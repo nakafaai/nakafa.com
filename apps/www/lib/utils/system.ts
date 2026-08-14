@@ -1,9 +1,10 @@
+import { api } from "@repo/backend/convex/_generated/api";
 import type { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
-import { getRuntimeContentRoute } from "@/lib/content/runtime/routes";
+import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 /** Expected failure raised when route metadata translations cannot be loaded. */
 class TranslationLoadError extends Schema.TaggedError<TranslationLoadError>()(
@@ -55,20 +56,25 @@ export function getMetadataFromSlug(
       date: "",
     };
 
-    const route = yield* getRuntimeContentRoute({
-      locale,
-      route: slug.join("/"),
-    });
+    const reference = yield* readRuntimeQuery(
+      api.contentRelease.reference.read,
+      {
+        input: {
+          kind: "route",
+          locale,
+          publicPath: slug.join("/"),
+        },
+      }
+    );
 
-    if (!route) {
+    if (!reference) {
       return defaultMetadata;
     }
 
     return {
-      authors: route.authors,
-      date: route.date ? new Date(route.date).toISOString() : "",
-      description: route.description ?? shortDescription,
-      title: route.title || defaultTitle,
+      ...defaultMetadata,
+      description: reference.description ?? shortDescription,
+      title: reference.title || defaultTitle,
     };
   });
 }

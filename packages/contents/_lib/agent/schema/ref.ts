@@ -151,8 +151,7 @@ export const NakafaAgentSectionSchema = Schema.Literal(
     'Public Nakafa content section: "material" lessons, "tryout" exam simulations, "articles" editorial/news content, or "quran" Quran references.',
 });
 
-/** Runtime schema for a canonical content reference used across agent tools. */
-export const NakafaAgentContentRefSchema = Schema.Struct({
+const NakafaAgentContentRefFields = {
   alignmentId: NakafaAgentGraphIdSchema,
   assetId: NakafaAgentGraphIdSchema,
   conceptId: NakafaAgentGraphIdSchema,
@@ -164,9 +163,6 @@ export const NakafaAgentContentRefSchema = Schema.Struct({
   locale: LocaleSchema.annotations({
     description: "Locale of the referenced content.",
   }),
-  markdown_url: NakafaAgentMarkdownUrlSchema.annotations({
-    description: "Canonical markdown URL for focused agent retrieval.",
-  }),
   route: NakafaAgentContentRouteSchema.annotations({
     description: "Locale-free route under the Nakafa content tree.",
   }),
@@ -176,9 +172,30 @@ export const NakafaAgentContentRefSchema = Schema.Struct({
   url: NakafaAgentContentUrlSchema.annotations({
     description: "Canonical public Nakafa URL for citation.",
   }),
+};
+
+/** Runtime schema for a canonical content reference used across agent tools. */
+export const NakafaAgentContentRefSchema = Schema.Struct({
+  ...NakafaAgentContentRefFields,
+  markdown_url: Schema.optional(
+    NakafaAgentMarkdownUrlSchema.annotations({
+      description:
+        "Canonical markdown URL when this content family supports focused retrieval.",
+    })
+  ),
 })
   .pipe(Schema.mutable)
   .annotations({ description: "Canonical Nakafa agent content reference." });
+
+/** Content reference for families with a public focused-read endpoint. */
+export const NakafaAgentReadableContentRefSchema = Schema.Struct({
+  ...NakafaAgentContentRefFields,
+  markdown_url: NakafaAgentMarkdownUrlSchema.annotations({
+    description: "Canonical markdown URL for focused agent retrieval.",
+  }),
+})
+  .pipe(Schema.mutable)
+  .annotations({ description: "Readable Nakafa agent content reference." });
 
 /** Runtime schema for one searchable Nakafa content summary. */
 export const NakafaAgentContentSummarySchema = NakafaAgentContentRefSchema.pipe(
@@ -198,20 +215,11 @@ export const NakafaAgentContentSummarySchema = NakafaAgentContentRefSchema.pipe(
 export type NakafaAgentSection = Schema.Schema.Type<
   typeof NakafaAgentSectionSchema
 >;
-export type NakafaAgentContentId = Schema.Schema.Type<
-  typeof NakafaAgentContentIdSchema
->;
-export type NakafaAgentContentRoute = Schema.Schema.Type<
-  typeof NakafaAgentContentRouteSchema
->;
-export type NakafaAgentContentUrl = Schema.Schema.Type<
-  typeof NakafaAgentContentUrlSchema
->;
-export type NakafaAgentMarkdownUrl = Schema.Schema.Type<
-  typeof NakafaAgentMarkdownUrlSchema
->;
 export type NakafaAgentContentRef = Schema.Schema.Type<
   typeof NakafaAgentContentRefSchema
+>;
+export type NakafaAgentReadableContentRef = Schema.Schema.Type<
+  typeof NakafaAgentReadableContentRefSchema
 >;
 export type NakafaAgentContentSummary = Schema.Schema.Type<
   typeof NakafaAgentContentSummarySchema

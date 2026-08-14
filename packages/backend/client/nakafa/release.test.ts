@@ -1,5 +1,8 @@
 import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
-import { verifyNakafaReleasePin } from "@repo/backend/client/nakafa/release";
+import {
+  readNakafaReleasePin,
+  verifyNakafaReleasePin,
+} from "@repo/backend/client/nakafa/release";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -12,6 +15,16 @@ vi.mock("@repo/backend/client/nakafa/query", () => ({
 describe("Nakafa release pin", () => {
   beforeEach(() => {
     queryMock.mockReset();
+  });
+
+  it("reads the current active release identity", async () => {
+    queryMock.mockReturnValue(
+      Effect.succeed({ releaseId: "release-material" })
+    );
+
+    await expect(
+      Effect.runPromise(readNakafaReleasePin("https://example.convex.cloud"))
+    ).resolves.toBe("release-material");
   });
 
   it("accepts one stable active release", async () => {

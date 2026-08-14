@@ -11,7 +11,7 @@ import {
 import routeSchema from "@repo/backend/convex/contents/schema/routes";
 import {
   localeValidator,
-  materialValidator,
+  materialDomainValidator,
   nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
@@ -24,6 +24,10 @@ const learningPopularityWindowValidator = literals(
 const learningPopularityScopeValidator = literals(
   ...learningPopularityScopeValues
 );
+const legacyContentSearchDocumentValidator = v.object({
+  ...contentSearchDocumentValidator.fields,
+  markdown_url: v.string(),
+});
 const tables = {
   /**
    * Durable graph-backed learning engagement history.
@@ -89,7 +93,7 @@ const tables = {
     description: v.optional(v.string()),
     insertedAt: v.number(),
     locale: localeValidator,
-    materialDomain: v.optional(materialValidator),
+    materialDomain: v.optional(materialDomainValidator),
     partition: v.number(),
     route: v.string(),
     section: nakafaSectionValidator,
@@ -115,7 +119,7 @@ const tables = {
     description: v.optional(v.string()),
     lastViewedAt: v.number(),
     locale: localeValidator,
-    materialDomain: v.optional(materialValidator),
+    materialDomain: v.optional(materialDomainValidator),
     route: v.string(),
     section: nakafaSectionValidator,
     sourcePath: v.string(),
@@ -179,7 +183,7 @@ const tables = {
     content_id: graphContentIdValidator,
     description: v.optional(v.string()),
     locale: localeValidator,
-    materialDomain: v.optional(materialValidator),
+    materialDomain: v.optional(materialDomainValidator),
     route: v.string(),
     section: nakafaSectionValidator,
     scopeMode: learningPopularityScopeValidator,
@@ -217,7 +221,7 @@ const tables = {
     content_id: graphContentIdValidator,
     description: v.optional(v.string()),
     locale: localeValidator,
-    materialDomain: v.optional(materialValidator),
+    materialDomain: v.optional(materialDomainValidator),
     route: v.string(),
     score: v.number(),
     section: nakafaSectionValidator,
@@ -242,11 +246,8 @@ const tables = {
       "content_id",
     ]),
 
-  /**
-   * Graph-backed content search read model for Nina and MCP.
-   * Rebuilt from synced source tables; public results expose graph asset IDs.
-   */
-  contentSearch: defineTable(contentSearchDocumentValidator)
+  /** Retained legacy search rows with their exact pre-drain contract. */
+  contentSearch: defineTable(legacyContentSearchDocumentValidator)
     .index("by_content_id", ["content_id"])
     .index("by_locale_and_route", ["locale", "route"])
     .index("by_locale_and_sourcePath", ["locale", "sourcePath"])

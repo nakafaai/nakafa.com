@@ -31,7 +31,8 @@ export type NonNumericGrade = (typeof NON_NUMERIC_GRADES)[number];
 export const GRADES = [...NUMERIC_GRADES, ...NON_NUMERIC_GRADES] as const;
 export type Grade = (typeof GRADES)[number];
 
-export const HIGH_SCHOOL_MATERIALS = [
+/** Material domains with Nakafa-owned presentation labels and icons. */
+export const PRESENTED_MATERIAL_DOMAINS = [
   "mathematics",
   "physics",
   "chemistry",
@@ -42,10 +43,6 @@ export const HIGH_SCHOOL_MATERIALS = [
   "informatics",
   "geospatial",
   "sociology",
-] as const;
-export type HighSchoolMaterial = (typeof HIGH_SCHOOL_MATERIALS)[number];
-
-export const BACHELOR_MATERIALS = [
   "ai-ds",
   "game-engineering",
   "computer-science",
@@ -54,10 +51,5 @@ export const BACHELOR_MATERIALS = [
   "informatics-engineering",
   "international-relations",
 ] as const;
-export type BachelorMaterial = (typeof BACHELOR_MATERIALS)[number];
-
-export const SUBJECT_MATERIALS = [
-  ...HIGH_SCHOOL_MATERIALS,
-  ...BACHELOR_MATERIALS,
-] as const;
-export type Material = (typeof SUBJECT_MATERIALS)[number];
+export type PresentedMaterialDomain =
+  (typeof PRESENTED_MATERIAL_DOMAINS)[number];

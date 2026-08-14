@@ -63,6 +63,55 @@ const decodePublicRequest = Effect.fn("contentRelease.decodePublicRequest")(
   }
 );
 
+/** Decodes one stored row into the exact Aksara public response. */
+export const decodePublicRuntimeRow = Effect.fn(
+  "contentRelease.decodePublicRuntimeRow"
+)(function* (row: PublicRuntimeRow) {
+  if (row === null) {
+    return null;
+  }
+  if (row.delivery !== "public") {
+    return yield* new PublicRuntimeReadError();
+  }
+  const [
+    artifact,
+    projection,
+    projectionHash,
+    release,
+    rendererManifest,
+    sourcePath,
+  ] = yield* Effect.all([
+    decodeArtifactJson(row.artifactJson),
+    decodeProjectionJson(row.projectionJson),
+    Schema.decodeUnknown(Sha256HashSchema)(row.projectionHash),
+    decodeReleaseJson(row.releaseJson),
+    decodeRendererJson(row.rendererJson),
+    Schema.decodeUnknown(CorpusSourcePathSchema)(row.sourcePath),
+  ]).pipe(Effect.mapError(() => new PublicRuntimeReadError()));
+  if (projection.kind === "question-body") {
+    return yield* new PublicRuntimeReadError();
+  }
+  if (
+    row.activeManifestHash !== release.manifestHash ||
+    row.activeReleaseId !== release.manifest.releaseId
+  ) {
+    return yield* new PublicRuntimeReadError();
+  }
+  const response: PublicContentRuntimeFound = {
+    activeManifestHash: release.manifestHash,
+    activeReleaseId: release.manifest.releaseId,
+    artifact,
+    delivery: "public",
+    kind: "found",
+    projection,
+    projectionHash,
+    release,
+    rendererManifest,
+    sourcePath,
+  };
+  return response;
+});
+
 /** Reads one active public artifact for Nakafa verification. */
 const resolvePublicRuntime = Effect.fn("contentRelease.resolvePublicRuntime")(
   function* (ctx: ActionCtx, request: PublicContentRuntimeRequest) {
@@ -74,49 +123,7 @@ const resolvePublicRuntime = Effect.fn("contentRelease.resolvePublicRuntime")(
           publicPath: request.publicPath,
         }),
     });
-    if (row === null) {
-      return null;
-    }
-    if (row.delivery !== "public") {
-      return yield* new PublicRuntimeReadError();
-    }
-    const [
-      artifact,
-      projection,
-      projectionHash,
-      release,
-      rendererManifest,
-      sourcePath,
-    ] = yield* Effect.all([
-      decodeArtifactJson(row.artifactJson),
-      decodeProjectionJson(row.projectionJson),
-      Schema.decodeUnknown(Sha256HashSchema)(row.projectionHash),
-      decodeReleaseJson(row.releaseJson),
-      decodeRendererJson(row.rendererJson),
-      Schema.decodeUnknown(CorpusSourcePathSchema)(row.sourcePath),
-    ]).pipe(Effect.mapError(() => new PublicRuntimeReadError()));
-    if (projection.kind === "question-body") {
-      return yield* new PublicRuntimeReadError();
-    }
-    if (
-      row.activeManifestHash !== release.manifestHash ||
-      row.activeReleaseId !== release.manifest.releaseId
-    ) {
-      return yield* new PublicRuntimeReadError();
-    }
-    const response: PublicContentRuntimeFound = {
-      activeManifestHash: release.manifestHash,
-      activeReleaseId: release.manifest.releaseId,
-      artifact,
-      delivery: "public",
-      kind: "found",
-      projection,
-      projectionHash,
-      release,
-      rendererManifest,
-      sourcePath,
-    };
-    return response;
+    return yield* decodePublicRuntimeRow(row);
   }
 );
 

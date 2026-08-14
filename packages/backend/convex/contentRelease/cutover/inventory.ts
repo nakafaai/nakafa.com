@@ -28,6 +28,13 @@ export const AUDITED_MATERIAL_TOPIC_COUNT = 72;
 export const AUDITED_QURAN_SEARCH_COUNT = 228;
 export const AUDITED_ACTIVE_TRYOUT_CATALOG_COUNT = RETAINED_CATALOG_COUNT;
 export const AUDITED_PHYSICAL_TRYOUT_CATALOG_COUNT = 108;
+export const AUDITED_REFERENCE_PROOF_COUNTS = {
+  article: AUDITED_ARTICLE_COUNT,
+  material: AUDITED_MATERIAL_COUNT,
+  materialTopic: AUDITED_MATERIAL_TOPIC_COUNT,
+  quran: AUDITED_QURAN_SEARCH_COUNT,
+  tryout: AUDITED_ACTIVE_TRYOUT_CATALOG_COUNT,
+} as const;
 
 export interface InventoryEntry<TableName extends TableNames = TableNames> {
   readonly batchSize: number;
@@ -55,15 +62,15 @@ export const LEGACY_INVENTORY = [
   { batchSize: 8, expected: 1056, table: "contentSearch" },
 ] as const satisfies readonly InventoryEntry[];
 
-/** Synthetic learning-plan tables removed by the signed selection cutover. */
-export const RETIRED_PROGRAM_INVENTORY = [
-  { batchSize: 1, expected: 0, table: "learningProgramCoverage" },
-  { batchSize: 1, expected: 0, table: "learningProgramSources" },
-  { batchSize: 1, expected: 0, table: "learningPrograms" },
-  { batchSize: 1, expected: 0, table: "learningPlanItems" },
-  { batchSize: 1, expected: 0, table: "learningPlans" },
-  { batchSize: 1, expected: 0, table: "learningProfiles" },
-] as const satisfies readonly InventoryEntry[];
+/** Empty physical tables whose Phase 1 receipt permits Phase 2 deletion. */
+export const RETIRED_PROGRAM_TABLES = [
+  "learningProgramCoverage",
+  "learningProgramSources",
+  "learningPrograms",
+  "learningPlanItems",
+  "learningPlans",
+  "learningProfiles",
+] as const;
 
 /** Exact mutable signed-store inventory measured before the freeze. */
 export const CURRENT_INVENTORY = [

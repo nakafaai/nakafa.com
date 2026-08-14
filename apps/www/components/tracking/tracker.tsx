@@ -1,10 +1,8 @@
 "use client";
 
 import type { LearningContextInput } from "@repo/backend/convex/contents/context";
-import type {
-  Locale,
-  NakafaSection,
-} from "@repo/backend/convex/lib/validators/contents";
+import type { RecordContentViewArgs } from "@repo/backend/convex/contents/views/spec";
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import type { PropsWithChildren } from "react";
 import { useRecordContentView } from "@/lib/hooks/use-record-content-view";
 
@@ -15,7 +13,7 @@ interface Props {
   delay?: number;
   locale: Locale;
   publicPath: string;
-  section: NakafaSection;
+  section: RecordContentViewArgs["section"];
 }
 
 /**

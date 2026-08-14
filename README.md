@@ -10,10 +10,9 @@ This repository owns the React and Next.js applications, design system,
 transactional Convex backend, renderer implementations, user state, and
 product integrations. The separate
 [Aksara repository](https://github.com/nakafaai/aksara) owns authored content
-and signed publication artifacts for every scope that has completed cutover.
-During the migration, `packages/contents` still contains source for scopes that
-have not completed cutover and copies awaiting coordinated deletion for scopes
-already served from Aksara. Those copies are not active publication sources.
+and signed publication artifacts for every content scope. `packages/contents`
+contains only live Nakafa product, formatting, and agent contracts. It is not an
+authored content source or publication path.
 
 ## Toolchain
 
@@ -60,8 +59,8 @@ pnpm start
 - `packages/backend`: Convex schema, functions, workflows, and integrations
 - `packages/design-system`: shared React components and renderer implementations
 - `packages/ai`: Effect-native AI capabilities
-- `packages/contents`: unactivated content source plus cutover copies awaiting
-  coordinated deletion
+- `packages/contents`: Nakafa product, formatting, route-context, learner, and
+  agent contracts
 - `packages/testing`: shared Vitest configuration
 - `packages/utilities`: generic cross-domain primitives
 - `repos/effect`: read-only Effect source pinned to the installed version
@@ -107,9 +106,9 @@ acceptance.
 ## Content ownership
 
 Do not add substitute content or duplicate Aksara-owned source to this
-repository. Before changing educational content, verify the active ownership
-scope. Aksara-owned changes belong in `nakafaai/aksara`; remaining local scopes
-must follow `packages/contents` contracts until their coordinated cutover.
+repository. Authored educational content changes belong in `nakafaai/aksara`.
+Nakafa consumes only authenticated current Aksara contracts and signed
+publication artifacts.
 
 Renderer and component implementations remain in Nakafa. Aksara content refers
 to reviewed renderer contracts and never carries duplicate React or TSX

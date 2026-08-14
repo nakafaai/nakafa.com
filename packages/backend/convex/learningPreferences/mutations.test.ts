@@ -1,4 +1,8 @@
-import { LearningProgramSchema } from "@nakafa/aksara-contracts/program/spec";
+import {
+  type LearningProgram,
+  LearningProgramKeySchema,
+  LearningProgramSchema,
+} from "@nakafa/aksara-contracts/program/spec";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   createConvexTestWithBetterAuth,
@@ -7,13 +11,33 @@ import {
 import {
   activateProgramSnapshot,
   makeProgramSnapshotData,
+  makeTechnicalProgram,
 } from "@repo/backend/test/program-snapshot";
 import { activateTryoutStartSource } from "@repo/backend/test/tryout-source";
-import { LEARNING_PROGRAM_CATALOG } from "@repo/contents/_types/program/catalog";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 const NOW = 1_798_752_000_000;
+
+const PREFERENCE_PROGRAMS = [
+  makePreferenceProgram(1, "merdeka", "ID", "merdeka", "Kurikulum Merdeka"),
+  makePreferenceProgram(
+    2,
+    "cambridge-international",
+    "GB",
+    "cambridge-international",
+    "Cambridge International"
+  ),
+  makePreferenceProgram(3, "singapore-moe", "SG", "singapura", "Singapore MOE"),
+  makePreferenceProgram(
+    4,
+    "united-states",
+    "US",
+    "amerika-serikat",
+    "United States Standards-Aligned Pathway"
+  ),
+  makePreferenceProgram(5, "snbt", "ID", "snbt", "SNBT", "admission-exam"),
+];
 
 describe("learningPreferences", () => {
   it("lists school curriculum preferences in catalog display order", async () => {
@@ -153,11 +177,34 @@ describe("learningPreferences", () => {
 async function syncPrograms(
   t: ReturnType<typeof createConvexTestWithBetterAuth>
 ) {
-  const programs = await Effect.runPromise(
-    Effect.forEach(LEARNING_PROGRAM_CATALOG, (program) =>
-      Schema.decodeUnknown(LearningProgramSchema)(program)
-    )
+  const data = await Effect.runPromise(
+    makeProgramSnapshotData(PREFERENCE_PROGRAMS)
   );
-  const data = await Effect.runPromise(makeProgramSnapshotData(programs));
   await activateProgramSnapshot(t, data);
+}
+
+/** Builds one explicit signed current program used by preference tests. */
+function makePreferenceProgram(
+  index: number,
+  key: string,
+  countryCode: string,
+  publicSlug: string,
+  title: string,
+  kind: LearningProgram["kind"] = "school-curriculum"
+) {
+  const base = makeTechnicalProgram(index, kind);
+
+  return LearningProgramSchema.make({
+    ...base,
+    key: LearningProgramKeySchema.make(key),
+    provider: {
+      ...base.provider,
+      homeCountry: countryCode,
+    },
+    recommendedCountry: countryCode,
+    translations: {
+      en: { publicSlug, title },
+      id: { publicSlug, title },
+    },
+  });
 }

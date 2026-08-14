@@ -1,8 +1,10 @@
+import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { deleteLegacyPage } from "@repo/backend/convex/contentRelease/cutover/legacy";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { testReaderCutoverReceipt } from "@repo/backend/test/content-cutover";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -12,6 +14,19 @@ const TEST_INVENTORY = [
 ] as const;
 
 describe("contentRelease/cutover/legacy", () => {
+  it("does not recreate a missing Phase 1 checkpoint", async () => {
+    const t = convexTest(schema, convexModules);
+
+    await expect(
+      t.action(internal.contentRelease.cutover.legacy.drainLegacy, {})
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_STATE",
+        message: expect.stringContaining("Phase 1 quiescence checkpoint"),
+      },
+    });
+  });
+
   it("cannot delete legacy rows before the reader cutover is accepted", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => seedLegacyDrain(ctx, false));
@@ -113,7 +128,9 @@ async function seedLegacyDrain(ctx: MutationCtx, readerAccepted = true) {
     legacyTableDeleted: 0,
     legacyTableIndex: 0,
     phase: "audited",
-    ...(readerAccepted ? { readerCutoverAcceptedAt: 1 } : {}),
+    ...(readerAccepted
+      ? { readerCutoverReceipt: testReaderCutoverReceipt() }
+      : {}),
     updatedAt: 1,
   });
   return userId;

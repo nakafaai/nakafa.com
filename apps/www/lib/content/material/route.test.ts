@@ -36,8 +36,6 @@ function foundModel(overrides?: {
   readonly activeManifestHash?: null | string;
   readonly activeReleaseId?: null | string;
   readonly alternateJson?: readonly string[];
-  readonly familyManaged?: boolean;
-  readonly managed?: boolean;
   readonly projectionJson?: null | string;
   readonly rendererDomain?: null | string;
   readonly siblingJson?: readonly string[];
@@ -58,8 +56,6 @@ function foundModel(overrides?: {
       [previewProjection, previewIdProjection].map(
         canonicalizeMaterialProjection
       ),
-    familyManaged: overrides?.familyManaged ?? true,
-    managed: overrides?.managed ?? true,
     projectionJson:
       overrides?.projectionJson === undefined
         ? canonicalizeMaterialProjection(previewProjection)
@@ -73,7 +69,6 @@ function foundModel(overrides?: {
       [previewProjection, previewNextProjection].map(
         canonicalizeMaterialProjection
       ),
-    sourceClaims: [],
     sourcePath:
       overrides?.sourcePath === undefined
         ? previewSourcePath
@@ -148,8 +143,6 @@ describe("published material route", () => {
   });
 
   it.each([
-    ["unmanaged route", foundModel({ managed: false })],
-    ["partially managed family", foundModel({ familyManaged: false })],
     ["active manifest", foundModel({ activeManifestHash: "invalid" })],
     ["missing manifest", foundModel({ activeManifestHash: null })],
     ["missing release", foundModel({ activeReleaseId: null })],

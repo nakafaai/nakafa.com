@@ -1,370 +1,268 @@
-import { api } from "@repo/backend/convex/_generated/api";
-import { contentViewRouteCollisionCode } from "@repo/backend/convex/contents/views/spec";
-import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
-import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
 import {
-  CONTEXT_NODE_KEY,
-  CONTEXT_PARENT_PATH,
-  CONTEXT_PUBLIC_PATH,
-  LATEST_MATERIAL,
-  PLACEMENT_VIEW_NOW,
-  PROGRAM_KEY,
-  PUBLIC_LESSON_PATH,
-  PUBLISHED_CONTEXT_NODE,
-  PUBLISHED_MATERIAL,
-  PUBLISHED_PLACEMENT,
-  RENAMED_MATERIAL,
-  recordPublishedView,
-  seedContextOwnershipConflict,
-  seedContextRouteOverlap,
-  seedContextSyncOverlap,
-  seedMaterialPlacement,
-  seedMixedPlacement,
-  seedRouteSyncOverlap,
-} from "@repo/backend/test/material-view";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+  CorpusSourcePathSchema,
+  PublicPathSchema,
+} from "@nakafa/aksara-contracts/ids";
+import {
+  CurriculumNodeKeySchema,
+  type CurriculumRoute,
+  CurriculumRouteSchema,
+} from "@nakafa/aksara-contracts/program/curriculum";
+import { makeCurriculumSnapshotRow } from "@nakafa/aksara-contracts/program/row-hash";
+import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
+import {
+  type MaterialLessonProjection,
+  MaterialLessonProjectionSchema,
+} from "@nakafa/aksara-contracts/projection/material";
+import {
+  type ContentSnapshotRow,
+  canonicalizeContentSnapshotRow,
+} from "@nakafa/aksara-contracts/release/snapshot/data";
+import { stageProgramRow } from "@repo/backend/convex/contentRelease/snapshot/program";
+import type { LearningContextInput } from "@repo/backend/convex/contents/context";
+import { resolveLearningContext } from "@repo/backend/convex/contents/views/context";
+import { validateIncomingContentTarget } from "@repo/backend/convex/contents/views/target";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import schema from "@repo/backend/convex/schema";
+import { convexModules } from "@repo/backend/convex/test.setup";
+import { FUNCTION_MATERIAL } from "@repo/backend/test/content-material";
+import {
+  activateMaterialCatalog,
+  insertMaterialProjection,
+} from "@repo/backend/test/material-catalog";
+import {
+  activateProgramSnapshot,
+  makeProgramSnapshotData,
+} from "@repo/backend/test/program-snapshot";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
+import { Effect } from "effect";
+import { describe, expect, it } from "vitest";
+
+const PROGRAM_KEY = LearningProgramKeySchema.make("technical-program-1");
+const GROUP_KEY = CurriculumNodeKeySchema.make("test-group");
+const ROOT_PATH = PublicPathSchema.make("curriculum/technical-program-1");
+const SUBJECT_PATH = PublicPathSchema.make(
+  "curriculum/technical-program-1/test-subject"
+);
+const GROUP_PATH = PublicPathSchema.make(
+  "curriculum/technical-program-1/test-subject/test-group"
+);
+const SOURCE_PATH = CorpusSourcePathSchema.make(
+  "packages/corpus/curriculum/technical-program-1"
+);
+const PLACEMENT = {
+  mode: "placement",
+  nodeKey: GROUP_KEY,
+  programKey: PROGRAM_KEY,
+} satisfies LearningContextInput;
+const RENAMED_MATERIAL = MaterialLessonProjectionSchema.make({
+  ...FUNCTION_MATERIAL,
+  publicPath: PublicPathSchema.make(
+    `${FUNCTION_MATERIAL.parentPath}/function-concept-renamed`
+  ),
+});
+
+/** Creates the card-list parent for the placement group. */
+function subjectRoute(): CurriculumRoute {
+  return CurriculumRouteSchema.make({
+    iconKey: "science",
+    kind: "curriculum-context",
+    level: "subject",
+    locale: "en",
+    nodeKey: "test-subject",
+    order: 1,
+    parentPath: ROOT_PATH,
+    programKey: PROGRAM_KEY,
+    publicPath: SUBJECT_PATH,
+    sitemap: true,
+    sourcePath: SOURCE_PATH,
+    title: "Technical Subject",
+  });
+}
+
+/** Creates the placement group named by the public context hint. */
+function groupRoute(): CurriculumRoute {
+  return CurriculumRouteSchema.make({
+    iconKey: "science",
+    kind: "curriculum-context",
+    level: "topic",
+    locale: "en",
+    materialCardDescription: "Technical card description.",
+    materialCardTitle: "Technical Group",
+    nodeKey: GROUP_KEY,
+    order: 1,
+    parentPath: SUBJECT_PATH,
+    programKey: PROGRAM_KEY,
+    publicPath: GROUP_PATH,
+    sitemap: false,
+    sourcePath: SOURCE_PATH,
+    title: "Technical Group",
+  });
+}
+
+/** Creates one immutable material mapping for the placement group. */
+function mappingRoute(
+  canonicalPath: typeof FUNCTION_MATERIAL.publicPath
+): CurriculumRoute {
+  return CurriculumRouteSchema.make({
+    canonicalPath,
+    iconKey: "science",
+    kind: "curriculum-context",
+    level: "lesson",
+    locale: "en",
+    materialContextNodeKey: GROUP_KEY,
+    materialContextParentPath: SUBJECT_PATH,
+    materialContextPublicPath: GROUP_PATH,
+    materialKey: FUNCTION_MATERIAL.materialKey,
+    nodeKey: "test-material-mapping",
+    order: 1,
+    parentPath: GROUP_PATH,
+    programKey: PROGRAM_KEY,
+    publicPath: PublicPathSchema.make(`${GROUP_PATH}/test-material-mapping`),
+    sitemap: false,
+    sourcePath: SOURCE_PATH,
+    title: "Technical Material Mapping",
+  });
+}
+
+/** Adds current signed placement rows to the active program snapshot. */
+async function stagePlacement(
+  target: TestConvex<typeof schema>,
+  snapshotId: string,
+  canonicalPath: typeof FUNCTION_MATERIAL.publicPath
+) {
+  const routes = [subjectRoute(), groupRoute(), mappingRoute(canonicalPath)];
+  const rows = await Effect.runPromise(
+    Effect.forEach(routes, (route) =>
+      Effect.gen(function* () {
+        const record = yield* makeCurriculumSnapshotRow(route);
+        const source = {
+          family: "program",
+          record,
+        } satisfies ContentSnapshotRow;
+        return {
+          rowJson: canonicalizeContentSnapshotRow(source),
+          source,
+        };
+      })
+    )
+  );
+  for (const [offset, row] of rows.entries()) {
+    await target.mutation((ctx) =>
+      runConvexProgram(
+        stageProgramRow(ctx, snapshotId, offset + 100, row.source, row.rowJson)
+      )
+    );
+  }
+}
+
+/** Resolves context through the current signed material target. */
+function readContext(
+  target: TestConvex<typeof schema>,
+  projection: MaterialLessonProjection,
+  context?: LearningContextInput
+) {
+  return target.query((ctx) =>
+    runConvexProgram(
+      Effect.gen(function* () {
+        const material = yield* validateIncomingContentTarget(ctx, {
+          contentId: projection.graph.assetId,
+          locale: projection.locale,
+          publicPath: projection.publicPath,
+          section: "material",
+        });
+        if (!material) {
+          return yield* Effect.die(
+            new Error("Expected one current signed material target.")
+          );
+        }
+        return yield* resolveLearningContext(ctx, material, context);
+      })
+    )
+  );
+}
+
+/** Activates one current signed program and material placement fixture. */
+async function activatePlacement(
+  target: TestConvex<typeof schema>,
+  canonicalPath: typeof FUNCTION_MATERIAL.publicPath,
+  projection: MaterialLessonProjection = FUNCTION_MATERIAL
+) {
+  const data = await Effect.runPromise(makeProgramSnapshotData());
+  await activateProgramSnapshot(target, data);
+  await stagePlacement(target, data.snapshotId, canonicalPath);
+  await target.mutation((ctx) => insertMaterialProjection(ctx, projection));
+}
 
 describe("contents/views/context", () => {
-  beforeEach(() => {
-    vi.useFakeTimers({ now: PLACEMENT_VIEW_NOW });
-  });
+  it("keeps a direct visit canonical", async () => {
+    const target = convexTest(schema, convexModules);
+    await activateMaterialCatalog(target, [FUNCTION_MATERIAL]);
 
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it("persists and resumes an exact curriculum placement", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const fixture = await t.mutation(seedMaterialPlacement);
-    const signedIn = t.withIdentity({
-      sessionId: fixture.sessionId,
-      subject: fixture.authUserId,
-    });
-
-    await signedIn.mutation(api.contents.mutations.views.recordContentView, {
-      contentId: fixture.contentId,
-      context: {
-        mode: "placement",
-        nodeKey: CONTEXT_NODE_KEY,
-        programKey: PROGRAM_KEY,
-      },
-      deviceId: "context-device",
-      locale: "id",
-      publicPath: PUBLIC_LESSON_PATH,
-      section: "material",
-    });
-
-    const state = await t.query(async (ctx) => ({
-      recents: await ctx.db.query("userLearningRecents").collect(),
-      views: await ctx.db.query("learningViews").collect(),
-    }));
-    const results = await signedIn.query(
-      api.contents.queries.recent.getRecentlyViewed,
-      { locale: "id", limit: 5 }
-    );
-
-    expect(state.views).toMatchObject([
-      {
-        contextKey: `placement:${PROGRAM_KEY}:${CONTEXT_NODE_KEY}`,
-        contextMode: "placement",
-        contextNodeKey: CONTEXT_NODE_KEY,
-      },
-    ]);
-    expect(state.recents).toMatchObject([
-      {
-        contextParentPath: CONTEXT_PARENT_PATH,
-        contextProgramKey: PROGRAM_KEY,
-        contextPublicPath: CONTEXT_PUBLIC_PATH,
-      },
-    ]);
-    expect(results).toMatchObject([
-      {
-        contextKey: `placement:${PROGRAM_KEY}:${CONTEXT_NODE_KEY}`,
-        href: `/${PUBLIC_LESSON_PATH}?ctx=${PROGRAM_KEY}~${CONTEXT_NODE_KEY}`,
-      },
-    ]);
-  });
-
-  it("keeps a later direct visit canonical", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const fixture = await t.mutation(seedMaterialPlacement);
-    const signedIn = t.withIdentity({
-      sessionId: fixture.sessionId,
-      subject: fixture.authUserId,
-    });
-
-    await signedIn.mutation(api.contents.mutations.views.recordContentView, {
-      contentId: fixture.contentId,
-      context: {
-        mode: "placement",
-        nodeKey: CONTEXT_NODE_KEY,
-        programKey: PROGRAM_KEY,
-      },
-      deviceId: "placement-device",
-      locale: "id",
-      publicPath: PUBLIC_LESSON_PATH,
-      section: "material",
-    });
-    vi.setSystemTime(PLACEMENT_VIEW_NOW + 1000);
-    await signedIn.mutation(api.contents.mutations.views.recordContentView, {
-      contentId: fixture.contentId,
-      deviceId: "direct-device",
-      locale: "id",
-      publicPath: PUBLIC_LESSON_PATH,
-      section: "material",
-    });
-
-    const results = await signedIn.query(
-      api.contents.queries.recent.getRecentlyViewed,
-      { locale: "id", limit: 5 }
-    );
-
-    expect(results).toMatchObject([
-      {
-        contextKey: "canonical",
-        href: `/${PUBLIC_LESSON_PATH}`,
-      },
-    ]);
-  });
-
-  it("stores an unverified client placement as canonical context", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const fixture = await t.mutation(seedMaterialPlacement);
-    const signedIn = t.withIdentity({
-      sessionId: fixture.sessionId,
-      subject: fixture.authUserId,
-    });
-
-    await signedIn.mutation(api.contents.mutations.views.recordContentView, {
-      contentId: fixture.contentId,
-      context: {
-        mode: "placement",
-        nodeKey: CONTEXT_NODE_KEY,
-        programKey: "merdeka",
-      },
-      deviceId: "unverified-context-device",
-      locale: "id",
-      publicPath: PUBLIC_LESSON_PATH,
-      section: "material",
-    });
-
-    const state = await t.query(async (ctx) => ({
-      recents: await ctx.db.query("userLearningRecents").collect(),
-      views: await ctx.db.query("learningViews").collect(),
-    }));
-    const results = await signedIn.query(
-      api.contents.queries.recent.getRecentlyViewed,
-      { locale: "id", limit: 5 }
-    );
-
-    expect(state.views).toMatchObject([
-      { contextKey: "canonical", contextMode: "canonical" },
-    ]);
-    expect(state.recents).toMatchObject([
-      { contextKey: "canonical", contextMode: "canonical" },
-    ]);
-    expect(results).toMatchObject([
-      {
-        contextKey: "canonical",
-        href: `/${PUBLIC_LESSON_PATH}`,
-      },
-    ]);
-  });
-
-  it("drops a stored placement when the current projection no longer owns it", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const fixture = await t.mutation(seedMaterialPlacement);
-    const signedIn = t.withIdentity({
-      sessionId: fixture.sessionId,
-      subject: fixture.authUserId,
-    });
-
-    await signedIn.mutation(api.contents.mutations.views.recordContentView, {
-      contentId: fixture.contentId,
-      context: {
-        mode: "placement",
-        nodeKey: CONTEXT_NODE_KEY,
-        programKey: PROGRAM_KEY,
-      },
-      deviceId: "stale-device",
-      locale: "id",
-      publicPath: PUBLIC_LESSON_PATH,
-      section: "material",
-    });
-    await t.mutation(async (ctx) => {
-      await ctx.db.delete(fixture.placementId);
-    });
-
-    const results = await signedIn.query(
-      api.contents.queries.recent.getRecentlyViewed,
-      { locale: "id", limit: 5 }
-    );
-
-    expect(results).toMatchObject([
-      {
-        contextKey: "canonical",
-        href: `/${PUBLIC_LESSON_PATH}`,
-      },
-    ]);
-  });
-
-  it("uses stable source placement after a published material route changes", async () => {
-    const t = createConvexTestWithBetterAuth();
-    await activateMaterialCatalog(t, [RENAMED_MATERIAL]);
-    const viewer = await t.mutation((ctx) => seedMixedPlacement(ctx));
-    await recordPublishedView(
-      t,
-      viewer,
-      "published-material-context",
-      RENAMED_MATERIAL.publicPath
-    );
-
-    await expect(
-      t.query((ctx) => ctx.db.query("userLearningRecents").unique())
-    ).resolves.toMatchObject({
-      contextKey: `placement:${PUBLISHED_PLACEMENT.programKey}:${PUBLISHED_CONTEXT_NODE}`,
-      contextSourcePath: PUBLISHED_MATERIAL.contentKey,
-      route: RENAMED_MATERIAL.publicPath,
-    });
-  });
-
-  it("keeps placement while equivalent curriculum shards overlap", async () => {
-    const t = createConvexTestWithBetterAuth();
-    await activateMaterialCatalog(t, [RENAMED_MATERIAL]);
-    const viewer = await t.mutation((ctx) => seedMixedPlacement(ctx));
-    await t.mutation(seedContextRouteOverlap);
-    await recordPublishedView(
-      t,
-      viewer,
-      "curriculum-route-overlap",
-      RENAMED_MATERIAL.publicPath
-    );
-
-    await expect(
-      t.query((ctx) => ctx.db.query("userLearningRecents").unique())
-    ).resolves.toMatchObject({
-      contextKey: `placement:${PUBLISHED_PLACEMENT.programKey}:${PUBLISHED_CONTEXT_NODE}`,
-      contextSourcePath: PUBLISHED_MATERIAL.contentKey,
-      route: RENAMED_MATERIAL.publicPath,
-    });
-  });
-
-  it("rejects conflicting curriculum ownership during overlap", async () => {
-    const t = createConvexTestWithBetterAuth();
-    await activateMaterialCatalog(t, [RENAMED_MATERIAL]);
-    const viewer = await t.mutation((ctx) => seedMixedPlacement(ctx));
-    await t.mutation(seedContextOwnershipConflict);
-    await recordPublishedView(
-      t,
-      viewer,
-      "curriculum-owner-conflict",
-      RENAMED_MATERIAL.publicPath
-    );
-
-    await expect(
-      t.query((ctx) => ctx.db.query("userLearningRecents").unique())
-    ).resolves.toMatchObject({
+    await expect(readContext(target, FUNCTION_MATERIAL)).resolves.toEqual({
       contextKey: "canonical",
-      route: RENAMED_MATERIAL.publicPath,
+      contextMode: "canonical",
     });
   });
 
-  it("keeps direct lesson placement while renamed shards overlap", async () => {
-    const t = createConvexTestWithBetterAuth();
-    await activateMaterialCatalog(t, [RENAMED_MATERIAL]);
-    const viewer = await t.mutation((ctx) =>
-      seedMixedPlacement(ctx, PUBLISHED_MATERIAL.publicPath)
-    );
-    await t.mutation(seedContextSyncOverlap);
-    await recordPublishedView(
-      t,
-      viewer,
-      "overlapping-material-context",
-      RENAMED_MATERIAL.publicPath
+  it("rejects placement when signed curriculum ownership is unavailable", async () => {
+    const target = convexTest(schema, convexModules);
+    await activateMaterialCatalog(target, [FUNCTION_MATERIAL]);
+
+    await expect(
+      readContext(target, FUNCTION_MATERIAL, PLACEMENT)
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_VIEW_IO_FAILED" },
+    });
+  });
+
+  it("resolves an exact current signed curriculum placement", async () => {
+    const target = convexTest(schema, convexModules);
+    await activatePlacement(target, FUNCTION_MATERIAL.publicPath);
+
+    await expect(
+      readContext(target, FUNCTION_MATERIAL, PLACEMENT)
+    ).resolves.toMatchObject({
+      contextKey: `placement:${PROGRAM_KEY}:${GROUP_KEY}`,
+      contextMaterialKey: FUNCTION_MATERIAL.materialKey,
+      contextMode: "placement",
+      contextNodeKey: GROUP_KEY,
+      contextParentPath: SUBJECT_PATH,
+      contextProgramKey: PROGRAM_KEY,
+      contextPublicPath: GROUP_PATH,
+    });
+  });
+
+  it("keeps a stable parent placement after a signed lesson rename", async () => {
+    const target = convexTest(schema, convexModules);
+    await activatePlacement(
+      target,
+      FUNCTION_MATERIAL.parentPath,
+      RENAMED_MATERIAL
     );
 
     await expect(
-      t.query((ctx) => ctx.db.query("userLearningRecents").unique())
+      readContext(target, RENAMED_MATERIAL, PLACEMENT)
     ).resolves.toMatchObject({
-      contextKey: `placement:${PUBLISHED_PLACEMENT.programKey}:${PUBLISHED_CONTEXT_NODE}`,
-      contextSourcePath: PUBLISHED_MATERIAL.contentKey,
-      route: RENAMED_MATERIAL.publicPath,
+      contextKey: `placement:${PROGRAM_KEY}:${GROUP_KEY}`,
+      contextMaterialKey: FUNCTION_MATERIAL.materialKey,
+      contextMode: "placement",
     });
   });
 
-  it("keeps stable topic placement while the published parent changes", async () => {
-    const t = createConvexTestWithBetterAuth();
-    await activateMaterialCatalog(t, [LATEST_MATERIAL]);
-    const viewer = await t.mutation((ctx) => seedMixedPlacement(ctx));
-    await t.mutation(seedRouteSyncOverlap);
-    await recordPublishedView(
-      t,
-      viewer,
-      "ambiguous-material-context",
-      LATEST_MATERIAL.publicPath
-    );
+  it("makes an unverified signed placement canonical", async () => {
+    const target = convexTest(schema, convexModules);
+    await activatePlacement(target, FUNCTION_MATERIAL.publicPath);
 
     await expect(
-      t.query((ctx) => ctx.db.query("userLearningRecents").unique())
-    ).resolves.toMatchObject({
-      contextKey: `placement:${PUBLISHED_PLACEMENT.programKey}:${PUBLISHED_CONTEXT_NODE}`,
-      contextSourcePath: PUBLISHED_MATERIAL.contentKey,
-      route: LATEST_MATERIAL.publicPath,
-    });
-  });
-
-  it("rejects route collisions beyond the bounded rename overlap", async () => {
-    const t = createConvexTestWithBetterAuth();
-    await activateMaterialCatalog(t, [RENAMED_MATERIAL]);
-    const viewer = await t.mutation((ctx) =>
-      seedMixedPlacement(ctx, PUBLISHED_MATERIAL.publicPath)
-    );
-    await t.mutation(seedContextSyncOverlap);
-
-    const thirdSourceId = await t.mutation((ctx) =>
-      ctx.db.insert("publicRoutes", {
-        contentHash: "latest-material-source-route",
-        kind: LATEST_MATERIAL.kind,
-        locale: LATEST_MATERIAL.locale,
-        materialKey: LATEST_MATERIAL.materialKey,
-        parentPath: LATEST_MATERIAL.parentPath,
-        publicPath: LATEST_MATERIAL.publicPath,
-        sitemap: LATEST_MATERIAL.sitemap,
-        sourcePath: LATEST_MATERIAL.contentKey,
-        syncShard: 2,
-        title: LATEST_MATERIAL.metadata.title,
+      readContext(target, FUNCTION_MATERIAL, {
+        mode: "placement",
+        nodeKey: "missing-group",
+        programKey: PROGRAM_KEY,
       })
-    );
-    await expect(
-      recordPublishedView(
-        t,
-        viewer,
-        "source-collision",
-        RENAMED_MATERIAL.publicPath
-      )
-    ).rejects.toMatchObject({
-      data: { code: contentViewRouteCollisionCode },
-    });
-
-    await t.mutation(async (ctx) => {
-      await ctx.db.delete(thirdSourceId);
-      await ctx.db.insert("publicRoutes", {
-        ...PUBLISHED_PLACEMENT,
-        canonicalPath: RENAMED_MATERIAL.publicPath,
-        contentHash: "latest-material-source-placement",
-        publicPath: `${PUBLISHED_PLACEMENT.publicPath}-latest`,
-        syncShard: 2,
-      });
-    });
-    await expect(
-      recordPublishedView(
-        t,
-        viewer,
-        "context-collision",
-        RENAMED_MATERIAL.publicPath
-      )
-    ).rejects.toMatchObject({
-      data: { code: contentViewRouteCollisionCode },
+    ).resolves.toEqual({
+      contextKey: "canonical",
+      contextMode: "canonical",
     });
   });
 });

@@ -5,7 +5,7 @@ import { fetchQuery } from "convex/nextjs";
 import type { FunctionArgs } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
-import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
+import { loadCurrentTryoutQuestion } from "@/components/tryout/content/signed";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 
@@ -31,16 +31,7 @@ export async function readFeaturedTryout(locale: Locale) {
 
   return await Effect.runPromise(
     Effect.gen(function* () {
-      const rendered = yield* loadSignedTryoutContent({
-        answers: [],
-        questions: [featured.question],
-      });
-      const question = rendered.questions[0];
-      if (!question) {
-        return yield* new TryoutCatalogReadError({
-          cause: "The featured try-out question did not render.",
-        });
-      }
+      const question = yield* loadCurrentTryoutQuestion(featured.question);
 
       return {
         choices: featured.choices,

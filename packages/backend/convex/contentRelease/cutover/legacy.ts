@@ -47,16 +47,6 @@ const phaseReference = makeFunctionReference<
   Record<string, never>,
   CutoverPhase | null
 >("contentRelease/cutover/quiescence:phase");
-const initializeReference = makeFunctionReference<
-  "mutation",
-  { legacyWriteVersion: number },
-  null
->("contentRelease/cutover/quiescence:initialize");
-const activityReference = makeFunctionReference<
-  "query",
-  Record<string, never>,
-  number
->("contentRelease/cutover/quiescence:activity");
 const acceptAuditReference = makeFunctionReference<
   "mutation",
   Record<string, never>,
@@ -89,29 +79,9 @@ const drainLegacyProgram = Effect.fn("contentRelease.cutover.drainLegacy")(
       ctx.runQuery(phaseReference, {})
     );
     if (durablePhase === null) {
-      const beforeAudit = yield* callInternal(() =>
-        ctx.runQuery(activityReference, {})
+      return yield* stateFailure(
+        "The required Phase 1 quiescence checkpoint is missing."
       );
-      yield* auditProgram(ctx);
-      const afterAudit = yield* callInternal(() =>
-        ctx.runQuery(activityReference, {})
-      );
-      if (beforeAudit !== afterAudit) {
-        return yield* stateFailure(
-          "A legacy writer committed during the production inventory audit."
-        );
-      }
-      yield* callInternal(() =>
-        ctx.runMutation(initializeReference, {
-          legacyWriteVersion: afterAudit,
-        })
-      );
-      return drainPageResult({
-        complete: false,
-        deleted: 0,
-        phase: "quiescent",
-        table: "audio-workflow-journal",
-      });
     }
     if (durablePhase === "quiescent") {
       yield* auditProgram(ctx);

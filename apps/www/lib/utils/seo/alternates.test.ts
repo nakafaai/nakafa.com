@@ -1,11 +1,8 @@
 // @vitest-environment node
-import { listPublicRoutes } from "@repo/contents/_types/route/projection";
 import { routing } from "@repo/internationalization/src/routing";
-import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   createLocalizedAlternates,
-  createProjectedRouteAlternates,
   createResolvedRouteAlternates,
 } from "@/lib/utils/seo/alternates";
 
@@ -104,54 +101,6 @@ describe("createLocalizedAlternates", () => {
     });
   });
 
-  it("builds hreflang alternates from projected material routes", async () => {
-    const routes = await Effect.runPromise(listPublicRoutes());
-    const route = routes.find(
-      (candidate) =>
-        candidate.kind === "subject-lesson" &&
-        candidate.locale === "id" &&
-        candidate.sourcePath ===
-          "material/lesson/mathematics/integral/riemann-sum"
-    );
-
-    if (!route) {
-      expect(route).toBeDefined();
-      return;
-    }
-
-    expect(createProjectedRouteAlternates(route, routes)).toMatchObject({
-      canonical: "/id/materi/matematika/integral/jumlahan-riemann",
-      languages: {
-        en: "/en/subjects/mathematics/integral/riemann-sum",
-        id: "/id/materi/matematika/integral/jumlahan-riemann",
-      },
-    });
-  });
-
-  it("omits projected hreflang values when a locale route is absent", async () => {
-    const routes = await Effect.runPromise(listPublicRoutes());
-    const route = routes.find(
-      (candidate) =>
-        candidate.kind === "subject-lesson" &&
-        candidate.locale === "id" &&
-        candidate.sourcePath ===
-          "material/lesson/mathematics/integral/riemann-sum"
-    );
-
-    if (!route) {
-      expect(route).toBeDefined();
-      return;
-    }
-
-    expect(createProjectedRouteAlternates(route, [route])).toMatchObject({
-      canonical: "/id/materi/matematika/integral/jumlahan-riemann",
-      languages: {
-        id: "/id/materi/matematika/integral/jumlahan-riemann",
-        "x-default": "/id/materi/matematika/integral/jumlahan-riemann",
-      },
-    });
-  });
-
   it("keeps x-default on an existing resolved locale route", () => {
     expect(
       createResolvedRouteAlternates(
@@ -162,55 +111,6 @@ describe("createLocalizedAlternates", () => {
       languages: {
         id: "/id/materi/matematika/fungsi/konsep",
         "x-default": "/id/materi/matematika/fungsi/konsep",
-      },
-    });
-  });
-
-  it("builds hreflang alternates for localized material route identities", async () => {
-    const routes = await Effect.runPromise(listPublicRoutes());
-    const vectorConcept = routes.find(
-      (candidate) =>
-        candidate.kind === "subject-lesson" &&
-        candidate.locale === "id" &&
-        candidate.sourcePath === "material/lesson/physics/vector/concept"
-    );
-
-    if (!vectorConcept) {
-      expect(vectorConcept).toBeDefined();
-      return;
-    }
-
-    expect(createProjectedRouteAlternates(vectorConcept, routes)).toMatchObject(
-      {
-        canonical: "/id/materi/fisika/vektor/konsep-vektor",
-        languages: {
-          en: "/en/subjects/physics/vector/concept",
-          id: "/id/materi/fisika/vektor/konsep-vektor",
-        },
-      }
-    );
-  });
-
-  it("builds hreflang alternates for curriculum contexts", async () => {
-    const routes = await Effect.runPromise(listPublicRoutes());
-    const curriculum = routes.find(
-      (candidate) =>
-        candidate.kind === "curriculum-context" &&
-        candidate.locale === "id" &&
-        candidate.programKey === "merdeka" &&
-        candidate.nodeKey.endsWith("integral")
-    );
-
-    if (!curriculum) {
-      expect(curriculum).toBeDefined();
-      return;
-    }
-
-    expect(createProjectedRouteAlternates(curriculum, routes)).toMatchObject({
-      canonical: `/${curriculum.locale}/${curriculum.publicPath}`,
-      languages: {
-        en: expect.stringContaining("/en/curriculum/merdeka/"),
-        id: expect.stringContaining("/id/kurikulum/merdeka/"),
       },
     });
   });

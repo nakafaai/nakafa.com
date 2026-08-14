@@ -2,7 +2,7 @@ import { contentTypeValidator } from "@repo/backend/convex/lib/validators/conten
 import { defineTable } from "convex/server";
 import { type Infer, v } from "convex/values";
 
-/** Polymorphic content IDs supported by the author-link join table. */
+/** Polymorphic content IDs supported by the retained author-link join table. */
 export const contentAuthorContentIdValidator = v.union(
   v.id("articleContents"),
   v.id("curriculumLessons")

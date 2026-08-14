@@ -11,6 +11,11 @@ import {
   readTryoutSetSelection,
   type TryoutSetSelection,
 } from "@repo/backend/convex/tryouts/catalog/selection";
+import {
+  readStoredAttemptSectionPage,
+  readStoredAttemptSetPage,
+} from "@repo/backend/convex/tryouts/history/catalog";
+import { readTryoutAttemptHistory } from "@repo/backend/convex/tryouts/history/reference";
 import { TryoutRuntimeError } from "@repo/backend/convex/tryouts/runtime/error";
 import {
   matchesAttemptIdentity,
@@ -33,6 +38,10 @@ export const readAttemptSetPage = Effect.fn("tryouts.attempt.readSetPage")(
     attempt: TryoutAttempt,
     identity: TryoutSetIdentity
   ) {
+    const history = yield* readTryoutAttemptHistory(ctx, attempt);
+    if (history) {
+      return yield* readStoredAttemptSetPage(ctx, attempt, args.publicPath);
+    }
     const selection = yield* readAttemptSetSelection(
       ctx,
       args,
@@ -56,6 +65,10 @@ export const readAttemptSetPage = Effect.fn("tryouts.attempt.readSetPage")(
 export const readAttemptSectionPage = Effect.fn(
   "tryouts.attempt.readSectionPage"
 )(function* (ctx: QueryCtx, args: AttemptPath, attempt: TryoutAttempt) {
+  const history = yield* readTryoutAttemptHistory(ctx, attempt);
+  if (history) {
+    return yield* readStoredAttemptSectionPage(ctx, attempt, args.publicPath);
+  }
   const identity = readAttemptSetIdentity(attempt);
   const selection = yield* readAttemptSetSelection(
     ctx,

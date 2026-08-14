@@ -33,7 +33,6 @@ import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { PaginationContent } from "@/components/shared/pagination-content";
 import { ContentViewTracker } from "@/components/tracking/tracker";
-import { getContentViewId } from "@/lib/content/views";
 import { readMaterialContextQuery } from "@/lib/routing/material/query";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
@@ -125,10 +124,7 @@ async function MaterialRouteContent({
       }
     : undefined;
   const contentKey = page.route.contentKey;
-  const contentId = getContentViewId({
-    locale,
-    route: contentKey,
-  });
+  const contentId = page.route.graph.assetId;
 
   return (
     <ContentViewTracker

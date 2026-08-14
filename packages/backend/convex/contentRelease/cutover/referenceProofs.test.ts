@@ -1,4 +1,7 @@
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type {
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
 import {
   persistReferenceProof,
   requireReferenceProofs,
@@ -40,9 +43,9 @@ describe("contentRelease/cutover/referenceProofs", () => {
       ),
     }));
 
-    await expect(
-      t.query((ctx) => runConvexProgram(requireReferenceProofs(ctx, expected)))
-    ).resolves.toEqual(expected);
+    await expect(t.query(requireTestReferenceProofs)).resolves.toEqual(
+      expected
+    );
     expect(receipts.article.count).toBe(expected.article);
     expect(receipts.material.count).toBe(expected.material);
     expect(receipts.materialTopic.count).toBe(expected.materialTopic);
@@ -59,9 +62,7 @@ describe("contentRelease/cutover/referenceProofs", () => {
       )
     );
 
-    await expect(
-      t.query((ctx) => runConvexProgram(requireReferenceProofs(ctx, expected)))
-    ).rejects.toMatchObject({
+    await expect(t.query(requireTestReferenceProofs)).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
   });
@@ -92,9 +93,7 @@ describe("contentRelease/cutover/referenceProofs", () => {
       await ctx.db.patch("contentState", publication._id, { nextSequence: 3 });
     });
 
-    await expect(
-      t.query((ctx) => runConvexProgram(requireReferenceProofs(ctx, expected)))
-    ).rejects.toMatchObject({
+    await expect(t.query(requireTestReferenceProofs)).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
   });
@@ -131,13 +130,19 @@ describe("contentRelease/cutover/referenceProofs", () => {
       });
     });
 
-    await expect(
-      t.query((ctx) => runConvexProgram(requireReferenceProofs(ctx, expected)))
-    ).rejects.toMatchObject({
+    await expect(t.query(requireTestReferenceProofs)).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
   });
 });
+
+async function requireTestReferenceProofs(ctx: QueryCtx) {
+  const state = await ctx.db.query("contentCutoverState").unique();
+  if (!state) {
+    throw new Error("Expected one cutover checkpoint.");
+  }
+  return runConvexProgram(requireReferenceProofs(ctx, state, expected));
+}
 
 async function insertQuiescentPublication(ctx: MutationCtx) {
   await ctx.db.insert("contentState", {

@@ -1,4 +1,5 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import type { PublicRuntimeRow } from "@repo/backend/convex/contentRelease/runtime/public/internal";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
@@ -26,6 +27,7 @@ import {
   TEST_RUNTIME_PATH,
   TEST_RUNTIME_RELEASE,
 } from "@repo/backend/test/runtime-values";
+import { makeFunctionReference } from "convex/server";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -34,8 +36,54 @@ const routeArgs = {
   publicPath: TEST_RUNTIME_PATH,
 } satisfies { readonly locale: "en" | "id"; readonly publicPath: string };
 const readPublic = internal.contentRelease.runtime.public.internal.read;
+const readPublicBatch = makeFunctionReference<
+  "query",
+  {
+    readonly requests: ReadonlyArray<{
+      readonly locale: "en" | "id";
+      readonly publicPath: string;
+    }>;
+  },
+  readonly PublicRuntimeRow[]
+>("contentRelease/runtime/public/internal:readBatch");
 
 describe("contentRelease/runtime/public/internal", () => {
+  it("returns at most eight routes in exact request order", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertRuntimeRelease(ctx);
+      await insertRuntimeHead(ctx, "public", "test:public");
+    });
+    const missingRoute = {
+      locale: "en",
+      publicPath: "test/missing",
+    } satisfies typeof routeArgs;
+    const requests = [
+      routeArgs,
+      missingRoute,
+      ...Array.from({ length: 6 }, () => routeArgs),
+    ];
+
+    const rows = await t.query(readPublicBatch, { requests });
+
+    expect(rows).toHaveLength(8);
+    expect(rows.map((row) => row?.delivery ?? null)).toEqual([
+      "public",
+      null,
+      "public",
+      "public",
+      "public",
+      "public",
+      "public",
+      "public",
+    ]);
+    await expect(
+      t.query(readPublicBatch, {
+        requests: Array.from({ length: 9 }, () => routeArgs),
+      })
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+  });
+
   it("returns public heads without exposing restricted delivery classes", async () => {
     for (const delivery of ["public", "authenticated", "entitled"] as const) {
       const t = convexTest(schema, convexModules);

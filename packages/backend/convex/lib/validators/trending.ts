@@ -1,5 +1,5 @@
 import { contentSearchSummaryValidator } from "@repo/backend/convex/contents/helpers/search/schema";
-import { materialValidator } from "@repo/backend/convex/lib/validators/contents";
+import { materialDomainValidator } from "@repo/backend/convex/lib/validators/contents";
 import { type Infer, v } from "convex/values";
 
 /**
@@ -9,7 +9,7 @@ export const trendingSubjectValidator = v.object({
   ...contentSearchSummaryValidator.fields,
   contextKey: v.string(),
   href: v.string(),
-  materialDomain: materialValidator,
+  materialDomain: materialDomainValidator,
   viewCount: v.number(),
 });
 
@@ -23,5 +23,5 @@ export const recentlyViewedSubjectValidator = v.object({
   contextKey: v.string(),
   href: v.string(),
   lastViewedAt: v.number(),
-  materialDomain: materialValidator,
+  materialDomain: materialDomainValidator,
 });

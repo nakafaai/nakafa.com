@@ -1,8 +1,14 @@
 /** Private Convex endpoint for active public content reads. */
 export const PUBLIC_CONTENT_RUNTIME_PATH = "/internal/content/runtime";
 
-/** Private Convex endpoint for retained protected content reads. */
+/** Private Convex endpoint for bounded active public content batches. */
+export const PUBLIC_CONTENT_RUNTIME_BATCH_PATH = `${PUBLIC_CONTENT_RUNTIME_PATH}/batch`;
+
+/** Private Convex endpoint for current protected content reads. */
 export const PROTECTED_CONTENT_RUNTIME_PATH = `${PUBLIC_CONTENT_RUNTIME_PATH}/protected`;
+
+/** Private attempt-bound endpoint for immutable retained-history reads. */
+export const RETAINED_PROTECTED_CONTENT_RUNTIME_PATH = `${PROTECTED_CONTENT_RUNTIME_PATH}/history`;
 
 /**
  * Marks responses built by the private runtime route after contract encoding.

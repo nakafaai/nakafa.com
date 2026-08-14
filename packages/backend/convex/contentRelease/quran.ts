@@ -1,9 +1,6 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { readQuranAttribution } from "@repo/backend/convex/contentRelease/quran/attribution";
-import {
-  readQuranSitemap,
-  readQuranSurahs,
-} from "@repo/backend/convex/contentRelease/quran/catalog";
+import { readQuranSurahs } from "@repo/backend/convex/contentRelease/quran/catalog";
 import {
   quranDocumentValidator,
   readQuranDocument,
@@ -17,7 +14,6 @@ import {
   readQuranMarkdown,
 } from "@repo/backend/convex/contentRelease/quran/markdown";
 import { readQuranReference } from "@repo/backend/convex/contentRelease/quran/reference";
-import { searchQuran } from "@repo/backend/convex/contentRelease/quran/search";
 import {
   quranLocaleValidator,
   quranSourceFields,
@@ -47,17 +43,6 @@ const referenceValidator = v.object({
   searchJson: v.union(v.string(), v.null()),
   surahJson: v.union(v.string(), v.null()),
   toVerse: v.number(),
-});
-
-const searchValidator = v.object({
-  ...quranSourceFields,
-  rowJson: v.array(v.string()),
-});
-
-const sitemapValidator = v.object({
-  ...quranSourceFields,
-  locale: quranLocaleValidator,
-  routes: v.array(v.string()),
 });
 
 /** Returns the visible signed source attribution for active Quran content. */
@@ -133,19 +118,4 @@ export const reference = query({
   },
   returns: referenceValidator,
   handler: (ctx, args) => runConvexProgram(readQuranReference(ctx, args)),
-});
-
-/** Returns relevance-ranked localized Quran search rows under a hard bound. */
-export const search = query({
-  args: { locale: quranLocaleValidator, query: v.string() },
-  returns: searchValidator,
-  handler: (ctx, { locale, query: sourceQuery }) =>
-    runConvexProgram(searchQuran(ctx, locale, sourceQuery)),
-});
-
-/** Returns canonical Quran sitemap paths for one supported locale. */
-export const sitemap = query({
-  args: { locale: quranLocaleValidator },
-  returns: sitemapValidator,
-  handler: (ctx, { locale }) => runConvexProgram(readQuranSitemap(ctx, locale)),
 });

@@ -1,5 +1,4 @@
-import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
-import { contentKeyResolver } from "@repo/backend/content/trust";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type {
   ActionCtx,
   MutationCtx,
@@ -9,7 +8,6 @@ import {
   readAuditFacts,
   validateQuiescentPublication,
 } from "@repo/backend/convex/contentRelease/cutover/facts";
-import { proveFreezeHistory } from "@repo/backend/convex/contentRelease/cutover/history";
 import {
   CURRENT_INVENTORY,
   LEGACY_INVENTORY,
@@ -28,17 +26,20 @@ import {
   runConvexActionProgram,
   runConvexProgram,
 } from "@repo/backend/convex/lib/effect";
-import { proveRetainedHistoryComplete } from "@repo/backend/convex/tryouts/history/readiness";
 import {
   type RetainedTryoutHistoryPlan,
   retainedTryoutHistoryPlan,
+  type TerminalHistoryProof,
+  terminalHistoryProofValidator,
 } from "@repo/backend/convex/tryouts/history/spec";
 import { makeFunctionReference } from "convex/server";
 import { type Infer, v } from "convex/values";
 import { Effect } from "effect";
 
 const freezeReceiptValidator = v.object({
+  artifacts: v.number(),
   attempts: v.number(),
+  bundles: v.number(),
   catalogRows: v.number(),
   frozen: v.literal(true),
   frozenPlacements: v.number(),
@@ -48,7 +49,9 @@ const freezeReceiptValidator = v.object({
   snapshotId: v.string(),
 });
 interface FreezeReceipt {
+  readonly artifacts: number;
   readonly attempts: number;
+  readonly bundles: number;
   readonly catalogRows: number;
   readonly frozen: true;
   readonly frozenPlacements: number;
@@ -65,14 +68,14 @@ const armReference = makeFunctionReference<
 >("contentRelease/cutover/freeze:arm");
 const commitReference = makeFunctionReference<
   "mutation",
-  Record<string, never>,
+  { proof: TerminalHistoryProof },
   FreezeReceipt
 >("contentRelease/cutover/freeze:commit");
-const verifyArtifactsReference = makeFunctionReference<
+const verifyHistoryReference = makeFunctionReference<
   "action",
   Record<string, never>,
-  { artifacts: number; placements: number }
->("contentRelease/cutover/artifacts:verify");
+  TerminalHistoryProof
+>("tryouts/history/terminal:verify");
 const phaseReference = makeFunctionReference<
   "query",
   Record<string, never>,
@@ -91,17 +94,10 @@ export const arm = internalMutation({
  * transaction after a separately committed guard arm.
  */
 export const commit = internalMutation({
-  args: {},
+  args: { proof: terminalHistoryProofValidator },
   returns: freezeReceiptValidator,
-  handler: (ctx) =>
-    runConvexProgram(
-      freezeProgram(ctx, retainedTryoutHistoryPlan).pipe(
-        Effect.provideService(
-          ContentVerificationKeyResolver,
-          contentKeyResolver
-        )
-      )
-    ),
+  handler: (ctx, args) =>
+    runConvexProgram(freezeProgram(ctx, retainedTryoutHistoryPlan, args.proof)),
 });
 
 /** Arms downtime, re-audits exact current state, then commits the freeze. */
@@ -126,8 +122,10 @@ const runFreeze = Effect.fn("contentRelease.cutover.runFreeze")(function* (
       }
     }
   }
-  yield* callInternal(() => ctx.runAction(verifyArtifactsReference, {}));
-  return yield* callInternal(() => ctx.runMutation(commitReference, {}));
+  const proof = yield* callInternal(() =>
+    ctx.runAction(verifyHistoryReference, {})
+  );
+  return yield* callInternal(() => ctx.runMutation(commitReference, { proof }));
 });
 
 const armFreeze = Effect.fn("contentRelease.cutover.armFreeze")(function* (
@@ -171,7 +169,11 @@ const proveLegacyTablesEmpty = Effect.fn(
 });
 
 export const freezeProgram = Effect.fn("contentRelease.cutover.freeze")(
-  function* (ctx: MutationCtx, plan: RetainedTryoutHistoryPlan) {
+  function* (
+    ctx: MutationCtx,
+    plan: RetainedTryoutHistoryPlan,
+    proof: TerminalHistoryProof
+  ) {
     const cutover = yield* requireCutoverPhase(ctx, [
       "freeze-armed",
       "frozen",
@@ -180,13 +182,10 @@ export const freezeProgram = Effect.fn("contentRelease.cutover.freeze")(
       "proved",
     ]);
     if (cutover.phase !== "freeze-armed") {
-      return yield* proveFrozenState(ctx, plan);
+      return yield* proveFrozenState(ctx, cutover, plan, proof);
     }
-    yield* requireReaderCutoverCheckpoint(cutover);
+    yield* requireReaderCutoverCheckpoint(cutover, plan);
     const state = yield* verifyAuditedPointer(ctx, cutover);
-    const proof = yield* proveFreezeHistory(ctx, plan).pipe(
-      Effect.mapError((error) => freezeError(error.message))
-    );
     yield* validateHistoryProof(proof, plan);
     yield* Effect.promise(() => ctx.db.delete("contentState", state._id));
     const now = Date.now();
@@ -239,7 +238,12 @@ const verifyAuditedPointer = Effect.fn(
 
 /** Re-proves idempotent retries cannot accept a recreated content pointer. */
 const proveFrozenState = Effect.fn("contentRelease.cutover.proveFrozenState")(
-  function* (ctx: MutationCtx, plan: RetainedTryoutHistoryPlan) {
+  function* (
+    ctx: MutationCtx,
+    cutover: Doc<"contentCutoverState">,
+    plan: RetainedTryoutHistoryPlan,
+    proof: TerminalHistoryProof
+  ) {
     const state = yield* Effect.promise(() =>
       ctx.db.query("contentState").first()
     );
@@ -248,9 +252,7 @@ const proveFrozenState = Effect.fn("contentRelease.cutover.proveFrozenState")(
         "Publication state was recreated after the durable freeze."
       );
     }
-    const proof = yield* proveRetainedHistoryComplete(ctx, plan).pipe(
-      Effect.mapError((error) => freezeError(error.message))
-    );
+    yield* requireReaderCutoverCheckpoint(cutover, plan);
     yield* validateHistoryProof(proof, plan);
     return freezeReceipt(proof);
   }
@@ -259,12 +261,11 @@ const proveFrozenState = Effect.fn("contentRelease.cutover.proveFrozenState")(
 /** Keeps the cross-module retention seam bound to exact Phase 1 counts. */
 const validateHistoryProof = Effect.fn(
   "contentRelease.cutover.validateHistoryProof"
-)(function* (
-  proof: Omit<FreezeReceipt, "frozen">,
-  plan: RetainedTryoutHistoryPlan
-) {
+)(function* (proof: TerminalHistoryProof, plan: RetainedTryoutHistoryPlan) {
   if (
+    proof.artifacts !== plan.artifactCount ||
     proof.attempts !== plan.attemptCount ||
+    proof.bundles !== plan.releases.length ||
     proof.catalogRows !== plan.catalogRowCount ||
     proof.frozenPlacements !== plan.frozenPlacementCount ||
     proof.markers !== plan.attemptCount ||
@@ -290,6 +291,6 @@ function freezeError(message: string) {
   });
 }
 
-function freezeReceipt(proof: Omit<FreezeReceipt, "frozen">): FreezeReceipt {
+function freezeReceipt(proof: TerminalHistoryProof): FreezeReceipt {
   return { ...proof, frozen: true };
 }

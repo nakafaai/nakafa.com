@@ -13,6 +13,8 @@ import {
   readArticleBuckets,
   readArticleSitemap,
 } from "@repo/backend/convex/contentRelease/article/sitemap";
+import { articleApiPageValidator } from "@repo/backend/convex/contentRelease/article/spec";
+import { readPartnerApiPage } from "@repo/backend/convex/contentRelease/partner/page";
 import {
   localeValidator,
   rendererDomainValidator,
@@ -105,6 +107,19 @@ const sitemapPageValidator = v.union(
   }),
   v.null()
 );
+
+/** Returns one current signed article partner API page. */
+export const apiPage = query({
+  args: {
+    cursor: v.union(v.string(), v.null()),
+    limit: v.number(),
+    locale: localeValidator,
+    prefix: v.string(),
+  },
+  returns: articleApiPageValidator,
+  handler: (ctx, args) =>
+    runConvexProgram(readPartnerApiPage(ctx, { ...args, family: "article" })),
+});
 
 /** Returns one release-bound newest-first article page. */
 export const page = query({

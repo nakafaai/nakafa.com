@@ -1,12 +1,13 @@
-import { publicRouteSyncStateValidator } from "@repo/backend/convex/contentSync/publicRoutes/spec";
 import { defineTable } from "convex/server";
+import { v } from "convex/values";
 
 const tables = {
   /** Compact source-projection hashes used to skip unchanged route shards. */
-  publicRouteSyncState: defineTable(publicRouteSyncStateValidator.fields).index(
-    "by_shard",
-    ["shard"]
-  ),
+  publicRouteSyncState: defineTable({
+    hash: v.string(),
+    rowCount: v.number(),
+    shard: v.number(),
+  }).index("by_shard", ["shard"]),
 };
 
 export default tables;

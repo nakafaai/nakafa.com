@@ -1,4 +1,4 @@
-import { listPublicContentRoutes } from "@repo/contents/_types/route/content";
+import { MaterialKeySchema } from "@nakafa/aksara-contracts/projection/material";
 import {
   projectMaterialContextToLocale,
   readMaterialContextHint,
@@ -9,13 +9,26 @@ import type {
   MaterialContextRef,
   MaterialRouteIdentity,
 } from "@repo/contents/_types/route/material/reference";
-import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
-const LESSON_SOURCE_PATH =
+const SOURCE_PATH =
   "material/lesson/mathematics/linear-equation-inequality/system-linear-equation";
+const MATERIAL_KEY = MaterialKeySchema.make(
+  "lesson.mathematics.linear-equation-inequality"
+);
+const PUBLIC_PATH =
+  "materi/matematika/sistem-persamaan-dan-pertidaksamaan-linear/sistem-persamaan-linear";
+const currentRoute = {
+  locale: "id",
+  materialKey: MATERIAL_KEY,
+  sourcePath: SOURCE_PATH,
+} satisfies MaterialRouteIdentity;
+const targetRoute = {
+  ...currentRoute,
+  locale: "en",
+} satisfies MaterialRouteIdentity;
 
-/** Builds the minimum source-owned reference required by material URL helpers. */
+/** Builds the minimum signed-route reference required by URL helpers. */
 function makeMerdekaRef(route: MaterialRouteIdentity): MaterialContextRef {
   return {
     anchor: "linear-equations",
@@ -31,44 +44,26 @@ function makeMerdekaRef(route: MaterialRouteIdentity): MaterialContextRef {
 
 describe("material route context", () => {
   it("builds contextual material hrefs from curriculum card identity", () => {
-    const contentRoutes = Effect.runSync(listPublicContentRoutes());
-    const route = contentRoutes.find(
-      (candidate) =>
-        candidate.kind === "subject-lesson" &&
-        candidate.locale === "id" &&
-        candidate.sourcePath === LESSON_SOURCE_PATH
-    );
-
-    expect(route).toBeDefined();
-
-    if (!route) {
-      return;
-    }
-
-    const merdekaRef = makeMerdekaRef(route);
+    const merdekaRef = makeMerdekaRef(currentRoute);
     const refs = [merdekaRef];
+    const href = `/id/${PUBLIC_PATH}`;
 
-    const contextHref = toContextualMaterialHref({
-      href: `/${route.locale}/${route.publicPath}`,
-      ref: merdekaRef,
-    });
-
-    expect(contextHref).toBe(
-      "/id/materi/matematika/sistem-persamaan-dan-pertidaksamaan-linear/sistem-persamaan-linear?ctx=merdeka~class-10-mathematics-linear-equation-inequality"
+    expect(toContextualMaterialHref({ href, ref: merdekaRef })).toBe(
+      `${href}?ctx=merdeka~class-10-mathematics-linear-equation-inequality`
     );
     expect(
       toContextualMaterialHref({
-        href: `/${route.locale}/${route.publicPath}?preview=true`,
+        href: `${href}?preview=true`,
         ref: merdekaRef,
       })
     ).toBe(
-      "/id/materi/matematika/sistem-persamaan-dan-pertidaksamaan-linear/sistem-persamaan-linear?preview=true&ctx=merdeka~class-10-mathematics-linear-equation-inequality"
+      `${href}?preview=true&ctx=merdeka~class-10-mathematics-linear-equation-inequality`
     );
     expect(
       resolveMaterialHeaderLink({
         context: merdekaRef,
         refs,
-        route,
+        route: currentRoute,
       })
     ).toEqual({
       href: merdekaRef.parentHref,
@@ -77,21 +72,7 @@ describe("material route context", () => {
   });
 
   it("ignores missing, malformed, or mismatched material context hints", () => {
-    const contentRoutes = Effect.runSync(listPublicContentRoutes());
-    const route = contentRoutes.find(
-      (candidate) =>
-        candidate.kind === "subject-lesson" &&
-        candidate.locale === "id" &&
-        candidate.sourcePath === LESSON_SOURCE_PATH
-    );
-
-    expect(route).toBeDefined();
-
-    if (!route) {
-      return;
-    }
-
-    const refs = [makeMerdekaRef(route)];
+    const refs = [makeMerdekaRef(currentRoute)];
 
     expect(readMaterialContextHint("merdeka~node")).toEqual({
       nodeKey: "node",
@@ -101,16 +82,13 @@ describe("material route context", () => {
     expect(readMaterialContextHint("merdeka")).toBeUndefined();
     expect(readMaterialContextHint("~node")).toBeUndefined();
     expect(
-      toContextualMaterialHref({
-        href: `/${route.locale}/${route.publicPath}`,
-        ref: undefined,
-      })
-    ).toBe(`/${route.locale}/${route.publicPath}`);
+      toContextualMaterialHref({ href: `/id/${PUBLIC_PATH}`, ref: undefined })
+    ).toBe(`/id/${PUBLIC_PATH}`);
     expect(
       resolveMaterialHeaderLink({
         context: undefined,
         refs,
-        route,
+        route: currentRoute,
       })
     ).toBeUndefined();
     expect(
@@ -120,56 +98,31 @@ describe("material route context", () => {
           programKey: "merdeka",
         },
         refs,
-        route,
+        route: currentRoute,
       })
     ).toBeUndefined();
   });
 
-  it("projects valid context hints by source identity and drops missing targets", () => {
-    const contentRoutes = Effect.runSync(listPublicContentRoutes());
-    const currentRoute = contentRoutes.find(
-      (candidate) =>
-        candidate.kind === "subject-lesson" &&
-        candidate.locale === "id" &&
-        candidate.sourcePath === LESSON_SOURCE_PATH
-    );
-    const targetRoute = contentRoutes.find(
-      (candidate) =>
-        candidate.kind === "subject-lesson" &&
-        candidate.locale === "en" &&
-        candidate.sourcePath === LESSON_SOURCE_PATH
-    );
-
-    expect(currentRoute).toBeDefined();
-    expect(targetRoute).toBeDefined();
-
-    if (!(currentRoute && targetRoute)) {
-      return;
-    }
-
+  it("projects valid context hints by source identity", () => {
     const currentRef = makeMerdekaRef(currentRoute);
     const targetRef = makeMerdekaRef(targetRoute);
     const refs = [currentRef, targetRef];
-    const projected = projectMaterialContextToLocale({
-      context: {
-        nodeKey: "class-10-mathematics-linear-equation-inequality",
-        programKey: "merdeka",
-      },
-      currentRoute,
-      refs,
-      targetRoute,
-    });
-
-    expect(projected).toEqual({
+    const context = {
       nodeKey: "class-10-mathematics-linear-equation-inequality",
       programKey: "merdeka",
-    });
+    };
+
     expect(
       projectMaterialContextToLocale({
-        context: {
-          nodeKey: "class-10-mathematics-linear-equation-inequality",
-          programKey: "merdeka",
-        },
+        context,
+        currentRoute,
+        refs,
+        targetRoute,
+      })
+    ).toEqual(context);
+    expect(
+      projectMaterialContextToLocale({
+        context,
         currentRoute,
         refs: [currentRef],
         targetRoute,
@@ -177,18 +130,15 @@ describe("material route context", () => {
     ).toBeUndefined();
     expect(
       projectMaterialContextToLocale({
-        context: undefined,
+        context,
         currentRoute,
-        refs,
+        refs: [targetRef],
         targetRoute,
       })
     ).toBeUndefined();
     expect(
       projectMaterialContextToLocale({
-        context: {
-          nodeKey: "class-10-biology-virus-role",
-          programKey: "merdeka",
-        },
+        context: undefined,
         currentRoute,
         refs,
         targetRoute,

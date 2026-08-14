@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import contentReleaseSchema from "@repo/backend/convex/contentRelease/schema";
-import routeSchema from "@repo/backend/convex/contents/schema/routes";
 import { tryoutBundleSchema } from "@repo/backend/convex/tryouts/runtime/schema";
 import { Effect, Schema } from "effect";
 
@@ -9,7 +8,7 @@ const TRANSIENT_CUTOVER_TABLES = new Set([
   "contentCutoverActivity",
   "contentCutoverState",
 ]);
-export const CONTENT_RUNTIME_CACHE_VERSION = "v1";
+export const CONTENT_RUNTIME_CACHE_VERSION = "v2";
 export const CONTENT_RUNTIME_CACHE_CONTRACT = Object.freeze({
   archive: Object.freeze({
     fixedEntries: Object.freeze([
@@ -55,7 +54,6 @@ const runtimeTableDefinitionFragments: readonly RuntimeTableDefinitionFragment[]
         table !== ACTIVE_POINTER_TABLE && !TRANSIENT_CUTOVER_TABLES.has(table)
     ),
     Object.entries(tryoutBundleSchema),
-    Object.entries(routeSchema),
     [activePointerDefinition],
   ];
 const runtimeTableDefinitions = runtimeTableDefinitionFragments.flat();

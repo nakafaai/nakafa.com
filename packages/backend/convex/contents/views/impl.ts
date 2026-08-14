@@ -14,7 +14,7 @@ import {
 } from "@repo/backend/convex/contents/views/spec";
 import {
   type ContentViewTarget,
-  loadContentTarget,
+  validateIncomingContentTarget,
 } from "@repo/backend/convex/contents/views/target";
 import { getOptionalActiveAppUser } from "@repo/backend/convex/lib/helpers/auth";
 import { Clock, Effect } from "effect";
@@ -209,7 +209,7 @@ export const recordUniqueContentView = Effect.fn(
     try: () => getOptionalActiveAppUser(ctx),
     catch: toContentViewIoError,
   });
-  const target = yield* loadContentTarget(ctx, args);
+  const target = yield* validateIncomingContentTarget(ctx, args);
 
   if (!target) {
     return { alreadyViewed: false, isNewView: false, success: false };

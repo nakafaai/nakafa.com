@@ -159,12 +159,7 @@ async function TryoutSectionRoute({
 
   const signedContent =
     attemptPage?.content.kind === "signed"
-      ? Effect.runPromise(
-          loadSignedTryoutContent({
-            answers: attemptPage.content.answers,
-            questions: attemptPage.content.questions,
-          })
-        )
+      ? Effect.runPromise(loadSignedTryoutContent(attemptPage.content))
       : null;
   const reviewRuntime =
     attemptPage?.content.kind === "signed" &&

@@ -1,6 +1,5 @@
 import {
   MdxAgentProjectionError,
-  preserveMdxSourceForAgentMarkdown,
   projectMdxForAgentMarkdown,
 } from "@repo/contents/_types/llms/mdx";
 import { Effect } from "effect";
@@ -236,15 +235,8 @@ print("Hello, World!")
         )
       )
     );
-    const fallback = preserveMdxSourceForAgentMarkdown(
-      "The statement keeps \\(x^2\\) even when {source syntax is incomplete."
-    );
-
     expect(explicitError.message).toBe("projection failed");
     expect(error._tag).toBe("MdxAgentProjectionError");
     expect(error.message).toContain("expression");
-    expect(fallback).toBe(
-      "The statement keeps $$x^2$$ even when {source syntax is incomplete."
-    );
   });
 });

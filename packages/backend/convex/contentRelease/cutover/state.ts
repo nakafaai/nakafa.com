@@ -3,9 +3,18 @@ import type {
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
-import type { cutoverPhaseValidator } from "@repo/backend/convex/contentRelease/cutover/schema";
+import { AUDITED_REFERENCE_PROOF_COUNTS } from "@repo/backend/convex/contentRelease/cutover/inventory";
+import type { ReferenceProofCounts } from "@repo/backend/convex/contentRelease/cutover/referenceProofs";
+import type {
+  cutoverPhaseValidator,
+  readerCutoverReceiptValidator,
+} from "@repo/backend/convex/contentRelease/cutover/schema";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import {
+  type RetainedTryoutHistoryPlan,
+  retainedTryoutHistoryPlan,
+} from "@repo/backend/convex/tryouts/history/spec";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { Effect } from "effect";
@@ -42,15 +51,71 @@ export const requireCutoverPhase = Effect.fn(
 /** Blocks destructive drains until the deployed reader cutover is accepted. */
 export const requireReaderCutoverCheckpoint = Effect.fn(
   "contentRelease.cutover.requireReaderCutoverCheckpoint"
-)(function* (state: { readonly readerCutoverAcceptedAt?: number }) {
+)(function* (
+  state: {
+    readonly readerCutoverReceipt?: Infer<typeof readerCutoverReceiptValidator>;
+  },
+  plan: RetainedTryoutHistoryPlan = retainedTryoutHistoryPlan,
+  referenceProofs: ReferenceProofCounts = AUDITED_REFERENCE_PROOF_COUNTS
+) {
+  const receipt = state.readerCutoverReceipt;
+  const history = receipt?.history;
+  const references = receipt?.referenceProofs;
   if (
-    state.readerCutoverAcceptedAt === undefined ||
-    !Number.isSafeInteger(state.readerCutoverAcceptedAt) ||
-    state.readerCutoverAcceptedAt <= 0
+    !(
+      receipt &&
+      history &&
+      references &&
+      Number.isSafeInteger(receipt.acceptedAt)
+    ) ||
+    receipt.acceptedAt <= 0 ||
+    history.attempts !== plan.attemptCount ||
+    history.declaredFrozenPlacements !== plan.frozenPlacementCount ||
+    history.markers !== plan.attemptCount ||
+    history.releases.length !== plan.releases.length ||
+    history.releases.some((release, index) => {
+      const expected = plan.releases[index];
+      return (
+        !expected ||
+        release.attempts !== expected.attemptCount ||
+        release.releaseId !== expected.releaseId
+      );
+    }) ||
+    history.snapshotId !== plan.snapshotId ||
+    references.article !== referenceProofs.article ||
+    references.material !== referenceProofs.material ||
+    references.materialTopic !== referenceProofs.materialTopic ||
+    references.quran !== referenceProofs.quran ||
+    references.tryout !== referenceProofs.tryout
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",
       "The retained-history and legacy reader cutover has not been accepted."
+    );
+  }
+  return receipt;
+});
+
+/** Proves the legacy-write token still equals the quiescent audit. */
+export const requireLegacyWriteCheckpoint = Effect.fn(
+  "contentRelease.cutover.requireLegacyWriteCheckpoint"
+)(function* (
+  ctx: ReadCtx,
+  state: { readonly auditedLegacyWriteVersion: number }
+) {
+  const activity = yield* Effect.promise(() =>
+    ctx.db
+      .query("contentCutoverActivity")
+      .withIndex("by_key", (index) => index.eq("key", "legacy"))
+      .take(2)
+  );
+  if (
+    activity.length !== 1 ||
+    activity[0]?.version !== state.auditedLegacyWriteVersion
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_STATE",
+      "The legacy-write token changed after writer quiescence."
     );
   }
 });

@@ -4,6 +4,7 @@ import { useHotkeys } from "@mantine/hooks";
 import dynamic from "next/dynamic";
 
 import { loadSearchCommandModule } from "@/components/shared/search-command-module";
+import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 import { useSearch } from "@/lib/context/use-search";
 
 const LazySearchCommand = dynamic(
@@ -15,7 +16,11 @@ const LazySearchCommand = dynamic(
 );
 
 /** Registers lightweight shortcuts and mounts search after first activation. */
-export function DeferredSearchCommand() {
+export function DeferredSearchCommand({
+  articleNavigation,
+}: {
+  articleNavigation: readonly ArticleNavigationItem[];
+}) {
   const activated = useSearch((state) => state.activated);
   const setOpen = useSearch((state) => state.setOpen);
 
@@ -28,5 +33,5 @@ export function DeferredSearchCommand() {
     return null;
   }
 
-  return <LazySearchCommand />;
+  return <LazySearchCommand articleNavigation={articleNavigation} />;
 }

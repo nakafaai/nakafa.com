@@ -5,11 +5,9 @@ import {
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import {
   activateMaterialCatalog,
   MATERIAL_IDENTITY,
-  selectExactMaterial,
 } from "@repo/backend/test/material-catalog";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -31,7 +29,6 @@ describe("contentRelease/material/discovery", () => {
       target.query((ctx) => runConvexProgram(readLatestMaterials(ctx, "en", 2)))
     ).resolves.toEqual({
       activeReleaseId: null,
-      claimedContentKeys: [],
       managed: false,
       materials: [],
     });
@@ -90,29 +87,6 @@ describe("contentRelease/material/discovery", () => {
       activeReleaseId: MATERIAL_IDENTITY.releaseId,
       managed: true,
       materials: [{ date: "2026-07-24", title: "EN Section 2" }],
-    });
-  });
-
-  it("fails closed while exact material ownership is still synchronizing", async () => {
-    const target = convexTest(schema, convexModules);
-    await activateMaterialCatalog(target);
-    await selectExactMaterial(target, makeMaterialProjection("en", 1));
-    await target.mutation(async (ctx) => {
-      const state = await ctx.db.query("contentState").unique();
-      if (!state) {
-        throw new Error("Expected active content state.");
-      }
-      await ctx.db.patch("contentState", state._id, {
-        materialManifestHash: undefined,
-        materialReleaseId: undefined,
-        materialSequence: undefined,
-      });
-    });
-
-    await expect(
-      target.query((ctx) => runConvexProgram(readLatestMaterials(ctx, "en", 2)))
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_STATE" },
     });
   });
 });

@@ -4,10 +4,7 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
-import {
-  testMaterialPublicPath,
-  testProjectionJson,
-} from "@repo/backend/test/content-material";
+import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
   TEST_RELEASE_ID,
   testRollbackJson,
@@ -187,28 +184,6 @@ describe("contentRelease/verify/item", () => {
     });
     await expect(route.mutation(verifyOnly)).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-  });
-
-  it("rejects a material upsert that displaces a retained source route", async () => {
-    const target = convexTest(schema, convexModules);
-    const publicPath = testMaterialPublicPath(0);
-    await stageUpsertFixture(target);
-    await target.mutation((ctx) =>
-      ctx.db.insert("publicRoutes", {
-        contentHash: "retained-source-route",
-        kind: "subject-lesson",
-        locale: "en",
-        publicPath,
-        sitemap: true,
-        sourcePath: "material/lesson/test/retained",
-        syncShard: 0,
-        title: "Retained source route",
-      })
-    );
-
-    await expect(target.mutation(verifyOnly)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_ROUTE" },
     });
   });
 

@@ -1,5 +1,5 @@
+import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { nakafaAgentPrompt } from "@repo/ai/agents/nakafa/prompt";
-import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { describe, expect, it } from "vitest";
 
 const context = {

@@ -7,15 +7,15 @@ import {
   SchoolIcon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
+import type { LearningProgramKindSchema } from "@nakafa/aksara-contracts/program/spec";
 import {
   type SelfSelectableUserRole,
   selfSelectableUserRoles,
 } from "@repo/backend/convex/users/roles";
-import type {
-  LearningInterest,
-  LearningProgramKind,
-} from "@repo/contents/_types/program/schema";
+import type { LearningInterest } from "@repo/contents/_types/learner/preferences";
 import { roleIconByValue } from "@/lib/data/roles";
+
+type LearningProgramKind = typeof LearningProgramKindSchema.Type;
 
 /** Normal Nakafa roles accepted by the learner-facing onboarding flow. */
 export type OnboardingRole = SelfSelectableUserRole;

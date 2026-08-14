@@ -9,7 +9,7 @@ import { quranSearchIdentity } from "@repo/backend/convex/contentRelease/quran/f
 import { QURAN_SEARCH_RESULT_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
 import { loadQuranOwner } from "@repo/backend/convex/contentRelease/quran/owner";
 import { readQuranRow } from "@repo/backend/convex/contentRelease/quran/row";
-import { authenticateQuranSearchHit } from "@repo/backend/convex/contentRelease/quran/search";
+import { authenticateQuranSearchHit } from "@repo/backend/convex/contentRelease/quran/verify";
 import { validateSearchQuery } from "@repo/backend/convex/contentRelease/search/input";
 import { buildContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/documents";
 import { interleaveSearchGroups } from "@repo/backend/convex/contents/helpers/search/groups";
@@ -20,7 +20,6 @@ import {
   getExactRouteQuery,
   getRouteSearchText,
 } from "@repo/backend/convex/contents/helpers/search/terms";
-import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/projection";
 import type { Infer } from "convex/values";
 import { Effect, Option, Schema } from "effect";
 
@@ -233,14 +232,18 @@ function authenticateQuranRows(
   );
 }
 
-/** Resolves one canonical Quran route through the shared graph grammar. */
+/** Resolves one exact canonical Quran route. */
 function getExactQuranSurah(route: string) {
-  const projection = getSourceRouteProjectionForRoute(route);
-  if (projection?.kind !== "quran-surah" || !projection.quran) {
+  const [namespace, surahSegment, extra] = route.split("/");
+  if (
+    namespace !== "quran" ||
+    surahSegment === undefined ||
+    extra !== undefined
+  ) {
     return Option.none();
   }
 
-  const surahNumber = Number(projection.quran.surahSegment);
+  const surahNumber = Number(surahSegment);
   return Schema.is(QuranSurahNumberSchema)(surahNumber)
     ? Option.some(surahNumber)
     : Option.none();

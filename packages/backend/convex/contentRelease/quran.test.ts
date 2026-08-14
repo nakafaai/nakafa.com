@@ -54,23 +54,6 @@ describe("contentRelease/quran", () => {
         surahNumber: 1,
       })
     ).resolves.toMatchObject({ fromVerse: 1, managed: false, toVerse: 1 });
-    await expect(
-      t.query(api.contentRelease.quran.search, {
-        locale: "id",
-        query: "technical",
-      })
-    ).resolves.toMatchObject({ managed: false, rowJson: [] });
-    await expect(
-      t.query(api.contentRelease.quran.sitemap, { locale: "en" })
-    ).resolves.toEqual({
-      activeManifestHash: null,
-      activeReleaseId: null,
-      locale: "en",
-      managed: false,
-      routes: [],
-      snapshotId: null,
-      sourceRevision: null,
-    });
   });
 
   it("pins every unmanaged read to the active source release", async () => {
@@ -96,11 +79,6 @@ describe("contentRelease/quran", () => {
         locale: "id",
         surahNumber: 1,
       }),
-      t.query(api.contentRelease.quran.search, {
-        locale: "id",
-        query: "technical",
-      }),
-      t.query(api.contentRelease.quran.sitemap, { locale: "en" }),
     ]);
 
     for (const result of results) {

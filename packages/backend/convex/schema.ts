@@ -15,7 +15,6 @@ import curriculumTopicsSchema from "@repo/backend/convex/curriculumTopics/schema
 import customersSchema from "@repo/backend/convex/customers/schema";
 import irtSchema from "@repo/backend/convex/irt/schema";
 import learningPreferencesSchema from "@repo/backend/convex/learningPreferences/schema";
-import learningProgramsSchema from "@repo/backend/convex/learningPrograms/schema";
 import notificationsSchema from "@repo/backend/convex/notifications/schema";
 import quranSchema from "@repo/backend/convex/quran/schema";
 import schoolsSchema from "@repo/backend/convex/schools/schema";
@@ -49,7 +48,6 @@ export default defineSchema(
     ...creditsSchema,
     ...irtSchema,
     ...learningPreferencesSchema,
-    ...learningProgramsSchema,
     ...tryoutAccessSchema,
     ...tryoutRuntimeSchema,
   },

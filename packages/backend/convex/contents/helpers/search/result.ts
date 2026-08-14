@@ -24,7 +24,9 @@ export function buildContentSearchResult(
       learningObjectId: document.learningObjectId,
       lensId: document.lensId,
       locale: document.locale,
-      markdown_url: document.markdown_url,
+      ...(document.markdown_url === undefined
+        ? {}
+        : { markdown_url: document.markdown_url }),
       route: document.route,
       section: document.section,
       title: document.title,

@@ -3,7 +3,7 @@
 Phase 2 reader cutover may start only after the Phase 1 runbook has created all
 21 authenticated history markers while `contentCutoverState.phase` remains
 `quiescent`. Destructive draining may start only after the deployed reader
-cutover writes the otherwise unreachable `readerCutoverAcceptedAt` checkpoint.
+cutover writes the otherwise unreachable `readerCutoverReceipt` checkpoint.
 The retained-history tables remain until their independent zero-reference gate
 is satisfied.
 
@@ -18,17 +18,25 @@ is satisfied.
    review, protected artifact, agent-doc, and browser acceptance against that
    deployment. No fallback or current-history union is accepted.
 4. Only the reader-cutover deployment may expose
-   `contentRelease/cutover/readers:accept`. It must re-prove all 21 markers,
+   `contentRelease/cutover/readers:accept`. It must prove the exact 21 attempts
+   and 21 markers, the 15 and 6 release split, locale completion, snapshot
+   identity, and 1,720 declared questions,
    require the exact Phase 1 article, material lesson, material topic, Quran,
    and try-out proof receipts, and verify the audited publication identity is
-   unchanged before it persists `readerCutoverAcceptedAt` on the existing
-   quiescent checkpoint. Phase 1 has no writer for this field, so an earlier
-   drain is impossible.
+   unchanged before it persists one structured `readerCutoverReceipt` on the
+   existing quiescent checkpoint. The cold path is limited to four queries,
+   44 documents, 512 KiB read, one patch, and zero schedules. An exact retry
+   reads only the existing receipt. Phase 1 has no writer for this field, so an
+   earlier drain is impossible.
 5. Invoke `contentRelease/cutover/legacy:drainLegacy` until it reaches phase
    `legacy-drained`. Sum `deleted` across every bounded action receipt and
    accept only exactly 12,854 total deletions. The terminal proof independently
    requires the same durable cumulative count.
-6. Authenticate all 1,680 retained artifacts and freeze the old mutable pointer:
+6. Run the full terminal history proof and freeze the old mutable pointer. The
+   proof must authenticate both retained bundle and renderer bindings, the
+   retained snapshot bytes and aggregate digests, all 54 catalog rows, all 840
+   placement rows, all 1,680 retained artifacts, all 1,720 frozen attempt
+   placements, all 10 progress rows, and all 21 attempts and markers:
 
    ```sh
    pnpm --filter @repo/backend exec convex run contentRelease/cutover/freeze:freeze '{}' --prod
@@ -41,7 +49,8 @@ is satisfied.
    pnpm --filter @repo/backend exec convex run contentRelease/cutover/proof:proof '{}' --prod
    ```
 
-   Accept only the exact receipt and durable phase `proved`.
+   The post-drain proof must repeat that same full terminal authentication.
+   Accept only its observed exact receipt and durable phase `proved`.
 8. Deploy the strict current application and backend with no legacy content
    writer, reader, route, sync, repair, local-content audio path, or fallback.
    Remove publication guards from the sole current Aksara ingress while keeping
@@ -80,13 +89,13 @@ is satisfied.
   expiry, progress, and account-cleanup mutations.
 - Delete the temporary runtime-cache exclusions for
   `contentCutoverActivity` and `contentCutoverState`.
-- Delete the reader-acceptance mutation and `readerCutoverAcceptedAt` field
+- Delete the reader-acceptance mutation and `readerCutoverReceipt` field
   after the terminal proof and current-genesis acceptance are complete.
 - Delete the retired learning-program zero receipt and its six-table inventory
   only after the terminal proof and physical table deletion are complete.
-- Delete migration-only `tryouts/history/copy.ts`, `locale.ts`, and
-  `finalize.ts`, plus the write-only history-row operation after their exact
-  production functions are no longer referenced.
+- This Phase 2 tree deletes migration-only `tryouts/history/copy.ts`,
+  `locale.ts`, and `finalize.ts`, their pre-drain audit operations, and the
+  write-only history-row operation after exact production completion.
 - Keep only the read-only retained-attempt history decoder, marker, row,
   selector, and protected-runtime seams while retained attempt references are
   nonzero.
@@ -99,7 +108,7 @@ is satisfied.
 ## Physical table deletion
 
 - Delete all 16 empty legacy tables listed by `LEGACY_INVENTORY`.
-- Delete the six empty retired tables listed by `RETIRED_PROGRAM_INVENTORY`:
+- Delete the six empty retired tables listed by `RETIRED_PROGRAM_TABLES`:
   `learningProgramCoverage`, `learningProgramSources`, `learningPrograms`,
   `learningPlanItems`, `learningPlans`, and `learningProfiles`.
 - Delete `contentCutoverActivity` and `contentCutoverState` after their rows are

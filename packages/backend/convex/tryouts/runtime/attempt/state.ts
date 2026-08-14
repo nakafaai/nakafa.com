@@ -1,8 +1,6 @@
-import type { TryoutSection } from "@nakafa/aksara-contracts/tryout/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import {
-  loadAttemptSectionRoutes,
   loadAttemptSections,
   readAttemptResume,
 } from "@repo/backend/convex/tryouts/runtime/attempt/sections";
@@ -16,10 +14,6 @@ interface AttemptStateInput {
   readonly attempt: Doc<"tryoutAttempts">;
   readonly sectionKey?: string;
   readonly sections?: readonly Doc<"tryoutSectionAttempts">[];
-}
-
-interface CurrentAttemptInput extends AttemptStateInput {
-  readonly signedSections?: readonly TryoutSection[];
 }
 
 /** Loads the mutable attempt graph without immutable catalog fields. */
@@ -83,40 +77,6 @@ export const loadAttemptState = Effect.fn("tryouts.attempt.loadState")(
       section: projection.sectionState,
       startedAt: projection.attempt.startedAt,
       status: projection.attempt.status,
-    };
-  }
-);
-
-/** Projects the deployed state shape until the current web switches contracts. */
-export const loadCurrentAttempt = Effect.fn("tryouts.attempt.loadCurrent")(
-  function* (ctx: QueryCtx, input: CurrentAttemptInput) {
-    const { projection, sectionRoutes } = yield* Effect.all(
-      {
-        projection: loadAttemptProjection(ctx, input),
-        sectionRoutes: loadAttemptSectionRoutes(
-          ctx,
-          input.attempt,
-          input.signedSections
-        ),
-      },
-      { concurrency: "unbounded" }
-    );
-
-    return {
-      activeSectionKey: projection.resume.activeSectionKey,
-      attemptId: projection.attempt._id,
-      attemptNumber: projection.attempt.attemptNumber,
-      completedSectionKeys: projection.attempt.completedSectionKeys,
-      expiresAt: projection.attempt.expiresAt,
-      lastActivityAt: projection.attempt.lastActivityAt,
-      resumeSectionKey: projection.resume.resumeSectionKey,
-      resumeSectionPublicPath: projection.resume.resumeSectionPublicPath,
-      score: projection.score,
-      section: projection.sectionState,
-      sectionRoutes,
-      startedAt: projection.attempt.startedAt,
-      status: projection.attempt.status,
-      totalQuestions: projection.attempt.totalQuestions,
     };
   }
 );

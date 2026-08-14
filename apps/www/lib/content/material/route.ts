@@ -96,9 +96,6 @@ export const readPublishedMaterialRoute = Effect.fn(
     locale,
     publicPath,
   });
-  if (!(result.managed && result.familyManaged)) {
-    return yield* makeMaterialProjectionError({ locale, publicPath });
-  }
   const [active, sourceRevision] = yield* Effect.all([
     decodeActiveIdentity(
       result.activeManifestHash,

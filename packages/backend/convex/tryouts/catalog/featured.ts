@@ -11,8 +11,8 @@ import {
 } from "@repo/backend/convex/tryouts/catalog/hierarchy";
 import { tryoutChoiceSnapshotValidator } from "@repo/backend/convex/tryouts/runtime/choice";
 import {
-  type TryoutQuestionSelector,
-  tryoutQuestionSelectorValidator,
+  type TryoutCurrentQuestionSelector,
+  tryoutCurrentQuestionSelectorValidator,
 } from "@repo/backend/convex/tryouts/runtime/content";
 import { v } from "convex/values";
 import { Effect } from "effect";
@@ -22,7 +22,7 @@ import { Effect } from "effect";
  */
 export const featuredTryoutValidator = v.object({
   choices: v.array(tryoutChoiceSnapshotValidator),
-  question: tryoutQuestionSelectorValidator,
+  question: tryoutCurrentQuestionSelectorValidator,
 });
 
 /** Selects the first authored question from the canonical try-out hierarchy. */
@@ -59,7 +59,7 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
       snapshotId: catalog.snapshotId,
       sourcePath: placement.questionSourcePath,
       sourceRevision: placement.sourceRevision,
-    } satisfies TryoutQuestionSelector;
+    } satisfies TryoutCurrentQuestionSelector;
 
     return {
       choices: [...placement.choices],

@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
 
-const mockGetRuntimeTryoutRoute = vi.hoisted(() => vi.fn());
+const mockReadRuntimeQuery = vi.hoisted(() => vi.fn());
 const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
 const mockReadPublishedProgramPath = vi.hoisted(() => vi.fn());
@@ -13,8 +13,8 @@ const activeReleaseId = "release-active";
 vi.mock("@/lib/content/preview/route", () => ({
   matchesPreviewRoute: mockMatchesPreviewRoute,
 }));
-vi.mock("@/lib/content/runtime/routes", () => ({
-  getRuntimeTryoutRoute: mockGetRuntimeTryoutRoute,
+vi.mock("@/lib/content/runtime/query", () => ({
+  readRuntimeQuery: mockReadRuntimeQuery,
 }));
 vi.mock("@/lib/content/published/route", () => ({
   readActiveContentRoute: mockReadActiveContentRoute,
@@ -35,10 +35,8 @@ function readRejection(pathname: string, hasAttemptCapability = false) {
 
 describe("projected public html route rejection", () => {
   beforeEach(() => {
-    mockGetRuntimeTryoutRoute.mockReset();
-    mockGetRuntimeTryoutRoute.mockReturnValue(
-      Effect.succeed({ exists: false })
-    );
+    mockReadRuntimeQuery.mockReset();
+    mockReadRuntimeQuery.mockReturnValue(Effect.succeed({ exists: false }));
     mockReadActiveContentRoute.mockReset();
     mockReadActiveContentRoute.mockReturnValue(
       Effect.succeed({ activeReleaseId, kind: "unmanaged" })
@@ -86,13 +84,13 @@ describe("projected public html route rejection", () => {
 
   it("uses signed try-out ownership for exact routes and tombstones", async () => {
     const pathname = "/en/try-out/indonesia/snbt/2027";
-    mockGetRuntimeTryoutRoute
+    mockReadRuntimeQuery
       .mockReturnValueOnce(Effect.succeed({ exists: true }))
       .mockReturnValueOnce(Effect.succeed({ exists: false }));
 
     await expect(readRejection(pathname)).resolves.toBeNull();
     await expect(readRejection(pathname)).resolves.toBe("en");
-    expect(mockGetRuntimeTryoutRoute).toHaveBeenCalledWith({
+    expect(mockReadRuntimeQuery).toHaveBeenCalledWith(expect.anything(), {
       locale: "en",
       publicPath: "try-out/indonesia/snbt/2027",
     });
@@ -104,14 +102,14 @@ describe("projected public html route rejection", () => {
       "/en/try-out/indonesia/snbt/2027/set-1/general-reasoning",
     ];
     for (const pathname of paths) {
-      mockGetRuntimeTryoutRoute
+      mockReadRuntimeQuery
         .mockReturnValueOnce(Effect.succeed({ exists: true }))
         .mockReturnValueOnce(Effect.succeed({ exists: false }));
 
       await expect(readRejection(pathname)).resolves.toBeNull();
       await expect(readRejection(pathname)).resolves.toBe("en");
     }
-    expect(mockGetRuntimeTryoutRoute).toHaveBeenCalledTimes(4);
+    expect(mockReadRuntimeQuery).toHaveBeenCalledTimes(4);
   });
 
   it("delegates retained set and section capabilities to page ownership", async () => {
@@ -122,7 +120,7 @@ describe("projected public html route rejection", () => {
     for (const pathname of paths) {
       await expect(readRejection(pathname, true)).resolves.toBeNull();
     }
-    expect(mockGetRuntimeTryoutRoute).not.toHaveBeenCalled();
+    expect(mockReadRuntimeQuery).not.toHaveBeenCalled();
   });
 
   it("accepts the exact local preview route before the Convex lookup", async () => {

@@ -5,10 +5,7 @@ import type {
   ContentLocale,
 } from "@nakafa/aksara-contracts/content";
 import type { GitCommitSha } from "@nakafa/aksara-contracts/ids";
-import {
-  preserveMdxSourceForAgentMarkdown,
-  projectMdxForAgentMarkdown,
-} from "@repo/contents/_types/llms/mdx";
+import { projectMdxForAgentMarkdown } from "@repo/contents/_types/llms/mdx";
 import { Effect } from "effect";
 import { applyPublishedContentCache } from "@/lib/content/cache";
 import { readPublishedArticle } from "@/lib/content/published/article";
@@ -47,11 +44,7 @@ const buildPublishedText = Effect.fn("www.llms.published.text")(function* ({
   sourceRevision: GitCommitSha | null;
   title: string;
 }) {
-  const body = yield* projectMdxForAgentMarkdown(rawMdx).pipe(
-    Effect.catchTag("MdxAgentProjectionError", () =>
-      Effect.succeed(preserveMdxSourceForAgentMarkdown(rawMdx))
-    )
-  );
+  const body = yield* projectMdxForAgentMarkdown(rawMdx);
   const source = sourceRevision
     ? getRawAksaraUrl({
         path: sourcePath,

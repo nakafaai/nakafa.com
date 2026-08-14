@@ -1,16 +1,9 @@
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
-import {
-  readQuranSitemap,
-  readQuranSurahs,
-} from "@repo/backend/convex/contentRelease/quran/catalog";
+import { readQuranSurahs } from "@repo/backend/convex/contentRelease/quran/catalog";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import {
-  TEST_MANIFEST_HASH,
-  TEST_RELEASE_ID,
-} from "@repo/backend/test/content-release";
 import { makeQuranSurah } from "@repo/backend/test/quran-rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran-snapshot";
 import { convexTest } from "convex-test";
@@ -25,26 +18,15 @@ function makeSurahCatalog() {
 }
 
 describe("contentRelease/quran/catalog", () => {
-  it("returns unmanaged catalog and sitemap results before publication", async () => {
+  it("returns an unmanaged catalog before publication", async () => {
     const t = convexTest(schema, convexModules);
 
     await expect(
       t.query((ctx) => runConvexProgram(readQuranSurahs(ctx)))
     ).resolves.toMatchObject({ managed: false, rowJson: [] });
-    await expect(
-      t.query((ctx) => runConvexProgram(readQuranSitemap(ctx, "id")))
-    ).resolves.toEqual({
-      activeManifestHash: null,
-      activeReleaseId: null,
-      locale: "id",
-      managed: false,
-      routes: [],
-      snapshotId: null,
-      sourceRevision: null,
-    });
   });
 
-  it("returns the complete verified catalog and localized sitemap paths", async () => {
+  it("returns the complete verified catalog", async () => {
     const t = convexTest(schema, convexModules);
     const snapshotId = await t.mutation((ctx) =>
       activateQuranSnapshot(ctx, makeSurahCatalog())
@@ -61,20 +43,6 @@ describe("contentRelease/quran/catalog", () => {
     expect(first).toMatchObject({
       family: "quran",
       record: { payload: { kind: "quran-surah", number: 1 } },
-    });
-    await expect(
-      t.query((ctx) => runConvexProgram(readQuranSitemap(ctx, "en")))
-    ).resolves.toEqual({
-      activeManifestHash: TEST_MANIFEST_HASH,
-      activeReleaseId: TEST_RELEASE_ID,
-      locale: "en",
-      managed: true,
-      routes: Array.from(
-        { length: QURAN_SURAH_COUNT },
-        (_, index) => `quran/${index + 1}`
-      ),
-      snapshotId,
-      sourceRevision: "a".repeat(40),
     });
   });
 

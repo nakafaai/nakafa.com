@@ -3,23 +3,15 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { MATERIAL_GROUP_LIMIT } from "@repo/backend/convex/contentRelease/material/limits";
-import {
-  readVisibleMaterial,
-  resolveMaterialRoute,
-} from "@repo/backend/convex/contentRelease/material/route";
-import { resolveMaterialSourceModel } from "@repo/backend/convex/contentRelease/material/source";
-import type { MaterialSourceCandidate } from "@repo/backend/convex/contentRelease/material/spec";
+import { resolveMaterialRoute } from "@repo/backend/convex/contentRelease/material/route";
+import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
 import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
 import { requireExpectedActiveRelease } from "@repo/backend/convex/contentRelease/runtime/pin";
 import { Effect } from "effect";
 
 /** Reads every locale-specific counterpart for one stable material identity. */
 const readAlternates = Effect.fn("contentRelease.readMaterialAlternates")(
-  function* (
-    ctx: QueryCtx,
-    row: Doc<"materialCatalog">,
-    familyManaged: boolean
-  ) {
+  function* (ctx: QueryCtx, row: Doc<"materialCatalog">) {
     const counterparts = yield* Effect.forEach(
       ContentLocaleSchema.literals,
       (locale) =>
@@ -33,10 +25,8 @@ const readAlternates = Effect.fn("contentRelease.readMaterialAlternates")(
               .unique()
           );
           if (alternate) {
-            return yield* readVisibleMaterial(ctx, alternate, familyManaged);
-          }
-          if (!familyManaged) {
-            return null;
+            const verified = yield* verifyMaterial(alternate);
+            return { ...verified, row: alternate };
           }
           return yield* releaseFail(
             "CONTENT_RELEASE_INTEGRITY",
@@ -50,11 +40,7 @@ const readAlternates = Effect.fn("contentRelease.readMaterialAlternates")(
 
 /** Reads every ordered lesson section sharing one localized material key. */
 const readSiblings = Effect.fn("contentRelease.readMaterialSiblings")(
-  function* (
-    ctx: QueryCtx,
-    row: Doc<"materialCatalog">,
-    familyManaged: boolean
-  ) {
+  function* (ctx: QueryCtx, row: Doc<"materialCatalog">) {
     const siblings = yield* Effect.promise(() =>
       ctx.db
         .query("materialCatalog")
@@ -71,10 +57,11 @@ const readSiblings = Effect.fn("contentRelease.readMaterialSiblings")(
         `Material ${row.locale}/${row.materialKey} exceeds ${MATERIAL_GROUP_LIMIT} lesson sections.`
       );
     }
-    const candidates = yield* Effect.forEach(siblings, (sibling) =>
-      readVisibleMaterial(ctx, sibling, familyManaged)
+    const verified = yield* Effect.forEach(siblings, (sibling) =>
+      verifyMaterial(sibling).pipe(
+        Effect.map((material) => ({ ...material, row: sibling }))
+      )
     );
-    const verified = candidates.filter((candidate) => candidate !== null);
     if (
       !verified.some(({ row: candidate }) => candidate._id === row._id) ||
       verified.some(
@@ -96,7 +83,6 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
     ctx: QueryCtx,
     locale: Doc<"materialCatalog">["locale"],
     publicPath: string,
-    sourceCandidates: readonly MaterialSourceCandidate[] = [],
     expectedActiveReleaseId?: string | null
   ) {
     const route = yield* resolveMaterialRoute(ctx, locale, publicPath);
@@ -105,63 +91,37 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
       expectedActiveReleaseId,
       "Material route"
     );
-    const { sourceClaims, sourceProjectionJson } =
-      yield* resolveMaterialSourceModel(
-        ctx,
-        locale,
-        route.active,
-        route.familyManaged,
-        sourceCandidates
-      );
     if (!(route.managed && route.active)) {
-      return {
-        activeManifestHash: route.active?.manifestHash ?? null,
-        activeReleaseId: route.active?.releaseId ?? null,
-        alternateJson: [],
-        familyManaged: false,
-        managed: false,
-        projectionJson: null,
-        rendererDomain: null,
-        siblingJson: [],
-        sourceClaims,
-        sourcePath: null,
-        sourceProjectionJson,
-        sourceRevision: null,
-      };
+      return yield* releaseFail(
+        "CONTENT_RELEASE_MISSING",
+        `Signed material ownership is unavailable for ${locale}.`
+      );
     }
     if (!route.material) {
       return {
         activeManifestHash: route.active.manifestHash,
         activeReleaseId: route.active.releaseId,
         alternateJson: [],
-        familyManaged: route.familyManaged,
-        managed: true,
         projectionJson: null,
         rendererDomain: null,
         siblingJson: [],
-        sourceClaims,
         sourcePath: null,
-        sourceProjectionJson,
         sourceRevision: readSourceRevision(route.active),
       };
     }
     const { projectionJson, row } = route.material;
     const [alternates, siblings] = yield* Effect.all([
-      readAlternates(ctx, row, route.familyManaged),
-      readSiblings(ctx, row, route.familyManaged),
+      readAlternates(ctx, row),
+      readSiblings(ctx, row),
     ]);
     return {
       activeManifestHash: route.active.manifestHash,
       activeReleaseId: route.active.releaseId,
       alternateJson: alternates.map(({ projectionJson }) => projectionJson),
-      familyManaged: route.familyManaged,
-      managed: true,
       projectionJson,
       rendererDomain: row.rendererDomain,
       siblingJson: siblings.map(({ projectionJson }) => projectionJson),
-      sourceClaims,
       sourcePath: row.sourcePath,
-      sourceProjectionJson,
       sourceRevision: readSourceRevision(route.active),
     };
   }

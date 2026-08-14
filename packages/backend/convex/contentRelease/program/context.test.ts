@@ -55,29 +55,6 @@ const CONTEXT_INPUT = {
   publicPath: MATERIAL_PUBLIC_PATH,
 };
 
-/** Inserts one source-owned lesson route for renamed identity checks. */
-async function insertSourceMaterialRoute(
-  target: TestConvex<typeof schema>,
-  projection: ReturnType<typeof makeMaterialProjection>
-) {
-  await target.mutation((ctx) =>
-    ctx.db.insert("publicRoutes", {
-      contentHash: `source:${projection.contentKey}`,
-      kind: projection.kind,
-      locale: projection.locale,
-      materialKey: projection.materialKey,
-      order: projection.order,
-      parentPath: projection.parentPath,
-      publicPath: projection.publicPath,
-      sectionKey: projection.sectionKey,
-      sitemap: projection.sitemap,
-      sourcePath: projection.contentKey,
-      syncShard: 0,
-      title: projection.metadata.title,
-    })
-  );
-}
-
 /** Creates one curriculum subject that owns the material card list. */
 function subjectRoute(): CurriculumRoute {
   return CurriculumRouteSchema.make({
@@ -215,11 +192,10 @@ describe("contentRelease/program/context", () => {
     });
   });
 
-  it("resolves a moved exact lesson while a source sibling keeps its old parent", async () => {
+  it("resolves a moved exact lesson from the current signed projection", async () => {
     const data = await Effect.runPromise(makeProgramSnapshotData());
     const target = convexTest(schema, convexModules);
     const source = SOURCE_MATERIAL;
-    const retainedSibling = makeMaterialProjection("en", 2);
     const renamedParent = PublicPathSchema.make(
       "subjects/test/renamed-technical-topic"
     );
@@ -234,13 +210,11 @@ describe("contentRelease/program/context", () => {
     await stageRoutes(target, data.snapshotId, [
       subjectRoute(),
       groupRoute(),
-      mappingRoute(),
+      mappingRoute(1, renamed.parentPath),
     ]);
     await target.mutation(async (ctx) => {
       await insertMaterialProjection(ctx, renamed);
-      await insertMaterialProjection(ctx, retainedSibling);
     });
-    await insertSourceMaterialRoute(target, source);
 
     await expect(
       target.query((ctx) =>
@@ -370,7 +344,6 @@ describe("contentRelease/program/context", () => {
       mappingRoute(1, MATERIAL_PUBLIC_PATH),
     ]);
     await t.mutation((ctx) => insertMaterialProjection(ctx, sibling));
-    await insertSourceMaterialRoute(t, sibling);
 
     await expect(
       t.query((ctx) =>

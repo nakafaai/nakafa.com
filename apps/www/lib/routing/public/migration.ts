@@ -1,22 +1,14 @@
-import {
-  findPublicContentRouteBySourcePath,
-  isMaterialLessonRoute,
-  toLocalizedContentHref,
-} from "@repo/contents/_types/route/content";
+import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
+import { api } from "@repo/backend/convex/_generated/api";
 import { routing } from "@repo/internationalization/src/routing";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { hasLocale } from "next-intl";
+import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 const PREVIOUS_SUBJECT_NAMESPACE = "subject";
-const MATERIAL_LESSON_SOURCE_ROOT = "material/lesson";
 const REDIRECTABLE_METHODS = new Set(["GET", "HEAD"]);
 
-/**
- * Finds the canonical target for permanent public URL migrations.
- *
- * Previous material lesson URLs never render old pages. They only redirect to
- * the source-owned canonical route so Google and users land on the new surface.
- */
+/** Resolves a retired material URL through the active signed publication. */
 export const readPublicUrlMigrationRedirect = Effect.fn(
   "www.routing.publicHtml.urlMigrationRedirect"
 )(function* ({ method, pathname }: { method: string; pathname: string }) {
@@ -24,50 +16,61 @@ export const readPublicUrlMigrationRedirect = Effect.fn(
     return null;
   }
 
-  const sourcePath = readPreviousSubjectLessonSourcePath(pathname);
-
-  if (!sourcePath) {
+  const identity = readPreviousMaterialIdentity(pathname);
+  if (Option.isNone(identity)) {
     return null;
   }
 
-  const route = yield* findPublicContentRouteBySourcePath(
-    sourcePath.sourcePath,
-    sourcePath.locale
+  const redirect = yield* readRuntimeQuery(
+    api.contentRelease.material.identity,
+    identity.value
   );
+  if (!(redirect.activeReleaseId && redirect.managed && redirect.publicPath)) {
+    return null;
+  }
 
-  return Option.match(route, {
-    onNone: () => null,
-    onSome: (canonicalRoute) => {
-      if (!isMaterialLessonRoute(canonicalRoute)) {
-        return null;
-      }
-
-      return toLocalizedContentHref(canonicalRoute);
-    },
-  });
+  return `/${identity.value.locale}/${redirect.publicPath}`;
 });
 
-/** Converts one previous subject URL into its source-owned lesson path. */
-function readPreviousSubjectLessonSourcePath(pathname: string) {
-  const [locale, namespace, _category, _grade, material, ...lessonSegments] =
-    pathname.split("/").filter(Boolean);
-
-  if (!(namespace === PREVIOUS_SUBJECT_NAMESPACE && material)) {
-    return null;
-  }
-
-  if (lessonSegments.length === 0) {
-    return null;
-  }
-
-  if (!hasLocale(routing.locales, locale)) {
-    return null;
-  }
-
-  return {
+/** Decodes one exact retired subject lesson URL into its stable content key. */
+function readPreviousMaterialIdentity(pathname: string) {
+  const [
     locale,
-    sourcePath: [MATERIAL_LESSON_SOURCE_ROOT, material, ...lessonSegments].join(
-      "/"
-    ),
-  };
+    namespace,
+    category,
+    grade,
+    domain,
+    topic,
+    section,
+    ...extraSegments
+  ] = pathname.split("/").filter(Boolean);
+
+  if (
+    !(
+      namespace === PREVIOUS_SUBJECT_NAMESPACE &&
+      category &&
+      grade &&
+      domain &&
+      topic &&
+      section &&
+      extraSegments.length === 0 &&
+      hasLocale(routing.locales, locale)
+    )
+  ) {
+    return Option.none();
+  }
+
+  const contentKey = Schema.decodeUnknownOption(ContentKeySchema)(
+    `material/lesson/${domain}/${topic}/${section}`
+  );
+  if (Option.isNone(contentKey)) {
+    return Option.none();
+  }
+
+  return Option.some({
+    contentKey: contentKey.value,
+    expectedMaterialKey: `lesson.${domain}.${topic}`,
+    expectedSectionKey: section,
+    locale,
+  });
 }

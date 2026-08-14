@@ -5,14 +5,14 @@ import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
-  insertTestState,
-  type TestIdentity,
-} from "@repo/backend/test/content-state";
-import {
   insertCompletedRelease,
   insertReleaseItem,
   selectActiveRelease,
-} from "@repo/backend/test/content-sync";
+} from "@repo/backend/test/content-read-model";
+import {
+  insertTestState,
+  type TestIdentity,
+} from "@repo/backend/test/content-state";
 import {
   insertRuntimeBinding,
   insertRuntimeVersion,

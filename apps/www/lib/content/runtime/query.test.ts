@@ -25,8 +25,12 @@ describe("content runtime query", () => {
     readMock.mockReturnValueOnce(Effect.succeed(42));
     await expect(
       Effect.runPromise(
-        readRuntimeQuery(api.contentRelease.material.claims, {
-          sourceCandidates: [],
+        readRuntimeQuery(api.contentRelease.reference.read, {
+          input: {
+            kind: "route",
+            locale: "en",
+            publicPath: "articles/politics/test",
+          },
         })
       )
     ).resolves.toBe(42);
@@ -40,8 +44,12 @@ describe("content runtime query", () => {
     await expect(
       Effect.runPromise(
         Effect.flip(
-          readRuntimeQuery(api.contentRelease.material.claims, {
-            sourceCandidates: [],
+          readRuntimeQuery(api.contentRelease.reference.read, {
+            input: {
+              kind: "route",
+              locale: "en",
+              publicPath: "articles/politics/test",
+            },
           })
         )
       )
@@ -52,8 +60,14 @@ describe("content runtime query", () => {
     });
     expect(readMock).toHaveBeenCalledWith(
       runtimeUrl,
-      api.contentRelease.material.claims,
-      { sourceCandidates: [] }
+      api.contentRelease.reference.read,
+      {
+        input: {
+          kind: "route",
+          locale: "en",
+          publicPath: "articles/politics/test",
+        },
+      }
     );
   });
 });

@@ -12,6 +12,7 @@ import {
   normalizeNakafaContentInput,
 } from "@repo/contents/_lib/agent/refs";
 import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran";
+import { NakafaAgentReadableContentRefSchema } from "@repo/contents/_lib/agent/schema/ref";
 import type { Locale } from "@repo/contents/_types/content";
 import { defaultLocale, locales } from "@repo/utilities/locales";
 import type { UIMessageStreamWriter } from "ai";
@@ -93,9 +94,17 @@ const nakafaTestRuntime = {
       return Effect.succeed(Option.none());
     }
 
+    const readableRef = Schema.decodeUnknownOption(
+      NakafaAgentReadableContentRefSchema
+    )(ref.value);
+
+    if (Option.isNone(readableRef)) {
+      return Effect.succeed(Option.none());
+    }
+
     return Effect.succeed(
       Option.some({
-        ...ref.value,
+        ...readableRef.value,
         description: "Runtime content fixture.",
         text: "# Nakafa Content\n\nSynced runtime markdown.",
         title: "Nakafa Content",
@@ -121,11 +130,6 @@ const nakafaTestRuntime = {
       locales: Array.from(locales),
       quran: { surah_count: 114 },
       sections: ["articles", "material", "tryout", "quran"],
-      subject: {
-        categories: ["high-school"],
-        grades: ["10"],
-        materials: ["mathematics"],
-      },
       tools: [
         "nakafa_search_content",
         "nakafa_get_content",
@@ -212,7 +216,8 @@ function resolveNakafaTestContentRef(input: string) {
     (item) =>
       item.content_id === normalized ||
       normalizeNakafaContentInput(item.url) === normalized ||
-      normalizeNakafaContentInput(item.markdown_url) === normalized
+      (item.markdown_url !== undefined &&
+        normalizeNakafaContentInput(item.markdown_url) === normalized)
   );
 
   if (!ref) {

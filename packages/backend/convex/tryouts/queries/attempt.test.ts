@@ -14,10 +14,8 @@ import {
 import { seedTryoutStartSet } from "@repo/backend/test/tryout-start";
 import { describe, expect, it, vi } from "vitest";
 
-const setPublicPath = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}`;
-
 describe("tryouts/queries/attempt", () => {
-  it("locks only the authenticated current in-progress set", async () => {
+  it("locks only one authenticated in-progress attempt", async () => {
     vi.setSystemTime(new Date(TRYOUT_START_NOW));
 
     const t = createConvexTestWithBetterAuth();
@@ -32,13 +30,6 @@ describe("tryouts/queries/attempt", () => {
       });
       return user;
     });
-
-    await expect(
-      t.query(api.tryouts.queries.attempt.isLockedByPublicPath, {
-        locale: "id",
-        publicPath: setPublicPath,
-      })
-    ).resolves.toBe(false);
 
     const authed = t.withIdentity({
       sessionId: identity.sessionId,
@@ -68,12 +59,6 @@ describe("tryouts/queries/attempt", () => {
     ).resolves.toBe(false);
 
     await expect(
-      authed.query(api.tryouts.queries.attempt.isLockedByPublicPath, {
-        locale: "id",
-        publicPath: setPublicPath,
-      })
-    ).resolves.toBe(true);
-    await expect(
       authed.query(api.tryouts.queries.attempt.isLockedByAttemptId, {
         attemptId: started.attemptId,
       })
@@ -87,12 +72,6 @@ describe("tryouts/queries/attempt", () => {
       })
     );
 
-    await expect(
-      authed.query(api.tryouts.queries.attempt.isLockedByPublicPath, {
-        locale: "id",
-        publicPath: setPublicPath,
-      })
-    ).resolves.toBe(false);
     await expect(
       authed.query(api.tryouts.queries.attempt.isLockedByAttemptId, {
         attemptId: started.attemptId,

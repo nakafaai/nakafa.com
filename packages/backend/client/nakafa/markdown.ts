@@ -1,15 +1,14 @@
 import type { ContentRuntimeTarget } from "@repo/backend/client/content/public";
-import { decodeNakafaMarkdown } from "@repo/backend/client/nakafa/decode";
-import { readPublishedMaterialMarkdown } from "@repo/backend/client/nakafa/material";
-import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import { readPublishedMarkdown } from "@repo/backend/client/nakafa/published";
 import { readQuranMarkdown } from "@repo/backend/client/nakafa/quran";
 import { resolveNakafaContentRef } from "@repo/backend/client/nakafa/ref";
-import { verifyNakafaReleasePin } from "@repo/backend/client/nakafa/release";
-import type { RuntimeMdxPage } from "@repo/backend/client/nakafa/types";
-import { api } from "@repo/backend/convex/_generated/api";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { Effect, Option } from "effect";
+
+type PublishedRef = NakafaAgentContentRef & {
+  readonly section: "articles" | "material";
+};
 
 /** Reads full markdown for one normalized Nakafa content reference. */
 export const readNakafaMarkdown = Effect.fn("NakafaContent.readMarkdown")(
@@ -19,94 +18,20 @@ export const readNakafaMarkdown = Effect.fn("NakafaContent.readMarkdown")(
     input: string
   ) {
     const ref = yield* resolveNakafaContentRef(convexUrl, input);
-
-    if (Option.isSome(ref) && ref.value.section === "quran") {
-      return yield* readQuranMarkdown(convexUrl, ref.value);
-    }
-
-    if (Option.isSome(ref) && ref.value.section !== "material") {
-      return yield* readMdxMarkdown(convexUrl, ref.value);
-    }
-
-    const published = yield* readPublishedMaterialMarkdown(
-      convexUrl,
-      readContentTarget,
-      input
-    );
-    if (published.managed) {
-      return published.markdown;
-    }
     if (Option.isNone(ref)) {
       return Option.none<NakafaAgentMarkdown>();
     }
-
-    const markdown = yield* readMdxMarkdown(convexUrl, ref.value);
-    if (published.activeReleaseId !== undefined) {
-      yield* verifyNakafaReleasePin(convexUrl, published.activeReleaseId);
+    if (ref.value.section === "quran") {
+      return yield* readQuranMarkdown(convexUrl, ref.value);
     }
-    return markdown;
+    if (isPublishedRef(ref.value)) {
+      return yield* readPublishedMarkdown(readContentTarget, ref.value);
+    }
+    return Option.none<NakafaAgentMarkdown>();
   }
 );
 
-/** Reads article or lesson material markdown from active Convex runtime rows. */
-export const readMdxMarkdown = Effect.fn("NakafaContent.readMdxMarkdown")(
-  function* (convexUrl: string, ref: NakafaAgentContentRef) {
-    const page = yield* getMdxRuntimePage(convexUrl, ref);
-
-    if (!page) {
-      return Option.none<NakafaAgentMarkdown>();
-    }
-
-    const markdown = yield* decodeNakafaMarkdown({
-      ...ref,
-      description: getMdxDescription(page),
-      text: [`# ${page.metadata.title}`, "", page.body.trim()].join("\n"),
-      title: page.metadata.title,
-    });
-
-    return Option.some(markdown);
-  }
-);
-
-/** Reads one article or lesson material page from the active Convex model. */
-export function getMdxRuntimePage(
-  convexUrl: string,
-  ref: NakafaAgentContentRef
-) {
-  if (ref.section === "articles") {
-    return readNakafaRuntimeQuery(
-      convexUrl,
-      api.contents.queries.runtime.getArticlePage,
-      {
-        locale: ref.locale,
-        slug: ref.route,
-      }
-    );
-  }
-
-  if (ref.section === "material") {
-    return readNakafaRuntimeQuery(
-      convexUrl,
-      api.contents.queries.runtime.getCurriculumPage,
-      {
-        locale: ref.locale,
-        slug: ref.route,
-      }
-    );
-  }
-
-  return Effect.succeed(null);
-}
-
-/** Returns the best agent-facing description for an MDX runtime page. */
-function getMdxDescription(page: RuntimeMdxPage) {
-  if (page.metadata.description) {
-    return page.metadata.description;
-  }
-
-  if ("subject" in page.metadata) {
-    return page.metadata.subject ?? "";
-  }
-
-  return "";
+/** Narrows current signed MDX families without admitting try-out or Quran. */
+function isPublishedRef(ref: NakafaAgentContentRef): ref is PublishedRef {
+  return ref.section === "articles" || ref.section === "material";
 }

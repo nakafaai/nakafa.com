@@ -163,6 +163,10 @@ remains active for the lifetime of these receipts.
 
 ## Preserve retained attempt history
 
+The commands in this section are completed Phase 1 production provenance.
+Phase 2 removes all three migration functions, so they must not exist or be
+invoked after the Phase 2 deployment.
+
 While the checkpoint remains `quiescent`, copy the app locale into the
 additive current field:
 
@@ -199,10 +203,11 @@ split.
 ## Stop at the reader boundary
 
 Do not invoke the legacy drain again, freeze the publication pointer, or drain
-any current signed table in this deployment. The Phase 1 schema contains an
-optional `readerCutoverAcceptedAt` checkpoint, but this source deliberately
-contains no operation that can write it. Every destructive page and the final
-proof reject the missing checkpoint.
+any current signed table in this deployment. The protected Phase 1 schema
+contains the unused optional `readerCutoverAcceptedAt` field and deliberately
+exposes no operation that can write it. The coordinated Phase 2 deployment
+replaces that absent field with the optional structured `readerCutoverReceipt`.
+Every destructive page and the final proof reject a missing or invalid receipt.
 
 The next deployment must first route retained set pages, retained section
 pages, and protected artifact reads through the authenticated history tables.
@@ -210,4 +215,6 @@ It must also remove every legacy application and agent-doc reader. Only that
 deployment may expose the bounded reader-acceptance mutation described in
 `phase2.md`. That mutation validates all five durable reference receipts across
 four families and the unchanged audited publication identity without reopening
-the large source inventories in one transaction.
+the large source inventories in one transaction. It derives the compact
+history witness from the exact marker and attempt sets created by the atomic
+finalize mutation.

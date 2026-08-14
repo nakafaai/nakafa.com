@@ -1,4 +1,4 @@
-import { LearningInterestSchema } from "@repo/contents/_types/program/schema";
+import { LearningInterestSchema } from "@repo/contents/_types/learner/preferences";
 import { Schema } from "effect";
 import {
   onboardingFocusSchema,

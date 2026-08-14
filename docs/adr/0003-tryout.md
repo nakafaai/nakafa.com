@@ -60,22 +60,15 @@ correctness from the signed choice snapshot. The transaction validates attempt,
 section, placement, and response ownership before it updates the response and
 parent activity counters.
 
-Explicitly temporary migration boundaries remain during the web cutover. The
-canonical web caller now saves through `responses.save` directly, while
-`attempts.saveResponse` stays registered for already-open clients and rollback.
-The same temporary rule applies to `history.list`, `runtime.getSetState`,
-`runtime.getSectionState`, `retained.getAttemptSetRoute`,
-`retained.getAttemptSectionRoute`, and `attempt.isLockedByPublicPath`. The new
-web uses `history.bySet`, exact attempt-page reads, exact attempt-state reads,
-and exact attempt-ID locking instead.
+The current runtime exposes only exact attempt-ID state, response, history, and
+page operations. Public-path compatibility queries, fallback indexes, duplicate
+state shapes, and old response writers are not supported.
 
-Deploy additive backend contracts first, then deploy the web cutover. Keep the
-old contracts through exact production acceptance, the rollback window, and
-the already-open client window. Remove them only after production traffic proves
-the new web no longer calls them. Historical `textAnswer` response rows remain
-readable by integrity validation until dev and production data prove that field
-empty. Remove that field and its integrity branch only after the data proof.
-None of these boundaries is a supported long-term compatibility API.
+Retained attempts read their immutable signed catalog, placement, artifact,
+release, renderer, and snapshot bytes through one private history decoder. That
+decoder is not a writer, route, fallback, or public compatibility contract. It
+must be deleted when production proves zero retained attempts reference its
+historical snapshot and release identities.
 
 Section completion, attempt completion, and expiry load bounded indexed
 placement and response graphs. They reject missing, duplicate, or mismatched
@@ -153,9 +146,10 @@ review and scoring.
 
 Removing a retired deployment table requires three separate proofs: its row
 count is zero, no schema or code reference remains, and the replacement runtime
-passes acceptance. Remove the schema first, deploy it, then permanently delete
-the empty table through the Convex dashboard. Do not add permanent cleanup
-functions for retired table names.
+passes acceptance. Drain rows through one temporary bounded internal operation,
+prove every retired table empty, then remove both the operation and schemas in
+the final deployment. Do not retain permanent cleanup functions for retired
+table names.
 
 ## Consequences
 

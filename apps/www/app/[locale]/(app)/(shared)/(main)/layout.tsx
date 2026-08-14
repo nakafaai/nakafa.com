@@ -1,4 +1,7 @@
+import { locale as rootLocale } from "next/root-params";
 import { AppShell } from "@/components/sidebar/app-shell";
+import { getArticleNavigation } from "@/lib/content/article/navigation";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /**
  * Renders the shared student shell for learn pages and core signed-in routes.
@@ -6,7 +9,10 @@ import { AppShell } from "@/components/sidebar/app-shell";
  * Keeping one shell instance for both route groups avoids shell-state
  * divergence across cross-group navigations under Cache Components.
  */
-export default function Layout(props: LayoutProps<"/[locale]">) {
+export default async function Layout(props: LayoutProps<"/[locale]">) {
   const { children } = props;
-  return <AppShell>{children}</AppShell>;
+  const locale = getLocaleOrThrow(await rootLocale());
+  const articleNavigation = await getArticleNavigation(locale);
+
+  return <AppShell articleNavigation={articleNavigation}>{children}</AppShell>;
 }

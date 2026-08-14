@@ -10,7 +10,7 @@ import {
   programMatchesInterest,
 } from "@repo/backend/convex/learningPrograms/spec";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
-import type { LearningInterest } from "@repo/contents/_types/program/schema";
+import type { LearningInterest } from "@repo/contents/_types/learner/preferences";
 import type { Infer } from "convex/values";
 import { Effect, Schema } from "effect";
 

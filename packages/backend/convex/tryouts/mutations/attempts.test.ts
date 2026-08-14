@@ -37,7 +37,6 @@ const entryStartArgs: FunctionArgs<
   ...startArgs,
   entrySectionKey: SECTION,
 };
-const setPublicPath = `try-out/${COUNTRY}/${EXAM}/${TRACK}/${SET}`;
 
 describe("tryouts/mutations/attempts", () => {
   it("resumes from the frozen attempt when the current entry key changed", async () => {
@@ -194,10 +193,10 @@ describe("tryouts/mutations/attempts", () => {
       status: "in-progress",
       statusRank: 1,
     });
-    const state = await authed.query(api.tryouts.queries.runtime.getSetState, {
-      locale: "id",
-      publicPath: setPublicPath,
-    });
+    const state = await authed.query(
+      api.tryouts.queries.runtime.getSetAttemptState,
+      { attemptId: result.attemptId }
+    );
     expect(state).toMatchObject({
       attempt: {
         activeSectionKey: SECTION,

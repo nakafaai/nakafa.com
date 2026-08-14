@@ -1,19 +1,17 @@
 import { buildContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/documents";
-import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
+import { testMaterialGraph } from "@repo/backend/test/content-material";
 import { describe, expect, it } from "vitest";
 
 describe("buildContentSearchDocument", () => {
   it("keeps route identity separate from display search text", () => {
     const route =
       "material/lesson/mathematics/exponential-logarithm/logarithm-definition";
-    const identity = createLearningGraphIdentityFromRoute({
-      locale: "id",
-      route,
-    });
-
-    if (!identity) {
-      throw new Error("Expected curriculum lesson graph identity.");
-    }
+    const identity = testMaterialGraph(
+      "exponential-logarithm",
+      "logarithm-definition",
+      "id",
+      "mathematics"
+    );
 
     const document = buildContentSearchDocument({
       ...identity,

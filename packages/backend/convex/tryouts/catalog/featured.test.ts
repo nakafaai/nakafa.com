@@ -222,6 +222,8 @@ describe("tryouts/catalog/featured", () => {
       },
     });
     expect(featured.question).not.toHaveProperty("answerArtifactHash");
+    expect(featured.question).not.toHaveProperty("appLocale");
+    expect(featured.question).not.toHaveProperty("artifactLocale");
   });
 
   it("does not expose an internal-entry section on the public landing", async () => {

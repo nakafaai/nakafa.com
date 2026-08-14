@@ -25,9 +25,18 @@ import {
   readContentResponse,
   validateContentRuntimeStatus,
 } from "@repo/backend/client/content/transport";
-import { PUBLIC_CONTENT_RUNTIME_PATH } from "@repo/backend/content/endpoint";
+import {
+  MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES,
+  MAX_PUBLIC_RUNTIME_BATCH_RESPONSE_BYTES,
+  PublicContentRuntimeBatchRequestSchema,
+  PublicContentRuntimeBatchResponseSchema,
+} from "@repo/backend/content/batch";
+import {
+  PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
+  PUBLIC_CONTENT_RUNTIME_PATH,
+} from "@repo/backend/content/endpoint";
 import { contentKeyResolver } from "@repo/backend/content/trust";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 /** Server-owned connection values for the private content runtime endpoint. */
 export type ContentRuntimeTarget = ContentHttpTarget;
@@ -72,6 +81,36 @@ const readPublicRuntimeResponse = Effect.fn(
   return decoded;
 });
 
+/** Verifies one exact Aksara response under the selected renderer policy. */
+const verifyPublicContentResponse = Effect.fn(
+  "NakafaContent.verifyPublicContentResponse"
+)(function* (
+  request: PublicContentRuntimeRequest,
+  response: PublicContentRuntimeResponse,
+  verification: PublicContentVerification,
+  status: number
+) {
+  const rendererManifest = getVerificationRenderer(verification, response);
+  const verified = yield* verifyContentRuntimeExchange({
+    rendererManifest,
+    request,
+    response,
+  }).pipe(
+    Effect.provideService(ContentVerificationKeyResolver, contentKeyResolver),
+    Effect.mapError((cause) => new ContentRuntimeVerificationError({ cause }))
+  );
+  if (verified.kind === "missing") {
+    return yield* new ContentRuntimeMissingError({ request });
+  }
+  if (verified.kind === "failure") {
+    return yield* new ContentRuntimeFailureError({
+      code: verified.code,
+      status,
+    });
+  }
+  return verified;
+});
+
 /** Reads and authenticates one public artifact under an explicit renderer policy. */
 const readPublicContentProgram = Effect.fn(
   "NakafaContent.readPublicContentProgram"
@@ -96,25 +135,40 @@ const readPublicContentProgram = Effect.fn(
   );
   const response = yield* postContentRequest({ endpoint, source, target });
   const decoded = yield* readPublicRuntimeResponse(response, endpoint);
-  const rendererManifest = getVerificationRenderer(verification, decoded);
-  const verified = yield* verifyContentRuntimeExchange({
-    rendererManifest,
+  return yield* verifyPublicContentResponse(
     request,
-    response: decoded,
-  }).pipe(
-    Effect.provideService(ContentVerificationKeyResolver, contentKeyResolver),
-    Effect.mapError((cause) => new ContentRuntimeVerificationError({ cause }))
+    decoded,
+    verification,
+    response.status
   );
-  if (verified.kind === "missing") {
-    return yield* new ContentRuntimeMissingError({ request });
-  }
-  if (verified.kind === "failure") {
+});
+
+/** Reads one batch response without trusting its outer wire contract. */
+const readPublicRuntimeBatchResponse = Effect.fn(
+  "NakafaContent.readPublicRuntimeBatchResponse"
+)(function* (response: Response, endpoint: string) {
+  const input = yield* readContentResponse(
+    response,
+    endpoint,
+    MAX_PUBLIC_RUNTIME_BATCH_RESPONSE_BYTES
+  );
+  if (response.status !== 200) {
+    const failure = yield* decodePublicContentRuntimeResponse(input).pipe(
+      Effect.mapError(() => createContentContractError(response))
+    );
+    yield* validateContentRuntimeStatus(failure, response.status);
+    if (failure.kind !== "failure") {
+      return yield* createContentContractError(response);
+    }
     return yield* new ContentRuntimeFailureError({
-      code: verified.code,
+      code: failure.code,
       status: response.status,
     });
   }
-  return verified;
+  return yield* Schema.decodeUnknown(PublicContentRuntimeBatchResponseSchema)(
+    input,
+    { onExcessProperty: "error" }
+  ).pipe(Effect.mapError(() => createContentContractError(response)));
 });
 
 /** Reads signed public evidence without claiming compatibility for execution. */
@@ -122,6 +176,52 @@ export const readPublicContentEvidence = Effect.fn(
   "NakafaContent.readPublicContentEvidence"
 )(function* (target: ContentRuntimeTarget, input: PublicContentRuntimeInput) {
   return yield* readPublicContentProgram(target, input, { kind: "frozen" });
+});
+
+/** Reads and independently verifies one bounded batch of public artifacts. */
+export const readPublicContentEvidenceBatch = Effect.fn(
+  "NakafaContent.readPublicContentEvidenceBatch"
+)(function* (
+  target: ContentRuntimeTarget,
+  inputs: readonly PublicContentRuntimeInput[]
+) {
+  const requests = yield* Effect.forEach(inputs, (input) =>
+    decodePublicContentRuntimeRequest({ delivery: "public", ...input }).pipe(
+      Effect.mapError(() => new ContentTransportError({ reason: "request" }))
+    )
+  );
+  const batch = yield* Schema.decodeUnknown(
+    PublicContentRuntimeBatchRequestSchema
+  )({ requests }, { onExcessProperty: "error" }).pipe(
+    Effect.mapError(() => new ContentTransportError({ reason: "request" }))
+  );
+  const source = yield* encodeContentRequest(
+    batch,
+    MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES
+  );
+  const endpoint = yield* createContentEndpoint(
+    target.siteUrl,
+    PUBLIC_CONTENT_RUNTIME_BATCH_PATH
+  );
+  const response = yield* postContentRequest({ endpoint, source, target });
+  const decoded = yield* readPublicRuntimeBatchResponse(response, endpoint);
+  if (decoded.responses.length !== requests.length) {
+    return yield* createContentContractError(response);
+  }
+  return yield* Effect.forEach(requests, (request, index) =>
+    Effect.gen(function* () {
+      const batchResponse = decoded.responses[index];
+      if (batchResponse === undefined) {
+        return yield* createContentContractError(response);
+      }
+      return yield* verifyPublicContentResponse(
+        request,
+        batchResponse,
+        { kind: "frozen" },
+        response.status
+      );
+    })
+  );
 });
 
 /** Reads one public artifact verified against the caller's live renderer. */

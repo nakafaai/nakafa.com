@@ -4,10 +4,8 @@ import { useDocumentVisibility, useLocalStorage } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { LearningContextInput } from "@repo/backend/convex/contents/context";
-import type {
-  Locale,
-  NakafaSection,
-} from "@repo/backend/convex/lib/validators/contents";
+import type { RecordContentViewArgs } from "@repo/backend/convex/contents/views/spec";
+import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { useConvexAuth, useMutation } from "convex/react";
 import { Effect } from "effect";
 import { nanoid } from "nanoid";
@@ -23,7 +21,7 @@ interface UseRecordContentViewOptions {
   delay?: number;
   locale: Locale;
   publicPath: string;
-  section: NakafaSection;
+  section: RecordContentViewArgs["section"];
 }
 
 /**

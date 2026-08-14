@@ -97,12 +97,6 @@ const tables = {
       "setIdentity",
       "startedAt",
     ])
-    .index("by_userId_and_locale_and_setPublicPath_and_startedAt", [
-      "userId",
-      "locale",
-      "setPublicPath",
-      "startedAt",
-    ])
     .index("by_accessCampaignId_and_startedAt", [
       "accessCampaignId",
       "startedAt",

@@ -3,8 +3,6 @@ import {
   ArrowUpRight01Icon,
   BookOpenTextIcon,
 } from "@hugeicons/core-free-icons";
-import { toLocalizedContentHref } from "@repo/contents/_types/route/content";
-import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
 import {
   BlockMath,
   InlineMath,
@@ -22,8 +20,6 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@repo/design-system/components/ui/resizable";
-import { notFound } from "next/navigation";
-import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
@@ -32,31 +28,9 @@ import {
   type TrustLessonExcerpt,
 } from "./trust-source";
 
-const TRUST_MATERIAL_KEY = "lesson.mathematics.exponential-logarithm";
-const TRUST_SECTION_KEY = "basic-concept";
-
 /** Applies the existing marketing accent to one intentional phrase. */
 function renderAccent(chunks: ReactNode) {
   return <mark>{chunks}</mark>;
-}
-
-/**
- * Resolves the localized exponent lesson through the canonical static content
- * route projection used by the learning app.
- */
-function readTrustLessonHref(locale: Locale) {
-  for (const candidate of readStaticPublicContentRoutes()) {
-    if (
-      candidate.locale === locale &&
-      candidate.materialKey === TRUST_MATERIAL_KEY &&
-      candidate.kind === "subject-lesson" &&
-      candidate.sectionKey === TRUST_SECTION_KEY
-    ) {
-      return toLocalizedContentHref(candidate);
-    }
-  }
-
-  notFound();
 }
 
 /** Renders the learner-facing side with Nakafa's shared MDX components. */
@@ -228,10 +202,14 @@ function TrustComparison({
 }
 
 /** Renders the source-backed trust chapter on the marketing homepage. */
-export function Trust({ locale }: { locale: Locale }) {
+export function Trust({
+  lessonHref,
+  sourceHref,
+}: {
+  lessonHref: string;
+  sourceHref: string;
+}) {
   const t = useTranslations("TrustSection");
-  const lessonHref = readTrustLessonHref(locale);
-  const sourceHref = `${lessonHref}.md`;
   const excerpt: TrustLessonExcerpt = {
     definition: t("lesson-definition"),
     definitionHeading: t("lesson-definition-heading"),

@@ -103,7 +103,6 @@ export async function proxy(request: NextRequest) {
       pathname,
     })
   );
-
   if (urlMigrationRedirect) {
     const redirectUrl = new URL(request.url);
     redirectUrl.pathname = urlMigrationRedirect;

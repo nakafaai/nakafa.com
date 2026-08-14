@@ -3,6 +3,7 @@ import { ensureState } from "@repo/backend/convex/contentRelease/model";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { testReaderCutoverReceipt } from "@repo/backend/test/content-cutover";
 import { makeFunctionReference } from "convex/server";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -30,10 +31,41 @@ describe("contentRelease/cutover/state", () => {
     await expect(
       t.mutation(() =>
         runConvexProgram(
-          requireReaderCutoverCheckpoint({ readerCutoverAcceptedAt: 1 })
+          requireReaderCutoverCheckpoint({
+            readerCutoverReceipt: testReaderCutoverReceipt(),
+          })
         )
       )
-    ).resolves.toBeNull();
+    ).resolves.toEqual(testReaderCutoverReceipt());
+  });
+
+  it("rejects a tampered stored reader receipt", async () => {
+    const t = convexTest(schema, convexModules);
+    const receipt = testReaderCutoverReceipt();
+
+    await expect(
+      t.mutation(() =>
+        runConvexProgram(
+          requireReaderCutoverCheckpoint({
+            readerCutoverReceipt: {
+              ...receipt,
+              history: {
+                ...receipt.history,
+                declaredFrozenPlacements:
+                  receipt.history.declaredFrozenPlacements + 1,
+              },
+            },
+          })
+        )
+      )
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_STATE",
+        message: expect.stringContaining(
+          "reader cutover has not been accepted"
+        ),
+      },
+    });
   });
 
   it("blocks singleton recreation as soon as the cutover is initialized", async () => {

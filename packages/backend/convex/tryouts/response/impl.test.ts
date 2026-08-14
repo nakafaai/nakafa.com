@@ -59,41 +59,6 @@ function authenticate(
 }
 
 describe("tryouts/response/impl", () => {
-  it("routes the deployed mutation contract through server timing", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await seedResponseFixture(t, "legacy-response-contract");
-    const selectedChoice = requireFirstChoice(seeded.choices);
-    const authed = authenticate(t, seeded.identity);
-
-    vi.setSystemTime(new Date(TRYOUT_TEST_NOW + 5000));
-    await expect(
-      authed.mutation(api.tryouts.mutations.attempts.saveResponse, {
-        placementId: seeded.placementId,
-        timeSpent: 7,
-      })
-    ).rejects.toMatchObject({ data: { code: "TRYOUT_CHOICE_REQUIRED" } });
-    await authed.mutation(api.tryouts.mutations.attempts.saveResponse, {
-      placementId: seeded.placementId,
-      selectedOptionId: selectedChoice.optionKey,
-      timeSpent: 7,
-    });
-
-    const response = await t.query((ctx) =>
-      ctx.db
-        .query("tryoutResponses")
-        .withIndex("by_placementId", (index) =>
-          index.eq("placementId", seeded.placementId)
-        )
-        .unique()
-    );
-    expect(response).toMatchObject({
-      answeredAt: TRYOUT_TEST_NOW + 5000,
-      selectedOptionId: selectedChoice.optionKey,
-      timeSpent: 5,
-      updatedAt: TRYOUT_TEST_NOW + 5000,
-    });
-  });
-
   it("stores server-derived elapsed time and preserves first-answer time", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await seedResponseFixture(t, "response-time");

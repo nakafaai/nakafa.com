@@ -1,10 +1,10 @@
 import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
 import {
   CONTENT_SITEMAP_ROUTE_PAGE_SIZE,
   compareSitemapPaths,
-} from "@repo/backend/convex/contents/sitemap/spec";
+} from "@repo/backend/convex/contentRelease/sitemap";
+import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
 import { Effect } from "effect";
 
 type TryoutCatalog = Effect.Effect.Success<

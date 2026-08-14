@@ -6,7 +6,6 @@ describe("generateFallbackMetadata", () => {
     expect(
       generateFallbackMetadata({
         type: "material-lesson",
-        category: "high-school",
         grade: "11",
         material: "mathematics",
         data: {

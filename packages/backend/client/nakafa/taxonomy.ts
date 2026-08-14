@@ -3,8 +3,13 @@ import {
   toNakafaQuranDataReadError,
 } from "@repo/backend/client/nakafa/decode";
 import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import {
+  readNakafaReleasePin,
+  verifyNakafaReleasePin,
+} from "@repo/backend/client/nakafa/release";
 import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/decode";
 import { api } from "@repo/backend/convex/_generated/api";
+import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import {
   NAKAFA_AGENT_SECTIONS,
   NAKAFA_MCP_DIRECT_ENDPOINT,
@@ -12,27 +17,50 @@ import {
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
 } from "@repo/contents/_lib/agent/constants";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
-import {
-  ARTICLE_CATEGORIES,
-  BACHELOR_MATERIALS,
-  HIGH_SCHOOL_MATERIALS,
-  NON_NUMERIC_GRADES,
-  NUMERIC_GRADES,
-  SUBJECT_CATEGORIES,
-} from "@repo/contents/_types/taxonomy";
 import { defaultLocale, type Locale, locales } from "@repo/utilities/locales";
-import { Effect, Option } from "effect";
+import type { FunctionArgs } from "convex/server";
+import { Effect } from "effect";
 
-/** Reads public taxonomy from constants and active signed publications. */
+type ArticleCategoryPageArgs = FunctionArgs<
+  typeof api.contentRelease.article.categories
+>;
+
+/** Reads one generated category page without recursive loop inference. */
+const readSignedArticleCategoryPage = Effect.fn(
+  "nakafa.taxonomy.readSignedArticleCategoryPage"
+)(function* (convexUrl: string, args: ArticleCategoryPageArgs) {
+  return yield* readNakafaRuntimeQuery(
+    convexUrl,
+    api.contentRelease.article.categories,
+    args
+  );
+});
+
+type ArticleCategoryPage = Effect.Effect.Success<
+  ReturnType<typeof readSignedArticleCategoryPage>
+>;
+
+interface ArticleCategoryCursor {
+  readonly categories: readonly string[];
+  readonly cursor: string | null;
+  readonly expectedManifestHash: string | null;
+  readonly expectedReleaseId: string | null;
+}
+
+/** Reads public taxonomy from current signed publications. */
 export function readNakafaTaxonomy(
   convexUrl: string,
   locale: Locale = defaultLocale
 ) {
   return Effect.gen(function* () {
-    const [signedInventory, quranResult] = yield* Effect.all([
-      readSignedInventory(convexUrl, locale),
-      readNakafaRuntimeQuery(convexUrl, api.contentRelease.quran.surahs, {}),
-    ]);
+    const activeReleaseId = yield* readNakafaReleasePin(convexUrl);
+    const [articleCategories, signedInventory, quranResult] = yield* Effect.all(
+      [
+        readSignedArticleCategories(convexUrl, locale),
+        readSignedInventory(convexUrl, locale),
+        readNakafaRuntimeQuery(convexUrl, api.contentRelease.quran.surahs, {}),
+      ]
+    );
     const quran = yield* decodePublishedQuranCatalog(quranResult).pipe(
       Effect.mapError(toNakafaQuranDataReadError)
     );
@@ -40,10 +68,11 @@ export function readNakafaTaxonomy(
       ...item,
       count: item.count + quran.surahs.length,
     }));
+    yield* verifyNakafaReleasePin(convexUrl, activeReleaseId);
 
     return yield* decodeNakafaTaxonomy({
       articles: {
-        categories: ARTICLE_CATEGORIES,
+        categories: articleCategories,
       },
       content_counts: contentCounts,
       default_locale: defaultLocale,
@@ -59,11 +88,6 @@ export function readNakafaTaxonomy(
         surah_count: quran.surahs.length,
       },
       sections: NAKAFA_AGENT_SECTIONS,
-      subject: {
-        categories: SUBJECT_CATEGORIES,
-        grades: [...NUMERIC_GRADES, ...NON_NUMERIC_GRADES],
-        materials: [...HIGH_SCHOOL_MATERIALS, ...BACHELOR_MATERIALS],
-      },
       tools: [
         "nakafa_search_content",
         "nakafa_get_content",
@@ -74,30 +98,95 @@ export function readNakafaTaxonomy(
   });
 }
 
+/** Recursively reads one stable signed article-category generation. */
+function readSignedArticleCategoryPages(
+  convexUrl: string,
+  locale: Locale,
+  position: ArticleCategoryCursor
+): Effect.Effect<readonly string[], NakafaAgentDataReadError> {
+  return Effect.gen(function* () {
+    const result: ArticleCategoryPage = yield* readSignedArticleCategoryPage(
+      convexUrl,
+      {
+        expectedManifestHash: position.expectedManifestHash,
+        expectedReleaseId: position.expectedReleaseId,
+        locale,
+        paginationOpts: {
+          cursor: position.cursor,
+          numItems: PROJECTION_PAGE_LIMIT,
+        },
+      }
+    );
+    const {
+      activeManifestHash,
+      activeReleaseId,
+      managed,
+      result: { continueCursor, isDone, page },
+      stale,
+    } = result;
+    const categories = [
+      ...position.categories,
+      ...page.map(({ category }) => category),
+    ];
+    if (
+      !managed ||
+      stale ||
+      activeManifestHash === null ||
+      activeReleaseId === null
+    ) {
+      return yield* Effect.fail(
+        missingSignedInventory("article taxonomy", locale)
+      );
+    }
+    if (isDone) {
+      return categories;
+    }
+    if (continueCursor === "") {
+      return yield* Effect.fail(
+        new NakafaAgentDataReadError({
+          cause: `Signed article taxonomy for ${locale} lost its continuation cursor.`,
+          message: "Unable to read signed Nakafa content inventory.",
+        })
+      );
+    }
+    return yield* readSignedArticleCategoryPages(convexUrl, locale, {
+      categories,
+      cursor: continueCursor,
+      expectedManifestHash: activeManifestHash,
+      expectedReleaseId: activeReleaseId,
+    });
+  });
+}
+
+/** Reads every authenticated article category in one stable release generation. */
+const readSignedArticleCategories = Effect.fn(
+  "nakafa.taxonomy.readSignedArticleCategories"
+)((convexUrl: string, locale: Locale) =>
+  readSignedArticleCategoryPages(convexUrl, locale, {
+    categories: [],
+    cursor: null,
+    expectedManifestHash: null,
+    expectedReleaseId: null,
+  })
+);
+
 /** Reads every locale's search inventory from active signed publications. */
 const readSignedInventory = Effect.fn("nakafa.taxonomy.readSignedInventory")(
   function* (convexUrl: string, selectedLocale: Locale) {
-    const inventories = yield* Effect.forEach(
-      locales,
-      (locale) => readLocaleSignedInventory(convexUrl, locale),
+    const inventories = yield* Effect.all(
+      {
+        en: readLocaleSignedInventory(convexUrl, "en"),
+        id: readLocaleSignedInventory(convexUrl, "id"),
+      },
       { concurrency: locales.length }
     );
-    const selected = Option.fromNullable(
-      inventories.find(({ locale }) => locale === selectedLocale)
-    );
-    if (Option.isNone(selected)) {
-      return yield* new NakafaAgentDataReadError({
-        cause: `Unsupported taxonomy locale ${selectedLocale}.`,
-        message: "Unable to read signed Nakafa content inventory.",
-      });
-    }
 
     return {
-      contentCounts: inventories.map(({ count, locale }) => ({
-        count,
+      contentCounts: locales.map((locale) => ({
+        count: inventories[locale].count,
         locale,
       })),
-      tryout: selected.value.tryout,
+      tryout: inventories[selectedLocale].tryout,
     };
   }
 );

@@ -1,15 +1,13 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import { formatScriptCause } from "@repo/backend/scripts/lib/errors";
-import { log, logError } from "@repo/backend/scripts/sync-content/cli/logging";
 import {
   ConvexIdSchema,
+  loadCustomerEnvProvider,
   mutableArraySchema,
-} from "@repo/backend/scripts/sync-content/contract/schemas";
-import {
-  callConvexQuery,
-  getConvexConfig,
-} from "@repo/backend/scripts/sync-content/convex/client";
-import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime/files";
+  readCustomerQuery,
+  writeCustomerError,
+  writeCustomerReport,
+} from "@repo/backend/scripts/customers/runtime";
+import { formatScriptCause } from "@repo/backend/scripts/lib/errors";
 import type {
   FunctionArgs,
   FunctionReference,
@@ -87,7 +85,6 @@ const collectIntegrityPages = Effect.fn("customers.collectIntegrityPages")(
     query: TFunction,
     schema: Schema.Schema<FunctionReturnType<TFunction>, Encoded, never>
   ) {
-    const config = yield* getConvexConfig({ prod });
     const rows: PageRow<TFunction>[] = [];
     let continueCursor: string | null = null;
 
@@ -98,7 +95,7 @@ const collectIntegrityPages = Effect.fn("customers.collectIntegrityPages")(
           numItems: CUSTOMER_PAGE_SIZE,
         },
       };
-      const result = yield* callConvexQuery(config, query, args, schema);
+      const result = yield* readCustomerQuery(prod, query, args, schema);
 
       rows.push(...result.page);
 
@@ -174,7 +171,7 @@ const main = Effect.fn("customers.verify")(function* () {
   const prod = args.includes("--prod");
   const report = yield* getCustomerIntegrityReport(prod);
 
-  log(
+  writeCustomerReport(
     JSON.stringify(
       {
         customerCount: report.customerCount,
@@ -210,12 +207,12 @@ const main = Effect.fn("customers.verify")(function* () {
 
 Effect.runPromise(
   Effect.gen(function* () {
-    const provider = yield* loadEnvProvider();
+    const provider = yield* loadCustomerEnvProvider();
     yield* main().pipe(Effect.withConfigProvider(provider));
   }).pipe(
     Effect.catchAllCause((cause) =>
       Effect.sync(() => {
-        logError(formatScriptCause(cause));
+        writeCustomerError(formatScriptCause(cause));
         process.exitCode = 1;
       })
     )

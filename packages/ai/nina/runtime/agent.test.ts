@@ -1,3 +1,4 @@
+import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { ModelIdSchema } from "@repo/ai/config/model";
 import {
   createNinaAgentContext,
@@ -14,7 +15,6 @@ import {
   textOutputSchema,
 } from "@repo/ai/schema/tools";
 import type { MyMetadata, MyUIMessage } from "@repo/ai/types/message";
-import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import type {
   LanguageModelUsage,
   ModelMessage,

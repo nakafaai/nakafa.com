@@ -26,6 +26,7 @@ import {
 } from "@repo/backend/convex/contentRelease/cutover/retiredPrograms";
 import {
   audioWorkflowAuditValidator,
+  readerCutoverReceiptValidator,
   retiredProgramZeroReceiptValidator,
 } from "@repo/backend/convex/contentRelease/cutover/schema";
 import {
@@ -34,18 +35,11 @@ import {
 } from "@repo/backend/convex/contentRelease/cutover/state";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import type { TerminalHistoryProof } from "@repo/backend/convex/tryouts/history/spec";
 import { type Infer, v } from "convex/values";
 import { Effect } from "effect";
 
-export interface HistoryProof {
-  readonly attempts: number;
-  readonly catalogRows: number;
-  readonly frozenPlacements: number;
-  readonly markers: number;
-  readonly placementRows: number;
-  readonly progressRows: number;
-  readonly snapshotId: string;
-}
+export type HistoryProof = TerminalHistoryProof;
 
 export interface RetentionFacts {
   readonly activity: null | { readonly version: number };
@@ -72,7 +66,7 @@ export interface RetentionFacts {
     legacyTableDeleted: number;
     legacyTableIndex: number;
     phase: string;
-    readerCutoverAcceptedAt?: number;
+    readerCutoverReceipt?: Infer<typeof readerCutoverReceiptValidator>;
     retiredProgramZeroReceipt?: RetiredProgramZeroReceipt;
   };
   readonly cutoverCount: number;
@@ -127,7 +121,7 @@ export const retentionFacts = internalQuery({
         legacyTableDeleted: v.number(),
         legacyTableIndex: v.number(),
         phase: v.string(),
-        readerCutoverAcceptedAt: v.optional(v.number()),
+        readerCutoverReceipt: v.optional(readerCutoverReceiptValidator),
         retiredProgramZeroReceipt: v.optional(
           retiredProgramZeroReceiptValidator
         ),
@@ -189,7 +183,7 @@ const readRetentionFacts = Effect.fn(
           legacyTableDeleted: cutover.legacyTableDeleted,
           legacyTableIndex: cutover.legacyTableIndex,
           phase: cutover.phase,
-          readerCutoverAcceptedAt: cutover.readerCutoverAcceptedAt,
+          readerCutoverReceipt: cutover.readerCutoverReceipt,
           retiredProgramZeroReceipt: cutover.retiredProgramZeroReceipt,
         }
       : null,

@@ -1,7 +1,7 @@
-import { v } from "convex/values";
+import { type Infer, v } from "convex/values";
 import { Effect, Schema } from "effect";
 
-export interface RetainedTryoutRelease {
+interface RetainedTryoutRelease {
   readonly attemptCount: number;
   readonly manifestHash: string;
   readonly releaseId: string;
@@ -51,24 +51,14 @@ export const retainedTryoutHistoryPlan = {
     "sha256:0a43a4125fc4886f90b5a509405178bfb8762ad3c7f72be80614fce2671b5162",
 } satisfies RetainedTryoutHistoryPlan;
 
-/** Phases where immutable history may be staged before any source drain. */
-export const historyStagingPhases = [
-  "quiescent",
-  "audited",
-  "draining-legacy",
-  "legacy-drained",
-] as const;
-
 /** Typed, fail-closed error for the one retained history cutover. */
 export class TryoutHistoryError extends Schema.TaggedError<TryoutHistoryError>()(
   "TryoutHistoryError",
   {
     code: Schema.Literal(
-      "TRYOUT_HISTORY_CONFLICT",
       "TRYOUT_HISTORY_INTEGRITY",
       "TRYOUT_HISTORY_NOT_READY",
-      "TRYOUT_HISTORY_READ_FAILED",
-      "TRYOUT_HISTORY_WRITE_FAILED"
+      "TRYOUT_HISTORY_READ_FAILED"
     ),
     message: Schema.String,
   }
@@ -99,48 +89,25 @@ export function historyRead<A>(message: string, operation: () => Promise<A>) {
   });
 }
 
-/** Lifts one Convex write into the retained-history failure channel. */
-export function historyWrite<A>(message: string, operation: () => Promise<A>) {
-  return Effect.tryPromise({
-    catch: () =>
-      new TryoutHistoryError({
-        code: "TRYOUT_HISTORY_WRITE_FAILED",
-        message,
-      }),
-    try: operation,
-  });
-}
-
-/** Bounded snapshot-copy progress returned to the operator. */
-export const historyCopyReceiptValidator = v.object({
-  created: v.number(),
-  done: v.boolean(),
-  nextIndex: v.number(),
-  processed: v.number(),
-  unchanged: v.number(),
-});
-
-/** Exact retained inventory authenticated before cutover writes. */
-export const historyAuditValidator = v.object({
+/** Actual compact evidence stored before the reader cutover is accepted. */
+export const historyMarkerProofValidator = v.object({
   attempts: v.number(),
-  bundles: v.number(),
-  frozenPlacements: v.number(),
-  progressRows: v.number(),
+  declaredFrozenPlacements: v.number(),
+  markers: v.number(),
+  releases: v.array(
+    v.object({
+      attempts: v.number(),
+      releaseId: v.string(),
+    })
+  ),
   snapshotId: v.string(),
 });
 
-/** Bounded app-locale copy progress. */
-export const historyLocaleReceiptValidator = v.object({
-  done: v.boolean(),
-  nextCursor: v.union(v.string(), v.null()),
-  processed: v.number(),
-  target: v.union(v.literal("attempt"), v.literal("progress")),
-  updated: v.number(),
-});
-
-/** Final Phase 1a readiness evidence, without deleting legacy fields. */
-export const historyReadinessValidator = v.object({
+/** Observed and authenticated retained history used by freeze and proof. */
+export const terminalHistoryProofValidator = v.object({
+  artifacts: v.number(),
   attempts: v.number(),
+  bundles: v.number(),
   catalogRows: v.number(),
   frozenPlacements: v.number(),
   markers: v.number(),
@@ -148,3 +115,4 @@ export const historyReadinessValidator = v.object({
   progressRows: v.number(),
   snapshotId: v.string(),
 });
+export type TerminalHistoryProof = Infer<typeof terminalHistoryProofValidator>;

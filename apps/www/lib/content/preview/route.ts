@@ -3,8 +3,10 @@ import "server-only";
 import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import { previewDocumentRoute } from "@nakafa/aksara-contracts/preview/document";
 import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
-import { readNamespaceSegment } from "@repo/contents/_types/route/path";
-import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
+import {
+  PUBLIC_ROUTE_SURFACES,
+  readNamespaceSegment,
+} from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect, Option } from "effect";
 import { hasLocale } from "next-intl";

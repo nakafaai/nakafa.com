@@ -1,25 +1,29 @@
 import {
-  COVERAGE_STATUS_VALUES,
+  LearningProgramKindSchema,
+  ProgramCoverageSchema,
+  ProgramNavigationLevelSchema,
+  ProgramNavigationModelSchema,
+} from "@nakafa/aksara-contracts/program/spec";
+import {
   LEARNING_INTEREST_PROGRAM_KIND_MATCHES,
   LEARNING_INTEREST_VALUES,
-  LEARNING_PROGRAM_KIND_VALUES,
   type LearningInterest,
-  type LearningProgramKind,
-  PROGRAM_NAVIGATION_LEVEL_VALUES,
-  PROGRAM_NAVIGATION_MODEL_VALUES,
-} from "@repo/contents/_types/program/schema";
+} from "@repo/contents/_types/learner/preferences";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 export const learningInterestValidator = literals(...LEARNING_INTEREST_VALUES);
 
-const coverageStatusValidator = literals(...COVERAGE_STATUS_VALUES);
-const learningProgramKindValidator = literals(...LEARNING_PROGRAM_KIND_VALUES);
+type LearningProgramKind = typeof LearningProgramKindSchema.Type;
+const coverageStatusValidator = literals(...ProgramCoverageSchema.literals);
+const learningProgramKindValidator = literals(
+  ...LearningProgramKindSchema.literals
+);
 const programNavigationLevelValidator = literals(
-  ...PROGRAM_NAVIGATION_LEVEL_VALUES
+  ...ProgramNavigationLevelSchema.literals
 );
 const programNavigationModelValidator = literals(
-  ...PROGRAM_NAVIGATION_MODEL_VALUES
+  ...ProgramNavigationModelSchema.literals
 );
 
 export const learningProgramSummaryValidator = v.object({

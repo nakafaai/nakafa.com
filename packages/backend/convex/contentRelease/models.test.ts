@@ -9,12 +9,12 @@ import { scheduleReadModels } from "@repo/backend/convex/contentRelease/models";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { insertReleaseItem } from "@repo/backend/test/content-read-model";
 import {
   insertTestState,
   insertZeroRelease,
   type TestIdentity,
 } from "@repo/backend/test/content-state";
-import { insertReleaseItem } from "@repo/backend/test/content-sync";
 import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -87,69 +87,8 @@ describe("contentRelease/models", () => {
     });
     expect(claimed.state).toMatchObject({
       articleReleaseId: ACTIVE.releaseId,
-      materialOwnerReleaseId: ACTIVE.releaseId,
       materialReleaseId: ACTIVE.releaseId,
       searchReleaseId: ACTIVE.releaseId,
-    });
-    await expect(
-      t.query(internal.contentRelease.models.status, {
-        releaseId: ACTIVE.releaseId,
-      })
-    ).resolves.toEqual({
-      phase: "completed",
-      releaseId: ACTIVE.releaseId,
-    });
-  });
-
-  it("rebinds exact material owners when material rows are unchanged", async () => {
-    const t = convexTest(schema, convexModules);
-    const contentKey = "material:models-carried";
-    await t.mutation(async (ctx) => {
-      await seedActiveRelease(
-        ctx,
-        PublicationScopeSchema.make({
-          content: [],
-          families: ["question"],
-          snapshots: ["tryout"],
-        })
-      );
-      const release = await ctx.db
-        .query("contentReleases")
-        .withIndex("by_releaseId", (index) =>
-          index.eq("releaseId", ACTIVE.releaseId)
-        )
-        .unique();
-      if (!release) {
-        expect.fail("Expected the active release.");
-      }
-      await ctx.db.patch("contentReleases", release._id, {
-        resultFamilies: ContentFamilySchema.literals.filter(
-          (family) => family !== "material"
-        ),
-      });
-      await ctx.db.insert("contentOwners", {
-        contentKey,
-        family: "material",
-        locale: "en",
-        managed: true,
-        releaseId: "release-models-prior",
-        sequence: 0,
-      });
-      await ctx.db.insert("materialOwners", {
-        contentKey,
-        locale: "en",
-        releaseId: "release-models-prior",
-        sequence: 0,
-      });
-      await runConvexProgram(scheduleReadModels(ctx, ACTIVE.releaseId));
-    });
-
-    await expect(
-      t.run((ctx) => ctx.db.query("materialOwners").unique())
-    ).resolves.toMatchObject({
-      contentKey,
-      releaseId: ACTIVE.releaseId,
-      sequence: ACTIVE.sequence,
     });
     await expect(
       t.query(internal.contentRelease.models.status, {

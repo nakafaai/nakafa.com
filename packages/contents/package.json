@@ -10,14 +10,12 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@effect/platform": "0.97.1",
-    "@effect/platform-node": "0.108.1",
     "@hugeicons/core-free-icons": "^4.2.3",
+    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz",
     "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",
     "@repo/utilities": "workspace:*",
     "effect": "catalog:",
-    "react": "19.2.8",
     "remark-mdx": "3.1.1",
     "remark-parse": "11.0.0",
     "unified": "11.0.5"
@@ -26,7 +24,6 @@
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/mdast": "4.0.4",
-    "@types/react": "^19.2.18",
     "@vitest/coverage-istanbul": "^4.1.10",
     "mdast-util-mdx-jsx": "3.2.0",
     "vitest": "^4.1.10"

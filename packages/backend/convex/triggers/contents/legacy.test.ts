@@ -1,24 +1,32 @@
-import { internal } from "@repo/backend/convex/_generated/api";
 import { deleteLegacyPage } from "@repo/backend/convex/contentRelease/cutover/legacy";
-import { getLearningProgramCatalogInputs } from "@repo/backend/convex/learningPrograms/catalog";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { legacyContentWriteHandler } from "@repo/backend/convex/triggers/contents/legacy";
+import { testReaderCutoverReceipt } from "@repo/backend/test/content-cutover";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 describe("triggers/contents/legacy", () => {
   it("blocks legacy writers while the raw cutover drain owns deletion", async () => {
     const t = convexTest(schema, convexModules);
-    const created = await t.mutation(
-      internal.contentSync.mutations.authors.bulkSyncAuthors,
-      { authorNames: ["Legacy Author"] }
-    );
-    expect(created.created).toBe(1);
-    const author = await t.query((ctx) => ctx.db.query("authors").unique());
-    if (!author) {
-      throw new Error("Expected legacy author fixture.");
-    }
+    const author = await t.mutation(async (ctx) => {
+      const id = await ctx.db.insert("authors", {
+        name: "Legacy Author",
+        username: "legacy-author",
+      });
+      const stored = await ctx.db.get(id);
+      if (!stored) {
+        throw new Error("Expected legacy author fixture.");
+      }
+      await legacyContentWriteHandler(ctx, {
+        id,
+        newDoc: stored,
+        oldDoc: null,
+        operation: "insert",
+      });
+      return stored;
+    });
     await expect(
       t.query((ctx) => ctx.db.query("contentCutoverActivity").unique())
     ).resolves.toMatchObject({ key: "legacy", version: 1 });
@@ -39,36 +47,23 @@ describe("triggers/contents/legacy", () => {
         legacyTableDeleted: 0,
         legacyTableIndex: 0,
         phase: "audited",
-        readerCutoverAcceptedAt: 1,
+        readerCutoverReceipt: testReaderCutoverReceipt(),
         updatedAt: 1,
       })
     );
 
     await expect(
-      t.mutation(internal.contentSync.mutations.authors.bulkSyncAuthors, {
-        authorNames: ["Blocked Author"],
-      })
+      t.mutation((ctx) =>
+        legacyContentWriteHandler(ctx, {
+          id: author._id,
+          newDoc: author,
+          oldDoc: author,
+          operation: "update",
+        })
+      )
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_STATE" },
     });
-    await expect(
-      t.mutation(internal.contentSync.mutations.authors.deleteUnusedAuthors, {
-        authorIds: [author._id],
-      })
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_STATE" },
-    });
-    await expect(
-      t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
-        programs: getLearningProgramCatalogInputs().slice(0, 1),
-        syncedAt: 2,
-      })
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_STATE" },
-    });
-    await expect(
-      t.query((ctx) => ctx.db.query("learningPrograms").take(1))
-    ).resolves.toEqual([]);
     await expect(
       t.mutation((ctx) =>
         runConvexProgram(
