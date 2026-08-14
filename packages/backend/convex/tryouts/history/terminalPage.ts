@@ -7,15 +7,31 @@ import {
   historyFail,
   historyRead,
 } from "@repo/backend/convex/tryouts/history/spec";
+import type { TransactionMetrics } from "convex/server";
 import { type Infer, v } from "convex/values";
 import { Effect } from "effect";
 
+const ARTIFACT_LOOKUPS_PER_PLACEMENT = 2;
 const HISTORY_PAGE_BYTES = 2 * 1024 * 1024;
+const HISTORY_PAGE_INDEX_RANGE_READS = 1;
+// Convex 1.43 implements unique() as take(2), so an exact one-row lookup can
+// consume two index-range reads in deployed transaction metrics.
+const MAX_INDEX_RANGE_READS_PER_UNIQUE = 2;
 const PAGE_SIZE = 8;
 const MAX_PAGE_BYTES =
-  HISTORY_PAGE_BYTES + 2 * PAGE_SIZE * MAX_SIGNED_ARTIFACT_BYTES;
+  HISTORY_PAGE_BYTES +
+  ARTIFACT_LOOKUPS_PER_PLACEMENT * PAGE_SIZE * MAX_SIGNED_ARTIFACT_BYTES;
 const MAX_PAGE_DOCUMENTS = 24;
-const MAX_PAGE_QUERIES = 17;
+const MAX_PAGE_QUERIES =
+  HISTORY_PAGE_INDEX_RANGE_READS +
+  ARTIFACT_LOOKUPS_PER_PLACEMENT * PAGE_SIZE * MAX_INDEX_RANGE_READS_PER_UNIQUE;
+
+/** Exact transaction ceilings for one bounded terminal history page. */
+export const terminalHistoryPageBudget = {
+  bytesRead: MAX_PAGE_BYTES,
+  databaseQueries: MAX_PAGE_QUERIES,
+  documentsRead: MAX_PAGE_DOCUMENTS,
+};
 
 const catalogRowValidator = v.object({
   index: v.number(),
@@ -138,10 +154,22 @@ const requirePageBudget = Effect.fn(
     "Unable to read terminal history page metrics.",
     () => ctx.meta.getTransactionMetrics()
   );
+  yield* verifyTerminalPageBudget(metrics);
+});
+
+type TerminalPageMetrics = Pick<
+  TransactionMetrics,
+  "bytesRead" | "databaseQueries" | "documentsRead"
+>;
+
+/** Fails closed when one page crosses its grounded transaction ceilings. */
+export const verifyTerminalPageBudget = Effect.fn(
+  "tryouts.history.verifyTerminalPageBudget"
+)(function* (metrics: TerminalPageMetrics) {
   if (
-    metrics.bytesRead.used > MAX_PAGE_BYTES ||
-    metrics.databaseQueries.used > MAX_PAGE_QUERIES ||
-    metrics.documentsRead.used > MAX_PAGE_DOCUMENTS
+    metrics.bytesRead.used > terminalHistoryPageBudget.bytesRead ||
+    metrics.databaseQueries.used > terminalHistoryPageBudget.databaseQueries ||
+    metrics.documentsRead.used > terminalHistoryPageBudget.documentsRead
   ) {
     return yield* historyFail(
       "TRYOUT_HISTORY_READ_FAILED",
