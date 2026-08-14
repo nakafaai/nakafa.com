@@ -18,6 +18,65 @@ import { describe, expect, it } from "vitest";
 const TRYOUT_CATALOG_COUNT = 2;
 
 describe("contentRelease/cutover/tryoutAssets", () => {
+  it("stages only the active snapshot while a retained generation remains", async () => {
+    const t = convexTest(schema, convexModules);
+    const snapshotIds = await t.mutation(async (ctx) => {
+      const activeSnapshotId = await activateTechnicalTryout(ctx);
+      const retainedSnapshotId = `sha256:${"a".repeat(64)}`;
+      const activeRows = await ctx.db.query("tryoutCatalog").collect();
+      for (const [index, row] of activeRows.entries()) {
+        const { _creationTime: _ignoredTime, _id: _ignoredId, ...stored } = row;
+        await ctx.db.patch("tryoutCatalog", row._id, { assetId: undefined });
+        await ctx.db.insert("tryoutCatalog", {
+          ...stored,
+          assetId:
+            index === 0 ? "asset:en:tryout:retained:tampered" : undefined,
+          snapshotId: retainedSnapshotId,
+        });
+      }
+      await insertQuiescentCheckpoint(ctx);
+      return { activeSnapshotId, retainedSnapshotId };
+    });
+
+    const receipt = await t.mutation((ctx) =>
+      runConvexProgram(stageTryoutAssetIds(ctx, TRYOUT_CATALOG_COUNT))
+    );
+    const proved = await t.query((ctx) =>
+      runConvexProgram(proveTryoutAssetIdsComplete(ctx, TRYOUT_CATALOG_COUNT))
+    );
+    const stored = await t.run(async (ctx) => ({
+      active: await ctx.db
+        .query("tryoutCatalog")
+        .withIndex("by_snapshotId_and_index", (index) =>
+          index.eq("snapshotId", snapshotIds.activeSnapshotId)
+        )
+        .collect(),
+      retained: await ctx.db
+        .query("tryoutCatalog")
+        .withIndex("by_snapshotId_and_index", (index) =>
+          index.eq("snapshotId", snapshotIds.retainedSnapshotId)
+        )
+        .collect(),
+    }));
+
+    expect(receipt).toEqual({
+      complete: true,
+      total: TRYOUT_CATALOG_COUNT,
+      unchanged: 0,
+      updated: TRYOUT_CATALOG_COUNT,
+    });
+    expect(proved).toBe(TRYOUT_CATALOG_COUNT);
+    expect(stored.active).toHaveLength(2);
+    expect(stored.active.every(({ assetId }) => assetId !== undefined)).toBe(
+      true
+    );
+    expect(stored.retained).toHaveLength(2);
+    expect(stored.retained.map(({ assetId }) => assetId)).toEqual([
+      "asset:en:tryout:retained:tampered",
+      undefined,
+    ]);
+  });
+
   it("stages exact authenticated try-out asset identities idempotently", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {

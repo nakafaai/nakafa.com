@@ -26,7 +26,8 @@ export const AUDITED_ARTICLE_COUNT = 14;
 export const AUDITED_MATERIAL_COUNT = 766;
 export const AUDITED_MATERIAL_TOPIC_COUNT = 72;
 export const AUDITED_QURAN_SEARCH_COUNT = 228;
-export const AUDITED_TRYOUT_CATALOG_COUNT = 108;
+export const AUDITED_ACTIVE_TRYOUT_CATALOG_COUNT = RETAINED_CATALOG_COUNT;
+export const AUDITED_PHYSICAL_TRYOUT_CATALOG_COUNT = 108;
 
 export interface InventoryEntry<TableName extends TableNames = TableNames> {
   readonly batchSize: number;
@@ -102,7 +103,7 @@ export const CURRENT_INVENTORY = [
   },
   {
     batchSize: 20,
-    expected: AUDITED_TRYOUT_CATALOG_COUNT,
+    expected: AUDITED_PHYSICAL_TRYOUT_CATALOG_COUNT,
     table: "tryoutCatalog",
   },
   { batchSize: 20, expected: 1680, table: "tryoutPlacements" },
