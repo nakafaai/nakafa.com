@@ -12,11 +12,19 @@ import {
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
 import { tryoutChoiceSnapshotValidator } from "@repo/backend/convex/tryouts/runtime/choice";
 import { tryoutStatusValidator } from "@repo/backend/convex/tryouts/status";
+import type { TransactionMetrics } from "convex/server";
 import { type Infer, v } from "convex/values";
 import { Effect } from "effect";
 
 const PAGE_BYTES = 2 * 1024 * 1024;
 const PAGE_SIZE = 8;
+
+/** Exact transaction ceilings for one bounded frozen placement page. */
+export const terminalFrozenPageBudget = {
+  bytesRead: PAGE_BYTES,
+  databaseQueries: 1,
+  documentsRead: PAGE_SIZE,
+};
 
 const attemptValidator = v.object({
   _id: v.id("tryoutAttempts"),
@@ -223,6 +231,7 @@ export const readSignedState = Effect.fn(
 export const readFrozenPage = Effect.fn(
   "tryouts.history.readTerminalFrozenPage"
 )(function* (ctx: QueryCtx, cursor: null | string) {
+  const before = yield* readFrozenPageMetrics(ctx);
   const page = yield* historyRead(
     "Unable to page terminal frozen placements.",
     () =>
@@ -233,20 +242,8 @@ export const readFrozenPage = Effect.fn(
         numItems: PAGE_SIZE,
       })
   );
-  const metrics = yield* historyRead(
-    "Unable to read terminal frozen page metrics.",
-    () => ctx.meta.getTransactionMetrics()
-  );
-  if (
-    metrics.bytesRead.used > PAGE_BYTES ||
-    metrics.databaseQueries.used > 1 ||
-    metrics.documentsRead.used > PAGE_SIZE
-  ) {
-    return yield* historyFail(
-      "TRYOUT_HISTORY_READ_FAILED",
-      `Terminal frozen page used ${metrics.bytesRead.used} bytes, ${metrics.databaseQueries.used} queries, and ${metrics.documentsRead.used} documents.`
-    );
-  }
+  const after = yield* readFrozenPageMetrics(ctx);
+  yield* verifyTerminalFrozenPageBudget(before, after);
   return {
     cursor: page.continueCursor,
     done: page.isDone,
@@ -271,3 +268,48 @@ export const readFrozenPage = Effect.fn(
     })),
   };
 });
+
+const readFrozenPageMetrics = Effect.fn(
+  "tryouts.history.readTerminalFrozenPageMetrics"
+)(function* (ctx: QueryCtx) {
+  return yield* historyRead(
+    "Unable to read terminal frozen page metrics.",
+    () => ctx.meta.getTransactionMetrics()
+  );
+});
+
+type TerminalPageMetrics = Pick<
+  TransactionMetrics,
+  "bytesRead" | "databaseQueries" | "documentsRead"
+>;
+
+/** Fails closed when one frozen page crosses its owned transaction deltas. */
+export const verifyTerminalFrozenPageBudget = Effect.fn(
+  "tryouts.history.verifyTerminalFrozenPageBudget"
+)(function* (before: TerminalPageMetrics, after: TerminalPageMetrics) {
+  const usage = frozenPageUsage(before, after);
+  if (
+    usage.bytesRead < 0 ||
+    usage.databaseQueries < 0 ||
+    usage.documentsRead < 0 ||
+    usage.bytesRead > terminalFrozenPageBudget.bytesRead ||
+    usage.databaseQueries > terminalFrozenPageBudget.databaseQueries ||
+    usage.documentsRead > terminalFrozenPageBudget.documentsRead
+  ) {
+    return yield* historyFail(
+      "TRYOUT_HISTORY_READ_FAILED",
+      `Terminal frozen page used ${usage.bytesRead} bytes, ${usage.databaseQueries} queries, and ${usage.documentsRead} documents.`
+    );
+  }
+});
+
+function frozenPageUsage(
+  before: TerminalPageMetrics,
+  after: TerminalPageMetrics
+) {
+  return {
+    bytesRead: after.bytesRead.used - before.bytesRead.used,
+    databaseQueries: after.databaseQueries.used - before.databaseQueries.used,
+    documentsRead: after.documentsRead.used - before.documentsRead.used,
+  };
+}

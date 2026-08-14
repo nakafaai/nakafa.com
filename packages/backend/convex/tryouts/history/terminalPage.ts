@@ -14,17 +14,13 @@ import { Effect } from "effect";
 const ARTIFACT_LOOKUPS_PER_PLACEMENT = 2;
 const HISTORY_PAGE_BYTES = 2 * 1024 * 1024;
 const HISTORY_PAGE_INDEX_RANGE_READS = 1;
-// Convex 1.43 implements unique() as take(2), so an exact one-row lookup can
-// consume two index-range reads in deployed transaction metrics.
-const MAX_INDEX_RANGE_READS_PER_UNIQUE = 2;
 const PAGE_SIZE = 8;
 const MAX_PAGE_BYTES =
   HISTORY_PAGE_BYTES +
   ARTIFACT_LOOKUPS_PER_PLACEMENT * PAGE_SIZE * MAX_SIGNED_ARTIFACT_BYTES;
 const MAX_PAGE_DOCUMENTS = 24;
 const MAX_PAGE_QUERIES =
-  HISTORY_PAGE_INDEX_RANGE_READS +
-  ARTIFACT_LOOKUPS_PER_PLACEMENT * PAGE_SIZE * MAX_INDEX_RANGE_READS_PER_UNIQUE;
+  HISTORY_PAGE_INDEX_RANGE_READS + ARTIFACT_LOOKUPS_PER_PLACEMENT * PAGE_SIZE;
 
 /** Exact transaction ceilings for one bounded terminal history page. */
 export const terminalHistoryPageBudget = {
@@ -75,6 +71,7 @@ export const historyPage = internalQuery({
 export const readHistoryPage = Effect.fn(
   "tryouts.history.readTerminalHistoryPage"
 )(function* (ctx: QueryCtx, cursor: null | string) {
+  const before = yield* readTerminalPageMetrics(ctx);
   const page = yield* historyRead(
     "Unable to page terminal retained history.",
     () =>
@@ -90,7 +87,8 @@ export const readHistoryPage = Effect.fn(
     (row) => readHistoryRow(ctx, row),
     { concurrency: 4 }
   );
-  yield* requirePageBudget(ctx);
+  const after = yield* readTerminalPageMetrics(ctx);
+  yield* verifyTerminalPageBudget(before, after);
   return {
     cursor: page.continueCursor,
     done: page.isDone,
@@ -147,14 +145,13 @@ const readHistoryRow = Effect.fn("tryouts.history.readTerminalHistoryRow")(
   }
 );
 
-const requirePageBudget = Effect.fn(
-  "tryouts.history.requireTerminalPageBudget"
+const readTerminalPageMetrics = Effect.fn(
+  "tryouts.history.readTerminalPageMetrics"
 )(function* (ctx: QueryCtx) {
-  const metrics = yield* historyRead(
+  return yield* historyRead(
     "Unable to read terminal history page metrics.",
     () => ctx.meta.getTransactionMetrics()
   );
-  yield* verifyTerminalPageBudget(metrics);
 });
 
 type TerminalPageMetrics = Pick<
@@ -165,15 +162,30 @@ type TerminalPageMetrics = Pick<
 /** Fails closed when one page crosses its grounded transaction ceilings. */
 export const verifyTerminalPageBudget = Effect.fn(
   "tryouts.history.verifyTerminalPageBudget"
-)(function* (metrics: TerminalPageMetrics) {
+)(function* (before: TerminalPageMetrics, after: TerminalPageMetrics) {
+  const usage = terminalPageUsage(before, after);
   if (
-    metrics.bytesRead.used > terminalHistoryPageBudget.bytesRead ||
-    metrics.databaseQueries.used > terminalHistoryPageBudget.databaseQueries ||
-    metrics.documentsRead.used > terminalHistoryPageBudget.documentsRead
+    usage.bytesRead < 0 ||
+    usage.databaseQueries < 0 ||
+    usage.documentsRead < 0 ||
+    usage.bytesRead > terminalHistoryPageBudget.bytesRead ||
+    usage.databaseQueries > terminalHistoryPageBudget.databaseQueries ||
+    usage.documentsRead > terminalHistoryPageBudget.documentsRead
   ) {
     return yield* historyFail(
       "TRYOUT_HISTORY_READ_FAILED",
-      `Terminal history page used ${metrics.bytesRead.used} bytes, ${metrics.databaseQueries.used} queries, and ${metrics.documentsRead.used} documents.`
+      `Terminal history page used ${usage.bytesRead} bytes, ${usage.databaseQueries} queries, and ${usage.documentsRead} documents.`
     );
   }
 });
+
+function terminalPageUsage(
+  before: TerminalPageMetrics,
+  after: TerminalPageMetrics
+) {
+  return {
+    bytesRead: after.bytesRead.used - before.bytesRead.used,
+    databaseQueries: after.databaseQueries.used - before.databaseQueries.used,
+    documentsRead: after.documentsRead.used - before.documentsRead.used,
+  };
+}

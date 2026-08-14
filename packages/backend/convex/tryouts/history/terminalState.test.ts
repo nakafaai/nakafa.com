@@ -1,33 +1,33 @@
 import {
-  terminalHistoryPageBudget,
-  verifyTerminalPageBudget,
-} from "@repo/backend/convex/tryouts/history/terminalPage";
+  terminalFrozenPageBudget,
+  verifyTerminalFrozenPageBudget,
+} from "@repo/backend/convex/tryouts/history/terminalState";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
-describe("tryouts/history/terminalPage", () => {
-  it("grounds the full-page transaction ceilings", () => {
-    expect(terminalHistoryPageBudget).toEqual({
-      bytesRead: 9_961_472,
-      databaseQueries: 17,
-      documentsRead: 24,
+describe("tryouts/history/terminalState", () => {
+  it("grounds the frozen-page transaction ceilings", () => {
+    expect(terminalFrozenPageBudget).toEqual({
+      bytesRead: 2_097_152,
+      databaseQueries: 1,
+      documentsRead: 8,
     });
   });
 
   it("accepts the rehearsal page delta from an arbitrary baseline", async () => {
     const before = pageMetrics({
-      bytesRead: 2000,
-      databaseQueries: 12,
-      documentsRead: 5,
+      bytesRead: 10_000,
+      databaseQueries: 28,
+      documentsRead: 4,
     });
     await expect(
       Effect.runPromise(
-        verifyTerminalPageBudget(
+        verifyTerminalFrozenPageBudget(
           before,
           pageMetrics({
-            bytesRead: 2000 + terminalHistoryPageBudget.bytesRead,
+            bytesRead: 10_000 + terminalFrozenPageBudget.bytesRead,
             databaseQueries: 29,
-            documentsRead: 5 + terminalHistoryPageBudget.documentsRead,
+            documentsRead: 4 + terminalFrozenPageBudget.documentsRead,
           })
         )
       )
@@ -39,21 +39,21 @@ describe("tryouts/history/terminalPage", () => {
       name: "byte ceiling",
       before: pageMetrics(),
       after: pageMetrics({
-        bytesRead: terminalHistoryPageBudget.bytesRead + 1,
+        bytesRead: terminalFrozenPageBudget.bytesRead + 1,
       }),
     },
     {
       name: "query ceiling",
       before: pageMetrics(),
       after: pageMetrics({
-        databaseQueries: terminalHistoryPageBudget.databaseQueries + 1,
+        databaseQueries: terminalFrozenPageBudget.databaseQueries + 1,
       }),
     },
     {
       name: "document ceiling",
       before: pageMetrics(),
       after: pageMetrics({
-        documentsRead: terminalHistoryPageBudget.documentsRead + 1,
+        documentsRead: terminalFrozenPageBudget.documentsRead + 1,
       }),
     },
     {
@@ -74,7 +74,7 @@ describe("tryouts/history/terminalPage", () => {
   ])("fails closed beyond the $name", async ({ after, before }) => {
     await expect(
       Effect.runPromise(
-        verifyTerminalPageBudget(before, after).pipe(Effect.flip)
+        verifyTerminalFrozenPageBudget(before, after).pipe(Effect.flip)
       )
     ).resolves.toMatchObject({
       _tag: "TryoutHistoryError",
