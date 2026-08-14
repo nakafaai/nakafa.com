@@ -62,7 +62,7 @@ describe("contentRelease/runtime/public/dispatch", () => {
     const row = await t.query(
       internal.contentRelease.runtime.public.internal.read,
       {
-        locale: "en",
+        appLocale: "en",
         publicPath: TEST_RUNTIME_PATH,
       }
     );
@@ -103,8 +103,8 @@ describe("contentRelease/runtime/public/dispatch", () => {
       t,
       JSON.stringify({
         delivery: "public",
-        locale: "en",
-        publicPath: "test/missing",
+        appLocale: "en",
+        publicPath: "subjects/test/missing",
       })
     );
 
@@ -170,7 +170,7 @@ describe("contentRelease/runtime/public/dispatch", () => {
       t,
       JSON.stringify({
         delivery: "public",
-        locale: "en",
+        appLocale: "en",
         publicPath: FUNCTION_MATERIAL_PATH,
       })
     );

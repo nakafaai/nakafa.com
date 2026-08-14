@@ -1,8 +1,8 @@
-import { ContentLocaleSchema } from "@nakafa/aksara-contracts/content";
 import {
   ContentKeySchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { Schema } from "effect";
 
 /** Authenticated MDX code could not produce its expected React module. */
@@ -26,7 +26,7 @@ export class ContentRuntimeConfigurationError extends Schema.TaggedError<Content
 export class PublishedProjectionError extends Schema.TaggedError<PublishedProjectionError>()(
   "PublishedProjectionError",
   {
-    locale: ContentLocaleSchema,
+    appLocale: AppLocaleSchema,
     publicPath: Schema.String,
   }
 ) {}
@@ -34,7 +34,7 @@ export class PublishedProjectionError extends Schema.TaggedError<PublishedProjec
 /** Public route identity attached to a malformed signed projection. */
 export type PublishedProjectionIdentity = Pick<
   PublishedProjectionError,
-  "locale" | "publicPath"
+  "appLocale" | "publicPath"
 >;
 
 /** Two release-bound reads observed different active publication identities. */

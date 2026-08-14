@@ -132,6 +132,8 @@ describe("contentRelease/proof/snapshot", () => {
     const rollbackSnapshots = invertContentSnapshots(base.manifest.snapshots);
     const rollbackManifest = ContentReleaseManifestSchema.make({
       ...testEmptyManifest(ReleaseIdSchema.make("release-recovery")),
+      baseActiveAppLocales: base.manifest.activeAppLocales,
+      baseEditorialReviewDigest: base.manifest.editorialReviewDigest,
       baseManifestHash: base.manifestHash,
       baseReleaseId: base.manifest.releaseId,
       baseResultCount: base.manifest.resultCount,

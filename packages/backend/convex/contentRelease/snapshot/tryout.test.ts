@@ -1,13 +1,12 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/catalog-hash";
 import {
   tryoutCatalogIdentity,
   tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
-import {
-  makeTryoutCatalogRecord,
-  makeTryoutPlacementRecord,
-} from "@nakafa/aksara-contracts/tryout/row-hash";
+import { makeTryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/placement-hash";
+import { TryoutChoiceListSchema } from "@nakafa/aksara-contracts/tryout/spec";
 import {
   stageTryoutCatalog,
   stageTryoutPlacement,
@@ -74,28 +73,6 @@ describe("contentRelease/snapshot/tryout", () => {
     });
   });
 
-  it("accepts pre-hash placement rows during the additive migration", async () => {
-    const placement = makeTryoutPlacementRow();
-    const placementJson = canonicalizeContentSnapshotRow(placement);
-    const { contentHash: _contentHash, ...legacyFacts } = tryoutPlacementFacts(
-      placement.record
-    );
-    const t = convexTest(schema, convexModules);
-
-    const placementId = await t.mutation((ctx) =>
-      ctx.db.insert("tryoutPlacements", {
-        ...legacyFacts,
-        index: 0,
-        rowHash: placement.record.rowHash,
-        rowJson: placementJson,
-        snapshotId,
-      })
-    );
-    const stored = await t.run((ctx) => ctx.db.get(placementId));
-
-    expect(stored).not.toHaveProperty("contentHash");
-  });
-
   it("replays exact rows and rejects index or identity collisions", async () => {
     const catalog = makeTryoutCatalogRow();
     const rowJson = canonicalizeContentSnapshotRow(catalog);
@@ -110,52 +87,26 @@ describe("contentRelease/snapshot/tryout", () => {
         )
       )
     ).resolves.toBe(true);
+    await t.mutation(async (ctx) => {
+      const stored = await ctx.db.query("tryoutCatalog").unique();
+      if (!stored) {
+        throw new Error("Expected one technical try-out catalog row.");
+      }
+      await ctx.db.patch("tryoutCatalog", stored._id, {
+        assetId: "asset:en:tryout:technical:changed",
+      });
+    });
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(
+          stageTryoutCatalog(ctx, snapshotId, 0, catalog, rowJson)
+        )
+      )
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
     await expect(
       t.mutation((ctx) =>
         runConvexProgram(
           stageTryoutCatalog(ctx, snapshotId, 1, catalog, rowJson)
-        )
-      )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
-  });
-
-  it("accepts an unstaged asset identity and rejects a changed one", async () => {
-    const catalog = makeTryoutCatalogRow();
-    const rowJson = canonicalizeContentSnapshotRow(catalog);
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) =>
-      runConvexProgram(stageTryoutCatalog(ctx, snapshotId, 0, catalog, rowJson))
-    );
-    await t.mutation(async (ctx) => {
-      const stored = await ctx.db.query("tryoutCatalog").unique();
-      if (!stored) {
-        throw new Error("Expected one technical try-out catalog row.");
-      }
-      await ctx.db.patch("tryoutCatalog", stored._id, {
-        assetId: undefined,
-      });
-    });
-    await expect(
-      t.mutation((ctx) =>
-        runConvexProgram(
-          stageTryoutCatalog(ctx, snapshotId, 0, catalog, rowJson)
-        )
-      )
-    ).resolves.toBe(true);
-    await t.mutation(async (ctx) => {
-      const stored = await ctx.db.query("tryoutCatalog").unique();
-      if (!stored) {
-        throw new Error("Expected one technical try-out catalog row.");
-      }
-      await ctx.db.patch("tryoutCatalog", stored._id, {
-        assetId: "asset:en:tryout:technical:tampered",
-      });
-    });
-
-    await expect(
-      t.mutation((ctx) =>
-        runConvexProgram(
-          stageTryoutCatalog(ctx, snapshotId, 0, catalog, rowJson)
         )
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
@@ -171,11 +122,20 @@ describe("contentRelease/snapshot/tryout", () => {
       }),
     };
     const placementSource = makeTryoutPlacementRow();
+    const [firstChoice, ...remainingChoices] =
+      placementSource.record.row.choices;
+    const oversizedChoices = TryoutChoiceListSchema.make([
+      {
+        ...firstChoice,
+        label: "x".repeat(TRYOUT_PLACEMENT_DOCUMENT_LIMIT),
+      },
+      ...remainingChoices,
+    ]);
     const placement = {
       ...placementSource,
       record: makeTryoutPlacementRecord({
         ...placementSource.record.row,
-        title: "x".repeat(TRYOUT_PLACEMENT_DOCUMENT_LIMIT),
+        choices: oversizedChoices,
       }),
     };
     const t = convexTest(schema, convexModules);

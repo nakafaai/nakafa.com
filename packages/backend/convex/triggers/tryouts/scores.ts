@@ -4,6 +4,7 @@ import {
   getUnknownErrorMessage,
   runConvexProgram,
 } from "@repo/backend/convex/lib/effect";
+import { readAttemptSetIdentity } from "@repo/backend/convex/tryouts/runtime/lookup";
 import type { GenericMutationCtx } from "convex/server";
 import type { Change } from "convex-helpers/server/triggers";
 import { Effect, Schema } from "effect";
@@ -50,7 +51,7 @@ const captureTryoutScoreEvent = Effect.fn(
       )
     );
   }
-  const identity = readScoreIdentity(attempt);
+  const identity = readAttemptSetIdentity(attempt);
 
   yield* captureProductEvent(ctx, {
     distinctId: score.userId,
@@ -73,17 +74,6 @@ const captureTryoutScoreEvent = Effect.fn(
     timestamp: new Date(score.finalizedAt),
   }).pipe(Effect.mapError(toTryoutScoreAnalyticsError));
 });
-
-/** Reads analytics identity from the immutable signed attempt. */
-function readScoreIdentity(attempt: DataModel["tryoutAttempts"]["document"]) {
-  return {
-    countryKey: attempt.countryKey,
-    examKey: attempt.examKey,
-    locale: attempt.locale,
-    setKey: attempt.setKey,
-    trackKey: attempt.trackKey,
-  };
-}
 
 /** Runs completed-score analytics at the registered Convex trigger boundary. */
 export async function tryoutScoresHandler(

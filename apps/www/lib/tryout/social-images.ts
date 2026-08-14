@@ -1,5 +1,5 @@
-import { ContentLocaleSchema } from "@nakafa/aksara-contracts/content";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import { ActiveAppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { TryoutKeySchema } from "@nakafa/aksara-contracts/tryout/key";
 import { Effect, Either, Schema } from "effect";
 import { constant } from "effect/Function";
@@ -9,29 +9,29 @@ const reviewedTryoutSocialImageSources = [
   {
     countryKey: "indonesia",
     examKey: "snbt",
-    locale: "en",
+    appLocale: "en",
   },
   {
     countryKey: "indonesia",
     examKey: "tka",
-    locale: "en",
+    appLocale: "en",
   },
   {
     countryKey: "indonesia",
     examKey: "snbt",
-    locale: "id",
+    appLocale: "id",
   },
   {
     countryKey: "indonesia",
     examKey: "tka",
-    locale: "id",
+    appLocale: "id",
   },
 ];
 
 const ReviewedTryoutSocialImageSchema = Schema.Struct({
   countryKey: TryoutKeySchema,
   examKey: TryoutKeySchema,
-  locale: ContentLocaleSchema,
+  appLocale: ActiveAppLocaleSchema,
 });
 
 const ReviewedTryoutSocialImageRegistrySchema = Schema.Array(
@@ -46,7 +46,7 @@ const ReviewedTryoutSocialImageRegistrySchema = Schema.Array(
 const TryoutExamSocialImageIdentitySchema = Schema.Struct({
   countryKey: TryoutKeySchema,
   examKey: TryoutKeySchema,
-  locale: ContentLocaleSchema,
+  appLocale: ActiveAppLocaleSchema,
   publicPath: PublicPathSchema,
 });
 
@@ -144,22 +144,22 @@ export function resolveTryoutExamSocialImage(
   );
 
   return Effect.succeed(
-    reviewedImagePath ?? getOgUrl(identity.locale, identity.publicPath)
+    reviewedImagePath ?? getOgUrl(identity.appLocale, identity.publicPath)
   );
 }
 
 function getReviewedTryoutSocialImagePath(image: {
   readonly countryKey: string;
   readonly examKey: string;
-  readonly locale: string;
+  readonly appLocale: string;
 }) {
-  return `/open-graph/tryout/${image.countryKey}/${image.locale}-${image.examKey}.png`;
+  return `/open-graph/tryout/${image.countryKey}/${image.appLocale}-${image.examKey}.png`;
 }
 
 function getTryoutSocialImageIdentity(identity: {
   readonly countryKey: string;
   readonly examKey: string;
-  readonly locale: string;
+  readonly appLocale: string;
 }) {
-  return `${identity.countryKey}:${identity.locale}:${identity.examKey}`;
+  return `${identity.countryKey}:${identity.appLocale}:${identity.examKey}`;
 }

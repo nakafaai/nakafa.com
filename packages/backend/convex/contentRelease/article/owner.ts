@@ -7,7 +7,7 @@ import { Effect } from "effect";
 
 /** Loads article ownership only after its active read model is complete. */
 export const loadArticleOwner = Effect.fn("contentRelease.loadArticleOwner")(
-  function* (ctx: QueryCtx, locale: Doc<"contentKeys">["locale"]) {
+  function* (ctx: QueryCtx, appLocale: Doc<"contentPaths">["appLocale"]) {
     const active = yield* loadActiveIdentity(ctx);
     if (!active) {
       return { active: null, managed: false };
@@ -23,7 +23,7 @@ export const loadArticleOwner = Effect.fn("contentRelease.loadArticleOwner")(
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_STATE",
-        `Articles for ${locale} in active release ${active.releaseId} are still synchronizing.`
+        `Articles for ${appLocale} in active release ${active.releaseId} are still synchronizing.`
       );
     }
     return { active, managed: true };

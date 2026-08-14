@@ -49,9 +49,11 @@ export function ContentPart({ message }: Props) {
           title={message.result.url}
         >
           <p className="text-sm">{message.result.title}</p>
-          <span className="text-muted-foreground text-sm">
-            {message.result.description}
-          </span>
+          {message.result.description ? (
+            <span className="text-muted-foreground text-sm">
+              {message.result.description}
+            </span>
+          ) : null}
         </a>
       </CollapsibleContent>
     </Collapsible>

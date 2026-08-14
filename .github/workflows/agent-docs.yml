@@ -91,39 +91,64 @@ jobs:
 
           if [ ! -f "$output" ] || [ -L "$output" ] || \
             [ "$(stat -c '%a' "$output")" != "600" ] || \
-            [ "$(wc -l < "$output")" -ne 1 ] || \
-            ! grep -Exq 'AGENT_DOCS_CONTENT_STATE_HASH=[a-f0-9]{64}' "$output"; then
+            ! grep -Exq 'AGENT_DOCS_CONTENT_RUNTIME_MODE=(published|proved-maintenance)' "$output" || \
+            ! grep -Exq 'AGENT_DOCS_RUNTIME_GENERATION_HASH=[a-f0-9]{64}' "$output"; then
             echo "Invalid production runtime generation output." >&2
             exit 1
           fi
 
+          runtime_mode="$(sed -n 's/^AGENT_DOCS_CONTENT_RUNTIME_MODE=//p' "$output")"
+          case "$runtime_mode" in
+            published)
+              if [ "$(wc -l < "$output")" -ne 3 ] || \
+                ! grep -Exq 'AGENT_DOCS_CONTENT_STATE_HASH=[a-f0-9]{64}' "$output" || \
+                [ "$(sed -n 's/^AGENT_DOCS_CONTENT_STATE_HASH=//p' "$output")" != \
+                  "$(sed -n 's/^AGENT_DOCS_RUNTIME_GENERATION_HASH=//p' "$output")" ]; then
+                echo "Invalid published runtime generation output." >&2
+                exit 1
+              fi
+              ;;
+            proved-maintenance)
+              if [ "$(wc -l < "$output")" -ne 2 ] || \
+                grep -Eq '^AGENT_DOCS_CONTENT_STATE_HASH=' "$output"; then
+                echo "Invalid proved maintenance generation output." >&2
+                exit 1
+              fi
+              ;;
+            *)
+              echo "Invalid production runtime mode." >&2
+              exit 1
+              ;;
+          esac
+
           cat "$output" >> "$GITHUB_ENV"
           rm -f -- "$output"
 
+      - name: Verify selected production runtime generation
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.AGENT_DOCS_CONVEX_DEPLOY_KEY }}
+        run: pnpm --silent --dir packages/backend runtime:ci verify-generations
+
       # Protected signed runtime, including tryout content, is never cached raw.
+      # Proved maintenance has no current signed snapshot and remains WAF-contained.
       - name: Restore encrypted signed content snapshot
         id: signed-content-cache
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true' && env.AGENT_DOCS_CONTENT_RUNTIME_MODE == 'published'
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/agent-docs-content-cache
           key: agent-docs-content-${{ env.AGENT_DOCS_CONTENT_CACHE_VERSION }}-${{ env.AGENT_DOCS_CONTENT_STATE_HASH }}-${{ env.AGENT_DOCS_RUNTIME_SCHEMA_FINGERPRINT }}
 
       - name: Export encrypted signed content snapshot
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true' && steps.signed-content-cache.outputs.cache-hit != 'true'
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true' && env.AGENT_DOCS_CONTENT_RUNTIME_MODE == 'published' && steps.signed-content-cache.outputs.cache-hit != 'true'
         env:
           AGENT_DOCS_CONTENT_CACHE_KEY: ${{ secrets.AGENT_DOCS_CONTENT_CACHE_KEY_V1 }}
           CONVEX_DEPLOY_KEY: ${{ secrets.AGENT_DOCS_CONVEX_DEPLOY_KEY }}
         run: pnpm --silent --dir packages/backend runtime:ci export
 
-      - name: Verify production runtime generations
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
-        env:
-          CONVEX_DEPLOY_KEY: ${{ secrets.AGENT_DOCS_CONVEX_DEPLOY_KEY }}
-        run: pnpm --silent --dir packages/backend runtime:ci verify-generations
-
       - name: Initialize anonymous local backend
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true' && env.AGENT_DOCS_CONTENT_RUNTIME_MODE == 'published'
         run: |
           umask 077
           CONVEX_AGENT_MODE=anonymous pnpm --dir packages/backend exec convex init
@@ -158,7 +183,7 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Configure anonymous local backend
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true' && env.AGENT_DOCS_CONTENT_RUNTIME_MODE == 'published'
         run: |
           # Agent docs exercises content reads only. External integrations stay inert.
           pnpm --dir packages/backend exec convex env set --force <<EOF
@@ -185,7 +210,7 @@ jobs:
           EOF
 
       - name: Start anonymous local backend
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true' && env.AGENT_DOCS_CONTENT_RUNTIME_MODE == 'published'
         run: |
           umask 077
           convex_log="$RUNNER_TEMP/agent-docs-convex.log"
@@ -214,14 +239,14 @@ jobs:
           exit 1
 
       - name: Import signed content snapshot
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true' && env.AGENT_DOCS_CONTENT_RUNTIME_MODE == 'published'
         env:
           AGENT_DOCS_CONTENT_CACHE_KEY: ${{ secrets.AGENT_DOCS_CONTENT_CACHE_KEY_V1 }}
         run: pnpm --silent --dir packages/backend runtime:ci import
 
       - name: Build production app
         id: production_build
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true' && env.AGENT_DOCS_CONTENT_RUNTIME_MODE == 'published'
         run: pnpm build
         env:
           NODE_ENV: production
@@ -230,6 +255,8 @@ jobs:
         if: failure() && steps.production_build.outcome == 'failure'
         env:
           AGENT_DOCS_CONTENT_STATE_HASH: ""
+          AGENT_DOCS_CONTENT_RUNTIME_MODE: ""
+          AGENT_DOCS_RUNTIME_GENERATION_HASH: ""
           AGENT_DOCS_RUNTIME_SCHEMA_FINGERPRINT: ""
           CONTENT_RUNTIME_TOKEN: ""
           CONVEX_SITE_URL: ""
@@ -275,7 +302,7 @@ jobs:
             "local_backend_request_id_present=$request_id_present"
 
       - name: Start web app
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true' && env.AGENT_DOCS_CONTENT_RUNTIME_MODE == 'published'
         run: |
           umask 077
           web_log="$RUNNER_TEMP/agent-docs-www.log"
@@ -286,7 +313,7 @@ jobs:
           echo "$!" > "$web_pid"
 
       - name: Wait for web app
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true' && env.AGENT_DOCS_CONTENT_RUNTIME_MODE == 'published'
         run: |
           for _attempt in {1..60}; do
             if curl -fsS http://localhost:3000/llms.txt > /dev/null && \
@@ -299,11 +326,17 @@ jobs:
           exit 1
 
       - name: Run AFDocs checks
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true' && env.AGENT_DOCS_CONTENT_RUNTIME_MODE == 'published'
         run: pnpm agent-docs
 
+      - name: Verify final production runtime generation
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.AGENT_DOCS_CONVEX_DEPLOY_KEY }}
+        run: pnpm --silent --dir packages/backend runtime:ci verify-generations
+
       - name: Save verified encrypted signed content snapshot
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.signed-content-cache.outputs.cache-hit != 'true'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && env.AGENT_DOCS_CONTENT_RUNTIME_MODE == 'published' && steps.signed-content-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/agent-docs-content-cache

@@ -3,13 +3,14 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import {
-  QURAN_SURAH_COUNT,
-  type QuranChunkRow,
   QuranChunkRowSchema,
   type QuranRuntimeVerse,
-  type QuranSearchRow,
   QuranSearchRowSchema,
+} from "@nakafa/aksara-contracts/quran/snapshot/row";
+import {
+  QURAN_SURAH_COUNT,
   type QuranSurahRow,
   QuranSurahRowSchema,
 } from "@nakafa/aksara-contracts/quran/spec";
@@ -25,6 +26,8 @@ type QuranCatalogResult = FunctionReturnType<
 type QuranReferenceResult = FunctionReturnType<
   typeof api.contentRelease.quran.reference
 >;
+type QuranChunkRow = typeof QuranChunkRowSchema.Type;
+type QuranSearchRow = typeof QuranSearchRowSchema.Type;
 
 const QuranPublicationOperationSchema = Schema.Literal(
   "attribution",
@@ -59,7 +62,7 @@ export interface PublishedQuranCatalog extends PublishedQuranSource {
   readonly surahs: readonly QuranSurahRow[];
 }
 
-/** One bounded signed Quran reference and its locale-specific graph identity. */
+/** One bounded signed Quran reference and its app-locale graph identity. */
 export interface PublishedQuranReference extends PublishedQuranSource {
   readonly fromVerse: number;
   readonly search: QuranSearchRow;
@@ -189,14 +192,14 @@ function hasContiguousChunks(
   });
 }
 
-/** Checks the locale-specific search identity returned beside one surah. */
+/** Checks the app-locale search identity returned beside one surah. */
 function hasExpectedSearchIdentity(
   search: QuranSearchRow,
-  locale: QuranSearchRow["locale"],
+  appLocale: AppLocaleCode,
   surahNumber: number
 ) {
   return (
-    search.locale === locale &&
+    search.appLocale === appLocale &&
     search.surahNumber === surahNumber &&
     search.route === `quran/${surahNumber}`
   );
@@ -227,7 +230,7 @@ export const decodePublishedQuranReference = Effect.fn(
 )(function* (
   result: QuranReferenceResult,
   expected: {
-    readonly locale: QuranSearchRow["locale"];
+    readonly appLocale: AppLocaleCode;
     readonly surahNumber: number;
   }
 ) {
@@ -268,7 +271,7 @@ export const decodePublishedQuranReference = Effect.fn(
     result.fromVerse < 1 ||
     result.toVerse > surah.numberOfVerses ||
     !hasExactQuranVerseRange(verses, result.fromVerse, result.toVerse) ||
-    !hasExpectedSearchIdentity(search, expected.locale, expected.surahNumber)
+    !hasExpectedSearchIdentity(search, expected.appLocale, expected.surahNumber)
   ) {
     return yield* publicationError(
       "reference",

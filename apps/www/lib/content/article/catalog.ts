@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   type ArticleCategory,
   ArticleCategorySchema,
@@ -84,7 +85,10 @@ export interface PublishedCategoryPage {
 
 /** Maps one malformed catalog field to the public projection failure contract. */
 function projectionError(locale: Locale, publicPath = "articles") {
-  return new PublishedProjectionError({ locale, publicPath });
+  return new PublishedProjectionError({
+    appLocale: AppLocaleSchema.make(locale),
+    publicPath,
+  });
 }
 
 /** Strictly decodes one backend-verified article catalog row. */
@@ -102,8 +106,8 @@ const decodeArticleItem = Effect.fn("www.articles.decodeItem")(function* (
   ).pipe(Effect.mapError(() => projectionError(locale, item.publicPath)));
   if (
     item.family !== "article" ||
-    item.locale !== locale ||
-    projection.locale !== locale ||
+    item.appLocale !== locale ||
+    projection.appLocale !== locale ||
     projection.contentKey !== item.contentKey ||
     projection.publicPath !== item.publicPath
   ) {
@@ -147,11 +151,12 @@ export const readPublishedArticlePage = Effect.fn(
     readonly locale: Locale;
   }
 ) {
+  const appLocale = AppLocaleSchema.make(input.locale);
   const args = {
+    appLocale,
     category: input.category,
     expectedManifestHash: input.expectedManifestHash,
     expectedReleaseId: input.expectedReleaseId,
-    locale: input.locale,
     paginationOpts: {
       cursor: input.cursor,
       numItems: PROJECTION_PAGE_LIMIT,
@@ -170,7 +175,7 @@ export const readPublishedArticlePage = Effect.fn(
     decodeArticleItem(item, input.locale)
   );
   const sourceRevision = yield* decodeSourceRevision(rawSourceRevision, {
-    locale: input.locale,
+    appLocale,
     publicPath: "articles",
   });
   const done = page.isDone;
@@ -197,10 +202,11 @@ export const readPublishedCategories = Effect.fn(
     readonly locale: Locale;
   }
 ) {
+  const appLocale = AppLocaleSchema.make(input.locale);
   const args = {
+    appLocale,
     expectedManifestHash: input.expectedManifestHash,
     expectedReleaseId: input.expectedReleaseId,
-    locale: input.locale,
     paginationOpts: {
       cursor: input.cursor,
       numItems: PROJECTION_PAGE_LIMIT,
@@ -222,7 +228,7 @@ export const readPublishedCategories = Effect.fn(
     decodeCategoryItem(item, input.locale)
   );
   const sourceRevision = yield* decodeSourceRevision(rawSourceRevision, {
-    locale: input.locale,
+    appLocale,
     publicPath: "articles",
   });
   const done = page.isDone;

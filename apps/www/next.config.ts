@@ -13,9 +13,10 @@ import { Schema } from "effect";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import { AGENT_DISCOVERY_HEADERS } from "@/lib/agent-discovery";
+import { hasPreviewRendererEnvironment } from "@/lib/content/preview/environment";
 
 const configEnv = createEnv({
-  extends: [analyzeKeys(), postHogProxyKeys()],
+  extends: [analyzeKeys()],
   server: {
     CONVEX_AGENT_MODE: Schema.standardSchemaV1(
       Schema.UndefinedOr(Schema.Literal("anonymous"))
@@ -25,6 +26,9 @@ const configEnv = createEnv({
     CONVEX_AGENT_MODE: process.env.CONVEX_AGENT_MODE,
   },
 });
+const postHogProxyEnv = hasPreviewRendererEnvironment()
+  ? null
+  : postHogProxyKeys();
 
 const withNextIntl = createNextIntlPlugin(
   "../../packages/internationalization/src/request.ts"
@@ -78,7 +82,9 @@ function createAppRewrites() {
     // PostHog requires the specific static and array rewrites to come before the
     // catch-all analytics rewrite so asset cache headers are preserved.
     afterFiles: [
-      ...createPostHogProxyRewrites(configEnv.POSTHOG_PROXY_HOST),
+      ...(postHogProxyEnv === null
+        ? []
+        : createPostHogProxyRewrites(postHogProxyEnv.POSTHOG_PROXY_HOST)),
       ...agentDiscoveryRewrites,
       // Keep canonical OG image routes out of the broad extension rewrites.
       // After a pass-through match, Next checks the localized dynamic route

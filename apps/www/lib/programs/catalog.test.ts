@@ -1,3 +1,4 @@
+import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { describe, expect, it } from "vitest";
 import type {
   ActiveLearningSelection,
@@ -13,7 +14,7 @@ const activeSelection = {
   program: {
     coverageStatus: "available",
     displayOrder: 10,
-    key: "ready-curriculum",
+    key: LearningProgramKeySchema.make("ready-curriculum"),
     kind: "school-curriculum",
     navigation: {
       levels: ["stage", "class", "subject", "topic"],
@@ -29,7 +30,7 @@ const catalog = [
   {
     coverageStatus: "available",
     displayOrder: 10,
-    key: "ready-curriculum",
+    key: LearningProgramKeySchema.make("ready-curriculum"),
     kind: "school-curriculum",
     navigation: {
       levels: ["stage", "class", "subject", "topic"],
@@ -42,7 +43,7 @@ const catalog = [
   {
     coverageStatus: "planned",
     displayOrder: 20,
-    key: "planned-path",
+    key: LearningProgramKeySchema.make("planned-path"),
     kind: "school-curriculum",
     navigation: {
       levels: ["stage", "class", "subject", "topic"],
@@ -55,7 +56,7 @@ const catalog = [
   {
     coverageStatus: "partial",
     displayOrder: 30,
-    key: "partial-path",
+    key: LearningProgramKeySchema.make("partial-path"),
     kind: "school-curriculum",
     navigation: {
       levels: ["stage", "class", "subject", "topic"],

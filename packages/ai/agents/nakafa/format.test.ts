@@ -51,6 +51,17 @@ describe("Nakafa formatter", () => {
     expect(text).toContain("Isi materi lengkap.");
   });
 
+  it("omits an unavailable content description", () => {
+    const text = formatRead({
+      ...readNakafaContentRefFixture("id", subjectRoute, "material"),
+      text: "Isi materi lengkap.",
+      title: "Contoh Materi",
+    });
+
+    expect(text).toContain("- Title: Contoh Materi");
+    expect(text).not.toContain("- Description:");
+  });
+
   it("formats Quran references with and without tafsir", () => {
     const text = formatQuran({
       ...readNakafaContentRefFixture("id", "quran/1", "quran"),

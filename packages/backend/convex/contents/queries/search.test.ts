@@ -83,8 +83,8 @@ describe("contents/queries/search:search", () => {
     await activateMaterialCatalog(t, [projection]);
     await t.mutation(async (ctx) => {
       await insertRuntimeIndex(ctx, projection.contentKey, {
+        artifactLocale: projection.artifactLocale,
         headSequence: MATERIAL_IDENTITY.sequence,
-        locale: projection.locale,
         plainText: "current signed material",
       });
       const state = await ctx.db.query("contentState").unique();
@@ -100,7 +100,7 @@ describe("contents/queries/search:search", () => {
 
     const result = await t.query(api.contents.queries.search.search, {
       limit: 5,
-      locale: projection.locale,
+      locale: "en",
       offset: 0,
       queries: [projection.publicPath],
       section: "material",

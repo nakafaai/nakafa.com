@@ -1,5 +1,6 @@
 import "server-only";
 
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type {
   ArticleCategory,
   ArticleCategoryTitle,
@@ -38,7 +39,7 @@ export const readArticleNavigation = Effect.fn("www.articles.readNavigation")(
       });
       if (page.stale) {
         return yield* new PublishedProjectionError({
-          locale,
+          appLocale: AppLocaleSchema.make(locale),
           publicPath: "articles",
         });
       }

@@ -8,8 +8,13 @@ import {
   PublicPathSchema,
 } from "@nakafa/aksara-contracts/ids";
 import {
+  ActiveAppLocaleSchema,
+  ArtifactLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
+import {
   ArticleCategorySchema,
   ArticleProjectionSchema,
+  ArticleRouteSlugSchema,
   ArticleSlugSchema,
   canonicalizeArticleProjection,
 } from "@nakafa/aksara-contracts/projection/article";
@@ -55,13 +60,18 @@ export const TEST_ARTICLE_SOURCE = CorpusSourcePathSchema.make(
   "packages/corpus/articles/politics/dynastic-politics/asian-values/en.mdx"
 );
 export const TEST_ARTICLE_PROJECTION = ArticleProjectionSchema.make({
+  articleRouteSlug: ArticleRouteSlugSchema.make(
+    "dynastic-politics-asian-values"
+  ),
   articleSlug: ArticleSlugSchema.make("dynastic-politics-asian-values"),
   category: ArticleCategorySchema.make("politics"),
+  categoryRouteSlug: ArticleRouteSlugSchema.make("politics"),
   categoryTitle: "Politics",
   contentKey: TEST_ARTICLE_KEY,
   graph: testArticleGraph("dynastic-politics-asian-values"),
   kind: "article",
-  locale: "en",
+  appLocale: ActiveAppLocaleSchema.make("en"),
+  artifactLocale: ArtifactLocaleSchema.make("en"),
   metadata: {
     authors: [{ name: "Nakafa" }],
     date: "2026-07-23",
@@ -87,6 +97,7 @@ export function testArticleProjection(
   const publicPath = PublicPathSchema.make(contentKey);
   return ArticleProjectionSchema.make({
     ...TEST_ARTICLE_PROJECTION,
+    articleRouteSlug: ArticleRouteSlugSchema.make(articleSlug),
     articleSlug,
     contentKey,
     graph: {
@@ -115,7 +126,7 @@ export function runtimeContentKey(
 export function publicRuntimeRequest() {
   return JSON.stringify({
     delivery: "public",
-    locale: "en",
+    appLocale: "en",
     publicPath: TEST_RUNTIME_PATH,
   });
 }
@@ -124,7 +135,7 @@ export function publicRuntimeRequest() {
 export function articleRuntimeRequest() {
   return JSON.stringify({
     delivery: "public",
-    locale: "en",
+    appLocale: "en",
     publicPath: TEST_ARTICLE_PATH,
   });
 }
@@ -145,8 +156,8 @@ export function runtimeCases(row: RuntimeRow) {
   };
   const idArtifact = testArtifactJson({
     artifactHash: `sha256:${"3".repeat(64)}`,
+    artifactLocale: "id",
     contentKey: runtimeContentKey("public"),
-    locale: "id",
   });
   return [
     [
@@ -157,8 +168,8 @@ export function runtimeCases(row: RuntimeRow) {
         projection: JSON.parse(
           testProjectionJson({
             contentKey: runtimeContentKey("public"),
-            locale: "id",
-            publicPath: TEST_RUNTIME_PATH,
+            appLocale: "id",
+            publicPath: "materi/test/runtime",
           })
         ),
       },
@@ -170,7 +181,7 @@ export function runtimeCases(row: RuntimeRow) {
         projection: JSON.parse(
           testProjectionJson({
             contentKey: runtimeContentKey("public"),
-            publicPath: "test/foreign",
+            publicPath: "subjects/test/foreign",
           })
         ),
       },
@@ -227,20 +238,22 @@ export async function insertRuntimeArticles(
     const projectionJson = canonicalizeArticleProjection(projection);
     await insertRuntimeKey(ctx, projection.contentKey, { projectionJson });
     await insertRuntimeVersion(ctx, "public", projection.contentKey, {
+      artifactLocale: projection.artifactLocale,
       projectionJson,
       publicPath: projection.publicPath,
       rendererDomain: "politics",
-      sourcePath: `packages/corpus/${projection.contentKey}/${projection.locale}.mdx`,
+      sourcePath: `packages/corpus/${projection.contentKey}/${projection.artifactLocale}.mdx`,
     });
     await insertRuntimeBinding(ctx, projection.contentKey, {
+      appLocale: projection.appLocale,
       publicPath: projection.publicPath,
     });
     const head = await ctx.db
       .query("contentHeads")
-      .withIndex("by_contentKey_and_locale_and_sequence", (query) =>
+      .withIndex("by_contentKey_and_artifactLocale_and_sequence", (query) =>
         query
           .eq("contentKey", projection.contentKey)
-          .eq("locale", projection.locale)
+          .eq("artifactLocale", projection.artifactLocale)
           .eq("sequence", TEST_RUNTIME_RELEASE.sequence)
       )
       .unique();

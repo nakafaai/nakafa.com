@@ -118,10 +118,15 @@ describe("signed curriculum runtime", () => {
   it("reads signed root cards and selector values", async () => {
     catalogMock.mockResolvedValueOnce({
       entries: [
-        { program: testPublishedProgram, route: testProgramRoot },
+        {
+          program: testPublishedProgram,
+          route: testProgramRoot,
+          translation: testPublishedProgram.translations[0],
+        },
         {
           program: testPublishedProgram,
           route: { ...testProgramRoot, sitemap: false },
+          translation: testPublishedProgram.translations[0],
         },
       ],
       sourceRevision: revision,

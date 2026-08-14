@@ -1,7 +1,7 @@
 import "server-only";
 
+import type { AppLocale } from "@nakafa/aksara-contracts/locale";
 import { readPublicContentEvidenceBatch } from "@repo/backend/client/content/public";
-import type { Locale } from "@repo/utilities/locales";
 import { Effect, Schema } from "effect";
 import { env } from "@/env";
 
@@ -11,8 +11,8 @@ type PublishedFamily = "article" | "material";
 
 interface PublishedContentInput {
   readonly activeReleaseId: string;
+  readonly appLocale: AppLocale;
   readonly family: PublishedFamily;
-  readonly locale: Locale;
   readonly publicPath: string;
 }
 
@@ -45,7 +45,7 @@ const verifyPublishedIdentity = Effect.fn("ApiContent.verifyPublishedIdentity")(
     if (
       found.activeReleaseId !== input.activeReleaseId ||
       found.projection.kind !== expectedKind ||
-      found.projection.locale !== input.locale ||
+      found.projection.appLocale !== input.appLocale ||
       String(found.projection.publicPath) !== input.publicPath
     ) {
       return yield* publishedReadError(
@@ -61,7 +61,7 @@ function makePublishedApiItem(found: PublishedEvidence) {
   const projection = found.projection;
   return {
     ...projection.graph,
-    locale: projection.locale,
+    locale: projection.appLocale,
     metadata: {
       authors: projection.metadata.authors.map(({ name }) => ({ name })),
       date: projection.metadata.date,
@@ -77,7 +77,7 @@ function makePublishedApiItem(found: PublishedEvidence) {
     raw: found.artifact.payload.rawMdx,
     slug: projection.contentKey,
     sourcePath: projection.contentKey,
-    url: `${NAKAFA_CONTENT_BASE_URL}/${projection.locale}/${projection.publicPath}`,
+    url: `${NAKAFA_CONTENT_BASE_URL}/${projection.appLocale}/${projection.publicPath}`,
   };
 }
 
@@ -90,7 +90,7 @@ export const readPublishedApiItems = Effect.fn(
       siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
       token: env.CONTENT_RUNTIME_TOKEN,
     },
-    inputs.map(({ locale, publicPath }) => ({ locale, publicPath }))
+    inputs.map(({ appLocale, publicPath }) => ({ appLocale, publicPath }))
   ).pipe(Effect.mapError(publishedReadError));
   return yield* Effect.forEach(inputs, (input, index) => {
     const found = foundItems[index];

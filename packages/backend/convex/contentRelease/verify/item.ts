@@ -29,13 +29,18 @@ const checkRollback = Effect.fn("contentRelease.checkRollback")(function* (
   const prior =
     row.priorSequence === undefined
       ? null
-      : yield* loadVersion(ctx, row.contentKey, row.locale, row.priorSequence);
+      : yield* loadVersion(
+          ctx,
+          row.contentKey,
+          row.artifactLocale,
+          row.priorSequence
+        );
   if (!prior || prior.operation === "delete") {
     if (
       snapshot.snapshot.state !== "absent" ||
       snapshot.snapshot.contentKey !== row.contentKey ||
       snapshot.snapshot.family !== item.change.family ||
-      snapshot.snapshot.locale !== row.locale
+      snapshot.snapshot.artifactLocale !== row.artifactLocale
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
@@ -47,7 +52,7 @@ const checkRollback = Effect.fn("contentRelease.checkRollback")(function* (
   const head = yield* resolveContentHead(
     ctx,
     row.contentKey,
-    row.locale,
+    row.artifactLocale,
     row.priorSequence ?? prior.sequence
   );
   if (

@@ -14,7 +14,9 @@ async function readEnglishBucket(target: TestConvex<typeof schema>) {
   const row = await target.run((ctx) =>
     ctx.db
       .query("materialBuckets")
-      .withIndex("by_locale_and_bucket", (query) => query.eq("locale", "en"))
+      .withIndex("by_appLocale_and_bucket", (query) =>
+        query.eq("appLocale", "en")
+      )
       .first()
   );
   if (!row) {
@@ -63,7 +65,7 @@ describe("contentRelease/material/partition", () => {
     ).resolves.toMatchObject({
       activeReleaseId: MATERIAL_IDENTITY.releaseId,
       kind: "found",
-      materials: [{ projection: { locale: "en", sitemap: true } }],
+      materials: [{ projection: { appLocale: "en", sitemap: true } }],
     });
 
     await target.mutation((ctx) =>

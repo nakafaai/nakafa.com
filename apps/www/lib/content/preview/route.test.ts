@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   type LocalPreviewManifest,
   LocalPreviewManifestSchema,
@@ -67,22 +68,6 @@ const materialMismatchCases: readonly [
   Partial<MaterialPreviewRouteInput["params"]>,
 ][] = [
   ["locale", pendingRoute(), { locale: "id" }],
-  [
-    "namespace",
-    pendingRoute({
-      publicPath:
-        "materials/mathematics/function-composition-inverse-function/function-concept",
-    }),
-    {},
-  ],
-  [
-    "renderer subject",
-    pendingRoute({
-      publicPath:
-        "subjects/physics/function-composition-inverse-function/function-concept",
-    }),
-    {},
-  ],
   ["topic", pendingRoute(), { topic: "other" }],
   ["lesson count", pendingRoute(), { lesson: [] }],
   ["lesson value", pendingRoute(), { lesson: ["other"] }],
@@ -92,7 +77,7 @@ const materialMismatchCases: readonly [
 /** Runs one public preview route decision. */
 function matchPublic(publicPath: string = previewRoute.publicPath) {
   return Effect.runPromise(
-    matchesPreviewRoute({ locale: previewRoute.locale, publicPath })
+    matchesPreviewRoute({ appLocale: previewRoute.appLocale, publicPath })
   );
 }
 
@@ -130,7 +115,7 @@ describe("local preview route matching", () => {
     await expect(
       Effect.runPromise(
         matchesPreviewRoute({
-          locale: "id",
+          appLocale: AppLocaleSchema.make("id"),
           publicPath: previewRoute.publicPath,
         })
       )

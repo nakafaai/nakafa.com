@@ -22,6 +22,7 @@ vi.mock("@repo/backend/client/runtime", () => ({
 }));
 
 const quranSnapshotId = Sha256HashSchema.make(`sha256:${"b".repeat(64)}`);
+const APP_LOCALE_PATTERN = /^(?:en|id)$/u;
 
 beforeEach(() => {
   runtimeMocks.runtimeQuery.mockReset();
@@ -62,12 +63,6 @@ describe("readNakafaTaxonomy", () => {
     expect(calledRuntimeQueries()).toContain(
       getFunctionName(api.contentRelease.tryout.taxonomy)
     );
-    expect(
-      calledRuntimeQueries().filter(
-        (name) =>
-          name === getFunctionName(api.contentRelease.runtime.active.read)
-      )
-    ).toHaveLength(4);
   });
 
   it("fails closed when an article or material family is unmanaged", async () => {
@@ -181,35 +176,6 @@ describe("readNakafaTaxonomy", () => {
       },
     });
   });
-
-  it("fails closed when the active release changes during assembly", async () => {
-    let activeReadCount = 0;
-    runtimeMocks.runtimeQuery.mockImplementation((convexUrl, query, args) => {
-      if (
-        getFunctionName(query) ===
-        getFunctionName(api.contentRelease.runtime.active.read)
-      ) {
-        activeReadCount += 1;
-        return Promise.resolve({
-          releaseId: activeReadCount === 1 ? "release-current" : "release-next",
-        });
-      }
-
-      return readRuntimeFixture(convexUrl, query, args);
-    });
-
-    await expect(
-      Effect.runPromise(
-        Effect.either(readNakafaTaxonomy("https://example.convex.cloud", "id"))
-      )
-    ).resolves.toMatchObject({
-      _tag: "Left",
-      left: {
-        _tag: "NakafaAgentDataReadError",
-        message: "Unable to complete one release-pinned Nakafa content read.",
-      },
-    });
-  });
 });
 
 /** Builds one authenticated article category page fixture. */
@@ -240,15 +206,8 @@ function categoryPage(
 function readRuntimeFixture(
   _convexUrl: string,
   query: FunctionReference<"query">,
-  _args: unknown
+  args: unknown
 ) {
-  if (
-    getFunctionName(query) ===
-    getFunctionName(api.contentRelease.runtime.active.read)
-  ) {
-    return Promise.resolve({ releaseId: "release-current" });
-  }
-
   if (
     getFunctionName(query) === getFunctionName(api.contentRelease.quran.surahs)
   ) {
@@ -268,6 +227,7 @@ function readRuntimeFixture(
     getFunctionName(query) ===
     getFunctionName(api.contentRelease.article.categories)
   ) {
+    expectSignedAppLocale(args);
     return Promise.resolve(categoryPage(["politics"], true, ""));
   }
 
@@ -275,6 +235,7 @@ function readRuntimeFixture(
     getFunctionName(query) ===
     getFunctionName(api.contentRelease.article.sitemapBuckets)
   ) {
+    expectSignedAppLocale(args);
     return Promise.resolve({
       articleCount: 1,
       buckets: ["0"],
@@ -286,11 +247,13 @@ function readRuntimeFixture(
     getFunctionName(query) ===
     getFunctionName(api.contentRelease.material.sitemapBuckets)
   ) {
+    expectSignedAppLocale(args);
     return Promise.resolve({
       activeReleaseId: "release-id",
       buckets: ["0"],
       managed: true,
       materialCount: 2,
+      sourceClaimCount: 0,
     });
   }
 
@@ -298,6 +261,7 @@ function readRuntimeFixture(
     getFunctionName(query) ===
     getFunctionName(api.contentRelease.tryout.taxonomy)
   ) {
+    expectSignedAppLocale(args);
     return Promise.resolve({
       countries: [{ id: "indonesia", label: "Indonesia" }],
       exams: [{ id: "snbt", label: "SNBT" }],
@@ -306,6 +270,13 @@ function readRuntimeFixture(
   }
 
   return Promise.reject(new Error("Unhandled taxonomy query fixture."));
+}
+
+/** Requires signed inventory reads to map product locale at the client seam. */
+function expectSignedAppLocale(args: unknown) {
+  expect(args).toMatchObject({
+    appLocale: expect.stringMatching(APP_LOCALE_PATTERN),
+  });
 }
 
 /** Returns generated Convex query names called by the taxonomy reader. */

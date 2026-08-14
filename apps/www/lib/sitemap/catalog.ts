@@ -1,3 +1,4 @@
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
@@ -27,7 +28,7 @@ export const readSitemapPageDescriptors = Effect.fn(
 )(function* () {
   const descriptors: SitemapPage[] = [{ id: SITEMAP_BASE_ID }];
   const identity = {
-    locale: routing.defaultLocale,
+    appLocale: AppLocaleSchema.make(routing.defaultLocale),
     publicPath: "sitemap.xml",
   };
   const active = yield* readActiveContentIdentity();

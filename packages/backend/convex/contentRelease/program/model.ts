@@ -1,4 +1,4 @@
-import { ContentLocaleSchema } from "@nakafa/aksara-contracts/content";
+import { ACTIVE_APP_LOCALES } from "@nakafa/aksara-contracts/locale";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
@@ -32,16 +32,16 @@ export const loadProgramRouteRow = Effect.fn("contentRelease.loadProgramRoute")(
   function* (
     ctx: QueryCtx,
     snapshotId: string,
-    locale: Doc<"curriculumRoutes">["locale"],
+    appLocale: Doc<"curriculumRoutes">["appLocale"],
     publicPath: string
   ) {
     return yield* Effect.promise(() =>
       ctx.db
         .query("curriculumRoutes")
-        .withIndex("by_snapshotId_and_locale_and_path", (index) =>
+        .withIndex("by_snapshotId_and_appLocale_and_path", (index) =>
           index
             .eq("snapshotId", snapshotId)
-            .eq("locale", locale)
+            .eq("appLocale", appLocale)
             .eq("path", publicPath)
         )
         .unique()
@@ -71,19 +71,19 @@ const readAncestors = Effect.fn("contentRelease.readProgramAncestors")(
       if (rows.length === PROGRAM_ANCESTOR_LIMIT) {
         return yield* releaseFail(
           "CONTENT_RELEASE_LIMIT",
-          `Curriculum route ${route.locale}/${route.publicPath} exceeds ${PROGRAM_ANCESTOR_LIMIT} ancestors.`
+          `Curriculum route ${route.appLocale}/${route.publicPath} exceeds ${PROGRAM_ANCESTOR_LIMIT} ancestors.`
         );
       }
       const parent = yield* loadProgramRouteRow(
         ctx,
         snapshotId,
-        route.locale,
+        route.appLocale,
         parentPath
       );
       if (!parent) {
         return yield* releaseFail(
           "CONTENT_RELEASE_INTEGRITY",
-          `Curriculum route ${route.locale}/${route.publicPath} lost parent ${parentPath}.`
+          `Curriculum route ${route.appLocale}/${route.publicPath} lost parent ${parentPath}.`
         );
       }
       const verified = yield* verifyCurriculum(parent, snapshotId);
@@ -102,16 +102,16 @@ const readAlternates = Effect.fn("contentRelease.readProgramAlternates")(
     programKey: string,
     nodeKey: string
   ) {
-    return yield* Effect.forEach(ContentLocaleSchema.literals, (locale) =>
+    return yield* Effect.forEach(ACTIVE_APP_LOCALES, (appLocale) =>
       Effect.promise(() =>
         ctx.db
           .query("curriculumRoutes")
           .withIndex(
-            "by_snapshotId_and_locale_and_programKey_and_nodeKey",
+            "by_snapshotId_and_appLocale_and_programKey_and_nodeKey",
             (index) =>
               index
                 .eq("snapshotId", snapshotId)
-                .eq("locale", locale)
+                .eq("appLocale", appLocale)
                 .eq("programKey", programKey)
                 .eq("nodeKey", nodeKey)
           )
@@ -122,7 +122,7 @@ const readAlternates = Effect.fn("contentRelease.readProgramAlternates")(
             ? verifyCurriculum(row, snapshotId).pipe(Effect.as(row))
             : releaseFail(
                 "CONTENT_RELEASE_INTEGRITY",
-                `Curriculum node ${programKey}/${nodeKey} lost locale ${locale}.`
+                `Curriculum node ${programKey}/${nodeKey} lost locale ${appLocale}.`
               )
         )
       )
@@ -143,29 +143,29 @@ const readRelatedRows = Effect.fn("contentRelease.readProgramRelations")(
         ? ctx.db
             .query("curriculumRoutes")
             .withIndex(
-              "by_snapshotId_and_locale_and_parentPath_and_order_and_path",
+              "by_snapshotId_and_appLocale_and_parentPath_and_order_and_path",
               (index) =>
                 index
                   .eq("snapshotId", snapshotId)
-                  .eq("locale", route.locale)
+                  .eq("appLocale", route.appLocale)
                   .eq("parentPath", route.publicPath)
             )
             .take(PROGRAM_RELATED_LIMIT + 1)
         : ctx.db
             .query("curriculumRoutes")
             .withIndex(
-              "by_snapshotId_and_locale_and_contextPath_and_order_and_path",
+              "by_snapshotId_and_appLocale_and_contextPath_and_order_and_path",
               (index) =>
                 index
                   .eq("snapshotId", snapshotId)
-                  .eq("locale", route.locale)
+                  .eq("appLocale", route.appLocale)
                   .eq("contextPath", route.publicPath)
             )
             .take(PROGRAM_RELATED_LIMIT + 1)
     );
     return yield* requireBoundedRows(
       rows,
-      `Curriculum ${relation} for ${route.locale}/${route.publicPath}`
+      `Curriculum ${relation} for ${route.appLocale}/${route.publicPath}`
     );
   }
 );
@@ -183,7 +183,7 @@ const readGroups = Effect.fn("contentRelease.readProgramGroups")(function* (
     )
   );
   const groups = yield* Effect.forEach(publicPaths, (publicPath) =>
-    loadProgramRouteRow(ctx, snapshotId, route.locale, publicPath).pipe(
+    loadProgramRouteRow(ctx, snapshotId, route.appLocale, publicPath).pipe(
       Effect.flatMap((row) =>
         row
           ? verifyCurriculum(row, snapshotId).pipe(Effect.as(row))
@@ -214,16 +214,18 @@ const readMaterials = Effect.fn("contentRelease.readProgramMaterials")(
         ctx.db
           .query("materialCatalog")
           .withIndex(
-            "by_locale_and_materialKey_and_order_and_publicPath",
+            "by_appLocale_and_materialKey_and_order_and_publicPath",
             (index) =>
-              index.eq("locale", route.locale).eq("materialKey", materialKey)
+              index
+                .eq("appLocale", route.appLocale)
+                .eq("materialKey", materialKey)
           )
           .take(Math.min(PROGRAM_RELATED_LIMIT, remaining) + 1)
       );
       if (rows.length > PROGRAM_RELATED_LIMIT || rows.length > remaining) {
         return yield* releaseFail(
           "CONTENT_RELEASE_LIMIT",
-          `Materials for ${route.locale}/${route.publicPath} exceed ${PROGRAM_MATERIAL_LIMIT} rows.`
+          `Materials for ${route.appLocale}/${route.publicPath} exceed ${PROGRAM_MATERIAL_LIMIT} rows.`
         );
       }
       const verified = yield* Effect.forEach(rows, (row) =>

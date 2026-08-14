@@ -1,9 +1,9 @@
-import { localeValidator } from "@repo/backend/convex/contentRelease/spec";
+import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
 import { v } from "convex/values";
 
 /** One signed article selected for partner API hydration. */
 export const articleApiEntryValidator = v.object({
-  locale: localeValidator,
+  appLocale: appLocaleValidator,
   publicPath: v.string(),
 });
 

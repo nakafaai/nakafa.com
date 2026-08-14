@@ -2,7 +2,6 @@ import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projecti
 import type { ContentPagination } from "@repo/contents/_types/content";
 import { toContextualMaterialHref } from "@repo/contents/_types/route/material/context";
 import type { MaterialContextIdentity } from "@repo/contents/_types/route/material/reference";
-import type { Locale } from "next-intl";
 import type { MaterialPageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
 import { getPublishedMaterialContext } from "@/lib/content/material/context";
 
@@ -10,10 +9,10 @@ const emptyItem = { href: "", title: "" };
 
 /** Canonical localized URL for one signed material route. */
 export function toMaterialHref(route: {
-  readonly locale: Locale;
+  readonly appLocale: MaterialLessonProjection["appLocale"];
   readonly publicPath: string;
 }) {
-  return `/${route.locale}/${route.publicPath}`;
+  return `/${route.appLocale}/${route.publicPath}`;
 }
 
 /** Orders signed sibling routes by authored order and canonical path. */
@@ -70,7 +69,7 @@ export async function readMaterialNavigation(
   }
 
   const published = await getPublishedMaterialContext(
-    page.locale,
+    page.appLocale,
     page.route,
     context,
     page.activeReleaseId

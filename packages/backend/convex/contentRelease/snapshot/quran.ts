@@ -118,7 +118,7 @@ export const stageQuranRow = Effect.fn("contentRelease.stageQuranRow")(
         byIndex.firstVerse !== stored.firstVerse ||
         byIndex.identity !== stored.identity ||
         byIndex.kind !== stored.kind ||
-        byIndex.locale !== stored.locale ||
+        byIndex.appLocale !== stored.appLocale ||
         byIndex.rowJson !== rowJson ||
         byIndex.rowHash !== source.record.rowHash ||
         byIndex.surahNumber !== stored.surahNumber
@@ -140,12 +140,9 @@ export const stageQuranRow = Effect.fn("contentRelease.stageQuranRow")(
       if (
         !(searchByIndex && searchByIdentity) ||
         searchByIndex._id !== searchByIdentity._id ||
-        (searchByIndex.assetId !== undefined &&
-          searchByIndex.assetId !== searchStored.assetId) ||
+        searchByIndex.assetId !== searchStored.assetId ||
         searchByIndex.identity !== searchStored.identity ||
-        searchByIndex.locale !== searchStored.locale ||
-        (searchByIndex.publicPath !== undefined &&
-          searchByIndex.publicPath !== searchStored.publicPath) ||
+        searchByIndex.appLocale !== searchStored.appLocale ||
         searchByIndex.rowHash !== searchStored.rowHash ||
         searchByIndex.surahNumber !== searchStored.surahNumber ||
         searchByIndex.text !== searchStored.text

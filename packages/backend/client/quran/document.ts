@@ -17,13 +17,13 @@ export type QuranDocumentVerse = QuranDocumentResult["verses"][number];
 /** Validator-derived public Quran surah metadata. */
 export type QuranDocumentSurah = NonNullable<QuranDocumentResult["surah"]>;
 
-/** Decodes one active locale-specific Quran API document projection. */
+/** Decodes one active app-locale Quran API document projection. */
 export const decodePublishedQuranDocument = Effect.fn(
   "NakafaQuran.decodeDocument"
 )(function* (
   result: QuranDocumentResult,
   expected: {
-    readonly locale: QuranDocumentResult["locale"];
+    readonly appLocale: QuranDocumentResult["appLocale"];
     readonly surahNumber: number;
   }
 ) {
@@ -35,7 +35,7 @@ export const decodePublishedQuranDocument = Effect.fn(
     });
   }
   if (
-    result.locale !== expected.locale ||
+    result.appLocale !== expected.appLocale ||
     result.surah.number !== expected.surahNumber ||
     !hasExactQuranVerseRange(result.verses, 1, result.surah.numberOfVerses)
   ) {
@@ -47,7 +47,7 @@ export const decodePublishedQuranDocument = Effect.fn(
 
   return {
     ...source,
-    locale: result.locale,
+    appLocale: result.appLocale,
     surah: result.surah,
     verses: result.verses,
   };

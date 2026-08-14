@@ -34,7 +34,7 @@ const publishedPage = {
   children: "Function Concept",
   copySourceUrl: null,
   kind: "published",
-  locale: previewProjection.locale,
+  appLocale: "en",
   metadata: previewProjection.metadata,
   rendererDomain: "mathematics",
   route: previewProjection,
@@ -47,7 +47,7 @@ const previewPage = {
   children: "Function Concept",
   copySourceUrl: null,
   kind: "preview",
-  locale: previewProjection.locale,
+  appLocale: "en",
   metadata: previewProjection.metadata,
   rendererDomain: "mathematics",
   route: previewProjection,
@@ -75,7 +75,7 @@ beforeEach(() => {
 describe("material lesson navigation", () => {
   it("builds canonical signed material hrefs", () => {
     expect(toMaterialHref(previewProjection)).toBe(
-      `/${previewProjection.locale}/${previewProjection.publicPath}`
+      `/${previewProjection.appLocale}/${previewProjection.publicPath}`
     );
   });
 

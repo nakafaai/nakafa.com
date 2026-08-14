@@ -13,10 +13,13 @@ import { previewRepositories } from "@/test/content-preview";
 
 const articleRoute = Schema.decodeUnknownSync(ArticleRouteSchema)({
   articleSlug: testArticleProjection.articleSlug,
+  appLocale: testArticleProjection.appLocale,
+  articleRouteSlug: testArticleProjection.articleRouteSlug,
+  artifactLocale: testArticleProjection.artifactLocale,
   category: testArticleProjection.category,
+  categoryRouteSlug: testArticleProjection.categoryRouteSlug,
   contentKey: testArticleProjection.contentKey,
   graph: testArticleProjection.graph,
-  locale: testArticleProjection.locale,
   publicPath: testArticleProjection.publicPath,
 });
 

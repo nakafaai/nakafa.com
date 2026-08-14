@@ -35,18 +35,17 @@ describe("contentRelease/snapshot/quran", () => {
     await expect(
       t.run((ctx) => ctx.db.query("quranRows").unique())
     ).resolves.toMatchObject({
+      appLocale: "en",
       identity: "search:en:1",
       kind: "quran-search",
-      locale: "en",
       surahNumber: 1,
     });
     await expect(
       t.run((ctx) => ctx.db.query("quranSearch").unique())
     ).resolves.toMatchObject({
+      appLocale: "en",
       assetId: "asset:en:quran:quran-surah:1",
       identity: "search:en:1",
-      locale: "en",
-      publicPath: "quran/1",
       text: "Technical search text",
       surahNumber: 1,
     });
@@ -86,69 +85,8 @@ describe("contentRelease/snapshot/quran", () => {
       if (!search) {
         throw new Error("Expected one technical Quran search projection.");
       }
-      await ctx.db.patch("quranSearch", search._id, { text: "changed" });
-    });
-
-    await expect(
-      t.mutation((ctx) =>
-        runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
-      )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
-  });
-
-  it("accepts an unstaged asset identity and rejects a changed one", async () => {
-    const source = await Effect.runPromise(makeQuranSnapshotRow(snapshotId));
-    const rowJson = canonicalizeContentSnapshotRow(source);
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) =>
-      runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
-    );
-    await t.mutation(async (ctx) => {
-      const search = await ctx.db.query("quranSearch").unique();
-      if (!search) {
-        throw new Error("Expected one technical Quran search projection.");
-      }
       await ctx.db.patch("quranSearch", search._id, {
-        assetId: undefined,
-        publicPath: undefined,
-      });
-    });
-    await expect(
-      t.mutation((ctx) =>
-        runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
-      )
-    ).resolves.toBe(true);
-    await t.mutation(async (ctx) => {
-      const search = await ctx.db.query("quranSearch").unique();
-      if (!search) {
-        throw new Error("Expected one technical Quran search projection.");
-      }
-      await ctx.db.patch("quranSearch", search._id, {
-        assetId: "asset:en:quran:quran-surah:tampered",
-      });
-    });
-
-    await expect(
-      t.mutation((ctx) =>
-        runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
-      )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
-  });
-
-  it("rejects a replay whose stored public path changed", async () => {
-    const source = await Effect.runPromise(makeQuranSnapshotRow(snapshotId));
-    const rowJson = canonicalizeContentSnapshotRow(source);
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) =>
-      runConvexProgram(stageQuranRow(ctx, snapshotId, 0, source, rowJson))
-    );
-    await t.mutation(async (ctx) => {
-      const search = await ctx.db.query("quranSearch").unique();
-      if (!search) {
-        throw new Error("Expected one technical Quran search projection.");
-      }
-      await ctx.db.patch("quranSearch", search._id, {
-        publicPath: "quran/tampered",
+        assetId: "asset:en:quran:quran-surah:changed",
       });
     });
 
@@ -165,9 +103,10 @@ describe("contentRelease/snapshot/quran", () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>
       ctx.db.insert("quranSearch", {
+        assetId: "asset:en:quran:quran-search:1",
         identity: "search:en:1",
         index: 0,
-        locale: "en",
+        appLocale: "en",
         rowHash: source.record.rowHash,
         snapshotId,
         surahNumber: 1,
@@ -198,9 +137,10 @@ describe("contentRelease/snapshot/quran", () => {
     ).resolves.toBe(true);
     await t.mutation((ctx) =>
       ctx.db.insert("quranSearch", {
+        assetId: "asset:en:quran:quran-search:1",
         identity: "search:en:1",
         index: 0,
-        locale: "en",
+        appLocale: "en",
         rowHash: source.record.rowHash,
         snapshotId,
         surahNumber: 1,

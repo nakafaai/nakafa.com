@@ -1,4 +1,4 @@
-import { localeValidator } from "@repo/backend/convex/contentRelease/spec";
+import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
 import { contentSearchSummaryValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import { type Infer, v } from "convex/values";
 
@@ -10,7 +10,7 @@ export const contentReferenceInputValidator = v.union(
   }),
   v.object({
     kind: v.literal("route"),
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
     publicPath: v.string(),
   })
 );

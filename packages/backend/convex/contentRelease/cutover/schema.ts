@@ -1,4 +1,4 @@
-import { localeValidator } from "@repo/backend/convex/contentRelease/spec";
+import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
 import { historyMarkerProofValidator } from "@repo/backend/convex/tryouts/history/spec";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
@@ -69,7 +69,7 @@ export const quranReferenceProgressValidator = v.object({
 });
 
 const activeMaterialTopicValidator = v.object({
-  locale: localeValidator,
+  locale: appLocaleValidator,
   publicPath: v.string(),
   title: v.string(),
   topicAlignmentId: v.string(),

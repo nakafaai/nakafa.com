@@ -26,11 +26,11 @@ export async function GET(
   }
 
   return Effect.runPromise(
-    readQuranApiDocument({ locale: defaultLocale, surahNumber }).pipe(
+    readQuranApiDocument({ appLocale: defaultLocale, surahNumber }).pipe(
       Effect.map((document) =>
         NextResponse.json({
           ...document.surah,
-          locale: document.locale,
+          locale: document.appLocale,
           verses: document.verses,
         })
       ),

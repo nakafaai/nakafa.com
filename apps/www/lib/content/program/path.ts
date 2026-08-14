@@ -1,5 +1,6 @@
 import "server-only";
 
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -10,8 +11,9 @@ import { readRuntimeQuery } from "@/lib/content/runtime/query";
 export const readPublishedProgramPath = Effect.fn(
   "NakafaProgram.readPublishedPath"
 )(function* (locale: Locale, publicPath: string) {
+  const appLocale = AppLocaleSchema.make(locale);
   const result = yield* readRuntimeQuery(api.contentRelease.program.path, {
-    locale,
+    appLocale,
     publicPath,
   });
   if (!(result.managed && result.routeJson)) {
@@ -25,7 +27,7 @@ export const readPublishedProgramPath = Effect.fn(
     locale,
     publicPath
   );
-  if (route.locale !== locale || route.publicPath !== publicPath) {
+  if (route.appLocale !== appLocale || route.publicPath !== publicPath) {
     return { managed: true, route: null };
   }
   return { managed: true, route };

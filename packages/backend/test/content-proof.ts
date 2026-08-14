@@ -18,8 +18,13 @@ import {
   Sha256HashSchema,
   SigningKeyIdSchema,
 } from "@nakafa/aksara-contracts/ids";
+import {
+  ACTIVE_APP_LOCALES,
+  ArtifactLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
 import { digestProjections } from "@nakafa/aksara-contracts/projection/digest";
 import {
+  CONTENT_RELEASE_FORMAT,
   type ContentReleaseManifest,
   ContentReleaseManifestSchema,
   SignedContentReleaseSchema,
@@ -31,9 +36,14 @@ import { digestRollbackSnapshot } from "@nakafa/aksara-contracts/release/rollbac
 import { digestRoutes } from "@nakafa/aksara-contracts/release/route/digest";
 import { canonicalizeContentReleaseSigningInput } from "@nakafa/aksara-contracts/release/signing";
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import {
+  canonicalizeRendererManifestContract,
+  RENDERER_CONTRACT_VERSION,
+  RENDERER_MANIFEST_FORMAT,
+  RendererManifestEnvelopeSchema,
+} from "@nakafa/aksara-contracts/renderer/contract";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
-import { createRendererManifest } from "@nakafa/aksara-contracts/renderer/manifest";
 import {
   ContentVerificationKeyResolver,
   SigningKeyNotFoundError,
@@ -58,6 +68,7 @@ import { Effect, Schema, Stream } from "effect";
 
 const keys = generateKeyPairSync("ed25519");
 const digest = Schema.decodeUnknownSync(Sha256HashSchema)(TEST_DIGEST);
+type ArtifactLocaleCode = Schema.Schema.Encoded<typeof ArtifactLocaleSchema>;
 
 export const TEST_KEY_ID = SigningKeyIdSchema.make("test-key");
 export const TEST_PUBLIC_KEY = keys.publicKey
@@ -70,20 +81,29 @@ export function testProofRenderer(
   publishedDomains: readonly RendererDomain[] = RENDERER_DOMAINS
 ) {
   const components = [{ name: componentName, version: 1 }];
-  return Effect.runSync(
-    createRendererManifest({
-      base: {
-        authoringComponents: components,
-        supportedComponents: components,
-      },
-      domains: RENDERER_DOMAINS.map((name) => ({
-        authoringComponents: [],
-        name,
-        supportedComponents: [],
-      })),
-      publishedDomains,
-    })
+  const contract = {
+    base: {
+      authoringComponents: components,
+      supportedComponents: components,
+    },
+    domains: RENDERER_DOMAINS.map((name) => ({
+      authoringComponents: [],
+      name,
+      supportedComponents: [],
+    })),
+    publishedDomains: [...publishedDomains].sort(),
+  };
+  const hash = Sha256HashSchema.make(
+    `sha256:${createHash("sha256")
+      .update(canonicalizeRendererManifestContract(contract))
+      .digest("hex")}`
   );
+  return RendererManifestEnvelopeSchema.make({
+    ...contract,
+    format: RENDERER_MANIFEST_FORMAT,
+    hash,
+    rendererContractVersion: RENDERER_CONTRACT_VERSION,
+  });
 }
 
 export const TEST_PROOF_RENDERER = testProofRenderer();
@@ -111,7 +131,7 @@ export async function insertProofItem(
       operation === "delete"
         ? testDeleteJson({ contentKey, index })
         : testUpsertJson({ artifactHash, contentKey, index }),
-    locale: "en",
+    artifactLocale: "en",
     projectionJson:
       operation === "upsert"
         ? testProjectionJson({ contentKey, index })
@@ -141,7 +161,7 @@ export function insertProofRoute(ctx: MutationCtx, index: number) {
     batchIndex: 0,
     contentKey,
     index,
-    locale: "en",
+    appLocale: "en",
     operation: "bind",
     publicPath,
     releaseId: TEST_RELEASE_ID,
@@ -162,11 +182,16 @@ export function testEmptyManifest(releaseId: ReleaseId) {
   const routes = Effect.runSync(digestRoutes(releaseId, Stream.empty));
   const snapshots = inheritContentSnapshots(null);
   return ContentReleaseManifestSchema.make({
+    activeAppLocales: ACTIVE_APP_LOCALES,
+    baseActiveAppLocales: null,
+    baseEditorialReviewDigest: null,
     baseManifestHash: null,
     baseReleaseId: null,
     baseResultCount: 0,
     baseResultDigest: EMPTY_RESULT_CATALOG_DIGEST,
     deleteCount: 0,
+    editorialReviewDigest: digest,
+    format: CONTENT_RELEASE_FORMAT,
     itemCount: 0,
     itemsDigest: items.digest,
     origin: { kind: "git", sha: GitCommitShaSchema.make("a".repeat(40)) },
@@ -201,9 +226,9 @@ export const TEST_KEY_RESOLVER = ContentVerificationKeyResolver.of({
 export function testSignedArtifact(
   rendererDomain: RendererDomain = "mathematics",
   options?: {
+    readonly artifactLocale?: ArtifactLocaleCode;
     readonly compiledCode?: string;
     readonly contentKey?: string;
-    readonly locale?: "en" | "id";
     readonly plainText?: string;
     readonly rawMdx?: string;
   }
@@ -211,13 +236,13 @@ export function testSignedArtifact(
   const rawMdx = options?.rawMdx ?? "## Technical proof";
   const compiledCode = options?.compiledCode ?? "return {};";
   const payload = CompiledContentPayloadSchema.make({
+    artifactLocale: ArtifactLocaleSchema.make(options?.artifactLocale ?? "en"),
     byteLength: Buffer.byteLength(compiledCode, "utf8"),
     compiledCode,
     compilerConfigHash: digest,
     compilerVersion: "0.1.0",
     contentKey: ContentKeySchema.make(options?.contentKey ?? "test:head-0"),
-    format: "mdx-function-body-v1",
-    locale: options?.locale ?? "en",
+    format: "mdx-function-body",
     mdxCompilerVersion: "3.1.1",
     plainText: options?.plainText ?? "Technical proof",
     rawMdx,

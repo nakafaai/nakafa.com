@@ -257,13 +257,13 @@ describe("local material preview", () => {
       },
     ],
     [
-      "projection locale",
+      "projection app locale",
       "manifest",
       {
         artifacts: [
           {
             ...readyManifest().artifacts[0],
-            projection: { ...projection, locale: "id" },
+            projection: { ...projection, appLocale: "id" },
           },
         ],
       },
@@ -343,7 +343,10 @@ describe("local material preview", () => {
         },
       },
     ],
-    ["locale", { payload: { ...artifact.payload, locale: "id" } }],
+    [
+      "artifact locale",
+      { payload: { ...artifact.payload, artifactLocale: "id" } },
+    ],
     ["domain", { payload: { ...artifact.payload, rendererDomain: "physics" } }],
   ])("rejects an artifact with a mismatched %s", async (_label, change) => {
     const changedArtifact = Schema.decodeUnknownSync(

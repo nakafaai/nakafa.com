@@ -59,7 +59,7 @@ const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
   const stored = yield* Effect.promise(() =>
     ctx.db
       .query("contentKeys")
-      .withIndex("by_family_and_contentKey_and_locale", (query) =>
+      .withIndex("by_family_and_contentKey_and_artifactLocale", (query) =>
         query.eq("family", request.family)
       )
       .order("asc")
@@ -74,7 +74,7 @@ const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
     const head = yield* resolveContentHead(
       ctx,
       key.contentKey,
-      key.locale,
+      key.artifactLocale,
       sequence
     );
     if (head) {

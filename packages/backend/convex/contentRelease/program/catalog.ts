@@ -20,9 +20,9 @@ export const readVerifiedProgramCatalog = Effect.fn(
   "contentRelease.readVerifiedProgramCatalog"
 )(function* (
   ctx: ProgramCatalogCtx,
-  locale: Doc<"curriculumRoutes">["locale"]
+  appLocale: Doc<"curriculumRoutes">["appLocale"]
 ) {
-  const owner = yield* loadProgramOwner(ctx, locale);
+  const owner = yield* loadProgramOwner(ctx, appLocale);
   if (!(owner.managed && owner.selected)) {
     return {
       activeManifestHash: owner.selected?.active.manifestHash ?? null,
@@ -50,11 +50,11 @@ export const readVerifiedProgramCatalog = Effect.fn(
       ctx.db
         .query("curriculumRoutes")
         .withIndex(
-          "by_snapshotId_and_locale_and_parentPath_and_order_and_path",
+          "by_snapshotId_and_appLocale_and_parentPath_and_order_and_path",
           (index) =>
             index
               .eq("snapshotId", snapshotId)
-              .eq("locale", locale)
+              .eq("appLocale", appLocale)
               .eq("parentPath", undefined)
         )
         .take(PROGRAM_CATALOG_LIMIT + 1)
@@ -87,7 +87,7 @@ export const readVerifiedProgramCatalog = Effect.fn(
   if (invalidRoot) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Program root ${invalidRoot.locale}/${invalidRoot.publicPath} lost its program.`
+      `Program root ${invalidRoot.appLocale}/${invalidRoot.publicPath} lost its program.`
     );
   }
   const missingRoot = treeProgramKeys.find(
@@ -100,7 +100,7 @@ export const readVerifiedProgramCatalog = Effect.fn(
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Program catalog for ${locale} does not match localized root ownership.`
+      `Program catalog for ${appLocale} does not match localized root ownership.`
     );
   }
   return {
@@ -119,8 +119,8 @@ export const readVerifiedProgramCatalog = Effect.fn(
 /** Adapts the verified catalog to the public serialized query contract. */
 export const readProgramCatalog = Effect.fn(
   "contentRelease.readProgramCatalog"
-)(function* (ctx: QueryCtx, locale: Doc<"curriculumRoutes">["locale"]) {
-  const catalog = yield* readVerifiedProgramCatalog(ctx, locale);
+)(function* (ctx: QueryCtx, appLocale: Doc<"curriculumRoutes">["appLocale"]) {
+  const catalog = yield* readVerifiedProgramCatalog(ctx, appLocale);
 
   return {
     activeManifestHash: catalog.activeManifestHash,

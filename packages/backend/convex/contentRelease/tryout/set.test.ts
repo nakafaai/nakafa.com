@@ -1,8 +1,9 @@
-import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   type TryoutCatalogRow,
   TryoutCatalogRowSchema,
-} from "@nakafa/aksara-contracts/tryout/spec";
+} from "@nakafa/aksara-contracts/tryout/catalog";
+import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import { TRYOUT_SET_QUESTION_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
 import {
   readTryoutSet,
@@ -109,7 +110,14 @@ describe("contentRelease/tryout/set", () => {
 
   it("rejects a set whose indexed owner identity was changed", async () => {
     const { snapshotId, t } = await activateSet();
-    const setIdentity = tryoutCatalogIdentity({ ...identity, kind: "set" });
+    const setIdentity = tryoutCatalogNodeIdentity({
+      appLocale: AppLocaleSchema.make(identity.locale),
+      countryKey: identity.countryKey,
+      examKey: identity.examKey,
+      kind: "set",
+      setKey: identity.setKey,
+      trackKey: identity.trackKey,
+    });
     await t.mutation(async (ctx) => {
       const stored = await ctx.db
         .query("tryoutCatalog")

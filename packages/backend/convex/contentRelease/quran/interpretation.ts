@@ -3,16 +3,17 @@ import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadQuranPassage } from "@repo/backend/convex/contentRelease/quran/reference";
 import {
   quranSourceFields,
-  quranTafsirLocaleValidator,
+  quranTafsirAppLocaleValidator,
 } from "@repo/backend/convex/contentRelease/quran/spec";
+import { readQuranTafsir } from "@repo/backend/convex/contentRelease/quran/translation";
 import { type Infer, v } from "convex/values";
 import { Effect } from "effect";
 
 /** Exact signed tafsir response returned only after one verse is requested. */
 export const quranInterpretationValidator = v.object({
   ...quranSourceFields,
+  appLocale: quranTafsirAppLocaleValidator,
   interpretation: v.union(v.string(), v.null()),
-  locale: quranTafsirLocaleValidator,
   surahNumber: v.number(),
   verseNumber: v.number(),
 });
@@ -24,7 +25,7 @@ export const readQuranInterpretation = Effect.fn(
   "contentRelease.readQuranInterpretation"
 )(function* (
   ctx: QueryCtx,
-  locale: QuranInterpretation["locale"],
+  appLocale: QuranInterpretation["appLocale"],
   expectedSnapshotId: string,
   sourceSurah: number,
   sourceVerse: number
@@ -38,8 +39,8 @@ export const readQuranInterpretation = Effect.fn(
   if (loaded.passage === null) {
     return {
       ...loaded.owner,
+      appLocale,
       interpretation: null,
-      locale,
       surahNumber: loaded.input.surahNumber,
       verseNumber: loaded.input.fromVerse,
     };
@@ -55,10 +56,11 @@ export const readQuranInterpretation = Effect.fn(
     );
   }
 
+  const interpretation = yield* readQuranTafsir(verse, appLocale);
   return {
     ...loaded.owner,
-    interpretation: verse.tafsir[locale].text,
-    locale,
+    appLocale,
+    interpretation: interpretation.text,
     surahNumber: loaded.input.surahNumber,
     verseNumber: loaded.input.fromVerse,
   };

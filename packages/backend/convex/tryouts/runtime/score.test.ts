@@ -1,4 +1,5 @@
-import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -35,19 +36,19 @@ const SECTION_KEY = "pengetahuan-kuantitatif";
 const SECTION_SOURCE = `question-bank/tryout/indonesia/snbt/${TRACK_KEY}/set-1/${SECTION_KEY}`;
 const SET_ROUTE = `try-out/indonesia/snbt/${TRACK_KEY}/set-1`;
 const SECTION_ROUTE = `${SET_ROUTE}/${SECTION_KEY}`;
-const SET_IDENTITY = tryoutCatalogIdentity({
+const SET_IDENTITY = tryoutCatalogNodeIdentity({
+  appLocale: AppLocaleSchema.make("id"),
   countryKey: "indonesia",
   examKey: "snbt",
   kind: "set",
-  locale: "id",
   setKey: "set-1",
   trackKey: TRACK_KEY,
 });
-const SECTION_IDENTITY = tryoutCatalogIdentity({
+const SECTION_IDENTITY = tryoutCatalogNodeIdentity({
+  appLocale: AppLocaleSchema.make("id"),
   countryKey: "indonesia",
   examKey: "snbt",
   kind: "section",
-  locale: "id",
   sectionKey: SECTION_KEY,
   setKey: "set-1",
   trackKey: TRACK_KEY,
@@ -196,7 +197,7 @@ describe("tryouts/runtime/score", () => {
         examKey: "snbt",
         expiresAt: NOW + 86_400_000,
         lastActivityAt: NOW,
-        locale: "id",
+        appLocale: "id",
         scoreStatus: "official",
         scoringStrategy: "raw",
         sectionSnapshots: [
@@ -261,7 +262,6 @@ describe("tryouts/runtime/score", () => {
         sectionKey: SECTION_KEY,
         sourcePath: `${SECTION_SOURCE}/question-1`,
         sourceRevision: "2026",
-        title: "Question",
         tryoutAttemptId: attemptId,
       });
 

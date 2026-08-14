@@ -16,7 +16,7 @@ const tables = {
     tryoutSnapshotId: v.string(),
   }).index("by_tryoutAttemptId", ["tryoutAttemptId"]),
 
-  /** Exact Aksara 0.11 envelopes retained beyond mutable snapshot tables. */
+  /** Exact authenticated old row envelopes retained outside current tables. */
   tryoutHistoryRows: defineTable(
     v.union(
       v.object({

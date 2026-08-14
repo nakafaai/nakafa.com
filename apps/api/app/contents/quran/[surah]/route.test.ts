@@ -32,7 +32,7 @@ describe("Quran content API route", () => {
   it("returns one explicit locale-specific signed Quran document", async () => {
     quranMocks.readQuranApiDocument.mockReturnValue(
       Effect.succeed({
-        locale: "en",
+        appLocale: "en",
         surah: {
           name: { transliteration: "Al-Faatiha" },
           number: 1,
@@ -71,7 +71,7 @@ describe("Quran content API route", () => {
       ],
     });
     expect(quranMocks.readQuranApiDocument).toHaveBeenCalledWith({
-      locale: "en",
+      appLocale: "en",
       surahNumber: 1,
     });
   });

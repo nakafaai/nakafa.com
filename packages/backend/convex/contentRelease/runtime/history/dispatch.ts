@@ -1,14 +1,14 @@
 import {
-  MAX_PROTECTED_RUNTIME_REQUEST_BYTES,
-  MAX_PROTECTED_RUNTIME_RESPONSE_BYTES,
-  protectedRuntimeResponseBytes,
-} from "@nakafa/aksara-contracts/runtime/protected/limits";
-import {
   type StoredProtectedRuntimeFound,
   type StoredProtectedRuntimeRequest,
   StoredProtectedRuntimeRequestSchema,
   StoredProtectedRuntimeResponseSchema,
-} from "@nakafa/aksara-history/history/decode";
+} from "@nakafa/aksara-contracts/history/decode";
+import {
+  MAX_PROTECTED_RUNTIME_REQUEST_BYTES,
+  MAX_PROTECTED_RUNTIME_RESPONSE_BYTES,
+  protectedRuntimeResponseBytes,
+} from "@nakafa/aksara-contracts/runtime/protected/limits";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import type { RetainedRuntimeBatchRow } from "@repo/backend/convex/contentRelease/runtime/history/internal";
 import { failureResult } from "@repo/backend/convex/contentRelease/runtime/result";

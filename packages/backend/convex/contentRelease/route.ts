@@ -19,9 +19,9 @@ const ensureContentPath = Effect.fn("contentRelease.ensureContentPath")(
     const existing = yield* Effect.promise(() =>
       ctx.db
         .query("contentPaths")
-        .withIndex("by_locale_and_publicPath", (query) =>
+        .withIndex("by_appLocale_and_publicPath", (query) =>
           query
-            .eq("locale", route.change.locale)
+            .eq("appLocale", route.change.appLocale)
             .eq("publicPath", route.change.publicPath)
         )
         .unique()
@@ -31,8 +31,8 @@ const ensureContentPath = Effect.fn("contentRelease.ensureContentPath")(
     }
     yield* Effect.promise(() =>
       ctx.db.insert("contentPaths", {
+        appLocale: route.change.appLocale,
         createdSequence: sequence,
-        locale: route.change.locale,
         publicPath: route.change.publicPath,
       })
     );
@@ -54,7 +54,7 @@ const validateBoundContent = Effect.fn("contentRelease.validateBoundContent")(
       ctx,
       releaseId,
       route.change.contentKey,
-      route.change.locale
+      route.change.appLocale
     );
     if (staged) {
       const item = yield* decodeItemJson(staged.itemJson);
@@ -63,14 +63,14 @@ const validateBoundContent = Effect.fn("contentRelease.validateBoundContent")(
       }
       return yield* releaseFail(
         "CONTENT_RELEASE_ROUTE",
-        `Route ${route.change.locale}/${route.change.publicPath} binds deleted content.`
+        `Route ${route.change.appLocale}/${route.change.publicPath} binds deleted content.`
       );
     }
     if (sequence !== undefined) {
       const prior = yield* loadVersion(
         ctx,
         route.change.contentKey,
-        route.change.locale,
+        route.change.appLocale,
         sequence
       );
       if (prior?.operation === "upsert") {
@@ -79,7 +79,7 @@ const validateBoundContent = Effect.fn("contentRelease.validateBoundContent")(
     }
     return yield* releaseFail(
       "CONTENT_RELEASE_MISSING",
-      `Route ${route.change.locale}/${route.change.publicPath} has no content head.`
+      `Route ${route.change.appLocale}/${route.change.publicPath} has no content head.`
     );
   }
 );
@@ -106,10 +106,10 @@ export const stageRouteVersion = Effect.fn("contentRelease.stageRouteVersion")(
     const atPath = yield* Effect.promise(() =>
       ctx.db
         .query("contentBindings")
-        .withIndex("by_releaseId_and_locale_and_publicPath", (query) =>
+        .withIndex("by_releaseId_and_appLocale_and_publicPath", (query) =>
           query
             .eq("releaseId", route.releaseId)
-            .eq("locale", route.change.locale)
+            .eq("appLocale", route.change.appLocale)
             .eq("publicPath", route.change.publicPath)
         )
         .unique()
@@ -125,14 +125,14 @@ export const stageRouteVersion = Effect.fn("contentRelease.stageRouteVersion")(
         ? null
         : yield* loadRouteBinding(
             ctx,
-            route.change.locale,
+            route.change.appLocale,
             route.change.publicPath,
             priorSequence
           );
     if (route.change.operation === "delete" && prior?.operation !== "bind") {
       return yield* releaseFail(
         "CONTENT_RELEASE_MISSING",
-        `Route ${route.change.locale}/${route.change.publicPath} has no prior owner.`
+        `Route ${route.change.appLocale}/${route.change.publicPath} has no prior owner.`
       );
     }
     if (
@@ -142,12 +142,13 @@ export const stageRouteVersion = Effect.fn("contentRelease.stageRouteVersion")(
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_CONFLICT",
-        `Route ${route.change.locale}/${route.change.publicPath} keeps its owner.`
+        `Route ${route.change.appLocale}/${route.change.publicPath} keeps its owner.`
       );
     }
     yield* validateBoundContent(ctx, route.releaseId, priorSequence, route);
     yield* ensureContentPath(ctx, route, sequence);
     const row = {
+      appLocale: route.change.appLocale,
       batchHash,
       batchIndex,
       contentKey:
@@ -155,7 +156,6 @@ export const stageRouteVersion = Effect.fn("contentRelease.stageRouteVersion")(
           ? route.change.contentKey
           : prior?.contentKey,
       index: route.index,
-      locale: route.change.locale,
       operation: route.change.operation,
       publicPath: route.change.publicPath,
       releaseId: route.releaseId,

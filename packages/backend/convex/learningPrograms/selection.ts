@@ -43,11 +43,18 @@ export function isLearningProgramSelectable(program: LearningProgram) {
 }
 
 /** Returns the localized public summary for one authenticated program row. */
-export function toLearningProgramSummary(
-  program: LearningProgram,
-  locale: Locale
-): LearningProgramSummary {
-  const translation = program.translations[locale];
+export const toLearningProgramSummary = Effect.fn(
+  "learningPrograms.toLearningProgramSummary"
+)(function* (program: LearningProgram, locale: Locale) {
+  const translation = program.translations.find(
+    (candidate) => candidate.appLocale === locale
+  );
+  if (!translation) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Learning program ${program.key} has no ${locale} translation.`
+    );
+  }
 
   return {
     coverageStatus: program.defaultCoverageStatus,
@@ -61,8 +68,8 @@ export function toLearningProgramSummary(
     publicSlug: translation.publicSlug,
     title: translation.title,
     versionLabel: program.version.label,
-  };
-}
+  } satisfies LearningProgramSummary;
+});
 
 /** Reads one authenticated program by its stable Aksara key. */
 export const readSignedProgram = Effect.fn(

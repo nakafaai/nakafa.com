@@ -21,7 +21,7 @@ import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
 
 /** Exact article route identity requested by the physical Next page. */
 export interface ArticlePreviewInput {
-  readonly locale: ArticlePreviewDocument["route"]["locale"];
+  readonly appLocale: ArticlePreviewDocument["route"]["appLocale"];
   readonly publicPath: ArticlePreviewDocument["route"]["publicPath"];
 }
 
@@ -41,7 +41,7 @@ function matchesArticleRoute(
   input: ArticlePreviewInput
 ) {
   return (
-    document.route.locale === input.locale &&
+    document.route.appLocale === input.appLocale &&
     document.route.publicPath === input.publicPath
   );
 }

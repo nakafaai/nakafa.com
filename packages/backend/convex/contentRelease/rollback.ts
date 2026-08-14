@@ -142,7 +142,7 @@ const priorRouteOwner = Effect.fn("contentRelease.priorRouteOwner")(function* (
 ) {
   const prior = yield* loadRouteBinding(
     ctx,
-    row.locale,
+    row.appLocale,
     row.publicPath,
     baseSequence
   );
@@ -154,7 +154,7 @@ const priorRouteOwner = Effect.fn("contentRelease.priorRouteOwner")(function* (
       () =>
         new ReleaseError({
           code: "CONTENT_RELEASE_INTEGRITY",
-          message: `Prior route ${row.locale}/${row.publicPath} lost its content identity.`,
+          message: `Prior route ${row.appLocale}/${row.publicPath} lost its content identity.`,
         })
     )
   );

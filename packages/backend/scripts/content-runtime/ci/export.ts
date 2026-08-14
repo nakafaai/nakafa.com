@@ -9,10 +9,10 @@ import { runConvexData } from "./command";
 import type { ExportConfig } from "./config";
 import { contentRuntimeCiError } from "./error";
 import {
-  decodeJsonRows,
   readProductionGenerations,
   verifyRuntimeGenerations,
 } from "./generation";
+import { decodeJsonRows } from "./json";
 import {
   CONTENT_RUNTIME_CACHE_DIRECTORY,
   CONTENT_RUNTIME_CACHE_FILE,

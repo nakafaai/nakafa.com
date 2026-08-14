@@ -63,4 +63,19 @@ describe("NakafaAgentMarkdownSchema", () => {
       })
     ).toThrow();
   });
+
+  it("omits a description when signed metadata has none", () => {
+    const reference = readNakafaContentRefFixture(
+      "en",
+      "material/mathematics/example",
+      "material"
+    );
+    const decoded = Schema.decodeUnknownSync(NakafaAgentMarkdownSchema)({
+      ...reference,
+      text: "# Example",
+      title: "Example",
+    });
+
+    expect(decoded).not.toHaveProperty("description");
+  });
 });

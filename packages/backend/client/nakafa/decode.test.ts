@@ -129,11 +129,6 @@ function taxonomy() {
     locales: Array.from(locales),
     quran: { surah_count: 114 },
     sections: ["articles", "material", "quran"],
-    subject: {
-      categories: ["high-school"],
-      grades: ["10"],
-      materials: ["mathematics"],
-    },
     tryout: {
       countries: [{ id: "indonesia", label: "Indonesia" }],
       exams: [{ id: "snbt", label: "SNBT" }],

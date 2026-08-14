@@ -122,7 +122,6 @@ export const createAttemptPlacements = Effect.fn(
           sectionKey: placement.row.sectionKey,
           sourcePath: placement.row.questionSourcePath,
           sourceRevision: placement.row.sourceRevision,
-          title: placement.row.title,
           tryoutAttemptId: args.attempt._id,
         })
       );

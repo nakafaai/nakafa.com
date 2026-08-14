@@ -61,7 +61,7 @@ export const getActiveSelection = query({
 
         return {
           interest: preference.learningInterest,
-          program: toLearningProgramSummary(program, args.locale),
+          program: yield* toLearningProgramSummary(program, args.locale),
         };
       })
     ),
@@ -76,10 +76,11 @@ export const listSelectablePrograms = query({
   handler: (ctx, args) =>
     runConvexProgram(
       listSignedPrograms(ctx, args.locale).pipe(
-        Effect.map((programs) =>
-          programs
-            .filter(isLearningProgramSelectable)
-            .map((program) => toLearningProgramSummary(program, args.locale))
+        Effect.flatMap((programs) =>
+          Effect.forEach(
+            programs.filter(isLearningProgramSelectable),
+            (program) => toLearningProgramSummary(program, args.locale)
+          )
         )
       )
     ),

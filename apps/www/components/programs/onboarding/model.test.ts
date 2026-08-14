@@ -1,3 +1,4 @@
+import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { describe, expect, it } from "vitest";
 import type { LearningProgramCatalog } from "@/components/programs/contract";
 import {
@@ -14,7 +15,7 @@ const programs = [
   {
     coverageStatus: "partial",
     displayOrder: 10,
-    key: "merdeka",
+    key: LearningProgramKeySchema.make("merdeka"),
     kind: "school-curriculum",
     navigation: {
       levels: ["stage", "class", "subject", "topic"],
@@ -27,7 +28,7 @@ const programs = [
   {
     coverageStatus: "partial",
     displayOrder: 20,
-    key: "snbt",
+    key: LearningProgramKeySchema.make("snbt"),
     kind: "admission-exam",
     navigation: {
       levels: ["section", "domain", "set"],
@@ -118,7 +119,7 @@ describe("components/programs/onboarding/model", () => {
           interest: "exam-prep",
           program: {
             ...programs[0],
-            key: "retired-learning-path",
+            key: LearningProgramKeySchema.make("retired-learning-path"),
           },
         },
         programs,

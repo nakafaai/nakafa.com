@@ -7,7 +7,7 @@ interface Props {
   contextTitle?: string;
 }
 
-/** Renders the Nina entry point with the current page title context. */
+/** Chooses the right Nina entry point for the current learning page. */
 export function AiSheetOpen({ contextTitle }: Props) {
   const sheetContextTitle = contextTitle?.trim() ?? "";
 

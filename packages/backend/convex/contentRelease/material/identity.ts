@@ -15,10 +15,10 @@ import { Effect, Schema } from "effect";
 
 /** Stable signed material identity requested by an application surface. */
 export interface MaterialIdentityInput {
+  readonly appLocale: Doc<"materialCatalog">["appLocale"];
   readonly contentKey: string;
   readonly expectedMaterialKey: string;
   readonly expectedSectionKey: string;
-  readonly locale: Doc<"materialCatalog">["locale"];
 }
 
 /** Decodes the caller's stable identity through Aksara's current contracts. */
@@ -51,7 +51,7 @@ export const readMaterialIdentity = Effect.fn(
 )(function* (ctx: QueryCtx, input: MaterialIdentityInput) {
   const [identity, owner] = yield* Effect.all([
     decodeMaterialIdentity(input),
-    loadMaterialOwner(ctx, input.locale),
+    loadMaterialOwner(ctx, input.appLocale),
   ]);
   if (!(owner.active && owner.managed)) {
     return {
@@ -64,8 +64,10 @@ export const readMaterialIdentity = Effect.fn(
   const row = yield* Effect.promise(() =>
     ctx.db
       .query("materialCatalog")
-      .withIndex("by_contentKey_and_locale", (index) =>
-        index.eq("contentKey", identity.contentKey).eq("locale", input.locale)
+      .withIndex("by_contentKey_and_appLocale", (index) =>
+        index
+          .eq("contentKey", identity.contentKey)
+          .eq("appLocale", input.appLocale)
       )
       .unique()
   );
@@ -88,7 +90,7 @@ export const readMaterialIdentity = Effect.fn(
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Active material ${identity.contentKey}/${input.locale} disagrees with its stable identity.`
+      `Active material ${identity.contentKey}/${input.appLocale} disagrees with its stable identity.`
     );
   }
 

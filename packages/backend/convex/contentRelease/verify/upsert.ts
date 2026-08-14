@@ -1,6 +1,7 @@
 import {
   canonicalizeContentProjection,
   familyForProjection,
+  projectionArtifactLocale,
 } from "@nakafa/aksara-contracts/projection/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -66,7 +67,7 @@ const upsertVersion = Effect.fn("contentRelease.upsertVersion")(function* (
       ? null
       : yield* loadRouteBinding(
           ctx,
-          row.locale,
+          projection.appLocale,
           projection.publicPath,
           row.sequence
         );
@@ -82,11 +83,11 @@ const upsertVersion = Effect.fn("contentRelease.upsertVersion")(function* (
   if (
     artifact.artifactHash !== change.artifactHash ||
     artifact.payload.contentKey !== row.contentKey ||
-    artifact.payload.locale !== row.locale ||
+    artifact.payload.artifactLocale !== row.artifactLocale ||
     artifact.payload.rendererDomain !== change.rendererDomain ||
     familyForProjection(projection) !== change.family ||
     projection.contentKey !== row.contentKey ||
-    projection.locale !== row.locale ||
+    projectionArtifactLocale(projection) !== row.artifactLocale ||
     !hasExpectedRoute
   ) {
     return yield* releaseFail(
@@ -96,12 +97,12 @@ const upsertVersion = Effect.fn("contentRelease.upsertVersion")(function* (
   }
   const version = {
     artifactHash: change.artifactHash,
+    artifactLocale: row.artifactLocale,
     compilerConfigHash: artifact.payload.compilerConfigHash,
     contentKey: row.contentKey,
     delivery: change.delivery,
     family: change.family,
     index: row.index,
-    locale: row.locale,
     operation: "upsert",
     projectionHash,
     projectionJson: row.projectionJson,
@@ -121,12 +122,12 @@ function sameVersion(
 ) {
   return (
     stored.artifactHash === expected.artifactHash &&
+    stored.artifactLocale === expected.artifactLocale &&
     stored.compilerConfigHash === expected.compilerConfigHash &&
     stored.contentKey === expected.contentKey &&
     stored.delivery === expected.delivery &&
     stored.family === expected.family &&
     stored.index === expected.index &&
-    stored.locale === expected.locale &&
     stored.operation === expected.operation &&
     stored.projectionHash === expected.projectionHash &&
     stored.projectionJson === expected.projectionJson &&
@@ -147,14 +148,14 @@ export const writeUpsert = Effect.fn("contentRelease.writeUpsert")(function* (
   const existing = yield* loadExactVersion(
     ctx,
     row.contentKey,
-    row.locale,
+    row.artifactLocale,
     row.sequence
   );
   if (existing) {
     if (!sameVersion(existing, version)) {
       return yield* releaseFail(
         "CONTENT_RELEASE_CONFLICT",
-        `Content version ${row.contentKey}/${row.locale}/${row.sequence} conflicts.`
+        `Content version ${row.contentKey}/${row.artifactLocale}/${row.sequence} conflicts.`
       );
     }
   } else {

@@ -118,7 +118,7 @@ const currentState = Effect.fn("contentRelease.currentRollbackState")(
     const head = yield* loadExactVersion(
       ctx,
       row.contentKey,
-      row.locale,
+      row.artifactLocale,
       row.sequence
     );
     if (!head || head.releaseId !== row.releaseId || head.index !== row.index) {
@@ -158,7 +158,7 @@ const priorState = Effect.fn("contentRelease.priorRollbackState")(function* (
     snapshot.releaseId !== row.releaseId ||
     priorIdentity.contentKey !== item.change.contentKey ||
     priorIdentity.family !== item.change.family ||
-    priorIdentity.locale !== item.change.locale
+    priorIdentity.artifactLocale !== item.change.artifactLocale
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
@@ -170,7 +170,7 @@ const priorState = Effect.fn("contentRelease.priorRollbackState")(function* (
       change: {
         contentKey: snapshot.snapshot.contentKey,
         family: snapshot.snapshot.family,
-        locale: snapshot.snapshot.locale,
+        artifactLocale: snapshot.snapshot.artifactLocale,
         operation: "delete",
       },
     } satisfies RollbackState;
@@ -184,7 +184,7 @@ const priorState = Effect.fn("contentRelease.priorRollbackState")(function* (
   const head = yield* loadExactVersion(
     ctx,
     row.contentKey,
-    row.locale,
+    row.artifactLocale,
     row.priorSequence
   );
   if (head?.operation !== "upsert" || !head.projectionJson) {
@@ -196,10 +196,10 @@ const priorState = Effect.fn("contentRelease.priorRollbackState")(function* (
   const prior = snapshot.snapshot.head;
   const change = ContentUpsertSchema.make({
     artifactHash: prior.artifactHash,
+    artifactLocale: prior.artifactLocale,
     contentKey: prior.contentKey,
     delivery: prior.delivery,
     family: prior.family,
-    locale: prior.locale,
     operation: "upsert",
     rendererDomain: prior.rendererDomain,
     sourcePath: prior.sourcePath,

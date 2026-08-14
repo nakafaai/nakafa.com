@@ -56,9 +56,12 @@ export const NakafaAgentMarkdownSchema =
   NakafaAgentReadableContentRefSchema.pipe(
     Schema.extend(
       Schema.Struct({
-        description: Schema.String.annotations({
-          description: "Short content description.",
-        }),
+        description: Schema.optional(
+          Schema.String.annotations({
+            description:
+              "Short content description when signed metadata provides one.",
+          })
+        ),
         text: Schema.String.annotations({
           description: "Full agent-readable markdown text.",
         }),

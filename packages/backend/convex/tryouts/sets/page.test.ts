@@ -1,8 +1,9 @@
-import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   TryoutCatalogRowSchema,
   type TryoutSet,
-} from "@nakafa/aksara-contracts/tryout/spec";
+} from "@nakafa/aksara-contracts/tryout/catalog";
+import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -61,13 +62,13 @@ describe("tryouts/sets/page", () => {
         countryKey: TRYOUT_START_COUNTRY,
         examKey: TRYOUT_START_EXAM,
         latestAttemptId: attemptId,
-        locale: "id",
+        appLocale: "id",
         publishedScore: null,
-        setIdentity: tryoutCatalogIdentity({
+        setIdentity: tryoutCatalogNodeIdentity({
+          appLocale: AppLocaleSchema.make("id"),
           countryKey: TRYOUT_START_COUNTRY,
           examKey: TRYOUT_START_EXAM,
           kind: "set",
-          locale: "id",
           setKey: TRYOUT_START_SET,
           trackKey: TRYOUT_START_TRACK,
         }),
@@ -83,7 +84,7 @@ describe("tryouts/sets/page", () => {
     const failure = await t.query(async (ctx) => {
       const catalog = await Effect.runPromise(loadTryoutCatalog(ctx, "id"));
       const firstSet = catalog.entries.find(
-        ({ row }) => row.kind === "set" && row.locale === "id"
+        ({ row }) => row.kind === "set" && row.appLocale === "id"
       )?.row;
       const progress = await ctx.db.get(progressId);
       if (!(firstSet?.kind === "set" && progress)) {

@@ -1,3 +1,4 @@
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
@@ -18,15 +19,16 @@ interface ProjectedHtmlRouteInput {
 const readProjectedMaterialRouteRejection = Effect.fn(
   "www.routing.publicHtml.materialRejection"
 )(function* (locale: "en" | "id", publicPath: string) {
-  if (yield* matchesPreviewRoute({ locale, publicPath })) {
+  const appLocale = AppLocaleSchema.make(locale);
+  if (yield* matchesPreviewRoute({ appLocale, publicPath })) {
     return null;
   }
   const identity = yield* readActiveContentIdentity();
   const activeReleaseId = identity?.releaseId ?? null;
   const ownership = yield* readActiveContentRoute({
     activeReleaseId,
+    appLocale,
     family: "material",
-    locale,
     publicPath,
   });
   if (ownership.kind === "found") {
@@ -89,9 +91,12 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
   ) {
     return null;
   }
-  const route = yield* readRuntimeQuery(api.tryouts.queries.catalog.getRoute, {
-    locale,
-    publicPath,
+  const reference = yield* readRuntimeQuery(api.contentRelease.reference.read, {
+    input: {
+      appLocale: AppLocaleSchema.make(locale),
+      kind: "route",
+      publicPath,
+    },
   });
-  return route.exists ? null : locale;
+  return reference ? null : locale;
 });

@@ -1,5 +1,6 @@
 "use client";
 
+import type { LearningProgramKey } from "@nakafa/aksara-contracts/program/spec";
 import type { api } from "@repo/backend/convex/_generated/api";
 import {
   Select,
@@ -24,7 +25,7 @@ import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation.cli
 export type CurriculumSelectorOption = Readonly<{
   countryCode?: string;
   href: string;
-  programKey: string;
+  programKey: LearningProgramKey;
   publicSlug?: string;
   title: string;
   value: string;

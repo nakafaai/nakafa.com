@@ -19,7 +19,7 @@ import { describe, expect, it } from "vitest";
 const resolve = api.contentRelease.ownership.resolve;
 const routeArgs: FunctionArgs<typeof resolve> = {
   family: "material",
-  locale: "en",
+  appLocale: "en",
   publicPath: TEST_RUNTIME_PATH,
 };
 
@@ -55,7 +55,7 @@ describe("contentRelease/ownership", () => {
       await insertRuntimeRelease(ctx, ["article"]);
       await ctx.db.insert("contentPaths", {
         createdSequence: TEST_RUNTIME_RELEASE.sequence + 1,
-        locale: "en",
+        appLocale: "en",
         publicPath: TEST_RUNTIME_PATH,
       });
     });
@@ -110,7 +110,7 @@ describe("contentRelease/ownership", () => {
       await insertRuntimeRelease(ctx);
       await ctx.db.insert("contentPaths", {
         createdSequence: 1,
-        locale: "en",
+        appLocale: "en",
         publicPath: TEST_RUNTIME_PATH,
       });
     });
@@ -137,7 +137,7 @@ describe("contentRelease/ownership", () => {
   });
 
   it("moves canonical ownership from a tombstoned path to its rename", async () => {
-    const oldPath = "test/old";
+    const oldPath = "subjects/test/old";
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await insertRuntimeRelease(ctx);
@@ -171,7 +171,7 @@ describe("contentRelease/ownership", () => {
       await insertRuntimeHead(ctx, "public", "test:drift", {
         projectionJson: testProjectionJson({
           contentKey: "test:drift",
-          publicPath: "test/other",
+          publicPath: "subjects/test/other",
         }),
       });
     });

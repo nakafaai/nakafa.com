@@ -40,7 +40,7 @@ export async function GET(
   return runMaterialApiRead(
     getMaterialApiContentPage({
       ...pageParams,
-      locale: validLocale,
+      appLocale: validLocale,
       prefix,
     }),
     { locale, slug }

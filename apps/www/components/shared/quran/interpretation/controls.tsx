@@ -126,14 +126,14 @@ export function QuranInterpretationControls({
       try: () =>
         convex.query(api.contentRelease.quran.interpretation, {
           expectedSnapshotId: snapshotId,
-          locale: "id",
+          appLocale: "id",
           surahNumber,
           verseNumber,
         }),
     }).pipe(
       Effect.flatMap((result) =>
         decodePublishedQuranInterpretation(result, {
-          locale: "id",
+          appLocale: "id",
           snapshotId,
           surahNumber,
           verseNumber,

@@ -3,6 +3,7 @@ import {
   PublicPathSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { MaterialDomainSchema } from "@nakafa/aksara-contracts/material/domain";
 import {
   CurriculumNodeKeySchema,
@@ -59,10 +60,18 @@ export const testPublishedProgram = LearningProgramSchema.make({
       url: "https://guru.kemendikdasmen.go.id/kurikulum/referensi-penerapan/capaian-pembelajaran/",
     },
   ],
-  translations: {
-    en: { publicSlug: "merdeka", title: "Kurikulum Merdeka" },
-    id: { publicSlug: "merdeka", title: "Kurikulum Merdeka" },
-  },
+  translations: [
+    {
+      appLocale: AppLocaleSchema.make("en"),
+      publicSlug: "merdeka",
+      title: "Kurikulum Merdeka",
+    },
+    {
+      appLocale: AppLocaleSchema.make("id"),
+      publicSlug: "merdeka",
+      title: "Kurikulum Merdeka",
+    },
+  ],
   version: { label: "Indonesia" },
 });
 
@@ -70,7 +79,7 @@ const englishRoot = CurriculumRouteSchema.make({
   iconKey: "school",
   kind: "curriculum-context",
   level: "track",
-  locale: "en",
+  appLocale: AppLocaleSchema.make("en"),
   nodeKey: "merdeka:root",
   order: 10,
   programKey: testPublishedProgram.key,
@@ -86,7 +95,7 @@ const englishClass = CurriculumRouteSchema.make({
   iconKey: "grade-11",
   kind: "curriculum-context",
   level: "class",
-  locale: "en",
+  appLocale: AppLocaleSchema.make("en"),
   nodeKey: "class-11",
   order: 110,
   parentPath: englishRoot.publicPath,
@@ -101,7 +110,7 @@ const englishSubject = CurriculumRouteSchema.make({
   iconKey: "mathematics",
   kind: "curriculum-context",
   level: "subject",
-  locale: "en",
+  appLocale: AppLocaleSchema.make("en"),
   materialDomain,
   nodeKey: "class-11-mathematics",
   order: 30,
@@ -117,7 +126,7 @@ const englishGroup = CurriculumRouteSchema.make({
   iconKey: "mathematics",
   kind: "curriculum-context",
   level: "unit",
-  locale: "en",
+  appLocale: AppLocaleSchema.make("en"),
   materialCardDescription: "Operate on functions and domains.",
   materialCardTitle: "Function Composition and Inverses",
   materialDomain,
@@ -140,7 +149,7 @@ const englishPlacement = CurriculumRouteSchema.make({
   iconKey: "mathematics",
   kind: "curriculum-context",
   level: "lesson",
-  locale: "en",
+  appLocale: AppLocaleSchema.make("en"),
   materialContextNodeKey,
   materialContextParentPath: englishSubject.publicPath,
   materialContextPublicPath: englishGroup.publicPath,
@@ -161,14 +170,14 @@ const englishPlacement = CurriculumRouteSchema.make({
 
 const indonesianRoot = CurriculumRouteSchema.make({
   ...englishRoot,
-  locale: "id",
+  appLocale: AppLocaleSchema.make("id"),
   publicPath: PublicPathSchema.make("kurikulum/merdeka"),
 });
 
 const indonesianClass = CurriculumRouteSchema.make({
   ...englishClass,
   displayGroupTitle: "SMA",
-  locale: "id",
+  appLocale: AppLocaleSchema.make("id"),
   parentPath: indonesianRoot.publicPath,
   publicPath: PublicPathSchema.make("kurikulum/merdeka/kelas-11"),
   title: "Kelas 11",
@@ -176,7 +185,7 @@ const indonesianClass = CurriculumRouteSchema.make({
 
 const indonesianSubject = CurriculumRouteSchema.make({
   ...englishSubject,
-  locale: "id",
+  appLocale: AppLocaleSchema.make("id"),
   parentPath: indonesianClass.publicPath,
   publicPath: PublicPathSchema.make("kurikulum/merdeka/kelas-11/matematika"),
   title: "Matematika",
@@ -200,7 +209,7 @@ export function readTestPublishedRoute(
 ) {
   const route = publishedRoutes.find(
     (candidate) =>
-      candidate.locale === locale && candidate.publicPath === publicPath
+      candidate.appLocale === locale && candidate.publicPath === publicPath
   );
 
   if (!route) {

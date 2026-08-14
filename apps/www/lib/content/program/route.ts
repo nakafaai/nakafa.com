@@ -4,6 +4,7 @@ import {
   type GitCommitShaSchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect, Schema } from "effect";
@@ -49,24 +50,27 @@ const decodeRoutes = Effect.fn("NakafaProgram.decodeRoutes")(function* (
 export const readPublishedProgramRoute = Effect.fn(
   "NakafaProgram.readPublishedRoute"
 )(function* (locale: Locale, publicPath: string) {
+  const appLocale = AppLocaleSchema.make(locale);
   const result = yield* readRuntimeQuery(api.contentRelease.program.route, {
-    locale,
+    appLocale,
     publicPath,
   });
   const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
-    locale,
+    appLocale,
     publicPath,
   });
   const activeReleaseId = yield* Schema.decodeUnknown(
     Schema.NullOr(ReleaseIdSchema)
   )(result.activeReleaseId).pipe(
-    Effect.mapError(() => new PublishedProjectionError({ locale, publicPath }))
+    Effect.mapError(
+      () => new PublishedProjectionError({ appLocale, publicPath })
+    )
   );
   if (!result.managed) {
-    return yield* new PublishedProjectionError({ locale, publicPath });
+    return yield* new PublishedProjectionError({ appLocale, publicPath });
   }
   if (activeReleaseId === null) {
-    return yield* new PublishedProjectionError({ locale, publicPath });
+    return yield* new PublishedProjectionError({ appLocale, publicPath });
   }
   if (result.routeJson === null) {
     return {
@@ -83,7 +87,7 @@ export const readPublishedProgramRoute = Effect.fn(
     } satisfies PublishedProgramRoute;
   }
   if (result.programJson === null) {
-    return yield* new PublishedProjectionError({ locale, publicPath });
+    return yield* new PublishedProjectionError({ appLocale, publicPath });
   }
   const [
     alternates,
@@ -101,18 +105,18 @@ export const readPublishedProgramRoute = Effect.fn(
     decodeRoutes(result.contextJson, locale, publicPath),
     decodeRoutes(result.groupJson, locale, publicPath),
     Effect.forEach(result.materialJson, (source) =>
-      decodeMaterialJson(source, { locale, publicPath })
+      decodeMaterialJson(source, { appLocale, publicPath })
     ),
     decodeProgramJson(result.programJson, locale, publicPath),
     decodeCurriculumJson(result.routeJson, locale, publicPath),
   ]);
   if (
-    route.locale !== locale ||
+    route.appLocale !== appLocale ||
     route.publicPath !== publicPath ||
     program.key !== route.programKey ||
-    materials.some((material) => material.locale !== locale)
+    materials.some((material) => material.appLocale !== appLocale)
   ) {
-    return yield* new PublishedProjectionError({ locale, publicPath });
+    return yield* new PublishedProjectionError({ appLocale, publicPath });
   }
   return {
     activeReleaseId,

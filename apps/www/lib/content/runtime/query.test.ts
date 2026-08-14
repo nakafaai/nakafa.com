@@ -27,8 +27,8 @@ describe("content runtime query", () => {
       Effect.runPromise(
         readRuntimeQuery(api.contentRelease.reference.read, {
           input: {
+            appLocale: "en",
             kind: "route",
-            locale: "en",
             publicPath: "articles/politics/test",
           },
         })
@@ -46,8 +46,8 @@ describe("content runtime query", () => {
         Effect.flip(
           readRuntimeQuery(api.contentRelease.reference.read, {
             input: {
+              appLocale: "en",
               kind: "route",
-              locale: "en",
               publicPath: "articles/politics/test",
             },
           })
@@ -63,8 +63,8 @@ describe("content runtime query", () => {
       api.contentRelease.reference.read,
       {
         input: {
+          appLocale: "en",
           kind: "route",
-          locale: "en",
           publicPath: "articles/politics/test",
         },
       }

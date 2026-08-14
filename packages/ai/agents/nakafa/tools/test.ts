@@ -1,5 +1,6 @@
 import { makeLearningGraphIdentity } from "@nakafa/aksara-contracts/graph/identity";
 import type { LearningGraphIdentity } from "@nakafa/aksara-contracts/graph/spec";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { Nakafa, type NakafaRuntime } from "@repo/ai/agents/nakafa/service";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import {
@@ -159,7 +160,7 @@ export function makeSnbtSetRef(locale: Locale, route: string, setKey: string) {
       concept: ["tryout", "indonesia", "snbt", "2027", setKey],
       learningObject: ["tryout-set", "indonesia", "snbt", "2027", setKey],
       lens: ["tryout", "indonesia", "snbt"],
-      locale,
+      appLocale: AppLocaleSchema.make(locale),
     })
   );
 
@@ -185,7 +186,7 @@ export function makeSnbtSectionRef(
         sectionKey,
       ],
       lens: ["tryout", "indonesia", "snbt"],
-      locale,
+      appLocale: AppLocaleSchema.make(locale),
     })
   );
 

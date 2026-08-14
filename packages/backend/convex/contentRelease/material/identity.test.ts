@@ -13,10 +13,10 @@ import { describe, expect, it } from "vitest";
 
 const projection = makeMaterialProjection("en", 1);
 const identity = {
+  appLocale: projection.appLocale,
   contentKey: projection.contentKey,
   expectedMaterialKey: projection.materialKey,
   expectedSectionKey: projection.sectionKey,
-  locale: projection.locale,
 };
 
 describe("contentRelease/material/identity", () => {
@@ -98,10 +98,10 @@ describe("contentRelease/material/identity", () => {
     await stale.mutation(async (ctx) => {
       const row = await ctx.db
         .query("materialCatalog")
-        .withIndex("by_contentKey_and_locale", (index) =>
+        .withIndex("by_contentKey_and_appLocale", (index) =>
           index
             .eq("contentKey", projection.contentKey)
-            .eq("locale", projection.locale)
+            .eq("appLocale", projection.appLocale)
         )
         .unique();
       if (!row) {

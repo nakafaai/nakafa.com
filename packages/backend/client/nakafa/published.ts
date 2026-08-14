@@ -1,5 +1,6 @@
 import "server-only";
 
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   type ContentRuntimeTarget,
   readPublicContentEvidence,
@@ -12,7 +13,7 @@ import {
 import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { projectMdxForAgentMarkdown } from "@repo/contents/_types/llms/mdx";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 type PublishedSection = Extract<
   NakafaAgentContentRef["section"],
@@ -38,8 +39,11 @@ export const readPublishedMarkdown = Effect.fn(
     try: readContentTarget,
     catch: publishedReadError,
   });
+  const appLocale = yield* Schema.decodeUnknown(AppLocaleSchema)(
+    ref.locale
+  ).pipe(Effect.mapError(publishedReadError));
   const found = yield* readPublicContentEvidence(target, {
-    locale: ref.locale,
+    appLocale,
     publicPath: ref.route,
   }).pipe(Effect.mapError(publishedReadError));
   const expectedKind =
@@ -47,7 +51,7 @@ export const readPublishedMarkdown = Effect.fn(
   if (
     found.projection.kind !== expectedKind ||
     found.projection.graph.assetId !== ref.content_id ||
-    found.projection.locale !== ref.locale ||
+    found.projection.appLocale !== ref.locale ||
     `${found.projection.publicPath}` !== `${ref.route}`
   ) {
     return yield* publishedReadError(
@@ -57,7 +61,7 @@ export const readPublishedMarkdown = Effect.fn(
   const currentRef = createNakafaContentRefFromGraphProjection({
     ...found.projection.graph,
     content_id: found.projection.graph.assetId,
-    locale: found.projection.locale,
+    locale: found.projection.appLocale,
     route: found.projection.publicPath,
     section: ref.section,
   });
@@ -72,11 +76,10 @@ export const readPublishedMarkdown = Effect.fn(
   const metadata = found.projection.metadata;
   const description =
     metadata.description ??
-    ("subject" in metadata ? metadata.subject : undefined) ??
-    "";
+    ("subject" in metadata ? metadata.subject : undefined);
   const markdown = yield* decodeNakafaMarkdown({
     ...currentRef.value,
-    description,
+    ...(description === undefined ? {} : { description }),
     text: [`# ${metadata.title}`, "", body.trim()].join("\n"),
     title: metadata.title,
   });

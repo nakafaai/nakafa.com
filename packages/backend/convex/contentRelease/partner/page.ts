@@ -1,4 +1,3 @@
-import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { loadArticleOwner } from "@repo/backend/convex/contentRelease/article/owner";
@@ -19,10 +18,10 @@ const PARTNER_PAGE_LIMIT = 100;
 type PartnerFamily = "article" | "material";
 
 interface PartnerPageInput {
+  readonly appLocale: Doc<"contentPaths">["appLocale"];
   readonly cursor: string | null;
   readonly family: PartnerFamily;
   readonly limit: number;
-  readonly locale: ContentLocale;
   readonly prefix: string;
 }
 
@@ -31,8 +30,8 @@ interface ValidatedPartnerPageInput extends Omit<PartnerPageInput, "cursor"> {
 }
 
 interface PartnerCatalogRow {
+  readonly appLocale: Doc<"contentPaths">["appLocale"];
   readonly contentKey: string;
-  readonly locale: ContentLocale;
   readonly publicPath: string;
 }
 
@@ -145,19 +144,19 @@ export const readPartnerApiPage = Effect.fn(
   const input = yield* validatePartnerPageInput(rawInput);
   const owner =
     input.family === "article"
-      ? yield* loadArticleOwner(ctx, input.locale)
-      : yield* loadMaterialOwner(ctx, input.locale);
+      ? yield* loadArticleOwner(ctx, input.appLocale)
+      : yield* loadMaterialOwner(ctx, input.appLocale);
   if (!(owner.active && owner.managed)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_MISSING",
-      `Signed ${input.family}s for ${input.locale} are unavailable.`
+      `Signed ${input.family}s for ${input.appLocale} are unavailable.`
     );
   }
   const active = owner.active;
   if (
     input.cursor &&
     (input.cursor.activeReleaseId !== active.releaseId ||
-      input.cursor.locale !== input.locale)
+      input.cursor.appLocale !== input.appLocale)
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_STALE_BASE",
@@ -171,19 +170,21 @@ export const readPartnerApiPage = Effect.fn(
       readDescendants: (range, limit) =>
         ctx.db
           .query("articleCatalog")
-          .withIndex("by_contentKey_and_locale", (index) => {
+          .withIndex("by_appLocale_and_contentKey", (index) => {
+            const appLocale = index.eq("appLocale", input.appLocale);
             const lower = range.inclusive
-              ? index.gte("contentKey", range.lower)
-              : index.gt("contentKey", range.lower);
+              ? appLocale.gte("contentKey", range.lower)
+              : appLocale.gt("contentKey", range.lower);
             return lower.lt("contentKey", range.upper);
           })
-          .filter((filter) => filter.eq(filter.field("locale"), input.locale))
           .take(limit),
       readExact: () =>
         ctx.db
           .query("articleCatalog")
-          .withIndex("by_contentKey_and_locale", (index) =>
-            index.eq("contentKey", input.prefix).eq("locale", input.locale)
+          .withIndex("by_appLocale_and_contentKey", (index) =>
+            index
+              .eq("appLocale", input.appLocale)
+              .eq("contentKey", input.prefix)
           )
           .unique(),
       verify: (row) => verifyArticle(ctx, row, active.sequence),
@@ -193,19 +194,21 @@ export const readPartnerApiPage = Effect.fn(
       readDescendants: (range, limit) =>
         ctx.db
           .query("materialCatalog")
-          .withIndex("by_locale_and_contentKey", (index) => {
-            const locale = index.eq("locale", input.locale);
+          .withIndex("by_appLocale_and_contentKey", (index) => {
+            const appLocale = index.eq("appLocale", input.appLocale);
             const lower = range.inclusive
-              ? locale.gte("contentKey", range.lower)
-              : locale.gt("contentKey", range.lower);
+              ? appLocale.gte("contentKey", range.lower)
+              : appLocale.gt("contentKey", range.lower);
             return lower.lt("contentKey", range.upper);
           })
           .take(limit),
       readExact: () =>
         ctx.db
           .query("materialCatalog")
-          .withIndex("by_locale_and_contentKey", (index) =>
-            index.eq("locale", input.locale).eq("contentKey", input.prefix)
+          .withIndex("by_appLocale_and_contentKey", (index) =>
+            index
+              .eq("appLocale", input.appLocale)
+              .eq("contentKey", input.prefix)
           )
           .unique(),
       verify: verifyMaterial,
@@ -224,10 +227,10 @@ export const readPartnerApiPage = Effect.fn(
       );
     }
     continueCursor = yield* encodePartnerCursor({
+      appLocale: input.appLocale,
       activeReleaseId: active.releaseId,
       contentKey: last.contentKey,
       family: input.family,
-      locale: input.locale,
       prefix: input.prefix,
     });
   }
@@ -236,7 +239,7 @@ export const readPartnerApiPage = Effect.fn(
     continueCursor,
     isDone,
     page: selected.map((row) => ({
-      locale: row.locale,
+      appLocale: row.appLocale,
       publicPath: row.publicPath,
     })),
   };

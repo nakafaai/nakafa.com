@@ -20,7 +20,7 @@ export function makeConvexNakafa({
     read: (input) => readNakafaMarkdown(convexUrl, readContentTarget, input),
     /** Reads Quran references from Convex Quran runtime rows. */
     quran: (input) => readNakafaQuranReference(convexUrl, input),
-    /** Reads taxonomy from pure taxonomy constants plus Convex counts. */
+    /** Reads taxonomy from authenticated current Convex publications. */
     taxonomy: (locale) => readNakafaTaxonomy(convexUrl, locale),
     /** Verifies concrete runtime routes through the Convex route catalog. */
     verify: (input) => verifyNakafaContent(convexUrl, input),

@@ -1,12 +1,10 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import type { Id, TableNames } from "@repo/backend/convex/_generated/dataModel";
 import {
-  ConvexIdSchema,
+  callCustomerIntegrityQuery,
+  getCustomerConvexConfig,
   loadCustomerEnvProvider,
-  mutableArraySchema,
-  readCustomerQuery,
-  writeCustomerError,
-  writeCustomerReport,
-} from "@repo/backend/scripts/customers/runtime";
+} from "@repo/backend/scripts/customers/convex";
 import { formatScriptCause } from "@repo/backend/scripts/lib/errors";
 import type {
   FunctionArgs,
@@ -17,6 +15,26 @@ import type {
 import { Effect, Schema } from "effect";
 
 const CUSTOMER_PAGE_SIZE = 100;
+
+const writeLine = (message: string) => {
+  process.stdout.write(`${message}\n`);
+};
+
+const writeError = (message: string) => {
+  process.stderr.write(`ERROR: ${message}\n`);
+};
+
+const ConvexIdSchema = <const TableName extends TableNames>(
+  tableName: TableName
+) =>
+  Schema.String.pipe(
+    Schema.filter((value): value is Id<TableName> => value.length > 0, {
+      message: () => `Expected ${tableName} document ID`,
+    })
+  );
+
+const mutableArraySchema = <A, I>(schema: Schema.Schema<A, I, never>) =>
+  Schema.mutable(Schema.Array(schema));
 
 interface PageResult {
   continueCursor: string;
@@ -85,6 +103,7 @@ const collectIntegrityPages = Effect.fn("customers.collectIntegrityPages")(
     query: TFunction,
     schema: Schema.Schema<FunctionReturnType<TFunction>, Encoded, never>
   ) {
+    const config = yield* getCustomerConvexConfig(prod);
     const rows: PageRow<TFunction>[] = [];
     let continueCursor: string | null = null;
 
@@ -95,7 +114,12 @@ const collectIntegrityPages = Effect.fn("customers.collectIntegrityPages")(
           numItems: CUSTOMER_PAGE_SIZE,
         },
       };
-      const result = yield* readCustomerQuery(prod, query, args, schema);
+      const result = yield* callCustomerIntegrityQuery(
+        config,
+        query,
+        args,
+        schema
+      );
 
       rows.push(...result.page);
 
@@ -171,7 +195,7 @@ const main = Effect.fn("customers.verify")(function* () {
   const prod = args.includes("--prod");
   const report = yield* getCustomerIntegrityReport(prod);
 
-  writeCustomerReport(
+  writeLine(
     JSON.stringify(
       {
         customerCount: report.customerCount,
@@ -212,7 +236,7 @@ Effect.runPromise(
   }).pipe(
     Effect.catchAllCause((cause) =>
       Effect.sync(() => {
-        writeCustomerError(formatScriptCause(cause));
+        writeError(formatScriptCause(cause));
         process.exitCode = 1;
       })
     )

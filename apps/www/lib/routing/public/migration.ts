@@ -29,7 +29,7 @@ export const readPublicUrlMigrationRedirect = Effect.fn(
     return null;
   }
 
-  return `/${identity.value.locale}/${redirect.publicPath}`;
+  return `/${identity.value.appLocale}/${redirect.publicPath}`;
 });
 
 /** Decodes one exact retired subject lesson URL into its stable content key. */
@@ -68,9 +68,9 @@ function readPreviousMaterialIdentity(pathname: string) {
   }
 
   return Option.some({
+    appLocale: locale,
     contentKey: contentKey.value,
     expectedMaterialKey: `lesson.${domain}.${topic}`,
     expectedSectionKey: section,
-    locale,
   });
 }

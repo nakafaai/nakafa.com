@@ -14,9 +14,9 @@ export const readMaterialBuckets = Effect.fn(
   "contentRelease.readMaterialBuckets"
 )(function* (
   ctx: QueryCtx,
-  locale: Parameters<typeof readMaterialPartition>[1]
+  appLocale: Parameters<typeof readMaterialPartition>[1]
 ) {
-  const owner = yield* loadMaterialOwner(ctx, locale);
+  const owner = yield* loadMaterialOwner(ctx, appLocale);
   if (!(owner.active && owner.managed)) {
     return {
       activeReleaseId: owner.active?.releaseId ?? null,
@@ -29,13 +29,15 @@ export const readMaterialBuckets = Effect.fn(
   const rows = yield* Effect.promise(() =>
     ctx.db
       .query("materialBuckets")
-      .withIndex("by_locale_and_bucket", (index) => index.eq("locale", locale))
+      .withIndex("by_appLocale_and_bucket", (index) =>
+        index.eq("appLocale", appLocale)
+      )
       .take(CONTENT_BUCKET_LIMIT + 1)
   );
   if (rows.length > CONTENT_BUCKET_LIMIT) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Material discovery buckets for ${locale} exceed their fixed partition space.`
+      `Material discovery buckets for ${appLocale} exceed their fixed partition space.`
     );
   }
   for (const row of rows) {
@@ -46,7 +48,7 @@ export const readMaterialBuckets = Effect.fn(
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Material discovery bucket ${locale}/${row.bucket} has invalid counts.`
+        `Material discovery bucket ${appLocale}/${row.bucket} has invalid counts.`
       );
     }
   }
@@ -63,10 +65,10 @@ export const readMaterialSitemap = Effect.fn(
   "contentRelease.readMaterialSitemap"
 )(function* (
   ctx: QueryCtx,
-  locale: Parameters<typeof readMaterialPartition>[1],
+  appLocale: Parameters<typeof readMaterialPartition>[1],
   bucket: string
 ) {
-  const partition = yield* readMaterialPartition(ctx, locale, bucket);
+  const partition = yield* readMaterialPartition(ctx, appLocale, bucket);
   if (partition.kind !== "found") {
     return null;
   }

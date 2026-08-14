@@ -113,9 +113,9 @@ const stageCurriculum = Effect.fn("contentRelease.stageCurriculum")(function* (
   }
   const row = {
     ...(record.row.sitemap && bucket !== null ? { bucket } : {}),
+    appLocale: record.row.appLocale,
     index,
     level: record.row.level,
-    locale: record.row.locale,
     contextPath: record.row.materialContextParentPath,
     materialKey: record.row.materialKey,
     nodeKey: record.row.nodeKey,
@@ -137,10 +137,10 @@ const stageCurriculum = Effect.fn("contentRelease.stageCurriculum")(function* (
     Effect.promise(() =>
       ctx.db
         .query("curriculumRoutes")
-        .withIndex("by_snapshotId_and_locale_and_path", (query) =>
+        .withIndex("by_snapshotId_and_appLocale_and_path", (query) =>
           query
             .eq("snapshotId", snapshotId)
-            .eq("locale", record.row.locale)
+            .eq("appLocale", record.row.appLocale)
             .eq("path", record.row.publicPath)
         )
         .unique()
@@ -149,11 +149,11 @@ const stageCurriculum = Effect.fn("contentRelease.stageCurriculum")(function* (
       ctx.db
         .query("curriculumRoutes")
         .withIndex(
-          "by_snapshotId_and_locale_and_programKey_and_nodeKey",
+          "by_snapshotId_and_appLocale_and_programKey_and_nodeKey",
           (query) =>
             query
               .eq("snapshotId", snapshotId)
-              .eq("locale", record.row.locale)
+              .eq("appLocale", record.row.appLocale)
               .eq("programKey", record.row.programKey)
               .eq("nodeKey", record.row.nodeKey)
         )
@@ -193,7 +193,7 @@ const stageCurriculum = Effect.fn("contentRelease.stageCurriculum")(function* (
       ctx,
       snapshotId,
       index,
-      record.row.locale,
+      record.row.appLocale,
       row.bucket
     );
   }

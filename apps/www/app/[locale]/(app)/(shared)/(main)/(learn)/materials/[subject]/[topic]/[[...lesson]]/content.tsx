@@ -6,6 +6,7 @@ import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { Effect, Option } from "effect";
 import { io } from "next/cache";
 import { notFound } from "next/navigation";
+import type { Locale } from "next-intl";
 import type { ReactNode } from "react";
 import {
   type MaterialParams,
@@ -22,13 +23,14 @@ import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import { getAksaraUrl, getRawAksaraUrl } from "@/lib/utils/github";
 
 interface PreviewOwner {
+  readonly appLocale: Locale;
   readonly kind: "preview";
   readonly preview: MaterialPreviewContent;
 }
 
 interface PublishedOwner {
   readonly kind: "published";
-  readonly locale: MaterialLessonProjection["locale"];
+  readonly locale: Locale;
   readonly publicPath: string;
 }
 
@@ -36,7 +38,7 @@ type MaterialOwner = PreviewOwner | PublishedOwner;
 
 interface MaterialFields {
   readonly alternates: readonly MaterialLessonProjection[];
-  readonly locale: MaterialLessonProjection["locale"];
+  readonly appLocale: Locale;
   readonly metadata: MaterialMetadata;
   readonly rendererDomain: RendererDomain;
   readonly route: MaterialLessonProjection;
@@ -71,7 +73,8 @@ export interface MaterialMetadataContent extends MaterialFields {
 
 /** Reads a local overlay only in the explicitly configured preview child. */
 async function readPreviewOwner(
-  params: Awaited<MaterialParams>
+  params: Awaited<MaterialParams>,
+  appLocale: Locale
 ): Promise<Option.Option<PreviewOwner>> {
   if (!hasPreviewConfig()) {
     return Option.none();
@@ -79,7 +82,7 @@ async function readPreviewOwner(
   await io();
   return Option.map(
     await Effect.runPromise(readMaterialPreview({ params })),
-    (preview) => ({ kind: "preview", preview })
+    (preview) => ({ appLocale, kind: "preview", preview })
   );
 }
 
@@ -88,12 +91,12 @@ async function resolveMaterialOwner(
   params: MaterialParams
 ): Promise<MaterialOwner> {
   const routeParams = await params;
-  const preview = await readPreviewOwner(routeParams);
+  const request = await readMaterialRequest(Promise.resolve(routeParams));
+  const preview = await readPreviewOwner(routeParams, request.locale);
   if (Option.isSome(preview)) {
     return preview.value;
   }
 
-  const request = await readMaterialRequest(Promise.resolve(routeParams));
   if (!request.publicPath) {
     notFound();
   }
@@ -113,7 +116,7 @@ export async function readMaterialMetadata(
     return {
       alternates: [owner.preview.projection],
       kind: owner.kind,
-      locale: owner.preview.locale,
+      appLocale: owner.appLocale,
       metadata: owner.preview.metadata,
       rendererDomain: owner.preview.rendererDomain,
       route: owner.preview.projection,
@@ -128,7 +131,7 @@ export async function readMaterialMetadata(
   return {
     alternates: model.alternates,
     kind: owner.kind,
-    locale: model.projection.locale,
+    appLocale: owner.locale,
     metadata: model.projection.metadata,
     rendererDomain: model.rendererDomain,
     route: model.projection,
@@ -148,7 +151,7 @@ export async function readMaterialPage(
       children: <Content />,
       copySourceUrl: null,
       kind: owner.kind,
-      locale: owner.preview.locale,
+      appLocale: owner.appLocale,
       metadata: owner.preview.metadata,
       rendererDomain: owner.preview.rendererDomain,
       route: owner.preview.projection,
@@ -177,7 +180,7 @@ export async function readMaterialPage(
         })
       : null,
     kind: owner.kind,
-    locale: model.projection.locale,
+    appLocale: owner.locale,
     metadata: published.metadata,
     rendererDomain: model.rendererDomain,
     route: model.projection,

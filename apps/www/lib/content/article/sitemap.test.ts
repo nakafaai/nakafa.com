@@ -49,11 +49,11 @@ describe("published article sitemap", () => {
       routes: [{ publicPath: "articles/politics/article" }],
     });
     expect(runtimeQueryMock).toHaveBeenNthCalledWith(1, expect.anything(), {
-      locale: "en",
+      appLocale: "en",
     });
     expect(runtimeQueryMock).toHaveBeenNthCalledWith(2, expect.anything(), {
+      appLocale: "en",
       bucket: "abc",
-      locale: "en",
     });
   });
 

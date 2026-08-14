@@ -5,7 +5,7 @@ import {
   type ProtectedContentRuntimeSelector,
   ProtectedContentRuntimeSelectorSchema,
 } from "@nakafa/aksara-contracts/runtime/protected/spec";
-import type { TryoutPlacement } from "@nakafa/aksara-contracts/tryout/spec";
+import type { TryoutPlacement } from "@nakafa/aksara-contracts/tryout/placement";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   TEST_PROOF_RENDERER,
@@ -72,13 +72,13 @@ export async function insertProtectedRuntime(
     rawMdx: "#### Technical answer",
   });
   const idQuestion = testSignedArtifact("snbt-quant", {
+    artifactLocale: "id",
     contentKey: enQuestion.payload.contentKey,
-    locale: "id",
     rawMdx: "## Pertanyaan teknis",
   });
   const idAnswer = testSignedArtifact("snbt-quant", {
+    artifactLocale: "id",
     contentKey: enAnswer.payload.contentKey,
-    locale: "id",
     rawMdx: "#### Jawaban teknis",
   });
   const enPlacement = makeTryoutPlacementRow("en", {
@@ -130,7 +130,7 @@ export async function insertProtectedRuntime(
   const request = Schema.decodeUnknownSync(
     ProtectedContentRuntimeRequestSchema
   )({
-    locale: enPlacement.locale,
+    appLocale: enPlacement.appLocale,
     selectors: [question, answer],
     snapshotReleaseId: signedRelease.manifest.releaseId,
     snapshotId,

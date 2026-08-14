@@ -19,23 +19,23 @@ const syncMaterialIdentity = Effect.fn("contentRelease.syncMaterialIdentity")(
   function* (
     ctx: MutationCtx,
     contentKey: string,
-    locale: Doc<"contentKeys">["locale"],
+    artifactLocale: Doc<"contentKeys">["artifactLocale"],
     activeSequence: number
   ) {
     const resolved = yield* resolvePublicProjection(
       ctx,
       contentKey,
-      locale,
+      artifactLocale,
       activeSequence
     );
     if (resolved?.family !== "material") {
-      return yield* deleteMaterial(ctx, contentKey, locale);
+      return yield* deleteMaterial(ctx, contentKey, artifactLocale);
     }
     const projection = yield* decodeProjectionJson(resolved.projectionJson);
     if (projection.kind !== "subject-lesson") {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Active material head ${contentKey}/${locale} is incomplete.`
+        `Active material head ${contentKey}/${artifactLocale} is incomplete.`
       );
     }
     yield* writeMaterial(ctx, resolved, projection);
@@ -52,7 +52,7 @@ const baselineMaterials = Effect.fn("contentRelease.baselineMaterials")(
     const stored = yield* Effect.promise(() =>
       ctx.db
         .query("contentKeys")
-        .withIndex("by_family_and_contentKey_and_locale", (index) =>
+        .withIndex("by_family_and_contentKey_and_artifactLocale", (index) =>
           index.eq("family", "material")
         )
         .paginate({
@@ -66,7 +66,7 @@ const baselineMaterials = Effect.fn("contentRelease.baselineMaterials")(
       yield* syncMaterialIdentity(
         ctx,
         key.contentKey,
-        key.locale,
+        key.artifactLocale,
         active.sequence
       );
     }
@@ -153,7 +153,7 @@ export const syncMaterials = Effect.fn("contentRelease.syncMaterials")(
         yield* syncMaterialIdentity(
           ctx,
           row.contentKey,
-          row.locale,
+          row.artifactLocale,
           release.sequence
         );
       }

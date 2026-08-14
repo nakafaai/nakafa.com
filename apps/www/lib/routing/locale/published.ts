@@ -82,7 +82,7 @@ export const readPublishedLocalizedHref = Effect.fn(
       });
     }
     const target = current.alternates.find(
-      (alternate) => alternate.locale === locale
+      (alternate) => alternate.appLocale === locale
     );
     if (!target) {
       return yield* new MissingLocalizedRouteProjectionError({
@@ -101,9 +101,9 @@ export const readPublishedLocalizedHref = Effect.fn(
 
   if (surface?.key === "tryout") {
     const target = yield* readPublishedTryoutLocalizedPath({
-      currentLocale,
-      locale,
+      currentAppLocale: currentLocale,
       publicPath,
+      targetAppLocale: locale,
     });
     if (!target) {
       return yield* new MissingLocalizedRouteProjectionError({
@@ -127,7 +127,7 @@ export const readPublishedLocalizedHref = Effect.fn(
   }
   const target = current.alternates.find(
     (alternate) =>
-      alternate.locale === locale &&
+      alternate.appLocale === locale &&
       alternate.nodeKey === current.route?.nodeKey &&
       alternate.programKey === current.route?.programKey &&
       alternate.sitemap &&

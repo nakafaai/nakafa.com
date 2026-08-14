@@ -11,25 +11,25 @@ const reviewedTryoutSocialImageFixtures = [
     countryKey: "indonesia",
     examKey: "snbt",
     imagePath: "/open-graph/tryout/indonesia/en-snbt.png",
-    locale: "en",
+    appLocale: "en",
   },
   {
     countryKey: "indonesia",
     examKey: "tka",
     imagePath: "/open-graph/tryout/indonesia/en-tka.png",
-    locale: "en",
+    appLocale: "en",
   },
   {
     countryKey: "indonesia",
     examKey: "snbt",
     imagePath: "/open-graph/tryout/indonesia/id-snbt.png",
-    locale: "id",
+    appLocale: "id",
   },
   {
     countryKey: "indonesia",
     examKey: "tka",
     imagePath: "/open-graph/tryout/indonesia/id-tka.png",
-    locale: "id",
+    appLocale: "id",
   },
 ];
 
@@ -39,13 +39,13 @@ describe("try-out social images", () => {
       countryKey,
       examKey,
       imagePath,
-      locale,
+      appLocale,
     } of reviewedTryoutSocialImageFixtures) {
       const resolvedPath = await Effect.runPromise(
         resolveTryoutExamSocialImage({
           countryKey,
           examKey,
-          locale,
+          appLocale,
           publicPath: `try-out/${countryKey}/${examKey}`,
         })
       );
@@ -63,7 +63,7 @@ describe("try-out social images", () => {
         resolveTryoutExamSocialImage({
           countryKey: "indonesia",
           examKey: "future-exam",
-          locale: "en",
+          appLocale: "en",
           publicPath: "try-out/indonesia/future-exam",
         })
       )
@@ -76,7 +76,7 @@ describe("try-out social images", () => {
         resolveTryoutExamSocialImage({
           countryKey: "germany",
           examKey: "snbt",
-          locale: "en",
+          appLocale: "en",
           publicPath: "try-out/germany/snbt",
         })
       )
@@ -84,11 +84,11 @@ describe("try-out social images", () => {
   });
 
   it.each([
-    { countryKey: "Indonesia", examKey: "snbt", locale: "en" },
-    { countryKey: "indonesia", examKey: "TKA", locale: "en" },
-    { countryKey: "indonesia", examKey: "tka", locale: "de" },
+    { appLocale: "en", countryKey: "Indonesia", examKey: "snbt" },
+    { appLocale: "en", countryKey: "indonesia", examKey: "TKA" },
+    { appLocale: "de", countryKey: "indonesia", examKey: "tka" },
   ])(
-    "rejects invalid signed identity $countryKey/$examKey/$locale",
+    "rejects invalid signed identity $countryKey/$examKey/$appLocale",
     async (input) => {
       const error = await Effect.runPromise(
         Effect.flip(
@@ -112,7 +112,7 @@ describe("try-out social images", () => {
         resolveTryoutExamSocialImage({
           countryKey: "indonesia",
           examKey: "tka",
-          locale: "id",
+          appLocale: "id",
           publicPath: "try-out/indonesia/snbt",
         })
       )

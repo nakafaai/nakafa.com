@@ -1,4 +1,5 @@
-import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -9,11 +10,11 @@ import { makeTryoutSet, TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
-const SIGNED_SET_IDENTITY = tryoutCatalogIdentity({
+const SIGNED_SET_IDENTITY = tryoutCatalogNodeIdentity({
+  appLocale: AppLocaleSchema.make("id"),
   countryKey: "indonesia",
   examKey: "snbt",
   kind: "set",
-  locale: "id",
   setKey: "set-1",
   trackKey: "2027",
 });

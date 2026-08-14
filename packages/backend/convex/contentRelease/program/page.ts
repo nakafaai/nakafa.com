@@ -24,14 +24,14 @@ function emptyPage() {
 export const readProgramPage = Effect.fn("contentRelease.readProgramPage")(
   function* (
     ctx: QueryCtx,
-    locale: Doc<"curriculumRoutes">["locale"],
+    appLocale: Doc<"curriculumRoutes">["appLocale"],
     expectedManifestHash: null | string,
     expectedReleaseId: null | string,
     paginationOpts: Parameters<typeof validateProjectionPage>[0]
   ) {
     const [options, owner] = yield* Effect.all([
       validateProjectionPage(paginationOpts),
-      loadProgramOwner(ctx, locale),
+      loadProgramOwner(ctx, appLocale),
     ]);
     if (options.endCursor !== undefined && options.endCursor !== null) {
       return yield* releaseFail(
@@ -79,8 +79,10 @@ export const readProgramPage = Effect.fn("contentRelease.readProgramPage")(
     const stored = yield* Effect.promise(() =>
       ctx.db
         .query("curriculumRoutes")
-        .withIndex("by_snapshotId_and_locale_and_path", (index) =>
-          index.eq("snapshotId", owner.selected.snapshotId).eq("locale", locale)
+        .withIndex("by_snapshotId_and_appLocale_and_path", (index) =>
+          index
+            .eq("snapshotId", owner.selected.snapshotId)
+            .eq("appLocale", appLocale)
         )
         .paginate(options)
     );

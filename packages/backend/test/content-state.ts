@@ -1,5 +1,6 @@
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
 import type {
   ContentSnapshotSet,
@@ -86,7 +87,9 @@ export async function insertZeroRelease(
   const aborted = options.status === "aborted";
   const receipt = {
     activatedHeads: 0,
+    activeAppLocales: ACTIVE_APP_LOCALE_CODES,
     deletedHeads: 0,
+    editorialReviewDigest: TEST_DIGEST,
     manifestHash: options.manifestHash,
     projectionDigest: TEST_DIGEST,
     releaseId: options.releaseId,
@@ -168,9 +171,6 @@ export async function insertTestState(
     ...(options.material
       ? {
           materialManifestHash: options.material.manifestHash,
-          materialOwnerManifestHash: options.material.manifestHash,
-          materialOwnerReleaseId: options.material.releaseId,
-          materialOwnerSequence: options.material.sequence,
           materialReleaseId: options.material.releaseId,
           materialSequence: options.material.sequence,
         }
@@ -237,7 +237,9 @@ export async function insertActiveRelease(
   const now = Date.UTC(2026, 6, 22, 12);
   const receipt = {
     activatedHeads: 0,
+    activeAppLocales: manifest.activeAppLocales,
     deletedHeads: 0,
+    editorialReviewDigest: manifest.editorialReviewDigest,
     manifestHash: active.manifestHash,
     projectionDigest: manifest.projectionDigest,
     releaseId: activeReleaseId,

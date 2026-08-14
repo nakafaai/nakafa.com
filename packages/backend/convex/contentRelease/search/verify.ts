@@ -2,8 +2,7 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { loadContentOwner } from "@repo/backend/convex/contentRelease/scope/owner";
-import type { loadSearchOwner } from "@repo/backend/convex/contentRelease/search";
+import type { loadSearchOwner } from "@repo/backend/convex/contentRelease/search/owner";
 import { Effect } from "effect";
 
 type SearchOwner = NonNullable<
@@ -14,37 +13,21 @@ type SearchOwner = NonNullable<
 export const resolveSearchProjection = Effect.fn(
   "contentRelease.resolveSearchProjection"
 )(function* (ctx: QueryCtx, row: Doc<"contentIndex">, owner: SearchOwner) {
-  if (row.family === "article" && !owner.families.includes("article")) {
-    return yield* staleSearchRow(row);
-  }
-  if (row.family === "material" && !owner.families.includes("material")) {
-    if (!owner.materialReady) {
-      return yield* staleSearchRow(row);
-    }
-    const contentOwner = yield* loadContentOwner(
-      ctx,
-      row.contentKey,
-      row.locale,
-      owner.sequence
-    );
-    if (!contentOwner?.managed) {
-      return null;
-    }
-    if (contentOwner.family !== "material") {
-      return yield* staleSearchRow(row);
-    }
-  }
-  if (row.family !== "article" && row.family !== "material") {
+  if (
+    (row.family !== "article" && row.family !== "material") ||
+    !owner.families.includes(row.family)
+  ) {
     return yield* staleSearchRow(row);
   }
   const resolved = yield* resolvePublicProjection(
     ctx,
     row.contentKey,
-    row.locale,
+    row.appLocale,
     owner.sequence
   );
   if (
     !resolved ||
+    resolved.appLocale !== row.appLocale ||
     resolved.family !== row.family ||
     resolved.projectionHash !== row.projectionHash ||
     resolved.publicPath !== row.publicPath ||
@@ -58,10 +41,10 @@ export const resolveSearchProjection = Effect.fn(
 
 /** Creates one typed integrity failure for a stale release-owned search row. */
 function staleSearchRow(
-  row: Pick<Doc<"contentIndex">, "contentKey" | "locale">
+  row: Pick<Doc<"contentIndex">, "appLocale" | "contentKey">
 ) {
   return releaseFail(
     "CONTENT_RELEASE_INTEGRITY",
-    `Active search entry ${row.contentKey}/${row.locale} is stale.`
+    `Active search entry ${row.contentKey}/${row.appLocale} is stale.`
   );
 }

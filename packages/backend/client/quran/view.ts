@@ -13,18 +13,18 @@ import { Effect } from "effect";
 
 type QuranViewResult = FunctionReturnType<typeof api.contentRelease.quran.view>;
 
-/** One validator-derived verse rendered by the locale-specific Quran web view. */
+/** One validator-derived verse rendered by the app-locale Quran web view. */
 export type QuranViewVerse = QuranViewResult["verses"][number];
 
 /** Minimal validator-derived surah metadata rendered by the Quran web view. */
 export type QuranViewSurah = NonNullable<QuranViewResult["surah"]>;
 
-/** Decodes one active locale-specific Quran web projection. */
+/** Decodes one active app-locale Quran web projection. */
 export const decodePublishedQuranView = Effect.fn("NakafaQuran.decodeView")(
   function* (
     result: QuranViewResult,
     expected: {
-      readonly locale: QuranViewResult["locale"];
+      readonly appLocale: QuranViewResult["appLocale"];
       readonly surahNumber: number;
     }
   ) {
@@ -36,7 +36,7 @@ export const decodePublishedQuranView = Effect.fn("NakafaQuran.decodeView")(
       });
     }
     if (
-      result.locale !== expected.locale ||
+      result.appLocale !== expected.appLocale ||
       result.surah.number !== expected.surahNumber ||
       !hasExactQuranVerseRange(result.verses, 1, result.surah.numberOfVerses) ||
       !hasExpectedQuranNeighbors(
@@ -54,7 +54,7 @@ export const decodePublishedQuranView = Effect.fn("NakafaQuran.decodeView")(
 
     return {
       ...source,
-      locale: result.locale,
+      appLocale: result.appLocale,
       nextSurah: result.nextSurah,
       previousSurah: result.previousSurah,
       surah: result.surah,

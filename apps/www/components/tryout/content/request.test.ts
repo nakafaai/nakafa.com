@@ -1,6 +1,7 @@
+import { StoredProtectedRuntimeRequestSchema } from "@nakafa/aksara-contracts/history/decode";
 import { decodeProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 import type {
   CurrentTryoutQuestionSelector,
@@ -9,17 +10,18 @@ import type {
 import {
   makeCurrentTryoutRuntimeRequest,
   makeHistoryTryoutRuntimeRequest,
+  requireCurrentTryoutQuestion,
 } from "@/components/tryout/content/request";
 
 const digest = `sha256:${"a".repeat(64)}`;
 const contentKey =
   "question-bank/tryout/indonesia/snbt/general-reasoning/set-1/question-1/question";
 const currentQuestion: CurrentTryoutQuestionSelector = {
+  appLocale: "en",
   artifactHash: digest,
   contentHash: "current-content-hash",
   contentKey,
   delivery: "authenticated",
-  locale: "en",
   questionOrder: 1,
   snapshotId: digest,
   snapshotReleaseId: "current-release",
@@ -27,20 +29,19 @@ const currentQuestion: CurrentTryoutQuestionSelector = {
   sourceRevision: "current-source",
 };
 const historyQuestion: HistoryTryoutQuestionSelector = {
+  ...currentQuestion,
   appLocale: "id",
-  artifactHash: digest,
   artifactLocale: "en",
-  contentHash: currentQuestion.contentHash,
-  contentKey,
-  delivery: "authenticated",
-  questionOrder: currentQuestion.questionOrder,
-  snapshotId: digest,
   snapshotReleaseId: "history-release",
-  sourcePath: currentQuestion.sourcePath,
-  sourceRevision: currentQuestion.sourceRevision,
 };
 
 describe("try-out protected runtime requests", () => {
+  it("rejects an empty protected content batch", async () => {
+    await expect(
+      Effect.runPromise(makeCurrentTryoutRuntimeRequest([]).pipe(Effect.flip))
+    ).resolves.toBeInstanceOf(ContentRuntimeVerificationError);
+  });
+
   it("keeps the current request free of attempt and historical fields", async () => {
     const request = await Effect.runPromise(
       makeCurrentTryoutRuntimeRequest([currentQuestion])
@@ -58,6 +59,9 @@ describe("try-out protected runtime requests", () => {
       makeHistoryTryoutRuntimeRequest("attempt-1", [historyQuestion])
     );
 
+    expect(
+      Schema.decodeUnknownSync(StoredProtectedRuntimeRequestSchema)(request)
+    ).toEqual(request);
     expect(request).toMatchObject({
       appLocale: "id",
       attemptId: "attempt-1",
@@ -65,7 +69,6 @@ describe("try-out protected runtime requests", () => {
       snapshotId: digest,
       snapshotReleaseId: "history-release",
     });
-    expect(request).not.toHaveProperty("locale");
   });
 
   it("fails before transport when one batch spans snapshots", async () => {
@@ -79,24 +82,13 @@ describe("try-out protected runtime requests", () => {
     ).resolves.toBeInstanceOf(ContentRuntimeVerificationError);
   });
 
-  it("rejects empty current and historical batches", async () => {
+  it("keeps the featured operation current-only", async () => {
     await expect(
-      Effect.runPromise(makeCurrentTryoutRuntimeRequest([]).pipe(Effect.flip))
-    ).resolves.toBeInstanceOf(ContentRuntimeVerificationError);
-    await expect(
-      Effect.runPromise(
-        makeHistoryTryoutRuntimeRequest("attempt-1", []).pipe(Effect.flip)
-      )
-    ).resolves.toBeInstanceOf(ContentRuntimeVerificationError);
-  });
-
-  it("rejects a historical batch that spans retained releases", async () => {
+      Effect.runPromise(requireCurrentTryoutQuestion(currentQuestion))
+    ).resolves.toEqual(currentQuestion);
     await expect(
       Effect.runPromise(
-        makeHistoryTryoutRuntimeRequest("attempt-1", [
-          historyQuestion,
-          { ...historyQuestion, snapshotReleaseId: "another-release" },
-        ]).pipe(Effect.flip)
+        requireCurrentTryoutQuestion(historyQuestion).pipe(Effect.flip)
       )
     ).resolves.toBeInstanceOf(ContentRuntimeVerificationError);
   });

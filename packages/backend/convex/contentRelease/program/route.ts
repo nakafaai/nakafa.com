@@ -18,12 +18,12 @@ import { Effect } from "effect";
 export const readProgramRoute = Effect.fn("contentRelease.readProgramRoute")(
   function* (
     ctx: QueryCtx,
-    locale: Doc<"curriculumRoutes">["locale"],
+    appLocale: Doc<"curriculumRoutes">["appLocale"],
     publicPath: string
   ) {
     const [globalActive, owner] = yield* Effect.all([
       loadActiveIdentity(ctx),
-      loadProgramOwner(ctx, locale),
+      loadProgramOwner(ctx, appLocale),
     ]);
     if (!(owner.managed && owner.selected)) {
       return {
@@ -46,7 +46,7 @@ export const readProgramRoute = Effect.fn("contentRelease.readProgramRoute")(
     const storedRoute = yield* loadProgramRouteRow(
       ctx,
       snapshotId,
-      locale,
+      appLocale,
       publicPath
     );
     if (!storedRoute) {
@@ -78,7 +78,7 @@ export const readProgramRoute = Effect.fn("contentRelease.readProgramRoute")(
     if (!storedProgram) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Curriculum route ${locale}/${publicPath} lost program ${route.programKey}.`
+        `Curriculum route ${appLocale}/${publicPath} lost program ${route.programKey}.`
       );
     }
     yield* verifyProgram(storedProgram, snapshotId);

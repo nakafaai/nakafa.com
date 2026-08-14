@@ -51,7 +51,7 @@ async function insertHistoryAttempt(
     userId: args.userId,
     countryKey: TRYOUT_START_COUNTRY,
     examKey: TRYOUT_START_EXAM,
-    locale: "id",
+    appLocale: "id",
     setIdentity: args.setIdentity,
     setKey: TRYOUT_START_SET,
     setPublicPath: SET_PATH,
@@ -78,7 +78,7 @@ async function insertHistoryAttempt(
 }
 
 describe("tryouts/queries/history", () => {
-  it("keeps identity history after a public-path rename", async () => {
+  it("keeps immutable identity history after a public route rename", async () => {
     vi.setSystemTime(new Date(NOW));
 
     const t = createConvexTestWithBetterAuth();
@@ -139,7 +139,7 @@ describe("tryouts/queries/history", () => {
     ]);
   });
 
-  it("returns an empty page for an unknown immutable set identity", async () => {
+  it("keeps missing immutable set identities isolated", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const user = await seedAuthenticatedUser(ctx, {
@@ -169,7 +169,7 @@ describe("tryouts/queries/history", () => {
     expect(identityHistory).toMatchObject({ isDone: true, page: [] });
   });
 
-  it("limits identity history pages to twenty-five attempts", async () => {
+  it("limits identity page reads to twenty-five attempts", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {

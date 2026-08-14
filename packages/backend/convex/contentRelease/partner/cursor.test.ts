@@ -11,14 +11,14 @@ describe("contentRelease/partner/cursor", () => {
       activeReleaseId: "release-one",
       contentKey: "articles/politics/item:one",
       family: "article" as const,
-      locale: "en",
+      appLocale: "en",
       prefix: "articles/politics",
     },
     {
       activeReleaseId: "release-two",
       contentKey: "material/lesson/test/item-two",
       family: "material" as const,
-      locale: "id",
+      appLocale: "id",
       prefix: "",
     },
   ])("round trips one release-bound cursor", async (input) => {
@@ -43,7 +43,7 @@ describe("contentRelease/partner/cursor", () => {
     "content:article::en:articles%2Fpolitics:articles%2Fpolitics%2Fitem",
     "content:other:release-one:en:articles%2Fpolitics:articles%2Fpolitics%2Fitem",
     "content:article:invalid release:en:articles%2Fpolitics:articles%2Fpolitics%2Fitem",
-    "content:article:release-one:de:articles%2Fpolitics:articles%2Fpolitics%2Fitem",
+    "content:article:release-one:fr:articles%2Fpolitics:articles%2Fpolitics%2Fitem",
     "content:article:release-one:en:articles%ZZpolitics:articles%2Fpolitics%2Fitem",
     "content:article:release-one:en:articles%2Fpolitics:",
   ])("rejects invalid cursor %s", async (cursor) => {
@@ -59,7 +59,7 @@ describe("contentRelease/partner/cursor", () => {
           activeReleaseId: "release-one",
           contentKey: "Invalid Key",
           family: "article",
-          locale: "en",
+          appLocale: "en",
           prefix: "articles/politics",
         }).pipe(Effect.flip)
       )

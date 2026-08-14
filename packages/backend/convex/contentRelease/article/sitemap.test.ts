@@ -80,17 +80,17 @@ describe("contentRelease/article/sitemap", () => {
           continue;
         }
         await ctx.db.insert("articleBuckets", {
+          appLocale: "en",
           articleCount: 1,
           bucket,
           categoryCount: 0,
-          locale: "en",
         });
       }
       await ctx.db.insert("articleBuckets", {
+        appLocale: "en",
         articleCount: 1,
         bucket: "zzz",
         categoryCount: 0,
-        locale: "en",
       });
     });
 

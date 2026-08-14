@@ -1,12 +1,15 @@
-import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import {
   type LearningGraphSegments,
   makeLearningGraphIdentity,
 } from "@nakafa/aksara-contracts/graph/identity";
 import {
+  type ActiveAppLocaleCode,
+  ActiveAppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
+import {
   TryoutSectionSchema,
   TryoutSetSchema,
-} from "@nakafa/aksara-contracts/tryout/spec";
+} from "@nakafa/aksara-contracts/tryout/catalog";
 import { Effect, Schema } from "effect";
 
 export const TRYOUT_TEST_NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
@@ -51,26 +54,26 @@ type TryoutSectionFixtureOptions = Partial<
 >;
 
 interface TryoutExamGraphInput {
+  readonly appLocale?: ActiveAppLocaleCode;
   readonly countryKey: string;
   readonly examKey: string;
   readonly kind: "exam";
-  readonly locale?: ContentLocale;
 }
 
 interface TryoutSetGraphInput {
+  readonly appLocale?: ActiveAppLocaleCode;
   readonly countryKey: string;
   readonly examKey: string;
   readonly kind: "set";
-  readonly locale?: ContentLocale;
   readonly setKey: string;
   readonly trackKey: string;
 }
 
 interface TryoutSectionGraphInput {
+  readonly appLocale?: ActiveAppLocaleCode;
   readonly countryKey: string;
   readonly examKey: string;
   readonly kind: "section";
-  readonly locale?: ContentLocale;
   readonly sectionKey: string;
   readonly setKey: string;
   readonly trackKey: string;
@@ -83,7 +86,7 @@ type TryoutGraphInput =
 
 /** Derives the exact graph identity owned by one signed try-out row. */
 export function testTryoutGraph(input: TryoutGraphInput) {
-  const locale = input.locale ?? "id";
+  const appLocale = ActiveAppLocaleSchema.make(input.appLocale ?? "id");
   const examLens: LearningGraphSegments["lens"] = [
     "tryout",
     input.countryKey,
@@ -95,7 +98,7 @@ export function testTryoutGraph(input: TryoutGraphInput) {
         concept: examLens,
         learningObject: ["tryout-exam", input.countryKey, input.examKey],
         lens: examLens,
-        locale,
+        appLocale,
       })
     );
   }
@@ -112,7 +115,7 @@ export function testTryoutGraph(input: TryoutGraphInput) {
           input.setKey,
         ],
         lens: examLens,
-        locale,
+        appLocale,
       })
     );
   }
@@ -129,7 +132,7 @@ export function testTryoutGraph(input: TryoutGraphInput) {
         input.sectionKey,
       ],
       lens: examLens,
-      locale,
+      appLocale,
     })
   );
 }
@@ -152,7 +155,7 @@ export function makeTryoutSet(options: TryoutSetFixtureOptions = {}) {
     }),
     internalEntrySectionKey: options.internalEntrySectionKey,
     kind: "set",
-    locale: "id",
+    appLocale: "id",
     order: options.order ?? (setKey === "set-1" ? 1 : 2),
     publicPath: options.publicPath ?? `${TRYOUT_TRACK_PATH}/${setKey}`,
     questionCount: options.questionCount ?? 1,
@@ -186,7 +189,7 @@ export function makeTryoutSection(options: TryoutSectionFixtureOptions = {}) {
       trackKey,
     }),
     kind: "section",
-    locale: "id",
+    appLocale: "id",
     order: options.order ?? 1,
     publicPath: options.publicPath ?? `${TRYOUT_SET_PATH}/${sectionKey}`,
     questionCount: options.questionCount ?? 1,

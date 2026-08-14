@@ -4,6 +4,7 @@ import {
   ContentKeySchema,
   PublicPathSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   MaterialKeySchema,
   MaterialSectionSchema,
@@ -34,11 +35,12 @@ export interface PublishedTrustLesson {
 export const readPublishedTrustLesson = Effect.fn(
   "www.marketing.readTrustLesson"
 )(function* (locale: Locale) {
+  const appLocale = AppLocaleSchema.make(locale);
   const args = {
+    appLocale,
     contentKey: TRUST_CONTENT_KEY,
     expectedMaterialKey: TRUST_MATERIAL_KEY,
     expectedSectionKey: TRUST_SECTION_KEY,
-    locale,
   } satisfies FunctionArgs<typeof api.contentRelease.material.identity>;
   const result = yield* readRuntimeQuery(
     api.contentRelease.material.identity,
@@ -46,7 +48,7 @@ export const readPublishedTrustLesson = Effect.fn(
   );
   if (!result.managed || result.publicPath === null) {
     return yield* new PublishedProjectionError({
-      locale,
+      appLocale,
       publicPath: "marketing/trust",
     });
   }
@@ -56,7 +58,7 @@ export const readPublishedTrustLesson = Effect.fn(
     Effect.mapError(
       () =>
         new PublishedProjectionError({
-          locale,
+          appLocale,
           publicPath: "marketing/trust",
         })
     )

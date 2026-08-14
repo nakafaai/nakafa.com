@@ -3,19 +3,15 @@ import {
   type Sha256Hash,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import { bindQuranRow } from "@nakafa/aksara-contracts/quran/row-hash";
-import { hashQuranSnapshot } from "@nakafa/aksara-contracts/quran/snapshot/hash";
-import {
-  QURAN_SNAPSHOT_FORMAT,
-  type QuranSnapshotManifest,
-  QuranSnapshotManifestSchema,
-} from "@nakafa/aksara-contracts/quran/snapshot/spec";
-import { QURAN_SOURCE_FILE_COUNT } from "@nakafa/aksara-contracts/quran/source";
+import { ACTIVE_APP_LOCALES } from "@nakafa/aksara-contracts/locale";
+import { makeQuranSnapshot as makeSignedQuranSnapshot } from "@nakafa/aksara-contracts/quran/snapshot/hash";
+import type { QuranRowPayload } from "@nakafa/aksara-contracts/quran/snapshot/row";
+import { bindQuranRow } from "@nakafa/aksara-contracts/quran/snapshot/row-hash";
+import type { QuranSnapshotFacts } from "@nakafa/aksara-contracts/quran/snapshot/spec";
+import { quranSourceFileCount } from "@nakafa/aksara-contracts/quran/source";
 import {
   QURAN_ATTRIBUTION_COUNT,
-  QURAN_SEARCH_COUNT,
   QURAN_SURAH_COUNT,
-  type QuranRowPayload,
 } from "@nakafa/aksara-contracts/quran/spec";
 import {
   type ContentSnapshotManifest,
@@ -46,35 +42,48 @@ import {
 import { makeQuranSearch } from "@repo/backend/test/quran-rows";
 import { Effect } from "effect";
 
+const QURAN_SEARCH_COUNT = QURAN_SURAH_COUNT * ACTIVE_APP_LOCALES.length;
+const QURAN_SOURCE_FILE_COUNT = quranSourceFileCount(ACTIVE_APP_LOCALES);
+
+/** Creates the complete technical snapshot facts shared by test manifests. */
+function makeQuranSnapshotFacts(
+  provenanceStatus: QuranSnapshotFacts["provenanceStatus"]
+): QuranSnapshotFacts {
+  const chunkCount = 1085;
+  const runtimeCount = QURAN_ATTRIBUTION_COUNT + QURAN_SURAH_COUNT + chunkCount;
+  return {
+    activeAppLocales: ACTIVE_APP_LOCALES,
+    attributionCount: QURAN_ATTRIBUTION_COUNT,
+    chunkCount,
+    editorialReviewDigest: TEST_DIGEST,
+    projectionCount: runtimeCount + QURAN_SEARCH_COUNT,
+    projectionDigest: TEST_DIGEST,
+    provenanceDigest: TEST_DIGEST,
+    provenanceStatus,
+    runtimeCount,
+    runtimeDigest: TEST_DIGEST,
+    searchCount: QURAN_SEARCH_COUNT,
+    searchDigest: TEST_DIGEST,
+    sourceBytes: 1,
+    sourceDigest: TEST_DIGEST,
+    sourceFileCount: QURAN_SOURCE_FILE_COUNT,
+    surahCount: QURAN_SURAH_COUNT,
+    tafsirLocales: ["id"],
+    verseCount: 6236,
+  };
+}
+
 /** Builds one schema-valid blocked Quran manifest without authored text. */
 export function makeBlockedQuranSnapshot(): Extract<
   ContentSnapshotManifest,
   { readonly family: "quran" }
 > {
-  const chunkCount = 1085;
-  const runtimeCount = QURAN_ATTRIBUTION_COUNT + QURAN_SURAH_COUNT + chunkCount;
   return {
     family: "quran",
     manifest: {
-      attributionCount: QURAN_ATTRIBUTION_COUNT,
-      chunkCount,
-      format: QURAN_SNAPSHOT_FORMAT,
-      locales: ["en", "id"],
-      projectionCount: runtimeCount + QURAN_SEARCH_COUNT,
-      projectionDigest: TEST_DIGEST,
-      provenanceDigest: TEST_DIGEST,
-      provenanceStatus: "blocked",
-      runtimeCount,
-      runtimeDigest: TEST_DIGEST,
-      searchCount: QURAN_SEARCH_COUNT,
-      searchDigest: TEST_DIGEST,
+      ...makeQuranSnapshotFacts("blocked"),
+      format: "localized-quran-snapshot",
       snapshotId: Sha256HashSchema.make(`sha256:${"4".repeat(64)}`),
-      sourceBytes: 1,
-      sourceDigest: TEST_DIGEST,
-      sourceFileCount: QURAN_SOURCE_FILE_COUNT,
-      surahCount: QURAN_SURAH_COUNT,
-      tafsirLocales: ["id"],
-      verseCount: 6236,
     },
   };
 }
@@ -96,33 +105,12 @@ export const makeQuranSnapshotRow = Effect.fn(
 /** Creates one self-authenticating technical Quran snapshot manifest. */
 export const makeQuranSnapshot = Effect.fn("backendTest.makeQuranSnapshot")(
   function* () {
-    const chunkCount = 1085;
-    const runtimeCount =
-      QURAN_ATTRIBUTION_COUNT + QURAN_SURAH_COUNT + chunkCount;
-    const identity: Omit<QuranSnapshotManifest, "snapshotId"> = {
-      attributionCount: QURAN_ATTRIBUTION_COUNT,
-      chunkCount,
-      format: QURAN_SNAPSHOT_FORMAT,
-      locales: ["en", "id"],
-      projectionCount: runtimeCount + QURAN_SEARCH_COUNT,
-      projectionDigest: TEST_DIGEST,
-      provenanceDigest: TEST_DIGEST,
-      provenanceStatus: "approved",
-      runtimeCount,
-      runtimeDigest: TEST_DIGEST,
-      searchCount: QURAN_SEARCH_COUNT,
-      searchDigest: TEST_DIGEST,
-      sourceBytes: 1,
-      sourceDigest: TEST_DIGEST,
-      sourceFileCount: QURAN_SOURCE_FILE_COUNT,
-      surahCount: QURAN_SURAH_COUNT,
-      tafsirLocales: ["id"],
-      verseCount: 6236,
-    };
-    const snapshotId = yield* hashQuranSnapshot(identity);
+    const manifest = yield* makeSignedQuranSnapshot(
+      makeQuranSnapshotFacts("approved")
+    );
     return {
       family: "quran",
-      manifest: QuranSnapshotManifestSchema.make({ ...identity, snapshotId }),
+      manifest,
     } satisfies ContentSnapshotManifest;
   }
 );

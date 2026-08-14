@@ -39,7 +39,7 @@ describe("contentRelease/partner/page", () => {
       target.query(query, {
         cursor: null,
         limit: 1,
-        locale: "en",
+        appLocale: "en",
         prefix: family === "article" ? ARTICLE_PREFIX : MATERIAL_PREFIX,
       })
     ).rejects.toMatchObject({
@@ -54,7 +54,7 @@ describe("contentRelease/partner/page", () => {
     const first = await target.query(api.contentRelease.article.apiPage, {
       cursor: null,
       limit: 1,
-      locale: "en",
+      appLocale: "en",
       prefix: ARTICLE_PREFIX,
     });
 
@@ -64,7 +64,7 @@ describe("contentRelease/partner/page", () => {
       isDone: false,
       page: [
         {
-          locale: "en",
+          appLocale: "en",
           publicPath: testArticleProjection(0).publicPath,
         },
       ],
@@ -73,7 +73,7 @@ describe("contentRelease/partner/page", () => {
       target.query(api.contentRelease.article.apiPage, {
         cursor: first.continueCursor,
         limit: 1,
-        locale: "en",
+        appLocale: "en",
         prefix: ARTICLE_PREFIX,
       })
     ).resolves.toEqual({
@@ -82,7 +82,7 @@ describe("contentRelease/partner/page", () => {
       isDone: true,
       page: [
         {
-          locale: "en",
+          appLocale: "en",
           publicPath: testArticleProjection(1).publicPath,
         },
       ],
@@ -98,7 +98,7 @@ describe("contentRelease/partner/page", () => {
     const page = await target.query(api.contentRelease.material.apiPage, {
       cursor: null,
       limit: 1,
-      locale: "en",
+      appLocale: "en",
       prefix: MATERIAL_PREFIX,
     });
 
@@ -106,20 +106,20 @@ describe("contentRelease/partner/page", () => {
       activeReleaseId: MATERIAL_IDENTITY.releaseId,
       continueCursor: expect.stringMatching(MATERIAL_CURSOR_PATTERN),
       isDone: false,
-      page: [{ locale: "en", publicPath: first.publicPath }],
+      page: [{ appLocale: "en", publicPath: first.publicPath }],
     });
     await expect(
       target.query(api.contentRelease.material.apiPage, {
         cursor: page.continueCursor,
         limit: 1,
-        locale: "en",
+        appLocale: "en",
         prefix: MATERIAL_PREFIX,
       })
     ).resolves.toEqual({
       activeReleaseId: MATERIAL_IDENTITY.releaseId,
       continueCursor: "",
       isDone: true,
-      page: [{ locale: "en", publicPath: second.publicPath }],
+      page: [{ appLocale: "en", publicPath: second.publicPath }],
     });
   });
 
@@ -138,23 +138,23 @@ describe("contentRelease/partner/page", () => {
     const first = await target.query(api.contentRelease.material.apiPage, {
       cursor: null,
       limit: 1,
-      locale: "en",
+      appLocale: "en",
       prefix: MATERIAL_PREFIX,
     });
     expect(first).toMatchObject({
       isDone: false,
-      page: [{ locale: "en", publicPath: dot.publicPath }],
+      page: [{ appLocale: "en", publicPath: dot.publicPath }],
     });
     await expect(
       target.query(api.contentRelease.material.apiPage, {
         cursor: first.continueCursor,
         limit: 1,
-        locale: "en",
+        appLocale: "en",
         prefix: MATERIAL_PREFIX,
       })
     ).resolves.toMatchObject({
       isDone: true,
-      page: [{ locale: "en", publicPath: colon.publicPath }],
+      page: [{ appLocale: "en", publicPath: colon.publicPath }],
     });
   });
 
@@ -164,7 +164,7 @@ describe("contentRelease/partner/page", () => {
     const page = await target.query(api.contentRelease.material.apiPage, {
       cursor: null,
       limit: 1,
-      locale: "en",
+      appLocale: "en",
       prefix: MATERIAL_PREFIX,
     });
 
@@ -172,7 +172,7 @@ describe("contentRelease/partner/page", () => {
       target.query(api.contentRelease.material.apiPage, {
         cursor: page.continueCursor,
         limit: 1,
-        locale: "id",
+        appLocale: "id",
         prefix: MATERIAL_PREFIX,
       })
     ).rejects.toMatchObject({
@@ -182,7 +182,7 @@ describe("contentRelease/partner/page", () => {
       target.query(api.contentRelease.article.apiPage, {
         cursor: page.continueCursor,
         limit: 1,
-        locale: "en",
+        appLocale: "en",
         prefix: MATERIAL_PREFIX,
       })
     ).rejects.toMatchObject({
@@ -193,7 +193,7 @@ describe("contentRelease/partner/page", () => {
       target.query(api.contentRelease.material.apiPage, {
         cursor: page.continueCursor,
         limit: 1,
-        locale: "en",
+        appLocale: "en",
         prefix: MATERIAL_PREFIX,
       })
     ).rejects.toMatchObject({
@@ -211,18 +211,18 @@ describe("contentRelease/partner/page", () => {
       target.query(api.contentRelease.material.apiPage, {
         cursor: null,
         limit: 10,
-        locale: "en",
+        appLocale: "en",
         prefix: exact.contentKey,
       })
     ).resolves.toMatchObject({
       isDone: true,
-      page: [{ locale: "en", publicPath: exact.publicPath }],
+      page: [{ appLocale: "en", publicPath: exact.publicPath }],
     });
     await expect(
       target.query(api.contentRelease.material.apiPage, {
         cursor: null,
         limit: 101,
-        locale: "en",
+        appLocale: "en",
         prefix: MATERIAL_PREFIX,
       })
     ).rejects.toMatchObject({

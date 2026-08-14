@@ -69,7 +69,7 @@ describe("contentRelease/material/sitemap", () => {
       ctx.db.insert("materialBuckets", {
         bucket: "invalid",
         count: 0,
-        locale: "en",
+        appLocale: "en",
       })
     );
 

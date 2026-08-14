@@ -71,9 +71,9 @@ of prefix-suffixed filenames:
 - https://confect.dev/concepts/file-naming-conventions
 
 Prefer one clear capability token per Convex folder or filename. CamelCase
-domain terms such as `assistantResponses` or `contentAudios` are acceptable when
-they name one established concept; ambiguous generic names or compound
-prefix/suffix filenames are not.
+domain terms such as `assistantResponses` are acceptable when they name one
+established concept; ambiguous generic names or compound prefix/suffix
+filenames are not.
 
 Prefer direct imports from the owning module. Do not add barrel re-exports or
 compatibility routes when callers can import the concrete capability directly.
@@ -85,10 +85,10 @@ obsolete Convex function and its tests before considering the work complete.
 ## Type And Convex Source Of Truth
 
 Convex is the typed transactional source for app state and graph read models.
-Aksara signed snapshots feed activated content scopes. During migration,
-`packages/contents` still feeds unactivated scopes and contains cutover copies
-awaiting deletion. Those copies are not authoritative and must not be edited or
-republished. Do not make either corpus path layout the app-state identity.
+Aksara signed snapshots are the exclusive authored input for every content
+scope. `packages/contents` contains no authored source and is never a Convex
+publication input. Do not make the Aksara corpus path layout the app-state
+identity.
 
 Domain validators and schema modules own backend value sets. Derive types from
 Convex `Infer<typeof validator>`, generated `Doc<>` and `Id<>` types, or

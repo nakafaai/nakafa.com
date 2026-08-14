@@ -5,6 +5,7 @@ import {
   CorpusSourcePathSchema,
   PublicPathSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
@@ -33,6 +34,7 @@ export interface PublishedMaterialSummary {
 /** Decodes one backend-verified material discovery row. */
 const decodeMaterialSummary = Effect.fn("www.materials.decodeDiscovery")(
   function* (summary: MaterialSummary, locale: Locale) {
+    const appLocale = AppLocaleSchema.make(locale);
     const [date, publicPath, sourcePath] = yield* Effect.all([
       Schema.decodeUnknown(DateOnlySchema)(summary.date),
       Schema.decodeUnknown(PublicPathSchema)(summary.publicPath),
@@ -41,7 +43,7 @@ const decodeMaterialSummary = Effect.fn("www.materials.decodeDiscovery")(
       Effect.mapError(
         () =>
           new PublishedProjectionError({
-            locale,
+            appLocale,
             publicPath: summary.publicPath,
           })
       )
@@ -65,18 +67,19 @@ export const readPublishedMaterialBucket = Effect.fn(
   bucket: string,
   expectedActiveReleaseId?: ContentReleasePin
 ) {
+  const appLocale = AppLocaleSchema.make(locale);
   const result = yield* readRuntimeQuery(api.contentRelease.material.bucket, {
+    appLocale,
     bucket,
-    locale,
   });
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
     expectedActiveReleaseId,
-    { locale, publicPath: "materials" }
+    { appLocale, publicPath: "materials" }
   );
   if (!result.managed || activeReleaseId === null) {
     return yield* new PublishedProjectionError({
-      locale,
+      appLocale,
       publicPath: "materials",
     });
   }
@@ -93,18 +96,19 @@ export const readPublishedMaterialBucket = Effect.fn(
 export const readPublishedLatestMaterials = Effect.fn(
   "www.materials.readLatest"
 )(function* (locale: Locale, limit: number) {
+  const appLocale = AppLocaleSchema.make(locale);
   const result = yield* readRuntimeQuery(api.contentRelease.material.latest, {
+    appLocale,
     limit,
-    locale,
   });
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
     undefined,
-    { locale, publicPath: "materials" }
+    { appLocale, publicPath: "materials" }
   );
   if (!result.managed || activeReleaseId === null) {
     return yield* new PublishedProjectionError({
-      locale,
+      appLocale,
       publicPath: "materials",
     });
   }

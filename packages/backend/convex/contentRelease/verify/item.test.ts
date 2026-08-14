@@ -225,7 +225,7 @@ describe("contentRelease/verify/item", () => {
         contentKey: "test:head-0",
         family: "material",
         index: 0,
-        locale: "en",
+        artifactLocale: "en",
         operation: "delete",
         releaseId: "release-conflict",
         sequence: 1,

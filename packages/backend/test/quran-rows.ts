@@ -2,19 +2,23 @@ import {
   PublicPathSchema,
   type Sha256Hash,
 } from "@nakafa/aksara-contracts/ids";
-import { bindQuranRow } from "@nakafa/aksara-contracts/quran/row-hash";
 import {
-  QURAN_SOURCE_IDS,
-  QuranAttributionRowSchema,
-} from "@nakafa/aksara-contracts/quran/source";
+  ACTIVE_APP_LOCALES,
+  type AppLocaleCode,
+} from "@nakafa/aksara-contracts/locale";
 import {
-  type QuranChunkRow,
   QuranChunkRowSchema,
   type QuranRowPayload,
   type QuranRuntimeVerse,
   QuranRuntimeVerseSchema,
-  type QuranSearchRow,
   QuranSearchRowSchema,
+} from "@nakafa/aksara-contracts/quran/snapshot/row";
+import { bindQuranRow } from "@nakafa/aksara-contracts/quran/snapshot/row-hash";
+import {
+  QuranAttributionRowSchema,
+  quranSourceIds,
+} from "@nakafa/aksara-contracts/quran/source";
+import {
   type QuranSurahRow,
   QuranSurahRowSchema,
 } from "@nakafa/aksara-contracts/quran/spec";
@@ -22,15 +26,22 @@ import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release
 import { Effect, Schema } from "effect";
 
 const testDigest = `sha256:${"1".repeat(64)}`;
+type QuranChunkRow = typeof QuranChunkRowSchema.Type;
+type QuranSearchRow = typeof QuranSearchRowSchema.Type;
 
 /** Creates the complete technical attribution row required by runtime tests. */
 export function makeQuranAttribution() {
   return Schema.decodeUnknownSync(QuranAttributionRowSchema)({
+    activeAppLocales: ACTIVE_APP_LOCALES,
     kind: "quran-attribution",
-    sources: QURAN_SOURCE_IDS.map((id) => ({
+    sources: quranSourceIds(ACTIVE_APP_LOCALES).map((id) => ({
       artifact: { byteCount: 1, digest: testDigest, fileCount: 1 },
+      copy: ACTIVE_APP_LOCALES.map((appLocale) => ({
+        appLocale,
+        notice: `Technical attribution notice ${appLocale}`,
+        title: `Technical source ${id} ${appLocale}`,
+      })),
       id,
-      notice: "Technical attribution notice",
       publisher: "Nakafa protocol tests",
       retrievedAt: "2026-07-31T00:00:00Z",
       sourceUrl: `https://example.test/${id}`,
@@ -38,7 +49,6 @@ export function makeQuranAttribution() {
         artifact: { byteCount: 1, digest: testDigest, fileCount: 1 },
         url: `https://example.test/${id}/terms`,
       },
-      title: `Technical source ${id}`,
       updateUrl: `https://example.test/${id}/updates`,
       version: "technical-version",
     })),
@@ -65,7 +75,7 @@ export function makeQuranSurah(
 
 /** Creates one exact technical verse inside a bounded runtime chunk. */
 function makeQuranVerse(inQuran: number, inSurah: number): QuranRuntimeVerse {
-  return QuranRuntimeVerseSchema.make({
+  return Schema.decodeUnknownSync(QuranRuntimeVerseSchema)({
     meta: {
       hizbQuarter: 1,
       juz: 1,
@@ -75,14 +85,24 @@ function makeQuranVerse(inQuran: number, inSurah: number): QuranRuntimeVerse {
       sajda: null,
     },
     number: { inQuran, inSurah },
-    tafsir: {
-      id: { footnotes: null, text: `Tafsir teknis ${inSurah}` },
-    },
+    tafsir: [
+      {
+        appLocale: "id",
+        footnotes: null,
+        text: `Tafsir teknis ${inSurah}`,
+      },
+    ],
     text: { arabic: `آية ${inSurah}` },
-    translation: {
-      en: { footnotes: "", text: `Technical translation ${inSurah}` },
-      id: { footnotes: "", text: `Terjemahan teknis ${inSurah}` },
-    },
+    translations: [
+      {
+        appLocale: "en",
+        value: { footnotes: "", text: `Technical translation ${inSurah}` },
+      },
+      {
+        appLocale: "id",
+        value: { footnotes: "", text: `Terjemahan teknis ${inSurah}` },
+      },
+    ],
   });
 }
 
@@ -108,20 +128,20 @@ export function makeQuranChunk(input: {
 
 /** Creates one localized search row whose text is safe for test assertions. */
 export function makeQuranSearch(
-  locale: QuranSearchRow["locale"],
+  appLocale: AppLocaleCode,
   surahNumber: number,
   text = `Technical search text ${surahNumber}`
 ): QuranSearchRow {
-  return QuranSearchRowSchema.make({
+  return Schema.decodeUnknownSync(QuranSearchRowSchema)({
+    appLocale,
     graph: {
       alignmentId: `alignment:quran:quran-surah:${surahNumber}`,
-      assetId: `asset:${locale}:quran:quran-surah:${surahNumber}`,
+      assetId: `asset:${appLocale}:quran:quran-surah:${surahNumber}`,
       conceptId: `concept:quran:surah:${surahNumber}`,
       learningObjectId: `lo:quran-surah:${surahNumber}`,
       lensId: "lens:quran",
     },
     kind: "quran-search",
-    locale,
     route: PublicPathSchema.make(`quran/${surahNumber}`),
     surahNumber,
     text,

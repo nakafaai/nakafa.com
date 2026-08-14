@@ -1,8 +1,9 @@
 import {
   buildRuntimeGenerations,
-  decodeJsonRows,
+  formatGenerationEnvironment,
   verifyRuntimeGenerations,
 } from "@repo/backend/scripts/content-runtime/ci/generation";
+import { decodeJsonRows } from "@repo/backend/scripts/content-runtime/ci/json";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -27,8 +28,30 @@ describe("content runtime generations", () => {
         { ...contentState[0], _creationTime: 999, _id: "different" },
       ])
     );
+    const cutoverRowsIgnored = await Effect.runPromise(
+      buildRuntimeGenerations(
+        contentState,
+        [{ invalid: true }],
+        [{ invalid: true }]
+      )
+    );
 
     expect(systemFieldsChanged).toEqual(baseline);
+    expect(cutoverRowsIgnored).toEqual(baseline);
+    expect(baseline.contentStateHash).toBe(
+      "81b0dcbf693af64c1be78d3c657485632e80f68e84ddc657e970c646137fc680"
+    );
+    expect(baseline).toMatchObject({
+      mode: "published",
+      runtimeGenerationHash: baseline.contentStateHash,
+    });
+    expect(formatGenerationEnvironment(baseline)).toBe(
+      [
+        "AGENT_DOCS_CONTENT_RUNTIME_MODE=published",
+        `AGENT_DOCS_RUNTIME_GENERATION_HASH=${baseline.runtimeGenerationHash}`,
+        `AGENT_DOCS_CONTENT_STATE_HASH=${baseline.contentStateHash}`,
+      ].join("\n")
+    );
   });
 
   it("changes when the current signed pointer changes", async () => {
@@ -45,9 +68,8 @@ describe("content runtime generations", () => {
     const verificationFailure = await Effect.runPromise(
       verifyRuntimeGenerations(
         {
-          cacheVersion: "v2",
-          ...baseline,
-          runtimeSchemaFingerprint: "1".repeat(64),
+          runtimeGenerationHash: baseline.runtimeGenerationHash,
+          runtimeMode: baseline.mode,
         },
         changed
       ).pipe(Effect.flip)
@@ -55,6 +77,17 @@ describe("content runtime generations", () => {
     expect(verificationFailure).toMatchObject({
       _tag: "ContentRuntimeCiError",
     });
+    await expect(
+      Effect.runPromise(
+        verifyRuntimeGenerations(
+          {
+            runtimeGenerationHash: baseline.runtimeGenerationHash,
+            runtimeMode: "proved-maintenance",
+          },
+          baseline
+        ).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({ _tag: "ContentRuntimeCiError" });
   });
 
   it("rejects malformed or non-singleton pointer inputs", async () => {

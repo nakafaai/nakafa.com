@@ -34,8 +34,8 @@ export function getContentReferenceInput(input: string) {
   }
 
   return Option.some<ContentReferenceInput>({
+    appLocale: route.value.locale,
     kind: "route",
-    locale: route.value.locale,
     publicPath: route.value.route,
   });
 }

@@ -1,3 +1,4 @@
+import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   canonicalizeContentProjection,
   familyForProjection,
@@ -17,8 +18,8 @@ import {
 } from "@repo/backend/convex/contentRelease/parse";
 import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
 import {
+  appLocaleValidator,
   deliveryValidator,
-  localeValidator,
 } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type { Infer } from "convex/values";
@@ -40,12 +41,12 @@ const publicResultValidator = v.union(
   })
 );
 const publicRequestValidator = v.object({
-  locale: localeValidator,
+  appLocale: appLocaleValidator,
   publicPath: v.string(),
 });
 const publicBatchResultValidator = v.array(publicResultValidator);
 
-type ContentLocale = Infer<typeof localeValidator>;
+type AppLocale = Infer<typeof appLocaleValidator>;
 type ActiveIdentity = NonNullable<
   Effect.Effect.Success<ReturnType<typeof loadActiveIdentity>>
 >;
@@ -59,12 +60,12 @@ const resolvePublicRouteForActive = Effect.fn(
 )(function* (
   ctx: QueryCtx,
   active: ActiveIdentity,
-  locale: ContentLocale,
+  appLocale: AppLocale,
   publicPath: string
 ) {
   const binding = yield* loadRouteBinding(
     ctx,
-    locale,
+    appLocale,
     publicPath,
     active.sequence
   );
@@ -74,19 +75,19 @@ const resolvePublicRouteForActive = Effect.fn(
   if (!binding.contentKey) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Published route ${locale}/${publicPath} lost its content identity.`
+      `Published route ${appLocale}/${publicPath} lost its content identity.`
     );
   }
   const head = yield* loadVersion(
     ctx,
     binding.contentKey,
-    locale,
+    ArtifactLocaleSchema.make(appLocale),
     active.sequence
   );
   if (head?.operation !== "upsert") {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Published route ${locale}/${publicPath} lost its active head.`
+      `Published route ${appLocale}/${publicPath} lost its active head.`
     );
   }
   if (
@@ -95,7 +96,7 @@ const resolvePublicRouteForActive = Effect.fn(
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Published route ${locale}/${publicPath} disagrees at one sequence.`
+      `Published route ${appLocale}/${publicPath} disagrees at one sequence.`
     );
   }
   if (head.delivery !== "public") {
@@ -114,7 +115,7 @@ const resolvePublicRouteForActive = Effect.fn(
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Published route ${locale}/${publicPath} lost runtime fields.`
+      `Published route ${appLocale}/${publicPath} lost runtime fields.`
     );
   }
   const artifactHash = head.artifactHash;
@@ -129,7 +130,7 @@ const resolvePublicRouteForActive = Effect.fn(
   if (!artifact) {
     return yield* releaseFail(
       "CONTENT_RELEASE_MISSING",
-      `Published route ${locale}/${publicPath} lost its artifact.`
+      `Published route ${appLocale}/${publicPath} lost its artifact.`
     );
   }
   const decodedArtifact = yield* decodeArtifactJson(artifact.artifactJson);
@@ -142,19 +143,19 @@ const resolvePublicRouteForActive = Effect.fn(
     decodedArtifact.artifactHash !== head.artifactHash ||
     decodedArtifact.payload.contentKey !== head.contentKey ||
     decodedArtifact.payload.compilerConfigHash !== head.compilerConfigHash ||
-    decodedArtifact.payload.locale !== locale ||
+    decodedArtifact.payload.artifactLocale !== head.artifactLocale ||
     decodedArtifact.payload.rendererDomain !== head.rendererDomain ||
     decodedArtifact.payload.sourceHash !== head.sourceHash ||
     familyForProjection(projection) !== head.family ||
     projection.kind === "question-body" ||
     projectionHash !== head.projectionHash ||
     projection.contentKey !== head.contentKey ||
-    projection.locale !== locale ||
+    projection.appLocale !== appLocale ||
     projection.publicPath !== publicPath
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Published route ${locale}/${publicPath} has mismatched content.`
+      `Published route ${appLocale}/${publicPath} has mismatched content.`
     );
   }
   return {
@@ -172,12 +173,17 @@ const resolvePublicRouteForActive = Effect.fn(
 
 /** Resolves one active public route for the singular runtime endpoint. */
 const resolvePublicRoute = Effect.fn("contentRelease.resolvePublicRoute")(
-  function* (ctx: QueryCtx, locale: ContentLocale, publicPath: string) {
+  function* (ctx: QueryCtx, appLocale: AppLocale, publicPath: string) {
     const active = yield* loadActiveIdentity(ctx);
     if (!active) {
       return null;
     }
-    return yield* resolvePublicRouteForActive(ctx, active, locale, publicPath);
+    return yield* resolvePublicRouteForActive(
+      ctx,
+      active,
+      appLocale,
+      publicPath
+    );
   }
 );
 
@@ -186,7 +192,7 @@ const resolvePublicRoutes = Effect.fn("contentRelease.resolvePublicRoutes")(
   function* (
     ctx: QueryCtx,
     requests: readonly {
-      readonly locale: ContentLocale;
+      readonly appLocale: AppLocale;
       readonly publicPath: string;
     }[]
   ) {
@@ -207,7 +213,7 @@ const resolvePublicRoutes = Effect.fn("contentRelease.resolvePublicRoutes")(
       resolvePublicRouteForActive(
         ctx,
         active,
-        request.locale,
+        request.appLocale,
         request.publicPath
       )
     );
@@ -216,10 +222,10 @@ const resolvePublicRoutes = Effect.fn("contentRelease.resolvePublicRoutes")(
 
 /** Returns one public artifact only to the server-authenticated HTTP adapter. */
 export const read = internalQuery({
-  args: { locale: localeValidator, publicPath: v.string() },
+  args: { appLocale: appLocaleValidator, publicPath: v.string() },
   returns: publicResultValidator,
   handler: (ctx, args) =>
-    runConvexProgram(resolvePublicRoute(ctx, args.locale, args.publicPath)),
+    runConvexProgram(resolvePublicRoute(ctx, args.appLocale, args.publicPath)),
 });
 
 /** Returns one ordered public batch to the authenticated HTTP adapter. */

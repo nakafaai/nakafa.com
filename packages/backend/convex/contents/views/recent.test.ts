@@ -1,4 +1,3 @@
-import { MaterialDomainSchema } from "@nakafa/aksara-contracts/material/domain";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   createCanonicalLearningContext,
@@ -25,13 +24,13 @@ const target = {
   content_id: projection.graph.assetId,
   description: projection.metadata.description,
   kind: "curriculum-lesson",
-  locale: projection.locale,
+  locale: "en",
   materialDomain: MaterialDomainSchema.make("mathematics"),
   materialKey: projection.materialKey,
   parentPath: projection.parentPath,
   route: projection.publicPath,
   section: "material",
-  sourcePath: `packages/corpus/${projection.contentKey}/${projection.locale}.mdx`,
+  sourcePath: `packages/corpus/${projection.contentKey}/${projection.artifactLocale}.mdx`,
   title: projection.metadata.title,
 } satisfies ContentViewTarget;
 const placementContext: LearningContextStorage = {
@@ -110,3 +109,5 @@ describe("contents/views/recent", () => {
     expect(result.recents[0]).not.toHaveProperty("contextProgramKey");
   });
 });
+
+import { MaterialDomainSchema } from "@nakafa/aksara-contracts/material/domain";

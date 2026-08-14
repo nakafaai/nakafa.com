@@ -1,4 +1,4 @@
-import type { ContentLocale } from "@nakafa/aksara-contracts/content";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
 import { Effect } from "effect";
@@ -6,7 +6,7 @@ import { Effect } from "effect";
 /** Reads localized options and route counts from one verified Tryout catalog. */
 export const readTryoutTaxonomy = Effect.fn(
   "contentRelease.readTryoutTaxonomy"
-)(function* (ctx: QueryCtx, locale: ContentLocale) {
+)(function* (ctx: QueryCtx, locale: AppLocaleCode) {
   const catalog = yield* loadTryoutCatalog(ctx, locale);
   const countries: Array<{ id: string; label: string }> = [];
   const exams = new Map<string, string>();

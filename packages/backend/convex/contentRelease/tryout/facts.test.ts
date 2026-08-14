@@ -1,5 +1,5 @@
-import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/row-hash";
-import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/spec";
+import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
+import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/catalog-hash";
 import { tryoutCatalogFacts } from "@repo/backend/convex/contentRelease/tryout/facts";
 import { makeTryoutCatalogRow } from "@repo/backend/test/tryout-snapshot";
 import { Schema } from "effect";
@@ -17,7 +17,7 @@ function makeSetChild(kind: "section" | "set") {
       learningObjectId: `lo:tryout-technical-${kind}`,
       lensId: "lens:tryout:technical",
     },
-    locale: "en",
+    appLocale: "en",
     order: 1,
     publicPath: `try-out/indonesia/snbt/2027/set-1/${kind}`,
     questionCount: 1,

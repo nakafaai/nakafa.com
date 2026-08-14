@@ -31,13 +31,13 @@ function searchableText(projection: PublicProjection, plainText: string) {
 const loadSearchEntry = Effect.fn("contentRelease.loadSearchEntry")(function* (
   ctx: MutationCtx,
   contentKey: string,
-  locale: Doc<"contentIndex">["locale"]
+  appLocale: Doc<"contentIndex">["appLocale"]
 ) {
   return yield* Effect.promise(() =>
     ctx.db
       .query("contentIndex")
-      .withIndex("by_contentKey_and_locale", (index) =>
-        index.eq("contentKey", contentKey).eq("locale", locale)
+      .withIndex("by_contentKey_and_appLocale", (index) =>
+        index.eq("contentKey", contentKey).eq("appLocale", appLocale)
       )
       .unique()
   );
@@ -58,17 +58,17 @@ export const writeSearchEntry = Effect.fn("contentRelease.writeSearchEntry")(
       !head.projectionHash ||
       familyForProjection(projection) !== head.family ||
       projection.contentKey !== head.contentKey ||
-      projection.locale !== head.locale
+      projection.artifactLocale !== head.artifactLocale
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Search entry ${head.contentKey}/${head.locale} lost its public identity.`
+        `Search entry ${head.contentKey}/${head.artifactLocale} lost its public identity.`
       );
     }
     const entry = {
       contentKey: head.contentKey,
       family: head.family,
-      locale: head.locale,
+      appLocale: projection.appLocale,
       projectionHash: head.projectionHash,
       publicPath: projection.publicPath,
       releaseId: head.releaseId,
@@ -80,7 +80,11 @@ export const writeSearchEntry = Effect.fn("contentRelease.writeSearchEntry")(
       entry,
       SEARCH_DOCUMENT_LIMIT
     );
-    const existing = yield* loadSearchEntry(ctx, head.contentKey, head.locale);
+    const existing = yield* loadSearchEntry(
+      ctx,
+      head.contentKey,
+      projection.appLocale
+    );
     if (existing) {
       yield* Effect.promise(() =>
         ctx.db.replace("contentIndex", existing._id, entry)
@@ -96,9 +100,9 @@ export const deleteSearchEntry = Effect.fn("contentRelease.deleteSearchEntry")(
   function* (
     ctx: MutationCtx,
     contentKey: string,
-    locale: Doc<"contentIndex">["locale"]
+    appLocale: Doc<"contentIndex">["appLocale"]
   ) {
-    const existing = yield* loadSearchEntry(ctx, contentKey, locale);
+    const existing = yield* loadSearchEntry(ctx, contentKey, appLocale);
     if (existing) {
       yield* Effect.promise(() => ctx.db.delete("contentIndex", existing._id));
     }

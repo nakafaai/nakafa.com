@@ -36,11 +36,11 @@ describe("public URL migration redirects", () => {
       "/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling"
     );
     expect(readRuntimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
+      appLocale: "id",
       contentKey:
         "material/lesson/mathematics/circle/central-angle-and-inscribed-angle",
       expectedMaterialKey: "lesson.mathematics.circle",
       expectedSectionKey: "central-angle-and-inscribed-angle",
-      locale: "id",
     });
   });
 

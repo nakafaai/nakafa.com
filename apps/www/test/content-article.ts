@@ -6,8 +6,13 @@ import {
   PublicPathSchema,
 } from "@nakafa/aksara-contracts/ids";
 import {
+  AppLocaleSchema,
+  ArtifactLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
+import {
   ArticleCategorySchema,
   ArticleProjectionSchema,
+  ArticleRouteSlugSchema,
   ArticleSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
 import { previewWireArtifact } from "@/test/content-preview";
@@ -24,8 +29,12 @@ export function makeTestArticleProjection(
     `articles/${category}/${articleSlug}`
   );
   return ArticleProjectionSchema.make({
+    appLocale: AppLocaleSchema.make("en"),
+    articleRouteSlug: ArticleRouteSlugSchema.make(slugValue),
     articleSlug,
+    artifactLocale: ArtifactLocaleSchema.make("en"),
     category,
+    categoryRouteSlug: ArticleRouteSlugSchema.make(category),
     categoryTitle: "Politics",
     contentKey: ContentKeySchema.make(publicPath),
     graph: LearningGraphIdentitySchema.make({
@@ -36,7 +45,6 @@ export function makeTestArticleProjection(
       lensId: `lens:article:${category}`,
     }),
     kind: "article",
-    locale: "en",
     metadata: {
       authors: [{ name: "Shifna Zihdatal Haq" }],
       date,

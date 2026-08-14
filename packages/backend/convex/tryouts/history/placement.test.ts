@@ -1,18 +1,19 @@
-import { decodeStoredTryoutRow } from "@nakafa/aksara-history/history/decode";
+import { decodeStoredTryoutRow } from "@nakafa/aksara-contracts/history/decode";
 import {
   StoredTryoutPlacementMismatchError,
   verifyStoredTryoutPlacement,
 } from "@repo/backend/convex/tryouts/history/placement";
-import { RETAINED_RUNTIME_PLACEMENT_ROW } from "@repo/backend/test/retained-runtime";
+import { TEST_STORED_TRYOUT_PLACEMENT } from "@repo/backend/test/tryout-history";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 const FROZEN_CONTENT_HASH = "f".repeat(64);
+const CORPUS_ROOT_PATTERN = /^packages\/corpus\//;
 
 /** Builds authenticated and frozen views of the same fixed history vector. */
 const readPlacementPair = Effect.fn("test.readHistoricalTryoutPlacementPair")(
   function* () {
-    const row = yield* decodeStoredTryoutRow(RETAINED_RUNTIME_PLACEMENT_ROW);
+    const row = yield* decodeStoredTryoutRow(TEST_STORED_TRYOUT_PLACEMENT);
     if (row.rowKind !== "placement") {
       return yield* Effect.dieMessage("Expected one historical placement.");
     }
@@ -30,7 +31,6 @@ const readPlacementPair = Effect.fn("test.readHistoricalTryoutPlacementPair")(
         sectionKey: historical.sectionKey,
         sourcePath: historical.questionSourcePath,
         sourceRevision: historical.sourceRevision,
-        title: historical.title,
       },
       historical,
     };
@@ -80,5 +80,22 @@ describe("tryouts/history/placement", () => {
         }).pipe(Effect.flip)
       )
     ).resolves.toEqual(new StoredTryoutPlacementMismatchError());
+  });
+
+  it("accepts a root-relative frozen source path", async () => {
+    const { frozen, historical } = await Effect.runPromise(readPlacementPair());
+    const relativeSourcePath = historical.questionSourcePath.replace(
+      CORPUS_ROOT_PATTERN,
+      ""
+    );
+
+    await expect(
+      Effect.runPromise(
+        verifyStoredTryoutPlacement(historical, {
+          ...frozen,
+          sourcePath: relativeSourcePath,
+        })
+      )
+    ).resolves.toMatchObject({ contentHash: FROZEN_CONTENT_HASH });
   });
 });

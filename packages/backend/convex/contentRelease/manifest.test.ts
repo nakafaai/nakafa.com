@@ -90,7 +90,6 @@ describe("contentRelease/manifest", () => {
       releaseJson: candidateJson(),
       rendererJson: testRendererJson(),
     };
-
     const created = await t.mutation(stageRelease, input);
     const unchanged = await t.mutation(stageRelease, input);
 

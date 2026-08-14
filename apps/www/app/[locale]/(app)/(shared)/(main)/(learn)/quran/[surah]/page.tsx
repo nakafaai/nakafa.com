@@ -203,7 +203,7 @@ async function CachedSurahShell({
   });
 
   const interpretationLabel = t("interpretation");
-  const hasInterpretation = result.locale === "id";
+  const hasInterpretation = result.appLocale === "id";
 
   return (
     <>

@@ -1,4 +1,4 @@
-import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/spec";
+import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import { readTryoutTaxonomy } from "@repo/backend/convex/contentRelease/tryout/taxonomy";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -26,7 +26,7 @@ function makeTryoutExam(locale: "en" | "id") {
       lensId: "lens:tryout:technical",
     },
     kind: "exam",
-    locale,
+    appLocale: locale,
     order: 1,
     publicPath: "try-out/indonesia/snbt",
     scoringStrategy: "irt",

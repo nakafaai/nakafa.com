@@ -9,7 +9,6 @@ import {
   internalQuery,
 } from "@repo/backend/convex/_generated/server";
 import { syncArticles } from "@repo/backend/convex/contentRelease/article/sync";
-import { ensurePublicationWritable } from "@repo/backend/convex/contentRelease/cutover/state";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { hasMaterialReadModel } from "@repo/backend/convex/contentRelease/material/state";
 import { syncMaterials } from "@repo/backend/convex/contentRelease/material/sync";
@@ -153,7 +152,6 @@ const readModelStatus = Effect.fn("contentRelease.readModelStatus")(function* (
 /** Executes one generation-fenced page and schedules its sole successor. */
 const resumeReadModels = Effect.fn("contentRelease.resumeReadModels")(
   function* (ctx: MutationCtx, releaseId: string, generation: number) {
-    yield* ensurePublicationWritable(ctx);
     const { release, signed, state } = yield* loadSyncRelease(ctx, releaseId);
     if (release.syncGeneration !== generation) {
       return null;

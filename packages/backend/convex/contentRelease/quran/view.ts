@@ -1,20 +1,21 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import {
   QURAN_SURAH_COUNT,
-  type QuranRuntimeVerse,
-  type QuranSearchRow,
   type QuranSurahRow,
   QuranSurahRowSchema,
 } from "@nakafa/aksara-contracts/quran/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { readQuranRow } from "@repo/backend/convex/contentRelease/quran/row";
 import {
-  quranLocaleValidator,
+  quranAppLocaleValidator,
   quranSourceFields,
 } from "@repo/backend/convex/contentRelease/quran/spec";
 import {
   loadQuranSurah,
   readQuranSurahVerses,
 } from "@repo/backend/convex/contentRelease/quran/surah";
+import { readQuranTranslation } from "@repo/backend/convex/contentRelease/quran/translation";
 import { type Infer, v } from "convex/values";
 import { Effect } from "effect";
 
@@ -38,10 +39,10 @@ const quranViewVerseValidator = v.object({
   translation: v.string(),
 });
 
-/** Exact locale-specific Quran page projection returned to the web app. */
+/** Exact app-locale Quran page projection returned to the web app. */
 export const quranViewValidator = v.object({
   ...quranSourceFields,
-  locale: quranLocaleValidator,
+  appLocale: quranAppLocaleValidator,
   nextSurah: v.union(quranViewSurahValidator, v.null()),
   previousSurah: v.union(quranViewSurahValidator, v.null()),
   surah: v.union(quranViewSurahValidator, v.null()),
@@ -50,7 +51,6 @@ export const quranViewValidator = v.object({
 
 type QuranView = Infer<typeof quranViewValidator>;
 type QuranViewSurah = NonNullable<QuranView["surah"]>;
-type QuranViewVerse = QuranView["verses"][number];
 
 /** Reads one neighboring surah metadata row when that neighbor exists. */
 const readNeighbor = Effect.fn("contentRelease.readQuranNeighbor")(function* (
@@ -81,30 +81,26 @@ function projectSurah(surah: QuranSurahRow): QuranViewSurah {
   };
 }
 
-/** Projects one verse without transporting unrelated locale or tafsir fields. */
-function projectVerse(
-  verse: QuranRuntimeVerse,
-  locale: QuranSearchRow["locale"]
-): QuranViewVerse {
-  return {
-    arabic: verse.text.arabic,
-    number: verse.number,
-    translation: verse.translation[locale].text,
-  };
-}
+/** Projects one verse without transporting other locales or tafsir fields. */
+const projectVerse = Effect.fn("contentRelease.projectQuranViewVerse")(
+  function* (verse: QuranRuntimeVerse, appLocale: AppLocaleCode) {
+    const translation = yield* readQuranTranslation(verse, appLocale);
+    return {
+      arabic: verse.text.arabic,
+      number: verse.number,
+      translation: translation.text,
+    };
+  }
+);
 
-/** Returns the narrow locale-specific projection used by the Quran web UI. */
+/** Returns the narrow app-locale projection used by the Quran web UI. */
 export const readQuranView = Effect.fn("contentRelease.readQuranView")(
-  function* (
-    ctx: QueryCtx,
-    locale: QuranSearchRow["locale"],
-    sourceSurah: number
-  ) {
+  function* (ctx: QueryCtx, appLocale: AppLocaleCode, sourceSurah: number) {
     const loaded = yield* loadQuranSurah(ctx, sourceSurah);
     if (loaded.surah === null || loaded.owner.snapshotId === null) {
       return {
         ...loaded.owner,
-        locale,
+        appLocale,
         nextSurah: null,
         previousSurah: null,
         surah: null,
@@ -138,14 +134,17 @@ export const readQuranView = Effect.fn("contentRelease.readQuranView")(
       ? projectSurah(previousRow.payload)
       : null;
     const surah = projectSurah(loaded.surah.row.payload);
+    const projectedVerses = yield* Effect.forEach(verses, (verse) =>
+      projectVerse(verse, appLocale)
+    );
 
     return {
       ...loaded.owner,
-      locale,
+      appLocale,
       nextSurah,
       previousSurah,
       surah,
-      verses: verses.map((verse) => projectVerse(verse, locale)),
+      verses: projectedVerses,
     };
   }
 );

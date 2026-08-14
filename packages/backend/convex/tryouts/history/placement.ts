@@ -1,95 +1,38 @@
-import {
-  tryoutCatalogIdentity,
-  tryoutPlacementIdentity,
-} from "@nakafa/aksara-contracts/tryout/identity";
+import type { StoredTryoutRow } from "@nakafa/aksara-contracts/history/decode";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { HistoricalTryoutRow } from "@repo/backend/convex/tryouts/history/decode";
-import {
-  historyFail,
-  type RetainedTryoutHistoryPlan,
-} from "@repo/backend/convex/tryouts/history/spec";
 import { Effect, Schema } from "effect";
 
-type Attempt = Pick<
-  Doc<"tryoutAttempts">,
-  | "_id"
-  | "appLocale"
-  | "countryKey"
-  | "examKey"
-  | "locale"
-  | "setIdentity"
-  | "setKey"
-  | "snapshotReleaseId"
-  | "trackKey"
-  | "tryoutSnapshotId"
->;
-type FrozenPlacement = Pick<
+type FrozenTryoutPlacement = Pick<
   Doc<"tryoutAttemptPlacements">,
-  | "_id"
   | "answerArtifactHash"
   | "answerContentKey"
   | "choiceSnapshots"
   | "contentHash"
-  | "placementIdentity"
-  | "placementRowHash"
   | "questionArtifactHash"
   | "questionContentKey"
   | "questionOrder"
   | "rendererDomain"
-  | "sectionIdentity"
   | "sectionKey"
   | "sourcePath"
   | "sourceRevision"
-  | "title"
-  | "tryoutAttemptId"
 >;
-type HistoryPlacement = Pick<
-  Extract<Doc<"tryoutHistoryRows">, { readonly rowKind: "placement" }>,
-  | "answerArtifactHash"
-  | "index"
-  | "questionArtifactHash"
-  | "rowHash"
-  | "rowJson"
-  | "rowKind"
-  | "snapshotId"
->;
-type SignedPlacement = Extract<
-  HistoricalTryoutRow,
+
+type HistoricalTryoutPlacement = Extract<
+  StoredTryoutRow,
   { readonly rowKind: "placement" }
->;
-type HistoricalTryoutPlacement = SignedPlacement["record"]["row"];
-type FrozenStoredPlacement = Pick<
-  FrozenPlacement,
-  | "answerArtifactHash"
-  | "answerContentKey"
-  | "choiceSnapshots"
-  | "contentHash"
-  | "questionArtifactHash"
-  | "questionContentKey"
-  | "questionOrder"
-  | "rendererDomain"
-  | "sectionKey"
-  | "sourcePath"
-  | "sourceRevision"
-  | "title"
->;
+>["record"]["row"];
 
-export interface AuthenticatedHistoryPlacement {
-  readonly history: HistoryPlacement;
-  readonly signed: SignedPlacement;
-}
-
-/** Facts exposed only after an old row matches its attempt-owned frozen copy. */
+/** Authenticated history facts proven identical to one frozen attempt row. */
 export interface VerifiedStoredTryoutPlacement {
   readonly answerArtifactHash: HistoricalTryoutPlacement["answerArtifactHash"];
   readonly answerContentKey: HistoricalTryoutPlacement["answerContentKey"];
   readonly artifactLocale: HistoricalTryoutPlacement["locale"];
-  readonly contentHash: FrozenPlacement["contentHash"];
+  readonly contentHash: string;
   readonly questionArtifactHash: HistoricalTryoutPlacement["questionArtifactHash"];
   readonly questionContentKey: HistoricalTryoutPlacement["questionContentKey"];
-  readonly questionOrder: HistoricalTryoutPlacement["questionOrder"];
+  readonly questionOrder: number;
   readonly questionSourcePath: HistoricalTryoutPlacement["questionSourcePath"];
-  readonly sourceRevision: HistoricalTryoutPlacement["sourceRevision"];
+  readonly sourceRevision: string;
 }
 
 /** One authenticated old placement differs from its attempt-owned frozen row. */
@@ -98,115 +41,43 @@ export class StoredTryoutPlacementMismatchError extends Schema.TaggedError<Store
   {}
 ) {}
 
-/** Checks the exact ordered choice snapshot stored on one retained attempt. */
-function hasExactChoices(
-  frozen: FrozenPlacement["choiceSnapshots"],
-  signed: readonly FrozenPlacement["choiceSnapshots"][number][]
+/** Checks ordered answer choices without normalizing historical bytes. */
+function hasSameChoices(
+  historical: HistoricalTryoutPlacement["choices"],
+  frozen: FrozenTryoutPlacement["choiceSnapshots"]
 ) {
   return (
-    frozen.length === signed.length &&
-    frozen.every((choice, index) => {
-      const expected = signed[index];
+    historical.length === frozen.length &&
+    historical.every((choice, index) => {
+      const candidate = frozen[index];
       return (
-        expected !== undefined &&
-        choice.isCorrect === expected.isCorrect &&
-        choice.label === expected.label &&
-        choice.optionKey === expected.optionKey &&
-        choice.order === expected.order
+        candidate !== undefined &&
+        choice.isCorrect === candidate.isCorrect &&
+        choice.label === candidate.label &&
+        choice.optionKey === candidate.optionKey &&
+        choice.order === candidate.order
       );
     })
   );
 }
 
-/** Accepts the two exact frozen encodings: 1,220 rooted and 500 root-relative. */
+/** Accepts the two exact frozen source encodings retained in production. */
 function hasExactHistoricalSourcePath(
   frozenSourcePath: string,
-  signedSourcePath: string
+  historicalSourcePath: string
 ) {
   return (
-    frozenSourcePath === signedSourcePath ||
-    `packages/corpus/${frozenSourcePath}` === signedSourcePath
+    frozenSourcePath === historicalSourcePath ||
+    `packages/corpus/${frozenSourcePath}` === historicalSourcePath
   );
 }
 
-/** Proves one frozen placement still equals its authenticated signed source. */
-export const verifyFrozenPlacement = Effect.fn(
-  "tryouts.history.verifyFrozenPlacement"
-)(function* (
-  attempt: Attempt,
-  frozen: FrozenPlacement,
-  authenticated: AuthenticatedHistoryPlacement,
-  plan: RetainedTryoutHistoryPlan
-) {
-  const { history, signed } = authenticated;
-  const row = signed.record.row;
-  const placementIdentity = tryoutPlacementIdentity(row);
-  const sectionIdentity = tryoutCatalogIdentity({
-    countryKey: row.countryKey,
-    examKey: row.examKey,
-    kind: "section",
-    locale: row.locale,
-    sectionKey: row.sectionKey,
-    setKey: row.setKey,
-    trackKey: row.trackKey,
-  });
-  const setIdentity = tryoutCatalogIdentity({
-    countryKey: row.countryKey,
-    examKey: row.examKey,
-    kind: "set",
-    locale: row.locale,
-    setKey: row.setKey,
-    trackKey: row.trackKey,
-  });
-  const releaseIsRetained = plan.releases.some(
-    ({ releaseId }) => releaseId === attempt.snapshotReleaseId
-  );
-
-  // The signed migration deliberately preserved each pre-signing contentHash.
-  // placementRowHash authenticates the later signed row without rewriting it.
-  if (
-    history.snapshotId !== plan.snapshotId ||
-    history.rowHash !== signed.record.rowHash ||
-    history.questionArtifactHash !== row.questionArtifactHash ||
-    history.answerArtifactHash !== row.answerArtifactHash ||
-    attempt.tryoutSnapshotId !== plan.snapshotId ||
-    !releaseIsRetained ||
-    attempt.appLocale !== attempt.locale ||
-    attempt.locale !== row.locale ||
-    attempt.countryKey !== row.countryKey ||
-    attempt.examKey !== row.examKey ||
-    attempt.trackKey !== row.trackKey ||
-    attempt.setKey !== row.setKey ||
-    attempt.setIdentity !== setIdentity ||
-    frozen.tryoutAttemptId !== attempt._id ||
-    frozen.placementIdentity !== placementIdentity ||
-    frozen.placementRowHash !== signed.record.rowHash ||
-    frozen.answerArtifactHash !== row.answerArtifactHash ||
-    frozen.answerContentKey !== row.answerContentKey ||
-    frozen.questionArtifactHash !== row.questionArtifactHash ||
-    frozen.questionContentKey !== row.questionContentKey ||
-    frozen.rendererDomain !== row.rendererDomain ||
-    frozen.sectionIdentity !== sectionIdentity ||
-    frozen.sectionKey !== row.sectionKey ||
-    frozen.questionOrder !== row.questionOrder ||
-    !hasExactHistoricalSourcePath(frozen.sourcePath, row.questionSourcePath) ||
-    frozen.sourceRevision !== row.sourceRevision ||
-    frozen.title !== row.title ||
-    !hasExactChoices(frozen.choiceSnapshots, row.choices)
-  ) {
-    return yield* historyFail(
-      "TRYOUT_HISTORY_NOT_READY",
-      `Frozen placement ${frozen._id} no longer matches ${placementIdentity}.`
-    );
-  }
-});
-
-/** Proves one authenticated old placement still matches its frozen attempt row. */
+/** Proves one authenticated old placement is identical to its frozen copy. */
 export const verifyStoredTryoutPlacement = Effect.fn(
   "tryouts.history.verifyStoredPlacement"
 )(function* (
   historical: HistoricalTryoutPlacement,
-  frozen: FrozenStoredPlacement
+  frozen: FrozenTryoutPlacement
 ) {
   const matchesFrozen =
     historical.answerArtifactHash === frozen.answerArtifactHash &&
@@ -221,8 +92,7 @@ export const verifyStoredTryoutPlacement = Effect.fn(
     historical.rendererDomain === frozen.rendererDomain &&
     historical.sectionKey === frozen.sectionKey &&
     historical.sourceRevision === frozen.sourceRevision &&
-    historical.title === frozen.title &&
-    hasExactChoices(frozen.choiceSnapshots, historical.choices);
+    hasSameChoices(historical.choices, frozen.choiceSnapshots);
   if (!matchesFrozen) {
     return yield* new StoredTryoutPlacementMismatchError();
   }

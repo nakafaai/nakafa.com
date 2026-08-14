@@ -1,3 +1,7 @@
+import {
+  type AppLocaleCode,
+  AppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
 import { readConvexRuntimeQuery } from "@repo/backend/client/runtime";
 import { PUBLIC_CONTENT_RUNTIME_BATCH_SIZE } from "@repo/backend/content/batch";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -20,10 +24,10 @@ interface PublishedApiPage {
   readonly activeReleaseId: string;
   readonly continueCursor: string;
   readonly isDone: boolean;
-  readonly page: readonly {
-    readonly locale: Locale;
+  readonly page: ReadonlyArray<{
+    readonly appLocale: AppLocaleCode;
     readonly publicPath: string;
-  }[];
+  }>;
 }
 
 const INITIAL_CURSOR: string | null = null;
@@ -155,8 +159,8 @@ const hydratePublishedApiPage = Effect.fn("api.content.hydratePublishedPage")(
         readPublishedApiItems(
           entries.map((entry) => ({
             activeReleaseId: result.activeReleaseId,
+            appLocale: AppLocaleSchema.make(entry.appLocale),
             family,
-            locale: entry.locale,
             publicPath: entry.publicPath,
           }))
         ).pipe(Effect.mapError(mapPublishedContentError)),
@@ -171,7 +175,7 @@ const hydratePublishedApiPage = Effect.fn("api.content.hydratePublishedPage")(
   }
 );
 
-/** Reads one current signed reference by stable graph content ID. */
+/** Reads one current signed summary by stable graph content ID. */
 export function getApiContentReferenceByContentId(args: { contentId: string }) {
   return readApiRuntimeQuery(api.contentRelease.reference.read, {
     input: { contentId: args.contentId, kind: "content" },

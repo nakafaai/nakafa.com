@@ -119,7 +119,6 @@ describe("mapUIMessagePartsToDBParts", () => {
           },
           result: {
             ...ref,
-            description: "Article summary",
             title: "Dynastic Politics",
           },
         },

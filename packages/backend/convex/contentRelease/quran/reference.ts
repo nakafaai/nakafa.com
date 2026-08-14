@@ -1,8 +1,6 @@
-import {
-  type QuranSearchRow,
-  QuranSearchRowSchema,
-  QuranSurahRowSchema,
-} from "@nakafa/aksara-contracts/quran/spec";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { QuranSearchRowSchema } from "@nakafa/aksara-contracts/quran/snapshot/row";
+import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { readQuranChunks } from "@repo/backend/convex/contentRelease/quran/chunks";
@@ -14,8 +12,8 @@ import { readQuranRow } from "@repo/backend/convex/contentRelease/quran/row";
 import { Effect } from "effect";
 
 interface QuranReferenceRequest {
+  readonly appLocale: AppLocaleCode;
   readonly fromVerse: number;
-  readonly locale: QuranSearchRow["locale"];
   readonly surahNumber: number;
   readonly toVerse?: number;
 }
@@ -140,7 +138,7 @@ export const readQuranReference = Effect.fn(
       search: readQuranRow(
         ctx,
         loaded.owner.snapshotId,
-        quranSearchIdentity(request.locale, loaded.input.surahNumber),
+        quranSearchIdentity(request.appLocale, loaded.input.surahNumber),
         QuranSearchRowSchema
       ),
     },

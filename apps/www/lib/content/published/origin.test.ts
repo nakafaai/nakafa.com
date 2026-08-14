@@ -1,8 +1,12 @@
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 
-const identity = { locale: "id", publicPath: "try-out" } as const;
+const identity = {
+  appLocale: AppLocaleSchema.make("id"),
+  publicPath: "try-out",
+} as const;
 
 describe("content/published/origin", () => {
   it("treats omitted and null revisions as absent", async () => {

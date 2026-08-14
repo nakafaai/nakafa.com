@@ -35,7 +35,7 @@ describe("contentRelease/quran/document", () => {
     ).resolves.toEqual({
       activeManifestHash: null,
       activeReleaseId: null,
-      locale: "en",
+      appLocale: "en",
       managed: false,
       snapshotId: null,
       sourceRevision: null,
@@ -44,7 +44,7 @@ describe("contentRelease/quran/document", () => {
     });
   });
 
-  it("projects API metadata, footnotes, and only the requested locale", async () => {
+  it("projects metadata, footnotes, and only the requested app locale", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => activateQuranSnapshot(ctx, documentRows()));
 
@@ -62,6 +62,17 @@ describe("contentRelease/quran/document", () => {
     expect(JSON.stringify(document)).not.toContain("Technical translation");
     expect(JSON.stringify(document)).not.toContain("Tafsir teknis");
     expect(JSON.stringify(document)).not.toContain("hizbQuarter");
+  });
+
+  it("rejects an app locale missing from signed verse translations", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) => activateQuranSnapshot(ctx, documentRows()));
+
+    await expect(
+      t.query((ctx) => runConvexProgram(readQuranDocument(ctx, "de", 1)))
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
   });
 
   it("rejects invalid, oversized, and incomplete signed documents", async () => {

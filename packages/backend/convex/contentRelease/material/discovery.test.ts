@@ -49,7 +49,9 @@ describe("contentRelease/material/discovery", () => {
     const count = await target.run((ctx) =>
       ctx.db
         .query("materialBuckets")
-        .withIndex("by_locale_and_bucket", (query) => query.eq("locale", "en"))
+        .withIndex("by_appLocale_and_bucket", (query) =>
+          query.eq("appLocale", "en")
+        )
         .first()
     );
     if (!count) {

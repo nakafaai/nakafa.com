@@ -1,8 +1,4 @@
-import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
-import {
-  type MaterialLessonProjection,
-  MaterialLessonProjectionSchema,
-} from "@nakafa/aksara-contracts/projection/material";
+import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -36,7 +32,7 @@ async function insertMaterialRecent(
     content_id: projection.graph.assetId,
     description: "Stale copied description",
     lastViewedAt,
-    locale: projection.locale,
+    locale: "en",
     materialDomain: "biology",
     route: projection.publicPath,
     section: "material",
@@ -47,18 +43,9 @@ async function insertMaterialRecent(
 }
 
 describe("contents/queries/recent", () => {
-  it("hydrates a recent card through a signed material route rename", async () => {
+  it("hydrates a recent card from the current signed material", async () => {
     const t = createConvexTestWithBetterAuth();
-    const current = MaterialLessonProjectionSchema.make({
-      ...FUNCTION_MATERIAL,
-      parentPath: PublicPathSchema.make(
-        "subjects/mathematics/functions-and-relations"
-      ),
-      publicPath: PublicPathSchema.make(
-        "subjects/mathematics/functions-and-relations/function-concept"
-      ),
-    });
-    await activateMaterialCatalog(t, [current]);
+    await activateMaterialCatalog(t, [FUNCTION_MATERIAL]);
     const identity = await t.mutation(async (ctx) => {
       const viewer = await seedAuthenticatedUser(ctx, {
         now: NOW,
@@ -82,13 +69,13 @@ describe("contents/queries/recent", () => {
       expect.objectContaining({
         assetId: FUNCTION_MATERIAL.graph.assetId,
         content_id: FUNCTION_MATERIAL.graph.assetId,
-        description: current.metadata.description,
-        href: `/${current.publicPath}`,
+        description: FUNCTION_MATERIAL.metadata.description,
+        href: `/${FUNCTION_MATERIAL.publicPath}`,
         lastViewedAt: NOW,
         materialDomain: "mathematics",
-        route: current.publicPath,
-        title: current.metadata.title,
-        url: `https://nakafa.com/en/${current.publicPath}`,
+        route: FUNCTION_MATERIAL.publicPath,
+        title: FUNCTION_MATERIAL.metadata.title,
+        url: `https://nakafa.com/en/${FUNCTION_MATERIAL.publicPath}`,
       }),
     ]);
     expect(results[0]).not.toHaveProperty("id");

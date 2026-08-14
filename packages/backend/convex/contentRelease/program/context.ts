@@ -39,7 +39,7 @@ export const readProgramContext = Effect.fn(
   "contentRelease.readProgramContext"
 )(function* (
   ctx: QueryCtx,
-  locale: Doc<"curriculumRoutes">["locale"],
+  appLocale: Doc<"curriculumRoutes">["appLocale"],
   input: ProgramContextInput,
   expectedActiveReleaseId?: string | null
 ) {
@@ -49,7 +49,7 @@ export const readProgramContext = Effect.fn(
     expectedActiveReleaseId,
     "Curriculum context"
   );
-  const owner = yield* loadProgramOwner(ctx, locale);
+  const owner = yield* loadProgramOwner(ctx, appLocale);
   if (!(owner.managed && owner.selected)) {
     return { context: null, managed: false };
   }
@@ -58,11 +58,11 @@ export const readProgramContext = Effect.fn(
     ctx.db
       .query("curriculumRoutes")
       .withIndex(
-        "by_snapshotId_and_locale_and_programKey_and_nodeKey",
+        "by_snapshotId_and_appLocale_and_programKey_and_nodeKey",
         (index) =>
           index
             .eq("snapshotId", snapshotId)
-            .eq("locale", locale)
+            .eq("appLocale", appLocale)
             .eq("programKey", input.programKey)
             .eq("nodeKey", input.nodeKey)
       )
@@ -78,7 +78,7 @@ export const readProgramContext = Effect.fn(
   const storedParent = yield* loadProgramRouteRow(
     ctx,
     snapshotId,
-    locale,
+    appLocale,
     group.parentPath
   );
   if (!storedParent) {
@@ -95,11 +95,11 @@ export const readProgramContext = Effect.fn(
     ctx.db
       .query("curriculumRoutes")
       .withIndex(
-        "by_snapshotId_and_locale_and_contextPath_and_order_and_path",
+        "by_snapshotId_and_appLocale_and_contextPath_and_order_and_path",
         (index) =>
           index
             .eq("snapshotId", snapshotId)
-            .eq("locale", locale)
+            .eq("appLocale", appLocale)
             .eq("contextPath", parent.publicPath)
       )
       .take(PROGRAM_RELATED_LIMIT + 1)
@@ -107,7 +107,7 @@ export const readProgramContext = Effect.fn(
   if (storedContexts.length > PROGRAM_RELATED_LIMIT) {
     return yield* releaseFail(
       "CONTENT_RELEASE_LIMIT",
-      `Curriculum context ${locale}/${parent.publicPath} exceeds ${PROGRAM_RELATED_LIMIT} rows.`
+      `Curriculum context ${appLocale}/${parent.publicPath} exceeds ${PROGRAM_RELATED_LIMIT} rows.`
     );
   }
   const contexts = yield* Effect.forEach(storedContexts, (row) =>

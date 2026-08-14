@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { StoredProtectedRuntimeItem } from "@nakafa/aksara-contracts/history/decode";
 import type { ProtectedContentRuntimeItem } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
 import { readRetainedProtectedContent } from "@repo/backend/client/content/history";
@@ -14,18 +15,19 @@ import {
 } from "@/components/tryout/content/batch";
 import {
   type CurrentContentAccess,
-  type CurrentTryoutQuestionSelector,
   type CurrentTryoutSelector,
   type HistoryContentAccess,
   type HistoryTryoutSelector,
   projectTryoutRuntimeContent,
   type RenderedTryoutContentEntry,
   type SignedContentAccess,
+  type TryoutQuestionSelector,
   type TryoutRenderSelector,
 } from "@/components/tryout/content/model";
 import {
   makeCurrentTryoutRuntimeRequest,
   makeHistoryTryoutRuntimeRequest,
+  requireCurrentTryoutQuestion,
 } from "@/components/tryout/content/request";
 import { env } from "@/env";
 import { applyPublishedContentBatchCache } from "@/lib/content/cache";
@@ -38,9 +40,6 @@ import { getRendererComponents } from "@/lib/content/renderer/components";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 
 const SIGNED_RENDER_CONCURRENCY = 4;
-type HistoricalRuntimeItem = Effect.Effect.Success<
-  ReturnType<typeof readRetainedProtectedContent>
->["items"][number];
 
 /** Dispatches one attempt-owned signed access at the sole runtime boundary. */
 export const loadSignedTryoutContent = Effect.fn(
@@ -55,10 +54,11 @@ export const loadSignedTryoutContent = Effect.fn(
 /** Renders the public featured question only through the current transport. */
 export const loadCurrentTryoutQuestion = Effect.fn(
   "NakafaContent.loadCurrentTryoutQuestion"
-)(function* (question: CurrentTryoutQuestionSelector) {
+)(function* (question: TryoutQuestionSelector) {
+  const currentQuestion = yield* requireCurrentTryoutQuestion(question);
   const rendered = yield* loadCurrentTryoutContent({
     answers: [],
-    questions: [question],
+    questions: [currentQuestion],
   });
   const result = rendered.questions[0];
   if (!result) {
@@ -226,7 +226,7 @@ const renderCurrentItem = Effect.fn("NakafaContent.renderCurrentTryoutItem")(
 /** Renders one old item only after historical exchange verification. */
 const renderHistoryItem = Effect.fn("NakafaContent.renderHistoryTryoutItem")(
   function* (
-    item: HistoricalRuntimeItem | undefined,
+    item: StoredProtectedRuntimeItem | undefined,
     selector: HistoryTryoutSelector
   ) {
     if (!item) {

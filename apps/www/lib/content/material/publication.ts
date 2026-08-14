@@ -1,5 +1,6 @@
 import "server-only";
 
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { ContentRuntimeMissingError } from "@repo/backend/client/content/errors";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -21,8 +22,9 @@ export async function getMaterialPublication(
 ) {
   "use cache";
 
+  const appLocale = AppLocaleSchema.make(locale);
   const readPublished = Effect.tryPromise(() =>
-    renderPublishedMaterial({ locale, publicPath })
+    renderPublishedMaterial({ appLocale, publicPath })
   ).pipe(
     Effect.catchIf(
       (failure) => failure.error instanceof ContentRuntimeMissingError,
@@ -39,7 +41,7 @@ export async function getMaterialPublication(
   }
   if (!published) {
     return await Effect.runPromise(
-      Effect.fail(makeMaterialProjectionError({ locale, publicPath }))
+      Effect.fail(makeMaterialProjectionError({ appLocale, publicPath }))
     );
   }
 

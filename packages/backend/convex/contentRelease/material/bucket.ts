@@ -12,7 +12,7 @@ export const adjustMaterialBucket = Effect.fn(
   "contentRelease.adjustMaterialBucket"
 )(function* (
   ctx: MutationCtx,
-  locale: Doc<"materialBuckets">["locale"],
+  appLocale: Doc<"materialBuckets">["appLocale"],
   bucket: string,
   delta: -1 | 1
 ) {
@@ -25,8 +25,8 @@ export const adjustMaterialBucket = Effect.fn(
   const existing = yield* Effect.promise(() =>
     ctx.db
       .query("materialBuckets")
-      .withIndex("by_locale_and_bucket", (index) =>
-        index.eq("locale", locale).eq("bucket", bucket)
+      .withIndex("by_appLocale_and_bucket", (index) =>
+        index.eq("appLocale", appLocale).eq("bucket", bucket)
       )
       .unique()
   );
@@ -34,13 +34,13 @@ export const adjustMaterialBucket = Effect.fn(
   if (count < 0) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Material discovery bucket ${locale}/${bucket} underflowed.`
+      `Material discovery bucket ${appLocale}/${bucket} underflowed.`
     );
   }
   if (count > CONTENT_BUCKET_SIZE) {
     return yield* releaseFail(
       "CONTENT_RELEASE_LIMIT",
-      `Material discovery bucket ${locale}/${bucket} exceeds ${CONTENT_BUCKET_SIZE} routes.`
+      `Material discovery bucket ${appLocale}/${bucket} exceeds ${CONTENT_BUCKET_SIZE} routes.`
     );
   }
   if (count === 0) {
@@ -51,7 +51,7 @@ export const adjustMaterialBucket = Effect.fn(
     }
     return;
   }
-  const row = { bucket, count, locale };
+  const row = { appLocale, bucket, count };
   if (existing) {
     yield* Effect.promise(() =>
       ctx.db.replace("materialBuckets", existing._id, row)

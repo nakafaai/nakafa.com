@@ -67,7 +67,7 @@ describe("contentRelease/snapshot/cleanup", () => {
         bucket: "333",
         index: 3,
         level: "track",
-        locale: "en",
+        appLocale: "en",
         nodeKey: "program-0:root",
         order: 0,
         programKey: "program-0",
@@ -80,7 +80,7 @@ describe("contentRelease/snapshot/cleanup", () => {
       await ctx.db.insert("programBuckets", {
         bucket: "333",
         index: 3,
-        locale: "en",
+        appLocale: "en",
         routeCount: 1,
         snapshotId,
       });
@@ -170,10 +170,11 @@ describe("contentRelease/snapshot/cleanup", () => {
       });
       for (const index of [0]) {
         await ctx.db.insert("tryoutCatalog", {
+          assetId: `asset:en:tryout:catalog-${index}`,
           identity: `catalog-${index}`,
           index,
           kind: "exam",
-          locale: "en",
+          appLocale: "en",
           order: index,
           rowHash: `sha256:${index.toString(16).padStart(64, "0")}`,
           rowJson: "{}",
@@ -183,13 +184,16 @@ describe("contentRelease/snapshot/cleanup", () => {
       for (const index of [1]) {
         await ctx.db.insert("tryoutPlacements", {
           answerArtifactHash: `sha256:${"a".repeat(64)}`,
+          answerArtifactLocale: "en",
+          appLocale: "en",
           contentHash: "3".repeat(64),
           countryKey: "indonesia",
+          deliveryLanguage: "en",
           examKey: "snbt",
           identity: `placement-${index}`,
           index,
-          locale: "en",
           questionArtifactHash: `sha256:${"b".repeat(64)}`,
+          questionArtifactLocale: "en",
           questionOrder: index,
           rowHash: `sha256:${index.toString(16).padStart(64, "0")}`,
           rowJson: "{}",
@@ -256,16 +260,17 @@ describe("contentRelease/snapshot/cleanup", () => {
         identity: "search:en:1",
         index: 0,
         kind: "quran-search",
-        locale: "en",
+        appLocale: "en",
         rowHash: `sha256:${"b".repeat(64)}`,
         rowJson: "{}",
         snapshotId,
         surahNumber: 1,
       });
       await ctx.db.insert("quranSearch", {
+        assetId: "asset:en:quran:quran-search:1",
         identity: "search:en:1",
         index: 0,
-        locale: "en",
+        appLocale: "en",
         rowHash: `sha256:${"b".repeat(64)}`,
         snapshotId,
         surahNumber: 1,

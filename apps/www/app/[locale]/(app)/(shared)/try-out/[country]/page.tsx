@@ -78,7 +78,7 @@ async function TryoutCountryRoute({
       resolveTryoutExamSocialImage({
         countryKey: page.country.countryKey,
         examKey: exam.examKey,
-        locale,
+        appLocale: locale,
         publicPath: exam.publicPath,
       })
     ),

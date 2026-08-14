@@ -1,4 +1,4 @@
-import type { ContentLocale } from "@nakafa/aksara-contracts/content";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { verifyTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/verify";
 import { Effect } from "effect";
@@ -28,17 +28,17 @@ export const readTryoutCatalogRowByPath = Effect.fn(
   ctx: QueryCtx,
   snapshotId: string,
   input: {
-    readonly locale: ContentLocale;
+    readonly appLocale: AppLocaleCode;
     readonly publicPath: string;
   }
 ) {
   const stored = yield* Effect.promise(() =>
     ctx.db
       .query("tryoutCatalog")
-      .withIndex("by_snapshotId_and_locale_and_publicPath", (index) =>
+      .withIndex("by_snapshotId_and_appLocale_and_publicPath", (index) =>
         index
           .eq("snapshotId", snapshotId)
-          .eq("locale", input.locale)
+          .eq("appLocale", input.appLocale)
           .eq("publicPath", input.publicPath)
       )
       .unique()

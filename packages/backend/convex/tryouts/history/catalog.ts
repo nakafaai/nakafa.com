@@ -1,8 +1,8 @@
-import type { StoredTryoutRow } from "@nakafa/aksara-history/history/decode";
+import type { StoredTryoutRow } from "@nakafa/aksara-contracts/history/decode";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import type { TryoutSetIdentity } from "@repo/backend/convex/contentRelease/tryout/set";
-import { loadStoredTryoutRows } from "@repo/backend/convex/tryouts/history/rows";
+import { loadStoredTryoutCatalogRows } from "@repo/backend/convex/tryouts/history/rows";
 import { TryoutRuntimeError } from "@repo/backend/convex/tryouts/runtime/error";
 import {
   matchesAttemptIdentity,
@@ -67,20 +67,12 @@ export const readStoredAttemptSectionPage = Effect.fn(
 /** Loads authenticated rows and proves their exact attempt-owned hierarchy. */
 const loadAttemptCatalog = Effect.fn("tryouts.history.loadAttemptCatalog")(
   function* (ctx: QueryCtx, attempt: TryoutAttempt) {
-    const decoded = yield* loadStoredTryoutRows(
+    const decoded = yield* loadStoredTryoutCatalogRows(
       ctx,
-      attempt.tryoutSnapshotId,
-      "catalog"
+      attempt.tryoutSnapshotId
     );
-    const rows = decoded.flatMap((envelope) =>
-      envelope.rowKind === "catalog" ? [envelope.record.row] : []
-    );
+    const rows = decoded.map(({ record }) => record.row);
     const identity = readAttemptSetIdentity(attempt);
-    if (attempt.appLocale !== identity.locale) {
-      return yield* historyCatalogIntegrity(
-        "Retained try-out app locale no longer matches its frozen route locale."
-      );
-    }
     const set = findAttemptSet(rows, attempt, identity);
     const country = rows.find(
       (row): row is StoredCountry =>
@@ -121,9 +113,7 @@ const loadAttemptCatalog = Effect.fn("tryouts.history.loadAttemptCatalog")(
         "Retained try-out catalog no longer matches its attempt inventory."
       );
     }
-    const records = decoded.flatMap((envelope) =>
-      envelope.rowKind === "catalog" ? [envelope.record] : []
-    );
+    const records = decoded.map(({ record }) => record);
     for (const snapshot of attempt.sectionSnapshots) {
       const record = records.find(
         ({ row }) =>

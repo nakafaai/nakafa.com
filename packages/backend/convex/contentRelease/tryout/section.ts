@@ -1,8 +1,12 @@
-import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import {
+  type AppLocaleCode,
+  AppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
 import {
   type TryoutSection,
   TryoutSectionSchema,
-} from "@nakafa/aksara-contracts/tryout/spec";
+} from "@nakafa/aksara-contracts/tryout/catalog";
+import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -18,10 +22,14 @@ import {
 import { Effect, Schema } from "effect";
 
 /** Stable authored keys that select one localized try-out section. */
-export type TryoutSectionIdentity = Pick<
-  TryoutSection,
-  "countryKey" | "examKey" | "locale" | "sectionKey" | "setKey" | "trackKey"
->;
+export interface TryoutSectionIdentity {
+  readonly countryKey: TryoutSection["countryKey"];
+  readonly examKey: TryoutSection["examKey"];
+  readonly locale: AppLocaleCode;
+  readonly sectionKey: TryoutSection["sectionKey"];
+  readonly setKey: TryoutSection["setKey"];
+  readonly trackKey: TryoutSection["trackKey"];
+}
 
 /** Reads one verified server-only section and all signed placements. */
 export const readTryoutSection = Effect.fn("contentRelease.readTryoutSection")(
@@ -29,9 +37,14 @@ export const readTryoutSection = Effect.fn("contentRelease.readTryoutSection")(
     const owner = yield* loadTryoutOwner(ctx);
     const { snapshotId } = owner;
 
-    const catalogIdentity = tryoutCatalogIdentity({
-      ...identity,
+    const catalogIdentity = tryoutCatalogNodeIdentity({
+      appLocale: AppLocaleSchema.make(identity.locale),
+      countryKey: identity.countryKey,
+      examKey: identity.examKey,
       kind: "section",
+      sectionKey: identity.sectionKey,
+      setKey: identity.setKey,
+      trackKey: identity.trackKey,
     });
     const storedSection = yield* Effect.promise(() =>
       ctx.db
@@ -83,15 +96,17 @@ export const readTryoutSectionRows = Effect.fn(
   const storedPlacements = yield* Effect.promise(() =>
     ctx.db
       .query("tryoutPlacements")
-      .withIndex("by_snapshotId_and_section_and_questionOrder", (index) =>
-        index
-          .eq("snapshotId", snapshotId)
-          .eq("locale", section.locale)
-          .eq("countryKey", section.countryKey)
-          .eq("examKey", section.examKey)
-          .eq("trackKey", section.trackKey)
-          .eq("setKey", section.setKey)
-          .eq("sectionKey", section.sectionKey)
+      .withIndex(
+        "by_snapshotId_and_appLocale_and_section_and_questionOrder",
+        (index) =>
+          index
+            .eq("snapshotId", snapshotId)
+            .eq("appLocale", section.appLocale)
+            .eq("countryKey", section.countryKey)
+            .eq("examKey", section.examKey)
+            .eq("trackKey", section.trackKey)
+            .eq("setKey", section.setKey)
+            .eq("sectionKey", section.sectionKey)
       )
       .take(section.questionCount + 1)
   );

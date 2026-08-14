@@ -60,8 +60,8 @@ export function getMetadataFromSlug(
       api.contentRelease.reference.read,
       {
         input: {
+          appLocale: locale,
           kind: "route",
-          locale,
           publicPath: slug.join("/"),
         },
       }

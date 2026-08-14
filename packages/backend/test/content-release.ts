@@ -1,14 +1,19 @@
 import { createHash } from "node:crypto";
-import type {
-  ContentFamily,
-  ContentLocale,
-} from "@nakafa/aksara-contracts/content";
+import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { makeLearningGraphIdentity } from "@nakafa/aksara-contracts/graph/identity";
 import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import {
+  ACTIVE_APP_LOCALE_CODES,
+  type ActiveAppLocaleCode,
+  type AppLocaleCode,
+  AppLocaleSchema,
+  type ArtifactLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
+import { CONTENT_RELEASE_FORMAT } from "@nakafa/aksara-contracts/release";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
 import {
   ContentSnapshotKindSchema,
@@ -20,7 +25,9 @@ import {
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
 import { testMaterialPublicPath } from "@repo/backend/test/content-material";
-import { Effect } from "effect";
+import { Effect, type Schema } from "effect";
+
+type ArtifactLocaleCode = Schema.Schema.Encoded<typeof ArtifactLocaleSchema>;
 
 export const TEST_DIGEST = Sha256HashSchema.make(`sha256:${"0".repeat(64)}`);
 export const TEST_MANIFEST_HASH = Sha256HashSchema.make(
@@ -34,14 +41,14 @@ export const TEST_RELEASE_ID = ReleaseIdSchema.make("release-test");
 /** Creates the exact graph identity derived from one article source key. */
 export function testArticleGraph(
   articleSlug: string,
-  locale: ContentLocale = "en"
+  appLocale: AppLocaleCode = "en"
 ) {
   return Effect.runSync(
     makeLearningGraphIdentity({
       concept: ["article", "politics"],
       learningObject: ["article", "politics", articleSlug],
       lens: ["article", "politics"],
-      locale,
+      appLocale: AppLocaleSchema.make(appLocale),
     })
   );
 }
@@ -123,6 +130,10 @@ export function testReleaseJson(options?: ReleaseOptions) {
   return JSON.stringify({
     keyId: "test-key",
     manifest: {
+      activeAppLocales: ACTIVE_APP_LOCALE_CODES,
+      baseActiveAppLocales:
+        baseReleaseId === null ? null : ACTIVE_APP_LOCALE_CODES,
+      baseEditorialReviewDigest: baseReleaseId === null ? null : TEST_DIGEST,
       baseManifestHash:
         baseReleaseId === null
           ? null
@@ -152,6 +163,8 @@ export function testReleaseJson(options?: ReleaseOptions) {
       scope: options?.scope ?? testPublicationScope({ snapshots }),
       snapshots,
       upsertCount,
+      editorialReviewDigest: TEST_DIGEST,
+      format: CONTENT_RELEASE_FORMAT,
     },
     manifestHash: options?.manifestHash ?? TEST_MANIFEST_HASH,
     signature: "A".repeat(86),
@@ -160,10 +173,10 @@ export function testReleaseJson(options?: ReleaseOptions) {
 
 /** Creates one canonical snapshot for a previously absent head. */
 export function testRollbackJson(options?: {
+  readonly artifactLocale?: ArtifactLocaleCode;
   readonly contentKey?: string;
   readonly family?: ContentFamily;
   readonly index?: number;
-  readonly locale?: ContentLocale;
   readonly releaseId?: string;
 }) {
   const index = options?.index ?? 0;
@@ -171,9 +184,9 @@ export function testRollbackJson(options?: {
     index,
     releaseId: options?.releaseId ?? TEST_RELEASE_ID,
     snapshot: {
+      artifactLocale: options?.artifactLocale ?? "en",
       contentKey: options?.contentKey ?? `test:head-${index}`,
       family: options?.family ?? "material",
-      locale: options?.locale ?? "en",
       state: "absent",
     },
   });
@@ -182,28 +195,28 @@ export function testRollbackJson(options?: {
 /** Creates one canonical technical upsert item. */
 export function testUpsertJson(options?: {
   readonly artifactHash?: string;
+  readonly artifactLocale?: ArtifactLocaleCode;
   readonly contentKey?: string;
   readonly family?: ContentFamily;
   readonly index?: number;
-  readonly locale?: ContentLocale;
   readonly releaseId?: string;
   readonly rendererDomain?: RendererDomain;
   readonly sourcePath?: string;
 }) {
   const index = options?.index ?? 0;
-  const locale = options?.locale ?? "en";
+  const artifactLocale = options?.artifactLocale ?? "en";
   return JSON.stringify({
     change: {
       artifactHash: options?.artifactHash ?? TEST_ARTIFACT_HASH,
+      artifactLocale,
       contentKey: options?.contentKey ?? `test:head-${index}`,
       delivery: "public",
       family: options?.family ?? "material",
-      locale,
       operation: "upsert",
       rendererDomain: options?.rendererDomain ?? "mathematics",
       sourcePath:
         options?.sourcePath ??
-        `packages/corpus/test/head-${index}/${locale}.mdx`,
+        `packages/corpus/test/head-${index}/${artifactLocale}.mdx`,
     },
     index,
     releaseId: options?.releaseId ?? TEST_RELEASE_ID,
@@ -212,22 +225,22 @@ export function testUpsertJson(options?: {
 
 /** Creates one canonical technical route change. */
 export function testRouteJson(options?: {
+  readonly appLocale?: ActiveAppLocaleCode;
   readonly contentKey?: string;
   readonly index?: number;
-  readonly locale?: ContentLocale;
   readonly operation?: "bind" | "delete";
   readonly publicPath?: string;
   readonly releaseId?: string;
 }) {
   const index = options?.index ?? 0;
-  const locale = options?.locale ?? "en";
+  const appLocale = options?.appLocale ?? "en";
   const change = {
     ...(options?.operation === "delete"
       ? {}
       : { contentKey: options?.contentKey ?? `test:head-${index}` }),
-    locale,
+    appLocale,
     operation: options?.operation ?? "bind",
-    publicPath: options?.publicPath ?? testMaterialPublicPath(index, locale),
+    publicPath: options?.publicPath ?? testMaterialPublicPath(index, appLocale),
   };
   return JSON.stringify({
     change,
@@ -238,17 +251,17 @@ export function testRouteJson(options?: {
 
 /** Creates one canonical technical delete item. */
 export function testDeleteJson(options?: {
+  readonly artifactLocale?: ArtifactLocaleCode;
   readonly contentKey?: string;
   readonly family?: ContentFamily;
   readonly index?: number;
-  readonly locale?: ContentLocale;
   readonly releaseId?: string;
 }) {
   return JSON.stringify({
     change: {
+      artifactLocale: options?.artifactLocale ?? "en",
       contentKey: options?.contentKey ?? "test:deleted",
       family: options?.family ?? "material",
-      locale: options?.locale ?? "en",
       operation: "delete",
     },
     index: options?.index ?? 0,

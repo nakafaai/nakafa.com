@@ -80,7 +80,7 @@ const stageArtifact = Effect.fn("contentRelease.stageArtifact")(function* (
     ctx,
     releaseId,
     artifact.payload.contentKey,
-    artifact.payload.locale
+    artifact.payload.artifactLocale
   );
   if (!item) {
     return yield* releaseFail(

@@ -15,7 +15,7 @@ import { seedTryoutStartSet } from "@repo/backend/test/tryout-start";
 import { describe, expect, it, vi } from "vitest";
 
 describe("tryouts/queries/attempt", () => {
-  it("locks only one authenticated in-progress attempt", async () => {
+  it("locks only one exact authenticated in-progress attempt", async () => {
     vi.setSystemTime(new Date(TRYOUT_START_NOW));
 
     const t = createConvexTestWithBetterAuth();

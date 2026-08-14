@@ -27,8 +27,8 @@ describe("readNakafaRuntimeQuery", () => {
   it("returns generated query results from the shared Convex runtime client", async () => {
     const args: FunctionArgs<typeof api.contentRelease.reference.read> = {
       input: {
+        appLocale: "en",
         kind: "route",
-        locale: "en",
         publicPath: "articles/example",
       },
     };
@@ -53,8 +53,8 @@ describe("readNakafaRuntimeQuery", () => {
   it("maps runtime client failures into Nakafa read errors", async () => {
     const args: FunctionArgs<typeof api.contentRelease.reference.read> = {
       input: {
+        appLocale: "en",
         kind: "route",
-        locale: "en",
         publicPath: "articles/example",
       },
     };
@@ -87,8 +87,8 @@ describe("readNakafaRuntimeQuery", () => {
   it("preserves classified runtime diagnostics", async () => {
     const args: FunctionArgs<typeof api.contentRelease.reference.read> = {
       input: {
+        appLocale: "en",
         kind: "route",
-        locale: "en",
         publicPath: "articles/example",
       },
     };

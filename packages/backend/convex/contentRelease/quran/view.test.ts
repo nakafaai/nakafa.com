@@ -28,7 +28,7 @@ function viewRows() {
 }
 
 describe("contentRelease/quran/view", () => {
-  it("returns normalized unmanaged locale views", async () => {
+  it("returns normalized unmanaged app-locale views", async () => {
     const t = convexTest(schema, convexModules);
 
     await expect(
@@ -36,7 +36,7 @@ describe("contentRelease/quran/view", () => {
     ).resolves.toEqual({
       activeManifestHash: null,
       activeReleaseId: null,
-      locale: "en",
+      appLocale: "en",
       managed: false,
       nextSurah: null,
       previousSurah: null,
@@ -47,7 +47,7 @@ describe("contentRelease/quran/view", () => {
     });
   });
 
-  it("projects only the requested locale without transporting tafsir", async () => {
+  it("projects only the requested app locale without transporting tafsir", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => activateQuranSnapshot(ctx, viewRows()));
 
@@ -90,10 +90,10 @@ describe("contentRelease/quran/view", () => {
       },
     ]);
     expect(JSON.stringify(indonesian)).not.toContain("Tafsir teknis");
-    expect({ english: english.locale, indonesian: indonesian.locale }).toEqual({
-      english: "en",
-      indonesian: "id",
-    });
+    expect({
+      english: english.appLocale,
+      indonesian: indonesian.appLocale,
+    }).toEqual({ english: "en", indonesian: "id" });
   });
 
   it("does not read the unrelated signed search projection", async () => {

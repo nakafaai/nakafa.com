@@ -71,7 +71,7 @@ describe("resolveLocalizedNavigationHref", () => {
   it("projects signed material and curriculum counterparts", () => {
     expect(
       resolveHref(
-        `/${previewProjection.locale}/${previewProjection.publicPath}`,
+        `/${previewProjection.appLocale}/${previewProjection.publicPath}`,
         "id"
       )
     ).toBe(`/${previewIdProjection.publicPath}`);
@@ -84,14 +84,14 @@ describe("resolveLocalizedNavigationHref", () => {
     );
     expect(
       resolveHref(
-        `/${testProgramSubject.locale}/${testProgramSubject.publicPath}`,
+        `/${testProgramSubject.appLocale}/${testProgramSubject.publicPath}`,
         "id"
       )
     ).toBe(`/${idProgramSubject.publicPath}`);
   });
 
   it("keeps material context only while the signed program verifies it", () => {
-    const href = `/${previewProjection.locale}/${previewProjection.publicPath}?ctx=merdeka~class-11-mathematics-function-composition-inverse-function`;
+    const href = `/${previewProjection.appLocale}/${previewProjection.publicPath}?ctx=merdeka~class-11-mathematics-function-composition-inverse-function`;
     publishedMocks.materialContext
       .mockReturnValueOnce(Effect.succeed({ context: {} }))
       .mockReturnValueOnce(Effect.succeed(null));
@@ -152,7 +152,7 @@ describe("resolveLocalizedNavigationHref", () => {
     for (let attempt = 0; attempt < 2; attempt += 1) {
       const result = Effect.runSyncExit(
         resolveLocalizedNavigationHref({
-          href: `/${previewProjection.locale}/${previewProjection.publicPath}`,
+          href: `/${previewProjection.appLocale}/${previewProjection.publicPath}`,
           locale: "id",
         })
       );
@@ -167,7 +167,7 @@ describe("resolveLocalizedNavigationHref", () => {
     for (let attempt = 0; attempt < 2; attempt += 1) {
       const result = Effect.runSyncExit(
         resolveLocalizedNavigationHref({
-          href: `/${testProgramSubject.locale}/${testProgramSubject.publicPath}`,
+          href: `/${testProgramSubject.appLocale}/${testProgramSubject.publicPath}`,
           locale: "id",
         })
       );

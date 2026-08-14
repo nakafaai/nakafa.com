@@ -5,6 +5,7 @@ import type {
   CurrentTryoutQuestionSelector,
   HistoryTryoutAnswerSelector,
   HistoryTryoutQuestionSelector,
+  TryoutQuestionSelector,
 } from "@/components/tryout/content/model";
 
 type CurrentSelector =
@@ -13,33 +14,27 @@ type CurrentSelector =
 type HistorySelector =
   | HistoryTryoutAnswerSelector
   | HistoryTryoutQuestionSelector;
+type RuntimeIdentity = Pick<
+  CurrentTryoutQuestionSelector,
+  "appLocale" | "snapshotId" | "snapshotReleaseId"
+>;
 
-/** Requires one current batch to share locale, snapshot, and release identity. */
-const requireCoherentCurrentSelectors = Effect.fn(
-  "NakafaContent.requireCoherentCurrentTryoutSelectors"
-)(function* (selectors: readonly CurrentSelector[]) {
-  const first = selectors[0];
-  if (!first) {
-    return yield* runtimeIntegrity("Protected content batch is empty.");
-  }
-  const coherent = selectors.every(
-    (selector) =>
-      selector.locale === first.locale &&
-      selector.snapshotId === first.snapshotId &&
-      selector.snapshotReleaseId === first.snapshotReleaseId
-  );
-  if (!coherent) {
+/** Rejects historical selectors at the public featured-question boundary. */
+export const requireCurrentTryoutQuestion = Effect.fn(
+  "NakafaContent.requireCurrentTryoutQuestion"
+)(function* (question: TryoutQuestionSelector) {
+  if ("artifactLocale" in question) {
     return yield* runtimeIntegrity(
-      "Protected content batch spans multiple snapshots."
+      "The featured try-out question is not current content."
     );
   }
-  return first;
+  return question;
 });
 
-/** Requires one historical batch to share app, snapshot, and release identity. */
-const requireCoherentHistorySelectors = Effect.fn(
-  "NakafaContent.requireCoherentHistoryTryoutSelectors"
-)(function* (selectors: readonly HistorySelector[]) {
+/** Requires one batch to share app, snapshot, and release identity. */
+const requireCoherentSelectors = Effect.fn(
+  "NakafaContent.requireCoherentTryoutSelectors"
+)(function* <Selector extends RuntimeIdentity>(selectors: readonly Selector[]) {
   const first = selectors[0];
   if (!first) {
     return yield* runtimeIntegrity("Protected content batch is empty.");
@@ -58,13 +53,13 @@ const requireCoherentHistorySelectors = Effect.fn(
   return first;
 });
 
-/** Builds one coherent request for the canonical Aksara 0.11 endpoint. */
+/** Builds one coherent request for the unversioned current endpoint. */
 export const makeCurrentTryoutRuntimeRequest = Effect.fn(
   "NakafaContent.makeCurrentTryoutRequest"
 )(function* (selectors: readonly CurrentSelector[]) {
-  const first = yield* requireCoherentCurrentSelectors(selectors);
+  const first = yield* requireCoherentSelectors(selectors);
   return {
-    locale: first.locale,
+    appLocale: first.appLocale,
     selectors: selectors.map(({ artifactHash, contentKey, delivery }) => ({
       artifactHash,
       contentKey,
@@ -75,11 +70,11 @@ export const makeCurrentTryoutRuntimeRequest = Effect.fn(
   };
 });
 
-/** Builds one exact attempt-bound request for the isolated history endpoint. */
+/** Builds one exact attempt-bound request for the history endpoint. */
 export const makeHistoryTryoutRuntimeRequest = Effect.fn(
   "NakafaContent.makeHistoryTryoutRequest"
 )(function* (attemptId: string, selectors: readonly HistorySelector[]) {
-  const first = yield* requireCoherentHistorySelectors(selectors);
+  const first = yield* requireCoherentSelectors(selectors);
   return {
     appLocale: first.appLocale,
     attemptId,

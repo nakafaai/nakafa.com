@@ -12,7 +12,7 @@ import {
   readExportConfig,
   readImportConfig,
   readProductionConfig,
-  readProductionIdentityConfig,
+  readProductionGenerationConfig,
 } from "./config";
 import { ContentRuntimeCiError, contentRuntimeCiError } from "./error";
 import { exportSignedRuntime } from "./export";
@@ -77,7 +77,7 @@ const runMode = (mode: string | undefined) => {
       });
     case "verify-generations":
       return Effect.gen(function* () {
-        const config = yield* readProductionIdentityConfig;
+        const config = yield* readProductionGenerationConfig;
         yield* clearContentRuntimeSecrets;
         yield* verifyRuntimeGenerations(
           config,

@@ -1,4 +1,5 @@
-import type { QuranSnapshotRow } from "@nakafa/aksara-contracts/quran/spec";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { QuranSnapshotRow } from "@nakafa/aksara-contracts/quran/snapshot/row";
 
 type QuranSearch = Extract<
   QuranSnapshotRow["payload"],
@@ -6,19 +7,19 @@ type QuranSearch = Extract<
 >;
 
 interface QuranRowFacts {
+  readonly appLocale?: QuranSearch["appLocale"];
   readonly firstVerse?: number;
   readonly identity: string;
   readonly kind: QuranSnapshotRow["payload"]["kind"];
-  readonly locale?: QuranSearch["locale"];
   readonly surahNumber?: number;
 }
 
 /** Derives the canonical identity for one localized Quran search row. */
 export function quranSearchIdentity(
-  locale: QuranSearch["locale"],
+  appLocale: AppLocaleCode,
   surahNumber: QuranSearch["surahNumber"]
 ) {
-  return `search:${locale}:${surahNumber}`;
+  return `search:${appLocale}:${surahNumber}`;
 }
 
 /** Derives the immutable indexed facts stored beside one signed Quran row. */
@@ -46,9 +47,9 @@ export function quranRowFacts(record: QuranSnapshotRow): QuranRowFacts {
     };
   }
   return {
-    identity: quranSearchIdentity(payload.locale, payload.surahNumber),
+    appLocale: payload.appLocale,
+    identity: quranSearchIdentity(payload.appLocale, payload.surahNumber),
     kind: payload.kind,
-    locale: payload.locale,
     surahNumber: payload.surahNumber,
   };
 }
@@ -56,10 +57,9 @@ export function quranRowFacts(record: QuranSnapshotRow): QuranRowFacts {
 /** Derives one searchable projection from an authenticated search payload. */
 export function quranSearchFacts(payload: QuranSearch) {
   return {
+    appLocale: payload.appLocale,
     assetId: payload.graph.assetId,
-    identity: quranSearchIdentity(payload.locale, payload.surahNumber),
-    locale: payload.locale,
-    publicPath: payload.route,
+    identity: quranSearchIdentity(payload.appLocale, payload.surahNumber),
     surahNumber: payload.surahNumber,
     text: payload.text,
   };

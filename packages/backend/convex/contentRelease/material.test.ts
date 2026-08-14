@@ -15,7 +15,7 @@ describe("contentRelease/material", () => {
 
     await expect(
       t.query(api.contentRelease.material.route, {
-        locale: "en",
+        appLocale: "en",
         publicPath: "subjects/mathematics/functions/concept",
       })
     ).rejects.toMatchObject({
@@ -31,7 +31,7 @@ describe("contentRelease/material", () => {
     await expect(
       t.query(api.contentRelease.material.route, {
         expectedActiveReleaseId: "another-release",
-        locale: material.locale,
+        appLocale: material.appLocale,
         publicPath: material.publicPath,
       })
     ).rejects.toMatchObject({
@@ -40,7 +40,7 @@ describe("contentRelease/material", () => {
     await expect(
       t.query(api.contentRelease.material.route, {
         expectedActiveReleaseId: MATERIAL_IDENTITY.releaseId,
-        locale: material.locale,
+        appLocale: material.appLocale,
         publicPath: material.publicPath,
       })
     ).resolves.toMatchObject({

@@ -1,4 +1,4 @@
-import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/spec";
+import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
 import { readTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -27,7 +27,7 @@ function makeTechnicalTrack() {
       lensId: "lens:tryout:technical",
     },
     kind: "track",
-    locale: "en",
+    appLocale: "en",
     order: 1,
     publicPath: "try-out/indonesia/snbt/2027",
     questionCount: 1,
@@ -80,7 +80,7 @@ describe("contentRelease/tryout/catalog", () => {
     expect(rows).toMatchObject([
       {
         family: "tryout",
-        record: { row: { kind: "country", locale: "id" } },
+        record: { row: { appLocale: "id", kind: "country" } },
         rowKind: "catalog",
       },
     ]);
@@ -130,8 +130,8 @@ describe("contentRelease/tryout/catalog", () => {
     await missing.t.mutation(async (ctx) => {
       const row = await ctx.db
         .query("tryoutCatalog")
-        .withIndex("by_snapshotId_and_locale_and_publicPath", (index) =>
-          index.eq("snapshotId", missing.snapshotId).eq("locale", "en")
+        .withIndex("by_snapshotId_and_appLocale_and_publicPath", (index) =>
+          index.eq("snapshotId", missing.snapshotId).eq("appLocale", "en")
         )
         .unique();
       if (!row) {
@@ -149,8 +149,8 @@ describe("contentRelease/tryout/catalog", () => {
     await changed.t.mutation(async (ctx) => {
       const row = await ctx.db
         .query("tryoutCatalog")
-        .withIndex("by_snapshotId_and_locale_and_publicPath", (index) =>
-          index.eq("snapshotId", changed.snapshotId).eq("locale", "en")
+        .withIndex("by_snapshotId_and_appLocale_and_publicPath", (index) =>
+          index.eq("snapshotId", changed.snapshotId).eq("appLocale", "en")
         )
         .unique();
       if (!row) {

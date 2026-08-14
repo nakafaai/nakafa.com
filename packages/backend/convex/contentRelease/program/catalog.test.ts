@@ -111,10 +111,10 @@ describe("contentRelease/program/catalog", () => {
     await t.mutation(async (ctx) => {
       const root = await ctx.db
         .query("curriculumRoutes")
-        .withIndex("by_snapshotId_and_locale_and_path", (index) =>
+        .withIndex("by_snapshotId_and_appLocale_and_path", (index) =>
           index
             .eq("snapshotId", data.snapshotId)
-            .eq("locale", "en")
+            .eq("appLocale", "en")
             .eq("path", "curriculum/technical-program-1")
         )
         .unique();

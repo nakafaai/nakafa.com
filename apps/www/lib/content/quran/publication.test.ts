@@ -78,7 +78,7 @@ describe("published Quran content", () => {
       verses: [{ number: {} }],
     });
     expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
-      locale: "id",
+      appLocale: "id",
       surahNumber: 1,
       verseLimit: 80,
     });
@@ -94,7 +94,7 @@ describe("published Quran content", () => {
       verses: [{ number: {} }],
     });
     expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
-      locale: "id",
+      appLocale: "id",
       surahNumber: 1,
     });
   });
@@ -117,7 +117,7 @@ describe("published Quran content", () => {
     runtimeQueryMock.mockResolvedValue(viewResult());
 
     await expect(getPublishedQuranView("id", 1)).resolves.toMatchObject({
-      locale: "id",
+      appLocale: "id",
       surah: { number: 1 },
       verses: [
         {
@@ -126,7 +126,7 @@ describe("published Quran content", () => {
       ],
     });
     expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
-      locale: "id",
+      appLocale: "id",
       surahNumber: 1,
     });
     expect(cacheMock).toHaveBeenCalledWith(source.snapshotId);
@@ -147,7 +147,7 @@ function catalogResult() {
 function viewResult() {
   return {
     ...source,
-    locale: "id",
+    appLocale: "id",
     nextSurah: {
       name: {
         translation: "Technical meaning 2",
@@ -179,7 +179,7 @@ function viewResult() {
 function markdownResult() {
   return {
     ...source,
-    locale: "id",
+    appLocale: "id",
     surah: {
       name: {
         translation: "Technical meaning 1",

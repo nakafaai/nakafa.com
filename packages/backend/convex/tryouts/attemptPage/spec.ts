@@ -1,4 +1,4 @@
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
 import {
   publicTryoutExamValidator,
   publicTryoutSectionValidator,
@@ -21,7 +21,7 @@ const currentSetRequestValidator = v.object({
 const retainedRequestFields = {
   attemptId: v.string(),
   kind: v.literal("retained"),
-  locale: localeValidator,
+  locale: appLocaleValidator,
   publicPath: v.string(),
 };
 

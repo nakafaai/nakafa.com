@@ -1,13 +1,10 @@
-import { decodeStoredTryoutRow } from "@nakafa/aksara-history/history/decode";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { loadTryoutSignedContent } from "@repo/backend/convex/tryouts/runtime/selectors";
 import {
-  RETAINED_RUNTIME_PLACEMENT,
-  RETAINED_RUNTIME_PLACEMENT_HASH,
-  RETAINED_RUNTIME_PLACEMENT_ROW,
-  RETAINED_RUNTIME_RELEASE_ID,
-  RETAINED_RUNTIME_SNAPSHOT_ID,
-} from "@repo/backend/test/retained-runtime";
+  TEST_STORED_TRYOUT_PLACEMENT,
+  TEST_STORED_TRYOUT_RELEASE_ID,
+  TEST_STORED_TRYOUT_SNAPSHOT_ID,
+} from "@repo/backend/test/tryout-history";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout-runtime";
 import {
   TRYOUT_SECTION_KEY,
@@ -38,10 +35,10 @@ describe("tryouts/runtime/selectors", () => {
       }
       return Effect.runPromise(
         loadTryoutSignedContent({
-          access: { answers: false, questions: true },
+          answers: false,
           attempt,
           ctx,
-          locale: "id",
+          appLocale: "id",
           sectionKey: TRYOUT_SECTION_KEY,
           snapshotId: attempt.tryoutSnapshotId,
           snapshotReleaseId: attempt.snapshotReleaseId,
@@ -75,10 +72,10 @@ describe("tryouts/runtime/selectors", () => {
       }
       return Effect.runPromise(
         loadTryoutSignedContent({
-          access: { answers: true, questions: true },
+          answers: true,
           attempt,
           ctx,
-          locale: "id",
+          appLocale: "id",
           sectionKey: TRYOUT_SECTION_KEY,
           snapshotId: attempt.tryoutSnapshotId,
           snapshotReleaseId: attempt.snapshotReleaseId,
@@ -106,24 +103,18 @@ describe("tryouts/runtime/selectors", () => {
       if (!fixture.placementId) {
         throw new Error("Expected one frozen placement fixture.");
       }
-      const decoded = await Effect.runPromise(
-        decodeStoredTryoutRow(RETAINED_RUNTIME_PLACEMENT_ROW)
-      );
-      if (decoded.rowKind !== "placement") {
-        throw new Error("Expected one retained placement fixture.");
-      }
-      const historical = decoded.record.row;
+      const historical = TEST_STORED_TRYOUT_PLACEMENT.record.row;
       await ctx.db.patch(fixture.attemptId, {
         appLocale: "id",
-        snapshotReleaseId: RETAINED_RUNTIME_RELEASE_ID,
-        tryoutSnapshotId: RETAINED_RUNTIME_SNAPSHOT_ID,
+        snapshotReleaseId: TEST_STORED_TRYOUT_RELEASE_ID,
+        tryoutSnapshotId: TEST_STORED_TRYOUT_SNAPSHOT_ID,
       });
       await ctx.db.patch(fixture.placementId, {
         answerArtifactHash: historical.answerArtifactHash,
         answerContentKey: historical.answerContentKey,
         choiceSnapshots: [...historical.choices],
-        contentHash: historical.contentHash ?? "",
-        placementRowHash: RETAINED_RUNTIME_PLACEMENT_HASH,
+        contentHash: historical.contentHash,
+        placementRowHash: TEST_STORED_TRYOUT_PLACEMENT.record.rowHash,
         questionArtifactHash: historical.questionArtifactHash,
         questionContentKey: historical.questionContentKey,
         questionOrder: historical.questionOrder,
@@ -131,21 +122,20 @@ describe("tryouts/runtime/selectors", () => {
         sectionKey: historical.sectionKey,
         sourcePath: historical.questionSourcePath,
         sourceRevision: historical.sourceRevision,
-        title: historical.title,
       });
       await ctx.db.insert("tryoutHistoryRows", {
         answerArtifactHash: historical.answerArtifactHash,
-        index: 54,
+        index: 0,
         questionArtifactHash: historical.questionArtifactHash,
-        rowHash: RETAINED_RUNTIME_PLACEMENT_HASH,
-        rowJson: JSON.stringify(RETAINED_RUNTIME_PLACEMENT_ROW),
+        rowHash: TEST_STORED_TRYOUT_PLACEMENT.record.rowHash,
+        rowJson: JSON.stringify(TEST_STORED_TRYOUT_PLACEMENT),
         rowKind: "placement",
-        snapshotId: RETAINED_RUNTIME_SNAPSHOT_ID,
+        snapshotId: TEST_STORED_TRYOUT_SNAPSHOT_ID,
       });
       await ctx.db.insert("tryoutAttemptHistory", {
-        snapshotReleaseId: RETAINED_RUNTIME_RELEASE_ID,
+        snapshotReleaseId: TEST_STORED_TRYOUT_RELEASE_ID,
         tryoutAttemptId: fixture.attemptId,
-        tryoutSnapshotId: RETAINED_RUNTIME_SNAPSHOT_ID,
+        tryoutSnapshotId: TEST_STORED_TRYOUT_SNAPSHOT_ID,
       });
       return fixture;
     });
@@ -157,13 +147,13 @@ describe("tryouts/runtime/selectors", () => {
       }
       return Effect.runPromise(
         loadTryoutSignedContent({
-          access: { answers: true, questions: true },
+          answers: true,
+          appLocale: "id",
           attempt,
           ctx,
-          locale: "id",
-          sectionKey: RETAINED_RUNTIME_PLACEMENT.sectionKey,
-          snapshotId: RETAINED_RUNTIME_SNAPSHOT_ID,
-          snapshotReleaseId: RETAINED_RUNTIME_RELEASE_ID,
+          sectionKey: TEST_STORED_TRYOUT_PLACEMENT.record.row.sectionKey,
+          snapshotId: TEST_STORED_TRYOUT_SNAPSHOT_ID,
+          snapshotReleaseId: TEST_STORED_TRYOUT_RELEASE_ID,
           totalQuestions: 1,
         })
       );
@@ -198,7 +188,7 @@ describe("tryouts/runtime/selectors", () => {
         sectionStatus: "in-progress",
         suffix: "content-signed-locale",
       });
-      await ctx.db.patch(fixture.attemptId, { locale: "en" });
+      await ctx.db.patch(fixture.attemptId, { appLocale: "en" });
       return fixture;
     });
 
@@ -210,10 +200,10 @@ describe("tryouts/runtime/selectors", () => {
         }
         return Effect.runPromise(
           loadTryoutSignedContent({
-            access: { answers: false, questions: true },
+            answers: false,
             attempt,
             ctx,
-            locale: "id",
+            appLocale: "id",
             sectionKey: TRYOUT_SECTION_KEY,
             snapshotId: attempt.tryoutSnapshotId,
             snapshotReleaseId: attempt.snapshotReleaseId,
@@ -249,10 +239,10 @@ describe("tryouts/runtime/selectors", () => {
         }
         return Effect.runPromise(
           loadTryoutSignedContent({
-            access: { answers: false, questions: true },
+            answers: false,
             attempt,
             ctx,
-            locale: "id",
+            appLocale: "id",
             sectionKey: TRYOUT_SECTION_KEY,
             snapshotId: attempt.tryoutSnapshotId,
             snapshotReleaseId: attempt.snapshotReleaseId,
@@ -286,10 +276,10 @@ describe("tryouts/runtime/selectors", () => {
 
       const exit = await Effect.runPromiseExit(
         loadTryoutSignedContent({
-          access: { answers: false, questions: true },
+          answers: false,
           attempt,
           ctx,
-          locale: "id",
+          appLocale: "id",
           sectionKey: TRYOUT_SECTION_KEY,
           snapshotId: attempt.tryoutSnapshotId,
           snapshotReleaseId: attempt.snapshotReleaseId,

@@ -52,8 +52,8 @@ describe("public content runtime batch contract", () => {
 
   it("accepts one to eight exact public requests and rejects larger batches", () => {
     const request = {
+      appLocale: "en",
       delivery: "public",
-      locale: "en",
       publicPath: "subjects/mathematics/topic/lesson",
     };
     const decode = Schema.decodeUnknownEither(

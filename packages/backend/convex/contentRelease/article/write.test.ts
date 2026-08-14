@@ -28,12 +28,12 @@ function testHead(options?: {
 }): ContentHead {
   return {
     artifactHash: `sha256:${"2".repeat(64)}`,
+    artifactLocale: "en",
     compilerConfigHash: `sha256:${"3".repeat(64)}`,
     contentKey: TEST_ARTICLE_PROJECTION.contentKey,
     delivery: options?.delivery ?? "public",
     family: "article",
     index: 0,
-    locale: "en",
     operation: options?.operation ?? "upsert",
     projectionHash: options?.projectionHash ?? `sha256:${"4".repeat(64)}`,
     projectionJson: TEST_ARTICLE_PROJECTION_JSON,
@@ -101,12 +101,13 @@ describe("contentRelease/article/write", () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await ctx.db.insert("articleCatalog", {
+        appLocale: "en",
+        assetId: TEST_ARTICLE_PROJECTION.graph.assetId,
         bucket: "111",
         category: "history",
         categoryTitle: "History",
         contentKey: TEST_ARTICLE_PROJECTION.contentKey,
         date: "2026-07-22",
-        locale: "en",
         projectionHash: `sha256:${"1".repeat(64)}`,
         publicPath: TEST_ARTICLE_PROJECTION.publicPath,
         releaseId: "release-old",
@@ -114,10 +115,10 @@ describe("contentRelease/article/write", () => {
         sequence: 0,
       });
       await ctx.db.insert("articleCategories", {
+        appLocale: "en",
         bucket: "111",
         category: "history",
         contentKey: TEST_ARTICLE_PROJECTION.contentKey,
-        locale: "en",
         projectionHash: `sha256:${"1".repeat(64)}`,
         releaseId: "release-old",
         rendererDomain: "politics",
@@ -125,10 +126,10 @@ describe("contentRelease/article/write", () => {
         title: "History",
       });
       await ctx.db.insert("articleBuckets", {
+        appLocale: "en",
         articleCount: 1,
         bucket: "111",
         categoryCount: 1,
-        locale: "en",
       });
       await write(ctx);
     });
@@ -141,7 +142,7 @@ describe("contentRelease/article/write", () => {
         deleteArticle(
           ctx,
           TEST_ARTICLE_PROJECTION.contentKey,
-          TEST_ARTICLE_PROJECTION.locale
+          TEST_ARTICLE_PROJECTION.appLocale
         )
       )
     );
@@ -150,7 +151,7 @@ describe("contentRelease/article/write", () => {
         deleteArticle(
           ctx,
           TEST_ARTICLE_PROJECTION.contentKey,
-          TEST_ARTICLE_PROJECTION.locale
+          TEST_ARTICLE_PROJECTION.appLocale
         )
       )
     );
@@ -166,10 +167,10 @@ describe("contentRelease/article/write", () => {
     const conflict = convexTest(schema, convexModules);
     await conflict.mutation(async (ctx) => {
       await ctx.db.insert("articleCategories", {
+        appLocale: "en",
         bucket: "aaa",
         category: "politics",
         contentKey: "articles/politics/first",
-        locale: "en",
         projectionHash: `sha256:${"a".repeat(64)}`,
         releaseId: "release-conflict",
         rendererDomain: "politics",

@@ -277,11 +277,11 @@ describe("learningPrograms/selection", () => {
       const root = await ctx.db
         .query("curriculumRoutes")
         .withIndex(
-          "by_snapshotId_and_locale_and_parentPath_and_order_and_path",
+          "by_snapshotId_and_appLocale_and_parentPath_and_order_and_path",
           (index) =>
             index
               .eq("snapshotId", data.snapshotId)
-              .eq("locale", "id")
+              .eq("appLocale", "id")
               .eq("parentPath", undefined)
         )
         .unique();

@@ -39,12 +39,6 @@ const NEXT_MATERIAL_IDENTITY = {
   sequence: 2,
 } satisfies TestIdentity;
 
-export const INHERITED_MATERIAL_IDENTITY = {
-  manifestHash: Sha256HashSchema.make(`sha256:${"4".repeat(64)}`),
-  releaseId: ReleaseIdSchema.make("release-inherited"),
-  sequence: 3,
-} satisfies TestIdentity;
-
 /** Inserts one projection into the immutable head and active material model. */
 export async function insertMaterialProjection(
   ctx: MutationCtx,
@@ -52,27 +46,27 @@ export async function insertMaterialProjection(
   identity: TestIdentity = MATERIAL_IDENTITY
 ) {
   const projectionJson = canonicalizeMaterialProjection(projection);
-  const sourcePath = `packages/corpus/${projection.contentKey}/${projection.locale}.mdx`;
+  const sourcePath = `packages/corpus/${projection.contentKey}/${projection.artifactLocale}.mdx`;
   await insertRuntimeVersion(ctx, "public", projection.contentKey, {
+    artifactLocale: projection.artifactLocale,
     headReleaseId: identity.releaseId,
     headSequence: identity.sequence,
-    locale: projection.locale,
     projectionJson,
     publicPath: projection.publicPath,
     rendererDomain: "mathematics",
     sourcePath,
   });
   await insertRuntimeBinding(ctx, projection.contentKey, {
+    appLocale: projection.appLocale,
     bindingReleaseId: identity.releaseId,
     bindingSequence: identity.sequence,
-    locale: projection.locale,
     publicPath: projection.publicPath,
   });
   const resolved = await runConvexProgram(
     resolvePublicProjection(
       ctx,
       projection.contentKey,
-      projection.locale,
+      projection.artifactLocale,
       identity.sequence
     )
   );
@@ -131,80 +125,9 @@ export async function advanceMaterialCatalog(
       activeReleaseId: NEXT_MATERIAL_IDENTITY.releaseId,
       activeSequence: NEXT_MATERIAL_IDENTITY.sequence,
       materialManifestHash: NEXT_MATERIAL_IDENTITY.manifestHash,
-      materialOwnerManifestHash: NEXT_MATERIAL_IDENTITY.manifestHash,
-      materialOwnerReleaseId: NEXT_MATERIAL_IDENTITY.releaseId,
-      materialOwnerSequence: NEXT_MATERIAL_IDENTITY.sequence,
       materialReleaseId: NEXT_MATERIAL_IDENTITY.releaseId,
       materialSequence: NEXT_MATERIAL_IDENTITY.sequence,
       nextSequence: 3,
-    });
-  });
-}
-
-/** Activates material rows inherited from two earlier physical generations. */
-export async function activateInheritedMaterialCatalog(
-  target: TestConvex<typeof schema>
-) {
-  await activateMaterialCatalog(target);
-  await advanceMaterialCatalog(target);
-  await target.mutation(async (ctx) => {
-    await insertMaterialProjection(
-      ctx,
-      makeMaterialProjection("en", 1),
-      NEXT_MATERIAL_IDENTITY
-    );
-    await insertZeroRelease(ctx, {
-      ...INHERITED_MATERIAL_IDENTITY,
-      base: NEXT_MATERIAL_IDENTITY,
-      ownership: { base: ["material"], result: ["material"] },
-      role: "candidate",
-      status: "completed",
-    });
-    const state = await ctx.db.query("contentState").unique();
-    if (!state) {
-      throw new Error("Expected one active content state.");
-    }
-    await ctx.db.patch("contentState", state._id, {
-      activeManifestHash: INHERITED_MATERIAL_IDENTITY.manifestHash,
-      activeReleaseId: INHERITED_MATERIAL_IDENTITY.releaseId,
-      activeSequence: INHERITED_MATERIAL_IDENTITY.sequence,
-      materialManifestHash: INHERITED_MATERIAL_IDENTITY.manifestHash,
-      materialOwnerManifestHash: INHERITED_MATERIAL_IDENTITY.manifestHash,
-      materialOwnerReleaseId: INHERITED_MATERIAL_IDENTITY.releaseId,
-      materialOwnerSequence: INHERITED_MATERIAL_IDENTITY.sequence,
-      materialReleaseId: INHERITED_MATERIAL_IDENTITY.releaseId,
-      materialSequence: INHERITED_MATERIAL_IDENTITY.sequence,
-      nextSequence: INHERITED_MATERIAL_IDENTITY.sequence + 1,
-    });
-  });
-}
-
-/** Limits active ownership to one exact material without changing its catalog. */
-export async function selectExactMaterial(
-  target: TestConvex<typeof schema>,
-  projection: MaterialLessonProjection
-) {
-  await target.mutation(async (ctx) => {
-    const release = await ctx.db.query("contentReleases").unique();
-    if (!release) {
-      throw new Error("Expected one active material release.");
-    }
-    await ctx.db.patch("contentReleases", release._id, {
-      resultFamilies: ["article"],
-    });
-    await ctx.db.insert("contentOwners", {
-      contentKey: projection.contentKey,
-      family: "material",
-      locale: projection.locale,
-      managed: true,
-      releaseId: MATERIAL_IDENTITY.releaseId,
-      sequence: MATERIAL_IDENTITY.sequence,
-    });
-    await ctx.db.insert("materialOwners", {
-      contentKey: projection.contentKey,
-      locale: projection.locale,
-      releaseId: MATERIAL_IDENTITY.releaseId,
-      sequence: MATERIAL_IDENTITY.sequence,
     });
   });
 }

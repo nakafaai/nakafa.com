@@ -1,4 +1,4 @@
-import { ContentLocaleSchema } from "@nakafa/aksara-contracts/content";
+import { ACTIVE_APP_LOCALES } from "@nakafa/aksara-contracts/locale";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
@@ -13,14 +13,16 @@ import { Effect } from "effect";
 const readAlternates = Effect.fn("contentRelease.readMaterialAlternates")(
   function* (ctx: QueryCtx, row: Doc<"materialCatalog">) {
     const counterparts = yield* Effect.forEach(
-      ContentLocaleSchema.literals,
-      (locale) =>
+      ACTIVE_APP_LOCALES,
+      (appLocale) =>
         Effect.gen(function* () {
           const alternate = yield* Effect.promise(() =>
             ctx.db
               .query("materialCatalog")
-              .withIndex("by_contentKey_and_locale", (index) =>
-                index.eq("contentKey", row.contentKey).eq("locale", locale)
+              .withIndex("by_contentKey_and_appLocale", (index) =>
+                index
+                  .eq("contentKey", row.contentKey)
+                  .eq("appLocale", appLocale)
               )
               .unique()
           );
@@ -30,7 +32,7 @@ const readAlternates = Effect.fn("contentRelease.readMaterialAlternates")(
           }
           return yield* releaseFail(
             "CONTENT_RELEASE_INTEGRITY",
-            `Material ${row.contentKey} lost locale ${locale}.`
+            `Material ${row.contentKey} lost locale ${appLocale}.`
           );
         })
     );
@@ -45,16 +47,18 @@ const readSiblings = Effect.fn("contentRelease.readMaterialSiblings")(
       ctx.db
         .query("materialCatalog")
         .withIndex(
-          "by_locale_and_materialKey_and_order_and_publicPath",
+          "by_appLocale_and_materialKey_and_order_and_publicPath",
           (index) =>
-            index.eq("locale", row.locale).eq("materialKey", row.materialKey)
+            index
+              .eq("appLocale", row.appLocale)
+              .eq("materialKey", row.materialKey)
         )
         .take(MATERIAL_GROUP_LIMIT + 1)
     );
     if (siblings.length > MATERIAL_GROUP_LIMIT) {
       return yield* releaseFail(
         "CONTENT_RELEASE_LIMIT",
-        `Material ${row.locale}/${row.materialKey} exceeds ${MATERIAL_GROUP_LIMIT} lesson sections.`
+        `Material ${row.appLocale}/${row.materialKey} exceeds ${MATERIAL_GROUP_LIMIT} lesson sections.`
       );
     }
     const verified = yield* Effect.forEach(siblings, (sibling) =>
@@ -70,7 +74,7 @@ const readSiblings = Effect.fn("contentRelease.readMaterialSiblings")(
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Material ${row.locale}/${row.materialKey} lost its coherent lesson group.`
+        `Material ${row.appLocale}/${row.materialKey} lost its coherent lesson group.`
       );
     }
     return verified;
@@ -81,11 +85,11 @@ const readSiblings = Effect.fn("contentRelease.readMaterialSiblings")(
 export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
   function* (
     ctx: QueryCtx,
-    locale: Doc<"materialCatalog">["locale"],
+    appLocale: Doc<"materialCatalog">["appLocale"],
     publicPath: string,
     expectedActiveReleaseId?: string | null
   ) {
-    const route = yield* resolveMaterialRoute(ctx, locale, publicPath);
+    const route = yield* resolveMaterialRoute(ctx, appLocale, publicPath);
     yield* requireExpectedActiveRelease(
       route.active,
       expectedActiveReleaseId,
@@ -94,7 +98,7 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
     if (!(route.managed && route.active)) {
       return yield* releaseFail(
         "CONTENT_RELEASE_MISSING",
-        `Signed material ownership is unavailable for ${locale}.`
+        `Signed material ownership is unavailable for ${appLocale}.`
       );
     }
     if (!route.material) {

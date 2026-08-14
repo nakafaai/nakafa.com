@@ -1,8 +1,9 @@
-import {
-  ContentFamilySchema,
-  ContentLocaleSchema,
-} from "@nakafa/aksara-contracts/content";
+import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { ContentDeliveryClassSchema } from "@nakafa/aksara-contracts/delivery";
+import {
+  ACTIVE_APP_LOCALE_CODES,
+  APP_LOCALE_CODES,
+} from "@nakafa/aksara-contracts/locale";
 import { ProgramNavigationLevelSchema } from "@nakafa/aksara-contracts/program/spec";
 import {
   ContentDeleteSchema,
@@ -81,7 +82,6 @@ export const releaseRoleValidator = literals("candidate", "recovery");
 /** Ordered durable phases for one crash-safe history compaction cycle. */
 export const compactionPhaseValidator = literals(
   "heads",
-  "owners",
   "bindings",
   "items",
   "batches",
@@ -103,8 +103,17 @@ export const deliveryValidator = literals(
   ...ContentDeliveryClassSchema.literals
 );
 
-/** Exact locale values owned by the shared Aksara contract. */
-export const localeValidator = literals(...ContentLocaleSchema.literals);
+/** Application locales owned by public routes and localized read models. */
+export const appLocaleValidator = literals(...APP_LOCALE_CODES);
+
+/** Application locales activated by the current signed corpus. */
+export const activeAppLocaleValidator = literals(...ACTIVE_APP_LOCALE_CODES);
+
+/** Artifact locales owned by immutable compiled-content identities. */
+export const artifactLocaleValidator = literals(...APP_LOCALE_CODES);
+
+/** Assessed languages owned by signed question placements. */
+export const deliveryLanguageValidator = literals(...APP_LOCALE_CODES);
 
 /** Exact curriculum levels owned by the shared Aksara program contract. */
 export const curriculumLevelValidator = literals(
@@ -173,7 +182,9 @@ const snapshotStateValidator = v.object({
 /** Completed publication evidence stored and returned without body replay. */
 export const publicationReceiptValidator = v.object({
   activatedHeads: v.number(),
+  activeAppLocales: v.array(appLocaleValidator),
   deletedHeads: v.number(),
+  editorialReviewDigest: v.string(),
   manifestHash: v.string(),
   projectionDigest: v.string(),
   releaseId: v.string(),
@@ -269,11 +280,11 @@ export const compactionReceiptValidator = v.object({
 /** One compact content head shared by publication and proof pages. */
 export const contentHeadValidator = v.object({
   artifactHash: v.string(),
+  artifactLocale: artifactLocaleValidator,
   compilerConfigHash: v.string(),
   contentKey: v.string(),
   delivery: deliveryValidator,
   family: contentFamilyValidator,
-  locale: localeValidator,
   projectionHash: v.string(),
   publicPath: v.optional(v.string()),
   rendererDomain: rendererDomainValidator,

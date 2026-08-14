@@ -7,11 +7,9 @@ import { cronJobs } from "convex/server";
 
 const crons = cronJobs();
 const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_MINUTES = 10;
-const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
 const EMAIL_RETENTION_SWEEP_INTERVAL_HOURS = 1;
 const NINA_CAPABILITY_TRACE_RETENTION_INTERVAL_HOURS = 24;
-const TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES = 5;
 
 /**
  * Reconciles prepared deletions even when an at-most-once recovery action
@@ -72,14 +70,6 @@ crons.interval(
   {}
 );
 
-/** Compacts unreachable content release history in persisted bounded pages. */
-crons.interval(
-  "compact content release history",
-  { minutes: CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES },
-  internal.contentRelease.compact.run,
-  {}
-);
-
 /**
  * Applies the Resend component's bounded finalized and abandoned email
  * retention windows instead of retaining delivery records indefinitely.
@@ -108,16 +98,6 @@ crons.interval(
   "sweep Nina capability traces",
   { hours: NINA_CAPABILITY_TRACE_RETENTION_INTERVAL_HOURS },
   internal.chats.traces.mutations.sweepExpired,
-  {}
-);
-
-/**
- * Reconciles try-out expiry if a scheduled attempt or section job is missed.
- */
-crons.interval(
-  "sweep try-out expiry",
-  { minutes: TRYOUT_EXPIRY_SWEEP_INTERVAL_MINUTES },
-  internal.tryouts.mutations.expiry.sweep,
   {}
 );
 

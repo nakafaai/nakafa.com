@@ -2,8 +2,8 @@ import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
   QuranChunkRowSchema,
   QuranSearchRowSchema,
-  QuranSurahRowSchema,
-} from "@nakafa/aksara-contracts/quran/spec";
+} from "@nakafa/aksara-contracts/quran/snapshot/row";
+import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
 import {
   getSurahName,
   readNakafaQuranReference,
@@ -145,27 +145,27 @@ function readRuntimeFixture(
 
 /** Builds one signed reference response around a bounded chunk. */
 function referenceResult(args: Record<string, unknown>) {
-  const locale = args.locale === "id" ? "id" : "en";
+  const appLocale = args.appLocale === "id" ? "id" : "en";
   return {
     ...source,
     chunkJson: [encodeTestQuranRow(source.snapshotId, chunkRow())],
     fromVerse: 1,
-    searchJson: encodeTestQuranRow(source.snapshotId, searchRow(locale)),
+    searchJson: encodeTestQuranRow(source.snapshotId, searchRow(appLocale)),
     surahJson: encodeTestQuranRow(source.snapshotId, surahRow()),
     toVerse: 1,
   };
 }
 
-/** Builds one locale-specific signed markdown response. */
+/** Builds one app-locale signed markdown response. */
 function markdownResult(args: Record<string, unknown>) {
-  const locale = args.locale === "id" ? "id" : "en";
+  const appLocale = args.appLocale === "id" ? "id" : "en";
   const verse = chunkRow().verses[0];
   if (!verse) {
     throw new Error("Expected one technical Quran verse.");
   }
   return {
     ...source,
-    locale,
+    appLocale,
     surah: {
       name: {
         translation: "Pembukaan",
@@ -180,7 +180,9 @@ function markdownResult(args: Record<string, unknown>) {
       {
         arabic: verse.text.arabic,
         number: { inSurah: verse.number.inSurah },
-        translation: verse.translation[locale],
+        translation: verse.translations.find(
+          (translation) => translation.appLocale === appLocale
+        )?.value,
       },
     ],
   };
@@ -220,31 +222,41 @@ function chunkRow() {
           sajda: null,
         },
         number: { inQuran: 1, inSurah: 1 },
-        tafsir: {
-          id: { footnotes: null, text: "Tafsir lengkap." },
-        },
+        tafsir: [
+          {
+            appLocale: "id",
+            footnotes: null,
+            text: "Tafsir lengkap.",
+          },
+        ],
         text: { arabic: "بِسْمِ اللّٰهِ" },
-        translation: {
-          en: { footnotes: "", text: "In the name of Allah." },
-          id: { footnotes: "", text: "Dengan nama Allah." },
-        },
+        translations: [
+          {
+            appLocale: "en",
+            value: { footnotes: "", text: "In the name of Allah." },
+          },
+          {
+            appLocale: "id",
+            value: { footnotes: "", text: "Dengan nama Allah." },
+          },
+        ],
       },
     ],
   });
 }
 
-/** Builds one locale-specific signed Quran search row. */
-function searchRow(locale: "en" | "id") {
+/** Builds one app-locale signed Quran search row. */
+function searchRow(appLocale: "en" | "id") {
   return Schema.decodeUnknownSync(QuranSearchRowSchema)({
+    appLocale,
     graph: {
-      alignmentId: `alignment:quran:surah:1:${locale}`,
-      assetId: `asset:quran:surah:1:${locale}`,
+      alignmentId: `alignment:quran:surah:1:${appLocale}`,
+      assetId: `asset:quran:surah:1:${appLocale}`,
       conceptId: "concept:quran:surah:1",
       learningObjectId: "lo:quran-surah:1",
       lensId: "lens:quran",
     },
     kind: "quran-search",
-    locale,
     route: "quran/1",
     surahNumber: 1,
     text: "Al-Fatihah",

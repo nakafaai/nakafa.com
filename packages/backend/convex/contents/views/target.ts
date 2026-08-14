@@ -81,6 +81,7 @@ export const decodeMaterialDomain = Effect.fn(
 /** Projects one authenticated article into durable engagement facts. */
 function toArticleTarget(
   projection: ArticleProjection,
+  locale: IncomingContentViewTargetInput["locale"],
   sourcePath: string
 ): ContentViewTarget {
   return {
@@ -89,7 +90,7 @@ function toArticleTarget(
     content_id: projection.graph.assetId,
     description: projection.metadata.description,
     kind: "article",
-    locale: projection.locale,
+    locale,
     route: projection.publicPath,
     section: "articles",
     sourcePath,
@@ -99,7 +100,11 @@ function toArticleTarget(
 
 /** Projects one authenticated material into durable engagement facts. */
 const toMaterialTarget = Effect.fn("contents.views.toMaterialTarget")(
-  function* (projection: MaterialLessonProjection, sourcePath: string) {
+  function* (
+    projection: MaterialLessonProjection,
+    locale: IncomingContentViewTargetInput["locale"],
+    sourcePath: string
+  ) {
     const materialDomain = yield* decodeMaterialDomain(projection.materialKey);
     return {
       ...projection.graph,
@@ -107,7 +112,7 @@ const toMaterialTarget = Effect.fn("contents.views.toMaterialTarget")(
       content_id: projection.graph.assetId,
       description: projection.metadata.description,
       kind: "curriculum-lesson",
-      locale: projection.locale,
+      locale,
       materialDomain,
       materialKey: projection.materialKey,
       parentPath: projection.parentPath,
@@ -143,7 +148,7 @@ const validateIncomingMaterialTarget = Effect.fn(
   ) {
     return null;
   }
-  return yield* toMaterialTarget(projection, row.sourcePath);
+  return yield* toMaterialTarget(projection, input.locale, row.sourcePath);
 });
 
 /** Validates one new article view against its exact signed public route. */
@@ -172,8 +177,8 @@ const validateIncomingArticleTarget = Effect.fn(
     try: () =>
       ctx.db
         .query("articleCatalog")
-        .withIndex("by_contentKey_and_locale", (query) =>
-          query.eq("contentKey", contentKey).eq("locale", input.locale)
+        .withIndex("by_contentKey_and_appLocale", (query) =>
+          query.eq("contentKey", contentKey).eq("appLocale", input.locale)
         )
         .unique(),
     catch: toContentViewIoError,
@@ -192,7 +197,7 @@ const validateIncomingArticleTarget = Effect.fn(
   ) {
     return null;
   }
-  return toArticleTarget(projection, resolved.sourcePath);
+  return toArticleTarget(projection, input.locale, resolved.sourcePath);
 });
 
 /** Resolves one material by its durable signed asset identity. */
@@ -210,8 +215,8 @@ const hydrateMaterialTarget = Effect.fn("contents.views.hydrateMaterialTarget")(
       try: () =>
         ctx.db
           .query("materialCatalog")
-          .withIndex("by_locale_and_assetId", (query) =>
-            query.eq("locale", input.locale).eq("assetId", input.contentId)
+          .withIndex("by_appLocale_and_assetId", (query) =>
+            query.eq("appLocale", input.locale).eq("assetId", input.contentId)
           )
           .unique(),
       catch: toContentViewIoError,
@@ -227,7 +232,11 @@ const hydrateMaterialTarget = Effect.fn("contents.views.hydrateMaterialTarget")(
     if (projection.graph.assetId !== input.contentId) {
       return null;
     }
-    return yield* toMaterialTarget(projection, resolved.sourcePath);
+    return yield* toMaterialTarget(
+      projection,
+      input.locale,
+      resolved.sourcePath
+    );
   }
 );
 
@@ -246,8 +255,8 @@ const hydrateArticleTarget = Effect.fn("contents.views.hydrateArticleTarget")(
       try: () =>
         ctx.db
           .query("articleCatalog")
-          .withIndex("by_locale_and_assetId", (query) =>
-            query.eq("locale", input.locale).eq("assetId", input.contentId)
+          .withIndex("by_appLocale_and_assetId", (query) =>
+            query.eq("appLocale", input.locale).eq("assetId", input.contentId)
           )
           .unique(),
       catch: toContentViewIoError,
@@ -263,7 +272,7 @@ const hydrateArticleTarget = Effect.fn("contents.views.hydrateArticleTarget")(
     if (projection.graph.assetId !== input.contentId) {
       return null;
     }
-    return toArticleTarget(projection, resolved.sourcePath);
+    return toArticleTarget(projection, input.locale, resolved.sourcePath);
   }
 );
 

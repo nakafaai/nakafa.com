@@ -1,15 +1,22 @@
 import "server-only";
 
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { Effect } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { readTryoutMetadata } from "@/components/tryout/catalog/server";
 import { resolveTryoutExamSocialImage } from "@/lib/tryout/social-images";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
 
-type TryoutMetadataQueryInput = Parameters<typeof readTryoutMetadata>[0];
+type TryoutMetadataKind = Parameters<typeof readTryoutMetadata>[0]["kind"];
+
+interface TryoutMetadataQueryInput {
+  readonly locale: Locale;
+  readonly publicPath: string;
+}
 
 type TryoutMetadataInput =
   | (TryoutMetadataQueryInput & {
@@ -18,7 +25,7 @@ type TryoutMetadataInput =
       readonly kind: "exam";
     })
   | (TryoutMetadataQueryInput & {
-      readonly kind: Exclude<TryoutMetadataQueryInput["kind"], "exam">;
+      readonly kind: Exclude<TryoutMetadataKind, "exam">;
     });
 
 interface RetainedTryoutMetadataSource {
@@ -41,9 +48,10 @@ export function createRetainedTryoutMetadata(
 export async function generateTryoutRouteMetadata(
   input: TryoutMetadataInput
 ): Promise<Metadata> {
+  const appLocale = AppLocaleSchema.make(input.locale);
   const queryInput = {
+    appLocale,
     kind: input.kind,
-    locale: input.locale,
     publicPath: input.publicPath,
   };
   const [published, tTryouts] = await Promise.all([
@@ -64,7 +72,7 @@ export async function generateTryoutRouteMetadata(
           resolveTryoutExamSocialImage({
             countryKey: input.countryKey,
             examKey: input.examKey,
-            locale: input.locale,
+            appLocale,
             publicPath: source.publicPath,
           })
         )
@@ -74,7 +82,7 @@ export async function generateTryoutRouteMetadata(
     title: { absolute: source.title },
     description,
     alternates: createResolvedRouteAlternates(
-      { locale: input.locale, publicPath: source.publicPath },
+      { appLocale, publicPath: source.publicPath },
       source.alternates
     ),
     ...getSocialMetadata({

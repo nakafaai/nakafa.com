@@ -56,10 +56,10 @@ describe("contentRelease/program/path", () => {
     await target.mutation(async (ctx) => {
       const route = await ctx.db
         .query("curriculumRoutes")
-        .withIndex("by_snapshotId_and_locale_and_path", (query) =>
+        .withIndex("by_snapshotId_and_appLocale_and_path", (query) =>
           query
             .eq("snapshotId", data.snapshotId)
-            .eq("locale", "en")
+            .eq("appLocale", "en")
             .eq("path", "curriculum/technical-program-1")
         )
         .unique();

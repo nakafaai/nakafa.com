@@ -1,5 +1,9 @@
 import "server-only";
 
+import {
+  type AppLocale,
+  AppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
 import { api } from "@repo/backend/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
 import type { FunctionArgs } from "convex/server";
@@ -9,9 +13,15 @@ import { loadCurrentTryoutQuestion } from "@/components/tryout/content/signed";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 
-type TryoutMetadataArgs = FunctionArgs<
+type TryoutMetadataKind = FunctionArgs<
   typeof api.tryouts.queries.catalog.getMetadata
->;
+>["kind"];
+
+interface TryoutMetadataArgs {
+  readonly appLocale: AppLocale;
+  readonly kind: TryoutMetadataKind;
+  readonly publicPath: string;
+}
 
 /** Expected failure while reading one authenticated try-out page. */
 class TryoutCatalogReadError extends Schema.TaggedError<TryoutCatalogReadError>()(
@@ -26,7 +36,7 @@ export async function readFeaturedTryout(locale: Locale) {
 
   const featured = await fetchQuery(
     api.tryouts.queries.catalog.getFeaturedQuestion,
-    { locale }
+    { appLocale: AppLocaleSchema.make(locale) }
   );
 
   return await Effect.runPromise(
@@ -54,17 +64,18 @@ export async function readTryoutHubPage(locale: Locale) {
   "use cache";
   applyContentRuntimeCache();
 
+  const appLocale = AppLocaleSchema.make(locale);
   return await Effect.runPromise(
     Effect.tryPromise({
       catch: (cause) => new TryoutCatalogReadError({ cause }),
       try: () =>
         fetchQuery(api.tryouts.queries.catalog.getHubPage, {
-          locale,
+          appLocale,
         }),
     }).pipe(
       Effect.flatMap((page) =>
         decodeSourceRevision(page.sourceRevision, {
-          locale,
+          appLocale,
           publicPath: "try-out",
         }).pipe(Effect.map((sourceRevision) => ({ ...page, sourceRevision })))
       )
@@ -80,12 +91,13 @@ export async function readTryoutCountryPage(
   "use cache";
   applyContentRuntimeCache();
 
+  const appLocale = AppLocaleSchema.make(locale);
   return await Effect.runPromise(
     Effect.tryPromise({
       catch: (cause) => new TryoutCatalogReadError({ cause }),
       try: () =>
         fetchQuery(api.tryouts.queries.catalog.getCountryPage, {
-          locale,
+          appLocale,
           publicPath,
         }),
     }).pipe(
@@ -94,7 +106,7 @@ export async function readTryoutCountryPage(
           return Effect.succeed(null);
         }
         return decodeSourceRevision(page.sourceRevision, {
-          locale,
+          appLocale,
           publicPath,
         }).pipe(Effect.map((sourceRevision) => ({ ...page, sourceRevision })));
       })
@@ -108,7 +120,7 @@ export async function readTryoutExamPage(locale: Locale, publicPath: string) {
   applyContentRuntimeCache();
 
   return await fetchQuery(api.tryouts.queries.catalog.getExamPage, {
-    locale,
+    appLocale: AppLocaleSchema.make(locale),
     publicPath,
   });
 }
@@ -119,7 +131,7 @@ export async function readTryoutTrackPage(locale: Locale, publicPath: string) {
   applyContentRuntimeCache();
 
   return await fetchQuery(api.tryouts.queries.catalog.getTrackPage, {
-    locale,
+    appLocale: AppLocaleSchema.make(locale),
     publicPath,
   });
 }
@@ -130,7 +142,7 @@ export async function readTryoutSetPage(locale: Locale, publicPath: string) {
   applyContentRuntimeCache();
 
   return await fetchQuery(api.tryouts.queries.catalog.getSetPage, {
-    locale,
+    appLocale: AppLocaleSchema.make(locale),
     publicPath,
   });
 }
@@ -164,7 +176,7 @@ export async function readTryoutSectionPage(
   applyContentRuntimeCache();
 
   return await fetchQuery(api.tryouts.queries.catalog.getSectionPage, {
-    locale,
+    appLocale: AppLocaleSchema.make(locale),
     publicPath,
   });
 }

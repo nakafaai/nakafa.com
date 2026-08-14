@@ -1,11 +1,11 @@
-import type { ContentLocale } from "@nakafa/aksara-contracts/content";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { readTryoutAttemptHistory } from "@repo/backend/convex/tryouts/history/reference";
 import { projectStoredTryoutContent } from "@repo/backend/convex/tryouts/history/selectors";
 import type {
-  TryoutCurrentAnswerSelector,
-  TryoutCurrentQuestionSelector,
+  TryoutAnswerSelector,
+  TryoutQuestionSelector,
   TryoutSectionContentAccess,
 } from "@repo/backend/convex/tryouts/runtime/content";
 import { Effect, Schema } from "effect";
@@ -27,10 +27,10 @@ export class TryoutSelectorReadError extends Schema.TaggedError<TryoutSelectorRe
 export const loadTryoutSignedContent = Effect.fn(
   "tryouts.selectors.loadSignedContent"
 )(function* (input: {
-  readonly access: { readonly answers: boolean; readonly questions: boolean };
+  readonly answers: boolean;
   readonly attempt: TryoutAttempt;
   readonly ctx: QueryCtx;
-  readonly locale: ContentLocale;
+  readonly appLocale: AppLocaleCode;
   readonly sectionKey: string;
   readonly snapshotReleaseId: string;
   readonly snapshotId: string;
@@ -57,10 +57,10 @@ export const loadTryoutSignedContent = Effect.fn(
       .take(input.totalQuestions + 1)
   );
   return yield* projectTryoutSignedContent({
-    access: input.access,
+    answers: input.answers,
     attempt: input.attempt,
     ctx: input.ctx,
-    locale: input.locale,
+    appLocale: input.appLocale,
     placements,
     totalQuestions: input.totalQuestions,
   });
@@ -70,14 +70,14 @@ export const loadTryoutSignedContent = Effect.fn(
 export const projectTryoutSignedContent = Effect.fn(
   "tryouts.selectors.projectSignedContent"
 )(function* (input: {
-  readonly access: { readonly answers: boolean; readonly questions: boolean };
+  readonly answers: boolean;
   readonly attempt: TryoutAttempt;
   readonly ctx: QueryCtx;
-  readonly locale: ContentLocale;
+  readonly appLocale: AppLocaleCode;
   readonly placements: readonly TryoutPlacement[];
   readonly totalQuestions: number;
 }) {
-  if (input.attempt.locale !== input.locale) {
+  if (input.attempt.appLocale !== input.appLocale) {
     return yield* selectorIntegrity(
       "Signed try-out attempt lost its locale or snapshot identity."
     );
@@ -87,17 +87,11 @@ export const projectTryoutSignedContent = Effect.fn(
       "Signed try-out section lost one or more frozen placements."
     );
   }
-
   const history = yield* readTryoutAttemptHistory(input.ctx, input.attempt);
   if (history) {
-    if (input.attempt.appLocale !== input.locale) {
-      return yield* selectorIntegrity(
-        "Retained try-out attempt has not completed its app-locale migration."
-      );
-    }
     return yield* projectStoredTryoutContent({
-      access: input.access,
-      appLocale: input.attempt.appLocale,
+      answers: input.answers,
+      appLocale: input.appLocale,
       attempt: input.attempt,
       ctx: input.ctx,
       placements: input.placements,
@@ -105,11 +99,11 @@ export const projectTryoutSignedContent = Effect.fn(
   }
 
   const content: Extract<TryoutSectionContentAccess, { runtime: "current" }> = {
-    answers: input.access.answers
+    answers: input.answers
       ? yield* Effect.forEach(input.placements, (placement) =>
           makeAnswerSelector(
             placement,
-            input.locale,
+            input.appLocale,
             input.attempt.tryoutSnapshotId,
             input.attempt.snapshotReleaseId
           )
@@ -119,7 +113,7 @@ export const projectTryoutSignedContent = Effect.fn(
     questions: yield* Effect.forEach(input.placements, (placement) =>
       makeQuestionSelector(
         placement,
-        input.locale,
+        input.appLocale,
         input.attempt.tryoutSnapshotId,
         input.attempt.snapshotReleaseId
       )
@@ -132,7 +126,7 @@ export const projectTryoutSignedContent = Effect.fn(
 /** Builds one authenticated question selector from a frozen placement. */
 function makeQuestionSelector(
   placement: TryoutPlacement,
-  locale: ContentLocale,
+  appLocale: AppLocaleCode,
   snapshotId: string,
   snapshotReleaseId: string
 ) {
@@ -146,12 +140,12 @@ function makeQuestionSelector(
     return selectorIntegrity("Signed try-out question selector is incomplete.");
   }
 
-  const selector: TryoutCurrentQuestionSelector = {
+  const selector: TryoutQuestionSelector = {
+    appLocale,
     artifactHash: placement.questionArtifactHash,
     contentHash: placement.contentHash,
     contentKey: placement.questionContentKey,
     delivery: "authenticated",
-    locale,
     questionOrder: placement.questionOrder,
     snapshotReleaseId,
     snapshotId,
@@ -164,7 +158,7 @@ function makeQuestionSelector(
 /** Builds one entitled answer selector from a frozen placement. */
 function makeAnswerSelector(
   placement: TryoutPlacement,
-  locale: ContentLocale,
+  appLocale: AppLocaleCode,
   snapshotId: string,
   snapshotReleaseId: string
 ) {
@@ -172,12 +166,12 @@ function makeAnswerSelector(
     return selectorIntegrity("Signed try-out answer selector is incomplete.");
   }
 
-  const selector: TryoutCurrentAnswerSelector = {
+  const selector: TryoutAnswerSelector = {
+    appLocale,
     artifactHash: placement.answerArtifactHash,
     contentHash: placement.contentHash,
     contentKey: placement.answerContentKey,
     delivery: "entitled",
-    locale,
     questionOrder: placement.questionOrder,
     snapshotReleaseId,
     snapshotId,

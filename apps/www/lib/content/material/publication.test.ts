@@ -36,8 +36,8 @@ describe("material publication", () => {
     renderMock.mockRejectedValueOnce(
       new ContentRuntimeMissingError({
         request: {
+          appLocale: previewProjection.appLocale,
           delivery: "public",
-          locale: "en",
           publicPath: previewProjection.publicPath,
         },
       })
@@ -58,8 +58,8 @@ describe("material publication", () => {
     renderMock.mockRejectedValueOnce(
       new ContentRuntimeMissingError({
         request: {
+          appLocale: previewProjection.appLocale,
           delivery: "public",
-          locale: "en",
           publicPath: previewProjection.publicPath,
         },
       })

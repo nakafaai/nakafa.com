@@ -1,4 +1,7 @@
-import { rendererDomainValidator } from "@repo/backend/convex/contentRelease/spec";
+import {
+  appLocaleValidator,
+  rendererDomainValidator,
+} from "@repo/backend/convex/contentRelease/spec";
 import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { tryoutAttemptAccessSourceKindValidator } from "@repo/backend/convex/tryouts/access/source";
@@ -59,8 +62,9 @@ const tables = {
     examKey: tryoutRouteKeyValidator,
     trackKey: tryoutRouteKeyValidator,
     setKey: tryoutRouteKeyValidator,
-    appLocale: v.optional(localeValidator),
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
+    /** Temporary storage-only source for the bounded appLocale migration. */
+    locale: v.optional(localeValidator),
     scaleVersionId: v.optional(v.id("irtScaleVersions")),
     accessCampaignId: v.optional(v.id("tryoutAccessCampaigns")),
     accessGrantId: v.optional(v.id("tryoutAccessGrants")),
@@ -116,8 +120,9 @@ const tables = {
     examKey: tryoutRouteKeyValidator,
     trackKey: tryoutRouteKeyValidator,
     setKey: tryoutRouteKeyValidator,
-    appLocale: v.optional(localeValidator),
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
+    /** Temporary storage-only source for the bounded appLocale migration. */
+    locale: v.optional(localeValidator),
     attemptNumber: v.number(),
     publishedScore: v.union(v.number(), v.null()),
     status: tryoutStatusValidator,
@@ -125,6 +130,14 @@ const tables = {
     updatedAt: v.number(),
   })
     .index("by_userId_and_setIdentity", ["userId", "setIdentity"])
+    .index("by_userId_countryKey_examKey_trackKey_appLocale_setKey", [
+      "userId",
+      "countryKey",
+      "examKey",
+      "trackKey",
+      "appLocale",
+      "setKey",
+    ])
     .index("by_userId_countryKey_examKey_trackKey_locale_setKey", [
       "userId",
       "countryKey",
@@ -138,7 +151,7 @@ const tables = {
       "countryKey",
       "examKey",
       "trackKey",
-      "locale",
+      "appLocale",
       "publishedScore",
       "setKey",
     ])
@@ -147,7 +160,7 @@ const tables = {
       "countryKey",
       "examKey",
       "trackKey",
-      "locale",
+      "appLocale",
       "statusRank",
       "setKey",
     ]),
@@ -191,9 +204,10 @@ const tables = {
     tryoutAttemptId: v.id("tryoutAttempts"),
     questionOrder: v.number(),
     sourcePath: v.string(),
-    title: v.string(),
     choiceSnapshots: v.array(tryoutChoiceSnapshotValidator),
     sourceRevision: v.string(),
+    /** Temporary storage-only source for the proved retained-field drain. */
+    title: v.optional(v.string()),
     contentHash: v.string(),
   })
     .index("by_tryoutAttemptId_and_questionOrder", [

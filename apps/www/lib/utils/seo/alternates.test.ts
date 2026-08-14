@@ -86,10 +86,10 @@ describe("createLocalizedAlternates", () => {
   it("builds hreflang values from already-resolved route counterparts", () => {
     expect(
       createResolvedRouteAlternates(
-        { locale: "id", publicPath: "kurikulum/merdeka" },
+        { appLocale: "id", publicPath: "kurikulum/merdeka" },
         [
-          { locale: "en", publicPath: "curriculum/merdeka" },
-          { locale: "id", publicPath: "kurikulum/merdeka" },
+          { appLocale: "en", publicPath: "curriculum/merdeka" },
+          { appLocale: "id", publicPath: "kurikulum/merdeka" },
         ]
       )
     ).toMatchObject({
@@ -104,8 +104,13 @@ describe("createLocalizedAlternates", () => {
   it("keeps x-default on an existing resolved locale route", () => {
     expect(
       createResolvedRouteAlternates(
-        { locale: "id", publicPath: "materi/matematika/fungsi/konsep" },
-        [{ locale: "id", publicPath: "materi/matematika/fungsi/konsep" }]
+        { appLocale: "id", publicPath: "materi/matematika/fungsi/konsep" },
+        [
+          {
+            appLocale: "id",
+            publicPath: "materi/matematika/fungsi/konsep",
+          },
+        ]
       )
     ).toMatchObject({
       languages: {
