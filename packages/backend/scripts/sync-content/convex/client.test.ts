@@ -3,7 +3,7 @@ import { CountTablePageSchema } from "@repo/backend/scripts/sync-content/contrac
 import { AuthorSyncResultSchema } from "@repo/backend/scripts/sync-content/contract/schemas";
 import type { ConvexConfig } from "@repo/backend/scripts/sync-content/contract/types";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
-import { Cause, ConfigProvider, Effect, Exit, Schema } from "effect";
+import { Cause, ConfigProvider, Effect, Exit } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const config: ConvexConfig = {
@@ -22,8 +22,6 @@ type Adapter =
 type BulkSyncAuthors =
   typeof internal.contentSync.mutations.authors.bulkSyncAuthors;
 type CountTablePage = typeof internal.contentSync.queries.counts.countTablePage;
-type PopulateAudioQueue =
-  typeof internal.contents.actions.queue.populateAudioQueue;
 
 interface CapturedRequest {
   init: RequestInit | undefined;
@@ -196,7 +194,7 @@ describe("sync-content Convex adapter", () => {
     expect(result).toEqual({ created: 1, existing: 0 });
   });
 
-  it("posts generated query and action references to their endpoints", async () => {
+  it("posts generated query references to their endpoint", async () => {
     const adapter = await loadAdapter();
     const queryRequests = stubFetch(
       createJsonResponse({
@@ -227,25 +225,6 @@ describe("sync-content Convex adapter", () => {
       isDone: true,
       pageSize: 1,
     });
-
-    const actionRequests = stubFetch(
-      createJsonResponse({ status: "success", value: null })
-    );
-    const actionArgs: FunctionArgs<PopulateAudioQueue> = {};
-    const actionResult: FunctionReturnType<PopulateAudioQueue> =
-      await Effect.runPromise(
-        adapter.callConvexAction(
-          config,
-          internal.contents.actions.queue.populateAudioQueue,
-          actionArgs,
-          Schema.Null
-        )
-      );
-
-    expect(String(getOnlyRequest(actionRequests).input)).toBe(
-      "https://example.convex.cloud/api/action"
-    );
-    expect(actionResult).toBeNull();
   });
 
   it("reports Convex envelope errors with generated function context", async () => {

@@ -3,6 +3,7 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import { ensurePublicationWritable } from "@repo/backend/convex/contentRelease/cutover/state";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import type {
   localeValidator,
@@ -35,6 +36,7 @@ export const loadState = Effect.fn("contentRelease.loadState")(function* (
 export const ensureState = Effect.fn("contentRelease.ensureState")(function* (
   ctx: MutationCtx
 ) {
+  yield* ensurePublicationWritable(ctx);
   const existing = yield* loadState(ctx);
   if (existing) {
     return existing;

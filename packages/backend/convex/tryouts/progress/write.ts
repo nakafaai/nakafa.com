@@ -1,5 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { ensureTryoutLifecycleWritable } from "@repo/backend/convex/contentRelease/cutover/tryouts";
 import type { ConvexTaggedError } from "@repo/backend/convex/lib/effect";
 import {
   getUnknownErrorMessage,
@@ -42,6 +43,15 @@ export const writeTryoutSetProgress = Effect.fn(
     updatedAt: number;
   }
 ) {
+  yield* ensureTryoutLifecycleWritable(ctx).pipe(
+    Effect.mapError(
+      (error) =>
+        new TryoutProgressError({
+          code: error.code,
+          message: error.message,
+        })
+    )
+  );
   yield* validateProgressScore(args.status, args.publishedScore);
   const identity = readProgressIdentity(args.attempt);
   const current = yield* loadProgress(ctx, args.attempt, identity);

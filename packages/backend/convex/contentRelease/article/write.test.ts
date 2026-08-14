@@ -78,6 +78,7 @@ describe("contentRelease/article/write", () => {
     }));
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({
+      assetId: TEST_ARTICLE_PROJECTION.graph.assetId,
       categoryTitle: "Public Affairs",
       date: "2026-07-24",
       sequence: 2,

@@ -15,12 +15,15 @@ import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 const EXPECTED_RUNTIME_SCHEMA_FINGERPRINT =
-  "cd5f66d090909b4fcb276711c6a52b54df8875ebb303d4c4d659c5b80b0e5609";
+  "36341e82e40b4e8ad80a68fc8ec194facfbf76e1422db64bbd9fc1234cd521f9";
 
 describe("content runtime tables", () => {
   it("derives the complete copy set and applies the active pointer last", () => {
     const releaseTables = Object.keys(contentReleaseSchema).filter(
-      (table) => table !== "contentState"
+      (table) =>
+        table !== "contentState" &&
+        table !== "contentCutoverActivity" &&
+        table !== "contentCutoverState"
     );
     const expected = [
       ...releaseTables,
@@ -30,6 +33,8 @@ describe("content runtime tables", () => {
     ];
 
     expect(CONTENT_RUNTIME_TABLES).toEqual(expected);
+    expect(CONTENT_RUNTIME_TABLES).not.toContain("contentCutoverState");
+    expect(CONTENT_RUNTIME_TABLES).not.toContain("contentCutoverActivity");
     expect(new Set(CONTENT_RUNTIME_TABLES).size).toBe(expected.length);
     expect(Effect.runSync(validateContentRuntimeTableDefinitions)).toHaveLength(
       expected.length

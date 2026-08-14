@@ -8,6 +8,8 @@ import { v } from "convex/values";
 const tables = {
   /** Active public articles ordered independently from the search index. */
   articleCatalog: defineTable({
+    /** Additive Phase 1 field tightened after exact authenticated backfill. */
+    assetId: v.optional(v.string()),
     bucket: v.string(),
     category: v.string(),
     categoryTitle: v.string(),
@@ -20,7 +22,11 @@ const tables = {
     rendererDomain: rendererDomainValidator,
     sequence: v.number(),
   })
+    .index("by_assetId", ["assetId"])
     .index("by_contentKey_and_locale", ["contentKey", "locale"])
+    .index("by_locale_and_assetId", ["locale", "assetId"])
+    .index("by_locale_and_contentKey", ["locale", "contentKey"])
+    .index("by_locale_and_publicPath", ["locale", "publicPath"])
     .index("by_locale_and_date_and_contentKey", [
       "locale",
       "date",

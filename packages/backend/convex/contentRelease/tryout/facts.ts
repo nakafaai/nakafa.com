@@ -28,6 +28,7 @@ function catalogSetIdentity(row: TryoutCatalogRow) {
 export function tryoutCatalogFacts(record: TryoutCatalogRecord) {
   const { row } = record;
   return {
+    assetId: row.graph.assetId,
     identity: tryoutCatalogIdentity(row),
     kind: row.kind,
     locale: row.locale,

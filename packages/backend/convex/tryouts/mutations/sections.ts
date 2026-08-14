@@ -1,10 +1,12 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import { ensureTryoutLifecycleWritable } from "@repo/backend/convex/contentRelease/cutover/tryouts";
 import { mutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
 import {
   TryoutRuntimeError,
+  toTryoutRuntimeError,
   tryRuntimePromise,
 } from "@repo/backend/convex/tryouts/runtime/error";
 import {
@@ -53,6 +55,9 @@ export const start = mutation({
   handler: (ctx, args) =>
     runConvexProgram(
       Effect.gen(function* () {
+        yield* ensureTryoutLifecycleWritable(ctx).pipe(
+          Effect.mapError(toTryoutRuntimeError)
+        );
         const { appUser } = yield* tryRuntimePromise(() => requireAuth(ctx));
         const attempt = yield* requireOwnedAttempt(ctx, {
           attemptId: args.attemptId,
@@ -81,6 +86,9 @@ export const complete = mutation({
   handler: (ctx, args) =>
     runConvexProgram(
       Effect.gen(function* () {
+        yield* ensureTryoutLifecycleWritable(ctx).pipe(
+          Effect.mapError(toTryoutRuntimeError)
+        );
         const { appUser } = yield* tryRuntimePromise(() => requireAuth(ctx));
         const attempt = yield* requireOwnedAttempt(ctx, {
           attemptId: args.attemptId,

@@ -18,9 +18,6 @@ const graphIdentityTargets = [
   "learningPopularityViewerSignals",
   "learningPopularitySignals",
   "learningPopularityCounters",
-  "audioContentSources",
-  "audioGenerationQueue",
-  "contentAudios",
 ] as const;
 
 export const graphIdentityTargetValidator = literals(...graphIdentityTargets);

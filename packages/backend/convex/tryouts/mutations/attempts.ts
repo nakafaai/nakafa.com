@@ -1,3 +1,4 @@
+import { ensureTryoutLifecycleWritable } from "@repo/backend/convex/contentRelease/cutover/tryouts";
 import { mutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
@@ -22,6 +23,9 @@ export const startAttempt = mutation({
   handler: (ctx, args) =>
     runConvexProgram(
       Effect.gen(function* () {
+        yield* ensureTryoutLifecycleWritable(ctx).pipe(
+          Effect.mapError(toTryoutStartError)
+        );
         const { appUser } = yield* Effect.tryPromise({
           catch: toTryoutStartError,
           try: () => requireAuth(ctx),
@@ -48,6 +52,9 @@ export const saveResponse = mutation({
   handler: (ctx, args) =>
     runConvexProgram(
       Effect.gen(function* () {
+        yield* ensureTryoutLifecycleWritable(ctx).pipe(
+          Effect.mapError(toTryoutResponseError)
+        );
         const { appUser } = yield* Effect.tryPromise({
           catch: toTryoutResponseError,
           try: () => requireAuth(ctx),

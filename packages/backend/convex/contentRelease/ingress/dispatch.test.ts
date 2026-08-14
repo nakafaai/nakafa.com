@@ -276,6 +276,40 @@ describe("content publication Node dispatch", () => {
     expect(result.status).toBe(400);
   });
 
+  it("rejects every decoded operation after the cutover guard is armed", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) =>
+      ctx.db.insert("contentCutoverState", {
+        auditedActiveReleaseId: "active-release",
+        auditedActiveSequence: 1,
+        auditedAt: 1,
+        auditedLegacyWriteVersion: 0,
+        auditedNextSequence: 2,
+        currentDeleted: 0,
+        currentTableDeleted: 0,
+        currentTableIndex: 0,
+        currentTablePreserved: 0,
+        inventoryVersion: "production-2026-08-13",
+        key: "phase1",
+        legacyDeleted: 0,
+        legacyTableDeleted: 0,
+        legacyTableIndex: 16,
+        phase: "freeze-armed",
+        updatedAt: 1,
+      })
+    );
+
+    await expect(
+      sendPublication(t, { operation: "current" })
+    ).resolves.toMatchObject({
+      failure: {
+        code: "CONTENT_RELEASE_STATE",
+        operation: "current",
+      },
+      ok: false,
+    });
+  });
+
   it("sanitizes a non-stale domain rejection", async () => {
     const t = convexTest(schema, convexModules);
     const response = await sendPublication(t, {

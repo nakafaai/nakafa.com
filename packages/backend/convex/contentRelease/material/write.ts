@@ -13,6 +13,7 @@ import {
 } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { adjustMaterialBucket } from "@repo/backend/convex/contentRelease/material/bucket";
+import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
 import { Effect } from "effect";
 
 type PublicProjection = NonNullable<
@@ -78,6 +79,7 @@ export const writeMaterial = Effect.fn("contentRelease.writeMaterial")(
         `Material entry ${head.contentKey}/${head.locale} has an invalid projection hash.`
       );
     }
+    const topic = yield* deriveMaterialTopicReference(projection);
     const row = {
       assetId: projection.graph.assetId,
       bucket,
@@ -94,6 +96,7 @@ export const writeMaterial = Effect.fn("contentRelease.writeMaterial")(
       rendererDomain: head.rendererDomain,
       sequence: head.sequence,
       sourcePath: head.sourcePath,
+      topicAssetId: topic.graph.assetId,
     };
     yield* ensureDocumentSize(
       "Active material catalog entry",

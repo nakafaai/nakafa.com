@@ -68,5 +68,8 @@ describe("contentRelease/tryout/facts", () => {
     const country = makeTryoutCatalogRow().record;
 
     expect(tryoutCatalogFacts(country).setIdentity).toBeUndefined();
+    expect(tryoutCatalogFacts(country).assetId).toBe(
+      "asset:en:tryout:technical:country"
+    );
   });
 });

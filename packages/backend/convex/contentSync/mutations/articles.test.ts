@@ -78,7 +78,7 @@ function getGraphIdentity(route: string) {
 }
 
 describe("contentSync/mutations/articles", () => {
-  it("syncs article rows, references, authors, search, and audio metadata", async () => {
+  it("syncs article rows, references, authors, search, and routes", async () => {
     const t = convexTest(schema, convexModules);
 
     await t.mutation(async (ctx) => {
@@ -163,14 +163,7 @@ describe("contentSync/mutations/articles", () => {
           q.eq("content_id", ARTICLE_CONTENT_ID)
         )
         .unique();
-      const audioSource = await ctx.db
-        .query("audioContentSources")
-        .withIndex("by_content_id", (q) =>
-          q.eq("content_id", ARTICLE_CONTENT_ID)
-        )
-        .unique();
-
-      return { article, audioSource, authorLinks, references, route, search };
+      return { article, authorLinks, references, route, search };
     });
 
     expect(created).toEqual({
@@ -213,12 +206,6 @@ describe("contentSync/mutations/articles", () => {
       official: true,
       route: ARTICLE_SLUG,
       title: "New Article Title",
-    });
-    expect(snapshot.audioSource).toMatchObject({
-      contentHash: "updated-article-hash",
-      content_id: ARTICLE_CONTENT_ID,
-      contentType: "article",
-      route: ARTICLE_SLUG,
     });
   });
 
@@ -394,14 +381,7 @@ describe("contentSync/mutations/articles", () => {
           q.eq("content_id", ARTICLE_CONTENT_ID)
         )
         .unique();
-      const audioSource = await ctx.db
-        .query("audioContentSources")
-        .withIndex("by_content_id", (q) =>
-          q.eq("content_id", ARTICLE_CONTENT_ID)
-        )
-        .unique();
-
-      if (!(search && route && audioSource)) {
+      if (!(search && route)) {
         throw new Error("Expected synced article projections.");
       }
 
@@ -410,10 +390,6 @@ describe("contentSync/mutations/articles", () => {
         content_id: detachedContentId,
       });
       await ctx.db.patch("contentRoutes", route._id, {
-        assetId: detachedContentId,
-        content_id: detachedContentId,
-      });
-      await ctx.db.patch("audioContentSources", audioSource._id, {
         assetId: detachedContentId,
         content_id: detachedContentId,
       });
@@ -450,20 +426,12 @@ describe("contentSync/mutations/articles", () => {
           q.eq("content_id", detachedContentId)
         )
         .unique();
-      const audioSource = await ctx.db
-        .query("audioContentSources")
-        .withIndex("by_content_id", (q) =>
-          q.eq("content_id", detachedContentId)
-        )
-        .unique();
-
-      return { article, audioSource, authorLinks, references, route, search };
+      return { article, authorLinks, references, route, search };
     });
 
     expect(result).toEqual({ deleted: 1 });
     expect(snapshot).toEqual({
       article: null,
-      audioSource: null,
       authorLinks: [],
       references: [],
       route: null,

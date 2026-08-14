@@ -17,7 +17,7 @@ function preloadAiSheetOnIntent() {
   Effect.runFork(preloadAiSheet());
 }
 
-/** Renders the sticky Nina entry button when no audio toolbar is available. */
+/** Renders the sticky Nina entry button for the current page. */
 export function SheetEntry() {
   const contextTitle = usePageTitle();
   const open = useAi((state) => state.open);

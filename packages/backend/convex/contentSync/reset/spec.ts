@@ -12,8 +12,6 @@ export const batchDeleteResultValidator = v.object({
 export const resettableTableNames = [
   "articleContents",
   "articleReferences",
-  "audioContentSources",
-  "audioGenerationQueue",
   "authors",
   "contentAnalyticsPartitions",
   "contentAuthors",

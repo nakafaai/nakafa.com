@@ -103,9 +103,6 @@ export const reset = Effect.fn("sync.reset")(function* (
   log(`  Quran Verses:          ${counts.quranVerses}`);
   log(`  Content Authors:       ${counts.contentAuthors}`);
   log(`  Article References:    ${counts.articleReferences}`);
-  log(`  Audio Content Sources: ${counts.audioContentSources}`);
-  log(`  Content Audios:        ${counts.contentAudios}`);
-  log(`  Audio Queue:           ${counts.audioGenerationQueue}`);
   log(`  Tryout Access Campaigns (preserved): ${counts.tryoutAccessCampaigns}`);
   log(`  Tryout Access Targets (preserved): ${counts.tryoutAccessTargets}`);
   log(`  Tryout Access Links (preserved): ${counts.tryoutAccessLinks}`);
@@ -145,10 +142,7 @@ export const reset = Effect.fn("sync.reset")(function* (
     counts.contentRouteCounts +
     counts.contentRoutePages +
     counts.quranSurahs +
-    counts.quranVerses +
-    counts.audioGenerationQueue +
-    counts.audioContentSources +
-    counts.contentAudios;
+    counts.quranVerses;
   const totalPreserved =
     counts.learningProgramSources +
     counts.learningPrograms +

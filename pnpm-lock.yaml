@@ -482,18 +482,12 @@ importers:
       '@ai-sdk/devtools':
         specifier: ^1.0.12
         version: 1.0.12
-      '@ai-sdk/elevenlabs':
-        specifier: ^3.0.26
-        version: 3.0.26(zod@4.4.3)
       '@ai-sdk/gateway':
         specifier: ^4.0.46
         version: 4.0.46(zod@4.4.3)
       '@ai-sdk/google':
         specifier: ^4.0.39
         version: 4.0.39(zod@4.4.3)
-      '@ai-sdk/react':
-        specifier: ^4.0.61
-        version: 4.0.61(react@19.2.8)(zod@4.4.3)
       '@effect/platform':
         specifier: 0.97.1
         version: 0.97.1(effect@3.22.1)
@@ -515,9 +509,6 @@ importers:
       ai:
         specifier: ^7.0.58
         version: 7.0.58(zod@4.4.3)
-      convex:
-        specifier: ^1.43.0
-        version: 1.43.0(react@19.2.8)
       dedent:
         specifier: ^1.7.2
         version: 1.7.2
@@ -543,12 +534,6 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
-      '@types/react':
-        specifier: 19.2.18
-        version: 19.2.18
-      '@types/react-dom':
-        specifier: ^19.2.4
-        version: 19.2.4(@types/react@19.2.18)
       '@vitest/coverage-istanbul':
         specifier: ^4.1.10
         version: 4.1.10(vitest@4.1.10)
@@ -631,6 +616,9 @@ importers:
       '@nakafa/aksara-contracts':
         specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz
         version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz(effect@3.22.1)
+      '@nakafa/aksara-history':
+        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.12.0/nakafa-aksara-contracts-0.12.0.tgz
+        version: '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.12.0/nakafa-aksara-contracts-0.12.0.tgz(effect@3.22.1)'
       '@polar-sh/sdk':
         specifier: ^0.49.0
         version: 0.49.0
@@ -673,9 +661,6 @@ importers:
       hono:
         specifier: ^4.13.1
         version: 4.13.1
-      jsonrepair:
-        specifier: ^3.15.0
-        version: 3.15.0
       nanoid:
         specifier: ^6.0.1
         version: 6.0.1
@@ -1171,12 +1156,6 @@ packages:
     resolution: {integrity: sha512-E14W4PNZH9qI331cv4t4qeLjAxHjyUorvMarSGxETpCSvCWtVH8lPbBmpSmzORY5ZzRJpR24XhhmbqeRymth+Q==}
     engines: {node: '>=22'}
     hasBin: true
-
-  '@ai-sdk/elevenlabs@3.0.26':
-    resolution: {integrity: sha512-fNmc5LEzSblEzwfpRfqaQ1N854UzcR9FpmzyNSA64D1lxioy8JjBC9wKxgIMfjO5tbNQtJGPdUNo+SgXkTRBPw==}
-    engines: {node: '>=22'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4.1.8
 
   '@ai-sdk/gateway@4.0.46':
     resolution: {integrity: sha512-LIAO6kAG8fpXQb9L0iwPk1FIbXftvqnyC56v5NEAzeWTeL8fUsy/Hx86VPBTWEDFdwbVprjWifJOAqS6AOj3mA==}
@@ -2625,6 +2604,13 @@ packages:
   '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz':
     resolution: {integrity: sha512-Pl3HWCk5EQ8n1HkzYIz/o1wOwt8qYw0NyLe31FxgC1EiYwQ6SAKwWlWaag3cl71p1Ic+Gwu76GmLUnhLg4XjJg==, tarball: https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz}
     version: 0.11.0
+    engines: {node: '>=24.0.0 <25.0.0'}
+    peerDependencies:
+      effect: 3.22.1
+
+  '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.12.0/nakafa-aksara-contracts-0.12.0.tgz':
+    resolution: {integrity: sha512-HPsqzmfBAGQp+6cHOL1IkLMtJd6pPpRhlI6zeOlmK2Cj/nr1SnZxOkogxgPsbqEhgqUkUi609l0JzD3W5RZnKw==, tarball: https://github.com/nakafaai/aksara/releases/download/contracts-v0.12.0/nakafa-aksara-contracts-0.12.0.tgz}
+    version: 0.12.0
     engines: {node: '>=24.0.0 <25.0.0'}
     peerDependencies:
       effect: 3.22.1
@@ -5569,10 +5555,6 @@ packages:
   jsonfile@4.0.0:
     resolution: {integrity: sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==}
 
-  jsonrepair@3.15.0:
-    resolution: {integrity: sha512-wy8OTjwsJwQRnQJkKnMJJ9vcytRdBPAgIF/Hy6+s1dAj42BHMKiyL8JzEieIl3JY7idt8eyHwBWTO8mh/+mtwA==}
-    hasBin: true
-
   katex@0.16.47:
     resolution: {integrity: sha512-Eeo8Ys1doU1z+x8AZsPpQu+p/QcZBI5PeOo7QGQdy2x2m0MU/hYagBbGOmXwr5KVbEfVuWv9LpnQWeehogurjg==}
     hasBin: true
@@ -7829,12 +7811,6 @@ snapshots:
       '@hono/node-server': 2.0.11(hono@4.13.1)
       hono: 4.13.1
 
-  '@ai-sdk/elevenlabs@3.0.26(zod@4.4.3)':
-    dependencies:
-      '@ai-sdk/provider': 4.0.7
-      '@ai-sdk/provider-utils': 5.0.25(zod@4.4.3)
-      zod: 4.4.3
-
   '@ai-sdk/gateway@4.0.46(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 4.0.7
@@ -9265,6 +9241,10 @@ snapshots:
     optional: true
 
   '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz(effect@3.22.1)':
+    dependencies:
+      effect: 3.22.1
+
+  '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.12.0/nakafa-aksara-contracts-0.12.0.tgz(effect@3.22.1)':
     dependencies:
       effect: 3.22.1
 
@@ -12176,8 +12156,6 @@ snapshots:
   jsonfile@4.0.0:
     optionalDependencies:
       graceful-fs: 4.2.11
-
-  jsonrepair@3.15.0: {}
 
   katex@0.16.47:
     dependencies:

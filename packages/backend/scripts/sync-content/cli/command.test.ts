@@ -92,9 +92,6 @@ const loadCli = async (options: CliTestOptions = {}) => {
   vi.doMock("@repo/backend/scripts/sync-content/cleanup/analytics", () => ({
     resetAnalytics: recordSync("resetAnalytics"),
   }));
-  vi.doMock("@repo/backend/scripts/sync-content/cleanup/audio", () => ({
-    resetAudio: recordSync("resetAudio"),
-  }));
   vi.doMock("@repo/backend/scripts/sync-content/content/curriculum", () => ({
     syncCurriculumLessons: recordSync("syncCurriculumLessons"),
     syncCurriculumTopics: recordSync("syncCurriculumTopics"),

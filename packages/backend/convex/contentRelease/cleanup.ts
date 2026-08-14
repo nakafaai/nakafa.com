@@ -3,6 +3,7 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { validateAbortedRelease } from "@repo/backend/convex/contentRelease/abort";
+import { ensurePublicationWritable } from "@repo/backend/convex/contentRelease/cutover/state";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
   loadRelease,
@@ -64,6 +65,7 @@ const cleanupProgram = Effect.fn("contentRelease.cleanup")(function* (
   ctx: MutationCtx,
   releaseId: string
 ) {
+  yield* ensurePublicationWritable(ctx);
   const release = yield* loadRelease(ctx, releaseId);
   yield* ensureEligible(ctx, release);
   const counters = cleanupCounters(release);

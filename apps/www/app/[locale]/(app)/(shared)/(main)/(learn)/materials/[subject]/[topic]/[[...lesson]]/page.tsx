@@ -150,16 +150,7 @@ async function MaterialRouteContent({
         parentTitle={page.route.topicTitle}
         route={route}
         sourceUrl={page.sourceUrl}
-        toolbar={
-          <DeferredAiSheetOpen
-            audio={{
-              contentType: "material",
-              locale,
-              slug: contentKey,
-            }}
-            contextTitle={page.metadata.title}
-          />
-        }
+        toolbar={<DeferredAiSheetOpen contextTitle={page.metadata.title} />}
       >
         {page.children}
       </MaterialLessonPage>

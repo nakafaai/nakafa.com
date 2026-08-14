@@ -1,6 +1,5 @@
 import {
   deleteBatchFromTable,
-  deleteContentAudioRows,
   deleteContentSearchRows,
 } from "@repo/backend/convex/contentSync/reset/impl";
 import {
@@ -79,23 +78,6 @@ export const deleteQuranVersesBatch = createBatchDeleteMutation("quranVerses");
 export const deleteQuranSurahsBatch = createBatchDeleteMutation("quranSurahs");
 export const deleteArticleReferencesBatch =
   createBatchDeleteMutation("articleReferences");
-export const deleteAudioGenerationQueueBatch = createBatchDeleteMutation(
-  "audioGenerationQueue"
-);
-export const deleteAudioContentSourcesBatch = createBatchDeleteMutation(
-  "audioContentSources"
-);
-
-/**
- * Deletes generated audio rows with their Convex storage blobs.
- *
- * @see https://docs.convex.dev/file-storage/delete-files
- */
-export const deleteContentAudiosBatch = internalMutation({
-  args: {},
-  returns: batchDeleteResultValidator,
-  handler: (ctx) => runConvexProgram(deleteContentAudioRows(ctx)),
-});
 export const deleteCurriculumLessonsBatch =
   createBatchDeleteMutation("curriculumLessons");
 export const deleteCurriculumTopicsBatch =

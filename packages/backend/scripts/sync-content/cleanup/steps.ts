@@ -120,21 +120,6 @@ export const RESET_STEPS: ResetStep[] = [
     resultLabel: "article references",
   },
   {
-    label: "Deleting audio generation queue...",
-    mutation: reset.deleteAudioGenerationQueueBatch,
-    resultLabel: "audio generation queue entries",
-  },
-  {
-    label: "Deleting generated content audio...",
-    mutation: reset.deleteContentAudiosBatch,
-    resultLabel: "generated content audio rows",
-  },
-  {
-    label: "Deleting audio content sources...",
-    mutation: reset.deleteAudioContentSourcesBatch,
-    resultLabel: "audio content sources",
-  },
-  {
     label: "Deleting curriculum lessons...",
     mutation: reset.deleteCurriculumLessonsBatch,
     resultLabel: "curriculum lessons",
