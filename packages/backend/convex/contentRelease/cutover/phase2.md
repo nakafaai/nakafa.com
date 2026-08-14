@@ -25,7 +25,7 @@ is satisfied.
    and try-out proof receipts, and verify the audited publication identity is
    unchanged before it persists one structured `readerCutoverReceipt` on the
    existing quiescent checkpoint. The cold path is limited to four queries,
-   48 documents, 512 KiB read, one patch, and zero schedules. An exact retry
+   44 documents, 512 KiB read, one patch, and zero schedules. An exact retry
    reads only the existing receipt. Phase 1 has no writer for this field, so an
    earlier drain is impossible.
 5. Invoke `contentRelease/cutover/legacy:drainLegacy` until it reaches phase

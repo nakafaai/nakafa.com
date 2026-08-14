@@ -1,6 +1,10 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { writeArticle } from "@repo/backend/convex/contentRelease/article/write";
-import { acceptReaderCutover } from "@repo/backend/convex/contentRelease/cutover/readers";
+import {
+  acceptReaderCutover,
+  readerAcceptanceBudget,
+  verifyReaderAcceptanceBudget,
+} from "@repo/backend/convex/contentRelease/cutover/readers";
 import type { ReferenceProofCounts } from "@repo/backend/convex/contentRelease/cutover/referenceProofs";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -19,6 +23,7 @@ import {
   seedRetainedTryoutHistory,
 } from "@repo/backend/test/tryout-history";
 import { convexTest } from "convex-test";
+import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 const SHA256_PREFIX = /^sha256:/;
@@ -185,33 +190,141 @@ describe("contentRelease/cutover/readers", () => {
     });
   });
 
-  it("fails before writing when the cold acceptance query budget drifts", async () => {
+  it("accepts cold reads after an unrelated transaction read", async () => {
     const t = convexTest(schema, convexModules);
     const plan = await t.mutation(async (ctx) => {
       const fixture = await prepareReaderCutover(ctx);
       return fixture.plan;
     });
 
-    await expect(
-      t.mutation(async (ctx) => {
-        await ctx.db.query("contentCutoverState").first();
-        return runConvexProgram(
-          provideHistoryTestTrust(
-            acceptReaderCutover(ctx, plan, TEST_REFERENCE_PROOF_COUNTS)
-          )
-        );
-      })
-    ).rejects.toMatchObject({
-      data: {
-        code: "CONTENT_RELEASE_LIMIT",
-        message: expect.stringContaining("5 queries"),
-      },
+    const receipt = await t.mutation(async (ctx) => {
+      await ctx.db.query("contentCutoverState").first();
+      return runConvexProgram(
+        provideHistoryTestTrust(
+          acceptReaderCutover(ctx, plan, TEST_REFERENCE_PROOF_COUNTS)
+        )
+      );
     });
+    const state = await t.query((ctx) =>
+      ctx.db.query("contentCutoverState").unique()
+    );
+
+    expect(receipt.history).toMatchObject({ attempts: 2, markers: 2 });
+    expect(state?.readerCutoverReceipt).toEqual(receipt);
+  });
+
+  it("grounds the exact cold-path transaction ceilings", () => {
+    expect(readerAcceptanceBudget).toEqual({
+      bytesRead: 524_288,
+      databaseQueries: 4,
+      documentsRead: 44,
+      functionsScheduled: 0,
+    });
+  });
+
+  it("accepts the rehearsal delta from an arbitrary baseline", async () => {
+    const before = acceptanceMetrics({
+      bytesRead: 5000,
+      databaseQueries: 108,
+      documentsRead: 6,
+      functionsScheduled: 2,
+    });
+
     await expect(
-      t.query((ctx) => ctx.db.query("contentCutoverState").unique())
-    ).resolves.not.toHaveProperty("readerCutoverReceipt");
+      Effect.runPromise(
+        verifyReaderAcceptanceBudget(
+          before,
+          acceptanceMetrics({
+            bytesRead: 66_752,
+            databaseQueries: 112,
+            documentsRead: 50,
+            functionsScheduled: 2,
+          })
+        )
+      )
+    ).resolves.toBeUndefined();
+  });
+
+  it.each([
+    {
+      name: "byte ceiling",
+      before: acceptanceMetrics(),
+      after: acceptanceMetrics({
+        bytesRead: readerAcceptanceBudget.bytesRead + 1,
+      }),
+    },
+    {
+      name: "query ceiling",
+      before: acceptanceMetrics(),
+      after: acceptanceMetrics({
+        databaseQueries: readerAcceptanceBudget.databaseQueries + 1,
+      }),
+    },
+    {
+      name: "document ceiling",
+      before: acceptanceMetrics(),
+      after: acceptanceMetrics({
+        documentsRead: readerAcceptanceBudget.documentsRead + 1,
+      }),
+    },
+    {
+      name: "schedule ceiling",
+      before: acceptanceMetrics(),
+      after: acceptanceMetrics({
+        functionsScheduled: readerAcceptanceBudget.functionsScheduled + 1,
+      }),
+    },
+    {
+      name: "negative byte delta",
+      before: acceptanceMetrics({ bytesRead: 1 }),
+      after: acceptanceMetrics(),
+    },
+    {
+      name: "negative query delta",
+      before: acceptanceMetrics({ databaseQueries: 1 }),
+      after: acceptanceMetrics(),
+    },
+    {
+      name: "negative document delta",
+      before: acceptanceMetrics({ documentsRead: 1 }),
+      after: acceptanceMetrics(),
+    },
+    {
+      name: "negative schedule delta",
+      before: acceptanceMetrics({ functionsScheduled: 1 }),
+      after: acceptanceMetrics(),
+    },
+  ])("fails closed beyond the $name", async ({ after, before }) => {
+    await expect(
+      Effect.runPromise(
+        verifyReaderAcceptanceBudget(before, after).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({
+      _tag: "ReleaseError",
+      code: "CONTENT_RELEASE_LIMIT",
+    });
   });
 });
+
+function acceptanceMetrics(
+  override: Partial<{
+    readonly bytesRead: number;
+    readonly databaseQueries: number;
+    readonly documentsRead: number;
+    readonly functionsScheduled: number;
+  }> = {}
+) {
+  return {
+    bytesRead: metric(override.bytesRead ?? 0),
+    databaseQueries: metric(override.databaseQueries ?? 0),
+    documentsRead: metric(override.documentsRead ?? 0),
+    functionsScheduled: metric(override.functionsScheduled ?? 0),
+  };
+}
+
+function metric(used: number) {
+  return { remaining: 0, used };
+}
 
 async function prepareReaderCutover(ctx: MutationCtx) {
   const fixture = await seedRetainedTryoutHistory(ctx);
