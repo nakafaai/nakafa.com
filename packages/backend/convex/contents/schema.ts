@@ -24,6 +24,10 @@ const learningPopularityWindowValidator = literals(
 const learningPopularityScopeValidator = literals(
   ...learningPopularityScopeValues
 );
+const legacyContentSearchDocumentValidator = v.object({
+  ...contentSearchDocumentValidator.fields,
+  markdown_url: v.string(),
+});
 const tables = {
   /**
    * Durable graph-backed learning engagement history.
@@ -242,11 +246,8 @@ const tables = {
       "content_id",
     ]),
 
-  /**
-   * Graph-backed content search read model for Nina and MCP.
-   * Rebuilt from synced source tables; public results expose graph asset IDs.
-   */
-  contentSearch: defineTable(contentSearchDocumentValidator)
+  /** Retained legacy search rows with their exact pre-drain contract. */
+  contentSearch: defineTable(legacyContentSearchDocumentValidator)
     .index("by_content_id", ["content_id"])
     .index("by_locale_and_route", ["locale", "route"])
     .index("by_locale_and_sourcePath", ["locale", "sourcePath"])

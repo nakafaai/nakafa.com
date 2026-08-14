@@ -2,8 +2,11 @@ import { contentTypeValidator } from "@repo/backend/convex/lib/validators/conten
 import { defineTable } from "convex/server";
 import { type Infer, v } from "convex/values";
 
-/** Legacy content identity retained only until the bounded production drain. */
-export const contentAuthorContentIdValidator = v.string();
+/** Polymorphic content IDs supported by the retained author-link join table. */
+export const contentAuthorContentIdValidator = v.union(
+  v.id("articleContents"),
+  v.id("curriculumLessons")
+);
 export type ContentAuthorContentId = Infer<
   typeof contentAuthorContentIdValidator
 >;
@@ -37,7 +40,7 @@ const tables = {
    *   ).collect();
    */
   contentAuthors: defineTable({
-    /** Opaque legacy document ID retained only for the bounded drain. */
+    /** Document ID from articleContents or curriculumLessons. */
     contentId: contentAuthorContentIdValidator,
     /** Discriminator: which table contentId refers to */
     contentType: contentTypeValidator,
