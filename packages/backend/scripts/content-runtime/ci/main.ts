@@ -12,14 +12,14 @@ import {
   readExportConfig,
   readImportConfig,
   readProductionConfig,
-  readProductionIdentityConfig,
+  readProductionSelectionConfig,
 } from "./config";
 import { ContentRuntimeCiError, contentRuntimeCiError } from "./error";
 import { exportSignedRuntime } from "./export";
 import {
   formatGenerationEnvironment,
   readProductionGenerations,
-  verifyRuntimeGenerations,
+  verifyRuntimeSelection,
 } from "./generation";
 import { importSignedRuntime } from "./import";
 
@@ -77,9 +77,9 @@ const runMode = (mode: string | undefined) => {
       });
     case "verify-generations":
       return Effect.gen(function* () {
-        const config = yield* readProductionIdentityConfig;
+        const config = yield* readProductionSelectionConfig;
         yield* clearContentRuntimeSecrets;
-        yield* verifyRuntimeGenerations(
+        yield* verifyRuntimeSelection(
           config,
           yield* readProductionGenerations(config)
         );

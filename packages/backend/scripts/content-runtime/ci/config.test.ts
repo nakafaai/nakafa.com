@@ -2,6 +2,7 @@ import {
   CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT,
   clearContentRuntimeSecrets,
   readExportConfig,
+  readProductionSelectionConfig,
   validateProductionDeployKey,
 } from "@repo/backend/scripts/content-runtime/ci/config";
 import { CONTENT_RUNTIME_CACHE_VERSION } from "@repo/backend/scripts/content-runtime/tables";
@@ -74,6 +75,28 @@ describe("content runtime CI config", () => {
       contentStateHash,
     });
   });
+
+  it("reads the public runtime selection independently", async () => {
+    const runtimeSelectionHash = "2".repeat(64);
+    stubProductionConfig();
+    stubRuntimeSelection(runtimeSelectionHash);
+
+    await expect(
+      Effect.runPromise(readProductionSelectionConfig)
+    ).resolves.toMatchObject({ runtimeSelectionHash });
+  });
+
+  it("rejects an invalid public runtime selection identity", async () => {
+    stubProductionConfig();
+    stubRuntimeSelection("invalid-selection");
+
+    await expect(
+      Effect.runPromise(readProductionSelectionConfig.pipe(Effect.flip))
+    ).resolves.toMatchObject({
+      _tag: "ContentRuntimeCiError",
+      message: "AGENT_DOCS_RUNTIME_SELECTION_HASH must be a SHA-256 hash.",
+    });
+  });
 });
 
 function stubProductionConfig() {
@@ -89,4 +112,8 @@ function stubCacheIdentity(contentStateHash: string) {
   vi.stubEnv("AGENT_DOCS_CONTENT_CACHE_VERSION", CONTENT_RUNTIME_CACHE_VERSION);
   vi.stubEnv("AGENT_DOCS_CONTENT_STATE_HASH", contentStateHash);
   vi.stubEnv("AGENT_DOCS_RUNTIME_SCHEMA_FINGERPRINT", "3".repeat(64));
+}
+
+function stubRuntimeSelection(runtimeSelectionHash: string) {
+  vi.stubEnv("AGENT_DOCS_RUNTIME_SELECTION_HASH", runtimeSelectionHash);
 }

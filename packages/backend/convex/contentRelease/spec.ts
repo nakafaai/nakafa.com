@@ -80,15 +80,16 @@ export const releaseStatusValidator = literals(
 export const releaseRoleValidator = literals("candidate", "recovery");
 
 /** Ordered durable phases for one crash-safe history compaction cycle. */
-export const compactionPhaseValidator = literals(
+export const COMPACTION_PHASES = [
   "heads",
   "bindings",
   "items",
   "batches",
   "artifacts",
   "snapshots",
-  "releases"
-);
+  "releases",
+] as const;
+export const compactionPhaseValidator = literals(...COMPACTION_PHASES);
 
 /** Implemented content families owned by the shared release contract. */
 export const contentFamilyValidator = literals(...ContentFamilySchema.literals);
