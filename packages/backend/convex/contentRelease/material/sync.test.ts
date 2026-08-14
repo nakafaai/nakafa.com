@@ -1,4 +1,3 @@
-import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { syncMaterials } from "@repo/backend/convex/contentRelease/material/sync";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -12,20 +11,15 @@ import {
   testProjectionJson,
 } from "@repo/backend/test/content-material";
 import {
-  testPublicationScope,
-  testTextHash,
-} from "@repo/backend/test/content-release";
-
-import {
-  insertTestState,
-  insertZeroRelease,
-  type TestIdentity,
-} from "@repo/backend/test/content-state";
-import {
   insertCompletedRelease,
   insertReleaseItem,
   selectActiveRelease,
-} from "@repo/backend/test/content-sync";
+} from "@repo/backend/test/content-read-model";
+import { testTextHash } from "@repo/backend/test/content-release";
+import {
+  insertTestState,
+  type TestIdentity,
+} from "@repo/backend/test/content-state";
 import {
   insertRuntimeBinding,
   insertRuntimeKey,
@@ -61,7 +55,7 @@ async function insertMaterial(
   }
 ) {
   const contentKey = `test:head-${index}`;
-  const publicPath = `test/head-${index}`;
+  const publicPath = `subjects/test/head-${index}`;
   const projectionJson = testProjectionJson({
     contentKey,
     index,
@@ -73,8 +67,8 @@ async function insertMaterial(
   }
   const key = await ctx.db
     .query("contentKeys")
-    .withIndex("by_contentKey_and_locale", (query) =>
-      query.eq("contentKey", contentKey).eq("locale", "en")
+    .withIndex("by_contentKey_and_artifactLocale", (query) =>
+      query.eq("contentKey", contentKey).eq("artifactLocale", "en")
     )
     .unique();
   if (!key) {
@@ -113,70 +107,6 @@ describe("contentRelease/material/sync", () => {
     ).resolves.toMatchObject({ contentKey: "test:head-0" });
   });
 
-  it("backfills exact owners for a material model created before the owner projection", async () => {
-    const t = convexTest(schema, convexModules);
-    const contentKey = ContentKeySchema.make("test:head-0");
-    await t.mutation(async (ctx) => {
-      await insertZeroRelease(ctx, {
-        ...BASE,
-        ownership: { base: [], result: ["article"] },
-        role: "candidate",
-        scope: testPublicationScope({
-          content: [{ contentKey, family: "material", locale: "en" }],
-          families: ["article"],
-        }),
-        status: "completed",
-      });
-      await insertTestState(ctx, { active: BASE, nextSequence: 2 });
-      await insertMaterial(ctx, BASE, 0, { changed: false });
-      await ctx.db.insert("contentOwners", {
-        contentKey,
-        family: "material",
-        locale: "en",
-        managed: true,
-        releaseId: BASE.releaseId,
-        sequence: BASE.sequence,
-      });
-    });
-    await t.mutation((ctx) =>
-      runConvexProgram(syncMaterials(ctx, BASE.releaseId))
-    );
-    await t.mutation(async (ctx) => {
-      const owner = await ctx.db.query("materialOwners").unique();
-      const state = await ctx.db.query("contentState").unique();
-      if (!(owner && state)) {
-        expect.fail("Expected one synchronized material owner.");
-      }
-      await ctx.db.delete("materialOwners", owner._id);
-      await ctx.db.patch("contentState", state._id, {
-        materialOwnerManifestHash: undefined,
-        materialOwnerReleaseId: undefined,
-        materialOwnerSequence: undefined,
-      });
-    });
-
-    await expect(
-      t.mutation((ctx) => runConvexProgram(syncMaterials(ctx, BASE.releaseId)))
-    ).resolves.toEqual({ done: true, nextIndex: -1, processed: 1 });
-    await expect(
-      t.run(async (ctx) => ({
-        owner: await ctx.db.query("materialOwners").unique(),
-        state: await ctx.db.query("contentState").unique(),
-      }))
-    ).resolves.toMatchObject({
-      owner: {
-        contentKey,
-        releaseId: BASE.releaseId,
-        sequence: BASE.sequence,
-      },
-      state: {
-        materialOwnerManifestHash: BASE.manifestHash,
-        materialOwnerReleaseId: BASE.releaseId,
-        materialOwnerSequence: BASE.sequence,
-      },
-    });
-  });
-
   it("publishes a material model across bounded durable pages", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -204,9 +134,6 @@ describe("contentRelease/material/sync", () => {
     expect(stored.rows).toHaveLength(9);
     expect(stored.state).toMatchObject({
       materialManifestHash: BASE.manifestHash,
-      materialOwnerManifestHash: BASE.manifestHash,
-      materialOwnerReleaseId: BASE.releaseId,
-      materialOwnerSequence: BASE.sequence,
       materialReleaseId: BASE.releaseId,
       materialSequence: BASE.sequence,
     });
@@ -231,7 +158,7 @@ describe("contentRelease/material/sync", () => {
         contentKey: "test:head-1",
         family: "material",
         index: 1,
-        locale: "en",
+        artifactLocale: "en",
         operation: "delete",
         releaseId: NEXT.releaseId,
         sequence: NEXT.sequence,
@@ -250,13 +177,13 @@ describe("contentRelease/material/sync", () => {
         projectionHash: testTextHash(
           testProjectionJson({
             contentKey: "test:head-0",
-            publicPath: "test/head-0",
+            publicPath: "subjects/test/head-0",
             title: "Updated Material",
           })
         ),
         projectionJson: testProjectionJson({
           contentKey: "test:head-0",
-          publicPath: "test/head-0",
+          publicPath: "subjects/test/head-0",
           title: "Updated Material",
         }),
       },
@@ -288,7 +215,7 @@ describe("contentRelease/material/sync", () => {
       await insertTestState(ctx, { active: BASE, nextSequence: 2 });
       const state = await ctx.db.query("contentState").unique();
       if (!state) {
-        throw new Error("Expected content synchronization state.");
+        throw new Error("Expected content release state.");
       }
       await ctx.db.patch("contentState", state._id, {
         materialReleaseId: BASE.releaseId,

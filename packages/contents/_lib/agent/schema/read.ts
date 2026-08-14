@@ -1,7 +1,7 @@
 import {
   NakafaAgentContentIdSchema,
-  NakafaAgentContentRefSchema,
   NakafaAgentContentUrlSchema,
+  NakafaAgentReadableContentRefSchema,
 } from "@repo/contents/_lib/agent/schema/ref";
 import { Schema } from "effect";
 
@@ -52,22 +52,23 @@ export const NakafaAgentReadOptionsSchema = Schema.Struct({
   .annotations({ description: "Nakafa content read options." });
 
 /** Runtime schema for markdown retrieval output. */
-export const NakafaAgentMarkdownSchema = NakafaAgentContentRefSchema.pipe(
-  Schema.extend(
-    Schema.Struct({
-      description: Schema.String.annotations({
-        description: "Short content description.",
-      }),
-      text: Schema.String.annotations({
-        description: "Full agent-readable markdown text.",
-      }),
-      title: Schema.String.annotations({
-        description: "Human-readable content title.",
-      }),
-    })
-  ),
-  Schema.mutable
-).annotations({ description: "Full Nakafa content markdown payload." });
+export const NakafaAgentMarkdownSchema =
+  NakafaAgentReadableContentRefSchema.pipe(
+    Schema.extend(
+      Schema.Struct({
+        description: Schema.String.annotations({
+          description: "Short content description.",
+        }),
+        text: Schema.String.annotations({
+          description: "Full agent-readable markdown text.",
+        }),
+        title: Schema.String.annotations({
+          description: "Human-readable content title.",
+        }),
+      })
+    ),
+    Schema.mutable
+  ).annotations({ description: "Full Nakafa content markdown payload." });
 
 export type NakafaAgentReadOptions = Schema.Schema.Type<
   typeof NakafaAgentReadOptionsSchema

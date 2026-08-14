@@ -1,7 +1,7 @@
-import { ContentLocaleSchema } from "@nakafa/aksara-contracts/content";
+import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { TryoutKeySchema } from "@nakafa/aksara-contracts/tryout/key";
+import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
 import type { ConvexTaggedError } from "@repo/backend/convex/lib/effect";
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { v } from "convex/values";
 import { Effect, Schema } from "effect";
 
@@ -12,7 +12,7 @@ export const tryoutRouteKeyValidator = v.string();
 export const tryoutSetIdentityValidator = v.object({
   countryKey: tryoutRouteKeyValidator,
   examKey: tryoutRouteKeyValidator,
-  locale: localeValidator,
+  locale: appLocaleValidator,
   setKey: tryoutRouteKeyValidator,
   trackKey: tryoutRouteKeyValidator,
 });
@@ -20,7 +20,7 @@ export const tryoutSetIdentityValidator = v.object({
 const TryoutSetIdentitySchema = Schema.Struct({
   countryKey: TryoutKeySchema,
   examKey: TryoutKeySchema,
-  locale: ContentLocaleSchema,
+  locale: AppLocaleCodeSchema,
   setKey: TryoutKeySchema,
   trackKey: TryoutKeySchema,
 });

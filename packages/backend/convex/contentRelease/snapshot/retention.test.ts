@@ -13,6 +13,10 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { TEST_ARTIFACT_HASH } from "@repo/backend/test/content-release";
 import { insertTestRelease } from "@repo/backend/test/content-stage";
 import { makeProgramSnapshotData } from "@repo/backend/test/program-snapshot";
+import {
+  TEST_STORED_TRYOUT_PLACEMENT,
+  TEST_STORED_TRYOUT_SNAPSHOT_ID,
+} from "@repo/backend/test/tryout-history";
 import { makeTryoutPlacementRow } from "@repo/backend/test/tryout-snapshot";
 import {
   TRYOUT_START_COUNTRY,
@@ -104,6 +108,37 @@ describe("contentRelease/snapshot/retention", () => {
         )
       )
     ).resolves.toBe(false);
+  });
+
+  it("finds artifacts retained by isolated try-out history", async () => {
+    const t = convexTest(schema, convexModules);
+    const placement = TEST_STORED_TRYOUT_PLACEMENT.record;
+    await t.mutation((ctx) =>
+      ctx.db.insert("tryoutHistoryRows", {
+        answerArtifactHash: placement.row.answerArtifactHash,
+        index: 0,
+        questionArtifactHash: placement.row.questionArtifactHash,
+        rowHash: placement.rowHash,
+        rowJson: JSON.stringify(TEST_STORED_TRYOUT_PLACEMENT),
+        rowKind: "placement",
+        snapshotId: TEST_STORED_TRYOUT_SNAPSHOT_ID,
+      })
+    );
+
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(
+          hasSnapshotArtifactReference(ctx, placement.row.questionArtifactHash)
+        )
+      )
+    ).resolves.toBe(true);
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(
+          hasSnapshotArtifactReference(ctx, placement.row.answerArtifactHash)
+        )
+      )
+    ).resolves.toBe(true);
   });
 
   it("protects try-out snapshots referenced by attempts and IRT scales", async () => {

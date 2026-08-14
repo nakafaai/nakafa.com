@@ -3,8 +3,6 @@ import {
   ArrowUpRight01Icon,
   BookOpenTextIcon,
 } from "@hugeicons/core-free-icons";
-import { toLocalizedContentHref } from "@repo/contents/_types/route/content";
-import { readStaticPublicContentRoutes } from "@repo/contents/_types/route/content/static";
 import {
   BlockMath,
   InlineMath,
@@ -22,7 +20,6 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@repo/design-system/components/ui/resizable";
-import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -32,31 +29,19 @@ import {
   type TrustLessonExcerpt,
 } from "./trust-source";
 
-const TRUST_MATERIAL_KEY = "lesson.mathematics.exponential-logarithm";
-const TRUST_SECTION_KEY = "basic-concept";
+const TRUST_LESSON_PATHS = {
+  en: "subjects/mathematics/exponential-logarithm/basic-concept",
+  id: "materi/matematika/eksponen-dan-logaritma/konsep-eksponen",
+} satisfies Record<Locale, string>;
 
 /** Applies the existing marketing accent to one intentional phrase. */
 function renderAccent(chunks: ReactNode) {
   return <mark>{chunks}</mark>;
 }
 
-/**
- * Resolves the localized exponent lesson through the canonical static content
- * route projection used by the learning app.
- */
+/** Resolves the reviewed public identity of the trust-section lesson. */
 function readTrustLessonHref(locale: Locale) {
-  for (const candidate of readStaticPublicContentRoutes()) {
-    if (
-      candidate.locale === locale &&
-      candidate.materialKey === TRUST_MATERIAL_KEY &&
-      candidate.kind === "subject-lesson" &&
-      candidate.sectionKey === TRUST_SECTION_KEY
-    ) {
-      return toLocalizedContentHref(candidate);
-    }
-  }
-
-  notFound();
+  return `/${locale}/${TRUST_LESSON_PATHS[locale]}`;
 }
 
 /** Renders the learner-facing side with Nakafa's shared MDX components. */

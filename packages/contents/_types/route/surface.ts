@@ -1,14 +1,22 @@
-import { LocaleSchema } from "@repo/contents/_types/content";
-import {
-  PublicRouteSegmentSchema,
-  PublicRouteSlugMapSchema,
-} from "@repo/contents/_types/route/segment";
+import type { Locale } from "@repo/contents/_types/content";
+import { fieldsForEveryLocale } from "@repo/utilities/locales";
 import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
 type SchemaEncoded<T extends Schema.Schema.Any> = Schema.Schema.Encoded<T>;
 
-export const PublicRouteSurfaceKeySchema = Schema.Literal(
+const PUBLIC_ROUTE_SEGMENT_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+const PublicRouteSegmentSchema = Schema.String.pipe(
+  Schema.pattern(PUBLIC_ROUTE_SEGMENT_PATTERN),
+  Schema.brand("@Nakafa/PublicRouteSegment")
+);
+
+const PublicRouteSlugMapSchema = Schema.Struct(
+  fieldsForEveryLocale(PublicRouteSegmentSchema)
+);
+
+const PublicRouteSurfaceKeySchema = Schema.Literal(
   "curriculum",
   "subject",
   "tryout"
@@ -18,7 +26,7 @@ export type PublicRouteSurfaceKey = SchemaType<
   typeof PublicRouteSurfaceKeySchema
 >;
 
-export const PublicRouteSurfaceSchema = Schema.Struct({
+const PublicRouteSurfaceSchema = Schema.Struct({
   appSegment: PublicRouteSegmentSchema,
   key: PublicRouteSurfaceKeySchema,
   routeSlugs: PublicRouteSlugMapSchema,
@@ -50,12 +58,11 @@ export const PUBLIC_ROUTE_SURFACES = Schema.decodeUnknownSync(
   Schema.Array(PublicRouteSurfaceSchema)
 )(publicRouteSurfaceInput);
 
-export const PublicRouteNamespaceLookupSchema = Schema.Struct({
-  locale: LocaleSchema,
-  namespace: PublicRouteSurfaceKeySchema,
-  segment: PublicRouteSegmentSchema,
-});
-
-export type PublicRouteNamespaceLookup = SchemaType<
-  typeof PublicRouteNamespaceLookupSchema
->;
+/** Reads the localized URL namespace owned by one Nakafa route surface. */
+export function readNamespaceSegment(
+  namespace: PublicRouteSurfaceKey,
+  locale: Locale
+) {
+  return PUBLIC_ROUTE_SURFACES.find((item) => item.key === namespace)
+    ?.routeSlugs[locale];
+}

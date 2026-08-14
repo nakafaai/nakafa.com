@@ -26,8 +26,8 @@ export type MaterialPreviewInput = MaterialPreviewRouteInput;
 
 /** Authenticated local body plus metadata rendered by the actual Nakafa app. */
 export interface MaterialPreviewContent {
+  readonly appLocale: MaterialPreviewDocument["route"]["appLocale"];
   readonly Content: RenderableContent["Content"];
-  readonly locale: MaterialPreviewDocument["route"]["locale"];
   readonly metadata: MaterialMetadata;
   readonly projection: MaterialLessonProjection;
   readonly rawMdx: string;
@@ -53,7 +53,7 @@ const readReadyContent = Effect.fn("NakafaContent.readReadyPreview")(function* (
   });
   return {
     Content: rendered.Content,
-    locale: projection.locale,
+    appLocale: projection.appLocale,
     metadata: projection.metadata,
     projection,
     rawMdx: rendered.artifact.payload.rawMdx,

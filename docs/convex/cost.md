@@ -46,35 +46,30 @@ Omitting long tafsir only from a response would not save database I/O because
 Convex reads the stored document before projecting the response. The hot stored
 row had to change.
 
-## Shipped Architecture
+## Current Architecture
 
-### Quran runtime
+### Signed publication runtime
 
-- `quranVerses` no longer stores unused long tafsir in the hot verse document.
-- Metadata generation uses a lightweight surah metadata query instead of
-  loading every verse.
-- Body rendering still uses the indexed surah page query and preserves the same
-  public content contract.
-
-### Public content routes
-
-- Public routes are synchronized through deterministic shards rather than one
-  monolithic root document or full-table rewrite.
-- A root content hash and shard states make an unchanged sync a no-op.
-- Incremental sync skips Convex work when the source projection has not changed.
-- Route tracking identity is derived from the source graph contract; runtime
-  reads no longer perform a redundant tracking lookup.
-- Route-owned cached loaders prevent metadata and page rendering from repeating
-  the same build read.
-- Static parameter generation is capped at 512 routes per locale and route
-  family. The remaining long tail renders on demand under Next.js Cache
-  Components rather than forcing every content row into every build.
+- Aksara exclusively owns authored content and emits signed publication
+  artifacts. Nakafa has no local authored corpus or publication writer.
+- `contentState` pins the active signed release. Family read models authenticate
+  their release, manifest, projection, artifact, and indexed facts before use.
+- Article and material catalogs use equality-prefixed indexes and bounded cursor
+  pages. Unified search reads authenticated signed family indexes rather than a
+  mutable `contentSearch` copy.
+- Quran and try-out structured rows remain immutable signed snapshots. Public
+  application reads use only the unversioned current contract.
+- Mutable legacy route, search, Quran, curriculum, author, and content-copy
+  tables are not part of the current runtime.
 
 ### Try-out discovery
 
 - Aksara owns authored try-out content and publishes a signed snapshot.
 - Nakafa reads the verified active snapshot directly. It has no authored
   question-bank or try-out catalog tables.
+- Retained attempts resolve only by exact attempt ID and may read one private
+  immutable history decoder while production still references historical signed
+  bytes. Current attempt creation and public catalog reads never use it.
 - `tryoutSetProgress` stores one compact latest-state row only after a user has
   attempted a set. It does not create a user-by-catalog cross product.
 - Attempt start and finalization update the progress row in the same Convex
@@ -95,11 +90,14 @@ row had to change.
   `tryoutCountries`, `tryoutExams`, `tryoutTracks`, `tryoutSets`, and
   `tryoutSections` production tables were removed after signed-runtime
   acceptance and zero-row proof.
-- No-change content synchronization performs no redundant mutation batches.
+- No-change signed release activation performs no redundant mutation batches.
 - One-time repair and migration functions were removed after dev and production
   verification.
 
-## Post-change Evidence
+## Historical Post-change Evidence
+
+The dated samples below describe earlier runtime generations and preserve their
+original function names for cost comparison. They are not current interfaces.
 
 ### 2026-07-11 runtime sample
 
@@ -151,9 +149,9 @@ deployment data.
 
 ## Scale Model
 
-Millions of localized content records are partitioned by source identity,
-locale, route family, and bounded route shards. Hot user state remains in
-Convex. Aksara owns static authoring truth and sends signed projections to
+Millions of localized content records are partitioned by signed source identity,
+locale, content family, and bounded catalog partitions. Hot user state remains
+in Convex. Aksara owns static authoring truth and sends signed projections to
 Nakafa. Queries use equality-prefixed indexes and cursor pagination; no runtime
 query added by this work collects a globally growing table.
 

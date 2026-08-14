@@ -1,6 +1,5 @@
 import {
   CompiledContentPayloadSchema,
-  type ContentLocale,
   SignedContentArtifactSchema,
 } from "@nakafa/aksara-contracts/content";
 import { makeLearningGraphIdentity } from "@nakafa/aksara-contracts/graph/identity";
@@ -13,6 +12,11 @@ import {
   Sha256HashSchema,
   SigningKeyIdSchema,
 } from "@nakafa/aksara-contracts/ids";
+import {
+  type AppLocaleCode,
+  AppLocaleSchema,
+  ArtifactLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
 import { MaterialPreviewDocumentSchema } from "@nakafa/aksara-contracts/preview/document";
 import {
   LOCAL_PREVIEW_FORMAT,
@@ -49,14 +53,14 @@ export function makeMaterialGraph(
   domain: string,
   topic: string,
   section: string,
-  locale: ContentLocale
+  appLocale: AppLocaleCode
 ) {
   return Effect.runSync(
     makeLearningGraphIdentity({
       concept: ["material", "lesson", domain, topic],
       learningObject: ["material-section", domain, topic, section],
       lens: ["material", "lesson", domain],
-      locale,
+      appLocale: AppLocaleSchema.make(appLocale),
     })
   );
 }
@@ -73,7 +77,8 @@ export const previewRoute = Schema.decodeUnknownSync(MaterialLessonRouteSchema)(
       "function-concept",
       "en"
     ),
-    locale: "en",
+    appLocale: AppLocaleSchema.make("en"),
+    artifactLocale: ArtifactLocaleSchema.make("en"),
     materialKey: "lesson.mathematics.function-composition-inverse-function",
     order: 5,
     publicPath:
@@ -112,7 +117,8 @@ export const previewNextRoute = Schema.decodeUnknownSync(
     "injective-surjective-bijective-function",
     "en"
   ),
-  locale: "en",
+  appLocale: AppLocaleSchema.make("en"),
+  artifactLocale: ArtifactLocaleSchema.make("en"),
   materialKey: previewRoute.materialKey,
   order: 6,
   publicPath:
@@ -148,7 +154,8 @@ export const previewIdRoute = Schema.decodeUnknownSync(
     "function-concept",
     "id"
   ),
-  locale: "id",
+  appLocale: AppLocaleSchema.make("id"),
+  artifactLocale: ArtifactLocaleSchema.make("id"),
   materialKey: previewRoute.materialKey,
   order: previewRoute.order,
   publicPath:
@@ -214,7 +221,7 @@ export function makePreviewInput(): MaterialPreviewInput {
   return {
     params: {
       lesson: ["function-concept"],
-      locale: previewRoute.locale,
+      locale: previewRoute.appLocale,
       subject: "mathematics",
       topic: "function-composition-inverse-function",
     },
@@ -235,8 +242,8 @@ export const previewWireArtifact = SignedContentArtifactSchema.make({
     compilerConfigHash: configHash,
     compilerVersion: "0.1.0",
     contentKey: previewRoute.contentKey,
-    format: "mdx-function-body-v1",
-    locale: previewRoute.locale,
+    artifactLocale: previewRoute.artifactLocale,
+    format: "mdx-function-body",
     mdxCompilerVersion: "3.1.1",
     plainText: "",
     rawMdx: previewWireMdx,

@@ -3,7 +3,7 @@ import {
   ProtectedContentRuntimeRequestSchema,
   type ProtectedContentRuntimeSelector,
 } from "@nakafa/aksara-contracts/runtime/protected/spec";
-import type { TryoutPlacement } from "@nakafa/aksara-contracts/tryout/spec";
+import type { TryoutPlacement } from "@nakafa/aksara-contracts/tryout/placement";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
@@ -18,7 +18,7 @@ import {
 } from "@repo/backend/convex/contentRelease/parse";
 import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/renderer";
 import { loadVerifiedSnapshot } from "@repo/backend/convex/contentRelease/runtime/snapshot";
-import { localeValidator } from "@repo/backend/convex/contentRelease/spec";
+import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
 import { verifyTryoutPlacement } from "@repo/backend/convex/contentRelease/tryout/verify";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { findTryoutBundleByRelease } from "@repo/backend/convex/tryouts/runtime/bundle";
@@ -36,7 +36,7 @@ const protectedSelectorValidator = v.object({
   delivery: protectedDeliveryValidator,
 });
 const protectedArgsValidator = {
-  locale: localeValidator,
+  appLocale: appLocaleValidator,
   selectors: v.array(protectedSelectorValidator),
   snapshotReleaseId: v.string(),
   snapshotId: v.string(),
@@ -63,6 +63,7 @@ export type ProtectedRuntimeBatchRow = Infer<typeof protectedResultValidator>;
 
 interface ProtectedBodyIdentity {
   readonly artifactHash: string;
+  readonly artifactLocale: TryoutPlacement["answerArtifactLocale"];
   readonly contentKey: string;
   readonly kind: "answer" | "question";
 }
@@ -112,12 +113,14 @@ function bodyIdentity(
   if (delivery === "authenticated") {
     return {
       artifactHash: placement.questionArtifactHash,
+      artifactLocale: placement.questionArtifactLocale,
       contentKey: placement.questionContentKey,
       kind: "question",
     };
   }
   return {
     artifactHash: placement.answerArtifactHash,
+    artifactLocale: placement.answerArtifactLocale,
     contentKey: placement.answerContentKey,
     kind: "answer",
   };
@@ -136,9 +139,9 @@ const resolveProtectedItem = Effect.fn("contentRelease.resolveProtectedItem")(
       request.snapshotId
     );
     const body = bodyIdentity(placement, selector.delivery);
-    const sourcePath = `${placement.questionSourcePath}/${body.kind}.${request.locale}.mdx`;
+    const sourcePath = `${placement.questionSourcePath}/${body.kind}.${body.artifactLocale}.mdx`;
     if (
-      placement.locale !== request.locale ||
+      placement.appLocale !== request.appLocale ||
       body.artifactHash !== selector.artifactHash ||
       body.contentKey !== selector.contentKey
     ) {
@@ -165,7 +168,7 @@ const resolveProtectedItem = Effect.fn("contentRelease.resolveProtectedItem")(
     if (
       artifact.artifactHash !== selector.artifactHash ||
       artifact.payload.contentKey !== selector.contentKey ||
-      artifact.payload.locale !== request.locale ||
+      artifact.payload.artifactLocale !== body.artifactLocale ||
       artifact.payload.rendererDomain !== placement.rendererDomain
     ) {
       return yield* releaseFail(

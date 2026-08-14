@@ -1,4 +1,5 @@
-import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/spec";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import { readSignedTryoutSearchDocuments } from "@repo/backend/convex/contents/helpers/search/tryout";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -13,20 +14,20 @@ import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 /** Builds one internal section that must never become a public search result. */
-function makeInternalSection(locale: "en" | "id") {
+function makeInternalSection(appLocale: ActiveAppLocaleCode) {
   return Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
     countryKey: "indonesia",
     description: "Internal entry",
     examKey: "snbt",
     graph: {
       alignmentId: "alignment:tryout:technical:internal-section",
-      assetId: `asset:${locale}:tryout:technical:internal-section`,
+      assetId: `asset:${appLocale}:tryout:technical:internal-section`,
       conceptId: "concept:tryout:technical:internal-section",
       learningObjectId: "lo:tryout-technical-internal-section",
       lensId: "lens:tryout:technical",
     },
     kind: "section",
-    locale,
+    appLocale,
     order: 1,
     questionCount: 1,
     questionSourcePath:

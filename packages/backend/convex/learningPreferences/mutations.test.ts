@@ -1,13 +1,44 @@
-import { api, internal } from "@repo/backend/convex/_generated/api";
-import { getLearningProgramCatalogInputs } from "@repo/backend/convex/learningPrograms/catalog";
+import {
+  type LearningProgram,
+  LearningProgramKeySchema,
+  LearningProgramSchema,
+} from "@nakafa/aksara-contracts/program/spec";
+import { ActiveAppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { api } from "@repo/backend/convex/_generated/api";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
+import {
+  activateProgramSnapshot,
+  makeProgramSnapshotData,
+  makeTechnicalProgram,
+} from "@repo/backend/test/program-snapshot";
 import { activateTryoutStartSource } from "@repo/backend/test/tryout-source";
+import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 const NOW = 1_798_752_000_000;
+
+const PREFERENCE_PROGRAMS = [
+  makePreferenceProgram(1, "merdeka", "ID", "merdeka", "Kurikulum Merdeka"),
+  makePreferenceProgram(
+    2,
+    "cambridge-international",
+    "GB",
+    "cambridge-international",
+    "Cambridge International"
+  ),
+  makePreferenceProgram(3, "singapore-moe", "SG", "singapura", "Singapore MOE"),
+  makePreferenceProgram(
+    4,
+    "united-states",
+    "US",
+    "amerika-serikat",
+    "United States Standards-Aligned Pathway"
+  ),
+  makePreferenceProgram(5, "snbt", "ID", "snbt", "SNBT", "admission-exam"),
+];
 
 describe("learningPreferences", () => {
   it("lists school curriculum preferences in catalog display order", async () => {
@@ -118,51 +149,6 @@ describe("learningPreferences", () => {
     ).resolves.toBeNull();
   });
 
-  it("reads an existing school curriculum profile before a preference row exists", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now: NOW })
-    );
-
-    await syncPrograms(t);
-    await t.mutation(async (ctx) => {
-      const program = await ctx.db
-        .query("learningPrograms")
-        .withIndex("by_key", (q) => q.eq("key", "merdeka"))
-        .unique();
-
-      expect(program).not.toBeNull();
-
-      if (!program) {
-        return;
-      }
-
-      await ctx.db.insert("learningProfiles", {
-        interests: ["school-curriculum"],
-        programId: program._id,
-        updatedAt: NOW,
-        userId: identity.userId,
-      });
-    });
-
-    await expect(
-      t
-        .withIdentity({
-          sessionId: identity.sessionId,
-          subject: identity.authUserId,
-        })
-        .query(api.learningPreferences.queries.getCurrent, { locale: "id" })
-    ).resolves.toMatchObject({
-      preferredCurriculumProgramKey: "merdeka",
-      program: {
-        countryCode: "ID",
-        key: "merdeka",
-        publicSlug: "merdeka",
-        title: "Kurikulum Merdeka",
-      },
-    });
-  });
-
   it("rejects non-curriculum program keys", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation((ctx) =>
@@ -188,12 +174,38 @@ describe("learningPreferences", () => {
   });
 });
 
-/** Syncs the source-owned learning program catalog into the test database. */
+/** Activates the reviewed program copy as one signed snapshot. */
 async function syncPrograms(
   t: ReturnType<typeof createConvexTestWithBetterAuth>
 ) {
-  await t.mutation(internal.learningPrograms.sync.syncLearningPrograms, {
-    programs: getLearningProgramCatalogInputs(),
-    syncedAt: NOW,
+  const data = await Effect.runPromise(
+    makeProgramSnapshotData(PREFERENCE_PROGRAMS)
+  );
+  await activateProgramSnapshot(t, data);
+}
+
+/** Builds one explicit signed current program used by preference tests. */
+function makePreferenceProgram(
+  index: number,
+  key: string,
+  countryCode: string,
+  publicSlug: string,
+  title: string,
+  kind: LearningProgram["kind"] = "school-curriculum"
+) {
+  const base = makeTechnicalProgram(index, kind);
+
+  return LearningProgramSchema.make({
+    ...base,
+    key: LearningProgramKeySchema.make(key),
+    provider: {
+      ...base.provider,
+      homeCountry: countryCode,
+    },
+    recommendedCountry: countryCode,
+    translations: [
+      { appLocale: ActiveAppLocaleSchema.make("en"), publicSlug, title },
+      { appLocale: ActiveAppLocaleSchema.make("id"), publicSlug, title },
+    ],
   });
 }

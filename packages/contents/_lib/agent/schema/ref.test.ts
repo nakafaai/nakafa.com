@@ -125,12 +125,6 @@ describe("NakafaAgentContentRefSchema", () => {
     ).toEqual(quranRef);
   });
 
-  it("rejects refs that cannot become graph identity", () => {
-    expect(() =>
-      readNakafaContentRefFixture("en", "articles/example", "articles")
-    ).toThrow("Expected Nakafa content ref fixture");
-  });
-
   it("rejects invalid canonical URLs", () => {
     expect(() =>
       Schema.decodeUnknownSync(NakafaAgentContentRefSchema)({
@@ -138,6 +132,19 @@ describe("NakafaAgentContentRefSchema", () => {
         markdown_url: "not-a-url",
       })
     ).toThrow("Expected a valid URL.");
+  });
+
+  it("allows content families without a markdown reader", () => {
+    const reference = readNakafaContentRefFixture(
+      "en",
+      "try-out/indonesia/snbt/2027/set-1/general-reasoning",
+      "tryout"
+    );
+
+    expect(
+      Schema.decodeUnknownSync(NakafaAgentContentRefSchema)(reference)
+    ).toEqual(reference);
+    expect(reference.markdown_url).toBeUndefined();
   });
 
   it("rejects unsafe graph IDs in content references", () => {

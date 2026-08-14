@@ -29,7 +29,7 @@ export const readArticlePage = Effect.fn("contentRelease.readArticlePage")(
   function* (
     ctx: QueryCtx,
     categorySource: string,
-    locale: Doc<"articleCatalog">["locale"],
+    appLocale: Doc<"articleCatalog">["appLocale"],
     expectedManifestHash: null | string,
     expectedReleaseId: null | string,
     paginationOpts: Parameters<typeof validateProjectionPage>[0]
@@ -37,7 +37,7 @@ export const readArticlePage = Effect.fn("contentRelease.readArticlePage")(
     const [category, options, owner] = yield* Effect.all([
       decodeCategory(categorySource),
       validateProjectionPage(paginationOpts),
-      loadArticleOwner(ctx, locale),
+      loadArticleOwner(ctx, appLocale),
     ]);
     if (options.endCursor !== undefined && options.endCursor !== null) {
       return yield* releaseFail(
@@ -82,8 +82,10 @@ export const readArticlePage = Effect.fn("contentRelease.readArticlePage")(
     const stored = yield* Effect.promise(() =>
       ctx.db
         .query("articleCatalog")
-        .withIndex("by_locale_and_category_and_date_and_contentKey", (index) =>
-          index.eq("locale", locale).eq("category", category)
+        .withIndex(
+          "by_appLocale_and_category_and_date_and_contentKey",
+          (index) =>
+            index.eq("appLocale", appLocale).eq("category", category)
         )
         .order("desc")
         .paginate(options)
@@ -109,14 +111,14 @@ export const readCategoryPage = Effect.fn(
   "contentRelease.readArticleCategories"
 )(function* (
   ctx: QueryCtx,
-  locale: Doc<"articleCategories">["locale"],
+  appLocale: Doc<"articleCategories">["appLocale"],
   expectedManifestHash: null | string,
   expectedReleaseId: null | string,
   paginationOpts: Parameters<typeof validateProjectionPage>[0]
 ) {
   const [options, owner] = yield* Effect.all([
     validateProjectionPage(paginationOpts),
-    loadArticleOwner(ctx, locale),
+    loadArticleOwner(ctx, appLocale),
   ]);
   if (options.endCursor !== undefined && options.endCursor !== null) {
     return yield* releaseFail(
@@ -161,8 +163,8 @@ export const readCategoryPage = Effect.fn(
   const stored = yield* Effect.promise(() =>
     ctx.db
       .query("articleCategories")
-      .withIndex("by_locale_and_category", (index) =>
-        index.eq("locale", locale)
+      .withIndex("by_appLocale_and_category", (index) =>
+        index.eq("appLocale", appLocale)
       )
       .paginate(options)
   );

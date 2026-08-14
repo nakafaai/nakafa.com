@@ -1,5 +1,6 @@
 import "server-only";
 
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   decodePublishedQuranCatalog,
   decodePublishedQuranSource,
@@ -35,14 +36,15 @@ export const readPublishedQuranCatalog = Effect.fn(
 export const readPublishedQuranMarkdown = Effect.fn(
   "NakafaQuran.readPublishedMarkdown"
 )(function* (locale: Locale, surahNumber: number, verseLimit?: number) {
+  const appLocale = AppLocaleSchema.make(locale);
   const result = yield* readRuntimeQuery(
     api.contentRelease.quran.markdown,
     verseLimit === undefined
-      ? { locale, surahNumber }
-      : { locale, surahNumber, verseLimit }
+      ? { appLocale, surahNumber }
+      : { appLocale, surahNumber, verseLimit }
   );
   return yield* decodePublishedQuranMarkdown(result, {
-    locale,
+    appLocale,
     surahNumber,
     verseLimit,
   });
@@ -51,11 +53,15 @@ export const readPublishedQuranMarkdown = Effect.fn(
 /** Reads and validates one locale-specific signed Quran web projection. */
 const readPublishedQuranView = Effect.fn("NakafaQuran.readPublishedView")(
   function* (locale: Locale, surahNumber: number) {
+    const appLocale = AppLocaleSchema.make(locale);
     const result = yield* readRuntimeQuery(api.contentRelease.quran.view, {
-      locale,
+      appLocale,
       surahNumber,
     });
-    return yield* decodePublishedQuranView(result, { locale, surahNumber });
+    return yield* decodePublishedQuranView(result, {
+      appLocale,
+      surahNumber,
+    });
   }
 );
 

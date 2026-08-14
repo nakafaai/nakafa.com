@@ -28,7 +28,7 @@ async function getHomeTrendingSubjects(locale: Locale) {
 
   cacheLife("minutes");
 
-  return await fetchQuery(api.curriculumLessons.queries.getTrendingSubjects, {
+  return await fetchQuery(api.contents.queries.trending.getTrendingSubjects, {
     locale,
     windowKey: "7d",
   });

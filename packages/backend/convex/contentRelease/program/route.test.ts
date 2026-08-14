@@ -1,5 +1,5 @@
 import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
-import { makeCurriculumSnapshotRow } from "@nakafa/aksara-contracts/program/row-hash";
+import { makeCurriculumSnapshotRow } from "@nakafa/aksara-contracts/program/snapshot/row-hash";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
 import { readProgramRoute } from "@repo/backend/convex/contentRelease/program/route";
@@ -29,10 +29,10 @@ const PROGRAM_ROOT = "curriculum/technical-program-1";
 /** Creates one authored material group under the technical root. */
 function materialGroup(groupIndex: number, order: number) {
   return Schema.decodeUnknownSync(CurriculumRouteSchema)({
+    appLocale: "en",
     iconKey: "school",
     kind: "curriculum-context",
     level: "topic",
-    locale: "en",
     nodeKey: `group-${groupIndex}`,
     order,
     parentPath: PROGRAM_ROOT,
@@ -53,11 +53,11 @@ function materialContext(
   const groupNodeKey = group?.nodeKey ?? `context-${materialIndex}`;
   const groupPath = group?.publicPath ?? PROGRAM_ROOT;
   return Schema.decodeUnknownSync(CurriculumRouteSchema)({
+    appLocale: "en",
     canonicalPath: material.parentPath,
     iconKey: "school",
     kind: "curriculum-context",
     level: "topic",
-    locale: "en",
     materialContextNodeKey: groupNodeKey,
     materialContextParentPath: PROGRAM_ROOT,
     materialContextPublicPath: groupPath,
@@ -86,9 +86,9 @@ async function insertCurriculumRoutes(
     for (const [offset, record] of records.entries()) {
       const row = record.row;
       await ctx.db.insert("curriculumRoutes", {
+        appLocale: row.appLocale,
         index: 10 + offset,
         level: row.level,
-        locale: row.locale,
         contextPath: row.materialContextParentPath,
         materialKey: row.materialKey,
         nodeKey: row.nodeKey,
@@ -170,7 +170,7 @@ describe("contentRelease/program/route", () => {
       family: "program",
       record: {
         kind: "curriculum",
-        row: { locale: "en", programKey: "technical-program-1" },
+        row: { appLocale: "en", programKey: "technical-program-1" },
       },
     });
   });

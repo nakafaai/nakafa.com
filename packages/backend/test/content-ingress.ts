@@ -4,6 +4,10 @@ import {
   PublicPathSchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
+import {
+  ACTIVE_APP_LOCALES,
+  ActiveAppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
 import { digestProjections } from "@nakafa/aksara-contracts/projection/digest";
 import {
   canonicalizeMaterialProjection,
@@ -12,6 +16,7 @@ import {
   MaterialSectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
 import {
+  CONTENT_RELEASE_FORMAT,
   ContentReleaseItemSchema,
   ContentReleaseManifestSchema,
 } from "@nakafa/aksara-contracts/release";
@@ -37,6 +42,7 @@ import {
   testSignedRelease,
 } from "@repo/backend/test/content-proof";
 import {
+  TEST_MANIFEST_HASH,
   testPublicationScope,
   testTextHash,
 } from "@repo/backend/test/content-release";
@@ -44,6 +50,7 @@ import { Effect, Stream } from "effect";
 
 export const ingressReleaseId = ReleaseIdSchema.make("release-ingress");
 export const ingressArtifact = testSignedArtifact();
+const appLocale = ActiveAppLocaleSchema.make("en");
 const publicPath = PublicPathSchema.make(testMaterialPublicPath(0));
 const sourcePath = CorpusSourcePathSchema.make(
   "packages/corpus/material/lesson/mathematics/technical-heads/head-0/en.mdx"
@@ -55,7 +62,7 @@ export const ingressItem = ContentReleaseItemSchema.make({
     contentKey: ingressArtifact.payload.contentKey,
     delivery: "public",
     family: "material",
-    locale: ingressArtifact.payload.locale,
+    artifactLocale: ingressArtifact.payload.artifactLocale,
     operation: "upsert",
     rendererDomain: ingressArtifact.payload.rendererDomain,
     sourcePath,
@@ -67,7 +74,7 @@ export const ingressItem = ContentReleaseItemSchema.make({
 export const ingressRoute = ContentRouteItemSchema.make({
   change: {
     contentKey: ingressItem.change.contentKey,
-    locale: ingressItem.change.locale,
+    appLocale,
     operation: "bind",
     publicPath,
   },
@@ -77,9 +84,15 @@ export const ingressRoute = ContentRouteItemSchema.make({
 
 export const ingressProjection = MaterialLessonProjectionSchema.make({
   contentKey: ingressArtifact.payload.contentKey,
-  graph: testMaterialGraph("technical-heads", "head-0", "en", "mathematics"),
+  graph: testMaterialGraph(
+    "technical-heads",
+    "head-0",
+    appLocale,
+    "mathematics"
+  ),
   kind: "subject-lesson",
-  locale: "en",
+  appLocale,
+  artifactLocale: ingressArtifact.payload.artifactLocale,
   materialKey: MaterialKeySchema.make("lesson.mathematics.technical-heads"),
   metadata: {
     authors: [{ name: "Nakafa" }],
@@ -110,7 +123,7 @@ const rollbackDigest = Effect.runSync(
         snapshot: {
           contentKey: ingressItem.change.contentKey,
           family: "material",
-          locale: ingressItem.change.locale,
+          artifactLocale: ingressItem.change.artifactLocale,
           state: "absent",
         },
       })
@@ -126,7 +139,7 @@ const ingressHead = MaterialHeadSchema.make({
   contentKey: ingressItem.change.contentKey,
   delivery: "public",
   family: "material",
-  locale: ingressArtifact.payload.locale,
+  artifactLocale: ingressArtifact.payload.artifactLocale,
   projectionHash: testTextHash(
     canonicalizeMaterialProjection(ingressProjection)
   ),
@@ -142,11 +155,16 @@ const ingressSnapshots = inheritContentSnapshots(null);
 
 export const ingressRelease = testSignedRelease(
   ContentReleaseManifestSchema.make({
+    activeAppLocales: ACTIVE_APP_LOCALES,
+    baseActiveAppLocales: null,
+    baseEditorialReviewDigest: null,
     baseManifestHash: null,
     baseReleaseId: null,
     baseResultCount: 0,
     baseResultDigest: EMPTY_RESULT_CATALOG_DIGEST,
     deleteCount: 0,
+    editorialReviewDigest: TEST_MANIFEST_HASH,
+    format: CONTENT_RELEASE_FORMAT,
     itemCount: 1,
     itemsDigest: itemDigest.digest,
     origin: { kind: "git", sha: GitCommitShaSchema.make("a".repeat(40)) },
@@ -175,7 +193,7 @@ export const ingressRecoveryItem = ContentReleaseItemSchema.make({
   change: {
     contentKey: ingressItem.change.contentKey,
     family: "material",
-    locale: ingressItem.change.locale,
+    artifactLocale: ingressItem.change.artifactLocale,
     operation: "delete",
   },
   index: 0,
@@ -183,7 +201,7 @@ export const ingressRecoveryItem = ContentReleaseItemSchema.make({
 });
 export const ingressRecoveryRoute = ContentRouteItemSchema.make({
   change: {
-    locale: ingressRoute.change.locale,
+    appLocale: ingressRoute.change.appLocale,
     operation: "delete",
     publicPath: ingressRoute.change.publicPath,
   },
@@ -214,11 +232,16 @@ const recoveryRoutes = Effect.runSync(
 
 export const ingressRecovery = testSignedRelease(
   ContentReleaseManifestSchema.make({
+    activeAppLocales: ingressRelease.manifest.activeAppLocales,
+    baseActiveAppLocales: ingressRelease.manifest.activeAppLocales,
+    baseEditorialReviewDigest: ingressRelease.manifest.editorialReviewDigest,
     baseManifestHash: ingressRelease.manifestHash,
     baseReleaseId: ingressReleaseId,
     baseResultCount: 1,
     baseResultDigest: ingressRelease.manifest.resultDigest,
     deleteCount: 1,
+    editorialReviewDigest: ingressRelease.manifest.editorialReviewDigest,
+    format: CONTENT_RELEASE_FORMAT,
     itemCount: 1,
     itemsDigest: recoveryItems.digest,
     origin: { kind: "rollback", releaseId: ingressReleaseId },

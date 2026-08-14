@@ -21,7 +21,7 @@ export async function insertTestHead(ctx: MutationCtx, options: HeadOptions) {
   const sequence = options.sequence ?? 1;
   const releaseId = options.releaseId ?? TEST_RELEASE_ID;
   const operation = options.operation ?? "upsert";
-  const publicPath = `test/${options.contentKey.slice(5)}`;
+  const publicPath = `subjects/test/${options.contentKey.slice(5)}`;
   const projectionJson = testProjectionJson({
     contentKey: options.contentKey,
     publicPath,
@@ -30,7 +30,7 @@ export async function insertTestHead(ctx: MutationCtx, options: HeadOptions) {
     contentKey: options.contentKey,
     createdSequence: sequence,
     family: "material",
-    locale: "en",
+    artifactLocale: "en",
   });
   await ctx.db.insert("contentHeads", {
     ...(operation === "upsert"
@@ -48,7 +48,7 @@ export async function insertTestHead(ctx: MutationCtx, options: HeadOptions) {
     contentKey: options.contentKey,
     family: "material",
     index: 0,
-    locale: "en",
+    artifactLocale: "en",
     operation,
     releaseId,
     sequence,
@@ -61,7 +61,7 @@ export async function insertTestHead(ctx: MutationCtx, options: HeadOptions) {
     batchIndex: 0,
     contentKey: options.contentKey,
     index: 0,
-    locale: "en",
+    appLocale: "en",
     operation: "bind",
     publicPath,
     releaseId,
@@ -84,7 +84,7 @@ export function maximumTestHead(index: number) {
     contentKey: "a".repeat(512 - suffix.length) + suffix,
     delivery: "authenticated",
     family: "material",
-    locale: "en",
+    artifactLocale: "en",
     projectionHash: `sha256:${"c".repeat(64)}`,
     publicPath: "a".repeat(2048 - suffix.length) + suffix,
     rendererDomain: "snbt-general",

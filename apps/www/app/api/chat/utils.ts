@@ -1,4 +1,4 @@
-import { AgentLearningProfileSchema } from "@repo/ai/types/agents";
+import { AgentLearningSelectionSchema } from "@repo/ai/types/agents";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import type { Locale } from "@repo/utilities/locales";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
@@ -44,17 +44,17 @@ export const getUserInfo = Effect.fn("chat.getUserInfo")(function* (
 });
 
 /**
- * Fetches the authenticated user's active learning profile for AI context.
+ * Fetches the authenticated user's canonical learning selection for AI context.
  *
  * This uses the same Convex read interface as the app surfaces, so Nina sees
  * the selected program and first plan items without route or folder heuristics.
  */
-export const getLearningProfile = Effect.fn("chat.getLearningProfile")(
+export const getLearningSelection = Effect.fn("chat.getLearningSelection")(
   function* (token: string, locale: Locale) {
     const profile = yield* Effect.tryPromise({
       try: () =>
         fetchQuery(
-          convexApi.learningPrograms.queries.getActiveProfile,
+          convexApi.learningPrograms.queries.getActiveSelection,
           { locale },
           {
             token,
@@ -63,13 +63,13 @@ export const getLearningProfile = Effect.fn("chat.getLearningProfile")(
       catch: (cause) =>
         new ChatQueryError({
           cause,
-          message: "Unable to load the active learning profile.",
-          operation: "load-profile",
+          message: "Unable to load the active learning selection.",
+          operation: "load-selection",
         }),
     });
 
     return yield* Schema.decodeUnknown(
-      Schema.NullOr(AgentLearningProfileSchema)
+      Schema.NullOr(AgentLearningSelectionSchema)
     )(profile);
   }
 );

@@ -4,6 +4,7 @@ import {
   PublicPathSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   canonicalizeRollbackSnapshotEntry,
   RollbackSnapshotEntrySchema,
@@ -11,7 +12,10 @@ import {
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
-import { testProjectionJson } from "@repo/backend/test/content-material";
+import {
+  testMaterialPublicPath,
+  testProjectionJson,
+} from "@repo/backend/test/content-material";
 import { testSignedArtifact } from "@repo/backend/test/content-proof";
 import {
   TEST_DIGEST,
@@ -47,7 +51,7 @@ export function insertRoute(
     batchIndex: 0,
     contentKey: fixture.contentKey,
     index: fixture.index,
-    locale: "en",
+    appLocale: "en",
     operation,
     publicPath: fixture.publicPath,
     releaseId,
@@ -95,7 +99,9 @@ export async function activateRollbackFixture(
   }
   const receipt = {
     activatedHeads: itemCount,
+    activeAppLocales: ["en", "id"],
     deletedHeads: 0,
+    editorialReviewDigest: TEST_DIGEST,
     manifestHash: TEST_MANIFEST_HASH,
     projectionDigest: TEST_DIGEST,
     releaseId: TEST_RELEASE_ID,
@@ -154,7 +160,7 @@ async function insertVersion(
     delivery: "public",
     family: "material",
     index: options.index,
-    locale: "en",
+    artifactLocale: "en",
     operation: "upsert",
     projectionHash: testTextHash(options.projectionJson),
     projectionJson: options.projectionJson,
@@ -192,17 +198,16 @@ export async function insertRollbackItem(
     : undefined;
   const currentHash =
     signedArtifact?.artifactHash ?? rollbackArtifactHash(index, "current");
-  const currentPath = `test/head-${index}`;
+  const currentPath = testMaterialPublicPath(index);
   const currentProjection = testProjectionJson({
     contentKey,
     index,
-    publicPath: currentPath,
   });
   const priorHash = rollbackArtifactHash(index, "prior");
-  const priorPath = PublicPathSchema.make(`test/prior-${index}`);
+  const priorPath = PublicPathSchema.make(testMaterialPublicPath(index + 100));
   const priorProjection =
     options?.priorProjectionJson ??
-    testProjectionJson({ contentKey, index, publicPath: priorPath });
+    testProjectionJson({ contentKey, index: index + 100 });
   const priorSourcePath =
     options?.priorSourcePath ??
     CorpusSourcePathSchema.make(`packages/corpus/test/prior-${index}/en.mdx`);
@@ -218,7 +223,7 @@ export async function insertRollbackItem(
               contentKey,
               delivery: "public",
               family: "material",
-              locale: "en",
+              artifactLocale: ArtifactLocaleSchema.make("en"),
               projectionHash: Sha256HashSchema.make(
                 testTextHash(priorProjection)
               ),
@@ -246,7 +251,7 @@ export async function insertRollbackItem(
       contentKey,
       index,
     }),
-    locale: "en",
+    artifactLocale: "en",
     priorSequence: previousExists ? 0 : undefined,
     projectionBatchHash: TEST_DIGEST,
     projectionBatchIndex: 0,

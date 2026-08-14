@@ -1,9 +1,12 @@
-import { ContentLocaleSchema } from "@nakafa/aksara-contracts/content";
-import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/spec";
 import {
+  ACTIVE_APP_LOCALE_CODES,
+  type ActiveAppLocaleCode,
+} from "@nakafa/aksara-contracts/locale";
+import {
+  type TryoutCatalogRow,
   TryoutCatalogRowSchema,
-  TryoutPlacementSchema,
-} from "@nakafa/aksara-contracts/tryout/spec";
+} from "@nakafa/aksara-contracts/tryout/catalog";
+import { TryoutPlacementSchema } from "@nakafa/aksara-contracts/tryout/placement";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -51,9 +54,7 @@ function makeSecondSetGraph(graph: TryoutCatalogRow["graph"]) {
 }
 
 /** Builds a hierarchy whose first set is private and second set is public. */
-function makeInternalThenVisibleCatalog(
-  locale: (typeof ContentLocaleSchema.literals)[number]
-) {
+function makeInternalThenVisibleCatalog(locale: ActiveAppLocaleCode) {
   const privateFirstHierarchy = makeTryoutStartHierarchy(
     locale,
     "internal-entry"
@@ -108,9 +109,7 @@ function makeInternalThenVisibleCatalog(
 }
 
 /** Moves the technical placement into the public second set. */
-function makeSecondSetPlacement(
-  locale: (typeof ContentLocaleSchema.literals)[number]
-) {
+function makeSecondSetPlacement(locale: ActiveAppLocaleCode) {
   const placement = makeTryoutStartPlacement(locale);
   const moveToSecondSet = (value: string) =>
     value.replace(FIRST_SOURCE_SEGMENT, SECOND_SOURCE_SEGMENT);
@@ -122,14 +121,11 @@ function makeSecondSetPlacement(
     questionSourcePath: moveToSecondSet(placement.questionSourcePath),
     sectionKey: TRYOUT_REUSED_SECTION,
     setKey: TRYOUT_REUSED_SET,
-    title: "Second set question",
   });
 }
 
 /** Builds a hierarchy whose first track is private and second track is public. */
-function makeInternalTrackThenVisibleCatalog(
-  locale: (typeof ContentLocaleSchema.literals)[number]
-) {
+function makeInternalTrackThenVisibleCatalog(locale: ActiveAppLocaleCode) {
   const privateFirstTrack = makeTryoutStartHierarchy(locale, "internal-entry");
   const publicSecondTrack = makeTryoutStartHierarchy(locale, "visible")
     .filter(
@@ -180,9 +176,7 @@ function makeInternalTrackThenVisibleCatalog(
 }
 
 /** Moves the public technical placement into the second authored track. */
-function makeSecondTrackPlacement(
-  locale: (typeof ContentLocaleSchema.literals)[number]
-) {
+function makeSecondTrackPlacement(locale: ActiveAppLocaleCode) {
   return Schema.decodeUnknownSync(TryoutPlacementSchema)({
     ...makeSecondSetPlacement(locale),
     trackKey: SECOND_TRACK,
@@ -213,7 +207,7 @@ describe("tryouts/catalog/featured", () => {
         contentHash: TRYOUT_START_CONTENT_HASH,
         contentKey: source.questionContentKey,
         delivery: "authenticated",
-        locale: "id",
+        appLocale: "id",
         questionOrder: 1,
         snapshotReleaseId: TEST_RELEASE_ID,
         snapshotId: expect.any(String),
@@ -239,10 +233,10 @@ describe("tryouts/catalog/featured", () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>
       activateTryoutSnapshot(ctx, {
-        catalog: ContentLocaleSchema.literals.flatMap(
+        catalog: ACTIVE_APP_LOCALE_CODES.flatMap(
           makeInternalThenVisibleCatalog
         ),
-        placements: ContentLocaleSchema.literals.flatMap((locale) => [
+        placements: ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
           makeTryoutStartPlacement(locale),
           makeSecondSetPlacement(locale),
         ]),
@@ -262,10 +256,10 @@ describe("tryouts/catalog/featured", () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>
       activateTryoutSnapshot(ctx, {
-        catalog: ContentLocaleSchema.literals.flatMap(
+        catalog: ACTIVE_APP_LOCALE_CODES.flatMap(
           makeInternalTrackThenVisibleCatalog
         ),
-        placements: ContentLocaleSchema.literals.flatMap((locale) => [
+        placements: ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
           makeTryoutStartPlacement(locale),
           makeSecondTrackPlacement(locale),
         ]),

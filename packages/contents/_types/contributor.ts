@@ -6,13 +6,9 @@ const UrlStringSchema = Schema.String.pipe(
   })
 );
 
-export const CONTRIBUTOR_TYPES = [
-  "official",
-  "former-official",
-  "community",
-] as const;
+const CONTRIBUTOR_TYPES = ["official", "former-official", "community"] as const;
 
-export const ContributorSchema = Schema.Struct({
+const ContributorSchema = Schema.Struct({
   name: Schema.String,
   username: Schema.String,
   type: Schema.Literal(...CONTRIBUTOR_TYPES),

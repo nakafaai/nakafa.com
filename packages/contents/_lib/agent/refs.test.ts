@@ -50,6 +50,21 @@ describe("Nakafa agent references", () => {
     });
   });
 
+  it("omits markdown URLs for tryout references without a reader", () => {
+    const ref = createNakafaContentRefFromGraphProjection({
+      ...graphProjection,
+      route: "try-out/indonesia/snbt/2027/set-1/general-reasoning",
+      section: "tryout",
+    });
+
+    expect(Option.getOrUndefined(ref)).toStrictEqual({
+      ...graphProjection,
+      route: "try-out/indonesia/snbt/2027/set-1/general-reasoning",
+      section: "tryout",
+      url: "https://nakafa.com/en/try-out/indonesia/snbt/2027/set-1/general-reasoning",
+    });
+  });
+
   it("rejects inconsistent or malformed persisted graph projections", () => {
     expect(
       Option.isNone(

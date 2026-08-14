@@ -1,12 +1,13 @@
-import {
-  tryoutCatalogIdentity,
-  tryoutPlacementIdentity,
-} from "@nakafa/aksara-contracts/tryout/identity";
 import type {
   TryoutCatalogRecord,
   TryoutCatalogRow,
-  TryoutPlacementRecord,
-} from "@nakafa/aksara-contracts/tryout/spec";
+} from "@nakafa/aksara-contracts/tryout/catalog";
+import {
+  tryoutCatalogIdentity,
+  tryoutCatalogNodeIdentity,
+  tryoutPlacementIdentity,
+} from "@nakafa/aksara-contracts/tryout/identity";
+import type { TryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/placement";
 
 /** Derives the canonical set identity shared by set and section rows. */
 function catalogSetIdentity(row: TryoutCatalogRow) {
@@ -14,11 +15,11 @@ function catalogSetIdentity(row: TryoutCatalogRow) {
     return;
   }
 
-  return tryoutCatalogIdentity({
+  return tryoutCatalogNodeIdentity({
+    appLocale: row.appLocale,
     countryKey: row.countryKey,
     examKey: row.examKey,
     kind: "set",
-    locale: row.locale,
     setKey: row.setKey,
     trackKey: row.trackKey,
   });
@@ -28,9 +29,10 @@ function catalogSetIdentity(row: TryoutCatalogRow) {
 export function tryoutCatalogFacts(record: TryoutCatalogRecord) {
   const { row } = record;
   return {
+    assetId: row.graph.assetId,
     identity: tryoutCatalogIdentity(row),
     kind: row.kind,
-    locale: row.locale,
+    appLocale: row.appLocale,
     order: row.kind === "country" || row.kind === "exam" ? 0 : row.order,
     publicPath: row.publicPath,
     setIdentity: catalogSetIdentity(row),
@@ -42,12 +44,15 @@ export function tryoutPlacementFacts(record: TryoutPlacementRecord) {
   const { row } = record;
   return {
     answerArtifactHash: row.answerArtifactHash,
+    answerArtifactLocale: row.answerArtifactLocale,
+    appLocale: row.appLocale,
     contentHash: row.contentHash,
     countryKey: row.countryKey,
+    deliveryLanguage: row.deliveryLanguage,
     examKey: row.examKey,
     identity: tryoutPlacementIdentity(row),
-    locale: row.locale,
     questionArtifactHash: row.questionArtifactHash,
+    questionArtifactLocale: row.questionArtifactLocale,
     questionOrder: row.questionOrder,
     sectionKey: row.sectionKey,
     setKey: row.setKey,

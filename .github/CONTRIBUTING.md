@@ -45,8 +45,8 @@ The main web app is available at [http://localhost:3000](http://localhost:3000).
 
 - Read root `AGENTS.md` and the nearest nested `AGENTS.md`.
 - Inspect recent history, the owning package, its config, and nearby tests.
-- Verify whether a content scope is owned by Aksara or by the remaining local
-  `packages/contents` source.
+- Send authored content changes to Aksara. `packages/contents` is a Nakafa
+  product and agent contract package, not an authored source.
 - For Effect work, read `repos/effect/AGENTS.md`, then inspect the matching
   implementation, tests, type-level tests, module structure, and API design.
   Treat the vendored subtree as read-only application reference material.
@@ -64,8 +64,8 @@ The main web app is available at [http://localhost:3000](http://localhost:3000).
   layers, duplicate sources of truth, or dead migration code.
 - Keep tests colocated as `name.test.ts` or `name.test.tsx` and use
   `vitest.config.ts`.
-- Use MDX for authored educational content and the existing math components for
-  mathematical notation.
+- Author educational MDX in Aksara and use the reviewed Nakafa renderer
+  components for mathematical notation.
 
 ## Verification
 

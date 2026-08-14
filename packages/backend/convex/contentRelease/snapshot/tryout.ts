@@ -59,6 +59,7 @@ export const stageTryoutCatalog = Effect.fn(
     if (
       !(byIndex && byIdentity) ||
       byIndex._id !== byIdentity._id ||
+      byIndex.assetId !== stored.assetId ||
       byIndex.rowJson !== rowJson ||
       byIndex.rowHash !== source.record.rowHash
     ) {

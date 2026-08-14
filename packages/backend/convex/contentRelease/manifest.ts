@@ -23,10 +23,6 @@ import {
   loadReleaseFamilies,
 } from "@repo/backend/convex/contentRelease/scope/family";
 import {
-  stageContentOwners,
-  validateContentOwners,
-} from "@repo/backend/convex/contentRelease/scope/owner";
-import {
   abortReceiptValidator,
   statusValidator,
 } from "@repo/backend/convex/contentRelease/spec";
@@ -114,7 +110,6 @@ const validateExisting = Effect.fn("contentRelease.validateExisting")(
       role === "candidate" ? state.candidateReleaseId : state.recoveryReleaseId;
     const slotSequence =
       role === "candidate" ? state.candidateSequence : state.recoverySequence;
-    yield* validateContentOwners(ctx, release, signed.manifest);
     if (slotId !== release.releaseId || slotSequence !== release.sequence) {
       return yield* releaseFail(
         "CONTENT_RELEASE_STATE",
@@ -139,6 +134,12 @@ const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
     return yield* releaseFail(
       "CONTENT_RELEASE_UNSUPPORTED",
       `Content release ${signed.manifest.releaseId} does not bind its renderer.`
+    );
+  }
+  if (signed.manifest.scope.content.length > 0) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_UNSUPPORTED",
+      `Content release ${signed.manifest.releaseId} uses deleted exact-content ownership.`
     );
   }
   const state = yield* ensureState(ctx);
@@ -207,7 +208,6 @@ const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
   } satisfies WithoutSystemFields<Doc<"contentReleases">>;
   yield* ensureDocumentSize(`Content release ${row.releaseId}`, row);
   yield* Effect.promise(() => ctx.db.insert("contentReleases", row));
-  yield* stageContentOwners(ctx, row, signed.manifest);
   const slot =
     role === "candidate"
       ? {

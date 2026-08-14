@@ -33,7 +33,6 @@ import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { PaginationContent } from "@/components/shared/pagination-content";
 import { ContentViewTracker } from "@/components/tracking/tracker";
-import { getContentViewId } from "@/lib/content/views";
 import { readMaterialContextQuery } from "@/lib/routing/material/query";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
@@ -66,7 +65,7 @@ export async function generateMetadata({
   params,
 }: MaterialPageProps): Promise<Metadata> {
   const source = await readMaterialMetadata(params);
-  const { locale, metadata, route } = source;
+  const { appLocale, metadata, route } = source;
   const path = toMaterialHref(route);
   const { description, title } = toMaterialMetadataCopy(source);
 
@@ -80,9 +79,9 @@ export async function generateMetadata({
     ...getSocialMetadata({
       title,
       description,
-      locale,
+      locale: appLocale,
       path,
-      image: getOgUrl(locale, route.publicPath),
+      image: getOgUrl(appLocale, route.publicPath),
       type: "article",
     }),
   };
@@ -114,7 +113,7 @@ async function MaterialRouteContent({
     readMaterialPage(params),
     searchParams,
   ]);
-  const { locale, route } = page;
+  const { appLocale, route } = page;
   const materialContext = readMaterialContextQuery(query ?? {});
   const navigation = await readMaterialNavigation(page, materialContext);
   const trackerContext: LearningContextInput | undefined = navigation.context
@@ -125,16 +124,13 @@ async function MaterialRouteContent({
       }
     : undefined;
   const contentKey = page.route.contentKey;
-  const contentId = getContentViewId({
-    locale,
-    route: contentKey,
-  });
+  const contentId = page.route.graph.assetId;
 
   return (
     <ContentViewTracker
       contentId={contentId}
       context={trackerContext}
-      locale={locale}
+      locale={appLocale}
       publicPath={route.publicPath}
       section="material"
     >
@@ -145,21 +141,12 @@ async function MaterialRouteContent({
         footer={<DeferredComments slug={contentKey} />}
         headerLink={navigation.link}
         icon={getMaterialIcon(page.rendererDomain)}
-        locale={locale}
+        locale={appLocale}
         pagination={navigation.pagination}
         parentTitle={page.route.topicTitle}
         route={route}
         sourceUrl={page.sourceUrl}
-        toolbar={
-          <DeferredAiSheetOpen
-            audio={{
-              contentType: "material",
-              locale,
-              slug: contentKey,
-            }}
-            contextTitle={page.metadata.title}
-          />
-        }
+        toolbar={<DeferredAiSheetOpen contextTitle={page.metadata.title} />}
       >
         {page.children}
       </MaterialLessonPage>

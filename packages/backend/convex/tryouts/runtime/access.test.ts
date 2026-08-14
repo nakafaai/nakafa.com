@@ -31,7 +31,7 @@ describe("tryouts/runtime/access", () => {
       return Effect.runPromise(
         readOwnedTryoutSectionContent(ctx, {
           attempt,
-          locale: "id",
+          appLocale: "id",
           sectionKey: TRYOUT_SECTION_KEY,
         })
       );
@@ -41,6 +41,7 @@ describe("tryouts/runtime/access", () => {
       answers: [],
       kind: "signed",
       questions: [seeded.signedContent.question],
+      runtime: "current",
     });
   });
 
@@ -62,7 +63,7 @@ describe("tryouts/runtime/access", () => {
       return Effect.runPromise(
         readOwnedTryoutSectionContent(ctx, {
           attempt,
-          locale: "id",
+          appLocale: "id",
           sectionKey: TRYOUT_SECTION_KEY,
         })
       );
@@ -72,6 +73,7 @@ describe("tryouts/runtime/access", () => {
       answers: [seeded.signedContent.answer],
       kind: "signed",
       questions: [seeded.signedContent.question],
+      runtime: "current",
     });
   });
 
@@ -115,7 +117,7 @@ describe("tryouts/runtime/access", () => {
         return Effect.runPromise(
           readOwnedTryoutSectionContent(ctx, {
             attempt,
-            locale: "id",
+            appLocale: "id",
             sectionKey: TRYOUT_SECTION_KEY,
           })
         );

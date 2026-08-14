@@ -84,7 +84,7 @@ export const executePreviewArtifact = Effect.fn(
   if (
     rendered.artifact.artifactHash !== previewArtifact.artifactHash ||
     rendered.artifact.payload.contentKey !== projection.contentKey ||
-    rendered.artifact.payload.locale !== projection.locale ||
+    rendered.artifact.payload.artifactLocale !== projection.artifactLocale ||
     rendered.artifact.payload.rendererDomain !== document.rendererDomain
   ) {
     return yield* new PreviewIntegrityError({ check: "artifact" });

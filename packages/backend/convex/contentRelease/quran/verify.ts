@@ -32,11 +32,11 @@ export const verifyQuranRow = Effect.fn("contentRelease.verifyQuranRow")(
     yield* ensureDocumentSize(
       `Quran row ${row.identity}`,
       {
+        appLocale: row.appLocale,
         firstVerse: row.firstVerse,
         identity: row.identity,
         index: row.index,
         kind: row.kind,
-        locale: row.locale,
         rowHash: row.rowHash,
         rowJson: row.rowJson,
         snapshotId: row.snapshotId,
@@ -48,7 +48,7 @@ export const verifyQuranRow = Effect.fn("contentRelease.verifyQuranRow")(
       facts.identity !== row.identity ||
       facts.kind !== row.kind ||
       facts.firstVerse !== row.firstVerse ||
-      facts.locale !== row.locale ||
+      facts.appLocale !== row.appLocale ||
       facts.surahNumber !== row.surahNumber
     ) {
       return yield* releaseFail(

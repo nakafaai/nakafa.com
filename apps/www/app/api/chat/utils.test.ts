@@ -5,7 +5,7 @@ import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ChatMutationError, ChatQueryError } from "@/app/api/chat/errors";
 import {
-  getLearningProfile,
+  getLearningSelection,
   getUserInfo,
   getVerified,
 } from "@/app/api/chat/utils";
@@ -100,21 +100,9 @@ describe("app/api/chat/utils", () => {
     });
   });
 
-  it("fetches active learning profile through the shared Convex query", async () => {
-    const learningProfile = {
-      interests: ["exam-prep", "assessment-prep"],
-      planItems: [
-        {
-          content_id:
-            "asset:en:tryout:indonesia:snbt:tryout-section:indonesia:snbt:2027:set-1:quantitative-knowledge",
-          lensId: "lens:snbt",
-          position: 1,
-          reason: "program-alignment",
-          route: "/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
-          status: "ready",
-          title: "SNBT Set 1",
-        },
-      ],
+  it("fetches the active learning selection through the shared Convex query", async () => {
+    const learningSelection = {
+      interest: "exam-prep",
       program: {
         coverageStatus: "partial",
         description: "UTBK-SNBT preparation for the 2026 admission cycle.",
@@ -129,25 +117,14 @@ describe("app/api/chat/utils", () => {
         versionLabel: "2026",
       },
     };
-    vi.mocked(fetchQuery).mockResolvedValue(learningProfile);
+    vi.mocked(fetchQuery).mockResolvedValue(learningSelection);
 
     const result = await Effect.runPromise(
-      getLearningProfile("test-token", "en")
+      getLearningSelection("test-token", "en")
     );
 
     expect(result).toEqual({
-      interests: ["exam-prep", "assessment-prep"],
-      planItems: [
-        {
-          content_id:
-            "asset:en:tryout:indonesia:snbt:tryout-section:indonesia:snbt:2027:set-1:quantitative-knowledge",
-          lensId: "lens:snbt",
-          position: 1,
-          route: "/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
-          status: "ready",
-          title: "SNBT Set 1",
-        },
-      ],
+      interest: "exam-prep",
       program: {
         coverageStatus: "partial",
         key: "snbt",
@@ -157,7 +134,7 @@ describe("app/api/chat/utils", () => {
       },
     });
     expect(fetchQuery).toHaveBeenCalledWith(
-      convexApi.learningPrograms.queries.getActiveProfile,
+      convexApi.learningPrograms.queries.getActiveSelection,
       { locale: "en" },
       {
         token: "test-token",
@@ -165,18 +142,18 @@ describe("app/api/chat/utils", () => {
     );
   });
 
-  it("maps learning-profile failures into the query error contract", async () => {
+  it("maps learning-selection failures into the query error contract", async () => {
     const cause = new Error("query unavailable");
     vi.mocked(fetchQuery).mockRejectedValueOnce(cause);
 
     const error = await Effect.runPromise(
-      getLearningProfile("test-token", "en").pipe(Effect.flip)
+      getLearningSelection("test-token", "en").pipe(Effect.flip)
     );
 
     expect(error).toBeInstanceOf(ChatQueryError);
     expect(error).toMatchObject({
       cause,
-      operation: "load-profile",
+      operation: "load-selection",
     });
   });
 });

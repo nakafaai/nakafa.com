@@ -14,7 +14,7 @@ function batch(
   selectors = [fixture.question, fixture.answer]
 ) {
   return {
-    locale: fixture.request.locale,
+    appLocale: fixture.request.appLocale,
     selectors: selectors.map(({ artifactHash, contentKey, delivery }) => ({
       artifactHash,
       contentKey,

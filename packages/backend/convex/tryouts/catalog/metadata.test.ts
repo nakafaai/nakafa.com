@@ -50,7 +50,7 @@ describe("tryouts/catalog/metadata", () => {
         runConvexProgram(
           readTryoutMetadata(ctx, {
             kind: "country",
-            locale: "en",
+            appLocale: "en",
             publicPath: "try-out/indonesia",
           })
         )
@@ -66,7 +66,7 @@ describe("tryouts/catalog/metadata", () => {
         runConvexProgram(
           readTryoutMetadata(ctx, {
             kind: "country",
-            locale: "en",
+            appLocale: "en",
             publicPath: "try-out/indonesia",
           })
         )
@@ -74,8 +74,8 @@ describe("tryouts/catalog/metadata", () => {
     ).resolves.toMatchObject({
       route: {
         alternates: [
-          { locale: "en", publicPath: "try-out/indonesia" },
-          { locale: "id", publicPath: "try-out/indonesia" },
+          { appLocale: "en", publicPath: "try-out/indonesia" },
+          { appLocale: "id", publicPath: "try-out/indonesia" },
         ],
         publicPath: "try-out/indonesia",
       },
@@ -87,7 +87,7 @@ describe("tryouts/catalog/metadata", () => {
     await t.mutation(async (ctx) => {
       const source = await ctx.db
         .query("tryoutCatalog")
-        .filter((query) => query.eq(query.field("locale"), "id"))
+        .filter((query) => query.eq(query.field("appLocale"), "id"))
         .first();
       if (!source) {
         throw new Error("Expected an active Indonesian catalog row.");
@@ -96,7 +96,7 @@ describe("tryouts/catalog/metadata", () => {
         identity: "unreferenced-catalog-row",
         index: 100,
         kind: "country",
-        locale: "id",
+        appLocale: "id",
         order: 100,
         publicPath: "try-out/unreferenced",
         rowHash: source.rowHash,
@@ -110,7 +110,7 @@ describe("tryouts/catalog/metadata", () => {
         runConvexProgram(
           readTryoutMetadata(ctx, {
             kind: "country",
-            locale: "en",
+            appLocale: "en",
             publicPath: "try-out/indonesia",
           })
         )
@@ -118,8 +118,8 @@ describe("tryouts/catalog/metadata", () => {
     ).resolves.toMatchObject({
       route: {
         alternates: [
-          { locale: "en", publicPath: "try-out/indonesia" },
-          { locale: "id", publicPath: "try-out/indonesia" },
+          { appLocale: "en", publicPath: "try-out/indonesia" },
+          { appLocale: "id", publicPath: "try-out/indonesia" },
         ],
       },
     });
@@ -147,9 +147,9 @@ describe("tryouts/catalog/metadata", () => {
       t.query((ctx) =>
         runConvexProgram(
           readTryoutLocalizedPath(ctx, {
-            currentLocale: "en",
-            locale: "id",
+            currentAppLocale: "en",
             publicPath: englishPath,
+            targetAppLocale: "id",
           })
         )
       )
@@ -158,9 +158,9 @@ describe("tryouts/catalog/metadata", () => {
       t.query((ctx) =>
         runConvexProgram(
           readTryoutLocalizedPath(ctx, {
-            currentLocale: "en",
-            locale: "id",
+            currentAppLocale: "en",
             publicPath: "try-out/missing",
+            targetAppLocale: "id",
           })
         )
       )
@@ -175,7 +175,7 @@ describe("tryouts/catalog/metadata", () => {
         runConvexProgram(
           readTryoutMetadata(ctx, {
             kind: "exam",
-            locale: "en",
+            appLocale: "en",
             publicPath: "try-out/indonesia",
           })
         )
@@ -188,7 +188,7 @@ describe("tryouts/catalog/metadata", () => {
     await t.mutation(async (ctx) => {
       const alternate = await ctx.db
         .query("tryoutCatalog")
-        .filter((query) => query.eq(query.field("locale"), "id"))
+        .filter((query) => query.eq(query.field("appLocale"), "id"))
         .first();
       if (!alternate) {
         throw new Error("Expected an Indonesian catalog row.");
@@ -201,14 +201,14 @@ describe("tryouts/catalog/metadata", () => {
         runConvexProgram(
           readTryoutMetadata(ctx, {
             kind: "country",
-            locale: "en",
+            appLocale: "en",
             publicPath: "try-out/indonesia",
           })
         )
       )
     ).resolves.toMatchObject({
       route: {
-        alternates: [{ locale: "en", publicPath: "try-out/indonesia" }],
+        alternates: [{ appLocale: "en", publicPath: "try-out/indonesia" }],
       },
     });
   });
@@ -241,14 +241,14 @@ describe("tryouts/catalog/metadata", () => {
         runConvexProgram(
           readTryoutMetadata(ctx, {
             kind: "section",
-            locale: "en",
+            appLocale: "en",
             publicPath,
           })
         )
       )
     ).resolves.toMatchObject({
       route: {
-        alternates: [{ locale: "en", publicPath }],
+        alternates: [{ appLocale: "en", publicPath }],
       },
     });
   });
@@ -261,7 +261,7 @@ describe("tryouts/catalog/metadata", () => {
         runConvexProgram(
           readTryoutMetadata(ctx, {
             kind: "country",
-            locale: "id",
+            appLocale: "id",
             publicPath: "try-out/missing",
           })
         )

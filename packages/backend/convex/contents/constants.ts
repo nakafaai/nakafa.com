@@ -1,8 +1,3 @@
-import {
-  LEARNING_OBJECT_KIND_VALUES,
-  SOURCE_REGISTRY_ROOT_VALUES,
-} from "@repo/contents/_types/graph/schema";
-
 /**
  * Maximum queued analytics rows processed in one mutation.
  * @see https://docs.convex.dev/production/state/limits#transactions
@@ -26,12 +21,3 @@ export const CONTENT_ANALYTICS_PARTITIONS = Array.from(
 
 /** Public Nakafa website origin used for canonical content URLs. */
 export const NAKAFA_CONTENT_BASE_URL = "https://nakafa.com";
-
-/** Public content sections persisted in the Convex content search read model. */
-export const NAKAFA_CONTENT_SECTIONS = SOURCE_REGISTRY_ROOT_VALUES;
-
-/** Concrete synced route families in the durable content catalog. */
-export const CONTENT_ROUTE_KINDS = LEARNING_OBJECT_KIND_VALUES;
-
-/** Maximum route rows stored in one sitemap or LLMS route artifact page. */
-export const CONTENT_ROUTE_ARTIFACT_PAGE_SIZE = 100;

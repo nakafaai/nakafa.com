@@ -1,32 +1,22 @@
-import type { LearningGraphIdentity } from "@nakafa/aksara-contracts/graph/spec";
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type { LearningContextStorage } from "@repo/backend/convex/contents/context";
 import { getContentAnalyticsPartition } from "@repo/backend/convex/contents/helpers/partitions";
 import type { RecordContentViewArgs } from "@repo/backend/convex/contents/views/spec";
-import type { ContentViewTargetInput } from "@repo/backend/convex/contents/views/target";
 import {
   type createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
-import { testTryoutGraph } from "@repo/backend/test/tryouts";
-import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
+import {
+  insertRuntimeArticles,
+  testArticleProjection,
+} from "@repo/backend/test/content-runtime";
 import { expect } from "vitest";
 
+const ARTICLE_VIEW_PROJECTION = testArticleProjection(0);
+
 export const CONTENT_VIEW_NOW = Date.UTC(2026, 4, 29, 10, 0, 0);
-export const ARTICLE_VIEW_ROUTE = "articles/politics/views";
-export const ARTICLE_VIEW_ID = "asset:id:catalog:article:views";
-export const SUBJECT_VIEW_ROUTE = "material/lesson/mathematics/vector/addition";
-export const SUBJECT_VIEW_ID = "asset:id:catalog:subject:views";
-export const TRYOUT_VIEW_ROUTE = "try-out/indonesia/snbt/2027/set-1";
-const TRYOUT_VIEW_GRAPH = testTryoutGraph({
-  countryKey: "indonesia",
-  examKey: "snbt",
-  kind: "set",
-  setKey: "set-1",
-  trackKey: "2027",
-});
-export const TRYOUT_VIEW_ID = TRYOUT_VIEW_GRAPH.assetId;
+export const ARTICLE_VIEW_ROUTE = ARTICLE_VIEW_PROJECTION.publicPath;
+export const ARTICLE_VIEW_ID = ARTICLE_VIEW_PROJECTION.graph.assetId;
 export const canonicalViewContext = {
   contextKey: "canonical",
   contextMode: "canonical",
@@ -40,95 +30,27 @@ export function makeArticleViewArgs(
   return {
     contentId,
     deviceId,
-    locale: "id",
+    locale: "en",
     publicPath: ARTICLE_VIEW_ROUTE,
     section: "articles",
   };
 }
 
-/** Builds one route-catalog graph fixture from the route shape under test. */
-function getGraphFixture(
-  route: string,
-  locale: Doc<"contentRoutes">["locale"]
-) {
-  const graph = createLearningGraphIdentityFromRoute({
-    locale,
-    route,
-  });
-
-  if (!graph) {
-    expect.fail(`Unable to build graph fixture for route "${route}".`);
+/** Inserts one current signed article for content-view behavior tests. */
+export async function insertContentViewArticle(ctx: MutationCtx) {
+  await insertRuntimeArticles(ctx, 1, () => ARTICLE_VIEW_PROJECTION);
+  const row = await ctx.db
+    .query("articleCatalog")
+    .withIndex("by_contentKey_and_appLocale", (query) =>
+      query
+        .eq("contentKey", ARTICLE_VIEW_PROJECTION.contentKey)
+        .eq("appLocale", ARTICLE_VIEW_PROJECTION.appLocale)
+    )
+    .unique();
+  if (!row) {
+    throw new Error("Expected one current signed article fixture.");
   }
-
-  return graph;
-}
-
-/** Inserts one graph route-catalog row for content-view tests. */
-export async function insertContentViewRoute(
-  ctx: MutationCtx,
-  source: {
-    readonly contentId: string;
-    readonly graph?: LearningGraphIdentity;
-    readonly kind: Doc<"contentRoutes">["kind"];
-    readonly locale?: Doc<"contentRoutes">["locale"];
-    readonly materialDomain?: Doc<"contentRoutes">["materialDomain"];
-    readonly route: string;
-    readonly section: Doc<"contentRoutes">["section"];
-    readonly sourcePath?: string;
-    readonly title: string;
-  }
-) {
-  const locale = source.locale ?? "id";
-  const graph = source.graph ?? getGraphFixture(source.route, locale);
-
-  await ctx.db.insert("contentRoutes", {
-    ...graph,
-    assetId: source.contentId,
-    authors: [],
-    contentHash: `route-hash-${source.contentId}`,
-    content_id: source.contentId,
-    kind: source.kind,
-    locale,
-    markdown: true,
-    ...(source.materialDomain ? { materialDomain: source.materialDomain } : {}),
-    route: source.route,
-    section: source.section,
-    sourcePath: source.sourcePath ?? source.route,
-    syncedAt: CONTENT_VIEW_NOW,
-    title: source.title,
-  });
-
-  return source.contentId;
-}
-
-/** Inserts one source-owned article and its route projection. */
-export async function insertContentViewArticle(
-  ctx: MutationCtx,
-  slug = ARTICLE_VIEW_ROUTE,
-  contentId = ARTICLE_VIEW_ID
-) {
-  const id = await ctx.db.insert("articleContents", {
-    articleSlug: slug.split("/").at(-1) ?? "views",
-    body: "Article body",
-    category: "politics",
-    contentHash: `hash-${slug}`,
-    date: CONTENT_VIEW_NOW,
-    description: "Article description",
-    locale: "id",
-    slug,
-    syncedAt: CONTENT_VIEW_NOW,
-    title: "Views",
-  });
-
-  await insertContentViewRoute(ctx, {
-    contentId,
-    kind: "article",
-    route: slug,
-    section: "articles",
-    title: "Views",
-  });
-
-  return { contentId, id };
+  return { contentId: ARTICLE_VIEW_ID, id: row._id };
 }
 
 /** Seeds one article and authenticated viewer for content-view behavior tests. */
@@ -138,116 +60,7 @@ export async function seedArticleViewer(ctx: MutationCtx, suffix: string) {
     now: CONTENT_VIEW_NOW,
     suffix,
   });
-
   return { ...user, contentId: article.contentId };
-}
-
-/** Inserts one source-owned curriculum lesson and its route projection. */
-async function insertContentViewSubject(ctx: MutationCtx) {
-  const topicId = await ctx.db.insert("curriculumTopics", {
-    locale: "id",
-    material: "mathematics",
-    order: 0,
-    sectionCount: 1,
-    slug: "material/lesson/mathematics/vector",
-    syncedAt: CONTENT_VIEW_NOW,
-    title: "Vector",
-    topic: "vector",
-  });
-
-  const id = await ctx.db.insert("curriculumLessons", {
-    body: "Subject body",
-    contentHash: "subject-hash",
-    date: CONTENT_VIEW_NOW,
-    description: "Subject description",
-    locale: "id",
-    material: "mathematics",
-    order: 0,
-    section: "addition",
-    slug: SUBJECT_VIEW_ROUTE,
-    subject: "Vector",
-    syncedAt: CONTENT_VIEW_NOW,
-    title: "Vector Addition",
-    topic: "vector",
-    topicId,
-  });
-
-  await insertContentViewRoute(ctx, {
-    contentId: SUBJECT_VIEW_ID,
-    kind: "curriculum-lesson",
-    route: SUBJECT_VIEW_ROUTE,
-    section: "material",
-    title: "Vector Addition",
-  });
-
-  return { contentId: SUBJECT_VIEW_ID, id };
-}
-
-/** Inserts one route projection backed by a signed try-out set identity. */
-async function insertContentViewTryout(ctx: MutationCtx) {
-  await insertContentViewRoute(ctx, {
-    contentId: TRYOUT_VIEW_ID,
-    graph: TRYOUT_VIEW_GRAPH,
-    kind: "tryout-set",
-    route: TRYOUT_VIEW_ROUTE,
-    section: "tryout",
-    title: "SNBT Set 1",
-  });
-
-  return { contentId: TRYOUT_VIEW_ID };
-}
-
-/** Inserts the route target kinds supported by content views. */
-export async function insertContentViewRouteTargets(ctx: MutationCtx) {
-  const examRoute = "try-out/indonesia/snbt";
-  const examGraph = testTryoutGraph({
-    countryKey: "indonesia",
-    examKey: "snbt",
-    kind: "exam",
-  });
-  const examContentId = await insertContentViewRoute(ctx, {
-    contentId: examGraph.assetId,
-    graph: examGraph,
-    kind: "tryout-exam",
-    route: examRoute,
-    section: "tryout",
-    title: "SNBT",
-  });
-  const subject = await insertContentViewSubject(ctx);
-  const tryout = await insertContentViewTryout(ctx);
-
-  return [
-    {
-      expectedRoute: SUBJECT_VIEW_ROUTE,
-      input: {
-        contentId: subject.contentId,
-        locale: "id",
-        publicPath: "materi/matematika/vektor/penjumlahan",
-        section: "material",
-      },
-    },
-    {
-      expectedRoute: TRYOUT_VIEW_ROUTE,
-      input: {
-        contentId: tryout.contentId,
-        locale: "id",
-        publicPath: TRYOUT_VIEW_ROUTE,
-        section: "tryout",
-      },
-    },
-    {
-      expectedRoute: examRoute,
-      input: {
-        contentId: examContentId,
-        locale: "id",
-        publicPath: examRoute,
-        section: "tryout",
-      },
-    },
-  ] satisfies readonly {
-    readonly expectedRoute: string;
-    readonly input: ContentViewTargetInput;
-  }[];
 }
 
 /** Returns the analytics partition for one popularity signal scope. */
@@ -258,34 +71,28 @@ export function getContentViewPartition(contentId: string) {
 /** Returns whether one scheduled job is the analytics partition scheduler. */
 function isAnalyticsPartitionJob(job: { args: readonly unknown[] }) {
   const [arg] = job.args;
-
   return typeof arg === "object" && arg !== null && "partition" in arg;
 }
 
 /** Returns whether one scheduled job is a content-view product event. */
 function isContentViewedEventJob(job: { args: readonly unknown[] }) {
   const [arg] = job.args;
-
   if (typeof arg !== "object" || arg === null) {
     return false;
   }
-
   return Reflect.get(arg, "event") === "content viewed";
 }
 
 /** Reads the product analytics user from a scheduled content-view event. */
 export function getContentViewDistinctId(job: { args: readonly unknown[] }) {
   const [arg] = job.args;
-
   if (typeof arg !== "object" || arg === null) {
     expect.fail("Expected scheduled content-view event arguments.");
   }
-
   const distinctId = Reflect.get(arg, "distinctId");
   if (typeof distinctId !== "string") {
     expect.fail("Expected scheduled content-view event distinct ID.");
   }
-
   return distinctId;
 }
 
@@ -297,7 +104,6 @@ export async function readContentViewState(
     const scheduledFunctions = await ctx.db.system
       .query("_scheduled_functions")
       .take(20);
-
     return {
       contentViewEvents: scheduledFunctions.filter(isContentViewedEventJob),
       engagementQueue: await ctx.db.query("learningEngagementQueue").take(20),

@@ -1,4 +1,4 @@
-import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/spec";
+import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import {
   readTryoutSitemapCount,
   readTryoutSitemapPage,
@@ -51,7 +51,7 @@ function makeInternalSection(locale: "en" | "id") {
       learningObjectId: "lo:tryout-entry-section",
     },
     kind: "section",
-    locale,
+    appLocale: locale,
     order: 1,
     questionCount: 1,
     questionSourcePath:

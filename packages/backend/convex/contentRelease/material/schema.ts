@@ -1,5 +1,5 @@
 import {
-  localeValidator,
+  appLocaleValidator,
   rendererDomainValidator,
 } from "@repo/backend/convex/contentRelease/spec";
 import { defineTable } from "convex/server";
@@ -8,11 +8,11 @@ import { v } from "convex/values";
 const tables = {
   /** Active public material lessons indexed for curriculum-card assembly. */
   materialCatalog: defineTable({
+    appLocale: appLocaleValidator,
     assetId: v.string(),
     bucket: v.string(),
     contentKey: v.string(),
     date: v.string(),
-    locale: localeValidator,
     materialKey: v.string(),
     order: v.number(),
     parentPath: v.string(),
@@ -24,53 +24,39 @@ const tables = {
     sequence: v.number(),
     sourcePath: v.string(),
   })
-    .index("by_contentKey_and_locale", ["contentKey", "locale"])
-    .index("by_locale_and_contentKey", ["locale", "contentKey"])
-    .index("by_locale_and_assetId", ["locale", "assetId"])
-    .index("by_locale_and_publicPath", ["locale", "publicPath"])
-    .index("by_locale_and_date_and_contentKey", [
-      "locale",
+    .index("by_contentKey_and_appLocale", ["contentKey", "appLocale"])
+    .index("by_appLocale_and_contentKey", ["appLocale", "contentKey"])
+    .index("by_appLocale_and_assetId", ["appLocale", "assetId"])
+    .index("by_appLocale_and_publicPath", ["appLocale", "publicPath"])
+    .index("by_appLocale_and_date_and_contentKey", [
+      "appLocale",
       "date",
       "contentKey",
     ])
-    .index("by_locale_and_bucket_and_publicPath", [
-      "locale",
+    .index("by_appLocale_and_bucket_and_publicPath", [
+      "appLocale",
       "bucket",
       "publicPath",
     ])
-    .index("by_locale_and_parentPath_and_order_and_publicPath", [
-      "locale",
+    .index("by_appLocale_and_parentPath_and_order_and_publicPath", [
+      "appLocale",
       "parentPath",
       "order",
       "publicPath",
     ])
-    .index("by_locale_and_materialKey_and_order_and_publicPath", [
-      "locale",
+    .index("by_appLocale_and_materialKey_and_order_and_publicPath", [
+      "appLocale",
       "materialKey",
       "order",
       "publicPath",
     ]),
 
-  /** Current exact material ownership selected by the active release. */
-  materialOwners: defineTable({
-    contentKey: v.string(),
-    locale: localeValidator,
-    releaseId: v.string(),
-    sequence: v.number(),
-  })
-    .index("by_contentKey_and_locale", ["contentKey", "locale"])
-    .index("by_releaseId_and_locale_and_contentKey", [
-      "releaseId",
-      "locale",
-      "contentKey",
-    ]),
-
   /** Non-empty deterministic partitions for bounded material discovery. */
   materialBuckets: defineTable({
+    appLocale: appLocaleValidator,
     bucket: v.string(),
     count: v.number(),
-    locale: localeValidator,
-  }).index("by_locale_and_bucket", ["locale", "bucket"]),
+  }).index("by_appLocale_and_bucket", ["appLocale", "bucket"]),
 };
 
 export default tables;

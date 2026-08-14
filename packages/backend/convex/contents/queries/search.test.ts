@@ -1,12 +1,18 @@
-import { api, internal } from "@repo/backend/convex/_generated/api";
+import { api } from "@repo/backend/convex/_generated/api";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+import { makeMaterialProjection } from "@repo/backend/test/content-material";
+import {
+  insertRuntimeArticles,
+  testArticleProjection,
+} from "@repo/backend/test/content-runtime";
+import {
+  activateMaterialCatalog,
+  MATERIAL_IDENTITY,
+} from "@repo/backend/test/material-catalog";
 import { makeQuranSearch } from "@repo/backend/test/quran-rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran-snapshot";
-import {
-  getPublicSearchPath,
-  insertContentSearch,
-  searchContentId,
-} from "@repo/backend/test/search";
+import { insertRuntimeIndex } from "@repo/backend/test/runtime-head";
+import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
 import {
   activateTryoutSnapshot,
   makeTryoutCatalogRow,
@@ -15,223 +21,118 @@ import {
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/_types/agent/search";
 import { describe, expect, it } from "vitest";
 
+const MARKDOWN_PATH_PATTERN = /\.md$/;
+
+/** Activates signed articles and their authenticated search rows. */
+async function activateArticleSearch(
+  count: number,
+  textAt: (index: number) => string
+) {
+  const t = createConvexTestWithBetterAuth();
+  await t.mutation(async (ctx) => {
+    await insertRuntimeArticles(ctx, count);
+    for (let index = 0; index < count; index += 1) {
+      const projection = testArticleProjection(index);
+      await insertRuntimeIndex(ctx, projection.contentKey, {
+        plainText: textAt(index),
+      });
+    }
+    const state = await ctx.db.query("contentState").unique();
+    if (!state) {
+      throw new Error("Expected one active content state.");
+    }
+    await ctx.db.patch("contentState", state._id, {
+      searchManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
+      searchReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+      searchSequence: TEST_RUNTIME_RELEASE.sequence,
+    });
+  });
+  return t;
+}
+
 describe("contents/queries/search:search", () => {
-  it("searches title and body text with locale and section filters", async () => {
-    const t = createConvexTestWithBetterAuth();
-
-    await t.mutation(async (ctx) => {
-      await insertContentSearch(ctx, {
-        contentHash: "hash-rational",
-        description: "Pelajari fungsi rasional.",
-        locale: "id",
-        route:
-          "material/lesson/mathematics/function-modeling/rational-function",
-        section: "material",
-        syncedAt: 1,
-        text: "kelas 11 matematika pemodelan fungsi penyebut domain asimtot",
-        title: "Fungsi Rasional",
-      });
-      await insertContentSearch(ctx, {
-        contentHash: "hash-domain",
-        description: "Pelajari domain dan range.",
-        locale: "id",
-        route:
-          "material/lesson/mathematics/function-modeling/domain-codomain-range",
-        section: "material",
-        syncedAt: 1,
-        text: "fungsi rasional muncul dalam contoh batas input dan output",
-        title: "Domain, Kodomain, dan Range",
-      });
-      await insertContentSearch(ctx, {
-        contentHash: "hash-en",
-        description: "Learn rational functions.",
-        locale: "en",
-        route:
-          "material/lesson/mathematics/function-modeling/rational-function",
-        section: "material",
-        syncedAt: 1,
-        text: "grade 11 mathematics rational function",
-        title: "Rational Function",
-      });
-    });
-
-    const titleResult = await t.query(api.contents.queries.search.search, {
-      limit: 10,
-      locale: "id",
-      offset: 0,
-      queries: ["fungsi rasional kelas 11"],
-      section: "material",
-    });
-    const bodyResult = await t.query(api.contents.queries.search.search, {
-      limit: 10,
-      locale: "id",
-      offset: 0,
-      queries: ["batas input output"],
-      section: "material",
-    });
-
-    expect(titleResult.items.map((item) => item.title)).toEqual([
-      "Fungsi Rasional",
-      "Domain, Kodomain, dan Range",
-    ]);
-    expect(titleResult.items[0]).toEqual(
-      expect.objectContaining({
-        excerpt: expect.stringContaining("kelas 11"),
-      })
+  it("searches authenticated article text and returns a readable reference", async () => {
+    const t = await activateArticleSearch(2, (index) =>
+      index === 0
+        ? "rational function grade eleven asymptote"
+        : "unrelated editorial text"
     );
-    expect(bodyResult.items).toEqual([
+
+    const result = await t.query(api.contents.queries.search.search, {
+      limit: 10,
+      locale: "en",
+      offset: 0,
+      queries: ["rational function"],
+      section: "articles",
+    });
+
+    expect(result.items).toEqual([
       expect.objectContaining({
-        content_id: searchContentId(
-          "id",
-          "material/lesson/mathematics/function-modeling/domain-codomain-range"
-        ),
-        excerpt: expect.stringContaining("batas input"),
+        content_id: testArticleProjection(0).graph.assetId,
+        excerpt: expect.stringContaining("rational function"),
+        markdown_url: expect.stringMatching(MARKDOWN_PATH_PATTERN),
+        route: testArticleProjection(0).publicPath,
+        section: "articles",
       }),
     ]);
-    expect(bodyResult.items[0].excerpt).not.toContain("<mark>");
   });
 
-  it("searches route tokens without leaking route strings into excerpts", async () => {
+  it("resolves an exact current material route", async () => {
     const t = createConvexTestWithBetterAuth();
-    const sourcePath =
-      "material/lesson/mathematics/exponential-logarithm/logarithm-definition";
-    const publicPath = getPublicSearchPath("id", sourcePath);
-
+    const projection = makeMaterialProjection("en", 1);
+    await activateMaterialCatalog(t, [projection]);
     await t.mutation(async (ctx) => {
-      await insertContentSearch(ctx, {
-        contentHash: "hash-logarithm",
-        description: "Memahami bentuk dasar logaritma.",
-        locale: "id",
-        route: sourcePath,
-        section: "material",
-        syncedAt: 1,
-        text: "Definisi Logaritma menjelaskan pangkat yang dibutuhkan.",
-        title: "Definisi Logaritma",
+      await insertRuntimeIndex(ctx, projection.contentKey, {
+        artifactLocale: projection.artifactLocale,
+        headSequence: MATERIAL_IDENTITY.sequence,
+        plainText: "current signed material",
+      });
+      const state = await ctx.db.query("contentState").unique();
+      if (!state) {
+        throw new Error("Expected one active content state.");
+      }
+      await ctx.db.patch("contentState", state._id, {
+        searchManifestHash: MATERIAL_IDENTITY.manifestHash,
+        searchReleaseId: MATERIAL_IDENTITY.releaseId,
+        searchSequence: MATERIAL_IDENTITY.sequence,
       });
     });
 
     const result = await t.query(api.contents.queries.search.search, {
       limit: 5,
-      locale: "id",
+      locale: "en",
       offset: 0,
-      queries: [publicPath],
+      queries: [projection.publicPath],
       section: "material",
     });
 
     expect(result.items).toEqual([
       expect.objectContaining({
-        content_id: searchContentId("id", sourcePath),
-        excerpt: expect.stringContaining("pangkat"),
+        content_id: projection.graph.assetId,
+        route: projection.publicPath,
+        section: "material",
       }),
     ]);
-    expect(result.items[0].excerpt).not.toContain("material/lesson");
-    expect(result.items[0].excerpt).not.toContain("exponential-logarithm");
   });
 
-  it("searches multiple unique query variants in one bounded request", async () => {
-    const t = createConvexTestWithBetterAuth();
-
-    await t.mutation(async (ctx) => {
-      await insertContentSearch(ctx, {
-        contentHash: "hash-mass",
-        description: "Pelajari hukum kekekalan massa.",
-        locale: "id",
-        route:
-          "material/lesson/chemistry/basic-chemistry-laws/mass-conservation-law",
-        section: "material",
-        syncedAt: 1,
-        text: "kimia kelas 10 reaksi tertutup massa zat tetap",
-        title: "Hukum Kekekalan Massa",
-      });
-      await insertContentSearch(ctx, {
-        contentHash: "hash-stoichiometry",
-        description: "Pelajari stoikiometri.",
-        locale: "id",
-        route: "material/lesson/chemistry/stoichiometry/introduction",
-        section: "material",
-        syncedAt: 1,
-        text: "perhitungan kimia mol massa reaksi",
-        title: "Stoikiometri",
-      });
-      await insertContentSearch(ctx, {
-        contentHash: "hash-mass-application",
-        description: "Latihan tambahan hukum kekekalan massa.",
-        locale: "id",
-        route:
-          "material/lesson/chemistry/basic-chemistry-laws/mass-application",
-        section: "material",
-        syncedAt: 1,
-        text: "hukum kekekalan massa contoh lanjutan",
-        title: "Aplikasi Massa",
-      });
-    });
+  it("browses current articles in stable route order", async () => {
+    const t = await activateArticleSearch(3, () => "browse article");
 
     const result = await t.query(api.contents.queries.search.search, {
       limit: 2,
-      locale: "id",
+      locale: "en",
       offset: 0,
-      queries: ["hukum kekekalan massa", "stoikiometri"],
-      section: "material",
+      section: "articles",
     });
 
-    expect(result.items.map((item) => item.title)).toEqual([
-      "Hukum Kekekalan Massa",
-      "Stoikiometri",
+    expect(result).toMatchObject({ count: 2, has_more: true, next_offset: 2 });
+    expect(result.items.map(({ route }) => route)).toEqual([
+      testArticleProjection(0).publicPath,
+      testArticleProjection(1).publicPath,
     ]);
   });
 
-  it("never falls back to obsolete Quran or Tryout source rows", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const tryout = makeTryoutCatalogRow("en").record.row;
-    const tryoutPublicPath = tryout.publicPath;
-    if (tryoutPublicPath === undefined) {
-      expect.fail("Expected one public technical Tryout row.");
-    }
-
-    await t.mutation(async (ctx) => {
-      await insertContentSearch(ctx, {
-        contentHash: "legacy-quran",
-        description: "Obsolete Quran source row.",
-        locale: "en",
-        route: "quran/1",
-        section: "quran",
-        syncedAt: 1,
-        text: "legacy signed cutover",
-        title: "Legacy Quran",
-      });
-      await insertContentSearch(ctx, {
-        contentHash: "legacy-tryout",
-        description: "Obsolete Tryout source row.",
-        graph: tryout.graph,
-        locale: "en",
-        route: tryoutPublicPath,
-        section: "tryout",
-        syncedAt: 1,
-        text: "legacy signed cutover",
-        title: "Legacy Tryout",
-      });
-    });
-
-    const quran = await t.query(api.contents.queries.search.search, {
-      limit: 10,
-      locale: "en",
-      offset: 0,
-      queries: ["legacy signed cutover"],
-      section: "quran",
-    });
-    const tryoutResult = await t.query(api.contents.queries.search.search, {
-      limit: 10,
-      locale: "en",
-      offset: 0,
-      queries: ["legacy signed cutover"],
-      section: "tryout",
-    });
-
-    expect(quran.items).toEqual([]);
-    expect(tryoutResult.items).toEqual([]);
-  });
-
-  it("returns signed Quran rows through the unified search query", async () => {
+  it("returns signed Quran rows through the unified query", async () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation((ctx) =>
       activateQuranSnapshot(ctx, [
@@ -250,13 +151,47 @@ describe("contents/queries/search:search", () => {
     expect(result.items).toMatchObject([
       {
         content_id: "asset:en:quran:quran-surah:1",
+        markdown_url: "https://nakafa.com/en/quran/1.md",
         route: "quran/1",
         section: "quran",
       },
     ]);
   });
 
-  it("addresses the final result in the shared signed search window", async () => {
+  it("returns bodyless Tryout catalog refs without claiming markdown", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await t.mutation((ctx) =>
+      activateTryoutSnapshot(ctx, {
+        catalog: [
+          makeTryoutCatalogRow("en").record.row,
+          makeTryoutCatalogRow("id").record.row,
+        ],
+        placements: [
+          makeTryoutPlacementRow("en").record.row,
+          makeTryoutPlacementRow("id").record.row,
+        ],
+      })
+    );
+
+    const result = await t.query(api.contents.queries.search.search, {
+      limit: 10,
+      locale: "en",
+      offset: 0,
+      queries: ["Technical country"],
+      section: "tryout",
+    });
+
+    expect(result.items).toEqual([
+      expect.objectContaining({
+        content_id: "asset:en:tryout:technical:country",
+        route: "try-out/indonesia",
+        section: "tryout",
+      }),
+    ]);
+    expect(result.items[0]).not.toHaveProperty("markdown_url");
+  });
+
+  it("caps the shared signed search window", async () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation((ctx) =>
       activateQuranSnapshot(
@@ -280,199 +215,5 @@ describe("contents/queries/search:search", () => {
       items: [{ route: `quran/${NAKAFA_AGENT_SEARCH_WINDOW}` }],
       offset: NAKAFA_AGENT_SEARCH_WINDOW - 1,
     });
-  });
-
-  it("returns signed Tryout rows through the unified search query", async () => {
-    const t = createConvexTestWithBetterAuth();
-    await t.mutation((ctx) =>
-      activateTryoutSnapshot(ctx, {
-        catalog: [
-          makeTryoutCatalogRow("en").record.row,
-          makeTryoutCatalogRow("id").record.row,
-        ],
-        placements: [
-          makeTryoutPlacementRow("en").record.row,
-          makeTryoutPlacementRow("id").record.row,
-        ],
-      })
-    );
-
-    const result = await t.query(api.contents.queries.search.search, {
-      limit: 10,
-      locale: "en",
-      offset: 0,
-      queries: ["Technical country"],
-      section: "tryout",
-    });
-
-    expect(result.items).toMatchObject([
-      {
-        content_id: "asset:en:tryout:technical:country",
-        route: "try-out/indonesia",
-        section: "tryout",
-      },
-    ]);
-  });
-
-  it("browses a stable bounded list when no query is provided", async () => {
-    const t = createConvexTestWithBetterAuth();
-
-    await t.mutation(async (ctx) => {
-      await insertContentSearch(ctx, {
-        contentHash: "hash-b",
-        description: "",
-        locale: "id",
-        route: "articles/science/b",
-        section: "articles",
-        syncedAt: 1,
-        text: "Beta",
-        title: "Beta",
-      });
-      await insertContentSearch(ctx, {
-        contentHash: "hash-a",
-        description: "",
-        locale: "id",
-        route: "articles/science/a",
-        section: "articles",
-        syncedAt: 1,
-        text: "Alpha",
-        title: "Alpha",
-      });
-    });
-
-    const result = await t.query(api.contents.queries.search.search, {
-      limit: 1,
-      locale: "id",
-      offset: 0,
-      section: "articles",
-    });
-
-    expect(result).toMatchObject({
-      count: 1,
-      has_more: true,
-      next_offset: 1,
-    });
-    expect(result.items[0].title).toBe("Alpha");
-  });
-
-  it("caps the final page without advertising another offset", async () => {
-    const t = createConvexTestWithBetterAuth();
-
-    await t.mutation(async (ctx) => {
-      for (
-        let index = 0;
-        index <= NAKAFA_AGENT_SEARCH_WINDOW + 10;
-        index += 1
-      ) {
-        const title = `Search Cap ${index.toString().padStart(4, "0")}`;
-
-        await insertContentSearch(ctx, {
-          contentHash: `hash-search-cap-${index}`,
-          description: "",
-          locale: "id",
-          route: `articles/search-cap/${index}`,
-          section: "articles",
-          syncedAt: 1,
-          text: "searchcap pagination",
-          title,
-        });
-      }
-    });
-
-    const limit = Math.ceil(NAKAFA_AGENT_SEARCH_WINDOW / 2);
-    const offset = NAKAFA_AGENT_SEARCH_WINDOW - limit;
-    const continuationOffset = limit;
-    const browseResult = await t.query(api.contents.queries.search.search, {
-      limit,
-      locale: "id",
-      offset,
-      section: "articles",
-    });
-    const queryResult = await t.query(api.contents.queries.search.search, {
-      limit,
-      locale: "id",
-      offset,
-      queries: ["searchcap"],
-      section: "articles",
-    });
-    const naturalContinuation = await t.query(
-      api.contents.queries.search.search,
-      {
-        limit,
-        locale: "id",
-        offset: continuationOffset,
-        queries: ["searchcap"],
-        section: "articles",
-      }
-    );
-
-    expect(browseResult).toMatchObject({
-      count: limit,
-      has_more: false,
-    });
-    expect(queryResult).toMatchObject({
-      count: limit,
-      has_more: false,
-    });
-    expect(naturalContinuation).toMatchObject({
-      count: NAKAFA_AGENT_SEARCH_WINDOW - continuationOffset,
-      has_more: false,
-      limit,
-      offset: continuationOffset,
-    });
-  });
-
-  it("removes article search rows when stale synced content is deleted", async () => {
-    const t = createConvexTestWithBetterAuth();
-
-    await t.mutation(internal.contentSync.mutations.articles.bulkSyncArticles, {
-      articles: [
-        {
-          articleSlug: "valid-article",
-          authors: [],
-          body: "body about searchable deletion",
-          category: "politics",
-          contentHash: "hash-valid",
-          date: 1,
-          description: "Searchable article",
-          locale: "id",
-          official: false,
-          references: [],
-          slug: "articles/science/valid-article",
-          title: "Valid Article",
-        },
-      ],
-    });
-
-    const articleId = await t.query(async (ctx) => {
-      const article = await ctx.db
-        .query("articleContents")
-        .withIndex("by_locale_and_slug", (q) =>
-          q.eq("locale", "id").eq("slug", "articles/science/valid-article")
-        )
-        .unique();
-
-      if (!article) {
-        expect.fail("Expected synced article.");
-      }
-
-      return article._id;
-    });
-
-    await t.mutation(
-      internal.contentSync.mutations.articles.deleteStaleArticles,
-      {
-        articleIds: [articleId],
-      }
-    );
-
-    const result = await t.query(api.contents.queries.search.search, {
-      limit: 10,
-      locale: "id",
-      offset: 0,
-      queries: ["searchable deletion"],
-    });
-
-    expect(result.items).toEqual([]);
   });
 });

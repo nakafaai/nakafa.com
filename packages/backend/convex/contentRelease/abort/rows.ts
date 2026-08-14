@@ -8,9 +8,7 @@ import {
   ABORT_PAGE_LIMIT,
   hasAbortTransactionHeadroom,
 } from "@repo/backend/convex/contentRelease/abort/budget";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { retainOrphanedArtifacts } from "@repo/backend/convex/contentRelease/retention";
-import { EXACT_SCOPE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import { Effect } from "effect";
 
 interface AbortCounts {
@@ -34,14 +32,16 @@ export function abortRowCount(release: AbortCounts) {
 const deleteOwnedKey = Effect.fn("contentRelease.deleteAbortKey")(function* (
   ctx: MutationCtx,
   contentKey: string,
-  locale: Doc<"contentKeys">["locale"],
+  artifactLocale: Doc<"contentKeys">["artifactLocale"],
   sequence: number
 ) {
   const key = yield* Effect.promise(() =>
     ctx.db
       .query("contentKeys")
-      .withIndex("by_contentKey_and_locale", (query) =>
-        query.eq("contentKey", contentKey).eq("locale", locale)
+      .withIndex("by_contentKey_and_artifactLocale", (query) =>
+        query
+          .eq("contentKey", contentKey)
+          .eq("artifactLocale", artifactLocale)
       )
       .unique()
   );
@@ -53,15 +53,15 @@ const deleteOwnedKey = Effect.fn("contentRelease.deleteAbortKey")(function* (
 /** Removes a route identity only when this release first introduced it. */
 const deleteOwnedPath = Effect.fn("contentRelease.deleteAbortPath")(function* (
   ctx: MutationCtx,
-  locale: Doc<"contentPaths">["locale"],
+  appLocale: Doc<"contentPaths">["appLocale"],
   publicPath: string,
   sequence: number
 ) {
   const path = yield* Effect.promise(() =>
     ctx.db
       .query("contentPaths")
-      .withIndex("by_locale_and_publicPath", (query) =>
-        query.eq("locale", locale).eq("publicPath", publicPath)
+      .withIndex("by_appLocale_and_publicPath", (query) =>
+        query.eq("appLocale", appLocale).eq("publicPath", publicPath)
       )
       .unique()
   );
@@ -70,66 +70,36 @@ const deleteOwnedPath = Effect.fn("contentRelease.deleteAbortPath")(function* (
   }
 });
 
-/** Removes every bounded exact ownership transition for one invisible release. */
-const deleteOwnedOwners = Effect.fn("contentRelease.deleteAbortOwners")(
-  function* (ctx: MutationCtx, releaseId: string) {
-    const owners = yield* Effect.promise(() =>
-      ctx.db
-        .query("contentOwners")
-        .withIndex("by_releaseId_and_contentKey_and_locale", (query) =>
-          query.eq("releaseId", releaseId)
-        )
-        .take(EXACT_SCOPE_LIMIT + 1)
-    );
-    if (owners.length > EXACT_SCOPE_LIMIT) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_LIMIT",
-        `Release ${releaseId} exceeds the exact ownership abort limit.`
-      );
-    }
-    for (const owner of owners) {
-      yield* Effect.promise(() => ctx.db.delete("contentOwners", owner._id));
-    }
-  }
-);
-
 /** Checks whether an aborted release still owns auxiliary publication state. */
 export const hasAbortResidue = Effect.fn("contentRelease.hasAbortResidue")(
-  function* (ctx: MutationCtx | QueryCtx, releaseId: string, sequence: number) {
-    const [key, owner, path] = yield* Effect.all([
+  function* (ctx: MutationCtx | QueryCtx, sequence: number) {
+    const [key, path] = yield* Effect.all([
       Effect.promise(() =>
         ctx.db
           .query("contentKeys")
-          .withIndex("by_createdSequence_and_contentKey_and_locale", (query) =>
-            query.eq("createdSequence", sequence)
-          )
-          .first()
-      ),
-      Effect.promise(() =>
-        ctx.db
-          .query("contentOwners")
-          .withIndex("by_releaseId_and_contentKey_and_locale", (query) =>
-            query.eq("releaseId", releaseId)
+          .withIndex(
+            "by_createdSequence_and_contentKey_and_artifactLocale",
+            (query) => query.eq("createdSequence", sequence)
           )
           .first()
       ),
       Effect.promise(() =>
         ctx.db
           .query("contentPaths")
-          .withIndex("by_createdSequence_and_locale_and_publicPath", (query) =>
-            query.eq("createdSequence", sequence)
+          .withIndex(
+            "by_createdSequence_and_appLocale_and_publicPath",
+            (query) => query.eq("createdSequence", sequence)
           )
           .first()
       ),
     ]);
-    return key !== null || owner !== null || path !== null;
+    return key !== null || path !== null;
   }
 );
 
 /** Deletes one measured release-owned page and its staged directory identities. */
 export const deleteAbortRows = Effect.fn("contentRelease.deleteAbortRows")(
   function* (ctx: MutationCtx, releaseId: string, sequence: number) {
-    yield* deleteOwnedOwners(ctx, releaseId);
     const head = yield* Effect.promise(() =>
       ctx.db
         .query("contentHeads")
@@ -193,7 +163,7 @@ export const deleteAbortRows = Effect.fn("contentRelease.deleteAbortRows")(
       );
       let processed = 0;
       for (const row of bindings.page) {
-        yield* deleteOwnedPath(ctx, row.locale, row.publicPath, sequence);
+        yield* deleteOwnedPath(ctx, row.appLocale, row.publicPath, sequence);
         yield* Effect.promise(() => ctx.db.delete("contentBindings", row._id));
         processed += 1;
         const metrics = yield* Effect.promise(() =>
@@ -230,7 +200,12 @@ export const deleteAbortRows = Effect.fn("contentRelease.deleteAbortRows")(
       );
       let processed = 0;
       for (const row of items.page) {
-        yield* deleteOwnedKey(ctx, row.contentKey, row.locale, sequence);
+        yield* deleteOwnedKey(
+          ctx,
+          row.contentKey,
+          row.artifactLocale,
+          sequence
+        );
         yield* Effect.promise(() => ctx.db.delete("contentItems", row._id));
         if (row.artifactHash) {
           yield* retainOrphanedArtifacts(ctx, [row.artifactHash]);

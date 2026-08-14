@@ -1,6 +1,5 @@
 // @vitest-environment node
 
-import { readFile } from "node:fs/promises";
 import {
   GitCommitShaSchema,
   ReleaseIdSchema,
@@ -29,12 +28,11 @@ const readArticleMock = vi.hoisted(() => vi.fn());
 const readMaterialMock = vi.hoisted(() => vi.fn());
 const liveRenderer = await Effect.runPromise(rendererManifest);
 const sourceRevision = GitCommitShaSchema.make("a".repeat(40));
-const functionRoot = new URL(
-  "../../../../packages/contents/material/lesson/mathematics/function-composition-inverse-function/function-concept/en.mdx",
-  import.meta.url
-);
-const functionSource = await readFile(functionRoot, "utf8");
-const rawMdx = functionSource.slice(functionSource.indexOf("\n\n") + 2);
+const rawMdx = `## What is a Function?
+
+A function maps one input to exactly one output.
+
+<FunctionMachine />`;
 const materialData = {
   activeReleaseId: ReleaseIdSchema.make("release-function-concept"),
   artifact: {
@@ -80,8 +78,8 @@ describe("published llms markdown", () => {
   it("projects verified source with immutable provenance and exact cache tags", async () => {
     const text = await getCachedPublishedText({
       activeReleaseId: materialData.activeReleaseId,
+      appLocale: previewProjection.appLocale,
       family: "material",
-      locale: "en",
       publicPath: previewProjection.publicPath,
     });
 
@@ -93,8 +91,8 @@ describe("published llms markdown", () => {
     );
     expect(readPublishedMaterial).toHaveBeenCalledWith({
       activeReleaseId: materialData.activeReleaseId,
+      appLocale: previewProjection.appLocale,
       family: "material",
-      locale: "en",
       publicPath: previewProjection.publicPath,
     });
     expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
@@ -108,8 +106,8 @@ describe("published llms markdown", () => {
   it("selects article metadata and provenance through the same cache seam", async () => {
     const text = await getCachedPublishedText({
       activeReleaseId: articleData.activeReleaseId,
+      appLocale: testArticleProjection.appLocale,
       family: "article",
-      locale: "en",
       publicPath: testArticleProjection.publicPath,
     });
 
@@ -117,8 +115,8 @@ describe("published llms markdown", () => {
     expect(text).toContain(testArticleArtifact.payload.rawMdx);
     expect(readPublishedArticle).toHaveBeenCalledWith({
       activeReleaseId: articleData.activeReleaseId,
+      appLocale: testArticleProjection.appLocale,
       family: "article",
-      locale: "en",
       publicPath: testArticleProjection.publicPath,
     });
     expect(cacheTagMock).toHaveBeenCalledWith(
@@ -134,8 +132,8 @@ describe("published llms markdown", () => {
     );
     const text = await getCachedPublishedText({
       activeReleaseId: materialData.activeReleaseId,
+      appLocale: previewProjection.appLocale,
       family: "material",
-      locale: "en",
       publicPath: previewProjection.publicPath,
     });
 
@@ -158,8 +156,8 @@ describe("published llms markdown", () => {
     );
     const text = await getCachedPublishedText({
       activeReleaseId: materialData.activeReleaseId,
+      appLocale: previewProjection.appLocale,
       family: "material",
-      locale: "en",
       publicPath: previewProjection.publicPath,
     });
 

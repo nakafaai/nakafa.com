@@ -136,7 +136,6 @@ describe("generateSEOMetadata", () => {
     const result = await generateSEOMetadata(
       {
         type: "material-lesson",
-        category: "high-school",
         grade: "11",
         material: "mathematics",
         data: {
@@ -164,7 +163,6 @@ describe("generateSEOMetadata", () => {
     const result = await generateSEOMetadata(
       {
         type: "material-lesson",
-        category: "university",
         grade: "bachelor",
         material: "mathematics",
         data: {
@@ -184,7 +182,6 @@ describe("generateSEOMetadata", () => {
     const result = await generateSEOMetadata(
       {
         type: "material-lesson",
-        category: "high-school",
         grade: "11",
         material: "mathematics",
         data: {
@@ -204,7 +201,6 @@ describe("generateSEOMetadata", () => {
     const result = await generateSEOMetadata(
       {
         type: "material-lesson",
-        category: "high-school",
         grade: "11",
         material: "mathematics",
         data: {},
@@ -300,7 +296,6 @@ describe("generateSEOMetadata", () => {
     const result = await generateSEOMetadata(
       {
         type: "material-lesson",
-        category: "high-school",
         grade: "11",
         material: "mathematics",
         data: {

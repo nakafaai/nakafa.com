@@ -1,3 +1,4 @@
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -83,6 +84,7 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
 /** Resolves one public route to its active signed markdown owner. */
 const getPublishedMarkdownSource = Effect.fn("www.llms.markdown.source")(
   function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
+    const appLocale = AppLocaleSchema.make(locale);
     const routeSegment = readRouteSegment(cleanSlug);
     const publishedFamily = readPublishedFamily(routeSegment);
     if (!publishedFamily) {
@@ -92,8 +94,8 @@ const getPublishedMarkdownSource = Effect.fn("www.llms.markdown.source")(
     const active = yield* readActiveContentIdentity();
     const activeRoute = yield* readActiveContentRoute({
       activeReleaseId: active?.releaseId ?? null,
+      appLocale,
       family: publishedFamily,
-      locale,
       publicPath: cleanSlug,
     });
     if (activeRoute.kind !== "found") {
@@ -133,8 +135,8 @@ function readPublishedMarkdown(
 ) {
   const input = {
     activeReleaseId: source.activeReleaseId,
+    appLocale: AppLocaleSchema.make(locale),
     family: source.family,
-    locale,
     publicPath: source.publicPath,
   };
   return getCachedPublishedText(input);

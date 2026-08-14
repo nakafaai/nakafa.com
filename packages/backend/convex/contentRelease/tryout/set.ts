@@ -1,8 +1,12 @@
-import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import {
+  type AppLocaleCode,
+  AppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
 import {
   type TryoutSet,
   TryoutSetSchema,
-} from "@nakafa/aksara-contracts/tryout/spec";
+} from "@nakafa/aksara-contracts/tryout/catalog";
+import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import {
   ReleaseError,
@@ -15,17 +19,27 @@ import { verifyTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/
 import { Effect, Schema } from "effect";
 
 /** Stable authored keys that select one localized signed try-out set. */
-export type TryoutSetIdentity = Pick<
-  TryoutSet,
-  "countryKey" | "examKey" | "locale" | "setKey" | "trackKey"
->;
+export interface TryoutSetIdentity {
+  readonly countryKey: TryoutSet["countryKey"];
+  readonly examKey: TryoutSet["examKey"];
+  readonly locale: AppLocaleCode;
+  readonly setKey: TryoutSet["setKey"];
+  readonly trackKey: TryoutSet["trackKey"];
+}
 
 /** Loads one complete verified set snapshot for immutable attempt creation. */
 export const readTryoutSet = Effect.fn("contentRelease.readTryoutSet")(
   function* (ctx: QueryCtx, identity: TryoutSetIdentity) {
     const owner = yield* loadTryoutOwner(ctx);
     const { snapshotId } = owner;
-    const setIdentity = tryoutCatalogIdentity({ ...identity, kind: "set" });
+    const setIdentity = tryoutCatalogNodeIdentity({
+      appLocale: AppLocaleSchema.make(identity.locale),
+      countryKey: identity.countryKey,
+      examKey: identity.examKey,
+      kind: "set",
+      setKey: identity.setKey,
+      trackKey: identity.trackKey,
+    });
     const storedSet = yield* Effect.promise(() =>
       ctx.db
         .query("tryoutCatalog")

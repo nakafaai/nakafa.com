@@ -226,13 +226,8 @@ async function ArticleRouteContent({
         locale={locale}
         toolbar={
           <DeferredAiSheetOpen
-            audio={{
-              locale,
-              slug: filePath,
-              contentType: "article",
-            }}
             contextTitle={contentMetadata.title}
-            key={`audio:${filePath}`}
+            key={`nina:${filePath}`}
           />
         }
       >

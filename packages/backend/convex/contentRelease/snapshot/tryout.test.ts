@@ -4,10 +4,9 @@ import {
   tryoutCatalogIdentity,
   tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
-import {
-  makeTryoutCatalogRecord,
-  makeTryoutPlacementRecord,
-} from "@nakafa/aksara-contracts/tryout/row-hash";
+import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/catalog-hash";
+import { makeTryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/placement-hash";
+import { TryoutChoiceListSchema } from "@nakafa/aksara-contracts/tryout/spec";
 import {
   stageTryoutCatalog,
   stageTryoutPlacement,
@@ -60,6 +59,7 @@ describe("contentRelease/snapshot/tryout", () => {
       }))
     ).resolves.toMatchObject({
       catalog: {
+        assetId: "asset:en:tryout:technical:country",
         identity: tryoutCatalogIdentity(catalog.record.row),
         kind: "country",
       },
@@ -109,6 +109,22 @@ describe("contentRelease/snapshot/tryout", () => {
         )
       )
     ).resolves.toBe(true);
+    await t.mutation(async (ctx) => {
+      const stored = await ctx.db.query("tryoutCatalog").unique();
+      if (!stored) {
+        throw new Error("Expected one technical try-out catalog row.");
+      }
+      await ctx.db.patch("tryoutCatalog", stored._id, {
+        assetId: "asset:en:tryout:technical:changed",
+      });
+    });
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(
+          stageTryoutCatalog(ctx, snapshotId, 0, catalog, rowJson)
+        )
+      )
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
     await expect(
       t.mutation((ctx) =>
         runConvexProgram(
@@ -128,11 +144,20 @@ describe("contentRelease/snapshot/tryout", () => {
       }),
     };
     const placementSource = makeTryoutPlacementRow();
+    const [firstChoice, ...remainingChoices] =
+      placementSource.record.row.choices;
+    const oversizedChoices = TryoutChoiceListSchema.make([
+      {
+        ...firstChoice,
+        label: "x".repeat(TRYOUT_PLACEMENT_DOCUMENT_LIMIT),
+      },
+      ...remainingChoices,
+    ]);
     const placement = {
       ...placementSource,
       record: makeTryoutPlacementRecord({
         ...placementSource.record.row,
-        title: "x".repeat(TRYOUT_PLACEMENT_DOCUMENT_LIMIT),
+        choices: oversizedChoices,
       }),
     };
     const t = convexTest(schema, convexModules);

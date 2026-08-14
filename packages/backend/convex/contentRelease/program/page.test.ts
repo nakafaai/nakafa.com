@@ -59,7 +59,7 @@ describe("contentRelease/program/page", () => {
     });
     expect(firstRow).toMatchObject({
       family: "program",
-      record: { kind: "curriculum", row: { locale: "en" } },
+      record: { kind: "curriculum", row: { appLocale: "en" } },
     });
 
     await expect(

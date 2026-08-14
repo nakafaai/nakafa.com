@@ -52,9 +52,9 @@ export function hasSamePublicationScope(
     left.content.every((identity, index) => {
       const compared = right.content[index];
       return (
-        compared?.contentKey === identity.contentKey &&
-        compared.family === identity.family &&
-        compared.locale === identity.locale
+        compared?.artifactLocale === identity.artifactLocale &&
+        compared.contentKey === identity.contentKey &&
+        compared.family === identity.family
       );
     })
   );

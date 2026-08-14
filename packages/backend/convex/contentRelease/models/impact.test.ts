@@ -1,4 +1,5 @@
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
+import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { PublicationScopeSchema } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { getReadModelImpact } from "@repo/backend/convex/contentRelease/models/impact";
 import { describe, expect, it } from "vitest";
@@ -37,7 +38,7 @@ describe("contentRelease/models/impact", () => {
         {
           contentKey: ContentKeySchema.make("material:test"),
           family: "material",
-          locale: "en",
+          artifactLocale: ArtifactLocaleSchema.make("en"),
         },
       ],
       families: [],

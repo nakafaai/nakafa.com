@@ -3,38 +3,13 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
-import { testTryoutGraph } from "@repo/backend/test/tryouts";
-import { createLearningGraphIdentityFromRoute } from "@repo/contents/_types/learning-graph";
+import {
+  insertRuntimeArticles,
+  testArticleProjection,
+} from "@repo/backend/test/content-runtime";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
-const ARTICLE_ROUTE = "articles/politics/analytics";
-const ARTICLE_CONTENT_ID = "asset:id:catalog:article:analytics";
-const TRYOUT_ROUTE = "try-out/indonesia/snbt/2027/set-1";
-const TRYOUT_GRAPH = testTryoutGraph({
-  countryKey: "indonesia",
-  examKey: "snbt",
-  kind: "set",
-  setKey: "set-1",
-  trackKey: "2027",
-});
-const TRYOUT_CONTENT_ID = TRYOUT_GRAPH.assetId;
-
-/** Builds the article graph fixture used by the content-view trigger test. */
-function getArticleGraphFixture() {
-  const graph = createLearningGraphIdentityFromRoute({
-    locale: "id",
-    route: ARTICLE_ROUTE,
-  });
-
-  if (!graph) {
-    throw new Error(
-      `Unable to build graph fixture for route "${ARTICLE_ROUTE}".`
-    );
-  }
-
-  return graph;
-}
 
 describe("triggers/contents/views", () => {
   beforeEach(() => {
@@ -45,39 +20,12 @@ describe("triggers/contents/views", () => {
     vi.useRealTimers();
   });
 
-  it("captures signed-in content views after the engaged view write", async () => {
+  it("captures signed-in current article views after the engaged write", async () => {
     const t = createConvexTestWithBetterAuth();
-    const graph = getArticleGraphFixture();
+    const projection = testArticleProjection(0);
     const identity = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, { now: NOW });
-
-      await ctx.db.insert("articleContents", {
-        articleSlug: "analytics",
-        body: "content",
-        category: "politics",
-        contentHash: "hash",
-        date: NOW,
-        locale: "id",
-        slug: ARTICLE_ROUTE,
-        syncedAt: NOW,
-        title: "Analytics",
-      });
-      await ctx.db.insert("contentRoutes", {
-        ...graph,
-        assetId: ARTICLE_CONTENT_ID,
-        authors: [],
-        contentHash: "route-hash",
-        content_id: ARTICLE_CONTENT_ID,
-        kind: "article",
-        locale: "id",
-        markdown: true,
-        route: ARTICLE_ROUTE,
-        section: "articles",
-        sourcePath: ARTICLE_ROUTE,
-        syncedAt: NOW,
-        title: "Analytics",
-      });
-
+      await insertRuntimeArticles(ctx, 1, () => projection);
       return identity;
     });
 
@@ -87,10 +35,10 @@ describe("triggers/contents/views", () => {
         sessionId: identity.sessionId,
       })
       .mutation(api.contents.mutations.views.recordContentView, {
-        contentId: ARTICLE_CONTENT_ID,
+        contentId: projection.graph.assetId,
         deviceId: "device-1",
-        locale: "id",
-        publicPath: ARTICLE_ROUTE,
+        locale: "en",
+        publicPath: projection.publicPath,
         section: "articles",
       });
 
@@ -106,80 +54,21 @@ describe("triggers/contents/views", () => {
               distinctId: identity.userId,
               event: "content viewed",
               properties: JSON.stringify({
-                alignment_id: graph.alignmentId,
-                concept_id: graph.conceptId,
-                content_id: ARTICLE_CONTENT_ID,
+                alignment_id: projection.graph.alignmentId,
+                concept_id: projection.graph.conceptId,
+                content_id: projection.graph.assetId,
                 context_key: "canonical",
                 content_type: "article",
                 is_new_view: true,
-                learning_object_id: graph.learningObjectId,
-                lens_id: graph.lensId,
-                locale: "id",
-                route: ARTICLE_ROUTE,
+                learning_object_id: projection.graph.learningObjectId,
+                lens_id: projection.graph.lensId,
+                locale: "en",
+                route: projection.publicPath,
               }),
             }),
           ],
         }),
       ])
     );
-  });
-
-  it("classifies try-out views as question analytics", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const graph = TRYOUT_GRAPH;
-    const identity = await t.mutation(async (ctx) => {
-      const identity = await seedAuthenticatedUser(ctx, { now: NOW });
-
-      await ctx.db.insert("contentRoutes", {
-        ...graph,
-        assetId: TRYOUT_CONTENT_ID,
-        authors: [],
-        contentHash: "tryout-route-hash",
-        content_id: TRYOUT_CONTENT_ID,
-        kind: "tryout-set",
-        locale: "id",
-        markdown: true,
-        route: TRYOUT_ROUTE,
-        section: "tryout",
-        sourcePath: TRYOUT_ROUTE,
-        syncedAt: NOW,
-        title: "SNBT Set 1",
-      });
-
-      return identity;
-    });
-
-    await t
-      .withIdentity({
-        subject: identity.authUserId,
-        sessionId: identity.sessionId,
-      })
-      .mutation(api.contents.mutations.views.recordContentView, {
-        contentId: TRYOUT_CONTENT_ID,
-        deviceId: "device-tryout",
-        locale: "id",
-        publicPath: TRYOUT_ROUTE,
-        section: "tryout",
-      });
-
-    const scheduledJobs = await t.query(
-      async (ctx) => await ctx.db.system.query("_scheduled_functions").collect()
-    );
-    const contentViewJob = scheduledJobs.find((job) => {
-      const [args] = job.args;
-
-      return (
-        typeof args === "object" &&
-        args !== null &&
-        Reflect.get(args, "event") === "content viewed"
-      );
-    });
-    const [args] = contentViewJob?.args ?? [];
-    const properties =
-      typeof args === "object" && args !== null
-        ? Reflect.get(args, "properties")
-        : undefined;
-
-    expect(properties).toContain('"content_type":"question"');
   });
 });

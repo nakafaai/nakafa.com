@@ -1,5 +1,4 @@
 import contentReleaseSchema from "@repo/backend/convex/contentRelease/schema";
-import routeSchema from "@repo/backend/convex/contents/schema/routes";
 import { tryoutBundleSchema } from "@repo/backend/convex/tryouts/runtime/schema";
 import {
   CONTENT_RUNTIME_CACHE_CONTRACT,
@@ -15,7 +14,7 @@ import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 const EXPECTED_RUNTIME_SCHEMA_FINGERPRINT =
-  "cd5f66d090909b4fcb276711c6a52b54df8875ebb303d4c4d659c5b80b0e5609";
+  "c0b5e31df6859597178fb8bc48f952b95e0ac65e99b2b9ec9b6fa97d234fb18a";
 
 describe("content runtime tables", () => {
   it("derives the complete copy set and applies the active pointer last", () => {
@@ -25,7 +24,6 @@ describe("content runtime tables", () => {
     const expected = [
       ...releaseTables,
       ...Object.keys(tryoutBundleSchema),
-      ...Object.keys(routeSchema),
       "contentState",
     ];
 
@@ -75,7 +73,7 @@ describe("content runtime tables", () => {
           "syncJobId",
         ],
       },
-      version: "signed-runtime-cache-v1",
+      version: "signed-runtime-cache-v2",
     });
     expect(CONTENT_RUNTIME_SCHEMA_FINGERPRINT).toBe(
       EXPECTED_RUNTIME_SCHEMA_FINGERPRINT

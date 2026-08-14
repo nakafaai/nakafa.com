@@ -3,7 +3,7 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import { selectTryoutTrackReturnHref } from "@/components/tryout/route/owner";
 import {
@@ -39,6 +39,7 @@ interface TryoutSetPageBinding {
 
 interface TryoutSetPageClientProps {
   binding: TryoutSetPageBinding | null;
+  children: ReactNode;
   content: Promise<TryoutRuntimeContent> | null;
   page: SetPage;
   restartTarget: TryoutSetRestartTarget | null;
@@ -48,6 +49,7 @@ interface TryoutSetPageClientProps {
 /** Renders one stable page with an active-only mutable subscription. */
 export function TryoutSetPageClient({
   binding,
+  children,
   content,
   page,
   restartTarget,
@@ -62,7 +64,9 @@ export function TryoutSetPageClient({
         restartTarget={restartTarget}
         route={route}
         state={null}
-      />
+      >
+        {children}
+      </ResolvedTryoutSetPage>
     );
   }
 
@@ -75,7 +79,9 @@ export function TryoutSetPageClient({
         restartTarget={restartTarget}
         route={route}
         state={binding.initialState}
-      />
+      >
+        {children}
+      </ResolvedTryoutSetPage>
     );
   }
 
@@ -87,14 +93,20 @@ export function TryoutSetPageClient({
       page={page}
       restartTarget={restartTarget}
       route={route}
-    />
+    >
+      {children}
+    </LiveTryoutSetPage>
   );
 }
 
 /** Owns one active subscription and skips it after a terminal update. */
 function LiveTryoutSetPage({
   binding,
-  ...props
+  children,
+  content,
+  page,
+  restartTarget,
+  route,
 }: TryoutSetPageClientProps & { binding: TryoutSetPageBinding }) {
   const [terminalState, setTerminalState] = useState<SetState | undefined>();
   const liveState = useQuery(
@@ -117,12 +129,24 @@ function LiveTryoutSetPage({
   if (terminalState !== undefined) {
     state = terminalState;
   }
-  return <ResolvedTryoutSetPage {...props} binding={binding} state={state} />;
+  return (
+    <ResolvedTryoutSetPage
+      binding={binding}
+      content={content}
+      page={page}
+      restartTarget={restartTarget}
+      route={route}
+      state={state}
+    >
+      {children}
+    </ResolvedTryoutSetPage>
+  );
 }
 
 /** Renders one stable set view from its exact mutable state. */
 function ResolvedTryoutSetPage({
   binding,
+  children,
   content,
   page,
   restartTarget,
@@ -203,7 +227,9 @@ function ResolvedTryoutSetPage({
           runtime,
           view,
         }}
-      />
+      >
+        {children}
+      </TryoutInternalSet>
     );
   }
 
@@ -212,8 +238,10 @@ function ResolvedTryoutSetPage({
 
 /** Renders one direct-entry runtime from its exact authenticated query. */
 function TryoutInternalSet({
+  children,
   value,
 }: {
+  children: ReactNode;
   value: {
     content: Promise<TryoutRuntimeContent> | null;
     entrySection: SetEntrySection;
@@ -236,7 +264,9 @@ function TryoutInternalSet({
         entrySection: value.entrySection,
         runtimeState,
       }}
-    />
+    >
+      {children}
+    </TryoutSetEntry>
   );
 }
 

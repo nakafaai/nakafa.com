@@ -1,4 +1,4 @@
-import { LearningInterestSchema } from "@repo/contents/_types/program/schema";
+import { LearningInterestSchema } from "@repo/contents/_types/learner/preferences";
 import { Schema } from "effect";
 import {
   onboardingFocusSchema,
@@ -7,11 +7,8 @@ import {
 
 const onboardingValueSchema = Schema.Struct({
   focusKey: onboardingFocusSchema,
-  interests: Schema.Array(LearningInterestSchema).pipe(
-    Schema.minItems(1),
-    Schema.mutable
-  ),
-  primaryProgramKey: Schema.Trim.pipe(Schema.minLength(1)),
+  interest: LearningInterestSchema,
+  programKey: Schema.Trim.pipe(Schema.minLength(1)),
   role: onboardingRoleSchema,
 });
 

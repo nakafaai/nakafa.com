@@ -1,4 +1,7 @@
 import {
+  ArtifactLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
+import {
   canonicalizeContentProjection,
   familyForProjection,
 } from "@nakafa/aksara-contracts/projection/spec";
@@ -16,8 +19,8 @@ import {
 } from "@repo/backend/convex/contentRelease/parse";
 import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
 import {
+  appLocaleValidator,
   deliveryValidator,
-  localeValidator,
 } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type { Infer } from "convex/values";
@@ -39,21 +42,21 @@ const publicResultValidator = v.union(
   })
 );
 
-type ContentLocale = Infer<typeof localeValidator>;
+type AppLocale = Infer<typeof appLocaleValidator>;
 
 /** Stored active public row returned only to the authenticated HTTP adapter. */
 export type PublicRuntimeRow = Infer<typeof publicResultValidator>;
 
 /** Resolves an active route and enforces its public delivery class. */
 const resolvePublicRoute = Effect.fn("contentRelease.resolvePublicRoute")(
-  function* (ctx: QueryCtx, locale: ContentLocale, publicPath: string) {
+  function* (ctx: QueryCtx, appLocale: AppLocale, publicPath: string) {
     const active = yield* loadActiveIdentity(ctx);
     if (!active) {
       return null;
     }
     const binding = yield* loadRouteBinding(
       ctx,
-      locale,
+      appLocale,
       publicPath,
       active.sequence
     );
@@ -63,19 +66,19 @@ const resolvePublicRoute = Effect.fn("contentRelease.resolvePublicRoute")(
     if (!binding.contentKey) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Published route ${locale}/${publicPath} lost its content identity.`
+        `Published route ${appLocale}/${publicPath} lost its content identity.`
       );
     }
     const head = yield* loadVersion(
       ctx,
       binding.contentKey,
-      locale,
+      ArtifactLocaleSchema.make(appLocale),
       active.sequence
     );
     if (head?.operation !== "upsert") {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Published route ${locale}/${publicPath} lost its active head.`
+        `Published route ${appLocale}/${publicPath} lost its active head.`
       );
     }
     if (
@@ -84,7 +87,7 @@ const resolvePublicRoute = Effect.fn("contentRelease.resolvePublicRoute")(
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Published route ${locale}/${publicPath} disagrees at one sequence.`
+        `Published route ${appLocale}/${publicPath} disagrees at one sequence.`
       );
     }
     if (head.delivery !== "public") {
@@ -103,7 +106,7 @@ const resolvePublicRoute = Effect.fn("contentRelease.resolvePublicRoute")(
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Published route ${locale}/${publicPath} lost runtime fields.`
+        `Published route ${appLocale}/${publicPath} lost runtime fields.`
       );
     }
     const artifactHash = head.artifactHash;
@@ -118,7 +121,7 @@ const resolvePublicRoute = Effect.fn("contentRelease.resolvePublicRoute")(
     if (!artifact) {
       return yield* releaseFail(
         "CONTENT_RELEASE_MISSING",
-        `Published route ${locale}/${publicPath} lost its artifact.`
+        `Published route ${appLocale}/${publicPath} lost its artifact.`
       );
     }
     const decodedArtifact = yield* decodeArtifactJson(artifact.artifactJson);
@@ -131,19 +134,19 @@ const resolvePublicRoute = Effect.fn("contentRelease.resolvePublicRoute")(
       decodedArtifact.artifactHash !== head.artifactHash ||
       decodedArtifact.payload.contentKey !== head.contentKey ||
       decodedArtifact.payload.compilerConfigHash !== head.compilerConfigHash ||
-      decodedArtifact.payload.locale !== locale ||
+      decodedArtifact.payload.artifactLocale !== head.artifactLocale ||
       decodedArtifact.payload.rendererDomain !== head.rendererDomain ||
       decodedArtifact.payload.sourceHash !== head.sourceHash ||
       familyForProjection(projection) !== head.family ||
       projection.kind === "question-body" ||
       projectionHash !== head.projectionHash ||
       projection.contentKey !== head.contentKey ||
-      projection.locale !== locale ||
+      projection.appLocale !== appLocale ||
       projection.publicPath !== publicPath
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Published route ${locale}/${publicPath} has mismatched content.`
+        `Published route ${appLocale}/${publicPath} has mismatched content.`
       );
     }
     return {
@@ -162,8 +165,8 @@ const resolvePublicRoute = Effect.fn("contentRelease.resolvePublicRoute")(
 
 /** Returns one public artifact only to the server-authenticated HTTP adapter. */
 export const read = internalQuery({
-  args: { locale: localeValidator, publicPath: v.string() },
+  args: { appLocale: appLocaleValidator, publicPath: v.string() },
   returns: publicResultValidator,
   handler: (ctx, args) =>
-    runConvexProgram(resolvePublicRoute(ctx, args.locale, args.publicPath)),
+    runConvexProgram(resolvePublicRoute(ctx, args.appLocale, args.publicPath)),
 });

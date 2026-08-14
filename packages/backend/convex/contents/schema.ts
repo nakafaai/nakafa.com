@@ -3,16 +3,14 @@ import {
   graphContentIdValidator,
   learningGraphIdentityValidator,
 } from "@repo/backend/convex/contents/graph";
-import { contentSearchDocumentValidator } from "@repo/backend/convex/contents/helpers/search/schema";
 import {
   learningPopularityScopeValues,
   learningPopularityWindowValues,
 } from "@repo/backend/convex/contents/popularity";
-import routeSchema from "@repo/backend/convex/contents/schema/routes";
+import { contentViewSectionValidator } from "@repo/backend/convex/contents/views/spec";
 import {
   localeValidator,
   materialValidator,
-  nakafaSectionValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
@@ -40,7 +38,7 @@ const tables = {
     lastViewedAt: v.number(),
     locale: localeValidator,
     route: v.string(),
-    section: nakafaSectionValidator,
+    section: contentViewSectionValidator,
     userId: v.optional(v.id("users")),
   })
     .index("by_userId_and_content_id_and_contextKey", [
@@ -92,7 +90,7 @@ const tables = {
     materialDomain: v.optional(materialValidator),
     partition: v.number(),
     route: v.string(),
-    section: nakafaSectionValidator,
+    section: contentViewSectionValidator,
     scopeMode: learningPopularityScopeValidator,
     sourcePath: v.string(),
     title: v.string(),
@@ -117,7 +115,7 @@ const tables = {
     locale: localeValidator,
     materialDomain: v.optional(materialValidator),
     route: v.string(),
-    section: nakafaSectionValidator,
+    section: contentViewSectionValidator,
     sourcePath: v.string(),
     title: v.string(),
     userId: v.id("users"),
@@ -151,7 +149,7 @@ const tables = {
     content_id: graphContentIdValidator,
     locale: localeValidator,
     scopeMode: learningPopularityScopeValidator,
-    section: nakafaSectionValidator,
+    section: contentViewSectionValidator,
     signalDay: v.number(),
     viewedAt: v.number(),
     viewerKey: v.string(),
@@ -181,7 +179,7 @@ const tables = {
     locale: localeValidator,
     materialDomain: v.optional(materialValidator),
     route: v.string(),
-    section: nakafaSectionValidator,
+    section: contentViewSectionValidator,
     scopeMode: learningPopularityScopeValidator,
     signalDay: v.number(),
     sourcePath: v.string(),
@@ -220,7 +218,7 @@ const tables = {
     materialDomain: v.optional(materialValidator),
     route: v.string(),
     score: v.number(),
-    section: nakafaSectionValidator,
+    section: contentViewSectionValidator,
     scopeMode: learningPopularityScopeValidator,
     sourcePath: v.string(),
     title: v.string(),
@@ -241,31 +239,6 @@ const tables = {
       "score",
       "content_id",
     ]),
-
-  /**
-   * Graph-backed content search read model for Nina and MCP.
-   * Rebuilt from synced source tables; public results expose graph asset IDs.
-   */
-  contentSearch: defineTable(contentSearchDocumentValidator)
-    .index("by_content_id", ["content_id"])
-    .index("by_locale_and_route", ["locale", "route"])
-    .index("by_locale_and_sourcePath", ["locale", "sourcePath"])
-    .index("by_locale_and_title", ["locale", "title"])
-    .index("by_locale_and_section_and_title", ["locale", "section", "title"])
-    .searchIndex("search_title", {
-      searchField: "title",
-      filterFields: ["locale", "section"],
-    })
-    .searchIndex("search_text", {
-      searchField: "text",
-      filterFields: ["locale", "section"],
-    })
-    .searchIndex("search_route", {
-      searchField: "route",
-      filterFields: ["locale", "section"],
-    }),
-
-  ...routeSchema,
 };
 
 export default tables;

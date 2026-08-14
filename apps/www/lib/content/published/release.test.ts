@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { PublishedProjectionIdentity } from "@/lib/content/published/errors";
@@ -13,7 +14,7 @@ const readActiveContentIdentityMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-active");
 const nextReleaseId = ReleaseIdSchema.make("release-next");
 const identity = {
-  locale: "en",
+  appLocale: AppLocaleSchema.make("en"),
   publicPath:
     "subjects/mathematics/function-composition-inverse-function/function-concept",
 } satisfies PublishedProjectionIdentity;

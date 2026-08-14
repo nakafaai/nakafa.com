@@ -1,7 +1,5 @@
-import {
-  tryoutCatalogIdentity,
-  tryoutPlacementIdentity,
-} from "@nakafa/aksara-contracts/tryout/identity";
+import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import { tryoutPlacementIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type { TryoutStartSource } from "@repo/backend/convex/tryouts/start/source";

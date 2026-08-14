@@ -23,14 +23,14 @@ const syncArticleItem = Effect.fn("contentRelease.syncArticleItem")(function* (
   const resolved = yield* resolvePublicProjection(
     ctx,
     row.contentKey,
-    row.locale,
+    row.artifactLocale,
     activeSequence
   );
   if (resolved?.family !== "article") {
-    return yield* deleteArticle(ctx, row.contentKey, row.locale);
+    return yield* deleteArticle(ctx, row.contentKey, row.artifactLocale);
   }
   const [head, projection] = yield* Effect.all([
-    loadVersion(ctx, row.contentKey, row.locale, activeSequence),
+    loadVersion(ctx, row.contentKey, row.artifactLocale, activeSequence),
     decodeProjectionJson(resolved.projectionJson),
   ]);
   if (
@@ -40,7 +40,7 @@ const syncArticleItem = Effect.fn("contentRelease.syncArticleItem")(function* (
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Active article head ${row.contentKey}/${row.locale} is incomplete.`
+      `Active article head ${row.contentKey}/${row.artifactLocale} is incomplete.`
     );
   }
   yield* writeArticle(ctx, head, projection);

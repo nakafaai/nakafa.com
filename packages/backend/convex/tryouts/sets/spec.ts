@@ -1,4 +1,4 @@
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
+import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
 import { publicTryoutSetValidator } from "@repo/backend/convex/tryouts/queries/catalogModel";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
 import { tryoutStatusValidator } from "@repo/backend/convex/tryouts/status";
@@ -16,7 +16,7 @@ export const setSortValidator = v.object({
 export const trackIdentityValidator = v.object({
   countryKey: tryoutRouteKeyValidator,
   examKey: tryoutRouteKeyValidator,
-  locale: localeValidator,
+  locale: appLocaleValidator,
   trackKey: tryoutRouteKeyValidator,
 });
 

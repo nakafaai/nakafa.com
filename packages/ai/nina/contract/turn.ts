@@ -2,7 +2,7 @@ import { ModelIdSchema } from "@repo/ai/config/model";
 import { NinaContextPackSchema } from "@repo/ai/nina/memory/pack";
 import {
   type AgentContext,
-  AgentLearningProfileSchema,
+  AgentLearningSelectionSchema,
 } from "@repo/ai/types/agents";
 import { PromptUserRoleSchema } from "@repo/ai/types/roles";
 import { LocaleSchema } from "@repo/contents/_types/content";
@@ -34,9 +34,9 @@ export const NinaLocationSchema = Schema.Struct({
   longitude: Schema.String,
 }).pipe(Schema.mutable);
 
-/** User facts Nina may use after app auth/profile boundaries validate them. */
+/** User facts Nina may use after app auth and selection boundaries validate them. */
 export const NinaUserSchema = Schema.Struct({
-  learningProfile: Schema.optional(AgentLearningProfileSchema),
+  learningSelection: Schema.optional(AgentLearningSelectionSchema),
   location: NinaLocationSchema,
   role: Schema.optional(PromptUserRoleSchema),
 }).pipe(Schema.mutable);
@@ -93,7 +93,9 @@ export function createNinaAgentContext({
     slug: learningPage.slug,
     url: learningPage.url,
     verified: learningPage.verified,
-    ...(user.learningProfile ? { learningProfile: user.learningProfile } : {}),
+    ...(user.learningSelection
+      ? { learningSelection: user.learningSelection }
+      : {}),
     ...(user.role ? { userRole: user.role } : {}),
   };
 }

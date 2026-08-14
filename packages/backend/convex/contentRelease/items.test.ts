@@ -37,7 +37,7 @@ async function insertPrior(
   contentKey = "test:deleted",
   sequence = 1
 ) {
-  const publicPath = `test/${contentKey.slice(5)}`;
+  const publicPath = `subjects/test/${contentKey.slice(5)}`;
   await insertRuntimeVersion(ctx, "public", contentKey, {
     headReleaseId: "release-base",
     headSequence: sequence,
@@ -80,7 +80,6 @@ describe("contentRelease/items", () => {
     const state = await t.run(async (ctx) => ({
       items: await ctx.db.query("contentItems").take(3),
       keys: await ctx.db.query("contentKeys").take(3),
-      owners: await ctx.db.query("contentOwners").take(3),
       release: await ctx.db.query("contentReleases").unique(),
     }));
 
@@ -88,7 +87,6 @@ describe("contentRelease/items", () => {
     expect(repeated).toMatchObject({ created: 0, unchanged: 2 });
     expect(state.items).toHaveLength(2);
     expect(state.keys).toHaveLength(2);
-    expect(state.owners).toHaveLength(0);
     expect(state.release).toMatchObject({
       stagedArtifacts: 0,
       stagedDeletes: 1,
@@ -148,7 +146,7 @@ describe("contentRelease/items", () => {
         contentKey: "test:head-0",
         family: "material",
         index: 0,
-        locale: "en",
+        artifactLocale: "en",
         operation: "delete",
         releaseId: "release-tombstone",
         sequence: 2,
@@ -233,12 +231,12 @@ describe("contentRelease/items", () => {
       await insertRuntimeVersion(ctx, "public", "test:head-0", {
         headReleaseId: "release-candidate",
         headSequence: 2,
-        publicPath: "test/head-0",
+        publicPath: "subjects/test/head-0",
       });
       await insertRuntimeBinding(ctx, "test:head-0", {
         bindingReleaseId: "release-candidate",
         bindingSequence: 2,
-        publicPath: "test/head-0",
+        publicPath: "subjects/test/head-0",
       });
       const state = await ctx.db.query("contentState").unique();
       if (!state) {

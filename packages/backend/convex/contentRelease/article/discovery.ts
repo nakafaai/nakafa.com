@@ -45,10 +45,10 @@ function summarizeArticle(
 export const readArticleBucket = Effect.fn("contentRelease.readArticleBucket")(
   function* (
     ctx: QueryCtx,
-    locale: Parameters<typeof loadArticleOwner>[1],
+    appLocale: Parameters<typeof loadArticleOwner>[1],
     bucket: string
   ) {
-    const partition = yield* readArticlePartition(ctx, locale, bucket);
+    const partition = yield* readArticlePartition(ctx, appLocale, bucket);
     if (partition.kind === "unmanaged") {
       return { articles: null, managed: false };
     }
@@ -68,19 +68,19 @@ export const readLatestArticles = Effect.fn(
   "contentRelease.readLatestArticles"
 )(function* (
   ctx: QueryCtx,
-  locale: Parameters<typeof loadArticleOwner>[1],
+  appLocale: Parameters<typeof loadArticleOwner>[1],
   limit: number
 ) {
   yield* validateDiscoveryLimit(limit);
-  const owner = yield* loadArticleOwner(ctx, locale);
+  const owner = yield* loadArticleOwner(ctx, appLocale);
   if (!(owner.managed && owner.active)) {
     return { articles: [], managed: false };
   }
   const rows = yield* Effect.promise(() =>
     ctx.db
       .query("articleCatalog")
-      .withIndex("by_locale_and_date_and_contentKey", (index) =>
-        index.eq("locale", locale)
+      .withIndex("by_appLocale_and_date_and_contentKey", (index) =>
+        index.eq("appLocale", appLocale)
       )
       .order("desc")
       .take(limit)
@@ -100,20 +100,21 @@ export const readCategoryArticles = Effect.fn(
   "contentRelease.readCategoryArticles"
 )(function* (
   ctx: QueryCtx,
-  locale: Parameters<typeof loadArticleOwner>[1],
+  appLocale: Parameters<typeof loadArticleOwner>[1],
   category: string,
   limit: number
 ) {
   yield* validateDiscoveryLimit(limit);
-  const owner = yield* loadArticleOwner(ctx, locale);
+  const owner = yield* loadArticleOwner(ctx, appLocale);
   if (!(owner.managed && owner.active)) {
     return { articles: [], managed: false };
   }
   const rows = yield* Effect.promise(() =>
     ctx.db
       .query("articleCatalog")
-      .withIndex("by_locale_and_category_and_date_and_contentKey", (index) =>
-        index.eq("locale", locale).eq("category", category)
+      .withIndex(
+        "by_appLocale_and_category_and_date_and_contentKey",
+        (index) => index.eq("appLocale", appLocale).eq("category", category)
       )
       .order("desc")
       .take(limit)

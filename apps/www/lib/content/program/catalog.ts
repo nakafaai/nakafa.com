@@ -1,6 +1,8 @@
 import "server-only";
 
 import type { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import type { ProgramTranslation } from "@nakafa/aksara-contracts/program/spec";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import type { FunctionArgs } from "convex/server";
@@ -31,6 +33,7 @@ export interface PublishedProgramCatalog {
   readonly entries: readonly {
     readonly program: PublishedLearningProgram;
     readonly route: PublishedCurriculumRoute;
+    readonly translation: ProgramTranslation;
   }[];
   readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
 }
@@ -52,16 +55,17 @@ export interface PublishedProgramPage {
 export const readPublishedProgramCatalog = Effect.fn(
   "NakafaProgram.readPublishedCatalog"
 )(function* (locale: Locale) {
+  const appLocale = AppLocaleSchema.make(locale);
   const result = yield* readRuntimeQuery(api.contentRelease.program.catalog, {
-    locale,
+    appLocale,
   });
   const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
-    locale,
+    appLocale,
     publicPath: "curricula",
   });
   if (!result.managed) {
     return yield* new PublishedProjectionError({
-      locale,
+      appLocale,
       publicPath: "curricula",
     });
   }
@@ -75,15 +79,23 @@ export const readPublishedProgramCatalog = Effect.fn(
   ]);
   const entries = yield* Effect.forEach(routes, (route) => {
     const program = programs.find(({ key }) => key === route.programKey);
-    if (route.locale !== locale || route.level !== "track" || !program) {
+    const translation = program?.translations.find(
+      (candidate) => candidate.appLocale === appLocale
+    );
+    if (
+      route.appLocale !== appLocale ||
+      route.level !== "track" ||
+      !program ||
+      !translation
+    ) {
       return Effect.fail(
         new PublishedProjectionError({
-          locale,
+          appLocale,
           publicPath: route.publicPath,
         })
       );
     }
-    return Effect.succeed({ program, route });
+    return Effect.succeed({ program, route, translation });
   });
   return {
     entries,
@@ -95,10 +107,11 @@ export const readPublishedProgramCatalog = Effect.fn(
 export const readPublishedProgramPage = Effect.fn(
   "NakafaProgram.readPublishedPage"
 )(function* (input: ProgramCursor & { readonly locale: Locale }) {
+  const appLocale = AppLocaleSchema.make(input.locale);
   const args = {
+    appLocale,
     expectedManifestHash: input.expectedManifestHash,
     expectedReleaseId: input.expectedReleaseId,
-    locale: input.locale,
     paginationOpts: {
       cursor: input.cursor,
       numItems: PROJECTION_PAGE_LIMIT,
@@ -109,7 +122,7 @@ export const readPublishedProgramPage = Effect.fn(
     decodeCurriculumJson(source, input.locale, "curricula")
   );
   const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
-    locale: input.locale,
+    appLocale,
     publicPath: "curricula",
   });
   const nextCursor = result.result.isDone ? null : result.result.continueCursor;
@@ -130,6 +143,7 @@ export const readPublishedProgramPage = Effect.fn(
 export const readPublishedProgramRoutes = Effect.fn(
   "NakafaProgram.readPublishedRoutes"
 )(function* (locale: Locale) {
+  const appLocale = AppLocaleSchema.make(locale);
   const routes: PublishedCurriculumRoute[] = [];
   let cursor: ProgramCursor = {
     cursor: null,
@@ -144,13 +158,13 @@ export const readPublishedProgramRoutes = Effect.fn(
     });
     if (page.stale) {
       return yield* new PublishedProjectionError({
-        locale,
+        appLocale,
         publicPath: "curricula",
       });
     }
     if (!page.managed) {
       return yield* new PublishedProjectionError({
-        locale,
+        appLocale,
         publicPath: "curricula",
       });
     }
@@ -165,7 +179,7 @@ export const readPublishedProgramRoutes = Effect.fn(
       page.activeReleaseId === null
     ) {
       return yield* new PublishedProjectionError({
-        locale,
+        appLocale,
         publicPath: "curricula",
       });
     }

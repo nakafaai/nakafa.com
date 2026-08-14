@@ -1,3 +1,4 @@
+import { LearningGraphIdentitySchema } from "@nakafa/aksara-contracts/graph/spec";
 import {
   NAKAFA_BASE_URL,
   NAKAFA_MCP_INFORMATIONAL_ROOT,
@@ -12,7 +13,6 @@ import {
 } from "@repo/contents/_lib/agent/schema/ref";
 import type { Locale } from "@repo/contents/_types/content";
 import { LocaleSchema } from "@repo/contents/_types/content";
-import { LearningGraphIdentitySchema } from "@repo/contents/_types/learning-graph";
 import { cleanSlug } from "@repo/utilities/helper";
 import { Option, Schema } from "effect";
 
@@ -27,7 +27,6 @@ const NakafaContentGraphProjectionSchema = LearningGraphIdentitySchema.pipe(
       locale: LocaleSchema,
       route: Schema.String,
       section: NakafaAgentSectionSchema,
-      sourcePath: Schema.optional(Schema.String),
     })
   )
 );
@@ -36,10 +35,6 @@ const NakafaContentGraphProjectionSchema = LearningGraphIdentitySchema.pipe(
 type NakafaContentGraphProjection = Schema.Schema.Type<
   typeof NakafaContentGraphProjectionSchema
 >;
-
-interface NakafaContentRefInput extends NakafaContentGraphProjection {
-  publicRoute: string;
-}
 
 interface NakafaUrlRoute {
   locale: Locale;
@@ -110,20 +105,14 @@ export function createNakafaContentRefFromGraphProjection(input: unknown) {
     return Option.none<NakafaAgentContentRef>();
   }
 
-  const sourceRoute = graph.sourcePath ?? graph.route;
-
   return Schema.decodeUnknownOption(NakafaAgentContentRefSchema)(
-    createNakafaContentRefInput({
-      ...graph,
-      publicRoute: graph.route,
-      route: sourceRoute,
-    })
+    createNakafaContentRefInput(graph)
   );
 }
 
 /** Builds the schema-decoded agent content ref from graph projection fields. */
-function createNakafaContentRefInput(input: NakafaContentRefInput) {
-  return {
+function createNakafaContentRefInput(input: NakafaContentGraphProjection) {
+  const ref = {
     alignmentId: input.alignmentId,
     assetId: input.assetId,
     conceptId: input.conceptId,
@@ -131,13 +120,21 @@ function createNakafaContentRefInput(input: NakafaContentRefInput) {
     learningObjectId: input.learningObjectId,
     lensId: input.lensId,
     locale: input.locale,
-    markdown_url: NakafaAgentMarkdownUrlSchema.make(
-      `${NAKAFA_BASE_URL}/${input.locale}/${input.publicRoute}.md`
-    ),
     route: input.route,
     section: input.section,
     url: NakafaAgentContentUrlSchema.make(
-      `${NAKAFA_BASE_URL}/${input.locale}/${input.publicRoute}`
+      `${NAKAFA_BASE_URL}/${input.locale}/${input.route}`
+    ),
+  };
+
+  if (input.section === "tryout") {
+    return ref;
+  }
+
+  return {
+    ...ref,
+    markdown_url: NakafaAgentMarkdownUrlSchema.make(
+      `${NAKAFA_BASE_URL}/${input.locale}/${input.route}.md`
     ),
   };
 }

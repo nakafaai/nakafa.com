@@ -1,18 +1,15 @@
-import {
-  type QuranSearchRow,
-  QuranSearchRowSchema,
-  QuranSurahNumberSchema,
-} from "@nakafa/aksara-contracts/quran/spec";
+import { QuranSearchRowSchema } from "@nakafa/aksara-contracts/quran/snapshot/row";
+import { QuranSurahNumberSchema } from "@nakafa/aksara-contracts/quran/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { quranSearchIdentity } from "@repo/backend/convex/contentRelease/quran/facts";
 import { QURAN_SEARCH_RESULT_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
 import { loadQuranOwner } from "@repo/backend/convex/contentRelease/quran/owner";
 import { readQuranRow } from "@repo/backend/convex/contentRelease/quran/row";
-import { authenticateQuranSearchHit } from "@repo/backend/convex/contentRelease/quran/search";
 import { validateSearchQuery } from "@repo/backend/convex/contentRelease/search/input";
 import { buildContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/documents";
 import { interleaveSearchGroups } from "@repo/backend/convex/contents/helpers/search/groups";
+import { authenticateQuranSearchHit } from "@repo/backend/convex/contents/helpers/search/quran/authenticate";
 import { readTextCandidates } from "@repo/backend/convex/contents/helpers/search/quran/candidates";
 import { rankContentSearchDocuments } from "@repo/backend/convex/contents/helpers/search/rank";
 import type { contentSearchInputValidator } from "@repo/backend/convex/contents/helpers/search/schema";
@@ -20,14 +17,13 @@ import {
   getExactRouteQuery,
   getRouteSearchText,
 } from "@repo/backend/convex/contents/helpers/search/terms";
-import { getSourceRouteProjectionForRoute } from "@repo/contents/_types/graph/projection";
 import type { Infer } from "convex/values";
 import { Effect, Option, Schema } from "effect";
 
 type ContentSearchInput = Infer<typeof contentSearchInputValidator>;
 interface SignedQuranSearch {
   readonly index: number;
-  readonly payload: QuranSearchRow;
+  readonly payload: typeof QuranSearchRowSchema.Type;
   readonly rowHash: string;
 }
 
@@ -60,7 +56,8 @@ export const readSignedQuranSearchDocuments = Effect.fn(
     const authenticated = yield* authenticateQuranRows(
       ctx,
       owner.snapshotId,
-      rows
+      rows,
+      args.locale
     );
     return authenticated.map(({ document }) => document);
   }
@@ -107,7 +104,8 @@ export const readSignedQuranSearchDocuments = Effect.fn(
   const authenticated = yield* authenticateQuranRows(
     ctx,
     owner.snapshotId,
-    rows
+    rows,
+    args.locale
   );
   const documentsByIdentity = new Map(
     authenticated.map(({ document, row }) => [row.identity, document])
@@ -138,29 +136,29 @@ const readSignedQuranSearchDocument = Effect.fn(
 )(function* (
   ctx: QueryCtx,
   snapshotId: string,
-  locale: ContentSearchInput["locale"],
-  surahNumber: QuranSearchRow["surahNumber"]
+  appLocale: ContentSearchInput["locale"],
+  surahNumber: number
 ) {
   const signed = yield* readQuranRow(
     ctx,
     snapshotId,
-    quranSearchIdentity(locale, surahNumber),
+    quranSearchIdentity(appLocale, surahNumber),
     QuranSearchRowSchema
   );
-  return buildSignedQuranSearchDocument(signed);
+  return buildSignedQuranSearchDocument(signed, appLocale);
 });
 
 /** Partitions valid exact Quran routes from alternate text expressions. */
 function partitionQuranQueries(
-  locale: ContentSearchInput["locale"],
+  appLocale: ContentSearchInput["locale"],
   queryTexts: readonly string[]
 ) {
-  const exactSurahNumbers: QuranSearchRow["surahNumber"][] = [];
+  const exactSurahNumbers: number[] = [];
   const seenExact = new Set<number>();
   const textQueries: string[] = [];
 
   for (const queryText of queryTexts) {
-    const route = getExactRouteQuery(locale, queryText);
+    const route = getExactRouteQuery(appLocale, queryText);
     if (!route) {
       textQueries.push(queryText);
       continue;
@@ -183,11 +181,14 @@ function partitionQuranQueries(
 }
 
 /** Builds one public search document from an authenticated signed payload. */
-function buildSignedQuranSearchDocument(signed: SignedQuranSearch) {
+function buildSignedQuranSearchDocument(
+  signed: SignedQuranSearch,
+  appLocale: ContentSearchInput["locale"]
+) {
   return buildContentSearchDocument({
     ...signed.payload.graph,
     contentHash: signed.rowHash,
-    locale: signed.payload.locale,
+    locale: appLocale,
     route: signed.payload.route,
     section: "quran",
     sourcePath: signed.payload.route,
@@ -201,14 +202,14 @@ function buildSignedQuranSearchDocument(signed: SignedQuranSearch) {
 function browseQuranRows(
   ctx: QueryCtx,
   snapshotId: string,
-  locale: ContentSearchInput["locale"],
+  appLocale: ContentSearchInput["locale"],
   scanLimit: number
 ) {
   return Effect.promise(() =>
     ctx.db
       .query("quranSearch")
-      .withIndex("by_snapshotId_and_locale_and_index", (index) =>
-        index.eq("snapshotId", snapshotId).eq("locale", locale)
+      .withIndex("by_snapshotId_and_appLocale_and_index", (index) =>
+        index.eq("snapshotId", snapshotId).eq("appLocale", appLocale)
       )
       .take(scanLimit)
   );
@@ -218,14 +219,15 @@ function browseQuranRows(
 function authenticateQuranRows(
   ctx: QueryCtx,
   snapshotId: string,
-  rows: readonly Doc<"quranSearch">[]
+  rows: readonly Doc<"quranSearch">[],
+  appLocale: ContentSearchInput["locale"]
 ) {
   return Effect.forEach(
     rows,
     (row) =>
       authenticateQuranSearchHit(ctx, snapshotId, row).pipe(
         Effect.map((signed) => ({
-          document: buildSignedQuranSearchDocument(signed),
+          document: buildSignedQuranSearchDocument(signed, appLocale),
           row,
         }))
       ),
@@ -233,14 +235,18 @@ function authenticateQuranRows(
   );
 }
 
-/** Resolves one canonical Quran route through the shared graph grammar. */
+/** Resolves one exact canonical Quran route. */
 function getExactQuranSurah(route: string) {
-  const projection = getSourceRouteProjectionForRoute(route);
-  if (projection?.kind !== "quran-surah" || !projection.quran) {
+  const [namespace, surahSegment, extra] = route.split("/");
+  if (
+    namespace !== "quran" ||
+    surahSegment === undefined ||
+    extra !== undefined
+  ) {
     return Option.none();
   }
 
-  const surahNumber = Number(projection.quran.surahSegment);
+  const surahNumber = Number(surahSegment);
   return Schema.is(QuranSurahNumberSchema)(surahNumber)
     ? Option.some(surahNumber)
     : Option.none();

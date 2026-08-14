@@ -1,5 +1,5 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
-import { bindQuranRow } from "@nakafa/aksara-contracts/quran/row-hash";
+import { bindQuranRow } from "@nakafa/aksara-contracts/quran/snapshot/row-hash";
 import {
   quranRowFacts,
   quranSearchFacts,
@@ -47,15 +47,16 @@ describe("contentRelease/quran/facts", () => {
         surahNumber: 1,
       },
       {
+        appLocale: "id",
         identity: "search:id:1",
         kind: "quran-search",
-        locale: "id",
         surahNumber: 1,
       },
     ]);
     expect(quranSearchFacts(search)).toEqual({
+      appLocale: "id",
+      assetId: "asset:id:quran:quran-surah:1",
       identity: "search:id:1",
-      locale: "id",
       surahNumber: 1,
       text: "pencarian teknis",
     });

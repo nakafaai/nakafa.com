@@ -1,7 +1,5 @@
-import {
-  TryoutCatalogRowSchema,
-  TryoutPlacementSchema,
-} from "@nakafa/aksara-contracts/tryout/spec";
+import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
+import { TryoutPlacementSchema } from "@nakafa/aksara-contracts/tryout/placement";
 import {
   readTryoutSection,
   type TryoutSectionIdentity,
@@ -39,7 +37,7 @@ function makeTechnicalSection(locale: "en" | "id", questionCount = 1) {
       lensId: "lens:tryout:technical",
     },
     kind: "section",
-    locale,
+    appLocale: locale,
     order: 1,
     publicPath: "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
     questionCount,

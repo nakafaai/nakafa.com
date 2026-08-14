@@ -1,7 +1,7 @@
-import type { ContentLocale } from "@nakafa/aksara-contracts/content";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { ContentSnapshotManifest } from "@nakafa/aksara-contracts/release/snapshot/data";
+import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/catalog";
 import type { TryoutCatalogCounts } from "@nakafa/aksara-contracts/tryout/snapshot/spec";
-import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
@@ -64,7 +64,7 @@ function hasExpectedCounts(
 
 /** Finds the complete verified hierarchy when signed try-out is active. */
 export const findTryoutCatalog = Effect.fn("contentRelease.findTryoutCatalog")(
-  function* (ctx: QueryCtx, locale: ContentLocale) {
+  function* (ctx: QueryCtx, locale: AppLocaleCode) {
     const owner = yield* findTryoutOwner(ctx);
     if (Option.isNone(owner)) {
       return Option.none();
@@ -84,7 +84,7 @@ export const findTryoutCatalog = Effect.fn("contentRelease.findTryoutCatalog")(
 
 /** Loads the complete verified hierarchy for one active try-out locale. */
 export const loadTryoutCatalog = Effect.fn("contentRelease.loadTryoutCatalog")(
-  function* (ctx: QueryCtx, locale: ContentLocale) {
+  function* (ctx: QueryCtx, locale: AppLocaleCode) {
     const catalog = yield* findTryoutCatalog(ctx, locale);
     if (Option.isSome(catalog)) {
       return catalog.value;
@@ -100,7 +100,7 @@ export const loadTryoutCatalog = Effect.fn("contentRelease.loadTryoutCatalog")(
 /** Loads one retained signed catalog for an authenticated frozen attempt. */
 export const loadTryoutSnapshotCatalog = Effect.fn(
   "contentRelease.loadTryoutSnapshotCatalog"
-)(function* (ctx: QueryCtx, locale: ContentLocale, snapshotId: string) {
+)(function* (ctx: QueryCtx, locale: AppLocaleCode, snapshotId: string) {
   const { snapshot } = yield* loadVerifiedSnapshot(ctx, "tryout", snapshotId);
   return yield* loadStoredTryoutCatalog(ctx, locale, {
     activeManifestHash: null,
@@ -116,7 +116,7 @@ const loadStoredTryoutCatalog = Effect.fn(
   "contentRelease.loadStoredTryoutCatalog"
 )(function* (
   ctx: QueryCtx,
-  locale: ContentLocale,
+  locale: AppLocaleCode,
   selection: {
     readonly activeManifestHash: string | null;
     readonly activeReleaseId: string | null;
@@ -131,9 +131,12 @@ const loadStoredTryoutCatalog = Effect.fn(
       "Selected try-out owner contains another snapshot family."
     );
   }
-  const { counts, locales, routeCount } = selection.snapshot.manifest;
-  const expected = localizedCounts(counts, locales.length);
-  const expectedRouteCount = localizedCount(routeCount, locales.length);
+  const { activeAppLocales, counts, routeCount } = selection.snapshot.manifest;
+  const expected = localizedCounts(counts, activeAppLocales.length);
+  const expectedRouteCount = localizedCount(
+    routeCount,
+    activeAppLocales.length
+  );
   if (!(expected && expectedRouteCount !== undefined)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
@@ -153,8 +156,8 @@ const loadStoredTryoutCatalog = Effect.fn(
   const stored = yield* Effect.promise(() =>
     ctx.db
       .query("tryoutCatalog")
-      .withIndex("by_snapshotId_and_locale_and_publicPath", (index) =>
-        index.eq("snapshotId", selection.snapshotId).eq("locale", locale)
+      .withIndex("by_snapshotId_and_appLocale_and_publicPath", (index) =>
+        index.eq("snapshotId", selection.snapshotId).eq("appLocale", locale)
       )
       .take(total + 1)
   );
@@ -202,7 +205,7 @@ const loadStoredTryoutCatalog = Effect.fn(
 
 /** Reads the canonical wire rows used by release diagnostics and previews. */
 export const readTryoutCatalog = Effect.fn("contentRelease.readTryoutCatalog")(
-  function* (ctx: QueryCtx, locale: ContentLocale) {
+  function* (ctx: QueryCtx, locale: AppLocaleCode) {
     const catalog = yield* loadTryoutCatalog(ctx, locale);
     return {
       activeManifestHash: catalog.activeManifestHash,

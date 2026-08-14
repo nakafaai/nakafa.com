@@ -3,100 +3,115 @@ import {
   makeMaterialContentRef,
   makeMaterialProjection,
 } from "@repo/backend/test/content-material";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { Effect, Option } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const runtimeMocks = vi.hoisted(() => ({
-  readNakafaRuntimeQuery: vi.fn(),
-  readPublishedMaterialMarkdown: vi.fn(),
+  readPublishedMarkdown: vi.fn(),
+  readQuranMarkdown: vi.fn(),
   resolveNakafaContentRef: vi.fn(),
-  verifyNakafaReleasePin: vi.fn(),
 }));
 
-vi.mock("@repo/backend/client/nakafa/material", () => ({
-  readPublishedMaterialMarkdown: runtimeMocks.readPublishedMaterialMarkdown,
+vi.mock("@repo/backend/client/nakafa/published", () => ({
+  readPublishedMarkdown: runtimeMocks.readPublishedMarkdown,
+}));
+vi.mock("@repo/backend/client/nakafa/quran", () => ({
+  readQuranMarkdown: runtimeMocks.readQuranMarkdown,
 }));
 vi.mock("@repo/backend/client/nakafa/ref", () => ({
   resolveNakafaContentRef: runtimeMocks.resolveNakafaContentRef,
 }));
-vi.mock("@repo/backend/client/nakafa/query", () => ({
-  readNakafaRuntimeQuery: runtimeMocks.readNakafaRuntimeQuery,
-}));
-vi.mock("@repo/backend/client/nakafa/release", () => ({
-  verifyNakafaReleasePin: runtimeMocks.verifyNakafaReleasePin,
-}));
 
-const materialRef = makeMaterialContentRef(makeMaterialProjection("en", 1));
+const materialRef = makeMaterialContentRef(
+  makeMaterialProjection("en", 1)
+);
+const articleRef = readNakafaContentRefFixture(
+  "en",
+  "articles/politics/example",
+  "articles"
+);
+const quranRef = readNakafaContentRefFixture("en", "quran/1", "quran");
+const tryoutRef: NakafaAgentContentRef = {
+  ...quranRef,
+  section: "tryout",
+};
+const readTarget = () => ({
+  siteUrl: "https://example.convex.site",
+  token: "runtime-token",
+});
 
 beforeEach(() => {
-  runtimeMocks.readNakafaRuntimeQuery.mockReset();
-  runtimeMocks.readPublishedMaterialMarkdown.mockReset();
-  runtimeMocks.resolveNakafaContentRef.mockReset();
-  runtimeMocks.verifyNakafaReleasePin
-    .mockReset()
-    .mockReturnValue(Effect.succeed(null));
+  for (const mock of Object.values(runtimeMocks)) {
+    mock.mockReset();
+  }
 });
 
 describe("readNakafaMarkdown", () => {
-  it("preserves a stable material asset ID across the signed lookup", async () => {
+  it.each([articleRef, materialRef])(
+    "dispatches $section through the signed public reader",
+    async (ref) => {
+      runtimeMocks.resolveNakafaContentRef.mockReturnValue(
+        Effect.succeed(Option.some(ref))
+      );
+      runtimeMocks.readPublishedMarkdown.mockReturnValue(
+        Effect.succeed(Option.none())
+      );
+
+      await Effect.runPromise(
+        readNakafaMarkdown(
+          "https://example.convex.cloud",
+          readTarget,
+          ref.content_id
+        )
+      );
+
+      expect(runtimeMocks.readPublishedMarkdown).toHaveBeenCalledWith(
+        readTarget,
+        ref
+      );
+    }
+  );
+
+  it("dispatches Quran through its signed snapshot reader", async () => {
     runtimeMocks.resolveNakafaContentRef.mockReturnValue(
-      Effect.succeed(Option.some(materialRef))
+      Effect.succeed(Option.some(quranRef))
     );
-    runtimeMocks.readPublishedMaterialMarkdown.mockReturnValue(
-      Effect.succeed({ managed: true, markdown: Option.none() })
+    runtimeMocks.readQuranMarkdown.mockReturnValue(
+      Effect.succeed(Option.none())
     );
-    const readTarget = () => ({
-      siteUrl: "https://example.convex.site",
-      token: "runtime-token",
-    });
 
     await Effect.runPromise(
       readNakafaMarkdown(
         "https://example.convex.cloud",
         readTarget,
-        materialRef.content_id
+        quranRef.content_id
       )
     );
 
-    expect(runtimeMocks.readPublishedMaterialMarkdown).toHaveBeenCalledWith(
+    expect(runtimeMocks.readQuranMarkdown).toHaveBeenCalledWith(
       "https://example.convex.cloud",
-      readTarget,
-      materialRef.content_id
+      quranRef
     );
   });
 
-  it("checks the release again after reading source material markdown", async () => {
-    runtimeMocks.resolveNakafaContentRef.mockReturnValue(
-      Effect.succeed(Option.some(materialRef))
-    );
-    runtimeMocks.readPublishedMaterialMarkdown.mockReturnValue(
-      Effect.succeed({
-        activeReleaseId: null,
-        managed: false,
-        markdown: Option.none(),
-      })
-    );
-    runtimeMocks.readNakafaRuntimeQuery.mockReturnValue(
-      Effect.succeed({
-        body: "## Source lesson",
-        metadata: { title: "Source material" },
-      })
-    );
+  it.each([Option.none(), Option.some(tryoutRef)])(
+    "returns no markdown when the current identity has no readable body",
+    async (ref) => {
+      runtimeMocks.resolveNakafaContentRef.mockReturnValue(Effect.succeed(ref));
 
-    await Effect.runPromise(
-      readNakafaMarkdown(
-        "https://example.convex.cloud",
-        () => ({
-          siteUrl: "https://example.convex.site",
-          token: "runtime-token",
-        }),
-        materialRef.content_id
-      )
-    );
-
-    expect(runtimeMocks.verifyNakafaReleasePin).toHaveBeenCalledWith(
-      "https://example.convex.cloud",
-      null
-    );
-  });
+      await expect(
+        Effect.runPromise(
+          readNakafaMarkdown(
+            "https://example.convex.cloud",
+            readTarget,
+            "unsupported"
+          )
+        )
+      ).resolves.toEqual(Option.none());
+      expect(runtimeMocks.readPublishedMarkdown).not.toHaveBeenCalled();
+      expect(runtimeMocks.readQuranMarkdown).not.toHaveBeenCalled();
+    }
+  );
 });

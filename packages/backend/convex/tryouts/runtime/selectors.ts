@@ -1,6 +1,8 @@
-import type { ContentLocale } from "@nakafa/aksara-contracts/content";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { readTryoutAttemptHistory } from "@repo/backend/convex/tryouts/history/reference";
+import { projectStoredTryoutContent } from "@repo/backend/convex/tryouts/history/selectors";
 import type {
   TryoutAnswerSelector,
   TryoutQuestionSelector,
@@ -28,7 +30,7 @@ export const loadTryoutSignedContent = Effect.fn(
   readonly access: { readonly answers: boolean; readonly questions: boolean };
   readonly attempt: TryoutAttempt;
   readonly ctx: QueryCtx;
-  readonly locale: ContentLocale;
+  readonly appLocale: AppLocaleCode;
   readonly sectionKey: string;
   readonly snapshotReleaseId: string;
   readonly snapshotId: string;
@@ -57,7 +59,8 @@ export const loadTryoutSignedContent = Effect.fn(
   return yield* projectTryoutSignedContent({
     access: input.access,
     attempt: input.attempt,
-    locale: input.locale,
+    ctx: input.ctx,
+    appLocale: input.appLocale,
     placements,
     totalQuestions: input.totalQuestions,
   });
@@ -69,11 +72,12 @@ export const projectTryoutSignedContent = Effect.fn(
 )(function* (input: {
   readonly access: { readonly answers: boolean; readonly questions: boolean };
   readonly attempt: TryoutAttempt;
-  readonly locale: ContentLocale;
+  readonly ctx: QueryCtx;
+  readonly appLocale: AppLocaleCode;
   readonly placements: readonly TryoutPlacement[];
   readonly totalQuestions: number;
 }) {
-  if (input.attempt.locale !== input.locale) {
+  if (input.attempt.appLocale !== input.appLocale) {
     return yield* selectorIntegrity(
       "Signed try-out attempt lost its locale or snapshot identity."
     );
@@ -83,13 +87,23 @@ export const projectTryoutSignedContent = Effect.fn(
       "Signed try-out section lost one or more frozen placements."
     );
   }
+  const history = yield* readTryoutAttemptHistory(input.ctx, input.attempt);
+  if (history) {
+    return yield* projectStoredTryoutContent({
+      access: input.access,
+      appLocale: input.appLocale,
+      attempt: input.attempt,
+      ctx: input.ctx,
+      placements: input.placements,
+    });
+  }
 
-  const content: Extract<TryoutSectionContentAccess, { kind: "signed" }> = {
+  const content: Extract<TryoutSectionContentAccess, { runtime: "current" }> = {
     answers: input.access.answers
       ? yield* Effect.forEach(input.placements, (placement) =>
           makeAnswerSelector(
             placement,
-            input.locale,
+            input.appLocale,
             input.attempt.tryoutSnapshotId,
             input.attempt.snapshotReleaseId
           )
@@ -99,11 +113,12 @@ export const projectTryoutSignedContent = Effect.fn(
     questions: yield* Effect.forEach(input.placements, (placement) =>
       makeQuestionSelector(
         placement,
-        input.locale,
+        input.appLocale,
         input.attempt.tryoutSnapshotId,
         input.attempt.snapshotReleaseId
       )
     ),
+    runtime: "current",
   };
   return content;
 });
@@ -111,7 +126,7 @@ export const projectTryoutSignedContent = Effect.fn(
 /** Builds one authenticated question selector from a frozen placement. */
 function makeQuestionSelector(
   placement: TryoutPlacement,
-  locale: ContentLocale,
+  appLocale: AppLocaleCode,
   snapshotId: string,
   snapshotReleaseId: string
 ) {
@@ -126,11 +141,11 @@ function makeQuestionSelector(
   }
 
   const selector: TryoutQuestionSelector = {
+    appLocale,
     artifactHash: placement.questionArtifactHash,
     contentHash: placement.contentHash,
     contentKey: placement.questionContentKey,
     delivery: "authenticated",
-    locale,
     questionOrder: placement.questionOrder,
     snapshotReleaseId,
     snapshotId,
@@ -143,7 +158,7 @@ function makeQuestionSelector(
 /** Builds one entitled answer selector from a frozen placement. */
 function makeAnswerSelector(
   placement: TryoutPlacement,
-  locale: ContentLocale,
+  appLocale: AppLocaleCode,
   snapshotId: string,
   snapshotReleaseId: string
 ) {
@@ -152,11 +167,11 @@ function makeAnswerSelector(
   }
 
   const selector: TryoutAnswerSelector = {
+    appLocale,
     artifactHash: placement.answerArtifactHash,
     contentHash: placement.contentHash,
     contentKey: placement.answerContentKey,
     delivery: "entitled",
-    locale,
     questionOrder: placement.questionOrder,
     snapshotReleaseId,
     snapshotId,

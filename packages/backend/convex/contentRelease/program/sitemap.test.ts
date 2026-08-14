@@ -58,9 +58,9 @@ describe("contentRelease/program/sitemap", () => {
     await activateProgramSnapshot(target, data);
     await target.mutation((ctx) =>
       ctx.db.insert("programBuckets", {
+        appLocale: "en",
         bucket: "invalid",
         index: 100,
-        locale: "en",
         routeCount: 0,
         snapshotId: data.snapshotId,
       })

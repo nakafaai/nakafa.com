@@ -1,15 +1,11 @@
 import { internal } from "@repo/backend/convex/_generated/api";
+import type { Id, TableNames } from "@repo/backend/convex/_generated/dataModel";
+import {
+  callCustomerIntegrityQuery,
+  getCustomerConvexConfig,
+  loadCustomerEnvProvider,
+} from "@repo/backend/scripts/customers/convex";
 import { formatScriptCause } from "@repo/backend/scripts/lib/errors";
-import { log, logError } from "@repo/backend/scripts/sync-content/cli/logging";
-import {
-  ConvexIdSchema,
-  mutableArraySchema,
-} from "@repo/backend/scripts/sync-content/contract/schemas";
-import {
-  callConvexQuery,
-  getConvexConfig,
-} from "@repo/backend/scripts/sync-content/convex/client";
-import { loadEnvProvider } from "@repo/backend/scripts/sync-content/runtime/files";
 import type {
   FunctionArgs,
   FunctionReference,
@@ -19,6 +15,26 @@ import type {
 import { Effect, Schema } from "effect";
 
 const CUSTOMER_PAGE_SIZE = 100;
+
+const writeLine = (message: string) => {
+  process.stdout.write(`${message}\n`);
+};
+
+const writeError = (message: string) => {
+  process.stderr.write(`ERROR: ${message}\n`);
+};
+
+const ConvexIdSchema = <const TableName extends TableNames>(
+  tableName: TableName
+) =>
+  Schema.String.pipe(
+    Schema.filter((value): value is Id<TableName> => value.length > 0, {
+      message: () => `Expected ${tableName} document ID`,
+    })
+  );
+
+const mutableArraySchema = <A, I>(schema: Schema.Schema<A, I, never>) =>
+  Schema.mutable(Schema.Array(schema));
 
 interface PageResult {
   continueCursor: string;
@@ -87,7 +103,7 @@ const collectIntegrityPages = Effect.fn("customers.collectIntegrityPages")(
     query: TFunction,
     schema: Schema.Schema<FunctionReturnType<TFunction>, Encoded, never>
   ) {
-    const config = yield* getConvexConfig({ prod });
+    const config = yield* getCustomerConvexConfig(prod);
     const rows: PageRow<TFunction>[] = [];
     let continueCursor: string | null = null;
 
@@ -98,7 +114,12 @@ const collectIntegrityPages = Effect.fn("customers.collectIntegrityPages")(
           numItems: CUSTOMER_PAGE_SIZE,
         },
       };
-      const result = yield* callConvexQuery(config, query, args, schema);
+      const result = yield* callCustomerIntegrityQuery(
+        config,
+        query,
+        args,
+        schema
+      );
 
       rows.push(...result.page);
 
@@ -174,7 +195,7 @@ const main = Effect.fn("customers.verify")(function* () {
   const prod = args.includes("--prod");
   const report = yield* getCustomerIntegrityReport(prod);
 
-  log(
+  writeLine(
     JSON.stringify(
       {
         customerCount: report.customerCount,
@@ -210,12 +231,12 @@ const main = Effect.fn("customers.verify")(function* () {
 
 Effect.runPromise(
   Effect.gen(function* () {
-    const provider = yield* loadEnvProvider();
+    const provider = yield* loadCustomerEnvProvider();
     yield* main().pipe(Effect.withConfigProvider(provider));
   }).pipe(
     Effect.catchAllCause((cause) =>
       Effect.sync(() => {
-        logError(formatScriptCause(cause));
+        writeError(formatScriptCause(cause));
         process.exitCode = 1;
       })
     )

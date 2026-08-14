@@ -127,8 +127,8 @@ describe("public HTML route rejection", () => {
     expect(results).toEqual([null, "en", "en"]);
     expect(publishedMocks.readActiveContentRoute).toHaveBeenCalledWith({
       activeReleaseId: "release-active",
+      appLocale: "en",
       family: "article",
-      locale: "en",
       publicPath: "articles/public-affairs/new-article",
     });
   });
@@ -145,7 +145,7 @@ describe("public HTML route rejection", () => {
       )
     ).resolves.toBeNull();
     expect(previewMocks.matchesPreviewRoute).toHaveBeenCalledWith({
-      locale: "en",
+      appLocale: "en",
       publicPath: "articles/public-affairs/new-preview",
     });
     expect(publishedMocks.readActiveContentIdentity).not.toHaveBeenCalled();
@@ -170,8 +170,8 @@ describe("public HTML route rejection", () => {
     ).resolves.toBe("en");
     expect(publishedMocks.readActiveContentRoute).toHaveBeenCalledWith({
       activeReleaseId: null,
+      appLocale: "en",
       family: "article",
-      locale: "en",
       publicPath: "articles/public-affairs/unmanaged-article",
     });
   });

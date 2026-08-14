@@ -1,15 +1,19 @@
+import type { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import {
   TEST_ARTIFACT_HASH,
   TEST_DIGEST,
 } from "@repo/backend/test/content-release";
+import type { Schema } from "effect";
+
+type ArtifactLocaleCode = Schema.Schema.Encoded<typeof ArtifactLocaleSchema>;
 
 /** Creates one schema-valid technical signed artifact. */
 export function testArtifactJson(options?: {
   readonly artifactHash?: string;
+  readonly artifactLocale?: ArtifactLocaleCode;
   readonly compiledCode?: string;
   readonly contentKey?: string;
-  readonly locale?: "en" | "id";
   readonly plainText?: string;
   readonly rendererDomain?: RendererDomain;
 }) {
@@ -18,13 +22,13 @@ export function testArtifactJson(options?: {
     artifactHash: options?.artifactHash ?? TEST_ARTIFACT_HASH,
     keyId: "test-key",
     payload: {
+      artifactLocale: options?.artifactLocale ?? "en",
       byteLength: new TextEncoder().encode(compiledCode).byteLength,
       compiledCode,
       compilerConfigHash: TEST_DIGEST,
       compilerVersion: "0.1.0",
       contentKey: options?.contentKey ?? "test:head-0",
-      format: "mdx-function-body-v1",
-      locale: options?.locale ?? "en",
+      format: "mdx-function-body",
       mdxCompilerVersion: "3.1.1",
       plainText: options?.plainText ?? "Technical fixture",
       rawMdx: "## Technical fixture",

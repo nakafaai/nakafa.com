@@ -9,7 +9,7 @@ export const contentSearchRefValidator = v.object({
   ...learningGraphIdentityValidator.fields,
   content_id: v.string(),
   locale: localeValidator,
-  markdown_url: v.string(),
+  markdown_url: v.optional(v.string()),
   route: v.string(),
   section: nakafaSectionValidator,
   url: v.string(),

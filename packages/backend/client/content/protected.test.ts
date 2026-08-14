@@ -5,6 +5,7 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { ContentReleaseManifestSchema } from "@nakafa/aksara-contracts/release";
 import {
   inheritContentSnapshots,
@@ -60,7 +61,7 @@ const contentKey = ContentKeySchema.make(
 );
 const artifact = testSignedArtifact("snbt-quant", { contentKey });
 const request: ProtectedContentRuntimeRequest = {
-  locale: "en",
+  appLocale: AppLocaleSchema.make("en"),
   selectors: [
     {
       artifactHash: artifact.artifactHash,

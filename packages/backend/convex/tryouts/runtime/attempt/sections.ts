@@ -1,12 +1,18 @@
-import type { TryoutSection } from "@nakafa/aksara-contracts/tryout/spec";
+import {
+  type TryoutSection,
+  TryoutSectionSchema,
+} from "@nakafa/aksara-contracts/tryout/catalog";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { loadVerifiedSnapshot } from "@repo/backend/convex/contentRelease/runtime/snapshot";
 import { readTryoutSetSelection } from "@repo/backend/convex/tryouts/catalog/selection";
+import { loadStoredTryoutRows } from "@repo/backend/convex/tryouts/history/rows";
+import { readTryoutAttemptHistory } from "@repo/backend/convex/tryouts/history/reference";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
 import { TryoutRuntimeError } from "@repo/backend/convex/tryouts/runtime/error";
 import { type Infer, v } from "convex/values";
 import { Effect, Schema } from "effect";
+import { readAttemptSetIdentity } from "@repo/backend/convex/tryouts/runtime/lookup";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type TryoutSectionSnapshot = TryoutAttempt["sectionSnapshots"][number];
@@ -124,9 +130,42 @@ export const loadAttemptSectionRoutes = Effect.fn(
 /** Reads immutable section rows from one retained signed catalog snapshot. */
 const loadSignedSections = Effect.fn("tryouts.attempt.loadSignedSections")(
   function* (ctx: QueryCtx, attempt: TryoutAttempt) {
+    const identity = yield* readAttemptSetIdentity(attempt);
+    const history = yield* readTryoutAttemptHistory(ctx, attempt);
+    if (history) {
+      const rows = yield* loadStoredTryoutRows(
+        ctx,
+        attempt.tryoutSnapshotId,
+        "catalog"
+      );
+      const historicalSections: TryoutSection[] = [];
+      for (const envelope of rows) {
+        if (envelope.rowKind !== "catalog") {
+          continue;
+        }
+        const row = envelope.record.row;
+        if (
+          row.kind !== "section" ||
+          row.locale !== identity.locale ||
+          row.countryKey !== attempt.countryKey ||
+          row.examKey !== attempt.examKey ||
+          row.trackKey !== attempt.trackKey ||
+          row.setKey !== attempt.setKey
+        ) {
+          continue;
+        }
+        const { locale: _locale, ...section } = row;
+        const decoded = yield* Schema.decodeUnknown(TryoutSectionSchema)({
+          ...section,
+          appLocale: identity.locale,
+        }).pipe(Effect.mapError(snapshotMismatch));
+        historicalSections.push(decoded);
+      }
+      return historicalSections;
+    }
     yield* loadVerifiedSnapshot(ctx, "tryout", attempt.tryoutSnapshotId);
     const catalog = yield* readTryoutSetSelection(ctx, {
-      locale: attempt.locale,
+      appLocale: identity.locale,
       publicPath: attempt.setPublicPath,
       snapshotId: attempt.tryoutSnapshotId,
     });

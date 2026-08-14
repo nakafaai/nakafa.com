@@ -35,16 +35,17 @@ describe("contentRelease/snapshot/quran", () => {
     await expect(
       t.run((ctx) => ctx.db.query("quranRows").unique())
     ).resolves.toMatchObject({
+      appLocale: "en",
       identity: "search:en:1",
       kind: "quran-search",
-      locale: "en",
       surahNumber: 1,
     });
     await expect(
       t.run((ctx) => ctx.db.query("quranSearch").unique())
     ).resolves.toMatchObject({
+      appLocale: "en",
+      assetId: "asset:en:quran:quran-surah:1",
       identity: "search:en:1",
-      locale: "en",
       text: "Technical search text",
       surahNumber: 1,
     });
@@ -84,7 +85,9 @@ describe("contentRelease/snapshot/quran", () => {
       if (!search) {
         throw new Error("Expected one technical Quran search projection.");
       }
-      await ctx.db.patch("quranSearch", search._id, { text: "changed" });
+      await ctx.db.patch("quranSearch", search._id, {
+        assetId: "asset:en:quran:quran-surah:changed",
+      });
     });
 
     await expect(
@@ -102,7 +105,7 @@ describe("contentRelease/snapshot/quran", () => {
       ctx.db.insert("quranSearch", {
         identity: "search:en:1",
         index: 0,
-        locale: "en",
+        appLocale: "en",
         rowHash: source.record.rowHash,
         snapshotId,
         surahNumber: 1,
@@ -135,7 +138,7 @@ describe("contentRelease/snapshot/quran", () => {
       ctx.db.insert("quranSearch", {
         identity: "search:en:1",
         index: 0,
-        locale: "en",
+        appLocale: "en",
         rowHash: source.record.rowHash,
         snapshotId,
         surahNumber: 1,

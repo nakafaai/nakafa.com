@@ -1,9 +1,6 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { readQuranAttribution } from "@repo/backend/convex/contentRelease/quran/attribution";
-import {
-  readQuranSitemap,
-  readQuranSurahs,
-} from "@repo/backend/convex/contentRelease/quran/catalog";
+import { readQuranSurahs } from "@repo/backend/convex/contentRelease/quran/catalog";
 import {
   quranDocumentValidator,
   readQuranDocument,
@@ -17,11 +14,10 @@ import {
   readQuranMarkdown,
 } from "@repo/backend/convex/contentRelease/quran/markdown";
 import { readQuranReference } from "@repo/backend/convex/contentRelease/quran/reference";
-import { searchQuran } from "@repo/backend/convex/contentRelease/quran/search";
 import {
-  quranLocaleValidator,
+  quranAppLocaleValidator,
   quranSourceFields,
-  quranTafsirLocaleValidator,
+  quranTafsirAppLocaleValidator,
 } from "@repo/backend/convex/contentRelease/quran/spec";
 import {
   quranViewValidator,
@@ -49,17 +45,6 @@ const referenceValidator = v.object({
   toVerse: v.number(),
 });
 
-const searchValidator = v.object({
-  ...quranSourceFields,
-  rowJson: v.array(v.string()),
-});
-
-const sitemapValidator = v.object({
-  ...quranSourceFields,
-  locale: quranLocaleValidator,
-  routes: v.array(v.string()),
-});
-
 /** Returns the visible signed source attribution for active Quran content. */
 export const attribution = query({
   args: {},
@@ -76,46 +61,48 @@ export const surahs = query({
 
 /** Returns the narrow locale-specific Quran document used by the public API. */
 export const document = query({
-  args: { locale: quranLocaleValidator, surahNumber: v.number() },
+  args: { appLocale: quranAppLocaleValidator, surahNumber: v.number() },
   returns: quranDocumentValidator,
-  handler: (ctx, { locale, surahNumber }) =>
-    runConvexProgram(readQuranDocument(ctx, locale, surahNumber)),
+  handler: (ctx, { appLocale, surahNumber }) =>
+    runConvexProgram(readQuranDocument(ctx, appLocale, surahNumber)),
 });
 
 /** Returns the exact signed fields rendered by Quran markdown consumers. */
 export const markdown = query({
   args: {
-    locale: quranLocaleValidator,
+    appLocale: quranAppLocaleValidator,
     surahNumber: v.number(),
     verseLimit: v.optional(v.number()),
   },
   returns: quranMarkdownValidator,
-  handler: (ctx, { locale, surahNumber, verseLimit }) =>
-    runConvexProgram(readQuranMarkdown(ctx, locale, surahNumber, verseLimit)),
+  handler: (ctx, { appLocale, surahNumber, verseLimit }) =>
+    runConvexProgram(
+      readQuranMarkdown(ctx, appLocale, surahNumber, verseLimit)
+    ),
 });
 
 /** Returns the narrow locale-specific Quran projection used by the web UI. */
 export const view = query({
-  args: { locale: quranLocaleValidator, surahNumber: v.number() },
+  args: { appLocale: quranAppLocaleValidator, surahNumber: v.number() },
   returns: quranViewValidator,
-  handler: (ctx, { locale, surahNumber }) =>
-    runConvexProgram(readQuranView(ctx, locale, surahNumber)),
+  handler: (ctx, { appLocale, surahNumber }) =>
+    runConvexProgram(readQuranView(ctx, appLocale, surahNumber)),
 });
 
 /** Returns one exact signed tafsir only after the verse is requested. */
 export const interpretation = query({
   args: {
     expectedSnapshotId: v.string(),
-    locale: quranTafsirLocaleValidator,
+    appLocale: quranTafsirAppLocaleValidator,
     surahNumber: v.number(),
     verseNumber: v.number(),
   },
   returns: quranInterpretationValidator,
-  handler: (ctx, { expectedSnapshotId, locale, surahNumber, verseNumber }) =>
+  handler: (ctx, { appLocale, expectedSnapshotId, surahNumber, verseNumber }) =>
     runConvexProgram(
       readQuranInterpretation(
         ctx,
-        locale,
+        appLocale,
         expectedSnapshotId,
         surahNumber,
         verseNumber
@@ -127,25 +114,10 @@ export const interpretation = query({
 export const reference = query({
   args: {
     fromVerse: v.number(),
-    locale: quranLocaleValidator,
+    appLocale: quranAppLocaleValidator,
     surahNumber: v.number(),
     toVerse: v.optional(v.number()),
   },
   returns: referenceValidator,
   handler: (ctx, args) => runConvexProgram(readQuranReference(ctx, args)),
-});
-
-/** Returns relevance-ranked localized Quran search rows under a hard bound. */
-export const search = query({
-  args: { locale: quranLocaleValidator, query: v.string() },
-  returns: searchValidator,
-  handler: (ctx, { locale, query: sourceQuery }) =>
-    runConvexProgram(searchQuran(ctx, locale, sourceQuery)),
-});
-
-/** Returns canonical Quran sitemap paths for one supported locale. */
-export const sitemap = query({
-  args: { locale: quranLocaleValidator },
-  returns: sitemapValidator,
-  handler: (ctx, { locale }) => runConvexProgram(readQuranSitemap(ctx, locale)),
 });

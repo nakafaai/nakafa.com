@@ -2,6 +2,7 @@ import { internal } from "@repo/backend/convex/_generated/api";
 import { PROOF_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { testMaterialPublicPath } from "@repo/backend/test/content-material";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content-release";
 import {
   insertRollbackItem,
@@ -34,14 +35,14 @@ async function insertCatalogFixture() {
     });
     for (let index = 0; index < itemCount; index += 1) {
       const contentKey = `test:head-${index}`;
-      const publicPath = `test/head-${index}`;
+      const publicPath = testMaterialPublicPath(index);
       await insertRollbackItem(ctx, index, false);
       await insertRoute(ctx, { contentKey, index, publicPath });
       await ctx.db.insert("contentKeys", {
         contentKey,
         createdSequence: 1,
         family: "material",
-        locale: "en",
+        artifactLocale: "en",
       });
     }
   });

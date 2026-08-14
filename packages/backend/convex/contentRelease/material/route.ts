@@ -11,23 +11,26 @@ export const resolveMaterialRoute = Effect.fn(
   "contentRelease.resolveMaterialRoute"
 )(function* (
   ctx: QueryCtx,
-  locale: Doc<"materialCatalog">["locale"],
+  appLocale: Doc<"materialCatalog">["appLocale"],
   publicPath: string
 ) {
-  const route = yield* resolveActiveRoute(ctx, "material", locale, publicPath);
+  const route = yield* resolveActiveRoute(
+    ctx,
+    "material",
+    appLocale,
+    publicPath
+  );
   if (!(route.managed && route.active)) {
     return {
       active: route.active,
-      familyManaged: route.familyManaged,
       managed: false,
       material: null,
     };
   }
-  yield* requireMaterialState(route.active, locale);
+  yield* requireMaterialState(route.active, appLocale);
   if (!route.projection) {
     return {
       active: route.active,
-      familyManaged: route.familyManaged,
       managed: true,
       material: null,
     };
@@ -35,15 +38,17 @@ export const resolveMaterialRoute = Effect.fn(
   const row = yield* Effect.promise(() =>
     ctx.db
       .query("materialCatalog")
-      .withIndex("by_contentKey_and_locale", (index) =>
-        index.eq("contentKey", route.projection.contentKey).eq("locale", locale)
+      .withIndex("by_contentKey_and_appLocale", (index) =>
+        index
+          .eq("contentKey", route.projection.contentKey)
+          .eq("appLocale", appLocale)
       )
       .unique()
   );
   if (!row) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Active material ${route.projection.contentKey}/${locale} lost its catalog row.`
+      `Active material ${route.projection.contentKey}/${appLocale} lost its catalog row.`
     );
   }
   const verified = yield* verifyMaterial(row);
@@ -55,37 +60,12 @@ export const resolveMaterialRoute = Effect.fn(
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Active material ${route.projection.contentKey}/${locale} disagrees with its published route.`
+      `Active material ${route.projection.contentKey}/${appLocale} disagrees with its published route.`
     );
   }
   return {
     active: route.active,
-    familyManaged: route.familyManaged,
     managed: true,
     material: { ...verified, row },
   };
-});
-
-/** Selects one catalog row only when its active ownership makes it visible. */
-export const readVisibleMaterial = Effect.fn(
-  "contentRelease.readVisibleMaterial"
-)(function* (
-  ctx: QueryCtx,
-  row: Doc<"materialCatalog">,
-  familyManaged: boolean
-) {
-  if (familyManaged) {
-    return { ...(yield* verifyMaterial(row)), row };
-  }
-  const route = yield* resolveMaterialRoute(ctx, row.locale, row.publicPath);
-  if (!route.material) {
-    return null;
-  }
-  if (route.material.row._id !== row._id) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Material ${row.locale}/${row.publicPath} resolved a different catalog row.`
-    );
-  }
-  return route.material;
 });

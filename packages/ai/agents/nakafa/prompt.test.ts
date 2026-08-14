@@ -1,5 +1,5 @@
+import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { nakafaAgentPrompt } from "@repo/ai/agents/nakafa/prompt";
-import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { describe, expect, it } from "vitest";
 
 const context = {
@@ -83,17 +83,8 @@ describe("nakafaAgentPrompt", () => {
     const prompt = nakafaAgentPrompt({
       context: {
         ...context,
-        learningProfile: {
-          interests: ["school-curriculum"],
-          planItems: [
-            {
-              content_id: "asset:id:subject:mathematics:rational-function",
-              lensId: "lens:kurikulum-merdeka",
-              position: 1,
-              status: "ready",
-              title: "Rational Functions",
-            },
-          ],
+        learningSelection: {
+          interest: "school-curriculum",
           program: {
             coverageStatus: "partial",
             key: LearningProgramKeySchema.make("merdeka"),
@@ -106,16 +97,14 @@ describe("nakafaAgentPrompt", () => {
       locale: "id",
     });
 
-    expect(prompt).toContain("- active learning profile: selected");
+    expect(prompt).toContain("- active learning selection: selected");
     expect(prompt).toContain("- program: Kurikulum Merdeka");
-    expect(prompt).toContain(
-      "1. Rational Functions; graph asset reference: asset:id:subject:mathematics:rational-function; status: ready"
-    );
+    expect(prompt).toContain("- interest: school-curriculum");
     const runtimeContext = prompt.slice(
       prompt.indexOf("# Runtime Context"),
       prompt.indexOf("# Tool Usage Guidelines")
     );
-    expect(runtimeContext).not.toContain("content_id");
+    expect(runtimeContext).not.toContain("plan items");
   });
 
   it("keeps Nakafa sources out of model-facing prose", () => {

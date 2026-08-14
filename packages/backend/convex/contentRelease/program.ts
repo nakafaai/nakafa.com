@@ -8,7 +8,7 @@ import {
   readProgramBuckets,
   readProgramSitemap,
 } from "@repo/backend/convex/contentRelease/program/sitemap";
-import { localeValidator } from "@repo/backend/convex/contentRelease/spec";
+import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
   paginationOptsValidator,
@@ -81,18 +81,18 @@ const programSitemapValidator = v.union(
 
 /** Returns the bounded learning-program catalog and localized root routes. */
 export const catalog = query({
-  args: { locale: localeValidator },
+  args: { appLocale: appLocaleValidator },
   returns: programCatalogValidator,
-  handler: (ctx, { locale }) =>
-    runConvexProgram(readProgramCatalog(ctx, locale)),
+  handler: (ctx, { appLocale }) =>
+    runConvexProgram(readProgramCatalog(ctx, appLocale)),
 });
 
 /** Resolves a validated curriculum return context for one material route. */
 export const context = query({
   args: {
     expectedActiveReleaseId: v.optional(v.union(v.string(), v.null())),
+    appLocale: appLocaleValidator,
     contentKey: v.string(),
-    locale: localeValidator,
     materialKey: v.string(),
     nodeKey: v.string(),
     parentPath: v.string(),
@@ -104,7 +104,7 @@ export const context = query({
     runConvexProgram(
       readProgramContext(
         ctx,
-        args.locale,
+        args.appLocale,
         {
           contentKey: args.contentKey,
           materialKey: args.materialKey,
@@ -131,7 +131,7 @@ export const page = query({
   args: {
     expectedManifestHash: v.union(v.string(), v.null()),
     expectedReleaseId: v.union(v.string(), v.null()),
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
     paginationOpts: paginationOptsValidator,
   },
   returns: programPageValidator,
@@ -139,7 +139,7 @@ export const page = query({
     runConvexProgram(
       readProgramPage(
         ctx,
-        args.locale,
+        args.appLocale,
         args.expectedManifestHash,
         args.expectedReleaseId,
         args.paginationOpts
@@ -149,32 +149,32 @@ export const page = query({
 
 /** Resolves lightweight curriculum ownership by one exact public path. */
 export const path = query({
-  args: { locale: localeValidator, publicPath: v.string() },
+  args: { appLocale: appLocaleValidator, publicPath: v.string() },
   returns: programPathValidator,
-  handler: (ctx, { locale, publicPath }) =>
-    runConvexProgram(readProgramPath(ctx, locale, publicPath)),
+  handler: (ctx, { appLocale, publicPath }) =>
+    runConvexProgram(readProgramPath(ctx, appLocale, publicPath)),
 });
 
 /** Resolves one complete indexed curriculum page model by public path. */
 export const route = query({
-  args: { locale: localeValidator, publicPath: v.string() },
+  args: { appLocale: appLocaleValidator, publicPath: v.string() },
   returns: programRouteValidator,
-  handler: (ctx, { locale, publicPath }) =>
-    runConvexProgram(readProgramRoute(ctx, locale, publicPath)),
+  handler: (ctx, { appLocale, publicPath }) =>
+    runConvexProgram(readProgramRoute(ctx, appLocale, publicPath)),
 });
 
 /** Returns non-empty curriculum sitemap partitions for one locale. */
 export const sitemapBuckets = query({
-  args: { locale: localeValidator },
+  args: { appLocale: appLocaleValidator },
   returns: programBucketsValidator,
-  handler: (ctx, { locale }) =>
-    runConvexProgram(readProgramBuckets(ctx, locale)),
+  handler: (ctx, { appLocale }) =>
+    runConvexProgram(readProgramBuckets(ctx, appLocale)),
 });
 
 /** Returns one verified curriculum sitemap partition. */
 export const sitemapPage = query({
-  args: { bucket: v.string(), locale: localeValidator },
+  args: { appLocale: appLocaleValidator, bucket: v.string() },
   returns: programSitemapValidator,
-  handler: (ctx, { bucket, locale }) =>
-    runConvexProgram(readProgramSitemap(ctx, locale, bucket)),
+  handler: (ctx, { appLocale, bucket }) =>
+    runConvexProgram(readProgramSitemap(ctx, appLocale, bucket)),
 });

@@ -31,7 +31,7 @@ describe("Quran API content", () => {
   it("reads and validates one locale-specific signed Quran document", async () => {
     runtimeClientMocks.runtimeQuery.mockResolvedValueOnce({
       ...source,
-      locale: "en",
+      appLocale: "en",
       surah: {
         kind: "quran-surah",
         name: {
@@ -53,9 +53,11 @@ describe("Quran API content", () => {
     });
 
     await expect(
-      Effect.runPromise(readQuranApiDocument({ locale: "en", surahNumber: 1 }))
+      Effect.runPromise(
+        readQuranApiDocument({ appLocale: "en", surahNumber: 1 })
+      )
     ).resolves.toMatchObject({
-      locale: "en",
+      appLocale: "en",
       surah: { number: 1, revelation: { order: 5, place: "Meccan" } },
       verses: [
         {
@@ -66,7 +68,7 @@ describe("Quran API content", () => {
     expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledWith(
       "https://test.convex.cloud",
       expect.anything(),
-      { locale: "en", surahNumber: 1 }
+      { appLocale: "en", surahNumber: 1 }
     );
   });
 
@@ -74,7 +76,7 @@ describe("Quran API content", () => {
     runtimeClientMocks.runtimeQuery.mockRejectedValueOnce(new Error("offline"));
     await expect(
       Effect.runPromise(
-        Effect.either(readQuranApiDocument({ locale: "en", surahNumber: 1 }))
+        Effect.either(readQuranApiDocument({ appLocale: "en", surahNumber: 1 }))
       )
     ).resolves.toMatchObject({
       _tag: "Left",
@@ -83,13 +85,13 @@ describe("Quran API content", () => {
 
     runtimeClientMocks.runtimeQuery.mockResolvedValueOnce({
       ...source,
-      locale: "en",
+      appLocale: "en",
       surah: null,
       verses: [],
     });
     await expect(
       Effect.runPromise(
-        Effect.either(readQuranApiDocument({ locale: "en", surahNumber: 1 }))
+        Effect.either(readQuranApiDocument({ appLocale: "en", surahNumber: 1 }))
       )
     ).resolves.toMatchObject({
       _tag: "Left",

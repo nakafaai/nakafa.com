@@ -1,7 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { readVisibleMaterial } from "@repo/backend/convex/contentRelease/material/route";
 import { PROGRAM_RELATED_LIMIT } from "@repo/backend/convex/contentRelease/program/limits";
 import { loadProgramRouteRow } from "@repo/backend/convex/contentRelease/program/model";
 import { loadProgramOwner } from "@repo/backend/convex/contentRelease/program/owner";
@@ -19,13 +18,6 @@ interface ProgramContextInput {
   readonly publicPath: string;
 }
 
-interface RenamedMaterialSource {
-  readonly parentPath: string;
-  readonly publicPath: string;
-}
-
-const SOURCE_ROUTE_LIMIT = 2;
-
 /** Checks whether one curriculum mapping owns the stable material identity. */
 function ownsMaterialIdentity(
   context: Effect.Effect.Success<ReturnType<typeof verifyCurriculum>>,
@@ -42,117 +34,12 @@ function ownsMaterialIdentity(
   );
 }
 
-/** Resolves the source route for one exact active material identity. */
-const readRenamedMaterialSource = Effect.fn(
-  "contentRelease.readRenamedMaterialSource"
-)(function* (
-  ctx: QueryCtx,
-  locale: Doc<"curriculumRoutes">["locale"],
-  input: ProgramContextInput
-) {
-  const row = yield* Effect.promise(() =>
-    ctx.db
-      .query("materialCatalog")
-      .withIndex("by_contentKey_and_locale", (index) =>
-        index.eq("contentKey", input.contentKey).eq("locale", locale)
-      )
-      .unique()
-  );
-  if (!row) {
-    return;
-  }
-  const selected = yield* readVisibleMaterial(ctx, row, false);
-  if (
-    !selected ||
-    selected.projection.materialKey !== input.materialKey ||
-    selected.projection.parentPath !== input.parentPath ||
-    selected.projection.publicPath !== input.publicPath
-  ) {
-    return;
-  }
-  const routes = yield* Effect.promise(() =>
-    ctx.db
-      .query("publicRoutes")
-      .withIndex("by_locale_and_sourcePath", (index) =>
-        index.eq("locale", locale).eq("sourcePath", input.contentKey)
-      )
-      .take(SOURCE_ROUTE_LIMIT + 1)
-  );
-  if (routes.length > SOURCE_ROUTE_LIMIT) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_LIMIT",
-      `Material source ${locale}/${input.contentKey} exceeds ${SOURCE_ROUTE_LIMIT} rows.`
-    );
-  }
-  const identities = new Map<string, RenamedMaterialSource>();
-  for (const route of routes) {
-    if (
-      route.kind !== "subject-lesson" ||
-      route.materialKey !== input.materialKey ||
-      !route.parentPath
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Material source ${locale}/${input.contentKey} changed route identity.`
-      );
-    }
-    const identity = {
-      parentPath: route.parentPath,
-      publicPath: route.publicPath,
-    };
-    identities.set(`${identity.parentPath}\0${identity.publicPath}`, identity);
-  }
-  if (identities.size > 1) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Material source ${locale}/${input.contentKey} has ambiguous route identity.`
-    );
-  }
-  return identities.values().next().value;
-});
-
-/** Maps one source-owned canonical path to its current exact material path. */
-function resolveRenamedCanonicalPath(
-  canonicalPath: string | undefined,
-  input: ProgramContextInput,
-  source: RenamedMaterialSource
-) {
-  if (canonicalPath === source.publicPath) {
-    return input.publicPath;
-  }
-  if (canonicalPath === source.parentPath) {
-    return input.parentPath;
-  }
-  return;
-}
-
-/** Selects curriculum mappings that still own one renamed material source. */
-function selectRenamedMappings(
-  contexts: readonly {
-    readonly context: Effect.Effect.Success<
-      ReturnType<typeof verifyCurriculum>
-    >;
-    readonly row: Doc<"curriculumRoutes">;
-  }[],
-  input: ProgramContextInput,
-  source: RenamedMaterialSource
-) {
-  return contexts.flatMap((match) => {
-    const resolvedCanonicalPath = resolveRenamedCanonicalPath(
-      match.context.canonicalPath,
-      input,
-      source
-    );
-    return resolvedCanonicalPath ? [{ match, resolvedCanonicalPath }] : [];
-  });
-}
-
 /** Resolves one valid curriculum return context for a material identity. */
 export const readProgramContext = Effect.fn(
   "contentRelease.readProgramContext"
 )(function* (
   ctx: QueryCtx,
-  locale: Doc<"curriculumRoutes">["locale"],
+  appLocale: Doc<"curriculumRoutes">["appLocale"],
   input: ProgramContextInput,
   expectedActiveReleaseId?: string | null
 ) {
@@ -162,7 +49,7 @@ export const readProgramContext = Effect.fn(
     expectedActiveReleaseId,
     "Curriculum context"
   );
-  const owner = yield* loadProgramOwner(ctx, locale);
+  const owner = yield* loadProgramOwner(ctx, appLocale);
   if (!(owner.managed && owner.selected)) {
     return { context: null, managed: false };
   }
@@ -171,11 +58,11 @@ export const readProgramContext = Effect.fn(
     ctx.db
       .query("curriculumRoutes")
       .withIndex(
-        "by_snapshotId_and_locale_and_programKey_and_nodeKey",
+        "by_snapshotId_and_appLocale_and_programKey_and_nodeKey",
         (index) =>
           index
             .eq("snapshotId", snapshotId)
-            .eq("locale", locale)
+            .eq("appLocale", appLocale)
             .eq("programKey", input.programKey)
             .eq("nodeKey", input.nodeKey)
       )
@@ -191,7 +78,7 @@ export const readProgramContext = Effect.fn(
   const storedParent = yield* loadProgramRouteRow(
     ctx,
     snapshotId,
-    locale,
+    appLocale,
     group.parentPath
   );
   if (!storedParent) {
@@ -208,11 +95,11 @@ export const readProgramContext = Effect.fn(
     ctx.db
       .query("curriculumRoutes")
       .withIndex(
-        "by_snapshotId_and_locale_and_contextPath_and_order_and_path",
+        "by_snapshotId_and_appLocale_and_contextPath_and_order_and_path",
         (index) =>
           index
             .eq("snapshotId", snapshotId)
-            .eq("locale", locale)
+            .eq("appLocale", appLocale)
             .eq("contextPath", parent.publicPath)
       )
       .take(PROGRAM_RELATED_LIMIT + 1)
@@ -220,7 +107,7 @@ export const readProgramContext = Effect.fn(
   if (storedContexts.length > PROGRAM_RELATED_LIMIT) {
     return yield* releaseFail(
       "CONTENT_RELEASE_LIMIT",
-      `Curriculum context ${locale}/${parent.publicPath} exceeds ${PROGRAM_RELATED_LIMIT} rows.`
+      `Curriculum context ${appLocale}/${parent.publicPath} exceeds ${PROGRAM_RELATED_LIMIT} rows.`
     );
   }
   const contexts = yield* Effect.forEach(storedContexts, (row) =>
@@ -236,24 +123,13 @@ export const readProgramContext = Effect.fn(
       context.canonicalPath === input.publicPath ||
       context.canonicalPath === input.parentPath
   );
-  let matches = directMatches;
-  let resolvedCanonicalPath: string | undefined =
-    directMatches.at(0)?.context.canonicalPath;
-  if (directMatches.length === 0) {
-    const source = yield* readRenamedMaterialSource(ctx, locale, input);
-    const renamed = source
-      ? selectRenamedMappings(identityMatches, input, source)
-      : [];
-    matches = renamed.map(({ match }) => match);
-    resolvedCanonicalPath = renamed.at(0)?.resolvedCanonicalPath;
-  }
-  if (matches.length > 1) {
+  if (directMatches.length > 1) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       `Curriculum context ${input.programKey}/${input.nodeKey} has ambiguous material ownership.`
     );
   }
-  const match = matches[0];
+  const match = directMatches[0];
   if (!match) {
     return { context: null, managed: true };
   }
@@ -263,7 +139,7 @@ export const readProgramContext = Effect.fn(
       mapping: match.context,
       mappingJson: match.row.rowJson,
       parentJson: storedParent.rowJson,
-      resolvedCanonicalPath,
+      resolvedCanonicalPath: match.context.canonicalPath,
     },
     managed: true,
   };

@@ -11,6 +11,7 @@ import {
   checkoutLocaleValidator,
   polarCheckoutLocaleValidator,
 } from "@repo/backend/convex/customers/checkout/localization";
+import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
 import {
   contentTypeValidator,
   localeValidator,
@@ -56,7 +57,7 @@ export const productAnalyticsEventValidator = v.union(
       attempt_number: v.number(),
       country_key: tryoutRouteKeyValidator,
       exam_key: tryoutRouteKeyValidator,
-      locale: localeValidator,
+      locale: appLocaleValidator,
       score_status: tryoutScoreStatusValidator,
       set_key: tryoutRouteKeyValidator,
       track_key: tryoutRouteKeyValidator,
@@ -68,7 +69,7 @@ export const productAnalyticsEventValidator = v.union(
       attempt_number: v.number(),
       country_key: tryoutRouteKeyValidator,
       exam_key: tryoutRouteKeyValidator,
-      locale: localeValidator,
+      locale: appLocaleValidator,
       raw_score_percentage: v.number(),
       score_status: tryoutScoreStatusValidator,
       set_key: tryoutRouteKeyValidator,

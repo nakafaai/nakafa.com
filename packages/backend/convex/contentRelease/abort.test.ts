@@ -36,7 +36,6 @@ describe("contentRelease/abort", () => {
     const stored = await t.run(async (ctx) => ({
       items: await ctx.db.query("contentItems").collect(),
       keys: await ctx.db.query("contentKeys").collect(),
-      owners: await ctx.db.query("contentOwners").collect(),
       release: await ctx.db.query("contentReleases").unique(),
       state: await ctx.db.query("contentState").unique(),
     }));
@@ -50,7 +49,6 @@ describe("contentRelease/abort", () => {
     expect(repeated).toEqual(completed);
     expect(stored.items).toHaveLength(0);
     expect(stored.keys).toHaveLength(0);
-    expect(stored.owners).toHaveLength(0);
     expect(stored.release?.status).toBe("aborted");
     expect(stored.state?.candidateReleaseId).toBeUndefined();
   });
@@ -93,7 +91,7 @@ describe("contentRelease/abort", () => {
       await seedAbortRelease(ctx);
       await ctx.db.insert("contentPaths", {
         createdSequence: 1,
-        locale: "en",
+        appLocale: "en",
         publicPath: "test/abandoned",
       });
       await ctx.db.insert("contentBindings", {
@@ -101,7 +99,7 @@ describe("contentRelease/abort", () => {
         batchIndex: 0,
         contentKey: abortContentKey(0),
         index: 0,
-        locale: "en",
+        appLocale: "en",
         operation: "bind",
         publicPath: "test/abandoned",
         releaseId: ABORT_RELEASE_ID,
@@ -214,7 +212,7 @@ describe("contentRelease/abort", () => {
     const contentKey = abortContentKey(0);
     const projectionJson = testProjectionJson({
       contentKey,
-      publicPath: "test/abort-0",
+      publicPath: "subjects/test/abort-0",
     });
     const projectionHash = testTextHash(projectionJson);
     await t.mutation(async (ctx) => {
@@ -231,7 +229,7 @@ describe("contentRelease/abort", () => {
         delivery: "public",
         family: "material",
         index: 0,
-        locale: "en",
+        artifactLocale: "en",
         operation: "upsert",
         projectionHash,
         projectionJson,
@@ -244,7 +242,7 @@ describe("contentRelease/abort", () => {
       await ctx.db.insert("contentIndex", {
         contentKey,
         family: "material",
-        locale: "en",
+        appLocale: "en",
         projectionHash,
         publicPath: "test/abort-0",
         releaseId: "release-before-abort",
@@ -313,7 +311,7 @@ describe("contentRelease/abort", () => {
         contentKey: "test:orphaned-directory",
         createdSequence: 1,
         family: "material",
-        locale: "en",
+        artifactLocale: "en",
       });
     });
 

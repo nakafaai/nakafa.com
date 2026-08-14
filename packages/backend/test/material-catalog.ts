@@ -46,27 +46,27 @@ export async function insertMaterialProjection(
   identity: TestIdentity = MATERIAL_IDENTITY
 ) {
   const projectionJson = canonicalizeMaterialProjection(projection);
-  const sourcePath = `packages/corpus/${projection.contentKey}/${projection.locale}.mdx`;
+  const sourcePath = `packages/corpus/${projection.contentKey}/${projection.artifactLocale}.mdx`;
   await insertRuntimeVersion(ctx, "public", projection.contentKey, {
+    artifactLocale: projection.artifactLocale,
     headReleaseId: identity.releaseId,
     headSequence: identity.sequence,
-    locale: projection.locale,
     projectionJson,
     publicPath: projection.publicPath,
     rendererDomain: "mathematics",
     sourcePath,
   });
   await insertRuntimeBinding(ctx, projection.contentKey, {
+    appLocale: projection.appLocale,
     bindingReleaseId: identity.releaseId,
     bindingSequence: identity.sequence,
-    locale: projection.locale,
     publicPath: projection.publicPath,
   });
   const resolved = await runConvexProgram(
     resolvePublicProjection(
       ctx,
       projection.contentKey,
-      projection.locale,
+      projection.artifactLocale,
       identity.sequence
     )
   );
@@ -125,42 +125,9 @@ export async function advanceMaterialCatalog(
       activeReleaseId: NEXT_MATERIAL_IDENTITY.releaseId,
       activeSequence: NEXT_MATERIAL_IDENTITY.sequence,
       materialManifestHash: NEXT_MATERIAL_IDENTITY.manifestHash,
-      materialOwnerManifestHash: NEXT_MATERIAL_IDENTITY.manifestHash,
-      materialOwnerReleaseId: NEXT_MATERIAL_IDENTITY.releaseId,
-      materialOwnerSequence: NEXT_MATERIAL_IDENTITY.sequence,
       materialReleaseId: NEXT_MATERIAL_IDENTITY.releaseId,
       materialSequence: NEXT_MATERIAL_IDENTITY.sequence,
       nextSequence: 3,
-    });
-  });
-}
-
-/** Limits active ownership to one exact material without changing its catalog. */
-export async function selectExactMaterial(
-  target: TestConvex<typeof schema>,
-  projection: MaterialLessonProjection
-) {
-  await target.mutation(async (ctx) => {
-    const release = await ctx.db.query("contentReleases").unique();
-    if (!release) {
-      throw new Error("Expected one active material release.");
-    }
-    await ctx.db.patch("contentReleases", release._id, {
-      resultFamilies: ["article"],
-    });
-    await ctx.db.insert("contentOwners", {
-      contentKey: projection.contentKey,
-      family: "material",
-      locale: projection.locale,
-      managed: true,
-      releaseId: MATERIAL_IDENTITY.releaseId,
-      sequence: MATERIAL_IDENTITY.sequence,
-    });
-    await ctx.db.insert("materialOwners", {
-      contentKey: projection.contentKey,
-      locale: projection.locale,
-      releaseId: MATERIAL_IDENTITY.releaseId,
-      sequence: MATERIAL_IDENTITY.sequence,
     });
   });
 }

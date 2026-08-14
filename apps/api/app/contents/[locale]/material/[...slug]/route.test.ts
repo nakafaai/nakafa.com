@@ -71,9 +71,9 @@ describe("material content API route", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(page);
     expect(runtimeMocks.getMaterialApiContentPage).toHaveBeenCalledWith({
+      appLocale: "id",
       cursor: null,
       limit: 100,
-      locale: "id",
       prefix: "material/lesson/mathematics",
     });
   });
@@ -104,9 +104,9 @@ describe("material content API route", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(page);
     expect(runtimeMocks.getMaterialApiContentPage).toHaveBeenCalledWith({
+      appLocale: "id",
       cursor: "page-1",
       limit: 1,
-      locale: "id",
       prefix: "material/lesson/mathematics",
     });
   });

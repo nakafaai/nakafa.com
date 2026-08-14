@@ -92,8 +92,8 @@ describe("llms markdown content resolver", () => {
 
     expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
       activeReleaseId,
+      appLocale: "en",
       family: "material",
-      locale: "en",
       publicPath: PUBLISHED_PATH,
     });
   });
@@ -115,8 +115,8 @@ describe("llms markdown content resolver", () => {
 
     expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
       activeReleaseId,
+      appLocale: "en",
       family: "material",
-      locale: "en",
       publicPath: NEW_PATH,
     });
   });
@@ -139,14 +139,14 @@ describe("llms markdown content resolver", () => {
     );
     expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
       activeReleaseId,
+      appLocale: "en",
       family: "article",
-      locale: "en",
       publicPath: PUBLISHED_ARTICLE_PATH,
     });
     expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
       activeReleaseId,
+      appLocale: "en",
       family: "article",
-      locale: "en",
       publicPath: PUBLISHED_ARTICLE_PATH,
     });
   });
@@ -239,8 +239,8 @@ describe("llms markdown content resolver", () => {
     expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
     expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
       activeReleaseId,
+      appLocale: "en",
       family: "material",
-      locale: "en",
       publicPath: "subjects/mathematics/integral/invalid.segment",
     });
   });

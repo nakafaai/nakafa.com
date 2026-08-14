@@ -20,9 +20,9 @@ describe("contentRelease/program/bucket", () => {
     await expect(
       target.run((ctx) => ctx.db.query("programBuckets").unique())
     ).resolves.toMatchObject({
+      appLocale: "en",
       bucket: "abc",
       index: 4,
-      locale: "en",
       routeCount: 2,
       snapshotId: "snapshot",
     });
@@ -43,9 +43,9 @@ describe("contentRelease/program/bucket", () => {
 
     await target.mutation((ctx) =>
       ctx.db.insert("programBuckets", {
+        appLocale: "en",
         bucket: "abc",
         index: 0,
-        locale: "en",
         routeCount: CONTENT_BUCKET_SIZE,
         snapshotId: "snapshot",
       })

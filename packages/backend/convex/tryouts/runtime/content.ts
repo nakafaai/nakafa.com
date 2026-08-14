@@ -1,4 +1,6 @@
+import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
 import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
+import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
 import { tryoutScoreResultValidator } from "@repo/backend/convex/tryouts/score";
 import {
@@ -20,10 +22,10 @@ export const tryoutCurrentSectionValidator = v.object({
 });
 
 const protectedSelectorFields = {
+  appLocale: appLocaleValidator,
   artifactHash: v.string(),
   contentHash: v.string(),
   contentKey: v.string(),
-  locale: v.union(v.literal("en"), v.literal("id")),
   questionOrder: v.number(),
   snapshotReleaseId: v.string(),
   snapshotId: v.string(),
@@ -31,26 +33,59 @@ const protectedSelectorFields = {
   sourceRevision: v.string(),
 };
 
-export const tryoutQuestionSelectorValidator = v.object({
+const currentQuestionSelectorValidator = v.object({
   ...protectedSelectorFields,
   delivery: v.literal("authenticated"),
 });
+
+const currentAnswerSelectorValidator = v.object({
+  ...protectedSelectorFields,
+  delivery: v.literal("entitled"),
+});
+
+const historySelectorFields = {
+  ...protectedSelectorFields,
+  artifactLocale: localeValidator,
+};
+
+const historyQuestionSelectorValidator = v.object({
+  ...historySelectorFields,
+  delivery: v.literal("authenticated"),
+});
+
+const historyAnswerSelectorValidator = v.object({
+  ...historySelectorFields,
+  delivery: v.literal("entitled"),
+});
+
+export const tryoutQuestionSelectorValidator = v.union(
+  currentQuestionSelectorValidator,
+  historyQuestionSelectorValidator
+);
 export type TryoutQuestionSelector = Infer<
   typeof tryoutQuestionSelectorValidator
 >;
 
-export const tryoutAnswerSelectorValidator = v.object({
-  ...protectedSelectorFields,
-  delivery: v.literal("entitled"),
-});
+export const tryoutAnswerSelectorValidator = v.union(
+  currentAnswerSelectorValidator,
+  historyAnswerSelectorValidator
+);
 export type TryoutAnswerSelector = Infer<typeof tryoutAnswerSelectorValidator>;
 
 export const tryoutSectionContentAccessValidator = v.union(
   v.object({ kind: v.literal("none") }),
   v.object({
-    answers: v.array(tryoutAnswerSelectorValidator),
+    answers: v.array(currentAnswerSelectorValidator),
     kind: v.literal("signed"),
-    questions: v.array(tryoutQuestionSelectorValidator),
+    questions: v.array(currentQuestionSelectorValidator),
+    runtime: v.literal("current"),
+  }),
+  v.object({
+    answers: v.array(historyAnswerSelectorValidator),
+    attemptId: v.id("tryoutAttempts"),
+    kind: v.literal("signed"),
+    questions: v.array(historyQuestionSelectorValidator),
+    runtime: v.literal("history"),
   })
 );
 

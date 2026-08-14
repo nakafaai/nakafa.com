@@ -27,7 +27,7 @@ import { Effect, Either, Schema } from "effect";
 
 const publicReadReference = makeFunctionReference<
   "query",
-  Pick<PublicContentRuntimeRequest, "locale" | "publicPath">,
+  Pick<PublicContentRuntimeRequest, "appLocale" | "publicPath">,
   PublicRuntimeRow
 >("contentRelease/runtime/public/internal:read");
 
@@ -70,7 +70,7 @@ const resolvePublicRuntime = Effect.fn("contentRelease.resolvePublicRuntime")(
       catch: () => new PublicRuntimeReadError(),
       try: (): Promise<PublicRuntimeRow> =>
         ctx.runQuery(publicReadReference, {
-          locale: request.locale,
+          appLocale: request.appLocale,
           publicPath: request.publicPath,
         }),
     });

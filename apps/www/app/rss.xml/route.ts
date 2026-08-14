@@ -1,3 +1,4 @@
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { Feed, type Item } from "feed";
@@ -46,7 +47,7 @@ export async function GET() {
   const feedItems: Item[] = [];
 
   for (const route of routes) {
-    const link = `${baseUrl}/${route.locale}/${route.route}`;
+    const link = `${baseUrl}/${route.appLocale}/${route.route}`;
     feedItems.push({
       title: route.title,
       description: route.description ?? route.title,
@@ -54,7 +55,7 @@ export async function GET() {
       date: new Date(route.date),
       id: link,
       author: route.authors,
-      image: `${baseUrl}/${route.locale}/og/${route.route}/image.png`,
+      image: `${baseUrl}/${route.appLocale}/og/${route.route}/image.png`,
     });
   }
 
@@ -75,7 +76,7 @@ function getFeedContentRoutes() {
       const active = yield* readActiveContentIdentity();
       if (!active) {
         return yield* new PublishedProjectionError({
-          locale: routing.defaultLocale,
+          appLocale: AppLocaleSchema.make(routing.defaultLocale),
           publicPath: "rss.xml",
         });
       }
@@ -93,7 +94,10 @@ function getFeedContentRoutes() {
       yield* decodeContentReleasePin(
         latest?.releaseId ?? null,
         activeReleaseId,
-        { locale: routing.defaultLocale, publicPath: "rss.xml" }
+        {
+          appLocale: AppLocaleSchema.make(routing.defaultLocale),
+          publicPath: "rss.xml",
+        }
       );
 
       return routes
@@ -108,15 +112,16 @@ function getFeedContentRoutes() {
 const readFeedArticles = Effect.fn("www.rss.readArticles")(function* (
   locale: (typeof routing.locales)[number]
 ) {
+  const appLocale = AppLocaleSchema.make(locale);
   const published = yield* readPublishedLatestArticles(
     locale,
     RSS_CONTENT_ROUTE_LIMIT
   );
   return published.articles.map((article) => ({
     authors: article.authors,
+    appLocale,
     date: Date.parse(`${article.date}T00:00:00.000Z`),
     description: article.description,
-    locale,
     route: article.publicPath,
     title: article.title,
   }));
@@ -127,6 +132,7 @@ const readFeedMaterials = Effect.fn("www.rss.readMaterials")(function* (
   locale: (typeof routing.locales)[number],
   expectedActiveReleaseId: ContentReleasePin
 ) {
+  const appLocale = AppLocaleSchema.make(locale);
   const published = yield* readPublishedLatestMaterials(
     locale,
     RSS_CONTENT_ROUTE_LIMIT
@@ -134,13 +140,13 @@ const readFeedMaterials = Effect.fn("www.rss.readMaterials")(function* (
   yield* decodeContentReleasePin(
     published.activeReleaseId,
     expectedActiveReleaseId,
-    { locale, publicPath: "rss.xml" }
+    { appLocale, publicPath: "rss.xml" }
   );
   const publishedRoutes = published.materials.map((material) => ({
     authors: material.authors,
     date: Date.parse(`${material.date}T00:00:00.000Z`),
     description: material.description,
-    locale,
+    appLocale,
     route: material.publicPath,
     sourcePath: material.sourcePath,
     title: material.title,

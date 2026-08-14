@@ -1,6 +1,10 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { tryUserCleanup } from "@repo/backend/convex/auth/cleanup/spec";
+import {
+  toUserCleanupError,
+  tryUserCleanup,
+} from "@repo/backend/convex/auth/cleanup/spec";
+import { deleteTryoutAttemptHistory } from "@repo/backend/convex/tryouts/history/reference";
 import { Effect } from "effect";
 
 const ATTEMPT_CHILD_BATCH_SIZE = 50;
@@ -79,6 +83,9 @@ const cleanupAttemptRuntime = Effect.fn("auth.cleanup.cleanupAttemptRuntime")(
       return true;
     }
 
+    yield* deleteTryoutAttemptHistory(ctx, attempt).pipe(
+      Effect.mapError(toUserCleanupError)
+    );
     yield* tryUserCleanup(() => ctx.db.delete("tryoutAttempts", attempt._id));
     return true;
   }

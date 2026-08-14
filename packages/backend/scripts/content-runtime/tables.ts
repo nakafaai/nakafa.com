@@ -1,11 +1,10 @@
 import { createHash } from "node:crypto";
 import contentReleaseSchema from "@repo/backend/convex/contentRelease/schema";
-import routeSchema from "@repo/backend/convex/contents/schema/routes";
 import { tryoutBundleSchema } from "@repo/backend/convex/tryouts/runtime/schema";
 import { Effect, Schema } from "effect";
 
 const ACTIVE_POINTER_TABLE = "contentState";
-export const CONTENT_RUNTIME_CACHE_VERSION = "v1";
+export const CONTENT_RUNTIME_CACHE_VERSION = "v2";
 export const CONTENT_RUNTIME_CACHE_CONTRACT = Object.freeze({
   archive: Object.freeze({
     fixedEntries: Object.freeze([
@@ -48,7 +47,6 @@ const runtimeTableDefinitionFragments: readonly RuntimeTableDefinitionFragment[]
   [
     Object.entries(contentReleaseTables),
     Object.entries(tryoutBundleSchema),
-    Object.entries(routeSchema),
     [activePointerDefinition],
   ];
 const runtimeTableDefinitions = runtimeTableDefinitionFragments.flat();

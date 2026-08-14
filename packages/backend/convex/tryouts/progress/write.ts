@@ -6,6 +6,7 @@ import {
   readConvexErrorData,
 } from "@repo/backend/convex/lib/effect";
 import { ensureTryoutProgressWithinReadBudget } from "@repo/backend/convex/tryouts/progress/size";
+import { readAttemptSetIdentity } from "@repo/backend/convex/tryouts/runtime/lookup";
 import {
   getTryoutStatusRank,
   type TryoutStatus,
@@ -13,10 +14,14 @@ import {
 import { Effect, Schema } from "effect";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
-type ProgressIdentity = Pick<
-  TryoutAttempt,
-  "countryKey" | "examKey" | "locale" | "setIdentity" | "setKey" | "trackKey"
->;
+interface ProgressIdentity {
+  readonly appLocale: NonNullable<TryoutAttempt["appLocale"]>;
+  readonly countryKey: TryoutAttempt["countryKey"];
+  readonly examKey: TryoutAttempt["examKey"];
+  readonly setIdentity: TryoutAttempt["setIdentity"];
+  readonly setKey: TryoutAttempt["setKey"];
+  readonly trackKey: TryoutAttempt["trackKey"];
+}
 
 /** Expected failure while persisting compact try-out progress. */
 export class TryoutProgressError
@@ -43,7 +48,7 @@ export const writeTryoutSetProgress = Effect.fn(
   }
 ) {
   yield* validateProgressScore(args.status, args.publishedScore);
-  const identity = readProgressIdentity(args.attempt);
+  const identity = yield* readProgressIdentity(args.attempt);
   const current = yield* loadProgress(ctx, args.attempt, identity);
   if (current) {
     yield* ensureTryoutProgressWithinReadBudget(current);
@@ -58,7 +63,7 @@ export const writeTryoutSetProgress = Effect.fn(
     countryKey: identity.countryKey,
     examKey: identity.examKey,
     latestAttemptId: args.attempt._id,
-    locale: identity.locale,
+    appLocale: identity.appLocale,
     publishedScore: args.publishedScore,
     setIdentity: identity.setIdentity,
     setKey: identity.setKey,
@@ -82,16 +87,21 @@ export const writeTryoutSetProgress = Effect.fn(
 });
 
 /** Reads progress identity from the immutable signed attempt snapshot. */
-function readProgressIdentity(attempt: TryoutAttempt): ProgressIdentity {
+const readProgressIdentity = Effect.fn("tryouts.progress.readIdentity")(
+  function* (attempt: TryoutAttempt) {
+    const identity = yield* readAttemptSetIdentity(attempt).pipe(
+      Effect.mapError(toTryoutProgressError)
+    );
   return {
     countryKey: attempt.countryKey,
     examKey: attempt.examKey,
-    locale: attempt.locale,
+      appLocale: identity.locale,
     setIdentity: attempt.setIdentity,
     setKey: attempt.setKey,
     trackKey: attempt.trackKey,
-  };
-}
+    } satisfies ProgressIdentity;
+  }
+);
 
 /** Loads the one compact progress row owned by the attempt identity. */
 const loadProgress = Effect.fn("tryouts.progress.loadProgress")(function* (

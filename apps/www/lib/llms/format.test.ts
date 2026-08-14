@@ -15,8 +15,7 @@ describe("llms formatting helpers", () => {
     expect(
       buildHeader({
         description: "Description",
-        source:
-          "packages/contents/articles/politics/dynastic-politics-asian-values/en.mdx",
+        source: "https://source.test/dynastic-politics/en.mdx",
         title: "Dynastic Politics",
         url: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values.md",
       })
@@ -26,7 +25,7 @@ describe("llms formatting helpers", () => {
       AGENT_MARKDOWN_DIRECTIVE,
       "",
       "URL: https://nakafa.com/en/articles/politics/dynastic-politics-asian-values.md",
-      "Source: packages/contents/articles/politics/dynastic-politics-asian-values/en.mdx",
+      "Source: https://source.test/dynastic-politics/en.mdx",
       "",
       "Description",
       "",

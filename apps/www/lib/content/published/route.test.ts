@@ -13,8 +13,8 @@ const readQueryMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-active");
 const input = {
   activeReleaseId,
+  appLocale: previewProjection.appLocale,
   family: "material" as const,
-  locale: "en" as const,
   publicPath: previewProjection.publicPath,
 };
 
@@ -34,8 +34,8 @@ describe("published content route", () => {
       Effect.runPromise(
         readActiveContentRoute({
           activeReleaseId: null,
+          appLocale: input.appLocale,
           family: input.family,
-          locale: input.locale,
           publicPath: input.publicPath,
         })
       )
@@ -115,13 +115,13 @@ describe("published content route", () => {
       projection: previewProjection,
     });
     expect(fetchQueryMock).toHaveBeenCalledWith(expect.anything(), {
+      appLocale: input.appLocale,
       family: input.family,
-      locale: input.locale,
       publicPath: input.publicPath,
     });
     expect(readQueryMock).toHaveBeenCalledWith(expect.anything(), {
+      appLocale: input.appLocale,
       family: input.family,
-      locale: input.locale,
       publicPath: input.publicPath,
     });
   });
@@ -140,7 +140,7 @@ describe("published content route", () => {
       Effect.runPromise(readActiveContentRoute(input).pipe(Effect.flip))
     ).resolves.toMatchObject({
       _tag: "PublishedProjectionError",
-      locale: input.locale,
+      appLocale: input.appLocale,
       publicPath: input.publicPath,
     });
 
@@ -153,7 +153,7 @@ describe("published content route", () => {
       Effect.runPromise(readActiveContentRoute(input).pipe(Effect.flip))
     ).resolves.toMatchObject({
       _tag: "PublishedProjectionError",
-      locale: input.locale,
+      appLocale: input.appLocale,
       publicPath: input.publicPath,
     });
 
@@ -166,7 +166,7 @@ describe("published content route", () => {
       Effect.runPromise(readActiveContentRoute(input).pipe(Effect.flip))
     ).resolves.toMatchObject({
       _tag: "PublishedProjectionError",
-      locale: input.locale,
+      appLocale: input.appLocale,
       publicPath: input.publicPath,
     });
   });

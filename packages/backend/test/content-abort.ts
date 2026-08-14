@@ -22,9 +22,9 @@ export function abortItemJson(index: number) {
   return JSON.stringify({
     change: {
       artifactHash: `sha256:${index.toString(16).padStart(64, "0")}`,
+      artifactLocale: "en",
       contentKey,
       delivery: "public",
-      locale: "en",
       operation: "upsert",
       rendererDomain: "mathematics",
       sourcePath: `packages/corpus/test/abort-${index}/en.mdx`,
@@ -79,16 +79,16 @@ export async function seedAbortRelease(ctx: MutationCtx) {
       contentKey,
       createdSequence: 1,
       family: "material",
-      locale: "en",
+      artifactLocale: "en",
     });
     await ctx.db.insert("contentItems", {
       artifactReady: false,
+      artifactLocale: "en",
       contentKey,
       index,
       itemBatchHash: ABORT_BATCH_HASH,
       itemBatchIndex: 0,
       itemJson: abortItemJson(index),
-      locale: "en",
       projectionReady: false,
       releaseId: ABORT_RELEASE_ID,
       rollbackJson: testRollbackJson({
@@ -98,14 +98,6 @@ export async function seedAbortRelease(ctx: MutationCtx) {
       }),
       sequence: 1,
       stagedAt: now,
-    });
-    await ctx.db.insert("contentOwners", {
-      contentKey,
-      family: "material",
-      locale: "en",
-      managed: true,
-      releaseId: ABORT_RELEASE_ID,
-      sequence: 1,
     });
   }
 }

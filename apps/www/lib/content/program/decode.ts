@@ -1,3 +1,4 @@
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
 import type { LearningProgram } from "@nakafa/aksara-contracts/program/spec";
 import { ContentSnapshotRowSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
@@ -7,7 +8,10 @@ import { PublishedProjectionError } from "@/lib/content/published/errors";
 
 /** Maps malformed program bytes to one public projection failure. */
 function projectionError(locale: Locale, publicPath: string) {
-  return new PublishedProjectionError({ locale, publicPath });
+  return new PublishedProjectionError({
+    appLocale: AppLocaleSchema.make(locale),
+    publicPath,
+  });
 }
 
 /** Parses one backend-verified snapshot row without thrown JSON failures. */

@@ -1,10 +1,6 @@
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { readExactMaterialSnapshot } from "@repo/backend/convex/contentRelease/material/exact";
-import {
-  loadMaterialCatalogOwner,
-  type loadMaterialOwner,
-} from "@repo/backend/convex/contentRelease/material/owner";
+import { loadMaterialOwner } from "@repo/backend/convex/contentRelease/material/owner";
 import { readMaterialPartition } from "@repo/backend/convex/contentRelease/material/partition";
 import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
 import { Effect } from "effect";
@@ -48,10 +44,10 @@ export const readMaterialBucket = Effect.fn(
   "contentRelease.readMaterialBucket"
 )(function* (
   ctx: QueryCtx,
-  locale: Parameters<typeof loadMaterialOwner>[1],
+  appLocale: Parameters<typeof loadMaterialOwner>[1],
   bucket: string
 ) {
-  const partition = yield* readMaterialPartition(ctx, locale, bucket);
+  const partition = yield* readMaterialPartition(ctx, appLocale, bucket);
   if (partition.kind === "unmanaged") {
     return {
       activeReleaseId: partition.activeReleaseId,
@@ -80,39 +76,24 @@ export const readLatestMaterials = Effect.fn(
   "contentRelease.readLatestMaterials"
 )(function* (
   ctx: QueryCtx,
-  locale: Parameters<typeof loadMaterialOwner>[1],
+  appLocale: Parameters<typeof loadMaterialOwner>[1],
   limit: number
 ) {
   yield* validateDiscoveryLimit(limit);
-  const owner = yield* loadMaterialCatalogOwner(ctx);
+  const owner = yield* loadMaterialOwner(ctx, appLocale);
   const activeReleaseId = owner.active?.releaseId ?? null;
-  if (!(owner.active && owner.ready)) {
+  if (!(owner.active && owner.managed)) {
     return {
       activeReleaseId,
-      claimedContentKeys: [],
       managed: false,
       materials: [],
-    };
-  }
-  if (!owner.familyManaged) {
-    const exact = yield* readExactMaterialSnapshot(ctx, owner.active, locale);
-    return {
-      activeReleaseId,
-      claimedContentKeys: exact.owners.map(({ contentKey }) => contentKey),
-      managed: false,
-      materials: exact.materials
-        .sort((left, right) => right.row.date.localeCompare(left.row.date))
-        .slice(0, limit)
-        .map((material) =>
-          summarizeMaterial(material, material.row.sourcePath)
-        ),
     };
   }
   const rows = yield* Effect.promise(() =>
     ctx.db
       .query("materialCatalog")
-      .withIndex("by_locale_and_date_and_contentKey", (index) =>
-        index.eq("locale", locale)
+      .withIndex("by_appLocale_and_date_and_contentKey", (index) =>
+        index.eq("appLocale", appLocale)
       )
       .order("desc")
       .take(limit)
@@ -124,7 +105,6 @@ export const readLatestMaterials = Effect.fn(
   );
   return {
     activeReleaseId,
-    claimedContentKeys: [],
     managed: true,
     materials,
   };

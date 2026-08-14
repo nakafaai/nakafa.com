@@ -47,7 +47,7 @@ async function insertScoreGraph(ctx: MutationCtx) {
     userId,
     countryKey: "indonesia",
     examKey: "snbt",
-    locale: "id",
+    appLocale: "id",
     setIdentity,
     setKey: "set-1",
     setPublicPath: "try-out/indonesia/snbt/2027/set-1",

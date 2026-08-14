@@ -8,7 +8,7 @@ import { Effect } from "effect";
 
 /** Loads one coherent program snapshot and active material catalog owner. */
 export const loadProgramOwner = Effect.fn("contentRelease.loadProgramOwner")(
-  function* (ctx: QueryCtx, locale: Doc<"contentKeys">["locale"]) {
+  function* (ctx: QueryCtx, appLocale: Doc<"contentPaths">["appLocale"]) {
     const selected = yield* loadActiveSnapshot(ctx, "program");
     if (!selected) {
       return { managed: false, selected: null };
@@ -21,7 +21,7 @@ export const loadProgramOwner = Effect.fn("contentRelease.loadProgramOwner")(
     if (!hasMaterialReadModel(active)) {
       return yield* releaseFail(
         "CONTENT_RELEASE_STATE",
-        `Programs for ${locale} in active release ${active.releaseId} are waiting for materials.`
+        `Programs for ${appLocale} in active release ${active.releaseId} are waiting for materials.`
       );
     }
     return { managed: true, selected };

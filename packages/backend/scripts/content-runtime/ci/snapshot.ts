@@ -20,9 +20,7 @@ const ManifestEntrySchema = Schema.Struct({
 const MetadataSchema = Schema.Struct({
   cacheVersion: Schema.String,
   contentStateHash: HashSchema,
-  routeGenerationHash: HashSchema,
   runtimeSchemaFingerprint: HashSchema,
-  sitemapGenerationHash: HashSchema,
 });
 const JsonObjectTextSchema = Schema.parseJson(JsonObjectSchema);
 
@@ -114,9 +112,7 @@ export const validateMetadata = Effect.fn("contentRuntime.validateMetadata")(
     if (
       metadata.cacheVersion !== expected.cacheVersion ||
       metadata.contentStateHash !== expected.contentStateHash ||
-      metadata.routeGenerationHash !== expected.routeGenerationHash ||
-      metadata.runtimeSchemaFingerprint !== expected.runtimeSchemaFingerprint ||
-      metadata.sitemapGenerationHash !== expected.sitemapGenerationHash
+      metadata.runtimeSchemaFingerprint !== expected.runtimeSchemaFingerprint
     ) {
       return yield* contentRuntimeCiError(
         "Signed runtime metadata does not match the cache identity."

@@ -51,7 +51,7 @@ async function insertHistoryAttempt(
     userId: args.userId,
     countryKey: TRYOUT_START_COUNTRY,
     examKey: TRYOUT_START_EXAM,
-    locale: "id",
+    appLocale: "id",
     setIdentity: args.setIdentity,
     setKey: TRYOUT_START_SET,
     setPublicPath: SET_PATH,
@@ -78,7 +78,7 @@ async function insertHistoryAttempt(
 }
 
 describe("tryouts/queries/history", () => {
-  it("preserves path reads and keeps identity history after a rename", async () => {
+  it("keeps immutable identity history after a public route rename", async () => {
     vi.setSystemTime(new Date(NOW));
 
     const t = createConvexTestWithBetterAuth();
@@ -111,28 +111,6 @@ describe("tryouts/queries/history", () => {
       subject: seeded.identity.authUserId,
     });
 
-    const pathHistory = await authed.query(api.tryouts.queries.history.list, {
-      locale: "id",
-      paginationOpts: { cursor: null, numItems: 25 },
-      publicPath: SET_PATH,
-    });
-
-    expect(pathHistory.isDone).toBe(true);
-    expect(pathHistory.page).toEqual([
-      expect.objectContaining({
-        attemptId: seeded.secondAttemptId,
-        attemptNumber: 2,
-        score: expect.objectContaining({ publishedScore: 90 }),
-        status: "completed",
-      }),
-      expect.objectContaining({
-        attemptId: seeded.firstAttemptId,
-        attemptNumber: 1,
-        score: expect.objectContaining({ publishedScore: 0 }),
-        status: "completed",
-      }),
-    ]);
-
     await t.mutation((ctx) => activateRenamedTryoutStartSource(ctx));
 
     const history = await authed.query(api.tryouts.queries.history.bySet, {
@@ -161,7 +139,7 @@ describe("tryouts/queries/history", () => {
     ]);
   });
 
-  it("keeps empty legacy paths and immutable set identities isolated", async () => {
+  it("keeps missing immutable set identities isolated", async () => {
     const t = createConvexTestWithBetterAuth();
     const identity = await t.mutation(async (ctx) => {
       const user = await seedAuthenticatedUser(ctx, {
@@ -176,11 +154,6 @@ describe("tryouts/queries/history", () => {
       subject: identity.authUserId,
     });
 
-    const pathHistory = await authed.query(api.tryouts.queries.history.list, {
-      locale: "id",
-      paginationOpts: { cursor: null, numItems: 25 },
-      publicPath: `${SET_PATH}-missing`,
-    });
     const identityHistory = await authed.query(
       api.tryouts.queries.history.bySet,
       {
@@ -193,11 +166,10 @@ describe("tryouts/queries/history", () => {
       }
     );
 
-    expect(pathHistory).toMatchObject({ isDone: true, page: [] });
     expect(identityHistory).toMatchObject({ isDone: true, page: [] });
   });
 
-  it("limits legacy and identity page reads to twenty-five attempts", async () => {
+  it("limits identity page reads to twenty-five attempts", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, {
@@ -224,11 +196,6 @@ describe("tryouts/queries/history", () => {
       subject: seeded.authUserId,
     });
 
-    const pathHistory = await authed.query(api.tryouts.queries.history.list, {
-      locale: "id",
-      paginationOpts: { cursor: null, numItems: 100 },
-      publicPath: SET_PATH,
-    });
     const identityHistory = await authed.query(
       api.tryouts.queries.history.bySet,
       {
@@ -241,11 +208,9 @@ describe("tryouts/queries/history", () => {
       }
     );
 
-    for (const history of [pathHistory, identityHistory]) {
-      expect(history.isDone).toBe(false);
-      expect(history.page).toHaveLength(25);
-      expect(history.page.at(0)?.attemptNumber).toBe(26);
-    }
+    expect(identityHistory.isDone).toBe(false);
+    expect(identityHistory.page).toHaveLength(25);
+    expect(identityHistory.page.at(0)?.attemptNumber).toBe(26);
   });
 
   it("rejects malformed authored set identity keys", async () => {

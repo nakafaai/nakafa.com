@@ -23,7 +23,7 @@ export const readQuranApiDocument = Effect.fn("api.quran.readDocument")(
     ).pipe(Effect.mapError((cause) => new QuranApiReadError({ cause })));
 
     return yield* decodePublishedQuranDocument(result, {
-      locale: args.locale,
+      appLocale: args.appLocale,
       surahNumber: args.surahNumber,
     }).pipe(Effect.mapError((cause) => new QuranApiReadError({ cause })));
   }

@@ -1,6 +1,6 @@
+import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import type { NinaContextPack } from "@repo/ai/nina/memory/pack";
 import { createNinaPrompt } from "@repo/ai/nina/prompt/prompt";
-import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import { describe, expect, it } from "vitest";
 
 const nina = {
@@ -260,19 +260,8 @@ describe("createNinaPrompt", () => {
   it("includes selected learning program context without table-shaped prose", () => {
     const prompt = createNinaPrompt({
       ...base,
-      learningProfile: {
-        interests: ["exam-prep", "assessment-prep"],
-        planItems: [
-          {
-            content_id:
-              "asset:id:tryout-section:indonesia:snbt:2027:set-2:general-knowledge",
-            lensId: "lens:snbt",
-            position: 1,
-            route: "/try-out/indonesia/snbt/2027/set-2/general-knowledge",
-            status: "ready",
-            title: "SNBT Set 2",
-          },
-        ],
+      learningSelection: {
+        interest: "exam-prep",
         program: {
           coverageStatus: "partial",
           key: LearningProgramKeySchema.make("snbt"),
@@ -283,17 +272,14 @@ describe("createNinaPrompt", () => {
       },
     });
 
-    expect(prompt).toContain("- active learning profile: selected");
+    expect(prompt).toContain("- active learning selection: selected");
     expect(prompt).toContain("- program: SNBT 2026");
-    expect(prompt).toContain("- interests: exam-prep, assessment-prep");
-    expect(prompt).toContain(
-      "1. SNBT Set 2; route: /try-out/indonesia/snbt/2027/set-2/general-knowledge; status: ready"
-    );
+    expect(prompt).toContain("- interest: exam-prep");
     const runtimeContext = prompt.slice(
       prompt.indexOf("# Runtime Context"),
       prompt.indexOf("# Tool Usage Guidelines")
     );
-    expect(runtimeContext).not.toContain("content_id");
+    expect(runtimeContext).not.toContain("plan items");
   });
 
   it("includes default role guidance and unverified page context", () => {

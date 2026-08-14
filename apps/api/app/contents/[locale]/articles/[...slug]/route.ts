@@ -4,22 +4,12 @@ import { NextResponse } from "next/server";
 import {
   getArticleApiContentPage,
   invalidApiLocaleMessage,
-  listApiStaticParams,
   parseApiLocale,
   parseApiPageParams,
 } from "@/lib/content/runtime";
 
+export const dynamic = "force-dynamic";
 export const revalidate = false;
-
-/**
- * Generates all locale-aware article API paths from the Convex route catalog.
- */
-export function generateStaticParams() {
-  return listApiStaticParams({
-    prefix: "articles/",
-    section: "articles",
-  });
-}
 
 /**
  * Returns article content lists for `/contents/:locale/articles/*`.
@@ -53,7 +43,7 @@ export async function GET(
   return Effect.runPromise(
     getArticleApiContentPage({
       ...pageParams,
-      locale: validLocale,
+      appLocale: validLocale,
       prefix,
     }).pipe(
       Effect.map((data): Response => NextResponse.json(data)),

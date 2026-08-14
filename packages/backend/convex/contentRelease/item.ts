@@ -43,7 +43,7 @@ function absentRollback(
     snapshot: {
       contentKey: item.change.contentKey,
       family: item.change.family,
-      locale: item.change.locale,
+      artifactLocale: item.change.artifactLocale,
       state: "absent",
     },
   });
@@ -66,7 +66,7 @@ const rollbackEvidence = Effect.fn("contentRelease.rollbackEvidence")(
     const prior = yield* loadVersion(
       ctx,
       item.change.contentKey,
-      item.change.locale,
+      item.change.artifactLocale,
       sequence
     );
     if (!prior || prior.operation === "delete") {
@@ -75,13 +75,13 @@ const rollbackEvidence = Effect.fn("contentRelease.rollbackEvidence")(
     const head = yield* resolveContentHead(
       ctx,
       item.change.contentKey,
-      item.change.locale,
+      item.change.artifactLocale,
       sequence
     );
     if (!head) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Prior content ${item.change.contentKey}/${item.change.locale} is not recoverable.`
+        `Prior content ${item.change.contentKey}/${item.change.artifactLocale} is not recoverable.`
       );
     }
     const entry = RollbackSnapshotEntrySchema.make({
@@ -102,10 +102,10 @@ const ensureContentKey = Effect.fn("contentRelease.ensureContentKey")(
     const existing = yield* Effect.promise(() =>
       ctx.db
         .query("contentKeys")
-        .withIndex("by_contentKey_and_locale", (query) =>
+        .withIndex("by_contentKey_and_artifactLocale", (query) =>
           query
             .eq("contentKey", item.change.contentKey)
-            .eq("locale", item.change.locale)
+            .eq("artifactLocale", item.change.artifactLocale)
         )
         .unique()
     );
@@ -113,17 +113,17 @@ const ensureContentKey = Effect.fn("contentRelease.ensureContentKey")(
       if (existing.family !== item.change.family) {
         return yield* releaseFail(
           "CONTENT_RELEASE_INTEGRITY",
-          `Content key ${item.change.contentKey}/${item.change.locale} changed family.`
+          `Content key ${item.change.contentKey}/${item.change.artifactLocale} changed family.`
         );
       }
       return;
     }
     yield* Effect.promise(() =>
       ctx.db.insert("contentKeys", {
+        artifactLocale: item.change.artifactLocale,
         contentKey: item.change.contentKey,
         createdSequence: sequence,
         family: item.change.family,
-        locale: item.change.locale,
       })
     );
   }
@@ -157,7 +157,7 @@ export const stageContentItem = Effect.fn("contentRelease.stageContentItem")(
       ctx,
       item.releaseId,
       item.change.contentKey,
-      item.change.locale
+      item.change.artifactLocale
     );
     if (atIndex || atIdentity) {
       return yield* releaseFail(
@@ -171,7 +171,7 @@ export const stageContentItem = Effect.fn("contentRelease.stageContentItem")(
         : yield* loadVersion(
             ctx,
             item.change.contentKey,
-            item.change.locale,
+            item.change.artifactLocale,
             priorSequence
           );
     if (
@@ -180,7 +180,7 @@ export const stageContentItem = Effect.fn("contentRelease.stageContentItem")(
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_MISSING",
-        `Delete ${item.change.contentKey}/${item.change.locale} has no published head.`
+        `Delete ${item.change.contentKey}/${item.change.artifactLocale} has no published head.`
       );
     }
     yield* ensureContentKey(ctx, item, sequence);
@@ -190,13 +190,13 @@ export const stageContentItem = Effect.fn("contentRelease.stageContentItem")(
         item.change.operation === "upsert"
           ? item.change.artifactHash
           : undefined,
+      artifactLocale: item.change.artifactLocale,
       artifactReady: false,
       contentKey: item.change.contentKey,
       index: item.index,
       itemBatchHash: batchHash,
       itemBatchIndex: batchIndex,
       itemJson,
-      locale: item.change.locale,
       priorSequence: rollback.priorSequence,
       projectionReady: false,
       releaseId: item.releaseId,

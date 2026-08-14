@@ -1,15 +1,19 @@
-import type {
-  ContentFamily,
-  ContentLocale,
-} from "@nakafa/aksara-contracts/content";
+import type { ContentFamily } from "@nakafa/aksara-contracts/content";
+import {
+  AppLocaleSchema,
+  ArtifactLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import {
+  ReleaseError,
+  releaseFail,
+} from "@repo/backend/convex/contentRelease/error";
 import { loadRouteBinding } from "@repo/backend/convex/contentRelease/model";
 import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
 import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/family";
-import { loadContentOwner } from "@repo/backend/convex/contentRelease/scope/owner";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 /** Resolves one public route from the exact active publication sequence. */
 export const resolveActiveRoute = Effect.fn(
@@ -17,14 +21,35 @@ export const resolveActiveRoute = Effect.fn(
 )(function* (
   ctx: QueryCtx,
   family: ContentFamily,
-  locale: ContentLocale,
+  rawAppLocale: Doc<"contentPaths">["appLocale"],
   publicPath: string
 ) {
+  const appLocale = yield* Schema.decodeUnknown(AppLocaleSchema)(
+    rawAppLocale
+  ).pipe(
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: `Route locale ${rawAppLocale} violates the current application-locale contract.`,
+        })
+    )
+  );
+  const artifactLocale = yield* Schema.decodeUnknown(ArtifactLocaleSchema)(
+    rawAppLocale
+  ).pipe(
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: `Route locale ${rawAppLocale} cannot identify its current routed artifact.`,
+        })
+    )
+  );
   const active = yield* loadActiveIdentity(ctx);
   if (!active) {
     return {
       active,
-      familyManaged: false,
       managed: false,
       projection: null,
     };
@@ -32,37 +57,27 @@ export const resolveActiveRoute = Effect.fn(
   const families = yield* loadReleaseFamilies(active.release);
   const binding = yield* loadRouteBinding(
     ctx,
-    locale,
+    appLocale,
     publicPath,
     active.sequence
   );
-  const owner = binding?.contentKey
-    ? yield* loadContentOwner(ctx, binding.contentKey, locale, active.sequence)
-    : null;
-  if (owner && owner.family !== family) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Route ${locale}/${publicPath} changed its ${family} ownership family.`
-    );
-  }
-  const familyManaged = families.result.includes(family);
-  const managed = familyManaged || owner?.managed === true;
+  const managed = families.result.includes(family);
   if (!managed) {
-    return { active, familyManaged, managed, projection: null };
+    return { active, managed, projection: null };
   }
   if (!binding || binding.operation === "delete") {
-    return { active, familyManaged, managed, projection: null };
+    return { active, managed, projection: null };
   }
   if (!binding.contentKey) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Route ${locale}/${publicPath} lost its content identity.`
+      `Route ${appLocale}/${publicPath} lost its content identity.`
     );
   }
   const projection = yield* resolvePublicProjection(
     ctx,
     binding.contentKey,
-    locale,
+    artifactLocale,
     active.sequence
   );
   if (
@@ -72,9 +87,9 @@ export const resolveActiveRoute = Effect.fn(
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Route ${locale}/${publicPath} lost its ${family} projection.`
+      `Route ${appLocale}/${publicPath} lost its ${family} projection.`
     );
   }
 
-  return { active, familyManaged, managed, projection };
+  return { active, managed, projection };
 });

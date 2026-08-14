@@ -9,17 +9,17 @@ import { Effect } from "effect";
 export const readProgramPath = Effect.fn("contentRelease.readProgramPath")(
   function* (
     ctx: QueryCtx,
-    locale: Doc<"curriculumRoutes">["locale"],
+    appLocale: Doc<"curriculumRoutes">["appLocale"],
     publicPath: string
   ) {
-    const owner = yield* loadProgramOwner(ctx, locale);
+    const owner = yield* loadProgramOwner(ctx, appLocale);
     if (!(owner.managed && owner.selected)) {
       return { managed: false, routeJson: null };
     }
     const route = yield* loadProgramRouteRow(
       ctx,
       owner.selected.snapshotId,
-      locale,
+      appLocale,
       publicPath
     );
     if (!route) {

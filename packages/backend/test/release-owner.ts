@@ -1,4 +1,5 @@
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
+import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
 import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -17,7 +18,7 @@ export const TEST_OWNER_SCOPE = testPublicationScope({
     {
       contentKey: TEST_OWNER_KEY,
       family: "material",
-      locale: "en",
+      artifactLocale: ArtifactLocaleSchema.make("en"),
     },
   ],
   families: [],
@@ -93,8 +94,10 @@ export async function stageVerifiedOwner(
   await t.mutation(async (ctx) => {
     const key = await ctx.db
       .query("contentKeys")
-      .withIndex("by_contentKey_and_locale", (query) =>
-        query.eq("contentKey", TEST_OWNER_KEY).eq("locale", "en")
+      .withIndex("by_contentKey_and_artifactLocale", (query) =>
+        query
+          .eq("contentKey", TEST_OWNER_KEY)
+          .eq("artifactLocale", "en")
       )
       .unique();
     if (!key) {
@@ -102,7 +105,7 @@ export async function stageVerifiedOwner(
         contentKey: TEST_OWNER_KEY,
         createdSequence: 0,
         family: "material",
-        locale: "en",
+        artifactLocale: "en",
       });
     }
   });

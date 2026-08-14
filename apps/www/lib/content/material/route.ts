@@ -1,12 +1,15 @@
 import "server-only";
 
-import { ContentLocaleSchema } from "@nakafa/aksara-contracts/content";
 import {
   CorpusSourcePathSchema,
   type GitCommitShaSchema,
   type ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import {
+  ACTIVE_APP_LOCALES,
+  AppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import {
   type RendererDomain,
@@ -64,15 +67,23 @@ const decodeActiveIdentity = Effect.fn("NakafaMaterial.decodeActiveIdentity")(
     const releaseId = yield* decodeContentReleasePin(
       activeReleaseId,
       expectedActiveReleaseId,
-      { locale, publicPath }
+      { appLocale: AppLocaleSchema.make(locale), publicPath }
     );
     if (activeManifestHash === null || releaseId === null) {
-      return yield* makeMaterialProjectionError({ locale, publicPath });
+      return yield* makeMaterialProjectionError({
+        appLocale: AppLocaleSchema.make(locale),
+        publicPath,
+      });
     }
     const manifestHash = yield* Schema.decodeUnknown(Sha256HashSchema)(
       activeManifestHash
     ).pipe(
-      Effect.mapError(() => makeMaterialProjectionError({ locale, publicPath }))
+      Effect.mapError(() =>
+        makeMaterialProjectionError({
+          appLocale: AppLocaleSchema.make(locale),
+          publicPath,
+        })
+      )
     );
     return {
       activeManifestHash: manifestHash,
@@ -89,16 +100,14 @@ export const readPublishedMaterialRoute = Effect.fn(
   publicPath: string,
   expectedActiveReleaseId?: ContentReleasePin
 ) {
+  const appLocale = AppLocaleSchema.make(locale);
   const result = yield* readRuntimeQuery(api.contentRelease.material.route, {
     ...(expectedActiveReleaseId === undefined
       ? {}
       : { expectedActiveReleaseId }),
-    locale,
+    appLocale,
     publicPath,
   });
-  if (!(result.managed && result.familyManaged)) {
-    return yield* makeMaterialProjectionError({ locale, publicPath });
-  }
   const [active, sourceRevision] = yield* Effect.all([
     decodeActiveIdentity(
       result.activeManifestHash,
@@ -107,7 +116,7 @@ export const readPublishedMaterialRoute = Effect.fn(
       locale,
       publicPath
     ),
-    decodeSourceRevision(result.sourceRevision, { locale, publicPath }),
+    decodeSourceRevision(result.sourceRevision, { appLocale, publicPath }),
   ]);
   if (result.projectionJson === null) {
     return {
@@ -121,34 +130,36 @@ export const readPublishedMaterialRoute = Effect.fn(
     } satisfies PublishedMaterialRoute;
   }
   if (result.rendererDomain === null || result.sourcePath === null) {
-    return yield* makeMaterialProjectionError({ locale, publicPath });
+    return yield* makeMaterialProjectionError({ appLocale, publicPath });
   }
   const projection = yield* decodeMaterialJson(result.projectionJson, {
-    locale,
+    appLocale,
     publicPath,
   });
   const [alternates, rendererDomain, siblings, sourcePath] = yield* Effect.all([
     Effect.forEach(result.alternateJson, (source) =>
-      decodeMaterialJson(source, { locale, publicPath })
+      decodeMaterialJson(source, { appLocale, publicPath })
     ),
     Schema.decodeUnknown(RendererDomainSchema)(result.rendererDomain),
     Effect.forEach(result.siblingJson, (source) =>
-      decodeMaterialJson(source, { locale, publicPath })
+      decodeMaterialJson(source, { appLocale, publicPath })
     ),
     Schema.decodeUnknown(CorpusSourcePathSchema)(result.sourcePath),
   ]).pipe(
-    Effect.mapError(() => makeMaterialProjectionError({ locale, publicPath }))
+    Effect.mapError(() =>
+      makeMaterialProjectionError({ appLocale, publicPath })
+    )
   );
   const alternateLocales = new Set(
-    alternates.map((alternate) => alternate.locale)
+    alternates.map((alternate) => alternate.appLocale)
   );
   const completeLocaleSet =
-    alternateLocales.size === ContentLocaleSchema.literals.length &&
-    ContentLocaleSchema.literals.every((alternateLocale) =>
+    alternateLocales.size === ACTIVE_APP_LOCALES.length &&
+    ACTIVE_APP_LOCALES.every((alternateLocale) =>
       alternateLocales.has(alternateLocale)
     );
   if (
-    projection.locale !== locale ||
+    projection.appLocale !== appLocale ||
     projection.publicPath !== publicPath ||
     alternates.some(
       (alternate) => !isMaterialCounterpart(projection, alternate)
@@ -156,14 +167,14 @@ export const readPublishedMaterialRoute = Effect.fn(
     alternateLocales.size !== alternates.length ||
     !alternates.some(
       (alternate) =>
-        alternate.locale === projection.locale &&
+        alternate.appLocale === projection.appLocale &&
         alternate.publicPath === projection.publicPath
     ) ||
     !completeLocaleSet ||
     siblings.some((sibling) => !isMaterialSibling(projection, sibling)) ||
     !siblings.some((sibling) => sibling.publicPath === projection.publicPath)
   ) {
-    return yield* makeMaterialProjectionError({ locale, publicPath });
+    return yield* makeMaterialProjectionError({ appLocale, publicPath });
   }
   return {
     ...active,

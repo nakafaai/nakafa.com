@@ -4,7 +4,7 @@ import type {
   TryoutSection,
   TryoutSet,
   TryoutTrack,
-} from "@nakafa/aksara-contracts/tryout/spec";
+} from "@nakafa/aksara-contracts/tryout/catalog";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import type { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
 import type { TrackIdentity } from "@repo/backend/convex/tryouts/sets/spec";
@@ -158,7 +158,7 @@ export const readPublishedSet = Effect.fn("tryouts.catalog.readPublishedSet")(
           set.examKey === identity.examKey &&
           set.trackKey === identity.trackKey &&
           set.setKey === identity.setKey &&
-          set.locale === identity.locale
+          set.appLocale === identity.locale
       ) ?? null
     );
   }
@@ -183,7 +183,7 @@ export const readPublishedSection = Effect.fn(
         section.trackKey === identity.trackKey &&
         section.setKey === identity.setKey &&
         section.sectionKey === identity.sectionKey &&
-        section.locale === identity.locale &&
+        section.appLocale === identity.locale &&
         section.visibility === "visible"
     ) ?? null
   );
@@ -207,7 +207,7 @@ export const readPublishedTrackSets = Effect.fn(
       row.countryKey === identity.countryKey &&
       row.examKey === identity.examKey &&
       row.trackKey === identity.trackKey &&
-      row.locale === identity.locale
+      row.appLocale === identity.locale
   );
   if (!track) {
     return null;

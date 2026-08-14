@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { verifyContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/verify";
 import {
   ContentRuntimeFailureError,
@@ -34,7 +35,7 @@ const target = {
   token: "runtime-test-token",
 };
 const input = {
-  locale: "en" as const,
+  appLocale: AppLocaleSchema.make("en"),
   publicPath: PublicPathSchema.make("test/head-0"),
 };
 const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
@@ -102,7 +103,11 @@ describe("public content runtime client", () => {
     expect(fetchMock).toHaveBeenCalledWith(
       endpoint,
       expect.objectContaining({
-        body: JSON.stringify({ delivery: "public", ...input }),
+        body: JSON.stringify({
+          appLocale: input.appLocale,
+          delivery: "public",
+          publicPath: input.publicPath,
+        }),
       })
     );
     expect(verifyContentRuntimeExchange).toHaveBeenCalledOnce();

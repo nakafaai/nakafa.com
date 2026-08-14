@@ -6,7 +6,6 @@ import {
   getApiContentRouteByContentId,
   getArticleApiContentPage,
   getMaterialApiContentPage,
-  listApiStaticParams,
   parseApiContentId,
   parseApiLocale,
   parseApiPageParams,
@@ -15,9 +14,8 @@ import {
 const runtimeClientMocks = vi.hoisted(() => ({
   runtimeQuery: vi.fn(),
 }));
-const publishedMaterialMocks = vi.hoisted(() => ({
-  readPublishedMaterialApiItem: vi.fn(),
-  readPublishedMaterialGraphRoute: vi.fn(),
+const publishedContentMocks = vi.hoisted(() => ({
+  readPublishedApiItem: vi.fn(),
 }));
 
 vi.mock("@repo/backend/client/runtime", async (importOriginal) => ({
@@ -28,13 +26,11 @@ vi.mock("@repo/backend/client/runtime", async (importOriginal) => ({
       try: () => runtimeClientMocks.runtimeQuery(url, query, args),
     }),
 }));
-vi.mock("@/lib/content/material", () => publishedMaterialMocks);
+vi.mock("@/lib/content/published", () => publishedContentMocks);
 
 describe("API content runtime", () => {
   afterEach(() => {
-    runtimeClientMocks.runtimeQuery.mockReset();
-    publishedMaterialMocks.readPublishedMaterialApiItem.mockReset();
-    publishedMaterialMocks.readPublishedMaterialGraphRoute.mockReset();
+    vi.clearAllMocks();
   });
 
   it("narrows supported route locales", () => {
@@ -52,10 +48,7 @@ describe("API content runtime", () => {
     });
     expect(
       parseApiPageParams(new URLSearchParams("cursor=abc&limit=5"))
-    ).toEqual({
-      cursor: "abc",
-      limit: 5,
-    });
+    ).toEqual({ cursor: "abc", limit: 5 });
     expect(parseApiPageParams(new URLSearchParams("limit=0"))).toBeNull();
     expect(parseApiPageParams(new URLSearchParams("limit=101"))).toBeNull();
     expect(parseApiPageParams(new URLSearchParams("limit=abc"))).toBeNull();
@@ -68,410 +61,151 @@ describe("API content runtime", () => {
     expect(parseApiContentId("en/articles/a")).toBeNull();
   });
 
-  it("reads one page for each API runtime content query", async () => {
-    const articlePage = { continueCursor: "", isDone: true, page: [] };
-    const subjectPage = {
-      activeReleaseId: null,
+  it.each([
+    {
+      args: {
+        appLocale: "en" as const,
+        cursor: null,
+        limit: 10,
+        prefix: "articles/politics",
+      },
+      family: "article" as const,
+      read: getArticleApiContentPage,
+    },
+    {
+      args: {
+        appLocale: "id" as const,
+        cursor: "next",
+        limit: 5,
+        prefix: "material/lesson/mathematics",
+      },
+      family: "material" as const,
+      read: getMaterialApiContentPage,
+    },
+  ])(
+    "hydrates one current signed $family page",
+    async ({ args, family, read }) => {
+      const publishedItem = { slug: `${family}/published` };
+      runtimeClientMocks.runtimeQuery
+        .mockResolvedValueOnce({
+          activeReleaseId: "release-test",
+          continueCursor: "",
+          isDone: true,
+          page: [
+            { appLocale: args.appLocale, publicPath: `${family}/published` },
+          ],
+        })
+        .mockResolvedValueOnce({ releaseId: "release-test" });
+      publishedContentMocks.readPublishedApiItem.mockReturnValue(
+        Effect.succeed(publishedItem)
+      );
+
+      await expect(Effect.runPromise(read(args))).resolves.toEqual({
+        continueCursor: "",
+        isDone: true,
+        page: [publishedItem],
+      });
+      expect(publishedContentMocks.readPublishedApiItem).toHaveBeenCalledWith({
+        activeReleaseId: "release-test",
+        appLocale: args.appLocale,
+        family,
+        publicPath: `${family}/published`,
+      });
+      expect(runtimeClientMocks.runtimeQuery).toHaveBeenNthCalledWith(
+        1,
+        "https://test.convex.cloud",
+        expect.anything(),
+        args
+      );
+    }
+  );
+
+  it.each([{ releaseId: "release-after" }, null])(
+    "rejects a page when its signed release changes or disappears",
+    async (active) => {
+      runtimeClientMocks.runtimeQuery
+        .mockResolvedValueOnce({
+          activeReleaseId: "release-before",
+          continueCursor: "",
+          isDone: true,
+          page: [],
+        })
+        .mockResolvedValueOnce(active);
+
+      await expect(
+        Effect.runPromise(
+          getArticleApiContentPage({
+            appLocale: "en",
+            cursor: null,
+            limit: 10,
+            prefix: "articles/politics",
+          })
+        )
+      ).rejects.toThrow(
+        "Content ownership changed during the public API read."
+      );
+    }
+  );
+
+  it("maps signed hydration failures into the API runtime error", async () => {
+    runtimeClientMocks.runtimeQuery.mockResolvedValueOnce({
+      activeReleaseId: "release-test",
       continueCursor: "",
       isDone: true,
-      page: [],
-    };
-    const routeRow = { content_id: "asset:en:article:politics:article:a" };
-
-    runtimeClientMocks.runtimeQuery
-      .mockResolvedValueOnce(articlePage)
-      .mockResolvedValueOnce(subjectPage)
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce({
-        activeReleaseId: null,
-        managed: false,
-        route: null,
-        syncedAt: null,
-      })
-      .mockResolvedValueOnce(routeRow)
-      .mockResolvedValueOnce(null);
+      page: [{ appLocale: "en", publicPath: "articles/politics/test" }],
+    });
+    publishedContentMocks.readPublishedApiItem.mockReturnValue(
+      Effect.fail(new Error("signature mismatch"))
+    );
 
     await expect(
       Effect.runPromise(
         getArticleApiContentPage({
+          appLocale: "en",
           cursor: null,
           limit: 10,
-          locale: "en",
           prefix: "articles/politics",
         })
       )
-    ).resolves.toEqual(articlePage);
+    ).rejects.toThrow("Unable to read signed content for the public API.");
+  });
+
+  it("reads one current reference by stable graph content ID", async () => {
+    const row = { contentId: "asset:en:article:politics:article:a" };
+    runtimeClientMocks.runtimeQuery.mockResolvedValueOnce(row);
+
+    await expect(
+      Effect.runPromise(
+        getApiContentRouteByContentId({ contentId: row.contentId })
+      )
+    ).resolves.toEqual(row);
     expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledWith(
       "https://test.convex.cloud",
       expect.anything(),
-      {
-        cursor: null,
-        limit: 10,
-        locale: "en",
-        prefix: "articles/politics",
-      }
-    );
-
-    await expect(
-      Effect.runPromise(
-        getMaterialApiContentPage({
-          cursor: "next",
-          limit: 5,
-          locale: "id",
-          prefix: "curriculum/high-school/10/mathematics",
-        })
-      )
-    ).resolves.toEqual({
-      continueCursor: "",
-      isDone: true,
-      page: [],
-    });
-    expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledWith(
-      "https://test.convex.cloud",
-      expect.anything(),
-      {
-        cursor: "next",
-        limit: 5,
-        locale: "id",
-        prefix: "curriculum/high-school/10/mathematics",
-      }
-    );
-
-    await expect(
-      Effect.runPromise(
-        getApiContentRouteByContentId({
-          contentId: "asset:en:article:politics:article:a",
-        })
-      )
-    ).resolves.toEqual(routeRow);
-    expect(runtimeClientMocks.runtimeQuery).toHaveBeenLastCalledWith(
-      "https://test.convex.cloud",
-      expect.anything(),
-      {}
+      { input: { contentId: row.contentId, kind: "content" } }
     );
   });
 
-  it("rejects a source graph fallback after ownership changes", async () => {
-    runtimeClientMocks.runtimeQuery
-      .mockResolvedValueOnce({
-        activeReleaseId: "release-before",
-        managed: false,
-        route: null,
-        syncedAt: null,
-      })
-      .mockResolvedValueOnce({
-        content_id: "asset:en:material:test:source",
-      })
-      .mockResolvedValueOnce({
-        manifestHash: "manifest-after",
-        releaseId: "release-after",
-        sequence: 2,
-      });
-
-    await expect(
-      Effect.runPromise(
-        getApiContentRouteByContentId({
-          contentId: "asset:en:material:test:source",
-        })
-      )
-    ).rejects.toThrow("Content ownership changed during the public API read.");
-  });
-
-  it("reconciles source and signed material page entries", async () => {
-    const sourceItem = { slug: "material/lesson/test/source" };
-    const publishedItem = { slug: "material/lesson/test/published" };
-    runtimeClientMocks.runtimeQuery.mockResolvedValueOnce({
-      activeReleaseId: "release-test",
-      continueCursor: "",
-      isDone: true,
-      page: [
-        { item: sourceItem, kind: "source" },
-        {
-          kind: "published",
-          locale: "en",
-          publicPath: "subjects/test/published",
-        },
-      ],
-    });
-    runtimeClientMocks.runtimeQuery.mockResolvedValueOnce({
-      releaseId: "release-test",
-    });
-    publishedMaterialMocks.readPublishedMaterialApiItem.mockReturnValue(
-      Effect.succeed(publishedItem)
-    );
-
-    await expect(
-      Effect.runPromise(
-        getMaterialApiContentPage({
-          cursor: null,
-          limit: 10,
-          locale: "en",
-          prefix: "material/lesson/test",
-        })
-      )
-    ).resolves.toEqual({
-      continueCursor: "",
-      isDone: true,
-      page: [sourceItem, publishedItem],
-    });
-    expect(
-      publishedMaterialMocks.readPublishedMaterialApiItem
-    ).toHaveBeenCalledWith({
-      activeReleaseId: "release-test",
-      locale: "en",
-      publicPath: "subjects/test/published",
-    });
-  });
-
-  it("rejects a source material page after ownership changes", async () => {
-    runtimeClientMocks.runtimeQuery
-      .mockResolvedValueOnce({
-        activeReleaseId: "release-before",
-        continueCursor: "",
-        isDone: true,
-        page: [
-          { item: { slug: "material/lesson/test/source" }, kind: "source" },
-        ],
-      })
-      .mockResolvedValueOnce({ releaseId: "release-after" });
-
-    await expect(
-      Effect.runPromise(
-        getMaterialApiContentPage({
-          cursor: null,
-          limit: 10,
-          locale: "en",
-          prefix: "material/lesson/test",
-        })
-      )
-    ).rejects.toThrow("Content ownership changed during the public API read.");
-  });
-
-  it("rejects incomplete or failed signed material page reads", async () => {
-    runtimeClientMocks.runtimeQuery
-      .mockResolvedValueOnce({
-        activeReleaseId: null,
-        continueCursor: "",
-        isDone: true,
-        page: [
-          {
-            kind: "published",
-            locale: "en",
-            publicPath: "subjects/test/missing-release",
-          },
-        ],
-      })
-      .mockResolvedValueOnce({
-        activeReleaseId: "release-test",
-        continueCursor: "",
-        isDone: true,
-        page: [
-          {
-            kind: "published",
-            locale: "en",
-            publicPath: "subjects/test/failure",
-          },
-        ],
-      });
-
-    await expect(
-      Effect.runPromise(
-        getMaterialApiContentPage({
-          cursor: null,
-          limit: 10,
-          locale: "en",
-          prefix: "material/lesson/test",
-        })
-      )
-    ).rejects.toThrow("Published material API entry has no active release.");
-
-    publishedMaterialMocks.readPublishedMaterialApiItem.mockReturnValue(
-      Effect.fail(new Error("signature mismatch"))
-    );
-    await expect(
-      Effect.runPromise(
-        getMaterialApiContentPage({
-          cursor: null,
-          limit: 10,
-          locale: "en",
-          prefix: "material/lesson/test",
-        })
-      )
-    ).rejects.toThrow(
-      "Unable to read signed material content for the public API."
-    );
-  });
-
-  it("resolves exact graph routes and preserves managed tombstones", async () => {
-    const exactRoute = {
-      content_id: "asset:en:material:test:exact",
-      route: "subjects/test/exact",
-    };
-    runtimeClientMocks.runtimeQuery
-      .mockResolvedValueOnce({
-        activeReleaseId: "release-test",
-        managed: true,
-        route: { locale: "en", publicPath: "subjects/test/exact" },
-        syncedAt: 42,
-      })
-      .mockResolvedValueOnce({
-        activeReleaseId: "release-test",
-        managed: true,
-        route: null,
-        syncedAt: 42,
-      });
-    publishedMaterialMocks.readPublishedMaterialGraphRoute.mockReturnValue(
-      Effect.succeed(exactRoute)
-    );
-
-    await expect(
-      Effect.runPromise(
-        getApiContentRouteByContentId({
-          contentId: "asset:en:material:test:exact",
-        })
-      )
-    ).resolves.toBe(exactRoute);
-    expect(
-      publishedMaterialMocks.readPublishedMaterialGraphRoute
-    ).toHaveBeenCalledWith({
-      activeReleaseId: "release-test",
-      locale: "en",
-      publicPath: "subjects/test/exact",
-      syncedAt: 42,
-    });
-    await expect(
-      Effect.runPromise(
-        getApiContentRouteByContentId({
-          contentId: "asset:en:material:test:deleted",
-        })
-      )
-    ).resolves.toBeNull();
-    expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledTimes(2);
-  });
-
-  it("rejects incomplete or failed exact graph reads", async () => {
-    runtimeClientMocks.runtimeQuery
-      .mockResolvedValueOnce({
-        activeReleaseId: null,
-        managed: true,
-        route: { locale: "en", publicPath: "subjects/test/exact" },
-        syncedAt: 42,
-      })
-      .mockResolvedValueOnce({
-        activeReleaseId: "release-test",
-        managed: true,
-        route: { locale: "en", publicPath: "subjects/test/exact" },
-        syncedAt: null,
-      })
-      .mockResolvedValueOnce({
-        activeReleaseId: "release-test",
-        managed: true,
-        route: { locale: "en", publicPath: "subjects/test/exact" },
-        syncedAt: 42,
-      });
-
-    for (const contentId of [
-      "asset:en:material:test:missing-release",
-      "asset:en:material:test:missing-time",
-    ]) {
-      await expect(
-        Effect.runPromise(getApiContentRouteByContentId({ contentId }))
-      ).rejects.toThrow("Published material graph route is incomplete.");
-    }
-
-    publishedMaterialMocks.readPublishedMaterialGraphRoute.mockReturnValue(
-      Effect.fail(new Error("signature mismatch"))
-    );
-    await expect(
-      Effect.runPromise(
-        getApiContentRouteByContentId({
-          contentId: "asset:en:material:test:failure",
-        })
-      )
-    ).rejects.toThrow(
-      "Unable to read signed material content for the public API."
-    );
-  });
-
-  it("wraps runtime query failures with content runtime context", async () => {
+  it("wraps runtime query failures with query context", async () => {
     runtimeClientMocks.runtimeQuery.mockRejectedValueOnce(
       new ConvexRuntimeQueryError({
         networkCodes: [],
-        query: "contents/queries/runtime:listArticleApiContentPage",
+        query: "contentRelease/article:apiPage",
         reason: "transport",
       })
     );
 
-    const effect = getArticleApiContentPage({
-      cursor: null,
-      limit: 10,
-      locale: "en",
-      prefix: "articles/politics",
-    });
-
-    await expect(Effect.runPromise(effect)).rejects.toThrow(
-      "Unable to read API content runtime query: contents/queries/runtime:listArticleApiContentPage."
-    );
-  });
-
-  it("maps route catalog rows into API static params", async () => {
-    runtimeClientMocks.runtimeQuery
-      .mockResolvedValueOnce({
-        continueCursor: "",
-        isDone: true,
-        page: [
-          {
-            route: "articles/politics/dynastic-politics-asian-values",
-          },
-        ],
-      })
-      .mockResolvedValueOnce({
-        continueCursor: "",
-        isDone: true,
-        page: [
-          {
-            route: "articles/politics/political-accountability",
-          },
-        ],
-      });
-
     await expect(
-      listApiStaticParams({
-        prefix: "articles/",
-        section: "articles",
-      })
-    ).resolves.toEqual([
-      {
-        locale: "en",
-        slug: ["politics", "dynastic-politics-asian-values"],
-      },
-      {
-        locale: "id",
-        slug: ["politics", "political-accountability"],
-      },
-    ]);
-    expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledTimes(2);
-    expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledWith(
-      "https://test.convex.cloud",
-      expect.anything(),
-      {
-        cursor: null,
-        limit: 100,
-        locale: "en",
-        prefix: "articles/",
-        section: "articles",
-      }
-    );
-    expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledWith(
-      "https://test.convex.cloud",
-      expect.anything(),
-      {
-        cursor: null,
-        limit: 100,
-        locale: "id",
-        prefix: "articles/",
-        section: "articles",
-      }
+      Effect.runPromise(
+        getArticleApiContentPage({
+          appLocale: "en",
+          cursor: null,
+          limit: 10,
+          prefix: "articles/politics",
+        })
+      )
+    ).rejects.toThrow(
+      "Unable to read API content runtime query: contentRelease/article:apiPage."
     );
   });
 });

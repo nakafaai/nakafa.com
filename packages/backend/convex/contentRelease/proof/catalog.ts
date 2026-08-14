@@ -16,7 +16,7 @@ import {
 } from "@repo/backend/convex/contentRelease/receipt";
 import {
   contentHeadValidator,
-  localeValidator,
+  artifactLocaleValidator,
   PROOF_PAGE_BYTES,
   PROOF_PAGE_LIMIT,
 } from "@repo/backend/convex/contentRelease/spec";
@@ -25,8 +25,8 @@ import { getConvexSize, type Infer, v } from "convex/values";
 import { Effect } from "effect";
 
 const catalogCursorValidator = v.object({
+  artifactLocale: artifactLocaleValidator,
   contentKey: v.string(),
-  locale: localeValidator,
 });
 const catalogPageValidator = v.object({
   done: v.boolean(),
@@ -140,10 +140,10 @@ const loadCatalogKeys = Effect.fn("contentRelease.loadCatalogKeys")(function* (
       : yield* Effect.promise(() =>
           ctx.db
             .query("contentKeys")
-            .withIndex("by_contentKey_and_locale", (query) =>
+            .withIndex("by_contentKey_and_artifactLocale", (query) =>
               query
                 .eq("contentKey", cursor.contentKey)
-                .gt("locale", cursor.locale)
+                .gt("artifactLocale", cursor.artifactLocale)
             )
             .order("asc")
             .take(limit)
@@ -156,13 +156,13 @@ const loadCatalogKeys = Effect.fn("contentRelease.loadCatalogKeys")(function* (
     if (cursor === null) {
       return ctx.db
         .query("contentKeys")
-        .withIndex("by_contentKey_and_locale")
+        .withIndex("by_contentKey_and_artifactLocale")
         .order("asc")
         .take(remaining);
     }
     return ctx.db
       .query("contentKeys")
-      .withIndex("by_contentKey_and_locale", (query) =>
+      .withIndex("by_contentKey_and_artifactLocale", (query) =>
         query.gt("contentKey", cursor.contentKey)
       )
       .order("asc")
@@ -187,7 +187,7 @@ const pageProgram = Effect.fn("contentRelease.resultCatalogPage")(function* (
     const head = yield* resolveContentHead(
       ctx,
       key.contentKey,
-      key.locale,
+      key.artifactLocale,
       release.sequence
     );
     if (head) {
@@ -196,21 +196,24 @@ const pageProgram = Effect.fn("contentRelease.resultCatalogPage")(function* (
         heads: [...heads, head],
         nextCursor: {
           contentKey: key.contentKey,
-          locale: key.locale,
+          artifactLocale: key.artifactLocale,
         },
       };
       if (getConvexSize(candidate) > PROOF_PAGE_BYTES) {
         if (heads.length === 0) {
           return yield* releaseFail(
             "CONTENT_RELEASE_LIMIT",
-            `Content head ${key.contentKey}/${key.locale} exceeds the proof page ceiling.`
+            `Content head ${key.contentKey}/${key.artifactLocale} exceeds the proof page ceiling.`
           );
         }
         break;
       }
       heads.push(head);
     }
-    nextCursor = { contentKey: key.contentKey, locale: key.locale };
+    nextCursor = {
+      artifactLocale: key.artifactLocale,
+      contentKey: key.contentKey,
+    };
     processed += 1;
     const metrics = yield* Effect.promise(() =>
       ctx.meta.getTransactionMetrics()

@@ -11,18 +11,16 @@
   },
   "dependencies": {
     "@ai-sdk/devtools": "^1.0.12",
-    "@ai-sdk/elevenlabs": "^3.0.26",
     "@ai-sdk/gateway": "^4.0.46",
     "@ai-sdk/google": "^4.0.39",
-    "@ai-sdk/react": "^4.0.61",
     "@effect/platform": "0.97.1",
     "@mendable/firecrawl-js": "^4.32.0",
+    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.12.0/nakafa-aksara-contracts-0.12.0.tgz",
     "@repo/contents": "workspace:*",
     "@repo/math": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "ai": "^7.0.58",
-    "convex": "^1.43.0",
     "dedent": "^1.7.2",
     "effect": "catalog:",
     "gpt-tokenizer": "^3.4.0",
@@ -30,11 +28,8 @@
     "parse-domain": "^8.3.2"
   },
   "devDependencies": {
-    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.11.0/nakafa-aksara-contracts-0.11.0.tgz",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/react": "19.2.18",
-    "@types/react-dom": "^19.2.4",
     "@vitest/coverage-istanbul": "^4.1.10",
     "vitest": "^4.1.10"
   }

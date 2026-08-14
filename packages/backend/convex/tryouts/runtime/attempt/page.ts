@@ -1,3 +1,4 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
@@ -11,6 +12,11 @@ import {
   readTryoutSetSelection,
   type TryoutSetSelection,
 } from "@repo/backend/convex/tryouts/catalog/selection";
+import {
+  readStoredAttemptSectionPage,
+  readStoredAttemptSetPage,
+} from "@repo/backend/convex/tryouts/history/catalog";
+import { readTryoutAttemptHistory } from "@repo/backend/convex/tryouts/history/reference";
 import { TryoutRuntimeError } from "@repo/backend/convex/tryouts/runtime/error";
 import {
   matchesAttemptIdentity,
@@ -21,7 +27,7 @@ import { Effect } from "effect";
 type TryoutAttempt = Doc<"tryoutAttempts">;
 
 interface AttemptPath {
-  readonly locale: "en" | "id";
+  readonly locale: AppLocaleCode;
   readonly publicPath: string;
 }
 
@@ -33,6 +39,10 @@ export const readAttemptSetPage = Effect.fn("tryouts.attempt.readSetPage")(
     attempt: TryoutAttempt,
     identity: TryoutSetIdentity
   ) {
+    const history = yield* readTryoutAttemptHistory(ctx, attempt);
+    if (history) {
+      return yield* readStoredAttemptSetPage(ctx, attempt, args.publicPath);
+    }
     const selection = yield* readAttemptSetSelection(
       ctx,
       args,
@@ -56,7 +66,11 @@ export const readAttemptSetPage = Effect.fn("tryouts.attempt.readSetPage")(
 export const readAttemptSectionPage = Effect.fn(
   "tryouts.attempt.readSectionPage"
 )(function* (ctx: QueryCtx, args: AttemptPath, attempt: TryoutAttempt) {
-  const identity = readAttemptSetIdentity(attempt);
+  const history = yield* readTryoutAttemptHistory(ctx, attempt);
+  if (history) {
+    return yield* readStoredAttemptSectionPage(ctx, attempt, args.publicPath);
+  }
+  const identity = yield* readAttemptSetIdentity(attempt);
   const selection = yield* readAttemptSetSelection(
     ctx,
     args,
@@ -85,7 +99,8 @@ const readAttemptSetSelection = Effect.fn("tryouts.attempt.readSetSelection")(
   ) {
     yield* loadVerifiedSnapshot(ctx, "tryout", attempt.tryoutSnapshotId);
     const selection = yield* readTryoutSetSelection(ctx, {
-      ...args,
+      appLocale: args.locale,
+      publicPath: args.publicPath,
       snapshotId: attempt.tryoutSnapshotId,
     });
     if (!(selection && matchesAttemptSelection(attempt, identity, selection))) {
@@ -107,7 +122,14 @@ function matchesAttemptSelection(
   if (
     !set ||
     selection.sets.length !== 1 ||
-    !matchesAttemptIdentity(identity, set) ||
+    set.appLocale !== identity.locale ||
+    !matchesAttemptIdentity(identity, {
+      countryKey: set.countryKey,
+      examKey: set.examKey,
+      locale: identity.locale,
+      setKey: set.setKey,
+      trackKey: set.trackKey,
+    }) ||
     tryoutCatalogIdentity(set) !== attempt.setIdentity ||
     set.publicPath !== attempt.setPublicPath ||
     set.questionCount !== attempt.totalQuestions ||

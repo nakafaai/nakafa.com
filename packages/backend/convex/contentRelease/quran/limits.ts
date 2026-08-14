@@ -1,7 +1,7 @@
+import type { QuranSnapshotRow } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import {
   QURAN_CHUNK_SIZE,
   QURAN_SURAH_COUNT,
-  type QuranSnapshotRow,
 } from "@nakafa/aksara-contracts/quran/spec";
 import { CONTENT_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/document";
 import {

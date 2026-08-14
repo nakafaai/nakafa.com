@@ -1,5 +1,5 @@
 import type {
-  ActiveLearningProfile,
+  ActiveLearningSelection,
   LearningProgramCatalog,
 } from "@/components/programs/contract";
 
@@ -16,15 +16,15 @@ export function filterOnboardingPrograms(catalog: LearningProgramCatalog) {
   return catalog.filter(isProgramReadyForOnboarding);
 }
 
-/** Decides whether a locale can require first-run learning-profile onboarding. */
+/** Decides whether a locale can require first-run learning selection. */
 function hasOnboardingPrograms(catalog: LearningProgramCatalog) {
   return catalog.some(isProgramReadyForOnboarding);
 }
 
 /** Decides whether home should require first-run onboarding for this locale. */
 export function shouldRequireLearningProgramOnboarding(
-  activeProfile: ActiveLearningProfile,
+  activeSelection: ActiveLearningSelection,
   catalog: LearningProgramCatalog
 ) {
-  return !activeProfile && hasOnboardingPrograms(catalog);
+  return !activeSelection && hasOnboardingPrograms(catalog);
 }

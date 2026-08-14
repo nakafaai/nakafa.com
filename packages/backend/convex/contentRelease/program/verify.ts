@@ -37,7 +37,7 @@ export const verifyCurriculum = Effect.fn("contentRelease.verifyCurriculum")(
         ? getHashBucket(decoded.record.rowHash)
         : undefined) !== row.bucket ||
       decoded.record.row.level !== row.level ||
-      decoded.record.row.locale !== row.locale ||
+      decoded.record.row.appLocale !== row.appLocale ||
       decoded.record.row.materialContextParentPath !== row.contextPath ||
       decoded.record.row.materialKey !== row.materialKey ||
       decoded.record.row.nodeKey !== row.nodeKey ||
@@ -50,7 +50,7 @@ export const verifyCurriculum = Effect.fn("contentRelease.verifyCurriculum")(
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Curriculum route ${row.locale}/${row.path} changed its immutable snapshot identity.`
+        `Curriculum route ${row.appLocale}/${row.path} changed its immutable snapshot identity.`
       );
     }
     return decoded.record.row;

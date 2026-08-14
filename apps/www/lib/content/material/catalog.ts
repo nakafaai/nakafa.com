@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
@@ -51,10 +52,11 @@ export type PublishedMaterialPage = PublishedMaterialPageBase &
 export const readPublishedMaterialPage = Effect.fn(
   "NakafaMaterial.readPublishedPage"
 )(function* (input: MaterialPageCursor & { readonly locale: Locale }) {
+  const appLocale = AppLocaleSchema.make(input.locale);
   const args = {
     expectedManifestHash: input.expectedManifestHash,
     expectedReleaseId: input.expectedReleaseId,
-    locale: input.locale,
+    appLocale,
     paginationOpts: {
       cursor: input.cursor,
       numItems: PROJECTION_PAGE_LIMIT,
@@ -66,18 +68,18 @@ export const readPublishedMaterialPage = Effect.fn(
   );
   const routes = yield* Effect.forEach(result.result.page, (source) =>
     decodeMaterialJson(source, {
-      locale: input.locale,
+      appLocale,
       publicPath: "materials",
     })
   );
-  if (routes.some((route) => route.locale !== input.locale)) {
+  if (routes.some((route) => route.appLocale !== appLocale)) {
     return yield* new PublishedProjectionError({
-      locale: input.locale,
+      appLocale,
       publicPath: "materials",
     });
   }
   const sourceRevision = yield* decodeSourceRevision(result.sourceRevision, {
-    locale: input.locale,
+    appLocale,
     publicPath: "materials",
   });
   const activeManifestHash = result.activeManifestHash;
@@ -101,7 +103,7 @@ export const readPublishedMaterialPage = Effect.fn(
   }
   if (activeManifestHash === null || activeReleaseId === null) {
     return yield* new PublishedProjectionError({
-      locale: input.locale,
+      appLocale,
       publicPath: "materials",
     });
   }
@@ -118,6 +120,7 @@ export const readPublishedMaterialPage = Effect.fn(
 export const readPublishedMaterialRoutes = Effect.fn(
   "NakafaMaterial.readPublishedRoutes"
 )(function* (locale: Locale) {
+  const appLocale = AppLocaleSchema.make(locale);
   const routes: MaterialLessonProjection[] = [];
   let cursor: MaterialPageCursor = {
     cursor: null,
@@ -132,13 +135,13 @@ export const readPublishedMaterialRoutes = Effect.fn(
     });
     if (page.stale) {
       return yield* new PublishedProjectionError({
-        locale,
+        appLocale,
         publicPath: "materials",
       });
     }
     if (!page.managed) {
       return yield* new PublishedProjectionError({
-        locale,
+        appLocale,
         publicPath: "materials",
       });
     }

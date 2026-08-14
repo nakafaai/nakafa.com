@@ -4,7 +4,7 @@ import type {
   TryoutSection,
   TryoutSet,
   TryoutTrack,
-} from "@nakafa/aksara-contracts/tryout/spec";
+} from "@nakafa/aksara-contracts/tryout/catalog";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
   findPublishedSet,

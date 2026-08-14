@@ -1,4 +1,4 @@
-import { formatLearningProfilePromptContext } from "@repo/ai/prompt/learning-profile";
+import { formatLearningSelectionPromptContext } from "@repo/ai/prompt/learning-selection";
 import { createPrompt } from "@repo/ai/prompt/utils";
 import type { AgentContext } from "@repo/ai/types/agents";
 import type { Locale } from "@repo/utilities/locales";
@@ -27,7 +27,7 @@ export function nakafaAgentPrompt({
       - current slug: ${context.slug}
       - verified current page: ${context.verified ? "yes" : "no"}
       - user role: ${context.userRole ?? "unknown"}
-      ${formatLearningProfilePromptContext(context.learningProfile)}
+      ${formatLearningSelectionPromptContext(context.learningSelection)}
     `,
     toolUsageGuidelines: `
       # Tool Usage Guidelines

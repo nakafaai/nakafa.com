@@ -16,8 +16,8 @@ describe("contentRelease/article/discovery", () => {
     const catalog = await t.run((ctx) =>
       ctx.db
         .query("articleCatalog")
-        .withIndex("by_locale_and_date_and_contentKey", (index) =>
-          index.eq("locale", "en")
+        .withIndex("by_appLocale_and_date_and_contentKey", (index) =>
+          index.eq("appLocale", "en")
         )
         .order("desc")
         .take(2)
@@ -28,7 +28,7 @@ describe("contentRelease/article/discovery", () => {
     }
 
     await expect(
-      t.query(latest, { limit: 1, locale: "en" })
+      t.query(latest, { appLocale: "en", limit: 1 })
     ).resolves.toMatchObject({
       articles: [
         {
@@ -44,9 +44,9 @@ describe("contentRelease/article/discovery", () => {
     });
     await expect(
       t.query(listing, {
+        appLocale: "en",
         category: "politics",
         limit: 1,
-        locale: "en",
       })
     ).resolves.toMatchObject({
       articles: [
@@ -59,7 +59,7 @@ describe("contentRelease/article/discovery", () => {
       managed: true,
     });
     await expect(
-      t.query(bucket, { bucket: selected.bucket, locale: "en" })
+      t.query(bucket, { appLocale: "en", bucket: selected.bucket })
     ).resolves.toMatchObject({
       articles: expect.arrayContaining([
         expect.objectContaining({ publicPath: selected.publicPath }),
@@ -71,23 +71,23 @@ describe("contentRelease/article/discovery", () => {
   it("distinguishes unmanaged and absent managed partitions", async () => {
     const unmanaged = convexTest(schema, convexModules);
     await expect(
-      unmanaged.query(latest, { limit: 10, locale: "en" })
+      unmanaged.query(latest, { appLocale: "en", limit: 10 })
     ).resolves.toEqual({ articles: [], managed: false });
     await expect(
       unmanaged.query(listing, {
+        appLocale: "en",
         category: "politics",
         limit: 10,
-        locale: "en",
       })
     ).resolves.toEqual({ articles: [], managed: false });
     await expect(
-      unmanaged.query(bucket, { bucket: "abc", locale: "en" })
+      unmanaged.query(bucket, { appLocale: "en", bucket: "abc" })
     ).resolves.toEqual({ articles: null, managed: false });
 
     const managed = convexTest(schema, convexModules);
     await managed.mutation((ctx) => insertRuntimeArticles(ctx, 1));
     await expect(
-      managed.query(bucket, { bucket: "fff", locale: "en" })
+      managed.query(bucket, { appLocale: "en", bucket: "fff" })
     ).resolves.toEqual({ articles: null, managed: true });
   });
 
@@ -95,21 +95,21 @@ describe("contentRelease/article/discovery", () => {
     const t = convexTest(schema, convexModules);
 
     await expect(
-      t.query(latest, { limit: 101, locale: "en" })
+      t.query(latest, { appLocale: "en", limit: 101 })
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_LIMIT" },
     });
     await expect(
       t.query(listing, {
+        appLocale: "en",
         category: "politics",
         limit: 0,
-        locale: "en",
       })
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_LIMIT" },
     });
     await expect(
-      t.query(bucket, { bucket: "wrong", locale: "en" })
+      t.query(bucket, { appLocale: "en", bucket: "wrong" })
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_LIMIT" },
     });

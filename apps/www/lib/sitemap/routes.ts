@@ -1,4 +1,4 @@
-import { compareSitemapPaths } from "@repo/backend/convex/contents/sitemap/spec";
+import { compareSitemapPaths } from "@repo/backend/convex/contentRelease/sitemap";
 import { Data, Effect } from "effect";
 import { readPublishedArticleSitemap } from "@/lib/content/article/sitemap";
 import { readPublishedMaterialSitemap } from "@/lib/content/material/sitemap";

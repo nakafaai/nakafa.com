@@ -15,7 +15,7 @@ export const verifyMaterial = Effect.fn("contentRelease.verifyMaterial")(
     if (projection.kind !== "subject-lesson") {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Active material ${row.contentKey}/${row.locale} has a non-material projection.`
+        `Active material ${row.contentKey}/${row.appLocale} has a non-material projection.`
       );
     }
     const projectionJson = canonicalizeMaterialProjection(projection);
@@ -30,7 +30,7 @@ export const verifyMaterial = Effect.fn("contentRelease.verifyMaterial")(
       projection.graph.assetId !== row.assetId ||
       projection.metadata.date !== row.date ||
       projection.contentKey !== row.contentKey ||
-      projection.locale !== row.locale ||
+      projection.appLocale !== row.appLocale ||
       projection.materialKey !== row.materialKey ||
       projection.order !== row.order ||
       projection.parentPath !== row.parentPath ||
@@ -38,7 +38,7 @@ export const verifyMaterial = Effect.fn("contentRelease.verifyMaterial")(
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Active material ${row.contentKey}/${row.locale} changed catalog metadata.`
+        `Active material ${row.contentKey}/${row.appLocale} changed catalog metadata.`
       );
     }
     return { projection, projectionJson };

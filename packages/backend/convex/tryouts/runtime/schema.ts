@@ -1,4 +1,7 @@
-import { rendererDomainValidator } from "@repo/backend/convex/contentRelease/spec";
+import {
+  appLocaleValidator,
+  rendererDomainValidator,
+} from "@repo/backend/convex/contentRelease/spec";
 import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { tryoutAttemptAccessSourceKindValidator } from "@repo/backend/convex/tryouts/access/source";
@@ -57,7 +60,9 @@ const tables = {
     examKey: tryoutRouteKeyValidator,
     trackKey: tryoutRouteKeyValidator,
     setKey: tryoutRouteKeyValidator,
-    locale: localeValidator,
+    appLocale: v.optional(appLocaleValidator),
+    /** Temporary storage-only source for the bounded appLocale migration. */
+    locale: v.optional(localeValidator),
     scaleVersionId: v.optional(v.id("irtScaleVersions")),
     accessCampaignId: v.optional(v.id("tryoutAccessCampaigns")),
     accessGrantId: v.optional(v.id("tryoutAccessGrants")),
@@ -94,12 +99,6 @@ const tables = {
       "setIdentity",
       "startedAt",
     ])
-    .index("by_userId_and_locale_and_setPublicPath_and_startedAt", [
-      "userId",
-      "locale",
-      "setPublicPath",
-      "startedAt",
-    ])
     .index("by_accessCampaignId_and_startedAt", [
       "accessCampaignId",
       "startedAt",
@@ -111,6 +110,47 @@ const tables = {
       "startedAt",
     ]),
 
+  /** Explicit immutable discriminator for attempts that retain old bytes. */
+  tryoutAttemptHistory: defineTable({
+    snapshotReleaseId: v.string(),
+    tryoutAttemptId: v.id("tryoutAttempts"),
+    tryoutSnapshotId: v.string(),
+  }).index("by_tryoutAttemptId", ["tryoutAttemptId"]),
+
+  /** Exact authenticated old row envelopes retained outside current tables. */
+  tryoutHistoryRows: defineTable(
+    v.union(
+      v.object({
+        index: v.number(),
+        rowHash: v.string(),
+        rowJson: v.string(),
+        rowKind: v.literal("catalog"),
+        snapshotId: v.string(),
+      }),
+      v.object({
+        answerArtifactHash: v.string(),
+        index: v.number(),
+        questionArtifactHash: v.string(),
+        rowHash: v.string(),
+        rowJson: v.string(),
+        rowKind: v.literal("placement"),
+        snapshotId: v.string(),
+      })
+    )
+  )
+    .index("by_answerArtifactHash", ["answerArtifactHash"])
+    .index("by_questionArtifactHash", ["questionArtifactHash"])
+    .index("by_snapshotId_and_rowKind_and_index", [
+      "snapshotId",
+      "rowKind",
+      "index",
+    ])
+    .index("by_snapshotId_and_rowKind_and_rowHash", [
+      "snapshotId",
+      "rowKind",
+      "rowHash",
+    ]),
+
   tryoutSetProgress: defineTable({
     userId: v.id("users"),
     setIdentity: v.string(),
@@ -119,7 +159,9 @@ const tables = {
     examKey: tryoutRouteKeyValidator,
     trackKey: tryoutRouteKeyValidator,
     setKey: tryoutRouteKeyValidator,
-    locale: localeValidator,
+    appLocale: v.optional(appLocaleValidator),
+    /** Temporary storage-only source for the bounded appLocale migration. */
+    locale: v.optional(localeValidator),
     attemptNumber: v.number(),
     publishedScore: v.union(v.number(), v.null()),
     status: tryoutStatusValidator,
@@ -127,6 +169,14 @@ const tables = {
     updatedAt: v.number(),
   })
     .index("by_userId_and_setIdentity", ["userId", "setIdentity"])
+    .index("by_userId_countryKey_examKey_trackKey_appLocale_setKey", [
+      "userId",
+      "countryKey",
+      "examKey",
+      "trackKey",
+      "appLocale",
+      "setKey",
+    ])
     .index("by_userId_countryKey_examKey_trackKey_locale_setKey", [
       "userId",
       "countryKey",
@@ -140,7 +190,7 @@ const tables = {
       "countryKey",
       "examKey",
       "trackKey",
-      "locale",
+      "appLocale",
       "publishedScore",
       "setKey",
     ])
@@ -149,7 +199,7 @@ const tables = {
       "countryKey",
       "examKey",
       "trackKey",
-      "locale",
+      "appLocale",
       "statusRank",
       "setKey",
     ]),
@@ -193,7 +243,6 @@ const tables = {
     tryoutAttemptId: v.id("tryoutAttempts"),
     questionOrder: v.number(),
     sourcePath: v.string(),
-    title: v.string(),
     choiceSnapshots: v.array(tryoutChoiceSnapshotValidator),
     sourceRevision: v.string(),
     contentHash: v.string(),

@@ -7,7 +7,7 @@ import { hasOnboardingChoices } from "@/components/programs/onboarding/model";
 import { getToken } from "@/lib/auth/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import {
-  getActiveLearningProfile,
+  getActiveLearningSelection,
   getLearningProgramOnboardingCatalog,
 } from "@/lib/programs/server";
 
@@ -41,7 +41,9 @@ async function FocusStepRuntime({ locale }: { locale: Locale }) {
     return null;
   }
 
-  const activeProfile = await getActiveLearningProfile(token, locale);
+  const activeSelection = await getActiveLearningSelection(token, locale);
 
-  return <FocusStepForm activeProfile={activeProfile} programs={programs} />;
+  return (
+    <FocusStepForm activeSelection={activeSelection} programs={programs} />
+  );
 }

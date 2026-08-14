@@ -85,7 +85,7 @@ export const validateAbortedRelease = Effect.fn(
           .first()
       ),
     ]),
-    hasAbortResidue(ctx, releaseId, release.sequence),
+    hasAbortResidue(ctx, release.sequence),
   ]);
   if (
     release.status !== "aborted" ||
@@ -166,7 +166,7 @@ export const abortProgram = Effect.fn("contentRelease.abort")(function* (
     );
   }
   const complete = processed === total;
-  if (complete && (yield* hasAbortResidue(ctx, releaseId, release.sequence))) {
+  if (complete && (yield* hasAbortResidue(ctx, release.sequence))) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       `Release ${releaseId} retained staged publication ownership.`

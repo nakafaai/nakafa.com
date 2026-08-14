@@ -18,10 +18,10 @@ const source = {
 };
 
 describe("signed Quran document decoder", () => {
-  it("preserves the exact locale document projection", async () => {
+  it("preserves the exact app-locale document projection", async () => {
     const document = await Effect.runPromise(
       decodePublishedQuranDocument(documentResult(), {
-        locale: "id",
+        appLocale: "id",
         surahNumber: 1,
       })
     );
@@ -43,21 +43,21 @@ describe("signed Quran document decoder", () => {
           {
             activeManifestHash: null,
             activeReleaseId: null,
-            locale: "id",
+            appLocale: "id",
             managed: false,
             snapshotId: null,
             sourceRevision: null,
             surah: null,
             verses: [],
           },
-          { locale: "id", surahNumber: 1 }
+          { appLocale: "id", surahNumber: 1 }
         )
       )
     );
     const inconsistent = await Effect.runPromise(
       Effect.either(
         decodePublishedQuranDocument(documentResult(), {
-          locale: "en",
+          appLocale: "en",
           surahNumber: 1,
         })
       )
@@ -74,11 +74,11 @@ describe("signed Quran document decoder", () => {
   });
 });
 
-/** Builds one complete locale-specific signed document response. */
+/** Builds one complete app-locale signed document response. */
 function documentResult(): QuranDocumentResult {
   return {
     ...source,
-    locale: "id",
+    appLocale: "id",
     surah: {
       kind: "quran-surah",
       name: {

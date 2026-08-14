@@ -47,7 +47,7 @@ describe("local preview event route", () => {
 
   it("returns the sanitized stream with private no-cache headers", async () => {
     const source =
-      'event: update\ndata: {"format":"aksara-local-preview-v1","revision":1,"status":"ready"}\n\n';
+      'event: update\ndata: {"format":"aksara-local-preview","revision":1,"status":"ready"}\n\n';
     eventsMock.mockReturnValueOnce(
       Effect.succeed(
         new ReadableStream({

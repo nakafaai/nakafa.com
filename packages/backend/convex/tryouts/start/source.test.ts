@@ -14,7 +14,6 @@ import {
   TRYOUT_START_NOW as NOW,
   TRYOUT_START_SET as SET,
   TRYOUT_START_TRACK as TRACK,
-  TRYOUT_RENAMED_SET_PATH,
 } from "@repo/backend/test/tryout-source";
 import { seedTryoutStartSet } from "@repo/backend/test/tryout-start";
 import { describe, expect, it, vi } from "vitest";
@@ -71,9 +70,8 @@ describe("tryouts/start/source", () => {
     await t.mutation(activateRenamedTryoutStartSource);
 
     await expect(
-      authed.query(api.tryouts.queries.runtime.getSetState, {
-        locale: "id",
-        publicPath: TRYOUT_RENAMED_SET_PATH,
+      authed.query(api.tryouts.queries.runtime.getSetAttemptState, {
+        attemptId: started.attemptId,
       })
     ).resolves.toMatchObject({
       attempt: { attemptId: started.attemptId },

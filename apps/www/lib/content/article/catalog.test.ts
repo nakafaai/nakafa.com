@@ -35,9 +35,10 @@ type CategoryRow = FunctionReturnType<
 /** Builds one backend projection row from a reviewed article projection. */
 function articleRow(selected = testArticleProjection): ArticleRow {
   return {
+    appLocale: selected.appLocale,
+    artifactLocale: selected.artifactLocale,
     contentKey: selected.contentKey,
     family: "article",
-    locale: selected.locale,
     projectionHash: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
     projectionJson: canonicalizeArticleProjection(selected),
     publicPath: selected.publicPath,
@@ -153,10 +154,10 @@ describe("published article catalog", () => {
       sourceRevision: null,
     });
     expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
+      appLocale: "en",
       category: "politics",
       expectedManifestHash: null,
       expectedReleaseId: null,
-      locale: "en",
       paginationOpts: { cursor: null, numItems: PROJECTION_PAGE_LIMIT },
     });
     expect(cacheMock).toHaveBeenCalledWith("article");
@@ -256,7 +257,7 @@ describe("published article catalog", () => {
     ["invalid JSON", { ...articleRow(), projectionJson: "{" }],
     ["invalid projection", { ...articleRow(), projectionJson: "{}" }],
     ["foreign family", { ...articleRow(), family: "material" }],
-    ["foreign locale", { ...articleRow(), locale: "id" }],
+    ["foreign app locale", { ...articleRow(), appLocale: "id" }],
     ["foreign key", { ...articleRow(), contentKey: "articles/other" }],
     ["foreign route", { ...articleRow(), publicPath: "articles/other" }],
   ])("rejects %s article rows", async (_name, row) => {

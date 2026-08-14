@@ -25,8 +25,8 @@ describe("published article category", () => {
       Effect.runPromise(hasPublishedArticleCategory("politics", "en"))
     ).resolves.toBe(true);
     expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
+      appLocale: "en",
       category: "politics",
-      locale: "en",
     });
   });
 
@@ -39,7 +39,7 @@ describe("published article category", () => {
       )
     ).resolves.toMatchObject({
       _tag: "PublishedProjectionError",
-      locale: "en",
+      appLocale: "en",
       publicPath: "articles/politics",
     });
   });

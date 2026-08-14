@@ -49,12 +49,12 @@ describe("try-out route metadata", () => {
       route: {
         alternates: [
           {
-            locale: "en",
+            appLocale: "en",
             publicPath:
               "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
           },
           {
-            locale: "id",
+            appLocale: "id",
             publicPath:
               "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
           },
@@ -128,8 +128,8 @@ describe("try-out route metadata", () => {
       },
     });
     expect(runtimeMocks.readTryoutMetadata).toHaveBeenCalledWith({
+      appLocale: "id",
       kind: "exam",
-      locale: "id",
       publicPath: "try-out/indonesia/snbt",
     });
   });

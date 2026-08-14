@@ -230,11 +230,16 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
       );
     }
     const proof: ReleaseVerificationEvidence = {
+      activeAppLocales: release.manifest.activeAppLocales,
+      baseActiveAppLocales: release.manifest.baseActiveAppLocales,
+      baseEditorialReviewDigest:
+        release.manifest.baseEditorialReviewDigest,
       baseManifestHash: release.manifest.baseManifestHash,
       baseReleaseId: release.manifest.baseReleaseId,
       baseResultCount: release.manifest.baseResultCount,
       baseResultDigest: release.manifest.baseResultDigest,
       deleteHeads: items.deleteCount,
+      editorialReviewDigest: release.manifest.editorialReviewDigest,
       itemCount: release.manifest.itemCount,
       itemsDigest: release.manifest.itemsDigest,
       manifestHash: release.manifestHash,

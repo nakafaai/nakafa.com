@@ -3,10 +3,6 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { READ_MODEL_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import {
-  finalizeExactMaterialOwners,
-  syncExactMaterialOwner,
-} from "@repo/backend/convex/contentRelease/material/exact";
 import { MATERIAL_BASELINE_LIMIT } from "@repo/backend/convex/contentRelease/material/limits";
 import { hasMaterialReadModel } from "@repo/backend/convex/contentRelease/material/state";
 import {
@@ -23,23 +19,23 @@ const syncMaterialIdentity = Effect.fn("contentRelease.syncMaterialIdentity")(
   function* (
     ctx: MutationCtx,
     contentKey: string,
-    locale: Doc<"contentKeys">["locale"],
+    artifactLocale: Doc<"contentKeys">["artifactLocale"],
     activeSequence: number
   ) {
     const resolved = yield* resolvePublicProjection(
       ctx,
       contentKey,
-      locale,
+      artifactLocale,
       activeSequence
     );
     if (resolved?.family !== "material") {
-      return yield* deleteMaterial(ctx, contentKey, locale);
+      return yield* deleteMaterial(ctx, contentKey, artifactLocale);
     }
     const projection = yield* decodeProjectionJson(resolved.projectionJson);
     if (projection.kind !== "subject-lesson") {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Active material head ${contentKey}/${locale} is incomplete.`
+        `Active material head ${contentKey}/${artifactLocale} is incomplete.`
       );
     }
     yield* writeMaterial(ctx, resolved, projection);
@@ -56,7 +52,7 @@ const baselineMaterials = Effect.fn("contentRelease.baselineMaterials")(
     const stored = yield* Effect.promise(() =>
       ctx.db
         .query("contentKeys")
-        .withIndex("by_family_and_contentKey_and_locale", (index) =>
+        .withIndex("by_family_and_contentKey_and_artifactLocale", (index) =>
           index.eq("family", "material")
         )
         .paginate({
@@ -70,10 +66,9 @@ const baselineMaterials = Effect.fn("contentRelease.baselineMaterials")(
       yield* syncMaterialIdentity(
         ctx,
         key.contentKey,
-        key.locale,
+        key.artifactLocale,
         active.sequence
       );
-      yield* syncExactMaterialOwner(ctx, key.contentKey, key.locale, active);
     }
     return {
       cursor: stored.isDone ? undefined : stored.continueCursor,
@@ -126,24 +121,9 @@ export const syncMaterials = Effect.fn("contentRelease.syncMaterials")(
       state.materialReleaseId,
       state.materialSequence,
     ];
-    const materialOwnerIdentity = [
-      state.materialOwnerManifestHash,
-      state.materialOwnerReleaseId,
-      state.materialOwnerSequence,
-    ];
-    yield* Effect.all([
-      requireCompleteIdentity("Material", materialIdentity),
-      requireCompleteIdentity("Material owner", materialOwnerIdentity),
-    ]);
+    yield* requireCompleteIdentity("Material", materialIdentity);
     const hasMaterialBaseline = hasCompleteIdentity(materialIdentity);
-    const hasOwnerBaseline = hasCompleteIdentity(materialOwnerIdentity);
-    const hasRequiredBaseline =
-      hasMaterialBaseline &&
-      (hasOwnerBaseline || release.resultFamilies.includes("material"));
-    const rebuildOwners =
-      release.baseFamilies.includes("material") &&
-      !release.resultFamilies.includes("material");
-    const needsBaseline = !hasRequiredBaseline || rebuildOwners;
+    const needsBaseline = !hasMaterialBaseline;
     let cursor: string | undefined;
     let done: boolean;
     let nextIndex = release.materialIndex ?? -1;
@@ -173,7 +153,7 @@ export const syncMaterials = Effect.fn("contentRelease.syncMaterials")(
         yield* syncMaterialIdentity(
           ctx,
           row.contentKey,
-          row.locale,
+          row.artifactLocale,
           release.sequence
         );
       }
@@ -197,13 +177,9 @@ export const syncMaterials = Effect.fn("contentRelease.syncMaterials")(
       })
     );
     if (done) {
-      yield* finalizeExactMaterialOwners(ctx, release);
       yield* Effect.promise(() =>
         ctx.db.patch("contentState", state._id, {
           materialManifestHash: signed.manifestHash,
-          materialOwnerManifestHash: signed.manifestHash,
-          materialOwnerReleaseId: releaseId,
-          materialOwnerSequence: release.sequence,
           materialReleaseId: releaseId,
           materialSequence: release.sequence,
           updatedAt: now,

@@ -49,7 +49,7 @@ function insertDeleteItem(ctx: MutationCtx) {
     itemBatchHash: TEST_DIGEST,
     itemBatchIndex: 0,
     itemJson: testDeleteJson({ contentKey: "test:head-0" }),
-    locale: "en",
+    artifactLocale: "en",
     projectionReady: false,
     releaseId: TEST_RELEASE_ID,
     rollbackJson: testRollbackJson(),
@@ -85,7 +85,7 @@ describe("contentRelease/projection", () => {
     await t.mutation((ctx) => insertTestRelease(ctx));
     await stageUpsert(t);
     const projectionJson = testProjectionJson({
-      publicPath: "test/new-canonical-path",
+      publicPath: "subjects/test/new-canonical-path",
     });
 
     await expect(stage(t, [projectionJson])).resolves.toMatchObject({
@@ -158,7 +158,11 @@ describe("contentRelease/projection", () => {
     await stageUpsert(changed);
     await stage(changed, [testProjectionJson()]);
     await expect(
-      stage(changed, [testProjectionJson({ publicPath: "test/changed" })], 0)
+      stage(
+        changed,
+        [testProjectionJson({ publicPath: "subjects/test/changed" })],
+        0
+      )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
 
     const oversized = convexTest(schema, convexModules);

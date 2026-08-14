@@ -1,32 +1,18 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import {
-  readMaterialApiPage,
-  readMaterialApiRoute,
-} from "@repo/backend/convex/contentRelease/material/api";
-import {
   readLatestMaterials,
   readMaterialBucket,
 } from "@repo/backend/convex/contentRelease/material/discovery";
-import { lookupMaterial } from "@repo/backend/convex/contentRelease/material/lookup";
 import { readMaterialModel } from "@repo/backend/convex/contentRelease/material/model";
 import { readMaterialPage } from "@repo/backend/convex/contentRelease/material/page";
 import {
   readMaterialBuckets,
   readMaterialSitemap,
 } from "@repo/backend/convex/contentRelease/material/sitemap";
+import { materialApiPageValidator } from "@repo/backend/convex/contentRelease/material/spec";
+import { readPartnerApiPage } from "@repo/backend/convex/contentRelease/partner/page";
 import {
-  readMaterialClaims,
-  readMaterialShell,
-} from "@repo/backend/convex/contentRelease/material/source";
-import {
-  materialApiPageValidator,
-  materialApiRouteValidator,
-  materialLookupInputValidator,
-  materialSourceCandidateValidator,
-  materialSourceClaimValidator,
-} from "@repo/backend/convex/contentRelease/material/spec";
-import {
-  localeValidator,
+  appLocaleValidator,
   rendererDomainValidator,
 } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -40,14 +26,10 @@ const materialModelValidator = v.object({
   activeManifestHash: v.union(v.string(), v.null()),
   activeReleaseId: v.union(v.string(), v.null()),
   alternateJson: v.array(v.string()),
-  familyManaged: v.boolean(),
-  managed: v.boolean(),
   projectionJson: v.union(v.string(), v.null()),
   rendererDomain: v.union(rendererDomainValidator, v.null()),
   siblingJson: v.array(v.string()),
-  sourceClaims: v.array(materialSourceClaimValidator),
   sourcePath: v.union(v.string(), v.null()),
-  sourceProjectionJson: v.array(v.string()),
   sourceRevision: v.union(v.string(), v.null()),
 });
 
@@ -71,7 +53,6 @@ const materialSummaryValidator = v.object({
 
 const materialDiscoveryValidator = v.object({
   activeReleaseId: v.union(v.string(), v.null()),
-  claimedContentKeys: v.array(v.string()),
   managed: v.boolean(),
   materials: v.array(materialSummaryValidator),
 });
@@ -87,7 +68,6 @@ const materialBucketsValidator = v.object({
   buckets: v.array(v.string()),
   managed: v.boolean(),
   materialCount: v.number(),
-  sourceClaimCount: v.number(),
 });
 
 const materialSitemapValidator = v.union(
@@ -102,137 +82,68 @@ const materialSitemapValidator = v.union(
   })
 );
 
-const materialClaimsValidator = v.object({
-  activeReleaseId: v.union(v.string(), v.null()),
-  sourceClaims: v.array(materialSourceClaimValidator),
-});
-
-const materialLookupValidator = v.object({
-  activeReleaseId: v.union(v.string(), v.null()),
-  managed: v.boolean(),
-  route: v.union(
-    v.null(),
-    v.object({
-      locale: localeValidator,
-      publicPath: v.string(),
-    })
-  ),
-});
-
-const materialShellValidator = v.object({
-  activeReleaseId: v.union(v.string(), v.null()),
-  sourceClaims: v.array(materialSourceClaimValidator),
-  sourceProjectionJson: v.array(v.string()),
-});
-
-/** Returns one exact-ownership-aware material partner API page. */
+/** Returns one current signed material partner API page. */
 export const apiPage = query({
   args: {
     cursor: v.union(v.string(), v.null()),
     limit: v.number(),
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
     prefix: v.string(),
   },
   returns: materialApiPageValidator,
-  handler: (ctx, args) => runConvexProgram(readMaterialApiPage(ctx, args)),
-});
-
-/** Resolves one material graph identity through exact ownership. */
-export const apiRoute = query({
-  args: { input: materialLookupInputValidator },
-  returns: materialApiRouteValidator,
-  handler: (ctx, { input }) =>
-    runConvexProgram(readMaterialApiRoute(ctx, input)),
+  handler: (ctx, args) =>
+    runConvexProgram(readPartnerApiPage(ctx, { ...args, family: "material" })),
 });
 
 /** Returns one complete managed material discovery partition. */
 export const bucket = query({
-  args: { bucket: v.string(), locale: localeValidator },
+  args: { appLocale: appLocaleValidator, bucket: v.string() },
   returns: materialBucketValidator,
-  handler: (ctx, { bucket: bucketId, locale }) =>
-    runConvexProgram(readMaterialBucket(ctx, locale, bucketId)),
+  handler: (ctx, { appLocale, bucket: bucketId }) =>
+    runConvexProgram(readMaterialBucket(ctx, appLocale, bucketId)),
 });
 
 /** Returns a bounded newest-first material list for RSS discovery. */
 export const latest = query({
-  args: { limit: v.number(), locale: localeValidator },
+  args: { appLocale: appLocaleValidator, limit: v.number() },
   returns: materialDiscoveryValidator,
-  handler: (ctx, { limit, locale }) =>
-    runConvexProgram(readLatestMaterials(ctx, locale, limit)),
-});
-
-/** Resolves one active material identity for a signed agent read. */
-export const lookup = query({
-  args: { input: materialLookupInputValidator },
-  returns: materialLookupValidator,
-  handler: (ctx, { input }) => runConvexProgram(lookupMaterial(ctx, input)),
-});
-
-/** Resolves exact active claims for one bounded source-owned material set. */
-export const claims = query({
-  args: {
-    expectedActiveReleaseId: v.optional(v.union(v.string(), v.null())),
-    sourceCandidates: v.array(materialSourceCandidateValidator),
-  },
-  returns: materialClaimsValidator,
-  handler: (ctx, { expectedActiveReleaseId, sourceCandidates }) =>
-    runConvexProgram(
-      readMaterialClaims(ctx, sourceCandidates, expectedActiveReleaseId)
-    ),
+  handler: (ctx, { appLocale, limit }) =>
+    runConvexProgram(readLatestMaterials(ctx, appLocale, limit)),
 });
 
 /** Resolves one complete active material shell model by localized path. */
 export const route = query({
   args: {
+    appLocale: appLocaleValidator,
     expectedActiveReleaseId: v.optional(v.union(v.string(), v.null())),
-    locale: localeValidator,
     publicPath: v.string(),
-    sourceCandidates: v.optional(v.array(materialSourceCandidateValidator)),
   },
   returns: materialModelValidator,
-  handler: (
-    ctx,
-    { expectedActiveReleaseId, locale, publicPath, sourceCandidates = [] }
-  ) =>
+  handler: (ctx, { appLocale, expectedActiveReleaseId, publicPath }) =>
     runConvexProgram(
       readMaterialModel(
         ctx,
-        locale,
+        appLocale,
         publicPath,
-        sourceCandidates,
         expectedActiveReleaseId
       )
     ),
 });
 
-/** Resolves one bounded exact overlay for source-owned material rows. */
-export const shell = query({
-  args: {
-    expectedActiveReleaseId: v.optional(v.union(v.string(), v.null())),
-    locale: localeValidator,
-    sourceCandidates: v.array(materialSourceCandidateValidator),
-  },
-  returns: materialShellValidator,
-  handler: (ctx, { expectedActiveReleaseId, locale, sourceCandidates }) =>
-    runConvexProgram(
-      readMaterialShell(ctx, locale, sourceCandidates, expectedActiveReleaseId)
-    ),
-});
-
 /** Returns non-empty material discovery partitions for one locale. */
 export const sitemapBuckets = query({
-  args: { locale: localeValidator },
+  args: { appLocale: appLocaleValidator },
   returns: materialBucketsValidator,
-  handler: (ctx, { locale }) =>
-    runConvexProgram(readMaterialBuckets(ctx, locale)),
+  handler: (ctx, { appLocale }) =>
+    runConvexProgram(readMaterialBuckets(ctx, appLocale)),
 });
 
 /** Returns one verified material sitemap partition. */
 export const sitemapPage = query({
-  args: { bucket: v.string(), locale: localeValidator },
+  args: { appLocale: appLocaleValidator, bucket: v.string() },
   returns: materialSitemapValidator,
-  handler: (ctx, { bucket: bucketId, locale }) =>
-    runConvexProgram(readMaterialSitemap(ctx, locale, bucketId)),
+  handler: (ctx, { appLocale, bucket: bucketId }) =>
+    runConvexProgram(readMaterialSitemap(ctx, appLocale, bucketId)),
 });
 
 /** Returns one release-bound page of active localized material routes. */
@@ -240,7 +151,7 @@ export const page = query({
   args: {
     expectedManifestHash: v.union(v.string(), v.null()),
     expectedReleaseId: v.union(v.string(), v.null()),
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
     paginationOpts: paginationOptsValidator,
   },
   returns: materialPageValidator,
@@ -248,7 +159,7 @@ export const page = query({
     runConvexProgram(
       readMaterialPage(
         ctx,
-        args.locale,
+        args.appLocale,
         args.expectedManifestHash,
         args.expectedReleaseId,
         args.paginationOpts

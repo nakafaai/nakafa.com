@@ -1,4 +1,3 @@
-import type { QuranSearchRow } from "@nakafa/aksara-contracts/quran/spec";
 import {
   QURAN_SURAH_COUNT,
   QuranSurahRowSchema,
@@ -59,21 +58,6 @@ export const readQuranSurahs = Effect.fn("contentRelease.readQuranSurahs")(
     return {
       ...catalog.owner,
       rowJson: catalog.stored.map(({ rowJson }) => rowJson),
-    };
-  }
-);
-
-/** Returns canonical Quran sitemap paths from signed surah metadata. */
-export const readQuranSitemap = Effect.fn("contentRelease.readQuranSitemap")(
-  function* (ctx: QueryCtx, locale: QuranSearchRow["locale"]) {
-    const catalog = yield* loadQuranCatalog(ctx);
-    if (catalog.stored === null) {
-      return { ...catalog.owner, locale, routes: [] };
-    }
-    return {
-      ...catalog.owner,
-      locale,
-      routes: catalog.surahs.map(({ number }) => `quran/${number}`),
     };
   }
 );

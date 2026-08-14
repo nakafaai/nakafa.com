@@ -1,15 +1,26 @@
-import type { ContentLocale } from "@nakafa/aksara-contracts/content";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  type ActiveAppLocaleCode,
+  ActiveAppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
+import {
+  type TryoutCatalogRow,
+  TryoutCatalogRowSchema,
+} from "@nakafa/aksara-contracts/tryout/catalog";
 import {
   tryoutCatalogIdentity,
   tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
 import {
-  type TryoutCatalogRow,
-  TryoutCatalogRowSchema,
-  TryoutContentHashSchema,
+  deliveryLanguageForSection,
+  questionArtifactLocaleForSection,
+} from "@nakafa/aksara-contracts/tryout/language";
+import {
   type TryoutPlacement,
   TryoutPlacementSchema,
+} from "@nakafa/aksara-contracts/tryout/placement";
+import {
+  TryoutContentHashSchema,
   type TryoutScoring,
 } from "@nakafa/aksara-contracts/tryout/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -38,7 +49,7 @@ export const TRYOUT_START_CONTENT_HASH = TryoutContentHashSchema.make(
 
 const sourcePath = `question-bank/tryout/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_SECTION}/${TRYOUT_START_SET}`;
 const setPath = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}`;
-const tryoutStartLocales: readonly ContentLocale[] = ["en", "id"];
+const tryoutStartLocales: readonly ActiveAppLocaleCode[] = ["en", "id"];
 
 /** Activates the signed source that exactly matches the legacy start fixture. */
 export async function activateTryoutStartSource(
@@ -55,10 +66,12 @@ export async function activateTryoutStartSource(
     placements,
   });
   const section = catalog.find(
-    (row) => row.kind === "section" && row.locale === "id"
+    (row) => row.kind === "section" && row.appLocale === "id"
   );
-  const set = catalog.find((row) => row.kind === "set" && row.locale === "id");
-  const placement = placements.find(({ locale }) => locale === "id");
+  const set = catalog.find(
+    (row) => row.kind === "set" && row.appLocale === "id"
+  );
+  const placement = placements.find(({ appLocale }) => appLocale === "id");
   if (!(section?.kind === "section" && set?.kind === "set" && placement)) {
     throw new Error("Expected one Indonesian signed try-out source.");
   }
@@ -185,7 +198,7 @@ export async function activateReusedTryoutStartPath(ctx: MutationCtx) {
 
 /** Builds the complete localized hierarchy around the signed start fixture. */
 export function makeTryoutStartHierarchy(
-  locale: ContentLocale,
+  appLocale: ActiveAppLocaleCode,
   visibility: "internal-entry" | "visible",
   scoringStrategy: TryoutScoring = "raw"
 ): readonly TryoutCatalogRow[] {
@@ -199,9 +212,9 @@ export function makeTryoutStartHierarchy(
     {
       countryCode: "ID",
       countryKey: TRYOUT_START_COUNTRY,
-      graph: makeGraph(locale, "country"),
+      appLocale,
+      graph: makeGraph(appLocale, "country"),
       kind: "country",
-      locale,
       order: 1,
       publicPath: countryPath,
       sourceRevision: "2026",
@@ -210,9 +223,9 @@ export function makeTryoutStartHierarchy(
     {
       countryKey: TRYOUT_START_COUNTRY,
       examKey: TRYOUT_START_EXAM,
-      graph: makeGraph(locale, "exam"),
+      appLocale,
+      graph: makeGraph(appLocale, "exam"),
       kind: "exam",
-      locale,
       order: 1,
       publicPath: examPath,
       scoringStrategy,
@@ -222,16 +235,16 @@ export function makeTryoutStartHierarchy(
     {
       countryKey: TRYOUT_START_COUNTRY,
       examKey: TRYOUT_START_EXAM,
-      graph: makeGraph(locale, "track"),
+      appLocale,
+      graph: makeGraph(appLocale, "track"),
       kind: "track",
-      locale,
       order: 1,
       publicPath: trackPath,
       questionCount: 1,
       sectionCount: 1,
       setCount: 1,
       sourceRevision: "2026",
-      title: locale === "id" ? "Matematika" : "Mathematics",
+      title: appLocale === "id" ? "Matematika" : "Mathematics",
       trackKey: TRYOUT_START_TRACK,
       trackKind: "subject",
       visibleSectionCount,
@@ -239,13 +252,13 @@ export function makeTryoutStartHierarchy(
   ]);
   return [
     ...parents,
-    ...makeTryoutStartCatalog(locale, visibility, scoringStrategy),
+    ...makeTryoutStartCatalog(appLocale, visibility, scoringStrategy),
   ];
 }
 
 /** Builds the localized set and section rows for the start fixture. */
 export function makeTryoutStartCatalog(
-  locale: ContentLocale,
+  appLocale: ActiveAppLocaleCode,
   visibility: "internal-entry" | "visible",
   scoringStrategy: TryoutScoring = "raw"
 ): readonly TryoutCatalogRow[] {
@@ -254,10 +267,10 @@ export function makeTryoutStartCatalog(
     {
       countryKey: TRYOUT_START_COUNTRY,
       examKey: TRYOUT_START_EXAM,
-      graph: makeGraph(locale, "set"),
+      appLocale,
+      graph: makeGraph(appLocale, "set"),
       internalEntrySectionKey: internalEntry ? TRYOUT_START_SECTION : undefined,
       kind: "set",
-      locale,
       order: 1,
       publicPath: setPath,
       questionCount: 1,
@@ -272,9 +285,9 @@ export function makeTryoutStartCatalog(
     {
       countryKey: TRYOUT_START_COUNTRY,
       examKey: TRYOUT_START_EXAM,
-      graph: makeGraph(locale, "section"),
+      appLocale,
+      graph: makeGraph(appLocale, "section"),
       kind: "section",
-      locale,
       order: 1,
       publicPath: internalEntry
         ? undefined
@@ -294,11 +307,13 @@ export function makeTryoutStartCatalog(
 
 /** Builds one localized signed placement matching the legacy question. */
 export function makeTryoutStartPlacement(
-  locale: ContentLocale
+  appLocale: ActiveAppLocaleCode
 ): TryoutPlacement {
+  const signedAppLocale = ActiveAppLocaleSchema.make(appLocale);
   const questionRoot = `${sourcePath}/question-1`;
   return Schema.decodeUnknownSync(TryoutPlacementSchema)({
-    answerArtifactHash: testTextHash(`${locale}:tryout-start:answer`),
+    answerArtifactHash: testTextHash(`${appLocale}:tryout-start:answer`),
+    answerArtifactLocale: signedAppLocale,
     answerContentKey: `${questionRoot}/answer`,
     choices: [
       {
@@ -310,9 +325,17 @@ export function makeTryoutStartPlacement(
     ],
     contentHash: TRYOUT_START_CONTENT_HASH,
     countryKey: TRYOUT_START_COUNTRY,
+    deliveryLanguage: deliveryLanguageForSection(
+      TRYOUT_START_SECTION,
+      signedAppLocale
+    ),
     examKey: TRYOUT_START_EXAM,
-    locale,
-    questionArtifactHash: testTextHash(`${locale}:tryout-start:question`),
+    appLocale: signedAppLocale,
+    questionArtifactHash: testTextHash(`${appLocale}:tryout-start:question`),
+    questionArtifactLocale: questionArtifactLocaleForSection(
+      TRYOUT_START_SECTION,
+      signedAppLocale
+    ),
     questionContentKey: `${questionRoot}/question`,
     questionOrder: 1,
     questionSourcePath: `packages/corpus/${questionRoot}`,
@@ -321,20 +344,19 @@ export function makeTryoutStartPlacement(
     sectionKey: TRYOUT_START_SECTION,
     setKey: TRYOUT_START_SET,
     sourceRevision: "2026",
-    title: "Question",
     trackKey: TRYOUT_START_TRACK,
   });
 }
 
 /** Builds one stable graph identity for a technical signed row. */
 function makeGraph(
-  locale: ContentLocale,
+  appLocale: ActiveAppLocaleCode,
   kind: "country" | "exam" | "section" | "set" | "track",
   owner = "start"
 ) {
   return {
     alignmentId: `alignment:tryout:${owner}:${kind}`,
-    assetId: `asset:${locale}:tryout:${owner}:${kind}`,
+    assetId: `asset:${appLocale}:tryout:${owner}:${kind}`,
     conceptId: `concept:tryout:${owner}:${kind}`,
     learningObjectId: `lo:tryout-${owner}-${kind}`,
     lensId: `lens:tryout:${owner}`,
@@ -345,30 +367,28 @@ const reusedSourcePath = `question-bank/tryout/${TRYOUT_START_COUNTRY}/${TRYOUT_
 const revisedSourcePath = `question-bank/tryout/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_REVISED_SECTION}/${TRYOUT_START_SET}`;
 
 /** Builds one replacement placement for the revised internal entry. */
-function makeRevisedTryoutStartPlacement(locale: ContentLocale) {
+function makeRevisedTryoutStartPlacement(appLocale: ActiveAppLocaleCode) {
   const questionRoot = `${revisedSourcePath}/question-1`;
   return Schema.decodeUnknownSync(TryoutPlacementSchema)({
-    ...makeTryoutStartPlacement(locale),
+    ...makeTryoutStartPlacement(appLocale),
     answerContentKey: `${questionRoot}/answer`,
     questionContentKey: `${questionRoot}/question`,
     questionSourcePath: `packages/corpus/${questionRoot}`,
     sectionKey: TRYOUT_REVISED_SECTION,
     sourceRevision: "2027",
-    title: "Revised question",
   });
 }
 
 /** Builds one replacement placement whose public path belongs to another set. */
-function makeReusedTryoutStartPlacement(locale: ContentLocale) {
+function makeReusedTryoutStartPlacement(appLocale: ActiveAppLocaleCode) {
   const questionRoot = `${reusedSourcePath}/question-1`;
   return Schema.decodeUnknownSync(TryoutPlacementSchema)({
-    ...makeTryoutStartPlacement(locale),
+    ...makeTryoutStartPlacement(appLocale),
     answerContentKey: `${questionRoot}/answer`,
     questionContentKey: `${questionRoot}/question`,
     questionSourcePath: `packages/corpus/${questionRoot}`,
     sectionKey: TRYOUT_REUSED_SECTION,
     setKey: TRYOUT_REUSED_SET,
-    title: "Replacement question",
   });
 }
 

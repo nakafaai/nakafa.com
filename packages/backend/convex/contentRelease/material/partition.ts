@@ -5,8 +5,7 @@ import {
   isProjectionBucket,
 } from "@repo/backend/convex/contentRelease/bucket";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { loadMaterialCatalogOwner } from "@repo/backend/convex/contentRelease/material/owner";
-import { readVisibleMaterial } from "@repo/backend/convex/contentRelease/material/route";
+import { loadMaterialOwner } from "@repo/backend/convex/contentRelease/material/owner";
 import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
 import { Effect } from "effect";
 
@@ -15,7 +14,7 @@ export const readMaterialPartition = Effect.fn(
   "contentRelease.readMaterialPartition"
 )(function* (
   ctx: QueryCtx,
-  locale: Doc<"materialCatalog">["locale"],
+  appLocale: Doc<"materialCatalog">["appLocale"],
   bucket: string
 ) {
   if (!isProjectionBucket(bucket)) {
@@ -24,9 +23,9 @@ export const readMaterialPartition = Effect.fn(
       `Material discovery bucket ${bucket} is invalid.`
     );
   }
-  const owner = yield* loadMaterialCatalogOwner(ctx);
+  const owner = yield* loadMaterialOwner(ctx, appLocale);
   const activeReleaseId = owner.active?.releaseId ?? null;
-  if (!(owner.active && owner.ready)) {
+  if (!(owner.active && owner.managed)) {
     return {
       activeReleaseId,
       kind: "unmanaged",
@@ -38,8 +37,8 @@ export const readMaterialPartition = Effect.fn(
   const count = yield* Effect.promise(() =>
     ctx.db
       .query("materialBuckets")
-      .withIndex("by_locale_and_bucket", (index) =>
-        index.eq("locale", locale).eq("bucket", bucket)
+      .withIndex("by_appLocale_and_bucket", (index) =>
+        index.eq("appLocale", appLocale).eq("bucket", bucket)
       )
       .unique()
   );
@@ -55,8 +54,8 @@ export const readMaterialPartition = Effect.fn(
   const rows = yield* Effect.promise(() =>
     ctx.db
       .query("materialCatalog")
-      .withIndex("by_locale_and_bucket_and_publicPath", (index) =>
-        index.eq("locale", locale).eq("bucket", bucket)
+      .withIndex("by_appLocale_and_bucket_and_publicPath", (index) =>
+        index.eq("appLocale", appLocale).eq("bucket", bucket)
       )
       .take(CONTENT_BUCKET_SIZE + 1)
   );
@@ -67,18 +66,12 @@ export const readMaterialPartition = Effect.fn(
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Material discovery bucket ${locale}/${bucket} has mismatched counts.`
+      `Material discovery bucket ${appLocale}/${bucket} has mismatched counts.`
     );
   }
-  const materials = owner.familyManaged
-    ? yield* Effect.forEach(rows, (row) =>
-        verifyMaterial(row).pipe(
-          Effect.map((verified) => ({ ...verified, row }))
-        )
-      )
-    : (yield* Effect.forEach(rows, (row) =>
-        readVisibleMaterial(ctx, row, false)
-      )).filter((material) => material !== null);
+  const materials = yield* Effect.forEach(rows, (row) =>
+    verifyMaterial(row).pipe(Effect.map((verified) => ({ ...verified, row })))
+  );
   return materials.length === 0
     ? ({
         activeReleaseId,

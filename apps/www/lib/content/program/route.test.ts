@@ -78,6 +78,12 @@ describe("published program route", () => {
     runtimeQueryMock.mockReset();
   });
 
+  it("fails fast when a test route is not part of the signed fixture", () => {
+    expect(() => readTestPublishedRoute("curriculum/missing")).toThrow(
+      "Missing published route fixture: en/curriculum/missing"
+    );
+  });
+
   it("decodes one complete real curriculum route model", async () => {
     runtimeQueryMock.mockResolvedValueOnce(routeResponse());
 
@@ -88,7 +94,7 @@ describe("published program route", () => {
 
     expect(model).toMatchObject({
       activeReleaseId: "program-release",
-      alternates: [{ locale: "en" }, { locale: "id" }],
+      alternates: [{ appLocale: "en" }, { appLocale: "id" }],
       ancestors: [{ level: "track" }, { level: "class" }],
       contexts: expect.any(Array),
       groups: expect.any(Array),

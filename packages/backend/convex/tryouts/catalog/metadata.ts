@@ -1,31 +1,35 @@
+import {
+  type AppLocaleCode,
+  AppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
+import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
-import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
 import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import {
   readTryoutCatalogRowByIdentity,
   readTryoutCatalogRowByPath,
 } from "@repo/backend/convex/tryouts/catalog/row";
-import type { locales } from "@repo/utilities/locales";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 export const tryoutMetadataArgsValidator = {
+  appLocale: appLocaleValidator,
   kind: literals("country", "exam", "track", "set", "section"),
-  locale: localeValidator,
   publicPath: v.string(),
 };
 
 export const tryoutLocalizedPathArgsValidator = {
-  currentLocale: localeValidator,
-  locale: localeValidator,
+  currentAppLocale: appLocaleValidator,
   publicPath: v.string(),
+  targetAppLocale: appLocaleValidator,
 };
 
 const tryoutAlternateValidator = v.object({
-  locale: localeValidator,
+  appLocale: appLocaleValidator,
   publicPath: v.string(),
 });
 
@@ -44,15 +48,15 @@ export const tryoutMetadataReturnValidator = v.object({
 type TryoutRouteKind = TryoutCatalogRow["kind"];
 
 interface TryoutMetadataInput {
+  readonly appLocale: AppLocaleCode;
   readonly kind: TryoutRouteKind;
-  readonly locale: (typeof locales)[number];
   readonly publicPath: string;
 }
 
 interface TryoutLocalizedPathInput {
-  readonly currentLocale: (typeof locales)[number];
-  readonly locale: (typeof locales)[number];
+  readonly currentAppLocale: AppLocaleCode;
   readonly publicPath: string;
+  readonly targetAppLocale: AppLocaleCode;
 }
 
 /** Reads one route and its localized counterparts from signed ownership. */
@@ -61,7 +65,7 @@ export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
     const owner = yield* loadTryoutOwner(ctx);
     const { snapshot, snapshotId } = owner;
     const current = yield* readCurrentRoute(ctx, {
-      locale: input.locale,
+      appLocale: input.appLocale,
       publicPath: input.publicPath,
       snapshotId,
     });
@@ -73,14 +77,21 @@ export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
     }
     const currentPublicPath = current.publicPath;
 
-    const alternateRows = yield* Effect.forEach(
-      snapshot.manifest.locales,
-      (locale) =>
-        readAlternate(ctx, {
-          current,
-          locale,
-          snapshotId,
-        })
+    const activeAppLocales = snapshot.manifest.activeAppLocales.filter(
+      Schema.is(AppLocaleSchema)
+    );
+    if (activeAppLocales.length !== snapshot.manifest.activeAppLocales.length) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        "The active try-out snapshot contains an unsupported app locale."
+      );
+    }
+    const alternateRows = yield* Effect.forEach(activeAppLocales, (locale) =>
+      readAlternate(ctx, {
+        appLocale: locale,
+        current,
+        snapshotId,
+      })
     );
     const alternates = alternateRows.flatMap((alternate) =>
       alternate ? [alternate] : []
@@ -103,7 +114,7 @@ export const readTryoutLocalizedPath = Effect.fn(
 )(function* (ctx: QueryCtx, input: TryoutLocalizedPathInput) {
   const owner = yield* loadTryoutOwner(ctx);
   const current = yield* readCurrentRoute(ctx, {
-    locale: input.currentLocale,
+    appLocale: input.currentAppLocale,
     publicPath: input.publicPath,
     snapshotId: owner.snapshotId,
   });
@@ -112,8 +123,8 @@ export const readTryoutLocalizedPath = Effect.fn(
   }
 
   const alternate = yield* readAlternate(ctx, {
+    appLocale: input.targetAppLocale,
     current,
-    locale: input.locale,
     snapshotId: owner.snapshotId,
   });
   if (!alternate) {
@@ -127,7 +138,7 @@ const readCurrentRoute = Effect.fn("tryouts.catalog.readCurrentRoute")(
   function* (
     ctx: QueryCtx,
     input: {
-      readonly locale: (typeof locales)[number];
+      readonly appLocale: AppLocaleCode;
       readonly publicPath: string;
       readonly snapshotId: string;
     }
@@ -141,14 +152,14 @@ const readAlternate = Effect.fn("tryouts.catalog.readMetadataAlternate")(
   function* (
     ctx: QueryCtx,
     input: {
+      readonly appLocale: AppLocaleCode;
       readonly current: TryoutCatalogRow;
-      readonly locale: (typeof locales)[number];
       readonly snapshotId: string;
     }
   ) {
     const identity = tryoutCatalogIdentity({
       ...input.current,
-      locale: input.locale,
+      appLocale: AppLocaleSchema.make(input.appLocale),
     });
     const alternate = yield* readTryoutCatalogRowByIdentity(
       ctx,
@@ -159,7 +170,7 @@ const readAlternate = Effect.fn("tryouts.catalog.readMetadataAlternate")(
       return null;
     }
     return {
-      locale: alternate.locale,
+      appLocale: input.appLocale,
       publicPath: alternate.publicPath,
     };
   }

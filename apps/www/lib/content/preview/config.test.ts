@@ -8,6 +8,7 @@ import {
   readPreviewConfig,
   readPreviewRendererConfig,
 } from "@/lib/content/preview/config";
+import { hasPreviewRendererEnvironment } from "@/lib/content/preview/environment";
 import { previewConfig } from "@/test/content-preview";
 
 afterEach(() => {
@@ -54,6 +55,18 @@ describe("local preview configuration", () => {
 
     vi.stubEnv("NODE_ENV", "production");
     expect(hasPreviewConfig()).toBe(false);
+  });
+
+  it("gates renderer mode to an explicit development child", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("AKSARA_PREVIEW_RENDERER_TOKEN", undefined);
+    expect(hasPreviewRendererEnvironment()).toBe(false);
+
+    vi.stubEnv("AKSARA_PREVIEW_RENDERER_TOKEN", "partial-token");
+    expect(hasPreviewRendererEnvironment()).toBe(true);
+
+    vi.stubEnv("NODE_ENV", "production");
+    expect(hasPreviewRendererEnvironment()).toBe(false);
   });
 
   it("returns one redacted development token", async () => {

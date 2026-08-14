@@ -181,7 +181,7 @@ describe("sitemap page catalog", () => {
       Effect.runPromise(readSitemapPageDescriptors().pipe(Effect.flip))
     ).resolves.toMatchObject({
       _tag: "PublishedProjectionError",
-      locale: "en",
+      appLocale: "en",
       publicPath: "sitemap.xml",
     });
     expect(quranMocks.readPublishedQuranCatalog).not.toHaveBeenCalled();

@@ -1,6 +1,7 @@
+import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { describe, expect, it } from "vitest";
 import type {
-  ActiveLearningProfile,
+  ActiveLearningSelection,
   LearningProgramCatalog,
 } from "@/components/programs/contract";
 import {
@@ -8,13 +9,12 @@ import {
   shouldRequireLearningProgramOnboarding,
 } from "@/lib/programs/catalog";
 
-const activeProfile = {
-  interests: ["school-curriculum"],
-  planItems: [],
+const activeSelection = {
+  interest: "school-curriculum",
   program: {
     coverageStatus: "available",
     displayOrder: 10,
-    key: "ready-curriculum",
+    key: LearningProgramKeySchema.make("ready-curriculum"),
     kind: "school-curriculum",
     navigation: {
       levels: ["stage", "class", "subject", "topic"],
@@ -24,14 +24,13 @@ const activeProfile = {
     title: "Ready curriculum",
     versionLabel: "2026",
   },
-  stage: undefined,
-} satisfies NonNullable<ActiveLearningProfile>;
+} satisfies NonNullable<ActiveLearningSelection>;
 
 const catalog = [
   {
     coverageStatus: "available",
     displayOrder: 10,
-    key: "ready-curriculum",
+    key: LearningProgramKeySchema.make("ready-curriculum"),
     kind: "school-curriculum",
     navigation: {
       levels: ["stage", "class", "subject", "topic"],
@@ -44,7 +43,7 @@ const catalog = [
   {
     coverageStatus: "planned",
     displayOrder: 20,
-    key: "planned-path",
+    key: LearningProgramKeySchema.make("planned-path"),
     kind: "school-curriculum",
     navigation: {
       levels: ["stage", "class", "subject", "topic"],
@@ -57,7 +56,7 @@ const catalog = [
   {
     coverageStatus: "partial",
     displayOrder: 30,
-    key: "partial-path",
+    key: LearningProgramKeySchema.make("partial-path"),
     kind: "school-curriculum",
     navigation: {
       levels: ["stage", "class", "subject", "topic"],
@@ -87,10 +86,10 @@ describe("programs/catalog", () => {
     ).toBe(false);
   });
 
-  it("requires first-run onboarding only when a missing profile can be created", () => {
+  it("requires first-run onboarding only when a selection is missing", () => {
     expect(shouldRequireLearningProgramOnboarding(null, catalog)).toBe(true);
-    expect(shouldRequireLearningProgramOnboarding(activeProfile, catalog)).toBe(
-      false
-    );
+    expect(
+      shouldRequireLearningProgramOnboarding(activeSelection, catalog)
+    ).toBe(false);
   });
 });

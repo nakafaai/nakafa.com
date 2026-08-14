@@ -28,16 +28,18 @@ async function activatePlacement() {
   const placement = await t.run((ctx) =>
     ctx.db
       .query("tryoutPlacements")
-      .withIndex("by_snapshotId_and_section_and_questionOrder", (index) =>
-        index
-          .eq("snapshotId", snapshotId)
-          .eq("locale", "en")
-          .eq("countryKey", "indonesia")
-          .eq("examKey", "snbt")
-          .eq("trackKey", "2027")
-          .eq("setKey", "set-1")
-          .eq("sectionKey", "quantitative-knowledge")
-          .eq("questionOrder", 1)
+      .withIndex(
+        "by_snapshotId_and_appLocale_and_section_and_questionOrder",
+        (index) =>
+          index
+            .eq("snapshotId", snapshotId)
+            .eq("appLocale", "en")
+            .eq("countryKey", "indonesia")
+            .eq("examKey", "snbt")
+            .eq("trackKey", "2027")
+            .eq("setKey", "set-1")
+            .eq("sectionKey", "quantitative-knowledge")
+            .eq("questionOrder", 1)
       )
       .unique()
   );

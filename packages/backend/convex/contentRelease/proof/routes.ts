@@ -1,4 +1,5 @@
 import { familyForProjection } from "@nakafa/aksara-contracts/projection/spec";
+import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
@@ -38,7 +39,7 @@ const routeProgram = Effect.fn("contentRelease.routeCatalogPage")(function* (
   const stored = yield* Effect.promise(() =>
     ctx.db
       .query("contentPaths")
-      .withIndex("by_createdSequence_and_locale_and_publicPath", (query) =>
+      .withIndex("by_createdSequence_and_appLocale_and_publicPath", (query) =>
         query.lte("createdSequence", release.sequence)
       )
       .order("asc")
@@ -52,7 +53,7 @@ const routeProgram = Effect.fn("contentRelease.routeCatalogPage")(function* (
   for (const path of stored.page) {
     const binding = yield* loadRouteBinding(
       ctx,
-      path.locale,
+      path.appLocale,
       path.publicPath,
       release.sequence
     );
@@ -62,38 +63,43 @@ const routeProgram = Effect.fn("contentRelease.routeCatalogPage")(function* (
     if (!binding.contentKey) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Route ${path.locale}/${path.publicPath} lost its content key.`
+        `Route ${path.appLocale}/${path.publicPath} lost its content key.`
       );
     }
     const head = yield* loadVersion(
       ctx,
       binding.contentKey,
-      path.locale,
+      ArtifactLocaleSchema.make(path.appLocale),
       release.sequence
     );
     if (head?.operation !== "upsert") {
       return yield* releaseFail(
         "CONTENT_RELEASE_ROUTE",
-        `Route ${path.locale}/${path.publicPath} targets missing content.`
+        `Route ${path.appLocale}/${path.publicPath} targets missing content.`
       );
     }
     if (!head.projectionJson) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Route ${path.locale}/${path.publicPath} lost its projection.`
+        `Route ${path.appLocale}/${path.publicPath} lost its projection.`
       );
     }
     const projection = yield* decodeProjectionJson(head.projectionJson);
+    if (projection.kind === "question-body") {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_ROUTE",
+        `Route ${path.appLocale}/${path.publicPath} targets a protected question body.`
+      );
+    }
     if (
       projection.contentKey !== binding.contentKey ||
       familyForProjection(projection) !== head.family ||
-      projection.locale !== path.locale ||
-      projection.kind === "question-body" ||
+      projection.appLocale !== path.appLocale ||
       projection.publicPath !== path.publicPath
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_ROUTE",
-        `Route ${path.locale}/${path.publicPath} disagrees with its projection.`
+        `Route ${path.appLocale}/${path.publicPath} disagrees with its projection.`
       );
     }
     if (
@@ -102,7 +108,7 @@ const routeProgram = Effect.fn("contentRelease.routeCatalogPage")(function* (
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Route ${path.locale}/${path.publicPath} disagrees at one sequence.`
+        `Route ${path.appLocale}/${path.publicPath} disagrees at one sequence.`
       );
     }
   }

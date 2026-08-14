@@ -1,3 +1,4 @@
+import { learningInterestValidator } from "@repo/backend/convex/learningPrograms/spec";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 
@@ -33,8 +34,11 @@ export const currentTryoutPreferenceValidator = v.union(
 
 const tables = {
   learningPreferences: defineTable({
+    learningInterest: v.optional(learningInterestValidator),
+    primaryProgramKey: v.optional(v.string()),
     preferredCurriculumProgramKey: v.optional(v.string()),
     preferredTryoutCountryKey: v.optional(v.string()),
+    selectionUpdatedAt: v.optional(v.number()),
     updatedAt: v.number(),
     userId: v.id("users"),
   }).index("by_userId", ["userId"]),

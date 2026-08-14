@@ -1,118 +1,182 @@
 import "server-only";
 
-import { MAX_PROTECTED_RUNTIME_SELECTORS } from "@nakafa/aksara-contracts/runtime/protected/limits";
+import type { StoredProtectedRuntimeItem } from "@nakafa/aksara-contracts/history/decode";
 import type { ProtectedContentRuntimeItem } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
+import { readRetainedProtectedContent } from "@repo/backend/client/content/history";
 import { readProtectedContent } from "@repo/backend/client/content/protected";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
 import { Effect } from "effect";
-import type {
-  TryoutAnswerContent,
-  TryoutAnswerSelector,
-  TryoutQuestionContent,
-  TryoutQuestionSelector,
+import type { ComponentType } from "react";
+import {
+  planTryoutContentBatches,
+  restoreTryoutContentOrder,
+  type TryoutContentBatchPlan,
+} from "@/components/tryout/content/batch";
+import {
+  type CurrentContentAccess,
+  type CurrentTryoutSelector,
+  type HistoryContentAccess,
+  type HistoryTryoutSelector,
+  projectTryoutRuntimeContent,
+  type RenderedTryoutContentEntry,
+  type SignedContentAccess,
+  type TryoutQuestionSelector,
+  type TryoutRenderSelector,
 } from "@/components/tryout/content/model";
+import {
+  makeCurrentTryoutRuntimeRequest,
+  makeHistoryTryoutRuntimeRequest,
+  requireCurrentTryoutQuestion,
+} from "@/components/tryout/content/request";
 import { env } from "@/env";
 import { applyPublishedContentBatchCache } from "@/lib/content/cache";
-import { evaluateVerifiedArtifact } from "@/lib/content/published/artifact";
+import {
+  evaluateVerifiedArtifact,
+  evaluateVerifiedHistoricalArtifact,
+} from "@/lib/content/published/artifact";
 import { ContentRuntimeConfigurationError } from "@/lib/content/published/errors";
 import { getRendererComponents } from "@/lib/content/renderer/components";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 
-type ProtectedSelector = TryoutAnswerSelector | TryoutQuestionSelector;
 const SIGNED_RENDER_CONCURRENCY = 4;
 
-/** Renders protected questions and answers through bounded signed batches. */
+/** Dispatches one attempt-owned signed access at the sole runtime boundary. */
 export const loadSignedTryoutContent = Effect.fn(
   "NakafaContent.loadSignedTryout"
-)(function* (input: {
-  readonly answers: readonly TryoutAnswerSelector[];
-  readonly questions: readonly TryoutQuestionSelector[];
-}) {
-  const selectors = [...input.questions, ...input.answers];
-  if (selectors.length === 0) {
-    return yield* new ContentRuntimeVerificationError({
-      cause: "Protected content batch is empty.",
-    });
+)(function* (access: SignedContentAccess) {
+  if (access.runtime === "history") {
+    return yield* loadHistoryTryoutContent(access);
   }
-  const chunks = chunkSelectors(selectors);
-  const batches = yield* Effect.forEach(
-    chunks,
-    (chunk) =>
-      Effect.tryPromise({
-        catch: (cause) => new ContentRuntimeVerificationError({ cause }),
-        try: () => renderSignedBatch(chunk),
-      }),
-    { concurrency: SIGNED_RENDER_CONCURRENCY }
-  );
-  const entries = batches.flat();
-  const questionEntries = entries.slice(0, input.questions.length);
-  const answerEntries = entries.slice(input.questions.length);
-  const questions = questionEntries.map(
-    ({ body, contentHash, sourcePath, sourceRevision }) =>
-      ({
-        content: body,
-        contentHash,
-        sourcePath,
-        sourceRevision,
-      }) satisfies TryoutQuestionContent
-  );
-  const answers = answerEntries.map(
-    ({ body, contentHash, sourcePath, sourceRevision }) =>
-      ({
-        answer: body,
-        contentHash,
-        sourcePath,
-        sourceRevision,
-      }) satisfies TryoutAnswerContent
-  );
-  return { answers, questions };
+  return yield* loadCurrentTryoutContent(access);
 });
 
-/** Splits a section only when its signed selector count exceeds the contract. */
-function chunkSelectors(selectors: readonly ProtectedSelector[]) {
-  const chunks: ProtectedSelector[][] = [];
-  for (
-    let start = 0;
-    start < selectors.length;
-    start += MAX_PROTECTED_RUNTIME_SELECTORS
-  ) {
-    chunks.push(
-      selectors.slice(start, start + MAX_PROTECTED_RUNTIME_SELECTORS)
+/** Renders the public featured question only through the current transport. */
+export const loadCurrentTryoutQuestion = Effect.fn(
+  "NakafaContent.loadCurrentTryoutQuestion"
+)(function* (question: TryoutQuestionSelector) {
+  const currentQuestion = yield* requireCurrentTryoutQuestion(question);
+  const rendered = yield* loadCurrentTryoutContent({
+    answers: [],
+    questions: [currentQuestion],
+  });
+  const result = rendered.questions[0];
+  if (!result) {
+    return yield* runtimeIntegrity(
+      "The featured try-out question did not render."
     );
   }
-  return chunks;
-}
+  return result;
+});
 
-/** Caches one verified batch under every immutable artifact identity it owns. */
-async function renderSignedBatch(selectors: readonly ProtectedSelector[]) {
+/** Renders one current signed access through current-only request bytes. */
+const loadCurrentTryoutContent = Effect.fn(
+  "NakafaContent.loadCurrentTryoutContent"
+)(function* (access: Pick<CurrentContentAccess, "answers" | "questions">) {
+  const plan = planTryoutContentBatches(access.questions, access.answers);
+  return yield* renderContentPlan(plan, renderCurrentBatch);
+});
+
+/** Renders one retained attempt through its isolated historical transport. */
+const loadHistoryTryoutContent = Effect.fn(
+  "NakafaContent.loadHistoryTryoutContent"
+)(function* (access: HistoryContentAccess) {
+  const plan = planTryoutContentBatches(access.questions, access.answers);
+  return yield* renderContentPlan(plan, (selectors) =>
+    renderHistoryBatch(access.attemptId, selectors)
+  );
+});
+
+/** Executes a bounded plan and restores its question and answer partitions. */
+const renderContentPlan = Effect.fn("NakafaContent.renderTryoutContentPlan")(
+  function* <Selector>(
+    plan: TryoutContentBatchPlan<Selector>,
+    renderBatch: (
+      selectors: readonly Selector[]
+    ) => Promise<readonly RenderedTryoutContentEntry[]>
+  ) {
+    if (plan.selectorCount === 0) {
+      return yield* runtimeIntegrity("Protected content batch is empty.");
+    }
+    const renderedBatches = yield* Effect.forEach(
+      plan.batches,
+      (batch) =>
+        Effect.tryPromise({
+          catch: (cause) => new ContentRuntimeVerificationError({ cause }),
+          try: () => renderBatch(batch),
+        }),
+      { concurrency: SIGNED_RENDER_CONCURRENCY }
+    );
+    const ordered = yield* restoreTryoutContentOrder(
+      plan,
+      renderedBatches
+    ).pipe(
+      Effect.mapError((cause) => new ContentRuntimeVerificationError({ cause }))
+    );
+    return projectTryoutRuntimeContent(ordered);
+  }
+);
+
+/** Caches one current verified batch by immutable selector identity. */
+async function renderCurrentBatch(selectors: readonly CurrentTryoutSelector[]) {
   "use cache";
 
-  const content = await Effect.runPromise(readSignedBatch(selectors));
+  const content = await Effect.runPromise(readCurrentBatch(selectors));
+  cacheRenderedBatch(content);
+  return content;
+}
+
+/** Caches one attempt-bound historical batch by immutable selector identity. */
+async function renderHistoryBatch(
+  attemptId: string,
+  selectors: readonly HistoryTryoutSelector[]
+) {
+  "use cache";
+
+  const content = await Effect.runPromise(
+    readHistoryBatch(attemptId, selectors)
+  );
+  cacheRenderedBatch(content);
+  return content;
+}
+
+/** Applies artifact-addressed invalidation after full exchange verification. */
+function cacheRenderedBatch(content: readonly RenderedTryoutContentEntry[]) {
   applyPublishedContentBatchCache(
     "question",
     content.map(({ artifactHash }) => artifactHash)
   );
-  return content;
 }
 
-/** Reads, verifies, and executes one retained-snapshot protected batch. */
-const readSignedBatch = Effect.fn("NakafaContent.readSignedTryoutBatch")(
-  function* (selectors: readonly ProtectedSelector[]) {
-    const request = yield* makeProtectedRequest(selectors);
-    const runtimeKeys = yield* Effect.try({
-      catch: () =>
-        new ContentRuntimeConfigurationError({
-          key: "CONTENT_RUNTIME_TOKEN",
-        }),
-      try: contentRuntimeKeys,
-    });
+/** Reads, verifies, and renders one current protected batch. */
+const readCurrentBatch = Effect.fn("NakafaContent.readCurrentTryoutBatch")(
+  function* (selectors: readonly CurrentTryoutSelector[]) {
+    const request = yield* makeCurrentTryoutRuntimeRequest(selectors);
+    const target = yield* readRuntimeTarget;
     const liveRenderer = yield* rendererManifest;
-    const found = yield* readProtectedContent(
-      {
-        siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
-        token: runtimeKeys.CONTENT_RUNTIME_TOKEN,
-      },
+    const found = yield* readProtectedContent(target, request, liveRenderer);
+    return yield* Effect.forEach(
+      selectors.map((selector, index) => ({
+        item: found.items[index],
+        selector,
+      })),
+      ({ item, selector }) => renderCurrentItem(item, selector),
+      { concurrency: SIGNED_RENDER_CONCURRENCY }
+    );
+  }
+);
+
+/** Reads, verifies, and renders one attempt-bound historical batch. */
+const readHistoryBatch = Effect.fn("NakafaContent.readHistoryTryoutBatch")(
+  function* (attemptId: string, selectors: readonly HistoryTryoutSelector[]) {
+    const request = yield* makeHistoryTryoutRuntimeRequest(
+      attemptId,
+      selectors
+    );
+    const target = yield* readRuntimeTarget;
+    const liveRenderer = yield* rendererManifest;
+    const found = yield* readRetainedProtectedContent(
+      target,
       request,
       liveRenderer
     );
@@ -121,55 +185,32 @@ const readSignedBatch = Effect.fn("NakafaContent.readSignedTryoutBatch")(
         item: found.items[index],
         selector,
       })),
-      ({ item, selector }) => renderSignedItem(item, selector),
+      ({ item, selector }) => renderHistoryItem(item, selector),
       { concurrency: SIGNED_RENDER_CONCURRENCY }
     );
   }
 );
 
-/** Builds one contract request while preserving shared snapshot identity. */
-const makeProtectedRequest = Effect.fn("NakafaContent.makeProtectedRequest")(
-  function* (selectors: readonly ProtectedSelector[]) {
-    const first = selectors[0];
-    if (!first) {
-      return yield* new ContentRuntimeVerificationError({
-        cause: "Protected content batch is empty.",
-      });
-    }
-    const coherent = selectors.every(
-      (selector) =>
-        selector.locale === first.locale &&
-        selector.snapshotId === first.snapshotId &&
-        selector.snapshotReleaseId === first.snapshotReleaseId
-    );
-    if (!coherent) {
-      return yield* new ContentRuntimeVerificationError({
-        cause: "Protected content batch spans multiple snapshots.",
-      });
-    }
-    return {
-      locale: first.locale,
-      selectors: selectors.map(({ artifactHash, contentKey, delivery }) => ({
-        artifactHash,
-        contentKey,
-        delivery,
-      })),
-      snapshotId: first.snapshotId,
-      snapshotReleaseId: first.snapshotReleaseId,
-    };
-  }
-);
+/** Reads the server-owned protected runtime target. */
+const readRuntimeTarget = Effect.try({
+  catch: () =>
+    new ContentRuntimeConfigurationError({ key: "CONTENT_RUNTIME_TOKEN" }),
+  try: () => ({
+    siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
+    token: contentRuntimeKeys().CONTENT_RUNTIME_TOKEN,
+  }),
+});
 
-/** Executes one signed item already verified by the protected exchange. */
-const renderSignedItem = Effect.fn("NakafaContent.renderSignedTryoutItem")(
+/** Renders one current item only after current exchange verification. */
+const renderCurrentItem = Effect.fn("NakafaContent.renderCurrentTryoutItem")(
   function* (
     item: ProtectedContentRuntimeItem | undefined,
-    selector: ProtectedSelector
+    selector: CurrentTryoutSelector
   ) {
     if (!item) {
-      return yield* new ContentRuntimeVerificationError({
-        cause: "Protected content batch lost an ordered item.",
-      });
+      return yield* runtimeIntegrity(
+        "Protected content batch lost an ordered item."
+      );
     }
     const components = getRendererComponents(
       item.artifact.payload.rendererDomain
@@ -178,12 +219,52 @@ const renderSignedItem = Effect.fn("NakafaContent.renderSignedTryoutItem")(
       artifact: item.artifact,
       components,
     });
-    return {
-      artifactHash: rendered.artifact.artifactHash,
-      body: <rendered.Content />,
-      contentHash: selector.contentHash,
-      sourcePath: selector.sourcePath,
-      sourceRevision: selector.sourceRevision,
-    };
+    return projectRenderedArtifact(rendered, selector);
   }
 );
+
+/** Renders one old item only after historical exchange verification. */
+const renderHistoryItem = Effect.fn("NakafaContent.renderHistoryTryoutItem")(
+  function* (
+    item: StoredProtectedRuntimeItem | undefined,
+    selector: HistoryTryoutSelector
+  ) {
+    if (!item) {
+      return yield* runtimeIntegrity(
+        "Protected content batch lost an ordered item."
+      );
+    }
+    const components = getRendererComponents(
+      item.artifact.payload.rendererDomain
+    );
+    const rendered = yield* evaluateVerifiedHistoricalArtifact({
+      artifact: item.artifact,
+      components,
+    });
+    return projectRenderedArtifact(rendered, selector);
+  }
+);
+
+/** Projects one separately typed authenticated artifact into runtime content. */
+function projectRenderedArtifact(
+  rendered: {
+    readonly artifact: {
+      readonly artifactHash: RenderedTryoutContentEntry["artifactHash"];
+    };
+    readonly Content: ComponentType;
+  },
+  selector: TryoutRenderSelector
+) {
+  return {
+    artifactHash: rendered.artifact.artifactHash,
+    body: <rendered.Content />,
+    contentHash: selector.contentHash,
+    sourcePath: selector.sourcePath,
+    sourceRevision: selector.sourceRevision,
+  } satisfies RenderedTryoutContentEntry;
+}
+
+/** Creates one consistent signed runtime verification failure. */
+function runtimeIntegrity(cause: string) {
+  return new ContentRuntimeVerificationError({ cause });
+}

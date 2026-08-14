@@ -7,7 +7,7 @@ import {
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { Effect } from "effect";
 
-type ArticleLocale = Doc<"articleBuckets">["locale"];
+type ArticleAppLocale = Doc<"articleBuckets">["appLocale"];
 type BucketKind = "article" | "category";
 
 /** Updates one non-empty bucket count in the same transaction as its route. */
@@ -15,7 +15,7 @@ export const adjustArticleBucket = Effect.fn(
   "contentRelease.adjustArticleBucket"
 )(function* (
   ctx: MutationCtx,
-  locale: ArticleLocale,
+  appLocale: ArticleAppLocale,
   bucket: string,
   kind: BucketKind,
   delta: -1 | 1
@@ -30,8 +30,8 @@ export const adjustArticleBucket = Effect.fn(
   const existing = yield* Effect.promise(() =>
     ctx.db
       .query("articleBuckets")
-      .withIndex("by_locale_and_bucket", (index) =>
-        index.eq("locale", locale).eq("bucket", bucket)
+      .withIndex("by_appLocale_and_bucket", (index) =>
+        index.eq("appLocale", appLocale).eq("bucket", bucket)
       )
       .unique()
   );
@@ -43,13 +43,13 @@ export const adjustArticleBucket = Effect.fn(
   if (articleCount < 0 || categoryCount < 0) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Article sitemap bucket ${locale}/${bucket} underflowed.`
+      `Article sitemap bucket ${appLocale}/${bucket} underflowed.`
     );
   }
   if (articleCount + categoryCount > CONTENT_BUCKET_SIZE) {
     return yield* releaseFail(
       "CONTENT_RELEASE_LIMIT",
-      `Article sitemap bucket ${locale}/${bucket} exceeds ${CONTENT_BUCKET_SIZE} routes.`
+      `Article sitemap bucket ${appLocale}/${bucket} exceeds ${CONTENT_BUCKET_SIZE} routes.`
     );
   }
 
@@ -62,7 +62,7 @@ export const adjustArticleBucket = Effect.fn(
     return;
   }
 
-  const row = { articleCount, bucket, categoryCount, locale };
+  const row = { appLocale, articleCount, bucket, categoryCount };
   if (existing) {
     yield* Effect.promise(() =>
       ctx.db.replace("articleBuckets", existing._id, row)

@@ -1,3 +1,4 @@
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type {
   ArticleMetadata,
   ArticleProjection,
@@ -53,7 +54,12 @@ async function readPreviewOwner(input: ArticleContentInput) {
   }
 
   await io();
-  return Effect.runPromise(readArticlePreview(input));
+  return Effect.runPromise(
+    readArticlePreview({
+      appLocale: AppLocaleSchema.make(input.locale),
+      publicPath: input.publicPath,
+    })
+  );
 }
 
 /** Selects one exclusive article owner before any native module import. */
@@ -78,7 +84,7 @@ export async function readArticleMetadata(input: ArticleContentInput) {
     };
   }
   const published = await getCurrentPublishedArticle({
-    locale: input.locale,
+    appLocale: AppLocaleSchema.make(input.locale),
     publicPath: input.publicPath,
   });
   if (!published) {
@@ -103,7 +109,7 @@ export async function readArticlePage(
     };
   }
   const published = await renderCurrentPublishedArticle({
-    locale: input.locale,
+    appLocale: AppLocaleSchema.make(input.locale),
     publicPath: input.publicPath,
   });
   if (!published) {

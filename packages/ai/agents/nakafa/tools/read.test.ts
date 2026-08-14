@@ -24,6 +24,9 @@ const MISSING_CONTENT_ID = NakafaAgentContentRefInputSchema.make(
   readNakafaContentRefFixture("en", "articles/politics/missing", "articles")
     .content_id
 );
+const TRYOUT_URL = NakafaAgentContentRefInputSchema.make(
+  "https://nakafa.com/en/try-out/indonesia/snbt/2027/set-2"
+);
 
 describe("nakafa read tool", () => {
   it("writes loading and done parts for content reads", async () => {
@@ -78,6 +81,24 @@ describe("nakafa read tool", () => {
       read({
         input: { content_ref: MISSING_CONTENT_ID },
         toolCallId: "read-2",
+        writer,
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
+    );
+
+    expect(output).toBe("Nakafa content was not found.");
+    expect(parts.at(-1)).toEqual(
+      expect.objectContaining({
+        data: expect.objectContaining({ kind: "content", status: "error" }),
+      })
+    );
+  });
+
+  it("does not invent a markdown read for tryout references", async () => {
+    const { parts, writer } = createWriter();
+    const output = await Effect.runPromise(
+      read({
+        input: { content_ref: TRYOUT_URL },
+        toolCallId: "read-tryout",
         writer,
       }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
     );

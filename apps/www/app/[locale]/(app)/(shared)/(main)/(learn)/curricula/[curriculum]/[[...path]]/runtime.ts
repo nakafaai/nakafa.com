@@ -4,7 +4,10 @@ import {
   isRenderableCurriculumLevel,
   type CurriculumRoute as PublishedCurriculumRoute,
 } from "@nakafa/aksara-contracts/program/curriculum";
-import type { LearningProgram as PublishedLearningProgram } from "@nakafa/aksara-contracts/program/spec";
+import type {
+  ProgramTranslation,
+  LearningProgram as PublishedLearningProgram,
+} from "@nakafa/aksara-contracts/program/spec";
 import type { MaterialList } from "@repo/contents/_types/curriculum/material";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
@@ -32,6 +35,7 @@ export type CurriculumViewProgram = PublishedLearningProgram;
 export interface CurriculumCatalogEntry {
   readonly program: CurriculumViewProgram;
   readonly route: CurriculumViewRoute;
+  readonly translation: ProgramTranslation;
 }
 
 /** Complete signed curriculum catalog selected for one locale. */
@@ -135,11 +139,11 @@ export function readRuntimeCurriculumOptions(
   catalog: CurriculumCatalogModel,
   locale: Locale
 ) {
-  return catalog.entries.map(({ program, route }) => ({
+  return catalog.entries.map(({ program, route, translation }) => ({
     countryCode: program.provider.homeCountry,
     href: `/${locale}/${route.publicPath}`,
     programKey: route.programKey,
-    publicSlug: program.translations[locale].publicSlug,
+    publicSlug: translation.publicSlug,
     title: route.title,
     value: route.publicPath,
   }));

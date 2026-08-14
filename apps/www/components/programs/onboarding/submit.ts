@@ -9,7 +9,7 @@ import {
 import { reportClientException } from "@/lib/analytics/client";
 
 type SelectProgramMutation = (
-  value: Pick<OnboardingFormValue, "interests" | "primaryProgramKey">
+  value: Pick<OnboardingFormValue, "interest" | "programKey">
 ) => Promise<unknown>;
 type UpdateRoleMutation = (
   value: Pick<OnboardingFormValue, "role">
@@ -113,8 +113,8 @@ function saveOnboardingSelection({
       Effect.tryPromise({
         try: () =>
           selectProgram({
-            interests: formValue.interests,
-            primaryProgramKey: formValue.primaryProgramKey,
+            interest: formValue.interest,
+            programKey: formValue.programKey,
           }),
         catch: (cause) => new OnboardingMutationError({ cause }),
       })

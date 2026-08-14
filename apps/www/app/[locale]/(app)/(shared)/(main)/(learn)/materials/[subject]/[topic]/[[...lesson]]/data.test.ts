@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
   selectLearningStaticParams: vi.fn(),
 }));
 
-vi.mock("@repo/contents/_types/route/path", () => ({
+vi.mock("@repo/contents/_types/route/surface", () => ({
   readNamespaceSegment: mocks.readNamespaceSegment,
 }));
 vi.mock("@/lib/content/material/catalog", () => ({

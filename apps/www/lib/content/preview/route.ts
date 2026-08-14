@@ -1,9 +1,12 @@
 import "server-only";
 
-import type { ContentLocale } from "@nakafa/aksara-contracts/content";
+import {
+  type AppLocale,
+  AppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
 import { previewDocumentRoute } from "@nakafa/aksara-contracts/preview/document";
 import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
-import { readNamespaceSegment } from "@repo/contents/_types/route/path";
+import { materialPublicNamespace } from "@nakafa/aksara-contracts/projection/material";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect, Option } from "effect";
@@ -12,7 +15,7 @@ import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
 
 /** Exact public route identity checked before Convex route rejection. */
 interface PreviewRouteInput {
-  readonly locale: ContentLocale;
+  readonly appLocale: AppLocale;
   readonly publicPath: string;
 }
 
@@ -50,13 +53,13 @@ export function matchesMaterialPreviewRoute(
   }
 
   const { route } = manifest.document;
-  if (route.locale !== input.params.locale) {
+  if (route.appLocale !== input.params.locale) {
     return false;
   }
 
   const [namespace, subject, topic, ...lesson] = route.publicPath.split("/");
   if (
-    namespace !== readNamespaceSegment("subject", route.locale) ||
+    namespace !== materialPublicNamespace(route.appLocale) ||
     subject !== input.params.subject ||
     topic !== input.params.topic ||
     !hasSameSegments(lesson, input.params.lesson ?? [])
@@ -82,7 +85,7 @@ function resolveInternalRoute({ localeHint, pathname }: InternalRouteInput) {
   }
 
   return Option.some({
-    locale,
+    appLocale: AppLocaleSchema.make(locale),
     publicPath: [surface.routeSlugs[locale], ...segments].join("/"),
   });
 }
@@ -98,7 +101,8 @@ export const matchesPreviewRoute = Effect.fn(
     onSome: ({ manifest }) => {
       const route = previewDocumentRoute(manifest.document);
       return (
-        route.locale === input.locale && route.publicPath === input.publicPath
+        route.appLocale === input.appLocale &&
+        route.publicPath === input.publicPath
       );
     },
   });

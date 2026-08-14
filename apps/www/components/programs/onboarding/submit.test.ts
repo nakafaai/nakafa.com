@@ -7,8 +7,8 @@ import {
 
 const validValue = {
   focusKey: "student-exam",
-  interests: ["school-curriculum", "exam-prep"],
-  primaryProgramKey: "snbt",
+  interest: "exam-prep",
+  programKey: "snbt",
   role: "student",
 };
 
@@ -89,8 +89,8 @@ describe("components/programs/onboarding/submit", () => {
     expect(roleValues).toEqual([{ role: "student" }]);
     expect(selectedValues).toEqual([
       {
-        interests: ["school-curriculum", "exam-prep"],
-        primaryProgramKey: "snbt",
+        interest: "exam-prep",
+        programKey: "snbt",
       },
     ]);
   });
@@ -109,7 +109,7 @@ describe("components/programs/onboarding/submit", () => {
           return Promise.resolve();
         },
         value: {
-          primaryProgramKey: "snbt",
+          programKey: "snbt",
         },
       })
     );
@@ -137,7 +137,7 @@ describe("components/programs/onboarding/submit", () => {
     });
   });
 
-  it("does not create a learning profile when the role mutation fails", async () => {
+  it("does not create a learning selection when the role mutation fails", async () => {
     const selectedValues: unknown[] = [];
     const result = await Effect.runPromise(
       submitOnboardingSelection({

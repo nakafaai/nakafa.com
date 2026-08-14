@@ -54,9 +54,7 @@ export const importSignedRuntime = Effect.fn(
     {
       cacheVersion: config.cacheVersion,
       contentStateHash: config.contentStateHash,
-      routeGenerationHash: config.routeGenerationHash,
       runtimeSchemaFingerprint: config.runtimeSchemaFingerprint,
-      sitemapGenerationHash: config.sitemapGenerationHash,
     }
   );
 

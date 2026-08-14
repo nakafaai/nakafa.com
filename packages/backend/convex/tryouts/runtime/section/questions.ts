@@ -5,6 +5,7 @@ import {
   getTryoutSectionContentAccess,
   noTryoutSectionContentAccess,
 } from "@repo/backend/convex/tryouts/runtime/content";
+import { readAttemptSetIdentity } from "@repo/backend/convex/tryouts/runtime/lookup";
 import { loadSectionPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
 import { loadSectionResponseIndex } from "@repo/backend/convex/tryouts/runtime/response";
 import { projectTryoutSignedContent } from "@repo/backend/convex/tryouts/runtime/selectors";
@@ -31,7 +32,7 @@ export const readCurrentSection = Effect.fn(
   };
 });
 
-/** Loads one bounded section graph shared by old and new runtime contracts. */
+/** Loads one bounded section graph for the exact-attempt runtime contract. */
 const loadSectionRows = Effect.fn("tryouts.runtime.loadSectionRows")(function* (
   ctx: QueryCtx,
   attempt: Doc<"tryoutAttempts">,
@@ -57,32 +58,6 @@ const loadSectionRows = Effect.fn("tryouts.runtime.loadSectionRows")(function* (
   return { access, currentSection, ...loaded };
 });
 
-/** Loads the deployed runtime shape until the current web switches contracts. */
-export const loadSectionRuntime = Effect.fn("tryouts.runtime.loadSection")(
-  function* (
-    ctx: QueryCtx,
-    attempt: Doc<"tryoutAttempts">,
-    section: Doc<"tryoutSectionAttempts">
-  ) {
-    const loaded = yield* loadSectionRows(ctx, attempt, section);
-    if (!loaded) {
-      return null;
-    }
-    const questions = projectRuntimeQuestions(
-      loaded.placements,
-      loaded.responses,
-      loaded.access
-    );
-
-    return {
-      attemptId: attempt._id,
-      expiresAt: section.expiresAt,
-      questions,
-      section: loaded.currentSection,
-    };
-  }
-);
-
 /** Loads the compact runtime plus immutable content selectors once. */
 export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
   function* (
@@ -95,10 +70,12 @@ export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
       return { content: noTryoutSectionContentAccess, runtime: null };
     }
 
+    const identity = yield* readAttemptSetIdentity(attempt);
     const content = yield* projectTryoutSignedContent({
       access: loaded.access,
       attempt,
-      locale: attempt.locale,
+      ctx,
+      appLocale: identity.locale,
       placements: loaded.placements,
       totalQuestions: section.totalQuestions,
     });
@@ -111,7 +88,7 @@ export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
           loaded.placements,
           loaded.responses,
           loaded.access
-        ).map(({ title: _title, ...question }) => question),
+        ),
         section: loaded.currentSection,
       },
     };
@@ -151,7 +128,6 @@ function projectRuntimeQuestions(
         : null,
       sourcePath: placement.sourcePath,
       sourceRevision: placement.sourceRevision,
-      title: placement.title,
     };
   });
 }

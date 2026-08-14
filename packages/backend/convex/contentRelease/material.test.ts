@@ -10,17 +10,16 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 describe("contentRelease/material", () => {
-  it("accepts the deployed route argument shape during expansion", async () => {
+  it("fails closed before current signed ownership is available", async () => {
     const t = convexTest(schema, convexModules);
 
     await expect(
       t.query(api.contentRelease.material.route, {
-        locale: "en",
+        appLocale: "en",
         publicPath: "subjects/mathematics/functions/concept",
       })
-    ).resolves.toMatchObject({
-      managed: false,
-      sourceClaims: [],
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_MISSING" },
     });
   });
 
@@ -32,7 +31,7 @@ describe("contentRelease/material", () => {
     await expect(
       t.query(api.contentRelease.material.route, {
         expectedActiveReleaseId: "another-release",
-        locale: material.locale,
+        appLocale: material.appLocale,
         publicPath: material.publicPath,
       })
     ).rejects.toMatchObject({
@@ -41,12 +40,11 @@ describe("contentRelease/material", () => {
     await expect(
       t.query(api.contentRelease.material.route, {
         expectedActiveReleaseId: MATERIAL_IDENTITY.releaseId,
-        locale: material.locale,
+        appLocale: material.appLocale,
         publicPath: material.publicPath,
       })
     ).resolves.toMatchObject({
       activeReleaseId: MATERIAL_IDENTITY.releaseId,
-      managed: true,
     });
   });
 });

@@ -39,7 +39,7 @@ describe("contentRelease/quran/reference", () => {
         runConvexProgram(
           readQuranReference(ctx, {
             fromVerse: 2,
-            locale: "en",
+            appLocale: "en",
             surahNumber: 1,
           })
         )
@@ -62,7 +62,7 @@ describe("contentRelease/quran/reference", () => {
         runConvexProgram(
           readQuranReference(ctx, {
             fromVerse: 6,
-            locale: "en",
+            appLocale: "en",
             surahNumber: 1,
             toVerse: 7,
           })
@@ -88,7 +88,7 @@ describe("contentRelease/quran/reference", () => {
         runConvexProgram(
           readQuranReference(ctx, {
             fromVerse: 7,
-            locale: "en",
+            appLocale: "en",
             surahNumber: 1,
             toVerse: 8,
           })
@@ -110,7 +110,7 @@ describe("contentRelease/quran/reference", () => {
         runConvexProgram(
           readQuranReference(ctx, {
             fromVerse: 1,
-            locale: "en",
+            appLocale: "en",
             surahNumber: 1,
           })
         )
@@ -120,7 +120,7 @@ describe("contentRelease/quran/reference", () => {
     });
   });
 
-  it("preserves the complete legacy reference search contract", async () => {
+  it("requires the signed search row used by public references", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>
       activateQuranSnapshot(
@@ -134,7 +134,7 @@ describe("contentRelease/quran/reference", () => {
         runConvexProgram(
           readQuranReference(ctx, {
             fromVerse: 1,
-            locale: "en",
+            appLocale: "en",
             surahNumber: 1,
           })
         )

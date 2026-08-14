@@ -61,7 +61,7 @@ export function buildContentSearchRef({
   const cleanSourcePath = cleanSlug(sourcePath);
   const localizedPublicPath = `${locale}/${cleanPublicPath}`;
 
-  return {
+  const ref = {
     alignmentId,
     assetId,
     conceptId,
@@ -69,11 +69,19 @@ export function buildContentSearchRef({
     learningObjectId,
     lensId,
     locale,
-    markdown_url: `${NAKAFA_CONTENT_BASE_URL}/${localizedPublicPath}.md`,
     route: cleanPublicPath,
     section,
     sourcePath: cleanSourcePath,
     url: `${NAKAFA_CONTENT_BASE_URL}/${localizedPublicPath}`,
+  };
+
+  if (section === "tryout") {
+    return ref;
+  }
+
+  return {
+    ...ref,
+    markdown_url: `${NAKAFA_CONTENT_BASE_URL}/${localizedPublicPath}.md`,
   };
 }
 

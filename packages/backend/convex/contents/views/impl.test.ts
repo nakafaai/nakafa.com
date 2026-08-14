@@ -53,7 +53,7 @@ describe("contents/views/impl", () => {
         deviceId: "device-1",
         firstViewedAt: NOW,
         lastViewedAt: NOW,
-        locale: "id",
+        locale: "en",
         route: ARTICLE_ROUTE,
         section: "articles",
       },
@@ -64,7 +64,7 @@ describe("contents/views/impl", () => {
         content_id: article.contentId,
         contextKey: "canonical",
         contextMode: "canonical",
-        locale: "id",
+        locale: "en",
         partition: getSignalPartition(article.contentId),
         route: ARTICLE_ROUTE,
         section: "articles",
@@ -84,22 +84,6 @@ describe("contents/views/impl", () => {
     expect(state.scheduledJobs.map((job) => job.args[0])).toEqual([
       { partition: getSignalPartition(article.contentId) },
     ]);
-  });
-
-  it("accepts the currently deployed argument shape during rollout", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const article = await t.mutation((ctx) => insertArticle(ctx));
-
-    await expect(
-      t.mutation(api.contents.mutations.views.recordContentView, {
-        contentId: article.contentId,
-        deviceId: "deployed-client",
-        locale: "id",
-      })
-    ).resolves.toMatchObject({
-      isNewView: true,
-      success: true,
-    });
   });
 
   it("updates an existing device view without queuing duplicate analytics", async () => {

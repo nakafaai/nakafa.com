@@ -13,8 +13,11 @@ import {
   readArticleBuckets,
   readArticleSitemap,
 } from "@repo/backend/convex/contentRelease/article/sitemap";
+import { articleApiPageValidator } from "@repo/backend/convex/contentRelease/article/spec";
+import { readPartnerApiPage } from "@repo/backend/convex/contentRelease/partner/page";
 import {
-  localeValidator,
+  appLocaleValidator,
+  artifactLocaleValidator,
   rendererDomainValidator,
 } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -25,9 +28,10 @@ import {
 import { v } from "convex/values";
 
 const projectionValidator = v.object({
+  appLocale: appLocaleValidator,
+  artifactLocale: artifactLocaleValidator,
   contentKey: v.string(),
   family: v.literal("article"),
-  locale: localeValidator,
   projectionHash: v.string(),
   projectionJson: v.string(),
   publicPath: v.string(),
@@ -106,13 +110,26 @@ const sitemapPageValidator = v.union(
   v.null()
 );
 
+/** Returns one current signed article partner API page. */
+export const apiPage = query({
+  args: {
+    cursor: v.union(v.string(), v.null()),
+    limit: v.number(),
+    appLocale: appLocaleValidator,
+    prefix: v.string(),
+  },
+  returns: articleApiPageValidator,
+  handler: (ctx, args) =>
+    runConvexProgram(readPartnerApiPage(ctx, { ...args, family: "article" })),
+});
+
 /** Returns one release-bound newest-first article page. */
 export const page = query({
   args: {
     category: v.string(),
     expectedManifestHash: v.union(v.string(), v.null()),
     expectedReleaseId: v.union(v.string(), v.null()),
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
     paginationOpts: paginationOptsValidator,
   },
   returns: articlePageValidator,
@@ -121,7 +138,7 @@ export const page = query({
       readArticlePage(
         ctx,
         args.category,
-        args.locale,
+        args.appLocale,
         args.expectedManifestHash,
         args.expectedReleaseId,
         args.paginationOpts
@@ -134,7 +151,7 @@ export const categories = query({
   args: {
     expectedManifestHash: v.union(v.string(), v.null()),
     expectedReleaseId: v.union(v.string(), v.null()),
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
     paginationOpts: paginationOptsValidator,
   },
   returns: categoryPageValidator,
@@ -142,7 +159,7 @@ export const categories = query({
     runConvexProgram(
       readCategoryPage(
         ctx,
-        args.locale,
+        args.appLocale,
         args.expectedManifestHash,
         args.expectedReleaseId,
         args.paginationOpts
@@ -154,33 +171,35 @@ export const categories = query({
 export const category = query({
   args: {
     category: v.string(),
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
   },
   returns: categoryLookupValidator,
   handler: (ctx, args) =>
-    runConvexProgram(readArticleCategory(ctx, args.locale, args.category)),
+    runConvexProgram(
+      readArticleCategory(ctx, args.appLocale, args.category)
+    ),
 });
 
 /** Returns one managed hash partition for agent-facing article indexes. */
 export const bucket = query({
   args: {
     bucket: v.string(),
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
   },
   returns: articleBucketValidator,
   handler: (ctx, args) =>
-    runConvexProgram(readArticleBucket(ctx, args.locale, args.bucket)),
+    runConvexProgram(readArticleBucket(ctx, args.appLocale, args.bucket)),
 });
 
 /** Returns a bounded newest-first article set for discovery surfaces. */
 export const latest = query({
   args: {
     limit: v.number(),
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
   },
   returns: articleDiscoveryValidator,
   handler: (ctx, args) =>
-    runConvexProgram(readLatestArticles(ctx, args.locale, args.limit)),
+    runConvexProgram(readLatestArticles(ctx, args.appLocale, args.limit)),
 });
 
 /** Returns a bounded newest-first article set for one exact category. */
@@ -188,30 +207,30 @@ export const listing = query({
   args: {
     category: v.string(),
     limit: v.number(),
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
   },
   returns: articleDiscoveryValidator,
   handler: (ctx, args) =>
     runConvexProgram(
-      readCategoryArticles(ctx, args.locale, args.category, args.limit)
+      readCategoryArticles(ctx, args.appLocale, args.category, args.limit)
     ),
 });
 
 /** Returns non-empty deterministic sitemap partitions for one locale. */
 export const sitemapBuckets = query({
-  args: { locale: localeValidator },
+  args: { appLocale: appLocaleValidator },
   returns: sitemapBucketsValidator,
-  handler: (ctx, { locale }) =>
-    runConvexProgram(readArticleBuckets(ctx, locale)),
+  handler: (ctx, { appLocale }) =>
+    runConvexProgram(readArticleBuckets(ctx, appLocale)),
 });
 
 /** Returns one verified article sitemap partition by its stable bucket. */
 export const sitemapPage = query({
   args: {
     bucket: v.string(),
-    locale: localeValidator,
+    appLocale: appLocaleValidator,
   },
   returns: sitemapPageValidator,
-  handler: (ctx, { bucket, locale }) =>
-    runConvexProgram(readArticleSitemap(ctx, locale, bucket)),
+  handler: (ctx, { appLocale, bucket }) =>
+    runConvexProgram(readArticleSitemap(ctx, appLocale, bucket)),
 });

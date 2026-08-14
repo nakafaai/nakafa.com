@@ -13,7 +13,7 @@ import { routing } from "@repo/internationalization/src/routing";
 import { Schema } from "effect";
 
 /** Runtime schema for one Convex-backed search result item. */
-export const NakafaAgentSearchItemSchema = NakafaAgentContentSummarySchema.pipe(
+const NakafaAgentSearchItemSchema = NakafaAgentContentSummarySchema.pipe(
   Schema.extend(
     Schema.Struct({
       excerpt: Schema.String.annotations({

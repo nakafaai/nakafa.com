@@ -1,3 +1,4 @@
+import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { ModelIdSchema } from "@repo/ai/config/model";
 import {
   createNinaAgentContext,
@@ -14,7 +15,6 @@ import {
   textOutputSchema,
 } from "@repo/ai/schema/tools";
 import type { MyMetadata, MyUIMessage } from "@repo/ai/types/message";
-import { LearningProgramKeySchema } from "@repo/contents/_types/program/schema";
 import type {
   LanguageModelUsage,
   ModelMessage,
@@ -239,7 +239,7 @@ const runtime = {
 } satisfies NinaRuntime;
 
 const user = {
-  learningProfile: undefined,
+  learningSelection: undefined,
   location: {
     city: "Jakarta",
     country: "Indonesia",
@@ -320,10 +320,9 @@ describe("nina/agent", () => {
     expect(context.nina?.snapshot.source).toBe("pinned-chat");
   });
 
-  it("preserves selected learning profile context without inventing a user role", () => {
-    const learningProfile = {
-      interests: ["exam-prep"],
-      planItems: [],
+  it("preserves selected learning context without inventing a user role", () => {
+    const learningSelection = {
+      interest: "exam-prep",
       program: {
         coverageStatus: "partial",
         key: LearningProgramKeySchema.make("snbt"),
@@ -331,18 +330,18 @@ describe("nina/agent", () => {
         title: "SNBT 2026",
         versionLabel: "2026",
       },
-    } satisfies NinaUser["learningProfile"];
+    } satisfies NinaUser["learningSelection"];
     const context = createNinaAgentContext({
       page,
       runtime,
       user: {
         ...user,
-        learningProfile,
+        learningSelection,
         role: undefined,
       },
     });
 
-    expect(context.learningProfile).toEqual(learningProfile);
+    expect(context.learningSelection).toEqual(learningSelection);
     expect(context.userRole).toBeUndefined();
   });
 

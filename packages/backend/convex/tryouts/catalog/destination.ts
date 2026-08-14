@@ -1,5 +1,9 @@
-import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
-import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/spec";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import type { TryoutCatalogRow } from "@nakafa/aksara-contracts/tryout/catalog";
+import {
+  tryoutCatalogIdentity,
+  tryoutCatalogNodeIdentity,
+} from "@nakafa/aksara-contracts/tryout/identity";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
@@ -27,11 +31,11 @@ export const readTryoutDestinationPaths = Effect.fn(
 )(function* (ctx: QueryCtx, identity: TryoutDestinationIdentity) {
   const owner = yield* loadTryoutOwner(ctx);
   const { snapshotId } = owner;
-  const setIdentity = tryoutCatalogIdentity({
+  const setIdentity = tryoutCatalogNodeIdentity({
+    appLocale: AppLocaleSchema.make(identity.locale),
     countryKey: identity.countryKey,
     examKey: identity.examKey,
     kind: "set",
-    locale: identity.locale,
     setKey: identity.setKey,
     trackKey: identity.trackKey,
   });
@@ -49,19 +53,20 @@ export const readTryoutDestinationPaths = Effect.fn(
   let section: TryoutCatalogRow | null = null;
   let sectionIdentity: string | null = null;
   if (identity.sectionKey) {
-    sectionIdentity = tryoutCatalogIdentity({
+    const selectedSectionIdentity = tryoutCatalogNodeIdentity({
+      appLocale: AppLocaleSchema.make(identity.locale),
       countryKey: identity.countryKey,
       examKey: identity.examKey,
       kind: "section",
-      locale: identity.locale,
       sectionKey: identity.sectionKey,
       setKey: identity.setKey,
       trackKey: identity.trackKey,
     });
+    sectionIdentity = selectedSectionIdentity;
     section = yield* readTryoutCatalogRowByIdentity(
       ctx,
       snapshotId,
-      sectionIdentity
+      selectedSectionIdentity
     );
     if (section && section.kind !== "section") {
       return yield* destinationIntegrity(
@@ -73,7 +78,7 @@ export const readTryoutDestinationPaths = Effect.fn(
   let requestedSectionMatches: boolean | null = null;
   if (identity.requestedSectionPublicPath && sectionIdentity) {
     const requested = yield* readTryoutCatalogRowByPath(ctx, snapshotId, {
-      locale: identity.locale,
+      appLocale: identity.locale,
       publicPath: identity.requestedSectionPublicPath,
     });
     if (requested) {
@@ -103,7 +108,14 @@ export const readActiveTryoutRestartTarget = Effect.fn(
   "tryouts.catalog.readActiveRestartTarget"
 )(function* (ctx: QueryCtx, identity: TryoutSetIdentity) {
   const owner = yield* loadTryoutOwner(ctx);
-  const setIdentity = tryoutCatalogIdentity({ ...identity, kind: "set" });
+  const setIdentity = tryoutCatalogNodeIdentity({
+    appLocale: AppLocaleSchema.make(identity.locale),
+    countryKey: identity.countryKey,
+    examKey: identity.examKey,
+    kind: "set",
+    setKey: identity.setKey,
+    trackKey: identity.trackKey,
+  });
   const set = yield* readTryoutCatalogRowByIdentity(
     ctx,
     owner.snapshotId,

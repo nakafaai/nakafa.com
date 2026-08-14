@@ -1,5 +1,6 @@
 import "server-only";
 
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -10,13 +11,14 @@ import { readRuntimeQuery } from "@/lib/content/runtime/query";
 export const hasPublishedArticleCategory = Effect.fn(
   "www.articles.hasCategory"
 )(function* (category: string, locale: Locale) {
+  const appLocale = AppLocaleSchema.make(locale);
   const result = yield* readRuntimeQuery(api.contentRelease.article.category, {
+    appLocale,
     category,
-    locale,
   });
   if (!result.managed) {
     return yield* new PublishedProjectionError({
-      locale,
+      appLocale,
       publicPath: `articles/${category}`,
     });
   }

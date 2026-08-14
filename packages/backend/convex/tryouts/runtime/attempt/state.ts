@@ -1,4 +1,4 @@
-import type { TryoutSection } from "@nakafa/aksara-contracts/tryout/spec";
+import type { TryoutSection } from "@nakafa/aksara-contracts/tryout/catalog";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import {

@@ -13,7 +13,7 @@ export const readProgramPartition = Effect.fn(
   "contentRelease.readProgramPartition"
 )(function* (
   ctx: QueryCtx,
-  locale: Parameters<typeof loadProgramOwner>[1],
+  appLocale: Parameters<typeof loadProgramOwner>[1],
   bucket: string
 ) {
   if (!isProjectionBucket(bucket)) {
@@ -22,7 +22,7 @@ export const readProgramPartition = Effect.fn(
       `Program sitemap bucket ${bucket} is invalid.`
     );
   }
-  const owner = yield* loadProgramOwner(ctx, locale);
+  const owner = yield* loadProgramOwner(ctx, appLocale);
   if (!(owner.managed && owner.selected)) {
     return { kind: "unmanaged" as const };
   }
@@ -30,10 +30,10 @@ export const readProgramPartition = Effect.fn(
   const count = yield* Effect.promise(() =>
     ctx.db
       .query("programBuckets")
-      .withIndex("by_snapshotId_and_locale_and_bucket", (query) =>
+      .withIndex("by_snapshotId_and_appLocale_and_bucket", (query) =>
         query
           .eq("snapshotId", snapshotId)
-          .eq("locale", locale)
+          .eq("appLocale", appLocale)
           .eq("bucket", bucket)
       )
       .unique()
@@ -44,10 +44,10 @@ export const readProgramPartition = Effect.fn(
   const rows = yield* Effect.promise(() =>
     ctx.db
       .query("curriculumRoutes")
-      .withIndex("by_snapshotId_and_locale_and_bucket_and_path", (query) =>
+      .withIndex("by_snapshotId_and_appLocale_and_bucket_and_path", (query) =>
         query
           .eq("snapshotId", snapshotId)
-          .eq("locale", locale)
+          .eq("appLocale", appLocale)
           .eq("bucket", bucket)
       )
       .take(CONTENT_BUCKET_SIZE + 1)
@@ -59,7 +59,7 @@ export const readProgramPartition = Effect.fn(
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Program sitemap bucket ${locale}/${bucket} has mismatched counts.`
+      `Program sitemap bucket ${appLocale}/${bucket} has mismatched counts.`
     );
   }
   const routes = yield* Effect.forEach(rows, (row) =>

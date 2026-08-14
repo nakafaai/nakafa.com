@@ -1,4 +1,5 @@
-import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import { api } from "@repo/backend/convex/_generated/api";
 import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
 import {
@@ -67,13 +68,13 @@ describe("tryouts/sets/published", () => {
           countryKey: TRYOUT_START_COUNTRY,
           examKey: TRYOUT_START_EXAM,
           latestAttemptId: attempt.attemptId,
-          locale: "id",
+          appLocale: "id",
           publishedScore: index,
-          setIdentity: tryoutCatalogIdentity({
+          setIdentity: tryoutCatalogNodeIdentity({
+            appLocale: AppLocaleSchema.make("id"),
             countryKey: TRYOUT_START_COUNTRY,
             examKey: TRYOUT_START_EXAM,
             kind: "set",
-            locale: "id",
             setKey: `retired-${index}`,
             trackKey: TRYOUT_START_TRACK,
           }),

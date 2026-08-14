@@ -7,15 +7,12 @@ interface MaterialReadModelIdentity {
   readonly state: Doc<"contentState">;
 }
 
-/** Checks both material projections against one exact active release identity. */
+/** Checks the material projection against one active release identity. */
 export function hasMaterialReadModel(identity: MaterialReadModelIdentity) {
   const { manifestHash, releaseId, sequence, state } = identity;
   return (
     state.materialManifestHash === manifestHash &&
     state.materialReleaseId === releaseId &&
-    state.materialSequence === sequence &&
-    state.materialOwnerManifestHash === manifestHash &&
-    state.materialOwnerReleaseId === releaseId &&
-    state.materialOwnerSequence === sequence
+    state.materialSequence === sequence
   );
 }

@@ -6,14 +6,33 @@ import {
   type LearningContextInput,
   type LearningContextStorage,
 } from "@repo/backend/convex/contents/context";
-import {
-  type MaterialTarget,
-  readTargetMaterial,
-  resolveSourceContext,
-} from "@repo/backend/convex/contents/views/source";
 import { toContentViewIoError } from "@repo/backend/convex/contents/views/spec";
 import type { ContentViewTarget } from "@repo/backend/convex/contents/views/target";
 import { Effect } from "effect";
+
+interface MaterialTarget {
+  readonly materialKey: string;
+  readonly parentPath: string;
+  readonly publicPath: string;
+  readonly sourcePath: string;
+}
+
+/** Reads material facts already authenticated by the current signed target. */
+function readTargetMaterial(target: ContentViewTarget) {
+  if (
+    target.kind !== "curriculum-lesson" ||
+    !target.materialKey ||
+    !target.parentPath
+  ) {
+    return null;
+  }
+  return {
+    materialKey: target.materialKey,
+    parentPath: target.parentPath,
+    publicPath: target.route,
+    sourcePath: target.sourcePath,
+  } satisfies MaterialTarget;
+}
 
 /** Projects a verified public-route context row into engagement storage fields. */
 function toLearningContextStorage(input: {
@@ -87,7 +106,7 @@ const resolvePublishedContext = Effect.fn(
 });
 
 /**
- * Verifies optional learning context against durable public route rows.
+ * Verifies optional learning context against the current signed snapshot.
  *
  * Invalid, stale, or non-material hints intentionally return canonical context
  * so callers do not invent curriculum placement for direct asset visits.
@@ -104,31 +123,21 @@ export const resolveLearningContext = Effect.fn(
   }
 
   const targetMaterial = readTargetMaterial(target);
-  if (targetMaterial) {
-    const published = yield* resolvePublishedContext(
-      ctx,
-      target,
-      context,
-      targetMaterial,
-      context.programKey,
-      context.nodeKey
-    );
-    if (published.managed) {
-      return published.storage;
-    }
-  }
-
-  const sourceContext = yield* resolveSourceContext(ctx, target, {
-    nodeKey: context.nodeKey,
-    programKey: context.programKey,
-  });
-  if (!sourceContext) {
+  if (!targetMaterial) {
     return createCanonicalLearningContext();
   }
-
-  return toLearningContextStorage({
+  const published = yield* resolvePublishedContext(
+    ctx,
+    target,
     context,
-    contextRoute: sourceContext.route,
-    material: sourceContext.material,
-  });
+    targetMaterial,
+    context.programKey,
+    context.nodeKey
+  );
+  if (!published.managed) {
+    return yield* toContentViewIoError(
+      "Signed curriculum ownership is unavailable."
+    );
+  }
+  return published.storage;
 });

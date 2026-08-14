@@ -25,9 +25,10 @@ export const verifyTryoutCatalog = Effect.fn(
   }
   const facts = tryoutCatalogFacts(decoded.record);
   if (
+    facts.assetId !== row.assetId ||
     facts.identity !== row.identity ||
     facts.kind !== row.kind ||
-    facts.locale !== row.locale ||
+    facts.appLocale !== row.appLocale ||
     facts.order !== row.order ||
     facts.publicPath !== row.publicPath ||
     facts.setIdentity !== row.setIdentity
@@ -59,12 +60,15 @@ export const verifyTryoutPlacement = Effect.fn(
   const facts = tryoutPlacementFacts(decoded.record);
   if (
     facts.answerArtifactHash !== row.answerArtifactHash ||
+    facts.answerArtifactLocale !== row.answerArtifactLocale ||
+    facts.appLocale !== row.appLocale ||
     facts.contentHash !== row.contentHash ||
     facts.countryKey !== row.countryKey ||
+    facts.deliveryLanguage !== row.deliveryLanguage ||
     facts.examKey !== row.examKey ||
     facts.identity !== row.identity ||
-    facts.locale !== row.locale ||
     facts.questionArtifactHash !== row.questionArtifactHash ||
+    facts.questionArtifactLocale !== row.questionArtifactLocale ||
     facts.questionOrder !== row.questionOrder ||
     facts.sectionKey !== row.sectionKey ||
     facts.setKey !== row.setKey ||

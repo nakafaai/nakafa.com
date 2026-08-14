@@ -41,7 +41,9 @@ export function makePublicationReceipt(
   const manifest = signed.manifest;
   return {
     activatedHeads: release.stagedUpserts,
+    activeAppLocales: Array.from(manifest.activeAppLocales),
     deletedHeads: release.stagedDeletes,
+    editorialReviewDigest: manifest.editorialReviewDigest,
     manifestHash: signed.manifestHash,
     projectionDigest: manifest.projectionDigest,
     releaseId: release.releaseId,
@@ -191,6 +193,6 @@ export const completedReceipt = Effect.fn("contentRelease.completedReceipt")(
         `Completed release ${release.releaseId} has mismatched receipt evidence.`
       );
     }
-    return stored;
+    return expected;
   }
 );

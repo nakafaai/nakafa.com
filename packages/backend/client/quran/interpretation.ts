@@ -46,7 +46,7 @@ export const decodePublishedQuranInterpretation = Effect.fn(
 )(function* (
   result: QuranInterpretationResult,
   expected: {
-    readonly locale: QuranInterpretationResult["locale"];
+    readonly appLocale: QuranInterpretationResult["appLocale"];
     readonly snapshotId: string;
     readonly surahNumber: number;
     readonly verseNumber: number;
@@ -54,7 +54,7 @@ export const decodePublishedQuranInterpretation = Effect.fn(
 ) {
   const source = yield* decodePublishedQuranSource(result, "interpretation");
   if (
-    result.locale !== expected.locale ||
+    result.appLocale !== expected.appLocale ||
     source.snapshotId !== expected.snapshotId ||
     result.surahNumber !== expected.surahNumber ||
     result.verseNumber !== expected.verseNumber ||
@@ -68,8 +68,8 @@ export const decodePublishedQuranInterpretation = Effect.fn(
 
   return {
     ...source,
+    appLocale: result.appLocale,
     interpretation: result.interpretation,
-    locale: result.locale,
     surahNumber: result.surahNumber,
     verseNumber: result.verseNumber,
   };

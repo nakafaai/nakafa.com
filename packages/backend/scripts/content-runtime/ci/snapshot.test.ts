@@ -15,11 +15,9 @@ import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 const identity = {
-  cacheVersion: "v1",
+  cacheVersion: "v2",
   contentStateHash: "1".repeat(64),
-  routeGenerationHash: "2".repeat(64),
   runtimeSchemaFingerprint: "3".repeat(64),
-  sitemapGenerationHash: "4".repeat(64),
 };
 
 describe("content runtime snapshot", () => {

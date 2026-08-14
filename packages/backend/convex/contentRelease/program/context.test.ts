@@ -2,12 +2,13 @@ import {
   CorpusSourcePathSchema,
   PublicPathSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   CurriculumNodeKeySchema,
   type CurriculumRoute,
   CurriculumRouteSchema,
 } from "@nakafa/aksara-contracts/program/curriculum";
-import { makeCurriculumSnapshotRow } from "@nakafa/aksara-contracts/program/row-hash";
+import { makeCurriculumSnapshotRow } from "@nakafa/aksara-contracts/program/snapshot/row-hash";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import {
@@ -55,36 +56,13 @@ const CONTEXT_INPUT = {
   publicPath: MATERIAL_PUBLIC_PATH,
 };
 
-/** Inserts one source-owned lesson route for renamed identity checks. */
-async function insertSourceMaterialRoute(
-  target: TestConvex<typeof schema>,
-  projection: ReturnType<typeof makeMaterialProjection>
-) {
-  await target.mutation((ctx) =>
-    ctx.db.insert("publicRoutes", {
-      contentHash: `source:${projection.contentKey}`,
-      kind: projection.kind,
-      locale: projection.locale,
-      materialKey: projection.materialKey,
-      order: projection.order,
-      parentPath: projection.parentPath,
-      publicPath: projection.publicPath,
-      sectionKey: projection.sectionKey,
-      sitemap: projection.sitemap,
-      sourcePath: projection.contentKey,
-      syncShard: 0,
-      title: projection.metadata.title,
-    })
-  );
-}
-
 /** Creates one curriculum subject that owns the material card list. */
 function subjectRoute(): CurriculumRoute {
   return CurriculumRouteSchema.make({
+    appLocale: AppLocaleSchema.make("en"),
     iconKey: "science",
     kind: "curriculum-context",
     level: "subject",
-    locale: "en",
     nodeKey: "test-subject",
     order: 1,
     parentPath: ROOT_PATH,
@@ -103,10 +81,10 @@ function groupRoute(
   nodeKey = GROUP_KEY
 ): CurriculumRoute {
   return CurriculumRouteSchema.make({
+    appLocale: AppLocaleSchema.make("en"),
     iconKey: "science",
     kind: "curriculum-context",
     level: "topic",
-    locale: "en",
     materialCardDescription: "Technical card description.",
     materialCardTitle: "Technical Group",
     nodeKey,
@@ -127,11 +105,11 @@ function mappingRoute(
 ): CurriculumRoute {
   const publicPath = PublicPathSchema.make(`${GROUP_PATH}/mapping-${index}`);
   return CurriculumRouteSchema.make({
+    appLocale: AppLocaleSchema.make("en"),
     canonicalPath,
     iconKey: "science",
     kind: "curriculum-context",
     level: "lesson",
-    locale: "en",
     materialContextNodeKey: GROUP_KEY,
     materialContextParentPath: SUBJECT_PATH,
     materialContextPublicPath: GROUP_PATH,
@@ -215,11 +193,10 @@ describe("contentRelease/program/context", () => {
     });
   });
 
-  it("resolves a moved exact lesson while a source sibling keeps its old parent", async () => {
+  it("resolves a moved exact lesson from the current signed projection", async () => {
     const data = await Effect.runPromise(makeProgramSnapshotData());
     const target = convexTest(schema, convexModules);
     const source = SOURCE_MATERIAL;
-    const retainedSibling = makeMaterialProjection("en", 2);
     const renamedParent = PublicPathSchema.make(
       "subjects/test/renamed-technical-topic"
     );
@@ -234,13 +211,11 @@ describe("contentRelease/program/context", () => {
     await stageRoutes(target, data.snapshotId, [
       subjectRoute(),
       groupRoute(),
-      mappingRoute(),
+      mappingRoute(1, renamed.parentPath),
     ]);
     await target.mutation(async (ctx) => {
       await insertMaterialProjection(ctx, renamed);
-      await insertMaterialProjection(ctx, retainedSibling);
     });
-    await insertSourceMaterialRoute(target, source);
 
     await expect(
       target.query((ctx) =>
@@ -370,7 +345,6 @@ describe("contentRelease/program/context", () => {
       mappingRoute(1, MATERIAL_PUBLIC_PATH),
     ]);
     await t.mutation((ctx) => insertMaterialProjection(ctx, sibling));
-    await insertSourceMaterialRoute(t, sibling);
 
     await expect(
       t.query((ctx) =>

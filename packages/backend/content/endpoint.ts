@@ -4,6 +4,9 @@ export const PUBLIC_CONTENT_RUNTIME_PATH = "/internal/content/runtime";
 /** Private Convex endpoint for retained protected content reads. */
 export const PROTECTED_CONTENT_RUNTIME_PATH = `${PUBLIC_CONTENT_RUNTIME_PATH}/protected`;
 
+/** Private attempt-bound endpoint for immutable retained-history reads. */
+export const RETAINED_PROTECTED_CONTENT_RUNTIME_PATH = `${PROTECTED_CONTENT_RUNTIME_PATH}/history`;
+
 /**
  * Marks responses built by the private runtime route after contract encoding.
  * This diagnostic signal does not replace signed response verification.

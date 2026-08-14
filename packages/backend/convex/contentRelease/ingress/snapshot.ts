@@ -1,22 +1,17 @@
 "use node";
 
 import type { Sha256Hash } from "@nakafa/aksara-contracts/ids";
-import {
-  hashCurriculumRow,
-  hashProgramRow,
-} from "@nakafa/aksara-contracts/program/row-hash";
-import { hashProgramSnapshot } from "@nakafa/aksara-contracts/program/snapshot/hash";
-import { hashQuranRow } from "@nakafa/aksara-contracts/quran/row-hash";
-import { hashQuranSnapshot } from "@nakafa/aksara-contracts/quran/snapshot/hash";
+import { verifyProgramSnapshotHash } from "@nakafa/aksara-contracts/program/snapshot/hash";
+import { verifyProgramSnapshotRowHash } from "@nakafa/aksara-contracts/program/snapshot/row-hash";
+import { verifyQuranSnapshotHash } from "@nakafa/aksara-contracts/quran/snapshot/hash";
+import { verifyQuranRowHash } from "@nakafa/aksara-contracts/quran/snapshot/row-hash";
 import type {
   ContentSnapshotManifest,
   ContentSnapshotRow,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
 import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
-import {
-  makeTryoutCatalogRecord,
-  makeTryoutPlacementRecord,
-} from "@nakafa/aksara-contracts/tryout/row-hash";
+import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/catalog-hash";
+import { makeTryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/placement-hash";
 import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
@@ -89,18 +84,24 @@ export const verifySnapshotManifest = Effect.fn(
   "contentRelease.verifySnapshotManifest"
 )(function* (snapshot: ContentSnapshotManifest) {
   if (snapshot.family === "program") {
-    const { snapshotId, ...identity } = snapshot.manifest;
-    const actual = yield* hashProgramSnapshot(identity).pipe(
+    const actual = yield* verifyProgramSnapshotHash(snapshot.manifest).pipe(
       Effect.mapError(contractFailure)
     );
-    return yield* requireHash(actual, snapshotId, "Program snapshot manifest");
+    return yield* requireHash(
+      actual,
+      snapshot.manifest.snapshotId,
+      "Program snapshot manifest"
+    );
   }
   if (snapshot.family === "quran") {
-    const { snapshotId, ...identity } = snapshot.manifest;
-    const actual = yield* hashQuranSnapshot(identity).pipe(
+    const actual = yield* verifyQuranSnapshotHash(snapshot.manifest).pipe(
       Effect.mapError(contractFailure)
     );
-    return yield* requireHash(actual, snapshotId, "Quran snapshot manifest");
+    return yield* requireHash(
+      actual,
+      snapshot.manifest.snapshotId,
+      "Quran snapshot manifest"
+    );
   }
   const { snapshotId, ...identity } = snapshot.manifest;
   const actual = yield* contractHash(
@@ -123,11 +124,9 @@ const verifySnapshotRow = Effect.fn("contentRelease.verifySnapshotRow")(
       );
     }
     if (row.family === "program") {
-      const actual = yield* (
-        row.record.kind === "program"
-          ? hashProgramRow(row.record.row)
-          : hashCurriculumRow(row.record.row)
-      ).pipe(Effect.mapError(contractFailure));
+      const actual = yield* verifyProgramSnapshotRowHash(row.record).pipe(
+        Effect.mapError(contractFailure)
+      );
       return yield* requireHash(
         actual,
         row.record.rowHash,
@@ -141,7 +140,7 @@ const verifySnapshotRow = Effect.fn("contentRelease.verifySnapshotRow")(
           `Quran row is not bound to snapshot ${snapshotId}.`
         );
       }
-      const actual = yield* hashQuranRow(row.record.payload).pipe(
+      const actual = yield* verifyQuranRowHash(row.record).pipe(
         Effect.mapError(contractFailure)
       );
       return yield* requireHash(

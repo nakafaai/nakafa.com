@@ -1,13 +1,14 @@
+import { ACTIVE_APP_LOCALES } from "@nakafa/aksara-contracts/locale";
 import {
-  QURAN_SOURCE_IDS,
   QuranAttributionRowSchema,
+  quranSourceIds,
 } from "@nakafa/aksara-contracts/quran/source";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { loadQuranOwner } from "@repo/backend/convex/contentRelease/quran/owner";
 import { readQuranRow } from "@repo/backend/convex/contentRelease/quran/row";
 import { Effect } from "effect";
 
-const ATTRIBUTION_IDENTITY = `attribution:${QURAN_SOURCE_IDS.join(":")}`;
+const ATTRIBUTION_IDENTITY = `attribution:${quranSourceIds(ACTIVE_APP_LOCALES).join(":")}`;
 
 /** Returns the visible signed source attribution for active Quran content. */
 export const readQuranAttribution = Effect.fn(

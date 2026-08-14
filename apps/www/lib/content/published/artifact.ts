@@ -12,6 +12,7 @@ import "server-only";
 import { run } from "@mdx-js/mdx";
 import { verifySignedContentArtifact } from "@nakafa/aksara-contracts/artifact/verify";
 import type { SignedContentArtifact } from "@nakafa/aksara-contracts/content";
+import type { StoredProtectedRuntimeItem } from "@nakafa/aksara-contracts/history/decode";
 import type {
   RendererContractVersion,
   RendererManifestEnvelope,
@@ -35,42 +36,87 @@ interface EvaluateArtifactInput {
   readonly components: MDXComponents;
 }
 
+interface EvaluateHistoricalArtifactInput {
+  readonly artifact: StoredProtectedRuntimeItem["artifact"];
+  readonly components: MDXComponents;
+}
+
+interface EvaluateCompiledCodeInput {
+  readonly compiledCode: string;
+  readonly components: MDXComponents;
+  readonly contentKey: SignedContentArtifact["payload"]["contentKey"];
+}
+
 /** Authenticated module and projections consumed by a Nakafa route shell. */
 export interface RenderableContent {
   readonly artifact: SignedContentArtifact;
   readonly Content: ComponentType;
 }
 
+/** Authenticated historical module retaining its exact immutable wire type. */
+interface RenderableHistoricalContent {
+  readonly artifact: StoredProtectedRuntimeItem["artifact"];
+  readonly Content: ComponentType;
+}
+
+/** Evaluates already-authenticated compiled code without changing its schema. */
+const evaluateCompiledCode = Effect.fn("NakafaContent.evaluateCompiledCode")(
+  function* (input: EvaluateCompiledCodeInput) {
+    const module = yield* Effect.tryPromise({
+      catch: () =>
+        new ContentExecutionError({
+          contentKey: input.contentKey,
+          stage: "evaluate",
+        }),
+      try: () =>
+        run(input.compiledCode, {
+          Fragment,
+          jsx,
+          jsxs,
+          useMDXComponents: () => input.components,
+        }),
+    });
+
+    if (typeof module.default !== "function") {
+      return yield* new ContentExecutionError({
+        contentKey: input.contentKey,
+        stage: "module",
+      });
+    }
+    return module.default;
+  }
+);
+
 /** Evaluates an artifact already authenticated by its owning runtime boundary. */
 export const evaluateVerifiedArtifact = Effect.fn(
   "NakafaContent.evaluateVerifiedArtifact"
 )(function* (input: EvaluateArtifactInput) {
-  const module = yield* Effect.tryPromise({
-    catch: () =>
-      new ContentExecutionError({
-        contentKey: input.artifact.payload.contentKey,
-        stage: "evaluate",
-      }),
-    try: () =>
-      run(input.artifact.payload.compiledCode, {
-        Fragment,
-        jsx,
-        jsxs,
-        useMDXComponents: () => input.components,
-      }),
+  const Content = yield* evaluateCompiledCode({
+    compiledCode: input.artifact.payload.compiledCode,
+    components: input.components,
+    contentKey: input.artifact.payload.contentKey,
   });
 
-  if (typeof module.default !== "function") {
-    return yield* new ContentExecutionError({
-      contentKey: input.artifact.payload.contentKey,
-      stage: "module",
-    });
-  }
-
   return {
-    Content: module.default,
+    Content,
     artifact: input.artifact,
   } satisfies RenderableContent;
+});
+
+/** Evaluates an authenticated old artifact without adapting its wire schema. */
+export const evaluateVerifiedHistoricalArtifact = Effect.fn(
+  "NakafaContent.evaluateVerifiedHistoricalArtifact"
+)(function* (input: EvaluateHistoricalArtifactInput) {
+  const Content = yield* evaluateCompiledCode({
+    compiledCode: input.artifact.payload.compiledCode,
+    components: input.components,
+    contentKey: input.artifact.payload.contentKey,
+  });
+
+  return {
+    Content,
+    artifact: input.artifact,
+  } satisfies RenderableHistoricalContent;
 });
 
 /**

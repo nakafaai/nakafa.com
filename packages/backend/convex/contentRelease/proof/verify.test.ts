@@ -6,6 +6,7 @@ import {
   Ed25519SignatureSchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   ContentReleaseItemSchema,
   ContentReleaseManifestSchema,
@@ -100,7 +101,7 @@ async function insertDeleteRelease(ctx: MutationCtx, count: number) {
       change: {
         contentKey: ContentKeySchema.make(`test:proof-${index}`),
         family: "material",
-        locale: "en",
+        artifactLocale: ArtifactLocaleSchema.make("en"),
         operation: "delete",
       },
       index,
@@ -117,7 +118,7 @@ async function insertDeleteRelease(ctx: MutationCtx, count: number) {
       snapshot: {
         contentKey: item.change.contentKey,
         family: item.change.family,
-        locale: item.change.locale,
+        artifactLocale: item.change.artifactLocale,
         state: "absent",
       },
     })
@@ -178,7 +179,7 @@ async function insertDeleteRelease(ctx: MutationCtx, count: number) {
       itemBatchHash: digest.digest,
       itemBatchIndex: Math.floor(item.index / 4),
       itemJson: JSON.stringify(item),
-      locale: item.change.locale,
+      artifactLocale: item.change.artifactLocale,
       projectionReady: false,
       releaseId,
       rollbackJson: canonicalizeRollbackSnapshotEntry(rollbackEntry),
