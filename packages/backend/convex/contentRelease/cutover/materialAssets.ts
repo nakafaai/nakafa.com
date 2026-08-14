@@ -6,6 +6,7 @@ import {
   AUDITED_MATERIAL_TOPIC_COUNT,
 } from "@repo/backend/convex/contentRelease/cutover/inventory";
 import {
+  MATERIAL_EFFECTIVE_PROJECTION_ROW_READ_LIMIT,
   MATERIAL_REFERENCE_DOCUMENT_READ_CEILING,
   MATERIAL_REFERENCE_PAGE_LIMIT,
   requireAuditedMaterialOwner,
@@ -16,12 +17,13 @@ import { persistReferenceProof } from "@repo/backend/convex/contentRelease/cutov
 import { requireCutoverPhase } from "@repo/backend/convex/contentRelease/cutover/state";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
-import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
 import { Effect } from "effect";
 
-export const MATERIAL_PROOF_ROW_READ_LIMIT = MATERIAL_REFERENCE_PAGE_LIMIT * 6;
+export const MATERIAL_PROOF_ROW_READ_LIMIT =
+  MATERIAL_REFERENCE_PAGE_LIMIT *
+  (6 + MATERIAL_EFFECTIVE_PROJECTION_ROW_READ_LIMIT);
 export const MATERIAL_PROOF_READ_CEILING =
   MATERIAL_PROOF_ROW_READ_LIMIT * MATERIAL_REFERENCE_DOCUMENT_READ_CEILING;
 
@@ -109,8 +111,7 @@ export const checkpointMaterialReferencePage = Effect.fn(
   let activeTopic = progress.activeTopic;
   let topics = progress.topics;
   for (const row of stored.page) {
-    yield* requireAuditedMaterialRow(row, state);
-    const { projection } = yield* verifyMaterial(row);
+    const { projection } = yield* requireAuditedMaterialRow(ctx, row, state);
     const topic = yield* deriveMaterialTopicReference(projection);
     if (row.topicAssetId !== topic.graph.assetId) {
       return yield* materialAssetFailure(

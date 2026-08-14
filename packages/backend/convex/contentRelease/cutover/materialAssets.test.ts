@@ -5,6 +5,7 @@ import {
   MATERIAL_PROOF_ROW_READ_LIMIT,
 } from "@repo/backend/convex/contentRelease/cutover/materialAssets";
 import {
+  MATERIAL_EFFECTIVE_PROJECTION_ROW_READ_LIMIT,
   MATERIAL_REFERENCE_DOCUMENT_READ_CEILING,
   MATERIAL_REFERENCE_PAGE_LIMIT,
 } from "@repo/backend/convex/contentRelease/cutover/materialTopics";
@@ -16,8 +17,11 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
+import type { TestIdentity } from "@repo/backend/test/content-state";
 import {
+  activateInheritedMaterialCatalog,
   activateMaterialCatalog,
+  INHERITED_MATERIAL_IDENTITY,
   MATERIAL_IDENTITY,
 } from "@repo/backend/test/material-catalog";
 import type { TestConvex } from "convex-test";
@@ -30,14 +34,15 @@ const TOPIC_COUNT = 2;
 describe("contentRelease/cutover/materialAssets", () => {
   it("keeps one proof page below the reserved transaction read budget", () => {
     expect(MATERIAL_PROOF_ROW_READ_LIMIT).toBe(
-      MATERIAL_REFERENCE_PAGE_LIMIT * 6
+      MATERIAL_REFERENCE_PAGE_LIMIT *
+        (6 + MATERIAL_EFFECTIVE_PROJECTION_ROW_READ_LIMIT)
     );
     expect(MATERIAL_PROOF_READ_CEILING).toBe(
       MATERIAL_REFERENCE_PAGE_LIMIT *
-        6 *
+        (6 + MATERIAL_EFFECTIVE_PROJECTION_ROW_READ_LIMIT) *
         MATERIAL_REFERENCE_DOCUMENT_READ_CEILING
     );
-    expect(MATERIAL_PROOF_READ_CEILING).toBe(294_912);
+    expect(MATERIAL_PROOF_READ_CEILING).toBe(491_520);
     expect(MATERIAL_PROOF_READ_CEILING).toBeLessThanOrEqual(
       TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
     );
@@ -119,6 +124,50 @@ describe("contentRelease/cutover/materialAssets", () => {
       TOPIC_COUNT
     );
     expect(indexed.topic?.topicAssetId).toBe(indexed.row.topicAssetId);
+  });
+
+  it("proves inherited rows from two generations at the effective active sequence", async () => {
+    const t = convexTest(schema, convexModules);
+    await activateInheritedMaterialCatalog(t);
+    await t.mutation((ctx) =>
+      insertQuiescentCheckpointFor(ctx, INHERITED_MATERIAL_IDENTITY)
+    );
+
+    const first = await t.mutation((ctx) =>
+      runConvexProgram(
+        checkpointMaterialReferencePage(ctx, MATERIAL_COUNT, TOPIC_COUNT)
+      )
+    );
+    const progress = await t.run((ctx) =>
+      ctx.db.query("contentCutoverState").unique()
+    );
+    const receipts = [
+      first,
+      ...(await completeCheckpoint(t, MATERIAL_COUNT, TOPIC_COUNT)),
+    ];
+    const rows = await t.run((ctx) =>
+      ctx.db.query("materialCatalog").take(MATERIAL_COUNT)
+    );
+
+    expect(first).toMatchObject({
+      checked: MATERIAL_REFERENCE_PAGE_LIMIT,
+      complete: false,
+      phase: "stage",
+    });
+    expect(progress?.materialReferenceProgress).toMatchObject({
+      checked: MATERIAL_REFERENCE_PAGE_LIMIT,
+      phase: "stage",
+    });
+    expect(receipts.at(-1)).toMatchObject({
+      checked: MATERIAL_COUNT,
+      complete: true,
+      phase: "complete",
+      topics: TOPIC_COUNT,
+    });
+    expect(new Set(rows.map((row) => row.sequence))).toEqual(new Set([1, 2]));
+    expect(
+      rows.every((row) => row.sequence < INHERITED_MATERIAL_IDENTITY.sequence)
+    ).toBe(true);
   });
 
   it("rejects duplicate authenticated lesson identities", async () => {
@@ -221,12 +270,19 @@ async function completeCheckpoint(
 }
 
 async function insertQuiescentCheckpoint(ctx: MutationCtx) {
+  await insertQuiescentCheckpointFor(ctx, MATERIAL_IDENTITY);
+}
+
+async function insertQuiescentCheckpointFor(
+  ctx: MutationCtx,
+  identity: TestIdentity
+) {
   await ctx.db.insert("contentCutoverState", {
-    auditedActiveReleaseId: MATERIAL_IDENTITY.releaseId,
-    auditedActiveSequence: MATERIAL_IDENTITY.sequence,
+    auditedActiveReleaseId: identity.releaseId,
+    auditedActiveSequence: identity.sequence,
     auditedAt: 1,
     auditedLegacyWriteVersion: 0,
-    auditedNextSequence: MATERIAL_IDENTITY.sequence + 1,
+    auditedNextSequence: identity.sequence + 1,
     currentDeleted: 0,
     currentTableDeleted: 0,
     currentTableIndex: 0,

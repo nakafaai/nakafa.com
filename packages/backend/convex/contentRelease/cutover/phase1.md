@@ -103,12 +103,16 @@ pnpm --filter @repo/backend exec convex run contentRelease/cutover/materialAsset
 ```
 
 Each transaction processes at most three material rows. The staging phase may
-read at most four 16 KiB rows, and the proof phase may read at most 18 16 KiB
-rows across its page and exact index checks, for a 294,912-byte ceiling. Accept
-only monotonically increasing staging and proof counts, a terminal `checked:
-766`, exactly 72 localized topic identities, and both count-766 lesson and
-count-72 topic proof receipts. Repeating the terminal command must return
-`complete: true` with zero processed or staged rows.
+read at most 16 16 KiB rows across its page and effective-publication checks,
+for a 262,144-byte ceiling. The proof phase may read at most 30 16 KiB rows
+across its page, effective-publication checks, and exact index checks, for a
+491,520-byte ceiling. The staging bound counts four page reads plus four
+effective-publication reads for each of three rows. The proof bound counts six
+page and index reads plus four effective-publication reads for each of three
+rows. Accept only monotonically increasing staging and proof counts, a terminal
+`checked: 766`, exactly 72 localized topic identities, and both count-766
+lesson and count-72 topic proof receipts. Repeating the terminal command must
+return `complete: true` with zero processed or staged rows.
 
 ## Stage signed snapshot reference identities
 
