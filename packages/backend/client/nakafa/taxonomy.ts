@@ -3,6 +3,10 @@ import {
   toNakafaQuranDataReadError,
 } from "@repo/backend/client/nakafa/decode";
 import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
+import {
+  readNakafaReleasePin,
+  verifyNakafaReleasePin,
+} from "@repo/backend/client/nakafa/release";
 import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/decode";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
@@ -49,6 +53,7 @@ export function readNakafaTaxonomy(
   locale: Locale = defaultLocale
 ) {
   return Effect.gen(function* () {
+    const releasePin = yield* readNakafaReleasePin(convexUrl);
     const [articleCategories, signedInventory, quranResult] = yield* Effect.all(
       [
         readSignedArticleCategories(convexUrl, locale),
@@ -63,6 +68,7 @@ export function readNakafaTaxonomy(
       ...item,
       count: item.count + quran.surahs.length,
     }));
+    yield* verifyNakafaReleasePin(convexUrl, releasePin);
 
     return yield* decodeNakafaTaxonomy({
       articles: {
