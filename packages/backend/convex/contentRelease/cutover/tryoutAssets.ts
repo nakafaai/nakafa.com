@@ -4,7 +4,7 @@ import type {
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
-import { AUDITED_TRYOUT_CATALOG_COUNT } from "@repo/backend/convex/contentRelease/cutover/inventory";
+import { AUDITED_ACTIVE_TRYOUT_CATALOG_COUNT } from "@repo/backend/convex/contentRelease/cutover/inventory";
 import { persistReferenceProof } from "@repo/backend/convex/contentRelease/cutover/referenceProofs";
 import { referenceProofReceiptValidator } from "@repo/backend/convex/contentRelease/cutover/schema";
 import { requireCutoverPhase } from "@repo/backend/convex/contentRelease/cutover/state";
@@ -57,7 +57,12 @@ const authenticateTryoutAssets = Effect.fn(
   }
 
   const rows = yield* Effect.promise(() =>
-    ctx.db.query("tryoutCatalog").take(expectedCount + 1)
+    ctx.db
+      .query("tryoutCatalog")
+      .withIndex("by_snapshotId_and_index", (index) =>
+        index.eq("snapshotId", selected.snapshotId)
+      )
+      .take(expectedCount + 1)
   );
   if (rows.length !== expectedCount) {
     return yield* tryoutAssetFailure(
@@ -180,7 +185,9 @@ export const stage = internalMutation({
   args: {},
   returns: tryoutAssetReceiptValidator,
   handler: (ctx) =>
-    runConvexProgram(stageTryoutAssetIds(ctx, AUDITED_TRYOUT_CATALOG_COUNT)),
+    runConvexProgram(
+      stageTryoutAssetIds(ctx, AUDITED_ACTIVE_TRYOUT_CATALOG_COUNT)
+    ),
 });
 
 /** Stores the exact try-out reference proof in its own transaction. */
@@ -189,7 +196,7 @@ export const prove = internalMutation({
   returns: referenceProofReceiptValidator,
   handler: (ctx) =>
     runConvexProgram(
-      checkpointTryoutAssetIds(ctx, AUDITED_TRYOUT_CATALOG_COUNT)
+      checkpointTryoutAssetIds(ctx, AUDITED_ACTIVE_TRYOUT_CATALOG_COUNT)
     ),
 });
 

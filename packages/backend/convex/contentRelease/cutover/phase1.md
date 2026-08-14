@@ -130,15 +130,16 @@ signed snapshot cursor. Accept only monotonically increasing `checked` counts,
 terminal command must return `complete: true`, `checked: 228`, and zero
 processed or staged rows.
 
-Then backfill the exact 108 try-out asset IDs from their authenticated signed
-catalog rows:
+Then backfill the exact 54 active try-out asset IDs from their authenticated
+signed catalog rows. The separate audited table inventory remains 108 because
+it includes 54 rows from the retained prior snapshot generation:
 
 ```sh
 pnpm --filter @repo/backend exec convex run contentRelease/cutover/tryoutAssets:stage '{}' --prod
 ```
 
-Accept only `complete: true`, `total: 108`, and an `updated` plus `unchanged`
-sum of 108. Repeating the command must report all 108 rows unchanged.
+Accept only `complete: true`, `total: 54`, and an `updated` plus `unchanged`
+sum of 54. Repeating the command must report all 54 active rows unchanged.
 
 ## Prove all reference indexes in isolated transactions
 
@@ -152,7 +153,7 @@ pnpm --filter @repo/backend exec convex run contentRelease/cutover/articleAssets
 pnpm --filter @repo/backend exec convex run contentRelease/cutover/tryoutAssets:prove '{}' --prod
 ```
 
-Accept only article and try-out receipts with counts 14 and 108. Together with
+Accept only article and try-out receipts with counts 14 and 54. Together with
 the completed material lesson count-766, material topic count-72, and Quran
 count-228 receipts, the checkpoint must hold exactly five reference receipts
 across four families. Every proof authenticates its complete active inventory,
