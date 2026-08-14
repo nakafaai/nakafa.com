@@ -1,18 +1,15 @@
-import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import {
   tryoutCatalogIdentity,
   tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
-import { contentKeyResolver } from "@repo/backend/content/trust";
 import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { authenticateRetainedTryoutHistory } from "@repo/backend/convex/tryouts/history/authentication";
 import type { RetainedTryoutInventory } from "@repo/backend/convex/tryouts/history/inventory";
-import { verifyRetainedHistoryMarkers } from "@repo/backend/convex/tryouts/history/markers";
+import { proveRetainedHistoryMarkers } from "@repo/backend/convex/tryouts/history/markers";
 import { verifyFrozenPlacement } from "@repo/backend/convex/tryouts/history/placement";
 import {
   type AuthenticatedHistoryRows,
@@ -167,24 +164,11 @@ export const verifyRetainedHistoryReadiness = Effect.fn(
   yield* verifyFrozenRows(inventory, rows, plan);
 });
 
-/** Post-drain proof using only attempt-owned and immutable history storage. */
+/** Compact post-finalize witness safe after mutable source rows are drained. */
 export const proveRetainedHistoryComplete = Effect.fn(
   "tryouts.history.proveRetainedHistoryComplete"
 )(function* (ctx: ReadCtx, plan: RetainedTryoutHistoryPlan) {
-  const inventory = yield* authenticateRetainedTryoutHistory(ctx, plan);
-  const rows = yield* authenticateRetainedHistoryRows(ctx, inventory, plan);
-  yield* verifyAppLocales(inventory);
-  yield* verifyFrozenRows(inventory, rows, plan);
-  const markerCount = yield* verifyRetainedHistoryMarkers(ctx, inventory, plan);
-  return {
-    attempts: inventory.attempts.length,
-    catalogRows: rows.catalogRows.length,
-    frozenPlacements: inventory.frozenPlacements.length,
-    markers: markerCount,
-    placementRows: rows.placementRows.length,
-    progressRows: inventory.progressRows.length,
-    snapshotId: plan.snapshotId,
-  };
+  return yield* proveRetainedHistoryMarkers(ctx, plan);
 });
 
 /** Stable post-drain proof consumed by the deletion-complete cutover. */
@@ -193,11 +177,6 @@ export const read = internalQuery({
   returns: historyReadinessValidator,
   handler: (ctx) =>
     runConvexProgram(
-      proveRetainedHistoryComplete(ctx, retainedTryoutHistoryPlan).pipe(
-        Effect.provideService(
-          ContentVerificationKeyResolver,
-          contentKeyResolver
-        )
-      )
+      proveRetainedHistoryComplete(ctx, retainedTryoutHistoryPlan)
     ),
 });

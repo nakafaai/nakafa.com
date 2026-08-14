@@ -37,6 +37,7 @@ import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
 import { runConvexActionProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { testReaderCutoverReceipt } from "@repo/backend/test/content-cutover";
 import { makeFunctionReference } from "convex/server";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
@@ -207,7 +208,7 @@ function retentionFacts(includeRetiredProgramReceipt: boolean): RetentionFacts {
       legacyTableDeleted: 0,
       legacyTableIndex: LEGACY_INVENTORY.length,
       phase: "complete",
-      readerCutoverAcceptedAt: 1,
+      readerCutoverReceipt: testReaderCutoverReceipt(),
       ...(includeRetiredProgramReceipt
         ? { retiredProgramZeroReceipt: RETIRED_PROGRAM_ZERO_RECEIPT }
         : {}),
@@ -238,7 +239,7 @@ async function insertCompleteCutover(ctx: MutationCtx) {
     legacyTableDeleted: 0,
     legacyTableIndex: LEGACY_INVENTORY.length,
     phase: "complete",
-    readerCutoverAcceptedAt: 1,
+    readerCutoverReceipt: testReaderCutoverReceipt(),
     retiredProgramZeroReceipt: RETIRED_PROGRAM_ZERO_RECEIPT,
     updatedAt: 3,
   });

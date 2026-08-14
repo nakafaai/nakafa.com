@@ -1,4 +1,5 @@
 import { localeValidator } from "@repo/backend/convex/contentRelease/spec";
+import { historyReadinessValidator } from "@repo/backend/convex/tryouts/history/spec";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
@@ -46,6 +47,18 @@ export const retiredProgramZeroReceiptValidator = v.object({
 export const referenceProofReceiptValidator = v.object({
   count: v.number(),
   provedAt: v.number(),
+});
+
+export const readerCutoverReceiptValidator = v.object({
+  acceptedAt: v.number(),
+  history: historyReadinessValidator,
+  referenceProofs: v.object({
+    article: v.number(),
+    material: v.number(),
+    materialTopic: v.number(),
+    quran: v.number(),
+    tryout: v.number(),
+  }),
 });
 
 /** Durable cursor for the transaction-bounded Quran reference proof. */
@@ -126,7 +139,7 @@ const tables = {
     quranReferenceProof: v.optional(referenceProofReceiptValidator),
     quranReferenceProgress: v.optional(quranReferenceProgressValidator),
     /** Written only by the later deployment that owns the live reader cutover. */
-    readerCutoverAcceptedAt: v.optional(v.number()),
+    readerCutoverReceipt: v.optional(readerCutoverReceiptValidator),
     retiredProgramZeroReceipt: v.optional(retiredProgramZeroReceiptValidator),
     tryoutReferenceProof: v.optional(referenceProofReceiptValidator),
     updatedAt: v.number(),

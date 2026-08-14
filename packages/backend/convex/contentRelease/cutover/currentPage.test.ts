@@ -8,6 +8,7 @@ import {
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { testReaderCutoverReceipt } from "@repo/backend/test/content-cutover";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -168,7 +169,9 @@ async function seedArtifactDrain(ctx: MutationCtx, readerAccepted = true) {
     legacyTableDeleted: 0,
     legacyTableIndex: 16,
     phase: "frozen",
-    ...(readerAccepted ? { readerCutoverAcceptedAt: 1 } : {}),
+    ...(readerAccepted
+      ? { readerCutoverReceipt: testReaderCutoverReceipt() }
+      : {}),
     updatedAt: 1,
   });
   return userId;
@@ -226,7 +229,7 @@ async function seedSnapshotDrain(ctx: MutationCtx) {
     legacyTableDeleted: 0,
     legacyTableIndex: 16,
     phase: "draining-current",
-    readerCutoverAcceptedAt: 1,
+    readerCutoverReceipt: testReaderCutoverReceipt(),
     updatedAt: 1,
   });
   return userId;

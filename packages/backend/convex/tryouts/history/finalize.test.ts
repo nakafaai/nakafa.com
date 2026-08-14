@@ -25,6 +25,13 @@ describe("tryouts/history/finalize", () => {
           finalizeRetainedTryoutHistory(ctx, fixture.plan)
         )
       );
+      const mutableSource = [
+        ...(await ctx.db.query("tryoutCatalog").collect()),
+        ...(await ctx.db.query("tryoutPlacements").collect()),
+      ];
+      for (const row of mutableSource) {
+        await ctx.db.delete(row._id);
+      }
       const second = await runConvexProgram(
         provideHistoryTestTrust(
           finalizeRetainedTryoutHistory(ctx, fixture.plan)

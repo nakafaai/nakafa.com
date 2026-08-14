@@ -4,6 +4,7 @@ import { deleteLegacyPage } from "@repo/backend/convex/contentRelease/cutover/le
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { testReaderCutoverReceipt } from "@repo/backend/test/content-cutover";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -127,7 +128,9 @@ async function seedLegacyDrain(ctx: MutationCtx, readerAccepted = true) {
     legacyTableDeleted: 0,
     legacyTableIndex: 0,
     phase: "audited",
-    ...(readerAccepted ? { readerCutoverAcceptedAt: 1 } : {}),
+    ...(readerAccepted
+      ? { readerCutoverReceipt: testReaderCutoverReceipt() }
+      : {}),
     updatedAt: 1,
   });
   return userId;

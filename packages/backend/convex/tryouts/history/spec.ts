@@ -138,8 +138,7 @@ export const historyLocaleReceiptValidator = v.object({
   updated: v.number(),
 });
 
-/** Final Phase 1a readiness evidence, without deleting legacy fields. */
-export const historyReadinessValidator = v.object({
+const historyReadinessFields = {
   attempts: v.number(),
   catalogRows: v.number(),
   frozenPlacements: v.number(),
@@ -147,4 +146,7 @@ export const historyReadinessValidator = v.object({
   placementRows: v.number(),
   progressRows: v.number(),
   snapshotId: v.string(),
-});
+};
+
+/** Final Phase 1a readiness evidence, without deleting legacy fields. */
+export const historyReadinessValidator = v.object(historyReadinessFields);

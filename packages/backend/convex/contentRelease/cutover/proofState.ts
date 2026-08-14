@@ -26,6 +26,7 @@ import {
 } from "@repo/backend/convex/contentRelease/cutover/retiredPrograms";
 import {
   audioWorkflowAuditValidator,
+  readerCutoverReceiptValidator,
   retiredProgramZeroReceiptValidator,
 } from "@repo/backend/convex/contentRelease/cutover/schema";
 import {
@@ -72,7 +73,7 @@ export interface RetentionFacts {
     legacyTableDeleted: number;
     legacyTableIndex: number;
     phase: string;
-    readerCutoverAcceptedAt?: number;
+    readerCutoverReceipt?: Infer<typeof readerCutoverReceiptValidator>;
     retiredProgramZeroReceipt?: RetiredProgramZeroReceipt;
   };
   readonly cutoverCount: number;
@@ -127,7 +128,7 @@ export const retentionFacts = internalQuery({
         legacyTableDeleted: v.number(),
         legacyTableIndex: v.number(),
         phase: v.string(),
-        readerCutoverAcceptedAt: v.optional(v.number()),
+        readerCutoverReceipt: v.optional(readerCutoverReceiptValidator),
         retiredProgramZeroReceipt: v.optional(
           retiredProgramZeroReceiptValidator
         ),
@@ -189,7 +190,7 @@ const readRetentionFacts = Effect.fn(
           legacyTableDeleted: cutover.legacyTableDeleted,
           legacyTableIndex: cutover.legacyTableIndex,
           phase: cutover.phase,
-          readerCutoverAcceptedAt: cutover.readerCutoverAcceptedAt,
+          readerCutoverReceipt: cutover.readerCutoverReceipt,
           retiredProgramZeroReceipt: cutover.retiredProgramZeroReceipt,
         }
       : null,

@@ -163,7 +163,6 @@ import type * as contentRelease_cutover_currentPage from "../contentRelease/cuto
 import type * as contentRelease_cutover_currentTable from "../contentRelease/cutover/currentTable.js";
 import type * as contentRelease_cutover_facts from "../contentRelease/cutover/facts.js";
 import type * as contentRelease_cutover_freeze from "../contentRelease/cutover/freeze.js";
-import type * as contentRelease_cutover_history from "../contentRelease/cutover/history.js";
 import type * as contentRelease_cutover_inventory from "../contentRelease/cutover/inventory.js";
 import type * as contentRelease_cutover_legacy from "../contentRelease/cutover/legacy.js";
 import type * as contentRelease_cutover_materialAssets from "../contentRelease/cutover/materialAssets.js";
@@ -747,7 +746,6 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/cutover/currentTable": typeof contentRelease_cutover_currentTable;
   "contentRelease/cutover/facts": typeof contentRelease_cutover_facts;
   "contentRelease/cutover/freeze": typeof contentRelease_cutover_freeze;
-  "contentRelease/cutover/history": typeof contentRelease_cutover_history;
   "contentRelease/cutover/inventory": typeof contentRelease_cutover_inventory;
   "contentRelease/cutover/legacy": typeof contentRelease_cutover_legacy;
   "contentRelease/cutover/materialAssets": typeof contentRelease_cutover_materialAssets;

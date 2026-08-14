@@ -1,51 +1,25 @@
-import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
-import { contentKeyResolver } from "@repo/backend/content/trust";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { proveFreezeHistory } from "@repo/backend/convex/contentRelease/cutover/history";
-import {
-  AUDITED_ARTICLE_COUNT,
-  AUDITED_MATERIAL_COUNT,
-  AUDITED_MATERIAL_TOPIC_COUNT,
-  AUDITED_QURAN_SEARCH_COUNT,
-  AUDITED_TRYOUT_CATALOG_COUNT,
-} from "@repo/backend/convex/contentRelease/cutover/inventory";
+import { AUDITED_REFERENCE_PROOF_COUNTS } from "@repo/backend/convex/contentRelease/cutover/inventory";
 import {
   type ReferenceProofCounts,
   requireReferenceProofs,
 } from "@repo/backend/convex/contentRelease/cutover/referenceProofs";
+import { readerCutoverReceiptValidator } from "@repo/backend/convex/contentRelease/cutover/schema";
 import {
-  requireCutoverPhase,
+  loadCutoverState,
   requireReaderCutoverCheckpoint,
 } from "@repo/backend/convex/contentRelease/cutover/state";
+import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import {
-  historyReadinessValidator,
-  type RetainedTryoutHistoryPlan,
-  retainedTryoutHistoryPlan,
-} from "@repo/backend/convex/tryouts/history/spec";
-import { v } from "convex/values";
+import { proveRetainedHistoryMarkers } from "@repo/backend/convex/tryouts/history/markers";
+import type { RetainedTryoutHistoryPlan } from "@repo/backend/convex/tryouts/history/spec";
+import { retainedTryoutHistoryPlan } from "@repo/backend/convex/tryouts/history/spec";
 import { Effect } from "effect";
 
-const readerCutoverAcceptanceValidator = v.object({
-  acceptedAt: v.number(),
-  history: historyReadinessValidator,
-  referenceProofs: v.object({
-    article: v.number(),
-    material: v.number(),
-    materialTopic: v.number(),
-    quran: v.number(),
-    tryout: v.number(),
-  }),
-});
-
-const productionReferenceProofCounts = {
-  article: AUDITED_ARTICLE_COUNT,
-  material: AUDITED_MATERIAL_COUNT,
-  materialTopic: AUDITED_MATERIAL_TOPIC_COUNT,
-  quran: AUDITED_QURAN_SEARCH_COUNT,
-  tryout: AUDITED_TRYOUT_CATALOG_COUNT,
-};
+const ACCEPTANCE_MAX_BYTES_READ = 512 * 1024;
+const ACCEPTANCE_MAX_DATABASE_QUERIES = 4;
+const ACCEPTANCE_MAX_DOCUMENTS_READ = 48;
 
 /** Proves retained readers are safe before unlocking destructive drains. */
 export const acceptReaderCutover = Effect.fn(
@@ -55,43 +29,66 @@ export const acceptReaderCutover = Effect.fn(
   plan: RetainedTryoutHistoryPlan,
   expectedReferenceProofs: ReferenceProofCounts
 ) {
-  const state = yield* requireCutoverPhase(ctx, ["quiescent"]);
-  const [history, referenceProofs] = yield* Effect.all([
-    proveFreezeHistory(ctx, plan),
-    requireReferenceProofs(ctx, expectedReferenceProofs),
-  ]);
-  const existingAcceptedAt = state.readerCutoverAcceptedAt;
-
-  if (existingAcceptedAt !== undefined) {
-    yield* requireReaderCutoverCheckpoint(state);
-    return { acceptedAt: existingAcceptedAt, history, referenceProofs };
+  const state = yield* loadCutoverState(ctx);
+  if (state?.readerCutoverReceipt !== undefined) {
+    return yield* requireReaderCutoverCheckpoint(
+      state,
+      plan,
+      expectedReferenceProofs
+    );
+  }
+  if (state?.phase !== "quiescent") {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_STATE",
+      "Reader cutover acceptance requires the quiescent cutover phase."
+    );
   }
 
+  const [history, referenceProofs] = yield* Effect.all([
+    proveRetainedHistoryMarkers(ctx, plan),
+    requireReferenceProofs(ctx, state, expectedReferenceProofs),
+  ]);
+  yield* requireAcceptanceBudget(ctx);
+
   const acceptedAt = Date.now();
+  const readerCutoverReceipt = { acceptedAt, history, referenceProofs };
   yield* Effect.promise(() =>
     ctx.db.patch("contentCutoverState", state._id, {
-      readerCutoverAcceptedAt: acceptedAt,
+      readerCutoverReceipt,
       updatedAt: acceptedAt,
     })
   );
-  return { acceptedAt, history, referenceProofs };
+  return readerCutoverReceipt;
+});
+
+/** Fails before the receipt write if the bounded acceptance budget drifts. */
+const requireAcceptanceBudget = Effect.fn(
+  "contentRelease.cutover.requireReaderAcceptanceBudget"
+)(function* (ctx: MutationCtx) {
+  const metrics = yield* Effect.promise(() => ctx.meta.getTransactionMetrics());
+  if (
+    metrics.bytesRead.used > ACCEPTANCE_MAX_BYTES_READ ||
+    metrics.databaseQueries.used > ACCEPTANCE_MAX_DATABASE_QUERIES ||
+    metrics.documentsRead.used > ACCEPTANCE_MAX_DOCUMENTS_READ ||
+    metrics.functionsScheduled.used !== 0
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_LIMIT",
+      `Reader cutover acceptance used ${metrics.bytesRead.used} bytes, ${metrics.databaseQueries.used} queries, ${metrics.documentsRead.used} documents, and ${metrics.functionsScheduled.used} schedules.`
+    );
+  }
 });
 
 /** Sole reader-deployment writer for the otherwise unreachable checkpoint. */
 export const accept = internalMutation({
   args: {},
-  returns: readerCutoverAcceptanceValidator,
+  returns: readerCutoverReceiptValidator,
   handler: (ctx) =>
     runConvexProgram(
       acceptReaderCutover(
         ctx,
         retainedTryoutHistoryPlan,
-        productionReferenceProofCounts
-      ).pipe(
-        Effect.provideService(
-          ContentVerificationKeyResolver,
-          contentKeyResolver
-        )
+        AUDITED_REFERENCE_PROOF_COUNTS
       )
     ),
 });

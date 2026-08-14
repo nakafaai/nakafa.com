@@ -3,6 +3,7 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { legacyContentWriteHandler } from "@repo/backend/convex/triggers/contents/legacy";
+import { testReaderCutoverReceipt } from "@repo/backend/test/content-cutover";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -46,7 +47,7 @@ describe("triggers/contents/legacy", () => {
         legacyTableDeleted: 0,
         legacyTableIndex: 0,
         phase: "audited",
-        readerCutoverAcceptedAt: 1,
+        readerCutoverReceipt: testReaderCutoverReceipt(),
         updatedAt: 1,
       })
     );

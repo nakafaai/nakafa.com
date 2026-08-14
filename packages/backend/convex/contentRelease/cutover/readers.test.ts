@@ -35,27 +35,48 @@ const TEST_REFERENCE_PROOF_COUNTS = {
 describe("contentRelease/cutover/readers", () => {
   it("accepts exact retained history once and preserves the first checkpoint", async () => {
     const t = convexTest(schema, convexModules);
-    const result = await t.mutation(async (ctx) => {
+    const plan = await t.mutation(async (ctx) => {
       const fixture = await prepareReaderCutover(ctx);
-
-      const first = await runConvexProgram(
+      return fixture.plan;
+    });
+    const first = await t.mutation((ctx) =>
+      runConvexProgram(
         provideHistoryTestTrust(
-          acceptReaderCutover(ctx, fixture.plan, TEST_REFERENCE_PROOF_COUNTS)
+          acceptReaderCutover(ctx, plan, TEST_REFERENCE_PROOF_COUNTS)
         )
-      );
-      const second = await runConvexProgram(
+      )
+    );
+    const second = await t.mutation((ctx) =>
+      runConvexProgram(
         provideHistoryTestTrust(
-          acceptReaderCutover(ctx, fixture.plan, TEST_REFERENCE_PROOF_COUNTS)
+          acceptReaderCutover(ctx, plan, TEST_REFERENCE_PROOF_COUNTS)
         )
-      );
-      const state = await ctx.db
+      )
+    );
+    await t.mutation(async (ctx) => {
+      const state = await ctx.db.query("contentCutoverState").unique();
+      if (!state) {
+        throw new Error("Expected one accepted reader checkpoint.");
+      }
+      await ctx.db.patch("contentCutoverState", state._id, {
+        phase: "audited",
+      });
+    });
+    const advancedPhaseRetry = await t.mutation((ctx) =>
+      runConvexProgram(
+        provideHistoryTestTrust(
+          acceptReaderCutover(ctx, plan, TEST_REFERENCE_PROOF_COUNTS)
+        )
+      )
+    );
+    const state = await t.query((ctx) =>
+      ctx.db
         .query("contentCutoverState")
         .withIndex("by_key", (index) => index.eq("key", "phase1"))
-        .unique();
-      return { first, second, state };
-    });
+        .unique()
+    );
 
-    expect(result.first).toEqual({
+    expect(first).toEqual({
       acceptedAt: expect.any(Number),
       history: {
         attempts: 2,
@@ -68,9 +89,10 @@ describe("contentRelease/cutover/readers", () => {
       },
       referenceProofs: TEST_REFERENCE_PROOF_COUNTS,
     });
-    expect(result.second).toEqual(result.first);
-    expect(result.state?.readerCutoverAcceptedAt).toBe(result.first.acceptedAt);
-    expect(result.state?.updatedAt).toBe(result.first.acceptedAt);
+    expect(second).toEqual(first);
+    expect(advancedPhaseRetry).toEqual(first);
+    expect(state?.readerCutoverReceipt).toEqual(first);
+    expect(state?.updatedAt).toBe(first.acceptedAt);
   });
 
   it("rejects acceptance when one completion marker is missing", async () => {
@@ -102,7 +124,7 @@ describe("contentRelease/cutover/readers", () => {
     const state = await t.query((ctx) =>
       ctx.db.query("contentCutoverState").first()
     );
-    expect(state?.readerCutoverAcceptedAt).toBeUndefined();
+    expect(state?.readerCutoverReceipt).toBeUndefined();
   });
 
   it("rejects acceptance when one signed reference proof is missing", async () => {
@@ -134,7 +156,61 @@ describe("contentRelease/cutover/readers", () => {
     const state = await t.query((ctx) =>
       ctx.db.query("contentCutoverState").first()
     );
-    expect(state?.readerCutoverAcceptedAt).toBeUndefined();
+    expect(state?.readerCutoverReceipt).toBeUndefined();
+  });
+
+  it("rejects a first acceptance after the quiescent phase", async () => {
+    const t = convexTest(schema, convexModules);
+    const plan = await t.mutation(async (ctx) => {
+      const fixture = await prepareReaderCutover(ctx);
+      const state = await ctx.db.query("contentCutoverState").unique();
+      if (!state) {
+        throw new Error("Expected one reader cutover checkpoint.");
+      }
+      await ctx.db.patch("contentCutoverState", state._id, {
+        phase: "audited",
+      });
+      return fixture.plan;
+    });
+
+    await expect(
+      t.mutation((ctx) =>
+        runConvexProgram(
+          provideHistoryTestTrust(
+            acceptReaderCutover(ctx, plan, TEST_REFERENCE_PROOF_COUNTS)
+          )
+        )
+      )
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_STATE" },
+    });
+  });
+
+  it("fails before writing when the cold acceptance query budget drifts", async () => {
+    const t = convexTest(schema, convexModules);
+    const plan = await t.mutation(async (ctx) => {
+      const fixture = await prepareReaderCutover(ctx);
+      return fixture.plan;
+    });
+
+    await expect(
+      t.mutation(async (ctx) => {
+        await ctx.db.query("contentCutoverState").first();
+        return runConvexProgram(
+          provideHistoryTestTrust(
+            acceptReaderCutover(ctx, plan, TEST_REFERENCE_PROOF_COUNTS)
+          )
+        );
+      })
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_LIMIT",
+        message: expect.stringContaining("5 queries"),
+      },
+    });
+    await expect(
+      t.query((ctx) => ctx.db.query("contentCutoverState").unique())
+    ).resolves.not.toHaveProperty("readerCutoverReceipt");
   });
 });
 

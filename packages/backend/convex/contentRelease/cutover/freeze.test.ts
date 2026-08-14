@@ -12,6 +12,7 @@ import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { finalizeRetainedTryoutHistory } from "@repo/backend/convex/tryouts/history/finalize";
 import { retainedTryoutHistoryPlan } from "@repo/backend/convex/tryouts/history/spec";
+import { testReaderCutoverReceipt } from "@repo/backend/test/content-cutover";
 import {
   insertTestState,
   insertZeroRelease,
@@ -47,7 +48,7 @@ describe("contentRelease/cutover/freeze", () => {
       if (publicationState) {
         await ctx.db.delete(publicationState._id);
       }
-      await insertCutoverState(ctx, "complete");
+      await insertCutoverState(ctx, "complete", fixture.plan);
       return runConvexProgram(
         provideHistoryTestTrust(freezeProgram(ctx, fixture.plan))
       );
@@ -99,7 +100,8 @@ describe("contentRelease/cutover/freeze", () => {
 
 async function insertCutoverState(
   ctx: MutationCtx,
-  phase: "complete" | "freeze-armed"
+  phase: "complete" | "freeze-armed",
+  plan = retainedTryoutHistoryPlan
 ) {
   await ctx.db.insert("contentCutoverState", {
     auditedActiveReleaseId: AUDITED_ACTIVE_RELEASE_ID,
@@ -117,7 +119,7 @@ async function insertCutoverState(
     legacyTableDeleted: 0,
     legacyTableIndex: 16,
     phase,
-    readerCutoverAcceptedAt: 1,
+    readerCutoverReceipt: testReaderCutoverReceipt(plan),
     updatedAt: 1,
   });
 }

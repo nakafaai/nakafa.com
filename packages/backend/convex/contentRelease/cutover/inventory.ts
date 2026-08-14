@@ -28,6 +28,13 @@ export const AUDITED_MATERIAL_TOPIC_COUNT = 72;
 export const AUDITED_QURAN_SEARCH_COUNT = 228;
 export const AUDITED_ACTIVE_TRYOUT_CATALOG_COUNT = RETAINED_CATALOG_COUNT;
 export const AUDITED_PHYSICAL_TRYOUT_CATALOG_COUNT = 108;
+export const AUDITED_REFERENCE_PROOF_COUNTS = {
+  article: AUDITED_ARTICLE_COUNT,
+  material: AUDITED_MATERIAL_COUNT,
+  materialTopic: AUDITED_MATERIAL_TOPIC_COUNT,
+  quran: AUDITED_QURAN_SEARCH_COUNT,
+  tryout: AUDITED_ACTIVE_TRYOUT_CATALOG_COUNT,
+} as const;
 
 export interface InventoryEntry<TableName extends TableNames = TableNames> {
   readonly batchSize: number;

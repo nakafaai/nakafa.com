@@ -200,7 +200,7 @@ split.
 
 Do not invoke the legacy drain again, freeze the publication pointer, or drain
 any current signed table in this deployment. The Phase 1 schema contains an
-optional `readerCutoverAcceptedAt` checkpoint, but this source deliberately
+optional `readerCutoverReceipt` checkpoint, but this source deliberately
 contains no operation that can write it. Every destructive page and the final
 proof reject the missing checkpoint.
 
@@ -210,4 +210,6 @@ It must also remove every legacy application and agent-doc reader. Only that
 deployment may expose the bounded reader-acceptance mutation described in
 `phase2.md`. That mutation validates all five durable reference receipts across
 four families and the unchanged audited publication identity without reopening
-the large source inventories in one transaction.
+the large source inventories in one transaction. It derives the compact
+history witness from the exact marker and attempt sets created by the atomic
+finalize mutation.

@@ -3,7 +3,7 @@
 Phase 2 reader cutover may start only after the Phase 1 runbook has created all
 21 authenticated history markers while `contentCutoverState.phase` remains
 `quiescent`. Destructive draining may start only after the deployed reader
-cutover writes the otherwise unreachable `readerCutoverAcceptedAt` checkpoint.
+cutover writes the otherwise unreachable `readerCutoverReceipt` checkpoint.
 The retained-history tables remain until their independent zero-reference gate
 is satisfied.
 
@@ -18,12 +18,16 @@ is satisfied.
    review, protected artifact, agent-doc, and browser acceptance against that
    deployment. No fallback or current-history union is accepted.
 4. Only the reader-cutover deployment may expose
-   `contentRelease/cutover/readers:accept`. It must re-prove all 21 markers,
+   `contentRelease/cutover/readers:accept`. It must prove the exact 21 attempts
+   and 21 markers, the 15 and 6 release split, locale completion, snapshot
+   identity, and 1,720 declared questions,
    require the exact Phase 1 article, material lesson, material topic, Quran,
    and try-out proof receipts, and verify the audited publication identity is
-   unchanged before it persists `readerCutoverAcceptedAt` on the existing
-   quiescent checkpoint. Phase 1 has no writer for this field, so an earlier
-   drain is impossible.
+   unchanged before it persists one structured `readerCutoverReceipt` on the
+   existing quiescent checkpoint. The cold path is limited to four queries,
+   48 documents, 512 KiB read, one patch, and zero schedules. An exact retry
+   reads only the existing receipt. Phase 1 has no writer for this field, so an
+   earlier drain is impossible.
 5. Invoke `contentRelease/cutover/legacy:drainLegacy` until it reaches phase
    `legacy-drained`. Sum `deleted` across every bounded action receipt and
    accept only exactly 12,854 total deletions. The terminal proof independently
@@ -80,7 +84,7 @@ is satisfied.
   expiry, progress, and account-cleanup mutations.
 - Delete the temporary runtime-cache exclusions for
   `contentCutoverActivity` and `contentCutoverState`.
-- Delete the reader-acceptance mutation and `readerCutoverAcceptedAt` field
+- Delete the reader-acceptance mutation and `readerCutoverReceipt` field
   after the terminal proof and current-genesis acceptance are complete.
 - Delete the retired learning-program zero receipt and its six-table inventory
   only after the terminal proof and physical table deletion are complete.

@@ -3,6 +3,7 @@ import { ensureState } from "@repo/backend/convex/contentRelease/model";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { testReaderCutoverReceipt } from "@repo/backend/test/content-cutover";
 import { makeFunctionReference } from "convex/server";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -30,10 +31,12 @@ describe("contentRelease/cutover/state", () => {
     await expect(
       t.mutation(() =>
         runConvexProgram(
-          requireReaderCutoverCheckpoint({ readerCutoverAcceptedAt: 1 })
+          requireReaderCutoverCheckpoint({
+            readerCutoverReceipt: testReaderCutoverReceipt(),
+          })
         )
       )
-    ).resolves.toBeNull();
+    ).resolves.toEqual(testReaderCutoverReceipt());
   });
 
   it("blocks singleton recreation as soon as the cutover is initialized", async () => {

@@ -1,5 +1,4 @@
-import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
-import { contentKeyResolver } from "@repo/backend/content/trust";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type {
   ActionCtx,
   MutationCtx,
@@ -9,7 +8,6 @@ import {
   readAuditFacts,
   validateQuiescentPublication,
 } from "@repo/backend/convex/contentRelease/cutover/facts";
-import { proveFreezeHistory } from "@repo/backend/convex/contentRelease/cutover/history";
 import {
   CURRENT_INVENTORY,
   LEGACY_INVENTORY,
@@ -28,7 +26,6 @@ import {
   runConvexActionProgram,
   runConvexProgram,
 } from "@repo/backend/convex/lib/effect";
-import { proveRetainedHistoryComplete } from "@repo/backend/convex/tryouts/history/readiness";
 import {
   type RetainedTryoutHistoryPlan,
   retainedTryoutHistoryPlan,
@@ -94,14 +91,7 @@ export const commit = internalMutation({
   args: {},
   returns: freezeReceiptValidator,
   handler: (ctx) =>
-    runConvexProgram(
-      freezeProgram(ctx, retainedTryoutHistoryPlan).pipe(
-        Effect.provideService(
-          ContentVerificationKeyResolver,
-          contentKeyResolver
-        )
-      )
-    ),
+    runConvexProgram(freezeProgram(ctx, retainedTryoutHistoryPlan)),
 });
 
 /** Arms downtime, re-audits exact current state, then commits the freeze. */
@@ -180,13 +170,11 @@ export const freezeProgram = Effect.fn("contentRelease.cutover.freeze")(
       "proved",
     ]);
     if (cutover.phase !== "freeze-armed") {
-      return yield* proveFrozenState(ctx, plan);
+      return yield* proveFrozenState(ctx, cutover, plan);
     }
-    yield* requireReaderCutoverCheckpoint(cutover);
+    const readerReceipt = yield* requireReaderCutoverCheckpoint(cutover, plan);
     const state = yield* verifyAuditedPointer(ctx, cutover);
-    const proof = yield* proveFreezeHistory(ctx, plan).pipe(
-      Effect.mapError((error) => freezeError(error.message))
-    );
+    const proof = readerReceipt.history;
     yield* validateHistoryProof(proof, plan);
     yield* Effect.promise(() => ctx.db.delete("contentState", state._id));
     const now = Date.now();
@@ -239,7 +227,11 @@ const verifyAuditedPointer = Effect.fn(
 
 /** Re-proves idempotent retries cannot accept a recreated content pointer. */
 const proveFrozenState = Effect.fn("contentRelease.cutover.proveFrozenState")(
-  function* (ctx: MutationCtx, plan: RetainedTryoutHistoryPlan) {
+  function* (
+    ctx: MutationCtx,
+    cutover: Doc<"contentCutoverState">,
+    plan: RetainedTryoutHistoryPlan
+  ) {
     const state = yield* Effect.promise(() =>
       ctx.db.query("contentState").first()
     );
@@ -248,9 +240,8 @@ const proveFrozenState = Effect.fn("contentRelease.cutover.proveFrozenState")(
         "Publication state was recreated after the durable freeze."
       );
     }
-    const proof = yield* proveRetainedHistoryComplete(ctx, plan).pipe(
-      Effect.mapError((error) => freezeError(error.message))
-    );
+    const readerReceipt = yield* requireReaderCutoverCheckpoint(cutover, plan);
+    const proof = readerReceipt.history;
     yield* validateHistoryProof(proof, plan);
     return freezeReceipt(proof);
   }

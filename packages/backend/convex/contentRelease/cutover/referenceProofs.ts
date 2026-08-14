@@ -44,8 +44,16 @@ export const persistReferenceProof = Effect.fn(
 /** Requires every durable proof and the original publication identity. */
 export const requireReferenceProofs = Effect.fn(
   "contentRelease.cutover.requireReferenceProofs"
-)(function* (ctx: ReadCtx, expected: ReferenceProofCounts) {
-  const state = yield* requireCutoverPhase(ctx, ["quiescent"]);
+)(function* (
+  ctx: ReadCtx,
+  state: Doc<"contentCutoverState">,
+  expected: ReferenceProofCounts
+) {
+  if (state.phase !== "quiescent") {
+    return yield* referenceProofFailure(
+      "Reference proofs require the quiescent cutover phase."
+    );
+  }
   const states = yield* Effect.promise(() =>
     ctx.db.query("contentState").take(2)
   );
