@@ -10,6 +10,13 @@ export const CUTOVER_REFERENCE_PROOF_COUNTS = {
   tryout: 54,
 } as const;
 
+export const CUTOVER_AUDIO_WORKFLOW_COUNTS = {
+  failed: 26,
+  steps: 315,
+  succeeded: 37,
+  total: 63,
+} as const;
+
 /** Authenticates every durable receipt required to retire the checkpoint. */
 export function hasTerminalCutoverEvidence(
   checkpoint: Doc<"contentCutoverState">
@@ -77,10 +84,10 @@ function hasExactAudioReceipt(
     0
   );
   return (
-    audio.total === 63 &&
-    audio.succeeded === 37 &&
-    audio.failed === 26 &&
-    audio.steps === 315 &&
+    audio.total === CUTOVER_AUDIO_WORKFLOW_COUNTS.total &&
+    audio.succeeded === CUTOVER_AUDIO_WORKFLOW_COUNTS.succeeded &&
+    audio.failed === CUTOVER_AUDIO_WORKFLOW_COUNTS.failed &&
+    audio.steps === CUTOVER_AUDIO_WORKFLOW_COUNTS.steps &&
     audio.workflows.length === audio.total &&
     ids.size === audio.total &&
     succeeded === audio.succeeded &&

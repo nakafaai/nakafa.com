@@ -6,7 +6,7 @@ import {
 import { Effect, Schema } from "effect";
 import type { CacheIdentity } from "./config";
 import { contentRuntimeCiError } from "./error";
-import { type JsonObject, JsonObjectSchema } from "./generation";
+import { type JsonObject, JsonObjectSchema } from "./json";
 
 export const CONTENT_RUNTIME_CACHE_DIRECTORY = "agent-docs-content-cache";
 export const CONTENT_RUNTIME_CACHE_FILE = "runtime.tar.gpg";

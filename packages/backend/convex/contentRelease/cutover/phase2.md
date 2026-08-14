@@ -55,6 +55,11 @@ is satisfied.
    writer, reader, route, sync, repair, local-content audio path, or fallback.
    Remove publication guards from the sole current Aksara ingress while keeping
    the separate try-out and application maintenance guard backed by `proved`.
+   While `contentState` is empty, the required Agent-Friendly Docs workflow may
+   accept only the exact proved checkpoint and activity receipt. It must hash
+   the complete stripped rows, verify the generation twice, and skip signed
+   snapshot, build, and AFDocs work because no current publication exists. The
+   maintenance branch is temporary and does not replace production acceptance.
 9. Publish the clean six-scope current genesis through the protected Aksara
    release workflow and prove the exact active pointer and signed catalogs.
 10. Run application, retained-history, and signed-publication acceptance while
@@ -118,6 +123,10 @@ is satisfied.
   expiry, progress, and account-cleanup mutations.
 - Delete the temporary runtime-cache exclusions for
   `contentCutoverActivity` and `contentCutoverState`.
+- Delete `scripts/content-runtime/ci/maintenance.ts`, its test, the temporary
+  runtime-generation mode, and the Agent-Friendly Docs maintenance branch in
+  the same deployment that retires both checkpoint rows. Restore the required
+  workflow to the single published-pointer path.
 - Delete the reader-acceptance mutation and `readerCutoverReceipt` field
   after the terminal proof and current-genesis acceptance are complete.
 - Delete the retired learning-program zero receipt and its six-table inventory
