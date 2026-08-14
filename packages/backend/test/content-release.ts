@@ -133,7 +133,6 @@ export function testReleaseJson(options?: ReleaseOptions) {
       activeAppLocales: ACTIVE_APP_LOCALE_CODES,
       baseActiveAppLocales:
         baseReleaseId === null ? null : ACTIVE_APP_LOCALE_CODES,
-      baseEditorialReviewDigest: baseReleaseId === null ? null : TEST_DIGEST,
       baseManifestHash:
         baseReleaseId === null
           ? null
@@ -163,7 +162,6 @@ export function testReleaseJson(options?: ReleaseOptions) {
       scope: options?.scope ?? testPublicationScope({ snapshots }),
       snapshots,
       upsertCount,
-      editorialReviewDigest: TEST_DIGEST,
       format: CONTENT_RELEASE_FORMAT,
     },
     manifestHash: options?.manifestHash ?? TEST_MANIFEST_HASH,

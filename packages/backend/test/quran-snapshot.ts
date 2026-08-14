@@ -55,7 +55,6 @@ function makeQuranSnapshotFacts(
     activeAppLocales: ACTIVE_APP_LOCALES,
     attributionCount: QURAN_ATTRIBUTION_COUNT,
     chunkCount,
-    editorialReviewDigest: TEST_DIGEST,
     projectionCount: runtimeCount + QURAN_SEARCH_COUNT,
     projectionDigest: TEST_DIGEST,
     provenanceDigest: TEST_DIGEST,

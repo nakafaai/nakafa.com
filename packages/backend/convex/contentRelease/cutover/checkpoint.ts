@@ -152,7 +152,6 @@ function hasGenesisManifest(
     manifest.baseReleaseId === null &&
     manifest.baseManifestHash === null &&
     manifest.baseActiveAppLocales === null &&
-    manifest.baseEditorialReviewDigest === null &&
     manifest.baseResultCount === 0 &&
     manifest.baseResultDigest === EMPTY_RESULT_CATALOG_DIGEST &&
     manifest.origin.kind === "git" &&

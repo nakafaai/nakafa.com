@@ -101,7 +101,6 @@ export async function activateRollbackFixture(
     activatedHeads: itemCount,
     activeAppLocales: ["en", "id"],
     deletedHeads: 0,
-    editorialReviewDigest: TEST_DIGEST,
     manifestHash: TEST_MANIFEST_HASH,
     projectionDigest: TEST_DIGEST,
     releaseId: TEST_RELEASE_ID,

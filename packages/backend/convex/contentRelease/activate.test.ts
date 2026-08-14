@@ -79,7 +79,6 @@ function expectedReceipt(identity: TestIdentity) {
     activatedHeads: 0,
     activeAppLocales: ["en", "id"],
     deletedHeads: 0,
-    editorialReviewDigest: TEST_DIGEST,
     manifestHash: identity.manifestHash,
     projectionDigest: TEST_DIGEST,
     releaseId: identity.releaseId,

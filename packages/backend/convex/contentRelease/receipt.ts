@@ -43,7 +43,6 @@ export function makePublicationReceipt(
     activatedHeads: release.stagedUpserts,
     activeAppLocales: Array.from(manifest.activeAppLocales),
     deletedHeads: release.stagedDeletes,
-    editorialReviewDigest: manifest.editorialReviewDigest,
     manifestHash: signed.manifestHash,
     projectionDigest: manifest.projectionDigest,
     releaseId: release.releaseId,

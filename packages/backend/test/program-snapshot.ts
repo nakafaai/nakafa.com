@@ -161,7 +161,6 @@ export const makeProgramSnapshotData = Effect.fn(
   });
   const manifest = yield* makeProgramSnapshot({
     activeAppLocales: ACTIVE_APP_LOCALES,
-    editorialReviewDigest: TEST_MANIFEST_HASH,
     ...evidence,
   });
   const snapshotId = manifest.snapshotId;
