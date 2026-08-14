@@ -153,7 +153,6 @@ import type * as contentRelease_compact_state from "../contentRelease/compact/st
 import type * as contentRelease_cursor from "../contentRelease/cursor.js";
 import type * as contentRelease_cutover_checkpoint from "../contentRelease/cutover/checkpoint.js";
 import type * as contentRelease_cutover_evidence from "../contentRelease/cutover/evidence.js";
-import type * as contentRelease_cutover_locale from "../contentRelease/cutover/locale.js";
 import type * as contentRelease_cutover_retained from "../contentRelease/cutover/retained.js";
 import type * as contentRelease_cutover_state from "../contentRelease/cutover/state.js";
 import type * as contentRelease_cutover_tryouts from "../contentRelease/cutover/tryouts.js";
@@ -702,7 +701,6 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/cursor": typeof contentRelease_cursor;
   "contentRelease/cutover/checkpoint": typeof contentRelease_cutover_checkpoint;
   "contentRelease/cutover/evidence": typeof contentRelease_cutover_evidence;
-  "contentRelease/cutover/locale": typeof contentRelease_cutover_locale;
   "contentRelease/cutover/retained": typeof contentRelease_cutover_retained;
   "contentRelease/cutover/state": typeof contentRelease_cutover_state;
   "contentRelease/cutover/tryouts": typeof contentRelease_cutover_tryouts;

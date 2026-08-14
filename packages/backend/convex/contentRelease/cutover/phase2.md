@@ -64,26 +64,26 @@ is satisfied.
    release workflow and prove the exact active pointer and signed catalogs.
 10. Run application, retained-history, and signed-publication acceptance while
    the `proved` checkpoint still blocks try-out and application writes.
-11. Retire all 31 legacy locale fields and 1,720 frozen placement titles while
-   the transitional schema still declares them. Accept only 21 attempts, 10
-   progress rows, 1,720 placements, 31 locale removals, and 1,720 title
-   removals. Repeat once and require zero removals on retry:
-
-   ```sh
-   pnpm --filter @repo/backend exec convex run contentRelease/cutover/locale:retire '{}' --prod
-   ```
+11. Completed in production on 2026-08-14. The bounded mutation retired all
+   31 legacy locale fields and all 1,720 frozen placement titles while the
+   transitional schema still declared them. The first receipt observed 21
+   attempts, 10 progress rows, 1,720 placements, 31 locale removals, and 1,720
+   title removals. The immediate retry observed the same inventory with zero
+   removals. The one-off mutation is deleted in the strict-schema deployment.
 
 12. Immediately deploy the strict try-out schema. Delete the field-retirement
    mutation in that deployment, make `appLocale` required, remove the legacy
    `locale` fields and index, and remove the frozen placement `title` field.
    Preserve the proved checkpoint and all maintenance guards.
-13. Physically delete every empty undeclared legacy table and all six retired
-   learning-program tables only after the strict schema is deployed. Use the
-   Convex Dashboard's table-scoped **Delete table** operation because the
-   installed CLI has no table-scoped deletion command. Immediately before each
-   deletion, prove the table is still undeclared and empty. Record the table,
-   production deployment, operator, timestamp, and zero-count evidence. Prove
-   every removed table remains absent after the final deletion.
+13. Physically delete all 27 empty undeclared tables only after the strict
+   schema is deployed: the 16 legacy content tables, six retired
+   learning-program tables, three retired audio tables, and two drained signed
+   ownership tables listed below. Use the Convex Dashboard's table-scoped
+   **Delete table** operation because the installed CLI has no table-scoped
+   deletion command. Immediately before each deletion, prove the table is still
+   undeclared and empty. Record the table, production deployment, operator,
+   timestamp, and zero-count evidence. Prove every removed table remains absent
+   after the final deletion.
 14. Set the exact accepted genesis identity from the signed publication receipt,
    then delete the single `contentCutoverState` and `contentCutoverActivity`
    documents through the bounded retire mutation:
@@ -154,6 +154,10 @@ is satisfied.
 - Delete these six empty retired tables: `learningProgramCoverage`,
   `learningProgramSources`, `learningPrograms`,
   `learningPlanItems`, `learningPlans`, and `learningProfiles`.
+- Delete these three empty retired audio tables: `audioContentSources`,
+  `contentAudios`, and `audioGenerationQueue`.
+- Delete these two drained signed ownership tables: `contentOwners` and
+  `materialOwners`.
 - Delete `contentCutoverActivity` and `contentCutoverState` after their rows are
   zero and their schema declarations are gone.
 - Remove `ELEVENLABS_API_KEY` and `ENABLE_AUDIO_GENERATION` from every Convex
