@@ -19,10 +19,7 @@ const EXPECTED_RUNTIME_SCHEMA_FINGERPRINT =
 describe("content runtime tables", () => {
   it("derives the complete copy set and applies the active pointer last", () => {
     const releaseTables = Object.keys(contentReleaseSchema).filter(
-      (table) =>
-        table !== "contentState" &&
-        table !== "contentCutoverActivity" &&
-        table !== "contentCutoverState"
+      (table) => table !== "contentState"
     );
     const expected = [
       ...releaseTables,
@@ -31,8 +28,6 @@ describe("content runtime tables", () => {
     ];
 
     expect(CONTENT_RUNTIME_TABLES).toEqual(expected);
-    expect(CONTENT_RUNTIME_TABLES).not.toContain("contentCutoverState");
-    expect(CONTENT_RUNTIME_TABLES).not.toContain("contentCutoverActivity");
     expect(new Set(CONTENT_RUNTIME_TABLES).size).toBe(expected.length);
     expect(Effect.runSync(validateContentRuntimeTableDefinitions)).toHaveLength(
       expected.length
