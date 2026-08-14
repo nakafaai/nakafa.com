@@ -3,7 +3,6 @@ import {
   rendererDomainValidator,
 } from "@repo/backend/convex/contentRelease/spec";
 import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
-import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { tryoutAttemptAccessSourceKindValidator } from "@repo/backend/convex/tryouts/access/source";
 import tryoutHistorySchema from "@repo/backend/convex/tryouts/history/schema";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
@@ -63,8 +62,6 @@ const tables = {
     trackKey: tryoutRouteKeyValidator,
     setKey: tryoutRouteKeyValidator,
     appLocale: appLocaleValidator,
-    /** Temporary storage-only source for the bounded appLocale migration. */
-    locale: v.optional(localeValidator),
     scaleVersionId: v.optional(v.id("irtScaleVersions")),
     accessCampaignId: v.optional(v.id("tryoutAccessCampaigns")),
     accessGrantId: v.optional(v.id("tryoutAccessGrants")),
@@ -121,8 +118,6 @@ const tables = {
     trackKey: tryoutRouteKeyValidator,
     setKey: tryoutRouteKeyValidator,
     appLocale: appLocaleValidator,
-    /** Temporary storage-only source for the bounded appLocale migration. */
-    locale: v.optional(localeValidator),
     attemptNumber: v.number(),
     publishedScore: v.union(v.number(), v.null()),
     status: tryoutStatusValidator,
@@ -136,14 +131,6 @@ const tables = {
       "examKey",
       "trackKey",
       "appLocale",
-      "setKey",
-    ])
-    .index("by_userId_countryKey_examKey_trackKey_locale_setKey", [
-      "userId",
-      "countryKey",
-      "examKey",
-      "trackKey",
-      "locale",
       "setKey",
     ])
     .index("by_userId_and_track_and_publishedScore_and_setKey", [
@@ -206,8 +193,6 @@ const tables = {
     sourcePath: v.string(),
     choiceSnapshots: v.array(tryoutChoiceSnapshotValidator),
     sourceRevision: v.string(),
-    /** Temporary storage-only source for the proved retained-field drain. */
-    title: v.optional(v.string()),
     contentHash: v.string(),
   })
     .index("by_tryoutAttemptId_and_questionOrder", [

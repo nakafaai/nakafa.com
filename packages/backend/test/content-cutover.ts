@@ -97,7 +97,6 @@ export async function insertProvedCutoverInventory(ctx: MutationCtx) {
     });
     await ctx.db.patch("tryoutAttempts", attemptId, {
       attemptNumber: ownedAttempts.length + 1,
-      locale: "id",
       totalQuestions:
         index <
         retainedTryoutHistoryPlan.frozenPlacementCount %
@@ -145,7 +144,6 @@ export async function insertProvedCutoverInventory(ctx: MutationCtx) {
           sectionKey: "general-reasoning",
           sourcePath: `packages/corpus/question-${placementIndex}`,
           sourceRevision: "retained",
-          title: `Question ${placementIndex}`,
           tryoutAttemptId: attemptId,
         })
       );
@@ -169,7 +167,6 @@ export async function insertProvedCutoverInventory(ctx: MutationCtx) {
         countryKey: attempt.countryKey,
         examKey: attempt.examKey,
         latestAttemptId,
-        locale: "id",
         publishedScore: null,
         setIdentity: attempt.setIdentity,
         setKey: attempt.setKey,

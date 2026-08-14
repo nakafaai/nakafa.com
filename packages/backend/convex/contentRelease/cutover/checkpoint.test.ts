@@ -1,5 +1,4 @@
 import { retireCutoverCheckpoint } from "@repo/backend/convex/contentRelease/cutover/checkpoint";
-import { retireLegacyTryoutFields } from "@repo/backend/convex/contentRelease/cutover/locale";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -23,7 +22,6 @@ async function seedReady(
   ctx: Parameters<typeof insertProvedCutoverInventory>[0]
 ) {
   await insertProvedCutoverInventory(ctx);
-  await runConvexProgram(retireLegacyTryoutFields(ctx));
   await insertAcceptedGenesisPublication(ctx);
 }
 
@@ -53,30 +51,6 @@ describe("contentRelease/cutover/checkpoint", () => {
       checkpointDeleted: 0,
     });
     expect(rows).toEqual({ activity: [], state: [] });
-  });
-
-  it("rejects compatibility fields before deleting either row", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await insertProvedCutoverInventory(ctx);
-      await insertAcceptedGenesisPublication(ctx);
-    });
-
-    await expect(t.mutation(retire)).rejects.toMatchObject({
-      data: {
-        code: "CONTENT_RELEASE_INTEGRITY",
-        message: expect.stringContaining("have not been retired"),
-      },
-    });
-    await expect(
-      t.run(async (ctx) => ({
-        activity: await ctx.db.query("contentCutoverActivity").unique(),
-        state: await ctx.db.query("contentCutoverState").unique(),
-      }))
-    ).resolves.toMatchObject({
-      activity: { key: "legacy" },
-      state: { key: "phase1" },
-    });
   });
 
   it("rejects a non-genesis active release", async () => {
