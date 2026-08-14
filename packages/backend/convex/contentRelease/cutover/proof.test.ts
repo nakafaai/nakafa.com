@@ -37,7 +37,10 @@ import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
 import { runConvexActionProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { testReaderCutoverReceipt } from "@repo/backend/test/content-cutover";
+import {
+  testReaderCutoverReceipt,
+  testTerminalHistoryProof,
+} from "@repo/backend/test/content-cutover";
 import { makeFunctionReference } from "convex/server";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
@@ -152,11 +155,7 @@ function makeProofEvidence(
   includeRetiredProgramReceipt = true
 ) {
   return {
-    authenticateArtifacts: () =>
-      Effect.succeed({
-        artifacts: RETAINED_ARTIFACT_COUNT,
-        placements: RETAINED_PLACEMENT_COUNT,
-      }),
+    authenticateHistory: () => Effect.succeed(testTerminalHistoryProof()),
     countTable: (table) => {
       counted.push(table);
       if (table === repopulated) {
@@ -166,16 +165,6 @@ function makeProofEvidence(
         table === "contentArtifacts" ? RETAINED_ARTIFACT_COUNT : 0
       );
     },
-    readHistory: () =>
-      Effect.succeed({
-        attempts: RETAINED_ATTEMPT_COUNT,
-        catalogRows: RETAINED_CATALOG_COUNT,
-        frozenPlacements: RETAINED_FROZEN_PLACEMENT_COUNT,
-        markers: RETAINED_ATTEMPT_COUNT,
-        placementRows: RETAINED_PLACEMENT_COUNT,
-        progressRows: RETAINED_PROGRESS_COUNT,
-        snapshotId: RETAINED_TRYOUT_SNAPSHOT_ID,
-      }),
     readRetention: () =>
       Effect.succeed(retentionFacts(includeRetiredProgramReceipt)),
     record: (receipt) =>

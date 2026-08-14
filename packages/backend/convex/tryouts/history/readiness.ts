@@ -6,10 +6,7 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
-import { internalQuery } from "@repo/backend/convex/_generated/server";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type { RetainedTryoutInventory } from "@repo/backend/convex/tryouts/history/inventory";
-import { proveRetainedHistoryMarkers } from "@repo/backend/convex/tryouts/history/markers";
 import { verifyFrozenPlacement } from "@repo/backend/convex/tryouts/history/placement";
 import {
   type AuthenticatedHistoryRows,
@@ -18,9 +15,7 @@ import {
 import {
   historyFail,
   historyRead,
-  historyReadinessValidator,
   type RetainedTryoutHistoryPlan,
-  retainedTryoutHistoryPlan,
 } from "@repo/backend/convex/tryouts/history/spec";
 import { Effect } from "effect";
 
@@ -162,14 +157,4 @@ export const verifyRetainedHistoryReadiness = Effect.fn(
   yield* verifyAppLocales(inventory);
   yield* verifySourceEquality(ctx, rows, plan);
   yield* verifyFrozenRows(inventory, rows, plan);
-});
-
-/** Stable post-drain proof consumed by the deletion-complete cutover. */
-export const read = internalQuery({
-  args: {},
-  returns: historyReadinessValidator,
-  handler: (ctx) =>
-    runConvexProgram(
-      proveRetainedHistoryMarkers(ctx, retainedTryoutHistoryPlan)
-    ),
 });

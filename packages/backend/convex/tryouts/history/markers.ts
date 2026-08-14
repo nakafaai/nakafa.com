@@ -1,3 +1,4 @@
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,
   QueryCtx,
@@ -10,6 +11,19 @@ import {
 import { Effect } from "effect";
 
 type ReadCtx = MutationCtx | QueryCtx;
+export type RetainedMarkerAttempt = Pick<
+  Doc<"tryoutAttempts">,
+  | "_id"
+  | "appLocale"
+  | "locale"
+  | "snapshotReleaseId"
+  | "totalQuestions"
+  | "tryoutSnapshotId"
+>;
+export type RetainedCompletionMarker = Pick<
+  Doc<"tryoutAttemptHistory">,
+  "_id" | "snapshotReleaseId" | "tryoutAttemptId" | "tryoutSnapshotId"
+>;
 
 /** Proves the compact marker witness created by the atomic full-history gate. */
 export const proveRetainedHistoryMarkers = Effect.fn(
@@ -23,6 +37,17 @@ export const proveRetainedHistoryMarkers = Effect.fn(
       ctx.db.query("tryoutAttemptHistory").take(plan.attemptCount + 1)
     ),
   ]);
+  return yield* verifyRetainedHistoryMarkers(attempts, markers, plan);
+});
+
+/** Verifies actual attempt and marker rows without deriving content counts. */
+export const verifyRetainedHistoryMarkers = Effect.fn(
+  "tryouts.history.verifyRetainedHistoryMarkers"
+)(function* (
+  attempts: readonly RetainedMarkerAttempt[],
+  markers: readonly RetainedCompletionMarker[],
+  plan: RetainedTryoutHistoryPlan
+) {
   if (
     attempts.length !== plan.attemptCount ||
     markers.length !== plan.attemptCount
@@ -37,7 +62,7 @@ export const proveRetainedHistoryMarkers = Effect.fn(
     attempts.map((attempt) => [attempt._id, attempt])
   );
   const releaseCounts = new Map<string, number>();
-  let frozenPlacements = 0;
+  let declaredFrozenPlacements = 0;
   for (const attempt of attempts) {
     const release = plan.releases.find(
       ({ releaseId }) => releaseId === attempt.snapshotReleaseId
@@ -58,12 +83,12 @@ export const proveRetainedHistoryMarkers = Effect.fn(
       release.releaseId,
       (releaseCounts.get(release.releaseId) ?? 0) + 1
     );
-    frozenPlacements += attempt.totalQuestions;
+    declaredFrozenPlacements += attempt.totalQuestions;
   }
-  if (frozenPlacements !== plan.frozenPlacementCount) {
+  if (declaredFrozenPlacements !== plan.frozenPlacementCount) {
     return yield* historyFail(
       "TRYOUT_HISTORY_INTEGRITY",
-      `Retained attempts declare ${frozenPlacements} placements, expected ${plan.frozenPlacementCount}.`
+      `Retained attempts declare ${declaredFrozenPlacements} placements, expected ${plan.frozenPlacementCount}.`
     );
   }
   for (const release of plan.releases) {
@@ -104,11 +129,12 @@ export const proveRetainedHistoryMarkers = Effect.fn(
 
   return {
     attempts: attempts.length,
-    catalogRows: plan.catalogRowCount,
-    frozenPlacements,
+    declaredFrozenPlacements,
     markers: markers.length,
-    placementRows: plan.placementRowCount,
-    progressRows: plan.progressCount,
+    releases: plan.releases.map((release) => ({
+      attempts: releaseCounts.get(release.releaseId) ?? 0,
+      releaseId: release.releaseId,
+    })),
     snapshotId: plan.snapshotId,
   };
 });

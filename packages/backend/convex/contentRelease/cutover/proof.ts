@@ -36,10 +36,10 @@ import { makeFunctionReference } from "convex/server";
 import { Context, Effect } from "effect";
 
 const historyProofReference = makeFunctionReference<
-  "query",
+  "action",
   Record<string, never>,
   HistoryProof
->("tryouts/history/readiness:read");
+>("tryouts/history/terminal:verify");
 const retentionFactsReference = makeFunctionReference<
   "query",
   Record<string, never>,
@@ -50,21 +50,11 @@ const recordProofReference = makeFunctionReference<
   CutoverProofReceipt,
   null
 >("contentRelease/cutover/proofState:record");
-const verifyArtifactsReference = makeFunctionReference<
-  "action",
-  Record<string, never>,
-  { artifacts: number; placements: number }
->("contentRelease/cutover/artifacts:verify");
-
 export interface CutoverProofEvidenceService {
-  readonly authenticateArtifacts: () => Effect.Effect<
-    { artifacts: number; placements: number },
-    ReleaseError
-  >;
+  readonly authenticateHistory: () => Effect.Effect<HistoryProof, ReleaseError>;
   readonly countTable: (
     table: AuditTableName
   ) => Effect.Effect<number, ReleaseError>;
-  readonly readHistory: () => Effect.Effect<HistoryProof, ReleaseError>;
   readonly readRetention: () => Effect.Effect<RetentionFacts, ReleaseError>;
   readonly record: (
     receipt: CutoverProofReceipt
@@ -81,11 +71,9 @@ export function makeLiveProofEvidence(
   ctx: ActionCtx
 ): CutoverProofEvidenceService {
   return {
-    authenticateArtifacts: () =>
-      callInternal(() => ctx.runAction(verifyArtifactsReference, {})),
+    authenticateHistory: () =>
+      callInternal(() => ctx.runAction(historyProofReference, {})),
     countTable: (table) => countAuditedTable(ctx, table),
-    readHistory: () =>
-      callInternal(() => ctx.runQuery(historyProofReference, {})),
     readRetention: () =>
       callInternal(() => ctx.runQuery(retentionFactsReference, {})),
     record: (receipt) =>
@@ -116,24 +104,23 @@ export const proofProgram = Effect.fn("contentRelease.cutover.proof")(
         );
       }
     }
-    const artifacts = yield* evidence.authenticateArtifacts();
+    const history = yield* evidence.authenticateHistory();
+    yield* validateHistoryNumbers(history);
     const storedArtifactCount = yield* evidence.countTable("contentArtifacts");
     if (
-      artifacts.artifacts !== RETAINED_ARTIFACT_COUNT ||
+      history.artifacts !== RETAINED_ARTIFACT_COUNT ||
       storedArtifactCount !== RETAINED_ARTIFACT_COUNT
     ) {
       return yield* proofFailure(
         "Retained artifact count changed after drain."
       );
     }
-    const history = yield* evidence.readHistory();
-    yield* validateHistoryNumbers(history);
     const facts = yield* evidence.readRetention();
     yield* validateRetentionFacts(facts);
     const receipt = {
-      artifacts: artifacts.artifacts,
+      artifacts: history.artifacts,
       attempts: history.attempts,
-      bundles: facts.bundles.length,
+      bundles: history.bundles,
       catalogRows: history.catalogRows,
       complete: true as const,
       frozenPlacements: history.frozenPlacements,
@@ -153,7 +140,9 @@ const validateHistoryNumbers = Effect.fn(
   "contentRelease.cutover.validateHistoryNumbers"
 )(function* (history: HistoryProof) {
   if (
+    history.artifacts !== RETAINED_ARTIFACT_COUNT ||
     history.attempts !== RETAINED_ATTEMPT_COUNT ||
+    history.bundles !== RETAINED_TRYOUT_RELEASES.length ||
     history.catalogRows !== RETAINED_CATALOG_COUNT ||
     history.frozenPlacements !== RETAINED_FROZEN_PLACEMENT_COUNT ||
     history.markers !== RETAINED_ATTEMPT_COUNT ||

@@ -80,11 +80,12 @@ describe("contentRelease/cutover/readers", () => {
       acceptedAt: expect.any(Number),
       history: {
         attempts: 2,
-        catalogRows: 2,
-        frozenPlacements: 2,
+        declaredFrozenPlacements: 2,
         markers: 2,
-        placementRows: 2,
-        progressRows: 1,
+        releases: [
+          { attempts: 1, releaseId: "retained-history-a" },
+          { attempts: 1, releaseId: "retained-history-b" },
+        ],
         snapshotId: expect.stringMatching(SHA256_PREFIX),
       },
       referenceProofs: TEST_REFERENCE_PROOF_COUNTS,

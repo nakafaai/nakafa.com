@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { type Infer, v } from "convex/values";
 import { Effect, Schema } from "effect";
 
 export interface RetainedTryoutRelease {
@@ -138,15 +138,31 @@ export const historyLocaleReceiptValidator = v.object({
   updated: v.number(),
 });
 
-const historyReadinessFields = {
+/** Actual compact evidence stored before the reader cutover is accepted. */
+export const historyMarkerProofValidator = v.object({
   attempts: v.number(),
+  declaredFrozenPlacements: v.number(),
+  markers: v.number(),
+  releases: v.array(
+    v.object({
+      attempts: v.number(),
+      releaseId: v.string(),
+    })
+  ),
+  snapshotId: v.string(),
+});
+export type HistoryMarkerProof = Infer<typeof historyMarkerProofValidator>;
+
+/** Observed and authenticated retained history used by freeze and proof. */
+export const terminalHistoryProofValidator = v.object({
+  artifacts: v.number(),
+  attempts: v.number(),
+  bundles: v.number(),
   catalogRows: v.number(),
   frozenPlacements: v.number(),
   markers: v.number(),
   placementRows: v.number(),
   progressRows: v.number(),
   snapshotId: v.string(),
-};
-
-/** Final Phase 1a readiness evidence, without deleting legacy fields. */
-export const historyReadinessValidator = v.object(historyReadinessFields);
+});
+export type TerminalHistoryProof = Infer<typeof terminalHistoryProofValidator>;

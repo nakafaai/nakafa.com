@@ -47,7 +47,6 @@ export function provideHistoryTestTrust<A, E, R>(
 async function insertRetainedAttempt(
   ctx: MutationCtx,
   input: {
-    readonly frozenContentHash?: string;
     readonly frozenSourcePath?: string;
     readonly placement: TryoutPlacement;
     readonly releaseId: string;
@@ -125,7 +124,7 @@ async function insertRetainedAttempt(
     answerArtifactHash: row.answerArtifactHash,
     answerContentKey: row.answerContentKey,
     choiceSnapshots: [...row.choices],
-    contentHash: input.frozenContentHash ?? row.contentHash,
+    contentHash: row.contentHash,
     placementIdentity: tryoutPlacementIdentity(row),
     placementRowHash: placement.rowHash,
     questionArtifactHash: row.questionArtifactHash,
@@ -216,7 +215,6 @@ export async function seedRetainedTryoutHistory(ctx: MutationCtx) {
     });
   }
   const first = await insertRetainedAttempt(ctx, {
-    frozenContentHash: "f".repeat(64),
     frozenSourcePath: firstPlacement.questionSourcePath.replace(
       "packages/corpus/",
       ""
@@ -232,25 +230,27 @@ export async function seedRetainedTryoutHistory(ctx: MutationCtx) {
     snapshotId,
     suffix: "id",
   });
-  const firstAttempt = await ctx.db.get("tryoutAttempts", first.attemptId);
-  if (!firstAttempt) {
-    throw new Error("Expected retained attempt fixture.");
+  for (const attemptId of [first.attemptId, second.attemptId]) {
+    const attempt = await ctx.db.get("tryoutAttempts", attemptId);
+    if (!attempt) {
+      throw new Error("Expected retained attempt fixture.");
+    }
+    await ctx.db.insert("tryoutSetProgress", {
+      attemptNumber: attempt.attemptNumber,
+      countryKey: attempt.countryKey,
+      examKey: attempt.examKey,
+      latestAttemptId: attempt._id,
+      locale: attempt.locale,
+      publishedScore: null,
+      setIdentity: attempt.setIdentity,
+      setKey: attempt.setKey,
+      status: attempt.status,
+      statusRank: 1,
+      trackKey: attempt.trackKey,
+      updatedAt: NOW,
+      userId: attempt.userId,
+    });
   }
-  await ctx.db.insert("tryoutSetProgress", {
-    attemptNumber: firstAttempt.attemptNumber,
-    countryKey: firstAttempt.countryKey,
-    examKey: firstAttempt.examKey,
-    latestAttemptId: firstAttempt._id,
-    locale: firstAttempt.locale,
-    publishedScore: null,
-    setIdentity: firstAttempt.setIdentity,
-    setKey: firstAttempt.setKey,
-    status: firstAttempt.status,
-    statusRank: 1,
-    trackKey: firstAttempt.trackKey,
-    updatedAt: NOW,
-    userId: firstAttempt.userId,
-  });
   for (const artifacts of signedArtifacts) {
     for (const artifact of [artifacts.question, artifacts.answer]) {
       await ctx.db.insert("contentArtifacts", {
@@ -271,7 +271,7 @@ export async function seedRetainedTryoutHistory(ctx: MutationCtx) {
     format: "tryout-v1",
     frozenPlacementCount: 2,
     placementRowCount: 2,
-    progressCount: 1,
+    progressCount: 2,
     releases: signedReleases.map((release) => ({
       attemptCount: 1,
       manifestHash: release.manifestHash,

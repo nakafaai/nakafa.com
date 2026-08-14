@@ -3,6 +3,7 @@ import type { ReferenceProofCounts } from "@repo/backend/convex/contentRelease/c
 import {
   type RetainedTryoutHistoryPlan,
   retainedTryoutHistoryPlan,
+  type TerminalHistoryProof,
 } from "@repo/backend/convex/tryouts/history/spec";
 
 /** Exact production-shaped reader receipt for cutover-only test fixtures. */
@@ -15,13 +16,31 @@ export function testReaderCutoverReceipt(
     acceptedAt,
     history: {
       attempts: plan.attemptCount,
-      catalogRows: plan.catalogRowCount,
-      frozenPlacements: plan.frozenPlacementCount,
+      declaredFrozenPlacements: plan.frozenPlacementCount,
       markers: plan.attemptCount,
-      placementRows: plan.placementRowCount,
-      progressRows: plan.progressCount,
+      releases: plan.releases.map((release) => ({
+        attempts: release.attemptCount,
+        releaseId: release.releaseId,
+      })),
       snapshotId: plan.snapshotId,
     },
     referenceProofs,
+  };
+}
+
+/** Exact terminal history receipt for cutover-only unit test boundaries. */
+export function testTerminalHistoryProof(
+  plan: RetainedTryoutHistoryPlan = retainedTryoutHistoryPlan
+): TerminalHistoryProof {
+  return {
+    artifacts: plan.artifactCount,
+    attempts: plan.attemptCount,
+    bundles: plan.releases.length,
+    catalogRows: plan.catalogRowCount,
+    frozenPlacements: plan.frozenPlacementCount,
+    markers: plan.attemptCount,
+    placementRows: plan.placementRowCount,
+    progressRows: plan.progressCount,
+    snapshotId: plan.snapshotId,
   };
 }

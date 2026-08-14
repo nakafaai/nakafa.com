@@ -51,7 +51,8 @@ describe("contentRelease/cutover/state", () => {
               ...receipt,
               history: {
                 ...receipt.history,
-                frozenPlacements: receipt.history.frozenPlacements + 1,
+                declaredFrozenPlacements:
+                  receipt.history.declaredFrozenPlacements + 1,
               },
             },
           })

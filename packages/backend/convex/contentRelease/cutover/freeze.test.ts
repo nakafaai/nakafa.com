@@ -1,5 +1,3 @@
-import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
-import { contentKeyResolver } from "@repo/backend/content/trust";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { freezeProgram } from "@repo/backend/convex/contentRelease/cutover/freeze";
 import {
@@ -12,7 +10,10 @@ import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { finalizeRetainedTryoutHistory } from "@repo/backend/convex/tryouts/history/finalize";
 import { retainedTryoutHistoryPlan } from "@repo/backend/convex/tryouts/history/spec";
-import { testReaderCutoverReceipt } from "@repo/backend/test/content-cutover";
+import {
+  testReaderCutoverReceipt,
+  testTerminalHistoryProof,
+} from "@repo/backend/test/content-cutover";
 import {
   insertTestState,
   insertZeroRelease,
@@ -23,7 +24,6 @@ import {
   seedRetainedTryoutHistory,
 } from "@repo/backend/test/tryout-history";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("contentRelease/cutover/freeze", () => {
@@ -50,7 +50,7 @@ describe("contentRelease/cutover/freeze", () => {
       }
       await insertCutoverState(ctx, "complete", fixture.plan);
       return runConvexProgram(
-        provideHistoryTestTrust(freezeProgram(ctx, fixture.plan))
+        freezeProgram(ctx, fixture.plan, testTerminalHistoryProof(fixture.plan))
       );
     });
 
@@ -72,11 +72,10 @@ describe("contentRelease/cutover/freeze", () => {
     await expect(
       t.mutation((ctx) =>
         runConvexProgram(
-          freezeProgram(ctx, retainedTryoutHistoryPlan).pipe(
-            Effect.provideService(
-              ContentVerificationKeyResolver,
-              contentKeyResolver
-            )
+          freezeProgram(
+            ctx,
+            retainedTryoutHistoryPlan,
+            testTerminalHistoryProof()
           )
         )
       )

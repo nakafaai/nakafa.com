@@ -41,8 +41,12 @@ describe("tryouts/history/markers", () => {
 
     expect(proof).toMatchObject({
       attempts: 2,
-      frozenPlacements: 2,
+      declaredFrozenPlacements: 2,
       markers: 2,
+      releases: [
+        { attempts: 1, releaseId: "retained-history-a" },
+        { attempts: 1, releaseId: "retained-history-b" },
+      ],
     });
   });
 

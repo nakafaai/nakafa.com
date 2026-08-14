@@ -70,11 +70,17 @@ export const requireReaderCutoverCheckpoint = Effect.fn(
     ) ||
     receipt.acceptedAt <= 0 ||
     history.attempts !== plan.attemptCount ||
-    history.catalogRows !== plan.catalogRowCount ||
-    history.frozenPlacements !== plan.frozenPlacementCount ||
+    history.declaredFrozenPlacements !== plan.frozenPlacementCount ||
     history.markers !== plan.attemptCount ||
-    history.placementRows !== plan.placementRowCount ||
-    history.progressRows !== plan.progressCount ||
+    history.releases.length !== plan.releases.length ||
+    history.releases.some((release, index) => {
+      const expected = plan.releases[index];
+      return (
+        !expected ||
+        release.attempts !== expected.attemptCount ||
+        release.releaseId !== expected.releaseId
+      );
+    }) ||
     history.snapshotId !== plan.snapshotId ||
     references.article !== referenceProofs.article ||
     references.material !== referenceProofs.material ||

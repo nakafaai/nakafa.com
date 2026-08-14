@@ -32,7 +32,11 @@ is satisfied.
    `legacy-drained`. Sum `deleted` across every bounded action receipt and
    accept only exactly 12,854 total deletions. The terminal proof independently
    requires the same durable cumulative count.
-6. Authenticate all 1,680 retained artifacts and freeze the old mutable pointer:
+6. Run the full terminal history proof and freeze the old mutable pointer. The
+   proof must authenticate both retained bundle and renderer bindings, the
+   retained snapshot bytes and aggregate digests, all 54 catalog rows, all 840
+   placement rows, all 1,680 retained artifacts, all 1,720 frozen attempt
+   placements, all 10 progress rows, and all 21 attempts and markers:
 
    ```sh
    pnpm --filter @repo/backend exec convex run contentRelease/cutover/freeze:freeze '{}' --prod
@@ -45,7 +49,8 @@ is satisfied.
    pnpm --filter @repo/backend exec convex run contentRelease/cutover/proof:proof '{}' --prod
    ```
 
-   Accept only the exact receipt and durable phase `proved`.
+   The post-drain proof must repeat that same full terminal authentication.
+   Accept only its observed exact receipt and durable phase `proved`.
 8. Deploy the strict current application and backend with no legacy content
    writer, reader, route, sync, repair, local-content audio path, or fallback.
    Remove publication guards from the sole current Aksara ingress while keeping

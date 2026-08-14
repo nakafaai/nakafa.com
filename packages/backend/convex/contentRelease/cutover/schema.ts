@@ -1,5 +1,5 @@
 import { localeValidator } from "@repo/backend/convex/contentRelease/spec";
-import { historyReadinessValidator } from "@repo/backend/convex/tryouts/history/spec";
+import { historyMarkerProofValidator } from "@repo/backend/convex/tryouts/history/spec";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
@@ -51,7 +51,7 @@ export const referenceProofReceiptValidator = v.object({
 
 export const readerCutoverReceiptValidator = v.object({
   acceptedAt: v.number(),
-  history: historyReadinessValidator,
+  history: historyMarkerProofValidator,
   referenceProofs: v.object({
     article: v.number(),
     material: v.number(),

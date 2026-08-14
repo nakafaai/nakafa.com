@@ -10,8 +10,8 @@ import { proveRetainedHistoryMarkers } from "@repo/backend/convex/tryouts/histor
 import { verifyRetainedHistoryReadiness } from "@repo/backend/convex/tryouts/history/readiness";
 import {
   historyFail,
+  historyMarkerProofValidator,
   historyRead,
-  historyReadinessValidator,
   historyStagingPhases,
   historyWrite,
   type RetainedTryoutHistoryPlan,
@@ -73,21 +73,13 @@ export const finalizeRetainedTryoutHistory = Effect.fn(
     );
   }
 
-  return {
-    attempts: inventory.attempts.length,
-    catalogRows: plan.catalogRowCount,
-    frozenPlacements: inventory.frozenPlacements.length,
-    markers: plan.attemptCount,
-    placementRows: plan.placementRowCount,
-    progressRows: inventory.progressRows.length,
-    snapshotId: plan.snapshotId,
-  };
+  return yield* proveRetainedHistoryMarkers(ctx, plan);
 });
 
 /** Final separately invoked Phase 1a gate with atomic marker insertion. */
 export const finalize = internalMutation({
   args: {},
-  returns: historyReadinessValidator,
+  returns: historyMarkerProofValidator,
   handler: (ctx) =>
     runConvexProgram(
       Effect.gen(function* () {

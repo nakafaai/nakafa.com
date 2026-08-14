@@ -34,7 +34,7 @@ describe("tryouts/history/locale", () => {
     });
 
     expect(result.attempts.updated).toBe(2);
-    expect(result.progress.updated).toBe(1);
+    expect(result.progress.updated).toBe(2);
     expect(result.retry.updated).toBe(0);
     expect(
       result.storedAttempts.every((row) => row.appLocale === row.locale)

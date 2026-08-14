@@ -35,18 +35,11 @@ import {
 } from "@repo/backend/convex/contentRelease/cutover/state";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import type { TerminalHistoryProof } from "@repo/backend/convex/tryouts/history/spec";
 import { type Infer, v } from "convex/values";
 import { Effect } from "effect";
 
-export interface HistoryProof {
-  readonly attempts: number;
-  readonly catalogRows: number;
-  readonly frozenPlacements: number;
-  readonly markers: number;
-  readonly placementRows: number;
-  readonly progressRows: number;
-  readonly snapshotId: string;
-}
+export type HistoryProof = TerminalHistoryProof;
 
 export interface RetentionFacts {
   readonly activity: null | { readonly version: number };

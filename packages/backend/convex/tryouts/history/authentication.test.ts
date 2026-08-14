@@ -34,7 +34,7 @@ describe("tryouts/history/authentication", () => {
       attempts: 2,
       bundles: 2,
       placements: 2,
-      progress: 1,
+      progress: 2,
       snapshotId: expect.stringMatching(SHA256_PREFIX),
     });
   });

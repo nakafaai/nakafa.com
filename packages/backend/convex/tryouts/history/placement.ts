@@ -13,11 +13,48 @@ import {
 } from "@repo/backend/convex/tryouts/history/spec";
 import { Effect, Schema } from "effect";
 
-type Attempt = Doc<"tryoutAttempts">;
-type FrozenPlacement = Doc<"tryoutAttemptPlacements">;
-type HistoryPlacement = Extract<
-  Doc<"tryoutHistoryRows">,
-  { readonly rowKind: "placement" }
+type Attempt = Pick<
+  Doc<"tryoutAttempts">,
+  | "_id"
+  | "appLocale"
+  | "countryKey"
+  | "examKey"
+  | "locale"
+  | "setIdentity"
+  | "setKey"
+  | "snapshotReleaseId"
+  | "trackKey"
+  | "tryoutSnapshotId"
+>;
+type FrozenPlacement = Pick<
+  Doc<"tryoutAttemptPlacements">,
+  | "_id"
+  | "answerArtifactHash"
+  | "answerContentKey"
+  | "choiceSnapshots"
+  | "contentHash"
+  | "placementIdentity"
+  | "placementRowHash"
+  | "questionArtifactHash"
+  | "questionContentKey"
+  | "questionOrder"
+  | "rendererDomain"
+  | "sectionIdentity"
+  | "sectionKey"
+  | "sourcePath"
+  | "sourceRevision"
+  | "title"
+  | "tryoutAttemptId"
+>;
+type HistoryPlacement = Pick<
+  Extract<Doc<"tryoutHistoryRows">, { readonly rowKind: "placement" }>,
+  | "answerArtifactHash"
+  | "index"
+  | "questionArtifactHash"
+  | "rowHash"
+  | "rowJson"
+  | "rowKind"
+  | "snapshotId"
 >;
 type SignedPlacement = Extract<
   HistoricalTryoutRow,
@@ -142,8 +179,7 @@ export const verifyFrozenPlacement = Effect.fn(
     ({ releaseId }) => releaseId === attempt.snapshotReleaseId
   );
 
-  // The signed migration deliberately preserved each pre-signing contentHash.
-  // placementRowHash authenticates the later signed row without rewriting it.
+  // placementRowHash and contentHash bind the frozen attempt to one signed row.
   if (
     history.snapshotId !== plan.snapshotId ||
     history.rowHash !== signed.record.rowHash ||
@@ -151,6 +187,7 @@ export const verifyFrozenPlacement = Effect.fn(
     history.answerArtifactHash !== row.answerArtifactHash ||
     attempt.tryoutSnapshotId !== plan.snapshotId ||
     !releaseIsRetained ||
+    row.contentHash === undefined ||
     attempt.appLocale !== attempt.locale ||
     attempt.locale !== row.locale ||
     attempt.countryKey !== row.countryKey ||
@@ -161,6 +198,7 @@ export const verifyFrozenPlacement = Effect.fn(
     frozen.tryoutAttemptId !== attempt._id ||
     frozen.placementIdentity !== placementIdentity ||
     frozen.placementRowHash !== signed.record.rowHash ||
+    frozen.contentHash !== row.contentHash ||
     frozen.answerArtifactHash !== row.answerArtifactHash ||
     frozen.answerContentKey !== row.answerContentKey ||
     frozen.questionArtifactHash !== row.questionArtifactHash ||
@@ -189,6 +227,8 @@ export const verifyStoredTryoutPlacement = Effect.fn(
   frozen: FrozenStoredPlacement
 ) {
   const matchesFrozen =
+    historical.contentHash !== undefined &&
+    historical.contentHash === frozen.contentHash &&
     historical.answerArtifactHash === frozen.answerArtifactHash &&
     historical.answerContentKey === frozen.answerContentKey &&
     historical.questionArtifactHash === frozen.questionArtifactHash &&
@@ -211,7 +251,7 @@ export const verifyStoredTryoutPlacement = Effect.fn(
     answerArtifactHash: historical.answerArtifactHash,
     answerContentKey: historical.answerContentKey,
     artifactLocale: historical.locale,
-    contentHash: frozen.contentHash,
+    contentHash: historical.contentHash,
     questionArtifactHash: historical.questionArtifactHash,
     questionContentKey: historical.questionContentKey,
     questionOrder: historical.questionOrder,

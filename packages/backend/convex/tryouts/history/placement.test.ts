@@ -72,6 +72,14 @@ describe("tryouts/history/placement", () => {
       Effect.runPromise(
         verifyStoredTryoutPlacement(historical, {
           ...frozen,
+          contentHash: "changed",
+        }).pipe(Effect.flip)
+      )
+    ).resolves.toEqual(new StoredTryoutPlacementMismatchError());
+    await expect(
+      Effect.runPromise(
+        verifyStoredTryoutPlacement(historical, {
+          ...frozen,
           choiceSnapshots: frozen.choiceSnapshots.map((choice, index) =>
             index === 0 ? { ...choice, isCorrect: false } : choice
           ),
