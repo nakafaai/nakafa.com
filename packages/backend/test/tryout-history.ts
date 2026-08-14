@@ -11,9 +11,6 @@ import {
 import type { TryoutPlacement } from "@nakafa/aksara-contracts/tryout/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { copyHistoryRows } from "@repo/backend/convex/tryouts/history/copy";
-import { migrateAppLocale } from "@repo/backend/convex/tryouts/history/locale";
 import type { RetainedTryoutHistoryPlan } from "@repo/backend/convex/tryouts/history/spec";
 import {
   TEST_KEY_RESOLVER,
@@ -47,6 +44,7 @@ export function provideHistoryTestTrust<A, E, R>(
 async function insertRetainedAttempt(
   ctx: MutationCtx,
   input: {
+    readonly frozenContentHash?: string;
     readonly frozenSourcePath?: string;
     readonly placement: TryoutPlacement;
     readonly releaseId: string;
@@ -84,6 +82,7 @@ async function insertRetainedAttempt(
   const attemptId = await ctx.db.insert("tryoutAttempts", {
     accessEndsAt: NOW + 86_400_000,
     accessSourceKind: "free",
+    appLocale: row.locale,
     attemptNumber: 1,
     completedAt: null,
     completedSectionKeys: [],
@@ -124,7 +123,7 @@ async function insertRetainedAttempt(
     answerArtifactHash: row.answerArtifactHash,
     answerContentKey: row.answerContentKey,
     choiceSnapshots: [...row.choices],
-    contentHash: row.contentHash,
+    contentHash: input.frozenContentHash ?? row.contentHash,
     placementIdentity: tryoutPlacementIdentity(row),
     placementRowHash: placement.rowHash,
     questionArtifactHash: row.questionArtifactHash,
@@ -215,6 +214,7 @@ export async function seedRetainedTryoutHistory(ctx: MutationCtx) {
     });
   }
   const first = await insertRetainedAttempt(ctx, {
+    frozenContentHash: "f".repeat(64),
     frozenSourcePath: firstPlacement.questionSourcePath.replace(
       "packages/corpus/",
       ""
@@ -236,6 +236,7 @@ export async function seedRetainedTryoutHistory(ctx: MutationCtx) {
       throw new Error("Expected retained attempt fixture.");
     }
     await ctx.db.insert("tryoutSetProgress", {
+      appLocale: attempt.locale,
       attemptNumber: attempt.attemptNumber,
       countryKey: attempt.countryKey,
       examKey: attempt.examKey,
@@ -262,6 +263,51 @@ export async function seedRetainedTryoutHistory(ctx: MutationCtx) {
     }
   }
 
+  const [catalogRows, placementRows] = await Promise.all([
+    ctx.db
+      .query("tryoutCatalog")
+      .withIndex("by_snapshotId_and_index", (query) =>
+        query.eq("snapshotId", snapshotId)
+      )
+      .collect(),
+    ctx.db
+      .query("tryoutPlacements")
+      .withIndex("by_snapshotId_and_index", (query) =>
+        query.eq("snapshotId", snapshotId)
+      )
+      .collect(),
+  ]);
+  for (const row of catalogRows) {
+    await ctx.db.insert("tryoutHistoryRows", {
+      index: row.index,
+      rowHash: row.rowHash,
+      rowJson: row.rowJson,
+      rowKind: "catalog",
+      snapshotId: row.snapshotId,
+    });
+  }
+  for (const row of placementRows) {
+    await ctx.db.insert("tryoutHistoryRows", {
+      answerArtifactHash: row.answerArtifactHash,
+      index: row.index,
+      questionArtifactHash: row.questionArtifactHash,
+      rowHash: row.rowHash,
+      rowJson: row.rowJson,
+      rowKind: "placement",
+      snapshotId: row.snapshotId,
+    });
+  }
+  await ctx.db.insert("tryoutAttemptHistory", {
+    snapshotReleaseId: firstRelease.manifest.releaseId,
+    tryoutAttemptId: first.attemptId,
+    tryoutSnapshotId: snapshotId,
+  });
+  await ctx.db.insert("tryoutAttemptHistory", {
+    snapshotReleaseId: secondRelease.manifest.releaseId,
+    tryoutAttemptId: second.attemptId,
+    tryoutSnapshotId: snapshotId,
+  });
+
   const plan = {
     artifactCount: 4,
     attemptCount: 2,
@@ -280,20 +326,6 @@ export async function seedRetainedTryoutHistory(ctx: MutationCtx) {
     snapshotId,
   } satisfies RetainedTryoutHistoryPlan;
   return { attemptIds: [first.attemptId, second.attemptId], plan };
-}
-
-export async function prepareRetainedTryoutHistory(
-  ctx: MutationCtx,
-  fixture: Awaited<ReturnType<typeof seedRetainedTryoutHistory>>
-) {
-  await runConvexProgram(copyHistoryRows(ctx, fixture.plan, "catalog", -1));
-  await runConvexProgram(copyHistoryRows(ctx, fixture.plan, "placement", 1));
-  await runConvexProgram(
-    provideHistoryTestTrust(migrateAppLocale(ctx, fixture.plan, "attempt"))
-  );
-  await runConvexProgram(
-    provideHistoryTestTrust(migrateAppLocale(ctx, fixture.plan, "progress"))
-  );
 }
 
 export function fixtureAttemptId(

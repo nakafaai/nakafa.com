@@ -5,7 +5,6 @@ import type { ReferenceProofCounts } from "@repo/backend/convex/contentRelease/c
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { finalizeRetainedTryoutHistory } from "@repo/backend/convex/tryouts/history/finalize";
 import {
   TEST_ARTICLE_PROJECTION,
   TEST_ARTICLE_PROJECTION_JSON,
@@ -16,7 +15,6 @@ import {
   insertRuntimeVersion,
 } from "@repo/backend/test/runtime-head";
 import {
-  prepareRetainedTryoutHistory,
   provideHistoryTestTrust,
   seedRetainedTryoutHistory,
 } from "@repo/backend/test/tryout-history";
@@ -218,10 +216,6 @@ describe("contentRelease/cutover/readers", () => {
 async function prepareReaderCutover(ctx: MutationCtx) {
   const fixture = await seedRetainedTryoutHistory(ctx);
   await insertReaderArticle(ctx);
-  await prepareRetainedTryoutHistory(ctx, fixture);
-  await runConvexProgram(
-    provideHistoryTestTrust(finalizeRetainedTryoutHistory(ctx, fixture.plan))
-  );
   const state = await ctx.db.query("contentState").unique();
   if (!(state?.activeReleaseId && state.activeSequence !== undefined)) {
     throw new Error("Expected one active retained-history release.");

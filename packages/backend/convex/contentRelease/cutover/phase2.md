@@ -93,9 +93,9 @@ is satisfied.
   after the terminal proof and current-genesis acceptance are complete.
 - Delete the retired learning-program zero receipt and its six-table inventory
   only after the terminal proof and physical table deletion are complete.
-- Delete migration-only `tryouts/history/copy.ts`, `locale.ts`, and
-  `finalize.ts`, plus the write-only history-row operation after their exact
-  production functions are no longer referenced.
+- This Phase 2 tree deletes migration-only `tryouts/history/copy.ts`,
+  `locale.ts`, and `finalize.ts`, their pre-drain audit operations, and the
+  write-only history-row operation after exact production completion.
 - Keep only the read-only retained-attempt history decoder, marker, row,
   selector, and protected-runtime seams while retained attempt references are
   nonzero.

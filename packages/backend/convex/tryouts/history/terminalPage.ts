@@ -43,9 +43,6 @@ const historyPageValidator = v.object({
 
 export type TerminalCatalogRow = Infer<typeof catalogRowValidator>;
 export type TerminalHistoryPage = Infer<typeof historyPageValidator>;
-export type TerminalHistoryRow = Infer<
-  typeof historyPageValidator
->["rows"][number];
 export type TerminalPlacementRow = Infer<typeof placementRowValidator>;
 export type TerminalStoredPlacement = Omit<
   TerminalPlacementRow,

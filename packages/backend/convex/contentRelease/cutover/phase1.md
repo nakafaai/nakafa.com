@@ -163,6 +163,10 @@ remains active for the lifetime of these receipts.
 
 ## Preserve retained attempt history
 
+The commands in this section are completed Phase 1 production provenance.
+Phase 2 removes all three migration functions, so they must not exist or be
+invoked after the Phase 2 deployment.
+
 While the checkpoint remains `quiescent`, copy the app locale into the
 additive current field:
 

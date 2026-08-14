@@ -7,6 +7,8 @@ import { RETAINED_RUNTIME_PLACEMENT_ROW } from "@repo/backend/test/retained-runt
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
+const FROZEN_CONTENT_HASH = "f".repeat(64);
+
 /** Builds authenticated and frozen views of the same fixed history vector. */
 const readPlacementPair = Effect.fn("test.readHistoricalTryoutPlacementPair")(
   function* () {
@@ -20,7 +22,7 @@ const readPlacementPair = Effect.fn("test.readHistoricalTryoutPlacementPair")(
         answerArtifactHash: historical.answerArtifactHash,
         answerContentKey: historical.answerContentKey,
         choiceSnapshots: historical.choices.map((choice) => ({ ...choice })),
-        contentHash: historical.contentHash ?? "",
+        contentHash: FROZEN_CONTENT_HASH,
         questionArtifactHash: historical.questionArtifactHash,
         questionContentKey: historical.questionContentKey,
         questionOrder: historical.questionOrder,
@@ -36,7 +38,7 @@ const readPlacementPair = Effect.fn("test.readHistoricalTryoutPlacementPair")(
 );
 
 describe("tryouts/history/placement", () => {
-  it("returns only facts proven by both authenticated and frozen rows", async () => {
+  it("returns the attempt-owned hash after authenticating the signed row", async () => {
     const { frozen, historical } = await Effect.runPromise(readPlacementPair());
 
     const verified = await Effect.runPromise(
@@ -47,7 +49,7 @@ describe("tryouts/history/placement", () => {
       answerArtifactHash: historical.answerArtifactHash,
       answerContentKey: historical.answerContentKey,
       artifactLocale: historical.locale,
-      contentHash: historical.contentHash,
+      contentHash: FROZEN_CONTENT_HASH,
       questionArtifactHash: historical.questionArtifactHash,
       questionContentKey: historical.questionContentKey,
       questionOrder: historical.questionOrder,
@@ -65,14 +67,6 @@ describe("tryouts/history/placement", () => {
         verifyStoredTryoutPlacement(historical, {
           ...frozen,
           sourceRevision: "changed",
-        }).pipe(Effect.flip)
-      )
-    ).resolves.toEqual(new StoredTryoutPlacementMismatchError());
-    await expect(
-      Effect.runPromise(
-        verifyStoredTryoutPlacement(historical, {
-          ...frozen,
-          contentHash: "changed",
         }).pipe(Effect.flip)
       )
     ).resolves.toEqual(new StoredTryoutPlacementMismatchError());

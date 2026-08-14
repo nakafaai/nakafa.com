@@ -8,7 +8,6 @@ import {
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { finalizeRetainedTryoutHistory } from "@repo/backend/convex/tryouts/history/finalize";
 import { retainedTryoutHistoryPlan } from "@repo/backend/convex/tryouts/history/spec";
 import {
   testReaderCutoverReceipt,
@@ -18,11 +17,7 @@ import {
   insertTestState,
   insertZeroRelease,
 } from "@repo/backend/test/content-state";
-import {
-  prepareRetainedTryoutHistory,
-  provideHistoryTestTrust,
-  seedRetainedTryoutHistory,
-} from "@repo/backend/test/tryout-history";
+import { seedRetainedTryoutHistory } from "@repo/backend/test/tryout-history";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -31,12 +26,6 @@ describe("contentRelease/cutover/freeze", () => {
     const t = convexTest(schema, convexModules);
     const result = await t.mutation(async (ctx) => {
       const fixture = await seedRetainedTryoutHistory(ctx);
-      await prepareRetainedTryoutHistory(ctx, fixture);
-      await runConvexProgram(
-        provideHistoryTestTrust(
-          finalizeRetainedTryoutHistory(ctx, fixture.plan)
-        )
-      );
       const sourceRows = [
         ...(await ctx.db.query("tryoutCatalog").collect()),
         ...(await ctx.db.query("tryoutPlacements").collect()),

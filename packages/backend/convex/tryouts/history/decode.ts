@@ -1,6 +1,5 @@
 import {
   decodeStoredTryoutRow,
-  decodeStoredTryoutSnapshot,
   type StoredTryoutRow,
   verifyStoredTryoutInventory,
 } from "@nakafa/aksara-history/history/decode";
@@ -16,7 +15,7 @@ const TryoutSnapshotEnvelopeSchema = Schema.Struct({
 });
 
 /** Parses retained JSON without allowing a thrown parser defect. */
-export const parseHistoryJson = Effect.fn("tryouts.history.parseHistoryJson")(
+const parseHistoryJson = Effect.fn("tryouts.history.parseHistoryJson")(
   (source: string, subject: string) =>
     Effect.try({
       catch: () => historyIntegrity(`${subject} is not valid JSON.`),
@@ -32,25 +31,6 @@ export const decodeHistoryRowJson = Effect.fn(
     Effect.flatMap(decodeStoredTryoutRow),
     Effect.mapError(() =>
       historyIntegrity(`History row ${identity} failed authentication.`)
-    )
-  )
-);
-
-/** Extracts and authenticates the old try-out manifest from its stored envelope. */
-export const decodeHistorySnapshotJson = Effect.fn(
-  "tryouts.history.decodeHistorySnapshotJson"
-)((source: string, expectedSnapshotId: string) =>
-  parseHistoryJson(source, `Retained snapshot ${expectedSnapshotId}`).pipe(
-    Effect.flatMap(
-      Schema.decodeUnknown(TryoutSnapshotEnvelopeSchema, {
-        onExcessProperty: "error",
-      })
-    ),
-    Effect.flatMap(({ manifest }) => decodeStoredTryoutSnapshot(manifest)),
-    Effect.mapError(() =>
-      historyIntegrity(
-        `Retained snapshot ${expectedSnapshotId} failed authentication.`
-      )
     )
   )
 );

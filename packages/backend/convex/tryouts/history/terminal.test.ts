@@ -2,7 +2,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { finalizeRetainedTryoutHistory } from "@repo/backend/convex/tryouts/history/finalize";
+import { decodeHistoryRowJson } from "@repo/backend/convex/tryouts/history/decode";
 import {
   historyRead,
   type RetainedTryoutHistoryPlan,
@@ -19,7 +19,6 @@ import {
   readSignedState,
 } from "@repo/backend/convex/tryouts/history/terminalState";
 import {
-  prepareRetainedTryoutHistory,
   provideHistoryTestTrust,
   seedRetainedTryoutHistory,
 } from "@repo/backend/test/tryout-history";
@@ -36,6 +35,10 @@ describe("tryouts/history/terminal", () => {
   it("retries the same full proof after mutable source deletion", async () => {
     const target = makeTarget();
     const fixture = await prepareTerminalTarget(target);
+    const hashes = await readPreSigningContentHashes(
+      target,
+      fixture.plan.snapshotId
+    );
     const expected = {
       artifacts: 4,
       attempts: 2,
@@ -48,6 +51,7 @@ describe("tryouts/history/terminal", () => {
       snapshotId: fixture.plan.snapshotId,
     };
 
+    expect(hashes.frozen).not.toBe(hashes.signed);
     await expect(runTerminalProof(target, fixture.plan)).resolves.toEqual(
       expected
     );
@@ -130,6 +134,19 @@ const terminalIntegrityCases: readonly {
     },
   },
   {
+    name: "one signed placement envelope is tampered",
+    tamper: async (ctx) => {
+      const row = await ctx.db
+        .query("tryoutHistoryRows")
+        .filter((query) => query.eq(query.field("rowKind"), "placement"))
+        .first();
+      if (!row) {
+        throw new Error("Expected terminal placement fixture.");
+      }
+      await ctx.db.patch(row._id, { rowJson: "{}" });
+    },
+  },
+  {
     name: "one frozen attempt placement is deleted",
     tamper: async (ctx) => {
       const row = await ctx.db.query("tryoutAttemptPlacements").first();
@@ -140,13 +157,13 @@ const terminalIntegrityCases: readonly {
     },
   },
   {
-    name: "one frozen content hash is tampered",
+    name: "one frozen signed field is tampered",
     tamper: async (ctx) => {
       const row = await ctx.db.query("tryoutAttemptPlacements").first();
       if (!row) {
         throw new Error("Expected terminal frozen placement fixture.");
       }
-      await ctx.db.patch(row._id, { contentHash: "changed" });
+      await ctx.db.patch(row._id, { sourceRevision: "changed" });
     },
   },
   {
@@ -275,13 +292,40 @@ function makeTarget() {
   return convexTest(schema, convexModules);
 }
 
+function readPreSigningContentHashes(target: TestTarget, snapshotId: string) {
+  return target.query(async (ctx) => {
+    const frozen = await ctx.db.query("tryoutAttemptPlacements").first();
+    if (!frozen) {
+      throw new Error("Expected terminal frozen placement fixture.");
+    }
+    const history = await ctx.db
+      .query("tryoutHistoryRows")
+      .withIndex("by_snapshotId_and_rowKind_and_rowHash", (query) =>
+        query
+          .eq("snapshotId", snapshotId)
+          .eq("rowKind", "placement")
+          .eq("rowHash", frozen.placementRowHash)
+      )
+      .unique();
+    if (!history) {
+      throw new Error("Expected terminal history placement fixture.");
+    }
+    const signed = await runConvexProgram(
+      decodeHistoryRowJson(history.rowJson, history.rowHash)
+    );
+    if (signed.rowKind !== "placement") {
+      throw new Error("Expected signed placement fixture.");
+    }
+    return {
+      frozen: frozen.contentHash,
+      signed: signed.record.row.contentHash,
+    };
+  });
+}
+
 function prepareTerminalTarget(target: TestTarget) {
   return target.mutation(async (ctx) => {
     const fixture = await seedRetainedTryoutHistory(ctx);
-    await prepareRetainedTryoutHistory(ctx, fixture);
-    await runConvexProgram(
-      provideHistoryTestTrust(finalizeRetainedTryoutHistory(ctx, fixture.plan))
-    );
     for (const row of await ctx.db.query("tryoutCatalog").collect()) {
       await ctx.db.delete(row._id);
     }

@@ -11,7 +11,7 @@ import type {
 } from "@repo/backend/convex/tryouts/history/terminalPage";
 import { Effect } from "effect";
 
-export interface TerminalAuthenticatedInventory {
+interface TerminalAuthenticatedInventory {
   readonly catalogRows: number;
   readonly placementByIdentity: ReadonlyMap<
     string,

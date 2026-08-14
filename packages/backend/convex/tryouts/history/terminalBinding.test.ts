@@ -1,17 +1,86 @@
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { verifyTerminalProgress } from "@repo/backend/convex/tryouts/history/terminalBinding";
-import { readIdentities } from "@repo/backend/convex/tryouts/history/terminalState";
+import { decodeHistoryRowJson } from "@repo/backend/convex/tryouts/history/decode";
 import {
-  prepareRetainedTryoutHistory,
-  seedRetainedTryoutHistory,
-} from "@repo/backend/test/tryout-history";
+  verifyTerminalFrozenPlacements,
+  verifyTerminalProgress,
+} from "@repo/backend/convex/tryouts/history/terminalBinding";
+import { readIdentities } from "@repo/backend/convex/tryouts/history/terminalState";
+import { seedRetainedTryoutHistory } from "@repo/backend/test/tryout-history";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("tryouts/history/terminalBinding", () => {
+  it("accepts one signed placement shared across retained releases", async () => {
+    const target = convexTest(schema, convexModules);
+    const verified = await target.mutation(async (ctx) => {
+      const fixture = await seedRetainedTryoutHistory(ctx);
+      const [attempts, frozenRows] = await Promise.all([
+        ctx.db.query("tryoutAttempts").take(2),
+        ctx.db.query("tryoutAttemptPlacements").take(2),
+      ]);
+      const firstAttempt = attempts[0];
+      const secondAttempt = attempts[1];
+      if (!(firstAttempt && secondAttempt)) {
+        throw new Error("Expected two retained attempt fixtures.");
+      }
+      const firstFrozen = frozenRows.find(
+        ({ tryoutAttemptId }) => tryoutAttemptId === firstAttempt._id
+      );
+      const secondFrozen = frozenRows.find(
+        ({ tryoutAttemptId }) => tryoutAttemptId === secondAttempt._id
+      );
+      if (!(firstFrozen && secondFrozen)) {
+        throw new Error("Expected two retained frozen placement fixtures.");
+      }
+      const history = await ctx.db
+        .query("tryoutHistoryRows")
+        .withIndex("by_snapshotId_and_rowKind_and_rowHash", (query) =>
+          query
+            .eq("snapshotId", fixture.plan.snapshotId)
+            .eq("rowKind", "placement")
+            .eq("rowHash", firstFrozen.placementRowHash)
+        )
+        .unique();
+      if (history?.rowKind !== "placement") {
+        throw new Error("Expected one retained placement history fixture.");
+      }
+      const signed = await runConvexProgram(
+        decodeHistoryRowJson(history.rowJson, history.rowHash)
+      );
+      if (signed.rowKind !== "placement") {
+        throw new Error("Expected one signed placement fixture.");
+      }
+
+      return runConvexProgram(
+        verifyTerminalFrozenPlacements(
+          [
+            firstAttempt,
+            {
+              ...firstAttempt,
+              _id: secondAttempt._id,
+              snapshotReleaseId: secondAttempt.snapshotReleaseId,
+            },
+          ],
+          [
+            firstFrozen,
+            {
+              ...firstFrozen,
+              _id: secondFrozen._id,
+              tryoutAttemptId: secondAttempt._id,
+            },
+          ],
+          new Map([[firstFrozen.placementIdentity, { history, signed }]]),
+          fixture.plan
+        )
+      );
+    });
+
+    expect(verified).toBe(2);
+  });
+
   it("rejects progress that points to an earlier retained attempt", async () => {
     const { attempts, plan, progressRows } = await readProgressFixture();
     const [first, second] = attempts;
@@ -62,11 +131,7 @@ describe("tryouts/history/terminalBinding", () => {
 
 async function readProgressFixture() {
   const target = convexTest(schema, convexModules);
-  const fixture = await target.mutation(async (ctx) => {
-    const seeded = await seedRetainedTryoutHistory(ctx);
-    await prepareRetainedTryoutHistory(ctx, seeded);
-    return seeded;
-  });
+  const fixture = await target.mutation(seedRetainedTryoutHistory);
   const state = await target.query((ctx) =>
     runConvexProgram(readIdentities(ctx, fixture.plan))
   );

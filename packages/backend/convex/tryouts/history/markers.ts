@@ -11,7 +11,7 @@ import {
 import { Effect } from "effect";
 
 type ReadCtx = MutationCtx | QueryCtx;
-export type RetainedMarkerAttempt = Pick<
+type RetainedMarkerAttempt = Pick<
   Doc<"tryoutAttempts">,
   | "_id"
   | "appLocale"
@@ -20,7 +20,7 @@ export type RetainedMarkerAttempt = Pick<
   | "totalQuestions"
   | "tryoutSnapshotId"
 >;
-export type RetainedCompletionMarker = Pick<
+type RetainedCompletionMarker = Pick<
   Doc<"tryoutAttemptHistory">,
   "_id" | "snapshotReleaseId" | "tryoutAttemptId" | "tryoutSnapshotId"
 >;
