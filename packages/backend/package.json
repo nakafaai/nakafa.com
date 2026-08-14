@@ -29,7 +29,7 @@
     "@convex-dev/workpool": "^0.4.9",
     "@effect/platform": "0.97.1",
     "@effect/platform-node": "0.108.1",
-    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.12.0/nakafa-aksara-contracts-0.12.0.tgz",
+    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.0/nakafa-aksara-contracts-0.13.0.tgz",
     "@polar-sh/sdk": "^0.49.0",
     "@posthog/convex": "2.1.0",
     "@repo/ai": "workspace:*",

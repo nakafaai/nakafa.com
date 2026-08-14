@@ -184,7 +184,6 @@ export const publicationReceiptValidator = v.object({
   activatedHeads: v.number(),
   activeAppLocales: v.array(appLocaleValidator),
   deletedHeads: v.number(),
-  editorialReviewDigest: v.string(),
   manifestHash: v.string(),
   projectionDigest: v.string(),
   releaseId: v.string(),

@@ -42,7 +42,6 @@ import {
   testSignedRelease,
 } from "@repo/backend/test/content-proof";
 import {
-  TEST_MANIFEST_HASH,
   testPublicationScope,
   testTextHash,
 } from "@repo/backend/test/content-release";
@@ -157,13 +156,11 @@ export const ingressRelease = testSignedRelease(
   ContentReleaseManifestSchema.make({
     activeAppLocales: ACTIVE_APP_LOCALES,
     baseActiveAppLocales: null,
-    baseEditorialReviewDigest: null,
     baseManifestHash: null,
     baseReleaseId: null,
     baseResultCount: 0,
     baseResultDigest: EMPTY_RESULT_CATALOG_DIGEST,
     deleteCount: 0,
-    editorialReviewDigest: TEST_MANIFEST_HASH,
     format: CONTENT_RELEASE_FORMAT,
     itemCount: 1,
     itemsDigest: itemDigest.digest,
@@ -234,13 +231,11 @@ export const ingressRecovery = testSignedRelease(
   ContentReleaseManifestSchema.make({
     activeAppLocales: ingressRelease.manifest.activeAppLocales,
     baseActiveAppLocales: ingressRelease.manifest.activeAppLocales,
-    baseEditorialReviewDigest: ingressRelease.manifest.editorialReviewDigest,
     baseManifestHash: ingressRelease.manifestHash,
     baseReleaseId: ingressReleaseId,
     baseResultCount: 1,
     baseResultDigest: ingressRelease.manifest.resultDigest,
     deleteCount: 1,
-    editorialReviewDigest: ingressRelease.manifest.editorialReviewDigest,
     format: CONTENT_RELEASE_FORMAT,
     itemCount: 1,
     itemsDigest: recoveryItems.digest,

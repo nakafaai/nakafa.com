@@ -39,13 +39,11 @@ function testProofJson() {
   return JSON.stringify({
     activeAppLocales: ACTIVE_APP_LOCALE_CODES,
     baseActiveAppLocales: null,
-    baseEditorialReviewDigest: null,
     baseManifestHash: null,
     baseReleaseId: null,
     baseResultCount: 0,
     baseResultDigest: EMPTY_RESULT_CATALOG_DIGEST,
     deleteHeads: 0,
-    editorialReviewDigest: TEST_DIGEST,
     itemCount: 1,
     itemsDigest: TEST_DIGEST,
     manifestHash: TEST_MANIFEST_HASH,

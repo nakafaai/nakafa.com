@@ -149,7 +149,6 @@ export const makeTryoutSnapshotManifest = Effect.fn(
     activeAppLocales: ACTIVE_APP_LOCALES,
     catalogDigest: catalogEvidence.digest,
     counts: { country: 2, exam: 0, section: 0, set: 0, track: 0 },
-    editorialReviewDigest: artifactHash,
     placementCount: placementEvidence.count,
     placementDigest: placementEvidence.digest,
     routeCount: 2,
@@ -192,7 +191,6 @@ export async function activateTryoutSnapshot(
       activeAppLocales: ACTIVE_APP_LOCALES,
       catalogDigest: catalogEvidence.digest,
       counts: countCatalog(input.catalog),
-      editorialReviewDigest: artifactHash,
       placementCount: placementEvidence.count,
       placementDigest: placementEvidence.digest,
       routeCount: input.catalog.filter(

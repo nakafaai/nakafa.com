@@ -184,13 +184,11 @@ export function testEmptyManifest(releaseId: ReleaseId) {
   return ContentReleaseManifestSchema.make({
     activeAppLocales: ACTIVE_APP_LOCALES,
     baseActiveAppLocales: null,
-    baseEditorialReviewDigest: null,
     baseManifestHash: null,
     baseReleaseId: null,
     baseResultCount: 0,
     baseResultDigest: EMPTY_RESULT_CATALOG_DIGEST,
     deleteCount: 0,
-    editorialReviewDigest: digest,
     format: CONTENT_RELEASE_FORMAT,
     itemCount: 0,
     itemsDigest: items.digest,
