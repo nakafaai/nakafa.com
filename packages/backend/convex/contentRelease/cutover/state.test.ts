@@ -39,6 +39,34 @@ describe("contentRelease/cutover/state", () => {
     ).resolves.toEqual(testReaderCutoverReceipt());
   });
 
+  it("rejects a tampered stored reader receipt", async () => {
+    const t = convexTest(schema, convexModules);
+    const receipt = testReaderCutoverReceipt();
+
+    await expect(
+      t.mutation(() =>
+        runConvexProgram(
+          requireReaderCutoverCheckpoint({
+            readerCutoverReceipt: {
+              ...receipt,
+              history: {
+                ...receipt.history,
+                frozenPlacements: receipt.history.frozenPlacements + 1,
+              },
+            },
+          })
+        )
+      )
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_STATE",
+        message: expect.stringContaining(
+          "reader cutover has not been accepted"
+        ),
+      },
+    });
+  });
+
   it("blocks singleton recreation as soon as the cutover is initialized", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>

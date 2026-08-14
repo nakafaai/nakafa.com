@@ -164,19 +164,12 @@ export const verifyRetainedHistoryReadiness = Effect.fn(
   yield* verifyFrozenRows(inventory, rows, plan);
 });
 
-/** Compact post-finalize witness safe after mutable source rows are drained. */
-export const proveRetainedHistoryComplete = Effect.fn(
-  "tryouts.history.proveRetainedHistoryComplete"
-)(function* (ctx: ReadCtx, plan: RetainedTryoutHistoryPlan) {
-  return yield* proveRetainedHistoryMarkers(ctx, plan);
-});
-
 /** Stable post-drain proof consumed by the deletion-complete cutover. */
 export const read = internalQuery({
   args: {},
   returns: historyReadinessValidator,
   handler: (ctx) =>
     runConvexProgram(
-      proveRetainedHistoryComplete(ctx, retainedTryoutHistoryPlan)
+      proveRetainedHistoryMarkers(ctx, retainedTryoutHistoryPlan)
     ),
 });

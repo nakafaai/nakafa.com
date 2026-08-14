@@ -199,10 +199,11 @@ split.
 ## Stop at the reader boundary
 
 Do not invoke the legacy drain again, freeze the publication pointer, or drain
-any current signed table in this deployment. The Phase 1 schema contains an
-optional `readerCutoverReceipt` checkpoint, but this source deliberately
-contains no operation that can write it. Every destructive page and the final
-proof reject the missing checkpoint.
+any current signed table in this deployment. The protected Phase 1 schema
+contains the unused optional `readerCutoverAcceptedAt` field and deliberately
+exposes no operation that can write it. The coordinated Phase 2 deployment
+replaces that absent field with the optional structured `readerCutoverReceipt`.
+Every destructive page and the final proof reject a missing or invalid receipt.
 
 The next deployment must first route retained set pages, retained section
 pages, and protected artifact reads through the authenticated history tables.

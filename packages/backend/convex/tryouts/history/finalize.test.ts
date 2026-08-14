@@ -2,7 +2,7 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { finalizeRetainedTryoutHistory } from "@repo/backend/convex/tryouts/history/finalize";
-import { proveRetainedHistoryComplete } from "@repo/backend/convex/tryouts/history/readiness";
+import { proveRetainedHistoryMarkers } from "@repo/backend/convex/tryouts/history/markers";
 import {
   prepareRetainedTryoutHistory,
   provideHistoryTestTrust,
@@ -38,7 +38,7 @@ describe("tryouts/history/finalize", () => {
         )
       );
       const proof = await runConvexProgram(
-        provideHistoryTestTrust(proveRetainedHistoryComplete(ctx, fixture.plan))
+        proveRetainedHistoryMarkers(ctx, fixture.plan)
       );
       const markers = await ctx.db.query("tryoutAttemptHistory").collect();
       return { first, markers, proof, second };
