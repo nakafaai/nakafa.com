@@ -6,17 +6,23 @@ async function loadProducts() {
 }
 
 const expectedMonthlyPrices = {
-  default: {
+  EUR: {
     amount: 8.99,
-    currency: "USD",
+    currency: "EUR",
     fractionDigits: 2,
-    locale: "en-US",
+    locale: "de-DE",
   },
-  ID: {
+  IDR: {
     amount: 69_000,
     currency: "IDR",
     fractionDigits: 0,
     locale: "id-ID",
+  },
+  USD: {
+    amount: 8.99,
+    currency: "USD",
+    fractionDigits: 2,
+    locale: "en-US",
   },
 };
 

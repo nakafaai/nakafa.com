@@ -42,8 +42,31 @@ describe("marketing/about/pricing-display", () => {
     );
   });
 
-  it("falls back to USD pricing outside Indonesia", () => {
-    const countryPrice = getProPricingDisplay("US");
+  it("formats euro pricing for Polar EUR countries and territories", () => {
+    const countryPrice = getProPricingDisplay("DE");
+    const lowercasePrice = getProPricingDisplay("de");
+    const territoryPrice = getProPricingDisplay("AX");
+    const formatter = new Intl.NumberFormat(
+      countryPrice.pro.locales,
+      countryPrice.pro.format
+    );
+
+    expect(countryPrice.pro).toMatchObject({
+      locales: "de-DE",
+      value: 8.99,
+    });
+    expect(formatter.format(countryPrice.free.value).replace(/\s+/g, " ")).toBe(
+      "0,00 €"
+    );
+    expect(formatter.format(countryPrice.pro.value).replace(/\s+/g, " ")).toBe(
+      "8,99 €"
+    );
+    expect(lowercasePrice).toEqual(countryPrice);
+    expect(territoryPrice).toEqual(countryPrice);
+  });
+
+  it("falls back to USD pricing when Polar has no matching price", () => {
+    const countryPrice = getProPricingDisplay("PL");
     const fallbackPrice = getProPricingDisplay(null);
     const formatter = new Intl.NumberFormat(
       countryPrice.pro.locales,
