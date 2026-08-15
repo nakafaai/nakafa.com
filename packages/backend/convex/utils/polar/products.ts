@@ -11,17 +11,23 @@ export const products = {
       ? "db602388-ef0c-4a88-92fa-c785f3230c45"
       : "5435bfd4-ca2a-4f97-ae7b-27d65907e49b",
     monthlyPrices: {
-      default: {
+      EUR: {
         amount: 8.99,
-        currency: "USD",
+        currency: "EUR",
         fractionDigits: 2,
-        locale: "en-US",
+        locale: "de-DE",
       },
-      ID: {
+      IDR: {
         amount: 69_000,
         currency: "IDR",
         fractionDigits: 0,
         locale: "id-ID",
+      },
+      USD: {
+        amount: 8.99,
+        currency: "USD",
+        fractionDigits: 2,
+        locale: "en-US",
       },
     },
     slug: "pro",
