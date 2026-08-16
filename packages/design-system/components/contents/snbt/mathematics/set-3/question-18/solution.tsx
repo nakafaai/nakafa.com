@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -86,13 +87,13 @@ export function GraphSolution({
           showPoints: false,
           labels: [
             {
-              text: "A",
+              text: <InlineMath math="A" />,
               at: 0,
               offset: [-labelOffsetX * 0.3, labelOffsetY * 0.2, 0],
               color: getColor("INDIGO"),
             },
             {
-              text: "16 m",
+              text: <InlineMath math="16\,\text{m}" />,
               at: 1,
               offset: [-labelOffsetX, 0, 0],
               color: getColor("INDIGO"),
@@ -104,7 +105,7 @@ export function GraphSolution({
               color: getColor("INDIGO"),
             },
             {
-              text: "D",
+              text: <InlineMath math="D" />,
               at: 2,
               offset: [-labelOffsetX * 0.3, 0, 0],
               color: getColor("INDIGO"),
@@ -123,7 +124,7 @@ export function GraphSolution({
               color: getColor("ORANGE"),
             },
             {
-              text: "C",
+              text: <InlineMath math="C" />,
               at: 1,
               offset: [-labelOffsetX * 0.3, 0, 0],
               color: getColor("ORANGE"),
@@ -137,13 +138,13 @@ export function GraphSolution({
           showPoints: false,
           labels: [
             {
-              text: "(32 - x) m",
+              text: <InlineMath math="(32 - x)\,\text{m}" />,
               at: 1,
               offset: [0, -labelOffsetY * 0.3, 0],
               color: getColor("TEAL"),
             },
             {
-              text: "B",
+              text: <InlineMath math="B" />,
               at: 2,
               offset: [0, labelOffsetY * 0.2, 0],
               color: getColor("TEAL"),
@@ -156,13 +157,13 @@ export function GraphSolution({
           showPoints: false,
           labels: [
             {
-              text: "x",
+              text: <InlineMath math="x" />,
               at: 1,
               offset: [0, -labelOffsetY * 0.3, 0],
               color: getColor("CYAN"),
             },
             {
-              text: "E",
+              text: <InlineMath math="E" />,
               at: 2,
               offset: [labelOffsetX, labelOffsetY * 0.2, 0],
               color: getColor("CYAN"),
@@ -207,7 +208,7 @@ export function GraphSolution({
           cone: { position: "both" },
           labels: [
             {
-              text: "32 m",
+              text: <InlineMath math="32\,\text{m}" />,
               at: 1,
               offset: [0, -labelOffsetY * 0.4, 0],
               color: getColor("ROSE"),
@@ -221,7 +222,7 @@ export function GraphSolution({
           showPoints: false,
           labels: [
             {
-              text: "30°",
+              text: <InlineMath math="30^\circ" />,
               at: arc30LabelIndex,
               offset: [-labelOffsetX * 0.6, labelOffsetY * 0.05, 0],
               color: getColor("VIOLET"),
@@ -234,7 +235,7 @@ export function GraphSolution({
           showPoints: false,
           labels: [
             {
-              text: "45°",
+              text: <InlineMath math="45^\circ" />,
               at: arc45LabelIndex,
               offset: [-labelOffsetX * 0.8, labelOffsetY * 0.15, 0],
               color: getColor("EMERALD"),

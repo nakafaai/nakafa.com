@@ -14,7 +14,8 @@ import {
   getChemistryParticleLabelFontSize,
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/particle-label";
-import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
 import type { ReactNode } from "react";
 
 const BEFORE_X = -1.08;
@@ -119,34 +120,34 @@ export function ConstantCompositionScene({
 
   return (
     <group position={[0, -0.04, 0]} scale={SCENE_SCALE}>
-      <SceneLabel
+      <ThreeLabel
         color={colors.text}
         fontSize="compact"
         position={[BEFORE_X, 0.58, 0.16]}
       >
         {labels.before}
-      </SceneLabel>
-      <SceneLabel
+      </ThreeLabel>
+      <ThreeLabel
         color={colors.text}
         fontSize="compact"
         position={[BEFORE_X, READOUT_Y, 0.22]}
       >
         {modeLabels.readoutBefore}
-      </SceneLabel>
-      <SceneLabel
+      </ThreeLabel>
+      <ThreeLabel
         color={colors.text}
         fontSize="compact"
         position={[AFTER_X, READOUT_Y, 0.22]}
       >
         {modeLabels.readoutAfter}
-      </SceneLabel>
-      <SceneLabel
+      </ThreeLabel>
+      <ThreeLabel
         color={colors.text}
         fontSize="compact"
         position={[AFTER_X, 0.58, 0.16]}
       >
         {labels.after}
-      </SceneLabel>
+      </ThreeLabel>
       <CompositionStage x={BEFORE_X}>
         {layout.beforeAtoms.map((atomData) => (
           <AtomParticle atomData={atomData} colors={colors} key={atomData.id} />
@@ -237,7 +238,7 @@ function AtomParticle({
         outlineWidth={CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH}
         position={getChemistryParticleLabelPosition(radius)}
       >
-        {atomSymbol(atomData.element)}
+        <InlineMath math={atomSymbol(atomData.element)} />
       </ChemistryParticleLabel>
     </group>
   );

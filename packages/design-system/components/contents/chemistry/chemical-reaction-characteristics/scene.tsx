@@ -9,7 +9,7 @@ import {
   type ReactionSceneColors,
   type ReactionScenePoint,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/data";
-import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useRef } from "react";
 import { DoubleSide, type Group, type Mesh } from "three";
 
@@ -137,20 +137,20 @@ export function ReactionCharacteristicsScene({
 }) {
   return (
     <group position={[0, SCENE_Y, 0]} scale={SCENE_SCALE}>
-      <SceneLabel
+      <ThreeLabel
         color={colors.text}
         fontSize="compact"
         position={[BEFORE_BEAKER_X, 0.88, 0.16]}
       >
         {labels.before}
-      </SceneLabel>
-      <SceneLabel
+      </ThreeLabel>
+      <ThreeLabel
         color={colors.text}
         fontSize="compact"
         position={[AFTER_BEAKER_X, 0.88, 0.16]}
       >
         {labels.after}
-      </SceneLabel>
+      </ThreeLabel>
       <ReactionBeaker
         colors={colors}
         cueId={cueId}

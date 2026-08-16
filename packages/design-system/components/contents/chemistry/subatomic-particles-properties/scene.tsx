@@ -13,8 +13,10 @@ import {
   type SubatomicParticlePropertiesModeId,
   type SubatomicParticlePropertiesSceneLabels,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/data";
-import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
+import type { ReactNode } from "react";
 import { Vector3 } from "three";
 
 const PATH_POINT_COUNT = 44;
@@ -35,15 +37,15 @@ const PROTON_PATH = createQuadraticPath(
 );
 
 const CHARGE_PARTICLES = [
-  { color: "electron", label: "e^-", path: ELECTRON_PATH, progress: 0.62 },
-  { color: "neutral", label: "n^0", path: NEUTRON_PATH, progress: 0.52 },
-  { color: "proton", label: "p^+", path: PROTON_PATH, progress: 0.62 },
+  { color: "electron", math: "e^-", path: ELECTRON_PATH, progress: 0.62 },
+  { color: "neutral", math: "n^0", path: NEUTRON_PATH, progress: 0.52 },
+  { color: "proton", math: "p^+", path: PROTON_PATH, progress: 0.62 },
 ] satisfies {
   color: keyof Pick<
     SubatomicParticlePropertiesColors,
     "electron" | "neutral" | "proton"
   >;
-  label: string;
+  math: string;
   path: Vector3[];
   progress: number;
 }[];
@@ -66,13 +68,13 @@ const MASS_BARS = [
 }[];
 
 const NUCLEUS_PARTICLES = [
-  { color: "proton", label: "p^+", position: new Vector3(-0.38, 0.26, 0.15) },
-  { color: "neutron", label: "n^0", position: new Vector3(0.38, 0.26, -0.05) },
-  { color: "neutron", label: "n^0", position: new Vector3(-0.38, -0.3, 0) },
-  { color: "proton", label: "p^+", position: new Vector3(0.38, -0.3, 0.15) },
+  { color: "proton", math: "p^+", position: new Vector3(-0.38, 0.26, 0.15) },
+  { color: "neutron", math: "n^0", position: new Vector3(0.38, 0.26, -0.05) },
+  { color: "neutron", math: "n^0", position: new Vector3(-0.38, -0.3, 0) },
+  { color: "proton", math: "p^+", position: new Vector3(0.38, -0.3, 0.15) },
 ] satisfies {
   color: keyof Pick<SubatomicParticlePropertiesColors, "neutron" | "proton">;
-  label: string;
+  math: string;
   position: Vector3;
 }[];
 
@@ -162,35 +164,35 @@ function ChargeScene({
       {CHARGE_PARTICLES.map((particle) => (
         <Particle
           color={colors[particle.color]}
-          key={particle.label}
-          label={particle.label}
+          key={particle.math}
           labelColor={colors.sphereText}
+          math={particle.math}
           position={getPathPoint(particle.path, particle.progress)}
           radius={0.14}
         />
       ))}
 
-      <SceneLabel
+      <ThreeLabel
         color={colors.text}
         fontSize={THREE_FONT_SIZE.compact}
         position={[2.48, 0.82, 0.24]}
       >
         {labels.electron}
-      </SceneLabel>
-      <SceneLabel
+      </ThreeLabel>
+      <ThreeLabel
         color={colors.text}
         fontSize={THREE_FONT_SIZE.compact}
         position={[2.48, 0.08, 0.24]}
       >
         {labels.neutron}
-      </SceneLabel>
-      <SceneLabel
+      </ThreeLabel>
+      <ThreeLabel
         color={colors.text}
         fontSize={THREE_FONT_SIZE.compact}
         position={[2.48, -0.82, 0.24]}
       >
         {labels.proton}
-      </SceneLabel>
+      </ThreeLabel>
     </group>
   );
 }
@@ -217,13 +219,13 @@ function MassScene({
           >
             <meshStandardMaterial color={colors[bar.color]} roughness={0.42} />
           </RoundedBox>
-          <SceneLabel
+          <ThreeLabel
             color={colors.text}
             fontSize={THREE_FONT_SIZE.compact}
             position={[0, -0.88, 0.38]}
           >
             {labels[bar.label]}
-          </SceneLabel>
+          </ThreeLabel>
         </group>
       ))}
     </group>
@@ -261,8 +263,8 @@ function LocationScene({
         <Particle
           color={colors[particle.color]}
           key={`${particle.color}-${particle.position.x}-${particle.position.y}`}
-          label={particle.label}
           labelColor={colors.sphereText}
+          math={particle.math}
           position={particle.position}
           radius={0.18}
         />
@@ -272,27 +274,27 @@ function LocationScene({
         <Particle
           color={colors.electron}
           key={`electron-${position.x}-${position.y}`}
-          label="e^-"
           labelColor={colors.sphereText}
+          math="e^-"
           position={position}
           radius={0.14}
         />
       ))}
 
-      <SceneLabel
+      <ThreeLabel
         color={colors.text}
         fontSize={THREE_FONT_SIZE.compact}
         position={[0, -0.74, 0.82]}
       >
         {labels.nucleus}
-      </SceneLabel>
-      <SceneLabel
+      </ThreeLabel>
+      <ThreeLabel
         color={colors.text}
         fontSize={THREE_FONT_SIZE.compact}
         position={[0, 1.7, 0.18]}
       >
         {labels.electronRegion}
-      </SceneLabel>
+      </ThreeLabel>
     </group>
   );
 }
@@ -306,7 +308,7 @@ function Plate({
   y,
 }: {
   color: string;
-  label: string;
+  label: ReactNode;
   y: number;
 }) {
   return (
@@ -314,13 +316,13 @@ function Plate({
       <RoundedBox args={[2.35, 0.14, 0.14]} radius={0.06} smoothness={4}>
         <meshStandardMaterial color={color} roughness={0.4} />
       </RoundedBox>
-      <SceneLabel
+      <ThreeLabel
         color={color}
         fontSize={THREE_FONT_SIZE.compact}
         position={[0, y > 0 ? 0.28 : -0.28, 0.2]}
       >
         {label}
-      </SceneLabel>
+      </ThreeLabel>
     </group>
   );
 }
@@ -357,14 +359,14 @@ function getPathPoint(path: Vector3[], progress: number) {
  */
 function Particle({
   color,
-  label,
   labelColor,
+  math,
   position,
   radius,
 }: {
   color: string;
-  label: string;
   labelColor: string;
+  math: string;
   position: Vector3;
   radius: number;
 }) {
@@ -382,7 +384,7 @@ function Particle({
           CHEMISTRY_PARTICLE_LABEL_CLOSE_SURFACE_OFFSET_RATIO
         )}
       >
-        {label}
+        <InlineMath math={math} />
       </ChemistryParticleLabel>
     </group>
   );

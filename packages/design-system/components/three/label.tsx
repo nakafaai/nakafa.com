@@ -1,66 +1,121 @@
 "use client";
 
-import { Billboard, Text } from "@react-three/drei";
+import { Billboard, Html } from "@react-three/drei";
+import { useThree } from "@react-three/fiber";
 import {
-  MONO_FONT_PATH,
   resolveThreeFontSize,
   type ThreeFontSize,
 } from "@repo/design-system/components/three/data/constants";
-import type { ComponentProps, ReactNode } from "react";
+import { type ComponentProps, type ReactNode, useEffect } from "react";
 import { Color } from "three";
 
+type HtmlProps = ComponentProps<typeof Html>;
 type BillboardProps = ComponentProps<typeof Billboard>;
-type TextProps = ComponentProps<typeof Text>;
+type LabelAnchorX = "center" | "left" | "right";
+type LabelAnchorY = "bottom" | "middle" | "top";
 
 interface ThreeLabelProps {
-  anchorX?: TextProps["anchorX"];
-  anchorY?: TextProps["anchorY"];
+  anchorX?: LabelAnchorX;
+  anchorY?: LabelAnchorY;
   children: ReactNode;
   color: string | Color;
-  font?: string;
   fontSize?: ThreeFontSize | number;
-  material?: TextProps["material"];
+  /** Enables scene-aware depth occlusion for labels attached to geometry. */
+  occlude?: HtmlProps["occlude"];
+  outlineColor?: string;
+  outlineWidth?: number;
   position: BillboardProps["position"];
-  renderOrder?: number;
-  rotation?: TextProps["rotation"];
+  /** Screen-plane rotation in radians. */
+  rotation?: number;
   visible?: boolean;
 }
 
+const LABEL_BASE_FONT_SIZE = 16;
+const LABEL_Z_INDEX_RANGE: [number, number] = [1, 0];
+
+function anchorOffset(anchor: LabelAnchorX | LabelAnchorY) {
+  if (anchor === "left" || anchor === "top") {
+    return "0%";
+  }
+
+  if (anchor === "right" || anchor === "bottom") {
+    return "-100%";
+  }
+
+  return "-50%";
+}
+
+function anchorOrigin(anchor: LabelAnchorX | LabelAnchorY) {
+  return anchor === "middle" ? "center" : anchor;
+}
+
 /**
- * Shared camera-facing label for interactive Three.js educational scenes.
+ * Renders semantic React content at one camera-facing Three.js world position.
+ *
+ * A plain string and rich content such as mixed prose and KaTeX use the same
+ * authoring contract. The bounded portal layer stays below scene controls and
+ * does not intercept pointer input. Visual labels stay hidden from assistive
+ * technology because each scene owns its complete accessible description.
+ *
+ * @see https://drei.docs.pmnd.rs/misc/html
  */
 export function ThreeLabel({
   anchorX = "center",
   anchorY = "middle",
   children,
   color,
-  font = MONO_FONT_PATH,
   fontSize = "annotation",
-  material,
+  outlineColor,
+  outlineWidth = 0,
+  occlude,
   position,
-  renderOrder = 10,
-  rotation,
+  rotation = 0,
   visible = true,
 }: ThreeLabelProps) {
+  const canvasHeight = useThree((state) => state.size.height);
+  const invalidate = useThree((state) => state.invalidate);
   const labelColor = color instanceof Color ? color.getStyle() : color;
+  const worldFontSize = resolveThreeFontSize(fontSize);
+  const distanceFactor = (worldFontSize * canvasHeight) / LABEL_BASE_FONT_SIZE;
+  const outlineWidthEm = worldFontSize > 0 ? outlineWidth / worldFontSize : 0;
+
+  // Drei mounts Html through a separate React root, so demand-mode canvases
+  // need one frame after each label render to apply its final world matrix.
+  useEffect(() => {
+    invalidate();
+  });
+
+  if (!visible) {
+    return null;
+  }
 
   return (
-    <Billboard position={position} visible={visible}>
-      <Text
-        anchorX={anchorX}
-        anchorY={anchorY}
-        color={labelColor}
-        font={font}
-        fontSize={resolveThreeFontSize(fontSize)}
-        frustumCulled={false}
-        material={material}
-        material-depthTest={false}
-        raycast={() => null}
-        renderOrder={renderOrder}
-        rotation={rotation}
+    <Billboard position={position}>
+      <Html
+        distanceFactor={distanceFactor}
+        occlude={occlude}
+        pointerEvents="none"
+        style={{
+          WebkitTextStroke:
+            outlineColor && outlineWidthEm > 0
+              ? `${outlineWidthEm}em ${outlineColor}`
+              : undefined,
+          color: labelColor,
+          fontFamily: "var(--font-mono)",
+          fontSize: LABEL_BASE_FONT_SIZE,
+          lineHeight: 1,
+          paintOrder: "stroke fill",
+          pointerEvents: "none",
+          transform: `translate(${anchorOffset(anchorX)}, ${anchorOffset(anchorY)}) rotate(${rotation}rad)`,
+          transformOrigin: `${anchorOrigin(anchorX)} ${anchorOrigin(anchorY)}`,
+          userSelect: "none",
+          whiteSpace: "nowrap",
+        }}
+        transform
+        zIndexRange={LABEL_Z_INDEX_RANGE}
       >
-        {children}
-      </Text>
+        <span aria-hidden="true">{children}</span>
+      </Html>
     </Billboard>
   );
 }

@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ComponentProps } from "react";
 
@@ -33,7 +34,7 @@ export function Graph({
           smooth: false,
           labels: [
             {
-              text: "y = 2x + 6",
+              text: <InlineMath math="y = 2x + 6" />,
               at: 25,
               offset: [3, 0.5, 0],
               color: getColor("INDIGO"),
@@ -48,7 +49,7 @@ export function Graph({
           smooth: true,
           labels: [
             {
-              text: "y = (1/2)^x - 3",
+              text: <InlineMath math="y = \left(\frac{1}{2}\right)^x - 3" />,
               at: 45,
               offset: [1, 2, 0],
               color: getColor("ORANGE"),
@@ -60,21 +61,21 @@ export function Graph({
           points: [{ x: 0, y: -2, z: 0 }],
           color: getColor("ORANGE"),
           showPoints: true,
-          labels: [{ text: "A", offset: [0.5, 0, 0] }],
+          labels: [{ text: <InlineMath math="A" />, offset: [0.5, 0, 0] }],
         },
         // Point B (0, 6) - y-intercept of line
         {
           points: [{ x: 0, y: 6, z: 0 }],
           color: getColor("INDIGO"),
           showPoints: true,
-          labels: [{ text: "B", offset: [0.5, 0, 0] }],
+          labels: [{ text: <InlineMath math="B" />, offset: [0.5, 0, 0] }],
         },
         // Point C (-3, 0) - x-intercept of line
         {
           points: [{ x: -3, y: 0, z: 0 }],
           color: getColor("INDIGO"),
           showPoints: true,
-          labels: [{ text: "C", offset: [0, -0.5, 0] }],
+          labels: [{ text: <InlineMath math="C" />, offset: [0, -0.5, 0] }],
         },
         // Point D - Intersection (Approx at x = -2.2)
         // y = 2(-2.2) + 6 = 1.6
@@ -82,7 +83,7 @@ export function Graph({
           points: [{ x: -2.2, y: 1.6, z: 0 }],
           color: getColor("TEAL"),
           showPoints: true,
-          labels: [{ text: "D", offset: [0.4, 0.4, 0] }],
+          labels: [{ text: <InlineMath math="D" />, offset: [0.4, 0.4, 0] }],
         },
       ]}
       description={description}

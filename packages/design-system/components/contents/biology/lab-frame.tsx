@@ -3,6 +3,7 @@
 import { useThree } from "@react-three/fiber";
 import {
   BIOLOGY_DEFAULT_VIEW,
+  type BiologyLabItem,
   type BiologyLabProps,
   type BiologySceneProps,
   type BiologySceneView,
@@ -37,14 +38,14 @@ const NARROW_CANVAS_ASPECT_RATIO = 1.3;
 /**
  * Renders the shared card, controls, and camera frame for one biology 3D lab.
  */
-export function BiologyLabFrame({
+export function BiologyLabFrame<Item extends BiologyLabItem>({
   description,
   labels,
   scene: Scene,
   title,
   view = BIOLOGY_DEFAULT_VIEW,
-}: BiologyLabProps & {
-  scene: ComponentType<BiologySceneProps>;
+}: BiologyLabProps<Item> & {
+  scene: ComponentType<BiologySceneProps<Item>>;
   view?: BiologySceneView;
 }) {
   const { resolvedTheme } = useTheme();

@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -138,7 +139,7 @@ export function Graph({ title, description, labels }: GraphProps) {
           showPoints: false,
           labels: [
             {
-              text: "30°",
+              text: <InlineMath math="30^\circ" />,
               at: 0,
               offset: [0, 0, 0],
               color: COLOR_LABEL,
@@ -167,7 +168,7 @@ export function Graph({ title, description, labels }: GraphProps) {
           showPoints: false,
           labels: [
             {
-              text: "3m",
+              text: <InlineMath math="3\,\text{m}" />,
               at: 1, // Midpoint
               offset: [-0.8, 0, 0], // Adjusted offset
               color: COLOR_DEPTH,
@@ -181,7 +182,7 @@ export function Graph({ title, description, labels }: GraphProps) {
           showPoints: false,
           labels: [
             {
-              text: "h = ?",
+              text: <InlineMath math="h = ?" />,
               at: 1, // Midpoint
               offset: [1, 0, 0], // Adjusted offset
               color: COLOR_DEPTH,

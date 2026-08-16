@@ -14,6 +14,8 @@ import {
   getChemistryParticleLabelFontSize,
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/particle-label";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
 
 const FIRST_X = -0.78;
 const SECOND_X = 0.78;
@@ -48,6 +50,13 @@ function CompoundStage({
 }) {
   return (
     <group position={[x, 0, 0]}>
+      <ThreeLabel
+        color={colors.text}
+        fontSize="compact"
+        position={[0, 0.56, 0.32]}
+      >
+        <InlineMath math={model.formula} />
+      </ThreeLabel>
       <group position={[0, 0.02, 0]}>
         {model.molecules.map((molecule) => (
           <Molecule colors={colors} key={molecule.id} molecule={molecule} />
@@ -120,7 +129,7 @@ function AtomParticle({
         outlineWidth={CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH}
         position={getChemistryParticleLabelPosition(radius)}
       >
-        {atomSymbol(atomData.element)}
+        <InlineMath math={atomSymbol(atomData.element)} />
       </ChemistryParticleLabel>
     </group>
   );

@@ -5,9 +5,10 @@ import type {
   VectorConceptSceneColors,
   VectorConceptState,
 } from "@repo/design-system/components/contents/physics/vector/concept/data";
-import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
 import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
 
 export function VectorConceptScene({
   colors,
@@ -56,20 +57,22 @@ export function VectorConceptScene({
         to={right.arrowEnd}
       />
 
-      <SceneLabel
+      <ThreeLabel
         color={colors.leftVector}
         fontSize={THREE_FONT_SIZE.reading}
         position={left.labelPoint}
       >
-        {`${labels.leftCable} ${Math.round(left.tension)} N`}
-      </SceneLabel>
-      <SceneLabel
+        {labels.leftCable}{" "}
+        <InlineMath math={`${Math.round(left.tension)}\\,\\mathrm{N}`} />
+      </ThreeLabel>
+      <ThreeLabel
         color={colors.rightVector}
         fontSize={THREE_FONT_SIZE.reading}
         position={right.labelPoint}
       >
-        {`${labels.rightCable} ${Math.round(right.tension)} N`}
-      </SceneLabel>
+        {labels.rightCable}{" "}
+        <InlineMath math={`${Math.round(right.tension)}\\,\\mathrm{N}`} />
+      </ThreeLabel>
     </group>
   );
 }

@@ -142,7 +142,7 @@ export interface MeasurementToolsLabProps {
 export interface MeasurementSceneProps {
   colors: SceneColors;
   measurement: number;
-  reading: string;
+  reading: ReactNode;
 }
 
 export type MeasurementControl =
@@ -197,7 +197,7 @@ export function normalizeMeasurement(
 }
 
 /**
- * Formats one measurement for KaTeX and the 3D text labels.
+ * Formats one measurement for every mathematical reading surface.
  */
 export function formatMeasurement(
   value: number,
@@ -210,10 +210,7 @@ export function formatMeasurement(
     decimalSeparator
   );
 
-  return {
-    math: `${formattedValue} \\text{ ${control.unit}}`,
-    scene: `${formattedValue} ${control.unit}`,
-  };
+  return `${formattedValue}\\,\\mathrm{${control.unit}}`;
 }
 
 /**

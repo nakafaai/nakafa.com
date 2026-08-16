@@ -2,8 +2,6 @@
 
 import { Instance, Instances, Line } from "@react-three/drei";
 import {
-  FONT_PATH,
-  MONO_FONT_PATH,
   resolveThreeFontSize,
   THREE_FONT_SIZE,
   type ThreeFontSize,
@@ -15,7 +13,7 @@ import {
 } from "@repo/design-system/components/three/helpers/quality";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { randomColor } from "@repo/design-system/lib/color";
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import {
   CatmullRomCurve3,
   Color,
@@ -99,6 +97,22 @@ function getSharedMaterial(color: string | Color): MeshBasicMaterial {
   return material;
 }
 
+interface LineLabelStyle {
+  /** Optional index into the points array where this label appears. */
+  at?: number;
+  /** Color for the label. */
+  color?: string | Color;
+  /** Font size of the label. */
+  fontSize?: ThreeFontSize | number;
+  /** Optional [x,y,z] offset from the selected point. */
+  offset?: [number, number, number];
+}
+
+/** Semantic React content rendered at one line point. */
+export interface LineLabel extends LineLabelStyle {
+  text: ReactNode;
+}
+
 export interface Props {
   color?: string | Color;
   /**
@@ -119,18 +133,7 @@ export interface Props {
    * Optional array of labels to render along the line. Each can specify the index of the point
    * at which to render (defaults to midpoint), optional offset, and text styling.
    */
-  labels?: Array<{
-    /** Text to display */
-    text: string;
-    /** Optional index into the `points` array where this label should appear; defaults to midpoint */
-    at?: number;
-    /** Optional [x,y,z] offset applied on top of the base point position */
-    offset?: [number, number, number];
-    /** Color for the label text */
-    color?: string | Color;
-    /** Font size of the label text */
-    fontSize?: ThreeFontSize | number;
-  }>;
+  labels?: LineLabel[];
   lineWidth?: number;
   points: {
     x: number;
@@ -142,10 +145,6 @@ export interface Props {
    * Whether to render the line as a smooth curve using CatmullRomCurve3
    */
   smooth?: boolean;
-  /**
-   * Whether to use the mono font for the labels
-   */
-  useMonoFont?: boolean;
 }
 
 const DEFAULT_LABELS: NonNullable<Props["labels"]> = [];
@@ -161,7 +160,6 @@ export function LineEquation({
   smooth = true,
   curvePoints,
   labels = DEFAULT_LABELS,
-  useMonoFont = true,
   cone,
 }: Props) {
   const vectorPoints = useMemo(
@@ -225,8 +223,6 @@ export function LineEquation({
     }
     return basePoints;
   }, [vectorPoints, smooth, curvePoints, cone, arrowSize]);
-
-  const fontPath = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
 
   // Use shared geometry and materials
   const pointGeom = getSharedSphereGeometry();
@@ -368,9 +364,7 @@ export function LineEquation({
       {/* Render custom labels at specified indices */}
       {labelData.map((data) => (
         <ThreeLabel
-          anchorX="center"
           color={data.color}
-          font={fontPath}
           fontSize={data.fontSize}
           key={data.key}
           position={data.position}

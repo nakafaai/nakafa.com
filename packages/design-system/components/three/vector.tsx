@@ -2,6 +2,7 @@
 
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
 import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
+import type { ReactNode } from "react";
 import type * as Three from "three";
 
 type LabelAnchorX = "left" | "center" | "right";
@@ -15,7 +16,7 @@ interface VectorProps {
   /** Starting point of the vector [x, y, z] */
   from?: readonly [number, number, number];
   /** Label for the vector */
-  label?: string;
+  label?: ReactNode;
   /** Horizontal anchor for the label text */
   labelAnchorX?: LabelAnchorX;
   /**
@@ -44,8 +45,6 @@ interface VectorProps {
   showArrow?: boolean;
   /** End point of the vector [x, y, z] */
   to: readonly [number, number, number];
-  /** Use mono font for the label */
-  useMonoFont?: boolean;
   /** Additional props */
   [key: string]: unknown;
 }

@@ -47,8 +47,7 @@ export const SUBATOMIC_VIEW_CONFIG = {
 
 export interface SubatomicParticlesFact {
   label: string;
-  math?: boolean;
-  value: string;
+  value: ReactNode;
 }
 
 export interface SubatomicParticlesModeLabels {
@@ -58,13 +57,13 @@ export interface SubatomicParticlesModeLabels {
 }
 
 export interface SubatomicParticlesSceneLabels {
-  alphaParticle: string;
-  anode: string;
-  cathode: string;
-  cathodeRay: string;
-  negativePlate: string;
-  nucleus: string;
-  positivePlate: string;
+  alphaParticle: ReactNode;
+  anode: ReactNode;
+  cathode: ReactNode;
+  cathodeRay: ReactNode;
+  negativePlate: ReactNode;
+  nucleus: ReactNode;
+  positivePlate: ReactNode;
 }
 
 export interface SubatomicParticlesLabLabels {

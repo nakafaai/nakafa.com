@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ComponentProps } from "react";
 
@@ -24,10 +25,10 @@ const questionData = [
     smooth: false,
     showPoints: true,
     labels: [
-      { text: "A", at: 0, offset: [-1, 1, 0] },
-      { text: "B", at: 1, offset: [1, 1, 0] },
-      { text: "C", at: 2, offset: [1, -1, 0] },
-      { text: "D", at: 3, offset: [-1, -1, 0] },
+      { text: <InlineMath math="A" />, at: 0, offset: [-1, 1, 0] },
+      { text: <InlineMath math="B" />, at: 1, offset: [1, 1, 0] },
+      { text: <InlineMath math="C" />, at: 2, offset: [1, -1, 0] },
+      { text: <InlineMath math="D" />, at: 3, offset: [-1, -1, 0] },
     ],
   },
   {
@@ -49,21 +50,21 @@ const answerSegments = [
     color: getColor("ORANGE"),
     smooth: false,
     showPoints: true,
-    labels: [{ text: "F", at: 1, offset: [0, -1, 0] }],
+    labels: [{ text: <InlineMath math="F" />, at: 1, offset: [0, -1, 0] }],
   },
   {
     points: [pointF, pointG],
     color: getColor("ORANGE"),
     smooth: false,
     showPoints: true,
-    labels: [{ text: "G", at: 1, offset: [1, 0.5, 0] }],
+    labels: [{ text: <InlineMath math="G" />, at: 1, offset: [1, 0.5, 0] }],
   },
   {
     points: [pointE, pointF],
     color: getColor("ORANGE"),
     smooth: false,
     showPoints: true,
-    labels: [{ text: "E", at: 0, offset: [-1, 0.5, 0] }],
+    labels: [{ text: <InlineMath math="E" />, at: 0, offset: [-1, 0.5, 0] }],
   },
 ] satisfies ComponentProps<typeof LineEquation>["data"];
 

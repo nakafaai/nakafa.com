@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ComponentProps } from "react";
 
@@ -52,11 +53,23 @@ export function QuestionGraph({
           showPoints: false,
           cone: { position: "end", size: 0.5 },
           labels: [
-            { text: "A", at: indexA, offset: [0.4, -0.4, 0] },
-            { text: "B", at: indexB, offset: [0.3, -0.4, 0] },
-            { text: "D", at: indexD, offset: [-0.2, 0.5, 0] },
             {
-              text: "y = 2^x - 2",
+              text: <InlineMath math="A" />,
+              at: indexA,
+              offset: [0.4, -0.4, 0],
+            },
+            {
+              text: <InlineMath math="B" />,
+              at: indexB,
+              offset: [0.3, -0.4, 0],
+            },
+            {
+              text: <InlineMath math="D" />,
+              at: indexD,
+              offset: [-0.2, 0.5, 0],
+            },
+            {
+              text: <InlineMath math="y = 2^x - 2" />,
               at: expPoints.length - 1,
               offset: [1, 0.5, 0],
             },
@@ -68,9 +81,13 @@ export function QuestionGraph({
           showPoints: false,
           cone: { position: "both", size: 0.5 }, // Lines usually extend both ways
           labels: [
-            { text: "C", at: indexC, offset: [0.3, 0.3, 0] },
             {
-              text: "y = -2x + 4",
+              text: <InlineMath math="C" />,
+              at: indexC,
+              offset: [0.3, 0.3, 0],
+            },
+            {
+              text: <InlineMath math="y = -2x + 4" />,
               at: linePoints.length - 1,
               offset: [1, -0.5, 0],
             },

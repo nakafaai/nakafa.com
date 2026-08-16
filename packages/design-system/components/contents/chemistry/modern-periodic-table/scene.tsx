@@ -1,4 +1,3 @@
-import { Billboard, Text } from "@react-three/drei";
 import {
   getModernPeriodicTableCategoryColor,
   INNER_TRANSITION_FOCUS_ID,
@@ -12,11 +11,10 @@ import {
   SERIES_MARKER_CATEGORY_ID,
   TRANSITION_FOCUS_ID,
 } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/data";
-import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
-import {
-  MONO_FONT_PATH,
-  THREE_FONT_SIZE,
-} from "@repo/design-system/components/three/data/constants";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
+import type { ReactNode } from "react";
 
 const GROUP_COUNT = 18;
 const PERIOD_COUNT = 7;
@@ -33,7 +31,6 @@ const SERIES_LANTHANIDE_Z = 2.22;
 const SERIES_ACTINIDE_Z = 2.76;
 const PERIOD_AXIS_LABEL_OFFSET = TILE_GAP * 2.45;
 const TILE_LABEL_Y_OFFSET = 0.16;
-const TILE_LABEL_RENDER_ORDER = 10;
 const TILE_LABEL_OUTLINE_WIDTH = 0.018;
 
 const TRANSITION_LABEL_SYMBOLS = ["Sc", "Fe", "Cu", "Ag", "Au", "Hg"];
@@ -96,31 +93,31 @@ function GuideLabels({
 }) {
   return (
     <>
-      <SceneLabel
+      <ThreeLabel
         color={colors.text}
         fontSize={THREE_FONT_SIZE.diagram}
         position={[0, 0.62, MAIN_LABEL_Z - 0.34]}
       >
-        {`${labels.group} 1-18`}
-      </SceneLabel>
+        {labels.group} <InlineMath math="1-18" />
+      </ThreeLabel>
 
-      <SceneLabel
+      <ThreeLabel
         color={colors.text}
         fontSize={THREE_FONT_SIZE.reading}
         position={[getMainX(1) - PERIOD_AXIS_LABEL_OFFSET, 0.42, 0]}
       >
-        {`${labels.period} 1-7`}
-      </SceneLabel>
+        {labels.period} <InlineMath math="1-7" />
+      </ThreeLabel>
 
       {PERIODIC_SERIES_ROWS.map((row, rowIndex) => (
-        <SceneLabel
+        <ThreeLabel
           color={colors.text}
           fontSize={THREE_FONT_SIZE.reading}
           key={row.key}
           position={[-4.08, 0.32, getSeriesZ(rowIndex)]}
         >
           {labels.seriesNames[row.key]}
-        </SceneLabel>
+        </ThreeLabel>
       ))}
     </>
   );
@@ -236,7 +233,7 @@ function PeriodicTile({
           outlineColor={labelOutlineColor}
           position={[0, height / 2 + TILE_LABEL_Y_OFFSET, 0]}
         >
-          {label}
+          <InlineMath math={label} />
         </PeriodicTileLabel>
       )}
     </group>
@@ -253,28 +250,22 @@ function PeriodicTileLabel({
   outlineColor,
   position,
 }: {
-  children: string;
+  children: ReactNode;
   color: string;
   fontSize: number;
   outlineColor: string;
   position: readonly [number, number, number];
 }) {
   return (
-    <Billboard position={position}>
-      <Text
-        anchorX="center"
-        anchorY="middle"
-        color={color}
-        font={MONO_FONT_PATH}
-        fontSize={fontSize}
-        outlineColor={outlineColor}
-        outlineWidth={TILE_LABEL_OUTLINE_WIDTH}
-        renderOrder={TILE_LABEL_RENDER_ORDER}
-      >
-        {children}
-        <meshBasicMaterial color={color} depthTest={false} toneMapped={false} />
-      </Text>
-    </Billboard>
+    <ThreeLabel
+      color={color}
+      fontSize={fontSize}
+      outlineColor={outlineColor}
+      outlineWidth={TILE_LABEL_OUTLINE_WIDTH}
+      position={position}
+    >
+      {children}
+    </ThreeLabel>
   );
 }
 

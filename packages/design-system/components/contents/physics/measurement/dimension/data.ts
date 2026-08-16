@@ -26,7 +26,7 @@ export const CAMERA_TARGET = [0, 0.45, 0] satisfies readonly [
   number,
 ];
 
-// Drei Text renders plain strings, so WebGL labels avoid KaTeX syntax.
+// Scene labels consume these values through InlineMath.
 export const DIMENSION_MODES = {
   [LENGTH_MODE_ID]: {
     dimension: "[\\mathrm{L}]",

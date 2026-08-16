@@ -21,8 +21,9 @@ import {
   OBJECT_COLOR,
   RULER_COLOR,
 } from "@repo/design-system/components/contents/physics/measurement/tools/data";
-import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useRef } from "react";
 import type { Group, Mesh } from "three";
 
@@ -53,7 +54,7 @@ export function MassScene({
   const rightPanPosition = getPanPosition(MASS_ARM_LENGTH, currentTilt.current);
   const objectSize = getScaledMassSize(measurement);
   const referenceSize = getScaledMassSize(MASS_REFERENCE_GRAMS);
-  const referenceReading = `${MASS_REFERENCE_GRAMS} g`;
+  const referenceReading = `${MASS_REFERENCE_GRAMS}\\,\\mathrm{g}`;
 
   useFrame((state, delta) => {
     const beam = beamRef.current;
@@ -175,20 +176,20 @@ export function MassScene({
           <meshStandardMaterial color={RULER_COLOR} roughness={0.45} />
         </mesh>
       </group>
-      <SceneLabel
+      <ThreeLabel
         color={colors.text}
         fontSize={THREE_FONT_SIZE.reading}
         position={[-MASS_ARM_LENGTH, 0.45, 1.05]}
       >
         {reading}
-      </SceneLabel>
-      <SceneLabel
+      </ThreeLabel>
+      <ThreeLabel
         color={colors.text}
         fontSize={THREE_FONT_SIZE.reading}
         position={[MASS_ARM_LENGTH, 0.45, 1.05]}
       >
-        {referenceReading}
-      </SceneLabel>
+        <InlineMath math={referenceReading} />
+      </ThreeLabel>
     </group>
   );
 }

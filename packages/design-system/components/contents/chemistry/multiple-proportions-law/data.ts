@@ -41,7 +41,7 @@ export interface MultipleProportionsMolecule {
 }
 
 export interface MultipleProportionsCompoundModel {
-  label: string;
+  formula: string;
   molecules: readonly MultipleProportionsMolecule[];
 }
 
@@ -81,7 +81,7 @@ export const MULTIPLE_PROPORTIONS_SCENE_VIEW = {
 export const MULTIPLE_PROPORTIONS_MODELS = {
   [WATER_PEROXIDE_MODE_ID]: {
     first: {
-      label: "H\u2082O",
+      formula: "\\mathrm{H_2O}",
       molecules: [
         molecule(
           "water",
@@ -95,7 +95,7 @@ export const MULTIPLE_PROPORTIONS_MODELS = {
       ],
     },
     second: {
-      label: "H\u2082O\u2082",
+      formula: "\\mathrm{H_2O_2}",
       molecules: [
         molecule(
           "peroxide",
@@ -117,7 +117,7 @@ export const MULTIPLE_PROPORTIONS_MODELS = {
   },
   [CARBON_OXIDES_MODE_ID]: {
     first: {
-      label: "CO",
+      formula: "\\mathrm{CO}",
       molecules: [
         molecule(
           "carbon-monoxide",
@@ -130,7 +130,7 @@ export const MULTIPLE_PROPORTIONS_MODELS = {
       ],
     },
     second: {
-      label: "CO\u2082",
+      formula: "\\mathrm{CO_2}",
       molecules: [
         molecule(
           "carbon-dioxide",
@@ -150,7 +150,7 @@ export const MULTIPLE_PROPORTIONS_MODELS = {
   },
   [NITROGEN_OXIDES_MODE_ID]: {
     first: {
-      label: "2N\u2082O",
+      formula: "2\\mathrm{N_2O}",
       molecules: [
         molecule(
           "nitrous-oxide-top",
@@ -181,7 +181,7 @@ export const MULTIPLE_PROPORTIONS_MODELS = {
       ],
     },
     second: {
-      label: "NO\u2082",
+      formula: "\\mathrm{NO_2}",
       molecules: [
         molecule(
           "nitrogen-dioxide",

@@ -2,13 +2,13 @@ import {
   GRAPH_ANGLE_ARC_SEGMENTS,
   GRAPH_FULL_CIRCLE_SEGMENTS,
 } from "@repo/design-system/components/three/helpers/quality";
-import type { Props as LineEquationProps } from "@repo/design-system/components/three/line-equation";
+import type {
+  Props as LineEquationProps,
+  LineLabel,
+} from "@repo/design-system/components/three/line-equation";
 import { getRadians } from "@repo/design-system/lib/geometry/angles";
 
-type CircleLineLabel = Omit<
-  NonNullable<LineEquationProps["labels"]>[number],
-  "at"
-> & {
+type CircleLineLabel = Omit<LineLabel, "at"> & {
   progress?: number;
 };
 

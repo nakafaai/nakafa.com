@@ -1,9 +1,8 @@
 "use client";
 
 import { Instance, Instances, Line } from "@react-three/drei";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
-  FONT_PATH,
-  MONO_FONT_PATH,
   ORIGIN_COLOR,
   THREE_FONT_SIZE,
 } from "@repo/design-system/components/three/data/constants";
@@ -16,7 +15,7 @@ import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "next-themes";
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import { MeshBasicMaterial, SphereGeometry, Vector3 } from "three";
 
 // Angle and Quadrant constants
@@ -55,14 +54,12 @@ interface Props {
   angle?: number;
   /** Labels for the triangle */
   labels?: {
-    opposite: string;
-    adjacent: string;
-    hypotenuse: string;
+    opposite: ReactNode;
+    adjacent: ReactNode;
+    hypotenuse: ReactNode;
   };
   /** Size of the triangle (scale factor) */
   size?: number;
-  /** Use mono font for the labels */
-  useMonoFont?: boolean;
   /** Additional props */
   [key: string]: unknown;
 }
@@ -114,7 +111,6 @@ export function Triangle({
     adjacent: "Adjacent",
     hypotenuse: "Hypotenuse",
   },
-  useMonoFont = true,
   ...props
 }: Props) {
   const { resolvedTheme } = useTheme();
@@ -130,9 +126,6 @@ export function Triangle({
   const hypotenuse = size; // Scale the hypotenuse by the size parameter
   const adjacent = Math.cos(angleInRadians) * hypotenuse;
   const opposite = Math.sin(angleInRadians) * hypotenuse;
-
-  // Font path based on the useMonoFont setting
-  const fontPath = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
 
   // Colors based on theme
   const baseColor =
@@ -295,7 +288,6 @@ export function Triangle({
       <ThreeLabel
         anchorX="center"
         color={COLORS.VIOLET}
-        font={fontPath}
         fontSize={BASE_FONT_SIZE}
         position={[
           Math.cos(angleInRadians / 2) * angleLabelDistance +
@@ -306,14 +298,13 @@ export function Triangle({
           0,
         ]}
       >
-        {`${angle}°`}
+        <InlineMath math={`${angle}^\\circ`} />
       </ThreeLabel>
 
       {/* Side labels */}
       <ThreeLabel
         anchorX="center"
         color={COLORS.CYAN}
-        font={fontPath}
         fontSize={BASE_FONT_SIZE}
         position={labelPositions.adjacentLabelPos}
       >
@@ -322,7 +313,6 @@ export function Triangle({
 
       <ThreeLabel
         color={COLORS.ORANGE}
-        font={fontPath}
         fontSize={BASE_FONT_SIZE}
         position={labelPositions.oppositeLabelPos}
       >
@@ -332,10 +322,9 @@ export function Triangle({
       <ThreeLabel
         anchorX="center"
         color={COLORS.ROSE}
-        font={fontPath}
         fontSize={BASE_FONT_SIZE}
         position={labelPositions.hypotenuseLabelPos}
-        rotation={[0, 0, hypotenuseLabelRotation]}
+        rotation={-hypotenuseLabelRotation}
       >
         {labels.hypotenuse}
       </ThreeLabel>

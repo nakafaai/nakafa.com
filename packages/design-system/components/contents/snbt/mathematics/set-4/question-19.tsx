@@ -3,6 +3,7 @@ import {
   getArcPoints,
   getMidpoint,
 } from "@repo/design-system/components/contents/snbt/geometry";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -51,21 +52,29 @@ export function Graph({ title, description }: GraphProps) {
           color: getColor("INDIGO"),
           showPoints: false,
           labels: [
-            { text: "A", at: 0, offset: [-0.5, -0.5, 0] },
-            { text: "B", at: 2, offset: [0.5, 0.5, 0] },
+            { text: <InlineMath math="A" />, at: 0, offset: [-0.5, -0.5, 0] },
+            { text: <InlineMath math="B" />, at: 2, offset: [0.5, 0.5, 0] },
           ],
         },
         {
           points: [pointA, midpointAC, pointC],
           color: getColor("EMERALD"),
           showPoints: false,
-          labels: [{ text: "C", at: 2, offset: [-0.6, -0.7, 0] }],
+          labels: [
+            { text: <InlineMath math="C" />, at: 2, offset: [-0.6, -0.7, 0] },
+          ],
         },
         {
           points: [pointB, midpointBC, pointC],
           color: getColor("CYAN"),
           showPoints: false,
-          labels: [{ text: "BC = 500 m", at: 1, offset: [-1.3, 0.5, 0] }],
+          labels: [
+            {
+              text: <InlineMath math="BC = 500\,\text{m}" />,
+              at: 1,
+              offset: [-1.3, 0.5, 0],
+            },
+          ],
         },
         {
           points: arcPoints,
@@ -73,7 +82,7 @@ export function Graph({ title, description }: GraphProps) {
           showPoints: false,
           labels: [
             {
-              text: "60°",
+              text: <InlineMath math="60^\circ" />,
               at: arcLabelIndex,
               offset: [0.6, 0.6, 0],
             },

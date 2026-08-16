@@ -13,7 +13,8 @@ import {
   getChemistryParticleLabelFontSize,
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/particle-label";
-import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
 
 const SCENE_SCALE = 1.9;
 const FORMULA_LABEL_Y = 0.62;
@@ -50,13 +51,13 @@ function MoleculeStage({
 
   return (
     <group position={molecule.position} scale={molecule.scale ?? 1}>
-      <SceneLabel
+      <ThreeLabel
         color={colors.text}
         fontSize="compact"
         position={[0, FORMULA_LABEL_Y, 0.32]}
       >
-        {molecule.label}
-      </SceneLabel>
+        <InlineMath math={molecule.formula} />
+      </ThreeLabel>
 
       {molecule.bonds.map(([startId, endId]) => {
         const start = atomsById.get(startId);
@@ -108,7 +109,7 @@ function AtomParticle({
         outlineWidth={CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH}
         position={getChemistryParticleLabelPosition(radius)}
       >
-        {atomSymbol(atomData.element)}
+        <InlineMath math={atomSymbol(atomData.element)} />
       </ChemistryParticleLabel>
     </group>
   );

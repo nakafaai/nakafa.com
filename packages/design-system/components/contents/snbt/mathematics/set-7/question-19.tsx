@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -188,7 +189,12 @@ export function Graph({ title, description, labels }: GraphProps) {
           color: COLOR_LABEL,
           showPoints: false,
           labels: [
-            { text: "30°", at: 0, offset: [0, 0, 0], color: COLOR_LABEL },
+            {
+              text: <InlineMath math="30^\circ" />,
+              at: 0,
+              offset: [0, 0, 0],
+              color: COLOR_LABEL,
+            },
           ],
         },
         // Arc 2 (45 deg)
@@ -203,7 +209,12 @@ export function Graph({ title, description, labels }: GraphProps) {
           color: COLOR_LABEL,
           showPoints: false,
           labels: [
-            { text: "45°", at: 0, offset: [0, 0, 0], color: COLOR_LABEL },
+            {
+              text: <InlineMath math="45^\circ" />,
+              at: 0,
+              offset: [0, 0, 0],
+              color: COLOR_LABEL,
+            },
           ],
         },
       ]}

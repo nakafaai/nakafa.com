@@ -38,9 +38,9 @@ interface Props {
   angle?: number;
   description: ReactNode;
   labels?: {
-    opposite: string;
-    adjacent: string;
-    hypotenuse: string;
+    opposite: ReactNode;
+    adjacent: ReactNode;
+    hypotenuse: ReactNode;
   };
   size?: number;
   title: ReactNode;

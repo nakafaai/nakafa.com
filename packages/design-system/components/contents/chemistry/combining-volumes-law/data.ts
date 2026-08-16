@@ -77,23 +77,23 @@ export const COMBINING_VOLUMES_SCENE_VIEW = {
 export const COMBINING_VOLUMES_MODELS = {
   [WATER_VAPOR_MODE_ID]: {
     reactants: [
-      gas("hydrogen", "H\u2082", 2, "hydrogen", "hydrogenGas"),
-      gas("oxygen", "O\u2082", 1, "oxygen", "oxygenGas"),
+      gas("hydrogen", "\\mathrm{H_2}", 2, "hydrogen", "hydrogenGas"),
+      gas("oxygen", "\\mathrm{O_2}", 1, "oxygen", "oxygenGas"),
     ],
-    products: [gas("steam", "H\u2082O", 2, "water-vapor", "steamGas")],
+    products: [gas("steam", "\\mathrm{H_2O}", 2, "water-vapor", "steamGas")],
   },
   [AMMONIA_SYNTHESIS_MODE_ID]: {
     reactants: [
-      gas("nitrogen", "N\u2082", 1, "nitrogen", "nitrogenGas"),
-      gas("hydrogen", "H\u2082", 3, "hydrogen", "hydrogenGas"),
+      gas("nitrogen", "\\mathrm{N_2}", 1, "nitrogen", "nitrogenGas"),
+      gas("hydrogen", "\\mathrm{H_2}", 3, "hydrogen", "hydrogenGas"),
     ],
-    products: [gas("ammonia", "NH\u2083", 2, "ammonia", "nitrogenGas")],
+    products: [gas("ammonia", "\\mathrm{NH_3}", 2, "ammonia", "nitrogenGas")],
   },
   [AMMONIA_DECOMPOSITION_MODE_ID]: {
-    reactants: [gas("ammonia", "NH\u2083", 2, "ammonia", "nitrogenGas")],
+    reactants: [gas("ammonia", "\\mathrm{NH_3}", 2, "ammonia", "nitrogenGas")],
     products: [
-      gas("hydrogen", "H\u2082", 3, "hydrogen", "hydrogenGas"),
-      gas("nitrogen", "N\u2082", 1, "nitrogen", "nitrogenGas"),
+      gas("hydrogen", "\\mathrm{H_2}", 3, "hydrogen", "hydrogenGas"),
+      gas("nitrogen", "\\mathrm{N_2}", 1, "nitrogen", "nitrogenGas"),
     ],
   },
 } satisfies Record<CombiningVolumesModeId, CombiningVolumesModeModel>;

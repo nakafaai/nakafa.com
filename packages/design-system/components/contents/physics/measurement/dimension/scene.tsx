@@ -9,8 +9,9 @@ import {
   type SceneColors,
   VOLUME_MODE_ID,
 } from "@repo/design-system/components/contents/physics/measurement/dimension/data";
-import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { DoubleSide } from "three";
 
 const GRAIN_LINES = [-0.42, -0.14, 0.18, 0.46];
@@ -42,13 +43,13 @@ export function DimensionScene({
       {modeId === AREA_MODE_ID && <AreaLayer colors={colors} />}
       {modeId === VOLUME_MODE_ID && <VolumeLayer colors={colors} />}
 
-      <SceneLabel
+      <ThreeLabel
         color={colors.text}
         fontSize={THREE_FONT_SIZE.display}
         position={[0, 1.35, 1.05]}
       >
-        {powerLabel}
-      </SceneLabel>
+        <InlineMath math={powerLabel} />
+      </ThreeLabel>
     </group>
   );
 }

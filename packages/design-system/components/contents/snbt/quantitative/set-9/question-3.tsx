@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ComponentProps } from "react";
 
@@ -27,8 +28,8 @@ const questionData = [
     smooth: false,
     showPoints: false,
     labels: [
-      { text: "P", at: 0, offset: [0, 0.5, 0] },
-      { text: "Q", at: 1, offset: [0, 0.5, 0] },
+      { text: <InlineMath math="P" />, at: 0, offset: [0, 0.5, 0] },
+      { text: <InlineMath math="Q" />, at: 1, offset: [0, 0.5, 0] },
     ],
   },
   {
@@ -37,8 +38,8 @@ const questionData = [
     smooth: false,
     showPoints: false,
     labels: [
-      { text: "R", at: 0, offset: [0, -0.5, 0] },
-      { text: "S", at: 1, offset: [0, -0.5, 0] },
+      { text: <InlineMath math="R" />, at: 0, offset: [0, -0.5, 0] },
+      { text: <InlineMath math="S" />, at: 1, offset: [0, -0.5, 0] },
     ],
   },
   {
@@ -47,9 +48,9 @@ const questionData = [
     smooth: false,
     showPoints: true,
     labels: [
-      { text: "25°", at: 0, offset: [-2, -0.5, 0] },
-      { text: "α", at: 1, offset: [-0.5, 0.5, 0] },
-      { text: "135°", at: 2, offset: [1, 0.5, 0] },
+      { text: <InlineMath math="25^\circ" />, at: 0, offset: [-2, -0.5, 0] },
+      { text: <InlineMath math="\alpha" />, at: 1, offset: [-0.5, 0.5, 0] },
+      { text: <InlineMath math="135^\circ" />, at: 2, offset: [1, 0.5, 0] },
     ],
   },
 ] satisfies ComponentProps<typeof LineEquation>["data"];
@@ -61,8 +62,8 @@ const answerSegments = [
     smooth: false,
     showPoints: false,
     labels: [
-      { text: "β", at: 1, offset: [2, 0.5, 0] },
-      { text: "γ", at: 1, offset: [2, -0.5, 0] },
+      { text: <InlineMath math="\beta" />, at: 1, offset: [2, 0.5, 0] },
+      { text: <InlineMath math="\gamma" />, at: 1, offset: [2, -0.5, 0] },
     ],
   },
 ] satisfies ComponentProps<typeof LineEquation>["data"];

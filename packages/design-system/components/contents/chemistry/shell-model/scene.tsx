@@ -1,15 +1,12 @@
-import { Billboard, Text } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import type {
   ShellModelSample,
   ShellModelSceneColors,
   ShellModelShells,
 } from "@repo/design-system/components/contents/chemistry/shell-model/data";
-import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
-import {
-  MONO_FONT_PATH,
-  THREE_FONT_SIZE,
-} from "@repo/design-system/components/three/data/constants";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useRef } from "react";
 import type { Group } from "three";
 
@@ -26,7 +23,6 @@ const NUCLEUS_RADIUS = 0.44;
 const NUCLEUS_LABEL_SURFACE_OFFSET_RATIO = 1.06;
 const NUCLEUS_SYMBOL_Y = 0.07;
 const NUCLEUS_ATOMIC_NUMBER_Y = -0.18;
-const NUCLEUS_LABEL_RENDER_ORDER = 10;
 const NUCLEUS_LABEL_OUTLINE_WIDTH = 0.012;
 
 /**
@@ -125,49 +121,35 @@ function NucleusLabel({
   sample: ShellModelSample;
 }) {
   return (
-    <Billboard>
-      <group
-        position={[0, 0, NUCLEUS_RADIUS * NUCLEUS_LABEL_SURFACE_OFFSET_RATIO]}
+    <>
+      <ThreeLabel
+        color={colors.sphereText}
+        fontSize={THREE_FONT_SIZE.display}
+        outlineColor={colors.sphereTextOutline}
+        outlineWidth={NUCLEUS_LABEL_OUTLINE_WIDTH}
+        position={[
+          0,
+          NUCLEUS_SYMBOL_Y,
+          NUCLEUS_RADIUS * NUCLEUS_LABEL_SURFACE_OFFSET_RATIO,
+        ]}
       >
-        <Text
-          anchorX="center"
-          anchorY="middle"
-          color={colors.sphereText}
-          font={MONO_FONT_PATH}
-          fontSize={THREE_FONT_SIZE.display}
-          outlineColor={colors.sphereTextOutline}
-          outlineWidth={NUCLEUS_LABEL_OUTLINE_WIDTH}
-          position={[0, NUCLEUS_SYMBOL_Y, 0]}
-          renderOrder={NUCLEUS_LABEL_RENDER_ORDER}
-        >
-          {sample.symbol}
-          <meshBasicMaterial
-            color={colors.sphereText}
-            depthTest={false}
-            toneMapped={false}
-          />
-        </Text>
+        <InlineMath math={sample.symbol} />
+      </ThreeLabel>
 
-        <Text
-          anchorX="center"
-          anchorY="middle"
-          color={colors.sphereText}
-          font={MONO_FONT_PATH}
-          fontSize={THREE_FONT_SIZE.annotation}
-          outlineColor={colors.sphereTextOutline}
-          outlineWidth={NUCLEUS_LABEL_OUTLINE_WIDTH}
-          position={[0, NUCLEUS_ATOMIC_NUMBER_Y, 0]}
-          renderOrder={NUCLEUS_LABEL_RENDER_ORDER}
-        >
-          {`Z = ${sample.atomicNumber}`}
-          <meshBasicMaterial
-            color={colors.sphereText}
-            depthTest={false}
-            toneMapped={false}
-          />
-        </Text>
-      </group>
-    </Billboard>
+      <ThreeLabel
+        color={colors.sphereText}
+        fontSize={THREE_FONT_SIZE.annotation}
+        outlineColor={colors.sphereTextOutline}
+        outlineWidth={NUCLEUS_LABEL_OUTLINE_WIDTH}
+        position={[
+          0,
+          NUCLEUS_ATOMIC_NUMBER_Y,
+          NUCLEUS_RADIUS * NUCLEUS_LABEL_SURFACE_OFFSET_RATIO,
+        ]}
+      >
+        <InlineMath math={`Z = ${sample.atomicNumber}`} />
+      </ThreeLabel>
+    </>
   );
 }
 
@@ -199,13 +181,13 @@ function ShellRing({
           transparent
         />
       </mesh>
-      <SceneLabel
+      <ThreeLabel
         color={colors.text}
         fontSize={THREE_FONT_SIZE.reading}
         position={[radius + 0.24, 0.12, 0.12]}
       >
-        {shellKey}
-      </SceneLabel>
+        <InlineMath math={shellKey} />
+      </ThreeLabel>
     </group>
   );
 }
