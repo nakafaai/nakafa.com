@@ -13,9 +13,12 @@ import {
   GRAPH_POINT_SEGMENTS,
   getCurveDivisions,
 } from "@repo/design-system/components/three/helpers/quality";
-import { ThreeLabel } from "@repo/design-system/components/three/label";
+import {
+  ThreeLabel,
+  ThreeRichLabel,
+} from "@repo/design-system/components/three/label";
 import { randomColor } from "@repo/design-system/lib/color";
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import {
   CatmullRomCurve3,
   Color,
@@ -99,6 +102,26 @@ function getSharedMaterial(color: string | Color): MeshBasicMaterial {
   return material;
 }
 
+interface LineLabelStyle {
+  /** Optional index into the points array where this label appears. */
+  at?: number;
+  /** Color for the label. */
+  color?: string | Color;
+  /** Font size of the label. */
+  fontSize?: ThreeFontSize | number;
+  /** Optional [x,y,z] offset from the selected point. */
+  offset?: [number, number, number];
+}
+
+/**
+ * Label rendered at one line point.
+ *
+ * Plain text stays in WebGL. Rich content uses a camera-facing DOM overlay so
+ * one label can combine prose, InlineMath, and other semantic React content.
+ */
+export type LineLabel = LineLabelStyle &
+  ({ content: ReactNode; text?: never } | { content?: never; text: string });
+
 export interface Props {
   color?: string | Color;
   /**
@@ -119,18 +142,7 @@ export interface Props {
    * Optional array of labels to render along the line. Each can specify the index of the point
    * at which to render (defaults to midpoint), optional offset, and text styling.
    */
-  labels?: Array<{
-    /** Text to display */
-    text: string;
-    /** Optional index into the `points` array where this label should appear; defaults to midpoint */
-    at?: number;
-    /** Optional [x,y,z] offset applied on top of the base point position */
-    offset?: [number, number, number];
-    /** Color for the label text */
-    color?: string | Color;
-    /** Font size of the label text */
-    fontSize?: ThreeFontSize | number;
-  }>;
+  labels?: LineLabel[];
   lineWidth?: number;
   points: {
     x: number;
@@ -316,7 +328,10 @@ export function LineEquation({
             position,
             color: label.color ?? color,
             fontSize: resolveThreeFontSize(label.fontSize ?? DEFAULT_FONT_SIZE),
-            text: label.text,
+            content:
+              "content" in label
+                ? { kind: "rich" as const, node: label.content }
+                : { kind: "text" as const, text: label.text },
           },
         ];
       }),
@@ -366,18 +381,33 @@ export function LineEquation({
       </Instances>
 
       {/* Render custom labels at specified indices */}
-      {labelData.map((data) => (
-        <ThreeLabel
-          anchorX="center"
-          color={data.color}
-          font={fontPath}
-          fontSize={data.fontSize}
-          key={data.key}
-          position={data.position}
-        >
-          {data.text}
-        </ThreeLabel>
-      ))}
+      {labelData.map((data) => {
+        if (data.content.kind === "rich") {
+          return (
+            <ThreeRichLabel
+              color={data.color}
+              fontSize={data.fontSize}
+              key={data.key}
+              position={data.position}
+            >
+              {data.content.node}
+            </ThreeRichLabel>
+          );
+        }
+
+        return (
+          <ThreeLabel
+            anchorX="center"
+            color={data.color}
+            font={fontPath}
+            fontSize={data.fontSize}
+            key={data.key}
+            position={data.position}
+          >
+            {data.content.text}
+          </ThreeLabel>
+        );
+      })}
     </group>
   );
 }
