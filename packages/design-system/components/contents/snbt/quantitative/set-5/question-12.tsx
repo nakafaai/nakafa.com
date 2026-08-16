@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ComponentProps } from "react";
 
@@ -38,9 +39,21 @@ export function QuestionGraph({
           color: getColor("INDIGO"),
           showPoints: false,
           labels: [
-            { text: "4", at: index4, offset: [-0.5, -0.5, 0] },
-            { text: "-2", at: indexNeg2, offset: [-0.6, 0.5, 0] },
-            { text: "8", at: index8, offset: [0.3, -0.5, 0] },
+            {
+              text: <InlineMath math="4" />,
+              at: index4,
+              offset: [-0.5, -0.5, 0],
+            },
+            {
+              text: <InlineMath math="-2" />,
+              at: indexNeg2,
+              offset: [-0.6, 0.5, 0],
+            },
+            {
+              text: <InlineMath math="8" />,
+              at: index8,
+              offset: [0.3, -0.5, 0],
+            },
           ],
         },
       ]}

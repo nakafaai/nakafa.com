@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ComponentProps } from "react";
 
@@ -22,7 +23,7 @@ export function Graph({
           color: getColor("INDIGO"),
           labels: [
             {
-              text: "22",
+              text: <InlineMath math="22" />,
               at: 1,
               offset: [-1, 0, 0],
               color: getColor("INDIGO"),
@@ -39,7 +40,12 @@ export function Graph({
           ],
           color: getColor("INDIGO"),
           labels: [
-            { text: "20", at: 1, offset: [1, 0, 0], color: getColor("INDIGO") },
+            {
+              text: <InlineMath math="20" />,
+              at: 1,
+              offset: [1, 0, 0],
+              color: getColor("INDIGO"),
+            },
           ],
           showPoints: false,
         },
@@ -52,9 +58,14 @@ export function Graph({
           ],
           color: getColor("INDIGO"),
           labels: [
-            { text: "2", at: 1, offset: [0, -1, 0], color: getColor("INDIGO") },
             {
-              text: "4",
+              text: <InlineMath math="2" />,
+              at: 1,
+              offset: [0, -1, 0],
+              color: getColor("INDIGO"),
+            },
+            {
+              text: <InlineMath math="4" />,
               at: 1,
               offset: [0, 1.5, 0],
               color: getColor("INDIGO"),
@@ -69,7 +80,9 @@ export function Graph({
             { x: -5, y: 4, z: 0 },
           ], // Point above top
           color: "transparent",
-          labels: [{ text: "Q", at: 0, color: getColor("INDIGO") }],
+          labels: [
+            { text: <InlineMath math="Q" />, at: 0, color: getColor("INDIGO") },
+          ],
           showPoints: false,
         },
 
@@ -83,7 +96,12 @@ export function Graph({
           ],
           color: getColor("TEAL"),
           labels: [
-            { text: "13", at: 1, offset: [-1, 0, 0], color: getColor("TEAL") },
+            {
+              text: <InlineMath math="13" />,
+              at: 1,
+              offset: [-1, 0, 0],
+              color: getColor("TEAL"),
+            },
           ],
           showPoints: false,
         },
@@ -96,7 +114,12 @@ export function Graph({
           ],
           color: getColor("TEAL"),
           labels: [
-            { text: "12", at: 1, offset: [1, 0, 0], color: getColor("TEAL") },
+            {
+              text: <InlineMath math="12" />,
+              at: 1,
+              offset: [1, 0, 0],
+              color: getColor("TEAL"),
+            },
           ],
           showPoints: false,
         },
@@ -109,8 +132,18 @@ export function Graph({
           ],
           color: getColor("TEAL"),
           labels: [
-            { text: "3", at: 1, offset: [0, -1, 0], color: getColor("TEAL") },
-            { text: "?", at: 1, offset: [0, 1.5, 0], color: getColor("TEAL") }, // Center label
+            {
+              text: <InlineMath math="3" />,
+              at: 1,
+              offset: [0, -1, 0],
+              color: getColor("TEAL"),
+            },
+            {
+              text: <InlineMath math="?" />,
+              at: 1,
+              offset: [0, 1.5, 0],
+              color: getColor("TEAL"),
+            }, // Center label
           ],
           showPoints: false,
         },
@@ -121,7 +154,9 @@ export function Graph({
             { x: 5, y: 4, z: 0 },
           ], // Point above top
           color: "transparent",
-          labels: [{ text: "R", at: 0, color: getColor("TEAL") }],
+          labels: [
+            { text: <InlineMath math="R" />, at: 0, color: getColor("TEAL") },
+          ],
           showPoints: false,
         },
       ]}

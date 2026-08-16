@@ -53,8 +53,7 @@ export const SUBATOMIC_PARTICLE_PROPERTIES_VIEW_CONFIG = {
 
 export interface SubatomicParticlePropertiesFact {
   label: string;
-  math?: boolean;
-  value: string;
+  value: ReactNode;
 }
 
 export interface SubatomicParticlePropertiesModeLabels {
@@ -64,13 +63,13 @@ export interface SubatomicParticlePropertiesModeLabels {
 }
 
 export interface SubatomicParticlePropertiesSceneLabels {
-  electron: string;
-  electronRegion: string;
-  negativePlate: string;
-  neutron: string;
-  nucleus: string;
-  positivePlate: string;
-  proton: string;
+  electron: ReactNode;
+  electronRegion: ReactNode;
+  negativePlate: ReactNode;
+  neutron: ReactNode;
+  nucleus: ReactNode;
+  positivePlate: ReactNode;
+  proton: ReactNode;
 }
 
 export interface SubatomicParticlePropertiesLabLabels {

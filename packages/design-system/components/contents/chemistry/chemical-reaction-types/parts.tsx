@@ -9,6 +9,7 @@ import {
   getChemistryParticleLabelFontSize,
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/particle-label";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import type { ReactNode } from "react";
 import { DoubleSide } from "three";
 
@@ -173,7 +174,7 @@ export function Particle({
             CHEMISTRY_PARTICLE_LABEL_CLOSE_SURFACE_OFFSET_RATIO
           )}
         >
-          {label}
+          <InlineMath math={label} />
         </ChemistryParticleLabel>
       )}
     </group>

@@ -3,6 +3,7 @@ import {
   getArcPoints,
   getMidpoint,
 } from "@repo/design-system/components/contents/snbt/geometry";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ComponentProps, ReactNode } from "react";
 
@@ -54,9 +55,9 @@ const graphData = [
     color: getColor("INDIGO"),
     showPoints: false,
     labels: [
-      { text: "B", at: 0, offset: [-0.3, -0.3, 0] },
-      { text: "h", at: 1, offset: [-0.6, 0, 0] },
-      { text: "A", at: 2, offset: [-0.3, 0.3, 0] },
+      { text: <InlineMath math="B" />, at: 0, offset: [-0.3, -0.3, 0] },
+      { text: <InlineMath math="h" />, at: 1, offset: [-0.6, 0, 0] },
+      { text: <InlineMath math="A" />, at: 2, offset: [-0.3, 0.3, 0] },
     ],
   },
   {
@@ -69,16 +70,22 @@ const graphData = [
     color: getColor("TEAL"),
     showPoints: false,
     labels: [
-      { text: "D", at: 0, offset: [0, -0.5, 0] },
-      { text: "2 km", at: 1, offset: [0, -0.8, 0] },
-      { text: "C", at: 2, offset: [0, -0.5, 0] },
+      { text: <InlineMath math="D" />, at: 0, offset: [0, -0.5, 0] },
+      { text: <InlineMath math="2\,\text{km}" />, at: 1, offset: [0, -0.8, 0] },
+      { text: <InlineMath math="C" />, at: 2, offset: [0, -0.5, 0] },
     ],
   },
   {
     points: [pointA, midAC, pointC],
     color: getColor("VIOLET"),
     showPoints: false,
-    labels: [{ text: "12 km", at: 1, offset: [0.5, 0.5, 0] }],
+    labels: [
+      {
+        text: <InlineMath math="12\,\text{km}" />,
+        at: 1,
+        offset: [0.5, 0.5, 0],
+      },
+    ],
   },
   {
     points: [pointA, pointD],
@@ -91,7 +98,7 @@ const graphData = [
     showPoints: false,
     labels: [
       {
-        text: "37°",
+        text: <InlineMath math="37^\circ" />,
         at: arcCLabelIndex,
         offset: [-0.6, 0.2, 0],
       },
@@ -103,7 +110,7 @@ const graphData = [
     showPoints: false,
     labels: [
       {
-        text: "53°",
+        text: <InlineMath math="53^\circ" />,
         at: arcDLabelIndex,
         offset: [-0.5, 0.2, 0],
       },

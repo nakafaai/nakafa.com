@@ -4,9 +4,10 @@ import type {
   BiologyLabCallout,
   BiologyScenePoint,
 } from "@repo/design-system/components/contents/biology/data";
-import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
 import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
+import type { ReactNode } from "react";
 
 const BIOLOGY_CALLOUT_ARROW_SIZE = 0.055;
 const BIOLOGY_CALLOUT_LABEL_CLEARANCE = 0.18;
@@ -73,15 +74,15 @@ function BiologyCallout({
 }: {
   color: string;
   fontSize?: ThreeFontSize | number;
-  label: string;
+  label: ReactNode;
   labelPosition: BiologyScenePoint;
   target?: BiologyScenePoint;
 }) {
   if (!target) {
     return (
-      <SceneLabel color={color} fontSize={fontSize} position={labelPosition}>
+      <ThreeLabel color={color} fontSize={fontSize} position={labelPosition}>
         {label}
-      </SceneLabel>
+      </ThreeLabel>
     );
   }
 
@@ -90,9 +91,9 @@ function BiologyCallout({
 
   return (
     <group>
-      <SceneLabel color={color} fontSize={fontSize} position={labelPosition}>
+      <ThreeLabel color={color} fontSize={fontSize} position={labelPosition}>
         {label}
-      </SceneLabel>
+      </ThreeLabel>
       <ArrowHelper
         arrowSize={BIOLOGY_CALLOUT_ARROW_SIZE}
         color={color}

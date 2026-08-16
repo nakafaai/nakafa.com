@@ -2,16 +2,18 @@
 
 import { Line } from "@react-three/drei";
 import {
-  FONT_PATH,
-  MONO_FONT_PATH,
   resolveThreeFontSize,
   THREE_FONT_SIZE,
-  type ThreeFontSize,
 } from "@repo/design-system/components/three/data/constants";
 import { GRAPH_BOUNDARY_SEGMENTS } from "@repo/design-system/components/three/helpers/quality";
+import {
+  DEFAULT_INEQUALITY_RANGE_MAX,
+  DEFAULT_INEQUALITY_RANGE_MIN,
+  getAdaptiveInequalityResolution,
+  type InequalityProps,
+} from "@repo/design-system/components/three/inequality-data";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
-import { isMobileDevice } from "@repo/design-system/lib/device";
 import { useMemo } from "react";
 import {
   BufferAttribute,
@@ -21,16 +23,6 @@ import {
   Float32BufferAttribute,
   MeshBasicMaterial,
 } from "three";
-
-// Performance tuning constants
-const MIN_CORES_FOR_HIGH_RES = 8;
-const MIN_CORES_FOR_MEDIUM_RES = 4;
-const MAX_RES_MOBILE_LOW_CORE = 50;
-const MAX_RES_MEDIUM_CORE = 100;
-
-// Default geometry values
-const DEFAULT_RANGE_MIN = -5;
-const DEFAULT_RANGE_MAX = 5;
 
 // Geometry calculation constants
 const COMPONENTS_PER_VERTEX = 3;
@@ -51,64 +43,6 @@ const DEFAULT_LABEL_FONT_SIZE = THREE_FONT_SIZE.diagram;
 
 type Point = [number, number, number];
 
-interface Props {
-  /** Color for the boundary line/plane */
-  boundaryColor?: string | Color;
-  /** Function that determines the boundary of the inequality (where the inequality becomes equality) */
-  boundaryFunction?: (x: number, y: number) => number;
-  /** For 2D inequalities, specifies the boundary line function where ax + by + c = 0
-   * as [a, b, c]. For example, x + y = 10 would be [1, 1, -10] */
-  boundaryLine2D?: [number, number, number];
-  /** Width of the boundary line */
-  boundaryLineWidth?: number;
-  /** Color for the inequality region */
-  color?: string | Color;
-  /** Indicates if this is a 2D inequality (like x + y <= 10) that should be extruded along z-axis */
-  is2D?: boolean;
-  /** Optional label for the inequality */
-  label?: {
-    /** Text to display */
-    text: string;
-    /** Position for the label */
-    position: [number, number, number];
-    /** Color for the label text */
-    color?: string | Color;
-    /** Font size of the label text */
-    fontSize?: ThreeFontSize | number;
-  };
-  /** Opacity of the region */
-  opacity?: number;
-  /** Granularity of the visualization (higher means more detailed) */
-  resolution?: number;
-  /** Show boundary line/plane */
-  showBoundary?: boolean;
-  /** Whether to use the mono font for the labels */
-  useMonoFont?: boolean;
-  /** Range for x coordinate to visualize */
-  xRange?: [number, number];
-  /** Range for y coordinate to visualize */
-  yRange?: [number, number];
-  /** Range for z coordinate to visualize */
-  zRange?: [number, number];
-}
-
-/**
- * Adapts inequality mesh resolution to the device budget while honoring callers.
- */
-function getAdaptiveResolution(requestedResolution: number): number {
-  // Check device capabilities
-  const isMobile = isMobileDevice();
-  const cores = navigator.hardwareConcurrency || MIN_CORES_FOR_MEDIUM_RES;
-
-  if (isMobile || cores < MIN_CORES_FOR_MEDIUM_RES) {
-    return Math.min(requestedResolution, MAX_RES_MOBILE_LOW_CORE);
-  }
-  if (cores >= MIN_CORES_FOR_HIGH_RES) {
-    return requestedResolution;
-  }
-  return Math.min(requestedResolution, MAX_RES_MEDIUM_CORE);
-}
-
 /**
  * Renders 2D or 3D inequality regions with a wide boundary guide line.
  */
@@ -116,9 +50,9 @@ export function Inequality({
   boundaryFunction,
   is2D = false,
   boundaryLine2D,
-  xRange = [DEFAULT_RANGE_MIN, DEFAULT_RANGE_MAX],
-  yRange = [DEFAULT_RANGE_MIN, DEFAULT_RANGE_MAX],
-  zRange = [DEFAULT_RANGE_MIN, DEFAULT_RANGE_MAX],
+  xRange = [DEFAULT_INEQUALITY_RANGE_MIN, DEFAULT_INEQUALITY_RANGE_MAX],
+  yRange = [DEFAULT_INEQUALITY_RANGE_MIN, DEFAULT_INEQUALITY_RANGE_MAX],
+  zRange = [DEFAULT_INEQUALITY_RANGE_MIN, DEFAULT_INEQUALITY_RANGE_MAX],
   resolution = 200,
   color = COLORS.BLUE,
   boundaryColor,
@@ -126,12 +60,9 @@ export function Inequality({
   boundaryLineWidth = 2,
   showBoundary = true,
   label,
-  useMonoFont = true,
-}: Props) {
-  const fontPath = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
-
+}: InequalityProps) {
   // Adaptive resolution for performance
-  const adaptiveResolution = getAdaptiveResolution(resolution);
+  const adaptiveResolution = getAdaptiveInequalityResolution(resolution);
 
   // Create optimized buffer geometry for the inequality region
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: This is a complex function, but it's necessary for the inequality visualization
@@ -505,7 +436,6 @@ export function Inequality({
         <ThreeLabel
           anchorX="center"
           color={label.color || finalBoundaryColor}
-          font={fontPath}
           fontSize={resolveThreeFontSize(
             label.fontSize ?? DEFAULT_LABEL_FONT_SIZE
           )}

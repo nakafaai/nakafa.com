@@ -2,8 +2,6 @@
 
 import { Instance, Instances, Line } from "@react-three/drei";
 import {
-  FONT_PATH,
-  MONO_FONT_PATH,
   resolveThreeFontSize,
   THREE_FONT_SIZE,
   type ThreeFontSize,
@@ -13,10 +11,7 @@ import {
   GRAPH_POINT_SEGMENTS,
   getCurveDivisions,
 } from "@repo/design-system/components/three/helpers/quality";
-import {
-  ThreeLabel,
-  ThreeRichLabel,
-} from "@repo/design-system/components/three/label";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { randomColor } from "@repo/design-system/lib/color";
 import { type ReactNode, useMemo } from "react";
 import {
@@ -113,14 +108,10 @@ interface LineLabelStyle {
   offset?: [number, number, number];
 }
 
-/**
- * Label rendered at one line point.
- *
- * Plain text stays in WebGL. Rich content uses a camera-facing DOM overlay so
- * one label can combine prose, InlineMath, and other semantic React content.
- */
-export type LineLabel = LineLabelStyle &
-  ({ content: ReactNode; text?: never } | { content?: never; text: string });
+/** Semantic React content rendered at one line point. */
+export interface LineLabel extends LineLabelStyle {
+  text: ReactNode;
+}
 
 export interface Props {
   color?: string | Color;
@@ -154,10 +145,6 @@ export interface Props {
    * Whether to render the line as a smooth curve using CatmullRomCurve3
    */
   smooth?: boolean;
-  /**
-   * Whether to use the mono font for the labels
-   */
-  useMonoFont?: boolean;
 }
 
 const DEFAULT_LABELS: NonNullable<Props["labels"]> = [];
@@ -173,7 +160,6 @@ export function LineEquation({
   smooth = true,
   curvePoints,
   labels = DEFAULT_LABELS,
-  useMonoFont = true,
   cone,
 }: Props) {
   const vectorPoints = useMemo(
@@ -237,8 +223,6 @@ export function LineEquation({
     }
     return basePoints;
   }, [vectorPoints, smooth, curvePoints, cone, arrowSize]);
-
-  const fontPath = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
 
   // Use shared geometry and materials
   const pointGeom = getSharedSphereGeometry();
@@ -328,10 +312,7 @@ export function LineEquation({
             position,
             color: label.color ?? color,
             fontSize: resolveThreeFontSize(label.fontSize ?? DEFAULT_FONT_SIZE),
-            content:
-              "content" in label
-                ? { kind: "rich" as const, node: label.content }
-                : { kind: "text" as const, text: label.text },
+            text: label.text,
           },
         ];
       }),
@@ -381,33 +362,16 @@ export function LineEquation({
       </Instances>
 
       {/* Render custom labels at specified indices */}
-      {labelData.map((data) => {
-        if (data.content.kind === "rich") {
-          return (
-            <ThreeRichLabel
-              color={data.color}
-              fontSize={data.fontSize}
-              key={data.key}
-              position={data.position}
-            >
-              {data.content.node}
-            </ThreeRichLabel>
-          );
-        }
-
-        return (
-          <ThreeLabel
-            anchorX="center"
-            color={data.color}
-            font={fontPath}
-            fontSize={data.fontSize}
-            key={data.key}
-            position={data.position}
-          >
-            {data.content.text}
-          </ThreeLabel>
-        );
-      })}
+      {labelData.map((data) => (
+        <ThreeLabel
+          color={data.color}
+          fontSize={data.fontSize}
+          key={data.key}
+          position={data.position}
+        >
+          {data.text}
+        </ThreeLabel>
+      ))}
     </group>
   );
 }

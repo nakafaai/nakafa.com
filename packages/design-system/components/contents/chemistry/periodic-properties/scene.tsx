@@ -1,4 +1,4 @@
-import { Billboard, Line, Text } from "@react-three/drei";
+import { Line } from "@react-three/drei";
 import {
   getPeriodicPropertyModeColor,
   PERIODIC_PROPERTY_MODES,
@@ -7,11 +7,11 @@ import {
   type PeriodicPropertyModeId,
   type PeriodicPropertySample,
 } from "@repo/design-system/components/contents/chemistry/periodic-properties/data";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
-import {
-  MONO_FONT_PATH,
-  THREE_FONT_SIZE,
-} from "@repo/design-system/components/three/data/constants";
+import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
+import type { ReactNode } from "react";
 
 const PERIOD_Z = -1.18;
 const PERIOD_STEP = 0.78;
@@ -27,7 +27,6 @@ const PILLAR_MAX_HEIGHT = 1.46;
 const SPHERE_MIN_RADIUS = 0.18;
 const SPHERE_MAX_RADIUS = 0.38;
 const MARKER_LABEL_OUTLINE_WIDTH = 0.012;
-const MARKER_LABEL_RENDER_ORDER = 10;
 const PILLAR_LABEL_OFFSET = 0.22;
 const SCENE_SCALE = 1.12;
 const SCENE_Y_OFFSET = 0.62;
@@ -162,7 +161,7 @@ function TrendMarker({
           fontSize={THREE_FONT_SIZE.compact}
           position={[0, radius, 0]}
         >
-          {sample.symbol}
+          <InlineMath math={sample.symbol} />
         </MarkerLabel>
       </group>
     );
@@ -191,7 +190,7 @@ function TrendMarker({
         fontSize={THREE_FONT_SIZE.annotation}
         position={[0, height + PILLAR_LABEL_OFFSET, 0]}
       >
-        {sample.symbol}
+        <InlineMath math={sample.symbol} />
       </MarkerLabel>
     </group>
   );
@@ -206,31 +205,21 @@ function MarkerLabel({
   fontSize,
   position,
 }: {
-  children: string;
+  children: ReactNode;
   colors: PeriodicPropertiesSceneColors;
   fontSize: number;
   position: ScenePoint;
 }) {
   return (
-    <Billboard position={position}>
-      <Text
-        anchorX="center"
-        anchorY="middle"
-        color={colors.markerText}
-        font={MONO_FONT_PATH}
-        fontSize={fontSize}
-        outlineColor={colors.markerTextOutline}
-        outlineWidth={MARKER_LABEL_OUTLINE_WIDTH}
-        renderOrder={MARKER_LABEL_RENDER_ORDER}
-      >
-        {children}
-        <meshBasicMaterial
-          color={colors.markerText}
-          depthTest={false}
-          toneMapped={false}
-        />
-      </Text>
-    </Billboard>
+    <ThreeLabel
+      color={colors.markerText}
+      fontSize={fontSize}
+      outlineColor={colors.markerTextOutline}
+      outlineWidth={MARKER_LABEL_OUTLINE_WIDTH}
+      position={position}
+    >
+      {children}
+    </ThreeLabel>
   );
 }
 

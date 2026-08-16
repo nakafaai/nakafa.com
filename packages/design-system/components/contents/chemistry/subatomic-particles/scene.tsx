@@ -13,8 +13,10 @@ import {
   type SubatomicParticlesSceneLabels,
   type SubatomicSceneColors,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles/data";
-import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
+import type { ReactNode } from "react";
 import { Vector3 } from "three";
 
 const PATH_POINT_COUNT = 48;
@@ -59,10 +61,10 @@ const ELECTRON_POSITIONS = [
   [1.45, -0.62, -0.05],
 ];
 const NUCLEON_POSITIONS = [
-  { kind: "proton", label: "p^+", position: [-0.48, 0.28, 0.16] },
-  { kind: "neutron", label: "n^0", position: [0.48, 0.28, -0.06] },
-  { kind: "neutron", label: "n^0", position: [-0.48, -0.34, 0.04] },
-  { kind: "proton", label: "p^+", position: [0.48, -0.34, 0.16] },
+  { kind: "proton", math: "p^+", position: [-0.48, 0.28, 0.16] },
+  { kind: "neutron", math: "n^0", position: [0.48, 0.28, -0.06] },
+  { kind: "neutron", math: "n^0", position: [-0.48, -0.34, 0.04] },
+  { kind: "proton", math: "p^+", position: [0.48, -0.34, 0.16] },
 ];
 const SUBATOMIC_LABEL_SIZE = THREE_FONT_SIZE.annotation;
 const ATOM_MAP_SCALE = 1.1;
@@ -172,10 +174,22 @@ function CathodeRayScene({ colors, labels }: SceneProps) {
 
       <Electrode
         color={colors.cathode}
-        label={`${labels.cathode} -`}
+        label={
+          <>
+            {labels.cathode} <InlineMath math="-" />
+          </>
+        }
         x={-2.1}
       />
-      <Electrode color={colors.anode} label={`${labels.anode} +`} x={-0.95} />
+      <Electrode
+        color={colors.anode}
+        label={
+          <>
+            {labels.anode} <InlineMath math="+" />
+          </>
+        }
+        x={-0.95}
+      />
       <Plate color={colors.positive} label={labels.positivePlate} y={0.9} />
       <Plate color={colors.negative} label={labels.negativePlate} y={-0.95} />
 
@@ -184,20 +198,20 @@ function CathodeRayScene({ colors, labels }: SceneProps) {
         <Particle
           color={colors.electron}
           key={`electron-${point.x}-${point.y}`}
-          label="e^-"
           labelColor={colors.sphereText}
+          math="e^-"
           position={point}
           radius={0.11}
         />
       ))}
 
-      <SceneLabel
+      <ThreeLabel
         color={colors.text}
         fontSize={SUBATOMIC_LABEL_SIZE}
         position={[1.25, 0, 0.35]}
       >
         {labels.cathodeRay}
-      </SceneLabel>
+      </ThreeLabel>
     </group>
   );
 }
@@ -234,8 +248,8 @@ function GoldFoilScene({ colors, labels }: SceneProps) {
 
       <Particle
         color={colors.nucleus}
-        label=""
         labelColor={colors.sphereText}
+        math=""
         position={new Vector3(0, 0, 0.1)}
         radius={0.16}
       />
@@ -245,20 +259,20 @@ function GoldFoilScene({ colors, labels }: SceneProps) {
         points={GOLD_NUCLEUS_POINTER_POINTS}
       />
 
-      <SceneLabel
+      <ThreeLabel
         color={colors.text}
         fontSize={SUBATOMIC_LABEL_SIZE}
         position={[-1.9, 0.9, 1.05]}
       >
         {labels.alphaParticle}
-      </SceneLabel>
-      <SceneLabel
+      </ThreeLabel>
+      <ThreeLabel
         color={colors.text}
         fontSize={SUBATOMIC_LABEL_SIZE}
         position={[0.88, 0.98, 0.76]}
       >
         {labels.nucleus}
-      </SceneLabel>
+      </ThreeLabel>
     </group>
   );
 }
@@ -284,8 +298,8 @@ function AtomMapScene({ colors, labels }: SceneProps) {
           <Particle
             color={particle.kind === "proton" ? colors.proton : colors.neutron}
             key={`${particle.kind}-${particle.position.join(",")}`}
-            label={particle.label}
             labelColor={colors.sphereText}
+            math={particle.math}
             position={new Vector3(...particle.position)}
             radius={0.2}
           />
@@ -295,21 +309,21 @@ function AtomMapScene({ colors, labels }: SceneProps) {
           <Particle
             color={colors.electron}
             key={`electron-${position.join(",")}`}
-            label="e^-"
             labelColor={colors.sphereText}
+            math="e^-"
             position={new Vector3(...position)}
             radius={0.16}
           />
         ))}
       </group>
 
-      <SceneLabel
+      <ThreeLabel
         color={colors.text}
         fontSize={SUBATOMIC_LABEL_SIZE}
         position={[-0.22, -0.72, 0.9]}
       >
         {labels.nucleus}
-      </SceneLabel>
+      </ThreeLabel>
     </group>
   );
 }
@@ -323,7 +337,7 @@ function Electrode({
   x,
 }: {
   color: string;
-  label: string;
+  label: ReactNode;
   x: number;
 }) {
   return (
@@ -331,13 +345,13 @@ function Electrode({
       <RoundedBox args={[0.16, 0.95, 0.16]} radius={0.035} smoothness={3}>
         <meshStandardMaterial color={color} roughness={0.45} />
       </RoundedBox>
-      <SceneLabel
+      <ThreeLabel
         color={color}
         fontSize={THREE_FONT_SIZE.compact}
         position={[0, -0.66, 0.22]}
       >
         {label}
-      </SceneLabel>
+      </ThreeLabel>
     </group>
   );
 }
@@ -351,7 +365,7 @@ function Plate({
   y,
 }: {
   color: string;
-  label: string;
+  label: ReactNode;
   y: number;
 }) {
   return (
@@ -359,13 +373,13 @@ function Plate({
       <RoundedBox args={[1.45, 0.12, 0.12]} radius={0.05} smoothness={3}>
         <meshStandardMaterial color={color} roughness={0.4} />
       </RoundedBox>
-      <SceneLabel
+      <ThreeLabel
         color={color}
         fontSize={THREE_FONT_SIZE.compact}
         position={[0, y > 0 ? 0.27 : -0.27, 0.18]}
       >
         {label}
-      </SceneLabel>
+      </ThreeLabel>
     </group>
   );
 }
@@ -393,14 +407,14 @@ function ElectronRegionRing({
  */
 function Particle({
   color,
-  label,
   labelColor,
+  math,
   position,
   radius,
 }: {
   color: string;
-  label: string;
   labelColor: string;
+  math: string;
   position: Vector3;
   radius: number;
 }) {
@@ -410,7 +424,7 @@ function Particle({
         <sphereGeometry args={[radius, 32, 32]} />
         <meshStandardMaterial color={color} roughness={0.35} />
       </mesh>
-      {label && (
+      {math && (
         <ChemistryParticleLabel
           color={labelColor}
           fontSize={getChemistryParticleLabelFontSize(radius)}
@@ -419,7 +433,7 @@ function Particle({
             CHEMISTRY_PARTICLE_LABEL_CLOSE_SURFACE_OFFSET_RATIO
           )}
         >
-          {label}
+          <InlineMath math={math} />
         </ChemistryParticleLabel>
       )}
     </group>

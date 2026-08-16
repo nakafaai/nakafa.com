@@ -22,8 +22,8 @@ export type MassConservationScenePoint = readonly [number, number, number];
 export interface MassConservationModeLabels {
   calculation: ReactNode;
   helperCaption: ReactNode;
-  readoutAfter: string;
-  readoutBefore: string;
+  readoutAfter: ReactNode;
+  readoutBefore: ReactNode;
   system: ReactNode;
   tab: string;
 }

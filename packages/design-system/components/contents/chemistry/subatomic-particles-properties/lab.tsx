@@ -13,7 +13,6 @@ import {
   type SubatomicParticlePropertiesModeId,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/data";
 import { SubatomicParticlePropertiesScene } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/scene";
-import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
@@ -176,24 +175,7 @@ function PropertyFact({ fact }: { fact: SubatomicParticlePropertiesFact }) {
   return (
     <div className="flex min-h-12 min-w-0 flex-col gap-1">
       <dt className="text-muted-foreground text-sm">{fact.label}</dt>
-      <dd className="wrap-break-word text-foreground">
-        <PropertyFactValue fact={fact} />
-      </dd>
+      <dd className="wrap-break-word text-foreground">{fact.value}</dd>
     </div>
   );
-}
-
-/**
- * Renders mathematical facts through KaTeX and plain facts as compact text.
- */
-function PropertyFactValue({
-  fact,
-}: {
-  fact: SubatomicParticlePropertiesFact;
-}) {
-  if (fact.math) {
-    return <InlineMath math={fact.value} />;
-  }
-
-  return <span className="text-sm">{fact.value}</span>;
 }

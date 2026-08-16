@@ -7,7 +7,7 @@ export type BiologyScenePoint = readonly [number, number, number];
 
 export interface BiologyLabCallout {
   id: string;
-  label: string;
+  label: ReactNode;
 }
 
 export interface BiologyLabItem {

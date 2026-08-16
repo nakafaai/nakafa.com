@@ -8,11 +8,7 @@ import type {
 } from "@repo/design-system/components/three/line-equation";
 import { getRadians } from "@repo/design-system/lib/geometry/angles";
 
-type DistributiveOmit<T, Key extends PropertyKey> = T extends unknown
-  ? Omit<T, Extract<keyof T, Key>>
-  : never;
-
-type CircleLineLabel = DistributiveOmit<LineLabel, "at"> & {
+type CircleLineLabel = Omit<LineLabel, "at"> & {
   progress?: number;
 };
 

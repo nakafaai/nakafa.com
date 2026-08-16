@@ -6,12 +6,23 @@ import {
   SpirillumBacteriumModel,
 } from "@repo/design-system/components/contents/biology/bacteria-parts";
 import type {
+  BiologyLabCallout,
   BiologyLabProps,
   BiologySceneProps,
   BiologySceneView,
 } from "@repo/design-system/components/contents/biology/data";
 import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab-frame";
-import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
+import type { ReactNode } from "react";
+
+const BACTERIA_CALLOUT_ID = {
+  bacillus: "bacillus",
+  coccus: "coccus",
+  gramNegative: "gram-negative",
+  gramPositive: "gram-positive",
+  nucleoidDna: "nucleoid-dna",
+  spiral: "spiral",
+} as const;
 
 const BACTERIA_VIEW = {
   cameraPosition: [2.28, 1.58, 3.3],
@@ -35,33 +46,96 @@ export function BacteriaStructureLab(props: BiologyLabProps) {
 /**
  * Uses distinct scenes for morphology, inner anatomy, and Gram wall logic.
  */
-function BacteriaStructureScene({ colors, selectedIndex }: BiologySceneProps) {
+function BacteriaStructureScene({
+  colors,
+  item,
+  selectedIndex,
+}: BiologySceneProps) {
   if (selectedIndex === 1) {
-    return <BacterialStructure colors={colors} />;
+    return (
+      <BacterialStructure
+        colors={colors}
+        nucleoidDnaLabel={requireCalloutLabel(
+          item.callouts,
+          BACTERIA_CALLOUT_ID.nucleoidDna
+        )}
+      />
+    );
   }
 
   if (selectedIndex === 2) {
-    return <GramWallComparison colors={colors} />;
+    return (
+      <GramWallComparison
+        colors={colors}
+        gramNegativeLabel={requireCalloutLabel(
+          item.callouts,
+          BACTERIA_CALLOUT_ID.gramNegative
+        )}
+        gramPositiveLabel={requireCalloutLabel(
+          item.callouts,
+          BACTERIA_CALLOUT_ID.gramPositive
+        )}
+      />
+    );
   }
 
-  return <BacterialShapes colors={colors} />;
+  return (
+    <BacterialShapes
+      bacillusLabel={requireCalloutLabel(
+        item.callouts,
+        BACTERIA_CALLOUT_ID.bacillus
+      )}
+      coccusLabel={requireCalloutLabel(
+        item.callouts,
+        BACTERIA_CALLOUT_ID.coccus
+      )}
+      colors={colors}
+      spiralLabel={requireCalloutLabel(
+        item.callouts,
+        BACTERIA_CALLOUT_ID.spiral
+      )}
+    />
+  );
+}
+
+/** Returns one required localized scene label by its stable model identity. */
+function requireCalloutLabel(
+  callouts: readonly BiologyLabCallout[] | undefined,
+  id: string
+) {
+  const callout = callouts?.find((candidate) => candidate.id === id);
+
+  if (!callout) {
+    throw new Error(`Missing bacteria scene label: ${id}`);
+  }
+
+  return callout.label;
 }
 
 /**
  * Shows coccus, bacillus, and spiral bacterial forms together.
  */
-function BacterialShapes({ colors }: Pick<BiologySceneProps, "colors">) {
+function BacterialShapes({
+  bacillusLabel,
+  colors,
+  coccusLabel,
+  spiralLabel,
+}: Pick<BiologySceneProps, "colors"> & {
+  bacillusLabel: ReactNode;
+  coccusLabel: ReactNode;
+  spiralLabel: ReactNode;
+}) {
   return (
     <group scale={1.22}>
       <group position={[-0.92, 0.34, 0]}>
         <CoccusClusterModel colors={colors} scale={0.96} />
-        <SceneLabel
+        <ThreeLabel
           color={colors.text}
           fontSize="compact"
           position={[0, -0.42, 0.24]}
         >
-          Kokus
-        </SceneLabel>
+          {coccusLabel}
+        </ThreeLabel>
       </group>
       <group position={[0.18, 0.32, 0]} rotation={[0.1, 0, -0.18]}>
         <BacillusBacteriumModel
@@ -70,23 +144,23 @@ function BacterialShapes({ colors }: Pick<BiologySceneProps, "colors">) {
           showInterior={false}
           showPili={false}
         />
-        <SceneLabel
+        <ThreeLabel
           color={colors.text}
           fontSize="compact"
           position={[0, -0.52, 0.28]}
         >
-          Basilus
-        </SceneLabel>
+          {bacillusLabel}
+        </ThreeLabel>
       </group>
       <group position={[0.92, -0.42, 0]} rotation={[0, 0, -0.18]}>
         <SpirillumBacteriumModel colors={colors} scale={1.02} />
-        <SceneLabel
+        <ThreeLabel
           color={colors.text}
           fontSize="compact"
           position={[0, -0.36, 0.26]}
         >
-          Spiral
-        </SceneLabel>
+          {spiralLabel}
+        </ThreeLabel>
       </group>
     </group>
   );
@@ -95,19 +169,22 @@ function BacterialShapes({ colors }: Pick<BiologySceneProps, "colors">) {
 /**
  * Shows a prokaryotic cell without a nucleus but with nucleoid and ribosomes.
  */
-function BacterialStructure({ colors }: Pick<BiologySceneProps, "colors">) {
+function BacterialStructure({
+  colors,
+  nucleoidDnaLabel,
+}: Pick<BiologySceneProps, "colors"> & { nucleoidDnaLabel: ReactNode }) {
   return (
     <group>
       <group rotation={[0, 0, -0.08]}>
         <BacillusBacteriumModel colors={colors} scale={1.18} />
       </group>
-      <SceneLabel
+      <ThreeLabel
         color={colors.text}
         fontSize="compact"
         position={[0.58, -0.34, 0.72]}
       >
-        Nukleoid DNA
-      </SceneLabel>
+        {nucleoidDnaLabel}
+      </ThreeLabel>
     </group>
   );
 }
@@ -115,18 +192,25 @@ function BacterialStructure({ colors }: Pick<BiologySceneProps, "colors">) {
 /**
  * Compares thick peptidoglycan and outer-membrane wall arrangements.
  */
-function GramWallComparison({ colors }: Pick<BiologySceneProps, "colors">) {
+function GramWallComparison({
+  colors,
+  gramNegativeLabel,
+  gramPositiveLabel,
+}: Pick<BiologySceneProps, "colors"> & {
+  gramNegativeLabel: ReactNode;
+  gramPositiveLabel: ReactNode;
+}) {
   return (
     <group position={[0, 0.32, 0]}>
       <WallStack
         colors={[colors.microbe, colors.plant]}
-        label="Gram positif"
+        label={gramPositiveLabel}
         textColor={colors.text}
         x={-0.7}
       />
       <WallStack
         colors={[colors.membrane, colors.microbe, colors.pathogen]}
-        label="Gram negatif"
+        label={gramNegativeLabel}
         textColor={colors.text}
         x={0.72}
       />
@@ -144,7 +228,7 @@ function WallStack({
   x,
 }: {
   colors: readonly string[];
-  label: string;
+  label: ReactNode;
   textColor: string;
   x: number;
 }) {
@@ -157,7 +241,7 @@ function WallStack({
 
         return (
           <mesh
-            key={`${label}-${color}`}
+            key={`${x}-${color}`}
             position={[0, 0.02, index * 0.055]}
             rotation={[0, 0, Math.PI / 2]}
           >
@@ -171,13 +255,13 @@ function WallStack({
           </mesh>
         );
       })}
-      <SceneLabel
+      <ThreeLabel
         color={textColor}
         fontSize="compact"
         position={[0, 0.44, 0.72]}
       >
         {label}
-      </SceneLabel>
+      </ThreeLabel>
     </group>
   );
 }

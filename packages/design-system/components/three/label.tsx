@@ -1,117 +1,101 @@
 "use client";
 
-import { Billboard, Html, Text } from "@react-three/drei";
+import { Html } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import {
-  MONO_FONT_PATH,
   resolveThreeFontSize,
   type ThreeFontSize,
 } from "@repo/design-system/components/three/data/constants";
 import type { ComponentProps, ReactNode } from "react";
 import { Color } from "three";
 
-type BillboardProps = ComponentProps<typeof Billboard>;
-type TextProps = ComponentProps<typeof Text>;
+type HtmlProps = ComponentProps<typeof Html>;
+type LabelAnchorX = "center" | "left" | "right";
+type LabelAnchorY = "bottom" | "middle" | "top";
 
 interface ThreeLabelProps {
-  anchorX?: TextProps["anchorX"];
-  anchorY?: TextProps["anchorY"];
-  children: null | number | string | undefined;
-  color: string | Color;
-  font?: string;
-  fontSize?: ThreeFontSize | number;
-  material?: TextProps["material"];
-  position: BillboardProps["position"];
-  renderOrder?: number;
-  rotation?: TextProps["rotation"];
-  visible?: boolean;
-}
-
-interface ThreeRichLabelProps {
+  anchorX?: LabelAnchorX;
+  anchorY?: LabelAnchorY;
   children: ReactNode;
   color: string | Color;
   fontSize?: ThreeFontSize | number;
-  position: BillboardProps["position"];
+  outlineColor?: string;
+  outlineWidth?: number;
+  position: HtmlProps["position"];
+  /** Screen-plane rotation in radians. */
+  rotation?: number;
   visible?: boolean;
 }
 
-const RICH_LABEL_BASE_FONT_SIZE = 16;
+const LABEL_BASE_FONT_SIZE = 16;
+const LABEL_Z_INDEX_RANGE: [number, number] = [1, 0];
+
+function anchorOffset(anchor: LabelAnchorX | LabelAnchorY) {
+  if (anchor === "left" || anchor === "top") {
+    return "0%";
+  }
+
+  if (anchor === "right" || anchor === "bottom") {
+    return "-100%";
+  }
+
+  return "-50%";
+}
 
 /**
- * Shared camera-facing label for interactive Three.js educational scenes.
+ * Renders semantic React content at one camera-facing Three.js world position.
+ *
+ * A plain string and rich content such as mixed prose and KaTeX use the same
+ * authoring contract. The bounded portal layer stays below scene controls and
+ * does not intercept pointer input. Visual labels stay hidden from assistive
+ * technology because each scene owns its complete accessible description.
+ *
+ * @see https://drei.docs.pmnd.rs/misc/html
  */
 export function ThreeLabel({
   anchorX = "center",
   anchorY = "middle",
   children,
   color,
-  font = MONO_FONT_PATH,
   fontSize = "annotation",
-  material,
+  outlineColor,
+  outlineWidth = 0,
   position,
-  renderOrder = 10,
-  rotation,
+  rotation = 0,
   visible = true,
 }: ThreeLabelProps) {
-  const labelColor = color instanceof Color ? color.getStyle() : color;
-
-  return (
-    <Billboard position={position} visible={visible}>
-      <Text
-        anchorX={anchorX}
-        anchorY={anchorY}
-        color={labelColor}
-        font={font}
-        fontSize={resolveThreeFontSize(fontSize)}
-        frustumCulled={false}
-        material={material}
-        material-depthTest={false}
-        raycast={() => null}
-        renderOrder={renderOrder}
-        rotation={rotation}
-      >
-        {children}
-      </Text>
-    </Billboard>
-  );
-}
-
-/**
- * Renders camera-facing React content at one Three.js world position.
- *
- * Use this for labels that need semantic markup, including mixed prose and
- * KaTeX. Plain string labels should keep using ThreeLabel so they remain one
- * efficient WebGL text object instead of creating a DOM root.
- *
- * @see https://drei.docs.pmnd.rs/misc/html
- */
-export function ThreeRichLabel({
-  children,
-  color,
-  fontSize = "annotation",
-  position,
-  visible = true,
-}: ThreeRichLabelProps) {
   const canvasHeight = useThree((state) => state.size.height);
   const labelColor = color instanceof Color ? color.getStyle() : color;
   const worldFontSize = resolveThreeFontSize(fontSize);
-  const distanceFactor =
-    (worldFontSize * canvasHeight) / RICH_LABEL_BASE_FONT_SIZE;
+  const distanceFactor = (worldFontSize * canvasHeight) / LABEL_BASE_FONT_SIZE;
+  const outlineWidthEm = worldFontSize > 0 ? outlineWidth / worldFontSize : 0;
+
+  if (!visible) {
+    return null;
+  }
 
   return (
     <Html
-      center
+      aria-hidden="true"
       distanceFactor={distanceFactor}
-      pointerEvents="none"
       position={position}
       style={{
+        WebkitTextStroke:
+          outlineColor && outlineWidthEm > 0
+            ? `${outlineWidthEm}em ${outlineColor}`
+            : undefined,
         color: labelColor,
-        fontSize: RICH_LABEL_BASE_FONT_SIZE,
+        fontFamily: "var(--font-mono)",
+        fontSize: LABEL_BASE_FONT_SIZE,
         lineHeight: 1,
+        paintOrder: "stroke fill",
+        pointerEvents: "none",
+        transform: `translate(${anchorOffset(anchorX)}, ${anchorOffset(anchorY)}) rotate(${rotation}rad)`,
+        transformOrigin: "center",
         userSelect: "none",
         whiteSpace: "nowrap",
       }}
-      visible={visible}
+      zIndexRange={LABEL_Z_INDEX_RANGE}
     >
       {children}
     </Html>

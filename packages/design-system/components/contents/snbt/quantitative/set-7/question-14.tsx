@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ComponentProps } from "react";
 
@@ -26,17 +27,17 @@ export function Graph({
           color: getColor("INDIGO"),
           labels: [
             {
-              text: "y = f(x)",
+              text: <InlineMath math="y = f(x)" />,
               at: 3,
               offset: [0, -2, 0],
             },
             {
-              text: "5",
+              text: <InlineMath math="5" />,
               at: f_points.findIndex((p) => Math.abs(p.x) < 0.1),
               offset: [-0.5, 0, 0],
             },
             {
-              text: "5",
+              text: <InlineMath math="5" />,
               at: f_points.findIndex((p) => Math.abs(p.x - 5) < 0.1),
               offset: [0.5, 0.5, 0],
             },
@@ -49,12 +50,12 @@ export function Graph({
           color: getColor("TEAL"),
           labels: [
             {
-              text: "y = g(x)",
+              text: <InlineMath math="y = g(x)" />,
               at: g_points.length / 1.5,
               offset: [2, 1, 0],
             },
             {
-              text: "(2, 3)",
+              text: <InlineMath math="(2, 3)" />,
               at: g_points.findIndex((p) => Math.abs(p.x - 2) < 0.1),
               offset: [1, -0.5, 0],
             },

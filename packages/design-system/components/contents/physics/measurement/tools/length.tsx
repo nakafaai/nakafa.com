@@ -9,8 +9,9 @@ import {
   RULER_START_X,
   RULER_STEP_CM,
 } from "@repo/design-system/components/contents/physics/measurement/tools/data";
-import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useMemo } from "react";
 
 /**
@@ -72,20 +73,20 @@ export function LengthScene({
         <meshStandardMaterial color={OBJECT_COLOR} roughness={0.5} />
       </RoundedBox>
 
-      <SceneLabel
+      <ThreeLabel
         color={colors.text}
         fontSize={THREE_FONT_SIZE.reading}
         position={[RULER_START_X - 0.35, 0.64, 1]}
       >
-        0
-      </SceneLabel>
-      <SceneLabel
+        <InlineMath math="0" />
+      </ThreeLabel>
+      <ThreeLabel
         color={colors.text}
         fontSize={THREE_FONT_SIZE.reading}
         position={[readingLabelX, 0.92, 1]}
       >
         {reading}
-      </SceneLabel>
+      </ThreeLabel>
     </group>
   );
 }

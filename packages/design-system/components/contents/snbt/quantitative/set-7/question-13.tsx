@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ComponentProps, ReactNode } from "react";
 
@@ -23,13 +24,23 @@ const graphData = [
     smooth: false,
     labels: [
       {
-        text: "A",
+        text: <InlineMath math="A" />,
         at: 0,
         offset: [-0.5, -0.5, 0],
         color: getColor("INDIGO"),
       },
-      { text: "B", at: 1, offset: [0.5, -0.5, 0], color: getColor("INDIGO") },
-      { text: "C", at: 2, offset: [0, 0.5, 0], color: getColor("INDIGO") },
+      {
+        text: <InlineMath math="B" />,
+        at: 1,
+        offset: [0.5, -0.5, 0],
+        color: getColor("INDIGO"),
+      },
+      {
+        text: <InlineMath math="C" />,
+        at: 2,
+        offset: [0, 0.5, 0],
+        color: getColor("INDIGO"),
+      },
     ],
   },
   {
@@ -38,7 +49,12 @@ const graphData = [
     showPoints: true,
     smooth: false,
     labels: [
-      { text: "P", at: 1, offset: [0, -0.5, 0], color: getColor("TEAL") },
+      {
+        text: <InlineMath math="P" />,
+        at: 1,
+        offset: [0, -0.5, 0],
+        color: getColor("TEAL"),
+      },
     ],
   },
   {
@@ -47,7 +63,12 @@ const graphData = [
     showPoints: true,
     smooth: false,
     labels: [
-      { text: "Q", at: 1, offset: [0.3, 0.3, 0], color: getColor("VIOLET") },
+      {
+        text: <InlineMath math="Q" />,
+        at: 1,
+        offset: [0.3, 0.3, 0],
+        color: getColor("VIOLET"),
+      },
     ],
   },
   {
@@ -56,7 +77,12 @@ const graphData = [
     showPoints: true,
     smooth: false,
     labels: [
-      { text: "R", at: 1, offset: [-0.3, 0.3, 0], color: getColor("VIOLET") },
+      {
+        text: <InlineMath math="R" />,
+        at: 1,
+        offset: [-0.3, 0.3, 0],
+        color: getColor("VIOLET"),
+      },
     ],
   },
 ] satisfies ComponentProps<typeof LineEquation>["data"];

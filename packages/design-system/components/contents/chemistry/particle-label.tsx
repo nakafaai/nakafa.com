@@ -1,8 +1,6 @@
-import { Billboard, Text } from "@react-three/drei";
-import {
-  getThreeParticleLabelFontSize,
-  MONO_FONT_PATH,
-} from "@repo/design-system/components/three/data/constants";
+import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
+import type { ReactNode } from "react";
 
 type ParticleLabelPosition = readonly [number, number, number];
 
@@ -32,7 +30,7 @@ export function ChemistryParticleLabel({
   outlineWidth,
   position,
 }: {
-  children: string;
+  children: ReactNode;
   color: string;
   fontSize: number;
   outlineColor?: string;
@@ -40,20 +38,14 @@ export function ChemistryParticleLabel({
   position: ParticleLabelPosition;
 }) {
   return (
-    <Billboard>
-      <Text
-        anchorX="center"
-        anchorY="middle"
-        color={color}
-        font={MONO_FONT_PATH}
-        fontSize={fontSize}
-        outlineColor={outlineColor}
-        outlineWidth={outlineWidth}
-        position={position}
-      >
-        {children}
-        <meshBasicMaterial color={color} toneMapped={false} />
-      </Text>
-    </Billboard>
+    <ThreeLabel
+      color={color}
+      fontSize={fontSize}
+      outlineColor={outlineColor}
+      outlineWidth={outlineWidth}
+      position={position}
+    >
+      {children}
+    </ThreeLabel>
   );
 }

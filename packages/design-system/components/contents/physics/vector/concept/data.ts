@@ -24,12 +24,12 @@ export interface VectorConceptLabLabels {
   chooseLoadPosition: string;
   direction: string;
   directionValue: string;
-  leftCable: string;
+  leftCable: ReactNode;
   magnitude: string;
   magnitudeValue: string;
   netIdea: string;
   netIdeaValue: string;
-  rightCable: string;
+  rightCable: ReactNode;
 }
 
 export interface VectorConceptLabProps {

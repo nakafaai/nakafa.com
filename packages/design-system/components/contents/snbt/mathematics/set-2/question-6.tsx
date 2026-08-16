@@ -1,5 +1,6 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
 import { getMidpoint } from "@repo/design-system/components/contents/snbt/geometry";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -37,32 +38,36 @@ export function Graph({ description, title }: GraphProps) {
           points: [cubePointD, getMidpoint(cubePointD, cubePointA), cubePointA],
           color: getColor("INDIGO"),
           labels: [
-            { text: "D", at: 0, offset: [-0.3, -0.3, 0] },
-            { text: "4", at: 1, offset: [0, -0.3, 0] },
-            { text: "A", at: 2, offset: [0.3, -0.3, 0] },
+            { text: <InlineMath math="D" />, at: 0, offset: [-0.3, -0.3, 0] },
+            { text: <InlineMath math="4" />, at: 1, offset: [0, -0.3, 0] },
+            { text: <InlineMath math="A" />, at: 2, offset: [0.3, -0.3, 0] },
           ],
         },
         {
           ...hiddenPoints,
           points: [cubePointA, getMidpoint(cubePointA, cubePointB), cubePointB],
           color: getColor("INDIGO"),
-          labels: [{ text: "4", at: 1, offset: [0.3, 0, 0] }],
+          labels: [
+            { text: <InlineMath math="4" />, at: 1, offset: [0.3, 0, 0] },
+          ],
         },
         {
           ...hiddenPoints,
           points: [cubePointB, getMidpoint(cubePointB, cubePointC), cubePointC],
           color: getColor("INDIGO"),
           labels: [
-            { text: "B", at: 0, offset: [0.3, 0.3, 0] },
-            { text: "4", at: 1, offset: [0, 0.3, 0] },
-            { text: "C", at: 2, offset: [-0.3, 0.3, 0] },
+            { text: <InlineMath math="B" />, at: 0, offset: [0.3, 0.3, 0] },
+            { text: <InlineMath math="4" />, at: 1, offset: [0, 0.3, 0] },
+            { text: <InlineMath math="C" />, at: 2, offset: [-0.3, 0.3, 0] },
           ],
         },
         {
           ...hiddenPoints,
           points: [cubePointC, getMidpoint(cubePointC, cubePointD), cubePointD],
           color: getColor("INDIGO"),
-          labels: [{ text: "4", at: 1, offset: [-0.3, 0, 0] }],
+          labels: [
+            { text: <InlineMath math="4" />, at: 1, offset: [-0.3, 0, 0] },
+          ],
         },
 
         // Top Face
@@ -71,24 +76,26 @@ export function Graph({ description, title }: GraphProps) {
           points: [cubePointH, getMidpoint(cubePointH, cubePointE), cubePointE],
           color: getColor("INDIGO"),
           labels: [
-            { text: "H", at: 0, offset: [-0.3, -0.3, 0.3] },
-            { text: "4", at: 1, offset: [0, -0.3, 0.3] },
-            { text: "E", at: 2, offset: [0.3, -0.3, 0.3] },
+            { text: <InlineMath math="H" />, at: 0, offset: [-0.3, -0.3, 0.3] },
+            { text: <InlineMath math="4" />, at: 1, offset: [0, -0.3, 0.3] },
+            { text: <InlineMath math="E" />, at: 2, offset: [0.3, -0.3, 0.3] },
           ],
         },
         {
           ...hiddenPoints,
           points: [cubePointE, getMidpoint(cubePointE, cubePointF), cubePointF],
           color: getColor("INDIGO"),
-          labels: [{ text: "4", at: 1, offset: [0.3, 0, 0.3] }],
+          labels: [
+            { text: <InlineMath math="4" />, at: 1, offset: [0.3, 0, 0.3] },
+          ],
         },
         {
           ...hiddenPoints,
           points: [cubePointF, getMidpoint(cubePointF, cubePointQ), cubePointQ],
           color: getColor("INDIGO"),
           labels: [
-            { text: "F", at: 0, offset: [0.3, 0.3, 0.3] },
-            { text: "2", at: 1, offset: [0, 0.3, 0.3] },
+            { text: <InlineMath math="F" />, at: 0, offset: [0.3, 0.3, 0.3] },
+            { text: <InlineMath math="2" />, at: 1, offset: [0, 0.3, 0.3] },
           ],
         },
         {
@@ -96,15 +103,17 @@ export function Graph({ description, title }: GraphProps) {
           points: [cubePointQ, getMidpoint(cubePointQ, cubePointG), cubePointG],
           color: getColor("INDIGO"),
           labels: [
-            { text: "2", at: 1, offset: [0, 0.3, 0.3] },
-            { text: "G", at: 2, offset: [-0.3, 0.3, 0.3] },
+            { text: <InlineMath math="2" />, at: 1, offset: [0, 0.3, 0.3] },
+            { text: <InlineMath math="G" />, at: 2, offset: [-0.3, 0.3, 0.3] },
           ],
         },
         {
           ...hiddenPoints,
           points: [cubePointG, getMidpoint(cubePointG, cubePointH), cubePointH],
           color: getColor("INDIGO"),
-          labels: [{ text: "4", at: 1, offset: [-0.3, 0, 0.3] }],
+          labels: [
+            { text: <InlineMath math="4" />, at: 1, offset: [-0.3, 0, 0.3] },
+          ],
         },
 
         // Vertical Edges
@@ -112,25 +121,33 @@ export function Graph({ description, title }: GraphProps) {
           ...hiddenPoints,
           points: [cubePointD, getMidpoint(cubePointD, cubePointH), cubePointH],
           color: getColor("INDIGO"),
-          labels: [{ text: "4", at: 1, offset: [-0.3, -0.3, 0] }],
+          labels: [
+            { text: <InlineMath math="4" />, at: 1, offset: [-0.3, -0.3, 0] },
+          ],
         },
         {
           ...hiddenPoints,
           points: [cubePointA, getMidpoint(cubePointA, cubePointE), cubePointE],
           color: getColor("INDIGO"),
-          labels: [{ text: "4", at: 1, offset: [0.3, -0.3, 0] }],
+          labels: [
+            { text: <InlineMath math="4" />, at: 1, offset: [0.3, -0.3, 0] },
+          ],
         },
         {
           ...hiddenPoints,
           points: [cubePointB, getMidpoint(cubePointB, cubePointF), cubePointF],
           color: getColor("INDIGO"),
-          labels: [{ text: "4", at: 1, offset: [0.3, 0.3, 0] }],
+          labels: [
+            { text: <InlineMath math="4" />, at: 1, offset: [0.3, 0.3, 0] },
+          ],
         },
         {
           ...hiddenPoints,
           points: [cubePointC, getMidpoint(cubePointC, cubePointG), cubePointG],
           color: getColor("INDIGO"),
-          labels: [{ text: "4", at: 1, offset: [-0.3, 0.3, 0] }],
+          labels: [
+            { text: <InlineMath math="4" />, at: 1, offset: [-0.3, 0.3, 0] },
+          ],
         },
 
         // Diagonal BD
@@ -146,15 +163,21 @@ export function Graph({ description, title }: GraphProps) {
           points: [cubePointD, getMidpoint(cubePointD, cubePointQ), cubePointQ],
           color: getColor("TEAL"),
           labels: [
-            { text: "6", at: 1, offset: [-0.3, 0.3, 0] },
-            { text: "Q", at: 2, offset: [0, 0.3, 0.3] },
+            { text: <InlineMath math="6" />, at: 1, offset: [-0.3, 0.3, 0] },
+            { text: <InlineMath math="Q" />, at: 2, offset: [0, 0.3, 0.3] },
           ],
         },
         {
           ...hiddenPoints,
           points: [cubePointB, getMidpoint(cubePointB, cubePointQ), cubePointQ],
           color: getColor("TEAL"),
-          labels: [{ text: "2√5", at: 1, offset: [0.3, 0, 0] }],
+          labels: [
+            {
+              text: <InlineMath math="2\sqrt{5}" />,
+              at: 1,
+              offset: [0.3, 0, 0],
+            },
+          ],
         },
 
         // Line HQ (from image)
@@ -162,7 +185,13 @@ export function Graph({ description, title }: GraphProps) {
           ...hiddenPoints,
           points: [cubePointH, getMidpoint(cubePointH, cubePointQ), cubePointQ],
           color: getColor("VIOLET"),
-          labels: [{ text: "2√5", at: 1, offset: [0, 0, 0.3] }],
+          labels: [
+            {
+              text: <InlineMath math="2\sqrt{5}" />,
+              at: 1,
+              offset: [0, 0, 0.3],
+            },
+          ],
         },
 
         // Height Line QO
@@ -171,8 +200,8 @@ export function Graph({ description, title }: GraphProps) {
           points: [cubePointQ, getMidpoint(cubePointQ, cubePointO), cubePointO],
           color: getColor("ROSE"),
           labels: [
-            { text: "y", at: 1, offset: [0.2, 0, 0] },
-            { text: "O", at: 2, offset: [0.2, 0.2, 0] },
+            { text: <InlineMath math="y" />, at: 1, offset: [0.2, 0, 0] },
+            { text: <InlineMath math="O" />, at: 2, offset: [0.2, 0.2, 0] },
           ],
         },
       ]}

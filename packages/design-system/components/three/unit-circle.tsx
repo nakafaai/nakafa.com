@@ -1,9 +1,8 @@
 "use client";
 
 import { Line } from "@react-three/drei";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
-  FONT_PATH,
-  MONO_FONT_PATH,
   ORIGIN_COLOR,
   THREE_FONT_SIZE,
 } from "@repo/design-system/components/three/data/constants";
@@ -42,8 +41,6 @@ interface Props {
     cos?: string;
     tan?: string;
   };
-  /** Use mono font for the labels */
-  useMonoFont?: boolean;
   /** Additional props */
   [key: string]: unknown;
 }
@@ -117,7 +114,6 @@ export function UnitCircle({
   showLabels = true,
   displayMode = "exact",
   precision = 2,
-  useMonoFont = true,
   trigValues,
   ...props
 }: Props) {
@@ -138,7 +134,7 @@ export function UnitCircle({
   const formatValue = useMemo(() => {
     return (value: number) => {
       if (!Number.isFinite(value)) {
-        return t("undefined");
+        return null;
       }
       if (Math.abs(value) < EPSILON) {
         return "0";
@@ -153,15 +149,15 @@ export function UnitCircle({
 
       // Common trig values lookup table for performance
       const commonValues = [
-        { value: ONE / TWO, display: "1/2" },
-        { value: Math.SQRT1_2, display: "√2/2" },
-        { value: SQRT_3 / TWO, display: "√3/2" },
+        { value: ONE / TWO, display: "\\frac{1}{2}" },
+        { value: Math.SQRT1_2, display: "\\frac{\\sqrt{2}}{2}" },
+        { value: SQRT_3 / TWO, display: "\\frac{\\sqrt{3}}{2}" },
         { value: ONE, display: "1" },
-        { value: SQRT_3, display: "√3" },
-        { value: SQRT_3 / THREE, display: "√3/3" },
-        { value: Math.SQRT2, display: "√2" },
-        { value: ONE / FOUR, display: "1/4" },
-        { value: THREE / FOUR, display: "3/4" },
+        { value: SQRT_3, display: "\\sqrt{3}" },
+        { value: SQRT_3 / THREE, display: "\\frac{\\sqrt{3}}{3}" },
+        { value: Math.SQRT2, display: "\\sqrt{2}" },
+        { value: ONE / FOUR, display: "\\frac{1}{4}" },
+        { value: THREE / FOUR, display: "\\frac{3}{4}" },
       ];
 
       for (const { value: v, display } of commonValues) {
@@ -172,33 +168,25 @@ export function UnitCircle({
 
       return value.toFixed(precision);
     };
-  }, [displayMode, precision, t]);
+  }, [displayMode, precision]);
 
   // Memoize labels
   const labels = useMemo(() => {
     // If trigValues are provided, use them for fraction display
     if (trigValues) {
       return {
-        sin: trigValues.sin
-          ? `sin(${angle}°) = ${trigValues.sin}`
-          : `sin(${angle}°) = ${formatValue(sin)}`,
-        cos: trigValues.cos
-          ? `cos(${angle}°) = ${trigValues.cos}`
-          : `cos(${angle}°) = ${formatValue(cos)}`,
-        tan: trigValues.tan
-          ? `tan(${angle}°) = ${trigValues.tan}`
-          : `tan(${angle}°) = ${formatValue(tan)}`,
+        sin: trigValues.sin ?? formatValue(sin),
+        cos: trigValues.cos ?? formatValue(cos),
+        tan: trigValues.tan ?? formatValue(tan),
       };
     }
 
     return {
-      sin: `sin(${angle}°) = ${formatValue(sin)}`,
-      cos: `cos(${angle}°) = ${formatValue(cos)}`,
-      tan: `tan(${angle}°) = ${formatValue(tan)}`,
+      sin: formatValue(sin),
+      cos: formatValue(cos),
+      tan: formatValue(tan),
     };
-  }, [angle, sin, cos, tan, formatValue, trigValues]);
-
-  const fontPath = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
+  }, [sin, cos, tan, formatValue, trigValues]);
 
   // Colors based on theme
   const circleColor =
@@ -249,7 +237,6 @@ export function UnitCircle({
         <ThreeLabel
           anchorX="center"
           color={COLORS.VIOLET}
-          font={fontPath}
           fontSize={LABEL_FONT_SIZE}
           position={[
             Math.cos(angleInRadians / 2) * ANGLE_LABEL_X_FACTOR,
@@ -258,7 +245,7 @@ export function UnitCircle({
           ]}
           visible={showLabels}
         >
-          {`${angle}°`}
+          <InlineMath math={`${angle}^\\circ`} />
         </ThreeLabel>
 
         {/* Point on circle - using shared geometry */}
@@ -299,28 +286,38 @@ export function UnitCircle({
             <ThreeLabel
               anchorX="center"
               color={COLORS.CYAN}
-              font={fontPath}
               fontSize={LABEL_FONT_SIZE}
               position={[cos / 2, COS_LABEL_Y_OFFSET, 0]}
             >
-              {labels.cos}
+              <InlineMath
+                math={`\\cos\\left(${angle}^\\circ\\right) = ${labels.cos}`}
+              />
             </ThreeLabel>
             <ThreeLabel
               anchorX="left"
               color={COLORS.ORANGE}
-              font={fontPath}
               fontSize={LABEL_FONT_SIZE}
               position={[cos + SIN_LABEL_X_OFFSET, sin / 2, 0]}
             >
-              {labels.sin}
+              <InlineMath
+                math={`\\sin\\left(${angle}^\\circ\\right) = ${labels.sin}`}
+              />
             </ThreeLabel>
             <ThreeLabel
               color={COLORS.ROSE}
-              font={fontPath}
               fontSize={LABEL_FONT_SIZE}
               position={[TAN_LABEL_POSITION, TAN_LABEL_POSITION, 0]}
             >
-              {labels.tan}
+              {labels.tan ? (
+                <InlineMath
+                  math={`\\tan\\left(${angle}^\\circ\\right) = ${labels.tan}`}
+                />
+              ) : (
+                <>
+                  <InlineMath math={`\\tan\\left(${angle}^\\circ\\right) =`} />{" "}
+                  {t("undefined")}
+                </>
+              )}
             </ThreeLabel>
           </>
         )}

@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -58,9 +59,13 @@ export function Graph({ title, description }: GraphProps) {
           ],
           color: getColor("INDIGO"),
           labels: [
-            { text: "A (ATC)", at: 0, offset: [-0.5, -0.5, 0] },
-            { text: "D", at: 1, offset: [0, -0.5, 0] },
-            { text: "B", at: 2, offset: [0, -0.5, 0] },
+            {
+              text: <InlineMath math="A\;(\mathrm{ATC})" />,
+              at: 0,
+              offset: [-0.5, -0.5, 0],
+            },
+            { text: <InlineMath math="D" />, at: 1, offset: [0, -0.5, 0] },
+            { text: <InlineMath math="B" />, at: 2, offset: [0, -0.5, 0] },
           ],
         },
         // Plane Path (E -> C)
@@ -71,8 +76,8 @@ export function Graph({ title, description }: GraphProps) {
           ],
           color: getColor("EMERALD"),
           labels: [
-            { text: "E", at: 0, offset: [0, 0.5, 0] },
-            { text: "C", at: 1, offset: [0, 0.5, 0] },
+            { text: <InlineMath math="E" />, at: 0, offset: [0, 0.5, 0] },
+            { text: <InlineMath math="C" />, at: 1, offset: [0, 0.5, 0] },
           ],
         },
         // Line of Sight 1 (A -> C) - 30 degrees
@@ -111,14 +116,26 @@ export function Graph({ title, description }: GraphProps) {
         {
           points: generateArc(1500 * scale, 0, 30),
           color: getColor("VIOLET"),
-          labels: [{ text: "30°", at: 10, offset: [0.5, 0, 0] }],
+          labels: [
+            {
+              text: <InlineMath math="30^\circ" />,
+              at: 10,
+              offset: [0.5, 0, 0],
+            },
+          ],
           showPoints: false,
         },
         // Arc 15 degrees (from 30 to 45)
         {
           points: generateArc(2000 * scale, 30, 45),
           color: getColor("VIOLET"),
-          labels: [{ text: "15°", at: 10, offset: [0.5, 0.3, 0] }],
+          labels: [
+            {
+              text: <InlineMath math="15^\circ" />,
+              at: 10,
+              offset: [0.5, 0.3, 0],
+            },
+          ],
           showPoints: false,
         },
       ]}

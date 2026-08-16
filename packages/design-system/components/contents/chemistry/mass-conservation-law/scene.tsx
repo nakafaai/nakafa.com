@@ -6,7 +6,7 @@ import {
   type MassConservationScenePoint,
   OPEN_SYSTEM_MODE_ID,
 } from "@repo/design-system/components/contents/chemistry/mass-conservation-law/data";
-import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useRef } from "react";
 import { DoubleSide, type Mesh, type MeshStandardMaterial } from "three";
 
@@ -122,34 +122,34 @@ export function MassConservationScene({
 
   return (
     <group position={[0, -0.03, 0]} scale={SCENE_SCALE}>
-      <SceneLabel
+      <ThreeLabel
         color={colors.text}
         fontSize="compact"
         position={[BEFORE_X, 1.1, 0.16]}
       >
         {labels.before}
-      </SceneLabel>
-      <SceneLabel
+      </ThreeLabel>
+      <ThreeLabel
         color={colors.text}
         fontSize="compact"
         position={[AFTER_X, 1.1, 0.16]}
       >
         {labels.after}
-      </SceneLabel>
-      <SceneLabel
+      </ThreeLabel>
+      <ThreeLabel
         color={colors.text}
         fontSize="compact"
         position={[BEFORE_X, READOUT_Y, 0.22]}
       >
         {modeLabels.readoutBefore}
-      </SceneLabel>
-      <SceneLabel
+      </ThreeLabel>
+      <ThreeLabel
         color={colors.text}
         fontSize="compact"
         position={[AFTER_X, READOUT_Y, 0.22]}
       >
         {modeLabels.readoutAfter}
-      </SceneLabel>
+      </ThreeLabel>
       <BalanceStage
         colors={colors}
         isOpen={isOpen}

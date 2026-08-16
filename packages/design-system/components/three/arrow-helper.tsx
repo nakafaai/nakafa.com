@@ -1,15 +1,11 @@
 "use client";
 
 import { Line } from "@react-three/drei";
-import {
-  FONT_PATH,
-  MONO_FONT_PATH,
-  type ThreeFontSize,
-} from "@repo/design-system/components/three/data/constants";
+import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
 import { GRAPH_ARROW_SEGMENTS } from "@repo/design-system/components/three/helpers/quality";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { COLORS } from "@repo/design-system/lib/color";
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import {
   Color,
   ConeGeometry,
@@ -101,7 +97,7 @@ interface Props {
   /** Starting point of the vector [x, y, z] */
   from?: readonly [number, number, number];
   /** Label for the vector */
-  label?: string;
+  label?: ReactNode;
   /** Horizontal anchor for the label text */
   labelAnchorX?: LabelAnchorX;
   /**
@@ -130,8 +126,6 @@ interface Props {
   showArrow?: boolean;
   /** End point of the vector [x, y, z] */
   to: readonly [number, number, number];
-  /** Use mono font for the label */
-  useMonoFont?: boolean;
   /** Additional props */
   [key: string]: unknown;
 }
@@ -153,7 +147,6 @@ export function ArrowHelper({
   labelPoint,
   labelProgress,
   labelSize = "diagram",
-  useMonoFont = true,
   ...props
 }: Props) {
   // Memoize vector calculations
@@ -235,8 +228,6 @@ export function ArrowHelper({
     return { position, quaternion };
   }, [showArrow, vectors, arrowSize]);
 
-  const fontPath = useMonoFont ? MONO_FONT_PATH : FONT_PATH;
-
   return (
     <group frustumCulled {...props}>
       {/* Shaft of the arrow */}
@@ -259,16 +250,16 @@ export function ArrowHelper({
       )}
 
       {/* Label text */}
-      <ThreeLabel
-        anchorX={labelAnchorX}
-        color={color}
-        font={fontPath}
-        fontSize={labelSize}
-        position={labelPos}
-        visible={Boolean(label)}
-      >
-        {label}
-      </ThreeLabel>
+      {label != null && (
+        <ThreeLabel
+          anchorX={labelAnchorX}
+          color={color}
+          fontSize={labelSize}
+          position={labelPos}
+        >
+          {label}
+        </ThreeLabel>
+      )}
     </group>
   );
 }

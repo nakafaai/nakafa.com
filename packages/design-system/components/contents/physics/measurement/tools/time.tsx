@@ -1,4 +1,3 @@
-import { Text } from "@react-three/drei";
 import type { MeasurementSceneProps } from "@repo/design-system/components/contents/physics/measurement/tools/data";
 import {
   METAL_COLOR,
@@ -9,10 +8,8 @@ import {
   TIME_FACE_COLOR,
   TIME_SCENE_SCALE,
 } from "@repo/design-system/components/contents/physics/measurement/tools/data";
-import {
-  MONO_FONT_PATH,
-  THREE_FONT_SIZE,
-} from "@repo/design-system/components/three/data/constants";
+import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useMemo } from "react";
 
 /**
@@ -85,15 +82,13 @@ export function TimeScene({
         <sphereGeometry args={[0.09, 32, 32]} />
         <meshStandardMaterial color={TIME_COLOR} />
       </mesh>
-      <Text
-        anchorX="center"
+      <ThreeLabel
         color={colors.text}
-        font={MONO_FONT_PATH}
         fontSize={THREE_FONT_SIZE.display}
         position={[0, -0.55, 0.25]}
       >
         {reading}
-      </Text>
+      </ThreeLabel>
     </group>
   );
 }

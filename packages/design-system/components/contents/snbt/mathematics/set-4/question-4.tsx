@@ -1,5 +1,6 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
 import { getMidpoint } from "@repo/design-system/components/contents/snbt/geometry";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -50,17 +51,42 @@ export function Graph({ title, description }: GraphProps) {
           ...common,
           points: [A, getMidpoint(A, B), B],
           labels: [
-            { text: "A", at: 0, offset: [-0.2, -0.2, 0.2], color: labelColor },
-            { text: "B", at: 2, offset: [0.2, -0.2, 0.2], color: labelColor },
-            { text: "p = 2l", at: 1, offset: [0, -0.4, 0], color: labelColor },
+            {
+              text: <InlineMath math="A" />,
+              at: 0,
+              offset: [-0.2, -0.2, 0.2],
+              color: labelColor,
+            },
+            {
+              text: <InlineMath math="B" />,
+              at: 2,
+              offset: [0.2, -0.2, 0.2],
+              color: labelColor,
+            },
+            {
+              text: <InlineMath math="p = 2l" />,
+              at: 1,
+              offset: [0, -0.4, 0],
+              color: labelColor,
+            },
           ],
         },
         {
           ...common,
           points: [B, getMidpoint(B, C), C],
           labels: [
-            { text: "C", at: 2, offset: [0.2, -0.2, -0.2], color: labelColor },
-            { text: "l", at: 1, offset: [0.4, 0, 0], color: labelColor },
+            {
+              text: <InlineMath math="C" />,
+              at: 2,
+              offset: [0.2, -0.2, -0.2],
+              color: labelColor,
+            },
+            {
+              text: <InlineMath math="l" />,
+              at: 1,
+              offset: [0.4, 0, 0],
+              color: labelColor,
+            },
           ],
         },
         {
@@ -68,7 +94,7 @@ export function Graph({ title, description }: GraphProps) {
           points: [C, D],
           labels: [
             {
-              text: "D",
+              text: <InlineMath math="D" />,
               at: 1,
               offset: [-0.2, -0.2, -0.2],
               color: labelColor,
@@ -79,7 +105,12 @@ export function Graph({ title, description }: GraphProps) {
           ...common,
           points: [D, getMidpoint(D, A), A],
           labels: [
-            { text: "l", at: 1, offset: [-0.4, 0, 0], color: labelColor },
+            {
+              text: <InlineMath math="l" />,
+              at: 1,
+              offset: [-0.4, 0, 0],
+              color: labelColor,
+            },
           ],
         },
 
@@ -88,22 +119,42 @@ export function Graph({ title, description }: GraphProps) {
           ...common,
           points: [E, F],
           labels: [
-            { text: "E", at: 0, offset: [-0.2, 0.2, 0.2], color: labelColor },
-            { text: "F", at: 1, offset: [0.2, 0.2, 0.2], color: labelColor },
+            {
+              text: <InlineMath math="E" />,
+              at: 0,
+              offset: [-0.2, 0.2, 0.2],
+              color: labelColor,
+            },
+            {
+              text: <InlineMath math="F" />,
+              at: 1,
+              offset: [0.2, 0.2, 0.2],
+              color: labelColor,
+            },
           ],
         },
         {
           ...common,
           points: [F, G],
           labels: [
-            { text: "G", at: 1, offset: [0.2, 0.2, -0.2], color: labelColor },
+            {
+              text: <InlineMath math="G" />,
+              at: 1,
+              offset: [0.2, 0.2, -0.2],
+              color: labelColor,
+            },
           ],
         },
         {
           ...common,
           points: [G, H],
           labels: [
-            { text: "H", at: 1, offset: [-0.2, 0.2, -0.2], color: labelColor },
+            {
+              text: <InlineMath math="H" />,
+              at: 1,
+              offset: [-0.2, 0.2, -0.2],
+              color: labelColor,
+            },
           ],
         },
         {
@@ -120,7 +171,12 @@ export function Graph({ title, description }: GraphProps) {
           ...common,
           points: [B, getMidpoint(B, F), F],
           labels: [
-            { text: "t = l", at: 1, offset: [0.4, 0, 0], color: labelColor },
+            {
+              text: <InlineMath math="t = l" />,
+              at: 1,
+              offset: [0.4, 0, 0],
+              color: labelColor,
+            },
           ],
         },
         {
@@ -138,7 +194,12 @@ export function Graph({ title, description }: GraphProps) {
           color: highlightColor,
           showPoints: false,
           labels: [
-            { text: "9", at: 1, offset: [0, 0.5, 0], color: highlightColor },
+            {
+              text: <InlineMath math="9" />,
+              at: 1,
+              offset: [0, 0.5, 0],
+              color: highlightColor,
+            },
           ],
         },
         // Diagonal DB (Base Diagonal)

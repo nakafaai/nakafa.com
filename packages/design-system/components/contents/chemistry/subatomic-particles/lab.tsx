@@ -13,7 +13,6 @@ import {
   type SubatomicParticlesModeId,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles/data";
 import { SubatomicParticlesScene } from "@repo/design-system/components/contents/chemistry/subatomic-particles/scene";
-import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
@@ -151,23 +150,9 @@ function LabFact({ fact }: { fact: SubatomicParticlesFact }) {
   return (
     <div className="flex min-h-12 min-w-0 flex-col gap-1">
       <dt className="text-muted-foreground text-sm">{fact.label}</dt>
-      <dd className="wrap-break-word text-foreground">
-        <FactValue fact={fact} />
-      </dd>
+      <dd className="wrap-break-word text-foreground text-sm">{fact.value}</dd>
     </div>
   );
-}
-
-/**
- * Renders mathematical facts with the site math renderer and plain facts as
- * compact body text.
- */
-function FactValue({ fact }: { fact: SubatomicParticlesFact }) {
-  if (fact.math) {
-    return <InlineMath math={fact.value} />;
-  }
-
-  return <span className="text-sm">{fact.value}</span>;
 }
 
 /**

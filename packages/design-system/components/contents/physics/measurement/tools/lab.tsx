@@ -67,7 +67,7 @@ export function MeasurementToolsLab({
   const selectedLabels = labels.tools[selectedToolId];
   const selectedControl = MEASUREMENT_CONTROLS[selectedToolId];
   const selectedMeasurement = measurements[selectedToolId];
-  const selectedReading = formatMeasurement(
+  const selectedReadingMath = formatMeasurement(
     selectedMeasurement,
     selectedControl,
     labels.decimalSeparator
@@ -151,7 +151,7 @@ export function MeasurementToolsLab({
               <MeasurementScene
                 colors={sceneColors}
                 measurement={selectedMeasurement}
-                reading={selectedReading.scene}
+                reading={<InlineMath math={selectedReadingMath} />}
                 selectedToolId={selectedToolId}
               />
             </Suspense>
@@ -164,7 +164,7 @@ export function MeasurementToolsLab({
               <div>{selectedLabels.control}</div>
             </div>
             <div className="shrink-0 tabular-nums">
-              <InlineMath math={selectedReading.math} />
+              <InlineMath math={selectedReadingMath} />
             </div>
           </div>
           <Slider
@@ -189,7 +189,7 @@ export function MeasurementToolsLab({
           />
           <ToolFact
             label={labels.reading}
-            value={<InlineMath math={selectedReading.math} />}
+            value={<InlineMath math={selectedReadingMath} />}
           />
         </dl>
       </CardFooter>

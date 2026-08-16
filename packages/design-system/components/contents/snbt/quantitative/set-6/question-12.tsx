@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ComponentProps } from "react";
 
@@ -24,31 +25,31 @@ export function Graph({
           smooth: false,
           labels: [
             {
-              text: "a°",
+              text: <InlineMath math="a^\circ" />,
               at: 0,
               offset: [0, -1.5, 0],
               color: getColor("INDIGO"),
             },
             {
-              text: "x°",
+              text: <InlineMath math="x^\circ" />,
               at: 1,
               offset: [0.8, 1.2, 0],
               color: getColor("INDIGO"),
             },
             {
-              text: "y°",
+              text: <InlineMath math="y^\circ" />,
               at: 1,
               offset: [1, 0.3, 0],
               color: getColor("INDIGO"),
             },
             {
-              text: "y°",
+              text: <InlineMath math="y^\circ" />,
               at: 2,
               offset: [-0.8, 1.2, 0],
               color: getColor("INDIGO"),
             },
             {
-              text: "x°",
+              text: <InlineMath math="x^\circ" />,
               at: 2,
               offset: [-1, 0.3, 0],
               color: getColor("INDIGO"),
@@ -63,7 +64,7 @@ export function Graph({
           smooth: false,
           labels: [
             {
-              text: "100°",
+              text: <InlineMath math="100^\circ" />,
               at: 1,
               offset: [0, -0.8, 0],
               color: getColor("TEAL"),

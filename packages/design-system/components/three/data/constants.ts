@@ -6,12 +6,6 @@ export const ORIGIN_COLOR = {
   DARK: getColor("ZINC", 900),
 };
 
-/** Font URL used by Drei Text inside WebGL scenes. */
-export const FONT_PATH = "/fonts/Geist-Regular.ttf";
-
-/** Monospace font URL used by technical Three.js labels. */
-export const MONO_FONT_PATH = "/fonts/GeistMono-Regular.ttf";
-
 /** Shared Three.js font sizes in world units, not CSS pixels. */
 export const THREE_FONT_SIZE = {
   marker: 0.08,

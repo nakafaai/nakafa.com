@@ -2,10 +2,11 @@
 
 import { Line } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
-import { SceneLabel } from "@repo/design-system/components/contents/scene-label";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
   isNarrowThreeScene,
   threeSceneFrameVariants,
@@ -78,7 +79,7 @@ const NARROW_CANVAS_ASPECT_RATIO = 1.22;
 
 const MODELS = {
   methane: molecule(
-    "CH\u2084",
+    "\\mathrm{CH_4}",
     [
       atom("c", "C", [0, 0, 0]),
       atom("h1", "H", [0.5541, 0.7996, 0.4965]),
@@ -89,12 +90,12 @@ const MODELS = {
     [bond("c", "h1"), bond("c", "h2"), bond("c", "h3"), bond("c", "h4")]
   ),
   oxygen: molecule(
-    "O\u2082",
+    "\\mathrm{O_2}",
     [atom("o1", "O", [-0.616, 0, 0]), atom("o2", "O", [0.616, 0, 0])],
     [bond("o1", "o2", 2)]
   ),
   carbonDioxide: molecule(
-    "CO\u2082",
+    "\\mathrm{CO_2}",
     [
       atom("o1", "O", [-1.197, 0, 0]),
       atom("c", "C", [0, 0, 0]),
@@ -103,7 +104,7 @@ const MODELS = {
     [bond("o1", "c", 2), bond("o2", "c", 2)]
   ),
   water: molecule(
-    "H\u2082O",
+    "\\mathrm{H_2O}",
     [
       atom("o", "O", [0, 0, 0]),
       atom("h1", "H", [0.2774, 0.8929, 0.2544]),
@@ -123,10 +124,30 @@ const INSTANCES = [
 ] as const;
 
 const FORMULA_LABELS = [
-  { id: "methane", text: "CH\u2084", position: [-2.28, -0.92, 0.36] },
-  { id: "oxygen", text: "2O\u2082", position: [-1.15, -0.92, 0.36] },
-  { id: "carbon-dioxide", text: "CO\u2082", position: [1.12, -0.92, 0.36] },
-  { id: "water", text: "2H\u2082O", position: [2.36, -0.92, 0.36] },
+  {
+    coefficient: 1,
+    id: "methane",
+    modelId: "methane",
+    position: [-2.28, -0.92, 0.36],
+  },
+  {
+    coefficient: 2,
+    id: "oxygen",
+    modelId: "oxygen",
+    position: [-1.15, -0.92, 0.36],
+  },
+  {
+    coefficient: 1,
+    id: "carbon-dioxide",
+    modelId: "carbonDioxide",
+    position: [1.12, -0.92, 0.36],
+  },
+  {
+    coefficient: 2,
+    id: "water",
+    modelId: "water",
+    position: [2.36, -0.92, 0.36],
+  },
 ] as const;
 
 const OPERATOR_LABELS = [
@@ -183,42 +204,44 @@ function CombustionScene({
 }) {
   return (
     <group position={SCENE_POSITION} scale={SCENE_SCALE}>
-      <SceneLabel
+      <ThreeLabel
         color={colors.text}
         fontSize="reading"
         position={[-1.72, 0.92, 0.36]}
       >
         {labels.reactants}
-      </SceneLabel>
-      <SceneLabel
+      </ThreeLabel>
+      <ThreeLabel
         color={colors.text}
         fontSize="reading"
         position={[1.72, 0.92, 0.36]}
       >
         {labels.products}
-      </SceneLabel>
+      </ThreeLabel>
       {INSTANCES.map((item) => (
         <Molecule colors={colors} instance={item} key={item.id} />
       ))}
       {OPERATOR_LABELS.map((label) => (
-        <SceneLabel
+        <ThreeLabel
           color={colors.text}
           fontSize="reading"
           key={label.id}
           position={label.position}
         >
-          {label.text}
-        </SceneLabel>
+          <InlineMath math={label.text} />
+        </ThreeLabel>
       ))}
       {FORMULA_LABELS.map((label) => (
-        <SceneLabel
+        <ThreeLabel
           color={colors.text}
           fontSize="reading"
           key={label.id}
           position={label.position}
         >
-          {label.text}
-        </SceneLabel>
+          <InlineMath
+            math={`${label.coefficient === 1 ? "" : label.coefficient}${MODELS[label.modelId].formula}`}
+          />
+        </ThreeLabel>
       ))}
     </group>
   );

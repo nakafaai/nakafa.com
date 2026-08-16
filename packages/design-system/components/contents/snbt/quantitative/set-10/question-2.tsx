@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ComponentProps } from "react";
 
@@ -49,7 +50,7 @@ export function Graph(
       cone: { position: "both", size: 0.5 },
       labels: [
         {
-          text: "x°",
+          text: <InlineMath math="x^\circ" />,
           at: 1, // Center point
           offset: [-1.2, 0.4, 0], // Adjusted for x position
           color: getColor("TEAL"),
@@ -64,14 +65,14 @@ export function Graph(
       cone: { position: "both", size: 0.5 },
       labels: [
         {
-          text: "y°",
+          text: <InlineMath math="y^\circ" />,
           at: 1, // Center point
           offset: [1.2, 0.4, 0], // Adjusted for y position
           fontSize: 0.6,
           color: getColor("TEAL"),
         },
         {
-          text: "z°",
+          text: <InlineMath math="z^\circ" />,
           at: 1, // Center point
           offset: [0, -0.8, 0], // Adjusted for z position
           fontSize: 0.6,

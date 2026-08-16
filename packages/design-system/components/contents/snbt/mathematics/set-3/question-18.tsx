@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -77,7 +78,7 @@ export function Graph({ title, description, labels }: GraphProps) {
           showPoints: false,
           labels: [
             {
-              text: "16 m",
+              text: <InlineMath math="16\,\text{m}" />,
               at: 1,
               offset: [-labelOffsetX, -labelOffsetY, 0],
               color: getColor("INDIGO"),
@@ -102,7 +103,7 @@ export function Graph({ title, description, labels }: GraphProps) {
               color: getColor("ORANGE"),
             },
             {
-              text: "?",
+              text: <InlineMath math="?" />,
               at: 0,
               offset: [-labelOffsetX, labelOffsetY * 0.7, 0],
               color: getColor("ORANGE"),
@@ -126,7 +127,7 @@ export function Graph({ title, description, labels }: GraphProps) {
           cone: { position: "both" },
           labels: [
             {
-              text: "32 m",
+              text: <InlineMath math="32\,\text{m}" />,
               at: 1,
               offset: [0, -labelOffsetY * 0.4, 0],
               color: getColor("ROSE"),
@@ -174,7 +175,7 @@ export function Graph({ title, description, labels }: GraphProps) {
           cone: { position: "both" },
           labels: [
             {
-              text: "x",
+              text: <InlineMath math="x" />,
               at: 1,
               offset: [0, -labelOffsetY * 0.4, 0],
               color: getColor("CYAN"),
@@ -187,7 +188,7 @@ export function Graph({ title, description, labels }: GraphProps) {
           showPoints: false,
           labels: [
             {
-              text: "30°",
+              text: <InlineMath math="30^\circ" />,
               at: arc30LabelIndex,
               offset: [-labelOffsetX * 0.6, labelOffsetY * 0.05, 0],
               color: getColor("VIOLET"),
@@ -200,7 +201,7 @@ export function Graph({ title, description, labels }: GraphProps) {
           showPoints: false,
           labels: [
             {
-              text: "45°",
+              text: <InlineMath math="45^\circ" />,
               at: arc45LabelIndex,
               offset: [-labelOffsetX * 0.8, labelOffsetY * 0.15, 0],
               color: getColor("EMERALD"),

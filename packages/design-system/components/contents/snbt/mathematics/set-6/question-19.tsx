@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -123,7 +124,7 @@ export function Graph({ title, description, label }: GraphProps) {
           smooth: false,
           labels: [
             {
-              text: "60 m",
+              text: <InlineMath math="60\,\text{m}" />,
               at: 1, // midpoint
               offset: [-1, 0, 0],
               color: COLOR_LABEL,
@@ -138,7 +139,7 @@ export function Graph({ title, description, label }: GraphProps) {
           smooth: false,
           labels: [
             {
-              text: "180 m",
+              text: <InlineMath math="180\,\text{m}" />,
               at: 1,
               offset: [0, -1, 0],
               color: COLOR_LABEL,
@@ -174,7 +175,7 @@ export function Graph({ title, description, label }: GraphProps) {
           smooth: false,
           labels: [
             {
-              text: "a",
+              text: <InlineMath math="a" />,
               at: 0,
               offset: [0, 0, 0],
               color: COLOR_AUX,
@@ -194,7 +195,7 @@ export function Graph({ title, description, label }: GraphProps) {
           smooth: false,
           labels: [
             {
-              text: "a",
+              text: <InlineMath math="a" />,
               at: 0,
               offset: [0, 0, 0],
               color: COLOR_AUX,
@@ -209,7 +210,7 @@ export function Graph({ title, description, label }: GraphProps) {
           smooth: false,
           labels: [
             {
-              text: "173 cm",
+              text: <InlineMath math="173\,\text{cm}" />,
               at: 1,
               offset: [-0.8, 0, 0],
               color: COLOR_LABEL,
@@ -223,7 +224,7 @@ export function Graph({ title, description, label }: GraphProps) {
           smooth: false,
           labels: [
             {
-              text: "173 cm",
+              text: <InlineMath math="173\,\text{cm}" />,
               at: 1,
               offset: [0.8, 0, 0],
               color: COLOR_LABEL,
@@ -237,7 +238,12 @@ export function Graph({ title, description, label }: GraphProps) {
           showPoints: true,
           smooth: false,
           labels: [
-            { text: "A", at: 0, offset: [-0.5, 0.5, 0], color: COLOR_TRIANGLE },
+            {
+              text: <InlineMath math="A" />,
+              at: 0,
+              offset: [-0.5, 0.5, 0],
+              color: COLOR_TRIANGLE,
+            },
           ],
         },
         {
@@ -247,7 +253,7 @@ export function Graph({ title, description, label }: GraphProps) {
           smooth: false,
           labels: [
             {
-              text: "B",
+              text: <InlineMath math="B" />,
               at: 0,
               offset: [-0.5, -0.5, 0],
               color: COLOR_TRIANGLE,
@@ -260,7 +266,12 @@ export function Graph({ title, description, label }: GraphProps) {
           showPoints: true,
           smooth: false,
           labels: [
-            { text: "C", at: 0, offset: [0.5, -0.5, 0], color: COLOR_TRIANGLE },
+            {
+              text: <InlineMath math="C" />,
+              at: 0,
+              offset: [0.5, -0.5, 0],
+              color: COLOR_TRIANGLE,
+            },
           ],
         },
       ]}

@@ -35,8 +35,8 @@ export interface MatterParticleAtom {
 export interface MatterParticleMolecule {
   atoms: readonly MatterParticleAtom[];
   bonds: readonly (readonly [string, string])[];
+  formula: string;
   id: string;
-  label: string;
   position: MatterParticleScenePoint;
   scale?: number;
 }
@@ -100,7 +100,7 @@ export const MATTER_PARTICLE_MODELS = {
     molecules: [
       molecule(
         "oxygen-molecule",
-        "O\u2082",
+        "\\mathrm{O_2}",
         [-0.62, -0.04, 0],
         [
           atom("oxygen-molecule-left", "oxygen", [-0.16, 0, 0.02]),
@@ -109,7 +109,7 @@ export const MATTER_PARTICLE_MODELS = {
       ),
       molecule(
         "nitrogen-molecule",
-        "N\u2082",
+        "\\mathrm{N_2}",
         [0.62, -0.04, 0],
         [
           atom("nitrogen-molecule-left", "nitrogen", [-0.16, 0, 0.02]),
@@ -122,7 +122,7 @@ export const MATTER_PARTICLE_MODELS = {
     molecules: [
       molecule(
         "water-molecule",
-        "H\u2082O",
+        "\\mathrm{H_2O}",
         [-0.62, -0.04, 0],
         [
           atom("water-o", "oxygen", [0, 0.04, 0]),
@@ -134,7 +134,7 @@ export const MATTER_PARTICLE_MODELS = {
       ),
       molecule(
         "carbon-dioxide-molecule",
-        "CO\u2082",
+        "\\mathrm{CO_2}",
         [0.62, -0.04, 0],
         [
           atom("carbon-dioxide-o-left", "oxygen", [-0.32, 0, 0.03]),
@@ -200,7 +200,7 @@ function atomCluster(
 
 function molecule(
   id: string,
-  label: string,
+  formula: string,
   position: MatterParticleScenePoint,
   atoms: readonly MatterParticleAtom[],
   bonds: readonly (readonly [string, string])[] = defaultBonds(atoms),
@@ -209,8 +209,8 @@ function molecule(
   return {
     atoms,
     bonds,
+    formula,
     id,
-    label,
     position,
     scale,
   };

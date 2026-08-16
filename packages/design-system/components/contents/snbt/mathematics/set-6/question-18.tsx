@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -97,7 +98,7 @@ export function Graph({ title, description }: GraphProps) {
           lineWidth: 3,
           labels: [
             {
-              text: "DF",
+              text: <InlineMath math="DF" />,
               at: 1, // Midpoint index
               offset: [0.5, 0.5, 0],
               color: COLOR_LABEL,
@@ -113,7 +114,7 @@ export function Graph({ title, description }: GraphProps) {
           lineWidth: 3,
           labels: [
             {
-              text: "HF",
+              text: <InlineMath math="HF" />,
               at: 1, // Midpoint index
               offset: [0, 0.5, 0],
               color: COLOR_LABEL,
@@ -128,7 +129,7 @@ export function Graph({ title, description }: GraphProps) {
           showPoints: true,
           labels: [
             {
-              text: "D",
+              text: <InlineMath math="D" />,
               at: 0,
               offset: [-0.5, -0.5, -0.5],
               color: COLOR_LABEL,
@@ -140,7 +141,12 @@ export function Graph({ title, description }: GraphProps) {
           color: COLOR_LABEL,
           showPoints: true,
           labels: [
-            { text: "H", at: 0, offset: [-0.5, 0.5, -0.5], color: COLOR_LABEL },
+            {
+              text: <InlineMath math="H" />,
+              at: 0,
+              offset: [-0.5, 0.5, -0.5],
+              color: COLOR_LABEL,
+            },
           ],
         },
         {
@@ -148,7 +154,12 @@ export function Graph({ title, description }: GraphProps) {
           color: COLOR_LABEL,
           showPoints: true,
           labels: [
-            { text: "F", at: 0, offset: [0.5, 0.5, 0.5], color: COLOR_LABEL },
+            {
+              text: <InlineMath math="F" />,
+              at: 0,
+              offset: [0.5, 0.5, 0.5],
+              color: COLOR_LABEL,
+            },
           ],
         },
         {
@@ -156,7 +167,12 @@ export function Graph({ title, description }: GraphProps) {
           color: COLOR_CUBE,
           showPoints: true,
           labels: [
-            { text: "A", at: 0, offset: [-0.5, -0.5, 0.5], color: COLOR_CUBE },
+            {
+              text: <InlineMath math="A" />,
+              at: 0,
+              offset: [-0.5, -0.5, 0.5],
+              color: COLOR_CUBE,
+            },
           ],
         },
         {
@@ -164,7 +180,12 @@ export function Graph({ title, description }: GraphProps) {
           color: COLOR_CUBE,
           showPoints: true,
           labels: [
-            { text: "B", at: 0, offset: [0.5, -0.5, 0.5], color: COLOR_CUBE },
+            {
+              text: <InlineMath math="B" />,
+              at: 0,
+              offset: [0.5, -0.5, 0.5],
+              color: COLOR_CUBE,
+            },
           ],
         },
         {
@@ -172,7 +193,12 @@ export function Graph({ title, description }: GraphProps) {
           color: COLOR_CUBE,
           showPoints: true,
           labels: [
-            { text: "C", at: 0, offset: [0.5, -0.5, -0.5], color: COLOR_CUBE },
+            {
+              text: <InlineMath math="C" />,
+              at: 0,
+              offset: [0.5, -0.5, -0.5],
+              color: COLOR_CUBE,
+            },
           ],
         },
         {
@@ -180,7 +206,12 @@ export function Graph({ title, description }: GraphProps) {
           color: COLOR_CUBE,
           showPoints: true,
           labels: [
-            { text: "E", at: 0, offset: [-0.5, 0.5, 0.5], color: COLOR_CUBE },
+            {
+              text: <InlineMath math="E" />,
+              at: 0,
+              offset: [-0.5, 0.5, 0.5],
+              color: COLOR_CUBE,
+            },
           ],
         },
         {
@@ -188,7 +219,12 @@ export function Graph({ title, description }: GraphProps) {
           color: COLOR_CUBE,
           showPoints: true,
           labels: [
-            { text: "G", at: 0, offset: [0.5, 0.5, -0.5], color: COLOR_CUBE },
+            {
+              text: <InlineMath math="G" />,
+              at: 0,
+              offset: [0.5, 0.5, -0.5],
+              color: COLOR_CUBE,
+            },
           ],
         },
       ]}

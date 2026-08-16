@@ -1,4 +1,5 @@
 import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -104,13 +105,13 @@ export function Graph({ title, description }: GraphProps) {
           lineWidth: 2,
           labels: [
             {
-              text: "h₁",
+              text: <InlineMath math="h_1" />,
               at: 0,
               offset: [0.2, H1 / 2, 0],
               color: COLOR_LABEL,
             },
             {
-              text: "P₁",
+              text: <InlineMath math="P_1" />,
               at: 0,
               offset: [0, -0.5, 0],
               color: COLOR_LABEL,
@@ -125,7 +126,7 @@ export function Graph({ title, description }: GraphProps) {
           lineWidth: 2,
           labels: [
             {
-              text: "R₁",
+              text: <InlineMath math="R_1" />,
               at: 0,
               offset: [R1 / 2, -0.5, 0],
               color: COLOR_LABEL,
@@ -155,13 +156,13 @@ export function Graph({ title, description }: GraphProps) {
           lineWidth: 2,
           labels: [
             {
-              text: "h₂",
+              text: <InlineMath math="h_2" />,
               at: 0,
               offset: [0.2, H2 / 2, 0],
               color: COLOR_LABEL,
             },
             {
-              text: "P₂",
+              text: <InlineMath math="P_2" />,
               at: 0,
               offset: [0, -0.5, 0],
               color: COLOR_LABEL,
@@ -176,7 +177,7 @@ export function Graph({ title, description }: GraphProps) {
           lineWidth: 2,
           labels: [
             {
-              text: "R₂",
+              text: <InlineMath math="R_2" />,
               at: 0,
               offset: [R2 / 2, -0.5, 0],
               color: COLOR_LABEL,

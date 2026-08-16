@@ -25,8 +25,8 @@ export interface ConstantCompositionModeLabels {
   helperCaption: ReactNode;
   leftover: ReactNode;
   ratio: ReactNode;
-  readoutAfter: string;
-  readoutBefore: string;
+  readoutAfter: ReactNode;
+  readoutBefore: ReactNode;
   tab: ReactNode;
   tabLabel: string;
 }

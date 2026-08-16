@@ -46,11 +46,6 @@ interface Props {
   children?: ReactNode;
   /** Additional class name */
   className?: string;
-  /** Font to use for labels and text
-   *
-   * @default "mono"
-   */
-  font?: "mono" | "sans";
   /** Divisions of the grid */
   gridDivisions?: number;
   /** Size of the grid */
@@ -85,7 +80,6 @@ export function CoordinateSystem({
   backgroundColor = "transparent",
   cameraPosition = [CAMERA_POSITION_X, CAMERA_POSITION_Y, CAMERA_POSITION_Z],
   cameraTarget,
-  font = "mono",
   children,
   className,
 }: Props) {
@@ -198,7 +192,6 @@ export function CoordinateSystem({
 
           {/* Coordinate System */}
           <Axes
-            font={font}
             showLabels={showLabels}
             showZAxis={showZAxis}
             size={size}
@@ -260,7 +253,7 @@ export function CoordinateSystem({
       {/* UI Controls */}
       <div
         className={cn(
-          "absolute bottom-3 left-3 flex gap-2 transition-opacity duration-300 ease-out",
+          "absolute bottom-3 left-3 z-10 flex gap-2 transition-opacity duration-300 ease-out",
           sceneReady ? "opacity-100" : "opacity-0"
         )}
       >
