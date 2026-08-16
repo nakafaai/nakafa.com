@@ -30,36 +30,80 @@ export interface BacteriaLabItem extends BiologyLabItem {
   scene: BacteriaScene;
 }
 
+const LEGACY_SHAPE_SCENE = {
+  bacillusLabel: "Basilus",
+  coccusLabel: "Kokus",
+  kind: "shape",
+  spiralLabel: "Spiral",
+} satisfies BacteriaScene;
+
+const LEGACY_STRUCTURE_SCENE = {
+  kind: "structure",
+  nucleoidDnaLabel: "Nukleoid DNA",
+} satisfies BacteriaScene;
+
+const LEGACY_WALL_SCENE = {
+  gramNegativeLabel: "Gram negatif",
+  gramPositiveLabel: "Gram positif",
+  kind: "wall",
+} satisfies BacteriaScene;
+
+/**
+ * Keeps already signed content renderable while new authoring supplies the
+ * required locale-owned scene labels.
+ */
+function resolveBacteriaScene(
+  item: BacteriaLabItem,
+  selectedIndex: number
+): BacteriaScene {
+  if ("scene" in item) {
+    return item.scene;
+  }
+
+  if (selectedIndex === 1) {
+    return LEGACY_STRUCTURE_SCENE;
+  }
+
+  if (selectedIndex === 2) {
+    return LEGACY_WALL_SCENE;
+  }
+
+  return LEGACY_SHAPE_SCENE;
+}
+
 /** Uses distinct scenes for morphology, inner anatomy, and Gram wall logic. */
 export function BacteriaStructureScene({
   colors,
   item,
+  selectedIndex,
 }: BiologySceneProps<BacteriaLabItem>) {
-  if (item.scene.kind === "structure") {
+  const scene = resolveBacteriaScene(item, selectedIndex);
+
+  if (scene.kind === "structure") {
     return (
       <BacterialStructure
         colors={colors}
-        nucleoidDnaLabel={item.scene.nucleoidDnaLabel}
+        nucleoidDnaLabel={scene.nucleoidDnaLabel}
       />
     );
   }
 
-  if (item.scene.kind === "wall") {
+  if (scene.kind === "wall") {
     return (
       <GramWallComparison
         colors={colors}
-        gramNegativeLabel={item.scene.gramNegativeLabel}
-        gramPositiveLabel={item.scene.gramPositiveLabel}
+        gramNegativeLabel={scene.gramNegativeLabel}
+        gramPositiveLabel={scene.gramPositiveLabel}
       />
     );
   }
 
   return (
     <BacterialShapes
-      bacillusLabel={item.scene.bacillusLabel}
-      coccusLabel={item.scene.coccusLabel}
+      bacillusLabel={scene.bacillusLabel}
+      coccusLabel={scene.coccusLabel}
       colors={colors}
-      spiralLabel={item.scene.spiralLabel}
+      spiralLabel={scene.spiralLabel}
     />
   );
 }
