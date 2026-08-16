@@ -41,6 +41,7 @@ export function ChemistryParticleLabel({
     <ThreeLabel
       color={color}
       fontSize={fontSize}
+      occlude
       outlineColor={outlineColor}
       outlineWidth={outlineWidth}
       position={position}

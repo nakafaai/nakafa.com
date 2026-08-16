@@ -324,7 +324,7 @@ export function Triangle({
         color={COLORS.ROSE}
         fontSize={BASE_FONT_SIZE}
         position={labelPositions.hypotenuseLabelPos}
-        rotation={hypotenuseLabelRotation}
+        rotation={-hypotenuseLabelRotation}
       >
         {labels.hypotenuse}
       </ThreeLabel>

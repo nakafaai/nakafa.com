@@ -4,82 +4,62 @@ import { BacterialShapes } from "@repo/design-system/components/contents/biology
 import { BacterialStructure } from "@repo/design-system/components/contents/biology/bacteria-structure";
 import { GramWallComparison } from "@repo/design-system/components/contents/biology/bacteria-wall";
 import type {
-  BiologyLabCallout,
+  BiologyLabItem,
   BiologySceneProps,
 } from "@repo/design-system/components/contents/biology/data";
+import type { ReactNode } from "react";
 
-const BACTERIA_CALLOUT_ID = {
-  bacillus: "bacillus",
-  coccus: "coccus",
-  gramNegative: "gram-negative",
-  gramPositive: "gram-positive",
-  nucleoidDna: "nucleoid-dna",
-  spiral: "spiral",
-} as const;
+type BacteriaScene =
+  | {
+      bacillusLabel: ReactNode;
+      coccusLabel: ReactNode;
+      kind: "shape";
+      spiralLabel: ReactNode;
+    }
+  | {
+      kind: "structure";
+      nucleoidDnaLabel: ReactNode;
+    }
+  | {
+      gramNegativeLabel: ReactNode;
+      gramPositiveLabel: ReactNode;
+      kind: "wall";
+    };
+
+export interface BacteriaLabItem extends BiologyLabItem {
+  scene: BacteriaScene;
+}
 
 /** Uses distinct scenes for morphology, inner anatomy, and Gram wall logic. */
 export function BacteriaStructureScene({
   colors,
   item,
-  selectedIndex,
-}: BiologySceneProps) {
-  if (selectedIndex === 1) {
+}: BiologySceneProps<BacteriaLabItem>) {
+  if (item.scene.kind === "structure") {
     return (
       <BacterialStructure
         colors={colors}
-        nucleoidDnaLabel={requireCalloutLabel(
-          item.callouts,
-          BACTERIA_CALLOUT_ID.nucleoidDna
-        )}
+        nucleoidDnaLabel={item.scene.nucleoidDnaLabel}
       />
     );
   }
 
-  if (selectedIndex === 2) {
+  if (item.scene.kind === "wall") {
     return (
       <GramWallComparison
         colors={colors}
-        gramNegativeLabel={requireCalloutLabel(
-          item.callouts,
-          BACTERIA_CALLOUT_ID.gramNegative
-        )}
-        gramPositiveLabel={requireCalloutLabel(
-          item.callouts,
-          BACTERIA_CALLOUT_ID.gramPositive
-        )}
+        gramNegativeLabel={item.scene.gramNegativeLabel}
+        gramPositiveLabel={item.scene.gramPositiveLabel}
       />
     );
   }
 
   return (
     <BacterialShapes
-      bacillusLabel={requireCalloutLabel(
-        item.callouts,
-        BACTERIA_CALLOUT_ID.bacillus
-      )}
-      coccusLabel={requireCalloutLabel(
-        item.callouts,
-        BACTERIA_CALLOUT_ID.coccus
-      )}
+      bacillusLabel={item.scene.bacillusLabel}
+      coccusLabel={item.scene.coccusLabel}
       colors={colors}
-      spiralLabel={requireCalloutLabel(
-        item.callouts,
-        BACTERIA_CALLOUT_ID.spiral
-      )}
+      spiralLabel={item.scene.spiralLabel}
     />
   );
-}
-
-/** Returns one required localized scene label by its stable model identity. */
-function requireCalloutLabel(
-  callouts: readonly BiologyLabCallout[] | undefined,
-  id: string
-) {
-  const callout = callouts?.find((candidate) => candidate.id === id);
-
-  if (!callout) {
-    throw new Error(`Missing bacteria scene label: ${id}`);
-  }
-
-  return callout.label;
 }

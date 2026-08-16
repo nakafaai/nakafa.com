@@ -18,17 +18,19 @@ export interface BiologyLabItem {
   takeaway: ReactNode;
 }
 
-export interface BiologyLabLabels {
+export interface BiologyLabLabels<
+  Item extends BiologyLabItem = BiologyLabItem,
+> {
   chooseMode: string;
   focusLabel: string;
-  items: readonly [BiologyLabItem, ...BiologyLabItem[]];
+  items: readonly [Item, ...Item[]];
   takeawayLabel: string;
   viewLabel: string;
 }
 
-export interface BiologyLabProps {
+export interface BiologyLabProps<Item extends BiologyLabItem = BiologyLabItem> {
   description: ReactNode;
-  labels: BiologyLabLabels;
+  labels: BiologyLabLabels<Item>;
   title: ReactNode;
 }
 
@@ -69,9 +71,11 @@ export interface BiologySceneView {
   narrowCameraPosition: BiologyScenePoint;
 }
 
-export interface BiologySceneProps {
+export interface BiologySceneProps<
+  Item extends BiologyLabItem = BiologyLabItem,
+> {
   colors: BiologySceneColors;
-  item: BiologyLabItem;
+  item: Item;
   selectedIndex: number;
 }
 

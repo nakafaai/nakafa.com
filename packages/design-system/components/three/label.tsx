@@ -1,15 +1,16 @@
 "use client";
 
-import { Html } from "@react-three/drei";
+import { Billboard, Html } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import {
   resolveThreeFontSize,
   type ThreeFontSize,
 } from "@repo/design-system/components/three/data/constants";
-import type { ComponentProps, ReactNode } from "react";
+import { type ComponentProps, type ReactNode, useEffect } from "react";
 import { Color } from "three";
 
 type HtmlProps = ComponentProps<typeof Html>;
+type BillboardProps = ComponentProps<typeof Billboard>;
 type LabelAnchorX = "center" | "left" | "right";
 type LabelAnchorY = "bottom" | "middle" | "top";
 
@@ -19,9 +20,11 @@ interface ThreeLabelProps {
   children: ReactNode;
   color: string | Color;
   fontSize?: ThreeFontSize | number;
+  /** Enables scene-aware depth occlusion for labels attached to geometry. */
+  occlude?: HtmlProps["occlude"];
   outlineColor?: string;
   outlineWidth?: number;
-  position: HtmlProps["position"];
+  position: BillboardProps["position"];
   /** Screen-plane rotation in radians. */
   rotation?: number;
   visible?: boolean;
@@ -42,6 +45,10 @@ function anchorOffset(anchor: LabelAnchorX | LabelAnchorY) {
   return "-50%";
 }
 
+function anchorOrigin(anchor: LabelAnchorX | LabelAnchorY) {
+  return anchor === "middle" ? "center" : anchor;
+}
+
 /**
  * Renders semantic React content at one camera-facing Three.js world position.
  *
@@ -60,44 +67,55 @@ export function ThreeLabel({
   fontSize = "annotation",
   outlineColor,
   outlineWidth = 0,
+  occlude,
   position,
   rotation = 0,
   visible = true,
 }: ThreeLabelProps) {
   const canvasHeight = useThree((state) => state.size.height);
+  const invalidate = useThree((state) => state.invalidate);
   const labelColor = color instanceof Color ? color.getStyle() : color;
   const worldFontSize = resolveThreeFontSize(fontSize);
   const distanceFactor = (worldFontSize * canvasHeight) / LABEL_BASE_FONT_SIZE;
   const outlineWidthEm = worldFontSize > 0 ? outlineWidth / worldFontSize : 0;
+
+  // Drei mounts Html through a separate React root, so demand-mode canvases
+  // need one frame after each label render to apply its final world matrix.
+  useEffect(() => {
+    invalidate();
+  });
 
   if (!visible) {
     return null;
   }
 
   return (
-    <Html
-      aria-hidden="true"
-      distanceFactor={distanceFactor}
-      position={position}
-      style={{
-        WebkitTextStroke:
-          outlineColor && outlineWidthEm > 0
-            ? `${outlineWidthEm}em ${outlineColor}`
-            : undefined,
-        color: labelColor,
-        fontFamily: "var(--font-mono)",
-        fontSize: LABEL_BASE_FONT_SIZE,
-        lineHeight: 1,
-        paintOrder: "stroke fill",
-        pointerEvents: "none",
-        transform: `translate(${anchorOffset(anchorX)}, ${anchorOffset(anchorY)}) rotate(${rotation}rad)`,
-        transformOrigin: "center",
-        userSelect: "none",
-        whiteSpace: "nowrap",
-      }}
-      zIndexRange={LABEL_Z_INDEX_RANGE}
-    >
-      {children}
-    </Html>
+    <Billboard position={position}>
+      <Html
+        distanceFactor={distanceFactor}
+        occlude={occlude}
+        pointerEvents="none"
+        style={{
+          WebkitTextStroke:
+            outlineColor && outlineWidthEm > 0
+              ? `${outlineWidthEm}em ${outlineColor}`
+              : undefined,
+          color: labelColor,
+          fontFamily: "var(--font-mono)",
+          fontSize: LABEL_BASE_FONT_SIZE,
+          lineHeight: 1,
+          paintOrder: "stroke fill",
+          pointerEvents: "none",
+          transform: `translate(${anchorOffset(anchorX)}, ${anchorOffset(anchorY)}) rotate(${rotation}rad)`,
+          transformOrigin: `${anchorOrigin(anchorX)} ${anchorOrigin(anchorY)}`,
+          userSelect: "none",
+          whiteSpace: "nowrap",
+        }}
+        transform
+        zIndexRange={LABEL_Z_INDEX_RANGE}
+      >
+        <span aria-hidden="true">{children}</span>
+      </Html>
+    </Billboard>
   );
 }
