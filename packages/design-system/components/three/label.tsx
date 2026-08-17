@@ -1,6 +1,6 @@
 "use client";
 
-import { Billboard, Html } from "@react-three/drei";
+import { Html } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import {
   resolveThreeFontSize,
@@ -10,7 +10,6 @@ import { type ComponentProps, type ReactNode, useEffect } from "react";
 import { Color } from "three";
 
 type HtmlProps = ComponentProps<typeof Html>;
-type BillboardProps = ComponentProps<typeof Billboard>;
 type LabelAnchorX = "center" | "left" | "right";
 type LabelAnchorY = "bottom" | "middle" | "top";
 
@@ -24,7 +23,7 @@ interface ThreeLabelProps {
   occlude?: HtmlProps["occlude"];
   outlineColor?: string;
   outlineWidth?: number;
-  position: BillboardProps["position"];
+  position: HtmlProps["position"];
   /** Screen-plane rotation in radians. */
   rotation?: number;
   visible?: boolean;
@@ -90,32 +89,29 @@ export function ThreeLabel({
   }
 
   return (
-    <Billboard position={position}>
-      <Html
-        distanceFactor={distanceFactor}
-        occlude={occlude}
-        pointerEvents="none"
-        style={{
-          WebkitTextStroke:
-            outlineColor && outlineWidthEm > 0
-              ? `${outlineWidthEm}em ${outlineColor}`
-              : undefined,
-          color: labelColor,
-          fontFamily: "var(--font-mono)",
-          fontSize: LABEL_BASE_FONT_SIZE,
-          lineHeight: 1,
-          paintOrder: "stroke fill",
-          pointerEvents: "none",
-          transform: `translate(${anchorOffset(anchorX)}, ${anchorOffset(anchorY)}) rotate(${rotation}rad)`,
-          transformOrigin: `${anchorOrigin(anchorX)} ${anchorOrigin(anchorY)}`,
-          userSelect: "none",
-          whiteSpace: "nowrap",
-        }}
-        transform
-        zIndexRange={LABEL_Z_INDEX_RANGE}
-      >
-        <span aria-hidden="true">{children}</span>
-      </Html>
-    </Billboard>
+    <Html
+      distanceFactor={distanceFactor}
+      occlude={occlude}
+      position={position}
+      style={{
+        WebkitTextStroke:
+          outlineColor && outlineWidthEm > 0
+            ? `${outlineWidthEm}em ${outlineColor}`
+            : undefined,
+        color: labelColor,
+        fontFamily: "var(--font-mono)",
+        fontSize: LABEL_BASE_FONT_SIZE,
+        lineHeight: 1,
+        paintOrder: "stroke fill",
+        pointerEvents: "none",
+        transform: `translate(${anchorOffset(anchorX)}, ${anchorOffset(anchorY)}) rotate(${rotation}rad)`,
+        transformOrigin: `${anchorOrigin(anchorX)} ${anchorOrigin(anchorY)}`,
+        userSelect: "none",
+        whiteSpace: "nowrap",
+      }}
+      zIndexRange={LABEL_Z_INDEX_RANGE}
+    >
+      <span aria-hidden="true">{children}</span>
+    </Html>
   );
 }

@@ -28,6 +28,12 @@ export function Graph({
               offset: [-1, 0, 0],
               color: getColor("INDIGO"),
             },
+            {
+              text: <InlineMath math="Q" />,
+              at: 2,
+              offset: [0, 1, 0],
+              color: getColor("INDIGO"),
+            },
           ],
           showPoints: false,
         },
@@ -73,19 +79,6 @@ export function Graph({
           ],
           showPoints: false,
         },
-        // Label Q
-        {
-          points: [
-            { x: -5, y: 4, z: 0 },
-            { x: -5, y: 4, z: 0 },
-          ], // Point above top
-          color: "transparent",
-          labels: [
-            { text: <InlineMath math="Q" />, at: 0, color: getColor("INDIGO") },
-          ],
-          showPoints: false,
-        },
-
         // Triangle R (Right)
         // Left side: (2, -2) to (5, 3)
         {
@@ -100,6 +93,12 @@ export function Graph({
               text: <InlineMath math="13" />,
               at: 1,
               offset: [-1, 0, 0],
+              color: getColor("TEAL"),
+            },
+            {
+              text: <InlineMath math="R" />,
+              at: 2,
+              offset: [0, 1, 0],
               color: getColor("TEAL"),
             },
           ],
@@ -144,18 +143,6 @@ export function Graph({
               offset: [0, 1.5, 0],
               color: getColor("TEAL"),
             }, // Center label
-          ],
-          showPoints: false,
-        },
-        // Label R
-        {
-          points: [
-            { x: 5, y: 4, z: 0 },
-            { x: 5, y: 4, z: 0 },
-          ], // Point above top
-          color: "transparent",
-          labels: [
-            { text: <InlineMath math="R" />, at: 0, color: getColor("TEAL") },
           ],
           showPoints: false,
         },
