@@ -169,7 +169,7 @@ export function NumberLine({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="mx-auto">
+        <div className="w-full">
           <div className="relative h-20 w-full">
             {processedSegments.map((segment) => (
               <div key={`bg-${segment.start}-${segment.end}-${segment.index}`}>
