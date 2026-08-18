@@ -237,16 +237,17 @@ export function CoordinateSystem({
           {children}
 
           {/* Orientation Helper */}
-          <GizmoHelper
-            alignment="bottom-right"
-            margin={[GIZMO_MARGIN, GIZMO_MARGIN]}
-            visible={showGizmo}
-          >
-            <GizmoViewport
-              axisColors={[COLORS.RED, COLORS.GREEN, COLORS.BLUE]}
-              labelColor={ORIGIN_COLOR.LIGHT}
-            />
-          </GizmoHelper>
+          {showGizmo ? (
+            <GizmoHelper
+              alignment="bottom-right"
+              margin={[GIZMO_MARGIN, GIZMO_MARGIN]}
+            >
+              <GizmoViewport
+                axisColors={[COLORS.RED, COLORS.GREEN, COLORS.BLUE]}
+                labelColor={ORIGIN_COLOR.LIGHT}
+              />
+            </GizmoHelper>
+          ) : null}
         </Suspense>
       </ThreeCanvas>
 
