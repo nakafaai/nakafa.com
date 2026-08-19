@@ -1,6 +1,6 @@
 ---
 name: next-cache-components
-description: Next.js 16 Cache Components guidance - PPR, use cache directive, cacheLife, cacheTag, updateTag, and migration from unstable_cache. Use when implementing partial prerendering, caching strategies, or migrating from older Next.js cache patterns.
+description: Next.js 16 Cache Components guidance — PPR, use cache directive, cacheLife, cacheTag, updateTag, and migration from unstable_cache. Use when implementing partial prerendering, caching strategies, or migrating from older Next.js cache patterns.
 metadata:
   priority: 6
   docs:
@@ -40,42 +40,42 @@ metadata:
   validate:
     -
       pattern: 'unstable_cache\s*\('
-      message: 'unstable_cache is deprecated in Next.js 16 - use the "use cache" directive with cacheTag() and cacheLife() instead'
+      message: 'unstable_cache is deprecated in Next.js 16 — use the "use cache" directive with cacheTag() and cacheLife() instead'
       severity: recommended
       upgradeToSkill: next-cache-components
       upgradeWhy: 'Guides migration from unstable_cache to use cache directive with cacheTag and cacheLife.'
     -
       pattern: '\bcacheHandler\s*:'
-      message: 'Singular cacheHandler is deprecated in Next.js 16 - use cacheHandlers (plural) with per-type handlers'
+      message: 'Singular cacheHandler is deprecated in Next.js 16 — use cacheHandlers (plural) with per-type handlers'
       severity: recommended
     -
       pattern: revalidateTag\(\s*['"][^'"]+['"]\s*\)
-      message: 'Single-arg revalidateTag(tag) is deprecated in Next.js 16 - pass a cacheLife profile: revalidateTag(tag, "max")'
+      message: 'Single-arg revalidateTag(tag) is deprecated in Next.js 16 — pass a cacheLife profile: revalidateTag(tag, "max")'
       severity: recommended
-  retrieval:
-    aliases:
-      - cache components
-      - partial prerendering
-      - PPR
-      - use cache
-    intents:
-      - enable partial prerendering in Next.js
-      - cache async data with use cache directive
-      - invalidate cache with cacheTag
-      - migrate from unstable_cache
-    entities:
-      - use cache
-      - cacheLife
-      - cacheTag
-      - updateTag
-      - revalidateTag
-      - PPR
-  chainTo:
-    -
-      pattern: 'use cache'
-      targetSkill: nextjs
-      message: 'Cache component detected - loading Next.js best practices for RSC boundaries and data patterns alongside caching.'
-      skipIfFileContains: 'next-best-practices'
+retrieval:
+  aliases:
+    - cache components
+    - partial prerendering
+    - PPR
+    - use cache
+  intents:
+    - enable partial prerendering in Next.js
+    - cache async data with use cache directive
+    - invalidate cache with cacheTag
+    - migrate from unstable_cache
+  entities:
+    - use cache
+    - cacheLife
+    - cacheTag
+    - updateTag
+    - revalidateTag
+    - PPR
+chainTo:
+  -
+    pattern: 'use cache'
+    targetSkill: nextjs
+    message: 'Cache component detected — loading Next.js best practices for RSC boundaries and data patterns alongside caching.'
+    skipIfFileContains: 'next-best-practices'
 
 ---
 

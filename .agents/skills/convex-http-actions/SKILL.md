@@ -1,11 +1,10 @@
 ---
 name: convex-http-actions
+displayName: Convex HTTP Actions
 description: External API integration and webhook handling including HTTP endpoint routing, request/response handling, authentication, CORS configuration, and webhook signature validation
-metadata:
-  displayName: Convex HTTP Actions
-  version: "1.0.0"
-  author: Convex
-  tags: "convex, http, actions, webhooks, api, endpoints"
+version: 1.0.0
+author: Convex
+tags: [convex, http, actions, webhooks, api, endpoints]
 ---
 
 # Convex HTTP Actions
@@ -73,10 +72,10 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     // Parse JSON body
     const body = await request.json();
-
+    
     // Access headers
     const authHeader = request.headers.get("Authorization");
-
+    
     // Access URL parameters
     const url = new URL(request.url);
     const queryParam = url.searchParams.get("filter");
@@ -117,7 +116,7 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     const bytes = await request.bytes();
     const contentType = request.headers.get("Content-Type") ?? "application/octet-stream";
-
+    
     // Store in Convex storage
     const blob = new Blob([bytes], { type: contentType });
     const storageId = await ctx.storage.store(blob);
@@ -263,7 +262,7 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     const event = request.headers.get("X-GitHub-Event");
     const signature = request.headers.get("X-Hub-Signature-256");
-
+    
     if (!signature) {
       return new Response("Missing signature", { status: 400 });
     }
@@ -350,7 +349,7 @@ http.route({
   method: "GET",
   handler: httpAction(async (ctx, request) => {
     const apiKey = request.headers.get("X-API-Key");
-
+    
     if (!apiKey) {
       return new Response(
         JSON.stringify({ error: "Missing API key" }),
@@ -386,7 +385,7 @@ http.route({
   method: "GET",
   handler: httpAction(async (ctx, request) => {
     const authHeader = request.headers.get("Authorization");
-
+    
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
         JSON.stringify({ error: "Missing or invalid Authorization header" }),

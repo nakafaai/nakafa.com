@@ -1,6 +1,6 @@
 # Transactional Email Best Practices
 
-Clear, actionable emails that users expect and need - password resets, confirmations, OTPs.
+Clear, actionable emails that users expect and need—password resets, confirmations, OTPs.
 
 ## Core Principles
 

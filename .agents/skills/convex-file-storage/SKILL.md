@@ -1,11 +1,10 @@
 ---
 name: convex-file-storage
+displayName: Convex File Storage
 description: Complete file handling including upload flows, serving files via URL, storing generated files from actions, deletion, and accessing file metadata from system tables
-metadata:
-  displayName: Convex File Storage
-  version: "1.0.0"
-  author: Convex
-  tags: "convex, file-storage, uploads, images, files"
+version: 1.0.0
+author: Convex
+tags: [convex, file-storage, uploads, images, files]
 ---
 
 # Convex File Storage
@@ -160,7 +159,7 @@ export const getFile = query({
     if (!file) return null;
 
     const url = await ctx.storage.getUrl(file.storageId);
-
+    
     return {
       _id: file._id,
       fileName: file.fileName,
@@ -382,7 +381,7 @@ function ImageUploader({ onUpload }: { onUpload: (id: Id<"files">) => void }) {
         onChange={handleFileSelect}
         style={{ display: "none" }}
       />
-
+      
       <button
         onClick={() => inputRef.current?.click()}
         disabled={uploading}

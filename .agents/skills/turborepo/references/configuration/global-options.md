@@ -152,7 +152,7 @@ Enable experimental OpenTelemetry exporter support: honors the `experimentalObse
 
 ### `affectedUsingTaskInputs`
 
-Use task-level `inputs` globs to determine which tasks `--affected` selects - only tasks whose declared inputs match the changed files, rather than all tasks in changed packages.
+Use task-level `inputs` globs to determine which tasks `--affected` selects — only tasks whose declared inputs match the changed files, rather than all tasks in changed packages.
 
 ### `githubActionsRemoteBaseRefFallback`
 
@@ -181,7 +181,7 @@ Moves global configuration keys under a top-level `global` key for clarity and c
 When enabled:
 
 - Global config keys move under `global` with cleaner names
-- `global.inputs` files are **prepended to every task's inputs** instead of being folded into the global hash - tasks can opt out of specific global inputs using negation globs
+- `global.inputs` files are **prepended to every task's inputs** instead of being folded into the global hash — tasks can opt out of specific global inputs using negation globs
 
 ```json
 {
@@ -216,7 +216,7 @@ When enabled:
 
 **Behavior change for `global.inputs`:**
 
-With `globalDependencies` (old): files are hashed into the **global hash**, which is embedded in every task's cache key. Changing any of these files invalidates all tasks - there is no opt-out.
+With `globalDependencies` (old): files are hashed into the **global hash**, which is embedded in every task's cache key. Changing any of these files invalidates all tasks — there is no opt-out.
 
 With `global.inputs` (new): files are treated as **implicit task inputs** prepended to each task's `inputs` globs. This means:
 

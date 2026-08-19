@@ -3,7 +3,7 @@ name: convex-billing
 description: "Add Stripe billing/payments to the Convex app via @convex-dev/stripe (checkout + webhook + gating)."
 ---
 
-<!-- GENERATED from convex-agents content/capabilities/billing.json - do not edit by hand. -->
+<!-- GENERATED from convex-agents content/capabilities/billing.json — do not edit by hand. -->
 
 # Add billing / payments
 
@@ -58,12 +58,12 @@ Wire Stripe to Convex using @convex-dev/stripe: a checkout action, an httpAction
      },
    });
    ```
-6. Run `npx convex dev --once` - it will install the component and push the functions. Verify output shows `✔ Installed component stripe.`
+6. Run `npx convex dev --once` — it will install the component and push the functions. Verify output shows `✔ Installed component stripe.`
 7. In Stripe Dashboard → Webhooks: add endpoint `https://<deployment>.convex.site/stripe/webhook`, subscribe to `checkout.session.completed`, `customer.subscription.*`, `invoice.*`, `payment_intent.*`. Copy the signing secret as `STRIPE_WEBHOOK_SECRET`.
 
 ## Rules
 
-- Use @convex-dev/stripe (npm: @convex-dev/stripe@^0.1.4) - it handles webhook signature verification internally via registerRoutes; do NOT write a manual constructEvent webhook.
+- Use @convex-dev/stripe (npm: @convex-dev/stripe@^0.1.4) — it handles webhook signature verification internally via registerRoutes; do NOT write a manual constructEvent webhook.
 - Stripe keys live in Convex env (use the `env` micro power): STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET.
 - Gate on server-stored subscription state via isSubscribed query (reads component tables), not client claims.
-- convex/convex.config.ts must import from '@convex-dev/stripe/convex.config.js' (not .ts) - the .js extension is required by the Convex bundler.
+- convex/convex.config.ts must import from '@convex-dev/stripe/convex.config.js' (not .ts) — the .js extension is required by the Convex bundler.

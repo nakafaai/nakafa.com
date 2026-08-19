@@ -1,6 +1,6 @@
 # Email Accessibility
 
-Emails must be readable by screen readers, dark-mode clients, translation tools, and AI agents - not just sighted readers on a default inbox. The rules below are mechanical. Apply them every time.
+Emails must be readable by screen readers, dark-mode clients, translation tools, and AI agents — not just sighted readers on a default inbox. The rules below are mechanical. Apply them every time.
 
 ## Rules
 
@@ -26,8 +26,8 @@ Both attributes are needed in **two places**: on `<html>` *and* on the direct ch
 
 **Fallbacks when the correct values aren't available** (use only when you genuinely don't know):
 
-- `dir="auto"` - lets the user agent infer direction from content
-- `lang="und"` - marks the language as undetermined
+- `dir="auto"` — lets the user agent infer direction from content
+- `lang="und"` — marks the language as undetermined
 
 Both fallbacks are worse than the correct value but much better than nothing. For multi-locale templates, pass the locale through; do not hardcode `en`.
 
@@ -100,7 +100,7 @@ Even when a link has text, it must describe where the link goes. Never use "clic
 <a href="...">Read the 2026 accessibility report</a>
 ```
 
-### Write meaningful alt text - and use `alt=""` for decorative images (Critical)
+### Write meaningful alt text — and use `alt=""` for decorative images (Critical)
 
 Two distinct rules, both mandatory. `alt` must always be present; the value depends on the image's role.
 
@@ -115,13 +115,13 @@ Two distinct rules, both mandatory. `alt` must always be present; the value depe
 <img src="..." alt="Red bicycle leaning against a brick wall on a rainy street">
 ```
 
-**Decorative images** (spacers, dividers, background flourishes, pure branding ornaments): use an empty `alt=""`. This tells screen readers to skip them. Never omit the attribute entirely - omitting it and `alt=""` are not equivalent; some screen readers announce the filename when `alt` is absent.
+**Decorative images** (spacers, dividers, background flourishes, pure branding ornaments): use an empty `alt=""`. This tells screen readers to skip them. Never omit the attribute entirely — omitting it and `alt=""` are not equivalent; some screen readers announce the filename when `alt` is absent.
 
 ```html
 <img src="divider.png" alt="" role="presentation">
 ```
 
-If an image conveys no information that isn't already in the surrounding text, it is decorative. If it's inside an `<a>`, it is **not** decorative - see the "Every link must have discernible text" rule.
+If an image conveys no information that isn't already in the surrounding text, it is decorative. If it's inside an `<a>`, it is **not** decorative — see the "Every link must have discernible text" rule.
 
 ### Include a `<title>` tag (Serious)
 
@@ -139,7 +139,7 @@ If the per-email title is hard to populate, a generic but specific fallback like
 
 - Body text and links: **4.5:1** minimum against the background (WCAG AA)
 - Large text (≥18pt, or ≥14pt bold): **3:1** minimum
-- Never rely on color alone to convey meaning (error states, status badges) - pair it with text or an icon
+- Never rely on color alone to convey meaning (error states, status badges) — pair it with text or an icon
 
 Verify with the [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/) or browser devtools.
 
@@ -149,10 +149,10 @@ Verify with the [WebAIM Contrast Checker](https://webaim.org/resources/contrastc
 
 When you can't fix everything, fix in this order:
 
-1. **Critical** - missing or misused `alt` on images
-2. **Serious** - `lang`/`dir` (on `<html>` and body children), `role="presentation"` on layout tables, links without discernible text, missing `<title>`, color contrast
-3. **Moderate** - non-descriptive link text ("click here")
-4. **Mild** - missing `<h1>` (skip the fix for very short messages)
+1. **Critical** — missing or misused `alt` on images
+2. **Serious** — `lang`/`dir` (on `<html>` and body children), `role="presentation"` on layout tables, links without discernible text, missing `<title>`, color contrast
+3. **Moderate** — non-descriptive link text ("click here")
+4. **Mild** — missing `<h1>` (skip the fix for very short messages)
 
 ## Authoring checklist
 
@@ -162,8 +162,8 @@ Run this on every template:
 - [ ] `<title>` set on `<head>`, specific to this email (not the brand name)
 - [ ] Layout `<table>` elements have `role="presentation"` (or `role="none"`)
 - [ ] At most one `<h1>` (or none, for very short messages); `<h2>`/`<h3>` nested in order
-- [ ] Every `<a>` has discernible text - visible text, descriptive alt on linked images, or visually hidden text
-- [ ] Every link describes its destination - no "click here," "learn more," or bare URLs
+- [ ] Every `<a>` has discernible text — visible text, descriptive alt on linked images, or visually hidden text
+- [ ] Every link describes its destination — no "click here," "learn more," or bare URLs
 - [ ] Every meaningful image has descriptive `alt`; every decorative image has an explicit `alt=""`
 - [ ] No linked image with `alt=""` (linked images are functional, never decorative)
 - [ ] Body text passes 4.5:1 contrast and stays readable in dark mode
@@ -180,10 +180,10 @@ Automated tests do not catch everything. They will not tell you whether alt text
 
 ## Related
 
-- [Transactional Emails](./transactional-emails.md) - content patterns for password resets, OTPs, receipts
-- [Marketing Emails](./marketing-emails.md) - newsletter and campaign best practices
-- [Compliance](./compliance.md) - legal requirements that overlap with accessibility (e.g., clear unsubscribe text)
+- [Transactional Emails](./transactional-emails.md) — content patterns for password resets, OTPs, receipts
+- [Marketing Emails](./marketing-emails.md) — newsletter and campaign best practices
+- [Compliance](./compliance.md) — legal requirements that overlap with accessibility (e.g., clear unsubscribe text)
 
 ## Tooling
 
-When generating templates with React Email, the latest version handles several of the structural rules: `<Html>` sets `lang`/`dir`, `<Img>` defaults to `alt=""`, `<Markdown>` tables render `role="presentation"`, and `<Preview>` emits a `<title>`. Upgrade with `npm install react-email@latest`. The content rules - heading hierarchy, descriptive alt and link text, contrast, the linked-image rule - still have to be applied by hand.
+When generating templates with React Email, the latest version handles several of the structural rules: `<Html>` sets `lang`/`dir`, `<Img>` defaults to `alt=""`, `<Markdown>` tables render `role="presentation"`, and `<Preview>` emits a `<title>`. Upgrade with `npm install react-email@latest`. The content rules — heading hierarchy, descriptive alt and link text, contrast, the linked-image rule — still have to be applied by hand.

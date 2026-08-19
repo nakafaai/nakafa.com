@@ -1,6 +1,6 @@
 # Email Compliance
 
-Legal requirements for email by jurisdiction. **Not legal advice - consult an attorney for your specific situation.**
+Legal requirements for email by jurisdiction. **Not legal advice—consult an attorney for your specific situation.**
 
 ## Quick Reference
 
@@ -78,7 +78,7 @@ headers: {
 ```
 
 **Your unsubscribe endpoint must:**
-- Accept POST requests - return `200` or `202` with a blank page
+- Accept POST requests — return `200` or `202` with a blank page
 - Display standard unsubscribe page for GET requests
 - Stop sending within 48 hours of the request
 

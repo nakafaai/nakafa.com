@@ -73,7 +73,7 @@ turbo build --concurrency=50%    # 50% of CPU cores
 
 ### `--continue`
 
-Control whether other tasks keep running when one fails. Value requires `=` - `--continue never` parses `never` as a task name and the flag becomes `--continue=always`.
+Control whether other tasks keep running when one fails. Value requires `=` — `--continue never` parses `never` as a task name and the flag becomes `--continue=always`.
 
 ```bash
 turbo build test --continue                          # bare flag = --continue=always
@@ -92,7 +92,7 @@ turbo build --only  # skip running dependsOn tasks
 
 ### `--parallel` (Deprecated)
 
-Ignores task graph dependencies, runs all tasks simultaneously. **Deprecated, will be removed in a future major version** - use task configuration (`persistent`, `with`) in `turbo.json` instead. Using `--parallel` bypasses Turborepo's dependency graph, which can cause race conditions and incorrect builds.
+Ignores task graph dependencies, runs all tasks simultaneously. **Deprecated, will be removed in a future major version**—use task configuration (`persistent`, `with`) in `turbo.json` instead. Using `--parallel` bypasses Turborepo's dependency graph, which can cause race conditions and incorrect builds.
 
 ## Cache Control
 

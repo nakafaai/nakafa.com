@@ -3,7 +3,7 @@ name: convex-migrate
 description: "Migrate schema + backfill data on a deployed Convex app using @convex-dev/migrations."
 ---
 
-<!-- GENERATED from convex-agents content/capabilities/migrate.json - do not edit by hand. -->
+<!-- GENERATED from convex-agents content/capabilities/migrate.json — do not edit by hand. -->
 
 # Migrate the schema / data on a live app
 
@@ -18,6 +18,6 @@ Change a deployed schema without breaking existing data: stage the schema change
 
 ## Rules
 
-- Never tighten a validator before the backfill completes - it rejects existing rows and breaks the live app.
+- Never tighten a validator before the backfill completes — it rejects existing rows and breaks the live app.
 - Add new fields as optional first, migrate, then require.
 - Verify row counts before and after.

@@ -1,11 +1,10 @@
 ---
 name: convex-cron-jobs
+displayName: Convex Cron Jobs
 description: Scheduled function patterns for background tasks including interval scheduling, cron expressions, job monitoring, retry strategies, and best practices for long-running tasks
-metadata:
-  displayName: Convex Cron Jobs
-  version: "1.0.0"
-  author: Convex
-  tags: "convex, cron, scheduling, background-jobs, automation"
+version: 1.0.0
+author: Convex
+tags: [convex, cron, scheduling, background-jobs, automation]
 ---
 
 # Convex Cron Jobs
@@ -180,7 +179,7 @@ export const cleanupExpiredSessions = internalMutation({
   returns: v.number(),
   handler: async (ctx) => {
     const oneHourAgo = Date.now() - 60 * 60 * 1000;
-
+    
     const expiredSessions = await ctx.db
       .query("sessions")
       .withIndex("by_lastActive")
@@ -210,7 +209,7 @@ export const processPendingTasks = internalMutation({
         status: "processing",
         startedAt: Date.now(),
       });
-
+      
       // Schedule the actual processing
       await ctx.scheduler.runAfter(0, internal.tasks.processTask, {
         taskId: task._id,
@@ -264,10 +263,10 @@ export const cleanupByType = internalMutation({
   returns: v.number(),
   handler: async (ctx, args) => {
     const cutoff = Date.now() - args.maxAge;
-
+    
     const oldFiles = await ctx.db
       .query("files")
-      .withIndex("by_type_and_created", (q) =>
+      .withIndex("by_type_and_created", (q) => 
         q.eq("type", args.fileType).lt("createdAt", cutoff)
       )
       .collect();

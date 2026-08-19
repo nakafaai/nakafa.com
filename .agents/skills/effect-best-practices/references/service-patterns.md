@@ -1,84 +1,100 @@
 # Service Patterns
 
-## Contents
+## Effect.Service Over Context.Tag
 
-- [Stable contracts](#stable-contracts-with-contexttag-and-layer)
-- [Deliberate Effect.Service adoption](#deliberate-effectservice-adoption)
-- [Effect.fn tracing](#effectfn-for-tracing)
-- [Runtime-injected tags](#runtime-injected-contexttag-examples)
-- [Single responsibility](#single-responsibility)
-- [Service interfaces](#service-interface-patterns)
-- [Testing](#testing-services)
+**Always prefer `Effect.Service`** for defining business logic services. This is the modern, recommended approach that provides:
 
-## Stable Contracts With Context.Tag And Layer
+1. **Built-in `Default` layer** - No manual layer creation needed
+2. **Automatic accessors** - Direct method calls via `ServiceName.method()`
+3. **Proper dependency declaration** - Dependencies are explicit and type-checked
+4. **Consistent structure** - All services follow the same pattern
 
-Effect 3.22 documents `Context.Tag` plus `Layer` as the stable service pattern.
-The pinned source marks `Effect.Service` experimental, so it is not a universal
-replacement for `Context.Tag`.
-
-Keep ownership explicit:
-
-- The tag owns the contract.
-- A layer owns one implementation.
-- The application composition root chooses the implementation.
-- Effect requirements keep missing dependencies visible in the type.
+### Basic Service Definition
 
 ```typescript
-import { Context, Effect, Layer, Option } from "effect"
+import { Effect, Layer } from "effect"
 
-export class UserService extends Context.Tag("UserService")<
-    UserService,
-    {
-        readonly register: (
-            input: CreateUserInput,
-        ) => Effect.Effect<User, EmailAlreadyRegisteredError | UserCreateError>
-    }
->() {}
-
-export const UserServiceLive = Layer.effect(
-    UserService,
-    Effect.gen(function* () {
-        const repo = yield* UserRepo
-
-        const register = Effect.fn("UserService.register")(function* (
-            input: CreateUserInput,
-        ) {
-            const existing = yield* repo.findByEmail(input.email)
-            if (Option.isSome(existing)) {
-                return yield* new EmailAlreadyRegisteredError({
-                    email: input.email,
-                    message: "Email is already registered",
-                })
-            }
-            return yield* repo.create(input)
+export class UserService extends Effect.Service<UserService>()("UserService", {
+    accessors: true,
+    effect: Effect.gen(function* () {
+        const findById = Effect.fn("UserService.findById")(function* (id: UserId) {
+            // Implementation
         })
 
-        return UserService.of({ register })
+        const findByEmail = Effect.fn("UserService.findByEmail")(function* (email: string) {
+            // Implementation
+        })
+
+        const create = Effect.fn("UserService.create")(function* (input: CreateUserInput) {
+            // Implementation
+        })
+
+        return { findById, findByEmail, create }
     }),
-)
+}) {}
 ```
 
-Provide requirements once when composing layers:
+### Service with Dependencies
+
+**Critical:** Always declare dependencies using the `dependencies` array. This ensures:
+- Dependencies are automatically provided when using `ServiceName.Default`
+- Type errors if dependencies are missing
+- No manual `Layer.provide` at usage sites
 
 ```typescript
-const AppLive = Layer.mergeAll(
-    UserServiceLive.pipe(Layer.provide(UserRepoLive)),
-    OrderServiceLive.pipe(Layer.provide(OrderRepoLive)),
-)
+export class OrderService extends Effect.Service<OrderService>()("OrderService", {
+    accessors: true,
+    dependencies: [
+        UserService.Default,
+        ProductService.Default,
+        InventoryService.Default,
+    ],
+    effect: Effect.gen(function* () {
+        // Dependencies are automatically available
+        const users = yield* UserService
+        const products = yield* ProductService
+        const inventory = yield* InventoryService
+
+        const create = Effect.fn("OrderService.create")(function* (input: CreateOrderInput) {
+            // Validate user exists
+            const user = yield* users.findById(input.userId)
+
+            // Check product availability
+            const product = yield* products.findById(input.productId)
+            const available = yield* inventory.checkAvailability(input.productId, input.quantity)
+
+            if (!available) {
+                return yield* Effect.fail(new InsufficientInventoryError({
+                    productId: input.productId,
+                    message: "Not enough inventory",
+                }))
+            }
+
+            // Create order...
+        })
+
+        return { create }
+    }),
+}) {}
 ```
 
-## Deliberate Effect.Service Adoption
+### Wrong: Leaking Dependencies
 
-`Effect.Service` may combine a tag with a module-owned default layer when all of
-these conditions hold:
+```typescript
+// WRONG - Dependencies not declared, must be provided manually
+export class OrderService extends Effect.Service<OrderService>()("OrderService", {
+    accessors: true,
+    effect: Effect.gen(function* () {
+        const users = yield* UserService  // Dependency not in `dependencies` array!
+        // ...
+    }),
+}) {}
 
-- The repository deliberately accepts its experimental Effect 3.22 status.
-- The module genuinely owns a canonical default implementation.
-- Importing the contract may intentionally expose that default.
-- Alternate implementations remain easy to provide in tests and other runtimes.
-
-When those conditions hold, declare default-layer requirements in the
-`dependencies` array. Otherwise use `Context.Tag` plus a separately owned layer.
+// Now every usage site must do this:
+const program = OrderService.create(input).pipe(
+    Effect.provide(UserService.Default),  // Annoying and error-prone
+)
+```
 
 ## Effect.fn for Tracing
 
@@ -123,9 +139,9 @@ yield* Effect.annotateCurrentSpan("step", "processing")
 yield* Effect.annotateCurrentSpan("step", "completing")
 ```
 
-## Runtime-Injected Context.Tag Examples
+## When Context.Tag is Acceptable
 
-Runtime-injected infrastructure is another clear use of the stable tag pattern:
+`Context.Tag` is appropriate **only** for infrastructure that's injected at runtime:
 
 ### Cloudflare Worker Bindings
 
@@ -179,24 +195,25 @@ Each service should have a focused responsibility:
 
 ```typescript
 // CORRECT - Focused services
-export class UserService extends Context.Tag("UserService")<
-    UserService,
-    UserOperations
->() {}
-export class AuthService extends Context.Tag("AuthService")<
-    AuthService,
-    AuthOperations
->() {}
-export class NotificationService extends Context.Tag("NotificationService")<
-    NotificationService,
-    NotificationOperations
->() {}
+export class UserService extends Effect.Service<UserService>()("UserService", { /* user operations */ }) {}
+export class AuthService extends Effect.Service<AuthService>()("AuthService", { /* auth operations */ }) {}
+export class NotificationService extends Effect.Service<NotificationService>()("NotificationService", { /* notifications */ }) {}
 
 // WRONG - God service doing everything
-export class AppService extends Context.Tag("AppService")<
-    AppService,
-    UserOperations & AuthOperations & NotificationOperations & PaymentOperations
->() {}
+export class AppService extends Effect.Service<AppService>()("AppService", {
+    effect: Effect.gen(function* () {
+        return {
+            createUser,
+            deleteUser,
+            login,
+            logout,
+            sendEmail,
+            sendPush,
+            processPayment,
+            // ... 50 more methods
+        }
+    }),
+}) {}
 ```
 
 ## Service Interface Patterns
@@ -249,31 +266,30 @@ Create test implementations using the same pattern:
 export const UserServiceTest = Layer.succeed(
     UserService,
     UserService.of({
-        register: (input) => Effect.succeed({ ...mockUser, ...input }),
+        findById: (id) => Effect.succeed(mockUser),
+        create: (input) => Effect.succeed({ ...mockUser, ...input }),
     })
 )
 
-// Stateful test implementation with the same stable tag contract
-export const UserServiceInMemory = Layer.effect(
-    UserService,
-    Effect.sync(() => {
-        const usersByEmail = new Map<string, User>()
+// Or with Effect.Service for stateful mocks
+export class UserServiceTest extends Effect.Service<UserService>()("UserService", {
+    accessors: true,
+    effect: Effect.gen(function* () {
+        const users = new Map<string, User>()
 
-        const register = Effect.fn("UserService.register")(function* (
-            input: CreateUserInput,
-        ) {
-            if (usersByEmail.has(input.email)) {
-                return yield* new EmailAlreadyRegisteredError({
-                    email: input.email,
-                    message: "Email is already registered",
-                })
-            }
-            const user = makeTestUser(usersByEmail.size, input)
-            usersByEmail.set(user.email, user)
+        const findById = Effect.fn("UserService.findById")(function* (id: UserId) {
+            const user = users.get(id)
+            if (!user) return yield* Effect.fail(new UserNotFoundError({ userId: id, message: "Not found" }))
             return user
         })
 
-        return UserService.of({ register })
+        const create = Effect.fn("UserService.create")(function* (input: CreateUserInput) {
+            const user = { id: UserId.make(crypto.randomUUID()), ...input }
+            users.set(user.id, user)
+            return user
+        })
+
+        return { findById, create }
     }),
-)
+}) {}
 ```

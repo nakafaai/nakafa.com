@@ -10,6 +10,7 @@
 - If multiple options can be selected -> use CheckboxGroup instead.
 - If options are many and need search/filtering -> use Select or Combobox instead.
 - If the choices are binary (on/off) -> use Switch or Checkbox instead.
+- If each option reveals a content panel rather than selecting a value -> use Tabs instead.
 
 ## Install
 
@@ -85,7 +86,7 @@ const [value, setValue] = useState("default")
 
 ### More examples
 
-See `p-radio-group-1` through `p-radio-group-5` for disabled, description, card-style, and form integration patterns.
+See `p-radio-group-1` through `p-radio-group-5` for disabled, description, card-style, and form integration patterns. For a segmented presentation, use `p-radio-group-7`, `p-radio-group-8`, or `p-radio-group-9`; read `../segmented-control.md` before choosing the underlying primitive.
 
 ## Common pitfalls
 
@@ -99,4 +100,5 @@ See `p-radio-group-1` through `p-radio-group-5` for disabled, description, card-
 - with description: `p-radio-group-3`
 - card style: `p-radio-group-4`
 - form integration: `p-radio-group-5`
+- segmented, small/default/large: `p-radio-group-7`, `p-radio-group-8`, `p-radio-group-9`
 - form composition references: `p-form-1`, `p-form-2`, `p-input-group-24`

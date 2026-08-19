@@ -2938,7 +2938,7 @@ Duration(1m)
 
 Converts a `Duration` to a human readable string.
 
-**Example**
+**Example** 
 
 ```ts
 

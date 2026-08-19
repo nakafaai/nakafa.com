@@ -33,7 +33,7 @@ v=DMARC1; p=none; rua=mailto:dmarc@example.com
 
 **Rollout:** `p=none` (monitor) → `p=quarantine; pct=25` → `p=reject`
 
-Learn more: https://resend.com/blog/dmarc-policy-modes
+Learn more: https://resend.com/blog/dmarc-policy-modes 
 
 ### Verify Your Setup
 
@@ -97,7 +97,7 @@ Learn more: https://resend.com/docs/knowledge-base/warming-up
 
 ## Infrastructure
 
-**Dedicated sending domain:** Use different subdomains for different sending purposes (e.g., `t.example.com` for transactional emails and `m.example.com` for marketing emails).
+**Dedicated sending domain:** Use different subdomains for different sending purposes (e.g., `t.example.com` for transactional emails and `m.example.com` for marketing emails). 
 
 **DNS TTL:** Low (300s) during setup, high (3600s+) after stable.
 
@@ -105,7 +105,7 @@ Learn more: https://resend.com/docs/knowledge-base/warming-up
 
 **Emails going to spam?** Check in order:
 1. Authentication (SPF, DKIM, DMARC)
-2. List-Unsubscribe header - required by Gmail/Yahoo since Feb 2024 (see [Compliance](./compliance.md))
+2. List-Unsubscribe header — required by Gmail/Yahoo since Feb 2024 (see [Compliance](./compliance.md))
 3. Sender reputation (blacklists, complaint rates)
 4. Content
 5. Sending patterns (sudden volume spikes)

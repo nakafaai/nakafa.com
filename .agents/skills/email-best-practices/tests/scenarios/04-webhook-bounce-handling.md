@@ -35,7 +35,7 @@ Be specific about: svix verification headers, hard vs soft bounce handling thres
 - [ ] Suppression entry schema includes: email, reason, created_at, source_email_id
 
 ### Complaint handling (webhooks-events.md + list-management.md)
-- [ ] Immediate suppression - no exceptions
+- [ ] Immediate suppression — no exceptions
 - [ ] Remove from all lists
 - [ ] Log for analysis
 

@@ -3,11 +3,11 @@ name: convex-auth
 description: "Add authentication (passkeys/OAuth) to the current Convex app, including the auth.config.ts wiring."
 ---
 
-<!-- GENERATED from convex-agents content/capabilities/auth.json - do not edit by hand. -->
+<!-- GENERATED from convex-agents content/capabilities/auth.json — do not edit by hand. -->
 
 # Add sign-in to the app
 
-Install and wire @convex-dev/auth for the current app: a provider (passkeys by default, or OAuth/password), the server config, the client hooks, and a sign-in UI - correctly, including the auth.config.ts that's the #1 real-world auth footgun.
+Install and wire @convex-dev/auth for the current app: a provider (passkeys by default, or OAuth/password), the server config, the client hooks, and a sign-in UI — correctly, including the auth.config.ts that's the #1 real-world auth footgun.
 
 ## Workflow
 

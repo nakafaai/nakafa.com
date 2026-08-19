@@ -1,4 +1,4 @@
-# Next.js App Router - File Convention Reference
+# Next.js App Router — File Convention Reference
 
 ## Special Files
 

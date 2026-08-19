@@ -1,7 +1,7 @@
 ---
 name: remotion-markup
 description: Content, animation and effects best practices
-version: 4.0.507
+version: 4.0.513
 ---
 
 This is guidance for writing Remotion React Markup.
@@ -15,8 +15,8 @@ If you detect a surprising change made in the meanwhile, don't overwrite it, ass
 
 ## General rules
 
-Drive animations using `useCurrentFrame()` and `interpolate()`.
-CSS `transition` or `animation` will not render correctly, they need to refactored.
+Drive animations using `useCurrentFrame()` and `interpolate()`.  
+CSS `transition` or `animation` will not render correctly, they need to refactored.  
 Tailwind animation class will not render correctly, they need to be refactored.
 
 Use `Easing.bezier()` and `Easing.spring()` to customize timing.
@@ -85,7 +85,7 @@ Use `staticFile()` to reference files from the `public/` folder.
 
 ## Media components
 
-Add video and audio using `<Video>` and `<Audio>` from `@remotion/media`.
+Add video and audio using `<Video>` and `<Audio>` from `@remotion/media`.  
 Add images using the `<CanvasImage>` component.
 Add animated GIFs, APNG, WebP or AVIF images using `<AnimatedImage>`, use `@remotion/gif` if not using Chrome.
 Use `staticFile()` for files in `public/` or pass a remote URL directly:
@@ -188,7 +188,7 @@ When the element starts appearing in the timelien.
 <Interactive.Div durationInFrames={20 * fps} {/* ... */}/>
 ```
 
-For how long the layer plays in the timeline.
+For how long the layer plays in the timeline.  
 For media, pass the natural duration of the media: `<Video durationInFrames={29.322 * fps}/>`
 
 ### `trimBefore`
@@ -212,7 +212,7 @@ If a component does not support these props, wrap it in`<Sequence>` from `remoti
 
 ## Maps
 
-See [Remotion Maps](../remotion-maps/REFERENCE.md) if wanting to include maps in the video.
+See [Remotion Maps](./remotion-maps/REFERENCE.md) if wanting to include maps in the video.
 
 ## Text highlights and annotations
 
@@ -248,7 +248,7 @@ See [transitions.md](transitions.md) for scene transition patterns.
 
 ## Visual and pixel effects
 
-When creating a visual effect, consider whether it is feasible using CSS and HTML, or whether a shader is needed.
+When creating a visual effect, consider whether it is feasible using CSS and HTML, or whether a shader is needed.  
 Order or preference:
 
 1. Regular HTML + CSS or other web techniques
@@ -271,7 +271,7 @@ When needing to visualize audio (spectrum bars, waveforms, bass-reactive effects
 
 ## Maps
 
-For static maps, animated routes and markers, geographic explainers, Mapbox, MapLibre, MapTiler, GeoJSON, or 3D geographic flyovers, load [Remotion Maps](../remotion-maps/REFERENCE.md).
+For static maps, animated routes and markers, geographic explainers, Mapbox, MapLibre, MapTiler, GeoJSON, or 3D geographic flyovers, load [Remotion Maps](./remotion-maps/REFERENCE.md).
 
 ## Captions
 
@@ -349,13 +349,13 @@ This goes for `@remotion/*` packages, `mediabunny`, `@mediabunny/*`, and `zod`.
 npx remotion studio --no-open
 ```
 
-This will start a long-running process and print the server URL for the preview.
+This will start a long-running process and print the server URL for the preview.  
 If server is already started, it will print the URL.
 You can visit a specific composition by navigating to `/[composition-id]`, for example `http://localhost:3000/MapAnimation`.
 
 ## Optional: one-frame render check
 
-You can render a single frame with the CLI to sanity-check layout, colors, or timing.
+You can render a single frame with the CLI to sanity-check layout, colors, or timing.  
 Skip it for trivial edits, pure refactors, or when you already have enough confidence from Studio or prior renders.
 
 ```bash

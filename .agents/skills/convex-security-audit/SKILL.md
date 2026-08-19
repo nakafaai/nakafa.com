@@ -1,11 +1,10 @@
 ---
 name: convex-security-audit
+displayName: Convex Security Audit
 description: Deep security review patterns for authorization logic, data access boundaries, action isolation, rate limiting, and protecting sensitive operations
-metadata:
-  displayName: Convex Security Audit
-  version: "1.0.0"
-  author: Convex
-  tags: "convex, security, audit, authorization, rate-limiting, protection"
+version: 1.0.0
+author: Convex
+tags: [convex, security, audit, authorization, rate-limiting, protection]
 ---
 
 # Convex Security Audit
@@ -52,38 +51,38 @@ const roleHierarchy: Record<UserRole, number> = {
 export async function getUser(ctx: QueryCtx | MutationCtx): Promise<Doc<"users"> | null> {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) return null;
-
+  
   return await ctx.db
     .query("users")
-    .withIndex("by_tokenIdentifier", (q) =>
+    .withIndex("by_tokenIdentifier", (q) => 
       q.eq("tokenIdentifier", identity.tokenIdentifier)
     )
     .unique();
 }
 
 export async function requireRole(
-  ctx: QueryCtx | MutationCtx,
+  ctx: QueryCtx | MutationCtx, 
   minRole: UserRole
 ): Promise<Doc<"users">> {
   const user = await getUser(ctx);
-
+  
   if (!user) {
     throw new ConvexError({
       code: "UNAUTHENTICATED",
       message: "Authentication required",
     });
   }
-
+  
   const userRoleLevel = roleHierarchy[user.role as UserRole] ?? 0;
   const requiredLevel = roleHierarchy[minRole];
-
+  
   if (userRoleLevel < requiredLevel) {
     throw new ConvexError({
       code: "FORBIDDEN",
       message: `Role '${minRole}' or higher required`,
     });
   }
-
+  
   return user;
 }
 
@@ -102,21 +101,21 @@ export async function requirePermission(
   permission: Permission
 ): Promise<Doc<"users">> {
   const user = await getUser(ctx);
-
+  
   if (!user) {
     throw new ConvexError({ code: "UNAUTHENTICATED", message: "Authentication required" });
   }
-
+  
   const userRole = user.role as UserRole;
   const permissions = rolePermissions[userRole] ?? [];
-
+  
   if (!permissions.includes(permission)) {
     throw new ConvexError({
       code: "FORBIDDEN",
       message: `Permission '${permission}' required`,
     });
   }
-
+  
   return user;
 }
 ```
@@ -140,7 +139,7 @@ export const getMyData = query({
   handler: async (ctx) => {
     const user = await getUser(ctx);
     if (!user) return [];
-
+    
     // SECURITY: Filter by userId
     return await ctx.db
       .query("userData")
@@ -159,14 +158,14 @@ export const getSensitiveItem = query({
   handler: async (ctx, args) => {
     const user = await getUser(ctx);
     if (!user) return null;
-
+    
     const item = await ctx.db.get(args.itemId);
-
+    
     // SECURITY: Verify ownership
     if (!item || item.ownerId !== user._id) {
       return null; // Don't reveal if item exists
     }
-
+    
     return item;
   },
 });
@@ -182,32 +181,32 @@ export const getSharedDocument = query({
   handler: async (ctx, args) => {
     const user = await getUser(ctx);
     const doc = await ctx.db.get(args.docId);
-
+    
     if (!doc) return null;
-
+    
     // Public documents
     if (doc.visibility === "public") {
       return { ...doc, accessLevel: "public" };
     }
-
+    
     // Must be authenticated for non-public
     if (!user) return null;
-
+    
     // Owner has full access
     if (doc.ownerId === user._id) {
       return { ...doc, accessLevel: "owner" };
     }
-
+    
     // Check shared access
     const access = await ctx.db
       .query("documentAccess")
-      .withIndex("by_doc_and_user", (q) =>
+      .withIndex("by_doc_and_user", (q) => 
         q.eq("documentId", args.docId).eq("userId", user._id)
       )
       .unique();
-
+    
     if (!access) return null;
-
+    
     return { ...doc, accessLevel: access.level };
   },
 });
@@ -234,20 +233,20 @@ export const callExternalAPI = action({
     if (!identity) {
       throw new ConvexError("Authentication required");
     }
-
+    
     // Get API key from environment (not hardcoded)
     const apiKey = process.env.EXTERNAL_API_KEY;
     if (!apiKey) {
       throw new Error("API key not configured");
     }
-
+    
     // Log usage for audit trail
     await ctx.runMutation(internal.audit.logAPICall, {
       userId: identity.tokenIdentifier,
       endpoint: "external-api",
       timestamp: Date.now(),
     });
-
+    
     const response = await fetch("https://api.example.com/query", {
       method: "POST",
       headers: {
@@ -256,14 +255,14 @@ export const callExternalAPI = action({
       },
       body: JSON.stringify({ query: args.query }),
     });
-
+    
     if (!response.ok) {
       // Don't expose external API error details
       throw new ConvexError("External service unavailable");
     }
-
+    
     const data = await response.json();
-
+    
     // Sanitize response before returning
     return { result: sanitizeResponse(data) };
   },
@@ -279,10 +278,10 @@ export const _processPayment = internalAction({
   returns: v.object({ success: v.boolean(), transactionId: v.optional(v.string()) }),
   handler: async (ctx, args) => {
     const stripeKey = process.env.STRIPE_SECRET_KEY;
-
+    
     // Process payment with Stripe
     // This should NEVER be exposed as a public action
-
+    
     return { success: true, transactionId: "txn_xxx" };
   },
 });
@@ -312,30 +311,30 @@ export const checkRateLimit = mutation({
     const limit = RATE_LIMITS[args.action];
     const now = Date.now();
     const windowStart = now - limit.windowMs;
-
+    
     // Count requests in window
     const requests = await ctx.db
       .query("rateLimits")
-      .withIndex("by_user_and_action", (q) =>
+      .withIndex("by_user_and_action", (q) => 
         q.eq("userId", args.userId).eq("action", args.action)
       )
       .filter((q) => q.gt(q.field("timestamp"), windowStart))
       .collect();
-
+    
     if (requests.length >= limit.requests) {
       const oldestRequest = requests[0];
       const retryAfter = oldestRequest.timestamp + limit.windowMs - now;
-
+      
       return { allowed: false, retryAfter };
     }
-
+    
     // Record this request
     await ctx.db.insert("rateLimits", {
       userId: args.userId,
       action: args.action,
       timestamp: now,
     });
-
+    
     return { allowed: true };
   },
 });
@@ -347,20 +346,20 @@ export const sendMessage = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new ConvexError("Authentication required");
-
+    
     // Check rate limit
     const rateCheck = await checkRateLimit(ctx, {
       userId: identity.tokenIdentifier,
       action: "message",
     });
-
+    
     if (!rateCheck.allowed) {
       throw new ConvexError({
         code: "RATE_LIMITED",
         message: `Too many requests. Try again in ${Math.ceil(rateCheck.retryAfter! / 1000)} seconds`,
       });
     }
-
+    
     return await ctx.db.insert("messages", {
       content: args.content,
       authorId: identity.tokenIdentifier,
@@ -389,29 +388,29 @@ export const deleteAllUserData = mutation({
   handler: async (ctx, args) => {
     // Require superadmin
     const admin = await requireRole(ctx, "superadmin");
-
+    
     // Verify confirmation code
     const confirmation = await ctx.db
       .query("confirmations")
-      .withIndex("by_admin_and_code", (q) =>
+      .withIndex("by_admin_and_code", (q) => 
         q.eq("adminId", admin._id).eq("code", args.confirmationCode)
       )
       .filter((q) => q.gt(q.field("expiresAt"), Date.now()))
       .unique();
-
+    
     if (!confirmation || confirmation.action !== "delete_user_data") {
       throw new ConvexError("Invalid or expired confirmation code");
     }
-
+    
     // Delete confirmation to prevent reuse
     await ctx.db.delete(confirmation._id);
-
+    
     // Schedule deletion (don't do it inline)
     await ctx.scheduler.runAfter(0, internal.admin._performDeletion, {
       userId: args.userId,
       requestedBy: admin._id,
     });
-
+    
     // Audit log
     await ctx.db.insert("auditLogs", {
       action: "delete_user_data",
@@ -419,7 +418,7 @@ export const deleteAllUserData = mutation({
       performedBy: admin._id,
       timestamp: Date.now(),
     });
-
+    
     return null;
   },
 });
@@ -430,9 +429,9 @@ export const requestDeletionConfirmation = mutation({
   returns: v.string(),
   handler: async (ctx, args) => {
     const admin = await requireRole(ctx, "superadmin");
-
+    
     const code = generateSecureCode();
-
+    
     await ctx.db.insert("confirmations", {
       adminId: admin._id,
       code,
@@ -440,7 +439,7 @@ export const requestDeletionConfirmation = mutation({
       targetUserId: args.userId,
       expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes
     });
-
+    
     // In production, send code via secure channel (email, SMS)
     return code;
   },
@@ -497,15 +496,15 @@ export const getAuditLogs = query({
   returns: v.array(auditEventValidator),
   handler: async (ctx, args) => {
     await requireRole(ctx, "admin");
-
+    
     let query = ctx.db.query("auditLogs");
-
+    
     if (args.resourceType) {
-      query = query.withIndex("by_resource_type", (q) =>
+      query = query.withIndex("by_resource_type", (q) => 
         q.eq("resourceType", args.resourceType)
       );
     }
-
+    
     return await query
       .order("desc")
       .take(args.limit ?? 100);

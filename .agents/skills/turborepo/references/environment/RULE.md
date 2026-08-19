@@ -85,7 +85,7 @@ When the `globalConfiguration` future flag is enabled, global environment keys m
 | `globalEnv`            | `env`            |
 | `globalPassThroughEnv` | `passThroughEnv` |
 
-`global.env` and `global.passThroughEnv` behave identically to their top-level counterparts - they affect the global hash and all tasks, respectively. The rename is purely organizational.
+`global.env` and `global.passThroughEnv` behave identically to their top-level counterparts — they affect the global hash and all tasks, respectively. The rename is purely organizational.
 
 ```json
 {
@@ -107,7 +107,7 @@ When the `globalConfiguration` future flag is enabled, global environment keys m
 
 ```json
 {
-  "$schema": "https://v2-10-9.turborepo.dev/schema.json",
+  "$schema": "https://v2-10-11-canary-4.turborepo.dev/schema.json",
   "globalEnv": ["CI", "NODE_ENV"],
   "globalPassThroughEnv": ["GITHUB_TOKEN", "NPM_TOKEN"],
   "tasks": {

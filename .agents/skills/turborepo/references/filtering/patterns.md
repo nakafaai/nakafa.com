@@ -105,7 +105,7 @@ turbo run lint --filter=!legacy-app --filter=!deprecated-pkg
 
 ## Complex Combinations
 
-Separate `--filter` flags are unioned, not intersected - to intersect a directory with a git range, wrap the directory in `{}` inside a single filter.
+Separate `--filter` flags are unioned, not intersected — to intersect a directory with a git range, wrap the directory in `{}` inside a single filter.
 
 Apps that changed since the last commit:
 

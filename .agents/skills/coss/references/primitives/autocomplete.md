@@ -112,7 +112,7 @@ Form integration: place `Autocomplete` inside `Field name="..."` with `FieldLabe
 
 ### More examples
 
-See `p-autocomplete-1` through `p-autocomplete-15` for sizes, matching behavior, groups, limited results, async, form integration, and pill input patterns.
+See `p-autocomplete-1` through `p-autocomplete-16` for sizes, matching behavior, groups, limited results, async integrations, forms, and pill input patterns.
 
 ## Common pitfalls
 
@@ -121,6 +121,7 @@ See `p-autocomplete-1` through `p-autocomplete-15` for sizes, matching behavior,
 - Mixing combobox/select assumptions into autocomplete APIs without checking docs.
 - Missing explicit labels (`FieldLabel` or `aria-label`) on the input.
 - Not handling async race/error states (`loading`, `error`, stale response cancellation).
+- Exposing an unrestricted browser API key in an external address integration; apply provider restrictions and cancel stale requests.
 
 ## Useful particle references
 
@@ -132,3 +133,4 @@ See `p-autocomplete-1` through `p-autocomplete-15` for sizes, matching behavior,
 - async search with loading/error status: `p-autocomplete-12`
 - form integration: `p-autocomplete-13`
 - style variant (pill input): `p-autocomplete-15`
+- Google Maps Places address suggestions with debouncing, cancellation, status feedback, and session tokens: `p-autocomplete-16`

@@ -1,77 +1,74 @@
 # Layer Patterns
 
-## Contents
+## Dependencies in Effect.Service
 
-- [Dependency requirements](#dependency-requirements)
-- [Infrastructure layers](#infrastructure-layers)
-- [Flat composition](#layermergeall-over-nested-provides)
-- [Sequential composition](#layerprovidemerge-for-sequential-composition)
-- [Deduplication](#layer-deduplication-benefits)
-- [TypeScript performance](#typescript-lsp-performance)
-- [Configuration](#layerconfig-pattern)
-- [Naming](#layer-naming-conventions)
-- [Config-dependent layers](#layerunwrapeffect-for-config-dependent-layers)
-- [Scoped layers](#scoped-layers)
-- [Testing](#testing-layer-composition)
-- [Constructors](#layereffect-vs-layersucceed)
-- [Lazy layers](#lazy-layers)
-
-## Dependency Requirements
-
-Use `Context.Tag` plus `Layer` as the stable Effect 3.22 default. Keep each
-service contract separate from its implementations. A consuming layer exposes
-dependencies in its `RIn` type, and the composition root chooses the
-implementations once.
+**Critical rule:** Always declare dependencies in the `dependencies` array of `Effect.Service`. This ensures proper composition and avoids "leaked dependencies" that require manual wiring at usage sites.
 
 ### Correct Pattern
 
 ```typescript
-export class OrderService extends Context.Tag("OrderService")<
-    OrderService,
-    {
-        readonly place: (input: PlaceOrderInput) => Effect.Effect<Order, PlaceOrderError>
-    }
->() {}
-
-export const OrderServiceLive = Layer.effect(
-    OrderService,
-    Effect.gen(function* () {
+export class OrderService extends Effect.Service<OrderService>()("OrderService", {
+    accessors: true,
+    dependencies: [
+        UserService.Default,
+        ProductService.Default,
+        InventoryService.Default,
+        PaymentService.Default,
+    ],
+    effect: Effect.gen(function* () {
         const users = yield* UserService
         const products = yield* ProductService
         const inventory = yield* InventoryService
         const payments = yield* PaymentService
 
-        const place = makePlaceOrder({ users, products, inventory, payments })
-        return OrderService.of({ place })
+        // Service implementation...
+        return { /* methods */ }
     }),
-)
+}) {}
 
-const OrderDependenciesLive = Layer.mergeAll(
-    UserServiceLive,
-    ProductServiceLive,
-    InventoryServiceLive,
-    PaymentServiceLive,
-)
-
+// At app root - simple, flat composition
 const AppLive = Layer.mergeAll(
-    OrderServiceLive.pipe(Layer.provide(OrderDependenciesLive)),
-    NotificationServiceLive,
-    AnalyticsServiceLive,
+    OrderService.Default,
+    // Other top-level services
+    NotificationService.Default,
+    AnalyticsService.Default,
 )
 ```
 
-Do not rebuild this dependency graph with repeated `Effect.provide` calls at
-each usage site.
+### Wrong Pattern (Leaked Dependencies)
+
+```typescript
+// WRONG - Dependencies not declared
+export class OrderService extends Effect.Service<OrderService>()("OrderService", {
+    accessors: true,
+    effect: Effect.gen(function* () {
+        const users = yield* UserService // Not in dependencies!
+        // ...
+    }),
+}) {}
+
+// Now every usage requires manual wiring
+const program = OrderService.create(input).pipe(
+    Effect.provide(
+        OrderService.Default.pipe(
+            Layer.provide(UserService.Default),
+            Layer.provide(ProductService.Default),
+            // Easy to forget one, causes runtime errors
+        )
+    ),
+)
+```
 
 ## Infrastructure Layers
 
-Dependency ownership does not change because a requirement is infrastructure.
-Database, cache, and HTTP services may be supplied once at the application
-boundary, but the layer that consumes them must still expose those requirements
-in its `RIn` type. Tests can then replace the same requirements without hidden
-wiring.
+Infrastructure layers (Database, Redis, HTTP clients) are **acceptable** to leave as "leaked" dependencies because:
+
+1. They're provided once at the application root
+2. They don't change between test/production (different implementations, same interface)
+3. They're true infrastructure, not business logic
 
 ```typescript
+// Infrastructure can be provided at app root
 import { PgClient } from "@effect/sql-pg"
 
 const DatabaseLive = PgClient.layer({
@@ -82,33 +79,29 @@ const DatabaseLive = PgClient.layer({
     password: Config.redacted("DB_PASSWORD"),
 })
 
-export class UserRepo extends Context.Tag("UserRepo")<
-    UserRepo,
-    {
-        readonly findById: (id: UserId) => Effect.Effect<Option.Option<User>, SqlError>
-    }
->() {}
-
-// UserRepoLive declares PgClient as an input requirement through Layer's RIn.
-const UserRepoLive = Layer.effect(
-    UserRepo,
-    Effect.gen(function* () {
+// Services use database but don't declare it in dependencies
+export class UserRepo extends Effect.Service<UserRepo>()("UserRepo", {
+    accessors: true,
+    // No dependencies array - PgClient provided at app root
+    effect: Effect.gen(function* () {
         const sql = yield* PgClient.PgClient
 
         const findById = Effect.fn("UserRepo.findById")(function* (id: UserId) {
-            // Query and decode through the repository's schemas.
-            return yield* loadUser(sql, id)
+            const rows = yield* sql`SELECT * FROM users WHERE id = ${id}`.pipe(Effect.orDie)
+            return rows[0] as User | undefined
         })
 
-        return UserRepo.of({ findById })
+        return { findById }
     }),
-)
+}) {}
 
+// App root provides infrastructure once
 const AppLive = Layer.mergeAll(
-    OrderServiceLive,
-    UserRepoLive,
+    OrderService.Default,
+    UserService.Default,
 ).pipe(
-    Layer.provide(DatabaseLive),
+    Layer.provide(DatabaseLive), // Infrastructure provided here
+    Layer.provide(RedisLive),
 )
 ```
 
@@ -119,10 +112,10 @@ const AppLive = Layer.mergeAll(
 ```typescript
 // CORRECT - Flat composition
 const ServicesLive = Layer.mergeAll(
-    UserServiceLive,
-    OrderServiceLive,
-    ProductServiceLive,
-    NotificationServiceLive,
+    UserService.Default,
+    OrderService.Default,
+    ProductService.Default,
+    NotificationService.Default,
 )
 
 const InfrastructureLive = Layer.mergeAll(
@@ -138,11 +131,11 @@ const AppLive = ServicesLive.pipe(
 
 ```typescript
 // WRONG - Deeply nested, hard to read
-const AppLive = UserServiceLive.pipe(
+const AppLive = UserService.Default.pipe(
     Layer.provide(
-        OrderServiceLive.pipe(
+        OrderService.Default.pipe(
             Layer.provide(
-                ProductServiceLive.pipe(
+                ProductService.Default.pipe(
                     Layer.provide(DatabaseLive),
                 ),
             ),
@@ -158,7 +151,7 @@ const AppLive = UserServiceLive.pipe(
 ```typescript
 // CORRECT - Layer.provideMerge chains for incremental composition
 const MainLive = DatabaseLive.pipe(
-    Layer.provideMerge(ProxyConfigServiceLive),
+    Layer.provideMerge(ProxyConfigService.Default),
     Layer.provideMerge(LoggerLive),
     Layer.provideMerge(CacheLive),
     Layer.provideMerge(TracerLive),
@@ -166,7 +159,7 @@ const MainLive = DatabaseLive.pipe(
 
 // WRONG - Multiple Layer.provide calls create nested types
 const MainLive = DatabaseLive.pipe(
-    Layer.provide(ProxyConfigServiceLive),
+    Layer.provide(ProxyConfigService.Default),
     Layer.provide(LoggerLive),  // Each provide creates deeper nesting
     Layer.provide(CacheLive),
 )
@@ -181,8 +174,8 @@ Layers automatically memoize construction - the same service is instantiated onl
 ```typescript
 // Both UserRepo and OrderRepo depend on DatabaseLive
 const RepoLive = Layer.mergeAll(
-    UserRepoLive,   // requires DatabaseLive
-    OrderRepoLive,  // requires DatabaseLive
+    UserRepo.Default,   // requires DatabaseLive
+    OrderRepo.Default,  // requires DatabaseLive
 )
 
 // With Layer.mergeAll, DatabaseLive is constructed ONCE
@@ -191,9 +184,18 @@ const AppLive = RepoLive.pipe(
 )
 ```
 
-Use the composed layer rather than separately providing each repository:
+**`Effect.provide` does NOT deduplicate:**
 
 ```typescript
+// WRONG - Each provide creates a new instance
+const program = myEffect.pipe(
+    Effect.provide(UserRepo.Default),
+    Effect.provide(OrderRepo.Default),
+    // If both repos need DatabaseLive, and you provide it separately,
+    // you may get TWO database connections!
+)
+
+// CORRECT - Use layers for deduplication
 const program = myEffect.pipe(
     Effect.provide(AppLive), // Single composed layer
 )
@@ -234,11 +236,10 @@ const AppLive = Layer.mergeAll(Layer1, Layer2).pipe(
 
 ## layerConfig Pattern
 
-For services that need configuration at construction time, expose a
-configuration-driven layer factory:
+For services that need configuration at construction time, use the `layerConfig` static method pattern:
 
 ```typescript
-import { Config, ConfigError, Context, Effect, Layer } from "effect"
+import { Config, ConfigError, Effect, Layer } from "effect"
 
 interface EventQueueConfig {
     readonly maxRetries: number
@@ -246,30 +247,34 @@ interface EventQueueConfig {
     readonly pollInterval: number
 }
 
-export class ElectricEventQueue extends Context.Tag("ElectricEventQueue")<
-    ElectricEventQueue,
+export class ElectricEventQueue extends Effect.Service<ElectricEventQueue>()(
+    "ElectricEventQueue",
     {
-        readonly publish: (
-            events: ReadonlyArray<Event>,
-        ) => Effect.Effect<void, EventQueueError>
+        accessors: true,
+        effect: Effect.gen(function* () {
+            // Default implementation
+            return { /* methods */ }
+        }),
     }
->() {}
-
-export const makeEventQueueLive = (
-    config: Config.Config.Wrap<EventQueueConfig>,
-): Layer.Layer<ElectricEventQueue, ConfigError.ConfigError> =>
-    Layer.unwrapEffect(
-        Config.unwrap(config).pipe(
-            Effect.map((value) =>
-                Layer.succeed(
-                    ElectricEventQueue,
-                    ElectricEventQueue.of(makeElectricEventQueue(value)),
-                ),
+) {
+    // Static method for config-driven layer
+    static readonly layerConfig = (
+        config: Config.Config.Wrap<EventQueueConfig>,
+    ): Layer.Layer<ElectricEventQueue, ConfigError.ConfigError> =>
+        Layer.unwrapEffect(
+            Config.unwrap(config).pipe(
+                Effect.map((cfg) =>
+                    Layer.succeed(
+                        ElectricEventQueue,
+                        new ElectricEventQueueImpl(cfg)
+                    )
+                )
             )
         )
-    )
+}
 
-const EventQueueLive = makeEventQueueLive({
+// Usage
+const EventQueueLive = ElectricEventQueue.layerConfig({
     maxRetries: Config.integer("EVENT_QUEUE_MAX_RETRIES").pipe(
         Config.withDefault(3)
     ),
@@ -298,10 +303,7 @@ Use suffixes to indicate layer type:
 
 ```typescript
 // Production
-export const UserServiceLive = Layer.effect(
-    UserService,
-    makeUserService,
-)
+export const UserServiceLive = UserService.Default
 
 // Test with mocks
 export const UserServiceTest = Layer.succeed(
@@ -313,25 +315,25 @@ export const UserServiceTest = Layer.succeed(
 )
 
 // Test with in-memory state
-export const UserServiceInMemory = Layer.effect(
-    UserService,
-    Effect.sync(() => {
+export class UserServiceInMemory extends Effect.Service<UserService>()("UserService", {
+    accessors: true,
+    effect: Effect.gen(function* () {
         const store = new Map<string, User>()
 
-        return UserService.of({
+        return {
             findById: Effect.fn("UserService.findById")(function* (id) {
                 const user = store.get(id)
                 if (!user) return yield* Effect.fail(new UserNotFoundError({ userId: id }))
                 return user
             }),
             create: Effect.fn("UserService.create")(function* (input) {
-                const user = makeTestUser(store.size, input)
+                const user = { id: UserId.make(crypto.randomUUID()), ...input }
                 store.set(user.id, user)
                 return user
             }),
-        })
+        }
     }),
-)
+}) {}
 ```
 
 ## Layer.unwrapEffect for Config-Dependent Layers
@@ -400,28 +402,19 @@ const DatabaseConnectionLive = Layer.scoped(
     )
 )
 
-// Repository layer exposes DatabaseConnection in its RIn type.
-export class UserRepo extends Context.Tag("UserRepo")<
-    UserRepo,
-    {
-        readonly findById: (
-            id: UserId,
-        ) => Effect.Effect<Option.Option<User>, DatabaseError>
-    }
->() {}
-
-export const UserRepoLive = Layer.effect(
-    UserRepo,
-    Effect.gen(function* () {
+// Service using scoped resource
+export class UserRepo extends Effect.Service<UserRepo>()("UserRepo", {
+    accessors: true,
+    effect: Effect.gen(function* () {
         const db = yield* DatabaseConnection
 
-        return UserRepo.of({
+        return {
             findById: Effect.fn("UserRepo.findById")(function* (id) {
-                return yield* loadUser(db, id)
+                return yield* db.query("SELECT * FROM users WHERE id = $1", [id])
             }),
-        })
+        }
     }),
-)
+}) {}
 ```
 
 ## Testing Layer Composition

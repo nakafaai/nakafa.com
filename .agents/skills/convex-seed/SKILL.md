@@ -3,7 +3,7 @@ name: convex-seed
 description: "Seed or import data into the Convex database."
 ---
 
-<!-- GENERATED from convex-agents content/capabilities/seed.json - do not edit by hand. -->
+<!-- GENERATED from convex-agents content/capabilities/seed.json — do not edit by hand. -->
 
 # Seed / import data
 
