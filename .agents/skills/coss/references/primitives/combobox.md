@@ -111,4 +111,6 @@ See `p-combobox-1` through `p-combobox-9` for sizes, label, auto-highlight, clea
 - with clear button: `p-combobox-7`
 - with groups: `p-combobox-8`
 - with multiple selection: `p-combobox-9`
+- multiple team selection rendered as separate stacked rows: `p-combobox-19`
+- multiple team selection rendered as a divided stack: `p-combobox-20`
 - related search/selection references: `p-autocomplete-1`, `p-select-1`, `p-input-group-1`

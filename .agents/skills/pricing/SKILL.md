@@ -42,15 +42,15 @@ Gather this context (ask if not provided):
 
 ### The Three Pricing Axes
 
-**1. Packaging** - What's included at each tier?
+**1. Packaging** — What's included at each tier?
 - Features, limits, support level
 - How tiers differ from each other
 
-**2. Pricing Metric** - What do you charge for?
+**2. Pricing Metric** — What do you charge for?
 - Per user, per usage, flat fee
 - How price scales with value
 
-**3. Price Point** - How much do you charge?
+**3. Price Point** — How much do you charge?
 - The actual dollar amounts
 - Perceived value vs. cost
 
@@ -58,10 +58,10 @@ Gather this context (ask if not provided):
 
 Price should be based on value delivered, not cost to serve:
 
-- **Customer's perceived value** - The ceiling
-- **Your price** - Between alternatives and perceived value
-- **Next best alternative** - The floor for differentiation
-- **Your cost to serve** - Only a baseline, not the basis
+- **Customer's perceived value** — The ceiling
+- **Your price** — Between alternatives and perceived value
+- **Next best alternative** — The floor for differentiation
+- **Your cost to serve** — Only a baseline, not the basis
 
 **Key insight:** Price between the next best alternative and perceived value.
 
@@ -71,7 +71,7 @@ Price should be based on value delivered, not cost to serve:
 
 ### What is a Value Metric?
 
-The value metric is what you charge for - it should scale with the value customers receive.
+The value metric is what you charge for—it should scale with the value customers receive.
 
 **Good value metrics:**
 - Align price with value delivered
@@ -108,10 +108,10 @@ Ask: "As a customer uses more of [metric], do they get more value?"
 
 ### Tier Differentiation
 
-- **Feature gating** - Basic vs. advanced features
-- **Usage limits** - Same features, different limits
-- **Support level** - Email → Priority → Dedicated
-- **Access** - API, SSO, custom branding
+- **Feature gating** — Basic vs. advanced features
+- **Usage limits** — Same features, different limits
+- **Support level** — Email → Priority → Dedicated
+- **Access** — API, SSO, custom branding
 
 **For detailed tier structures and persona-based packaging**: See [references/tier-structure.md](references/tier-structure.md)
 
@@ -160,10 +160,10 @@ Identifies which features customers value most:
 
 ### Price Increase Strategies
 
-1. **Grandfather existing** - New price for new customers only
-2. **Delayed increase** - Announce 3-6 months out
-3. **Tied to value** - Raise price but add features
-4. **Plan restructure** - Change plans entirely
+1. **Grandfather existing** — New price for new customers only
+2. **Delayed increase** — Announce 3-6 months out
+3. **Tied to value** — Raise price but add features
+4. **Plan restructure** — Change plans entirely
 
 ---
 
@@ -193,12 +193,12 @@ Identifies which features customers value most:
 
 ## Pricing Page Teardown
 
-When someone wants to audit an existing pricing *page* for **clarity, transparency, and AI-readability** (not the pricing strategy itself, and not conversion-rate optimization - that's `cro`), run a **teardown** that scores it across two axes and returns prioritized fixes:
+When someone wants to audit an existing pricing *page* for **clarity, transparency, and AI-readability** (not the pricing strategy itself, and not conversion-rate optimization — that's `cro`), run a **teardown** that scores it across two axes and returns prioritized fixes:
 
-- **Human buyer experience** - value-prop clarity, plan differentiation, cognitive load, trust signals, pricing psychology, and price transparency.
-- **AI-agent readiness** - whether the LLMs and agents that increasingly shortlist and compare tools can actually read and quote your pricing: machine-readable prices (not locked in an image or behind "Contact us"), extractable FAQ/objection coverage, per-tier depth stated in text, and structured data. Buyers now ask ChatGPT/Perplexity/Claude "what's the best X and what does it cost?" *before* visiting - a pricing page an agent can't parse loses deals you never see.
+- **Human buyer experience** — value-prop clarity, plan differentiation, cognitive load, trust signals, pricing psychology, and price transparency.
+- **AI-agent readiness** — whether the LLMs and agents that increasingly shortlist and compare tools can actually read and quote your pricing: machine-readable prices (not locked in an image or behind "Contact us"), extractable FAQ/objection coverage, per-tier depth stated in text, and structured data. Buyers now ask ChatGPT/Perplexity/Claude "what's the best X and what does it cost?" *before* visiting — a pricing page an agent can't parse loses deals you never see.
 
-**Fast check - the "paste test":** give the pricing URL to a browsing-capable AI (Perplexity, ChatGPT with search, Claude with web) - or paste the rendered page text - and ask "what are the plans and prices?" A clean miss means agents fetching your page will struggle too (a heuristic, not proof every agent fails).
+**Fast check — the "paste test":** give the pricing URL to a browsing-capable AI (Perplexity, ChatGPT with search, Claude with web) — or paste the rendered page text — and ask "what are the plans and prices?" A clean miss means agents fetching your page will struggle too (a heuristic, not proof every agent fails).
 
 The AI-readiness fixes are usually high-impact, low-effort (put prices in text, add `Offer` schema). Hand implementation to **schema** (Product/Offer JSON-LD) and **ai-seo** (extractability, AI-bot access, `llms.txt`).
 

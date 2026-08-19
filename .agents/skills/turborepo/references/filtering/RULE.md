@@ -28,7 +28,7 @@ TURBO_SCM_BASE=origin/develop turbo run build --affected
 TURBO_SCM_HEAD=HEAD~5 turbo run build --affected
 ```
 
-Base resolution order: `TURBO_SCM_BASE`, then the CI base ref on GitHub Actions (`GITHUB_BASE_REF` for PRs, the push event's previous SHA otherwise - errors if unresolvable rather than falling through), then the literal refs `main`, `master`. Turborepo does NOT read the repo's configured default branch - if the default branch is anything else (e.g. `develop`), set `TURBO_SCM_BASE`.
+Base resolution order: `TURBO_SCM_BASE`, then the CI base ref on GitHub Actions (`GITHUB_BASE_REF` for PRs, the push event's previous SHA otherwise — errors if unresolvable rather than falling through), then the literal refs `main`, `master`. Turborepo does NOT read the repo's configured default branch — if the default branch is anything else (e.g. `develop`), set `TURBO_SCM_BASE`.
 
 ### Common CI Pattern
 

@@ -15,9 +15,9 @@ Include specific HTTP error codes and which ones to retry vs not retry, idempote
 ### Idempotency keys (sending-reliability.md)
 - [ ] Event-based key example: `order-confirm-${orderId}` (recommended)
 - [ ] Request-scoped example: `reset-${userId}-${resetRequestId}`
-- [ ] UUID fallback: `crypto.randomUUID()` - generate once, reuse on retry
+- [ ] UUID fallback: `crypto.randomUUID()` — generate once, reuse on retry
 - [ ] Warns against `Date.now()` or random values generated fresh on each attempt
-- [ ] Key expiration: 24 hours - complete retry logic within this window
+- [ ] Key expiration: 24 hours — complete retry logic within this window
 
 ### Error codes (sending-reliability.md)
 - [ ] Retry: 5xx (server error), 429 (rate limit), network timeout, DNS failure

@@ -53,7 +53,7 @@ Toggle group with icon buttons:
 </ToggleGroup>
 ```
 
-Multiple selection (default). For single selection use `type="single"`.
+Toggle Group is exclusive by default and may be cleared. Add `multiple` only when more than one item may be pressed.
 
 Controlled toggle group:
 
@@ -68,7 +68,7 @@ const [value, setValue] = useState(["bold"])
 
 ### More examples
 
-See `p-toggle-group-1` through `p-toggle-group-9` for sizes, outline, vertical, disabled, multiple, and tooltip patterns.
+See `p-toggle-group-1` through `p-toggle-group-9` for sizes, outline, vertical, disabled, multiple, and tooltip patterns. Read `../segmented-control.md` before applying segmented styling to a custom reversible mode.
 
 ## Common pitfalls
 

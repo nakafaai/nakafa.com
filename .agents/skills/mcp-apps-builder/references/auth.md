@@ -1,12 +1,15 @@
 # Authentication
 
-## Choose the integration
+## Choose an integration
 
-- Use a provider adapter when the identity provider supports the expected OAuth/DCR flow.
-- Use `oauthCustomProvider` from `mcp-use/oauth` for a custom DCR-capable provider.
-- Use the OAuth proxy and verifier helpers from `mcp-use/oauth` when upstream credentials are pre-registered.
+Configure OAuth when a server must identify callers or authorize access by user, organization, role, scope, or permission.
 
-Import provider adapters from their explicit subpaths:
+- Use a built-in provider adapter when the identity provider supports the expected resource-server and Dynamic Client Registration flow.
+- Use `oauthCustomProvider` from `mcp-use/oauth` for another compatible provider.
+- Use the OAuth proxy and verifier helpers when the upstream authorization server uses preregistered credentials rather than Dynamic Client Registration.
+- Inspect the installed adapter declarations and current provider documentation for required options and environment variables.
+
+Import adapters from explicit subpaths:
 
 ```ts
 import { MCPServer } from "mcp-use";
@@ -15,32 +18,45 @@ import { oauthAuth0Provider } from "mcp-use/oauth/auth0";
 const server = new MCPServer({
   name: "secure-server",
   version: "1.0.0",
-  oauth: oauthAuth0Provider(),
+  oauth: oauthAuth0Provider({ domain: process.env.AUTH0_DOMAIN! }),
 });
 ```
 
-Inspect the installed adapter's declarations for required environment variables and options. Never place client secrets, tokens, or full OAuth payloads in examples, logs, or tool output.
+Validate configuration at startup in production instead of relying on non-null assertions.
 
-## Tool authorization
+## Use verified request identity
 
-Read identity from the callback context and fail closed:
+With OAuth configured, callbacks receive:
+
+- `ctx.auth.user`: provider-normalized verified identity. Built-in users have `id`; optional fields vary.
+- `ctx.auth.scopes`: grants from verified auth information.
+- `ctx.auth.permissions`: provider-mapped application permissions.
+- `ctx.auth.payload`: verified claims or introspection data.
+- `ctx.auth.accessToken`: the bearer token, for intentional downstream delegation only.
+- `ctx.auth.clientId`, `expiresAt`, and `resource` when available.
+
+Authorize the specific action rather than checking only that a user exists:
 
 ```ts
 async ({ documentId }, ctx) => {
-  if (!ctx.auth) {
+  if (!ctx.auth.permissions.includes("documents:delete")) {
     return {
       isError: true,
-      content: [{ type: "text", text: "Authentication required" }],
+      content: [{ type: "text", text: "Forbidden" }],
     };
   }
 
-  await deleteOwnedDocument(documentId, ctx.auth.user.userId);
+  await deleteOwnedDocument(documentId, ctx.auth.user.id);
   return { content: [{ type: "text", text: "Document deleted" }] };
 };
 ```
 
-Check scopes/permissions for the action, not only the presence of a user. Do not assume optional profile fields exist. Keep authorization checks next to sensitive operations or in narrowly scoped middleware.
+Prefer normalized user fields. Read raw payload claims only when the provider does not map a required verified value.
 
-## Continuity
+## Security boundaries
 
-Treat deterministic request keys as correlation aids, not proof of identity continuity. Elicitation or multi-request sensitive flows require verified request state supplied by the protocol/host. Never reconstruct sensitive continuity from module globals.
+- Never treat `ctx.client.user()`, locale, location, subject, conversation ID, or other request metadata as authenticated identity.
+- Keep authorization next to sensitive operations or in narrowly scoped MCP middleware.
+- Forward an access token only to the intended upstream resource and never log or return it.
+- Do not include client secrets, tokens, full claims, or provider payloads in examples, logs, tool content, structured output, `_meta`, or View state.
+- Keep multi-request state in a trusted external store. Use verified request state for sensitive elicitation flows; do not infer continuity from module globals or transport details.

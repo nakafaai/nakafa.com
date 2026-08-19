@@ -15,9 +15,9 @@ tags: ai, llm, tool-use, planning
 
 Welcome to the documentation for Effect's AI integration packages — a set of libraries designed to make working with large language models (LLMs) seamless, flexible, and provider-agnostic.
 
-These packages enable you to write programs that describe *what* you want to do with an LLM — generating completions, handling chat interactions, running function calls — without having to commit to *how* or *where* those operations are executed.
+These packages enable you to write programs that describe *what* you want to do with an LLM — generating completions, handling chat interactions, running function calls — without having to commit to *how* or *where* those operations are executed. 
 
-The core package, [`@effect/ai`](https://www.npmjs.com/package/@effect/ai), provides a high-level, unified interface for modeling LLM interactions, independent of any specific provider. Once you're ready to run your program, you can plug in the services your program requires from our LLM provider integration packages.
+The core package, [`@effect/ai`](https://www.npmjs.com/package/@effect/ai), provides a high-level, unified interface for modeling LLM interactions, independent of any specific provider. Once you're ready to run your program, you can plug in the services your program requires from our LLM provider integration packages. 
 
 This separation of concerns allows you to:
 - Write clean, declarative business logic without worrying about provider-specific quirks
@@ -34,16 +34,16 @@ Integrating LLMs isn’t just about sending API requests — it’s handling str
 
 By using Effect for your LLM interactions you'll benefit from:
 
-- 🧩 **Provider-Agnostic Architecture**
+- 🧩 **Provider-Agnostic Architecture**  
   Write your business logic once, and defer choosing the underlying provider (OpenAI, Anthropic, local models, mocks, etc.) until runtime
 
-- 🧪 **Fully Testable**
+- 🧪 **Fully Testable**  
   Because LLM interactions are modeled via Effect services, you can mock, simulate, or snapshot responses just by providing an alternative implementation
 
-- 🧵 **Structured Concurrency**
+- 🧵 **Structured Concurrency**  
   Run concurrent LLM calls, cancel stale requests, stream partial results, or race multiple providers — all safely managed by Effect’s structured concurrency model
 
-- 🔍 **Observability**
+- 🔍 **Observability**  
   Leverage Effect's built-in tracing, logging, and metrics to instrument your LLM interactions to gain deep insight into  performance bottlenecks or failures in production
 
 ...and much more!
@@ -55,8 +55,8 @@ Effect’s AI integrations are built around the idea of **provider-agnostic prog
 These services expose capabilities such as:
 - **Generating Text** – single-shot text generation
 - **Generating Embeddings** – vector representations of text for search or retrieval
-- **Tool Calling** – structured outputs and tool usage
-- **Streaming** – incremental output for memory efficiency and responsiveness
+- **Tool Calling** – structured outputs and tool usage 
+- **Streaming** – incremental output for memory efficiency and responsiveness 
 
 Each of these services is defined as an *Effect service* — meaning they can be injected, composed, and tested just like any other dependency in the Effect ecosystem.
 
@@ -81,7 +81,7 @@ For detailed API documentation, see the [API Reference](https://effect-ts.github
 
 ### `@effect/ai-openai`
 
-Concrete implementations of services from `@effect/ai` backed by the [OpenAI API](https://platform.openai.com).
+Concrete implementations of services from `@effect/ai` backed by the [OpenAI API](https://platform.openai.com). 
 
 Supported services include:
 - `LanguageModel` (via OpenAI's [Chat Completions API](https://platform.openai.com/docs/api-reference/chat))
@@ -261,7 +261,7 @@ export interface Model<ProviderName, Provides, Requires> {}
 
 An `Model` has three generic type parameters:
 
-- **ProviderName** - the name of the large language model provider that will be used
+- **ProviderName** - the name of the large language model provider that will be used 
 - **Provides** - the services this model will provide when built
 - **Requires** - the services this model will require to be built
 
@@ -269,7 +269,7 @@ This allows Effect to track which services the `Model` requires as well as which
 
 ### Creating n `Model`
 
-To create a `Model`, you can use the model-specific factory from one of Effect's provider integration packages.
+To create a `Model`, you can use the model-specific factory from one of Effect's provider integration packages. 
 
 **Example** (Defining a `Model` to Interact with OpenAI)
 
@@ -282,13 +282,13 @@ const Gpt4o = OpenAiLanguageModel.model("gpt-4o")
 
 This creates a `Model` that:
 
-- **Provides** the `ProviderName` service, which allows introspection of the current provider in use by the program
+- **Provides** the `ProviderName` service, which allows introspection of the current provider in use by the program 
 - **Provides** an OpenAI-specific implementation of the `LanguageModel` service using `"gpt-4o"`
 - **Requires** an `OpenAiClient` to be built
 
 ### Providing a `Model`
 
-Once you've created a `Model`, you can directly `Effect.provide` it to your Effect programs just like any other service:
+Once you've created a `Model`, you can directly `Effect.provide` it to your Effect programs just like any other service: 
 
 ```ts
 
@@ -336,7 +336,7 @@ const main = Effect.gen(function*() {
 
 **Flexibility**
 
-If we know that one model or provider performs better at a given task than another, we can freely mix and match models and providers together.
+If we know that one model or provider performs better at a given task than another, we can freely mix and match models and providers together. 
 
 For example, if we know Anthropic's Claude generates some really great dad jokes, we can mix it into our existing program with just a few lines of code:
 
@@ -382,7 +382,7 @@ const Claude37 = AnthropicLanguageModel.model("claude-3-7-sonnet-latest")
 class DadJokes extends Effect.Service<DadJokes>()("app/DadJokes", {
   effect: Effect.gen(function*() {
     // Yielding the model will return a layer with no requirements
-    //
+    // 
     //     ┌─── Layer<LanguageModel | ProviderName>
     //     ▼
     const gpt = yield* Gpt4o
@@ -403,7 +403,7 @@ class DadJokes extends Effect.Service<DadJokes>()("app/DadJokes", {
   })
 }) {}
 
-// Programs which utilize the `DadJokes` service have no knowledge of
+// Programs which utilize the `DadJokes` service have no knowledge of 
 // any AI requirements
 //
 //     ┌─── Effect<void, AiError, DadJokes>
@@ -423,7 +423,7 @@ DadJokes.Default
 
 ## Create a Provider Client
 
-To make our code executable, we must finish satisfying our program's requirements.
+To make our code executable, we must finish satisfying our program's requirements. 
 
 Let's take another look at our program from earlier:
 
@@ -446,7 +446,7 @@ const main = generateDadJoke.pipe(
 )
 ```
 
-We can see that our `main` program still requires us to provide an `OpenAiClient`.
+We can see that our `main` program still requires us to provide an `OpenAiClient`. 
 
 Each of our provider integration packages exports a client module that can be used to construct a client for that provider.
 
@@ -509,7 +509,7 @@ const OpenAi = OpenAiClient.layerConfig({
   apiKey: Config.redacted("OPENAI_API_KEY")
 })
 
-// Provide a platform-specific implementation of `HttpClient` to our
+// Provide a platform-specific implementation of `HttpClient` to our 
 // OpenAi layer
 //
 //        ┌─── Layer<OpenAiClient, ConfigError, never>
@@ -519,7 +519,7 @@ const OpenAiWithHttp = Layer.provide(OpenAi, NodeHttpClient.layerUndici)
 
 ## Running the Program
 
-Now that we have a `Layer` which provides us with an `OpenAiClient`, we're ready to make our `main` program runnable.
+Now that we have a `Layer` which provides us with an `OpenAiClient`, we're ready to make our `main` program runnable. 
 
 Our final program looks like the following:
 
@@ -558,19 +558,19 @@ main.pipe(
 
 ## Overview
 
-Language models are great at generating text, but often we need them to take **real-world actions**, such as querying an API, accessing a database, or calling a service. Most LLM providers support this through **tool use** (also known as *function calling*), where you expose specific operations in your application that the model can invoke.
+Language models are great at generating text, but often we need them to take **real-world actions**, such as querying an API, accessing a database, or calling a service. Most LLM providers support this through **tool use** (also known as *function calling*), where you expose specific operations in your application that the model can invoke. 
 
 Based on the input it receives, a model may choose to **invoke (or call)** one or more tools to augment its response. Your application then runs the corresponding logic for the tool using the parameters provided by the model. You then return the result to the model, allowing it to include the output in its final response.
 
 The `Toolkit` simplifies tool integration by offering a structured, type-safe approach to defining tools. It takes care of all the wiring between the model and your application - all you have to do is define the tool and implement its behavior.
 
-## Defining a Tool
+## Defining a Tool 
 
 Let’s walk through a complete example of how to define, implement, and use a tool that fetches a dad joke from the [icanhazdadjoke.com](https://icanhazdadjoke.com) API.
 
-### 1. Define the Tool
+### 1. Define the Tool 
 
-We start by defining a tool that the language model will have access to using the `Tool.make` constructor.
+We start by defining a tool that the language model will have access to using the `Tool.make` constructor. 
 
 This constructor accepts several parameters that allow us to fully describe the tool to the language model:
 
@@ -602,7 +602,7 @@ Based on the above, a request to call the `GetDadJoke` tool:
 
 ### 2. Create a Toolkit
 
-Once we have a tool request defined, we can create a `Toolkit`, which is a collection of tools that the model will have access to.
+Once we have a tool request defined, we can create a `Toolkit`, which is a collection of tools that the model will have access to. 
 
 **Example** (Creating a `Toolkit`)
 
@@ -624,15 +624,15 @@ const DadJokeTools = Toolkit.make(GetDadJoke)
 
 ### 3. Implement the Logic
 
-The `.toLayer(...)` method on a `Toolkit` allows you to define the handlers for each tool in the toolkit. Because `.toLayer(...)` takes an `Effect`, we can access services from our application to implement the tool call handlers.
+The `.toLayer(...)` method on a `Toolkit` allows you to define the handlers for each tool in the toolkit. Because `.toLayer(...)` takes an `Effect`, we can access services from our application to implement the tool call handlers. 
 
 **Example** (Implementing a `Toolkit`)
 
 ```ts
-import {
-  HttpClient,
-  HttpClientRequest,
-  HttpClientResponse
+import { 
+  HttpClient, 
+  HttpClientRequest, 
+  HttpClientResponse 
 } from "@effect/platform"
 
 class DadJoke extends Schema.Class<DadJoke>("DadJoke")({
@@ -688,7 +688,7 @@ const DadJokeTools = Toolkit.make(GetDadJoke)
 
 const DadJokeToolHandlers = DadJokeTools.toLayer(
   Effect.gen(function*() {
-    // Access the `ICanHazDadJoke` service
+    // Access the `ICanHazDadJoke` service 
     const icanhazdadjoke = yield* ICanHazDadJoke
     return {
       // Implement the handler for the `GetDadJoke` tool call request
@@ -703,7 +703,7 @@ In the code above:
 - Register a handler for the `GetDadJoke` tool using `.handle("GetDadJoke", ...)`
 - Use the `.search` method on our `ICanHazDadJoke` service to search for a dad joke based on the tool call parameters
 
-The result of calling `.toLayer` on a `Toolkit` is a `Layer` that contains the handlers for all the tools in our toolkit.
+The result of calling `.toLayer` on a `Toolkit` is a `Layer` that contains the handlers for all the tools in our toolkit. 
 
 Because of this, it is quite simple to test a `Toolkit` by using `.toLayer` to create a separate `Layer` specifically for testing.
 
@@ -741,10 +741,10 @@ To make the program executable, we must provide the implementation of our tool c
 **Example** (Providing the Tool Call Handlers to a Program)
 
 ```ts
-import {
-  HttpClient,
-  HttpClientRequest,
-  HttpClientResponse
+import { 
+  HttpClient, 
+  HttpClientRequest, 
+  HttpClientResponse 
 } from "@effect/platform"
 
 class DadJoke extends Schema.Class<DadJoke>("DadJoke")({
@@ -826,13 +826,13 @@ program.pipe(
 )
 ```
 
-## Benefits
+## Benefits 
 
 **Type Safe**
 
 Every tool is fully described using Effect's `Schema`, including inputs, outputs, and descriptions.
 
-**Effect Native**
+**Effect Native** 
 
 Tool call behavior is defined using Effect, so they can leverage all the power of Effect. This is especially useful when you need to access other services to support the implementation of your tool call handlers.
 
@@ -879,7 +879,7 @@ This is fine, but what if we want to:
 
 How can we accomplish such logic?
 
-## Planning LLM Interactions
+## Planning LLM Interactions 
 
 The `ExecutionPlan` module from Effect provides a robust method for creating **structured execution plans** for your Effect programs. Rather than making a single model call and hoping that it succeeds, you can use `ExecutionPlan` to describe how to handle errors, retries, and fallbacks in a clear, declarative way.
 
@@ -888,7 +888,7 @@ This is especially useful when:
 - You want to retry on transient errors (e.g. network failures)
 - You want to control timing between retry attempts
 
-## Creating Execution Plans
+## Creating Execution Plans 
 
 To create an `ExecutionPlan`, we can use the `ExecutionPlan.make` constructor.
 
@@ -911,7 +911,7 @@ const DadJokePlan = ExecutionPlan.make({
   provide: OpenAiLanguageModel.model("gpt-4o"),
   attempts: 3,
   schedule: Schedule.exponential("100 millis", 1.5),
-  while: (error: NetworkError | ProviderOutage) =>
+  while: (error: NetworkError | ProviderOutage) => 
     error._tag === "NetworkError"
 })
 
@@ -924,7 +924,7 @@ const main = Effect.gen(function*() {
 ```
 
 This plan contains a single step which will:
-- Provide OpenAi's `"gpt-4o"` model as a `LanguageModel` for the program
+- Provide OpenAi's `"gpt-4o"` model as a `LanguageModel` for the program 
 - Attempt to call OpenAi up to 3 times
 - Wait with an exponential backoff between attempts (starting at `100ms`)
 - Only re-attempt the call to OpenAi if the error is a `NetworkError`
@@ -935,7 +935,7 @@ To make your interactions with large language models resilient to provider outag
 
 Use this when:
 - You want to make your model interactions resilient to provider outages
-- You want to potentially have multiple fallback models
+- You want to potentially have multiple fallback models 
 
 **Example** (Adding a Fallback to Anthropic from OpenAi)
 
@@ -956,13 +956,13 @@ const DadJokePlan = ExecutionPlan.make({
   provide: OpenAiLanguageModel.model("gpt-4o"),
   attempts: 3,
   schedule: Schedule.exponential("100 millis", 1.5),
-  while: (error: NetworkError | ProviderOutage) =>
+  while: (error: NetworkError | ProviderOutage) => 
     error._tag === "NetworkError"
 }, {
   provide: AnthropicLanguageModel.model("claude-4-sonnet-20250514"),
   attempts: 2,
   schedule: Schedule.exponential("100 millis", 1.5),
-  while: (error: NetworkError | ProviderOutage) =>
+  while: (error: NetworkError | ProviderOutage) => 
     error._tag === "ProviderOutage"
 })
 
@@ -974,26 +974,26 @@ const main = Effect.gen(function*() {
 }).pipe(Effect.withExecutionPlan(DadJokePlan))
 ```
 
-This plan contains two steps.
+This plan contains two steps. 
 
 **Step 1**
 
 The first step will:
-- Provide OpenAi's `"gpt-4o"` model as a `LanguageModel` for the program
+- Provide OpenAi's `"gpt-4o"` model as a `LanguageModel` for the program 
 - Attempt to call OpenAi up to 3 times
 - Wait with an exponential backoff between attempts (starting at `100ms`)
 - Only attempt the call to OpenAi if the error is a `NetworkError`
 
-If all of the above logic fails to run the program successfully, the plan will
-try to run the program using the second step.
+If all of the above logic fails to run the program successfully, the plan will 
+try to run the program using the second step. 
 
 **Step 2**
 
 The second step will:
-- Provide Anthropic's `"claude-4-sonnet-20250514"` model as a `LanguageModel` for the program
+- Provide Anthropic's `"claude-4-sonnet-20250514"` model as a `LanguageModel` for the program 
 - Attempt to call Anthropic up to 2 times
 - Wait with an exponential backoff between attempts (starting at `100ms`)
-- Only attempt the fallback if the error is a `ProviderOutage`
+- Only attempt the fallback if the error is a `ProviderOutage` 
 
 ## End-to-End Usage
 
@@ -1016,13 +1016,13 @@ const DadJokePlan = ExecutionPlan.make({
   provide: OpenAiLanguageModel.model("gpt-4o"),
   attempts: 3,
   schedule: Schedule.exponential("100 millis", 1.5),
-  while: (error: NetworkError | ProviderOutage) =>
+  while: (error: NetworkError | ProviderOutage) => 
     error._tag === "NetworkError"
 }, {
   provide: AnthropicLanguageModel.model("claude-4-sonnet-20250514"),
   attempts: 2,
   schedule: Schedule.exponential("100 millis", 1.5),
-  while: (error: NetworkError | ProviderOutage) =>
+  while: (error: NetworkError | ProviderOutage) => 
     error._tag === "ProviderOutage"
 })
 

@@ -115,7 +115,7 @@ Think of transactional emails for everything that would leave you with a paper r
 
 Some emails mix transactional and marketing content. This isn't best practice and should be avoided.
 
-**Best practice:** Keep transactional and marketing separate.
+**Best practice:** Keep transactional and marketing separate. 
 
 **Example of problematic hybrid:**
 - Newsletter (marketing) with a small order status update (transactional)

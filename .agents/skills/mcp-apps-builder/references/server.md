@@ -1,50 +1,74 @@
-# Server primitives
+# Server
 
-## Package boundaries
+## Project and lifecycle
 
-- Server framework and helpers: `mcp-use`
-- React View runtime: `mcp-use/react`
-- OAuth core: `mcp-use/oauth`
-- Provider adapters: `mcp-use/oauth/auth0`, `/clerk`, `/keycloak`, `/supabase`, `/workos`, and `/better-auth`
-- Client and Agent packages: `@mcp-use/client` and `@mcp-use/agent`
+Import `MCPServer` from `mcp-use`. Default-export the server entry so `mcp-use dev`, `mcp-use build`, and `mcp-use start` can own the listener and View pipeline. Call `server.listen()` only in an explicitly standalone program.
 
-The server entry must default-export its `MCPServer`. Use named exports for tool refs consumed by Views.
+Use the project's package manager and existing scripts. For a new stable project, scaffold instead of recreating framework boilerplate:
+
+```bash
+npx create-mcp-use-app@latest my-server --template mcp-server
+```
 
 ## Tools
 
-Use `inputSchema` for arguments and `outputSchema` for structured results. The callback must return a protocol result, not a plain object.
+Use a Standard Schema-compatible validator such as Zod, ArkType, or Valibot. Describe fields when the description helps a client or model choose valid input.
 
 ```ts
-export const lookup = server.tool(
+import { MCPServer } from "mcp-use";
+import { z } from "zod";
+
+const server = new MCPServer({ name: "inventory", version: "1.0.0" });
+
+export const lookupInventory = server.tool(
   {
-    name: "lookup",
-    description: "Look up an item by id",
-    inputSchema: z.object({ id: z.string() }),
-    outputSchema: z.object({ id: z.string(), value: z.string() }),
+    name: "lookup-inventory",
+    description: "Return available inventory for one SKU",
+    inputSchema: z.object({ sku: z.string().describe("Inventory SKU") }),
+    outputSchema: z.object({ sku: z.string(), available: z.number().int() }),
     annotations: { readOnlyHint: true, openWorldHint: false },
   },
-  async ({ id }) => {
-    const item = { id, value: "example" };
+  async ({ sku }) => {
+    const data = { sku, available: await inventory.count(sku) };
     return {
-      content: [{ type: "text", text: JSON.stringify(item) }],
-      structuredContent: item,
+      content: [{ type: "text", text: JSON.stringify(data) }],
+      structuredContent: data,
     };
   },
 );
+
+export default server;
 ```
 
-For an error, return `isError: true` with model-visible content. When an `outputSchema` exists, every non-error result must include matching `structuredContent`.
+Use `visibility: "app"` for helper tools intended for Views but hidden from the model. Treat annotations as behavioral hints, not authorization controls.
+
+## Result channels
+
+- Put concise model-readable output in `content`.
+- Put schema-validated JSON in `structuredContent` when `outputSchema` exists.
+- Put invocation-specific, View-only data in result `_meta`; validate or narrow it in the View.
+- Return `isError: true` with useful `content` for expected operational failures.
+- Throw only for unexpected failures that should surface as protocol errors.
 
 ## Resources and prompts
 
-Confirm definitions against installed types because their schema fields differ from tools. Resources expose read-only content by URI. Prompts return `messages`; their argument definition currently uses `schema`, not a tool's `inputSchema`.
+Use `server.resource()` for one stable URI and `server.resourceTemplate()` for a URI family. Return `{ contents: [...] }`; each entry must include its URI and either text or a base64 blob. A template callback receives `(uri, params, ctx)`, and template values may be `string | string[]`.
 
-Prefer raw protocol envelopes. Response helpers remain migration conveniences, but do not use them to recreate retired View/widget behavior.
+Use `server.prompt()` for model-ready messages. Prompt arguments use `schema`, not a tool's `inputSchema`, and the callback returns `{ messages: [...] }`. Wrap a string field with `completable()` when clients should receive suggestions without restricting other valid strings.
 
-## Middleware and request context
+## MCP middleware and request context
 
-Use `server.use("mcp:...")` for MCP method middleware and `server.app` for Hono HTTP routes. Read authentication and request-scoped services from the callback context. Avoid module-level mutable user/session state: v2 requests may be sessionless and concurrent.
+Register protocol middleware with `server.use("mcp:<method>", handler)`. Use the narrowest operation, call `next()`, and return its result unless intentionally replacing it.
 
-## Server configuration
+```ts
+server.use("mcp:tools/call", async (ctx, next) => {
+  const startedAt = Date.now();
+  const result = await next();
+  console.log(`${ctx.params.name}: ${Date.now() - startedAt}ms`);
+  return result;
+});
+```
 
-Treat `MCP_URL` as a public origin. `basePath` owns the MCP endpoint path. Public assets resolve under `<basePath>/_mcp-use/public/`; use `MCP_ASSETS_URL` only when assets have a distinct origin or prefix.
+Tool, resource, and prompt callbacks receive request-scoped context. Use `ctx.signal` for cancellation, `ctx.client` for self-reported capabilities, and `ctx.auth` only when OAuth is configured. Never use client metadata for authorization.
+
+Register static capabilities while constructing the server. Use the notification helpers described in [Advanced features](advanced-features.md) when discoverable lists or resource content change.

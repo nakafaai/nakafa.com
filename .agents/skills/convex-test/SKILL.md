@@ -3,7 +3,7 @@ name: convex-test
 description: "Generate convex-test tests for the app's Convex functions."
 ---
 
-<!-- GENERATED from convex-agents content/capabilities/test.json - do not edit by hand. -->
+<!-- GENERATED from convex-agents content/capabilities/test.json — do not edit by hand. -->
 
 # Generate Convex tests
 

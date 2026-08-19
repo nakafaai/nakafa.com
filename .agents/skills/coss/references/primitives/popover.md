@@ -72,4 +72,5 @@ import {
 - baseline popover with form content: `p-popover-1`
 - close controls (icon + action button): `p-popover-2`
 - detached trigger handle pattern: `p-popover-3`
+- split-button confirmation flow with selectable occurrences: `p-popover-4`
 - tooltip-style popover usage example: `p-input-group-7`

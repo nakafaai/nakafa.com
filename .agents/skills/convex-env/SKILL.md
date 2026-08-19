@@ -3,7 +3,7 @@ name: convex-env
 description: "Set and wire Convex deployment env vars / secrets for the app."
 ---
 
-<!-- GENERATED from convex-agents content/capabilities/env.json - do not edit by hand. -->
+<!-- GENERATED from convex-agents content/capabilities/env.json — do not edit by hand. -->
 
 # Manage env vars + secrets
 

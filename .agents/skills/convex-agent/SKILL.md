@@ -3,11 +3,11 @@ name: convex-agent
 description: "Add an AI agent / RAG backend (@convex-dev/agent) to the Convex app."
 ---
 
-<!-- GENERATED from convex-agents content/capabilities/agent.json - do not edit by hand. -->
+<!-- GENERATED from convex-agents content/capabilities/agent.json — do not edit by hand. -->
 
 # Add an AI agent / RAG backend
 
-Install @convex-dev/agent for durable threads, message history, tool-calls, and vector search/RAG - the backend for an in-app AI agent.
+Install @convex-dev/agent for durable threads, message history, tool-calls, and vector search/RAG — the backend for an in-app AI agent.
 
 ## Workflow
 

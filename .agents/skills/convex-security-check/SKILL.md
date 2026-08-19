@@ -1,11 +1,10 @@
 ---
 name: convex-security-check
+displayName: Convex Security Check
 description: Quick security audit checklist covering authentication, function exposure, argument validation, row-level access control, and environment variable handling
-metadata:
-  displayName: Convex Security Check
-  version: "1.0.0"
-  author: Convex
-  tags: "convex, security, authentication, authorization, checklist"
+version: 1.0.0
+author: Convex
+tags: [convex, security, authentication, authorization, checklist]
 ---
 
 # Convex Security Check
@@ -89,10 +88,10 @@ export const getMyProfile = query({
   }), v.null()),
   handler: async (ctx) => {
     const identity = await requireAuth(ctx);
-
+    
     return await ctx.db
       .query("users")
-      .withIndex("by_tokenIdentifier", (q) =>
+      .withIndex("by_tokenIdentifier", (q) => 
         q.eq("tokenIdentifier", identity.tokenIdentifier)
       )
       .unique();
@@ -178,14 +177,14 @@ export const updateTask = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await requireAuth(ctx);
-
+    
     const task = await ctx.db.get(args.taskId);
-
+    
     // Check ownership
     if (!task || task.userId !== identity.tokenIdentifier) {
       throw new ConvexError("Not authorized to update this task");
     }
-
+    
     await ctx.db.patch(args.taskId, { title: args.title });
     return null;
   },
@@ -197,13 +196,13 @@ export const deleteTask = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const identity = await requireAuth(ctx);
-
+    
     const task = await ctx.db.get(args.taskId);
-
+    
     if (!task || task.userId !== identity.tokenIdentifier) {
       throw new ConvexError("Not authorized to delete this task");
     }
-
+    
     await ctx.db.delete(args.taskId);
     return null;
   },
@@ -229,11 +228,11 @@ export const sendEmail = action({
   handler: async (ctx, args) => {
     // Access API key from environment
     const apiKey = process.env.RESEND_API_KEY;
-
+    
     if (!apiKey) {
       throw new Error("RESEND_API_KEY not configured");
     }
-
+    
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -247,7 +246,7 @@ export const sendEmail = action({
         html: args.body,
       }),
     });
-
+    
     return { success: response.ok };
   },
 });
@@ -272,35 +271,35 @@ async function getAuthenticatedUser(ctx: QueryCtx | MutationCtx) {
       message: "You must be logged in",
     });
   }
-
+  
   const user = await ctx.db
     .query("users")
-    .withIndex("by_tokenIdentifier", (q) =>
+    .withIndex("by_tokenIdentifier", (q) => 
       q.eq("tokenIdentifier", identity.tokenIdentifier)
     )
     .unique();
-
+    
   if (!user) {
     throw new ConvexError({
       code: "USER_NOT_FOUND",
       message: "User profile not found",
     });
   }
-
+  
   return user;
 }
 
 // Check admin role
 async function requireAdmin(ctx: QueryCtx | MutationCtx) {
   const user = await getAuthenticatedUser(ctx);
-
+  
   if (user.role !== "admin") {
     throw new ConvexError({
       code: "FORBIDDEN",
       message: "Admin access required",
     });
   }
-
+  
   return user;
 }
 
@@ -314,7 +313,7 @@ export const listMyTasks = query({
   })),
   handler: async (ctx) => {
     const user = await getAuthenticatedUser(ctx);
-
+    
     return await ctx.db
       .query("tasks")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
@@ -332,7 +331,7 @@ export const listAllUsers = query({
   })),
   handler: async (ctx) => {
     await requireAdmin(ctx);
-
+    
     return await ctx.db.query("users").collect();
   },
 });

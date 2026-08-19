@@ -1,10 +1,10 @@
 ---
 name: remotion-create
 description: Create a new Remotion video
-version: 4.0.507
+version: 4.0.513
 ---
 
-These are instructions for making a new Remotion project and composition.
+These are instructions for making a new Remotion project and composition.  
 If this is not the next task, see [Remotion Best Practices](../SKILL.md)
 
 ## Scaffold a project
@@ -47,7 +47,7 @@ Start the preview server after building the composition:
 npx remotion studio --no-open
 ```
 
-This will start a long-running process and print the server URL for the preview.
+This will start a long-running process and print the server URL for the preview.  
 If the server is already started, it will print the URL.
 If an in-harness browser is available, open it there.
 You can visit a specific composition by navigating to `/[composition-id]`, for example `http://localhost:3000/MapAnimation`.

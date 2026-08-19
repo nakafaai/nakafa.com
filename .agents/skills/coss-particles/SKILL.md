@@ -1,10 +1,10 @@
 ---
 name: coss-particles
 description: Index of all COSS UI particle examples. Use when implementing UI features to find copy-paste-ready component patterns built on coss primitives. Each particle has a description and a JSON URL for easy installation.
+compatibility: Requires coss UI components installed in the project.
 license: MIT
 metadata:
   author: cosscom
-  compatibility: Requires coss UI components installed in the project.
 ---
 
 # COSS UI Particles Index
@@ -37,25 +37,26 @@ Run the generator script from the coss repo root:
 node apps/ui/scripts/generate-particle-index.cjs
 ```
 
-Total: **484 particles** across **52 component types**
+Total: **508 particles** across **54 component types**
 
 ## Component types
 
 - [accordion](#accordion) (4)
 - [alert](#alert) (7)
 - [alert-dialog](#alert-dialog) (2)
-- [autocomplete](#autocomplete) (15)
+- [autocomplete](#autocomplete) (16)
 - [avatar](#avatar) (14)
 - [badge](#badge) (20)
 - [breadcrumb](#breadcrumb) (7)
 - [button](#button) (40)
-- [calendar](#calendar) (24)
+- [calendar](#calendar) (25)
 - [card](#card) (11)
 - [checkbox](#checkbox) (5)
 - [checkbox-group](#checkbox-group) (5)
 - [collapsible](#collapsible) (1)
-- [combobox](#combobox) (18)
+- [combobox](#combobox) (20)
 - [command](#command) (2)
+- [context-menu](#context-menu) (8)
 - [date-picker](#date-picker) (9)
 - [dialog](#dialog) (6)
 - [drawer](#drawer) (14)
@@ -70,13 +71,14 @@ Total: **484 particles** across **52 component types**
 - [kbd](#kbd) (1)
 - [menu](#menu) (9)
 - [meter](#meter) (4)
+- [navigation](#navigation) (3)
 - [number-field](#number-field) (11)
 - [otp-field](#otp-field) (9)
 - [pagination](#pagination) (3)
-- [popover](#popover) (3)
+- [popover](#popover) (4)
 - [preview-card](#preview-card) (1)
 - [progress](#progress) (3)
-- [radio-group](#radio-group) (6)
+- [radio-group](#radio-group) (9)
 - [scroll-area](#scroll-area) (5)
 - [select](#select) (23)
 - [separator](#separator) (1)
@@ -84,9 +86,9 @@ Total: **484 particles** across **52 component types**
 - [skeleton](#skeleton) (2)
 - [slider](#slider) (23)
 - [spinner](#spinner) (1)
-- [switch](#switch) (6)
+- [switch](#switch) (9)
 - [table](#table) (8)
-- [tabs](#tabs) (13)
+- [tabs](#tabs) (15)
 - [textarea](#textarea) (15)
 - [toast](#toast) (13)
 - [toggle](#toggle) (8)
@@ -135,6 +137,7 @@ Total: **484 particles** across **52 component types**
 - Autocomplete form | [JSON](https://coss.com/ui/r/p-autocomplete-13.json)
 - Autocomplete form | [JSON](https://coss.com/ui/r/p-autocomplete-14.json)
 - Pill-shaped autocomplete | [JSON](https://coss.com/ui/r/p-autocomplete-15.json)
+- Address autocomplete with Google Maps Places API | [JSON](https://coss.com/ui/r/p-autocomplete-16.json)
 
 ### avatar
 
@@ -255,6 +258,7 @@ Total: **484 particles** across **52 component types**
 - Two months calendar | [JSON](https://coss.com/ui/r/p-calendar-22.json)
 - Three months calendar | [JSON](https://coss.com/ui/r/p-calendar-23.json)
 - Pricing calendar with custom day buttons | [JSON](https://coss.com/ui/r/p-calendar-24.json)
+- Calendar with 24-hour autocomplete time input | [JSON](https://coss.com/ui/r/p-calendar-25.json)
 
 ### card
 
@@ -310,11 +314,24 @@ Total: **484 particles** across **52 component types**
 - Timezone combobox | [JSON](https://coss.com/ui/r/p-combobox-16.json)
 - Timezone combobox with search input | [JSON](https://coss.com/ui/r/p-combobox-17.json)
 - Combobox with select trigger | [JSON](https://coss.com/ui/r/p-combobox-18.json)
+- Combobox multiple with stacked chips | [JSON](https://coss.com/ui/r/p-combobox-19.json)
+- Combobox multiple with stacked divided chips | [JSON](https://coss.com/ui/r/p-combobox-20.json)
 
 ### command
 
 - Command palette with dialog | [JSON](https://coss.com/ui/r/p-command-1.json)
 - Command palette with AI assistant | [JSON](https://coss.com/ui/r/p-command-2.json)
+
+### context-menu
+
+- Basic context menu | [JSON](https://coss.com/ui/r/p-context-menu-1.json)
+- Context menu with link items | [JSON](https://coss.com/ui/r/p-context-menu-2.json)
+- Nested context menu | [JSON](https://coss.com/ui/r/p-context-menu-3.json)
+- Context menu with checkbox items | [JSON](https://coss.com/ui/r/p-context-menu-4.json)
+- Context menu with group labels | [JSON](https://coss.com/ui/r/p-context-menu-5.json)
+- Context menu with icons | [JSON](https://coss.com/ui/r/p-context-menu-6.json)
+- Context menu with radio group | [JSON](https://coss.com/ui/r/p-context-menu-7.json)
+- Context menu with switch checkbox items | [JSON](https://coss.com/ui/r/p-context-menu-8.json)
 
 ### date-picker
 
@@ -496,6 +513,12 @@ Total: **484 particles** across **52 component types**
 - Meter with formatted value | [JSON](https://coss.com/ui/r/p-meter-3.json)
 - Meter with range | [JSON](https://coss.com/ui/r/p-meter-4.json)
 
+### navigation
+
+- Segmented navigation built with links | [JSON](https://coss.com/ui/r/p-navigation-1.json)
+- Small segmented navigation built with links | [JSON](https://coss.com/ui/r/p-navigation-2.json)
+- Large segmented navigation built with links | [JSON](https://coss.com/ui/r/p-navigation-3.json)
+
 ### number-field
 
 - Basic number field | [JSON](https://coss.com/ui/r/p-number-field-1.json)
@@ -533,6 +556,7 @@ Total: **484 particles** across **52 component types**
 - Popover with a form | [JSON](https://coss.com/ui/r/p-popover-1.json)
 - Popover with close button | [JSON](https://coss.com/ui/r/p-popover-2.json)
 - Animated popovers | [JSON](https://coss.com/ui/r/p-popover-3.json)
+- Split button with popover to confirm multiple occurrences | [JSON](https://coss.com/ui/r/p-popover-4.json)
 
 ### preview-card
 
@@ -552,6 +576,9 @@ Total: **484 particles** across **52 component types**
 - Radio group card | [JSON](https://coss.com/ui/r/p-radio-group-4.json)
 - Radio group in form | [JSON](https://coss.com/ui/r/p-radio-group-5.json)
 - Theme selector with image cards | [JSON](https://coss.com/ui/r/p-radio-group-6.json)
+- Small segmented control built with a radio group | [JSON](https://coss.com/ui/r/p-radio-group-7.json)
+- Segmented control built with a radio group | [JSON](https://coss.com/ui/r/p-radio-group-8.json)
+- Large segmented control built with a radio group | [JSON](https://coss.com/ui/r/p-radio-group-9.json)
 
 ### scroll-area
 
@@ -640,6 +667,9 @@ Total: **484 particles** across **52 component types**
 - Switch card | [JSON](https://coss.com/ui/r/p-switch-4.json)
 - Switch in form | [JSON](https://coss.com/ui/r/p-switch-5.json)
 - Custom size switch | [JSON](https://coss.com/ui/r/p-switch-6.json)
+- Weekly availability editor with time range combobox pickers | [JSON](https://coss.com/ui/r/p-switch-7.json)
+- Weekly availability editor with grouped time range controls | [JSON](https://coss.com/ui/r/p-switch-8.json)
+- Weekly availability editor with From/To labeled time groups | [JSON](https://coss.com/ui/r/p-switch-9.json)
 
 ### table
 
@@ -654,7 +684,7 @@ Total: **484 particles** across **52 component types**
 
 ### tabs
 
-- Basic tabs | [JSON](https://coss.com/ui/r/p-tabs-1.json)
+- Segmented control built with tabs | [JSON](https://coss.com/ui/r/p-tabs-1.json)
 - Tabs with underline | [JSON](https://coss.com/ui/r/p-tabs-2.json)
 - Vertical tabs | [JSON](https://coss.com/ui/r/p-tabs-3.json)
 - Vertical tabs with underline | [JSON](https://coss.com/ui/r/p-tabs-4.json)
@@ -667,6 +697,8 @@ Total: **484 particles** across **52 component types**
 - Vertical tabs with underline and icon before name | [JSON](https://coss.com/ui/r/p-tabs-11.json)
 - Tabs with icon only and count badge | [JSON](https://coss.com/ui/r/p-tabs-12.json)
 - Tabs with icon only and grouped tooltips | [JSON](https://coss.com/ui/r/p-tabs-13.json)
+- Small segmented control built with tabs | [JSON](https://coss.com/ui/r/p-tabs-14.json)
+- Large segmented control built with tabs | [JSON](https://coss.com/ui/r/p-tabs-15.json)
 
 ### textarea
 

@@ -1,11 +1,10 @@
 ---
 name: convex-migrations
+displayName: Convex Migrations
 description: Schema migration strategies for evolving applications including adding new fields, backfilling data, removing deprecated fields, index migrations, and zero-downtime migration patterns
-metadata:
-  displayName: Convex Migrations
-  version: "1.0.0"
-  author: Convex
-  tags: "convex, migrations, schema, database, data-modeling"
+version: 1.0.0
+author: Convex
+tags: [convex, migrations, schema, database, data-modeling]
 ---
 
 # Convex Migrations
@@ -643,14 +642,14 @@ export default defineSchema({
     // Original fields
     name: v.string(),
     email: v.string(),
-
+    
     // Added in migration v1
     createdAt: v.optional(v.number()),
     updatedAt: v.optional(v.number()),
-
+    
     // Added in migration v2
     avatarUrl: v.optional(v.string()),
-
+    
     // Added in migration v3
     settings: v.optional(v.object({
       theme: v.string(),

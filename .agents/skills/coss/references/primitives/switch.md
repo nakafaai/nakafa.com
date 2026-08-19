@@ -74,6 +74,7 @@ Disabled switch:
 - customizing size: `p-switch-6`
 - card style: `p-switch-4`
 - form integration: `p-switch-5`
+- weekly availability editors with searchable time ranges: `p-switch-7`, `p-switch-8`, `p-switch-9`
 
 ## Common pitfalls
 
@@ -83,4 +84,4 @@ Disabled switch:
 
 ## Useful particle references
 
-See `p-switch-1` through `p-switch-6` for label, disabled, description, card, form, and size patterns.
+See `p-switch-1` through `p-switch-6` for label, disabled, description, card, form, and size patterns. See `p-switch-7` through `p-switch-9` for complete weekly availability editors using Switch, Combobox, Popover, and grouped controls.

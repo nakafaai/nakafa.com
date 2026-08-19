@@ -14,8 +14,10 @@ npx shadcn@latest add @coss/tabs
 Manual deps from docs:
 
 ```bash
-# No extra runtime dependency required for this primitive.
+npm install @base-ui/react class-variance-authority
 ```
+
+The CLI installs the shared `@coss/segmented-control` registry dependency automatically. For a manual installation, also copy `lib/segmented-control.ts` before copying the Tabs component.
 
 ## Canonical imports
 
@@ -57,11 +59,20 @@ const [value, setValue] = useState("tab-1")
 </Tabs>
 ```
 
+Sizes are set on `TabsList` and inherited by its tabs. An individual `TabsTab` can override the inherited size.
+
+```tsx
+<TabsList size="sm">
+  <TabsTab value="tab-1">Tab 1</TabsTab>
+  <TabsTab size="lg" value="tab-2">Tab 2</TabsTab>
+</TabsList>
+```
+
 Underline variant:
 
 ```tsx
-<Tabs defaultValue="tab-1" variant="underline">
-  <TabsList>
+<Tabs defaultValue="tab-1">
+  <TabsList variant="underline">
     <TabsTab value="tab-1">Tab 1</TabsTab>
     <TabsTab value="tab-2">Tab 2</TabsTab>
   </TabsList>
@@ -79,8 +90,9 @@ Underline variant:
 
 - Mismatching `TabsTab value` and `TabsPanel value` pairs.
 - Using tabs for workflows that require route-level navigation instead.
+- Using tabs for a form value or reversible filter just because it looks like a segmented control. Read `../segmented-control.md` and choose semantics first.
 - Mounting expensive panel content without considering visibility/performance.
 
 ## Useful particle references
 
-See `p-tabs-1` through `p-tabs-4` for variants and orientations. Related: `p-toolbar-1`, `p-card-1`.
+See `p-tabs-1` through `p-tabs-4` for variants and orientations, plus `p-tabs-14` and `p-tabs-15` for small and large segmented Tabs. Related: `p-toolbar-1`, `p-card-1`.

@@ -40,7 +40,7 @@ await resend.emails.send({
 
 **Best practice:** Use deterministic keys based on the business event. If you retry the same logical send, the same key must be generated. Avoid `Date.now()` or random values generated fresh on each attempt.
 
-**Key expiration:** Idempotency keys are typically cached for 24 hours. Retries within this window return the original response. After expiration, the same key triggers a new send - so complete your retry logic well within 24 hours.
+**Key expiration:** Idempotency keys are typically cached for 24 hours. Retries within this window return the original response. After expiration, the same key triggers a new send—so complete your retry logic well within 24 hours.
 
 ## Retry Logic
 

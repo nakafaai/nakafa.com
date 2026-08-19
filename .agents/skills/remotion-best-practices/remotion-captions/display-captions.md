@@ -131,7 +131,7 @@ The captions are whitespace sensitive. You should include spaces in the `text` f
 
 ## Separate component for captions
 
-Put captioning logic in a separate component.
+Put captioning logic in a separate component.  
 Make a new file for it.
 
 ## Word highlighting
@@ -177,7 +177,7 @@ const CaptionPage: React.FC<{ page: TikTokPage }> = ({ page }) => {
 
 ## Display captions alongside video content
 
-By default, put the captions alongside the video content, so the captions are in sync.
+By default, put the captions alongside the video content, so the captions are in sync.  
 For each video, make a new captions JSON file.
 
 ```tsx

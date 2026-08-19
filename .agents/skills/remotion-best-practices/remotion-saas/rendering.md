@@ -5,7 +5,7 @@ metadata:
   tags: remotion, saas, ssr, renderer, node, bun, render-server
 ---
 
-This is about rendering videos programmatically with Remotion.
+This is about rendering videos programmatically with Remotion.  
 For one-off renders, `npx remotion render` or the Studio is better suited.
 
 ## Comparison of SSR methods

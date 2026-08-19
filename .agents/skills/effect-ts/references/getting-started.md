@@ -3491,7 +3491,7 @@ To install the Effect Language Service in your project:
 
    > **Tip**
    In VS Code or Cursor, you can select the workspace TypeScript version by opening a TypeScript file, clicking on the TypeScript version number in the status bar, and selecting "Use Workspace Version".
-
+   
 
 4. You're ready to play!
 

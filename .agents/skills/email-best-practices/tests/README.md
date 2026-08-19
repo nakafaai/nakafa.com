@@ -6,9 +6,9 @@ Tests for the `email-best-practices` skill using the RED-GREEN methodology from 
 
 This is a **reference/technique** skill (not discipline-enforcing), so tests focus on:
 
-- **Retrieval** - Does the agent find the right resource for a given problem?
-- **Application** - Does the agent produce correct, specific guidance?
-- **Gap** - Are common email scenarios adequately covered?
+- **Retrieval** — Does the agent find the right resource for a given problem?
+- **Application** — Does the agent produce correct, specific guidance?
+- **Gap** — Are common email scenarios adequately covered?
 
 ## Test Scenarios
 
@@ -24,7 +24,7 @@ This is a **reference/technique** skill (not discipline-enforcing), so tests foc
 
 Each scenario in `scenarios/` is a self-contained prompt. Run with a subagent:
 
-**RED (baseline):** Run the prompt as-is - no skill loaded. The agent uses only general knowledge.
+**RED (baseline):** Run the prompt as-is — no skill loaded. The agent uses only general knowledge.
 
 **GREEN (with skill):** Prepend: `You have access to an email best practices skill with resources in <path>. Read SKILL.md first, then read the relevant resource file(s).`
 

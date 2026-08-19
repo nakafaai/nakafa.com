@@ -73,10 +73,10 @@ import {TransitionSeries} from '@remotion/transitions';
 
 ## Options
 
-- `progress?` - controls the evolve/retract phase from `0` to `1`. Effects do not animate on their own, so drive it with `useCurrentFrame()` and `interpolate()`. Default: `0.5`.
-- `seed?` - determines the shape of the light leak pattern. Different seeds produce different patterns. Default: `0`.
-- `hueShift?` - rotates the hue in degrees (`0`–`360`). Default: `0` (yellow-to-orange). `120` = green, `240` = blue.
-- `disabled?` - skips the effect when `true`. Default: `false`.
+- `progress?` — controls the evolve/retract phase from `0` to `1`. Effects do not animate on their own, so drive it with `useCurrentFrame()` and `interpolate()`. Default: `0.5`.
+- `seed?` — determines the shape of the light leak pattern. Different seeds produce different patterns. Default: `0`.
+- `hueShift?` — rotates the hue in degrees (`0`–`360`). Default: `0` (yellow-to-orange). `120` = green, `240` = blue.
+- `disabled?` — skips the effect when `true`. Default: `false`.
 
 ## Customizing the look
 

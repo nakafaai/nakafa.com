@@ -19,7 +19,7 @@ Collecting email addresses responsibly with validation, verification, and proper
 
 ### Server-Side (Recommended)
 
-Always validate server-side - client-side can be bypassed.
+Always validate server-side—client-side can be bypassed.
 
 **Check:**
 - Email format (RFC 5322)

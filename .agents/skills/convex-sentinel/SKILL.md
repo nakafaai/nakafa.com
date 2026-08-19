@@ -3,7 +3,7 @@ name: convex-sentinel
 description: "Set up Sentinel production error capture in your own Convex deployment."
 ---
 
-<!-- GENERATED from convex-agents content/capabilities/sentinel.json - do not edit by hand. -->
+<!-- GENERATED from convex-agents content/capabilities/sentinel.json — do not edit by hand. -->
 
 # Capture production errors in your own deployment
 
@@ -19,7 +19,7 @@ Install `@convex-dev/sentinel` to capture production errors (server function fai
 
 ## Rules
 
-- Redaction is mandatory and on by default - never store raw secrets; the agent's reads reach the model provider.
+- Redaction is mandatory and on by default — never store raw secrets; the agent's reads reach the model provider.
 - Data stays in the user's deployment; never send it to a third party.
 - Sample and cap to control volume and cost.
 - Capturing PROD errors needs a deployed cloud app; install works anonymously.

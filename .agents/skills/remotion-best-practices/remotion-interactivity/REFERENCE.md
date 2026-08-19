@@ -1,7 +1,7 @@
 ---
 name: remotion-interactivity
 description: Structure Remotion markup for interactivity
-version: 4.0.507
+version: 4.0.513
 ---
 
 By writing Remotion markup in a specific way, the Remotion Studio is able to recognize the structure of the code and makes it interactive:
@@ -94,7 +94,7 @@ const baseStyle = useMemo(() => {
 
 ## Animate using `interpolate()`
 
-Write animations as inline `interpolate()` calls on the property that changes.
+Write animations as inline `interpolate()` calls on the property that changes.  
 The output range, easing, extrapolation and `output` property should use hardcoded values.
 
 The input range may additionally use `durationInFrames`, `fps`, `width` and `height` destructured directly from `useVideoConfig()`. Bare identifiers such as `durationInFrames`, multiplication with a number such as `2 * fps` or `fps * 2`, and subtraction of a number such as `durationInFrames - 1` are supported.
@@ -149,7 +149,7 @@ const translateY = interpolate(frame, [0, 30], [0, 120]); // ❌ Math should be 
 
 ## Use `scale`, `translate`, `rotate` CSS properties
 
-Avoid the `transform` CSS property.
+Avoid the `transform` CSS property.  
 If possible, use `scale`, `rotate` and `translate` instead because only they are interactively editable.
 
 ## Keep composition metadata inline
@@ -196,7 +196,7 @@ Use only `calculateMetadata()` for the part of the metadata that is dynamic.
 
 ## Effects should be inline too
 
-The effects array should not be computed.
+The effects array should not be computed.  
 The same rules for setting keyframes as `interpolate()` apply too here: All values should also be hardcoded: Input range, output range, easing, extrapolation, `output` property.
 
 ```tsx title="Effects"
