@@ -1,5 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { Effect, Exit, Queue, Ref, Scope, SubscriptionRef } from "effect";
+import { Effect, Queue, Ref, SubscriptionRef } from "effect";
 import { vi } from "vitest";
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import { areConversationViewsEqual } from "@/components/school/classes/forum/conversation/data/view/model";
@@ -153,32 +153,23 @@ export function createViewportRuntime({
   state?: ViewportState;
 }) {
   return Effect.gen(function* () {
-    const scope = yield* Scope.make();
+    const scope = yield* Effect.scope;
 
     return {
-      runtime: {
-        activeTranscriptRef:
-          yield* Ref.make<ActiveTranscript>(activeTranscript),
-        adapters,
-        eventQueue: yield* Queue.bounded<ViewportEvent>(1),
-        highlightFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
-        highlightTokenRef: yield* Ref.make(0),
-        lastMeasurementRef: yield* Ref.make<ViewportMeasurement | null>(
-          measurement
-        ),
-        lastReadPostIdRef: yield* Ref.make<ForumPostId | null>(null),
-        persistFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
-        scope,
-        stateRef: yield* SubscriptionRef.make(state),
-      } satisfies ViewportRuntime,
+      activeTranscriptRef: yield* Ref.make<ActiveTranscript>(activeTranscript),
+      adapters,
+      eventQueue: yield* Queue.bounded<ViewportEvent>(1),
+      highlightFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
+      highlightTokenRef: yield* Ref.make(0),
+      lastMeasurementRef: yield* Ref.make<ViewportMeasurement | null>(
+        measurement
+      ),
+      lastReadPostIdRef: yield* Ref.make<ForumPostId | null>(null),
+      persistFiberRef: yield* Ref.make<RuntimeFiber | null>(null),
       scope,
-    };
+      stateRef: yield* SubscriptionRef.make(state),
+    } satisfies ViewportRuntime;
   });
-}
-
-/** Closes one manually-created viewport runtime fixture. */
-export function closeViewportRuntime(scope: Scope.Closeable) {
-  return Scope.close(scope, Exit.succeed(undefined));
 }
 
 /** Creates one Effect-owned viewport service with test adapters provided. */

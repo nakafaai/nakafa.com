@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@repo/testing/effect";
-import { Effect, Exit, Queue, Ref, Scope, SubscriptionRef } from "effect";
+import { Effect, Queue, Ref, SubscriptionRef } from "effect";
 import {
   type ActiveTranscriptModel,
   createActiveTranscriptModel,
@@ -198,43 +198,40 @@ describe("conversation/viewport/measure", () => {
       Effect.gen(function* () {
         const rig = createAdapters();
 
-        yield* Effect.gen(function* () {
-          const runtime = yield* makeMeasurementRuntime({
-            adapters: {
-              ...rig.adapters,
-              session: {
-                saveSnapshot: () =>
-                  Effect.fail(
-                    new ViewportSessionError({
-                      cause: "test",
-                      message: "No snapshot should be persisted in this test.",
-                    })
-                  ),
-              },
+        const runtime = yield* makeMeasurementRuntime({
+          adapters: {
+            ...rig.adapters,
+            session: {
+              saveSnapshot: () =>
+                Effect.fail(
+                  new ViewportSessionError({
+                    cause: "test",
+                    message: "No snapshot should be persisted in this test.",
+                  })
+                ),
             },
-            state: {
-              backStack: [{ kind: "bottom" }],
-              hasOverflow: true,
-              highlightedPostId: null,
-              isAtLatest: false,
-              latestAffinity: "detached",
-              lifecycle: "ready",
-              pendingPlacement: null,
-            },
-          });
+          },
+          state: {
+            backStack: [{ kind: "bottom" }],
+            hasOverflow: true,
+            highlightedPostId: null,
+            isAtLatest: false,
+            latestAffinity: "detached",
+            lifecycle: "ready",
+            pendingPlacement: null,
+          },
+        });
 
-          yield* handleViewportMeasurement(
-            runtime,
-            makePostMeasurement(firstPost._id),
-            "scroll"
-          );
-          const state = yield* SubscriptionRef.get(runtime.stateRef);
+        yield* handleViewportMeasurement(
+          runtime,
+          makePostMeasurement(firstPost._id),
+          "scroll"
+        );
+        const state = yield* SubscriptionRef.get(runtime.stateRef);
 
-          expect(state.jumpControl).toEqual({
-            showBack: true,
-            showLatest: true,
-          });
-          yield* Scope.close(runtime.scope, Exit.succeed(undefined));
+        expect(state.jumpControl).toEqual({
+          showBack: true,
+          showLatest: true,
         });
       })
   );
@@ -249,78 +246,74 @@ describe("conversation/viewport/measure", () => {
           sequence: 5,
         });
 
-        yield* Effect.gen(function* () {
-          const runtime = yield* makeMeasurementRuntime({
-            adapters: rig.adapters,
-            lastMeasurement: makePostMeasurement(secondPost._id, 80),
-            state: {
-              backStack: [{ kind: "bottom" }],
-              hasOverflow: true,
-              highlightedPostId: null,
-              isAtLatest: false,
-              latestAffinity: "detached",
-              lifecycle: "placing",
-              pendingPlacement: {
-                highlightPostId: firstPost._id,
-                view: { kind: "post", postId: firstPost._id },
-              },
+        const runtime = yield* makeMeasurementRuntime({
+          adapters: rig.adapters,
+          lastMeasurement: makePostMeasurement(secondPost._id, 80),
+          state: {
+            backStack: [{ kind: "bottom" }],
+            hasOverflow: true,
+            highlightedPostId: null,
+            isAtLatest: false,
+            latestAffinity: "detached",
+            lifecycle: "placing",
+            pendingPlacement: {
+              highlightPostId: firstPost._id,
+              view: { kind: "post", postId: firstPost._id },
             },
-          });
-
-          yield* handleViewportMeasurement(
-            runtime,
-            {
-              ...makePostMeasurement(secondPost._id, 120),
-              offset: 260,
-            },
-            "scroll"
-          );
-          const state = yield* SubscriptionRef.get(runtime.stateRef);
-
-          expect(state.pendingPlacement?.view).toEqual({
-            kind: "post",
-            postId: firstPost._id,
-          });
-          expect(state.backStack).toEqual([{ kind: "bottom" }]);
-          yield* Scope.close(runtime.scope, Exit.succeed(undefined));
+          },
         });
 
-        yield* Effect.gen(function* () {
-          const runtime = yield* makeMeasurementRuntime({
-            activeTranscript: viewportTestTranscript,
-            adapters: rig.adapters,
-            lastMeasurement: makePostMeasurement(secondPost._id, 80),
-            state: {
-              backStack: [{ kind: "bottom" }],
-              hasOverflow: true,
-              highlightedPostId: null,
-              isAtLatest: false,
-              latestAffinity: "detached",
-              lifecycle: "placing",
-              pendingPlacement: {
-                highlightPostId: missingPost._id,
-                view: { kind: "post", postId: missingPost._id },
-              },
-            },
-          });
+        yield* handleViewportMeasurement(
+          runtime,
+          {
+            ...makePostMeasurement(secondPost._id, 120),
+            offset: 260,
+          },
+          "scroll"
+        );
+        const state = yield* SubscriptionRef.get(runtime.stateRef);
 
-          yield* handleViewportMeasurement(
-            runtime,
-            {
-              ...makePostMeasurement(secondPost._id, 120),
-              offset: 260,
-            },
-            "scroll"
-          );
-          const state = yield* SubscriptionRef.get(runtime.stateRef);
-
-          expect(state.pendingPlacement?.view).toEqual({
-            kind: "post",
-            postId: missingPost._id,
-          });
-          expect(state.backStack).toEqual([{ kind: "bottom" }]);
-          yield* Scope.close(runtime.scope, Exit.succeed(undefined));
+        expect(state.pendingPlacement?.view).toEqual({
+          kind: "post",
+          postId: firstPost._id,
         });
+        expect(state.backStack).toEqual([{ kind: "bottom" }]);
+
+        const missingPostRuntime = yield* makeMeasurementRuntime({
+          activeTranscript: viewportTestTranscript,
+          adapters: rig.adapters,
+          lastMeasurement: makePostMeasurement(secondPost._id, 80),
+          state: {
+            backStack: [{ kind: "bottom" }],
+            hasOverflow: true,
+            highlightedPostId: null,
+            isAtLatest: false,
+            latestAffinity: "detached",
+            lifecycle: "placing",
+            pendingPlacement: {
+              highlightPostId: missingPost._id,
+              view: { kind: "post", postId: missingPost._id },
+            },
+          },
+        });
+
+        yield* handleViewportMeasurement(
+          missingPostRuntime,
+          {
+            ...makePostMeasurement(secondPost._id, 120),
+            offset: 260,
+          },
+          "scroll"
+        );
+        const missingPostState = yield* SubscriptionRef.get(
+          missingPostRuntime.stateRef
+        );
+
+        expect(missingPostState.pendingPlacement?.view).toEqual({
+          kind: "post",
+          postId: missingPost._id,
+        });
+        expect(missingPostState.backStack).toEqual([{ kind: "bottom" }]);
       })
   );
 
@@ -330,39 +323,36 @@ describe("conversation/viewport/measure", () => {
       Effect.gen(function* () {
         const rig = createAdapters();
 
-        yield* Effect.gen(function* () {
-          const runtime = yield* makeMeasurementRuntime({
-            activeTranscript: viewportTestTranscript,
-            adapters: rig.adapters,
-            lastMeasurement: makeMeasurement(),
-            state: {
-              backStack: [{ kind: "bottom" }],
-              hasOverflow: true,
-              highlightedPostId: null,
-              isAtLatest: false,
-              latestAffinity: "detached",
-              lifecycle: "placing",
-              pendingPlacement: {
-                highlightPostId: firstPost._id,
-                view: { kind: "post", postId: firstPost._id },
-              },
+        const runtime = yield* makeMeasurementRuntime({
+          activeTranscript: viewportTestTranscript,
+          adapters: rig.adapters,
+          lastMeasurement: makeMeasurement(),
+          state: {
+            backStack: [{ kind: "bottom" }],
+            hasOverflow: true,
+            highlightedPostId: null,
+            isAtLatest: false,
+            latestAffinity: "detached",
+            lifecycle: "placing",
+            pendingPlacement: {
+              highlightPostId: firstPost._id,
+              view: { kind: "post", postId: firstPost._id },
             },
-          });
-
-          yield* handleViewportMeasurement(
-            runtime,
-            makePostMeasurement(secondPost._id, 260),
-            "scroll"
-          );
-          const state = yield* SubscriptionRef.get(runtime.stateRef);
-
-          expect(state.pendingPlacement?.view).toEqual({
-            kind: "post",
-            postId: firstPost._id,
-          });
-          expect(state.backStack).toEqual([{ kind: "bottom" }]);
-          yield* Scope.close(runtime.scope, Exit.succeed(undefined));
+          },
         });
+
+        yield* handleViewportMeasurement(
+          runtime,
+          makePostMeasurement(secondPost._id, 260),
+          "scroll"
+        );
+        const state = yield* SubscriptionRef.get(runtime.stateRef);
+
+        expect(state.pendingPlacement?.view).toEqual({
+          kind: "post",
+          postId: firstPost._id,
+        });
+        expect(state.backStack).toEqual([{ kind: "bottom" }]);
       })
   );
 
@@ -372,39 +362,32 @@ describe("conversation/viewport/measure", () => {
       Effect.gen(function* () {
         const rig = createAdapters();
 
-        yield* Effect.gen(function* () {
-          const runtime = yield* makeMeasurementRuntime({
-            adapters: rig.adapters,
-            state: {
-              backStack: [{ kind: "bottom" }],
-              hasOverflow: true,
-              highlightedPostId: null,
-              isAtLatest: false,
-              latestAffinity: "detached",
-              lifecycle: "placing",
-              pendingPlacement: {
-                highlightPostId: firstPost._id,
-                view: { kind: "post", postId: firstPost._id },
-              },
+        const runtime = yield* makeMeasurementRuntime({
+          adapters: rig.adapters,
+          state: {
+            backStack: [{ kind: "bottom" }],
+            hasOverflow: true,
+            highlightedPostId: null,
+            isAtLatest: false,
+            latestAffinity: "detached",
+            lifecycle: "placing",
+            pendingPlacement: {
+              highlightPostId: firstPost._id,
+              view: { kind: "post", postId: firstPost._id },
             },
-          });
-          const clampedMeasurement = makeMeasurement({
-            lastVisiblePostId: firstPost._id,
-            view: { kind: "post", postId: firstPost._id },
-          });
-          rig.setMeasurement(clampedMeasurement);
-
-          yield* handleViewportMeasurement(
-            runtime,
-            clampedMeasurement,
-            "frame"
-          );
-          const state = yield* SubscriptionRef.get(runtime.stateRef);
-
-          expect(state.pendingPlacement).toBeNull();
-          expect(state.latestAffinity).toBe("latest");
-          yield* Scope.close(runtime.scope, Exit.succeed(undefined));
+          },
         });
+        const clampedMeasurement = makeMeasurement({
+          lastVisiblePostId: firstPost._id,
+          view: { kind: "post", postId: firstPost._id },
+        });
+        rig.setMeasurement(clampedMeasurement);
+
+        yield* handleViewportMeasurement(runtime, clampedMeasurement, "frame");
+        const state = yield* SubscriptionRef.get(runtime.stateRef);
+
+        expect(state.pendingPlacement).toBeNull();
+        expect(state.latestAffinity).toBe("latest");
       })
   );
 
@@ -492,7 +475,7 @@ function makeMeasurementRuntime({
   state: Omit<ViewportState, "jumpControl">;
 }) {
   return Effect.gen(function* () {
-    const scope = yield* Scope.make();
+    const scope = yield* Effect.scope;
 
     return {
       activeTranscriptRef: yield* Ref.make<ActiveTranscript>(activeTranscript),

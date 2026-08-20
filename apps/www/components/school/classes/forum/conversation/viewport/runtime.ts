@@ -29,6 +29,6 @@ export interface ViewportRuntime {
   lastMeasurementRef: Ref.Ref<ViewportMeasurement | null>;
   lastReadPostIdRef: Ref.Ref<ForumPostId | null>;
   persistFiberRef: Ref.Ref<RuntimeFiber | null>;
-  scope: Scope.Closeable;
+  scope: Scope.Scope;
   stateRef: SubscriptionRef.SubscriptionRef<ViewportState>;
 }

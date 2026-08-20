@@ -10,7 +10,6 @@ import {
 } from "@/components/school/classes/forum/conversation/fixtures/data";
 import { ViewportSessionError } from "@/components/school/classes/forum/conversation/viewport/adapter";
 import {
-  closeViewportRuntime,
   createAdapters,
   createViewport,
   createViewportRuntime,
@@ -29,6 +28,20 @@ import {
   flushCurrentSnapshot,
   persistCurrentSnapshot,
 } from "@/components/school/classes/forum/conversation/viewport/persist";
+import type { ConversationScrollSnapshot } from "@/components/school/classes/forum/store/session";
+
+function makeExpectedSnapshot(
+  overrides: Partial<ConversationScrollSnapshot> = {}
+): ConversationScrollSnapshot {
+  return {
+    lastPostId: secondPost._id,
+    offset: 300,
+    renderedRowCount: rows.length,
+    view: { kind: "bottom" },
+    wasAtBottom: true,
+    ...overrides,
+  };
+}
 
 describe("conversation/viewport/persist", () => {
   it("persists only after opening placement has reached its target", async () => {
@@ -53,15 +66,7 @@ describe("conversation/viewport/persist", () => {
     await dispatchViewport(viewport, { type: "persist" });
     await waitForState(viewport, () => rig.snapshots.length === 1);
 
-    expect(rig.snapshots).toEqual([
-      {
-        lastPostId: secondPost._id,
-        offset: 300,
-        renderedRowCount: rows.length,
-        view: { kind: "bottom" },
-        wasAtBottom: true,
-      },
-    ]);
+    expect(rig.snapshots).toEqual([makeExpectedSnapshot()]);
 
     await shutdownViewport(viewport);
   });
@@ -73,17 +78,14 @@ describe("conversation/viewport/persist", () => {
         const rig = createAdapters();
         rig.setMeasurement(null);
 
-        yield* Effect.gen(function* () {
-          const { runtime, scope } = yield* createViewportRuntime({
-            adapters: rig.adapters,
-          });
+        const runtime = yield* createViewportRuntime({
+          adapters: rig.adapters,
+        });
 
-          yield* flushCurrentSnapshot(runtime);
-          yield* persistCurrentSnapshot(runtime, {
-            activeTranscript: null,
-            measurement: makeMeasurement(),
-          });
-          yield* closeViewportRuntime(scope);
+        yield* flushCurrentSnapshot(runtime);
+        yield* persistCurrentSnapshot(runtime, {
+          activeTranscript: null,
+          measurement: makeMeasurement(),
         });
 
         expect(rig.snapshots).toEqual([]);
@@ -99,15 +101,7 @@ describe("conversation/viewport/persist", () => {
     await dispatchViewport(viewport, { type: "persist" });
     await waitForState(viewport, () => rig.snapshots.length === 1);
 
-    expect(rig.snapshots).toEqual([
-      {
-        lastPostId: secondPost._id,
-        offset: 300,
-        renderedRowCount: rows.length,
-        view: { kind: "bottom" },
-        wasAtBottom: true,
-      },
-    ]);
+    expect(rig.snapshots).toEqual([makeExpectedSnapshot()]);
 
     await shutdownViewport(viewport);
   });
@@ -122,34 +116,23 @@ describe("conversation/viewport/persist", () => {
         rig.setMeasurement(liveMeasurement);
         expect(rig.adapters.scroller.measure()).toEqual(liveMeasurement);
 
-        yield* Effect.gen(function* () {
-          const { runtime, scope } = yield* createViewportRuntime({
-            adapters: rig.adapters,
-            measurement: capturedMeasurement,
-            state: deriveViewportState({
-              backStack: [],
-              hasOverflow: true,
-              highlightedPostId: null,
-              isAtLatest: false,
-              latestAffinity: "detached",
-              lifecycle: "ready",
-              pendingPlacement: null,
-            }),
-          });
-
-          yield* flushCurrentSnapshot(runtime);
-          yield* closeViewportRuntime(scope);
+        const runtime = yield* createViewportRuntime({
+          adapters: rig.adapters,
+          measurement: capturedMeasurement,
+          state: deriveViewportState({
+            backStack: [],
+            hasOverflow: true,
+            highlightedPostId: null,
+            isAtLatest: false,
+            latestAffinity: "detached",
+            lifecycle: "ready",
+            pendingPlacement: null,
+          }),
         });
 
-        expect(rig.snapshots).toEqual([
-          {
-            lastPostId: secondPost._id,
-            offset: 999,
-            renderedRowCount: rows.length,
-            view: { kind: "bottom" },
-            wasAtBottom: true,
-          },
-        ]);
+        yield* flushCurrentSnapshot(runtime);
+
+        expect(rig.snapshots).toEqual([makeExpectedSnapshot({ offset: 999 })]);
       })
   );
 
@@ -181,25 +164,20 @@ describe("conversation/viewport/persist", () => {
         })
       );
 
-      yield* Effect.gen(function* () {
-        const { runtime, scope } = yield* createViewportRuntime({
-          activeTranscript: viewportTestTranscript,
-          adapters: rig.adapters,
-          measurement: makeMeasurement(),
-        });
-
-        yield* flushCurrentSnapshot(runtime);
-        yield* closeViewportRuntime(scope);
+      const runtime = yield* createViewportRuntime({
+        activeTranscript: viewportTestTranscript,
+        adapters: rig.adapters,
+        measurement: makeMeasurement(),
       });
 
+      yield* flushCurrentSnapshot(runtime);
+
       expect(rig.snapshots).toEqual([
-        {
+        makeExpectedSnapshot({
           lastPostId: latestPost._id,
           offset: 480,
           renderedRowCount: latestRows.length,
-          view: { kind: "bottom" },
-          wasAtBottom: true,
-        },
+        }),
       ]);
     })
   );
@@ -219,31 +197,28 @@ describe("conversation/viewport/persist", () => {
         });
         rig.setMeasurement(liveMeasurement);
 
-        yield* Effect.gen(function* () {
-          const { runtime, scope } = yield* createViewportRuntime({
-            adapters: rig.adapters,
-            measurement: previousMeasurement,
-            state: deriveViewportState({
-              backStack: [],
-              hasOverflow: true,
-              highlightedPostId: null,
-              isAtLatest: false,
-              latestAffinity: "detached",
-              lifecycle: "placing",
-              pendingPlacement: {
-                highlightPostId: firstPost._id,
-                view: { kind: "post", postId: firstPost._id },
-              },
-            }),
-          });
-
-          yield* flushCurrentSnapshot(runtime);
-
-          expect(yield* Ref.get(runtime.lastMeasurementRef)).toEqual(
-            previousMeasurement
-          );
-          yield* closeViewportRuntime(scope);
+        const runtime = yield* createViewportRuntime({
+          adapters: rig.adapters,
+          measurement: previousMeasurement,
+          state: deriveViewportState({
+            backStack: [],
+            hasOverflow: true,
+            highlightedPostId: null,
+            isAtLatest: false,
+            latestAffinity: "detached",
+            lifecycle: "placing",
+            pendingPlacement: {
+              highlightPostId: firstPost._id,
+              view: { kind: "post", postId: firstPost._id },
+            },
+          }),
         });
+
+        yield* flushCurrentSnapshot(runtime);
+
+        expect(yield* Ref.get(runtime.lastMeasurementRef)).toEqual(
+          previousMeasurement
+        );
       })
   );
 
@@ -318,13 +293,11 @@ describe("conversation/viewport/persist", () => {
         yield* viewport.flushSnapshot;
 
         expect(rig.snapshots).toEqual([
-          {
-            lastPostId: secondPost._id,
+          makeExpectedSnapshot({
             offset: 160,
-            renderedRowCount: rows.length,
             view: { kind: "post", postId: firstPost._id },
             wasAtBottom: false,
-          },
+          }),
         ]);
         yield* Effect.promise(() => shutdownViewport(viewport));
       })
@@ -337,39 +310,30 @@ describe("conversation/viewport/persist", () => {
         const rig = createAdapters();
         rig.setMeasurement(null);
 
-        yield* Effect.gen(function* () {
-          const { runtime, scope } = yield* createViewportRuntime({
-            adapters: rig.adapters,
-            measurement: makeMeasurement({
-              bottomDistance: 320,
-              isAtLatest: false,
-              lastVisiblePostId: null,
-              offset: 80,
-              view: null,
-            }),
-            state: deriveViewportState({
-              backStack: [],
-              hasOverflow: true,
-              highlightedPostId: null,
-              isAtLatest: false,
-              latestAffinity: "detached",
-              lifecycle: "ready",
-              pendingPlacement: null,
-            }),
-          });
-
-          yield* flushCurrentSnapshot(runtime);
-          yield* closeViewportRuntime(scope);
+        const runtime = yield* createViewportRuntime({
+          adapters: rig.adapters,
+          measurement: makeMeasurement({
+            bottomDistance: 320,
+            isAtLatest: false,
+            lastVisiblePostId: null,
+            offset: 80,
+            view: null,
+          }),
+          state: deriveViewportState({
+            backStack: [],
+            hasOverflow: true,
+            highlightedPostId: null,
+            isAtLatest: false,
+            latestAffinity: "detached",
+            lifecycle: "ready",
+            pendingPlacement: null,
+          }),
         });
 
+        yield* flushCurrentSnapshot(runtime);
+
         expect(rig.snapshots).toEqual([
-          {
-            lastPostId: secondPost._id,
-            offset: 80,
-            renderedRowCount: rows.length,
-            view: { kind: "bottom" },
-            wasAtBottom: false,
-          },
+          makeExpectedSnapshot({ offset: 80, wasAtBottom: false }),
         ]);
       })
   );
@@ -399,15 +363,7 @@ describe("conversation/viewport/persist", () => {
 
       yield* viewport.flushSnapshot;
 
-      expect(rig.snapshots).toEqual([
-        {
-          lastPostId: secondPost._id,
-          offset: 160,
-          renderedRowCount: rows.length,
-          view: { kind: "bottom" },
-          wasAtBottom: true,
-        },
-      ]);
+      expect(rig.snapshots).toEqual([makeExpectedSnapshot({ offset: 160 })]);
 
       yield* Effect.promise(() => shutdownViewport(viewport));
     })
@@ -419,36 +375,21 @@ describe("conversation/viewport/persist", () => {
       const latestMeasurement = makeMeasurement({ offset: 360 });
       rig.setMeasurement(latestMeasurement);
 
-      yield* Effect.gen(function* () {
-        const { runtime, scope } = yield* createViewportRuntime({
-          adapters: rig.adapters,
-          measurement: latestMeasurement,
-        });
-        const pendingFiber = yield* Effect.forkIn(Effect.never, scope);
-        yield* Ref.set(runtime.persistFiberRef, pendingFiber);
-
-        yield* flushCurrentSnapshot(runtime);
-
-        expect(yield* Ref.get(runtime.persistFiberRef)).toBeNull();
-        yield* flushCurrentSnapshot(runtime);
-        yield* closeViewportRuntime(scope);
+      const runtime = yield* createViewportRuntime({
+        adapters: rig.adapters,
+        measurement: latestMeasurement,
       });
+      const pendingFiber = yield* Effect.forkIn(Effect.never, runtime.scope);
+      yield* Ref.set(runtime.persistFiberRef, pendingFiber);
+
+      yield* flushCurrentSnapshot(runtime);
+
+      expect(yield* Ref.get(runtime.persistFiberRef)).toBeNull();
+      yield* flushCurrentSnapshot(runtime);
 
       expect(rig.snapshots).toEqual([
-        {
-          lastPostId: secondPost._id,
-          offset: 360,
-          renderedRowCount: rows.length,
-          view: { kind: "bottom" },
-          wasAtBottom: true,
-        },
-        {
-          lastPostId: secondPost._id,
-          offset: 360,
-          renderedRowCount: rows.length,
-          view: { kind: "bottom" },
-          wasAtBottom: true,
-        },
+        makeExpectedSnapshot({ offset: 360 }),
+        makeExpectedSnapshot({ offset: 360 }),
       ]);
     })
   );
@@ -461,29 +402,18 @@ describe("conversation/viewport/persist", () => {
         const latestMeasurement = makeMeasurement({ offset: 420 });
         rig.setMeasurement(latestMeasurement);
 
-        yield* Effect.gen(function* () {
-          const { runtime, scope } = yield* createViewportRuntime({
-            adapters: rig.adapters,
-            measurement: latestMeasurement,
-          });
-          const pendingFiber = yield* Effect.forkIn(Effect.never, scope);
-          yield* Ref.set(runtime.persistFiberRef, pendingFiber);
-
-          yield* flushCurrentSnapshot(runtime);
-
-          expect(yield* Ref.get(runtime.persistFiberRef)).toBeNull();
-          yield* closeViewportRuntime(scope);
+        const runtime = yield* createViewportRuntime({
+          adapters: rig.adapters,
+          measurement: latestMeasurement,
         });
+        const pendingFiber = yield* Effect.forkIn(Effect.never, runtime.scope);
+        yield* Ref.set(runtime.persistFiberRef, pendingFiber);
 
-        expect(rig.snapshots).toEqual([
-          {
-            lastPostId: secondPost._id,
-            offset: 420,
-            renderedRowCount: rows.length,
-            view: { kind: "bottom" },
-            wasAtBottom: true,
-          },
-        ]);
+        yield* flushCurrentSnapshot(runtime);
+
+        expect(yield* Ref.get(runtime.persistFiberRef)).toBeNull();
+
+        expect(rig.snapshots).toEqual([makeExpectedSnapshot({ offset: 420 })]);
       })
   );
 
@@ -534,13 +464,11 @@ describe("conversation/viewport/persist", () => {
         yield* viewport.flushSnapshot;
 
         expect(rig.snapshots).toEqual([
-          {
-            lastPostId: secondPost._id,
+          makeExpectedSnapshot({
             offset: 160,
-            renderedRowCount: rows.length,
             view: { kind: "post", postId: firstPost._id },
             wasAtBottom: false,
-          },
+          }),
         ]);
 
         yield* Effect.promise(() => shutdownViewport(viewport));
