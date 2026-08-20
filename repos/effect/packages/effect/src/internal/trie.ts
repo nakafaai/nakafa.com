@@ -1,18 +1,18 @@
-import * as Equal from "../Equal.js"
-import { dual, identity, pipe } from "../Function.js"
-import * as Hash from "../Hash.js"
-import { format, NodeInspectSymbol, toJSON } from "../Inspectable.js"
-import * as Option from "../Option.js"
-import type * as Ordering from "../Ordering.js"
-import { pipeArguments } from "../Pipeable.js"
-import { hasProperty } from "../Predicate.js"
-import type * as TR from "../Trie.js"
-import type { NoInfer } from "../Types.js"
-
-const TrieSymbolKey = "effect/Trie"
+import * as Equal from "../Equal.ts"
+import { format } from "../Formatter.ts"
+import { dual, pipe } from "../Function.ts"
+import * as Hash from "../Hash.ts"
+import { NodeInspectSymbol, toJson } from "../Inspectable.ts"
+import * as Option from "../Option.ts"
+import type * as Ordering from "../Ordering.ts"
+import { pipeArguments } from "../Pipeable.ts"
+import { hasProperty } from "../Predicate.ts"
+import * as Result from "../Result.ts"
+import type * as TR from "../Trie.ts"
+import type { NoInfer } from "../Types.ts"
 
 /** @internal */
-export const TrieTypeId: TR.TypeId = Symbol.for(TrieSymbolKey) as TR.TypeId
+export const TrieTypeId = "~effect/collections/Trie"
 
 type TraversalMap<K, V, A> = (k: K, v: V) => A
 
@@ -35,14 +35,14 @@ const TrieProto: TR.Trie<unknown> = {
     return new TrieIterator(this, (k, v) => [k, v], () => true)
   },
   [Hash.symbol](this: TR.Trie<unknown>): number {
-    let hash = Hash.hash(TrieSymbolKey)
+    let hash = Hash.hash(TrieTypeId)
     for (const item of this) {
       hash ^= pipe(Hash.hash(item[0]), Hash.combine(Hash.hash(item[1])))
     }
-    return Hash.cached(this, hash)
+    return hash
   },
   [Equal.symbol]<V>(this: TrieImpl<V>, that: unknown): boolean {
-    if (isTrie(that)) {
+    if (isTrie(that) && size(this) === size(that)) {
       const entries = Array.from(that)
       return Array.from(this).every((itemSelf, i) => {
         const itemThat = entries[i]
@@ -52,12 +52,12 @@ const TrieProto: TR.Trie<unknown> = {
     return false
   },
   toString() {
-    return format(this.toJSON())
+    return `Trie(${format(Array.from(this))})`
   },
   toJSON() {
     return {
       _id: "Trie",
-      values: Array.from(this).map(toJSON)
+      values: toJson(Array.from(this))
     }
   },
   [NodeInspectSymbol]() {
@@ -77,12 +77,18 @@ const makeImpl = <V>(root: Node<V> | undefined): TrieImpl<V> => {
 
 class TrieIterator<in out V, out T> implements IterableIterator<T> {
   stack: Array<[Node<V>, string, boolean]> = []
+  readonly trie: TrieImpl<V>
+  readonly f: TraversalMap<string, V, T>
+  readonly filter: TraversalFilter<string, V>
 
   constructor(
-    readonly trie: TrieImpl<V>,
-    readonly f: TraversalMap<string, V, T>,
-    readonly filter: TraversalFilter<string, V>
+    trie: TrieImpl<V>,
+    f: TraversalMap<string, V, T>,
+    filter: TraversalFilter<string, V>
   ) {
+    this.trie = trie
+    this.f = f
+    this.filter = filter
     const root = trie._root !== undefined ? trie._root : undefined
     if (root !== undefined) {
       this.stack.push([root, "", false])
@@ -97,8 +103,8 @@ class TrieIterator<in out V, out T> implements IterableIterator<T> {
         const value = node.value
         if (value !== undefined) {
           const key = keyString + node.key
-          if (this.filter(key, value)) {
-            return { done: false, value: this.f(key, value) }
+          if (this.filter(key, value.value)) {
+            return { done: false, value: this.f(key, value.value) }
           }
         }
       } else {
@@ -166,7 +172,7 @@ export const insert = dual<
     key: key[0],
     count: 0
   }
-  const count = n.count + 1
+  let count = n.count + 1
   let cIndex = 0
 
   while (cIndex < key.length) {
@@ -188,7 +194,17 @@ export const insert = dual<
       }
     } else {
       if (cIndex === key.length - 1) {
-        n.value = value
+        if (n.value !== undefined) {
+          count -= 1
+        }
+        nStack[nStack.length - 1] = {
+          key: n.key,
+          count,
+          value: { value },
+          left: n.left,
+          mid: n.mid,
+          right: n.right
+        }
       } else if (n.mid === undefined) {
         dStack.push(0)
         n = { key: key[cIndex + 1], count }
@@ -304,22 +320,27 @@ export const filter: {
 
 /** @internal */
 export const filterMap = dual<
-  <A, B>(
-    f: (value: A, key: string) => Option.Option<B>
+  <A, B, X>(
+    f: (input: A, key: string) => Result.Result<B, X>
   ) => (self: TR.Trie<A>) => TR.Trie<B>,
-  <A, B>(self: TR.Trie<A>, f: (value: A, key: string) => Option.Option<B>) => TR.Trie<B>
->(2, (self, f) =>
+  <A, B, X>(self: TR.Trie<A>, f: (input: A, key: string) => Result.Result<B, X>) => TR.Trie<B>
+>(2, <A, B, X>(self: TR.Trie<A>, f: (input: A, key: string) => Result.Result<B, X>): TR.Trie<B> =>
   reduce(
     self,
-    empty(),
+    empty<B>(),
     (trie, value, key) => {
-      const option = f(value, key)
-      return Option.isSome(option) ? insert(trie, key, option.value) : trie
+      const result = f(value, key)
+      return Result.isSuccess(result) ? insert(trie, key, result.success) : trie
     }
   ))
 
 /** @internal */
-export const compact = <A>(self: TR.Trie<Option.Option<A>>) => filterMap(self, identity)
+export const compact = <A>(self: TR.Trie<Option.Option<A>>) =>
+  reduce(
+    self,
+    empty<A>(),
+    (trie, option, key) => Option.isSome(option) ? insert(trie, key, option.value) : trie
+  )
 
 /** @internal */
 export const forEach = dual<
@@ -392,7 +413,7 @@ export const get = dual<
         }
       } else {
         if (cIndex === key.length - 1) {
-          return Option.fromNullable(n.value)
+          return n.value === undefined ? Option.none() : Option.some(n.value.value)
         } else {
           if (n.mid === undefined) {
             return Option.none()
@@ -414,7 +435,7 @@ export const has = dual<
 >(2, (self, key) => Option.isSome(get(self, key)))
 
 /** @internal */
-export const unsafeGet = dual<
+export const getUnsafe = dual<
   (key: string) => <V>(self: TR.Trie<V>) => V,
   <V>(self: TR.Trie<V>, key: string) => V
 >(2, (self, key) => {
@@ -621,7 +642,7 @@ export const modify = dual<
     nStack[nStack.length - 1] = {
       key: updateNode.key,
       count: updateNode.count,
-      value: f(updateNode.value), // Update
+      value: { value: f(updateNode.value.value) }, // Update
       left: updateNode.left,
       mid: updateNode.mid,
       right: updateNode.right
@@ -675,17 +696,13 @@ export const longestPrefixOf = dual<
   <V>(self: TR.Trie<V>, key: string) => Option.Option<[string, V]>
 >(
   2,
-  <V>(self: TR.Trie<V>, key: string) => {
+  <V>(self: TR.Trie<V>, key: string): Option.Option<[string, V]> => {
     let n: Node<V> | undefined = (self as TrieImpl<V>)._root
     if (n === undefined || key.length === 0) return Option.none()
-    let longestPrefixNode: [string, V] | undefined = undefined
+    let longestPrefixNode: Option.Option<[string, V]> = Option.none()
     let cIndex = 0
     while (cIndex < key.length) {
       const c = key[cIndex]
-      if (n.value !== undefined) {
-        longestPrefixNode = [key.slice(0, cIndex + 1), n.value]
-      }
-
       if (c > n.key) {
         if (n.right === undefined) {
           break
@@ -699,6 +716,9 @@ export const longestPrefixOf = dual<
           n = n.left
         }
       } else {
+        if (n.value !== undefined) {
+          longestPrefixNode = Option.some([key.slice(0, cIndex + 1), n.value.value])
+        }
         if (n.mid === undefined) {
           break
         } else {
@@ -708,14 +728,14 @@ export const longestPrefixOf = dual<
       }
     }
 
-    return Option.fromNullable(longestPrefixNode)
+    return longestPrefixNode
   }
 )
 
 interface Node<V> {
   key: string
   count: number
-  value?: V | undefined
+  value?: { readonly value: V } | undefined
   left?: Node<V> | undefined
   mid?: Node<V> | undefined
   right?: Node<V> | undefined

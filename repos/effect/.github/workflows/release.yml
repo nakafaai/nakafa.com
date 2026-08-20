@@ -1,8 +1,7 @@
-name: Release V3
-
+name: Release
 on:
   push:
-    branches: [v3]
+    branches: [main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -13,15 +12,15 @@ permissions: {}
 jobs:
   release:
     if: github.repository_owner == 'Effect-Ts'
-    name: Release (v3)
+    name: Release
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
       contents: write
-      id-token: write
       pull-requests: write
+      id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           # This is required to ensure the `GITHUB_TOKEN` we provide below is
           # **always** used when pushing updates to the changesets release branch.
@@ -30,16 +29,22 @@ jobs:
           persist-credentials: false
       - name: Install dependencies
         uses: ./.github/actions/setup
-        with:
-          registry-url: "https://registry.npmjs.org"
       - name: Upgrade npm for OIDC support
         run: npm install -g npm@11
       - name: Create Release Pull Request or Publish
-        uses: changesets/action@v1
+        id: changesets
+        uses: changesets/action@d0ee272882939fa35f22d979828acb7e61e0bd47 # v2.0.0-next.4
         with:
-          version: pnpm changeset-version
-          publish: pnpm changeset-publish
-          title: Version Packages (v3)
-          commit: Version Packages (v3)
-        env:
-          GITHUB_TOKEN: ${{ secrets.CHANGESET_GITHUB_TOKEN }}
+          version-script: pnpm changeset-version
+          publish-script: pnpm changeset-publish
+          # Use a personal access token instead of the one that GitHub generates
+          # automatically to ensure workflows get triggered on the changesets
+          # release branch.
+          github-token: ${{ secrets.CHANGESET_GITHUB_TOKEN }}
+      - name: Deploy website
+        if: steps.changesets.outputs.published == 'true'
+        uses: ./.github/actions/deploy-website
+        with:
+          channel: v4
+          dispatch-token: ${{ secrets.WEBSITE_DISPATCH_TOKEN }}
+          revision: ${{ github.sha }}
