@@ -7,34 +7,29 @@ import {
 } from "@/scripts/indexing/paths";
 import { logger } from "@/scripts/utils";
 
-const SubmissionServiceSchema = Schema.Literal(
+const SubmissionServiceSchema = Schema.Literals([
   "bing",
   "googleIndexingApi",
-  "indexNow"
-);
-const ServiceHistorySchema = Schema.Record({
-  key: Schema.String,
-  value: Schema.String,
-});
+  "indexNow",
+]);
+const ServiceHistorySchema = Schema.Record(Schema.String, Schema.String);
 const SubmissionHistorySchema = Schema.Struct({
   bing: ServiceHistorySchema,
   googleIndexingApi: ServiceHistorySchema,
   indexNow: ServiceHistorySchema,
 });
-const decodeSubmissionHistory = Schema.decodeUnknown(
-  Schema.parseJson(SubmissionHistorySchema)
+const decodeSubmissionHistory = Schema.decodeUnknownEffect(
+  Schema.fromJsonString(SubmissionHistorySchema)
 );
-const decodeEmptySubmissionHistory = Schema.decodeUnknown(
+const decodeEmptySubmissionHistory = Schema.decodeUnknownEffect(
   SubmissionHistorySchema
 );
-
 export type SubmissionHistory = Schema.Schema.Type<
   typeof SubmissionHistorySchema
 >;
 export type SubmissionService = Schema.Schema.Type<
   typeof SubmissionServiceSchema
 >;
-
 /** Builds an empty local submission-history value for a first script run. */
 export function emptySubmissionHistory(): SubmissionHistory {
   return {
@@ -43,7 +38,6 @@ export function emptySubmissionHistory(): SubmissionHistory {
     indexNow: {},
   };
 }
-
 /** Ensures the ignored local state folder exists before an adapter writes history. */
 export const ensureSubmissionHistoryFolder = Effect.fn(
   "scripts.indexing.history.ensureFolder"
@@ -56,11 +50,9 @@ export const ensureSubmissionHistoryFolder = Effect.fn(
       }),
     try: () => fs.existsSync(INDEXING_STATE_FOLDER),
   });
-
   if (exists) {
     return;
   }
-
   yield* Effect.try({
     catch: (cause) =>
       new SubmissionHistoryError({
@@ -73,7 +65,6 @@ export const ensureSubmissionHistoryFolder = Effect.fn(
     },
   });
 });
-
 /**
  * Loads ignored submission history for IndexNow, Bing, and Google adapters.
  *
@@ -90,11 +81,9 @@ export const loadSubmissionHistory = Effect.fn("scripts.indexing.history.load")(
         }),
       try: () => fs.existsSync(SUBMISSION_HISTORY_FILE),
     });
-
     if (!exists) {
       return yield* decodeEmptySubmissionHistory(emptySubmissionHistory());
     }
-
     const data = yield* Effect.try({
       catch: (cause) =>
         new SubmissionHistoryError({
@@ -103,7 +92,6 @@ export const loadSubmissionHistory = Effect.fn("scripts.indexing.history.load")(
         }),
       try: () => fs.readFileSync(SUBMISSION_HISTORY_FILE, "utf8"),
     });
-
     return yield* decodeSubmissionHistory(data).pipe(
       Effect.mapError(
         (cause) =>
@@ -115,7 +103,6 @@ export const loadSubmissionHistory = Effect.fn("scripts.indexing.history.load")(
     );
   }
 );
-
 /** Persists ignored local submission history after successful notifications. */
 export const saveSubmissionHistory = Effect.fn("scripts.indexing.history.save")(
   function* (history: SubmissionHistory) {
@@ -135,7 +122,6 @@ export const saveSubmissionHistory = Effect.fn("scripts.indexing.history.save")(
     });
   }
 );
-
 /**
  * Returns canonical URLs that a specific adapter has not successfully notified.
  *
@@ -153,7 +139,6 @@ export function listUnsubmittedUrls({
 }) {
   return urls.filter((url) => !history[service][url]);
 }
-
 /** Adds successful notifications to one service's ignored local history. */
 export function updateSubmissionHistory({
   history,
@@ -166,11 +151,9 @@ export function updateSubmissionHistory({
 }): SubmissionHistory {
   const timestamp = new Date().toISOString();
   const serviceHistory = { ...history[service] };
-
   for (const url of urls) {
     serviceHistory[url] = timestamp;
   }
-
   return {
     ...history,
     [service]: serviceHistory,

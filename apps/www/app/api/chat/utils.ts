@@ -5,7 +5,6 @@ import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { Effect, Schema } from "effect";
 import { ChatMutationError, ChatQueryError } from "@/app/api/chat/errors";
 import { nakafaContent } from "@/app/api/chat/nakafa-content";
-
 /**
  * Checks whether the given URL corresponds to verified content by querying
  * the appropriate content API (Quran surah, exercises, or general content).
@@ -17,7 +16,6 @@ export const getVerified = Effect.fn("chat.getVerified")(function* (
 ) {
   return yield* nakafaContent.verify(url);
 });
-
 /**
  * Fetches the authenticated user's role and credit balance from Convex,
  * used for access control and credit gating before the chat stream starts.
@@ -42,7 +40,6 @@ export const getUserInfo = Effect.fn("chat.getUserInfo")(function* (
       }),
   });
 });
-
 /**
  * Fetches the authenticated user's canonical learning selection for AI context.
  *
@@ -67,8 +64,7 @@ export const getLearningSelection = Effect.fn("chat.getLearningSelection")(
           operation: "load-selection",
         }),
     });
-
-    return yield* Schema.decodeUnknown(
+    return yield* Schema.decodeEffect(
       Schema.NullOr(AgentLearningSelectionSchema)
     )(profile);
   }

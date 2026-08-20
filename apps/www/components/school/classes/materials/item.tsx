@@ -194,7 +194,7 @@ function MaterialGroupActions({
           await deleteGroup({ groupId: group._id });
           toast.success(schoolT("material-deleted"));
         }).pipe(
-          Effect.catchAll(() =>
+          Effect.catch(() =>
             Effect.sync(() => {
               toast.error(schoolT("delete-material-failed"));
             })

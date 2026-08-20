@@ -122,7 +122,7 @@ export const recoverSpecialistFailure = Effect.fn("nina.specialist.recover")(
     readonly component: LearningCapabilityName;
     readonly error: unknown;
     readonly errorLocation: string;
-    readonly reporter: Context.Tag.Service<typeof NinaReporter>;
+    readonly reporter: Context.Service.Shape<typeof NinaReporter>;
   }) {
     const normalizedError = normalizeError(error);
     const diagnosticError = getDiagnosticError(normalizedError);

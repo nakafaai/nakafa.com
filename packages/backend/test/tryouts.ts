@@ -11,7 +11,6 @@ import {
   TryoutSetSchema,
 } from "@nakafa/aksara-contracts/tryout/catalog";
 import { Effect, Schema } from "effect";
-
 export const TRYOUT_TEST_NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 export const TRYOUT_COUNTRY_PATH = "try-out/indonesia";
 export const TRYOUT_EXAM_PATH = `${TRYOUT_COUNTRY_PATH}/snbt`;
@@ -19,10 +18,9 @@ export const TRYOUT_TRACK_PATH = `${TRYOUT_EXAM_PATH}/2027`;
 export const TRYOUT_SET_PATH = `${TRYOUT_TRACK_PATH}/set-1`;
 export const TRYOUT_SECTION_KEY = "penalaran-matematika";
 export const TRYOUT_SECTION_PATH = `${TRYOUT_SET_PATH}/${TRYOUT_SECTION_KEY}`;
-
 type TryoutSetFixtureOptions = Partial<
   Pick<
-    Schema.Schema.Encoded<typeof TryoutSetSchema>,
+    Schema.Codec.Encoded<typeof TryoutSetSchema>,
     | "examKey"
     | "internalEntrySectionKey"
     | "order"
@@ -35,10 +33,9 @@ type TryoutSetFixtureOptions = Partial<
     | "visibleSectionCount"
   >
 >;
-
 type TryoutSectionFixtureOptions = Partial<
   Pick<
-    Schema.Schema.Encoded<typeof TryoutSectionSchema>,
+    Schema.Codec.Encoded<typeof TryoutSectionSchema>,
     | "examKey"
     | "order"
     | "publicPath"
@@ -52,14 +49,12 @@ type TryoutSectionFixtureOptions = Partial<
     | "visibility"
   >
 >;
-
 interface TryoutExamGraphInput {
   readonly appLocale?: ActiveAppLocaleCode;
   readonly countryKey: string;
   readonly examKey: string;
   readonly kind: "exam";
 }
-
 interface TryoutSetGraphInput {
   readonly appLocale?: ActiveAppLocaleCode;
   readonly countryKey: string;
@@ -68,7 +63,6 @@ interface TryoutSetGraphInput {
   readonly setKey: string;
   readonly trackKey: string;
 }
-
 interface TryoutSectionGraphInput {
   readonly appLocale?: ActiveAppLocaleCode;
   readonly countryKey: string;
@@ -78,12 +72,10 @@ interface TryoutSectionGraphInput {
   readonly setKey: string;
   readonly trackKey: string;
 }
-
 type TryoutGraphInput =
   | TryoutExamGraphInput
   | TryoutSetGraphInput
   | TryoutSectionGraphInput;
-
 /** Derives the exact graph identity owned by one signed try-out row. */
 export function testTryoutGraph(input: TryoutGraphInput) {
   const appLocale = ActiveAppLocaleSchema.make(input.appLocale ?? "id");
@@ -102,7 +94,6 @@ export function testTryoutGraph(input: TryoutGraphInput) {
       })
     );
   }
-
   if (input.kind === "set") {
     return Effect.runSync(
       makeLearningGraphIdentity({
@@ -119,7 +110,6 @@ export function testTryoutGraph(input: TryoutGraphInput) {
       })
     );
   }
-
   return Effect.runSync(
     makeLearningGraphIdentity({
       concept: [...examLens, input.trackKey, input.sectionKey],
@@ -136,14 +126,12 @@ export function testTryoutGraph(input: TryoutGraphInput) {
     })
   );
 }
-
 /** Builds one signed set contract for runtime tests. */
 export function makeTryoutSet(options: TryoutSetFixtureOptions = {}) {
   const examKey = options.examKey ?? "snbt";
   const setKey = options.setKey ?? "set-1";
   const trackKey = options.trackKey ?? "2027";
-
-  return Schema.decodeUnknownSync(TryoutSetSchema)({
+  return Schema.decodeSync(TryoutSetSchema)({
     countryKey: "indonesia",
     examKey,
     graph: testTryoutGraph({
@@ -168,7 +156,6 @@ export function makeTryoutSet(options: TryoutSetFixtureOptions = {}) {
     visibleSectionCount: options.visibleSectionCount ?? 1,
   });
 }
-
 /** Builds one signed section contract for runtime tests. */
 export function makeTryoutSection(options: TryoutSectionFixtureOptions = {}) {
   const examKey = options.examKey ?? "snbt";
@@ -176,8 +163,7 @@ export function makeTryoutSection(options: TryoutSectionFixtureOptions = {}) {
   const setKey = options.setKey ?? "set-1";
   const trackKey = options.trackKey ?? "2027";
   const sourcePath = `question-bank/tryout/indonesia/snbt/${sectionKey}/${setKey}`;
-
-  return Schema.decodeUnknownSync(TryoutSectionSchema)({
+  return Schema.decodeSync(TryoutSectionSchema)({
     countryKey: "indonesia",
     examKey,
     graph: testTryoutGraph({

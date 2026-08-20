@@ -6,7 +6,6 @@ import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { Effect } from "effect";
 
 const ARTICLE_DISCOVERY_LIMIT = 100;
-
 /** Validates one bounded discovery read before accessing an article index. */
 const validateDiscoveryLimit = Effect.fn(
   "contentRelease.validateArticleDiscoveryLimit"
@@ -22,10 +21,9 @@ const validateDiscoveryLimit = Effect.fn(
     );
   }
 });
-
 /** Selects the compact fields needed by RSS and agent-facing indexes. */
 function summarizeArticle(
-  verified: Effect.Effect.Success<ReturnType<typeof verifyArticle>>
+  verified: Effect.Success<ReturnType<typeof verifyArticle>>
 ) {
   const { projection } = verified;
   return {
@@ -40,7 +38,6 @@ function summarizeArticle(
     title: projection.metadata.title,
   };
 }
-
 /** Reads one complete hash partition for a managed article index. */
 export const readArticleBucket = Effect.fn("contentRelease.readArticleBucket")(
   function* (
@@ -55,14 +52,12 @@ export const readArticleBucket = Effect.fn("contentRelease.readArticleBucket")(
     if (partition.kind === "missing") {
       return { articles: null, managed: true };
     }
-
     return {
       articles: partition.articles.map(summarizeArticle),
       managed: true,
     };
   }
 );
-
 /** Reads a bounded newest-first article set from the active owner. */
 export const readLatestArticles = Effect.fn(
   "contentRelease.readLatestArticles"
@@ -88,13 +83,11 @@ export const readLatestArticles = Effect.fn(
   const verified = yield* Effect.forEach(rows, (article) =>
     verifyArticle(ctx, article, owner.active.sequence)
   );
-
   return {
     articles: verified.map(summarizeArticle),
     managed: true,
   };
 });
-
 /** Reads a bounded newest-first article set for one managed category. */
 export const readCategoryArticles = Effect.fn(
   "contentRelease.readCategoryArticles"
@@ -121,7 +114,6 @@ export const readCategoryArticles = Effect.fn(
   const verified = yield* Effect.forEach(rows, (article) =>
     verifyArticle(ctx, article, owner.active.sequence)
   );
-
   return {
     articles: verified.map(summarizeArticle),
     managed: true,

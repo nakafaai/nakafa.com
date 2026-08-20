@@ -28,7 +28,7 @@ import { describe, expect, it } from "vitest";
 
 /** Creates another valid set in the same signed track for pagination tests. */
 function makeSecondSet(source: TryoutSet) {
-  const row = Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
+  const row = Schema.decodeSync(TryoutCatalogRowSchema)({
     ...source,
     order: source.order + 1,
     publicPath: `${source.publicPath}-2`,

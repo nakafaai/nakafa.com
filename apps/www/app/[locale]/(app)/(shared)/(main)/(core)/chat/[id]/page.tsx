@@ -29,7 +29,7 @@ export async function generateMetadata({
   const defaultMetadata = {};
   const title = await Effect.runPromise(
     Effect.tryPromise(() => getChatTitle(id as Id<"chats">)).pipe(
-      Effect.catchTag("UnknownException", ({ error }) =>
+      Effect.catchTag("UnknownError", ({ cause: error }) =>
         Effect.gen(function* () {
           yield* Effect.tryPromise(() =>
             captureServerException(error, undefined, {

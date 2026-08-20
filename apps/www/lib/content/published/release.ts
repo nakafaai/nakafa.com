@@ -1,5 +1,5 @@
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
-import { Effect, Either, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 import {
   type ActiveContentReleaseId,
   readActiveContentIdentity,
@@ -9,37 +9,33 @@ import {
   type PublishedProjectionIdentity,
   PublishedReleaseMismatchError,
 } from "@/lib/content/published/errors";
-
 /** Active signed publication identity shared across one multi-read request. */
 export type ContentReleasePin = ActiveContentReleaseId | null;
-
 type ContentReleasePinError =
   | PublishedProjectionError
   | PublishedReleaseMismatchError;
-
 /** Decodes one release pin without starting an Effect runtime. */
 function decodeReleasePin(
   actual: unknown,
   expected: ContentReleasePin | undefined,
   identity: PublishedProjectionIdentity
-): Either.Either<ContentReleasePin, ContentReleasePinError> {
-  const decoded = Schema.decodeUnknownEither(Schema.NullOr(ReleaseIdSchema))(
+): Result.Result<ContentReleasePin, ContentReleasePinError> {
+  const decoded = Schema.decodeUnknownResult(Schema.NullOr(ReleaseIdSchema))(
     actual
   );
-  if (Either.isLeft(decoded)) {
-    return Either.left(new PublishedProjectionError(identity));
+  if (Result.isFailure(decoded)) {
+    return Result.fail(new PublishedProjectionError(identity));
   }
-  if (expected !== undefined && decoded.right !== expected) {
-    return Either.left(
+  if (expected !== undefined && decoded.success !== expected) {
+    return Result.fail(
       new PublishedReleaseMismatchError({
-        actualReleaseId: decoded.right,
+        actualReleaseId: decoded.success,
         expectedReleaseId: expected,
       })
     );
   }
-  return Either.right(decoded.right);
+  return Result.succeed(decoded.success);
 }
-
 /** Decodes and verifies the active release returned by one signed read. */
 export const decodeContentReleasePin = Effect.fn(
   "NakafaContent.decodeReleasePin"
@@ -49,12 +45,11 @@ export const decodeContentReleasePin = Effect.fn(
   identity: PublishedProjectionIdentity
 ) {
   const decoded = decodeReleasePin(actual, expected, identity);
-  if (Either.isLeft(decoded)) {
-    return yield* decoded.left;
+  if (Result.isFailure(decoded)) {
+    return yield* decoded.failure;
   }
-  return decoded.right;
+  return decoded.success;
 });
-
 /** Rechecks one multi-read operation against the active publication identity. */
 export const verifyContentReleasePin = Effect.fn(
   "NakafaContent.verifyReleasePin"

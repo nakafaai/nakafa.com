@@ -10,7 +10,7 @@ import {
   accountDeletionAttemptStatus,
   accountDeletionRequestPhase,
 } from "@repo/backend/convex/auth/deletion/spec";
-import { Effect, Either } from "effect";
+import { Effect, Result } from "effect";
 import {
   AccountDeletionFailed,
   AccountDeletionRequestUncertain,
@@ -28,7 +28,6 @@ import { authClient } from "@/lib/auth/client";
 
 const betterAuthSessionExpiredCode = "SESSION_EXPIRED";
 const betterAuthUserDeletedMessage = "User deleted";
-
 type DeleteUserResult = Awaited<ReturnType<typeof authClient.deleteUser>>;
 type AccountDeletionAttemptId = AccountDeletionBrowserAttempt["attemptId"];
 type DeleteUserRequest = (
@@ -37,13 +36,11 @@ type DeleteUserRequest = (
 type ReconcileAccountDeletionRequest = (
   attemptId: AccountDeletionAttemptId
 ) => Promise<AccountDeletionAttemptStatus>;
-
 interface AccountDeletionOperations
   extends AccountDeletionPreparationOperations {
   readonly reconcile: ReconcileAccountDeletionRequest;
   readonly request?: DeleteUserRequest;
 }
-
 /** Deletes the current Better Auth account through a typed failure channel. */
 export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
   function* ({
@@ -86,7 +83,6 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
         );
         yield* clearCanceledAccountDeletionAttempt(clearAttempt);
       });
-
     if (startPhase === accountDeletionRequestPhase.preparation) {
       yield* prepareAccountDeletion({
         attempt,
@@ -96,15 +92,13 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
         prepare,
       });
     }
-
     if (
       startPhase === accountDeletionRequestPhase.deletion &&
       (yield* proveCommittedDeletion())
     ) {
       return;
     }
-
-    const resultOrFailure = yield* Effect.either(
+    const resultOrFailure = yield* Effect.result(
       Effect.tryPromise({
         try: () => request(attemptId),
         catch: () =>
@@ -115,19 +109,14 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
           }),
       })
     );
-
-    if (Either.isLeft(resultOrFailure)) {
-      const reconciliation = yield* Effect.either(proveCommittedDeletion());
-
-      if (Either.isRight(reconciliation) && reconciliation.right) {
+    if (Result.isFailure(resultOrFailure)) {
+      const reconciliation = yield* Effect.result(proveCommittedDeletion());
+      if (Result.isSuccess(reconciliation) && reconciliation.success) {
         return;
       }
-
-      return yield* resultOrFailure.left;
+      return yield* resultOrFailure.failure;
     }
-
-    const result = resultOrFailure.right;
-
+    const result = resultOrFailure.success;
     if (
       !result.error &&
       result.data?.success === true &&
@@ -135,18 +124,15 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
     ) {
       return;
     }
-
     if (yield* proveCommittedDeletion()) {
       return;
     }
-
     if (!result.error) {
       yield* resetPreparedAttempt();
       return yield* new AccountDeletionFailed({
         code: accountDeletionErrorCode.failed,
       });
     }
-
     if (
       result.error.code === ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE ||
       result.error.code === ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE
@@ -158,21 +144,18 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
         phase: accountDeletionRequestPhase.preparation,
       });
     }
-
     if (result.error.code === betterAuthSessionExpiredCode) {
       yield* resetPreparedAttempt();
       return yield* new AccountDeletionSessionExpired({
         code: accountDeletionErrorCode.sessionExpired,
       });
     }
-
     if (result.error.code === ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE) {
       yield* resetPreparedAttempt();
       return yield* new AccountDeletionSchoolMemberRequired({
         code: ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
       });
     }
-
     return yield* new AccountDeletionRequestUncertain({
       attemptId,
       code: accountDeletionErrorCode.requestUncertain,

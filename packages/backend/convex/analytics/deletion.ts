@@ -7,28 +7,27 @@ const postHogDeletionConfigErrorCode = "POSTHOG_DELETION_CONFIG_INVALID";
 const postHogDeletionRequestErrorCode = "POSTHOG_DELETION_REQUEST_FAILED";
 const postHogIngestionHostnameSuffix = /\.i\.posthog\.com$/;
 const postHogProjectIdPattern = /^[1-9]\d*$/;
-
 export const POSTHOG_DELETION_RECONCILIATION_DELAY_MS = 24 * 60 * 60 * 1000;
-
 const PostHogBulkDeleteResponseSchema = Schema.Struct({
   deletion_errors: Schema.optional(Schema.Array(Schema.Unknown)),
   events_queued_for_deletion: Schema.Boolean,
-  persons_deleted: Schema.NonNegativeInt,
-  persons_found: Schema.NonNegativeInt,
+  persons_deleted: Schema.Finite.check(Schema.isInt()).check(
+    Schema.isGreaterThanOrEqualTo(0)
+  ),
+  persons_found: Schema.Finite.check(Schema.isInt()).check(
+    Schema.isGreaterThanOrEqualTo(0)
+  ),
   recordings_queued_for_deletion: Schema.Boolean,
 });
-
 interface PostHogDeletionConfig {
   readonly deletionApiKey: string;
   readonly host: string;
   readonly projectId: string;
 }
-
 interface PostHogDeletionOptions {
   readonly config: PostHogDeletionConfig;
   readonly request: typeof fetch;
 }
-
 /** Raised when PostHog erasure credentials are not configured. */
 export class PostHogDeletionConfigError extends Schema.TaggedError<PostHogDeletionConfigError>()(
   "PostHogDeletionConfigError",
@@ -37,7 +36,6 @@ export class PostHogDeletionConfigError extends Schema.TaggedError<PostHogDeleti
     message: Schema.String,
   }
 ) {}
-
 /** Raised when PostHog does not accept the person-erasure request. */
 export class PostHogDeletionRequestError extends Schema.TaggedError<PostHogDeletionRequestError>()(
   "PostHogDeletionRequestError",
@@ -46,7 +44,6 @@ export class PostHogDeletionRequestError extends Schema.TaggedError<PostHogDelet
     message: Schema.String,
   }
 ) {}
-
 function getDefaultPostHogDeletionConfig(): PostHogDeletionConfig {
   return {
     deletionApiKey: env.POSTHOG_ACCOUNT_DELETION_API_KEY,
@@ -54,21 +51,18 @@ function getDefaultPostHogDeletionConfig(): PostHogDeletionConfig {
     projectId: env.POSTHOG_PROJECT_ID,
   };
 }
-
 /** Validates and normalizes the credentials required before identity removal. */
 const validatePostHogDeletionConfig = Effect.fn(
   "analytics.deletion.validatePostHogDeletionConfig"
 )(function* (config: PostHogDeletionConfig) {
   const deletionApiKey = config.deletionApiKey.trim();
   const projectId = config.projectId.trim();
-
   if (!(deletionApiKey && postHogProjectIdPattern.test(projectId))) {
     return yield* new PostHogDeletionConfigError({
       code: postHogDeletionConfigErrorCode,
       message: "PostHog person deletion credentials are not configured.",
     });
   }
-
   const hostUrl = yield* Effect.try({
     try: () => new URL(config.host),
     catch: () =>
@@ -78,26 +72,22 @@ const validatePostHogDeletionConfig = Effect.fn(
       }),
   });
   const hasTrustedHost = postHogIngestionHostnameSuffix.test(hostUrl.hostname);
-
   if (hostUrl.protocol !== "https:" || hostUrl.port || !hasTrustedHost) {
     return yield* new PostHogDeletionConfigError({
       code: postHogDeletionConfigErrorCode,
       message: "PostHog deletion host is invalid.",
     });
   }
-
   hostUrl.hostname = hostUrl.hostname.replace(
     postHogIngestionHostnameSuffix,
     ".posthog.com"
   );
-
   return {
     apiOrigin: hostUrl.origin,
     deletionApiKey,
     projectId,
   };
 });
-
 /** Fails before auth deletion when durable analytics erasure cannot start. */
 export const ensurePostHogDeletionConfigured = Effect.fn(
   "analytics.deletion.ensurePostHogDeletionConfigured"
@@ -106,7 +96,6 @@ export const ensurePostHogDeletionConfigured = Effect.fn(
 ) {
   yield* validatePostHogDeletionConfig(config);
 });
-
 /** Deletes the PostHog person, historical events, and session recordings. */
 export const deletePostHogPerson = Effect.fn(
   "analytics.deletion.deletePostHogPerson"
@@ -141,14 +130,12 @@ export const deletePostHogPerson = Effect.fn(
         message: "PostHog person deletion request could not be sent.",
       }),
   });
-
   if (!response.ok) {
     return yield* new PostHogDeletionRequestError({
       code: postHogDeletionRequestErrorCode,
       message: `PostHog person deletion returned HTTP ${response.status}.`,
     });
   }
-
   const responseBody = yield* Effect.tryPromise({
     try: (): Promise<unknown> => response.json(),
     catch: () =>
@@ -157,9 +144,9 @@ export const deletePostHogPerson = Effect.fn(
         message: "PostHog person deletion returned an invalid response.",
       }),
   });
-  const result = yield* Schema.decodeUnknown(PostHogBulkDeleteResponseSchema)(
-    responseBody
-  ).pipe(
+  const result = yield* Schema.decodeUnknownEffect(
+    PostHogBulkDeleteResponseSchema
+  )(responseBody).pipe(
     Effect.mapError(
       () =>
         new PostHogDeletionRequestError({
@@ -168,14 +155,12 @@ export const deletePostHogPerson = Effect.fn(
         })
     )
   );
-
   const matchedPersonsWereQueued =
     result.persons_found === 0 ||
     (result.events_queued_for_deletion &&
       result.recordings_queued_for_deletion);
   const everyMatchedPersonWasDeleted =
     result.persons_deleted === result.persons_found;
-
   if (
     (result.deletion_errors?.length ?? 0) > 0 ||
     !matchedPersonsWereQueued ||
@@ -187,7 +172,6 @@ export const deletePostHogPerson = Effect.fn(
     });
   }
 });
-
 /** Convex action boundary for durable deleted-user analytics erasure. */
 export const cleanupDeletedUserAnalytics = internalAction({
   args: {

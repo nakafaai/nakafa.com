@@ -24,8 +24,12 @@ import {
 } from "@repo/backend/convex/contentRelease/parse";
 import { Effect, Schema } from "effect";
 
-type UpsertChange = Extract<ContentChange, { readonly operation: "upsert" }>;
-
+type UpsertChange = Extract<
+  ContentChange,
+  {
+    readonly operation: "upsert";
+  }
+>;
 /** Loads one immutable signed artifact required by a rollback state. */
 const loadArtifact = Effect.fn("contentRelease.loadRollbackArtifact")(
   function* (ctx: QueryCtx, artifactHash: string, identity: string) {
@@ -46,7 +50,6 @@ const loadArtifact = Effect.fn("contentRelease.loadRollbackArtifact")(
     return yield* decodeArtifactJson(stored.artifactJson);
   }
 );
-
 /** Builds and validates one complete body-bearing rollback state. */
 const upsertState = Effect.fn("contentRelease.rollbackUpsertState")(function* (
   ctx: QueryCtx,
@@ -59,7 +62,7 @@ const upsertState = Effect.fn("contentRelease.rollbackUpsertState")(function* (
     change,
     projection: yield* decodeProjectionJson(projectionJson),
   };
-  return yield* Schema.decodeUnknown(RollbackUpsertStateSchema)(state, {
+  return yield* Schema.decodeEffect(RollbackUpsertStateSchema)(state, {
     onExcessProperty: "error",
   }).pipe(
     Effect.mapError(
@@ -71,7 +74,6 @@ const upsertState = Effect.fn("contentRelease.rollbackUpsertState")(function* (
     )
   );
 });
-
 /** Proves a stored upsert state matches its immutable content version. */
 const validateVersion = Effect.fn("contentRelease.validateRollbackVersion")(
   function* (
@@ -101,7 +103,6 @@ const validateVersion = Effect.fn("contentRelease.validateRollbackVersion")(
     }
   }
 );
-
 /** Reconstructs the exact state produced by one completed release item. */
 const currentState = Effect.fn("contentRelease.currentRollbackState")(
   function* (ctx: QueryCtx, row: Doc<"contentItems">) {
@@ -141,7 +142,6 @@ const currentState = Effect.fn("contentRelease.currentRollbackState")(
     return state;
   }
 );
-
 /** Reconstructs the exact immutable state replaced by one release item. */
 const priorState = Effect.fn("contentRelease.priorRollbackState")(function* (
   ctx: QueryCtx,
@@ -223,11 +223,10 @@ const priorState = Effect.fn("contentRelease.priorRollbackState")(function* (
   }
   return state;
 });
-
 /** Builds one exact current-to-prior transition from immutable stored state. */
 export const rollbackRecord = Effect.fn("contentRelease.rollbackRecord")(
   function* (ctx: QueryCtx, row: Doc<"contentItems">) {
-    return yield* Schema.decodeUnknown(RollbackRecordSchema)(
+    return yield* Schema.decodeEffect(RollbackRecordSchema)(
       {
         current: yield* currentState(ctx, row),
         index: row.index,

@@ -1,27 +1,30 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { Schema } from "effect";
 
-const optionalStringSchema = Schema.standardSchemaV1(
+const optionalStringSchema = Schema.toStandardSchemaV1(
   Schema.UndefinedOr(Schema.String)
 );
-const requiredStringSchema = Schema.standardSchemaV1(Schema.NonEmptyString);
-const optionalUrlSchema = Schema.standardSchemaV1(
+const requiredStringSchema = Schema.toStandardSchemaV1(Schema.NonEmptyString);
+const optionalUrlSchema = Schema.toStandardSchemaV1(
   Schema.UndefinedOr(
     Schema.String.pipe(
-      Schema.filter((value) => URL.canParse(value), {
-        message: () => "Expected a valid URL.",
+      Schema.check(
+        Schema.makeFilter((value) => URL.canParse(value), {
+          message: "Expected a valid URL.",
+        })
+      )
+    )
+  )
+);
+const requiredUrlSchema = Schema.toStandardSchemaV1(
+  Schema.String.pipe(
+    Schema.check(
+      Schema.makeFilter((value) => URL.canParse(value), {
+        message: "Expected a valid URL.",
       })
     )
   )
 );
-const requiredUrlSchema = Schema.standardSchemaV1(
-  Schema.String.pipe(
-    Schema.filter((value) => URL.canParse(value), {
-      message: () => "Expected a valid URL.",
-    })
-  )
-);
-
 /** Defines the optional bundle-analyzer flag read by Next config files. */
 export const analyzeKeys = () =>
   createEnv({
@@ -32,7 +35,6 @@ export const analyzeKeys = () =>
       ANALYZE: process.env.ANALYZE,
     },
   });
-
 /** Defines the shared secret accepted by internal content cache routes. */
 export const contentApiKeys = () =>
   createEnv({
@@ -43,7 +45,6 @@ export const contentApiKeys = () =>
       INTERNAL_CONTENT_API_KEY: process.env.INTERNAL_CONTENT_API_KEY,
     },
   });
-
 /** Defines the private token used only by executable-content runtime reads. */
 export const contentRuntimeKeys = () =>
   createEnv({
@@ -54,17 +55,14 @@ export const contentRuntimeKeys = () =>
       CONTENT_RUNTIME_TOKEN: process.env.CONTENT_RUNTIME_TOKEN,
     },
   });
-
 /** Reads the private target required by signed public content consumers. */
 export function readContentRuntimeTarget(siteUrl: string) {
   const keys = contentRuntimeKeys();
-
   return {
     siteUrl,
     token: keys.CONTENT_RUNTIME_TOKEN,
   };
 }
-
 /** Defines the canonical site URL used by server-side absolute URL builders. */
 export const siteUrlKeys = () =>
   createEnv({
@@ -75,7 +73,6 @@ export const siteUrlKeys = () =>
       SITE_URL: process.env.SITE_URL,
     },
   });
-
 /** Defines the public MCP endpoint used by app and MCP surfaces. */
 export const mcpKeys = () =>
   createEnv({
@@ -86,7 +83,6 @@ export const mcpKeys = () =>
       NEXT_PUBLIC_MCP_URL: process.env.NEXT_PUBLIC_MCP_URL,
     },
   });
-
 /** Defines public app URL values shared by Next applications. */
 export const publicAppKeys = () =>
   createEnv({
@@ -101,15 +97,14 @@ export const publicAppKeys = () =>
       NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     },
   });
-
 /** Defines the common environment contract inherited by every Next app. */
 export const keys = () =>
   createEnv({
     extends: [analyzeKeys(), contentApiKeys(), publicAppKeys(), mcpKeys()],
     server: {
       // Added by Vercel
-      NEXT_RUNTIME: Schema.standardSchemaV1(
-        Schema.UndefinedOr(Schema.Literal("nodejs", "edge"))
+      NEXT_RUNTIME: Schema.toStandardSchemaV1(
+        Schema.UndefinedOr(Schema.Literals(["nodejs", "edge"]))
       ),
     },
     runtimeEnv: {

@@ -1,18 +1,15 @@
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { LocaleSchema } from "@repo/contents/_types/content";
-import { Effect, Schema } from "effect";
-
+import { Effect, Schema, Struct } from "effect";
 export const NINA_CONTEXT_TRANSITION_REASONS = [
   "same-context",
   "page-context",
 ] as const;
-
 export const NINA_CONTEXT_SOURCES = [
   "current-page",
   "pinned-chat",
   "message",
 ] as const;
-
 /** Page identity Nina can trust because the app validated it before the turn. */
 export const NinaLearningContextSchema = Schema.Struct({
   assetId: Schema.optional(Schema.String),
@@ -25,8 +22,7 @@ export const NinaLearningContextSchema = Schema.Struct({
   title: Schema.optional(Schema.String),
   url: Schema.String,
   verified: Schema.Boolean,
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 /** Verified placement that explains why this asset was opened from navigation. */
 export const LearningPlacementContextSchema = Schema.Struct({
   mode: Schema.Literal("placement"),
@@ -34,41 +30,36 @@ export const LearningPlacementContextSchema = Schema.Struct({
   parentHref: Schema.String,
   parentTitle: Schema.String,
   programKey: LearningProgramKeySchema,
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 /** Tool permissions for a Nina turn, separated from tool implementation code. */
 export const NinaToolContextSchema = Schema.Struct({
   allowDeepResearch: Schema.Boolean,
   allowMath: Schema.Boolean,
   allowNakafa: Schema.Boolean,
   allowPageFetch: Schema.Boolean,
-  evidenceScope: Schema.Literal("verified-page", "general-learning"),
-}).pipe(Schema.mutable);
-
+  evidenceScope: Schema.Literals(["verified-page", "general-learning"]),
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 /** Compact context copy that can be stored on messages and replayed later. */
 export const NinaContextSnapshotSchema = Schema.Struct({
   learning: NinaLearningContextSchema,
   placement: Schema.optional(LearningPlacementContextSchema),
   capturedAt: Schema.String,
-  source: Schema.Literal(...NINA_CONTEXT_SOURCES),
+  source: Schema.Literals(NINA_CONTEXT_SOURCES),
   tools: NinaToolContextSchema,
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 /** Explicit marker for messages that intentionally switch Nina context. */
 export const NinaContextTransitionSchema = Schema.Struct({
   fromContextKey: Schema.optional(Schema.String),
-  reason: Schema.Literal(...NINA_CONTEXT_TRANSITION_REASONS),
+  reason: Schema.Literals(NINA_CONTEXT_TRANSITION_REASONS),
   toContextKey: Schema.String,
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 /** Input accepted by NinaHarness when opening one learning chat turn. */
 export const NinaLearningSessionInputSchema = Schema.Struct({
   capturedAt: Schema.String,
   learning: NinaLearningContextSchema,
   placement: Schema.optional(LearningPlacementContextSchema),
-  source: Schema.Literal(...NINA_CONTEXT_SOURCES),
-}).pipe(Schema.mutable);
-
+  source: Schema.Literals(NINA_CONTEXT_SOURCES),
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export type NinaLearningContext = Schema.Schema.Type<
   typeof NinaLearningContextSchema
 >;
@@ -85,7 +76,6 @@ export type NinaContextTransition = Schema.Schema.Type<
 export type NinaLearningSessionInput = Schema.Schema.Type<
   typeof NinaLearningSessionInputSchema
 >;
-
 /** Nina context pack consumed by prompts, specialists, and message metadata. */
 export const NinaContextPackSchema = Schema.Struct({
   learning: NinaLearningContextSchema,
@@ -93,19 +83,15 @@ export const NinaContextPackSchema = Schema.Struct({
   snapshot: NinaContextSnapshotSchema,
   tools: NinaToolContextSchema,
   transition: NinaContextTransitionSchema,
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export type NinaContextPack = Schema.Schema.Type<typeof NinaContextPackSchema>;
-
 /** NinaHarness output returned to app route boundaries for one turn. */
 export const NinaLearningSessionSchema = Schema.Struct({
   context: NinaContextPackSchema,
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export type NinaLearningSession = Schema.Schema.Type<
   typeof NinaLearningSessionSchema
 >;
-
 /** Raised when the app boundary sends an invalid Nina learning context. */
 export class NinaContextError extends Schema.TaggedError<NinaContextError>()(
   "NinaContextError",
@@ -113,7 +99,6 @@ export class NinaContextError extends Schema.TaggedError<NinaContextError>()(
     message: Schema.String,
   }
 ) {}
-
 /** Creates the stable key used for context snapshots and transition markers. */
 export function createNinaContextKey({
   learning,
@@ -125,16 +110,13 @@ export function createNinaContextKey({
   if (placement) {
     return `placement:${placement.programKey}:${placement.nodeKey}:${learning.slug}`;
   }
-
   return `canonical:${learning.slug}`;
 }
-
 /** Resolves per-turn specialist evidence permissions from validated context. */
 export function resolveNinaToolContext(
   learning: NinaLearningContext
 ): NinaToolContext {
   const allowPageFetch = learning.verified;
-
   return {
     allowDeepResearch: true,
     allowMath: true,
@@ -143,7 +125,6 @@ export function resolveNinaToolContext(
     evidenceScope: allowPageFetch ? "verified-page" : "general-learning",
   };
 }
-
 /** Builds the durable snapshot that survives chat reload and retries. */
 export function createNinaContextSnapshot({
   capturedAt,
@@ -166,7 +147,6 @@ export function createNinaContextSnapshot({
     tools,
   };
 }
-
 /** Builds an explicit transition marker for the current Nina turn. */
 export function createNinaContextTransition({
   learning,
@@ -182,12 +162,11 @@ export function createNinaContextTransition({
     toContextKey: createNinaContextKey({ learning, placement }),
   };
 }
-
 /** Opens one validated Nina learning session as an Effect-native program. */
 export const openNinaLearningSession = Effect.fn(
   "nina.openNinaLearningSession"
 )(function* (input: unknown) {
-  const sessionInput = yield* Schema.decodeUnknown(
+  const sessionInput = yield* Schema.decodeUnknownEffect(
     NinaLearningSessionInputSchema
   )(input).pipe(
     Effect.mapError(
@@ -211,7 +190,6 @@ export const openNinaLearningSession = Effect.fn(
     reason:
       sessionInput.source === "pinned-chat" ? "same-context" : "page-context",
   });
-
   return {
     context: {
       learning: sessionInput.learning,

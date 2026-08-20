@@ -1,43 +1,38 @@
 import { Schema } from "effect";
-
-export const assessmentModeSchema = Schema.Literal(
+export const assessmentModeSchema = Schema.Literals([
   "practice",
   "assignment",
   "quiz",
   "exam",
-  "tryout"
-);
-
-export const assessmentStatusSchema = Schema.Literal(
+  "tryout",
+]);
+export const assessmentStatusSchema = Schema.Literals([
   "draft",
   "published",
   "scheduled",
-  "archived"
-);
-
+  "archived",
+]);
 const createAssessmentForm = Schema.Struct({
-  title: Schema.Trim.pipe(Schema.minLength(1)),
+  title: Schema.Trim.pipe(Schema.check(Schema.isMinLength(1))),
   description: Schema.String,
   mode: assessmentModeSchema,
   status: assessmentStatusSchema,
-  scheduledAt: Schema.optional(Schema.Number),
+  scheduledAt: Schema.optional(Schema.Finite),
 }).pipe(
-  Schema.filter((data) => {
-    if (data.status !== "scheduled") {
-      return true;
-    }
-
-    if (!data.scheduledAt) {
-      return false;
-    }
-
-    return data.scheduledAt > Date.now();
-  })
+  Schema.check(
+    Schema.makeFilter((data) => {
+      if (data.status !== "scheduled") {
+        return true;
+      }
+      if (!data.scheduledAt) {
+        return false;
+      }
+      return data.scheduledAt > Date.now();
+    })
+  )
 );
-
 export const createAssessmentFormSchema =
-  Schema.standardSchemaV1(createAssessmentForm);
-
+  Schema.toStandardSchemaV1(createAssessmentForm);
 export type CreateAssessmentFormValues = Schema.Schema.Type<
   typeof createAssessmentForm
 >;

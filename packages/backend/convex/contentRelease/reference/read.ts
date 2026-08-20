@@ -390,7 +390,7 @@ const readQuranReferenceRow = Effect.fn("contentRelease.readQuranReferenceRow")(
       return yield* authenticateQuranSearchHit(ctx, snapshotId, row);
     }
     const segments = input.publicPath.split("/");
-    const surahNumber = Schema.decodeUnknownOption(QuranSurahNumberSchema)(
+    const surahNumber = Schema.decodeOption(QuranSurahNumberSchema)(
       Number(segments[1])
     );
     if (

@@ -19,21 +19,14 @@ type MathRepairOptions = Omit<
   Parameters<ToolCallRepairFunction<ToolSet>>[0],
   "system"
 >;
-
-const repairArgumentsSchema = Schema.Record({
-  key: Schema.String,
-  value: Schema.Unknown,
-});
-
+const repairArgumentsSchema = Schema.Record(Schema.String, Schema.Unknown);
 const operationSchema = Schema.Struct({
   operation: Schema.String,
 });
-
 /** Reads the requested operation from raw tool arguments. */
 function decodeOperation(input: string) {
-  return Schema.decodeUnknown(Schema.parseJson(operationSchema))(input);
+  return Schema.decodeEffect(Schema.fromJsonString(operationSchema))(input);
 }
-
 /**
  * Repairs invalid math tool inputs while preserving the selected tool.
  *
@@ -57,29 +50,23 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
   if (NoSuchToolError.isInstance(error)) {
     return null;
   }
-
   const tool = tools[toolCall.toolName];
-
   if (!tool) {
     return null;
   }
-
   const schema = yield* Effect.tryPromise(() => inputSchema(toolCall)).pipe(
     Effect.option
   );
-
   if (Option.isNone(schema)) {
     return null;
   }
-
-  const failedArguments = yield* Schema.decodeUnknown(
-    Schema.parseJson(Schema.Unknown)
+  const failedArguments = yield* Schema.decodeEffect(
+    Schema.fromJsonString(Schema.Unknown)
   )(toolCall.input).pipe(Effect.option);
   const failedArgumentsText = Option.match(failedArguments, {
     onNone: () => toolCall.input,
     onSome: (input) => JSON.stringify(input, null, 2),
   });
-
   const repaired = yield* Effect.tryPromise(() =>
     generateText({
       model: provider.languageModel(modelId),
@@ -90,7 +77,6 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
 
         Repair the math tool arguments without changing the selected tool.
       `,
-
         toolUsageGuidelines: `
         # Repair Rules
 
@@ -109,7 +95,6 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
         - For named probability distributions, include distribution and parameters.
         - Include the requested probability point or event bounds.
       `,
-
         backgroundData: `
         # Selected Tool
 
@@ -140,19 +125,15 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
       timeout: backgroundGenerationTimeout,
     })
   ).pipe(Effect.option);
-
   if (Option.isNone(repaired)) {
     return null;
   }
-
-  const repairedInput = yield* Schema.decodeUnknown(repairArgumentsSchema)(
-    repaired.value.output
-  ).pipe(Effect.option);
-
+  const repairedInput = yield* Schema.decodeUnknownEffect(
+    repairArgumentsSchema
+  )(repaired.value.output).pipe(Effect.option);
   if (Option.isNone(repairedInput)) {
     return null;
   }
-
   const originalOperation = yield* decodeOperation(toolCall.input).pipe(
     Effect.option
   );
@@ -160,7 +141,6 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
     onNone: () => repairedInput.value,
     onSome: ({ operation }) => ({ ...repairedInput.value, operation }),
   });
-
   return {
     ...toolCall,
     input: JSON.stringify(input, null, 2),

@@ -1,5 +1,4 @@
 "use node";
-
 import type { ReleaseId } from "@nakafa/aksara-contracts/ids";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
@@ -28,7 +27,7 @@ import {
 import { stagePublication } from "@repo/backend/convex/contentRelease/ingress/stage";
 import { runConvexActionProgram } from "@repo/backend/convex/lib/effect";
 import { type Infer, v } from "convex/values";
-import { Effect, Either } from "effect";
+import { Effect, Result } from "effect";
 
 const dispatchInputValidator = v.object({
   byteLength: v.number(),
@@ -36,7 +35,6 @@ const dispatchInputValidator = v.object({
 });
 /** Complete bounded evidence accepted by the Node publication dispatcher. */
 export type DispatchInput = Infer<typeof dispatchInputValidator>;
-
 /** Routes one decoded request to its single domain-owned capability. */
 const performRequest = Effect.fn("contentRelease.performRequest")(function* (
   ctx: ActionCtx,
@@ -69,7 +67,6 @@ const performRequest = Effect.fn("contentRelease.performRequest")(function* (
   }
   return yield* readPublication(ctx, request);
 });
-
 /** Encodes one sanitized failure from a fully decoded request. */
 const encodeRequestFailure = Effect.fn("contentRelease.encodeRequestFailure")(
   function* (ctx: ActionCtx, request: PublicationRequest, error: ReleaseError) {
@@ -82,19 +79,18 @@ const encodeRequestFailure = Effect.fn("contentRelease.encodeRequestFailure")(
     );
     let activeReleaseId: null | ReleaseId = null;
     if (error.code === "CONTENT_RELEASE_STALE_BASE") {
-      const current = yield* readCurrentPublication(ctx).pipe(Effect.either);
-      if (Either.isLeft(current)) {
-        const failure = yield* requestFailure(request, current.left, null);
+      const current = yield* readCurrentPublication(ctx).pipe(Effect.result);
+      if (Result.isFailure(current)) {
+        const failure = yield* requestFailure(request, current.failure, null);
         return yield* publicationFailure(failure);
       }
       activeReleaseId =
-        current.right.active?.release.manifest.releaseId ?? null;
+        current.success.active?.release.manifest.releaseId ?? null;
     }
     const failure = yield* requestFailure(request, error, activeReleaseId);
     return yield* publicationFailure(failure);
   }
 );
-
 /** Strictly decodes, executes, and sanitizes one authenticated request. */
 export const dispatchPublication = Effect.fn(
   "contentRelease.dispatchPublication"
@@ -106,18 +102,17 @@ export const dispatchPublication = Effect.fn(
   const decoded = yield* decodePublicationBody(
     input.source,
     input.byteLength
-  ).pipe(Effect.either);
-  if (Either.isLeft(decoded)) {
-    return yield* publicationFailure(predecodeFailure(decoded.left));
+  ).pipe(Effect.result);
+  if (Result.isFailure(decoded)) {
+    return yield* publicationFailure(predecodeFailure(decoded.failure));
   }
-  return yield* performRequest(ctx, decoded.right, activeKeyId).pipe(
+  return yield* performRequest(ctx, decoded.success, activeKeyId).pipe(
     Effect.flatMap((response) => publicationSuccess(response)),
     Effect.catchTag("ReleaseError", (error) =>
-      encodeRequestFailure(ctx, decoded.right, error)
+      encodeRequestFailure(ctx, decoded.success, error)
     )
   );
 });
-
 /** Runs the publication program with the reviewed production key registry. */
 export function dispatchHandler(ctx: ActionCtx, input: DispatchInput) {
   return runConvexActionProgram(
@@ -126,7 +121,6 @@ export function dispatchHandler(ctx: ActionCtx, input: DispatchInput) {
     )
   );
 }
-
 /** Internal Node boundary used only by the bounded HTTP publication route. */
 export const dispatch = internalAction({
   args: dispatchInputValidator,

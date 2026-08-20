@@ -31,12 +31,12 @@ function hasConvexErrorCode(error: unknown, allowedCodes: readonly string[]) {
 
 /** Captures an unexpected school route error and preserves the original failure. */
 function captureSchoolRouteError(
-  failure: Cause.UnknownException,
+  failure: Cause.UnknownError,
   context: Record<string | number, unknown>
 ) {
   return Effect.gen(function* () {
     yield* Effect.tryPromise(() =>
-      captureServerException(failure.error, undefined, context)
+      captureServerException(failure.cause, undefined, context)
     ).pipe(Effect.ignore);
 
     return yield* failure;
@@ -65,13 +65,13 @@ export const getSchoolRouteSnapshot = cache(
       ).pipe(
         Effect.catchIf(
           (failure) =>
-            hasConvexErrorCode(failure.error, [
+            hasConvexErrorCode(failure.cause, [
               "SCHOOL_NOT_FOUND",
               "MEMBERSHIP_NOT_FOUND",
             ]),
           () => Effect.succeed(null)
         ),
-        Effect.catchAll((error) =>
+        Effect.catch((error) =>
           captureSchoolRouteError(error, {
             slug,
             source: "school-route-boundary",
@@ -105,14 +105,14 @@ export async function preloadClassRoute({ classId }: { classId: string }) {
       })),
       Effect.catchIf(
         (failure) =>
-          hasConvexErrorCode(failure.error, [
+          hasConvexErrorCode(failure.cause, [
             "ACCESS_DENIED",
             "CLASS_ARCHIVED",
             "CLASS_NOT_FOUND",
           ]),
         () => Effect.succeed(null)
       ),
-      Effect.catchAll((error) =>
+      Effect.catch((error) =>
         captureSchoolRouteError(error, {
           classId,
           source: "school-class-route-boundary",
@@ -139,7 +139,7 @@ export async function getSchoolSwitcherPage() {
         },
       })
     ).pipe(
-      Effect.catchAll((error) =>
+      Effect.catch((error) =>
         captureSchoolRouteError(error, {
           source: "school-switcher-page",
         })

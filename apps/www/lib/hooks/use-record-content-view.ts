@@ -102,7 +102,7 @@ export function useRecordContentView({
           })
         ).pipe(
           Effect.tap(() => Effect.sync(() => markAsViewed(viewKey))),
-          Effect.catchTag("UnknownException", ({ error }) =>
+          Effect.catchTag("UnknownError", ({ cause: error }) =>
             Effect.sync(() =>
               captureException(error, {
                 contentId,

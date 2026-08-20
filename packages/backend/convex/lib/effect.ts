@@ -31,15 +31,18 @@ export function readConvexErrorData(error: unknown) {
 const nanosPerMillisecond = 1_000_000n;
 
 const convexClock: Clock.Clock = {
-  [Clock.ClockTypeId]: Clock.ClockTypeId,
   currentTimeMillis: Effect.sync(() => Date.now()),
+  currentTimeMillisUnsafe: () => Date.now(),
   currentTimeNanos: Effect.sync(() => BigInt(Date.now()) * nanosPerMillisecond),
+  currentTimeNanosUnsafe: () => BigInt(Date.now()) * nanosPerMillisecond,
+  monotonicTimeNanos: Effect.sync(
+    () => BigInt(Date.now()) * nanosPerMillisecond
+  ),
+  monotonicTimeNanosUnsafe: () => BigInt(Date.now()) * nanosPerMillisecond,
   sleep: () =>
     Effect.die(
       new Error("Effect.sleep is not supported inside native Convex handlers.")
     ),
-  unsafeCurrentTimeMillis: () => Date.now(),
-  unsafeCurrentTimeNanos: () => BigInt(Date.now()) * nanosPerMillisecond,
 };
 
 /** Resolves one Effect exit into the stable Convex boundary behavior. */
@@ -48,7 +51,7 @@ function resolveConvexExit<A, E extends ConvexTaggedError>(
 ) {
   return Exit.match(exit, {
     onFailure: (cause) => {
-      const failure = Cause.failureOption(cause);
+      const failure = Cause.findErrorOption(cause);
 
       if (Option.isSome(failure)) {
         throw new ConvexError({
@@ -79,7 +82,7 @@ export async function runConvexProgram<A, E extends ConvexTaggedError>(
   program: Effect.Effect<A, E, never>
 ) {
   const exit = await Effect.runPromiseExit(
-    Effect.withClock(program, convexClock)
+    program.pipe(Effect.provideService(Clock.Clock, convexClock))
   );
 
   return resolveConvexExit(exit);

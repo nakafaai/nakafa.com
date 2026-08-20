@@ -17,12 +17,11 @@ interface ProgramContextInput {
   readonly programKey: string;
   readonly publicPath: string;
 }
-
 /** Checks whether one curriculum mapping owns the stable material identity. */
 function ownsMaterialIdentity(
-  context: Effect.Effect.Success<ReturnType<typeof verifyCurriculum>>,
-  group: Effect.Effect.Success<ReturnType<typeof verifyCurriculum>>,
-  parent: Effect.Effect.Success<ReturnType<typeof verifyCurriculum>>,
+  context: Effect.Success<ReturnType<typeof verifyCurriculum>>,
+  group: Effect.Success<ReturnType<typeof verifyCurriculum>>,
+  parent: Effect.Success<ReturnType<typeof verifyCurriculum>>,
   input: ProgramContextInput
 ) {
   return (
@@ -33,7 +32,6 @@ function ownsMaterialIdentity(
     context.programKey === input.programKey
   );
 }
-
 /** Resolves one valid curriculum return context for a material identity. */
 export const readProgramContext = Effect.fn(
   "contentRelease.readProgramContext"

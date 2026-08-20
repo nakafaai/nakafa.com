@@ -1,28 +1,25 @@
-import {
-  HttpBody,
-  HttpClient,
-  HttpClientRequest,
-  HttpClientResponse,
-} from "@effect/platform";
 import { captureException } from "@repo/analytics/posthog";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
-import { Effect, Either, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
+import {
+  HttpBody,
+  HttpClient,
+  HttpClientRequest,
+  HttpClientResponse,
+} from "effect/unstable/http";
 
 const STORAGE_UPLOAD_TIMEOUT = "10 seconds";
-
 const StorageIdSchema = Schema.declare(
   (input): input is Id<"_storage"> =>
     typeof input === "string" && input.length > 0,
   { identifier: "ConvexStorageId" }
 );
-
 const StorageUploadResponseSchema = Schema.Struct({
   storageId: StorageIdSchema,
 });
-
 type GenerateUploadUrlMutation = (
   args: FunctionArgs<
     typeof api.classes.forums.mutations.uploads.generateUploadUrl
@@ -32,7 +29,6 @@ type GenerateUploadUrlMutation = (
     typeof api.classes.forums.mutations.uploads.generateUploadUrl
   >
 >;
-
 type DiscardForumUploadsMutation = (
   args: FunctionArgs<
     typeof api.classes.forums.mutations.uploads.discardForumUploads
@@ -42,7 +38,6 @@ type DiscardForumUploadsMutation = (
     typeof api.classes.forums.mutations.uploads.discardForumUploads
   >
 >;
-
 type SaveForumUploadMutation = (
   args: FunctionArgs<
     typeof api.classes.forums.mutations.uploads.saveForumUpload
@@ -52,38 +47,32 @@ type SaveForumUploadMutation = (
     typeof api.classes.forums.mutations.uploads.saveForumUpload
   >
 >;
-
 type CreateForumPostMutation = (
   args: FunctionArgs<typeof api.classes.forums.mutations.posts.createForumPost>
 ) => Promise<
   FunctionReturnType<typeof api.classes.forums.mutations.posts.createForumPost>
 >;
-
 interface ForumPostSubmitMutations {
   createPost: CreateForumPostMutation;
   discardForumUploads: DiscardForumUploadsMutation;
   generateUploadUrl: GenerateUploadUrlMutation;
   saveForumUpload: SaveForumUploadMutation;
 }
-
 interface ForumPostSubmitDraft {
   body: string;
   forumId: Id<"schoolClassForums">;
   parentId: Id<"schoolClassForumPosts"> | undefined;
 }
-
 interface ForumPostSubmitInput {
   files: readonly FileWithPreview[];
   mutations: ForumPostSubmitMutations;
   post: ForumPostSubmitDraft;
 }
-
 interface DiscardPendingUploadsInput {
   mutations: Pick<ForumPostSubmitMutations, "discardForumUploads">;
   source: string;
   uploadIds: Id<"schoolClassForumPendingUploads">[];
 }
-
 interface UploadAttachmentFileInput {
   file: File;
   forumId: Id<"schoolClassForums">;
@@ -92,7 +81,6 @@ interface UploadAttachmentFileInput {
     "discardForumUploads" | "generateUploadUrl" | "saveForumUpload"
   >;
 }
-
 class ForumAttachmentUploadError extends Schema.TaggedError<ForumAttachmentUploadError>()(
   "ForumAttachmentUploadError",
   {
@@ -100,7 +88,6 @@ class ForumAttachmentUploadError extends Schema.TaggedError<ForumAttachmentUploa
     cause: Schema.optional(Schema.String),
   }
 ) {}
-
 class ForumAttachmentCleanupError extends Schema.TaggedError<ForumAttachmentCleanupError>()(
   "ForumAttachmentCleanupError",
   {
@@ -108,7 +95,6 @@ class ForumAttachmentCleanupError extends Schema.TaggedError<ForumAttachmentClea
     cause: Schema.optional(Schema.String),
   }
 ) {}
-
 class ForumPostCreateError extends Schema.TaggedError<ForumPostCreateError>()(
   "ForumPostCreateError",
   {
@@ -116,33 +102,27 @@ class ForumPostCreateError extends Schema.TaggedError<ForumPostCreateError>()(
     cause: Schema.optional(Schema.String),
   }
 ) {}
-
 /** Converts unknown failures into a stable serializable error cause. */
 function getErrorCause(cause: unknown) {
   return cause instanceof Error ? cause.message : String(cause);
 }
-
 /** Returns only browser File objects that can be uploaded for a new post. */
 function getUploadableFiles(files: readonly FileWithPreview[]) {
   const uploadableFiles: File[] = [];
-
   for (const fileWithPreview of files) {
     if (fileWithPreview.file instanceof File) {
       uploadableFiles.push(fileWithPreview.file);
     }
   }
-
   return uploadableFiles;
 }
-
 /** Discards pending uploads and captures cleanup failures without masking the original error. */
 const discardPendingUploads = Effect.fn("www.forum.discardPendingUploads")(
   function* ({ mutations, source, uploadIds }: DiscardPendingUploadsInput) {
     if (uploadIds.length === 0) {
       return;
     }
-
-    const result = yield* Effect.either(
+    const result = yield* Effect.result(
       Effect.tryPromise({
         try: () => mutations.discardForumUploads({ uploadIds }),
         catch: (cause) =>
@@ -152,17 +132,15 @@ const discardPendingUploads = Effect.fn("www.forum.discardPendingUploads")(
           }),
       })
     );
-
-    if (Either.isLeft(result)) {
+    if (Result.isFailure(result)) {
       yield* Effect.sync(() =>
-        captureException(result.left, {
+        captureException(result.failure, {
           source,
         })
       );
     }
   }
 );
-
 /** Uploads one attachment and removes its pending record if the upload fails. */
 const uploadAttachmentFile = Effect.fn("www.forum.uploadAttachmentFile")(
   function* ({ file, forumId, mutations }: UploadAttachmentFileInput) {
@@ -174,11 +152,7 @@ const uploadAttachmentFile = Effect.fn("www.forum.uploadAttachmentFile")(
           cause: getErrorCause(cause),
         }),
     });
-    const client = (yield* HttpClient.HttpClient).pipe(
-      // Convex upload URLs are short-lived capabilities and must not enter traces.
-      HttpClient.withTracerDisabledWhen(() => true)
-    );
-
+    const client = yield* HttpClient.HttpClient;
     const { storageId } = yield* HttpClientRequest.post(uploadUrl).pipe(
       HttpClientRequest.setBody(
         HttpBody.raw(file, {
@@ -186,6 +160,7 @@ const uploadAttachmentFile = Effect.fn("www.forum.uploadAttachmentFile")(
         })
       ),
       client.execute,
+      Effect.provideService(HttpClient.TracerDisabledWhen, () => true),
       Effect.flatMap(HttpClientResponse.filterStatusOk),
       Effect.flatMap(
         HttpClientResponse.schemaBodyJson(StorageUploadResponseSchema)
@@ -205,7 +180,6 @@ const uploadAttachmentFile = Effect.fn("www.forum.uploadAttachmentFile")(
         })
       )
     );
-
     yield* Effect.tryPromise({
       try: () =>
         mutations.saveForumUpload({
@@ -229,11 +203,9 @@ const uploadAttachmentFile = Effect.fn("www.forum.uploadAttachmentFile")(
         })
       )
     );
-
     return uploadId;
   }
 );
-
 /** Uploads attachments, creates the post, and cleans partial uploads on failure. */
 export const submitForumPost = Effect.fn("www.forum.submitPost")(function* ({
   files,
@@ -249,27 +221,22 @@ export const submitForumPost = Effect.fn("www.forum.submitPost")(function* ({
         mutations,
       })
     ),
-    { mode: "either" }
+    { mode: "result" }
   );
-
   for (const result of uploadResults) {
-    if (Either.isRight(result)) {
-      attachmentUploadIds.push(result.right);
+    if (Result.isSuccess(result)) {
+      attachmentUploadIds.push(result.success);
     }
   }
-
-  const failedUpload = uploadResults.find(Either.isLeft);
-
+  const failedUpload = uploadResults.find(Result.isFailure);
   if (failedUpload) {
     yield* discardPendingUploads({
       mutations,
       source: "forum-upload-discard-batch",
       uploadIds: attachmentUploadIds,
     });
-
-    return yield* failedUpload.left;
+    return yield* failedUpload.failure;
   }
-
   yield* Effect.tryPromise({
     try: () =>
       mutations.createPost({

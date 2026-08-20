@@ -159,15 +159,15 @@ export const polarGateway: PolarCustomerGateway = {
         id: polarCustomerId,
       })
     ).pipe(
-      Effect.catchTag("UnknownException", ({ error }) => {
-        if (isMissingPolarCustomer(error)) {
+      Effect.catchTag("UnknownError", (error) => {
+        if (isMissingPolarCustomer(error.cause)) {
           return Effect.succeed(null);
         }
 
         return Effect.fail(
           new PolarDeleteError({
             code: polarDeleteErrorCode,
-            message: `Failed to delete customer from Polar: ${getUnknownErrorMessage(error)}`,
+            message: `Failed to delete customer from Polar: ${getUnknownErrorMessage(error.cause)}`,
           })
         );
       }),
@@ -222,15 +222,15 @@ export const polarGateway: PolarCustomerGateway = {
         externalId,
       })
     ).pipe(
-      Effect.catchTag("UnknownException", ({ error }) => {
-        if (isMissingPolarCustomer(error)) {
+      Effect.catchTag("UnknownError", (error) => {
+        if (isMissingPolarCustomer(error.cause)) {
           return Effect.succeed(null);
         }
 
         return Effect.fail(
           new PolarCustomerError({
             code: polarCustomerErrorCode,
-            message: `Failed to load Polar customer by external ID: ${getUnknownErrorMessage(error)}`,
+            message: `Failed to load Polar customer by external ID: ${getUnknownErrorMessage(error.cause)}`,
           })
         );
       }),
@@ -262,15 +262,15 @@ export const polarGateway: PolarCustomerGateway = {
         id: polarCustomerId,
       })
     ).pipe(
-      Effect.catchTag("UnknownException", ({ error }) => {
-        if (isMissingPolarCustomer(error)) {
+      Effect.catchTag("UnknownError", (error) => {
+        if (isMissingPolarCustomer(error.cause)) {
           return Effect.succeed(null);
         }
 
         return Effect.fail(
           new PolarCustomerError({
             code: polarCustomerErrorCode,
-            message: `Failed to load Polar customer by ID: ${getUnknownErrorMessage(error)}`,
+            message: `Failed to load Polar customer by ID: ${getUnknownErrorMessage(error.cause)}`,
           })
         );
       }),

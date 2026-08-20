@@ -15,7 +15,7 @@ import {
 } from "@repo/backend/content/endpoint";
 import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
 import { isJsonContentType } from "@repo/utilities/mime";
-import { Data, Effect, Schedule, ScheduleDecision } from "effect";
+import { Data, Effect, Schedule } from "effect";
 
 const CONTENT_TIMEOUT_MILLISECONDS = 10_000;
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "[::1]", "localhost"]);
@@ -70,13 +70,7 @@ function isRetryableContentResponse(response: Response, endpoint: string) {
  * @see https://github.com/nodejs/undici/blob/v7.29.0/README.md#garbage-collection
  */
 const cancelRetryResponse = Effect.fn("NakafaContent.cancelRetryResponse")(
-  function* (
-    failure: ContentRequestFailure,
-    decision: ScheduleDecision.ScheduleDecision
-  ) {
-    if (!ScheduleDecision.isContinue(decision)) {
-      return;
-    }
+  function* (failure: ContentRequestFailure) {
     if (failure._tag !== "RetryableContentResponse") {
       return;
     }
@@ -89,7 +83,7 @@ const cancelRetryResponse = Effect.fn("NakafaContent.cancelRetryResponse")(
       catch: () => undefined,
       try: () => body.cancel(),
     }).pipe(
-      Effect.catchAll(() =>
+      Effect.catch(() =>
         Effect.logWarning(
           "Unable to cancel a discarded content runtime response body."
         )
@@ -98,13 +92,23 @@ const cancelRetryResponse = Effect.fn("NakafaContent.cancelRetryResponse")(
   }
 );
 
-const CONTENT_RETRY_SCHEDULE = Schedule.fromDelays(
-  NETWORK_RETRY_DELAYS_MILLISECONDS[0],
-  NETWORK_RETRY_DELAYS_MILLISECONDS[1]
-).pipe(
-  Schedule.whileInput<ContentRequestFailure>(isRetryableContentFailure),
+const CONTENT_RETRY_SCHEDULE: Schedule.Schedule<
+  ContentRequestFailure,
+  ContentRequestFailure
+> = Schedule.recurs(2).pipe(
+  Schedule.addDelay(({ attempt }) =>
+    Effect.succeed(
+      attempt === 1
+        ? NETWORK_RETRY_DELAYS_MILLISECONDS[0]
+        : NETWORK_RETRY_DELAYS_MILLISECONDS[1]
+    )
+  ),
+  Schedule.while(
+    ({ input }: Schedule.Metadata<number, ContentRequestFailure>) =>
+      isRetryableContentFailure(input)
+  ),
   Schedule.passthrough,
-  Schedule.onDecision(cancelRetryResponse)
+  Schedule.tap(({ input }) => cancelRetryResponse(input))
 );
 
 /** Returns whether the response carries the current diagnostic marker. */

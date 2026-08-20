@@ -19,12 +19,8 @@ export interface TryoutStartSource {
 export const loadTryoutStartSource = Effect.fn(
   "tryouts.start.loadTryoutStartSource"
 )(function* (ctx: QueryCtx, args: StartAttemptArgs) {
-  const owner = yield* loadTryoutOwner(ctx).pipe(
-    Effect.mapError(toTryoutStartError)
-  );
-  const snapshot = yield* readTryoutSet(ctx, args).pipe(
-    Effect.mapError(toTryoutStartError)
-  );
+  const owner = yield* loadTryoutOwner(ctx);
+  const snapshot = yield* readTryoutSet(ctx, args);
   const { active, snapshotId } = owner;
   const source: TryoutStartSource = {
     bundle: {
@@ -37,4 +33,4 @@ export const loadTryoutStartSource = Effect.fn(
     snapshot,
   };
   return source;
-});
+}, Effect.mapError(toTryoutStartError));

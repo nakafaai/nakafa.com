@@ -1,5 +1,4 @@
 import "server-only";
-
 import {
   type StoredProtectedRuntimeRequest,
   StoredProtectedRuntimeRequestSchema,
@@ -28,13 +27,11 @@ import {
 import { RETAINED_PROTECTED_CONTENT_RUNTIME_PATH } from "@repo/backend/content/endpoint";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import { Effect, Schema } from "effect";
-
 /** One exact retained attempt has no immutable historical content response. */
 export class RetainedContentRuntimeMissingError extends Schema.TaggedError<RetainedContentRuntimeMissingError>()(
   "RetainedContentRuntimeMissingError",
   { request: StoredProtectedRuntimeRequestSchema }
 ) {}
-
 /** Reads one bounded retained-history response without trusting its body. */
 const readRetainedRuntimeResponse = Effect.fn(
   "NakafaContent.readRetainedRuntimeResponse"
@@ -44,14 +41,13 @@ const readRetainedRuntimeResponse = Effect.fn(
     endpoint,
     MAX_PROTECTED_RUNTIME_RESPONSE_BYTES
   );
-  const decoded = yield* Schema.decodeUnknown(
+  const decoded = yield* Schema.decodeUnknownEffect(
     StoredProtectedRuntimeResponseSchema,
     { onExcessProperty: "error" }
   )(input).pipe(Effect.mapError(() => createContentContractError(response)));
   yield* validateContentRuntimeStatus(decoded, response.status);
   return decoded;
 });
-
 /** Reads and authenticates historical bodies for one exact retained attempt. */
 export const readRetainedProtectedContent = Effect.fn(
   "NakafaContent.readRetainedProtectedContent"
@@ -60,12 +56,12 @@ export const readRetainedProtectedContent = Effect.fn(
   input: unknown,
   rendererManifest: unknown
 ) {
-  const request: StoredProtectedRuntimeRequest = yield* Schema.decodeUnknown(
-    StoredProtectedRuntimeRequestSchema,
-    { onExcessProperty: "error" }
-  )(input).pipe(
-    Effect.mapError(() => new ContentTransportError({ reason: "request" }))
-  );
+  const request: StoredProtectedRuntimeRequest =
+    yield* Schema.decodeUnknownEffect(StoredProtectedRuntimeRequestSchema, {
+      onExcessProperty: "error",
+    })(input).pipe(
+      Effect.mapError(() => new ContentTransportError({ reason: "request" }))
+    );
   const source = yield* encodeContentRequest(
     request,
     MAX_PROTECTED_RUNTIME_REQUEST_BYTES

@@ -9,6 +9,7 @@ import {
   readNakafaQuranReference,
   readQuranMarkdown,
 } from "@repo/backend/client/nakafa/quran";
+import { ConvexRuntimeQueryError } from "@repo/backend/client/runtime";
 import { api } from "@repo/backend/convex/_generated/api";
 import { encodeTestQuranRow } from "@repo/backend/test/quran-rows";
 import { NakafaAgentInputError } from "@repo/contents/_lib/agent/errors";
@@ -20,15 +21,23 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const runtimeMocks = vi.hoisted(() => ({
   runtimeQuery: vi.fn(),
 }));
-
 vi.mock("@repo/backend/client/runtime", () => ({
   readConvexRuntimeQuery: (url: string, query: unknown, args: unknown) =>
     Effect.tryPromise({
-      catch: (cause) => cause,
+      catch: toRuntimeQueryError,
       try: () => runtimeMocks.runtimeQuery(url, query, args),
     }),
 }));
-
+function toRuntimeQueryError(cause: unknown) {
+  if (cause instanceof ConvexRuntimeQueryError) {
+    return cause;
+  }
+  return new ConvexRuntimeQueryError({
+    networkCodes: [],
+    query: "test-runtime-query",
+    reason: "query",
+  });
+}
 const convexUrl = "https://example.convex.cloud";
 const source = {
   activeManifestHash: `sha256:${"a".repeat(64)}`,
@@ -37,12 +46,10 @@ const source = {
   snapshotId: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
   sourceRevision: "c".repeat(40),
 };
-
 beforeEach(() => {
   runtimeMocks.runtimeQuery.mockReset();
   runtimeMocks.runtimeQuery.mockImplementation(readRuntimeFixture);
 });
-
 describe("Quran Nakafa reader", () => {
   it("reads signed Quran references and includes published Indonesian tafsir", async () => {
     const reference = await Effect.runPromise(
@@ -54,13 +61,11 @@ describe("Quran Nakafa reader", () => {
         to_verse: 1,
       })
     );
-
     expect(Option.getOrUndefined(reference)?.verses[0]?.tafsir).toBe(
       "Tafsir lengkap."
     );
     expect(Option.getOrUndefined(reference)?.name).toBe("Al-Fatihah");
   });
-
   it("does not invent tafsir for a locale without published tafsir", async () => {
     const reference = await Effect.runPromise(
       readNakafaQuranReference(convexUrl, {
@@ -70,21 +75,17 @@ describe("Quran Nakafa reader", () => {
         surah: 1,
       })
     );
-
     expect(Option.getOrUndefined(reference)?.verses[0]?.tafsir).toBeUndefined();
   });
-
   it("maps malformed reference input to the agent input error", async () => {
     const invalid = await Effect.runPromise(
-      Effect.either(readNakafaQuranReference(convexUrl, { surah: "one" }))
+      Effect.result(readNakafaQuranReference(convexUrl, { surah: "one" }))
     );
-
-    expect(invalid._tag).toBe("Left");
-    if (invalid._tag === "Left") {
-      expect(invalid.left).toBeInstanceOf(NakafaAgentInputError);
+    expect(invalid._tag).toBe("Failure");
+    if (invalid._tag === "Failure") {
+      expect(invalid.failure).toBeInstanceOf(NakafaAgentInputError);
     }
   });
-
   it("renders full signed surah markdown without blocked legacy fields", async () => {
     const markdown = await Effect.runPromise(
       readQuranMarkdown(
@@ -92,7 +93,6 @@ describe("Quran Nakafa reader", () => {
         readNakafaContentRefFixture("id", "quran/1", "quran")
       )
     );
-
     expect(Option.getOrUndefined(markdown)?.title).toBe("Al-Fatihah");
     expect(Option.getOrUndefined(markdown)?.description).toBe("Pembukaan");
     expect(Option.getOrUndefined(markdown)?.text).toContain("## Verses");
@@ -103,7 +103,6 @@ describe("Quran Nakafa reader", () => {
       "Transliteration"
     );
   });
-
   it("rejects non-Quran routes and reads source names directly", async () => {
     const missing = await Effect.runPromise(
       readQuranMarkdown(
@@ -115,12 +114,10 @@ describe("Quran Nakafa reader", () => {
         )
       )
     );
-
     expect(Option.isNone(missing)).toBe(true);
     expect(getSurahName(surahRow())).toBe("Al-Fatihah");
   });
 });
-
 /** Routes generated Convex query refs to signed Quran fixtures. */
 function readRuntimeFixture(
   _convexUrl: string,
@@ -139,10 +136,8 @@ function readRuntimeFixture(
   ) {
     return Promise.resolve(markdownResult(args));
   }
-
   return Promise.reject(new Error("Unhandled Quran query fixture."));
 }
-
 /** Builds one signed reference response around a bounded chunk. */
 function referenceResult(args: Record<string, unknown>) {
   const appLocale = args.appLocale === "id" ? "id" : "en";
@@ -155,7 +150,6 @@ function referenceResult(args: Record<string, unknown>) {
     toVerse: 1,
   };
 }
-
 /** Builds one app-locale signed markdown response. */
 function markdownResult(args: Record<string, unknown>) {
   const appLocale = args.appLocale === "id" ? "id" : "en";
@@ -187,10 +181,9 @@ function markdownResult(args: Record<string, unknown>) {
     ],
   };
 }
-
 /** Builds one exact signed Quran surah row. */
 function surahRow(number = 1) {
-  return Schema.decodeUnknownSync(QuranSurahRowSchema)({
+  return Schema.decodeSync(QuranSurahRowSchema)({
     kind: "quran-surah",
     name: {
       arabic: "الفاتحة",
@@ -202,10 +195,9 @@ function surahRow(number = 1) {
     revelation: { order: 5, place: "Meccan" },
   });
 }
-
 /** Builds one exact signed Quran chunk row. */
 function chunkRow() {
-  return Schema.decodeUnknownSync(QuranChunkRowSchema)({
+  return Schema.decodeSync(QuranChunkRowSchema)({
     firstQuranNumber: 1,
     firstVerse: 1,
     kind: "quran-chunk",
@@ -244,10 +236,9 @@ function chunkRow() {
     ],
   });
 }
-
 /** Builds one app-locale signed Quran search row. */
 function searchRow(appLocale: "en" | "id") {
-  return Schema.decodeUnknownSync(QuranSearchRowSchema)({
+  return Schema.decodeSync(QuranSearchRowSchema)({
     appLocale,
     graph: {
       alignmentId: `alignment:quran:surah:1:${appLocale}`,

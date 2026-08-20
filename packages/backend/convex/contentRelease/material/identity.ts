@@ -12,7 +12,6 @@ import {
 import { loadMaterialOwner } from "@repo/backend/convex/contentRelease/material/owner";
 import { verifyEffectiveMaterial } from "@repo/backend/convex/contentRelease/material/verify";
 import { Effect, Schema } from "effect";
-
 /** Stable signed material identity requested by an application surface. */
 export interface MaterialIdentityInput {
   readonly appLocale: Doc<"materialCatalog">["appLocale"];
@@ -20,17 +19,16 @@ export interface MaterialIdentityInput {
   readonly expectedMaterialKey: string;
   readonly expectedSectionKey: string;
 }
-
 /** Decodes the caller's stable identity through Aksara's current contracts. */
 const decodeMaterialIdentity = Effect.fn(
   "contentRelease.decodeMaterialIdentity"
 )(function* (input: MaterialIdentityInput) {
   return yield* Effect.all({
-    contentKey: Schema.decodeUnknown(ContentKeySchema)(input.contentKey),
-    materialKey: Schema.decodeUnknown(MaterialKeySchema)(
+    contentKey: Schema.decodeEffect(ContentKeySchema)(input.contentKey),
+    materialKey: Schema.decodeEffect(MaterialKeySchema)(
       input.expectedMaterialKey
     ),
-    sectionKey: Schema.decodeUnknown(MaterialSectionSchema)(
+    sectionKey: Schema.decodeEffect(MaterialSectionSchema)(
       input.expectedSectionKey
     ),
   }).pipe(
@@ -44,7 +42,6 @@ const decodeMaterialIdentity = Effect.fn(
     )
   );
 });
-
 /** Resolves one active authenticated material row by stable content identity. */
 export const readMaterialIdentity = Effect.fn(
   "contentRelease.readMaterialIdentity"
@@ -60,7 +57,6 @@ export const readMaterialIdentity = Effect.fn(
       publicPath: null,
     };
   }
-
   const row = yield* Effect.promise(() =>
     ctx.db
       .query("materialCatalog")
@@ -78,7 +74,6 @@ export const readMaterialIdentity = Effect.fn(
       publicPath: null,
     };
   }
-
   const { projection } = yield* verifyEffectiveMaterial(
     ctx,
     row,
@@ -93,7 +88,6 @@ export const readMaterialIdentity = Effect.fn(
       `Active material ${identity.contentKey}/${input.appLocale} disagrees with its stable identity.`
     );
   }
-
   return {
     activeReleaseId: owner.active.releaseId,
     managed: true,

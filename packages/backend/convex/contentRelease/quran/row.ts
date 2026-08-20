@@ -2,7 +2,6 @@ import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { verifyQuranRow } from "@repo/backend/convex/contentRelease/quran/verify";
 import { Effect, type Schema } from "effect";
-
 /** Reads and authenticates one exact row from an active Quran snapshot. */
 export const readQuranRow = Effect.fn("contentRelease.readQuranRow")(function* <
   A,
@@ -11,7 +10,7 @@ export const readQuranRow = Effect.fn("contentRelease.readQuranRow")(function* <
   ctx: QueryCtx,
   snapshotId: string,
   identity: string,
-  payloadSchema: Schema.Schema<A, I, never>
+  payloadSchema: Schema.Codec<A, I, never, never>
 ) {
   const stored = yield* Effect.promise(() =>
     ctx.db

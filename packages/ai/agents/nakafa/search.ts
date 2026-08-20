@@ -8,14 +8,14 @@ import { Context, type Effect } from "effect";
 /**
  * Runtime-injected infrastructure adapter for Convex-backed Nakafa search.
  *
- * Context.Tag is intentional here because each app provides its own Convex
+ * A required Context service is intentional because each app provides its own Convex
  * boundary instead of `@repo/ai` owning deployment configuration.
  */
-export class NakafaSearch extends Context.Tag("NakafaSearch")<
+export class NakafaSearch extends Context.Service<
   NakafaSearch,
   {
     readonly search: (
       input: NakafaAgentSearchInput
     ) => Effect.Effect<NakafaAgentSearchResult, NakafaAgentDataReadError>;
   }
->() {}
+>()("NakafaSearch") {}

@@ -6,7 +6,6 @@ interface RetainedTryoutRelease {
   readonly manifestHash: string;
   readonly releaseId: string;
 }
-
 /** Exact immutable production inventory accepted by the Phase 1a cutover. */
 export interface RetainedTryoutHistoryPlan {
   readonly artifactCount: number;
@@ -21,7 +20,6 @@ export interface RetainedTryoutHistoryPlan {
   readonly releases: readonly RetainedTryoutRelease[];
   readonly snapshotId: string;
 }
-
 /** Production identities proven by the read-only retained-attempt audit. */
 export const retainedTryoutHistoryPlan = {
   artifactCount: 1680,
@@ -50,20 +48,18 @@ export const retainedTryoutHistoryPlan = {
   snapshotId:
     "sha256:0a43a4125fc4886f90b5a509405178bfb8762ad3c7f72be80614fce2671b5162",
 } satisfies RetainedTryoutHistoryPlan;
-
 /** Typed, fail-closed error for the one retained history cutover. */
 export class TryoutHistoryError extends Schema.TaggedError<TryoutHistoryError>()(
   "TryoutHistoryError",
   {
-    code: Schema.Literal(
+    code: Schema.Literals([
       "TRYOUT_HISTORY_INTEGRITY",
       "TRYOUT_HISTORY_NOT_READY",
-      "TRYOUT_HISTORY_READ_FAILED"
-    ),
+      "TRYOUT_HISTORY_READ_FAILED",
+    ]),
     message: Schema.String,
   }
 ) {}
-
 /** Creates one integrity failure for mapping another typed decoder error. */
 export function historyIntegrity(message: string) {
   return new TryoutHistoryError({
@@ -71,12 +67,10 @@ export function historyIntegrity(message: string) {
     message,
   });
 }
-
 /** Fails one retained-history invariant without throwing. */
 export function historyFail(code: TryoutHistoryError["code"], message: string) {
   return Effect.fail(new TryoutHistoryError({ code, message }));
 }
-
 /** Lifts one Convex read into the retained-history failure channel. */
 export function historyRead<A>(message: string, operation: () => Promise<A>) {
   return Effect.tryPromise({
@@ -88,7 +82,6 @@ export function historyRead<A>(message: string, operation: () => Promise<A>) {
     try: operation,
   });
 }
-
 /** Actual compact evidence stored before the reader cutover is accepted. */
 export const historyMarkerProofValidator = v.object({
   attempts: v.number(),

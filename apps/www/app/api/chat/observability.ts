@@ -81,7 +81,7 @@ export function createChatErrorReporter({
                   message: "Unable to capture the chat stream failure.",
                 }),
             }).pipe(
-              Effect.catchAll((captureError) =>
+              Effect.catch((captureError) =>
                 logError(toError(captureError.cause), {
                   ...errorContext,
                   errorLocation: "posthog-capture",

@@ -2,48 +2,42 @@ import {
   nonEmptyStringArraySchema,
   valueInputSchema,
 } from "@repo/math/schema/shared";
-import { Schema } from "effect";
+import { Schema, Struct } from "effect";
 
 const MathDiscreteValuesInputSchema = Schema.Struct({
-  operation: Schema.Literal("gcd", "lcm").annotations({
+  operation: Schema.Literals(["gcd", "lcm"]).annotate({
     description: "Compute a result from a list of integers.",
   }),
-  values: nonEmptyStringArraySchema.annotations({
+  values: nonEmptyStringArraySchema.annotate({
     description: "Integer values, for example [84, 30].",
   }),
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 const MathDiscreteIntegerInputSchema = Schema.Struct({
   n: valueInputSchema,
-  operation: Schema.Literal("is_prime", "prime_factorization").annotations({
+  operation: Schema.Literals(["is_prime", "prime_factorization"]).annotate({
     description: "Inspect one integer.",
   }),
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 const MathDiscreteModularInputSchema = Schema.Struct({
   modulus: valueInputSchema,
   n: valueInputSchema,
-  operation: Schema.Literal("modular").annotations({
+  operation: Schema.Literal("modular").annotate({
     description: "Compute n modulo modulus.",
   }),
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 const MathDiscreteCountInputSchema = Schema.Struct({
   k: valueInputSchema,
   n: valueInputSchema,
-  operation: Schema.Literal("combination", "permutation").annotations({
+  operation: Schema.Literals(["combination", "permutation"]).annotate({
     description: "Compute combinations or permutations from n and k.",
   }),
-}).pipe(Schema.mutable);
-
-export const MathDiscreteInputSchema = Schema.Union(
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
+export const MathDiscreteInputSchema = Schema.Union([
   MathDiscreteValuesInputSchema,
   MathDiscreteIntegerInputSchema,
   MathDiscreteModularInputSchema,
-  MathDiscreteCountInputSchema
-)
-  .pipe(Schema.mutable)
-  .annotations({
-    description:
-      "Discrete math and number theory tool input. Required fields depend on the selected operation.",
-  });
+  MathDiscreteCountInputSchema,
+]).annotate({
+  description:
+    "Discrete math and number theory tool input. Required fields depend on the selected operation.",
+});

@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 describe("MathResultSchema", () => {
   it("decodes a CAS result", () => {
     expect(
-      Schema.decodeUnknownSync(MathResultSchema)({
+      Schema.decodeSync(MathResultSchema)({
         conditions: [],
         input: {
           expression: "2 + 2",

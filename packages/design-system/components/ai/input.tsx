@@ -59,7 +59,7 @@ export function PromptInput({
   const controller = useOptionalPromptInputController();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
-  const submitFibersRef = useRef(new Set<Fiber.RuntimeFiber<void, never>>());
+  const submitFibersRef = useRef(new Set<Fiber.Fiber<void, never>>());
   const { attachments, files } = usePromptInputFiles({
     accept,
     controller,

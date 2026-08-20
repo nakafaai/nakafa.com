@@ -6,29 +6,26 @@ import schema from "@repo/backend/convex/betterAuth/schema";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
 import { paginator } from "convex-helpers/server/pagination";
-import { Effect, Either, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 
-const oauthLinkVerificationSchema = Schema.parseJson(
+const oauthLinkVerificationSchema = Schema.fromJsonString(
   Schema.Struct({
     link: Schema.Struct({
       userId: Schema.String,
     }),
   })
 );
-const decodeOauthLinkVerification = Schema.decodeUnknownEither(
+const decodeOauthLinkVerification = Schema.decodeUnknownResult(
   oauthLinkVerificationSchema
 );
-
 /** Matches the direct tokens and OAuth-link state Better Auth owns per user. */
 function belongsToDeletedUser(value: string, authId: string) {
   if (value === authId) {
     return true;
   }
-
   const decoded = decodeOauthLinkVerification(value);
-  return Either.isRight(decoded) && decoded.right.link.userId === authId;
+  return Result.isSuccess(decoded) && decoded.success.link.userId === authId;
 }
-
 /** Deletes one bounded scan page of Better Auth verification artifacts. */
 const deleteUserVerificationPageProgram = Effect.fn(
   "betterAuth.deletion.deleteUserVerificationPage"
@@ -39,7 +36,6 @@ const deleteUserVerificationPageProgram = Effect.fn(
       numItems: ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE,
     })
   );
-
   for (const verification of page.page) {
     if (belongsToDeletedUser(verification.value, authId)) {
       yield* tryUserCleanup(() =>
@@ -47,13 +43,11 @@ const deleteUserVerificationPageProgram = Effect.fn(
       );
     }
   }
-
   return {
     continueCursor: page.continueCursor,
     isDone: page.isDone,
   };
 });
-
 /**
  * Scans Better Auth verification rows with an opaque cursor because OAuth
  * link state embeds the user ID inside its JSON value and cannot use an index.

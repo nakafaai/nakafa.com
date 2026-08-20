@@ -11,144 +11,122 @@ import {
 import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/schema/taxonomy";
 import { MathDataSchema } from "@repo/math/schema/data";
 import { locales } from "@repo/utilities/locales";
-import { Schema } from "effect";
+import { Schema, Struct } from "effect";
 
-const LocaleSchema = Schema.Literal(...locales);
-const StatusSchema = Schema.Literal("loading", "done", "error");
-
-const ContentPreviewSchema = NakafaAgentContentRefSchema.pipe(
-  Schema.extend(
-    Schema.Struct({
-      description: Schema.optional(Schema.String),
-      title: Schema.String,
-    })
-  ),
-  Schema.mutable
-);
+const LocaleSchema = Schema.Literals(locales);
+const StatusSchema = Schema.Literals(["loading", "done", "error"]);
+const ContentPreviewSchema = NakafaAgentContentRefSchema.mapFields(
+  (fields) => ({
+    ...fields,
+    description: Schema.optional(Schema.String),
+    title: Schema.String,
+  }),
+  { unsafePreserveChecks: true }
+).mapFields(Struct.map(Schema.mutableKey), { unsafePreserveChecks: true });
 const SearchInputSchema = NakafaAgentSearchOptionsSchema;
 const SearchResultSchema = NakafaAgentSearchResultSchema;
 const ReadInputSchema = NakafaAgentReadOptionsSchema;
 const QuranInputSchema = NakafaAgentQuranReferenceOptionsSchema;
 const TaxonomyInputSchema = NakafaAgentTaxonomyOptionsSchema;
-
-const QuranPreviewSchema = NakafaAgentContentRefSchema.pipe(
-  Schema.extend(
-    Schema.Struct({
-      from_verse: Schema.Number,
-      name: Schema.String,
-      revelation: Schema.String,
-      to_verse: Schema.Number,
-      translation: Schema.String,
-      verse_count: Schema.Number,
-    })
-  ),
-  Schema.mutable
-);
-
+const QuranPreviewSchema = NakafaAgentContentRefSchema.mapFields(
+  (fields) => ({
+    ...fields,
+    from_verse: Schema.Finite,
+    name: Schema.String,
+    revelation: Schema.String,
+    to_verse: Schema.Finite,
+    translation: Schema.String,
+    verse_count: Schema.Finite,
+  }),
+  { unsafePreserveChecks: true }
+).mapFields(Struct.map(Schema.mutableKey), { unsafePreserveChecks: true });
 const TaxonomyPreviewSchema = Schema.Struct({
   content_counts: Schema.Array(
     Schema.Struct({
-      count: Schema.Number,
+      count: Schema.Finite,
       locale: LocaleSchema,
-    }).pipe(Schema.mutable)
+    }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
   ).pipe(Schema.mutable),
   locale: LocaleSchema,
   sections: Schema.Array(NakafaAgentSectionSchema).pipe(Schema.mutable),
   tools: Schema.Array(Schema.String).pipe(Schema.mutable),
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 const nakafaSearchLoadingFields = {
   input: SearchInputSchema,
   kind: Schema.Literal("search"),
   status: Schema.Literal("loading"),
 };
-
 const NakafaSearchLoadingSchema = Schema.Struct(nakafaSearchLoadingFields).pipe(
-  Schema.mutable
+  (schema) => schema.mapFields(Struct.map(Schema.mutableKey))
 );
-
 const NakafaSearchDoneSchema = Schema.Struct({
   ...nakafaSearchLoadingFields,
   result: SearchResultSchema,
   status: Schema.Literal("done"),
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 const NakafaSearchErrorSchema = Schema.Struct({
   ...nakafaSearchLoadingFields,
   error: Schema.String,
   status: Schema.Literal("error"),
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 const nakafaContentLoadingFields = {
   input: ReadInputSchema,
   kind: Schema.Literal("content"),
   status: Schema.Literal("loading"),
 };
-
 const NakafaContentLoadingSchema = Schema.Struct(
   nakafaContentLoadingFields
-).pipe(Schema.mutable);
-
+).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 const NakafaContentDoneSchema = Schema.Struct({
   ...nakafaContentLoadingFields,
   result: ContentPreviewSchema,
   status: Schema.Literal("done"),
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 const NakafaContentErrorSchema = Schema.Struct({
   ...nakafaContentLoadingFields,
   error: Schema.String,
   status: Schema.Literal("error"),
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 const nakafaQuranLoadingFields = {
   input: QuranInputSchema,
   kind: Schema.Literal("quran"),
   status: Schema.Literal("loading"),
 };
-
 const NakafaQuranLoadingSchema = Schema.Struct(nakafaQuranLoadingFields).pipe(
-  Schema.mutable
+  (schema) => schema.mapFields(Struct.map(Schema.mutableKey))
 );
-
 const NakafaQuranDoneSchema = Schema.Struct({
   ...nakafaQuranLoadingFields,
   result: QuranPreviewSchema,
   status: Schema.Literal("done"),
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 const NakafaQuranErrorSchema = Schema.Struct({
   ...nakafaQuranLoadingFields,
   error: Schema.String,
   status: Schema.Literal("error"),
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 const nakafaTaxonomyLoadingFields = {
   input: TaxonomyInputSchema,
   kind: Schema.Literal("taxonomy"),
   status: Schema.Literal("loading"),
 };
-
 const NakafaTaxonomyLoadingSchema = Schema.Struct(
   nakafaTaxonomyLoadingFields
-).pipe(Schema.mutable);
-
+).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 const NakafaTaxonomyDoneSchema = Schema.Struct({
   ...nakafaTaxonomyLoadingFields,
   result: TaxonomyPreviewSchema,
   status: Schema.Literal("done"),
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 const NakafaTaxonomyErrorSchema = Schema.Struct({
   ...nakafaTaxonomyLoadingFields,
   error: Schema.String,
   status: Schema.Literal("error"),
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 /**
  * UI data payloads written by Nakafa sub-tools.
  */
-export const NakafaDataSchema = Schema.Union(
+export const NakafaDataSchema = Schema.Union([
   NakafaSearchLoadingSchema,
   NakafaSearchDoneSchema,
   NakafaSearchErrorSchema,
@@ -160,9 +138,8 @@ export const NakafaDataSchema = Schema.Union(
   NakafaQuranErrorSchema,
   NakafaTaxonomyLoadingSchema,
   NakafaTaxonomyDoneSchema,
-  NakafaTaxonomyErrorSchema
-);
-
+  NakafaTaxonomyErrorSchema,
+]);
 /**
  * UI data parts written by Nina agents.
  */
@@ -177,13 +154,13 @@ export const DataPartSchema = Schema.Struct({
     status: StatusSchema,
     title: Schema.optional(Schema.String),
     url: Schema.String,
-  }).pipe(Schema.mutable),
+  }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
   suggestions: Schema.Struct({
     data: Schema.Array(Schema.String).pipe(Schema.mutable),
-  }).pipe(Schema.mutable),
+  }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
   "web-search": Schema.Struct({
     error: Schema.optional(Schema.String),
-    provider: Schema.optional(Schema.Literal("firecrawl", "google")),
+    provider: Schema.optional(Schema.Literals(["firecrawl", "google"])),
     queries: Schema.Array(Schema.String).pipe(Schema.mutable),
     sources: Schema.Array(
       Schema.Struct({
@@ -192,11 +169,10 @@ export const DataPartSchema = Schema.Struct({
         description: Schema.String,
         title: Schema.String,
         url: Schema.String,
-      }).pipe(Schema.mutable)
+      }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
     ).pipe(Schema.mutable),
     status: StatusSchema,
-  }).pipe(Schema.mutable),
-}).pipe(Schema.mutable);
-
+  }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export type DataPart = Schema.Schema.Type<typeof DataPartSchema>;
 export type NakafaDataPart = Schema.Schema.Type<typeof NakafaDataSchema>;

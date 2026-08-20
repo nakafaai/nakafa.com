@@ -27,7 +27,7 @@ export async function getMaterialPublication(
     renderPublishedMaterial({ appLocale, publicPath })
   ).pipe(
     Effect.catchIf(
-      (failure) => failure.error instanceof ContentRuntimeMissingError,
+      (failure) => failure.cause instanceof ContentRuntimeMissingError,
       () => Effect.succeed(null)
     )
   );

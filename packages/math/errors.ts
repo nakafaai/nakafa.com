@@ -5,7 +5,7 @@ export class MathCasRequestError extends Schema.TaggedError<MathCasRequestError>
   "MathCasRequestError",
   {
     message: Schema.String,
-    status: Schema.optional(Schema.Number),
+    status: Schema.optional(Schema.Finite),
   }
 ) {}
 

@@ -37,7 +37,7 @@ describe("MathToolInputSchema", () => {
 
   it("accepts strict compare tool input", () => {
     expect(
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         left: "(x^2 - 9)/(x - 3)",
         operation: "compare",
         right: "x + 3",
@@ -51,7 +51,7 @@ describe("MathToolInputSchema", () => {
 
   it("accepts equation solve domains", () => {
     expect(
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         expression: "x^x * (ln(x) + 1) = 0",
         lower: "0",
         lowerInclusive: false,
@@ -69,7 +69,7 @@ describe("MathToolInputSchema", () => {
 
   it("accepts bounded system domains with a domain variable", () => {
     expect(
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         expressions: ["x^2 - 1 = 0", "y = 0"],
         lower: "0",
         lowerInclusive: false,
@@ -100,7 +100,7 @@ describe("MathToolInputSchema", () => {
 
   it("accepts unbounded systems without a domain variable", () => {
     expect(
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         expressions: ["x^2 - 1 = 0", "y = 0"],
         operation: "solve",
         variables: ["x", "y"],
@@ -114,7 +114,7 @@ describe("MathToolInputSchema", () => {
 
   it("rejects bounded system domains without a domain variable", () => {
     expect(() =>
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         expressions: ["x^2 - 1 = 0", "y = 0"],
         lower: "0",
         lowerInclusive: false,
@@ -124,7 +124,7 @@ describe("MathToolInputSchema", () => {
     ).toThrow();
 
     expect(() =>
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         expressions: ["x^2 - 1 = 0", "y = 0"],
         operation: "solve",
         upper: "2",
@@ -136,7 +136,7 @@ describe("MathToolInputSchema", () => {
 
   it("rejects bounded system domains without full solved variables", () => {
     expect(() =>
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         expressions: ["x + y = 3", "y = 1"],
         lower: "0",
         operation: "solve",
@@ -145,7 +145,7 @@ describe("MathToolInputSchema", () => {
     ).toThrow();
 
     expect(() =>
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         expressions: ["x = 2", "y = 1"],
         lower: "0",
         operation: "solve",
@@ -155,7 +155,7 @@ describe("MathToolInputSchema", () => {
     ).toThrow();
 
     expect(() =>
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         expressions: ["x^2 - 1 = 0", "y = 0"],
         lower: "0",
         operation: "solve",
@@ -167,7 +167,7 @@ describe("MathToolInputSchema", () => {
 
   it("accepts bounded systems with symbolic parameters", () => {
     expect(
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         expressions: ["a*x = 1"],
         lower: "0",
         lowerInclusive: false,
@@ -187,7 +187,7 @@ describe("MathToolInputSchema", () => {
 
   it("accepts bounded systems with supported parser functions", () => {
     expect(
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         expressions: ["Rational(1, 2)*x = 1"],
         lower: "0",
         operation: "solve",
@@ -205,7 +205,7 @@ describe("MathToolInputSchema", () => {
 
   it("accepts matrix eigen analysis tool input", () => {
     expect(
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         matrix: [
           ["2", "1"],
           ["0", "2"],
@@ -312,7 +312,7 @@ describe("MathToolInputSchema", () => {
 
   it("requires exact point counts for geometry tool input", () => {
     expect(
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         operation: "distance",
         points: [
           { x: "1", y: "2" },
@@ -328,14 +328,14 @@ describe("MathToolInputSchema", () => {
     });
 
     expect(() =>
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         operation: "distance",
         points: [{ x: "1", y: "2" }],
       })
     ).toThrow();
 
     expect(() =>
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         operation: "intersection",
         points: [
           { x: "0", y: "0" },
@@ -347,7 +347,7 @@ describe("MathToolInputSchema", () => {
 
   it("rejects malformed point coordinate strings before CAS execution", () => {
     expect(() =>
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         operation: "midpoint",
         points: [
           { x: "1", y: "2" },
@@ -359,7 +359,7 @@ describe("MathToolInputSchema", () => {
 
   it("decodes probability summary input with required distribution parameters", () => {
     expect(
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         distribution: "poisson",
         operation: "distribution",
         parameters: {
@@ -377,7 +377,7 @@ describe("MathToolInputSchema", () => {
     });
 
     expect(
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         distribution: "poisson",
         expression: "X^2",
         operation: "expected_value",
@@ -397,7 +397,7 @@ describe("MathToolInputSchema", () => {
     });
 
     expect(
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         distribution: "poisson",
         operation: "expected_value",
         parameters: {
@@ -415,7 +415,7 @@ describe("MathToolInputSchema", () => {
     });
 
     expect(
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         distribution: "poisson",
         expression: "X^2",
         operation: "expected_value",
@@ -609,7 +609,7 @@ describe("MathToolInputSchema", () => {
 
   it("rejects probability inputs without required distribution parameters", () => {
     expect(() =>
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         distribution: "normal",
         operation: "distribution",
         parameters: {
@@ -619,7 +619,7 @@ describe("MathToolInputSchema", () => {
     ).toThrow();
 
     expect(() =>
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         distribution: "normal",
         operation: "cumulative_probability",
         parameters: {
@@ -630,7 +630,7 @@ describe("MathToolInputSchema", () => {
     ).toThrow();
 
     expect(() =>
-      Schema.decodeUnknownSync(MathToolInputSchema)({
+      Schema.decodeSync(MathToolInputSchema)({
         distribution: "binomial",
         operation: "point_probability",
         parameters: {

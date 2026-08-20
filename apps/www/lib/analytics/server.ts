@@ -114,6 +114,8 @@ export const scheduleServerExceptionCapture = Effect.fn(
   }
 
   const distinctId = extractDistinctIdFromPostHogCookie(cookieHeader);
+  const services = yield* Effect.context<never>();
+  const runPromise = Effect.runPromiseWith(services);
   yield* Effect.try({
     catch: (cause) =>
       new ServerExceptionScheduleError({
@@ -122,9 +124,7 @@ export const scheduleServerExceptionCapture = Effect.fn(
       }),
     try: () =>
       after(() =>
-        Effect.runPromise(
-          captureServerExceptionSafely(error, distinctId, properties)
-        )
+        runPromise(captureServerExceptionSafely(error, distinctId, properties))
       ),
   }).pipe(Effect.ignore);
 });

@@ -1,5 +1,4 @@
 // @vitest-environment node
-
 import {
   decodePublicContentRuntimeRequest,
   MAX_PUBLIC_RUNTIME_REQUEST_BYTES,
@@ -35,7 +34,6 @@ import { describe, expect, it } from "vitest";
 
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 type RuntimeAction = Pick<RuntimeTest, "action">;
-
 /** Executes the public runtime transport program. */
 function runDispatch(t: RuntimeAction, source: string) {
   const byteLength = new TextEncoder().encode(source).byteLength;
@@ -43,7 +41,6 @@ function runDispatch(t: RuntimeAction, source: string) {
     runConvexProgram(dispatchProgram(ctx, source, byteLength))
   );
 }
-
 /** Seeds one active route for the requested stored delivery class. */
 function seedSigned(
   t: RuntimeTest,
@@ -54,7 +51,6 @@ function seedSigned(
     await insertSignedHead(ctx, delivery, runtimeContentKey(delivery));
   });
 }
-
 describe("contentRelease/runtime/public/dispatch", () => {
   it("returns one fully authenticated public artifact and exact absence", async () => {
     const t = createConvexTestWithBetterAuth();
@@ -93,11 +89,10 @@ describe("contentRelease/runtime/public/dispatch", () => {
           ContentVerificationKeyResolver,
           TEST_KEY_RESOLVER
         ),
-        Effect.either
+        Effect.result
       )
     );
-    expect(verified).toMatchObject({ _tag: "Right" });
-
+    expect(verified).toMatchObject({ _tag: "Success" });
     const found = await runDispatch(t, publicRuntimeRequest());
     const missing = await runDispatch(
       t,
@@ -107,7 +102,6 @@ describe("contentRelease/runtime/public/dispatch", () => {
         publicPath: "subjects/test/missing",
       })
     );
-
     expect(found.status).toBe(200);
     expect(JSON.parse(found.body)).toMatchObject({
       artifact: {
@@ -120,7 +114,6 @@ describe("contentRelease/runtime/public/dispatch", () => {
     });
     expect(missing).toEqual({ body: '{"kind":"missing"}', status: 404 });
   });
-
   it("authenticates the real pair-grouped article source end to end", async () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation(async (ctx) => {
@@ -132,9 +125,7 @@ describe("contentRelease/runtime/public/dispatch", () => {
         sourcePath: TEST_ARTICLE_SOURCE,
       });
     });
-
     const found = await runDispatch(t, articleRuntimeRequest());
-
     expect(found.status).toBe(200);
     expect(JSON.parse(found.body)).toMatchObject({
       artifact: {
@@ -153,7 +144,6 @@ describe("contentRelease/runtime/public/dispatch", () => {
       sourcePath: TEST_ARTICLE_SOURCE,
     });
   });
-
   it("authenticates the exact active canonical material", async () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation(async (ctx) => {
@@ -165,7 +155,6 @@ describe("contentRelease/runtime/public/dispatch", () => {
         sourcePath: FUNCTION_MATERIAL_SOURCE,
       });
     });
-
     const found = await runDispatch(
       t,
       JSON.stringify({
@@ -174,7 +163,6 @@ describe("contentRelease/runtime/public/dispatch", () => {
         publicPath: FUNCTION_MATERIAL_PATH,
       })
     );
-
     expect(found.status).toBe(200);
     const body = JSON.parse(found.body);
     expect(body).toMatchObject({
@@ -192,21 +180,18 @@ describe("contentRelease/runtime/public/dispatch", () => {
       "Function Composition and Inverse Function"
     );
   });
-
   it("rejects malformed, mismatched, and oversized request bytes", async () => {
     const t = createConvexTestWithBetterAuth();
     const source = publicRuntimeRequest();
     const mismatch = await t.action((ctx) =>
       runConvexProgram(dispatchProgram(ctx, source, 1))
     );
-
     await expect(runDispatch(t, "{")).resolves.toMatchObject({ status: 400 });
     expect(mismatch.status).toBe(400);
     await expect(
       runDispatch(t, "x".repeat(MAX_PUBLIC_RUNTIME_REQUEST_BYTES + 1))
     ).resolves.toMatchObject({ status: 400 });
   });
-
   it("fails closed when authenticated stored evidence is tampered", async () => {
     const t = createConvexTestWithBetterAuth();
     await seedSigned(t, "public");
@@ -219,7 +204,6 @@ describe("contentRelease/runtime/public/dispatch", () => {
         projectionHash: `sha256:${"f".repeat(64)}`,
       });
     });
-
     await expect(runDispatch(t, publicRuntimeRequest())).resolves.toEqual({
       body: '{"code":"CONTENT_RUNTIME_INTERNAL","kind":"failure"}',
       status: 500,

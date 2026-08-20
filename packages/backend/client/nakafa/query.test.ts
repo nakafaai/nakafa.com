@@ -9,21 +9,28 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const runtimeMocks = vi.hoisted(() => ({
   runtimeQuery: vi.fn(),
 }));
-
 vi.mock("@repo/backend/client/runtime", async (importOriginal) => ({
   ...(await importOriginal()),
   readConvexRuntimeQuery: (url: string, query: unknown, args: unknown) =>
     Effect.tryPromise({
-      catch: (cause) => cause,
+      catch: toRuntimeQueryError,
       try: () => runtimeMocks.runtimeQuery(url, query, args),
     }),
 }));
-
+function toRuntimeQueryError(cause: unknown) {
+  if (cause instanceof ConvexRuntimeQueryError) {
+    return cause;
+  }
+  return new ConvexRuntimeQueryError({
+    networkCodes: [],
+    query: "test-runtime-query",
+    reason: "query",
+  });
+}
 describe("readNakafaRuntimeQuery", () => {
   beforeEach(() => {
     runtimeMocks.runtimeQuery.mockReset();
   });
-
   it("returns generated query results from the shared Convex runtime client", async () => {
     const args: FunctionArgs<typeof api.contentRelease.reference.read> = {
       input: {
@@ -33,7 +40,6 @@ describe("readNakafaRuntimeQuery", () => {
       },
     };
     runtimeMocks.runtimeQuery.mockResolvedValueOnce(null);
-
     const result = await Effect.runPromise(
       readNakafaRuntimeQuery(
         "https://example.convex.cloud",
@@ -41,7 +47,6 @@ describe("readNakafaRuntimeQuery", () => {
         args
       )
     );
-
     expect(result).toBeNull();
     expect(runtimeMocks.runtimeQuery).toHaveBeenCalledWith(
       "https://example.convex.cloud",
@@ -49,7 +54,6 @@ describe("readNakafaRuntimeQuery", () => {
       args
     );
   });
-
   it("maps runtime client failures into Nakafa read errors", async () => {
     const args: FunctionArgs<typeof api.contentRelease.reference.read> = {
       input: {
@@ -64,9 +68,8 @@ describe("readNakafaRuntimeQuery", () => {
       reason: "client",
     });
     runtimeMocks.runtimeQuery.mockRejectedValueOnce(runtimeError);
-
     const result = await Effect.runPromise(
-      Effect.either(
+      Effect.result(
         readNakafaRuntimeQuery(
           "https://example.convex.cloud",
           api.contentRelease.reference.read,
@@ -74,16 +77,13 @@ describe("readNakafaRuntimeQuery", () => {
         )
       )
     );
-
-    expect(result._tag).toBe("Left");
-
-    if (result._tag === "Left") {
-      expect(result.left).toBeInstanceOf(NakafaAgentDataReadError);
-      expect(result.left.message).toContain("contentRelease/reference:read");
-      expect(result.left.cause).toBe(runtimeError.message);
+    expect(result._tag).toBe("Failure");
+    if (result._tag === "Failure") {
+      expect(result.failure).toBeInstanceOf(NakafaAgentDataReadError);
+      expect(result.failure.message).toContain("contentRelease/reference:read");
+      expect(result.failure.cause).toBe(runtimeError.message);
     }
   });
-
   it("preserves classified runtime diagnostics", async () => {
     const args: FunctionArgs<typeof api.contentRelease.reference.read> = {
       input: {
@@ -98,9 +98,8 @@ describe("readNakafaRuntimeQuery", () => {
       reason: "transport",
     });
     runtimeMocks.runtimeQuery.mockRejectedValueOnce(runtimeError);
-
     const result = await Effect.runPromise(
-      Effect.either(
+      Effect.result(
         readNakafaRuntimeQuery(
           "https://example.convex.cloud",
           api.contentRelease.reference.read,
@@ -108,9 +107,8 @@ describe("readNakafaRuntimeQuery", () => {
         )
       )
     );
-
     expect(result).toMatchObject({
-      left: {
+      failure: {
         cause: runtimeError.message,
         message:
           "Unable to read Nakafa runtime content query: contentRelease/reference:read.",

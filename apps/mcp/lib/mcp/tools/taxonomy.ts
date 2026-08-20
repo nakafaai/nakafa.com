@@ -10,11 +10,9 @@ import {
   succeedMcpReadModelError,
   toMcpStructuredResult,
 } from "@/lib/mcp/result";
-
 export const NakafaGetTaxonomyToolInputSchema =
   NakafaAgentTaxonomyOptionsSchema;
 export const NakafaGetTaxonomyToolOutputSchema = NakafaAgentTaxonomySchema;
-
 /** Builds the taxonomy and endpoint guidance tool result. */
 export function getNakafaTaxonomyToolResult(args: unknown) {
   return Effect.gen(function* () {
@@ -23,10 +21,9 @@ export function getNakafaTaxonomyToolResult(args: unknown) {
       args,
       "Invalid Nakafa taxonomy options."
     );
-    const taxonomy = yield* Nakafa.taxonomy(input.locale).pipe(
-      Effect.provideService(Nakafa, nakafaContent)
-    );
-
+    const taxonomy = yield* Nakafa.use((service) =>
+      service.taxonomy(input.locale)
+    ).pipe(Effect.provideService(Nakafa, nakafaContent));
     return toMcpStructuredResult(taxonomy);
   }).pipe(
     Effect.catchTags({

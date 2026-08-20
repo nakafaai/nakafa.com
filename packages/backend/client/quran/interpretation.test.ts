@@ -20,11 +20,9 @@ const source = {
   snapshotId: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
   sourceRevision: "c".repeat(40),
 };
-
 type QuranInterpretationResult = FunctionReturnType<
   typeof api.contentRelease.quran.interpretation
 >;
-
 const activeInterpretation: QuranInterpretationResult = {
   ...source,
   interpretation: "Tafsir ayat tujuh.",
@@ -32,7 +30,6 @@ const activeInterpretation: QuranInterpretationResult = {
   surahNumber: 1,
   verseNumber: 7,
 };
-
 describe("signed Quran interpretation decoder", () => {
   it("preserves one exact active tafsir", async () => {
     const interpretation = await Effect.runPromise(
@@ -43,7 +40,6 @@ describe("signed Quran interpretation decoder", () => {
         verseNumber: 7,
       })
     );
-
     expect(interpretation).toMatchObject({
       interpretation: "Tafsir ayat tujuh.",
       appLocale: "id",
@@ -51,7 +47,6 @@ describe("signed Quran interpretation decoder", () => {
       verseNumber: 7,
     } satisfies Partial<PublishedQuranInterpretation>);
   });
-
   it("fails closed for inactive, stale, mismatched, and empty responses", async () => {
     const inactive: QuranInterpretationResult = {
       activeManifestHash: null,
@@ -76,10 +71,9 @@ describe("signed Quran interpretation decoder", () => {
       ...activeInterpretation,
       interpretation: "   ",
     };
-
     for (const result of [inactive, stale, mismatched, empty]) {
       const decoded = await Effect.runPromise(
-        Effect.either(
+        Effect.result(
           decodePublishedQuranInterpretation(result, {
             appLocale: "id",
             snapshotId: source.snapshotId,
@@ -88,14 +82,12 @@ describe("signed Quran interpretation decoder", () => {
           })
         )
       );
-
-      expect(decoded._tag).toBe("Left");
-      if (decoded._tag === "Left") {
-        expect(decoded.left).toBeInstanceOf(QuranPublicationError);
+      expect(decoded._tag).toBe("Failure");
+      if (decoded._tag === "Failure") {
+        expect(decoded.failure).toBeInstanceOf(QuranPublicationError);
       }
     }
   });
-
   it("recognizes only a typed snapshot conflict request failure", () => {
     const conflict = toQuranInterpretationRequestError(
       new ConvexError({
@@ -103,10 +95,8 @@ describe("signed Quran interpretation decoder", () => {
         message: "The active Quran snapshot changed.",
       })
     );
-
     expect(conflict).toBeInstanceOf(QuranInterpretationRequestError);
     expect(isQuranSnapshotConflict(conflict)).toBe(true);
-
     for (const error of [
       new Error("Network error"),
       new ConvexError({ code: "CONTENT_RELEASE_CONFLICT" }),

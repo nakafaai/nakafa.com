@@ -4,12 +4,10 @@ import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { NakafaAgentReadOptions } from "@repo/contents/_lib/agent/schema/read";
 import type { UIMessageStreamWriter } from "ai";
-import { Effect, Either, Option } from "effect";
+import { Effect, Option, Result } from "effect";
 
 type Writer = Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
-
 const notFoundMessage = "Nakafa content was not found.";
-
 /** Reads one Nakafa content reference and writes a bounded preview UI part. */
 export const read = Effect.fn("nakafa.read")(function* ({
   input,
@@ -31,10 +29,10 @@ export const read = Effect.fn("nakafa.read")(function* ({
       },
     })
   );
-
-  const result = yield* Effect.either(Nakafa.read(input.content_ref));
-
-  if (Either.isLeft(result)) {
+  const result = yield* Effect.result(
+    Nakafa.use((service) => service.read(input.content_ref))
+  );
+  if (Result.isFailure(result)) {
     yield* Effect.sync(() =>
       writer.write({
         id: toolCallId,
@@ -43,16 +41,13 @@ export const read = Effect.fn("nakafa.read")(function* ({
           kind: "content",
           input,
           status: "error",
-          error: result.left.message,
+          error: result.failure.message,
         },
       })
     );
-
-    return result.left.message;
+    return result.failure.message;
   }
-
-  const content = result.right;
-
+  const content = result.success;
   if (Option.isNone(content)) {
     yield* Effect.sync(() =>
       writer.write({
@@ -66,12 +61,9 @@ export const read = Effect.fn("nakafa.read")(function* ({
         },
       })
     );
-
     return notFoundMessage;
   }
-
   const value = content.value;
-
   yield* Effect.sync(() =>
     writer.write({
       id: toolCallId,
@@ -84,6 +76,5 @@ export const read = Effect.fn("nakafa.read")(function* ({
       },
     })
   );
-
   return formatRead(value);
 });

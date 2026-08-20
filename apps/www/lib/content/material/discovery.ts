@@ -1,5 +1,4 @@
 import "server-only";
-
 import { DateOnlySchema } from "@nakafa/aksara-contracts/date";
 import {
   CorpusSourcePathSchema,
@@ -20,25 +19,25 @@ import { readRuntimeQuery } from "@/lib/content/runtime/query";
 type MaterialSummary = FunctionReturnType<
   typeof api.contentRelease.material.latest
 >["materials"][number];
-
 /** Verified compact material metadata used by discovery surfaces. */
 export interface PublishedMaterialSummary {
-  readonly authors: readonly { readonly name: string }[];
+  readonly authors: readonly {
+    readonly name: string;
+  }[];
   readonly date: typeof DateOnlySchema.Type;
   readonly description: string | undefined;
   readonly publicPath: typeof PublicPathSchema.Type;
   readonly sourcePath: typeof CorpusSourcePathSchema.Type;
   readonly title: string;
 }
-
 /** Decodes one backend-verified material discovery row. */
 const decodeMaterialSummary = Effect.fn("www.materials.decodeDiscovery")(
   function* (summary: MaterialSummary, locale: Locale) {
     const appLocale = AppLocaleSchema.make(locale);
     const [date, publicPath, sourcePath] = yield* Effect.all([
-      Schema.decodeUnknown(DateOnlySchema)(summary.date),
-      Schema.decodeUnknown(PublicPathSchema)(summary.publicPath),
-      Schema.decodeUnknown(CorpusSourcePathSchema)(summary.sourcePath),
+      Schema.decodeEffect(DateOnlySchema)(summary.date),
+      Schema.decodeEffect(PublicPathSchema)(summary.publicPath),
+      Schema.decodeEffect(CorpusSourcePathSchema)(summary.sourcePath),
     ]).pipe(
       Effect.mapError(
         () =>
@@ -58,7 +57,6 @@ const decodeMaterialSummary = Effect.fn("www.materials.decodeDiscovery")(
     } satisfies PublishedMaterialSummary;
   }
 );
-
 /** Reads one complete published material partition for agent discovery. */
 export const readPublishedMaterialBucket = Effect.fn(
   "www.materials.readBucket"
@@ -91,7 +89,6 @@ export const readPublishedMaterialBucket = Effect.fn(
   );
   return { activeReleaseId, materials };
 });
-
 /** Reads a bounded newest-first material set for feed discovery. */
 export const readPublishedLatestMaterials = Effect.fn(
   "www.materials.readLatest"

@@ -45,7 +45,7 @@ function createDeletionOperations(
     cancelPreparation: vi.fn(
       async () => accountDeletionCancellationOutcome.complete
     ),
-    clearAttempt: vi.fn(() => Effect.void),
+    clearAttempt: Effect.void,
     persist: vi.fn(() => Effect.void),
     prepare: vi.fn(async () => accountDeletionPreparationOutcome.ready),
     reconcile: vi.fn(async () => accountDeletionAttemptStatus.pending),
@@ -234,10 +234,10 @@ describe("account deletion", () => {
     const cancelPreparation = vi.fn(
       async () => accountDeletionCancellationOutcome.complete
     );
-    const clearAttempt = vi.fn(() => Effect.void);
+    const clearAttempt = vi.fn();
     const failure = await runDeletionFailure({
       cancelPreparation,
-      clearAttempt,
+      clearAttempt: Effect.sync(clearAttempt),
       request: requestFailure(ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE),
     });
 
@@ -254,7 +254,7 @@ describe("account deletion", () => {
     const cancelPreparation = vi.fn(
       async () => accountDeletionCancellationOutcome.complete
     );
-    const clearAttempt = vi.fn(() => Effect.void);
+    const clearAttempt = vi.fn();
     const failure = await runDeletionFailure({
       attempt: {
         attemptId: ATTEMPT_ID,
@@ -262,7 +262,7 @@ describe("account deletion", () => {
         userId: USER_ID,
       },
       cancelPreparation,
-      clearAttempt,
+      clearAttempt: Effect.sync(clearAttempt),
       request: requestFailure(ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE),
     });
 
@@ -320,10 +320,10 @@ describe("account deletion", () => {
     const cancelPreparation = vi.fn(
       async () => accountDeletionCancellationOutcome.complete
     );
-    const clearAttempt = vi.fn(() => Effect.void);
+    const clearAttempt = vi.fn();
     const failure = await runDeletionFailure({
       cancelPreparation,
-      clearAttempt,
+      clearAttempt: Effect.sync(clearAttempt),
       request: requestFailure("ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER"),
     });
 

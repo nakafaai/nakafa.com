@@ -5,7 +5,6 @@ import {
   type ViewportRuntime,
 } from "@/components/school/classes/forum/conversation/viewport/runtime";
 import { updateViewportState } from "@/components/school/classes/forum/conversation/viewport/state";
-
 /** Highlights one post and schedules highlight expiration. */
 export function startViewportHighlight(
   runtime: ViewportRuntime,
@@ -13,11 +12,9 @@ export function startViewportHighlight(
 ) {
   return Effect.gen(function* () {
     const currentFiber = yield* Ref.get(runtime.highlightFiberRef);
-
     if (currentFiber) {
       yield* Fiber.interrupt(currentFiber);
     }
-
     yield* updateViewportState(runtime, (state) => ({
       ...state,
       highlightedPostId: postId,
@@ -26,10 +23,9 @@ export function startViewportHighlight(
       runtime.highlightTokenRef,
       (currentToken) => currentToken + 1
     );
-
     const fiber = yield* Effect.forkIn(
       runtime.adapters.timer.sleep(HIGHLIGHT_DURATION_MS).pipe(
-        Effect.zipRight(
+        Effect.andThen(
           Queue.offer(runtime.eventQueue, {
             token,
             type: "highlight-expired",
@@ -39,7 +35,6 @@ export function startViewportHighlight(
       ),
       runtime.scope
     );
-
     yield* Ref.set(runtime.highlightFiberRef, fiber);
   });
 }

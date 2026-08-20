@@ -1,5 +1,4 @@
 "use client";
-
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { LearningProgramKey } from "@nakafa/aksara-contracts/program/spec";
 import type { api } from "@repo/backend/convex/_generated/api";
@@ -22,7 +21,6 @@ import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { reportClientException } from "@/lib/analytics/client";
 import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation.client";
 import { isActiveLocale } from "@/lib/i18n/active";
-
 export type CurriculumSelectorOption = Readonly<{
   countryCode?: string;
   href: string;
@@ -31,7 +29,6 @@ export type CurriculumSelectorOption = Readonly<{
   title: string;
   value: string;
 }>;
-
 type SavePreferredCurriculumArgs = FunctionArgs<
   typeof api.learningPreferences.mutations.setPreferredCurriculum
 >;
@@ -42,7 +39,6 @@ type SavePreferredCurriculum = (
     typeof api.learningPreferences.mutations.setPreferredCurriculum
   >
 >;
-
 /** Expected failure when a background curriculum preference save fails. */
 class CurriculumPreferenceSaveError extends Schema.TaggedError<CurriculumPreferenceSaveError>()(
   "CurriculumPreferenceSaveError",
@@ -50,7 +46,6 @@ class CurriculumPreferenceSaveError extends Schema.TaggedError<CurriculumPrefere
     cause: Schema.Unknown,
   }
 ) {}
-
 /** Renders the root curriculum selector and navigates to the selected root. */
 export function CurriculumSelector({
   currentValue,
@@ -84,29 +79,22 @@ export function CurriculumSelector({
     value: option.value,
   }));
   const currentOption = options.find((option) => option.value === currentValue);
-
   /** Navigate to a selected curriculum and persist it for signed-in viewers. */
   async function handleValueChange(value: string | null) {
     if (!value || value === currentValue) {
       return;
     }
-
     const selectedOption = options.find((option) => option.value === value);
-
     if (!selectedOption) {
       return;
     }
-
     if (isLoading) {
       return;
     }
-
     router.push(normalizeLocalizedInternalHref(selectedOption.href));
-
     if (!(isAuthenticated && isActiveLocale(locale))) {
       return;
     }
-
     await Effect.runPromise(
       saveCurriculumPreference({
         errorMessage: t("preference-save-error"),
@@ -116,7 +104,6 @@ export function CurriculumSelector({
       })
     );
   }
-
   return (
     <Select
       items={items}
@@ -156,7 +143,6 @@ export function CurriculumSelector({
     </Select>
   );
 }
-
 /** Persists curriculum selection without blocking route navigation. */
 function saveCurriculumPreference({
   errorMessage,
@@ -177,12 +163,12 @@ function saveCurriculumPreference({
       }),
     catch: (cause) => new CurriculumPreferenceSaveError({ cause }),
   }).pipe(
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       reportClientException(error, {
         programKey,
         source: "curriculum-selector",
       }).pipe(
-        Effect.zipRight(
+        Effect.andThen(
           Effect.sync(() => {
             toast.error(errorMessage, { position: "bottom-center" });
           })

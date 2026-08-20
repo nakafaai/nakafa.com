@@ -10,10 +10,8 @@ import { Effect, Schema } from "effect";
 const WEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5";
 const DEFAULT_CONDITION = "Clear";
 const DEFAULT_ICON = "01d";
-
 export const DEFAULT_LATITUDE = "-6.2088";
 export const DEFAULT_LONGITUDE = "106.8456";
-
 /** Fetches the current weather summary for given coordinates. */
 export const getCurrentWeather = Effect.fn("weather.getCurrentWeather")(
   function* ({ latitude, longitude }: { latitude: string; longitude: string }) {
@@ -22,16 +20,13 @@ export const getCurrentWeather = Effect.fn("weather.getCurrentWeather")(
       latitude,
       longitude,
     };
-
     return yield* timeOperation(
       "fetch_current_weather",
       Effect.gen(function* () {
         const apiKey = weatherKeys().OPENWEATHER_API_KEY;
-
         yield* Effect.logInfo("Fetching current weather").pipe(
           Effect.annotateLogs(context)
         );
-
         const response = yield* requestWeatherJson({
           endpoint: "current-weather",
           searchParams: {
@@ -41,15 +36,14 @@ export const getCurrentWeather = Effect.fn("weather.getCurrentWeather")(
           },
           url: `${WEATHER_BASE_URL}/weather`,
         }).pipe(
-          Effect.flatMap(Schema.decodeUnknown(OpenWeatherCurrentResponseSchema))
+          Effect.flatMap(
+            Schema.decodeUnknownEffect(OpenWeatherCurrentResponseSchema)
+          )
         );
-
         yield* Effect.logInfo("Current weather fetched successfully").pipe(
           Effect.annotateLogs(context)
         );
-
         const condition = response.weather.at(0);
-
         return {
           city: response.name,
           condition: condition?.description ?? DEFAULT_CONDITION,

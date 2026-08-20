@@ -27,8 +27,7 @@ import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
 import { testMaterialPublicPath } from "@repo/backend/test/content-material";
 import { Effect, type Schema } from "effect";
 
-type ArtifactLocaleCode = Schema.Schema.Encoded<typeof ArtifactLocaleSchema>;
-
+type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
 export const TEST_DIGEST = Sha256HashSchema.make(`sha256:${"0".repeat(64)}`);
 export const TEST_MANIFEST_HASH = Sha256HashSchema.make(
   `sha256:${"1".repeat(64)}`
@@ -37,7 +36,6 @@ export const TEST_ARTIFACT_HASH = Sha256HashSchema.make(
   `sha256:${"2".repeat(64)}`
 );
 export const TEST_RELEASE_ID = ReleaseIdSchema.make("release-test");
-
 /** Creates the exact graph identity derived from one article source key. */
 export function testArticleGraph(
   articleSlug: string,
@@ -52,14 +50,12 @@ export function testArticleGraph(
     })
   );
 }
-
 /** Hashes one canonical technical wire value with the production algorithm. */
 export function testTextHash(value: string) {
   return Sha256HashSchema.make(
     `sha256:${createHash("sha256").update(value).digest("hex")}`
   );
 }
-
 /** Creates a complete technical renderer snapshot with no lesson content. */
 export function testRendererJson(
   hash: string = TEST_DIGEST,
@@ -79,7 +75,6 @@ export function testRendererJson(
     rendererContractVersion: "1.0.0",
   });
 }
-
 interface ReleaseOptions {
   readonly baseManifestHash?: null | string;
   readonly baseReleaseId?: null | string;
@@ -101,7 +96,6 @@ interface ReleaseOptions {
   readonly snapshots?: ContentSnapshotSet;
   readonly upsertCount?: number;
 }
-
 /** Creates canonical broad test scope plus every replaced snapshot family. */
 export function testPublicationScope(options?: {
   readonly content?: PublicationScope["content"];
@@ -117,7 +111,6 @@ export function testPublicationScope(options?: {
     ),
   });
 }
-
 /** Creates one schema-valid signed release envelope for backend tests. */
 export function testReleaseJson(options?: ReleaseOptions) {
   const itemCount = options?.itemCount ?? 1;
@@ -168,7 +161,6 @@ export function testReleaseJson(options?: ReleaseOptions) {
     signature: "A".repeat(86),
   });
 }
-
 /** Creates one canonical snapshot for a previously absent head. */
 export function testRollbackJson(options?: {
   readonly artifactLocale?: ArtifactLocaleCode;
@@ -189,7 +181,6 @@ export function testRollbackJson(options?: {
     },
   });
 }
-
 /** Creates one canonical technical upsert item. */
 export function testUpsertJson(options?: {
   readonly artifactHash?: string;
@@ -220,7 +211,6 @@ export function testUpsertJson(options?: {
     releaseId: options?.releaseId ?? TEST_RELEASE_ID,
   });
 }
-
 /** Creates one canonical technical route change. */
 export function testRouteJson(options?: {
   readonly appLocale?: ActiveAppLocaleCode;
@@ -246,7 +236,6 @@ export function testRouteJson(options?: {
     releaseId: options?.releaseId ?? TEST_RELEASE_ID,
   });
 }
-
 /** Creates one canonical technical delete item. */
 export function testDeleteJson(options?: {
   readonly artifactLocale?: ArtifactLocaleCode;

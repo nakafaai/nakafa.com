@@ -39,7 +39,7 @@ export function markLastVisibleViewportPostRead(
     );
 
     if (lifetime === "detached") {
-      yield* Effect.forkDaemon(readSync);
+      yield* Effect.forkDetach(readSync);
       return;
     }
 

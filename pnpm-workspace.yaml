@@ -2,22 +2,55 @@ packages:
   - apps/*
   - packages/*
 
+engineStrict: true
+minimumReleaseAge: 1440
+minimumReleaseAgeStrict: true
+savePrefix: ""
+
+update:
+  ignoreDeps:
+    - '@ai-sdk/devtools'
+    - '@ai-sdk/gateway'
+    - '@ai-sdk/google'
+    - '@ai-sdk/react'
+    - '@biomejs/biome'
+    - '@convex-dev/better-auth'
+    - '@effect/platform-node'
+    - '@effect/tsgo'
+    - '@effect/vitest'
+    - '@nakafa/aksara-contracts'
+    - '@next/bundle-analyzer'
+    - '@next/mdx'
+    - '@next/third-parties'
+    - '@turbo/gen'
+    - '@types/node'
+    - '@typescript/native'
+    - ai
+    - auth
+    - better-auth
+    - convex
+    - effect
+    - next
+    - node
+    - pnpm
+    - turbo
+    - typescript
+    - ultracite
+
 catalog:
-  effect: 3.22.1
+  '@effect/platform-node': 4.0.0-rc.110
+  '@effect/vitest': 4.0.0-rc.110
+  effect: 4.0.0-rc.110
+  typescript: npm:@typescript/typescript6@6.0.2
 
 overrides:
-  "@effect/cluster": "0.60.2"
-  "@effect/experimental": "0.61.1"
-  "@effect/rpc": "0.76.2"
-  "@effect/sql": "0.52.1"
-  "@effect/workflow": "0.19.1"
   "@ai-sdk/devtools@1.0.12>@hono/node-server": "2.0.11"
   "@changesets/parse@0.4.3>js-yaml": "4.3.1"
   "@modelcontextprotocol/sdk@1.30.0>@hono/node-server": "2.0.11"
-  "@react-email/ui@6.9.2>next": "16.3.0"
-  "@vitest/coverage-istanbul@4.1.10>@babel/core": "7.29.7"
-  "auth@1.6.26>@babel/core": "7.29.7"
-  "convex-helpers": "0.1.122"
+  "@react-email/ui@6.9.2>next": "16.3.1"
+  "@vitest/coverage-istanbul@4.1.11>@babel/core": "7.29.7"
+  "auth@1.6.30>@babel/core": "7.29.7"
+  "convex-helpers": "0.1.123"
   "depcheck@1.4.7>js-yaml": "3.15.1"
   "fast-uri": "3.1.5"
   "ip-address": "10.4.0"
@@ -25,18 +58,12 @@ overrides:
   "minimatch@3.1.5>brace-expansion": "1.1.18"
   "minimatch@10.2.5>brace-expansion": "5.0.9"
   "minimatch@7.4.9>brace-expansion": "2.1.4"
-  "mermaid@11.16.1>dompurify": "^3.4.13"
-  "next@16.3.0>postcss": "8.5.26"
-  "next@16.3.0>sharp": "0.35.3"
+  "mermaid@11.17.0>dompurify": "^3.4.13"
+  "next@16.3.1>postcss": "8.5.26"
+  "next@16.3.1>sharp": "0.35.3"
   "postcss@8.5.23>nanoid": "^3.3.17"
-  "posthog-js@1.414.0>dompurify": "^3.4.13"
+  "posthog-js@1.418.5>dompurify": "^3.4.13"
   "read-yaml-file@1.1.0>js-yaml": "3.15.1"
-
-patchedDependencies:
-  # Backports Next.js #96553 while npm latest remains stable 16.3.0.
-  # Source maps are disabled for this patched module until that fix reaches stable.
-  # Remove after a stable release contains commit 5f735c1ac56b93bc28cd3af86961c47c838fb077.
-  next@16.3.0: patches/next.patch
 
 allowBuilds:
   '@parcel/watcher': true
@@ -48,3 +75,25 @@ allowBuilds:
   msw: true
   protobufjs: true
   sharp: true
+
+minimumReleaseAgeExclude:
+  - '@ai-sdk/gateway@4.0.56'
+  - '@ai-sdk/google@4.0.47'
+  - '@ai-sdk/mcp@2.0.34'
+  - '@ai-sdk/provider-utils@5.0.28'
+  - '@ai-sdk/react@4.0.73'
+  - '@mendable/firecrawl-js@4.34.0'
+  - '@mermaid-js/parser@1.2.1'
+  - '@posthog/core@1.48.5'
+  - '@vitejs/plugin-react@6.1.0'
+  - ai@7.0.70
+  - convex-test@0.0.56
+  - mermaid@11.17.0
+  - posthog-js@1.418.5
+  - vite@8.2.2
+
+patchedDependencies:
+  # Backports Next.js #96553 while npm latest remains stable 16.3.1.
+  # Source maps are disabled for this patched module until that fix reaches stable.
+  # Remove after a stable release contains commit 5f735c1ac56b93bc28cd3af86961c47c838fb077.
+  next@16.3.1: patches/next.patch

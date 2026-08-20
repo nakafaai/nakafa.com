@@ -18,10 +18,10 @@ export class NinaStoreError extends Schema.TaggedError<NinaStoreError>()(
  * The app owns Convex deployment details and binds them into this service at
  * the route boundary; the harness owns when stream lifecycle events persist.
  */
-export class NinaStore extends Context.Tag("NinaStore")<
+export class NinaStore extends Context.Service<
   NinaStore,
   {
-    readonly loadMessages: () => Effect.Effect<MyUIMessage[], NinaStoreError>;
+    readonly loadMessages: Effect.Effect<MyUIMessage[], NinaStoreError>;
     readonly saveAssistant: (input: {
       readonly context: NinaContextPack;
       readonly responseMessage: MyUIMessage;
@@ -36,4 +36,4 @@ export class NinaStore extends Context.Tag("NinaStore")<
       readonly messages: MyUIMessage[];
     }) => Effect.Effect<void, NinaStoreError>;
   }
->() {}
+>()("NinaStore") {}

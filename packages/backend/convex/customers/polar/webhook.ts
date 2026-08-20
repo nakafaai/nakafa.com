@@ -14,19 +14,21 @@ import { convertToDatabaseSubscription } from "@repo/backend/convex/subscription
 import { Effect, Schema } from "effect";
 
 type PolarWebhookEvent = ReturnType<typeof validateEvent>;
-const subscriptionWebhookOperationSchema = Schema.Literal("create", "update");
+const subscriptionWebhookOperationSchema = Schema.Literals([
+  "create",
+  "update",
+]);
 type SubscriptionWebhookOperation = Schema.Schema.Type<
   typeof subscriptionWebhookOperationSchema
 >;
-const polarCustomerWebhookDispositionSchema = Schema.Literal(
+const polarCustomerWebhookDispositionSchema = Schema.Literals([
   "discarded",
   "missing",
-  "stored"
-);
+  "stored",
+]);
 type PolarCustomerWebhookDisposition = Schema.Schema.Type<
   typeof polarCustomerWebhookDispositionSchema
 >;
-
 class PolarWebhookIoError extends Schema.TaggedError<PolarWebhookIoError>()(
   "PolarWebhookIoError",
   {
@@ -34,9 +36,7 @@ class PolarWebhookIoError extends Schema.TaggedError<PolarWebhookIoError>()(
     message: Schema.String,
   }
 ) {}
-
 type PolarWebhookFailure = PolarCustomerError | PolarWebhookIoError;
-
 /** Maps Convex action IO into the Polar webhook error channel. */
 function tryPolarWebhook<A>(operation: () => Promise<A>) {
   return Effect.tryPromise({
@@ -48,7 +48,6 @@ function tryPolarWebhook<A>(operation: () => Promise<A>) {
     try: operation,
   });
 }
-
 /**
  * Upserts one Polar customer only while its app user remains active.
  *
@@ -77,11 +76,9 @@ export const upsertPolarCustomerWebhook: (
         }
       )
     );
-
     if (target.kind !== "active") {
       return target.kind === "deleted" ? "discarded" : "missing";
     }
-
     const result = yield* tryPolarWebhook(() =>
       ctx.runMutation(internal.customers.mutations.internal.upsertCustomer, {
         customer: convertToDatabaseCustomer({
@@ -90,14 +87,11 @@ export const upsertPolarCustomerWebhook: (
         }),
       })
     );
-
     if (result.kind === "stored") {
       return "stored";
     }
-
     return result.kind === "prepared" ? "missing" : "discarded";
   });
-
 /**
  * Resolves the authoritative Polar customer before accepting a subscription.
  *
@@ -118,17 +112,13 @@ export const upsertPolarSubscriptionWebhook: (
     const customer = yield* polarGateway.getCustomerById(
       subscription.customerId
     );
-
     if (!customer) {
       return "discarded";
     }
-
     const disposition = yield* upsertPolarCustomerWebhook(ctx, customer);
-
     if (disposition !== "stored") {
       return disposition;
     }
-
     if (operation === "create") {
       yield* tryPolarWebhook(() =>
         ctx.runMutation(internal.subscriptions.mutations.createSubscription, {
@@ -137,7 +127,6 @@ export const upsertPolarSubscriptionWebhook: (
       );
       return "stored";
     }
-
     yield* tryPolarWebhook(() =>
       ctx.runMutation(internal.subscriptions.mutations.updateSubscription, {
         subscription,
@@ -145,7 +134,6 @@ export const upsertPolarSubscriptionWebhook: (
     );
     return "stored";
   });
-
 /** Drains local state for one terminal Polar customer deletion. */
 const deletePolarCustomerWebhook: (
   ctx: ActionCtx,
@@ -154,7 +142,6 @@ const deletePolarCustomerWebhook: (
   "customers.polar.deleteWebhookCustomer"
 )(function* (ctx: ActionCtx, polarCustomerId: string) {
   let hasMore = true;
-
   while (hasMore) {
     hasMore = yield* tryPolarWebhook(() =>
       ctx.runMutation(
@@ -164,7 +151,6 @@ const deletePolarCustomerWebhook: (
     );
   }
 });
-
 /** Dispatches one already-verified Polar webhook through durable guards. */
 export const processPolarWebhookEvent: (
   ctx: ActionCtx,

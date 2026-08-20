@@ -1,5 +1,4 @@
 "use node";
-
 import { verifySignedContentArtifactIntegrity } from "@nakafa/aksara-contracts/artifact/integrity";
 import {
   canonicalizeRollbackPage,
@@ -36,17 +35,17 @@ import { Effect, Schema } from "effect";
 
 type RollbackRequest = Extract<
   PublicationRequest,
-  { readonly operation: "rollbackPage" | "routePage" }
+  {
+    readonly operation: "rollbackPage" | "routePage";
+  }
 >;
 type ReadContext = Pick<ActionCtx, "runQuery">;
-
 interface RollbackArgs extends DefaultFunctionArgs {
   readonly afterIndex: number;
   readonly limit: number;
   readonly rollbackOf: string;
   readonly rollbackOfManifestHash: string;
 }
-
 const rollbackReference = makeFunctionReference<"query", RollbackArgs, string>(
   "contentRelease/rollback:prepareRollback"
 );
@@ -56,12 +55,11 @@ const routeRollbackReference = makeFunctionReference<
   string
 >("contentRelease/rollback:prepareRoutes");
 const textEncoder = new TextEncoder();
-
 /** Decodes one canonical stored page through its exact shared schema. */
 const decodePage = Effect.fn("contentRelease.decodeRollbackPage")(function* <
   A,
   I,
->(source: string, schema: Schema.Schema<A, I, never>, label: string) {
+>(source: string, schema: Schema.Codec<A, I, never, never>, label: string) {
   const unknownPage = yield* Effect.try({
     catch: () =>
       new ReleaseError({
@@ -70,7 +68,7 @@ const decodePage = Effect.fn("contentRelease.decodeRollbackPage")(function* <
       }),
     try: (): unknown => JSON.parse(source),
   });
-  return yield* Schema.decodeUnknown(schema)(unknownPage, {
+  return yield* Schema.decodeUnknownEffect(schema)(unknownPage, {
     onExcessProperty: "error",
   }).pipe(
     Effect.mapError(
@@ -82,10 +80,14 @@ const decodePage = Effect.fn("contentRelease.decodeRollbackPage")(function* <
     )
   );
 });
-
 /** Creates one coherent aggregate page from already validated records. */
 function makeRollbackPage(
-  request: Extract<RollbackRequest, { readonly operation: "rollbackPage" }>,
+  request: Extract<
+    RollbackRequest,
+    {
+      readonly operation: "rollbackPage";
+    }
+  >,
   total: number,
   records: readonly RollbackRecord[]
 ): RollbackPage {
@@ -99,10 +101,14 @@ function makeRollbackPage(
     total,
   };
 }
-
 /** Creates one coherent route page from already validated records. */
 function makeRoutePage(
-  request: Extract<RollbackRequest, { readonly operation: "routePage" }>,
+  request: Extract<
+    RollbackRequest,
+    {
+      readonly operation: "routePage";
+    }
+  >,
   total: number,
   records: readonly RouteRollbackRecord[]
 ): RoutePage {
@@ -116,19 +122,22 @@ function makeRoutePage(
     total,
   };
 }
-
 /** Computes exact canonical bytes without repeatedly serializing prior records. */
 function rollbackPageBytes(page: RollbackPage, recordBytes: number) {
   const wrapper = canonicalizeRollbackPage({ ...page, records: [] });
   const separators = Math.max(0, page.records.length - 1);
   return textEncoder.encode(wrapper).byteLength + recordBytes + separators;
 }
-
 /** Requires one query chunk to continue the exact aggregate cursor. */
 const validateBodyChunk = Effect.fn("contentRelease.validateRollbackChunk")(
   function* (
     chunk: RollbackPage,
-    request: Extract<RollbackRequest, { readonly operation: "rollbackPage" }>,
+    request: Extract<
+      RollbackRequest,
+      {
+        readonly operation: "rollbackPage";
+      }
+    >,
     afterIndex: number,
     limit: number,
     total: number
@@ -148,12 +157,16 @@ const validateBodyChunk = Effect.fn("contentRelease.validateRollbackChunk")(
     }
   }
 );
-
 /** Requires one route query chunk to continue the exact aggregate cursor. */
 const validateRouteChunk = Effect.fn("contentRelease.validateRouteChunk")(
   function* (
     chunk: RoutePage,
-    request: Extract<RollbackRequest, { readonly operation: "routePage" }>,
+    request: Extract<
+      RollbackRequest,
+      {
+        readonly operation: "routePage";
+      }
+    >,
     afterIndex: number,
     limit: number,
     total: number
@@ -173,7 +186,6 @@ const validateRouteChunk = Effect.fn("contentRelease.validateRouteChunk")(
     }
   }
 );
-
 /** Reauthenticates every body-bearing rollback state before external return. */
 const verifyRollbackArtifacts = Effect.fn(
   "contentRelease.verifyRollbackArtifacts"
@@ -189,12 +201,16 @@ const verifyRollbackArtifacts = Effect.fn(
   }
   return page;
 });
-
 /** Aggregates safe query transactions into one byte-bounded wire page. */
 const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
   function* (
     ctx: ReadContext,
-    request: Extract<RollbackRequest, { readonly operation: "rollbackPage" }>,
+    request: Extract<
+      RollbackRequest,
+      {
+        readonly operation: "rollbackPage";
+      }
+    >,
     total: number
   ) {
     if (request.afterIndex >= total) {
@@ -203,7 +219,6 @@ const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
         `Rollback cursor ${request.afterIndex} exceeds release ${request.rollbackOf}.`
       );
     }
-
     const records: RollbackRecord[] = [];
     let afterIndex = request.afterIndex;
     let recordBytes = 0;
@@ -226,7 +241,6 @@ const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
         "Rollback query page"
       );
       yield* validateBodyChunk(chunk, request, afterIndex, limit, total);
-
       for (const record of chunk.records) {
         const encodedBytes = textEncoder.encode(
           canonicalizeRollbackRecord(record)
@@ -260,12 +274,16 @@ const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
     );
   }
 );
-
 /** Aggregates safe route query transactions into one external page. */
 const readRoutePage = Effect.fn("contentRelease.readRollbackRoutePage")(
   function* (
     ctx: ReadContext,
-    request: Extract<RollbackRequest, { readonly operation: "routePage" }>,
+    request: Extract<
+      RollbackRequest,
+      {
+        readonly operation: "routePage";
+      }
+    >,
     total: number
   ) {
     if (request.afterIndex >= total) {
@@ -274,7 +292,6 @@ const readRoutePage = Effect.fn("contentRelease.readRollbackRoutePage")(
         `Route cursor ${request.afterIndex} exceeds release ${request.rollbackOf}.`
       );
     }
-
     const records: RouteRollbackRecord[] = [];
     let afterIndex = request.afterIndex;
     while (records.length < request.limit && afterIndex < total - 1) {
@@ -305,7 +322,6 @@ const readRoutePage = Effect.fn("contentRelease.readRollbackRoutePage")(
     return makeRoutePage(request, total, records);
   }
 );
-
 /** Reads one authenticated body or route rollback page. */
 export const readRollback = Effect.fn("contentRelease.readRollback")(function* (
   ctx: ReadContext,

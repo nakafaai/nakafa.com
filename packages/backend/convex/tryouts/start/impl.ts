@@ -137,7 +137,7 @@ const resumeActiveAttempt = Effect.fn("tryouts.start.resumeActiveAttempt")(
       yield* expireAttemptAtEffectiveTime(ctx, {
         attempt,
         now: input.now,
-      }).pipe(Effect.mapError(toTryoutStartError));
+      });
       return null;
     }
 
@@ -161,11 +161,12 @@ const resumeActiveAttempt = Effect.fn("tryouts.start.resumeActiveAttempt")(
         attempt,
         now: input.now,
         sectionKey: entrySection.sectionKey,
-      }).pipe(Effect.mapError(toTryoutStartError));
+      });
     }
 
     return attempt;
-  }
+  },
+  Effect.mapError(toTryoutStartError)
 );
 
 /** Resolves premium access first, then atomically claims the lifetime free try-out. */

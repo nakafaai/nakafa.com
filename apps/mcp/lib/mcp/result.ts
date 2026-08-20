@@ -3,14 +3,13 @@ import type {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
 } from "@repo/contents/_lib/agent/errors";
-import { Effect, Schema } from "effect";
+import { Effect, Schema, Struct } from "effect";
 
 type NakafaMcpStructuredResult<
   TStructuredContent extends Record<string, unknown>,
 > = CallToolResult & {
   readonly structuredContent: TStructuredContent;
 };
-
 type NakafaMcpToolErrorResult = CallToolResult & {
   readonly isError: true;
   readonly structuredContent: {
@@ -20,21 +19,18 @@ type NakafaMcpToolErrorResult = CallToolResult & {
     };
   };
 };
-
 /** Structured error payload shared by all MCP tool error results. */
 export const NakafaMcpToolErrorSchema = Schema.Struct({
   message: Schema.String,
   suggestions: Schema.Array(Schema.String).pipe(
-    Schema.minItems(1),
-    Schema.mutable
+    Schema.mutable,
+    Schema.check(Schema.isMinLength(1))
   ),
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 /** Structured content schema shared by all MCP tool error results. */
 export const NakafaMcpToolErrorStructuredContentSchema = Schema.Struct({
   error: NakafaMcpToolErrorSchema,
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 /** Converts structured content into a modern MCP tool result. */
 export function toMcpStructuredResult<
   TStructuredContent extends Record<string, unknown>,
@@ -51,7 +47,6 @@ export function toMcpStructuredResult<
     structuredContent,
   };
 }
-
 /** Builds an actionable MCP tool execution error. */
 export function toMcpToolError(
   message: string,
@@ -63,7 +58,6 @@ export function toMcpToolError(
       suggestions,
     },
   };
-
   return {
     content: [
       {
@@ -75,7 +69,6 @@ export function toMcpToolError(
     structuredContent,
   };
 }
-
 /** Maps shared read-model failures to agent-friendly MCP tool errors. */
 function toMcpReadModelError(
   error: NakafaAgentInputError | NakafaAgentDataReadError
@@ -85,7 +78,6 @@ function toMcpReadModelError(
       "Call `nakafa_get_taxonomy` and retry with supported values.",
   ]);
 }
-
 /** Lifts a typed read-model failure into a successful MCP error result. */
 export function succeedMcpReadModelError(
   error: Parameters<typeof toMcpReadModelError>[0]

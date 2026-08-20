@@ -8,7 +8,7 @@ import {
   accountDeletionPreparationOutcome,
   accountDeletionRequestPhase,
 } from "@repo/backend/convex/auth/deletion/spec";
-import { Effect, Either } from "effect";
+import { Effect, Result } from "effect";
 import type { AccountDeletionAttemptStorageFailed } from "@/lib/auth/account-deletion-attempt";
 import {
   AccountDeletionFailed,
@@ -27,11 +27,10 @@ type PrepareAccountDeletionRequest = (
 type PersistAccountDeletionAttempt = (
   attempt: AccountDeletionBrowserAttempt
 ) => Effect.Effect<void, AccountDeletionAttemptStorageFailed>;
-type ClearAccountDeletionAttempt = () => Effect.Effect<
+type ClearAccountDeletionAttempt = Effect.Effect<
   void,
   AccountDeletionAttemptStorageFailed
 >;
-
 export interface AccountDeletionPreparationOperations {
   readonly attempt: AccountDeletionBrowserAttempt;
   readonly cancelPreparation: CancelAccountDeletionRequest;
@@ -39,7 +38,6 @@ export interface AccountDeletionPreparationOperations {
   readonly persist: PersistAccountDeletionAttempt;
   readonly prepare: PrepareAccountDeletionRequest;
 }
-
 /** Cancels every bounded batch owned by one browser deletion attempt. */
 export const cancelPreparedAccountDeletion = Effect.fn(
   "www.auth.cancelPreparedAccountDeletion"
@@ -50,7 +48,6 @@ export const cancelPreparedAccountDeletion = Effect.fn(
 ) {
   let outcome: AccountDeletionCancellationOutcome =
     accountDeletionCancellationOutcome.continue;
-
   while (outcome === accountDeletionCancellationOutcome.continue) {
     outcome = yield* Effect.tryPromise({
       try: () => cancelPreparation(attemptId),
@@ -63,7 +60,6 @@ export const cancelPreparedAccountDeletion = Effect.fn(
     });
   }
 });
-
 /** Persists one durable browser phase without leaking storage failures. */
 export const persistAccountDeletionPhase = Effect.fn(
   "www.auth.persistAccountDeletionPhase"
@@ -81,12 +77,11 @@ export const persistAccountDeletionPhase = Effect.fn(
     )
   );
 });
-
 /** Removes a proven-canceled browser attempt before another delete can begin. */
 export const clearCanceledAccountDeletionAttempt = Effect.fn(
   "www.auth.clearCanceledAccountDeletionAttempt"
 )(function* (clearAttempt: ClearAccountDeletionAttempt) {
-  yield* clearAttempt().pipe(
+  yield* clearAttempt.pipe(
     Effect.mapError(
       () =>
         new AccountDeletionFailed({
@@ -95,7 +90,6 @@ export const clearCanceledAccountDeletionAttempt = Effect.fn(
     )
   );
 });
-
 /** Reserves all owned resources before the irreversible auth deletion. */
 export const prepareAccountDeletion = Effect.fn(
   "www.auth.prepareAccountDeletion"
@@ -109,7 +103,6 @@ export const prepareAccountDeletion = Effect.fn(
   const { attemptId } = attempt;
   let preparationOutcome: AccountDeletionPreparationOutcome =
     accountDeletionPreparationOutcome.continue;
-
   while (preparationOutcome === accountDeletionPreparationOutcome.continue) {
     preparationOutcome = yield* Effect.tryPromise({
       try: () => prepare(attemptId),
@@ -121,7 +114,6 @@ export const prepareAccountDeletion = Effect.fn(
         }),
     });
   }
-
   if (
     preparationOutcome ===
     accountDeletionPreparationOutcome.schoolSuccessorRequired
@@ -136,7 +128,6 @@ export const prepareAccountDeletion = Effect.fn(
       code: ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
     });
   }
-
   if (preparationOutcome !== accountDeletionPreparationOutcome.ready) {
     yield* cancelPreparedAccountDeletion(
       attemptId,
@@ -148,22 +139,20 @@ export const prepareAccountDeletion = Effect.fn(
       code: accountDeletionErrorCode.failed,
     });
   }
-
-  const persistedDeletionPhase = yield* Effect.either(
+  const persistedDeletionPhase = yield* Effect.result(
     persistAccountDeletionPhase(
       attempt,
       accountDeletionRequestPhase.deletion,
       persist
     )
   );
-
-  if (Either.isLeft(persistedDeletionPhase)) {
+  if (Result.isFailure(persistedDeletionPhase)) {
     yield* cancelPreparedAccountDeletion(
       attemptId,
       accountDeletionRequestPhase.preparation,
       cancelPreparation
     );
     yield* clearCanceledAccountDeletionAttempt(clearAttempt);
-    return yield* persistedDeletionPhase.left;
+    return yield* persistedDeletionPhase.failure;
   }
 });

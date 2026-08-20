@@ -10,7 +10,7 @@ import {
 } from "@repo/backend/convex/contentRelease/parse";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
 import type { ProofPage } from "@repo/backend/convex/contentRelease/proof/read";
-import { Effect, Option, Stream } from "effect";
+import { Effect, Option, Result, Stream } from "effect";
 
 type ProofRow = ProofPage["rows"][number];
 
@@ -35,7 +35,7 @@ export const verifyContentStreams = Effect.fn(
     )
   );
   return yield* decodedRows.pipe(
-    Stream.broadcast(3, 16),
+    Stream.broadcastN({ capacity: 16, n: 3 }),
     Effect.flatMap(([itemRows, projectionRows, rollbackRows]) =>
       Effect.all(
         {
@@ -46,7 +46,12 @@ export const verifyContentStreams = Effect.fn(
           projections: verifyContentProjections({
             manifest: release.manifest,
             projections: projectionRows.pipe(
-              Stream.filterMap((row) => row.projection)
+              Stream.filterMap((row) =>
+                Option.match(row.projection, {
+                  onNone: () => Result.failVoid,
+                  onSome: Result.succeed,
+                })
+              )
             ),
           }),
           rollback: verifyRollbackSnapshot({

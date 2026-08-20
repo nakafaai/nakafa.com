@@ -1,5 +1,4 @@
-import { FileSystem } from "@effect/platform";
-import { Effect } from "effect";
+import { Effect, FileSystem } from "effect";
 import { runRuntimeCommand } from "./command";
 import { contentRuntimeCiError } from "./error";
 import { validateArchiveListing } from "./snapshot";

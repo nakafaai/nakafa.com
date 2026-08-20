@@ -9,7 +9,7 @@ import {
   ModelIdSchema,
   type ModelKey,
 } from "@repo/ai/config/model";
-import { Brand } from "effect";
+import { Function as EffectFunction } from "effect";
 
 const modelIcons = {
   "nakafa-lite": LaurelWreathRight03Icon,
@@ -53,5 +53,5 @@ export const aiModels = MODEL_IDS.map((value) => aiModelsById[value]);
 
 /** Finds display metadata for one Nakafa model. */
 export function getAiModel(modelId: ModelId) {
-  return aiModelsById[Brand.unbranded(modelId)];
+  return aiModelsById[EffectFunction.cast<ModelId, ModelKey>(modelId)];
 }

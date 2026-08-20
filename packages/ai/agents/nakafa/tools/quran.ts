@@ -6,14 +6,12 @@ import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/_lib/age
 import type { NakafaAgentQuranReferenceOptions } from "@repo/contents/_lib/agent/schema/quran";
 import type { Locale } from "@repo/contents/_types/content";
 import type { UIMessageStreamWriter } from "ai";
-import { Effect, Either, Option } from "effect";
+import { Effect, Option, Result } from "effect";
 
 type Writer = Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
-
 const invalidRangeMessage = "Invalid Quran verse range.";
 const notFoundMessage = "Nakafa Quran reference was not found.";
 const oversizedRangeMessage = "Quran reference range is too large.";
-
 /** Reads a bounded Nakafa Quran reference and writes a preview UI part. */
 export const quran = Effect.fn("nakafa.quran")(function* ({
   input,
@@ -27,7 +25,6 @@ export const quran = Effect.fn("nakafa.quran")(function* ({
   readonly writer: Writer;
 }) {
   const dataInput = normalizeQuranInput(input, locale);
-
   yield* Effect.sync(() =>
     writer.write({
       id: toolCallId,
@@ -39,11 +36,9 @@ export const quran = Effect.fn("nakafa.quran")(function* ({
       },
     })
   );
-
   const fromVerse = dataInput.from_verse;
   const toVerse = dataInput.to_verse ?? fromVerse;
   const requestedVerseCount = toVerse - fromVerse + 1;
-
   if (toVerse < fromVerse) {
     yield* Effect.sync(() =>
       writer.write({
@@ -57,10 +52,8 @@ export const quran = Effect.fn("nakafa.quran")(function* ({
         },
       })
     );
-
     return invalidRangeMessage;
   }
-
   if (requestedVerseCount > NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES) {
     yield* Effect.sync(() =>
       writer.write({
@@ -74,13 +67,12 @@ export const quran = Effect.fn("nakafa.quran")(function* ({
         },
       })
     );
-
     return oversizedRangeMessage;
   }
-
-  const result = yield* Effect.either(Nakafa.quran(dataInput));
-
-  if (Either.isLeft(result)) {
+  const result = yield* Effect.result(
+    Nakafa.use((service) => service.quran(dataInput))
+  );
+  if (Result.isFailure(result)) {
     yield* Effect.sync(() =>
       writer.write({
         id: toolCallId,
@@ -89,16 +81,13 @@ export const quran = Effect.fn("nakafa.quran")(function* ({
           kind: "quran",
           input: dataInput,
           status: "error",
-          error: result.left.message,
+          error: result.failure.message,
         },
       })
     );
-
-    return result.left.message;
+    return result.failure.message;
   }
-
-  const content = result.right;
-
+  const content = result.success;
   if (Option.isNone(content)) {
     yield* Effect.sync(() =>
       writer.write({
@@ -112,12 +101,9 @@ export const quran = Effect.fn("nakafa.quran")(function* ({
         },
       })
     );
-
     return notFoundMessage;
   }
-
   const value = content.value;
-
   yield* Effect.sync(() =>
     writer.write({
       id: toolCallId,
@@ -130,10 +116,8 @@ export const quran = Effect.fn("nakafa.quran")(function* ({
       },
     })
   );
-
   return formatQuran(value);
 });
-
 /** Applies Quran input defaults before writing persistent UI data. */
 function normalizeQuranInput(
   input: NakafaAgentQuranReferenceOptions,

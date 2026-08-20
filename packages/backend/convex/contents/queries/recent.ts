@@ -137,7 +137,7 @@ const toRecentlyViewedSubject = Effect.fn(
     contentId: row.content_id,
     locale: row.locale,
     section: "material",
-  }).pipe(Effect.mapError(toRecentLearningIoError));
+  });
 
   if (
     !(
@@ -162,7 +162,7 @@ const toRecentlyViewedSubject = Effect.fn(
           programKey: row.contextProgramKey,
         }
       : undefined
-  ).pipe(Effect.mapError(toRecentLearningIoError));
+  );
 
   return {
     ...toPublicContentRef(route),
@@ -173,4 +173,4 @@ const toRecentlyViewedSubject = Effect.fn(
     materialDomain: route.materialDomain,
     title: route.title,
   };
-});
+}, Effect.mapError(toRecentLearningIoError));

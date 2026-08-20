@@ -1,7 +1,7 @@
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { ActiveAppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { TryoutKeySchema } from "@nakafa/aksara-contracts/tryout/key";
-import { Effect, Either, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 import { constant } from "effect/Function";
 import { getOgUrl } from "@/lib/utils/metadata";
 
@@ -27,43 +27,39 @@ const reviewedTryoutSocialImageSources = [
     appLocale: "id",
   },
 ];
-
 const ReviewedTryoutSocialImageSchema = Schema.Struct({
   countryKey: TryoutKeySchema,
   examKey: TryoutKeySchema,
   appLocale: ActiveAppLocaleSchema,
 });
-
 const ReviewedTryoutSocialImageRegistrySchema = Schema.Array(
   ReviewedTryoutSocialImageSchema
 ).pipe(
-  Schema.filter(
-    (images) =>
-      new Set(images.map(getTryoutSocialImageIdentity)).size === images.length
+  Schema.check(
+    Schema.makeFilter(
+      (images) =>
+        new Set(images.map(getTryoutSocialImageIdentity)).size === images.length
+    )
   )
 );
-
 const TryoutExamSocialImageIdentitySchema = Schema.Struct({
   countryKey: TryoutKeySchema,
   examKey: TryoutKeySchema,
   appLocale: ActiveAppLocaleSchema,
   publicPath: PublicPathSchema,
 });
-
 export class InvalidTryoutSocialImageIdentityError extends Schema.TaggedError<InvalidTryoutSocialImageIdentityError>()(
   "InvalidTryoutSocialImageIdentityError",
   {
     message: Schema.String,
   }
 ) {}
-
 class InvalidReviewedTryoutSocialImageRegistryError extends Schema.TaggedError<InvalidReviewedTryoutSocialImageRegistryError>()(
   "InvalidReviewedTryoutSocialImageRegistryError",
   {
     message: Schema.String,
   }
 ) {}
-
 export class TryoutSocialImageIdentityMismatchError extends Schema.TaggedError<TryoutSocialImageIdentityMismatchError>()(
   "TryoutSocialImageIdentityMismatchError",
   {
@@ -72,21 +68,20 @@ export class TryoutSocialImageIdentityMismatchError extends Schema.TaggedError<T
     message: Schema.String,
   }
 ) {}
-
-const decodeTryoutExamSocialImageIdentity = Schema.decodeUnknownEither(
+const decodeTryoutExamSocialImageIdentity = Schema.decodeUnknownResult(
   TryoutExamSocialImageIdentitySchema
 );
 const invalidReviewedTryoutSocialImageRegistryError =
   new InvalidReviewedTryoutSocialImageRegistryError({
     message: "Invalid reviewed try-out social image registry",
   });
-const reviewedTryoutSocialImages = Either.mapLeft(
-  Schema.decodeUnknownEither(ReviewedTryoutSocialImageRegistrySchema)(
+const reviewedTryoutSocialImages = Result.mapError(
+  Schema.decodeUnknownResult(ReviewedTryoutSocialImageRegistrySchema)(
     reviewedTryoutSocialImageSources
   ),
   constant(invalidReviewedTryoutSocialImageRegistryError)
 );
-const reviewedTryoutSocialImageByIdentity = Either.map(
+const reviewedTryoutSocialImageByIdentity = Result.map(
   reviewedTryoutSocialImages,
   (images) =>
     new Map(
@@ -96,7 +91,6 @@ const reviewedTryoutSocialImageByIdentity = Either.map(
       ])
     )
 );
-
 /**
  * Resolves reviewed exam artwork while preserving generated images for every
  * signed route without a matching static asset. Static prerender safety depends
@@ -113,17 +107,15 @@ export function resolveTryoutExamSocialImage(
   | TryoutSocialImageIdentityMismatchError
 > {
   const decodedIdentity = decodeTryoutExamSocialImageIdentity(input);
-  if (Either.isLeft(decodedIdentity)) {
+  if (Result.isFailure(decodedIdentity)) {
     return Effect.fail(
       new InvalidTryoutSocialImageIdentityError({
         message: "Invalid try-out social image identity",
       })
     );
   }
-
-  const identity = decodedIdentity.right;
+  const identity = decodedIdentity.success;
   const expectedPublicPath = `try-out/${identity.countryKey}/${identity.examKey}`;
-
   if (identity.publicPath !== expectedPublicPath) {
     return Effect.fail(
       new TryoutSocialImageIdentityMismatchError({
@@ -133,21 +125,17 @@ export function resolveTryoutExamSocialImage(
       })
     );
   }
-
   /* istanbul ignore next -- invalid authored registry fails every real resolver fixture */
-  if (Either.isLeft(reviewedTryoutSocialImageByIdentity)) {
-    return Effect.fail(reviewedTryoutSocialImageByIdentity.left);
+  if (Result.isFailure(reviewedTryoutSocialImageByIdentity)) {
+    return Effect.fail(reviewedTryoutSocialImageByIdentity.failure);
   }
-
-  const reviewedImagePath = reviewedTryoutSocialImageByIdentity.right.get(
+  const reviewedImagePath = reviewedTryoutSocialImageByIdentity.success.get(
     getTryoutSocialImageIdentity(identity)
   );
-
   return Effect.succeed(
     reviewedImagePath ?? getOgUrl(identity.appLocale, identity.publicPath)
   );
 }
-
 function getReviewedTryoutSocialImagePath(image: {
   readonly countryKey: string;
   readonly examKey: string;
@@ -155,7 +143,6 @@ function getReviewedTryoutSocialImagePath(image: {
 }) {
   return `/open-graph/tryout/${image.countryKey}/${image.appLocale}-${image.examKey}.png`;
 }
-
 function getTryoutSocialImageIdentity(identity: {
   readonly countryKey: string;
   readonly examKey: string;

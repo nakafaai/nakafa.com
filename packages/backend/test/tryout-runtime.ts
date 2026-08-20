@@ -94,16 +94,16 @@ export async function seedTryoutContentAccessState(
   if (!signedPlacement) {
     throw new Error("Expected one signed try-out placement fixture.");
   }
-  const englishSet = Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
+  const englishSet = Schema.decodeSync(TryoutCatalogRowSchema)({
     ...signedSource.snapshot.set.row,
     appLocale: "en",
   });
-  const englishSection = Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
+  const englishSection = Schema.decodeSync(TryoutCatalogRowSchema)({
     ...signedSection.signed.section.row,
     appLocale: "en",
   });
   const englishPlacements = signedSection.signed.placements.map(({ row }) =>
-    Schema.decodeUnknownSync(TryoutPlacementSchema)({
+    Schema.decodeSync(TryoutPlacementSchema)({
       ...row,
       answerArtifactLocale: "en",
       appLocale: "en",

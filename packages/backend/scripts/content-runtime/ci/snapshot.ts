@@ -7,13 +7,15 @@ import { Effect, Schema } from "effect";
 import type { CacheIdentity } from "./config";
 import { contentRuntimeCiError } from "./error";
 import { type JsonObject, JsonObjectSchema } from "./json";
-
 export const CONTENT_RUNTIME_CACHE_DIRECTORY = "agent-docs-content-cache";
 export const CONTENT_RUNTIME_CACHE_FILE = "runtime.tar.gpg";
-
-const HashSchema = Schema.String.pipe(Schema.pattern(/^[a-f0-9]{64}$/));
+const HashSchema = Schema.String.pipe(
+  Schema.check(Schema.isPattern(/^[a-f0-9]{64}$/))
+);
 const ManifestEntrySchema = Schema.Struct({
-  rowCount: Schema.NonNegativeInt,
+  rowCount: Schema.Finite.check(Schema.isInt()).check(
+    Schema.isGreaterThanOrEqualTo(0)
+  ),
   sha256: HashSchema,
   table: Schema.String,
 });
@@ -22,13 +24,10 @@ const MetadataSchema = Schema.Struct({
   contentStateHash: HashSchema,
   runtimeSchemaFingerprint: HashSchema,
 });
-const JsonObjectTextSchema = Schema.parseJson(JsonObjectSchema);
-
+const JsonObjectTextSchema = Schema.fromJsonString(JsonObjectSchema);
 export type ManifestEntry = Schema.Schema.Type<typeof ManifestEntrySchema>;
-
 const hashText = (text: string) =>
   createHash("sha256").update(text).digest("hex");
-
 const stripPortableFields = (row: JsonObject) =>
   Object.fromEntries(
     Object.entries(row).filter(
@@ -38,7 +37,6 @@ const stripPortableFields = (row: JsonObject) =>
         )
     )
   );
-
 export const createPortableTable = (
   table: string,
   rows: readonly JsonObject[]
@@ -48,7 +46,6 @@ export const createPortableTable = (
     .map((row) => JSON.stringify(row))
     .join("\n");
   const jsonLines = body.length === 0 ? "" : `${body}\n`;
-
   return {
     entry: {
       rowCount: rows.length,
@@ -58,36 +55,30 @@ export const createPortableTable = (
     jsonLines,
   };
 };
-
 export const formatManifest = (entries: readonly ManifestEntry[]) => {
   const body = entries.map((entry) => JSON.stringify(entry)).join("\n");
   return body.length === 0 ? "" : `${body}\n`;
 };
-
 export const formatMetadata = (identity: CacheIdentity) =>
   `${JSON.stringify(identity)}\n`;
-
 const decodeManifestEntry = (line: string) =>
-  Schema.decodeUnknown(Schema.parseJson(ManifestEntrySchema))(line, {
+  Schema.decodeEffect(Schema.fromJsonString(ManifestEntrySchema))(line, {
     onExcessProperty: "error",
   }).pipe(
     Effect.mapError(() =>
       contentRuntimeCiError("Signed runtime manifest is invalid.")
     )
   );
-
 export const decodeAndValidateManifest = Effect.fn(
   "contentRuntime.validateManifest"
 )(function* (text: string) {
   const lines = text.split("\n").filter((line) => line.length > 0);
   const entries = yield* Effect.forEach(lines, decodeManifestEntry);
-
   if (entries.length !== CONTENT_RUNTIME_TABLES.length) {
     return yield* contentRuntimeCiError(
       "Signed runtime manifest has an invalid table count."
     );
   }
-
   for (const [index, table] of CONTENT_RUNTIME_TABLES.entries()) {
     if (entries[index]?.table !== table) {
       return yield* contentRuntimeCiError(
@@ -95,20 +86,17 @@ export const decodeAndValidateManifest = Effect.fn(
       );
     }
   }
-
   return entries;
 });
-
 export const validateMetadata = Effect.fn("contentRuntime.validateMetadata")(
   function* (text: string, expected: CacheIdentity) {
-    const metadata = yield* Schema.decodeUnknown(
-      Schema.parseJson(MetadataSchema)
+    const metadata = yield* Schema.decodeEffect(
+      Schema.fromJsonString(MetadataSchema)
     )(text, { onExcessProperty: "error" }).pipe(
       Effect.mapError(() =>
         contentRuntimeCiError("Signed runtime metadata is invalid.")
       )
     );
-
     if (
       metadata.cacheVersion !== expected.cacheVersion ||
       metadata.contentStateHash !== expected.contentStateHash ||
@@ -120,20 +108,17 @@ export const validateMetadata = Effect.fn("contentRuntime.validateMetadata")(
     }
   }
 );
-
 export const validatePortableTable = Effect.fn(
   "contentRuntime.validatePortableTable"
 )(function* (entry: ManifestEntry, text: string) {
   const lines = text.split("\n").filter((line) => line.length > 0);
-
   if (lines.length !== entry.rowCount || hashText(text) !== entry.sha256) {
     return yield* contentRuntimeCiError(
       `Signed runtime table ${entry.table} failed its integrity check.`
     );
   }
-
   const rows = yield* Effect.forEach(lines, (line) =>
-    Schema.decodeUnknown(JsonObjectTextSchema)(line).pipe(
+    Schema.decodeEffect(JsonObjectTextSchema)(line).pipe(
       Effect.mapError(() =>
         contentRuntimeCiError(
           `Signed runtime table ${entry.table} contains invalid JSON rows.`
@@ -141,7 +126,6 @@ export const validatePortableTable = Effect.fn(
       )
     )
   );
-
   if (
     rows.some((row) =>
       CONTENT_RUNTIME_CACHE_CONTRACT.portableRows.strippedFields.some(
@@ -154,7 +138,6 @@ export const validatePortableTable = Effect.fn(
     );
   }
 });
-
 export const getExpectedArchiveEntries = () =>
   [
     "./",
@@ -163,7 +146,6 @@ export const getExpectedArchiveEntries = () =>
     ),
     ...CONTENT_RUNTIME_TABLES.map((table) => `./${table}.jsonl`),
   ].sort();
-
 export const validateArchiveListing = (
   listingText: string,
   verboseText: string
@@ -174,7 +156,6 @@ export const validateArchiveListing = (
     .filter((line) => line.length > 0)
     .sort();
   const verbose = verboseText.split("\n").filter((line) => line.length > 0);
-
   if (
     JSON.stringify(actual) !== JSON.stringify(expected) ||
     verbose.length !== expected.length ||
@@ -184,6 +165,5 @@ export const validateArchiveListing = (
       contentRuntimeCiError("Signed runtime archive layout is unsafe.")
     );
   }
-
-  return Effect.succeed(undefined);
+  return Effect.void;
 };

@@ -14,7 +14,7 @@ import { describe, expect, it } from "vitest";
 
 /** Builds one localized technical exam beneath the shared country fixture. */
 function makeTryoutExam(locale: "en" | "id") {
-  return Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
+  return Schema.decodeSync(TryoutCatalogRowSchema)({
     countryKey: "indonesia",
     description: locale === "en" ? "Technical exam" : "Ujian teknis",
     examKey: "snbt",

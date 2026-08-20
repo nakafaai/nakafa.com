@@ -61,7 +61,7 @@ function pendingRoute({
 } = {}) {
   const base = makePendingManifest();
 
-  const manifest = Schema.decodeUnknownSync(LocalPreviewManifestSchema)({
+  const manifest = Schema.decodeSync(LocalPreviewManifestSchema)({
     ...base,
     document: {
       ...previewDocument,

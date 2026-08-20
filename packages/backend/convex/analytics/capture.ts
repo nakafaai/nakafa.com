@@ -23,18 +23,15 @@ import {
 } from "@repo/backend/convex/users/schema";
 import { makeFunctionReference } from "convex/server";
 import { v } from "convex/values";
-import { Effect, Either, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 
 const productAnalyticsCaptureFailedCode = "PRODUCT_ANALYTICS_CAPTURE_FAILED";
-
 type ProductAnalyticsCtx = Pick<MutationCtx, "scheduler">;
-
 interface ProductAnalyticsCaptureArgs {
   readonly distinctId: Id<"users">;
   readonly event: ProductAnalyticsEvent;
   readonly timestamp?: Date;
 }
-
 interface ProductAnalyticsIdentifyArgs {
   readonly distinctId: Id<"users">;
   readonly email: string;
@@ -42,18 +39,15 @@ interface ProductAnalyticsIdentifyArgs {
   readonly plan: UserPlan;
   readonly signedUpAt: string;
 }
-
 interface ProductAnalyticsCaptureOperations {
   readonly capture: () => Effect.Effect<void, ProductAnalyticsCaptureError>;
   readonly loadUser: () => Promise<Doc<"users"> | null>;
 }
-
 interface ProductAnalyticsDeliveryOperations {
   readonly capture: () => Promise<void>;
   readonly erase: () => Effect.Effect<void, ProductAnalyticsCaptureError>;
   readonly isUserActive: () => Promise<boolean>;
 }
-
 const deliverProductEventReference = makeFunctionReference<
   "action",
   {
@@ -78,10 +72,11 @@ const deliverProductIdentifyReference = makeFunctionReference<
 >("analytics/capture:deliverProductIdentify");
 const isProductAnalyticsUserActiveReference = makeFunctionReference<
   "query",
-  { userId: Id<"users"> },
+  {
+    userId: Id<"users">;
+  },
   boolean
 >("analytics/capture:isProductAnalyticsUserActive");
-
 /** Raised when an admitted backend product event cannot be queued. */
 export class ProductAnalyticsCaptureError extends Schema.TaggedError<ProductAnalyticsCaptureError>()(
   "ProductAnalyticsCaptureError",
@@ -90,7 +85,6 @@ export class ProductAnalyticsCaptureError extends Schema.TaggedError<ProductAnal
     message: Schema.String,
   }
 ) {}
-
 /** Maps one Convex or PostHog failure into the analytics capture channel. */
 function toProductAnalyticsCaptureError(error: unknown) {
   return new ProductAnalyticsCaptureError({
@@ -98,7 +92,6 @@ function toProductAnalyticsCaptureError(error: unknown) {
     message: getUnknownErrorMessage(error),
   });
 }
-
 /** Queues one backend event behind deletion-aware PostHog delivery. */
 export const captureProductEvent = Effect.fn(
   "analytics.capture.captureProductEvent"
@@ -118,7 +111,6 @@ export const captureProductEvent = Effect.fn(
       }),
   });
 });
-
 /** Queues signup identification behind the same deletion-aware delivery gate. */
 export const identifyProductUser = Effect.fn(
   "analytics.capture.identifyProductUser"
@@ -128,7 +120,6 @@ export const identifyProductUser = Effect.fn(
     try: () => ctx.scheduler.runAfter(0, deliverProductIdentifyReference, args),
   });
 });
-
 /** Delivers only for active users and erases writes overlapping deletion. */
 export const deliverProductAnalyticsProgram = Effect.fn(
   "analytics.capture.deliverProductAnalytics"
@@ -137,12 +128,10 @@ export const deliverProductAnalyticsProgram = Effect.fn(
     catch: toProductAnalyticsCaptureError,
     try: operations.isUserActive,
   });
-
   if (!isActiveBeforeSend) {
     return;
   }
-
-  const captureResult = yield* Effect.either(
+  const captureResult = yield* Effect.result(
     Effect.tryPromise({
       catch: toProductAnalyticsCaptureError,
       try: operations.capture,
@@ -152,16 +141,13 @@ export const deliverProductAnalyticsProgram = Effect.fn(
     catch: toProductAnalyticsCaptureError,
     try: operations.isUserActive,
   });
-
   if (!isActiveAfterSend) {
     yield* operations.erase();
   }
-
-  if (Either.isLeft(captureResult)) {
-    return yield* captureResult.left;
+  if (Result.isFailure(captureResult)) {
+    return yield* captureResult.failure;
   }
 });
-
 /** Returns the latest deletion-aware admission state for one app user. */
 export const isProductAnalyticsUserActive = internalQuery({
   args: {
@@ -173,7 +159,6 @@ export const isProductAnalyticsUserActive = internalQuery({
     return user !== null && !isAccountDeletionPending(user);
   },
 });
-
 /** Sends one queued event and reconciles deletion that overlaps its IO. */
 export const deliverProductEvent = internalAction({
   args: {
@@ -205,11 +190,9 @@ export const deliverProductEvent = internalAction({
           }),
       })
     );
-
     return null;
   },
 });
-
 /** Identifies one signup without allowing a delayed job to revive deleted data. */
 export const deliverProductIdentify = internalAction({
   args: {
@@ -248,11 +231,9 @@ export const deliverProductIdentify = internalAction({
           }),
       })
     );
-
     return null;
   },
 });
-
 /** Re-enters mutation ordering before admitting an action-owned event. */
 export const captureActionProductEventProgram = Effect.fn(
   "analytics.capture.captureActionProductEvent"
@@ -268,15 +249,12 @@ export const captureActionProductEventProgram = Effect.fn(
     catch: toProductAnalyticsCaptureError,
     try: operations.loadUser,
   });
-
   if (!user || isAccountDeletionPending(user)) {
     return false;
   }
-
   yield* operations.capture();
   return true;
 });
-
 /** Mutation boundary for action-owned analytics events. */
 export const captureActionProductEvent = internalMutation({
   args: {

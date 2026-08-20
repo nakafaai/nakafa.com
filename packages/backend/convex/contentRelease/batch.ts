@@ -2,14 +2,13 @@ import { hashText } from "@repo/backend/convex/contentRelease/digest";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { Effect, Schema } from "effect";
 
-const BatchKindSchema = Schema.Literal(
+const BatchKindSchema = Schema.Literals([
   "artifact",
   "item",
   "projection",
   "route",
-  "snapshot"
-);
-
+  "snapshot",
+]);
 /** Computes the exact ordered request identity for idempotent batch retries. */
 export const hashBatch = Effect.fn("contentRelease.hashBatch")(function* (
   kind: typeof BatchKindSchema.Type,
@@ -22,7 +21,6 @@ export const hashBatch = Effect.fn("contentRelease.hashBatch")(function* (
     JSON.stringify([kind, releaseId, batchIndex, values])
   );
 });
-
 /** Rejects one immutable batch index reused with different exact bytes. */
 export function validateStoredBatch(
   actualRows: number,

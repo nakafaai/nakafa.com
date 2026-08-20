@@ -80,7 +80,16 @@ describe("contentRelease/proof/poll", () => {
   });
 
   it("starts exactly once and returns proof after the workflow completes", async () => {
-    vi.useFakeTimers();
+    // Effect yields through setImmediate, while Convex jobs use timer APIs.
+    vi.useFakeTimers({
+      toFake: [
+        "Date",
+        "clearInterval",
+        "clearTimeout",
+        "setInterval",
+        "setTimeout",
+      ],
+    });
     const t = await createCandidate();
 
     await expect(Promise.all([pollProof(t), pollProof(t)])).resolves.toEqual([

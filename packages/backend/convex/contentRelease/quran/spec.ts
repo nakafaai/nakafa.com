@@ -8,7 +8,7 @@ export const quranAppLocaleValidator = literals(...APP_LOCALE_CODES);
 
 /** Runtime validator for app locales with a complete signed tafsir source. */
 export const quranTafsirAppLocaleValidator = literals(
-  ...QuranTafsirLocaleSchema.literals
+  QuranTafsirLocaleSchema.literal
 );
 
 /** Shared active-source fields returned by every signed Quran read. */

@@ -1,5 +1,4 @@
 import "server-only";
-
 import { DateOnlySchema } from "@nakafa/aksara-contracts/date";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
@@ -19,18 +18,17 @@ import { readRuntimeQuery } from "@/lib/content/runtime/query";
 type DiscoveryItem = FunctionReturnType<
   typeof api.contentRelease.article.latest
 >["articles"][number];
-
 /** Decodes one backend-verified discovery row into the article card contract. */
 const decodeDiscoveryItem = Effect.fn("www.articles.decodeDiscovery")(
   function* (item: DiscoveryItem, locale: Locale) {
     const appLocale = AppLocaleSchema.make(locale);
     const [category, categoryTitle, date, publicPath, slug] = yield* Effect.all(
       [
-        Schema.decodeUnknown(ArticleCategorySchema)(item.category),
-        Schema.decodeUnknown(ArticleCategoryTitleSchema)(item.categoryTitle),
-        Schema.decodeUnknown(DateOnlySchema)(item.date),
-        Schema.decodeUnknown(PublicPathSchema)(item.publicPath),
-        Schema.decodeUnknown(ArticleSlugSchema)(item.articleSlug),
+        Schema.decodeEffect(ArticleCategorySchema)(item.category),
+        Schema.decodeEffect(ArticleCategoryTitleSchema)(item.categoryTitle),
+        Schema.decodeEffect(DateOnlySchema)(item.date),
+        Schema.decodeEffect(PublicPathSchema)(item.publicPath),
+        Schema.decodeEffect(ArticleSlugSchema)(item.articleSlug),
       ]
     ).pipe(
       Effect.mapError(
@@ -41,7 +39,6 @@ const decodeDiscoveryItem = Effect.fn("www.articles.decodeDiscovery")(
           })
       )
     );
-
     return {
       authors: item.authors,
       category,
@@ -55,7 +52,6 @@ const decodeDiscoveryItem = Effect.fn("www.articles.decodeDiscovery")(
     } satisfies PublishedArticleSummary;
   }
 );
-
 /** Reads one complete published article partition for agent discovery. */
 export const readPublishedArticleBucket = Effect.fn("www.articles.readBucket")(
   function* (locale: Locale, bucket: string) {
@@ -79,7 +75,6 @@ export const readPublishedArticleBucket = Effect.fn("www.articles.readBucket")(
     return { articles };
   }
 );
-
 /** Reads a bounded newest-first article set for feed discovery. */
 export const readPublishedLatestArticles = Effect.fn("www.articles.readLatest")(
   function* (locale: Locale, limit: number) {
@@ -100,7 +95,6 @@ export const readPublishedLatestArticles = Effect.fn("www.articles.readLatest")(
     return { articles };
   }
 );
-
 /** Reads a bounded newest-first article set for one exact category. */
 export const readPublishedCategoryArticles = Effect.fn(
   "www.articles.readCategory"

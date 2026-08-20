@@ -31,7 +31,7 @@ const questionRoot = `packages/corpus/${questionKey}`;
 const sourceRevision = "test-preview";
 
 /** Exact visible try-out target used only by Nakafa preview tests. */
-export const questionPreviewTarget = Schema.decodeUnknownSync(
+export const questionPreviewTarget = Schema.decodeSync(
   TryoutPreviewTargetSchema
 )({
   exam: {
@@ -136,7 +136,7 @@ const answerIdentity = {
 } as const;
 
 /** Exact prompt document accepted by the local preview protocol. */
-export const questionPromptDocument = Schema.decodeUnknownSync(
+export const questionPromptDocument = Schema.decodeSync(
   QuestionPromptPreviewDocumentSchema
 )({
   delivery: "authenticated",
@@ -148,7 +148,7 @@ export const questionPromptDocument = Schema.decodeUnknownSync(
 });
 
 /** Exact answer document carrying its required prompt-first closure. */
-export const questionAnswerDocument = Schema.decodeUnknownSync(
+export const questionAnswerDocument = Schema.decodeSync(
   QuestionAnswerPreviewDocumentSchema
 )({
   delivery: "entitled",
@@ -166,7 +166,7 @@ const metadata = {
 };
 
 /** Exact prompt projection with one correct authored choice. */
-export const questionPromptProjection = Schema.decodeUnknownSync(
+export const questionPromptProjection = Schema.decodeSync(
   QuestionPromptProjectionSchema
 )({
   ...promptIdentity,
@@ -179,7 +179,7 @@ export const questionPromptProjection = Schema.decodeUnknownSync(
 });
 
 /** Exact answer projection paired with the selected prompt. */
-export const questionAnswerProjection = Schema.decodeUnknownSync(
+export const questionAnswerProjection = Schema.decodeSync(
   QuestionAnswerProjectionSchema
 )({
   ...answerIdentity,
@@ -210,7 +210,7 @@ export function makeQuestionReadyManifest(
   rendererManifestHash: typeof Sha256HashSchema.Type,
   bodyKind: "answer" | "question" = "question"
 ) {
-  return Schema.decodeUnknownSync(PreviewReadySchema)({
+  return Schema.decodeSync(PreviewReadySchema)({
     artifacts:
       bodyKind === "answer"
         ? [promptArtifact, answerArtifact]
@@ -227,7 +227,7 @@ export function makeQuestionReadyManifest(
 
 /** Builds one pending question manifest without stale artifact fallback. */
 export function makeQuestionPendingManifest() {
-  return Schema.decodeUnknownSync(PreviewPendingSchema)({
+  return Schema.decodeSync(PreviewPendingSchema)({
     document: questionPromptDocument,
     format: LOCAL_PREVIEW_FORMAT,
     repositories: previewRepositories,
@@ -238,7 +238,7 @@ export function makeQuestionPendingManifest() {
 
 /** Builds one failed question manifest without stale artifact fallback. */
 export function makeQuestionFailedManifest() {
-  return Schema.decodeUnknownSync(PreviewFailedSchema)({
+  return Schema.decodeSync(PreviewFailedSchema)({
     document: questionPromptDocument,
     failure: { code: "MDX_PARSE", message: "Compilation failed." },
     format: LOCAL_PREVIEW_FORMAT,

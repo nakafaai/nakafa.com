@@ -54,7 +54,7 @@ export function makeTryoutCatalogRow(
   ContentSnapshotRow,
   { readonly family: "tryout"; readonly rowKind: "catalog" }
 > {
-  const row = Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
+  const row = Schema.decodeSync(TryoutCatalogRowSchema)({
     countryCode: "ID",
     countryKey: "indonesia",
     graph: {
@@ -89,7 +89,7 @@ export function makeTryoutPlacementRow(
   ContentSnapshotRow,
   { readonly family: "tryout"; readonly rowKind: "placement" }
 > {
-  const row = Schema.decodeUnknownSync(TryoutPlacementSchema)({
+  const row = Schema.decodeSync(TryoutPlacementSchema)({
     answerArtifactHash: artifacts?.answerArtifactHash ?? artifactHash,
     answerArtifactLocale: appLocale,
     answerContentKey:

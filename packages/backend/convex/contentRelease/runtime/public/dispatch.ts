@@ -23,26 +23,23 @@ import {
   failureResult,
 } from "@repo/backend/convex/contentRelease/runtime/result";
 import { makeFunctionReference } from "convex/server";
-import { Effect, Either, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 
 const publicReadReference = makeFunctionReference<
   "query",
   Pick<PublicContentRuntimeRequest, "appLocale" | "publicPath">,
   PublicRuntimeRow
 >("contentRelease/runtime/public/internal:read");
-
 /** Request JSON could not satisfy the exact public runtime contract. */
 class PublicRuntimeRequestError extends Schema.TaggedError<PublicRuntimeRequestError>()(
   "PublicRuntimeRequestError",
   {}
 ) {}
-
 /** Convex or stored public runtime data failed before a safe response. */
 class PublicRuntimeReadError extends Schema.TaggedError<PublicRuntimeReadError>()(
   "PublicRuntimeReadError",
   {}
 ) {}
-
 /** Strictly parses one bounded UTF-8 public request. */
 const decodePublicRequest = Effect.fn("contentRelease.decodePublicRequest")(
   function* (source: string, byteLength: number) {
@@ -62,7 +59,6 @@ const decodePublicRequest = Effect.fn("contentRelease.decodePublicRequest")(
     );
   }
 );
-
 /** Decodes one stored row into the exact Aksara public response. */
 export const decodePublicRuntimeRow = Effect.fn(
   "contentRelease.decodePublicRuntimeRow"
@@ -83,10 +79,10 @@ export const decodePublicRuntimeRow = Effect.fn(
   ] = yield* Effect.all([
     decodeArtifactJson(row.artifactJson),
     decodeProjectionJson(row.projectionJson),
-    Schema.decodeUnknown(Sha256HashSchema)(row.projectionHash),
+    Schema.decodeEffect(Sha256HashSchema)(row.projectionHash),
     decodeReleaseJson(row.releaseJson),
     decodeRendererJson(row.rendererJson),
-    Schema.decodeUnknown(CorpusSourcePathSchema)(row.sourcePath),
+    Schema.decodeEffect(CorpusSourcePathSchema)(row.sourcePath),
   ]).pipe(Effect.mapError(() => new PublicRuntimeReadError()));
   if (projection.kind === "question-body") {
     return yield* new PublicRuntimeReadError();
@@ -111,7 +107,6 @@ export const decodePublicRuntimeRow = Effect.fn(
   };
   return response;
 });
-
 /** Reads one active public artifact for Nakafa verification. */
 const resolvePublicRuntime = Effect.fn("contentRelease.resolvePublicRuntime")(
   function* (ctx: ActionCtx, request: PublicContentRuntimeRequest) {
@@ -126,24 +121,23 @@ const resolvePublicRuntime = Effect.fn("contentRelease.resolvePublicRuntime")(
     return yield* decodePublicRuntimeRow(row);
   }
 );
-
 /** Decodes, resolves, and safely encodes one public runtime request. */
 export const dispatchProgram = Effect.fn(
   "contentRelease.publicRuntimeDispatch"
 )(function* (ctx: ActionCtx, source: string, byteLength: number) {
   const decoded = yield* decodePublicRequest(source, byteLength).pipe(
-    Effect.either
+    Effect.result
   );
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     return failureResult("CONTENT_RUNTIME_INVALID", 400);
   }
-  const resolved = yield* resolvePublicRuntime(ctx, decoded.right).pipe(
-    Effect.either
+  const resolved = yield* resolvePublicRuntime(ctx, decoded.success).pipe(
+    Effect.result
   );
-  if (Either.isLeft(resolved)) {
+  if (Result.isFailure(resolved)) {
     return failureResult("CONTENT_RUNTIME_INTERNAL", 500);
   }
-  if (resolved.right === null) {
+  if (resolved.success === null) {
     return encodeRuntimeResult(
       PublicContentRuntimeResponseSchema,
       MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
@@ -154,7 +148,7 @@ export const dispatchProgram = Effect.fn(
   return encodeRuntimeResult(
     PublicContentRuntimeResponseSchema,
     MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
-    resolved.right,
+    resolved.success,
     200
   );
 });

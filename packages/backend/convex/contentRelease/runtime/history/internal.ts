@@ -49,10 +49,8 @@ const resultValidator = v.union(
     snapshotReleaseId: v.string(),
   })
 );
-
 /** Historical bytes returned only across the private action boundary. */
 export type RetainedRuntimeBatchRow = Infer<typeof resultValidator>;
-
 /** Creates one stable fail-closed retained-runtime error. */
 function historyIntegrity(message: string) {
   return new ReleaseError({
@@ -60,7 +58,6 @@ function historyIntegrity(message: string) {
     message,
   });
 }
-
 /** Loads the exact attempt before any history discriminator or bytes. */
 const loadAttempt = Effect.fn("contentRelease.loadRetainedRuntimeAttempt")(
   function* (ctx: QueryCtx, request: StoredProtectedRuntimeRequest) {
@@ -82,7 +79,6 @@ const loadAttempt = Effect.fn("contentRelease.loadRetainedRuntimeAttempt")(
     return attempt;
   }
 );
-
 /** Loads the exact old bundle selected by the attempt marker. */
 const loadBundle = Effect.fn("contentRelease.loadRetainedRuntimeBundle")(
   function* (ctx: QueryCtx, request: StoredProtectedRuntimeRequest) {
@@ -108,11 +104,10 @@ const loadBundle = Effect.fn("contentRelease.loadRetainedRuntimeBundle")(
     return bundle;
   }
 );
-
 /** Resolves one complete retained batch in a single read transaction. */
 const readProgram = Effect.fn("contentRelease.readRetainedRuntimeBatch")(
   function* (ctx: QueryCtx, input: unknown) {
-    const request = yield* Schema.decodeUnknown(
+    const request = yield* Schema.decodeUnknownEffect(
       StoredProtectedRuntimeRequestSchema,
       { onExcessProperty: "error" }
     )(input).pipe(
@@ -149,7 +144,7 @@ const readProgram = Effect.fn("contentRelease.readRetainedRuntimeBatch")(
     const artifacts = yield* Effect.forEach(items, (item) =>
       parseStoredJson(item.artifactJson, "Retained signed artifact")
     );
-    const found = yield* Schema.decodeUnknown(
+    const found = yield* Schema.decodeUnknownEffect(
       StoredProtectedRuntimeFoundSchema
     )(
       {
@@ -197,7 +192,6 @@ const readProgram = Effect.fn("contentRelease.readRetainedRuntimeBatch")(
     };
   }
 );
-
 /** Returns attempt-bound historical bytes only through the private action. */
 export const read = internalQuery({
   args: argsValidator,

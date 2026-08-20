@@ -23,7 +23,6 @@ import {
   VIEWPORT_EVENT_CAPACITY,
   type ViewportRuntime,
 } from "@/components/school/classes/forum/conversation/viewport/runtime";
-
 /** Public Effect-owned viewport interface exposed to React boundaries. */
 export interface ConversationViewport {
   /** Emits each derived Viewport state update for React subscription. */
@@ -37,47 +36,40 @@ export interface ConversationViewport {
   /** Stops the event loop and releases all Viewport fibers. */
   shutdown: Effect.Effect<void>;
 }
-
 /** Creates one Effect-owned Viewport service instance for an opened Forum Conversation. */
-export function makeConversationViewport() {
-  return Effect.gen(function* () {
-    const adapters = yield* ConversationViewportAdapters;
-    const eventQueue = yield* Queue.bounded<ViewportEvent>(
-      VIEWPORT_EVENT_CAPACITY
-    );
-    const scope = yield* Scope.make();
-    const stateRef = yield* SubscriptionRef.make(initialViewportState);
-    const activeTranscriptRef = yield* Ref.make<ActiveTranscript>(null);
-    const highlightFiberRef = yield* Ref.make<RuntimeFiber | null>(null);
-    const highlightTokenRef = yield* Ref.make(0);
-    const persistFiberRef = yield* Ref.make<RuntimeFiber | null>(null);
-    const lastMeasurementRef = yield* Ref.make<ViewportMeasurement | null>(
-      null
-    );
-    const lastReadPostIdRef = yield* Ref.make<ForumPostId | null>(null);
-    const runtime = {
-      activeTranscriptRef,
-      adapters,
-      eventQueue,
-      highlightFiberRef,
-      highlightTokenRef,
-      lastMeasurementRef,
-      lastReadPostIdRef,
-      persistFiberRef,
-      scope,
-      stateRef,
-    } satisfies ViewportRuntime;
-
-    yield* Effect.forkIn(runViewportEventLoop(runtime), scope);
-
-    return {
-      changes: stateRef.changes,
-      dispatch: (event) => Queue.offer(eventQueue, event).pipe(Effect.asVoid),
-      flushSnapshot: flushCurrentSnapshot(runtime),
-      getState: SubscriptionRef.get(stateRef),
-      shutdown: Queue.shutdown(eventQueue).pipe(
-        Effect.zipRight(Scope.close(scope, Exit.succeed(undefined)))
-      ),
-    } satisfies ConversationViewport;
-  });
-}
+export const makeConversationViewport = Effect.gen(function* () {
+  const adapters = yield* ConversationViewportAdapters;
+  const eventQueue = yield* Queue.bounded<ViewportEvent>(
+    VIEWPORT_EVENT_CAPACITY
+  );
+  const scope = yield* Scope.make();
+  const stateRef = yield* SubscriptionRef.make(initialViewportState);
+  const activeTranscriptRef = yield* Ref.make<ActiveTranscript>(null);
+  const highlightFiberRef = yield* Ref.make<RuntimeFiber | null>(null);
+  const highlightTokenRef = yield* Ref.make(0);
+  const persistFiberRef = yield* Ref.make<RuntimeFiber | null>(null);
+  const lastMeasurementRef = yield* Ref.make<ViewportMeasurement | null>(null);
+  const lastReadPostIdRef = yield* Ref.make<ForumPostId | null>(null);
+  const runtime = {
+    activeTranscriptRef,
+    adapters,
+    eventQueue,
+    highlightFiberRef,
+    highlightTokenRef,
+    lastMeasurementRef,
+    lastReadPostIdRef,
+    persistFiberRef,
+    scope,
+    stateRef,
+  } satisfies ViewportRuntime;
+  yield* Effect.forkIn(runViewportEventLoop(runtime), scope);
+  return {
+    changes: SubscriptionRef.changes(stateRef),
+    dispatch: (event) => Queue.offer(eventQueue, event).pipe(Effect.asVoid),
+    flushSnapshot: flushCurrentSnapshot(runtime),
+    getState: SubscriptionRef.get(stateRef),
+    shutdown: Queue.shutdown(eventQueue).pipe(
+      Effect.andThen(Scope.close(scope, Exit.succeed(undefined)))
+    ),
+  } satisfies ConversationViewport;
+});

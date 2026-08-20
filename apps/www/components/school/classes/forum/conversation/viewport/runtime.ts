@@ -14,7 +14,7 @@ export const VIEWPORT_EVENT_CAPACITY = 64;
 
 export type ActiveTranscript = ActiveTranscriptModel | null;
 export type ForumPostId = Id<"schoolClassForumPosts">;
-export type RuntimeFiber = Fiber.RuntimeFiber<void, never>;
+export type RuntimeFiber = Fiber.Fiber<void, never>;
 export type ViewportStateDraft = Omit<ViewportState, "jumpControl"> & {
   jumpControl?: ViewportState["jumpControl"];
 };
@@ -29,6 +29,6 @@ export interface ViewportRuntime {
   lastMeasurementRef: Ref.Ref<ViewportMeasurement | null>;
   lastReadPostIdRef: Ref.Ref<ForumPostId | null>;
   persistFiberRef: Ref.Ref<RuntimeFiber | null>;
-  scope: Scope.CloseableScope;
+  scope: Scope.Closeable;
   stateRef: SubscriptionRef.SubscriptionRef<ViewportState>;
 }

@@ -317,7 +317,7 @@ export function mapDBPartToUIMessagePart({
           fieldName: "dataNakafaId",
           partType: part.type,
         }),
-        data: Schema.decodeUnknownSync(NakafaDataSchema)(
+        data: Schema.decodeSync(NakafaDataSchema)(
           requirePartField({
             value: part.dataNakafaData,
             fieldName: "dataNakafaData",

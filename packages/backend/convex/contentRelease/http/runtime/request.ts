@@ -8,13 +8,17 @@ import {
   failureResult,
   type RuntimeHttpResult,
 } from "@repo/backend/convex/contentRelease/runtime/result";
-import { Effect, Either } from "effect";
-
+import { Effect, Result } from "effect";
 /** Authenticated bounded body or one response-safe rejection. */
 export type RuntimeRequestResult =
-  | { readonly body: HttpJsonBody; readonly kind: "accepted" }
-  | { readonly kind: "rejected"; readonly result: RuntimeHttpResult };
-
+  | {
+      readonly body: HttpJsonBody;
+      readonly kind: "accepted";
+    }
+  | {
+      readonly kind: "rejected";
+      readonly result: RuntimeHttpResult;
+    };
 /** Maps one shared bounded-body failure to its stable HTTP status. */
 function bodyFailureResult(error: HttpBodyError) {
   if (error.reason === "size") {
@@ -25,7 +29,6 @@ function bodyFailureResult(error: HttpBodyError) {
   }
   return failureResult("CONTENT_RUNTIME_INVALID", 400);
 }
-
 /** Authenticates before reading one complete bounded runtime request body. */
 export const readRuntimeRequest = Effect.fn(
   "contentRelease.readRuntimeRequest"
@@ -33,28 +36,28 @@ export const readRuntimeRequest = Effect.fn(
   const trustedServer = yield* matchesHttpSecret(
     request.headers.get("x-nakafa-content-token") ?? "",
     secret
-  ).pipe(Effect.either);
-  if (Either.isLeft(trustedServer)) {
+  ).pipe(Effect.result);
+  if (Result.isFailure(trustedServer)) {
     return {
       kind: "rejected",
       result: failureResult("CONTENT_RUNTIME_INTERNAL", 500),
     } satisfies RuntimeRequestResult;
   }
-  if (!trustedServer.right) {
+  if (!trustedServer.success) {
     return {
       kind: "rejected",
       result: failureResult("CONTENT_RUNTIME_UNAUTHORIZED", 401),
     } satisfies RuntimeRequestResult;
   }
-  const body = yield* readJsonBody(request, maxBytes).pipe(Effect.either);
-  if (Either.isLeft(body)) {
+  const body = yield* readJsonBody(request, maxBytes).pipe(Effect.result);
+  if (Result.isFailure(body)) {
     return {
       kind: "rejected",
-      result: bodyFailureResult(body.left),
+      result: bodyFailureResult(body.failure),
     } satisfies RuntimeRequestResult;
   }
   return {
-    body: body.right,
+    body: body.success,
     kind: "accepted",
   } satisfies RuntimeRequestResult;
 });

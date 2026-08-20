@@ -89,7 +89,7 @@ export function TryoutRuntimeControls({
               });
             })
           ),
-          Effect.catchAll(() =>
+          Effect.catch(() =>
             Effect.sync(() => {
               toast.error(tTryouts("complete-part-error"), {
                 position: "bottom-center",

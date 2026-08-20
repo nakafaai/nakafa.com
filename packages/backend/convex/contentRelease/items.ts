@@ -47,7 +47,7 @@ const decodeBatch = Effect.fn("contentRelease.decodeItemBatch")(function* (
     );
   }
   const items = yield* Effect.forEach(itemJson, decodeItemJson);
-  return yield* Schema.decodeUnknown(StageItemBatchInputSchema)({
+  return yield* Schema.decodeUnknownEffect(StageItemBatchInputSchema)({
     batchIndex,
     items,
     releaseId,
@@ -61,7 +61,6 @@ const decodeBatch = Effect.fn("contentRelease.decodeItemBatch")(function* (
     )
   );
 });
-
 /** Stages one canonical item batch with exact immutable retry identity. */
 const stageItemProgram = Effect.fn("contentRelease.stageItemBatch")(function* (
   ctx: MutationCtx,
@@ -145,7 +144,6 @@ const stageItemProgram = Effect.fn("contentRelease.stageItemBatch")(function* (
   );
   return { batchIndex, created: values.length, releaseId, unchanged: 0 };
 });
-
 /** Stages one bounded ordered item batch through internal state. */
 export const stageItemBatch = internalMutation({
   args: {
@@ -159,7 +157,6 @@ export const stageItemBatch = internalMutation({
       stageItemProgram(ctx, args.releaseId, args.batchIndex, args.itemJson)
     ),
 });
-
 /** Stages one bounded material-projection batch through internal state. */
 export const stageProjectionBatch = internalMutation({
   args: {

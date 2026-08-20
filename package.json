@@ -13,7 +13,7 @@
     "analyze": "turbo run analyze",
     "boundaries": "turbo boundaries",
     "build": "pnpm check:patches && pnpm check:tests && turbo run build",
-    "bump-deps": "pnpm dlx npm-check-updates --workspaces --root -u -x pnpm,better-auth,@types/node,@biomejs/biome,typescript && turbo run bump-deps --filter=cas",
+    "bump-deps": "node scripts/bump-deps.mjs && turbo run bump-deps --filter=cas",
     "bump-ui": "pnpm dlx shadcn@latest add --all --overwrite -c packages/design-system",
     "changeset": "changeset",
     "check:patches": "node scripts/check-patches.mjs",
@@ -32,9 +32,10 @@
     "format": "ultracite fix && turbo run format --filter=cas",
     "format:doctor": "ultracite doctor",
     "lint": "pnpm effect:source:check && pnpm check:patches && pnpm check:tests && ultracite check && turbo run lint --filter=cas",
+    "prepare": "effect-tsgo patch --typescript-package @typescript/native",
     "security:audit": "pnpm audit --audit-level=low",
     "start": "turbo run start",
-    "test": "pnpm check:patches && pnpm check:tests && turbo run test",
+    "test": "pnpm check:patches && pnpm check:tests && node --test scripts/dependency-policy.test.mjs && turbo run test",
     "test:coverage": "pnpm check:patches && pnpm check:tests && turbo run test:coverage",
     "test:ui": "turbo run test:ui",
     "test:watch": "turbo run test:watch",
@@ -42,32 +43,32 @@
     "version-packages": "changeset version"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.7",
-    "@changesets/changelog-github": "^0.7.0",
-    "@changesets/cli": "^2.31.1",
-    "@effect/language-service": "^0.87.2",
-    "@effect/platform": "0.97.1",
-    "@effect/platform-node": "0.108.1",
+    "@biomejs/biome": "2.5.9",
+    "@changesets/changelog-github": "^1.0.0",
+    "@changesets/cli": "^3.0.1",
+    "@effect/platform-node": "catalog:",
+    "@effect/tsgo": "0.36.5",
     "@repo/typescript-config": "workspace:*",
-    "@turbo/gen": "^2.10.9",
-    "@types/node": "^24.13.3",
-    "@typescript/native": "npm:typescript@^7.0.2",
-    "@vercel/config": "^0.5.6",
-    "afdocs": "0.18.7",
+    "@turbo/gen": "2.10.11",
+    "@types/node": "24.13.3",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "@vercel/config": "^0.6.1",
+    "afdocs": "0.19.0",
     "depcheck": "^1.4.7",
     "effect": "catalog:",
-    "turbo": "^2.10.9",
-    "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "ultracite": "^7.10.1"
+    "turbo": "2.10.11",
+    "typescript": "catalog:",
+    "ultracite": "7.10.5",
+    "yaml": "2.9.0"
   },
-  "packageManager": "pnpm@10.34.1",
+  "packageManager": "pnpm@11.22.0",
   "engines": {
-    "node": "^24.0.0"
+    "node": ">=24.0.0 <25.0.0"
   },
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": "^24.0.0",
+      "version": "24.19.0",
       "onFail": "download"
     }
   }

@@ -8,10 +8,9 @@ import type { MyUIMessage } from "@repo/ai/types/message";
 import type { NakafaAgentSearchInput } from "@repo/contents/_lib/agent/schema/search";
 import type { Locale } from "@repo/contents/_types/content";
 import type { UIMessageStreamWriter } from "ai";
-import { Effect, Either } from "effect";
+import { Effect, Result } from "effect";
 
 type Writer = Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
-
 /** Searches Nakafa content and writes a bounded `data-nakafa` UI part. */
 export const search = Effect.fn("nakafa.search")(function* ({
   input,
@@ -26,7 +25,6 @@ export const search = Effect.fn("nakafa.search")(function* ({
 }) {
   const dataInput = getSearchInput(input, locale);
   const partId = getNakafaSearchPartId(toolCallId);
-
   yield* Effect.sync(() =>
     writer.write({
       id: partId,
@@ -38,9 +36,8 @@ export const search = Effect.fn("nakafa.search")(function* ({
       },
     })
   );
-
   const nakafaSearch = yield* NakafaSearch;
-  const result = yield* Effect.either(
+  const result = yield* Effect.result(
     nakafaSearch
       .search(dataInput)
       .pipe(
@@ -52,8 +49,7 @@ export const search = Effect.fn("nakafa.search")(function* ({
         )
       )
   );
-
-  if (Either.isLeft(result)) {
+  if (Result.isFailure(result)) {
     yield* Effect.sync(() =>
       writer.write({
         id: partId,
@@ -62,17 +58,15 @@ export const search = Effect.fn("nakafa.search")(function* ({
           kind: "search",
           input: dataInput,
           status: "error",
-          error: result.left.message,
+          error: result.failure.message,
         },
       })
     );
-
     return {
       result: null,
-      text: result.left.message,
+      text: result.failure.message,
     };
   }
-
   yield* Effect.sync(() =>
     writer.write({
       id: partId,
@@ -81,17 +75,15 @@ export const search = Effect.fn("nakafa.search")(function* ({
         kind: "search",
         input: dataInput,
         status: "done",
-        result: result.right,
+        result: result.success,
       },
     })
   );
-
   return {
-    result: result.right,
-    text: formatSearchGroup(dataInput, result.right),
+    result: result.success,
+    text: formatSearchGroup(dataInput, result.success),
   };
 });
-
 /** Applies server-owned locale before calling the Convex-backed search adapter. */
 function getSearchInput(input: NakafaAgentSearchInput, locale: Locale) {
   return {
@@ -102,7 +94,6 @@ function getSearchInput(input: NakafaAgentSearchInput, locale: Locale) {
     ...(input.section === undefined ? {} : { section: input.section }),
   };
 }
-
 /** Derives the stable UI data-part id for one Nakafa search request. */
 function getNakafaSearchPartId(toolCallId: string) {
   return `${toolCallId}-1`;

@@ -52,10 +52,9 @@ const COMPLETED_PROOF_WORKFLOW_STATUS = {
 } satisfies WorkflowStatus;
 const completedProofCoordinator = {
   cleanup: () => Effect.succeed(true),
-  start: () => Effect.dieMessage("Unexpected proof coordinator start."),
+  start: () => Effect.die(new Error("Unexpected proof coordinator start.")),
   status: () => Effect.succeed(COMPLETED_PROOF_WORKFLOW_STATUS),
 } satisfies ProofPollCoordinatorService;
-
 /** Selects one complete family-owned upsert fixture without parallel helpers. */
 function upsertFixture(family: ContentFamily) {
   if (family === "article") {
@@ -84,7 +83,6 @@ function upsertFixture(family: ContentFamily) {
     routeJson: testRouteJson(),
   };
 }
-
 /** Stages one complete technical upsert through every real mutation. */
 export async function stageUpsertFixture(
   t: TestConvex<typeof schema>,
@@ -113,7 +111,6 @@ export async function stageUpsertFixture(
     routeJson: [fixture.routeJson],
   });
 }
-
 /** Stages one complete delete plus its required route tombstone. */
 export async function stageDeleteFixture(
   t: TestConvex<typeof schema>,
@@ -167,14 +164,12 @@ export async function stageDeleteFixture(
     routeJson: [testRouteJson({ operation: "delete", publicPath })],
   });
 }
-
 /** Freezes one fully staged fixture before item verification. */
 export function beginFixture(t: TestConvex<typeof schema>) {
   return t.mutation((ctx) =>
     runConvexProgram(beginVerification(ctx, TEST_RELEASE_ID))
   );
 }
-
 /** Freezes one release with validator-derived test coordinator identity. */
 export async function prepareContentProof(
   target: TestConvex<typeof schema>,
@@ -194,7 +189,6 @@ export async function prepareContentProof(
     });
   });
 }
-
 /** Recomputes proof with the production verifier and technical test key. */
 export async function recomputeContentProof(
   target: TestConvex<typeof schema>,
@@ -229,7 +223,6 @@ export async function recomputeContentProof(
     )
   );
 }
-
 /** Finalizes recomputed proof when a test owns no Workflow component state. */
 export async function completeContentProof(
   target: TestConvex<typeof schema>,

@@ -32,7 +32,7 @@ function createPreparationOperations(
     cancelPreparation: vi.fn(
       async () => accountDeletionCancellationOutcome.complete
     ),
-    clearAttempt: vi.fn(() => Effect.void),
+    clearAttempt: Effect.void,
     persist: vi.fn(() => Effect.void),
     prepare: vi.fn(async () => accountDeletionPreparationOutcome.ready),
     ...overrides,
@@ -142,10 +142,10 @@ describe("account deletion preparation", () => {
     const cancelPreparation = vi.fn(
       async () => accountDeletionCancellationOutcome.complete
     );
-    const clearAttempt = vi.fn(() => Effect.void);
+    const clearAttempt = vi.fn();
     const failure = await runPreparationFailure({
       cancelPreparation,
-      clearAttempt,
+      clearAttempt: Effect.sync(clearAttempt),
       prepare: vi.fn(
         async () => accountDeletionPreparationOutcome.schoolSuccessorRequired
       ),
@@ -160,10 +160,10 @@ describe("account deletion preparation", () => {
     const cancelPreparation = vi.fn(
       async () => accountDeletionCancellationOutcome.complete
     );
-    const clearAttempt = vi.fn(() => Effect.void);
+    const clearAttempt = vi.fn();
     const failure = await runPreparationFailure({
       cancelPreparation,
-      clearAttempt,
+      clearAttempt: Effect.sync(clearAttempt),
       prepare: vi.fn(
         async () => accountDeletionPreparationOutcome.temporarilyUnavailable
       ),
@@ -176,12 +176,11 @@ describe("account deletion preparation", () => {
 
   it("fails closed when a canceled browser capability cannot be removed", async () => {
     const failure = await runPreparationFailure({
-      clearAttempt: () =>
-        Effect.fail(
-          new AccountDeletionAttemptStorageFailed({
-            code: STORAGE_FAILED_CODE,
-          })
-        ),
+      clearAttempt: Effect.fail(
+        new AccountDeletionAttemptStorageFailed({
+          code: STORAGE_FAILED_CODE,
+        })
+      ),
       prepare: vi.fn(
         async () => accountDeletionPreparationOutcome.temporarilyUnavailable
       ),

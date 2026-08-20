@@ -20,7 +20,6 @@ import {
   verifyTryoutPlacement,
 } from "@repo/backend/convex/contentRelease/tryout/verify";
 import { Effect, Schema } from "effect";
-
 /** Stable authored keys that select one localized try-out section. */
 export interface TryoutSectionIdentity {
   readonly countryKey: TryoutSection["countryKey"];
@@ -30,13 +29,11 @@ export interface TryoutSectionIdentity {
   readonly setKey: TryoutSection["setKey"];
   readonly trackKey: TryoutSection["trackKey"];
 }
-
 /** Reads one verified server-only section and all signed placements. */
 export const readTryoutSection = Effect.fn("contentRelease.readTryoutSection")(
   function* (ctx: QueryCtx, identity: TryoutSectionIdentity) {
     const owner = yield* loadTryoutOwner(ctx);
     const { snapshotId } = owner;
-
     const catalogIdentity = tryoutCatalogNodeIdentity({
       appLocale: AppLocaleSchema.make(identity.locale),
       countryKey: identity.countryKey,
@@ -60,11 +57,9 @@ export const readTryoutSection = Effect.fn("contentRelease.readTryoutSection")(
         `Try-out section ${catalogIdentity} is unavailable.`
       );
     }
-
     return yield* readTryoutSectionRows(ctx, snapshotId, storedSection);
   }
 );
-
 /** Reads one already-selected signed section without repeating owner reads. */
 export const readTryoutSectionRows = Effect.fn(
   "contentRelease.readTryoutSectionRows"
@@ -75,7 +70,7 @@ export const readTryoutSectionRows = Effect.fn(
 ) {
   const catalogIdentity = storedSection.identity;
   const catalogRow = yield* verifyTryoutCatalog(storedSection, snapshotId);
-  const section = yield* Schema.decodeUnknown(TryoutSectionSchema)(
+  const section = yield* Schema.decodeUnknownEffect(TryoutSectionSchema)(
     catalogRow
   ).pipe(
     Effect.mapError(
@@ -92,7 +87,6 @@ export const readTryoutSectionRows = Effect.fn(
       `Try-out section ${catalogIdentity} exceeds ${TRYOUT_SECTION_LIMIT} placements.`
     );
   }
-
   const storedPlacements = yield* Effect.promise(() =>
     ctx.db
       .query("tryoutPlacements")
@@ -116,7 +110,6 @@ export const readTryoutSectionRows = Effect.fn(
       `Try-out section ${catalogIdentity} lost its signed placements.`
     );
   }
-
   const placements = yield* Effect.forEach(storedPlacements, (placement) =>
     verifyTryoutPlacement(placement, snapshotId).pipe(
       Effect.map((row) => ({ row, rowHash: placement.rowHash }))
@@ -131,7 +124,6 @@ export const readTryoutSectionRows = Effect.fn(
       `Try-out section ${catalogIdentity} changed its placement order.`
     );
   }
-
   return {
     placements,
     section: { row: section, rowHash: storedSection.rowHash },

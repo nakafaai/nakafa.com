@@ -1,70 +1,66 @@
+import { describe, expect, it } from "@repo/testing/effect";
 import {
   parseContentLength,
   readBoundedBody,
   readBoundedBodyResult,
 } from "@repo/utilities/body";
-import { Effect, Either, Fiber } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { Effect, Fiber, Result } from "effect";
+import { vi } from "vitest";
 
-/** Runs one bounded body read at the test boundary. */
+/** Builds one bounded body read for the Effect test runtime. */
 function read(body: ReadableStream<Uint8Array> | null, maxBytes = 8) {
-  return Effect.runPromise(readBoundedBody(body, maxBytes));
+  return readBoundedBody(body, maxBytes);
 }
-
-/** Returns one typed body failure at the test boundary. */
+/** Returns one typed body failure in the Effect test runtime. */
 function reject(body: ReadableStream<Uint8Array> | null, maxBytes = 8) {
-  return Effect.runPromise(readBoundedBody(body, maxBytes).pipe(Effect.flip));
+  return readBoundedBody(body, maxBytes).pipe(Effect.flip);
 }
-
 describe("bounded response body", () => {
-  it.each([
-    [null, null],
-    ["0", 0],
-    ["0008", 8],
-    ["8", 8],
-  ] as const)(
-    "parses the optional Content-Length %s",
-    async (value, expected) => {
-      await expect(
-        Effect.runPromise(parseContentLength(value, 8))
-      ).resolves.toBe(expected);
-    }
+  it.effect.each([
+    { expected: null, value: null },
+    { expected: 0, value: "0" },
+    { expected: 8, value: "0008" },
+    { expected: 8, value: "8" },
+  ] as const)("parses the optional Content-Length %s", ({ expected, value }) =>
+    Effect.gen(function* () {
+      expect(yield* parseContentLength(value, 8)).toBe(expected);
+    })
   );
-
-  it.each(["", " 1", "-1", "+1", "1.0", "1, 1", "9".repeat(400)])(
+  it.effect.each(["", " 1", "-1", "+1", "1.0", "1, 1", "9".repeat(400)])(
     "rejects the malformed Content-Length %s",
-    async (value) => {
-      await expect(
-        Effect.runPromise(parseContentLength(value, 8).pipe(Effect.either))
-      ).resolves.toEqual(
-        Either.left({ _tag: "BodyLengthError", reason: "invalid" })
-      );
-    }
+    (value) =>
+      Effect.gen(function* () {
+        expect(
+          yield* parseContentLength(value, 8).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "BodyLengthError",
+          reason: "invalid",
+        });
+      })
   );
-
-  it("rejects a declared Content-Length above its caller ceiling", async () => {
-    await expect(
-      Effect.runPromise(parseContentLength("9", 8).pipe(Effect.either))
-    ).resolves.toEqual(
-      Either.left({ _tag: "BodyLengthError", reason: "limit" })
-    );
-  });
-
-  it("concatenates ordered chunks without exceeding the ceiling", async () => {
-    const stream = new ReadableStream<Uint8Array>({
-      /** Emits two chunks to prove stable byte ordering. */
-      start(controller) {
-        controller.enqueue(new TextEncoder().encode("ab"));
-        controller.enqueue(new TextEncoder().encode("cd"));
-        controller.close();
-      },
-    });
-
-    await expect(read(stream)).resolves.toEqual(
-      new TextEncoder().encode("abcd")
-    );
-  });
-
+  it.effect("rejects a declared Content-Length above its caller ceiling", () =>
+    Effect.gen(function* () {
+      expect(yield* parseContentLength("9", 8).pipe(Effect.flip)).toMatchObject(
+        {
+          _tag: "BodyLengthError",
+          reason: "limit",
+        }
+      );
+    })
+  );
+  it.effect("concatenates ordered chunks without exceeding the ceiling", () =>
+    Effect.gen(function* () {
+      const stream = new ReadableStream<Uint8Array>({
+        /** Emits two chunks to prove stable byte ordering. */
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode("ab"));
+          controller.enqueue(new TextEncoder().encode("cd"));
+          controller.close();
+        },
+      });
+      expect(yield* read(stream)).toEqual(new TextEncoder().encode("abcd"));
+    })
+  );
   it("exposes the same bounded result without starting a runtime", async () => {
     const stream = new ReadableStream<Uint8Array>({
       /** Emits one direct-boundary chunk. */
@@ -73,69 +69,80 @@ describe("bounded response body", () => {
         controller.close();
       },
     });
-
     await expect(readBoundedBodyResult(stream, 8)).resolves.toEqual(
-      Either.right(new TextEncoder().encode("direct"))
+      Result.succeed(new TextEncoder().encode("direct"))
     );
   });
-
-  it("rejects missing and unreadable bodies", async () => {
-    const locked = new ReadableStream<Uint8Array>();
-    locked.getReader();
-
-    await expect(reject(null)).resolves.toMatchObject({
-      _tag: "BodyMissingError",
-    });
-    await expect(reject(locked)).resolves.toMatchObject({
-      _tag: "BodyReadError",
-    });
-  });
-
-  it("maps stream failures to a typed read error", async () => {
-    const stream = new ReadableStream<Uint8Array>({
-      /** Fails before exposing response bytes. */
-      pull(controller) {
-        controller.error(new TypeError("private detail"));
-      },
-    });
-
-    await expect(reject(stream)).resolves.toMatchObject({
-      _tag: "BodyReadError",
-    });
-  });
-
-  it("cancels an unfinished reader when its Effect is interrupted", async () => {
-    const cancel = vi.fn();
-    const stream = new ReadableStream<Uint8Array>({ cancel });
-    const fiber = Effect.runFork(readBoundedBody(stream, 8));
-
-    await Effect.runPromise(Fiber.interrupt(fiber));
-
-    expect(cancel).toHaveBeenCalledOnce();
-  });
-
-  it.each([false, true])(
-    "cancels an oversized body even when cancellation rejects: %s",
-    async (rejectCancellation) => {
-      const cancel = vi.fn(() =>
-        rejectCancellation
-          ? Promise.reject(new TypeError("cancel failed"))
-          : Promise.resolve()
-      );
+  it.effect("rejects missing and unreadable bodies", () =>
+    Effect.gen(function* () {
+      const locked = new ReadableStream<Uint8Array>();
+      locked.getReader();
+      expect(yield* reject(null)).toMatchObject({
+        _tag: "BodyMissingError",
+      });
+      expect(yield* reject(locked)).toMatchObject({
+        _tag: "BodyReadError",
+      });
+    })
+  );
+  it.effect("maps stream failures to a typed read error", () =>
+    Effect.gen(function* () {
       const stream = new ReadableStream<Uint8Array>({
-        cancel,
-        /** Emits one oversized chunk before provider cancellation. */
+        /** Fails before exposing response bytes. */
         pull(controller) {
-          controller.enqueue(new TextEncoder().encode("oversized"));
+          controller.error(new TypeError("private detail"));
         },
       });
-
-      await expect(reject(stream, 4)).resolves.toMatchObject({
-        _tag: "BodyLimitError",
-        actualBytes: 9,
-        maxBytes: 4,
+      expect(yield* reject(stream)).toMatchObject({
+        _tag: "BodyReadError",
       });
+    })
+  );
+  it.effect("cancels an unfinished reader when its Effect is interrupted", () =>
+    Effect.gen(function* () {
+      let markCancelled: () => void = () => undefined;
+      const cancelled = new Promise<void>((resolve) => {
+        markCancelled = resolve;
+      });
+      const cancel = vi.fn(markCancelled);
+      let markPullStarted: () => void = () => undefined;
+      const pullStarted = new Promise<void>((resolve) => {
+        markPullStarted = resolve;
+      });
+      const stream = new ReadableStream<Uint8Array>({
+        cancel,
+        pull: markPullStarted,
+      });
+      const fiber = yield* Effect.forkChild(readBoundedBody(stream, 8));
+      yield* Effect.promise(() => pullStarted);
+      yield* Effect.yieldNow;
+      yield* Fiber.interrupt(fiber);
+      yield* Effect.promise(() => cancelled);
       expect(cancel).toHaveBeenCalledOnce();
-    }
+    })
+  );
+  it.effect.each([false, true])(
+    "cancels an oversized body even when cancellation rejects: %s",
+    (rejectCancellation) =>
+      Effect.gen(function* () {
+        const cancel = vi.fn(() =>
+          rejectCancellation
+            ? Promise.reject(new TypeError("cancel failed"))
+            : Promise.resolve()
+        );
+        const stream = new ReadableStream<Uint8Array>({
+          cancel,
+          /** Emits one oversized chunk before provider cancellation. */
+          pull(controller) {
+            controller.enqueue(new TextEncoder().encode("oversized"));
+          },
+        });
+        expect(yield* reject(stream, 4)).toMatchObject({
+          _tag: "BodyLimitError",
+          actualBytes: 9,
+          maxBytes: 4,
+        });
+        expect(cancel).toHaveBeenCalledOnce();
+      })
   );
 });

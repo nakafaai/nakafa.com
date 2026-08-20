@@ -1,5 +1,4 @@
 // @vitest-environment node
-
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
   encodeTestQuranRow,
@@ -17,7 +16,6 @@ import {
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
-
 vi.mock("@/lib/content/cache", () => ({
   applyPublishedSnapshotCache: cacheMock,
 }));
@@ -27,7 +25,6 @@ vi.mock("@/lib/content/runtime/query", async () => {
     readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
   };
 });
-
 const source = {
   activeManifestHash: `sha256:${"a".repeat(64)}`,
   activeReleaseId: "quran-release",
@@ -35,28 +32,23 @@ const source = {
   snapshotId: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
   sourceRevision: "c".repeat(40),
 };
-
 beforeEach(() => {
   cacheMock.mockReset();
   runtimeQueryMock.mockReset();
 });
-
 describe("published Quran content", () => {
   it("reads the active identity through the one-row attribution query", async () => {
     runtimeQueryMock.mockResolvedValue({
       ...source,
       rowJson: "attribution-row",
     });
-
     await expect(
       Effect.runPromise(readPublishedQuranIdentity())
     ).resolves.toMatchObject({ snapshotId: source.snapshotId });
     expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {});
   });
-
   it("reads and caches the signed catalog through the Effect boundary", async () => {
     runtimeQueryMock.mockResolvedValue(catalogResult());
-
     await expect(
       Effect.runPromise(readPublishedQuranCatalog())
     ).resolves.toMatchObject({ surahs: expect.any(Array) });
@@ -66,11 +58,9 @@ describe("published Quran content", () => {
     expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {});
     expect(cacheMock).toHaveBeenCalledWith(source.snapshotId);
   });
-
   it("reads the locale-specific signed markdown through the Effect boundary", async () => {
     const result = markdownResult();
     runtimeQueryMock.mockResolvedValue(result);
-
     await expect(
       Effect.runPromise(readPublishedQuranMarkdown("id", 1, 80))
     ).resolves.toMatchObject({
@@ -83,10 +73,8 @@ describe("published Quran content", () => {
       verseLimit: 80,
     });
   });
-
   it("reads the complete signed markdown when no verse limit is requested", async () => {
     runtimeQueryMock.mockResolvedValue(markdownResult());
-
     await expect(
       Effect.runPromise(readPublishedQuranMarkdown("id", 1))
     ).resolves.toMatchObject({
@@ -98,24 +86,20 @@ describe("published Quran content", () => {
       surahNumber: 1,
     });
   });
-
   it("keeps a failed Quran query in the Effect error channel", async () => {
     runtimeQueryMock.mockRejectedValueOnce(new Error("Quran unavailable"));
-
     await expect(
-      Effect.runPromise(Effect.either(readPublishedQuranCatalog()))
+      Effect.runPromise(Effect.result(readPublishedQuranCatalog()))
     ).resolves.toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         _tag: "TestRuntimeQueryError",
         message: "Error: Quran unavailable",
       },
     });
   });
-
   it("caches the locale-specific Quran web projection", async () => {
     runtimeQueryMock.mockResolvedValue(viewResult());
-
     await expect(getPublishedQuranView("id", 1)).resolves.toMatchObject({
       appLocale: "id",
       surah: { number: 1 },
@@ -132,7 +116,6 @@ describe("published Quran content", () => {
     expect(cacheMock).toHaveBeenCalledWith(source.snapshotId);
   });
 });
-
 /** Builds the complete signed metadata catalog response. */
 function catalogResult() {
   return {
@@ -142,7 +125,6 @@ function catalogResult() {
     ),
   };
 }
-
 /** Builds one narrow locale-specific Quran web response. */
 function viewResult() {
   return {
@@ -174,7 +156,6 @@ function viewResult() {
     ],
   };
 }
-
 /** Builds one locale-specific signed Quran markdown response. */
 function markdownResult() {
   return {

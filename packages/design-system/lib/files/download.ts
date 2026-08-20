@@ -1,17 +1,14 @@
-import { Effect, Either, Schema } from "effect";
-
+import { Effect, Result, Schema } from "effect";
 /** Runtime contract for one browser file download. */
 export const FileDownloadRequest = Schema.Struct({
-  content: Schema.Union(Schema.String, Schema.instanceOf(Blob)),
+  content: Schema.Union([Schema.String, Schema.instanceOf(Blob)]),
   filename: Schema.String,
   mimeType: Schema.String,
 });
-
 /** Schema-derived input accepted by the browser download program. */
 export type FileDownloadRequest = Schema.Schema.Type<
   typeof FileDownloadRequest
 >;
-
 /** Expected browser failure while preparing, activating, or cleaning a download. */
 export class BrowserFileDownloadError extends Schema.TaggedError<BrowserFileDownloadError>()(
   "BrowserFileDownloadError",
@@ -21,7 +18,6 @@ export class BrowserFileDownloadError extends Schema.TaggedError<BrowserFileDown
     message: Schema.String,
   }
 ) {}
-
 function downloadError(filename: string, cause: unknown) {
   return new BrowserFileDownloadError({
     cause,
@@ -29,7 +25,6 @@ function downloadError(filename: string, cause: unknown) {
     message: `Failed to download ${filename}.`,
   });
 }
-
 /** Downloads one file and guarantees removal of its temporary browser resources. */
 export const downloadFile = Effect.fn("designSystem.files.download")(
   function* ({ content, filename, mimeType }: FileDownloadRequest) {
@@ -40,17 +35,14 @@ export const downloadFile = Effect.fn("designSystem.files.download")(
           typeof content === "string"
             ? new Blob([content], { type: mimeType })
             : content;
-
         return { anchor, objectUrl: URL.createObjectURL(blob) };
       },
       catch: (cause) => downloadError(filename, cause),
-    }).pipe(Effect.either);
-
-    if (Either.isLeft(preparation)) {
-      return yield* preparation.left;
+    }).pipe(Effect.result);
+    if (Result.isFailure(preparation)) {
+      return yield* preparation.failure;
     }
-
-    const { anchor, objectUrl } = preparation.right;
+    const { anchor, objectUrl } = preparation.success;
     const failures: BrowserFileDownloadError[] = [];
     const attachment = yield* Effect.try({
       try: () => {
@@ -59,35 +51,31 @@ export const downloadFile = Effect.fn("designSystem.files.download")(
         document.body.append(anchor);
       },
       catch: (cause) => downloadError(filename, cause),
-    }).pipe(Effect.either);
-
-    if (Either.isLeft(attachment)) {
-      failures.push(attachment.left);
+    }).pipe(Effect.result);
+    if (Result.isFailure(attachment)) {
+      failures.push(attachment.failure);
     } else {
       const activation = yield* Effect.try({
         try: () => anchor.click(),
         catch: (cause) => downloadError(filename, cause),
-      }).pipe(Effect.either);
-
-      if (Either.isLeft(activation)) {
-        failures.push(activation.left);
+      }).pipe(Effect.result);
+      if (Result.isFailure(activation)) {
+        failures.push(activation.failure);
       }
     }
-
     const anchorCleanup = yield* Effect.try({
       try: () => anchor.remove(),
       catch: (cause) => downloadError(filename, cause),
-    }).pipe(Effect.either);
+    }).pipe(Effect.result);
     const objectUrlCleanup = yield* Effect.try({
       try: () => URL.revokeObjectURL(objectUrl),
       catch: (cause) => downloadError(filename, cause),
-    }).pipe(Effect.either);
-
-    if (Either.isLeft(anchorCleanup)) {
-      failures.push(anchorCleanup.left);
+    }).pipe(Effect.result);
+    if (Result.isFailure(anchorCleanup)) {
+      failures.push(anchorCleanup.failure);
     }
-    if (Either.isLeft(objectUrlCleanup)) {
-      failures.push(objectUrlCleanup.left);
+    if (Result.isFailure(objectUrlCleanup)) {
+      failures.push(objectUrlCleanup.failure);
     }
     const firstFailure = failures[0];
     if (firstFailure) {

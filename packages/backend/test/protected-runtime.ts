@@ -33,7 +33,7 @@ function protectedSelector(
   delivery: "authenticated" | "entitled"
 ) {
   const question = delivery === "authenticated";
-  return Schema.decodeUnknownSync(ProtectedContentRuntimeSelectorSchema)({
+  return Schema.decodeSync(ProtectedContentRuntimeSelectorSchema)({
     artifactHash: question
       ? placement.questionArtifactHash
       : placement.answerArtifactHash,
@@ -127,9 +127,7 @@ export async function insertProtectedRuntime(
   );
   const question = protectedSelector(enPlacement, "authenticated");
   const answer = protectedSelector(enPlacement, "entitled");
-  const request = Schema.decodeUnknownSync(
-    ProtectedContentRuntimeRequestSchema
-  )({
+  const request = Schema.decodeSync(ProtectedContentRuntimeRequestSchema)({
     appLocale: enPlacement.appLocale,
     selectors: [question, answer],
     snapshotReleaseId: signedRelease.manifest.releaseId,

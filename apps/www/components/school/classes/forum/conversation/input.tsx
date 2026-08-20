@@ -1,4 +1,3 @@
-import { FetchHttpClient } from "@effect/platform";
 import { ArrowUp01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure, useOs, useResizeObserver } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog";
@@ -19,6 +18,7 @@ import { cn } from "@repo/design-system/lib/utils";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "convex/react";
 import { Effect, Schema } from "effect";
+import { FetchHttpClient } from "effect/unstable/http";
 import { useTranslations } from "next-intl";
 import { Activity, type ComponentRef, useEffect, useRef } from "react";
 import { toast } from "sonner";
@@ -43,7 +43,6 @@ interface ForumPostFailureReport {
   draft?: ForumPostInputDraft;
   error: unknown;
 }
-
 /** Handles forum post submission, uploads, and reply cleanup for the transcript. */
 export function ForumPostInput() {
   const t = useTranslations("School.Classes");
@@ -83,17 +82,15 @@ export function ForumPostInput() {
   const [isEmojiPickerOpen, emojiPicker] = useDisclosure(false);
   const os = useOs();
   const isMobile = os === "ios" || os === "android";
-
   useEffect(() => {
     if (replyTarget) {
       textareaRef.current?.focus();
     }
   }, [replyTarget]);
-
   const form = useForm({
     defaultValues: { body: "" },
     validators: {
-      onSubmit: Schema.standardSchemaV1(
+      onSubmit: Schema.toStandardSchemaV1(
         Schema.Struct({
           body: Schema.String,
         })
@@ -103,7 +100,6 @@ export function ForumPostInput() {
       const hasBody = value.body.trim().length > 0;
       const hasAttachments = files.length > 0;
       const isTextOnlyPost = !hasAttachments;
-
       if (!(hasBody || hasAttachments)) {
         return;
       }
@@ -111,7 +107,6 @@ export function ForumPostInput() {
         body: value.body,
         replyTarget,
       } satisfies ForumPostInputDraft;
-
       /** Reports a failed submit without hiding already optimistic local feedback. */
       const reportSubmitFailure = ({ draft, error }: ForumPostFailureReport) =>
         Effect.all(
@@ -146,14 +141,12 @@ export function ForumPostInput() {
           ],
           { discard: true }
         );
-
       /** Clears the composer while the optimistic row covers local feedback. */
       const clearSubmittedDraft = () =>
         Effect.sync(() => {
           form.reset();
           clearFiles();
           setForumReplyTarget(forumId, null);
-
           requestAnimationFrame(() => {
             textareaRef.current?.focus();
           });
@@ -162,7 +155,6 @@ export function ForumPostInput() {
       const placeConfirmedPost = () =>
         Effect.sync(() => {
           acknowledgeUnreadCue();
-
           requestAnimationFrame(() => {
             textareaRef.current?.focus();
             goToLatest();
@@ -170,8 +162,7 @@ export function ForumPostInput() {
         });
       /** Clears the composer and keeps confirmed attachment posts visible. */
       const completeSubmit = () =>
-        clearSubmittedDraft().pipe(Effect.zipRight(placeConfirmedPost()));
-
+        clearSubmittedDraft().pipe(Effect.andThen(placeConfirmedPost()));
       const submitPost = submitForumPost({
         files,
         mutations: {
@@ -186,10 +177,8 @@ export function ForumPostInput() {
           parentId: replyTarget?.postId,
         },
       }).pipe(Effect.provide(FetchHttpClient.layer));
-
       if (isTextOnlyPost) {
         Effect.runSync(clearSubmittedDraft());
-
         return Effect.runPromise(
           submitPost.pipe(
             Effect.matchEffect({
@@ -199,7 +188,6 @@ export function ForumPostInput() {
           )
         );
       }
-
       return Effect.runPromise(
         submitPost.pipe(
           Effect.matchEffect({
@@ -210,7 +198,6 @@ export function ForumPostInput() {
       );
     },
   });
-
   return (
     <form
       action={() => form.handleSubmit()}
@@ -250,7 +237,6 @@ export function ForumPostInput() {
             {({ isSubmitting, body }) => {
               const canSubmit = body.trim().length > 0 || files.length > 0;
               const submitDisabled = isSubmitting || !canSubmit;
-
               return (
                 <InputGroup
                   className={cn(
@@ -278,13 +264,10 @@ export function ForumPostInput() {
                       if (event.nativeEvent.isComposing) {
                         return;
                       }
-
                       if (event.key !== "Enter" || event.shiftKey) {
                         return;
                       }
-
                       event.preventDefault();
-
                       if (!submitDisabled) {
                         form.handleSubmit();
                       }
@@ -310,7 +293,6 @@ export function ForumPostInput() {
                           emojiPicker.open();
                           return;
                         }
-
                         emojiPicker.close();
                       }}
                     />

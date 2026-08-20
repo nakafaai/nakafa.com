@@ -41,9 +41,7 @@ const contentViewTargetValidator = v.object({
   sourcePath: v.string(),
   title: v.string(),
 });
-
 type StoredContentViewTarget = Infer<typeof contentViewTargetValidator>;
-
 /** Current verified route facts used by views, recents, and popularity. */
 export type ContentViewTarget = Omit<
   StoredContentViewTarget,
@@ -51,33 +49,25 @@ export type ContentViewTarget = Omit<
 > & {
   readonly materialDomain?: MaterialDomain;
 };
-
 /** Exact browser route and stable identity required for a new view write. */
 export type IncomingContentViewTargetInput = Pick<
   RecordContentViewArgs,
   "contentId" | "locale" | "publicPath" | "section"
 >;
-
 /** Durable identity required to hydrate current navigation facts. */
 export type DurableContentViewTargetInput = Pick<
   RecordContentViewArgs,
   "contentId" | "locale" | "section"
 >;
-
 /** Reads the Aksara-owned domain from one authenticated material key. */
 export const decodeMaterialDomain = Effect.fn(
   "contents.views.decodeMaterialDomain"
 )(function* (materialKeyInput: unknown) {
-  const materialKey = yield* Schema.decodeUnknown(MaterialKeySchema)(
-    materialKeyInput
-  ).pipe(Effect.mapError(toContentViewIoError));
+  const materialKey =
+    yield* Schema.decodeUnknownEffect(MaterialKeySchema)(materialKeyInput);
   const [, materialDomainInput] = materialKey.split(".");
-
-  return yield* Schema.decodeUnknown(MaterialDomainSchema)(
-    materialDomainInput
-  ).pipe(Effect.mapError(toContentViewIoError));
-});
-
+  return yield* Schema.decodeEffect(MaterialDomainSchema)(materialDomainInput);
+}, Effect.mapError(toContentViewIoError));
 /** Projects one authenticated article into durable engagement facts. */
 function toArticleTarget(
   projection: ArticleProjection,
@@ -97,7 +87,6 @@ function toArticleTarget(
     title: projection.metadata.title,
   };
 }
-
 /** Projects one authenticated material into durable engagement facts. */
 const toMaterialTarget = Effect.fn("contents.views.toMaterialTarget")(
   function* (
@@ -123,7 +112,6 @@ const toMaterialTarget = Effect.fn("contents.views.toMaterialTarget")(
     } satisfies ContentViewTarget;
   }
 );
-
 /** Validates one new material view against its exact signed public route. */
 const validateIncomingMaterialTarget = Effect.fn(
   "contents.views.validateIncomingMaterialTarget"
@@ -150,7 +138,6 @@ const validateIncomingMaterialTarget = Effect.fn(
   }
   return yield* toMaterialTarget(projection, input.locale, row.sourcePath);
 });
-
 /** Validates one new article view against its exact signed public route. */
 const validateIncomingArticleTarget = Effect.fn(
   "contents.views.validateIncomingArticleTarget"
@@ -199,7 +186,6 @@ const validateIncomingArticleTarget = Effect.fn(
   }
   return toArticleTarget(projection, input.locale, resolved.sourcePath);
 });
-
 /** Resolves one material by its durable signed asset identity. */
 const hydrateMaterialTarget = Effect.fn("contents.views.hydrateMaterialTarget")(
   function* (ctx: QueryCtx, input: DurableContentViewTargetInput) {
@@ -239,7 +225,6 @@ const hydrateMaterialTarget = Effect.fn("contents.views.hydrateMaterialTarget")(
     );
   }
 );
-
 /** Resolves one article by its durable signed asset identity. */
 const hydrateArticleTarget = Effect.fn("contents.views.hydrateArticleTarget")(
   function* (ctx: QueryCtx, input: DurableContentViewTargetInput) {
@@ -275,7 +260,6 @@ const hydrateArticleTarget = Effect.fn("contents.views.hydrateArticleTarget")(
     return toArticleTarget(projection, input.locale, resolved.sourcePath);
   }
 );
-
 /** Validates a new content view against both its ID and current public path. */
 export const validateIncomingContentTarget = Effect.fn(
   "contents.views.validateIncomingContentTarget"
@@ -285,7 +269,6 @@ export const validateIncomingContentTarget = Effect.fn(
   }
   return yield* validateIncomingArticleTarget(ctx, input);
 });
-
 /** Hydrates current route facts from one durable signed asset identity. */
 export const hydrateDurableContentTarget = Effect.fn(
   "contents.views.hydrateDurableContentTarget"

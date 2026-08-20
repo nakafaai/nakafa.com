@@ -4,9 +4,10 @@ import {
   runConvexActionProgram,
   runConvexProgram,
 } from "@repo/backend/convex/lib/effect";
+import { describe, expect, it } from "@repo/testing/effect";
 import { ConvexError } from "convex/values";
 import { Clock, Effect, Schema } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const boundaryFailureCode = "BOUNDARY_FAILURE";
 
@@ -46,10 +47,10 @@ describe("lib/effect", () => {
     );
     await expect(
       runConvexProgram(
-        Effect.clockWith((clock) =>
+        Clock.clockWith((clock) =>
           Effect.sync(() => [
-            clock.unsafeCurrentTimeMillis(),
-            clock.unsafeCurrentTimeNanos(),
+            clock.currentTimeMillisUnsafe(),
+            clock.currentTimeNanosUnsafe(),
           ])
         )
       )

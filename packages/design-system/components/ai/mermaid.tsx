@@ -1,5 +1,4 @@
 "use client";
-
 import { captureException } from "@repo/analytics/posthog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
@@ -11,8 +10,7 @@ import { useEffect, useId, useRef, useState } from "react";
 
 const HASH_SEED = 0;
 const SHIFT_5 = 5;
-const MermaidOperationSchema = Schema.Literal("initialize", "render");
-
+const MermaidOperationSchema = Schema.Literals(["initialize", "render"]);
 /** Expected client failure while loading, configuring, or rendering Mermaid. */
 class MermaidRenderError extends Schema.TaggedError<MermaidRenderError>()(
   "MermaidRenderError",
@@ -21,7 +19,6 @@ class MermaidRenderError extends Schema.TaggedError<MermaidRenderError>()(
     operation: MermaidOperationSchema,
   }
 ) {}
-
 /**
  * Loads Mermaid on the client and applies the site defaults before rendering.
  */
@@ -34,7 +31,6 @@ const initializeMermaid = Effect.fn("designSystem.mermaid.initialize")(
       fontFamily: "inherit",
       suppressErrorRendering: true,
     } satisfies MermaidConfig;
-
     const config = { ...defaultConfig, ...customConfig };
     const mermaidModule = yield* Effect.tryPromise({
       try: () => import("mermaid"),
@@ -42,17 +38,14 @@ const initializeMermaid = Effect.fn("designSystem.mermaid.initialize")(
         new MermaidRenderError({ cause, operation: "initialize" }),
     });
     const mermaid = mermaidModule.default;
-
     yield* Effect.try({
       try: () => mermaid.initialize(config),
       catch: (cause) =>
         new MermaidRenderError({ cause, operation: "initialize" }),
     });
-
     return mermaid;
   }
 );
-
 /** Renders one Mermaid chart through the typed client boundary. */
 const renderMermaid = Effect.fn("designSystem.mermaid.render")(function* (
   renderId: string,
@@ -60,39 +53,32 @@ const renderMermaid = Effect.fn("designSystem.mermaid.render")(function* (
   config: MermaidConfig
 ) {
   const mermaid = yield* initializeMermaid(config);
-
   return yield* Effect.tryPromise({
     try: () => mermaid.render(renderId, chart),
     catch: (cause) => new MermaidRenderError({ cause, operation: "render" }),
   });
 });
-
 /** Creates a stable Mermaid DOM id for one component instance and chart body. */
 function getMermaidRenderId(componentId: string, chart: string) {
   const chartHash = chart.split("").reduce((acc, char) => {
     // biome-ignore lint/suspicious/noBitwiseOperators: Mermaid render ids only need a compact deterministic hash.
     return ((acc << SHIFT_5) - acc + char.charCodeAt(0)) | HASH_SEED;
   }, HASH_SEED);
-
   return `mermaid-${componentId.replaceAll(":", "")}-${Math.abs(chartHash).toString(36)}`;
 }
-
 /** Converts unknown Mermaid renderer failures into a user-visible message. */
 function getMermaidRenderErrorMessage(error: unknown) {
   if (error instanceof Error) {
     return error.message;
   }
-
   return "Failed to render Mermaid chart";
 }
-
 interface MermaidProps {
   chart: string;
   className?: string;
   config?: MermaidConfig;
   label: string;
 }
-
 /**
  * Renders Mermaid chart markup with a cached last-good SVG fallback.
  */
@@ -110,7 +96,6 @@ export function Mermaid({ chart, className, config, label }: MermaidProps) {
     svg: "",
   });
   const lastValidSvg = useRef("");
-
   useEffect(() => {
     const renderFiber = Effect.runFork(
       renderMermaid(renderId, chart, { ...config, theme }).pipe(
@@ -118,13 +103,11 @@ export function Mermaid({ chart, className, config, label }: MermaidProps) {
           onFailure: (error) =>
             Effect.sync(() => {
               const svg = lastValidSvg.current;
-
               captureException(error.cause, {
                 has_cached_svg: !!svg,
                 operation: error.operation,
                 source: "mermaid-render",
               });
-
               return {
                 errorMessage: svg
                   ? ""
@@ -148,14 +131,11 @@ export function Mermaid({ chart, className, config, label }: MermaidProps) {
         )
       )
     );
-
     return () => {
       Effect.runFork(Fiber.interrupt(renderFiber));
     };
   }, [chart, config, renderId, renderKey, theme]);
-
   const hasCurrentRender = renderState.renderKey === renderKey;
-
   // Show loading only on initial load when we have no content
   if (!(hasCurrentRender || renderState.svg)) {
     return (
@@ -166,7 +146,6 @@ export function Mermaid({ chart, className, config, label }: MermaidProps) {
       </div>
     );
   }
-
   // Only show error if we have no valid SVG to display
   if (hasCurrentRender && renderState.errorMessage && !renderState.svg) {
     return (
@@ -188,7 +167,6 @@ export function Mermaid({ chart, className, config, label }: MermaidProps) {
       </div>
     );
   }
-
   // Always render the SVG if we have content (either current or last valid)
   return (
     <div

@@ -2,11 +2,11 @@ import {
   expressionInputSchema,
   variableInputSchema,
 } from "@repo/math/schema/shared";
-import { Schema } from "effect";
+import { Schema, Struct } from "effect";
 
 const MathAlgebraExpressionInputSchema = Schema.Struct({
   expression: expressionInputSchema,
-  operation: Schema.Literal(
+  operation: Schema.Literals([
     "apart",
     "cancel",
     "domain",
@@ -14,28 +14,24 @@ const MathAlgebraExpressionInputSchema = Schema.Struct({
     "factor",
     "rationalize",
     "simplify",
-    "together"
-  ).annotations({
+    "together",
+  ]).annotate({
     description: "Choose the algebra operation for the provided expression.",
   }),
-  variable: Schema.optional(variableInputSchema),
-}).pipe(Schema.mutable);
-
+  variable: Schema.optionalKey(variableInputSchema),
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 const MathAlgebraCompareInputSchema = Schema.Struct({
   left: expressionInputSchema,
-  operation: Schema.Literal("compare").annotations({
+  operation: Schema.Literal("compare").annotate({
     description: "Compare the left and right expressions for equivalence.",
   }),
   right: expressionInputSchema,
-  variable: Schema.optional(variableInputSchema),
-}).pipe(Schema.mutable);
-
-export const MathAlgebraInputSchema = Schema.Union(
+  variable: Schema.optionalKey(variableInputSchema),
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
+export const MathAlgebraInputSchema = Schema.Union([
   MathAlgebraExpressionInputSchema,
-  MathAlgebraCompareInputSchema
-)
-  .pipe(Schema.mutable)
-  .annotations({
-    description:
-      "Symbolic algebra tool input. Use expression for all algebra operations except compare; use left and right for compare.",
-  });
+  MathAlgebraCompareInputSchema,
+]).annotate({
+  description:
+    "Symbolic algebra tool input. Use expression for all algebra operations except compare; use left and right for compare.",
+});

@@ -35,14 +35,12 @@
         }
       }
     },
-    "vtsls": {
+    "typescript-ls": {
       "settings": {
+        "package_version": "7.0.2",
         "typescript": {
           "preferences": {
             "includePackageJsonAutoImports": "on"
-          },
-          "tsserver": {
-            "maxTsServerMemory": 8192
           }
         }
       }
@@ -50,7 +48,29 @@
   },
   "languages": {
     "JavaScript": {
-      "language_servers": ["vtsls", "!typescript-language-server", "..."],
+      "language_servers": [
+        "typescript-ls",
+        "!vtsls",
+        "!typescript-language-server",
+        "..."
+      ],
+      "formatter": {
+        "language_server": {
+          "name": "biome"
+        }
+      },
+      "code_actions_on_format": {
+        "source.fixAll.biome": true,
+        "source.organizeImports.biome": true
+      }
+    },
+    "JSX": {
+      "language_servers": [
+        "typescript-ls",
+        "!vtsls",
+        "!typescript-language-server",
+        "..."
+      ],
       "formatter": {
         "language_server": {
           "name": "biome"
@@ -62,7 +82,12 @@
       }
     },
     "TypeScript": {
-      "language_servers": ["vtsls", "!typescript-language-server", "..."],
+      "language_servers": [
+        "typescript-ls",
+        "!vtsls",
+        "!typescript-language-server",
+        "..."
+      ],
       "formatter": {
         "language_server": {
           "name": "biome"
@@ -74,7 +99,12 @@
       }
     },
     "TSX": {
-      "language_servers": ["vtsls", "!typescript-language-server", "..."],
+      "language_servers": [
+        "typescript-ls",
+        "!vtsls",
+        "!typescript-language-server",
+        "..."
+      ],
       "formatter": {
         "language_server": {
           "name": "biome"

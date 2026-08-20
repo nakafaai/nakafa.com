@@ -11,7 +11,6 @@ import {
 import { NakafaAgentMarkdownSchema } from "@repo/contents/_lib/agent/schema/read";
 import { NakafaAgentTaxonomySchema } from "@repo/contents/_lib/agent/schema/taxonomy";
 import { Effect, Schema } from "effect";
-
 /** Maps signed Quran contract failures into the public agent read boundary. */
 export function toNakafaQuranDataReadError(error: QuranPublicationError) {
   return new NakafaAgentDataReadError({
@@ -19,10 +18,9 @@ export function toNakafaQuranDataReadError(error: QuranPublicationError) {
     message: `Unable to read signed Nakafa Quran ${error.operation}.`,
   });
 }
-
 /** Decodes agent markdown output into the public schema shape. */
 export function decodeNakafaMarkdown(markdown: unknown) {
-  return Schema.decodeUnknown(NakafaAgentMarkdownSchema)(markdown).pipe(
+  return Schema.decodeUnknownEffect(NakafaAgentMarkdownSchema)(markdown).pipe(
     Effect.mapError(
       (error) =>
         new NakafaAgentDataReadError({
@@ -32,10 +30,11 @@ export function decodeNakafaMarkdown(markdown: unknown) {
     )
   );
 }
-
 /** Decodes Quran reference output into the public schema shape. */
 export function decodeNakafaQuranReference(reference: unknown) {
-  return Schema.decodeUnknown(NakafaAgentQuranReferenceSchema)(reference).pipe(
+  return Schema.decodeUnknownEffect(NakafaAgentQuranReferenceSchema)(
+    reference
+  ).pipe(
     Effect.mapError(
       (error) =>
         new NakafaAgentDataReadError({
@@ -45,10 +44,9 @@ export function decodeNakafaQuranReference(reference: unknown) {
     )
   );
 }
-
 /** Decodes taxonomy output into the public schema shape. */
 export function decodeNakafaTaxonomy(taxonomy: unknown) {
-  return Schema.decodeUnknown(NakafaAgentTaxonomySchema)(taxonomy).pipe(
+  return Schema.decodeUnknownEffect(NakafaAgentTaxonomySchema)(taxonomy).pipe(
     Effect.mapError(
       (error) =>
         new NakafaAgentDataReadError({
@@ -58,10 +56,9 @@ export function decodeNakafaTaxonomy(taxonomy: unknown) {
     )
   );
 }
-
 /** Parses Quran reference options with schema-backed input errors. */
 export function parseQuranReferenceOptions(input: unknown) {
-  return Schema.decodeUnknown(NakafaAgentQuranReferenceOptionsSchema)(
+  return Schema.decodeUnknownEffect(NakafaAgentQuranReferenceOptionsSchema)(
     input
   ).pipe(
     Effect.mapError(

@@ -1,5 +1,4 @@
 "use client";
-
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -26,7 +25,6 @@ import { HeaderAddVisibilityField } from "@/components/school/classes/add/visibi
 import { HeaderAddYearField } from "@/components/school/classes/add/year";
 import { reportClientException } from "@/lib/analytics/client";
 import { useSchool } from "@/lib/context/use-school";
-
 /** Render the school class creation dialog. */
 export function CreateSchoolClassDialog({
   open,
@@ -40,7 +38,6 @@ export function CreateSchoolClassDialog({
   const pathname = usePathname();
   const schoolId = useSchool((state) => state.school._id);
   const createClass = useMutation(api.classes.mutations.createClass);
-
   const form = useForm({
     defaultValues: classCreateDefaultValues,
     validators: {
@@ -53,16 +50,15 @@ export function CreateSchoolClassDialog({
             ...value,
             schoolId,
           });
-
           router.push(`${pathname}/${classId}`);
           setOpenAction(false);
           form.reset();
         }).pipe(
-          Effect.catchTag("UnknownException", ({ error }) =>
+          Effect.catchTag("UnknownError", ({ cause: error }) =>
             reportClientException(error, {
               source: "school-class-create",
             }).pipe(
-              Effect.zipRight(
+              Effect.andThen(
                 Effect.sync(() => {
                   toast.error(t("create-class-failed"));
                 })
@@ -73,7 +69,6 @@ export function CreateSchoolClassDialog({
       );
     },
   });
-
   return (
     <form
       action={() => form.handleSubmit()}
@@ -112,7 +107,6 @@ export function CreateSchoolClassDialog({
               const isInvalid =
                 Boolean(field.state.meta.isTouched) &&
                 Boolean(!field.state.meta.isValid);
-
               return (
                 <HeaderAddNameField
                   isInvalid={isInvalid}
@@ -130,7 +124,6 @@ export function CreateSchoolClassDialog({
               const isInvalid =
                 Boolean(field.state.meta.isTouched) &&
                 Boolean(!field.state.meta.isValid);
-
               return (
                 <HeaderAddSubjectField
                   isInvalid={isInvalid}
@@ -148,7 +141,6 @@ export function CreateSchoolClassDialog({
               const isInvalid =
                 Boolean(field.state.meta.isTouched) &&
                 Boolean(!field.state.meta.isValid);
-
               return (
                 <HeaderAddYearField
                   isInvalid={isInvalid}
@@ -165,7 +157,6 @@ export function CreateSchoolClassDialog({
               const isInvalid =
                 Boolean(field.state.meta.isTouched) &&
                 Boolean(!field.state.meta.isValid);
-
               return (
                 <HeaderAddVisibilityField
                   isInvalid={isInvalid}

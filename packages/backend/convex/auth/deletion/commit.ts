@@ -20,7 +20,7 @@ const continueAccountDeletionCommitReference = makeFunctionReference<
 >("auth/deletion:continueAccountDeletionCommit");
 
 const betterAuthDeletePageSchema = Schema.Struct({
-  count: Schema.Number,
+  count: Schema.Finite,
 });
 const decodeBetterAuthDeletePage = Schema.decodeUnknownSync(
   betterAuthDeletePageSchema

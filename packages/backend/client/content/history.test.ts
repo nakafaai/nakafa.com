@@ -28,7 +28,7 @@ const target = {
   siteUrl: "https://example.convex.site",
   token: "retained-runtime-test-token",
 };
-const request = Schema.decodeUnknownSync(StoredProtectedRuntimeRequestSchema)({
+const request = Schema.decodeSync(StoredProtectedRuntimeRequestSchema)({
   appLocale: "en",
   attemptId: "retained-client-attempt",
   selectors: [

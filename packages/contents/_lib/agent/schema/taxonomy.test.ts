@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 describe("NakafaAgentTaxonomyOptionsSchema", () => {
   it("applies default taxonomy options", () => {
     expect(
-      Schema.decodeUnknownSync(NakafaAgentTaxonomyOptionsSchema)({})
+      Schema.decodeSync(NakafaAgentTaxonomyOptionsSchema)({})
     ).toStrictEqual({ locale: "en" });
   });
 });

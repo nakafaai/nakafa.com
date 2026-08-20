@@ -45,7 +45,7 @@ export function PostReactions({ post }: { post: ForumPost }) {
                           toggleReaction({ postId: post._id, emoji })
                         ).pipe(
                           Effect.asVoid,
-                          Effect.catchTag("UnknownException", ({ error }) =>
+                          Effect.catchTag("UnknownError", ({ cause: error }) =>
                             Effect.sync(() => {
                               captureException(error, {
                                 source: "post-reaction-toggle",

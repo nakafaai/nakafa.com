@@ -1,5 +1,4 @@
 "use node";
-
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import {
   ContentReleaseCurrentSchema,
@@ -27,10 +26,11 @@ interface StoredEnvelope {
 }
 type CurrentStatus = Infer<typeof currentValidator>;
 type RecoveryLookup = Infer<typeof recoveryLookupValidator>;
-
 const releaseEnvelopeReference = makeFunctionReference<
   "query",
-  { releaseId: string },
+  {
+    releaseId: string;
+  },
   StoredEnvelope
 >("contentRelease/envelope:byRelease");
 const currentStatusReference = makeFunctionReference<
@@ -40,10 +40,12 @@ const currentStatusReference = makeFunctionReference<
 >("contentRelease/status:current");
 const recoveryLookupReference = makeFunctionReference<
   "query",
-  { recoveryId: string; releaseId: string },
+  {
+    recoveryId: string;
+    releaseId: string;
+  },
   RecoveryLookup
 >("contentRelease/recovery:lookup");
-
 /** Authenticates one exact release and renderer bundle recovered from storage. */
 export const decodeStoredBundle = Effect.fn(
   "contentRelease.decodeStoredBundle"
@@ -58,7 +60,6 @@ export const decodeStoredBundle = Effect.fn(
     rendererManifest,
   }).pipe(Effect.mapError(contractFailure));
 });
-
 /** Loads and authenticates one stored release through its durable identity. */
 export const loadVerifiedRelease = Effect.fn(
   "contentRelease.loadVerifiedRelease"
@@ -78,7 +79,6 @@ export const loadVerifiedRelease = Effect.fn(
   }
   return bundle;
 });
-
 /** Binds one authenticated release to the exact requested manifest identity. */
 export const matchManifest = Effect.fn("contentRelease.matchManifest")(
   function* (
@@ -94,7 +94,6 @@ export const matchManifest = Effect.fn("contentRelease.matchManifest")(
     }
   }
 );
-
 /** Reads and authenticates active, candidate, and recovery release bundles. */
 export const readCurrentPublication = Effect.fn(
   "contentRelease.readCurrentPublication"
@@ -129,7 +128,7 @@ export const readCurrentPublication = Effect.fn(
         phase: stored.recovery.phase,
       }
     : null;
-  return yield* Schema.decodeUnknown(ContentReleaseCurrentSchema)(
+  return yield* Schema.decodeUnknownEffect(ContentReleaseCurrentSchema)(
     { active, candidate, recovery },
     { onExcessProperty: "error" }
   ).pipe(
@@ -142,11 +141,13 @@ export const readCurrentPublication = Effect.fn(
     )
   );
 });
-
 /** Authenticates one exact completed recovery or returns explicit absence. */
 export const readRecovery = Effect.fn("contentRelease.readRecovery")(function* (
   ctx: ReadContext,
-  request: { readonly recoveryId: string; readonly releaseId: string }
+  request: {
+    readonly recoveryId: string;
+    readonly releaseId: string;
+  }
 ) {
   const stored = yield* callInternal(() =>
     ctx.runQuery(recoveryLookupReference, request)
@@ -170,7 +171,7 @@ export const readRecovery = Effect.fn("contentRelease.readRecovery")(function* (
       `Recovery ${request.recoveryId} does not bind candidate ${request.releaseId}.`
     );
   }
-  return yield* Schema.decodeUnknown(RecoveryLookupSchema)({
+  return yield* Schema.decodeUnknownEffect(RecoveryLookupSchema)({
     kind: "completed",
     value: { ...bundle, receipt: stored.value.receipt },
   }).pipe(

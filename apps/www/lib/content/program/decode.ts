@@ -13,7 +13,6 @@ function projectionError(locale: Locale, publicPath: string) {
     publicPath,
   });
 }
-
 /** Parses one backend-verified snapshot row without thrown JSON failures. */
 const decodeSnapshotRow = Effect.fn("NakafaProgram.decodeSnapshotRow")(
   function* (source: string, locale: Locale, publicPath: string) {
@@ -21,12 +20,11 @@ const decodeSnapshotRow = Effect.fn("NakafaProgram.decodeSnapshotRow")(
       catch: () => projectionError(locale, publicPath),
       try: (): unknown => JSON.parse(source),
     });
-    return yield* Schema.decodeUnknown(ContentSnapshotRowSchema)(input, {
+    return yield* Schema.decodeUnknownEffect(ContentSnapshotRowSchema)(input, {
       onExcessProperty: "error",
     }).pipe(Effect.mapError(() => projectionError(locale, publicPath)));
   }
 );
-
 /** Decodes one exact immutable curriculum route row. */
 export const decodeCurriculumJson = Effect.fn("NakafaProgram.decodeCurriculum")(
   function* (source: string, locale: Locale, publicPath: string) {
@@ -37,7 +35,6 @@ export const decodeCurriculumJson = Effect.fn("NakafaProgram.decodeCurriculum")(
     return decoded.record.row;
   }
 );
-
 /** Decodes one exact immutable learning-program catalog row. */
 export const decodeProgramJson = Effect.fn("NakafaProgram.decodeProgram")(
   function* (source: string, locale: Locale, publicPath: string) {
@@ -48,6 +45,5 @@ export const decodeProgramJson = Effect.fn("NakafaProgram.decodeProgram")(
     return decoded.record.row;
   }
 );
-
 export type PublishedCurriculumRoute = CurriculumRoute;
 export type PublishedLearningProgram = LearningProgram;

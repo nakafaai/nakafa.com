@@ -1,6 +1,6 @@
-import { Effect, Schema } from "effect";
+import { Effect, Schema, Semaphore } from "effect";
 
-const clipboardWriteSemaphore = Effect.unsafeMakeSemaphore(1);
+const clipboardWriteSemaphore = Semaphore.makeUnsafe(1);
 
 /** Expected browser failure when the Clipboard API is unavailable. */
 export class CodeClipboardUnavailableError extends Schema.TaggedError<CodeClipboardUnavailableError>()(

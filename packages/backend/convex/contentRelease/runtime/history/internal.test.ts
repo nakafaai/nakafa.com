@@ -111,9 +111,7 @@ describe("contentRelease/runtime/history/internal", () => {
   it("returns absence for a selector outside the frozen attempt", async () => {
     const t = convexTest(schema, convexModules);
     const fixture = await t.mutation(insertRetainedRuntime);
-    const request = Schema.decodeUnknownSync(
-      StoredProtectedRuntimeRequestSchema
-    )({
+    const request = Schema.decodeSync(StoredProtectedRuntimeRequestSchema)({
       ...fixture.request,
       selectors: [
         {

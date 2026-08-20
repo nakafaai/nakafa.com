@@ -32,7 +32,7 @@ export function CodeBlockCopyButton({
   ...props
 }: CodeBlockCopyButtonProps) {
   const [isCopied, setIsCopied] = useState(false);
-  const copyFiberRef = useRef<Fiber.RuntimeFiber<void, never> | null>(null);
+  const copyFiberRef = useRef<Fiber.Fiber<void, never> | null>(null);
   const { data, value } = useCodeBlock((state) => ({
     data: state.data,
     value: state.value,

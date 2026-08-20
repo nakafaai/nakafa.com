@@ -6,8 +6,7 @@ import {
 } from "@repo/backend/test/content-release";
 import type { Schema } from "effect";
 
-type ArtifactLocaleCode = Schema.Schema.Encoded<typeof ArtifactLocaleSchema>;
-
+type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
 /** Creates one schema-valid technical signed artifact. */
 export function testArtifactJson(options?: {
   readonly artifactHash?: string;

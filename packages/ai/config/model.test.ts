@@ -33,7 +33,7 @@ describe("Nakafa model registry", () => {
   it("keeps credit costs and gateway mapping explicit", () => {
     expect(
       MODEL_IDS.map((modelId) =>
-        Schema.decodeUnknownSync(ModelInfoSchema)(modelRegistry[modelId])
+        Schema.decodeSync(ModelInfoSchema)(modelRegistry[modelId])
       )
     ).toEqual([
       {

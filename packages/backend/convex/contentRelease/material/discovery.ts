@@ -6,10 +6,9 @@ import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/ver
 import { Effect } from "effect";
 
 const MATERIAL_DISCOVERY_LIMIT = 100;
-
 /** Selects the compact fields used by RSS, sitemap, and LLMS discovery. */
 function summarizeMaterial(
-  verified: Effect.Effect.Success<ReturnType<typeof verifyMaterial>>,
+  verified: Effect.Success<ReturnType<typeof verifyMaterial>>,
   sourcePath: string
 ) {
   const { projection } = verified;
@@ -22,7 +21,6 @@ function summarizeMaterial(
     title: projection.metadata.title,
   };
 }
-
 /** Validates one bounded material discovery read. */
 const validateDiscoveryLimit = Effect.fn(
   "contentRelease.validateMaterialDiscoveryLimit"
@@ -38,7 +36,6 @@ const validateDiscoveryLimit = Effect.fn(
     );
   }
 });
-
 /** Reads one complete hash partition for a managed material catalog. */
 export const readMaterialBucket = Effect.fn(
   "contentRelease.readMaterialBucket"
@@ -70,7 +67,6 @@ export const readMaterialBucket = Effect.fn(
     ),
   };
 });
-
 /** Reads a bounded newest-first material set from the active owner. */
 export const readLatestMaterials = Effect.fn(
   "contentRelease.readLatestMaterials"

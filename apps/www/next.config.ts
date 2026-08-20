@@ -20,7 +20,7 @@ import { hasPreviewRendererEnvironment } from "@/lib/content/preview/environment
 const configEnv = createEnv({
   extends: [analyzeKeys()],
   server: {
-    CONVEX_AGENT_MODE: Schema.standardSchemaV1(
+    CONVEX_AGENT_MODE: Schema.toStandardSchemaV1(
       Schema.UndefinedOr(Schema.Literal("anonymous"))
     ),
   },
@@ -31,11 +31,9 @@ const configEnv = createEnv({
 const isAksaraPreviewChild =
   hasCandidateLocalePreview() || hasPreviewRendererEnvironment();
 const postHogProxyEnv = isAksaraPreviewChild ? null : postHogProxyKeys();
-
 const withNextIntl = createNextIntlPlugin(
   "../../packages/internationalization/src/request.ts"
 );
-
 /**
  * Build the rewrite rules for agent discovery, SEO assets, and the PostHog proxy.
  *
@@ -68,7 +66,6 @@ function createAppRewrites() {
       destination: "/og/:path*/image.png",
     },
   ];
-
   const seoAssetRewrites = [
     ...llmSource.map((source) => ({
       source,
@@ -79,7 +76,6 @@ function createAppRewrites() {
       destination: ogDestination,
     })),
   ];
-
   return {
     // PostHog requires the specific static and array rewrites to come before the
     // catch-all analytics rewrite so asset cache headers are preserved.
@@ -96,7 +92,6 @@ function createAppRewrites() {
     ],
   };
 }
-
 /**
  * Build the localized redirect list shared by all supported locales.
  */
@@ -130,7 +125,6 @@ function createLocalizedRedirects() {
       permanent: false,
     },
   ];
-
   return [
     ...rootRedirects,
     ...redirects.flatMap(({ source, destination, permanent }) => {
@@ -150,7 +144,6 @@ function createLocalizedRedirects() {
     }),
   ];
 }
-
 /**
  * Return the shared security headers for all application responses.
  */
@@ -167,7 +160,6 @@ function createAppHeaders() {
     },
   ];
 }
-
 const nextConfig = {
   ...config,
   cacheComponents: true,
@@ -217,8 +209,6 @@ const nextConfig = {
       : {}),
   },
 } satisfies NextConfig;
-
 const analyzedConfig =
   configEnv.ANALYZE === "true" ? withAnalyzer(nextConfig) : nextConfig;
-
 export default withMDX(withNextIntl(analyzedConfig));

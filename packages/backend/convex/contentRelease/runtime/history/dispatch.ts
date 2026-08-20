@@ -13,26 +13,23 @@ import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import type { RetainedRuntimeBatchRow } from "@repo/backend/convex/contentRelease/runtime/history/internal";
 import { failureResult } from "@repo/backend/convex/contentRelease/runtime/result";
 import { makeFunctionReference } from "convex/server";
-import { Effect, Either, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 
 const readReference = makeFunctionReference<
   "query",
   StoredProtectedRuntimeRequest,
   RetainedRuntimeBatchRow
 >("contentRelease/runtime/history/internal:read");
-
 /** Request JSON could not satisfy the exact retained history contract. */
 class RetainedRuntimeRequestError extends Schema.TaggedError<RetainedRuntimeRequestError>()(
   "RetainedRuntimeRequestError",
   {}
 ) {}
-
 /** Convex or retained data failed before a safe history response. */
 class RetainedRuntimeReadError extends Schema.TaggedError<RetainedRuntimeReadError>()(
   "RetainedRuntimeReadError",
   {}
 ) {}
-
 /** Strictly parses one bounded UTF-8 attempt-owned history request. */
 const decodeRequest = Effect.fn("contentRelease.decodeRetainedRequest")(
   function* (source: string, byteLength: number) {
@@ -47,19 +44,24 @@ const decodeRequest = Effect.fn("contentRelease.decodeRetainedRequest")(
       catch: () => new RetainedRuntimeRequestError(),
       try: (): unknown => JSON.parse(source),
     });
-    return yield* Schema.decodeUnknown(StoredProtectedRuntimeRequestSchema)(
-      input,
-      { onExcessProperty: "error" }
-    ).pipe(Effect.mapError(() => new RetainedRuntimeRequestError()));
+    return yield* Schema.decodeUnknownEffect(
+      StoredProtectedRuntimeRequestSchema
+    )(input, { onExcessProperty: "error" }).pipe(
+      Effect.mapError(() => new RetainedRuntimeRequestError())
+    );
   }
 );
-
 /** Builds one attempt-bound response through the historical wire schema. */
 function encodeRetainedResult(
   request: StoredProtectedRuntimeRequest,
   outcome:
-    | { readonly code: "CONTENT_RUNTIME_INTERNAL"; readonly kind: "failure" }
-    | { readonly kind: "missing" }
+    | {
+        readonly code: "CONTENT_RUNTIME_INTERNAL";
+        readonly kind: "failure";
+      }
+    | {
+        readonly kind: "missing";
+      }
     | StoredProtectedRuntimeFound,
   status: number
 ) {
@@ -71,21 +73,21 @@ function encodeRetainedResult(
           appLocale: request.appLocale,
           attemptId: request.attemptId,
         };
-  const decoded = Schema.decodeUnknownEither(
-    StoredProtectedRuntimeResponseSchema
-  )(input, { onExcessProperty: "error" });
-  if (Either.isLeft(decoded)) {
+  const decoded = Schema.decodeResult(StoredProtectedRuntimeResponseSchema)(
+    input,
+    { onExcessProperty: "error" }
+  );
+  if (Result.isFailure(decoded)) {
     return encodeRetainedFailure(request, "CONTENT_RUNTIME_INTERNAL");
   }
   if (
-    protectedRuntimeResponseBytes(decoded.right) >
+    protectedRuntimeResponseBytes(decoded.success) >
     MAX_PROTECTED_RUNTIME_RESPONSE_BYTES
   ) {
     return encodeRetainedFailure(request, "CONTENT_RUNTIME_RESPONSE_TOO_LARGE");
   }
-  return { body: JSON.stringify(decoded.right), status };
+  return { body: JSON.stringify(decoded.success), status };
 }
-
 /** Encodes one response-safe failure bound to its decoded attempt request. */
 function encodeRetainedFailure(
   request: StoredProtectedRuntimeRequest,
@@ -101,7 +103,6 @@ function encodeRetainedFailure(
     status: 500,
   };
 }
-
 /** Resolves exact retained JSON without decoding it as current content. */
 const resolveRuntime = Effect.fn("contentRelease.resolveRetainedRuntime")(
   function* (ctx: ActionCtx, request: StoredProtectedRuntimeRequest) {
@@ -129,7 +130,7 @@ const resolveRuntime = Effect.fn("contentRelease.resolveRetainedRuntime")(
         try: (): unknown => JSON.parse(row.rendererJson),
       }),
     });
-    const response = yield* Schema.decodeUnknown(
+    const response = yield* Schema.decodeUnknownEffect(
       StoredProtectedRuntimeResponseSchema,
       { onExcessProperty: "error" }
     )({
@@ -153,27 +154,26 @@ const resolveRuntime = Effect.fn("contentRelease.resolveRetainedRuntime")(
     return response;
   }
 );
-
 /** Decodes, resolves, and safely encodes one retained-history request. */
 export const dispatchProgram = Effect.fn(
   "contentRelease.retainedRuntimeDispatch"
 )(function* (ctx: ActionCtx, source: string, byteLength: number) {
-  const decoded = yield* decodeRequest(source, byteLength).pipe(Effect.either);
-  if (Either.isLeft(decoded)) {
+  const decoded = yield* decodeRequest(source, byteLength).pipe(Effect.result);
+  if (Result.isFailure(decoded)) {
     return failureResult("CONTENT_RUNTIME_INVALID", 400);
   }
-  const resolved = yield* resolveRuntime(ctx, decoded.right).pipe(
-    Effect.either
+  const resolved = yield* resolveRuntime(ctx, decoded.success).pipe(
+    Effect.result
   );
-  if (Either.isLeft(resolved)) {
+  if (Result.isFailure(resolved)) {
     return encodeRetainedResult(
-      decoded.right,
+      decoded.success,
       { code: "CONTENT_RUNTIME_INTERNAL", kind: "failure" },
       500
     );
   }
-  if (resolved.right === null) {
-    return encodeRetainedResult(decoded.right, { kind: "missing" }, 404);
+  if (resolved.success === null) {
+    return encodeRetainedResult(decoded.success, { kind: "missing" }, 404);
   }
-  return encodeRetainedResult(decoded.right, resolved.right, 200);
+  return encodeRetainedResult(decoded.success, resolved.success, 200);
 });

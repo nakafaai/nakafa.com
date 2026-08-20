@@ -51,17 +51,11 @@ export const submitPromptInput = Effect.fn("designSystem.promptInput.submit")(
     text,
   }: SubmitPromptInputOptions<TEvent>) {
     const convertedFiles = yield* convertPromptInputFiles(files);
-    const pendingSubmit = yield* Effect.try({
-      try: () => onSubmit({ text, files: convertedFiles }, event),
+    yield* Effect.tryPromise({
+      try: () =>
+        Promise.resolve(onSubmit({ text, files: convertedFiles }, event)),
       catch: (cause) => new PromptInputSubmitError({ cause }),
     });
-
-    if (pendingSubmit instanceof Promise) {
-      yield* Effect.tryPromise({
-        try: () => pendingSubmit,
-        catch: (cause) => new PromptInputSubmitError({ cause }),
-      });
-    }
 
     yield* Effect.try({
       try: onSuccess,

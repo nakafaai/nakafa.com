@@ -11,8 +11,8 @@
     "@t3-oss/env-nextjs": "^0.13.11",
     "@vercel/analytics": "^2.0.1",
     "effect": "catalog:",
-    "posthog-js": "1.414.0",
-    "posthog-node": "^5.48.1",
+    "posthog-js": "1.418.5",
+    "posthog-node": "^5.49.1",
     "react": "^19.2.8",
     "server-only": "0.0.1"
   },
@@ -21,8 +21,8 @@
     "@repo/typescript-config": "workspace:*",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
-    "@vitest/coverage-istanbul": "^4.1.10",
-    "next": "16.3.0",
-    "vitest": "^4.1.10"
+    "@vitest/coverage-istanbul": "^4.1.11",
+    "next": "16.3.1",
+    "vitest": "^4.1.11"
   }
 }

@@ -1,11 +1,10 @@
 import { expressionInputSchema } from "@repo/math/schema/shared";
-import { Schema } from "effect";
-
+import { Schema, Struct } from "effect";
 export const MathArithmeticInputSchema = Schema.Struct({
   expression: expressionInputSchema,
-  operation: Schema.Literal("evaluate").annotations({
+  operation: Schema.Literal("evaluate").annotate({
     description: "Evaluate an exact arithmetic or numeric expression.",
   }),
 })
-  .pipe(Schema.mutable)
-  .annotations({ description: "Exact arithmetic tool input." });
+  .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+  .annotate({ description: "Exact arithmetic tool input." });

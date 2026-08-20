@@ -20,16 +20,17 @@ const CONTENT_RESOURCE_PREFIX = "nakafa://content/";
 const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
 
 /** Runtime schema for persisted graph projection fields accepted by agent refs. */
-const NakafaContentGraphProjectionSchema = LearningGraphIdentitySchema.pipe(
-  Schema.extend(
-    Schema.Struct({
+const NakafaContentGraphProjectionSchema =
+  LearningGraphIdentitySchema.mapFields(
+    (fields) => ({
+      ...fields,
       content_id: Schema.String,
       locale: LocaleSchema,
       route: Schema.String,
       section: NakafaAgentSectionSchema,
-    })
-  )
-);
+    }),
+    { unsafePreserveChecks: true }
+  );
 
 /** Persisted graph projection fields derived from the runtime schema. */
 type NakafaContentGraphProjection = Schema.Schema.Type<
@@ -64,9 +65,7 @@ export function parseNakafaUrlRoute(input: string) {
   }
 
   const route = segments.slice(1).join("/");
-  const parsedRoute = Schema.decodeUnknownOption(NakafaAgentContentRouteSchema)(
-    route
-  );
+  const parsedRoute = Schema.decodeOption(NakafaAgentContentRouteSchema)(route);
 
   if (Option.isNone(parsedRoute)) {
     return Option.none<NakafaUrlRoute>();
@@ -105,7 +104,7 @@ export function createNakafaContentRefFromGraphProjection(input: unknown) {
     return Option.none<NakafaAgentContentRef>();
   }
 
-  return Schema.decodeUnknownOption(NakafaAgentContentRefSchema)(
+  return Schema.decodeOption(NakafaAgentContentRefSchema)(
     createNakafaContentRefInput(graph)
   );
 }

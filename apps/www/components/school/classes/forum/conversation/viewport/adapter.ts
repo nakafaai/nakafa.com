@@ -75,6 +75,7 @@ export interface ViewportAdapters {
 }
 
 /** Effect service tag for browser or test adapters used by one Viewport service. */
-export class ConversationViewportAdapters extends Context.Tag(
-  "ConversationViewportAdapters"
-)<ConversationViewportAdapters, ViewportAdapters>() {}
+export class ConversationViewportAdapters extends Context.Service<
+  ConversationViewportAdapters,
+  ViewportAdapters
+>()("ConversationViewportAdapters") {}

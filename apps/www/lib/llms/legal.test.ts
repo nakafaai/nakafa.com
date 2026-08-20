@@ -101,10 +101,11 @@ describe("legal llms markdown", () => {
             locale: "en",
           })
         )
-      ).rejects.toHaveProperty(
-        "name",
-        "(FiberFailure) LegalMarkdownReadFailed"
-      );
+      ).rejects.toMatchObject({
+        _tag: "LegalMarkdownReadFailed",
+        cause: failure,
+        path: expect.stringContaining("terms-of-service/en.mdx"),
+      });
     }
   });
 });

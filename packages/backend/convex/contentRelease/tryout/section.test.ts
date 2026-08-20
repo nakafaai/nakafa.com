@@ -27,7 +27,7 @@ const identity: TryoutSectionIdentity = {
 
 /** Creates one technical section with an explicit signed question count. */
 function makeTechnicalSection(locale: "en" | "id", questionCount = 1) {
-  return Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
+  return Schema.decodeSync(TryoutCatalogRowSchema)({
     ...identity,
     graph: {
       alignmentId: "alignment:tryout:technical:section",
@@ -54,7 +54,7 @@ function makeTechnicalSection(locale: "en" | "id", questionCount = 1) {
 function makeTechnicalPlacement(locale: "en" | "id", questionOrder: number) {
   const placement = makeTryoutPlacementRow(locale).record.row;
   const questionRoot = `question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-${questionOrder}`;
-  return Schema.decodeUnknownSync(TryoutPlacementSchema)({
+  return Schema.decodeSync(TryoutPlacementSchema)({
     ...placement,
     answerContentKey: `${questionRoot}/answer`,
     questionContentKey: `${questionRoot}/question`,

@@ -36,7 +36,7 @@ export async function GET(
 
         return NextResponse.json(reference);
       }),
-      Effect.catchAll((error) =>
+      Effect.catch((error) =>
         Effect.gen(function* () {
           yield* logError(error, {
             service: "api-content-reference",

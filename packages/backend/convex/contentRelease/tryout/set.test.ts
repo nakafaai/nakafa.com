@@ -96,7 +96,7 @@ describe("contentRelease/tryout/set", () => {
         if (row.kind !== "set") {
           return row;
         }
-        return Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
+        return Schema.decodeSync(TryoutCatalogRowSchema)({
           ...row,
           questionCount: 2,
         });
@@ -143,7 +143,7 @@ describe("contentRelease/tryout/set", () => {
         if (row.kind !== "set") {
           return row;
         }
-        return Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
+        return Schema.decodeSync(TryoutCatalogRowSchema)({
           ...row,
           questionCount: TRYOUT_SET_QUESTION_LIMIT + 1,
         });
@@ -161,7 +161,7 @@ describe("contentRelease/tryout/set", () => {
         if (row.kind !== "set") {
           return row;
         }
-        return Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
+        return Schema.decodeSync(TryoutCatalogRowSchema)({
           ...row,
           internalEntrySectionKey: TRYOUT_START_SECTION,
           visibleSectionCount: 0,

@@ -62,14 +62,12 @@ const sweepAccountDeletionRecoveryReference = makeFunctionReference<
   SweepAccountDeletionRecoveryArgs,
   null
 >("auth/deletion/recovery:sweepAccountDeletionRecovery");
-
 interface RecoveryOperations {
   readonly authUserExists: () => Promise<boolean>;
   readonly cancel: () => Promise<unknown>;
   readonly continueCommit: () => Promise<boolean>;
   readonly finalize: () => Promise<unknown>;
 }
-
 /** Restores an aborted deletion or finishes one whose auth user is gone. */
 export const recoverAccountDeletionProgram: (
   operations: RecoveryOperations
@@ -77,27 +75,21 @@ export const recoverAccountDeletionProgram: (
   "auth.deletion.recoverAccountDeletion"
 )(function* (operations: RecoveryOperations) {
   const commitStarted = yield* tryUserCleanup(operations.continueCommit);
-
   if (commitStarted) {
     return;
   }
-
   const authUserExists = yield* tryUserCleanup(operations.authUserExists);
-
   if (authUserExists) {
     yield* tryUserCleanup(operations.cancel);
     return;
   }
-
   yield* tryUserCleanup(operations.finalize);
 });
-
 type ScheduleRecovery = (
   ctx: MutationCtx,
   authId: string,
   expectedPreparation: AccountDeletionPreparationVersion
 ) => Promise<unknown>;
-
 const defaultScheduleRecovery: ScheduleRecovery = (
   ctx,
   authId,
@@ -107,7 +99,6 @@ const defaultScheduleRecovery: ScheduleRecovery = (
     authId,
     expectedPreparation,
   });
-
 /**
  * Claims due recovery leases before scheduling at-most-once auth reads.
  *
@@ -133,7 +124,6 @@ export const sweepAccountDeletionRecoveryProgram: (
       )
       .take(ACCOUNT_DELETION_RECOVERY_SWEEP_BATCH_SIZE)
   );
-
   for (const preparation of preparations) {
     if (
       preparation.attemptId === undefined ||
@@ -143,7 +133,7 @@ export const sweepAccountDeletionRecoveryProgram: (
         "Account deletion preparation has an invalid recovery lease"
       ).pipe(
         Effect.annotateLogs({ preparationId: preparation._id }),
-        Effect.zipRight(
+        Effect.andThen(
           tryUserCleanup(() =>
             ctx.db.patch("accountDeletionPreparations", preparation._id, {
               recoveryAt: undefined,
@@ -153,14 +143,12 @@ export const sweepAccountDeletionRecoveryProgram: (
       );
       continue;
     }
-
     const recoveryGeneration = preparation.recoveryGeneration + 1;
     const expectedPreparation = {
       attemptId: preparation.attemptId,
       preparationId: preparation._id,
       recoveryGeneration,
     };
-
     yield* tryUserCleanup(() =>
       ctx.db.patch("accountDeletionPreparations", preparation._id, {
         recoveryAt: now + ACCOUNT_DELETION_RECONCILIATION_DELAY_MS,
@@ -171,10 +159,8 @@ export const sweepAccountDeletionRecoveryProgram: (
       scheduleRecovery(ctx, preparation.authId, expectedPreparation)
     );
   }
-
   return preparations.length === ACCOUNT_DELETION_RECOVERY_SWEEP_BATCH_SIZE;
 });
-
 /** Claims due recovery leases and drains additional bounded pages. */
 export const sweepAccountDeletionRecovery = internalMutation({
   args: sweepAccountDeletionRecoveryArgsValidator,
@@ -183,7 +169,6 @@ export const sweepAccountDeletionRecovery = internalMutation({
     runConvexProgram(
       Effect.gen(function* () {
         const hasMore = yield* sweepAccountDeletionRecoveryProgram(ctx);
-
         if (hasMore) {
           yield* tryUserCleanup(() =>
             ctx.scheduler.runAfter(0, sweepAccountDeletionRecoveryReference, {})
@@ -192,7 +177,6 @@ export const sweepAccountDeletionRecovery = internalMutation({
       }).pipe(Effect.as(null))
     ),
 });
-
 /** Reconciles one prepared deletion after the Better Auth request has settled. */
 export const recoverAccountDeletion = internalAction({
   args: {
@@ -222,7 +206,6 @@ export const recoverAccountDeletion = internalAction({
           }),
       }).pipe(Effect.annotateLogs({ authId: args.authId }))
     );
-
     return null;
   },
 });

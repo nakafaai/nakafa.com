@@ -1,111 +1,111 @@
 import { NakafaAgentSectionSchema } from "@repo/contents/_lib/agent/schema/ref";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";
-import { Schema } from "effect";
+import { Effect, Schema, Struct } from "effect";
 
 const UrlStringSchema = Schema.String.pipe(
-  Schema.filter((value) => URL.canParse(value), {
-    message: () => "Expected a valid URL.",
-  })
+  Schema.check(
+    Schema.makeFilter((value) => URL.canParse(value), {
+      message: "Expected a valid URL.",
+    })
+  )
 );
-
 const NakafaAgentTaxonomyOptionSchema = Schema.Struct({
-  id: Schema.String.annotations({
+  id: Schema.String.annotate({
     description: "Canonical route/schema identifier.",
   }),
-  label: Schema.String.annotations({
+  label: Schema.String.annotate({
     description: "Localized display label.",
   }),
 })
-  .pipe(Schema.mutable)
-  .annotations({
+  .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+  .annotate({
     description: "Supported taxonomy value with a localized label.",
   });
-
 const CountByLocaleSchema = Schema.Struct({
-  count: Schema.Number.pipe(Schema.int(), Schema.nonNegative()).annotations({
+  count: Schema.Finite.pipe(
+    Schema.check(Schema.isInt()),
+    Schema.check(Schema.isGreaterThanOrEqualTo(0))
+  ).annotate({
     description: "Indexed content count.",
   }),
-  locale: LocaleSchema.annotations({
+  locale: LocaleSchema.annotate({
     description: "Locale for this count.",
   }),
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 /** Runtime schema for taxonomy input. */
 export const NakafaAgentTaxonomyOptionsSchema = Schema.Struct({
-  locale: Schema.optionalWith(LocaleSchema, {
-    default: () => routing.defaultLocale,
-  }).annotations({
+  locale: LocaleSchema.pipe(
+    Schema.withDecodingDefaultType(Effect.succeed(routing.defaultLocale))
+  ).annotate({
     description: "Locale used for localized labels and content counts.",
   }),
 })
-  .pipe(Schema.mutable)
-  .annotations({ description: "Nakafa taxonomy options." });
-
+  .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+  .annotate({ description: "Nakafa taxonomy options." });
 /** Runtime schema for taxonomy output. */
 export const NakafaAgentTaxonomySchema = Schema.Struct({
   articles: Schema.Struct({
     categories: Schema.Array(Schema.String)
       .pipe(Schema.mutable)
-      .annotations({ description: "Supported article categories." }),
+      .annotate({ description: "Supported article categories." }),
   })
-    .pipe(Schema.mutable)
-    .annotations({ description: "Article taxonomy." }),
+    .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+    .annotate({ description: "Article taxonomy." }),
   content_counts: Schema.Array(CountByLocaleSchema)
     .pipe(Schema.mutable)
-    .annotations({ description: "Indexed content counts by locale." }),
-  default_locale: LocaleSchema.annotations({
+    .annotate({ description: "Indexed content counts by locale." }),
+  default_locale: LocaleSchema.annotate({
     description: "Default Nakafa locale.",
   }),
   endpoints: Schema.Struct({
-    direct: UrlStringSchema.annotations({
+    direct: UrlStringSchema.annotate({
       description: "Direct MCP endpoint.",
     }),
-    recommended: UrlStringSchema.annotations({
+    recommended: UrlStringSchema.annotate({
       description: "Recommended MCP endpoint.",
     }),
-    root_note: Schema.String.annotations({
+    root_note: Schema.String.annotate({
       description: "Root URL connection guidance.",
     }),
   })
-    .pipe(Schema.mutable)
-    .annotations({ description: "MCP endpoint guidance." }),
+    .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+    .annotate({ description: "MCP endpoint guidance." }),
   tryout: Schema.Struct({
     countries: Schema.Array(NakafaAgentTaxonomyOptionSchema)
       .pipe(Schema.mutable)
-      .annotations({ description: "Supported try-out countries." }),
+      .annotate({ description: "Supported try-out countries." }),
     exams: Schema.Array(NakafaAgentTaxonomyOptionSchema)
       .pipe(Schema.mutable)
-      .annotations({ description: "Supported try-out exams." }),
+      .annotate({ description: "Supported try-out exams." }),
   })
-    .pipe(Schema.mutable)
-    .annotations({ description: "Try-out taxonomy." }),
-  locale: LocaleSchema.annotations({
+    .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+    .annotate({ description: "Try-out taxonomy." }),
+  locale: LocaleSchema.annotate({
     description: "Locale used for this taxonomy response.",
   }),
   locales: Schema.Array(LocaleSchema)
     .pipe(Schema.mutable)
-    .annotations({ description: "Supported content locales." }),
+    .annotate({ description: "Supported content locales." }),
   quran: Schema.Struct({
-    surah_count: Schema.Number.pipe(
-      Schema.int(),
-      Schema.positive()
-    ).annotations({
+    surah_count: Schema.Finite.pipe(
+      Schema.check(Schema.isInt()),
+      Schema.check(Schema.isGreaterThan(0))
+    ).annotate({
       description: "Indexed Quran surah count.",
     }),
   })
-    .pipe(Schema.mutable)
-    .annotations({ description: "Quran taxonomy." }),
+    .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+    .annotate({ description: "Quran taxonomy." }),
   sections: Schema.Array(NakafaAgentSectionSchema)
     .pipe(Schema.mutable)
-    .annotations({ description: "Supported top-level content sections." }),
+    .annotate({ description: "Supported top-level content sections." }),
   tools: Schema.Array(Schema.String)
     .pipe(Schema.mutable)
-    .annotations({ description: "Public MCP tools exposed by Nakafa." }),
+    .annotate({ description: "Public MCP tools exposed by Nakafa." }),
 })
-  .pipe(Schema.mutable)
-  .annotations({ description: "Nakafa public content taxonomy." });
-
+  .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+  .annotate({ description: "Nakafa public content taxonomy." });
 export type NakafaAgentTaxonomyOptions = Schema.Schema.Type<
   typeof NakafaAgentTaxonomyOptionsSchema
 >;

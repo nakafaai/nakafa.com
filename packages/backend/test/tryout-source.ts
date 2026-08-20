@@ -132,7 +132,7 @@ export async function activateRevisedTryoutStartEntry(ctx: MutationCtx) {
   await clearActiveTryoutSnapshot(ctx);
 
   const catalog = tryoutStartLocales.flatMap((locale) =>
-    Schema.decodeUnknownSync(Schema.Array(TryoutCatalogRowSchema))(
+    Schema.decodeSync(Schema.Array(TryoutCatalogRowSchema))(
       makeTryoutStartHierarchy(locale, "internal-entry").map((row) => {
         if (row.kind === "set") {
           return {
@@ -166,7 +166,7 @@ export async function activateReusedTryoutStartPath(ctx: MutationCtx) {
   await clearActiveTryoutSnapshot(ctx);
 
   const catalog = tryoutStartLocales.flatMap((locale) =>
-    Schema.decodeUnknownSync(Schema.Array(TryoutCatalogRowSchema))(
+    Schema.decodeSync(Schema.Array(TryoutCatalogRowSchema))(
       makeTryoutStartHierarchy(locale, "visible").map((row) => {
         if (row.kind === "set") {
           return {
@@ -206,9 +206,7 @@ export function makeTryoutStartHierarchy(
   const examPath = `${countryPath}/${TRYOUT_START_EXAM}`;
   const trackPath = `${examPath}/${TRYOUT_START_TRACK}`;
   const visibleSectionCount = visibility === "visible" ? 1 : 0;
-  const parents = Schema.decodeUnknownSync(
-    Schema.Array(TryoutCatalogRowSchema)
-  )([
+  const parents = Schema.decodeSync(Schema.Array(TryoutCatalogRowSchema))([
     {
       countryCode: "ID",
       countryKey: TRYOUT_START_COUNTRY,
@@ -263,7 +261,7 @@ export function makeTryoutStartCatalog(
   scoringStrategy: TryoutScoring = "raw"
 ): readonly TryoutCatalogRow[] {
   const internalEntry = visibility === "internal-entry";
-  return Schema.decodeUnknownSync(Schema.Array(TryoutCatalogRowSchema))([
+  return Schema.decodeSync(Schema.Array(TryoutCatalogRowSchema))([
     {
       countryKey: TRYOUT_START_COUNTRY,
       examKey: TRYOUT_START_EXAM,
@@ -311,7 +309,7 @@ export function makeTryoutStartPlacement(
 ): TryoutPlacement {
   const signedAppLocale = ActiveAppLocaleSchema.make(appLocale);
   const questionRoot = `${sourcePath}/question-1`;
-  return Schema.decodeUnknownSync(TryoutPlacementSchema)({
+  return Schema.decodeSync(TryoutPlacementSchema)({
     answerArtifactHash: testTextHash(`${appLocale}:tryout-start:answer`),
     answerArtifactLocale: signedAppLocale,
     answerContentKey: `${questionRoot}/answer`,
@@ -369,7 +367,7 @@ const revisedSourcePath = `question-bank/tryout/${TRYOUT_START_COUNTRY}/${TRYOUT
 /** Builds one replacement placement for the revised internal entry. */
 function makeRevisedTryoutStartPlacement(appLocale: ActiveAppLocaleCode) {
   const questionRoot = `${revisedSourcePath}/question-1`;
-  return Schema.decodeUnknownSync(TryoutPlacementSchema)({
+  return Schema.decodeSync(TryoutPlacementSchema)({
     ...makeTryoutStartPlacement(appLocale),
     answerContentKey: `${questionRoot}/answer`,
     questionContentKey: `${questionRoot}/question`,
@@ -382,7 +380,7 @@ function makeRevisedTryoutStartPlacement(appLocale: ActiveAppLocaleCode) {
 /** Builds one replacement placement whose public path belongs to another set. */
 function makeReusedTryoutStartPlacement(appLocale: ActiveAppLocaleCode) {
   const questionRoot = `${reusedSourcePath}/question-1`;
-  return Schema.decodeUnknownSync(TryoutPlacementSchema)({
+  return Schema.decodeSync(TryoutPlacementSchema)({
     ...makeTryoutStartPlacement(appLocale),
     answerContentKey: `${questionRoot}/answer`,
     questionContentKey: `${questionRoot}/question`,

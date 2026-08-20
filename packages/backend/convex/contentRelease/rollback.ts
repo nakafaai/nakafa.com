@@ -40,7 +40,6 @@ const rollbackSource = Effect.fn("contentRelease.rollbackSource")(function* (
 ) {
   return yield* loadReadableSnapshot(ctx, releaseId, manifestHash);
 });
-
 /** Creates one bounded body-bearing rollback page. */
 function makeRollbackPage(
   request: typeof RollbackPageRequestSchema.Type,
@@ -57,13 +56,12 @@ function makeRollbackPage(
     total,
   };
 }
-
 /** Reads one bounded exact prior-state page from the active release. */
 const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(function* (
   ctx: QueryCtx,
   input: unknown
 ) {
-  const request = yield* Schema.decodeUnknown(RollbackPageRequestSchema)(
+  const request = yield* Schema.decodeUnknownEffect(RollbackPageRequestSchema)(
     input
   ).pipe(
     Effect.mapError(
@@ -133,7 +131,6 @@ const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(function* (
   }
   return canonicalizeRollbackPage(makeRollbackPage(request, total, records));
 });
-
 /** Resolves the owner immediately before one signed route change. */
 const priorRouteOwner = Effect.fn("contentRelease.priorRouteOwner")(function* (
   ctx: QueryCtx,
@@ -149,7 +146,9 @@ const priorRouteOwner = Effect.fn("contentRelease.priorRouteOwner")(function* (
   if (prior?.operation !== "bind") {
     return null;
   }
-  return yield* Schema.decodeUnknown(ContentKeySchema)(prior.contentKey).pipe(
+  return yield* Schema.decodeUnknownEffect(ContentKeySchema)(
+    prior.contentKey
+  ).pipe(
     Effect.mapError(
       () =>
         new ReleaseError({
@@ -159,11 +158,10 @@ const priorRouteOwner = Effect.fn("contentRelease.priorRouteOwner")(function* (
     )
   );
 });
-
 /** Reads one bounded exact prior-owner page from the active release. */
 const routeProgram = Effect.fn("contentRelease.prepareRouteRollback")(
   function* (ctx: QueryCtx, input: unknown) {
-    const request = yield* Schema.decodeUnknown(RoutePageRequestSchema)(
+    const request = yield* Schema.decodeUnknownEffect(RoutePageRequestSchema)(
       input
     ).pipe(
       Effect.mapError(
@@ -227,7 +225,6 @@ const routeProgram = Effect.fn("contentRelease.prepareRouteRollback")(
     return JSON.stringify(page);
   }
 );
-
 /** Returns one canonical bounded body rollback page. */
 export const prepareRollback = internalQuery({
   args: {
@@ -239,7 +236,6 @@ export const prepareRollback = internalQuery({
   returns: v.string(),
   handler: (ctx, args) => runConvexProgram(rollbackProgram(ctx, args)),
 });
-
 /** Returns one canonical bounded route-owner rollback page. */
 export const prepareRoutes = internalQuery({
   args: {

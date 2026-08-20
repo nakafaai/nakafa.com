@@ -295,7 +295,7 @@ export async function insertRetainedRuntime(
     });
   }
   return {
-    request: Schema.decodeUnknownSync(StoredProtectedRuntimeRequestSchema)({
+    request: Schema.decodeSync(StoredProtectedRuntimeRequestSchema)({
       appLocale,
       attemptId,
       selectors: [

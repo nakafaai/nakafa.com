@@ -15,7 +15,7 @@ import { describe, expect, it } from "vitest";
 
 /** Creates one technical track used to break localized count symmetry. */
 function makeTechnicalTrack() {
-  return Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
+  return Schema.decodeSync(TryoutCatalogRowSchema)({
     countryKey: "indonesia",
     description: "Technical track",
     examKey: "snbt",

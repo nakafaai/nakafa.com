@@ -1,6 +1,5 @@
-import { FileSystem } from "@effect/platform";
 import { CONTENT_RUNTIME_TABLES } from "@repo/backend/scripts/content-runtime/tables";
-import { Console, Effect, Redacted } from "effect";
+import { Console, Effect, FileSystem, Redacted } from "effect";
 import { decryptAndExtractArchive } from "./archive";
 import { runConvexImport } from "./command";
 import type { ImportConfig } from "./config";

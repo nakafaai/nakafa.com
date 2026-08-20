@@ -34,14 +34,12 @@ const readPublishedQuranTranslation = Effect.fn("NakafaQuran.readTranslation")(
     return localized.value;
   }
 );
-
 /** Reads optional reviewed Indonesian tafsir without inventing another locale. */
 function findPublishedQuranTafsir(verse: QuranRuntimeVerse) {
   return verse.tafsir.find(
     (interpretation) => interpretation.appLocale === "id"
   );
 }
-
 /** Reads a bounded Quran reference from the active signed publication. */
 export function readNakafaQuranReference(convexUrl: string, input: unknown) {
   return Effect.gen(function* () {
@@ -69,10 +67,9 @@ export function readNakafaQuranReference(convexUrl: string, input: unknown) {
     });
     if (Option.isNone(ref)) {
       return Option.none<
-        Effect.Effect.Success<ReturnType<typeof decodeNakafaQuranReference>>
+        Effect.Success<ReturnType<typeof decodeNakafaQuranReference>>
       >();
     }
-
     const verses = yield* Effect.forEach(reference.verses, (verse) =>
       Effect.gen(function* () {
         const translation = yield* readPublishedQuranTranslation(
@@ -107,7 +104,6 @@ export function readNakafaQuranReference(convexUrl: string, input: unknown) {
     return Option.some(decoded);
   });
 }
-
 /** Renders one signed Quran surah as full agent markdown. */
 export function readQuranMarkdown(
   convexUrl: string,
@@ -116,11 +112,9 @@ export function readQuranMarkdown(
   return Effect.gen(function* () {
     const [section, value, extra] = ref.route.split("/");
     const surahNumber = parseQuranSurahNumber(value);
-
     if (section !== "quran" || extra !== undefined || surahNumber === null) {
       return Option.none<NakafaAgentMarkdown>();
     }
-
     const result = yield* readNakafaRuntimeQuery(
       convexUrl,
       api.contentRelease.quran.markdown,
@@ -158,14 +152,14 @@ export function readQuranMarkdown(
       ].join("\n"),
       title,
     });
-
     return Option.some(markdown);
   });
 }
-
 /** Returns the source-authenticated transliterated surah name. */
 export function getSurahName(surah: {
-  readonly name: { readonly transliteration: string };
+  readonly name: {
+    readonly transliteration: string;
+  };
 }) {
   return surah.name.transliteration;
 }

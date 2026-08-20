@@ -8,7 +8,6 @@ function toHex(buffer: ArrayBuffer) {
     byte.toString(16).padStart(2, "0")
   ).join("");
 }
-
 /** Computes one SHA-256 identity through the Convex Web Crypto runtime. */
 export const hashText = Effect.fn("contentRelease.hashText")(function* (
   label: string,
@@ -23,7 +22,7 @@ export const hashText = Effect.fn("contentRelease.hashText")(function* (
       }),
     try: () => crypto.subtle.digest("SHA-256", encoded),
   });
-  return yield* Schema.decodeUnknown(Sha256HashSchema)(
+  return yield* Schema.decodeEffect(Sha256HashSchema)(
     `sha256:${toHex(digest)}`
   ).pipe(
     Effect.mapError(

@@ -11,7 +11,7 @@ const canonicalSitemapOrigin = `https://${MAIN_DOMAIN}`;
 export function GET() {
   return Effect.runPromise(
     buildSitemapIndexResponse().pipe(
-      Effect.catchAll((error) =>
+      Effect.catch((error) =>
         reportSitemapRouteError(error, "sitemap-index").pipe(
           Effect.as(
             new Response(sitemapIndexError, {

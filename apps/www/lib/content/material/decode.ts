@@ -15,19 +15,17 @@ interface MaterialPublicationRead {
   readonly activeReleaseId: ActiveContentReleaseId;
   readonly projection: MaterialLessonProjection;
 }
-
 /** Creates the public failure returned for malformed material projection data. */
 export function makeMaterialProjectionError(
   identity: PublishedProjectionIdentity
 ) {
   return new PublishedProjectionError(identity);
 }
-
 /** Strictly decodes one material projection and its requested route identity. */
 export const decodeMaterialProjection = Effect.fn(
   "NakafaMaterial.decodeProjection"
 )(function* (input: unknown, identity: PublishedProjectionIdentity) {
-  const projection = yield* Schema.decodeUnknown(
+  const projection = yield* Schema.decodeUnknownEffect(
     MaterialLessonProjectionSchema
   )(input, { onExcessProperty: "error" }).pipe(
     Effect.mapError(() => makeMaterialProjectionError(identity))
@@ -40,7 +38,6 @@ export const decodeMaterialProjection = Effect.fn(
   }
   return projection;
 });
-
 /** Parses one canonical material projection encoded by the backend. */
 export const decodeMaterialJson = Effect.fn("NakafaMaterial.decodeJson")(
   function* (source: string, identity: PublishedProjectionIdentity) {
@@ -48,12 +45,14 @@ export const decodeMaterialJson = Effect.fn("NakafaMaterial.decodeJson")(
       catch: () => makeMaterialProjectionError(identity),
       try: (): unknown => JSON.parse(source),
     });
-    return yield* Schema.decodeUnknown(MaterialLessonProjectionSchema)(input, {
-      onExcessProperty: "error",
-    }).pipe(Effect.mapError(() => makeMaterialProjectionError(identity)));
+    return yield* Schema.decodeUnknownEffect(MaterialLessonProjectionSchema)(
+      input,
+      {
+        onExcessProperty: "error",
+      }
+    ).pipe(Effect.mapError(() => makeMaterialProjectionError(identity)));
   }
 );
-
 /** Proves two concurrent material reads selected one identical publication. */
 export const verifyMaterialPublication = Effect.fn(
   "NakafaMaterial.verifyPublication"
@@ -78,7 +77,6 @@ export const verifyMaterialPublication = Effect.fn(
     return yield* makeMaterialProjectionError(identity);
   }
 });
-
 /** Checks whether two material projections share one stable content identity. */
 export function isMaterialCounterpart(
   current: MaterialLessonProjection,
@@ -86,7 +84,6 @@ export function isMaterialCounterpart(
 ) {
   return current.contentKey === candidate.contentKey;
 }
-
 /** Checks whether two projections belong to one localized lesson group. */
 export function isMaterialSibling(
   current: MaterialLessonProjection,

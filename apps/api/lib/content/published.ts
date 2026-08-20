@@ -1,21 +1,17 @@
 import "server-only";
-
 import type { AppLocale } from "@nakafa/aksara-contracts/locale";
 import { readPublicContentEvidenceBatch } from "@repo/backend/client/content/public";
 import { Effect, Schema } from "effect";
 import { env } from "@/env";
 
 const NAKAFA_CONTENT_BASE_URL = "https://nakafa.com";
-
 type PublishedFamily = "article" | "material";
-
 interface PublishedContentInput {
   readonly activeReleaseId: string;
   readonly appLocale: AppLocale;
   readonly family: PublishedFamily;
   readonly publicPath: string;
 }
-
 /** Expected signed-runtime failure while building one public API response. */
 export class ApiPublishedContentReadError extends Schema.TaggedError<ApiPublishedContentReadError>()(
   "ApiPublishedContentReadError",
@@ -24,7 +20,6 @@ export class ApiPublishedContentReadError extends Schema.TaggedError<ApiPublishe
     message: Schema.String,
   }
 ) {}
-
 /** Maps one signed-publication failure into the API-owned error contract. */
 function publishedReadError(cause: unknown) {
   return new ApiPublishedContentReadError({
@@ -32,11 +27,9 @@ function publishedReadError(cause: unknown) {
     message: "Unable to read signed public content for the public API.",
   });
 }
-
-type PublishedEvidence = Effect.Effect.Success<
+type PublishedEvidence = Effect.Success<
   ReturnType<typeof readPublicContentEvidenceBatch>
 >[number];
-
 /** Requires one verified item to retain its page-owned public identity. */
 const verifyPublishedIdentity = Effect.fn("ApiContent.verifyPublishedIdentity")(
   function* (input: PublishedContentInput, found: PublishedEvidence) {
@@ -55,7 +48,6 @@ const verifyPublishedIdentity = Effect.fn("ApiContent.verifyPublishedIdentity")(
     return found;
   }
 );
-
 /** Maps verified signed evidence into the established partner item. */
 function makePublishedApiItem(found: PublishedEvidence) {
   const projection = found.projection;
@@ -80,7 +72,6 @@ function makePublishedApiItem(found: PublishedEvidence) {
     url: `${NAKAFA_CONTENT_BASE_URL}/${projection.appLocale}/${projection.publicPath}`,
   };
 }
-
 /** Builds one ordered partner batch from current signed public evidence. */
 export const readPublishedApiItems = Effect.fn(
   "ApiContent.readPublishedApiItems"

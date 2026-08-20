@@ -24,12 +24,10 @@ const routeResultValidator = v.union(
     projectionJson: v.string(),
   })
 );
-
 type RouteResult = Infer<typeof routeResultValidator>;
-
 /** Converts the internal route model into its public ownership contract. */
 function toRouteResult(
-  resolved: Effect.Effect.Success<ReturnType<typeof resolveActiveRoute>>
+  resolved: Effect.Success<ReturnType<typeof resolveActiveRoute>>
 ): RouteResult {
   if (!resolved.active) {
     return { activeReleaseId: null, kind: "unmanaged" };
@@ -52,7 +50,6 @@ function toRouteResult(
     projectionJson: resolved.projection.projectionJson,
   };
 }
-
 /** Returns active public-route ownership without exposing artifact code. */
 export const resolve = query({
   args: {

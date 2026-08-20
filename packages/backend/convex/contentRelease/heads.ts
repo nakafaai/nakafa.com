@@ -20,7 +20,7 @@ import { Effect, Schema } from "effect";
 const decodeRequest = Effect.fn("contentRelease.decodeHeadPage")(function* (
   input: unknown
 ) {
-  return yield* Schema.decodeUnknown(HeadPageRequestSchema)(input, {
+  return yield* Schema.decodeUnknownEffect(HeadPageRequestSchema)(input, {
     onExcessProperty: "error",
   }).pipe(
     Effect.mapError(
@@ -32,7 +32,6 @@ const decodeRequest = Effect.fn("contentRelease.decodeHeadPage")(function* (
     )
   );
 });
-
 /** Proves the requested release is an exact active or verified snapshot. */
 const snapshotSequence = Effect.fn("contentRelease.snapshotSequence")(
   function* (ctx: QueryCtx, releaseId: string, manifestHash: string) {
@@ -44,7 +43,6 @@ const snapshotSequence = Effect.fn("contentRelease.snapshotSequence")(
     return release.sequence;
   }
 );
-
 /** Reads one canonical family directory page from an immutable sequence. */
 const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
   ctx: QueryCtx,
@@ -90,7 +88,7 @@ const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
     heads,
     nextCursor: stored.isDone ? null : stored.continueCursor,
   };
-  return yield* Schema.decodeUnknown(HeadPageSchema)(page, {
+  return yield* Schema.decodeUnknownEffect(HeadPageSchema)(page, {
     onExcessProperty: "error",
   }).pipe(
     Effect.mapError(
@@ -106,7 +104,6 @@ const headPageProgram = Effect.fn("contentRelease.headPage")(function* (
     }))
   );
 });
-
 /** Returns one exact active family inventory page for source diffing. */
 export const page = internalQuery({
   args: {

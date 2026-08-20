@@ -1,5 +1,4 @@
 "use client";
-
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -37,13 +36,13 @@ type SavePreferredCurriculum = (
     typeof api.learningPreferences.mutations.setPreferredCurriculum
   >
 >;
-
-const formSchema = Schema.standardSchemaV1(
+const formSchema = Schema.toStandardSchemaV1(
   Schema.Struct({
-    preferredCurriculumProgramKey: Schema.String.pipe(Schema.minLength(1)),
+    preferredCurriculumProgramKey: Schema.String.pipe(
+      Schema.check(Schema.isMinLength(1))
+    ),
   })
 );
-
 /** Expected failure when the submitted curriculum preference is invalid. */
 class CurriculumPreferenceValidationError extends Schema.TaggedError<CurriculumPreferenceValidationError>()(
   "CurriculumPreferenceValidationError",
@@ -51,7 +50,6 @@ class CurriculumPreferenceValidationError extends Schema.TaggedError<CurriculumP
     cause: Schema.Unknown,
   }
 ) {}
-
 /** Expected failure when Convex cannot save the selected curriculum preference. */
 class CurriculumPreferenceMutationError extends Schema.TaggedError<CurriculumPreferenceMutationError>()(
   "CurriculumPreferenceMutationError",
@@ -59,7 +57,6 @@ class CurriculumPreferenceMutationError extends Schema.TaggedError<CurriculumPre
     cause: Schema.Unknown,
   }
 ) {}
-
 interface UserSettingsCurriculumProps {
   preloadedPreference: Preloaded<
     typeof api.learningPreferences.queries.getCurrent
@@ -68,7 +65,6 @@ interface UserSettingsCurriculumProps {
     typeof api.learningPreferences.queries.listCurriculumPrograms
   >;
 }
-
 /** Renders the settings form that saves the user's preferred curriculum. */
 export function UserSettingsCurriculum({
   preloadedPreference,
@@ -76,7 +72,6 @@ export function UserSettingsCurriculum({
 }: UserSettingsCurriculumProps) {
   const preference = usePreloadedQuery(preloadedPreference);
   const programs = usePreloadedQuery(preloadedPrograms);
-
   return (
     <UserSettingsCurriculumForm
       initialProgramKey={preference?.preferredCurriculumProgramKey ?? ""}
@@ -85,7 +80,6 @@ export function UserSettingsCurriculum({
     />
   );
 }
-
 /** Owns the curriculum preference form state after Convex data is ready. */
 function UserSettingsCurriculumForm({
   initialProgramKey,
@@ -106,7 +100,6 @@ function UserSettingsCurriculumForm({
     ),
     value: program.key,
   }));
-
   const form = useForm({
     defaultValues: {
       preferredCurriculumProgramKey: initialProgramKey,
@@ -118,7 +111,6 @@ function UserSettingsCurriculumForm({
       if (!isActiveLocale(locale)) {
         return;
       }
-
       const handleMutationError = (error: CurriculumPreferenceMutationError) =>
         reportClientException(error, {
           source: "user-settings-curriculum",
@@ -138,15 +130,12 @@ function UserSettingsCurriculumForm({
           })
         )
       );
-
       if (!didSave) {
         return;
       }
-
       form.reset(value);
     },
   });
-
   return (
     <form action={() => form.handleSubmit()} id="user-settings-curriculum-form">
       <FormBlock
@@ -222,7 +211,6 @@ function UserSettingsCurriculumForm({
     </form>
   );
 }
-
 /** Saves one settings form submission through the Convex preference mutation. */
 function submitCurriculumPreference({
   locale,
@@ -236,9 +224,11 @@ function submitCurriculumPreference({
   value: unknown;
 }) {
   return Effect.gen(function* () {
-    const formValue = yield* Schema.decodeUnknown(
+    const formValue = yield* Schema.decodeUnknownEffect(
       Schema.Struct({
-        preferredCurriculumProgramKey: Schema.String.pipe(Schema.minLength(1)),
+        preferredCurriculumProgramKey: Schema.String.pipe(
+          Schema.check(Schema.isMinLength(1))
+        ),
       })
     )(value).pipe(
       Effect.mapError(
@@ -248,13 +238,11 @@ function submitCurriculumPreference({
     const program = programs.find(
       (candidate) => candidate.key === formValue.preferredCurriculumProgramKey
     );
-
     if (!program) {
       return yield* new CurriculumPreferenceValidationError({
         cause: formValue.preferredCurriculumProgramKey,
       });
     }
-
     yield* Effect.tryPromise({
       try: () =>
         setPreferredCurriculum({
@@ -264,7 +252,6 @@ function submitCurriculumPreference({
         }),
       catch: (cause) => new CurriculumPreferenceMutationError({ cause }),
     });
-
     return null;
   });
 }

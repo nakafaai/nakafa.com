@@ -9,13 +9,12 @@ import { describe, expect, it } from "vitest";
 
 const FROZEN_CONTENT_HASH = "f".repeat(64);
 const CORPUS_ROOT_PATTERN = /^packages\/corpus\//;
-
 /** Builds authenticated and frozen views of the same fixed history vector. */
 const readPlacementPair = Effect.fn("test.readHistoricalTryoutPlacementPair")(
   function* () {
     const row = yield* decodeStoredTryoutRow(TEST_STORED_TRYOUT_PLACEMENT);
     if (row.rowKind !== "placement") {
-      return yield* Effect.dieMessage("Expected one historical placement.");
+      return yield* Effect.die(new Error("Expected one historical placement."));
     }
     const historical = row.record.row;
     return {
@@ -36,15 +35,12 @@ const readPlacementPair = Effect.fn("test.readHistoricalTryoutPlacementPair")(
     };
   }
 );
-
 describe("tryouts/history/placement", () => {
   it("returns the attempt-owned hash after authenticating the signed row", async () => {
     const { frozen, historical } = await Effect.runPromise(readPlacementPair());
-
     const verified = await Effect.runPromise(
       verifyStoredTryoutPlacement(historical, frozen)
     );
-
     expect(verified).toEqual({
       answerArtifactHash: historical.answerArtifactHash,
       answerContentKey: historical.answerContentKey,
@@ -58,10 +54,8 @@ describe("tryouts/history/placement", () => {
     });
     expect(verified).not.toHaveProperty("appLocale");
   });
-
   it("returns one typed failure for frozen field or choice drift", async () => {
     const { frozen, historical } = await Effect.runPromise(readPlacementPair());
-
     await expect(
       Effect.runPromise(
         verifyStoredTryoutPlacement(historical, {
@@ -81,14 +75,12 @@ describe("tryouts/history/placement", () => {
       )
     ).resolves.toEqual(new StoredTryoutPlacementMismatchError());
   });
-
   it("accepts a root-relative frozen source path", async () => {
     const { frozen, historical } = await Effect.runPromise(readPlacementPair());
     const relativeSourcePath = historical.questionSourcePath.replace(
       CORPUS_ROOT_PATTERN,
       ""
     );
-
     await expect(
       Effect.runPromise(
         verifyStoredTryoutPlacement(historical, {

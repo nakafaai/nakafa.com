@@ -36,10 +36,9 @@ import type { MathAgentParams } from "@repo/ai/types/agents";
 import { mathOperations } from "@repo/math/schema/operations";
 import { MathService } from "@repo/math/service";
 import { generateText, isStepCount, tool } from "ai";
-import { Effect, Runtime } from "effect";
+import { Effect } from "effect";
 
 const MAX_MATH_STEPS = mathOperations.length;
-
 /**
  * Runs the math agent and returns text with token usage.
  *
@@ -54,7 +53,8 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
   context,
   writer,
 }: MathAgentParams) {
-  const runPromise = Runtime.runPromise(yield* Effect.runtime());
+  const services = yield* Effect.context<never>();
+  const runPromise = Effect.runPromiseWith(services);
   const result = yield* Effect.tryPromise({
     try: () =>
       generateText({
@@ -86,7 +86,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
                   input,
                   toolCallId,
                   writer,
-                }).pipe(Effect.provide(MathService.Default))
+                }).pipe(Effect.provide(MathService.layer))
               ),
             inputSchema: mathAlgebraInput,
             outputSchema: textOutputSchema,
@@ -99,7 +99,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
                   input,
                   toolCallId,
                   writer,
-                }).pipe(Effect.provide(MathService.Default))
+                }).pipe(Effect.provide(MathService.layer))
               ),
             inputSchema: mathArithmeticInput,
             outputSchema: textOutputSchema,
@@ -112,7 +112,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
                   input,
                   toolCallId,
                   writer,
-                }).pipe(Effect.provide(MathService.Default))
+                }).pipe(Effect.provide(MathService.layer))
               ),
             inputSchema: mathCalculusInput,
             outputSchema: textOutputSchema,
@@ -125,7 +125,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
                   input,
                   toolCallId,
                   writer,
-                }).pipe(Effect.provide(MathService.Default))
+                }).pipe(Effect.provide(MathService.layer))
               ),
             inputSchema: mathDiscreteInput,
             outputSchema: textOutputSchema,
@@ -138,7 +138,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
                   input,
                   toolCallId,
                   writer,
-                }).pipe(Effect.provide(MathService.Default))
+                }).pipe(Effect.provide(MathService.layer))
               ),
             inputSchema: mathEquationInput,
             outputSchema: textOutputSchema,
@@ -151,7 +151,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
                   input,
                   toolCallId,
                   writer,
-                }).pipe(Effect.provide(MathService.Default))
+                }).pipe(Effect.provide(MathService.layer))
               ),
             inputSchema: mathGeometryInput,
             outputSchema: textOutputSchema,
@@ -164,7 +164,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
                   input,
                   toolCallId,
                   writer,
-                }).pipe(Effect.provide(MathService.Default))
+                }).pipe(Effect.provide(MathService.layer))
               ),
             inputSchema: mathMatrixInput,
             outputSchema: textOutputSchema,
@@ -177,7 +177,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
                   input,
                   toolCallId,
                   writer,
-                }).pipe(Effect.provide(MathService.Default))
+                }).pipe(Effect.provide(MathService.layer))
               ),
             inputSchema: mathProbabilityInput,
             outputSchema: textOutputSchema,
@@ -190,7 +190,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
                   input,
                   toolCallId,
                   writer,
-                }).pipe(Effect.provide(MathService.Default))
+                }).pipe(Effect.provide(MathService.layer))
               ),
             inputSchema: mathSeriesInput,
             outputSchema: textOutputSchema,
@@ -203,7 +203,7 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
                   input,
                   toolCallId,
                   writer,
-                }).pipe(Effect.provide(MathService.Default))
+                }).pipe(Effect.provide(MathService.layer))
               ),
             inputSchema: mathStatisticsInput,
             outputSchema: textOutputSchema,
@@ -212,7 +212,6 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
       }),
     catch: makeMathGenerationError,
   });
-
   return {
     text: result.text,
     usage: result.usage,

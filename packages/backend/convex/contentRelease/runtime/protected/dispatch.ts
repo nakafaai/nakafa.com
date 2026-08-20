@@ -22,26 +22,23 @@ import {
   failureResult,
 } from "@repo/backend/convex/contentRelease/runtime/result";
 import { makeFunctionReference } from "convex/server";
-import { Effect, Either, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 
 const protectedReadReference = makeFunctionReference<
   "query",
   ProtectedContentRuntimeRequest,
   ProtectedRuntimeBatchRow
 >("contentRelease/runtime/protected/internal:read");
-
 /** Request JSON could not satisfy the exact protected runtime contract. */
 class ProtectedRuntimeRequestError extends Schema.TaggedError<ProtectedRuntimeRequestError>()(
   "ProtectedRuntimeRequestError",
   {}
 ) {}
-
 /** Convex or stored protected runtime data failed before a safe response. */
 class ProtectedRuntimeReadError extends Schema.TaggedError<ProtectedRuntimeReadError>()(
   "ProtectedRuntimeReadError",
   {}
 ) {}
-
 /** Strictly parses one bounded UTF-8 protected batch request. */
 const decodeProtectedRequest = Effect.fn(
   "contentRelease.decodeProtectedRequest"
@@ -61,7 +58,6 @@ const decodeProtectedRequest = Effect.fn(
     Effect.mapError(() => new ProtectedRuntimeRequestError())
   );
 });
-
 /** Reads one retained-snapshot protected artifact batch for Nakafa verification. */
 const resolveProtectedRuntime = Effect.fn(
   "contentRelease.resolveProtectedRuntime"
@@ -81,7 +77,7 @@ const resolveProtectedRuntime = Effect.fn(
         Effect.all({
           artifact: decodeArtifactJson(item.artifactJson),
           delivery: Effect.succeed(item.delivery),
-          sourcePath: Schema.decodeUnknown(CorpusSourcePathSchema)(
+          sourcePath: Schema.decodeEffect(CorpusSourcePathSchema)(
             item.sourcePath
           ),
         }),
@@ -109,24 +105,23 @@ const resolveProtectedRuntime = Effect.fn(
   };
   return response;
 });
-
 /** Decodes, resolves, and safely encodes one protected runtime request. */
 export const dispatchProgram = Effect.fn(
   "contentRelease.protectedRuntimeDispatch"
 )(function* (ctx: ActionCtx, source: string, byteLength: number) {
   const decoded = yield* decodeProtectedRequest(source, byteLength).pipe(
-    Effect.either
+    Effect.result
   );
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     return failureResult("CONTENT_RUNTIME_INVALID", 400);
   }
-  const resolved = yield* resolveProtectedRuntime(ctx, decoded.right).pipe(
-    Effect.either
+  const resolved = yield* resolveProtectedRuntime(ctx, decoded.success).pipe(
+    Effect.result
   );
-  if (Either.isLeft(resolved)) {
+  if (Result.isFailure(resolved)) {
     return failureResult("CONTENT_RUNTIME_INTERNAL", 500);
   }
-  if (resolved.right === null) {
+  if (resolved.success === null) {
     return encodeRuntimeResult(
       ProtectedContentRuntimeResponseSchema,
       MAX_PROTECTED_RUNTIME_RESPONSE_BYTES,
@@ -135,7 +130,7 @@ export const dispatchProgram = Effect.fn(
     );
   }
   if (
-    protectedRuntimeResponseBytes(resolved.right) >
+    protectedRuntimeResponseBytes(resolved.success) >
     MAX_PROTECTED_RUNTIME_RESPONSE_BYTES
   ) {
     return failureResult("CONTENT_RUNTIME_RESPONSE_TOO_LARGE", 500);
@@ -143,7 +138,7 @@ export const dispatchProgram = Effect.fn(
   return encodeRuntimeResult(
     ProtectedContentRuntimeResponseSchema,
     MAX_PROTECTED_RUNTIME_RESPONSE_BYTES,
-    resolved.right,
+    resolved.success,
     200
   );
 });

@@ -12,13 +12,10 @@ import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 
 type QuranViewResult = FunctionReturnType<typeof api.contentRelease.quran.view>;
-
 /** One validator-derived verse rendered by the app-locale Quran web view. */
 export type QuranViewVerse = QuranViewResult["verses"][number];
-
 /** Minimal validator-derived surah metadata rendered by the Quran web view. */
 export type QuranViewSurah = NonNullable<QuranViewResult["surah"]>;
-
 /** Decodes one active app-locale Quran web projection. */
 export const decodePublishedQuranView = Effect.fn("NakafaQuran.decodeView")(
   function* (
@@ -51,7 +48,6 @@ export const decodePublishedQuranView = Effect.fn("NakafaQuran.decodeView")(
         reason: "Signed Quran view identity is inconsistent.",
       });
     }
-
     return {
       ...source,
       appLocale: result.appLocale,
@@ -62,7 +58,6 @@ export const decodePublishedQuranView = Effect.fn("NakafaQuran.decodeView")(
     };
   }
 );
-
-export type PublishedQuranView = Effect.Effect.Success<
+export type PublishedQuranView = Effect.Success<
   ReturnType<typeof decodePublishedQuranView>
 >;

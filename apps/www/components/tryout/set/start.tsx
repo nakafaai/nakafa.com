@@ -192,7 +192,7 @@ export function StartTryoutButton({
   function createPaywallProgram() {
     return Effect.sync(() => setForceUpgrade(true)).pipe(
       Effect.tap(() =>
-        Effect.forkDaemon(
+        Effect.forkDetach(
           paywallViewProgram({
             mutation: trackPaywall,
             source: "start-mutation",

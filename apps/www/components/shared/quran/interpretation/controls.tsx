@@ -1,5 +1,4 @@
 "use client";
-
 import { useDisclosure, useWindowEvent } from "@mantine/hooks";
 import {
   decodePublishedQuranInterpretation,
@@ -36,35 +35,27 @@ interface Props {
   snapshotId: string;
   surahNumber: number;
 }
-
 const INTERPRETATION_BUTTON_SELECTOR = "[data-quran-interpretation-verse]";
-
 /** Finds a delegated tafsir button from a browser click event. */
 function getInterpretationButton(event: MouseEvent) {
   const target = event.target;
-
   if (!(target instanceof Element)) {
     return null;
   }
-
   const button = target.closest(INTERPRETATION_BUTTON_SELECTOR);
   if (!(button instanceof HTMLButtonElement)) {
     return null;
   }
-
   return button;
 }
-
 /** Reads the exact verse identity selected by one delegated button. */
 function getVerseNumber(button: HTMLButtonElement) {
   const verseNumber = Number(button.dataset.quranInterpretationVerse);
   if (!Number.isSafeInteger(verseNumber) || verseNumber < 1) {
     return null;
   }
-
   return verseNumber;
 }
-
 /** Coordinates every verse tafsir request and drawer through one client controller. */
 export function QuranInterpretationControls({
   children,
@@ -85,7 +76,6 @@ export function QuranInterpretationControls({
   const requestSequence = useRef(0);
   const pendingRequestId = useRef<number | null>(null);
   const toastId = `quran-interpretation-${snapshotId}-${surahNumber}`;
-
   // Cached routes use React Activity, which runs layout cleanup while hidden.
   useLayoutEffect(
     () => () => {
@@ -98,29 +88,24 @@ export function QuranInterpretationControls({
     },
     [close, toastId]
   );
-
   useWindowEvent("click", (event) => {
     const button = getInterpretationButton(event);
     if (!button) {
       return;
     }
-
     const verseNumber = getVerseNumber(button);
     if (verseNumber === null) {
       return;
     }
-
     if (isPending || pendingRequestId.current !== null) {
       return;
     }
-
     requestSequence.current += 1;
     const requestId = requestSequence.current;
     pendingRequestId.current = requestId;
     setPendingVerseNumber(verseNumber);
     close();
     setSelectedInterpretation("");
-
     const program = Effect.tryPromise({
       catch: toQuranInterpretationRequestError,
       try: () =>
@@ -144,16 +129,14 @@ export function QuranInterpretationControls({
           if (requestSequence.current !== requestId) {
             return;
           }
-
           setSelectedInterpretation(interpretation);
           open();
         })
       ),
-      Effect.catchAll((error) => {
+      Effect.catch((error) => {
         if (requestSequence.current !== requestId) {
           return Effect.void;
         }
-
         if (isQuranSnapshotConflict(error)) {
           return Effect.sync(() =>
             toast.info(refreshingMessage, {
@@ -161,19 +144,19 @@ export function QuranInterpretationControls({
               position: "bottom-center",
             })
           ).pipe(
-            Effect.zipRight(
+            Effect.andThen(
               Effect.tryPromise({
                 catch: toQuranInterpretationRequestError,
                 try: recoverSnapshot,
               }).pipe(
-                Effect.catchAll((recoveryError) =>
+                Effect.catch((recoveryError) =>
                   Effect.sync(() => {
                     toast.error(errorMessage, {
                       id: toastId,
                       position: "bottom-center",
                     });
                   }).pipe(
-                    Effect.zipRight(
+                    Effect.andThen(
                       reportClientException(recoveryError, {
                         source: "quran-interpretation-recovery",
                         surahNumber,
@@ -186,14 +169,13 @@ export function QuranInterpretationControls({
             )
           );
         }
-
         return Effect.sync(() => {
           toast.error(errorMessage, {
             id: toastId,
             position: "bottom-center",
           });
         }).pipe(
-          Effect.zipRight(
+          Effect.andThen(
             reportClientException(error, {
               source: "quran-interpretation",
               surahNumber,
@@ -207,17 +189,14 @@ export function QuranInterpretationControls({
           if (pendingRequestId.current !== requestId) {
             return;
           }
-
           pendingRequestId.current = null;
           setPendingVerseNumber(null);
         })
       ),
       Effect.asVoid
     );
-
     startTransition(() => Effect.runPromise(program));
   });
-
   return (
     <QuranInterpretationContext.Provider
       value={isPending ? pendingVerseNumber : null}

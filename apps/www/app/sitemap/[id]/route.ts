@@ -24,7 +24,7 @@ export async function GET(
       Effect.catchTag("SitemapPageNotFoundError", () =>
         Effect.succeed(createNotFoundResponse())
       ),
-      Effect.catchAll((error) =>
+      Effect.catch((error) =>
         reportSitemapRouteError(error, "sitemap-page").pipe(
           Effect.as(
             new Response(sitemapPageError, {

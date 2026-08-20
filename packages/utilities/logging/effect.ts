@@ -3,10 +3,10 @@ import { Duration, Effect, Metric } from "effect";
 
 const SERVER_ERROR_CODE = 500;
 const CLIENT_ERROR_CODE = 400;
-const operationDuration = Metric.timer(
-  "operation_duration",
-  "Duration of Effect operations recorded by shared logging utilities."
-);
+const operationDuration = Metric.timer("operation_duration", {
+  description:
+    "Duration of Effect operations recorded by shared logging utilities.",
+});
 
 /**
  * Logs an Error through Effect with stable structured metadata.
@@ -80,7 +80,7 @@ export const timeOperation = Effect.fn("logging.timeOperation")(
           ...context,
         },
       }),
-      Metric.trackDuration(operationDuration),
+      Effect.trackDuration(operationDuration),
       Effect.timed,
       Effect.flatMap(([duration, result]) =>
         Effect.logInfo(`${label} completed`).pipe(

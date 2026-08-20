@@ -2,12 +2,13 @@ import { CAS_ENV } from "@repo/math/config";
 import { createEnv } from "@t3-oss/env-core";
 import { Schema } from "effect";
 
-const casUrlSchema = Schema.NonEmptyTrimmedString.pipe(
-  Schema.filter((value) => URL.canParse(value), {
-    message: () => "Expected a valid CAS URL.",
-  })
+const casUrlSchema = Schema.Trimmed.check(Schema.isNonEmpty()).pipe(
+  Schema.check(
+    Schema.makeFilter((value) => URL.canParse(value), {
+      message: "Expected a valid CAS URL.",
+    })
+  )
 );
-
 /**
  * Validate the CAS environment contract for runtimes that consume deterministic
  * math.
@@ -24,7 +25,9 @@ export const keys = () =>
       [CAS_ENV.url]: process.env[CAS_ENV.url],
     },
     server: {
-      [CAS_ENV.apiKey]: Schema.standardSchemaV1(Schema.NonEmptyTrimmedString),
-      [CAS_ENV.url]: Schema.standardSchemaV1(casUrlSchema),
+      [CAS_ENV.apiKey]: Schema.toStandardSchemaV1(
+        Schema.Trimmed.check(Schema.isNonEmpty())
+      ),
+      [CAS_ENV.url]: Schema.toStandardSchemaV1(casUrlSchema),
     },
   });

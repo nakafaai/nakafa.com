@@ -1,5 +1,4 @@
 "use client";
-
 import { selfSelectableUserRoles } from "@repo/backend/convex/users/roles";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
@@ -20,13 +19,12 @@ import { useUpdateUserRoleMutation } from "@/components/user/mutation.client";
 import type { CurrentUser } from "@/lib/context/use-user";
 import { roles } from "@/lib/data/roles";
 
-const roleSchema = Schema.Literal(...selfSelectableUserRoles);
-const formSchema = Schema.standardSchemaV1(
+const roleSchema = Schema.Literals(selfSelectableUserRoles);
+const formSchema = Schema.toStandardSchemaV1(
   Schema.Struct({
     role: roleSchema,
   })
 );
-
 /** Renders the settings form that validates and saves the user's app role. */
 export function UserSettingsRole({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
@@ -39,12 +37,10 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
     ),
     value: role.value,
   }));
-
   const updateUserRole = useUpdateUserRoleMutation();
   const initialRole = roles.find(
     (role) => role.value === user.appUser.role
   )?.value;
-
   const form = useForm({
     defaultValues: {
       role: initialRole,
@@ -57,14 +53,12 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
       if (Option.isNone(role)) {
         return;
       }
-
       await updateUserRole({
         role: role.value,
       });
       form.reset(value);
     },
   });
-
   return (
     <form action={() => form.handleSubmit()} id="user-settings-role-form">
       <FormBlock

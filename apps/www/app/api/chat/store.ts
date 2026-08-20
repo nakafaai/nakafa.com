@@ -31,18 +31,17 @@ export function createNinaStore({
   readonly modelId: ModelId;
   readonly reportError: (error: unknown, source: string) => void;
   readonly token: string;
-}): Context.Tag.Service<typeof NinaStore> {
+}): Context.Service.Shape<typeof NinaStore> {
   return {
-    loadMessages: () =>
-      loadMessages({ chatId, token }).pipe(
-        Effect.mapError(
-          () =>
-            new NinaStoreError({
-              message: "Unable to load chat messages for Nina.",
-              source: "loadMessages",
-            })
-        )
-      ),
+    loadMessages: loadMessages({ chatId, token }).pipe(
+      Effect.mapError(
+        () =>
+          new NinaStoreError({
+            message: "Unable to load chat messages for Nina.",
+            source: "loadMessages",
+          })
+      )
+    ),
     saveAssistant: ({ context, responseMessage }) =>
       Effect.sync(() => {
         const tokenData = responseMessage.metadata?.tokens;
@@ -71,7 +70,7 @@ export function createNinaStore({
                 { token }
               )
             ).pipe(
-              Effect.catchAll((error) =>
+              Effect.catch((error) =>
                 Effect.sync(() => reportError(error, "saveAssistantResponse"))
               )
             )
@@ -88,7 +87,7 @@ export function createNinaStore({
               responseMessageId,
               token,
             }).pipe(
-              Effect.catchAll((error) =>
+              Effect.catch((error) =>
                 Effect.sync(() => reportError(error, "saveAssistantFailure"))
               )
             )
@@ -124,7 +123,7 @@ export function createNinaStore({
                 )
               );
             }).pipe(
-              Effect.catchAll((error) =>
+              Effect.catch((error) =>
                 Effect.sync(() => reportError(error, "generateTitle"))
               )
             )

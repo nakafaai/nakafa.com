@@ -13,21 +13,19 @@ const GOOGLE_JWT_AUDIENCE = GOOGLE_TOKEN_ENDPOINT;
 const GOOGLE_JWT_ALGORITHM = "RS256";
 const GOOGLE_JWT_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";
 const GOOGLE_JWT_TOKEN_LIFETIME_SECONDS = 3600;
-
 const GoogleServiceAccountSchema = Schema.Struct({
-  client_email: Schema.NonEmptyTrimmedString,
+  client_email: Schema.Trimmed.check(Schema.isNonEmpty()),
   private_key: Schema.NonEmptyString,
 });
 const GoogleTokenResponseSchema = Schema.Struct({
-  access_token: Schema.NonEmptyTrimmedString,
+  access_token: Schema.Trimmed.check(Schema.isNonEmpty()),
 });
-const decodeGoogleServiceAccount = Schema.decodeUnknown(
-  Schema.parseJson(GoogleServiceAccountSchema)
+const decodeGoogleServiceAccount = Schema.decodeUnknownEffect(
+  Schema.fromJsonString(GoogleServiceAccountSchema)
 );
-const decodeGoogleTokenResponse = Schema.decodeUnknown(
-  Schema.parseJson(GoogleTokenResponseSchema)
+const decodeGoogleTokenResponse = Schema.decodeUnknownEffect(
+  Schema.fromJsonString(GoogleTokenResponseSchema)
 );
-
 /** Loads and validates the service-account key used for eligible URL updates. */
 const loadGoogleServiceAccount = Effect.fn(
   "scripts.google.auth.loadServiceAccount"
@@ -40,7 +38,6 @@ const loadGoogleServiceAccount = Effect.fn(
         message: `Failed to read ${GOOGLE_KEY_FILE}.`,
       }),
   });
-
   return yield* decodeGoogleServiceAccount(keyFileContent).pipe(
     Effect.mapError(
       () =>
@@ -52,7 +49,6 @@ const loadGoogleServiceAccount = Effect.fn(
     )
   );
 });
-
 /** Signs a service-account assertion for Google's OAuth token endpoint. */
 const signGoogleAccessTokenAssertion = Effect.fn(
   "scripts.google.auth.signAssertion"
@@ -113,10 +109,8 @@ const signGoogleAccessTokenAssertion = Effect.fn(
         message: "Failed to sign the Google service-account JWT assertion.",
       }),
   });
-
   return `${signatureInput}.${Buffer.from(signature).toString("base64url")}`;
 });
-
 /** Exchanges a signed service-account assertion for a Google API access token. */
 export const getGoogleAccessToken = Effect.fn("scripts.google.auth.getToken")(
   function* () {
@@ -141,14 +135,12 @@ export const getGoogleAccessToken = Effect.fn("scripts.google.auth.getToken")(
           message: "Google token request transport failed.",
         }),
     });
-
     if (!tokenResponse.ok) {
       return yield* new GoogleTokenRequestError({
         message: "Google token request failed.",
         responseText: tokenResponse.responseText,
       });
     }
-
     return (yield* decodeGoogleTokenResponse(tokenResponse.responseText))
       .access_token;
   }

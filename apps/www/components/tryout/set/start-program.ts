@@ -30,7 +30,7 @@ export function startAttemptProgram(input: StartAttemptProgramInput) {
     catch: toTryoutClientRequestError,
   }).pipe(
     Effect.tap((result) => input.onSuccess(result)),
-    Effect.catchAll((error) => {
+    Effect.catch((error) => {
       if (isTryoutAccessRequired(error)) {
         return input.onUpgrade();
       }
@@ -61,7 +61,7 @@ export function startEntrySectionProgram(input: {
     catch: toTryoutClientRequestError,
   }).pipe(
     Effect.tap(() => showSuccess(input.successMessage)),
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       reportRequestFailure(error, "tryout-start-section", input.failureMessage)
     ),
     Effect.asVoid
@@ -90,7 +90,7 @@ export function checkoutProgram(input: {
         window.location.href = url;
       })
     ),
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       reportRequestFailure(error, "tryout-checkout", input.failureMessage)
     ),
     Effect.asVoid
@@ -108,7 +108,7 @@ export function paywallViewProgram(input: {
     try: () => input.mutation({ source: input.source }),
     catch: toTryoutClientRequestError,
   }).pipe(
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       reportClientException(error, { source: "tryout-paywall-view" })
     ),
     Effect.asVoid

@@ -55,7 +55,7 @@ import {
   tool,
   wrapLanguageModel,
 } from "ai";
-import { Effect, Runtime } from "effect";
+import { Effect } from "effect";
 
 // Keep exact user source scraping parallel without allowing unlimited fan-out.
 const exactSourceScrapeConcurrency = 3;
@@ -75,7 +75,8 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
     toolCallId,
     writer,
   }: ResearchAgentParams) {
-    const runPromise = Runtime.runPromise(yield* Effect.runtime());
+    const services = yield* Effect.context<never>();
+    const runPromise = Effect.runPromiseWith(services);
     let triedGoogleGrounding = false;
     const sourceReferences = getUniqueSourceReferences([
       ...messageSourceReferences,
@@ -295,15 +296,14 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
       },
     }).pipe(Effect.retry({ times: synthesisRetryAttempts }));
 
-    const output = yield* Effect.fromNullable(synthesisResult.output).pipe(
-      Effect.mapError(
-        () =>
-          new ResearchGenerationError({
-            message: "Research agent did not return structured output.",
-            phase: "synthesis",
-          })
-      )
-    );
+    const output = synthesisResult.output;
+
+    if (output == null) {
+      return yield* new ResearchGenerationError({
+        message: "Research agent did not return structured output.",
+        phase: "synthesis",
+      });
+    }
     const evidenceUsage = evidenceResult.usage;
     const synthesisUsage = synthesisResult.usage;
 

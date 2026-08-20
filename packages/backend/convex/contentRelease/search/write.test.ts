@@ -61,7 +61,7 @@ function materialProjection() {
 function questionProjection() {
   const setKey = "question-bank/tryout/indonesia/snbt/general/set-1";
   const questionKey = `${setKey}/question-1`;
-  return Schema.decodeUnknownSync(ContentProjectionSchema)({
+  return Schema.decodeSync(ContentProjectionSchema)({
     bodyKind: "question",
     choices: [
       { label: "Correct", value: true },

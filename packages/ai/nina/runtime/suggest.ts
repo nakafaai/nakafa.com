@@ -20,13 +20,12 @@ import { Effect, Schema, Stream } from "effect";
 
 const SuggestionsOutputSchema = createEffectSchema(
   Schema.Struct({
-    suggestions: Schema.Array(Schema.String).annotations({
+    suggestions: Schema.Array(Schema.String).annotate({
       description:
         "Exactly 5 natural follow-up questions or requests from the student's perspective.",
     }),
   })
 );
-
 /** Raised when Nina cannot stream follow-up suggestions after an answer. */
 export class NinaSuggestionError extends Schema.TaggedError<NinaSuggestionError>()(
   "NinaSuggestionError",
@@ -34,7 +33,6 @@ export class NinaSuggestionError extends Schema.TaggedError<NinaSuggestionError>
     message: Schema.String,
   }
 ) {}
-
 /**
  * Streams follow-up suggestions after the assistant response is complete.
  *
@@ -55,7 +53,6 @@ export const writeNinaSuggestions = Effect.fn("nina.suggest.write")(function* ({
     reasoning: "all",
     toolCalls: "all",
   });
-
   const suggestionsStream = streamText({
     model: provider.languageModel(defaultModel),
     instructions: nakafaSuggestions({ locale }),
@@ -69,9 +66,7 @@ export const writeNinaSuggestions = Effect.fn("nina.suggest.write")(function* ({
     },
     timeout: suggestionGenerationTimeout,
   });
-
   const dataPartId = crypto.randomUUID();
-
   yield* Stream.fromAsyncIterable(
     suggestionsStream.partialOutputStream,
     () =>
@@ -84,11 +79,9 @@ export const writeNinaSuggestions = Effect.fn("nina.suggest.write")(function* ({
         const suggestions =
           chunk.suggestions?.filter((suggestion) => suggestion !== undefined) ??
           [];
-
         if (suggestions.length === 0) {
           return;
         }
-
         writer.write({
           id: dataPartId,
           type: "data-suggestions",
@@ -99,7 +92,6 @@ export const writeNinaSuggestions = Effect.fn("nina.suggest.write")(function* ({
       })
     )
   );
-
   const output = yield* Effect.tryPromise({
     try: () => suggestionsStream.output,
     catch: () =>
@@ -107,11 +99,9 @@ export const writeNinaSuggestions = Effect.fn("nina.suggest.write")(function* ({
         message: "Failed to complete Nina suggestions.",
       }),
   });
-
   if (output.suggestions.length === 0) {
     return;
   }
-
   yield* Effect.sync(() =>
     writer.write({
       id: dataPartId,

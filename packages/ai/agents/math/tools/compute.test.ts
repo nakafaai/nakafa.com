@@ -9,17 +9,14 @@ import { ConfigProvider, Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 type WrittenPart = Parameters<UIMessageStreamWriter<MyUIMessage>["write"]>[0];
-
 const input = {
   expression: "6 * 7",
   operation: "evaluate",
 } satisfies MathToolInput;
-
 const request = {
   ...input,
   kind: "math",
 } satisfies MathRequest;
-
 const result = {
   conditions: [],
   input: request,
@@ -56,14 +53,10 @@ const result = {
   ],
   status: "verified",
 } satisfies MathResult;
-
-const provider = ConfigProvider.fromMap(
-  new Map([
-    ["MATH_CAS_API_KEY", "secret"],
-    ["NEXT_PUBLIC_CAS_URL", "https://cas.nakafa.test"],
-  ])
-);
-
+const provider = ConfigProvider.fromEnvRecord({
+  MATH_CAS_API_KEY: "secret",
+  NEXT_PUBLIC_CAS_URL: "https://cas.nakafa.test",
+});
 /** Creates a stream writer harness that records math data parts for assertions. */
 function createWriter() {
   const parts: WrittenPart[] = [];
@@ -74,14 +67,11 @@ function createWriter() {
       parts.push(part);
     },
   } satisfies UIMessageStreamWriter<MyUIMessage>;
-
   return { parts, writer };
 }
-
 afterEach(() => {
   vi.restoreAllMocks();
 });
-
 describe("math compute tool", () => {
   it("writes loading and done math data parts", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json(result));
@@ -92,11 +82,10 @@ describe("math compute tool", () => {
         toolCallId: "math-1",
         writer,
       }).pipe(
-        Effect.provide(MathService.Default),
-        Effect.withConfigProvider(provider)
+        Effect.provide(MathService.layer),
+        Effect.provideService(ConfigProvider.ConfigProvider, provider)
       )
     );
-
     expect(output).toContain("# Checked Math Work");
     expect(output).toContain("- Status: verified");
     expect(parts).toEqual([
@@ -122,7 +111,6 @@ describe("math compute tool", () => {
       }),
     ]);
   });
-
   it("writes an error data part for math request failures", async () => {
     vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline"));
     const { parts, writer } = createWriter();
@@ -132,11 +120,10 @@ describe("math compute tool", () => {
         toolCallId: "math-2",
         writer,
       }).pipe(
-        Effect.provide(MathService.Default),
-        Effect.withConfigProvider(provider)
+        Effect.provide(MathService.layer),
+        Effect.provideService(ConfigProvider.ConfigProvider, provider)
       )
     );
-
     expect(output).toContain("- Status: error");
     expect(output).toContain(
       "- Evidence scope: unavailable deterministic derivation"
@@ -162,7 +149,6 @@ describe("math compute tool", () => {
       })
     );
   });
-
   it("writes an error data part for math response failures", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       Response.json({ status: "verified" })
@@ -174,11 +160,10 @@ describe("math compute tool", () => {
         toolCallId: "math-3",
         writer,
       }).pipe(
-        Effect.provide(MathService.Default),
-        Effect.withConfigProvider(provider)
+        Effect.provide(MathService.layer),
+        Effect.provideService(ConfigProvider.ConfigProvider, provider)
       )
     );
-
     expect(output).toContain("- Status: error");
     expect(output).toContain("- Error code: math_check_unavailable");
     expect(parts.at(-1)).toEqual(
@@ -194,7 +179,6 @@ describe("math compute tool", () => {
       })
     );
   });
-
   it("asks the model to retry ambiguous symbolic calculus with the explicit variable", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       Response.json(
@@ -215,11 +199,10 @@ describe("math compute tool", () => {
         toolCallId: "math-ambiguous-variable",
         writer,
       }).pipe(
-        Effect.provide(MathService.Default),
-        Effect.withConfigProvider(provider)
+        Effect.provide(MathService.layer),
+        Effect.provideService(ConfigProvider.ConfigProvider, provider)
       )
     );
-
     expect(output).toContain(
       "Retry the same operation with the explicit variable"
     );
@@ -232,7 +215,6 @@ describe("math compute tool", () => {
       })
     );
   });
-
   it("returns a model-readable error before writing data for invalid tool input", async () => {
     const fetch = vi.spyOn(globalThis, "fetch");
     const { parts, writer } = createWriter();
@@ -242,18 +224,16 @@ describe("math compute tool", () => {
         toolCallId: "math-4",
         writer,
       }).pipe(
-        Effect.provide(MathService.Default),
-        Effect.withConfigProvider(provider)
+        Effect.provide(MathService.layer),
+        Effect.provideService(ConfigProvider.ConfigProvider, provider)
       )
     );
-
     expect(output).toContain("- Status: error");
     expect(output).toContain("- Error code: invalid_math_input");
     expect(output).toContain("Ask the user for the exact missing expression");
     expect(fetch).not.toHaveBeenCalled();
     expect(parts).toEqual([]);
   });
-
   it("tells the model how to retry bounded systems with the same bounds", async () => {
     const fetch = vi.spyOn(globalThis, "fetch");
     const { parts, writer } = createWriter();
@@ -269,11 +249,10 @@ describe("math compute tool", () => {
         toolCallId: "math-5",
         writer,
       }).pipe(
-        Effect.provide(MathService.Default),
-        Effect.withConfigProvider(provider)
+        Effect.provide(MathService.layer),
+        Effect.provideService(ConfigProvider.ConfigProvider, provider)
       )
     );
-
     expect(output).toContain("- Error code: invalid_math_input");
     expect(output).toContain("Retry the same equation solve");
     expect(output).toContain("Keep the same expressions");
@@ -284,7 +263,6 @@ describe("math compute tool", () => {
     expect(fetch).not.toHaveBeenCalled();
     expect(parts).toEqual([]);
   });
-
   it("tells the model how to retry incomplete bounded system expressions", async () => {
     const fetch = vi.spyOn(globalThis, "fetch");
     const { parts, writer } = createWriter();
@@ -300,11 +278,10 @@ describe("math compute tool", () => {
         toolCallId: "math-6",
         writer,
       }).pipe(
-        Effect.provide(MathService.Default),
-        Effect.withConfigProvider(provider)
+        Effect.provide(MathService.layer),
+        Effect.provideService(ConfigProvider.ConfigProvider, provider)
       )
     );
-
     expect(output).toContain("- Error code: invalid_math_input");
     expect(output).toContain("Retry the same bounded system solve");
     expect(output).toContain("Keep symbolic parameters out of variables");
@@ -314,7 +291,6 @@ describe("math compute tool", () => {
     expect(fetch).not.toHaveBeenCalled();
     expect(parts).toEqual([]);
   });
-
   it("keeps invalid input errors locale-free", async () => {
     const fetch = vi.spyOn(globalThis, "fetch");
     const { parts, writer } = createWriter();
@@ -324,16 +300,14 @@ describe("math compute tool", () => {
         toolCallId: "math-6",
         writer,
       }).pipe(
-        Effect.provide(MathService.Default),
-        Effect.withConfigProvider(provider)
+        Effect.provide(MathService.layer),
+        Effect.provideService(ConfigProvider.ConfigProvider, provider)
       )
     );
-
     expect(output).toContain("- Error code: invalid_math_input");
     expect(fetch).not.toHaveBeenCalled();
     expect(parts).toEqual([]);
   });
-
   it("writes locale-free error data for math service failures", async () => {
     vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline"));
     const { parts, writer } = createWriter();
@@ -343,11 +317,10 @@ describe("math compute tool", () => {
         toolCallId: "math-7",
         writer,
       }).pipe(
-        Effect.provide(MathService.Default),
-        Effect.withConfigProvider(provider)
+        Effect.provide(MathService.layer),
+        Effect.provideService(ConfigProvider.ConfigProvider, provider)
       )
     );
-
     expect(output).toContain("- Error code: math_check_unavailable");
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({

@@ -1,5 +1,4 @@
 import "server-only";
-
 import {
   decodePublicContentRuntimeRequest,
   decodePublicContentRuntimeResponse,
@@ -37,20 +36,21 @@ import {
 } from "@repo/backend/content/endpoint";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import { Effect, Schema } from "effect";
-
 /** Server-owned connection values for the private content runtime endpoint. */
 export type ContentRuntimeTarget = ContentHttpTarget;
-
 /** Public route identity without its module-owned delivery discriminator. */
 export interface PublicContentRuntimeInput {
   readonly appLocale: PublicContentRuntimeRequest["appLocale"];
   readonly publicPath: string;
 }
-
 type PublicContentVerification =
-  | { readonly kind: "frozen" }
-  | { readonly kind: "live"; readonly rendererManifest: unknown };
-
+  | {
+      readonly kind: "frozen";
+    }
+  | {
+      readonly kind: "live";
+      readonly rendererManifest: unknown;
+    };
 /** Selects the renderer authority required by one public read capability. */
 function getVerificationRenderer(
   verification: PublicContentVerification,
@@ -64,7 +64,6 @@ function getVerificationRenderer(
   }
   return;
 }
-
 /** Reads one public response without trusting its advertised size or shape. */
 const readPublicRuntimeResponse = Effect.fn(
   "NakafaContent.readPublicRuntimeResponse"
@@ -80,7 +79,6 @@ const readPublicRuntimeResponse = Effect.fn(
   yield* validateContentRuntimeStatus(decoded, response.status);
   return decoded;
 });
-
 /** Verifies one exact Aksara response under the selected renderer policy. */
 const verifyPublicContentResponse = Effect.fn(
   "NakafaContent.verifyPublicContentResponse"
@@ -110,7 +108,6 @@ const verifyPublicContentResponse = Effect.fn(
   }
   return verified;
 });
-
 /** Reads and authenticates one public artifact under an explicit renderer policy. */
 const readPublicContentProgram = Effect.fn(
   "NakafaContent.readPublicContentProgram"
@@ -142,7 +139,6 @@ const readPublicContentProgram = Effect.fn(
     response.status
   );
 });
-
 /** Reads one batch response without trusting its outer wire contract. */
 const readPublicRuntimeBatchResponse = Effect.fn(
   "NakafaContent.readPublicRuntimeBatchResponse"
@@ -165,19 +161,18 @@ const readPublicRuntimeBatchResponse = Effect.fn(
       status: response.status,
     });
   }
-  return yield* Schema.decodeUnknown(PublicContentRuntimeBatchResponseSchema)(
-    input,
-    { onExcessProperty: "error" }
-  ).pipe(Effect.mapError(() => createContentContractError(response)));
+  return yield* Schema.decodeUnknownEffect(
+    PublicContentRuntimeBatchResponseSchema
+  )(input, { onExcessProperty: "error" }).pipe(
+    Effect.mapError(() => createContentContractError(response))
+  );
 });
-
 /** Reads signed public evidence without claiming compatibility for execution. */
 export const readPublicContentEvidence = Effect.fn(
   "NakafaContent.readPublicContentEvidence"
 )(function* (target: ContentRuntimeTarget, input: PublicContentRuntimeInput) {
   return yield* readPublicContentProgram(target, input, { kind: "frozen" });
 });
-
 /** Reads and independently verifies one bounded batch of public artifacts. */
 export const readPublicContentEvidenceBatch = Effect.fn(
   "NakafaContent.readPublicContentEvidenceBatch"
@@ -190,7 +185,7 @@ export const readPublicContentEvidenceBatch = Effect.fn(
       Effect.mapError(() => new ContentTransportError({ reason: "request" }))
     )
   );
-  const batch = yield* Schema.decodeUnknown(
+  const batch = yield* Schema.decodeEffect(
     PublicContentRuntimeBatchRequestSchema
   )({ requests }, { onExcessProperty: "error" }).pipe(
     Effect.mapError(() => new ContentTransportError({ reason: "request" }))
@@ -223,7 +218,6 @@ export const readPublicContentEvidenceBatch = Effect.fn(
     })
   );
 });
-
 /** Reads one public artifact verified against the caller's live renderer. */
 export const readPublicContent = Effect.fn("NakafaContent.readPublicContent")(
   function* (

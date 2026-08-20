@@ -20,7 +20,7 @@ import {
 import { type Context, Effect } from "effect";
 
 type NinaRepairOptions = Parameters<ToolCallRepairFunction<NinaToolSet>>[0] & {
-  readonly reporter: Context.Tag.Service<typeof NinaReporter>;
+  readonly reporter: Context.Service.Shape<typeof NinaReporter>;
   readonly reservePageFetch: () => boolean;
   readonly sessionLogger: LogContext;
   readonly url: string;
@@ -89,8 +89,8 @@ export const repairNinaToolCall = Effect.fn("nina.repair.toolCall")(function* ({
   }
 
   const schema = yield* Effect.tryPromise(() => inputSchema(toolCall)).pipe(
-    Effect.tapError(({ error }) =>
-      reporter.report({ error, source: "repair.inputSchema" })
+    Effect.tapError((error) =>
+      reporter.report({ error: error.cause, source: "repair.inputSchema" })
     )
   );
   const { output: recoveredArgs } = yield* Effect.tryPromise(() =>

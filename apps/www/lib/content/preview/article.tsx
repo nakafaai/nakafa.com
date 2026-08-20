@@ -1,5 +1,4 @@
 import "server-only";
-
 import type { ArticlePreviewDocument } from "@nakafa/aksara-contracts/preview/document";
 import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
 import {
@@ -18,13 +17,11 @@ import {
   PreviewPendingError,
 } from "@/lib/content/preview/errors";
 import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
-
 /** Exact article route identity requested by the physical Next page. */
 export interface ArticlePreviewInput {
   readonly appLocale: ArticlePreviewDocument["route"]["appLocale"];
   readonly publicPath: ArticlePreviewDocument["route"]["publicPath"];
 }
-
 /** Authenticated local article rendered by the actual Nakafa application. */
 export interface ArticlePreviewContent {
   readonly body: string;
@@ -34,7 +31,6 @@ export interface ArticlePreviewContent {
   readonly metadata: ArticleMetadata;
   readonly references: readonly ArticleReference[];
 }
-
 /** Checks whether one selected article owns the requested physical route. */
 function matchesArticleRoute(
   document: ArticlePreviewDocument,
@@ -45,15 +41,19 @@ function matchesArticleRoute(
     document.route.publicPath === input.publicPath
   );
 }
-
 /** Authenticates and renders the exact ready article artifact. */
 const readReadyArticle = Effect.fn("NakafaContent.readReadyArticle")(function* (
-  manifest: Extract<LocalPreviewManifest, { readonly status: "ready" }>,
+  manifest: Extract<
+    LocalPreviewManifest,
+    {
+      readonly status: "ready";
+    }
+  >,
   document: ArticlePreviewDocument,
   config: PreviewConfig
 ) {
   const previewArtifact = manifest.artifacts[0];
-  const projection = yield* Schema.decodeUnknown(ArticleProjectionSchema)(
+  const projection = yield* Schema.decodeUnknownEffect(ArticleProjectionSchema)(
     previewArtifact.projection,
     { onExcessProperty: "error" }
   ).pipe(
@@ -65,7 +65,6 @@ const readReadyArticle = Effect.fn("NakafaContent.readReadyArticle")(function* (
     manifest,
     previewArtifact,
   });
-
   return {
     body: rendered.artifact.payload.rawMdx,
     categoryTitle: projection.categoryTitle,
@@ -75,7 +74,6 @@ const readReadyArticle = Effect.fn("NakafaContent.readReadyArticle")(function* (
     references: projection.references,
   } satisfies ArticlePreviewContent;
 });
-
 /** Reads a matching changed article before consulting persistent ownership. */
 export const readArticlePreview = Effect.fn("NakafaContent.readArticlePreview")(
   function* (input: ArticlePreviewInput) {
@@ -83,7 +81,6 @@ export const readArticlePreview = Effect.fn("NakafaContent.readArticlePreview")(
     if (Option.isNone(snapshot)) {
       return Option.none<ArticlePreviewContent>();
     }
-
     const { config, manifest } = snapshot.value;
     const document = manifest.document;
     if (
@@ -102,7 +99,6 @@ export const readArticlePreview = Effect.fn("NakafaContent.readArticlePreview")(
         revision: manifest.revision,
       });
     }
-
     return Option.some(yield* readReadyArticle(manifest, document, config));
   }
 );

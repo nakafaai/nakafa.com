@@ -14,7 +14,6 @@ import { loadRouteBinding } from "@repo/backend/convex/contentRelease/model";
 import { loadActiveIdentity } from "@repo/backend/convex/contentRelease/runtime/active";
 import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/family";
 import { Effect, Schema } from "effect";
-
 /** Resolves one public route from the exact active publication sequence. */
 export const resolveActiveRoute = Effect.fn(
   "contentRelease.resolveActiveRoute"
@@ -24,7 +23,7 @@ export const resolveActiveRoute = Effect.fn(
   rawAppLocale: Doc<"contentPaths">["appLocale"],
   publicPath: string
 ) {
-  const appLocale = yield* Schema.decodeUnknown(AppLocaleSchema)(
+  const appLocale = yield* Schema.decodeEffect(AppLocaleSchema)(
     rawAppLocale
   ).pipe(
     Effect.mapError(
@@ -35,7 +34,7 @@ export const resolveActiveRoute = Effect.fn(
         })
     )
   );
-  const artifactLocale = yield* Schema.decodeUnknown(ArtifactLocaleSchema)(
+  const artifactLocale = yield* Schema.decodeEffect(ArtifactLocaleSchema)(
     rawAppLocale
   ).pipe(
     Effect.mapError(
@@ -90,6 +89,5 @@ export const resolveActiveRoute = Effect.fn(
       `Route ${appLocale}/${publicPath} lost its ${family} projection.`
     );
   }
-
   return { active, managed, projection };
 });

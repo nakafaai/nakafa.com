@@ -15,7 +15,6 @@ import {
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { Effect, Schema } from "effect";
-
 /** Parses one stored JSON value without allowing thrown parser failures. */
 export const parseStoredJson = Effect.fn("contentRelease.parseStoredJson")(
   (source: string, label = "Stored publication JSON") =>
@@ -28,13 +27,12 @@ export const parseStoredJson = Effect.fn("contentRelease.parseStoredJson")(
       try: (): unknown => JSON.parse(source),
     })
 );
-
 /** Strictly decodes one signed release from canonical storage JSON. */
 export const decodeReleaseJson = Effect.fn("contentRelease.decodeReleaseJson")(
   (source: string) =>
     parseStoredJson(source, "Signed release").pipe(
       Effect.flatMap(
-        Schema.decodeUnknown(SignedContentReleaseSchema, {
+        Schema.decodeUnknownEffect(SignedContentReleaseSchema, {
           onExcessProperty: "error",
         })
       ),
@@ -47,13 +45,12 @@ export const decodeReleaseJson = Effect.fn("contentRelease.decodeReleaseJson")(
       )
     )
 );
-
 /** Strictly decodes one ordered release item from canonical storage JSON. */
 export const decodeItemJson = Effect.fn("contentRelease.decodeItemJson")(
   (source: string) =>
     parseStoredJson(source, "Release item").pipe(
       Effect.flatMap(
-        Schema.decodeUnknown(ContentReleaseItemSchema, {
+        Schema.decodeUnknownEffect(ContentReleaseItemSchema, {
           onExcessProperty: "error",
         })
       ),
@@ -66,13 +63,12 @@ export const decodeItemJson = Effect.fn("contentRelease.decodeItemJson")(
       )
     )
 );
-
 /** Strictly decodes one ordered route item from canonical storage JSON. */
 export const decodeRouteJson = Effect.fn("contentRelease.decodeRouteJson")(
   (source: string) =>
     parseStoredJson(source, "Release route").pipe(
       Effect.flatMap(
-        Schema.decodeUnknown(ContentRouteItemSchema, {
+        Schema.decodeUnknownEffect(ContentRouteItemSchema, {
           onExcessProperty: "error",
         })
       ),
@@ -85,14 +81,13 @@ export const decodeRouteJson = Effect.fn("contentRelease.decodeRouteJson")(
       )
     )
 );
-
 /** Strictly decodes one signed artifact from canonical storage JSON. */
 export const decodeArtifactJson = Effect.fn(
   "contentRelease.decodeArtifactJson"
 )((source: string) =>
   parseStoredJson(source, "Signed artifact").pipe(
     Effect.flatMap(
-      Schema.decodeUnknown(SignedContentArtifactSchema, {
+      Schema.decodeUnknownEffect(SignedContentArtifactSchema, {
         onExcessProperty: "error",
       })
     ),
@@ -105,14 +100,13 @@ export const decodeArtifactJson = Effect.fn(
     )
   )
 );
-
 /** Strictly decodes one content projection from canonical storage JSON. */
 export const decodeProjectionJson = Effect.fn(
   "contentRelease.decodeProjectionJson"
 )((source: string) =>
   parseStoredJson(source, "Content projection").pipe(
     Effect.flatMap(
-      Schema.decodeUnknown(ContentProjectionSchema, {
+      Schema.decodeUnknownEffect(ContentProjectionSchema, {
         onExcessProperty: "error",
       })
     ),
@@ -125,13 +119,12 @@ export const decodeProjectionJson = Effect.fn(
     )
   )
 );
-
 /** Strictly decodes server-derived verification evidence from storage JSON. */
 export const decodeProofJson = Effect.fn("contentRelease.decodeProofJson")(
   (source: string) =>
     parseStoredJson(source, "Release proof").pipe(
       Effect.flatMap(
-        Schema.decodeUnknown(ReleaseVerificationEvidenceSchema, {
+        Schema.decodeUnknownEffect(ReleaseVerificationEvidenceSchema, {
           onExcessProperty: "error",
         })
       ),
@@ -144,13 +137,12 @@ export const decodeProofJson = Effect.fn("contentRelease.decodeProofJson")(
       )
     )
 );
-
 /** Strictly decodes one completed receipt from canonical storage JSON. */
 export const decodeReceiptJson = Effect.fn("contentRelease.decodeReceiptJson")(
   (source: string) =>
     parseStoredJson(source, "Publication receipt").pipe(
       Effect.flatMap(
-        Schema.decodeUnknown(PublicationReceiptSchema, {
+        Schema.decodeUnknownEffect(PublicationReceiptSchema, {
           onExcessProperty: "error",
         })
       ),
@@ -163,14 +155,13 @@ export const decodeReceiptJson = Effect.fn("contentRelease.decodeReceiptJson")(
       )
     )
 );
-
 /** Strictly decodes one canonical prior-state snapshot from storage JSON. */
 export const decodeRollbackJson = Effect.fn(
   "contentRelease.decodeRollbackJson"
 )((source: string) =>
   parseStoredJson(source, "Rollback snapshot").pipe(
     Effect.flatMap(
-      Schema.decodeUnknown(RollbackSnapshotEntrySchema, {
+      Schema.decodeUnknownEffect(RollbackSnapshotEntrySchema, {
         onExcessProperty: "error",
       })
     ),
@@ -183,14 +174,13 @@ export const decodeRollbackJson = Effect.fn(
     )
   )
 );
-
 /** Strictly decodes one immutable structured-family manifest. */
 export const decodeSnapshotJson = Effect.fn(
   "contentRelease.decodeSnapshotJson"
 )((source: string) =>
   parseStoredJson(source, "Content snapshot").pipe(
     Effect.flatMap(
-      Schema.decodeUnknown(ContentSnapshotManifestSchema, {
+      Schema.decodeUnknownEffect(ContentSnapshotManifestSchema, {
         onExcessProperty: "error",
       })
     ),
@@ -203,14 +193,13 @@ export const decodeSnapshotJson = Effect.fn(
     )
   )
 );
-
 /** Strictly decodes one immutable structured-family row. */
 export const decodeSnapshotRowJson = Effect.fn(
   "contentRelease.decodeSnapshotRowJson"
 )((source: string) =>
   parseStoredJson(source, "Content snapshot row").pipe(
     Effect.flatMap(
-      Schema.decodeUnknown(ContentSnapshotRowSchema, {
+      Schema.decodeUnknownEffect(ContentSnapshotRowSchema, {
         onExcessProperty: "error",
       })
     ),
@@ -223,14 +212,13 @@ export const decodeSnapshotRowJson = Effect.fn(
     )
   )
 );
-
 /** Strictly decodes one trusted renderer snapshot from canonical JSON. */
 export const decodeRendererJson = Effect.fn(
   "contentRelease.decodeRendererJson"
 )((source: string) =>
   parseStoredJson(source, "Renderer manifest").pipe(
     Effect.flatMap(
-      Schema.decodeUnknown(RendererManifestEnvelopeSchema, {
+      Schema.decodeUnknownEffect(RendererManifestEnvelopeSchema, {
         onExcessProperty: "error",
       })
     ),

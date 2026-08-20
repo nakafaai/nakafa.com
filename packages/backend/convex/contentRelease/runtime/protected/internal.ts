@@ -57,22 +57,18 @@ const protectedResultValidator = v.union(
     snapshotId: v.string(),
   })
 );
-
 /** Stored protected batch returned only through one internal query. */
 export type ProtectedRuntimeBatchRow = Infer<typeof protectedResultValidator>;
-
 interface ProtectedBodyIdentity {
   readonly artifactHash: string;
   readonly artifactLocale: TryoutPlacement["answerArtifactLocale"];
   readonly contentKey: string;
   readonly kind: "answer" | "question";
 }
-
 interface ProtectedPlacementSelection {
   readonly placement: Doc<"tryoutPlacements">;
   readonly selector: ProtectedContentRuntimeSelector;
 }
-
 /** Selects the placement index owned by one protected body class. */
 const loadPlacement = Effect.fn("contentRelease.loadProtectedPlacement")(
   function* (
@@ -104,7 +100,6 @@ const loadPlacement = Effect.fn("contentRelease.loadProtectedPlacement")(
     );
   }
 );
-
 /** Derives the exact signed identity owned by one placement body. */
 function bodyIdentity(
   placement: TryoutPlacement,
@@ -125,7 +120,6 @@ function bodyIdentity(
     kind: "answer",
   };
 }
-
 /** Loads one immutable artifact after exact retained-snapshot membership checks. */
 const resolveProtectedItem = Effect.fn("contentRelease.resolveProtectedItem")(
   function* (
@@ -183,7 +177,6 @@ const resolveProtectedItem = Effect.fn("contentRelease.resolveProtectedItem")(
     };
   }
 );
-
 /** Loads and verifies the immutable release bundle selected by one attempt. */
 const loadBundle = Effect.fn("contentRelease.loadProtectedBundle")(function* (
   ctx: QueryCtx,
@@ -223,11 +216,10 @@ const loadBundle = Effect.fn("contentRelease.loadProtectedBundle")(function* (
   }
   return stored;
 });
-
 /** Decodes and resolves one complete protected batch in a single transaction. */
 const readProtectedProgram = Effect.fn("contentRelease.readProtectedBatch")(
   function* (ctx: QueryCtx, input: unknown) {
-    const request = yield* Schema.decodeUnknown(
+    const request = yield* Schema.decodeUnknownEffect(
       ProtectedContentRuntimeRequestSchema,
       { onExcessProperty: "error" }
     )(input).pipe(
@@ -275,7 +267,6 @@ const readProtectedProgram = Effect.fn("contentRelease.readProtectedBatch")(
     };
   }
 );
-
 /** Returns one ordered protected batch from a retained snapshot transaction. */
 export const read = internalQuery({
   args: protectedArgsValidator,

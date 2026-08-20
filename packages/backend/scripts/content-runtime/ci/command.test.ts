@@ -1,12 +1,11 @@
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
-import { FileSystem } from "@effect/platform";
-import { NodeContext } from "@effect/platform-node";
+import * as NodeServices from "@effect/platform-node/NodeServices";
 import {
   runRuntimeCommand,
   sanitizeRuntimeCommandError,
 } from "@repo/backend/scripts/content-runtime/ci/command";
-import { Effect } from "effect";
+import { Effect, FileSystem } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 describe("content runtime command diagnostics", () => {
@@ -67,7 +66,7 @@ describe("content runtime command diagnostics", () => {
             stdout: yield* fileSystem.readFileString(stdoutPath),
           };
         })
-      ).pipe(Effect.provide(NodeContext.layer))
+      ).pipe(Effect.provide(NodeServices.layer))
     );
 
     expect(result.failure).toMatchObject({
@@ -112,7 +111,7 @@ describe("content runtime command diagnostics", () => {
             stdout: yield* fileSystem.readFileString(stdoutPath),
           };
         })
-      ).pipe(Effect.provide(NodeContext.layer))
+      ).pipe(Effect.provide(NodeServices.layer))
     );
 
     expect(result.stderr).toBe("");
@@ -158,7 +157,7 @@ describe("content runtime command diagnostics", () => {
             })
           );
         })
-      ).pipe(Effect.provide(NodeContext.layer))
+      ).pipe(Effect.provide(NodeServices.layer))
     );
 
     expect(results).toEqual(
@@ -197,7 +196,7 @@ describe("content runtime command diagnostics", () => {
             stdout: yield* fileSystem.readFileString(stdoutPath),
           };
         })
-      ).pipe(Effect.provide(NodeContext.layer))
+      ).pipe(Effect.provide(NodeServices.layer))
     );
 
     expect(result.failure.message).toContain(

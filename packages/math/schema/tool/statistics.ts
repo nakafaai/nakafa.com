@@ -2,40 +2,36 @@ import {
   expressionInputSchema,
   nonEmptyStringArraySchema,
 } from "@repo/math/schema/shared";
-import { Schema } from "effect";
+import { Schema, Struct } from "effect";
 
 const MathStatisticsDatasetInputSchema = Schema.Struct({
-  operation: Schema.Literal(
+  operation: Schema.Literals([
     "mean",
     "median",
     "mode",
     "quartiles",
     "standard_deviation",
-    "variance"
-  ).annotations({
+    "variance",
+  ]).annotate({
     description: "Choose the descriptive statistics operation.",
   }),
-  values: nonEmptyStringArraySchema.annotations({
+  values: nonEmptyStringArraySchema.annotate({
     description: "Dataset values as exact strings.",
   }),
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 const MathZScoreInputSchema = Schema.Struct({
   expression: expressionInputSchema,
-  operation: Schema.Literal("z_score").annotations({
+  operation: Schema.Literal("z_score").annotate({
     description: "Compute a z-score for one target value in a dataset.",
   }),
-  values: nonEmptyStringArraySchema.annotations({
+  values: nonEmptyStringArraySchema.annotate({
     description: "Dataset values as exact strings.",
   }),
-}).pipe(Schema.mutable);
-
-export const MathStatisticsInputSchema = Schema.Union(
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
+export const MathStatisticsInputSchema = Schema.Union([
   MathStatisticsDatasetInputSchema,
-  MathZScoreInputSchema
-)
-  .pipe(Schema.mutable)
-  .annotations({
-    description:
-      "Statistics tool input. z_score requires both a target expression and dataset values.",
-  });
+  MathZScoreInputSchema,
+]).annotate({
+  description:
+    "Statistics tool input. z_score requires both a target expression and dataset values.",
+});

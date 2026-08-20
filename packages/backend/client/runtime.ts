@@ -12,9 +12,14 @@ import {
 } from "convex/server";
 import { Effect, Schedule, Schema } from "effect";
 
-const CONVEX_QUERY_RETRY_SCHEDULE = Schedule.fromDelays(
-  NETWORK_RETRY_DELAYS_MILLISECONDS[0],
-  NETWORK_RETRY_DELAYS_MILLISECONDS[1]
+const CONVEX_QUERY_RETRY_SCHEDULE = Schedule.recurs(2).pipe(
+  Schedule.addDelay(({ attempt }) =>
+    Effect.succeed(
+      attempt === 1
+        ? NETWORK_RETRY_DELAYS_MILLISECONDS[0]
+        : NETWORK_RETRY_DELAYS_MILLISECONDS[1]
+    )
+  )
 );
 
 /** One public Convex query failed at a sanitized client boundary. */
@@ -23,7 +28,7 @@ export class ConvexRuntimeQueryError extends Schema.TaggedError<ConvexRuntimeQue
   {
     networkCodes: Schema.Array(NetworkRetryCodeSchema),
     query: Schema.String,
-    reason: Schema.Literal("client", "query", "transport"),
+    reason: Schema.Literals(["client", "query", "transport"]),
   }
 ) {
   get message() {
@@ -57,7 +62,6 @@ function mapQueryFailure(query: string, cause: unknown) {
   if (cause instanceof NetworkRequestError) {
     return createRuntimeQueryError(query, "transport", cause.networkCodes);
   }
-
   return createRuntimeQueryError(query, "query");
 }
 
@@ -93,7 +97,6 @@ export const readConvexRuntimeQuery = Effect.fn("ConvexRuntime.query")(
           logger: false,
         }),
     });
-
     return yield* Effect.tryPromise({
       catch: (cause) => mapQueryFailure(queryName, cause),
       try: () => client.query(query, args),

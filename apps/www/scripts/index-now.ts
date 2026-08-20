@@ -13,7 +13,7 @@ import { logger } from "@/scripts/utils";
 
 Effect.runPromise(
   runIndexNow().pipe(
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.sync(() => {
         logger.error(`Error running indexing script: ${error}`);
         process.exitCode = 1;

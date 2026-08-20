@@ -85,7 +85,7 @@ export function CommentsAdd({ slug, comment, closeButton }: Props) {
             })
           ),
           Effect.asVoid,
-          Effect.catchAll((error) =>
+          Effect.catch((error) =>
             reportClientException(error, {
               slug,
               source: "comment-create",

@@ -177,25 +177,27 @@ export function createViewportRuntime({
 }
 
 /** Closes one manually-created viewport runtime fixture. */
-export function closeViewportRuntime(scope: Scope.CloseableScope) {
+export function closeViewportRuntime(scope: Scope.Closeable) {
   return Scope.close(scope, Exit.succeed(undefined));
 }
 
 /** Creates one Effect-owned viewport service with test adapters provided. */
 export function createViewport(adapters: ViewportAdapters) {
   return Effect.runPromise(
-    makeConversationViewport().pipe(
+    makeConversationViewport.pipe(
       Effect.provideService(ConversationViewportAdapters, adapters)
     )
   );
 }
 
-/** Sends one event through the serialized viewport service queue. */
+/** Sends one event and yields so the serialized service fiber can process it. */
 export async function dispatchViewport(
   viewport: ConversationViewport,
   event: ViewportEvent
 ) {
-  await Effect.runPromise(viewport.dispatch(event));
+  await Effect.runPromise(
+    viewport.dispatch(event).pipe(Effect.andThen(Effect.yieldNow))
+  );
 }
 
 /** Sends one normalized measurement event through the viewport service queue. */

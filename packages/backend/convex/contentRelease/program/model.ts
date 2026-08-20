@@ -11,10 +11,7 @@ import {
 import { verifyCurriculum } from "@repo/backend/convex/contentRelease/program/verify";
 import { Effect } from "effect";
 
-type CurriculumRoute = Effect.Effect.Success<
-  ReturnType<typeof verifyCurriculum>
->;
-
+type CurriculumRoute = Effect.Success<ReturnType<typeof verifyCurriculum>>;
 /** Orders material groups exactly as authored, with paths as stable tie-breakers. */
 function compareGroups(
   left: Doc<"curriculumRoutes">,
@@ -26,7 +23,6 @@ function compareGroups(
   }
   return left.path.localeCompare(right.path);
 }
-
 /** Loads one exact immutable curriculum route from the selected snapshot. */
 export const loadProgramRouteRow = Effect.fn("contentRelease.loadProgramRoute")(
   function* (
@@ -48,7 +44,6 @@ export const loadProgramRouteRow = Effect.fn("contentRelease.loadProgramRoute")(
     );
   }
 );
-
 /** Rejects a bounded relationship whose source fan-out exceeds its contract. */
 const requireBoundedRows = Effect.fn("contentRelease.requireProgramRows")(
   function* <Row>(rows: readonly Row[], label: string) {
@@ -61,7 +56,6 @@ const requireBoundedRows = Effect.fn("contentRelease.requireProgramRows")(
     return rows;
   }
 );
-
 /** Reads the complete verified parent chain for one curriculum route. */
 const readAncestors = Effect.fn("contentRelease.readProgramAncestors")(
   function* (ctx: QueryCtx, snapshotId: string, route: CurriculumRoute) {
@@ -93,7 +87,6 @@ const readAncestors = Effect.fn("contentRelease.readProgramAncestors")(
     return rows;
   }
 );
-
 /** Reads every localized counterpart through source-owned node identity. */
 const readAlternates = Effect.fn("contentRelease.readProgramAlternates")(
   function* (
@@ -129,7 +122,6 @@ const readAlternates = Effect.fn("contentRelease.readProgramAlternates")(
     );
   }
 );
-
 /** Reads one indexed relationship page from an immutable program snapshot. */
 const readRelatedRows = Effect.fn("contentRelease.readProgramRelations")(
   function* (
@@ -169,7 +161,6 @@ const readRelatedRows = Effect.fn("contentRelease.readProgramRelations")(
     );
   }
 );
-
 /** Reads every group route referenced by material-context rows. */
 const readGroups = Effect.fn("contentRelease.readProgramGroups")(function* (
   ctx: QueryCtx,
@@ -196,7 +187,6 @@ const readGroups = Effect.fn("contentRelease.readProgramGroups")(function* (
   );
   return groups.sort(compareGroups);
 });
-
 /** Reads every verified lesson projection referenced by curriculum contexts. */
 const readMaterials = Effect.fn("contentRelease.readProgramMaterials")(
   function* (
@@ -238,7 +228,6 @@ const readMaterials = Effect.fn("contentRelease.readProgramMaterials")(
     return projections;
   }
 );
-
 /** Resolves every bounded relationship needed by one curriculum page. */
 export const readProgramModel = Effect.fn("contentRelease.readProgramModel")(
   function* (ctx: QueryCtx, snapshotId: string, route: CurriculumRoute) {

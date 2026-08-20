@@ -96,19 +96,18 @@ function familyRows(
   releaseId: string,
   family: ContentSnapshotKind
 ) {
-  return Stream.paginateEffect(-1, (afterBatchIndex) =>
+  return Stream.paginate(-1, (afterBatchIndex) =>
     callInternal(() =>
       ctx.runQuery(rowsReference, { afterBatchIndex, family, releaseId })
     ).pipe(
-      Effect.map((page): readonly [SnapshotRowPage, Option.Option<number>] => [
-        page,
-        page.done ? Option.none() : Option.some(page.nextBatchIndex),
-      ])
+      Effect.map(
+        (page): readonly [readonly string[], Option.Option<number>] => [
+          page.rowJson,
+          page.done ? Option.none() : Option.some(page.nextBatchIndex),
+        ]
+      )
     )
-  ).pipe(
-    Stream.flatMap(({ rowJson }) => Stream.fromIterable(rowJson)),
-    Stream.mapEffect(parseStoredJson)
-  );
+  ).pipe(Stream.mapEffect(parseStoredJson));
 }
 
 /** Creates one replayable globally ordered structured-row stream. */
@@ -172,9 +171,9 @@ export const verifyReleaseSnapshots = Effect.fn(
     return { snapshots: release.manifest.snapshots, stagedRows: 0 };
   }
   const verified = yield* verifyContentSnapshots({
-    manifests: () => manifestStream(ctx, release),
+    manifests: manifestStream(ctx, release),
     previousSnapshots: previous,
-    rows: () => rowStream(ctx, release),
+    rows: rowStream(ctx, release),
   }).pipe(Effect.mapError(contractFailure));
   if (
     stagedSnapshotRows !== verified.stagedRows ||

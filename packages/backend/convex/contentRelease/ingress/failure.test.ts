@@ -19,7 +19,7 @@ import {
   testRouteJson,
   testUpsertJson,
 } from "@repo/backend/test/content-release";
-import { Cause, Effect, Exit, Option, Schema } from "effect";
+import { Cause, Effect, Exit, Result, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 /** Strictly decodes one technical request through the shared contract. */
@@ -264,8 +264,8 @@ describe("content publication failure mapping", () => {
       const exit = await failure(requests[operation], code);
       expect(Exit.isFailure(exit)).toBe(true);
       if (Exit.isFailure(exit)) {
-        expect(Option.getOrUndefined(Cause.dieOption(exit.cause))).toEqual(
-          new PublicationFailureDefect({ code, operation })
+        expect(Cause.findDefect(exit.cause)).toEqual(
+          Result.succeed(new PublicationFailureDefect({ code, operation }))
         );
       }
     }

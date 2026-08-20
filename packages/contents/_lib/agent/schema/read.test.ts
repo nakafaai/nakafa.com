@@ -11,15 +11,15 @@ const quranAssetId = "asset:en:quran:quran-surah:1";
 describe("NakafaAgentContentRefInputSchema", () => {
   it("accepts graph content IDs, resource URIs, and canonical URLs", () => {
     expect(
-      Schema.decodeUnknownSync(NakafaAgentContentRefInputSchema)(quranAssetId)
+      Schema.decodeSync(NakafaAgentContentRefInputSchema)(quranAssetId)
     ).toBe(quranAssetId);
     expect(
-      Schema.decodeUnknownSync(NakafaAgentContentRefInputSchema)(
+      Schema.decodeSync(NakafaAgentContentRefInputSchema)(
         `nakafa://content/${quranAssetId}`
       )
     ).toBe(`nakafa://content/${quranAssetId}`);
     expect(
-      Schema.decodeUnknownSync(NakafaAgentContentRefInputSchema)(
+      Schema.decodeSync(NakafaAgentContentRefInputSchema)(
         "https://nakafa.com/en/quran/1"
       )
     ).toBe("https://nakafa.com/en/quran/1");
@@ -27,18 +27,18 @@ describe("NakafaAgentContentRefInputSchema", () => {
 
   it("rejects bare route refs and external URLs", () => {
     expect(() =>
-      Schema.decodeUnknownSync(NakafaAgentContentRefInputSchema)("en/quran/1")
+      Schema.decodeSync(NakafaAgentContentRefInputSchema)("en/quran/1")
     ).toThrow("Expected a Nakafa graph content ID");
     expect(() =>
-      Schema.decodeUnknownSync(NakafaAgentContentRefInputSchema)("quran/1")
+      Schema.decodeSync(NakafaAgentContentRefInputSchema)("quran/1")
     ).toThrow("Expected a Nakafa graph content ID");
     expect(() =>
-      Schema.decodeUnknownSync(NakafaAgentContentRefInputSchema)(
+      Schema.decodeSync(NakafaAgentContentRefInputSchema)(
         "https://example.com/en/quran/1"
       )
     ).toThrow("Expected a Nakafa graph content ID");
     expect(() =>
-      Schema.decodeUnknownSync(NakafaAgentContentRefInputSchema)(
+      Schema.decodeSync(NakafaAgentContentRefInputSchema)(
         "nakafa://content/en%2Fquran%2F1"
       )
     ).toThrow("Expected a Nakafa graph content ID");
@@ -70,7 +70,7 @@ describe("NakafaAgentMarkdownSchema", () => {
       "material/mathematics/example",
       "material"
     );
-    const decoded = Schema.decodeUnknownSync(NakafaAgentMarkdownSchema)({
+    const decoded = Schema.decodeSync(NakafaAgentMarkdownSchema)({
       ...reference,
       text: "# Example",
       title: "Example",

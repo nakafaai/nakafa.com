@@ -3,72 +3,66 @@ import {
   ScrapeInputSchema,
   WebSearchInputSchema,
 } from "@repo/ai/agents/research/schema";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("research schema", () => {
   it("validates scrape URLs with Effect schema", () => {
-    const valid = Schema.decodeUnknownEither(ScrapeInputSchema)({
+    const valid = Schema.decodeResult(ScrapeInputSchema)({
       urlToCrawl: "https://nakafa.com",
     });
-
-    const invalid = Schema.decodeUnknownEither(ScrapeInputSchema)({
+    const invalid = Schema.decodeResult(ScrapeInputSchema)({
       urlToCrawl: "not-a-url",
     });
-
-    expect(Either.isRight(valid)).toBe(true);
-    expect(Either.isLeft(invalid)).toBe(true);
-
-    if (Either.isLeft(invalid)) {
-      expect(invalid.left.message).toContain("Expected a public http(s) URL.");
+    expect(Result.isSuccess(valid)).toBe(true);
+    expect(Result.isFailure(invalid)).toBe(true);
+    if (Result.isFailure(invalid)) {
+      expect(invalid.failure.message).toContain(
+        "Expected a public http(s) URL."
+      );
     }
   });
-
   it("rejects non-public scrape URL targets before tool execution", () => {
-    const localhost = Schema.decodeUnknownEither(ScrapeInputSchema)({
+    const localhost = Schema.decodeResult(ScrapeInputSchema)({
       urlToCrawl: "http://localhost:3000/private",
     });
-    const privateIp = Schema.decodeUnknownEither(ScrapeInputSchema)({
+    const privateIp = Schema.decodeResult(ScrapeInputSchema)({
       urlToCrawl: "http://10.0.0.1/admin",
     });
-    const mappedPrivateIp = Schema.decodeUnknownEither(ScrapeInputSchema)({
+    const mappedPrivateIp = Schema.decodeResult(ScrapeInputSchema)({
       urlToCrawl: "http://[::ffff:127.0.0.1]/admin",
     });
-    const unsupportedScheme = Schema.decodeUnknownEither(ScrapeInputSchema)({
+    const unsupportedScheme = Schema.decodeResult(ScrapeInputSchema)({
       urlToCrawl: "file:///etc/passwd",
     });
-
-    expect(Either.isLeft(localhost)).toBe(true);
-    expect(Either.isLeft(privateIp)).toBe(true);
-    expect(Either.isLeft(mappedPrivateIp)).toBe(true);
-    expect(Either.isLeft(unsupportedScheme)).toBe(true);
+    expect(Result.isFailure(localhost)).toBe(true);
+    expect(Result.isFailure(privateIp)).toBe(true);
+    expect(Result.isFailure(mappedPrivateIp)).toBe(true);
+    expect(Result.isFailure(unsupportedScheme)).toBe(true);
   });
-
   it("validates optimized web-search query arrays", () => {
-    const valid = Schema.decodeUnknownEither(WebSearchInputSchema)({
+    const valid = Schema.decodeResult(WebSearchInputSchema)({
       queries: ["AI SDK DevTools official documentation"],
       sourcePreference: "primary",
     });
-    const invalid = Schema.decodeUnknownEither(WebSearchInputSchema)({
+    const invalid = Schema.decodeResult(WebSearchInputSchema)({
       queries: [],
       sourcePreference: "any",
     });
-    const missingPreference = Schema.decodeUnknownEither(WebSearchInputSchema)({
+    const missingPreference = Schema.decodeUnknownResult(WebSearchInputSchema)({
       queries: ["AI SDK DevTools documentation"],
     });
-    const invalidPreference = Schema.decodeUnknownEither(WebSearchInputSchema)({
+    const invalidPreference = Schema.decodeUnknownResult(WebSearchInputSchema)({
       queries: ["AI SDK DevTools official documentation"],
       sourcePreference: "official",
     });
-
-    expect(Either.isRight(valid)).toBe(true);
-    expect(Either.isLeft(invalid)).toBe(true);
-    expect(Either.isLeft(missingPreference)).toBe(true);
-    expect(Either.isLeft(invalidPreference)).toBe(true);
+    expect(Result.isSuccess(valid)).toBe(true);
+    expect(Result.isFailure(invalid)).toBe(true);
+    expect(Result.isFailure(missingPreference)).toBe(true);
+    expect(Result.isFailure(invalidPreference)).toBe(true);
   });
-
   it("validates structured research findings with citation data", () => {
-    const valid = Schema.decodeUnknownEither(ResearchOutputSchema)({
+    const valid = Schema.decodeResult(ResearchOutputSchema)({
       findings: [
         {
           text: "AI SDK DevTools uses local debugging middleware.",
@@ -83,7 +77,7 @@ describe("research schema", () => {
       limitations: [],
       noEvidenceAnswer: "I could not verify this from direct sources.",
     });
-    const invalid = Schema.decodeUnknownEither(ResearchOutputSchema)({
+    const invalid = Schema.decodeResult(ResearchOutputSchema)({
       findings: [
         {
           text: "Missing citation URL.",
@@ -93,27 +87,22 @@ describe("research schema", () => {
       limitations: [],
       noEvidenceAnswer: "I could not verify this from direct sources.",
     });
-
-    expect(Either.isRight(valid)).toBe(true);
-    expect(Either.isLeft(invalid)).toBe(true);
+    expect(Result.isSuccess(valid)).toBe(true);
+    expect(Result.isFailure(invalid)).toBe(true);
   });
-
   it("allows empty findings when direct citation evidence is unavailable", () => {
-    const valid = Schema.decodeUnknownEither(ResearchOutputSchema)({
+    const valid = Schema.decodeResult(ResearchOutputSchema)({
       findings: [],
       limitations: ["No retrieved direct source supported a citeable claim."],
       noEvidenceAnswer: "I could not verify this from direct sources.",
     });
-
-    expect(Either.isRight(valid)).toBe(true);
+    expect(Result.isSuccess(valid)).toBe(true);
   });
-
   it("requires a generated no-evidence answer", () => {
-    const invalid = Schema.decodeUnknownEither(ResearchOutputSchema)({
+    const invalid = Schema.decodeUnknownResult(ResearchOutputSchema)({
       findings: [],
       limitations: ["No retrieved direct source supported a citeable claim."],
     });
-
-    expect(Either.isLeft(invalid)).toBe(true);
+    expect(Result.isFailure(invalid)).toBe(true);
   });
 });

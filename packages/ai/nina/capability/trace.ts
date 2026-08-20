@@ -44,7 +44,7 @@ export const traceLearningCapability = Effect.fn("nina.capability.trace")(
         })
       )
       .pipe(
-        Effect.catchAll((error) =>
+        Effect.catch((error) =>
           reporter.report({ error, source: "saveCapabilityTrace" })
         )
       );

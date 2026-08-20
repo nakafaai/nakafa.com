@@ -46,7 +46,7 @@ const decodeBatch = Effect.fn("contentRelease.decodeRouteBatch")(function* (
     );
   }
   const routes = yield* Effect.forEach(routeJson, decodeRouteJson);
-  return yield* Schema.decodeUnknown(StageRouteBatchInputSchema)({
+  return yield* Schema.decodeUnknownEffect(StageRouteBatchInputSchema)({
     batchIndex,
     releaseId,
     routes,
@@ -60,7 +60,6 @@ const decodeBatch = Effect.fn("contentRelease.decodeRouteBatch")(function* (
     )
   );
 });
-
 /** Stages one canonical route batch with exact immutable retry identity. */
 const stageProgram = Effect.fn("contentRelease.stageRouteBatch")(function* (
   ctx: MutationCtx,
@@ -128,7 +127,6 @@ const stageProgram = Effect.fn("contentRelease.stageRouteBatch")(function* (
   );
   return { batchIndex, created: values.length, releaseId, unchanged: 0 };
 });
-
 /** Stages one bounded immutable route batch through internal state. */
 export const stageRouteBatch = internalMutation({
   args: {

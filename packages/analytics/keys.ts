@@ -1,13 +1,14 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { Schema } from "effect";
 
-const postHogKeySchema = Schema.standardSchemaV1(
-  Schema.String.pipe(Schema.startsWith("phc_"))
+const postHogKeySchema = Schema.toStandardSchemaV1(
+  Schema.String.check(Schema.isStartsWith("phc_"))
 );
-const urlSchema = Schema.standardSchemaV1(
-  Schema.String.pipe(Schema.filter((value) => URL.canParse(value)))
+const urlSchema = Schema.toStandardSchemaV1(
+  Schema.String.pipe(
+    Schema.check(Schema.makeFilter((value) => URL.canParse(value)))
+  )
 );
-
 /**
  * Validates the PostHog managed reverse proxy host read by Next config.
  */
@@ -20,7 +21,6 @@ export const postHogProxyKeys = () =>
       POSTHOG_PROXY_HOST: process.env.POSTHOG_PROXY_HOST,
     },
   });
-
 /** Validates public PostHog values used by browser analytics. */
 export const postHogPublicKeys = () =>
   createEnv({
@@ -33,7 +33,6 @@ export const postHogPublicKeys = () =>
       NEXT_PUBLIC_POSTHOG_UI_HOST: process.env.NEXT_PUBLIC_POSTHOG_UI_HOST,
     },
   });
-
 /**
  * Validate the shared PostHog environment contract used by browser and server
  * analytics.

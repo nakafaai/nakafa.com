@@ -1,9 +1,9 @@
+import { Effect, Schedule, Schema } from "effect";
 import {
   HttpClient,
   HttpClientResponse,
   type UrlParams,
-} from "@effect/platform";
-import { Effect, Schedule, Schema } from "effect";
+} from "effect/unstable/http";
 
 const WEATHER_REQUEST_TIMEOUT = "10 seconds";
 
@@ -28,8 +28,6 @@ export const requestWeatherJson = Effect.fn("weather.requestJson")(function* ({
   url,
 }: WeatherRequestInput) {
   const client = (yield* HttpClient.HttpClient).pipe(
-    // OpenWeather requires `appid` in the query, so its URL must not enter telemetry.
-    HttpClient.withTracerDisabledWhen(() => true),
     HttpClient.retryTransient({
       schedule: Schedule.exponential("300 millis"),
       times: 2,
@@ -39,6 +37,8 @@ export const requestWeatherJson = Effect.fn("weather.requestJson")(function* ({
   return yield* client.get(url, { urlParams: searchParams }).pipe(
     Effect.flatMap(HttpClientResponse.filterStatusOk),
     Effect.flatMap((response) => response.json),
+    // OpenWeather requires `appid` in the query, so its URL must not enter telemetry.
+    Effect.provideService(HttpClient.TracerDisabledWhen, () => true),
     Effect.timeout(WEATHER_REQUEST_TIMEOUT),
     Effect.mapError(
       () =>

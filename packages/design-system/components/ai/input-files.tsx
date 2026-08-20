@@ -1,5 +1,4 @@
 "use client";
-
 import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-mutable-value";
 import type {
   AttachmentsContext,
@@ -10,7 +9,7 @@ import {
   type PromptInputFileConstraintError,
   validatePromptInputFiles,
 } from "@repo/design-system/lib/prompt-input/files";
-import { Effect, Either } from "effect";
+import { Effect, Result } from "effect";
 import { nanoid } from "nanoid";
 import {
   type RefObject,
@@ -30,7 +29,6 @@ interface PromptInputFilesOptions {
   maxFiles?: number;
   onError?: (error: PromptInputFileConstraintError) => void;
 }
-
 /** Owns local prompt files while delegating to a provider when one is present. */
 export function usePromptInputFiles({
   accept,
@@ -46,7 +44,6 @@ export function usePromptInputFiles({
   const files = controller ? controller.attachments.files : items;
   const fileCountRef = useRef(files.length);
   const [fileIds] = useState(() => new Set(files.map((file) => file.id)));
-
   useLayoutEffect(() => {
     fileCountRef.current = files.length;
     fileIds.clear();
@@ -54,18 +51,15 @@ export function usePromptInputFiles({
       fileIds.add(file.id);
     }
   }, [fileIds, files]);
-
   const openFileDialogLocal = useCallback(() => {
     inputRef.current?.click();
   }, [inputRef]);
-
   const addLocal = useCallback(
     (selectedFiles: readonly File[]) => {
       const next = selectedFiles.map((file): PromptInputFile => {
         const id = nanoid();
         const url = URL.createObjectURL(file);
         localUrls.set(id, url);
-
         return {
           id,
           type: "file",
@@ -80,7 +74,6 @@ export function usePromptInputFiles({
     },
     [localUrls]
   );
-
   const removeLocal = useCallback(
     (id: string) => {
       const url = localUrls.get(id);
@@ -88,14 +81,12 @@ export function usePromptInputFiles({
         URL.revokeObjectURL(url);
         localUrls.delete(id);
       }
-
       const nextItems = localItemsRef.current.filter((file) => file.id !== id);
       localItemsRef.current = nextItems;
       setItems(nextItems);
     },
     [localUrls]
   );
-
   const clearLocal = useCallback(() => {
     for (const url of localUrls.values()) {
       URL.revokeObjectURL(url);
@@ -104,11 +95,10 @@ export function usePromptInputFiles({
     localItemsRef.current = [];
     setItems([]);
   }, [localUrls]);
-
   const add = useCallback(
     (fileList: File[] | FileList) => {
       const result = Effect.runSync(
-        Effect.either(
+        Effect.result(
           validatePromptInputFiles({
             accept,
             currentFileCount: fileCountRef.current,
@@ -118,25 +108,23 @@ export function usePromptInputFiles({
           })
         )
       );
-      if (Either.isLeft(result)) {
-        onError?.(result.left);
+      if (Result.isFailure(result)) {
+        onError?.(result.failure);
         return;
       }
-
-      if (result.right.warning) {
-        onError?.(result.right.warning);
+      if (result.success.warning) {
+        onError?.(result.success.warning);
       }
-      if (result.right.files.length === 0) {
+      if (result.success.files.length === 0) {
         return;
       }
-
       if (controller) {
-        controller.attachments.add(result.right.files);
-        fileCountRef.current += result.right.files.length;
+        controller.attachments.add(result.success.files);
+        fileCountRef.current += result.success.files.length;
         return;
       }
-      addLocal(result.right.files);
-      fileCountRef.current += result.right.files.length;
+      addLocal(result.success.files);
+      fileCountRef.current += result.success.files.length;
     },
     [accept, addLocal, controller, maxFileSize, maxFiles, onError]
   );
@@ -145,7 +133,6 @@ export function usePromptInputFiles({
       if (fileIds.delete(id)) {
         fileCountRef.current = Math.max(0, fileCountRef.current - 1);
       }
-
       if (controller) {
         controller.attachments.remove(id);
         return;
@@ -166,14 +153,12 @@ export function usePromptInputFiles({
   const openFileDialog = controller
     ? controller.attachments.openFileDialog
     : openFileDialogLocal;
-
   useEffect(() => {
     if (!controller) {
       return;
     }
     controller.__registerFileInput(inputRef, () => inputRef.current?.click());
   }, [controller, inputRef]);
-
   useEffect(
     () => () => {
       if (controller) {
@@ -186,7 +171,6 @@ export function usePromptInputFiles({
     },
     [controller, localUrls]
   );
-
   const attachments = useMemo<AttachmentsContext>(
     () => ({
       files: files.map((item) => ({ ...item, id: item.id })),
@@ -198,6 +182,5 @@ export function usePromptInputFiles({
     }),
     [files, add, remove, clear, openFileDialog, inputRef]
   );
-
   return { attachments, files };
 }

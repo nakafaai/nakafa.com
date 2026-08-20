@@ -11,34 +11,28 @@ const BING_SUBMIT_ENDPOINT =
 const BING_PLACEHOLDER_API_KEY = "YOUR_BING_WEBMASTER_API_KEY";
 const QUOTA_REMAINING_REGEX = /Quota remaining for today: (\d+)/u;
 const QUOTA_EXCEEDED_REGEX = /exceeded your daily url submission quota/iu;
-
 const BingQuotaMessageSchema = Schema.Struct({
   Message: Schema.String,
 });
-const decodeBingQuotaMessage = Schema.decodeUnknown(
-  Schema.parseJson(BingQuotaMessageSchema)
+const decodeBingQuotaMessage = Schema.decodeUnknownEffect(
+  Schema.fromJsonString(BingQuotaMessageSchema)
 );
 const bingWebmasterApiKey = Config.string("BING_WEBMASTER_API_KEY").pipe(
   Config.option
 );
-
 /** Reads the optional Bing Webmaster API key from the CLI environment. */
 export const readBingWebmasterApiKey = Effect.fn(
   "scripts.indexing.bing.readApiKey"
 )(function* () {
   const apiKey = yield* bingWebmasterApiKey;
-
   if (Option.isNone(apiKey)) {
     return;
   }
-
   if (apiKey.value === BING_PLACEHOLDER_API_KEY) {
     return;
   }
-
   return apiKey.value;
 });
-
 /**
  * Submits canonical sitemap URLs to Bing's URL Submission API.
  *
@@ -51,15 +45,12 @@ export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
       logger.info("No new URLs to submit to Bing.");
       return [];
     }
-
     let batchSize = BATCH_SIZE;
     let submittedCount = 0;
     const successfullySubmitted: string[] = [];
-
     logger.info("Starting Bing URL Submission API process...");
     logger.stats("URLs to submit", urls.length);
     logger.stats("Initial batch size", batchSize);
-
     while (submittedCount < urls.length) {
       const currentBatchSize = Math.min(
         batchSize,
@@ -77,19 +68,15 @@ export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
         endIndex,
         startIndex,
       });
-
       if (result.submittedUrls.length > 0) {
         successfullySubmitted.push(...result.submittedUrls);
         submittedCount += result.submittedUrls.length;
       }
-
       if (result.shouldStop) {
         break;
       }
-
       if (result.quotaRemaining !== undefined) {
         batchSize = result.quotaRemaining;
-
         if (batch.length > result.quotaRemaining) {
           logger.info(
             `Retrying with smaller batch size of ${result.quotaRemaining}`
@@ -97,25 +84,20 @@ export const submitUrlsToBing = Effect.fn("scripts.indexing.bing.submitUrls")(
           continue;
         }
       }
-
       if (result.submittedUrls.length === 0) {
         break;
       }
-
       if (submittedCount < urls.length) {
         logger.progress(submittedCount, urls.length, "Submission progress");
         yield* Effect.sleep(RATE_LIMIT_DELAY);
       }
     }
-
     logger.info(
       `Bing URL Submission API process completed. Submitted ${successfullySubmitted.length}/${urls.length} URLs.`
     );
-
     return successfullySubmitted;
   }
 );
-
 /** Submits one Bing batch and converts quota responses into caller decisions. */
 const submitBatchToBing = Effect.fn("scripts.indexing.bing.submitBatch")(
   function* ({
@@ -132,7 +114,6 @@ const submitBatchToBing = Effect.fn("scripts.indexing.bing.submitBatch")(
     logger.info(
       `Submitting batch of ${batch.length} URLs to Bing (${startIndex} to ${endIndex})`
     );
-
     const response = yield* Effect.tryPromise({
       catch: (cause) =>
         new BingSubmitError({
@@ -152,11 +133,9 @@ const submitBatchToBing = Effect.fn("scripts.indexing.bing.submitBatch")(
           method: "POST",
         }),
     });
-
     return yield* readBingResponse(response, batch);
   }
 );
-
 /** Reads Bing's response and preserves quota semantics for the submit loop. */
 const readBingResponse = Effect.fn("scripts.indexing.bing.readResponse")(
   function* (response: Response, batch: readonly string[]) {
@@ -169,9 +148,7 @@ const readBingResponse = Effect.fn("scripts.indexing.bing.readResponse")(
         }),
       try: () => response.text(),
     });
-
     logger.info(`Bing API response status: ${status}`);
-
     if (status === HTTP_STATUS_CODE_OK) {
       logger.success(
         `Successfully submitted ${batch.length} URLs to Bing URL Submission API.`
@@ -182,10 +159,8 @@ const readBingResponse = Effect.fn("scripts.indexing.bing.readResponse")(
         submittedUrls: [...batch],
       };
     }
-
     logger.error(`Error submitting URLs to Bing. Status: ${status}`);
     logger.error(`Response: ${responseText}`);
-
     if (QUOTA_EXCEEDED_REGEX.test(responseText)) {
       logger.warn("Daily quota exceeded. Stopping submission.");
       return {
@@ -194,10 +169,8 @@ const readBingResponse = Effect.fn("scripts.indexing.bing.readResponse")(
         submittedUrls: [],
       };
     }
-
     if (responseText.includes("Quota remaining")) {
       const quotaRemaining = yield* readRemainingBingQuota(responseText);
-
       if (quotaRemaining !== undefined) {
         logger.info(
           `Adjusting batch size to respect quota. New batch size: ${quotaRemaining}`
@@ -209,7 +182,6 @@ const readBingResponse = Effect.fn("scripts.indexing.bing.readResponse")(
         };
       }
     }
-
     return {
       quotaRemaining: undefined,
       shouldStop: false,
@@ -217,7 +189,6 @@ const readBingResponse = Effect.fn("scripts.indexing.bing.readResponse")(
     };
   }
 );
-
 /** Decodes Bing's JSON quota message and extracts the remaining daily count. */
 const readRemainingBingQuota = Effect.fn("scripts.indexing.bing.readQuota")(
   function* (responseText: string) {
@@ -230,21 +201,16 @@ const readRemainingBingQuota = Effect.fn("scripts.indexing.bing.readQuota")(
           })
       )
     );
-
     const remainingQuotaMatch = quotaMessage.Message.match(
       QUOTA_REMAINING_REGEX
     );
-
     if (!remainingQuotaMatch?.[1]) {
       return;
     }
-
     const remainingQuota = Number.parseInt(remainingQuotaMatch[1], 10);
-
     if (Number.isNaN(remainingQuota) || remainingQuota <= 0) {
       return;
     }
-
     return remainingQuota;
   }
 );

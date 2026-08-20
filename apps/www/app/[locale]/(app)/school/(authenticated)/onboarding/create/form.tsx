@@ -1,5 +1,4 @@
 "use client";
-
 import { PartyIcon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -31,7 +30,6 @@ import {
   schoolTypeSchema,
 } from "@/app/[locale]/(app)/school/(authenticated)/onboarding/create/schema";
 import { reportClientException } from "@/lib/analytics/client";
-
 /** Render the onboarding form for creating a new school. */
 export function SchoolOnboardingCreateForm() {
   const t = useTranslations("School.Onboarding");
@@ -39,11 +37,8 @@ export function SchoolOnboardingCreateForm() {
     label: t(option.value),
     value: option.value,
   }));
-
   const router = useRouter();
-
   const createSchool = useMutation(api.schools.mutations.createSchool);
-
   const form = useForm({
     defaultValues: schoolCreateDefaultValues,
     validators: {
@@ -55,11 +50,11 @@ export function SchoolOnboardingCreateForm() {
           const { slug } = await createSchool(value);
           router.push(`/school/${slug}`);
         }).pipe(
-          Effect.catchTag("UnknownException", ({ error }) =>
+          Effect.catchTag("UnknownError", ({ cause: error }) =>
             reportClientException(error, {
               source: "school-onboarding-create",
             }).pipe(
-              Effect.zipRight(
+              Effect.andThen(
                 Effect.sync(() => {
                   toast.error(t("school-creation-failed"));
                 })
@@ -70,7 +65,6 @@ export function SchoolOnboardingCreateForm() {
       );
     },
   });
-
   return (
     <form
       action={() => form.handleSubmit()}
@@ -288,7 +282,6 @@ export function SchoolOnboardingCreateForm() {
     </form>
   );
 }
-
 const schoolTypeOptions = [
   {
     value: "elementary-school",

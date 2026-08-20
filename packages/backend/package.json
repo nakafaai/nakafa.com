@@ -18,18 +18,17 @@
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:once": "vitest run",
     "test:watch": "vitest watch",
-    "typecheck": "pnpm --workspace-root exec tsc --project packages/backend/tsconfig.json --noEmit --emitDeclarationOnly false"
+    "typecheck": "tsc --project tsconfig.json --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
     "@convex-dev/aggregate": "^0.2.2",
-    "@convex-dev/better-auth": "^0.12.5",
+    "@convex-dev/better-auth": "0.12.5",
     "@convex-dev/migrations": "0.3.6",
     "@convex-dev/resend": "^0.2.6",
-    "@convex-dev/workflow": "^0.4.4",
+    "@convex-dev/workflow": "^0.4.6",
     "@convex-dev/workpool": "^0.4.9",
-    "@effect/platform": "0.97.1",
-    "@effect/platform-node": "0.108.1",
-    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.1/nakafa-aksara-contracts-0.13.1.tgz",
+    "@effect/platform-node": "catalog:",
+    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.14.1/nakafa-aksara-contracts-0.14.1.tgz",
     "@polar-sh/sdk": "^0.49.0",
     "@posthog/convex": "2.1.0",
     "@repo/ai": "workspace:*",
@@ -37,13 +36,13 @@
     "@repo/math": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "ai": "^7.0.58",
-    "better-auth": "1.6.26",
+    "ai": "7.0.70",
+    "better-auth": "1.6.30",
     "buffer": "^6.0.3",
-    "convex": "^1.43.0",
-    "convex-helpers": "^0.1.122",
+    "convex": "1.44.0",
+    "convex-helpers": "0.1.123",
     "effect": "catalog:",
-    "hono": "^4.13.1",
+    "hono": "^4.13.3",
     "nanoid": "^6.0.1",
     "server-only": "0.0.1",
     "strip-ansi": "^7.2.0"
@@ -51,12 +50,12 @@
   "devDependencies": {
     "@edge-runtime/vm": "^5.0.0",
     "@repo/testing": "workspace:*",
-    "@vitest/coverage-istanbul": "^4.1.10",
-    "auth": "~1.6.26",
-    "convex-test": "^0.0.55",
-    "tsx": "^4.23.11",
-    "typescript": "6.0.3",
-    "vite": "^8.2.1",
-    "vitest": "^4.1.10"
+    "@vitest/coverage-istanbul": "^4.1.11",
+    "auth": "1.6.30",
+    "convex-test": "^0.0.56",
+    "tsx": "^4.23.12",
+    "typescript": "npm:typescript@7.0.2",
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11"
   }
 }

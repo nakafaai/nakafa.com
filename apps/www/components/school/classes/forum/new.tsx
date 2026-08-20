@@ -1,5 +1,4 @@
 "use client";
-
 import {
   Add01Icon,
   ArrowDown01Icon,
@@ -44,25 +43,26 @@ import { useClass } from "@/lib/context/use-class";
 import { useClassPermissions } from "@/lib/hooks/use-class-permissions";
 
 const form = Schema.Struct({
-  title: Schema.Trim.pipe(Schema.minLength(MIN_FORUM_THREAD_TEXT_LENGTH)),
-  body: Schema.Trim.pipe(Schema.minLength(MIN_FORUM_THREAD_TEXT_LENGTH)),
-  tag: Schema.Literal(
+  title: Schema.Trim.pipe(
+    Schema.check(Schema.isMinLength(MIN_FORUM_THREAD_TEXT_LENGTH))
+  ),
+  body: Schema.Trim.pipe(
+    Schema.check(Schema.isMinLength(MIN_FORUM_THREAD_TEXT_LENGTH))
+  ),
+  tag: Schema.Literals([
     "general",
     "question",
     "announcement",
     "assignment",
-    "resource"
-  ),
+    "resource",
+  ]),
 });
-
-const formSchema = Schema.standardSchemaV1(form);
-
-const defaultValues: Schema.Schema.Encoded<typeof form> = {
+const formSchema = Schema.toStandardSchemaV1(form);
+const defaultValues: Schema.Codec.Encoded<typeof form> = {
   title: "",
   body: "",
   tag: "general",
 };
-
 /** Render the create-forum dialog and submit it through the class forum API. */
 export function SchoolClassesForumNew() {
   return (
@@ -71,15 +71,15 @@ export function SchoolClassesForumNew() {
     </Suspense>
   );
 }
-
 function SchoolClassesForumNewContent() {
   const t = useTranslations("School.Classes");
   const router = useRouter();
-  const routeParams = useParams<{ id: string; slug: string }>();
+  const routeParams = useParams<{
+    id: string;
+    slug: string;
+  }>();
   const searchParams = useSearchParams();
-
   const [isDialogOpen, dialog] = useDisclosure(false);
-
   const classId = useClass((c) => c.class._id);
   const classMembership = useClass((c) => c.classMembership);
   const schoolMembership = useClass((c) => c.schoolMembership);
@@ -87,16 +87,13 @@ function SchoolClassesForumNewContent() {
   const createForum = useMutation(
     api.classes.forums.mutations.forums.createForum
   );
-
   const canModerateForum = can(PERMISSIONS.FORUM_MODERATE);
-
   // Get available tags based on the same permission split enforced by Convex.
   const availableTags = getTagsByRole(
     canModerateForum,
     classMembership?.role ?? "student",
     schoolMembership?.role ?? "student"
   );
-
   const form = useForm({
     defaultValues,
     validators: {
@@ -112,16 +109,15 @@ function SchoolClassesForumNewContent() {
             queryString: searchParams.toString(),
             slug: routeParams.slug,
           });
-
           dialog.close();
           form.reset();
           router.push(href);
         }).pipe(
-          Effect.catchTag("UnknownException", ({ error }) =>
+          Effect.catchTag("UnknownError", ({ cause: error }) =>
             reportClientException(error, {
               source: "school-forum-create",
             }).pipe(
-              Effect.zipRight(
+              Effect.andThen(
                 Effect.sync(() => {
                   toast.error(t("create-forum-failed"));
                 })
@@ -132,7 +128,6 @@ function SchoolClassesForumNewContent() {
       );
     },
   });
-
   return (
     <form action={() => form.handleSubmit()} id="school-classes-forum-new-form">
       <ButtonGroup>
@@ -165,7 +160,6 @@ function SchoolClassesForumNewContent() {
               dialog.open();
               return;
             }
-
             dialog.close();
           }}
           title={t("new-forum-title")}
@@ -225,7 +219,6 @@ function SchoolClassesForumNewContent() {
                 const isInvalid =
                   Boolean(field.state.meta.isTouched) &&
                   Boolean(!field.state.meta.isValid);
-
                 const currentTag = getTag(field.state.value);
                 return (
                   <Field data-invalid={isInvalid}>

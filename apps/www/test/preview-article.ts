@@ -11,7 +11,7 @@ import {
 } from "@/test/content-article";
 import { previewRepositories } from "@/test/content-preview";
 
-const articleRoute = Schema.decodeUnknownSync(ArticleRouteSchema)({
+const articleRoute = Schema.decodeSync(ArticleRouteSchema)({
   articleSlug: testArticleProjection.articleSlug,
   appLocale: testArticleProjection.appLocale,
   articleRouteSlug: testArticleProjection.articleRouteSlug,
@@ -23,7 +23,7 @@ const articleRoute = Schema.decodeUnknownSync(ArticleRouteSchema)({
   publicPath: testArticleProjection.publicPath,
 });
 
-const germanArticleRoute = Schema.decodeUnknownSync(ArticleRouteSchema)({
+const germanArticleRoute = Schema.decodeSync(ArticleRouteSchema)({
   ...articleRoute,
   appLocale: "de",
   articleRouteSlug: "politische-dynastien-und-asiatische-werte",
@@ -37,7 +37,7 @@ const germanArticleRoute = Schema.decodeUnknownSync(ArticleRouteSchema)({
 });
 
 /** Exact real article selected by local preview tests. */
-export const articlePreviewDocument = Schema.decodeUnknownSync(
+export const articlePreviewDocument = Schema.decodeSync(
   ArticlePreviewDocumentSchema
 )({
   delivery: "public",
@@ -48,7 +48,7 @@ export const articlePreviewDocument = Schema.decodeUnknownSync(
 });
 
 /** Exact real German article route used by candidate-locale preview tests. */
-const germanArticlePreviewDocument = Schema.decodeUnknownSync(
+const germanArticlePreviewDocument = Schema.decodeSync(
   ArticlePreviewDocumentSchema
 )({
   ...articlePreviewDocument,
@@ -58,9 +58,7 @@ const germanArticlePreviewDocument = Schema.decodeUnknownSync(
 });
 
 /** Pending state for one real article that a material route must ignore. */
-export const articlePendingManifest = Schema.decodeUnknownSync(
-  PreviewPendingSchema
-)({
+export const articlePendingManifest = Schema.decodeSync(PreviewPendingSchema)({
   document: articlePreviewDocument,
   format: LOCAL_PREVIEW_FORMAT,
   repositories: previewRepositories,
@@ -69,7 +67,7 @@ export const articlePendingManifest = Schema.decodeUnknownSync(
 });
 
 /** Pending state for the real localized German article preview route. */
-export const germanArticlePendingManifest = Schema.decodeUnknownSync(
+export const germanArticlePendingManifest = Schema.decodeSync(
   PreviewPendingSchema
 )({
   document: germanArticlePreviewDocument,

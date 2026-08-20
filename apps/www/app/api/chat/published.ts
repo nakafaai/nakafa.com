@@ -1,5 +1,4 @@
 import "server-only";
-
 import {
   type ActiveAppLocaleCode,
   AppLocaleSchema,
@@ -14,7 +13,6 @@ import { readPublishedMaterialContext } from "@/lib/content/material/context";
 import { readPublishedMaterialRoute } from "@/lib/content/material/route";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { isActiveLocale } from "@/lib/i18n/active";
-
 /** Returns whether one localized path belongs to the material route surface. */
 export function isPublishedMaterialPath(
   locale: Locale,
@@ -23,14 +21,12 @@ export function isPublishedMaterialPath(
   if (!isActiveLocale(locale)) {
     return false;
   }
-
   const [namespace] = publicPath.split("/");
   return PUBLIC_ROUTE_SURFACES.some(
     (surface) =>
       surface.key === "subject" && surface.routeSlugs[locale] === namespace
   );
 }
-
 /** Reads Nina context only from the active release-owned material model. */
 export const readPublishedNinaMaterial = Effect.fn(
   "chat.readPublishedNinaMaterial"
@@ -81,7 +77,7 @@ export const readPublishedNinaMaterial = Effect.fn(
       placement: undefined,
     };
   }
-  const programKey = yield* Schema.decodeUnknown(LearningProgramKeySchema)(
+  const programKey = yield* Schema.decodeEffect(LearningProgramKeySchema)(
     resolved.context.programKey
   ).pipe(
     Effect.mapError(

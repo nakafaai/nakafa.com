@@ -45,10 +45,8 @@ const captureTryoutScoreEvent = Effect.fn(
     try: () => ctx.db.get("tryoutAttempts", score.tryoutAttemptId),
   });
   if (!attempt) {
-    return yield* Effect.fail(
-      toTryoutScoreAnalyticsError(
-        "A completed try-out score is missing its attempt."
-      )
+    return yield* toTryoutScoreAnalyticsError(
+      "A completed try-out score is missing its attempt."
     );
   }
   const identity = readAttemptSetIdentity(attempt);

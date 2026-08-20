@@ -8,13 +8,12 @@ import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse
 import { quranRowFacts } from "@repo/backend/convex/contentRelease/quran/facts";
 import { quranRowDocumentLimit } from "@repo/backend/convex/contentRelease/quran/limits";
 import { Effect, Schema } from "effect";
-
 /** Authenticates one immutable Quran row and every indexed fact. */
 export const verifyQuranRow = Effect.fn("contentRelease.verifyQuranRow")(
   function* <A, I>(
     row: Doc<"quranRows">,
     snapshotId: string,
-    payloadSchema: Schema.Schema<A, I, never>
+    payloadSchema: Schema.Codec<A, I, never, never>
   ) {
     const decoded = yield* decodeSnapshotRowJson(row.rowJson);
     if (
@@ -56,7 +55,7 @@ export const verifyQuranRow = Effect.fn("contentRelease.verifyQuranRow")(
         `Quran row ${row.identity} changed its indexed facts.`
       );
     }
-    return yield* Schema.decodeUnknown(payloadSchema)(
+    return yield* Schema.decodeUnknownEffect(payloadSchema)(
       decoded.record.payload
     ).pipe(
       Effect.mapError(

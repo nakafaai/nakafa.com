@@ -18,7 +18,7 @@ type ContentReferenceInput = FunctionArgs<
 
 /** Produces one current semantic lookup from a graph identity or public URL. */
 export function getContentReferenceInput(input: string) {
-  const contentId = Schema.decodeUnknownOption(NakafaAgentContentIdSchema)(
+  const contentId = Schema.decodeOption(NakafaAgentContentIdSchema)(
     normalizeNakafaContentInput(input)
   );
   if (Option.isSome(contentId)) {

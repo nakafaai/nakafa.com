@@ -5,8 +5,7 @@ import {
   stringArraySchema,
 } from "@repo/math/schema/shared";
 import { probabilityParametersSchema } from "@repo/math/schema/tool/probability";
-import { Schema } from "effect";
-
+import { Schema, Struct } from "effect";
 export const MathRequestSchema = Schema.Struct({
   distribution: Schema.optional(Schema.String),
   expression: Schema.optional(Schema.String),
@@ -21,7 +20,9 @@ export const MathRequestSchema = Schema.Struct({
   modulus: Schema.optional(Schema.String),
   n: Schema.optional(Schema.String),
   operation: MathOperationSchema,
-  order: Schema.optional(Schema.NonNegativeInt),
+  order: Schema.optional(
+    Schema.Finite.check(Schema.isInt()).check(Schema.isGreaterThanOrEqualTo(0))
+  ),
   parameters: Schema.optional(probabilityParametersSchema),
   point: Schema.optional(Schema.String),
   points: Schema.optional(pointArraySchema),
@@ -34,10 +35,9 @@ export const MathRequestSchema = Schema.Struct({
   variables: Schema.optional(stringArraySchema),
   vector: Schema.optional(stringArraySchema),
 })
-  .pipe(Schema.mutable)
-  .annotations({
+  .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+  .annotate({
     description:
       "Canonical request sent to the deterministic CAS math service.",
   });
-
 export type MathRequest = Schema.Schema.Type<typeof MathRequestSchema>;

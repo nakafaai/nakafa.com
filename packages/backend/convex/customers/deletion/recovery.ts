@@ -18,12 +18,10 @@ import { v } from "convex/values";
 import { Effect } from "effect";
 
 const WORKFLOW_RECOVERY_DELAY_MS = 60 * 60 * 1000;
-
 type GetCleanupWorkflowStatus = (
   ctx: MutationCtx,
   workflowId: WorkflowId
 ) => Promise<WorkflowStatus>;
-
 type RestartCleanupWorkflow = (
   ctx: MutationCtx,
   workflowId: WorkflowId,
@@ -32,17 +30,14 @@ type RestartCleanupWorkflow = (
     readonly startAsync: true;
   }
 ) => Promise<void>;
-
 type ScheduleCleanupRecovery = (
   ctx: MutationCtx,
   workflowId: WorkflowId
 ) => Promise<unknown>;
-
 type CleanupWorkflowStorage = (
   ctx: MutationCtx,
   workflowId: WorkflowId
 ) => Promise<unknown>;
-
 /** Restarts every idempotent cleanup step after a recoverable terminal state. */
 export const retryDeletedUserCleanupProgram: (
   ctx: MutationCtx,
@@ -68,16 +63,13 @@ export const retryDeletedUserCleanupProgram: (
 ) {
   const recoverFailedWorkflow = Effect.gen(function* () {
     const status = yield* tryUserCleanup(() => getStatus(ctx, workflowId));
-
     if (status.type !== "failed" && status.type !== "canceled") {
       return;
     }
-
     yield* tryUserCleanup(() =>
       restartWorkflow(ctx, workflowId, { from: 0, startAsync: true })
     );
   });
-
   yield* recoverFailedWorkflow.pipe(
     Effect.catchTag("UserCleanupError", (error) =>
       Effect.logError("Deleted-user cleanup recovery attempt failed").pipe(
@@ -85,12 +77,11 @@ export const retryDeletedUserCleanupProgram: (
           error: error.message,
           workflowId,
         }),
-        Effect.zipRight(tryUserCleanup(() => scheduleRecovery(ctx, workflowId)))
+        Effect.andThen(tryUserCleanup(() => scheduleRecovery(ctx, workflowId)))
       )
     )
   );
 });
-
 /** Retries one retained recoverable workflow after its recovery delay. */
 export const retryDeletedUserCleanup = internalMutation({
   args: {
@@ -104,7 +95,6 @@ export const retryDeletedUserCleanup = internalMutation({
     return null;
   },
 });
-
 /** Retains incomplete cleanup journals and releases successful ones. */
 export const handleDeletedUserCleanupComplete = internalMutation({
   args: {
@@ -122,12 +112,10 @@ export const handleDeletedUserCleanupComplete = internalMutation({
       );
       return null;
     }
-
     logger.error("Deleted-user cleanup workflow requires recovery", {
       resultKind: args.result.kind,
       workflowId: args.workflowId,
     });
-
     if (args.result.kind === "failed" || args.result.kind === "canceled") {
       await runConvexProgram(
         tryUserCleanup(() =>
@@ -139,11 +127,9 @@ export const handleDeletedUserCleanupComplete = internalMutation({
         )
       );
     }
-
     return null;
   },
 });
-
 /** Retries journal release until the component accepts the cleanup. */
 export const cleanupDeletedUserWorkflowStorageProgram: (
   ctx: MutationCtx,
@@ -171,12 +157,11 @@ export const cleanupDeletedUserWorkflowStorageProgram: (
           error: error.message,
           workflowId,
         }),
-        Effect.zipRight(tryUserCleanup(() => scheduleRecovery(ctx, workflowId)))
+        Effect.andThen(tryUserCleanup(() => scheduleRecovery(ctx, workflowId)))
       )
     )
   );
 });
-
 /** Releases the journal after completion and retries transient failures. */
 export const cleanupDeletedUserWorkflowStorage = internalMutation({
   args: {
