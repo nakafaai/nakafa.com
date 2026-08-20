@@ -220,6 +220,44 @@ jobs:
           AGENT_DOCS_CONTENT_CACHE_KEY: ${{ secrets.AGENT_DOCS_CONTENT_CACHE_KEY_V1 }}
         run: pnpm --silent --dir packages/backend runtime:ci import
 
+      - name: Probe imported Quran runtime
+        id: quran_probe
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        continue-on-error: true
+        run: |
+          umask 077
+          diagnostic="$RUNNER_TEMP/quran-probe.log"
+          if pnpm --dir packages/backend exec convex run \
+            contentRelease/quran:surahs '{}' > "$diagnostic" 2>&1; then
+            rm -f -- "$diagnostic"
+            exit 0
+          fi
+          exit 1
+
+      - name: Encrypt failed Quran diagnostic
+        if: steps.quran_probe.outcome == 'failure'
+        run: |
+          diagnostic="$RUNNER_TEMP/quran-probe.log"
+          encrypted="$RUNNER_TEMP/quran-probe.cms"
+          openssl cms -encrypt -binary -aes-256-cbc -outform DER \
+            -recip .github/quran-diagnostic-cert.txt \
+            -in "$diagnostic" \
+            -out "$encrypted"
+          rm -f -- "$diagnostic"
+
+      - name: Upload encrypted Quran diagnostic
+        if: steps.quran_probe.outcome == 'failure'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: quran-private-diagnostic-${{ github.run_id }}
+          path: ${{ runner.temp }}/quran-probe.cms
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Reject failed Quran probe
+        if: steps.quran_probe.outcome == 'failure'
+        run: exit 1
+
       - name: Build production app
         id: production_build
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
