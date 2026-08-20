@@ -2,7 +2,7 @@
 
 Effective date: April 24, 2026
 
-Copyright (c) 2026 PT. Nakafa Tekno Kreatif. All rights reserved.
+Copyright (c) 2026 PT NAKAFA TEKNO KREATIF. All rights reserved.
 
 Nakafa educational content is public for learning and review. It is not public
 domain, open content, or free material for republishing, scraping, rebranding,
@@ -18,8 +18,8 @@ commercial use, or AI training.
 Personal use does not include use for an employer, client, school, organization,
 product, service, team, or business purpose.
 
-`Written permission` means a separate written agreement signed by PT. Nakafa
-Tekno Kreatif, or a written approval sent from an official Nakafa email address.
+`Written permission` means a separate written agreement signed by PT NAKAFA
+TEKNO KREATIF, or a written approval sent from an official Nakafa email address.
 
 ## 2. Scope
 
@@ -37,8 +37,8 @@ Covered materials include:
 Third-party content keeps its own license or legal status. This license does not
 grant rights to third-party materials that Nakafa does not own.
 
-All rights not expressly granted by this license are reserved by PT. Nakafa Tekno
-Kreatif.
+All rights not expressly granted by this license are reserved by PT NAKAFA TEKNO
+KREATIF.
 
 ## 3. Allowed Personal Use
 
@@ -52,7 +52,7 @@ You may do the following without written permission:
 
 ## 4. Permission Required
 
-You must get prior written permission from PT. Nakafa Tekno Kreatif before doing
+You must get prior written permission from PT NAKAFA TEKNO KREATIF before doing
 anything not listed in Section 3.
 
 The following uses always require prior written permission:
@@ -89,7 +89,7 @@ Your rights under this license end immediately if you violate any term.
 After termination, you must stop using the content and delete all copies under
 your control, except copies you are required to keep for legal compliance.
 
-PT. Nakafa Tekno Kreatif may reinstate your rights only in writing.
+PT NAKAFA TEKNO KREATIF may reinstate your rights only in writing.
 
 ## 7. Mandatory Legal Rights
 
@@ -101,13 +101,13 @@ limited, or conditioned by contract.
 Nakafa content is provided "as is" and "as available", without warranties or
 conditions of any kind, whether express, implied, statutory, or otherwise.
 
-PT. Nakafa Tekno Kreatif does not warrant that Nakafa content is accurate,
+PT NAKAFA TEKNO KREATIF does not warrant that Nakafa content is accurate,
 complete, uninterrupted, error-free, fit for a particular purpose, or
 non-infringing.
 
 ## 9. Limitation of Liability
 
-To the fullest extent permitted by law, PT. Nakafa Tekno Kreatif will not be
+To the fullest extent permitted by law, PT NAKAFA TEKNO KREATIF will not be
 liable for any indirect, incidental, special, consequential, exemplary, punitive,
 or similar damages, or for any loss of profits, revenue, data, goodwill, or
 business opportunity, arising from or related to Nakafa content or this license.
@@ -123,10 +123,10 @@ the Republic of Indonesia.
 
 ## 11. No Waiver
 
-If PT. Nakafa Tekno Kreatif does not enforce a term immediately, that does not
+If PT NAKAFA TEKNO KREATIF does not enforce a term immediately, that does not
 waive the right to enforce that term later.
 
-Any waiver must be in writing and signed by PT. Nakafa Tekno Kreatif.
+Any waiver must be in writing and signed by PT NAKAFA TEKNO KREATIF.
 
 ## 12. Severability
 

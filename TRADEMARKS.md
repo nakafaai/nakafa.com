@@ -2,7 +2,7 @@
 
 Effective date: April 24, 2026
 
-PT. Nakafa Tekno Kreatif owns the Nakafa brand. Public source code access does
+PT NAKAFA TEKNO KREATIF owns the Nakafa brand. Public source code access does
 not grant permission to use Nakafa names, logos, domains, or visual identity.
 
 ## 1. Definitions
@@ -12,8 +12,8 @@ identifiers covered by this policy.
 
 `You` means the individual or entity using or referring to Nakafa brand assets.
 
-`Written permission` means a separate written agreement signed by PT. Nakafa
-Tekno Kreatif, or a written approval sent from an official Nakafa email address.
+`Written permission` means a separate written agreement signed by PT NAKAFA
+TEKNO KREATIF, or a written approval sent from an official Nakafa email address.
 
 ## 2. Protected Brand Assets
 
@@ -41,7 +41,7 @@ Allowed examples:
 
 ## 4. Permission Required
 
-You must get prior written permission from PT. Nakafa Tekno Kreatif before using
+You must get prior written permission from PT NAKAFA TEKNO KREATIF before using
 any Nakafa brand asset in a product, service, domain, social account, repository,
 course, school deployment, company deployment, marketing page, presentation,
 fundraising material, advertisement, or public announcement.
@@ -64,7 +64,7 @@ The following uses are not allowed without written permission:
 The source code license does not grant permission to distribute forks,
 modifications, or derivative products.
 
-If PT. Nakafa Tekno Kreatif gives you separate written permission to make or
+If PT NAKAFA TEKNO KREATIF gives you separate written permission to make or
 distribute a modified version, that permission does not include Nakafa brand
 rights unless the written agreement explicitly says so.
 
@@ -81,10 +81,10 @@ of the Republic of Indonesia.
 
 ## 7. No Waiver
 
-If PT. Nakafa Tekno Kreatif does not enforce a term immediately, that does not
+If PT NAKAFA TEKNO KREATIF does not enforce a term immediately, that does not
 waive the right to enforce that term later.
 
-Any waiver must be in writing and signed by PT. Nakafa Tekno Kreatif.
+Any waiver must be in writing and signed by PT NAKAFA TEKNO KREATIF.
 
 ## 8. Severability
 

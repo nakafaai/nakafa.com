@@ -1,6 +1,7 @@
 import { Mail01Icon, School01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { useTranslations } from "next-intl";
 
 export function Schools() {
@@ -33,7 +34,7 @@ export function Schools() {
               nativeButton={false}
               render={
                 <a
-                  href="mailto:nakafaai@gmail.com"
+                  href={`mailto:${COMPANY_IDENTITY.email}`}
                   rel="noopener noreferrer"
                   target="_blank"
                 >

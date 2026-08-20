@@ -1,6 +1,8 @@
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { useTranslations } from "next-intl";
 import type { EducationalOrganization, WithContext } from "schema-dts";
 import { JsonLd } from ".";
+import { FOUNDER, ORGANIZATION } from "./constants";
 
 /**
  * EducationalOrgJsonLd component generates Schema.org EducationalOrganization structured data
@@ -16,30 +18,14 @@ export function EducationalOrgJsonLd() {
 
   const educationalOrganizationJsonLd: WithContext<EducationalOrganization> = {
     "@context": "https://schema.org",
+    ...ORGANIZATION,
     "@type": "EducationalOrganization",
-    "@id": "https://nakafa.com/#educational-organization",
-    name: "Nakafa",
-    legalName: "PT. Nakafa Tekno Kreatif",
     alternateName: t("title"),
     description: t("description"),
-    logo: "https://nakafa.com/logo.svg",
-    image: "https://nakafa.com/logo.svg",
-    url: "https://nakafa.com",
-    sameAs: [
-      "https://twitter.com/nabilfatih_",
-      "https://www.linkedin.com/company/nakafa",
-      "https://www.instagram.com/nakafa.ai/",
-      "https://github.com/nakafaai",
-      "https://www.youtube.com/@nakafaa",
-    ],
-    email: "contact@nakafa.com",
+    image: COMPANY_IDENTITY.logoUrl,
     foundingDate: "2021",
-    founder: {
-      "@type": "Person",
-      name: "Nabil Akbarazzima Fatih",
-      url: "https://nakafa.com/en/contributor",
-    },
-    areaServed: "Indonesia",
+    founder: FOUNDER,
+    areaServed: COMPANY_IDENTITY.registeredAddress.country,
     knowsAbout: [
       "Education",
       "Mathematics",

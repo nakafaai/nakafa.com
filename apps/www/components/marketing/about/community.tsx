@@ -1,6 +1,7 @@
 import { DiscordIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { useTranslations } from "next-intl";
 import { Avatar } from "@/components/contributor/avatar";
 import { contributors } from "@/lib/data/contributor";
@@ -22,7 +23,7 @@ export function Community() {
                   nativeButton={false}
                   render={
                     <a
-                      href="https://discord.gg/CPCSfKhvfQ"
+                      href={COMPANY_SOCIAL_PROFILES.discord}
                       rel="noopener noreferrer"
                       target="_blank"
                     >

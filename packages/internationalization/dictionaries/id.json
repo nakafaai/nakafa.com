@@ -8,7 +8,7 @@
     "classification": "Pendidikan"
   },
   "Common": {
-    "copyright": "Hak Cipta © {year} PT. Nakafa Tekno Kreatif. Seluruh hak dilindungi.",
+    "copyright": "Hak Cipta © {year} {companyName}. Seluruh hak dilindungi.",
     "made-with-love": "Dibuat dengan cinta",
     "version": "Versi {version}",
     "beta": "Beta",
@@ -91,7 +91,6 @@
     "open-in-t3-chat": "Buka di T3 Chat",
     "open-in-gemini": "Buka di Gemini",
     "see-on-youtube": "Lihat di YouTube",
-    "subscribe": "Berlangganan",
     "comments": "Komentar",
     "anonymous": "Anonim",
     "delete": "Hapus",

@@ -7,6 +7,7 @@ import { TailwindIndicator } from "@repo/design-system/components/ui/tailwind-in
 import { fonts } from "@repo/design-system/lib/fonts";
 import { ThemeBootstrap } from "@repo/design-system/providers/theme-bootstrap";
 import { routing } from "@repo/internationalization/src/routing";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
 import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
 import type { Metadata } from "next";
@@ -37,7 +38,7 @@ export async function generateMetadata(): Promise<Metadata> {
       default: t("title"),
     },
     description: t("description"),
-    applicationName: "Nakafa",
+    applicationName: COMPANY_IDENTITY.brandName,
     authors: [
       {
         name: "Nabil Akbarazzima Fatih",
@@ -45,9 +46,9 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     ],
     creator: "Nabil Akbarazzima Fatih",
-    publisher: "PT. Nakafa Tekno Kreatif",
+    publisher: COMPANY_IDENTITY.legalName,
     referrer: "origin-when-cross-origin",
-    metadataBase: new URL("https://nakafa.com"),
+    metadataBase: new URL(COMPANY_IDENTITY.url),
     classification: t("classification"),
     generator: "Next.js",
     alternates: createLocalizedAlternates(`/${locale}`),
@@ -55,19 +56,19 @@ export async function generateMetadata(): Promise<Metadata> {
       icon: [
         { url: "/favicon.ico", sizes: "16x16", type: "image/x-icon" },
         { url: "/logo.svg", type: "image/svg+xml" },
-        new URL("/favicon.ico", "https://nakafa.com"),
+        new URL("/favicon.ico", COMPANY_IDENTITY.url),
       ],
       shortcut: [
         { url: "/favicon.ico" },
-        new URL("/favicon.ico", "https://nakafa.com"),
+        new URL("/favicon.ico", COMPANY_IDENTITY.url),
       ],
-      apple: [{ url: "/logo.svg" }, new URL("/logo.svg", "https://nakafa.com")],
+      apple: [{ url: "/logo.svg" }, new URL("/logo.svg", COMPANY_IDENTITY.url)],
       other: [
         { rel: "manifest", url: "/manifest.webmanifest" },
         { rel: "apple-touch-icon", url: "/logo.svg" },
       ],
     },
-    manifest: "https://nakafa.com/manifest.webmanifest",
+    manifest: new URL("/manifest.webmanifest", COMPANY_IDENTITY.url).href,
     robots: {
       index: true,
       follow: true,
@@ -108,8 +109,8 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title: t("title"),
       description: t("description"),
-      url: "https://nakafa.com",
-      siteName: "Nakafa",
+      url: COMPANY_IDENTITY.url,
+      siteName: COMPANY_IDENTITY.brandName,
       locale,
       type: "website",
       images: [

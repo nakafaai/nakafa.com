@@ -1,5 +1,6 @@
 import merge from "lodash.merge";
 import type { Metadata } from "next";
+import { COMPANY_IDENTITY } from "./company";
 
 type MetadataGenerator = Omit<Metadata, "description" | "title"> & {
   title: string;
@@ -7,12 +8,12 @@ type MetadataGenerator = Omit<Metadata, "description" | "title"> & {
   image?: string;
 };
 
-const applicationName = "Nakafa";
+const applicationName = COMPANY_IDENTITY.brandName;
 const author: Metadata["authors"] = {
-  name: "Nakafa",
-  url: "https://nakafa.com/",
+  name: COMPANY_IDENTITY.brandName,
+  url: COMPANY_IDENTITY.url,
 };
-const publisher = "Nakafa";
+const publisher = COMPANY_IDENTITY.legalName;
 const twitterHandle = "@nakafa";
 const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
 const productionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;

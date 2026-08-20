@@ -38,6 +38,7 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { cleanupUrl, formatUrl } from "@repo/design-system/lib/routing/url";
 import { cn } from "@repo/design-system/lib/utils";
+import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";
 
@@ -146,7 +147,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                   nativeButton={false}
                   render={
                     <a
-                      href="https://www.youtube.com/@nakafaa"
+                      href={COMPANY_SOCIAL_PROFILES.youtube}
                       rel="noopener noreferrer"
                       target="_blank"
                       title={t("videos")}
@@ -172,7 +173,7 @@ export function RefContent({ title, references, githubUrl, className }: Props) {
                   nativeButton={false}
                   render={
                     <a
-                      href="https://discord.gg/CPCSfKhvfQ"
+                      href={COMPANY_SOCIAL_PROFILES.discord}
                       rel="noopener noreferrer"
                       target="_blank"
                       title={t("community")}

@@ -1,5 +1,6 @@
 import { YoutubeIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -25,7 +26,7 @@ function VideoCard({ children }: { children: React.ReactNode }) {
   return (
     <Link
       className="group relative flex aspect-square overflow-hidden rounded-md border p-3 text-card-foreground shadow-xs"
-      href="https://www.youtube.com/@nakafaa"
+      href={COMPANY_SOCIAL_PROFILES.youtube}
       rel="noopener noreferrer"
       target="_blank"
     >

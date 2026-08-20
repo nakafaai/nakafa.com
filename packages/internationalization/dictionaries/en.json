@@ -8,7 +8,7 @@
     "classification": "Education"
   },
   "Common": {
-    "copyright": "Copyright © {year} PT. Nakafa Tekno Kreatif. All rights reserved.",
+    "copyright": "Copyright © {year} {companyName}. All rights reserved.",
     "made-with-love": "Made with love",
     "version": "Version {version}",
     "beta": "Beta",
@@ -91,7 +91,6 @@
     "open-in-t3-chat": "Open in T3 Chat",
     "open-in-gemini": "Open in Gemini",
     "see-on-youtube": "See on YouTube",
-    "subscribe": "Subscribe",
     "comments": "Comments",
     "anonymous": "Anonymous",
     "delete": "Delete",

@@ -8,6 +8,7 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { FooterAction } from "@/components/marketing/shared/footer-action";
@@ -107,7 +108,7 @@ export function Footer({
                 </li>
                 <li>
                   <LinkItem
-                    href="https://discord.gg/CPCSfKhvfQ"
+                    href={COMPANY_IDENTITY.socialProfiles.discord}
                     label={t("community")}
                   />
                 </li>
@@ -155,7 +156,10 @@ export function Footer({
       <section className="w-full border-t">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-4 p-6 lg:flex-row">
           <p className="text-center text-sm">
-            {tCommon("copyright", { year: "2026" })}
+            {tCommon("copyright", {
+              year: "2026",
+              companyName: COMPANY_IDENTITY.legalName,
+            })}
           </p>
           <div className="flex flex-col items-center gap-4 lg:flex-row">
             <div className="flex items-center gap-1">
@@ -224,27 +228,27 @@ function LinkItem({ href, label, nativeAnchor }: LinkItemProps) {
 
 const socialMedia = [
   {
-    href: "https://www.youtube.com/@nakafaa",
+    href: COMPANY_IDENTITY.socialProfiles.youtube,
     icon: YoutubeIcon,
     label: "YouTube",
   },
   {
-    href: "https://discord.gg/CPCSfKhvfQ",
+    href: COMPANY_IDENTITY.socialProfiles.discord,
     icon: DiscordIcon,
     label: "Discord",
   },
   {
-    href: "https://github.com/nakafaai",
+    href: COMPANY_IDENTITY.socialProfiles.github,
     icon: GithubIcon,
     label: "GitHub",
   },
   {
-    href: "https://www.linkedin.com/company/nakafa",
+    href: COMPANY_IDENTITY.socialProfiles.linkedin,
     icon: Linkedin02Icon,
     label: "LinkedIn",
   },
   {
-    href: "https://www.instagram.com/nakafa.ai/",
+    href: COMPANY_IDENTITY.socialProfiles.instagram,
     icon: InstagramIcon,
     label: "Instagram",
   },
