@@ -18,18 +18,16 @@ function requestProxy(pathname: string, init?: NextRequestInit) {
   return proxy(makeRequest(pathname, init));
 }
 
-/** Verifies that next-intl handled one request. */
-function expectLocaleProxy(response: Response) {
-  expect(mockLocaleRouting.activeMiddleware).toHaveBeenCalledTimes(1);
-  expect(mockLocaleRouting.previewMiddleware).not.toHaveBeenCalled();
-  expect(response.headers.get("x-locale-proxy")).toBe("1");
-}
-
-/** Verifies that the authenticated local child used candidate locale routing. */
-function expectPreviewLocaleProxy(response: Response) {
-  expect(mockLocaleRouting.previewMiddleware).toHaveBeenCalledTimes(1);
-  expect(mockLocaleRouting.activeMiddleware).not.toHaveBeenCalled();
-  expect(response.headers.get("x-locale-proxy")).toBe("preview");
+function expectLocaleProxy(
+  response: Response,
+  mode: "active" | "preview" = "active"
+) {
+  const expected = mode === "preview" ? [0, 1, "preview"] : [1, 0, "1"];
+  expect([
+    mockLocaleRouting.activeMiddleware.mock.calls.length,
+    mockLocaleRouting.previewMiddleware.mock.calls.length,
+    response.headers.get("x-locale-proxy"),
+  ]).toEqual(expected);
 }
 
 function expectNoLocaleProxy() {
@@ -48,40 +46,29 @@ function expectHardNotFound(response: Response, locale: string) {
   expectNoLocaleProxy();
 }
 
-const mockLocaleRouting = vi.hoisted(() => ({
-  activeMiddleware: vi.fn(
-    () =>
-      new Response(null, {
-        headers: {
-          "x-locale-proxy": "1",
-        },
-      })
-  ),
-  previewMiddleware: vi.fn(
-    () =>
-      new Response(null, {
-        headers: {
-          "x-locale-proxy": "preview",
-        },
-      })
-  ),
-}));
+const mockLocaleRouting = vi.hoisted(() => {
+  const response = (value: string) =>
+    new Response(null, { headers: { "x-locale-proxy": value } });
+
+  return {
+    activeMiddleware: vi.fn(() => response("1")),
+    previewMiddleware: vi.fn(() => response("preview")),
+  };
+});
 const runtimeMocks = vi.hoisted(() => ({
   readActive: vi.fn(),
   readActiveIdentity: vi.fn(),
   hasArticleCategory: vi.fn(),
   readProgramPath: vi.fn(),
+  readRedirect: vi.fn(),
   readTryout: vi.fn(),
 }));
 const previewMocks = vi.hoisted(() => ({
   configured: vi.fn(),
   internal: vi.fn(),
+  pathname: vi.fn(),
   route: vi.fn(),
 }));
-const migrationMocks = vi.hoisted(() => ({
-  readRedirect: vi.fn(),
-}));
-
 vi.mock("@repo/internationalization/src/routing", () => ({
   previewRouting: {
     defaultLocale: "en",
@@ -107,6 +94,7 @@ vi.mock("@/lib/content/preview/config", () => ({
 
 vi.mock("@/lib/content/preview/route", () => ({
   matchesInternalPreviewRoute: previewMocks.internal,
+  matchesPreviewPathname: previewMocks.pathname,
   matchesPreviewRoute: previewMocks.route,
 }));
 
@@ -126,7 +114,7 @@ vi.mock("@/lib/content/program/path", () => ({
   readPublishedProgramPath: runtimeMocks.readProgramPath,
 }));
 vi.mock("@/lib/routing/public/migration", () => ({
-  readPublicUrlMigrationRedirect: migrationMocks.readRedirect,
+  readPublicUrlMigrationRedirect: runtimeMocks.readRedirect,
 }));
 
 describe("proxy", () => {
@@ -151,10 +139,9 @@ describe("proxy", () => {
       .mockReturnValue(Effect.succeed(true));
     previewMocks.configured.mockReset().mockReturnValue(false);
     previewMocks.internal.mockReset().mockReturnValue(Effect.succeed(false));
+    previewMocks.pathname.mockReset().mockReturnValue(Effect.succeed(false));
     previewMocks.route.mockReset().mockReturnValue(Effect.succeed(false));
-    migrationMocks.readRedirect
-      .mockReset()
-      .mockReturnValue(Effect.succeed(null));
+    runtimeMocks.readRedirect.mockReset().mockReturnValue(Effect.succeed(null));
     mockLocaleRouting.activeMiddleware.mockClear();
     mockLocaleRouting.previewMiddleware.mockClear();
   });
@@ -180,7 +167,7 @@ describe("proxy", () => {
   });
 
   it("permanently redirects an authenticated retired material URL", async () => {
-    migrationMocks.readRedirect.mockReturnValueOnce(
+    runtimeMocks.readRedirect.mockReturnValueOnce(
       Effect.succeed(
         "/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling"
       )
@@ -194,7 +181,7 @@ describe("proxy", () => {
     expect(response.headers.get("location")).toBe(
       "http://localhost:3000/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling?utm=test"
     );
-    expect(migrationMocks.readRedirect).toHaveBeenCalledWith({
+    expect(runtimeMocks.readRedirect).toHaveBeenCalledWith({
       method: "GET",
       pathname:
         "/id/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle",
@@ -250,13 +237,27 @@ describe("proxy", () => {
 
   it("uses full contract locale routing only in the configured local child", async () => {
     previewMocks.configured.mockReturnValue(true);
+    previewMocks.pathname.mockReturnValueOnce(Effect.succeed(true));
+    previewMocks.route.mockReturnValueOnce(Effect.succeed(true));
 
-    const response = await requestProxy("/de/search");
+    const response = await requestProxy(
+      "/de/faecher/mathematik/funktionen/funktionsbegriff"
+    );
 
-    expectPreviewLocaleProxy(response);
-    expect(response.headers.get("link")).toBe('</llms.txt>; rel="llms-txt"');
-    expect(response.headers.get("x-llms-txt")).toBe("/llms.txt");
+    expectLocaleProxy(response, "preview");
   });
+
+  it.each(["/de/search", "/de/school/onboarding/create"])(
+    "hard-rejects the unselected candidate route %s",
+    async (path) => {
+      previewMocks.configured.mockReturnValue(true);
+
+      const response = await requestProxy(path);
+
+      expectHardNotFound(response, "de");
+      expect(previewMocks.pathname).toHaveBeenCalledWith(path);
+    }
+  );
 
   it.each([
     [

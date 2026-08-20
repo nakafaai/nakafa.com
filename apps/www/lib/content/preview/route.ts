@@ -180,6 +180,21 @@ export const matchesPreviewRoute = Effect.fn(
   });
 });
 
+/** Reports whether the manifest owns one exact localized public pathname. */
+export const matchesPreviewPathname = Effect.fn(
+  "NakafaContent.matchesPreviewPathname"
+)(function* (pathname: string) {
+  const [locale, ...segments] = pathname.split("/").filter(Boolean);
+  if (!(hasLocale(APP_LOCALE_CODES, locale) && segments.length > 0)) {
+    return false;
+  }
+
+  return yield* matchesPreviewRoute({
+    appLocale: AppLocaleSchema.make(locale),
+    publicPath: segments.join("/"),
+  });
+});
+
 /** Allows only the selected local document through next-intl's internal pass. */
 export const matchesInternalPreviewRoute = Effect.fn(
   "NakafaContent.matchesInternalPreviewRoute"

@@ -1,3 +1,5 @@
 import { initializeAnalytics } from "@repo/analytics/posthog/instrumentation-client";
 
-initializeAnalytics();
+if (process.env.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD !== "true") {
+  initializeAnalytics();
+}

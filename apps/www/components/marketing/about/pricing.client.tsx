@@ -10,6 +10,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { getThemeShaderColor } from "@repo/design-system/lib/theme/registry";
 import { useAction } from "convex/react";
+import { Effect } from "effect";
 import { useReducedMotion } from "motion/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
@@ -70,32 +71,45 @@ export function ProButton() {
   );
 
   const handleCheckout = () => {
-    startTransition(async () => {
-      if (!isActiveLocale(locale)) {
-        return;
-      }
+    if (!isActiveLocale(locale)) {
+      return;
+    }
 
+    const program = Effect.gen(function* () {
       if (!currentUser) {
-        await authClient.signIn.social({
-          provider: "google",
-          callbackURL: pricingCallbackURL,
-        });
+        yield* Effect.tryPromise(() =>
+          authClient.signIn.social({
+            provider: "google",
+            callbackURL: pricingCallbackURL,
+          })
+        );
         return;
       }
 
-      const { url } = await generateCheckoutLink({
-        locale,
-        successUrl: window.location.href,
+      const { url } = yield* Effect.tryPromise(() =>
+        generateCheckoutLink({ locale, successUrl: window.location.href })
+      );
+      yield* Effect.sync(() => {
+        window.location.href = url;
       });
-      window.location.href = url;
     });
+    startTransition(() => Effect.runPromise(program));
   };
 
   const handleManageSubscription = () => {
-    startTransition(async () => {
-      const { url } = await generateCustomerPortalUrl({});
-      window.location.href = url;
-    });
+    if (!isActiveLocale(locale)) {
+      return;
+    }
+
+    const program = Effect.tryPromise(() => generateCustomerPortalUrl({})).pipe(
+      Effect.tap(({ url }) =>
+        Effect.sync(() => {
+          window.location.href = url;
+        })
+      ),
+      Effect.asVoid
+    );
+    startTransition(() => Effect.runPromise(program));
   };
 
   return (

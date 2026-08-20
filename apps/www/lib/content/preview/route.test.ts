@@ -13,6 +13,7 @@ import {
   type MaterialPreviewRouteInput,
   matchesInternalPreviewRoute,
   matchesMaterialPreviewRoute,
+  matchesPreviewPathname,
   matchesPreviewRoute,
   parseMaterialPreviewStaticParams,
   readMaterialPreviewStaticParams,
@@ -136,6 +137,20 @@ describe("local preview route matching", () => {
           publicPath: previewRoute.publicPath,
         })
       )
+    ).resolves.toBe(false);
+  });
+
+  it("matches only the selected localized public pathname", async () => {
+    await expect(
+      Effect.runPromise(
+        matchesPreviewPathname(`/en/${previewRoute.publicPath}`)
+      )
+    ).resolves.toBe(true);
+    await expect(
+      Effect.runPromise(matchesPreviewPathname("/en/school/onboarding/create"))
+    ).resolves.toBe(false);
+    await expect(
+      Effect.runPromise(matchesPreviewPathname("/de"))
     ).resolves.toBe(false);
   });
 

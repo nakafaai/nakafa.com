@@ -1,4 +1,7 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import {
+  APP_LOCALE_CODES,
+  type AppLocaleCode,
+} from "@nakafa/aksara-contracts/locale";
 import { isPostHogProxyPathname } from "@repo/analytics/posthog/config";
 import {
   previewRouting,
@@ -16,7 +19,10 @@ import {
   LLMS_TEXT_PATH,
 } from "@/lib/agent-discovery";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
-import { matchesInternalPreviewRoute } from "@/lib/content/preview/route";
+import {
+  matchesInternalPreviewRoute,
+  matchesPreviewPathname,
+} from "@/lib/content/preview/route";
 import {
   type LocalizedLlmsRoute,
   resolveLlmsProxyRoute,
@@ -73,6 +79,16 @@ export async function proxy(request: NextRequest) {
         "X-Robots-Tag": "noindex",
       },
     });
+  }
+
+  const candidateLocale = readCandidateLocale(pathname);
+  if (candidateLocale) {
+    const previewOwnsPathname =
+      hasPreviewConfig() &&
+      (await Effect.runPromise(matchesPreviewPathname(pathname)));
+    if (!previewOwnsPathname) {
+      return rewriteToContentNotFound(request, candidateLocale);
+    }
   }
 
   const schoolAuthRedirect = readSchoolAuthRedirect(request);
@@ -139,7 +155,20 @@ export async function proxy(request: NextRequest) {
     return rewriteToContentNotFound(request, projectedRouteRejection);
   }
 
-  return routeLocalizedRequest(request);
+  return routeLocalizedRequest(request, candidateLocale !== null);
+}
+
+/** Reads a supported locale that is not in the active public route set. */
+function readCandidateLocale(pathname: string): AppLocaleCode | null {
+  const [locale] = pathname.split("/").filter(Boolean);
+  if (
+    !hasLocale(APP_LOCALE_CODES, locale) ||
+    hasLocale(routing.locales, locale)
+  ) {
+    return null;
+  }
+
+  return locale;
 }
 
 /**
@@ -174,8 +203,11 @@ function readSchoolAuthRedirect(request: NextRequest) {
 }
 
 /** Applies next-intl routing and Nakafa discovery headers once per pass. */
-function routeLocalizedRequest(request: NextRequest) {
-  const response = hasPreviewConfig()
+function routeLocalizedRequest(
+  request: NextRequest,
+  usesCandidateLocale: boolean
+) {
+  const response = usesCandidateLocale
     ? handlePreviewLocalizedRequest(request)
     : handleLocalizedRequest(request);
   response.headers.append("Link", AGENT_DISCOVERY_LINK_HEADER);

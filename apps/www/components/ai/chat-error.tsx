@@ -18,6 +18,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useAction } from "convex/react";
+import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useTransition } from "react";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
@@ -96,31 +97,44 @@ function ButtonCheckout() {
   );
 
   const handleCheckout = () => {
-    startTransition(async () => {
-      if (!isActiveLocale(locale)) {
-        return;
-      }
+    if (!isActiveLocale(locale)) {
+      return;
+    }
 
-      const { url } = await generateCheckoutLink({
-        locale,
-        successUrl: window.location.href,
-      });
-      window.location.href = url;
-    });
+    const program = Effect.tryPromise(() =>
+      generateCheckoutLink({ locale, successUrl: window.location.href })
+    ).pipe(
+      Effect.tap(({ url }) =>
+        Effect.sync(() => {
+          window.location.href = url;
+        })
+      ),
+      Effect.asVoid
+    );
+    startTransition(() => Effect.runPromise(program));
   };
 
   const handleManageSubscription = () => {
-    startTransition(async () => {
-      const { url } = await generateCustomerPortalUrl({});
-      window.location.href = url;
-    });
+    if (!isActiveLocale(locale)) {
+      return;
+    }
+
+    const program = Effect.tryPromise(() => generateCustomerPortalUrl({})).pipe(
+      Effect.tap(({ url }) =>
+        Effect.sync(() => {
+          window.location.href = url;
+        })
+      ),
+      Effect.asVoid
+    );
+    startTransition(() => Effect.runPromise(program));
   };
 
   return (
     <div className="flex items-center gap-4">
       <Activity mode={hasSubscription ? "visible" : "hidden"}>
         <Button
-          disabled={isPending}
+          disabled={isPending || !isActiveLocale(locale)}
           onClick={handleManageSubscription}
           variant="secondary"
         >
