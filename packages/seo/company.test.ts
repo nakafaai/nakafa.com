@@ -25,13 +25,18 @@ describe("company identity", () => {
     ]);
   });
 
-  it("rejects malformed public URLs", () => {
+  it.each([
+    "not-a-url",
+    "http://nakafa.com",
+    "ftp://nakafa.com",
+    "javascript:alert(1)",
+  ])("rejects the non-HTTPS public URL %s", (url) => {
     expect(() =>
       decodeCompanyIdentity({
         ...COMPANY_IDENTITY,
-        url: "not-a-url",
+        url,
       })
-    ).toThrow("Expected a valid URL");
+    ).toThrow("Expected a valid HTTPS URL");
   });
 
   it("rejects malformed business identification numbers", () => {

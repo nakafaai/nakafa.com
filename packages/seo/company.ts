@@ -2,9 +2,12 @@ import { Schema } from "effect";
 import { COMPANY_SOCIAL_PROFILES } from "./company-profiles";
 
 const UrlStringSchema = Schema.String.pipe(
-  Schema.filter((value) => URL.canParse(value), {
-    message: () => "Expected a valid URL.",
-  })
+  Schema.filter(
+    (value) => URL.canParse(value) && new URL(value).protocol === "https:",
+    {
+      message: () => "Expected a valid HTTPS URL.",
+    }
+  )
 );
 const EmailAddressSchema = Schema.String.pipe(
   Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
