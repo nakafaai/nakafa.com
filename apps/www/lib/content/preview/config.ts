@@ -8,9 +8,9 @@ import {
   type PreviewRendererSecret,
   PreviewRendererSecretSchema,
 } from "@nakafa/aksara-contracts/preview/auth";
+import { hasCandidateLocalePreview } from "@repo/internationalization/src/environment";
 import { Effect, Option, Redacted, Schema } from "effect";
 import {
-  hasPreviewEnvironment,
   readPreviewEnvironment,
   readPreviewRendererEnvironment,
 } from "@/lib/content/preview/environment";
@@ -102,7 +102,7 @@ export const previewUrl = Effect.fn("NakafaContent.previewUrl")(function* (
  * returns true so strict decoding exposes the error instead of falling back.
  */
 export function hasPreviewConfig() {
-  return hasPreviewEnvironment();
+  return hasCandidateLocalePreview();
 }
 
 /** Reads the complete ephemeral connection only in the development child. */

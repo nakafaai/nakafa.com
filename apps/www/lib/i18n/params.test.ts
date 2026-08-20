@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getActiveLocaleOrThrow, getLocaleOrThrow } from "@/lib/i18n/params";
 
 const hasPreviewConfigMock = vi.hoisted(() => vi.fn(() => false));
 
@@ -17,6 +17,7 @@ describe("getLocaleOrThrow", () => {
 
   it("returns a configured locale", () => {
     expect(getLocaleOrThrow("en")).toBe("en");
+    expect(getActiveLocaleOrThrow("id")).toBe("id");
   });
 
   it("rejects an inactive locale without an exact local preview", () => {
@@ -27,6 +28,7 @@ describe("getLocaleOrThrow", () => {
     hasPreviewConfigMock.mockReturnValue(true);
 
     expect(getLocaleOrThrow("de")).toBe("de");
+    expect(() => getActiveLocaleOrThrow("de")).toThrow();
     expect(() => getLocaleOrThrow("fr")).toThrow();
   });
 });

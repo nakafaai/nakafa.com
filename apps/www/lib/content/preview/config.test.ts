@@ -45,15 +45,25 @@ function stubRendererEnvironment() {
 }
 
 describe("local preview configuration", () => {
-  it("gates Effect startup to a configured development child", () => {
+  it.each([
+    "AKSARA_PREVIEW_EVENTS_PATH",
+    "AKSARA_PREVIEW_KEY_ID",
+    "AKSARA_PREVIEW_MANIFEST_PATH",
+    "AKSARA_PREVIEW_ORIGIN",
+    "AKSARA_PREVIEW_PUBLIC_KEY",
+    "AKSARA_PREVIEW_PROVIDER_TOKEN",
+  ])("detects the partial provider field %s", (name) => {
     vi.stubEnv("NODE_ENV", "development");
-    vi.stubEnv("AKSARA_PREVIEW_PROVIDER_TOKEN", undefined);
+    vi.stubEnv(name, "partial-value");
+    expect(hasPreviewConfig()).toBe(true);
+  });
+
+  it("rejects absent and production preview environments", () => {
+    vi.stubEnv("NODE_ENV", "development");
     expect(hasPreviewConfig()).toBe(false);
 
-    vi.stubEnv("AKSARA_PREVIEW_PROVIDER_TOKEN", "partial-token");
-    expect(hasPreviewConfig()).toBe(true);
-
     vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("AKSARA_PREVIEW_PROVIDER_TOKEN", "partial-token");
     expect(hasPreviewConfig()).toBe(false);
   });
 

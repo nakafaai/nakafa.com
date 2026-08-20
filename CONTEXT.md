@@ -2,6 +2,13 @@
 
 This glossary records stable domain terms used by Nakafa code and PR review. It is not an implementation plan.
 
+## Content Publication
+
+- **Supported application locale**: A locale code recognized by the shared Aksara contract. Support does not activate public product routes or prove that every authored content family is ready.
+- **Candidate application locale**: A supported application locale whose reviewed sources can be exercised through an authenticated local preview while it remains unavailable on public product routes.
+- **Active application locale**: A supported application locale included in the authenticated active Aksara publication and enabled by Nakafa public routing. Activation requires complete publication evidence, not only an application dictionary or preview artifact.
+- **Signed content delivery**: The resolution of one exact authored identity to an authenticated Aksara artifact for a specific application locale and route. Delivery fails closed when that signed identity is absent and never substitutes another locale.
+
 ## Learning Engagement
 
 - **Canonical asset**: A material, question, article, or Quran asset owned by the content system. Other product surfaces group or navigate over references to these assets.
