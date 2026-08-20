@@ -1,7 +1,8 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
-import { ConvexRuntimeQueryError } from "@repo/backend/client/runtime";
+import { toRuntimeQueryError } from "@repo/backend/test/runtime-query";
+import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import { readQuranApiDocument } from "@/lib/content/quran";
 
 const runtimeClientMocks = vi.hoisted(() => ({
@@ -20,16 +21,6 @@ vi.mock("@repo/backend/client/runtime", async (importOriginal) => {
       }),
   };
 });
-function toRuntimeQueryError(cause: unknown) {
-  if (cause instanceof ConvexRuntimeQueryError) {
-    return cause;
-  }
-  return new ConvexRuntimeQueryError({
-    networkCodes: [],
-    query: "test-runtime-query",
-    reason: "query",
-  });
-}
 const source = {
   activeManifestHash: Sha256HashSchema.make(`sha256:${"a".repeat(64)}`),
   activeReleaseId: "quran-release",
@@ -41,71 +32,81 @@ afterEach(() => {
   runtimeClientMocks.runtimeQuery.mockReset();
 });
 describe("Quran API content", () => {
-  it("reads and validates one locale-specific signed Quran document", async () => {
-    runtimeClientMocks.runtimeQuery.mockResolvedValueOnce({
-      ...source,
-      appLocale: "en",
-      surah: {
-        kind: "quran-surah",
-        name: {
-          arabic: "الفاتحة",
-          translation: "The Opening",
-          transliteration: "Al-Fatihah",
+  it.live("reads and validates one locale-specific signed Quran document", () =>
+    Effect.gen(function* () {
+      runtimeClientMocks.runtimeQuery.mockResolvedValueOnce({
+        ...source,
+        appLocale: "en",
+        surah: {
+          kind: "quran-surah",
+          name: {
+            arabic: "الفاتحة",
+            translation: "The Opening",
+            transliteration: "Al-Fatihah",
+          },
+          number: 1,
+          numberOfVerses: 1,
+          revelation: { order: 5, place: "Meccan" },
         },
-        number: 1,
-        numberOfVerses: 1,
-        revelation: { order: 5, place: "Meccan" },
-      },
-      verses: [
-        {
-          arabic: "بِسْمِ اللّٰهِ",
-          number: { inQuran: 1, inSurah: 1 },
-          translation: { footnotes: "Source note.", text: "In Allah's name." },
-        },
-      ],
-    });
-    await expect(
-      Effect.runPromise(
-        readQuranApiDocument({ appLocale: "en", surahNumber: 1 })
-      )
-    ).resolves.toMatchObject({
-      appLocale: "en",
-      surah: { number: 1, revelation: { order: 5, place: "Meccan" } },
-      verses: [
-        {
-          translation: { footnotes: "Source note.", text: "In Allah's name." },
-        },
-      ],
-    });
-    expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledWith(
-      "https://test.convex.cloud",
-      expect.anything(),
-      { appLocale: "en", surahNumber: 1 }
-    );
-  });
-  it("maps transport and publication failures into its domain error", async () => {
-    runtimeClientMocks.runtimeQuery.mockRejectedValueOnce(new Error("offline"));
-    await expect(
-      Effect.runPromise(
-        Effect.result(readQuranApiDocument({ appLocale: "en", surahNumber: 1 }))
-      )
-    ).resolves.toMatchObject({
-      _tag: "Failure",
-      failure: { _tag: "QuranApiReadError" },
-    });
-    runtimeClientMocks.runtimeQuery.mockResolvedValueOnce({
-      ...source,
-      appLocale: "en",
-      surah: null,
-      verses: [],
-    });
-    await expect(
-      Effect.runPromise(
-        Effect.result(readQuranApiDocument({ appLocale: "en", surahNumber: 1 }))
-      )
-    ).resolves.toMatchObject({
-      _tag: "Failure",
-      failure: { _tag: "QuranApiReadError" },
-    });
-  });
+        verses: [
+          {
+            arabic: "بِسْمِ اللّٰهِ",
+            number: { inQuran: 1, inSurah: 1 },
+            translation: {
+              footnotes: "Source note.",
+              text: "In Allah's name.",
+            },
+          },
+        ],
+      });
+      expect(
+        yield* readQuranApiDocument({ appLocale: "en", surahNumber: 1 })
+      ).toMatchObject({
+        appLocale: "en",
+        surah: { number: 1, revelation: { order: 5, place: "Meccan" } },
+        verses: [
+          {
+            translation: {
+              footnotes: "Source note.",
+              text: "In Allah's name.",
+            },
+          },
+        ],
+      });
+      expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledWith(
+        "https://test.convex.cloud",
+        expect.anything(),
+        { appLocale: "en", surahNumber: 1 }
+      );
+    })
+  );
+  it.live("maps transport and publication failures into its domain error", () =>
+    Effect.gen(function* () {
+      runtimeClientMocks.runtimeQuery.mockRejectedValueOnce(
+        new Error("offline")
+      );
+      expect(
+        yield* Effect.result(
+          readQuranApiDocument({ appLocale: "en", surahNumber: 1 })
+        )
+      ).toMatchObject({
+        _tag: "Failure",
+        failure: { _tag: "QuranApiReadError" },
+      });
+      runtimeClientMocks.runtimeQuery.mockResolvedValueOnce({
+        ...source,
+        appLocale: "en",
+        surah: null,
+        verses: [],
+      });
+      expect(
+        yield* Effect.result(
+          readQuranApiDocument({ appLocale: "en", surahNumber: 1 })
+        )
+      ).toMatchObject({
+        _tag: "Failure",
+        failure: { _tag: "QuranApiReadError" },
+      });
+    })
+  );
 });
