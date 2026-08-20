@@ -20,7 +20,6 @@ export function EducationalOrgJsonLd() {
     "@context": "https://schema.org",
     ...ORGANIZATION,
     "@type": "EducationalOrganization",
-    "@id": new URL("#educational-organization", COMPANY_IDENTITY.url).href,
     alternateName: t("title"),
     description: t("description"),
     image: COMPANY_IDENTITY.logoUrl,
