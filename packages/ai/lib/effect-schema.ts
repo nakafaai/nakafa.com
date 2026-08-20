@@ -247,12 +247,15 @@ export const providerCompatibleObjectSchema = <A, I>(
   if (isObjectSchema(modelSchema)) {
     return modelSchema;
   }
+  const variants = objectVariants(modelSchema);
+  if (variants.length === 0) {
+    throw new Error(
+      "Provider-compatible tool schemas require an object or object union."
+    );
+  }
   return {
     ...withoutTopLevelAnyOf(modelSchema),
-    properties: mergeVariantProperties(
-      objectVariants(modelSchema),
-      document.definitions
-    ),
+    properties: mergeVariantProperties(variants, document.definitions),
     required: [],
     type: "object",
   };

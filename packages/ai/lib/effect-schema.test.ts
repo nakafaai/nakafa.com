@@ -488,17 +488,9 @@ describe("createEffectSchema", () => {
       )
     ).toThrow("Effect generated an unsupported schema for property value.");
   });
-  it("falls back to an empty object schema for non-object model metadata", async () => {
-    const inputSchema = createEffectSchema(
-      Schema.String,
-      providerCompatibleObjectSchema(Schema.String)
+  it("rejects non-object model metadata", () => {
+    expect(() => providerCompatibleObjectSchema(Schema.String)).toThrow(
+      "Provider-compatible tool schemas require an object or object union."
     );
-    const schema = asSchema(inputSchema);
-    const jsonSchema = await Promise.resolve(schema.jsonSchema);
-    expect(jsonSchema).toMatchObject({
-      properties: {},
-      required: [],
-      type: "object",
-    });
   });
 });

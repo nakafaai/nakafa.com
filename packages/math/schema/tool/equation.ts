@@ -118,8 +118,7 @@ function hasSolvedVariableInEveryBoundedExpression(
   );
 }
 const MathEquationSystemInputSchema = MathEquationSystemStructSchema.mapFields(
-  Struct.map(Schema.mutableKey),
-  { unsafePreserveChecks: true }
+  Struct.map(Schema.mutableKey)
 )
   .check(
     Schema.makeFilter((value) => hasBoundedDomainVariable(value), {

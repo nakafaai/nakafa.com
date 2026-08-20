@@ -86,17 +86,14 @@ function hasConsistentMomentExpression(value: ProbabilityMomentInput) {
   return symbols.has(value.variable);
 }
 const MathProbabilityDistributionInputSchema =
-  MathProbabilityBaseInputSchema.mapFields(
-    (fields) => ({
-      ...fields,
-      operation: Schema.Literal("distribution").annotate({
-        description:
-          "Use distribution to inspect a supported named distribution.",
-      }),
+  MathProbabilityBaseInputSchema.mapFields((fields) => ({
+    ...fields,
+    operation: Schema.Literal("distribution").annotate({
+      description:
+        "Use distribution to inspect a supported named distribution.",
     }),
-    { unsafePreserveChecks: true }
-  )
-    .mapFields(Struct.map(Schema.mutableKey), { unsafePreserveChecks: true })
+  }))
+    .mapFields(Struct.map(Schema.mutableKey))
     .check(
       Schema.makeFilter((value) => hasRequiredProbabilityParameters(value), {
         message:
@@ -105,26 +102,23 @@ const MathProbabilityDistributionInputSchema =
     )
     .annotate({ description: "Named distribution summary input." });
 const MathProbabilityMomentInputSchema =
-  MathProbabilityBaseInputSchema.mapFields(
-    (fields) => ({
-      ...fields,
-      expression: Schema.optionalKey(
-        expressionInputSchema.annotate({
-          description:
-            "Optional transformed random-variable expression for expected_value or variance_probability. Use when the requested moment is about a transformation of the random variable. It must contain exactly one random variable and match variable when variable is provided.",
-        })
-      ),
-      operation: Schema.Literals([
-        "expected_value",
-        "variance_probability",
-      ]).annotate({
+  MathProbabilityBaseInputSchema.mapFields((fields) => ({
+    ...fields,
+    expression: Schema.optionalKey(
+      expressionInputSchema.annotate({
         description:
-          "Use expected_value for expectation or variance_probability for variance.",
-      }),
+          "Optional transformed random-variable expression for expected_value or variance_probability. Use when the requested moment is about a transformation of the random variable. It must contain exactly one random variable and match variable when variable is provided.",
+      })
+    ),
+    operation: Schema.Literals([
+      "expected_value",
+      "variance_probability",
+    ]).annotate({
+      description:
+        "Use expected_value for expectation or variance_probability for variance.",
     }),
-    { unsafePreserveChecks: true }
-  )
-    .mapFields(Struct.map(Schema.mutableKey), { unsafePreserveChecks: true })
+  }))
+    .mapFields(Struct.map(Schema.mutableKey))
     .check(
       Schema.makeFilter((value) => hasRequiredProbabilityParameters(value), {
         message:
@@ -141,19 +135,16 @@ const MathProbabilityMomentInputSchema =
       description: "Named distribution expected value or variance input.",
     });
 const MathProbabilityPointInputSchema =
-  MathProbabilityBaseInputSchema.mapFields(
-    (fields) => ({
-      ...fields,
-      operation: Schema.Literal("point_probability").annotate({
-        description: "Use for exact-value probability such as P(X = 3).",
-      }),
-      point: pointInputSchema.annotate({
-        description: "Exact event value, for example 3.",
-      }),
+  MathProbabilityBaseInputSchema.mapFields((fields) => ({
+    ...fields,
+    operation: Schema.Literal("point_probability").annotate({
+      description: "Use for exact-value probability such as P(X = 3).",
     }),
-    { unsafePreserveChecks: true }
-  )
-    .mapFields(Struct.map(Schema.mutableKey), { unsafePreserveChecks: true })
+    point: pointInputSchema.annotate({
+      description: "Exact event value, for example 3.",
+    }),
+  }))
+    .mapFields(Struct.map(Schema.mutableKey))
     .check(
       Schema.makeFilter((value) => hasRequiredProbabilityParameters(value), {
         message:
@@ -162,20 +153,17 @@ const MathProbabilityPointInputSchema =
     )
     .annotate({ description: "Exact-value probability input." });
 const MathProbabilityCumulativeInputSchema =
-  MathProbabilityBaseInputSchema.mapFields(
-    (fields) => ({
-      ...fields,
-      inclusive: Schema.optionalKey(probabilityInclusiveSchema),
-      operation: Schema.Literal("cumulative_probability").annotate({
-        description: "Use for below, less-than, at-most, or up-to events.",
-      }),
-      upper: boundInputSchema.annotate({
-        description: "Upper event bound, for example 85.",
-      }),
+  MathProbabilityBaseInputSchema.mapFields((fields) => ({
+    ...fields,
+    inclusive: Schema.optionalKey(probabilityInclusiveSchema),
+    operation: Schema.Literal("cumulative_probability").annotate({
+      description: "Use for below, less-than, at-most, or up-to events.",
     }),
-    { unsafePreserveChecks: true }
-  )
-    .mapFields(Struct.map(Schema.mutableKey), { unsafePreserveChecks: true })
+    upper: boundInputSchema.annotate({
+      description: "Upper event bound, for example 85.",
+    }),
+  }))
+    .mapFields(Struct.map(Schema.mutableKey))
     .check(
       Schema.makeFilter((value) => hasRequiredProbabilityParameters(value), {
         message:
@@ -193,10 +181,9 @@ const MathProbabilityTailInputSchema = MathProbabilityBaseInputSchema.mapFields(
     operation: Schema.Literal("tail_probability").annotate({
       description: "Use for above, greater-than, at-least, or from events.",
     }),
-  }),
-  { unsafePreserveChecks: true }
+  })
 )
-  .mapFields(Struct.map(Schema.mutableKey), { unsafePreserveChecks: true })
+  .mapFields(Struct.map(Schema.mutableKey))
   .check(
     Schema.makeFilter((value) => hasRequiredProbabilityParameters(value), {
       message:
@@ -205,25 +192,22 @@ const MathProbabilityTailInputSchema = MathProbabilityBaseInputSchema.mapFields(
   )
   .annotate({ description: "Tail probability input." });
 const MathProbabilityIntervalInputSchema =
-  MathProbabilityBaseInputSchema.mapFields(
-    (fields) => ({
-      ...fields,
-      lower: boundInputSchema.annotate({
-        description: "Lower event bound, for example 60.",
-      }),
-      lowerInclusive: Schema.optionalKey(probabilityInclusiveSchema),
-      operation: Schema.Literal("interval_probability").annotate({
-        description:
-          "Use for between-range events. Always include both lower and upper.",
-      }),
-      upper: boundInputSchema.annotate({
-        description: "Upper event bound, for example 85.",
-      }),
-      upperInclusive: Schema.optionalKey(probabilityInclusiveSchema),
+  MathProbabilityBaseInputSchema.mapFields((fields) => ({
+    ...fields,
+    lower: boundInputSchema.annotate({
+      description: "Lower event bound, for example 60.",
     }),
-    { unsafePreserveChecks: true }
-  )
-    .mapFields(Struct.map(Schema.mutableKey), { unsafePreserveChecks: true })
+    lowerInclusive: Schema.optionalKey(probabilityInclusiveSchema),
+    operation: Schema.Literal("interval_probability").annotate({
+      description:
+        "Use for between-range events. Always include both lower and upper.",
+    }),
+    upper: boundInputSchema.annotate({
+      description: "Upper event bound, for example 85.",
+    }),
+    upperInclusive: Schema.optionalKey(probabilityInclusiveSchema),
+  }))
+    .mapFields(Struct.map(Schema.mutableKey))
     .check(
       Schema.makeFilter((value) => hasRequiredProbabilityParameters(value), {
         message:

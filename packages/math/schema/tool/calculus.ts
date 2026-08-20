@@ -42,8 +42,7 @@ const MathCalculusStructSchema = Schema.Struct({
 }).annotate({ description: "Calculus tool input." });
 type MathCalculusInput = Schema.Schema.Type<typeof MathCalculusStructSchema>;
 export const MathCalculusInputSchema = MathCalculusStructSchema.mapFields(
-  Struct.map(Schema.mutableKey),
-  { unsafePreserveChecks: true }
+  Struct.map(Schema.mutableKey)
 )
   .check(
     Schema.makeFilter((value) => hasSafeCalculusVariable(value), {
