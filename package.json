@@ -61,7 +61,7 @@
     "effect": "catalog:",
     "turbo": "2.10.11",
     "typescript": "catalog:",
-    "ultracite": "7.10.5",
+    "ultracite": "7.10.6",
     "yaml": "2.9.0"
   },
   "packageManager": "pnpm@11.22.0",
