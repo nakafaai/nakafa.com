@@ -4,7 +4,7 @@ import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/arti
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
-import { Effect, Schema } from "effect";
+import { Schema } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -119,8 +119,8 @@ export async function generateStaticParams({
 }) {
   const locale = getLocaleOrThrow(params.locale);
   if (hasPreviewConfig()) {
-    const preview = await Effect.runPromise(
-      readArticlePreviewStaticParams(AppLocaleSchema.make(locale))
+    const preview = await readArticlePreviewStaticParams(
+      AppLocaleSchema.make(locale)
     );
     return [preview];
   }

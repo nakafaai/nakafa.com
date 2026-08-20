@@ -261,4 +261,25 @@ describe("local preview JSON requests", () => {
     await expect(runFailure()).resolves.toMatchObject({ stage: "body" });
     await expect(runFailure()).resolves.toMatchObject({ stage: "body" });
   });
+
+  it("maps synchronous stream-reader acquisition failures", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve({
+          body: {
+            /** Fails before the response body exposes a reader. */
+            getReader() {
+              throw new TypeError("reader unavailable");
+            },
+          },
+          headers: new Headers({ "content-type": "application/json" }),
+          status: 200,
+          url: target,
+        })
+      )
+    );
+
+    await expect(runFailure()).resolves.toMatchObject({ stage: "body" });
+  });
 });

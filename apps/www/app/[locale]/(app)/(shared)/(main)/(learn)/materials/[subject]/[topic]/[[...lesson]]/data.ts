@@ -1,6 +1,5 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { readNamespaceSegment } from "@repo/contents/_types/route/surface";
-import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { getPublishedMaterialRoutes } from "@/lib/content/material/catalog";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
@@ -47,8 +46,8 @@ export async function readMaterialRequest(params: MaterialParams) {
 export async function listMaterialStaticParams(rawLocale: string) {
   const locale = getLocaleOrThrow(rawLocale);
   if (hasPreviewConfig()) {
-    const preview = await Effect.runPromise(
-      readMaterialPreviewStaticParams(AppLocaleSchema.make(locale))
+    const preview = await readMaterialPreviewStaticParams(
+      AppLocaleSchema.make(locale)
     );
     return [preview];
   }

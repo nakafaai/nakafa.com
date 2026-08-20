@@ -9,7 +9,6 @@ import { ThemeBootstrap } from "@repo/design-system/providers/theme-bootstrap";
 import { routing } from "@repo/internationalization/src/routing";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
 import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
-import { Effect } from "effect";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { NextIntlClientProvider } from "next-intl";
@@ -131,7 +130,7 @@ export const viewport = appViewport;
 /** Prebuilds active shells or the single selected local preview shell. */
 export async function generateStaticParams() {
   if (hasPreviewConfig()) {
-    return await Effect.runPromise(readPreviewStaticLocaleParams());
+    return await readPreviewStaticLocaleParams();
   }
 
   return routing.locales.map((locale) => ({ locale }));

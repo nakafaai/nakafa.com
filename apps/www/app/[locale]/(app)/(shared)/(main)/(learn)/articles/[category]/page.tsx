@@ -5,7 +5,7 @@ import {
 } from "@nakafa/aksara-contracts/projection/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
-import { Effect, Option, Schema } from "effect";
+import { Option, Schema } from "effect";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
@@ -98,8 +98,8 @@ export async function generateStaticParams({
 }) {
   const locale = getLocaleOrThrow(params.locale);
   if (hasPreviewConfig()) {
-    const preview = await Effect.runPromise(
-      readArticlePreviewStaticParams(AppLocaleSchema.make(locale))
+    const preview = await readArticlePreviewStaticParams(
+      AppLocaleSchema.make(locale)
     );
     return [{ category: preview.category }];
   }

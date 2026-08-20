@@ -1,6 +1,5 @@
 // @vitest-environment node
 
-import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   listMaterialStaticParams,
@@ -48,13 +47,11 @@ beforeEach(() => {
     sourceRevision: "a".repeat(40),
   });
   mocks.hasPreviewConfig.mockReturnValue(false);
-  mocks.readMaterialPreviewStaticParams.mockReturnValue(
-    Effect.succeed({
-      lesson: ["function-concept"],
-      subject: "mathematics",
-      topic: "function-composition-inverse-function",
-    })
-  );
+  mocks.readMaterialPreviewStaticParams.mockResolvedValue({
+    lesson: ["function-concept"],
+    subject: "mathematics",
+    topic: "function-composition-inverse-function",
+  });
   mocks.selectLearningStaticParams.mockImplementation((values) => values);
 });
 

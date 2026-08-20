@@ -9,7 +9,7 @@ import {
   PreviewRendererSecretSchema,
 } from "@nakafa/aksara-contracts/preview/auth";
 import { hasCandidateLocalePreview } from "@repo/internationalization/src/environment";
-import { Effect, Option, Redacted, Schema } from "effect";
+import { Effect, Either, Option, Redacted, Schema } from "effect";
 import {
   readPreviewEnvironment,
   readPreviewRendererEnvironment,
@@ -77,22 +77,57 @@ export class PreviewRendererConfigError extends Schema.TaggedError<PreviewRender
   { name: Schema.Literal("AKSARA_PREVIEW_RENDERER") }
 ) {}
 
-/** Builds one validated preview URL without allowing its origin to change. */
-export const previewUrl = Effect.fn("NakafaContent.previewUrl")(function* (
-  config: PreviewConfig,
-  path: string
+/** Decodes one complete child-process environment without starting a runtime. */
+export function decodePreviewEnvironment(
+  environment: ReturnType<typeof readPreviewEnvironment>
 ) {
-  const decodedPath = yield* Schema.decodeUnknown(PreviewPathSchema)(path).pipe(
-    Effect.mapError(() => new PreviewConfigError({ name: "AKSARA_PREVIEW" }))
+  const decoded = Schema.decodeUnknownEither(PreviewEnvironmentSchema)(
+    environment,
+    { onExcessProperty: "error" }
   );
-  const target = new URL(decodedPath, config.origin);
-
-  if (target.origin !== config.origin.origin) {
-    return yield* new PreviewConfigError({ name: "AKSARA_PREVIEW" });
+  if (Either.isLeft(decoded)) {
+    return Either.left(new PreviewConfigError({ name: "AKSARA_PREVIEW" }));
   }
 
-  return target;
-});
+  return Either.try({
+    catch: () => new PreviewConfigError({ name: "AKSARA_PREVIEW" }),
+    try: () => ({
+      eventsPath: decoded.right.eventsPath,
+      keyId: decoded.right.keyId,
+      manifestPath: decoded.right.manifestPath,
+      origin: new URL(decoded.right.origin),
+      publicKey: decoded.right.publicKey,
+      token: Redacted.make(decoded.right.token),
+    }),
+  });
+}
+
+/** Validates one provider path and preserves the configured loopback origin. */
+export function decodePreviewUrl(config: PreviewConfig, path: string) {
+  const decodedPath = Schema.decodeUnknownEither(PreviewPathSchema)(path);
+  if (Either.isLeft(decodedPath)) {
+    return Either.left(new PreviewConfigError({ name: "AKSARA_PREVIEW" }));
+  }
+
+  const target = new URL(decodedPath.right, config.origin);
+  if (target.origin !== config.origin.origin) {
+    return Either.left(new PreviewConfigError({ name: "AKSARA_PREVIEW" }));
+  }
+
+  return Either.right(target);
+}
+
+/** Builds one validated preview URL without allowing its origin to change. */
+export const previewUrl = Effect.fn("NakafaContent.previewUrl")(
+  (config: PreviewConfig, path: string) => {
+    const target = decodePreviewUrl(config, path);
+    if (Either.isLeft(target)) {
+      return Effect.fail(target.left);
+    }
+
+    return Effect.succeed(target.right);
+  }
+);
 
 /**
  * Reports whether a development child supplied any preview connection field.
@@ -117,25 +152,12 @@ export const readPreviewConfig = Effect.fn("NakafaContent.readPreviewConfig")(
       return Effect.succeed(Option.none<PreviewConfig>());
     }
 
-    return Schema.decodeUnknown(PreviewEnvironmentSchema)(environment, {
-      onExcessProperty: "error",
-    }).pipe(
-      Effect.flatMap((value) =>
-        Effect.try({
-          catch: () => new PreviewConfigError({ name: "AKSARA_PREVIEW" }),
-          try: () =>
-            Option.some<PreviewConfig>({
-              eventsPath: value.eventsPath,
-              keyId: value.keyId,
-              manifestPath: value.manifestPath,
-              origin: new URL(value.origin),
-              publicKey: value.publicKey,
-              token: Redacted.make(value.token),
-            }),
-        })
-      ),
-      Effect.mapError(() => new PreviewConfigError({ name: "AKSARA_PREVIEW" }))
-    );
+    const decoded = decodePreviewEnvironment(environment);
+    if (Either.isLeft(decoded)) {
+      return Effect.fail(decoded.left);
+    }
+
+    return Effect.succeed(Option.some<PreviewConfig>(decoded.right));
   }
 );
 

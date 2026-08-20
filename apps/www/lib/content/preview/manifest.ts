@@ -4,14 +4,17 @@ import {
   type LocalPreviewManifest,
   LocalPreviewManifestSchema,
 } from "@nakafa/aksara-contracts/preview/spec";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Either, Option, Schema } from "effect";
 import {
+  decodePreviewEnvironment,
   type PreviewConfig,
   readPreviewConfig,
 } from "@/lib/content/preview/config";
+import { readPreviewEnvironment } from "@/lib/content/preview/environment";
 import { PreviewIntegrityError } from "@/lib/content/preview/errors";
 import {
   fetchPreviewJson,
+  fetchPreviewJsonForPrerender,
   MAX_PREVIEW_MANIFEST_BYTES,
 } from "@/lib/content/preview/request";
 
@@ -21,12 +24,13 @@ interface PreviewSnapshot {
   readonly manifest: LocalPreviewManifest;
 }
 
-/** Strictly decodes one current loopback manifest without hidden defaults. */
+/** Strictly decodes one current loopback manifest without a runtime. */
 function decodeManifest(input: unknown) {
-  return Schema.decodeUnknown(LocalPreviewManifestSchema)(input, {
-    onExcessProperty: "error",
-  }).pipe(
-    Effect.mapError(() => new PreviewIntegrityError({ check: "manifest" }))
+  return Either.mapLeft(
+    Schema.decodeUnknownEither(LocalPreviewManifestSchema)(input, {
+      onExcessProperty: "error",
+    }),
+    () => new PreviewIntegrityError({ check: "manifest" })
   );
 }
 
@@ -44,7 +48,36 @@ export const readPreviewSnapshot = Effect.fn(
     config,
     config.manifestPath,
     MAX_PREVIEW_MANIFEST_BYTES
-  ).pipe(Effect.flatMap(decodeManifest));
+  );
+  const decoded = decodeManifest(manifest);
+  if (Either.isLeft(decoded)) {
+    return yield* decoded.left;
+  }
 
-  return Option.some({ config, manifest });
+  return Option.some({ config, manifest: decoded.right });
 });
+
+/**
+ * Reads one manifest through Next's request-less static-generation Promise.
+ *
+ * This deliberately avoids an Effect fiber before the uncached fetch:
+ * https://nextjs.org/docs/messages/next-prerender-current-time
+ */
+export function readPreviewManifestForPrerender() {
+  const config = decodePreviewEnvironment(readPreviewEnvironment());
+  if (Either.isLeft(config)) {
+    return Promise.reject(config.left);
+  }
+
+  return fetchPreviewJsonForPrerender(
+    config.right,
+    config.right.manifestPath,
+    MAX_PREVIEW_MANIFEST_BYTES
+  ).then((input) => {
+    const manifest = decodeManifest(input);
+    if (Either.isLeft(manifest)) {
+      return Promise.reject(manifest.left);
+    }
+    return manifest.right;
+  });
+}

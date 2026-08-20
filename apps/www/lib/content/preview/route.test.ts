@@ -8,7 +8,11 @@ import {
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { Effect, Option, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
+import { PreviewIntegrityError } from "@/lib/content/preview/errors";
+import {
+  readPreviewManifestForPrerender,
+  readPreviewSnapshot,
+} from "@/lib/content/preview/manifest";
 import {
   type MaterialPreviewRouteInput,
   matchesInternalPreviewRoute,
@@ -32,9 +36,11 @@ import {
 } from "@/test/preview-article";
 
 vi.mock("@/lib/content/preview/manifest", () => ({
+  readPreviewManifestForPrerender: vi.fn(),
   readPreviewSnapshot: vi.fn(),
 }));
 
+const prerenderManifestMock = vi.mocked(readPreviewManifestForPrerender);
 const snapshotMock = vi.mocked(readPreviewSnapshot);
 const materialInput = {
   params: {
@@ -100,6 +106,8 @@ function matchInternal(
 }
 
 beforeEach(() => {
+  prerenderManifestMock.mockReset();
+  prerenderManifestMock.mockResolvedValue(makePendingManifest());
   snapshotMock.mockReset();
   snapshotMock.mockReturnValue(
     Effect.succeed(
@@ -110,14 +118,14 @@ beforeEach(() => {
 
 describe("local preview route matching", () => {
   it("prerenders only the selected preview locale", async () => {
-    await expect(
-      Effect.runPromise(readPreviewStaticLocaleParams())
-    ).resolves.toEqual([{ locale: "en" }]);
+    await expect(readPreviewStaticLocaleParams()).resolves.toEqual([
+      { locale: "en" },
+    ]);
 
-    snapshotMock.mockReturnValueOnce(Effect.succeed(Option.none()));
-    await expect(
-      Effect.runPromise(readPreviewStaticLocaleParams().pipe(Effect.flip))
-    ).resolves.toMatchObject({
+    prerenderManifestMock.mockRejectedValueOnce(
+      new PreviewIntegrityError({ check: "manifest" })
+    );
+    await expect(readPreviewStaticLocaleParams()).rejects.toMatchObject({
       _tag: "PreviewIntegrityError",
       check: "manifest",
     });
@@ -170,9 +178,7 @@ describe("local preview route matching", () => {
 
   it("projects the selected material route into nonempty static params", async () => {
     await expect(
-      Effect.runPromise(
-        readMaterialPreviewStaticParams(AppLocaleSchema.make("en"))
-      )
+      readMaterialPreviewStaticParams(AppLocaleSchema.make("en"))
     ).resolves.toEqual({
       lesson: ["function-concept"],
       subject: "mathematics",
@@ -181,19 +187,10 @@ describe("local preview route matching", () => {
   });
 
   it("projects the selected article route into localized static params", async () => {
-    snapshotMock.mockReturnValueOnce(
-      Effect.succeed(
-        Option.some({
-          config: previewConfig,
-          manifest: germanArticlePendingManifest,
-        })
-      )
-    );
+    prerenderManifestMock.mockResolvedValueOnce(germanArticlePendingManifest);
 
     await expect(
-      Effect.runPromise(
-        readArticlePreviewStaticParams(AppLocaleSchema.make("de"))
-      )
+      readArticlePreviewStaticParams(AppLocaleSchema.make("de"))
     ).resolves.toEqual({
       category: "politik",
       slug: "politische-dynastien-und-asiatische-werte",
@@ -201,6 +198,19 @@ describe("local preview route matching", () => {
   });
 
   it("rejects malformed material preview paths", async () => {
+    await expect(
+      Effect.runPromise(
+        parseMaterialPreviewStaticParams({
+          appLocale: AppLocaleSchema.make("en"),
+          publicPath: previewRoute.publicPath,
+        })
+      )
+    ).resolves.toEqual({
+      lesson: ["function-concept"],
+      subject: "mathematics",
+      topic: "function-composition-inverse-function",
+    });
+
     await expect(
       Effect.runPromise(
         parseMaterialPreviewStaticParams({
@@ -227,55 +237,50 @@ describe("local preview route matching", () => {
   });
 
   it("rejects a missing or mismatched material preview projection", async () => {
-    snapshotMock.mockReturnValueOnce(Effect.succeed(Option.none()));
+    prerenderManifestMock.mockRejectedValueOnce(
+      new PreviewIntegrityError({ check: "manifest" })
+    );
     await expect(
-      Effect.runPromise(
-        readMaterialPreviewStaticParams(AppLocaleSchema.make("en")).pipe(
-          Effect.flip
-        )
-      )
-    ).resolves.toMatchObject({
+      readMaterialPreviewStaticParams(AppLocaleSchema.make("en"))
+    ).rejects.toMatchObject({
       _tag: "PreviewIntegrityError",
       check: "manifest",
     });
 
-    snapshotMock.mockReturnValueOnce(
-      Effect.succeed(
-        Option.some({ config: previewConfig, manifest: articlePendingManifest })
-      )
+    prerenderManifestMock.mockResolvedValueOnce(articlePendingManifest);
+    await expect(
+      readMaterialPreviewStaticParams(AppLocaleSchema.make("en"))
+    ).rejects.toMatchObject({
+      _tag: "PreviewIntegrityError",
+      check: "projection",
+    });
+
+    prerenderManifestMock.mockResolvedValueOnce(
+      pendingRoute({ publicPath: "subjects/mathematics/functions" })
     );
     await expect(
-      Effect.runPromise(
-        readMaterialPreviewStaticParams(AppLocaleSchema.make("en")).pipe(
-          Effect.flip
-        )
-      )
-    ).resolves.toMatchObject({
+      readMaterialPreviewStaticParams(AppLocaleSchema.make("en"))
+    ).rejects.toMatchObject({
       _tag: "PreviewIntegrityError",
       check: "projection",
     });
   });
 
   it("rejects a missing or mismatched article preview projection", async () => {
-    snapshotMock.mockReturnValueOnce(Effect.succeed(Option.none()));
+    prerenderManifestMock.mockRejectedValueOnce(
+      new PreviewIntegrityError({ check: "manifest" })
+    );
     await expect(
-      Effect.runPromise(
-        readArticlePreviewStaticParams(AppLocaleSchema.make("en")).pipe(
-          Effect.flip
-        )
-      )
-    ).resolves.toMatchObject({
+      readArticlePreviewStaticParams(AppLocaleSchema.make("en"))
+    ).rejects.toMatchObject({
       _tag: "PreviewIntegrityError",
       check: "manifest",
     });
 
+    prerenderManifestMock.mockResolvedValueOnce(makePendingManifest());
     await expect(
-      Effect.runPromise(
-        readArticlePreviewStaticParams(AppLocaleSchema.make("en")).pipe(
-          Effect.flip
-        )
-      )
-    ).resolves.toMatchObject({
+      readArticlePreviewStaticParams(AppLocaleSchema.make("en"))
+    ).rejects.toMatchObject({
       _tag: "PreviewIntegrityError",
       check: "projection",
     });

@@ -1,4 +1,8 @@
-import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
+import {
+  parseContentLength,
+  readBoundedBody,
+  readBoundedBodyResult,
+} from "@repo/utilities/body";
 import { Effect, Either, Fiber } from "effect";
 import { describe, expect, it, vi } from "vitest";
 
@@ -58,6 +62,20 @@ describe("bounded response body", () => {
 
     await expect(read(stream)).resolves.toEqual(
       new TextEncoder().encode("abcd")
+    );
+  });
+
+  it("exposes the same bounded result without starting a runtime", async () => {
+    const stream = new ReadableStream<Uint8Array>({
+      /** Emits one direct-boundary chunk. */
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode("direct"));
+        controller.close();
+      },
+    });
+
+    await expect(readBoundedBodyResult(stream, 8)).resolves.toEqual(
+      Either.right(new TextEncoder().encode("direct"))
     );
   });
 
