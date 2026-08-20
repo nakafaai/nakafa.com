@@ -8,9 +8,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
-  issues: write
-  statuses: write
 
 concurrency:
   group: react-doctor-${{ github.event.pull_request.number || github.ref }}
@@ -32,9 +29,5 @@ jobs:
           cache: "pnpm"
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - uses: millionco/react-doctor@01820bb4fd4d0a4aebcd8df2b2a143a098649cb2 # v2.2.8
-        with:
-          blocking: warning
-          directory: apps/www
-          scope: changed
-          version: 0.9.5
+      - name: Run React Doctor
+        run: pnpm run doctor --verbose --scope changed --base main --include-untracked
