@@ -65,6 +65,30 @@ describe("lib/effect", () => {
     );
   });
 
+  it("does not schedule timers when native programs yield", async () => {
+    const setImmediateSpy = vi
+      .spyOn(globalThis, "setImmediate")
+      .mockImplementation(() => {
+        throw new Error("setImmediate is unavailable in native Convex");
+      });
+    const setTimeoutSpy = vi
+      .spyOn(globalThis, "setTimeout")
+      .mockImplementation(() => {
+        throw new Error("setTimeout is unavailable in native Convex");
+      });
+
+    try {
+      await expect(
+        runConvexProgram(Effect.yieldNow.pipe(Effect.as("done")))
+      ).resolves.toBe("done");
+      expect(setImmediateSpy).not.toHaveBeenCalled();
+      expect(setTimeoutSpy).not.toHaveBeenCalled();
+    } finally {
+      setImmediateSpy.mockRestore();
+      setTimeoutSpy.mockRestore();
+    }
+  });
+
   it("supports the live clock at the Node action boundary", async () => {
     await expect(
       runConvexActionProgram(Effect.sleep(1).pipe(Effect.as("done")))

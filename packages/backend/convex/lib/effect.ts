@@ -1,5 +1,5 @@
 import { ConvexError } from "convex/values";
-import { Cause, Clock, Effect, Exit, Option, Result } from "effect";
+import { Cause, Clock, Effect, Exit, Option, Result, Scheduler } from "effect";
 
 /** The stable error shape every Convex-facing Effect failure must provide. */
 export interface ConvexTaggedError {
@@ -45,6 +45,26 @@ const convexClock: Clock.Clock = {
     ),
 };
 
+/** Dispatches Effect fiber yields without forbidden native Convex timers. */
+function scheduleNativeConvexMicrotask(task: () => void) {
+  let cancelled = false;
+
+  Promise.resolve().then(() => {
+    if (!cancelled) {
+      task();
+    }
+  });
+
+  return () => {
+    cancelled = true;
+  };
+}
+
+const nativeConvexScheduler = new Scheduler.MixedScheduler(
+  "async",
+  scheduleNativeConvexMicrotask
+);
+
 /** Resolves one Effect exit into the stable Convex boundary behavior. */
 function resolveConvexExit<A, E extends ConvexTaggedError>(
   exit: Exit.Exit<A, E>
@@ -78,17 +98,23 @@ function resolveConvexExit<A, E extends ConvexTaggedError>(
  * Convex mutations/queries reject the Performance API, while Effect's default
  * clock can use it for tracing. This boundary installs a Date-backed clock
  * locally for each program without creating a global runtime or layer.
+ * The native runtime also omits setImmediate and rejects setTimeout. Effect's
+ * async scheduler falls back to those timers for cooperative fiber yields, so
+ * this boundary preserves async execution with cancellable microtask dispatch.
  *
  * References:
  * - Effect running guide: https://effect.website/docs/getting-started/running-effects/
+ * - Effect Convex scheduler issue: https://github.com/Effect-TS/effect/issues/6651
  * - Convex error handling: https://docs.convex.dev/functions/error-handling/
  * - Convex action runtime note: https://docs.convex.dev/functions/actions
+ * - Convex deterministic runtime: https://docs.convex.dev/functions/runtimes
  */
 export async function runConvexProgram<A, E extends ConvexTaggedError>(
   program: Effect.Effect<A, E, never>
 ) {
   const exit = await Effect.runPromiseExit(
-    program.pipe(Effect.provideService(Clock.Clock, convexClock))
+    program.pipe(Effect.provideService(Clock.Clock, convexClock)),
+    { scheduler: nativeConvexScheduler }
   );
 
   return resolveConvexExit(exit);
