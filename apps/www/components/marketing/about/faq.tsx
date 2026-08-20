@@ -7,6 +7,7 @@ import {
 } from "@repo/design-system/components/ui/accordion";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { useTranslations } from "next-intl";
 
 export function Faq() {
@@ -49,7 +50,7 @@ export function Faq() {
                 nativeButton={false}
                 render={
                   <a
-                    href="mailto:nakafaai@gmail.com"
+                    href={`mailto:${COMPANY_IDENTITY.email}`}
                     rel="noopener noreferrer"
                     target="_blank"
                   >
