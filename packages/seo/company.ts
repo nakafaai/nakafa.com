@@ -1,42 +1,43 @@
 import { Schema } from "effect";
 import { COMPANY_SOCIAL_PROFILES } from "./company-profiles";
 
-const UrlStringSchema = Schema.String.pipe(
-  Schema.filter(
+const NonEmptyTrimmedStringSchema = Schema.Trimmed.check(Schema.isNonEmpty());
+const UrlStringSchema = Schema.String.check(
+  Schema.makeFilter(
     (value) => URL.canParse(value) && new URL(value).protocol === "https:",
-    {
-      message: () => "Expected a valid HTTPS URL.",
-    }
+    { message: "Expected a valid HTTPS URL." }
   )
 );
-const EmailAddressSchema = Schema.String.pipe(
-  Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+const EmailAddressSchema = Schema.String.check(
+  Schema.isPattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
 );
-const PhoneNumberSchema = Schema.String.pipe(Schema.pattern(/^\+\d[\d -]+$/));
-const IncorporationCertificateNumberSchema = Schema.String.pipe(
-  Schema.pattern(/^AHU-\d{6}\.AH\.01\.30\.Tahun \d{4}$/)
+const PhoneNumberSchema = Schema.String.check(
+  Schema.isPattern(/^\+\d[\d -]+$/)
 );
-const BusinessIdentificationNumberSchema = Schema.String.pipe(
-  Schema.pattern(/^\d{13}$/)
+const IncorporationCertificateNumberSchema = Schema.String.check(
+  Schema.isPattern(/^AHU-\d{6}\.AH\.01\.30\.Tahun \d{4}$/)
+);
+const BusinessIdentificationNumberSchema = Schema.String.check(
+  Schema.isPattern(/^\d{13}$/)
 );
 
 export const CompanyIdentitySchema = Schema.Struct({
-  brandName: Schema.NonEmptyTrimmedString,
-  legalName: Schema.NonEmptyTrimmedString,
+  brandName: NonEmptyTrimmedStringSchema,
+  legalName: NonEmptyTrimmedStringSchema,
   incorporationCertificateNumber: IncorporationCertificateNumberSchema,
   businessIdentificationNumber: BusinessIdentificationNumberSchema,
   representative: Schema.Struct({
-    name: Schema.NonEmptyTrimmedString,
-    role: Schema.NonEmptyTrimmedString,
+    name: NonEmptyTrimmedStringSchema,
+    role: NonEmptyTrimmedStringSchema,
   }),
   registeredAddress: Schema.Struct({
-    streetAddress: Schema.NonEmptyTrimmedString,
-    village: Schema.NonEmptyTrimmedString,
-    district: Schema.NonEmptyTrimmedString,
-    regency: Schema.NonEmptyTrimmedString,
-    region: Schema.NonEmptyTrimmedString,
-    postalCode: Schema.String.pipe(Schema.pattern(/^\d{5}$/)),
-    country: Schema.NonEmptyTrimmedString,
+    streetAddress: NonEmptyTrimmedStringSchema,
+    village: NonEmptyTrimmedStringSchema,
+    district: NonEmptyTrimmedStringSchema,
+    regency: NonEmptyTrimmedStringSchema,
+    region: NonEmptyTrimmedStringSchema,
+    postalCode: Schema.String.check(Schema.isPattern(/^\d{5}$/)),
+    country: NonEmptyTrimmedStringSchema,
     countryCode: Schema.Literal("ID"),
   }),
   email: EmailAddressSchema,
@@ -64,33 +65,31 @@ export type CompanyIdentity = Schema.Schema.Type<typeof CompanyIdentitySchema>;
  * Keep confidential personal identifiers, tax identifiers, and document
  * images out of this module.
  */
-export const COMPANY_IDENTITY = Schema.decodeUnknownSync(CompanyIdentitySchema)(
-  {
-    brandName: "Nakafa",
-    legalName: "PT NAKAFA TEKNO KREATIF",
-    incorporationCertificateNumber: "AHU-073724.AH.01.30.Tahun 2023",
-    businessIdentificationNumber: "2710230144326",
-    representative: {
-      name: "Dian Bachtiar Nurdin",
-      role: "Director",
-    },
-    registeredAddress: {
-      streetAddress: "Taman Sukahati Permai Blok H-6",
-      village: "Sukahati",
-      district: "Cibinong",
-      regency: "Kabupaten Bogor",
-      region: "Jawa Barat",
-      postalCode: "16913",
-      country: "Indonesia",
-      countryCode: "ID",
-    },
-    email: "nakafaai@gmail.com",
-    phone: "+62 811-8992-531",
-    url: "https://nakafa.com",
-    logoUrl: "https://nakafa.com/logo.svg",
-    socialProfiles: COMPANY_SOCIAL_PROFILES,
-  }
-);
+export const COMPANY_IDENTITY = Schema.decodeSync(CompanyIdentitySchema)({
+  brandName: "Nakafa",
+  legalName: "PT NAKAFA TEKNO KREATIF",
+  incorporationCertificateNumber: "AHU-073724.AH.01.30.Tahun 2023",
+  businessIdentificationNumber: "2710230144326",
+  representative: {
+    name: "Dian Bachtiar Nurdin",
+    role: "Director",
+  },
+  registeredAddress: {
+    streetAddress: "Taman Sukahati Permai Blok H-6",
+    village: "Sukahati",
+    district: "Cibinong",
+    regency: "Kabupaten Bogor",
+    region: "Jawa Barat",
+    postalCode: "16913",
+    country: "Indonesia",
+    countryCode: "ID",
+  },
+  email: "nakafaai@gmail.com",
+  phone: "+62 811-8992-531",
+  url: "https://nakafa.com",
+  logoUrl: "https://nakafa.com/logo.svg",
+  socialProfiles: COMPANY_SOCIAL_PROFILES,
+});
 
 export const COMPANY_REGISTERED_ADDRESS = [
   COMPANY_IDENTITY.registeredAddress.streetAddress,
