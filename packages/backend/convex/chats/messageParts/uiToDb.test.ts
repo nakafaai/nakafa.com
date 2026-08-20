@@ -13,11 +13,11 @@ const ref = readNakafaContentRefFixture(
 const quranRef = readNakafaContentRefFixture("en", "quran/1", "quran");
 
 const toolCallProviderMetadata = {
-  google: { thoughtSignature: "call-signature" },
+  openai: { opaqueContinuation: "call-continuation" },
 };
 
 const toolResultProviderMetadata = {
-  google: { thoughtSignature: "result-signature" },
+  openai: { opaqueContinuation: "result-continuation" },
 };
 
 const nakafaInput = {
