@@ -47,7 +47,7 @@ The main web app is available at [http://localhost:3000](http://localhost:3000).
 - Inspect recent history, the owning package, its config, and nearby tests.
 - Send authored content changes to Aksara. `packages/contents` is a Nakafa
   product and agent contract package, not an authored source.
-- For Effect work, read `repos/effect/AGENTS.md`, then inspect the matching
+- For Effect work, read `repos/effect/.agents/AGENTS.md`, then inspect the matching
   implementation, tests, type-level tests, module structure, and API design.
   Treat the vendored subtree as read-only application reference material.
 - For Convex work, follow `packages/backend/AGENTS.md` and use an isolated Agent

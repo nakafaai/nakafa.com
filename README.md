@@ -67,7 +67,7 @@ pnpm start
 
 Read the nearest `AGENTS.md` before working. Convex changes also require
 `packages/backend/AGENTS.md` and the generated Convex guidelines. Effect work
-requires reading `repos/effect/AGENTS.md` plus the relevant implementation,
+requires reading `repos/effect/.agents/AGENTS.md` plus the relevant implementation,
 tests, type-level tests, module structure, and API design in the vendored source.
 
 ## Commands

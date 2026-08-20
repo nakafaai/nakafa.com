@@ -35,11 +35,13 @@
     "prepare": "effect-tsgo patch --typescript-package @typescript/native",
     "security:audit": "pnpm audit --audit-level=low",
     "start": "turbo run start",
-    "test": "pnpm check:patches && pnpm check:tests && node --test scripts/dependency-policy.test.mjs && turbo run test",
+    "test": "pnpm check:patches && pnpm check:tests && pnpm test:scripts && turbo run test",
     "test:coverage": "pnpm check:patches && pnpm check:tests && turbo run test:coverage",
+    "test:scripts": "pnpm typecheck:scripts && node --test scripts/dependency-policy.test.mjs && pnpm --filter @repo/testing exec vitest run --root ../.. scripts/effect-source.test.ts",
     "test:ui": "turbo run test:ui",
     "test:watch": "turbo run test:watch",
     "translate": "turbo run translate",
+    "typecheck:scripts": "tsc --project scripts/tsconfig.json --noEmit",
     "version-packages": "changeset version"
   },
   "devDependencies": {
@@ -48,6 +50,7 @@
     "@changesets/cli": "^3.0.1",
     "@effect/platform-node": "catalog:",
     "@effect/tsgo": "0.36.5",
+    "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@turbo/gen": "2.10.11",
     "@types/node": "24.13.3",
