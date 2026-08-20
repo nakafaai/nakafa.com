@@ -122,10 +122,10 @@ export function AnalyticsConsentSurface() {
 /** Adds a permanent privacy preference action to the marketing footer. */
 export function AnalyticsConsentFooterItem() {
   const t = useTranslations("AnalyticsConsent");
-  const { isAvailable, setPreferencesOpen } = useAnalyticsConsent((state) => ({
-    isAvailable: state.isAvailable,
-    setPreferencesOpen: state.setPreferencesOpen,
-  }));
+  const isAvailable = useAnalyticsConsent((state) => state.isAvailable);
+  const setPreferencesOpen = useAnalyticsConsent(
+    (state) => state.setPreferencesOpen
+  );
 
   if (!isAvailable) {
     return null;
@@ -148,10 +148,10 @@ export function AnalyticsConsentFooterItem() {
 /** Adds the same permanent privacy preference action to account menus. */
 export function AnalyticsConsentMenuItem() {
   const t = useTranslations("AnalyticsConsent");
-  const { isAvailable, setPreferencesOpen } = useAnalyticsConsent((state) => ({
-    isAvailable: state.isAvailable,
-    setPreferencesOpen: state.setPreferencesOpen,
-  }));
+  const isAvailable = useAnalyticsConsent((state) => state.isAvailable);
+  const setPreferencesOpen = useAnalyticsConsent(
+    (state) => state.setPreferencesOpen
+  );
 
   if (!isAvailable) {
     return null;
@@ -171,10 +171,10 @@ export function AnalyticsConsentMenuItem() {
 /** Keeps privacy preferences reachable for signed-out sidebar visitors. */
 export function AnalyticsConsentSidebarItem() {
   const t = useTranslations("AnalyticsConsent");
-  const { isAvailable, setPreferencesOpen } = useAnalyticsConsent((state) => ({
-    isAvailable: state.isAvailable,
-    setPreferencesOpen: state.setPreferencesOpen,
-  }));
+  const isAvailable = useAnalyticsConsent((state) => state.isAvailable);
+  const setPreferencesOpen = useAnalyticsConsent(
+    (state) => state.setPreferencesOpen
+  );
 
   if (!isAvailable) {
     return null;
