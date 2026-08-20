@@ -1,5 +1,5 @@
-import { jsonSchema } from "ai";
-import { JsonSchema, Result, Schema } from "effect";
+import { asSchema, jsonSchema } from "ai";
+import { JsonSchema, Schema } from "effect";
 
 interface ObjectJsonSchema extends JsonSchema.JsonSchema {
   readonly properties: Readonly<Record<string, unknown>>;
@@ -230,11 +230,6 @@ function withDefinitions(document: JsonSchema.Document<"draft-07">) {
   };
 }
 
-/** Emits the exact Effect schema as AI SDK compatible Draft-07 JSON Schema. */
-function toDraft07Schema(schema: Schema.Constraint) {
-  return withDefinitions(toDraft07Document(schema));
-}
-
 /**
  * Builds an object-shaped schema for providers that reject top-level unions.
  * Effect validation still uses the original schema.
@@ -264,17 +259,14 @@ export const providerCompatibleObjectSchema = <A, I>(
 /** Converts an Effect schema into an AI SDK schema with Effect validation. */
 export const createEffectSchema = <A, I>(
   schema: Schema.Codec<A, I, never, never>,
-  modelSchema = toDraft07Schema(schema)
-) =>
-  jsonSchema<A>(modelSchema, {
-    validate: (value) => {
-      const decoded = Schema.decodeUnknownResult(schema)(value);
-      if (Result.isSuccess(decoded)) {
-        return { success: true, value: decoded.success };
-      }
-      return {
-        error: new Error(decoded.failure.message),
-        success: false,
-      };
-    },
-  });
+  modelSchema?: JsonSchema.JsonSchema
+) => {
+  const standardSchema = Schema.toStandardSchemaV1(
+    Schema.toStandardJSONSchemaV1(schema)
+  );
+  const aiSchema = asSchema(standardSchema);
+  if (modelSchema === undefined) {
+    return aiSchema;
+  }
+  return jsonSchema<A>(modelSchema, { validate: aiSchema.validate });
+};
