@@ -1,4 +1,4 @@
-import { routing } from "@repo/internationalization/src/routing";
+import { previewRouting } from "@repo/internationalization/src/routing";
 import { hasLocale } from "next-intl";
 
 const ABSOLUTE_URL_REGEX = /^https?:\/\//;
@@ -35,10 +35,10 @@ function shouldBypassInternalHrefNormalization(href: string) {
 /**
  * Normalize one internal href for locale-aware Next.js navigation.
  *
- * `next-intl` navigation helpers already prepend the active locale. When a
+ * `next-intl` navigation helpers already prepend the request locale. When a
  * localized internal href like `/id/kurikulum/...` is pushed directly, the locale
- * can be duplicated. This helper strips the leading locale segment and keeps the
- * remaining pathname, query, and hash intact.
+ * can be duplicated. Candidate preview locales need the same normalization even
+ * before activation, so this boundary recognizes every supported app locale.
  */
 export function normalizeLocalizedInternalHref(href: string) {
   if (shouldBypassInternalHrefNormalization(href)) {
@@ -49,13 +49,9 @@ export function normalizeLocalizedInternalHref(href: string) {
   const segments = url.pathname.split("/").filter(Boolean);
   const firstSegment = segments[0];
 
-  if (firstSegment && hasLocale(routing.locales, firstSegment)) {
+  if (firstSegment && hasLocale(previewRouting.locales, firstSegment)) {
     const localizedPath = segments.slice(1).join("/");
     url.pathname = localizedPath ? `/${localizedPath}` : "/";
-  }
-
-  if (!url.pathname.startsWith("/")) {
-    url.pathname = `/${url.pathname}`;
   }
 
   return `${url.pathname}${url.search}${url.hash}`;

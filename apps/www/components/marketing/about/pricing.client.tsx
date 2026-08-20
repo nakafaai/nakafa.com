@@ -75,24 +75,23 @@ export function ProButton() {
       return;
     }
 
-    const program = Effect.gen(function* () {
-      if (!currentUser) {
-        yield* Effect.tryPromise(() =>
+    const program = currentUser
+      ? Effect.tryPromise(() =>
+          generateCheckoutLink({ locale, successUrl: window.location.href })
+        ).pipe(
+          Effect.tap(({ url }) =>
+            Effect.sync(() => {
+              window.location.href = url;
+            })
+          ),
+          Effect.asVoid
+        )
+      : Effect.tryPromise(() =>
           authClient.signIn.social({
             provider: "google",
             callbackURL: pricingCallbackURL,
           })
-        );
-        return;
-      }
-
-      const { url } = yield* Effect.tryPromise(() =>
-        generateCheckoutLink({ locale, successUrl: window.location.href })
-      );
-      yield* Effect.sync(() => {
-        window.location.href = url;
-      });
-    });
+        ).pipe(Effect.asVoid);
     startTransition(() => Effect.runPromise(program));
   };
 

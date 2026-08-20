@@ -985,14 +985,23 @@ importers:
         version: link:../utilities
       next:
         specifier: 16.3.0
-        version: 16.3.0(patch_hash=69c234729b8a9eddad005442418b6c7c6f2fecc62a72fe12db60507ada0c6136)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@24.13.3)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 16.3.0(patch_hash=69c234729b8a9eddad005442418b6c7c6f2fecc62a72fe12db60507ada0c6136)(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       next-intl:
         specifier: ^4.13.5
-        version: 4.13.5(@swc/helpers@0.5.23)(@typescript/typescript6@6.0.2)(next@16.3.0(patch_hash=69c234729b8a9eddad005442418b6c7c6f2fecc62a72fe12db60507ada0c6136)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@24.13.3)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
+        version: 4.13.5(@swc/helpers@0.5.23)(@typescript/typescript6@6.0.2)(next@16.3.0(patch_hash=69c234729b8a9eddad005442418b6c7c6f2fecc62a72fe12db60507ada0c6136)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
     devDependencies:
+      '@repo/testing':
+        specifier: workspace:*
+        version: link:../testing
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
+      '@vitest/coverage-istanbul':
+        specifier: ^4.1.10
+        version: 4.1.10(vitest@4.1.10)
+      vitest:
+        specifier: ^4.1.10
+        version: 4.1.10(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.1)(@types/node@26.1.1)(@vitest/coverage-istanbul@4.1.10)(@vitest/ui@4.1.10)(jsdom@30.0.1(@noble/hashes@2.2.0))(vite@8.2.1(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(yaml@2.9.0))
 
   packages/math:
     dependencies:
@@ -12907,14 +12916,14 @@ snapshots:
 
   next-intl-swc-plugin-extractor@4.13.5: {}
 
-  next-intl@4.13.5(@swc/helpers@0.5.23)(@typescript/typescript6@6.0.2)(next@16.3.0(patch_hash=69c234729b8a9eddad005442418b6c7c6f2fecc62a72fe12db60507ada0c6136)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@24.13.3)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8):
+  next-intl@4.13.5(@swc/helpers@0.5.23)(@typescript/typescript6@6.0.2)(next@16.3.0(patch_hash=69c234729b8a9eddad005442418b6c7c6f2fecc62a72fe12db60507ada0c6136)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8):
     dependencies:
       '@formatjs/intl-localematcher': 0.8.13
       '@parcel/watcher': 2.6.0
       '@swc/core': 1.15.46(@swc/helpers@0.5.23)
       icu-minify: 4.13.5
       negotiator: 1.0.0
-      next: 16.3.0(patch_hash=69c234729b8a9eddad005442418b6c7c6f2fecc62a72fe12db60507ada0c6136)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@24.13.3)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      next: 16.3.0(patch_hash=69c234729b8a9eddad005442418b6c7c6f2fecc62a72fe12db60507ada0c6136)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       next-intl-swc-plugin-extractor: 4.13.5
       po-parser: 2.1.1
       react: 19.2.8
