@@ -45,9 +45,10 @@ export const CompanyIdentitySchema = Schema.Struct({
 export type CompanyIdentity = Schema.Schema.Type<typeof CompanyIdentitySchema>;
 
 /**
- * Public-safe company facts verified against the Indonesian company
- * registration certificate and OSS business identification record on
- * 2026-08-20.
+ * Public-safe corporate identity, registration, representation, address, and
+ * telephone facts verified against the Indonesian company registration and
+ * OSS records on 2026-08-20. The email and web profiles preserve Nakafa's
+ * established public contact surfaces.
  *
  * Keep confidential personal identifiers, tax identifiers, and document
  * images out of this module.
@@ -72,7 +73,7 @@ export const COMPANY_IDENTITY = Schema.decodeUnknownSync(CompanyIdentitySchema)(
       country: "Indonesia",
       countryCode: "ID",
     },
-    email: "contact@nakafa.com",
+    email: "nakafaai@gmail.com",
     phone: "+62 811-8992-531",
     url: "https://nakafa.com",
     logoUrl: "https://nakafa.com/logo.svg",
