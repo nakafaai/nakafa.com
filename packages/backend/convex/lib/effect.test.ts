@@ -6,7 +6,7 @@ import {
 } from "@repo/backend/convex/lib/effect";
 import { describe, expect, it } from "@repo/testing/effect";
 import { ConvexError } from "convex/values";
-import { Clock, Effect, Schema } from "effect";
+import { Cause, Clock, Effect, Schema } from "effect";
 import { vi } from "vitest";
 
 const boundaryFailureCode = "BOUNDARY_FAILURE";
@@ -102,6 +102,23 @@ describe("lib/effect", () => {
   it("preserves unexpected defects instead of turning them into domain errors", async () => {
     await expect(runConvexProgram(Effect.die("defect"))).rejects.toThrow(
       "defect"
+    );
+  });
+
+  it("preserves a defect when a cause also contains a tagged failure", async () => {
+    const defect = new Error("Unexpected boundary defect");
+    const cause = Cause.fromReasons([
+      Cause.makeFailReason(
+        new BoundaryFailure({
+          code: boundaryFailureCode,
+          message: "Boundary failed",
+        })
+      ),
+      Cause.makeDieReason(defect),
+    ]);
+
+    await expect(runConvexProgram(Effect.failCause(cause))).rejects.toBe(
+      defect
     );
   });
 

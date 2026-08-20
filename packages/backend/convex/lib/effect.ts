@@ -1,5 +1,5 @@
 import { ConvexError } from "convex/values";
-import { Cause, Clock, Effect, Exit, Option } from "effect";
+import { Cause, Clock, Effect, Exit, Option, Result } from "effect";
 
 /** The stable error shape every Convex-facing Effect failure must provide. */
 export interface ConvexTaggedError {
@@ -51,6 +51,12 @@ function resolveConvexExit<A, E extends ConvexTaggedError>(
 ) {
   return Exit.match(exit, {
     onFailure: (cause) => {
+      const defect = Cause.findDefect(cause);
+
+      if (Result.isSuccess(defect)) {
+        throw defect.success;
+      }
+
       const failure = Cause.findErrorOption(cause);
 
       if (Option.isSome(failure)) {
