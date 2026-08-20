@@ -11,10 +11,8 @@ import {
   readTryoutSetPage,
 } from "@/components/tryout/catalog/server";
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
-import {
-  readTryoutQuestionPreview,
-  TryoutQuestionPreview,
-} from "@/components/tryout/preview/server";
+import { readTryoutQuestionPreview } from "@/components/tryout/preview/read";
+import { TryoutQuestionPreview } from "@/components/tryout/preview/server";
 import { TryoutReview } from "@/components/tryout/review/server";
 import {
   createTryoutSetRestartTarget,

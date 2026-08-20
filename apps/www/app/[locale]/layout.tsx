@@ -9,12 +9,14 @@ import { ThemeBootstrap } from "@repo/design-system/providers/theme-bootstrap";
 import { routing } from "@repo/internationalization/src/routing";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
 import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
+import { Effect } from "effect";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { PreviewRefresh } from "@/components/dev/preview-refresh";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
+import { readPreviewStaticLocaleParams } from "@/lib/content/preview/route";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { appViewport } from "@/lib/theme/viewport";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
@@ -126,8 +128,12 @@ export async function generateMetadata(): Promise<Metadata> {
 /** Root viewport contract shared by every localized app route. */
 export const viewport = appViewport;
 
-/** Prebuilds one root layout shell per configured next-intl locale. */
-export function generateStaticParams() {
+/** Prebuilds active shells or the single selected local preview shell. */
+export async function generateStaticParams() {
+  if (hasPreviewConfig()) {
+    return await Effect.runPromise(readPreviewStaticLocaleParams());
+  }
+
   return routing.locales.map((locale) => ({ locale }));
 }
 

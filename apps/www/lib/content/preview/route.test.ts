@@ -14,6 +14,9 @@ import {
   matchesInternalPreviewRoute,
   matchesMaterialPreviewRoute,
   matchesPreviewRoute,
+  parseMaterialPreviewStaticParams,
+  readMaterialPreviewStaticParams,
+  readPreviewStaticLocaleParams,
 } from "@/lib/content/preview/route";
 import {
   makePendingManifest,
@@ -101,6 +104,20 @@ beforeEach(() => {
 });
 
 describe("local preview route matching", () => {
+  it("prerenders only the selected preview locale", async () => {
+    await expect(
+      Effect.runPromise(readPreviewStaticLocaleParams())
+    ).resolves.toEqual([{ locale: "en" }]);
+
+    snapshotMock.mockReturnValueOnce(Effect.succeed(Option.none()));
+    await expect(
+      Effect.runPromise(readPreviewStaticLocaleParams().pipe(Effect.flip))
+    ).resolves.toMatchObject({
+      _tag: "PreviewIntegrityError",
+      check: "manifest",
+    });
+  });
+
   it("leaves every route unchanged when preview is disabled", async () => {
     snapshotMock.mockReturnValueOnce(Effect.succeed(Option.none()));
 
@@ -130,6 +147,74 @@ describe("local preview route matching", () => {
     expect(matchesMaterialPreviewRoute(pendingRoute(), materialInput)).toBe(
       true
     );
+  });
+
+  it("projects the selected material route into nonempty static params", async () => {
+    await expect(
+      Effect.runPromise(
+        readMaterialPreviewStaticParams(AppLocaleSchema.make("en"))
+      )
+    ).resolves.toEqual({
+      lesson: ["function-concept"],
+      subject: "mathematics",
+      topic: "function-composition-inverse-function",
+    });
+  });
+
+  it("rejects malformed material preview paths", async () => {
+    await expect(
+      Effect.runPromise(
+        parseMaterialPreviewStaticParams({
+          appLocale: AppLocaleSchema.make("en"),
+          publicPath: "articles/mathematics/functions/concept",
+        }).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({
+      _tag: "PreviewIntegrityError",
+      check: "projection",
+    });
+
+    await expect(
+      Effect.runPromise(
+        parseMaterialPreviewStaticParams({
+          appLocale: AppLocaleSchema.make("en"),
+          publicPath: "subjects/mathematics/functions",
+        }).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({
+      _tag: "PreviewIntegrityError",
+      check: "projection",
+    });
+  });
+
+  it("rejects a missing or mismatched material preview projection", async () => {
+    snapshotMock.mockReturnValueOnce(Effect.succeed(Option.none()));
+    await expect(
+      Effect.runPromise(
+        readMaterialPreviewStaticParams(AppLocaleSchema.make("en")).pipe(
+          Effect.flip
+        )
+      )
+    ).resolves.toMatchObject({
+      _tag: "PreviewIntegrityError",
+      check: "manifest",
+    });
+
+    snapshotMock.mockReturnValueOnce(
+      Effect.succeed(
+        Option.some({ config: previewConfig, manifest: articlePendingManifest })
+      )
+    );
+    await expect(
+      Effect.runPromise(
+        readMaterialPreviewStaticParams(AppLocaleSchema.make("en")).pipe(
+          Effect.flip
+        )
+      )
+    ).resolves.toMatchObject({
+      _tag: "PreviewIntegrityError",
+      check: "projection",
+    });
   });
 
   it("does not claim an article preview route", () => {

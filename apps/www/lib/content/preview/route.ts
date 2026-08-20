@@ -9,8 +9,9 @@ import { previewDocumentRoute } from "@nakafa/aksara-contracts/preview/document"
 import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
 import { materialPublicNamespace } from "@nakafa/aksara-contracts/projection/material";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { hasLocale } from "next-intl";
+import { PreviewIntegrityError } from "@/lib/content/preview/errors";
 import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
 
 /** Exact public route identity checked before Convex route rejection. */
@@ -34,6 +35,30 @@ export interface MaterialPreviewRouteInput {
     readonly topic: string;
   };
 }
+
+/** Runtime contract for one concrete material preview route. */
+const MaterialPreviewStaticParamsSchema = Schema.Struct({
+  lesson: Schema.NonEmptyArray(Schema.NonEmptyTrimmedString),
+  subject: Schema.NonEmptyTrimmedString,
+  topic: Schema.NonEmptyTrimmedString,
+});
+
+/** Concrete child params Next prerenders for one selected material preview. */
+export type MaterialPreviewStaticParams =
+  typeof MaterialPreviewStaticParamsSchema.Type;
+
+/** Reads the single selected locale used to prerender the preview app shell. */
+export const readPreviewStaticLocaleParams = Effect.fn(
+  "NakafaContent.readPreviewStaticLocaleParams"
+)(function* () {
+  const snapshot = yield* readPreviewSnapshot();
+  if (Option.isNone(snapshot)) {
+    return yield* new PreviewIntegrityError({ check: "manifest" });
+  }
+
+  const route = previewDocumentRoute(snapshot.value.manifest.document);
+  return [{ locale: route.appLocale }];
+});
 
 /** Checks whether two route segment collections are byte-for-byte equal. */
 function hasSameSegments(left: readonly string[], right: readonly string[]) {
@@ -69,6 +94,53 @@ export function matchesMaterialPreviewRoute(
 
   return true;
 }
+
+/** Parses one canonical material path into Next child params. */
+export const parseMaterialPreviewStaticParams = Effect.fn(
+  "NakafaContent.parseMaterialPreviewStaticParams"
+)(function* ({
+  appLocale,
+  publicPath,
+}: {
+  readonly appLocale: AppLocale;
+  readonly publicPath: string;
+}) {
+  const [namespace, subject, topic, ...lesson] = publicPath.split("/");
+  if (namespace !== materialPublicNamespace(appLocale)) {
+    return yield* new PreviewIntegrityError({ check: "projection" });
+  }
+
+  return yield* Schema.decodeUnknown(MaterialPreviewStaticParamsSchema)({
+    lesson,
+    subject,
+    topic,
+  }).pipe(
+    Effect.mapError(() => new PreviewIntegrityError({ check: "projection" }))
+  );
+});
+
+/** Reads the selected material route so Cache Components can build its shell. */
+export const readMaterialPreviewStaticParams = Effect.fn(
+  "NakafaContent.readMaterialPreviewStaticParams"
+)(function* (appLocale: AppLocale) {
+  const snapshot = yield* readPreviewSnapshot();
+  if (Option.isNone(snapshot)) {
+    return yield* new PreviewIntegrityError({ check: "manifest" });
+  }
+
+  const document = snapshot.value.manifest.document;
+  if (
+    document.family !== "material" ||
+    document.route.appLocale !== appLocale
+  ) {
+    return yield* new PreviewIntegrityError({ check: "projection" });
+  }
+
+  return yield* parseMaterialPreviewStaticParams({
+    appLocale,
+    publicPath: document.route.publicPath,
+  });
+});
 
 /** Resolves a next-intl material rewrite back to its canonical public path. */
 function resolveInternalRoute({ localeHint, pathname }: InternalRouteInput) {

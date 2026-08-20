@@ -1,12 +1,8 @@
 import "server-only";
 
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
-import { Effect, Option } from "effect";
-import { io } from "next/cache";
-import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { cache, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 import { TryoutReviewedChoice } from "@/components/tryout/runtime/choice-surface.client";
 import {
@@ -20,28 +16,7 @@ import {
 } from "@/components/tryout/runtime/question-shell.client";
 import { TryoutPageHeader } from "@/components/tryout/shell/header";
 import { TryoutMeta } from "@/components/tryout/shell/meta";
-import { hasPreviewConfig } from "@/lib/content/preview/config";
-import {
-  type QuestionPreviewContent,
-  readQuestionPreview,
-} from "@/lib/content/preview/question";
-
-/** Reads a question only inside the explicitly configured development child. */
-export const readTryoutQuestionPreview = cache(
-  async (locale: Locale, publicPath: string) => {
-    if (!hasPreviewConfig()) {
-      return Option.none<QuestionPreviewContent>();
-    }
-
-    await io();
-    return await Effect.runPromise(
-      readQuestionPreview({
-        appLocale: AppLocaleSchema.make(locale),
-        publicPath,
-      })
-    );
-  }
-);
+import type { QuestionPreviewContent } from "@/lib/content/preview/question";
 
 /** Projects authored choices into the shared interactive preview model. */
 function previewChoices(

@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   listMaterialStaticParams,
@@ -11,6 +12,7 @@ import { previewProjection } from "@/test/content-preview";
 const mocks = vi.hoisted(() => ({
   getPublishedMaterialRoutes: vi.fn(),
   hasPreviewConfig: vi.fn(() => false),
+  readMaterialPreviewStaticParams: vi.fn(),
   readNamespaceSegment: vi.fn(),
   selectLearningStaticParams: vi.fn(),
 }));
@@ -23,6 +25,9 @@ vi.mock("@/lib/content/material/catalog", () => ({
 }));
 vi.mock("@/lib/content/preview/config", () => ({
   hasPreviewConfig: mocks.hasPreviewConfig,
+}));
+vi.mock("@/lib/content/preview/route", () => ({
+  readMaterialPreviewStaticParams: mocks.readMaterialPreviewStaticParams,
 }));
 vi.mock("@/lib/routing/prerender", () => ({
   selectLearningStaticParams: mocks.selectLearningStaticParams,
@@ -43,6 +48,13 @@ beforeEach(() => {
     sourceRevision: "a".repeat(40),
   });
   mocks.hasPreviewConfig.mockReturnValue(false);
+  mocks.readMaterialPreviewStaticParams.mockReturnValue(
+    Effect.succeed({
+      lesson: ["function-concept"],
+      subject: "mathematics",
+      topic: "function-composition-inverse-function",
+    })
+  );
   mocks.selectLearningStaticParams.mockImplementation((values) => values);
 });
 
@@ -112,10 +124,17 @@ describe("material route data", () => {
     expect(mocks.getPublishedMaterialRoutes).toHaveBeenCalledWith("en");
   });
 
-  it("does not prerender published routes inside the local preview child", async () => {
+  it("prerenders the selected route inside the local preview child", async () => {
     mocks.hasPreviewConfig.mockReturnValue(true);
 
-    await expect(listMaterialStaticParams("de")).resolves.toEqual([]);
+    await expect(listMaterialStaticParams("de")).resolves.toEqual([
+      {
+        lesson: ["function-concept"],
+        subject: "mathematics",
+        topic: "function-composition-inverse-function",
+      },
+    ]);
     expect(mocks.getPublishedMaterialRoutes).not.toHaveBeenCalled();
+    expect(mocks.readMaterialPreviewStaticParams).toHaveBeenCalledWith("de");
   });
 });
