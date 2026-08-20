@@ -30,4 +30,4 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Run React Doctor
-        run: pnpm run doctor --verbose --scope changed --base main --include-untracked
+        run: pnpm run doctor --verbose --scope changed --base origin/main --include-untracked
