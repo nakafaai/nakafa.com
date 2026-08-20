@@ -855,9 +855,6 @@ importers:
       react-error-boundary:
         specifier: ^6.1.2
         version: 6.1.2(react@19.2.8)
-      react-katex:
-        specifier: ^3.1.0
-        version: 3.1.0(prop-types@15.8.1)(react@19.2.8)
       react-markdown:
         specifier: ^10.1.0
         version: 10.1.0(@types/react@19.2.18)(react@19.2.8)
@@ -928,9 +925,6 @@ importers:
       '@types/react':
         specifier: ^19.2.18
         version: 19.2.18
-      '@types/react-katex':
-        specifier: ^3.0.4
-        version: 3.0.4
       '@types/three':
         specifier: ^0.185.4
         version: 0.185.4
@@ -3598,9 +3592,6 @@ packages:
     resolution: {integrity: sha512-Bsc+QHgp+P/F02XDzNCY9jnZNCUuLki36KT7VKrTXXLdHf+vHMNZnW1rVu5DNW/rCK+fya3DATySbLM4yhtKUw==}
     peerDependencies:
       '@types/react': ^19.2.0
-
-  '@types/react-katex@3.0.4':
-    resolution: {integrity: sha512-aLkykKzSKLpXI6REJ3uClao6P47HAFfR1gcHOZwDeTuALsyjgMhz+oynLV4gX0kiJVnvHrBKF/TLXqyNTpHDUg==}
 
   '@types/react-reconciler@0.28.9':
     resolution: {integrity: sha512-HHM3nxyUZ3zAylX8ZEyrDNd2XZOnQ0D5XfunJF5FLQnZbHHYq4UWvW1QfelQNXv1ICNkwYhfxjwfnqivYB6bFg==}
@@ -6646,12 +6637,6 @@ packages:
 
   react-is@18.3.1:
     resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
-
-  react-katex@3.1.0:
-    resolution: {integrity: sha512-At9uLOkC75gwn2N+ZXc5HD8TlATsB+3Hkp9OGs6uA8tM3dwZ3Wljn74Bk3JyHFPgSnesY/EMrIAB1WJwqZqejA==}
-    peerDependencies:
-      prop-types: ^15.8.1
-      react: '>=15.3.2 <20'
 
   react-markdown@10.1.0:
     resolution: {integrity: sha512-qKxVopLT/TyA6BX3Ue5NwabOsAzm0Q7kAPwq6L+wWDwisYs7R8vZ0nRXqq6rkueboxpkjvLGU9fWifiX/ZZFxQ==}
@@ -10093,10 +10078,6 @@ snapshots:
     dependencies:
       '@types/react': 19.2.18
 
-  '@types/react-katex@3.0.4':
-    dependencies:
-      '@types/react': 19.2.18
-
   '@types/react-reconciler@0.28.9(@types/react@19.2.18)':
     dependencies:
       '@types/react': 19.2.18
@@ -13468,12 +13449,6 @@ snapshots:
   react-is@16.13.1: {}
 
   react-is@18.3.1: {}
-
-  react-katex@3.1.0(prop-types@15.8.1)(react@19.2.8):
-    dependencies:
-      katex: 0.16.47
-      prop-types: 15.8.1
-      react: 19.2.8
 
   react-markdown@10.1.0(@types/react@19.2.18)(react@19.2.8):
     dependencies:
