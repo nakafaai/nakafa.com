@@ -64,7 +64,7 @@ describe("chat stream observability", () => {
       error,
       {
         error_location: "stream-on-error",
-        gateway_model_id: "openai/gpt-5-mini",
+        gateway_model_id: "google/gemini-3.5-flash-lite",
         model_id: modelId,
         source: "chat-api",
       }
@@ -103,7 +103,7 @@ describe("chat stream observability", () => {
       {
         error_location: "stream-on-error",
         gateway_error_type: "rate_limit",
-        gateway_model_id: "openai/gpt-5-mini",
+        gateway_model_id: "google/gemini-3.5-flash-lite",
         gateway_retryable: true,
         gateway_status_code: 429,
         model_id: "nakafa-lite",

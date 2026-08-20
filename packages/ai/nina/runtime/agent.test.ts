@@ -89,7 +89,7 @@ vi.mock("ai", async (importOriginal) => {
         initialMessages: options.messages,
         instructions: fakeAgentState.settings.instructions,
         messages: options.messages,
-        model: "openai/gpt-5-mini",
+        model: "google/gemini-3.5-flash-lite",
         responseMessages: [],
         runtimeContext: {},
         stepNumber: 0,

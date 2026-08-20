@@ -112,8 +112,9 @@ planning layer that can override or contaminate the search query.
   `taxonomy`.
 - Search UI parts are query-scoped: one executed query writes one loading part
   and reconciles that same part to done or error.
-- Research uses Firecrawl for inspectable, query-scoped source rows and
-  synthesizes only from the collected evidence.
+- Research runs Firecrawl first for inspectable source rows, then Google Search
+  grounding for corroboration. Google grounding appears in the source UI only
+  when it has a query-scoped direct source.
 - Provider identity is stored for traces and debugging, but the chat UI only
   shows user-relevant queries and sources.
 - Research evidence exposes citation links beside the facts they support.

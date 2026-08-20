@@ -27,6 +27,14 @@ flowchart LR
   reconciliation updates the visible row in place.
 - Firecrawl UI parts render provider-returned sources. Agent reasoning receives
   the filtered evidence set separately.
+- Google grounding can expose provider-level queries and sources without a
+  source-per-query mapping. Do not invent groupings when the provider does not
+  return that relationship.
+- Google grounding is rendered as a search row only when it has exactly one
+  search query and at least one usable direct source URL. Query-only grounding
+  remains in DevTools/provider metadata instead of the user-facing source UI.
+  Multi-query grounding remains internal evidence because the provider does not
+  expose which sources belong to which query.
 
 ```mermaid
 flowchart TD
@@ -35,6 +43,12 @@ flowchart TD
   Firecrawl --> Scoped["query/task-scoped evidence"]
   Raw --> UI["data-web-search row"]
   Scoped --> Agent["research evidence notes"]
+  Agent --> Google["Google grounding step"]
+  Google --> Grounded["provider metadata sources"]
+  Grounded --> Decision{"single query + source?"}
+  Decision -->|yes| UI
+  Decision -->|no| Agent
+  Decision -->|yes| Agent
 ```
 
 ```mermaid
@@ -50,7 +64,7 @@ sequenceDiagram
   Tool->>Stream: write id=query-2 done with provider results
   Stream->>UI: render each query beside its own results
   Tool->>Agent: return scoped evidence text
-  Agent->>Agent: synthesize only from collected source evidence
+  Agent->>Stream: write source-backed Google grounding only when it is query-scoped
 ```
 
 ## References

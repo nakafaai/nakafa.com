@@ -1,7 +1,8 @@
 import type { GatewayProviderOptions } from "@ai-sdk/gateway";
 
-/** Fails closed unless AI Gateway can use an OpenAI provider that does not train. */
+/** Routes Gemini requests only through no-training Google providers. */
 export const gatewayProviderOptions = {
   disallowPromptTraining: true,
-  only: ["openai"],
+  only: ["google", "vertex"],
+  sort: "ttft",
 } satisfies GatewayProviderOptions;

@@ -1,7 +1,7 @@
 import { provider } from "@repo/ai/config/app";
 import {
   defaultModel,
-  getBackgroundModelReasoning,
+  getFastModelProviderOptions,
 } from "@repo/ai/config/model";
 import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { backgroundGenerationTimeout } from "@repo/ai/config/timeouts";
@@ -107,8 +107,8 @@ export const repairNinaToolCall = Effect.fn("nina.repair.toolCall")(function* ({
       ].join("\n"),
       providerOptions: {
         gateway: gatewayProviderOptions,
+        google: getFastModelProviderOptions(defaultModel),
       },
-      reasoning: getBackgroundModelReasoning(defaultModel),
       timeout: backgroundGenerationTimeout,
     })
   );

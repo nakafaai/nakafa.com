@@ -1,5 +1,40 @@
+import { createPrompt } from "@repo/ai/prompt/utils";
+import type { ModelMessage } from "ai";
+
 /**
- * Starts broad research with inspectable web evidence before synthesis.
+ * Enables Gemini Google Search grounding after inspectable Firecrawl search.
+ *
+ * @see https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
+ */
+export function prepareGoogleGroundingStep(messages: ModelMessage[]) {
+  const message = {
+    role: "user",
+    content: createPrompt({
+      taskContext: `
+        # Required Next Step
+
+        Firecrawl webSearch is complete.
+        Google Search grounding is now enabled as the only active provider tool.
+      `,
+      detailedTaskInstructions: `
+        # Evidence Contract
+
+        - Use Google Search grounding to corroborate current public evidence before answering.
+        - Keep source titles and URLs attached to evidence notes.
+        - If Google returns no grounding sources, state that limitation and do not cite Google Search.
+      `,
+    }),
+  } satisfies ModelMessage;
+
+  return {
+    activeTools: ["google_search" as const],
+    toolChoice: "required" as const,
+    messages: [...messages, message],
+  };
+}
+
+/**
+ * Starts broad research with inspectable web evidence before provider grounding.
  *
  * @see https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
  */

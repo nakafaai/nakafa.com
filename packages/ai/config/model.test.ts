@@ -1,9 +1,9 @@
 import {
   defaultModel,
-  getBackgroundModelReasoning,
-  getInteractiveModelReasoning,
+  getFastModelProviderOptions,
   getModelCreditCost,
   getModelGatewayId,
+  getModelProviderOptions,
   hasEnoughCredits,
   isModelId,
   MODEL_IDS,
@@ -24,7 +24,7 @@ describe("Nakafa model registry", () => {
     expect(defaultModel).toBe("nakafa-lite");
     expect(isModelId("nakafa-lite")).toBe(true);
     expect(isModelId("nakafa-pro")).toBe(true);
-    expect(isModelId("openai/gpt-5.4-mini")).toBe(false);
+    expect(isModelId("google/gemini-3.7-flash")).toBe(false);
   });
 
   it("keeps credit costs and gateway mapping explicit", () => {
@@ -35,13 +35,11 @@ describe("Nakafa model registry", () => {
     ).toEqual([
       {
         credits: 2,
-        gatewayId: "openai/gpt-5-mini",
-        reasoning: { background: "low", interactive: "high" },
+        gatewayId: "google/gemini-3.5-flash-lite",
       },
       {
         credits: 5,
-        gatewayId: "openai/gpt-5.4-mini",
-        reasoning: { background: "low", interactive: "high" },
+        gatewayId: "google/gemini-3.7-flash",
       },
     ]);
     expect(getModelCreditCost(liteModel)).toBe(2);
@@ -50,18 +48,39 @@ describe("Nakafa model registry", () => {
     expect(hasEnoughCredits(2, liteModel)).toBe(true);
     expect(hasEnoughCredits(4, proModel)).toBe(false);
     expect(hasEnoughCredits(5, proModel)).toBe(true);
-    expect(getModelGatewayId(liteModel)).toBe("openai/gpt-5-mini");
-    expect(getModelGatewayId(proModel)).toBe("openai/gpt-5.4-mini");
+    expect(getModelGatewayId(liteModel)).toBe(
+      "google/gemini-3.5-flash-lite"
+    );
+    expect(getModelGatewayId(proModel)).toBe("google/gemini-3.7-flash");
   });
 
-  it("uses provider-neutral reasoning and OpenAI-only routing", () => {
-    expect(getInteractiveModelReasoning(liteModel)).toBe("high");
-    expect(getInteractiveModelReasoning(proModel)).toBe("high");
-    expect(getBackgroundModelReasoning(liteModel)).toBe("low");
-    expect(getBackgroundModelReasoning(proModel)).toBe("low");
+  it("uses interactive and fast Gemini thinking profiles", () => {
+    expect(getModelProviderOptions(liteModel)).toEqual({
+      thinkingConfig: {
+        includeThoughts: true,
+        thinkingLevel: "high",
+      },
+    });
+    expect(getModelProviderOptions(proModel)).toEqual({
+      thinkingConfig: {
+        includeThoughts: true,
+        thinkingLevel: "high",
+      },
+    });
+    expect(getFastModelProviderOptions(liteModel)).toEqual({
+      thinkingConfig: {
+        thinkingLevel: "low",
+      },
+    });
+    expect(getFastModelProviderOptions(proModel)).toEqual({
+      thinkingConfig: {
+        thinkingLevel: "low",
+      },
+    });
     expect(gatewayProviderOptions).toEqual({
       disallowPromptTraining: true,
-      only: ["openai"],
+      only: ["google", "vertex"],
+      sort: "ttft",
     });
   });
 });

@@ -261,7 +261,7 @@ export const webSearchSourceValidator = v.object({
   citation: v.string(),
 });
 
-export const webSearchProviderValidator = v.literal("firecrawl");
+export const webSearchProviderValidator = literals("firecrawl", "google");
 
 export const mathExpressionValidator = v.object({
   expression: v.string(),
