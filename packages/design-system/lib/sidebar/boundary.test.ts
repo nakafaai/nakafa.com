@@ -7,7 +7,7 @@ const { captureExceptionMock } = vi.hoisted(() => ({
   captureExceptionMock: vi.fn(),
 }));
 
-vi.mock("@repo/analytics/posthog", () => ({
+vi.mock("@repo/analytics/posthog/browser", () => ({
   captureException: captureExceptionMock,
 }));
 

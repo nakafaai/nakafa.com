@@ -30,13 +30,10 @@ function hasConvexErrorCode(error: unknown, allowedCodes: readonly string[]) {
 }
 
 /** Captures an unexpected school route error and preserves the original failure. */
-function captureSchoolRouteError(
-  failure: Cause.UnknownError,
-  context: Record<string | number, unknown>
-) {
+function captureSchoolRouteError(failure: Cause.UnknownError, source: string) {
   return Effect.gen(function* () {
     yield* Effect.tryPromise(() =>
-      captureServerException(failure.cause, undefined, context)
+      captureServerException(failure.cause, { source })
     ).pipe(Effect.ignore);
 
     return yield* failure;
@@ -72,10 +69,7 @@ export const getSchoolRouteSnapshot = cache(
           () => Effect.succeed(null)
         ),
         Effect.catch((error) =>
-          captureSchoolRouteError(error, {
-            slug,
-            source: "school-route-boundary",
-          })
+          captureSchoolRouteError(error, "school-route-boundary")
         )
       )
     );
@@ -113,10 +107,7 @@ export async function preloadClassRoute({ classId }: { classId: string }) {
         () => Effect.succeed(null)
       ),
       Effect.catch((error) =>
-        captureSchoolRouteError(error, {
-          classId,
-          source: "school-class-route-boundary",
-        })
+        captureSchoolRouteError(error, "school-class-route-boundary")
       )
     )
   );
@@ -140,9 +131,7 @@ export async function getSchoolSwitcherPage() {
       })
     ).pipe(
       Effect.catch((error) =>
-        captureSchoolRouteError(error, {
-          source: "school-switcher-page",
-        })
+        captureSchoolRouteError(error, "school-switcher-page")
       )
     )
   );

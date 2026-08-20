@@ -1,21 +1,9 @@
 import "server-only";
 
-import { extractDistinctIdFromPostHogCookie } from "@repo/analytics/posthog/attribution";
+import type { OperationalExceptionProperties } from "@repo/analytics/posthog/exception";
 import { isServerExceptionReportingEnabled } from "@repo/analytics/server-reporting";
-import { Effect, Option, Schema } from "effect";
-import { cookies } from "next/headers";
+import { Effect, Schema } from "effect";
 import { after } from "next/server";
-
-type ServerExceptionProperties = Record<string | number, unknown>;
-
-/** Expected failure while reading the current request cookie header. */
-class RequestCookieHeaderReadError extends Schema.TaggedError<RequestCookieHeaderReadError>()(
-  "RequestCookieHeaderReadError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
 
 /** Expected failure while sending a handled server exception to analytics. */
 class ServerExceptionCaptureError extends Schema.TaggedError<ServerExceptionCaptureError>()(
@@ -35,34 +23,16 @@ class ServerExceptionScheduleError extends Schema.TaggedError<ServerExceptionSch
   }
 ) {}
 
-/** Reads the current request cookies for analytics attribution. */
-const getCurrentCookieHeader = Effect.fn(
-  "www.analytics.getCurrentCookieHeader"
-)(function* () {
-  return yield* Effect.tryPromise({
-    try: () => cookies().then((requestCookies) => requestCookies.toString()),
-    catch: (cause) =>
-      new RequestCookieHeaderReadError({
-        cause,
-        message: "Failed to read request cookies.",
-      }),
-  });
-});
-
 /** Captures one server exception without leaking analytics failures. */
 const captureServerExceptionSafely = Effect.fn(
   "www.analytics.captureServerExceptionSafely"
-)(function* (
-  error: unknown,
-  distinctId?: string,
-  properties?: ServerExceptionProperties
-) {
+)(function* (error: unknown, properties: OperationalExceptionProperties) {
   yield* Effect.tryPromise({
     try: async () => {
       const { captureServerException } = await import(
         "@repo/analytics/posthog/server"
       );
-      await captureServerException(error, distinctId, properties);
+      await captureServerException(error, properties);
     },
     catch: (cause) =>
       new ServerExceptionCaptureError({
@@ -73,47 +43,28 @@ const captureServerExceptionSafely = Effect.fn(
 });
 
 /**
- * Reads request cookies before scheduling handled request-time error reporting.
- *
- * The cookie read proves that this capability runs within a real request. Next
- * forbids request APIs inside an `after` callback, so attribution is resolved
- * before the callback is registered.
+ * Schedules handled request-time error reporting after the response completes.
  *
  * https://nextjs.org/docs/app/api-reference/functions/after#with-request-apis
  */
 export const scheduleCurrentServerExceptionCapture = Effect.fn(
   "www.analytics.scheduleCurrentServerExceptionCapture"
-)(function* (error: unknown, properties?: ServerExceptionProperties) {
+)(function* (error: unknown, properties: OperationalExceptionProperties) {
   if (!isServerExceptionReportingEnabled()) {
     return;
   }
 
-  const cookieHeader = yield* getCurrentCookieHeader().pipe(
-    Effect.map(Option.some),
-    Effect.catchTag("RequestCookieHeaderReadError", () =>
-      Effect.succeed(Option.none<string>())
-    )
-  );
-  if (Option.isNone(cookieHeader)) {
-    return;
-  }
-
-  yield* scheduleServerExceptionCapture(error, cookieHeader.value, properties);
+  yield* scheduleServerExceptionCapture(error, properties);
 });
 
-/** Schedules one handled exception when its request cookie is already known. */
+/** Schedules one handled operational exception without request identity. */
 export const scheduleServerExceptionCapture = Effect.fn(
   "www.analytics.scheduleServerExceptionCapture"
-)(function* (
-  error: unknown,
-  cookieHeader: string,
-  properties?: ServerExceptionProperties
-) {
+)(function* (error: unknown, properties: OperationalExceptionProperties) {
   if (!isServerExceptionReportingEnabled()) {
     return;
   }
 
-  const distinctId = extractDistinctIdFromPostHogCookie(cookieHeader);
   const services = yield* Effect.context<never>();
   const runPromise = Effect.runPromiseWith(services);
   yield* Effect.try({
@@ -123,8 +74,6 @@ export const scheduleServerExceptionCapture = Effect.fn(
         message: "Failed to schedule server exception reporting.",
       }),
     try: () =>
-      after(() =>
-        runPromise(captureServerExceptionSafely(error, distinctId, properties))
-      ),
+      after(() => runPromise(captureServerExceptionSafely(error, properties))),
   }).pipe(Effect.ignore);
 });

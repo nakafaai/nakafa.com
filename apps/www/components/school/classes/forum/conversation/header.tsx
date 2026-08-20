@@ -1,6 +1,6 @@
 import { WinkIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { captureException } from "@repo/analytics/posthog";
+import { captureException } from "@repo/analytics/posthog/browser";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,

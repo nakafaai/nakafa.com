@@ -13,6 +13,7 @@ import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { FooterAction } from "@/components/marketing/shared/footer-action";
 import { FooterArt } from "@/components/marketing/shared/footer-art";
+import { AnalyticsConsentFooterItem } from "@/components/privacy/analytics-consent";
 import { holyMenu } from "@/components/sidebar/data/holy";
 import {
   getSubjectMenuHref,
@@ -138,6 +139,7 @@ export function Footer({
                     label={tLegal("security-policy")}
                   />
                 </li>
+                <AnalyticsConsentFooterItem />
               </ul>
             </div>
           </section>

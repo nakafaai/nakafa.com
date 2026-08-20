@@ -85,7 +85,6 @@ function InfoCustomizeButton() {
         ).pipe(
           Effect.catchTag("UnknownError", ({ cause: error }) =>
             reportClientException(error, {
-              image,
               source: "school-class-image-update",
             })
           )

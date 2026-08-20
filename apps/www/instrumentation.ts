@@ -65,25 +65,18 @@ export const onRequestError: Instrumentation.onRequestError = async (
     return;
   }
 
-  const [{ captureServerException }, { extractDistinctIdFromPostHogCookie }] =
-    await Promise.all([
-      import("@repo/analytics/posthog/server"),
-      import("@repo/analytics/posthog/attribution"),
-    ]);
+  const { captureServerException } = await import(
+    "@repo/analytics/posthog/server"
+  );
 
-  await captureServerException(
-    error,
-    extractDistinctIdFromPostHogCookie(request.headers.cookie),
-    {
-      error_digest: getErrorDigest(error),
-      method: request.method,
-      path: request.path,
-      render_source: context.renderSource,
-      revalidate_reason: context.revalidateReason,
-      route_path: context.routePath,
-      route_type: context.routeType,
-      router_kind: context.routerKind,
-      source: "next-on-request-error",
-    }
-  ).catch(() => undefined);
+  await captureServerException(error, {
+    error_digest: getErrorDigest(error),
+    method: request.method,
+    render_source: context.renderSource,
+    revalidate_reason: context.revalidateReason,
+    route_path: context.routePath,
+    route_type: context.routeType,
+    router_kind: context.routerKind,
+    source: "next-on-request-error",
+  }).catch(() => undefined);
 };

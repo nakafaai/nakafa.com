@@ -162,7 +162,6 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
           properties: {
             product_id: subscription.productId,
             status: subscription.status,
-            subscription_id: subscription.id,
           },
         },
         timestamp,
@@ -175,7 +174,6 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
           properties: {
             new_plan: newPlan,
             previous_plan: previousPlan,
-            subscription_id: subscription.id,
           },
         },
         timestamp,
@@ -229,7 +227,6 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
           properties: {
             product_id: subscription.productId,
             status: subscription.status,
-            subscription_id: subscription.id,
           },
         },
         timestamp,
@@ -243,7 +240,6 @@ const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
         properties: {
           new_plan: newPlan,
           previous_plan: previousPlan,
-          subscription_id: subscription.id,
         },
       },
       timestamp,

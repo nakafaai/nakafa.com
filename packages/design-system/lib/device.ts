@@ -51,25 +51,3 @@ export function getPowerPreference(): "default" | "high-performance" {
 
   return cores >= 4 ? "high-performance" : "default";
 }
-
-/**
- * Collects device information for analytics tracking
- *
- * Gathers mobile detection, CPU core count, GPU power preference,
- * and user agent string for device capability analysis.
- *
- * @returns Object containing device analytics data
- */
-export function getDeviceInfoForAnalytics(): {
-  isMobile: boolean;
-  cores: number;
-  powerPreference: "default" | "high-performance";
-  userAgent: string;
-} {
-  return {
-    isMobile: isMobileDevice(),
-    cores: navigator.hardwareConcurrency ?? 4,
-    powerPreference: getPowerPreference(),
-    userAgent: navigator.userAgent,
-  };
-}

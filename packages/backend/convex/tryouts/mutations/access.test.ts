@@ -2,6 +2,7 @@ import posthogTest from "@posthog/convex/test";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   createConvexTestWithBetterAuth,
+  seedAnalyticsConsent,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import { describe, expect, it, vi } from "vitest";
@@ -13,9 +14,17 @@ describe("tryouts/mutations/access", () => {
     vi.setSystemTime(new Date(NOW));
     const t = createConvexTestWithBetterAuth();
     posthogTest.register(t);
-    const identity = await t.mutation((ctx) =>
-      seedAuthenticatedUser(ctx, { now: NOW, suffix: "tryout-paywall" })
-    );
+    const identity = await t.mutation(async (ctx) => {
+      const seeded = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "tryout-paywall",
+      });
+      await seedAnalyticsConsent(ctx, {
+        decidedAt: NOW,
+        userId: seeded.userId,
+      });
+      return seeded;
+    });
     const authed = t.withIdentity({
       sessionId: identity.sessionId,
       subject: identity.authUserId,

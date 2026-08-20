@@ -1,6 +1,7 @@
 import { convexKeys, convexSiteKeys } from "@repo/backend/keys";
 import { contentApiKeys, mcpKeys, siteUrlKeys } from "@repo/next-config/keys";
 import { createEnv } from "@t3-oss/env-nextjs";
+import { Schema } from "effect";
 
 /**
  * Validates environment values consumed by `www` runtime modules.
@@ -17,5 +18,13 @@ export const env = createEnv({
     convexSiteKeys(),
     mcpKeys(),
   ],
-  runtimeEnv: {},
+  client: {
+    NEXT_PUBLIC_AKSARA_PREVIEW_CHILD: Schema.toStandardSchemaV1(
+      Schema.UndefinedOr(Schema.Literals(["true", "false"]))
+    ),
+  },
+  runtimeEnv: {
+    NEXT_PUBLIC_AKSARA_PREVIEW_CHILD:
+      process.env.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD,
+  },
 });

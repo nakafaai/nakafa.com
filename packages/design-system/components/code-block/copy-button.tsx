@@ -1,7 +1,7 @@
 "use client";
 
 import { Copy01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
-import { captureException } from "@repo/analytics/posthog";
+import { captureException } from "@repo/analytics/posthog/browser";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type {

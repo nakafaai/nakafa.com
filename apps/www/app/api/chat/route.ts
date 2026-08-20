@@ -210,7 +210,6 @@ export function POST(req: Request) {
         chatId,
         logContext,
         modelId: selectedModel,
-        userId: userInfo.userId,
       });
 
       const translate = yield* Effect.tryPromise(() =>

@@ -30,6 +30,10 @@ import { Effect, Result } from "effect";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";
 import { clearAiDraftText } from "@/components/ai/store/draft";
+import {
+  AnalyticsConsentMenuItem,
+  AnalyticsConsentSidebarItem,
+} from "@/components/privacy/analytics-consent";
 import { NavUserGuestButton } from "@/components/sidebar/nav-user-guest-button";
 import { NavUserSkeleton } from "@/components/sidebar/nav-user-skeleton";
 import { SidebarUtilityMenuItems } from "@/components/sidebar/utility-menu-items";
@@ -68,9 +72,12 @@ export function SchoolSidebarNavUser() {
   }
   if (!user) {
     return (
-      <SidebarMenuItem>
-        <NavUserGuestButton />
-      </SidebarMenuItem>
+      <>
+        <SidebarMenuItem>
+          <NavUserGuestButton />
+        </SidebarMenuItem>
+        <AnalyticsConsentSidebarItem />
+      </>
     );
   }
   const planLabelByPlan = {
@@ -137,6 +144,10 @@ export function SchoolSidebarNavUser() {
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <SidebarUtilityMenuItems side={submenuSide} />
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <AnalyticsConsentMenuItem />
+          </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem

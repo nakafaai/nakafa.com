@@ -1,5 +1,5 @@
 "use client";
-import { captureException } from "@repo/analytics/posthog";
+import { captureException } from "@repo/analytics/posthog/browser";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { cn } from "@repo/design-system/lib/utils";

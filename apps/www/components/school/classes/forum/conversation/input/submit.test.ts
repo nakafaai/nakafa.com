@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
   response: vi.fn<() => Response>(),
   tracingDisabled: vi.fn<(disabled: boolean) => void>(),
 }));
-vi.mock("@repo/analytics/posthog", () => ({
+vi.mock("@repo/analytics/posthog/browser", () => ({
   captureException: mocks.captureException,
 }));
 const forumId = "forum_1" as Id<"schoolClassForums">;

@@ -50,6 +50,14 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **EvalSuite**: A named collection of EvalCases for one NinaHarness or LearningCapability behavior boundary.
 - **EvalRun**: A recorded execution of an EvalSuite with bounded evidence and trace summaries.
 
+## Privacy
+
+- **Analytics consent decision**: A grant or denial for optional product analytics under one privacy-notice version. Missing, stale, unreadable, DNT, or Global Privacy Control state always keeps product analytics off.
+- **Account consent decision**: A signed-in account's Analytics consent decision for one category, with a server-owned decision time. It never inherits an anonymous browser decision.
+- **Anonymous consent decision**: A browser-local Analytics consent decision used only while no account is authenticated. Account sign-out preserves it without treating it as account state.
+- **Analytics eligibility**: The current consent and account-lifecycle proof required before a browser or backend analytics event may be admitted. Queued backend delivery rechecks eligibility around external IO.
+- **Operational exception report**: A minimized service-reliability report with a fixed error name and message, code stack frames, and bounded technical context. It carries no account or user identifier and no raw error message, cause, request payload, or user content. It is separate from optional product analytics.
+
 ## Forum Conversation
 
 - **Forum Conversation**: The opened discussion surface for one class forum, usually shown as the right-side panel beside the forum list.

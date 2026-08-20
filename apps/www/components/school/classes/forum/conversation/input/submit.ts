@@ -1,4 +1,4 @@
-import { captureException } from "@repo/analytics/posthog";
+import { captureException } from "@repo/analytics/posthog/browser";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload";

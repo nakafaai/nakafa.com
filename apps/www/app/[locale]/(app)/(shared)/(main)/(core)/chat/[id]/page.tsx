@@ -32,8 +32,7 @@ export async function generateMetadata({
       Effect.catchTag("UnknownError", ({ cause: error }) =>
         Effect.gen(function* () {
           yield* Effect.tryPromise(() =>
-            captureServerException(error, undefined, {
-              chat_id: id,
+            captureServerException(error, {
               source: "chat-page-metadata",
             })
           ).pipe(Effect.ignore);

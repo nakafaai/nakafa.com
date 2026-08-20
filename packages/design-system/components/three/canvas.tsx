@@ -3,17 +3,12 @@
 import { Sad02Icon } from "@hugeicons/core-free-icons";
 import { AdaptiveDpr } from "@react-three/drei";
 import { Canvas, type CanvasProps } from "@react-three/fiber";
-import { analytics } from "@repo/analytics/posthog";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import {
-  checkWebGL2Support,
-  getDeviceInfoForAnalytics,
-  getPowerPreference,
-} from "@repo/design-system/lib/device";
+import { getPowerPreference } from "@repo/design-system/lib/device";
 import { cn } from "@repo/design-system/lib/utils";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
@@ -83,7 +78,6 @@ function ThreeCanvasComponent({
   frameloop?: "always" | "demand" | "never";
 } & CanvasProps) {
   const powerPreference = getPowerPreference();
-  const deviceInfo = getDeviceInfoForAnalytics();
   const [canvasKey, setCanvasKey] = useState(0);
 
   /**
@@ -109,16 +103,6 @@ function ThreeCanvasComponent({
       fallbackRender={({ error, resetErrorBoundary }) => (
         <ErrorFallback error={error} resetErrorBoundary={resetErrorBoundary} />
       )}
-      onError={(error) => {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        analytics.capture("webgl_error", {
-          error: errorMessage,
-          component: "ThreeCanvas",
-          supported: checkWebGL2Support(),
-          ...deviceInfo,
-        });
-      }}
     >
       <Canvas
         className={cn(
@@ -142,9 +126,6 @@ function ThreeCanvasComponent({
           alpha: true,
         }}
         key={canvasKey}
-        onCreated={() => {
-          analytics.capture("webgl_init_success", deviceInfo);
-        }}
         performance={{
           min: 0.8,
           max: 1.0,

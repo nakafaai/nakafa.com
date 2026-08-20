@@ -1,6 +1,13 @@
-import { analytics } from "@repo/analytics/posthog";
-import { resetAnalyticsIdentity } from "@repo/analytics/posthog/identity";
-import { Effect, Schema } from "effect";
+import {
+  ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
+  createAnonymousAnalyticsConsent,
+} from "@repo/analytics/consent";
+import {
+  disableBrowserAnalytics,
+  resetBrowserAnalyticsIdentity,
+} from "@repo/analytics/posthog/browser";
+import { Clock, Effect, type Effect as EffectType, Schema } from "effect";
+import { saveAnonymousAnalyticsConsent } from "@/lib/analytics/consent-storage";
 import { authClient } from "@/lib/auth/client";
 
 const accountSignOutFailedCode = "ACCOUNT_SIGN_OUT_FAILED";
@@ -15,8 +22,16 @@ interface BrowserAccountIdentityCleanup {
 }
 
 interface DeletedAccountIdentityCleanup extends BrowserAccountIdentityCleanup {
-  readonly flushAnalytics: () => Promise<void>;
+  readonly denyAnonymousAnalytics: () => EffectType.Effect<void, unknown>;
+  readonly disableAnalytics: () => EffectType.Effect<void, unknown>;
 }
+
+const denyAnonymousAnalytics = Clock.currentTimeMillis.pipe(
+  Effect.map((decidedAt) =>
+    createAnonymousAnalyticsConsent("denied", decidedAt)
+  ),
+  Effect.flatMap(saveAnonymousAnalyticsConsent)
+);
 
 /** Raised when the current account cannot be signed out safely. */
 export class AccountSignOutFailed extends Schema.TaggedError<AccountSignOutFailed>()(
@@ -32,13 +47,16 @@ const defaultBrowserAccountIdentityCleanup: BrowserAccountIdentityCleanup = {
       for (let index = storage.length - 1; index >= 0; index -= 1) {
         const storageKey = storage.key(index);
 
-        if (storageKey?.startsWith(accountStorageKeyPrefix)) {
+        if (
+          storageKey?.startsWith(accountStorageKeyPrefix) &&
+          storageKey !== ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY
+        ) {
           storage.removeItem(storageKey);
         }
       }
     }
   },
-  resetAnalytics: () => resetAnalyticsIdentity(analytics, true),
+  resetAnalytics: () => resetBrowserAnalyticsIdentity(true),
 };
 
 /** Clears account-scoped state before another browser identity can take over. */
@@ -57,21 +75,20 @@ export const clearAccountBrowserIdentity = Effect.fn(
 });
 
 /**
- * Flushes analytics and clears browser identity after a committed deletion.
+ * Disables analytics and clears browser identity after a committed deletion.
  * Cleanup is best-effort because the server-side deletion is irreversible.
  */
 export const clearDeletedAccountBrowserIdentity = Effect.fn(
   "www.auth.clearDeletedAccountBrowserIdentity"
 )(function* (
   cleanup: DeletedAccountIdentityCleanup = {
-    flushAnalytics: () => analytics.shutdown(),
+    denyAnonymousAnalytics: () => denyAnonymousAnalytics,
+    disableAnalytics: disableBrowserAnalytics,
     ...defaultBrowserAccountIdentityCleanup,
   }
 ) {
-  yield* Effect.tryPromise({
-    try: cleanup.flushAnalytics,
-    catch: () => undefined,
-  }).pipe(Effect.ignore);
+  yield* cleanup.disableAnalytics().pipe(Effect.ignore);
+  yield* cleanup.denyAnonymousAnalytics().pipe(Effect.ignore);
 
   yield* clearAccountBrowserIdentity(cleanup);
 });

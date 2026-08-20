@@ -1,6 +1,6 @@
 import { ArrowUp01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure, useOs, useResizeObserver } from "@mantine/hooks";
-import { captureException } from "@repo/analytics/posthog";
+import { captureException } from "@repo/analytics/posthog/browser";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   MAX_FORUM_ATTACHMENT_BYTES,

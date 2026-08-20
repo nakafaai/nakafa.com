@@ -45,12 +45,10 @@ export function createChatErrorReporter({
   chatId,
   logContext,
   modelId,
-  userId,
 }: {
   readonly chatId: Id<"chats">;
   readonly logContext: LogContext;
   readonly modelId: ModelId;
-  readonly userId: string;
 }) {
   const gatewayModelId = getModelGatewayId(modelId);
 
@@ -66,6 +64,19 @@ export function createChatErrorReporter({
       modelId,
       source,
     };
+    const serverExceptionProperties = {
+      error_location: errorLocation,
+      gateway_model_id: gatewayModelId,
+      model_id: modelId,
+      source,
+      ...(gatewayErrorContext.gatewayErrorType
+        ? {
+            gateway_error_type: gatewayErrorContext.gatewayErrorType,
+            gateway_retryable: gatewayErrorContext.gatewayRetryable,
+            gateway_status_code: gatewayErrorContext.gatewayStatusCode,
+          }
+        : {}),
+    };
 
     waitUntil(
       Effect.runPromise(
@@ -74,7 +85,10 @@ export function createChatErrorReporter({
             logError(normalizedError, errorContext),
             Effect.tryPromise({
               try: () =>
-                captureServerException(normalizedError, userId, errorContext),
+                captureServerException(
+                  normalizedError,
+                  serverExceptionProperties
+                ),
               catch: (cause) =>
                 new ChatErrorCaptureFailure({
                   cause,

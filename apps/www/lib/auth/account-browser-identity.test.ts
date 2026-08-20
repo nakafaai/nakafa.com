@@ -1,4 +1,8 @@
-import { analytics } from "@repo/analytics/posthog";
+import { ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY } from "@repo/analytics/consent";
+import {
+  disableBrowserAnalytics,
+  resetBrowserAnalyticsIdentity,
+} from "@repo/analytics/posthog/browser";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -10,24 +14,19 @@ import {
 import { authClient } from "@/lib/auth/client";
 
 vi.mock("@/lib/auth/client", () => ({
-  authClient: {
-    signOut: vi.fn(),
-  },
+  authClient: { signOut: vi.fn() },
 }));
 
-vi.mock("@repo/analytics/posthog", () => ({
-  analytics: {
-    get_property: vi.fn(),
-    has_opted_out_capturing: vi.fn(() => false),
-    opt_out_capturing: vi.fn(),
-    reset: vi.fn(),
-    shutdown: vi.fn(async () => undefined),
-  },
+vi.mock("@repo/analytics/posthog/browser", () => ({
+  disableBrowserAnalytics: vi.fn(() => Effect.void),
+  resetBrowserAnalyticsIdentity: vi.fn(),
 }));
 
 describe("account browser identity", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.localStorage.clear();
+    window.sessionStorage.clear();
   });
 
   it("clears browser identity without stopping analytics", async () => {
@@ -45,7 +44,7 @@ describe("account browser identity", () => {
     expect(resetAnalytics).toHaveBeenCalledOnce();
   });
 
-  it("clears analytics and every Nakafa-prefixed account store", async () => {
+  it("clears account state while preserving the anonymous privacy choice", async () => {
     window.localStorage.setItem("nakafa-ai", "test-ai-state");
     window.localStorage.setItem(
       "nakafa-content-views",
@@ -53,6 +52,10 @@ describe("account browser identity", () => {
     );
     window.localStorage.setItem("nakafa-device-id", "test-device");
     window.localStorage.setItem("nakafa-school-layout", "test-layout");
+    window.localStorage.setItem(
+      ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
+      "anonymous-privacy-choice"
+    );
     window.localStorage.setItem("unrelated", "preserved");
     window.sessionStorage.setItem("nakafa-search", "test-search");
     window.sessionStorage.setItem(
@@ -63,12 +66,15 @@ describe("account browser identity", () => {
 
     await Effect.runPromise(clearAccountBrowserIdentity());
 
-    expect(analytics.shutdown).not.toHaveBeenCalled();
-    expect(analytics.reset).toHaveBeenCalledWith(true);
+    expect(disableBrowserAnalytics).not.toHaveBeenCalled();
+    expect(resetBrowserAnalyticsIdentity).toHaveBeenCalledWith(true);
     expect(window.localStorage.getItem("nakafa-ai")).toBeNull();
     expect(window.localStorage.getItem("nakafa-content-views")).toBeNull();
     expect(window.localStorage.getItem("nakafa-device-id")).toBeNull();
     expect(window.localStorage.getItem("nakafa-school-layout")).toBeNull();
+    expect(
+      window.localStorage.getItem(ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY)
+    ).toBe("anonymous-privacy-choice");
     expect(window.localStorage.getItem("unrelated")).toBe("preserved");
     expect(window.sessionStorage.getItem("nakafa-search")).toBeNull();
     expect(
@@ -77,49 +83,50 @@ describe("account browser identity", () => {
     expect(window.sessionStorage.getItem("unrelated")).toBe("preserved");
   });
 
-  it("flushes analytics before clearing a deleted browser identity", async () => {
-    const flushAnalytics = vi.fn(async () => undefined);
+  it("disables analytics before clearing a deleted browser identity", async () => {
+    const denyAnonymousAnalytics = vi.fn(() => Effect.void);
+    const disableAnalytics = vi.fn(() => Effect.void);
     const removePersistedAccountState = vi.fn();
     const resetAnalytics = vi.fn();
 
     await Effect.runPromise(
       clearDeletedAccountBrowserIdentity({
-        flushAnalytics,
+        denyAnonymousAnalytics,
+        disableAnalytics,
         removePersistedAccountState,
         resetAnalytics,
       })
     );
 
-    expect(flushAnalytics).toHaveBeenCalledOnce();
+    expect(disableAnalytics).toHaveBeenCalledOnce();
+    expect(denyAnonymousAnalytics).toHaveBeenCalledOnce();
     expect(removePersistedAccountState).toHaveBeenCalledOnce();
     expect(resetAnalytics).toHaveBeenCalledOnce();
-    expect(flushAnalytics.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(disableAnalytics.mock.invocationCallOrder[0]).toBeLessThan(
+      denyAnonymousAnalytics.mock.invocationCallOrder[0] ?? 0
+    );
+    expect(denyAnonymousAnalytics.mock.invocationCallOrder[0]).toBeLessThan(
       resetAnalytics.mock.invocationCallOrder[0] ?? 0
     );
   });
 
-  it("uses the analytics client after a committed deletion", async () => {
+  it("denies anonymous analytics after a committed deletion", async () => {
     await Effect.runPromise(clearDeletedAccountBrowserIdentity());
 
-    expect(analytics.shutdown).toHaveBeenCalledOnce();
-    expect(analytics.reset).toHaveBeenCalledWith(true);
-  });
-
-  it("preserves analytics opt-out while replacing browser identity", async () => {
-    vi.mocked(analytics.has_opted_out_capturing).mockReturnValue(true);
-
-    await Effect.runPromise(clearAccountBrowserIdentity());
-
-    expect(analytics.reset).toHaveBeenCalledWith(true);
-    expect(analytics.opt_out_capturing).toHaveBeenCalledOnce();
+    expect(disableBrowserAnalytics).toHaveBeenCalledOnce();
+    expect(resetBrowserAnalyticsIdentity).toHaveBeenCalledWith(true);
+    expect(
+      window.localStorage.getItem(ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY)
+    ).toContain('"decision":"denied"');
   });
 
   it("does not fail a completed deletion when browser cleanup fails", async () => {
     await expect(
       Effect.runPromise(
         clearDeletedAccountBrowserIdentity({
-          flushAnalytics: () =>
-            Promise.reject(new Error("analytics queue unavailable")),
+          denyAnonymousAnalytics: () =>
+            Effect.fail("privacy storage unavailable"),
+          disableAnalytics: () => Effect.fail("analytics queue unavailable"),
           removePersistedAccountState: () => {
             throw new Error("storage unavailable");
           },
@@ -150,12 +157,14 @@ describe("account browser identity", () => {
     expect(
       window.sessionStorage.getItem("nakafa-forum-session:class-1")
     ).toBeNull();
-    expect(analytics.shutdown).not.toHaveBeenCalled();
-    expect(analytics.reset).toHaveBeenCalledWith(true);
+    expect(disableBrowserAnalytics).not.toHaveBeenCalled();
+    expect(resetBrowserAnalyticsIdentity).toHaveBeenCalledWith(true);
     expect(authClient.signOut).toHaveBeenCalledOnce();
     expect(
       vi.mocked(authClient.signOut).mock.invocationCallOrder[0]
-    ).toBeLessThan(vi.mocked(analytics.reset).mock.invocationCallOrder[0] ?? 0);
+    ).toBeLessThan(
+      vi.mocked(resetBrowserAnalyticsIdentity).mock.invocationCallOrder[0] ?? 0
+    );
   });
 
   it("preserves browser identity when sign-out is rejected", async () => {
@@ -177,7 +186,7 @@ describe("account browser identity", () => {
     expect(window.localStorage.getItem("nakafa-ai")).toBe(
       "active-account-chat"
     );
-    expect(analytics.reset).not.toHaveBeenCalled();
+    expect(resetBrowserAnalyticsIdentity).not.toHaveBeenCalled();
   });
 
   it("preserves browser identity when sign-out cannot start", async () => {
@@ -196,6 +205,6 @@ describe("account browser identity", () => {
     expect(window.sessionStorage.getItem("nakafa-forum-session:class-1")).toBe(
       "active-account-forum"
     );
-    expect(analytics.reset).not.toHaveBeenCalled();
+    expect(resetBrowserAnalyticsIdentity).not.toHaveBeenCalled();
   });
 });

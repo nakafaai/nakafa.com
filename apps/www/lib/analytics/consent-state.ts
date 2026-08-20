@@ -1,0 +1,175 @@
+import {
+  ANALYTICS_CONSENT_NOTICE_VERSION,
+  type AnalyticsConsentState,
+  type AnonymousAnalyticsConsentRecord,
+  resolveAnalyticsConsentState,
+} from "@repo/analytics/consent";
+import type { BrowserAnalyticsIdentity } from "@repo/analytics/posthog/browser";
+import type { api } from "@repo/backend/convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
+import { Option } from "effect";
+
+export interface BrowserAnalyticsUser {
+  readonly appUser: {
+    readonly _id: string;
+    readonly plan: string;
+    readonly role?: string;
+  };
+}
+
+export interface BrowserConsentSnapshot {
+  readonly anonymousConsent: Option.Option<AnonymousAnalyticsConsentRecord>;
+  readonly hasBrowserPrivacySignal: boolean;
+  readonly isResolved: boolean;
+}
+
+export type AccountConsentDecision = NonNullable<
+  FunctionReturnType<typeof api.consents.queries.getCurrent>["decision"]
+>;
+
+/** Returns whether a browser signal must revoke a current account grant. */
+export function shouldRevokeAccountAnalyticsGrant({
+  accountConsent,
+  browserConsent,
+  isAccountConsentResolved,
+  isAuthenticated,
+}: {
+  readonly accountConsent: AccountConsentDecision | null;
+  readonly browserConsent: BrowserConsentSnapshot;
+  readonly isAccountConsentResolved: boolean;
+  readonly isAuthenticated: boolean;
+}) {
+  return (
+    isAuthenticated &&
+    isAccountConsentResolved &&
+    browserConsent.hasBrowserPrivacySignal &&
+    accountConsent?.granted === true
+  );
+}
+
+/** Returns whether this browser must retain a current anonymous denial. */
+export function shouldPersistAnonymousAnalyticsDenial({
+  accountConsent,
+  browserConsent,
+  isAuthenticated,
+}: {
+  readonly accountConsent: AccountConsentDecision | null;
+  readonly browserConsent: BrowserConsentSnapshot;
+  readonly isAuthenticated: boolean;
+}) {
+  if (!browserConsent.isResolved) {
+    return false;
+  }
+
+  const mustDeny =
+    browserConsent.hasBrowserPrivacySignal ||
+    (isAuthenticated && accountConsent?.granted === false);
+  if (!mustDeny) {
+    return false;
+  }
+
+  return Option.match(browserConsent.anonymousConsent, {
+    onNone: () => true,
+    onSome: (consent) =>
+      consent.decision !== "denied" ||
+      consent.noticeVersion !== ANALYTICS_CONSENT_NOTICE_VERSION,
+  });
+}
+
+/** Resolves preview, auth, account, and anonymous consent into one state. */
+export function resolveBrowserAnalyticsConsentState({
+  accountConsent,
+  browserConsent,
+  isAccountConsentResolved,
+  isAuthenticated,
+  isAuthLoading,
+  isPreviewChild,
+  isUserPending,
+  user,
+}: {
+  readonly accountConsent: AccountConsentDecision | null;
+  readonly browserConsent: BrowserConsentSnapshot;
+  readonly isAccountConsentResolved: boolean;
+  readonly isAuthenticated: boolean;
+  readonly isAuthLoading: boolean;
+  readonly isPreviewChild: boolean;
+  readonly isUserPending: boolean;
+  readonly user: BrowserAnalyticsUser | null;
+}): AnalyticsConsentState {
+  if (isPreviewChild) {
+    return { status: "browser-signal" };
+  }
+
+  return resolveAnalyticsConsentState({
+    accountConsent,
+    anonymousConsent: browserConsent.anonymousConsent,
+    hasBrowserPrivacySignal: browserConsent.hasBrowserPrivacySignal,
+    isAccountConsentResolved,
+    isAuthenticated,
+    isAuthLoading:
+      isAuthLoading ||
+      isUserPending ||
+      (isAuthenticated && !user) ||
+      !(isAuthenticated || browserConsent.isResolved),
+  });
+}
+
+/** Projects a proven grant into the only identity the SDK may authorize. */
+export function createBrowserAnalyticsIdentity({
+  accountConsent,
+  anonymousConsent,
+  isAuthenticated,
+  status,
+  user,
+}: {
+  readonly accountConsent: AccountConsentDecision | null;
+  readonly anonymousConsent: Option.Option<AnonymousAnalyticsConsentRecord>;
+  readonly isAuthenticated: boolean;
+  readonly status: AnalyticsConsentState["status"];
+  readonly user: BrowserAnalyticsUser | null;
+}): BrowserAnalyticsIdentity | null {
+  if (status !== "granted") {
+    return null;
+  }
+
+  if (!isAuthenticated) {
+    return Option.match(anonymousConsent, {
+      onNone: () => null,
+      onSome: (consent): BrowserAnalyticsIdentity | null => {
+        if (
+          consent.decision !== "granted" ||
+          consent.noticeVersion !== ANALYTICS_CONSENT_NOTICE_VERSION
+        ) {
+          return null;
+        }
+
+        return {
+          consentDecidedAt: consent.decidedAt,
+          consentMechanism: consent.mechanism,
+          consentNoticeVersion: consent.noticeVersion,
+          status: "anonymous",
+        };
+      },
+    });
+  }
+
+  if (
+    !(
+      user &&
+      accountConsent?.granted &&
+      accountConsent.noticeVersion === ANALYTICS_CONSENT_NOTICE_VERSION
+    )
+  ) {
+    return null;
+  }
+
+  return {
+    consentDecidedAt: accountConsent.decidedAt,
+    consentMechanism: accountConsent.mechanism,
+    consentNoticeVersion: accountConsent.noticeVersion,
+    plan: user.appUser.plan,
+    role: user.appUser.role ?? null,
+    status: "identified",
+    userId: user.appUser._id,
+  };
+}

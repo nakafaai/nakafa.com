@@ -1,6 +1,6 @@
 "use client";
 
-import { captureException } from "@repo/analytics/posthog";
+import { captureException } from "@repo/analytics/posthog/browser";
 import type { PromptInputError } from "@repo/design-system/lib/prompt-input/submission";
 import { Effect } from "effect";
 

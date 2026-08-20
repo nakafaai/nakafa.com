@@ -1,6 +1,6 @@
 import { ArrowTurnBackwardIcon, WinkIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { captureException } from "@repo/analytics/posthog";
+import { captureException } from "@repo/analytics/posthog/browser";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {

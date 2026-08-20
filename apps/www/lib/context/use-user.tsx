@@ -1,19 +1,9 @@
 "use client";
 
-import { analytics } from "@repo/analytics/posthog";
-import {
-  authorizeAnalyticsIdentity,
-  authorizeAnonymousAnalyticsIdentity,
-  captureDeferredAnalyticsPageview,
-  resetAnalyticsIdentity,
-  resolveAnalyticsIdentityAuthorization,
-  revokeAnalyticsIdentity,
-} from "@repo/analytics/posthog/identity";
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { useConvexAuth } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { useEffect } from "react";
 import { createContext, useContextSelector } from "use-context-selector";
 
 export type CurrentUser = NonNullable<
@@ -26,14 +16,10 @@ interface UserContextValue {
 }
 
 const UserContext = createContext<UserContextValue | null>(null);
+const missingUserContext = Symbol("UserContext");
 
 /**
- * Provide the current Better Auth and app-user snapshot to client components and
- * keep PostHog identity aligned with that snapshot.
- *
- * References:
- * https://posthog.com/docs/product-analytics/identify
- * https://posthog.com/docs/libraries/js/features
+ * Provides the current Better Auth and app-user snapshot to client components.
  */
 export function UserContextProvider({
   children,
@@ -48,88 +34,6 @@ export function UserContextProvider({
   );
   const currentUser = userQuery.isSuccess ? userQuery.data : null;
   const isPending = isLoading || (shouldLoadUser && userQuery.isPending);
-  const appUser = currentUser?.appUser ?? null;
-  const userId = currentUser?.appUser._id ?? null;
-  const userEmail = currentUser?.authUser.email ?? null;
-  const userName = currentUser?.authUser.name ?? null;
-  const userPlan = appUser?.plan ?? null;
-  const userRole = appUser?.role ?? null;
-  const signedUpAt = appUser
-    ? new Date(appUser._creationTime).toISOString()
-    : null;
-  const analyticsIdentity = resolveAnalyticsIdentityAuthorization({
-    isAuthenticated,
-    isAuthLoading: isLoading,
-    isUserResolved: userQuery.isSuccess,
-    userId,
-  });
-  const analyticsIdentityStatus = analyticsIdentity.status;
-  const analyticsUserId =
-    analyticsIdentity.status === "identified" ? analyticsIdentity.userId : null;
-
-  useEffect(() => {
-    revokeAnalyticsIdentity();
-
-    if (analyticsIdentityStatus === "unresolved") {
-      return;
-    }
-
-    const trackedUserId = analytics.get_property("$user_id");
-
-    if (analyticsIdentityStatus === "anonymous") {
-      if (trackedUserId) {
-        resetAnalyticsIdentity(analytics);
-      }
-
-      authorizeAnonymousAnalyticsIdentity();
-      captureDeferredAnalyticsPageview(analytics);
-      return revokeAnalyticsIdentity;
-    }
-
-    if (
-      analyticsUserId === null ||
-      userEmail === null ||
-      userName === null ||
-      userPlan === null ||
-      signedUpAt === null
-    ) {
-      return;
-    }
-
-    if (trackedUserId && trackedUserId !== analyticsUserId) {
-      resetAnalyticsIdentity(analytics);
-    }
-
-    const roleProperties = userRole ? { role: userRole } : {};
-    const personProperties = {
-      email: userEmail,
-      name: userName,
-      plan: userPlan,
-      ...roleProperties,
-    };
-    const setOnceProperties = {
-      signed_up_at: signedUpAt,
-    };
-
-    authorizeAnalyticsIdentity(analyticsUserId);
-
-    if (trackedUserId === analyticsUserId) {
-      analytics.setPersonProperties(personProperties, setOnceProperties);
-    } else {
-      analytics.identify(analyticsUserId, personProperties, setOnceProperties);
-    }
-
-    captureDeferredAnalyticsPageview(analytics);
-    return revokeAnalyticsIdentity;
-  }, [
-    analyticsIdentityStatus,
-    analyticsUserId,
-    signedUpAt,
-    userEmail,
-    userName,
-    userPlan,
-    userRole,
-  ]);
 
   const contextValue = {
     user: currentUser,
@@ -145,9 +49,11 @@ export function UserContextProvider({
  * Read one derived slice of the current user context.
  */
 export function useUser<T>(selector: (state: UserContextValue) => T) {
-  const context = useContextSelector(UserContext, (value) => value);
-  if (!context) {
+  const selected = useContextSelector(UserContext, (context) =>
+    context ? selector(context) : missingUserContext
+  );
+  if (selected === missingUserContext) {
     throw new Error("useUser must be used within a UserContextProvider");
   }
-  return selector(context);
+  return selected;
 }

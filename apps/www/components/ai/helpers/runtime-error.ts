@@ -1,6 +1,6 @@
 "use client";
 
-import { captureException } from "@repo/analytics/posthog";
+import { captureException } from "@repo/analytics/posthog/browser";
 import { toast } from "sonner";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
 

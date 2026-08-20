@@ -1,6 +1,6 @@
 "use client";
 import { Mic01Icon } from "@hugeicons/core-free-icons";
-import { captureException } from "@repo/analytics/posthog";
+import { captureException } from "@repo/analytics/posthog/browser";
 import {
   PromptInputButton,
   type PromptInputButtonProps,

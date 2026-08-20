@@ -1,3 +1,4 @@
+import { ANALYTICS_CONSENT_CATEGORY } from "@repo/analytics/consent";
 import { components } from "@repo/backend/convex/_generated/api";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import {
@@ -5,6 +6,7 @@ import {
   internalMutation,
   internalQuery,
   type MutationCtx,
+  type QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import { deletePostHogPerson } from "@repo/backend/convex/analytics/deletion";
 import {
@@ -12,41 +14,31 @@ import {
   productAnalyticsEventValidator,
 } from "@repo/backend/convex/analytics/events";
 import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
+import { hasCurrentConsent } from "@repo/backend/convex/consents/impl";
 import {
   getUnknownErrorMessage,
   runConvexProgram,
 } from "@repo/backend/convex/lib/effect";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
-import {
-  type UserPlan,
-  userPlanValidator,
-} from "@repo/backend/convex/users/schema";
 import { makeFunctionReference } from "convex/server";
 import { v } from "convex/values";
 import { Effect, Result, Schema } from "effect";
 
 const productAnalyticsCaptureFailedCode = "PRODUCT_ANALYTICS_CAPTURE_FAILED";
-type ProductAnalyticsCtx = Pick<MutationCtx, "scheduler">;
+type ProductAnalyticsCtx = Pick<MutationCtx, "db" | "scheduler">;
 interface ProductAnalyticsCaptureArgs {
   readonly distinctId: Id<"users">;
   readonly event: ProductAnalyticsEvent;
   readonly timestamp?: Date;
 }
-interface ProductAnalyticsIdentifyArgs {
-  readonly distinctId: Id<"users">;
-  readonly email: string;
-  readonly name: string;
-  readonly plan: UserPlan;
-  readonly signedUpAt: string;
-}
 interface ProductAnalyticsCaptureOperations {
-  readonly capture: () => Effect.Effect<void, ProductAnalyticsCaptureError>;
+  readonly capture: () => Effect.Effect<boolean, ProductAnalyticsCaptureError>;
   readonly loadUser: () => Promise<Doc<"users"> | null>;
 }
 interface ProductAnalyticsDeliveryOperations {
   readonly capture: () => Promise<void>;
   readonly erase: () => Effect.Effect<void, ProductAnalyticsCaptureError>;
-  readonly isUserActive: () => Promise<boolean>;
+  readonly isUserEligible: () => Promise<boolean>;
 }
 const deliverProductEventReference = makeFunctionReference<
   "action",
@@ -59,24 +51,13 @@ const deliverProductEventReference = makeFunctionReference<
   },
   null
 >("analytics/capture:deliverProductEvent");
-const deliverProductIdentifyReference = makeFunctionReference<
-  "action",
-  {
-    distinctId: Id<"users">;
-    email: string;
-    name: string;
-    plan: UserPlan;
-    signedUpAt: string;
-  },
-  null
->("analytics/capture:deliverProductIdentify");
-const isProductAnalyticsUserActiveReference = makeFunctionReference<
+const isProductAnalyticsUserEligibleReference = makeFunctionReference<
   "query",
   {
     userId: Id<"users">;
   },
   boolean
->("analytics/capture:isProductAnalyticsUserActive");
+>("analytics/capture:isProductAnalyticsUserEligible");
 /** Raised when an admitted backend product event cannot be queued. */
 export class ProductAnalyticsCaptureError extends Schema.TaggedError<ProductAnalyticsCaptureError>()(
   "ProductAnalyticsCaptureError",
@@ -92,6 +73,17 @@ function toProductAnalyticsCaptureError(error: unknown) {
     message: getUnknownErrorMessage(error),
   });
 }
+/** Checks the exact current analytics grant before any event can be queued. */
+const hasProductAnalyticsConsent = Effect.fn(
+  "analytics.capture.hasProductAnalyticsConsent"
+)(function* (
+  ctx: Pick<QueryCtx, "db"> | Pick<MutationCtx, "db">,
+  userId: Id<"users">
+) {
+  return yield* hasCurrentConsent(ctx, userId, ANALYTICS_CONSENT_CATEGORY).pipe(
+    Effect.mapError(toProductAnalyticsCaptureError)
+  );
+});
 /** Queues one backend event behind deletion-aware PostHog delivery. */
 export const captureProductEvent = Effect.fn(
   "analytics.capture.captureProductEvent"
@@ -99,6 +91,10 @@ export const captureProductEvent = Effect.fn(
   ctx: ProductAnalyticsCtx,
   { distinctId, event, timestamp }: ProductAnalyticsCaptureArgs
 ) {
+  if (!(yield* hasProductAnalyticsConsent(ctx, distinctId))) {
+    return false;
+  }
+
   yield* Effect.tryPromise({
     catch: toProductAnalyticsCaptureError,
     try: () =>
@@ -110,25 +106,17 @@ export const captureProductEvent = Effect.fn(
         timestamp: timestamp?.getTime(),
       }),
   });
+  return true;
 });
-/** Queues signup identification behind the same deletion-aware delivery gate. */
-export const identifyProductUser = Effect.fn(
-  "analytics.capture.identifyProductUser"
-)(function* (ctx: ProductAnalyticsCtx, args: ProductAnalyticsIdentifyArgs) {
-  yield* Effect.tryPromise({
-    catch: toProductAnalyticsCaptureError,
-    try: () => ctx.scheduler.runAfter(0, deliverProductIdentifyReference, args),
-  });
-});
-/** Delivers only for active users and erases writes overlapping deletion. */
+/** Delivers only for eligible users and erases writes overlapping withdrawal. */
 export const deliverProductAnalyticsProgram = Effect.fn(
   "analytics.capture.deliverProductAnalytics"
 )(function* (operations: ProductAnalyticsDeliveryOperations) {
-  const isActiveBeforeSend = yield* Effect.tryPromise({
+  const isEligibleBeforeSend = yield* Effect.tryPromise({
     catch: toProductAnalyticsCaptureError,
-    try: operations.isUserActive,
+    try: operations.isUserEligible,
   });
-  if (!isActiveBeforeSend) {
+  if (!isEligibleBeforeSend) {
     return;
   }
   const captureResult = yield* Effect.result(
@@ -137,27 +125,43 @@ export const deliverProductAnalyticsProgram = Effect.fn(
       try: operations.capture,
     })
   );
-  const isActiveAfterSend = yield* Effect.tryPromise({
-    catch: toProductAnalyticsCaptureError,
-    try: operations.isUserActive,
-  });
-  if (!isActiveAfterSend) {
+  const eligibilityAfterSend = yield* Effect.result(
+    Effect.tryPromise({
+      catch: toProductAnalyticsCaptureError,
+      try: operations.isUserEligible,
+    })
+  );
+  if (Result.isFailure(eligibilityAfterSend)) {
+    yield* operations.erase();
+    return yield* eligibilityAfterSend.failure;
+  }
+  if (!eligibilityAfterSend.success) {
     yield* operations.erase();
   }
   if (Result.isFailure(captureResult)) {
     return yield* captureResult.failure;
   }
 });
-/** Returns the latest deletion-aware admission state for one app user. */
-export const isProductAnalyticsUserActive = internalQuery({
+/** Returns the latest consent and deletion-aware state for one app user. */
+export const isProductAnalyticsUserEligible = internalQuery({
   args: {
     userId: vv.id("users"),
   },
   returns: v.boolean(),
-  handler: async (ctx, args) => {
-    const user = await ctx.db.get("users", args.userId);
-    return user !== null && !isAccountDeletionPending(user);
-  },
+  handler: (ctx, args) =>
+    runConvexProgram(
+      Effect.gen(function* () {
+        const user = yield* Effect.tryPromise({
+          catch: toProductAnalyticsCaptureError,
+          try: () => ctx.db.get("users", args.userId),
+        });
+        if (!user || isAccountDeletionPending(user)) {
+          return false;
+        }
+
+        return yield* hasProductAnalyticsConsent(ctx, args.userId);
+      })
+    ),
 });
 /** Sends one queued event and reconciles deletion that overlaps its IO. */
 export const deliverProductEvent = internalAction({
@@ -184,49 +188,8 @@ export const deliverProductEvent = internalAction({
           deletePostHogPerson(args.distinctId).pipe(
             Effect.mapError(toProductAnalyticsCaptureError)
           ),
-        isUserActive: () =>
-          ctx.runQuery(isProductAnalyticsUserActiveReference, {
-            userId: args.distinctId,
-          }),
-      })
-    );
-    return null;
-  },
-});
-/** Identifies one signup without allowing a delayed job to revive deleted data. */
-export const deliverProductIdentify = internalAction({
-  args: {
-    distinctId: vv.id("users"),
-    email: v.string(),
-    name: v.string(),
-    plan: userPlanValidator,
-    signedUpAt: v.string(),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    await runConvexProgram(
-      deliverProductAnalyticsProgram({
-        capture: () =>
-          ctx.runAction(components.posthog.lib.identify, {
-            disableGeoip: true,
-            distinctId: args.distinctId,
-            properties: JSON.stringify({
-              $set: {
-                email: args.email,
-                name: args.name,
-                plan: args.plan,
-              },
-              $set_once: {
-                signed_up_at: args.signedUpAt,
-              },
-            }),
-          }),
-        erase: () =>
-          deletePostHogPerson(args.distinctId).pipe(
-            Effect.mapError(toProductAnalyticsCaptureError)
-          ),
-        isUserActive: () =>
-          ctx.runQuery(isProductAnalyticsUserActiveReference, {
+        isUserEligible: () =>
+          ctx.runQuery(isProductAnalyticsUserEligibleReference, {
             userId: args.distinctId,
           }),
       })
@@ -252,8 +215,7 @@ export const captureActionProductEventProgram = Effect.fn(
   if (!user || isAccountDeletionPending(user)) {
     return false;
   }
-  yield* operations.capture();
-  return true;
+  return yield* operations.capture();
 });
 /** Mutation boundary for action-owned analytics events. */
 export const captureActionProductEvent = internalMutation({

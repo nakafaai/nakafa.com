@@ -7,6 +7,7 @@ import {
   Tick01Icon,
   Time04Icon,
 } from "@hugeicons/core-free-icons";
+import type { OperationalExceptionProperties } from "@repo/analytics/posthog/exception";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Calendar } from "@repo/design-system/components/ui/calendar";
@@ -63,7 +64,7 @@ import { useClass } from "@/lib/context/use-class";
 interface MaterialGroupDialogShellProps {
   defaultValues: MaterialGroupFormValues;
   description: string;
-  errorContext: Record<string, string>;
+  errorContext: OperationalExceptionProperties;
   errorMessage: string;
   formId: string;
   onSubmit: (value: MaterialGroupFormValues) => Promise<void>;
@@ -136,7 +137,6 @@ export function EditMaterialGroupDialog({
       }}
       description={t("edit-material-description")}
       errorContext={{
-        group_id: group._id,
         source: "school-material-group-update",
       }}
       errorMessage={t("update-material-group-failed")}

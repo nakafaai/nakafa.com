@@ -1,6 +1,6 @@
 "use client";
 
-import { captureException } from "@repo/analytics/posthog";
+import { captureException } from "@repo/analytics/posthog/browser";
 import {
   type ErrorBoundaryProps,
   ErrorBoundary as ReactErrorBoundary,

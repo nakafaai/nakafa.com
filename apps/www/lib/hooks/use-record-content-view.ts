@@ -1,7 +1,7 @@
 "use client";
 
 import { useDocumentVisibility, useLocalStorage } from "@mantine/hooks";
-import { captureException } from "@repo/analytics/posthog";
+import { captureException } from "@repo/analytics/posthog/browser";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { LearningContextInput } from "@repo/backend/convex/contents/context";
 import type { RecordContentViewArgs } from "@repo/backend/convex/contents/views/spec";

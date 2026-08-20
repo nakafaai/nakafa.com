@@ -1,6 +1,5 @@
 import "@/styles/globals.css";
 
-import { AnalyticsProvider } from "@repo/analytics/provider";
 import { DesignSystemProvider } from "@repo/design-system";
 import { Toaster } from "@repo/design-system/components/ui/sonner";
 import { TailwindIndicator } from "@repo/design-system/components/ui/tailwind-indicator";
@@ -165,12 +164,10 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
         <EducationalOrgJsonLd />
         <WebsiteJsonLd locale={locale} />
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <AnalyticsProvider>
-            <DesignSystemProvider>
-              <div className="isolate">{children}</div>
-              <Toaster />
-            </DesignSystemProvider>
-          </AnalyticsProvider>
+          <DesignSystemProvider>
+            <div className="isolate">{children}</div>
+            <Toaster />
+          </DesignSystemProvider>
           <TailwindIndicator />
         </NextIntlClientProvider>
       </body>

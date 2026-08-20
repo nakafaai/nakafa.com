@@ -894,6 +894,26 @@
     "security-policy-description": "Review Nakafa's security practices and policies to understand how we safeguard your data and ensure platform security.",
     "legal-description": "By using our services, you agree to our <terms-of-service>Terms of Service</terms-of-service> and <privacy-policy>Privacy Policy</privacy-policy>."
   },
+  "AnalyticsConsent": {
+    "title": "Optional product analytics",
+    "description": "With your consent, Nakafa uses PostHog to measure selected feature-use events and minimized browser errors. We do not load PostHog in your browser, use session replay, or collect browser and product analytics until you allow it. Nakafa may separately send minimized, identity-free operational error reports to keep the service reliable.",
+    "allow": "Allow analytics",
+    "decline": "Decline analytics",
+    "age-confirmation": "By allowing analytics, you confirm that you are at least 18 years old, or that you are 13 to 17 years old and a parent or legal guardian has made or authorized this choice with you.",
+    "manage": "Analytics preferences",
+    "preferences-title": "Analytics preferences",
+    "preferences-description": "Choose whether Nakafa may use optional product analytics for this browser or account. You can change your choice at any time.",
+    "current-choice": "Current choice",
+    "status-granted": "Analytics allowed",
+    "status-denied": "Analytics declined",
+    "status-browser-signal": "Blocked by your browser's Do Not Track or Global Privacy Control setting",
+    "status-pending": "Loading your choice",
+    "status-prompt": "No choice yet",
+    "policy": "Read our <privacy-policy>Privacy Policy</privacy-policy>.",
+    "load-error": "We could not load your privacy choice. Analytics remains off while we retry.",
+    "runtime-error": "Your choice was saved, but analytics could not start. Analytics remains off.",
+    "save-error": "We could not save your choice. Analytics remains off. Please try again."
+  },
   "School": {
     "Common": {
       "home": "Home",

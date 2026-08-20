@@ -4,6 +4,7 @@ import { cleanupDeletedUserProgram } from "@repo/backend/convex/auth/cleanup/imp
 import { createDeletedUserTombstone } from "@repo/backend/convex/auth/deletion/tombstone";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
+import { seedAnalyticsConsent } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
@@ -122,6 +123,10 @@ describe("auth/cleanup", () => {
         emailEnabled: true,
         userId,
         updatedAt: NOW,
+      });
+      await seedAnalyticsConsent(ctx, {
+        decidedAt: NOW,
+        userId,
       });
       await ctx.db.insert("tryoutFreeAttemptClaims", {
         claimedAt: NOW,
@@ -330,6 +335,18 @@ describe("auth/cleanup", () => {
       }
 
       return {
+        consentDecisions: await ctx.db
+          .query("accountConsentDecisions")
+          .withIndex("by_userId_and_category_and_decidedAt", (query) =>
+            query.eq("userId", userId)
+          )
+          .take(2),
+        consents: await ctx.db
+          .query("accountConsents")
+          .withIndex("by_userId_and_category", (query) =>
+            query.eq("userId", userId)
+          )
+          .take(2),
         claims: await ctx.db
           .query("tryoutFreeAttemptClaims")
           .withIndex("by_userId", (query) => query.eq("userId", userId))
@@ -402,6 +419,8 @@ describe("auth/cleanup", () => {
       chats: [],
       claims: [],
       collections: [],
+      consentDecisions: [],
+      consents: [],
       creditTransactions: [],
       deletedForum: null,
       deletedForumPosts: [],

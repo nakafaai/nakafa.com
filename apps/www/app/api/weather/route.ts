@@ -74,11 +74,7 @@ export function POST(req: Request) {
           const err = error instanceof Error ? error : new Error(String(error));
           const duration = Math.round(performance.now() - startedAt);
 
-          yield* scheduleServerExceptionCapture(
-            err,
-            req.headers.get("cookie") ?? "",
-            { source: "weather-api" }
-          );
+          yield* scheduleServerExceptionCapture(err, { source: "weather-api" });
 
           yield* logError(err, logContext);
           yield* logHttpRequest(
