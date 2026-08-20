@@ -3,15 +3,17 @@
 import type { LearningContextInput } from "@repo/backend/convex/contents/context";
 import type { RecordContentViewArgs } from "@repo/backend/convex/contents/views/spec";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
+import type { Locale as RouteLocale } from "next-intl";
 import type { PropsWithChildren } from "react";
 import { useRecordContentView } from "@/lib/hooks/use-record-content-view";
+import { isActiveLocale } from "@/lib/i18n/active";
 
 /** Graph content-view tracking inputs for a rendered learning page. */
 interface Props {
   contentId?: string | null;
   context?: LearningContextInput;
   delay?: number;
-  locale: Locale;
+  locale: RouteLocale;
   publicPath: string;
   section: RecordContentViewArgs["section"];
 }
@@ -31,6 +33,34 @@ export function ContentViewTracker({
   children,
   delay = 3000,
 }: PropsWithChildren<Props>) {
+  if (!isActiveLocale(locale)) {
+    return children;
+  }
+
+  return (
+    <ActiveContentViewTracker
+      contentId={contentId}
+      context={context}
+      delay={delay}
+      locale={locale}
+      publicPath={publicPath}
+      section={section}
+    >
+      {children}
+    </ActiveContentViewTracker>
+  );
+}
+
+/** Keeps hooks unconditional after the route locale has been narrowed. */
+function ActiveContentViewTracker({
+  contentId,
+  context,
+  locale,
+  publicPath,
+  section,
+  children,
+  delay,
+}: PropsWithChildren<Omit<Props, "locale"> & { locale: Locale }>) {
   useRecordContentView({
     contentId,
     context,

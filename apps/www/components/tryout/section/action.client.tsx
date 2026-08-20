@@ -16,6 +16,7 @@ import {
   StartTryoutButton,
   type StartTryoutRequest,
 } from "@/components/tryout/set/start";
+import { isActiveLocale } from "@/lib/i18n/active";
 
 type CurrentAttempt = TryoutSectionAttempt | null;
 type CompletedAction = "restart" | "return";
@@ -59,6 +60,10 @@ export function TryoutSummaryAction({
 }: {
   value: TryoutSummaryActionValue;
 }) {
+  if (!isActiveLocale(value.locale)) {
+    return null;
+  }
+
   const startDestination = value.startDestination;
 
   if (value.sectionFinished && value.completedAction === "return") {

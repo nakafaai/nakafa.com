@@ -8,12 +8,13 @@ import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
 import { Effect, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  getArticleNavigation,
+  getShellArticleNavigation,
   readArticleNavigation,
 } from "@/lib/content/article/navigation";
 
 const categoryReaderMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
+const previewConfigMock = vi.hoisted(() => vi.fn(() => false));
 const manifestHash = `sha256:${"a".repeat(64)}`;
 const releaseId = "release-article";
 
@@ -22,6 +23,9 @@ vi.mock("@/lib/content/article/catalog", () => ({
 }));
 vi.mock("@/lib/content/cache", () => ({
   applyPublishedCatalogCache: cacheMock,
+}));
+vi.mock("@/lib/content/preview/config", () => ({
+  hasPreviewConfig: previewConfigMock,
 }));
 
 /** Builds one release-bound signed category page. */
@@ -58,6 +62,8 @@ describe("article navigation", () => {
   beforeEach(() => {
     categoryReaderMock.mockReset();
     cacheMock.mockReset();
+    previewConfigMock.mockReset();
+    previewConfigMock.mockReturnValue(false);
   });
 
   it("builds navigation from every signed category page", async () => {
@@ -77,7 +83,7 @@ describe("article navigation", () => {
         )
       );
 
-    await expect(getArticleNavigation("en")).resolves.toEqual([
+    await expect(getShellArticleNavigation("en")).resolves.toEqual([
       {
         category: "politics",
         href: "/articles/politics",
@@ -113,5 +119,13 @@ describe("article navigation", () => {
     await expect(
       Effect.runPromise(readArticleNavigation("en").pipe(Effect.flip))
     ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+  });
+
+  it("keeps the local Aksara preview shell independent from publication", async () => {
+    previewConfigMock.mockReturnValue(true);
+
+    await expect(getShellArticleNavigation("de")).resolves.toEqual([]);
+    expect(categoryReaderMock).not.toHaveBeenCalled();
+    expect(cacheMock).not.toHaveBeenCalled();
   });
 });

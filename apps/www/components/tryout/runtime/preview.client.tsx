@@ -1,20 +1,22 @@
 "use client";
 
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { TryoutPreviewChoice } from "@/components/tryout/runtime/choice-surface.client";
 
-type FeaturedChoice = FunctionReturnType<
-  typeof api.tryouts.queries.catalog.getFeaturedQuestion
->["choices"][number];
+/** Minimal immutable choice model shared by signed and local preview sources. */
+export interface TryoutPreviewChoiceItem {
+  readonly isCorrect: boolean;
+  readonly label: string;
+  readonly optionKey: string;
+  readonly order: number;
+}
 
 /** Preserves the landing-page choice interaction without starting an attempt. */
 export function TryoutChoicePreview({
   choices,
 }: {
-  readonly choices: readonly FeaturedChoice[];
+  readonly choices: readonly TryoutPreviewChoiceItem[];
 }) {
   const t = useTranslations("Exercises");
   const [selectedOptionKey, setSelectedOptionKey] = useState<string | null>(

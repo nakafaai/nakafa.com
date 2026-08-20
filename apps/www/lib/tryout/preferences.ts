@@ -5,17 +5,20 @@ import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { useConvexAuth } from "convex/react";
 import type { Locale } from "next-intl";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
+import { isActiveLocale } from "@/lib/i18n/active";
 
 /** Reads the current user's preferred try-out country href for client navigation. */
 export function usePreferredTryoutHref(locale: Locale) {
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const queryArgs = isAuthenticated && !isLoading ? { locale } : "skip";
+  const activeLocale = isActiveLocale(locale);
+  const queryArgs =
+    isAuthenticated && !isLoading && activeLocale ? { locale } : "skip";
   const preference = useQueryWithStatus(
     api.learningPreferences.queries.getCurrentTryout,
     queryArgs
   );
 
-  if (!(preference.isSuccess && preference.data)) {
+  if (!(activeLocale && preference.isSuccess && preference.data)) {
     return null;
   }
 

@@ -5,17 +5,20 @@ import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { useConvexAuth } from "convex/react";
 import type { Locale } from "next-intl";
 import { getCurriculumProgramHref } from "@/lib/curriculum/routes";
+import { isActiveLocale } from "@/lib/i18n/active";
 
 /** Reads the current user's preferred curriculum href for client navigation. */
 export function usePreferredCurriculumHref(locale: Locale) {
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const queryArgs = isAuthenticated && !isLoading ? { locale } : "skip";
+  const activeLocale = isActiveLocale(locale);
+  const queryArgs =
+    isAuthenticated && !isLoading && activeLocale ? { locale } : "skip";
   const preference = useQueryWithStatus(
     api.learningPreferences.queries.getCurrent,
     queryArgs
   );
 
-  if (!(preference.isSuccess && preference.data)) {
+  if (!(activeLocale && preference.isSuccess && preference.data)) {
     return null;
   }
 

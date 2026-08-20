@@ -1,5 +1,6 @@
 "use client";
 
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { LearningProgramKey } from "@nakafa/aksara-contracts/program/spec";
 import type { api } from "@repo/backend/convex/_generated/api";
 import {
@@ -15,12 +16,12 @@ import { useRouter } from "@repo/internationalization/src/navigation";
 import { useConvexAuth } from "convex/react";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
-import type { Locale } from "next-intl";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { reportClientException } from "@/lib/analytics/client";
 import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation.client";
+import { isActiveLocale } from "@/lib/i18n/active";
 
 export type CurriculumSelectorOption = Readonly<{
   countryCode?: string;
@@ -102,7 +103,7 @@ export function CurriculumSelector({
 
     router.push(normalizeLocalizedInternalHref(selectedOption.href));
 
-    if (!isAuthenticated) {
+    if (!(isAuthenticated && isActiveLocale(locale))) {
       return;
     }
 
@@ -164,7 +165,7 @@ function saveCurriculumPreference({
   setPreferredCurriculum,
 }: {
   errorMessage: string;
-  locale: Locale;
+  locale: ActiveAppLocaleCode;
   programKey: string;
   setPreferredCurriculum: SavePreferredCurriculum;
 }) {

@@ -1,6 +1,7 @@
 import "server-only";
 
 import {
+  APP_LOCALE_CODES,
   type AppLocale,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
@@ -8,7 +9,6 @@ import { previewDocumentRoute } from "@nakafa/aksara-contracts/preview/document"
 import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
 import { materialPublicNamespace } from "@nakafa/aksara-contracts/projection/material";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
-import { routing } from "@repo/internationalization/src/routing";
 import { Effect, Option } from "effect";
 import { hasLocale } from "next-intl";
 import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
@@ -73,7 +73,7 @@ export function matchesMaterialPreviewRoute(
 /** Resolves a next-intl material rewrite back to its canonical public path. */
 function resolveInternalRoute({ localeHint, pathname }: InternalRouteInput) {
   const [locale, appSegment, ...segments] = pathname.split("/").filter(Boolean);
-  if (!(hasLocale(routing.locales, locale) && localeHint === locale)) {
+  if (!(hasLocale(APP_LOCALE_CODES, locale) && localeHint === locale)) {
     return Option.none<PreviewRouteInput>();
   }
 

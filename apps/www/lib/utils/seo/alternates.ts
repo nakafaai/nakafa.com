@@ -1,4 +1,7 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import {
+  APP_LOCALE_CODES,
+  type AppLocaleCode,
+} from "@nakafa/aksara-contracts/locale";
 import { routing } from "@repo/internationalization/src/routing";
 
 type AlternateLanguagePath = Partial<{
@@ -18,7 +21,7 @@ interface ResolvedAlternateRoute {
 
 /** Removes an existing locale prefix before building language alternates. */
 function getPathWithoutLocale(canonical: string) {
-  for (const locale of routing.locales) {
+  for (const locale of APP_LOCALE_CODES) {
     const prefix = `/${locale}`;
 
     if (canonical === prefix) {

@@ -1,6 +1,7 @@
 import { readNamespaceSegment } from "@repo/contents/_types/route/surface";
 import type { Locale } from "next-intl";
 import { getPublishedMaterialRoutes } from "@/lib/content/material/catalog";
+import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { selectLearningStaticParams } from "@/lib/routing/prerender";
 
@@ -42,6 +43,10 @@ export async function readMaterialRequest(params: MaterialParams) {
 /** Builds static params exclusively from the signed material catalog. */
 export async function listMaterialStaticParams(rawLocale: string) {
   const locale = getLocaleOrThrow(rawLocale);
+  if (hasPreviewConfig()) {
+    return [];
+  }
+
   const published = await getPublishedMaterialRoutes(locale);
   const params = published.routes.map((route) => {
     const [, subject, topic, ...lesson] = route.publicPath.split("/");

@@ -12,6 +12,7 @@ import {
   StartTryoutButton,
   type StartTryoutRequest,
 } from "@/components/tryout/set/start";
+import { isActiveLocale } from "@/lib/i18n/active";
 
 export interface TryoutSetActionValue {
   activeAttempt: CurrentAttempt | null;
@@ -25,7 +26,9 @@ export interface TryoutSetActionValue {
 
 /** Renders the only valid set-page action for the current attempt state. */
 export function TryoutSetAction({ value }: { value: TryoutSetActionValue }) {
-  if (!(value.entrySection && value.destination)) {
+  if (
+    !(value.entrySection && value.destination && isActiveLocale(value.locale))
+  ) {
     return null;
   }
 

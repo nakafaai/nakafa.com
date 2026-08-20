@@ -10,6 +10,7 @@ import { previewProjection } from "@/test/content-preview";
 
 const mocks = vi.hoisted(() => ({
   getPublishedMaterialRoutes: vi.fn(),
+  hasPreviewConfig: vi.fn(() => false),
   readNamespaceSegment: vi.fn(),
   selectLearningStaticParams: vi.fn(),
 }));
@@ -19,6 +20,9 @@ vi.mock("@repo/contents/_types/route/surface", () => ({
 }));
 vi.mock("@/lib/content/material/catalog", () => ({
   getPublishedMaterialRoutes: mocks.getPublishedMaterialRoutes,
+}));
+vi.mock("@/lib/content/preview/config", () => ({
+  hasPreviewConfig: mocks.hasPreviewConfig,
 }));
 vi.mock("@/lib/routing/prerender", () => ({
   selectLearningStaticParams: mocks.selectLearningStaticParams,
@@ -38,6 +42,7 @@ beforeEach(() => {
     routes: [previewProjection],
     sourceRevision: "a".repeat(40),
   });
+  mocks.hasPreviewConfig.mockReturnValue(false);
   mocks.selectLearningStaticParams.mockImplementation((values) => values);
 });
 
@@ -105,5 +110,12 @@ describe("material route data", () => {
       },
     ]);
     expect(mocks.getPublishedMaterialRoutes).toHaveBeenCalledWith("en");
+  });
+
+  it("does not prerender published routes inside the local preview child", async () => {
+    mocks.hasPreviewConfig.mockReturnValue(true);
+
+    await expect(listMaterialStaticParams("de")).resolves.toEqual([]);
+    expect(mocks.getPublishedMaterialRoutes).not.toHaveBeenCalled();
   });
 });

@@ -5,6 +5,7 @@ import { NAKAFA_AGENT_DEFAULT_LIMIT } from "@repo/contents/_types/agent/search";
 import { useQuery_experimental as useConvexQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useLocale } from "next-intl";
+import { isActiveLocale } from "@/lib/i18n/active";
 
 type ContentSearchResponse = FunctionReturnType<
   typeof api.contents.queries.search.search
@@ -22,7 +23,8 @@ export function useSearchQuery({
 }) {
   const locale = useLocale();
   const normalizedQuery = query.trim();
-  const shouldSearch = enabled && normalizedQuery.length > 0;
+  const shouldSearch =
+    enabled && normalizedQuery.length > 0 && isActiveLocale(locale);
   const state = useConvexQuery({
     query: api.contents.queries.search.search,
     args: shouldSearch

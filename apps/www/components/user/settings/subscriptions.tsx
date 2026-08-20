@@ -10,6 +10,7 @@ import { useAction } from "convex/react";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useTransition } from "react";
 import { FormBlock } from "@/components/shared/form-block";
+import { isActiveLocale } from "@/lib/i18n/active";
 
 export function UserSettingsSubscriptions() {
   const locale = useLocale();
@@ -30,6 +31,10 @@ export function UserSettingsSubscriptions() {
 
   const handleCheckout = () => {
     startTransition(async () => {
+      if (!isActiveLocale(locale)) {
+        return;
+      }
+
       const { url } = await generateCheckoutLink({
         locale,
         successUrl: window.location.href,
@@ -58,7 +63,10 @@ export function UserSettingsSubscriptions() {
           </Button>
         </Activity>
         <Activity mode={hasSubscription ? "hidden" : "visible"}>
-          <Button disabled={isPending} onClick={handleCheckout}>
+          <Button
+            disabled={isPending || !isActiveLocale(locale)}
+            onClick={handleCheckout}
+          >
             <Spinner icon={PartyIcon} isLoading={isPending} />
             {t("get-pro")}
           </Button>

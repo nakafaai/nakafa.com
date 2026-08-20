@@ -1,5 +1,6 @@
 "use client";
 
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
@@ -15,12 +16,12 @@ import { useForm } from "@tanstack/react-form";
 import { type Preloaded, usePreloadedQuery } from "convex/react";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
-import type { Locale } from "next-intl";
 import { useLocale, useTranslations } from "next-intl";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { FormBlock } from "@/components/shared/form-block";
 import { reportClientException } from "@/lib/analytics/client";
 import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation.client";
+import { isActiveLocale } from "@/lib/i18n/active";
 
 type CurriculumPrograms = FunctionReturnType<
   typeof api.learningPreferences.queries.listCurriculumPrograms
@@ -114,6 +115,10 @@ function UserSettingsCurriculumForm({
       onChange: formSchema,
     },
     onSubmit: async ({ value }) => {
+      if (!isActiveLocale(locale)) {
+        return;
+      }
+
       const handleMutationError = (error: CurriculumPreferenceMutationError) =>
         reportClientException(error, {
           source: "user-settings-curriculum",
@@ -225,7 +230,7 @@ function submitCurriculumPreference({
   setPreferredCurriculum,
   value,
 }: {
-  locale: Locale;
+  locale: ActiveAppLocaleCode;
   programs: readonly CurriculumProgramOption[];
   setPreferredCurriculum: SavePreferredCurriculum;
   value: unknown;

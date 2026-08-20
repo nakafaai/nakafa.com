@@ -1,18 +1,32 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { routing } from "@repo/internationalization/src/routing";
-import type { Locale } from "@repo/utilities/locales";
 import { notFound } from "next/navigation";
 import * as rootParams from "next/root-params";
 import { hasLocale } from "next-intl";
 import { getRequestConfig } from "next-intl/server";
+import { hasCandidateLocalePreview } from "./environment";
+import { previewRouting } from "./routing";
 
 const loadEnglishMessages = () =>
   import("@repo/internationalization/dictionaries/en.json");
 type EnglishMessagesModule = Awaited<ReturnType<typeof loadEnglishMessages>>;
 
 const loadMessagesByLocale = {
+  de: () => import("@repo/internationalization/dictionaries/de.json"),
   en: loadEnglishMessages,
   id: () => import("@repo/internationalization/dictionaries/id.json"),
-} satisfies Record<Locale, () => Promise<EnglishMessagesModule>>;
+} satisfies Record<AppLocaleCode, () => Promise<EnglishMessagesModule>>;
+
+/** Accepts inactive contract locales only for the authenticated local child. */
+function hasRequestLocale(locale: string | undefined): locale is AppLocaleCode {
+  if (hasLocale(routing.locales, locale)) {
+    return true;
+  }
+
+  return (
+    hasCandidateLocalePreview() && hasLocale(previewRouting.locales, locale)
+  );
+}
 
 /**
  * Resolves the request locale for `next-intl` from `next/root-params` so the
@@ -28,7 +42,7 @@ const loadMessagesByLocale = {
  *   `apps/www/node_modules/next-intl/dist/esm/production/server/react-server/getConfig.js`
  */
 export default getRequestConfig(async ({ locale }) => {
-  if (hasLocale(routing.locales, locale)) {
+  if (hasRequestLocale(locale)) {
     const messages = await loadMessagesByLocale[locale]();
 
     return {
@@ -39,7 +53,7 @@ export default getRequestConfig(async ({ locale }) => {
 
   const rootLocale = await rootParams.locale();
 
-  if (!hasLocale(routing.locales, rootLocale)) {
+  if (!hasRequestLocale(rootLocale)) {
     notFound();
   }
 

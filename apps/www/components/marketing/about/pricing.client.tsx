@@ -16,6 +16,7 @@ import { useTheme } from "next-themes";
 import { useTransition } from "react";
 import { authClient } from "@/lib/auth/client";
 import { useUser } from "@/lib/context/use-user";
+import { isActiveLocale } from "@/lib/i18n/active";
 
 export function PricingDithering({ ...props }: DitheringProps) {
   const { ref, entry } = useIntersection({
@@ -70,6 +71,10 @@ export function ProButton() {
 
   const handleCheckout = () => {
     startTransition(async () => {
+      if (!isActiveLocale(locale)) {
+        return;
+      }
+
       if (!currentUser) {
         await authClient.signIn.social({
           provider: "google",
@@ -96,7 +101,7 @@ export function ProButton() {
   return (
     <Button
       className="w-full"
-      disabled={isPending}
+      disabled={isPending || !isActiveLocale(locale)}
       onClick={hasSubscription ? handleManageSubscription : handleCheckout}
     >
       <Spinner icon={Diamond02Icon} isLoading={isPending} />

@@ -1,11 +1,13 @@
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { redirect } from "@repo/internationalization/src/navigation";
 import type { Metadata } from "next";
-import type { Locale } from "next-intl";
+import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { GuestProgramDiscovery } from "@/components/programs/onboarding/guest";
 import { hasOnboardingChoices } from "@/components/programs/onboarding/model";
 import { getToken } from "@/lib/auth/server";
+import { isActiveLocale } from "@/lib/i18n/active";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getLearningProgramOnboardingCatalog } from "@/lib/programs/server";
 
@@ -28,6 +30,10 @@ export async function generateMetadata({
 export default async function Page(props: PageProps<"/[locale]/onboarding">) {
   const locale = getLocaleOrThrow((await props.params).locale);
 
+  if (!isActiveLocale(locale)) {
+    notFound();
+  }
+
   return (
     <Suspense fallback={null}>
       <LearningProgramOnboardingRuntime locale={locale} />
@@ -39,7 +45,7 @@ export default async function Page(props: PageProps<"/[locale]/onboarding">) {
 async function LearningProgramOnboardingRuntime({
   locale,
 }: {
-  locale: Locale;
+  locale: ActiveAppLocaleCode;
 }) {
   const [programs, token] = await Promise.all([
     getLearningProgramOnboardingCatalog(locale),

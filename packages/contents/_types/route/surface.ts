@@ -1,5 +1,7 @@
-import type { Locale } from "@repo/contents/_types/content";
-import { fieldsForEveryLocale } from "@repo/utilities/locales";
+import {
+  type AppLocaleCode,
+  AppLocaleCodeSchema,
+} from "@nakafa/aksara-contracts/locale";
 import { Schema } from "effect";
 
 type SchemaType<T extends Schema.Schema.Any> = Schema.Schema.Type<T>;
@@ -12,9 +14,10 @@ const PublicRouteSegmentSchema = Schema.String.pipe(
   Schema.brand("@Nakafa/PublicRouteSegment")
 );
 
-const PublicRouteSlugMapSchema = Schema.Struct(
-  fieldsForEveryLocale(PublicRouteSegmentSchema)
-);
+const PublicRouteSlugMapSchema = Schema.Record({
+  key: AppLocaleCodeSchema,
+  value: PublicRouteSegmentSchema,
+});
 
 const PublicRouteSurfaceKeySchema = Schema.Literal(
   "curriculum",
@@ -40,17 +43,17 @@ const publicRouteSurfaceInput: readonly SchemaEncoded<
   {
     appSegment: "curricula",
     key: "curriculum",
-    routeSlugs: { en: "curriculum", id: "kurikulum" },
+    routeSlugs: { de: "lehrplaene", en: "curriculum", id: "kurikulum" },
   },
   {
     appSegment: "materials",
     key: "subject",
-    routeSlugs: { en: "subjects", id: "materi" },
+    routeSlugs: { de: "faecher", en: "subjects", id: "materi" },
   },
   {
     appSegment: "try-out",
     key: "tryout",
-    routeSlugs: { en: "try-out", id: "try-out" },
+    routeSlugs: { de: "try-out", en: "try-out", id: "try-out" },
   },
 ];
 
@@ -61,7 +64,7 @@ export const PUBLIC_ROUTE_SURFACES = Schema.decodeUnknownSync(
 /** Reads the localized URL namespace owned by one Nakafa route surface. */
 export function readNamespaceSegment(
   namespace: PublicRouteSurfaceKey,
-  locale: Locale
+  locale: AppLocaleCode
 ) {
   return PUBLIC_ROUTE_SURFACES.find((item) => item.key === namespace)
     ?.routeSlugs[locale];

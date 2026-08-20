@@ -9,6 +9,7 @@ const data = [
         title: "grade",
         value: 10,
         href: {
+          de: "/lehrplaene/merdeka/klasse-10",
           en: "/curriculum/merdeka/class-10",
           id: "/kurikulum/merdeka/kelas-10",
         },
@@ -17,6 +18,7 @@ const data = [
         title: "grade",
         value: 11,
         href: {
+          de: "/lehrplaene/merdeka/klasse-11",
           en: "/curriculum/merdeka/class-11",
           id: "/kurikulum/merdeka/kelas-11",
         },
@@ -25,6 +27,7 @@ const data = [
         title: "grade",
         value: 12,
         href: {
+          de: "/lehrplaene/merdeka/klasse-12",
           en: "/curriculum/merdeka/class-12",
           id: "/kurikulum/merdeka/kelas-12",
         },

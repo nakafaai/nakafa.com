@@ -53,6 +53,9 @@ describe("published Nina material", () => {
       )
     ).toBe(true);
     expect(isPublishedMaterialPath("en", "articles/mathematics")).toBe(false);
+    expect(isPublishedMaterialPath("de", previewProjection.publicPath)).toBe(
+      false
+    );
   });
 
   it("fails closed when the signed route is a tombstone", async () => {

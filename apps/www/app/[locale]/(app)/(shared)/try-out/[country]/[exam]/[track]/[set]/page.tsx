@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { cache, Suspense } from "react";
@@ -11,6 +11,10 @@ import {
   readTryoutSetPage,
 } from "@/components/tryout/catalog/server";
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
+import {
+  readTryoutQuestionPreview,
+  TryoutQuestionPreview,
+} from "@/components/tryout/preview/server";
 import { TryoutReview } from "@/components/tryout/review/server";
 import {
   createTryoutSetRestartTarget,
@@ -55,6 +59,18 @@ export async function generateMetadata({
     capability.kind === "valid" ? capability.attemptId : undefined;
   const locale = getLocaleOrThrow(localeParam);
   const publicPath = getTryoutHref({ country, exam, set, track }).slice(1);
+  const preview = attemptId
+    ? Option.none()
+    : await readTryoutQuestionPreview(locale, publicPath);
+  if (Option.isSome(preview)) {
+    const tTryouts = await getTranslations({ locale, namespace: "Tryouts" });
+    return createRetainedTryoutMetadata({
+      description:
+        preview.value.target.section.description ??
+        tTryouts("metadata-description"),
+      title: preview.value.target.section.title,
+    });
+  }
   const resolved = await readRoutePage(locale, publicPath, attemptId);
 
   if (resolved.authRequired) {
@@ -103,6 +119,12 @@ async function TryoutSetRoute({ params, searchParams }: TryoutSetPageProps) {
     capability.kind === "valid" ? capability.attemptId : undefined;
   const locale = getLocaleOrThrow(localeParam);
   const setPath = getTryoutHref({ country, exam, set, track }).slice(1);
+  if (!attemptId) {
+    const preview = await readTryoutQuestionPreview(locale, setPath);
+    if (Option.isSome(preview)) {
+      return <TryoutQuestionPreview content={preview.value} />;
+    }
+  }
   const resolved = await readRoutePage(locale, setPath, attemptId);
 
   if (resolved.authRequired && attemptId) {

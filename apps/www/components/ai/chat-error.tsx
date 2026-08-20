@@ -22,6 +22,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Activity, useTransition } from "react";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
 import { useChat } from "@/components/ai/context/use-chat";
+import { isActiveLocale } from "@/lib/i18n/active";
 
 interface AiChatErrorSurfaceProps {
   children?: React.ReactNode;
@@ -96,6 +97,10 @@ function ButtonCheckout() {
 
   const handleCheckout = () => {
     startTransition(async () => {
+      if (!isActiveLocale(locale)) {
+        return;
+      }
+
       const { url } = await generateCheckoutLink({
         locale,
         successUrl: window.location.href,
@@ -125,7 +130,7 @@ function ButtonCheckout() {
       </Activity>
       <Activity mode={hasSubscription ? "hidden" : "visible"}>
         <Button
-          disabled={isPending}
+          disabled={isPending || !isActiveLocale(locale)}
           onClick={handleCheckout}
           variant="secondary"
         >
