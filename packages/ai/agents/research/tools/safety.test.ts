@@ -1,6 +1,7 @@
 import { assertPublicResearchUrl } from "@repo/ai/agents/research/tools/safety";
+import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect, Result } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const lookup = vi.hoisted(() => vi.fn());
 vi.mock("node:dns/promises", () => ({
@@ -10,52 +11,66 @@ describe("assertPublicResearchUrl", () => {
   beforeEach(() => {
     lookup.mockReset();
   });
-  it("rejects unsafe URL syntax before DNS lookup", async () => {
-    const result = await Effect.runPromise(
-      Effect.result(assertPublicResearchUrl("http://localhost:3000/admin"))
-    );
-    expect(Result.isFailure(result)).toBe(true);
-    expect(lookup).not.toHaveBeenCalled();
-  });
-  it("allows public IP literals without DNS lookup", async () => {
-    const result = await Effect.runPromise(
-      assertPublicResearchUrl("https://93.184.216.34/docs")
-    );
-    expect(result).toEqual({
-      nativeFetchUrl: "https://93.184.216.34/docs",
-      publicUrl: "https://93.184.216.34/docs",
-    });
-    expect(lookup).not.toHaveBeenCalled();
-  });
-  it("rejects hostnames when DNS resolution fails", async () => {
-    lookup.mockRejectedValue(new Error("DNS failure"));
-    const result = await Effect.runPromise(
-      Effect.result(assertPublicResearchUrl("https://example.com/docs"))
-    );
-    expect(Result.isFailure(result)).toBe(true);
-  });
-  it("rejects hostnames without DNS addresses", async () => {
-    lookup.mockResolvedValue([]);
-    const result = await Effect.runPromise(
-      Effect.result(assertPublicResearchUrl("https://example.com/docs"))
-    );
-    expect(Result.isFailure(result)).toBe(true);
-  });
-  it("rejects hostnames that resolve to private addresses", async () => {
-    lookup.mockResolvedValue([{ address: "10.0.0.1", family: 4 }]);
-    const result = await Effect.runPromise(
-      Effect.result(assertPublicResearchUrl("https://example.com/docs"))
-    );
-    expect(Result.isFailure(result)).toBe(true);
-  });
-  it("allows public hostnames without enabling native server fetches", async () => {
-    lookup.mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);
-    const result = await Effect.runPromise(
-      assertPublicResearchUrl("https://example.com/docs")
-    );
-    expect(result).toEqual({
-      nativeFetchUrl: null,
-      publicUrl: "https://example.com/docs",
-    });
-  });
+  it.live("rejects unsafe URL syntax before DNS lookup", () =>
+    Effect.gen(function* () {
+      const result = yield* Effect.result(
+        assertPublicResearchUrl("http://localhost:3000/admin")
+      );
+      expect(Result.isFailure(result)).toBe(true);
+      expect(lookup).not.toHaveBeenCalled();
+    })
+  );
+  it.live("allows public IP literals without DNS lookup", () =>
+    Effect.gen(function* () {
+      const result = yield* assertPublicResearchUrl(
+        "https://93.184.216.34/docs"
+      );
+      expect(result).toEqual({
+        nativeFetchUrl: "https://93.184.216.34/docs",
+        publicUrl: "https://93.184.216.34/docs",
+      });
+      expect(lookup).not.toHaveBeenCalled();
+    })
+  );
+  it.live("rejects hostnames when DNS resolution fails", () =>
+    Effect.gen(function* () {
+      lookup.mockRejectedValue(new Error("DNS failure"));
+      const result = yield* Effect.result(
+        assertPublicResearchUrl("https://example.com/docs")
+      );
+      expect(Result.isFailure(result)).toBe(true);
+    })
+  );
+  it.live("rejects hostnames without DNS addresses", () =>
+    Effect.gen(function* () {
+      lookup.mockResolvedValue([]);
+      const result = yield* Effect.result(
+        assertPublicResearchUrl("https://example.com/docs")
+      );
+      expect(Result.isFailure(result)).toBe(true);
+    })
+  );
+  it.live("rejects hostnames that resolve to private addresses", () =>
+    Effect.gen(function* () {
+      lookup.mockResolvedValue([{ address: "10.0.0.1", family: 4 }]);
+      const result = yield* Effect.result(
+        assertPublicResearchUrl("https://example.com/docs")
+      );
+      expect(Result.isFailure(result)).toBe(true);
+    })
+  );
+  it.live(
+    "allows public hostnames without enabling native server fetches",
+    () =>
+      Effect.gen(function* () {
+        lookup.mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);
+        const result = yield* assertPublicResearchUrl(
+          "https://example.com/docs"
+        );
+        expect(result).toEqual({
+          nativeFetchUrl: null,
+          publicUrl: "https://example.com/docs",
+        });
+      })
+  );
 });

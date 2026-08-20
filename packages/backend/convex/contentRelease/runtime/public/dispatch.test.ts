@@ -35,8 +35,8 @@ import {
 } from "@repo/backend/test/content-runtime";
 import { insertSignedHead } from "@repo/backend/test/runtime-head";
 import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime-values";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 type RuntimeAction = Pick<RuntimeTest, "action">;
@@ -58,68 +58,73 @@ function seedSigned(
   });
 }
 describe("contentRelease/runtime/public/dispatch", () => {
-  it("returns one fully authenticated public artifact and exact absence", async () => {
-    const t = createConvexTestWithBetterAuth();
-    await seedSigned(t, "public");
-    const row = await t.query(
-      internal.contentRelease.runtime.public.internal.read,
-      {
-        appLocale: "en",
-        publicPath: TEST_RUNTIME_PATH,
-      }
-    );
-    if (!row) {
-      throw new Error("Expected one signed runtime row.");
-    }
-    const request = await Effect.runPromise(
-      decodePublicContentRuntimeRequest(JSON.parse(publicRuntimeRequest()))
-    );
-    const verified = await Effect.runPromise(
-      verifyContentRuntimeExchange({
-        rendererManifest: JSON.parse(row.rendererJson),
-        request,
-        response: {
-          activeManifestHash: row.activeManifestHash,
-          activeReleaseId: row.activeReleaseId,
-          artifact: JSON.parse(row.artifactJson),
-          delivery: row.delivery,
-          kind: "found",
-          projection: JSON.parse(row.projectionJson),
-          projectionHash: row.projectionHash,
-          release: JSON.parse(row.releaseJson),
+  it.live(
+    "returns one fully authenticated public artifact and exact absence",
+    () =>
+      Effect.gen(function* () {
+        const t = createConvexTestWithBetterAuth();
+        yield* Effect.promise(() => seedSigned(t, "public"));
+        const row = yield* Effect.promise(() =>
+          t.query(internal.contentRelease.runtime.public.internal.read, {
+            appLocale: "en",
+            publicPath: TEST_RUNTIME_PATH,
+          })
+        );
+        if (!row) {
+          throw new Error("Expected one signed runtime row.");
+        }
+        const request = yield* decodePublicContentRuntimeRequest(
+          JSON.parse(publicRuntimeRequest())
+        );
+        const verified = yield* verifyContentRuntimeExchange({
           rendererManifest: JSON.parse(row.rendererJson),
-          sourcePath: row.sourcePath,
-        },
-      }).pipe(
-        Effect.provideService(
-          ContentVerificationKeyResolver,
-          TEST_KEY_RESOLVER
-        ),
-        Effect.result
-      )
-    );
-    expect(verified).toMatchObject({ _tag: "Success" });
-    const found = await runDispatch(t, publicRuntimeRequest());
-    const missing = await runDispatch(
-      t,
-      JSON.stringify({
-        delivery: "public",
-        appLocale: "en",
-        publicPath: "subjects/test/missing",
+          request,
+          response: {
+            activeManifestHash: row.activeManifestHash,
+            activeReleaseId: row.activeReleaseId,
+            artifact: JSON.parse(row.artifactJson),
+            delivery: row.delivery,
+            kind: "found",
+            projection: JSON.parse(row.projectionJson),
+            projectionHash: row.projectionHash,
+            release: JSON.parse(row.releaseJson),
+            rendererManifest: JSON.parse(row.rendererJson),
+            sourcePath: row.sourcePath,
+          },
+        }).pipe(
+          Effect.provideService(
+            ContentVerificationKeyResolver,
+            TEST_KEY_RESOLVER
+          ),
+          Effect.result
+        );
+        expect(verified).toMatchObject({ _tag: "Success" });
+        const found = yield* Effect.promise(() =>
+          runDispatch(t, publicRuntimeRequest())
+        );
+        const missing = yield* Effect.promise(() =>
+          runDispatch(
+            t,
+            JSON.stringify({
+              delivery: "public",
+              appLocale: "en",
+              publicPath: "subjects/test/missing",
+            })
+          )
+        );
+        expect(found.status).toBe(200);
+        expect(JSON.parse(found.body)).toMatchObject({
+          artifact: {
+            payload: { contentKey: runtimeContentKey("public") },
+          },
+          delivery: "public",
+          kind: "found",
+          projection: { publicPath: TEST_RUNTIME_PATH },
+          sourcePath: `packages/corpus/${runtimeContentKey("public")}/en.mdx`,
+        });
+        expect(missing).toEqual({ body: '{"kind":"missing"}', status: 404 });
       })
-    );
-    expect(found.status).toBe(200);
-    expect(JSON.parse(found.body)).toMatchObject({
-      artifact: {
-        payload: { contentKey: runtimeContentKey("public") },
-      },
-      delivery: "public",
-      kind: "found",
-      projection: { publicPath: TEST_RUNTIME_PATH },
-      sourcePath: `packages/corpus/${runtimeContentKey("public")}/en.mdx`,
-    });
-    expect(missing).toEqual({ body: '{"kind":"missing"}', status: 404 });
-  });
+  );
   it("authenticates the real pair-grouped article source end to end", async () => {
     const t = createConvexTestWithBetterAuth();
     await t.mutation(async (ctx) => {

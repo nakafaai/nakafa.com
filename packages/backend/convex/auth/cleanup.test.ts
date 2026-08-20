@@ -6,26 +6,31 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { seedAnalyticsConsent } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 22, 8, 0, 0);
 const deletedAuthIdPattern = /^deleted:/;
 const deletedEmailPattern = /^deleted-.+@account\.nakafa\.invalid$/;
 
 describe("auth/cleanup", () => {
-  it("drains every committed local cleanup batch outside the workflow journal", async () => {
-    const cleanupBatch = vi
-      .fn<() => Promise<boolean>>()
-      .mockResolvedValueOnce(true)
-      .mockResolvedValueOnce(true)
-      .mockResolvedValueOnce(false);
+  it.live(
+    "drains every committed local cleanup batch outside the workflow journal",
+    () =>
+      Effect.gen(function* () {
+        const cleanupBatch = vi
+          .fn<() => Promise<boolean>>()
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(false);
 
-    await Effect.runPromise(drainDeletedUserDataProgram(cleanupBatch));
+        yield* drainDeletedUserDataProgram(cleanupBatch);
 
-    expect(cleanupBatch).toHaveBeenCalledTimes(3);
-  });
+        expect(cleanupBatch).toHaveBeenCalledTimes(3);
+      })
+  );
 
   it("stops after the first cleanup batch that makes progress", async () => {
     const t = convexTest(schema, convexModules);

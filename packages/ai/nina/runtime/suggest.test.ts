@@ -2,9 +2,10 @@
 import { suggestionGenerationTimeout } from "@repo/ai/config/timeouts";
 import { writeNinaSuggestions } from "@repo/ai/nina/runtime/suggest";
 import type { MyUIMessage } from "@repo/ai/types/message";
+import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import type { ModelMessage, UIMessageStreamWriter } from "ai";
 import { Effect, Result } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const streamText = vi.hoisted(() => vi.fn());
 vi.mock("@repo/ai/config/app", () => ({
@@ -53,205 +54,212 @@ describe("nina/runtime/suggest", () => {
   beforeEach(() => {
     streamText.mockReset();
   });
-  it("writes final suggestions when partial chunks are empty", async () => {
-    const writer = createWriter();
-    streamText.mockReturnValue({
-      output: Promise.resolve({
-        suggestions: ["Apa contoh lainnya?", "Beri latihan singkat."],
-      }),
-      partialOutputStream: suggestionPartials([{}, { suggestions: [] }]),
-    });
-    await Effect.runPromise(
-      writeNinaSuggestions({
+  it.live("writes final suggestions when partial chunks are empty", () =>
+    Effect.gen(function* () {
+      const writer = createWriter();
+      streamText.mockReturnValue({
+        output: Promise.resolve({
+          suggestions: ["Apa contoh lainnya?", "Beri latihan singkat."],
+        }),
+        partialOutputStream: suggestionPartials([{}, { suggestions: [] }]),
+      });
+      yield* writeNinaSuggestions({
         locale: "id",
         messages,
         writer,
-      })
-    );
-    expect(writer.write).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: "data-suggestions",
-        data: {
-          data: ["Apa contoh lainnya?", "Beri latihan singkat."],
-        },
-      })
-    );
-  });
-  it("prunes tool-call transcript parts before generating suggestions", async () => {
-    const writer = createWriter();
-    const transcriptWithToolCall = [
-      {
-        content: "Hitung 2 + 3.",
-        role: "user",
-      },
-      {
-        content: [
-          {
-            text: "Saya cek hitungannya.",
-            type: "text",
+      });
+      expect(writer.write).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "data-suggestions",
+          data: {
+            data: ["Apa contoh lainnya?", "Beri latihan singkat."],
           },
+        })
+      );
+    })
+  );
+  it.live(
+    "prunes tool-call transcript parts before generating suggestions",
+    () =>
+      Effect.gen(function* () {
+        const writer = createWriter();
+        const transcriptWithToolCall = [
           {
-            input: { expression: "2+3" },
-            toolCallId: "tool-1",
-            toolName: "math",
-            type: "tool-call",
+            content: "Hitung 2 + 3.",
+            role: "user",
           },
-        ],
-        role: "assistant",
-      },
-      {
-        content: [
-          {
-            output: { type: "text", value: "5" },
-            toolCallId: "tool-1",
-            toolName: "math",
-            type: "tool-result",
-          },
-        ],
-        role: "tool",
-      },
-      {
-        content: "Karena dua benda ditambah tiga benda menjadi lima benda.",
-        role: "assistant",
-      },
-    ] satisfies ModelMessage[];
-    streamText.mockReturnValue({
-      output: Promise.resolve({
-        suggestions: ["Beri contoh benda nyata."],
-      }),
-      partialOutputStream: suggestionPartials([]),
-    });
-    await Effect.runPromise(
-      writeNinaSuggestions({
-        locale: "id",
-        messages: transcriptWithToolCall,
-        writer,
-      })
-    );
-    expect(streamText).toHaveBeenCalledWith(
-      expect.objectContaining({
-        messages: [
-          { content: "Hitung 2 + 3.", role: "user" },
           {
             content: [
               {
                 text: "Saya cek hitungannya.",
                 type: "text",
               },
+              {
+                input: { expression: "2+3" },
+                toolCallId: "tool-1",
+                toolName: "math",
+                type: "tool-call",
+              },
             ],
             role: "assistant",
+          },
+          {
+            content: [
+              {
+                output: { type: "text", value: "5" },
+                toolCallId: "tool-1",
+                toolName: "math",
+                type: "tool-result",
+              },
+            ],
+            role: "tool",
           },
           {
             content: "Karena dua benda ditambah tiga benda menjadi lima benda.",
             role: "assistant",
           },
-        ],
-        timeout: suggestionGenerationTimeout,
+        ] satisfies ModelMessage[];
+        streamText.mockReturnValue({
+          output: Promise.resolve({
+            suggestions: ["Beri contoh benda nyata."],
+          }),
+          partialOutputStream: suggestionPartials([]),
+        });
+        yield* writeNinaSuggestions({
+          locale: "id",
+          messages: transcriptWithToolCall,
+          writer,
+        });
+        expect(streamText).toHaveBeenCalledWith(
+          expect.objectContaining({
+            messages: [
+              { content: "Hitung 2 + 3.", role: "user" },
+              {
+                content: [
+                  {
+                    text: "Saya cek hitungannya.",
+                    type: "text",
+                  },
+                ],
+                role: "assistant",
+              },
+              {
+                content:
+                  "Karena dua benda ditambah tiga benda menjadi lima benda.",
+                role: "assistant",
+              },
+            ],
+            timeout: suggestionGenerationTimeout,
+          })
+        );
       })
-    );
-  });
-  it("updates the same suggestions part when final output completes", async () => {
-    const writer = createWriter();
-    streamText.mockReturnValue({
-      output: Promise.resolve({
-        suggestions: ["Apa contoh finalnya?", "Buat latihan final."],
-      }),
-      partialOutputStream: suggestionPartials([
-        { suggestions: [] },
-        { suggestions: ["Apa langkah berikutnya?"] },
-      ]),
-    });
-    await Effect.runPromise(
-      writeNinaSuggestions({
+  );
+  it.live("updates the same suggestions part when final output completes", () =>
+    Effect.gen(function* () {
+      const writer = createWriter();
+      streamText.mockReturnValue({
+        output: Promise.resolve({
+          suggestions: ["Apa contoh finalnya?", "Buat latihan final."],
+        }),
+        partialOutputStream: suggestionPartials([
+          { suggestions: [] },
+          { suggestions: ["Apa langkah berikutnya?"] },
+        ]),
+      });
+      yield* writeNinaSuggestions({
         locale: "id",
         messages,
         writer,
-      })
-    );
-    expect(writer.write).toHaveBeenCalledTimes(2);
-    const firstWrite = writer.write.mock.calls[0]?.[0];
-    const finalWrite = writer.write.mock.calls[1]?.[0];
-    expect(firstWrite).toEqual(
-      expect.objectContaining({
-        data: {
-          data: ["Apa langkah berikutnya?"],
-        },
-      })
-    );
-    expect(finalWrite).toEqual(
-      expect.objectContaining({
-        id: firstWrite?.id,
-        data: {
-          data: ["Apa contoh finalnya?", "Buat latihan final."],
-        },
-      })
-    );
-  });
-  it("skips writing when the completed suggestions object is empty", async () => {
-    const writer = createWriter();
-    streamText.mockReturnValue({
-      output: Promise.resolve({
-        suggestions: [],
-      }),
-      partialOutputStream: suggestionPartials([{}]),
-    });
-    await Effect.runPromise(
-      writeNinaSuggestions({
+      });
+      expect(writer.write).toHaveBeenCalledTimes(2);
+      const firstWrite = writer.write.mock.calls[0]?.[0];
+      const finalWrite = writer.write.mock.calls[1]?.[0];
+      expect(firstWrite).toEqual(
+        expect.objectContaining({
+          data: {
+            data: ["Apa langkah berikutnya?"],
+          },
+        })
+      );
+      expect(finalWrite).toEqual(
+        expect.objectContaining({
+          id: firstWrite?.id,
+          data: {
+            data: ["Apa contoh finalnya?", "Buat latihan final."],
+          },
+        })
+      );
+    })
+  );
+  it.live("skips writing when the completed suggestions object is empty", () =>
+    Effect.gen(function* () {
+      const writer = createWriter();
+      streamText.mockReturnValue({
+        output: Promise.resolve({
+          suggestions: [],
+        }),
+        partialOutputStream: suggestionPartials([{}]),
+      });
+      yield* writeNinaSuggestions({
         locale: "id",
         messages,
         writer,
+      });
+      expect(writer.write).not.toHaveBeenCalled();
+    })
+  );
+  it.live(
+    "reports a typed failure when partial suggestion streaming fails",
+    () =>
+      Effect.gen(function* () {
+        const writer = createWriter();
+        streamText.mockReturnValue({
+          output: Promise.resolve({
+            suggestions: ["Tidak dipakai."],
+          }),
+          partialOutputStream: failingSuggestionPartials(),
+        });
+        const result = yield* Effect.result(
+          writeNinaSuggestions({
+            locale: "id",
+            messages,
+            writer,
+          })
+        );
+        expect(Result.isFailure(result)).toBe(true);
+        expect(Result.getFailure(result)).toMatchObject({
+          _tag: "Some",
+          value: {
+            _tag: "NinaSuggestionError",
+            message: "Failed to stream Nina suggestions.",
+          },
+        });
       })
-    );
-    expect(writer.write).not.toHaveBeenCalled();
-  });
-  it("reports a typed failure when partial suggestion streaming fails", async () => {
-    const writer = createWriter();
-    streamText.mockReturnValue({
-      output: Promise.resolve({
-        suggestions: ["Tidak dipakai."],
-      }),
-      partialOutputStream: failingSuggestionPartials(),
-    });
-    const result = await Effect.runPromise(
-      Effect.result(
-        writeNinaSuggestions({
-          locale: "id",
-          messages,
-          writer,
-        })
-      )
-    );
-    expect(Result.isFailure(result)).toBe(true);
-    expect(Result.getFailure(result)).toMatchObject({
-      _tag: "Some",
-      value: {
-        _tag: "NinaSuggestionError",
-        message: "Failed to stream Nina suggestions.",
-      },
-    });
-  });
-  it("reports a typed failure when final suggestion completion fails", async () => {
-    const writer = createWriter();
-    streamText.mockReturnValue({
-      output: Promise.reject(new Error("completion failed")),
-      partialOutputStream: suggestionPartials([{}]),
-    });
-    const result = await Effect.runPromise(
-      Effect.result(
-        writeNinaSuggestions({
-          locale: "id",
-          messages,
-          writer,
-        })
-      )
-    );
-    expect(Result.isFailure(result)).toBe(true);
-    expect(Result.getFailure(result)).toMatchObject({
-      _tag: "Some",
-      value: {
-        _tag: "NinaSuggestionError",
-        message: "Failed to complete Nina suggestions.",
-      },
-    });
-  });
+  );
+  it.live(
+    "reports a typed failure when final suggestion completion fails",
+    () =>
+      Effect.gen(function* () {
+        const writer = createWriter();
+        streamText.mockReturnValue({
+          output: Promise.reject(new Error("completion failed")),
+          partialOutputStream: suggestionPartials([{}]),
+        });
+        const result = yield* Effect.result(
+          writeNinaSuggestions({
+            locale: "id",
+            messages,
+            writer,
+          })
+        );
+        expect(Result.isFailure(result)).toBe(true);
+        expect(Result.getFailure(result)).toMatchObject({
+          _tag: "Some",
+          value: {
+            _tag: "NinaSuggestionError",
+            message: "Failed to complete Nina suggestions.",
+          },
+        });
+      })
+  );
 });

@@ -2,13 +2,14 @@ import {
   getContentReferenceInput,
   resolveNakafaContentRef,
 } from "@repo/backend/client/nakafa/ref";
-import { ConvexRuntimeQueryError } from "@repo/backend/client/runtime";
 import { api } from "@repo/backend/convex/_generated/api";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
+import { toRuntimeQueryError } from "@repo/backend/test/runtime-query";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const runtimeMocks = vi.hoisted(() => ({
   runtimeQuery: vi.fn(),
@@ -21,18 +22,6 @@ vi.mock("@repo/backend/client/runtime", () => ({
       try: () => runtimeMocks.runtimeQuery(url, query, args),
     }),
 }));
-
-function toRuntimeQueryError(cause: unknown) {
-  if (cause instanceof ConvexRuntimeQueryError) {
-    return cause;
-  }
-
-  return new ConvexRuntimeQueryError({
-    networkCodes: [],
-    query: "test-runtime-query",
-    reason: "query",
-  });
-}
 
 const convexUrl = "https://example.convex.cloud";
 const articleRoute = "articles/politics/example";
@@ -66,56 +55,63 @@ describe("resolveNakafaContentRef", () => {
     expect(getContentReferenceInput("not-content")).toEqual(Option.none());
   });
 
-  it("resolves graph content IDs and resource URIs through the current seam", async () => {
-    const graphRef = await Effect.runPromise(
-      resolveNakafaContentRef(convexUrl, articleRef.content_id)
-    );
-    const resourceRef = await Effect.runPromise(
-      resolveNakafaContentRef(
-        convexUrl,
-        `nakafa://content/${articleRef.content_id}`
-      )
-    );
+  it.live(
+    "resolves graph content IDs and resource URIs through the current seam",
+    () =>
+      Effect.gen(function* () {
+        const graphRef = yield* resolveNakafaContentRef(
+          convexUrl,
+          articleRef.content_id
+        );
+        const resourceRef = yield* resolveNakafaContentRef(
+          convexUrl,
+          `nakafa://content/${articleRef.content_id}`
+        );
 
-    expect(Option.getOrUndefined(graphRef)).toStrictEqual(articleRef);
-    expect(Option.getOrUndefined(resourceRef)).toStrictEqual(articleRef);
-    expect(runtimeMocks.runtimeQuery).toHaveBeenCalledTimes(2);
-  });
+        expect(Option.getOrUndefined(graphRef)).toStrictEqual(articleRef);
+        expect(Option.getOrUndefined(resourceRef)).toStrictEqual(articleRef);
+        expect(runtimeMocks.runtimeQuery).toHaveBeenCalledTimes(2);
+      })
+  );
 
-  it("resolves canonical public URLs through the current seam", async () => {
-    const ref = await Effect.runPromise(
-      resolveNakafaContentRef(
+  it.live("resolves canonical public URLs through the current seam", () =>
+    Effect.gen(function* () {
+      const ref = yield* resolveNakafaContentRef(
         convexUrl,
         "https://nakafa.com/en/articles/politics/example"
-      )
-    );
+      );
 
-    expect(Option.getOrUndefined(ref)).toStrictEqual(articleRef);
-    expect(runtimeMocks.runtimeQuery).toHaveBeenCalledWith(
-      convexUrl,
-      api.contentRelease.reference.read,
-      {
-        input: {
-          appLocale: "en",
-          kind: "route",
-          publicPath: articleRoute,
-        },
-      }
-    );
-  });
+      expect(Option.getOrUndefined(ref)).toStrictEqual(articleRef);
+      expect(runtimeMocks.runtimeQuery).toHaveBeenCalledWith(
+        convexUrl,
+        api.contentRelease.reference.read,
+        {
+          input: {
+            appLocale: "en",
+            kind: "route",
+            publicPath: articleRoute,
+          },
+        }
+      );
+    })
+  );
 
-  it("rejects bare route refs without querying Convex", async () => {
-    const localizedRoute = await Effect.runPromise(
-      resolveNakafaContentRef(convexUrl, `en/${articleRoute}`)
-    );
-    const localeFreeRoute = await Effect.runPromise(
-      resolveNakafaContentRef(convexUrl, articleRoute)
-    );
+  it.live("rejects bare route refs without querying Convex", () =>
+    Effect.gen(function* () {
+      const localizedRoute = yield* resolveNakafaContentRef(
+        convexUrl,
+        `en/${articleRoute}`
+      );
+      const localeFreeRoute = yield* resolveNakafaContentRef(
+        convexUrl,
+        articleRoute
+      );
 
-    expect(Option.isNone(localizedRoute)).toBe(true);
-    expect(Option.isNone(localeFreeRoute)).toBe(true);
-    expect(runtimeMocks.runtimeQuery).not.toHaveBeenCalled();
-  });
+      expect(Option.isNone(localizedRoute)).toBe(true);
+      expect(Option.isNone(localeFreeRoute)).toBe(true);
+      expect(runtimeMocks.runtimeQuery).not.toHaveBeenCalled();
+    })
+  );
 });
 
 /** Returns one current reference fixture through the sole query Interface. */

@@ -5,8 +5,9 @@ import {
 } from "@repo/backend/test/content-material";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
+import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect, Option } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const runtimeMocks = vi.hoisted(() => ({
   readPublishedMarkdown: vi.fn(),
@@ -47,69 +48,69 @@ beforeEach(() => {
 });
 
 describe("readNakafaMarkdown", () => {
-  it.each([articleRef, materialRef])(
+  it.live.each([articleRef, materialRef])(
     "dispatches $section through the signed public reader",
-    async (ref) => {
-      runtimeMocks.resolveNakafaContentRef.mockReturnValue(
-        Effect.succeed(Option.some(ref))
-      );
-      runtimeMocks.readPublishedMarkdown.mockReturnValue(
-        Effect.succeed(Option.none())
-      );
+    (ref) =>
+      Effect.gen(function* () {
+        runtimeMocks.resolveNakafaContentRef.mockReturnValue(
+          Effect.succeed(Option.some(ref))
+        );
+        runtimeMocks.readPublishedMarkdown.mockReturnValue(
+          Effect.succeed(Option.none())
+        );
 
-      await Effect.runPromise(
-        readNakafaMarkdown(
+        yield* readNakafaMarkdown(
           "https://example.convex.cloud",
           readTarget,
           ref.content_id
-        )
-      );
+        );
 
-      expect(runtimeMocks.readPublishedMarkdown).toHaveBeenCalledWith(
-        readTarget,
-        ref
-      );
-    }
+        expect(runtimeMocks.readPublishedMarkdown).toHaveBeenCalledWith(
+          readTarget,
+          ref
+        );
+      })
   );
 
-  it("dispatches Quran through its signed snapshot reader", async () => {
-    runtimeMocks.resolveNakafaContentRef.mockReturnValue(
-      Effect.succeed(Option.some(quranRef))
-    );
-    runtimeMocks.readQuranMarkdown.mockReturnValue(
-      Effect.succeed(Option.none())
-    );
+  it.live("dispatches Quran through its signed snapshot reader", () =>
+    Effect.gen(function* () {
+      runtimeMocks.resolveNakafaContentRef.mockReturnValue(
+        Effect.succeed(Option.some(quranRef))
+      );
+      runtimeMocks.readQuranMarkdown.mockReturnValue(
+        Effect.succeed(Option.none())
+      );
 
-    await Effect.runPromise(
-      readNakafaMarkdown(
+      yield* readNakafaMarkdown(
         "https://example.convex.cloud",
         readTarget,
         quranRef.content_id
-      )
-    );
+      );
 
-    expect(runtimeMocks.readQuranMarkdown).toHaveBeenCalledWith(
-      "https://example.convex.cloud",
-      quranRef
-    );
-  });
+      expect(runtimeMocks.readQuranMarkdown).toHaveBeenCalledWith(
+        "https://example.convex.cloud",
+        quranRef
+      );
+    })
+  );
 
-  it.each([Option.none(), Option.some(tryoutRef)])(
+  it.live.each([Option.none(), Option.some(tryoutRef)])(
     "returns no markdown when the current identity has no readable body",
-    async (ref) => {
-      runtimeMocks.resolveNakafaContentRef.mockReturnValue(Effect.succeed(ref));
+    (ref) =>
+      Effect.gen(function* () {
+        runtimeMocks.resolveNakafaContentRef.mockReturnValue(
+          Effect.succeed(ref)
+        );
 
-      await expect(
-        Effect.runPromise(
-          readNakafaMarkdown(
+        expect(
+          yield* readNakafaMarkdown(
             "https://example.convex.cloud",
             readTarget,
             "unsupported"
           )
-        )
-      ).resolves.toEqual(Option.none());
-      expect(runtimeMocks.readPublishedMarkdown).not.toHaveBeenCalled();
-      expect(runtimeMocks.readQuranMarkdown).not.toHaveBeenCalled();
-    }
+        ).toEqual(Option.none());
+        expect(runtimeMocks.readPublishedMarkdown).not.toHaveBeenCalled();
+        expect(runtimeMocks.readQuranMarkdown).not.toHaveBeenCalled();
+      })
   );
 });

@@ -23,8 +23,14 @@ import {
 } from "@repo/backend/test/content-runtime";
 import { insertRuntimeHead } from "@repo/backend/test/runtime-head";
 import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime-values";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@repo/testing/effect";
 import { Effect } from "effect";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const RUNTIME_TOKEN = "technical-runtime-token";
 const runtimeTokenName = "CONTENT_RUNTIME_TOKEN";
@@ -138,58 +144,68 @@ describe("public content runtime HTTP route", () => {
       });
     }
   );
-  it("transports evidence for application verification and exact absence", async () => {
-    const t = createConvexTestWithBetterAuth();
-    await seedRuntime(t, "public");
-    const found = await post(t, publicRuntimeRequest());
-    const missing = await post(
-      t,
-      JSON.stringify({
-        delivery: "public",
-        appLocale: "en",
-        publicPath: "subjects/test/missing",
+  it.live(
+    "transports evidence for application verification and exact absence",
+    () =>
+      Effect.gen(function* () {
+        const t = createConvexTestWithBetterAuth();
+        yield* Effect.promise(() => seedRuntime(t, "public"));
+        const found = yield* Effect.promise(() =>
+          post(t, publicRuntimeRequest())
+        );
+        const missing = yield* Effect.promise(() =>
+          post(
+            t,
+            JSON.stringify({
+              delivery: "public",
+              appLocale: "en",
+              publicPath: "subjects/test/missing",
+            })
+          )
+        );
+        expect(found.status).toBe(200);
+        const foundBody = yield* Effect.promise(() => found.json());
+        expect(foundBody).toMatchObject({ kind: "found" });
+        const request = yield* decodePublicContentRuntimeRequest(
+          JSON.parse(publicRuntimeRequest())
+        );
+        const rejected = yield* verifyContentRuntimeExchange({
+          rendererManifest: foundBody.rendererManifest,
+          request,
+          response: foundBody,
+        }).pipe(
+          Effect.provideService(
+            ContentVerificationKeyResolver,
+            contentKeyResolver
+          ),
+          Effect.flip
+        );
+        expect(rejected._tag).toBe("ReleaseManifestHashMismatchError");
+        expect(missing.status).toBe(404);
+        yield* Effect.promise(() =>
+          expect(missing.json()).resolves.toEqual({ kind: "missing" })
+        );
+        expectPrivate(found);
       })
-    );
-    expect(found.status).toBe(200);
-    const foundBody = await found.json();
-    expect(foundBody).toMatchObject({ kind: "found" });
-    const request = await Effect.runPromise(
-      decodePublicContentRuntimeRequest(JSON.parse(publicRuntimeRequest()))
-    );
-    const rejected = await Effect.runPromise(
-      verifyContentRuntimeExchange({
-        rendererManifest: foundBody.rendererManifest,
-        request,
-        response: foundBody,
-      }).pipe(
-        Effect.provideService(
-          ContentVerificationKeyResolver,
-          contentKeyResolver
-        ),
-        Effect.flip
-      )
-    );
-    expect(rejected._tag).toBe("ReleaseManifestHashMismatchError");
-    expect(missing.status).toBe(404);
-    await expect(missing.json()).resolves.toEqual({ kind: "missing" });
-    expectPrivate(found);
-  });
-  it("rejects found rows that do not belong to the exact request", async () => {
-    const t = createConvexTestWithBetterAuth();
-    await seedRuntime(t, "public");
-    const row = await t.query(
-      internal.contentRelease.runtime.public.internal.read,
-      { appLocale: "en", publicPath: TEST_RUNTIME_PATH }
-    );
-    if (!row) {
-      throw new Error("Expected one public runtime row.");
-    }
-    const request = await Effect.runPromise(
-      decodePublicContentRuntimeRequest(JSON.parse(publicRuntimeRequest()))
-    );
-    for (const [reason, candidate] of runtimeCases(row)) {
-      const result = await Effect.runPromise(
-        verifyContentRuntimeExchange({
+  );
+  it.live("rejects found rows that do not belong to the exact request", () =>
+    Effect.gen(function* () {
+      const t = createConvexTestWithBetterAuth();
+      yield* Effect.promise(() => seedRuntime(t, "public"));
+      const row = yield* Effect.promise(() =>
+        t.query(internal.contentRelease.runtime.public.internal.read, {
+          appLocale: "en",
+          publicPath: TEST_RUNTIME_PATH,
+        })
+      );
+      if (!row) {
+        throw new Error("Expected one public runtime row.");
+      }
+      const request = yield* decodePublicContentRuntimeRequest(
+        JSON.parse(publicRuntimeRequest())
+      );
+      for (const [reason, candidate] of runtimeCases(row)) {
+        const result = yield* verifyContentRuntimeExchange({
           rendererManifest: JSON.parse(row.rendererJson),
           request,
           response: candidate,
@@ -199,14 +215,14 @@ describe("public content runtime HTTP route", () => {
             contentKeyResolver
           ),
           Effect.result
-        )
-      );
-      expect(result, reason).toMatchObject({
-        _tag: "Failure",
-        failure: { _tag: "ContentRuntimeMismatchError", reason },
-      });
-    }
-  });
+        );
+        expect(result, reason).toMatchObject({
+          _tag: "Failure",
+          failure: { _tag: "ContentRuntimeMismatchError", reason },
+        });
+      }
+    })
+  );
   it("rejects non-public delivery even when its stored head exists", async () => {
     const t = createConvexTestWithBetterAuth();
     await seedRuntime(t, "authenticated");

@@ -1,7 +1,7 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { MAX_PROTECTED_RUNTIME_SELECTORS } from "@nakafa/aksara-contracts/runtime/protected/limits";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 import {
   planTryoutContentBatches,
   restoreTryoutContentOrder,
@@ -10,72 +10,78 @@ import {
 import { projectTryoutRuntimeContent } from "@/components/tryout/content/model";
 
 describe("try-out signed content batches", () => {
-  it("preserves question and answer order across the wire ceiling", async () => {
-    const questions = Array.from(
-      { length: MAX_PROTECTED_RUNTIME_SELECTORS - 1 },
-      (_, index) => `question-${index + 1}`
-    );
-    const answers = ["answer-1", "answer-2", "answer-3"];
-    const plan = planTryoutContentBatches(questions, answers);
+  it.live("preserves question and answer order across the wire ceiling", () =>
+    Effect.gen(function* () {
+      const questions = Array.from(
+        { length: MAX_PROTECTED_RUNTIME_SELECTORS - 1 },
+        (_, index) => `question-${index + 1}`
+      );
+      const answers = ["answer-1", "answer-2", "answer-3"];
+      const plan = planTryoutContentBatches(questions, answers);
 
-    expect(plan.batches.map(({ length }) => length)).toEqual([
-      MAX_PROTECTED_RUNTIME_SELECTORS,
-      2,
-    ]);
-    const renderedBatches = plan.batches.map((batch) =>
-      batch.map((entry) => `rendered:${entry}`)
-    );
+      expect(plan.batches.map(({ length }) => length)).toEqual([
+        MAX_PROTECTED_RUNTIME_SELECTORS,
+        2,
+      ]);
+      const renderedBatches = plan.batches.map((batch) =>
+        batch.map((entry) => `rendered:${entry}`)
+      );
 
-    await expect(
-      Effect.runPromise(restoreTryoutContentOrder(plan, renderedBatches))
-    ).resolves.toEqual({
-      answers: answers.map((answer) => `rendered:${answer}`),
-      questions: questions.map((question) => `rendered:${question}`),
-    });
-  });
+      expect(yield* restoreTryoutContentOrder(plan, renderedBatches)).toEqual({
+        answers: answers.map((answer) => `rendered:${answer}`),
+        questions: questions.map((question) => `rendered:${question}`),
+      });
+    })
+  );
 
-  it("fails with a typed error when one rendered batch loses an item", async () => {
-    const plan = planTryoutContentBatches(["question-1"], ["answer-1"]);
+  it.live(
+    "fails with a typed error when one rendered batch loses an item",
+    () =>
+      Effect.gen(function* () {
+        const plan = planTryoutContentBatches(["question-1"], ["answer-1"]);
 
-    await expect(
-      Effect.runPromise(
-        restoreTryoutContentOrder(plan, [["rendered:question-1"]]).pipe(
-          Effect.flip
-        )
-      )
-    ).resolves.toEqual(new TryoutContentBatchOrderError());
-  });
+        expect(
+          yield* restoreTryoutContentOrder(plan, [
+            ["rendered:question-1"],
+          ]).pipe(Effect.flip)
+        ).toEqual(new TryoutContentBatchOrderError());
+      })
+  );
 
-  it("fails with a typed error when the rendered batch count changes", async () => {
-    const questions = Array.from(
-      { length: MAX_PROTECTED_RUNTIME_SELECTORS + 1 },
-      (_, index) => `question-${index + 1}`
-    );
-    const plan = planTryoutContentBatches(questions, []);
+  it.live(
+    "fails with a typed error when the rendered batch count changes",
+    () =>
+      Effect.gen(function* () {
+        const questions = Array.from(
+          { length: MAX_PROTECTED_RUNTIME_SELECTORS + 1 },
+          (_, index) => `question-${index + 1}`
+        );
+        const plan = planTryoutContentBatches(questions, []);
 
-    await expect(
-      Effect.runPromise(
-        restoreTryoutContentOrder(plan, [questions.slice(0, -1)]).pipe(
-          Effect.flip
-        )
-      )
-    ).resolves.toEqual(new TryoutContentBatchOrderError());
-  });
+        expect(
+          yield* restoreTryoutContentOrder(plan, [questions.slice(0, -1)]).pipe(
+            Effect.flip
+          )
+        ).toEqual(new TryoutContentBatchOrderError());
+      })
+  );
 
-  it("fails with a typed error when the plan count differs from its batches", async () => {
-    const plan = {
-      ...planTryoutContentBatches(["question-1"], []),
-      selectorCount: 2,
-    };
+  it.live(
+    "fails with a typed error when the plan count differs from its batches",
+    () =>
+      Effect.gen(function* () {
+        const plan = {
+          ...planTryoutContentBatches(["question-1"], []),
+          selectorCount: 2,
+        };
 
-    await expect(
-      Effect.runPromise(
-        restoreTryoutContentOrder(plan, [["rendered:question-1"]]).pipe(
-          Effect.flip
-        )
-      )
-    ).resolves.toEqual(new TryoutContentBatchOrderError());
-  });
+        expect(
+          yield* restoreTryoutContentOrder(plan, [
+            ["rendered:question-1"],
+          ]).pipe(Effect.flip)
+        ).toEqual(new TryoutContentBatchOrderError());
+      })
+  );
 
   it("projects restored partitions without changing their runtime order", () => {
     const entry = (name: string) => ({

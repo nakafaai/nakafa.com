@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 import {
   submitOnboardingRole,
   submitOnboardingSelection,
@@ -13,10 +13,10 @@ const validValue = {
 };
 
 describe("components/programs/onboarding/submit", () => {
-  it("autosaves only the selected role on the role step", async () => {
-    const roleValues: unknown[] = [];
-    const result = await Effect.runPromise(
-      submitOnboardingRole({
+  it.live("autosaves only the selected role on the role step", () =>
+    Effect.gen(function* () {
+      const roleValues: unknown[] = [];
+      const result = yield* submitOnboardingRole({
         updateRole: (value) => {
           roleValues.push(value);
           return Promise.resolve();
@@ -24,17 +24,17 @@ describe("components/programs/onboarding/submit", () => {
         value: {
           role: "parent",
         },
-      })
-    );
+      });
 
-    expect(result).toEqual({ status: "success" });
-    expect(roleValues).toEqual([{ role: "parent" }]);
-  });
+      expect(result).toEqual({ status: "success" });
+      expect(roleValues).toEqual([{ role: "parent" }]);
+    })
+  );
 
-  it("does not autosave when the role step value is invalid", async () => {
-    const roleValues: unknown[] = [];
-    const result = await Effect.runPromise(
-      submitOnboardingRole({
+  it.live("does not autosave when the role step value is invalid", () =>
+    Effect.gen(function* () {
+      const roleValues: unknown[] = [];
+      const result = yield* submitOnboardingRole({
         updateRole: (value) => {
           roleValues.push(value);
           return Promise.resolve();
@@ -42,64 +42,66 @@ describe("components/programs/onboarding/submit", () => {
         value: {
           role: "administrator",
         },
-      })
-    );
+      });
 
-    expect(result).toEqual({
-      messageKey: "onboarding.invalid-selection",
-      status: "error",
-    });
-    expect(roleValues).toEqual([]);
-  });
+      expect(result).toEqual({
+        messageKey: "onboarding.invalid-selection",
+        status: "error",
+      });
+      expect(roleValues).toEqual([]);
+    })
+  );
 
-  it("returns error state when role autosave fails", async () => {
-    const result = await Effect.runPromise(
-      submitOnboardingRole({
+  it.live("returns error state when role autosave fails", () =>
+    Effect.gen(function* () {
+      const result = yield* submitOnboardingRole({
         updateRole: () => Promise.reject(new Error("Role unavailable")),
         value: {
           role: "teacher",
         },
+      });
+
+      expect(result).toEqual({
+        messageKey: "onboarding.save-error",
+        status: "error",
+      });
+    })
+  );
+
+  it.live(
+    "returns success after the Convex role and selection mutations resolve",
+    () =>
+      Effect.gen(function* () {
+        const selectedValues: unknown[] = [];
+        const roleValues: unknown[] = [];
+        const result = yield* submitOnboardingSelection({
+          selectProgram: (value) => {
+            selectedValues.push(value);
+            return Promise.resolve();
+          },
+          updateRole: (value) => {
+            roleValues.push(value);
+            return Promise.resolve();
+          },
+          value: validValue,
+        });
+
+        expect(result).toEqual({ status: "success" });
+        expect(roleValues).toEqual([{ role: "student" }]);
+        expect(selectedValues).toEqual([
+          {
+            interest: "exam-prep",
+            programKey: "snbt",
+          },
+        ]);
       })
-    );
+  );
 
-    expect(result).toEqual({
-      messageKey: "onboarding.save-error",
-      status: "error",
-    });
-  });
-
-  it("returns success after the Convex role and selection mutations resolve", async () => {
-    const selectedValues: unknown[] = [];
-    const roleValues: unknown[] = [];
-    const result = await Effect.runPromise(
-      submitOnboardingSelection({
-        selectProgram: (value) => {
-          selectedValues.push(value);
-          return Promise.resolve();
-        },
-        updateRole: (value) => {
-          roleValues.push(value);
-          return Promise.resolve();
-        },
-        value: validValue,
-      })
-    );
-
-    expect(result).toEqual({ status: "success" });
-    expect(roleValues).toEqual([{ role: "student" }]);
-    expect(selectedValues).toEqual([
-      {
-        interest: "exam-prep",
-        programKey: "snbt",
-      },
-    ]);
-  });
-
-  it("returns validation state without calling either mutation", async () => {
-    const selectedValues: unknown[] = [];
-    const roleValues: unknown[] = [];
-    const result = await Effect.runPromise(
-      submitOnboardingSelection({
+  it.live("returns validation state without calling either mutation", () =>
+    Effect.gen(function* () {
+      const selectedValues: unknown[] = [];
+      const roleValues: unknown[] = [];
+      const result = yield* submitOnboardingSelection({
         selectProgram: (value) => {
           selectedValues.push(value);
           return Promise.resolve();
@@ -111,49 +113,51 @@ describe("components/programs/onboarding/submit", () => {
         value: {
           programKey: "snbt",
         },
-      })
-    );
+      });
 
-    expect(result).toEqual({
-      messageKey: "onboarding.invalid-selection",
-      status: "error",
-    });
-    expect(roleValues).toEqual([]);
-    expect(selectedValues).toEqual([]);
-  });
+      expect(result).toEqual({
+        messageKey: "onboarding.invalid-selection",
+        status: "error",
+      });
+      expect(roleValues).toEqual([]);
+      expect(selectedValues).toEqual([]);
+    })
+  );
 
-  it("returns mutation error state when the Convex selection fails", async () => {
-    const result = await Effect.runPromise(
-      submitOnboardingSelection({
+  it.live("returns mutation error state when the Convex selection fails", () =>
+    Effect.gen(function* () {
+      const result = yield* submitOnboardingSelection({
         selectProgram: () => Promise.reject(new Error("Convex unavailable")),
         updateRole: () => Promise.resolve(),
         value: validValue,
+      });
+
+      expect(result).toEqual({
+        messageKey: "onboarding.save-error",
+        status: "error",
+      });
+    })
+  );
+
+  it.live(
+    "does not create a learning selection when the role mutation fails",
+    () =>
+      Effect.gen(function* () {
+        const selectedValues: unknown[] = [];
+        const result = yield* submitOnboardingSelection({
+          selectProgram: (value) => {
+            selectedValues.push(value);
+            return Promise.resolve();
+          },
+          updateRole: () => Promise.reject(new Error("Role unavailable")),
+          value: validValue,
+        });
+
+        expect(result).toEqual({
+          messageKey: "onboarding.save-error",
+          status: "error",
+        });
+        expect(selectedValues).toEqual([]);
       })
-    );
-
-    expect(result).toEqual({
-      messageKey: "onboarding.save-error",
-      status: "error",
-    });
-  });
-
-  it("does not create a learning selection when the role mutation fails", async () => {
-    const selectedValues: unknown[] = [];
-    const result = await Effect.runPromise(
-      submitOnboardingSelection({
-        selectProgram: (value) => {
-          selectedValues.push(value);
-          return Promise.resolve();
-        },
-        updateRole: () => Promise.reject(new Error("Role unavailable")),
-        value: validValue,
-      })
-    );
-
-    expect(result).toEqual({
-      messageKey: "onboarding.save-error",
-      status: "error",
-    });
-    expect(selectedValues).toEqual([]);
-  });
+  );
 });

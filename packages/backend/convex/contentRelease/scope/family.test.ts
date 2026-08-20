@@ -3,8 +3,8 @@ import {
   loadReleaseFamilies,
   mergeManagedFamilies,
 } from "@repo/backend/convex/contentRelease/scope/family";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("contentRelease/scope/family", () => {
   it("preserves established ownership in canonical contract order", () => {
@@ -18,15 +18,15 @@ describe("contentRelease/scope/family", () => {
     expect(hasExactFamilies(["material", "article"], merged)).toBe(false);
   });
 
-  it("rejects noncanonical durable ownership", async () => {
-    await expect(
-      Effect.runPromise(
-        loadReleaseFamilies({
+  it.live("rejects noncanonical durable ownership", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* loadReleaseFamilies({
           baseFamilies: [],
           releaseId: "release-noncanonical",
           resultFamilies: ["material", "article"],
         }).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
-  });
+      ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
+    })
+  );
 });

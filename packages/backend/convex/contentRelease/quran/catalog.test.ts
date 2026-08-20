@@ -6,9 +6,9 @@ import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeQuranSurah } from "@repo/backend/test/quran-rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran-snapshot";
+import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 /** Builds the complete technical surah catalog. */
 function makeSurahCatalog() {
@@ -26,25 +26,25 @@ describe("contentRelease/quran/catalog", () => {
     ).resolves.toMatchObject({ managed: false, rowJson: [] });
   });
 
-  it("returns the complete verified catalog", async () => {
-    const t = convexTest(schema, convexModules);
-    const snapshotId = await t.mutation((ctx) =>
-      activateQuranSnapshot(ctx, makeSurahCatalog())
-    );
-    const catalog = await t.query((ctx) =>
-      runConvexProgram(readQuranSurahs(ctx))
-    );
-    const first = await Effect.runPromise(
-      decodeSnapshotRowJson(catalog.rowJson[0] ?? "")
-    );
+  it.live("returns the complete verified catalog", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      const snapshotId = yield* Effect.promise(() =>
+        t.mutation((ctx) => activateQuranSnapshot(ctx, makeSurahCatalog()))
+      );
+      const catalog = yield* Effect.promise(() =>
+        t.query((ctx) => runConvexProgram(readQuranSurahs(ctx)))
+      );
+      const first = yield* decodeSnapshotRowJson(catalog.rowJson[0] ?? "");
 
-    expect(catalog).toMatchObject({ managed: true, snapshotId });
-    expect(catalog.rowJson).toHaveLength(QURAN_SURAH_COUNT);
-    expect(first).toMatchObject({
-      family: "quran",
-      record: { payload: { kind: "quran-surah", number: 1 } },
-    });
-  });
+      expect(catalog).toMatchObject({ managed: true, snapshotId });
+      expect(catalog.rowJson).toHaveLength(QURAN_SURAH_COUNT);
+      expect(first).toMatchObject({
+        family: "quran",
+        record: { payload: { kind: "quran-surah", number: 1 } },
+      });
+    })
+  );
 
   it("fails closed for incomplete or noncanonical catalogs", async () => {
     const incomplete = convexTest(schema, convexModules);

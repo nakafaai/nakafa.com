@@ -3,9 +3,9 @@ import {
   toTryoutRuntimeError,
   tryRuntimePromise,
 } from "@repo/backend/convex/tryouts/runtime/error";
+import { describe, expect, it } from "@repo/testing/effect";
 import { ConvexError } from "convex/values";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("tryouts/runtime/error", () => {
   it("preserves typed runtime and Convex failures", () => {
@@ -56,19 +56,19 @@ describe("tryouts/runtime/error", () => {
     ).not.toContain("Unknown runtime failure.");
   });
 
-  it("lifts promise operations", async () => {
-    await expect(
-      Effect.runPromise(tryRuntimePromise(() => Promise.resolve("ready")))
-    ).resolves.toBe("ready");
-    await expect(
-      Effect.runPromise(
-        Effect.flip(
+  it.live("lifts promise operations", () =>
+    Effect.gen(function* () {
+      expect(yield* tryRuntimePromise(() => Promise.resolve("ready"))).toBe(
+        "ready"
+      );
+      expect(
+        yield* Effect.flip(
           tryRuntimePromise(() => Promise.reject(new Error("Promise failed.")))
         )
-      )
-    ).resolves.toMatchObject({
-      code: "TRYOUT_RUNTIME_FAILED",
-      message: "Unable to complete try-out runtime operation.",
-    });
-  });
+      ).toMatchObject({
+        code: "TRYOUT_RUNTIME_FAILED",
+        message: "Unable to complete try-out runtime operation.",
+      });
+    })
+  );
 });

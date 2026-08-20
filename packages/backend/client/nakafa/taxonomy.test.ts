@@ -1,14 +1,15 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { readNakafaTaxonomy } from "@repo/backend/client/nakafa/taxonomy";
-import { ConvexRuntimeQueryError } from "@repo/backend/client/runtime";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   encodeTestQuranRow,
   makeQuranSurah,
 } from "@repo/backend/test/quran-rows";
+import { toRuntimeQueryError } from "@repo/backend/test/runtime-query";
+import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const runtimeMocks = vi.hoisted(() => ({
   runtimeQuery: vi.fn(),
@@ -20,16 +21,6 @@ vi.mock("@repo/backend/client/runtime", () => ({
       try: () => runtimeMocks.runtimeQuery(url, query, args),
     }),
 }));
-function toRuntimeQueryError(cause: unknown) {
-  if (cause instanceof ConvexRuntimeQueryError) {
-    return cause;
-  }
-  return new ConvexRuntimeQueryError({
-    networkCodes: [],
-    query: "test-runtime-query",
-    reason: "query",
-  });
-}
 const quranSnapshotId = Sha256HashSchema.make(`sha256:${"b".repeat(64)}`);
 const APP_LOCALE_PATTERN = /^(?:en|id)$/u;
 const ACTIVE_RELEASE = {
@@ -42,176 +33,195 @@ beforeEach(() => {
   runtimeMocks.runtimeQuery.mockImplementation(readRuntimeFixture);
 });
 describe("readNakafaTaxonomy", () => {
-  it("assembles taxonomy from signed publications", async () => {
-    const taxonomy = await Effect.runPromise(
-      readNakafaTaxonomy("https://example.convex.cloud", "id")
-    );
-    const defaultTaxonomy = await Effect.runPromise(
-      readNakafaTaxonomy("https://example.convex.cloud")
-    );
-    expect(taxonomy.locale).toBe("id");
-    expect(defaultTaxonomy.locale).toBe("en");
-    expect(taxonomy.quran.surah_count).toBe(114);
-    expect(taxonomy.content_counts).toEqual([
-      { count: 121, locale: "en" },
-      { count: 121, locale: "id" },
-    ]);
-    expect(taxonomy.tools).toContain("nakafa_get_quran_reference");
-    expect(taxonomy.articles.categories).toEqual(["politics"]);
-    expect(taxonomy.tryout).toEqual({
-      countries: [{ id: "indonesia", label: "Indonesia" }],
-      exams: [{ id: "snbt", label: "SNBT" }],
-    });
-    expect(calledRuntimeQueries()).toContain(
-      getFunctionName(api.contentRelease.article.categories)
-    );
-    expect(calledRuntimeQueries()).toContain(
-      getFunctionName(api.contentRelease.article.sitemapBuckets)
-    );
-    expect(calledRuntimeQueries()).toContain(
-      getFunctionName(api.contentRelease.material.sitemapBuckets)
-    );
-    expect(calledRuntimeQueries()).toContain(
-      getFunctionName(api.contentRelease.tryout.taxonomy)
-    );
-    expect(
-      calledRuntimeQueries().filter(
-        (name) =>
-          name === getFunctionName(api.contentRelease.runtime.active.read)
-      )
-    ).toHaveLength(4);
-  });
-  it("fails closed when an article or material family is unmanaged", async () => {
-    for (const family of ["article", "material"]) {
-      const target =
-        family === "article"
-          ? api.contentRelease.article.sitemapBuckets
-          : api.contentRelease.material.sitemapBuckets;
+  it.live("assembles taxonomy from signed publications", () =>
+    Effect.gen(function* () {
+      const taxonomy = yield* readNakafaTaxonomy(
+        "https://example.convex.cloud",
+        "id"
+      );
+      const defaultTaxonomy = yield* readNakafaTaxonomy(
+        "https://example.convex.cloud"
+      );
+      expect(taxonomy.locale).toBe("id");
+      expect(defaultTaxonomy.locale).toBe("en");
+      expect(taxonomy.quran.surah_count).toBe(114);
+      expect(taxonomy.content_counts).toEqual([
+        { count: 121, locale: "en" },
+        { count: 121, locale: "id" },
+      ]);
+      expect(taxonomy.tools).toContain("nakafa_get_quran_reference");
+      expect(taxonomy.articles.categories).toEqual(["politics"]);
+      expect(taxonomy.tryout).toEqual({
+        countries: [{ id: "indonesia", label: "Indonesia" }],
+        exams: [{ id: "snbt", label: "SNBT" }],
+      });
+      expect(calledRuntimeQueries()).toContain(
+        getFunctionName(api.contentRelease.article.categories)
+      );
+      expect(calledRuntimeQueries()).toContain(
+        getFunctionName(api.contentRelease.article.sitemapBuckets)
+      );
+      expect(calledRuntimeQueries()).toContain(
+        getFunctionName(api.contentRelease.material.sitemapBuckets)
+      );
+      expect(calledRuntimeQueries()).toContain(
+        getFunctionName(api.contentRelease.tryout.taxonomy)
+      );
+      expect(
+        calledRuntimeQueries().filter(
+          (name) =>
+            name === getFunctionName(api.contentRelease.runtime.active.read)
+        )
+      ).toHaveLength(4);
+    })
+  );
+  it.live("fails closed when an article or material family is unmanaged", () =>
+    Effect.gen(function* () {
+      for (const family of ["article", "material"]) {
+        const target =
+          family === "article"
+            ? api.contentRelease.article.sitemapBuckets
+            : api.contentRelease.material.sitemapBuckets;
+        runtimeMocks.runtimeQuery.mockImplementation(
+          (convexUrl, query, args) => {
+            if (getFunctionName(query) === getFunctionName(target)) {
+              return Promise.resolve({ managed: false });
+            }
+            return readRuntimeFixture(convexUrl, query, args);
+          }
+        );
+        expect(
+          yield* Effect.result(
+            readNakafaTaxonomy("https://example.convex.cloud", "id")
+          )
+        ).toMatchObject({
+          _tag: "Failure",
+          failure: {
+            _tag: "NakafaAgentDataReadError",
+            message: "Unable to read signed Nakafa content inventory.",
+          },
+        });
+      }
+    })
+  );
+  it.live("pins every article category page to one signed release", () =>
+    Effect.gen(function* () {
       runtimeMocks.runtimeQuery.mockImplementation((convexUrl, query, args) => {
-        if (getFunctionName(query) === getFunctionName(target)) {
-          return Promise.resolve({ managed: false });
+        if (
+          getFunctionName(query) !==
+          getFunctionName(api.contentRelease.article.categories)
+        ) {
+          return readRuntimeFixture(convexUrl, query, args);
+        }
+        const categoryArgs = args as {
+          expectedManifestHash: string | null;
+          expectedReleaseId: string | null;
+          paginationOpts: {
+            cursor: string | null;
+          };
+        };
+        if (categoryArgs.paginationOpts.cursor === null) {
+          expect(categoryArgs.expectedManifestHash).toBeNull();
+          expect(categoryArgs.expectedReleaseId).toBeNull();
+          return Promise.resolve(categoryPage(["politics"], false, "next"));
+        }
+        expect(categoryArgs).toMatchObject({
+          expectedManifestHash: `sha256:${"a".repeat(64)}`,
+          expectedReleaseId: "article-release",
+          paginationOpts: { cursor: "next" },
+        });
+        return Promise.resolve(categoryPage(["science"], true, ""));
+      });
+      const taxonomy = yield* readNakafaTaxonomy(
+        "https://example.convex.cloud",
+        "id"
+      );
+      expect(taxonomy.articles.categories).toEqual(["politics", "science"]);
+    })
+  );
+  it.live("fails closed when signed article taxonomy is stale", () =>
+    Effect.gen(function* () {
+      runtimeMocks.runtimeQuery.mockImplementation((convexUrl, query, args) => {
+        if (
+          getFunctionName(query) ===
+          getFunctionName(api.contentRelease.article.categories)
+        ) {
+          return Promise.resolve({
+            ...categoryPage(["politics"], true, ""),
+            stale: true,
+          });
         }
         return readRuntimeFixture(convexUrl, query, args);
       });
-      await expect(
-        Effect.runPromise(
-          Effect.result(
-            readNakafaTaxonomy("https://example.convex.cloud", "id")
-          )
+      expect(
+        yield* Effect.result(
+          readNakafaTaxonomy("https://example.convex.cloud", "id")
         )
-      ).resolves.toMatchObject({
+      ).toMatchObject({
+        _tag: "Failure",
+        failure: { _tag: "NakafaAgentDataReadError" },
+      });
+    })
+  );
+  it.live("fails closed when an article category page loses its cursor", () =>
+    Effect.gen(function* () {
+      runtimeMocks.runtimeQuery.mockImplementation((convexUrl, query, args) => {
+        if (
+          getFunctionName(query) ===
+          getFunctionName(api.contentRelease.article.categories)
+        ) {
+          return Promise.resolve(categoryPage(["politics"], false, ""));
+        }
+        return readRuntimeFixture(convexUrl, query, args);
+      });
+      expect(
+        yield* Effect.result(
+          readNakafaTaxonomy("https://example.convex.cloud", "id")
+        )
+      ).toMatchObject({
         _tag: "Failure",
         failure: {
           _tag: "NakafaAgentDataReadError",
-          message: "Unable to read signed Nakafa content inventory.",
+          cause: "Signed article taxonomy for id lost its continuation cursor.",
         },
       });
-    }
-  });
-  it("pins every article category page to one signed release", async () => {
-    runtimeMocks.runtimeQuery.mockImplementation((convexUrl, query, args) => {
-      if (
-        getFunctionName(query) !==
-        getFunctionName(api.contentRelease.article.categories)
-      ) {
-        return readRuntimeFixture(convexUrl, query, args);
-      }
-      const categoryArgs = args as {
-        expectedManifestHash: string | null;
-        expectedReleaseId: string | null;
-        paginationOpts: {
-          cursor: string | null;
-        };
-      };
-      if (categoryArgs.paginationOpts.cursor === null) {
-        expect(categoryArgs.expectedManifestHash).toBeNull();
-        expect(categoryArgs.expectedReleaseId).toBeNull();
-        return Promise.resolve(categoryPage(["politics"], false, "next"));
-      }
-      expect(categoryArgs).toMatchObject({
-        expectedManifestHash: `sha256:${"a".repeat(64)}`,
-        expectedReleaseId: "article-release",
-        paginationOpts: { cursor: "next" },
-      });
-      return Promise.resolve(categoryPage(["science"], true, ""));
-    });
-    const taxonomy = await Effect.runPromise(
-      readNakafaTaxonomy("https://example.convex.cloud", "id")
-    );
-    expect(taxonomy.articles.categories).toEqual(["politics", "science"]);
-  });
-  it("fails closed when signed article taxonomy is stale", async () => {
-    runtimeMocks.runtimeQuery.mockImplementation((convexUrl, query, args) => {
-      if (
-        getFunctionName(query) ===
-        getFunctionName(api.contentRelease.article.categories)
-      ) {
-        return Promise.resolve({
-          ...categoryPage(["politics"], true, ""),
-          stale: true,
-        });
-      }
-      return readRuntimeFixture(convexUrl, query, args);
-    });
-    await expect(
-      Effect.runPromise(
-        Effect.result(readNakafaTaxonomy("https://example.convex.cloud", "id"))
-      )
-    ).resolves.toMatchObject({
-      _tag: "Failure",
-      failure: { _tag: "NakafaAgentDataReadError" },
-    });
-  });
-  it("fails closed when an article category page loses its cursor", async () => {
-    runtimeMocks.runtimeQuery.mockImplementation((convexUrl, query, args) => {
-      if (
-        getFunctionName(query) ===
-        getFunctionName(api.contentRelease.article.categories)
-      ) {
-        return Promise.resolve(categoryPage(["politics"], false, ""));
-      }
-      return readRuntimeFixture(convexUrl, query, args);
-    });
-    await expect(
-      Effect.runPromise(
-        Effect.result(readNakafaTaxonomy("https://example.convex.cloud", "id"))
-      )
-    ).resolves.toMatchObject({
-      _tag: "Failure",
-      failure: {
-        _tag: "NakafaAgentDataReadError",
-        cause: "Signed article taxonomy for id lost its continuation cursor.",
-      },
-    });
-  });
-  it("fails closed when the active publication changes during assembly", async () => {
-    let activeReadCount = 0;
-    runtimeMocks.runtimeQuery.mockImplementation((convexUrl, query, args) => {
-      if (
-        getFunctionName(query) ===
-        getFunctionName(api.contentRelease.runtime.active.read)
-      ) {
-        activeReadCount += 1;
-        return Promise.resolve(
-          activeReadCount === 1
-            ? ACTIVE_RELEASE
-            : { ...ACTIVE_RELEASE, sequence: 26 }
+    })
+  );
+  it.live(
+    "fails closed when the active publication changes during assembly",
+    () =>
+      Effect.gen(function* () {
+        let activeReadCount = 0;
+        runtimeMocks.runtimeQuery.mockImplementation(
+          (convexUrl, query, args) => {
+            if (
+              getFunctionName(query) ===
+              getFunctionName(api.contentRelease.runtime.active.read)
+            ) {
+              activeReadCount += 1;
+              return Promise.resolve(
+                activeReadCount === 1
+                  ? ACTIVE_RELEASE
+                  : { ...ACTIVE_RELEASE, sequence: 26 }
+              );
+            }
+            return readRuntimeFixture(convexUrl, query, args);
+          }
         );
-      }
-      return readRuntimeFixture(convexUrl, query, args);
-    });
-    await expect(
-      Effect.runPromise(
-        Effect.result(readNakafaTaxonomy("https://example.convex.cloud", "id"))
-      )
-    ).resolves.toMatchObject({
-      _tag: "Failure",
-      failure: {
-        _tag: "NakafaAgentDataReadError",
-        message: "Unable to complete one release-pinned Nakafa content read.",
-      },
-    });
-  });
+        expect(
+          yield* Effect.result(
+            readNakafaTaxonomy("https://example.convex.cloud", "id")
+          )
+        ).toMatchObject({
+          _tag: "Failure",
+          failure: {
+            _tag: "NakafaAgentDataReadError",
+            message:
+              "Unable to complete one release-pinned Nakafa content read.",
+          },
+        });
+      })
+  );
 });
 /** Builds one authenticated article category page fixture. */
 function categoryPage(

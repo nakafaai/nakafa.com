@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import { projectTryoutReview } from "@/components/tryout/review/model";
 
@@ -15,76 +15,76 @@ const SECOND_IDENTITY = {
 };
 
 describe("projectTryoutReview", () => {
-  it("pairs signed questions and answers in frozen runtime order", async () => {
-    const content = createContent([SECOND_IDENTITY, FIRST_IDENTITY]);
-    const questions = [
-      createRuntimeQuestion(FIRST_IDENTITY, 1),
-      createRuntimeQuestion(SECOND_IDENTITY, 2),
-    ];
+  it.live("pairs signed questions and answers in frozen runtime order", () =>
+    Effect.gen(function* () {
+      const content = createContent([SECOND_IDENTITY, FIRST_IDENTITY]);
+      const questions = [
+        createRuntimeQuestion(FIRST_IDENTITY, 1),
+        createRuntimeQuestion(SECOND_IDENTITY, 2),
+      ];
 
-    await expect(
-      Effect.runPromise(projectTryoutReview({ content, questions }))
-    ).resolves.toEqual([
-      {
-        answer: "answer:questions/1",
-        choices: [{ isCorrect: true, label: "A", optionKey: "a", order: 1 }],
-        content: "question:questions/1",
-        questionOrder: 1,
-        response: {
-          answeredAt: 10,
-          selectedOptionId: "a",
-          updatedAt: 10,
+      expect(yield* projectTryoutReview({ content, questions })).toEqual([
+        {
+          answer: "answer:questions/1",
+          choices: [{ isCorrect: true, label: "A", optionKey: "a", order: 1 }],
+          content: "question:questions/1",
+          questionOrder: 1,
+          response: {
+            answeredAt: 10,
+            selectedOptionId: "a",
+            updatedAt: 10,
+          },
         },
-      },
-      {
-        answer: "answer:questions/2",
-        choices: [{ isCorrect: true, label: "A", optionKey: "a", order: 1 }],
-        content: "question:questions/2",
-        questionOrder: 2,
-        response: {
-          answeredAt: 20,
-          selectedOptionId: "a",
-          updatedAt: 20,
+        {
+          answer: "answer:questions/2",
+          choices: [{ isCorrect: true, label: "A", optionKey: "a", order: 1 }],
+          content: "question:questions/2",
+          questionOrder: 2,
+          response: {
+            answeredAt: 20,
+            selectedOptionId: "a",
+            updatedAt: 20,
+          },
         },
-      },
-    ]);
-  });
+      ]);
+    })
+  );
 
-  it("fails with a typed error when one signed answer is missing", async () => {
-    const content = createContent([FIRST_IDENTITY]);
-    const incompleteContent = {
-      ...content,
-      answers: [],
-    } satisfies TryoutRuntimeContent;
+  it.live("fails with a typed error when one signed answer is missing", () =>
+    Effect.gen(function* () {
+      const content = createContent([FIRST_IDENTITY]);
+      const incompleteContent = {
+        ...content,
+        answers: [],
+      } satisfies TryoutRuntimeContent;
 
-    await expect(
-      Effect.runPromise(
-        Effect.flip(
+      expect(
+        yield* Effect.flip(
           projectTryoutReview({
             content: incompleteContent,
             questions: [createRuntimeQuestion(FIRST_IDENTITY, 1)],
           })
         )
-      )
-    ).resolves.toMatchObject({
-      _tag: "TryoutReviewProjectionError",
-      code: "TRYOUT_REVIEW_PROJECTION",
-    });
-  });
+      ).toMatchObject({
+        _tag: "TryoutReviewProjectionError",
+        code: "TRYOUT_REVIEW_PROJECTION",
+      });
+    })
+  );
 
-  it("fails with a typed error when one signed question is missing", async () => {
-    await expectProjectionError({
+  it.live("fails with a typed error when one signed question is missing", () =>
+    expectProjectionError({
       content: createContent([]),
       questions: [createRuntimeQuestion(FIRST_IDENTITY, 1)],
-    });
-  });
+    })
+  );
 
-  it("fails with a typed error for duplicate content identity", async () => {
-    const content = createContent([FIRST_IDENTITY, FIRST_IDENTITY]);
+  it.live("fails with a typed error for duplicate content identity", () =>
+    Effect.gen(function* () {
+      const content = createContent([FIRST_IDENTITY, FIRST_IDENTITY]);
 
-    await expect(
-      Effect.runPromise(
-        Effect.flip(
+      expect(
+        yield* Effect.flip(
           projectTryoutReview({
             content,
             questions: [
@@ -93,67 +93,73 @@ describe("projectTryoutReview", () => {
             ],
           })
         )
-      )
-    ).resolves.toMatchObject({
-      _tag: "TryoutReviewProjectionError",
-      code: "TRYOUT_REVIEW_PROJECTION",
-    });
-  });
+      ).toMatchObject({
+        _tag: "TryoutReviewProjectionError",
+        code: "TRYOUT_REVIEW_PROJECTION",
+      });
+    })
+  );
 
-  it("fails with a typed error for duplicate answer identity", async () => {
-    const content = createContent([FIRST_IDENTITY, SECOND_IDENTITY]);
+  it.live("fails with a typed error for duplicate answer identity", () =>
+    Effect.gen(function* () {
+      const content = createContent([FIRST_IDENTITY, SECOND_IDENTITY]);
 
-    await expectProjectionError({
-      content: {
-        ...content,
-        answers: [content.answers[0], content.answers[0]],
-      },
-      questions: [
-        createRuntimeQuestion(FIRST_IDENTITY, 1),
-        createRuntimeQuestion(SECOND_IDENTITY, 2),
-      ],
-    });
-  });
+      yield* expectProjectionError({
+        content: {
+          ...content,
+          answers: [content.answers[0], content.answers[0]],
+        },
+        questions: [
+          createRuntimeQuestion(FIRST_IDENTITY, 1),
+          createRuntimeQuestion(SECOND_IDENTITY, 2),
+        ],
+      });
+    })
+  );
 
-  it("fails with a typed error for duplicate runtime order", async () => {
-    await expectProjectionError({
+  it.live("fails with a typed error for duplicate runtime order", () =>
+    expectProjectionError({
       content: createContent([FIRST_IDENTITY, SECOND_IDENTITY]),
       questions: [
         createRuntimeQuestion(FIRST_IDENTITY, 1),
         createRuntimeQuestion(SECOND_IDENTITY, 1),
       ],
-    });
-  });
+    })
+  );
 
-  it("fails with a typed error for runtime and signed identity drift", async () => {
-    await expectProjectionError({
-      content: createContent([FIRST_IDENTITY]),
-      questions: [createRuntimeQuestion(SECOND_IDENTITY, 1)],
-    });
-  });
+  it.live(
+    "fails with a typed error for runtime and signed identity drift",
+    () =>
+      expectProjectionError({
+        content: createContent([FIRST_IDENTITY]),
+        questions: [createRuntimeQuestion(SECOND_IDENTITY, 1)],
+      })
+  );
 
-  it("fails with a typed error for empty signed answer content", async () => {
-    const content = createContent([FIRST_IDENTITY]);
+  it.live("fails with a typed error for empty signed answer content", () =>
+    Effect.gen(function* () {
+      const content = createContent([FIRST_IDENTITY]);
 
-    await expectProjectionError({
-      content: {
-        ...content,
-        answers: [{ ...content.answers[0], answer: null }],
-      },
-      questions: [createRuntimeQuestion(FIRST_IDENTITY, 1)],
-    });
-  });
+      yield* expectProjectionError({
+        content: {
+          ...content,
+          answers: [{ ...content.answers[0], answer: null }],
+        },
+        questions: [createRuntimeQuestion(FIRST_IDENTITY, 1)],
+      });
+    })
+  );
 });
 
 /** Expects the review projection to fail through its typed Effect channel. */
-async function expectProjectionError(
+function expectProjectionError(
   input: Parameters<typeof projectTryoutReview>[0]
 ) {
-  await expect(
-    Effect.runPromise(Effect.flip(projectTryoutReview(input)))
-  ).resolves.toMatchObject({
-    _tag: "TryoutReviewProjectionError",
-    code: "TRYOUT_REVIEW_PROJECTION",
+  return Effect.gen(function* () {
+    expect(yield* Effect.flip(projectTryoutReview(input))).toMatchObject({
+      _tag: "TryoutReviewProjectionError",
+      code: "TRYOUT_REVIEW_PROJECTION",
+    });
   });
 }
 

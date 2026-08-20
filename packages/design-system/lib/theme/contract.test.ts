@@ -15,9 +15,9 @@ import {
   ThemeStyleSourceLoadError,
 } from "@repo/design-system/lib/theme/contract";
 import { themes } from "@repo/design-system/lib/theme/registry";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import postcss from "postcss";
-import { describe, expect, it } from "vitest";
 
 const STATUS_NAMES = ["success", "warning", "info"];
 const THEME_IDENTITY_TOKENS = [
@@ -47,38 +47,38 @@ const customThemeNames = concreteThemeNames.filter(
 );
 const profiles = createThemeProfiles(concreteThemeNames, sources);
 describe("theme profile contract", () => {
-  it("returns a typed failure when a theme stylesheet cannot load", async () => {
-    const missingPath = "/theme-contract/intentionally-missing.css";
-    const result = await Effect.runPromise(
-      Effect.result(
+  it.live("returns a typed failure when a theme stylesheet cannot load", () =>
+    Effect.gen(function* () {
+      const missingPath = "/theme-contract/intentionally-missing.css";
+      const result = yield* Effect.result(
         readThemeStyleSources({
           customThemes: missingPath,
           globals: missingPath,
         }).pipe(Effect.provide(NodeFileSystem.layer))
-      )
-    );
-    expect(result._tag).toBe("Failure");
-    if (result._tag !== "Failure") {
-      return;
-    }
-    expect(result.failure).toBeInstanceOf(ThemeStyleSourceLoadError);
-    expect(result.failure).toMatchObject({
-      _tag: "ThemeStyleSourceLoadError",
-      message: `Failed to load theme stylesheet at ${missingPath}.`,
-      path: missingPath,
-    });
-  });
-  it("returns a typed failure when a theme stylesheet cannot parse", () => {
-    const path = "/theme-contract/invalid.css";
-    const result = Effect.runSync(
-      Effect.result(parseThemeStylesheet("}", path))
-    );
-    expect(result._tag).toBe("Failure");
-    if (result._tag !== "Failure") {
-      return;
-    }
-    expect(result.failure).toMatchObject({ path });
-  });
+      );
+      expect(result._tag).toBe("Failure");
+      if (result._tag !== "Failure") {
+        return;
+      }
+      expect(result.failure).toBeInstanceOf(ThemeStyleSourceLoadError);
+      expect(result.failure).toMatchObject({
+        _tag: "ThemeStyleSourceLoadError",
+        message: `Failed to load theme stylesheet at ${missingPath}.`,
+        path: missingPath,
+      });
+    })
+  );
+  it.live("returns a typed failure when a theme stylesheet cannot parse", () =>
+    Effect.gen(function* () {
+      const path = "/theme-contract/invalid.css";
+      const result = yield* Effect.result(parseThemeStylesheet("}", path));
+      expect(result._tag).toBe("Failure");
+      if (result._tag !== "Failure") {
+        return;
+      }
+      expect(result.failure).toMatchObject({ path });
+    })
+  );
   it("inspects only direct declarations and simple top-level selectors", () => {
     const syntheticRoot = postcss.parse(`
       @layer base {}

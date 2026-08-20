@@ -8,46 +8,52 @@ import {
   validateContentRuntimeTableDefinitions,
   validateRuntimeTableDefinitions,
 } from "@repo/backend/scripts/content-runtime/tables";
+import { describe, expect, it } from "@repo/testing/effect";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 const EXPECTED_RUNTIME_SCHEMA_FINGERPRINT =
   "5d0f7abf656518fc06d7455686e85a0999a918855842eec07b2ece31a55fcfff";
 
 describe("content runtime tables", () => {
-  it("derives the complete copy set and applies the active pointer last", () => {
-    const releaseTables = Object.keys(contentReleaseSchema).filter(
-      (table) => table !== "contentState"
-    );
-    const expected = [
-      ...releaseTables,
-      ...Object.keys(tryoutBundleSchema),
-      "contentState",
-    ];
+  it.live(
+    "derives the complete copy set and applies the active pointer last",
+    () =>
+      Effect.gen(function* () {
+        const releaseTables = Object.keys(contentReleaseSchema).filter(
+          (table) => table !== "contentState"
+        );
+        const expected = [
+          ...releaseTables,
+          ...Object.keys(tryoutBundleSchema),
+          "contentState",
+        ];
 
-    expect(CONTENT_RUNTIME_TABLES).toEqual(expected);
-    expect(new Set(CONTENT_RUNTIME_TABLES).size).toBe(expected.length);
-    expect(Effect.runSync(validateContentRuntimeTableDefinitions)).toHaveLength(
-      expected.length
-    );
-  });
+        expect(CONTENT_RUNTIME_TABLES).toEqual(expected);
+        expect(new Set(CONTENT_RUNTIME_TABLES).size).toBe(expected.length);
+        expect(yield* validateContentRuntimeTableDefinitions).toHaveLength(
+          expected.length
+        );
+      })
+  );
 
-  it("rejects duplicate table registrations before CI uses the fingerprint", () => {
-    const table = defineTable({ value: v.string() });
-    const failure = Effect.runSync(
-      validateRuntimeTableDefinitions([
-        ["duplicate", table],
-        ["duplicate", table],
-      ]).pipe(Effect.flip)
-    );
+  it.live(
+    "rejects duplicate table registrations before CI uses the fingerprint",
+    () =>
+      Effect.gen(function* () {
+        const table = defineTable({ value: v.string() });
+        const failure = yield* validateRuntimeTableDefinitions([
+          ["duplicate", table],
+          ["duplicate", table],
+        ]).pipe(Effect.flip);
 
-    expect(failure).toMatchObject({
-      _tag: "DuplicateContentRuntimeTableError",
-      table: "duplicate",
-    });
-  });
+        expect(failure).toMatchObject({
+          _tag: "DuplicateContentRuntimeTableError",
+          table: "duplicate",
+        });
+      })
+  );
 
   it("fingerprints the exact cache format and runtime table contracts", () => {
     expect(CONTENT_RUNTIME_CACHE_CONTRACT).toEqual({

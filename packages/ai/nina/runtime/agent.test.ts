@@ -15,6 +15,7 @@ import {
   textOutputSchema,
 } from "@repo/ai/schema/tools";
 import type { MyMetadata, MyUIMessage } from "@repo/ai/types/message";
+import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import type {
   LanguageModelUsage,
   ModelMessage,
@@ -23,7 +24,7 @@ import type {
 } from "ai";
 import { tool } from "ai";
 import { Cause, Effect, Exit, Option } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 interface CapturedAgentSettings {
   readonly id?: string;
@@ -319,93 +320,109 @@ describe("nina/agent", () => {
     expect(context.learningSelection).toEqual(learningSelection);
     expect(context.userRole).toBeUndefined();
   });
-  it("runs the ToolLoopAgent lifecycle with Nina metadata and adapter-owned tools", async () => {
-    const writer = {
-      merge: vi.fn(),
-      onError: undefined,
-      write: vi.fn(),
-    } satisfies UIMessageStreamWriter<MyUIMessage>;
-    const tools = createTools();
-    const onStreamError = vi.fn();
-    const responseMessages = await Effect.runPromise(
-      runNinaAgentTurn({
-        messages: chat.finalMessages,
-        page,
-        runtime,
-        settings: {
-          repairToolCall: () => Effect.runPromise(Effect.succeed(null)),
-          tools,
-        },
-        stream: {
-          formatError: () => "translated stream error",
-          onError: onStreamError,
-          readFinishMetadata: () => ({
-            credits: 2,
-            model: modelId,
-            tokens: { input: 4, output: 6, total: 10 },
-          }),
-          writer,
-        },
-        user,
+  it.live(
+    "runs the ToolLoopAgent lifecycle with Nina metadata and adapter-owned tools",
+    () =>
+      Effect.gen(function* () {
+        const writer = {
+          merge: vi.fn(),
+          onError: undefined,
+          write: vi.fn(),
+        } satisfies UIMessageStreamWriter<MyUIMessage>;
+        const tools = createTools();
+        const onStreamError = vi.fn();
+        const responseMessages = yield* runNinaAgentTurn({
+          messages: chat.finalMessages,
+          page,
+          runtime,
+          settings: {
+            repairToolCall: () => Promise.resolve(null),
+            tools,
+          },
+          stream: {
+            formatError: () => "translated stream error",
+            onError: onStreamError,
+            readFinishMetadata: () => ({
+              credits: 2,
+              model: modelId,
+              tokens: { input: 4, output: 6, total: 10 },
+            }),
+            writer,
+          },
+          user,
+        });
+        expect(fakeAgentState.settings?.id).toBe("nina");
+        expect(fakeAgentState.settings?.instructions).toContain(
+          "Vector Addition"
+        );
+        expect(fakeAgentState.settings?.tools).toBe(tools);
+        expect(fakeAgentState.streamOptions?.messages).toEqual(
+          chat.finalMessages
+        );
+        expect(writer.merge).toHaveBeenCalledOnce();
+        expect(onStreamError).toHaveBeenCalledWith(
+          expect.any(Error),
+          "toUIMessageStream"
+        );
+        expect(fakeAgentState.streamErrorMessage).toBe(
+          "translated stream error"
+        );
+        expect(fakeAgentState.startMetadata).toMatchObject({
+          model: modelId,
+          ninaContextSnapshot: ninaContext.snapshot,
+        });
+        expect(fakeAgentState.deltaMetadata).toBeUndefined();
+        expect(fakeAgentState.finishMetadata).toMatchObject({
+          model: modelId,
+          ninaContextTransition: ninaContext.transition,
+          tokens: { input: 4, output: 6, total: 10 },
+        });
+        expect(responseMessages).toEqual([
+          {
+            content: [{ text: "Ready.", type: "text" }],
+            role: "assistant",
+          },
+        ]);
       })
-    );
-    expect(fakeAgentState.settings?.id).toBe("nina");
-    expect(fakeAgentState.settings?.instructions).toContain("Vector Addition");
-    expect(fakeAgentState.settings?.tools).toBe(tools);
-    expect(fakeAgentState.streamOptions?.messages).toEqual(chat.finalMessages);
-    expect(writer.merge).toHaveBeenCalledOnce();
-    expect(onStreamError).toHaveBeenCalledWith(
-      expect.any(Error),
-      "toUIMessageStream"
-    );
-    expect(fakeAgentState.streamErrorMessage).toBe("translated stream error");
-    expect(fakeAgentState.startMetadata).toMatchObject({
-      model: modelId,
-      ninaContextSnapshot: ninaContext.snapshot,
-    });
-    expect(fakeAgentState.deltaMetadata).toBeUndefined();
-    expect(fakeAgentState.finishMetadata).toMatchObject({
-      model: modelId,
-      ninaContextTransition: ninaContext.transition,
-      tokens: { input: 4, output: 6, total: 10 },
-    });
-    expect(responseMessages).toEqual([
-      {
-        content: [{ text: "Ready.", type: "text" }],
-        role: "assistant",
-      },
-    ]);
-  });
-  it("keeps ToolLoopAgent stream startup failures in the Effect error channel", async () => {
-    fakeAgentState.streamFailure = new Error("stream startup failed");
-    const exit = await Effect.runPromiseExit(
-      runNinaAgentTurn({
-        messages: chat.finalMessages,
-        page,
-        runtime,
-        settings: createSettings(),
-        stream: createStream(),
-        user,
+  );
+  it.live(
+    "keeps ToolLoopAgent stream startup failures in the Effect error channel",
+    () =>
+      Effect.gen(function* () {
+        fakeAgentState.streamFailure = new Error("stream startup failed");
+        const exit = yield* Effect.exit(
+          runNinaAgentTurn({
+            messages: chat.finalMessages,
+            page,
+            runtime,
+            settings: createSettings(),
+            stream: createStream(),
+            user,
+          })
+        );
+        expect(Exit.isFailure(exit)).toBe(true);
+        expect(readExitFailure(exit)).toBeInstanceOf(NinaAgentError);
       })
-    );
-    expect(Exit.isFailure(exit)).toBe(true);
-    expect(readExitFailure(exit)).toBeInstanceOf(NinaAgentError);
-  });
-  it("keeps ToolLoopAgent response failures in the Effect error channel", async () => {
-    fakeAgentState.responseFailure = new Error("response failed");
-    const exit = await Effect.runPromiseExit(
-      runNinaAgentTurn({
-        messages: chat.finalMessages,
-        page,
-        runtime,
-        settings: createSettings(),
-        stream: createStream(),
-        user,
+  );
+  it.live(
+    "keeps ToolLoopAgent response failures in the Effect error channel",
+    () =>
+      Effect.gen(function* () {
+        fakeAgentState.responseFailure = new Error("response failed");
+        const exit = yield* Effect.exit(
+          runNinaAgentTurn({
+            messages: chat.finalMessages,
+            page,
+            runtime,
+            settings: createSettings(),
+            stream: createStream(),
+            user,
+          })
+        );
+        expect(Exit.isFailure(exit)).toBe(true);
+        expect(readExitFailure(exit)).toBeInstanceOf(NinaAgentError);
       })
-    );
-    expect(Exit.isFailure(exit)).toBe(true);
-    expect(readExitFailure(exit)).toBeInstanceOf(NinaAgentError);
-  });
+  );
 });
 /** Extracts the typed Effect failure from an Exit for Nina agent assertions. */
 function readExitFailure(exit: Exit.Exit<unknown, unknown>) {
@@ -418,7 +435,7 @@ function readExitFailure(exit: Exit.Exit<unknown, unknown>) {
 /** Creates the minimal AI SDK settings needed to exercise Nina's package Module. */
 function createSettings() {
   return {
-    repairToolCall: () => Effect.runPromise(Effect.succeed(null)),
+    repairToolCall: () => Promise.resolve(null),
     tools: createTools(),
   };
 }

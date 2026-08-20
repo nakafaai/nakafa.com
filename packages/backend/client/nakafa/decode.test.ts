@@ -9,69 +9,75 @@ import {
   NakafaAgentInputError,
 } from "@repo/contents/_lib/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import { describe, expect, it } from "@repo/testing/effect";
 import { defaultLocale, locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("Nakafa runtime decoders", () => {
-  it("decodes valid agent-facing payloads", async () => {
-    await expect(
-      Effect.runPromise(decodeNakafaMarkdown(markdown()))
-    ).resolves.toMatchObject({
-      locale: "en",
-      text: "Body",
-      title: "Title",
-    });
-    await expect(
-      Effect.runPromise(decodeNakafaQuranReference(quranReference()))
-    ).resolves.toMatchObject({
-      route: "quran/1",
-      verses: [{ number: 1 }],
-    });
-    await expect(
-      Effect.runPromise(decodeNakafaTaxonomy(taxonomy()))
-    ).resolves.toMatchObject({
-      default_locale: "en",
-      quran: { surah_count: 114 },
-    });
-    await expect(
-      Effect.runPromise(
-        parseQuranReferenceOptions({
+  it.live("decodes valid agent-facing payloads", () =>
+    Effect.gen(function* () {
+      expect(yield* decodeNakafaMarkdown(markdown())).toMatchObject({
+        locale: "en",
+        text: "Body",
+        title: "Title",
+      });
+      expect(yield* decodeNakafaQuranReference(quranReference())).toMatchObject(
+        {
+          route: "quran/1",
+          verses: [{ number: 1 }],
+        }
+      );
+      expect(yield* decodeNakafaTaxonomy(taxonomy())).toMatchObject({
+        default_locale: "en",
+        quran: { surah_count: 114 },
+      });
+      expect(
+        yield* parseQuranReferenceOptions({
           from_verse: 1,
           include_tafsir: true,
           locale: "id",
           surah: 1,
           to_verse: 2,
         })
-      )
-    ).resolves.toMatchObject({
-      include_tafsir: true,
-      locale: "id",
-    });
-  });
-  it("maps invalid output and input into typed Nakafa errors", async () => {
-    await expectDecodeError(decodeNakafaMarkdown({}), NakafaAgentDataReadError);
-    await expectDecodeError(
-      decodeNakafaQuranReference({}),
-      NakafaAgentDataReadError
-    );
-    await expectDecodeError(decodeNakafaTaxonomy({}), NakafaAgentDataReadError);
-    await expectDecodeError(
-      parseQuranReferenceOptions({ surah: "one" }),
-      NakafaAgentInputError
-    );
-  });
+      ).toMatchObject({
+        include_tafsir: true,
+        locale: "id",
+      });
+    })
+  );
+  it.live("maps invalid output and input into typed Nakafa errors", () =>
+    Effect.gen(function* () {
+      yield* expectDecodeError(
+        decodeNakafaMarkdown({}),
+        NakafaAgentDataReadError
+      );
+      yield* expectDecodeError(
+        decodeNakafaQuranReference({}),
+        NakafaAgentDataReadError
+      );
+      yield* expectDecodeError(
+        decodeNakafaTaxonomy({}),
+        NakafaAgentDataReadError
+      );
+      yield* expectDecodeError(
+        parseQuranReferenceOptions({ surah: "one" }),
+        NakafaAgentInputError
+      );
+    })
+  );
 });
 /** Expects one decoding effect to fail with the supplied typed error class. */
-async function expectDecodeError(
+function expectDecodeError(
   effect: Effect.Effect<unknown, unknown>,
   expectedError: new (...args: never[]) => Error
 ) {
-  const result = await Effect.runPromise(Effect.result(effect));
-  expect(result._tag).toBe("Failure");
-  if (result._tag === "Failure") {
-    expect(result.failure).toBeInstanceOf(expectedError);
-  }
+  return Effect.gen(function* () {
+    const result = yield* Effect.result(effect);
+    expect(result._tag).toBe("Failure");
+    if (result._tag === "Failure") {
+      expect(result.failure).toBeInstanceOf(expectedError);
+    }
+  });
 }
 /** Builds a minimal valid markdown payload for schema decoding. */
 function markdown() {

@@ -2,9 +2,9 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { estimateIrtScore } from "@repo/backend/convex/tryouts/runtime/estimate";
+import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 type IrtScaleItem = Doc<"irtScaleItems">;
 
@@ -53,7 +53,7 @@ async function loadIrtItem() {
 }
 
 describe("tryouts/runtime/estimate", () => {
-  it.each([
+  it.live.each([
     {
       kind: "non-positive discrimination",
       update: (item: IrtScaleItem) => ({ ...item, discrimination: 0 }),
@@ -79,15 +79,17 @@ describe("tryouts/runtime/estimate", () => {
         discrimination: Number.MAX_VALUE,
       }),
     },
-  ])("rejects $kind", async ({ update }) => {
-    const item = update(await loadIrtItem());
-    const error = await Effect.runPromise(
-      Effect.flip(estimateIrtScore([{ isCorrect: true, item }]))
-    );
+  ])("rejects $kind", ({ update }) =>
+    Effect.gen(function* () {
+      const item = update(yield* Effect.promise(() => loadIrtItem()));
+      const error = yield* Effect.flip(
+        estimateIrtScore([{ isCorrect: true, item }])
+      );
 
-    expect(error).toMatchObject({
-      _tag: "TryoutRuntimeError",
-      code: "TRYOUT_IRT_ITEM_INVALID",
-    });
-  });
+      expect(error).toMatchObject({
+        _tag: "TryoutRuntimeError",
+        code: "TRYOUT_IRT_ITEM_INVALID",
+      });
+    })
+  );
 });

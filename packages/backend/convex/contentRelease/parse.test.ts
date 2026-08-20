@@ -30,9 +30,8 @@ import {
   testRendererJson,
   testUpsertJson,
 } from "@repo/backend/test/content-release";
-
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, Exit } from "effect";
-import { describe, expect, it } from "vitest";
 
 /** Creates exact server-derived evidence for strict proof decoding. */
 function testProofJson() {
@@ -67,64 +66,71 @@ function testProofJson() {
 }
 
 describe("contentRelease/parse", () => {
-  it("round-trips every stored contract through its owning canonicalizer", async () => {
-    const release = await Effect.runPromise(
-      decodeReleaseJson(testReleaseJson())
-    );
-    const item = await Effect.runPromise(decodeItemJson(testUpsertJson()));
-    const artifact = await Effect.runPromise(
-      decodeArtifactJson(testArtifactJson())
-    );
-    const projection = await Effect.runPromise(
-      decodeProjectionJson(testProjectionJson())
-    );
-    const renderer = await Effect.runPromise(
-      decodeRendererJson(testRendererJson())
-    );
-    const proof = await Effect.runPromise(decodeProofJson(testProofJson()));
+  it.live(
+    "round-trips every stored contract through its owning canonicalizer",
+    () =>
+      Effect.gen(function* () {
+        const release = yield* decodeReleaseJson(testReleaseJson());
+        const item = yield* decodeItemJson(testUpsertJson());
+        const artifact = yield* decodeArtifactJson(testArtifactJson());
+        const projection = yield* decodeProjectionJson(testProjectionJson());
+        const renderer = yield* decodeRendererJson(testRendererJson());
+        const proof = yield* decodeProofJson(testProofJson());
 
-    expect(encodeReleaseJson(release)).toBe(JSON.stringify(release));
-    expect(JSON.parse(encodeItemJson(item))).toEqual(item);
-    expect(JSON.parse(encodeArtifactJson(artifact))).toEqual(artifact);
-    expect(JSON.parse(encodeProjectionJson(projection))).toEqual(projection);
-    expect(encodeRendererJson(renderer)).toBe(testRendererJson());
-    expect(proof.releaseId).toBe(TEST_RELEASE_ID);
-  });
+        expect(encodeReleaseJson(release)).toBe(JSON.stringify(release));
+        expect(JSON.parse(encodeItemJson(item))).toEqual(item);
+        expect(JSON.parse(encodeArtifactJson(artifact))).toEqual(artifact);
+        expect(JSON.parse(encodeProjectionJson(projection))).toEqual(
+          projection
+        );
+        expect(encodeRendererJson(renderer)).toBe(testRendererJson());
+        expect(proof.releaseId).toBe(TEST_RELEASE_ID);
+      })
+  );
 
-  it("maps malformed and schema-invalid values to stable typed failures", async () => {
-    const malformed = await Effect.runPromiseExit(decodeReleaseJson("{"));
-    const failures = await Promise.all([
-      Effect.runPromise(decodeReleaseJson("{}").pipe(Effect.flip)),
-      Effect.runPromise(decodeItemJson("{}").pipe(Effect.flip)),
-      Effect.runPromise(decodeArtifactJson("{}").pipe(Effect.flip)),
-      Effect.runPromise(decodeProjectionJson("{}").pipe(Effect.flip)),
-      Effect.runPromise(decodeProofJson("{}").pipe(Effect.flip)),
-      Effect.runPromise(decodeRendererJson("{}").pipe(Effect.flip)),
-    ]);
+  it.live(
+    "maps malformed and schema-invalid values to stable typed failures",
+    () =>
+      Effect.gen(function* () {
+        const malformed = yield* Effect.exit(decodeReleaseJson("{"));
+        const failures = yield* Effect.all(
+          [
+            decodeReleaseJson("{}").pipe(Effect.flip),
+            decodeItemJson("{}").pipe(Effect.flip),
+            decodeArtifactJson("{}").pipe(Effect.flip),
+            decodeProjectionJson("{}").pipe(Effect.flip),
+            decodeProofJson("{}").pipe(Effect.flip),
+            decodeRendererJson("{}").pipe(Effect.flip),
+          ],
+          { concurrency: "unbounded" }
+        );
 
-    expect(Exit.isFailure(malformed)).toBe(true);
-    expect(failures).toHaveLength(6);
-    expect(
-      failures.every(({ code }) => code === "CONTENT_RELEASE_INTEGRITY")
-    ).toBe(true);
-  });
+        expect(Exit.isFailure(malformed)).toBe(true);
+        expect(failures).toHaveLength(6);
+        expect(
+          failures.every(({ code }) => code === "CONTENT_RELEASE_INTEGRITY")
+        ).toBe(true);
+      })
+  );
 
-  it("rejects stored material without its canonical topic title", async () => {
-    const { topicTitle: _topicTitle, ...incomplete } = FUNCTION_MATERIAL;
+  it.live("rejects stored material without its canonical topic title", () =>
+    Effect.gen(function* () {
+      const { topicTitle: _topicTitle, ...incomplete } = FUNCTION_MATERIAL;
 
-    await expect(
-      Effect.runPromise(
-        decodeProjectionJson(JSON.stringify(incomplete)).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
-  });
+      expect(
+        yield* decodeProjectionJson(JSON.stringify(incomplete)).pipe(
+          Effect.flip
+        )
+      ).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
+    })
+  );
 
-  it("parses unknown stored JSON once and maps invalid bytes", async () => {
-    await expect(
-      Effect.runPromise(parseStoredJson('{"ok":true}'))
-    ).resolves.toEqual({ ok: true });
-    await expect(
-      Effect.runPromise(parseStoredJson("{").pipe(Effect.flip))
-    ).resolves.toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
-  });
+  it.live("parses unknown stored JSON once and maps invalid bytes", () =>
+    Effect.gen(function* () {
+      expect(yield* parseStoredJson('{"ok":true}')).toEqual({ ok: true });
+      expect(yield* parseStoredJson("{").pipe(Effect.flip)).toMatchObject({
+        code: "CONTENT_RELEASE_INTEGRITY",
+      });
+    })
+  );
 });

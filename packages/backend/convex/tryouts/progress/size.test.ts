@@ -3,8 +3,8 @@ import {
   ensureTryoutProgressWithinReadBudget,
   isTryoutProgressWithinReadBudget,
 } from "@repo/backend/convex/tryouts/progress/size";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 const compactProgress = Object.freeze({
   appLocale: "id",
@@ -27,18 +27,18 @@ describe("tryouts/progress/size", () => {
     expect(isTryoutProgressWithinReadBudget(compactProgress)).toBe(true);
   });
 
-  it("rejects a row that consumes its complete byte reservation", async () => {
-    await expect(
-      Effect.runPromise(
-        ensureTryoutProgressWithinReadBudget({
+  it.live("rejects a row that consumes its complete byte reservation", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* ensureTryoutProgressWithinReadBudget({
           ...compactProgress,
           setIdentity: "x".repeat(TRYOUT_PROGRESS_DOCUMENT_LIMIT),
         }).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({
-      _tag: "TryoutProgressSizeError",
-      code: "TRYOUT_PROGRESS_SIZE",
-      message: "Try-out progress exceeds the signed catalog read budget.",
-    });
-  });
+      ).toMatchObject({
+        _tag: "TryoutProgressSizeError",
+        code: "TRYOUT_PROGRESS_SIZE",
+        message: "Try-out progress exceeds the signed catalog read budget.",
+      });
+    })
+  );
 });

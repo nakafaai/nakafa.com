@@ -6,14 +6,14 @@ import {
   publicationSuccess,
   validateResponseBytes,
 } from "@repo/backend/convex/contentRelease/ingress/response";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Cause, Effect, Exit, Result } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("content publication response encoding", () => {
-  it("encodes canonical successes and canonical failure statuses", async () => {
-    await expect(
-      Effect.runPromise(
-        publicationSuccess({
+  it.live("encodes canonical successes and canonical failure statuses", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* publicationSuccess({
           ok: true,
           operation: "current",
           value: {
@@ -22,43 +22,41 @@ describe("content publication response encoding", () => {
             recovery: null,
           },
         })
-      )
-    ).resolves.toEqual({
-      body: '{"ok":true,"operation":"current","value":{"active":null,"candidate":null,"recovery":null}}',
-      status: 200,
-    });
-    await expect(
-      Effect.runPromise(
-        publicationFailure({
+      ).toEqual({
+        body: '{"ok":true,"operation":"current","value":{"active":null,"candidate":null,"recovery":null}}',
+        status: 200,
+      });
+      expect(
+        yield* publicationFailure({
           code: "CONTENT_RELEASE_UNAUTHORIZED",
           kind: "unauthorized",
         })
-      )
-    ).resolves.toEqual({
-      body: '{"failure":{"code":"CONTENT_RELEASE_UNAUTHORIZED","kind":"unauthorized"},"ok":false}',
-      status: 401,
-    });
-  });
+      ).toEqual({
+        body: '{"failure":{"code":"CONTENT_RELEASE_UNAUTHORIZED","kind":"unauthorized"},"ok":false}',
+        status: 401,
+      });
+    })
+  );
 
-  it("defects on impossible response contracts and oversized bodies", async () => {
-    const invalid = await Effect.runPromiseExit(
-      encodePublicationResult({ ok: true })
-    );
-    const oversized = await Effect.runPromiseExit(
-      validateResponseBytes("x".repeat(MAX_PUBLICATION_RESPONSE_BYTES + 1))
-    );
+  it.live("defects on impossible response contracts and oversized bodies", () =>
+    Effect.gen(function* () {
+      const invalid = yield* Effect.exit(encodePublicationResult({ ok: true }));
+      const oversized = yield* Effect.exit(
+        validateResponseBytes("x".repeat(MAX_PUBLICATION_RESPONSE_BYTES + 1))
+      );
 
-    expect(Exit.isFailure(invalid)).toBe(true);
-    if (Exit.isFailure(invalid)) {
-      expect(Cause.findDefect(invalid.cause)).toEqual(
-        Result.succeed(new PublicationResponseDefect({ reason: "contract" }))
-      );
-    }
-    expect(Exit.isFailure(oversized)).toBe(true);
-    if (Exit.isFailure(oversized)) {
-      expect(Cause.findDefect(oversized.cause)).toEqual(
-        Result.succeed(new PublicationResponseDefect({ reason: "size" }))
-      );
-    }
-  });
+      expect(Exit.isFailure(invalid)).toBe(true);
+      if (Exit.isFailure(invalid)) {
+        expect(Cause.findDefect(invalid.cause)).toEqual(
+          Result.succeed(new PublicationResponseDefect({ reason: "contract" }))
+        );
+      }
+      expect(Exit.isFailure(oversized)).toBe(true);
+      if (Exit.isFailure(oversized)) {
+        expect(Cause.findDefect(oversized.cause)).toEqual(
+          Result.succeed(new PublicationResponseDefect({ reason: "size" }))
+        );
+      }
+    })
+  );
 });

@@ -1,9 +1,11 @@
 import { verifyNakafaContent } from "@repo/backend/client/nakafa/verify";
 import { ConvexRuntimeQueryError } from "@repo/backend/client/runtime";
+import { toRuntimeQueryError } from "@repo/backend/test/runtime-query";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const runtimeMocks = vi.hoisted(() => ({
   runtimeQuery: vi.fn(),
@@ -18,18 +20,6 @@ vi.mock("@repo/backend/client/runtime", async (importOriginal) => ({
     }),
 }));
 
-function toRuntimeQueryError(cause: unknown) {
-  if (cause instanceof ConvexRuntimeQueryError) {
-    return cause;
-  }
-
-  return new ConvexRuntimeQueryError({
-    networkCodes: [],
-    query: "test-runtime-query",
-    reason: "query",
-  });
-}
-
 const convexUrl = "https://example.convex.cloud";
 const quranRef = readNakafaContentRefFixture("en", "quran/1", "quran");
 
@@ -38,53 +28,56 @@ describe("verifyNakafaContent", () => {
     runtimeMocks.runtimeQuery.mockReset();
   });
 
-  it("returns false without a query for unsupported references", async () => {
-    const result = await Effect.runPromise(
-      verifyNakafaContent(convexUrl, "quran/1")
-    );
+  it.live("returns false without a query for unsupported references", () =>
+    Effect.gen(function* () {
+      const result = yield* verifyNakafaContent(convexUrl, "quran/1");
 
-    expect(result).toBe(false);
-    expect(runtimeMocks.runtimeQuery).not.toHaveBeenCalled();
-  });
+      expect(result).toBe(false);
+      expect(runtimeMocks.runtimeQuery).not.toHaveBeenCalled();
+    })
+  );
 
-  it("returns false when no current signed family owns a canonical route", async () => {
-    runtimeMocks.runtimeQuery.mockResolvedValueOnce(null);
+  it.live(
+    "returns false when no current signed family owns a canonical route",
+    () =>
+      Effect.gen(function* () {
+        runtimeMocks.runtimeQuery.mockResolvedValueOnce(null);
 
-    await expect(
-      Effect.runPromise(
-        verifyNakafaContent(convexUrl, "https://nakafa.com/en/quran/1")
-      )
-    ).resolves.toBe(false);
-  });
+        expect(
+          yield* verifyNakafaContent(convexUrl, "https://nakafa.com/en/quran/1")
+        ).toBe(false);
+      })
+  );
 
-  it("returns true when the current signed reference exists", async () => {
-    runtimeMocks.runtimeQuery.mockResolvedValueOnce(quranRef);
+  it.live("returns true when the current signed reference exists", () =>
+    Effect.gen(function* () {
+      runtimeMocks.runtimeQuery.mockResolvedValueOnce(quranRef);
 
-    await expect(
-      Effect.runPromise(
-        verifyNakafaContent(convexUrl, "https://nakafa.com/en/quran/1")
-      )
-    ).resolves.toBe(true);
-  });
+      expect(
+        yield* verifyNakafaContent(convexUrl, "https://nakafa.com/en/quran/1")
+      ).toBe(true);
+    })
+  );
 
-  it("preserves typed runtime read failures", async () => {
-    const runtimeError = new ConvexRuntimeQueryError({
-      networkCodes: ["EPIPE"],
-      query: "contentRelease.reference.read",
-      reason: "transport",
-    });
-    runtimeMocks.runtimeQuery.mockRejectedValueOnce(runtimeError);
+  it.live("preserves typed runtime read failures", () =>
+    Effect.gen(function* () {
+      const runtimeError = new ConvexRuntimeQueryError({
+        networkCodes: ["EPIPE"],
+        query: "contentRelease.reference.read",
+        reason: "transport",
+      });
+      runtimeMocks.runtimeQuery.mockRejectedValueOnce(runtimeError);
 
-    const error = await Effect.runPromise(
-      verifyNakafaContent(convexUrl, "https://nakafa.com/en/quran/1").pipe(
-        Effect.flip
-      )
-    );
+      const error = yield* verifyNakafaContent(
+        convexUrl,
+        "https://nakafa.com/en/quran/1"
+      ).pipe(Effect.flip);
 
-    expect(error).toBeInstanceOf(NakafaAgentDataReadError);
-    expect(error).toMatchObject({
-      _tag: "NakafaAgentDataReadError",
-      cause: runtimeError.message,
-    });
-  });
+      expect(error).toBeInstanceOf(NakafaAgentDataReadError);
+      expect(error).toMatchObject({
+        _tag: "NakafaAgentDataReadError",
+        cause: runtimeError.message,
+      });
+    })
+  );
 });

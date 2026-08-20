@@ -12,8 +12,8 @@ import {
   polarDuplicateEmailCode,
   type StoredPolarCustomer,
 } from "@repo/backend/convex/customers/polar/spec";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, Result } from "effect";
-import { describe, expect, it } from "vitest";
 
 const input: EnsurePolarCustomerInput = {
   email: "nakafaai@gmail.com",
@@ -39,322 +39,350 @@ function createGateway(overrides: Partial<PolarCustomerGateway>) {
   return { ...gateway, ...overrides };
 }
 describe("customers/polar/impl", () => {
-  it("normalizes Polar customer metadata to Convex-storable primitive values", async () => {
-    const customer = await Effect.runPromise(
-      normalizeStoredCustomer({
-        email: "nakafaai@gmail.com",
-        externalId: null,
-        id: "polar-customer",
-        metadata: {
-          ignored: { nested: true },
-          isTeacher: false,
-          note: "active",
-          score: 10,
-        },
-        name: null,
+  it.live(
+    "normalizes Polar customer metadata to Convex-storable primitive values",
+    () =>
+      Effect.gen(function* () {
+        const customer = yield* normalizeStoredCustomer({
+          email: "nakafaai@gmail.com",
+          externalId: null,
+          id: "polar-customer",
+          metadata: {
+            ignored: { nested: true },
+            isTeacher: false,
+            note: "active",
+            score: 10,
+          },
+          name: null,
+        });
+        expect(customer).toEqual({
+          email: "nakafaai@gmail.com",
+          externalId: null,
+          id: "polar-customer",
+          metadata: {
+            isTeacher: false,
+            note: "active",
+            score: 10,
+          },
+          name: null,
+        });
       })
-    );
-    expect(customer).toEqual({
-      email: "nakafaai@gmail.com",
-      externalId: null,
-      id: "polar-customer",
-      metadata: {
-        isTeacher: false,
-        note: "active",
-        score: 10,
-      },
-      name: null,
-    });
-  });
-  it("normalizes missing Polar metadata to an empty record", async () => {
-    const customer = await Effect.runPromise(
-      normalizeStoredCustomer({
+  );
+  it.live("normalizes missing Polar metadata to an empty record", () =>
+    Effect.gen(function* () {
+      const customer = yield* normalizeStoredCustomer({
         email: "nakafaai@gmail.com",
         externalId: undefined,
         id: "polar-customer",
         name: undefined,
+      });
+      expect(customer).toEqual({
+        email: "nakafaai@gmail.com",
+        externalId: null,
+        id: "polar-customer",
+        metadata: {},
+        name: null,
+      });
+    })
+  );
+  it.live(
+    "rejects Polar customers that cannot be linked to an email address",
+    () =>
+      Effect.gen(function* () {
+        const result = yield* Effect.result(
+          normalizeStoredCustomer({
+            externalId: null,
+            id: "polar-customer",
+            metadata: {},
+            name: "Missing Email",
+          })
+        );
+        if (Result.isSuccess(result)) {
+          throw new Error("Expected missing email to fail.");
+        }
+        expect(result.failure).toBeInstanceOf(PolarCustomerError);
+        expect(result.failure.message).toContain(
+          "missing a valid email address"
+        );
       })
-    );
-    expect(customer).toEqual({
-      email: "nakafaai@gmail.com",
-      externalId: null,
-      id: "polar-customer",
-      metadata: {},
-      name: null,
-    });
-  });
-  it("rejects Polar customers that cannot be linked to an email address", async () => {
-    const result = await Effect.runPromise(
-      Effect.result(
-        normalizeStoredCustomer({
-          externalId: null,
-          id: "polar-customer",
-          metadata: {},
-          name: "Missing Email",
-        })
-      )
-    );
-    if (Result.isSuccess(result)) {
-      throw new Error("Expected missing email to fail.");
-    }
-    expect(result.failure).toBeInstanceOf(PolarCustomerError);
-    expect(result.failure.message).toContain("missing a valid email address");
-  });
-  it("keeps an already-synced local Polar customer without writing updates", async () => {
-    let updateCount = 0;
-    const gateway = createGateway({
-      getCustomerById: () =>
-        Effect.succeed({
-          email: input.email,
+  );
+  it.live(
+    "keeps an already-synced local Polar customer without writing updates",
+    () =>
+      Effect.gen(function* () {
+        let updateCount = 0;
+        const gateway = createGateway({
+          getCustomerById: () =>
+            Effect.succeed({
+              email: input.email,
+              externalId: input.externalId,
+              id: "polar-local",
+              metadata: input.metadata,
+              name: input.name,
+            }),
+          updateCustomer: () => {
+            updateCount += 1;
+            return unusedGatewayCall();
+          },
+        });
+        const customer = yield* ensureCustomer(gateway, {
+          ...input,
+          localCustomerId: "polar-local",
+        });
+        expect(customer).toMatchObject({
           externalId: input.externalId,
           id: "polar-local",
-          metadata: input.metadata,
-          name: input.name,
-        }),
-      updateCustomer: () => {
-        updateCount += 1;
-        return unusedGatewayCall();
-      },
-    });
-    const customer = await Effect.runPromise(
-      ensureCustomer(gateway, {
-        ...input,
-        localCustomerId: "polar-local",
+        });
+        expect(updateCount).toBe(0);
       })
-    );
-    expect(customer).toMatchObject({
-      externalId: input.externalId,
-      id: "polar-local",
-    });
-    expect(updateCount).toBe(0);
-  });
-  it("treats omitted input metadata as an empty metadata record", async () => {
-    let updateCount = 0;
-    const gateway = createGateway({
-      getCustomerByExternalId: () =>
-        Effect.succeed({
-          email: input.email,
-          externalId: input.externalId,
-          id: "polar-external",
-          metadata: {},
-          name: input.name,
-        }),
-      updateCustomer: () => {
-        updateCount += 1;
-        return unusedGatewayCall();
-      },
-    });
-    const customer = await Effect.runPromise(
-      ensureCustomer(gateway, {
+  );
+  it.live("treats omitted input metadata as an empty metadata record", () =>
+    Effect.gen(function* () {
+      let updateCount = 0;
+      const gateway = createGateway({
+        getCustomerByExternalId: () =>
+          Effect.succeed({
+            email: input.email,
+            externalId: input.externalId,
+            id: "polar-external",
+            metadata: {},
+            name: input.name,
+          }),
+        updateCustomer: () => {
+          updateCount += 1;
+          return unusedGatewayCall();
+        },
+      });
+      const customer = yield* ensureCustomer(gateway, {
         email: input.email,
         externalId: input.externalId,
         name: input.name,
-      })
-    );
-    expect(customer).toMatchObject({
-      id: "polar-external",
-      metadata: {},
-    });
-    expect(updateCount).toBe(0);
-  });
-  it("creates a new customer when no existing Polar identity is found", async () => {
-    const gateway = createGateway({
-      createCustomer: (next) =>
-        Effect.succeed({
-          email: next.email,
-          externalId: next.externalId,
+      });
+      expect(customer).toMatchObject({
+        id: "polar-external",
+        metadata: {},
+      });
+      expect(updateCount).toBe(0);
+    })
+  );
+  it.live(
+    "creates a new customer when no existing Polar identity is found",
+    () =>
+      Effect.gen(function* () {
+        const gateway = createGateway({
+          createCustomer: (next) =>
+            Effect.succeed({
+              email: next.email,
+              externalId: next.externalId,
+              id: "polar-created",
+              metadata: next.metadata,
+              name: next.name,
+            }),
+          getCustomerByExternalId: () => Effect.succeed(null),
+        });
+        const customer = yield* ensureCustomer(gateway, input);
+        expect(customer).toMatchObject({
+          externalId: input.externalId,
           id: "polar-created",
-          metadata: next.metadata,
-          name: next.name,
-        }),
-      getCustomerByExternalId: () => Effect.succeed(null),
-    });
-    const customer = await Effect.runPromise(ensureCustomer(gateway, input));
-    expect(customer).toMatchObject({
-      externalId: input.externalId,
-      id: "polar-created",
-    });
-  });
-  it("uses an existing external-id customer before creating a new one", async () => {
-    let createCount = 0;
-    const gateway = createGateway({
-      createCustomer: () => {
-        createCount += 1;
-        return unusedGatewayCall();
-      },
-      getCustomerByExternalId: () =>
-        Effect.succeed({
-          email: input.email,
+        });
+      })
+  );
+  it.live(
+    "uses an existing external-id customer before creating a new one",
+    () =>
+      Effect.gen(function* () {
+        let createCount = 0;
+        const gateway = createGateway({
+          createCustomer: () => {
+            createCount += 1;
+            return unusedGatewayCall();
+          },
+          getCustomerByExternalId: () =>
+            Effect.succeed({
+              email: input.email,
+              externalId: input.externalId,
+              id: "polar-external",
+              metadata: input.metadata,
+              name: input.name,
+            }),
+        });
+        const customer = yield* ensureCustomer(gateway, input);
+        expect(customer).toMatchObject({
           externalId: input.externalId,
           id: "polar-external",
-          metadata: input.metadata,
-          name: input.name,
-        }),
-    });
-    const customer = await Effect.runPromise(ensureCustomer(gateway, input));
-    expect(customer).toMatchObject({
-      externalId: input.externalId,
-      id: "polar-external",
-    });
-    expect(createCount).toBe(0);
-  });
-  it("continues lookup when a stored local customer ID no longer exists in Polar", async () => {
-    let createCount = 0;
-    const gateway = createGateway({
-      createCustomer: (next) => {
-        createCount += 1;
-        return Effect.succeed({
-          email: next.email,
-          externalId: next.externalId,
-          id: "polar-created",
-          metadata: next.metadata,
-          name: next.name,
         });
-      },
-      getCustomerByExternalId: () => Effect.succeed(null),
-      getCustomerById: () => Effect.succeed(null),
-    });
-    const customer = await Effect.runPromise(
-      ensureCustomer(gateway, {
-        ...input,
-        localCustomerId: "stale-polar-id",
+        expect(createCount).toBe(0);
       })
-    );
-    expect(customer).toMatchObject({
-      id: "polar-created",
-    });
-    expect(createCount).toBe(1);
-  });
-  it("relinks an existing email customer when externalId is still unset", async () => {
-    const updates: Array<{
-      customer: StoredPolarCustomer;
-      next: EnsurePolarCustomerInput;
-    }> = [];
-    const gateway = createGateway({
-      createCustomer: () =>
-        Effect.fail(
-          new PolarDuplicateEmailError({
-            code: polarDuplicateEmailCode,
-            message: "Duplicate email",
-          })
-        ),
-      findCustomerByEmail: () =>
-        Effect.succeed({
-          email: "nakafaai@gmail.com",
-          externalId: null,
-          id: "polar-existing",
-          metadata: {},
-          name: "Existing Customer",
-        }),
-      getCustomerByExternalId: () => Effect.succeed(null),
-      updateCustomer: (update) => {
-        updates.push(update);
-        return Effect.succeed({
-          email: update.next.email,
-          externalId: update.next.externalId,
-          id: update.customer.id,
-          metadata: update.next.metadata,
-          name: update.next.name,
+  );
+  it.live(
+    "continues lookup when a stored local customer ID no longer exists in Polar",
+    () =>
+      Effect.gen(function* () {
+        let createCount = 0;
+        const gateway = createGateway({
+          createCustomer: (next) => {
+            createCount += 1;
+            return Effect.succeed({
+              email: next.email,
+              externalId: next.externalId,
+              id: "polar-created",
+              metadata: next.metadata,
+              name: next.name,
+            });
+          },
+          getCustomerByExternalId: () => Effect.succeed(null),
+          getCustomerById: () => Effect.succeed(null),
         });
-      },
-    });
-    const customer = await Effect.runPromise(ensureCustomer(gateway, input));
-    expect(customer).toMatchObject({
-      externalId: "auth-user",
-      id: "polar-existing",
-    });
-    expect(updates).toEqual([
-      expect.objectContaining({
-        customer: expect.objectContaining({ id: "polar-existing" }),
-        next: expect.objectContaining({ externalId: "auth-user" }),
-      }),
-    ]);
-  });
-  it("keeps duplicate-email conflicts typed when another externalId owns the customer", async () => {
-    const gateway = createGateway({
-      createCustomer: () =>
-        Effect.fail(
-          new PolarDuplicateEmailError({
-            code: polarDuplicateEmailCode,
-            message: "Duplicate email",
-          })
-        ),
-      findCustomerByEmail: () =>
-        Effect.succeed({
-          email: "nakafaai@gmail.com",
-          externalId: "different-auth",
-          id: "polar-existing",
-          metadata: {},
-          name: "Existing Customer",
-        }),
-      getCustomerByExternalId: () => Effect.succeed(null),
-    });
-    const result = await Effect.runPromise(
-      Effect.result(ensureCustomer(gateway, input))
-    );
-    if (Result.isSuccess(result)) {
-      throw new Error("Expected duplicate email ownership to fail.");
-    }
-    expect(result.failure).toBeInstanceOf(PolarCustomerEmailConflict);
-    expect(result.failure).toMatchObject({
-      code: "POLAR_CUSTOMER_EMAIL_CONFLICT",
-      existingExternalId: "different-auth",
-      polarCustomerId: "polar-existing",
-    });
-  });
-  it("retries external-id lookup after a create race failure", async () => {
-    let externalIdLookupCount = 0;
-    const gateway = createGateway({
-      createCustomer: () =>
-        Effect.fail(
-          new PolarCustomerError({
-            code: polarCustomerErrorCode,
-            message: "Create failed",
-          })
-        ),
-      getCustomerByExternalId: () => {
-        externalIdLookupCount += 1;
-        if (externalIdLookupCount === 1) {
-          return Effect.succeed(null);
-        }
-        return Effect.succeed({
-          email: "nakafaai@gmail.com",
+        const customer = yield* ensureCustomer(gateway, {
+          ...input,
+          localCustomerId: "stale-polar-id",
+        });
+        expect(customer).toMatchObject({
+          id: "polar-created",
+        });
+        expect(createCount).toBe(1);
+      })
+  );
+  it.live(
+    "relinks an existing email customer when externalId is still unset",
+    () =>
+      Effect.gen(function* () {
+        const updates: Array<{
+          customer: StoredPolarCustomer;
+          next: EnsurePolarCustomerInput;
+        }> = [];
+        const gateway = createGateway({
+          createCustomer: () =>
+            Effect.fail(
+              new PolarDuplicateEmailError({
+                code: polarDuplicateEmailCode,
+                message: "Duplicate email",
+              })
+            ),
+          findCustomerByEmail: () =>
+            Effect.succeed({
+              email: "nakafaai@gmail.com",
+              externalId: null,
+              id: "polar-existing",
+              metadata: {},
+              name: "Existing Customer",
+            }),
+          getCustomerByExternalId: () => Effect.succeed(null),
+          updateCustomer: (update) => {
+            updates.push(update);
+            return Effect.succeed({
+              email: update.next.email,
+              externalId: update.next.externalId,
+              id: update.customer.id,
+              metadata: update.next.metadata,
+              name: update.next.name,
+            });
+          },
+        });
+        const customer = yield* ensureCustomer(gateway, input);
+        expect(customer).toMatchObject({
           externalId: "auth-user",
-          id: "polar-race",
-          metadata: { userId: "user-1" },
-          name: "Nakafa Tekno Kreatif",
+          id: "polar-existing",
         });
-      },
-    });
-    const customer = await Effect.runPromise(ensureCustomer(gateway, input));
-    expect(customer).toMatchObject({
-      externalId: "auth-user",
-      id: "polar-race",
-    });
-    expect(externalIdLookupCount).toBe(2);
-  });
-  it("keeps create failures typed when duplicate-email recovery cannot find a customer", async () => {
-    const gateway = createGateway({
-      createCustomer: () =>
-        Effect.fail(
-          new PolarDuplicateEmailError({
-            code: polarDuplicateEmailCode,
-            message: "Duplicate email",
-          })
-        ),
-      findCustomerByEmail: () => Effect.succeed(null),
-      getCustomerByExternalId: () => Effect.succeed(null),
-    });
-    const result = await Effect.runPromise(
-      Effect.result(ensureCustomer(gateway, input))
-    );
-    if (Result.isSuccess(result)) {
-      throw new Error("Expected unrecovered duplicate email to fail.");
-    }
-    expect(result.failure).toBeInstanceOf(PolarCustomerError);
-    expect(result.failure).toMatchObject({
-      code: polarCustomerErrorCode,
-      message: "Duplicate email",
-    });
-  });
+        expect(updates).toEqual([
+          expect.objectContaining({
+            customer: expect.objectContaining({ id: "polar-existing" }),
+            next: expect.objectContaining({ externalId: "auth-user" }),
+          }),
+        ]);
+      })
+  );
+  it.live(
+    "keeps duplicate-email conflicts typed when another externalId owns the customer",
+    () =>
+      Effect.gen(function* () {
+        const gateway = createGateway({
+          createCustomer: () =>
+            Effect.fail(
+              new PolarDuplicateEmailError({
+                code: polarDuplicateEmailCode,
+                message: "Duplicate email",
+              })
+            ),
+          findCustomerByEmail: () =>
+            Effect.succeed({
+              email: "nakafaai@gmail.com",
+              externalId: "different-auth",
+              id: "polar-existing",
+              metadata: {},
+              name: "Existing Customer",
+            }),
+          getCustomerByExternalId: () => Effect.succeed(null),
+        });
+        const result = yield* Effect.result(ensureCustomer(gateway, input));
+        if (Result.isSuccess(result)) {
+          throw new Error("Expected duplicate email ownership to fail.");
+        }
+        expect(result.failure).toBeInstanceOf(PolarCustomerEmailConflict);
+        expect(result.failure).toMatchObject({
+          code: "POLAR_CUSTOMER_EMAIL_CONFLICT",
+          existingExternalId: "different-auth",
+          polarCustomerId: "polar-existing",
+        });
+      })
+  );
+  it.live("retries external-id lookup after a create race failure", () =>
+    Effect.gen(function* () {
+      let externalIdLookupCount = 0;
+      const gateway = createGateway({
+        createCustomer: () =>
+          Effect.fail(
+            new PolarCustomerError({
+              code: polarCustomerErrorCode,
+              message: "Create failed",
+            })
+          ),
+        getCustomerByExternalId: () => {
+          externalIdLookupCount += 1;
+          if (externalIdLookupCount === 1) {
+            return Effect.succeed(null);
+          }
+          return Effect.succeed({
+            email: "nakafaai@gmail.com",
+            externalId: "auth-user",
+            id: "polar-race",
+            metadata: { userId: "user-1" },
+            name: "Nakafa Tekno Kreatif",
+          });
+        },
+      });
+      const customer = yield* ensureCustomer(gateway, input);
+      expect(customer).toMatchObject({
+        externalId: "auth-user",
+        id: "polar-race",
+      });
+      expect(externalIdLookupCount).toBe(2);
+    })
+  );
+  it.live(
+    "keeps create failures typed when duplicate-email recovery cannot find a customer",
+    () =>
+      Effect.gen(function* () {
+        const gateway = createGateway({
+          createCustomer: () =>
+            Effect.fail(
+              new PolarDuplicateEmailError({
+                code: polarDuplicateEmailCode,
+                message: "Duplicate email",
+              })
+            ),
+          findCustomerByEmail: () => Effect.succeed(null),
+          getCustomerByExternalId: () => Effect.succeed(null),
+        });
+        const result = yield* Effect.result(ensureCustomer(gateway, input));
+        if (Result.isSuccess(result)) {
+          throw new Error("Expected unrecovered duplicate email to fail.");
+        }
+        expect(result.failure).toBeInstanceOf(PolarCustomerError);
+        expect(result.failure).toMatchObject({
+          code: polarCustomerErrorCode,
+          message: "Duplicate email",
+        });
+      })
+  );
 });

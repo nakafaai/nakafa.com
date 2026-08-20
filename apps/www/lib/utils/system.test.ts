@@ -1,8 +1,9 @@
 // @vitest-environment node
 
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import {
   getCachedMetadataFromSlug,
   getMetadataFromSlug,
@@ -63,78 +64,88 @@ beforeEach(() => {
 });
 
 describe("current content reference metadata", () => {
-  it("reads complete metadata from the current signed reference", async () => {
-    await expect(
-      Effect.runPromise(getMetadataFromSlug("en", ["quran", "1"]))
-    ).resolves.toEqual({
-      authors: [{ name: "Nakafa" }],
-      date: "",
-      description: "Runtime description",
-      title: "Runtime title",
-    });
-  });
+  it.live("reads complete metadata from the current signed reference", () =>
+    Effect.gen(function* () {
+      expect(yield* getMetadataFromSlug("en", ["quran", "1"])).toEqual({
+        authors: [{ name: "Nakafa" }],
+        date: "",
+        description: "Runtime description",
+        title: "Runtime title",
+      });
+    })
+  );
 
-  it("uses translated defaults when the current reference has no row", async () => {
-    routeMocks.read.mockReturnValueOnce(Effect.succeed(null));
-    await expect(
-      Effect.runPromise(getMetadataFromSlug("id", ["quran", "missing"]))
-    ).resolves.toEqual(translatedDefaults);
-  });
-
-  it("preserves typed current-reference read failures", async () => {
-    routeMocks.read.mockReturnValueOnce(
-      Effect.fail(
-        new NakafaAgentDataReadError({
-          cause: "Route catalog unavailable.",
-          message: "Unable to read route catalog.",
-        })
-      )
-    );
-
-    const error = await Effect.runPromise(
-      Effect.flip(getMetadataFromSlug("id", ["quran", "failed"]))
-    );
-
-    expect(error).toBeInstanceOf(NakafaAgentDataReadError);
-  });
-
-  it("fills sparse current metadata from translations", async () => {
-    routeMocks.read.mockReturnValueOnce(
-      Effect.succeed({
-        description: undefined,
-        title: "",
+  it.live(
+    "uses translated defaults when the current reference has no row",
+    () =>
+      Effect.gen(function* () {
+        routeMocks.read.mockReturnValueOnce(Effect.succeed(null));
+        expect(yield* getMetadataFromSlug("id", ["quran", "missing"])).toEqual(
+          translatedDefaults
+        );
       })
-    );
+  );
 
-    await expect(
-      Effect.runPromise(getMetadataFromSlug("en", ["quran", "sparse"]))
-    ).resolves.toEqual(translatedDefaults);
-  });
+  it.live("preserves typed current-reference read failures", () =>
+    Effect.gen(function* () {
+      routeMocks.read.mockReturnValueOnce(
+        Effect.fail(
+          new NakafaAgentDataReadError({
+            cause: "Route catalog unavailable.",
+            message: "Unable to read route catalog.",
+          })
+        )
+      );
 
-  it("reports which translation namespace failed", async () => {
-    mockGetTranslations.mockRejectedValueOnce(new Error("Missing Common."));
-    await expect(
-      Effect.runPromise(getMetadataFromSlug("en", ["quran", "1"]))
-    ).rejects.toMatchObject({
-      _tag: "TranslationLoadError",
-      locale: "en",
-      namespace: "Common",
-    });
+      const error = yield* Effect.flip(
+        getMetadataFromSlug("id", ["quran", "failed"])
+      );
 
-    mockGetTranslations.mockImplementation(({ namespace }) => {
-      if (namespace === "Common") {
-        return Promise.resolve(() => "Made with love");
-      }
-      return Promise.reject(new Error("Missing Metadata."));
-    });
-    await expect(
-      Effect.runPromise(getMetadataFromSlug("en", ["quran", "1"]))
-    ).rejects.toMatchObject({
-      _tag: "TranslationLoadError",
-      locale: "en",
-      namespace: "Metadata",
-    });
-  });
+      expect(error).toBeInstanceOf(NakafaAgentDataReadError);
+    })
+  );
+
+  it.live("fills sparse current metadata from translations", () =>
+    Effect.gen(function* () {
+      routeMocks.read.mockReturnValueOnce(
+        Effect.succeed({
+          description: undefined,
+          title: "",
+        })
+      );
+
+      expect(yield* getMetadataFromSlug("en", ["quran", "sparse"])).toEqual(
+        translatedDefaults
+      );
+    })
+  );
+
+  it.live("reports which translation namespace failed", () =>
+    Effect.gen(function* () {
+      mockGetTranslations.mockRejectedValueOnce(new Error("Missing Common."));
+      expect(
+        yield* getMetadataFromSlug("en", ["quran", "1"]).pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "TranslationLoadError",
+        locale: "en",
+        namespace: "Common",
+      });
+
+      mockGetTranslations.mockImplementation(({ namespace }) => {
+        if (namespace === "Common") {
+          return Promise.resolve(() => "Made with love");
+        }
+        return Promise.reject(new Error("Missing Metadata."));
+      });
+      expect(
+        yield* getMetadataFromSlug("en", ["quran", "1"]).pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "TranslationLoadError",
+        locale: "en",
+        namespace: "Metadata",
+      });
+    })
+  );
 
   it("applies the content cache at the route-handler boundary", async () => {
     await expect(

@@ -42,10 +42,10 @@ import {
   beginFixture,
   stageUpsertFixture,
 } from "@repo/backend/test/content-verify";
+import { describe, expect, it } from "@repo/testing/effect";
 import { getConvexSize } from "convex/values";
 import { convexTest, type TestConvex } from "convex-test";
 import { Effect, Result, Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 const headPage = internal.contentRelease.heads.page;
 const verifyItems = internal.contentRelease.verify.verifyItems;
@@ -235,37 +235,43 @@ describe("contentRelease/heads", () => {
     expect(second.nextCursor).not.toBeNull();
     expect(third).toMatchObject({ done: true, heads: [], nextCursor: null });
   });
-  it("keeps the exact maximum head page below Convex and HTTP ceilings", () => {
-    const page = Schema.decodeSync(HeadPageSchema)({
-      activeManifestHash: `sha256:${"e".repeat(64)}`,
-      activeReleaseId: "a".repeat(128),
-      cursor: "c".repeat(4096),
-      done: false,
-      family: "material",
-      heads: Array.from({ length: MAX_HEAD_PAGE_COUNT }, (_, index) =>
-        maximumTestHead(index)
-      ),
-      nextCursor: "d".repeat(4096),
-    });
-    const encoded = Effect.runSync(
-      publicationSuccess({ ok: true, operation: "headPage", value: page })
-    );
-    const convexPage = {
-      ...page,
-      heads: page.heads.map((head) => ({ ...head })),
-    };
-    expect(getConvexSize(convexPage)).toBeLessThan(
-      MAX_PUBLICATION_RESPONSE_BYTES
-    );
-    expect(new TextEncoder().encode(encoded.body).byteLength).toBeLessThan(
-      MAX_PUBLICATION_RESPONSE_BYTES
-    );
-    const overflow = Schema.decodeUnknownResult(HeadPageSchema)({
-      ...page,
-      heads: [...page.heads, maximumTestHead(MAX_HEAD_PAGE_COUNT)],
-    });
-    expect(Result.isFailure(overflow)).toBe(true);
-  });
+  it.live(
+    "keeps the exact maximum head page below Convex and HTTP ceilings",
+    () =>
+      Effect.gen(function* () {
+        const page = yield* Schema.decodeEffect(HeadPageSchema)({
+          activeManifestHash: `sha256:${"e".repeat(64)}`,
+          activeReleaseId: "a".repeat(128),
+          cursor: "c".repeat(4096),
+          done: false,
+          family: "material",
+          heads: Array.from({ length: MAX_HEAD_PAGE_COUNT }, (_, index) =>
+            maximumTestHead(index)
+          ),
+          nextCursor: "d".repeat(4096),
+        });
+        const encoded = yield* publicationSuccess({
+          ok: true,
+          operation: "headPage",
+          value: page,
+        });
+        const convexPage = {
+          ...page,
+          heads: page.heads.map((head) => ({ ...head })),
+        };
+        expect(getConvexSize(convexPage)).toBeLessThan(
+          MAX_PUBLICATION_RESPONSE_BYTES
+        );
+        expect(new TextEncoder().encode(encoded.body).byteLength).toBeLessThan(
+          MAX_PUBLICATION_RESPONSE_BYTES
+        );
+        const overflow = Schema.decodeUnknownResult(HeadPageSchema)({
+          ...page,
+          heads: [...page.heads, maximumTestHead(MAX_HEAD_PAGE_COUNT)],
+        });
+        expect(Result.isFailure(overflow)).toBe(true);
+      })
+  );
   it("rejects invalid limits and unreadable snapshot identities", async () => {
     const invalid = convexTest(schema, convexModules);
     await expect(readPage(invalid, null, undefined, 0)).rejects.toMatchObject({

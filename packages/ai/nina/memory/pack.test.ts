@@ -3,8 +3,8 @@ import {
   type NinaLearningSessionInput,
   openNinaLearningSession,
 } from "@repo/ai/nina/memory/pack";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, Exit } from "effect";
-import { describe, expect, it } from "vitest";
 
 const learning = {
   assetId: "asset:id:material:mathematics:vector:addition",
@@ -23,72 +23,78 @@ const placementProgramKey = LearningProgramKeySchema.make(
 );
 
 describe("nina/memory/pack", () => {
-  it("opens a verified page session with a durable snapshot and page-fetch policy", async () => {
-    const session = await Effect.runPromise(
-      openNinaLearningSession({
-        capturedAt: "2026-05-09T00:00:00.000Z",
-        learning,
-        placement: {
-          mode: "placement",
-          nodeKey: "curriculum:vector:addition",
-          parentHref: "/en/curriculum/mathematics/vector",
-          parentTitle: "Vector",
-          programKey: placementProgramKey,
-        },
-        source: "current-page",
-      } satisfies NinaLearningSessionInput)
-    );
+  it.live(
+    "opens a verified page session with a durable snapshot and page-fetch policy",
+    () =>
+      Effect.gen(function* () {
+        const session = yield* openNinaLearningSession({
+          capturedAt: "2026-05-09T00:00:00.000Z",
+          learning,
+          placement: {
+            mode: "placement",
+            nodeKey: "curriculum:vector:addition",
+            parentHref: "/en/curriculum/mathematics/vector",
+            parentTitle: "Vector",
+            programKey: placementProgramKey,
+          },
+          source: "current-page",
+        } satisfies NinaLearningSessionInput);
 
-    expect(session.context.snapshot).toMatchObject({
-      capturedAt: "2026-05-09T00:00:00.000Z",
-      learning,
-      source: "current-page",
-      tools: {
-        allowPageFetch: true,
-        evidenceScope: "verified-page",
-      },
-    });
-    expect(session.context.transition).toEqual({
-      reason: "page-context",
-      toContextKey:
-        "placement:cambridge-lower-secondary:curriculum:vector:addition:subjects/mathematics/vector/addition",
-    });
-  });
-
-  it("keeps invalid session input in the Effect failure channel", async () => {
-    const exit = await Effect.runPromiseExit(
-      openNinaLearningSession({
-        capturedAt: "2026-05-09T00:00:00.000Z",
-        learning: {
-          ...learning,
-          locale: "fr",
-        },
-        source: "current-page",
+        expect(session.context.snapshot).toMatchObject({
+          capturedAt: "2026-05-09T00:00:00.000Z",
+          learning,
+          source: "current-page",
+          tools: {
+            allowPageFetch: true,
+            evidenceScope: "verified-page",
+          },
+        });
+        expect(session.context.transition).toEqual({
+          reason: "page-context",
+          toContextKey:
+            "placement:cambridge-lower-secondary:curriculum:vector:addition:subjects/mathematics/vector/addition",
+        });
       })
-    );
+  );
 
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
+  it.live("keeps invalid session input in the Effect failure channel", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        openNinaLearningSession({
+          capturedAt: "2026-05-09T00:00:00.000Z",
+          learning: {
+            ...learning,
+            locale: "fr",
+          },
+          source: "current-page",
+        })
+      );
 
-  it("opens an unverified canonical session without current-page fetch permission", async () => {
-    const session = await Effect.runPromise(
-      openNinaLearningSession({
-        capturedAt: "2026-05-09T00:00:00.000Z",
-        learning: {
-          ...learning,
-          verified: false,
-        },
-        source: "pinned-chat",
-      } satisfies NinaLearningSessionInput)
-    );
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
 
-    expect(session.context.snapshot.tools).toMatchObject({
-      allowPageFetch: false,
-      evidenceScope: "general-learning",
-    });
-    expect(session.context.transition).toEqual({
-      reason: "same-context",
-      toContextKey: "canonical:subjects/mathematics/vector/addition",
-    });
-  });
+  it.live(
+    "opens an unverified canonical session without current-page fetch permission",
+    () =>
+      Effect.gen(function* () {
+        const session = yield* openNinaLearningSession({
+          capturedAt: "2026-05-09T00:00:00.000Z",
+          learning: {
+            ...learning,
+            verified: false,
+          },
+          source: "pinned-chat",
+        } satisfies NinaLearningSessionInput);
+
+        expect(session.context.snapshot.tools).toMatchObject({
+          allowPageFetch: false,
+          evidenceScope: "general-learning",
+        });
+        expect(session.context.transition).toEqual({
+          reason: "same-context",
+          toContextKey: "canonical:subjects/mathematics/vector/addition",
+        });
+      })
+  );
 });

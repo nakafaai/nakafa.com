@@ -14,10 +14,16 @@ import {
   CONTENT_RUNTIME_RESPONSE_MARKER,
   PUBLIC_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
-import { describe, expect, it } from "@repo/testing/effect";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@repo/testing/effect";
 import { Duration, Effect, Fiber, Logger } from "effect";
 import { TestClock } from "effect/testing";
-import { afterEach, beforeEach, vi } from "vitest";
+import { vi } from "vitest";
 
 const endpoint = "https://example.convex.site/internal/content/runtime";
 const target = {
@@ -81,79 +87,80 @@ afterEach(() => {
 });
 
 describe("content runtime transport", () => {
-  it("builds only fixed HTTPS or loopback endpoints", async () => {
-    await expect(
-      Effect.runPromise(
-        createContentEndpoint(
+  it.live("builds only fixed HTTPS or loopback endpoints", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* createContentEndpoint(
           "https://example.convex.site/ignored",
           PUBLIC_CONTENT_RUNTIME_PATH
         )
-      )
-    ).resolves.toBe(endpoint);
-    await expect(
-      Effect.runPromise(
-        createContentEndpoint(
+      ).toBe(endpoint);
+      expect(
+        yield* createContentEndpoint(
           "http://localhost:3211/ignored",
           PUBLIC_CONTENT_RUNTIME_PATH
         )
-      )
-    ).resolves.toBe("http://localhost:3211/internal/content/runtime");
+      ).toBe("http://localhost:3211/internal/content/runtime");
 
-    for (const siteUrl of [
-      "not a URL",
-      "http://example.com",
-      "ftp://localhost",
-      "https://user:secret@example.com",
-    ]) {
-      await expect(
-        Effect.runPromise(
-          createContentEndpoint(siteUrl, PUBLIC_CONTENT_RUNTIME_PATH).pipe(
-            Effect.flip
-          )
+      for (const siteUrl of [
+        "not a URL",
+        "http://example.com",
+        "ftp://localhost",
+        "https://user:secret@example.com",
+      ]) {
+        expect(
+          yield* createContentEndpoint(
+            siteUrl,
+            PUBLIC_CONTENT_RUNTIME_PATH
+          ).pipe(Effect.flip)
+        ).toEqual(new ContentTransportError({ reason: "url" }));
+      }
+    })
+  );
+
+  it.live("serializes bounded request JSON and rejects invalid values", () =>
+    Effect.gen(function* () {
+      expect(yield* encodeContentRequest({ locale: "en" }, 1024)).toBe(
+        '{"locale":"en"}'
+      );
+      const cyclic: { self?: unknown } = {};
+      cyclic.self = cyclic;
+      expect(
+        yield* encodeContentRequest(cyclic, 1024).pipe(Effect.flip)
+      ).toMatchObject({ reason: "request" });
+      expect(
+        yield* encodeContentRequest({ value: "x".repeat(1024) }, 10).pipe(
+          Effect.flip
         )
-      ).resolves.toEqual(new ContentTransportError({ reason: "url" }));
-    }
-  });
+      ).toMatchObject({ reason: "request-size" });
+    })
+  );
 
-  it("serializes bounded request JSON and rejects invalid values", async () => {
-    await expect(
-      Effect.runPromise(encodeContentRequest({ locale: "en" }, 1024))
-    ).resolves.toBe('{"locale":"en"}');
-    const cyclic: { self?: unknown } = {};
-    cyclic.self = cyclic;
-    await expect(
-      Effect.runPromise(encodeContentRequest(cyclic, 1024).pipe(Effect.flip))
-    ).resolves.toMatchObject({ reason: "request" });
-    await expect(
-      Effect.runPromise(
-        encodeContentRequest({ value: "x".repeat(1024) }, 10).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({ reason: "request-size" });
-  });
+  it.live("posts one private no-store request with the server credential", () =>
+    Effect.gen(function* () {
+      const response = createResponse("{}", 200);
+      fetchMock.mockResolvedValue(response);
 
-  it("posts one private no-store request with the server credential", async () => {
-    const response = createResponse("{}", 200);
-    fetchMock.mockResolvedValue(response);
-
-    await expect(
-      Effect.runPromise(postContentRequest({ endpoint, source: "{}", target }))
-    ).resolves.toBe(response);
-    expect(fetchMock).toHaveBeenCalledWith(
-      endpoint,
-      expect.objectContaining({
-        body: "{}",
-        cache: "no-store",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "x-nakafa-content-token": target.token,
-        },
-        method: "POST",
-        redirect: "error",
-        signal: expect.any(AbortSignal),
-      })
-    );
-  });
+      expect(
+        yield* postContentRequest({ endpoint, source: "{}", target })
+      ).toBe(response);
+      expect(fetchMock).toHaveBeenCalledWith(
+        endpoint,
+        expect.objectContaining({
+          body: "{}",
+          cache: "no-store",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            "x-nakafa-content-token": target.token,
+          },
+          method: "POST",
+          redirect: "error",
+          signal: expect.any(AbortSignal),
+        })
+      );
+    })
+  );
 
   it.effect(
     "shares one retry budget across network and platform failures",
@@ -243,39 +250,39 @@ describe("content runtime transport", () => {
       })
   );
 
-  it("keeps other received responses on one attempt", async () => {
-    const responses = [
-      createResponse("{}", 200, unmarkedJsonHeaders),
-      createResponse("{}", 401, unmarkedJsonHeaders),
-      createResponse("{}", 404, unmarkedJsonHeaders),
-      createResponse("{}", 502, unmarkedJsonHeaders),
-      createResponse("{}", 503, unmarkedJsonHeaders),
-      createResponse("{}", 500),
-      createResponse("{}", 500, {
-        "content-type": "application/json",
-        [CONTENT_RUNTIME_RESPONSE_HEADER]: "wrong-marker",
-      }),
-      createResponse("{}", 500, { "content-type": "text/plain" }),
-      createResponse(
-        "{}",
-        500,
-        unmarkedJsonHeaders,
-        "https://other.test/internal/content/runtime"
-      ),
-    ];
+  it.live("keeps other received responses on one attempt", () =>
+    Effect.gen(function* () {
+      const responses = [
+        createResponse("{}", 200, unmarkedJsonHeaders),
+        createResponse("{}", 401, unmarkedJsonHeaders),
+        createResponse("{}", 404, unmarkedJsonHeaders),
+        createResponse("{}", 502, unmarkedJsonHeaders),
+        createResponse("{}", 503, unmarkedJsonHeaders),
+        createResponse("{}", 500),
+        createResponse("{}", 500, {
+          "content-type": "application/json",
+          [CONTENT_RUNTIME_RESPONSE_HEADER]: "wrong-marker",
+        }),
+        createResponse("{}", 500, { "content-type": "text/plain" }),
+        createResponse(
+          "{}",
+          500,
+          unmarkedJsonHeaders,
+          "https://other.test/internal/content/runtime"
+        ),
+      ];
 
-    for (const response of responses) {
-      fetchMock.mockReset();
-      fetchMock.mockResolvedValue(response);
+      for (const response of responses) {
+        fetchMock.mockReset();
+        fetchMock.mockResolvedValue(response);
 
-      await expect(
-        Effect.runPromise(
-          postContentRequest({ endpoint, source: "{}", target })
-        )
-      ).resolves.toBe(response);
-      expect(fetchMock).toHaveBeenCalledOnce();
-    }
-  });
+        expect(
+          yield* postContentRequest({ endpoint, source: "{}", target })
+        ).toBe(response);
+        expect(fetchMock).toHaveBeenCalledOnce();
+      }
+    })
+  );
 
   it.effect("continues when a discarded response body cannot be canceled", () =>
     Effect.gen(function* () {
@@ -342,91 +349,95 @@ describe("content runtime transport", () => {
     })
   );
 
-  it("does not retry unknown or timeout fetch failures", async () => {
-    fetchMock.mockRejectedValue(createFetchFailure("UND_ERR_CONNECT_TIMEOUT"));
+  it.live("does not retry unknown or timeout fetch failures", () =>
+    Effect.gen(function* () {
+      fetchMock.mockRejectedValue(
+        createFetchFailure("UND_ERR_CONNECT_TIMEOUT")
+      );
 
-    await expect(
-      Effect.runPromise(
-        postContentRequest({ endpoint, source: "{}", target }).pipe(Effect.flip)
-      )
-    ).resolves.toEqual(
-      new ContentTransportError({ networkCodes: [], reason: "fetch" })
-    );
-    expect(fetchMock).toHaveBeenCalledOnce();
-  });
+      expect(
+        yield* postContentRequest({ endpoint, source: "{}", target }).pipe(
+          Effect.flip
+        )
+      ).toEqual(
+        new ContentTransportError({ networkCodes: [], reason: "fetch" })
+      );
+      expect(fetchMock).toHaveBeenCalledOnce();
+    })
+  );
 
-  it("reads exact bounded JSON and rejects untrusted responses", async () => {
-    await expect(
-      Effect.runPromise(
-        readContentResponse(
+  it.live("reads exact bounded JSON and rejects untrusted responses", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* readContentResponse(
           createResponse('{"kind":"missing"}', 404),
           endpoint,
           1024
         )
-      )
-    ).resolves.toEqual({ kind: "missing" });
-    expect(createContentContractError(createResponse("{}", 200))).toEqual(
-      new ContentTransportError({ reason: "response-contract" })
-    );
-    expect(
-      createContentContractError(
-        createResponse("{}", 200, { "content-type": "application/json" })
-      )
-    ).toEqual(new ContentTransportError({ reason: "response-unmarked" }));
-
-    const invalid: readonly [Response, string][] = [
-      [
-        createResponse("{}", 200, undefined, "https://other.test"),
-        "response-url",
-      ],
-      [
-        createResponse("{}", 200, {
-          "content-type": "text/plain",
-          [CONTENT_RUNTIME_RESPONSE_HEADER]: CONTENT_RUNTIME_RESPONSE_MARKER,
-        }),
-        "content-type",
-      ],
-      [
-        createResponse("{}", 200, {
-          "content-length": "invalid",
-          "content-type": "application/json",
-          [CONTENT_RUNTIME_RESPONSE_HEADER]: CONTENT_RUNTIME_RESPONSE_MARKER,
-        }),
-        "content-length",
-      ],
-      [
-        createResponse("{", 200, { "content-type": "application/json" }),
-        "response-unmarked",
-      ],
-      [createResponse("{", 200), "json-syntax"],
-      [createResponse("x".repeat(20), 200), "response-size"],
-    ];
-    for (const [response, reason] of invalid) {
-      await expect(
-        Effect.runPromise(
-          readContentResponse(response, endpoint, 10).pipe(Effect.flip)
+      ).toEqual({ kind: "missing" });
+      expect(createContentContractError(createResponse("{}", 200))).toEqual(
+        new ContentTransportError({ reason: "response-contract" })
+      );
+      expect(
+        createContentContractError(
+          createResponse("{}", 200, { "content-type": "application/json" })
         )
-      ).resolves.toMatchObject({ reason });
-    }
-  });
+      ).toEqual(new ContentTransportError({ reason: "response-unmarked" }));
 
-  it("accepts only contract-owned response status pairs", async () => {
-    for (const [response, status] of [
-      [{ kind: "found" }, 200],
-      [{ kind: "missing" }, 404],
-      [{ code: "CONTENT_RUNTIME_UNAUTHORIZED", kind: "failure" }, 401],
-      [{ code: "CONTENT_RUNTIME_INVALID", kind: "failure" }, 413],
-      [{ code: "CONTENT_RUNTIME_INTERNAL", kind: "failure" }, 500],
-      [{ code: "CONTENT_RUNTIME_RESPONSE_TOO_LARGE", kind: "failure" }, 500],
-    ] as const) {
-      await expect(
-        Effect.runPromise(validateContentRuntimeStatus(response, status))
-      ).resolves.toBeUndefined();
-    }
-    await expect(
-      Effect.runPromise(
-        validateContentRuntimeStatus({ kind: "missing" }, 200).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({ reason: "status" });
-  });
+      const invalid: readonly [Response, string][] = [
+        [
+          createResponse("{}", 200, undefined, "https://other.test"),
+          "response-url",
+        ],
+        [
+          createResponse("{}", 200, {
+            "content-type": "text/plain",
+            [CONTENT_RUNTIME_RESPONSE_HEADER]: CONTENT_RUNTIME_RESPONSE_MARKER,
+          }),
+          "content-type",
+        ],
+        [
+          createResponse("{}", 200, {
+            "content-length": "invalid",
+            "content-type": "application/json",
+            [CONTENT_RUNTIME_RESPONSE_HEADER]: CONTENT_RUNTIME_RESPONSE_MARKER,
+          }),
+          "content-length",
+        ],
+        [
+          createResponse("{", 200, { "content-type": "application/json" }),
+          "response-unmarked",
+        ],
+        [createResponse("{", 200), "json-syntax"],
+        [createResponse("x".repeat(20), 200), "response-size"],
+      ];
+      for (const [response, reason] of invalid) {
+        expect(
+          yield* readContentResponse(response, endpoint, 10).pipe(Effect.flip)
+        ).toMatchObject({ reason });
+      }
+    })
+  );
+
+  it.live("accepts only contract-owned response status pairs", () =>
+    Effect.gen(function* () {
+      for (const [response, status] of [
+        [{ kind: "found" }, 200],
+        [{ kind: "missing" }, 404],
+        [{ code: "CONTENT_RUNTIME_UNAUTHORIZED", kind: "failure" }, 401],
+        [{ code: "CONTENT_RUNTIME_INVALID", kind: "failure" }, 413],
+        [{ code: "CONTENT_RUNTIME_INTERNAL", kind: "failure" }, 500],
+        [{ code: "CONTENT_RUNTIME_RESPONSE_TOO_LARGE", kind: "failure" }, 500],
+      ] as const) {
+        expect(
+          yield* validateContentRuntimeStatus(response, status)
+        ).toBeUndefined();
+      }
+      expect(
+        yield* validateContentRuntimeStatus({ kind: "missing" }, 200).pipe(
+          Effect.flip
+        )
+      ).toMatchObject({ reason: "status" });
+    })
+  );
 });

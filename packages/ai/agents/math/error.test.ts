@@ -2,21 +2,25 @@ import {
   MathGenerationError,
   makeMathGenerationError,
 } from "@repo/ai/agents/math/error";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("math generation error", () => {
-  it("maps unknown provider failures into the capability error channel", async () => {
-    const cause = new Error("provider unavailable");
-    const error = await Effect.runPromise(
-      Effect.fail(makeMathGenerationError(cause)).pipe(Effect.flip)
-    );
+  it.live(
+    "maps unknown provider failures into the capability error channel",
+    () =>
+      Effect.gen(function* () {
+        const cause = new Error("provider unavailable");
+        const error = yield* Effect.fail(makeMathGenerationError(cause)).pipe(
+          Effect.flip
+        );
 
-    expect(error).toBeInstanceOf(MathGenerationError);
-    expect(error).toMatchObject({
-      _tag: "MathGenerationError",
-      cause,
-      message: "Math generation failed.",
-    });
-  });
+        expect(error).toBeInstanceOf(MathGenerationError);
+        expect(error).toMatchObject({
+          _tag: "MathGenerationError",
+          cause,
+          message: "Math generation failed.",
+        });
+      })
+  );
 });

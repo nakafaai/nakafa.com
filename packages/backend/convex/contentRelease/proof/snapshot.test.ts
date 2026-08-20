@@ -22,9 +22,9 @@ import {
   makeProgramSnapshotData,
   stageProgramSnapshot,
 } from "@repo/backend/test/program-snapshot";
+import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 /** Signs one genesis release that replaces the technical program snapshot. */
 function programRelease(data: ProgramSnapshotData, releaseId: string) {
@@ -72,144 +72,178 @@ function insertCompletedRelease(
 }
 
 describe("contentRelease/proof/snapshot", () => {
-  it("replays all staged rows through the shared snapshot verifier", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const release = programRelease(data, "release-test");
-    const t = convexTest(schema, convexModules);
-    const batchSize = 3;
-    const batchCount = Math.ceil(data.rowJson.length / batchSize);
-    await stageProgramSnapshot(t, data, batchSize);
+  it.live("replays all staged rows through the shared snapshot verifier", () =>
+    Effect.gen(function* () {
+      const data = yield* makeProgramSnapshotData();
+      const release = programRelease(data, "release-test");
+      const t = convexTest(schema, convexModules);
+      const batchSize = 3;
+      const batchCount = Math.ceil(data.rowJson.length / batchSize);
+      yield* Effect.promise(() => stageProgramSnapshot(t, data, batchSize));
 
-    await expect(
-      t.action((ctx) =>
-        runConvexProgram(
-          verifyReleaseSnapshots(
-            ctx,
-            release,
-            "candidate",
-            batchCount,
-            data.rowJson.length
+      yield* Effect.promise(() =>
+        expect(
+          t.action((ctx) =>
+            runConvexProgram(
+              verifyReleaseSnapshots(
+                ctx,
+                release,
+                "candidate",
+                batchCount,
+                data.rowJson.length
+              )
+            )
           )
-        )
-      )
-    ).resolves.toEqual({
-      snapshots: data.snapshots,
-      stagedRows: data.rowJson.length,
-    });
-    await expect(
-      t.action((ctx) =>
-        runConvexProgram(
-          verifyReleaseSnapshots(
-            ctx,
-            release,
-            "candidate",
-            batchCount,
-            data.rowJson.length - 1
+        ).resolves.toEqual({
+          snapshots: data.snapshots,
+          stagedRows: data.rowJson.length,
+        })
+      );
+      yield* Effect.promise(() =>
+        expect(
+          t.action((ctx) =>
+            runConvexProgram(
+              verifyReleaseSnapshots(
+                ctx,
+                release,
+                "candidate",
+                batchCount,
+                data.rowJson.length - 1
+              )
+            )
           )
-        )
-      )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
-  });
+        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } })
+      );
+    })
+  );
 
-  it("rejects tampered physical rows during canonical proof replay", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const release = programRelease(data, "release-test");
-    const t = convexTest(schema, convexModules);
-    await stageProgramSnapshot(t, data);
-    const secondRow = data.rowJson.at(1);
-    if (!secondRow) {
-      throw new Error("Expected a second program snapshot row.");
-    }
-    await t.mutation(async (ctx) => {
-      const first = await ctx.db
-        .query("programCatalog")
-        .withIndex("by_snapshotId_and_index", (query) =>
-          query.eq("snapshotId", data.snapshotId).eq("index", 0)
-        )
-        .unique();
-      if (!first) {
-        throw new Error("Expected first program row.");
+  it.live("rejects tampered physical rows during canonical proof replay", () =>
+    Effect.gen(function* () {
+      const data = yield* makeProgramSnapshotData();
+      const release = programRelease(data, "release-test");
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(() => stageProgramSnapshot(t, data));
+      const secondRow = data.rowJson.at(1);
+      if (!secondRow) {
+        throw new Error("Expected a second program snapshot row.");
       }
-      await ctx.db.patch("programCatalog", first._id, {
-        rowJson: secondRow,
-      });
-    });
+      yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const first = await ctx.db
+            .query("programCatalog")
+            .withIndex("by_snapshotId_and_index", (query) =>
+              query.eq("snapshotId", data.snapshotId).eq("index", 0)
+            )
+            .unique();
+          if (!first) {
+            throw new Error("Expected first program row.");
+          }
+          await ctx.db.patch("programCatalog", first._id, {
+            rowJson: secondRow,
+          });
+        })
+      );
 
-    await expect(
-      t.action((ctx) =>
-        runConvexProgram(
-          verifyReleaseSnapshots(
-            ctx,
-            release,
-            "candidate",
-            1,
-            data.rowJson.length
+      yield* Effect.promise(() =>
+        expect(
+          t.action((ctx) =>
+            runConvexProgram(
+              verifyReleaseSnapshots(
+                ctx,
+                release,
+                "candidate",
+                1,
+                data.rowJson.length
+              )
+            )
           )
-        )
-      )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
-  });
+        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } })
+      );
+    })
+  );
 
-  it("accepts only the exact zero-copy inverse for rollback candidates and recovery", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const base = programRelease(data, "release-base");
-    const rollbackSnapshots = invertContentSnapshots(base.manifest.snapshots);
-    const rollbackManifest = ContentReleaseManifestSchema.make({
-      ...testEmptyManifest(ReleaseIdSchema.make("release-recovery")),
-      baseActiveAppLocales: base.manifest.activeAppLocales,
-      baseManifestHash: base.manifestHash,
-      baseReleaseId: base.manifest.releaseId,
-      baseResultCount: base.manifest.resultCount,
-      baseResultDigest: base.manifest.resultDigest,
-      origin: { kind: "rollback", releaseId: base.manifest.releaseId },
-      scope: testPublicationScope({ snapshots: rollbackSnapshots }),
-      snapshots: rollbackSnapshots,
-    });
-    const rollback = testSignedRelease(rollbackManifest);
-    const driftSnapshots = inheritContentSnapshots(null);
-    const drift = testSignedRelease(
-      ContentReleaseManifestSchema.make({
-        ...rollbackManifest,
-        scope: testPublicationScope({ snapshots: driftSnapshots }),
-        snapshots: driftSnapshots,
+  it.live(
+    "accepts only the exact zero-copy inverse for rollback candidates and recovery",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* makeProgramSnapshotData();
+        const base = programRelease(data, "release-base");
+        const rollbackSnapshots = invertContentSnapshots(
+          base.manifest.snapshots
+        );
+        const rollbackManifest = ContentReleaseManifestSchema.make({
+          ...testEmptyManifest(ReleaseIdSchema.make("release-recovery")),
+          baseActiveAppLocales: base.manifest.activeAppLocales,
+          baseManifestHash: base.manifestHash,
+          baseReleaseId: base.manifest.releaseId,
+          baseResultCount: base.manifest.resultCount,
+          baseResultDigest: base.manifest.resultDigest,
+          origin: { kind: "rollback", releaseId: base.manifest.releaseId },
+          scope: testPublicationScope({ snapshots: rollbackSnapshots }),
+          snapshots: rollbackSnapshots,
+        });
+        const rollback = testSignedRelease(rollbackManifest);
+        const driftSnapshots = inheritContentSnapshots(null);
+        const drift = testSignedRelease(
+          ContentReleaseManifestSchema.make({
+            ...rollbackManifest,
+            scope: testPublicationScope({ snapshots: driftSnapshots }),
+            snapshots: driftSnapshots,
+          })
+        );
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            insertCompletedRelease(ctx, base, data.rowJson.length)
+          )
+        );
+
+        yield* Effect.promise(() =>
+          expect(
+            t.action((ctx) =>
+              runConvexProgram(
+                verifyReleaseSnapshots(ctx, rollback, "candidate", 0, 0)
+              )
+            )
+          ).resolves.toEqual({
+            snapshots: rollback.manifest.snapshots,
+            stagedRows: 0,
+          })
+        );
+        yield* Effect.promise(() =>
+          expect(
+            t.action((ctx) =>
+              runConvexProgram(
+                verifyReleaseSnapshots(ctx, rollback, "candidate", 1, 0)
+              )
+            )
+          ).rejects.toMatchObject({
+            data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          })
+        );
+        yield* Effect.promise(() =>
+          expect(
+            t.action((ctx) =>
+              runConvexProgram(
+                verifyReleaseSnapshots(ctx, rollback, "recovery", 0, 0)
+              )
+            )
+          ).resolves.toEqual({
+            snapshots: rollback.manifest.snapshots,
+            stagedRows: 0,
+          })
+        );
+        yield* Effect.promise(() =>
+          expect(
+            t.action((ctx) =>
+              runConvexProgram(
+                verifyReleaseSnapshots(ctx, drift, "recovery", 0, 0)
+              )
+            )
+          ).rejects.toMatchObject({
+            data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          })
+        );
       })
-    );
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) =>
-      insertCompletedRelease(ctx, base, data.rowJson.length)
-    );
-
-    await expect(
-      t.action((ctx) =>
-        runConvexProgram(
-          verifyReleaseSnapshots(ctx, rollback, "candidate", 0, 0)
-        )
-      )
-    ).resolves.toEqual({
-      snapshots: rollback.manifest.snapshots,
-      stagedRows: 0,
-    });
-    await expect(
-      t.action((ctx) =>
-        runConvexProgram(
-          verifyReleaseSnapshots(ctx, rollback, "candidate", 1, 0)
-        )
-      )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
-    await expect(
-      t.action((ctx) =>
-        runConvexProgram(
-          verifyReleaseSnapshots(ctx, rollback, "recovery", 0, 0)
-        )
-      )
-    ).resolves.toEqual({
-      snapshots: rollback.manifest.snapshots,
-      stagedRows: 0,
-    });
-    await expect(
-      t.action((ctx) =>
-        runConvexProgram(verifyReleaseSnapshots(ctx, drift, "recovery", 0, 0))
-      )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
-  });
+  );
 });

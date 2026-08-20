@@ -2,10 +2,11 @@
 
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload";
+import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect, Layer, Result } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 import type { HttpClientRequest } from "effect/unstable/http/HttpClientRequest";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import { submitForumPost } from "./submit";
 
 const mocks = vi.hoisted(() => ({
@@ -35,8 +36,9 @@ const TestHttpClient = Layer.succeed(
 );
 /** Runs a forum submission with the deterministic test HTTP client. */
 function runSubmit(input: SubmitForumPostInput) {
-  return Effect.runPromise(
-    submitForumPost(input).pipe(Effect.provide(TestHttpClient), Effect.result)
+  return submitForumPost(input).pipe(
+    Effect.provide(TestHttpClient),
+    Effect.result
   );
 }
 /** Builds the default successful Convex mutation set for one submit test. */
@@ -67,221 +69,243 @@ describe("submitForumPost", () => {
       })
     );
   });
-  it("creates a text-only post without upload mutations", async () => {
-    const mutations = makeMutations();
-    const result = await runSubmit({
-      files: [],
-      mutations,
-      post: {
-        body: "hello",
-        forumId,
-        parentId: undefined,
-      },
-    });
-    expect(Result.isSuccess(result)).toBe(true);
-    expect(mutations.createPost).toHaveBeenCalledWith({
-      attachmentUploadIds: undefined,
-      body: "hello",
-      forumId,
-      parentId: undefined,
-    });
-    expect(mutations.generateUploadUrl).not.toHaveBeenCalled();
-    expect(mutations.discardForumUploads).not.toHaveBeenCalled();
-  });
-  it("does not discard pending uploads when a text-only post fails", async () => {
-    const mutations = makeMutations({
-      createPost: vi.fn(() => Promise.reject(new Error("post failed"))),
-    });
-    const result = await runSubmit({
-      files: [],
-      mutations,
-      post: {
-        body: "hello",
-        forumId,
-        parentId: undefined,
-      },
-    });
-    expect(Result.isFailure(result)).toBe(true);
-    expect(mutations.discardForumUploads).not.toHaveBeenCalled();
-  });
-  it("uploads new File objects and ignores existing file metadata", async () => {
-    const uploadId = "upload_for_file" as Id<"schoolClassForumPendingUploads">;
-    const files = [
-      {
-        file: {
-          id: "existing",
-          name: "existing.txt",
-          size: 8,
-          type: "text/plain",
-          url: "https://files.example.test/existing.txt",
+  it.live("creates a text-only post without upload mutations", () =>
+    Effect.gen(function* () {
+      const mutations = makeMutations();
+      const result = yield* runSubmit({
+        files: [],
+        mutations,
+        post: {
+          body: "hello",
+          forumId,
+          parentId: undefined,
         },
-        id: "existing",
-      },
-      makeFile("fresh"),
-    ] satisfies FileWithPreview[];
-    const mutations = makeMutations({
-      generateUploadUrl: vi.fn(async () => ({
+      });
+      expect(Result.isSuccess(result)).toBe(true);
+      expect(mutations.createPost).toHaveBeenCalledWith({
+        attachmentUploadIds: undefined,
+        body: "hello",
+        forumId,
+        parentId: undefined,
+      });
+      expect(mutations.generateUploadUrl).not.toHaveBeenCalled();
+      expect(mutations.discardForumUploads).not.toHaveBeenCalled();
+    })
+  );
+  it.live("does not discard pending uploads when a text-only post fails", () =>
+    Effect.gen(function* () {
+      const mutations = makeMutations({
+        createPost: vi.fn(() => Promise.reject(new Error("post failed"))),
+      });
+      const result = yield* runSubmit({
+        files: [],
+        mutations,
+        post: {
+          body: "hello",
+          forumId,
+          parentId: undefined,
+        },
+      });
+      expect(Result.isFailure(result)).toBe(true);
+      expect(mutations.discardForumUploads).not.toHaveBeenCalled();
+    })
+  );
+  it.live("uploads new File objects and ignores existing file metadata", () =>
+    Effect.gen(function* () {
+      const uploadId =
+        "upload_for_file" as Id<"schoolClassForumPendingUploads">;
+      const files = [
+        {
+          file: {
+            id: "existing",
+            name: "existing.txt",
+            size: 8,
+            type: "text/plain",
+            url: "https://files.example.test/existing.txt",
+          },
+          id: "existing",
+        },
+        makeFile("fresh"),
+      ] satisfies FileWithPreview[];
+      const mutations = makeMutations({
+        generateUploadUrl: vi.fn(async () => ({
+          uploadId,
+          uploadUrl,
+        })),
+        saveForumUpload: vi.fn(async () => uploadId),
+      });
+      const result = yield* runSubmit({
+        files,
+        mutations,
+        post: {
+          body: "with attachment",
+          forumId,
+          parentId: undefined,
+        },
+      });
+      expect(Result.isSuccess(result)).toBe(true);
+      expect(mocks.request).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.objectContaining({
+            _tag: "Raw",
+            body: files[1]?.file,
+          }),
+          headers: expect.objectContaining({
+            "content-type": "text/plain",
+          }),
+          method: "POST",
+          url: uploadUrl,
+        })
+      );
+      expect(mutations.generateUploadUrl).toHaveBeenCalledTimes(1);
+      expect(mutations.saveForumUpload).toHaveBeenCalledWith({
+        name: "fresh.txt",
+        size: 5,
+        storageId,
+        type: "text/plain",
         uploadId,
-        uploadUrl,
-      })),
-      saveForumUpload: vi.fn(async () => uploadId),
-    });
-    const result = await runSubmit({
-      files,
-      mutations,
-      post: {
+      });
+      expect(mocks.tracingDisabled).toHaveBeenCalledWith(true);
+      expect(mutations.createPost).toHaveBeenCalledWith({
+        attachmentUploadIds: [uploadId],
         body: "with attachment",
         forumId,
         parentId: undefined,
-      },
-    });
-    expect(Result.isSuccess(result)).toBe(true);
-    expect(mocks.request).toHaveBeenCalledWith(
-      expect.objectContaining({
-        body: expect.objectContaining({
-          _tag: "Raw",
-          body: files[1]?.file,
-        }),
-        headers: expect.objectContaining({
-          "content-type": "text/plain",
-        }),
-        method: "POST",
-        url: uploadUrl,
+      });
+    })
+  );
+  it.live(
+    "discards successful uploads when another attachment upload fails",
+    () =>
+      Effect.gen(function* () {
+        const successfulUploadId =
+          "upload_success" as Id<"schoolClassForumPendingUploads">;
+        const files = [makeFile("first"), makeFile("second")];
+        const mutations = makeMutations({
+          generateUploadUrl: vi
+            .fn()
+            .mockResolvedValueOnce({
+              uploadId: successfulUploadId,
+              uploadUrl,
+            })
+            .mockRejectedValueOnce(new Error("upload URL failed")),
+          saveForumUpload: vi.fn(async () => successfulUploadId),
+        });
+        const result = yield* runSubmit({
+          files,
+          mutations,
+          post: {
+            body: "",
+            forumId,
+            parentId: undefined,
+          },
+        });
+        expect(Result.isFailure(result)).toBe(true);
+        expect(mutations.createPost).not.toHaveBeenCalled();
+        expect(mutations.discardForumUploads).toHaveBeenCalledWith({
+          uploadIds: [successfulUploadId],
+        });
       })
-    );
-    expect(mutations.generateUploadUrl).toHaveBeenCalledTimes(1);
-    expect(mutations.saveForumUpload).toHaveBeenCalledWith({
-      name: "fresh.txt",
-      size: 5,
-      storageId,
-      type: "text/plain",
-      uploadId,
-    });
-    expect(mocks.tracingDisabled).toHaveBeenCalledWith(true);
-    expect(mutations.createPost).toHaveBeenCalledWith({
-      attachmentUploadIds: [uploadId],
-      body: "with attachment",
-      forumId,
-      parentId: undefined,
-    });
-  });
-  it("discards successful uploads when another attachment upload fails", async () => {
-    const successfulUploadId =
-      "upload_success" as Id<"schoolClassForumPendingUploads">;
-    const files = [makeFile("first"), makeFile("second")];
-    const mutations = makeMutations({
-      generateUploadUrl: vi
-        .fn()
-        .mockResolvedValueOnce({
-          uploadId: successfulUploadId,
+  );
+  it.live(
+    "captures cleanup failures without masking storage upload errors",
+    () =>
+      Effect.gen(function* () {
+        const uploadId =
+          "upload_storage" as Id<"schoolClassForumPendingUploads">;
+        const files = [makeFile("storage")];
+        mocks.response.mockReturnValue(
+          new Response("storage failed", { status: 500 })
+        );
+        const mutations = makeMutations({
+          discardForumUploads: vi.fn(() => Promise.reject("cleanup failed")),
+          generateUploadUrl: vi.fn(async () => ({
+            uploadId,
+            uploadUrl,
+          })),
+          saveForumUpload: vi.fn(async () => uploadId),
+        });
+        const result = yield* runSubmit({
+          files,
+          mutations,
+          post: {
+            body: "",
+            forumId,
+            parentId: undefined,
+          },
+        });
+        expect(Result.isFailure(result)).toBe(true);
+        if (Result.isSuccess(result)) {
+          return;
+        }
+        expect(JSON.stringify(result.failure)).not.toContain(
+          "signed-upload-secret"
+        );
+        expect(JSON.stringify(result.failure)).not.toContain(uploadUrl);
+        expect(mutations.saveForumUpload).not.toHaveBeenCalled();
+        expect(mocks.captureException).toHaveBeenCalledWith(
+          expect.objectContaining({
+            _tag: "ForumAttachmentCleanupError",
+            cause: "cleanup failed",
+          }),
+          { source: "forum-upload-discard-single" }
+        );
+      })
+  );
+  it.live("discards the pending upload when metadata save fails", () =>
+    Effect.gen(function* () {
+      const uploadId =
+        "upload_metadata" as Id<"schoolClassForumPendingUploads">;
+      const files = [makeFile("metadata")];
+      const mutations = makeMutations({
+        generateUploadUrl: vi.fn(async () => ({
+          uploadId,
           uploadUrl,
-        })
-        .mockRejectedValueOnce(new Error("upload URL failed")),
-      saveForumUpload: vi.fn(async () => successfulUploadId),
-    });
-    const result = await runSubmit({
-      files,
-      mutations,
-      post: {
-        body: "",
-        forumId,
-        parentId: undefined,
-      },
-    });
-    expect(Result.isFailure(result)).toBe(true);
-    expect(mutations.createPost).not.toHaveBeenCalled();
-    expect(mutations.discardForumUploads).toHaveBeenCalledWith({
-      uploadIds: [successfulUploadId],
-    });
-  });
-  it("captures cleanup failures without masking storage upload errors", async () => {
-    const uploadId = "upload_storage" as Id<"schoolClassForumPendingUploads">;
-    const files = [makeFile("storage")];
-    mocks.response.mockReturnValue(
-      new Response("storage failed", { status: 500 })
-    );
-    const mutations = makeMutations({
-      discardForumUploads: vi.fn(() => Promise.reject("cleanup failed")),
-      generateUploadUrl: vi.fn(async () => ({
-        uploadId,
-        uploadUrl,
-      })),
-      saveForumUpload: vi.fn(async () => uploadId),
-    });
-    const result = await runSubmit({
-      files,
-      mutations,
-      post: {
-        body: "",
-        forumId,
-        parentId: undefined,
-      },
-    });
-    expect(Result.isFailure(result)).toBe(true);
-    if (Result.isSuccess(result)) {
-      return;
-    }
-    expect(JSON.stringify(result.failure)).not.toContain(
-      "signed-upload-secret"
-    );
-    expect(JSON.stringify(result.failure)).not.toContain(uploadUrl);
-    expect(mutations.saveForumUpload).not.toHaveBeenCalled();
-    expect(mocks.captureException).toHaveBeenCalledWith(
-      expect.objectContaining({
-        _tag: "ForumAttachmentCleanupError",
-        cause: "cleanup failed",
-      }),
-      { source: "forum-upload-discard-single" }
-    );
-  });
-  it("discards the pending upload when metadata save fails", async () => {
-    const uploadId = "upload_metadata" as Id<"schoolClassForumPendingUploads">;
-    const files = [makeFile("metadata")];
-    const mutations = makeMutations({
-      generateUploadUrl: vi.fn(async () => ({
-        uploadId,
-        uploadUrl,
-      })),
-      saveForumUpload: vi.fn(() => Promise.reject(new Error("save failed"))),
-    });
-    const result = await runSubmit({
-      files,
-      mutations,
-      post: {
-        body: "",
-        forumId,
-        parentId: undefined,
-      },
-    });
-    expect(Result.isFailure(result)).toBe(true);
-    expect(mutations.discardForumUploads).toHaveBeenCalledWith({
-      uploadIds: [uploadId],
-    });
-    expect(mutations.createPost).not.toHaveBeenCalled();
-  });
-  it("discards uploaded attachments when creating the post fails", async () => {
-    const uploadId = "upload_for_post" as Id<"schoolClassForumPendingUploads">;
-    const files = [makeFile("attachment")];
-    const mutations = makeMutations({
-      createPost: vi.fn(() => Promise.reject(new Error("post failed"))),
-      generateUploadUrl: vi.fn(async () => ({
-        uploadId,
-        uploadUrl,
-      })),
-      saveForumUpload: vi.fn(async () => uploadId),
-    });
-    const result = await runSubmit({
-      files,
-      mutations,
-      post: {
-        body: "attachment",
-        forumId,
-        parentId: undefined,
-      },
-    });
-    expect(Result.isFailure(result)).toBe(true);
-    expect(mutations.discardForumUploads).toHaveBeenCalledWith({
-      uploadIds: [uploadId],
-    });
-  });
+        })),
+        saveForumUpload: vi.fn(() => Promise.reject(new Error("save failed"))),
+      });
+      const result = yield* runSubmit({
+        files,
+        mutations,
+        post: {
+          body: "",
+          forumId,
+          parentId: undefined,
+        },
+      });
+      expect(Result.isFailure(result)).toBe(true);
+      expect(mutations.discardForumUploads).toHaveBeenCalledWith({
+        uploadIds: [uploadId],
+      });
+      expect(mutations.createPost).not.toHaveBeenCalled();
+    })
+  );
+  it.live("discards uploaded attachments when creating the post fails", () =>
+    Effect.gen(function* () {
+      const uploadId =
+        "upload_for_post" as Id<"schoolClassForumPendingUploads">;
+      const files = [makeFile("attachment")];
+      const mutations = makeMutations({
+        createPost: vi.fn(() => Promise.reject(new Error("post failed"))),
+        generateUploadUrl: vi.fn(async () => ({
+          uploadId,
+          uploadUrl,
+        })),
+        saveForumUpload: vi.fn(async () => uploadId),
+      });
+      const result = yield* runSubmit({
+        files,
+        mutations,
+        post: {
+          body: "attachment",
+          forumId,
+          parentId: undefined,
+        },
+      });
+      expect(Result.isFailure(result)).toBe(true);
+      expect(mutations.discardForumUploads).toHaveBeenCalledWith({
+        uploadIds: [uploadId],
+      });
+    })
+  );
 });

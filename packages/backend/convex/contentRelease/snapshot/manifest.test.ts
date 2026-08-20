@@ -10,77 +10,101 @@ import { insertTestRelease } from "@repo/backend/test/content-stage";
 import { makeProgramSnapshotData } from "@repo/backend/test/program-snapshot";
 import { makeBlockedQuranSnapshot } from "@repo/backend/test/quran-snapshot";
 import { TEST_STAGE_SNAPSHOT } from "@repo/backend/test/snapshot-routes";
+import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("contentRelease/snapshot/manifest", () => {
-  it("stores one signed manifest with byte-identical retry semantics", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) =>
-      insertTestRelease(ctx, { snapshots: data.snapshots })
-    );
+  it.live(
+    "stores one signed manifest with byte-identical retry semantics",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* makeProgramSnapshotData();
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            insertTestRelease(ctx, { snapshots: data.snapshots })
+          )
+        );
 
-    await expect(
-      t.mutation(TEST_STAGE_SNAPSHOT, {
-        releaseId: TEST_RELEASE_ID,
-        snapshotJson: data.manifestJson,
+        yield* Effect.promise(() =>
+          expect(
+            t.mutation(TEST_STAGE_SNAPSHOT, {
+              releaseId: TEST_RELEASE_ID,
+              snapshotJson: data.manifestJson,
+            })
+          ).resolves.toEqual({
+            created: 1,
+            family: "program",
+            releaseId: TEST_RELEASE_ID,
+            snapshotId: data.snapshotId,
+            unchanged: 0,
+          })
+        );
+        yield* Effect.promise(() =>
+          expect(
+            t.mutation(TEST_STAGE_SNAPSHOT, {
+              releaseId: TEST_RELEASE_ID,
+              snapshotJson: data.manifestJson,
+            })
+          ).resolves.toMatchObject({ created: 0, unchanged: 1 })
+        );
       })
-    ).resolves.toEqual({
-      created: 1,
-      family: "program",
-      releaseId: TEST_RELEASE_ID,
-      snapshotId: data.snapshotId,
-      unchanged: 0,
-    });
-    await expect(
-      t.mutation(TEST_STAGE_SNAPSHOT, {
-        releaseId: TEST_RELEASE_ID,
-        snapshotJson: data.manifestJson,
-      })
-    ).resolves.toMatchObject({ created: 0, unchanged: 1 });
-  });
+  );
 
-  it("rejects unsigned replacement state and changed stored bytes", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const unsigned = convexTest(schema, convexModules);
-    await unsigned.mutation((ctx) => insertTestRelease(ctx));
-    await expect(
-      unsigned.mutation(TEST_STAGE_SNAPSHOT, {
-        releaseId: TEST_RELEASE_ID,
-        snapshotJson: data.manifestJson,
-      })
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
+  it.live("rejects unsigned replacement state and changed stored bytes", () =>
+    Effect.gen(function* () {
+      const data = yield* makeProgramSnapshotData();
+      const unsigned = convexTest(schema, convexModules);
+      yield* Effect.promise(() =>
+        unsigned.mutation((ctx) => insertTestRelease(ctx))
+      );
+      yield* Effect.promise(() =>
+        expect(
+          unsigned.mutation(TEST_STAGE_SNAPSHOT, {
+            releaseId: TEST_RELEASE_ID,
+            snapshotJson: data.manifestJson,
+          })
+        ).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        })
+      );
 
-    const changed = convexTest(schema, convexModules);
-    await changed.mutation((ctx) =>
-      insertTestRelease(ctx, { snapshots: data.snapshots })
-    );
-    await changed.mutation(TEST_STAGE_SNAPSHOT, {
-      releaseId: TEST_RELEASE_ID,
-      snapshotJson: data.manifestJson,
-    });
-    await changed.mutation(async (ctx) => {
-      const stored = await ctx.db.query("contentSnapshots").unique();
-      if (!stored) {
-        throw new Error("Expected staged program snapshot.");
-      }
-      await ctx.db.patch("contentSnapshots", stored._id, {
-        snapshotJson: `${stored.snapshotJson} `,
-      });
-    });
-    await expect(
-      changed.mutation(TEST_STAGE_SNAPSHOT, {
-        releaseId: TEST_RELEASE_ID,
-        snapshotJson: data.manifestJson,
-      })
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_CONFLICT" },
-    });
-  });
+      const changed = convexTest(schema, convexModules);
+      yield* Effect.promise(() =>
+        changed.mutation((ctx) =>
+          insertTestRelease(ctx, { snapshots: data.snapshots })
+        )
+      );
+      yield* Effect.promise(() =>
+        changed.mutation(TEST_STAGE_SNAPSHOT, {
+          releaseId: TEST_RELEASE_ID,
+          snapshotJson: data.manifestJson,
+        })
+      );
+      yield* Effect.promise(() =>
+        changed.mutation(async (ctx) => {
+          const stored = await ctx.db.query("contentSnapshots").unique();
+          if (!stored) {
+            throw new Error("Expected staged program snapshot.");
+          }
+          await ctx.db.patch("contentSnapshots", stored._id, {
+            snapshotJson: `${stored.snapshotJson} `,
+          });
+        })
+      );
+      yield* Effect.promise(() =>
+        expect(
+          changed.mutation(TEST_STAGE_SNAPSHOT, {
+            releaseId: TEST_RELEASE_ID,
+            snapshotJson: data.manifestJson,
+          })
+        ).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_CONFLICT" },
+        })
+      );
+    })
+  );
 
   it("rejects blocked Quran provenance before storing its manifest", async () => {
     const snapshot = makeBlockedQuranSnapshot();
@@ -109,21 +133,27 @@ describe("contentRelease/snapshot/manifest", () => {
     ).resolves.toBeNull();
   });
 
-  it("rejects manifests after release staging closes", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) =>
-      insertTestRelease(ctx, {
-        snapshots: data.snapshots,
-        status: "verifying",
-      })
-    );
+  it.live("rejects manifests after release staging closes", () =>
+    Effect.gen(function* () {
+      const data = yield* makeProgramSnapshotData();
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          insertTestRelease(ctx, {
+            snapshots: data.snapshots,
+            status: "verifying",
+          })
+        )
+      );
 
-    await expect(
-      t.mutation(TEST_STAGE_SNAPSHOT, {
-        releaseId: TEST_RELEASE_ID,
-        snapshotJson: data.manifestJson,
-      })
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
-  });
+      yield* Effect.promise(() =>
+        expect(
+          t.mutation(TEST_STAGE_SNAPSHOT, {
+            releaseId: TEST_RELEASE_ID,
+            snapshotJson: data.manifestJson,
+          })
+        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } })
+      );
+    })
+  );
 });

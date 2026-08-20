@@ -9,8 +9,8 @@ import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import type { NakafaAgentSection } from "@repo/contents/_lib/agent/schema/ref";
 import { NakafaAgentSearchResultSchema } from "@repo/contents/_lib/agent/schema/search";
 import type { Locale } from "@repo/contents/_types/content";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 /** Extracts Nakafa search data parts from a recorded test writer stream. */
 function getSearchParts(parts: ReturnType<typeof createWriter>["parts"]) {
@@ -64,10 +64,10 @@ function searchItem({
 }
 
 describe("nakafa search tool", () => {
-  it("writes loading and done parts for search results", async () => {
-    const { parts, writer } = createWriter();
-    const output = await Effect.runPromise(
-      search({
+  it.live("writes loading and done parts for search results", () =>
+    Effect.gen(function* () {
+      const { parts, writer } = createWriter();
+      const output = yield* search({
         input: {
           limit: 1,
           locale: "en",
@@ -100,31 +100,31 @@ describe("nakafa search tool", () => {
               })
             ),
         })
-      )
-    );
+      );
 
-    expect(output.text).toContain("# Nakafa Search");
-    expect(output.result).toEqual(expect.objectContaining({ count: 1 }));
-    expect(parts).toEqual([
-      expect.objectContaining({
-        type: "data-nakafa",
-        data: expect.objectContaining({ kind: "search", status: "loading" }),
-      }),
-      expect.objectContaining({
-        type: "data-nakafa",
-        data: expect.objectContaining({
-          kind: "search",
-          status: "done",
-          result: expect.objectContaining({ count: 1 }),
+      expect(output.text).toContain("# Nakafa Search");
+      expect(output.result).toEqual(expect.objectContaining({ count: 1 }));
+      expect(parts).toEqual([
+        expect.objectContaining({
+          type: "data-nakafa",
+          data: expect.objectContaining({ kind: "search", status: "loading" }),
         }),
-      }),
-    ]);
-  });
+        expect.objectContaining({
+          type: "data-nakafa",
+          data: expect.objectContaining({
+            kind: "search",
+            status: "done",
+            result: expect.objectContaining({ count: 1 }),
+          }),
+        }),
+      ]);
+    })
+  );
 
-  it("writes an error part when Convex-backed search fails", async () => {
-    const { parts, writer } = createWriter();
-    const output = await Effect.runPromise(
-      search({
+  it.live("writes an error part when Convex-backed search fails", () =>
+    Effect.gen(function* () {
+      const { parts, writer } = createWriter();
+      const output = yield* search({
         input: {
           limit: 99,
           locale: "en",
@@ -143,24 +143,24 @@ describe("nakafa search tool", () => {
               })
             ),
         })
-      )
-    );
+      );
 
-    expect(output).toEqual({
-      result: null,
-      text: "Unable to search Nakafa content.",
-    });
-    expect(parts.at(-1)).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({ kind: "search", status: "error" }),
-      })
-    );
-  });
+      expect(output).toEqual({
+        result: null,
+        text: "Unable to search Nakafa content.",
+      });
+      expect(parts.at(-1)).toEqual(
+        expect.objectContaining({
+          data: expect.objectContaining({ kind: "search", status: "error" }),
+        })
+      );
+    })
+  );
 
-  it("formats empty search results without a next offset", async () => {
-    const { writer } = createWriter();
-    const output = await Effect.runPromise(
-      search({
+  it.live("formats empty search results without a next offset", () =>
+    Effect.gen(function* () {
+      const { writer } = createWriter();
+      const output = yield* search({
         input: {
           limit: 1,
           locale: "en",
@@ -184,64 +184,68 @@ describe("nakafa search tool", () => {
               })
             ),
         })
-      )
-    );
+      );
 
-    expect(output.text).toContain("- Next offset: none");
-  });
+      expect(output.text).toContain("- Next offset: none");
+    })
+  );
 
-  it("formats unscoped search results when no query text is provided", async () => {
-    const { parts, writer } = createWriter();
-    const output = await Effect.runPromise(
-      search({
-        input: {
-          limit: 1,
+  it.live(
+    "formats unscoped search results when no query text is provided",
+    () =>
+      Effect.gen(function* () {
+        const { parts, writer } = createWriter();
+        const output = yield* search({
+          input: {
+            limit: 1,
+            locale: "en",
+            offset: 0,
+          },
           locale: "en",
-          offset: 0,
-        },
-        locale: "en",
-        toolCallId: "search-unscoped",
-        writer,
-      }).pipe(
-        Effect.provideService(NakafaSearch, {
-          /** Returns one article result for an unscoped empty-query search. */
-          search: (input) =>
-            Effect.succeed(
-              searchResult({
-                count: 1,
-                has_more: false,
-                items: [
-                  searchItem({
-                    description: "Example article.",
-                    locale: input.locale,
-                    route: "articles/politics/example",
-                    section: "articles",
-                    title: "Example Article",
-                  }),
-                ],
-                limit: input.limit,
-                offset: input.offset,
-              })
-            ),
-        })
-      )
-    );
+          toolCallId: "search-unscoped",
+          writer,
+        }).pipe(
+          Effect.provideService(NakafaSearch, {
+            /** Returns one article result for an unscoped empty-query search. */
+            search: (input) =>
+              Effect.succeed(
+                searchResult({
+                  count: 1,
+                  has_more: false,
+                  items: [
+                    searchItem({
+                      description: "Example article.",
+                      locale: input.locale,
+                      route: "articles/politics/example",
+                      section: "articles",
+                      title: "Example Article",
+                    }),
+                  ],
+                  limit: input.limit,
+                  offset: input.offset,
+                })
+              ),
+          })
+        );
 
-    expect(output.text).toContain("# Nakafa Search");
-    expect(output.text).not.toContain("# Nakafa Search Query");
-    expect(parts.at(-1)).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          input: expect.not.objectContaining({ queries: expect.anything() }),
-        }),
+        expect(output.text).toContain("# Nakafa Search");
+        expect(output.text).not.toContain("# Nakafa Search Query");
+        expect(parts.at(-1)).toEqual(
+          expect.objectContaining({
+            data: expect.objectContaining({
+              input: expect.not.objectContaining({
+                queries: expect.anything(),
+              }),
+            }),
+          })
+        );
       })
-    );
-  });
+  );
 
-  it("uses the server locale instead of the model-provided locale", async () => {
-    const { parts, writer } = createWriter();
-    const output = await Effect.runPromise(
-      search({
+  it.live("uses the server locale instead of the model-provided locale", () =>
+    Effect.gen(function* () {
+      const { parts, writer } = createWriter();
+      const output = yield* search({
         input: {
           limit: 1,
           locale: "en",
@@ -275,28 +279,28 @@ describe("nakafa search tool", () => {
               })
             ),
         })
-      )
-    );
+      );
 
-    expect(output.text).toContain("Fungsi Rasional");
-    expect(parts.at(-1)).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          input: expect.objectContaining({ locale: "id" }),
-          result: expect.objectContaining({
-            items: expect.arrayContaining([
-              expect.objectContaining({ title: "Fungsi Rasional" }),
-            ]),
+      expect(output.text).toContain("Fungsi Rasional");
+      expect(parts.at(-1)).toEqual(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            input: expect.objectContaining({ locale: "id" }),
+            result: expect.objectContaining({
+              items: expect.arrayContaining([
+                expect.objectContaining({ title: "Fungsi Rasional" }),
+              ]),
+            }),
           }),
-        }),
-      })
-    );
-  });
+        })
+      );
+    })
+  );
 
-  it("preserves model-selected section filters", async () => {
-    const { parts, writer } = createWriter();
-    const output = await Effect.runPromise(
-      search({
+  it.live("preserves model-selected section filters", () =>
+    Effect.gen(function* () {
+      const { parts, writer } = createWriter();
+      const output = yield* search({
         input: {
           limit: 3,
           locale: "en",
@@ -329,24 +333,24 @@ describe("nakafa search tool", () => {
               })
             ),
         })
-      )
-    );
+      );
 
-    expect(output.text).toContain("Artikel Politik");
-    expect(parts.at(0)).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          input: expect.objectContaining({ section: "articles" }),
-        }),
-      })
-    );
-  });
+      expect(output.text).toContain("Artikel Politik");
+      expect(parts.at(0)).toEqual(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            input: expect.objectContaining({ section: "articles" }),
+          }),
+        })
+      );
+    })
+  );
 
-  it("preserves alternate query variants for one section", async () => {
-    const { parts, writer } = createWriter();
-    const capturedQueries: string[][] = [];
-    const output = await Effect.runPromise(
-      search({
+  it.live("preserves alternate query variants for one section", () =>
+    Effect.gen(function* () {
+      const { parts, writer } = createWriter();
+      const capturedQueries: string[][] = [];
+      const output = yield* search({
         input: {
           limit: 3,
           locale: "en",
@@ -383,33 +387,33 @@ describe("nakafa search tool", () => {
             );
           },
         })
-      )
-    );
+      );
 
-    expect(output.text).toContain("Hukum Kekekalan Massa");
-    expect(output.text).toContain('- Query: "hukum kekekalan massa"');
-    expect(output.result).toEqual(expect.objectContaining({ count: 1 }));
-    expect(capturedQueries).toEqual([
-      ["kimia kelas 10", "hukum kekekalan massa", "stoikiometri"],
-    ]);
-    expect(
-      getSearchParts(parts)
-        .filter((part) => part.status === "loading")
-        .map((part) => part.input.queries)
-    ).toEqual([["kimia kelas 10", "hukum kekekalan massa", "stoikiometri"]]);
-    expect(
-      getSearchParts(parts)
-        .filter((part) => part.status === "done")
-        .map((part) => part.input.queries)
-    ).toEqual([["kimia kelas 10", "hukum kekekalan massa", "stoikiometri"]]);
-  });
+      expect(output.text).toContain("Hukum Kekekalan Massa");
+      expect(output.text).toContain('- Query: "hukum kekekalan massa"');
+      expect(output.result).toEqual(expect.objectContaining({ count: 1 }));
+      expect(capturedQueries).toEqual([
+        ["kimia kelas 10", "hukum kekekalan massa", "stoikiometri"],
+      ]);
+      expect(
+        getSearchParts(parts)
+          .filter((part) => part.status === "loading")
+          .map((part) => part.input.queries)
+      ).toEqual([["kimia kelas 10", "hukum kekekalan massa", "stoikiometri"]]);
+      expect(
+        getSearchParts(parts)
+          .filter((part) => part.status === "done")
+          .map((part) => part.input.queries)
+      ).toEqual([["kimia kelas 10", "hukum kekekalan massa", "stoikiometri"]]);
+    })
+  );
 
-  it("executes the model-provided try-out query unchanged", async () => {
-    const { parts, writer } = createWriter();
-    const capturedQueries: string[][] = [];
+  it.live("executes the model-provided try-out query unchanged", () =>
+    Effect.gen(function* () {
+      const { parts, writer } = createWriter();
+      const capturedQueries: string[][] = [];
 
-    await Effect.runPromise(
-      search({
+      yield* search({
         input: {
           limit: 10,
           locale: "id",
@@ -449,16 +453,16 @@ describe("nakafa search tool", () => {
             );
           },
         })
-      )
-    );
+      );
 
-    expect(capturedQueries).toEqual([
-      ["SNBT Pengetahuan Kuantitatif try out 2026 set 2"],
-    ]);
-    expect(
-      getSearchParts(parts)
-        .filter((part) => part.status === "loading")
-        .map((part) => part.input.queries)
-    ).toEqual([["SNBT Pengetahuan Kuantitatif try out 2026 set 2"]]);
-  });
+      expect(capturedQueries).toEqual([
+        ["SNBT Pengetahuan Kuantitatif try out 2026 set 2"],
+      ]);
+      expect(
+        getSearchParts(parts)
+          .filter((part) => part.status === "loading")
+          .map((part) => part.input.queries)
+      ).toEqual([["SNBT Pengetahuan Kuantitatif try out 2026 set 2"]]);
+    })
+  );
 });

@@ -1,6 +1,6 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Deferred, Effect } from "effect";
-import { describe, expect, it } from "vitest";
 import {
   conversationTestFirstPost as firstPost,
   conversationTestSecondPost as secondPost,
@@ -108,93 +108,119 @@ describe("conversation/viewport/read", () => {
     expect(readAttempts).toEqual([firstPost._id]);
     await shutdownViewport(viewport);
   });
-  it("keeps flush-time read sync alive after viewport shutdown", async () => {
-    const rig = createAdapters();
-    const flushRead = await Effect.runPromise(Deferred.make<void>());
-    const viewport = await createViewport({
-      ...rig.adapters,
-      read: {
-        markPostRead: (postId) => {
-          if (postId !== firstPost._id) {
-            return rig.adapters.read.markPostRead(postId);
-          }
-          return Deferred.await(flushRead).pipe(
-            Effect.andThen(rig.adapters.read.markPostRead(postId))
-          );
-        },
-      },
-    });
-    await openReadyViewport(viewport);
-    rig.setMeasurement(makePostMeasurement(firstPost._id));
-    await Effect.runPromise(viewport.flushSnapshot);
-    await shutdownViewport(viewport);
-    await Effect.runPromise(Deferred.succeed(flushRead, undefined));
-    await waitForState(viewport, () => rig.readPostIds.includes(firstPost._id));
-    expect(rig.readPostIds).toContain(firstPost._id);
-  });
-  it("starts detached read sync when the same post is already scoped in flight", async () => {
-    const rig = createAdapters();
-    const readGate = await Effect.runPromise(Deferred.make<void>());
-    const readAttempts: Id<"schoolClassForumPosts">[] = [];
-    const viewport = await createViewport({
-      ...rig.adapters,
-      read: {
-        markPostRead: (postId) => {
-          readAttempts.push(postId);
-          return Deferred.await(readGate).pipe(
-            Effect.andThen(rig.adapters.read.markPostRead(postId))
-          );
-        },
-      },
-    });
-    const detachedMeasurement = makePostMeasurement(firstPost._id);
-    await openTranscript(viewport);
-    await dispatchMeasure(viewport, detachedMeasurement);
-    await waitForState(viewport, () => readAttempts.length === 1);
-    rig.setMeasurement(detachedMeasurement);
-    await Effect.runPromise(viewport.flushSnapshot);
-    await shutdownViewport(viewport);
-    await Effect.runPromise(Deferred.succeed(readGate, undefined));
-    await Effect.runPromise(Effect.sleep(10));
-    expect(readAttempts).toEqual([firstPost._id, firstPost._id]);
-    expect(rig.readPostIds).toEqual([firstPost._id]);
-  });
-  it("keeps a newer in-flight read marker when an older sync fails", async () => {
-    const rig = createAdapters();
-    const firstRead = await Effect.runPromise(
-      Deferred.make<void, ViewportReadError>()
-    );
-    const readAttempts: Id<"schoolClassForumPosts">[] = [];
-    const viewport = await createViewport({
-      ...rig.adapters,
-      read: {
-        markPostRead: (postId) => {
-          readAttempts.push(postId);
-          if (postId === firstPost._id) {
-            return Deferred.await(firstRead);
-          }
-          return Effect.never;
-        },
-      },
-    });
-    await openTranscript(viewport);
-    await dispatchMeasure(viewport, makePostMeasurement(firstPost._id));
-    await waitForState(viewport, () => readAttempts.length === 1);
-    await dispatchMeasure(viewport, makePostMeasurement(secondPost._id));
-    await waitForState(viewport, () => readAttempts.length === 2);
-    await Effect.runPromise(
-      Deferred.fail(
+  it.live("keeps flush-time read sync alive after viewport shutdown", () =>
+    Effect.gen(function* () {
+      const rig = createAdapters();
+      const flushRead = yield* Deferred.make<void>();
+      const viewport = yield* Effect.promise(() =>
+        createViewport({
+          ...rig.adapters,
+          read: {
+            markPostRead: (postId) => {
+              if (postId !== firstPost._id) {
+                return rig.adapters.read.markPostRead(postId);
+              }
+              return Deferred.await(flushRead).pipe(
+                Effect.andThen(rig.adapters.read.markPostRead(postId))
+              );
+            },
+          },
+        })
+      );
+      yield* Effect.promise(() => openReadyViewport(viewport));
+      rig.setMeasurement(makePostMeasurement(firstPost._id));
+      yield* viewport.flushSnapshot;
+      yield* Effect.promise(() => shutdownViewport(viewport));
+      yield* Deferred.succeed(flushRead, undefined);
+      yield* Effect.promise(() =>
+        waitForState(viewport, () => rig.readPostIds.includes(firstPost._id))
+      );
+      expect(rig.readPostIds).toContain(firstPost._id);
+    })
+  );
+  it.live(
+    "starts detached read sync when the same post is already scoped in flight",
+    () =>
+      Effect.gen(function* () {
+        const rig = createAdapters();
+        const readGate = yield* Deferred.make<void>();
+        const readAttempts: Id<"schoolClassForumPosts">[] = [];
+        const viewport = yield* Effect.promise(() =>
+          createViewport({
+            ...rig.adapters,
+            read: {
+              markPostRead: (postId) => {
+                readAttempts.push(postId);
+                return Deferred.await(readGate).pipe(
+                  Effect.andThen(rig.adapters.read.markPostRead(postId))
+                );
+              },
+            },
+          })
+        );
+        const detachedMeasurement = makePostMeasurement(firstPost._id);
+        yield* Effect.promise(() => openTranscript(viewport));
+        yield* Effect.promise(() =>
+          dispatchMeasure(viewport, detachedMeasurement)
+        );
+        yield* Effect.promise(() =>
+          waitForState(viewport, () => readAttempts.length === 1)
+        );
+        rig.setMeasurement(detachedMeasurement);
+        yield* viewport.flushSnapshot;
+        yield* Effect.promise(() => shutdownViewport(viewport));
+        yield* Deferred.succeed(readGate, undefined);
+        yield* Effect.sleep(10);
+        expect(readAttempts).toEqual([firstPost._id, firstPost._id]);
+        expect(rig.readPostIds).toEqual([firstPost._id]);
+      })
+  );
+  it.live("keeps a newer in-flight read marker when an older sync fails", () =>
+    Effect.gen(function* () {
+      const rig = createAdapters();
+      const firstRead = yield* Deferred.make<void, ViewportReadError>();
+      const readAttempts: Id<"schoolClassForumPosts">[] = [];
+      const viewport = yield* Effect.promise(() =>
+        createViewport({
+          ...rig.adapters,
+          read: {
+            markPostRead: (postId) => {
+              readAttempts.push(postId);
+              if (postId === firstPost._id) {
+                return Deferred.await(firstRead);
+              }
+              return Effect.never;
+            },
+          },
+        })
+      );
+      yield* Effect.promise(() => openTranscript(viewport));
+      yield* Effect.promise(() =>
+        dispatchMeasure(viewport, makePostMeasurement(firstPost._id))
+      );
+      yield* Effect.promise(() =>
+        waitForState(viewport, () => readAttempts.length === 1)
+      );
+      yield* Effect.promise(() =>
+        dispatchMeasure(viewport, makePostMeasurement(secondPost._id))
+      );
+      yield* Effect.promise(() =>
+        waitForState(viewport, () => readAttempts.length === 2)
+      );
+      yield* Deferred.fail(
         firstRead,
         new ViewportReadError({
           cause: "test",
           message: "Older read sync failed in test.",
         })
-      )
-    );
-    await dispatchMeasure(viewport, makePostMeasurement(secondPost._id));
-    expect(readAttempts).toEqual([firstPost._id, secondPost._id]);
-    await shutdownViewport(viewport);
-  });
+      );
+      yield* Effect.promise(() =>
+        dispatchMeasure(viewport, makePostMeasurement(secondPost._id))
+      );
+      expect(readAttempts).toEqual([firstPost._id, secondPost._id]);
+      yield* Effect.promise(() => shutdownViewport(viewport));
+    })
+  );
   it("does not mark read when no visible post is measured", async () => {
     const rig = createAdapters();
     const viewport = await createViewport(rig.adapters);

@@ -4,8 +4,9 @@ import {
   PromptInputSubmitError,
   submitPromptInput,
 } from "@repo/design-system/lib/prompt-input/submission";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 function createPromptFile(): PromptInputFile {
   return {
@@ -18,42 +19,42 @@ function createPromptFile(): PromptInputFile {
 }
 
 describe("prompt input submission", () => {
-  it("submits synchronously and applies success state", async () => {
-    const onSubmit = vi.fn();
-    const onSuccess = vi.fn();
+  it.live("submits synchronously and applies success state", () =>
+    Effect.gen(function* () {
+      const onSubmit = vi.fn();
+      const onSuccess = vi.fn();
 
-    await Effect.runPromise(
-      submitPromptInput({
+      yield* submitPromptInput({
         event: "submit-event",
         files: [createPromptFile()],
         onSubmit,
         onSuccess,
         text: "Explain this lesson.",
-      })
-    );
+      });
 
-    expect(onSubmit).toHaveBeenCalledWith(
-      {
-        files: [
-          {
-            filename: "lesson.txt",
-            mediaType: "text/plain",
-            type: "file",
-            url: "https://nakafa.test/lesson.txt",
-          },
-        ],
-        text: "Explain this lesson.",
-      },
-      "submit-event"
-    );
-    expect(onSuccess).toHaveBeenCalledOnce();
-  });
+      expect(onSubmit).toHaveBeenCalledWith(
+        {
+          files: [
+            {
+              filename: "lesson.txt",
+              mediaType: "text/plain",
+              type: "file",
+              url: "https://nakafa.test/lesson.txt",
+            },
+          ],
+          text: "Explain this lesson.",
+        },
+        "submit-event"
+      );
+      expect(onSuccess).toHaveBeenCalledOnce();
+    })
+  );
 
-  it("awaits asynchronous consumers before applying success state", async () => {
-    const order: string[] = [];
+  it.live("awaits asynchronous consumers before applying success state", () =>
+    Effect.gen(function* () {
+      const order: string[] = [];
 
-    await Effect.runPromise(
-      submitPromptInput({
+      yield* submitPromptInput({
         event: "submit-event",
         files: [],
         onSubmit: () =>
@@ -64,17 +65,17 @@ describe("prompt input submission", () => {
           order.push("completed");
         },
         text: "Hello",
-      })
-    );
+      });
 
-    expect(order).toEqual(["submitted", "completed"]);
-  });
+      expect(order).toEqual(["submitted", "completed"]);
+    })
+  );
 
-  it("types synchronous consumer failures", async () => {
-    const cause = new Error("Submit failed immediately.");
-    const onSuccess = vi.fn();
-    const error = await Effect.runPromise(
-      submitPromptInput({
+  it.live("types synchronous consumer failures", () =>
+    Effect.gen(function* () {
+      const cause = new Error("Submit failed immediately.");
+      const onSuccess = vi.fn();
+      const error = yield* submitPromptInput({
         event: "submit-event",
         files: [],
         onSubmit: () => {
@@ -82,36 +83,36 @@ describe("prompt input submission", () => {
         },
         onSuccess,
         text: "Hello",
-      }).pipe(Effect.flip)
-    );
+      }).pipe(Effect.flip);
 
-    expect(error).toBeInstanceOf(PromptInputSubmitError);
-    expect(error.cause).toBe(cause);
-    expect(onSuccess).not.toHaveBeenCalled();
-  });
+      expect(error).toBeInstanceOf(PromptInputSubmitError);
+      expect(error.cause).toBe(cause);
+      expect(onSuccess).not.toHaveBeenCalled();
+    })
+  );
 
-  it("types asynchronous consumer failures", async () => {
-    const cause = new Error("Submit promise rejected.");
-    const onSuccess = vi.fn();
-    const error = await Effect.runPromise(
-      submitPromptInput({
+  it.live("types asynchronous consumer failures", () =>
+    Effect.gen(function* () {
+      const cause = new Error("Submit promise rejected.");
+      const onSuccess = vi.fn();
+      const error = yield* submitPromptInput({
         event: "submit-event",
         files: [],
         onSubmit: () => Promise.reject(cause),
         onSuccess,
         text: "Hello",
-      }).pipe(Effect.flip)
-    );
+      }).pipe(Effect.flip);
 
-    expect(error).toBeInstanceOf(PromptInputSubmitError);
-    expect(error.cause).toBe(cause);
-    expect(onSuccess).not.toHaveBeenCalled();
-  });
+      expect(error).toBeInstanceOf(PromptInputSubmitError);
+      expect(error.cause).toBe(cause);
+      expect(onSuccess).not.toHaveBeenCalled();
+    })
+  );
 
-  it("types success-state failures after a successful submit", async () => {
-    const cause = new Error("Completion state failed.");
-    const error = await Effect.runPromise(
-      submitPromptInput({
+  it.live("types success-state failures after a successful submit", () =>
+    Effect.gen(function* () {
+      const cause = new Error("Completion state failed.");
+      const error = yield* submitPromptInput({
         event: "submit-event",
         files: [],
         onSubmit: vi.fn(),
@@ -119,10 +120,10 @@ describe("prompt input submission", () => {
           throw cause;
         },
         text: "Hello",
-      }).pipe(Effect.flip)
-    );
+      }).pipe(Effect.flip);
 
-    expect(error).toBeInstanceOf(PromptInputCompletionError);
-    expect(error.cause).toBe(cause);
-  });
+      expect(error).toBeInstanceOf(PromptInputCompletionError);
+      expect(error.cause).toBe(cause);
+    })
+  );
 });

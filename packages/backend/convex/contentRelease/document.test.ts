@@ -3,40 +3,36 @@ import {
   ensureDocumentSize,
   READ_MODEL_DOCUMENT_LIMIT,
 } from "@repo/backend/convex/contentRelease/document";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("contentRelease/document", () => {
-  it("accepts bounded documents and rejects complete oversized rows", async () => {
-    await expect(
-      Effect.runPromise(
-        ensureDocumentSize("Small document", {
+  it.live("accepts bounded documents and rejects complete oversized rows", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* ensureDocumentSize("Small document", {
           optional: undefined,
           value: "bounded",
         })
-      )
-    ).resolves.toBeUndefined();
+      ).toBeUndefined();
 
-    const failure = await Effect.runPromise(
-      ensureDocumentSize("Large document", {
+      const failure = yield* ensureDocumentSize("Large document", {
         value: "x".repeat(CONTENT_DOCUMENT_LIMIT),
-      }).pipe(Effect.flip)
-    );
-    expect(failure).toMatchObject({
-      code: "CONTENT_RELEASE_SIZE",
-      message: "Large document exceeds the content document ceiling.",
-    });
+      }).pipe(Effect.flip);
+      expect(failure).toMatchObject({
+        code: "CONTENT_RELEASE_SIZE",
+        message: "Large document exceeds the content document ceiling.",
+      });
 
-    const headFailure = await Effect.runPromise(
-      ensureDocumentSize(
+      const headFailure = yield* ensureDocumentSize(
         "Large head",
         { sourcePath: "x".repeat(READ_MODEL_DOCUMENT_LIMIT) },
         READ_MODEL_DOCUMENT_LIMIT
-      ).pipe(Effect.flip)
-    );
-    expect(headFailure).toMatchObject({
-      code: "CONTENT_RELEASE_SIZE",
-      message: "Large head exceeds the content document ceiling.",
-    });
-  });
+      ).pipe(Effect.flip);
+      expect(headFailure).toMatchObject({
+        code: "CONTENT_RELEASE_SIZE",
+        message: "Large head exceeds the content document ceiling.",
+      });
+    })
+  );
 });
