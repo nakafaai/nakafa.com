@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@repo/design-system": "workspace:*",
+    "@repo/seo": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "class-variance-authority": "^0.7.1",
     "effect": "catalog:",

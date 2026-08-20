@@ -1,6 +1,8 @@
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { useTranslations } from "next-intl";
 import type { Organization, WithContext } from "schema-dts";
 import { JsonLd } from ".";
+import { ORGANIZATION } from "./constants";
 
 /**
  * OrganizationJsonLd component generates Schema.org Organization structured data
@@ -15,25 +17,12 @@ export function OrganizationJsonLd() {
 
   const organizationJsonLd: WithContext<Organization> = {
     "@context": "https://schema.org",
-    "@type": "Organization",
-    "@id": "https://nakafa.com/#organization",
-    name: "Nakafa",
-    legalName: "PT. Nakafa Tekno Kreatif",
+    ...ORGANIZATION,
     alternateName: t("title"),
     description: t("description"),
-    logo: "https://nakafa.com/logo.svg",
-    image: "https://nakafa.com/logo.svg",
-    url: "https://nakafa.com",
-    sameAs: [
-      "https://twitter.com/nabilfatih_",
-      "https://www.linkedin.com/company/nakafa",
-      "https://www.instagram.com/nakafa.ai/",
-      "https://github.com/nakafaai",
-      "https://www.youtube.com/@nakafaa",
-    ],
-    email: "contact@nakafa.com",
+    image: COMPANY_IDENTITY.logoUrl,
     foundingDate: "2021",
-    areaServed: "Indonesia",
+    areaServed: COMPANY_IDENTITY.registeredAddress.country,
     knowsAbout: [
       "Education",
       "Mathematics",

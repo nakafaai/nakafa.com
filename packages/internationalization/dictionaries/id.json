@@ -8,7 +8,7 @@
     "classification": "Pendidikan"
   },
   "Common": {
-    "copyright": "Hak Cipta © {year} PT. Nakafa Tekno Kreatif. Seluruh hak dilindungi.",
+    "copyright": "Hak Cipta © {year} {companyName}. Seluruh hak dilindungi.",
     "made-with-love": "Dibuat dengan cinta",
     "version": "Versi {version}",
     "beta": "Beta",

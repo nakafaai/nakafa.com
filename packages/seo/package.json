@@ -4,11 +4,13 @@
   "private": true,
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
     "@repo/next-config": "workspace:*",
     "@repo/utilities": "workspace:*",
+    "effect": "catalog:",
     "lodash.merge": "^4.6.2",
     "next": "16.3.0",
     "next-intl": "^4.13.5",
@@ -16,7 +18,10 @@
     "schema-dts": "^2.0.0"
   },
   "devDependencies": {
+    "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/lodash.merge": "^4.6.9"
+    "@types/lodash.merge": "^4.6.9",
+    "@vitest/coverage-istanbul": "^4.1.10",
+    "vitest": "^4.1.10"
   }
 }

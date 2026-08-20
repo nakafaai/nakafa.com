@@ -8,6 +8,7 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { FooterAction } from "@/components/marketing/shared/footer-action";
@@ -155,7 +156,10 @@ export function Footer({
       <section className="w-full border-t">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-4 p-6 lg:flex-row">
           <p className="text-center text-sm">
-            {tCommon("copyright", { year: "2026" })}
+            {tCommon("copyright", {
+              year: "2026",
+              companyName: COMPANY_IDENTITY.legalName,
+            })}
           </p>
           <div className="flex flex-col items-center gap-4 lg:flex-row">
             <div className="flex items-center gap-1">

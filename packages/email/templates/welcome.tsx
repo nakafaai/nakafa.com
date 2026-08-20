@@ -8,6 +8,10 @@ import {
 import { WrapperIcon } from "@repo/email/components/wrapper";
 import { Tailwind } from "@repo/email/tailwind";
 import {
+  COMPANY_IDENTITY,
+  COMPANY_REGISTERED_ADDRESS,
+} from "@repo/seo/company";
+import {
   Body,
   Column,
   Container,
@@ -27,6 +31,14 @@ interface WelcomeProps {
 }
 
 const COPYRIGHT_YEAR = new Date().getFullYear();
+const EMAIL_LOGO_URL = new URL("/logo.png", COMPANY_IDENTITY.url).href;
+const START_LEARNING_URL = new URL("/en", COMPANY_IDENTITY.url).href;
+const PRIVACY_POLICY_URL = new URL("/en/privacy-policy", COMPANY_IDENTITY.url)
+  .href;
+const TERMS_OF_SERVICE_URL = new URL(
+  "/en/terms-of-service",
+  COMPANY_IDENTITY.url
+).href;
 
 export function Welcome({ name }: WelcomeProps) {
   return (
@@ -41,7 +53,7 @@ export function Welcome({ name }: WelcomeProps) {
                 alt="Nakafa"
                 className="mx-auto"
                 height="64"
-                src="https://nakafa.com/logo.png"
+                src={EMAIL_LOGO_URL}
                 width="64"
               />
             </Section>
@@ -138,7 +150,7 @@ export function Welcome({ name }: WelcomeProps) {
             </Card>
 
             <Section className="mt-6 text-center">
-              <Button href="https://nakafa.com/en" size="lg">
+              <Button href={START_LEARNING_URL} size="lg">
                 Start Learning
               </Button>
             </Section>
@@ -155,18 +167,18 @@ export function Welcome({ name }: WelcomeProps) {
 
             <Section className="text-center">
               <Text className="m-0 text-muted-foreground text-xs leading-relaxed">
-                © {COPYRIGHT_YEAR} PT. Nakafa Tekno Kreatif. All rights
+                © {COPYRIGHT_YEAR} {COMPANY_IDENTITY.legalName}. All rights
                 reserved.
               </Text>
               <Text className="m-0 mt-1 text-muted-foreground text-xs leading-relaxed">
-                Taman Sukahati Permai H6, Kab. Bogor
+                {COMPANY_REGISTERED_ADDRESS}
               </Text>
               <Section align="center" className="mt-4 w-auto">
                 <Row>
                   <Column className="pr-2">
                     <Link
                       className="text-muted-foreground text-xs"
-                      href="https://nakafa.com/en/privacy-policy"
+                      href={PRIVACY_POLICY_URL}
                       style={{ textDecoration: "underline" }}
                     >
                       Privacy Policy
@@ -175,7 +187,7 @@ export function Welcome({ name }: WelcomeProps) {
                   <Column className="pl-2">
                     <Link
                       className="text-muted-foreground text-xs"
-                      href="https://nakafa.com/en/terms-of-service"
+                      href={TERMS_OF_SERVICE_URL}
                       style={{ textDecoration: "underline" }}
                     >
                       Terms of Service

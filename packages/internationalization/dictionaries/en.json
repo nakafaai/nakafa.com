@@ -8,7 +8,7 @@
     "classification": "Education"
   },
   "Common": {
-    "copyright": "Copyright © {year} PT. Nakafa Tekno Kreatif. All rights reserved.",
+    "copyright": "Copyright © {year} {companyName}. All rights reserved.",
     "made-with-love": "Made with love",
     "version": "Version {version}",
     "beta": "Beta",
