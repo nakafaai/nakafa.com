@@ -1,9 +1,9 @@
 import {
   COMPANY_IDENTITY,
   COMPANY_REGISTERED_ADDRESS,
-  COMPANY_SOCIAL_PROFILE_URLS,
   CompanyIdentitySchema,
 } from "@repo/seo/company";
+import { COMPANY_SOCIAL_PROFILE_URLS } from "@repo/seo/company-profiles";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 

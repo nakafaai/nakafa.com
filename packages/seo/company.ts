@@ -1,4 +1,5 @@
 import { Schema } from "effect";
+import { COMPANY_SOCIAL_PROFILES } from "./company-profiles";
 
 const UrlStringSchema = Schema.String.pipe(
   Schema.filter((value) => URL.canParse(value), {
@@ -84,19 +85,8 @@ export const COMPANY_IDENTITY = Schema.decodeUnknownSync(CompanyIdentitySchema)(
     phone: "+62 811-8992-531",
     url: "https://nakafa.com",
     logoUrl: "https://nakafa.com/logo.svg",
-    socialProfiles: {
-      discord: "https://discord.gg/CPCSfKhvfQ",
-      github: "https://github.com/nakafaai",
-      instagram: "https://www.instagram.com/nakafa.ai/",
-      linkedin: "https://www.linkedin.com/company/nakafa",
-      twitter: "https://twitter.com/nabilfatih_",
-      youtube: "https://www.youtube.com/@nakafaa",
-    },
+    socialProfiles: COMPANY_SOCIAL_PROFILES,
   }
-);
-
-export const COMPANY_SOCIAL_PROFILE_URLS = Object.values(
-  COMPANY_IDENTITY.socialProfiles
 );
 
 export const COMPANY_REGISTERED_ADDRESS = [

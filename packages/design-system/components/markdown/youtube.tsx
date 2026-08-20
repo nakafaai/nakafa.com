@@ -1,8 +1,4 @@
-import {
-  ArrowUpRight01Icon,
-  InLoveIcon,
-  YoutubeIcon,
-} from "@hugeicons/core-free-icons";
+import { ArrowUpRight01Icon, YoutubeIcon } from "@hugeicons/core-free-icons";
 import { YoutubePlayer } from "@repo/design-system/components/markdown/youtube-player";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -45,19 +41,6 @@ export function Youtube({ videoId }: Props) {
             </a>
           }
           variant="outline"
-        />
-        <Button
-          nativeButton={false}
-          render={
-            <a
-              href="https://www.youtube.com/@nakafaa?sub_confirmation=1"
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              {t("subscribe")}
-              <HugeIcons icon={InLoveIcon} />
-            </a>
-          }
         />
       </CardFooter>
     </Card>

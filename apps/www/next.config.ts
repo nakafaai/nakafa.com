@@ -9,6 +9,7 @@ import {
   withMDX,
 } from "@repo/next-config";
 import { analyzeKeys } from "@repo/next-config/keys";
+import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { Schema } from "effect";
 import type { NextConfig } from "next";
@@ -120,12 +121,12 @@ function createLocalizedRedirects() {
   const redirects = [
     {
       source: "/discord",
-      destination: "https://discord.gg/CPCSfKhvfQ",
+      destination: COMPANY_SOCIAL_PROFILES.discord,
       permanent: false,
     },
     {
       source: "/community",
-      destination: "https://discord.gg/CPCSfKhvfQ",
+      destination: COMPANY_SOCIAL_PROFILES.discord,
       permanent: false,
     },
   ];

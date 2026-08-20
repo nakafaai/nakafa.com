@@ -11,6 +11,7 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRouter } from "@repo/internationalization/src/navigation";
+import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { useTranslations } from "next-intl";
 import type * as React from "react";
 import { SidebarPreferenceSubmenus } from "@/components/sidebar/preference-submenus";
@@ -34,7 +35,7 @@ export function SidebarUtilityMenuItems({
           render={(props) => (
             <a
               {...props}
-              href="https://discord.gg/CPCSfKhvfQ"
+              href={COMPANY_SOCIAL_PROFILES.discord}
               rel="noopener noreferrer"
               target="_blank"
             >
