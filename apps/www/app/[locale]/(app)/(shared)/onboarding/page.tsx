@@ -1,5 +1,5 @@
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { redirect } from "@repo/internationalization/src/navigation";
+import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -45,7 +45,7 @@ export default async function Page(props: PageProps<"/[locale]/onboarding">) {
 async function LearningProgramOnboardingRuntime({
   locale,
 }: {
-  locale: ActiveAppLocaleCode;
+  locale: PublicAppLocale;
 }) {
   const [programs, token] = await Promise.all([
     getLearningProgramOnboardingCatalog(locale),

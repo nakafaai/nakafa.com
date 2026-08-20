@@ -15,9 +15,9 @@ import {
   RETAINED_PROTECTED_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
 import {
+  RETAINED_RUNTIME_LIVE_RENDERER,
   RETAINED_RUNTIME_QUESTION,
   RETAINED_RUNTIME_RELEASE,
-  RETAINED_RUNTIME_RENDERER,
   retainedRuntimeFound,
 } from "@repo/backend/test/retained-runtime";
 import { Effect, Schema } from "effect";
@@ -83,7 +83,11 @@ describe("retained protected content runtime client", () => {
 
     await expect(
       Effect.runPromise(
-        readRetainedProtectedContent(target, request, RETAINED_RUNTIME_RENDERER)
+        readRetainedProtectedContent(
+          target,
+          request,
+          RETAINED_RUNTIME_LIVE_RENDERER
+        )
       )
     ).resolves.toEqual(found);
     const call = fetchMock.mock.calls.at(0);
@@ -111,7 +115,7 @@ describe("retained protected content runtime client", () => {
         readRetainedProtectedContent(
           target,
           request,
-          RETAINED_RUNTIME_RENDERER
+          RETAINED_RUNTIME_LIVE_RENDERER
         ).pipe(Effect.flip)
       )
     ).resolves.toEqual(new RetainedContentRuntimeMissingError({ request }));
@@ -127,7 +131,7 @@ describe("retained protected content runtime client", () => {
         readRetainedProtectedContent(
           target,
           request,
-          RETAINED_RUNTIME_RENDERER
+          RETAINED_RUNTIME_LIVE_RENDERER
         ).pipe(Effect.flip)
       )
     ).resolves.toBeInstanceOf(ContentRuntimeVerificationError);
@@ -143,7 +147,7 @@ describe("retained protected content runtime client", () => {
         readRetainedProtectedContent(
           target,
           request,
-          RETAINED_RUNTIME_RENDERER
+          RETAINED_RUNTIME_LIVE_RENDERER
         ).pipe(Effect.flip)
       )
     ).resolves.toEqual(
@@ -154,7 +158,7 @@ describe("retained protected content runtime client", () => {
         readRetainedProtectedContent(
           target,
           request,
-          RETAINED_RUNTIME_RENDERER
+          RETAINED_RUNTIME_LIVE_RENDERER
         ).pipe(Effect.flip)
       )
     ).resolves.toEqual(

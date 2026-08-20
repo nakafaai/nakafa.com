@@ -10,10 +10,10 @@ describe("contentRelease/scope/family", () => {
   it("preserves established ownership in canonical contract order", () => {
     const merged = mergeManagedFamilies(
       ["material", "question"],
-      ["article", "material"]
+      ["article", "material", "page"]
     );
 
-    expect(merged).toEqual(["article", "material", "question"]);
+    expect(merged).toEqual(["article", "material", "page", "question"]);
     expect(hasExactFamilies(merged, [...merged])).toBe(true);
     expect(hasExactFamilies(["material", "article"], merged)).toBe(false);
   });

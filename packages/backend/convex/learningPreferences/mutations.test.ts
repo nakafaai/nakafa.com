@@ -1,4 +1,7 @@
-import { ActiveAppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import {
+  ActiveAppLocaleListSchema,
+  ActiveAppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
 import {
   type LearningProgram,
   LearningProgramKeySchema,
@@ -15,10 +18,14 @@ import {
   makeTechnicalProgram,
 } from "@repo/backend/test/program-snapshot";
 import { activateTryoutStartSource } from "@repo/backend/test/tryout-source";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 const NOW = 1_798_752_000_000;
+const PREFERENCE_APP_LOCALES = Schema.decodeSync(ActiveAppLocaleListSchema)([
+  "en",
+  "id",
+]);
 
 const PREFERENCE_PROGRAMS = [
   makePreferenceProgram(1, "merdeka", "ID", "merdeka", "Kurikulum Merdeka"),
@@ -179,7 +186,7 @@ async function syncPrograms(
   t: ReturnType<typeof createConvexTestWithBetterAuth>
 ) {
   const data = await Effect.runPromise(
-    makeProgramSnapshotData(PREFERENCE_PROGRAMS)
+    makeProgramSnapshotData(PREFERENCE_PROGRAMS, PREFERENCE_APP_LOCALES)
   );
   await activateProgramSnapshot(t, data);
 }

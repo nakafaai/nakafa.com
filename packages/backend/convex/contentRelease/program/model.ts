@@ -1,4 +1,4 @@
-import { ACTIVE_APP_LOCALES } from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleList } from "@nakafa/aksara-contracts/locale";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
@@ -93,9 +93,10 @@ const readAlternates = Effect.fn("contentRelease.readProgramAlternates")(
     ctx: QueryCtx,
     snapshotId: string,
     programKey: string,
-    nodeKey: string
+    nodeKey: string,
+    activeAppLocales: ActiveAppLocaleList
   ) {
-    return yield* Effect.forEach(ACTIVE_APP_LOCALES, (appLocale) =>
+    return yield* Effect.forEach(activeAppLocales, (appLocale) =>
       Effect.promise(() =>
         ctx.db
           .query("curriculumRoutes")
@@ -230,9 +231,20 @@ const readMaterials = Effect.fn("contentRelease.readProgramMaterials")(
 );
 /** Resolves every bounded relationship needed by one curriculum page. */
 export const readProgramModel = Effect.fn("contentRelease.readProgramModel")(
-  function* (ctx: QueryCtx, snapshotId: string, route: CurriculumRoute) {
+  function* (
+    ctx: QueryCtx,
+    snapshotId: string,
+    route: CurriculumRoute,
+    activeAppLocales: ActiveAppLocaleList
+  ) {
     const [alternates, ancestors, children, contexts] = yield* Effect.all([
-      readAlternates(ctx, snapshotId, route.programKey, route.nodeKey),
+      readAlternates(
+        ctx,
+        snapshotId,
+        route.programKey,
+        route.nodeKey,
+        activeAppLocales
+      ),
       readAncestors(ctx, snapshotId, route),
       readRelatedRows(ctx, snapshotId, route, "children"),
       readRelatedRows(ctx, snapshotId, route, "contexts"),

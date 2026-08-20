@@ -29,6 +29,9 @@ function presentRollback(head: ContentHead): PresentRollbackState {
   if (head.family === "material") {
     return { head, state: "material" };
   }
+  if (head.family === "page") {
+    return { head, state: "page" };
+  }
   return { head, state: "question" };
 }
 

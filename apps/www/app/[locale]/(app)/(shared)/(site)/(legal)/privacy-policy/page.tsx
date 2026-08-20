@@ -1,4 +1,4 @@
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 import { getTranslations } from "next-intl/server";
@@ -12,7 +12,7 @@ import PrivacyPolicyId from "./id.mdx";
 const contentByLocale = {
   en: PrivacyPolicyEn,
   id: PrivacyPolicyId,
-} satisfies Record<ActiveAppLocaleCode, ComponentType>;
+} satisfies Record<PublicAppLocale, ComponentType>;
 
 export async function generateMetadata({
   params,
@@ -37,7 +37,7 @@ export default function Page(props: PageProps<"/[locale]/privacy-policy">) {
   return <PageContent locale={locale} />;
 }
 
-async function PageContent({ locale }: { locale: ActiveAppLocaleCode }) {
+async function PageContent({ locale }: { locale: PublicAppLocale }) {
   "use cache";
   cacheLife("hours");
 

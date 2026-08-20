@@ -1,12 +1,10 @@
 import "server-only";
-import {
-  type ActiveAppLocaleCode,
-  AppLocaleSchema,
-} from "@nakafa/aksara-contracts/locale";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import type { NinaLearningSessionInput } from "@repo/ai/nina/memory/pack";
 import { readMaterialContextHint } from "@repo/contents/_types/route/material/context";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
+import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { readPublishedMaterialContext } from "@/lib/content/material/context";
@@ -17,7 +15,7 @@ import { isActiveLocale } from "@/lib/i18n/active";
 export function isPublishedMaterialPath(
   locale: Locale,
   publicPath: string
-): locale is ActiveAppLocaleCode {
+): locale is PublicAppLocale {
   if (!isActiveLocale(locale)) {
     return false;
   }
@@ -32,7 +30,7 @@ export const readPublishedNinaMaterial = Effect.fn(
   "chat.readPublishedNinaMaterial"
 )(function* (input: {
   readonly contextHint?: null | string;
-  readonly locale: ActiveAppLocaleCode;
+  readonly locale: PublicAppLocale;
   readonly publicPath: string;
   readonly url: string;
 }) {

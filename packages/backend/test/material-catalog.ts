@@ -2,6 +2,7 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import {
   canonicalizeMaterialProjection,
   type MaterialLessonProjection,
@@ -84,11 +85,13 @@ export async function activateMaterialCatalog(
     makeMaterialProjection("en", 2),
     makeMaterialProjection("id", 1),
     makeMaterialProjection("id", 2),
-  ]
+  ],
+  activeAppLocales: readonly ActiveAppLocaleCode[] = ["en", "id"]
 ) {
   await target.mutation(async (ctx) => {
     await insertZeroRelease(ctx, {
       ...MATERIAL_IDENTITY,
+      activeAppLocales,
       ownership: { base: [], result: ["material"] },
       role: "candidate",
       status: "completed",
@@ -111,6 +114,7 @@ export async function advanceMaterialCatalog(
   await target.mutation(async (ctx) => {
     await insertZeroRelease(ctx, {
       ...NEXT_MATERIAL_IDENTITY,
+      activeAppLocales: ["en", "id"],
       base: MATERIAL_IDENTITY,
       ownership: { base: ["material"], result: ["material"] },
       role: "candidate",

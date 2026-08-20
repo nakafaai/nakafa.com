@@ -2,6 +2,7 @@ import { vWorkflowId } from "@convex-dev/workflow";
 import articleSchema from "@repo/backend/convex/contentRelease/article/schema";
 import materialSchema from "@repo/backend/convex/contentRelease/material/schema";
 import { proofFailureValidator } from "@repo/backend/convex/contentRelease/proof/spec";
+import { searchFamilyValidator } from "@repo/backend/convex/contentRelease/search/spec";
 import snapshotSchema from "@repo/backend/convex/contentRelease/snapshot/schema";
 import {
   appLocaleValidator,
@@ -116,7 +117,7 @@ const tables = {
   contentIndex: defineTable({
     appLocale: appLocaleValidator,
     contentKey: v.string(),
-    family: contentFamilyValidator,
+    family: searchFamilyValidator,
     projectionHash: v.string(),
     publicPath: v.string(),
     releaseId: v.string(),

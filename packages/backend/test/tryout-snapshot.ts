@@ -2,6 +2,8 @@ import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
   ACTIVE_APP_LOCALES,
   type ActiveAppLocaleCode,
+  ActiveAppLocaleListSchema,
+  APP_LOCALE_CODES,
 } from "@nakafa/aksara-contracts/locale";
 import type {
   ContentSnapshotManifest,
@@ -46,6 +48,30 @@ import { insertTestRelease } from "@repo/backend/test/content-stage";
 import { Effect, Schema, Stream } from "effect";
 
 const artifactHash = Sha256HashSchema.make(`sha256:${"8".repeat(64)}`);
+const technicalCopy = {
+  de: {
+    choice: "Technische Auswahl",
+    contentHashCharacter: "3",
+    country: "Technisches Land",
+  },
+  en: {
+    choice: "Technical choice",
+    contentHashCharacter: "1",
+    country: "Technical country",
+  },
+  id: {
+    choice: "Pilihan teknis",
+    contentHashCharacter: "2",
+    country: "Negara teknis",
+  },
+} as const satisfies Record<
+  ActiveAppLocaleCode,
+  {
+    readonly choice: string;
+    readonly contentHashCharacter: string;
+    readonly country: string;
+  }
+>;
 
 /** Creates one hashed technical try-out country row. */
 export function makeTryoutCatalogRow(
@@ -69,7 +95,7 @@ export function makeTryoutCatalogRow(
     order: 1,
     publicPath: "try-out/indonesia",
     sourceRevision: "technical-revision",
-    title: appLocale === "en" ? "Technical country" : "Negara teknis",
+    title: technicalCopy[appLocale].country,
   });
   return {
     family: "tryout",
@@ -97,13 +123,13 @@ export function makeTryoutPlacementRow(
     choices: [
       {
         isCorrect: true,
-        label: appLocale === "en" ? "Technical choice" : "Pilihan teknis",
+        label: technicalCopy[appLocale].choice,
         optionKey: "option-1",
         order: 1,
       },
     ],
     contentHash: TryoutContentHashSchema.make(
-      (appLocale === "en" ? "1" : "2").repeat(64)
+      technicalCopy[appLocale].contentHashCharacter.repeat(64)
     ),
     countryKey: "indonesia",
     deliveryLanguage: appLocale,
@@ -134,11 +160,16 @@ export function makeTryoutPlacementRow(
 export const makeTryoutSnapshotManifest = Effect.fn(
   "backendTest.makeTryoutSnapshotManifest"
 )(function* () {
-  const catalog = [makeTryoutCatalogRow("en"), makeTryoutCatalogRow("id")];
-  const placements = [
-    makeTryoutPlacementRow("en"),
-    makeTryoutPlacementRow("id"),
-  ];
+  const catalog = ACTIVE_APP_LOCALES.map((appLocale) =>
+    makeTryoutCatalogRow(appLocale)
+  ).sort((left, right) =>
+    compareTryoutCatalog(left.record.row, right.record.row)
+  );
+  const placements = ACTIVE_APP_LOCALES.map((appLocale) =>
+    makeTryoutPlacementRow(appLocale)
+  ).sort((left, right) =>
+    compareTryoutPlacements(left.record.row, right.record.row)
+  );
   const catalogEvidence = yield* digestTryoutCatalog(
     Stream.fromIterable(catalog.map(({ record }) => record))
   );
@@ -148,10 +179,16 @@ export const makeTryoutSnapshotManifest = Effect.fn(
   const manifest = makeTryoutSnapshot({
     activeAppLocales: ACTIVE_APP_LOCALES,
     catalogDigest: catalogEvidence.digest,
-    counts: { country: 2, exam: 0, section: 0, set: 0, track: 0 },
+    counts: {
+      country: catalog.length,
+      exam: 0,
+      section: 0,
+      set: 0,
+      track: 0,
+    },
     placementCount: placementEvidence.count,
     placementDigest: placementEvidence.digest,
-    routeCount: 2,
+    routeCount: catalog.length,
   });
   return {
     family: "tryout",
@@ -173,6 +210,11 @@ export async function activateTryoutSnapshot(
     readonly releaseId?: string;
   }
 ) {
+  const activeAppLocales = Schema.decodeUnknownSync(ActiveAppLocaleListSchema)(
+    APP_LOCALE_CODES.filter((appLocale) =>
+      input.catalog.some((row) => row.appLocale === appLocale)
+    )
+  );
   const catalog = [...input.catalog]
     .sort(compareTryoutCatalog)
     .map(makeTryoutCatalogRecord);
@@ -188,7 +230,7 @@ export async function activateTryoutSnapshot(
   const manifest: ContentSnapshotManifest = {
     family: "tryout",
     manifest: makeTryoutSnapshot({
-      activeAppLocales: ACTIVE_APP_LOCALES,
+      activeAppLocales,
       catalogDigest: catalogEvidence.digest,
       counts: countCatalog(input.catalog),
       placementCount: placementEvidence.count,
@@ -209,7 +251,7 @@ export async function activateTryoutSnapshot(
     }),
   };
   const releaseId = input.releaseId ?? TEST_RELEASE_ID;
-  await insertTestRelease(ctx, { releaseId, snapshots });
+  await insertTestRelease(ctx, { activeAppLocales, releaseId, snapshots });
   await ctx.db.insert("contentSnapshots", {
     createdAt: 1,
     family: "tryout",

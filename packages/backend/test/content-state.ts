@@ -1,6 +1,9 @@
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
-import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import {
+  ACTIVE_APP_LOCALE_CODES,
+  type ActiveAppLocaleCode,
+} from "@nakafa/aksara-contracts/locale";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
 import type {
   ContentSnapshotSet,
@@ -29,6 +32,7 @@ export interface TestIdentity {
 }
 
 interface TestReleaseEnvelope extends TestIdentity {
+  readonly activeAppLocales?: readonly ActiveAppLocaleCode[];
   readonly base?: TestIdentity;
   readonly originReleaseId?: string;
   readonly role: "candidate" | "recovery";
@@ -57,6 +61,7 @@ interface TestStateOptions {
 /** Creates the exact zero-item signed envelope used by lifecycle tests. */
 export function zeroReleaseJson(options: TestReleaseEnvelope) {
   return testReleaseJson({
+    activeAppLocales: options.activeAppLocales,
     baseManifestHash: options.base?.manifestHash ?? null,
     baseReleaseId: options.base?.releaseId ?? null,
     baseResultCount: 0,
@@ -87,7 +92,7 @@ export async function insertZeroRelease(
   const aborted = options.status === "aborted";
   const receipt = {
     activatedHeads: 0,
-    activeAppLocales: ACTIVE_APP_LOCALE_CODES,
+    activeAppLocales: options.activeAppLocales ?? ACTIVE_APP_LOCALE_CODES,
     deletedHeads: 0,
     manifestHash: options.manifestHash,
     projectionDigest: TEST_DIGEST,

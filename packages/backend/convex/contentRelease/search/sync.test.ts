@@ -5,6 +5,12 @@ import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
+  TEST_PAGE_KEY,
+  TEST_PAGE_PATH,
+  TEST_PAGE_PROJECTION_JSON,
+  TEST_PAGE_SOURCE,
+} from "@repo/backend/test/content-page";
+import {
   insertCompletedRelease,
   insertReleaseItem,
   selectActiveRelease,
@@ -56,6 +62,24 @@ async function insertPublicHead(
     publicPath,
   });
 }
+/** Inserts one public page that must remain outside the learning-search model. */
+async function insertPublicPage(ctx: MutationCtx, identity: TestIdentity) {
+  await insertRuntimeVersion(ctx, "public", TEST_PAGE_KEY, {
+    artifactHash: `sha256:${"a".repeat(64)}`,
+    headReleaseId: identity.releaseId,
+    headSequence: identity.sequence,
+    plainText: "legal page body",
+    projectionJson: TEST_PAGE_PROJECTION_JSON,
+    publicPath: TEST_PAGE_PATH,
+    rendererDomain: "site",
+    sourcePath: TEST_PAGE_SOURCE,
+  });
+  await insertRuntimeBinding(ctx, TEST_PAGE_KEY, {
+    bindingReleaseId: identity.releaseId,
+    bindingSequence: identity.sequence,
+    publicPath: TEST_PAGE_PATH,
+  });
+}
 
 describe("contentRelease/search/sync", () => {
   it("publishes one bounded search model atomically", async () => {
@@ -86,6 +110,25 @@ describe("contentRelease/search/sync", () => {
       searchReleaseId: BASE.releaseId,
       searchSequence: BASE.sequence,
     });
+  });
+
+  it("excludes public pages from a mixed full-release search sync", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertCompletedRelease(ctx, BASE, 2);
+      await insertTestState(ctx, { active: BASE, nextSequence: 2 });
+      await insertReleaseItem(ctx, BASE, "test:searchable", 0);
+      await insertPublicHead(ctx, BASE, "test:searchable", 0, "search body");
+      await insertReleaseItem(ctx, BASE, TEST_PAGE_KEY, 1, "page");
+      await insertPublicPage(ctx, BASE);
+    });
+
+    await expect(
+      t.mutation((ctx) => runConvexProgram(syncSearch(ctx, BASE.releaseId)))
+    ).resolves.toEqual({ done: true, nextIndex: 1, processed: 2 });
+    await expect(
+      t.run((ctx) => ctx.db.query("contentIndex").take(3))
+    ).resolves.toMatchObject([{ contentKey: "test:searchable" }]);
   });
 
   it("continues search models larger than one transaction page", async () => {

@@ -1,9 +1,19 @@
+import { createHash } from "node:crypto";
 import {
   type StoredProtectedRuntimeFound,
   StoredProtectedRuntimeFoundSchema,
   type StoredProtectedRuntimeRequest,
   StoredProtectedRuntimeRequestSchema,
 } from "@nakafa/aksara-contracts/history/decode";
+import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  canonicalizeRendererManifestContract,
+  RENDERER_CONTRACT_VERSION,
+  RENDERER_MANIFEST_FORMAT,
+  RendererManifestEnvelopeSchema,
+  RendererPublishedDomainsSchema,
+} from "@nakafa/aksara-contracts/renderer/contract";
+import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect, Schema } from "effect";
@@ -52,6 +62,31 @@ export const RETAINED_RUNTIME_RENDERER = {
   publishedDomains: ["snbt-general"],
   rendererContractVersion: "1.0.0",
 };
+
+const liveRendererContract = {
+  base: rendererCapability,
+  domains: RENDERER_DOMAINS.map((name) => ({
+    authoringComponents: [],
+    name,
+    supportedComponents: [],
+  })),
+  publishedDomains: RendererPublishedDomainsSchema.make([
+    retainedRendererDomain,
+  ]),
+};
+
+/** Complete current renderer used to execute authenticated historical bytes. */
+export const RETAINED_RUNTIME_LIVE_RENDERER =
+  RendererManifestEnvelopeSchema.make({
+    ...liveRendererContract,
+    format: RENDERER_MANIFEST_FORMAT,
+    hash: Sha256HashSchema.make(
+      `sha256:${createHash("sha256")
+        .update(canonicalizeRendererManifestContract(liveRendererContract))
+        .digest("hex")}`
+    ),
+    rendererContractVersion: RENDERER_CONTRACT_VERSION,
+  });
 
 export const RETAINED_RUNTIME_QUESTION = {
   artifactHash:

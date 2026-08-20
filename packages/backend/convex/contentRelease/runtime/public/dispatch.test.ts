@@ -15,6 +15,12 @@ import {
   FUNCTION_MATERIAL_PATH,
   FUNCTION_MATERIAL_SOURCE,
 } from "@repo/backend/test/content-material";
+import {
+  TEST_PAGE_KEY,
+  TEST_PAGE_PATH,
+  TEST_PAGE_PROJECTION_JSON,
+  TEST_PAGE_SOURCE,
+} from "@repo/backend/test/content-page";
 import { TEST_KEY_RESOLVER } from "@repo/backend/test/content-proof";
 import { testTextHash } from "@repo/backend/test/content-release";
 import {
@@ -142,6 +148,43 @@ describe("contentRelease/runtime/public/dispatch", () => {
         publicPath: TEST_ARTICLE_PATH,
       },
       sourcePath: TEST_ARTICLE_SOURCE,
+    });
+  });
+  it("authenticates one signed public page end to end", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await t.mutation(async (ctx) => {
+      await insertSignedRelease(ctx);
+      await insertSignedHead(ctx, "public", TEST_PAGE_KEY, {
+        projectionJson: TEST_PAGE_PROJECTION_JSON,
+        publicPath: TEST_PAGE_PATH,
+        rendererDomain: "site",
+        sourcePath: TEST_PAGE_SOURCE,
+      });
+    });
+    const found = await runDispatch(
+      t,
+      JSON.stringify({
+        appLocale: "en",
+        delivery: "public",
+        publicPath: TEST_PAGE_PATH,
+      })
+    );
+    expect(found.status).toBe(200);
+    expect(JSON.parse(found.body)).toMatchObject({
+      artifact: {
+        payload: {
+          contentKey: TEST_PAGE_KEY,
+          rendererDomain: "site",
+        },
+      },
+      delivery: "public",
+      kind: "found",
+      projection: {
+        contentKey: TEST_PAGE_KEY,
+        kind: "public-page",
+        publicPath: TEST_PAGE_PATH,
+      },
+      sourcePath: TEST_PAGE_SOURCE,
     });
   });
   it("authenticates the exact active canonical material", async () => {

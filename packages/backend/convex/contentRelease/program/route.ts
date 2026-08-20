@@ -82,7 +82,12 @@ export const readProgramRoute = Effect.fn("contentRelease.readProgramRoute")(
       );
     }
     yield* verifyProgram(storedProgram, snapshotId);
-    const model = yield* readProgramModel(ctx, snapshotId, route);
+    const model = yield* readProgramModel(
+      ctx,
+      snapshotId,
+      route,
+      active.signed.manifest.activeAppLocales
+    );
     return {
       activeManifestHash: active.manifestHash,
       activeReleaseId: active.releaseId,

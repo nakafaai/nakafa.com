@@ -1,4 +1,6 @@
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
+import { TEST_PAGE_PROJECTION } from "@repo/backend/test/content-page";
+import { TEST_ARTICLE_PROJECTION } from "@repo/backend/test/content-runtime";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -73,26 +75,29 @@ describe("published API content", () => {
   });
 
   it("accepts an article projection through the same current Interface", async () => {
-    const articleProjection = { ...projection, kind: "article" };
+    const articleInput = {
+      activeReleaseId: input.activeReleaseId,
+      appLocale: TEST_ARTICLE_PROJECTION.appLocale,
+      family: "article" as const,
+      publicPath: TEST_ARTICLE_PROJECTION.publicPath,
+    };
     readPublicContentBatchMock.mockReturnValue(
       Effect.succeed([
         {
           activeReleaseId: input.activeReleaseId,
           artifact: { payload: { rawMdx: "## Article" } },
           delivery: "public",
-          projection: articleProjection,
+          projection: TEST_ARTICLE_PROJECTION,
         },
       ])
     );
 
     await expect(
-      Effect.runPromise(
-        readPublishedApiItems([{ ...input, family: "article" }])
-      )
+      Effect.runPromise(readPublishedApiItems([articleInput]))
     ).resolves.toMatchObject([
       {
         raw: "## Article",
-        slug: projection.contentKey,
+        slug: TEST_ARTICLE_PROJECTION.contentKey,
       },
     ]);
   });
@@ -148,6 +153,28 @@ describe("published API content", () => {
       new ApiPublishedContentReadError({
         cause:
           "Signed content changed its release, family, or public identity.",
+        message: "Unable to read signed public content for the public API.",
+      })
+    );
+  });
+
+  it("rejects a signed page from the article and material API", async () => {
+    readPublicContentBatchMock.mockReturnValue(
+      Effect.succeed([
+        {
+          activeReleaseId: input.activeReleaseId,
+          artifact: { payload: { rawMdx: "## Signed page" } },
+          delivery: "public",
+          projection: TEST_PAGE_PROJECTION,
+        },
+      ])
+    );
+
+    await expect(
+      Effect.runPromise(readPublishedApiItems([input]).pipe(Effect.flip))
+    ).resolves.toEqual(
+      new ApiPublishedContentReadError({
+        cause: "Signed content does not belong to the article or material API.",
         message: "Unable to read signed public content for the public API.",
       })
     );

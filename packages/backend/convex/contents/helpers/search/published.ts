@@ -237,10 +237,10 @@ const authenticateSearchRow = Effect.fn(
     return null;
   }
   const projection = yield* decodeProjectionJson(resolved.projectionJson);
-  if (projection.kind === "question-body") {
+  if (projection.kind !== "article" && projection.kind !== "subject-lesson") {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Active search entry ${row.contentKey}/${row.appLocale} exposes a question body.`
+      `Active search entry ${row.contentKey}/${row.appLocale} exposes a non-search projection.`
     );
   }
   const section = projection.kind === "article" ? "articles" : "material";

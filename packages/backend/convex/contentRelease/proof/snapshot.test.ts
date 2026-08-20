@@ -40,7 +40,8 @@ function programRelease(data: ProgramSnapshotData, releaseId: string) {
 /** Inserts one completed signed release used as a recovery proof base. */
 function insertCompletedRelease(
   ctx: MutationCtx,
-  release: ReturnType<typeof programRelease>
+  release: ReturnType<typeof programRelease>,
+  stagedSnapshotRows: number
 ) {
   return ctx.db.insert("contentReleases", {
     baseFamilies: [],
@@ -62,7 +63,7 @@ function insertCompletedRelease(
     stagedProjections: 0,
     stagedRoutes: 0,
     stagedSnapshotBatches: 1,
-    stagedSnapshotRows: 6,
+    stagedSnapshotRows,
     stagedUpserts: 0,
     status: "completed",
     updatedAt: 1,
@@ -75,19 +76,36 @@ describe("contentRelease/proof/snapshot", () => {
     const data = await Effect.runPromise(makeProgramSnapshotData());
     const release = programRelease(data, "release-test");
     const t = convexTest(schema, convexModules);
-    await stageProgramSnapshot(t, data, 3);
+    const batchSize = 3;
+    const batchCount = Math.ceil(data.rowJson.length / batchSize);
+    await stageProgramSnapshot(t, data, batchSize);
 
     await expect(
       t.action((ctx) =>
         runConvexProgram(
-          verifyReleaseSnapshots(ctx, release, "candidate", 2, 6)
+          verifyReleaseSnapshots(
+            ctx,
+            release,
+            "candidate",
+            batchCount,
+            data.rowJson.length
+          )
         )
       )
-    ).resolves.toEqual({ snapshots: data.snapshots, stagedRows: 6 });
+    ).resolves.toEqual({
+      snapshots: data.snapshots,
+      stagedRows: data.rowJson.length,
+    });
     await expect(
       t.action((ctx) =>
         runConvexProgram(
-          verifyReleaseSnapshots(ctx, release, "candidate", 2, 5)
+          verifyReleaseSnapshots(
+            ctx,
+            release,
+            "candidate",
+            batchCount,
+            data.rowJson.length - 1
+          )
         )
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
@@ -120,7 +138,13 @@ describe("contentRelease/proof/snapshot", () => {
     await expect(
       t.action((ctx) =>
         runConvexProgram(
-          verifyReleaseSnapshots(ctx, release, "candidate", 1, 6)
+          verifyReleaseSnapshots(
+            ctx,
+            release,
+            "candidate",
+            1,
+            data.rowJson.length
+          )
         )
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
@@ -151,7 +175,9 @@ describe("contentRelease/proof/snapshot", () => {
       })
     );
     const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) => insertCompletedRelease(ctx, base));
+    await t.mutation((ctx) =>
+      insertCompletedRelease(ctx, base, data.rowJson.length)
+    );
 
     await expect(
       t.action((ctx) =>

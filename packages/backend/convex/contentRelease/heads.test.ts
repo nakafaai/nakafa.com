@@ -19,6 +19,11 @@ import {
   maximumTestHead,
 } from "@repo/backend/test/content-head";
 import {
+  TEST_PAGE_KEY,
+  TEST_PAGE_PATH,
+  TEST_PAGE_SOURCE,
+} from "@repo/backend/test/content-page";
+import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
 } from "@repo/backend/test/content-release";
@@ -121,6 +126,42 @@ describe("contentRelease/heads", () => {
           publicPath: TEST_ARTICLE_PATH,
           rendererDomain: "politics",
           sourcePath: TEST_ARTICLE_SOURCE,
+        },
+      ],
+      nextCursor: null,
+    });
+  });
+  it("pages one verified immutable public page head", async () => {
+    const t = convexTest(schema, convexModules);
+    await stageUpsertFixture(t, "page");
+    await beginFixture(t);
+    await t.mutation(verifyItems, {
+      afterIndex: -1,
+      releaseId: TEST_RELEASE_ID,
+    });
+    await t.mutation(async (ctx) => {
+      const release = await ctx.db.query("contentReleases").unique();
+      if (!release) {
+        throw new Error("Expected verified page release.");
+      }
+      await ctx.db.patch("contentReleases", release._id, {
+        proofAt: 1,
+        proofJson: "{}",
+        status: "verified",
+        verifiedAt: 1,
+      });
+    });
+    const page = await readPage(t, null, undefined, 2, "page");
+    expect(page).toMatchObject({
+      done: true,
+      family: "page",
+      heads: [
+        {
+          contentKey: TEST_PAGE_KEY,
+          family: "page",
+          publicPath: TEST_PAGE_PATH,
+          rendererDomain: "site",
+          sourcePath: TEST_PAGE_SOURCE,
         },
       ],
       nextCursor: null,

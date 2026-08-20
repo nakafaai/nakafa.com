@@ -76,6 +76,7 @@ export function testRendererJson(
   });
 }
 interface ReleaseOptions {
+  readonly activeAppLocales?: readonly ActiveAppLocaleCode[];
   readonly baseManifestHash?: null | string;
   readonly baseReleaseId?: null | string;
   readonly baseResultCount?: number;
@@ -117,15 +118,15 @@ export function testReleaseJson(options?: ReleaseOptions) {
   const upsertCount = options?.upsertCount ?? itemCount;
   const baseReleaseId = options?.baseReleaseId ?? null;
   const snapshots = options?.snapshots ?? inheritContentSnapshots(null);
+  const activeAppLocales = options?.activeAppLocales ?? ACTIVE_APP_LOCALE_CODES;
   const origin = options?.originReleaseId
     ? { kind: "rollback", releaseId: options.originReleaseId }
     : { kind: "git", sha: "a".repeat(40) };
   return JSON.stringify({
     keyId: "test-key",
     manifest: {
-      activeAppLocales: ACTIVE_APP_LOCALE_CODES,
-      baseActiveAppLocales:
-        baseReleaseId === null ? null : ACTIVE_APP_LOCALE_CODES,
+      activeAppLocales,
+      baseActiveAppLocales: baseReleaseId === null ? null : activeAppLocales,
       baseManifestHash:
         baseReleaseId === null
           ? null

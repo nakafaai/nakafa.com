@@ -10,6 +10,7 @@ import {
   mathematicsComponentNames,
   physicsComponentNames,
   politicsComponentNames,
+  siteComponentNames,
   snbtGeneralComponentNames,
   snbtMathComponentNames,
   snbtPlainComponentNames,
@@ -78,6 +79,7 @@ export const rendererManifest = createRendererManifest({
       "politics",
       Object.values(politicsComponentNames)
     ),
+    createCurrentDomainCapability("site", Object.values(siteComponentNames)),
     createCurrentDomainCapability(
       "snbt-general",
       Object.values(snbtGeneralComponentNames)

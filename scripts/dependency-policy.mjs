@@ -4,7 +4,7 @@ import path from "node:path";
 import { parse } from "yaml";
 
 export const CONTRACT_ARCHIVE =
-  "https://github.com/nakafaai/aksara/releases/download/contracts-v0.14.1/nakafa-aksara-contracts-0.14.1.tgz";
+  "https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.0/nakafa-aksara-contracts-0.15.0.tgz";
 
 export const DEPENDENCY_HOLDS = [
   {

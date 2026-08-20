@@ -12,10 +12,7 @@ type SearchOwner = NonNullable<
 export const resolveSearchProjection = Effect.fn(
   "contentRelease.resolveSearchProjection"
 )(function* (ctx: QueryCtx, row: Doc<"contentIndex">, owner: SearchOwner) {
-  if (
-    (row.family !== "article" && row.family !== "material") ||
-    !owner.families.includes(row.family)
-  ) {
+  if (!owner.families.includes(row.family)) {
     return yield* staleSearchRow(row);
   }
   const resolved = yield* resolvePublicProjection(

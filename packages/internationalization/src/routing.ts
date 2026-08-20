@@ -28,6 +28,9 @@ export const routing = defineRouting({
   pathnames,
 });
 
+/** Application locale currently exposed through public product routes. */
+export type PublicAppLocale = (typeof locales)[number];
+
 /** Full contract locale routing used only by authenticated local previews. */
 export const previewRouting = defineRouting({
   alternateLinks: false,

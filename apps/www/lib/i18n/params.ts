@@ -1,15 +1,17 @@
 import {
-  type ActiveAppLocaleCode,
   APP_LOCALE_CODES,
   type AppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
-import { routing } from "@repo/internationalization/src/routing";
+import {
+  type PublicAppLocale,
+  routing,
+} from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 
-/** Narrows one route locale to the authenticated active publication set. */
-export function getActiveLocaleOrThrow(locale: string): ActiveAppLocaleCode {
+/** Narrows one route locale to the product's current public locale set. */
+export function getActiveLocaleOrThrow(locale: string): PublicAppLocale {
   if (hasLocale(routing.locales, locale)) {
     return locale;
   }

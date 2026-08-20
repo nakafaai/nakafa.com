@@ -1,5 +1,4 @@
 "use client";
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
@@ -11,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
+import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { useForm } from "@tanstack/react-form";
 import { type Preloaded, usePreloadedQuery } from "convex/react";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
@@ -218,7 +218,7 @@ function submitCurriculumPreference({
   setPreferredCurriculum,
   value,
 }: {
-  locale: ActiveAppLocaleCode;
+  locale: PublicAppLocale;
   programs: readonly CurriculumProgramOption[];
   setPreferredCurriculum: SavePreferredCurriculum;
   value: unknown;

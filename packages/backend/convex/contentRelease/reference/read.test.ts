@@ -214,4 +214,31 @@ describe("contentRelease/reference/read", () => {
       )
     ).resolves.toBeNull();
   });
+
+  it("keeps contract locales private until the product route cutover", async () => {
+    const target = convexTest(schema, convexModules);
+    const material = makeMaterialProjection("de", 1);
+
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(
+          readContentReference(ctx, {
+            kind: "route",
+            appLocale: "de",
+            publicPath: material.publicPath,
+          })
+        )
+      )
+    ).resolves.toBeNull();
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(
+          readContentReference(ctx, {
+            contentId: material.graph.assetId,
+            kind: "content",
+          })
+        )
+      )
+    ).resolves.toBeNull();
+  });
 });

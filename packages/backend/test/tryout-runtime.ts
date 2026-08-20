@@ -296,9 +296,7 @@ export async function insertTryoutAttempt(
     userId: args.userId,
     countryKey: args.set.countryKey,
     examKey: args.set.examKey,
-    appLocale: Schema.decodeUnknownSync(ActiveAppLocaleCodeSchema)(
-      args.set.appLocale
-    ),
+    appLocale: Schema.decodeSync(ActiveAppLocaleCodeSchema)(args.set.appLocale),
     setIdentity,
     setKey: args.set.setKey,
     snapshotReleaseId: args.snapshotReleaseId ?? TEST_RELEASE_ID,

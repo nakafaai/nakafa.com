@@ -1,5 +1,4 @@
 "use client";
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { LearningProgramKey } from "@nakafa/aksara-contracts/program/spec";
 import type { api } from "@repo/backend/convex/_generated/api";
 import {
@@ -12,6 +11,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
 import { useRouter } from "@repo/internationalization/src/navigation";
+import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { useConvexAuth } from "convex/react";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
@@ -151,7 +151,7 @@ function saveCurriculumPreference({
   setPreferredCurriculum,
 }: {
   errorMessage: string;
-  locale: ActiveAppLocaleCode;
+  locale: PublicAppLocale;
   programKey: string;
   setPreferredCurriculum: SavePreferredCurriculum;
 }) {

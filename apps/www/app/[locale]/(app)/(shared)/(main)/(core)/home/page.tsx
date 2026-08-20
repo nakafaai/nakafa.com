@@ -1,5 +1,5 @@
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { redirect } from "@repo/internationalization/src/navigation";
+import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { HomeContinueLearning } from "@/components/home/continue-learning";
@@ -63,7 +63,7 @@ async function AuthenticatedHome({
 }
 
 /** Renders the authenticated home feed in the existing Nakafa home order. */
-function Main({ locale }: { locale: ActiveAppLocaleCode }) {
+function Main({ locale }: { locale: PublicAppLocale }) {
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-24">
       <div className="relative flex flex-col gap-12">

@@ -259,6 +259,7 @@ import type * as contentRelease_quran_view from "../contentRelease/quran/view.js
 import type * as contentRelease_receipt from "../contentRelease/receipt.js";
 import type * as contentRelease_recovery from "../contentRelease/recovery.js";
 import type * as contentRelease_reference from "../contentRelease/reference.js";
+import type * as contentRelease_reference_input from "../contentRelease/reference/input.js";
 import type * as contentRelease_reference_read from "../contentRelease/reference/read.js";
 import type * as contentRelease_reference_spec from "../contentRelease/reference/spec.js";
 import type * as contentRelease_renderer from "../contentRelease/renderer.js";
@@ -284,6 +285,7 @@ import type * as contentRelease_scope_family from "../contentRelease/scope/famil
 import type * as contentRelease_scope_route from "../contentRelease/scope/route.js";
 import type * as contentRelease_search_input from "../contentRelease/search/input.js";
 import type * as contentRelease_search_owner from "../contentRelease/search/owner.js";
+import type * as contentRelease_search_spec from "../contentRelease/search/spec.js";
 import type * as contentRelease_search_sync from "../contentRelease/search/sync.js";
 import type * as contentRelease_search_verify from "../contentRelease/search/verify.js";
 import type * as contentRelease_search_write from "../contentRelease/search/write.js";
@@ -805,6 +807,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/receipt": typeof contentRelease_receipt;
   "contentRelease/recovery": typeof contentRelease_recovery;
   "contentRelease/reference": typeof contentRelease_reference;
+  "contentRelease/reference/input": typeof contentRelease_reference_input;
   "contentRelease/reference/read": typeof contentRelease_reference_read;
   "contentRelease/reference/spec": typeof contentRelease_reference_spec;
   "contentRelease/renderer": typeof contentRelease_renderer;
@@ -830,6 +833,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/scope/route": typeof contentRelease_scope_route;
   "contentRelease/search/input": typeof contentRelease_search_input;
   "contentRelease/search/owner": typeof contentRelease_search_owner;
+  "contentRelease/search/spec": typeof contentRelease_search_spec;
   "contentRelease/search/sync": typeof contentRelease_search_sync;
   "contentRelease/search/verify": typeof contentRelease_search_verify;
   "contentRelease/search/write": typeof contentRelease_search_write;

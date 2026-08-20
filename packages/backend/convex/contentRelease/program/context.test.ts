@@ -25,6 +25,7 @@ import { insertMaterialProjection } from "@repo/backend/test/material-catalog";
 import {
   activateProgramSnapshot,
   makeProgramSnapshotData,
+  type ProgramSnapshotData,
 } from "@repo/backend/test/program-snapshot";
 import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";
@@ -128,7 +129,7 @@ function mappingRoute(
 /** Stages additional immutable curriculum rows into one technical snapshot. */
 async function stageRoutes(
   target: TestConvex<typeof schema>,
-  snapshotId: string,
+  data: ProgramSnapshotData,
   routes: readonly CurriculumRoute[]
 ) {
   const rows = await Effect.runPromise(
@@ -149,7 +150,13 @@ async function stageRoutes(
   for (const [offset, row] of rows.entries()) {
     await target.mutation((ctx) =>
       runConvexProgram(
-        stageProgramRow(ctx, snapshotId, offset + 6, row.source, row.rowJson)
+        stageProgramRow(
+          ctx,
+          data.snapshotId,
+          data.rowJson.length + offset,
+          row.source,
+          row.rowJson
+        )
       )
     );
   }
@@ -173,11 +180,7 @@ describe("contentRelease/program/context", () => {
     const data = await Effect.runPromise(makeProgramSnapshotData());
     const t = convexTest(schema, convexModules);
     await activateProgramSnapshot(t, data);
-    await stageRoutes(t, data.snapshotId, [
-      subjectRoute(),
-      groupRoute(),
-      mappingRoute(),
-    ]);
+    await stageRoutes(t, data, [subjectRoute(), groupRoute(), mappingRoute()]);
 
     await expect(
       t.query((ctx) =>
@@ -208,7 +211,7 @@ describe("contentRelease/program/context", () => {
       ),
     });
     await activateProgramSnapshot(target, data);
-    await stageRoutes(target, data.snapshotId, [
+    await stageRoutes(target, data, [
       subjectRoute(),
       groupRoute(),
       mappingRoute(1, renamed.parentPath),
@@ -240,7 +243,7 @@ describe("contentRelease/program/context", () => {
     const data = await Effect.runPromise(makeProgramSnapshotData());
     const t = convexTest(schema, convexModules);
     await activateProgramSnapshot(t, data);
-    await stageRoutes(t, data.snapshotId, [subjectRoute(), groupRoute()]);
+    await stageRoutes(t, data, [subjectRoute(), groupRoute()]);
 
     for (const nodeKey of ["missing-group", `${PROGRAM_KEY}:root`, GROUP_KEY]) {
       await expect(
@@ -264,7 +267,7 @@ describe("contentRelease/program/context", () => {
     const t = convexTest(schema, convexModules);
     await activateProgramSnapshot(t, data);
     const directPath = PublicPathSchema.make(`${ROOT_PATH}/direct-group`);
-    await stageRoutes(t, data.snapshotId, [
+    await stageRoutes(t, data, [
       groupRoute(
         ROOT_PATH,
         directPath,
@@ -293,7 +296,7 @@ describe("contentRelease/program/context", () => {
     await activateProgramSnapshot(t, data);
     const missingParent = PublicPathSchema.make(`${ROOT_PATH}/missing-parent`);
     const orphanPath = PublicPathSchema.make(`${missingParent}/orphan-group`);
-    await stageRoutes(t, data.snapshotId, [
+    await stageRoutes(t, data, [
       groupRoute(
         missingParent,
         orphanPath,
@@ -319,7 +322,7 @@ describe("contentRelease/program/context", () => {
     const data = await Effect.runPromise(makeProgramSnapshotData());
     const t = convexTest(schema, convexModules);
     await activateProgramSnapshot(t, data);
-    await stageRoutes(t, data.snapshotId, [
+    await stageRoutes(t, data, [
       subjectRoute(),
       groupRoute(),
       ...Array.from({ length: 101 }, (_, index) => mappingRoute(index + 1)),
@@ -339,7 +342,7 @@ describe("contentRelease/program/context", () => {
     const t = convexTest(schema, convexModules);
     const sibling = makeMaterialProjection("en", 2);
     await activateProgramSnapshot(t, data);
-    await stageRoutes(t, data.snapshotId, [
+    await stageRoutes(t, data, [
       subjectRoute(),
       groupRoute(),
       mappingRoute(1, MATERIAL_PUBLIC_PATH),
@@ -372,7 +375,7 @@ describe("contentRelease/program/context", () => {
     const data = await Effect.runPromise(makeProgramSnapshotData());
     const t = convexTest(schema, convexModules);
     await activateProgramSnapshot(t, data);
-    await stageRoutes(t, data.snapshotId, [
+    await stageRoutes(t, data, [
       subjectRoute(),
       groupRoute(),
       mappingRoute(1),

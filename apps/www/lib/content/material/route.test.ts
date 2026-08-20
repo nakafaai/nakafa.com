@@ -34,6 +34,7 @@ vi.mock("@/lib/content/runtime/query", async () => {
 /** Builds one complete backend-verified material model response. */
 function foundModel(overrides?: {
   readonly activeManifestHash?: null | string;
+  readonly activeAppLocales?: readonly string[];
   readonly activeReleaseId?: null | string;
   readonly alternateJson?: readonly string[];
   readonly projectionJson?: null | string;
@@ -47,6 +48,7 @@ function foundModel(overrides?: {
       overrides?.activeManifestHash === undefined
         ? activeManifestHash
         : overrides.activeManifestHash,
+    activeAppLocales: overrides?.activeAppLocales ?? ["en", "id"],
     activeReleaseId:
       overrides?.activeReleaseId === undefined
         ? activeReleaseId
@@ -145,6 +147,7 @@ describe("published material route", () => {
   it.each([
     ["active manifest", foundModel({ activeManifestHash: "invalid" })],
     ["missing manifest", foundModel({ activeManifestHash: null })],
+    ["active locales", foundModel({ activeAppLocales: ["id", "en"] })],
     ["missing release", foundModel({ activeReleaseId: null })],
     ["source revision", foundModel({ sourceRevision: "main" })],
     ["missing renderer", foundModel({ rendererDomain: null })],

@@ -7,6 +7,7 @@ import { chemistryComponents } from "@repo/design-system/lib/markdown/domain/che
 import { mathematicsComponents } from "@repo/design-system/lib/markdown/domain/mathematics";
 import { physicsComponents } from "@repo/design-system/lib/markdown/domain/physics";
 import { politicsComponents } from "@repo/design-system/lib/markdown/domain/politics";
+import { siteComponents } from "@repo/design-system/lib/markdown/domain/site";
 import { snbtGeneralComponents } from "@repo/design-system/lib/markdown/domain/snbt/general";
 import { snbtMathComponents } from "@repo/design-system/lib/markdown/domain/snbt/mathematics";
 import { snbtPlainComponents } from "@repo/design-system/lib/markdown/domain/snbt/plain";
@@ -25,6 +26,7 @@ const rendererComponents: RendererComponents = {
   mathematics: mathematicsComponents,
   physics: physicsComponents,
   politics: politicsComponents,
+  site: siteComponents,
   "snbt-general": snbtGeneralComponents,
   "snbt-math": snbtMathComponents,
   "snbt-plain": snbtPlainComponents,

@@ -1,12 +1,12 @@
 "use client";
 
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
   StartAttemptArgs,
   StartAttemptResult,
   TryoutPaywallSource,
 } from "@repo/backend/convex/tryouts/start/spec";
+import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
@@ -71,11 +71,11 @@ export function startEntrySectionProgram(input: {
 /** Creates the existing Pro checkout and navigates to its provider URL. */
 export function checkoutProgram(input: {
   readonly action: (args: {
-    locale: ActiveAppLocaleCode;
+    locale: PublicAppLocale;
     successUrl: string;
   }) => Promise<{ url: string }>;
   readonly failureMessage: string;
-  readonly locale: ActiveAppLocaleCode;
+  readonly locale: PublicAppLocale;
 }) {
   return Effect.tryPromise({
     try: () =>

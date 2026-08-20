@@ -6,7 +6,7 @@ import {
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import {
-  ACTIVE_APP_LOCALES,
+  ActiveAppLocaleListSchema,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
@@ -104,7 +104,7 @@ export const readPublishedMaterialRoute = Effect.fn(
     appLocale,
     publicPath,
   });
-  const [active, sourceRevision] = yield* Effect.all([
+  const [active, activeAppLocales, sourceRevision] = yield* Effect.all([
     decodeActiveIdentity(
       result.activeManifestHash,
       result.activeReleaseId,
@@ -112,8 +112,15 @@ export const readPublishedMaterialRoute = Effect.fn(
       locale,
       publicPath
     ),
+    Schema.decodeUnknownEffect(ActiveAppLocaleListSchema)(
+      result.activeAppLocales
+    ),
     decodeSourceRevision(result.sourceRevision, { appLocale, publicPath }),
-  ]);
+  ]).pipe(
+    Effect.mapError(() =>
+      makeMaterialProjectionError({ appLocale, publicPath })
+    )
+  );
   if (result.projectionJson === null) {
     return {
       ...active,
@@ -150,8 +157,8 @@ export const readPublishedMaterialRoute = Effect.fn(
     alternates.map((alternate) => alternate.appLocale)
   );
   const completeLocaleSet =
-    alternateLocales.size === ACTIVE_APP_LOCALES.length &&
-    ACTIVE_APP_LOCALES.every((alternateLocale) =>
+    alternateLocales.size === activeAppLocales.length &&
+    activeAppLocales.every((alternateLocale) =>
       alternateLocales.has(alternateLocale)
     );
   if (

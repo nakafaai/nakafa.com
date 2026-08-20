@@ -36,7 +36,7 @@ describe("contentRelease/quran/facts", () => {
     expect(records.map(quranRowFacts)).toEqual([
       {
         identity:
-          "attribution:tanzil-text:tanzil-metadata:quranenc-english:quranenc-indonesian:quranenc-tafsir",
+          "attribution:tanzil-text:tanzil-metadata:quranenc-english:quranenc-indonesian:quranenc-german:quranenc-tafsir",
         kind: "quran-attribution",
       },
       { identity: "surah:1", kind: "quran-surah", surahNumber: 1 },

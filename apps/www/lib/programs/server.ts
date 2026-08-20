@@ -1,7 +1,7 @@
 import "server-only";
 
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { api } from "@repo/backend/convex/_generated/api";
+import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { fetchQuery } from "convex/nextjs";
 import { Effect, Schema } from "effect";
 import type {
@@ -23,7 +23,7 @@ class ActiveLearningSelectionReadError extends Schema.TaggedError<ActiveLearning
 /** Reads the authenticated user's canonical learning selection. */
 const readActiveLearningSelection = Effect.fn(
   "www.learningPrograms.activeSelection"
-)(function* (token: string, locale: ActiveAppLocaleCode) {
+)(function* (token: string, locale: PublicAppLocale) {
   return yield* Effect.tryPromise({
     try: () =>
       fetchQuery(
@@ -49,7 +49,7 @@ const readActiveLearningSelection = Effect.fn(
  * https://nextjs.org/docs/messages/next-prerender-current-time.
  */
 async function getLearningProgramCatalog(
-  locale: ActiveAppLocaleCode
+  locale: PublicAppLocale
 ): Promise<LearningProgramCatalog> {
   "use cache";
   applyContentRuntimeCache();
@@ -61,7 +61,7 @@ async function getLearningProgramCatalog(
 
 /** Reads programs that are ready for learner selection. */
 export async function getLearningProgramOnboardingCatalog(
-  locale: ActiveAppLocaleCode
+  locale: PublicAppLocale
 ): Promise<LearningProgramCatalog> {
   const catalog = await getLearningProgramCatalog(locale);
 
@@ -71,7 +71,7 @@ export async function getLearningProgramOnboardingCatalog(
 /** Reads the active learning selection for the authenticated request token. */
 export async function getActiveLearningSelection(
   token: string,
-  locale: ActiveAppLocaleCode
+  locale: PublicAppLocale
 ): Promise<ActiveLearningSelection> {
   return await Effect.runPromise(readActiveLearningSelection(token, locale));
 }

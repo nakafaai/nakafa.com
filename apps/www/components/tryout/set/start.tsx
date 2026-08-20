@@ -2,13 +2,13 @@
 
 import { Rocket01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useRouter } from "@repo/internationalization/src/navigation";
+import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { useAction, useConvexAuth, useMutation, useQuery } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
@@ -39,7 +39,7 @@ export interface StartTryoutRequest {
   destinationSectionKey: string;
   entrySectionKey?: string;
   examKey: string;
-  locale: ActiveAppLocaleCode;
+  locale: PublicAppLocale;
   setKey: string;
   successNavigation: "destination" | "stay";
   trackKey: string;
