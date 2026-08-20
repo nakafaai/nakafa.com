@@ -1,10 +1,17 @@
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { COMPANY_SOCIAL_PROFILE_URLS } from "@repo/seo/company-profiles";
-import type { OrganizationLeaf, Person } from "schema-dts";
+import type { IdReference, OrganizationLeaf, Person } from "schema-dts";
+
+export const ORGANIZATION_ID = new URL("#organization", COMPANY_IDENTITY.url)
+  .href;
+
+export const ORGANIZATION_REFERENCE = {
+  "@id": ORGANIZATION_ID,
+} satisfies IdReference;
 
 export const ORGANIZATION: OrganizationLeaf = {
   "@type": "Organization",
-  "@id": new URL("#organization", COMPANY_IDENTITY.url).href,
+  "@id": ORGANIZATION_ID,
   name: COMPANY_IDENTITY.brandName,
   legalName: COMPANY_IDENTITY.legalName,
   url: COMPANY_IDENTITY.url,

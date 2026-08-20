@@ -1,5 +1,9 @@
 import { COMPANY_IDENTITY } from "@repo/seo/company";
-import { ORGANIZATION } from "@repo/seo/json-ld/constants";
+import {
+  ORGANIZATION,
+  ORGANIZATION_ID,
+  ORGANIZATION_REFERENCE,
+} from "@repo/seo/json-ld/constants";
 import { describe, expect, it } from "vitest";
 
 describe("organization JSON-LD", () => {
@@ -21,5 +25,10 @@ describe("organization JSON-LD", () => {
       email: COMPANY_IDENTITY.email,
       telephone: COMPANY_IDENTITY.phone,
     });
+  });
+
+  it("references the one canonical organization graph node", () => {
+    expect(ORGANIZATION["@id"]).toBe(ORGANIZATION_ID);
+    expect(ORGANIZATION_REFERENCE).toStrictEqual({ "@id": ORGANIZATION_ID });
   });
 });

@@ -2,7 +2,7 @@ import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { type Locale, useTranslations } from "next-intl";
 import type { SearchAction, WebSite, WithContext } from "schema-dts";
 import { JsonLd } from ".";
-import { ORGANIZATION } from "./constants";
+import { ORGANIZATION_REFERENCE } from "./constants";
 
 interface Props {
   locale: Locale;
@@ -28,8 +28,8 @@ export function WebsiteJsonLd({ locale }: Props) {
     name: COMPANY_IDENTITY.brandName,
     alternateName: t("title"),
     description: t("description"),
-    publisher: ORGANIZATION,
-    maintainer: ORGANIZATION,
+    publisher: ORGANIZATION_REFERENCE,
+    maintainer: ORGANIZATION_REFERENCE,
     inLanguage: locale,
     potentialAction: searchAction,
   };
