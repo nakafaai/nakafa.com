@@ -182,7 +182,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 
 - TypeScript is strict across the repo.
 - The root toolchain intentionally installs TypeScript 7 as `@typescript/native` and exposes it as `tsc`, while the `typescript` package name resolves to `@typescript/typescript6` for Next.js, Ultracite, and language-service consumers that still require the JavaScript compiler API. Keep this side-by-side arrangement until those consumers support the TypeScript 7 API.
-- `packages/backend` owns package-local TypeScript 6 because the Convex CLI resolves `node_modules/typescript/bin/tsc` directly and Effect diagnostics still require the JavaScript compiler API. Its workspace `typecheck` script explicitly runs the root native TypeScript 7 compiler, while Convex deployment performs an additional TypeScript 6 compatibility check. Keep this boundary until Convex supports the stable native compiler path and programmatic consumers support TypeScript 7.
+- `packages/backend` owns package-local native TypeScript 7 because the Convex CLI resolves `node_modules/typescript/bin/tsc` directly. It deduplicates to the same Effect-patched `7.0.2` package used by the root compiler. Keep the root TypeScript 6 alias only for Next.js, Ultracite, and other programmatic consumers that still require the JavaScript compiler API.
 - Run `pnpm exec tsc --version` to verify the native TypeScript 7 compiler and `pnpm exec tsc6 --version` only for compatibility diagnostics.
 - Prefer derived and inferred types over manual annotations.
 - Do not add redundant type annotations just to restate what TypeScript already knows.
