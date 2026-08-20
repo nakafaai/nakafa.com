@@ -12,7 +12,6 @@
   "dependencies": {
     "@ai-sdk/devtools": "1.0.12",
     "@ai-sdk/gateway": "4.0.56",
-    "@ai-sdk/google": "4.0.47",
     "@mendable/firecrawl-js": "^4.34.0",
     "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.14.1/nakafa-aksara-contracts-0.14.1.tgz",
     "@repo/contents": "workspace:*",

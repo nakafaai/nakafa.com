@@ -247,7 +247,7 @@ function readPreparedStep({
     initialMessages: messages,
     instructions,
     messages,
-    model: "google/gemini-3-flash",
+    model: "openai/gpt-5-mini",
     responseMessages: [],
     runtimeContext: {},
     stepNumber,

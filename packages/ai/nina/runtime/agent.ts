@@ -1,5 +1,5 @@
 import { provider } from "@repo/ai/config/app";
-import { getModelProviderOptions } from "@repo/ai/config/model";
+import { getInteractiveModelReasoning } from "@repo/ai/config/model";
 import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { chatStreamTimeout } from "@repo/ai/config/timeouts";
 import type {
@@ -115,8 +115,8 @@ export const runNinaAgentTurn = Effect.fn("nina.agent.turn")(function* ({
     repairToolCall: settings.repairToolCall,
     providerOptions: {
       gateway: gatewayProviderOptions,
-      google: getModelProviderOptions(runtime.modelId),
     },
+    reasoning: getInteractiveModelReasoning(runtime.modelId),
     stopWhen: isStepCount(MAX_ORCHESTRATOR_STEPS),
     tools: settings.tools,
   });

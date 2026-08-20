@@ -28,7 +28,7 @@ import {
 import { prepareMathStep } from "@repo/ai/agents/math/step";
 import { compute } from "@repo/ai/agents/math/tools/compute";
 import { provider } from "@repo/ai/config/app";
-import { getFastModelProviderOptions } from "@repo/ai/config/model";
+import { getBackgroundModelReasoning } from "@repo/ai/config/model";
 import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { subAgentGenerationTimeout } from "@repo/ai/config/timeouts";
 import { textOutputSchema } from "@repo/ai/schema/tools";
@@ -62,8 +62,8 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
         model: provider.languageModel(modelId),
         providerOptions: {
           gateway: gatewayProviderOptions,
-          google: getFastModelProviderOptions(modelId),
         },
+        reasoning: getBackgroundModelReasoning(modelId),
         repairToolCall: (options) =>
           runPromise(
             repairMathToolCall({
@@ -75,7 +75,6 @@ export const runMathAgent = Effect.fn("math.runMathAgent")(function* ({
         instructions: mathPrompt({ locale, context }),
         prepareStep: prepareMathStep,
         stopWhen: isStepCount(MAX_MATH_STEPS),
-        temperature: 0,
         timeout: subAgentGenerationTimeout,
         tools: {
           algebra: tool({

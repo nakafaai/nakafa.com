@@ -1,4 +1,3 @@
-import { google } from "@ai-sdk/google";
 import {
   addEligibleCitationUrl,
   addEligibleSourceUrls,
@@ -8,11 +7,6 @@ import {
   nakafaScrape,
   nakafaWebSearch,
 } from "@repo/ai/agents/research/descriptions";
-import {
-  createGroundingEvidence,
-  createGroundingWebSearchData,
-  hasSingleGroundingQuery,
-} from "@repo/ai/agents/research/grounding";
 import {
   createResearchMessages,
   createResearchSynthesisMessages,
@@ -28,10 +22,7 @@ import {
   scrapeInputSchema,
   webSearchInputSchema,
 } from "@repo/ai/agents/research/schema";
-import {
-  prepareGoogleGroundingStep,
-  prepareResearchEvidenceStep,
-} from "@repo/ai/agents/research/step";
+import { prepareResearchEvidenceStep } from "@repo/ai/agents/research/step";
 import {
   formatScrapeOutput,
   isSuccessfulScrapeOutput,
@@ -39,7 +30,7 @@ import {
 } from "@repo/ai/agents/research/tools/scrape";
 import { searchWeb } from "@repo/ai/agents/research/tools/search";
 import { provider } from "@repo/ai/config/app";
-import { getFastModelProviderOptions } from "@repo/ai/config/model";
+import { getBackgroundModelReasoning } from "@repo/ai/config/model";
 import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { subAgentGenerationTimeout } from "@repo/ai/config/timeouts";
 import { getSourceReferences } from "@repo/ai/lib/source";
@@ -77,7 +68,6 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
   }: ResearchAgentParams) {
     const services = yield* Effect.context<never>();
     const runPromise = Effect.runPromiseWith(services);
-    let triedGoogleGrounding = false;
     const sourceReferences = getUniqueSourceReferences([
       ...messageSourceReferences,
       ...getSourceReferences(task),
@@ -102,9 +92,6 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
           instructions: researchEvidencePrompt({ locale, context }),
           messages: createResearchMessages(task, collectedEvidence),
           tools: {
-            google_search: google.tools.googleSearch({
-              searchTypes: { webSearch: {} },
-            }),
             webSearch: tool({
               description: nakafaWebSearch,
               inputSchema: webSearchInputSchema,
@@ -165,7 +152,7 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
            * `activeTools`, and message overrides.
            * https://ai-sdk.dev/docs/ai-sdk-core/tools-and-tool-calling#preparestep-callback
            */
-          prepareStep: ({ messages, steps }) => {
+          prepareStep: ({ steps }) => {
             const hasWebSearchToolCall = steps.some((step) =>
               step.toolCalls.some(
                 (toolCall) => toolCall.toolName === "webSearch"
@@ -175,22 +162,12 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
               hasWebSearchToolCall,
             });
 
-            if (evidenceStep) {
-              return evidenceStep;
-            }
-
-            if (triedGoogleGrounding) {
-              return;
-            }
-
-            triedGoogleGrounding = true;
-
-            return prepareGoogleGroundingStep(messages);
+            return evidenceStep;
           },
           providerOptions: {
             gateway: gatewayProviderOptions,
-            google: getFastModelProviderOptions(modelId),
           },
+          reasoning: getBackgroundModelReasoning(modelId),
           stopWhen: isStepCount(5),
           timeout: subAgentGenerationTimeout,
         }),
@@ -210,28 +187,6 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
         });
       },
     });
-
-    const groundedSearchData = createGroundingWebSearchData({
-      providerMetadata: evidenceResult.finalStep.providerMetadata,
-      sources: evidenceResult.sources,
-    });
-
-    if (groundedSearchData) {
-      const groundingEvidence = createGroundingEvidence(groundedSearchData);
-
-      if (groundingEvidence) {
-        collectedEvidence.push(groundingEvidence);
-        addEligibleSourceUrls(eligibleCitationUrls, groundedSearchData.sources);
-      }
-    }
-
-    if (groundedSearchData && hasSingleGroundingQuery(groundedSearchData)) {
-      writer.write({
-        id: `${toolCallId}-grounding`,
-        type: "data-web-search",
-        data: groundedSearchData,
-      });
-    }
 
     const sourceEvidenceAvailable = eligibleCitationUrls.size > 0;
     const synthesisResult = yield* Effect.tryPromise({
@@ -258,8 +213,8 @@ export const runResearchAgent = Effect.fn("research.runResearchAgent")(
           }),
           providerOptions: {
             gateway: gatewayProviderOptions,
-            google: getFastModelProviderOptions(modelId),
           },
+          reasoning: getBackgroundModelReasoning(modelId),
           timeout: subAgentGenerationTimeout,
         }),
       catch: (error) => {

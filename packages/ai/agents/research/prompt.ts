@@ -33,9 +33,8 @@ export function researchEvidencePrompt({
       Workflow:
       1. Analyze the research task.
       2. Use webSearch for inspectable Firecrawl evidence with source content.
-      3. Use Google Search grounding for current public corroboration after Firecrawl.
-      4. Use scrape when a selected URL needs deeper reading.
-      5. Return structured evidence notes only.
+      3. Use scrape when a selected URL needs deeper reading.
+      4. Return structured evidence notes only.
 
       Search rules:
       - Keep webSearch queries as search-engine text, not the raw user prompt.

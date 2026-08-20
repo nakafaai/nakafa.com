@@ -1,7 +1,7 @@
 import { provider } from "@repo/ai/config/app";
 import {
   defaultModel,
-  getFastModelProviderOptions,
+  getBackgroundModelReasoning,
 } from "@repo/ai/config/model";
 import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { suggestionGenerationTimeout } from "@repo/ai/config/timeouts";
@@ -62,8 +62,8 @@ export const writeNinaSuggestions = Effect.fn("nina.suggest.write")(function* ({
     }),
     providerOptions: {
       gateway: gatewayProviderOptions,
-      google: getFastModelProviderOptions(defaultModel),
     },
+    reasoning: getBackgroundModelReasoning(defaultModel),
     timeout: suggestionGenerationTimeout,
   });
   const dataPartId = crypto.randomUUID();

@@ -19,7 +19,7 @@ import { read } from "@repo/ai/agents/nakafa/tools/read";
 import { search } from "@repo/ai/agents/nakafa/tools/search";
 import { taxonomy } from "@repo/ai/agents/nakafa/tools/taxonomy";
 import { provider } from "@repo/ai/config/app";
-import { getFastModelProviderOptions } from "@repo/ai/config/model";
+import { getBackgroundModelReasoning } from "@repo/ai/config/model";
 import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { subAgentGenerationTimeout } from "@repo/ai/config/timeouts";
 import { createEffectSchema } from "@repo/ai/lib/effect-schema";
@@ -63,11 +63,10 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
         model: provider.languageModel(modelId),
         providerOptions: {
           gateway: gatewayProviderOptions,
-          google: getFastModelProviderOptions(modelId),
         },
+        reasoning: getBackgroundModelReasoning(modelId),
         instructions: nakafaAgentPrompt({ locale, context }),
         messages: [{ role: "user", content: task }],
-        temperature: 0,
         tools: {
           search: tool({
             description: nakafaSearch,

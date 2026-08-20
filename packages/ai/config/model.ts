@@ -1,5 +1,4 @@
 import type { GatewayModelId } from "@ai-sdk/gateway";
-import type { GoogleLanguageModelOptions } from "@ai-sdk/google";
 import { Function as EffectFunction, Schema } from "effect";
 /**
  * User-facing Nakafa chat models.
@@ -16,26 +15,17 @@ export const ModelIdSchema = ModelKeySchema.pipe(
 );
 export type ModelKey = Schema.Schema.Type<typeof ModelKeySchema>;
 export type ModelId = Schema.Schema.Type<typeof ModelIdSchema>;
-const interactiveProviderOptions = {
-  thinkingConfig: {
-    includeThoughts: true,
-    thinkingLevel: "high",
-  },
-} satisfies GoogleLanguageModelOptions;
-const fastProviderOptions = {
-  thinkingConfig: {
-    thinkingLevel: "low",
-  },
-} satisfies GoogleLanguageModelOptions;
+const ModelReasoningSchema = Schema.Struct({
+  background: Schema.Literal("low"),
+  interactive: Schema.Literal("high"),
+});
 export const ModelInfoSchema = Schema.Struct({
   credits: Schema.Finite.pipe(
     Schema.check(Schema.isInt()),
     Schema.check(Schema.isGreaterThan(0))
   ),
-  gatewayId: Schema.Literals([
-    "google/gemini-3-flash",
-    "google/gemini-3.5-flash",
-  ]),
+  gatewayId: Schema.Literals(["openai/gpt-5-mini", "openai/gpt-5.4-mini"]),
+  reasoning: ModelReasoningSchema,
 }).annotate({
   description: "Public Nakafa model metadata used for billing and routing.",
 });
@@ -43,30 +33,21 @@ export type ModelInfo = Schema.Schema.Type<typeof ModelInfoSchema>;
 export const modelRegistry = {
   "nakafa-lite": {
     credits: 2,
-    gatewayId: "google/gemini-3-flash",
-    providerOptions: {
-      fast: fastProviderOptions,
-      interactive: interactiveProviderOptions,
+    gatewayId: "openai/gpt-5-mini",
+    reasoning: {
+      background: "low",
+      interactive: "high",
     },
   },
   "nakafa-pro": {
     credits: 5,
-    gatewayId: "google/gemini-3.5-flash",
-    providerOptions: {
-      fast: fastProviderOptions,
-      interactive: interactiveProviderOptions,
+    gatewayId: "openai/gpt-5.4-mini",
+    reasoning: {
+      background: "low",
+      interactive: "high",
     },
   },
-} satisfies Record<
-  ModelKey,
-  ModelInfo & {
-    gatewayId: GatewayModelId;
-    providerOptions: {
-      fast: GoogleLanguageModelOptions;
-      interactive: GoogleLanguageModelOptions;
-    };
-  }
->;
+} satisfies Record<ModelKey, ModelInfo & { gatewayId: GatewayModelId }>;
 export const defaultModel = ModelIdSchema.make("nakafa-lite");
 /** Checks whether an untrusted string is one of the public Nakafa model IDs. */
 export function isModelId(value: string): value is ModelId {
@@ -85,13 +66,13 @@ export function getModelGatewayId(modelId: ModelId) {
   return modelRegistry[EffectFunction.cast<ModelId, ModelKey>(modelId)]
     .gatewayId;
 }
-/** Returns Gemini provider options for one Nakafa model. */
-export function getModelProviderOptions(modelId: ModelId) {
+/** Returns provider-neutral reasoning for an interactive Nakafa response. */
+export function getInteractiveModelReasoning(modelId: ModelId) {
   return modelRegistry[EffectFunction.cast<ModelId, ModelKey>(modelId)]
-    .providerOptions.interactive;
+    .reasoning.interactive;
 }
-/** Returns Gemini provider options for background and tool-routing calls. */
-export function getFastModelProviderOptions(modelId: ModelId) {
+/** Returns provider-neutral reasoning for background and tool-routing calls. */
+export function getBackgroundModelReasoning(modelId: ModelId) {
   return modelRegistry[EffectFunction.cast<ModelId, ModelKey>(modelId)]
-    .providerOptions.fast;
+    .reasoning.background;
 }

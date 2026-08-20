@@ -1,6 +1,6 @@
 import { provider } from "@repo/ai/config/app";
 import {
-  getFastModelProviderOptions,
+  getBackgroundModelReasoning,
   type ModelId,
 } from "@repo/ai/config/model";
 import { gatewayProviderOptions } from "@repo/ai/config/routing";
@@ -119,8 +119,8 @@ export const repairMathToolCall = Effect.fn("math.repairToolCall")(function* ({
       }),
       providerOptions: {
         gateway: gatewayProviderOptions,
-        google: getFastModelProviderOptions(modelId),
       },
+      reasoning: getBackgroundModelReasoning(modelId),
       instructions,
       timeout: backgroundGenerationTimeout,
     })

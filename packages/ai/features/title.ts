@@ -1,7 +1,7 @@
 import { provider } from "@repo/ai/config/app";
 import {
   defaultModel,
-  getFastModelProviderOptions,
+  getBackgroundModelReasoning,
 } from "@repo/ai/config/model";
 import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { backgroundGenerationTimeout } from "@repo/ai/config/timeouts";
@@ -45,8 +45,8 @@ export const generateTitle = Effect.fn("features.generateTitle")(function* ({
         prompt: titleSourceText,
         providerOptions: {
           gateway: gatewayProviderOptions,
-          google: getFastModelProviderOptions(defaultModel),
         },
+        reasoning: getBackgroundModelReasoning(defaultModel),
         instructions: createPrompt({
           taskContext: `
             # Title Task

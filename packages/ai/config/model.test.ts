@@ -1,9 +1,9 @@
 import {
   defaultModel,
-  getFastModelProviderOptions,
+  getBackgroundModelReasoning,
+  getInteractiveModelReasoning,
   getModelCreditCost,
   getModelGatewayId,
-  getModelProviderOptions,
   hasEnoughCredits,
   isModelId,
   MODEL_IDS,
@@ -11,10 +11,7 @@ import {
   ModelInfoSchema,
   modelRegistry,
 } from "@repo/ai/config/model";
-import {
-  fallbackGatewayModelIds,
-  gatewayProviderOptions,
-} from "@repo/ai/config/routing";
+import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -27,7 +24,7 @@ describe("Nakafa model registry", () => {
     expect(defaultModel).toBe("nakafa-lite");
     expect(isModelId("nakafa-lite")).toBe(true);
     expect(isModelId("nakafa-pro")).toBe(true);
-    expect(isModelId("google/gemini-3.5-flash")).toBe(false);
+    expect(isModelId("openai/gpt-5.4-mini")).toBe(false);
   });
 
   it("keeps credit costs and gateway mapping explicit", () => {
@@ -38,11 +35,13 @@ describe("Nakafa model registry", () => {
     ).toEqual([
       {
         credits: 2,
-        gatewayId: "google/gemini-3-flash",
+        gatewayId: "openai/gpt-5-mini",
+        reasoning: { background: "low", interactive: "high" },
       },
       {
         credits: 5,
-        gatewayId: "google/gemini-3.5-flash",
+        gatewayId: "openai/gpt-5.4-mini",
+        reasoning: { background: "low", interactive: "high" },
       },
     ]);
     expect(getModelCreditCost(liteModel)).toBe(2);
@@ -51,47 +50,18 @@ describe("Nakafa model registry", () => {
     expect(hasEnoughCredits(2, liteModel)).toBe(true);
     expect(hasEnoughCredits(4, proModel)).toBe(false);
     expect(hasEnoughCredits(5, proModel)).toBe(true);
-    expect(getModelGatewayId(liteModel)).toBe("google/gemini-3-flash");
-    expect(getModelGatewayId(proModel)).toBe("google/gemini-3.5-flash");
+    expect(getModelGatewayId(liteModel)).toBe("openai/gpt-5-mini");
+    expect(getModelGatewayId(proModel)).toBe("openai/gpt-5.4-mini");
   });
 
-  it("uses interactive and fast Gemini thinking profiles", () => {
-    expect(getModelProviderOptions(liteModel)).toEqual({
-      thinkingConfig: {
-        includeThoughts: true,
-        thinkingLevel: "high",
-      },
-    });
-    expect(getModelProviderOptions(proModel)).toEqual({
-      thinkingConfig: {
-        includeThoughts: true,
-        thinkingLevel: "high",
-      },
-    });
-    expect(getFastModelProviderOptions(liteModel)).toEqual({
-      thinkingConfig: {
-        thinkingLevel: "low",
-      },
-    });
-    expect(getFastModelProviderOptions(proModel)).toEqual({
-      thinkingConfig: {
-        thinkingLevel: "low",
-      },
-    });
-    expect(fallbackGatewayModelIds).toEqual([
-      "alibaba/qwen3.7-max",
-      "minimax/minimax-m2.7",
-      "zai/glm-5.1",
-      "moonshotai/kimi-k2.6",
-    ]);
+  it("uses provider-neutral reasoning and OpenAI-only routing", () => {
+    expect(getInteractiveModelReasoning(liteModel)).toBe("high");
+    expect(getInteractiveModelReasoning(proModel)).toBe("high");
+    expect(getBackgroundModelReasoning(liteModel)).toBe("low");
+    expect(getBackgroundModelReasoning(proModel)).toBe("low");
     expect(gatewayProviderOptions).toEqual({
-      models: [
-        "alibaba/qwen3.7-max",
-        "minimax/minimax-m2.7",
-        "zai/glm-5.1",
-        "moonshotai/kimi-k2.6",
-      ],
-      sort: "ttft",
+      disallowPromptTraining: true,
+      only: ["openai"],
     });
   });
 });

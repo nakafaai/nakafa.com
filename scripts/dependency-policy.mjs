@@ -57,11 +57,6 @@ export const DEPENDENCY_HOLDS = [
     minimumDeclarations: 1,
   },
   {
-    approved: "4.0.47",
-    dependency: "@ai-sdk/google",
-    minimumDeclarations: 1,
-  },
-  {
     approved: "4.0.56",
     dependency: "@ai-sdk/gateway",
     minimumDeclarations: 1,
@@ -131,11 +126,6 @@ export const REGISTRY_REVIEWS = [
   [
     "@ai-sdk/react@latest",
     "4.0.73",
-    "AI SDK packages move as one reviewed cohort.",
-  ],
-  [
-    "@ai-sdk/google@latest",
-    "4.0.47",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [

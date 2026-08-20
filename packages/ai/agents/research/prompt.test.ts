@@ -36,7 +36,7 @@ describe("research prompt", () => {
     expect(toolSection).toContain("Workflow:");
     expect(toolSection).toContain("Search rules:");
     expect(toolSection).toContain("webSearch");
-    expect(toolSection).toContain("Google Search grounding");
+    expect(toolSection).toContain("Use scrape");
     expect(toolSection).toContain(
       "Every webSearch call must set sourcePreference"
     );
@@ -54,7 +54,6 @@ describe("research prompt", () => {
     expect(prompt).not.toContain("# Tool Usage Guidelines");
     expect(prompt).not.toContain("Workflow:");
     expect(prompt).not.toContain("webSearch");
-    expect(prompt).not.toContain("Google Search grounding");
   });
 
   it("keeps official-source requests scoped to authoritative sources", () => {
@@ -112,12 +111,12 @@ describe("research prompt", () => {
     expect(nakafaScrape).toContain("primary documentation");
   });
 
-  it("keeps Google Search grounding inside the research evidence agent", () => {
+  it("keeps source inspection inside the research evidence agent", () => {
     const prompt = researchEvidencePrompt({ context, locale: "id" });
 
     expect(prompt).toContain("Use webSearch for inspectable Firecrawl");
     expect(prompt).toContain(
-      "Use Google Search grounding for current public corroboration after Firecrawl."
+      "Use scrape when a selected URL needs deeper reading."
     );
   });
 

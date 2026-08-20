@@ -5,7 +5,7 @@ const originalNodeEnv = process.env.NODE_ENV;
 const originalVercelEnv = process.env.VERCEL_ENV;
 
 const languageModel = vi.hoisted(() => ({
-  modelId: "google/gemini-3-flash",
+  modelId: "openai/gpt-5-mini",
   provider: "gateway",
 }));
 
@@ -85,11 +85,11 @@ describe("AI SDK DevTools configuration", () => {
       await importDevToolsConfig();
 
     registerAiSdkDevToolsTelemetry();
-    const model = createAppLanguageModel("google/gemini-3-flash");
+    const model = createAppLanguageModel("openai/gpt-5-mini");
 
     expect(model).toBe(languageModel);
     expect(gateway).toHaveBeenCalledTimes(1);
-    expect(gateway).toHaveBeenCalledWith("google/gemini-3-flash");
+    expect(gateway).toHaveBeenCalledWith("openai/gpt-5-mini");
     expect(DevToolsTelemetry).toHaveBeenCalledTimes(1);
     expect(registerTelemetry).toHaveBeenCalledTimes(1);
     expect(registerTelemetry).toHaveBeenCalledWith(telemetryIntegration);
@@ -100,7 +100,7 @@ describe("AI SDK DevTools configuration", () => {
 
     const { createAppLanguageModel } = await importDevToolsConfig();
 
-    expect(createAppLanguageModel("google/gemini-3-flash")).toBe(languageModel);
+    expect(createAppLanguageModel("openai/gpt-5-mini")).toBe(languageModel);
     expect(DevToolsTelemetry).not.toHaveBeenCalled();
     expect(registerTelemetry).not.toHaveBeenCalled();
   });

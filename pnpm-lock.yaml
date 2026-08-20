@@ -482,9 +482,6 @@ importers:
       '@ai-sdk/gateway':
         specifier: 4.0.56
         version: 4.0.56(zod@4.4.3)
-      '@ai-sdk/google':
-        specifier: 4.0.47
-        version: 4.0.47(zod@4.4.3)
       '@mendable/firecrawl-js':
         specifier: ^4.34.0
         version: 4.34.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
@@ -1157,12 +1154,6 @@ packages:
 
   '@ai-sdk/gateway@4.0.56':
     resolution: {integrity: sha512-fc7tq+v7WrzCV+aXegbq/EOs68tFDJYLEwnCOnVYcB/Y5ZTjUIHzyJlrqdoJUlMTkc/qmKsXb1ovVvdUYPmxIA==}
-    engines: {node: '>=22'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4.1.8
-
-  '@ai-sdk/google@4.0.47':
-    resolution: {integrity: sha512-Aj/VRSDpNmxjC0mU1qWNI9BydRoRI3INVHv1KZcFj3lI7rdxmXuenhUfXw8KnfZlREWX3J3rM9JNF1khuxGfnw==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -8070,12 +8061,6 @@ snapshots:
       '@ai-sdk/provider': 4.0.7
       '@ai-sdk/provider-utils': 5.0.28(zod@4.4.3)
       '@vercel/oidc': 3.2.0
-      zod: 4.4.3
-
-  '@ai-sdk/google@4.0.47(zod@4.4.3)':
-    dependencies:
-      '@ai-sdk/provider': 4.0.7
-      '@ai-sdk/provider-utils': 5.0.28(zod@4.4.3)
       zod: 4.4.3
 
   '@ai-sdk/mcp@2.0.34(zod@4.4.3)':
