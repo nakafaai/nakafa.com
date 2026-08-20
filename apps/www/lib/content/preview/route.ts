@@ -7,6 +7,7 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { previewDocumentRoute } from "@nakafa/aksara-contracts/preview/document";
 import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
+import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
 import { materialPublicNamespace } from "@nakafa/aksara-contracts/projection/material";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { Effect, Option, Schema } from "effect";
@@ -46,6 +47,16 @@ const MaterialPreviewStaticParamsSchema = Schema.Struct({
 /** Concrete child params Next prerenders for one selected material preview. */
 export type MaterialPreviewStaticParams =
   typeof MaterialPreviewStaticParamsSchema.Type;
+
+/** Runtime contract for one concrete article preview route. */
+const ArticlePreviewStaticParamsSchema = Schema.Struct({
+  category: ArticleRouteSlugSchema,
+  slug: ArticleRouteSlugSchema,
+});
+
+/** Concrete child params Next prerenders for one selected article preview. */
+export type ArticlePreviewStaticParams =
+  typeof ArticlePreviewStaticParamsSchema.Type;
 
 /** Reads the single selected locale used to prerender the preview app shell. */
 export const readPreviewStaticLocaleParams = Effect.fn(
@@ -139,6 +150,26 @@ export const readMaterialPreviewStaticParams = Effect.fn(
   return yield* parseMaterialPreviewStaticParams({
     appLocale,
     publicPath: document.route.publicPath,
+  });
+});
+
+/** Reads the selected article route so Cache Components can build its shell. */
+export const readArticlePreviewStaticParams = Effect.fn(
+  "NakafaContent.readArticlePreviewStaticParams"
+)(function* (appLocale: AppLocale) {
+  const snapshot = yield* readPreviewSnapshot();
+  if (Option.isNone(snapshot)) {
+    return yield* new PreviewIntegrityError({ check: "manifest" });
+  }
+
+  const document = snapshot.value.manifest.document;
+  if (document.family !== "article" || document.route.appLocale !== appLocale) {
+    return yield* new PreviewIntegrityError({ check: "projection" });
+  }
+
+  return ArticlePreviewStaticParamsSchema.make({
+    category: document.route.categoryRouteSlug,
+    slug: document.route.articleRouteSlug,
   });
 });
 

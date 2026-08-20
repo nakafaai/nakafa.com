@@ -1,10 +1,11 @@
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   type ArticleCategory,
   ArticleCategorySchema,
 } from "@nakafa/aksara-contracts/projection/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
-import { Option, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import type { Locale } from "next-intl";
@@ -27,6 +28,8 @@ import {
   getArticleNextHref,
   readArticlePageCursor,
 } from "@/lib/content/article/query";
+import { hasPreviewConfig } from "@/lib/content/preview/config";
+import { readArticlePreviewStaticParams } from "@/lib/content/preview/route";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { selectLearningStaticParams } from "@/lib/routing/prerender";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
@@ -94,6 +97,12 @@ export async function generateStaticParams({
   params: { locale: string };
 }) {
   const locale = getLocaleOrThrow(params.locale);
+  if (hasPreviewConfig()) {
+    const preview = await Effect.runPromise(
+      readArticlePreviewStaticParams(AppLocaleSchema.make(locale))
+    );
+    return [{ category: preview.category }];
+  }
   const catalog = await getPublishedCategories({
     cursor: null,
     expectedManifestHash: null,

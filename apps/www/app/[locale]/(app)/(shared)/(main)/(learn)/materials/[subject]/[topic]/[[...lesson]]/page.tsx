@@ -125,11 +125,13 @@ async function MaterialRouteContent({
     : undefined;
   const contentKey = page.route.contentKey;
   const contentId = page.route.graph.assetId;
+  const allowsInteractions = page.kind === "published";
 
   return (
     <ContentViewTracker
       contentId={contentId}
       context={trackerContext}
+      enabled={allowsInteractions}
       locale={appLocale}
       publicPath={route.publicPath}
       section="material"
@@ -138,15 +140,22 @@ async function MaterialRouteContent({
         content={{ body: page.body, metadata: page.metadata }}
         copyContent={page.copySourceUrl ? undefined : page.body}
         copySourceUrl={page.copySourceUrl}
-        footer={<DeferredComments slug={contentKey} />}
+        footer={
+          allowsInteractions ? <DeferredComments slug={contentKey} /> : null
+        }
         headerLink={navigation.link}
         icon={getMaterialIcon(page.rendererDomain)}
         locale={appLocale}
         pagination={navigation.pagination}
         parentTitle={page.route.topicTitle}
         route={route}
+        showComments={allowsInteractions}
         sourceUrl={page.sourceUrl}
-        toolbar={<DeferredAiSheetOpen contextTitle={page.metadata.title} />}
+        toolbar={
+          allowsInteractions ? (
+            <DeferredAiSheetOpen contextTitle={page.metadata.title} />
+          ) : null
+        }
       >
         {page.children}
       </MaterialLessonPage>
@@ -172,6 +181,7 @@ async function MaterialLessonPage({
   pagination,
   parentTitle,
   route,
+  showComments,
   sourceUrl,
   toolbar,
 }: {
@@ -189,6 +199,7 @@ async function MaterialLessonPage({
   pagination: ContentPagination;
   parentTitle: string;
   route: MaterialPageContent["route"];
+  showComments: boolean;
   sourceUrl: null | string;
   toolbar: ReactNode;
 }) {
@@ -246,7 +257,7 @@ async function MaterialLessonPage({
           {headings.length > 0 ? children : null}
         </LayoutContent>
         <PaginationContent pagination={pagination} />
-        <FooterContent>{footer}</FooterContent>
+        {footer ? <FooterContent>{footer}</FooterContent> : null}
         {toolbar}
       </LayoutMaterialContent>
       <LayoutMaterialToc
@@ -260,7 +271,7 @@ async function MaterialLessonPage({
           href: toMaterialHref(route),
           description: metadata.description ?? metadata.subject,
         }}
-        showComments
+        showComments={showComments}
       />
     </>
   );

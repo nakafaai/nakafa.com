@@ -3,10 +3,6 @@ import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server.j
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { config, proxy } from "@/proxy";
-import {
-  makePreviewRequest,
-  previewRouteEvidence,
-} from "@/test/content-preview";
 
 type NextRequestInit = ConstructorParameters<typeof NextRequest>[1];
 
@@ -354,12 +350,16 @@ describe("proxy", () => {
   it("lets the selected next-intl preview rewrite reach the actual page", async () => {
     previewMocks.configured.mockReturnValueOnce(true);
     previewMocks.internal.mockReturnValueOnce(Effect.succeed(true));
+    const pathname = "/de/materials/mathematik/funktionen/funktionsbegriff";
 
-    const response = await proxy(makePreviewRequest());
+    const response = await requestProxy(pathname, {
+      headers: { "x-next-intl-locale": "de" },
+    });
 
     expect(response.headers.get("x-middleware-next")).toBe("1");
     expectNoLocaleProxy();
-    expect(previewMocks.internal).toHaveBeenCalledWith(previewRouteEvidence);
+    expect(previewMocks.internal).toHaveBeenCalledOnce();
+    expect(previewMocks.pathname).not.toHaveBeenCalled();
   });
 
   it.each([

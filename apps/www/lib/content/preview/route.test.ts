@@ -16,6 +16,7 @@ import {
   matchesPreviewPathname,
   matchesPreviewRoute,
   parseMaterialPreviewStaticParams,
+  readArticlePreviewStaticParams,
   readMaterialPreviewStaticParams,
   readPreviewStaticLocaleParams,
 } from "@/lib/content/preview/route";
@@ -25,7 +26,10 @@ import {
   previewDocument,
   previewRoute,
 } from "@/test/content-preview";
-import { articlePendingManifest } from "@/test/preview-article";
+import {
+  articlePendingManifest,
+  germanArticlePendingManifest,
+} from "@/test/preview-article";
 
 vi.mock("@/lib/content/preview/manifest", () => ({
   readPreviewSnapshot: vi.fn(),
@@ -176,6 +180,26 @@ describe("local preview route matching", () => {
     });
   });
 
+  it("projects the selected article route into localized static params", async () => {
+    snapshotMock.mockReturnValueOnce(
+      Effect.succeed(
+        Option.some({
+          config: previewConfig,
+          manifest: germanArticlePendingManifest,
+        })
+      )
+    );
+
+    await expect(
+      Effect.runPromise(
+        readArticlePreviewStaticParams(AppLocaleSchema.make("de"))
+      )
+    ).resolves.toEqual({
+      category: "politik",
+      slug: "politische-dynastien-und-asiatische-werte",
+    });
+  });
+
   it("rejects malformed material preview paths", async () => {
     await expect(
       Effect.runPromise(
@@ -223,6 +247,31 @@ describe("local preview route matching", () => {
     await expect(
       Effect.runPromise(
         readMaterialPreviewStaticParams(AppLocaleSchema.make("en")).pipe(
+          Effect.flip
+        )
+      )
+    ).resolves.toMatchObject({
+      _tag: "PreviewIntegrityError",
+      check: "projection",
+    });
+  });
+
+  it("rejects a missing or mismatched article preview projection", async () => {
+    snapshotMock.mockReturnValueOnce(Effect.succeed(Option.none()));
+    await expect(
+      Effect.runPromise(
+        readArticlePreviewStaticParams(AppLocaleSchema.make("en")).pipe(
+          Effect.flip
+        )
+      )
+    ).resolves.toMatchObject({
+      _tag: "PreviewIntegrityError",
+      check: "manifest",
+    });
+
+    await expect(
+      Effect.runPromise(
+        readArticlePreviewStaticParams(AppLocaleSchema.make("en")).pipe(
           Effect.flip
         )
       )

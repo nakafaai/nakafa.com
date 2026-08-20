@@ -13,6 +13,7 @@ interface Props {
   contentId?: string | null;
   context?: LearningContextInput;
   delay?: number;
+  enabled?: boolean;
   locale: RouteLocale;
   publicPath: string;
   section: RecordContentViewArgs["section"];
@@ -32,8 +33,9 @@ export function ContentViewTracker({
   section,
   children,
   delay = 3000,
+  enabled = true,
 }: PropsWithChildren<Props>) {
-  if (!isActiveLocale(locale)) {
+  if (!(enabled && isActiveLocale(locale))) {
     return children;
   }
 

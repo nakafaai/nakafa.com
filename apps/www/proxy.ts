@@ -81,10 +81,23 @@ export async function proxy(request: NextRequest) {
     });
   }
 
+  const previewConfigured = hasPreviewConfig();
+  if (
+    previewConfigured &&
+    (await Effect.runPromise(
+      matchesInternalPreviewRoute({
+        localeHint: request.headers.get(NEXT_INTL_LOCALE_HEADER),
+        pathname,
+      })
+    ))
+  ) {
+    return NextResponse.next();
+  }
+
   const candidateLocale = readCandidateLocale(pathname);
   if (candidateLocale) {
     const previewOwnsPathname =
-      hasPreviewConfig() &&
+      previewConfigured &&
       (await Effect.runPromise(matchesPreviewPathname(pathname)));
     if (!previewOwnsPathname) {
       return rewriteToContentNotFound(request, candidateLocale);
@@ -95,18 +108,6 @@ export async function proxy(request: NextRequest) {
 
   if (schoolAuthRedirect) {
     return NextResponse.redirect(schoolAuthRedirect);
-  }
-
-  if (
-    hasPreviewConfig() &&
-    (await Effect.runPromise(
-      matchesInternalPreviewRoute({
-        localeHint: request.headers.get(NEXT_INTL_LOCALE_HEADER),
-        pathname,
-      })
-    ))
-  ) {
-    return NextResponse.next();
   }
 
   const routeDecision = resolveLlmsProxyRoute({

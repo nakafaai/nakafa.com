@@ -1,4 +1,4 @@
-import type { ArticleCategory } from "@nakafa/aksara-contracts/projection/article";
+import type { ArticleRouteSlug } from "@nakafa/aksara-contracts/projection/article";
 import { getHeadings } from "@repo/contents/_lib/toc";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -23,7 +23,7 @@ export async function ArticleShell({
   toolbar,
 }: {
   locale: Locale;
-  category: ArticleCategory;
+  category: ArticleRouteSlug;
   categoryLabel: string;
   filePath: string;
   content: ArticlePageContent;
@@ -55,7 +55,7 @@ export async function ArticleShell({
           {headings.length === 0 && <ComingSoon />}
           {headings.length > 0 ? children : null}
         </LayoutContent>
-        <FooterContent>{footer}</FooterContent>
+        {footer ? <FooterContent>{footer}</FooterContent> : null}
         {toolbar}
       </LayoutMaterialContent>
       <LayoutMaterialToc
@@ -73,7 +73,7 @@ export async function ArticleShell({
           title: metadata.title,
           data: content.references.map((reference) => ({ ...reference })),
         }}
-        showComments
+        showComments={content.kind === "published"}
       />
     </>
   );

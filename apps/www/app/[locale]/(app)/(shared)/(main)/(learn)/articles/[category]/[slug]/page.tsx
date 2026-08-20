@@ -1,12 +1,10 @@
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
-import {
-  ArticleCategorySchema,
-  ArticleSlugSchema,
-} from "@nakafa/aksara-contracts/projection/article";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -24,6 +22,8 @@ import {
   getPublishedArticlePage,
   getPublishedCategories,
 } from "@/lib/content/article/catalog";
+import { hasPreviewConfig } from "@/lib/content/preview/config";
+import { readArticlePreviewStaticParams } from "@/lib/content/preview/route";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { selectLearningStaticParams } from "@/lib/routing/prerender";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
@@ -45,8 +45,8 @@ async function getResolvedParams(
   const locale = getLocaleOrThrow(rawLocale);
   if (
     !(
-      Schema.is(ArticleCategorySchema)(rawCategory) &&
-      Schema.is(ArticleSlugSchema)(slug)
+      Schema.is(ArticleRouteSlugSchema)(rawCategory) &&
+      Schema.is(ArticleRouteSlugSchema)(slug)
     )
   ) {
     notFound();
@@ -118,6 +118,12 @@ export async function generateStaticParams({
   params: { locale: string };
 }) {
   const locale = getLocaleOrThrow(params.locale);
+  if (hasPreviewConfig()) {
+    const preview = await Effect.runPromise(
+      readArticlePreviewStaticParams(AppLocaleSchema.make(locale))
+    );
+    return [preview];
+  }
   const categories = await getPublishedCategories({
     cursor: null,
     expectedManifestHash: null,
@@ -171,6 +177,7 @@ async function ArticleRouteContent({
   });
   const filePath = `/${publicPath}`;
   const contentMetadata = article.metadata;
+  const allowsInteractions = article.kind === "published";
 
   const tCommon = await getTranslations("Common");
   const categoryLabel = article.categoryTitle;
@@ -188,6 +195,7 @@ async function ArticleRouteContent({
   return (
     <ContentViewTracker
       contentId={article.contentId}
+      enabled={allowsInteractions}
       locale={locale}
       publicPath={publicPath}
       section="articles"
@@ -221,14 +229,18 @@ async function ArticleRouteContent({
         content={article}
         filePath={filePath}
         footer={
-          <DeferredComments key={`comments:${filePath}`} slug={filePath} />
+          allowsInteractions ? (
+            <DeferredComments key={`comments:${filePath}`} slug={filePath} />
+          ) : null
         }
         locale={locale}
         toolbar={
-          <DeferredAiSheetOpen
-            contextTitle={contentMetadata.title}
-            key={`nina:${filePath}`}
-          />
+          allowsInteractions ? (
+            <DeferredAiSheetOpen
+              contextTitle={contentMetadata.title}
+              key={`nina:${filePath}`}
+            />
+          ) : null
         }
       >
         {article.children}

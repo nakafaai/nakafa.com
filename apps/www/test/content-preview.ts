@@ -30,7 +30,6 @@ import {
   makeMaterialLessonProjection,
 } from "@nakafa/aksara-contracts/projection/material";
 import { Effect, Redacted, Schema } from "effect";
-import { NextRequest } from "next/server";
 import type { PreviewConfig } from "@/lib/content/preview/config";
 import type { MaterialPreviewInput } from "@/lib/content/preview/material";
 
@@ -196,16 +195,6 @@ export const previewDocument = Schema.decodeUnknownSync(
   sourcePath: previewSourcePath,
 });
 
-/** Exact localized pathname selected by the next-intl preview rewrite. */
-export const previewPathname =
-  "/en/materials/mathematics/function-composition-inverse-function/function-concept";
-
-/** Route evidence expected by the internal preview matcher. */
-export const previewRouteEvidence = {
-  localeHint: "en",
-  pathname: previewPathname,
-};
-
 /** Complete loopback configuration with redacted test-only credentials. */
 export const previewConfig: PreviewConfig = {
   eventsPath: "/v1/events",
@@ -259,13 +248,6 @@ export const previewRepositories = {
   aksara: { dirty: true, sha: GitCommitShaSchema.make("a".repeat(40)) },
   nakafa: { dirty: true, sha: GitCommitShaSchema.make("b".repeat(40)) },
 };
-
-/** Creates the next-intl rewrite request for the real preview document. */
-export function makePreviewRequest() {
-  return new NextRequest(`http://localhost:3000${previewPathname}`, {
-    headers: { "x-next-intl-locale": "en" },
-  });
-}
 
 /** Creates one ready manifest for a caller-provided renderer contract. */
 export function makeReadyManifest(rendererManifestHash: Sha256Hash) {
