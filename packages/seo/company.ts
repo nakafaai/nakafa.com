@@ -39,7 +39,14 @@ export const CompanyIdentitySchema = Schema.Struct({
   phone: PhoneNumberSchema,
   url: UrlStringSchema,
   logoUrl: UrlStringSchema,
-  socialProfiles: Schema.Array(UrlStringSchema),
+  socialProfiles: Schema.Struct({
+    discord: UrlStringSchema,
+    github: UrlStringSchema,
+    instagram: UrlStringSchema,
+    linkedin: UrlStringSchema,
+    twitter: UrlStringSchema,
+    youtube: UrlStringSchema,
+  }),
 });
 
 export type CompanyIdentity = Schema.Schema.Type<typeof CompanyIdentitySchema>;
@@ -77,14 +84,19 @@ export const COMPANY_IDENTITY = Schema.decodeUnknownSync(CompanyIdentitySchema)(
     phone: "+62 811-8992-531",
     url: "https://nakafa.com",
     logoUrl: "https://nakafa.com/logo.svg",
-    socialProfiles: [
-      "https://twitter.com/nabilfatih_",
-      "https://www.linkedin.com/company/nakafa",
-      "https://www.instagram.com/nakafa.ai/",
-      "https://github.com/nakafaai",
-      "https://www.youtube.com/@nakafaa",
-    ],
+    socialProfiles: {
+      discord: "https://discord.gg/CPCSfKhvfQ",
+      github: "https://github.com/nakafaai",
+      instagram: "https://www.instagram.com/nakafa.ai/",
+      linkedin: "https://www.linkedin.com/company/nakafa",
+      twitter: "https://twitter.com/nabilfatih_",
+      youtube: "https://www.youtube.com/@nakafaa",
+    },
   }
+);
+
+export const COMPANY_SOCIAL_PROFILE_URLS = Object.values(
+  COMPANY_IDENTITY.socialProfiles
 );
 
 export const COMPANY_REGISTERED_ADDRESS = [

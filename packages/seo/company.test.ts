@@ -1,6 +1,7 @@
 import {
   COMPANY_IDENTITY,
   COMPANY_REGISTERED_ADDRESS,
+  COMPANY_SOCIAL_PROFILE_URLS,
   CompanyIdentitySchema,
 } from "@repo/seo/company";
 import { Schema } from "effect";
@@ -14,6 +15,14 @@ describe("company identity", () => {
     expect(COMPANY_REGISTERED_ADDRESS).toBe(
       "Taman Sukahati Permai Blok H-6, Sukahati, Cibinong, Kabupaten Bogor, Jawa Barat 16913, Indonesia"
     );
+    expect(COMPANY_SOCIAL_PROFILE_URLS).toEqual([
+      "https://discord.gg/CPCSfKhvfQ",
+      "https://github.com/nakafaai",
+      "https://www.instagram.com/nakafa.ai/",
+      "https://www.linkedin.com/company/nakafa",
+      "https://twitter.com/nabilfatih_",
+      "https://www.youtube.com/@nakafaa",
+    ]);
   });
 
   it("rejects malformed public URLs", () => {

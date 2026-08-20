@@ -1,4 +1,7 @@
-import { COMPANY_IDENTITY } from "@repo/seo/company";
+import {
+  COMPANY_IDENTITY,
+  COMPANY_SOCIAL_PROFILE_URLS,
+} from "@repo/seo/company";
 import type { OrganizationLeaf, Person } from "schema-dts";
 
 export const ORGANIZATION: OrganizationLeaf = {
@@ -10,7 +13,12 @@ export const ORGANIZATION: OrganizationLeaf = {
   logo: COMPANY_IDENTITY.logoUrl,
   email: COMPANY_IDENTITY.email,
   telephone: COMPANY_IDENTITY.phone,
-  sameAs: [...COMPANY_IDENTITY.socialProfiles],
+  sameAs: COMPANY_SOCIAL_PROFILE_URLS,
+  employee: {
+    "@type": "Person",
+    name: COMPANY_IDENTITY.representative.name,
+    jobTitle: COMPANY_IDENTITY.representative.role,
+  },
   address: {
     "@type": "PostalAddress",
     streetAddress: COMPANY_IDENTITY.registeredAddress.streetAddress,

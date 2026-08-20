@@ -108,7 +108,7 @@ export function Footer({
                 </li>
                 <li>
                   <LinkItem
-                    href="https://discord.gg/CPCSfKhvfQ"
+                    href={COMPANY_IDENTITY.socialProfiles.discord}
                     label={t("community")}
                   />
                 </li>
@@ -228,27 +228,27 @@ function LinkItem({ href, label, nativeAnchor }: LinkItemProps) {
 
 const socialMedia = [
   {
-    href: "https://www.youtube.com/@nakafaa",
+    href: COMPANY_IDENTITY.socialProfiles.youtube,
     icon: YoutubeIcon,
     label: "YouTube",
   },
   {
-    href: "https://discord.gg/CPCSfKhvfQ",
+    href: COMPANY_IDENTITY.socialProfiles.discord,
     icon: DiscordIcon,
     label: "Discord",
   },
   {
-    href: "https://github.com/nakafaai",
+    href: COMPANY_IDENTITY.socialProfiles.github,
     icon: GithubIcon,
     label: "GitHub",
   },
   {
-    href: "https://www.linkedin.com/company/nakafa",
+    href: COMPANY_IDENTITY.socialProfiles.linkedin,
     icon: Linkedin02Icon,
     label: "LinkedIn",
   },
   {
-    href: "https://www.instagram.com/nakafa.ai/",
+    href: COMPANY_IDENTITY.socialProfiles.instagram,
     icon: InstagramIcon,
     label: "Instagram",
   },
