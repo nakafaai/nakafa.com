@@ -79,10 +79,12 @@ export function AnalyticsConsentProvider({
     const revokeFiber = Effect.runFork(
       Effect.tryPromise(() =>
         setAccountConsent({
-          category: ANALYTICS_CONSENT_CATEGORY,
-          granted: false,
-          mechanism: ANALYTICS_BROWSER_SIGNAL_MECHANISM,
-          noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+          decision: {
+            category: ANALYTICS_CONSENT_CATEGORY,
+            granted: false,
+            mechanism: ANALYTICS_BROWSER_SIGNAL_MECHANISM,
+            noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+          },
         })
       ).pipe(
         Effect.retry(browserSignalRetrySchedule),
@@ -184,10 +186,12 @@ export function AnalyticsConsentProvider({
     if (isAuthenticated) {
       const accountSave = Effect.tryPromise(() =>
         setAccountConsent({
-          category: ANALYTICS_CONSENT_CATEGORY,
-          granted,
-          mechanism: ANALYTICS_CONSENT_MECHANISM,
-          noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+          decision: {
+            category: ANALYTICS_CONSENT_CATEGORY,
+            granted,
+            mechanism: ANALYTICS_CONSENT_MECHANISM,
+            noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+          },
         })
       ).pipe(
         Effect.matchEffect({

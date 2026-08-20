@@ -9,13 +9,13 @@ import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
 
 /** Records one current-version account decision with its exact mechanism. */
 export const setCurrent = mutation({
-  args: consentWriteValidator,
+  args: { decision: consentWriteValidator },
   returns: consentDecisionValidator,
-  handler: async (ctx, args) => {
+  handler: async (ctx, { decision }) => {
     const { appUser } = await requireAuth(ctx);
     return await runConvexProgram(
       saveCurrentConsent(ctx, {
-        ...args,
+        ...decision,
         userId: appUser._id,
       })
     );

@@ -26,10 +26,12 @@ describe("consents/mutations", () => {
 
     await expect(
       t.mutation(api.consents.mutations.setCurrent, {
-        category: analyticsCategory,
-        granted: true,
-        mechanism: ANALYTICS_CONSENT_MECHANISM,
-        noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+        decision: {
+          category: analyticsCategory,
+          granted: true,
+          mechanism: ANALYTICS_CONSENT_MECHANISM,
+          noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+        },
       })
     ).rejects.toThrow();
   });
@@ -48,20 +50,24 @@ describe("consents/mutations", () => {
     const granted = await authenticated.mutation(
       api.consents.mutations.setCurrent,
       {
-        category: analyticsCategory,
-        granted: true,
-        mechanism: ANALYTICS_CONSENT_MECHANISM,
-        noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+        decision: {
+          category: analyticsCategory,
+          granted: true,
+          mechanism: ANALYTICS_CONSENT_MECHANISM,
+          noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+        },
       }
     );
     vi.setSystemTime(new Date(NOW + 1000));
     const denied = await authenticated.mutation(
       api.consents.mutations.setCurrent,
       {
-        category: analyticsCategory,
-        granted: false,
-        mechanism: ANALYTICS_BROWSER_SIGNAL_MECHANISM,
-        noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+        decision: {
+          category: analyticsCategory,
+          granted: false,
+          mechanism: ANALYTICS_BROWSER_SIGNAL_MECHANISM,
+          noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+        },
       }
     );
     const stored = await t.query(async (ctx) => ({
@@ -121,10 +127,12 @@ describe("consents/mutations", () => {
       subject: identity.authUserId,
     });
     const input = {
-      category: analyticsCategory,
-      granted: true,
-      mechanism: ANALYTICS_CONSENT_MECHANISM,
-      noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+      decision: {
+        category: analyticsCategory,
+        granted: true,
+        mechanism: ANALYTICS_CONSENT_MECHANISM,
+        noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+      },
     } as const;
 
     const first = await authenticated.mutation(
