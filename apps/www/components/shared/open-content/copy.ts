@@ -1,7 +1,7 @@
 import { Effect, Schema } from "effect";
 
 const COPY_SOURCE_TIMEOUT = "10 seconds";
-/** The reviewed source for one content page could not be copied. */
+/** The reviewed source for a content page could not be copied. */
 export class OpenContentCopyError extends Schema.TaggedError<OpenContentCopyError>()(
   "OpenContentCopyError",
   {

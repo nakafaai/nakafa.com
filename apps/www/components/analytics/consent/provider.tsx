@@ -16,24 +16,23 @@ import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { useConvexAuth, useMutation } from "convex/react";
 import { Effect, Fiber, Schedule } from "effect";
 import { type ReactNode, useEffect, useState, useTransition } from "react";
-import { AnalyticsConsentSurface } from "@/components/privacy/analytics-consent";
 import { env } from "@/env";
+import { useAnonymousAnalyticsConsent } from "@/lib/analytics/consent/browser";
 import {
   AnalyticsConsentContext,
   type AnalyticsConsentError,
-} from "@/lib/analytics/consent-context";
+} from "@/lib/analytics/consent/context";
 import {
   createBrowserAnalyticsIdentity,
   resolveBrowserAnalyticsConsentState,
   shouldRevokeAccountAnalyticsGrant,
-} from "@/lib/analytics/consent-state";
-import { useAnonymousAnalyticsConsent } from "@/lib/analytics/use-anonymous-consent";
+} from "@/lib/analytics/consent/state";
 import { useUser } from "@/lib/context/use-user";
 
 const isPreviewChild = env.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD === "true";
 const browserSignalRetrySchedule = Schedule.spaced("10 seconds");
 
-/** Owns the consent state that exclusively controls optional product analytics. */
+/** Owns the state that exclusively controls optional product analytics. */
 export function AnalyticsConsentProvider({
   children,
 }: {
@@ -228,7 +227,6 @@ export function AnalyticsConsentProvider({
   return (
     <AnalyticsConsentContext.Provider value={contextValue}>
       {children}
-      <AnalyticsConsentSurface />
     </AnalyticsConsentContext.Provider>
   );
 }

@@ -14,11 +14,11 @@ import {
   type AccountConsentDecision,
   type BrowserConsentSnapshot,
   shouldPersistAnonymousAnalyticsDenial,
-} from "@/lib/analytics/consent-state";
+} from "@/lib/analytics/consent/state";
 import {
   loadAnonymousAnalyticsConsent,
   saveAnonymousAnalyticsConsent,
-} from "@/lib/analytics/consent-storage";
+} from "@/lib/analytics/consent/storage";
 
 /** Owns the browser-local source, privacy signal, and cross-tab consent state. */
 export function useAnonymousAnalyticsConsent({

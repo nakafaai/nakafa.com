@@ -11,13 +11,13 @@ import {
 } from "@repo/backend/convex/auth/deletion/spec";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { deleteCurrentAccount } from "@/lib/auth/account-deletion";
+import { deleteCurrentAccount } from "@/lib/auth/deletion/delete";
 import {
   AccountDeletionFailed,
   AccountDeletionRequestUncertain,
   AccountDeletionSchoolMemberRequired,
   AccountDeletionSessionExpired,
-} from "@/lib/auth/account-deletion-errors";
+} from "@/lib/auth/deletion/errors";
 
 type AccountDeletionOperations = Parameters<typeof deleteCurrentAccount>[0];
 

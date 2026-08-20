@@ -44,7 +44,7 @@ const getAccountDeletionAttemptStorage = Effect.fn(
     catch: accountDeletionAttemptStorageFailure,
   });
 });
-/** Persists the opaque browser capability before an irreversible transition. */
+/** Persists the browser capability before an irreversible transition. */
 export const saveAccountDeletionAttempt = Effect.fn(
   "www.auth.saveAccountDeletionAttempt"
 )(function* (

@@ -6,7 +6,7 @@ import { useRouter } from "@repo/internationalization/src/navigation";
 import { Effect, Result } from "effect";
 import { useTranslations } from "next-intl";
 import { clearAiDraftText } from "@/components/ai/store/draft";
-import { signOutAccountBrowserIdentity } from "@/lib/auth/account-browser-identity";
+import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 export function AuthLogout() {
   const t = useTranslations("Auth");
   const router = useRouter();

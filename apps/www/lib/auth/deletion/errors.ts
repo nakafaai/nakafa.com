@@ -6,7 +6,7 @@ export const accountDeletionErrorCode = {
   requestUncertain: "ACCOUNT_DELETION_REQUEST_UNCERTAIN",
   sessionExpired: "ACCOUNT_DELETION_SESSION_EXPIRED",
 } as const;
-/** Raised when Better Auth cannot complete account deletion. */
+/** Raised when Better Auth cannot complete the deletion. */
 export class AccountDeletionFailed extends Schema.TaggedError<AccountDeletionFailed>()(
   "AccountDeletionFailed",
   {

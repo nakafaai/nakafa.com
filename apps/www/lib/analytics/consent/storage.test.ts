@@ -8,7 +8,7 @@ import {
   AnalyticsConsentStorageFailed,
   loadAnonymousAnalyticsConsent,
   saveAnonymousAnalyticsConsent,
-} from "@/lib/analytics/consent-storage";
+} from "@/lib/analytics/consent/storage";
 
 const consent = createAnonymousAnalyticsConsent("granted", 100);
 

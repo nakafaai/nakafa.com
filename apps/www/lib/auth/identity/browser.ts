@@ -7,7 +7,7 @@ import {
   resetBrowserAnalyticsIdentity,
 } from "@repo/analytics/posthog/browser";
 import { Clock, Effect, type Effect as EffectType, Schema } from "effect";
-import { saveAnonymousAnalyticsConsent } from "@/lib/analytics/consent-storage";
+import { saveAnonymousAnalyticsConsent } from "@/lib/analytics/consent/storage";
 import { authClient } from "@/lib/auth/client";
 
 const accountSignOutFailedCode = "ACCOUNT_SIGN_OUT_FAILED";
@@ -59,7 +59,7 @@ const defaultBrowserAccountIdentityCleanup: BrowserAccountIdentityCleanup = {
   resetAnalytics: () => resetBrowserAnalyticsIdentity(true),
 };
 
-/** Clears account-scoped state before another browser identity can take over. */
+/** Clears account state before another browser identity can take over. */
 export const clearAccountBrowserIdentity = Effect.fn(
   "www.auth.clearAccountBrowserIdentity"
 )(function* (

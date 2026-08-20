@@ -9,13 +9,13 @@ import {
   accountDeletionRequestPhase,
 } from "@repo/backend/convex/auth/deletion/spec";
 import { Effect, Result } from "effect";
-import type { AccountDeletionAttemptStorageFailed } from "@/lib/auth/account-deletion-attempt";
+import type { AccountDeletionAttemptStorageFailed } from "@/lib/auth/deletion/attempt";
 import {
   AccountDeletionFailed,
   AccountDeletionRequestUncertain,
   AccountDeletionSchoolMemberRequired,
   accountDeletionErrorCode,
-} from "@/lib/auth/account-deletion-errors";
+} from "@/lib/auth/deletion/errors";
 
 type AccountDeletionAttemptId = AccountDeletionBrowserAttempt["attemptId"];
 type CancelAccountDeletionRequest = (

@@ -10,9 +10,9 @@ import { useConvexAuth, useMutation } from "convex/react";
 import { Effect } from "effect";
 import { nanoid } from "nanoid";
 import { useEffect, useState } from "react";
+import { createContentViewKey } from "@/lib/content/views/key";
 import { useContentViews } from "@/lib/context/use-content-views";
 import { useUser } from "@/lib/context/use-user";
-import { createContentViewKey } from "@/lib/hooks/views";
 
 /** Client-side graph content-view recording configuration. */
 interface UseRecordContentViewOptions {

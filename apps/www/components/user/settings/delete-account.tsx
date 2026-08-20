@@ -24,15 +24,15 @@ import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { FormBlock } from "@/components/shared/form-block";
 import {
-  clearDeletedAccountBrowserIdentity,
-  signOutAccountBrowserIdentity,
-} from "@/lib/auth/account-browser-identity";
-import { deleteCurrentAccount } from "@/lib/auth/account-deletion";
-import {
   clearAccountDeletionAttempt,
   loadOrCreateAccountDeletionAttempt,
   saveAccountDeletionAttempt,
-} from "@/lib/auth/account-deletion-attempt";
+} from "@/lib/auth/deletion/attempt";
+import { deleteCurrentAccount } from "@/lib/auth/deletion/delete";
+import {
+  clearDeletedAccountBrowserIdentity,
+  signOutAccountBrowserIdentity,
+} from "@/lib/auth/identity/browser";
 
 const dialogError = {
   generic: "generic",

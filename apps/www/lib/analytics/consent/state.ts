@@ -27,7 +27,7 @@ export type AccountConsentDecision = NonNullable<
   FunctionReturnType<typeof api.consents.queries.getCurrent>["decision"]
 >;
 
-/** Returns whether a browser signal must revoke a current account grant. */
+/** Returns whether a browser privacy signal must revoke an account grant. */
 export function shouldRevokeAccountAnalyticsGrant({
   accountConsent,
   browserConsent,

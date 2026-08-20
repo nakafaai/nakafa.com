@@ -41,11 +41,11 @@ import { clearAiDraftText } from "@/components/ai/store/draft";
 import {
   AnalyticsConsentMenuItem,
   AnalyticsConsentSidebarItem,
-} from "@/components/privacy/analytics-consent";
+} from "@/components/analytics/consent/actions";
 import { NavUserGuestButton } from "@/components/sidebar/nav-user-guest-button";
 import { NavUserSkeleton } from "@/components/sidebar/nav-user-skeleton";
 import { SidebarUtilityMenuItems } from "@/components/sidebar/utility-menu-items";
-import { signOutAccountBrowserIdentity } from "@/lib/auth/account-browser-identity";
+import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
 /**

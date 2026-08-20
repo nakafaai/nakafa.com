@@ -12,7 +12,7 @@ import {
   resolveBrowserAnalyticsConsentState,
   shouldPersistAnonymousAnalyticsDenial,
   shouldRevokeAccountAnalyticsGrant,
-} from "@/lib/analytics/consent-state";
+} from "@/lib/analytics/consent/state";
 
 const anonymousConsent = createAnonymousAnalyticsConsent("granted", 100);
 const accountConsent = {

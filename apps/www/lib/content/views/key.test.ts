@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createContentViewKey } from "@/lib/hooks/views";
+import { createContentViewKey } from "@/lib/content/views/key";
 
 describe("createContentViewKey", () => {
   it("keeps anonymous and signed-in view attempts separate", () => {

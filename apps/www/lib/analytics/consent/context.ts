@@ -21,7 +21,7 @@ export const AnalyticsConsentContext =
   createContext<AnalyticsConsentContextValue | null>(null);
 const missingAnalyticsConsentContext = Symbol("AnalyticsConsentContext");
 
-/** Reads one derived slice of the optional analytics-consent controller. */
+/** Reads one derived slice of the optional analytics consent controller. */
 export function useAnalyticsConsent<T>(
   selector: (state: AnalyticsConsentContextValue) => T
 ) {

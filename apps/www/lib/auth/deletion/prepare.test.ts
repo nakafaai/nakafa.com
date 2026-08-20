@@ -5,12 +5,12 @@ import {
 } from "@repo/backend/convex/auth/deletion/spec";
 import { Effect } from "effect";
 import { describe, expect, it, vi } from "vitest";
-import { AccountDeletionAttemptStorageFailed } from "@/lib/auth/account-deletion-attempt";
+import { AccountDeletionAttemptStorageFailed } from "@/lib/auth/deletion/attempt";
 import {
   AccountDeletionFailed,
   AccountDeletionSchoolMemberRequired,
-} from "@/lib/auth/account-deletion-errors";
-import { prepareAccountDeletion } from "@/lib/auth/account-deletion-preparation";
+} from "@/lib/auth/deletion/errors";
+import { prepareAccountDeletion } from "@/lib/auth/deletion/prepare";
 
 type AccountDeletionPreparationOperations = Parameters<
   typeof prepareAccountDeletion

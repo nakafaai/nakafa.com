@@ -11,20 +11,20 @@ import {
   accountDeletionRequestPhase,
 } from "@repo/backend/convex/auth/deletion/spec";
 import { Effect, Result } from "effect";
+import { authClient } from "@/lib/auth/client";
 import {
   AccountDeletionFailed,
   AccountDeletionRequestUncertain,
   AccountDeletionSchoolMemberRequired,
   AccountDeletionSessionExpired,
   accountDeletionErrorCode,
-} from "@/lib/auth/account-deletion-errors";
+} from "@/lib/auth/deletion/errors";
 import {
   type AccountDeletionPreparationOperations,
   cancelPreparedAccountDeletion,
   clearCanceledAccountDeletionAttempt,
   prepareAccountDeletion,
-} from "@/lib/auth/account-deletion-preparation";
-import { authClient } from "@/lib/auth/client";
+} from "@/lib/auth/deletion/prepare";
 
 const betterAuthSessionExpiredCode = "SESSION_EXPIRED";
 const betterAuthUserDeletedMessage = "User deleted";

@@ -6,7 +6,7 @@ import {
   clearAccountDeletionAttempt,
   loadOrCreateAccountDeletionAttempt,
   saveAccountDeletionAttempt,
-} from "@/lib/auth/account-deletion-attempt";
+} from "@/lib/auth/deletion/attempt";
 
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 const USER_ID = "user-1";

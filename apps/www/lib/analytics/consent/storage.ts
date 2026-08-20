@@ -13,7 +13,7 @@ interface AnalyticsConsentStorage {
 
 const analyticsConsentStorageFailedCode = "ANALYTICS_CONSENT_STORAGE_FAILED";
 
-/** Raised when the browser cannot read or durably retain a privacy choice. */
+/** Raised when the browser cannot retain an analytics privacy choice. */
 export class AnalyticsConsentStorageFailed extends Schema.TaggedError<AnalyticsConsentStorageFailed>()(
   "AnalyticsConsentStorageFailed",
   { code: Schema.Literal(analyticsConsentStorageFailedCode) }

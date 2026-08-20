@@ -30,7 +30,7 @@ import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { copyOpenContent } from "@/components/shared/open-content-copy";
+import { copyOpenContent } from "@/components/shared/open-content/copy";
 
 /**
  * Renders open/share actions for one content page.

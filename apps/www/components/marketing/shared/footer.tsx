@@ -11,9 +11,9 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
+import { AnalyticsConsentFooterItem } from "@/components/analytics/consent/actions";
 import { FooterAction } from "@/components/marketing/shared/footer-action";
 import { FooterArt } from "@/components/marketing/shared/footer-art";
-import { AnalyticsConsentFooterItem } from "@/components/privacy/analytics-consent";
 import { holyMenu } from "@/components/sidebar/data/holy";
 import {
   getSubjectMenuHref,

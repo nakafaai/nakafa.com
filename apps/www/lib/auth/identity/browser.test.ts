@@ -5,13 +5,13 @@ import {
 } from "@repo/analytics/posthog/browser";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { authClient } from "@/lib/auth/client";
 import {
   AccountSignOutFailed,
   clearAccountBrowserIdentity,
   clearDeletedAccountBrowserIdentity,
   signOutAccountBrowserIdentity,
-} from "@/lib/auth/account-browser-identity";
-import { authClient } from "@/lib/auth/client";
+} from "@/lib/auth/identity/browser";
 
 vi.mock("@/lib/auth/client", () => ({
   authClient: { signOut: vi.fn() },

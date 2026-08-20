@@ -1,7 +1,7 @@
 import type { LearningContextInput } from "@repo/backend/convex/contents/context";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 
-/** Builds the local dedupe key for one engaged content-view attempt. */
+/** Builds the local dedupe key for an engaged content-view attempt. */
 export function createContentViewKey({
   authenticated,
   contentId,

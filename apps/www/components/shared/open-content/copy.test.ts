@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   copyOpenContent,
   OpenContentCopyError,
-} from "@/components/shared/open-content-copy";
+} from "@/components/shared/open-content/copy";
 
 const SOURCE_URL =
   "https://raw.githubusercontent.com/nakafaai/aksara/revision/source.mdx";
