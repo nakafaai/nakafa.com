@@ -2,8 +2,8 @@
 
 import { access } from "node:fs/promises";
 import { join } from "node:path";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 import { resolveTryoutExamSocialImage } from "@/lib/tryout/social-images";
 
 const reviewedTryoutSocialImageFixtures = [
@@ -34,107 +34,113 @@ const reviewedTryoutSocialImageFixtures = [
 ];
 
 describe("try-out social images", () => {
-  it("resolves every reviewed exam artwork to an existing asset", async () => {
-    for (const {
-      countryKey,
-      examKey,
-      imagePath,
-      appLocale,
-    } of reviewedTryoutSocialImageFixtures) {
-      const resolvedPath = await Effect.runPromise(
-        resolveTryoutExamSocialImage({
+  it.live("resolves every reviewed exam artwork to an existing asset", () =>
+    Effect.gen(function* () {
+      for (const {
+        countryKey,
+        examKey,
+        imagePath,
+        appLocale,
+      } of reviewedTryoutSocialImageFixtures) {
+        const resolvedPath = yield* resolveTryoutExamSocialImage({
           countryKey,
           examKey,
           appLocale,
           publicPath: `try-out/${countryKey}/${examKey}`,
-        })
-      );
+        });
 
-      expect(resolvedPath).toBe(imagePath);
-      await expect(
-        access(join(process.cwd(), "public", resolvedPath.slice(1)))
-      ).resolves.toBeUndefined();
-    }
-  });
+        expect(resolvedPath).toBe(imagePath);
+        yield* Effect.promise(() =>
+          expect(
+            access(join(process.cwd(), "public", resolvedPath.slice(1)))
+          ).resolves.toBeUndefined()
+        );
+      }
+    })
+  );
 
-  it("keeps generated images for future valid exams", async () => {
-    expect(
-      await Effect.runPromise(
-        resolveTryoutExamSocialImage({
+  it.live("keeps generated images for future valid exams", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* resolveTryoutExamSocialImage({
           countryKey: "indonesia",
           examKey: "future-exam",
           appLocale: "en",
           publicPath: "try-out/indonesia/future-exam",
         })
-      )
-    ).toBe("/en/og/try-out/indonesia/future-exam/image.png");
-  });
+      ).toBe("/en/og/try-out/indonesia/future-exam/image.png");
+    })
+  );
 
-  it("keeps generated images for German signed routes", async () => {
-    expect(
-      await Effect.runPromise(
-        resolveTryoutExamSocialImage({
+  it.live("keeps generated images for German signed routes", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* resolveTryoutExamSocialImage({
           countryKey: "indonesia",
           examKey: "tka",
           appLocale: "de",
           publicPath: "try-out/indonesia/tka",
         })
-      )
-    ).toBe("/de/og/try-out/indonesia/tka/image.png");
-  });
+      ).toBe("/de/og/try-out/indonesia/tka/image.png");
+    })
+  );
 
-  it("keeps generated images for the same exam key outside Indonesia", async () => {
-    expect(
-      await Effect.runPromise(
-        resolveTryoutExamSocialImage({
-          countryKey: "germany",
-          examKey: "snbt",
-          appLocale: "en",
-          publicPath: "try-out/germany/snbt",
-        })
-      )
-    ).toBe("/en/og/try-out/germany/snbt/image.png");
-  });
+  it.live(
+    "keeps generated images for the same exam key outside Indonesia",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* resolveTryoutExamSocialImage({
+            countryKey: "germany",
+            examKey: "snbt",
+            appLocale: "en",
+            publicPath: "try-out/germany/snbt",
+          })
+        ).toBe("/en/og/try-out/germany/snbt/image.png");
+      })
+  );
 
-  it.each([
+  it.live.each([
     { appLocale: "en", countryKey: "Indonesia", examKey: "snbt" },
     { appLocale: "en", countryKey: "indonesia", examKey: "TKA" },
   ])(
     "rejects invalid signed identity $countryKey/$examKey/$appLocale",
-    async (input) => {
-      const error = await Effect.runPromise(
-        Effect.flip(
+    (input) =>
+      Effect.gen(function* () {
+        const error = yield* Effect.flip(
           resolveTryoutExamSocialImage({
             ...input,
             publicPath: "try-out/indonesia/tka",
           })
-        )
-      );
+        );
 
-      expect(error).toMatchObject({
-        _tag: "InvalidTryoutSocialImageIdentityError",
-        message: "Invalid try-out social image identity",
-      });
-    }
+        expect(error).toMatchObject({
+          _tag: "InvalidTryoutSocialImageIdentityError",
+          message: "Invalid try-out social image identity",
+        });
+      })
   );
 
-  it("rejects a valid identity whose public path belongs to another exam", async () => {
-    const error = await Effect.runPromise(
-      Effect.flip(
-        resolveTryoutExamSocialImage({
-          countryKey: "indonesia",
-          examKey: "tka",
-          appLocale: "id",
-          publicPath: "try-out/indonesia/snbt",
-        })
-      )
-    );
+  it.live(
+    "rejects a valid identity whose public path belongs to another exam",
+    () =>
+      Effect.gen(function* () {
+        const error = yield* Effect.flip(
+          resolveTryoutExamSocialImage({
+            countryKey: "indonesia",
+            examKey: "tka",
+            appLocale: "id",
+            publicPath: "try-out/indonesia/snbt",
+          })
+        );
 
-    expect(error).toMatchObject({
-      _tag: "TryoutSocialImageIdentityMismatchError",
-      actualPublicPath: "try-out/indonesia/snbt",
-      expectedPublicPath: "try-out/indonesia/tka",
-      message: "Try-out social image identity does not match its public path",
-    });
-  });
+        expect(error).toMatchObject({
+          _tag: "TryoutSocialImageIdentityMismatchError",
+          actualPublicPath: "try-out/indonesia/snbt",
+          expectedPublicPath: "try-out/indonesia/tka",
+          message:
+            "Try-out social image identity does not match its public path",
+        });
+      })
+  );
 });

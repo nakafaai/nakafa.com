@@ -1,7 +1,8 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import {
   scheduleCurrentServerExceptionCapture,
   scheduleServerExceptionCapture,
@@ -46,82 +47,94 @@ describe("request-time server exception reporting", () => {
     analyticsMocks.isServerExceptionReportingEnabled.mockReturnValue(true);
   });
 
-  it("does not schedule outside the production runtime", async () => {
-    analyticsMocks.isServerExceptionReportingEnabled.mockReturnValue(false);
+  it.live("does not schedule outside the production runtime", () =>
+    Effect.gen(function* () {
+      analyticsMocks.isServerExceptionReportingEnabled.mockReturnValue(false);
 
-    await Effect.runPromise(
-      scheduleCurrentServerExceptionCapture(new Error("preload failed"), {
-        source: "disabled-current-test",
-      })
-    );
-    await Effect.runPromise(
-      scheduleServerExceptionCapture(new Error("weather failed"), {
+      yield* scheduleCurrentServerExceptionCapture(
+        new Error("preload failed"),
+        {
+          source: "disabled-current-test",
+        }
+      );
+      yield* scheduleServerExceptionCapture(new Error("weather failed"), {
         source: "disabled-explicit-test",
-      })
-    );
+      });
 
-    expect(analyticsMocks.after).not.toHaveBeenCalled();
-  });
+      expect(analyticsMocks.after).not.toHaveBeenCalled();
+    })
+  );
 
-  it("schedules the current operational exception without identity", async () => {
-    const error = new Error("preload failed");
-    const properties = { source: "settings" };
+  it.live("schedules the current operational exception without identity", () =>
+    Effect.gen(function* () {
+      const error = new Error("preload failed");
+      const properties = { source: "settings" };
 
-    await Effect.runPromise(
-      scheduleCurrentServerExceptionCapture(error, properties)
-    );
+      yield* scheduleCurrentServerExceptionCapture(error, properties);
 
-    expect(analyticsMocks.captureServerException).not.toHaveBeenCalled();
+      expect(analyticsMocks.captureServerException).not.toHaveBeenCalled();
 
-    await getScheduledTask()();
+      yield* Effect.promise(() => Promise.resolve(getScheduledTask()()));
 
-    expect(analyticsMocks.captureServerException).toHaveBeenCalledWith(
-      error,
-      properties
-    );
-  });
+      expect(analyticsMocks.captureServerException).toHaveBeenCalledWith(
+        error,
+        properties
+      );
+    })
+  );
 
-  it("schedules an explicitly provided operational exception", async () => {
-    const error = new Error("weather failed");
+  it.live("schedules an explicitly provided operational exception", () =>
+    Effect.gen(function* () {
+      const error = new Error("weather failed");
 
-    await Effect.runPromise(
-      scheduleServerExceptionCapture(error, {
+      yield* scheduleServerExceptionCapture(error, {
         source: "weather-api",
-      })
-    );
+      });
 
-    await getScheduledTask()();
-    expect(analyticsMocks.captureServerException).toHaveBeenCalledWith(error, {
-      source: "weather-api",
-    });
-  });
+      yield* Effect.promise(() => Promise.resolve(getScheduledTask()()));
+      expect(analyticsMocks.captureServerException).toHaveBeenCalledWith(
+        error,
+        {
+          source: "weather-api",
+        }
+      );
+    })
+  );
 
-  it("contains provider failures inside the request task", async () => {
-    analyticsMocks.captureServerException.mockRejectedValue(
-      new Error("provider unavailable")
-    );
+  it.live("contains provider failures inside the request task", () =>
+    Effect.gen(function* () {
+      analyticsMocks.captureServerException.mockRejectedValue(
+        new Error("provider unavailable")
+      );
 
-    await Effect.runPromise(
-      scheduleCurrentServerExceptionCapture(new Error("preload failed"), {
-        source: "provider-failure-test",
-      })
-    );
+      yield* scheduleCurrentServerExceptionCapture(
+        new Error("preload failed"),
+        {
+          source: "provider-failure-test",
+        }
+      );
 
-    await expect(getScheduledTask()()).resolves.toBeUndefined();
-  });
+      yield* Effect.promise(() =>
+        expect(getScheduledTask()()).resolves.toBeUndefined()
+      );
+    })
+  );
 
-  it("contains request scheduling failures", async () => {
-    analyticsMocks.after.mockImplementation(() => {
-      throw new Error("request already closed");
-    });
+  it.live("contains request scheduling failures", () =>
+    Effect.gen(function* () {
+      analyticsMocks.after.mockImplementation(() => {
+        throw new Error("request already closed");
+      });
 
-    await expect(
-      Effect.runPromise(
-        scheduleCurrentServerExceptionCapture(new Error("preload failed"), {
-          source: "scheduling-failure-test",
-        })
-      )
-    ).resolves.toBeUndefined();
-    expect(analyticsMocks.captureServerException).not.toHaveBeenCalled();
-  });
+      expect(
+        yield* scheduleCurrentServerExceptionCapture(
+          new Error("preload failed"),
+          {
+            source: "scheduling-failure-test",
+          }
+        )
+      ).toBeUndefined();
+      expect(analyticsMocks.captureServerException).not.toHaveBeenCalled();
+    })
+  );
 });
