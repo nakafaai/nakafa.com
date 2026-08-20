@@ -52,8 +52,9 @@ const readReadyArticle = Effect.fn("NakafaContent.readReadyArticle")(function* (
   document: ArticlePreviewDocument,
   config: PreviewConfig
 ) {
+  const previewArtifact = manifest.artifacts[0];
   const projection = yield* Schema.decodeUnknown(ArticleProjectionSchema)(
-    manifest.artifacts[0].projection,
+    previewArtifact.projection,
     { onExcessProperty: "error" }
   ).pipe(
     Effect.mapError(() => new PreviewIntegrityError({ check: "projection" }))
@@ -62,7 +63,7 @@ const readReadyArticle = Effect.fn("NakafaContent.readReadyArticle")(function* (
     config,
     document,
     manifest,
-    projection,
+    previewArtifact,
   });
 
   return {

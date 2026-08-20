@@ -1,11 +1,13 @@
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { redirect } from "@repo/internationalization/src/navigation";
-import type { Locale } from "next-intl";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { HomeContinueLearning } from "@/components/home/continue-learning";
 import { HomeExplore } from "@/components/home/explore";
 import { HomeHeader } from "@/components/home/header";
 import { HomeTrending } from "@/components/home/trending";
 import { getToken } from "@/lib/auth/server";
+import { isActiveLocale } from "@/lib/i18n/active";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { shouldRequireLearningProgramOnboarding } from "@/lib/programs/catalog";
 import {
@@ -34,6 +36,10 @@ async function AuthenticatedHome({
   ]);
   const locale = getLocaleOrThrow(rawLocale);
 
+  if (!isActiveLocale(locale)) {
+    notFound();
+  }
+
   if (!token) {
     redirect({ href: "/auth", locale });
     return null;
@@ -57,7 +63,7 @@ async function AuthenticatedHome({
 }
 
 /** Renders the authenticated home feed in the existing Nakafa home order. */
-function Main({ locale }: { locale: Locale }) {
+function Main({ locale }: { locale: ActiveAppLocaleCode }) {
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-24">
       <div className="relative flex flex-col gap-12">

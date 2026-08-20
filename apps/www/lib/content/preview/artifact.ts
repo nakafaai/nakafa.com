@@ -3,8 +3,10 @@ import "server-only";
 import type { SigningKeyId } from "@nakafa/aksara-contracts/ids";
 import { MAX_SIGNED_ARTIFACT_BYTES } from "@nakafa/aksara-contracts/limits";
 import type { PreviewDocument } from "@nakafa/aksara-contracts/preview/document";
-import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
-import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
+import type {
+  LocalPreviewManifest,
+  PreviewArtifact,
+} from "@nakafa/aksara-contracts/preview/spec";
 import type { RendererManifestEnvelope } from "@nakafa/aksara-contracts/renderer/contract";
 import {
   ContentVerificationKeyResolver,
@@ -53,24 +55,23 @@ export const executePreviewArtifact = Effect.fn(
   config,
   document,
   manifest,
-  projection,
+  previewArtifact,
 }: {
   readonly config: PreviewConfig;
   readonly document: PreviewDocument;
   readonly manifest: ReadyPreviewManifest;
-  readonly projection: ContentProjection;
+  readonly previewArtifact: PreviewArtifact;
 }) {
-  const previewArtifact = manifest.artifacts[0];
   const activeManifest = yield* rendererManifest;
   yield* validateRenderer(manifest, activeManifest);
 
-  const artifact = yield* fetchPreviewJson(
+  const wireArtifact = yield* fetchPreviewJson(
     config,
     previewArtifact.artifactPath,
     MAX_SIGNED_ARTIFACT_BYTES
   );
   const rendered = yield* executeSignedArtifact({
-    artifact,
+    artifact: wireArtifact,
     components: getRendererComponents(document.rendererDomain),
     rendererContractVersion: activeManifest.rendererContractVersion,
     rendererManifest: activeManifest,
@@ -83,8 +84,10 @@ export const executePreviewArtifact = Effect.fn(
 
   if (
     rendered.artifact.artifactHash !== previewArtifact.artifactHash ||
-    rendered.artifact.payload.contentKey !== projection.contentKey ||
-    rendered.artifact.payload.artifactLocale !== projection.artifactLocale ||
+    rendered.artifact.payload.contentKey !==
+      previewArtifact.projection.contentKey ||
+    rendered.artifact.payload.artifactLocale !==
+      previewArtifact.projection.artifactLocale ||
     rendered.artifact.payload.rendererDomain !== document.rendererDomain
   ) {
     return yield* new PreviewIntegrityError({ check: "artifact" });

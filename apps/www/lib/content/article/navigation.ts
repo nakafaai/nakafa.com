@@ -13,6 +13,7 @@ import {
   readPublishedCategories,
 } from "@/lib/content/article/catalog";
 import { applyPublishedCatalogCache } from "@/lib/content/cache";
+import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 
 /** One signed article category projected into Nakafa's navigation contract. */
@@ -71,4 +72,16 @@ export async function getArticleNavigation(locale: Locale) {
   const navigation = await Effect.runPromise(readArticleNavigation(locale));
   applyPublishedCatalogCache("article");
   return navigation;
+}
+
+/**
+ * Keeps the application shell independent from signed article publication
+ * while Aksara serves one exact local preview document.
+ */
+export function getShellArticleNavigation(locale: Locale) {
+  if (hasPreviewConfig()) {
+    return Promise.resolve<readonly ArticleNavigationItem[]>([]);
+  }
+
+  return getArticleNavigation(locale);
 }

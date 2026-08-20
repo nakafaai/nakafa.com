@@ -1,5 +1,12 @@
+import {
+  APP_LOCALE_CODES,
+  type AppLocaleCode,
+} from "@nakafa/aksara-contracts/locale";
 import { isPostHogProxyPathname } from "@repo/analytics/posthog/config";
-import { routing } from "@repo/internationalization/src/routing";
+import {
+  previewRouting,
+  routing,
+} from "@repo/internationalization/src/routing";
 import { getSessionCookie } from "better-auth/cookies";
 import { Effect } from "effect";
 import type { ProxyConfig } from "next/server";
@@ -12,7 +19,10 @@ import {
   LLMS_TEXT_PATH,
 } from "@/lib/agent-discovery";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
-import { matchesInternalPreviewRoute } from "@/lib/content/preview/route";
+import {
+  matchesInternalPreviewRoute,
+  matchesPreviewPathname,
+} from "@/lib/content/preview/route";
 import {
   type LocalizedLlmsRoute,
   resolveLlmsProxyRoute,
@@ -26,6 +36,7 @@ import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected"
 import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source";
 
 const handleLocalizedRequest = createMiddleware(routing);
+const handlePreviewLocalizedRequest = createMiddleware(previewRouting);
 const TRAILING_SLASH_PATTERN = /\/+$/;
 const NEXT_INTL_LOCALE_HEADER = "x-next-intl-locale";
 const CONTENT_NOT_FOUND_SEGMENT = "_not-found";
@@ -70,14 +81,9 @@ export async function proxy(request: NextRequest) {
     });
   }
 
-  const schoolAuthRedirect = readSchoolAuthRedirect(request);
-
-  if (schoolAuthRedirect) {
-    return NextResponse.redirect(schoolAuthRedirect);
-  }
-
+  const previewConfigured = hasPreviewConfig();
   if (
-    hasPreviewConfig() &&
+    previewConfigured &&
     (await Effect.runPromise(
       matchesInternalPreviewRoute({
         localeHint: request.headers.get(NEXT_INTL_LOCALE_HEADER),
@@ -86,6 +92,22 @@ export async function proxy(request: NextRequest) {
     ))
   ) {
     return NextResponse.next();
+  }
+
+  const candidateLocale = readCandidateLocale(pathname);
+  if (candidateLocale) {
+    const previewOwnsPathname =
+      previewConfigured &&
+      (await Effect.runPromise(matchesPreviewPathname(pathname)));
+    if (!previewOwnsPathname) {
+      return rewriteToContentNotFound(request, candidateLocale);
+    }
+  }
+
+  const schoolAuthRedirect = readSchoolAuthRedirect(request);
+
+  if (schoolAuthRedirect) {
+    return NextResponse.redirect(schoolAuthRedirect);
   }
 
   const routeDecision = resolveLlmsProxyRoute({
@@ -134,7 +156,20 @@ export async function proxy(request: NextRequest) {
     return rewriteToContentNotFound(request, projectedRouteRejection);
   }
 
-  return routeLocalizedRequest(request);
+  return routeLocalizedRequest(request, candidateLocale !== null);
+}
+
+/** Reads a supported locale that is not in the active public route set. */
+function readCandidateLocale(pathname: string): AppLocaleCode | null {
+  const [locale] = pathname.split("/").filter(Boolean);
+  if (
+    !hasLocale(APP_LOCALE_CODES, locale) ||
+    hasLocale(routing.locales, locale)
+  ) {
+    return null;
+  }
+
+  return locale;
 }
 
 /**
@@ -169,8 +204,13 @@ function readSchoolAuthRedirect(request: NextRequest) {
 }
 
 /** Applies next-intl routing and Nakafa discovery headers once per pass. */
-function routeLocalizedRequest(request: NextRequest) {
-  const response = handleLocalizedRequest(request);
+function routeLocalizedRequest(
+  request: NextRequest,
+  usesCandidateLocale: boolean
+) {
+  const response = usesCandidateLocale
+    ? handlePreviewLocalizedRequest(request)
+    : handleLocalizedRequest(request);
   response.headers.append("Link", AGENT_DISCOVERY_LINK_HEADER);
   response.headers.set("X-Llms-Txt", LLMS_TEXT_PATH);
 
@@ -189,10 +229,7 @@ function rewriteToLlmsMdx(
 }
 
 /** Rewrites missing content to the styled app not-found route with 404 status. */
-function rewriteToContentNotFound(
-  request: NextRequest,
-  locale: (typeof routing.locales)[number]
-) {
+function rewriteToContentNotFound(request: NextRequest, locale: AppLocaleCode) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(NEXT_INTL_LOCALE_HEADER, locale);
   const rewriteUrl = new URL(

@@ -2,12 +2,14 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { redirect } from "@repo/internationalization/src/navigation";
 import { Effect, Option } from "effect";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { UserSettingsCurriculum } from "@/components/user/settings/curriculum";
 import { UserSettingsProfilePage } from "@/components/user/settings/profile-page";
 import { scheduleCurrentServerExceptionCapture } from "@/lib/analytics/server";
 import { getToken, preloadAuthQuery } from "@/lib/auth/server";
+import { isActiveLocale } from "@/lib/i18n/active";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 export async function generateMetadata({
@@ -43,6 +45,10 @@ async function AuthenticatedSettings({
     getToken(),
   ]);
   const locale = getLocaleOrThrow(rawLocale);
+
+  if (!isActiveLocale(locale)) {
+    notFound();
+  }
 
   if (!token) {
     redirect({ href: "/auth", locale });

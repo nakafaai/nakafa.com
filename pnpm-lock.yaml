@@ -107,8 +107,8 @@ importers:
         specifier: ^0.12.5
         version: 0.12.5(@standard-schema/spec@1.1.0)(better-auth@1.6.26(@opentelemetry/api@1.9.1)(next@16.3.0(patch_hash=69c234729b8a9eddad005442418b6c7c6f2fecc62a72fe12db60507ada0c6136)(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.10))(convex@1.43.0(react@19.2.8))(hono@4.13.1)(react@19.2.8)(typescript@7.0.2)
       '@nakafa/aksara-contracts':
-        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.0/nakafa-aksara-contracts-0.13.0.tgz
-        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.0/nakafa-aksara-contracts-0.13.0.tgz(effect@3.22.1)
+        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.1/nakafa-aksara-contracts-0.13.1.tgz
+        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.1/nakafa-aksara-contracts-0.13.1.tgz(effect@3.22.1)
       '@repo/backend':
         specifier: workspace:*
         version: link:../../packages/backend
@@ -293,8 +293,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@nakafa/aksara-contracts':
-        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.0/nakafa-aksara-contracts-0.13.0.tgz
-        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.0/nakafa-aksara-contracts-0.13.0.tgz(effect@3.22.1)
+        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.1/nakafa-aksara-contracts-0.13.1.tgz
+        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.1/nakafa-aksara-contracts-0.13.1.tgz(effect@3.22.1)
       '@paper-design/shaders-react':
         specifier: ^0.0.79
         version: 0.0.79(@types/react@19.2.18)(react@19.2.8)
@@ -492,8 +492,8 @@ importers:
         specifier: ^4.32.0
         version: 4.32.0
       '@nakafa/aksara-contracts':
-        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.0/nakafa-aksara-contracts-0.13.0.tgz
-        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.0/nakafa-aksara-contracts-0.13.0.tgz(effect@3.22.1)
+        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.1/nakafa-aksara-contracts-0.13.1.tgz
+        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.1/nakafa-aksara-contracts-0.13.1.tgz(effect@3.22.1)
       '@repo/contents':
         specifier: workspace:*
         version: link:../contents
@@ -611,8 +611,8 @@ importers:
         specifier: 0.108.1
         version: 0.108.1(@effect/cluster@0.60.2(@effect/platform@0.97.1(effect@3.22.1))(@effect/rpc@0.76.2(@effect/platform@0.97.1(effect@3.22.1))(effect@3.22.1))(@effect/sql@0.52.1(@effect/experimental@0.61.1(@effect/platform@0.97.1(effect@3.22.1))(effect@3.22.1))(@effect/platform@0.97.1(effect@3.22.1))(effect@3.22.1))(@effect/workflow@0.19.1(@effect/experimental@0.61.1(@effect/platform@0.97.1(effect@3.22.1))(effect@3.22.1))(@effect/platform@0.97.1(effect@3.22.1))(@effect/rpc@0.76.2(@effect/platform@0.97.1(effect@3.22.1))(effect@3.22.1))(effect@3.22.1))(effect@3.22.1))(@effect/platform@0.97.1(effect@3.22.1))(@effect/rpc@0.76.2(@effect/platform@0.97.1(effect@3.22.1))(effect@3.22.1))(@effect/sql@0.52.1(@effect/experimental@0.61.1(@effect/platform@0.97.1(effect@3.22.1))(effect@3.22.1))(@effect/platform@0.97.1(effect@3.22.1))(effect@3.22.1))(effect@3.22.1)
       '@nakafa/aksara-contracts':
-        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.0/nakafa-aksara-contracts-0.13.0.tgz
-        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.0/nakafa-aksara-contracts-0.13.0.tgz(effect@3.22.1)
+        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.1/nakafa-aksara-contracts-0.13.1.tgz
+        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.1/nakafa-aksara-contracts-0.13.1.tgz(effect@3.22.1)
       '@polar-sh/sdk':
         specifier: ^0.49.0
         version: 0.49.0
@@ -699,8 +699,8 @@ importers:
         specifier: ^4.2.3
         version: 4.2.3
       '@nakafa/aksara-contracts':
-        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.0/nakafa-aksara-contracts-0.13.0.tgz
-        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.0/nakafa-aksara-contracts-0.13.0.tgz(effect@3.22.1)
+        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.1/nakafa-aksara-contracts-0.13.1.tgz
+        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.1/nakafa-aksara-contracts-0.13.1.tgz(effect@3.22.1)
       '@repo/design-system':
         specifier: workspace:*
         version: link:../design-system
@@ -855,9 +855,6 @@ importers:
       react-error-boundary:
         specifier: ^6.1.2
         version: 6.1.2(react@19.2.8)
-      react-katex:
-        specifier: ^3.1.0
-        version: 3.1.0(prop-types@15.8.1)(react@19.2.8)
       react-markdown:
         specifier: ^10.1.0
         version: 10.1.0(@types/react@19.2.18)(react@19.2.8)
@@ -928,9 +925,6 @@ importers:
       '@types/react':
         specifier: ^19.2.18
         version: 19.2.18
-      '@types/react-katex':
-        specifier: ^3.0.4
-        version: 3.0.4
       '@types/three':
         specifier: ^0.185.4
         version: 0.185.4
@@ -983,19 +977,31 @@ importers:
 
   packages/internationalization:
     dependencies:
+      '@nakafa/aksara-contracts':
+        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.1/nakafa-aksara-contracts-0.13.1.tgz
+        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.1/nakafa-aksara-contracts-0.13.1.tgz(effect@3.22.1)
       '@repo/utilities':
         specifier: workspace:*
         version: link:../utilities
       next:
         specifier: 16.3.0
-        version: 16.3.0(patch_hash=69c234729b8a9eddad005442418b6c7c6f2fecc62a72fe12db60507ada0c6136)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@24.13.3)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 16.3.0(patch_hash=69c234729b8a9eddad005442418b6c7c6f2fecc62a72fe12db60507ada0c6136)(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       next-intl:
         specifier: ^4.13.5
-        version: 4.13.5(@swc/helpers@0.5.23)(@typescript/typescript6@6.0.2)(next@16.3.0(patch_hash=69c234729b8a9eddad005442418b6c7c6f2fecc62a72fe12db60507ada0c6136)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@24.13.3)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
+        version: 4.13.5(@swc/helpers@0.5.23)(@typescript/typescript6@6.0.2)(next@16.3.0(patch_hash=69c234729b8a9eddad005442418b6c7c6f2fecc62a72fe12db60507ada0c6136)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
     devDependencies:
+      '@repo/testing':
+        specifier: workspace:*
+        version: link:../testing
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
+      '@vitest/coverage-istanbul':
+        specifier: ^4.1.10
+        version: 4.1.10(vitest@4.1.10)
+      vitest:
+        specifier: ^4.1.10
+        version: 4.1.10(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.1)(@types/node@26.1.1)(@vitest/coverage-istanbul@4.1.10)(@vitest/ui@4.1.10)(jsdom@30.0.1(@noble/hashes@2.2.0))(vite@8.2.1(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.11)(yaml@2.9.0))
 
   packages/math:
     dependencies:
@@ -2580,9 +2586,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.0/nakafa-aksara-contracts-0.13.0.tgz':
-    resolution: {integrity: sha512-TjHa5PtZSSoTh69J6BNCt5vSOCBxfzKebD42zFFpvF/2zsqwyEMGTR+YwP+KMSX2kky0S45Rmd3P4ZUAzp5wlA==, tarball: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.0/nakafa-aksara-contracts-0.13.0.tgz}
-    version: 0.13.0
+  '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.1/nakafa-aksara-contracts-0.13.1.tgz':
+    resolution: {integrity: sha512-2mJdyd/IySN/O+tsGxbDhd1xweTa9K07dAUSyxSa/IQe7n7Bn6Rlae7AvSF2NSKixc3HrHP1h5CJzbApVgcVJQ==, tarball: https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.1/nakafa-aksara-contracts-0.13.1.tgz}
+    version: 0.13.1
     engines: {node: '>=24.0.0 <25.0.0'}
     peerDependencies:
       effect: 3.22.1
@@ -3595,9 +3601,6 @@ packages:
     resolution: {integrity: sha512-Bsc+QHgp+P/F02XDzNCY9jnZNCUuLki36KT7VKrTXXLdHf+vHMNZnW1rVu5DNW/rCK+fya3DATySbLM4yhtKUw==}
     peerDependencies:
       '@types/react': ^19.2.0
-
-  '@types/react-katex@3.0.4':
-    resolution: {integrity: sha512-aLkykKzSKLpXI6REJ3uClao6P47HAFfR1gcHOZwDeTuALsyjgMhz+oynLV4gX0kiJVnvHrBKF/TLXqyNTpHDUg==}
 
   '@types/react-reconciler@0.28.9':
     resolution: {integrity: sha512-HHM3nxyUZ3zAylX8ZEyrDNd2XZOnQ0D5XfunJF5FLQnZbHHYq4UWvW1QfelQNXv1ICNkwYhfxjwfnqivYB6bFg==}
@@ -6644,12 +6647,6 @@ packages:
   react-is@18.3.1:
     resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
 
-  react-katex@3.1.0:
-    resolution: {integrity: sha512-At9uLOkC75gwn2N+ZXc5HD8TlATsB+3Hkp9OGs6uA8tM3dwZ3Wljn74Bk3JyHFPgSnesY/EMrIAB1WJwqZqejA==}
-    peerDependencies:
-      prop-types: ^15.8.1
-      react: '>=15.3.2 <20'
-
   react-markdown@10.1.0:
     resolution: {integrity: sha512-qKxVopLT/TyA6BX3Ue5NwabOsAzm0Q7kAPwq6L+wWDwisYs7R8vZ0nRXqq6rkueboxpkjvLGU9fWifiX/ZZFxQ==}
     peerDependencies:
@@ -9230,7 +9227,7 @@ snapshots:
   '@msgpackr-extract/msgpackr-extract-win32-x64@3.0.4':
     optional: true
 
-  '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.0/nakafa-aksara-contracts-0.13.0.tgz(effect@3.22.1)':
+  '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.1/nakafa-aksara-contracts-0.13.1.tgz(effect@3.22.1)':
     dependencies:
       effect: 3.22.1
 
@@ -10087,10 +10084,6 @@ snapshots:
   '@types/parse-json@4.0.2': {}
 
   '@types/react-dom@19.2.4(@types/react@19.2.18)':
-    dependencies:
-      '@types/react': 19.2.18
-
-  '@types/react-katex@3.0.4':
     dependencies:
       '@types/react': 19.2.18
 
@@ -12923,14 +12916,14 @@ snapshots:
 
   next-intl-swc-plugin-extractor@4.13.5: {}
 
-  next-intl@4.13.5(@swc/helpers@0.5.23)(@typescript/typescript6@6.0.2)(next@16.3.0(patch_hash=69c234729b8a9eddad005442418b6c7c6f2fecc62a72fe12db60507ada0c6136)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@24.13.3)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8):
+  next-intl@4.13.5(@swc/helpers@0.5.23)(@typescript/typescript6@6.0.2)(next@16.3.0(patch_hash=69c234729b8a9eddad005442418b6c7c6f2fecc62a72fe12db60507ada0c6136)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8):
     dependencies:
       '@formatjs/intl-localematcher': 0.8.13
       '@parcel/watcher': 2.6.0
       '@swc/core': 1.15.46(@swc/helpers@0.5.23)
       icu-minify: 4.13.5
       negotiator: 1.0.0
-      next: 16.3.0(patch_hash=69c234729b8a9eddad005442418b6c7c6f2fecc62a72fe12db60507ada0c6136)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@24.13.3)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      next: 16.3.0(patch_hash=69c234729b8a9eddad005442418b6c7c6f2fecc62a72fe12db60507ada0c6136)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@26.1.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       next-intl-swc-plugin-extractor: 4.13.5
       po-parser: 2.1.1
       react: 19.2.8
@@ -13465,12 +13458,6 @@ snapshots:
   react-is@16.13.1: {}
 
   react-is@18.3.1: {}
-
-  react-katex@3.1.0(prop-types@15.8.1)(react@19.2.8):
-    dependencies:
-      katex: 0.16.47
-      prop-types: 15.8.1
-      react: 19.2.8
 
   react-markdown@10.1.0(@types/react@19.2.18)(react@19.2.8):
     dependencies:

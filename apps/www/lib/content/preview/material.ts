@@ -49,7 +49,7 @@ const readReadyContent = Effect.fn("NakafaContent.readReadyPreview")(function* (
     config,
     document,
     manifest,
-    projection,
+    previewArtifact,
   });
   return {
     Content: rendered.Content,

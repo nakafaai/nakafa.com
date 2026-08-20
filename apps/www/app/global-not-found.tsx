@@ -7,9 +7,14 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { fonts } from "@repo/design-system/lib/fonts";
 import { cn } from "@repo/design-system/lib/utils";
 import { ThemeBootstrap } from "@repo/design-system/providers/theme-bootstrap";
+import de from "@repo/internationalization/dictionaries/de.json";
 import en from "@repo/internationalization/dictionaries/en.json";
 import id from "@repo/internationalization/dictionaries/id.json";
-import { routing } from "@repo/internationalization/src/routing";
+import { hasCandidateLocalePreview } from "@repo/internationalization/src/environment";
+import {
+  previewRouting,
+  routing,
+} from "@repo/internationalization/src/routing";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
@@ -23,7 +28,7 @@ export const viewport = appViewport;
 /** Validates the framework-synthesized 404 route as an instant shell. */
 export const instant = true;
 
-const dictionaries = { en, id };
+const dictionaries = { de, en, id };
 const NEXT_INTL_LOCALE_HEADER = "X-NEXT-INTL-LOCALE";
 
 /** Generates metadata from the same locale dictionary as the 404 document. */
@@ -47,6 +52,13 @@ async function getNotFoundLocale() {
   const locale = requestHeaders.get(NEXT_INTL_LOCALE_HEADER);
 
   if (hasLocale(routing.locales, locale)) {
+    return locale;
+  }
+
+  if (
+    hasCandidateLocalePreview() &&
+    hasLocale(previewRouting.locales, locale)
+  ) {
     return locale;
   }
 

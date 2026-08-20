@@ -42,6 +42,7 @@ export interface ArticlePageContent {
   readonly children: ReactNode;
   readonly contentId: ArticleProjection["graph"]["assetId"];
   readonly copySourceUrl: null | string;
+  readonly kind: PreviewOwner["kind"] | PublishedOwner["kind"];
   readonly metadata: ArticleMetadata;
   readonly references: readonly ArticleReference[];
   readonly sourceUrl: null | string;
@@ -105,6 +106,7 @@ export async function readArticlePage(
     return {
       ...owner.content,
       copySourceUrl: null,
+      kind: owner.kind,
       sourceUrl: null,
     };
   }
@@ -127,6 +129,7 @@ export async function readArticlePage(
           revision: published.sourceRevision,
         })
       : null,
+    kind: owner.kind,
     metadata: published.metadata,
     references: published.references,
     sourceUrl: published.sourceRevision

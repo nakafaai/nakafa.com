@@ -1,7 +1,21 @@
+import {
+  type ActiveAppLocaleCode,
+  APP_LOCALE_CODES,
+  type AppLocaleCode,
+} from "@nakafa/aksara-contracts/locale";
 import { routing } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
-import type { Locale } from "next-intl";
 import { hasLocale } from "next-intl";
+import { hasPreviewConfig } from "@/lib/content/preview/config";
+
+/** Narrows one route locale to the authenticated active publication set. */
+export function getActiveLocaleOrThrow(locale: string): ActiveAppLocaleCode {
+  if (hasLocale(routing.locales, locale)) {
+    return locale;
+  }
+
+  notFound();
+}
 
 /**
  * Narrows one route locale segment to the configured application locale union.
@@ -10,10 +24,14 @@ import { hasLocale } from "next-intl";
  * the runtime guard so pages and layouts can use `PageProps` / `LayoutProps`
  * without re-declaring locale-specific param types.
  */
-export function getLocaleOrThrow(locale: string): Locale {
-  if (!hasLocale(routing.locales, locale)) {
-    notFound();
+export function getLocaleOrThrow(locale: string): AppLocaleCode {
+  if (hasLocale(routing.locales, locale)) {
+    return locale;
   }
 
-  return locale;
+  if (hasPreviewConfig() && hasLocale(APP_LOCALE_CODES, locale)) {
+    return locale;
+  }
+
+  notFound();
 }

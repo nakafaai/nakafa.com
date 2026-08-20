@@ -1,6 +1,7 @@
 import path from "node:path";
 import { postHogProxyKeys } from "@repo/analytics/keys";
 import { createPostHogProxyRewrites } from "@repo/analytics/posthog/config";
+import { hasCandidateLocalePreview } from "@repo/internationalization/src/environment";
 import {
   config,
   createSecurityHeaders,
@@ -26,9 +27,9 @@ const configEnv = createEnv({
     CONVEX_AGENT_MODE: process.env.CONVEX_AGENT_MODE,
   },
 });
-const postHogProxyEnv = hasPreviewRendererEnvironment()
-  ? null
-  : postHogProxyKeys();
+const isAksaraPreviewChild =
+  hasCandidateLocalePreview() || hasPreviewRendererEnvironment();
+const postHogProxyEnv = isAksaraPreviewChild ? null : postHogProxyKeys();
 
 const withNextIntl = createNextIntlPlugin(
   "../../packages/internationalization/src/request.ts"
@@ -170,6 +171,9 @@ const nextConfig = {
   ...config,
   cacheComponents: true,
   partialPrefetching: true,
+  env: {
+    NEXT_PUBLIC_AKSARA_PREVIEW_CHILD: `${isAksaraPreviewChild}`,
+  },
   cacheLife: {
     contentRuntime: {
       stale: 300,

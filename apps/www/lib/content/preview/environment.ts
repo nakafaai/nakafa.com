@@ -1,21 +1,7 @@
-const providerEnvironmentNames = [
-  "AKSARA_PREVIEW_EVENTS_PATH",
-  "AKSARA_PREVIEW_KEY_ID",
-  "AKSARA_PREVIEW_MANIFEST_PATH",
-  "AKSARA_PREVIEW_ORIGIN",
-  "AKSARA_PREVIEW_PUBLIC_KEY",
-  "AKSARA_PREVIEW_PROVIDER_TOKEN",
-];
-
 const rendererEnvironmentNames = [
   "AKSARA_PREVIEW_RENDERER_SECRET",
   "AKSARA_PREVIEW_RENDERER_TOKEN",
 ];
-
-/** Reports whether the development child supplied any provider field. */
-export function hasPreviewEnvironment() {
-  return hasDevelopmentEnvironment(providerEnvironmentNames);
-}
 
 /** Reports whether the development child supplied any renderer field. */
 export function hasPreviewRendererEnvironment() {

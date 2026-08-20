@@ -1,4 +1,8 @@
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import {
+  APP_LOCALE_CODES,
+  type AppLocale,
+  AppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
@@ -18,11 +22,11 @@ interface ProjectedHtmlRouteInput {
 /** Resolves one material HTML route against a single active release snapshot. */
 const readProjectedMaterialRouteRejection = Effect.fn(
   "www.routing.publicHtml.materialRejection"
-)(function* (locale: "en" | "id", publicPath: string) {
-  const appLocale = AppLocaleSchema.make(locale);
-  if (yield* matchesPreviewRoute({ appLocale, publicPath })) {
-    return null;
-  }
+)(function* (
+  locale: (typeof routing.locales)[number],
+  appLocale: AppLocale,
+  publicPath: string
+) {
   const identity = yield* readActiveContentIdentity();
   const activeReleaseId = identity?.releaseId ?? null;
   const ownership = yield* readActiveContentRoute({
@@ -50,13 +54,15 @@ const readProjectedMaterialRouteRejection = Effect.fn(
 export const readProjectedHtmlRouteRejection = Effect.fn(
   "www.routing.publicHtml.projectedRejection"
 )(function* ({ hasAttemptCapability, pathname }: ProjectedHtmlRouteInput) {
-  const [locale, namespace, ...pathSegments] = pathname
+  const [rawLocale, namespace, ...pathSegments] = pathname
     .split("/")
     .filter(Boolean);
 
-  if (!(namespace && hasLocale(routing.locales, locale))) {
+  if (!(namespace && hasLocale(APP_LOCALE_CODES, rawLocale))) {
     return null;
   }
+
+  const locale = rawLocale;
 
   const surface = PUBLIC_ROUTE_SURFACES.find(
     (item) => item.routeSlugs[locale] === namespace
@@ -74,8 +80,21 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
   }
 
   const publicPath = [namespace, ...pathSegments].join("/");
+  const appLocale = AppLocaleSchema.make(locale);
+  if (yield* matchesPreviewRoute({ appLocale, publicPath })) {
+    return null;
+  }
+
+  if (!hasLocale(routing.locales, locale)) {
+    return locale;
+  }
+
   if (surface.key === "subject") {
-    return yield* readProjectedMaterialRouteRejection(locale, publicPath);
+    return yield* readProjectedMaterialRouteRejection(
+      locale,
+      appLocale,
+      publicPath
+    );
   }
   if (surface.key === "curriculum") {
     const ownership = yield* readPublishedProgramPath(locale, publicPath);
@@ -93,7 +112,7 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
   }
   const reference = yield* readRuntimeQuery(api.contentRelease.reference.read, {
     input: {
-      appLocale: AppLocaleSchema.make(locale),
+      appLocale,
       kind: "route",
       publicPath,
     },

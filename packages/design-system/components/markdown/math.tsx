@@ -4,12 +4,24 @@ import {
 } from "@repo/design-system/components/ui/scroll-area";
 import { cn } from "@repo/design-system/lib/utils";
 import { cva } from "class-variance-authority";
+import katex from "katex";
 import { Children, type HTMLAttributes, isValidElement } from "react";
-import {
-  BlockMath as BlockMathReactKatex,
-  InlineMath as InlineMathReactKatex,
-  type MathComponentProps,
-} from "react-katex";
+
+type MathComponentProps =
+  | {
+      readonly children?: never;
+      readonly errorColor?: string;
+      readonly math: string;
+    }
+  | {
+      readonly children: string;
+      readonly errorColor?: string;
+      readonly math?: never;
+    };
+
+type KatexMarkupProps = MathComponentProps & {
+  readonly displayMode: boolean;
+};
 
 const COMPACT_MATH_STACK_BLOCK_LIMIT = 2;
 const SPACIOUS_MATH_STACK_BLOCK_START = 5;
@@ -34,6 +46,38 @@ const blockMathVariants = cva(
   "overflow-hidden rounded-xl border bg-card text-card-foreground content-auto-formula"
 );
 
+function KatexMarkup({
+  children,
+  displayMode,
+  errorColor = "var(--color-muted-foreground)",
+  math,
+}: KatexMarkupProps) {
+  const html = katex.renderToString(math ?? children, {
+    displayMode,
+    errorColor,
+    throwOnError: false,
+    trust: false,
+  });
+
+  if (displayMode) {
+    return (
+      <div
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX generates safe HTML while trust remains disabled.
+        dangerouslySetInnerHTML={{ __html: html }}
+        data-testid="katex"
+      />
+    );
+  }
+
+  return (
+    <span
+      // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX generates safe HTML while trust remains disabled.
+      dangerouslySetInnerHTML={{ __html: html }}
+      data-testid="katex"
+    />
+  );
+}
+
 /**
  * Renders one KaTeX block without the surrounding card shell.
  */
@@ -41,10 +85,7 @@ const blockMathVariants = cva(
 export function BlockMathKatex(props: MathComponentProps) {
   return (
     <div data-markdown-ignore="">
-      <BlockMathReactKatex
-        errorColor="var(--color-muted-foreground)"
-        {...props}
-      />
+      <KatexMarkup displayMode={true} {...props} />
     </div>
   );
 }
@@ -122,10 +163,7 @@ export function BlockMath({
     >
       <ScrollArea className="grid">
         <div className="px-4">
-          <BlockMathReactKatex
-            errorColor="var(--color-muted-foreground)"
-            {...props}
-          />
+          <KatexMarkup displayMode={true} {...props} />
         </div>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
@@ -139,10 +177,7 @@ export function BlockMath({
 export function InlineMath(props: MathComponentProps) {
   return (
     <span data-markdown-ignore="">
-      <InlineMathReactKatex
-        errorColor="var(--color-muted-foreground)"
-        {...props}
-      />
+      <KatexMarkup displayMode={false} {...props} />
     </span>
   );
 }

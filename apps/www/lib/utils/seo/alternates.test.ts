@@ -57,6 +57,19 @@ describe("createLocalizedAlternates", () => {
     });
   });
 
+  it("normalizes an inactive preview locale without publishing it", () => {
+    const result = createLocalizedAlternates("/de/privacy-policy");
+
+    expect(result).toEqual({
+      canonical: "/de/privacy-policy",
+      languages: {
+        en: "/en/privacy-policy",
+        id: "/id/privacy-policy",
+        "x-default": "/en/privacy-policy",
+      },
+    });
+  });
+
   it("keeps unlocalized paths as the shared route path", () => {
     const result = createLocalizedAlternates("/robots.txt");
 

@@ -7,9 +7,11 @@ import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useAction } from "convex/react";
+import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { Activity, useTransition } from "react";
 import { FormBlock } from "@/components/shared/form-block";
+import { isActiveLocale } from "@/lib/i18n/active";
 
 export function UserSettingsSubscriptions() {
   const locale = useLocale();
@@ -29,20 +31,37 @@ export function UserSettingsSubscriptions() {
   );
 
   const handleCheckout = () => {
-    startTransition(async () => {
-      const { url } = await generateCheckoutLink({
-        locale,
-        successUrl: window.location.href,
-      });
-      window.location.href = url;
-    });
+    if (!isActiveLocale(locale)) {
+      return;
+    }
+
+    const program = Effect.tryPromise(() =>
+      generateCheckoutLink({ locale, successUrl: window.location.href })
+    ).pipe(
+      Effect.tap(({ url }) =>
+        Effect.sync(() => {
+          window.location.href = url;
+        })
+      ),
+      Effect.asVoid
+    );
+    startTransition(() => Effect.runPromise(program));
   };
 
   const handleManageSubscription = () => {
-    startTransition(async () => {
-      const { url } = await generateCustomerPortalUrl({});
-      window.location.href = url;
-    });
+    if (!isActiveLocale(locale)) {
+      return;
+    }
+
+    const program = Effect.tryPromise(() => generateCustomerPortalUrl({})).pipe(
+      Effect.tap(({ url }) =>
+        Effect.sync(() => {
+          window.location.href = url;
+        })
+      ),
+      Effect.asVoid
+    );
+    startTransition(() => Effect.runPromise(program));
   };
 
   return (
@@ -52,13 +71,19 @@ export function UserSettingsSubscriptions() {
     >
       <div className="flex items-center gap-4">
         <Activity mode={hasSubscription ? "visible" : "hidden"}>
-          <Button disabled={isPending} onClick={handleManageSubscription}>
+          <Button
+            disabled={isPending || !isActiveLocale(locale)}
+            onClick={handleManageSubscription}
+          >
             <Spinner icon={Settings01Icon} isLoading={isPending} />
             {t("manage")}
           </Button>
         </Activity>
         <Activity mode={hasSubscription ? "hidden" : "visible"}>
-          <Button disabled={isPending} onClick={handleCheckout}>
+          <Button
+            disabled={isPending || !isActiveLocale(locale)}
+            onClick={handleCheckout}
+          >
             <Spinner icon={PartyIcon} isLoading={isPending} />
             {t("get-pro")}
           </Button>

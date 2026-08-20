@@ -1,6 +1,7 @@
 import "server-only";
 
 import { ArrowDown02Icon, ViewIcon } from "@hugeicons/core-free-icons";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { api } from "@repo/backend/convex/_generated/api";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { Badge } from "@repo/design-system/components/ui/badge";
@@ -11,6 +12,7 @@ import { fetchQuery } from "convex/nextjs";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import { isActiveLocale } from "@/lib/i18n/active";
 
 /**
  * Reads one point-in-time homepage popularity snapshot.
@@ -23,7 +25,7 @@ import { getTranslations } from "next-intl/server";
  * @see https://nextjs.org/docs/messages/next-prerender-current-time
  * @see https://docs.convex.dev/client/nextjs/app-router/server-rendering#using-convex-to-render-server-components
  */
-async function getHomeTrendingSubjects(locale: Locale) {
+async function getHomeTrendingSubjects(locale: ActiveAppLocaleCode) {
   "use cache";
 
   cacheLife("minutes");
@@ -36,6 +38,10 @@ async function getHomeTrendingSubjects(locale: Locale) {
 
 /** Renders the home-screen trending learning objects for the current locale. */
 export async function HomeTrending({ locale }: { locale: Locale }) {
+  if (!isActiveLocale(locale)) {
+    return null;
+  }
+
   const [t, data] = await Promise.all([
     getTranslations({ locale, namespace: "Home" }),
     getHomeTrendingSubjects(locale),

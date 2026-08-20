@@ -1,6 +1,6 @@
 import { locale as rootLocale } from "next/root-params";
 import { AppShell } from "@/components/sidebar/app-shell";
-import { getArticleNavigation } from "@/lib/content/article/navigation";
+import { getShellArticleNavigation } from "@/lib/content/article/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /**
@@ -12,7 +12,7 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 export default async function Layout(props: LayoutProps<"/[locale]">) {
   const { children } = props;
   const locale = getLocaleOrThrow(await rootLocale());
-  const articleNavigation = await getArticleNavigation(locale);
+  const articleNavigation = await getShellArticleNavigation(locale);
 
   return <AppShell articleNavigation={articleNavigation}>{children}</AppShell>;
 }

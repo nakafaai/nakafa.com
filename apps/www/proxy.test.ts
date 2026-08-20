@@ -3,56 +3,73 @@ import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server.j
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { config, proxy } from "@/proxy";
-import {
-  makePreviewRequest,
-  previewRouteEvidence,
-} from "@/test/content-preview";
 
 type NextRequestInit = ConstructorParameters<typeof NextRequest>[1];
 
-/** Creates a local request without repeating the test origin. */
 function makeRequest(pathname: string, init?: NextRequestInit) {
   return new NextRequest(`http://localhost:3000${pathname}`, init);
 }
 
-/** Runs one local request through the proxy boundary. */
 function requestProxy(pathname: string, init?: NextRequestInit) {
   return proxy(makeRequest(pathname, init));
 }
 
-/** Verifies that next-intl handled one request. */
-function expectLocaleProxy(response: Response) {
-  expect(mockLocaleRouting.localeMiddleware).toHaveBeenCalledTimes(1);
-  expect(response.headers.get("x-locale-proxy")).toBe("1");
+function expectLocaleProxy(
+  response: Response,
+  mode: "active" | "preview" = "active"
+) {
+  const expected = mode === "preview" ? [0, 1, "preview"] : [1, 0, "1"];
+  expect([
+    mockLocaleRouting.activeMiddleware.mock.calls.length,
+    mockLocaleRouting.previewMiddleware.mock.calls.length,
+    response.headers.get("x-locale-proxy"),
+  ]).toEqual(expected);
 }
 
-const mockLocaleRouting = vi.hoisted(() => ({
-  localeMiddleware: vi.fn(
-    () =>
-      new Response(null, {
-        headers: {
-          "x-locale-proxy": "1",
-        },
-      })
-  ),
-}));
+function expectNoLocaleProxy() {
+  expect(mockLocaleRouting.activeMiddleware).not.toHaveBeenCalled();
+  expect(mockLocaleRouting.previewMiddleware).not.toHaveBeenCalled();
+}
+
+function expectHardNotFound(response: Response, locale: string) {
+  expect(response.status).toBe(404);
+  expect(response.headers.get("x-middleware-rewrite")).toBe(
+    `http://localhost:3000/_not-found/${locale}`
+  );
+  expect(response.headers.get("x-middleware-request-x-next-intl-locale")).toBe(
+    locale
+  );
+  expectNoLocaleProxy();
+}
+
+const mockLocaleRouting = vi.hoisted(() => {
+  const response = (value: string) =>
+    new Response(null, { headers: { "x-locale-proxy": value } });
+
+  return {
+    activeMiddleware: vi.fn(() => response("1")),
+    previewMiddleware: vi.fn(() => response("preview")),
+  };
+});
 const runtimeMocks = vi.hoisted(() => ({
   readActive: vi.fn(),
   readActiveIdentity: vi.fn(),
   hasArticleCategory: vi.fn(),
   readProgramPath: vi.fn(),
+  readRedirect: vi.fn(),
   readTryout: vi.fn(),
 }));
 const previewMocks = vi.hoisted(() => ({
   configured: vi.fn(),
   internal: vi.fn(),
+  pathname: vi.fn(),
   route: vi.fn(),
 }));
-const migrationMocks = vi.hoisted(() => ({
-  readRedirect: vi.fn(),
-}));
-
 vi.mock("@repo/internationalization/src/routing", () => ({
+  previewRouting: {
+    defaultLocale: "en",
+    locales: ["de", "en", "id"],
+  },
   routing: {
     defaultLocale: "en",
     locales: ["en", "id"],
@@ -60,7 +77,11 @@ vi.mock("@repo/internationalization/src/routing", () => ({
 }));
 
 vi.mock("next-intl/middleware", () => ({
-  default: vi.fn(() => mockLocaleRouting.localeMiddleware),
+  default: vi.fn((config: { locales: readonly string[] }) =>
+    config.locales.includes("de")
+      ? mockLocaleRouting.previewMiddleware
+      : mockLocaleRouting.activeMiddleware
+  ),
 }));
 
 vi.mock("@/lib/content/preview/config", () => ({
@@ -69,6 +90,7 @@ vi.mock("@/lib/content/preview/config", () => ({
 
 vi.mock("@/lib/content/preview/route", () => ({
   matchesInternalPreviewRoute: previewMocks.internal,
+  matchesPreviewPathname: previewMocks.pathname,
   matchesPreviewRoute: previewMocks.route,
 }));
 
@@ -88,7 +110,7 @@ vi.mock("@/lib/content/program/path", () => ({
   readPublishedProgramPath: runtimeMocks.readProgramPath,
 }));
 vi.mock("@/lib/routing/public/migration", () => ({
-  readPublicUrlMigrationRedirect: migrationMocks.readRedirect,
+  readPublicUrlMigrationRedirect: runtimeMocks.readRedirect,
 }));
 
 describe("proxy", () => {
@@ -113,11 +135,11 @@ describe("proxy", () => {
       .mockReturnValue(Effect.succeed(true));
     previewMocks.configured.mockReset().mockReturnValue(false);
     previewMocks.internal.mockReset().mockReturnValue(Effect.succeed(false));
+    previewMocks.pathname.mockReset().mockReturnValue(Effect.succeed(false));
     previewMocks.route.mockReset().mockReturnValue(Effect.succeed(false));
-    migrationMocks.readRedirect
-      .mockReset()
-      .mockReturnValue(Effect.succeed(null));
-    mockLocaleRouting.localeMiddleware.mockClear();
+    runtimeMocks.readRedirect.mockReset().mockReturnValue(Effect.succeed(null));
+    mockLocaleRouting.activeMiddleware.mockClear();
+    mockLocaleRouting.previewMiddleware.mockClear();
   });
 
   it.each([
@@ -127,13 +149,13 @@ describe("proxy", () => {
     const response = await requestProxy(path, init);
 
     expect(response.headers.get("x-middleware-next")).toBe("1");
-    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expectNoLocaleProxy();
   });
 
   it("redirects trailing slashes to the canonical URL", async () => {
     const response = await requestProxy("/en/search/");
 
-    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expectNoLocaleProxy();
     expect(response.status).toBe(308);
     expect(response.headers.get("location")).toBe(
       "http://localhost:3000/en/search"
@@ -141,7 +163,7 @@ describe("proxy", () => {
   });
 
   it("permanently redirects an authenticated retired material URL", async () => {
-    migrationMocks.readRedirect.mockReturnValueOnce(
+    runtimeMocks.readRedirect.mockReturnValueOnce(
       Effect.succeed(
         "/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling"
       )
@@ -155,12 +177,12 @@ describe("proxy", () => {
     expect(response.headers.get("location")).toBe(
       "http://localhost:3000/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling?utm=test"
     );
-    expect(migrationMocks.readRedirect).toHaveBeenCalledWith({
+    expect(runtimeMocks.readRedirect).toHaveBeenCalledWith({
       method: "GET",
       pathname:
         "/id/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle",
     });
-    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expectNoLocaleProxy();
   });
 
   it("runs only unsupported root files through the locale proxy", () => {
@@ -198,7 +220,7 @@ describe("proxy", () => {
       "text/plain; charset=utf-8"
     );
     expect(response.headers.get("x-robots-tag")).toBe("noindex");
-    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expectNoLocaleProxy();
   });
 
   it("delegates regular routes to the locale middleware", async () => {
@@ -208,6 +230,30 @@ describe("proxy", () => {
     expect(response.headers.get("link")).toBe('</llms.txt>; rel="llms-txt"');
     expect(response.headers.get("x-llms-txt")).toBe("/llms.txt");
   });
+
+  it("uses full contract locale routing only in the configured local child", async () => {
+    previewMocks.configured.mockReturnValue(true);
+    previewMocks.pathname.mockReturnValueOnce(Effect.succeed(true));
+    previewMocks.route.mockReturnValueOnce(Effect.succeed(true));
+
+    const response = await requestProxy(
+      "/de/faecher/mathematik/funktionen/funktionsbegriff"
+    );
+
+    expectLocaleProxy(response, "preview");
+  });
+
+  it.each(["/de/search", "/de/school/onboarding/create"])(
+    "hard-rejects the unselected candidate route %s",
+    async (path) => {
+      previewMocks.configured.mockReturnValue(true);
+
+      const response = await requestProxy(path);
+
+      expectHardNotFound(response, "de");
+      expect(previewMocks.pathname).toHaveBeenCalledWith(path);
+    }
+  );
 
   it.each([
     [
@@ -225,7 +271,7 @@ describe("proxy", () => {
 
       expect(response.status).toBe(307);
       expect(response.headers.get("location")).toBe(expected);
-      expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+      expectNoLocaleProxy();
     }
   );
 
@@ -255,14 +301,7 @@ describe("proxy", () => {
         init
       );
 
-      expect(response.status).toBe(404);
-      expect(response.headers.get("x-middleware-rewrite")).toBe(
-        "http://localhost:3000/_not-found/en"
-      );
-      expect(
-        response.headers.get("x-middleware-request-x-next-intl-locale")
-      ).toBe("en");
-      expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+      expectHardNotFound(response, "en");
     }
   );
 
@@ -272,10 +311,7 @@ describe("proxy", () => {
 
     const response = await requestProxy(path);
 
-    expect(response.status).toBe(404);
-    expect(response.headers.get("x-middleware-rewrite")).toBe(
-      "http://localhost:3000/_not-found/en"
-    );
+    expectHardNotFound(response, "en");
     expect(runtimeMocks.readTryout).toHaveBeenCalledWith(expect.anything(), {
       input: {
         appLocale: "en",
@@ -283,7 +319,6 @@ describe("proxy", () => {
         publicPath: "try-out/indonesia/snbt/2027/missing-set",
       },
     });
-    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
   });
 
   it("delegates one retained attempt capability to the authenticated page", async () => {
@@ -315,12 +350,16 @@ describe("proxy", () => {
   it("lets the selected next-intl preview rewrite reach the actual page", async () => {
     previewMocks.configured.mockReturnValueOnce(true);
     previewMocks.internal.mockReturnValueOnce(Effect.succeed(true));
+    const pathname = "/de/materials/mathematik/funktionen/funktionsbegriff";
 
-    const response = await proxy(makePreviewRequest());
+    const response = await requestProxy(pathname, {
+      headers: { "x-next-intl-locale": "de" },
+    });
 
     expect(response.headers.get("x-middleware-next")).toBe("1");
-    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
-    expect(previewMocks.internal).toHaveBeenCalledWith(previewRouteEvidence);
+    expectNoLocaleProxy();
+    expect(previewMocks.internal).toHaveBeenCalledOnce();
+    expect(previewMocks.pathname).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -341,7 +380,7 @@ describe("proxy", () => {
     async (_kind, path, init, expected) => {
       const response = await requestProxy(path, init);
 
-      expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+      expectNoLocaleProxy();
       expect(response.headers.get("x-middleware-rewrite")).toBe(expected);
     }
   );
@@ -358,14 +397,7 @@ describe("proxy", () => {
     async (path, locale, projectedPath) => {
       const response = await requestProxy(path);
 
-      expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
-      expect(response.status).toBe(404);
-      expect(response.headers.get("x-middleware-rewrite")).toBe(
-        `http://localhost:3000/_not-found/${locale}`
-      );
-      expect(
-        response.headers.get("x-middleware-request-x-next-intl-locale")
-      ).toBe(locale);
+      expectHardNotFound(response, locale);
       if (projectedPath) {
         expect(runtimeMocks.readProgramPath).toHaveBeenCalledWith(
           "en",
@@ -443,16 +475,9 @@ describe("proxy", () => {
     const found = await requestProxy(path);
     expectLocaleProxy(found);
 
-    mockLocaleRouting.localeMiddleware.mockClear();
+    mockLocaleRouting.activeMiddleware.mockClear();
     const missing = await requestProxy(path);
-    expect(missing.status).toBe(404);
-    expect(missing.headers.get("x-middleware-rewrite")).toBe(
-      "http://localhost:3000/_not-found/en"
-    );
-    expect(missing.headers.get("x-middleware-request-x-next-intl-locale")).toBe(
-      "en"
-    );
-    expect(mockLocaleRouting.localeMiddleware).not.toHaveBeenCalled();
+    expectHardNotFound(missing, "en");
   });
 
   it.each([

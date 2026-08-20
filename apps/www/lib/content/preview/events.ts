@@ -11,12 +11,17 @@ import {
 
 const MAX_EVENT_BYTES = 4096;
 const EVENT_BOUNDARY = "\n\n";
+const EVENT_HEARTBEAT = ": keep-alive";
 const EVENT_PREFIX = "event: update\ndata: ";
 const EVENT_CONTENT_TYPE = /^text\/event-stream(?:\s*;\s*charset=utf-8)?$/i;
 const encoder = new TextEncoder();
 
 /** Strictly validates and re-encodes one provider event for the browser. */
 function sanitizeEvent(block: string) {
+  if (block.startsWith(":") && !block.includes("\n")) {
+    return Either.right(encoder.encode(`${EVENT_HEARTBEAT}\n\n`));
+  }
+
   if (!block.startsWith(EVENT_PREFIX)) {
     return Either.left(new PreviewEventError({ stage: "event" }));
   }
@@ -96,7 +101,7 @@ function validateResponse(response: Response, target: URL) {
   return Effect.succeed(sanitizeStream(response.body));
 }
 
-/** Opens the private provider stream and returns only sanitized update events. */
+/** Opens the private provider stream and returns sanitized updates and heartbeats. */
 export const openPreviewEvents = Effect.fn("NakafaContent.openPreviewEvents")(
   function* (signal: AbortSignal) {
     const configOption = yield* readPreviewConfig();

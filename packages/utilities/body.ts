@@ -1,4 +1,4 @@
-import { Effect, Schema } from "effect";
+import { Effect, Either, Schema } from "effect";
 
 const DECIMAL_BYTES = /^\d+$/u;
 
@@ -44,12 +44,86 @@ function concatenateChunks(chunks: readonly Uint8Array[], totalBytes: number) {
   return result;
 }
 
-/** Settles provider cancellation without hiding the primary body failure. */
-function cancelReader(reader: ReadableStreamDefaultReader<Uint8Array>) {
-  reader.cancel().then(
-    () => undefined,
-    () => undefined
-  );
+type BoundedBodyError = BodyLimitError | BodyMissingError | BodyReadError;
+
+interface BoundedBodyRead {
+  readonly cancel?: () => void;
+  readonly result: Promise<Either.Either<Uint8Array, BoundedBodyError>>;
+}
+
+/** Settles reader cancellation without hiding the primary body result. */
+function settleReaderCancellation(
+  reader: ReadableStreamDefaultReader<Uint8Array>
+) {
+  Promise.resolve()
+    .then(() => reader.cancel())
+    .then(
+      () => undefined,
+      () => undefined
+    );
+}
+
+/** Starts one bounded body read with an interruptible cancellation handle. */
+function startBoundedBodyRead(
+  body: ReadableStream<Uint8Array> | null,
+  maxBytes: number
+): BoundedBodyRead {
+  if (!body) {
+    return {
+      result: Promise.resolve(Either.left(new BodyMissingError())),
+    };
+  }
+
+  const readerResult = Either.try({
+    catch: () => new BodyReadError(),
+    try: () => body.getReader(),
+  });
+  if (Either.isLeft(readerResult)) {
+    return {
+      result: Promise.resolve(Either.left(readerResult.left)),
+    };
+  }
+
+  const reader = readerResult.right;
+  let cancelled = false;
+
+  function cancel() {
+    cancelled = true;
+    settleReaderCancellation(reader);
+  }
+
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+
+  /** Pulls one provider chunk and preserves its typed result. */
+  function pull(): Promise<Either.Either<Uint8Array, BoundedBodyError>> {
+    return Promise.resolve()
+      .then(() => reader.read())
+      .then(
+        ({ done, value }) => {
+          if (cancelled) {
+            return Either.left(new BodyReadError());
+          }
+          if (done) {
+            return Either.right(concatenateChunks(chunks, totalBytes));
+          }
+
+          totalBytes += value.byteLength;
+          if (totalBytes > maxBytes) {
+            cancel();
+            return Either.left(
+              new BodyLimitError({ actualBytes: totalBytes, maxBytes })
+            );
+          }
+
+          chunks.push(value);
+          return pull();
+        },
+        () => Either.left(new BodyReadError())
+      );
+  }
+
+  return { cancel, result: pull() };
 }
 
 /** Parses an optional decimal Content-Length without unsafe number coercion. */
@@ -74,51 +148,30 @@ export const parseContentLength = Effect.fn("Utilities.parseContentLength")(
   }
 );
 
-/** Reads a web body stream without buffering beyond the declared limit. */
+/** Reads a web body without a runtime or buffering beyond the declared limit. */
+export function readBoundedBodyResult(
+  body: ReadableStream<Uint8Array> | null,
+  maxBytes: number
+) {
+  return startBoundedBodyRead(body, maxBytes).result;
+}
+
+/** Reads a web body stream with typed failure and interruption cancellation. */
 export const readBoundedBody = Effect.fn("Utilities.readBoundedBody")(
-  function* (body: ReadableStream<Uint8Array> | null, maxBytes: number) {
-    if (!body) {
-      return yield* new BodyMissingError();
-    }
-    const reader = yield* Effect.try({
-      catch: () => new BodyReadError(),
-      try: () => body.getReader(),
-    });
-
-    return yield* Effect.async<Uint8Array, BodyLimitError | BodyReadError>(
-      (resume) => {
-        const chunks: Uint8Array[] = [];
-        let totalBytes = 0;
-
-        /** Pulls one provider chunk and completes through the Effect callback. */
-        function pull() {
-          reader.read().then(
-            ({ done, value }) => {
-              if (done) {
-                resume(Effect.succeed(concatenateChunks(chunks, totalBytes)));
-                return;
-              }
-              totalBytes += value.byteLength;
-              if (totalBytes > maxBytes) {
-                cancelReader(reader);
-                resume(
-                  Effect.fail(
-                    new BodyLimitError({ actualBytes: totalBytes, maxBytes })
-                  )
-                );
-                return;
-              }
-              chunks.push(value);
-              pull();
-            },
-            () => resume(Effect.fail(new BodyReadError()))
-          );
+  (body: ReadableStream<Uint8Array> | null, maxBytes: number) =>
+    Effect.async<Uint8Array, BoundedBodyError>((resume) => {
+      const read = startBoundedBodyRead(body, maxBytes);
+      read.result.then((result) => {
+        if (Either.isLeft(result)) {
+          resume(Effect.fail(result.left));
+          return;
         }
+        resume(Effect.succeed(result.right));
+      });
 
-        pull();
-
-        return Effect.sync(() => cancelReader(reader));
+      if (read.cancel === undefined) {
+        return;
       }
-    );
-  }
+      return Effect.sync(read.cancel);
+    })
 );

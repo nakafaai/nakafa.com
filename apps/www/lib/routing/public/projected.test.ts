@@ -129,20 +129,40 @@ describe("projected public html route rejection", () => {
     expect(mockReadRuntimeContentReference).not.toHaveBeenCalled();
   });
 
-  it("accepts the exact local preview route before the Convex lookup", async () => {
-    mockMatchesPreviewRoute.mockReturnValueOnce(Effect.succeed(true));
+  it("accepts exact local preview routes before published lookups", async () => {
+    const paths = [
+      [
+        "/en/subjects/mathematics/function-composition-inverse-function/function-concept",
+        "subjects/mathematics/function-composition-inverse-function/function-concept",
+      ],
+      [
+        "/de/try-out/indonesien/snbt/2027/aufgabensatz-1/quantitatives-wissen",
+        "try-out/indonesien/snbt/2027/aufgabensatz-1/quantitatives-wissen",
+      ],
+    ] as const;
 
+    for (const [pathname, publicPath] of paths) {
+      mockMatchesPreviewRoute.mockReturnValueOnce(Effect.succeed(true));
+      await expect(readRejection(pathname)).resolves.toBe(null);
+      expect(mockMatchesPreviewRoute).toHaveBeenLastCalledWith({
+        appLocale: pathname.startsWith("/de/") ? "de" : "en",
+        publicPath,
+      });
+    }
+
+    expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
+    expect(mockReadRuntimeContentReference).not.toHaveBeenCalled();
+  });
+
+  it("rejects inactive contract routes that are not the selected preview", async () => {
     await expect(
       readRejection(
-        "/en/subjects/mathematics/function-composition-inverse-function/function-concept"
+        "/de/faecher/mathematik/analytische-geometrie/stellung-zweier-kreise"
       )
-    ).resolves.toBe(null);
-    expect(mockMatchesPreviewRoute).toHaveBeenCalledWith({
-      appLocale: "en",
-      publicPath:
-        "subjects/mathematics/function-composition-inverse-function/function-concept",
-    });
+    ).resolves.toBe("de");
+
     expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
+    expect(mockReadRuntimeContentReference).not.toHaveBeenCalled();
   });
 
   it("uses active ownership for new routes and permanent tombstones", async () => {

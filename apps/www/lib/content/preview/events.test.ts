@@ -145,7 +145,7 @@ describe("local preview events", () => {
     });
   });
 
-  it("forwards only complete schema-validated updates", async () => {
+  it("forwards only complete schema-validated updates and heartbeats", async () => {
     const pending = JSON.stringify({
       format: "aksara-local-preview",
       revision: 1,
@@ -168,7 +168,7 @@ describe("local preview events", () => {
         );
         controller.enqueue(
           new TextEncoder().encode(
-            `${pending.slice(48)}\n\nevent: update\ndata: ${ready}\n\n`
+            `${pending.slice(48)}\n\n: provider-owned-heartbeat\n\nevent: update\ndata: ${ready}\n\n`
           )
         );
         controller.close();
@@ -187,7 +187,7 @@ describe("local preview events", () => {
     );
 
     await expect(readEvents()).resolves.toBe(
-      `event: update\ndata: ${pending}\n\nevent: update\ndata: ${ready}\n\n`
+      `event: update\ndata: ${pending}\n\n: keep-alive\n\nevent: update\ndata: ${ready}\n\n`
     );
     expect(fetch).toHaveBeenCalledWith(
       new URL(target),
@@ -206,6 +206,7 @@ describe("local preview events", () => {
 
   it.each([
     ["event name", 'event: other\ndata: {"revision":1}\n\n'],
+    ["multiline comment", ": first\n: second\n\n"],
     ["extra line", "event: update\ndata: {}\nextra: value\n\n"],
     ["invalid data", "event: update\ndata: not-json\n\n"],
     [

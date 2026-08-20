@@ -1,6 +1,9 @@
 import "server-only";
 
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import {
+  type ActiveAppLocaleCode,
+  AppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import type { NinaLearningSessionInput } from "@repo/ai/nina/memory/pack";
 import { readMaterialContextHint } from "@repo/contents/_types/route/material/context";
@@ -10,9 +13,17 @@ import type { Locale } from "next-intl";
 import { readPublishedMaterialContext } from "@/lib/content/material/context";
 import { readPublishedMaterialRoute } from "@/lib/content/material/route";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
+import { isActiveLocale } from "@/lib/i18n/active";
 
 /** Returns whether one localized path belongs to the material route surface. */
-export function isPublishedMaterialPath(locale: Locale, publicPath: string) {
+export function isPublishedMaterialPath(
+  locale: Locale,
+  publicPath: string
+): locale is ActiveAppLocaleCode {
+  if (!isActiveLocale(locale)) {
+    return false;
+  }
+
   const [namespace] = publicPath.split("/");
   return PUBLIC_ROUTE_SURFACES.some(
     (surface) =>
@@ -25,7 +36,7 @@ export const readPublishedNinaMaterial = Effect.fn(
   "chat.readPublishedNinaMaterial"
 )(function* (input: {
   readonly contextHint?: null | string;
-  readonly locale: Locale;
+  readonly locale: ActiveAppLocaleCode;
   readonly publicPath: string;
   readonly url: string;
 }) {

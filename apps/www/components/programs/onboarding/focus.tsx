@@ -41,6 +41,7 @@ import { submitOnboardingSelection } from "@/components/programs/onboarding/subm
 import { choiceCardVariants } from "@/components/shared/choice/variants";
 import { useUpdateUserRoleMutation } from "@/components/user/mutation.client";
 import { useUser } from "@/lib/context/use-user";
+import { isActiveLocale } from "@/lib/i18n/active";
 
 /** Saves the selected learning focus for the latest reactive onboarding role. */
 export function FocusStepForm({
@@ -117,6 +118,11 @@ function FocusStepFormBody({
 
       if (!(option && selection)) {
         toast.error(t("onboarding.invalid-selection"));
+        return;
+      }
+
+      if (!isActiveLocale(locale)) {
+        toast.error(t("onboarding.unavailable-helper"));
         return;
       }
 

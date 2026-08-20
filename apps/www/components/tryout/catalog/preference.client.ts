@@ -6,6 +6,7 @@ import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
+import { isActiveLocale } from "@/lib/i18n/active";
 
 type SavePreferredTryoutArgs = FunctionArgs<
   typeof api.learningPreferences.mutations.setPreferredTryoutCountry
@@ -40,6 +41,10 @@ export function saveTryoutPreference({
   setPreferredTryout: SavePreferredTryout;
   source: string;
 }) {
+  if (!isActiveLocale(locale)) {
+    return Effect.void;
+  }
+
   return Effect.tryPromise({
     try: () =>
       setPreferredTryout({

@@ -9,18 +9,17 @@ import { GradientBlock } from "@repo/design-system/components/ui/gradient-block"
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useLocale, useTranslations } from "next-intl";
+import { isActiveLocale } from "@/lib/i18n/active";
 
 /** Renders graph-backed recently viewed learning objects on the home screen. */
 export function HomeContinueLearning() {
   const t = useTranslations("Home");
   const locale = useLocale();
+  const activeLocale = isActiveLocale(locale);
 
   const { data, isPending } = useQueryWithStatus(
     api.contents.queries.recent.getRecentlyViewed,
-    {
-      locale,
-      limit: 5,
-    }
+    activeLocale ? { locale, limit: 5 } : "skip"
   );
 
   if (isPending) {
