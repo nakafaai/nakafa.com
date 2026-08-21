@@ -53,7 +53,10 @@ export async function generateMetadata({
       description,
       locale,
       path: href,
-      image: getCurriculumIndexSocialImage(locale),
+      image: getCurriculumIndexSocialImage(
+        locale,
+        getCurriculumIndexHref(locale)
+      ),
     }),
   };
 }

@@ -1,6 +1,7 @@
 import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
 import type { LearningProgramKey } from "@nakafa/aksara-contracts/program/spec";
 import type { Locale } from "next-intl";
+import { resolveSocialArtwork } from "@/lib/og/artwork";
 import { getOgUrl } from "@/lib/utils/metadata";
 
 const CURRICULUM_SOCIAL_IMAGE_DIRECTORY = "/open-graph/curriculum";
@@ -8,8 +9,15 @@ const CURRICULUM_SOCIAL_IMAGE_DIRECTORY = "/open-graph/curriculum";
 type CurriculumSocialImageRoute = Pick<CurriculumRoute, "level" | "publicPath">;
 
 /** Resolves the localized artwork for the public Curriculum index. */
-export function getCurriculumIndexSocialImage(locale: Locale) {
-  return `${CURRICULUM_SOCIAL_IMAGE_DIRECTORY}/${locale}-index.png`;
+export function getCurriculumIndexSocialImage(
+  locale: Locale,
+  publicPath: string
+) {
+  return resolveSocialArtwork({
+    locale,
+    publicPath,
+    reviewedPath: `${CURRICULUM_SOCIAL_IMAGE_DIRECTORY}/${locale}-index.png`,
+  });
 }
 
 /**
@@ -27,5 +35,9 @@ export function getCurriculumRouteSocialImage(
     return getOgUrl(locale, route.publicPath);
   }
 
-  return `${CURRICULUM_SOCIAL_IMAGE_DIRECTORY}/${locale}-${programKey}.png`;
+  return resolveSocialArtwork({
+    locale,
+    publicPath: route.publicPath,
+    reviewedPath: `${CURRICULUM_SOCIAL_IMAGE_DIRECTORY}/${locale}-${programKey}.png`,
+  });
 }

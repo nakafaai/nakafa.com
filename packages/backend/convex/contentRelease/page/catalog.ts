@@ -57,8 +57,8 @@ const readLocalePages = Effect.fn("contentRelease.readLocalePages")(function* (
   );
 });
 
-/** Checks locale parity by stable page identity, independent of public paths. */
-function hasSamePageKeys(
+/** Checks locale parity by the content key that the Page contract binds to pageKey. */
+function hasSamePageIdentities(
   expected: readonly PageCatalogRow[],
   actual: readonly PageCatalogRow[]
 ) {
@@ -97,7 +97,7 @@ export const readPageCatalog = Effect.fn("contentRelease.readPageCatalog")(
     const expected = catalogs[0] ?? [];
     if (
       expected.length === 0 ||
-      catalogs.some((catalog) => !hasSamePageKeys(expected, catalog))
+      catalogs.some((catalog) => !hasSamePageIdentities(expected, catalog))
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",

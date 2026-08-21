@@ -4,8 +4,17 @@ import { contentRuntimeCiError } from "./error";
 
 export const CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT = "dapper-antelope-269";
 
+/**
+ * Largest safe CLI export below Convex's 32,000-row pagination ceiling.
+ * Convex CLI adds one row to detect a truncated result.
+ * @see https://github.com/get-convex/convex-js/blob/npm/1.44.0/src/cli/lib/data.ts
+ * @see https://github.com/get-convex/convex-backend/blob/ba336a65e20d53a7d4f646efd302af92325112b4/crates/common/src/knobs.rs#L580-L582
+ */
+export const MAX_CONTENT_RUNTIME_EXPORT_LIMIT = 31_999;
+
 /** Bounded trusted-snapshot capacity for active and retained content history. */
-export const DEFAULT_CONTENT_RUNTIME_EXPORT_LIMIT = 50_000;
+export const DEFAULT_CONTENT_RUNTIME_EXPORT_LIMIT =
+  MAX_CONTENT_RUNTIME_EXPORT_LIMIT;
 
 const HEX_64 = /^[a-f0-9]{64}$/;
 const WHITESPACE = /\s/u;
@@ -162,9 +171,13 @@ export const readExportConfig = Effect.gen(function* () {
       "Signed content cache key is missing or too short."
     );
   }
-  if (!Number.isSafeInteger(exportLimit) || exportLimit < 1) {
+  if (
+    !Number.isSafeInteger(exportLimit) ||
+    exportLimit < 1 ||
+    exportLimit > MAX_CONTENT_RUNTIME_EXPORT_LIMIT
+  ) {
     return yield* contentRuntimeCiError(
-      "CONTENT_RUNTIME_EXPORT_LIMIT must be a positive safe integer."
+      `CONTENT_RUNTIME_EXPORT_LIMIT must be between 1 and ${MAX_CONTENT_RUNTIME_EXPORT_LIMIT}.`
     );
   }
   return { ...production, ...cacheIdentity, cacheKey, exportLimit };

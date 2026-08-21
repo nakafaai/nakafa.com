@@ -19,6 +19,7 @@ import {
 } from "@/components/sidebar/data/subject";
 import { getPublishedTrustLesson } from "@/lib/content/material/trust";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { resolveSocialArtwork } from "@/lib/og/artwork";
 import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 
 export async function generateMetadata({
@@ -29,6 +30,11 @@ export async function generateMetadata({
   const locale = getLocaleOrThrow((await params).locale);
   const t = await getTranslations({ locale, namespace: "Metadata" });
   const path = `/${locale}`;
+  const socialImage = resolveSocialArtwork({
+    locale,
+    publicPath: "",
+    reviewedPath: `/open-graph/${locale}-about.png`,
+  });
 
   return {
     title: {
@@ -42,7 +48,7 @@ export async function generateMetadata({
       description: t("description"),
       images: [
         {
-          url: `/open-graph/${locale}-about.png`,
+          url: socialImage,
           alt: t("title"),
           width: 1200,
           height: 630,
@@ -60,7 +66,7 @@ export async function generateMetadata({
       type: "website",
       images: [
         {
-          url: `/open-graph/${locale}-about.png`,
+          url: socialImage,
           alt: t("title"),
           width: 1200,
           height: 630,

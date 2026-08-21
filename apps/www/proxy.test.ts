@@ -474,20 +474,24 @@ describe("proxy", () => {
     expectHardNotFound(missing, "en");
   });
 
-  it.each([
-    {
-      init: { method: "POST" },
-      kind: "non-read content requests without a route lookup",
-      path: "/en/articles/politics/not-a-read-check",
-    },
-    {
-      init: undefined,
-      kind: "defensive content roots without a route shape",
-      path: "/en/unknown-content-root/example",
-    },
-  ])("delegates $kind", async ({ init, path }) => {
-    const response = await requestProxy(path, init);
+  it("delegates non-read content requests without a route lookup", async () => {
+    const response = await requestProxy(
+      "/en/articles/politics/not-a-read-check",
+      { method: "POST" }
+    );
 
     expectLocaleProxy(response);
+  });
+
+  it("hard-rejects an unowned Page path before app streaming", async () => {
+    const response = await requestProxy("/en/unknown-content-root/example");
+
+    expectHardNotFound(response, "en");
+    expect(runtimeMocks.readActive).toHaveBeenCalledWith({
+      activeReleaseId: "release-active",
+      appLocale: "en",
+      family: "page",
+      publicPath: "unknown-content-root/example",
+    });
   });
 });

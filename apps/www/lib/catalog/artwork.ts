@@ -1,4 +1,5 @@
 import type { Locale } from "next-intl";
+import { hasStaticArtwork } from "@/lib/og/artwork";
 
 const GRADE_ARTWORK_BY_ICON_KEY = new Map([
   ["grade-9", "9"],
@@ -39,6 +40,10 @@ const TRYOUT_SUBJECT_ARTWORK_KEY_BY_TRACK_KEY = new Map([
 
 /** Resolves reviewed grade artwork from a stable curriculum icon identity. */
 export function getGradeCatalogArtwork(locale: Locale, iconKey: string) {
+  if (!hasStaticArtwork(locale)) {
+    return;
+  }
+
   const gradeKey = GRADE_ARTWORK_BY_ICON_KEY.get(iconKey);
 
   if (!gradeKey) {
@@ -76,7 +81,7 @@ export function getTryoutSubjectCatalogArtwork(
 }
 
 function getReviewedSubjectArtwork(locale: Locale, artworkKey: string) {
-  if (!SUBJECT_ARTWORK_KEYS.has(artworkKey)) {
+  if (!(hasStaticArtwork(locale) && SUBJECT_ARTWORK_KEYS.has(artworkKey))) {
     return;
   }
 
