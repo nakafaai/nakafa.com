@@ -1,5 +1,6 @@
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import {
+  ACTIVE_APP_LOCALE_CODES,
   type ActiveAppLocaleCode,
   ActiveAppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
@@ -49,7 +50,13 @@ export const TRYOUT_START_CONTENT_HASH = TryoutContentHashSchema.make(
 
 const sourcePath = `question-bank/tryout/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_SECTION}/${TRYOUT_START_SET}`;
 const setPath = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}`;
-const tryoutStartLocales: readonly ActiveAppLocaleCode[] = ["en", "id"];
+const tryoutStartLocales: readonly ActiveAppLocaleCode[] =
+  ACTIVE_APP_LOCALE_CODES;
+const tryoutTrackTitles = {
+  de: "Mathematik",
+  en: "Mathematics",
+  id: "Matematika",
+} as const satisfies Record<ActiveAppLocaleCode, string>;
 
 /** Activates the signed source that exactly matches the legacy start fixture. */
 export async function activateTryoutStartSource(
@@ -242,7 +249,7 @@ export function makeTryoutStartHierarchy(
       sectionCount: 1,
       setCount: 1,
       sourceRevision: "2026",
-      title: appLocale === "id" ? "Matematika" : "Mathematics",
+      title: tryoutTrackTitles[appLocale],
       trackKey: TRYOUT_START_TRACK,
       trackKind: "subject",
       visibleSectionCount,

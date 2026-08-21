@@ -17,7 +17,10 @@ import { geolocation } from "@vercel/functions";
 import { Effect, Option, Schema } from "effect";
 import { getTranslations } from "next-intl/server";
 import { CHAT_ERRORS } from "@/app/api/chat/constants";
-import { getCanonicalCurrentPageContentUrl } from "@/app/api/chat/content";
+import {
+  getCanonicalCurrentPageContentUrl,
+  isVerifiableContentPath,
+} from "@/app/api/chat/content";
 import { resolveNinaLearningSession } from "@/app/api/chat/context";
 import { search as nakafaSearch } from "@/app/api/chat/nakafa";
 import { nakafaContent } from "@/app/api/chat/nakafa-content";
@@ -36,15 +39,6 @@ import {
 import { getToken } from "@/lib/auth/server";
 
 const corsValidator = new CorsValidator();
-
-const possibleVerifiedUrls = [
-  "/articles",
-  "/quran",
-  "/curriculum",
-  "/kurikulum",
-  "/subjects",
-  "/materi",
-] as const;
 
 /**
  * Keeps the streamed chat route aligned with the longest normal AI SDK chat
@@ -117,10 +111,12 @@ export function POST(req: Request) {
         });
       }
 
-      const url = getCanonicalCurrentPageContentUrl({ locale, slug });
-      const shouldVerify = possibleVerifiedUrls.some((segment) =>
-        url.includes(segment)
-      );
+      const cleanPath = cleanSlug(slug);
+      const url = getCanonicalCurrentPageContentUrl({
+        locale,
+        slug: cleanPath,
+      });
+      const shouldVerify = isVerifiableContentPath(cleanPath);
 
       const capturedAt = new Date();
       const currentDate = capturedAt.toLocaleString("en-US", {
@@ -175,7 +171,7 @@ export function POST(req: Request) {
         service: "chat-api",
         currentPage: {
           locale,
-          slug: cleanSlug(slug),
+          slug: cleanPath,
           url,
           verified,
         },

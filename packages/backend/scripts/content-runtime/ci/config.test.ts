@@ -1,6 +1,8 @@
 import {
   CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT,
   clearContentRuntimeSecrets,
+  DEFAULT_CONTENT_RUNTIME_EXPORT_LIMIT,
+  MAX_CONTENT_RUNTIME_EXPORT_LIMIT,
   readExportConfig,
   readProductionSelectionConfig,
   validateProductionDeployKey,
@@ -79,6 +81,25 @@ describe("content runtime CI config", () => {
       stubCacheIdentity(contentStateHash);
       expect(yield* withStubbedEnv(readExportConfig)).toMatchObject({
         contentStateHash,
+        exportLimit: DEFAULT_CONTENT_RUNTIME_EXPORT_LIMIT,
+      });
+    })
+  );
+
+  it.live("rejects limits above the Convex CLI truncation boundary", () =>
+    Effect.gen(function* () {
+      stubProductionConfig();
+      stubCacheIdentity("1".repeat(64));
+      vi.stubEnv(
+        "CONTENT_RUNTIME_EXPORT_LIMIT",
+        String(MAX_CONTENT_RUNTIME_EXPORT_LIMIT + 1)
+      );
+
+      expect(
+        yield* withStubbedEnv(readExportConfig.pipe(Effect.flip))
+      ).toMatchObject({
+        _tag: "ContentRuntimeCiError",
+        message: `CONTENT_RUNTIME_EXPORT_LIMIT must be between 1 and ${MAX_CONTENT_RUNTIME_EXPORT_LIMIT}.`,
       });
     })
   );

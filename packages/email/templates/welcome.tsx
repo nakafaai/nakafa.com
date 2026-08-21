@@ -1,3 +1,4 @@
+import { render } from "@react-email/render";
 import { Button } from "@repo/email/components/button";
 import {
   Card,
@@ -11,6 +12,7 @@ import {
   COMPANY_IDENTITY,
   COMPANY_REGISTERED_ADDRESS,
 } from "@repo/seo/company";
+import { Effect, Schema } from "effect";
 import {
   Body,
   Column,
@@ -26,21 +28,31 @@ import {
   Text,
 } from "react-email";
 
-interface WelcomeProps {
+export interface WelcomeProps {
   readonly name: string;
+  readonly privacyPolicyUrl: string;
+  readonly startLearningUrl: string;
+  readonly termsOfServiceUrl: string;
 }
+
+/** Typed failure for repository-owned React Email rendering. */
+export class WelcomeEmailRenderError extends Schema.TaggedError<WelcomeEmailRenderError>()(
+  "WelcomeEmailRenderError",
+  {
+    code: Schema.Literal("WELCOME_EMAIL_RENDER_FAILED"),
+    message: Schema.String,
+  }
+) {}
 
 const COPYRIGHT_YEAR = new Date().getFullYear();
 const EMAIL_LOGO_URL = new URL("/logo.png", COMPANY_IDENTITY.url).href;
-const START_LEARNING_URL = new URL("/en", COMPANY_IDENTITY.url).href;
-const PRIVACY_POLICY_URL = new URL("/en/privacy-policy", COMPANY_IDENTITY.url)
-  .href;
-const TERMS_OF_SERVICE_URL = new URL(
-  "/en/terms-of-service",
-  COMPANY_IDENTITY.url
-).href;
 
-export function Welcome({ name }: WelcomeProps) {
+export function Welcome({
+  name,
+  privacyPolicyUrl,
+  startLearningUrl,
+  termsOfServiceUrl,
+}: WelcomeProps) {
   return (
     <Html>
       <Head />
@@ -150,7 +162,7 @@ export function Welcome({ name }: WelcomeProps) {
             </Card>
 
             <Section className="mt-6 text-center">
-              <Button href={START_LEARNING_URL} size="lg">
+              <Button href={startLearningUrl} size="lg">
                 Start Learning
               </Button>
             </Section>
@@ -178,7 +190,7 @@ export function Welcome({ name }: WelcomeProps) {
                   <Column className="pr-2">
                     <Link
                       className="text-muted-foreground text-xs"
-                      href={PRIVACY_POLICY_URL}
+                      href={privacyPolicyUrl}
                       style={{ textDecoration: "underline" }}
                     >
                       Privacy Policy
@@ -187,7 +199,7 @@ export function Welcome({ name }: WelcomeProps) {
                   <Column className="pl-2">
                     <Link
                       className="text-muted-foreground text-xs"
-                      href={TERMS_OF_SERVICE_URL}
+                      href={termsOfServiceUrl}
                       style={{ textDecoration: "underline" }}
                     >
                       Terms of Service
@@ -203,8 +215,31 @@ export function Welcome({ name }: WelcomeProps) {
   );
 }
 
+/** Renders the production HTML and text bodies from one source template. */
+export const renderWelcomeEmail = Effect.fn("email.welcome.render")(
+  (props: WelcomeProps) =>
+    Effect.tryPromise({
+      catch: () =>
+        new WelcomeEmailRenderError({
+          code: "WELCOME_EMAIL_RENDER_FAILED",
+          message: "Unable to render the welcome email.",
+        }),
+      try: async () => {
+        const email = <Welcome {...props} />;
+        const [html, text] = await Promise.all([
+          render(email),
+          render(email, { plainText: true }),
+        ]);
+        return { html, text };
+      },
+    })
+);
+
 Welcome.PreviewProps = {
   name: "Nabil Fatih",
+  privacyPolicyUrl: "https://example.com/privacy-policy",
+  startLearningUrl: "https://example.com/start-learning",
+  termsOfServiceUrl: "https://example.com/terms-of-service",
 };
 
 export default Welcome;

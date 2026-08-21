@@ -10,6 +10,9 @@ const articleMocks = vi.hoisted(() => ({
 const materialMocks = vi.hoisted(() => ({
   readPublishedMaterialSitemap: vi.fn(),
 }));
+const pageMocks = vi.hoisted(() => ({
+  readPublishedPageCatalog: vi.fn(),
+}));
 const programMocks = vi.hoisted(() => ({
   readPublishedProgramSitemap: vi.fn(),
 }));
@@ -24,6 +27,7 @@ vi.mock("@/lib/content/article/sitemap", () => ({
   readPublishedArticleSitemap: articleMocks.readPublishedArticleSitemap,
 }));
 vi.mock("@/lib/content/material/sitemap", () => materialMocks);
+vi.mock("@/lib/content/page/catalog", () => pageMocks);
 vi.mock("@/lib/content/program/sitemap", () => programMocks);
 vi.mock("@/lib/content/quran/publication", () => quranMocks);
 vi.mock("@/lib/content/tryout/sitemap", () => tryoutMocks);
@@ -36,6 +40,10 @@ beforeEach(() => {
   materialMocks.readPublishedMaterialSitemap.mockReset();
   materialMocks.readPublishedMaterialSitemap.mockReturnValue(
     Effect.succeed(null)
+  );
+  pageMocks.readPublishedPageCatalog.mockReset();
+  pageMocks.readPublishedPageCatalog.mockReturnValue(
+    Effect.succeed({ activeReleaseId: "release-pages", projections: [] })
   );
   programMocks.readPublishedProgramSitemap.mockReset();
   programMocks.readPublishedProgramSitemap.mockReturnValue(
@@ -78,11 +86,8 @@ describe("sitemap route pages", () => {
       "/",
       "/contributor",
       "/curricula",
-      "/privacy-policy",
       "/quran",
       "/search",
-      "/security-policy",
-      "/terms-of-service",
     ]);
     await expect(readPaths("quran_en")).resolves.toEqual([
       "/quran/1",
@@ -136,6 +141,45 @@ describe("sitemap route pages", () => {
     ]);
   });
 
+  it("serves signed Page routes with locale-equivalent paths", async () => {
+    pageMocks.readPublishedPageCatalog.mockReturnValue(
+      Effect.succeed({
+        activeReleaseId: "release-pages",
+        projections: [
+          pageProjection("de", "impressum", "imprint"),
+          pageProjection("en", "legal-notice", "imprint"),
+          pageProjection("id", "informasi-perusahaan", "imprint"),
+          pageProjection("de", "privacy-policy", "privacy-policy"),
+          pageProjection("en", "privacy-policy", "privacy-policy"),
+          pageProjection("id", "privacy-policy", "privacy-policy"),
+        ],
+      })
+    );
+
+    const page = await Effect.runPromise(readSitemapRoutePage("page_de"));
+
+    expect(page.routes).toEqual([
+      {
+        alternatePaths: {
+          de: "/impressum",
+          en: "/legal-notice",
+          id: "/informasi-perusahaan",
+        },
+        lastModified: Date.parse("2026-08-21T00:00:00.000Z"),
+        path: "/impressum",
+      },
+      {
+        alternatePaths: {
+          de: "/privacy-policy",
+          en: "/privacy-policy",
+          id: "/privacy-policy",
+        },
+        lastModified: Date.parse("2026-08-21T00:00:00.000Z"),
+        path: "/privacy-policy",
+      },
+    ]);
+  });
+
   it("rejects obsolete source-owned sitemap identities", async () => {
     for (const pageId of [
       "content_en_articles_0",
@@ -172,8 +216,26 @@ describe("sitemap route pages", () => {
       _tag: "SitemapPageNotFoundError",
       pageId: "tryout_en_0",
     });
+    await expect(readFailure("page_en")).resolves.toMatchObject({
+      _tag: "SitemapPageNotFoundError",
+      pageId: "page_en",
+    });
   });
 });
+
+/** Builds the Page projection fields consumed by sitemap route assembly. */
+function pageProjection(
+  appLocale: "de" | "en" | "id",
+  publicPath: string,
+  pageKey: string
+) {
+  return {
+    appLocale,
+    metadata: { lastModified: "2026-08-21" },
+    pageKey,
+    publicPath,
+  };
+}
 
 /** Reads only path strings from one sitemap route page. */
 async function readPaths(pageId: string) {

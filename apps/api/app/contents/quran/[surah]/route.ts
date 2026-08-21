@@ -1,5 +1,5 @@
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
-import { defaultLocale } from "@repo/utilities/locales";
 import { logError } from "@repo/utilities/logging/effect";
 import { Effect } from "effect";
 import { NextResponse } from "next/server";
@@ -26,7 +26,10 @@ export async function GET(
   }
 
   return Effect.runPromise(
-    readQuranApiDocument({ appLocale: defaultLocale, surahNumber }).pipe(
+    readQuranApiDocument({
+      appLocale: ACTIVE_APP_LOCALE_CODES[0],
+      surahNumber,
+    }).pipe(
       Effect.map((document) =>
         NextResponse.json({
           ...document.surah,

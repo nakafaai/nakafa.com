@@ -9,26 +9,33 @@ vi.mock("@/lib/content/preview/config", () => ({
   hasPreviewConfig: hasPreviewConfigMock,
 }));
 
+vi.mock("@repo/internationalization/src/routing", () => ({
+  routing: { locales: ["en", "id"] },
+}));
+
 describe("getLocaleOrThrow", () => {
   beforeEach(() => {
     hasPreviewConfigMock.mockReset();
     hasPreviewConfigMock.mockReturnValue(false);
   });
 
-  it("returns a configured locale", () => {
+  it("returns active locales and rejects inactive public locales", () => {
     expect(getLocaleOrThrow("en")).toBe("en");
     expect(getActiveLocaleOrThrow("id")).toBe("id");
-  });
-
-  it("rejects an inactive locale without an exact local preview", () => {
+    expect(() => getActiveLocaleOrThrow("de")).toThrow();
     expect(() => getLocaleOrThrow("de")).toThrow();
   });
 
-  it("accepts a contract locale only inside an exact local preview", () => {
+  it("admits a staged contract locale only for authenticated preview", () => {
     hasPreviewConfigMock.mockReturnValue(true);
 
     expect(getLocaleOrThrow("de")).toBe("de");
-    expect(() => getActiveLocaleOrThrow("de")).toThrow();
+  });
+
+  it("rejects a locale outside the contract with or without preview", () => {
+    expect(() => getLocaleOrThrow("fr")).toThrow();
+    hasPreviewConfigMock.mockReturnValue(true);
+
     expect(() => getLocaleOrThrow("fr")).toThrow();
   });
 });

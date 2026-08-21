@@ -1,3 +1,5 @@
+import type { ContentFamily } from "@nakafa/aksara-contracts/content";
+import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   ArticleCategorySchema,
@@ -11,6 +13,10 @@ import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { readActiveContentRoute } from "@/lib/content/published/route";
+import {
+  isApplicationRoutePath,
+  isApplicationRouteRoot,
+} from "@/lib/routing/public/ownership";
 
 const REJECTED_PUBLIC_ROOTS = new Set(["/learn"]);
 const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
@@ -72,9 +78,9 @@ function readRejectedPublicRouteLocale(pathname: string) {
 /**
  * Reads finite public HTML routes that should 404 before app rendering.
  *
- * Quran and signed article pages have finite inventories. Rejecting
- * impossible shapes here prevents Next streamed not-found responses from
- * looking like successful soft 404s to agents and crawlers.
+ * Quran, signed Article, and signed Page routes have finite inventories.
+ * Rejecting impossible shapes here prevents Next streamed not-found responses
+ * from looking like successful soft 404s to agents and crawlers.
  */
 function readMissingHtmlRouteLocale({
   method,
@@ -101,13 +107,29 @@ function readMissingHtmlRouteLocale({
     return Effect.succeed(isRenderableQuranPath(segments) ? null : locale);
   }
 
-  if (root !== "articles") {
-    return Effect.succeed(null);
+  if (root === "articles") {
+    return readMissingArticleHtmlLocale({
+      locale,
+      segments,
+    });
   }
 
-  return readMissingArticleHtmlLocale({
+  if (isApplicationRouteRoot(locale, root)) {
+    const publicPath = [root, ...segments].join("/");
+    return Effect.succeed(
+      isApplicationRoutePath(locale, publicPath) ? null : locale
+    );
+  }
+
+  const publicPath = [root, ...segments].join("/");
+  if (!Schema.is(PublicPathSchema)(publicPath)) {
+    return Effect.succeed(locale);
+  }
+
+  return readMissingOwnedHtmlLocale({
+    family: "page",
     locale,
-    segments,
+    publicPath,
   });
 }
 
@@ -160,6 +182,23 @@ function readMissingArticleHtmlLocale({
   }
 
   const publicPath = `articles/${category}/${slug}`;
+  return readMissingOwnedHtmlLocale({
+    family: "article",
+    locale,
+    publicPath,
+  });
+}
+
+/** Verifies one exact preview or signed route before app streaming starts. */
+function readMissingOwnedHtmlLocale({
+  family,
+  locale,
+  publicPath,
+}: {
+  family: ContentFamily;
+  locale: (typeof routing.locales)[number];
+  publicPath: string;
+}) {
   return Effect.gen(function* () {
     const appLocale = AppLocaleSchema.make(locale);
     const previewOwnsRoute = yield* matchesPreviewRoute({
@@ -174,12 +213,9 @@ function readMissingArticleHtmlLocale({
     const ownership = yield* readActiveContentRoute({
       activeReleaseId: identity?.releaseId ?? null,
       appLocale,
-      family: "article",
+      family,
       publicPath,
     });
-    if (ownership.kind === "found") {
-      return null;
-    }
-    return locale;
+    return ownership.kind === "found" ? null : locale;
   });
 }

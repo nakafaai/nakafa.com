@@ -3,7 +3,7 @@
     "allowJs": true,
     "strict": true,
     "skipLibCheck": true,
-    "jsx": "react",
+    "jsx": "react-jsx",
     "target": "ESNext",
     "lib": ["ES2022", "dom", "ESNext.Array", "DOM.Iterable"],
     "forceConsistentCasingInFileNames": true,

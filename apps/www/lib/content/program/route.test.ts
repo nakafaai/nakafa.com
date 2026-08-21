@@ -37,6 +37,9 @@ function routeResponse(overrides?: {
       testCurriculumRowJson(
         readTestPublishedRoute("kurikulum/merdeka/kelas-11/matematika", "id")
       ),
+      testCurriculumRowJson(
+        readTestPublishedRoute("lehrplaene/merdeka/klasse-11/mathematik", "de")
+      ),
     ],
     ancestorJson: [
       testCurriculumRowJson(readTestPublishedRoute("curriculum/merdeka")),
@@ -94,7 +97,11 @@ describe("published program route", () => {
 
     expect(model).toMatchObject({
       activeReleaseId: "program-release",
-      alternates: [{ appLocale: "en" }, { appLocale: "id" }],
+      alternates: [
+        { appLocale: "en" },
+        { appLocale: "id" },
+        { appLocale: "de" },
+      ],
       ancestors: [{ level: "track" }, { level: "class" }],
       contexts: expect.any(Array),
       groups: expect.any(Array),

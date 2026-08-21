@@ -1,3 +1,4 @@
+import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   getLocalizedMappedRoutePathname,
@@ -11,13 +12,13 @@ describe("public route pathnames", () => {
         locale: "en",
         route: "/curricula",
       })
-    ).toBe("/curriculum");
+    ).toEqual(Option.some("/curriculum"));
     expect(
       getLocalizedMappedRoutePathname({
         locale: "id",
         route: "/missing",
       })
-    ).toBeNull();
+    ).toEqual(Option.none());
   });
 
   it("projects mapped public pathnames across locales", () => {

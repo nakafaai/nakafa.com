@@ -1,4 +1,5 @@
 import { routing } from "@repo/internationalization/src/routing";
+import { Option } from "effect";
 import type { Locale } from "next-intl";
 
 const mappedPathnames = routing.pathnames;
@@ -17,10 +18,10 @@ export function getLocalizedMappedRoutePathname({
   route: string;
 }) {
   if (!isMappedRoutePathname(route)) {
-    return null;
+    return Option.none<string>();
   }
 
-  return mappedPathnames[route][locale];
+  return Option.fromNullishOr(mappedPathnames[route][locale]);
 }
 
 /** Projects one localized static public pathname to the same route in another locale. */

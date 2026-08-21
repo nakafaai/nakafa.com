@@ -1,11 +1,22 @@
+import type { ActiveAppLocaleCode as Locale } from "@nakafa/aksara-contracts/locale";
 import { createPrompt } from "@repo/ai/prompt/utils";
-import type { Locale } from "@repo/utilities/locales";
 
 interface Params {
   locale: Locale;
 }
 
 const localeInstructions = {
+  de: {
+    language: "German",
+    example: `
+      ## Nachdem Nina eine Algebraaufgabe gelöst hat:
+      - "Gib mir eine ähnliche Aufgabe zum Üben"
+      - "Woher weiß ich, welche Methode ich verwenden soll?"
+      - "Was passiert, wenn ich diese Zahlen ändere?"
+      - "Zeig mir, wo das im Alltag verwendet wird"
+      - "Erkläre mir die Schritte bitte langsamer"
+    `,
+  },
   en: {
     language: "English",
     example: `

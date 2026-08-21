@@ -133,6 +133,59 @@ describe("public HTML route rejection", () => {
     });
   });
 
+  it("accepts signed Pages and rejects missing or unmanaged Page routes", async () => {
+    publishedMocks.readActiveContentRoute
+      .mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId: "release-active",
+          kind: "found",
+        })
+      )
+      .mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId: "release-active",
+          kind: "missing",
+        })
+      )
+      .mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId: "release-active",
+          kind: "unmanaged",
+        })
+      );
+
+    await expect(
+      Effect.runPromise(
+        readSourceBackedHtmlRouteRejection({
+          method: "GET",
+          pathname: "/de/impressum",
+        })
+      )
+    ).resolves.toBeNull();
+    await expect(
+      Effect.runPromise(
+        readSourceBackedHtmlRouteRejection({
+          method: "GET",
+          pathname: "/de/fabricated-page",
+        })
+      )
+    ).resolves.toBe("de");
+    await expect(
+      Effect.runPromise(
+        readSourceBackedHtmlRouteRejection({
+          method: "HEAD",
+          pathname: "/en/missing/page",
+        })
+      )
+    ).resolves.toBe("en");
+    expect(publishedMocks.readActiveContentRoute).toHaveBeenNthCalledWith(1, {
+      activeReleaseId: "release-active",
+      appLocale: "de",
+      family: "page",
+      publicPath: "impressum",
+    });
+  });
+
   it("accepts the exact selected local preview before publication lookup", async () => {
     previewMocks.matchesPreviewRoute.mockReturnValueOnce(Effect.succeed(true));
 
@@ -147,6 +200,25 @@ describe("public HTML route rejection", () => {
     expect(previewMocks.matchesPreviewRoute).toHaveBeenCalledWith({
       appLocale: "en",
       publicPath: "articles/public-affairs/new-preview",
+    });
+    expect(publishedMocks.readActiveContentIdentity).not.toHaveBeenCalled();
+    expect(publishedMocks.readActiveContentRoute).not.toHaveBeenCalled();
+  });
+
+  it("accepts the exact selected Page preview before publication lookup", async () => {
+    previewMocks.matchesPreviewRoute.mockReturnValueOnce(Effect.succeed(true));
+
+    await expect(
+      Effect.runPromise(
+        readSourceBackedHtmlRouteRejection({
+          method: "GET",
+          pathname: "/de/neue-rechtliche-seite",
+        })
+      )
+    ).resolves.toBeNull();
+    expect(previewMocks.matchesPreviewRoute).toHaveBeenCalledWith({
+      appLocale: "de",
+      publicPath: "neue-rechtliche-seite",
     });
     expect(publishedMocks.readActiveContentIdentity).not.toHaveBeenCalled();
     expect(publishedMocks.readActiveContentRoute).not.toHaveBeenCalled();
@@ -225,6 +297,7 @@ describe("public HTML route rejection", () => {
         method: "GET",
         pathname: "/en/articles/politics/published-article.md",
       },
+      { method: "GET", pathname: "/de/datenschutz.md" },
       { method: "POST", pathname: "/en/articles/politics/not-a-read-check" },
     ];
 
@@ -234,6 +307,68 @@ describe("public HTML route rejection", () => {
       ).resolves.toBeNull();
     }
     expect(publishedMocks.hasArticleCategory).not.toHaveBeenCalled();
+    expect(publishedMocks.readActiveContentRoute).not.toHaveBeenCalled();
+  });
+
+  it("delegates concrete application roots without Page lookups", async () => {
+    const paths = [
+      "/de",
+      "/de/search",
+      "/de/chat/new",
+      "/de/lehrplaene/merdeka",
+      "/de/faecher/mathematik/algebra",
+      "/de/try-out/indonesien/snbt",
+      "/en/school/onboarding",
+    ];
+
+    for (const pathname of paths) {
+      await expect(
+        Effect.runPromise(
+          readSourceBackedHtmlRouteRejection({ method: "GET", pathname })
+        )
+      ).resolves.toBeNull();
+    }
+    expect(publishedMocks.readActiveContentIdentity).not.toHaveBeenCalled();
+    expect(publishedMocks.readActiveContentRoute).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid descendants inside reserved application roots", async () => {
+    const paths = [
+      "/de/search/fabricated",
+      "/de/auth/fabricated",
+      "/de/onboarding/fabricated",
+      "/de/home/fabricated",
+      "/de/contributor/fabricated",
+      "/de/user",
+      "/de/user/settings/fabricated",
+      "/en/school/select/fabricated",
+      "/de/og",
+      "/de/faecher",
+      "/en/subjects/mathematics",
+      "/de/try-out/a/b/c/d/e/f",
+    ];
+
+    for (const pathname of paths) {
+      await expect(
+        Effect.runPromise(
+          readSourceBackedHtmlRouteRejection({ method: "GET", pathname })
+        )
+      ).resolves.toBe(pathname.startsWith("/en/") ? "en" : "de");
+    }
+    expect(publishedMocks.readActiveContentIdentity).not.toHaveBeenCalled();
+    expect(publishedMocks.readActiveContentRoute).not.toHaveBeenCalled();
+  });
+
+  it("rejects malformed Page paths without a publication lookup", async () => {
+    await expect(
+      Effect.runPromise(
+        readSourceBackedHtmlRouteRejection({
+          method: "GET",
+          pathname: "/de/Invalid_Page",
+        })
+      )
+    ).resolves.toBe("de");
+    expect(publishedMocks.readActiveContentIdentity).not.toHaveBeenCalled();
     expect(publishedMocks.readActiveContentRoute).not.toHaveBeenCalled();
   });
 });

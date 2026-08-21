@@ -1,6 +1,13 @@
-import { type Locale, locales } from "@repo/utilities/locales";
+import {
+  ACTIVE_APP_LOCALE_CODES,
+  type ActiveAppLocaleCode,
+} from "@nakafa/aksara-contracts/locale";
 
 const languageMetadata = {
+  de: {
+    countryCode: "DE",
+    label: "Deutsch",
+  },
   en: {
     countryCode: "GB",
     label: "English",
@@ -10,14 +17,14 @@ const languageMetadata = {
     label: "Indonesia",
   },
 } satisfies {
-  readonly [Key in Locale]: {
+  readonly [Key in ActiveAppLocaleCode]: {
     readonly countryCode: string;
     readonly label: string;
   };
 };
 
 /** Language options derived from every canonical Nakafa locale. */
-export const languages = locales.map((value) => ({
+export const languages = ACTIVE_APP_LOCALE_CODES.map((value) => ({
   ...languageMetadata[value],
   value,
 }));

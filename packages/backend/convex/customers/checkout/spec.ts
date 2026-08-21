@@ -1,9 +1,9 @@
+import type { ActiveAppLocaleCode as Locale } from "@nakafa/aksara-contracts/locale";
 import type { PolarCheckoutLocale } from "@repo/backend/convex/customers/checkout/localization";
 import {
   type ConvexTaggedError,
   getUnknownErrorMessage,
 } from "@repo/backend/convex/lib/effect";
-import type { Locale } from "@repo/utilities/locales";
 import { Schema } from "effect";
 
 export const invalidCheckoutSuccessUrlCode = "INVALID_CHECKOUT_SUCCESS_URL";

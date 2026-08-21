@@ -72,7 +72,7 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
 
           await ctx.scheduler.runAfter(
             0,
-            internal.emails.mutations.sendWelcomeEmail,
+            internal.emails.delivery.sendWelcomeEmail,
             {
               userId,
             }

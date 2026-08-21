@@ -1,3 +1,7 @@
+import {
+  ACTIVE_APP_LOCALE_CODES,
+  type ActiveAppLocaleCode,
+} from "@nakafa/aksara-contracts/locale";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import { TryoutPlacementSchema } from "@nakafa/aksara-contracts/tryout/placement";
 import {
@@ -24,9 +28,14 @@ const identity: TryoutSectionIdentity = {
   setKey: "set-1",
   trackKey: "2027",
 };
+const technicalTitles = {
+  de: "Technischer Abschnitt",
+  en: "Technical section",
+  id: "Bagian teknis",
+} as const satisfies Record<ActiveAppLocaleCode, string>;
 
 /** Creates one technical section with an explicit signed question count. */
-function makeTechnicalSection(locale: "en" | "id", questionCount = 1) {
+function makeTechnicalSection(locale: ActiveAppLocaleCode, questionCount = 1) {
   return Schema.decodeSync(TryoutCatalogRowSchema)({
     ...identity,
     graph: {
@@ -45,13 +54,16 @@ function makeTechnicalSection(locale: "en" | "id", questionCount = 1) {
       "packages/corpus/question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1",
     sourceRevision: "technical-revision",
     timeLimitSeconds: 60,
-    title: locale === "en" ? "Technical section" : "Bagian teknis",
+    title: technicalTitles[locale],
     visibility: "visible",
   });
 }
 
 /** Moves one technical placement to another valid authored order. */
-function makeTechnicalPlacement(locale: "en" | "id", questionOrder: number) {
+function makeTechnicalPlacement(
+  locale: ActiveAppLocaleCode,
+  questionOrder: number
+) {
   const placement = makeTryoutPlacementRow(locale).record.row;
   const questionRoot = `question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-${questionOrder}`;
   return Schema.decodeSync(TryoutPlacementSchema)({
@@ -63,21 +75,18 @@ function makeTechnicalPlacement(locale: "en" | "id", questionOrder: number) {
   });
 }
 
-/** Activates one complete technical section in both supported locales. */
+/** Activates one complete technical section in every active locale. */
 async function activateSection(questionCount = 1) {
   const t = convexTest(schema, convexModules);
   const snapshotId = await t.mutation((ctx) =>
     activateTryoutSnapshot(ctx, {
-      catalog: [
-        makeTryoutCatalogRow("en").record.row,
-        makeTryoutCatalogRow("id").record.row,
-        makeTechnicalSection("en", questionCount),
-        makeTechnicalSection("id", questionCount),
-      ],
-      placements: [
-        makeTryoutPlacementRow("en").record.row,
-        makeTryoutPlacementRow("id").record.row,
-      ],
+      catalog: ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
+        makeTryoutCatalogRow(locale).record.row,
+        makeTechnicalSection(locale, questionCount),
+      ]),
+      placements: ACTIVE_APP_LOCALE_CODES.map(
+        (locale) => makeTryoutPlacementRow(locale).record.row
+      ),
     })
   );
   return { snapshotId, t };
@@ -124,7 +133,8 @@ describe("contentRelease/tryout/section", () => {
 
     const missingPlacement = await activateSection();
     await missingPlacement.t.mutation(async (ctx) => {
-      const placement = await ctx.db.query("tryoutPlacements").first();
+      const placements = await ctx.db.query("tryoutPlacements").collect();
+      const placement = placements.find(({ appLocale }) => appLocale === "en");
       if (!placement) {
         throw new Error("Expected one technical placement.");
       }
@@ -149,16 +159,15 @@ describe("contentRelease/tryout/section", () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>
       activateTryoutSnapshot(ctx, {
-        catalog: [
-          makeTryoutCatalogRow("en").record.row,
-          makeTryoutCatalogRow("id").record.row,
-          makeTechnicalSection("en"),
-          makeTechnicalSection("id"),
-        ],
-        placements: [
-          makeTechnicalPlacement("en", 2),
-          makeTryoutPlacementRow("id").record.row,
-        ],
+        catalog: ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
+          makeTryoutCatalogRow(locale).record.row,
+          makeTechnicalSection(locale),
+        ]),
+        placements: ACTIVE_APP_LOCALE_CODES.map((locale) =>
+          locale === "en"
+            ? makeTechnicalPlacement(locale, 2)
+            : makeTryoutPlacementRow(locale).record.row
+        ),
       })
     );
 

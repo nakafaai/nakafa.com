@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { describe, expect, it } from "vitest";
 import {
@@ -9,13 +10,29 @@ import {
 import { testProgramClass, testProgramRoot } from "@/test/content-program";
 
 describe("curriculum social images", () => {
-  it("resolves both localized Curriculum index images", () => {
-    expect(getCurriculumIndexSocialImage("en")).toBe(
+  it("resolves reviewed Curriculum index images", () => {
+    expect(getCurriculumIndexSocialImage("en", "curriculum")).toBe(
       "/open-graph/curriculum/en-index.png"
     );
-    expect(getCurriculumIndexSocialImage("id")).toBe(
+    expect(getCurriculumIndexSocialImage("id", "kurikulum")).toBe(
       "/open-graph/curriculum/id-index.png"
     );
+  });
+
+  it("uses localized dynamic Curriculum artwork for German", () => {
+    expect(getCurriculumIndexSocialImage("de", "/lehrplaene")).toBe(
+      "/de/og/lehrplaene/image.png"
+    );
+    expect(
+      getCurriculumRouteSocialImage(
+        "de",
+        LearningProgramKeySchema.make("merdeka"),
+        {
+          ...testProgramRoot,
+          publicPath: PublicPathSchema.make("lehrplaene/merdeka"),
+        }
+      )
+    ).toBe("/de/og/lehrplaene/merdeka/image.png");
   });
 
   it("uses stable program identities for localized curriculum roots", () => {

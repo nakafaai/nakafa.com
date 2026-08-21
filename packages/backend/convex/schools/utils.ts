@@ -1,16 +1,23 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { isReservedSchoolSlug } from "@repo/backend/convex/schools/slug";
 
 /**
- * Generate a unique slug by appending a number if the slug already exists.
+ * Generate a route-safe unique slug, appending a number when required.
  */
 export async function generateUniqueSlug(
   ctx: MutationCtx,
   baseSlug: string
 ): Promise<string> {
-  let slug = baseSlug;
-  let counter = 1;
+  let counter = 0;
 
   while (true) {
+    const slug = counter === 0 ? baseSlug : `${baseSlug}-${counter}`;
+    counter += 1;
+
+    if (isReservedSchoolSlug(slug)) {
+      continue;
+    }
+
     const existing = await ctx.db
       .query("schools")
       .withIndex("by_slug", (q) => q.eq("slug", slug))
@@ -19,8 +26,5 @@ export async function generateUniqueSlug(
     if (!existing) {
       return slug;
     }
-
-    slug = `${baseSlug}-${counter}`;
-    counter += 1;
   }
 }

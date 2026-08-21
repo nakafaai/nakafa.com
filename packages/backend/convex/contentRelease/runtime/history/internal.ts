@@ -18,14 +18,16 @@ const deliveryValidator = v.union(
   v.literal("authenticated"),
   v.literal("entitled")
 );
+/** Exact locale vocabulary frozen into the retained-history protocol. */
+const historicalLocaleValidator = v.union(v.literal("en"), v.literal("id"));
 const selectorValidator = v.object({
   artifactHash: v.string(),
-  artifactLocale: v.union(v.literal("en"), v.literal("id")),
+  artifactLocale: historicalLocaleValidator,
   contentKey: v.string(),
   delivery: deliveryValidator,
 });
 const argsValidator = {
-  appLocale: v.union(v.literal("en"), v.literal("id")),
+  appLocale: historicalLocaleValidator,
   attemptId: v.string(),
   selectors: v.array(selectorValidator),
   snapshotId: v.string(),
@@ -39,7 +41,7 @@ const itemValidator = v.object({
 const resultValidator = v.union(
   v.null(),
   v.object({
-    appLocale: v.union(v.literal("en"), v.literal("id")),
+    appLocale: historicalLocaleValidator,
     attemptId: v.string(),
     items: v.array(itemValidator),
     releaseJson: v.string(),

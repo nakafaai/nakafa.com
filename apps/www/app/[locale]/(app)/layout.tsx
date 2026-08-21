@@ -1,4 +1,7 @@
+import { locale as rootLocale } from "next/root-params";
 import { AppProviders } from "@/components/providers/app";
+import { getShellPageNavigation } from "@/lib/content/page/navigation";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /**
  * Mounts the shared client provider tree for the localized app subtree.
@@ -14,6 +17,11 @@ import { AppProviders } from "@/components/providers/app";
  * - Next.js Cache Components / mixed static-dynamic routes:
  *   @.agents/skills/next-cache-components/SKILL.md
  */
-export default function Layout({ children }: LayoutProps<"/[locale]">) {
-  return <AppProviders>{children}</AppProviders>;
+export default async function Layout({ children }: LayoutProps<"/[locale]">) {
+  const locale = getLocaleOrThrow(await rootLocale());
+  const pageNavigation = await getShellPageNavigation(locale);
+
+  return (
+    <AppProviders pageNavigation={pageNavigation}>{children}</AppProviders>
+  );
 }

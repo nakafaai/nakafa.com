@@ -7,6 +7,7 @@ import { Authenticated, Unauthenticated } from "convex/react";
 import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { AuthGoogle } from "@/components/auth/google";
+import { usePageNavigation } from "@/lib/content/page/context";
 
 /** Keeps protected school UI aligned with the live Convex auth state. */
 export function SchoolAuthBoundary({ children }: { children: ReactNode }) {
@@ -56,6 +57,11 @@ function SchoolAuthScreenTitle() {
 function SchoolAuthScreenFooter() {
   const tLegal = useTranslations("Legal");
   const locale = useLocale();
+  const pageNavigation = usePageNavigation((navigation) => navigation);
+
+  if (!pageNavigation) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col">
@@ -67,7 +73,7 @@ function SchoolAuthScreenFooter() {
               nativeButton={false}
               render={
                 <a
-                  href={`/${locale}/terms-of-service`}
+                  href={`/${locale}${pageNavigation.termsOfServiceHref}`}
                   rel="noopener noreferrer"
                   target="_blank"
                 >
@@ -84,7 +90,7 @@ function SchoolAuthScreenFooter() {
               nativeButton={false}
               render={
                 <a
-                  href={`/${locale}/privacy-policy`}
+                  href={`/${locale}${pageNavigation.privacyPolicyHref}`}
                   rel="noopener noreferrer"
                   target="_blank"
                 >

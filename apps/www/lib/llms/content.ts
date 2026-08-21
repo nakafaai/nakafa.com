@@ -8,7 +8,6 @@ import {
 } from "@/lib/content/published/active";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { getCachedLlmsSectionIndexText } from "@/lib/llms/indexes";
-import { getLlmsLegalPageText } from "@/lib/llms/legal";
 import {
   getCachedPublishedText,
   type PublishedMarkdownInput,
@@ -44,8 +43,8 @@ const readCachedMarkdown = Effect.fn("www.llms.markdown.owner")(function* (
  * Resolves cached markdown for one agent-facing route.
  *
  * The source chain is ordered from concrete page owners to derived indexes:
- * Quran, signed content, legal MDX, then sitemap-derived section or listing
- * indexes. A null result means the route has no markdown source.
+ * Quran, signed content, then sitemap-derived section or listing indexes. A
+ * null result means the route has no markdown source.
  */
 export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
   function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
@@ -60,10 +59,6 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
         return mdxText;
       }
     }
-    const legalText = yield* getLlmsLegalPageText({ cleanSlug, locale });
-    if (legalText) {
-      return legalText;
-    }
     return yield* Effect.tryPromise({
       try: () =>
         getCachedLlmsSectionIndexText({
@@ -77,8 +72,7 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
 const getPublishedMarkdownSource = Effect.fn("www.llms.markdown.source")(
   function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
     const appLocale = AppLocaleSchema.make(locale);
-    const routeSegment = readRouteSegment(cleanSlug);
-    const publishedFamily = readPublishedFamily(routeSegment);
+    const publishedFamily = readPublishedFamily(cleanSlug);
     if (!publishedFamily) {
       return null;
     }
@@ -99,19 +93,20 @@ const getPublishedMarkdownSource = Effect.fn("www.llms.markdown.source")(
     };
   }
 );
-/** Reads the first non-empty route namespace without accepting missing input. */
-function readRouteSegment(cleanSlug: string) {
-  return cleanSlug.split("/").find(Boolean) ?? "";
-}
 /** Maps one stable public route namespace to its body-bearing family. */
 function readPublishedFamily(
-  routeSegment: string
+  cleanSlug: string
 ): PublishedMarkdownInput["family"] | null {
+  const segments = cleanSlug.split("/").filter(Boolean);
+  const [routeSegment] = segments;
   if (routeSegment === "articles") {
     return "article";
   }
-  if (MATERIAL_ROUTE_SEGMENTS.has(routeSegment)) {
+  if (routeSegment && MATERIAL_ROUTE_SEGMENTS.has(routeSegment)) {
     return "material";
+  }
+  if (segments.length > 0) {
+    return "page";
   }
   return null;
 }

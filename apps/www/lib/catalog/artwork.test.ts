@@ -20,6 +20,7 @@ describe("catalog artwork", () => {
 
   it("keeps unsupported curriculum stages on gradient artwork", () => {
     expect(getGradeCatalogArtwork("en", "upper-secondary")).toBeUndefined();
+    expect(getGradeCatalogArtwork("de", "grade-10")).toBeUndefined();
   });
 
   it("maps curriculum material identities to reviewed artwork keys", () => {
@@ -44,5 +45,9 @@ describe("catalog artwork", () => {
     expect(getCurriculumSubjectCatalogArtwork("id", "science")).toBeUndefined();
     expect(getCurriculumSubjectCatalogArtwork("en", undefined)).toBeUndefined();
     expect(getTryoutSubjectCatalogArtwork("en", "literacy")).toBeUndefined();
+    expect(
+      getCurriculumSubjectCatalogArtwork("de", "mathematics")
+    ).toBeUndefined();
+    expect(getTryoutSubjectCatalogArtwork("de", "mathematics")).toBeUndefined();
   });
 });

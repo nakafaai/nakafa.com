@@ -15,7 +15,7 @@ const mockGetContentPageLlmsEntries = vi.hoisted(() => vi.fn());
 const mockReadPublishedArticleBuckets = vi.hoisted(() => vi.fn());
 const mockReadPublishedMaterialBuckets = vi.hoisted(() => vi.fn());
 const mockReadQuranInventory = vi.hoisted(() => vi.fn());
-const mockGetSiteLlmsEntries = vi.hoisted(() => vi.fn());
+const mockReadSiteLlmsEntries = vi.hoisted(() => vi.fn());
 
 const articleEntry: LlmsEntry = {
   description:
@@ -49,10 +49,13 @@ vi.mock("@/lib/llms/entries", async () => {
 
   return {
     getLlmsSections: () => Object.keys(constants.SECTION_LABELS),
-    getSiteLlmsEntries: mockGetSiteLlmsEntries,
     isLlmsSection,
   };
 });
+
+vi.mock("@/lib/llms/site", () => ({
+  readSiteLlmsEntries: mockReadSiteLlmsEntries,
+}));
 
 vi.mock("@/lib/llms/content-entries", () => ({
   getContentPageLlmsEntries: mockGetContentPageLlmsEntries,
@@ -80,10 +83,10 @@ beforeEach(() => {
   mockReadPublishedArticleBuckets.mockReset();
   mockReadPublishedMaterialBuckets.mockReset();
   mockReadQuranInventory.mockReset();
-  mockGetSiteLlmsEntries.mockReset();
+  mockReadSiteLlmsEntries.mockReset();
   mockGetContentListingLlmsEntries.mockReturnValue(Effect.succeed(null));
   mockGetContentPageLlmsEntries.mockReturnValue(Effect.succeed([articleEntry]));
-  mockGetSiteLlmsEntries.mockReturnValue([siteEntry]);
+  mockReadSiteLlmsEntries.mockReturnValue(Effect.succeed([siteEntry]));
   mockReadPublishedArticleBuckets.mockReturnValue(
     Effect.succeed({
       articleCount: 250,
@@ -125,7 +128,7 @@ describe("llms indexes", () => {
 
   it("omits missing locale page artifacts from starter pages", async () => {
     mockGetContentPageLlmsEntries.mockReturnValue(Effect.succeed(null));
-    mockGetSiteLlmsEntries.mockReturnValue([]);
+    mockReadSiteLlmsEntries.mockReturnValue(Effect.succeed([]));
 
     const text = await Effect.runPromise(getLlmsSectionIndexText("llms/en"));
 
@@ -271,7 +274,7 @@ describe("llms indexes", () => {
 
     expect(text).toContain("# Nakafa English Site Pages");
     expect(text).toContain(`${BASE_URL}/en/search`);
-    expect(mockGetSiteLlmsEntries).toHaveBeenCalledWith("en");
+    expect(mockReadSiteLlmsEntries).toHaveBeenCalledWith("en");
     expect(mockGetContentPageLlmsEntries).not.toHaveBeenCalled();
   });
 

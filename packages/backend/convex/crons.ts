@@ -87,7 +87,7 @@ crons.interval(
 crons.interval(
   "sweep retained email delivery data",
   { hours: EMAIL_RETENTION_SWEEP_INTERVAL_HOURS },
-  internal.emails.mutations.cleanupRetainedEmailData,
+  internal.emails.retention.cleanupRetainedEmailData,
   {}
 );
 

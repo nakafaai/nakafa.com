@@ -6,8 +6,8 @@ truth.
 
 ## Signed content ownership
 
-Aksara is the authored source and signed publisher for the activated article,
-material, learning-program, Quran, and try-out families. Nakafa accepts verified
+Aksara is the authored source and signed publisher for article, material, Page,
+question, learning-program, Quran, and try-out content. Nakafa accepts verified
 signed releases and owns their runtime read models plus durable learner state.
 
 Aksara releases are the only content publication input. Nakafa does not own a

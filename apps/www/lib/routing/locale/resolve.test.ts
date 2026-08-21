@@ -2,6 +2,7 @@ import {
   PublicPathSchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resolveLocalizedNavigationHref } from "@/lib/routing/locale/resolve";
@@ -14,6 +15,7 @@ import {
 const publishedMocks = vi.hoisted(() => ({
   materialContext: vi.fn(),
   materialRoute: vi.fn(),
+  pagePath: vi.fn(),
   programRoute: vi.fn(),
   tryoutPath: vi.fn(),
 }));
@@ -27,12 +29,19 @@ const idProgramSubject = readTestPublishedRoute(
   "kurikulum/merdeka/kelas-11/matematika",
   "id"
 );
+const deProgramSubject = readTestPublishedRoute(
+  "lehrplaene/merdeka/klasse-11/mathematik",
+  "de"
+);
 
 vi.mock("@/lib/content/material/context", () => ({
   readPublishedMaterialContext: publishedMocks.materialContext,
 }));
 vi.mock("@/lib/content/material/route", () => ({
   readPublishedMaterialRoute: publishedMocks.materialRoute,
+}));
+vi.mock("@/lib/content/page/catalog", () => ({
+  readPublishedPageLocalePath: publishedMocks.pagePath,
 }));
 vi.mock("@/lib/content/program/route", () => ({
   readPublishedProgramRoute: publishedMocks.programRoute,
@@ -41,7 +50,7 @@ vi.mock("@/lib/content/tryout/path", () => ({
   readPublishedTryoutLocalizedPath: publishedMocks.tryoutPath,
 }));
 /** Resolves a localized href through the Effect boundary used by callers. */
-function resolveHref(href: string, locale: "en" | "id") {
+function resolveHref(href: string, locale: ActiveAppLocaleCode) {
   return Effect.runSync(resolveLocalizedNavigationHref({ href, locale }));
 }
 
@@ -52,6 +61,9 @@ beforeEach(() => {
   publishedMocks.materialRoute
     .mockReset()
     .mockReturnValue(Effect.succeed(activeMaterialRoute));
+  publishedMocks.pagePath
+    .mockReset()
+    .mockReturnValue(Effect.succeed({ kind: "unmanaged" }));
   publishedMocks.programRoute
     .mockReset()
     .mockReturnValue(Effect.succeed({ alternates: [], route: null }));
@@ -78,7 +90,7 @@ describe("resolveLocalizedNavigationHref", () => {
 
     publishedMocks.programRoute.mockReturnValue(
       Effect.succeed({
-        alternates: [testProgramSubject, idProgramSubject],
+        alternates: [testProgramSubject, idProgramSubject, deProgramSubject],
         route: testProgramSubject,
       })
     );
@@ -88,6 +100,12 @@ describe("resolveLocalizedNavigationHref", () => {
         "id"
       )
     ).toBe(`/${idProgramSubject.publicPath}`);
+    expect(
+      resolveHref(
+        `/${testProgramSubject.appLocale}/${testProgramSubject.publicPath}`,
+        "de"
+      )
+    ).toBe(`/${deProgramSubject.publicPath}`);
   });
 
   it("keeps material context only while the signed program verifies it", () => {
@@ -187,6 +205,16 @@ describe("resolveLocalizedNavigationHref", () => {
         "en"
       )
     ).toBe("/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge");
+  });
+
+  it("projects signed Page identities across German route changes", () => {
+    publishedMocks.pagePath.mockReturnValueOnce(
+      Effect.succeed({ kind: "found", publicPath: "impressum" })
+    );
+
+    expect(resolveHref("/en/legal-notice?source=footer#company", "de")).toBe(
+      "/impressum?source=footer#company"
+    );
   });
 
   it("keeps static app routes and safe URL state", () => {

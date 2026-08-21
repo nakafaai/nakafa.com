@@ -1,3 +1,5 @@
+import type { PublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
+import { Option } from "effect";
 import type { Locale } from "next-intl";
 import {
   BASE_URL,
@@ -7,12 +9,8 @@ import {
 import { formatRouteTitle } from "@/lib/llms/format";
 import { getLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
 
-const sourceBackedSiteRoutes = [
-  "/curricula",
-  "/privacy-policy",
-  "/security-policy",
-  "/terms-of-service",
-];
+const derivedSiteRoutes = ["/curricula"] as const;
+type DerivedSiteRoute = (typeof derivedSiteRoutes)[number];
 
 /** One localized link advertised by a Nakafa llms index. */
 export interface LlmsEntry {
@@ -42,12 +40,28 @@ export function getLlmsSections() {
   return Object.keys(SECTION_LABELS).filter(isLlmsSection);
 }
 
-/** Builds site-page entries without reading the content route catalog. */
-export function getSiteLlmsEntries(locale: Locale) {
-  const entries: LlmsEntry[] = [];
+/** Builds site entries from derived indexes and signed Page projections. */
+export function buildSiteLlmsEntries(
+  locale: Locale,
+  pages: readonly PublicPageProjection[]
+) {
+  const entries: LlmsEntry[] = derivedSiteRoutes.flatMap((route) =>
+    Option.toArray(buildLocalizedSiteLlmsEntry({ locale, route }))
+  );
 
-  for (const route of sourceBackedSiteRoutes) {
-    entries.push(buildLocalizedSiteLlmsEntry({ locale, route }));
+  for (const page of pages) {
+    if (page.appLocale !== locale) {
+      continue;
+    }
+    const route = `/${page.publicPath}`;
+    entries.push({
+      description: page.metadata.description,
+      href: `${BASE_URL}/${locale}${route}`,
+      route,
+      section: "site",
+      segments: ["site", ...page.publicPath.split("/")],
+      title: page.metadata.title,
+    });
   }
 
   return entries;
@@ -84,21 +98,24 @@ function buildLocalizedSiteLlmsEntry({
   route,
 }: {
   locale: Locale;
-  route: string;
+  route: DerivedSiteRoute;
 }) {
-  const publicRoute =
-    getLocalizedMappedRoutePathname({ locale, route }) ?? route;
-  const hrefBase = `${BASE_URL}/${locale}${publicRoute}`;
-  const routePath = publicRoute.slice(1);
-  const routeSegments = ["site", ...routePath.split("/").filter(Boolean)];
-  const section: LlmsSection = "site";
+  return Option.map(
+    getLocalizedMappedRoutePathname({ locale, route }),
+    (publicRoute) => {
+      const hrefBase = `${BASE_URL}/${locale}${publicRoute}`;
+      const routePath = publicRoute.slice(1);
+      const routeSegments = ["site", ...routePath.split("/").filter(Boolean)];
+      const section: LlmsSection = "site";
 
-  return {
-    description: undefined,
-    href: hrefBase,
-    route: publicRoute,
-    section,
-    segments: routeSegments,
-    title: formatRouteTitle(publicRoute),
-  };
+      return {
+        description: undefined,
+        href: hrefBase,
+        route: publicRoute,
+        section,
+        segments: routeSegments,
+        title: formatRouteTitle(publicRoute),
+      };
+    }
+  );
 }

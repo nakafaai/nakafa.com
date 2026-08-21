@@ -1,4 +1,7 @@
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import {
+  ACTIVE_APP_LOCALE_CODES,
+  type ActiveAppLocaleCode,
+} from "@nakafa/aksara-contracts/locale";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -21,7 +24,7 @@ const examPath = `${countryPath}/${TRYOUT_START_EXAM}`;
 const trackPath = `${examPath}/${TRYOUT_START_TRACK}`;
 const setPath = `${trackPath}/${TRYOUT_START_SET}`;
 const sectionPath = `${setPath}/${TRYOUT_START_SECTION}`;
-const locales: readonly ActiveAppLocaleCode[] = ["en", "id"];
+const locales: readonly ActiveAppLocaleCode[] = ACTIVE_APP_LOCALE_CODES;
 
 describe("tryouts/queries/catalog", () => {
   it("serves the complete signed hierarchy without filesystem catalog rows", async () => {

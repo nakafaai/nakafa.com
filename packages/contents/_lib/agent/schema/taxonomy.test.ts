@@ -27,7 +27,7 @@ describe("NakafaAgentTaxonomySchema", () => {
         },
         exercises: { categories: [], materials: [], types: [] },
         locale: "en",
-        locales: ["en", "id"],
+        locales: ["en", "id", "de"],
         quran: { surah_count: 114 },
         sections: ["articles", "material", "quran"],
         tools: [],

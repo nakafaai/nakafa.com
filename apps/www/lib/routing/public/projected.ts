@@ -5,7 +5,7 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
-import { routing } from "@repo/internationalization/src/routing";
+import type { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { hasLocale } from "next-intl";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
@@ -83,10 +83,6 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
   const appLocale = AppLocaleSchema.make(locale);
   if (yield* matchesPreviewRoute({ appLocale, publicPath })) {
     return null;
-  }
-
-  if (!hasLocale(routing.locales, locale)) {
-    return locale;
   }
 
   if (surface.key === "subject") {

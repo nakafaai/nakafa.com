@@ -3,6 +3,7 @@ import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
 import { readPublishedMaterialBuckets } from "@/lib/content/material/sitemap";
+import { readPublishedPageCatalog } from "@/lib/content/page/catalog";
 import { readPublishedProgramBuckets } from "@/lib/content/program/sitemap";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
@@ -15,6 +16,7 @@ import { readPublishedTryoutSitemapCount } from "@/lib/content/tryout/sitemap";
 import {
   formatArticlePage,
   formatMaterialPage,
+  formatPagePage,
   formatProgramPage,
   formatQuranPage,
   formatTryoutPage,
@@ -36,7 +38,15 @@ export const readSitemapPageDescriptors = Effect.fn(
     return yield* new PublishedProjectionError(identity);
   }
   const activeReleaseId = active.releaseId;
-  const quranCatalog = yield* readPublishedQuranCatalog();
+  const [pageCatalog, quranCatalog] = yield* Effect.all([
+    readPublishedPageCatalog(),
+    readPublishedQuranCatalog(),
+  ]);
+  yield* decodeContentReleasePin(
+    pageCatalog.activeReleaseId,
+    activeReleaseId,
+    identity
+  );
   yield* decodeContentReleasePin(
     quranCatalog.activeReleaseId,
     activeReleaseId,
@@ -59,6 +69,14 @@ export const readSitemapPageDescriptors = Effect.fn(
       descriptors.push({
         id: formatQuranPage(locale),
         kind: "quran",
+        locale,
+      });
+    }
+
+    if (pageCatalog.projections.some(({ appLocale }) => appLocale === locale)) {
+      descriptors.push({
+        id: formatPagePage(locale),
+        kind: "page",
         locale,
       });
     }

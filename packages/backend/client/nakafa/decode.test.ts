@@ -1,3 +1,4 @@
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import {
   decodeNakafaMarkdown,
   decodeNakafaQuranReference,
@@ -10,8 +11,9 @@ import {
 } from "@repo/contents/_lib/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { describe, expect, it } from "@repo/testing/effect";
-import { defaultLocale, locales } from "@repo/utilities/locales";
 import { Effect } from "effect";
+
+const defaultLocale = ACTIVE_APP_LOCALE_CODES[0];
 
 describe("Nakafa runtime decoders", () => {
   it.live("decodes valid agent-facing payloads", () =>
@@ -125,7 +127,7 @@ function taxonomy() {
       root_note: "Root is informational only.",
     },
     locale: "en",
-    locales: Array.from(locales),
+    locales: Array.from(ACTIVE_APP_LOCALE_CODES),
     quran: { surah_count: 114 },
     sections: ["articles", "material", "quran"],
     tryout: {

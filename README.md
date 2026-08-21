@@ -110,6 +110,17 @@ repository. Authored educational content changes belong in `nakafaai/aksara`.
 Nakafa consumes only authenticated current Aksara contracts and signed
 publication artifacts.
 
+The shared `@nakafa/aksara-contracts/locale` module is the only locale source
+of truth. English, Indonesian, and German are active. Next.js routing, API
+validation, Convex validators, AI language handling, date formatting, checkout
+localization, and sitemap generation derive from that contract. Do not add a
+second app-local locale list.
+
+Aksara's signed `page` family owns public legal and company documents. Nakafa
+uses the same verified Page projections and artifacts for human routes, footer
+navigation, sitemap entries, and Markdown or LLM delivery. Do not restore local
+legal MDX, hard-coded legal route catalogs, or another publication path.
+
 Renderer and component implementations remain in Nakafa. Aksara content refers
 to reviewed renderer contracts and never carries duplicate React or TSX
 implementations.

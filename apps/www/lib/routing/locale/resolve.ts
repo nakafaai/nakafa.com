@@ -110,6 +110,7 @@ export const resolveLocalizedNavigationHref = Effect.fn(
 
   const publishedHref = yield* readPublishedLocalizedHref({
     currentLocale: parsed.currentLocale,
+    hash: parsed.hash,
     locale: input.locale,
     publicPath: parsed.publicPath,
     search: parsed.search,

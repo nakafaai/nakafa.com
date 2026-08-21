@@ -607,6 +607,9 @@ importers:
       '@repo/contents':
         specifier: workspace:*
         version: link:../contents
+      '@repo/email':
+        specifier: workspace:*
+        version: link:../email
       '@repo/math':
         specifier: workspace:*
         version: link:../math
@@ -919,15 +922,15 @@ importers:
 
   packages/email:
     dependencies:
+      '@react-email/render':
+        specifier: 2.1.0
+        version: 2.1.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@repo/design-system':
         specifier: workspace:*
         version: link:../design-system
       '@repo/seo':
         specifier: workspace:*
         version: link:../seo
-      '@t3-oss/env-nextjs':
-        specifier: ^0.13.11
-        version: 0.13.11(@typescript/typescript6@6.0.2)(zod@4.4.3)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -943,9 +946,6 @@ importers:
       react-email:
         specifier: 6.9.2
         version: 6.9.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(supports-color@7.2.0)
-      resend:
-        specifier: ^6.21.0
-        version: 6.21.0(@react-email/render@2.1.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))
     devDependencies:
       '@repo/typescript-config':
         specifier: workspace:*

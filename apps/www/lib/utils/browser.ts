@@ -4,7 +4,7 @@ import { hasLocale } from "next-intl";
 
 /**
  * Get current locale from the URL pathname
- * Assumes locale is the first segment of the pathname (e.g., /en/... or /id/...)
+ * Assumes locale is the first segment of the pathname, such as /en, /id, or /de.
  */
 export function getLocale() {
   const pathname = window.location.pathname;

@@ -4,11 +4,11 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
-describe("emails/mutations", () => {
+describe("emails/retention", () => {
   it("schedules both component-owned retention sweeps", async () => {
     const t = convexTest(schema, convexModules);
 
-    await t.mutation(internal.emails.mutations.cleanupRetainedEmailData, {});
+    await t.mutation(internal.emails.retention.cleanupRetainedEmailData, {});
 
     const scheduledJobs = await t.query((ctx) =>
       ctx.db.system.query("_scheduled_functions").collect()

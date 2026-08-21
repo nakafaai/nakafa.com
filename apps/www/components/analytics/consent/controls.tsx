@@ -15,6 +15,7 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { useTranslations } from "next-intl";
 import { useAnalyticsConsent } from "@/lib/analytics/consent/context";
+import { usePageNavigation } from "@/lib/content/page/context";
 
 /** Renders the non-blocking first decision and permanent preferences dialog. */
 export function AnalyticsConsentControls() {
@@ -116,6 +117,13 @@ export function AnalyticsConsentControls() {
 
 function PrivacyPolicyLink() {
   const t = useTranslations("AnalyticsConsent");
+  const href = usePageNavigation(
+    (navigation) => navigation?.privacyPolicyHref ?? null
+  );
+
+  if (!href) {
+    return null;
+  }
 
   return (
     <p className="text-muted-foreground text-sm">
@@ -123,7 +131,7 @@ function PrivacyPolicyLink() {
         "privacy-policy": (chunks) => (
           <NavigationLink
             className="text-foreground underline underline-offset-4"
-            href="/privacy-policy"
+            href={href}
           >
             {chunks}
           </NavigationLink>

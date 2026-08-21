@@ -6,12 +6,8 @@ import { config, proxy } from "@/proxy";
 
 type NextRequestInit = ConstructorParameters<typeof NextRequest>[1];
 
-function makeRequest(pathname: string, init?: NextRequestInit) {
-  return new NextRequest(`http://localhost:3000${pathname}`, init);
-}
-
 function requestProxy(pathname: string, init?: NextRequestInit) {
-  return proxy(makeRequest(pathname, init));
+  return proxy(new NextRequest(`http://localhost:3000${pathname}`, init));
 }
 
 function expectLocaleProxy(
@@ -42,15 +38,14 @@ function expectHardNotFound(response: Response, locale: string) {
   expectNoLocaleProxy();
 }
 
-const mockLocaleRouting = vi.hoisted(() => {
-  const response = (value: string) =>
-    new Response(null, { headers: { "x-locale-proxy": value } });
-
-  return {
-    activeMiddleware: vi.fn(() => response("1")),
-    previewMiddleware: vi.fn(() => response("preview")),
-  };
-});
+const mockLocaleRouting = vi.hoisted(() => ({
+  activeMiddleware: vi.fn(
+    () => new Response(null, { headers: { "x-locale-proxy": "1" } })
+  ),
+  previewMiddleware: vi.fn(
+    () => new Response(null, { headers: { "x-locale-proxy": "preview" } })
+  ),
+}));
 const runtimeMocks = vi.hoisted(() => ({
   readActive: vi.fn(),
   readActiveIdentity: vi.fn(),
@@ -66,19 +61,18 @@ const previewMocks = vi.hoisted(() => ({
   route: vi.fn(),
 }));
 vi.mock("@repo/internationalization/src/routing", () => ({
-  previewRouting: {
-    defaultLocale: "en",
-    locales: ["de", "en", "id"],
-  },
-  routing: {
-    defaultLocale: "en",
-    locales: ["en", "id"],
-  },
+  previewRouting: { defaultLocale: "en", locales: ["en", "id", "de", "fr"] },
+  routing: { defaultLocale: "en", locales: ["en", "id", "de"] },
+}));
+
+vi.mock("@nakafa/aksara-contracts/locale", async (importOriginal) => ({
+  ...(await importOriginal()),
+  APP_LOCALE_CODES: ["en", "id", "de", "fr"],
 }));
 
 vi.mock("next-intl/middleware", () => ({
   default: vi.fn((config: { locales: readonly string[] }) =>
-    config.locales.includes("de")
+    config.locales.includes("fr")
       ? mockLocaleRouting.previewMiddleware
       : mockLocaleRouting.activeMiddleware
   ),
@@ -186,8 +180,7 @@ describe("proxy", () => {
   });
 
   it("runs only unsupported root files through the locale proxy", () => {
-    /** Evaluates one URL against the exported proxy matcher. */
-    const doesProxyMatch = (url: string) =>
+    const matches = (url: string) =>
       unstable_doesMiddlewareMatch({ config, url });
     const rootFileExtensions =
       "svg jpg jpeg gif webp glb gltf bin ktx2 hdr exr js css xml webmanifest txt".split(
@@ -207,10 +200,8 @@ describe("proxy", () => {
       "/models/physics/kinematics/car.glb",
       "/missing.png",
     ];
-    expect(
-      [...matched, "/MISSING.XML", "/llms.txt"].every(doesProxyMatch)
-    ).toBe(true);
-    expect(bypassed.some(doesProxyMatch)).toBe(false);
+    expect([...matched, "/MISSING.XML", "/llms.txt"].every(matches)).toBe(true);
+    expect(bypassed.some(matches)).toBe(false);
   });
 
   it("returns a clean 404 for unsupported root files", async () => {
@@ -223,13 +214,16 @@ describe("proxy", () => {
     expectNoLocaleProxy();
   });
 
-  it("delegates regular routes to the locale middleware", async () => {
-    const response = await requestProxy("/en/search");
+  it.each(["/en/search", "/de/search"])(
+    "delegates the active route %s to the locale middleware",
+    async (path) => {
+      const response = await requestProxy(path);
 
-    expectLocaleProxy(response);
-    expect(response.headers.get("link")).toBe('</llms.txt>; rel="llms-txt"');
-    expect(response.headers.get("x-llms-txt")).toBe("/llms.txt");
-  });
+      expectLocaleProxy(response);
+      expect(response.headers.get("link")).toBe('</llms.txt>; rel="llms-txt"');
+      expect(response.headers.get("x-llms-txt")).toBe("/llms.txt");
+    }
+  );
 
   it("uses full contract locale routing only in the configured local child", async () => {
     previewMocks.configured.mockReturnValue(true);
@@ -237,20 +231,20 @@ describe("proxy", () => {
     previewMocks.route.mockReturnValueOnce(Effect.succeed(true));
 
     const response = await requestProxy(
-      "/de/faecher/mathematik/funktionen/funktionsbegriff"
+      "/fr/matieres/mathematiques/fonctions/notion-de-fonction"
     );
 
     expectLocaleProxy(response, "preview");
   });
 
-  it.each(["/de/search", "/de/school/onboarding/create"])(
+  it.each(["/fr/search", "/fr/school/onboarding/create"])(
     "hard-rejects the unselected candidate route %s",
     async (path) => {
       previewMocks.configured.mockReturnValue(true);
 
       const response = await requestProxy(path);
 
-      expectHardNotFound(response, "de");
+      expectHardNotFound(response, "fr");
       expect(previewMocks.pathname).toHaveBeenCalledWith(path);
     }
   );
@@ -292,7 +286,7 @@ describe("proxy", () => {
     ["missing", undefined],
     ["matching", { headers: { "x-next-intl-locale": "en" } }],
     ["mismatched", { headers: { "x-next-intl-locale": "id" } }],
-    ["unsupported", { headers: { "x-next-intl-locale": "de" } }],
+    ["other active", { headers: { "x-next-intl-locale": "de" } }],
   ])(
     "rejects an internal app route with a %s locale hint",
     async (_kind, init) => {
@@ -350,10 +344,10 @@ describe("proxy", () => {
   it("lets the selected next-intl preview rewrite reach the actual page", async () => {
     previewMocks.configured.mockReturnValueOnce(true);
     previewMocks.internal.mockReturnValueOnce(Effect.succeed(true));
-    const pathname = "/de/materials/mathematik/funktionen/funktionsbegriff";
+    const pathname = "/fr/materials/mathematiques/fonctions/notion-de-fonction";
 
     const response = await requestProxy(pathname, {
-      headers: { "x-next-intl-locale": "de" },
+      headers: { "x-next-intl-locale": "fr" },
     });
 
     expect(response.headers.get("x-middleware-next")).toBe("1");
@@ -387,6 +381,7 @@ describe("proxy", () => {
 
   it.each([
     ["/id/quran/999", "id", null],
+    ["/en/search/fabricated", "en", null],
     [
       "/en/curriculum/merdeka/class-11-afdocs-nonexistent-8f3a",
       "en",
@@ -408,7 +403,7 @@ describe("proxy", () => {
   );
 
   it.each([
-    ["unsupported locale paths", "/fr/quran/1"],
+    ["unsupported locale paths", "/zz/quran/1"],
     ["curriculum index routes", "/id/kurikulum"],
   ])("delegates %s to the locale middleware", async (_kind, path) => {
     const response = await requestProxy(path);
@@ -480,20 +475,24 @@ describe("proxy", () => {
     expectHardNotFound(missing, "en");
   });
 
-  it.each([
-    {
-      init: { method: "POST" },
-      kind: "non-read content requests without a route lookup",
-      path: "/en/articles/politics/not-a-read-check",
-    },
-    {
-      init: undefined,
-      kind: "defensive content roots without a route shape",
-      path: "/en/unknown-content-root/example",
-    },
-  ])("delegates $kind", async ({ init, path }) => {
-    const response = await requestProxy(path, init);
+  it("delegates non-read content requests without a route lookup", async () => {
+    const response = await requestProxy(
+      "/en/articles/politics/not-a-read-check",
+      { method: "POST" }
+    );
 
     expectLocaleProxy(response);
+  });
+
+  it("hard-rejects an unowned Page path before app streaming", async () => {
+    const response = await requestProxy("/en/unknown-content-root/example");
+
+    expectHardNotFound(response, "en");
+    expect(runtimeMocks.readActive).toHaveBeenCalledWith({
+      activeReleaseId: "release-active",
+      appLocale: "en",
+      family: "page",
+      publicPath: "unknown-content-root/example",
+    });
   });
 });

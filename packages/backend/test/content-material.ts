@@ -21,6 +21,11 @@ import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/a
 import { Effect, Option } from "effect";
 
 const TEST_MATERIAL_DOMAIN = "mathematics";
+const testTopicPrefixes = {
+  de: "technisch",
+  en: "technical",
+  id: "teknis",
+} as const satisfies Record<ActiveAppLocaleCode, string>;
 
 /** Resolves the registered localized route prefix for material test rows. */
 function readTestMaterialPrefix(appLocale: ActiveAppLocaleCode) {
@@ -187,8 +192,7 @@ export function makeMaterialProjection(
     `material/lesson/${TEST_MATERIAL_DOMAIN}/technical-${topic}/${section}`
   );
   const routePrefix = readTestMaterialPrefix(appLocaleCode);
-  const topicSlug =
-    appLocaleCode === "en" ? `technical-${topic}` : `teknis-${topic}`;
+  const topicSlug = `${testTopicPrefixes[appLocaleCode]}-${topic}`;
   return MaterialLessonProjectionSchema.make({
     contentKey,
     graph: testMaterialGraph(

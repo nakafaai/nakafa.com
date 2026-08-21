@@ -1,6 +1,9 @@
 import { makeLearningGraphIdentity } from "@nakafa/aksara-contracts/graph/identity";
 import type { LearningGraphIdentity } from "@nakafa/aksara-contracts/graph/spec";
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import {
+  ACTIVE_APP_LOCALE_CODES,
+  AppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
 import { Nakafa, type NakafaRuntime } from "@repo/ai/agents/nakafa/service";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import {
@@ -15,11 +18,11 @@ import {
 import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran";
 import { NakafaAgentReadableContentRefSchema } from "@repo/contents/_lib/agent/schema/ref";
 import type { Locale } from "@repo/contents/_types/content";
-import { defaultLocale, locales } from "@repo/utilities/locales";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Option, Schema } from "effect";
 
 type WrittenPart = Parameters<UIMessageStreamWriter<MyUIMessage>["write"]>[0];
+const defaultLocale = ACTIVE_APP_LOCALE_CODES[0];
 /** Creates a minimal writer for Nakafa tool data-part tests. */
 export function createWriter() {
   const parts: WrittenPart[] = [];
@@ -116,7 +119,7 @@ const nakafaTestRuntime = {
         exams: [{ id: "snbt", label: "SNBT" }],
       },
       locale,
-      locales: Array.from(locales),
+      locales: Array.from(ACTIVE_APP_LOCALE_CODES),
       quran: { surah_count: 114 },
       sections: ["articles", "material", "tryout", "quran"],
       tools: [

@@ -23,6 +23,7 @@ export type SitemapPage =
       kind: "program";
       locale: Locale;
     }
+  | { id: string; kind: "page"; locale: Locale }
   | { id: string; kind: "quran"; locale: Locale }
   | {
       id: string;
@@ -47,6 +48,11 @@ export function formatMaterialPage(bucket: string, locale: Locale) {
 /** Formats one deterministic published-program sitemap page id. */
 export function formatProgramPage(bucket: string, locale: Locale) {
   return `program_${locale}_${bucket}`;
+}
+
+/** Formats the complete signed Page sitemap identity for one locale. */
+export function formatPagePage(locale: Locale) {
+  return `page_${locale}`;
 }
 
 /** Formats the bounded signed Quran sitemap page id. */
@@ -74,6 +80,10 @@ export function getSitemapPageDescriptor(id: string): SitemapPage | null {
 
   if (prefix === "quran") {
     return segments.length === 2 ? { id, kind: "quran", locale } : null;
+  }
+
+  if (prefix === "page") {
+    return segments.length === 2 ? { id, kind: "page", locale } : null;
   }
 
   if (prefix === "tryout") {
@@ -131,6 +141,13 @@ export function isProgramSitemapPage(
   page: SitemapPage
 ): page is Extract<SitemapPage, { kind: "program" }> {
   return "kind" in page && page.kind === "program";
+}
+
+/** Checks whether one sitemap page targets signed public Pages. */
+export function isPageSitemapPage(
+  page: SitemapPage
+): page is Extract<SitemapPage, { kind: "page" }> {
+  return "kind" in page && page.kind === "page";
 }
 
 /** Checks whether one page targets the signed Quran catalog. */

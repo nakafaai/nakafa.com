@@ -46,6 +46,7 @@ import { NavUserGuestButton } from "@/components/sidebar/nav-user-guest-button";
 import { NavUserSkeleton } from "@/components/sidebar/nav-user-skeleton";
 import { SidebarUtilityMenuItems } from "@/components/sidebar/utility-menu-items";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
+import { usePageNavigation } from "@/lib/content/page/context";
 import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
 /**
@@ -54,6 +55,7 @@ import { getInitialName } from "@/lib/utils/helper";
 export function NavUser() {
   const t = useTranslations("Auth");
   const tLegal = useTranslations("Legal");
+  const pageNavigation = usePageNavigation((navigation) => navigation);
   const pathname = usePathname();
   const router = useRouter();
   const { isPending, user } = useUser((state) => ({
@@ -179,20 +181,24 @@ export function NavUser() {
           <SidebarUtilityMenuItems side={submenuSide} />
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={() => router.push("/terms-of-service")}
-            >
-              <HugeIcons icon={FileValidationIcon} />
-              {tLegal("terms-of-service")}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onClick={() => router.push("/privacy-policy")}
-            >
-              <HugeIcons icon={LockIcon} />
-              {tLegal("privacy-policy")}
-            </DropdownMenuItem>
+            {pageNavigation ? (
+              <>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => router.push(pageNavigation.termsOfServiceHref)}
+                >
+                  <HugeIcons icon={FileValidationIcon} />
+                  {tLegal("terms-of-service")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => router.push(pageNavigation.privacyPolicyHref)}
+                >
+                  <HugeIcons icon={LockIcon} />
+                  {tLegal("privacy-policy")}
+                </DropdownMenuItem>
+              </>
+            ) : null}
             <AnalyticsConsentMenuItem />
           </DropdownMenuGroup>
           <DropdownMenuSeparator />

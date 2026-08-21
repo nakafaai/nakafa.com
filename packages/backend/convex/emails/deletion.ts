@@ -5,7 +5,7 @@ import {
   tryUserCleanup,
   type UserCleanupError,
 } from "@repo/backend/convex/auth/cleanup/spec";
-import { resend } from "@repo/backend/convex/emails/mutations";
+import { resend } from "@repo/backend/convex/emails/client";
 import { Effect } from "effect";
 
 interface WelcomeEmailCancellationOperations {

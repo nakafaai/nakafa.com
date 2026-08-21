@@ -2,7 +2,10 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import {
+  ACTIVE_APP_LOCALE_CODES,
+  type ActiveAppLocaleCode,
+} from "@nakafa/aksara-contracts/locale";
 import {
   canonicalizeMaterialProjection,
   type MaterialLessonProjection,
@@ -39,6 +42,13 @@ const NEXT_MATERIAL_IDENTITY = {
   releaseId: ReleaseIdSchema.make("release-next"),
   sequence: 2,
 } satisfies TestIdentity;
+
+const defaultMaterialProjections = ACTIVE_APP_LOCALE_CODES.flatMap(
+  (appLocale) => [
+    makeMaterialProjection(appLocale, 1),
+    makeMaterialProjection(appLocale, 2),
+  ]
+);
 
 /** Inserts one projection into the immutable head and active material model. */
 export async function insertMaterialProjection(
@@ -80,13 +90,8 @@ export async function insertMaterialProjection(
 /** Activates a complete locale-parity material catalog for query tests. */
 export async function activateMaterialCatalog(
   target: TestConvex<typeof schema>,
-  projections: readonly MaterialLessonProjection[] = [
-    makeMaterialProjection("en", 1),
-    makeMaterialProjection("en", 2),
-    makeMaterialProjection("id", 1),
-    makeMaterialProjection("id", 2),
-  ],
-  activeAppLocales: readonly ActiveAppLocaleCode[] = ["en", "id"]
+  projections: readonly MaterialLessonProjection[] = defaultMaterialProjections,
+  activeAppLocales: readonly ActiveAppLocaleCode[] = ACTIVE_APP_LOCALE_CODES
 ) {
   await target.mutation(async (ctx) => {
     await insertZeroRelease(ctx, {
@@ -114,7 +119,7 @@ export async function advanceMaterialCatalog(
   await target.mutation(async (ctx) => {
     await insertZeroRelease(ctx, {
       ...NEXT_MATERIAL_IDENTITY,
-      activeAppLocales: ["en", "id"],
+      activeAppLocales: ACTIVE_APP_LOCALE_CODES,
       base: MATERIAL_IDENTITY,
       ownership: { base: ["material"], result: ["material"] },
       role: "candidate",

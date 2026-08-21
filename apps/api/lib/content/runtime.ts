@@ -1,4 +1,7 @@
 import {
+  ACTIVE_APP_LOCALE_CODES,
+  type ActiveAppLocaleCode,
+  ActiveAppLocaleCodeSchema,
   type AppLocaleCode,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
@@ -6,8 +9,6 @@ import { readConvexRuntimeQuery } from "@repo/backend/client/runtime";
 import { PUBLIC_CONTENT_RUNTIME_BATCH_SIZE } from "@repo/backend/content/batch";
 import { api } from "@repo/backend/convex/_generated/api";
 import { NakafaAgentContentIdSchema } from "@repo/contents/_lib/agent/schema/ref";
-import type { Locale } from "@repo/utilities/locales";
-import { locales } from "@repo/utilities/locales";
 import type { FunctionArgs, FunctionReference } from "convex/server";
 import { Effect, Array as EffectArray, Option, Schema } from "effect";
 import { env } from "@/env";
@@ -33,7 +34,7 @@ interface PublishedApiPage {
 const INITIAL_CURSOR: string | null = null;
 const API_PAGE_SIZE_MIN = 1;
 const API_PAGE_SIZE_MAX = 100;
-const supportedApiLocales = locales.join(", ");
+const supportedApiLocales = ACTIVE_APP_LOCALE_CODES.join(", ");
 
 /** Error copy derived from every canonical locale accepted by the content API. */
 export const invalidApiLocaleMessage = `Invalid locale. Supported locales: ${supportedApiLocales}.`;
@@ -76,17 +77,10 @@ const verifyApiReleasePin = Effect.fn("api.content.verifyReleasePin")(
 );
 
 /** Validates and narrows a locale segment from an API route. */
-export function parseApiLocale(locale: string): Locale | null {
-  if (isApiLocale(locale)) {
-    return locale;
-  }
-
-  return null;
-}
-
-/** Checks whether an API path locale is one of the repo-owned locale values. */
-function isApiLocale(locale: string): locale is Locale {
-  return locales.some((supportedLocale) => supportedLocale === locale);
+export function parseApiLocale(locale: string): ActiveAppLocaleCode | null {
+  return Option.getOrNull(
+    Schema.decodeUnknownOption(ActiveAppLocaleCodeSchema)(locale)
+  );
 }
 
 /** Parses API pagination params without allowing unbounded list responses. */

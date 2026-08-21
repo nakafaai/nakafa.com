@@ -18,6 +18,9 @@ const articleMocks = vi.hoisted(() => ({
 const materialMocks = vi.hoisted(() => ({
   readPublishedMaterialBuckets: vi.fn(),
 }));
+const pageMocks = vi.hoisted(() => ({
+  readPublishedPageCatalog: vi.fn(),
+}));
 const programMocks = vi.hoisted(() => ({
   readPublishedProgramBuckets: vi.fn(),
 }));
@@ -34,6 +37,9 @@ vi.mock("@/lib/content/article/sitemap", () => ({
 vi.mock("@/lib/content/material/sitemap", () => ({
   readPublishedMaterialBuckets: materialMocks.readPublishedMaterialBuckets,
 }));
+vi.mock("@/lib/content/page/catalog", () => ({
+  readPublishedPageCatalog: pageMocks.readPublishedPageCatalog,
+}));
 vi.mock("@/lib/content/program/sitemap", () => ({
   readPublishedProgramBuckets: programMocks.readPublishedProgramBuckets,
 }));
@@ -45,8 +51,15 @@ vi.mock("@/lib/content/published/active", () => ({
 }));
 
 vi.mock("@repo/internationalization/src/routing", async () => {
-  const { defaultLocale, locales } = await import("@repo/utilities/locales");
-  return { routing: { defaultLocale, locales } };
+  const { ACTIVE_APP_LOCALE_CODES } = await import(
+    "@nakafa/aksara-contracts/locale"
+  );
+  return {
+    routing: {
+      defaultLocale: ACTIVE_APP_LOCALE_CODES[0],
+      locales: ACTIVE_APP_LOCALE_CODES,
+    },
+  };
 });
 
 beforeEach(() => {
@@ -64,6 +77,17 @@ beforeEach(() => {
       activeReleaseId: "release-material",
       buckets: [],
       materialCount: 0,
+    })
+  );
+  pageMocks.readPublishedPageCatalog.mockReset();
+  pageMocks.readPublishedPageCatalog.mockReturnValue(
+    Effect.succeed({
+      activeReleaseId: "release-material",
+      projections: [
+        { appLocale: "en" },
+        { appLocale: "id" },
+        { appLocale: "de" },
+      ],
     })
   );
   programMocks.readPublishedProgramBuckets.mockReset();
@@ -90,7 +114,11 @@ describe("sitemap page catalog", () => {
     ).resolves.toEqual([
       { id: "base" },
       { id: "quran_en", kind: "quran", locale: "en" },
+      { id: "page_en", kind: "page", locale: "en" },
       { id: "quran_id", kind: "quran", locale: "id" },
+      { id: "page_id", kind: "page", locale: "id" },
+      { id: "quran_de", kind: "quran", locale: "de" },
+      { id: "page_de", kind: "page", locale: "de" },
     ]);
   });
 
@@ -235,6 +263,12 @@ describe("sitemap page catalog", () => {
   });
 
   it("omits Quran pages when the signed catalog is empty", async () => {
+    pageMocks.readPublishedPageCatalog.mockReturnValue(
+      Effect.succeed({
+        activeReleaseId: "release-material",
+        projections: [],
+      })
+    );
     quranMocks.readPublishedQuranCatalog.mockReturnValue(
       Effect.succeed({ activeReleaseId: "release-material", surahs: [] })
     );

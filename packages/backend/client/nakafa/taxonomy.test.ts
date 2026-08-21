@@ -1,4 +1,5 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { readNakafaTaxonomy } from "@repo/backend/client/nakafa/taxonomy";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
@@ -22,7 +23,10 @@ vi.mock("@repo/backend/client/runtime", () => ({
     }),
 }));
 const quranSnapshotId = Sha256HashSchema.make(`sha256:${"b".repeat(64)}`);
-const APP_LOCALE_PATTERN = /^(?:en|id)$/u;
+const APP_LOCALE_PATTERN = new RegExp(
+  `^(?:${ACTIVE_APP_LOCALE_CODES.join("|")})$`,
+  "u"
+);
 const ACTIVE_RELEASE = {
   manifestHash: `sha256:${"c".repeat(64)}`,
   releaseId: "release-current",
@@ -48,6 +52,7 @@ describe("readNakafaTaxonomy", () => {
       expect(taxonomy.content_counts).toEqual([
         { count: 121, locale: "en" },
         { count: 121, locale: "id" },
+        { count: 121, locale: "de" },
       ]);
       expect(taxonomy.tools).toContain("nakafa_get_quran_reference");
       expect(taxonomy.articles.categories).toEqual(["politics"]);

@@ -22,8 +22,10 @@ import {
   parseMaterialPreviewStaticParams,
   readArticlePreviewStaticParams,
   readMaterialPreviewStaticParams,
+  readPagePreviewStaticParams,
   readPreviewStaticLocaleParams,
 } from "@/lib/content/preview/route";
+import { testPagePendingManifest } from "@/test/content-page";
 import {
   makePendingManifest,
   previewConfig,
@@ -197,6 +199,14 @@ describe("local preview route matching", () => {
     });
   });
 
+  it("projects the selected Page route into catch-all static params", async () => {
+    prerenderManifestMock.mockResolvedValueOnce(testPagePendingManifest);
+
+    await expect(
+      readPagePreviewStaticParams(AppLocaleSchema.make("en"))
+    ).resolves.toEqual({ page: ["terms-of-service"] });
+  });
+
   it("rejects malformed material preview paths", async () => {
     await expect(
       Effect.runPromise(
@@ -280,6 +290,26 @@ describe("local preview route matching", () => {
     prerenderManifestMock.mockResolvedValueOnce(makePendingManifest());
     await expect(
       readArticlePreviewStaticParams(AppLocaleSchema.make("en"))
+    ).rejects.toMatchObject({
+      _tag: "PreviewIntegrityError",
+      check: "projection",
+    });
+  });
+
+  it("rejects a missing or mismatched Page preview projection", async () => {
+    prerenderManifestMock.mockRejectedValueOnce(
+      new PreviewIntegrityError({ check: "manifest" })
+    );
+    await expect(
+      readPagePreviewStaticParams(AppLocaleSchema.make("en"))
+    ).rejects.toMatchObject({
+      _tag: "PreviewIntegrityError",
+      check: "manifest",
+    });
+
+    prerenderManifestMock.mockResolvedValueOnce(makePendingManifest());
+    await expect(
+      readPagePreviewStaticParams(AppLocaleSchema.make("en"))
     ).rejects.toMatchObject({
       _tag: "PreviewIntegrityError",
       check: "projection",

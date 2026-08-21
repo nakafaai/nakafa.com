@@ -21,6 +21,7 @@ describe("createLocalizedAlternates", () => {
     expect(result).toEqual({
       canonical: "/id/articles/politics/example",
       languages: {
+        de: "/de/articles/politics/example",
         en: "/en/articles/politics/example",
         id: "/id/articles/politics/example",
         "x-default": "/en/articles/politics/example",
@@ -37,6 +38,7 @@ describe("createLocalizedAlternates", () => {
     expect(result).toEqual({
       canonical: "/en/articles/politics/example",
       languages: {
+        de: "/de/articles/politics/example",
         en: "/en/articles/politics/example",
         id: "/id/articles/politics/example",
         "x-default": "/en/articles/politics/example",
@@ -50,6 +52,7 @@ describe("createLocalizedAlternates", () => {
     expect(result).toEqual({
       canonical: "/id",
       languages: {
+        de: "/de",
         en: "/en",
         id: "/id",
         "x-default": "/en",
@@ -57,12 +60,13 @@ describe("createLocalizedAlternates", () => {
     });
   });
 
-  it("normalizes an inactive preview locale without publishing it", () => {
+  it("publishes every active locale from the routing contract", () => {
     const result = createLocalizedAlternates("/de/privacy-policy");
 
     expect(result).toEqual({
       canonical: "/de/privacy-policy",
       languages: {
+        de: "/de/privacy-policy",
         en: "/en/privacy-policy",
         id: "/id/privacy-policy",
         "x-default": "/en/privacy-policy",
@@ -76,6 +80,7 @@ describe("createLocalizedAlternates", () => {
     expect(result).toEqual({
       canonical: "/robots.txt",
       languages: {
+        de: "/de/robots.txt",
         en: "/en/robots.txt",
         id: "/id/robots.txt",
         "x-default": "/en/robots.txt",
@@ -103,11 +108,13 @@ describe("createLocalizedAlternates", () => {
         [
           { appLocale: "en", publicPath: "curriculum/merdeka" },
           { appLocale: "id", publicPath: "kurikulum/merdeka" },
+          { appLocale: "de", publicPath: "lehrplaene/merdeka" },
         ]
       )
     ).toMatchObject({
       canonical: "/id/kurikulum/merdeka",
       languages: {
+        de: "/de/lehrplaene/merdeka",
         en: "/en/curriculum/merdeka",
         id: "/id/kurikulum/merdeka",
       },
