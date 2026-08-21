@@ -5,6 +5,11 @@ import {
   inspectDependencyPolicy,
   REGISTRY_REVIEWS,
 } from "./dependency-policy.mjs";
+import {
+  fetchLatestGithubActionTag,
+  githubActionReleaseReviews,
+  inspectGithubActionPolicy,
+} from "./github-action-policy.mjs";
 
 const root = process.cwd();
 
@@ -22,7 +27,10 @@ if (update.status !== 0) {
   process.exit(update.status ?? 1);
 }
 
-const problems = inspectDependencyPolicy(root);
+const problems = [
+  ...inspectDependencyPolicy(root),
+  ...inspectGithubActionPolicy(root),
+];
 
 for (const [registry, reviewedLatest, reason] of REGISTRY_REVIEWS) {
   const result = runPnpm(["view", registry, "version", "--json"], {
@@ -50,6 +58,40 @@ for (const [registry, reviewedLatest, reason] of REGISTRY_REVIEWS) {
     );
   }
   process.stdout.write(`${registry}: reviewed ${reviewedLatest}. ${reason}\n`);
+}
+
+const actionChecks = await Promise.all(
+  githubActionReleaseReviews().map(async (review) => {
+    try {
+      return {
+        latest: await fetchLatestGithubActionTag(review, {
+          token: process.env.GITHUB_TOKEN,
+        }),
+        review,
+      };
+    } catch (error) {
+      return { error, review };
+    }
+  })
+);
+
+for (const { error, latest, review } of actionChecks) {
+  if (error) {
+    problems.push(
+      error instanceof Error
+        ? `Unable to inspect ${review.repository}: ${error.message}`
+        : `Unable to inspect ${review.repository}.`
+    );
+    continue;
+  }
+  if (latest !== review.expectedTag) {
+    problems.push(
+      `${review.repository} is now ${String(latest)}; last reviewed ${review.expectedTag}.`
+    );
+  }
+  process.stdout.write(
+    `${review.repository}: reviewed ${review.expectedTag}. ${review.reason}\n`
+  );
 }
 
 const outdated = runPnpm(["outdated", "--recursive", "--format", "json"], {

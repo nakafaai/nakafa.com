@@ -21,8 +21,13 @@ function validInput() {
         index === 0
           ? dependencies
           : { "@nakafa/aksara-contracts": CONTRACT_ARCHIVE },
+      scripts:
+        index === 0 ? { doctor: "pnpm dlx react-doctor@0.9.12" } : undefined,
     },
-    path: `packages/example-${index}/package.json`,
+    path:
+      index === 0
+        ? "apps/www/package.json"
+        : `packages/example-${index}/package.json`,
   }));
   const ignoreDeps = [
     ...new Set([
@@ -58,6 +63,7 @@ test("reports drift, missing consumers, and obsolete Effect packages", () => {
   const input = validInput();
   input.manifests[0].manifest.dependencies.effect = "4.0.0-rc.111";
   input.manifests[0].manifest.dependencies["@effect/platform"] = "0.97.1";
+  input.manifests[0].manifest.scripts.doctor = "pnpm dlx react-doctor@0.9.5";
   input.manifests.splice(1);
   input.workspace.update.ignoreDeps = [];
 
@@ -67,6 +73,7 @@ test("reports drift, missing consumers, and obsolete Effect packages", () => {
     problems.some((problem) => problem.includes("expected at least 6"))
   );
   assert.ok(problems.some((problem) => problem.includes("obsolete Effect")));
+  assert.ok(problems.some((problem) => problem.includes("react-doctor")));
   assert.ok(problems.some((problem) => problem.includes("update.ignoreDeps")));
 });
 

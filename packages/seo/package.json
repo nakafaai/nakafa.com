@@ -12,7 +12,7 @@
     "@repo/utilities": "workspace:*",
     "effect": "catalog:",
     "lodash.merge": "^4.6.2",
-    "next": "16.3.1",
+    "next": "16.3.2",
     "next-intl": "^4.13.7",
     "react": "^19.2.8",
     "schema-dts": "^2.0.0"

@@ -37,32 +37,32 @@ export const DEPENDENCY_HOLDS = [
     dependency: "typescript",
     minimumDeclarations: 1,
   },
-  { approved: "16.3.1", dependency: "next", minimumDeclarations: 1 },
+  { approved: "16.3.2", dependency: "next", minimumDeclarations: 1 },
   {
-    approved: "16.3.1",
+    approved: "16.3.2",
     dependency: "@next/bundle-analyzer",
     minimumDeclarations: 1,
   },
-  { approved: "16.3.1", dependency: "@next/mdx", minimumDeclarations: 1 },
+  { approved: "16.3.2", dependency: "@next/mdx", minimumDeclarations: 1 },
   {
-    approved: "16.3.1",
+    approved: "16.3.2",
     dependency: "@next/third-parties",
     minimumDeclarations: 1,
   },
   { approved: "1.44.0", dependency: "convex", minimumDeclarations: 1 },
-  { approved: "7.0.71", dependency: "ai", minimumDeclarations: 1 },
+  { approved: "7.0.73", dependency: "ai", minimumDeclarations: 1 },
   {
-    approved: "4.0.74",
+    approved: "4.0.76",
     dependency: "@ai-sdk/react",
     minimumDeclarations: 1,
   },
   {
-    approved: "4.0.48",
+    approved: "4.0.49",
     dependency: "@ai-sdk/google",
     minimumDeclarations: 1,
   },
   {
-    approved: "4.0.57",
+    approved: "4.0.59",
     dependency: "@ai-sdk/gateway",
     minimumDeclarations: 1,
   },
@@ -125,22 +125,26 @@ export const REGISTRY_REVIEWS = [
     "6.0.2",
     "Programmatic consumers still require the TypeScript 6 API.",
   ],
-  ["next@latest", "16.3.1", "The retained patch is rebased for this release."],
+  [
+    "next@latest",
+    "16.3.2",
+    "Stable 16.3.2 contains the reviewed catch-all cache-key backport.",
+  ],
   ["convex@latest", "1.44.0", "Convex acceptance uses an isolated deployment."],
-  ["ai@latest", "7.0.71", "AI SDK packages move as one reviewed cohort."],
+  ["ai@latest", "7.0.73", "AI SDK packages move as one reviewed cohort."],
   [
     "@ai-sdk/react@latest",
-    "4.0.74",
+    "4.0.76",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "@ai-sdk/google@latest",
-    "4.0.48",
+    "4.0.49",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "@ai-sdk/gateway@latest",
-    "4.0.57",
+    "4.0.59",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
@@ -163,7 +167,20 @@ export const REGISTRY_REVIEWS = [
   ["@types/node@24", "24.13.3", "Declarations remain on the Node 24 line."],
   ["node@24", "24.19.0", "The repository supports the Node 24 runtime line."],
   ["pnpm@latest", "11.22.0", "pnpm owns workspace and lockfile semantics."],
+  [
+    "react-doctor@latest",
+    "0.9.12",
+    "The local and CI scanners move as one reviewed cohort.",
+  ],
   ["turbo@latest", "2.10.11", "Turbo and its generator move together."],
+];
+
+export const SCRIPT_DEPENDENCY_HOLDS = [
+  {
+    approved: "pnpm dlx react-doctor@0.9.12",
+    manifestPath: "apps/www/package.json",
+    script: "doctor",
+  },
 ];
 
 export const FORBIDDEN_EFFECT_DEPENDENCIES = new Set([
@@ -249,6 +266,18 @@ export function validateDependencyPolicy({
     for (const declaration of dependencyDeclarations(manifests, dependency)) {
       problems.push(
         `${declaration.manifestPath} retains obsolete Effect dependency ${dependency}.`
+      );
+    }
+  }
+
+  for (const hold of SCRIPT_DEPENDENCY_HOLDS) {
+    const manifest = manifests.find(
+      ({ path: manifestPath }) => manifestPath === hold.manifestPath
+    )?.manifest;
+    const actual = manifest?.scripts?.[hold.script];
+    if (actual !== hold.approved) {
+      problems.push(
+        `${hold.manifestPath} script ${hold.script} is ${String(actual ?? "missing")}; approved ${hold.approved}.`
       );
     }
   }

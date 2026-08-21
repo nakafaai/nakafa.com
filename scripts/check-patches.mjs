@@ -1,14 +1,7 @@
-import { createHash } from "node:crypto";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
-const REPOSITORY_ROOT = process.cwd();
-const NEXT_VERSION = "16.3.1";
-const NEXT_PATCH_PATH = "patches/next.patch";
-const NEXT_PATCH_SHA256 =
-  "e2545990da9e16b72827b3fc2f35f63b8807ca3fd77975875ee51da0d4961519";
-const NEXT_UPSTREAM_FIX = "5f735c1ac56b93bc28cd3af86961c47c838fb077";
 const IGNORED_DIRECTORIES = new Set([
   ".git",
   ".next",
@@ -19,14 +12,13 @@ const IGNORED_DIRECTORIES = new Set([
   "repos",
 ]);
 
-/** Collects application-owned patch files without entering generated or vendored trees. */
-function readApplicationPatchFiles(directory) {
+/** Collects application-owned patch files without entering generated source. */
+function readApplicationPatchFiles(root) {
   const patchFiles = [];
-  const pending = [directory];
+  const pending = [root];
 
   while (pending.length > 0) {
     const current = pending.pop();
-
     if (!current) {
       continue;
     }
@@ -37,14 +29,10 @@ function readApplicationPatchFiles(directory) {
       }
 
       const entryPath = path.join(current, entry.name);
-
       if (entry.isDirectory()) {
         pending.push(entryPath);
-        continue;
-      }
-
-      if (entry.name.endsWith(".patch")) {
-        patchFiles.push(path.relative(REPOSITORY_ROOT, entryPath));
+      } else if (entry.name.endsWith(".patch")) {
+        patchFiles.push(path.relative(root, entryPath));
       }
     }
   }
@@ -52,117 +40,26 @@ function readApplicationPatchFiles(directory) {
   return patchFiles.sort();
 }
 
-/** Reads one declared dependency version from every first-party workspace. */
-function readDependencyVersions(dependencyName) {
-  const dependencyVersions = [];
-
-  for (const workspaceDirectory of ["apps", "packages"]) {
-    const workspaceRoot = path.join(REPOSITORY_ROOT, workspaceDirectory);
-
-    for (const entry of readdirSync(workspaceRoot, { withFileTypes: true })) {
-      if (!entry.isDirectory()) {
-        continue;
-      }
-
-      const manifestPath = path.join(workspaceRoot, entry.name, "package.json");
-      const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-
-      for (const dependencyGroup of [
-        "dependencies",
-        "devDependencies",
-        "peerDependencies",
-      ]) {
-        const dependencyVersion = manifest[dependencyGroup]?.[dependencyName];
-
-        if (typeof dependencyVersion === "string") {
-          dependencyVersions.push({
-            manifestPath: path.relative(REPOSITORY_ROOT, manifestPath),
-            version: dependencyVersion,
-          });
-        }
-      }
-    }
-  }
-
-  return dependencyVersions;
-}
-
-const failures = [];
-const patchFiles = readApplicationPatchFiles(REPOSITORY_ROOT);
-const expectedPatchFiles = [NEXT_PATCH_PATH];
-
-if (JSON.stringify(patchFiles) !== JSON.stringify(expectedPatchFiles)) {
-  failures.push(
-    `Application patches must match the reviewed allowlist. Expected: ${expectedPatchFiles.join(", ")}. Found: ${patchFiles.join(", ") || "none"}.`
-  );
-}
-
-const workspaceSource = readFileSync(
-  path.join(REPOSITORY_ROOT, "pnpm-workspace.yaml"),
+const repositoryRoot = process.cwd();
+const patchFiles = readApplicationPatchFiles(repositoryRoot);
+const workspace = readFileSync(
+  path.join(repositoryRoot, "pnpm-workspace.yaml"),
   "utf8"
 );
-const patchReferences = Array.from(
-  workspaceSource.matchAll(/^\s{2}([^\s][^\r\n:]*):\s+(\S+\.patch)\s*$/gm),
-  ([, dependency, patchPath]) => ({
-    dependency: dependency.replace(/^['"]|['"]$/g, ""),
-    patchPath,
-  })
-);
-const expectedPatchReferences = [
-  {
-    dependency: `next@${NEXT_VERSION}`,
-    patchPath: NEXT_PATCH_PATH,
-  },
-];
+const failures = [];
 
-if (
-  JSON.stringify(patchReferences) !== JSON.stringify(expectedPatchReferences)
-) {
+if (patchFiles.length > 0) {
   failures.push(
-    "pnpm-workspace.yaml patch registrations must match the reviewed allowlist."
+    `Application dependency patches require explicit review: ${patchFiles.join(", ")}.`
   );
 }
-
-if (!workspaceSource.includes(NEXT_UPSTREAM_FIX)) {
-  failures.push(
-    `pnpm-workspace.yaml must keep the stable-release deletion gate for Next.js commit ${NEXT_UPSTREAM_FIX}.`
-  );
+if (/^patchedDependencies:/mu.test(workspace)) {
+  failures.push("pnpm-workspace.yaml must not register dependency patches.");
 }
 
-const nextDependencyVersions = readDependencyVersions("next");
-const mismatchedNextDependencies = nextDependencyVersions.filter(
-  ({ version }) => version !== NEXT_VERSION
-);
-
-if (nextDependencyVersions.length === 0) {
-  failures.push(
-    "No first-party workspace declares the patched Next.js dependency."
-  );
+if (failures.length > 0) {
+  process.stderr.write(`${failures.join("\n")}\n`);
+  process.exitCode = 1;
+} else {
+  process.stdout.write("No application dependency patches are registered.\n");
 }
-
-if (mismatchedNextDependencies.length > 0) {
-  failures.push(
-    `Delete or revalidate ${NEXT_PATCH_PATH} before changing Next.js from ${NEXT_VERSION}:\n${mismatchedNextDependencies
-      .map(({ manifestPath, version }) => `  - ${manifestPath}: ${version}`)
-      .join("\n")}`
-  );
-}
-
-if (patchFiles.includes(NEXT_PATCH_PATH)) {
-  const patchSource = readFileSync(path.join(REPOSITORY_ROOT, NEXT_PATCH_PATH));
-  const patchHash = createHash("sha256").update(patchSource).digest("hex");
-
-  if (patchHash !== NEXT_PATCH_SHA256) {
-    failures.push(
-      `${NEXT_PATCH_PATH} changed. Revalidate it against upstream and update the source policy in the same review.`
-    );
-  }
-}
-
-if (failures.length === 0) {
-  process.stdout.write("Application patch policy checks passed.\n");
-  process.exit(0);
-}
-
-process.stderr.write(`${failures.join("\n")}\n`);
-process.exitCode = 1;
