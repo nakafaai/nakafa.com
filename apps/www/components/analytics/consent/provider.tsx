@@ -1,5 +1,6 @@
 "use client";
 
+import { useNetwork } from "@mantine/hooks";
 import {
   ANALYTICS_CONSENT_CATEGORY,
   ANALYTICS_CONSENT_MECHANISM,
@@ -46,6 +47,7 @@ export function AnalyticsConsentProvider({
     useState<AnalyticsConsentError | null>(null);
   const [isPreferencesOpen, setPreferencesOpen] = useState(false);
   const [isSaving, startSaving] = useTransition();
+  const { online: isOnline } = useNetwork();
   const setAccountConsent = useMutation(api.consents.mutations.setCurrent);
   const shouldLoadAccountConsent =
     !isPreviewChild && isAuthenticated && !isAuthLoading && !!user;
@@ -70,7 +72,7 @@ export function AnalyticsConsentProvider({
   });
 
   useEffect(() => {
-    if (!shouldRevokeAccountGrant) {
+    if (!(shouldRevokeAccountGrant && isOnline)) {
       return;
     }
 
@@ -86,7 +88,7 @@ export function AnalyticsConsentProvider({
     return () => {
       Effect.runFork(Fiber.interrupt(revokeFiber));
     };
-  }, [setAccountConsent, shouldRevokeAccountGrant]);
+  }, [isOnline, setAccountConsent, shouldRevokeAccountGrant]);
 
   const state = resolveBrowserAnalyticsConsentState({
     accountConsent,

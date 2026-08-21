@@ -104,6 +104,13 @@ export const readPublishedMaterialRoute = Effect.fn(
     appLocale,
     publicPath,
   });
+  const decodedActiveAppLocales = Schema.decodeUnknownEffect(
+    ActiveAppLocaleListSchema
+  )(result.activeAppLocales).pipe(
+    Effect.mapError(() =>
+      makeMaterialProjectionError({ appLocale, publicPath })
+    )
+  );
   const [active, activeAppLocales, sourceRevision] = yield* Effect.all([
     decodeActiveIdentity(
       result.activeManifestHash,
@@ -112,15 +119,9 @@ export const readPublishedMaterialRoute = Effect.fn(
       locale,
       publicPath
     ),
-    Schema.decodeUnknownEffect(ActiveAppLocaleListSchema)(
-      result.activeAppLocales
-    ),
+    decodedActiveAppLocales,
     decodeSourceRevision(result.sourceRevision, { appLocale, publicPath }),
-  ]).pipe(
-    Effect.mapError(() =>
-      makeMaterialProjectionError({ appLocale, publicPath })
-    )
-  );
+  ]);
   if (result.projectionJson === null) {
     return {
       ...active,

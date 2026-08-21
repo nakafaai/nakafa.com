@@ -121,6 +121,25 @@ describe("published material route", () => {
     );
   });
 
+  it("preserves an active release mismatch for pinned callers", async () => {
+    const expectedReleaseId = ReleaseIdSchema.make("release-previous");
+    runtimeQueryMock.mockResolvedValueOnce(foundModel());
+
+    await expect(
+      Effect.runPromise(
+        readPublishedMaterialRoute(
+          "en",
+          previewProjection.publicPath,
+          expectedReleaseId
+        ).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({
+      _tag: "PublishedReleaseMismatchError",
+      actualReleaseId: activeReleaseId,
+      expectedReleaseId,
+    });
+  });
+
   it("preserves a signed missing-route tombstone", async () => {
     runtimeQueryMock.mockResolvedValueOnce(
       foundModel({
