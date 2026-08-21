@@ -1,15 +1,19 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { use } from "react";
 import { Auth } from "@/components/auth";
 import { FeaturesDithering } from "@/components/marketing/about/features.client";
 import { Theme } from "@/components/marketing/shared/footer-action";
 import { BackButton } from "@/components/shared/back-button";
+import {
+  getShellPageNavigation,
+  type PageNavigation,
+} from "@/lib/content/page/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-export default function Page(props: PageProps<"/[locale]/auth">) {
-  const locale = getLocaleOrThrow(use(props.params).locale);
+export default async function Page(props: PageProps<"/[locale]/auth">) {
+  const locale = getLocaleOrThrow((await props.params).locale);
+  const pageNavigation = await getShellPageNavigation(locale);
 
   return (
     <main className="relative grid h-svh lg:grid-cols-7">
@@ -24,7 +28,7 @@ export default function Page(props: PageProps<"/[locale]/auth">) {
 
           <Auth />
 
-          <PageFooter locale={locale} />
+          <PageFooter locale={locale} pageNavigation={pageNavigation} />
         </div>
       </div>
       <div className="relative col-span-4 hidden lg:block">
@@ -45,8 +49,18 @@ function PageTitle() {
   );
 }
 
-function PageFooter({ locale }: { locale: Locale }) {
+function PageFooter({
+  locale,
+  pageNavigation,
+}: {
+  locale: Locale;
+  pageNavigation: PageNavigation | null;
+}) {
   const tLegal = useTranslations("Legal");
+
+  if (!pageNavigation) {
+    return null;
+  }
 
   return (
     <div className="flex max-w-sm flex-col">
@@ -58,7 +72,7 @@ function PageFooter({ locale }: { locale: Locale }) {
               nativeButton={false}
               render={
                 <a
-                  href={`/${locale}/terms-of-service`}
+                  href={`/${locale}${pageNavigation.termsOfServiceHref}`}
                   rel="noopener noreferrer"
                   target="_blank"
                 >
@@ -75,7 +89,7 @@ function PageFooter({ locale }: { locale: Locale }) {
               nativeButton={false}
               render={
                 <a
-                  href={`/${locale}/privacy-policy`}
+                  href={`/${locale}${pageNavigation.privacyPolicyHref}`}
                   rel="noopener noreferrer"
                   target="_blank"
                 >

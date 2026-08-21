@@ -1,7 +1,7 @@
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { ConvexRuntimeQueryError } from "@repo/backend/client/runtime";
 import { toRuntimeQueryError } from "@repo/backend/test/runtime-query";
 import { afterEach, describe, expect, it } from "@repo/testing/effect";
-import { locales } from "@repo/utilities/locales";
 import { Effect, Fiber } from "effect";
 import { vi } from "vitest";
 import {
@@ -33,7 +33,7 @@ describe("API content runtime", () => {
     vi.clearAllMocks();
   });
   it("narrows supported route locales", () => {
-    for (const locale of locales) {
+    for (const locale of ACTIVE_APP_LOCALE_CODES) {
       expect(parseApiLocale(locale)).toBe(locale);
     }
     expect(parseApiLocale("fr")).toBeNull();

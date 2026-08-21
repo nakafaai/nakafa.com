@@ -1,4 +1,5 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import {
   QuranChunkRowSchema,
   QuranSearchRowSchema,
@@ -72,6 +73,18 @@ describe("Quran Nakafa reader", () => {
       ).toBeUndefined();
     })
   );
+  it.live("reads the reviewed German Quran translation", () =>
+    Effect.gen(function* () {
+      const reference = yield* readNakafaQuranReference(convexUrl, {
+        from_verse: 1,
+        locale: "de",
+        surah: 1,
+      });
+      expect(Option.getOrUndefined(reference)?.verses[0]?.translation).toBe(
+        "Im Namen Allahs."
+      );
+    })
+  );
   it.live("maps malformed reference input to the agent input error", () =>
     Effect.gen(function* () {
       const invalid = yield* Effect.result(
@@ -139,7 +152,7 @@ function readRuntimeFixture(
 }
 /** Builds one signed reference response around a bounded chunk. */
 function referenceResult(args: Record<string, unknown>) {
-  const appLocale = args.appLocale === "id" ? "id" : "en";
+  const appLocale = readFixtureLocale(args.appLocale);
   return {
     ...source,
     chunkJson: [encodeTestQuranRow(source.snapshotId, chunkRow())],
@@ -151,7 +164,7 @@ function referenceResult(args: Record<string, unknown>) {
 }
 /** Builds one app-locale signed markdown response. */
 function markdownResult(args: Record<string, unknown>) {
-  const appLocale = args.appLocale === "id" ? "id" : "en";
+  const appLocale = readFixtureLocale(args.appLocale);
   const verse = chunkRow().verses[0];
   if (!verse) {
     throw new Error("Expected one technical Quran verse.");
@@ -230,13 +243,17 @@ function chunkRow() {
             appLocale: "id",
             value: { footnotes: "", text: "Dengan nama Allah." },
           },
+          {
+            appLocale: "de",
+            value: { footnotes: "", text: "Im Namen Allahs." },
+          },
         ],
       },
     ],
   });
 }
 /** Builds one app-locale signed Quran search row. */
-function searchRow(appLocale: "en" | "id") {
+function searchRow(appLocale: ActiveAppLocaleCode) {
   return Schema.decodeSync(QuranSearchRowSchema)({
     appLocale,
     graph: {
@@ -252,4 +269,12 @@ function searchRow(appLocale: "en" | "id") {
     text: "Al-Fatihah",
     title: "1. Al-Fatihah",
   });
+}
+
+/** Narrows one runtime fixture request to the contract-owned active locales. */
+function readFixtureLocale(value: unknown): ActiveAppLocaleCode {
+  if (value === "id" || value === "de") {
+    return value;
+  }
+  return "en";
 }

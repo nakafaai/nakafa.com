@@ -1,3 +1,4 @@
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { PublicRuntimeRow } from "@repo/backend/convex/contentRelease/runtime/public/internal";
 import schema from "@repo/backend/convex/schema";
@@ -34,13 +35,16 @@ import { describe, expect, it } from "vitest";
 const routeArgs = {
   appLocale: "en",
   publicPath: TEST_RUNTIME_PATH,
-} satisfies { readonly appLocale: "en" | "id"; readonly publicPath: string };
+} satisfies {
+  readonly appLocale: ActiveAppLocaleCode;
+  readonly publicPath: string;
+};
 const readPublic = internal.contentRelease.runtime.public.internal.read;
 const readPublicBatch = makeFunctionReference<
   "query",
   {
     readonly requests: ReadonlyArray<{
-      readonly appLocale: "en" | "id";
+      readonly appLocale: ActiveAppLocaleCode;
       readonly publicPath: string;
     }>;
   },

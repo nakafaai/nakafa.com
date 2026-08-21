@@ -1,3 +1,4 @@
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   createConvexTestWithBetterAuth,
@@ -61,7 +62,7 @@ describe("tryouts/start/scale", () => {
       await ctx.db.delete("contentReleases", release._id);
       await ctx.db.delete("contentState", state._id);
 
-      const locales = ["en", "id"] as const;
+      const locales = ACTIVE_APP_LOCALE_CODES;
       const catalog = locales.flatMap((locale) =>
         makeTryoutStartCatalog(locale, "visible", "irt").map((row) =>
           locale === "en" && row.kind === "set"

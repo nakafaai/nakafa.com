@@ -1,4 +1,7 @@
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import {
+  ACTIVE_APP_LOCALE_CODES,
+  AppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
 import {
   type TryoutCatalogRow,
   TryoutCatalogRowSchema,
@@ -34,24 +37,22 @@ const identity: TryoutSetIdentity = {
   trackKey: TRYOUT_START_TRACK,
 };
 
-/** Activates one complete signed start fixture in both supported locales. */
+/** Activates one complete signed start fixture in every active locale. */
 async function activateSet(
   transform: (
     rows: readonly TryoutCatalogRow[]
   ) => readonly TryoutCatalogRow[] = (rows) => rows
 ) {
   const t = convexTest(schema, convexModules);
-  const catalog = transform([
-    ...makeTryoutStartCatalog("en", "visible"),
-    ...makeTryoutStartCatalog("id", "visible"),
-  ]);
+  const catalog = transform(
+    ACTIVE_APP_LOCALE_CODES.flatMap((locale) =>
+      makeTryoutStartCatalog(locale, "visible")
+    )
+  );
   const snapshotId = await t.mutation((ctx) =>
     activateTryoutSnapshot(ctx, {
       catalog,
-      placements: [
-        makeTryoutStartPlacement("en"),
-        makeTryoutStartPlacement("id"),
-      ],
+      placements: ACTIVE_APP_LOCALE_CODES.map(makeTryoutStartPlacement),
     })
   );
   return { snapshotId, t };

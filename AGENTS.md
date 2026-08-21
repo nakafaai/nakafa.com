@@ -297,7 +297,9 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 
 ## MDX And Content Rules
 
-- Content is primarily Indonesian unless context requires English.
+- Authored content follows the locale-equivalent source owned by Aksara.
+  English, Indonesian, and German variants preserve the same reviewed facts,
+  pedagogy, exercises, and renderer contracts without locale fallback.
 - Locale variants of language-subject exams preserve the language being assessed; for example, Indonesian-language questions remain Indonesian and English-language questions remain English in every UI locale. Localize the surrounding shell and explanations without adding redundant per-section language override metadata.
 - Subject lesson headings start at `h2`; keep lesson depth at `h3`.
 - Exercise answer MDX is rendered under the app-provided `h3` answer heading, so answer sections start at `h4` and may use `h5` for real nested analysis.

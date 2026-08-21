@@ -6,13 +6,17 @@ import type { AppLocale } from "@nakafa/aksara-contracts/locale";
 import { projectMdxForAgentMarkdown } from "@repo/contents/_types/llms/mdx";
 import { Effect } from "effect";
 import { applyPublishedContentCache } from "@/lib/content/cache";
+import { readPublishedPage } from "@/lib/content/page/published";
 import { readPublishedArticle } from "@/lib/content/published/article";
 import { readPublishedMaterial } from "@/lib/content/published/material";
 import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader, getMdxDescription } from "@/lib/llms/format";
 import { getRawAksaraUrl } from "@/lib/utils/github";
 
-type PublishedMarkdownFamily = Extract<ContentFamily, "article" | "material">;
+type PublishedMarkdownFamily = Extract<
+  ContentFamily,
+  "article" | "material" | "page"
+>;
 
 /** Exact public content identity required for agent-facing markdown. */
 export interface PublishedMarkdownInput {
@@ -61,7 +65,7 @@ const buildPublishedText = Effect.fn("www.llms.published.text")(function* ({
   ].join("\n");
 });
 
-/** Reads one verified article or material artifact as agent-facing text data. */
+/** Reads one verified body-bearing artifact as agent-facing text data. */
 const readPublishedTextData = Effect.fn("www.llms.published.data")(function* (
   input: PublishedMarkdownInput
 ) {
@@ -70,6 +74,19 @@ const readPublishedTextData = Effect.fn("www.llms.published.data")(function* (
     return {
       artifactHash: data.artifact.artifactHash,
       description: getMdxDescription(data.projection.metadata),
+      publicPath: data.projection.publicPath,
+      rawMdx: data.artifact.payload.rawMdx,
+      sourcePath: data.sourcePath,
+      sourceRevision: data.sourceRevision,
+      title: data.projection.metadata.title,
+    };
+  }
+
+  if (input.family === "page") {
+    const data = yield* readPublishedPage(input);
+    return {
+      artifactHash: data.artifact.artifactHash,
+      description: data.projection.metadata.description,
       publicPath: data.projection.publicPath,
       rawMdx: data.artifact.payload.rawMdx,
       sourcePath: data.sourcePath,

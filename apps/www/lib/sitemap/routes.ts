@@ -1,7 +1,16 @@
+import {
+  type ActiveAppLocaleCode,
+  activeAppLocaleCode,
+} from "@nakafa/aksara-contracts/locale";
+import type {
+  PageKey,
+  PublicPageProjection,
+} from "@nakafa/aksara-contracts/projection/page";
 import { compareSitemapPaths } from "@repo/backend/convex/contentRelease/sitemap";
 import { Data, Effect } from "effect";
 import { readPublishedArticleSitemap } from "@/lib/content/article/sitemap";
 import { readPublishedMaterialSitemap } from "@/lib/content/material/sitemap";
+import { readPublishedPageCatalog } from "@/lib/content/page/catalog";
 import { readPublishedProgramSitemap } from "@/lib/content/program/sitemap";
 import { readPublishedQuranCatalog } from "@/lib/content/quran/publication";
 import { readPublishedTryoutSitemap } from "@/lib/content/tryout/sitemap";
@@ -9,6 +18,7 @@ import {
   getSitemapPageDescriptor,
   isArticleSitemapPage,
   isMaterialSitemapPage,
+  isPageSitemapPage,
   isProgramSitemapPage,
   isQuranSitemapPage,
   isTryoutSitemapPage,
@@ -28,11 +38,8 @@ export const baseRoutes: readonly string[] = [
   "/",
   "/contributor",
   "/curricula",
-  "/privacy-policy",
   quranRootRoute,
   "/search",
-  "/security-policy",
-  "/terms-of-service",
 ];
 
 /** Reads the bounded routes and shared metadata for one sitemap page. */
@@ -111,6 +118,39 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
             path: routeToPath(publicPath),
           }))
           .sort((left, right) => compareSitemapPaths(left.path, right.path)),
+      };
+    }
+
+    if (isPageSitemapPage(page)) {
+      const catalog = yield* readPublishedPageCatalog();
+      const alternatePathsByPageKey = new Map<
+        PageKey,
+        Partial<Record<ActiveAppLocaleCode, string>>
+      >();
+      const projections: PublicPageProjection[] = [];
+      for (const projection of catalog.projections) {
+        const alternatePaths =
+          alternatePathsByPageKey.get(projection.pageKey) ?? {};
+        alternatePaths[activeAppLocaleCode(projection.appLocale)] =
+          `/${projection.publicPath}`;
+        alternatePathsByPageKey.set(projection.pageKey, alternatePaths);
+        if (projection.appLocale === page.locale) {
+          projections.push(projection);
+        }
+      }
+      if (projections.length === 0) {
+        return yield* new SitemapPageNotFoundError({ pageId });
+      }
+      const routes = projections.map((projection) => ({
+        alternatePaths: alternatePathsByPageKey.get(projection.pageKey),
+        lastModified: Date.parse(
+          `${projection.metadata.lastModified}T00:00:00.000Z`
+        ),
+        path: routeToPath(projection.publicPath),
+      }));
+      routes.sort((left, right) => compareSitemapPaths(left.path, right.path));
+      return {
+        routes,
       };
     }
 

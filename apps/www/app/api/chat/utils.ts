@@ -1,6 +1,6 @@
+import type { ActiveAppLocaleCode as Locale } from "@nakafa/aksara-contracts/locale";
 import { AgentLearningSelectionSchema } from "@repo/ai/types/agents";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
-import type { Locale } from "@repo/utilities/locales";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { Effect, Schema } from "effect";
 import { ChatMutationError, ChatQueryError } from "@/app/api/chat/errors";

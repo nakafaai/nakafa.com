@@ -238,7 +238,9 @@ export function retainedRuntimeFound(
 /** Inserts one fixed synthetic attempt and its exact retained history bytes. */
 export async function insertRetainedRuntime(
   ctx: MutationCtx,
-  args: { readonly appLocale?: "en" | "id" } = {}
+  args: {
+    readonly appLocale?: StoredProtectedRuntimeRequest["appLocale"];
+  } = {}
 ): Promise<{ readonly request: StoredProtectedRuntimeRequest }> {
   const appLocale = args.appLocale ?? "en";
   const userId = await ctx.db.insert("users", {

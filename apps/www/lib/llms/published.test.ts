@@ -6,6 +6,7 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { readPublishedPage } from "@/lib/content/page/published";
 import { readPublishedArticle } from "@/lib/content/published/article";
 import { readPublishedMaterial } from "@/lib/content/published/material";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
@@ -15,6 +16,7 @@ import {
   testArticleProjection,
   testArticleSourcePath,
 } from "@/test/content-article";
+import { testPageArtifact, testPageProjection } from "@/test/content-page";
 import {
   previewMetadata,
   previewProjection,
@@ -26,6 +28,7 @@ const cacheLifeMock = vi.hoisted(() => vi.fn());
 const cacheTagMock = vi.hoisted(() => vi.fn());
 const readArticleMock = vi.hoisted(() => vi.fn());
 const readMaterialMock = vi.hoisted(() => vi.fn());
+const readPageMock = vi.hoisted(() => vi.fn());
 const liveRenderer = await Effect.runPromise(rendererManifest);
 const sourceRevision = GitCommitShaSchema.make("a".repeat(40));
 const rawMdx = `## What is a Function?
@@ -56,6 +59,14 @@ const articleData = {
   sourcePath: testArticleSourcePath,
   sourceRevision,
 };
+const pageData = {
+  activeReleaseId: ReleaseIdSchema.make("release-pages"),
+  artifact: testPageArtifact,
+  projection: testPageProjection,
+  rendererManifest: liveRenderer,
+  sourcePath: testPageProjection.sourcePath,
+  sourceRevision,
+};
 vi.mock("next/cache", () => ({
   cacheLife: cacheLifeMock,
   cacheTag: cacheTagMock,
@@ -66,12 +77,16 @@ vi.mock("@/lib/content/published/material", () => ({
 vi.mock("@/lib/content/published/article", () => ({
   readPublishedArticle: readArticleMock,
 }));
+vi.mock("@/lib/content/page/published", () => ({
+  readPublishedPage: readPageMock,
+}));
 beforeEach(() => {
   cacheLifeMock.mockReset();
   cacheTagMock.mockReset();
   readArticleMock.mockReset().mockReturnValue(Effect.succeed(articleData));
   readMaterialMock.mockReset();
   readMaterialMock.mockReturnValue(Effect.succeed(materialData));
+  readPageMock.mockReset().mockReturnValue(Effect.succeed(pageData));
 });
 
 describe("published llms markdown", () => {
@@ -123,6 +138,29 @@ describe("published llms markdown", () => {
       "content-runtime",
       "content-family:article",
       `content-artifact:${testArticleArtifact.artifactHash}`
+    );
+  });
+
+  it("selects signed Page metadata and provenance without filesystem fallback", async () => {
+    const text = await getCachedPublishedText({
+      activeReleaseId: pageData.activeReleaseId,
+      appLocale: testPageProjection.appLocale,
+      family: "page",
+      publicPath: testPageProjection.publicPath,
+    });
+
+    expect(text).toContain(testPageProjection.metadata.description);
+    expect(text).toContain(testPageArtifact.payload.rawMdx);
+    expect(readPublishedPage).toHaveBeenCalledWith({
+      activeReleaseId: pageData.activeReleaseId,
+      appLocale: testPageProjection.appLocale,
+      family: "page",
+      publicPath: testPageProjection.publicPath,
+    });
+    expect(cacheTagMock).toHaveBeenCalledWith(
+      "content-runtime",
+      "content-family:page",
+      `content-artifact:${testPageArtifact.artifactHash}`
     );
   });
 

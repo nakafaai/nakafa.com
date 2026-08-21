@@ -5,6 +5,7 @@ import type { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { readPublishedMaterialContext } from "@/lib/content/material/context";
 import { readPublishedMaterialRoute } from "@/lib/content/material/route";
+import { readPublishedPageLocalePath } from "@/lib/content/page/catalog";
 import { readPublishedProgramRoute } from "@/lib/content/program/route";
 import type { ContentReleasePin } from "@/lib/content/published/release";
 import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
@@ -18,6 +19,7 @@ type Locale = (typeof routing.locales)[number];
 
 interface PublishedLocalizedHrefInput {
   currentLocale: Locale;
+  hash: string;
   locale: Locale;
   publicPath: string;
   search: string;
@@ -56,11 +58,12 @@ const readLocalizedMaterialSuffix = Effect.fn(
   return published ? toMaterialContextQueryString(context) : "";
 });
 
-/** Resolves an Aksara-owned material or curriculum locale counterpart. */
+/** Resolves an Aksara-owned localized route counterpart. */
 export const readPublishedLocalizedHref = Effect.fn(
   "www.routing.locale.readPublished"
 )(function* ({
   currentLocale,
+  hash,
   locale,
   publicPath,
   search,
@@ -96,7 +99,7 @@ export const readPublishedLocalizedHref = Effect.fn(
       search,
       target,
     });
-    return toNavigationHref(target.publicPath, suffix);
+    return toNavigationHref(target.publicPath, `${suffix}${hash}`);
   }
 
   if (surface?.key === "tryout") {
@@ -111,11 +114,25 @@ export const readPublishedLocalizedHref = Effect.fn(
         publicPath,
       });
     }
-    return toNavigationHref(target, "");
+    return toNavigationHref(target, `${search}${hash}`);
   }
 
-  if (surface?.key !== "curriculum") {
-    return null;
+  if (!surface) {
+    const target = yield* readPublishedPageLocalePath({
+      currentLocale,
+      locale,
+      publicPath,
+    });
+    if (target.kind === "unmanaged") {
+      return null;
+    }
+    if (target.kind === "missing") {
+      return yield* new MissingLocalizedRouteProjectionError({
+        locale,
+        publicPath,
+      });
+    }
+    return toNavigationHref(target.publicPath, `${search}${hash}`);
   }
 
   const current = yield* readPublishedProgramRoute(currentLocale, publicPath);
@@ -139,5 +156,5 @@ export const readPublishedLocalizedHref = Effect.fn(
       publicPath,
     });
   }
-  return toNavigationHref(target.publicPath, "");
+  return toNavigationHref(target.publicPath, `${search}${hash}`);
 });

@@ -173,6 +173,41 @@ export const previewIdProjection = makeMaterialLessonProjection(
   previewIdMetadata
 );
 
+/** Exact German route owned by the real Function Concept source. */
+export const previewDeRoute = Schema.decodeSync(MaterialLessonRouteSchema)({
+  contentKey: previewRoute.contentKey,
+  graph: makeMaterialGraph(
+    "mathematics",
+    "function-composition-inverse-function",
+    "function-concept",
+    "de"
+  ),
+  appLocale: AppLocaleSchema.make("de"),
+  artifactLocale: ArtifactLocaleSchema.make("de"),
+  materialKey: previewRoute.materialKey,
+  order: previewRoute.order,
+  publicPath:
+    "faecher/mathematik/funktionskomposition-und-umkehrfunktion/funktionsbegriff",
+  sectionKey: previewRoute.sectionKey,
+  topicTitle: "Funktionskomposition und Umkehrfunktion",
+});
+
+/** Exact German metadata authored by the real Function Concept lesson. */
+export const previewDeMetadata = MaterialMetadataSchema.make({
+  authors: [{ name: "Nabil Akbarazzima Fatih" }],
+  date: "2025-04-27",
+  description:
+    "Verstehe Funktionen als Regeln, die jeder zulässigen Eingabe genau eine Ausgabe zuordnen, und lies anschließend Notation, Tabellen und geordnete Paare.",
+  subject: "Funktionszusammensetzung und Umkehrfunktion",
+  title: "Funktionsbegriff",
+});
+
+/** Exact German projection derived from the selected real document. */
+export const previewDeProjection = makeMaterialLessonProjection(
+  previewDeRoute,
+  previewDeMetadata
+);
+
 /** Exact filtered-history source path selected by the Aksara CLI. */
 export const previewSourcePath = CorpusSourcePathSchema.make(
   "packages/corpus/material/lesson/mathematics/function-composition-inverse-function/function-concept/en.mdx"

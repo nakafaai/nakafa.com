@@ -54,6 +54,7 @@ describe("contentRelease/material/model", () => {
     expect(result.alternateJson.map(decodeProjection)).toMatchObject([
       { appLocale: "en", order: 1 },
       { appLocale: "id", order: 1 },
+      { appLocale: "de", order: 1 },
     ]);
     expect(result.siblingJson.map(decodeProjection)).toMatchObject([
       { appLocale: "en", order: 1 },

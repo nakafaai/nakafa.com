@@ -1,10 +1,23 @@
 // @vitest-environment node
+import {
+  ContentKeySchema,
+  CorpusSourcePathSchema,
+  PublicPathSchema,
+} from "@nakafa/aksara-contracts/ids";
+import {
+  AppLocaleSchema,
+  ArtifactLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
+import {
+  PageKeySchema,
+  PublicPageProjectionSchema,
+} from "@nakafa/aksara-contracts/projection/page";
 import { describe, expect, it } from "vitest";
 import { BASE_URL } from "@/lib/llms/constants";
 import {
   buildPublishedContentLlmsEntries,
+  buildSiteLlmsEntries,
   getLlmsSections,
-  getSiteLlmsEntries,
   isLlmsSection,
 } from "@/lib/llms/entries";
 
@@ -21,9 +34,26 @@ describe("llms entries", () => {
     ]);
   });
 
-  it("localizes static site routes", () => {
-    const englishEntries = getSiteLlmsEntries("en");
-    const indonesianEntries = getSiteLlmsEntries("id");
+  it("combines localized indexes with signed Page metadata", () => {
+    const page = PublicPageProjectionSchema.make({
+      appLocale: AppLocaleSchema.make("en"),
+      artifactLocale: ArtifactLocaleSchema.make("en"),
+      contentKey: ContentKeySchema.make("pages/privacy-policy"),
+      kind: "public-page",
+      metadata: {
+        description: "How Nakafa protects personal data.",
+        lastModified: "2026-08-21",
+        title: "Privacy Policy",
+      },
+      pageKey: PageKeySchema.make("privacy-policy"),
+      publicPath: PublicPathSchema.make("privacy-policy"),
+      sitemap: true,
+      sourcePath: CorpusSourcePathSchema.make(
+        "packages/corpus/pages/privacy-policy/en.mdx"
+      ),
+    });
+    const englishEntries = buildSiteLlmsEntries("en", [page]);
+    const indonesianEntries = buildSiteLlmsEntries("id", [page]);
     const englishCurriculum = englishEntries.find(
       (entry) => entry.route === "/curriculum"
     );
@@ -44,8 +74,13 @@ describe("llms entries", () => {
     expect(englishEntries.map((entry) => entry.route)).toEqual([
       "/curriculum",
       "/privacy-policy",
-      "/security-policy",
-      "/terms-of-service",
+    ]);
+    expect(englishEntries[1]).toMatchObject({
+      description: page.metadata.description,
+      title: page.metadata.title,
+    });
+    expect(indonesianEntries.map((entry) => entry.route)).toEqual([
+      "/kurikulum",
     ]);
     expect(englishEntries.some((entry) => entry.route === "/")).toBe(false);
     expect(englishEntries.some((entry) => entry.route === "/contributor")).toBe(
@@ -83,5 +118,30 @@ describe("llms entries", () => {
           "Framing Dynastic Politics in Local Elections within Asian Values",
       },
     ]);
+  });
+
+  it("preserves every segment of a nested signed Page route", () => {
+    const page = PublicPageProjectionSchema.make({
+      appLocale: AppLocaleSchema.make("en"),
+      artifactLocale: ArtifactLocaleSchema.make("en"),
+      contentKey: ContentKeySchema.make("pages/privacy-policy"),
+      kind: "public-page",
+      metadata: {
+        description: "How Nakafa protects personal data.",
+        lastModified: "2026-08-21",
+        title: "Privacy Policy",
+      },
+      pageKey: PageKeySchema.make("privacy-policy"),
+      publicPath: PublicPathSchema.make("legal/privacy-policy"),
+      sitemap: true,
+      sourcePath: CorpusSourcePathSchema.make(
+        "packages/corpus/pages/privacy-policy/en.mdx"
+      ),
+    });
+
+    expect(buildSiteLlmsEntries("en", [page])[1]).toMatchObject({
+      route: "/legal/privacy-policy",
+      segments: ["site", "legal", "privacy-policy"],
+    });
   });
 });

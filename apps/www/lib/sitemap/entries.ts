@@ -1,7 +1,7 @@
 import { getPathname } from "@repo/internationalization/src/navigation";
 import { routing } from "@repo/internationalization/src/routing";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import type { MetadataRoute } from "next";
 import type { Locale } from "next-intl";
 import { getLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
@@ -13,12 +13,19 @@ type SitemapChangeFrequency = NonNullable<SitemapEntry["changeFrequency"]>;
 
 /** Optional settings shared by the Next route and standalone indexing scripts. */
 interface SitemapEntryOptions {
+  alternatePaths?: Partial<Record<Locale, string>>;
   lastModified?: number;
   locales: readonly Locale[];
 }
 
 interface SitemapPageEntryOptions {
   pageId: string;
+}
+
+interface SitemapRouteEntry {
+  readonly alternatePaths?: Partial<Record<Locale, string>>;
+  readonly lastModified?: number;
+  readonly path: string;
 }
 
 const host = `https://${MAIN_DOMAIN}`;
@@ -37,7 +44,7 @@ function getEntries(href: string, options: SitemapEntryOptions) {
   return locales.map((locale) => ({
     url: getUrl(href, locale),
     alternates: {
-      languages: getAlternateLanguages(href, locales),
+      languages: getAlternateLanguages(href, locales, options.alternatePaths),
     },
     changeFrequency,
     lastModified: getRouteLastModified(routeString, options.lastModified),
@@ -71,8 +78,26 @@ function getRouteLastModified(routeString: string, lastModified?: number) {
 }
 
 /** Builds hreflang alternates only for locales included in the current page. */
-function getAlternateLanguages(href: string, locales: readonly Locale[]) {
+function getAlternateLanguages(
+  href: string,
+  locales: readonly Locale[],
+  alternatePaths?: Partial<Record<Locale, string>>
+) {
   const languages: Partial<{ [Key in Locale | "x-default"]: string }> = {};
+
+  if (alternatePaths) {
+    for (const locale of routing.locales) {
+      const path = alternatePaths[locale];
+      if (path) {
+        languages[locale] = `${host}/${locale}${path}`;
+      }
+    }
+    const defaultPath = alternatePaths[routing.defaultLocale];
+    if (defaultPath) {
+      languages["x-default"] = `${host}/${routing.defaultLocale}${defaultPath}`;
+    }
+    return languages;
+  }
 
   for (const locale of locales) {
     languages[locale] = getUrl(href, locale);
@@ -92,11 +117,10 @@ function getUrl(href: string, locale: Locale): string {
     route: href,
   });
 
-  if (mappedPathname) {
-    return `${host}/${locale}${mappedPathname}`;
-  }
-
-  return host + getPathname({ locale, href, forcePrefix: true });
+  return Option.match(mappedPathname, {
+    onNone: () => host + getPathname({ locale, href, forcePrefix: true }),
+    onSome: (pathname) => `${host}/${locale}${pathname}`,
+  });
 }
 
 /** Generates entries for one bounded sitemap page. */
@@ -104,13 +128,14 @@ export const getSitemapEntries = Effect.fn("www.sitemap.entries.page")(
   function* (options: SitemapPageEntryOptions) {
     const pageId = options.pageId;
     const page = yield* readSitemapRoutePage(pageId);
+    const routes: readonly SitemapRouteEntry[] = page.routes;
     const locales = getSitemapEntryLocales(pageId);
     const entries: SitemapEntry[] = [];
 
-    for (const route of page.routes) {
+    for (const route of routes) {
       entries.push(
         ...getEntries(route.path, {
-          ...options,
+          alternatePaths: route.alternatePaths,
           lastModified: route.lastModified,
           locales,
         })
@@ -156,11 +181,19 @@ function getContentSeoSettings(route: string): {
     return { changeFrequency: "yearly", priority: 0.6 };
   }
 
-  if (route.startsWith("/subjects/") || route.startsWith("/materi/")) {
+  if (
+    route.startsWith("/subjects/") ||
+    route.startsWith("/materi/") ||
+    route.startsWith("/faecher/")
+  ) {
     return { changeFrequency: "monthly", priority: 0.8 };
   }
 
-  if (route.startsWith("/curriculum/") || route.startsWith("/kurikulum/")) {
+  if (
+    route.startsWith("/curriculum/") ||
+    route.startsWith("/kurikulum/") ||
+    route.startsWith("/lehrplaene/")
+  ) {
     return { changeFrequency: "monthly", priority: 0.7 };
   }
 

@@ -1,3 +1,4 @@
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import { readTryoutTaxonomy } from "@repo/backend/convex/contentRelease/tryout/taxonomy";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -13,10 +14,15 @@ import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 /** Builds one localized technical exam beneath the shared country fixture. */
-function makeTryoutExam(locale: "en" | "id") {
+function makeTryoutExam(locale: ActiveAppLocaleCode) {
+  const descriptions = {
+    de: "Technische Prüfung",
+    en: "Technical exam",
+    id: "Ujian teknis",
+  } satisfies Record<ActiveAppLocaleCode, string>;
   return Schema.decodeSync(TryoutCatalogRowSchema)({
     countryKey: "indonesia",
-    description: locale === "en" ? "Technical exam" : "Ujian teknis",
+    description: descriptions[locale],
     examKey: "snbt",
     graph: {
       alignmentId: "alignment:tryout:technical:exam",
@@ -53,10 +59,13 @@ describe("contentRelease/tryout/taxonomy", () => {
           makeTryoutExam("en"),
           makeTryoutCatalogRow("id").record.row,
           makeTryoutExam("id"),
+          makeTryoutCatalogRow("de").record.row,
+          makeTryoutExam("de"),
         ],
         placements: [
           makeTryoutPlacementRow("en").record.row,
           makeTryoutPlacementRow("id").record.row,
+          makeTryoutPlacementRow("de").record.row,
         ],
       })
     );

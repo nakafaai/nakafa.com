@@ -1,4 +1,5 @@
 import { MAX_SIGNED_ARTIFACT_BYTES } from "@nakafa/aksara-contracts/limits";
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { CONTENT_BUCKET_SIZE } from "@repo/backend/convex/contentRelease/bucket";
 import {
   CONTENT_DOCUMENT_LIMIT,
@@ -9,6 +10,11 @@ import {
   MATERIAL_BASELINE_LIMIT,
   MATERIAL_IDENTITY_READ_LIMIT,
 } from "@repo/backend/convex/contentRelease/material/limits";
+import {
+  PAGE_CATALOG_LIMIT,
+  PAGE_IDENTITY_READ_LIMIT,
+  PAGE_OWNER_READ_LIMIT,
+} from "@repo/backend/convex/contentRelease/page/limits";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import {
   PROGRAM_ANCESTOR_LIMIT,
@@ -75,6 +81,21 @@ describe("contentRelease/spec", () => {
       CONTENT_BUCKET_SIZE * 6 * READ_MODEL_DOCUMENT_LIMIT;
 
     expect(maximumArticleWork).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
+  });
+
+  it("bounds the complete locale-equivalent Page catalog", () => {
+    const ownerBytes = PAGE_OWNER_READ_LIMIT * CONTENT_DOCUMENT_LIMIT;
+    const localeCount = ACTIVE_APP_LOCALE_CODES.length;
+    const sentinelRows = localeCount;
+    const identityRows =
+      localeCount * PAGE_CATALOG_LIMIT * PAGE_IDENTITY_READ_LIMIT;
+    const maximumPageWork =
+      ownerBytes + (sentinelRows + identityRows) * READ_MODEL_DOCUMENT_LIMIT;
+
+    expect(PAGE_CATALOG_LIMIT).toBeGreaterThan(0);
+    expect(maximumPageWork).toBeLessThanOrEqual(
       TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
     );
   });

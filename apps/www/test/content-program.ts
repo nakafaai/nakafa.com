@@ -3,7 +3,10 @@ import {
   PublicPathSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import {
+  type ActiveAppLocaleCode,
+  AppLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
 import { MaterialDomainSchema } from "@nakafa/aksara-contracts/material/domain";
 import {
   CurriculumNodeKeySchema,
@@ -68,6 +71,11 @@ export const testPublishedProgram = LearningProgramSchema.make({
     },
     {
       appLocale: AppLocaleSchema.make("id"),
+      publicSlug: "merdeka",
+      title: "Kurikulum Merdeka",
+    },
+    {
+      appLocale: AppLocaleSchema.make("de"),
       publicSlug: "merdeka",
       title: "Kurikulum Merdeka",
     },
@@ -191,6 +199,29 @@ const indonesianSubject = CurriculumRouteSchema.make({
   title: "Matematika",
 });
 
+const germanRoot = CurriculumRouteSchema.make({
+  ...englishRoot,
+  appLocale: AppLocaleSchema.make("de"),
+  publicPath: PublicPathSchema.make("lehrplaene/merdeka"),
+});
+
+const germanClass = CurriculumRouteSchema.make({
+  ...englishClass,
+  displayGroupTitle: "Sekundarstufe II (SMA)",
+  appLocale: AppLocaleSchema.make("de"),
+  parentPath: germanRoot.publicPath,
+  publicPath: PublicPathSchema.make("lehrplaene/merdeka/klasse-11"),
+  title: "Klasse 11",
+});
+
+const germanSubject = CurriculumRouteSchema.make({
+  ...englishSubject,
+  appLocale: AppLocaleSchema.make("de"),
+  parentPath: germanClass.publicPath,
+  publicPath: PublicPathSchema.make("lehrplaene/merdeka/klasse-11/mathematik"),
+  title: "Mathematik",
+});
+
 const publishedRoutes = [
   englishRoot,
   englishClass,
@@ -200,12 +231,15 @@ const publishedRoutes = [
   indonesianRoot,
   indonesianClass,
   indonesianSubject,
+  germanRoot,
+  germanClass,
+  germanSubject,
 ];
 
 /** Reads one explicit signed-contract route fixture by localized public path. */
 export function readTestPublishedRoute(
   publicPath: string,
-  locale: "en" | "id" = "en"
+  locale: ActiveAppLocaleCode = "en"
 ) {
   const route = publishedRoutes.find(
     (candidate) =>

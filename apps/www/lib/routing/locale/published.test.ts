@@ -11,6 +11,7 @@ import {
 const publishedMocks = vi.hoisted(() => ({
   materialContext: vi.fn(),
   materialRoute: vi.fn(),
+  pagePath: vi.fn(),
   programRoute: vi.fn(),
   tryoutPath: vi.fn(),
 }));
@@ -19,12 +20,19 @@ const idProgramSubject = readTestPublishedRoute(
   "kurikulum/merdeka/kelas-11/matematika",
   "id"
 );
+const deProgramSubject = readTestPublishedRoute(
+  "lehrplaene/merdeka/klasse-11/mathematik",
+  "de"
+);
 
 vi.mock("@/lib/content/material/context", () => ({
   readPublishedMaterialContext: publishedMocks.materialContext,
 }));
 vi.mock("@/lib/content/material/route", () => ({
   readPublishedMaterialRoute: publishedMocks.materialRoute,
+}));
+vi.mock("@/lib/content/page/catalog", () => ({
+  readPublishedPageLocalePath: publishedMocks.pagePath,
 }));
 vi.mock("@/lib/content/program/route", () => ({
   readPublishedProgramRoute: publishedMocks.programRoute,
@@ -42,9 +50,12 @@ beforeEach(() => {
       projection: previewProjection,
     })
   );
+  publishedMocks.pagePath
+    .mockReset()
+    .mockReturnValue(Effect.succeed({ kind: "unmanaged" }));
   publishedMocks.programRoute.mockReset().mockReturnValue(
     Effect.succeed({
-      alternates: [testProgramSubject, idProgramSubject],
+      alternates: [testProgramSubject, idProgramSubject, deProgramSubject],
       route: testProgramSubject,
     })
   );
@@ -56,6 +67,7 @@ function readMaterialHref(search = "") {
   return Effect.runSync(
     readPublishedLocalizedHref({
       currentLocale: "en",
+      hash: "",
       locale: "id",
       publicPath: previewProjection.publicPath,
       search,
@@ -111,6 +123,7 @@ describe("published localized route ownership", () => {
       Effect.runSync(
         readPublishedLocalizedHref({
           currentLocale: "en",
+          hash: "",
           locale: "id",
           publicPath: testProgramSubject.publicPath,
           search: "",
@@ -121,6 +134,18 @@ describe("published localized route ownership", () => {
       Effect.runSync(
         readPublishedLocalizedHref({
           currentLocale: "en",
+          hash: "",
+          locale: "de",
+          publicPath: testProgramSubject.publicPath,
+          search: "",
+        })
+      )
+    ).toBe(`/${deProgramSubject.publicPath}`);
+    expect(
+      Effect.runSync(
+        readPublishedLocalizedHref({
+          currentLocale: "en",
+          hash: "",
           locale: "id",
           publicPath: "articles/example",
           search: "",
@@ -141,6 +166,7 @@ describe("published localized route ownership", () => {
       Effect.runSync(
         readPublishedLocalizedHref({
           currentLocale: "id",
+          hash: "",
           locale: "en",
           publicPath:
             "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
@@ -167,6 +193,7 @@ describe("published localized route ownership", () => {
       Effect.runSync(
         readPublishedLocalizedHref({
           currentLocale: "en",
+          hash: "",
           locale: "id",
           publicPath: testProgramSubject.publicPath,
           search: "",
@@ -175,5 +202,43 @@ describe("published localized route ownership", () => {
 
     expect(read).toThrow();
     expect(read).toThrow();
+  });
+
+  it("projects signed Page counterparts and preserves safe URL state", () => {
+    publishedMocks.pagePath.mockReturnValueOnce(
+      Effect.succeed({ kind: "found", publicPath: "impressum" })
+    );
+
+    expect(
+      Effect.runSync(
+        readPublishedLocalizedHref({
+          currentLocale: "en",
+          hash: "#company",
+          locale: "de",
+          publicPath: "legal-notice",
+          search: "?source=footer",
+        })
+      )
+    ).toBe("/impressum?source=footer#company");
+    expect(publishedMocks.pagePath).toHaveBeenCalledWith({
+      currentLocale: "en",
+      locale: "de",
+      publicPath: "legal-notice",
+    });
+
+    publishedMocks.pagePath.mockReturnValueOnce(
+      Effect.succeed({ kind: "missing" })
+    );
+    expect(() =>
+      Effect.runSync(
+        readPublishedLocalizedHref({
+          currentLocale: "en",
+          hash: "",
+          locale: "de",
+          publicPath: "legal-notice",
+          search: "",
+        })
+      )
+    ).toThrow();
   });
 });

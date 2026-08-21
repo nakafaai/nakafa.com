@@ -6,19 +6,14 @@ import { readMaterialContextHint } from "@repo/contents/_types/route/material/co
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { Effect, Schema } from "effect";
-import type { Locale } from "next-intl";
 import { readPublishedMaterialContext } from "@/lib/content/material/context";
 import { readPublishedMaterialRoute } from "@/lib/content/material/route";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
-import { isActiveLocale } from "@/lib/i18n/active";
 /** Returns whether one localized path belongs to the material route surface. */
 export function isPublishedMaterialPath(
-  locale: Locale,
+  locale: PublicAppLocale,
   publicPath: string
-): locale is PublicAppLocale {
-  if (!isActiveLocale(locale)) {
-    return false;
-  }
+): boolean {
   const [namespace] = publicPath.split("/");
   return PUBLIC_ROUTE_SURFACES.some(
     (surface) =>

@@ -887,11 +887,7 @@
   "Legal": {
     "terms-and-policies": "Terms and Policies",
     "terms-of-service": "Terms of Service",
-    "terms-of-service-description": "Read Nakafa's Terms of Service to understand the rules and guidelines for using our educational platform and services.",
     "privacy-policy": "Privacy Policy",
-    "privacy-policy-description": "Learn how Nakafa collects, uses, and protects your personal data and privacy when using our learning platform.",
-    "security-policy": "Security Policy",
-    "security-policy-description": "Review Nakafa's security practices and policies to understand how we safeguard your data and ensure platform security.",
     "legal-description": "By using our services, you agree to our <terms-of-service>Terms of Service</terms-of-service> and <privacy-policy>Privacy Policy</privacy-policy>."
   },
   "AnalyticsConsent": {

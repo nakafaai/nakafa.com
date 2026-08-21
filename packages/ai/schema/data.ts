@@ -1,3 +1,4 @@
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran";
 import { NakafaAgentReadOptionsSchema } from "@repo/contents/_lib/agent/schema/read";
 import {
@@ -10,10 +11,9 @@ import {
 } from "@repo/contents/_lib/agent/schema/search";
 import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/schema/taxonomy";
 import { MathDataSchema } from "@repo/math/schema/data";
-import { locales } from "@repo/utilities/locales";
 import { Schema, Struct } from "effect";
 
-const LocaleSchema = Schema.Literals(locales);
+const LocaleSchema = ActiveAppLocaleCodeSchema;
 const StatusSchema = Schema.Literals(["loading", "done", "error"]);
 const ContentPreviewSchema = NakafaAgentContentRefSchema.mapFields(
   (fields) => ({

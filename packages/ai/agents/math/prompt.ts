@@ -1,6 +1,6 @@
+import type { ActiveAppLocaleCode as Locale } from "@nakafa/aksara-contracts/locale";
 import { createPrompt } from "@repo/ai/prompt/utils";
 import type { AgentContext } from "@repo/ai/types/agents";
-import type { Locale } from "@repo/utilities/locales";
 
 /** Builds the system prompt for Nina's deterministic math agent. */
 export function mathPrompt({

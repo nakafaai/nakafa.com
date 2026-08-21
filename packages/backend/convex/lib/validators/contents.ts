@@ -1,10 +1,10 @@
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { NAKAFA_AGENT_SECTIONS } from "@repo/contents/_lib/agent/constants";
-import { locales } from "@repo/utilities/locales";
 import { type Infer, v } from "convex/values";
 import { literals } from "convex-helpers/validators";
 
 /** Supported content languages for Convex validators. */
-export const SUPPORTED_CONTENT_LOCALES = locales;
+export const SUPPORTED_CONTENT_LOCALES = ACTIVE_APP_LOCALE_CODES;
 export const localeValidator = literals(...SUPPORTED_CONTENT_LOCALES);
 export type Locale = Infer<typeof localeValidator>;
 

@@ -20,6 +20,7 @@ import {
   subjectMenu,
 } from "@/components/sidebar/data/subject";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
+import type { PageNavigationItem } from "@/lib/content/page/navigation";
 
 const highSchoolSubjects =
   subjectMenu.find((subject) => subject.title === "high-school")?.items || [];
@@ -30,8 +31,10 @@ const highSchoolSubjects =
  */
 export function Footer({
   articleNavigation,
+  pageNavigation,
 }: {
   articleNavigation: readonly ArticleNavigationItem[];
+  pageNavigation: readonly PageNavigationItem[];
 }) {
   const t = useTranslations("About");
   const tLegal = useTranslations("Legal");
@@ -121,24 +124,11 @@ export function Footer({
                 {tLegal("terms-and-policies")}
               </span>
               <ul className="flex flex-col gap-2">
-                <li>
-                  <LinkItem
-                    href="/terms-of-service"
-                    label={tLegal("terms-of-service")}
-                  />
-                </li>
-                <li>
-                  <LinkItem
-                    href="/privacy-policy"
-                    label={tLegal("privacy-policy")}
-                  />
-                </li>
-                <li>
-                  <LinkItem
-                    href="/security-policy"
-                    label={tLegal("security-policy")}
-                  />
-                </li>
+                {pageNavigation.map((page) => (
+                  <li key={page.pageKey}>
+                    <LinkItem href={page.href} label={page.title} />
+                  </li>
+                ))}
                 <AnalyticsConsentFooterItem />
               </ul>
             </div>

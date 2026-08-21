@@ -215,7 +215,7 @@ describe("contentRelease/reference/read", () => {
     ).resolves.toBeNull();
   });
 
-  it("keeps contract locales private until the product route cutover", async () => {
+  it("returns null when an active locale has no matching signed identity", async () => {
     const target = convexTest(schema, convexModules);
     const material = makeMaterialProjection("de", 1);
 

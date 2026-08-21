@@ -1,3 +1,4 @@
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import {
   readTryoutSitemapCount,
@@ -17,7 +18,7 @@ import { describe, expect, it } from "vitest";
 
 /** Creates one public country row with a deterministic technical identity. */
 function makeCountry(
-  locale: "en" | "id",
+  locale: ActiveAppLocaleCode,
   countryKey: string,
   publicPath: string,
   order: number
@@ -40,7 +41,7 @@ function makeCountry(
 }
 
 /** Creates one internal entry section that must never enter a sitemap. */
-function makeInternalSection(locale: "en" | "id") {
+function makeInternalSection(locale: ActiveAppLocaleCode) {
   const source = makeTryoutCatalogRow(locale).record.row;
   return Schema.decodeSync(TryoutCatalogRowSchema)({
     countryKey: "indonesia",
@@ -87,6 +88,9 @@ describe("contentRelease/tryout/sitemap", () => {
       makeCountry("id", "zeta", "try-out/zeta", 2),
       makeCountry("id", "alpha", "try-out/alpha", 1),
       makeInternalSection("id"),
+      makeCountry("de", "zeta", "try-out/zeta", 2),
+      makeCountry("de", "alpha", "try-out/alpha", 1),
+      makeInternalSection("de"),
     ];
     await t.mutation((ctx) =>
       activateTryoutSnapshot(ctx, {
@@ -94,6 +98,7 @@ describe("contentRelease/tryout/sitemap", () => {
         placements: [
           makeTryoutPlacementRow("en").record.row,
           makeTryoutPlacementRow("id").record.row,
+          makeTryoutPlacementRow("de").record.row,
         ],
       })
     );

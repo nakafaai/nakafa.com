@@ -2,8 +2,13 @@
 
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
-import { decodePublishedArticle } from "@/lib/content/published/projection";
+import {
+  decodePublishedArticle,
+  decodePublishedPage,
+  decodePublishedPageJson,
+} from "@/lib/content/published/projection";
 import { testArticleProjection } from "@/test/content-article";
+import { testPageProjection } from "@/test/content-page";
 
 const articleIdentity = {
   appLocale: testArticleProjection.appLocale,
@@ -38,6 +43,56 @@ describe("published projection", () => {
     ).resolves.toMatchObject({
       _tag: "PublishedProjectionError",
       ...articleIdentity,
+    });
+  });
+
+  it("decodes an exact signed Page projection", async () => {
+    const identity = {
+      appLocale: testPageProjection.appLocale,
+      publicPath: testPageProjection.publicPath,
+    } satisfies Parameters<typeof decodePublishedPage>[1];
+
+    await expect(
+      Effect.runPromise(decodePublishedPage(testPageProjection, identity))
+    ).resolves.toEqual(testPageProjection);
+    await expect(
+      Effect.runPromise(
+        decodePublishedPage(testPageProjection, {
+          ...identity,
+          publicPath: "other-page",
+        }).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({
+      _tag: "PublishedProjectionError",
+      appLocale: testPageProjection.appLocale,
+      publicPath: "other-page",
+    });
+    await expect(
+      Effect.runPromise(decodePublishedPage({}, identity).pipe(Effect.flip))
+    ).resolves.toMatchObject({
+      _tag: "PublishedProjectionError",
+      ...identity,
+    });
+    await expect(
+      Effect.runPromise(
+        decodePublishedPageJson(JSON.stringify(testPageProjection), identity)
+      )
+    ).resolves.toEqual(testPageProjection);
+    await expect(
+      Effect.runPromise(
+        decodePublishedPageJson("{", identity).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({
+      _tag: "PublishedProjectionError",
+      ...identity,
+    });
+    await expect(
+      Effect.runPromise(
+        decodePublishedPageJson("{}", identity).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({
+      _tag: "PublishedProjectionError",
+      ...identity,
     });
   });
 });

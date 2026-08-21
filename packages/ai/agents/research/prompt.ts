@@ -1,6 +1,6 @@
+import type { ActiveAppLocaleCode as Locale } from "@nakafa/aksara-contracts/locale";
 import { createPrompt } from "@repo/ai/prompt/utils";
 import type { AgentContext } from "@repo/ai/types/agents";
-import type { Locale } from "@repo/utilities/locales";
 
 /** Builds the research agent prompt for source evidence collection. */
 export function researchEvidencePrompt({

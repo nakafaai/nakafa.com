@@ -1,3 +1,4 @@
+import type { ActiveAppLocaleCode as Locale } from "@nakafa/aksara-contracts/locale";
 import type {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
@@ -5,7 +6,6 @@ import type {
 import type { NakafaAgentQuranReference } from "@repo/contents/_lib/agent/schema/quran";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentTaxonomy } from "@repo/contents/_lib/agent/schema/taxonomy";
-import type { Locale } from "@repo/utilities/locales";
 import { Context, type Effect, type Option } from "effect";
 
 type NakafaReadError = NakafaAgentDataReadError | NakafaAgentInputError;

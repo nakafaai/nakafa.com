@@ -1,3 +1,4 @@
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import {
   formatQuran,
   formatRead,
@@ -5,8 +6,9 @@ import {
   formatTaxonomy,
 } from "@repo/ai/agents/nakafa/format";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
-import { defaultLocale, locales } from "@repo/utilities/locales";
 import { describe, expect, it } from "vitest";
+
+const defaultLocale = ACTIVE_APP_LOCALE_CODES[0];
 
 const subjectRoute =
   "material/lesson/mathematics/example-topic/example-section";
@@ -103,7 +105,7 @@ describe("Nakafa formatter", () => {
         root_note: "Use /mcp for MCP transport.",
       },
       locale: "id",
-      locales: Array.from(locales),
+      locales: Array.from(ACTIVE_APP_LOCALE_CODES),
       quran: {
         surah_count: 114,
       },

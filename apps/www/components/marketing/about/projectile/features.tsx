@@ -1,6 +1,7 @@
 "use client";
 
 import { useIntersection } from "@mantine/hooks";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import {
   DEFAULT_PROJECTILE_SCENARIO_ID,
   formatMeterMath,
@@ -45,6 +46,12 @@ const importProjectileScene = () =>
     (module) => module.ProjectileScene
   );
 
+const decimalSeparators = {
+  de: "comma",
+  en: "dot",
+  id: "comma",
+} as const satisfies Record<ActiveAppLocaleCode, "comma" | "dot">;
+
 /** Keeps the lesson content available while deferring only its WebGL scene. */
 export function FeaturesProjectile() {
   const { ref, entry } = useIntersection({
@@ -62,7 +69,7 @@ export function FeaturesProjectile() {
     DEFAULT_PROJECTILE_SCENARIO_ID
   );
   const motion = getProjectileMotionState(scenarioId);
-  const decimalSeparator = locale === "id" ? "comma" : "dot";
+  const decimalSeparator = decimalSeparators[locale];
   const instantVelocity = getVelocityAtTime(motion, PROJECTILE_INSTANT_TIME);
   const facts = [
     {

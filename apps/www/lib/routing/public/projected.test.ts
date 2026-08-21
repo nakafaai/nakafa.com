@@ -154,14 +154,20 @@ describe("projected public html route rejection", () => {
     expect(mockReadRuntimeContentReference).not.toHaveBeenCalled();
   });
 
-  it("rejects inactive contract routes that are not the selected preview", async () => {
+  it("uses active ownership for German material routes", async () => {
     await expect(
       readRejection(
         "/de/faecher/mathematik/analytische-geometrie/stellung-zweier-kreise"
       )
     ).resolves.toBe("de");
 
-    expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
+    expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
+      activeReleaseId,
+      appLocale: "de",
+      family: "material",
+      publicPath:
+        "faecher/mathematik/analytische-geometrie/stellung-zweier-kreise",
+    });
     expect(mockReadRuntimeContentReference).not.toHaveBeenCalled();
   });
 

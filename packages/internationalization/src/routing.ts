@@ -1,6 +1,11 @@
-import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
-import { defaultLocale, locales } from "@repo/utilities/locales";
+import {
+  ACTIVE_APP_LOCALE_CODES,
+  type ActiveAppLocaleCode,
+  APP_LOCALE_CODES,
+} from "@nakafa/aksara-contracts/locale";
 import { defineRouting } from "next-intl/routing";
+
+const defaultLocale = ACTIVE_APP_LOCALE_CODES[0];
 
 const pathnames = {
   "/curricula": {
@@ -23,13 +28,13 @@ const pathnames = {
 export const routing = defineRouting({
   // Page metadata and sitemap build source-identity alternates for projected content routes.
   alternateLinks: false,
-  locales,
+  locales: ACTIVE_APP_LOCALE_CODES,
   defaultLocale,
   pathnames,
 });
 
 /** Application locale currently exposed through public product routes. */
-export type PublicAppLocale = (typeof locales)[number];
+export type PublicAppLocale = ActiveAppLocaleCode;
 
 /** Full contract locale routing used only by authenticated local previews. */
 export const previewRouting = defineRouting({

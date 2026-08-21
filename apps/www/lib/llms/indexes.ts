@@ -7,7 +7,6 @@ import { getContentPageLlmsEntries } from "@/lib/llms/content-entries";
 import { getContentListingLlmsEntries } from "@/lib/llms/content-listing";
 import {
   getLlmsSections,
-  getSiteLlmsEntries,
   isLlmsSection,
   type LlmsEntry,
 } from "@/lib/llms/entries";
@@ -23,6 +22,7 @@ import {
   buildLlmsSectionPageMapText,
   getLlmsSectionPages,
 } from "@/lib/llms/section";
+import { readSiteLlmsEntries } from "@/lib/llms/site";
 
 const LOCALE_INDEX_ENTRY_LIMIT = 60;
 
@@ -61,7 +61,7 @@ export const getLlmsSectionIndexText = Effect.fn("www.llms.index.text")(
     }
 
     if (section === "site") {
-      const entries = getSiteLlmsEntries(locale);
+      const entries = yield* readSiteLlmsEntries(locale);
       return buildLlmsSiteIndexText({ entries, locale });
     }
 
@@ -139,7 +139,7 @@ function parseLlmsIndexSlug(cleanSlug: string) {
   };
 }
 
-/** Builds the bounded site index from static site routes only. */
+/** Builds the bounded site index from derived and signed Page routes. */
 function buildLlmsSiteIndexText({
   entries,
   locale,
@@ -151,7 +151,7 @@ function buildLlmsSiteIndexText({
 
   return renderLlmsIndexText({
     lines: entries.map(formatLlmsEntryLine),
-    summary: `For AI agents: static ${localeLabel} site pages that do not require content route catalog reads.`,
+    summary: `For AI agents: reviewed ${localeLabel} site pages from Nakafa indexes and the active signed Page catalog.`,
     title: `Nakafa ${localeLabel} Site Pages`,
   });
 }
@@ -189,11 +189,13 @@ function buildLocaleLlmsIndexText({
 }
 
 /** Reads a bounded starter set of page-level markdown entries for one locale. */
-function getLocaleIndexEntries(locale: Locale) {
+const getLocaleIndexEntries = Effect.fn("www.llms.locale.entries")(function* (
+  locale: Locale
+) {
   const sections = getLlmsSections().filter(isContentLlmsSection);
-  const siteEntries = getSiteLlmsEntries(locale);
+  const siteEntries = yield* readSiteLlmsEntries(locale);
 
-  return Effect.all(
+  const sectionEntries = yield* Effect.all(
     sections.map((section) =>
       getContentPageLlmsEntries({
         locale,
@@ -201,22 +203,19 @@ function getLocaleIndexEntries(locale: Locale) {
         section,
       })
     )
-  ).pipe(
-    Effect.map((sectionEntries) => {
-      const entries = [...siteEntries];
-
-      for (const pageEntries of sectionEntries) {
-        if (pageEntries === null) {
-          continue;
-        }
-
-        entries.push(...pageEntries);
-      }
-
-      return entries.slice(0, LOCALE_INDEX_ENTRY_LIMIT);
-    })
   );
-}
+  const entries = [...siteEntries];
+
+  for (const pageEntries of sectionEntries) {
+    if (pageEntries === null) {
+      continue;
+    }
+
+    entries.push(...pageEntries);
+  }
+
+  return entries.slice(0, LOCALE_INDEX_ENTRY_LIMIT);
+});
 
 /** Excludes the static site section when building content-backed locale starter links. */
 function isContentLlmsSection(

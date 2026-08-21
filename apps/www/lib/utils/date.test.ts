@@ -11,8 +11,12 @@ describe("getLocale", () => {
     expect(getLocale("id").code).toBe("id");
   });
 
+  it("returns the German date locale", () => {
+    expect(getLocale("de").code).toBe("de");
+  });
+
   it("falls back to English for an unsupported locale", () => {
-    expect(getLocale("de").code).toBe("en-US");
+    expect(getLocale("fr").code).toBe("en-US");
   });
 
   it("falls back to English when the locale is absent", () => {

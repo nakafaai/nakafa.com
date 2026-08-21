@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { Effect } from "effect";
+import type { Locale } from "next-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BASE_URL } from "@/lib/llms/constants";
 import {
@@ -22,7 +23,7 @@ beforeEach(() => {
     Effect.succeed({ surahs: [surahMetadata(1), surahMetadata(2)] })
   );
   publicationMocks.readPublishedQuranMarkdown.mockImplementation(
-    (_locale: "en" | "id", surahNumber: number, verseLimit?: number) =>
+    (_locale: Locale, surahNumber: number, verseLimit?: number) =>
       Effect.succeed(surahMarkdown(surahNumber, verseLimit))
   );
 });

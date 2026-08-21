@@ -27,6 +27,11 @@ describe("sitemap page identity", () => {
       kind: "program",
       locale: "id",
     });
+    expect(getSitemapPageDescriptor("page_de")).toEqual({
+      id: "page_de",
+      kind: "page",
+      locale: "de",
+    });
     expect(getSitemapPageDescriptor("tryout_id_0")).toEqual({
       id: "tryout_id_0",
       kind: "tryout",
@@ -46,6 +51,7 @@ describe("sitemap page identity", () => {
     "public_en",
     "public_en_invalid",
     "public_en_",
+    "page_en_extra",
     "tryout_en",
     "tryout_en_",
     "tryout_en_01",

@@ -24,7 +24,7 @@ describe("browser utilities", () => {
   });
 
   it("falls back when the path has no supported locale", () => {
-    window.location.pathname = "/de/articles";
+    window.location.pathname = "/fr/articles";
 
     expect(getLocale()).toBe("en");
   });

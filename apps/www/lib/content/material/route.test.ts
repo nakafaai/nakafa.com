@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -9,6 +10,7 @@ import {
   readPublishedMaterialRoute,
 } from "@/lib/content/material/route";
 import {
+  previewDeProjection,
   previewIdProjection,
   previewNextProjection,
   previewProjection,
@@ -48,14 +50,14 @@ function foundModel(overrides?: {
       overrides?.activeManifestHash === undefined
         ? activeManifestHash
         : overrides.activeManifestHash,
-    activeAppLocales: overrides?.activeAppLocales ?? ["en", "id"],
+    activeAppLocales: overrides?.activeAppLocales ?? ACTIVE_APP_LOCALE_CODES,
     activeReleaseId:
       overrides?.activeReleaseId === undefined
         ? activeReleaseId
         : overrides.activeReleaseId,
     alternateJson:
       overrides?.alternateJson ??
-      [previewProjection, previewIdProjection].map(
+      [previewProjection, previewIdProjection, previewDeProjection].map(
         canonicalizeMaterialProjection
       ),
     projectionJson:
@@ -96,7 +98,7 @@ describe("published material route", () => {
       getPublishedMaterialRoute("en", previewProjection.publicPath)
     ).resolves.toMatchObject({
       activeReleaseId,
-      alternates: [previewProjection, previewIdProjection],
+      alternates: [previewProjection, previewIdProjection, previewDeProjection],
       projection: previewProjection,
       rendererDomain: "mathematics",
       siblings: [previewProjection, previewNextProjection],
@@ -166,7 +168,7 @@ describe("published material route", () => {
   it.each([
     ["active manifest", foundModel({ activeManifestHash: "invalid" })],
     ["missing manifest", foundModel({ activeManifestHash: null })],
-    ["active locales", foundModel({ activeAppLocales: ["id", "en"] })],
+    ["active locales", foundModel({ activeAppLocales: ["id", "en", "de"] })],
     ["missing release", foundModel({ activeReleaseId: null })],
     ["source revision", foundModel({ sourceRevision: "main" })],
     ["missing renderer", foundModel({ rendererDomain: null })],

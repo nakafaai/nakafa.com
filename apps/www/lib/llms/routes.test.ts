@@ -48,7 +48,7 @@ describe("llms proxy route resolver", () => {
     expect(
       resolveLlmsProxyRoute({
         acceptHeader: "text/markdown",
-        pathname: "/de/articles/example",
+        pathname: "/fr/articles/example",
       })
     ).toEqual({ kind: "delegate" });
   });

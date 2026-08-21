@@ -1,8 +1,12 @@
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
+import { AnalyticsConsentControls } from "@/components/analytics/consent/controls";
+import { AnalyticsConsentProvider } from "@/components/analytics/consent/provider";
 import { AnalyticsUnavailableProvider } from "@/components/analytics/consent/unavailable";
 import { ConvexProvider } from "@/components/providers/convex";
 import { ReactQueryProviders } from "@/components/providers/react-query";
+import { PageNavigationProvider } from "@/lib/content/page/context";
+import type { PageNavigation } from "@/lib/content/page/navigation";
 import { UserContextProvider } from "@/lib/context/use-user";
 
 /**
@@ -16,15 +20,30 @@ import { UserContextProvider } from "@/lib/context/use-user";
  * @see https://docs.convex.dev/client/nextjs/app-router/server-rendering
  * @see https://labs.convex.dev/better-auth
  */
-export function AppProviders({ children }: { children: ReactNode }) {
+export function AppProviders({
+  children,
+  pageNavigation,
+}: {
+  children: ReactNode;
+  pageNavigation: PageNavigation | null;
+}) {
+  const content = pageNavigation ? (
+    <AnalyticsConsentProvider>
+      {children}
+      <AnalyticsConsentControls />
+    </AnalyticsConsentProvider>
+  ) : (
+    <AnalyticsUnavailableProvider>{children}</AnalyticsUnavailableProvider>
+  );
+
   return (
     <NuqsAdapter>
       <ReactQueryProviders>
         <ConvexProvider>
           <UserContextProvider>
-            <AnalyticsUnavailableProvider>
-              {children}
-            </AnalyticsUnavailableProvider>
+            <PageNavigationProvider navigation={pageNavigation}>
+              {content}
+            </PageNavigationProvider>
           </UserContextProvider>
         </ConvexProvider>
       </ReactQueryProviders>

@@ -7,11 +7,12 @@ import { getLlmsMarkdownText } from "@/lib/llms/content";
 const PUBLISHED_PATH =
   "subjects/mathematics/function-composition-inverse-function/function-concept";
 const PUBLISHED_ARTICLE_PATH = "articles/politics/regional-elections-turmoil";
+const PUBLISHED_PAGE_PATH = "terms-of-service";
+const PUBLISHED_NESTED_PAGE_PATH = "legal/terms-of-service";
 const NEW_PATH = "subjects/mathematics/new-topic/new-lesson";
 const SOURCE_PUBLIC_PATH = "subjects/chemistry/green-chemistry/definition";
 const mockGetCachedLlmsSectionIndexText = vi.hoisted(() => vi.fn());
 const mockGetCachedPublishedText = vi.hoisted(() => vi.fn());
-const mockGetLlmsLegalPageText = vi.hoisted(() => vi.fn());
 const mockGetQuranLlmsText = vi.hoisted(() => vi.fn());
 const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
@@ -26,10 +27,6 @@ vi.mock("@/lib/content/published/active", () => ({
 
 vi.mock("@/lib/llms/indexes", () => ({
   getCachedLlmsSectionIndexText: mockGetCachedLlmsSectionIndexText,
-}));
-
-vi.mock("@/lib/llms/legal", () => ({
-  getLlmsLegalPageText: mockGetLlmsLegalPageText,
 }));
 
 vi.mock("@/lib/llms/published", () => ({
@@ -69,7 +66,6 @@ describe("llms markdown content resolver", () => {
   beforeEach(() => {
     mockGetCachedLlmsSectionIndexText.mockReset().mockResolvedValue(null);
     mockGetCachedPublishedText.mockReset().mockResolvedValue(null);
-    mockGetLlmsLegalPageText.mockReset().mockReturnValue(Effect.succeed(null));
     mockGetQuranLlmsText.mockReset().mockReturnValue(Effect.succeed(null));
     mockReadActiveContentRoute.mockReset();
     mockReadActiveContentIdentity
@@ -78,7 +74,10 @@ describe("llms markdown content resolver", () => {
 
     mockReadActiveContentRoute.mockImplementation(({ publicPath }) =>
       Effect.succeed(
-        publicPath === PUBLISHED_PATH || publicPath === PUBLISHED_ARTICLE_PATH
+        publicPath === PUBLISHED_PATH ||
+          publicPath === PUBLISHED_ARTICLE_PATH ||
+          publicPath === PUBLISHED_PAGE_PATH ||
+          publicPath === PUBLISHED_NESTED_PAGE_PATH
           ? { activeReleaseId, kind: "found" }
           : { activeReleaseId, kind: "unmanaged" }
       )
@@ -194,14 +193,35 @@ describe("llms markdown content resolver", () => {
     expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
   });
 
-  it("returns legal source markdown before route indexes", async () => {
-    mockGetLlmsLegalPageText.mockReturnValue(Effect.succeed("Legal markdown"));
+  it("reads a reviewed Page body through the same signed markdown seam", async () => {
+    mockGetCachedPublishedText.mockResolvedValue("Signed Page markdown");
 
     await expect(readMarkdown("terms-of-service")).resolves.toBe(
-      "Legal markdown"
+      "Signed Page markdown"
     );
 
+    expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
+      activeReleaseId,
+      appLocale: "en",
+      family: "page",
+      publicPath: PUBLISHED_PAGE_PATH,
+    });
     expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
+  });
+
+  it("reads a nested reviewed Page without assuming one route segment", async () => {
+    mockGetCachedPublishedText.mockResolvedValue("Nested signed Page markdown");
+
+    await expect(readMarkdown(PUBLISHED_NESTED_PAGE_PATH)).resolves.toBe(
+      "Nested signed Page markdown"
+    );
+
+    expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
+      activeReleaseId,
+      appLocale: "en",
+      family: "page",
+      publicPath: PUBLISHED_NESTED_PAGE_PATH,
+    });
   });
 
   it("returns sitemap-derived route indexes when page markdown is absent", async () => {

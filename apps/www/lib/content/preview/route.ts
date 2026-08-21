@@ -53,6 +53,10 @@ const ArticlePreviewStaticParamsSchema = Schema.Struct({
 /** Concrete child params Next prerenders for one selected article preview. */
 export type ArticlePreviewStaticParams =
   typeof ArticlePreviewStaticParamsSchema.Type;
+/** Concrete child params Next prerenders for one selected Page preview. */
+export interface PagePreviewStaticParams {
+  readonly page: string[];
+}
 /** Reads the single selected locale used to prerender the preview app shell. */
 export function readPreviewStaticLocaleParams() {
   return readPreviewManifestForPrerender().then((manifest) => {
@@ -158,6 +162,18 @@ export function readArticlePreviewStaticParams(appLocale: AppLocale) {
       category: document.route.categoryRouteSlug,
       slug: document.route.articleRouteSlug,
     });
+  });
+}
+/** Reads the selected Page route so Cache Components can build its shell. */
+export function readPagePreviewStaticParams(appLocale: AppLocale) {
+  return readPreviewManifestForPrerender().then((manifest) => {
+    const document = manifest.document;
+    if (document.family !== "page" || document.route.appLocale !== appLocale) {
+      return Promise.reject(new PreviewIntegrityError({ check: "projection" }));
+    }
+    return {
+      page: document.route.publicPath.split("/"),
+    } satisfies PagePreviewStaticParams;
   });
 }
 /** Resolves a next-intl material rewrite back to its canonical public path. */

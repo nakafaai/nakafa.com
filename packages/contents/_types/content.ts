@@ -1,7 +1,7 @@
-import { locales } from "@repo/utilities/locales";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Schema, Struct } from "effect";
 /** Locale validation schema - single source of truth */
-export const LocaleSchema = Schema.Literals(locales);
+export const LocaleSchema = ActiveAppLocaleCodeSchema;
 export type Locale = Schema.Schema.Type<typeof LocaleSchema>;
 const ArticleSchema = Schema.Struct({
   title: Schema.String,

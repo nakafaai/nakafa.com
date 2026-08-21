@@ -42,6 +42,23 @@ describe("customers/checkout/impl", () => {
         });
       })
   );
+  it.live("uses German for a German checkout", () =>
+    Effect.gen(function* () {
+      const productId = products.pro.id;
+      const successUrl = `${siteOrigin}/de/home`;
+      const request = yield* validateCheckoutRequest({
+        locale: "de",
+        successUrl,
+      });
+      expect(request).toEqual({
+        locale: "de",
+        polarLocale: "de",
+        primaryProductId: productId,
+        productIds: [productId],
+        successUrl,
+      });
+    })
+  );
   it.live("rejects off-site success URLs", () =>
     Effect.gen(function* () {
       const result = yield* Effect.result(

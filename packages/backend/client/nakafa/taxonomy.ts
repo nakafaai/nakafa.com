@@ -1,4 +1,8 @@
 import {
+  ACTIVE_APP_LOCALE_CODES,
+  type ActiveAppLocaleCode as Locale,
+} from "@nakafa/aksara-contracts/locale";
+import {
   decodeNakafaTaxonomy,
   toNakafaQuranDataReadError,
 } from "@repo/backend/client/nakafa/decode";
@@ -17,13 +21,13 @@ import {
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
 } from "@repo/contents/_lib/agent/constants";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
-import { defaultLocale, type Locale, locales } from "@repo/utilities/locales";
 import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 
 type ArticleCategoryPageArgs = FunctionArgs<
   typeof api.contentRelease.article.categories
 >;
+const defaultLocale = ACTIVE_APP_LOCALE_CODES[0];
 /** Reads one generated category page without recursive loop inference. */
 const readSignedArticleCategoryPage = Effect.fn(
   "nakafa.taxonomy.readSignedArticleCategoryPage"
@@ -78,7 +82,7 @@ export function readNakafaTaxonomy(
       },
       tryout: signedInventory.tryout,
       locale,
-      locales,
+      locales: ACTIVE_APP_LOCALE_CODES,
       quran: {
         surah_count: quran.surahs.length,
       },
@@ -161,19 +165,23 @@ const readSignedArticleCategories = Effect.fn(
 /** Reads every locale's search inventory from active signed publications. */
 const readSignedInventory = Effect.fn("nakafa.taxonomy.readSignedInventory")(
   function* (convexUrl: string, selectedLocale: Locale) {
-    const inventories = yield* Effect.all(
-      {
-        en: readLocaleSignedInventory(convexUrl, "en"),
-        id: readLocaleSignedInventory(convexUrl, "id"),
-      },
-      { concurrency: locales.length }
+    const inventories = yield* Effect.forEach(
+      ACTIVE_APP_LOCALE_CODES,
+      (locale) => readLocaleSignedInventory(convexUrl, locale),
+      { concurrency: ACTIVE_APP_LOCALE_CODES.length }
     );
+    const selectedInventory = inventories.find(
+      ({ locale }) => locale === selectedLocale
+    );
+    if (!selectedInventory) {
+      return yield* missingSignedInventory("selected locale", selectedLocale);
+    }
     return {
-      contentCounts: locales.map((locale) => ({
-        count: inventories[locale].count,
+      contentCounts: inventories.map(({ count, locale }) => ({
+        count,
         locale,
       })),
-      tryout: inventories[selectedLocale].tryout,
+      tryout: selectedInventory.tryout,
     };
   }
 );

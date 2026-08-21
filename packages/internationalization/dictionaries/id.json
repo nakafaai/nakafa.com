@@ -887,11 +887,7 @@
   "Legal": {
     "terms-and-policies": "Syarat dan Kebijakan",
     "terms-of-service": "Syarat dan Ketentuan",
-    "terms-of-service-description": "Baca Syarat dan Ketentuan Nakafa untuk memahami aturan dan panduan penggunaan platform dan layanan edukasi kami.",
     "privacy-policy": "Kebijakan Privasi",
-    "privacy-policy-description": "Pelajari bagaimana Nakafa mengumpulkan, menggunakan, dan melindungi data pribadi dan privasi kamu saat menggunakan platform belajar kami.",
-    "security-policy": "Kebijakan Keamanan",
-    "security-policy-description": "Tinjau praktik dan kebijakan keamanan Nakafa untuk memahami bagaimana kami melindungi data dan menjamin keamanan platform.",
     "legal-description": "Dengan menggunakan layanan kami, Anda setuju dengan <terms-of-service>Syarat dan Ketentuan</terms-of-service> dan <privacy-policy>Kebijakan Privasi</privacy-policy>."
   },
   "AnalyticsConsent": {

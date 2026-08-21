@@ -1,7 +1,7 @@
+import type { ActiveAppLocaleCode as Locale } from "@nakafa/aksara-contracts/locale";
 import { formatLearningSelectionPromptContext } from "@repo/ai/prompt/learning-selection";
 import { createPrompt } from "@repo/ai/prompt/utils";
 import type { AgentContext } from "@repo/ai/types/agents";
-import type { Locale } from "@repo/utilities/locales";
 
 /** Builds the system prompt for the Nakafa content agent. */
 export function nakafaAgentPrompt({
