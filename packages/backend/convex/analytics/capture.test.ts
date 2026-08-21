@@ -152,28 +152,26 @@ describe("analytics/capture", () => {
     })
   );
 
-  it.live(
-    "requests erasure after a failed send that overlaps withdrawal",
-    () =>
-      Effect.gen(function* () {
-        const requestErasure = vi.fn(() => Effect.void);
-        const isUserActive = vi
-          .fn<() => Promise<boolean>>()
-          .mockResolvedValueOnce(true)
-          .mockResolvedValueOnce(false);
+  it.live("requests erasure after a failed send that overlaps withdrawal", () =>
+    Effect.gen(function* () {
+      const requestErasure = vi.fn(() => Effect.void);
+      const isUserActive = vi
+        .fn<() => Promise<boolean>>()
+        .mockResolvedValueOnce(true)
+        .mockResolvedValueOnce(false);
 
-        const failure = yield* deliverProductAnalyticsProgram({
-          capture: vi.fn(() => Promise.reject(new Error("capture uncertain"))),
-          isUserEligible: isUserActive,
-          requestErasure,
-        }).pipe(Effect.flip);
+      const failure = yield* deliverProductAnalyticsProgram({
+        capture: vi.fn(() => Promise.reject(new Error("capture uncertain"))),
+        isUserEligible: isUserActive,
+        requestErasure,
+      }).pipe(Effect.flip);
 
-        expect(requestErasure).toHaveBeenCalledOnce();
-        expect(failure).toMatchObject({
-          _tag: "ProductAnalyticsCaptureError",
-          message: "capture uncertain",
-        });
-      })
+      expect(requestErasure).toHaveBeenCalledOnce();
+      expect(failure).toMatchObject({
+        _tag: "ProductAnalyticsCaptureError",
+        message: "capture uncertain",
+      });
+    })
   );
 
   it.live(
@@ -229,9 +227,7 @@ describe("analytics/capture", () => {
         })
       );
       const scheduledJobs = yield* Effect.promise(() =>
-        t.query((ctx) =>
-          ctx.db.system.query("_scheduled_functions").collect()
-        )
+        t.query((ctx) => ctx.db.system.query("_scheduled_functions").collect())
       );
 
       expect(admitted).toBe(true);
@@ -280,9 +276,7 @@ describe("analytics/capture", () => {
         })
       );
       const scheduledJobs = yield* Effect.promise(() =>
-        t.query((ctx) =>
-          ctx.db.system.query("_scheduled_functions").collect()
-        )
+        t.query((ctx) => ctx.db.system.query("_scheduled_functions").collect())
       );
 
       expect(admitted).toBe(false);
@@ -313,9 +307,7 @@ describe("analytics/capture", () => {
         })
       );
       const scheduledJobs = yield* Effect.promise(() =>
-        t.query((ctx) =>
-          ctx.db.system.query("_scheduled_functions").collect()
-        )
+        t.query((ctx) => ctx.db.system.query("_scheduled_functions").collect())
       );
 
       expect(admitted).toBe(false);

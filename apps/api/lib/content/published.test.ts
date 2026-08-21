@@ -178,7 +178,8 @@ describe("published API content", () => {
 
       expect(yield* readPublishedApiItems([input]).pipe(Effect.flip)).toEqual(
         new ApiPublishedContentReadError({
-          cause: "Signed content does not belong to the article or material API.",
+          cause:
+            "Signed content does not belong to the article or material API.",
           message: "Unable to read signed public content for the public API.",
         })
       );

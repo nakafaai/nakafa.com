@@ -5,7 +5,6 @@ import {
   fetchLatestGithubActionTag,
   GITHUB_ACTION_REVIEWS,
   inspectGithubActionPolicy,
-  latestStableVTag,
   validateGithubActionPolicy,
 } from "./github-action-policy.mjs";
 
@@ -35,41 +34,22 @@ test("reports mutable, unreviewed, missing, and misconfigured actions", () => {
     workflowPath: ".github/workflows/example.yml",
   });
 
-  const doctorIndex = actionUses.findIndex(({ reference }) =>
-    reference.startsWith("millionco/react-doctor@")
-  );
-  actionUses[doctorIndex].inputs = { version: "latest" };
-
   const setupIndex = actionUses.findIndex(({ reference }) =>
     reference.startsWith("pnpm/setup@")
   );
-  actionUses.splice(setupIndex, 1);
+  actionUses[setupIndex].inputs = { cache: false, install: false };
+  actionUses.splice(setupIndex + 1, 1);
 
   const problems = validateGithubActionPolicy(actionUses);
   assert.ok(problems.some((problem) => problem.includes("approved")));
   assert.ok(problems.some((problem) => problem.includes("unreviewed")));
-  assert.ok(problems.some((problem) => problem.includes("version")));
-  assert.ok(problems.some((problem) => problem.includes("expected 2")));
+  assert.ok(problems.some((problem) => problem.includes("cache")));
+  assert.ok(problems.some((problem) => problem.includes("expected 3")));
 });
 
-test("selects only the newest stable action tag", () => {
-  assert.equal(
-    latestStableVTag([
-      "v2",
-      "v2.2.8",
-      "v2.3.0-beta.1",
-      "react-doctor@0.9.12",
-      "v10.0.1",
-      "v9.12.4",
-    ]),
-    "v10.0.1"
-  );
-});
-
-test("reads release and stable-tag metadata from GitHub", async () => {
+test("reads release metadata from GitHub", async () => {
   const releaseTag = await fetchLatestGithubActionTag(
     {
-      latestTagSource: "release",
       repository: "actions/checkout",
     },
     {
@@ -86,37 +66,12 @@ test("reads release and stable-tag metadata from GitHub", async () => {
     }
   );
   assert.equal(releaseTag, "v7.0.1");
-
-  const stableTag = await fetchLatestGithubActionTag(
-    {
-      latestTagSource: "stable-v-tags",
-      repository: "millionco/react-doctor",
-    },
-    {
-      fetchImplementation: (url) => {
-        assert.equal(
-          url,
-          "https://api.github.com/repos/millionco/react-doctor/git/matching-refs/tags/v?per_page=100&page=1"
-        );
-        return {
-          json: () => [
-            { ref: "refs/tags/v2" },
-            { ref: "refs/tags/v2.2.8" },
-            { ref: "refs/tags/v2.3.0-beta.1" },
-          ],
-          ok: true,
-        };
-      },
-    }
-  );
-  assert.equal(stableTag, "v2.2.8");
 });
 
 test("rejects unavailable GitHub release metadata", async () => {
   await assert.rejects(
     fetchLatestGithubActionTag(
       {
-        latestTagSource: "release",
         repository: "actions/checkout",
       },
       {

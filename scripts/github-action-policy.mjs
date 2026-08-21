@@ -3,7 +3,6 @@ import path from "node:path";
 
 import { parse } from "yaml";
 
-const STABLE_ACTION_TAG_PATTERN = /^v(\d+)\.(\d+)\.(\d+)$/u;
 const WORKFLOW_FILE_PATTERN = /\.ya?ml$/u;
 
 export const GITHUB_ACTION_REVIEWS = [
@@ -15,27 +14,13 @@ export const GITHUB_ACTION_REVIEWS = [
     reason: "Checkout is pinned to the latest reviewed stable release.",
   },
   {
-    action: "millionco/react-doctor",
-    approvedSha: "01820bb4fd4d0a4aebcd8df2b2a143a098649cb2",
-    expectedInputs: { version: "0.9.12" },
-    expectedTag: "v2.2.8",
-    expectedUsages: 1,
-    latestTagSource: "stable-v-tags",
-    reason: "The action and its npm scanner are reviewed as one exact cohort.",
-  },
-  {
     action: "pnpm/setup",
     approvedSha: "84cb39b217b10273981911c288cd62326dc7c6d2",
+    expectedInputs: { cache: "true", install: "false" },
     expectedTag: "v2.0.2",
-    expectedUsages: 2,
-    reason: "The signed successor action owns pnpm installation.",
-  },
-  {
-    action: "actions/setup-node",
-    approvedSha: "820762786026740c76f36085b0efc47a31fe5020",
-    expectedTag: "v7.0.0",
-    expectedUsages: 2,
-    reason: "Node setup is pinned to the latest reviewed stable release.",
+    expectedUsages: 3,
+    reason:
+      "The signed successor action owns Node, pnpm, and dependency caching.",
   },
   {
     action: "changesets/action",
@@ -204,45 +189,17 @@ export function githubActionReleaseReviews() {
     const existing = reviews.get(repository);
     const review = {
       expectedTag: actionReview.expectedTag,
-      latestTagSource: actionReview.latestTagSource ?? "release",
       reason: actionReview.reason,
       repository,
     };
 
-    if (
-      existing &&
-      (existing.expectedTag !== review.expectedTag ||
-        existing.latestTagSource !== review.latestTagSource)
-    ) {
+    if (existing && existing.expectedTag !== review.expectedTag) {
       throw new Error(`${repository} has conflicting action release reviews.`);
     }
     reviews.set(repository, existing ?? review);
   }
 
   return [...reviews.values()];
-}
-
-function parseStableVTag(tag) {
-  const match = STABLE_ACTION_TAG_PATTERN.exec(tag);
-  return match ? { parts: match.slice(1).map(Number), tag } : undefined;
-}
-
-/** Selects the newest stable v-prefixed semantic version tag. */
-export function latestStableVTag(tags) {
-  const versions = tags.flatMap((tag) => {
-    const parsed = parseStableVTag(tag);
-    return parsed ? [parsed] : [];
-  });
-  versions.sort((left, right) => {
-    for (let index = 0; index < 3; index += 1) {
-      const difference = right.parts[index] - left.parts[index];
-      if (difference !== 0) {
-        return difference;
-      }
-    }
-    return 0;
-  });
-  return versions[0]?.tag;
 }
 
 async function requestGithubJson(url, { fetchImplementation, token }) {
@@ -262,37 +219,12 @@ async function requestGithubJson(url, { fetchImplementation, token }) {
   return response.json();
 }
 
-async function fetchStableVTags(review, options) {
-  const tags = [];
-  let page = 1;
-
-  while (true) {
-    const refs = await requestGithubJson(
-      `https://api.github.com/repos/${review.repository}/git/matching-refs/tags/v?per_page=100&page=${page}`,
-      options
-    );
-    tags.push(...refs.map(({ ref }) => ref.replace("refs/tags/", "")));
-    if (refs.length < 100) {
-      return tags;
-    }
-    page += 1;
-  }
-}
-
 /** Fetches the current stable tag for one reviewed GitHub Action repository. */
 export async function fetchLatestGithubActionTag(
   review,
   { fetchImplementation = fetch, token } = {}
 ) {
   const options = { fetchImplementation, token };
-  if (review.latestTagSource === "stable-v-tags") {
-    const tag = latestStableVTag(await fetchStableVTags(review, options));
-    if (!tag) {
-      throw new Error(`${review.repository} has no stable v-prefixed tag.`);
-    }
-    return tag;
-  }
-
   const release = await requestGithubJson(
     `https://api.github.com/repos/${review.repository}/releases/latest`,
     options

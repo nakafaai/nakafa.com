@@ -88,33 +88,31 @@ describe("account browser identity", () => {
       })
   );
 
-  it.live(
-    "disables analytics before clearing a deleted browser identity",
-    () =>
-      Effect.gen(function* () {
-        const denyAnonymousAnalytics = vi.fn(() => Effect.void);
-        const disableAnalytics = vi.fn(() => Effect.void);
-        const removePersistedAccountState = vi.fn();
-        const resetAnalytics = vi.fn();
+  it.live("disables analytics before clearing a deleted browser identity", () =>
+    Effect.gen(function* () {
+      const denyAnonymousAnalytics = vi.fn(() => Effect.void);
+      const disableAnalytics = vi.fn(() => Effect.void);
+      const removePersistedAccountState = vi.fn();
+      const resetAnalytics = vi.fn();
 
-        yield* clearDeletedAccountBrowserIdentity({
-          denyAnonymousAnalytics,
-          disableAnalytics,
-          removePersistedAccountState,
-          resetAnalytics,
-        });
+      yield* clearDeletedAccountBrowserIdentity({
+        denyAnonymousAnalytics,
+        disableAnalytics,
+        removePersistedAccountState,
+        resetAnalytics,
+      });
 
-        expect(disableAnalytics).toHaveBeenCalledOnce();
-        expect(denyAnonymousAnalytics).toHaveBeenCalledOnce();
-        expect(removePersistedAccountState).toHaveBeenCalledOnce();
-        expect(resetAnalytics).toHaveBeenCalledOnce();
-        expect(disableAnalytics.mock.invocationCallOrder[0]).toBeLessThan(
-          denyAnonymousAnalytics.mock.invocationCallOrder[0] ?? 0
-        );
-        expect(denyAnonymousAnalytics.mock.invocationCallOrder[0]).toBeLessThan(
-          resetAnalytics.mock.invocationCallOrder[0] ?? 0
-        );
-      })
+      expect(disableAnalytics).toHaveBeenCalledOnce();
+      expect(denyAnonymousAnalytics).toHaveBeenCalledOnce();
+      expect(removePersistedAccountState).toHaveBeenCalledOnce();
+      expect(resetAnalytics).toHaveBeenCalledOnce();
+      expect(disableAnalytics.mock.invocationCallOrder[0]).toBeLessThan(
+        denyAnonymousAnalytics.mock.invocationCallOrder[0] ?? 0
+      );
+      expect(denyAnonymousAnalytics.mock.invocationCallOrder[0]).toBeLessThan(
+        resetAnalytics.mock.invocationCallOrder[0] ?? 0
+      );
+    })
   );
 
   it.live("denies anonymous analytics after a committed deletion", () =>
@@ -129,24 +127,22 @@ describe("account browser identity", () => {
     })
   );
 
-  it.live(
-    "does not fail a completed deletion when browser cleanup fails",
-    () =>
-      Effect.gen(function* () {
-        expect(
-          yield* clearDeletedAccountBrowserIdentity({
-            denyAnonymousAnalytics: () =>
-              Effect.fail("privacy storage unavailable"),
-            disableAnalytics: () => Effect.fail("analytics queue unavailable"),
-            removePersistedAccountState: () => {
-              throw new Error("storage unavailable");
-            },
-            resetAnalytics: () => {
-              throw new Error("analytics unavailable");
-            },
-          })
-        ).toBeUndefined();
-      })
+  it.live("does not fail a completed deletion when browser cleanup fails", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* clearDeletedAccountBrowserIdentity({
+          denyAnonymousAnalytics: () =>
+            Effect.fail("privacy storage unavailable"),
+          disableAnalytics: () => Effect.fail("analytics queue unavailable"),
+          removePersistedAccountState: () => {
+            throw new Error("storage unavailable");
+          },
+          resetAnalytics: () => {
+            throw new Error("analytics unavailable");
+          },
+        })
+      ).toBeUndefined();
+    })
   );
 
   it.live("clears browser identity after successful sign-out", () =>
@@ -173,7 +169,8 @@ describe("account browser identity", () => {
       expect(
         vi.mocked(authClient.signOut).mock.invocationCallOrder[0]
       ).toBeLessThan(
-        vi.mocked(resetBrowserAnalyticsIdentity).mock.invocationCallOrder[0] ?? 0
+        vi.mocked(resetBrowserAnalyticsIdentity).mock.invocationCallOrder[0] ??
+          0
       );
     })
   );

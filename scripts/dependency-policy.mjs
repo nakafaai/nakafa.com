@@ -8,6 +8,26 @@ export const CONTRACT_ARCHIVE =
 
 export const DEPENDENCY_RELEASE_AGE_MINUTES = 1440;
 
+export const DEPENDENCY_RELEASE_AGE_EXCLUSIONS = [
+  "@ai-sdk/gateway@4.0.60",
+  "@ai-sdk/google@4.0.49",
+  "@ai-sdk/react@4.0.77",
+  "@next/bundle-analyzer@16.3.2",
+  "@next/env@16.3.2",
+  "@next/mdx@16.3.2",
+  "@next/swc-darwin-arm64@16.3.2",
+  "@next/swc-darwin-x64@16.3.2",
+  "@next/swc-linux-arm64-gnu@16.3.2",
+  "@next/swc-linux-arm64-musl@16.3.2",
+  "@next/swc-linux-x64-gnu@16.3.2",
+  "@next/swc-linux-x64-musl@16.3.2",
+  "@next/swc-win32-arm64-msvc@16.3.2",
+  "@next/swc-win32-x64-msvc@16.3.2",
+  "@next/third-parties@16.3.2",
+  "ai@7.0.74",
+  "next@16.3.2",
+];
+
 export const DEPENDENCY_HOLDS = [
   {
     approved: "catalog:",
@@ -52,9 +72,9 @@ export const DEPENDENCY_HOLDS = [
     minimumDeclarations: 1,
   },
   { approved: "1.44.0", dependency: "convex", minimumDeclarations: 1 },
-  { approved: "7.0.73", dependency: "ai", minimumDeclarations: 1 },
+  { approved: "7.0.74", dependency: "ai", minimumDeclarations: 1 },
   {
-    approved: "4.0.76",
+    approved: "4.0.77",
     dependency: "@ai-sdk/react",
     minimumDeclarations: 1,
   },
@@ -64,7 +84,7 @@ export const DEPENDENCY_HOLDS = [
     minimumDeclarations: 1,
   },
   {
-    approved: "4.0.59",
+    approved: "4.0.60",
     dependency: "@ai-sdk/gateway",
     minimumDeclarations: 1,
   },
@@ -133,10 +153,10 @@ export const REGISTRY_REVIEWS = [
     "Stable 16.3.2 contains the reviewed catch-all cache-key backport.",
   ],
   ["convex@latest", "1.44.0", "Convex acceptance uses an isolated deployment."],
-  ["ai@latest", "7.0.73", "AI SDK packages move as one reviewed cohort."],
+  ["ai@latest", "7.0.74", "AI SDK packages move as one reviewed cohort."],
   [
     "@ai-sdk/react@latest",
-    "4.0.76",
+    "4.0.77",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
@@ -146,7 +166,7 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@ai-sdk/gateway@latest",
-    "4.0.59",
+    "4.0.60",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
@@ -323,6 +343,15 @@ export function validateDependencyPolicy({
   }
   if (workspace.minimumReleaseAgeStrict !== true) {
     problems.push("Dependency release-age enforcement must remain strict.");
+  }
+  const expectedExclusions = [...DEPENDENCY_RELEASE_AGE_EXCLUSIONS].sort();
+  const actualExclusions = [
+    ...(workspace.minimumReleaseAgeExclude ?? []),
+  ].sort();
+  if (JSON.stringify(actualExclusions) !== JSON.stringify(expectedExclusions)) {
+    problems.push(
+      "pnpm minimumReleaseAgeExclude does not match the reviewed exception policy."
+    );
   }
 
   return problems;

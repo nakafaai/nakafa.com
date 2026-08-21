@@ -184,11 +184,7 @@ describe("contentRelease/program/context", () => {
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() => activateProgramSnapshot(t, data));
         yield* Effect.promise(() =>
-          stageRoutes(t, data, [
-            subjectRoute(),
-            groupRoute(),
-            mappingRoute(),
-          ])
+          stageRoutes(t, data, [subjectRoute(), groupRoute(), mappingRoute()])
         );
 
         yield* Effect.promise(() =>
