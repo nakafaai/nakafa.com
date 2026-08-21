@@ -1,3 +1,4 @@
+import { SCHOOL_ROUTE_SLUGS } from "@repo/backend/convex/schools/slug";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import type { routing } from "@repo/internationalization/src/routing";
 
@@ -72,11 +73,11 @@ function isSchoolPath(segments: readonly string[]) {
     return true;
   }
 
-  if (school === "select") {
+  if (school === SCHOOL_ROUTE_SLUGS.select) {
     return segments.length === 1;
   }
 
-  if (school === "onboarding") {
+  if (school === SCHOOL_ROUTE_SLUGS.onboarding) {
     return (
       segments.length === 1 ||
       (segments.length === 2 && ["create", "join"].includes(section))
