@@ -16,7 +16,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 
 ## Stack And Layout
 
-- Package manager: `pnpm@10.34.1`
+- Package manager: `pnpm@11.22.0`
 - Runtime: Node `24.x` through pnpm `devEngines.runtime`
 - Monorepo: Turborepo
 - Frontend: Next.js 16, React 19, TypeScript 7 CLI with TypeScript 6 API compatibility
@@ -48,7 +48,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 
 - This is an Effect-native TypeScript codebase. Effect is the decomposition and composition architecture, not a wrapper around raw TypeScript.
 - Effect-native architecture gives Nakafa decomposable, composable, traceable, and type-safe behavior end to end. It prevents fragmented helper chains, duplicated maps, hidden failure paths, and source-of-truth drift.
-- Every new or touched TypeScript domain capability must start from Effect-native design: Schema contracts, branded values, tagged errors, small named `Effect.fn` programs, and `Context.Tag` plus `Layer` only where there is a real dependency seam. `Effect.Service` is an optional convenience only when a module genuinely owns a default implementation and the repository deliberately accepts its experimental Effect 3.22 API.
+- Every new or touched TypeScript domain capability must start from Effect-native design: Schema contracts, branded values, tagged errors, small named `Effect.fn` programs, and `Context.Service` plus `Layer` only where there is a real dependency seam.
 - Public module Interfaces must expose schema-derived data contracts and Effect-native operations for fallible, effectful, cross-source, or cross-module work. Do not build a raw TypeScript module and sprinkle Schema decoding, `Effect.succeed`, or a boundary runner around it later.
 - Source registries must decode through schemas and produce typed/branded rows. Projection modules must compose those rows through typed Effects, not raw loops with hidden failure or fallback paths.
 - Missing source data, duplicate routes, invalid slugs, invalid source rows, mismatched mappings, and route collisions are expected domain failures in the Effect error channel. Model them with `Schema.TaggedError` or `Data.TaggedError`, not `null`, generic `Error`, thrown parser errors, silent filtering, or fallback strings.
@@ -182,7 +182,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 
 - TypeScript is strict across the repo.
 - The root toolchain intentionally installs TypeScript 7 as `@typescript/native` and exposes it as `tsc`, while the `typescript` package name resolves to `@typescript/typescript6` for Next.js, Ultracite, and language-service consumers that still require the JavaScript compiler API. Keep this side-by-side arrangement until those consumers support the TypeScript 7 API.
-- `packages/backend` owns package-local TypeScript 6 because the Convex CLI resolves `node_modules/typescript/bin/tsc` directly and Effect diagnostics still require the JavaScript compiler API. Its workspace `typecheck` script explicitly runs the root native TypeScript 7 compiler, while Convex deployment performs an additional TypeScript 6 compatibility check. Keep this boundary until Convex supports the stable native compiler path and programmatic consumers support TypeScript 7.
+- `packages/backend` owns package-local native TypeScript 7 because the Convex CLI resolves `node_modules/typescript/bin/tsc` directly. It deduplicates to the same Effect-patched `7.0.2` package used by the root compiler. Keep the root TypeScript 6 alias only for Next.js, Ultracite, and other programmatic consumers that still require the JavaScript compiler API.
 - Run `pnpm exec tsc --version` to verify the native TypeScript 7 compiler and `pnpm exec tsc6 --version` only for compatibility diagnostics.
 - Prefer derived and inferred types over manual annotations.
 - Do not add redundant type annotations just to restate what TypeScript already knows.
@@ -206,8 +206,8 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Effect-native means effectful work is modeled with Effect; pure deterministic helpers should stay pure.
 - Model expected failures with `Schema.TaggedError` and specific domain error names.
 - Prefer `Effect.fn("scope.name")` for effectful exported functions and service methods so traces are named.
-- Use the documented stable `Context.Tag` plus `Layer` pattern for dependency contracts. `Effect.Service` may combine that contract with a default layer only when the module genuinely owns the default implementation and the repository deliberately accepts its experimental Effect 3.22 API; do not choose between them based only on whether a dependency is "business" or "infrastructure."
-- Use `@effect/platform` and `@effect/platform-node` for Node filesystem and HTTP boundaries when those packages own the IO seam.
+- Use the Effect v4 `Context.Service` plus `Layer` pattern for dependency contracts. Keep service contracts separate from live implementations unless the owning Module intentionally provides both.
+- Use Effect v4 core platform abstractions and `@effect/platform-node` for Node implementations when those packages own the IO seam.
 - Prefer `Effect.Cache` or Effect cached effects for shared effectful cache state. Plain `Map` is acceptable inside one pure algorithm for grouping, deduplication, or indexing.
 - Use `Effect.try`, `Effect.tryPromise`, `Effect.acquireRelease`, and `Effect.sync` instead of raw `try/catch`, raw async wrappers, or hidden side effects.
 - Handle known errors with `catchTag` or `catchTags`; avoid `catchAll` unless preserving the full cause at an outer boundary.

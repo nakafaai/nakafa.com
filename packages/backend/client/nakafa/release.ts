@@ -14,12 +14,13 @@ const NakafaReleasePinSchema = Schema.NullOr(
   Schema.Struct({
     manifestHash: Sha256HashSchema,
     releaseId: ReleaseIdSchema,
-    sequence: Schema.Number.pipe(Schema.int(), Schema.positive()),
+    sequence: Schema.Finite.pipe(
+      Schema.check(Schema.isInt()),
+      Schema.check(Schema.isGreaterThan(0))
+    ),
   })
 );
-
 type NakafaReleasePin = typeof NakafaReleasePinSchema.Type;
-
 /** Reads the complete active publication identity for a multi-query operation. */
 export const readNakafaReleasePin = Effect.fn("NakafaContent.readReleasePin")(
   function* (convexUrl: string) {
@@ -28,8 +29,7 @@ export const readNakafaReleasePin = Effect.fn("NakafaContent.readReleasePin")(
       api.contentRelease.runtime.active.read,
       {}
     );
-
-    return yield* Schema.decodeUnknown(NakafaReleasePinSchema)(identity).pipe(
+    return yield* Schema.decodeEffect(NakafaReleasePinSchema)(identity).pipe(
       Effect.mapError(
         (error) =>
           new NakafaAgentDataReadError({
@@ -40,7 +40,6 @@ export const readNakafaReleasePin = Effect.fn("NakafaContent.readReleasePin")(
     );
   }
 );
-
 /** Verifies a multi-query read stayed on one exact publication generation. */
 export const verifyNakafaReleasePin = Effect.fn(
   "NakafaContent.verifyReleasePin"
@@ -52,10 +51,8 @@ export const verifyNakafaReleasePin = Effect.fn(
       message: "Unable to complete one release-pinned Nakafa content read.",
     });
   }
-
   return actual;
 });
-
 /** Compares every signed field that identifies one active publication. */
 function hasSameReleaseIdentity(
   expected: NakafaReleasePin,
@@ -64,19 +61,16 @@ function hasSameReleaseIdentity(
   if (expected === null || actual === null) {
     return expected === actual;
   }
-
   return (
     expected.manifestHash === actual.manifestHash &&
     expected.releaseId === actual.releaseId &&
     expected.sequence === actual.sequence
   );
 }
-
 /** Formats one public release identity for a typed consistency diagnostic. */
 function formatReleaseIdentity(identity: NakafaReleasePin) {
   if (identity === null) {
     return "none";
   }
-
   return `${identity.releaseId}@${identity.sequence} (${identity.manifestHash})`;
 }

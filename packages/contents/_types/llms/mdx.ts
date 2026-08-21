@@ -28,10 +28,10 @@ const INLINE_MATH_MARKDOWN_PATTERN = /\$\$[\s\S]*?\$\$/g;
 const JSX_SPACING_EXPRESSION_PATTERN = /\{\s*["'`]([^"'`}]*)["'`]\s*\}/g;
 const MdxPositionSchema = Schema.Struct({
   start: Schema.Struct({
-    offset: Schema.Number,
+    offset: Schema.Finite,
   }),
   end: Schema.Struct({
-    offset: Schema.Number,
+    offset: Schema.Finite,
   }),
 });
 

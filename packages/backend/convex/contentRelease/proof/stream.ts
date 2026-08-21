@@ -32,49 +32,52 @@ const routePageReference = makeFunctionReference<
 
 /** Replays one complete bounded proof stream across indexed query pages. */
 export function readProofStream(ctx: ActionCtx, releaseId: string) {
-  return Stream.paginateEffect(-1, (afterIndex) =>
+  return Stream.paginate(-1, (afterIndex) =>
     callInternal(() =>
       ctx.runQuery(proofPageReference, { afterIndex, releaseId })
     ).pipe(
-      Effect.map((page): readonly [ProofPage, Option.Option<number>] => [
-        page,
-        page.done ? Option.none() : Option.some(page.nextIndex),
-      ])
+      Effect.map(
+        (page): readonly [ProofPage["rows"], Option.Option<number>] => [
+          page.rows,
+          page.done ? Option.none() : Option.some(page.nextIndex),
+        ]
+      )
     )
-  ).pipe(Stream.flatMap(({ rows }) => Stream.fromIterable(rows)));
+  );
 }
 
 /** Replays the complete effective catalog in canonical indexed order. */
 export function readResultStream(ctx: ActionCtx, releaseId: string) {
-  return Stream.paginateEffect(null, (cursor: CatalogCursor | null) =>
+  return Stream.paginate(null, (cursor: CatalogCursor | null) =>
     callInternal(() =>
       ctx.runQuery(catalogPageReference, { cursor, releaseId })
     ).pipe(
       Effect.map(
-        (page): readonly [CatalogPage, Option.Option<CatalogCursor>] => [
-          page,
+        (
+          page
+        ): readonly [CatalogPage["heads"], Option.Option<CatalogCursor>] => [
+          page.heads,
           page.done || page.nextCursor === null
             ? Option.none()
             : Option.some(page.nextCursor),
         ]
       )
     )
-  ).pipe(Stream.flatMap(({ heads }) => Stream.fromIterable(heads)));
+  );
 }
 
 /** Replays one complete canonical signed route stream. */
 export function readRouteStream(ctx: ActionCtx, releaseId: string) {
-  return Stream.paginateEffect(-1, (afterIndex) =>
+  return Stream.paginate(-1, (afterIndex) =>
     callInternal(() =>
       ctx.runQuery(routePageReference, { afterIndex, releaseId })
     ).pipe(
-      Effect.map((page): readonly [RouteProofPage, Option.Option<number>] => [
-        page,
-        page.done ? Option.none() : Option.some(page.nextIndex),
-      ])
+      Effect.map(
+        (page): readonly [RouteProofPage["rows"], Option.Option<number>] => [
+          page.rows,
+          page.done ? Option.none() : Option.some(page.nextIndex),
+        ]
+      )
     )
-  ).pipe(
-    Stream.flatMap(({ rows }) => Stream.fromIterable(rows)),
-    Stream.mapEffect(({ routeJson }) => parseStoredJson(routeJson))
-  );
+  ).pipe(Stream.mapEffect(({ routeJson }) => parseStoredJson(routeJson)));
 }

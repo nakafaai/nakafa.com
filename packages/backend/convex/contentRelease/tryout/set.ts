@@ -17,7 +17,6 @@ import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owne
 import { readTryoutSectionRows } from "@repo/backend/convex/contentRelease/tryout/section";
 import { verifyTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/verify";
 import { Effect, Schema } from "effect";
-
 /** Stable authored keys that select one localized signed try-out set. */
 export interface TryoutSetIdentity {
   readonly countryKey: TryoutSet["countryKey"];
@@ -26,7 +25,6 @@ export interface TryoutSetIdentity {
   readonly setKey: TryoutSet["setKey"];
   readonly trackKey: TryoutSet["trackKey"];
 }
-
 /** Loads one complete verified set snapshot for immutable attempt creation. */
 export const readTryoutSet = Effect.fn("contentRelease.readTryoutSet")(
   function* (ctx: QueryCtx, identity: TryoutSetIdentity) {
@@ -55,7 +53,7 @@ export const readTryoutSet = Effect.fn("contentRelease.readTryoutSet")(
       );
     }
     const catalogRow = yield* verifyTryoutCatalog(storedSet, snapshotId);
-    const setRow = yield* Schema.decodeUnknown(TryoutSetSchema)(
+    const setRow = yield* Schema.decodeUnknownEffect(TryoutSetSchema)(
       catalogRow
     ).pipe(
       Effect.mapError(
@@ -78,7 +76,6 @@ export const readTryoutSet = Effect.fn("contentRelease.readTryoutSet")(
         `Try-out set ${setIdentity} has more sections than questions.`
       );
     }
-
     const storedSections = yield* Effect.promise(() =>
       ctx.db
         .query("tryoutCatalog")
@@ -114,7 +111,6 @@ export const readTryoutSet = Effect.fn("contentRelease.readTryoutSet")(
         `Try-out set ${setIdentity} lost one or more signed sections.`
       );
     }
-
     const set = { row: setRow, rowHash: storedSet.rowHash };
     const entrySectionKey = setRow.internalEntrySectionKey;
     if (
@@ -133,8 +129,7 @@ export const readTryoutSet = Effect.fn("contentRelease.readTryoutSet")(
     return { sections, set, setIdentity, snapshotId };
   }
 );
-
 /** Complete authenticated set state frozen into one new attempt. */
-export type VerifiedTryoutSet = Effect.Effect.Success<
+export type VerifiedTryoutSet = Effect.Success<
   ReturnType<typeof readTryoutSet>
 >;

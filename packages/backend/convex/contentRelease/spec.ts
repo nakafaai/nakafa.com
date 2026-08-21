@@ -128,14 +128,14 @@ export const rendererDomainValidator = literals(
 
 /** Immutable content-version operations owned by the release contract. */
 export const headOperationValidator = literals(
-  ...ContentUpsertSchema.fields.operation.literals,
-  ...ContentDeleteSchema.fields.operation.literals
+  ContentUpsertSchema.fields.operation.literal,
+  ContentDeleteSchema.fields.operation.literal
 );
 
 /** Immutable route-version operations owned by the route contract. */
 export const bindingOperationValidator = literals(
-  ...ContentRouteBindSchema.fields.operation.literals,
-  ...ContentRouteDeleteSchema.fields.operation.literals
+  ContentRouteBindSchema.fields.operation.literal,
+  ContentRouteDeleteSchema.fields.operation.literal
 );
 
 /** Resumable progress returned by bounded release-processing mutations. */

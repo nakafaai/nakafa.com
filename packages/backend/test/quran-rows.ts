@@ -75,7 +75,7 @@ export function makeQuranSurah(
 
 /** Creates one exact technical verse inside a bounded runtime chunk. */
 function makeQuranVerse(inQuran: number, inSurah: number): QuranRuntimeVerse {
-  return Schema.decodeUnknownSync(QuranRuntimeVerseSchema)({
+  return Schema.decodeSync(QuranRuntimeVerseSchema)({
     meta: {
       hizbQuarter: 1,
       juz: 1,
@@ -132,7 +132,7 @@ export function makeQuranSearch(
   surahNumber: number,
   text = `Technical search text ${surahNumber}`
 ): QuranSearchRow {
-  return Schema.decodeUnknownSync(QuranSearchRowSchema)({
+  return Schema.decodeSync(QuranSearchRowSchema)({
     appLocale,
     graph: {
       alignmentId: `alignment:quran:quran-surah:${surahNumber}`,

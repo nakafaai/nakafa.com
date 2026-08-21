@@ -8,7 +8,6 @@ import { describe, expect, it } from "vitest";
 type QuranMarkdownResult = FunctionReturnType<
   typeof api.contentRelease.quran.markdown
 >;
-
 const source = {
   activeManifestHash: `sha256:${"a".repeat(64)}`,
   activeReleaseId: "quran-release",
@@ -16,7 +15,6 @@ const source = {
   snapshotId: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
   sourceRevision: "c".repeat(40),
 };
-
 describe("signed Quran markdown decoder", () => {
   it("preserves the exact fields rendered by markdown consumers", async () => {
     const markdown = await Effect.runPromise(
@@ -25,7 +23,6 @@ describe("signed Quran markdown decoder", () => {
         surahNumber: 1,
       })
     );
-
     expect(markdown.surah.revelation).toEqual({ place: "Meccan" });
     expect(markdown.verses[0]).toEqual({
       arabic: "بِسْمِ اللّٰهِ",
@@ -33,10 +30,9 @@ describe("signed Quran markdown decoder", () => {
       translation: { footnotes: "Source note.", text: "In Allah's name." },
     });
   });
-
   it("fails with typed errors for missing and mismatched markdown", async () => {
     const missing = await Effect.runPromise(
-      Effect.either(
+      Effect.result(
         decodePublishedQuranMarkdown(
           { ...markdownResult(), surah: null, verses: [] },
           { appLocale: "en", surahNumber: 1 }
@@ -44,27 +40,24 @@ describe("signed Quran markdown decoder", () => {
       )
     );
     const mismatched = await Effect.runPromise(
-      Effect.either(
+      Effect.result(
         decodePublishedQuranMarkdown(markdownResult(), {
           appLocale: "en",
           surahNumber: 2,
         })
       )
     );
-
     expect(missing).toMatchObject({
-      _tag: "Left",
-      left: { _tag: "QuranPublicationError", operation: "markdown" },
+      _tag: "Failure",
+      failure: { _tag: "QuranPublicationError", operation: "markdown" },
     });
     expect(mismatched).toMatchObject({
-      _tag: "Left",
-      left: { _tag: "QuranPublicationError", operation: "markdown" },
+      _tag: "Failure",
+      failure: { _tag: "QuranPublicationError", operation: "markdown" },
     });
   });
-
   it("accepts only the requested exact markdown verse prefix", async () => {
     const bounded = markdownResult(82, 80);
-
     await expect(
       Effect.runPromise(
         decodePublishedQuranMarkdown(bounded, {
@@ -76,7 +69,7 @@ describe("signed Quran markdown decoder", () => {
     ).resolves.toMatchObject({ toVerse: 80, verses: { length: 80 } });
     await expect(
       Effect.runPromise(
-        Effect.either(
+        Effect.result(
           decodePublishedQuranMarkdown(
             { ...bounded, toVerse: 81 },
             { appLocale: "en", surahNumber: 1, verseLimit: 80 }
@@ -84,12 +77,11 @@ describe("signed Quran markdown decoder", () => {
         )
       )
     ).resolves.toMatchObject({
-      _tag: "Left",
-      left: { _tag: "QuranPublicationError", operation: "markdown" },
+      _tag: "Failure",
+      failure: { _tag: "QuranPublicationError", operation: "markdown" },
     });
   });
 });
-
 /** Builds one complete app-locale signed markdown response. */
 function markdownResult(
   numberOfVerses = 1,

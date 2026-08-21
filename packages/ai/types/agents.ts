@@ -3,7 +3,7 @@ import {
   LearningProgramKindSchema,
   ProgramCoverageSchema,
 } from "@nakafa/aksara-contracts/program/spec";
-import type { Nakafa } from "@repo/ai/agents/nakafa/service";
+import type { NakafaRuntime } from "@repo/ai/agents/nakafa/service";
 import { ModelIdSchema } from "@repo/ai/config/model";
 import { SourceReferenceSchema } from "@repo/ai/lib/source";
 import { NinaContextPackSchema } from "@repo/ai/nina/memory/pack";
@@ -12,8 +12,7 @@ import { PromptUserRoleSchema } from "@repo/ai/types/roles";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { LearningInterestSchema } from "@repo/contents/_types/learner/preferences";
 import type { UIMessageStreamWriter } from "ai";
-import { Schema } from "effect";
-
+import { Schema, Struct } from "effect";
 /** Canonical learner interest and signed program context available to agents. */
 export const AgentLearningSelectionSchema = Schema.Struct({
   interest: LearningInterestSchema,
@@ -23,13 +22,11 @@ export const AgentLearningSelectionSchema = Schema.Struct({
     kind: LearningProgramKindSchema,
     title: Schema.String,
     versionLabel: Schema.String,
-  }).pipe(Schema.mutable),
-}).pipe(Schema.mutable);
-
+  }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export type AgentLearningSelection = Schema.Schema.Type<
   typeof AgentLearningSelectionSchema
 >;
-
 /** Per-turn context shared by Nina and specialist agents after harness arbitration. */
 export const AgentContextSchema = Schema.Struct({
   currentDate: Schema.String,
@@ -40,32 +37,26 @@ export const AgentContextSchema = Schema.Struct({
   url: Schema.String,
   userRole: Schema.optional(PromptUserRoleSchema),
   verified: Schema.Boolean,
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export type AgentContext = Schema.Schema.Type<typeof AgentContextSchema>;
-
 /** Schema-derived data passed to task-oriented specialist agents. */
 export const TaskAgentDataSchema = Schema.Struct({
   context: AgentContextSchema,
   locale: LocaleSchema,
   modelId: ModelIdSchema,
   task: Schema.String,
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 type TaskAgentData = Schema.Schema.Type<typeof TaskAgentDataSchema>;
 type SpecialistWriter = UIMessageStreamWriter<MyUIMessage>;
-
 /** Parameters for the deterministic math specialist Adapter. */
 export type MathAgentParams = TaskAgentData & {
   readonly writer: SpecialistWriter;
 };
-
 /** Parameters for the Nakafa content retrieval specialist Adapter. */
 export type NakafaAgentParams = TaskAgentData & {
-  readonly nakafa: Nakafa;
+  readonly nakafa: NakafaRuntime;
   readonly writer: SpecialistWriter;
 };
-
 /** Schema-derived data passed to the external research specialist. */
 export const ResearchAgentDataSchema = Schema.Struct({
   context: AgentContextSchema,
@@ -74,8 +65,7 @@ export const ResearchAgentDataSchema = Schema.Struct({
   sourceReferences: Schema.Array(SourceReferenceSchema),
   task: Schema.String,
   toolCallId: Schema.String,
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 /** Parameters for the external research specialist Adapter. */
 export type ResearchAgentParams = Schema.Schema.Type<
   typeof ResearchAgentDataSchema

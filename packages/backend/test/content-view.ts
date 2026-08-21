@@ -4,6 +4,7 @@ import { getContentAnalyticsPartition } from "@repo/backend/convex/contents/help
 import type { RecordContentViewArgs } from "@repo/backend/convex/contents/views/spec";
 import {
   type createConvexTestWithBetterAuth,
+  seedAnalyticsConsent,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import {
@@ -53,12 +54,16 @@ export async function insertContentViewArticle(ctx: MutationCtx) {
   return { contentId: ARTICLE_VIEW_ID, id: row._id };
 }
 
-/** Seeds one article and authenticated viewer for content-view behavior tests. */
+/** Seeds one article and consented viewer for content-view behavior tests. */
 export async function seedArticleViewer(ctx: MutationCtx, suffix: string) {
   const article = await insertContentViewArticle(ctx);
   const user = await seedAuthenticatedUser(ctx, {
     now: CONTENT_VIEW_NOW,
     suffix,
+  });
+  await seedAnalyticsConsent(ctx, {
+    decidedAt: CONTENT_VIEW_NOW,
+    userId: user.userId,
   });
   return { ...user, contentId: article.contentId };
 }

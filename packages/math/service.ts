@@ -1,13 +1,12 @@
 import { casApiKey, casUrl } from "@repo/math/config";
 import { MathCasRequestError, MathCasResponseError } from "@repo/math/errors";
 import type { MathRequest } from "@repo/math/schema/request";
-import { MathResultSchema } from "@repo/math/schema/result";
-import { Effect, Redacted, Schema } from "effect";
+import { type MathResult, MathResultSchema } from "@repo/math/schema/result";
+import { Context, Effect, Layer, Redacted, Result, Schema } from "effect";
 
 const CAS_MATH_PATH = "/api/math";
 const JSON_CONTENT_TYPE = "application/json";
-
-const CasErrorBodySchema = Schema.Union(
+const CasErrorBodySchema = Schema.Union([
   Schema.Struct({
     detail: Schema.String,
   }),
@@ -17,9 +16,8 @@ const CasErrorBodySchema = Schema.Union(
         msg: Schema.String,
       })
     ),
-  })
-);
-
+  }),
+]);
 /**
  * Deterministic math service used by Nina.
  *
@@ -28,14 +26,18 @@ const CasErrorBodySchema = Schema.Union(
  * - Effect Schema validation: https://effect.website/docs/schema/introduction/
  * - SymPy capabilities: https://docs.sympy.org/latest/index.html
  */
-export class MathService extends Effect.Service<MathService>()(
+export interface MathRuntime {
+  readonly compute: (
+    request: MathRequest
+  ) => Effect.Effect<MathResult, MathCasRequestError | MathCasResponseError>;
+}
+
+export class MathService extends Context.Service<MathService, MathRuntime>()(
   "@repo/math/Math",
   {
-    accessors: true,
-    effect: Effect.gen(function* () {
+    make: Effect.gen(function* () {
       const baseUrl = yield* casUrl;
       const apiKey = yield* casApiKey;
-
       return {
         compute: (request: MathRequest) =>
           Effect.gen(function* () {
@@ -54,14 +56,12 @@ export class MathService extends Effect.Service<MathService>()(
                   message: "Unable to reach the Nakafa math service.",
                 }),
             });
-
             if (!response.ok) {
               return yield* new MathCasRequestError({
                 message: yield* readResponseError(response),
                 status: response.status,
               });
             }
-
             const payload = yield* Effect.tryPromise({
               try: () => response.json(),
               catch: () =>
@@ -69,8 +69,9 @@ export class MathService extends Effect.Service<MathService>()(
                   message: "Math service returned an unreadable JSON response.",
                 }),
             });
-
-            return yield* Schema.decodeUnknown(MathResultSchema)(payload).pipe(
+            return yield* Schema.decodeUnknownEffect(MathResultSchema)(
+              payload
+            ).pipe(
               Effect.mapError(
                 (error) =>
                   new MathCasResponseError({
@@ -82,13 +83,14 @@ export class MathService extends Effect.Service<MathService>()(
       };
     }),
   }
-) {}
-
+) {
+  static readonly layer = Layer.effect(this, this.make);
+}
 /** Reads math service JSON errors without leaking framework HTML pages into chat. */
 const readResponseError = Effect.fn("Math.readResponseError")(function* (
   response: Response
 ) {
-  const body = yield* Effect.either(
+  const body = yield* Effect.result(
     Effect.tryPromise({
       try: () => response.text(),
       catch: () =>
@@ -98,26 +100,20 @@ const readResponseError = Effect.fn("Math.readResponseError")(function* (
         }),
     })
   );
-
-  if (body._tag === "Left" || body.right.length === 0) {
+  if (Result.isFailure(body) || body.success.length === 0) {
     return `Math request failed with status ${response.status}.`;
   }
-
   if (!response.headers.get("content-type")?.includes(JSON_CONTENT_TYPE)) {
     return `Math request failed with status ${response.status}.`;
   }
-
-  const decoded = yield* Effect.either(
-    Schema.decodeUnknown(Schema.parseJson(CasErrorBodySchema))(body.right)
+  const decoded = yield* Effect.result(
+    Schema.decodeEffect(Schema.fromJsonString(CasErrorBodySchema))(body.success)
   );
-
-  if (decoded._tag === "Left") {
+  if (Result.isFailure(decoded)) {
     return `Math request failed with status ${response.status}.`;
   }
-
-  if (typeof decoded.right.detail === "string") {
-    return decoded.right.detail;
+  if (typeof decoded.success.detail === "string") {
+    return decoded.success.detail;
   }
-
-  return decoded.right.detail.map((issue) => issue.msg).join(" ");
+  return decoded.success.detail.map((issue) => issue.msg).join(" ");
 });

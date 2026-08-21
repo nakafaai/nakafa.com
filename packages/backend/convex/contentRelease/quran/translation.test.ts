@@ -12,11 +12,9 @@ const verse = makeQuranChunk({
   surahNumber: 1,
   verseCount: 1,
 }).verses[0];
-
 if (!verse) {
   throw new Error("Expected one technical Quran verse.");
 }
-
 describe("contentRelease/quran/translation", () => {
   it("selects exact reviewed translation and tafsir entries", async () => {
     const localized = await Effect.runPromise(
@@ -25,23 +23,20 @@ describe("contentRelease/quran/translation", () => {
         translation: readQuranTranslation(verse, "en"),
       })
     );
-
     expect(localized.translation.text).toBe("Technical translation 1");
     expect(localized.tafsir.text).toBe("Tafsir teknis 1");
   });
-
   it("fails closed when the signed verse lacks an app locale", async () => {
     const results = await Effect.runPromise(
       Effect.all({
-        tafsir: Effect.either(readQuranTafsir({ ...verse, tafsir: [] }, "id")),
-        translation: Effect.either(readQuranTranslation(verse, "de")),
+        tafsir: Effect.result(readQuranTafsir({ ...verse, tafsir: [] }, "id")),
+        translation: Effect.result(readQuranTranslation(verse, "de")),
       })
     );
-
     for (const result of Object.values(results)) {
       expect(result).toMatchObject({
-        _tag: "Left",
-        left: { code: "CONTENT_RELEASE_INTEGRITY" },
+        _tag: "Failure",
+        failure: { code: "CONTENT_RELEASE_INTEGRITY" },
       });
     }
   });

@@ -7,7 +7,6 @@ import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import { getNakafaMcpUsageMarkdown } from "@repo/contents/_lib/agent/usage";
 import { Effect, Option } from "effect";
 import { nakafaContent } from "@/lib/mcp/nakafa";
-
 /** Registers static and templated Nakafa MCP resources. */
 export function registerNakafaMcpResources(server: McpServer) {
   server.registerResource(
@@ -28,7 +27,6 @@ export function registerNakafaMcpResources(server: McpServer) {
       ],
     })
   );
-
   server.registerResource(
     "nakafa_taxonomy",
     "nakafa://taxonomy",
@@ -39,7 +37,7 @@ export function registerNakafaMcpResources(server: McpServer) {
     },
     (uri) =>
       Effect.runPromise(
-        Nakafa.taxonomy().pipe(
+        Nakafa.use((service) => service.taxonomy()).pipe(
           Effect.provideService(Nakafa, nakafaContent),
           Effect.map((taxonomy) => ({
             contents: [
@@ -53,7 +51,6 @@ export function registerNakafaMcpResources(server: McpServer) {
         )
       )
   );
-
   server.registerResource(
     "nakafa_content",
     new ResourceTemplate("nakafa://content/{contentId}", { list: undefined }),
@@ -64,7 +61,7 @@ export function registerNakafaMcpResources(server: McpServer) {
     },
     (uri) =>
       Effect.runPromise(
-        Nakafa.read(uri.toString()).pipe(
+        Nakafa.use((service) => service.read(uri.toString())).pipe(
           Effect.provideService(Nakafa, nakafaContent),
           Effect.flatMap(
             Option.match({

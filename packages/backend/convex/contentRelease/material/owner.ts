@@ -7,10 +7,9 @@ import { loadReleaseFamilies } from "@repo/backend/convex/contentRelease/scope/f
 import { Effect } from "effect";
 
 type ActiveIdentity = Exclude<
-  Effect.Effect.Success<ReturnType<typeof loadActiveIdentity>>,
+  Effect.Success<ReturnType<typeof loadActiveIdentity>>,
   null
 >;
-
 /** Requires the active material read model to match its publication identity. */
 export const requireMaterialState = Effect.fn(
   "contentRelease.requireMaterialState"
@@ -25,7 +24,6 @@ export const requireMaterialState = Effect.fn(
     );
   }
 });
-
 /** Loads active material catalog readiness and family ownership. */
 export const loadMaterialCatalogOwner = Effect.fn(
   "contentRelease.loadMaterialCatalogOwner"
@@ -45,7 +43,6 @@ export const loadMaterialCatalogOwner = Effect.fn(
   }
   return { active, managed, ready };
 });
-
 /** Loads material ownership only after its active read model is complete. */
 export const loadMaterialOwner = Effect.fn("contentRelease.loadMaterialOwner")(
   function* (ctx: QueryCtx, appLocale: Doc<"contentPaths">["appLocale"]) {

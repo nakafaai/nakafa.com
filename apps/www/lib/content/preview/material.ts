@@ -1,5 +1,4 @@
 import "server-only";
-
 import type { MaterialPreviewDocument } from "@nakafa/aksara-contracts/preview/document";
 import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
 import {
@@ -20,10 +19,8 @@ import {
   matchesMaterialPreviewRoute,
 } from "@/lib/content/preview/route";
 import type { RenderableContent } from "@/lib/content/published/artifact";
-
 /** Exact material route identity requested by one Next server boundary. */
 export type MaterialPreviewInput = MaterialPreviewRouteInput;
-
 /** Authenticated local body plus metadata rendered by the actual Nakafa app. */
 export interface MaterialPreviewContent {
   readonly appLocale: MaterialPreviewDocument["route"]["appLocale"];
@@ -33,18 +30,21 @@ export interface MaterialPreviewContent {
   readonly rawMdx: string;
   readonly rendererDomain: MaterialPreviewDocument["rendererDomain"];
 }
-
 /** Authenticates and executes the exact ready material artifact. */
 const readReadyContent = Effect.fn("NakafaContent.readReadyPreview")(function* (
-  manifest: Extract<LocalPreviewManifest, { readonly status: "ready" }>,
+  manifest: Extract<
+    LocalPreviewManifest,
+    {
+      readonly status: "ready";
+    }
+  >,
   document: MaterialPreviewDocument,
   config: PreviewConfig
 ) {
   const previewArtifact = manifest.artifacts[0];
-  const projection = yield* Schema.decodeUnknown(
+  const projection = yield* Schema.decodeUnknownEffect(
     MaterialLessonProjectionSchema
   )(previewArtifact.projection);
-
   const rendered = yield* executePreviewArtifact({
     config,
     document,
@@ -60,7 +60,6 @@ const readReadyContent = Effect.fn("NakafaContent.readReadyPreview")(function* (
     rendererDomain: document.rendererDomain,
   } satisfies MaterialPreviewContent;
 });
-
 /** Reads a matching changed material route or leaves unchanged routes alone. */
 export const readMaterialPreview = Effect.fn(
   "NakafaContent.readMaterialPreview"

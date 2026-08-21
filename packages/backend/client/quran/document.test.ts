@@ -8,7 +8,6 @@ import { describe, expect, it } from "vitest";
 type QuranDocumentResult = FunctionReturnType<
   typeof api.contentRelease.quran.document
 >;
-
 const source = {
   activeManifestHash: `sha256:${"a".repeat(64)}`,
   activeReleaseId: "quran-release",
@@ -16,7 +15,6 @@ const source = {
   snapshotId: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
   sourceRevision: "c".repeat(40),
 };
-
 describe("signed Quran document decoder", () => {
   it("preserves the exact app-locale document projection", async () => {
     const document = await Effect.runPromise(
@@ -25,7 +23,6 @@ describe("signed Quran document decoder", () => {
         surahNumber: 1,
       })
     );
-
     expect(document.surah.revelation).toEqual({ order: 5, place: "Meccan" });
     expect(document.verses).toEqual([
       {
@@ -35,10 +32,9 @@ describe("signed Quran document decoder", () => {
       },
     ]);
   });
-
   it("fails with typed errors for inactive and inconsistent documents", async () => {
     const inactive = await Effect.runPromise(
-      Effect.either(
+      Effect.result(
         decodePublishedQuranDocument(
           {
             activeManifestHash: null,
@@ -55,25 +51,23 @@ describe("signed Quran document decoder", () => {
       )
     );
     const inconsistent = await Effect.runPromise(
-      Effect.either(
+      Effect.result(
         decodePublishedQuranDocument(documentResult(), {
           appLocale: "en",
           surahNumber: 1,
         })
       )
     );
-
     expect(inactive).toMatchObject({
-      _tag: "Left",
-      left: { _tag: "QuranPublicationError", operation: "document" },
+      _tag: "Failure",
+      failure: { _tag: "QuranPublicationError", operation: "document" },
     });
     expect(inconsistent).toMatchObject({
-      _tag: "Left",
-      left: { _tag: "QuranPublicationError", operation: "document" },
+      _tag: "Failure",
+      failure: { _tag: "QuranPublicationError", operation: "document" },
     });
   });
 });
-
 /** Builds one complete app-locale signed document response. */
 function documentResult(): QuranDocumentResult {
   return {

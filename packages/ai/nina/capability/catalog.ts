@@ -39,10 +39,9 @@ import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/sche
 import type { Locale } from "@repo/contents/_types/content";
 import type { LogContext } from "@repo/utilities/logging/types";
 import { tool, type UIMessageStreamWriter } from "ai";
-import { Effect, Runtime } from "effect";
+import { Effect } from "effect";
 
-type NinaUsage = Effect.Effect.Success<ReturnType<typeof trackUsage>>;
-
+type NinaUsage = Effect.Success<ReturnType<typeof trackUsage>>;
 /**
  * Builds Nina's internal AI SDK tool catalog for one turn.
  *
@@ -73,8 +72,8 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
     const search = yield* NakafaSearch;
     const reporter = yield* NinaReporter;
     const store = yield* NinaStore;
-    const runPromise = Runtime.runPromise(yield* Effect.runtime());
-
+    const services = yield* Effect.context<never>();
+    const runPromise = Effect.runPromiseWith(services);
     return {
       [NAKAFA_CAPABILITY]: tool({
         description:
@@ -98,9 +97,7 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
                     decision,
                   });
                 }
-
                 const needsPageFetch = consumePageFetch();
-
                 if (needsPageFetch) {
                   const contentRef = getCanonicalNakafaContentUrl(context.url);
                   const text = yield* readNakafa({
@@ -111,18 +108,15 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
                     toolCallId,
                     writer,
                   }).pipe(Effect.provideService(Nakafa, nakafa));
-
                   if (typeof text !== "string") {
                     return text;
                   }
-
                   return capabilityResult({
                     capability: NAKAFA_CAPABILITY,
                     status: "available",
                     text,
                   });
                 }
-
                 const result = yield* runNakafaAgent({
                   context: { ...context, needsPageFetch },
                   locale,
@@ -139,7 +133,7 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
                       usage: result.usage,
                     })
                   ),
-                  Effect.catchAll((error) =>
+                  Effect.catch((error) =>
                     recoverSpecialistFailure({
                       component: NAKAFA_CAPABILITY,
                       error,
@@ -148,14 +142,12 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
                     })
                   )
                 );
-
                 yield* recordSpecialistUsage({
                   addUsage: usage.addUsage,
                   component: NAKAFA_CAPABILITY,
                   logContext,
                   result,
                 });
-
                 return result;
               }),
             }).pipe(
@@ -187,7 +179,6 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
                     decision,
                   });
                 }
-
                 const result = yield* runResearchAgent({
                   context,
                   locale,
@@ -204,7 +195,7 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
                       usage: result.usage,
                     })
                   ),
-                  Effect.catchAll((error) =>
+                  Effect.catch((error) =>
                     recoverSpecialistFailure({
                       component: RESEARCH_CAPABILITY,
                       error,
@@ -213,14 +204,12 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
                     })
                   )
                 );
-
                 yield* recordSpecialistUsage({
                   addUsage: usage.addUsage,
                   component: RESEARCH_CAPABILITY,
                   logContext,
                   result,
                 });
-
                 return result;
               }),
             }).pipe(
@@ -252,7 +241,6 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
                     decision,
                   });
                 }
-
                 const result = yield* runMathAgent({
                   context,
                   locale,
@@ -267,7 +255,7 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
                       usage: result.usage,
                     })
                   ),
-                  Effect.catchAll((error) =>
+                  Effect.catch((error) =>
                     recoverSpecialistFailure({
                       component: MATH_CAPABILITY,
                       error,
@@ -276,14 +264,12 @@ export const createNinaCapabilityCatalog = Effect.fn("nina.capability.catalog")(
                     })
                   )
                 );
-
                 yield* recordSpecialistUsage({
                   addUsage: usage.addUsage,
                   component: MATH_CAPABILITY,
                   logContext,
                   result,
                 });
-
                 return result;
               }),
             }).pipe(

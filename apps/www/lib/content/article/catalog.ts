@@ -1,5 +1,4 @@
 import "server-only";
-
 import type { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
@@ -17,10 +16,8 @@ import { applyPublishedCatalogCache } from "@/lib/content/cache";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 import { readRuntimeQuery } from "@/lib/content/runtime/query";
-
 /** Stable source root for immutable Aksara article links. */
 export const ARTICLE_SOURCE_ROOT = "packages/corpus/articles";
-
 type ArticlePageArgs = FunctionArgs<typeof api.contentRelease.article.page>;
 type ArticlePageResult = FunctionReturnType<
   typeof api.contentRelease.article.page
@@ -33,21 +30,18 @@ type CategoryPageResult = FunctionReturnType<
   typeof api.contentRelease.article.categories
 >;
 type CategoryPageItem = CategoryPageResult["result"]["page"][number];
-
 /** Active release identity required to continue one stable catalog read. */
 export interface ArticlePageCursor {
   readonly cursor: null | string;
   readonly expectedManifestHash: null | string;
   readonly expectedReleaseId: null | string;
 }
-
 /** One localized category title verified against the active article model. */
 export interface PublishedArticleCategory {
   readonly category: ArticleCategory;
   readonly rendererDomain: CategoryPageItem["rendererDomain"];
   readonly title: typeof ArticleCategoryTitleSchema.Type;
 }
-
 /** One verified article card selected from the active Aksara release. */
 export interface PublishedArticleSummary {
   readonly authors: (typeof ArticleProjectionSchema.Type)["metadata"]["authors"];
@@ -60,7 +54,6 @@ export interface PublishedArticleSummary {
   readonly slug: (typeof ArticleProjectionSchema.Type)["articleSlug"];
   readonly title: string;
 }
-
 /** One bounded active article page with immutable provenance. */
 export interface PublishedArticlePage {
   readonly activeManifestHash: string;
@@ -71,7 +64,6 @@ export interface PublishedArticlePage {
   readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
   readonly stale: boolean;
 }
-
 /** One bounded active category page with immutable provenance. */
 export interface PublishedCategoryPage {
   readonly activeManifestHash: string;
@@ -82,7 +74,6 @@ export interface PublishedCategoryPage {
   readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
   readonly stale: boolean;
 }
-
 /** Maps one malformed catalog field to the public projection failure contract. */
 function projectionError(locale: Locale, publicPath = "articles") {
   return new PublishedProjectionError({
@@ -90,7 +81,6 @@ function projectionError(locale: Locale, publicPath = "articles") {
     publicPath,
   });
 }
-
 /** Strictly decodes one backend-verified article catalog row. */
 const decodeArticleItem = Effect.fn("www.articles.decodeItem")(function* (
   item: ArticlePageItem,
@@ -100,7 +90,7 @@ const decodeArticleItem = Effect.fn("www.articles.decodeItem")(function* (
     catch: () => projectionError(locale),
     try: (): unknown => JSON.parse(item.projectionJson),
   });
-  const projection = yield* Schema.decodeUnknown(ArticleProjectionSchema)(
+  const projection = yield* Schema.decodeUnknownEffect(ArticleProjectionSchema)(
     input,
     { onExcessProperty: "error" }
   ).pipe(Effect.mapError(() => projectionError(locale, item.publicPath)));
@@ -125,15 +115,14 @@ const decodeArticleItem = Effect.fn("www.articles.decodeItem")(function* (
     title: projection.metadata.title,
   } satisfies PublishedArticleSummary;
 });
-
 /** Strictly decodes one backend-verified category catalog row. */
 const decodeCategoryItem = Effect.fn("www.articles.decodeCategory")(function* (
   item: CategoryPageItem,
   locale: Locale
 ) {
   const [category, title] = yield* Effect.all([
-    Schema.decodeUnknown(ArticleCategorySchema)(item.category),
-    Schema.decodeUnknown(ArticleCategoryTitleSchema)(item.title),
+    Schema.decodeEffect(ArticleCategorySchema)(item.category),
+    Schema.decodeEffect(ArticleCategoryTitleSchema)(item.title),
   ]).pipe(Effect.mapError(() => projectionError(locale)));
   return {
     category,
@@ -141,7 +130,6 @@ const decodeCategoryItem = Effect.fn("www.articles.decodeCategory")(function* (
     title,
   } satisfies PublishedArticleCategory;
 });
-
 /** Reads and decodes one exact category's newest-first article page. */
 export const readPublishedArticlePage = Effect.fn(
   "www.articles.readPublishedPage"
@@ -193,7 +181,6 @@ export const readPublishedArticlePage = Effect.fn(
     stale,
   } satisfies PublishedArticlePage;
 });
-
 /** Reads and decodes one localized article-category page. */
 export const readPublishedCategories = Effect.fn(
   "www.articles.readPublishedCategories"
@@ -246,7 +233,6 @@ export const readPublishedCategories = Effect.fn(
     stale,
   } satisfies PublishedCategoryPage;
 });
-
 /** Caches one bounded article page under exact article release tags. */
 export async function getPublishedArticlePage(
   input: ArticlePageCursor & {
@@ -255,12 +241,10 @@ export async function getPublishedArticlePage(
   }
 ) {
   "use cache";
-
   const page = await Effect.runPromise(readPublishedArticlePage(input));
   applyPublishedCatalogCache("article");
   return page;
 }
-
 /** Caches one bounded category page under exact article release tags. */
 export async function getPublishedCategories(
   input: ArticlePageCursor & {
@@ -268,7 +252,6 @@ export async function getPublishedCategories(
   }
 ) {
   "use cache";
-
   const page = await Effect.runPromise(readPublishedCategories(input));
   applyPublishedCatalogCache("article");
   return page;

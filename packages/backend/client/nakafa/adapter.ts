@@ -15,7 +15,7 @@ export function makeConvexNakafa({
   convexUrl,
   readContentTarget,
 }: ConvexNakafaOptions) {
-  return Nakafa.make({
+  return Nakafa.of({
     /** Reads markdown from the active Convex runtime model. */
     read: (input) => readNakafaMarkdown(convexUrl, readContentTarget, input),
     /** Reads Quran references from Convex Quran runtime rows. */

@@ -9,7 +9,7 @@
 - Use `catchTag` or `catchTags` when the error type is known.
 - Avoid raw `try/catch`; use `Effect.try`, `Effect.tryPromise`, or safe platform APIs like `URL.canParse`.
 - Avoid raw `async` business logic. Use `Effect.runPromise` only at external framework boundaries such as AI SDK tool `execute` handlers.
-- Use the stable `Context.Tag` plus `Layer` pattern for real dependency seams. Use `Effect.Service` only when the module owns a default implementation and deliberately accepts its experimental Effect 3.22 API.
+- Use the Effect v4 `Context.Service` plus `Layer` pattern for real dependency seams. Keep service contracts separate from live implementations unless the owning Module intentionally provides both.
 - Keep provider configuration and environment access inside config/env boundary modules.
 - Prefer direct imports. Do not add barrels or wrapper chains.
 

@@ -1,17 +1,18 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { Schema } from "effect";
 
-const emailSchema = Schema.standardSchemaV1(
+const emailSchema = Schema.toStandardSchemaV1(
   Schema.String.pipe(
-    Schema.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, {
-      message: () => "Expected a valid email address.",
-    })
+    Schema.check(
+      Schema.isPattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, {
+        message: "Expected a valid email address.",
+      })
+    )
   )
 );
-const resendTokenSchema = Schema.standardSchemaV1(
-  Schema.String.pipe(Schema.startsWith("re_"))
+const resendTokenSchema = Schema.toStandardSchemaV1(
+  Schema.String.check(Schema.isStartsWith("re_"))
 );
-
 export const keys = () =>
   createEnv({
     server: {

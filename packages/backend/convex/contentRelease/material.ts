@@ -25,6 +25,7 @@ import { v } from "convex/values";
 
 const materialModelValidator = v.object({
   activeManifestHash: v.union(v.string(), v.null()),
+  activeAppLocales: v.array(appLocaleValidator),
   activeReleaseId: v.union(v.string(), v.null()),
   alternateJson: v.array(v.string()),
   projectionJson: v.union(v.string(), v.null()),

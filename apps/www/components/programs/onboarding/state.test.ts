@@ -1,4 +1,4 @@
-import { Effect, Either } from "effect";
+import { Effect, Result } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   decodeOnboardingRoleValue,
@@ -13,37 +13,31 @@ describe("components/programs/onboarding/state", () => {
         interest: "exam-prep",
         programKey: "snbt",
         role: "student",
-      }).pipe(Effect.either)
+      }).pipe(Effect.result)
     );
-
-    expect(Either.isRight(result)).toBe(true);
-    if (!Either.isRight(result)) {
+    expect(Result.isSuccess(result)).toBe(true);
+    if (!Result.isSuccess(result)) {
       return;
     }
-
-    expect(result.right).toEqual({
+    expect(result.success).toEqual({
       focusKey: "student-exam",
       interest: "exam-prep",
       programKey: "snbt",
       role: "student",
     });
   });
-
   it("rejects incomplete program onboarding values", () => {
     const result = Effect.runSync(
       decodeOnboardingValue({
         programKey: "snbt",
-      }).pipe(Effect.either)
+      }).pipe(Effect.result)
     );
-
-    expect(Either.isLeft(result)).toBe(true);
+    expect(Result.isFailure(result)).toBe(true);
   });
-
   it("decodes a route-owned role step value", () => {
     const role = Effect.runSync(
-      decodeOnboardingRoleValue({ role: "teacher" }).pipe(Effect.either)
+      decodeOnboardingRoleValue({ role: "teacher" }).pipe(Effect.result)
     );
-
-    expect(Either.isRight(role)).toBe(true);
+    expect(Result.isSuccess(role)).toBe(true);
   });
 });

@@ -11,10 +11,8 @@ import {
   toMcpStructuredResult,
   toMcpToolError,
 } from "@/lib/mcp/result";
-
 export const NakafaGetContentToolInputSchema = NakafaAgentReadOptionsSchema;
 export const NakafaGetContentToolOutputSchema = NakafaAgentMarkdownSchema;
-
 /** Builds a full-content tool result for one Nakafa content reference. */
 export function getNakafaContentToolResult(args: unknown) {
   return Effect.gen(function* () {
@@ -23,10 +21,9 @@ export function getNakafaContentToolResult(args: unknown) {
       args,
       "Invalid Nakafa content read options."
     );
-    const content = yield* Nakafa.read(input.content_ref).pipe(
-      Effect.provideService(Nakafa, nakafaContent)
-    );
-
+    const content = yield* Nakafa.use((service) =>
+      service.read(input.content_ref)
+    ).pipe(Effect.provideService(Nakafa, nakafaContent));
     return Option.match(content, {
       onNone: () =>
         toMcpToolError("Nakafa content was not found.", [

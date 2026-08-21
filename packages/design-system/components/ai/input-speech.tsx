@@ -1,14 +1,13 @@
 "use client";
-
 import { Mic01Icon } from "@hugeicons/core-free-icons";
-import { captureException } from "@repo/analytics/posthog";
+import { captureException } from "@repo/analytics/posthog/browser";
 import {
   PromptInputButton,
   type PromptInputButtonProps,
 } from "@repo/design-system/components/ai/input-controls";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "@repo/design-system/lib/utils";
-import { Effect, Either, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 import {
   type RefObject,
   useCallback,
@@ -31,28 +30,22 @@ interface SpeechRecognition extends EventTarget {
   start(): void;
   stop(): void;
 }
-
 interface SpeechRecognitionEvent extends Event {
   results: ArrayLike<SpeechRecognitionResult>;
 }
-
 interface SpeechRecognitionResult {
   isFinal: boolean;
   [index: number]: SpeechRecognitionAlternative;
 }
-
 interface SpeechRecognitionAlternative {
   transcript: string;
 }
-
 type SpeechRecognitionPhase = "idle" | "starting" | "listening" | "stopping";
-
-const SpeechRecognitionOperationSchema = Schema.Literal(
+const SpeechRecognitionOperationSchema = Schema.Literals([
   "create",
   "start",
-  "stop"
-);
-
+  "stop",
+]);
 /** Expected browser failure while controlling speech recognition. */
 class PromptInputSpeechRecognitionError extends Schema.TaggedError<PromptInputSpeechRecognitionError>()(
   "PromptInputSpeechRecognitionError",
@@ -61,7 +54,6 @@ class PromptInputSpeechRecognitionError extends Schema.TaggedError<PromptInputSp
     operation: SpeechRecognitionOperationSchema,
   }
 ) {}
-
 declare global {
   interface Window {
     SpeechRecognition: {
@@ -72,13 +64,11 @@ declare global {
     };
   }
 }
-
 /** Props for optional browser speech transcription in a prompt input. */
 export type PromptInputSpeechButtonProps = PromptInputButtonProps & {
   textareaRef?: RefObject<HTMLTextAreaElement | null>;
   onTranscriptionChange?: (text: string) => void;
 };
-
 function getSpeechRecognitionApi() {
   if (typeof window === "undefined") {
     return null;
@@ -86,27 +76,21 @@ function getSpeechRecognitionApi() {
   if (!("SpeechRecognition" in window || "webkitSpeechRecognition" in window)) {
     return null;
   }
-
   return window.SpeechRecognition || window.webkitSpeechRecognition;
 }
-
 function getSpeechRecognitionSnapshot() {
   return getSpeechRecognitionApi() !== null;
 }
-
 function getServerSpeechRecognitionSnapshot() {
   return false;
 }
-
 function unsubscribeSpeechRecognitionAvailability() {
   return;
 }
-
 /** Browser support is stable for a document lifetime, so no change events exist. */
 function subscribeSpeechRecognitionAvailability(_listener: () => void) {
   return unsubscribeSpeechRecognitionAvailability;
 }
-
 /** Constructs the vendor speech-recognition boundary through a typed Effect. */
 const createSpeechRecognition = Effect.fn(
   "designSystem.promptInput.createSpeechRecognition"
@@ -117,7 +101,6 @@ const createSpeechRecognition = Effect.fn(
       new PromptInputSpeechRecognitionError({ cause, operation: "create" }),
   })
 );
-
 /** Starts or stops recognition while preserving browser failures in the error channel. */
 const controlSpeechRecognition = Effect.fn(
   "designSystem.promptInput.controlSpeechRecognition"
@@ -128,7 +111,6 @@ const controlSpeechRecognition = Effect.fn(
       new PromptInputSpeechRecognitionError({ cause, operation }),
   })
 );
-
 function reportSpeechRecognitionError(
   error: PromptInputSpeechRecognitionError
 ) {
@@ -137,7 +119,6 @@ function reportSpeechRecognitionError(
     source: "prompt-input-speech-recognition",
   });
 }
-
 /** Transcribes final speech-recognition results into a prompt textarea. */
 export function PromptInputSpeechButton({
   className,
@@ -155,34 +136,28 @@ export function PromptInputSpeechButton({
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const recognitionPhaseRef = useRef<SpeechRecognitionPhase>("idle");
   const textareaRefRef = useRef(textareaRef);
-
   useEffect(() => {
     onTranscriptionChangeRef.current = onTranscriptionChange;
   }, [onTranscriptionChange]);
-
   useEffect(() => {
     textareaRefRef.current = textareaRef;
   }, [textareaRef]);
-
   useEffect(() => {
     const SpeechRecognitionApi = getSpeechRecognitionApi();
     if (!SpeechRecognitionApi) {
       return;
     }
-
     const creation = Effect.runSync(
-      Effect.either(createSpeechRecognition(SpeechRecognitionApi))
+      Effect.result(createSpeechRecognition(SpeechRecognitionApi))
     );
-    if (Either.isLeft(creation)) {
-      reportSpeechRecognitionError(creation.left);
+    if (Result.isFailure(creation)) {
+      reportSpeechRecognitionError(creation.failure);
       return;
     }
-
-    const speechRecognition = creation.right;
+    const speechRecognition = creation.success;
     speechRecognition.continuous = true;
     speechRecognition.interimResults = true;
     speechRecognition.lang = "en-US";
-
     speechRecognition.onstart = () => {
       if (recognitionPhaseRef.current === "starting") {
         recognitionPhaseRef.current = "listening";
@@ -195,22 +170,18 @@ export function PromptInputSpeechButton({
     };
     speechRecognition.onresult = (event) => {
       let finalTranscript = "";
-
       for (const result of Array.from(event.results)) {
         if (result.isFinal) {
           finalTranscript += result[0].transcript;
         }
       }
-
       const textarea = textareaRefRef.current?.current;
       if (!(finalTranscript && textarea)) {
         return;
       }
-
       const currentValue = textarea.value;
       const newValue =
         currentValue + (currentValue ? " " : "") + finalTranscript;
-
       textarea.value = newValue;
       textarea.dispatchEvent(new Event("input", { bubbles: true }));
       onTranscriptionChangeRef.current?.(newValue);
@@ -219,56 +190,48 @@ export function PromptInputSpeechButton({
       recognitionPhaseRef.current = "idle";
       setIsListening(false);
     };
-
     recognitionRef.current = speechRecognition;
-
     return () => {
       speechRecognition.onend = null;
       speechRecognition.onerror = null;
       speechRecognition.onresult = null;
       speechRecognition.onstart = null;
-
       if (
         recognitionPhaseRef.current === "starting" ||
         recognitionPhaseRef.current === "listening"
       ) {
         const stopped = Effect.runSync(
-          Effect.either(controlSpeechRecognition(speechRecognition, "stop"))
+          Effect.result(controlSpeechRecognition(speechRecognition, "stop"))
         );
-        if (Either.isLeft(stopped)) {
-          reportSpeechRecognitionError(stopped.left);
+        if (Result.isFailure(stopped)) {
+          reportSpeechRecognitionError(stopped.failure);
         }
       }
-
       recognitionPhaseRef.current = "idle";
       recognitionRef.current = null;
     };
   }, []);
-
   const toggleListening = useCallback(() => {
     const recognition = recognitionRef.current;
     if (!recognition) {
       return;
     }
-
     const previousPhase = recognitionPhaseRef.current;
     if (previousPhase === "stopping") {
       return;
     }
-
     const operation = previousPhase === "idle" ? "start" : "stop";
     recognitionPhaseRef.current =
       operation === "start" ? "starting" : "stopping";
     const result = Effect.runSync(
-      Effect.either(controlSpeechRecognition(recognition, operation))
+      Effect.result(controlSpeechRecognition(recognition, operation))
     );
-    if (Either.isLeft(result)) {
+    if (Result.isFailure(result)) {
       recognitionPhaseRef.current = previousPhase;
       setIsListening(previousPhase === "listening");
-      reportSpeechRecognitionError(result.left);
+      reportSpeechRecognitionError(result.failure);
     }
   }, []);
-
   return (
     <PromptInputButton
       className={cn(

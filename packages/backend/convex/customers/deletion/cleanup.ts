@@ -1,5 +1,8 @@
 import { internal } from "@repo/backend/convex/_generated/api";
-import { POSTHOG_DELETION_RECONCILIATION_DELAY_MS } from "@repo/backend/convex/analytics/deletion";
+import {
+  ANALYTICS_ERASURE_RETRY,
+  LATE_ANALYTICS_RECONCILIATION_DELAY_MS,
+} from "@repo/backend/convex/analytics/erasure/policy";
 import { ACCOUNT_DELETION_RECONCILIATION_DELAY_MS } from "@repo/backend/convex/auth/deletion/constants";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
 import { workflow } from "@repo/backend/convex/workflow";
@@ -46,17 +49,17 @@ export const cleanupDeletedUserAnalytics = workflow.define({
   returns: v.null(),
   handler: async (step, args) => {
     await step.runAction(
-      internal.analytics.deletion.cleanupDeletedUserAnalytics,
+      internal.analytics.erasure.action.eraseUserAnalytics,
       { userId: args.userId },
-      { retry: DELETED_USER_CLEANUP_RETRY }
+      { retry: ANALYTICS_ERASURE_RETRY }
     );
     await step.runAction(
-      internal.analytics.deletion.cleanupDeletedUserAnalytics,
+      internal.analytics.erasure.action.eraseUserAnalytics,
       { userId: args.userId },
       {
         name: "reconcile late analytics writes",
-        retry: DELETED_USER_CLEANUP_RETRY,
-        runAfter: POSTHOG_DELETION_RECONCILIATION_DELAY_MS,
+        retry: ANALYTICS_ERASURE_RETRY,
+        runAfter: LATE_ANALYTICS_RECONCILIATION_DELAY_MS,
       }
     );
 

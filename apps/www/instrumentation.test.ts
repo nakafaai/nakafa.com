@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const instrumentationMocks = vi.hoisted(() => ({
   captureServerException: vi.fn(),
-  extractDistinctIdFromPostHogCookie: vi.fn(),
   isAiSdkDevToolsTelemetryEnabled: vi.fn(),
   isServerExceptionReportingEnabled: vi.fn(),
   postHogModuleLoads: 0,
@@ -33,11 +32,6 @@ vi.mock("@repo/analytics/posthog/server", () => {
   };
 });
 
-vi.mock("@repo/analytics/posthog/attribution", () => ({
-  extractDistinctIdFromPostHogCookie:
-    instrumentationMocks.extractDistinctIdFromPostHogCookie,
-}));
-
 const request = {
   headers: { cookie: "ph_cookie=encoded" },
   method: "GET",
@@ -58,9 +52,6 @@ describe("Next.js instrumentation", () => {
     vi.clearAllMocks();
     vi.unstubAllEnvs();
     instrumentationMocks.captureServerException.mockResolvedValue(undefined);
-    instrumentationMocks.extractDistinctIdFromPostHogCookie.mockReturnValue(
-      undefined
-    );
     instrumentationMocks.isAiSdkDevToolsTelemetryEnabled.mockReturnValue(false);
     instrumentationMocks.isServerExceptionReportingEnabled.mockReturnValue(
       false
@@ -124,7 +115,6 @@ describe("Next.js instrumentation", () => {
 
       expect(instrumentationMocks.captureServerException).toHaveBeenCalledWith(
         error,
-        undefined,
         expect.objectContaining({ revalidate_reason: revalidateReason })
       );
     }
@@ -136,25 +126,17 @@ describe("Next.js instrumentation", () => {
     instrumentationMocks.isServerExceptionReportingEnabled.mockReturnValue(
       true
     );
-    instrumentationMocks.extractDistinctIdFromPostHogCookie.mockReturnValue(
-      "viewer-1"
-    );
     const error = Object.assign(new Error("render failure"), {
       digest: "NEXT_DIGEST",
     });
 
     await onRequestError(error, request, requestContext);
 
-    expect(
-      instrumentationMocks.extractDistinctIdFromPostHogCookie
-    ).toHaveBeenCalledWith("ph_cookie=encoded");
     expect(instrumentationMocks.captureServerException).toHaveBeenCalledWith(
       error,
-      "viewer-1",
       {
         error_digest: "NEXT_DIGEST",
         method: "GET",
-        path: "/id",
         render_source: "react-server-components",
         revalidate_reason: undefined,
         route_path: "/[locale]",

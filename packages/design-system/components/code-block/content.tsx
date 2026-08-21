@@ -1,6 +1,6 @@
 "use client";
 
-import { captureException } from "@repo/analytics/posthog";
+import { captureException } from "@repo/analytics/posthog/browser";
 import { highlightCode } from "@repo/design-system/lib/code-block/highlight";
 import { cn } from "@repo/design-system/lib/utils";
 import { Effect, Fiber } from "effect";

@@ -1,4 +1,4 @@
-import { ACTIVE_APP_LOCALES } from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleList } from "@nakafa/aksara-contracts/locale";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
@@ -11,30 +11,30 @@ import { Effect } from "effect";
 
 /** Reads every locale-specific counterpart for one stable material identity. */
 const readAlternates = Effect.fn("contentRelease.readMaterialAlternates")(
-  function* (ctx: QueryCtx, row: Doc<"materialCatalog">) {
-    const counterparts = yield* Effect.forEach(
-      ACTIVE_APP_LOCALES,
-      (appLocale) =>
-        Effect.gen(function* () {
-          const alternate = yield* Effect.promise(() =>
-            ctx.db
-              .query("materialCatalog")
-              .withIndex("by_contentKey_and_appLocale", (index) =>
-                index
-                  .eq("contentKey", row.contentKey)
-                  .eq("appLocale", appLocale)
-              )
-              .unique()
-          );
-          if (alternate) {
-            const verified = yield* verifyMaterial(alternate);
-            return { ...verified, row: alternate };
-          }
-          return yield* releaseFail(
-            "CONTENT_RELEASE_INTEGRITY",
-            `Material ${row.contentKey} lost locale ${appLocale}.`
-          );
-        })
+  function* (
+    ctx: QueryCtx,
+    row: Doc<"materialCatalog">,
+    activeAppLocales: ActiveAppLocaleList
+  ) {
+    const counterparts = yield* Effect.forEach(activeAppLocales, (appLocale) =>
+      Effect.gen(function* () {
+        const alternate = yield* Effect.promise(() =>
+          ctx.db
+            .query("materialCatalog")
+            .withIndex("by_contentKey_and_appLocale", (index) =>
+              index.eq("contentKey", row.contentKey).eq("appLocale", appLocale)
+            )
+            .unique()
+        );
+        if (alternate) {
+          const verified = yield* verifyMaterial(alternate);
+          return { ...verified, row: alternate };
+        }
+        return yield* releaseFail(
+          "CONTENT_RELEASE_INTEGRITY",
+          `Material ${row.contentKey} lost locale ${appLocale}.`
+        );
+      })
     );
     return counterparts.filter((counterpart) => counterpart !== null);
   }
@@ -104,6 +104,9 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
     if (!route.material) {
       return {
         activeManifestHash: route.active.manifestHash,
+        activeAppLocales: Array.from(
+          route.active.signed.manifest.activeAppLocales
+        ),
         activeReleaseId: route.active.releaseId,
         alternateJson: [],
         projectionJson: null,
@@ -115,11 +118,14 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
     }
     const { projectionJson, row } = route.material;
     const [alternates, siblings] = yield* Effect.all([
-      readAlternates(ctx, row),
+      readAlternates(ctx, row, route.active.signed.manifest.activeAppLocales),
       readSiblings(ctx, row),
     ]);
     return {
       activeManifestHash: route.active.manifestHash,
+      activeAppLocales: Array.from(
+        route.active.signed.manifest.activeAppLocales
+      ),
       activeReleaseId: route.active.releaseId,
       alternateJson: alternates.map(({ projectionJson }) => projectionJson),
       projectionJson,

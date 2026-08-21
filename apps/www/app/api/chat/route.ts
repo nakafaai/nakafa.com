@@ -210,37 +210,38 @@ export function POST(req: Request) {
         chatId,
         logContext,
         modelId: selectedModel,
-        userId: userInfo.userId,
       });
 
       const translate = yield* Effect.tryPromise(() =>
         getTranslations({ locale, namespace: "Ai" })
       );
 
-      return yield* NinaHarness.stream({
-        copy: {
-          errorMessage: translate("error-message"),
-          rateLimitMessage: translate("rate-limit-message"),
-        },
-        page: {
-          locale,
-          needsFetch: false,
-          nina: ninaSession.context,
-          slug,
-          url,
-          verified,
-        },
-        runtime: {
-          currentDate,
-          modelId: selectedModel,
-        },
-        user: {
-          ...(learningSelection ? { learningSelection } : {}),
-          ...(userInfo.role ? { role: userInfo.role } : {}),
-          location: userLocation,
-        },
-      }).pipe(
-        Effect.provide(NinaHarness.Default),
+      return yield* NinaHarness.use((service) =>
+        service.stream({
+          copy: {
+            errorMessage: translate("error-message"),
+            rateLimitMessage: translate("rate-limit-message"),
+          },
+          page: {
+            locale,
+            needsFetch: false,
+            nina: ninaSession.context,
+            slug,
+            url,
+            verified,
+          },
+          runtime: {
+            currentDate,
+            modelId: selectedModel,
+          },
+          user: {
+            ...(learningSelection ? { learningSelection } : {}),
+            ...(userInfo.role ? { role: userInfo.role } : {}),
+            location: userLocation,
+          },
+        })
+      ).pipe(
+        Effect.provide(NinaHarness.layer),
         Effect.provideService(
           NinaStore,
           createNinaStore({

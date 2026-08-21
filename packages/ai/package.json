@@ -10,27 +10,26 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@ai-sdk/devtools": "^1.0.12",
-    "@ai-sdk/gateway": "^4.0.46",
-    "@ai-sdk/google": "^4.0.39",
-    "@effect/platform": "0.97.1",
-    "@mendable/firecrawl-js": "^4.32.0",
-    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.1/nakafa-aksara-contracts-0.13.1.tgz",
+    "@ai-sdk/devtools": "1.0.12",
+    "@ai-sdk/gateway": "4.0.56",
+    "@ai-sdk/google": "4.0.47",
+    "@mendable/firecrawl-js": "^4.34.0",
+    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.0/nakafa-aksara-contracts-0.15.0.tgz",
     "@repo/contents": "workspace:*",
     "@repo/math": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "ai": "^7.0.58",
+    "ai": "7.0.70",
     "dedent": "^1.7.2",
     "effect": "catalog:",
-    "gpt-tokenizer": "^3.4.0",
+    "gpt-tokenizer": "^4.0.0",
     "ipaddr.js": "^2.5.0",
-    "parse-domain": "^8.3.2"
+    "parse-domain": "^8.4.0"
   },
   "devDependencies": {
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@vitest/coverage-istanbul": "^4.1.10",
-    "vitest": "^4.1.10"
+    "@vitest/coverage-istanbul": "^4.1.11",
+    "vitest": "^4.1.11"
   }
 }

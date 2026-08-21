@@ -20,19 +20,16 @@ const MATERIAL_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(
     surface.key === "subject" ? Object.values(surface.routeSlugs) : []
   )
 );
-
 interface PublishedMarkdownSource {
   readonly activeReleaseId: ActiveContentReleaseId;
   readonly family: PublishedMarkdownInput["family"];
   readonly publicPath: string;
 }
-
 /** One rejected Next cache read with its exact content owner preserved. */
 class CacheFailure extends Schema.TaggedError<CacheFailure>()("CacheFailure", {
   cause: Schema.Unknown,
-  owner: Schema.Literal("index", "published"),
+  owner: Schema.Literals(["index", "published"]),
 }) {}
-
 /** Reads cached markdown from the signed owner selected for a route. */
 const readCachedMarkdown = Effect.fn("www.llms.markdown.owner")(function* (
   source: PublishedMarkdownSource,
@@ -43,7 +40,6 @@ const readCachedMarkdown = Effect.fn("www.llms.markdown.owner")(function* (
     try: () => readPublishedMarkdown(source, locale),
   });
 });
-
 /**
  * Resolves cached markdown for one agent-facing route.
  *
@@ -57,7 +53,6 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
     if (quranText) {
       return quranText;
     }
-
     const published = yield* getPublishedMarkdownSource({ cleanSlug, locale });
     if (published) {
       const mdxText = yield* readCachedMarkdown(published, locale);
@@ -65,12 +60,10 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
         return mdxText;
       }
     }
-
     const legalText = yield* getLlmsLegalPageText({ cleanSlug, locale });
     if (legalText) {
       return legalText;
     }
-
     return yield* Effect.tryPromise({
       try: () =>
         getCachedLlmsSectionIndexText({
@@ -80,7 +73,6 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
     });
   }
 );
-
 /** Resolves one public route to its active signed markdown owner. */
 const getPublishedMarkdownSource = Effect.fn("www.llms.markdown.source")(
   function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
@@ -90,7 +82,6 @@ const getPublishedMarkdownSource = Effect.fn("www.llms.markdown.source")(
     if (!publishedFamily) {
       return null;
     }
-
     const active = yield* readActiveContentIdentity();
     const activeRoute = yield* readActiveContentRoute({
       activeReleaseId: active?.releaseId ?? null,
@@ -101,7 +92,6 @@ const getPublishedMarkdownSource = Effect.fn("www.llms.markdown.source")(
     if (activeRoute.kind !== "found") {
       return null;
     }
-
     return {
       activeReleaseId: activeRoute.activeReleaseId,
       family: publishedFamily,
@@ -109,12 +99,10 @@ const getPublishedMarkdownSource = Effect.fn("www.llms.markdown.source")(
     };
   }
 );
-
 /** Reads the first non-empty route namespace without accepting missing input. */
 function readRouteSegment(cleanSlug: string) {
   return cleanSlug.split("/").find(Boolean) ?? "";
 }
-
 /** Maps one stable public route namespace to its body-bearing family. */
 function readPublishedFamily(
   routeSegment: string
@@ -127,7 +115,6 @@ function readPublishedFamily(
   }
   return null;
 }
-
 /** Reads one family-specific published markdown cache without source fallback. */
 function readPublishedMarkdown(
   source: PublishedMarkdownSource,

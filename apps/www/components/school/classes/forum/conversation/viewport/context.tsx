@@ -56,15 +56,12 @@ interface ViewportActions {
   /** Registers the mounted virtualizer handle used by the viewport service. */
   setVirtualizerHandle: (handle: VirtualizerHandle | null) => void;
 }
-
 interface ViewportContextValue {
   actions: ViewportActions;
   state: ViewportState;
 }
-
 const ViewportContext = createContext<ViewportContextValue | null>(null);
 const missingViewportContext = Symbol("missing-viewport-context");
-
 /** Provides the React Interface for one Effect-owned Forum Conversation Viewport. */
 export function ConversationViewportProvider({
   acknowledgeUnreadCue,
@@ -97,7 +94,6 @@ export function ConversationViewportProvider({
     savedSnapshot,
     unreadCue,
   }));
-
   useLayoutEffect(() => {
     const {
       activeTranscript: openingTranscript,
@@ -105,7 +101,6 @@ export function ConversationViewportProvider({
       unreadCue: openingUnreadCue,
     } = getOpeningTranscript();
     activeTranscriptRef.current = openingTranscript;
-
     const { adapters, scroller } = createBrowserViewportAdapters({
       forumId,
       getHandle: () => virtualizerHandleRef.current,
@@ -115,7 +110,7 @@ export function ConversationViewportProvider({
       saveSnapshot: saveConversationScrollSnapshot,
     });
     const viewport = Effect.runSync(
-      makeConversationViewport().pipe(
+      makeConversationViewport.pipe(
         Effect.provideService(ConversationViewportAdapters, adapters)
       )
     );
@@ -126,10 +121,8 @@ export function ConversationViewportProvider({
         })
       )
     );
-
     scrollerRef.current = scroller;
     viewportRef.current = viewport;
-
     Effect.runFork(
       viewport.dispatch({
         activeTranscript: openingTranscript,
@@ -139,26 +132,21 @@ export function ConversationViewportProvider({
       })
     );
     requestViewportMeasureFrame({ frameRef, scrollerRef, viewportRef });
-
     return () => {
       cancelViewportMeasureFrame(frameRef);
-
       const currentViewport = viewportRef.current;
-
       if (!currentViewport) {
         scrollerRef.current = null;
         viewportRef.current = null;
         Effect.runFork(Fiber.interrupt(stateFiber));
         return;
       }
-
       Effect.runSync(currentViewport.flushSnapshot);
       scrollerRef.current = null;
       viewportRef.current = null;
-
       Effect.runFork(
         Fiber.interrupt(stateFiber).pipe(
-          Effect.zipRight(currentViewport.shutdown)
+          Effect.andThen(currentViewport.shutdown)
         )
       );
     };
@@ -168,10 +156,8 @@ export function ConversationViewportProvider({
     prefersReducedMotion,
     saveConversationScrollSnapshot,
   ]);
-
   useLayoutEffect(() => {
     activeTranscriptRef.current = activeTranscript;
-
     dispatchViewportEvent(viewportRef, {
       activeTranscript,
       savedSnapshot,
@@ -180,16 +166,13 @@ export function ConversationViewportProvider({
     });
     requestViewportMeasureFrame({ frameRef, scrollerRef, viewportRef });
   }, [activeTranscript, savedSnapshot, unreadCue]);
-
   useEffect(() => {
     /** Persists the latest semantic viewport before the page can suspend. */
     const persist = () => {
       const viewport = viewportRef.current;
-
       if (!viewport) {
         return;
       }
-
       Effect.runSync(viewport.flushSnapshot);
     };
     /** Flushes the viewport snapshot when the document moves to the background. */
@@ -198,26 +181,21 @@ export function ConversationViewportProvider({
         persist();
       }
     };
-
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("pagehide", persist);
-
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("pagehide", persist);
       persist();
     };
   }, []);
-
   const actions = {
     acknowledgeUnreadCue,
     flushSnapshot: () => {
       const viewport = viewportRef.current;
-
       if (!viewport) {
         return;
       }
-
       Effect.runFork(viewport.flushSnapshot);
     },
     goBack: () => {
@@ -252,41 +230,33 @@ export function ConversationViewportProvider({
     actions,
     state,
   };
-
   return (
     <ViewportContext.Provider value={value}>
       {children}
     </ViewportContext.Provider>
   );
 }
-
 /** Reads one selected state slice from the Effect-owned Viewport Interface. */
 export function useViewport<T>(selector: (state: ViewportState) => T) {
   const selected = useContextSelector(ViewportContext, (context) => {
     if (!context) {
       return missingViewportContext;
     }
-
     return selector(context.state);
   });
-
   if (selected === missingViewportContext) {
     throw new Error("useViewport must be used within a ConversationProvider");
   }
-
   return selected;
 }
-
 /** Reads the semantic actions exposed by the Effect-owned Viewport Interface. */
 export function useControls() {
   const actions = useContextSelector(
     ViewportContext,
     (context) => context?.actions
   );
-
   if (!actions) {
     throw new Error("useControls must be used within a ConversationProvider");
   }
-
   return actions;
 }

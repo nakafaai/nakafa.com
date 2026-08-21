@@ -1,6 +1,7 @@
 import posthogTest from "@posthog/convex/test";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
+import { seedAnalyticsConsent } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { tryoutScoresHandler } from "@repo/backend/convex/triggers/tryouts/scores";
 import { convexTest } from "convex-test";
@@ -83,6 +84,7 @@ describe("triggers/tryouts/scores", () => {
 
     const identity = await t.mutation(async (ctx) => {
       const { score, userId } = await insertScoreGraph(ctx);
+      await seedAnalyticsConsent(ctx, { decidedAt: NOW, userId });
 
       await tryoutScoresHandler(ctx, {
         id: score._id,
@@ -108,10 +110,8 @@ describe("triggers/tryouts/scores", () => {
               country_key: "indonesia",
               exam_key: "snbt",
               locale: "id",
-              raw_score_percentage: 80,
               score_status: "official",
               set_key: "set-1",
-              total_correct: 8,
               total_questions: 10,
               track_key: "2027",
             }),

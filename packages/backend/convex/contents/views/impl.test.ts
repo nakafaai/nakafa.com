@@ -2,6 +2,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import {
   createConvexTestWithBetterAuth,
+  seedAnalyticsConsent,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -176,6 +177,14 @@ describe("contents/views/impl", () => {
       const secondUser = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "shared-device-second",
+      });
+      await seedAnalyticsConsent(ctx, {
+        decidedAt: NOW,
+        userId: firstUser.userId,
+      });
+      await seedAnalyticsConsent(ctx, {
+        decidedAt: NOW,
+        userId: secondUser.userId,
       });
 
       return { contentId: article.contentId, firstUser, secondUser };

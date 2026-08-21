@@ -26,7 +26,7 @@ function makeCountry(
   if (source.kind !== "country") {
     throw new Error("Expected the shared try-out fixture to be a country.");
   }
-  return Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
+  return Schema.decodeSync(TryoutCatalogRowSchema)({
     ...source,
     countryKey,
     graph: {
@@ -42,7 +42,7 @@ function makeCountry(
 /** Creates one internal entry section that must never enter a sitemap. */
 function makeInternalSection(locale: "en" | "id") {
   const source = makeTryoutCatalogRow(locale).record.row;
-  return Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
+  return Schema.decodeSync(TryoutCatalogRowSchema)({
     countryKey: "indonesia",
     examKey: "snbt",
     graph: {

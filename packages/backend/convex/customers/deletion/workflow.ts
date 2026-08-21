@@ -10,6 +10,7 @@ import { accountDeletionPreparationVersionValidator } from "@repo/backend/convex
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { vv } from "@repo/backend/convex/lib/validators/vv";
+import { cleanupSource } from "@repo/backend/convex/privacy/spec";
 import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
 import { Clock, Effect } from "effect";
@@ -36,9 +37,8 @@ const cleanupWorkflowStarters: CleanupWorkflowStarters = {
       internal.customers.deletion.cleanup.cleanupDeletedUserAnalytics,
       { userId: identity.userId },
       {
-        context: {},
-        onComplete:
-          internal.customers.deletion.recovery.handleDeletedUserCleanupComplete,
+        context: { source: cleanupSource.accountDeletion },
+        onComplete: internal.privacy.recovery.handleCleanupComplete,
       }
     ),
   startAuth: (ctx, identity) =>
@@ -47,9 +47,8 @@ const cleanupWorkflowStarters: CleanupWorkflowStarters = {
       internal.customers.deletion.cleanup.cleanupDeletedUserAuth,
       identity,
       {
-        context: {},
-        onComplete:
-          internal.customers.deletion.recovery.handleDeletedUserCleanupComplete,
+        context: { source: cleanupSource.accountDeletion },
+        onComplete: internal.privacy.recovery.handleCleanupComplete,
       }
     ),
   startCustomer: (ctx, identity) =>
@@ -58,9 +57,8 @@ const cleanupWorkflowStarters: CleanupWorkflowStarters = {
       internal.customers.deletion.cleanup.cleanupDeletedUserCustomer,
       identity,
       {
-        context: {},
-        onComplete:
-          internal.customers.deletion.recovery.handleDeletedUserCleanupComplete,
+        context: { source: cleanupSource.accountDeletion },
+        onComplete: internal.privacy.recovery.handleCleanupComplete,
       }
     ),
   startData: (ctx, identity) =>
@@ -69,9 +67,8 @@ const cleanupWorkflowStarters: CleanupWorkflowStarters = {
       internal.customers.deletion.cleanup.cleanupDeletedUserData,
       { userId: identity.userId },
       {
-        context: {},
-        onComplete:
-          internal.customers.deletion.recovery.handleDeletedUserCleanupComplete,
+        context: { source: cleanupSource.accountDeletion },
+        onComplete: internal.privacy.recovery.handleCleanupComplete,
       }
     ),
 };

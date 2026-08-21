@@ -1,10 +1,14 @@
 import "server-only";
 
 import { keys } from "@repo/analytics/keys";
+import {
+  createOperationalException,
+  decodeOperationalExceptionProperties,
+  type OperationalExceptionProperties,
+} from "@repo/analytics/posthog/exception";
 import { isServerExceptionReportingEnabled } from "@repo/analytics/server-reporting";
+import { Option } from "effect";
 import { PostHog } from "posthog-node";
-
-type ServerExceptionProperties = Record<string | number, unknown>;
 
 let analyticsKeys: ReturnType<typeof keys> | undefined;
 let serverAnalytics: PostHog | undefined;
@@ -28,15 +32,25 @@ function getServerAnalytics() {
 
   const runtimeKeys = getAnalyticsKeys();
   serverAnalytics = new PostHog(runtimeKeys.NEXT_PUBLIC_POSTHOG_KEY, {
+    disableGeoip: true,
+    disableSurveys: true,
+    enableExceptionAutocapture: false,
     host: runtimeKeys.POSTHOG_PROXY_HOST,
     flushAt: 1,
     flushInterval: 0,
+    personProfiles: "never",
+    preloadFeatureFlags: false,
+    sendFeatureFlagEvent: false,
   });
   return serverAnalytics;
 }
 
 /**
- * Capture one server-side exception and wait for PostHog to enqueue it.
+ * Capture one operational exception without a user or analytics identity.
+ *
+ * The installed PostHog Node client creates a random per-event UUID and sets
+ * `$process_person_profile = false` when `distinctId` is omitted. The client is
+ * private to this module, so request identity cannot enter through SDK context.
  *
  * Docs:
  * https://posthog.com/docs/error-tracking/capture
@@ -44,16 +58,20 @@ function getServerAnalytics() {
  */
 export async function captureServerException(
   error: unknown,
-  distinctId?: string,
-  additionalProperties?: ServerExceptionProperties
+  additionalProperties: OperationalExceptionProperties
 ) {
   if (!isServerExceptionReportingEnabled()) {
     return;
   }
+  const decodedProperties =
+    decodeOperationalExceptionProperties(additionalProperties);
+  if (Option.isNone(decodedProperties)) {
+    return;
+  }
 
   await getServerAnalytics().captureExceptionImmediate(
-    error,
-    distinctId,
-    additionalProperties
+    createOperationalException(error),
+    undefined,
+    decodedProperties.value
   );
 }

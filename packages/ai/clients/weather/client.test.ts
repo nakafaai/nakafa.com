@@ -1,15 +1,14 @@
+import { getCurrentWeather } from "@repo/ai/clients/weather/client";
+import { Effect, Layer, Result } from "effect";
 import {
   HttpClient,
   type HttpClientRequest,
   HttpClientResponse,
-} from "@effect/platform";
-import { getCurrentWeather } from "@repo/ai/clients/weather/client";
-import { Effect, Either, Layer } from "effect";
+} from "effect/unstable/http";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const latitude = "-6.2088";
 const longitude = "106.8456";
-
 const currentWeatherResponse = {
   base: "stations",
   cod: 200,
@@ -40,12 +39,10 @@ const currentWeatherResponse = {
     },
   ],
 };
-
 interface WeatherClientInput {
   makeResponse: (request: HttpClientRequest.HttpClientRequest) => Response;
   observeRequest?: (request: HttpClientRequest.HttpClientRequest) => void;
 }
-
 /** Builds an Effect HTTP client with a deterministic OpenWeather response. */
 function makeWeatherClient({
   makeResponse,
@@ -61,7 +58,6 @@ function makeWeatherClient({
     )
   );
 }
-
 /** Runs the public weather program with a deterministic HTTP layer. */
 function runWeather(
   makeResponse: WeatherClientInput["makeResponse"],
@@ -70,28 +66,24 @@ function runWeather(
   return Effect.runPromise(
     getCurrentWeather({ latitude, longitude }).pipe(
       Effect.provide(makeWeatherClient({ makeResponse, observeRequest })),
-      Effect.either
+      Effect.result
     )
   );
 }
-
 afterEach(() => {
   vi.unstubAllEnvs();
 });
-
 describe("getCurrentWeather", () => {
   it("returns a narrow summary from one current-weather request", async () => {
     vi.stubEnv("OPENWEATHER_API_KEY", "weather-key");
     const observeRequest =
       vi.fn<(request: HttpClientRequest.HttpClientRequest) => void>();
-
     const result = await runWeather(
       () => Response.json(currentWeatherResponse),
       observeRequest
     );
-
     expect(result).toEqual(
-      Either.right({
+      Result.succeed({
         city: "Jakarta",
         condition: "light rain",
         country: "ID",
@@ -100,60 +92,50 @@ describe("getCurrentWeather", () => {
       })
     );
     expect(observeRequest).toHaveBeenCalledTimes(1);
-    expect(observeRequest).toHaveBeenCalledWith(
-      expect.objectContaining({
-        method: "GET",
-        url: "https://api.openweathermap.org/data/2.5/weather",
-        urlParams: [
-          ["appid", "weather-key"],
-          ["lat", latitude],
-          ["lon", longitude],
-        ],
-      })
-    );
+    const request = observeRequest.mock.calls[0]?.[0];
+    expect(request).toMatchObject({
+      method: "GET",
+      url: "https://api.openweathermap.org/data/2.5/weather",
+    });
+    expect(request?.urlParams.params).toEqual([
+      ["appid", "weather-key"],
+      ["lat", latitude],
+      ["lon", longitude],
+    ]);
   });
-
   it("keeps an unavailable current-weather request in the typed error channel", async () => {
     vi.stubEnv("OPENWEATHER_API_KEY", "weather-key");
-
     const result = await runWeather(
       () => new Response("unauthorized", { status: 401 })
     );
-
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) {
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) {
       return;
     }
-    expect(result.left).toMatchObject({
+    expect(result.failure).toMatchObject({
       _tag: "WeatherClientRequestError",
       endpoint: "current-weather",
     });
   });
-
   it("keeps an invalid response in the schema error channel", async () => {
     vi.stubEnv("OPENWEATHER_API_KEY", "weather-key");
-
     const result = await runWeather(() => Response.json({ cod: 200 }));
-
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) {
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isSuccess(result)) {
       return;
     }
-    expect(result.left).toMatchObject({ _tag: "ParseError" });
+    expect(result.failure).toMatchObject({ _tag: "SchemaError" });
   });
-
   it("preserves the visible condition defaults when conditions are absent", async () => {
     vi.stubEnv("OPENWEATHER_API_KEY", "weather-key");
-
     const result = await runWeather(() =>
       Response.json({
         ...currentWeatherResponse,
         weather: [],
       })
     );
-
     expect(result).toEqual(
-      Either.right(
+      Result.succeed(
         expect.objectContaining({
           condition: "Clear",
           icon: "01d",

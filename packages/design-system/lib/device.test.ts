@@ -1,6 +1,5 @@
 import {
   checkWebGL2Support,
-  getDeviceInfoForAnalytics,
   getPowerPreference,
   isMobileDevice,
 } from "@repo/design-system/lib/device";
@@ -188,82 +187,5 @@ describe("getPowerPreference", () => {
     setNavigatorState(userAgent, cores);
 
     expect(getPowerPreference()).toBe(expected);
-  });
-});
-
-describe("getDeviceInfoForAnalytics", () => {
-  const cases = [
-    {
-      cores: 6,
-      expected: {
-        cores: 6,
-        isMobile: true,
-        powerPreference: "default",
-        userAgent: IPHONE_USER_AGENT,
-      },
-      name: "reports a mobile device",
-      userAgent: IPHONE_USER_AGENT,
-    },
-    {
-      cores: 8,
-      expected: {
-        cores: 8,
-        isMobile: false,
-        powerPreference: "high-performance",
-        userAgent: WINDOWS_USER_AGENT,
-      },
-      name: "reports a desktop device",
-      userAgent: WINDOWS_USER_AGENT,
-    },
-    {
-      cores: 2,
-      expected: {
-        cores: 2,
-        isMobile: true,
-        powerPreference: "default",
-        userAgent: IPHONE_USER_AGENT,
-      },
-      name: "reports default power preference for a low-end device",
-      userAgent: IPHONE_USER_AGENT,
-    },
-    {
-      cores: 16,
-      expected: {
-        cores: 16,
-        isMobile: false,
-        powerPreference: "high-performance",
-        userAgent: MAC_USER_AGENT,
-      },
-      name: "reports high-performance preference for a high-end device",
-      userAgent: MAC_USER_AGENT,
-    },
-    {
-      cores: undefined,
-      expected: {
-        cores: 4,
-        isMobile: false,
-        powerPreference: "high-performance",
-        userAgent: WINDOWS_USER_AGENT,
-      },
-      name: "reports the four-core fallback when core count is unavailable",
-      userAgent: WINDOWS_USER_AGENT,
-    },
-  ];
-
-  it.each(cases)("$name", ({ cores, expected, userAgent }) => {
-    setNavigatorState(userAgent, cores);
-
-    expect(getDeviceInfoForAnalytics()).toEqual(expected);
-  });
-
-  it("contains every analytics field", () => {
-    setNavigatorState("Mozilla/5.0 Test Agent", 8);
-
-    expect(Object.keys(getDeviceInfoForAnalytics())).toEqual([
-      "isMobile",
-      "cores",
-      "powerPreference",
-      "userAgent",
-    ]);
   });
 });

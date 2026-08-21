@@ -1,8 +1,7 @@
 import { fileURLToPath } from "node:url";
-import { FileSystem } from "@effect/platform";
 import { TEXT_ROLE_PAIRS } from "@repo/design-system/lib/theme/contrast";
 import Color from "colorjs.io";
-import { Effect, Schema } from "effect";
+import { Effect, FileSystem, Schema } from "effect";
 import postcss, { type AtRule, type Root, type Rule } from "postcss";
 
 /** Complete semantic color surface shared by every concrete profile. */

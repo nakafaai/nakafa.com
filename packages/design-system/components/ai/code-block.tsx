@@ -6,7 +6,7 @@ import {
   TerminalIcon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
-import { captureException } from "@repo/analytics/posthog";
+import { captureException } from "@repo/analytics/posthog/browser";
 import { CodeBlockContent } from "@repo/design-system/components/code-block/content";
 import { codeBlockDarkModeVariants } from "@repo/design-system/components/code-block/variants";
 import { SimpleIcon } from "@repo/design-system/components/icons/simple";

@@ -4,6 +4,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getStoredCreditResetTimestamp } from "@repo/backend/convex/credits/helpers/state";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
+import { seedAnalyticsConsent } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { syncCustomerPlan } from "@repo/backend/convex/triggers/subscriptions/impl";
 import type { UserPlan } from "@repo/backend/convex/users/schema";
@@ -233,6 +234,7 @@ describe("triggers/subscriptions/impl", () => {
         creditsResetAt: Date.UTC(2026, 3, 2, 0, 0, 0),
         plan: "free",
       });
+      await seedAnalyticsConsent(ctx, { decidedAt: NOW, userId });
 
       await insertCustomer(ctx, userId, "polar-upgrade");
       await insertSubscription(ctx, {
@@ -281,7 +283,6 @@ describe("triggers/subscriptions/impl", () => {
             properties: JSON.stringify({
               product_id: products.pro.id,
               status: "active",
-              subscription_id: "sub-upgrade",
             }),
           }),
         ],
@@ -294,7 +295,6 @@ describe("triggers/subscriptions/impl", () => {
             properties: JSON.stringify({
               new_plan: "pro",
               previous_plan: "free",
-              subscription_id: "sub-upgrade",
             }),
           }),
         ],
@@ -314,6 +314,7 @@ describe("triggers/subscriptions/impl", () => {
         creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
         plan: "pro",
       });
+      await seedAnalyticsConsent(ctx, { decidedAt: NOW, userId });
 
       await insertCustomer(ctx, userId, "polar-downgrade");
       await insertSubscription(ctx, {
@@ -362,7 +363,6 @@ describe("triggers/subscriptions/impl", () => {
             properties: JSON.stringify({
               new_plan: "free",
               previous_plan: "pro",
-              subscription_id: "sub-downgrade",
             }),
           }),
         ],
@@ -382,6 +382,7 @@ describe("triggers/subscriptions/impl", () => {
         creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
         plan: "pro",
       });
+      await seedAnalyticsConsent(ctx, { decidedAt: NOW, userId });
 
       await insertCustomer(ctx, userId, "polar-canceled-downgrade");
       await insertSubscription(ctx, {
@@ -415,7 +416,6 @@ describe("triggers/subscriptions/impl", () => {
             properties: JSON.stringify({
               product_id: products.pro.id,
               status: "canceled",
-              subscription_id: "sub-canceled-downgrade",
             }),
           }),
         ],
@@ -428,7 +428,6 @@ describe("triggers/subscriptions/impl", () => {
             properties: JSON.stringify({
               new_plan: "free",
               previous_plan: "pro",
-              subscription_id: "sub-canceled-downgrade",
             }),
           }),
         ],

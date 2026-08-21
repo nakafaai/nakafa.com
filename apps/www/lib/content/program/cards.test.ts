@@ -123,7 +123,7 @@ describe("published program material cards", () => {
     if (!(context && group)) {
       return;
     }
-    const exactContext = Schema.decodeUnknownSync(CurriculumRouteSchema)({
+    const exactContext = Schema.decodeSync(CurriculumRouteSchema)({
       ...context,
       canonicalPath: previewProjection.publicPath,
     });
@@ -175,7 +175,7 @@ describe("published program material cards", () => {
     if (!context) {
       return;
     }
-    const missingContext = Schema.decodeUnknownSync(CurriculumRouteSchema)({
+    const missingContext = Schema.decodeSync(CurriculumRouteSchema)({
       ...context,
       materialKey: MaterialKeySchema.make("lesson.mathematics.missing-topic"),
     });
@@ -201,7 +201,7 @@ describe("published program material cards", () => {
     if (!(context && group)) {
       return;
     }
-    const renamed = Schema.decodeUnknownSync(MaterialLessonProjectionSchema)({
+    const renamed = Schema.decodeSync(MaterialLessonProjectionSchema)({
       ...previewProjection,
       parentPath: "subjects/mathematics/renamed-functions",
       publicPath:
@@ -238,7 +238,7 @@ describe("published program material cards", () => {
     if (!(context && group)) {
       return;
     }
-    const moved = Schema.decodeUnknownSync(MaterialLessonProjectionSchema)({
+    const moved = Schema.decodeSync(MaterialLessonProjectionSchema)({
       ...previewProjection,
       parentPath: "subjects/mathematics/moved-functions",
       publicPath: "subjects/mathematics/moved-functions/function-concept-moved",
@@ -273,7 +273,7 @@ describe("published program material cards", () => {
       return;
     }
     const materials = ["first", "second"].map((suffix) =>
-      Schema.decodeUnknownSync(MaterialLessonProjectionSchema)({
+      Schema.decodeSync(MaterialLessonProjectionSchema)({
         ...previewProjection,
         parentPath: `subjects/mathematics/${suffix}-functions`,
         publicPath: `subjects/mathematics/${suffix}-functions/function-concept`,

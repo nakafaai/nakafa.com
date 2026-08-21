@@ -16,24 +16,21 @@ import { Effect, Schema } from "effect";
 
 type ProgramCtx = MutationCtx | QueryCtx;
 type LearningProgramSummary = Infer<typeof learningProgramSummaryValidator>;
-
 const programInterestMismatchCode = "LEARNING_PROGRAM_INTEREST_MISMATCH";
 const programNotFoundCode = "LEARNING_PROGRAM_NOT_FOUND";
 const programNotSelectableCode = "LEARNING_PROGRAM_NOT_SELECTABLE";
-
 /** Expected rejection of one invalid learner program selection. */
 export class LearningProgramSelectionError extends Schema.TaggedError<LearningProgramSelectionError>()(
   "LearningProgramSelectionError",
   {
-    code: Schema.Literal(
+    code: Schema.Literals([
       programInterestMismatchCode,
       programNotFoundCode,
-      programNotSelectableCode
-    ),
+      programNotSelectableCode,
+    ]),
     message: Schema.String,
   }
 ) {}
-
 /** Checks whether a signed program is ready for learner selection. */
 export function isLearningProgramSelectable(program: LearningProgram) {
   return (
@@ -41,7 +38,6 @@ export function isLearningProgramSelectable(program: LearningProgram) {
     program.defaultCoverageStatus === "partial"
   );
 }
-
 /** Returns the localized public summary for one authenticated program row. */
 export const toLearningProgramSummary = Effect.fn(
   "learningPrograms.toLearningProgramSummary"
@@ -55,7 +51,6 @@ export const toLearningProgramSummary = Effect.fn(
       `Learning program ${program.key} has no ${locale} translation.`
     );
   }
-
   return {
     coverageStatus: program.defaultCoverageStatus,
     displayOrder: program.displayOrder,
@@ -70,7 +65,6 @@ export const toLearningProgramSummary = Effect.fn(
     versionLabel: program.version.label,
   } satisfies LearningProgramSummary;
 });
-
 /** Reads one authenticated program by its stable Aksara key. */
 export const readSignedProgram = Effect.fn(
   "learningPrograms.readSignedProgram"
@@ -78,7 +72,6 @@ export const readSignedProgram = Effect.fn(
   const programs = yield* listSignedPrograms(ctx, locale);
   return programs.find((program) => program.key === programKey) ?? null;
 });
-
 /** Requires one signed program to be selectable for the learner's interest. */
 export const requireSelectableProgram = Effect.fn(
   "learningPrograms.requireSelectableProgram"
@@ -89,43 +82,36 @@ export const requireSelectableProgram = Effect.fn(
   interest: LearningInterest
 ) {
   const program = yield* readSignedProgram(ctx, locale, programKey);
-
   if (!program) {
     return yield* new LearningProgramSelectionError({
       code: programNotFoundCode,
       message: "Learning program not found.",
     });
   }
-
   if (!isLearningProgramSelectable(program)) {
     return yield* new LearningProgramSelectionError({
       code: programNotSelectableCode,
       message: "Learning program is not selectable.",
     });
   }
-
   if (!programMatchesInterest(program.kind, interest)) {
     return yield* new LearningProgramSelectionError({
       code: programInterestMismatchCode,
       message: "Selected program does not match the selected interest.",
     });
   }
-
   return program;
 });
-
 /** Reads the complete bounded program catalog from the signed active snapshot. */
 export const listSignedPrograms = Effect.fn(
   "learningPrograms.listSignedPrograms"
 )(function* (ctx: ProgramCtx, locale: Locale) {
   const catalog = yield* readVerifiedProgramCatalog(ctx, locale);
-
   if (!catalog.managed) {
     return yield* releaseFail(
       "CONTENT_RELEASE_MISSING",
       "Active signed program catalog is unavailable."
     );
   }
-
   return catalog.programs;
 });

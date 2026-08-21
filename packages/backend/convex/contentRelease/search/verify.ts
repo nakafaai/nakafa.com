@@ -6,17 +6,13 @@ import type { loadSearchOwner } from "@repo/backend/convex/contentRelease/search
 import { Effect } from "effect";
 
 type SearchOwner = NonNullable<
-  Effect.Effect.Success<ReturnType<typeof loadSearchOwner>>
+  Effect.Success<ReturnType<typeof loadSearchOwner>>
 >;
-
 /** Resolves one indexed hit through the active release's structural sharing. */
 export const resolveSearchProjection = Effect.fn(
   "contentRelease.resolveSearchProjection"
 )(function* (ctx: QueryCtx, row: Doc<"contentIndex">, owner: SearchOwner) {
-  if (
-    (row.family !== "article" && row.family !== "material") ||
-    !owner.families.includes(row.family)
-  ) {
+  if (!owner.families.includes(row.family)) {
     return yield* staleSearchRow(row);
   }
   const resolved = yield* resolvePublicProjection(
@@ -38,7 +34,6 @@ export const resolveSearchProjection = Effect.fn(
   }
   return resolved;
 });
-
 /** Creates one typed integrity failure for a stale release-owned search row. */
 function staleSearchRow(
   row: Pick<Doc<"contentIndex">, "appLocale" | "contentKey">

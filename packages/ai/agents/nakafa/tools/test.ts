@@ -20,7 +20,6 @@ import type { UIMessageStreamWriter } from "ai";
 import { Effect, Option, Schema } from "effect";
 
 type WrittenPart = Parameters<UIMessageStreamWriter<MyUIMessage>["write"]>[0];
-
 /** Creates a minimal writer for Nakafa tool data-part tests. */
 export function createWriter() {
   const parts: WrittenPart[] = [];
@@ -29,27 +28,23 @@ export function createWriter() {
       parts.push(part);
     },
   } satisfies Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
-
   return { parts, writer };
 }
-
 /** Creates an injected Nakafa runtime adapter for AI tool unit tests. */
 export function createNakafaTestService(
   overrides: Partial<NakafaRuntime> = {}
 ) {
-  return Nakafa.make({
+  return Nakafa.of({
     ...nakafaTestRuntime,
     ...overrides,
   });
 }
-
 const nakafaTestRuntime = {
   /** Returns deterministic Quran references and missing ranges for tests. */
   quran: (input) => {
     const parsed = Schema.decodeUnknownOption(
       NakafaAgentQuranReferenceOptionsSchema
     )(input);
-
     if (Option.isNone(parsed)) {
       return Effect.fail(
         new NakafaAgentInputError({
@@ -58,11 +53,9 @@ const nakafaTestRuntime = {
         })
       );
     }
-
     if (parsed.value.from_verse === 999) {
       return Effect.succeed(Option.none());
     }
-
     const ref = readNakafaContentRefFixture(
       parsed.value.locale,
       `quran/${parsed.value.surah}`,
@@ -76,7 +69,6 @@ const nakafaTestRuntime = {
         : {}),
       translation: "In the name of Allah.",
     };
-
     return Effect.succeed(
       Option.some({
         ...ref,
@@ -90,19 +82,15 @@ const nakafaTestRuntime = {
   /** Returns deterministic markdown for service-injection tests. */
   read: (input) => {
     const ref = resolveNakafaTestContentRef(input);
-
     if (Option.isNone(ref) || ref.value.route.includes("missing")) {
       return Effect.succeed(Option.none());
     }
-
     const readableRef = Schema.decodeUnknownOption(
       NakafaAgentReadableContentRefSchema
     )(ref.value);
-
     if (Option.isNone(readableRef)) {
       return Effect.succeed(Option.none());
     }
-
     return Effect.succeed(
       Option.some({
         ...readableRef.value,
@@ -142,7 +130,6 @@ const nakafaTestRuntime = {
   verify: (input) =>
     Effect.succeed(Option.isSome(resolveNakafaTestContentRef(input))),
 } satisfies NakafaRuntime;
-
 const nakafaTestRefs = [
   readNakafaContentRefFixture(
     "en",
@@ -152,7 +139,6 @@ const nakafaTestRefs = [
   readNakafaContentRefFixture("en", "articles/politics/missing", "articles"),
   makeSnbtSetRef("en", "try-out/indonesia/snbt/2027/set-2", "set-2"),
 ] as const;
-
 /** Builds one signed SNBT set reference for AI tests. */
 export function makeSnbtSetRef(locale: Locale, route: string, setKey: string) {
   const graph = Effect.runSync(
@@ -163,10 +149,8 @@ export function makeSnbtSetRef(locale: Locale, route: string, setKey: string) {
       appLocale: AppLocaleSchema.make(locale),
     })
   );
-
   return makeTryoutRef(graph, locale, route);
 }
-
 /** Builds one signed SNBT section reference for AI tests. */
 export function makeSnbtSectionRef(
   locale: Locale,
@@ -189,10 +173,8 @@ export function makeSnbtSectionRef(
       appLocale: AppLocaleSchema.make(locale),
     })
   );
-
   return makeTryoutRef(graph, locale, route);
 }
-
 /** Converts one exact signed try-out identity into the shared agent ref. */
 function makeTryoutRef(
   graph: LearningGraphIdentity,
@@ -209,7 +191,6 @@ function makeTryoutRef(
     })
   );
 }
-
 /** Resolves graph content IDs and public URL projections for injected tests. */
 function resolveNakafaTestContentRef(input: string) {
   const normalized = normalizeNakafaContentInput(input);
@@ -220,10 +201,8 @@ function resolveNakafaTestContentRef(input: string) {
       (item.markdown_url !== undefined &&
         normalizeNakafaContentInput(item.markdown_url) === normalized)
   );
-
   if (!ref) {
     return Option.none();
   }
-
   return Option.some(ref);
 }

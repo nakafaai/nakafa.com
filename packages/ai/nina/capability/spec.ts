@@ -1,35 +1,28 @@
 import { Schema } from "effect";
-
 export const LEARNING_CAPABILITY_NAME_VALUES = [
   "nakafa",
   "deepResearch",
   "math",
 ] as const;
-
 /** Schema-owned names for Nina's internal education capabilities. */
-export const LearningCapabilityNameSchema = Schema.Literal(
-  ...LEARNING_CAPABILITY_NAME_VALUES
+export const LearningCapabilityNameSchema = Schema.Literals(
+  LEARNING_CAPABILITY_NAME_VALUES
 );
-
 export type LearningCapabilityName = Schema.Schema.Type<
   typeof LearningCapabilityNameSchema
 >;
-
 export const NAKAFA_CAPABILITY = "nakafa" satisfies LearningCapabilityName;
 export const RESEARCH_CAPABILITY =
   "deepResearch" satisfies LearningCapabilityName;
 export const MATH_CAPABILITY = "math" satisfies LearningCapabilityName;
-
 export const EVIDENCE_STATUS_VALUES = [
   "available",
   "limited",
   "failed",
   "denied",
 ] as const;
-
 /** Bounded status values that describe whether evidence may constrain Nina. */
-export const EvidenceStatusSchema = Schema.Literal(...EVIDENCE_STATUS_VALUES);
-
+export const EvidenceStatusSchema = Schema.Literals(EVIDENCE_STATUS_VALUES);
 /**
  * Schema-owned evidence envelope returned by a LearningCapability.
  *
@@ -48,7 +41,6 @@ export class EvidenceEnvelope extends Schema.Class<EvidenceEnvelope>(
   status: EvidenceStatusSchema,
   summary: Schema.String,
 }) {}
-
 /**
  * Minimal LearningCapability result shape that can be rendered to a model and
  * summarized in operational traces.
@@ -59,7 +51,6 @@ export class LearningCapabilityResult extends Schema.Class<LearningCapabilityRes
   evidence: EvidenceEnvelope,
   text: Schema.String,
 }) {}
-
 /**
  * Bounded operational trace for one LearningCapability execution.
  *
@@ -70,25 +61,22 @@ export class CapabilityTrace extends Schema.Class<CapabilityTrace>(
   "CapabilityTrace"
 )({
   capability: LearningCapabilityNameSchema,
-  durationMs: Schema.Number,
-  endedAt: Schema.Number,
+  durationMs: Schema.Finite,
+  endedAt: Schema.Finite,
   evidence: EvidenceEnvelope,
   responseMessageIdentifier: Schema.String,
-  startedAt: Schema.Number,
+  startedAt: Schema.Finite,
   toolCallId: Schema.optional(Schema.String),
 }) {}
-
-export type CapabilityTraceEncoded = Schema.Schema.Encoded<
+export type CapabilityTraceEncoded = Schema.Codec.Encoded<
   typeof CapabilityTrace
 >;
-
 /** Encodes a schema-owned trace instance into a plain operational data value. */
 export function encodeCapabilityTrace(
   trace: CapabilityTrace
 ): CapabilityTraceEncoded {
   return Schema.encodeSync(CapabilityTrace)(trace);
 }
-
 /** Expected LearningCapability failure surfaced through the Effect channel. */
 export class LearningCapabilityError extends Schema.TaggedError<LearningCapabilityError>()(
   "LearningCapabilityError",

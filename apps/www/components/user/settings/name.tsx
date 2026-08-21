@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "@repo/design-system/components/ui/button";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
@@ -12,22 +11,18 @@ import type { CurrentUser } from "@/lib/context/use-user";
 
 const MAX_NAME_LENGTH = 32;
 const MIN_NAME_LENGTH = 3;
-
-const formSchema = Schema.standardSchemaV1(
+const formSchema = Schema.toStandardSchemaV1(
   Schema.Struct({
     name: Schema.Trim.pipe(
-      Schema.minLength(MIN_NAME_LENGTH),
-      Schema.maxLength(MAX_NAME_LENGTH)
+      Schema.check(Schema.isMinLength(MIN_NAME_LENGTH)),
+      Schema.check(Schema.isMaxLength(MAX_NAME_LENGTH))
     ),
   })
 );
-
 /** Render the validated optimistic user-name settings form. */
 export function UserSettingsName({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
-
   const updateUserName = useUpdateUserNameMutation();
-
   const form = useForm({
     defaultValues: {
       name: user.authUser.name,
@@ -42,7 +37,6 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
       form.reset();
     },
   });
-
   return (
     <form action={() => form.handleSubmit()} id="user-settings-name-form">
       <FormBlock

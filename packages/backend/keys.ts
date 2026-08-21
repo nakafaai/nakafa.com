@@ -1,16 +1,19 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { Schema } from "effect";
 
-const urlSchema = Schema.standardSchemaV1(
+const urlSchema = Schema.toStandardSchemaV1(
   Schema.String.pipe(
-    Schema.filter((value) => URL.canParse(value), {
-      message: () => "Expected a valid URL.",
-    })
+    Schema.check(
+      Schema.makeFilter((value) => URL.canParse(value), {
+        message: "Expected a valid URL.",
+      })
+    )
   )
 );
-const secretSchema = Schema.standardSchemaV1(Schema.NonEmptyTrimmedString);
-const stringSchema = Schema.standardSchemaV1(Schema.String);
-
+const secretSchema = Schema.toStandardSchemaV1(
+  Schema.Trimmed.check(Schema.isNonEmpty())
+);
+const stringSchema = Schema.toStandardSchemaV1(Schema.String);
 /** Defines the Convex URL required by Next.js server adapters such as `convex/nextjs`. */
 export const convexKeys = () =>
   createEnv({
@@ -21,7 +24,6 @@ export const convexKeys = () =>
       NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
     },
   });
-
 /** Defines the public Convex site URL used by auth and public HTTP adapters. */
 export const convexSiteKeys = () =>
   createEnv({
@@ -32,7 +34,6 @@ export const convexSiteKeys = () =>
       NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
     },
   });
-
 export const keys = () =>
   createEnv({
     extends: [convexKeys(), convexSiteKeys()],
@@ -48,8 +49,8 @@ export const keys = () =>
       INTERNAL_CONTENT_API_KEY: secretSchema,
     },
     client: {
-      NEXT_PUBLIC_POLAR_SERVER: Schema.standardSchemaV1(
-        Schema.Literal("production", "sandbox")
+      NEXT_PUBLIC_POLAR_SERVER: Schema.toStandardSchemaV1(
+        Schema.Literals(["production", "sandbox"])
       ),
     },
     runtimeEnv: {

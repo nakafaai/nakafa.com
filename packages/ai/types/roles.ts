@@ -1,5 +1,4 @@
 import { Schema } from "effect";
-
 /** Shared user-role vocabulary used by persisted users and AI prompt context. */
 export const userRoles = [
   "teacher",
@@ -7,8 +6,6 @@ export const userRoles = [
   "parent",
   "administrator",
 ] as const;
-
 /** Runtime prompt role contract used by Nina and specialist prompt context. */
-export const PromptUserRoleSchema = Schema.Literal(...userRoles);
-
+export const PromptUserRoleSchema = Schema.Literals(userRoles);
 export type PromptUserRole = Schema.Schema.Type<typeof PromptUserRoleSchema>;

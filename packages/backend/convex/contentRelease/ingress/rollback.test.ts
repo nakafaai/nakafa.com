@@ -75,7 +75,7 @@ describe("content publication rollback reads", () => {
       }
     });
 
-    const request = Schema.decodeUnknownSync(PublicationRequestSchema)({
+    const request = Schema.decodeSync(PublicationRequestSchema)({
       afterIndex: -1,
       limit: itemCount,
       operation: "rollbackPage",
@@ -126,7 +126,7 @@ describe("content publication rollback reads", () => {
       }
     });
 
-    const request = Schema.decodeUnknownSync(PublicationRequestSchema)({
+    const request = Schema.decodeSync(PublicationRequestSchema)({
       afterIndex: -1,
       limit: routeCount,
       operation: "routePage",

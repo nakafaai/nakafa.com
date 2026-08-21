@@ -49,7 +49,7 @@ export function makeSignedTryoutSection(
       const questionOrder = index + 1;
       const questionRoot = `${sourcePath}/question-${questionOrder}`;
 
-      return Schema.decodeUnknownSync(TryoutPlacementSchema)({
+      return Schema.decodeSync(TryoutPlacementSchema)({
         answerArtifactHash: testTextHash(`${questionRoot}:answer`),
         answerArtifactLocale: section.appLocale,
         answerContentKey: `${questionRoot}/answer`,

@@ -1,13 +1,13 @@
 import "server-only";
 
 import { ArrowDown02Icon, ViewIcon } from "@hugeicons/core-free-icons";
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { api } from "@repo/backend/convex/_generated/api";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { GradientBlock } from "@repo/design-system/components/ui/gradient-block";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { fetchQuery } from "convex/nextjs";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
@@ -25,7 +25,7 @@ import { isActiveLocale } from "@/lib/i18n/active";
  * @see https://nextjs.org/docs/messages/next-prerender-current-time
  * @see https://docs.convex.dev/client/nextjs/app-router/server-rendering#using-convex-to-render-server-components
  */
-async function getHomeTrendingSubjects(locale: ActiveAppLocaleCode) {
+async function getHomeTrendingSubjects(locale: PublicAppLocale) {
   "use cache";
 
   cacheLife("minutes");

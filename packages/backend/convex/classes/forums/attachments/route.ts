@@ -6,31 +6,29 @@ import { generateId } from "@repo/backend/convex/utils/id";
 import { siteOrigin } from "@repo/backend/convex/utils/site";
 import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
 import type { HonoWithConvex } from "convex-helpers/server/hono";
-import { Effect, Either, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 import { cors } from "hono/cors";
 
 const uploadPath = `${FORUM_ATTACHMENT_UPLOAD_PATH_PREFIX}/:uploadId/:uploadToken`;
-
 class ForumAttachmentHttpError extends Schema.TaggedError<ForumAttachmentHttpError>()(
   "ForumAttachmentHttpError",
   {
-    code: Schema.Literal(
+    code: Schema.Literals([
       "FORUM_ATTACHMENT_UPLOAD_INVALID",
       "FORUM_ATTACHMENT_UPLOAD_NOT_FOUND",
-      "FORUM_ATTACHMENT_UPLOAD_FAILED"
-    ),
-    operation: Schema.Literal(
+      "FORUM_ATTACHMENT_UPLOAD_FAILED",
+    ]),
+    operation: Schema.Literals([
       "body",
       "claim",
       "cleanup",
       "release",
       "settle",
-      "store"
-    ),
-    status: Schema.Literal(404, 413, 415, 500),
+      "store",
+    ]),
+    status: Schema.Literals([404, 413, 415, 500]),
   }
 ) {}
-
 function uploadError(
   code: ForumAttachmentHttpError["code"],
   operation: ForumAttachmentHttpError["operation"],
@@ -38,12 +36,11 @@ function uploadError(
 ) {
   return new ForumAttachmentHttpError({ code, operation, status });
 }
-
 /** Releases one failed request's lease without replacing its original error. */
 const releaseUploadLease = Effect.fn(
   "classes.forums.attachments.releaseUploadLease"
 )(function* (ctx: ActionCtx, uploadId: string, leaseId: string) {
-  const release = yield* Effect.either(
+  const release = yield* Effect.result(
     Effect.tryPromise({
       try: () =>
         ctx.runMutation(internal.classes.forums.attachments.upload.release, {
@@ -54,31 +51,26 @@ const releaseUploadLease = Effect.fn(
         uploadError("FORUM_ATTACHMENT_UPLOAD_FAILED", "release", 500),
     })
   );
-
-  if (Either.isLeft(release)) {
+  if (Result.isFailure(release)) {
     yield* Effect.logError("Forum attachment upload lease release failed").pipe(
       Effect.annotateLogs({
-        code: release.left.code,
-        operation: release.left.operation,
+        code: release.failure.code,
+        operation: release.failure.operation,
       })
     );
   }
 });
-
 /** Identifies the capability-bearing route so access logs never record it. */
 export function isForumAttachmentUploadPath(path: string) {
   return path.startsWith(`${FORUM_ATTACHMENT_UPLOAD_PATH_PREFIX}/`);
 }
-
 /** Reads one bounded binary body without trusting its Content-Length header. */
 const readUploadBody = Effect.fn("classes.forums.attachments.readUploadBody")(
   function* (request: Request) {
     const contentType = request.headers.get("content-type")?.trim();
-
     if (!contentType) {
       return yield* uploadError("FORUM_ATTACHMENT_UPLOAD_INVALID", "body", 415);
     }
-
     yield* parseContentLength(
       request.headers.get("content-length"),
       MAX_FORUM_ATTACHMENT_BYTES
@@ -87,11 +79,9 @@ const readUploadBody = Effect.fn("classes.forums.attachments.readUploadBody")(
         uploadError("FORUM_ATTACHMENT_UPLOAD_INVALID", "body", 413)
       )
     );
-
     if (!request.body) {
       return { bytes: new Uint8Array(), contentType };
     }
-
     const bytes = yield* readBoundedBody(
       request.body,
       MAX_FORUM_ATTACHMENT_BYTES
@@ -100,11 +90,9 @@ const readUploadBody = Effect.fn("classes.forums.attachments.readUploadBody")(
         uploadError("FORUM_ATTACHMENT_UPLOAD_INVALID", "body", 413)
       )
     );
-
     return { bytes, contentType };
   }
 );
-
 /** Stores and binds one upload while cleaning every failed storage write. */
 const uploadForumAttachment = Effect.fn("classes.forums.attachments.upload")(
   function* (
@@ -126,7 +114,6 @@ const uploadForumAttachment = Effect.fn("classes.forums.attachments.upload")(
         }),
       catch: () => uploadError("FORUM_ATTACHMENT_UPLOAD_FAILED", "claim", 500),
     });
-
     if (!claimed) {
       return yield* uploadError(
         "FORUM_ATTACHMENT_UPLOAD_NOT_FOUND",
@@ -134,8 +121,7 @@ const uploadForumAttachment = Effect.fn("classes.forums.attachments.upload")(
         404
       );
     }
-
-    const upload = yield* Effect.either(
+    const upload = yield* Effect.result(
       Effect.gen(function* () {
         const { bytes, contentType } = yield* readUploadBody(request);
         const storageId = yield* Effect.tryPromise({
@@ -146,7 +132,7 @@ const uploadForumAttachment = Effect.fn("classes.forums.attachments.upload")(
           catch: () =>
             uploadError("FORUM_ATTACHMENT_UPLOAD_FAILED", "store", 500),
         });
-        const settlement = yield* Effect.either(
+        const settlement = yield* Effect.result(
           Effect.tryPromise({
             try: () =>
               ctx.runMutation(
@@ -164,37 +150,31 @@ const uploadForumAttachment = Effect.fn("classes.forums.attachments.upload")(
               uploadError("FORUM_ATTACHMENT_UPLOAD_FAILED", "settle", 500),
           })
         );
-
-        if (Either.isLeft(settlement)) {
+        if (Result.isFailure(settlement)) {
           yield* Effect.tryPromise({
             try: () => ctx.storage.delete(storageId),
             catch: () =>
               uploadError("FORUM_ATTACHMENT_UPLOAD_FAILED", "cleanup", 500),
           });
-          return yield* settlement.left;
+          return yield* settlement.failure;
         }
-
-        if (settlement.right !== "accepted") {
+        if (settlement.success !== "accepted") {
           return yield* uploadError(
             "FORUM_ATTACHMENT_UPLOAD_NOT_FOUND",
             "settle",
             404
           );
         }
-
         return storageId;
       })
     );
-
-    if (Either.isLeft(upload)) {
+    if (Result.isFailure(upload)) {
       yield* releaseUploadLease(ctx, uploadId, leaseId);
-      return yield* upload.left;
+      return yield* upload.failure;
     }
-
-    return upload.right;
+    return upload.success;
   }
 );
-
 /** Registers the browser-facing, capability-authenticated upload adapter. */
 export function registerForumAttachmentUploadRoute(
   app: HonoWithConvex<ActionCtx>
@@ -208,10 +188,9 @@ export function registerForumAttachmentUploadRoute(
       origin: siteOrigin,
     })
   );
-
   app.post(uploadPath, async (c) => {
     const result = await Effect.runPromise(
-      Effect.either(
+      Effect.result(
         uploadForumAttachment(
           c.env,
           c.req.raw,
@@ -224,21 +203,23 @@ export function registerForumAttachmentUploadRoute(
       "Cache-Control": "private, no-store",
       "X-Content-Type-Options": "nosniff",
     };
-
-    if (Either.isLeft(result)) {
-      if (result.left.status === 500) {
+    if (Result.isFailure(result)) {
+      if (result.failure.status === 500) {
         await Effect.runPromise(
           Effect.logError("Forum attachment upload failed").pipe(
             Effect.annotateLogs({
-              code: result.left.code,
-              operation: result.left.operation,
+              code: result.failure.code,
+              operation: result.failure.operation,
             })
           )
         );
       }
-      return c.json({ code: result.left.code }, result.left.status, headers);
+      return c.json(
+        { code: result.failure.code },
+        result.failure.status,
+        headers
+      );
     }
-
-    return c.json({ storageId: result.right }, 200, headers);
+    return c.json({ storageId: result.success }, 200, headers);
   });
 }

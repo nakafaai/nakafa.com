@@ -894,6 +894,26 @@
     "security-policy-description": "Tinjau praktik dan kebijakan keamanan Nakafa untuk memahami bagaimana kami melindungi data dan menjamin keamanan platform.",
     "legal-description": "Dengan menggunakan layanan kami, Anda setuju dengan <terms-of-service>Syarat dan Ketentuan</terms-of-service> dan <privacy-policy>Kebijakan Privasi</privacy-policy>."
   },
+  "AnalyticsConsent": {
+    "title": "Analitik produk opsional",
+    "description": "Dengan izinmu, Nakafa menggunakan PostHog untuk mengukur peristiwa penggunaan fitur tertentu dan kesalahan peramban yang diminimalkan. Kami tidak memuat PostHog di perambanmu, menggunakan rekaman sesi, atau mengumpulkan analitik peramban dan produk sebelum kamu mengizinkannya. Secara terpisah, Nakafa dapat mengirim laporan kesalahan operasional yang diminimalkan dan tidak terkait identitas untuk menjaga keandalan layanan.",
+    "allow": "Izinkan analitik",
+    "decline": "Tolak analitik",
+    "age-confirmation": "Dengan mengizinkan analitik, kamu menyatakan bahwa kamu sudah berusia 18 tahun, atau berusia 13 sampai 17 tahun dan orang tua maupun wali sah telah membuat atau menyetujui pilihan ini bersamamu.",
+    "manage": "Preferensi analitik",
+    "preferences-title": "Preferensi analitik",
+    "preferences-description": "Pilih apakah Nakafa boleh menggunakan analitik produk opsional untuk peramban atau akun ini. Kamu dapat mengubah pilihan kapan saja.",
+    "current-choice": "Pilihan saat ini",
+    "status-granted": "Analitik diizinkan",
+    "status-denied": "Analitik ditolak",
+    "status-browser-signal": "Diblokir oleh pengaturan Do Not Track atau Global Privacy Control di perambanmu",
+    "status-pending": "Memuat pilihanmu",
+    "status-prompt": "Belum ada pilihan",
+    "policy": "Baca <privacy-policy>Kebijakan Privasi</privacy-policy> kami.",
+    "load-error": "Kami tidak dapat memuat pilihan privasimu. Analitik tetap nonaktif selama kami mencoba lagi.",
+    "runtime-error": "Pilihanmu sudah disimpan, tetapi analitik tidak dapat dimulai. Analitik tetap nonaktif.",
+    "save-error": "Kami tidak dapat menyimpan pilihanmu. Analitik tetap nonaktif. Silakan coba lagi."
+  },
   "School": {
     "Common": {
       "home": "Beranda",

@@ -134,10 +134,8 @@ describe("sitemap page route", () => {
 
     expect(response.status).toBe(500);
     expect(await response.text()).toBe("Internal Server Error");
-    expect(mockCaptureServerException).toHaveBeenCalledWith(
-      failure,
-      undefined,
-      { source: "sitemap-page" }
-    );
+    expect(mockCaptureServerException).toHaveBeenCalledWith(failure, {
+      source: "sitemap-page",
+    });
   });
 });

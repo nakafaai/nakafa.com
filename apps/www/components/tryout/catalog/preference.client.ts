@@ -1,5 +1,4 @@
 "use client";
-
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
@@ -18,7 +17,6 @@ type SavePreferredTryout = (
     typeof api.learningPreferences.mutations.setPreferredTryoutCountry
   >
 >;
-
 /** Expected failure when a background try-out preference save fails. */
 class TryoutPreferenceSaveError extends Schema.TaggedError<TryoutPreferenceSaveError>()(
   "TryoutPreferenceSaveError",
@@ -26,7 +24,6 @@ class TryoutPreferenceSaveError extends Schema.TaggedError<TryoutPreferenceSaveE
     cause: Schema.Unknown,
   }
 ) {}
-
 /** Persists try-out country selection without blocking route navigation. */
 export function saveTryoutPreference({
   countryKey,
@@ -44,7 +41,6 @@ export function saveTryoutPreference({
   if (!isActiveLocale(locale)) {
     return Effect.void;
   }
-
   return Effect.tryPromise({
     try: () =>
       setPreferredTryout({
@@ -53,9 +49,9 @@ export function saveTryoutPreference({
       }),
     catch: (cause) => new TryoutPreferenceSaveError({ cause }),
   }).pipe(
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       reportClientException(error, { countryKey, source }).pipe(
-        Effect.zipRight(
+        Effect.andThen(
           Effect.sync(() => {
             toast.error(errorMessage, { position: "bottom-center" });
           })

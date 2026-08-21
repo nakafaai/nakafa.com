@@ -1,5 +1,6 @@
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
+import { AnalyticsUnavailableProvider } from "@/components/analytics/consent/unavailable";
 import { ConvexProvider } from "@/components/providers/convex";
 import { ReactQueryProviders } from "@/components/providers/react-query";
 import { UserContextProvider } from "@/lib/context/use-user";
@@ -20,7 +21,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <NuqsAdapter>
       <ReactQueryProviders>
         <ConvexProvider>
-          <UserContextProvider>{children}</UserContextProvider>
+          <UserContextProvider>
+            <AnalyticsUnavailableProvider>
+              {children}
+            </AnalyticsUnavailableProvider>
+          </UserContextProvider>
         </ConvexProvider>
       </ReactQueryProviders>
     </NuqsAdapter>

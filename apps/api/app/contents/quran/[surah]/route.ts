@@ -34,7 +34,7 @@ export async function GET(
           verses: document.verses,
         })
       ),
-      Effect.catchAll((error) =>
+      Effect.catch((error) =>
         Effect.gen(function* () {
           yield* logError(toError(error), {
             service: "api-quran",

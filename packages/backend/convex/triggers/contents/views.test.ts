@@ -1,6 +1,7 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   createConvexTestWithBetterAuth,
+  seedAnalyticsConsent,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import {
@@ -25,6 +26,10 @@ describe("triggers/contents/views", () => {
     const projection = testArticleProjection(0);
     const identity = await t.mutation(async (ctx) => {
       const identity = await seedAuthenticatedUser(ctx, { now: NOW });
+      await seedAnalyticsConsent(ctx, {
+        decidedAt: NOW,
+        userId: identity.userId,
+      });
       await insertRuntimeArticles(ctx, 1, () => projection);
       return identity;
     });

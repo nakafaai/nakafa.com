@@ -7,7 +7,7 @@ import {
 import { makeNakafaGenerationError } from "@repo/ai/agents/nakafa/error";
 import { nakafaAgentPrompt } from "@repo/ai/agents/nakafa/prompt";
 import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
-import { Nakafa } from "@repo/ai/agents/nakafa/service";
+import { Nakafa, type NakafaRuntime } from "@repo/ai/agents/nakafa/service";
 import {
   prepareAnswerFromNakafaEvidenceStep,
   prepareReadStep,
@@ -30,7 +30,7 @@ import { NakafaAgentReadOptionsSchema } from "@repo/contents/_lib/agent/schema/r
 import { NakafaAgentSearchOptionsSchema } from "@repo/contents/_lib/agent/schema/search";
 import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/schema/taxonomy";
 import { generateText, isStepCount, tool } from "ai";
-import { Effect, Runtime } from "effect";
+import { Effect } from "effect";
 
 const nakafaSearchInputSchema = createEffectSchema(
   NakafaAgentSearchOptionsSchema
@@ -53,7 +53,8 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
   nakafa,
 }: NakafaAgentParams) {
   const searchService = yield* NakafaSearch;
-  const runPromise = Runtime.runPromise(yield* Effect.runtime());
+  const services = yield* Effect.context<never>();
+  const runPromise = Effect.runPromiseWith(services);
   let hasPendingContentRead = false;
   const result = yield* Effect.tryPromise({
     /** Runs the AI SDK Nakafa specialist loop with MCP-equivalent tools. */
@@ -177,6 +178,6 @@ export const runNakafaAgent = Effect.fn("nakafa.runNakafaAgent")(function* ({
 });
 
 /** Provides the app-owned Convex-backed Nakafa runtime service. */
-function provideNakafa(service: Nakafa) {
+function provideNakafa(service: NakafaRuntime) {
   return Effect.provideService(Nakafa, service);
 }

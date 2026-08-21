@@ -16,7 +16,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 beforeEach(() => {
   vi.setSystemTime(new Date(TRYOUT_TEST_NOW));
 });
-
 describe("tryouts/runtime/selectors", () => {
   it("returns signed selectors for the active attempt", async () => {
     const t = createConvexTestWithBetterAuth();
@@ -27,7 +26,6 @@ describe("tryouts/runtime/selectors", () => {
         suffix: "content-signed-active",
       })
     );
-
     const content = await t.query(async (ctx) => {
       const attempt = await ctx.db.get(seeded.attemptId);
       if (!(attempt?.snapshotReleaseId && attempt.tryoutSnapshotId)) {
@@ -46,7 +44,6 @@ describe("tryouts/runtime/selectors", () => {
         })
       );
     });
-
     expect(content).toEqual({
       answers: [],
       kind: "signed",
@@ -54,7 +51,6 @@ describe("tryouts/runtime/selectors", () => {
       runtime: "current",
     });
   });
-
   it("returns entitled answer selectors only after terminal review", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation((ctx) =>
@@ -64,7 +60,6 @@ describe("tryouts/runtime/selectors", () => {
         suffix: "content-signed-review",
       })
     );
-
     const content = await t.query(async (ctx) => {
       const attempt = await ctx.db.get(seeded.attemptId);
       if (!(attempt?.snapshotReleaseId && attempt.tryoutSnapshotId)) {
@@ -83,7 +78,6 @@ describe("tryouts/runtime/selectors", () => {
         })
       );
     });
-
     expect(content).toEqual({
       answers: [seeded.signedContent.answer],
       kind: "signed",
@@ -91,7 +85,6 @@ describe("tryouts/runtime/selectors", () => {
       runtime: "current",
     });
   });
-
   it("selects authenticated history only through an attempt marker", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
@@ -139,7 +132,6 @@ describe("tryouts/runtime/selectors", () => {
       });
       return fixture;
     });
-
     const content = await t.query(async (ctx) => {
       const attempt = await ctx.db.get("tryoutAttempts", seeded.attemptId);
       if (!attempt) {
@@ -158,7 +150,6 @@ describe("tryouts/runtime/selectors", () => {
         })
       );
     });
-
     expect(content).toMatchObject({
       answers: [
         {
@@ -179,7 +170,6 @@ describe("tryouts/runtime/selectors", () => {
       runtime: "history",
     });
   });
-
   it("fails closed when signed attempt locale identity drifts", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
@@ -191,7 +181,6 @@ describe("tryouts/runtime/selectors", () => {
       await ctx.db.patch(fixture.attemptId, { appLocale: "en" });
       return fixture;
     });
-
     await expect(
       t.query(async (ctx) => {
         const attempt = await ctx.db.get(seeded.attemptId);
@@ -215,7 +204,6 @@ describe("tryouts/runtime/selectors", () => {
       "Signed try-out attempt lost its locale or snapshot identity."
     );
   });
-
   it("fails closed when one signed placement is missing", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation(async (ctx) => {
@@ -230,7 +218,6 @@ describe("tryouts/runtime/selectors", () => {
       await ctx.db.delete(fixture.placementId);
       return fixture;
     });
-
     await expect(
       t.query(async (ctx) => {
         const attempt = await ctx.db.get(seeded.attemptId);
@@ -254,7 +241,6 @@ describe("tryouts/runtime/selectors", () => {
       "Signed try-out section lost one or more frozen placements."
     );
   });
-
   it("maps placement read failures into the typed selector error", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await t.mutation((ctx) =>
@@ -264,7 +250,6 @@ describe("tryouts/runtime/selectors", () => {
         suffix: "content-selector-read-failure",
       })
     );
-
     const failure = await t.query(async (ctx) => {
       const attempt = await ctx.db.get(seeded.attemptId);
       if (!(attempt?.snapshotReleaseId && attempt.tryoutSnapshotId)) {
@@ -273,7 +258,6 @@ describe("tryouts/runtime/selectors", () => {
       vi.spyOn(ctx.db, "query").mockImplementationOnce(() => {
         throw new Error("Injected selector read failure.");
       });
-
       const exit = await Effect.runPromiseExit(
         loadTryoutSignedContent({
           answers: false,
@@ -289,8 +273,7 @@ describe("tryouts/runtime/selectors", () => {
       if (Exit.isSuccess(exit)) {
         throw new Error("Expected selector resolution to fail.");
       }
-
-      const error = Cause.failureOption(exit.cause);
+      const error = Cause.findErrorOption(exit.cause);
       if (Option.isNone(error)) {
         throw new Error("Expected a typed selector failure.");
       }
@@ -300,7 +283,6 @@ describe("tryouts/runtime/selectors", () => {
         tag: error.value._tag,
       };
     });
-
     expect(failure).toMatchObject({
       code: "TRYOUT_SELECTOR_INTEGRITY",
       message: "Unable to read signed try-out selectors.",

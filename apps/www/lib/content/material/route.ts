@@ -1,5 +1,4 @@
 import "server-only";
-
 import {
   CorpusSourcePathSchema,
   type GitCommitShaSchema,
@@ -7,7 +6,7 @@ import {
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import {
-  ACTIVE_APP_LOCALES,
+  ActiveAppLocaleListSchema,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
@@ -37,7 +36,6 @@ interface PublishedMaterialIdentity {
   readonly activeReleaseId: typeof ReleaseIdSchema.Type;
   readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
 }
-
 /** Complete immutable shell data for one signed material lesson or tombstone. */
 export type PublishedMaterialRoute =
   | (PublishedMaterialIdentity & {
@@ -54,7 +52,6 @@ export type PublishedMaterialRoute =
       readonly siblings: readonly MaterialLessonProjection[];
       readonly sourcePath: typeof CorpusSourcePathSchema.Type;
     });
-
 /** Decodes the coherent active release identifiers carried by one route model. */
 const decodeActiveIdentity = Effect.fn("NakafaMaterial.decodeActiveIdentity")(
   function* (
@@ -75,7 +72,7 @@ const decodeActiveIdentity = Effect.fn("NakafaMaterial.decodeActiveIdentity")(
         publicPath,
       });
     }
-    const manifestHash = yield* Schema.decodeUnknown(Sha256HashSchema)(
+    const manifestHash = yield* Schema.decodeEffect(Sha256HashSchema)(
       activeManifestHash
     ).pipe(
       Effect.mapError(() =>
@@ -91,7 +88,6 @@ const decodeActiveIdentity = Effect.fn("NakafaMaterial.decodeActiveIdentity")(
     };
   }
 );
-
 /** Reads and validates one complete signed material route model. */
 export const readPublishedMaterialRoute = Effect.fn(
   "NakafaMaterial.readPublishedRoute"
@@ -108,7 +104,14 @@ export const readPublishedMaterialRoute = Effect.fn(
     appLocale,
     publicPath,
   });
-  const [active, sourceRevision] = yield* Effect.all([
+  const decodedActiveAppLocales = Schema.decodeUnknownEffect(
+    ActiveAppLocaleListSchema
+  )(result.activeAppLocales).pipe(
+    Effect.mapError(() =>
+      makeMaterialProjectionError({ appLocale, publicPath })
+    )
+  );
+  const [active, activeAppLocales, sourceRevision] = yield* Effect.all([
     decodeActiveIdentity(
       result.activeManifestHash,
       result.activeReleaseId,
@@ -116,6 +119,7 @@ export const readPublishedMaterialRoute = Effect.fn(
       locale,
       publicPath
     ),
+    decodedActiveAppLocales,
     decodeSourceRevision(result.sourceRevision, { appLocale, publicPath }),
   ]);
   if (result.projectionJson === null) {
@@ -140,11 +144,11 @@ export const readPublishedMaterialRoute = Effect.fn(
     Effect.forEach(result.alternateJson, (source) =>
       decodeMaterialJson(source, { appLocale, publicPath })
     ),
-    Schema.decodeUnknown(RendererDomainSchema)(result.rendererDomain),
+    Schema.decodeEffect(RendererDomainSchema)(result.rendererDomain),
     Effect.forEach(result.siblingJson, (source) =>
       decodeMaterialJson(source, { appLocale, publicPath })
     ),
-    Schema.decodeUnknown(CorpusSourcePathSchema)(result.sourcePath),
+    Schema.decodeEffect(CorpusSourcePathSchema)(result.sourcePath),
   ]).pipe(
     Effect.mapError(() =>
       makeMaterialProjectionError({ appLocale, publicPath })
@@ -154,8 +158,8 @@ export const readPublishedMaterialRoute = Effect.fn(
     alternates.map((alternate) => alternate.appLocale)
   );
   const completeLocaleSet =
-    alternateLocales.size === ACTIVE_APP_LOCALES.length &&
-    ACTIVE_APP_LOCALES.every((alternateLocale) =>
+    alternateLocales.size === activeAppLocales.length &&
+    activeAppLocales.every((alternateLocale) =>
       alternateLocales.has(alternateLocale)
     );
   if (
@@ -186,7 +190,6 @@ export const readPublishedMaterialRoute = Effect.fn(
     sourceRevision,
   } satisfies PublishedMaterialRoute;
 });
-
 /** Caches one exact signed material model under release invalidation. */
 export async function getPublishedMaterialRoute(
   locale: Locale,
@@ -194,7 +197,6 @@ export async function getPublishedMaterialRoute(
   expectedActiveReleaseId?: ContentReleasePin
 ) {
   "use cache";
-
   const result = await Effect.runPromise(
     readPublishedMaterialRoute(locale, publicPath, expectedActiveReleaseId)
   );

@@ -1,5 +1,4 @@
 "use client";
-
 import {
   Add01Icon,
   ArrowDown01Icon,
@@ -8,6 +7,7 @@ import {
   Tick01Icon,
   Time04Icon,
 } from "@hugeicons/core-free-icons";
+import type { OperationalExceptionProperties } from "@repo/analytics/posthog/exception";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Calendar } from "@repo/design-system/components/ui/calendar";
@@ -64,7 +64,7 @@ import { useClass } from "@/lib/context/use-class";
 interface MaterialGroupDialogShellProps {
   defaultValues: MaterialGroupFormValues;
   description: string;
-  errorContext: Record<string, string>;
+  errorContext: OperationalExceptionProperties;
   errorMessage: string;
   formId: string;
   onSubmit: (value: MaterialGroupFormValues) => Promise<void>;
@@ -74,7 +74,6 @@ interface MaterialGroupDialogShellProps {
   submitLabel: string;
   title: string;
 }
-
 /** Render the material-group create dialog for the active class. */
 export function CreateMaterialGroupDialog({
   open,
@@ -88,7 +87,6 @@ export function CreateMaterialGroupDialog({
   const createMaterialGroup = useMutation(
     api.classes.materials.mutations.createMaterialGroup
   );
-
   return (
     <MaterialGroupDialogShell
       defaultValues={{
@@ -117,7 +115,6 @@ export function CreateMaterialGroupDialog({
     />
   );
 }
-
 /** Render the material-group edit dialog for one existing group. */
 export function EditMaterialGroupDialog({
   group,
@@ -130,7 +127,6 @@ export function EditMaterialGroupDialog({
 }) {
   const t = useTranslations("School.Classes");
   const updateMaterialGroup = useUpdateMaterialGroupMutation();
-
   return (
     <MaterialGroupDialogShell
       defaultValues={{
@@ -141,7 +137,6 @@ export function EditMaterialGroupDialog({
       }}
       description={t("edit-material-description")}
       errorContext={{
-        group_id: group._id,
         source: "school-material-group-update",
       }}
       errorMessage={t("update-material-group-failed")}
@@ -164,7 +159,6 @@ export function EditMaterialGroupDialog({
     />
   );
 }
-
 /** Render the shared material-group form shell used by create and edit variants. */
 function MaterialGroupDialogShell({
   defaultValues,
@@ -182,7 +176,6 @@ function MaterialGroupDialogShell({
   const [minimumDate] = useState(() => startOfDay(new Date()));
   const t = useTranslations("School.Classes");
   const locale = useLocale();
-
   const form = useForm({
     defaultValues,
     validators: {
@@ -195,9 +188,9 @@ function MaterialGroupDialogShell({
           form.reset();
           setOpenAction(false);
         }).pipe(
-          Effect.catchTag("UnknownException", ({ error }) =>
+          Effect.catchTag("UnknownError", ({ cause: error }) =>
             reportClientException(error, errorContext).pipe(
-              Effect.zipRight(
+              Effect.andThen(
                 Effect.sync(() => {
                   toast.error(errorMessage);
                 })
@@ -208,7 +201,6 @@ function MaterialGroupDialogShell({
       );
     },
   });
-
   return (
     <form action={() => form.handleSubmit()} id={formId}>
       <ResponsiveDialog
@@ -239,7 +231,6 @@ function MaterialGroupDialogShell({
               const isInvalid =
                 Boolean(field.state.meta.isTouched) &&
                 Boolean(!field.state.meta.isValid);
-
               return (
                 <Field data-invalid={isInvalid}>
                   <FieldLabel htmlFor={`${formId}-name`}>
@@ -264,7 +255,6 @@ function MaterialGroupDialogShell({
               const isInvalid =
                 Boolean(field.state.meta.isTouched) &&
                 Boolean(!field.state.meta.isValid);
-
               return (
                 <Field data-invalid={isInvalid}>
                   <FieldLabel htmlFor={`${formId}-description`}>
@@ -291,7 +281,6 @@ function MaterialGroupDialogShell({
                 Boolean(field.state.meta.isTouched) &&
                 Boolean(!field.state.meta.isValid);
               const currentStatus = getMaterialStatus(field.state.value);
-
               return (
                 <Field data-invalid={isInvalid}>
                   <FieldLabel htmlFor={`${formId}-status`}>
@@ -354,7 +343,6 @@ function MaterialGroupDialogShell({
                     const isInvalid =
                       Boolean(field.state.meta.isTouched) &&
                       Boolean(!field.state.meta.isValid);
-
                     return (
                       <Field data-invalid={isInvalid}>
                         <FieldLabel htmlFor={`${formId}-scheduled-at`}>
@@ -393,7 +381,6 @@ function MaterialGroupDialogShell({
                                 if (!date) {
                                   return;
                                 }
-
                                 field.handleChange(
                                   updateDate(field.state.value, date)
                                 );
@@ -424,7 +411,6 @@ function MaterialGroupDialogShell({
                                       if (!field.state.value) {
                                         return;
                                       }
-
                                       field.handleChange(
                                         updateTime(
                                           field.state.value,

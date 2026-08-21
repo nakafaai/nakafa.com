@@ -1,11 +1,11 @@
+import { CurrentWeatherSummarySchema } from "@repo/ai/clients/weather/schema";
+import { useQuery } from "@tanstack/react-query";
+import { Effect } from "effect";
 import {
   FetchHttpClient,
   HttpClient,
   HttpClientResponse,
-} from "@effect/platform";
-import { CurrentWeatherSummarySchema } from "@repo/ai/clients/weather/schema";
-import { useQuery } from "@tanstack/react-query";
-import { Effect } from "effect";
+} from "effect/unstable/http";
 
 const WEATHER_REQUEST_TIMEOUT = "10 seconds";
 

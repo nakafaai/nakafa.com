@@ -10,13 +10,10 @@ import { Effect } from "effect";
 type QuranMarkdownResult = FunctionReturnType<
   typeof api.contentRelease.quran.markdown
 >;
-
 /** Validator-derived Quran verse used by markdown renderers. */
 export type QuranMarkdownVerse = QuranMarkdownResult["verses"][number];
-
 /** Validator-derived Quran metadata used by markdown renderers. */
 export type QuranMarkdownSurah = NonNullable<QuranMarkdownResult["surah"]>;
-
 /** Decodes one active app-locale Quran markdown projection. */
 export const decodePublishedQuranMarkdown = Effect.fn(
   "NakafaQuran.decodeMarkdown"
@@ -50,7 +47,6 @@ export const decodePublishedQuranMarkdown = Effect.fn(
       reason: "Signed Quran markdown identity is inconsistent.",
     });
   }
-
   return {
     ...source,
     appLocale: result.appLocale,
@@ -59,7 +55,6 @@ export const decodePublishedQuranMarkdown = Effect.fn(
     verses: result.verses,
   };
 });
-
-export type PublishedQuranMarkdown = Effect.Effect.Success<
+export type PublishedQuranMarkdown = Effect.Success<
   ReturnType<typeof decodePublishedQuranMarkdown>
 >;

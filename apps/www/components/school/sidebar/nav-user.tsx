@@ -1,5 +1,4 @@
 "use client";
-
 import { Logout01Icon, MoreVerticalIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -27,69 +26,65 @@ import {
   usePathname,
   useRouter,
 } from "@repo/internationalization/src/navigation";
-import { Effect, Either } from "effect";
+import { Effect, Result } from "effect";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";
 import { clearAiDraftText } from "@/components/ai/store/draft";
+import {
+  AnalyticsConsentMenuItem,
+  AnalyticsConsentSidebarItem,
+} from "@/components/analytics/consent/actions";
 import { NavUserGuestButton } from "@/components/sidebar/nav-user-guest-button";
 import { NavUserSkeleton } from "@/components/sidebar/nav-user-skeleton";
 import { SidebarUtilityMenuItems } from "@/components/sidebar/utility-menu-items";
-import { signOutAccountBrowserIdentity } from "@/lib/auth/account-browser-identity";
+import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 import { useUser } from "@/lib/context/use-user";
 import { getInitialName } from "@/lib/utils/helper";
-
 /**
  * Renders the signed-in school user menu, plan indicator, and guest login shortcut.
  */
 export function SchoolSidebarNavUser() {
   const t = useTranslations("Auth");
-
   const pathname = usePathname();
-
   const router = useRouter();
   const { isPending, user } = useUser((state) => ({
     isPending: state.isPending,
     user: state.user,
   }));
   const [open, { close, set }] = useDisclosure(false);
-
   const { isMobile } = useSidebar();
   const authHref = `/auth?redirect=${pathname}`;
   const dropdownSide = isMobile ? "bottom" : "right";
   const submenuSide = isMobile ? "top" : "right";
-
   useLayoutEffect(() => close, [close]);
-
   /** Signs the user out and leaves the shared authenticated app subtree on success. */
   async function handleSignOut() {
     const result = await Effect.runPromise(
-      Effect.either(signOutAccountBrowserIdentity())
+      Effect.result(signOutAccountBrowserIdentity())
     );
-
-    if (Either.isRight(result)) {
+    if (Result.isSuccess(result)) {
       Effect.runSync(clearAiDraftText);
       router.replace(authHref);
     }
   }
-
   if (isPending) {
     return <NavUserSkeleton />;
   }
-
   if (!user) {
     return (
-      <SidebarMenuItem>
-        <NavUserGuestButton />
-      </SidebarMenuItem>
+      <>
+        <SidebarMenuItem>
+          <NavUserGuestButton />
+        </SidebarMenuItem>
+        <AnalyticsConsentSidebarItem />
+      </>
     );
   }
-
   const planLabelByPlan = {
     free: t("plan-free"),
     pro: t("plan-pro"),
   };
   const planLabel = planLabelByPlan[user.appUser.plan];
-
   return (
     <SidebarMenuItem>
       <DropdownMenu onOpenChange={set} open={open}>
@@ -149,6 +144,10 @@ export function SchoolSidebarNavUser() {
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <SidebarUtilityMenuItems side={submenuSide} />
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <AnalyticsConsentMenuItem />
+          </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem

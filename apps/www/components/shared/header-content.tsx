@@ -3,7 +3,7 @@ import type { IconSvgElement } from "@hugeicons/react";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { format } from "date-fns";
-import { OpenContent } from "@/components/shared/open-content";
+import { OpenContent } from "@/components/shared/open-content/actions";
 
 interface Props {
   /** The authors of the content */

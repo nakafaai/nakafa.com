@@ -3,8 +3,7 @@ import { formatNinaContextPackPrompt } from "@repo/ai/nina/prompt/system";
 import { formatLearningSelectionPromptContext } from "@repo/ai/prompt/learning-selection";
 import { AgentLearningSelectionSchema } from "@repo/ai/types/agents";
 import { LocaleSchema } from "@repo/contents/_types/content";
-import { Schema } from "effect";
-
+import { Schema, Struct } from "effect";
 /** Structured runtime facts that Nina can use without route or title guessing. */
 export const RuntimePromptContextSchema = Schema.Struct({
   currentDate: Schema.String,
@@ -12,7 +11,7 @@ export const RuntimePromptContextSchema = Schema.Struct({
     locale: LocaleSchema,
     slug: Schema.String,
     verified: Schema.Boolean,
-  }).pipe(Schema.mutable),
+  }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
   learningSelection: Schema.optional(AgentLearningSelectionSchema),
   nina: NinaContextPackSchema,
   url: Schema.String,
@@ -22,13 +21,11 @@ export const RuntimePromptContextSchema = Schema.Struct({
     countryRegion: Schema.String,
     latitude: Schema.String,
     longitude: Schema.String,
-  }).pipe(Schema.mutable),
-}).pipe(Schema.mutable);
-
+  }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 export type RuntimePromptContext = Schema.Schema.Type<
   typeof RuntimePromptContextSchema
 >;
-
 /** Formats verified page, location, Nina context, and learning selection facts. */
 export function formatRuntimePrompt({
   currentDate,

@@ -4,8 +4,7 @@ import { NinaTurnSchema } from "@repo/ai/nina/contract/turn";
 import { NinaReporter } from "@repo/ai/nina/runtime/report";
 import { NinaStore } from "@repo/ai/nina/runtime/store";
 import { createNinaStreamResponse } from "@repo/ai/nina/runtime/stream";
-import { Effect, Schema } from "effect";
-
+import { Context, Effect, Layer, Schema } from "effect";
 /** Raised when a framework boundary sends an invalid Nina harness input. */
 export class NinaHarnessInputError extends Schema.TaggedError<NinaHarnessInputError>()(
   "NinaHarnessInputError",
@@ -13,7 +12,6 @@ export class NinaHarnessInputError extends Schema.TaggedError<NinaHarnessInputEr
     message: Schema.String,
   }
 ) {}
-
 /**
  * External Nina harness Interface used by framework routes.
  *
@@ -21,19 +19,19 @@ export class NinaHarnessInputError extends Schema.TaggedError<NinaHarnessInputEr
  * ToolLoopAgent, AI SDK writer callbacks, tool policy, and response composition
  * remain inside this package-owned Module.
  */
-export class NinaHarness extends Effect.Service<NinaHarness>()(
+export class NinaHarness extends Context.Service<NinaHarness>()(
   "@repo/ai/NinaHarness",
   {
-    accessors: true,
-    effect: Effect.gen(function* () {
+    make: Effect.gen(function* () {
       const store = yield* NinaStore;
       const reporter = yield* NinaReporter;
       const nakafa = yield* Nakafa;
       const search = yield* NakafaSearch;
-
       return {
         stream: Effect.fn("nina.harness.stream")(function* (input: unknown) {
-          const turn = yield* Schema.decodeUnknown(NinaTurnSchema)(input).pipe(
+          const turn = yield* Schema.decodeUnknownEffect(NinaTurnSchema)(
+            input
+          ).pipe(
             Effect.mapError(
               () =>
                 new NinaHarnessInputError({
@@ -41,7 +39,6 @@ export class NinaHarness extends Effect.Service<NinaHarness>()(
                 })
             )
           );
-
           return yield* createNinaStreamResponse(turn).pipe(
             Effect.provideService(NinaStore, store),
             Effect.provideService(NinaReporter, reporter),
@@ -52,4 +49,6 @@ export class NinaHarness extends Effect.Service<NinaHarness>()(
       };
     }),
   }
-) {}
+) {
+  static readonly layer = Layer.effect(this, this.make);
+}

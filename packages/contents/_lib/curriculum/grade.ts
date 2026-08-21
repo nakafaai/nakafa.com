@@ -1,8 +1,7 @@
 import { type Grade, NON_NUMERIC_GRADES } from "@repo/contents/_types/taxonomy";
 import { Schema } from "effect";
 
-const NonNumericGradeSchema = Schema.Literal(...NON_NUMERIC_GRADES);
-
+const NonNumericGradeSchema = Schema.Literals(NON_NUMERIC_GRADES);
 /**
  * Narrows a grade value to a non-numeric grade when applicable.
  *

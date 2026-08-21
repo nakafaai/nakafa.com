@@ -28,7 +28,7 @@ const PROGRAM_ROOT = "curriculum/technical-program-1";
 
 /** Creates one authored material group under the technical root. */
 function materialGroup(groupIndex: number, order: number) {
-  return Schema.decodeUnknownSync(CurriculumRouteSchema)({
+  return Schema.decodeSync(CurriculumRouteSchema)({
     appLocale: "en",
     iconKey: "school",
     kind: "curriculum-context",
@@ -52,7 +52,7 @@ function materialContext(
   const material = makeMaterialProjection("en", 1, materialIndex);
   const groupNodeKey = group?.nodeKey ?? `context-${materialIndex}`;
   const groupPath = group?.publicPath ?? PROGRAM_ROOT;
-  return Schema.decodeUnknownSync(CurriculumRouteSchema)({
+  return Schema.decodeSync(CurriculumRouteSchema)({
     appLocale: "en",
     canonicalPath: material.parentPath,
     iconKey: "school",

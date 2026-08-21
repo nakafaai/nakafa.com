@@ -6,8 +6,9 @@ import {
   ListToolsRequestSchema,
   McpError,
 } from "@modelcontextprotocol/sdk/types.js";
-import { Effect, type Schema } from "effect";
+import { Effect } from "effect";
 import {
+  type NakafaMcpSchema,
   toMcpJsonObjectSchema,
   toMcpToolOutputJsonSchema,
   validateNakafaMcpToolResult,
@@ -37,13 +38,12 @@ import {
 interface NakafaMcpTool {
   readonly annotations: typeof NAKAFA_READ_ONLY_TOOL_ANNOTATIONS;
   readonly description: string;
-  readonly inputSchema: Schema.Schema.AnyNoContext;
+  readonly inputSchema: NakafaMcpSchema;
   readonly name: string;
-  readonly outputSchema: Schema.Schema.AnyNoContext;
+  readonly outputSchema: NakafaMcpSchema;
   readonly run: (args: unknown) => Effect.Effect<CallToolResult>;
   readonly title: string;
 }
-
 const NAKAFA_MCP_TOOLS: readonly NakafaMcpTool[] = [
   {
     annotations: NAKAFA_READ_ONLY_TOOL_ANNOTATIONS,
@@ -86,41 +86,33 @@ const NAKAFA_MCP_TOOLS: readonly NakafaMcpTool[] = [
     title: "Get Nakafa Quran Reference",
   },
 ];
-
 /** Registers Nakafa tools through an Effect Schema-backed MCP boundary. */
 export function registerNakafaMcpTools(server: McpServer) {
   const toolsByName = new Map(
     NAKAFA_MCP_TOOLS.map((tool) => [tool.name, tool])
   );
-
   server.server.registerCapabilities({
     tools: {
       listChanged: true,
     },
   });
-
   server.server.setRequestHandler(ListToolsRequestSchema, () => ({
     tools: NAKAFA_MCP_TOOLS.map(toMcpToolDefinition),
   }));
-
   server.server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const tool = toolsByName.get(request.params.name);
-
     if (!tool) {
       throw new McpError(
         ErrorCode.InvalidParams,
         `Tool ${request.params.name} not found`
       );
     }
-
     const result = await Effect.runPromise(
       tool.run(request.params.arguments ?? {})
     );
-
     return validateNakafaMcpToolResult(result, tool.outputSchema, tool.name);
   });
 }
-
 /** Converts one Effect-backed tool definition into MCP protocol metadata. */
 function toMcpToolDefinition(tool: NakafaMcpTool) {
   return {

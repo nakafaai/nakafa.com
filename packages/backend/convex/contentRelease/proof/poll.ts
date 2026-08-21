@@ -47,9 +47,10 @@ export interface ProofPollCoordinatorService {
 }
 
 /** Durable Workflow dependency owned only by proof polling. */
-export class ProofPollCoordinator extends Context.Tag(
-  "@repo/backend/contentRelease/ProofPollCoordinator"
-)<ProofPollCoordinator, ProofPollCoordinatorService>() {}
+export class ProofPollCoordinator extends Context.Service<
+  ProofPollCoordinator,
+  ProofPollCoordinatorService
+>()("@repo/backend/contentRelease/ProofPollCoordinator") {}
 
 const proofPollCoordinatorLive: ProofPollCoordinatorService = {
   cleanup: (ctx, workflowId) =>

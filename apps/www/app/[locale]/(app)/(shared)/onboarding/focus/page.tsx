@@ -1,5 +1,5 @@
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { redirect } from "@repo/internationalization/src/navigation";
+import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { FocusStepForm } from "@/components/programs/onboarding/focus";
@@ -32,7 +32,7 @@ export default async function Page(
 }
 
 /** Reads route data for the focus step while keeping form state local. */
-async function FocusStepRuntime({ locale }: { locale: ActiveAppLocaleCode }) {
+async function FocusStepRuntime({ locale }: { locale: PublicAppLocale }) {
   const [programs, token] = await Promise.all([
     getLearningProgramOnboardingCatalog(locale),
     getToken(),

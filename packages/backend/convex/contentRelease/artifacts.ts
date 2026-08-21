@@ -51,7 +51,7 @@ const decodeBatch = Effect.fn("contentRelease.decodeArtifactBatch")(function* (
     );
   }
   const artifacts = yield* Effect.forEach(artifactJson, decodeArtifactJson);
-  return yield* Schema.decodeUnknown(StageArtifactBatchInputSchema)({
+  return yield* Schema.decodeUnknownEffect(StageArtifactBatchInputSchema)({
     artifacts,
     batchIndex,
     releaseId,
@@ -65,7 +65,6 @@ const decodeBatch = Effect.fn("contentRelease.decodeArtifactBatch")(function* (
     )
   );
 });
-
 /** Persists one immutable artifact and marks its exact staged item ready. */
 const stageArtifact = Effect.fn("contentRelease.stageArtifact")(function* (
   ctx: MutationCtx,
@@ -152,7 +151,6 @@ const stageArtifact = Effect.fn("contentRelease.stageArtifact")(function* (
   );
   return stored !== null;
 });
-
 /** Stages one canonical artifact batch with exact immutable retry identity. */
 const stageProgram = Effect.fn("contentRelease.stageArtifactBatch")(function* (
   ctx: MutationCtx,
@@ -236,7 +234,6 @@ const stageProgram = Effect.fn("contentRelease.stageArtifactBatch")(function* (
     unchanged,
   };
 });
-
 /** Stages one bounded immutable artifact batch through internal state. */
 export const stageArtifactBatch = internalMutation({
   args: {

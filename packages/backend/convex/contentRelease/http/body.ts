@@ -1,26 +1,22 @@
 import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
 import { isJsonContentType } from "@repo/utilities/mime";
 import { Effect, Schema } from "effect";
-
 /** Expected bounded HTTP body rejection before domain decoding begins. */
 export class HttpBodyError extends Schema.TaggedError<HttpBodyError>()(
   "HttpBodyError",
   {
-    reason: Schema.Literal("invalid", "size", "unsupported"),
+    reason: Schema.Literals(["invalid", "size", "unsupported"]),
   }
 ) {}
-
 /** Complete UTF-8 JSON request body accepted by one HTTP adapter. */
 export interface HttpJsonBody {
   readonly byteLength: number;
   readonly source: string;
 }
-
 /** Creates one sanitized body failure without retaining request bytes. */
 function bodyError(reason: HttpBodyError["reason"]) {
   return new HttpBodyError({ reason });
 }
-
 /** Reads one complete JSON request while enforcing its endpoint byte ceiling. */
 export const readJsonBody = Effect.fn("contentRelease.readJsonBody")(function* (
   request: Request,

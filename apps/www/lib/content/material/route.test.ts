@@ -34,6 +34,7 @@ vi.mock("@/lib/content/runtime/query", async () => {
 /** Builds one complete backend-verified material model response. */
 function foundModel(overrides?: {
   readonly activeManifestHash?: null | string;
+  readonly activeAppLocales?: readonly string[];
   readonly activeReleaseId?: null | string;
   readonly alternateJson?: readonly string[];
   readonly projectionJson?: null | string;
@@ -47,6 +48,7 @@ function foundModel(overrides?: {
       overrides?.activeManifestHash === undefined
         ? activeManifestHash
         : overrides.activeManifestHash,
+    activeAppLocales: overrides?.activeAppLocales ?? ["en", "id"],
     activeReleaseId:
       overrides?.activeReleaseId === undefined
         ? activeReleaseId
@@ -119,6 +121,25 @@ describe("published material route", () => {
     );
   });
 
+  it("preserves an active release mismatch for pinned callers", async () => {
+    const expectedReleaseId = ReleaseIdSchema.make("release-previous");
+    runtimeQueryMock.mockResolvedValueOnce(foundModel());
+
+    await expect(
+      Effect.runPromise(
+        readPublishedMaterialRoute(
+          "en",
+          previewProjection.publicPath,
+          expectedReleaseId
+        ).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({
+      _tag: "PublishedReleaseMismatchError",
+      actualReleaseId: activeReleaseId,
+      expectedReleaseId,
+    });
+  });
+
   it("preserves a signed missing-route tombstone", async () => {
     runtimeQueryMock.mockResolvedValueOnce(
       foundModel({
@@ -145,6 +166,7 @@ describe("published material route", () => {
   it.each([
     ["active manifest", foundModel({ activeManifestHash: "invalid" })],
     ["missing manifest", foundModel({ activeManifestHash: null })],
+    ["active locales", foundModel({ activeAppLocales: ["id", "en"] })],
     ["missing release", foundModel({ activeReleaseId: null })],
     ["source revision", foundModel({ sourceRevision: "main" })],
     ["missing renderer", foundModel({ rendererDomain: null })],

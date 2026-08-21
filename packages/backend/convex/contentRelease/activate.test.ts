@@ -1,4 +1,5 @@
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
 import type { ContentSnapshotSet } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
@@ -77,7 +78,7 @@ async function seedVerifiedPair(
 function expectedReceipt(identity: TestIdentity) {
   return {
     activatedHeads: 0,
-    activeAppLocales: ["en", "id"],
+    activeAppLocales: ACTIVE_APP_LOCALE_CODES,
     deletedHeads: 0,
     manifestHash: identity.manifestHash,
     projectionDigest: TEST_DIGEST,

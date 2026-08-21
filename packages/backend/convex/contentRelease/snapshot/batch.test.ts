@@ -34,7 +34,7 @@ describe("contentRelease/snapshot/batch", () => {
       family: "program",
       releaseId: TEST_RELEASE_ID,
       snapshotId: data.snapshotId,
-      unchanged: 6,
+      unchanged: data.rowJson.length,
     });
     const stored = await t.run(async (ctx) => ({
       batches: await ctx.db.query("snapshotBatches").collect(),
@@ -42,12 +42,18 @@ describe("contentRelease/snapshot/batch", () => {
       programs: await ctx.db.query("programCatalog").collect(),
       release: await ctx.db.query("contentReleases").unique(),
     }));
+    const programCount = data.rows.filter(
+      ({ record }) => record.kind === "program"
+    ).length;
+    const curriculumCount = data.rows.filter(
+      ({ record }) => record.kind === "curriculum"
+    ).length;
     expect(stored.batches).toHaveLength(1);
-    expect(stored.programs).toHaveLength(2);
-    expect(stored.curriculum).toHaveLength(4);
+    expect(stored.programs).toHaveLength(programCount);
+    expect(stored.curriculum).toHaveLength(curriculumCount);
     expect(stored.release).toMatchObject({
       stagedSnapshotBatches: 1,
-      stagedSnapshotRows: 6,
+      stagedSnapshotRows: data.rowJson.length,
     });
   });
 

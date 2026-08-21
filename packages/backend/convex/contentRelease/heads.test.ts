@@ -19,6 +19,11 @@ import {
   maximumTestHead,
 } from "@repo/backend/test/content-head";
 import {
+  TEST_PAGE_KEY,
+  TEST_PAGE_PATH,
+  TEST_PAGE_SOURCE,
+} from "@repo/backend/test/content-page";
+import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
 } from "@repo/backend/test/content-release";
@@ -39,7 +44,7 @@ import {
 } from "@repo/backend/test/content-verify";
 import { getConvexSize } from "convex/values";
 import { convexTest, type TestConvex } from "convex-test";
-import { Effect, Either, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 const headPage = internal.contentRelease.heads.page;
@@ -66,12 +71,10 @@ function readPage(
     })
     .then(Schema.decodeUnknownSync(HeadPageSchema));
 }
-
 /** Selects the ordered content keys returned by one head page. */
 function headKeys(page: HeadPage) {
   return page.heads.map(({ contentKey }) => contentKey);
 }
-
 describe("contentRelease/heads", () => {
   it("pages structurally shared material heads in canonical order", async () => {
     const t = convexTest(schema, convexModules);
@@ -85,16 +88,13 @@ describe("contentRelease/heads", () => {
       await insertTestHead(ctx, { contentKey: "test:beta" });
       await insertTestHead(ctx, { contentKey: "test:alpha" });
     });
-
     const first = await readPage(t, null);
     const second = await readPage(t, first.nextCursor);
-
     expect(first).toMatchObject({ cursor: null, done: false });
     expect(headKeys(first)).toEqual(["test:alpha", "test:beta"]);
     expect(second).toMatchObject({ done: true, nextCursor: null });
     expect(headKeys(second)).toEqual(["test:zeta"]);
   });
-
   it("pages one verified immutable article head", async () => {
     const t = convexTest(schema, convexModules);
     await stageUpsertFixture(t, "article");
@@ -115,9 +115,7 @@ describe("contentRelease/heads", () => {
         verifiedAt: 1,
       });
     });
-
     const page = await readPage(t, null, undefined, 2, "article");
-
     expect(page).toMatchObject({
       done: true,
       family: "article",
@@ -133,7 +131,42 @@ describe("contentRelease/heads", () => {
       nextCursor: null,
     });
   });
-
+  it("pages one verified immutable public page head", async () => {
+    const t = convexTest(schema, convexModules);
+    await stageUpsertFixture(t, "page");
+    await beginFixture(t);
+    await t.mutation(verifyItems, {
+      afterIndex: -1,
+      releaseId: TEST_RELEASE_ID,
+    });
+    await t.mutation(async (ctx) => {
+      const release = await ctx.db.query("contentReleases").unique();
+      if (!release) {
+        throw new Error("Expected verified page release.");
+      }
+      await ctx.db.patch("contentReleases", release._id, {
+        proofAt: 1,
+        proofJson: "{}",
+        status: "verified",
+        verifiedAt: 1,
+      });
+    });
+    const page = await readPage(t, null, undefined, 2, "page");
+    expect(page).toMatchObject({
+      done: true,
+      family: "page",
+      heads: [
+        {
+          contentKey: TEST_PAGE_KEY,
+          family: "page",
+          publicPath: TEST_PAGE_PATH,
+          rendererDomain: "site",
+          sourcePath: TEST_PAGE_SOURCE,
+        },
+      ],
+      nextCursor: null,
+    });
+  });
   it("reads an exact verified candidate against its completed base", async () => {
     const t = convexTest(schema, convexModules);
     const active = {
@@ -177,13 +210,11 @@ describe("contentRelease/heads", () => {
         sequence: candidate.sequence,
       });
     });
-
     await expect(readPage(t, null, candidate)).resolves.toMatchObject({
       activeReleaseId: candidate.releaseId,
       heads: [{ contentKey: "test:candidate" }],
     });
   });
-
   it("returns empty nonterminal pages while advancing the opaque cursor", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -194,7 +225,6 @@ describe("contentRelease/heads", () => {
       });
       await insertTestHead(ctx, { contentKey: "test:visible" });
     });
-
     const first = await readPage(t, null, undefined, 1);
     const second = await readPage(t, first.nextCursor, undefined, 1);
     const third = await readPage(t, second.nextCursor, undefined, 1);
@@ -205,9 +235,8 @@ describe("contentRelease/heads", () => {
     expect(second.nextCursor).not.toBeNull();
     expect(third).toMatchObject({ done: true, heads: [], nextCursor: null });
   });
-
   it("keeps the exact maximum head page below Convex and HTTP ceilings", () => {
-    const page = Schema.decodeUnknownSync(HeadPageSchema)({
+    const page = Schema.decodeSync(HeadPageSchema)({
       activeManifestHash: `sha256:${"e".repeat(64)}`,
       activeReleaseId: "a".repeat(128),
       cursor: "c".repeat(4096),
@@ -225,27 +254,23 @@ describe("contentRelease/heads", () => {
       ...page,
       heads: page.heads.map((head) => ({ ...head })),
     };
-
     expect(getConvexSize(convexPage)).toBeLessThan(
       MAX_PUBLICATION_RESPONSE_BYTES
     );
     expect(new TextEncoder().encode(encoded.body).byteLength).toBeLessThan(
       MAX_PUBLICATION_RESPONSE_BYTES
     );
-
-    const overflow = Schema.decodeUnknownEither(HeadPageSchema)({
+    const overflow = Schema.decodeUnknownResult(HeadPageSchema)({
       ...page,
       heads: [...page.heads, maximumTestHead(MAX_HEAD_PAGE_COUNT)],
     });
-    expect(Either.isLeft(overflow)).toBe(true);
+    expect(Result.isFailure(overflow)).toBe(true);
   });
-
   it("rejects invalid limits and unreadable snapshot identities", async () => {
     const invalid = convexTest(schema, convexModules);
     await expect(readPage(invalid, null, undefined, 0)).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_LIMIT" },
     });
-
     const stale = convexTest(schema, convexModules);
     await stale.mutation((ctx) => activateRollbackFixture(ctx, 0, 0));
     await expect(
@@ -256,7 +281,6 @@ describe("contentRelease/heads", () => {
       })
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
   });
-
   it("fails closed when a selected head loses canonical evidence", async () => {
     const incomplete = convexTest(schema, convexModules);
     await incomplete.mutation(async (ctx) => {
@@ -273,7 +297,6 @@ describe("contentRelease/heads", () => {
     await expect(readPage(incomplete, null)).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
-
     const route = convexTest(schema, convexModules);
     await route.mutation(async (ctx) => {
       await activateRollbackFixture(ctx, 0, 0);

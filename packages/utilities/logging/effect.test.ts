@@ -1,46 +1,50 @@
+import { describe, expect, it } from "@repo/testing/effect";
 import {
   logError,
   logHttpRequest,
   timeOperation,
 } from "@repo/utilities/logging/effect";
-import { Effect, HashMap, Logger, Option } from "effect";
-import { describe, expect, it } from "vitest";
+import { Effect, Logger } from "effect";
+
+type StructuredLogEntry = ReturnType<typeof Logger.formatStructured.log>;
+
+function makeLogCollector(entries: StructuredLogEntry[]) {
+  return Logger.make((entry) =>
+    entries.push(Logger.formatStructured.log(entry))
+  );
+}
 
 describe("Effect logging utilities", () => {
-  it("logs errors with structured annotations", async () => {
-    const entries: Logger.Logger.Options<unknown>[] = [];
-    const logger = Logger.make((entry) => entries.push(entry));
+  it.effect("logs errors with structured annotations", () =>
+    Effect.gen(function* () {
+      const entries: StructuredLogEntry[] = [];
+      const logger = makeLogCollector(entries);
 
-    await Effect.runPromise(
-      logError(new Error("Boom"), { service: "test-service" }).pipe(
-        Effect.provide(Logger.replace(Logger.defaultLogger, logger))
-      )
-    );
+      yield* logError(new Error("Boom"), { service: "test-service" }).pipe(
+        Effect.provide(Logger.layer([logger]))
+      );
 
-    const [entry] = entries;
+      const [entry] = entries;
 
-    expect(entry).toBeDefined();
+      expect(entry).toBeDefined();
 
-    if (!entry) {
-      return;
-    }
+      if (!entry) {
+        return;
+      }
 
-    expect(entry.logLevel.label).toBe("ERROR");
-    expect(entry.message).toEqual(["Boom"]);
-    expect(
-      Option.getOrUndefined(HashMap.get(entry.annotations, "service"))
-    ).toBe("test-service");
-    expect(Option.getOrUndefined(HashMap.get(entry.annotations, "type"))).toBe(
-      "error"
-    );
-  });
+      expect(entry.level).toBe("ERROR");
+      expect(entry.message).toBe("Boom");
+      expect(entry.annotations.service).toBe("test-service");
+      expect(entry.annotations.type).toBe("error");
+    })
+  );
 
-  it("derives HTTP log levels from status codes", async () => {
-    const entries: Logger.Logger.Options<unknown>[] = [];
-    const logger = Logger.make((entry) => entries.push(entry));
+  it.effect("derives HTTP log levels from status codes", () =>
+    Effect.gen(function* () {
+      const entries: StructuredLogEntry[] = [];
+      const logger = makeLogCollector(entries);
 
-    await Effect.runPromise(
-      Effect.all([
+      yield* Effect.all([
         logHttpRequest({
           method: "GET",
           url: "/ok",
@@ -59,61 +63,56 @@ describe("Effect logging utilities", () => {
           statusCode: 500,
           duration: 14,
         }),
-      ]).pipe(Effect.provide(Logger.replace(Logger.defaultLogger, logger)))
-    );
+      ]).pipe(Effect.provide(Logger.layer([logger])));
 
-    expect(entries.map((entry) => entry.logLevel.label)).toEqual([
-      "INFO",
-      "WARN",
-      "ERROR",
-    ]);
-  });
+      expect(entries.map((entry) => entry.level)).toEqual([
+        "INFO",
+        "WARN",
+        "ERROR",
+      ]);
+    })
+  );
 
-  it("returns the timed operation result", async () => {
-    const entries: Logger.Logger.Options<unknown>[] = [];
-    const logger = Logger.make((entry) => entries.push(entry));
+  it.effect("returns the timed operation result", () =>
+    Effect.gen(function* () {
+      const entries: StructuredLogEntry[] = [];
+      const logger = makeLogCollector(entries);
 
-    const result = await Effect.runPromise(
-      timeOperation("test_operation", Effect.succeed("done"), {
-        service: "test-service",
-      }).pipe(Effect.provide(Logger.replace(Logger.defaultLogger, logger)))
-    );
+      const result = yield* timeOperation(
+        "test_operation",
+        Effect.succeed("done"),
+        {
+          service: "test-service",
+        }
+      ).pipe(Effect.provide(Logger.layer([logger])));
 
-    const entry = entries.find((item) =>
-      Array.isArray(item.message)
-        ? item.message.includes("test_operation completed")
-        : false
-    );
+      const entry = entries.find(
+        (item) => item.message === "test_operation completed"
+      );
 
-    expect(result).toBe("done");
-    expect(entry).toBeDefined();
+      expect(result).toBe("done");
+      expect(entry).toBeDefined();
 
-    if (!entry) {
-      return;
-    }
+      if (!entry) {
+        return;
+      }
 
-    expect(
-      Option.getOrUndefined(HashMap.get(entry.annotations, "service"))
-    ).toBe("test-service");
-    expect(Option.getOrUndefined(HashMap.get(entry.annotations, "type"))).toBe(
-      "timer"
-    );
-  });
+      expect(entry.annotations.service).toBe("test-service");
+      expect(entry.annotations.type).toBe("timer");
+    })
+  );
 
-  it("keeps context optional for simple callers", async () => {
-    const entries: Logger.Logger.Options<unknown>[] = [];
-    const logger = Logger.make((entry) => entries.push(entry));
+  it.effect("keeps context optional for simple callers", () =>
+    Effect.gen(function* () {
+      const entries: StructuredLogEntry[] = [];
+      const logger = makeLogCollector(entries);
 
-    await Effect.runPromise(
-      Effect.all([
+      yield* Effect.all([
         logError(new Error("Without context")),
         timeOperation("contextless_operation", Effect.succeed("ok")),
-      ]).pipe(Effect.provide(Logger.replace(Logger.defaultLogger, logger)))
-    );
+      ]).pipe(Effect.provide(Logger.layer([logger])));
 
-    expect(entries.map((entry) => entry.logLevel.label)).toEqual([
-      "ERROR",
-      "INFO",
-    ]);
-  });
+      expect(entries.map((entry) => entry.level)).toEqual(["ERROR", "INFO"]);
+    })
+  );
 });

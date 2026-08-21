@@ -10,6 +10,11 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { testProjectionJson } from "@repo/backend/test/content-material";
+import {
+  TEST_PAGE_KEY,
+  TEST_PAGE_PROJECTION,
+  TEST_PAGE_SOURCE,
+} from "@repo/backend/test/content-page";
 import { TEST_DIGEST } from "@repo/backend/test/content-release";
 import type { WithoutSystemFields } from "convex/server";
 import { convexTest } from "convex-test";
@@ -61,7 +66,7 @@ function materialProjection() {
 function questionProjection() {
   const setKey = "question-bank/tryout/indonesia/snbt/general/set-1";
   const questionKey = `${setKey}/question-1`;
-  return Schema.decodeUnknownSync(ContentProjectionSchema)({
+  return Schema.decodeSync(ContentProjectionSchema)({
     bodyKind: "question",
     choices: [
       { label: "Correct", value: true },
@@ -111,7 +116,7 @@ describe("contentRelease/search/write", () => {
     });
   });
 
-  it("rejects non-public and question bodies at the writer boundary", async () => {
+  it("rejects non-public and non-search projections at the writer boundary", async () => {
     const t = convexTest(schema, convexModules);
     await expect(
       t.mutation((ctx) => write(ctx, testHead({ delivery: "authenticated" })))
@@ -128,6 +133,22 @@ describe("contentRelease/search/write", () => {
             family: "question",
           },
           question
+        )
+      )
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+    await expect(
+      t.mutation((ctx) =>
+        write(
+          ctx,
+          {
+            ...testHead({ contentKey: TEST_PAGE_KEY }),
+            family: "page",
+            rendererDomain: "site",
+            sourcePath: TEST_PAGE_SOURCE,
+          },
+          TEST_PAGE_PROJECTION
         )
       )
     ).rejects.toMatchObject({

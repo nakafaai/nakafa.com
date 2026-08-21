@@ -5,10 +5,12 @@ import {
   readConvexRuntimeQuery,
 } from "@repo/backend/client/runtime";
 import { api } from "@repo/backend/convex/_generated/api";
+import { describe, expect, it } from "@repo/testing/effect";
 import type { FunctionArgs } from "convex/server";
 import { ConvexError } from "convex/values";
-import { Duration, Effect, Fiber, TestClock, TestContext } from "effect";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { Duration, Effect, Fiber } from "effect";
+import { TestClock } from "effect/testing";
+import { afterEach, vi } from "vitest";
 
 const clientState = vi.hoisted(() => {
   const constructorFailure: { error: Error | undefined } = {
@@ -63,9 +65,6 @@ const args: FunctionArgs<typeof query> = {
 const queryName = "contentRelease/reference:read";
 const runtimeUrl = "https://example.convex.cloud";
 
-const runWithTestClock = <Value, Error>(program: Effect.Effect<Value, Error>) =>
-  Effect.runPromise(program.pipe(Effect.provide(TestContext.TestContext)));
-
 /** Makes the mocked official client execute its configured fetch hook. */
 function queryThroughFetch(result: unknown = null) {
   clientState.query.mockImplementation(
@@ -98,7 +97,7 @@ afterEach(() => {
 });
 
 describe("Convex runtime query", () => {
-  it("retries Effect callers through the typed network channel", async () => {
+  it.effect("retries Effect callers through the typed network channel", () => {
     const fetchMock = vi
       .fn<typeof fetch>()
       .mockRejectedValueOnce(createFetchFailure("ECONNRESET"))
@@ -106,33 +105,32 @@ describe("Convex runtime query", () => {
       .mockResolvedValueOnce(new Response("ok"));
     vi.stubGlobal("fetch", fetchMock);
     queryThroughFetch(42);
-    const program = Effect.gen(function* () {
-      const fiber = yield* Effect.fork(
+    return Effect.gen(function* () {
+      const fiber = yield* Effect.forkChild(
         readConvexRuntimeQuery(runtimeUrl, query, args)
       );
       yield* TestClock.adjust(Duration.millis(1500));
+      const result = yield* Fiber.join(fiber);
 
-      return yield* Fiber.join(fiber);
-    });
-
-    await expect(runWithTestClock(program)).resolves.toBe(42);
-    expect(clientState.query).toHaveBeenCalledTimes(3);
-    expect(fetchMock).toHaveBeenCalledTimes(3);
-    expect(fetchMock).toHaveBeenLastCalledWith(
-      "https://runtime.example/api/query",
-      {
-        cache: "no-store",
-      }
-    );
-    expect(clientState.instances).toEqual([
-      {
-        options: {
-          fetch: expect.any(Function),
-          logger: false,
+      expect(result).toBe(42);
+      expect(clientState.query).toHaveBeenCalledTimes(3);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+      expect(fetchMock).toHaveBeenLastCalledWith(
+        "https://runtime.example/api/query",
+        {
+          cache: "no-store",
+        }
+      );
+      expect(clientState.instances).toEqual([
+        {
+          options: {
+            fetch: expect.any(Function),
+            logger: false,
+          },
+          url: runtimeUrl,
         },
-        url: runtimeUrl,
-      },
-    ]);
+      ]);
+    });
   });
 
   it("does not retry Convex function failures", async () => {
@@ -152,33 +150,29 @@ describe("Convex runtime query", () => {
     expect(clientState.query).toHaveBeenCalledOnce();
   });
 
-  it("preserves sanitized codes after retry exhaustion", async () => {
+  it.effect("preserves sanitized codes after retry exhaustion", () => {
     const fetchMock = vi
       .fn<typeof fetch>()
       .mockRejectedValue(createFetchFailure("EPIPE"));
     vi.stubGlobal("fetch", fetchMock);
     queryThroughFetch();
-    const program = Effect.gen(function* () {
-      const fiber = yield* Effect.fork(
+    return Effect.gen(function* () {
+      const fiber = yield* Effect.forkChild(
         readConvexRuntimeQuery(runtimeUrl, query, args).pipe(Effect.flip)
       );
       yield* TestClock.adjust(Duration.millis(1500));
+      const result = yield* Fiber.join(fiber);
 
-      return yield* Fiber.join(fiber);
+      expect(result).toEqual(
+        new ConvexRuntimeQueryError({
+          networkCodes: ["EPIPE"],
+          query: queryName,
+          reason: "transport",
+        })
+      );
+      expect(clientState.query).toHaveBeenCalledTimes(3);
+      expect(JSON.stringify(result)).not.toContain("private network detail");
     });
-    const result = runWithTestClock(program);
-
-    await expect(result).resolves.toEqual(
-      new ConvexRuntimeQueryError({
-        networkCodes: ["EPIPE"],
-        query: queryName,
-        reason: "transport",
-      })
-    );
-    expect(clientState.query).toHaveBeenCalledTimes(3);
-    expect(JSON.stringify(await result)).not.toContain(
-      "private network detail"
-    );
   });
 
   it("does not retry unclassified or timeout fetch failures", async () => {

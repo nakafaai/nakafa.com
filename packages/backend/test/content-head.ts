@@ -78,7 +78,7 @@ export async function insertTestHead(ctx: MutationCtx, options: HeadOptions) {
 export function maximumTestHead(index: number) {
   const suffix = index.toString().padStart(4, "0");
   const sourcePrefix = "packages/corpus/a/";
-  return Schema.decodeUnknownSync(MaterialHeadSchema)({
+  return Schema.decodeSync(MaterialHeadSchema)({
     artifactHash: `sha256:${"a".repeat(64)}`,
     compilerConfigHash: `sha256:${"b".repeat(64)}`,
     contentKey: "a".repeat(512 - suffix.length) + suffix,

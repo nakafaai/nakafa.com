@@ -2,6 +2,7 @@ import {
   getContentReferenceInput,
   resolveNakafaContentRef,
 } from "@repo/backend/client/nakafa/ref";
+import { ConvexRuntimeQueryError } from "@repo/backend/client/runtime";
 import { api } from "@repo/backend/convex/_generated/api";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
@@ -16,10 +17,22 @@ const runtimeMocks = vi.hoisted(() => ({
 vi.mock("@repo/backend/client/runtime", () => ({
   readConvexRuntimeQuery: (url: string, query: unknown, args: unknown) =>
     Effect.tryPromise({
-      catch: (cause) => cause,
+      catch: toRuntimeQueryError,
       try: () => runtimeMocks.runtimeQuery(url, query, args),
     }),
 }));
+
+function toRuntimeQueryError(cause: unknown) {
+  if (cause instanceof ConvexRuntimeQueryError) {
+    return cause;
+  }
+
+  return new ConvexRuntimeQueryError({
+    networkCodes: [],
+    query: "test-runtime-query",
+    reason: "query",
+  });
+}
 
 const convexUrl = "https://example.convex.cloud";
 const articleRoute = "articles/politics/example";

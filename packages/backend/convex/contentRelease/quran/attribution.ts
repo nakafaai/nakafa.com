@@ -1,14 +1,9 @@
-import { ACTIVE_APP_LOCALES } from "@nakafa/aksara-contracts/locale";
-import {
-  QuranAttributionRowSchema,
-  quranSourceIds,
-} from "@nakafa/aksara-contracts/quran/source";
+import { QuranAttributionRowSchema } from "@nakafa/aksara-contracts/quran/source";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadQuranOwner } from "@repo/backend/convex/contentRelease/quran/owner";
-import { readQuranRow } from "@repo/backend/convex/contentRelease/quran/row";
+import { verifyQuranRow } from "@repo/backend/convex/contentRelease/quran/verify";
 import { Effect } from "effect";
-
-const ATTRIBUTION_IDENTITY = `attribution:${quranSourceIds(ACTIVE_APP_LOCALES).join(":")}`;
 
 /** Returns the visible signed source attribution for active Quran content. */
 export const readQuranAttribution = Effect.fn(
@@ -21,12 +16,26 @@ export const readQuranAttribution = Effect.fn(
       rowJson: null,
     };
   }
-  const row = yield* readQuranRow(
-    ctx,
-    owner.snapshotId,
-    ATTRIBUTION_IDENTITY,
-    QuranAttributionRowSchema
+  const rows = yield* Effect.promise(() =>
+    ctx.db
+      .query("quranRows")
+      .withIndex(
+        "by_snapshotId_and_kind_and_surahNumber_and_firstVerse",
+        (index) =>
+          index
+            .eq("snapshotId", owner.snapshotId)
+            .eq("kind", "quran-attribution")
+      )
+      .take(2)
   );
+  const [row] = rows;
+  if (row === undefined || rows.length !== 1) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Active Quran snapshot ${owner.snapshotId} lost its unique attribution row.`
+    );
+  }
+  yield* verifyQuranRow(row, owner.snapshotId, QuranAttributionRowSchema);
   return {
     ...owner,
     rowJson: row.rowJson,

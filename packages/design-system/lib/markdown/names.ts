@@ -137,6 +137,9 @@ export const politicsComponentNames = {
   porkBarrelFundChart: "PorkBarrelFundChart",
 } as const;
 
+/** Public site pages intentionally own no rich MDX implementations. */
+export const siteComponentNames = {} as const;
+
 /** Canonical rich component names owned by SNBT general-reasoning routes. */
 export const snbtGeneralComponentNames = {
   set10Question2RecruitmentChart: "Set10Question2RecruitmentChart",

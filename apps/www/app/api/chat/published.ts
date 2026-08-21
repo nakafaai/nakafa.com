@@ -1,42 +1,36 @@
 import "server-only";
-
-import {
-  type ActiveAppLocaleCode,
-  AppLocaleSchema,
-} from "@nakafa/aksara-contracts/locale";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import type { NinaLearningSessionInput } from "@repo/ai/nina/memory/pack";
 import { readMaterialContextHint } from "@repo/contents/_types/route/material/context";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
+import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { readPublishedMaterialContext } from "@/lib/content/material/context";
 import { readPublishedMaterialRoute } from "@/lib/content/material/route";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { isActiveLocale } from "@/lib/i18n/active";
-
 /** Returns whether one localized path belongs to the material route surface. */
 export function isPublishedMaterialPath(
   locale: Locale,
   publicPath: string
-): locale is ActiveAppLocaleCode {
+): locale is PublicAppLocale {
   if (!isActiveLocale(locale)) {
     return false;
   }
-
   const [namespace] = publicPath.split("/");
   return PUBLIC_ROUTE_SURFACES.some(
     (surface) =>
       surface.key === "subject" && surface.routeSlugs[locale] === namespace
   );
 }
-
 /** Reads Nina context only from the active release-owned material model. */
 export const readPublishedNinaMaterial = Effect.fn(
   "chat.readPublishedNinaMaterial"
 )(function* (input: {
   readonly contextHint?: null | string;
-  readonly locale: ActiveAppLocaleCode;
+  readonly locale: PublicAppLocale;
   readonly publicPath: string;
   readonly url: string;
 }) {
@@ -81,7 +75,7 @@ export const readPublishedNinaMaterial = Effect.fn(
       placement: undefined,
     };
   }
-  const programKey = yield* Schema.decodeUnknown(LearningProgramKeySchema)(
+  const programKey = yield* Schema.decodeEffect(LearningProgramKeySchema)(
     resolved.context.programKey
   ).pipe(
     Effect.mapError(

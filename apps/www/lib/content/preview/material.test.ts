@@ -189,7 +189,7 @@ describe("local material preview", () => {
   });
 
   it("renders a ready lesson route absent from the static catalog", async () => {
-    const newRoute = Schema.decodeUnknownSync(MaterialLessonRouteSchema)({
+    const newRoute = Schema.decodeSync(MaterialLessonRouteSchema)({
       ...route,
       contentKey: ContentKeySchema.make(
         "material/lesson/mathematics/function-composition-inverse-function/new-concept"
@@ -206,7 +206,7 @@ describe("local material preview", () => {
       sectionKey: "new-concept",
     });
     const newProjection = makeMaterialLessonProjection(newRoute, metadata);
-    const newArtifact = Schema.decodeUnknownSync(SignedContentArtifactSchema)({
+    const newArtifact = Schema.decodeSync(SignedContentArtifactSchema)({
       ...artifact,
       payload: { ...artifact.payload, contentKey: newRoute.contentKey },
     });

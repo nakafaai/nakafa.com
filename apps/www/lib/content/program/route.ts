@@ -1,5 +1,4 @@
 import "server-only";
-
 import {
   type GitCommitShaSchema,
   ReleaseIdSchema,
@@ -20,7 +19,6 @@ import {
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 import { readRuntimeQuery } from "@/lib/content/runtime/query";
-
 /** Complete immutable data needed by one curriculum route page. */
 export interface PublishedProgramRoute {
   readonly activeReleaseId: null | typeof ReleaseIdSchema.Type;
@@ -34,7 +32,6 @@ export interface PublishedProgramRoute {
   readonly route: null | PublishedCurriculumRoute;
   readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
 }
-
 /** Decodes one array of immutable curriculum rows from the runtime query. */
 const decodeRoutes = Effect.fn("NakafaProgram.decodeRoutes")(function* (
   sources: readonly string[],
@@ -45,7 +42,6 @@ const decodeRoutes = Effect.fn("NakafaProgram.decodeRoutes")(function* (
     decodeCurriculumJson(source, locale, publicPath)
   );
 });
-
 /** Reads and validates one complete published curriculum route model. */
 export const readPublishedProgramRoute = Effect.fn(
   "NakafaProgram.readPublishedRoute"
@@ -59,7 +55,7 @@ export const readPublishedProgramRoute = Effect.fn(
     appLocale,
     publicPath,
   });
-  const activeReleaseId = yield* Schema.decodeUnknown(
+  const activeReleaseId = yield* Schema.decodeEffect(
     Schema.NullOr(ReleaseIdSchema)
   )(result.activeReleaseId).pipe(
     Effect.mapError(
@@ -131,14 +127,12 @@ export const readPublishedProgramRoute = Effect.fn(
     sourceRevision,
   } satisfies PublishedProgramRoute;
 });
-
 /** Caches one complete curriculum route under global release invalidation. */
 export async function getPublishedProgramRoute(
   locale: Locale,
   publicPath: string
 ) {
   "use cache";
-
   const result = await Effect.runPromise(
     readPublishedProgramRoute(locale, publicPath)
   );

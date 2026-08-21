@@ -115,7 +115,11 @@ describe("current content reference metadata", () => {
     mockGetTranslations.mockRejectedValueOnce(new Error("Missing Common."));
     await expect(
       Effect.runPromise(getMetadataFromSlug("en", ["quran", "1"]))
-    ).rejects.toThrow('"namespace": "Common"');
+    ).rejects.toMatchObject({
+      _tag: "TranslationLoadError",
+      locale: "en",
+      namespace: "Common",
+    });
 
     mockGetTranslations.mockImplementation(({ namespace }) => {
       if (namespace === "Common") {
@@ -125,7 +129,11 @@ describe("current content reference metadata", () => {
     });
     await expect(
       Effect.runPromise(getMetadataFromSlug("en", ["quran", "1"]))
-    ).rejects.toThrow('"namespace": "Metadata"');
+    ).rejects.toMatchObject({
+      _tag: "TranslationLoadError",
+      locale: "en",
+      namespace: "Metadata",
+    });
   });
 
   it("applies the content cache at the route-handler boundary", async () => {

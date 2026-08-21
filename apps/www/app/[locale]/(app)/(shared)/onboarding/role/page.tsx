@@ -1,5 +1,5 @@
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { redirect } from "@repo/internationalization/src/navigation";
+import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { GuestProgramDiscovery } from "@/components/programs/onboarding/guest";
@@ -31,7 +31,7 @@ export default async function Page(
 }
 
 /** Reads route data for the role step without moving form state into the route. */
-async function RoleStepRuntime({ locale }: { locale: ActiveAppLocaleCode }) {
+async function RoleStepRuntime({ locale }: { locale: PublicAppLocale }) {
   const [programs, token] = await Promise.all([
     getLearningProgramOnboardingCatalog(locale),
     getToken(),

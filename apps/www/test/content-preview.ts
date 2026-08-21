@@ -65,27 +65,25 @@ export function makeMaterialGraph(
 }
 
 /** Exact English route owned by the real Function Concept source. */
-export const previewRoute = Schema.decodeUnknownSync(MaterialLessonRouteSchema)(
-  {
-    contentKey: ContentKeySchema.make(
-      "material/lesson/mathematics/function-composition-inverse-function/function-concept"
-    ),
-    graph: makeMaterialGraph(
-      "mathematics",
-      "function-composition-inverse-function",
-      "function-concept",
-      "en"
-    ),
-    appLocale: AppLocaleSchema.make("en"),
-    artifactLocale: ArtifactLocaleSchema.make("en"),
-    materialKey: "lesson.mathematics.function-composition-inverse-function",
-    order: 5,
-    publicPath:
-      "subjects/mathematics/function-composition-inverse-function/function-concept",
-    sectionKey: "function-concept",
-    topicTitle: "Function Composition and Inverse Function",
-  }
-);
+export const previewRoute = Schema.decodeSync(MaterialLessonRouteSchema)({
+  contentKey: ContentKeySchema.make(
+    "material/lesson/mathematics/function-composition-inverse-function/function-concept"
+  ),
+  graph: makeMaterialGraph(
+    "mathematics",
+    "function-composition-inverse-function",
+    "function-concept",
+    "en"
+  ),
+  appLocale: AppLocaleSchema.make("en"),
+  artifactLocale: ArtifactLocaleSchema.make("en"),
+  materialKey: "lesson.mathematics.function-composition-inverse-function",
+  order: 5,
+  publicPath:
+    "subjects/mathematics/function-composition-inverse-function/function-concept",
+  sectionKey: "function-concept",
+  topicTitle: "Function Composition and Inverse Function",
+});
 
 /** Exact metadata authored by the real English Function Concept lesson. */
 export const previewMetadata = MaterialMetadataSchema.make({
@@ -104,9 +102,7 @@ export const previewProjection = makeMaterialLessonProjection(
 );
 
 /** Exact English route owned by the next real Function Concept sibling. */
-export const previewNextRoute = Schema.decodeUnknownSync(
-  MaterialLessonRouteSchema
-)({
+export const previewNextRoute = Schema.decodeSync(MaterialLessonRouteSchema)({
   contentKey: ContentKeySchema.make(
     "material/lesson/mathematics/function-composition-inverse-function/injective-surjective-bijective-function"
   ),
@@ -143,9 +139,7 @@ export const previewNextProjection = makeMaterialLessonProjection(
 );
 
 /** Exact Indonesian route owned by the real Function Concept source. */
-export const previewIdRoute = Schema.decodeUnknownSync(
-  MaterialLessonRouteSchema
-)({
+export const previewIdRoute = Schema.decodeSync(MaterialLessonRouteSchema)({
   contentKey: previewRoute.contentKey,
   graph: makeMaterialGraph(
     "mathematics",
@@ -185,15 +179,15 @@ export const previewSourcePath = CorpusSourcePathSchema.make(
 );
 
 /** Exact material document selected by every local preview test fixture. */
-export const previewDocument = Schema.decodeUnknownSync(
-  MaterialPreviewDocumentSchema
-)({
-  delivery: "public",
-  family: "material",
-  rendererDomain: "mathematics",
-  route: previewRoute,
-  sourcePath: previewSourcePath,
-});
+export const previewDocument = Schema.decodeSync(MaterialPreviewDocumentSchema)(
+  {
+    delivery: "public",
+    family: "material",
+    rendererDomain: "mathematics",
+    route: previewRoute,
+    sourcePath: previewSourcePath,
+  }
+);
 
 /** Complete loopback configuration with redacted test-only credentials. */
 export const previewConfig: PreviewConfig = {
@@ -251,7 +245,7 @@ export const previewRepositories = {
 
 /** Creates one ready manifest for a caller-provided renderer contract. */
 export function makeReadyManifest(rendererManifestHash: Sha256Hash) {
-  const manifest = Schema.decodeUnknownSync(PreviewReadySchema)(
+  const manifest = Schema.decodeSync(PreviewReadySchema)(
     {
       artifacts: [
         {
@@ -274,7 +268,7 @@ export function makeReadyManifest(rendererManifestHash: Sha256Hash) {
 
 /** Creates the exact pending state without ready-only artifact fields. */
 export function makePendingManifest() {
-  const manifest = Schema.decodeUnknownSync(PreviewPendingSchema)(
+  const manifest = Schema.decodeSync(PreviewPendingSchema)(
     {
       document: makeReadyManifest(previewManifestHash).document,
       format: LOCAL_PREVIEW_FORMAT,
@@ -289,7 +283,7 @@ export function makePendingManifest() {
 
 /** Creates one sanitized compiler failure without an older artifact. */
 export function makeFailedManifest() {
-  const manifest = Schema.decodeUnknownSync(PreviewFailedSchema)(
+  const manifest = Schema.decodeSync(PreviewFailedSchema)(
     {
       document: makeReadyManifest(previewManifestHash).document,
       failure: { code: "MDX_PARSE", message: "Compilation failed." },

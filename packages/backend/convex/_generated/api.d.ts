@@ -9,7 +9,10 @@
  */
 
 import type * as analytics_capture from "../analytics/capture.js";
-import type * as analytics_deletion from "../analytics/deletion.js";
+import type * as analytics_erasure_action from "../analytics/erasure/action.js";
+import type * as analytics_erasure_policy from "../analytics/erasure/policy.js";
+import type * as analytics_erasure_request from "../analytics/erasure/request.js";
+import type * as analytics_erasure_workflow from "../analytics/erasure/workflow.js";
 import type * as analytics_events from "../analytics/events.js";
 import type * as assessments_helpers_access from "../assessments/helpers/access.js";
 import type * as assessments_helpers_attempts from "../assessments/helpers/attempts.js";
@@ -39,6 +42,7 @@ import type * as assessments_validators from "../assessments/validators.js";
 import type * as auth_actions from "../auth/actions.js";
 import type * as auth_cleanup from "../auth/cleanup.js";
 import type * as auth_cleanup_assessments from "../auth/cleanup/assessments.js";
+import type * as auth_cleanup_consents from "../auth/cleanup/consents.js";
 import type * as auth_cleanup_impl from "../auth/cleanup/impl.js";
 import type * as auth_cleanup_learning from "../auth/cleanup/learning.js";
 import type * as auth_cleanup_notifications from "../auth/cleanup/notifications.js";
@@ -123,6 +127,9 @@ import type * as classes_utils from "../classes/utils.js";
 import type * as classes_validators from "../classes/validators.js";
 import type * as comments_mutations from "../comments/mutations.js";
 import type * as comments_queries from "../comments/queries.js";
+import type * as consents_impl from "../consents/impl.js";
+import type * as consents_mutations from "../consents/mutations.js";
+import type * as consents_queries from "../consents/queries.js";
 import type * as contentRelease_abort from "../contentRelease/abort.js";
 import type * as contentRelease_abort_budget from "../contentRelease/abort/budget.js";
 import type * as contentRelease_abort_rows from "../contentRelease/abort/rows.js";
@@ -255,6 +262,7 @@ import type * as contentRelease_quran_view from "../contentRelease/quran/view.js
 import type * as contentRelease_receipt from "../contentRelease/receipt.js";
 import type * as contentRelease_recovery from "../contentRelease/recovery.js";
 import type * as contentRelease_reference from "../contentRelease/reference.js";
+import type * as contentRelease_reference_input from "../contentRelease/reference/input.js";
 import type * as contentRelease_reference_read from "../contentRelease/reference/read.js";
 import type * as contentRelease_reference_spec from "../contentRelease/reference/spec.js";
 import type * as contentRelease_renderer from "../contentRelease/renderer.js";
@@ -280,6 +288,7 @@ import type * as contentRelease_scope_family from "../contentRelease/scope/famil
 import type * as contentRelease_scope_route from "../contentRelease/scope/route.js";
 import type * as contentRelease_search_input from "../contentRelease/search/input.js";
 import type * as contentRelease_search_owner from "../contentRelease/search/owner.js";
+import type * as contentRelease_search_spec from "../contentRelease/search/spec.js";
 import type * as contentRelease_search_sync from "../contentRelease/search/sync.js";
 import type * as contentRelease_search_verify from "../contentRelease/search/verify.js";
 import type * as contentRelease_search_write from "../contentRelease/search/write.js";
@@ -365,7 +374,6 @@ import type * as customers_checkout_spec from "../customers/checkout/spec.js";
 import type * as customers_deletion_billing from "../customers/deletion/billing.js";
 import type * as customers_deletion_billingState from "../customers/deletion/billingState.js";
 import type * as customers_deletion_cleanup from "../customers/deletion/cleanup.js";
-import type * as customers_deletion_recovery from "../customers/deletion/recovery.js";
 import type * as customers_deletion_workflow from "../customers/deletion/workflow.js";
 import type * as customers_integrity_internal from "../customers/integrity/internal.js";
 import type * as customers_mutations_internal from "../customers/mutations/internal.js";
@@ -409,6 +417,8 @@ import type * as lib_validators_vv from "../lib/validators/vv.js";
 import type * as notifications_mutations from "../notifications/mutations.js";
 import type * as notifications_queries from "../notifications/queries.js";
 import type * as polyfills from "../polyfills.js";
+import type * as privacy_recovery from "../privacy/recovery.js";
+import type * as privacy_spec from "../privacy/spec.js";
 import type * as routes_constants from "../routes/constants.js";
 import type * as routes_middleware_requestId from "../routes/middleware/requestId.js";
 import type * as routes_polar from "../routes/polar.js";
@@ -551,7 +561,10 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   "analytics/capture": typeof analytics_capture;
-  "analytics/deletion": typeof analytics_deletion;
+  "analytics/erasure/action": typeof analytics_erasure_action;
+  "analytics/erasure/policy": typeof analytics_erasure_policy;
+  "analytics/erasure/request": typeof analytics_erasure_request;
+  "analytics/erasure/workflow": typeof analytics_erasure_workflow;
   "analytics/events": typeof analytics_events;
   "assessments/helpers/access": typeof assessments_helpers_access;
   "assessments/helpers/attempts": typeof assessments_helpers_attempts;
@@ -581,6 +594,7 @@ declare const fullApi: ApiFromModules<{
   "auth/actions": typeof auth_actions;
   "auth/cleanup": typeof auth_cleanup;
   "auth/cleanup/assessments": typeof auth_cleanup_assessments;
+  "auth/cleanup/consents": typeof auth_cleanup_consents;
   "auth/cleanup/impl": typeof auth_cleanup_impl;
   "auth/cleanup/learning": typeof auth_cleanup_learning;
   "auth/cleanup/notifications": typeof auth_cleanup_notifications;
@@ -665,6 +679,9 @@ declare const fullApi: ApiFromModules<{
   "classes/validators": typeof classes_validators;
   "comments/mutations": typeof comments_mutations;
   "comments/queries": typeof comments_queries;
+  "consents/impl": typeof consents_impl;
+  "consents/mutations": typeof consents_mutations;
+  "consents/queries": typeof consents_queries;
   "contentRelease/abort": typeof contentRelease_abort;
   "contentRelease/abort/budget": typeof contentRelease_abort_budget;
   "contentRelease/abort/rows": typeof contentRelease_abort_rows;
@@ -797,6 +814,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/receipt": typeof contentRelease_receipt;
   "contentRelease/recovery": typeof contentRelease_recovery;
   "contentRelease/reference": typeof contentRelease_reference;
+  "contentRelease/reference/input": typeof contentRelease_reference_input;
   "contentRelease/reference/read": typeof contentRelease_reference_read;
   "contentRelease/reference/spec": typeof contentRelease_reference_spec;
   "contentRelease/renderer": typeof contentRelease_renderer;
@@ -822,6 +840,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/scope/route": typeof contentRelease_scope_route;
   "contentRelease/search/input": typeof contentRelease_search_input;
   "contentRelease/search/owner": typeof contentRelease_search_owner;
+  "contentRelease/search/spec": typeof contentRelease_search_spec;
   "contentRelease/search/sync": typeof contentRelease_search_sync;
   "contentRelease/search/verify": typeof contentRelease_search_verify;
   "contentRelease/search/write": typeof contentRelease_search_write;
@@ -907,7 +926,6 @@ declare const fullApi: ApiFromModules<{
   "customers/deletion/billing": typeof customers_deletion_billing;
   "customers/deletion/billingState": typeof customers_deletion_billingState;
   "customers/deletion/cleanup": typeof customers_deletion_cleanup;
-  "customers/deletion/recovery": typeof customers_deletion_recovery;
   "customers/deletion/workflow": typeof customers_deletion_workflow;
   "customers/integrity/internal": typeof customers_integrity_internal;
   "customers/mutations/internal": typeof customers_mutations_internal;
@@ -951,6 +969,8 @@ declare const fullApi: ApiFromModules<{
   "notifications/mutations": typeof notifications_mutations;
   "notifications/queries": typeof notifications_queries;
   polyfills: typeof polyfills;
+  "privacy/recovery": typeof privacy_recovery;
+  "privacy/spec": typeof privacy_spec;
   "routes/constants": typeof routes_constants;
   "routes/middleware/requestId": typeof routes_middleware_requestId;
   "routes/polar": typeof routes_polar;

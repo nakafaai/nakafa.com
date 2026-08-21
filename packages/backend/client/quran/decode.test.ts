@@ -25,19 +25,16 @@ const source = {
   sourceRevision: GitCommitShaSchema.make("c".repeat(40)),
 };
 const otherSnapshotId = Sha256HashSchema.make(`sha256:${"d".repeat(64)}`);
-
 describe("signed Quran decoder", () => {
   it("decodes the complete ordered signed catalog", async () => {
     const catalog = await Effect.runPromise(
       decodePublishedQuranCatalog(catalogResult())
     );
-
     expect(catalog.surahs).toHaveLength(114);
     expect(catalog.surahs.at(0)?.number).toBe(1);
     expect(catalog.surahs.at(-1)?.number).toBe(114);
     expect(catalog.activeReleaseId).toBe("quran-release");
   });
-
   it("selects the exact bounded signed reference verses", async () => {
     const chunk = makeQuranChunk({
       firstQuranNumber: 1,
@@ -64,15 +61,13 @@ describe("signed Quran decoder", () => {
         { appLocale: "en", surahNumber: 1 }
       )
     );
-
     expect(reference.verses.map((verse) => verse.number.inSurah)).toEqual([
       2, 3,
     ]);
   });
-
   it("fails closed for inactive, malformed, or inconsistent publication data", async () => {
     const inactive = await Effect.runPromise(
-      Effect.either(
+      Effect.result(
         decodePublishedQuranCatalog({
           activeManifestHash: null,
           activeReleaseId: null,
@@ -84,7 +79,7 @@ describe("signed Quran decoder", () => {
       )
     );
     const malformed = await Effect.runPromise(
-      Effect.either(
+      Effect.result(
         decodePublishedQuranCatalog({
           ...source,
           rowJson: ["not-json"],
@@ -92,7 +87,7 @@ describe("signed Quran decoder", () => {
       )
     );
     const wrongSnapshot = await Effect.runPromise(
-      Effect.either(
+      Effect.result(
         decodePublishedQuranCatalog({
           ...source,
           rowJson: Array.from({ length: 114 }, (_, index) =>
@@ -101,16 +96,14 @@ describe("signed Quran decoder", () => {
         })
       )
     );
-
     for (const result of [inactive, malformed, wrongSnapshot]) {
-      expect(result._tag).toBe("Left");
-      if (result._tag === "Left") {
-        expect(result.left).toBeInstanceOf(QuranPublicationError);
+      expect(result._tag).toBe("Failure");
+      if (result._tag === "Failure") {
+        expect(result.failure).toBeInstanceOf(QuranPublicationError);
       }
     }
   });
 });
-
 /** Builds all 114 schema-valid signed metadata rows. */
 function catalogResult() {
   return {

@@ -119,9 +119,7 @@ export function parseApiPageParams(searchParams: URLSearchParams) {
 
 /** Parses a graph-backed content ID accepted by partner graph lookup routes. */
 export function parseApiContentId(contentId: string) {
-  const parsed = Schema.decodeUnknownOption(NakafaAgentContentIdSchema)(
-    contentId
-  );
+  const parsed = Schema.decodeOption(NakafaAgentContentIdSchema)(contentId);
 
   return Option.getOrNull(parsed);
 }

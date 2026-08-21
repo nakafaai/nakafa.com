@@ -12,101 +12,85 @@ import type {
   FunctionReturnType,
   PaginationOptions,
 } from "convex/server";
-import { Effect, Schema } from "effect";
+import { ConfigProvider, Effect, Schema, Struct } from "effect";
 
 const CUSTOMER_PAGE_SIZE = 100;
-
 const writeLine = (message: string) => {
   process.stdout.write(`${message}\n`);
 };
-
 const writeError = (message: string) => {
   process.stderr.write(`ERROR: ${message}\n`);
 };
-
 const ConvexIdSchema = <const TableName extends TableNames>(
   tableName: TableName
 ) =>
-  Schema.String.pipe(
-    Schema.filter((value): value is Id<TableName> => value.length > 0, {
-      message: () => `Expected ${tableName} document ID`,
-    })
+  Schema.declare<Id<TableName>>(
+    (value): value is Id<TableName> =>
+      typeof value === "string" && value.length > 0,
+    { description: `Expected ${tableName} document ID` }
   );
-
-const mutableArraySchema = <A, I>(schema: Schema.Schema<A, I, never>) =>
+const mutableArraySchema = <A, I>(schema: Schema.Codec<A, I, never, never>) =>
   Schema.mutable(Schema.Array(schema));
-
 interface PageResult {
   continueCursor: string;
   isDone: boolean;
   page: unknown[];
 }
-
 type CustomerIntegrityQuery = FunctionReference<
   "query",
   "internal" | "public",
-  { paginationOpts: PaginationOptions },
+  {
+    paginationOpts: PaginationOptions;
+  },
   PageResult
 >;
-
 type PageRow<TFunction extends CustomerIntegrityQuery> =
   FunctionReturnType<TFunction>["page"][number];
-
-const customerIntegrityUserPageSchema = Schema.mutable(
-  Schema.Struct({
-    continueCursor: Schema.String,
-    isDone: Schema.Boolean,
-    page: mutableArraySchema(
-      Schema.Struct({
-        authId: Schema.String,
-        email: Schema.String,
-        userId: ConvexIdSchema("users"),
-      })
-    ),
-  })
-);
-
-const customerIntegrityCustomerPageSchema = Schema.mutable(
-  Schema.Struct({
-    continueCursor: Schema.String,
-    isDone: Schema.Boolean,
-    page: mutableArraySchema(
-      Schema.Struct({
-        externalId: Schema.NullOr(Schema.String),
-        localCustomerId: ConvexIdSchema("customers"),
-        polarCustomerId: Schema.String,
-        userId: ConvexIdSchema("users"),
-      })
-    ),
-  })
-);
-
-const customerIntegritySubscriptionPageSchema = Schema.mutable(
-  Schema.Struct({
-    continueCursor: Schema.String,
-    isDone: Schema.Boolean,
-    page: mutableArraySchema(
-      Schema.Struct({
-        currentPeriodEnd: Schema.NullOr(Schema.String),
-        customerId: Schema.String,
-        status: Schema.String,
-        subscriptionId: Schema.String,
-      })
-    ),
-  })
-);
-
+const customerIntegrityUserPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  page: mutableArraySchema(
+    Schema.Struct({
+      authId: Schema.String,
+      email: Schema.String,
+      userId: ConvexIdSchema("users"),
+    })
+  ),
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
+const customerIntegrityCustomerPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  page: mutableArraySchema(
+    Schema.Struct({
+      externalId: Schema.NullOr(Schema.String),
+      localCustomerId: ConvexIdSchema("customers"),
+      polarCustomerId: Schema.String,
+      userId: ConvexIdSchema("users"),
+    })
+  ),
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
+const customerIntegritySubscriptionPageSchema = Schema.Struct({
+  continueCursor: Schema.String,
+  isDone: Schema.Boolean,
+  page: mutableArraySchema(
+    Schema.Struct({
+      currentPeriodEnd: Schema.NullOr(Schema.String),
+      customerId: Schema.String,
+      status: Schema.String,
+      subscriptionId: Schema.String,
+    })
+  ),
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 /** Reads every page from one bounded internal customer-integrity query. */
 const collectIntegrityPages = Effect.fn("customers.collectIntegrityPages")(
   function* <TFunction extends CustomerIntegrityQuery, Encoded>(
     prod: boolean,
     query: TFunction,
-    schema: Schema.Schema<FunctionReturnType<TFunction>, Encoded, never>
+    schema: Schema.Codec<FunctionReturnType<TFunction>, Encoded, never, never>
   ) {
     const config = yield* getCustomerConvexConfig(prod);
     const rows: PageRow<TFunction>[] = [];
     let continueCursor: string | null = null;
-
     while (true) {
       const args: FunctionArgs<TFunction> = {
         paginationOpts: {
@@ -120,18 +104,14 @@ const collectIntegrityPages = Effect.fn("customers.collectIntegrityPages")(
         args,
         schema
       );
-
       rows.push(...result.page);
-
       if (result.isDone) {
         return rows;
       }
-
       continueCursor = result.continueCursor;
     }
   }
 );
-
 /** Builds the current customer cohesion report from live Convex data. */
 const getCustomerIntegrityReport = Effect.fn(
   "customers.getCustomerIntegrityReport"
@@ -168,17 +148,14 @@ const getCustomerIntegrityReport = Effect.fn(
   );
   const customersWithExternalIdMismatch = customers.filter((customer) => {
     const user = usersById.get(customer.userId);
-
     if (!user) {
       return false;
     }
-
     return customer.externalId !== user.authId;
   });
   const subscriptionsWithoutLocalCustomer = subscriptions.filter(
     (subscription) => !customerByPolarId.has(subscription.customerId)
   );
-
   return {
     customerCount: customers.length,
     customersWithExternalIdMismatch,
@@ -188,13 +165,11 @@ const getCustomerIntegrityReport = Effect.fn(
     usersWithoutCustomer,
   };
 });
-
 /** Prints the current customer cohesion report for one deployment. */
 const main = Effect.fn("customers.verify")(function* () {
   const args = yield* Effect.sync(() => process.argv.slice(2));
   const prod = args.includes("--prod");
   const report = yield* getCustomerIntegrityReport(prod);
-
   writeLine(
     JSON.stringify(
       {
@@ -217,24 +192,23 @@ const main = Effect.fn("customers.verify")(function* () {
       2
     )
   );
-
   const hasIntegrityIssues =
     report.usersWithoutCustomer.length > 0 ||
     report.orphanCustomers.length > 0 ||
     report.customersWithExternalIdMismatch.length > 0 ||
     report.subscriptionsWithoutLocalCustomer.length > 0;
-
   yield* Effect.sync(() => {
     process.exitCode = hasIntegrityIssues ? 1 : 0;
   });
 });
-
 Effect.runPromise(
   Effect.gen(function* () {
     const provider = yield* loadCustomerEnvProvider();
-    yield* main().pipe(Effect.withConfigProvider(provider));
+    yield* main().pipe(
+      Effect.provideService(ConfigProvider.ConfigProvider, provider)
+    );
   }).pipe(
-    Effect.catchAllCause((cause) =>
+    Effect.catchCause((cause) =>
       Effect.sync(() => {
         writeError(formatScriptCause(cause));
         process.exitCode = 1;

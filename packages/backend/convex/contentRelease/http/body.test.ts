@@ -1,14 +1,12 @@
 // @vitest-environment node
-
 import { readJsonBody } from "@repo/backend/convex/contentRelease/http/body";
-import { Effect, Either } from "effect";
+import { Effect, Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 /** Reads one request at the Vitest boundary while preserving typed failures. */
 function read(request: Request, maxBytes = 8) {
-  return Effect.runPromise(readJsonBody(request, maxBytes).pipe(Effect.either));
+  return Effect.runPromise(readJsonBody(request, maxBytes).pipe(Effect.result));
 }
-
 /** Creates one Node request with a streaming body. */
 function streamRequest(
   body: ReadableStream<Uint8Array>,
@@ -19,10 +17,11 @@ function streamRequest(
     duplex: "half",
     headers: { "content-type": "application/json", ...headers },
     method: "POST",
-  } satisfies RequestInit & { readonly duplex: "half" };
+  } satisfies RequestInit & {
+    readonly duplex: "half";
+  };
   return new Request("https://example.test/internal", request);
 }
-
 describe("content release HTTP body", () => {
   it("accepts JSON media types and one exact UTF-8 body", async () => {
     const source = '"é"';
@@ -34,12 +33,10 @@ describe("content release HTTP body", () => {
       },
       method: "POST",
     });
-
     await expect(read(request)).resolves.toEqual(
-      Either.right({ byteLength: 4, source })
+      Result.succeed({ byteLength: 4, source })
     );
   });
-
   it("accepts an explicitly empty request body", async () => {
     const request = new Request("https://example.test/internal", {
       headers: {
@@ -48,12 +45,10 @@ describe("content release HTTP body", () => {
       },
       method: "POST",
     });
-
     await expect(read(request)).resolves.toEqual(
-      Either.right({ byteLength: 0, source: "" })
+      Result.succeed({ byteLength: 0, source: "" })
     );
   });
-
   it.each([
     ["not-decimal", "invalid"],
     ["999999999999999999999", "invalid"],
@@ -68,14 +63,12 @@ describe("content release HTTP body", () => {
         },
         method: "POST",
       });
-
       await expect(read(request)).resolves.toMatchObject({
-        _tag: "Left",
-        left: { reason },
+        _tag: "Failure",
+        failure: { reason },
       });
     }
   );
-
   it("rejects unsupported content before consuming its stream", async () => {
     let pulls = 0;
     const request = streamRequest(
@@ -90,14 +83,12 @@ describe("content release HTTP body", () => {
       ),
       { "content-type": "text/plain" }
     );
-
     await expect(read(request)).resolves.toMatchObject({
-      _tag: "Left",
-      left: { reason: "unsupported" },
+      _tag: "Failure",
+      failure: { reason: "unsupported" },
     });
     expect(pulls).toBe(0);
   });
-
   it.each([
     "application/json-seq",
     "application/json; charset=iso-8859-1",
@@ -109,13 +100,11 @@ describe("content release HTTP body", () => {
       headers: { "content-type": contentType },
       method: "POST",
     });
-
     await expect(read(request)).resolves.toMatchObject({
-      _tag: "Left",
-      left: { reason: "unsupported" },
+      _tag: "Failure",
+      failure: { reason: "unsupported" },
     });
   });
-
   it("rejects absent, mismatched, and oversized bodies", async () => {
     const absent = new Request("https://example.test/internal", {
       headers: {
@@ -145,20 +134,18 @@ describe("content release HTTP body", () => {
         },
       })
     );
-
     for (const [request, reason] of [
       [absent, "invalid"],
       [mismatched, "invalid"],
       [oversized, "size"],
     ] as const) {
       await expect(read(request)).resolves.toMatchObject({
-        _tag: "Left",
-        left: { reason },
+        _tag: "Failure",
+        failure: { reason },
       });
     }
     expect(cancelled).toBe(true);
   });
-
   it("rejects stream failures and malformed UTF-8", async () => {
     const failed = streamRequest(
       new ReadableStream({
@@ -177,11 +164,10 @@ describe("content release HTTP body", () => {
         },
       })
     );
-
     for (const request of [failed, malformed]) {
       await expect(read(request)).resolves.toMatchObject({
-        _tag: "Left",
-        left: { reason: "invalid" },
+        _tag: "Failure",
+        failure: { reason: "invalid" },
       });
     }
   });

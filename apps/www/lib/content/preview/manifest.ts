@@ -1,10 +1,9 @@
 import "server-only";
-
 import {
   type LocalPreviewManifest,
   LocalPreviewManifestSchema,
 } from "@nakafa/aksara-contracts/preview/spec";
-import { Effect, Either, Option, Schema } from "effect";
+import { Effect, Option, Result, Schema } from "effect";
 import {
   decodePreviewEnvironment,
   type PreviewConfig,
@@ -23,17 +22,15 @@ interface PreviewSnapshot {
   readonly config: PreviewConfig;
   readonly manifest: LocalPreviewManifest;
 }
-
 /** Strictly decodes one current loopback manifest without a runtime. */
 function decodeManifest(input: unknown) {
-  return Either.mapLeft(
-    Schema.decodeUnknownEither(LocalPreviewManifestSchema)(input, {
+  return Result.mapError(
+    Schema.decodeUnknownResult(LocalPreviewManifestSchema)(input, {
       onExcessProperty: "error",
     }),
     () => new PreviewIntegrityError({ check: "manifest" })
   );
 }
-
 /** Reads the authenticated local manifest when this development child has one. */
 export const readPreviewSnapshot = Effect.fn(
   "NakafaContent.readPreviewSnapshot"
@@ -42,7 +39,6 @@ export const readPreviewSnapshot = Effect.fn(
   if (Option.isNone(configOption)) {
     return Option.none<PreviewSnapshot>();
   }
-
   const config = configOption.value;
   const manifest = yield* fetchPreviewJson(
     config,
@@ -50,13 +46,11 @@ export const readPreviewSnapshot = Effect.fn(
     MAX_PREVIEW_MANIFEST_BYTES
   );
   const decoded = decodeManifest(manifest);
-  if (Either.isLeft(decoded)) {
-    return yield* decoded.left;
+  if (Result.isFailure(decoded)) {
+    return yield* decoded.failure;
   }
-
-  return Option.some({ config, manifest: decoded.right });
+  return Option.some({ config, manifest: decoded.success });
 });
-
 /**
  * Reads one manifest through Next's request-less static-generation Promise.
  *
@@ -65,19 +59,18 @@ export const readPreviewSnapshot = Effect.fn(
  */
 export function readPreviewManifestForPrerender() {
   const config = decodePreviewEnvironment(readPreviewEnvironment());
-  if (Either.isLeft(config)) {
-    return Promise.reject(config.left);
+  if (Result.isFailure(config)) {
+    return Promise.reject(config.failure);
   }
-
   return fetchPreviewJsonForPrerender(
-    config.right,
-    config.right.manifestPath,
+    config.success,
+    config.success.manifestPath,
     MAX_PREVIEW_MANIFEST_BYTES
   ).then((input) => {
     const manifest = decodeManifest(input);
-    if (Either.isLeft(manifest)) {
-      return Promise.reject(manifest.left);
+    if (Result.isFailure(manifest)) {
+      return Promise.reject(manifest.failure);
     }
-    return manifest.right;
+    return manifest.success;
   });
 }

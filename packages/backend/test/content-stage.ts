@@ -1,5 +1,6 @@
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import type { ReleaseId } from "@nakafa/aksara-contracts/ids";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import type {
   ContentSnapshotSet,
@@ -16,6 +17,7 @@ import {
 } from "@repo/backend/test/content-release";
 
 interface StagedReleaseOptions {
+  readonly activeAppLocales?: readonly ActiveAppLocaleCode[];
   readonly baseFamilies?: readonly ContentFamily[];
   readonly checkedIndex?: number;
   readonly checkedItems?: number;
@@ -105,6 +107,7 @@ export async function insertTestRelease(
     createdAt: now,
     releaseId,
     releaseJson: testReleaseJson({
+      activeAppLocales: options?.activeAppLocales,
       baseManifestHash: options?.originReleaseId ? TEST_DIGEST : null,
       baseReleaseId: options?.originReleaseId ?? null,
       deleteCount: options?.deleteCount ?? itemCount - upsertCount,

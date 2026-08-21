@@ -47,7 +47,7 @@ export async function GET(
       prefix,
     }).pipe(
       Effect.map((data): Response => NextResponse.json(data)),
-      Effect.catchAll((error) =>
+      Effect.catch((error) =>
         Effect.gen(function* () {
           yield* logError(error, {
             service: "api-contents",

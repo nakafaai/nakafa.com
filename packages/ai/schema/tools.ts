@@ -1,11 +1,18 @@
 import { createEffectSchema } from "@repo/ai/lib/effect-schema";
 import { createPrompt } from "@repo/ai/prompt/utils";
 import { type InferUITools, tool } from "ai";
-import { Schema } from "effect";
+import { Schema, Struct } from "effect";
+
+/** Builds a non-empty string with direct model-facing metadata. */
+function describedNonEmptyString(description: string) {
+  return Schema.String.annotate({ description }).pipe(
+    Schema.check(Schema.isMinLength(1))
+  );
+}
 
 const SpecialistToolInputFields = {
-  request: Schema.NonEmptyString.annotations({
-    description: createPrompt({
+  request: describedNonEmptyString(
+    createPrompt({
       taskContext: `
         Task-relevant user request details only.
 
@@ -19,10 +26,10 @@ const SpecialistToolInputFields = {
         Do not translate this field into English.
         Omit unrelated, repeated, emotional, or orchestration noise.
       `,
-    }),
-  }),
-  objective: Schema.NonEmptyString.annotations({
-    description: createPrompt({
+    })
+  ),
+  objective: describedNonEmptyString(
+    createPrompt({
       taskContext: `
         Specialist job only.
 
@@ -30,11 +37,11 @@ const SpecialistToolInputFields = {
         Do not include final-answer wording.
         Do not include instructions for weak, missing, or failed outcomes.
       `,
-    }),
-  }),
-  requirements: Schema.optional(
+    })
+  ),
+  requirements: Schema.optionalKey(
     Schema.Array(Schema.NonEmptyString).pipe(Schema.mutable)
-  ).annotations({
+  ).annotate({
     description: createPrompt({
       taskContext: `
         Real constraints only.
@@ -47,7 +54,6 @@ const SpecialistToolInputFields = {
     }),
   }),
 };
-
 /**
  * Input schema for the Nakafa LearningCapability tool.
  */
@@ -55,7 +61,7 @@ export const NakafaToolInputSchema = Schema.Struct({
   ...SpecialistToolInputFields,
   deliverables: Schema.Array(Schema.NonEmptyString)
     .pipe(Schema.mutable)
-    .annotations({
+    .annotate({
       description: createPrompt({
         taskContext: `
           Requested Nakafa deliverables only.
@@ -71,15 +77,14 @@ export const NakafaToolInputSchema = Schema.Struct({
       }),
     }),
 })
-  .pipe(Schema.mutable)
-  .annotations({
+  .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+  .annotate({
     description: createPrompt({
       taskContext: `
         Nakafa content retrieval request.
       `,
     }),
   });
-
 /**
  * Input schema for the deep research LearningCapability tool.
  */
@@ -87,7 +92,7 @@ export const ResearchToolInputSchema = Schema.Struct({
   ...SpecialistToolInputFields,
   sourceRequirements: Schema.Array(Schema.NonEmptyString)
     .pipe(Schema.mutable)
-    .annotations({
+    .annotate({
       description: createPrompt({
         taskContext: `
         Source requirements only.
@@ -98,15 +103,14 @@ export const ResearchToolInputSchema = Schema.Struct({
       }),
     }),
 })
-  .pipe(Schema.mutable)
-  .annotations({
+  .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+  .annotate({
     description: createPrompt({
       taskContext: `
         External research request.
       `,
     }),
   });
-
 /**
  * Input schema for the deterministic math LearningCapability tool.
  */
@@ -114,7 +118,7 @@ export const MathToolInputSchema = Schema.Struct({
   ...SpecialistToolInputFields,
   given: Schema.Array(Schema.NonEmptyString)
     .pipe(Schema.mutable)
-    .annotations({
+    .annotate({
       description: createPrompt({
         taskContext: `
           Math givens only.
@@ -127,23 +131,20 @@ export const MathToolInputSchema = Schema.Struct({
       }),
     }),
 })
-  .pipe(Schema.mutable)
-  .annotations({
+  .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+  .annotate({
     description: createPrompt({
       taskContext: `
         Deterministic math verification request.
       `,
     }),
   });
-
 export type NakafaToolInput = Schema.Schema.Type<typeof NakafaToolInputSchema>;
 export type ResearchToolInput = Schema.Schema.Type<
   typeof ResearchToolInputSchema
 >;
 export type MathToolInput = Schema.Schema.Type<typeof MathToolInputSchema>;
-
 type SpecialistToolInput = MathToolInput | NakafaToolInput | ResearchToolInput;
-
 /**
  * Builds the internal Markdown task after the public tool input has separated
  * routing concerns from answer wording.
@@ -163,12 +164,10 @@ export function formatSpecialistToolTask(input: SpecialistToolInput) {
     ),
     formatListSection("Given", "given" in input ? input.given : []),
   ].filter(Boolean);
-
   return createPrompt({
     taskContext: sections.join("\n\n"),
   });
 }
-
 /** Formats a single prose section for the internal specialist task. */
 function formatTextSection(heading: string, text: string) {
   return createPrompt({
@@ -179,13 +178,11 @@ function formatTextSection(heading: string, text: string) {
     `,
   });
 }
-
 /** Formats a list section, omitting it when no items are present. */
 function formatListSection(heading: string, items: readonly string[]) {
   if (items.length === 0) {
     return "";
   }
-
   return createPrompt({
     taskContext: `
       # ${heading}
@@ -194,14 +191,12 @@ function formatListSection(heading: string, items: readonly string[]) {
     `,
   });
 }
-
 export const nakafaToolInputSchema = createEffectSchema(NakafaToolInputSchema);
 export const researchToolInputSchema = createEffectSchema(
   ResearchToolInputSchema
 );
 export const mathToolInputSchema = createEffectSchema(MathToolInputSchema);
 export const textOutputSchema = createEffectSchema(Schema.String);
-
 const uiTools = {
   nakafa: tool({
     inputSchema: nakafaToolInputSchema,
@@ -216,5 +211,4 @@ const uiTools = {
     outputSchema: textOutputSchema,
   }),
 };
-
 export type MyUITools = InferUITools<typeof uiTools>;

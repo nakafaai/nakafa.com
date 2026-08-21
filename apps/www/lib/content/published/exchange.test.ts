@@ -192,7 +192,7 @@ describe("published content exchange", () => {
 
     await expect(
       Effect.runPromise(readPublishedContent(input).pipe(Effect.flip))
-    ).resolves.toEqual({
+    ).resolves.toMatchObject({
       _tag: "ContentRuntimeConfigurationError",
       key: "CONTENT_RUNTIME_TOKEN",
     });

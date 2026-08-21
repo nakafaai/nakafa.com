@@ -177,7 +177,7 @@ function AssessmentActions({
           });
           toast.success(schoolT("assessment-deleted"));
         }).pipe(
-          Effect.catchAll(() =>
+          Effect.catch(() =>
             Effect.sync(() => {
               toast.error(schoolT("delete-assessment-failed"));
             })

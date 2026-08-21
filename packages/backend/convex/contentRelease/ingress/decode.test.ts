@@ -15,7 +15,7 @@ import {
 } from "@repo/backend/convex/contentRelease/ingress/decode";
 import { testProjectionJson } from "@repo/backend/test/content-material";
 import { testUpsertJson } from "@repo/backend/test/content-release";
-import { Effect, Either, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 /** Decodes one exact source at the Vitest boundary. */
@@ -24,17 +24,15 @@ function decode(
   bytes = new TextEncoder().encode(source).byteLength
 ) {
   return Effect.runPromise(
-    decodePublicationBody(source, bytes).pipe(Effect.either)
+    decodePublicationBody(source, bytes).pipe(Effect.result)
   );
 }
-
 describe("content publication request decoding", () => {
   it("strictly decodes one exact JSON request", async () => {
     await expect(decode('{"operation":"current"}')).resolves.toEqual(
-      Either.right({ operation: "current" })
+      Result.succeed({ operation: "current" })
     );
   });
-
   it.each([
     ["", 0],
     ["{", 1],
@@ -44,42 +42,36 @@ describe("content publication request decoding", () => {
     "rejects malformed, excess, or contradictory bytes",
     async (source, bytes) => {
       const result = await decode(source, bytes);
-
       expect(result).toMatchObject({
-        _tag: "Left",
-        left: { code: "CONTENT_RELEASE_INVALID_REQUEST" },
+        _tag: "Failure",
+        failure: { code: "CONTENT_RELEASE_INVALID_REQUEST" },
       });
     }
   );
-
   it("rejects complete and operation-specific size violations", async () => {
     const tooLarge = "x".repeat(MAX_PUBLICATION_REQUEST_BYTES + 1);
     const complete = await decode(tooLarge);
-    const batchRequest = Schema.decodeUnknownSync(
-      Schema.parseJson(PublicationRequestSchema)
+    const batchRequest = Schema.decodeSync(
+      Schema.fromJsonString(PublicationRequestSchema)
     )(
       `{"batchIndex":0,"items":[${testUpsertJson()}],"operation":"stageItemBatch","releaseId":"release-test"}`
     );
     const batch = await Effect.runPromise(
       validateRequestBytes(batchRequest, MAX_ITEM_BATCH_BYTES + 1).pipe(
-        Effect.either
+        Effect.result
       )
     );
-
     expect(complete).toMatchObject({
-      _tag: "Left",
-      left: { code: "CONTENT_RELEASE_SIZE" },
+      _tag: "Failure",
+      failure: { code: "CONTENT_RELEASE_SIZE" },
     });
     expect(batch).toMatchObject({
-      _tag: "Left",
-      left: { code: "CONTENT_RELEASE_SIZE" },
+      _tag: "Failure",
+      failure: { code: "CONTENT_RELEASE_SIZE" },
     });
   });
-
   it("rejects an oversized grouped child before dispatch", async () => {
-    const projectionRequest = Schema.decodeUnknownSync(
-      PublicationRequestSchema
-    )({
+    const projectionRequest = Schema.decodeSync(PublicationRequestSchema)({
       batchIndex: 0,
       operation: "stageProjectionBatch",
       projections: [JSON.parse(testProjectionJson())],
@@ -108,13 +100,11 @@ describe("content publication request decoding", () => {
         },
       ],
     });
-
     await expect(decode(source)).resolves.toMatchObject({
-      _tag: "Left",
-      left: { code: "CONTENT_RELEASE_SIZE" },
+      _tag: "Failure",
+      failure: { code: "CONTENT_RELEASE_SIZE" },
     });
   });
-
   it("derives every operation ceiling from shared transport constants", () => {
     expect(publicationRequestLimit("stageArtifactBatch")).toBe(
       MAX_ARTIFACT_BATCH_BYTES

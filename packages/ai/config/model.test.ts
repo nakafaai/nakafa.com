@@ -11,10 +11,7 @@ import {
   ModelInfoSchema,
   modelRegistry,
 } from "@repo/ai/config/model";
-import {
-  fallbackGatewayModelIds,
-  gatewayProviderOptions,
-} from "@repo/ai/config/routing";
+import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -27,22 +24,22 @@ describe("Nakafa model registry", () => {
     expect(defaultModel).toBe("nakafa-lite");
     expect(isModelId("nakafa-lite")).toBe(true);
     expect(isModelId("nakafa-pro")).toBe(true);
-    expect(isModelId("google/gemini-3.5-flash")).toBe(false);
+    expect(isModelId("google/gemini-3.7-flash")).toBe(false);
   });
 
   it("keeps credit costs and gateway mapping explicit", () => {
     expect(
       MODEL_IDS.map((modelId) =>
-        Schema.decodeUnknownSync(ModelInfoSchema)(modelRegistry[modelId])
+        Schema.decodeSync(ModelInfoSchema)(modelRegistry[modelId])
       )
     ).toEqual([
       {
         credits: 2,
-        gatewayId: "google/gemini-3-flash",
+        gatewayId: "google/gemini-3.5-flash-lite",
       },
       {
         credits: 5,
-        gatewayId: "google/gemini-3.5-flash",
+        gatewayId: "google/gemini-3.7-flash",
       },
     ]);
     expect(getModelCreditCost(liteModel)).toBe(2);
@@ -51,8 +48,8 @@ describe("Nakafa model registry", () => {
     expect(hasEnoughCredits(2, liteModel)).toBe(true);
     expect(hasEnoughCredits(4, proModel)).toBe(false);
     expect(hasEnoughCredits(5, proModel)).toBe(true);
-    expect(getModelGatewayId(liteModel)).toBe("google/gemini-3-flash");
-    expect(getModelGatewayId(proModel)).toBe("google/gemini-3.5-flash");
+    expect(getModelGatewayId(liteModel)).toBe("google/gemini-3.5-flash-lite");
+    expect(getModelGatewayId(proModel)).toBe("google/gemini-3.7-flash");
   });
 
   it("uses interactive and fast Gemini thinking profiles", () => {
@@ -78,19 +75,9 @@ describe("Nakafa model registry", () => {
         thinkingLevel: "low",
       },
     });
-    expect(fallbackGatewayModelIds).toEqual([
-      "alibaba/qwen3.7-max",
-      "minimax/minimax-m2.7",
-      "zai/glm-5.1",
-      "moonshotai/kimi-k2.6",
-    ]);
     expect(gatewayProviderOptions).toEqual({
-      models: [
-        "alibaba/qwen3.7-max",
-        "minimax/minimax-m2.7",
-        "zai/glm-5.1",
-        "moonshotai/kimi-k2.6",
-      ],
+      disallowPromptTraining: true,
+      only: ["google", "vertex"],
       sort: "ttft",
     });
   });

@@ -1,34 +1,30 @@
 import { Schema } from "effect";
-
-export const materialStatusSchema = Schema.Literal(
+export const materialStatusSchema = Schema.Literals([
   "draft",
   "published",
   "scheduled",
-  "archived"
-);
-
+  "archived",
+]);
 const materialGroupForm = Schema.Struct({
-  name: Schema.Trim.pipe(Schema.minLength(1)),
-  description: Schema.Trim.pipe(Schema.minLength(1)),
+  name: Schema.Trim.pipe(Schema.check(Schema.isMinLength(1))),
+  description: Schema.Trim.pipe(Schema.check(Schema.isMinLength(1))),
   status: materialStatusSchema,
-  scheduledAt: Schema.optional(Schema.Number),
+  scheduledAt: Schema.optional(Schema.Finite),
 }).pipe(
-  Schema.filter((data) => {
-    if (data.status !== "scheduled") {
-      return true;
-    }
-
-    if (!data.scheduledAt) {
-      return false;
-    }
-
-    return data.scheduledAt > Date.now();
-  })
+  Schema.check(
+    Schema.makeFilter((data) => {
+      if (data.status !== "scheduled") {
+        return true;
+      }
+      if (!data.scheduledAt) {
+        return false;
+      }
+      return data.scheduledAt > Date.now();
+    })
+  )
 );
-
 export const materialGroupFormSchema =
-  Schema.standardSchemaV1(materialGroupForm);
-
+  Schema.toStandardSchemaV1(materialGroupForm);
 export type MaterialGroupFormValues = Schema.Schema.Type<
   typeof materialGroupForm
 >;

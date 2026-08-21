@@ -1,5 +1,4 @@
 "use client";
-
 import { InLoveIcon, Rocket01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -25,25 +24,18 @@ import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
 
 const form = Schema.Struct({
-  code: Schema.Trim.pipe(Schema.minLength(1)),
+  code: Schema.Trim.pipe(Schema.check(Schema.isMinLength(1))),
 });
-
-const formSchema = Schema.standardSchemaV1(form);
-
+const formSchema = Schema.toStandardSchemaV1(form);
 const defaultValues = {
   code: "",
 } satisfies Schema.Schema.Type<typeof form>;
-
 export function SchoolClassesHeaderJoin() {
   const t = useTranslations("School.Classes");
-
   const pathname = usePathname();
   const router = useRouter();
-
   const [open, openHandlers] = useDisclosure(false);
-
   const joinClass = useMutation(api.classes.mutations.joinClass);
-
   const form = useForm({
     defaultValues,
     validators: {
@@ -57,11 +49,11 @@ export function SchoolClassesHeaderJoin() {
           openHandlers.close();
           form.reset();
         }).pipe(
-          Effect.catchTag("UnknownException", ({ error }) =>
+          Effect.catchTag("UnknownError", ({ cause: error }) =>
             reportClientException(error, {
               source: "school-class-join-header",
             }).pipe(
-              Effect.zipRight(
+              Effect.andThen(
                 Effect.sync(() => {
                   toast.error(t("join-class-failed"));
                 })
@@ -72,7 +64,6 @@ export function SchoolClassesHeaderJoin() {
       );
     },
   });
-
   return (
     <form
       action={() => form.handleSubmit()}

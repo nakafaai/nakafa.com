@@ -1,5 +1,5 @@
-import { Command, FileSystem } from "@effect/platform";
-import { Effect } from "effect";
+import { Effect, FileSystem, Stream } from "effect";
+import { ChildProcess } from "effect/unstable/process";
 import stripAnsi from "strip-ansi";
 import { contentRuntimeCiError } from "./error";
 
@@ -65,26 +65,34 @@ export const runRuntimeCommand = Effect.fn("contentRuntime.runCommand")(
     const outputPaths = sharedOutput
       ? [spec.stdoutPath]
       : [spec.stdoutPath, spec.stderrPath];
-    let command = Command.make(
+    const stdin =
+      spec.stdin === undefined
+        ? "ignore"
+        : Stream.succeed(new TextEncoder().encode(spec.stdin));
+    const command = ChildProcess.make(
       "sh",
-      "-c",
-      redirectScript,
-      "content-runtime-command",
-      ...outputPaths,
-      spec.command,
-      ...spec.args
+      [
+        "-c",
+        redirectScript,
+        "content-runtime-command",
+        ...outputPaths,
+        spec.command,
+        ...spec.args,
+      ],
+      {
+        env: {
+          AGENT_DOCS_CONTENT_CACHE_KEY: "",
+          CONVEX_DEPLOY_KEY: spec.deployKey ?? "",
+          CONVEX_DEPLOYMENT_TOKEN: "",
+        },
+        extendEnv: true,
+        stderr: "ignore",
+        stdin,
+        stdout: "ignore",
+      }
     );
-
-    command = Command.env(command, {
-      AGENT_DOCS_CONTENT_CACHE_KEY: "",
-      CONVEX_DEPLOY_KEY: spec.deployKey ?? "",
-      CONVEX_DEPLOYMENT_TOKEN: "",
-    });
-    if (spec.stdin !== undefined) {
-      command = Command.feed(command, spec.stdin);
-    }
-
-    const exitCode = yield* Command.exitCode(command);
+    const childProcess = yield* command;
+    const exitCode = yield* childProcess.exitCode;
     if (exitCode !== 0) {
       if (spec.reportStderr) {
         const stderr = yield* fileSystem.readFileString(spec.stderrPath);

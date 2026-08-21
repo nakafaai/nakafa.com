@@ -50,7 +50,7 @@ describe("OpenWeatherCurrentResponseSchema", () => {
 
 describe("CurrentWeatherSummarySchema", () => {
   it("accepts the narrow app weather payload", () => {
-    const decoded = Schema.decodeUnknownSync(CurrentWeatherSummarySchema)({
+    const decoded = Schema.decodeSync(CurrentWeatherSummarySchema)({
       city: "Jakarta",
       condition: "light rain",
       country: "ID",

@@ -1,5 +1,5 @@
 import { MaterialCardDescriptionSchema } from "@repo/contents/_types/material/description";
-import { Schema } from "effect";
+import { Schema, Struct } from "effect";
 
 const MaterialListItemSchema = Schema.Struct({
   title: Schema.String,
@@ -9,10 +9,9 @@ const MaterialListItemSchema = Schema.Struct({
     Schema.Struct({
       title: Schema.String,
       href: Schema.String,
-    }).pipe(Schema.mutable)
+    }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
   ).pipe(Schema.mutable),
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 const MaterialListSchema = Schema.Array(MaterialListItemSchema).pipe(
   Schema.mutable
 );

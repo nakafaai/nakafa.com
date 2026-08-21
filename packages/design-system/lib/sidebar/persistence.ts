@@ -32,9 +32,7 @@ export class SidebarStatePersistenceError extends Schema.TaggedError<SidebarStat
 ) {}
 
 /** Browser cookie writer required by the sidebar persistence program. */
-export class SidebarCookieWriter extends Context.Tag(
-  "@repo/design-system/SidebarCookieWriter"
-)<
+export class SidebarCookieWriter extends Context.Service<
   SidebarCookieWriter,
   {
     /** Writes a fully serialized cookie and reports the logical cookie key on failure. */
@@ -43,7 +41,7 @@ export class SidebarCookieWriter extends Context.Tag(
       cookieName: string
     ) => Effect.Effect<void, SidebarStatePersistenceError>;
   }
->() {}
+>()("@repo/design-system/SidebarCookieWriter") {}
 
 const writeBrowserCookie = Effect.fn("designSystem.sidebar.writeBrowserCookie")(
   function* (cookie: string, cookieName: string) {

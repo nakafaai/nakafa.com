@@ -67,14 +67,12 @@ import {
 import { Effect, Schema, Stream } from "effect";
 
 const keys = generateKeyPairSync("ed25519");
-const digest = Schema.decodeUnknownSync(Sha256HashSchema)(TEST_DIGEST);
-type ArtifactLocaleCode = Schema.Schema.Encoded<typeof ArtifactLocaleSchema>;
-
+const digest = Schema.decodeSync(Sha256HashSchema)(TEST_DIGEST);
+type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
 export const TEST_KEY_ID = SigningKeyIdSchema.make("test-key");
 export const TEST_PUBLIC_KEY = keys.publicKey
   .export({ format: "pem", type: "spki" })
   .toString();
-
 /** Creates one authenticated renderer snapshot for proof tests. */
 export function testProofRenderer(
   componentName = "p",
@@ -105,9 +103,7 @@ export function testProofRenderer(
     rendererContractVersion: RENDERER_CONTRACT_VERSION,
   });
 }
-
 export const TEST_PROOF_RENDERER = testProofRenderer();
-
 /** Inserts one ordered proof row without unrelated staging orchestration. */
 export async function insertProofItem(
   ctx: MutationCtx,
@@ -151,7 +147,6 @@ export async function insertProofItem(
     });
   }
 }
-
 /** Inserts one ordered route proof row. */
 export function insertProofRoute(ctx: MutationCtx, index: number) {
   const contentKey = `test:head-${index}`;
@@ -169,7 +164,6 @@ export function insertProofRoute(ctx: MutationCtx, index: number) {
     sequence: 1,
   });
 }
-
 /** Creates an authenticated empty manifest with every catalog proof bound. */
 export function testEmptyManifest(releaseId: ReleaseId) {
   const items = Effect.runSync(digestItems(releaseId, Stream.empty));
@@ -209,7 +203,6 @@ export function testEmptyManifest(releaseId: ReleaseId) {
     upsertCount: 0,
   });
 }
-
 export const TEST_KEY_RESOLVER = ContentVerificationKeyResolver.of({
   /** Resolves only the explicit technical test key. */
   resolve: (requestedKeyId) => {
@@ -219,7 +212,6 @@ export const TEST_KEY_RESOLVER = ContentVerificationKeyResolver.of({
     return Effect.fail(new SigningKeyNotFoundError({ keyId: requestedKeyId }));
   },
 });
-
 /** Produces one fully authenticated technical artifact. */
 export function testSignedArtifact(
   rendererDomain: RendererDomain = "mathematics",
@@ -267,7 +259,6 @@ export function testSignedArtifact(
     ),
   });
 }
-
 /** Produces one fully authenticated technical release envelope. */
 export function testSignedRelease(manifest: ContentReleaseManifest) {
   const manifestHash = Effect.runSync(hashContentReleaseManifest(manifest));

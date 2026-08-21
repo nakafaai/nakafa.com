@@ -49,7 +49,6 @@ describe("Nakafa runtime decoders", () => {
       locale: "id",
     });
   });
-
   it("maps invalid output and input into typed Nakafa errors", async () => {
     await expectDecodeError(decodeNakafaMarkdown({}), NakafaAgentDataReadError);
     await expectDecodeError(
@@ -63,21 +62,17 @@ describe("Nakafa runtime decoders", () => {
     );
   });
 });
-
 /** Expects one decoding effect to fail with the supplied typed error class. */
 async function expectDecodeError(
   effect: Effect.Effect<unknown, unknown>,
   expectedError: new (...args: never[]) => Error
 ) {
-  const result = await Effect.runPromise(Effect.either(effect));
-
-  expect(result._tag).toBe("Left");
-
-  if (result._tag === "Left") {
-    expect(result.left).toBeInstanceOf(expectedError);
+  const result = await Effect.runPromise(Effect.result(effect));
+  expect(result._tag).toBe("Failure");
+  if (result._tag === "Failure") {
+    expect(result.failure).toBeInstanceOf(expectedError);
   }
 }
-
 /** Builds a minimal valid markdown payload for schema decoding. */
 function markdown() {
   return {
@@ -91,7 +86,6 @@ function markdown() {
     title: "Title",
   };
 }
-
 /** Builds a minimal valid Quran reference payload for schema decoding. */
 function quranReference() {
   return {
@@ -108,7 +102,6 @@ function quranReference() {
     ],
   };
 }
-
 /** Builds a minimal valid taxonomy payload for schema decoding. */
 function taxonomy() {
   return {

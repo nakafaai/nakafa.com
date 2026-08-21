@@ -77,7 +77,7 @@ function runMaterialApiRead(
   return Effect.runPromise(
     apiRead.pipe(
       Effect.map((data): Response => NextResponse.json(data)),
-      Effect.catchAll(onError)
+      Effect.catch(onError)
     )
   );
 }

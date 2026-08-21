@@ -30,13 +30,10 @@ function hasConvexErrorCode(error: unknown, allowedCodes: readonly string[]) {
 }
 
 /** Captures an unexpected school route error and preserves the original failure. */
-function captureSchoolRouteError(
-  failure: Cause.UnknownException,
-  context: Record<string | number, unknown>
-) {
+function captureSchoolRouteError(failure: Cause.UnknownError, source: string) {
   return Effect.gen(function* () {
     yield* Effect.tryPromise(() =>
-      captureServerException(failure.error, undefined, context)
+      captureServerException(failure.cause, { source })
     ).pipe(Effect.ignore);
 
     return yield* failure;
@@ -65,17 +62,14 @@ export const getSchoolRouteSnapshot = cache(
       ).pipe(
         Effect.catchIf(
           (failure) =>
-            hasConvexErrorCode(failure.error, [
+            hasConvexErrorCode(failure.cause, [
               "SCHOOL_NOT_FOUND",
               "MEMBERSHIP_NOT_FOUND",
             ]),
           () => Effect.succeed(null)
         ),
-        Effect.catchAll((error) =>
-          captureSchoolRouteError(error, {
-            slug,
-            source: "school-route-boundary",
-          })
+        Effect.catch((error) =>
+          captureSchoolRouteError(error, "school-route-boundary")
         )
       )
     );
@@ -105,18 +99,15 @@ export async function preloadClassRoute({ classId }: { classId: string }) {
       })),
       Effect.catchIf(
         (failure) =>
-          hasConvexErrorCode(failure.error, [
+          hasConvexErrorCode(failure.cause, [
             "ACCESS_DENIED",
             "CLASS_ARCHIVED",
             "CLASS_NOT_FOUND",
           ]),
         () => Effect.succeed(null)
       ),
-      Effect.catchAll((error) =>
-        captureSchoolRouteError(error, {
-          classId,
-          source: "school-class-route-boundary",
-        })
+      Effect.catch((error) =>
+        captureSchoolRouteError(error, "school-class-route-boundary")
       )
     )
   );
@@ -139,10 +130,8 @@ export async function getSchoolSwitcherPage() {
         },
       })
     ).pipe(
-      Effect.catchAll((error) =>
-        captureSchoolRouteError(error, {
-          source: "school-switcher-page",
-        })
+      Effect.catch((error) =>
+        captureSchoolRouteError(error, "school-switcher-page")
       )
     )
   );

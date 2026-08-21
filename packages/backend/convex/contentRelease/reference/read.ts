@@ -1,12 +1,3 @@
-import {
-  classifyLearningGraphAssetId,
-  type LearningGraphFamily,
-} from "@nakafa/aksara-contracts/graph/family";
-import {
-  type ActiveAppLocale,
-  ActiveAppLocaleSchema,
-} from "@nakafa/aksara-contracts/locale";
-import { materialPublicNamespace } from "@nakafa/aksara-contracts/projection/material";
 import { QuranSearchRowSchema } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import { QuranSurahNumberSchema } from "@nakafa/aksara-contracts/quran/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
@@ -19,6 +10,10 @@ import { verifyEffectiveMaterial } from "@repo/backend/convex/contentRelease/mat
 import { quranSearchIdentity } from "@repo/backend/convex/contentRelease/quran/facts";
 import { loadQuranOwner } from "@repo/backend/convex/contentRelease/quran/owner";
 import { readQuranRow } from "@repo/backend/convex/contentRelease/quran/row";
+import {
+  type ActiveContentReferenceInput,
+  resolveReferenceInput,
+} from "@repo/backend/convex/contentRelease/reference/input";
 import type { ContentReferenceInput } from "@repo/backend/convex/contentRelease/reference/spec";
 import { findTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
 import { verifyTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/verify";
@@ -26,71 +21,6 @@ import { buildContentSearchDocument } from "@repo/backend/convex/contents/helper
 import type { ContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/groups";
 import { authenticateQuranSearchHit } from "@repo/backend/convex/contents/helpers/search/quran/authenticate";
 import { Effect, Option, Schema } from "effect";
-
-type ActiveContentReferenceInput = (
-  | Extract<ContentReferenceInput, { readonly kind: "content" }>
-  | Extract<ContentReferenceInput, { readonly kind: "route" }>
-) & {
-  readonly appLocale: ActiveAppLocale;
-  readonly family: LearningGraphFamily;
-};
-
-/** Classifies one current public route through its locale-owned namespace. */
-function classifyPublicRoute(
-  appLocale: ActiveAppLocale,
-  publicPath: string
-): LearningGraphFamily | null {
-  const [namespace] = publicPath.split("/");
-  if (namespace === "articles") {
-    return "article";
-  }
-  if (namespace === materialPublicNamespace(appLocale)) {
-    return "material";
-  }
-  if (namespace === "quran") {
-    return "quran";
-  }
-  if (namespace === "try-out") {
-    return "tryout";
-  }
-  return null;
-}
-
-/** Selects one exact current family before reading any signed row. */
-const resolveReferenceInput = Effect.fn("contentRelease.resolveReferenceInput")(
-  function* (input: ContentReferenceInput) {
-    if (input.kind === "content") {
-      const owner = yield* Effect.option(
-        classifyLearningGraphAssetId(input.contentId)
-      );
-      if (Option.isNone(owner)) {
-        return null;
-      }
-      const appLocale = Schema.decodeUnknownOption(ActiveAppLocaleSchema)(
-        owner.value.appLocale
-      );
-      if (Option.isNone(appLocale)) {
-        return null;
-      }
-      return {
-        ...input,
-        appLocale: appLocale.value,
-        family: owner.value.family,
-      };
-    }
-    const appLocale = Schema.decodeUnknownOption(ActiveAppLocaleSchema)(
-      input.appLocale
-    );
-    if (Option.isNone(appLocale)) {
-      return null;
-    }
-    const family = classifyPublicRoute(appLocale.value, input.publicPath);
-    if (family === null) {
-      return null;
-    }
-    return { ...input, appLocale: appLocale.value, family };
-  }
-);
 
 /** Resolves one current semantic identity across every active signed family. */
 export const readContentReference = Effect.fn(
@@ -154,7 +84,7 @@ const readArticleReference = Effect.fn("contentRelease.readArticleReference")(
       ...projection.graph,
       contentHash: resolved.projectionHash,
       description: projection.metadata.description,
-      locale: appLocale,
+      locale: input.publicLocale,
       route: projection.publicPath,
       section: "articles",
       sourcePath: projection.contentKey,
@@ -226,7 +156,7 @@ const readMaterialReference = Effect.fn("contentRelease.readMaterialReference")(
       return buildContentSearchDocument({
         ...topic.graph,
         contentHash: resolved.projectionHash,
-        locale: appLocale,
+        locale: input.publicLocale,
         route: topic.publicPath,
         section: "material",
         sourcePath: topic.publicPath,
@@ -239,7 +169,7 @@ const readMaterialReference = Effect.fn("contentRelease.readMaterialReference")(
       ...projection.graph,
       contentHash: resolved.projectionHash,
       description: projection.metadata.description,
-      locale: appLocale,
+      locale: input.publicLocale,
       route: projection.publicPath,
       section: "material",
       sourcePath: projection.contentKey,
@@ -350,7 +280,7 @@ const readQuranReference = Effect.fn("contentRelease.readQuranReference")(
     return buildContentSearchDocument({
       ...signed.payload.graph,
       contentHash: signed.rowHash,
-      locale: input.appLocale,
+      locale: input.publicLocale,
       route: signed.payload.route,
       section: "quran",
       sourcePath: signed.payload.route,
@@ -390,7 +320,7 @@ const readQuranReferenceRow = Effect.fn("contentRelease.readQuranReferenceRow")(
       return yield* authenticateQuranSearchHit(ctx, snapshotId, row);
     }
     const segments = input.publicPath.split("/");
-    const surahNumber = Schema.decodeUnknownOption(QuranSurahNumberSchema)(
+    const surahNumber = Schema.decodeOption(QuranSurahNumberSchema)(
       Number(segments[1])
     );
     if (
@@ -433,7 +363,7 @@ const readTryoutReference = Effect.fn("contentRelease.readTryoutReference")(
       ...row.graph,
       contentHash: stored.rowHash,
       description: row.description,
-      locale: input.appLocale,
+      locale: input.publicLocale,
       route: row.publicPath,
       section: "tryout",
       sourcePath: row.publicPath,

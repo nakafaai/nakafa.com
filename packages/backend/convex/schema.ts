@@ -4,6 +4,7 @@ import bookmarksSchema from "@repo/backend/convex/bookmarks/schema";
 import chatsSchema from "@repo/backend/convex/chats/tables/schema";
 import classesSchema from "@repo/backend/convex/classes/schema";
 import commentsSchema from "@repo/backend/convex/comments/schema";
+import consentsSchema from "@repo/backend/convex/consents/schema";
 import contentReleaseSchema from "@repo/backend/convex/contentRelease/schema";
 import contentsSchema from "@repo/backend/convex/contents/schema";
 import creditsSchema from "@repo/backend/convex/credits/schema";
@@ -24,6 +25,7 @@ export default defineSchema(
     ...authDeletionSchema,
     ...chatsSchema,
     ...commentsSchema,
+    ...consentsSchema,
     ...contentReleaseSchema,
     ...customersSchema,
     ...subscriptionsSchema,

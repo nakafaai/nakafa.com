@@ -1,12 +1,12 @@
 "use client";
 
-import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type {
   StartAttemptArgs,
   StartAttemptResult,
   TryoutPaywallSource,
 } from "@repo/backend/convex/tryouts/start/spec";
+import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
@@ -30,7 +30,7 @@ export function startAttemptProgram(input: StartAttemptProgramInput) {
     catch: toTryoutClientRequestError,
   }).pipe(
     Effect.tap((result) => input.onSuccess(result)),
-    Effect.catchAll((error) => {
+    Effect.catch((error) => {
       if (isTryoutAccessRequired(error)) {
         return input.onUpgrade();
       }
@@ -61,7 +61,7 @@ export function startEntrySectionProgram(input: {
     catch: toTryoutClientRequestError,
   }).pipe(
     Effect.tap(() => showSuccess(input.successMessage)),
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       reportRequestFailure(error, "tryout-start-section", input.failureMessage)
     ),
     Effect.asVoid
@@ -71,11 +71,11 @@ export function startEntrySectionProgram(input: {
 /** Creates the existing Pro checkout and navigates to its provider URL. */
 export function checkoutProgram(input: {
   readonly action: (args: {
-    locale: ActiveAppLocaleCode;
+    locale: PublicAppLocale;
     successUrl: string;
   }) => Promise<{ url: string }>;
   readonly failureMessage: string;
-  readonly locale: ActiveAppLocaleCode;
+  readonly locale: PublicAppLocale;
 }) {
   return Effect.tryPromise({
     try: () =>
@@ -90,7 +90,7 @@ export function checkoutProgram(input: {
         window.location.href = url;
       })
     ),
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       reportRequestFailure(error, "tryout-checkout", input.failureMessage)
     ),
     Effect.asVoid
@@ -108,7 +108,7 @@ export function paywallViewProgram(input: {
     try: () => input.mutation({ source: input.source }),
     catch: toTryoutClientRequestError,
   }).pipe(
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       reportClientException(error, { source: "tryout-paywall-view" })
     ),
     Effect.asVoid

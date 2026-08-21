@@ -1,7 +1,6 @@
 import "server-only";
-
 import { PreviewEventSchema } from "@nakafa/aksara-contracts/preview/spec";
-import { Effect, Either, Option, Redacted, Schema } from "effect";
+import { Effect, Option, Redacted, Result, Schema } from "effect";
 import { previewUrl, readPreviewConfig } from "@/lib/content/preview/config";
 import {
   PreviewEventError,
@@ -15,46 +14,38 @@ const EVENT_HEARTBEAT = ": keep-alive";
 const EVENT_PREFIX = "event: update\ndata: ";
 const EVENT_CONTENT_TYPE = /^text\/event-stream(?:\s*;\s*charset=utf-8)?$/i;
 const encoder = new TextEncoder();
-
 /** Strictly validates and re-encodes one provider event for the browser. */
 function sanitizeEvent(block: string) {
   if (block.startsWith(":") && !block.includes("\n")) {
-    return Either.right(encoder.encode(`${EVENT_HEARTBEAT}\n\n`));
+    return Result.succeed(encoder.encode(`${EVENT_HEARTBEAT}\n\n`));
   }
-
   if (!block.startsWith(EVENT_PREFIX)) {
-    return Either.left(new PreviewEventError({ stage: "event" }));
+    return Result.fail(new PreviewEventError({ stage: "event" }));
   }
-
   const source = block.slice(EVENT_PREFIX.length);
   if (source.includes("\n")) {
-    return Either.left(new PreviewEventError({ stage: "event" }));
+    return Result.fail(new PreviewEventError({ stage: "event" }));
   }
-
-  const decoded = Schema.decodeUnknownEither(
-    Schema.parseJson(PreviewEventSchema)
+  const decoded = Schema.decodeResult(
+    Schema.fromJsonString(PreviewEventSchema)
   )(source, { onExcessProperty: "error" });
-  if (Either.isLeft(decoded)) {
-    return Either.left(new PreviewEventError({ stage: "event" }));
+  if (Result.isFailure(decoded)) {
+    return Result.fail(new PreviewEventError({ stage: "event" }));
   }
-
-  return Either.right(
-    encoder.encode(`${EVENT_PREFIX}${JSON.stringify(decoded.right)}\n\n`)
+  return Result.succeed(
+    encoder.encode(`${EVENT_PREFIX}${JSON.stringify(decoded.success)}\n\n`)
   );
 }
-
 /** Sanitizes provider chunks and prevents unbounded partial-event buffering. */
 function sanitizeStream(source: ReadableStream<Uint8Array>) {
   const decoder = new TextDecoder();
   let buffered = "";
-
   return source.pipeThrough(
     new TransformStream<Uint8Array, Uint8Array>({
       /** Emits only complete schema-validated events. */
       transform(chunk, controller) {
         buffered += decoder.decode(chunk, { stream: true });
         let boundary = buffered.indexOf(EVENT_BOUNDARY);
-
         while (boundary >= 0) {
           const block = buffered.slice(0, boundary);
           if (encoder.encode(block).byteLength > MAX_EVENT_BYTES) {
@@ -63,14 +54,13 @@ function sanitizeStream(source: ReadableStream<Uint8Array>) {
           }
           const event = sanitizeEvent(block);
           buffered = buffered.slice(boundary + EVENT_BOUNDARY.length);
-          if (Either.isLeft(event)) {
-            controller.error(event.left);
+          if (Result.isFailure(event)) {
+            controller.error(event.failure);
             return;
           }
-          controller.enqueue(event.right);
+          controller.enqueue(event.success);
           boundary = buffered.indexOf(EVENT_BOUNDARY);
         }
-
         if (encoder.encode(buffered).byteLength > MAX_EVENT_BYTES) {
           controller.error(new PreviewEventError({ stage: "event" }));
         }
@@ -85,7 +75,6 @@ function sanitizeStream(source: ReadableStream<Uint8Array>) {
     })
   );
 }
-
 /** Validates the authenticated provider response before exposing its stream. */
 function validateResponse(response: Response, target: URL) {
   const contentType = response.headers.get("content-type") ?? "";
@@ -97,10 +86,8 @@ function validateResponse(response: Response, target: URL) {
   ) {
     return Effect.fail(new PreviewEventError({ stage: "response" }));
   }
-
   return Effect.succeed(sanitizeStream(response.body));
 }
-
 /** Opens the private provider stream and returns sanitized updates and heartbeats. */
 export const openPreviewEvents = Effect.fn("NakafaContent.openPreviewEvents")(
   function* (signal: AbortSignal) {
@@ -108,7 +95,6 @@ export const openPreviewEvents = Effect.fn("NakafaContent.openPreviewEvents")(
     if (Option.isNone(configOption)) {
       return yield* new PreviewUnavailableError({});
     }
-
     const config = configOption.value;
     const target = yield* previewUrl(config, config.eventsPath);
     const response = yield* Effect.tryPromise({
@@ -126,7 +112,6 @@ export const openPreviewEvents = Effect.fn("NakafaContent.openPreviewEvents")(
           signal,
         }),
     });
-
     return yield* validateResponse(response, target);
   }
 );

@@ -1,10 +1,9 @@
-import { FileSystem } from "@effect/platform";
 import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { COMPACTION_PHASES } from "@repo/backend/convex/contentRelease/spec";
-import { Effect, Redacted, Schema } from "effect";
+import { Effect, FileSystem, Redacted, Schema } from "effect";
 import { runConvexData } from "./command";
 import type {
   CacheIdentity,
@@ -19,13 +18,18 @@ import {
   stripConvexSystemFields,
 } from "./json";
 
-const SequenceSchema = Schema.Number.pipe(Schema.int(), Schema.positive());
-const TimestampSchema = Schema.Number.pipe(Schema.int(), Schema.positive());
+const SequenceSchema = Schema.Finite.pipe(
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThan(0))
+);
+const TimestampSchema = Schema.Finite.pipe(
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThan(0))
+);
 const OptionalManifestHashSchema = Schema.optional(Sha256HashSchema);
 const OptionalReleaseIdSchema = Schema.optional(ReleaseIdSchema);
 const OptionalSequenceSchema = Schema.optional(SequenceSchema);
-const CompactionPhaseSchema = Schema.Literal(...COMPACTION_PHASES);
-
+const CompactionPhaseSchema = Schema.Literals(COMPACTION_PHASES);
 const PublishedContentStateSchema = Schema.Struct({
   activeManifestHash: Sha256HashSchema,
   activeReleaseId: ReleaseIdSchema,
@@ -37,13 +41,19 @@ const PublishedContentStateSchema = Schema.Struct({
   candidateReleaseId: OptionalReleaseIdSchema,
   candidateSequence: OptionalSequenceSchema,
   compactCursor: Schema.optional(Schema.String),
-  compactFloor: Schema.optional(Schema.NonNegativeInt),
-  compactFrom: Schema.optional(Schema.NonNegativeInt),
+  compactFloor: Schema.optional(
+    Schema.Finite.check(Schema.isInt()).check(Schema.isGreaterThanOrEqualTo(0))
+  ),
+  compactFrom: Schema.optional(
+    Schema.Finite.check(Schema.isInt()).check(Schema.isGreaterThanOrEqualTo(0))
+  ),
   compactPhase: Schema.optional(CompactionPhaseSchema),
   compactStartedAt: Schema.optional(
-    Schema.JsonNumber.pipe(Schema.nonNegative())
+    Schema.Finite.pipe(Schema.check(Schema.isGreaterThanOrEqualTo(0)))
   ),
-  compactedFloor: Schema.optional(Schema.NonNegativeInt),
+  compactedFloor: Schema.optional(
+    Schema.Finite.check(Schema.isInt()).check(Schema.isGreaterThanOrEqualTo(0))
+  ),
   key: Schema.Literal("primary"),
   materialManifestHash: Sha256HashSchema,
   materialReleaseId: ReleaseIdSchema,
@@ -57,16 +67,13 @@ const PublishedContentStateSchema = Schema.Struct({
   searchSequence: SequenceSchema,
   updatedAt: TimestampSchema,
 });
-
 type PublishedContentState = Schema.Schema.Type<
   typeof PublishedContentStateSchema
 >;
-
 export interface RuntimeGenerations {
   readonly contentStateHash: string;
   readonly runtimeSelectionHash: string;
 }
-
 /** Proves the public signed selection did not change during the CI run. */
 export const verifyRuntimeSelection = (
   expected: RuntimeSelectionIdentity,
@@ -75,14 +82,12 @@ export const verifyRuntimeSelection = (
   if (expected.runtimeSelectionHash === actual.runtimeSelectionHash) {
     return Effect.void;
   }
-
   return Effect.fail(
     contentRuntimeCiError(
       "Production signed content pointer changed during runtime verification."
     )
   );
 };
-
 /** Proves no publication or compaction state changed during one export. */
 export const verifyStableRuntimeExport = (
   expected: CacheIdentity,
@@ -91,14 +96,12 @@ export const verifyStableRuntimeExport = (
   if (expected.contentStateHash === actual.contentStateHash) {
     return Effect.void;
   }
-
   return Effect.fail(
     contentRuntimeCiError(
       "Production content state changed during signed runtime export."
     )
   );
 };
-
 /** Returns whether one optional release slot is either absent or complete. */
 function hasCompleteOptionalIdentity(
   manifestHash: string | undefined,
@@ -109,7 +112,6 @@ function hasCompleteOptionalIdentity(
   const present = fields.filter((field) => field !== undefined).length;
   return present === 0 || present === fields.length;
 }
-
 /** Mirrors the backend invariant for one resumable compaction cycle. */
 function hasValidCompactionIdentity(state: PublishedContentState) {
   const compactedFloor = state.compactedFloor ?? 0;
@@ -119,7 +121,6 @@ function hasValidCompactionIdentity(state: PublishedContentState) {
   ) {
     return false;
   }
-
   const required = [
     state.compactFloor,
     state.compactFrom,
@@ -130,7 +131,6 @@ function hasValidCompactionIdentity(state: PublishedContentState) {
   if (present === 0 && state.compactCursor === undefined) {
     return true;
   }
-
   return (
     present === required.length &&
     state.compactFloor !== undefined &&
@@ -145,7 +145,6 @@ function hasValidCompactionIdentity(state: PublishedContentState) {
     (state.compactCursor === undefined || state.compactCursor.length > 0)
   );
 }
-
 /** Returns whether one read model is pinned to the active signed release. */
 function hasActiveIdentity(
   state: PublishedContentState,
@@ -159,10 +158,9 @@ function hasActiveIdentity(
     sequence === state.activeSequence
   );
 }
-
 /** Decodes the full stored row before classifying generation-neutral fields. */
 const decodePublishedContentState = (row: JsonObject) =>
-  Schema.decodeUnknown(PublishedContentStateSchema)(row, {
+  Schema.decodeUnknownEffect(PublishedContentStateSchema)(row, {
     onExcessProperty: "error",
   }).pipe(
     Effect.mapError(() =>
@@ -171,7 +169,6 @@ const decodePublishedContentState = (row: JsonObject) =>
       )
     )
   );
-
 /** Projects only signed identities that can change rendered runtime output. */
 const runtimePointer = (state: PublishedContentState) => ({
   active: {
@@ -195,7 +192,6 @@ const runtimePointer = (state: PublishedContentState) => ({
     sequence: state.searchSequence,
   },
 });
-
 /** Builds the stable signed generation identity from one complete pointer. */
 export const buildRuntimeGenerations = Effect.fn(
   "contentRuntime.buildGenerations"
@@ -205,14 +201,12 @@ export const buildRuntimeGenerations = Effect.fn(
       "Production contentState must contain exactly one row."
     );
   }
-
   const activePointer = contentState[0];
   if (!activePointer) {
     return yield* contentRuntimeCiError(
       "Production contentState must contain exactly one row."
     );
   }
-
   const storedState = stripConvexSystemFields(activePointer);
   const state = yield* decodePublishedContentState(storedState);
   if (!hasValidCompactionIdentity(state)) {
@@ -255,13 +249,11 @@ export const buildRuntimeGenerations = Effect.fn(
       "Production contentState is not synchronized to one signed generation."
     );
   }
-
   return {
     contentStateHash: yield* hashCanonicalJson(storedState),
     runtimeSelectionHash: yield* hashCanonicalJson(runtimePointer(state)),
   } satisfies RuntimeGenerations;
 });
-
 /** Reads the exact current signed pointer from production. */
 export const readProductionGenerations = Effect.fn(
   "contentRuntime.readProductionGenerations"
@@ -272,7 +264,6 @@ export const readProductionGenerations = Effect.fn(
     prefix: "agent-docs-generations-",
   });
   yield* fileSystem.chmod(tempRoot, 0o700);
-
   const deployKey = Redacted.value(config.deployKey);
   const contentStatePath = `${tempRoot}/content-state.json`;
   yield* runConvexData({
@@ -282,13 +273,11 @@ export const readProductionGenerations = Effect.fn(
     outputPath: contentStatePath,
     table: "contentState",
   });
-
   const contentState = yield* fileSystem
     .readFileString(contentStatePath)
     .pipe(Effect.flatMap(decodeJsonRows));
   return yield* buildRuntimeGenerations(contentState);
 });
-
 export const formatGenerationEnvironment = (generations: RuntimeGenerations) =>
   [
     `AGENT_DOCS_CONTENT_STATE_HASH=${generations.contentStateHash}`,

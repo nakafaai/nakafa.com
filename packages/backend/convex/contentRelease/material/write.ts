@@ -17,10 +17,9 @@ import { deriveMaterialTopicReference } from "@repo/backend/convex/contentReleas
 import { Effect } from "effect";
 
 type PublicProjection = NonNullable<
-  Effect.Effect.Success<ReturnType<typeof resolvePublicProjection>>
+  Effect.Success<ReturnType<typeof resolvePublicProjection>>
 >;
 type AppLocale = Doc<"materialCatalog">["appLocale"];
-
 /** Loads the sole active material row for one localized content identity. */
 const loadMaterial = Effect.fn("contentRelease.loadMaterial")(function* (
   ctx: MutationCtx,
@@ -36,7 +35,6 @@ const loadMaterial = Effect.fn("contentRelease.loadMaterial")(function* (
       .unique()
   );
 });
-
 /** Replaces one active material lesson with its indexed curriculum facts. */
 export const writeMaterial = Effect.fn("contentRelease.writeMaterial")(
   function* (
@@ -124,7 +122,6 @@ export const writeMaterial = Effect.fn("contentRelease.writeMaterial")(
     yield* Effect.promise(() => ctx.db.insert("materialCatalog", row));
   }
 );
-
 /** Deletes one active localized material row when its head disappears. */
 export const deleteMaterial = Effect.fn("contentRelease.deleteMaterial")(
   function* (ctx: MutationCtx, contentKey: string, appLocale: AppLocale) {

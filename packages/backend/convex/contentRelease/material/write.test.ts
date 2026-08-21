@@ -22,9 +22,8 @@ import type { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 type PublicProjection = NonNullable<
-  Effect.Effect.Success<ReturnType<typeof resolvePublicProjection>>
+  Effect.Success<ReturnType<typeof resolvePublicProjection>>
 >;
-
 /** Builds one resolved public material projection for the writer boundary. */
 function testResolved(
   options?: {
@@ -53,7 +52,6 @@ function testResolved(
     sourcePath: options?.sourcePath ?? "packages/corpus/test/head-0/en.mdx",
   };
 }
-
 describe("contentRelease/material/write", () => {
   it("replaces and deletes one localized material identity", async () => {
     const t = convexTest(schema, convexModules);
@@ -74,7 +72,6 @@ describe("contentRelease/material/write", () => {
         writeMaterial(ctx, testResolved({ sequence: 2 }, updated), updated)
       )
     );
-
     const [stored] = await t.run((ctx) =>
       ctx.db.query("materialCatalog").take(2)
     );
@@ -109,7 +106,6 @@ describe("contentRelease/material/write", () => {
       t.run((ctx) => ctx.db.query("materialCatalog").take(1))
     ).resolves.toEqual([]);
   });
-
   it("rejects unsafe heads and oversized material metadata", async () => {
     const t = convexTest(schema, convexModules);
     for (const head of [

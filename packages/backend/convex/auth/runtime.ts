@@ -2,7 +2,7 @@ import type { GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { isActionCtx } from "@convex-dev/better-auth/utils";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
-import { ensurePostHogDeletionConfigured } from "@repo/backend/convex/analytics/deletion";
+import { ensurePostHogErasureConfigured } from "@repo/backend/convex/analytics/erasure/action";
 import { authComponent } from "@repo/backend/convex/auth/client";
 import {
   ACCOUNT_DELETION_ATTEMPT_HEADER,
@@ -29,7 +29,10 @@ import { Effect, Schema } from "effect";
 
 const claimAccountDeletion = makeFunctionReference<
   "mutation",
-  { attemptId: string; authId: string },
+  {
+    attemptId: string;
+    authId: string;
+  },
   AccountDeletionPreparationOutcome
 >("auth/deletion:claimAccountDeletion");
 const deletionUnavailableError = () =>
@@ -37,7 +40,6 @@ const deletionUnavailableError = () =>
     code: ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
     message: "Account deletion is temporarily unavailable.",
   });
-
 /** Requires the server-side claim to confirm deletion readiness. */
 export const verifyAccountDeletionPreparation = Effect.fn(
   "auth.verifyAccountDeletionPreparation"
@@ -46,7 +48,6 @@ export const verifyAccountDeletionPreparation = Effect.fn(
     try: runPreparation,
     catch: deletionUnavailableError,
   });
-
   if (preparationOutcome === accountDeletionPreparationOutcome.continue) {
     return yield* Effect.fail(
       APIError.from("BAD_REQUEST", {
@@ -55,7 +56,6 @@ export const verifyAccountDeletionPreparation = Effect.fn(
       })
     );
   }
-
   if (
     preparationOutcome ===
     accountDeletionPreparationOutcome.schoolSuccessorRequired
@@ -67,7 +67,6 @@ export const verifyAccountDeletionPreparation = Effect.fn(
       })
     );
   }
-
   if (
     preparationOutcome ===
     accountDeletionPreparationOutcome.temporarilyUnavailable
@@ -75,31 +74,26 @@ export const verifyAccountDeletionPreparation = Effect.fn(
     return yield* Effect.fail(deletionUnavailableError());
   }
 });
-
 const ensureAccountDeletionReady = Effect.fn("auth.ensureAccountDeletionReady")(
   function* (
     ctx: GenericCtx<DataModel>,
     authId: string,
     rawAttemptId: string | null
   ) {
-    yield* ensurePostHogDeletionConfigured().pipe(
+    yield* ensurePostHogErasureConfigured().pipe(
       Effect.mapError(deletionUnavailableError)
     );
-
     if (!isActionCtx(ctx)) {
       return yield* Effect.fail(deletionUnavailableError());
     }
-
-    const attemptId = yield* Schema.decodeUnknown(Schema.UUID)(
-      rawAttemptId
-    ).pipe(Effect.mapError(deletionUnavailableError));
-
+    const attemptId = yield* Schema.decodeUnknownEffect(
+      Schema.String.check(Schema.isUUID())
+    )(rawAttemptId).pipe(Effect.mapError(deletionUnavailableError));
     yield* verifyAccountDeletionPreparation(() =>
       ctx.runMutation(claimAccountDeletion, { attemptId, authId })
     );
   }
 );
-
 /** Builds Better Auth options for HTTP auth routes and component adapters. */
 export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
   ({
@@ -152,7 +146,6 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
       }),
     ],
   }) satisfies BetterAuthOptions;
-
 /** Creates one Better Auth instance for a Convex HTTP/action context. */
 export const createAuth = (ctx: GenericCtx<DataModel>) =>
   betterAuth(createAuthOptions(ctx));

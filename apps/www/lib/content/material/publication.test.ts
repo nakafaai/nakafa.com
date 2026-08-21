@@ -67,7 +67,11 @@ describe("material publication", () => {
 
     await expect(
       getMaterialPublication("en", previewProjection.publicPath)
-    ).rejects.toHaveProperty("name", "(FiberFailure) PublishedProjectionError");
+    ).rejects.toMatchObject({
+      _tag: "PublishedProjectionError",
+      appLocale: previewProjection.appLocale,
+      publicPath: previewProjection.publicPath,
+    });
   });
 
   it("verifies and caches one coherent material publication", async () => {

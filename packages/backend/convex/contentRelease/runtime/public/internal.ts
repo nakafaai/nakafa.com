@@ -45,15 +45,12 @@ const publicRequestValidator = v.object({
   publicPath: v.string(),
 });
 const publicBatchResultValidator = v.array(publicResultValidator);
-
 type AppLocale = Infer<typeof appLocaleValidator>;
 type ActiveIdentity = NonNullable<
-  Effect.Effect.Success<ReturnType<typeof loadActiveIdentity>>
+  Effect.Success<ReturnType<typeof loadActiveIdentity>>
 >;
-
 /** Stored active public row returned only to the authenticated HTTP adapter. */
 export type PublicRuntimeRow = Infer<typeof publicResultValidator>;
-
 /** Resolves an active route and enforces its public delivery class. */
 const resolvePublicRouteForActive = Effect.fn(
   "contentRelease.resolvePublicRouteForActive"
@@ -170,7 +167,6 @@ const resolvePublicRouteForActive = Effect.fn(
     sourcePath: head.sourcePath,
   };
 });
-
 /** Resolves one active public route for the singular runtime endpoint. */
 const resolvePublicRoute = Effect.fn("contentRelease.resolvePublicRoute")(
   function* (ctx: QueryCtx, appLocale: AppLocale, publicPath: string) {
@@ -186,7 +182,6 @@ const resolvePublicRoute = Effect.fn("contentRelease.resolvePublicRoute")(
     );
   }
 );
-
 /** Resolves one bounded public batch inside one consistent transaction. */
 const resolvePublicRoutes = Effect.fn("contentRelease.resolvePublicRoutes")(
   function* (
@@ -219,7 +214,6 @@ const resolvePublicRoutes = Effect.fn("contentRelease.resolvePublicRoutes")(
     );
   }
 );
-
 /** Returns one public artifact only to the server-authenticated HTTP adapter. */
 export const read = internalQuery({
   args: { appLocale: appLocaleValidator, publicPath: v.string() },
@@ -227,7 +221,6 @@ export const read = internalQuery({
   handler: (ctx, args) =>
     runConvexProgram(resolvePublicRoute(ctx, args.appLocale, args.publicPath)),
 });
-
 /** Returns one ordered public batch to the authenticated HTTP adapter. */
 export const readBatch = internalQuery({
   args: { requests: v.array(publicRequestValidator) },

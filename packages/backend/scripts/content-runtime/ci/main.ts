@@ -1,12 +1,12 @@
-import { FileSystem } from "@effect/platform";
-import { NodeContext, NodeRuntime } from "@effect/platform-node";
+import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
+import * as NodeServices from "@effect/platform-node/NodeServices";
 import {
   CONTENT_RUNTIME_CACHE_VERSION,
   CONTENT_RUNTIME_SCHEMA_FINGERPRINT,
   CONTENT_RUNTIME_TABLES,
   validateContentRuntimeTableDefinitions,
 } from "@repo/backend/scripts/content-runtime/tables";
-import { Config, Effect } from "effect";
+import { Config, ConfigProvider, Effect, FileSystem } from "effect";
 import {
   clearContentRuntimeSecrets,
   readExportConfig,
@@ -129,7 +129,11 @@ const main = Effect.gen(function* () {
   Effect.ensuring(clearContentRuntimeSecrets),
   Effect.tapError(reportFailure),
   Effect.scoped,
-  Effect.provide(NodeContext.layer)
+  Effect.provide(NodeServices.layer),
+  Effect.provideService(
+    ConfigProvider.ConfigProvider,
+    ConfigProvider.fromEnvRecord(process.env)
+  )
 );
 
 NodeRuntime.runMain(main, { disableErrorReporting: true });

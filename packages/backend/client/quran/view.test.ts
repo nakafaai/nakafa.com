@@ -12,7 +12,6 @@ const source = {
   snapshotId: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
   sourceRevision: "c".repeat(40),
 };
-
 const surah = {
   name: {
     translation: "Pembukaan",
@@ -21,9 +20,7 @@ const surah = {
   number: 1,
   numberOfVerses: 1,
 };
-
 type QuranViewResult = FunctionReturnType<typeof api.contentRelease.quran.view>;
-
 describe("signed Quran view decoder", () => {
   it("preserves each validator-derived app-locale projection", async () => {
     const english = await Effect.runPromise(
@@ -38,7 +35,6 @@ describe("signed Quran view decoder", () => {
         surahNumber: 1,
       })
     );
-
     expect(english.verses[0]).toEqual({
       arabic: "بِسْمِ اللّٰهِ",
       number: { inQuran: 1, inSurah: 1 },
@@ -51,10 +47,9 @@ describe("signed Quran view decoder", () => {
     });
     expect(JSON.stringify(indonesian)).not.toContain("Tafsir lengkap");
   });
-
   it("fails closed for inactive and inconsistent views", async () => {
     const inactive = await Effect.runPromise(
-      Effect.either(
+      Effect.result(
         decodePublishedQuranView(
           {
             activeManifestHash: null,
@@ -73,19 +68,17 @@ describe("signed Quran view decoder", () => {
       )
     );
     const inconsistent = await Effect.runPromise(
-      Effect.either(
+      Effect.result(
         decodePublishedQuranView(englishViewResult(), {
           appLocale: "en",
           surahNumber: 2,
         })
       )
     );
-
-    expect(inactive._tag).toBe("Left");
-    expect(inconsistent._tag).toBe("Left");
+    expect(inactive._tag).toBe("Failure");
+    expect(inconsistent._tag).toBe("Failure");
   });
 });
-
 /** Builds source and metadata shared by app-locale view fixtures. */
 function viewBase() {
   return {
@@ -99,7 +92,6 @@ function viewBase() {
     surah,
   };
 }
-
 /** Builds one complete English view response. */
 function englishViewResult(): QuranViewResult {
   return {
@@ -114,7 +106,6 @@ function englishViewResult(): QuranViewResult {
     ],
   };
 }
-
 /** Builds one complete Indonesian view response. */
 function indonesianViewResult(): QuranViewResult {
   return {

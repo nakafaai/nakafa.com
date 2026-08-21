@@ -5,7 +5,7 @@ import type { RecordContentViewArgs } from "@repo/backend/convex/contents/views/
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import type { Locale as RouteLocale } from "next-intl";
 import type { PropsWithChildren } from "react";
-import { useRecordContentView } from "@/lib/hooks/use-record-content-view";
+import { useRecordContentView } from "@/lib/content/views/record";
 import { isActiveLocale } from "@/lib/i18n/active";
 
 /** Graph content-view tracking inputs for a rendered learning page. */

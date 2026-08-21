@@ -5,7 +5,6 @@ import type {
 } from "@repo/backend/convex/_generated/server";
 import { ensureDocumentSize } from "@repo/backend/convex/contentRelease/document";
 import { Effect, Schema } from "effect";
-
 /** Exact signed release and renderer retained for one attempt generation. */
 export interface TryoutBundleSource {
   readonly manifestHash: string;
@@ -14,22 +13,19 @@ export interface TryoutBundleSource {
   readonly rendererJson: string;
   readonly snapshotId: string;
 }
-
 /** Expected failure while retaining one immutable try-out runtime bundle. */
 export class TryoutBundleError extends Schema.TaggedError<TryoutBundleError>()(
   "TryoutBundleError",
   {
-    code: Schema.Literal(
+    code: Schema.Literals([
       "TRYOUT_BUNDLE_CONFLICT",
       "TRYOUT_BUNDLE_READ_FAILED",
-      "TRYOUT_BUNDLE_WRITE_FAILED"
-    ),
+      "TRYOUT_BUNDLE_WRITE_FAILED",
+    ]),
     message: Schema.String,
   }
 ) {}
-
 type ReadCtx = MutationCtx | QueryCtx;
-
 /** Reads one retained bundle through its globally unique release identity. */
 export const findTryoutBundleByRelease = Effect.fn(
   "tryouts.runtime.findTryoutBundleByRelease"
@@ -44,7 +40,6 @@ export const findTryoutBundleByRelease = Effect.fn(
         .unique()
   );
 });
-
 /** Stores or reuses one exact release bundle before an attempt references it. */
 export const retainTryoutBundle = Effect.fn(
   "tryouts.runtime.retainTryoutBundle"
@@ -54,7 +49,6 @@ export const retainTryoutBundle = Effect.fn(
     yield* verifyStoredBundle(stored, source);
     return stored._id;
   }
-
   const latest = yield* tryBundlePromise(
     "TRYOUT_BUNDLE_READ_FAILED",
     "Unable to read the retained try-out runtime bundle.",
@@ -90,7 +84,6 @@ export const retainTryoutBundle = Effect.fn(
     () => ctx.db.insert("tryoutBundles", row)
   );
 });
-
 /** Rejects reuse of one release identity with different signed bytes. */
 const verifyStoredBundle = Effect.fn("tryouts.runtime.verifyStoredBundle")(
   function* (stored: Doc<"tryoutBundles">, source: TryoutBundleSource) {
@@ -102,7 +95,6 @@ const verifyStoredBundle = Effect.fn("tryouts.runtime.verifyStoredBundle")(
     ) {
       return;
     }
-
     return yield* new TryoutBundleError({
       code: "TRYOUT_BUNDLE_CONFLICT",
       message:
@@ -110,7 +102,6 @@ const verifyStoredBundle = Effect.fn("tryouts.runtime.verifyStoredBundle")(
     });
   }
 );
-
 /** Lifts one bundle storage operation into its typed failure channel. */
 function tryBundlePromise<A>(
   code: TryoutBundleError["code"],

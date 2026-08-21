@@ -70,6 +70,19 @@ describe("try-out social images", () => {
     ).toBe("/en/og/try-out/indonesia/future-exam/image.png");
   });
 
+  it("keeps generated images for German signed routes", async () => {
+    expect(
+      await Effect.runPromise(
+        resolveTryoutExamSocialImage({
+          countryKey: "indonesia",
+          examKey: "tka",
+          appLocale: "de",
+          publicPath: "try-out/indonesia/tka",
+        })
+      )
+    ).toBe("/de/og/try-out/indonesia/tka/image.png");
+  });
+
   it("keeps generated images for the same exam key outside Indonesia", async () => {
     expect(
       await Effect.runPromise(
@@ -86,7 +99,6 @@ describe("try-out social images", () => {
   it.each([
     { appLocale: "en", countryKey: "Indonesia", examKey: "snbt" },
     { appLocale: "en", countryKey: "indonesia", examKey: "TKA" },
-    { appLocale: "de", countryKey: "indonesia", examKey: "tka" },
   ])(
     "rejects invalid signed identity $countryKey/$examKey/$appLocale",
     async (input) => {

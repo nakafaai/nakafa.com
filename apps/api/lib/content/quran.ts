@@ -20,11 +20,12 @@ export const readQuranApiDocument = Effect.fn("api.quran.readDocument")(
       env.NEXT_PUBLIC_CONVEX_URL,
       api.contentRelease.quran.document,
       args
-    ).pipe(Effect.mapError((cause) => new QuranApiReadError({ cause })));
+    );
 
     return yield* decodePublishedQuranDocument(result, {
       appLocale: args.appLocale,
       surahNumber: args.surahNumber,
-    }).pipe(Effect.mapError((cause) => new QuranApiReadError({ cause })));
-  }
+    });
+  },
+  Effect.mapError((cause) => new QuranApiReadError({ cause }))
 );

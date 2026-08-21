@@ -27,7 +27,6 @@ const MISSING_CONTENT_ID = NakafaAgentContentRefInputSchema.make(
 const TRYOUT_URL = NakafaAgentContentRefInputSchema.make(
   "https://nakafa.com/en/try-out/indonesia/snbt/2027/set-2"
 );
-
 describe("nakafa read tool", () => {
   it("writes loading and done parts for content reads", async () => {
     const { parts, writer } = createWriter();
@@ -38,7 +37,6 @@ describe("nakafa read tool", () => {
         writer,
       }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
     );
-
     expect(output).toContain("# Nakafa Content");
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({
@@ -53,7 +51,6 @@ describe("nakafa read tool", () => {
       })
     );
   });
-
   it("accepts canonical URL projections for current-page reads", async () => {
     const { parts, writer } = createWriter();
     const output = await Effect.runPromise(
@@ -63,7 +60,6 @@ describe("nakafa read tool", () => {
         writer,
       }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
     );
-
     expect(output).toContain("# Nakafa Content");
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({
@@ -74,7 +70,6 @@ describe("nakafa read tool", () => {
       })
     );
   });
-
   it("writes an error part when content is missing", async () => {
     const { parts, writer } = createWriter();
     const output = await Effect.runPromise(
@@ -84,7 +79,6 @@ describe("nakafa read tool", () => {
         writer,
       }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
     );
-
     expect(output).toBe("Nakafa content was not found.");
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({
@@ -92,7 +86,6 @@ describe("nakafa read tool", () => {
       })
     );
   });
-
   it("does not invent a markdown read for tryout references", async () => {
     const { parts, writer } = createWriter();
     const output = await Effect.runPromise(
@@ -102,7 +95,6 @@ describe("nakafa read tool", () => {
         writer,
       }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
     );
-
     expect(output).toBe("Nakafa content was not found.");
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({
@@ -110,7 +102,6 @@ describe("nakafa read tool", () => {
       })
     );
   });
-
   it("writes an error part when content reading fails", async () => {
     const { parts, writer } = createWriter();
     const output = await Effect.runPromise(
@@ -121,7 +112,7 @@ describe("nakafa read tool", () => {
       }).pipe(
         Effect.provideService(
           Nakafa,
-          Nakafa.make({
+          Nakafa.of({
             quran: () => Effect.die("unused"),
             read: () =>
               Effect.fail(
@@ -135,7 +126,6 @@ describe("nakafa read tool", () => {
         )
       )
     );
-
     expect(output).toBe("Read failed.");
     expect(parts.at(-1)).toEqual(
       expect.objectContaining({

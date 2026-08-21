@@ -21,9 +21,9 @@
     "@repo/internationalization": "workspace:*",
     "@repo/next-config": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "convex": "^1.43.0",
+    "convex": "1.44.0",
     "effect": "catalog:",
-    "next": "16.3.0",
+    "next": "16.3.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
@@ -31,11 +31,11 @@
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/react": "19.2.18",
-    "@vercel/config": "^0.5.6",
-    "@vitest/coverage-istanbul": "^4.1.10",
-    "@vitest/ui": "^4.1.10",
+    "@vercel/config": "^0.6.1",
+    "@vitest/coverage-istanbul": "^4.1.11",
+    "@vitest/ui": "^4.1.11",
     "jsdom": "^30.0.1",
     "typescript": "7.0.2",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   }
 }

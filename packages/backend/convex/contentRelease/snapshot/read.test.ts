@@ -44,7 +44,8 @@ describe("contentRelease/snapshot/read", () => {
   it("replays one manifest and contiguous bounded row pages", async () => {
     const data = await Effect.runPromise(makeProgramSnapshotData());
     const t = convexTest(schema, convexModules);
-    await stageProgramSnapshot(t, data, 3);
+    const batchSize = 3;
+    await stageProgramSnapshot(t, data, batchSize);
 
     await expect(
       t.query(readManifest, {
@@ -63,7 +64,7 @@ describe("contentRelease/snapshot/read", () => {
       done: false,
       firstIndex: 0,
       nextBatchIndex: 0,
-      rowJson: data.rowJson.slice(0, 3),
+      rowJson: data.rowJson.slice(0, batchSize),
       snapshotId: data.snapshotId,
     });
     await expect(
@@ -74,10 +75,10 @@ describe("contentRelease/snapshot/read", () => {
       })
     ).resolves.toEqual({
       batchIndex: 1,
-      done: true,
-      firstIndex: 3,
+      done: false,
+      firstIndex: batchSize,
       nextBatchIndex: 1,
-      rowJson: data.rowJson.slice(3),
+      rowJson: data.rowJson.slice(batchSize, batchSize * 2),
       snapshotId: data.snapshotId,
     });
     await expect(
@@ -87,10 +88,24 @@ describe("contentRelease/snapshot/read", () => {
         releaseId: TEST_RELEASE_ID,
       })
     ).resolves.toEqual({
-      batchIndex: 1,
+      batchIndex: 2,
       done: true,
-      firstIndex: 6,
-      nextBatchIndex: 1,
+      firstIndex: batchSize * 2,
+      nextBatchIndex: 2,
+      rowJson: data.rowJson.slice(batchSize * 2),
+      snapshotId: data.snapshotId,
+    });
+    await expect(
+      t.query(readRows, {
+        afterBatchIndex: 2,
+        family: "program",
+        releaseId: TEST_RELEASE_ID,
+      })
+    ).resolves.toEqual({
+      batchIndex: 2,
+      done: true,
+      firstIndex: data.rowJson.length,
+      nextBatchIndex: 2,
       rowJson: [],
       snapshotId: data.snapshotId,
     });

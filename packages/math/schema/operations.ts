@@ -1,5 +1,4 @@
 import { Schema } from "effect";
-
 export const mathOperations = [
   "apart",
   "cancel",
@@ -56,11 +55,7 @@ export const mathOperations = [
   "variance_probability",
   "z_score",
 ] as const;
-
-export const MathOperationSchema = Schema.Literal(
-  ...mathOperations
-).annotations({
+export const MathOperationSchema = Schema.Literals(mathOperations).annotate({
   description: "Supported deterministic math operation.",
 });
-
 export type MathOperation = Schema.Schema.Type<typeof MathOperationSchema>;

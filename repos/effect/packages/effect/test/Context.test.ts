@@ -1,281 +1,218 @@
-import { describe, it } from "@effect/vitest"
-import {
-  assertFalse,
-  assertInclude,
-  assertInstanceOf,
-  assertMatch,
-  assertNone,
-  assertSome,
-  assertTrue,
-  deepStrictEqual,
-  strictEqual,
-  throws
-} from "@effect/vitest/utils"
-import { Context, Differ, Option, pipe } from "effect"
-
-interface A {
-  a: number
-}
-const A = Context.GenericTag<A>("A")
-
-interface B {
-  b: number
-}
-const B = Context.GenericTag<B>("B")
-
-interface C {
-  c: number
-}
-const C = Context.GenericTag<C>("C")
-
-class D extends Context.Tag("D")<D, { readonly d: number }>() {}
-
-class E extends Context.Reference<E>()("E", {
-  defaultValue: () => ({ e: 0 })
-}) {}
+import { assertFalse, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils"
+import * as Context from "effect/Context"
+import * as Equal from "effect/Equal"
+import * as Option from "effect/Option"
+import * as Redactable from "effect/Redactable"
+import { describe, it } from "vitest"
 
 describe("Context", () => {
-  it("error messages", () => {
-    throws(() => {
-      Context.unsafeGet(Context.empty(), A)
-    }, (e) => {
-      assertInstanceOf(e, Error)
-      assertInclude(e.message, "Service not found: A")
+  const A = Context.Service<number>("ContextTest/A")
+  const B = Context.Service<number>("ContextTest/B")
+  const C = Context.Service<number>("ContextTest/C")
+
+  it("keeps the source immutable across additions", () => {
+    const source = Context.make(A, 1)
+    const result = Context.add(source, B, 2)
+
+    deepStrictEqual([...source.mapUnsafe], [[A.key, 1]])
+    deepStrictEqual([...result.mapUnsafe], [[A.key, 1], [B.key, 2]])
+  })
+
+  it("removes a service with addOrOmit", () => {
+    const context = Context.make(A, 1).pipe(Context.addOrOmit(A, Option.none()))
+
+    assertTrue(Context.getOption(context, A)._tag === "None")
+  })
+
+  it("preserves Map insertion order for replacements and appends", () => {
+    const Ref = Context.Reference<number>("ContextTest/OrderRef", { defaultValue: () => 0 })
+    const context = Context.empty().pipe(
+      Context.add(A, 1),
+      Context.add(Ref, 2),
+      Context.add(B, 3),
+      Context.add(A, 4),
+      Context.add(C, 5)
+    )
+
+    deepStrictEqual([...context.mapUnsafe], [
+      [A.key, 4],
+      [Ref.key, 2],
+      [B.key, 3],
+      [C.key, 5]
+    ])
+  })
+
+  it("invalidates the fiber cache only for opted-in keys", () => {
+    const Cached = Context.Service<number>("ContextTest/Cached", { fiberCached: true })
+    class CachedClass extends Context.Service<CachedClass, number>()("ContextTest/CachedClass", {
+      fiberCached: true
+    }) {}
+    const Ref = Context.Reference<number>("ContextTest/Ref", { defaultValue: () => 0 })
+    const CachedRef = Context.Reference<number>("ContextTest/CachedRef", {
+      fiberCached: true,
+      defaultValue: () => 0
     })
-    throws(() => {
-      Context.get(Context.empty(), A as never)
-    }, (e) => {
-      assertInstanceOf(e, Error)
-      assertInclude(e.message, "Service not found: A")
+
+    const source = Context.make(A, 1)
+    assertTrue(Context.hasSameCache(source, Context.add(source, B, 1)))
+    assertTrue(Context.hasSameCache(source, Context.add(source, Ref, 1)))
+    assertFalse(Context.hasSameCache(source, Context.add(source, CachedRef, 1)))
+    const context = source.pipe(
+      Context.add(Cached, 2),
+      Context.add(CachedClass, 3)
+    )
+
+    strictEqual(Context.get(context, Cached), 2)
+    strictEqual(Context.get(context, CachedClass), 3)
+    assertTrue(Context.getOption(source, Cached)._tag === "None")
+
+    const replaced = Context.add(context, Cached, 4)
+    strictEqual(Context.get(replaced, Cached), 4)
+    strictEqual(Context.get(context, Cached), 2)
+
+    deepStrictEqual([...replaced.mapUnsafe], [
+      [A.key, 1],
+      [Cached.key, 4],
+      [CachedClass.key, 3]
+    ])
+    deepStrictEqual([...Context.omit(Cached)(replaced).mapUnsafe], [
+      [A.key, 1],
+      [CachedClass.key, 3]
+    ])
+  })
+
+  it("supports the Redactable fallback context", () => {
+    const Cached = Context.Service<number>("ContextTest/RedactableCached", { fiberCached: true })
+    const context = Redactable.getRedacted({
+      [Redactable.symbolRedactable](context: Context.Context<never>) {
+        return context
+      }
+    }) as Context.Context<never>
+
+    strictEqual(context.mapUnsafe.size, 0)
+    assertTrue(Context.getOption(context, Cached)._tag === "None")
+
+    const added = Context.add(context, Cached, 1)
+    strictEqual(Context.get(added, Cached), 1)
+    strictEqual(context.mapUnsafe.size, 0)
+  })
+
+  it("distinguishes an undefined service from an absent service", () => {
+    const Undefined = Context.Service<undefined>("ContextTest/Undefined", { fiberCached: true })
+    const Missing = Context.Service<undefined>("ContextTest/Missing")
+    const Ref = Context.Reference<string | undefined>("ContextTest/UndefinedRef", {
+      defaultValue: () => "default",
+      fiberCached: true
     })
-    throws(() => {
-      Context.unsafeGet(Context.empty(), C)
-    }, (e) => {
-      assertInstanceOf(e, Error)
-      assertInclude(e.message, "Service not found: C")
-    })
-    throws(() => {
-      Context.get(Context.empty(), C as never)
-    }, (e) => {
-      assertInstanceOf(e, Error)
-      assertInclude(e.message, "Service not found: C")
-    })
-    if (typeof window === "undefined") {
-      throws(
-        () => {
-          Context.get(Context.empty(), C as never)
-        },
-        (e) => {
-          assertInstanceOf(e, Error)
-          assertMatch(e.message, /Service not found: C \(defined at (.*)Context.test.ts:29:19\)/)
-        }
-      )
-      throws(
-        () => {
-          Context.get(Context.empty(), D as never)
-        },
-        (e) => {
-          assertInstanceOf(e, Error)
-          assertMatch(e.message, /Service not found: D \(defined at (.*)Context.test.ts:31:32\)/)
-        }
-      )
+    const context = Context.make(Undefined, undefined).pipe(Context.add(Ref, undefined))
+
+    assertTrue(Context.getOption(context, Undefined)._tag === "Some")
+    assertTrue(Context.getOption(context, Missing)._tag === "None")
+    strictEqual(Context.getUnsafe(context, Undefined), undefined)
+    strictEqual(Context.getOrElse(context, Undefined, () => 1), undefined)
+    deepStrictEqual(Context.getOption(context, Ref), Option.some(undefined))
+    strictEqual(Context.get(context, Ref), undefined)
+  })
+
+  it("bounds deep overlay chains without changing values or order", () => {
+    const keys = Array.from({ length: 20 }, (_, i) => Context.Service<number>(`ContextTest/Deep${i}`))
+    let context = Context.empty()
+    for (let i = 0; i < keys.length; i++) {
+      context = Context.add(context, keys[i], i)
     }
-  })
 
-  it("Tag.toJson()", () => {
-    const json: any = A.toJSON()
-    strictEqual(json["_id"], "Tag")
-    strictEqual(json["key"], "A")
-    strictEqual(typeof json["stack"], "string")
-  })
-
-  it("TagClass.toJson()", () => {
-    const json: any = D.toJSON()
-    strictEqual(json["_id"], "Tag")
-    strictEqual(json["key"], "D")
-    strictEqual(typeof json["stack"], "string")
-  })
-
-  it("Context.toJson()", () => {
-    const json: any = Context.empty().toJSON()
-    strictEqual(json["_id"], "Context")
-    deepStrictEqual(json["services"], [])
-  })
-
-  it("aliased tags", () => {
-    interface Foo {
-      readonly _tag: "Foo"
+    strictEqual(context.mapUnsafe.size, 20)
+    deepStrictEqual([...context.mapUnsafe.keys()], keys.map((key) => key.key))
+    for (let i = 0; i < keys.length; i++) {
+      strictEqual(Context.getUnsafe(context, keys[i]), i)
     }
-    interface Bar {
-      readonly _tag: "Bar"
-    }
-    interface FooBar {
-      readonly FooBar: unique symbol
-    }
-    const Service = Context.GenericTag<FooBar, Foo | Bar>("FooBar")
-    const context = Context.make(Service, { _tag: "Foo" }).pipe(
-      Context.add(Service, { _tag: "Foo" })
-    )
-    deepStrictEqual(Context.get(context, Service), { _tag: "Foo" })
+    // Rebasing on ordinary keys must not invalidate fiber caches
+    assertTrue(Context.hasSameCache(Context.empty(), context))
   })
 
-  it("adds and retrieve services", () => {
-    const Services = pipe(
-      Context.make(A, { a: 0 }),
-      Context.add(B, { b: 1 }),
-      Context.add(D, { d: 2 })
-    )
+  it("flattens after repeated base fall-throughs", () => {
+    const context = Context.make(A, 1).pipe(Context.add(B, 2))
+    const impl = context as any
 
-    deepStrictEqual(Context.get(Services, A), { a: 0 })
-    assertSome(pipe(Services, Context.getOption(B)), { b: 1 })
-    deepStrictEqual(pipe(Services, Context.get(D)), { d: 2 })
-    assertNone(pipe(Services, Context.getOption(C)))
-    deepStrictEqual(pipe(Services, Context.get(E)), { e: 0 })
+    for (let i = 0; i < 7; i++) {
+      strictEqual(Context.getUnsafe(context, A), 1)
+    }
+    strictEqual(impl._flat, undefined)
 
-    throws(() => {
-      pipe(
-        Services,
-        Context.unsafeGet(C)
-      )
-    }, (e) => {
-      assertInstanceOf(e, Error)
-      assertInclude(e.message, "Service not found: C")
+    strictEqual(Context.getUnsafe(context, A), 1)
+    assertTrue(impl._flat instanceof Map)
+    strictEqual(impl.overlay, undefined)
+    strictEqual(impl.depth, 0)
+
+    const added = Context.add(context, C, 3) as any
+    strictEqual(added._flat, undefined)
+    strictEqual(added.baseHits, 0)
+  })
+
+  it("supports the ReadonlyMap surface through mapUnsafe", () => {
+    const context = Context.make(A, 1).pipe(Context.add(B, 2))
+    const visited: Array<[string, number]> = []
+    context.mapUnsafe.forEach((value, key) => visited.push([key, value]))
+
+    strictEqual(context.mapUnsafe.size, 2)
+    assertTrue(context.mapUnsafe.has(A.key))
+    strictEqual(context.mapUnsafe.get(B.key), 2)
+    deepStrictEqual([...context.mapUnsafe.keys()], [A.key, B.key])
+    deepStrictEqual([...context.mapUnsafe.values()], [1, 2])
+    deepStrictEqual([...context.mapUnsafe.entries()], [[A.key, 1], [B.key, 2]])
+    deepStrictEqual(visited, [[A.key, 1], [B.key, 2]])
+  })
+
+  it("supports equality and JSON materialization", () => {
+    const left = Context.make(A, 1).pipe(Context.add(B, 2))
+    const right = Context.makeUnsafe(new Map([[A.key, 1], [B.key, 2]]))
+
+    assertTrue(Equal.equals(left, right))
+    assertFalse(Equal.equals(left, Context.make(A, 2)))
+    deepStrictEqual(left.toJSON(), {
+      _id: "Context",
+      services: [{ key: A.key, value: 1 }, { key: B.key, value: 2 }]
     })
   })
 
-  it("picks services in env and merges", () => {
-    const env = pipe(
-      Context.empty(),
-      Context.add(A, { a: 0 }),
-      Context.merge(pipe(
-        Context.empty(),
-        Context.add(B, { b: 1 }),
-        Context.add(C, { c: 2 })
-      ))
-    )
+  it("merges with right bias and preserves empty operand identity", () => {
+    const left = Context.make(A, 1).pipe(Context.add(B, 2))
+    const right = Context.make(A, 3).pipe(Context.add(C, 4))
+    const merged = Context.merge(left, right)
 
-    const pruned = pipe(
-      env,
-      Context.pick(A, B)
-    )
-
-    deepStrictEqual(pipe(pruned, Context.get(A)), { a: 0 })
-    assertSome(pipe(pruned, Context.getOption(B)), { b: 1 })
-    assertNone(pipe(pruned, Context.getOption(C)))
-    assertSome(pipe(env, Context.getOption(C)), { c: 2 })
+    strictEqual(Context.merge(Context.empty(), left), left)
+    strictEqual(Context.merge(left, Context.empty()), left)
+    deepStrictEqual([...merged.mapUnsafe], [[A.key, 3], [B.key, 2], [C.key, 4]])
   })
 
-  it("omits services from env", () => {
-    const env = pipe(
-      Context.empty(),
-      Context.add(A, { a: 0 }),
-      Context.merge(pipe(
-        Context.empty(),
-        Context.add(B, { b: 1 }),
-        Context.add(C, { c: 2 })
-      ))
-    )
+  it("pick and omit retain source ordering", () => {
+    const source = Context.make(A, 1).pipe(Context.add(B, 2), Context.add(C, 3))
 
-    const pruned = pipe(
-      env,
-      Context.omit(A, B)
-    )
-
-    assertNone(pipe(pruned, Context.getOption(A)))
-    deepStrictEqual(pipe(env, Context.get(C)), { c: 2 })
+    deepStrictEqual([...Context.pick(C, A)(source).mapUnsafe], [[A.key, 1], [C.key, 3]])
+    deepStrictEqual([...Context.omit(B)(source).mapUnsafe], [[A.key, 1], [C.key, 3]])
   })
 
-  it("applies a patch to the environment", () => {
-    const a: A = { a: 0 }
-    const b: B = { b: 1 }
-    const c: C = { c: 2 }
-    const oldEnv = pipe(
-      Context.empty(),
-      Context.add(A, a),
-      Context.add(B, b),
-      Context.add(C, c)
-    ) as Context.Context<A | B | C>
-    const newEnv = pipe(
-      Context.empty(),
-      Context.add(A, a),
-      Context.add(B, { b: 3 })
-    ) as Context.Context<A | B | C>
-    const differ = Differ.environment<A | B | C>()
-    const patch = differ.diff(oldEnv, newEnv)
-    const result = differ.patch(patch, oldEnv)
+  it("resolves reference defaults lazily and caches them", () => {
+    let calls = 0
+    const Ref = Context.Reference<object>("ContextTest/LazyRef", {
+      defaultValue: () => {
+        calls++
+        return {}
+      }
+    })
+    const context = Context.empty()
 
-    assertTrue(Option.isSome(Context.getOption(A)(result)))
-    assertTrue(Option.isSome(Context.getOption(B)(result)))
-    assertTrue(Option.isNone(Context.getOption(C)(result)))
-    strictEqual(pipe(result, Context.get(B)).b, 3)
+    strictEqual(calls, 0)
+    const first = Context.get(context, Ref)
+    strictEqual(calls, 1)
+    strictEqual(Context.get(context, Ref), first)
+    strictEqual(calls, 1)
   })
 
-  it("creates a proper diff", () => {
-    const a: A = { a: 0 }
-    const b: B = { b: 1 }
-    const c: C = { c: 2 }
-    const oldEnv = pipe(
-      Context.empty(),
-      Context.add(A, a),
-      Context.add(B, b),
-      Context.add(C, c)
-    ) as Context.Context<A | B | C>
-    const newEnv = pipe(
-      Context.empty(),
-      Context.add(A, a),
-      Context.add(B, { b: 3 })
-    ) as Context.Context<A | B | C>
-    const differ = Differ.environment<A | B | C>()
-    const result: any = differ.diff(oldEnv, newEnv)
+  it("retains the makeUnsafe input map", () => {
+    const map = new Map([[A.key, 1]])
+    const context = Context.makeUnsafe(map)
 
-    strictEqual(result.first._tag, "AndThen")
-    strictEqual(result.first.first._tag, "Empty")
-    strictEqual(result.first.second._tag, "UpdateService")
-    strictEqual(result.first.second.key, B.key)
-    strictEqual(result.second._tag, "RemoveService")
-    strictEqual(result.second.key, C.key)
-  })
-
-  it("pipe()", () => {
-    const result = Context.empty().pipe(Context.add(A, { a: 0 }))
-    deepStrictEqual(result.pipe(Context.get(A)), { a: 0 })
-  })
-
-  it("tag pipe", () => {
-    const result = A.pipe((tag) => Context.make(tag, { a: 0 }))
-    deepStrictEqual(result.pipe(Context.get(A)), { a: 0 })
-  })
-
-  it("mergeAll", () => {
-    const env = Context.mergeAll(
-      Context.make(A, { a: 0 }),
-      Context.make(B, { b: 1 }),
-      Context.make(C, { c: 2 })
-    )
-
-    const pruned = pipe(
-      env,
-      Context.pick(A, B)
-    )
-
-    deepStrictEqual(pipe(pruned, Context.get(A)), { a: 0 })
-    assertSome(pipe(pruned, Context.getOption(B)), { b: 1 })
-    assertNone(pipe(pruned, Context.getOption(C)))
-    assertSome(pipe(env, Context.getOption(C)), { c: 2 })
-  })
-
-  it("isContext", () => {
-    assertTrue(Context.isContext(Context.empty()))
-    assertFalse(Context.isContext(null))
-  })
-
-  it("isTag", () => {
-    assertTrue(Context.isTag(Context.GenericTag("Demo")))
-    assertFalse(Context.isContext(null))
-  })
-
-  it("isReference", () => {
-    assertTrue(Context.isTag(E))
-    assertTrue(Context.isReference(E))
+    strictEqual(context.mapUnsafe, map)
   })
 })

@@ -6,6 +6,11 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
 import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
+  TEST_PAGE_KEY,
+  TEST_PAGE_PATH,
+  TEST_PAGE_SOURCE,
+} from "@repo/backend/test/content-page";
+import {
   TEST_RELEASE_ID,
   testRollbackJson,
 } from "@repo/backend/test/content-release";
@@ -91,6 +96,51 @@ describe("contentRelease/verify/item", () => {
     expect(heads.find(({ sequence }) => sequence === 2)).toMatchObject({
       contentKey: TEST_ARTICLE_KEY,
       family: "article",
+      operation: "delete",
+    });
+  });
+
+  it("verifies a page upsert and preserves its family through deletion", async () => {
+    const upsert = convexTest(schema, convexModules);
+    await stageUpsertFixture(upsert, "page");
+    await beginFixture(upsert);
+
+    await expect(upsert.mutation(verifyOnly)).resolves.toBeNull();
+    const storedPage = await upsert.run((ctx) =>
+      ctx.db.query("contentHeads").unique()
+    );
+    expect(storedPage).toMatchObject({
+      contentKey: TEST_PAGE_KEY,
+      family: "page",
+      operation: "upsert",
+      rendererDomain: "site",
+      sourcePath: TEST_PAGE_SOURCE,
+    });
+
+    const deletion = convexTest(schema, convexModules);
+    await stageDeleteFixture(deletion, "page");
+    const staged = await deletion.run((ctx) =>
+      ctx.db.query("contentItems").unique()
+    );
+    expect(JSON.parse(staged?.rollbackJson ?? "{}")).toMatchObject({
+      snapshot: {
+        head: {
+          contentKey: TEST_PAGE_KEY,
+          family: "page",
+          publicPath: TEST_PAGE_PATH,
+          sourcePath: TEST_PAGE_SOURCE,
+        },
+        state: "page",
+      },
+    });
+    await beginFixture(deletion);
+    await expect(deletion.mutation(verifyOnly)).resolves.toBeNull();
+    const heads = await deletion.run((ctx) =>
+      ctx.db.query("contentHeads").take(3)
+    );
+    expect(heads.find(({ sequence }) => sequence === 2)).toMatchObject({
+      contentKey: TEST_PAGE_KEY,
+      family: "page",
       operation: "delete",
     });
   });

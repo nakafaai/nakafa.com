@@ -6,7 +6,7 @@ import {
   validateProductionDeployKey,
 } from "@repo/backend/scripts/content-runtime/ci/config";
 import { CONTENT_RUNTIME_CACHE_VERSION } from "@repo/backend/scripts/content-runtime/tables";
-import { Effect } from "effect";
+import { ConfigProvider, Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 describe("content runtime CI config", () => {
@@ -71,7 +71,7 @@ describe("content runtime CI config", () => {
     const contentStateHash = "1".repeat(64);
     stubProductionConfig();
     stubCacheIdentity(contentStateHash);
-    await expect(Effect.runPromise(readExportConfig)).resolves.toMatchObject({
+    await expect(runWithStubbedEnv(readExportConfig)).resolves.toMatchObject({
       contentStateHash,
     });
   });
@@ -82,7 +82,7 @@ describe("content runtime CI config", () => {
     stubRuntimeSelection(runtimeSelectionHash);
 
     await expect(
-      Effect.runPromise(readProductionSelectionConfig)
+      runWithStubbedEnv(readProductionSelectionConfig)
     ).resolves.toMatchObject({ runtimeSelectionHash });
   });
 
@@ -91,7 +91,7 @@ describe("content runtime CI config", () => {
     stubRuntimeSelection("invalid-selection");
 
     await expect(
-      Effect.runPromise(readProductionSelectionConfig.pipe(Effect.flip))
+      runWithStubbedEnv(readProductionSelectionConfig.pipe(Effect.flip))
     ).resolves.toMatchObject({
       _tag: "ContentRuntimeCiError",
       message: "AGENT_DOCS_RUNTIME_SELECTION_HASH must be a SHA-256 hash.",
@@ -116,4 +116,15 @@ function stubCacheIdentity(contentStateHash: string) {
 
 function stubRuntimeSelection(runtimeSelectionHash: string) {
   vi.stubEnv("AGENT_DOCS_RUNTIME_SELECTION_HASH", runtimeSelectionHash);
+}
+
+function runWithStubbedEnv<Value, Error>(program: Effect.Effect<Value, Error>) {
+  return Effect.runPromise(
+    program.pipe(
+      Effect.provideService(
+        ConfigProvider.ConfigProvider,
+        ConfigProvider.fromEnvRecord(process.env)
+      )
+    )
+  );
 }

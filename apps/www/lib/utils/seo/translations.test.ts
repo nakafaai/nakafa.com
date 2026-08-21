@@ -8,26 +8,21 @@ import {
 const { mockGetTranslations } = vi.hoisted(() => ({
   mockGetTranslations: vi.fn(),
 }));
-
 vi.mock("next-intl/server", () => ({
   getTranslations: mockGetTranslations,
 }));
-
 describe("fetchSEOTranslationsNamespace", () => {
   beforeEach(() => {
     mockGetTranslations.mockReset();
   });
-
   it("preserves thrown Error messages in the typed failure channel", async () => {
     mockGetTranslations.mockRejectedValue(new Error("dictionary unavailable"));
-
     const exit = await Effect.runPromiseExit(
       fetchSEOTranslationsNamespace("en", "SEO")
     );
     const failure = Exit.isFailure(exit)
-      ? Cause.failureOption(exit.cause)
+      ? Cause.findErrorOption(exit.cause)
       : Option.none();
-
     expect(Option.isSome(failure)).toBe(true);
     if (Option.isSome(failure)) {
       expect(failure.value).toBeInstanceOf(SEOTranslationLoadError);

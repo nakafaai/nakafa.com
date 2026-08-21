@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 describe("NakafaAgentQuranReferenceOptionsSchema", () => {
   it("applies default Quran options", () => {
     expect(
-      Schema.decodeUnknownSync(NakafaAgentQuranReferenceOptionsSchema)({
+      Schema.decodeSync(NakafaAgentQuranReferenceOptionsSchema)({
         surah: 1,
       })
     ).toMatchObject({

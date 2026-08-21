@@ -1,6 +1,6 @@
 import { WinkIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { captureException } from "@repo/analytics/posthog";
+import { captureException } from "@repo/analytics/posthog/browser";
 import { Response } from "@repo/design-system/components/ai/response";
 import {
   Avatar,
@@ -110,7 +110,7 @@ function ForumReactions() {
           toggleReaction({ forumId: forum._id, emoji })
         ).pipe(
           Effect.asVoid,
-          Effect.catchTag("UnknownException", ({ error }) =>
+          Effect.catchTag("UnknownError", ({ cause: error }) =>
             Effect.sync(() => {
               captureException(error, {
                 source: "forum-reaction-toggle",
@@ -190,7 +190,7 @@ function ForumActions() {
           toggleReaction({ forumId: forum._id, emoji })
         ).pipe(
           Effect.asVoid,
-          Effect.catchTag("UnknownException", ({ error }) =>
+          Effect.catchTag("UnknownError", ({ cause: error }) =>
             Effect.sync(() => {
               captureException(error, {
                 source: "forum-reaction-picker",

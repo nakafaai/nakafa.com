@@ -6,7 +6,7 @@ import {
   publicationSuccess,
   validateResponseBytes,
 } from "@repo/backend/convex/contentRelease/ingress/response";
-import { Cause, Effect, Exit, Option } from "effect";
+import { Cause, Effect, Exit, Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("content publication response encoding", () => {
@@ -50,14 +50,14 @@ describe("content publication response encoding", () => {
 
     expect(Exit.isFailure(invalid)).toBe(true);
     if (Exit.isFailure(invalid)) {
-      expect(Option.getOrUndefined(Cause.dieOption(invalid.cause))).toEqual(
-        new PublicationResponseDefect({ reason: "contract" })
+      expect(Cause.findDefect(invalid.cause)).toEqual(
+        Result.succeed(new PublicationResponseDefect({ reason: "contract" }))
       );
     }
     expect(Exit.isFailure(oversized)).toBe(true);
     if (Exit.isFailure(oversized)) {
-      expect(Option.getOrUndefined(Cause.dieOption(oversized.cause))).toEqual(
-        new PublicationResponseDefect({ reason: "size" })
+      expect(Cause.findDefect(oversized.cause)).toEqual(
+        Result.succeed(new PublicationResponseDefect({ reason: "size" }))
       );
     }
   });

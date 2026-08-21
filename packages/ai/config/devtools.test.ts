@@ -5,7 +5,7 @@ const originalNodeEnv = process.env.NODE_ENV;
 const originalVercelEnv = process.env.VERCEL_ENV;
 
 const languageModel = vi.hoisted(() => ({
-  modelId: "google/gemini-3-flash",
+  modelId: "google/gemini-3.5-flash-lite",
   provider: "gateway",
 }));
 
@@ -85,11 +85,11 @@ describe("AI SDK DevTools configuration", () => {
       await importDevToolsConfig();
 
     registerAiSdkDevToolsTelemetry();
-    const model = createAppLanguageModel("google/gemini-3-flash");
+    const model = createAppLanguageModel("google/gemini-3.5-flash-lite");
 
     expect(model).toBe(languageModel);
     expect(gateway).toHaveBeenCalledTimes(1);
-    expect(gateway).toHaveBeenCalledWith("google/gemini-3-flash");
+    expect(gateway).toHaveBeenCalledWith("google/gemini-3.5-flash-lite");
     expect(DevToolsTelemetry).toHaveBeenCalledTimes(1);
     expect(registerTelemetry).toHaveBeenCalledTimes(1);
     expect(registerTelemetry).toHaveBeenCalledWith(telemetryIntegration);
@@ -100,7 +100,9 @@ describe("AI SDK DevTools configuration", () => {
 
     const { createAppLanguageModel } = await importDevToolsConfig();
 
-    expect(createAppLanguageModel("google/gemini-3-flash")).toBe(languageModel);
+    expect(createAppLanguageModel("google/gemini-3.5-flash-lite")).toBe(
+      languageModel
+    );
     expect(DevToolsTelemetry).not.toHaveBeenCalled();
     expect(registerTelemetry).not.toHaveBeenCalled();
   });

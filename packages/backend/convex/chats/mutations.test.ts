@@ -6,6 +6,7 @@ import { CHAT_TRANSCRIPT_REWRITE_MESSAGE_BATCH_SIZE } from "@repo/backend/convex
 import schema from "@repo/backend/convex/schema";
 import {
   createConvexTestWithBetterAuth,
+  seedAnalyticsConsent,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -111,9 +112,14 @@ describe("chats/mutations", () => {
 
   it("captures a user chat message with the selected model", async () => {
     const t = createConvexTestWithBetterAuth();
-    const identity = await t.mutation(
-      async (ctx) => await seedAuthenticatedUser(ctx, { now: NOW })
-    );
+    const identity = await t.mutation(async (ctx) => {
+      const seeded = await seedAuthenticatedUser(ctx, { now: NOW });
+      await seedAnalyticsConsent(ctx, {
+        decidedAt: NOW,
+        userId: seeded.userId,
+      });
+      return seeded;
+    });
 
     const result = await t
       .withIdentity({

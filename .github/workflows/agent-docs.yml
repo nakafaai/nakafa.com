@@ -176,7 +176,7 @@ jobs:
           OPENWEATHER_API_KEY=agent-docs-disabled
           POLAR_ACCESS_TOKEN=agent-docs-disabled
           POLAR_WEBHOOK_SECRET=agent-docs-disabled
-          POSTHOG_ACCOUNT_DELETION_API_KEY=agent-docs-disabled
+          POSTHOG_ERASURE_API_KEY=agent-docs-disabled
           POSTHOG_HOST=https://example.invalid
           POSTHOG_PROJECT_ID=0
           POSTHOG_PROJECT_TOKEN=agent-docs-disabled

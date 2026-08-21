@@ -1,5 +1,4 @@
 import "server-only";
-
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   type ContentRuntimeTarget,
@@ -19,7 +18,6 @@ type PublishedSection = Extract<
   NakafaAgentContentRef["section"],
   "articles" | "material"
 >;
-
 /** Maps one signed-publication failure into the agent read contract. */
 function publishedReadError(error: unknown) {
   return new NakafaAgentDataReadError({
@@ -27,19 +25,20 @@ function publishedReadError(error: unknown) {
     message: "Unable to read signed Nakafa public content.",
   });
 }
-
 /** Reads one current article or material from the signed Aksara runtime. */
 export const readPublishedMarkdown = Effect.fn(
   "NakafaContent.readPublishedMarkdown"
 )(function* (
   readContentTarget: () => ContentRuntimeTarget,
-  ref: NakafaAgentContentRef & { readonly section: PublishedSection }
+  ref: NakafaAgentContentRef & {
+    readonly section: PublishedSection;
+  }
 ) {
   const target = yield* Effect.try({
     try: readContentTarget,
     catch: publishedReadError,
   });
-  const appLocale = yield* Schema.decodeUnknown(AppLocaleSchema)(
+  const appLocale = yield* Schema.decodeEffect(AppLocaleSchema)(
     ref.locale
   ).pipe(Effect.mapError(publishedReadError));
   const found = yield* readPublicContentEvidence(target, {

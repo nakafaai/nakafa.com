@@ -32,19 +32,16 @@ interface CapturedAgentSettings {
   readonly stopWhen?: unknown;
   readonly tools?: NinaToolSet;
 }
-
 interface CapturedStreamOptions {
   readonly messages: ModelMessage[];
   readonly timeout?: unknown;
 }
-
 interface CapturedMessageStreamOptions {
   readonly messageMetadata?: (input: {
     readonly part: TextStreamPart<NinaToolSet>;
   }) => MyMetadata | undefined;
   readonly onError?: (error: unknown) => string;
 }
-
 interface FakeAgentState {
   deltaMetadata?: MyMetadata;
   finishMetadata?: MyMetadata;
@@ -55,9 +52,7 @@ interface FakeAgentState {
   streamFailure?: Error;
   streamOptions?: CapturedStreamOptions;
 }
-
 const fakeAgentState = vi.hoisted((): FakeAgentState => ({}));
-
 /** Returns a complete AI SDK usage object for metadata callbacks. */
 function createUsage(): LanguageModelUsage {
   return {
@@ -76,36 +71,31 @@ function createUsage(): LanguageModelUsage {
     totalTokens: 10,
   };
 }
-
 vi.mock("ai", async (importOriginal) => {
   const actual = await importOriginal<typeof import("ai")>();
-
   /** Captures ToolLoopAgent settings and returns a deterministic stream result. */
   class FakeToolLoopAgent {
     constructor(settings: CapturedAgentSettings) {
       fakeAgentState.settings = settings;
     }
-
     /** Streams a single assistant response without contacting a provider. */
     stream(options: CapturedStreamOptions) {
       if (fakeAgentState.streamFailure) {
         return Promise.reject(fakeAgentState.streamFailure);
       }
-
       fakeAgentState.streamOptions = options;
       fakeAgentState.settings?.prepareStep?.({
         initialInstructions: fakeAgentState.settings.instructions,
         initialMessages: options.messages,
         instructions: fakeAgentState.settings.instructions,
         messages: options.messages,
-        model: "google/gemini-3-flash",
+        model: "google/gemini-3.5-flash-lite",
         responseMessages: [],
         runtimeContext: {},
         stepNumber: 0,
         steps: [],
         toolsContext: {},
       });
-
       return Promise.resolve({
         response: fakeAgentState.responseFailure
           ? Promise.reject(fakeAgentState.responseFailure)
@@ -121,7 +111,6 @@ vi.mock("ai", async (importOriginal) => {
       });
     }
   }
-
   /** Captures stream metadata callbacks without opening an SSE stream. */
   function fakeToUIMessageStream(streamOptions: CapturedMessageStreamOptions) {
     fakeAgentState.startMetadata = streamOptions.messageMetadata?.({
@@ -141,17 +130,14 @@ vi.mock("ai", async (importOriginal) => {
     fakeAgentState.streamErrorMessage = streamOptions.onError?.(
       new Error("stream failed")
     );
-
     return new ReadableStream();
   }
-
   return {
     ...actual,
     toUIMessageStream: fakeToUIMessageStream,
     ToolLoopAgent: FakeToolLoopAgent,
   };
 });
-
 vi.mock("@repo/ai/config/app", () => ({
   provider: {
     /** Supplies a fake model object because the mocked ToolLoopAgent never calls it. */
@@ -162,12 +148,10 @@ vi.mock("@repo/ai/config/app", () => ({
     }),
   },
 }));
-
 const modelId = ModelIdSchema.make("nakafa-lite");
 const placementProgramKey = LearningProgramKeySchema.make(
   "cambridge-lower-secondary"
 );
-
 const ninaContext = {
   learning: {
     assetId: "asset:id:material:mathematics:vector:addition",
@@ -223,7 +207,6 @@ const ninaContext = {
       "placement:cambridge-lower-secondary:curriculum:vector:addition:subjects/mathematics/vector/addition",
   },
 } satisfies NinaContextPack;
-
 const page = {
   locale: "en",
   needsFetch: true,
@@ -232,12 +215,10 @@ const page = {
   url: "https://nakafa.com/en/subjects/mathematics/vector/addition",
   verified: true,
 } satisfies NinaPage;
-
 const runtime = {
   currentDate: "June 21, 2026",
   modelId,
 } satisfies NinaRuntime;
-
 const user = {
   learningSelection: undefined,
   location: {
@@ -249,7 +230,6 @@ const user = {
   },
   role: "student",
 } satisfies NinaUser;
-
 const chat = {
   finalMessages: [
     {
@@ -257,8 +237,9 @@ const chat = {
       role: "user",
     },
   ],
-} satisfies { readonly finalMessages: ModelMessage[] };
-
+} satisfies {
+  readonly finalMessages: ModelMessage[];
+};
 describe("nina/agent", () => {
   beforeEach(() => {
     fakeAgentState.deltaMetadata = undefined;
@@ -270,10 +251,8 @@ describe("nina/agent", () => {
     fakeAgentState.streamErrorMessage = undefined;
     fakeAgentState.streamOptions = undefined;
   });
-
   it("builds specialist context from validated Nina session inputs", () => {
     const context = createNinaAgentContext({ page, runtime, user });
-
     expect(context).toMatchObject({
       currentDate: "June 21, 2026",
       needsPageFetch: true,
@@ -284,7 +263,6 @@ describe("nina/agent", () => {
     });
     expect(context.nina?.snapshot).toEqual(ninaContext.snapshot);
   });
-
   it("uses pinned learning context when the current route is not a learning asset", () => {
     const pinnedContext = {
       ...ninaContext,
@@ -310,7 +288,6 @@ describe("nina/agent", () => {
       runtime,
       user,
     });
-
     expect(context).toMatchObject({
       needsPageFetch: true,
       slug: "subjects/mathematics/vector/addition",
@@ -319,7 +296,6 @@ describe("nina/agent", () => {
     });
     expect(context.nina?.snapshot.source).toBe("pinned-chat");
   });
-
   it("preserves selected learning context without inventing a user role", () => {
     const learningSelection = {
       interest: "exam-prep",
@@ -340,11 +316,9 @@ describe("nina/agent", () => {
         role: undefined,
       },
     });
-
     expect(context.learningSelection).toEqual(learningSelection);
     expect(context.userRole).toBeUndefined();
   });
-
   it("runs the ToolLoopAgent lifecycle with Nina metadata and adapter-owned tools", async () => {
     const writer = {
       merge: vi.fn(),
@@ -375,7 +349,6 @@ describe("nina/agent", () => {
         user,
       })
     );
-
     expect(fakeAgentState.settings?.id).toBe("nina");
     expect(fakeAgentState.settings?.instructions).toContain("Vector Addition");
     expect(fakeAgentState.settings?.tools).toBe(tools);
@@ -403,10 +376,8 @@ describe("nina/agent", () => {
       },
     ]);
   });
-
   it("keeps ToolLoopAgent stream startup failures in the Effect error channel", async () => {
     fakeAgentState.streamFailure = new Error("stream startup failed");
-
     const exit = await Effect.runPromiseExit(
       runNinaAgentTurn({
         messages: chat.finalMessages,
@@ -417,14 +388,11 @@ describe("nina/agent", () => {
         user,
       })
     );
-
     expect(Exit.isFailure(exit)).toBe(true);
     expect(readExitFailure(exit)).toBeInstanceOf(NinaAgentError);
   });
-
   it("keeps ToolLoopAgent response failures in the Effect error channel", async () => {
     fakeAgentState.responseFailure = new Error("response failed");
-
     const exit = await Effect.runPromiseExit(
       runNinaAgentTurn({
         messages: chat.finalMessages,
@@ -435,22 +403,18 @@ describe("nina/agent", () => {
         user,
       })
     );
-
     expect(Exit.isFailure(exit)).toBe(true);
     expect(readExitFailure(exit)).toBeInstanceOf(NinaAgentError);
   });
 });
-
 /** Extracts the typed Effect failure from an Exit for Nina agent assertions. */
 function readExitFailure(exit: Exit.Exit<unknown, unknown>) {
   if (Exit.isSuccess(exit)) {
     return;
   }
-
-  const failure = Cause.failureOption(exit.cause);
+  const failure = Cause.findErrorOption(exit.cause);
   return Option.isSome(failure) ? failure.value : undefined;
 }
-
 /** Creates the minimal AI SDK settings needed to exercise Nina's package Module. */
 function createSettings() {
   return {
@@ -458,7 +422,6 @@ function createSettings() {
     tools: createTools(),
   };
 }
-
 /** Creates the minimal stream callbacks needed to exercise Nina's package Module. */
 function createStream() {
   const writer = {
@@ -466,7 +429,6 @@ function createStream() {
     onError: undefined,
     write: vi.fn(),
   } satisfies UIMessageStreamWriter<MyUIMessage>;
-
   return {
     formatError: () => "translated stream error",
     onError: vi.fn(),
@@ -478,7 +440,6 @@ function createStream() {
     writer,
   };
 }
-
 /** Creates the minimal AI SDK Nina tool set required by the step policy. */
 function createTools() {
   return {

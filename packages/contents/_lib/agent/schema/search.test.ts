@@ -5,9 +5,7 @@ import { describe, expect, it } from "vitest";
 
 describe("NakafaAgentSearchOptionsSchema", () => {
   it("applies the documented search defaults", () => {
-    expect(
-      Schema.decodeUnknownSync(NakafaAgentSearchOptionsSchema)({})
-    ).toEqual({
+    expect(Schema.decodeSync(NakafaAgentSearchOptionsSchema)({})).toEqual({
       limit: NAKAFA_AGENT_SEARCH_WINDOW,
       locale: "en",
       offset: 0,
@@ -16,7 +14,7 @@ describe("NakafaAgentSearchOptionsSchema", () => {
 
   it("accepts an offset within the shared authenticated window", () => {
     expect(
-      Schema.decodeUnknownSync(NakafaAgentSearchOptionsSchema)({
+      Schema.decodeSync(NakafaAgentSearchOptionsSchema)({
         offset: NAKAFA_AGENT_SEARCH_WINDOW - 1,
       })
     ).toEqual({

@@ -15,11 +15,12 @@ import { PromptUserRoleSchema } from "@repo/ai/types/roles";
 import { Schema } from "effect";
 
 /** Runtime context plus authenticated role used to build Nina's system prompt. */
-const SystemPromptPropsSchema = Schema.extend(
-  RuntimePromptContextSchema,
-  Schema.Struct({
+const SystemPromptPropsSchema = RuntimePromptContextSchema.mapFields(
+  (fields) => ({
+    ...fields,
     userRole: Schema.optional(PromptUserRoleSchema),
-  })
+  }),
+  { unsafePreserveChecks: true }
 );
 
 type SystemPromptProps = Schema.Schema.Type<typeof SystemPromptPropsSchema>;

@@ -5,6 +5,7 @@ import {
 import {
   ACTIVE_APP_LOCALES,
   type ActiveAppLocale,
+  type ActiveAppLocaleList,
   ActiveAppLocaleSchema,
   activeAppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
@@ -45,7 +46,6 @@ import {
 } from "@repo/backend/test/snapshot-routes";
 import type { TestConvex } from "convex-test";
 import { Effect, Stream } from "effect";
-
 /** Builds one explicit technical program row for backend protocol tests. */
 export function makeTechnicalProgram(
   index: number,
@@ -81,11 +81,15 @@ export function makeTechnicalProgram(
         publicSlug: `program-teknis-${index}`,
         title: `Program Teknis ${index}`,
       },
+      {
+        appLocale: ActiveAppLocaleSchema.make("de"),
+        publicSlug: `technisches-programm-${index}`,
+        title: `Technisches Programm ${index}`,
+      },
     ],
     version: { label: "Technical protocol version" },
   });
 }
-
 /** Builds one locale-specific root for a technical program contract row. */
 function technicalCurriculum(
   program: ReturnType<typeof makeTechnicalProgram>,
@@ -118,7 +122,6 @@ function technicalCurriculum(
     title: translation.title,
   });
 }
-
 /** Orders curriculum roots by the signed stream's code-unit identity. */
 function compareCurriculum(
   left: ReturnType<typeof technicalCurriculum>,
@@ -131,21 +134,21 @@ function compareCurriculum(
   }
   return leftKey === rightKey ? 0 : 1;
 }
-
-/** Prepares one complete six-row program snapshot and its signed transition. */
+/** Prepares one complete eight-row program snapshot and its signed transition. */
 export const makeProgramSnapshotData = Effect.fn(
   "backendTest.makeProgramSnapshotData"
 )(function* (
   programs: readonly LearningProgram[] = [
     makeTechnicalProgram(1),
     makeTechnicalProgram(2),
-  ]
+  ],
+  activeAppLocales: ActiveAppLocaleList = ACTIVE_APP_LOCALES
 ) {
   const catalog = yield* Effect.forEach(programs, makeProgramSnapshotRow);
   const curriculumRoutes = programs
     .filter((program) => program.navigation.model === "curriculum-tree")
     .flatMap((program) =>
-      ACTIVE_APP_LOCALES.map((appLocale) =>
+      activeAppLocales.map((appLocale) =>
         technicalCurriculum(program, appLocale)
       )
     )
@@ -156,11 +159,11 @@ export const makeProgramSnapshotData = Effect.fn(
   );
   const records = [...catalog, ...curriculum];
   const evidence = yield* digestProgramRows({
-    activeAppLocales: ACTIVE_APP_LOCALES,
+    activeAppLocales,
     rows: Stream.fromIterable(records),
   });
   const manifest = yield* makeProgramSnapshot({
-    activeAppLocales: ACTIVE_APP_LOCALES,
+    activeAppLocales,
     ...evidence,
   });
   const snapshotId = manifest.snapshotId;
@@ -201,11 +204,9 @@ export const makeProgramSnapshotData = Effect.fn(
     snapshots,
   };
 });
-
-export type ProgramSnapshotData = Effect.Effect.Success<
+export type ProgramSnapshotData = Effect.Success<
   ReturnType<typeof makeProgramSnapshotData>
 >;
-
 /** Stages one complete technical program snapshot through public internals. */
 export async function stageProgramSnapshot(
   t: TestConvex<typeof schema>,
@@ -213,7 +214,10 @@ export async function stageProgramSnapshot(
   batchSize = data.rowJson.length
 ) {
   await t.mutation((ctx) =>
-    insertTestRelease(ctx, { snapshots: data.snapshots })
+    insertTestRelease(ctx, {
+      activeAppLocales: data.snapshot.manifest.activeAppLocales,
+      snapshots: data.snapshots,
+    })
   );
   await t.mutation(TEST_STAGE_SNAPSHOT, {
     releaseId: TEST_RELEASE_ID,
@@ -233,7 +237,6 @@ export async function stageProgramSnapshot(
     });
   }
 }
-
 /** Selects one verified program snapshot with a coherent material owner. */
 export async function activateProgramSnapshot(
   t: TestConvex<typeof schema>,

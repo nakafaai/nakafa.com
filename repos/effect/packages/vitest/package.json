@@ -1,6 +1,6 @@
 {
   "name": "@effect/vitest",
-  "version": "0.30.0",
+  "version": "4.0.0-rc.110",
   "type": "module",
   "license": "MIT",
   "description": "A set of helpers for testing Effects with vitest",
@@ -13,33 +13,49 @@
   "bugs": {
     "url": "https://github.com/Effect-TS/effect/issues"
   },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true,
-    "directory": "dist",
-    "linkDirectory": false
-  },
+  "sideEffects": [],
   "exports": {
     "./package.json": "./package.json",
     ".": "./src/index.ts",
     "./*": "./src/*.ts",
-    "./internal/*": null
+    "./internal/*": null,
+    "./index": null,
+    "./*/index": null
+  },
+  "files": [
+    "src/**/*.ts",
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "ai-docs/**/*"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "exports": {
+      "./package.json": "./package.json",
+      ".": "./dist/index.js",
+      "./*": "./dist/*.js",
+      "./internal/*": null,
+      "./index": null,
+      "./*/index": null
+    }
   },
   "scripts": {
-    "build": "pnpm build-esm && pnpm build-annotate && pnpm build-cjs && build-utils pack-v3",
-    "build-esm": "tsc -b tsconfig.build.json",
-    "build-cjs": "babel build/esm --plugins @babel/transform-export-namespace-from --plugins @babel/transform-modules-commonjs --out-dir build/cjs --source-maps",
-    "build-annotate": "babel build/esm --plugins annotate-pure-calls --out-dir build/esm --source-maps",
-    "check": "tsc -b tsconfig.json",
-    "test": "vitest",
-    "coverage": "vitest --coverage"
+    "build": "tsc -b tsconfig.json && pnpm babel",
+    "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
+    "check": "tsc -b tsconfig.json"
   },
   "peerDependencies": {
     "effect": "workspace:^",
-    "vitest": "^3.2.0"
+    "vitest": ">=4.1.0 <5.0.0"
   },
   "devDependencies": {
+    "@types/node": "^26.1.2",
     "effect": "workspace:^",
-    "vitest": "^3.2.4"
+    "vitest": "4.1.10"
   }
 }

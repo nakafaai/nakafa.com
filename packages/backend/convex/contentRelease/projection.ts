@@ -56,7 +56,7 @@ const decodeBatch = Effect.fn("contentRelease.decodeProjectionBatch")(
       projectionJson,
       decodeProjectionJson
     );
-    return yield* Schema.decodeUnknown(StageProjectionBatchInputSchema)({
+    return yield* Schema.decodeUnknownEffect(StageProjectionBatchInputSchema)({
       batchIndex,
       projections,
       releaseId,
@@ -71,7 +71,6 @@ const decodeBatch = Effect.fn("contentRelease.decodeProjectionBatch")(
     );
   }
 );
-
 /** Confirms one projection belongs to its exact staged upsert. */
 const stageProjection = Effect.fn("contentRelease.stageProjection")(function* (
   ctx: MutationCtx,
@@ -127,7 +126,6 @@ const stageProjection = Effect.fn("contentRelease.stageProjection")(function* (
     })
   );
 });
-
 /** Stages one canonical projection batch with exact retry identity. */
 export const stageProjectionProgram = Effect.fn(
   "contentRelease.stageProjectionBatch"

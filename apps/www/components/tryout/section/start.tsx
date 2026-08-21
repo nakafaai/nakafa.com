@@ -46,7 +46,7 @@ export function StartSectionButton({
               });
             })
           ),
-          Effect.catchAll(() =>
+          Effect.catch(() =>
             Effect.sync(() => {
               toast.error(tTryouts("start-part-error"), {
                 position: "bottom-center",

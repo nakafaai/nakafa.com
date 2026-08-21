@@ -1,8 +1,13 @@
 // @vitest-environment node
 
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readSitemapPageDescriptors } from "@/lib/sitemap/catalog";
+
+class MissingSignedMaterialInventory extends Schema.TaggedError<MissingSignedMaterialInventory>()(
+  "MissingSignedMaterialInventory",
+  { message: Schema.String }
+) {}
 
 const activeMocks = vi.hoisted(() => ({
   readActiveContentIdentity: vi.fn(),
@@ -166,7 +171,11 @@ describe("sitemap page catalog", () => {
 
   it("propagates a missing signed material inventory", async () => {
     materialMocks.readPublishedMaterialBuckets.mockReturnValue(
-      Effect.fail(new Error("Signed material inventory is unavailable."))
+      Effect.fail(
+        new MissingSignedMaterialInventory({
+          message: "Signed material inventory is unavailable.",
+        })
+      )
     );
 
     await expect(

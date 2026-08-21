@@ -11,7 +11,6 @@ import {
 import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
 import { getConvexSize } from "convex/values";
 import { Effect, Schema } from "effect";
-
 /** Strictly decodes one bounded structured-row request at the mutation seam. */
 export const decodeSnapshotBatch = Effect.fn(
   "contentRelease.decodeSnapshotBatch"
@@ -38,9 +37,8 @@ export const decodeSnapshotBatch = Effect.fn(
       `Snapshot batch ${family}/${batchIndex} exceeds its bounded transport contract.`
     );
   }
-
   const rows = yield* Effect.forEach(rowJson, decodeSnapshotRowJson);
-  return yield* Schema.decodeUnknown(StageSnapshotBatchInputSchema)({
+  return yield* Schema.decodeUnknownEffect(StageSnapshotBatchInputSchema)({
     batchIndex,
     family,
     releaseId,

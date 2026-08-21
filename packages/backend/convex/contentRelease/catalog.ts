@@ -21,7 +21,6 @@ import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse"
 import { Effect, Schema } from "effect";
 
 type ReadCtx = MutationCtx | QueryCtx;
-
 /** Converts one complete immutable upsert version into a compact head. */
 export const contentHead = Effect.fn("contentRelease.contentHead")(function* (
   head: Doc<"contentHeads">,
@@ -43,7 +42,7 @@ export const contentHead = Effect.fn("contentRelease.contentHead")(function* (
       `Content version ${head.contentKey}/${head.artifactLocale}/${head.sequence} is incomplete.`
     );
   }
-  return yield* Schema.decodeUnknown(ContentHeadSchema)({
+  return yield* Schema.decodeEffect(ContentHeadSchema)({
     artifactHash: head.artifactHash,
     artifactLocale: head.artifactLocale,
     compilerConfigHash: head.compilerConfigHash,
@@ -65,7 +64,6 @@ export const contentHead = Effect.fn("contentRelease.contentHead")(function* (
     )
   );
 });
-
 /** Resolves and validates one content head's canonical published route. */
 const resolvePublicPath = Effect.fn("contentRelease.resolvePublicPath")(
   function* (ctx: ReadCtx, head: Doc<"contentHeads">, activeSequence: number) {
@@ -118,7 +116,6 @@ const resolvePublicPath = Effect.fn("contentRelease.resolvePublicPath")(
     return projection.publicPath;
   }
 );
-
 /** Resolves one exact public projection selected by a frozen sequence. */
 export const resolvePublicProjection = Effect.fn(
   "contentRelease.resolvePublicProjection"
@@ -171,7 +168,6 @@ export const resolvePublicProjection = Effect.fn(
       `Public content ${contentKey}/${artifactLocale} lost its renderer provenance.`
     );
   }
-
   return {
     appLocale: projection.appLocale,
     artifactLocale: head.artifactLocale,
@@ -186,7 +182,6 @@ export const resolvePublicProjection = Effect.fn(
     sourcePath: head.sourcePath,
   };
 });
-
 /** Resolves one effective immutable head from a frozen sequence snapshot. */
 export const resolveContentHead = Effect.fn(
   "contentRelease.resolveContentHead"

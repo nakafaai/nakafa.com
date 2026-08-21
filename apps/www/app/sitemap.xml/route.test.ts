@@ -51,10 +51,8 @@ describe("sitemap index route", () => {
 
     expect(response.status).toBe(500);
     expect(await response.text()).toBe("Internal Server Error");
-    expect(mockCaptureServerException).toHaveBeenCalledWith(
-      failure,
-      undefined,
-      { source: "sitemap-index" }
-    );
+    expect(mockCaptureServerException).toHaveBeenCalledWith(failure, {
+      source: "sitemap-index",
+    });
   });
 });

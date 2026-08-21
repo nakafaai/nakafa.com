@@ -11,7 +11,6 @@ import { Effect, Schema } from "effect";
 
 type ArticleRow = Doc<"articleCatalog">;
 type CategoryRow = Doc<"articleCategories">;
-
 /** Authenticates one active article row against its immutable projection. */
 export const verifyArticle = Effect.fn("contentRelease.verifyArticle")(
   function* (ctx: QueryCtx, row: ArticleRow, activeSequence: number) {
@@ -65,7 +64,6 @@ export const verifyArticle = Effect.fn("contentRelease.verifyArticle")(
     };
   }
 );
-
 /** Authenticates one category representative in a complete article model. */
 export const verifyCategory = Effect.fn("contentRelease.verifyArticleCategory")(
   function* (ctx: QueryCtx, category: CategoryRow, activeSequence: number) {
@@ -106,11 +104,10 @@ export const verifyCategory = Effect.fn("contentRelease.verifyArticleCategory")(
     };
   }
 );
-
 /** Validates one requested category through the public source contract. */
 export const decodeCategory = Effect.fn("contentRelease.decodeArticleCategory")(
   function* (source: string) {
-    return yield* Schema.decodeUnknown(ArticleCategorySchema)(source).pipe(
+    return yield* Schema.decodeEffect(ArticleCategorySchema)(source).pipe(
       Effect.mapError(
         () =>
           new ReleaseError({

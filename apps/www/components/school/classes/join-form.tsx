@@ -1,5 +1,4 @@
 "use client";
-
 import { ArrowLeft02Icon, InLoveIcon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -29,33 +28,26 @@ import { reportClientException } from "@/lib/analytics/client";
 import { useSchool } from "@/lib/context/use-school";
 
 const form = Schema.Struct({
-  code: Schema.Trim.pipe(Schema.minLength(1)),
+  code: Schema.Trim.pipe(Schema.check(Schema.isMinLength(1))),
 });
-
-const formSchema = Schema.standardSchemaV1(form);
-
+const formSchema = Schema.toStandardSchemaV1(form);
 const defaultValues = {
   code: "",
 } satisfies Schema.Schema.Type<typeof form>;
-
 interface Props {
   classId: Id<"schoolClasses">;
   visibility: SchoolClassVisibility;
 }
-
 /** Render the class-join screen when the viewer is in the school but not the class. */
 export function SchoolClassesJoinForm({ classId, visibility }: Props) {
   const t = useTranslations("School.Classes");
   const pathname = usePathname();
   const router = useRouter();
   const schoolSlug = useSchool((state) => state.school.slug);
-
   const [isPending, startTransition] = useTransition();
   const joinClass = useMutation(api.classes.mutations.joinClass);
   const joinPublicClass = useMutation(api.classes.mutations.joinPublicClass);
-
   const isPublic = visibility === "public";
-
   function handlePublicJoin() {
     startTransition(async () => {
       await Effect.runPromise(
@@ -64,11 +56,11 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
           router.replace(pathname);
           router.refresh();
         }).pipe(
-          Effect.catchTag("UnknownException", ({ error }) =>
+          Effect.catchTag("UnknownError", ({ cause: error }) =>
             reportClientException(error, {
               source: "school-class-join-public",
             }).pipe(
-              Effect.zipRight(
+              Effect.andThen(
                 Effect.sync(() => {
                   toast.error(t("join-class-failed"));
                 })
@@ -79,7 +71,6 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
       );
     });
   }
-
   const form = useForm({
     defaultValues,
     validators: {
@@ -92,11 +83,11 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
           router.replace(pathname);
           router.refresh();
         }).pipe(
-          Effect.catchTag("UnknownException", ({ error }) =>
+          Effect.catchTag("UnknownError", ({ cause: error }) =>
             reportClientException(error, {
               source: "school-class-join-private",
             }).pipe(
-              Effect.zipRight(
+              Effect.andThen(
                 Effect.sync(() => {
                   toast.error(t("join-class-failed"));
                 })
@@ -107,7 +98,6 @@ export function SchoolClassesJoinForm({ classId, visibility }: Props) {
       );
     },
   });
-
   return (
     <main className="relative flex h-[calc(100svh-4rem)] items-center justify-center">
       <Particles className="pointer-events-none absolute inset-0 opacity-80" />

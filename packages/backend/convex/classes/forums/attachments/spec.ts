@@ -1,8 +1,6 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import { Schema } from "effect";
-
 export type ForumPendingUploadDoc = Doc<"schoolClassForumPendingUploads">;
-
 export const forumAttachmentAlreadyAttachedCode =
   "FORUM_ATTACHMENT_ALREADY_ATTACHED";
 export const forumAttachmentAlreadyClaimedCode =
@@ -19,8 +17,7 @@ export const forumAttachmentTypeUnsupportedCode =
   "FORUM_ATTACHMENT_TYPE_UNSUPPORTED";
 export const forumAttachmentUploadNotFoundCode =
   "FORUM_ATTACHMENT_UPLOAD_NOT_FOUND";
-
-export const forumAttachmentErrorCodeSchema = Schema.Literal(
+export const forumAttachmentErrorCodeSchema = Schema.Literals([
   forumAttachmentAlreadyAttachedCode,
   forumAttachmentAlreadyClaimedCode,
   forumAttachmentDuplicateCode,
@@ -29,12 +26,11 @@ export const forumAttachmentErrorCodeSchema = Schema.Literal(
   forumAttachmentNotFoundCode,
   forumAttachmentTooLargeCode,
   forumAttachmentTypeUnsupportedCode,
-  forumAttachmentUploadNotFoundCode
-);
+  forumAttachmentUploadNotFoundCode,
+]);
 export type ForumAttachmentErrorCode = Schema.Schema.Type<
   typeof forumAttachmentErrorCodeSchema
 >;
-
 /**
  * One pending forum upload after the storage file and metadata have both been
  * finalized.
@@ -45,22 +41,18 @@ export type ForumAttachmentUpload = ForumPendingUploadDoc & {
   size: NonNullable<ForumPendingUploadDoc["size"]>;
   storageId: NonNullable<ForumPendingUploadDoc["storageId"]>;
 };
-
 export type ForumAttachmentPolicyInput = Pick<
   ForumAttachmentUpload,
   "mimeType" | "name" | "size"
 >;
-
 export type ForumAttachmentMetadataInput = Pick<
   ForumAttachmentUpload,
   "size" | "storageId"
 >;
-
 export interface ForumAttachmentStorageClaimInput {
   readonly storageId: Id<"_storage">;
   readonly uploadId: Id<"schoolClassForumPendingUploads">;
 }
-
 /** Raised when a forum attachment violates an expected domain rule. */
 export class ForumAttachmentError extends Schema.TaggedError<ForumAttachmentError>()(
   "ForumAttachmentError",
@@ -69,7 +61,6 @@ export class ForumAttachmentError extends Schema.TaggedError<ForumAttachmentErro
     message: Schema.String,
   }
 ) {}
-
 /** Raised when Convex storage or database IO fails during attachment handling. */
 export class ForumAttachmentIoError extends Schema.TaggedError<ForumAttachmentIoError>()(
   "ForumAttachmentIoError",
@@ -78,7 +69,6 @@ export class ForumAttachmentIoError extends Schema.TaggedError<ForumAttachmentIo
     message: Schema.String,
   }
 ) {}
-
 export type ForumAttachmentFailure =
   | ForumAttachmentError
   | ForumAttachmentIoError;

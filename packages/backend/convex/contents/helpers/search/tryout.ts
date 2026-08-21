@@ -20,10 +20,9 @@ import { Effect, Option } from "effect";
 
 type ContentSearchInput = Infer<typeof contentSearchInputValidator>;
 type TryoutCatalog = Option.Option.Value<
-  Effect.Effect.Success<ReturnType<typeof findTryoutCatalog>>
+  Effect.Success<ReturnType<typeof findTryoutCatalog>>
 >;
 type TryoutCatalogEntry = TryoutCatalog["entries"][number];
-
 /** Reads public Tryout search documents from its active signed hierarchy. */
 export const readSignedTryoutSearchDocuments = Effect.fn(
   "contents.search.readSignedTryoutDocuments"
@@ -40,19 +39,16 @@ export const readSignedTryoutSearchDocuments = Effect.fn(
   if (scanLimit === 0) {
     return [];
   }
-
   const catalog = yield* findTryoutCatalog(ctx, args.locale);
   if (Option.isNone(catalog)) {
     return [];
   }
-
   const documents = [...catalog.value.entries]
     .sort((left, right) => left.index - right.index)
     .flatMap((entry) => toTryoutSearchDocument(entry, args.locale));
   if (queryTexts.length === 0) {
     return documents.slice(0, scanLimit);
   }
-
   const groups = queryTexts.map((queryText) =>
     searchTryoutQuery(documents, args.locale, queryText, scanLimit)
   );
@@ -62,7 +58,6 @@ export const readSignedTryoutSearchDocuments = Effect.fn(
     (document) => document.content_id
   );
 });
-
 /** Builds one public search document and excludes internal-entry sections. */
 function toTryoutSearchDocument(
   entry: TryoutCatalogEntry,
@@ -72,7 +67,6 @@ function toTryoutSearchDocument(
   if (row.publicPath === undefined) {
     return [];
   }
-
   return [
     buildContentSearchDocument({
       ...row.graph,
@@ -88,7 +82,6 @@ function toTryoutSearchDocument(
     }),
   ];
 }
-
 /** Searches one bounded signed catalog through title, description, and route. */
 function searchTryoutQuery(
   documents: readonly ContentSearchDocument[],
@@ -111,7 +104,6 @@ function searchTryoutQuery(
     : hits;
   return rankContentSearchDocuments(candidates, queryText).slice(0, scanLimit);
 }
-
 /** Combines signed display metadata with route tokens for in-memory search. */
 function getTryoutSearchText(document: ContentSearchDocument) {
   return [

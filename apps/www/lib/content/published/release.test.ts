@@ -57,7 +57,7 @@ describe("content release pin", () => {
           Effect.flip
         )
       )
-    ).resolves.toEqual({
+    ).resolves.toMatchObject({
       _tag: "PublishedReleaseMismatchError",
       actualReleaseId: nextReleaseId,
       expectedReleaseId: activeReleaseId,

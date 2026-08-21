@@ -3,7 +3,7 @@ import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/convex/au
 import { createDeletedUserTombstone } from "@repo/backend/convex/auth/deletion/tombstone";
 import { drainDeletedUserVerificationsProgram } from "@repo/backend/convex/auth/deletion/verification";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
-import { Effect, Either, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 import { describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 28, 21, 0, 0);
@@ -16,7 +16,6 @@ const decodeVerificationPage = Schema.decodeUnknownSync(
     ),
   })
 );
-
 describe("auth/deletion/verification", () => {
   it("resumes from the last committed verification page after an action retry", async () => {
     let durableCursor: string | null = null;
@@ -28,12 +27,10 @@ describe("auth/deletion/verification", () => {
           isDone: false,
         });
       }
-
       if (interruptNextPage) {
         interruptNextPage = false;
         return Promise.reject(new Error("action interrupted"));
       }
-
       return Promise.resolve({
         continueCursor: "verification-cursor-2",
         isDone: true,
@@ -47,20 +44,17 @@ describe("auth/deletion/verification", () => {
         return Promise.resolve();
       }),
     };
-
     const interrupted = await Effect.runPromise(
-      drainDeletedUserVerificationsProgram(operations).pipe(Effect.either)
+      drainDeletedUserVerificationsProgram(operations).pipe(Effect.result)
     );
-
-    expect(Either.isLeft(interrupted)).toBe(true);
-    if (Either.isRight(interrupted)) {
+    expect(Result.isFailure(interrupted)).toBe(true);
+    if (Result.isSuccess(interrupted)) {
       throw new Error("Expected verification cleanup to be interrupted.");
     }
-    expect(interrupted.left).toMatchObject({
+    expect(interrupted.failure).toMatchObject({
       _tag: "UserCleanupError",
     });
     expect(durableCursor).toBe("verification-cursor-1");
-
     await expect(
       Effect.runPromise(drainDeletedUserVerificationsProgram(operations))
     ).resolves.toBeUndefined();
@@ -71,7 +65,6 @@ describe("auth/deletion/verification", () => {
     ]);
     expect(durableCursor).toBeNull();
   });
-
   it("drains direct tokens and OAuth-link state across bounded pages", async () => {
     const t = createConvexTestWithBetterAuth();
     const authUser = await t.mutation(components.betterAuth.adapter.create, {
@@ -91,7 +84,6 @@ describe("auth/deletion/verification", () => {
       { length: ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE + 1 },
       (_, index) => `unrelated-${index}`
     );
-
     for (const [index, value] of unrelatedValues.entries()) {
       await t.mutation(components.betterAuth.adapter.create, {
         input: {
@@ -106,7 +98,6 @@ describe("auth/deletion/verification", () => {
         },
       });
     }
-
     await t.mutation(components.betterAuth.adapter.create, {
       input: {
         model: "verification",
@@ -168,7 +159,6 @@ describe("auth/deletion/verification", () => {
       );
       return insertedUserId;
     });
-
     await t.action(
       internal.auth.deletion.verification.drainDeletedUserVerifications,
       {
@@ -176,7 +166,6 @@ describe("auth/deletion/verification", () => {
         userId,
       }
     );
-
     const state = await t.query(async (ctx) => ({
       remaining: decodeVerificationPage(
         await ctx.runQuery(components.betterAuth.adapter.findMany, {
@@ -190,7 +179,6 @@ describe("auth/deletion/verification", () => {
       ),
       user: await ctx.db.get("users", userId),
     }));
-
     expect(state.remaining.page.map((row) => row.value)).toEqual([
       ...unrelatedValues,
       substringValue,

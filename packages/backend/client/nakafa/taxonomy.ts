@@ -24,7 +24,6 @@ import { Effect } from "effect";
 type ArticleCategoryPageArgs = FunctionArgs<
   typeof api.contentRelease.article.categories
 >;
-
 /** Reads one generated category page without recursive loop inference. */
 const readSignedArticleCategoryPage = Effect.fn(
   "nakafa.taxonomy.readSignedArticleCategoryPage"
@@ -35,18 +34,15 @@ const readSignedArticleCategoryPage = Effect.fn(
     args
   );
 });
-
-type ArticleCategoryPage = Effect.Effect.Success<
+type ArticleCategoryPage = Effect.Success<
   ReturnType<typeof readSignedArticleCategoryPage>
 >;
-
 interface ArticleCategoryCursor {
   readonly categories: readonly string[];
   readonly cursor: string | null;
   readonly expectedManifestHash: string | null;
   readonly expectedReleaseId: string | null;
 }
-
 /** Reads public taxonomy from current signed publications. */
 export function readNakafaTaxonomy(
   convexUrl: string,
@@ -69,7 +65,6 @@ export function readNakafaTaxonomy(
       count: item.count + quran.surahs.length,
     }));
     yield* verifyNakafaReleasePin(convexUrl, releasePin);
-
     return yield* decodeNakafaTaxonomy({
       articles: {
         categories: articleCategories,
@@ -97,7 +92,6 @@ export function readNakafaTaxonomy(
     });
   });
 }
-
 /** Recursively reads one stable signed article-category generation. */
 function readSignedArticleCategoryPages(
   convexUrl: string,
@@ -134,20 +128,16 @@ function readSignedArticleCategoryPages(
       activeManifestHash === null ||
       activeReleaseId === null
     ) {
-      return yield* Effect.fail(
-        missingSignedInventory("article taxonomy", locale)
-      );
+      return yield* missingSignedInventory("article taxonomy", locale);
     }
     if (isDone) {
       return categories;
     }
     if (continueCursor === "") {
-      return yield* Effect.fail(
-        new NakafaAgentDataReadError({
-          cause: `Signed article taxonomy for ${locale} lost its continuation cursor.`,
-          message: "Unable to read signed Nakafa content inventory.",
-        })
-      );
+      return yield* new NakafaAgentDataReadError({
+        cause: `Signed article taxonomy for ${locale} lost its continuation cursor.`,
+        message: "Unable to read signed Nakafa content inventory.",
+      });
     }
     return yield* readSignedArticleCategoryPages(convexUrl, locale, {
       categories,
@@ -157,7 +147,6 @@ function readSignedArticleCategoryPages(
     });
   });
 }
-
 /** Reads every authenticated article category in one stable release generation. */
 const readSignedArticleCategories = Effect.fn(
   "nakafa.taxonomy.readSignedArticleCategories"
@@ -169,7 +158,6 @@ const readSignedArticleCategories = Effect.fn(
     expectedReleaseId: null,
   })
 );
-
 /** Reads every locale's search inventory from active signed publications. */
 const readSignedInventory = Effect.fn("nakafa.taxonomy.readSignedInventory")(
   function* (convexUrl: string, selectedLocale: Locale) {
@@ -180,7 +168,6 @@ const readSignedInventory = Effect.fn("nakafa.taxonomy.readSignedInventory")(
       },
       { concurrency: locales.length }
     );
-
     return {
       contentCounts: locales.map((locale) => ({
         count: inventories[locale].count,
@@ -190,7 +177,6 @@ const readSignedInventory = Effect.fn("nakafa.taxonomy.readSignedInventory")(
     };
   }
 );
-
 /** Reads one locale's article, material, and Tryout signed counts. */
 const readLocaleSignedInventory = Effect.fn(
   "nakafa.taxonomy.readLocaleSignedInventory"
@@ -216,7 +202,6 @@ const readLocaleSignedInventory = Effect.fn(
   if (!materials.managed) {
     return yield* missingSignedInventory("material", locale);
   }
-
   return {
     count: articles.articleCount + materials.materialCount + tryout.routeCount,
     locale,
@@ -226,7 +211,6 @@ const readLocaleSignedInventory = Effect.fn(
     },
   };
 });
-
 /** Fails closed when one activated signed search family is unavailable. */
 function missingSignedInventory(family: string, locale: Locale) {
   return new NakafaAgentDataReadError({

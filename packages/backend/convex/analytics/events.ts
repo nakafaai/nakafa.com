@@ -29,12 +29,6 @@ const optionalNumber = v.optional(v.number());
 /** Analytics event contract accepted by the product capture mutation. */
 export const productAnalyticsEventValidator = v.union(
   v.object({
-    name: v.literal("user signed up"),
-    properties: v.object({
-      plan: userPlanValidator,
-    }),
-  }),
-  v.object({
     name: v.literal("content viewed"),
     properties: v.object({
       alignment_id: learningGraphIdentityValidator.fields.alignmentId,
@@ -70,11 +64,8 @@ export const productAnalyticsEventValidator = v.union(
       country_key: tryoutRouteKeyValidator,
       exam_key: tryoutRouteKeyValidator,
       locale: appLocaleValidator,
-      raw_score_percentage: v.number(),
       score_status: tryoutScoreStatusValidator,
       set_key: tryoutRouteKeyValidator,
-      theta: optionalNumber,
-      total_correct: v.number(),
       total_questions: v.number(),
       track_key: tryoutRouteKeyValidator,
     }),
@@ -126,7 +117,6 @@ export const productAnalyticsEventValidator = v.union(
     properties: v.object({
       product_id: v.string(),
       status: v.string(),
-      subscription_id: v.string(),
     }),
   }),
   v.object({
@@ -134,7 +124,6 @@ export const productAnalyticsEventValidator = v.union(
     properties: v.object({
       product_id: v.string(),
       status: v.string(),
-      subscription_id: v.string(),
     }),
   }),
   v.object({
@@ -142,7 +131,6 @@ export const productAnalyticsEventValidator = v.union(
     properties: v.object({
       new_plan: userPlanValidator,
       previous_plan: userPlanValidator,
-      subscription_id: v.string(),
     }),
   })
 );

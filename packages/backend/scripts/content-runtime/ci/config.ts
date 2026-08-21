@@ -150,9 +150,9 @@ export const readExportConfig = Effect.gen(function* () {
   const production = yield* readProductionConfig;
   const cacheIdentity = yield* readCacheIdentity;
   const cacheKey = yield* Config.redacted("AGENT_DOCS_CONTENT_CACHE_KEY");
-  const exportLimit = yield* Config.integer(
-    "CONTENT_RUNTIME_EXPORT_LIMIT"
-  ).pipe(Config.withDefault(10_000));
+  const exportLimit = yield* Config.int("CONTENT_RUNTIME_EXPORT_LIMIT").pipe(
+    Config.withDefault(10_000)
+  );
 
   if (Redacted.value(cacheKey).length < 43) {
     return yield* contentRuntimeCiError(

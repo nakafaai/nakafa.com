@@ -11,6 +11,7 @@ import {
   decodeItemJson,
   decodeProjectionJson,
 } from "@repo/backend/convex/contentRelease/parse";
+import { isSearchFamily } from "@repo/backend/convex/contentRelease/search/spec";
 import {
   deleteSearchEntry,
   writeSearchEntry,
@@ -60,6 +61,19 @@ const syncSearchItem = Effect.fn("contentRelease.syncSearchItem")(function* (
   row: Doc<"contentItems">,
   activeSequence: number
 ) {
+  const item = yield* decodeItemJson(row.itemJson);
+  if (
+    item.change.contentKey !== row.contentKey ||
+    item.change.artifactLocale !== row.artifactLocale
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Search item ${row.releaseId}/${row.index} lost its signed identity.`
+    );
+  }
+  if (!isSearchFamily(item.change.family)) {
+    return;
+  }
   const projection = yield* resolvePublicProjection(
     ctx,
     row.contentKey,
@@ -67,19 +81,6 @@ const syncSearchItem = Effect.fn("contentRelease.syncSearchItem")(function* (
     activeSequence
   );
   if (!projection) {
-    const item = yield* decodeItemJson(row.itemJson);
-    if (
-      item.change.contentKey !== row.contentKey ||
-      item.change.artifactLocale !== row.artifactLocale
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Search item ${row.releaseId}/${row.index} lost its signed identity.`
-      );
-    }
-    if (item.change.family === "question") {
-      return;
-    }
     return yield* deleteSearchEntry(ctx, row.contentKey, row.artifactLocale);
   }
   const head = yield* loadVersion(

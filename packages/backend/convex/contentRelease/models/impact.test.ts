@@ -1,3 +1,4 @@
+import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { PublicationScopeSchema } from "@nakafa/aksara-contracts/release/snapshot/spec";
@@ -5,7 +6,7 @@ import { getReadModelImpact } from "@repo/backend/convex/contentRelease/models/i
 import { describe, expect, it } from "vitest";
 
 /** Builds one canonical family-wide scope for impact classification. */
-function familyScope(family: "article" | "material" | "question") {
+function familyScope(family: ContentFamily) {
   return PublicationScopeSchema.make({
     content: [],
     families: [family],
@@ -24,6 +25,11 @@ describe("contentRelease/models/impact", () => {
       article: false,
       material: true,
       search: true,
+    });
+    expect(getReadModelImpact(familyScope("page"))).toEqual({
+      article: false,
+      material: false,
+      search: false,
     });
     expect(getReadModelImpact(familyScope("question"))).toEqual({
       article: false,

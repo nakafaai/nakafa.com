@@ -1,6 +1,14 @@
+import { createHash } from "node:crypto";
+import {
+  canonicalizeRendererManifestContract,
+  RendererManifestEnvelopeSchema,
+} from "@nakafa/aksara-contracts/renderer/contract";
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
-import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
-import { Effect } from "effect";
+import {
+  validateLiveRendererManifestHash,
+  validateRendererManifestHash,
+} from "@nakafa/aksara-contracts/renderer/manifest";
+import { Effect, Exit, Schema } from "effect";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@repo/internationalization/src/navigation", () => ({
@@ -34,6 +42,46 @@ describe("renderer manifest", () => {
     expect(manifest.publishedDomains).toEqual(RENDERER_DOMAINS);
   });
 
+  it("accepts historical domain subsets only as frozen evidence", async () => {
+    const { rendererManifest } = await import(
+      "@/lib/content/renderer/manifest"
+    );
+    const manifest = await Effect.runPromise(rendererManifest);
+    const domains = manifest.domains.filter(({ name }) => name !== "site");
+    const publishedDomains = manifest.publishedDomains.filter(
+      (name) => name !== "site"
+    );
+    const canonicalContract = canonicalizeRendererManifestContract({
+      base: manifest.base,
+      domains,
+      publishedDomains,
+    });
+    const hash = `sha256:${createHash("sha256")
+      .update(canonicalContract)
+      .digest("hex")}`;
+    const historicalManifest = Schema.decodeSync(
+      RendererManifestEnvelopeSchema
+    )({
+      ...manifest,
+      domains,
+      hash,
+      publishedDomains,
+    });
+
+    expect(historicalManifest.hash).toBe(
+      "sha256:e06c5326020aeb0c43c0c565948b18a111a4df009ff3b3fe5cd827f35f9275e7"
+    );
+
+    await expect(
+      Effect.runPromise(validateRendererManifestHash(historicalManifest))
+    ).resolves.toEqual(historicalManifest);
+
+    const liveValidation = await Effect.runPromiseExit(
+      validateLiveRendererManifestHash(historicalManifest)
+    );
+    expect(Exit.isFailure(liveValidation)).toBe(true);
+  });
+
   it("matches every pure capability to its physical implementation", async () => {
     const [
       { rendererManifest },
@@ -44,6 +92,7 @@ describe("renderer manifest", () => {
       { mathematicsRegistry },
       { physicsRegistry },
       { politicsRegistry },
+      { siteRegistry },
       { snbtGeneralRegistry },
       { snbtMathRegistry },
       { snbtPlainRegistry },
@@ -58,6 +107,7 @@ describe("renderer manifest", () => {
       import("@repo/design-system/lib/markdown/domain/mathematics"),
       import("@repo/design-system/lib/markdown/domain/physics"),
       import("@repo/design-system/lib/markdown/domain/politics"),
+      import("@repo/design-system/lib/markdown/domain/site"),
       import("@repo/design-system/lib/markdown/domain/snbt/general"),
       import("@repo/design-system/lib/markdown/domain/snbt/mathematics"),
       import("@repo/design-system/lib/markdown/domain/snbt/plain"),
@@ -72,6 +122,7 @@ describe("renderer manifest", () => {
       ["mathematics", sortedKeys(mathematicsRegistry)],
       ["physics", sortedKeys(physicsRegistry)],
       ["politics", sortedKeys(politicsRegistry)],
+      ["site", sortedKeys(siteRegistry)],
       ["snbt-general", sortedKeys(snbtGeneralRegistry)],
       ["snbt-math", sortedKeys(snbtMathRegistry)],
       ["snbt-plain", sortedKeys(snbtPlainRegistry)],

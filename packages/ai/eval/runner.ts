@@ -8,14 +8,14 @@ import {
 import { Clock, Context, Effect } from "effect";
 
 /** Effect service that renders one eval case through the target Module seam. */
-export class EvalRenderer extends Context.Tag("EvalRenderer")<
+export class EvalRenderer extends Context.Service<
   EvalRenderer,
   {
     readonly render: (
       testCase: EvalCase
     ) => Effect.Effect<string, EvalRunError>;
   }
->() {}
+>()("EvalRenderer") {}
 
 /** Checks one rendered eval case against its schema-owned expectations. */
 export function evaluateRenderedCase(testCase: EvalCase, rendered: string) {

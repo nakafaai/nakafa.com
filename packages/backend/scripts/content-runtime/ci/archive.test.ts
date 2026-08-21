@@ -1,15 +1,13 @@
-import { FileSystem } from "@effect/platform";
-import { NodeContext } from "@effect/platform-node";
+import * as NodeServices from "@effect/platform-node/NodeServices";
 import {
   createEncryptedArchive,
   decryptAndExtractArchive,
 } from "@repo/backend/scripts/content-runtime/ci/archive";
 import { CONTENT_RUNTIME_TABLES } from "@repo/backend/scripts/content-runtime/tables";
-import { Effect } from "effect";
+import { Effect, FileSystem } from "effect";
 import { describe, expect, it } from "vitest";
 
 const CACHE_KEY = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGH";
-
 describe("content runtime archive", () => {
   it("uses OCB authenticated encryption and rejects ciphertext tampering", async () => {
     const failure = await Effect.runPromise(
@@ -25,7 +23,6 @@ describe("content runtime archive", () => {
           const importGpgHome = `${root}/import-gnupg`;
           const extractedRoot = `${root}/extracted`;
           const snapshotRoot = `${root}/snapshot`;
-
           for (const directory of [
             exportGpgHome,
             importGpgHome,
@@ -35,7 +32,6 @@ describe("content runtime archive", () => {
             yield* fileSystem.makeDirectory(directory);
             yield* fileSystem.chmod(directory, 0o700);
           }
-
           yield* fileSystem.writeFileString(
             `${snapshotRoot}/manifest.jsonl`,
             ""
@@ -51,7 +47,6 @@ describe("content runtime archive", () => {
           yield* Effect.forEach(CONTENT_RUNTIME_TABLES, (table) =>
             fileSystem.writeFileString(`${snapshotRoot}/${table}.jsonl`, "")
           );
-
           yield* createEncryptedArchive({
             archivePath: `${root}/runtime.tar`,
             cacheKey: CACHE_KEY,
@@ -70,20 +65,19 @@ describe("content runtime archive", () => {
             snapshotRoot: extractedRoot,
             verboseListingPath: `${root}/verbose-listing.txt`,
           });
-
           expect(
             yield* fileSystem.readFileString(`${extractedRoot}/tables.txt`)
           ).toBe(`${CONTENT_RUNTIME_TABLES.join("\n")}\n`);
-
           const ciphertext = yield* fileSystem.readFile(encryptedPath);
           const lastByte = ciphertext.at(-1);
           if (lastByte === undefined) {
-            return yield* Effect.dieMessage("Expected encrypted test bytes.");
+            return yield* Effect.die(
+              new Error("Expected encrypted test bytes.")
+            );
           }
           ciphertext[ciphertext.length - 1] =
             lastByte === 255 ? 254 : lastByte + 1;
           yield* fileSystem.writeFile(encryptedPath, ciphertext);
-
           return yield* decryptAndExtractArchive({
             archivePath: `${root}/tampered.tar`,
             cacheKey: CACHE_KEY,
@@ -95,9 +89,8 @@ describe("content runtime archive", () => {
             verboseListingPath: `${root}/tampered-verbose-listing.txt`,
           }).pipe(Effect.flip);
         })
-      ).pipe(Effect.provide(NodeContext.layer))
+      ).pipe(Effect.provide(NodeServices.layer))
     );
-
     expect(failure).toMatchObject({ _tag: "ContentRuntimeCiError" });
   }, 20_000);
 });

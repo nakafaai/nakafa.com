@@ -1,17 +1,19 @@
 import type { MyUIMessage, MyUIMessagePart } from "@repo/ai/types/message";
 import { Schema } from "effect";
-
 /** Raised when AI SDK finishes without a durable assistant answer. */
 export class IncompleteNinaResponseError extends Schema.TaggedError<IncompleteNinaResponseError>()(
   "IncompleteNinaResponseError",
   {
     finishReason: Schema.optional(Schema.String),
     message: Schema.String,
-    reason: Schema.Literal("aborted", "open-stream-part", "missing-final-text"),
+    reason: Schema.Literals([
+      "aborted",
+      "open-stream-part",
+      "missing-final-text",
+    ]),
     responseMessageId: Schema.String,
   }
 ) {}
-
 /** Returns a typed failure when a streamed response should not be persisted. */
 export function getNinaResponseFailure({
   finishReason,
@@ -30,7 +32,6 @@ export function getNinaResponseFailure({
       responseMessageId: responseMessage.id,
     });
   }
-
   if (responseMessage.parts.some(isOpenStreamPart)) {
     return new IncompleteNinaResponseError({
       finishReason,
@@ -39,7 +40,6 @@ export function getNinaResponseFailure({
       responseMessageId: responseMessage.id,
     });
   }
-
   if (!responseMessage.parts.some(hasFinalTextPart)) {
     return new IncompleteNinaResponseError({
       finishReason,
@@ -49,7 +49,6 @@ export function getNinaResponseFailure({
     });
   }
 }
-
 /** Identifies a final, non-empty assistant text part that is safe to persist. */
 function hasFinalTextPart(part: MyUIMessagePart) {
   return (
@@ -58,7 +57,6 @@ function hasFinalTextPart(part: MyUIMessagePart) {
     part.text.trim().length > 0
   );
 }
-
 /** Identifies AI SDK UI parts that still represent an in-progress stream. */
 function isOpenStreamPart(part: MyUIMessagePart) {
   switch (part.type) {

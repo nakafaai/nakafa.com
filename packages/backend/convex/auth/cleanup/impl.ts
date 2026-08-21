@@ -1,6 +1,7 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { cleanupUserAssessmentData } from "@repo/backend/convex/auth/cleanup/assessments";
+import { cleanupUserConsents } from "@repo/backend/convex/auth/cleanup/consents";
 import { cleanupUserLearningData } from "@repo/backend/convex/auth/cleanup/learning";
 import { cleanupUserNotifications } from "@repo/backend/convex/auth/cleanup/notifications";
 import { cleanupUserSchoolCommunity } from "@repo/backend/convex/auth/cleanup/schoolCommunity";
@@ -43,6 +44,10 @@ export const cleanupDeletedUserProgram = Effect.fn(
   }
 
   if (yield* cleanupUserLearningData(ctx, userId)) {
+    return true;
+  }
+
+  if (yield* cleanupUserConsents(ctx, userId)) {
     return true;
   }
 

@@ -60,7 +60,7 @@ function readPreviousMaterialIdentity(pathname: string) {
     return Option.none();
   }
 
-  const contentKey = Schema.decodeUnknownOption(ContentKeySchema)(
+  const contentKey = Schema.decodeOption(ContentKeySchema)(
     `material/lesson/${domain}/${topic}/${section}`
   );
   if (Option.isNone(contentKey)) {

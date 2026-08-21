@@ -1,10 +1,6 @@
 import { type AuthFunctions, createClient } from "@convex-dev/better-auth";
 import { components, internal } from "@repo/backend/convex/_generated/api";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
-import {
-  captureProductEvent,
-  identifyProductUser,
-} from "@repo/backend/convex/analytics/capture";
 import { ACCOUNT_DELETION_RECOVERY_DELAY_MS } from "@repo/backend/convex/auth/deletion/constants";
 import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
 import authSchema from "@repo/backend/convex/betterAuth/schema";
@@ -13,9 +9,7 @@ import {
   DEFAULT_USER_PLAN,
 } from "@repo/backend/convex/credits/constants";
 import { getCurrentCreditResetTimestamp } from "@repo/backend/convex/credits/helpers/state";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { makeFunctionReference } from "convex/server";
-import { Effect } from "effect";
 
 const authFunctions: AuthFunctions = internal.auth.lifecycle;
 const finalizeDeletedUserCleanupReference = makeFunctionReference<
@@ -36,7 +30,6 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
       user: {
         onCreate: async (ctx, authUser) => {
           const now = Date.now();
-          const signedUpAt = new Date(now).toISOString();
           const userId = await ctx.db.insert("users", {
             email: authUser.email,
             authId: authUser._id,
@@ -63,28 +56,6 @@ export const authComponent = createClient<DataModel, typeof authSchema>(
             unreadCount: 0,
             updatedAt: now,
           });
-
-          await runConvexProgram(
-            Effect.gen(function* () {
-              yield* identifyProductUser(ctx, {
-                distinctId: userId,
-                email: authUser.email,
-                name: authUser.name,
-                plan: DEFAULT_USER_PLAN,
-                signedUpAt,
-              });
-              yield* captureProductEvent(ctx, {
-                distinctId: userId,
-                event: {
-                  name: "user signed up",
-                  properties: {
-                    plan: DEFAULT_USER_PLAN,
-                  },
-                },
-                timestamp: new Date(now),
-              });
-            })
-          );
 
           await ctx.runMutation(components.betterAuth.mutations.setUserId, {
             authId: authUser._id,

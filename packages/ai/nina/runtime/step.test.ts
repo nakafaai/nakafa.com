@@ -247,7 +247,7 @@ function readPreparedStep({
     initialMessages: messages,
     instructions,
     messages,
-    model: "google/gemini-3-flash",
+    model: "google/gemini-3.5-flash-lite",
     responseMessages: [],
     runtimeContext: {},
     stepNumber,

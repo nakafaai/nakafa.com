@@ -6,11 +6,10 @@ import type { MathRequest } from "@repo/math/schema/request";
 import { MathToolInputSchema } from "@repo/math/schema/tool-input";
 import { MathService } from "@repo/math/service";
 import type { UIMessageStreamWriter } from "ai";
-import { Effect, Either, ParseResult, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 
 const invalidMathInputError = "invalid_math_input";
 const mathCheckUnavailableError = "math_check_unavailable";
-
 /** Gives the model actionable recovery guidance without exposing raw failures. */
 function recoveryMessage(message: string) {
   if (message.includes("Variable is required when multiple symbols")) {
@@ -23,7 +22,6 @@ function recoveryMessage(message: string) {
       `,
     });
   }
-
   return createPrompt({
     taskContext: `
       Do not present this result as checked.
@@ -35,12 +33,10 @@ function recoveryMessage(message: string) {
     `,
   });
 }
-
 /** Formats schema validation errors for model-facing recovery decisions. */
-function formatDecodeError(error: ParseResult.ParseError) {
-  return ParseResult.TreeFormatter.formatErrorSync(error);
+function formatDecodeError(error: Schema.SchemaError) {
+  return error.message;
 }
-
 /** Gives the model a concrete retry path for invalid tool arguments. */
 function decodeRecoveryMessage(message: string) {
   if (message.includes("Expected bounded system solves")) {
@@ -55,7 +51,6 @@ function decodeRecoveryMessage(message: string) {
       `,
     });
   }
-
   if (message.includes("Expected every bounded-system expression")) {
     return createPrompt({
       taskContext: `
@@ -68,10 +63,8 @@ function decodeRecoveryMessage(message: string) {
       `,
     });
   }
-
   return "Ask the user for the exact missing expression or data in their language.";
 }
-
 /** Runs one deterministic math request and writes the math evidence data part. */
 export const compute = Effect.fn("math.compute")(function* ({
   input,
@@ -82,13 +75,11 @@ export const compute = Effect.fn("math.compute")(function* ({
   readonly toolCallId: string;
   readonly writer: UIMessageStreamWriter<MyUIMessage>;
 }) {
-  const decoded = yield* Schema.decodeUnknown(MathToolInputSchema)(input).pipe(
-    Effect.either
-  );
-
-  if (Either.isLeft(decoded)) {
-    const recovery = decodeRecoveryMessage(formatDecodeError(decoded.left));
-
+  const decoded = yield* Schema.decodeUnknownEffect(MathToolInputSchema)(
+    input
+  ).pipe(Effect.result);
+  if (Result.isFailure(decoded)) {
+    const recovery = decodeRecoveryMessage(formatDecodeError(decoded.failure));
     return [
       "# Checked Math Work",
       "- Status: error",
@@ -96,12 +87,10 @@ export const compute = Effect.fn("math.compute")(function* ({
       `- Recovery: ${recovery}`,
     ].join("\n");
   }
-
   const request = {
-    ...decoded.right,
+    ...decoded.success,
     kind: "math",
   } satisfies MathRequest;
-
   yield* Effect.sync(() =>
     writer.write({
       data: {
@@ -113,17 +102,16 @@ export const compute = Effect.fn("math.compute")(function* ({
       type: "data-math",
     })
   );
-
-  const checked = yield* MathService.compute(request).pipe(Effect.either);
-
-  if (Either.isLeft(checked)) {
+  const checked = yield* MathService.use((service) =>
+    service.compute(request)
+  ).pipe(Effect.result);
+  if (Result.isFailure(checked)) {
     const data = {
       error: mathCheckUnavailableError,
       input: request,
       kind: request.operation,
       status: "error",
     } satisfies MathData;
-
     yield* Effect.sync(() =>
       writer.write({
         data,
@@ -131,18 +119,15 @@ export const compute = Effect.fn("math.compute")(function* ({
         type: "data-math",
       })
     );
-
-    return formatMathData(data, recoveryMessage(checked.left.message));
+    return formatMathData(data, recoveryMessage(checked.failure.message));
   }
-
   const data = {
     input: request,
-    kind: checked.right.operation,
-    result: checked.right,
-    status: checked.right.status,
-    summary: checked.right.status,
+    kind: checked.success.operation,
+    result: checked.success,
+    status: checked.success.status,
+    summary: checked.success.status,
   } satisfies MathData;
-
   yield* Effect.sync(() =>
     writer.write({
       data,
@@ -150,6 +135,5 @@ export const compute = Effect.fn("math.compute")(function* ({
       type: "data-math",
     })
   );
-
   return formatMathData(data);
 });

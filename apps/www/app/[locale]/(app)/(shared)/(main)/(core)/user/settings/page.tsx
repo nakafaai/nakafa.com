@@ -1,6 +1,6 @@
 import { api } from "@repo/backend/convex/_generated/api";
 import { redirect } from "@repo/internationalization/src/navigation";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -11,6 +11,11 @@ import { scheduleCurrentServerExceptionCapture } from "@/lib/analytics/server";
 import { getToken, preloadAuthQuery } from "@/lib/auth/server";
 import { isActiveLocale } from "@/lib/i18n/active";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+
+class UserSettingsCurriculumPreloadError extends Schema.TaggedError<UserSettingsCurriculumPreloadError>()(
+  "UserSettingsCurriculumPreloadError",
+  { cause: Schema.Unknown }
+) {}
 
 export async function generateMetadata({
   params,
@@ -58,23 +63,27 @@ async function AuthenticatedSettings({
   const curriculum = await Effect.runPromise(
     Effect.all(
       {
-        preloadedPreference: Effect.tryPromise(() =>
-          preloadAuthQuery(api.learningPreferences.queries.getCurrent, {
-            locale,
-          })
-        ),
-        preloadedPrograms: Effect.tryPromise(() =>
-          preloadAuthQuery(
-            api.learningPreferences.queries.listCurriculumPrograms,
-            { locale }
-          )
-        ),
+        preloadedPreference: Effect.tryPromise({
+          catch: (cause) => new UserSettingsCurriculumPreloadError({ cause }),
+          try: () =>
+            preloadAuthQuery(api.learningPreferences.queries.getCurrent, {
+              locale,
+            }),
+        }),
+        preloadedPrograms: Effect.tryPromise({
+          catch: (cause) => new UserSettingsCurriculumPreloadError({ cause }),
+          try: () =>
+            preloadAuthQuery(
+              api.learningPreferences.queries.listCurriculumPrograms,
+              { locale }
+            ),
+        }),
       },
       { concurrency: "unbounded" }
     ).pipe(
       Effect.map(Option.some),
-      Effect.catchTag("UnknownException", (error) =>
-        scheduleCurrentServerExceptionCapture(error.error, {
+      Effect.catchTag("UserSettingsCurriculumPreloadError", (error) =>
+        scheduleCurrentServerExceptionCapture(error.cause, {
           source: "user-settings-curriculum-preload",
         }).pipe(Effect.as(Option.none()))
       )

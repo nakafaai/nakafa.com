@@ -1,4 +1,3 @@
-import { FetchHttpClient } from "@effect/platform";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
@@ -8,6 +7,7 @@ import { CorsValidator } from "@repo/security/lib/cors-validator";
 import { logError, logHttpRequest } from "@repo/utilities/logging/effect";
 import { geolocation } from "@vercel/functions";
 import { Cause, Effect } from "effect";
+import { FetchHttpClient } from "effect/unstable/http";
 import { NextResponse } from "next/server";
 import { scheduleServerExceptionCapture } from "@/lib/analytics/server";
 
@@ -68,17 +68,13 @@ export function POST(req: Request) {
 
       return NextResponse.json(weather);
     }).pipe(
-      Effect.catchAllCause((cause) =>
+      Effect.catchCause((cause) =>
         Effect.gen(function* () {
           const error = Cause.squash(cause);
           const err = error instanceof Error ? error : new Error(String(error));
           const duration = Math.round(performance.now() - startedAt);
 
-          yield* scheduleServerExceptionCapture(
-            err,
-            req.headers.get("cookie") ?? "",
-            { source: "weather-api" }
-          );
+          yield* scheduleServerExceptionCapture(err, { source: "weather-api" });
 
           yield* logError(err, logContext);
           yield* logHttpRequest(

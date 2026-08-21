@@ -9,8 +9,7 @@ import {
   MathStatusSchema,
   MathStepStatusSchema,
 } from "@repo/math/schema/status";
-import { Schema } from "effect";
-
+import { Schema, Struct } from "effect";
 export const MathResultSchema = Schema.Struct({
   conditions: Schema.Array(MathExpressionSchema).pipe(Schema.mutable),
   input: MathRequestSchema,
@@ -24,9 +23,8 @@ export const MathResultSchema = Schema.Struct({
   steps: Schema.Array(MathStepSchema).pipe(Schema.mutable),
   status: MathStatusSchema,
 })
-  .pipe(Schema.mutable)
-  .annotations({
+  .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+  .annotate({
     description: "Deterministic CAS math result returned to Nina and the UI.",
   });
-
 export type MathResult = Schema.Schema.Type<typeof MathResultSchema>;

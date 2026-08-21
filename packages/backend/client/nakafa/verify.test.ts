@@ -13,10 +13,22 @@ vi.mock("@repo/backend/client/runtime", async (importOriginal) => ({
   ...(await importOriginal()),
   readConvexRuntimeQuery: (url: string, query: unknown, args: unknown) =>
     Effect.tryPromise({
-      catch: (cause) => cause,
+      catch: toRuntimeQueryError,
       try: () => runtimeMocks.runtimeQuery(url, query, args),
     }),
 }));
+
+function toRuntimeQueryError(cause: unknown) {
+  if (cause instanceof ConvexRuntimeQueryError) {
+    return cause;
+  }
+
+  return new ConvexRuntimeQueryError({
+    networkCodes: [],
+    query: "test-runtime-query",
+    reason: "query",
+  });
+}
 
 const convexUrl = "https://example.convex.cloud";
 const quranRef = readNakafaContentRefFixture("en", "quran/1", "quran");

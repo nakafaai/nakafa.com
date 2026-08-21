@@ -19,7 +19,7 @@ import { logger } from "@/scripts/utils";
 
 Effect.runPromise(
   runGoogleIndexing().pipe(
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.sync(() => {
         logger.error(`Error running Google indexing script: ${error}`);
         process.exitCode = 1;

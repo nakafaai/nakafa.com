@@ -38,7 +38,7 @@ describe("content release staging groups", () => {
         snapshots: data.snapshots,
       })
     );
-    const request = Schema.decodeUnknownSync(StageGroupRequestSchema)({
+    const request = Schema.decodeSync(StageGroupRequestSchema)({
       operation: "stageGroup",
       releaseId,
       requests: [

@@ -20,21 +20,21 @@ import { Clock, Effect, Schema } from "effect";
 
 const learningSelectionAuthFailedCode = "LEARNING_SELECTION_AUTH_FAILED";
 const unauthenticatedCode = "UNAUTHENTICATED";
-
 /** Expected authentication failure for a learning selection. */
 class LearningSelectionAuthError extends Schema.TaggedError<LearningSelectionAuthError>()(
   "LearningSelectionAuthError",
   {
-    code: Schema.Literal(learningSelectionAuthFailedCode, unauthenticatedCode),
+    code: Schema.Literals([
+      learningSelectionAuthFailedCode,
+      unauthenticatedCode,
+    ]),
     message: Schema.String,
   }
 ) {}
-
 /** Preserves expected auth failures and tags unknown boundary failures. */
 function toLearningSelectionAuthError(error: unknown) {
   const known = readConvexErrorData(error);
   const message = known?.message ?? getUnknownErrorMessage(error);
-
   return new LearningSelectionAuthError({
     code:
       known?.code === unauthenticatedCode || message === "Unauthenticated"
@@ -43,7 +43,6 @@ function toLearningSelectionAuthError(error: unknown) {
     message,
   });
 }
-
 /** Saves one current signed learner selection. */
 export const selectProgram = mutation({
   args: {
@@ -66,7 +65,6 @@ export const selectProgram = mutation({
           args.interest
         );
         const now = yield* Clock.currentTimeMillis;
-
         yield* saveLearningSelection({
           ctx,
           interest: args.interest,
@@ -76,7 +74,6 @@ export const selectProgram = mutation({
           replaceCurriculumPreference: true,
           userId: user.appUser._id,
         });
-
         return {
           interest: args.interest,
           program: yield* toLearningProgramSummary(program, args.locale),

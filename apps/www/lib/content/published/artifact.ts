@@ -2,11 +2,11 @@ import "server-only";
 
 // Only Aksara artifacts that pass exact schema, hash, source, Ed25519 signature,
 // and renderer compatibility verification reach `run()` below.
-// https://github.com/nakafaai/aksara/blob/contracts-v0.12.0/packages/contracts/src/artifact/verify.ts#L9-L37
-// https://github.com/nakafaai/aksara/blob/contracts-v0.12.0/packages/contracts/src/artifact/integrity.ts#L56-L92
+// https://github.com/nakafaai/aksara/blob/9b8cbbd9cc82704d9d7e36af04eb6bb439953fcd/packages/contracts/src/artifact/verify.ts#L9-L37
+// https://github.com/nakafaai/aksara/blob/9b8cbbd9cc82704d9d7e36af04eb6bb439953fcd/packages/contracts/src/artifact/integrity.ts#L56-L92
 // The pinned compiler records and rejects imports and re-exports before publication.
-// https://github.com/nakafaai/aksara/blob/contracts-v0.12.0/packages/compiler/src/policy.ts#L206-L222
-// https://github.com/nakafaai/aksara/blob/contracts-v0.12.0/packages/compiler/src/engine.ts#L201-L205
+// https://github.com/nakafaai/aksara/blob/9b8cbbd9cc82704d9d7e36af04eb6bb439953fcd/packages/compiler/src/policy.ts#L206-L222
+// https://github.com/nakafaai/aksara/blob/9b8cbbd9cc82704d9d7e36af04eb6bb439953fcd/packages/compiler/src/engine.ts#L201-L205
 // MDX documents `run()` as the execution API for already-compiled code.
 // https://mdxjs.com/packages/mdx/#run
 // react-doctor-disable-next-line react-doctor/mdx-ssr-execution-risk

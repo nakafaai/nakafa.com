@@ -8,7 +8,6 @@ import type { UIMessageStreamWriter } from "ai";
 import { Effect } from "effect";
 
 type Writer = Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
-
 /** Reads Nakafa taxonomy and writes a bounded preview UI part. */
 export const taxonomy = Effect.fn("nakafa.taxonomy")(function* ({
   input,
@@ -22,7 +21,6 @@ export const taxonomy = Effect.fn("nakafa.taxonomy")(function* ({
   readonly writer: Writer;
 }) {
   const dataInput = { ...input, locale };
-
   yield* Effect.sync(() =>
     writer.write({
       id: toolCallId,
@@ -34,9 +32,9 @@ export const taxonomy = Effect.fn("nakafa.taxonomy")(function* ({
       },
     })
   );
-
-  const result = yield* Nakafa.taxonomy(dataInput.locale);
-
+  const result = yield* Nakafa.use((service) =>
+    service.taxonomy(dataInput.locale)
+  );
   yield* Effect.sync(() =>
     writer.write({
       id: toolCallId,
@@ -49,6 +47,5 @@ export const taxonomy = Effect.fn("nakafa.taxonomy")(function* ({
       },
     })
   );
-
   return formatTaxonomy(result);
 });

@@ -4,7 +4,10 @@ import {
   PublicPathSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import {
+  ACTIVE_APP_LOCALE_CODES,
+  ArtifactLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
 import {
   canonicalizeRollbackSnapshotEntry,
   RollbackSnapshotEntrySchema,
@@ -99,7 +102,7 @@ export async function activateRollbackFixture(
   }
   const receipt = {
     activatedHeads: itemCount,
-    activeAppLocales: ["en", "id"],
+    activeAppLocales: ACTIVE_APP_LOCALE_CODES,
     deletedHeads: 0,
     manifestHash: TEST_MANIFEST_HASH,
     projectionDigest: TEST_DIGEST,

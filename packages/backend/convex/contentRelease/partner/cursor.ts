@@ -10,18 +10,15 @@ import {
 import { Effect, Schema } from "effect";
 
 const PARTNER_CURSOR_PREFIX = "content:";
-
 const PartnerCursorSchema = Schema.Struct({
   appLocale: AppLocaleSchema,
   activeReleaseId: ReleaseIdSchema,
   contentKey: ContentKeySchema,
-  family: Schema.Literal("article", "material"),
-  prefix: Schema.Union(Schema.Literal(""), ContentKeySchema),
+  family: Schema.Literals(["article", "material"]),
+  prefix: Schema.Union([Schema.Literal(""), ContentKeySchema]),
 });
-
 /** Opaque partner API position bound to one current publication generation. */
 export type PartnerCursor = typeof PartnerCursorSchema.Type;
-
 /** Decodes one unversioned current partner pagination cursor. */
 export const decodePartnerCursor = Effect.fn(
   "contentRelease.decodePartnerCursor"
@@ -64,7 +61,7 @@ export const decodePartnerCursor = Effect.fn(
         message: "Partner API cursor has an invalid identity.",
       }),
   });
-  return yield* Schema.decodeUnknown(PartnerCursorSchema)({
+  return yield* Schema.decodeUnknownEffect(PartnerCursorSchema)({
     appLocale,
     activeReleaseId: releaseId,
     contentKey: decoded.contentKey,
@@ -80,7 +77,6 @@ export const decodePartnerCursor = Effect.fn(
     )
   );
 });
-
 /** Encodes one validated current partner pagination position. */
 export const encodePartnerCursor = Effect.fn(
   "contentRelease.encodePartnerCursor"
@@ -91,7 +87,9 @@ export const encodePartnerCursor = Effect.fn(
   readonly family: "article" | "material";
   readonly prefix: string;
 }) {
-  const cursor = yield* Schema.decodeUnknown(PartnerCursorSchema)(input).pipe(
+  const cursor = yield* Schema.decodeUnknownEffect(PartnerCursorSchema)(
+    input
+  ).pipe(
     Effect.mapError(
       () =>
         new ReleaseError({
@@ -102,7 +100,6 @@ export const encodePartnerCursor = Effect.fn(
   );
   return `${PARTNER_CURSOR_PREFIX}${cursor.family}:${cursor.activeReleaseId}:${cursor.appLocale}:${encodeURIComponent(cursor.prefix)}:${encodeURIComponent(cursor.contentKey)}`;
 });
-
 /** Produces one typed cursor failure without accepting historical formats. */
 function invalidCursor(message: string) {
   return releaseFail("CONTENT_RELEASE_INTEGRITY", message);

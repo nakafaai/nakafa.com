@@ -14,14 +14,11 @@ import { Cause, Effect, Exit, Option } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const createNinaStreamResponseMock = vi.hoisted(() => vi.fn());
-
 vi.mock("@repo/ai/nina/runtime/stream", () => ({
   createNinaStreamResponse: createNinaStreamResponseMock,
 }));
-
 const modelId = ModelIdSchema.make("nakafa-lite");
 const programKey = LearningProgramKeySchema.make("cambridge-lower-secondary");
-
 const turn = {
   copy: {
     errorMessage: "Something went wrong.",
@@ -104,7 +101,6 @@ const turn = {
     role: "student",
   },
 } satisfies NinaTurn;
-
 describe("nina/harness/stream", () => {
   beforeEach(() => {
     createNinaStreamResponseMock.mockReset();
@@ -112,26 +108,26 @@ describe("nina/harness/stream", () => {
       Effect.succeed(new Response(input.page.slug))
     );
   });
-
   it("decodes one turn and delegates response creation through the harness Interface", async () => {
     const response = await Effect.runPromise(
-      provideHarnessServices(NinaHarness.stream(turn))
+      provideHarnessServices(NinaHarness.use((service) => service.stream(turn)))
     );
-
     await expect(response.text()).resolves.toBe(
       "/subjects/mathematics/vector/addition"
     );
     expect(createNinaStreamResponseMock).toHaveBeenCalledWith(turn);
   });
-
   it("rejects invalid route input with a tagged harness error", async () => {
     const exit = await Effect.runPromiseExit(
-      provideHarnessServices(NinaHarness.stream({ ...turn, page: undefined }))
+      provideHarnessServices(
+        NinaHarness.use((service) =>
+          service.stream({ ...turn, page: undefined })
+        )
+      )
     );
-
     expect(Exit.isFailure(exit)).toBe(true);
     const failure = Exit.isFailure(exit)
-      ? Cause.failureOption(exit.cause)
+      ? Cause.findErrorOption(exit.cause)
       : Option.none();
     expect(Option.isSome(failure)).toBe(true);
     if (Option.isSome(failure)) {
@@ -140,15 +136,14 @@ describe("nina/harness/stream", () => {
     }
   });
 });
-
 /** Provides the app-owned services required by the default NinaHarness layer. */
 function provideHarnessServices<A, E>(
   program: Effect.Effect<A, E, NinaHarness>
 ) {
   return program.pipe(
-    Effect.provide(NinaHarness.Default),
+    Effect.provide(NinaHarness.layer),
     Effect.provideService(NinaStore, {
-      loadMessages: () => Effect.succeed([]),
+      loadMessages: Effect.succeed([]),
       saveAssistant: () => Effect.void,
       saveFailure: () => Effect.void,
       saveTrace: () => Effect.void,
@@ -160,7 +155,7 @@ function provideHarnessServices<A, E>(
     Effect.provideService(Nakafa, createNakafaTestService()),
     Effect.provideService(NakafaSearch, {
       search: () =>
-        Effect.dieMessage("Nakafa search is not used in this test."),
+        Effect.die(new Error("Nakafa search is not used in this test.")),
     })
   );
 }

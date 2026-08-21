@@ -4,10 +4,10 @@ import path from "node:path";
 import process from "node:process";
 
 const REPOSITORY_ROOT = process.cwd();
-const NEXT_VERSION = "16.3.0";
+const NEXT_VERSION = "16.3.1";
 const NEXT_PATCH_PATH = "patches/next.patch";
 const NEXT_PATCH_SHA256 =
-  "69c234729b8a9eddad005442418b6c7c6f2fecc62a72fe12db60507ada0c6136";
+  "e2545990da9e16b72827b3fc2f35f63b8807ca3fd77975875ee51da0d4961519";
 const NEXT_UPSTREAM_FIX = "5f735c1ac56b93bc28cd3af86961c47c838fb077";
 const IGNORED_DIRECTORIES = new Set([
   ".git",

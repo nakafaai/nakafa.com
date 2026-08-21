@@ -1,6 +1,6 @@
 "use client";
 
-import { captureException } from "@repo/analytics/posthog";
+import { captureException } from "@repo/analytics/posthog/browser";
 import type { SidebarStatePersistenceError } from "@repo/design-system/lib/sidebar/persistence";
 import { Effect } from "effect";
 

@@ -18,7 +18,7 @@ import {
   failureResult,
 } from "@repo/backend/convex/contentRelease/runtime/result";
 import { makeFunctionReference } from "convex/server";
-import { Effect, Either, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 
 const publicBatchReadReference = makeFunctionReference<
   "query",
@@ -30,17 +30,14 @@ const publicBatchReadReference = makeFunctionReference<
   },
   readonly PublicRuntimeRow[]
 >("contentRelease/runtime/public/internal:readBatch");
-
 class PublicRuntimeBatchRequestError extends Schema.TaggedError<PublicRuntimeBatchRequestError>()(
   "PublicRuntimeBatchRequestError",
   {}
 ) {}
-
 class PublicRuntimeBatchReadError extends Schema.TaggedError<PublicRuntimeBatchReadError>()(
   "PublicRuntimeBatchReadError",
   {}
 ) {}
-
 /** Strictly parses one bounded UTF-8 public batch request. */
 const decodeBatchRequest = Effect.fn("contentRelease.decodePublicBatchRequest")(
   function* (source: string, byteLength: number) {
@@ -55,13 +52,13 @@ const decodeBatchRequest = Effect.fn("contentRelease.decodePublicBatchRequest")(
       catch: () => new PublicRuntimeBatchRequestError(),
       try: (): unknown => JSON.parse(source),
     });
-    return yield* Schema.decodeUnknown(PublicContentRuntimeBatchRequestSchema)(
-      input,
-      { onExcessProperty: "error" }
-    ).pipe(Effect.mapError(() => new PublicRuntimeBatchRequestError()));
+    return yield* Schema.decodeUnknownEffect(
+      PublicContentRuntimeBatchRequestSchema
+    )(input, { onExcessProperty: "error" }).pipe(
+      Effect.mapError(() => new PublicRuntimeBatchRequestError())
+    );
   }
 );
-
 /** Reads and decodes one transactionally consistent public batch. */
 const resolvePublicRuntimeBatch = Effect.fn(
   "contentRelease.resolvePublicRuntimeBatch"
@@ -84,33 +81,36 @@ const resolvePublicRuntimeBatch = Effect.fn(
       Effect.map(
         (
           response
-        ): Exclude<PublicContentRuntimeResponse, { kind: "failure" }> =>
-          response ?? { kind: "missing" }
+        ): Exclude<
+          PublicContentRuntimeResponse,
+          {
+            kind: "failure";
+          }
+        > => response ?? { kind: "missing" }
       ),
       Effect.mapError(() => new PublicRuntimeBatchReadError())
     )
   );
 });
-
 /** Decodes, resolves, and safely encodes one public runtime batch. */
 export const dispatchBatchProgram = Effect.fn(
   "contentRelease.publicRuntimeBatchDispatch"
 )(function* (ctx: ActionCtx, source: string, byteLength: number) {
   const decoded = yield* decodeBatchRequest(source, byteLength).pipe(
-    Effect.either
+    Effect.result
   );
-  if (Either.isLeft(decoded)) {
+  if (Result.isFailure(decoded)) {
     return failureResult("CONTENT_RUNTIME_INVALID", 400);
   }
   const responses = yield* resolvePublicRuntimeBatch(
     ctx,
-    decoded.right.requests
-  ).pipe(Effect.either);
-  if (Either.isLeft(responses)) {
+    decoded.success.requests
+  ).pipe(Effect.result);
+  if (Result.isFailure(responses)) {
     return failureResult("CONTENT_RUNTIME_INTERNAL", 500);
   }
   if (
-    responses.right.some(
+    responses.success.some(
       (response) =>
         publicRuntimeResponseBytes(response) > MAX_PUBLIC_RUNTIME_RESPONSE_BYTES
     )
@@ -120,7 +120,7 @@ export const dispatchBatchProgram = Effect.fn(
   return encodeRuntimeResult(
     PublicContentRuntimeBatchResponseSchema,
     MAX_PUBLIC_RUNTIME_BATCH_RESPONSE_BYTES,
-    { responses: responses.right },
+    { responses: responses.success },
     200
   );
 });

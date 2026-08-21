@@ -10,8 +10,7 @@ import { selectRelevantContent } from "@repo/ai/lib/selection";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { UIMessageStreamWriter } from "ai";
 import dedent from "dedent";
-import { Effect, Either } from "effect";
-
+import { Effect, Result } from "effect";
 /**
  * Scrapes one URL and returns structured evidence for citation checks.
  */
@@ -35,12 +34,9 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
       data: { url, status: "loading", content: "" },
     })
   );
-
-  const safeUrl = yield* Effect.either(assertPublicResearchUrl(url));
-
-  if (Either.isLeft(safeUrl)) {
-    const error = safeUrl.left.message;
-
+  const safeUrl = yield* Effect.result(assertPublicResearchUrl(url));
+  if (Result.isFailure(safeUrl)) {
+    const error = safeUrl.failure.message;
     yield* Effect.sync(() =>
       writer.write({
         id: toolCallId,
@@ -53,16 +49,13 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
         },
       })
     );
-
     return { data: { url, content: "" }, error } satisfies ScrapeOutput;
   }
-
-  const publicUrl = safeUrl.right.publicUrl;
-
+  const publicUrl = safeUrl.success.publicUrl;
   const { nativeMarkdown, scrapeResult } = yield* Effect.all(
     {
-      nativeMarkdown: safeUrl.right.nativeFetchUrl
-        ? fetchSourceMarkdown(safeUrl.right.nativeFetchUrl)
+      nativeMarkdown: safeUrl.success.nativeFetchUrl
+        ? fetchSourceMarkdown(safeUrl.success.nativeFetchUrl)
         : Effect.as(Effect.void, undefined),
       scrapeResult: Effect.tryPromise({
         try: () =>
@@ -81,7 +74,6 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
     },
     { concurrency: "unbounded" }
   );
-
   if ("error" in scrapeResult && !nativeMarkdown) {
     yield* Effect.sync(() =>
       writer.write({
@@ -95,23 +87,19 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
         },
       })
     );
-
     return {
       data: { url: publicUrl, content: "" },
       error: scrapeResult.error,
     } satisfies ScrapeOutput;
   }
-
   let markdown = nativeMarkdown;
   let metadata = {};
-
   if ("response" in scrapeResult) {
     markdown ??= scrapeResult.response.markdown;
     metadata = getDocumentMetadata({
       metadata: scrapeResult.response.metadata,
     });
   }
-
   if (!markdown) {
     yield* Effect.sync(() =>
       writer.write({
@@ -126,19 +114,16 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
         },
       })
     );
-
     return {
       data: { url: publicUrl, content: "", ...metadata },
       error: "No content found.",
     } satisfies ScrapeOutput;
   }
-
   const processedContent = selectRelevantContent({
     content: markdown,
     maxLength,
     query: selectionQuery,
   });
-
   yield* Effect.sync(() =>
     writer.write({
       id: toolCallId,
@@ -151,7 +136,6 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
       },
     })
   );
-
   return {
     data: {
       url: publicUrl,
@@ -161,12 +145,10 @@ export const scrapeUrl = Effect.fn("research.scrapeUrl")(function* ({
     error: undefined,
   } satisfies ScrapeOutput;
 });
-
 /** Checks whether a scrape output can be cited by synthesis. */
 export function isSuccessfulScrapeOutput(output: ScrapeOutput) {
   return !output.error && output.data.content.trim().length > 0;
 }
-
 /**
  * Formats scrape output as markdown for the research agent.
  */

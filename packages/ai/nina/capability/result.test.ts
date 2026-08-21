@@ -45,7 +45,7 @@ function usageRecorder() {
 
 /** Captures expected Effect logs so failure-path tests keep build logs clean. */
 function testLogger() {
-  const entries: Logger.Logger.Options<unknown>[] = [];
+  const entries: Logger.Options<unknown>[] = [];
   const logger = Logger.make((entry) => entries.push(entry));
 
   return { entries, logger };
@@ -127,11 +127,11 @@ describe("nina/capability/result", () => {
         });
 
         return recovered;
-      }).pipe(Effect.provide(Logger.replace(Logger.defaultLogger, logger)))
+      }).pipe(Effect.provide(Logger.layer([logger])))
     );
 
     expect(reported).toHaveLength(1);
-    expect(entries.map((entry) => entry.logLevel.label)).toEqual(["WARN"]);
+    expect(entries.map((entry) => entry.logLevel)).toEqual(["Warn"]);
     expect(Option.isNone(result.usage)).toBe(true);
     expect(result.evidence.capability).toBe("deepResearch");
     expect(result.evidence.status).toBe("failed");
@@ -150,7 +150,7 @@ describe("nina/capability/result", () => {
         error: "content lookup failed",
         errorLocation: "runNakafaAgent",
         reporter: createReporter(reported),
-      }).pipe(Effect.provide(Logger.replace(Logger.defaultLogger, logger)))
+      }).pipe(Effect.provide(Logger.layer([logger])))
     );
 
     const reportedError = reported[0];
@@ -158,7 +158,7 @@ describe("nina/capability/result", () => {
     if (reportedError instanceof Error) {
       expect(reportedError.message).toBe("content lookup failed");
     }
-    expect(entries.map((entry) => entry.logLevel.label)).toEqual([]);
+    expect(entries.map((entry) => entry.logLevel)).toEqual([]);
     expect(Option.isNone(result.usage)).toBe(true);
     expect(result.evidence.capability).toBe("nakafa");
     expect(result.evidence.status).toBe("failed");
@@ -193,5 +193,5 @@ function createReporter(reported: unknown[]) {
       Effect.sync(() => {
         reported.push(error);
       }),
-  } satisfies Context.Tag.Service<typeof NinaReporter>;
+  } satisfies Context.Service.Shape<typeof NinaReporter>;
 }

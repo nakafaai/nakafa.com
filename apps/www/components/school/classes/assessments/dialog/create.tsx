@@ -1,5 +1,4 @@
 "use client";
-
 import { Add01Icon, Edit01Icon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -41,7 +40,6 @@ interface AssessmentDialogShellProps {
   submitLabel: string;
   title: string;
 }
-
 /** Render the assessment create dialog for the active class. */
 export function CreateAssessmentDialog({
   initialAssessment,
@@ -59,7 +57,6 @@ export function CreateAssessmentDialog({
     api.assessments.mutations.public.create.createAssessment
   );
   const updateAssessment = useUpdateAssessmentMutation();
-
   if (initialAssessment) {
     return (
       <AssessmentDialogShell
@@ -102,7 +99,6 @@ export function CreateAssessmentDialog({
       />
     );
   }
-
   return (
     <AssessmentDialogShell
       defaultValues={{
@@ -143,7 +139,6 @@ export function CreateAssessmentDialog({
     />
   );
 }
-
 /** Render the shared assessment dialog shell used by assessment create flows. */
 function AssessmentDialogShell({
   defaultValues,
@@ -159,7 +154,6 @@ function AssessmentDialogShell({
 }: AssessmentDialogShellProps) {
   const [minimumDate] = useState(() => startOfDay(new Date()));
   const locale = useLocale();
-
   const form = useForm({
     defaultValues,
     validators: {
@@ -172,11 +166,11 @@ function AssessmentDialogShell({
           form.reset();
           setOpenAction(false);
         }).pipe(
-          Effect.catchTag("UnknownException", ({ error }) =>
+          Effect.catchTag("UnknownError", ({ cause: error }) =>
             reportClientException(error, {
               source: "school-assessment-create",
             }).pipe(
-              Effect.zipRight(
+              Effect.andThen(
                 Effect.sync(() => {
                   toast.error(errorMessage);
                 })
@@ -187,7 +181,6 @@ function AssessmentDialogShell({
       );
     },
   });
-
   return (
     <form.Subscribe
       selector={(state) => [state.isSubmitting, state.values.status]}
@@ -217,7 +210,6 @@ function AssessmentDialogShell({
               if (isSubmitting) {
                 return;
               }
-
               setOpenAction(nextOpen);
             }}
             title={title}
@@ -228,7 +220,6 @@ function AssessmentDialogShell({
                   const isInvalid =
                     Boolean(field.state.meta.isTouched) &&
                     Boolean(!field.state.meta.isValid);
-
                   return (
                     <AssessmentTitleField
                       formId={formId}
@@ -247,7 +238,6 @@ function AssessmentDialogShell({
                   const isInvalid =
                     Boolean(field.state.meta.isTouched) &&
                     Boolean(!field.state.meta.isValid);
-
                   return (
                     <AssessmentDescriptionField
                       formId={formId}
@@ -266,7 +256,6 @@ function AssessmentDialogShell({
                   const isInvalid =
                     Boolean(field.state.meta.isTouched) &&
                     Boolean(!field.state.meta.isValid);
-
                   return (
                     <AssessmentModeField
                       formId={formId}
@@ -284,7 +273,6 @@ function AssessmentDialogShell({
                   const isInvalid =
                     Boolean(field.state.meta.isTouched) &&
                     Boolean(!field.state.meta.isValid);
-
                   return (
                     <AssessmentStatusField
                       formId={formId}
@@ -303,7 +291,6 @@ function AssessmentDialogShell({
                     const isInvalid =
                       Boolean(field.state.meta.isTouched) &&
                       Boolean(!field.state.meta.isValid);
-
                     return (
                       <AssessmentScheduledAtField
                         formId={formId}

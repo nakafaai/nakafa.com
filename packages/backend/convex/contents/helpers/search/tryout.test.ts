@@ -15,7 +15,7 @@ import { describe, expect, it } from "vitest";
 
 /** Builds one internal section that must never become a public search result. */
 function makeInternalSection(appLocale: ActiveAppLocaleCode) {
-  return Schema.decodeUnknownSync(TryoutCatalogRowSchema)({
+  return Schema.decodeSync(TryoutCatalogRowSchema)({
     countryKey: "indonesia",
     description: "Internal entry",
     examKey: "snbt",

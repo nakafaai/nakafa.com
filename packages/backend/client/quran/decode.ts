@@ -28,18 +28,16 @@ type QuranReferenceResult = FunctionReturnType<
 >;
 type QuranChunkRow = typeof QuranChunkRowSchema.Type;
 type QuranSearchRow = typeof QuranSearchRowSchema.Type;
-
-const QuranPublicationOperationSchema = Schema.Literal(
+const QuranPublicationOperationSchema = Schema.Literals([
   "attribution",
   "catalog",
   "document",
   "interpretation",
   "markdown",
   "reference",
-  "view"
-);
+  "view",
+]);
 type QuranPublicationOperation = typeof QuranPublicationOperationSchema.Type;
-
 const PublishedQuranSourceSchema = Schema.Struct({
   activeManifestHash: Sha256HashSchema,
   activeReleaseId: ReleaseIdSchema,
@@ -47,7 +45,6 @@ const PublishedQuranSourceSchema = Schema.Struct({
   sourceRevision: GitCommitShaSchema,
 });
 export type PublishedQuranSource = typeof PublishedQuranSourceSchema.Type;
-
 /** One signed Quran response failed its exact publication contract. */
 export class QuranPublicationError extends Schema.TaggedError<QuranPublicationError>()(
   "QuranPublicationError",
@@ -56,12 +53,10 @@ export class QuranPublicationError extends Schema.TaggedError<QuranPublicationEr
     reason: Schema.String,
   }
 ) {}
-
 /** Complete signed Quran metadata catalog and its immutable source identity. */
 export interface PublishedQuranCatalog extends PublishedQuranSource {
   readonly surahs: readonly QuranSurahRow[];
 }
-
 /** One bounded signed Quran reference and its app-locale graph identity. */
 export interface PublishedQuranReference extends PublishedQuranSource {
   readonly fromVerse: number;
@@ -70,7 +65,6 @@ export interface PublishedQuranReference extends PublishedQuranSource {
   readonly toVerse: number;
   readonly verses: readonly QuranRuntimeVerse[];
 }
-
 /** Creates one domain failure for malformed or inactive signed Quran data. */
 function publicationError(
   operation: QuranPublicationOperation,
@@ -78,7 +72,6 @@ function publicationError(
 ) {
   return new QuranPublicationError({ operation, reason });
 }
-
 /** Requires a complete active source identity for every public Quran read. */
 export const decodePublishedQuranSource = Effect.fn("NakafaQuran.decodeSource")(
   function* (
@@ -97,32 +90,35 @@ export const decodePublishedQuranSource = Effect.fn("NakafaQuran.decodeSource")(
         "Signed Quran publication is not active."
       );
     }
-
-    return yield* Schema.decodeUnknown(PublishedQuranSourceSchema)(input, {
-      onExcessProperty: "ignore",
-    }).pipe(
+    return yield* Schema.decodeUnknownEffect(PublishedQuranSourceSchema)(
+      input,
+      {
+        onExcessProperty: "ignore",
+      }
+    ).pipe(
       Effect.mapError(() =>
         publicationError(operation, "Signed Quran source identity is invalid.")
       )
     );
   }
 );
-
 /** Parses and strictly decodes one signed Quran JSON row. */
 const decodeRow = Effect.fn("NakafaQuran.decodeRow")(function* <A, I>(
   source: string,
   snapshotId: PublishedQuranSource["snapshotId"],
-  schema: Schema.Schema<A, I, never>,
+  schema: Schema.Codec<A, I, never, never>,
   operation: QuranPublicationOperation
 ) {
   const input = yield* Effect.try({
     catch: () => publicationError(operation, "Quran row is not valid JSON."),
     try: (): unknown => JSON.parse(source),
   });
-
-  const row = yield* Schema.decodeUnknown(ContentSnapshotRowSchema)(input, {
-    onExcessProperty: "error",
-  }).pipe(
+  const row = yield* Schema.decodeUnknownEffect(ContentSnapshotRowSchema)(
+    input,
+    {
+      onExcessProperty: "error",
+    }
+  ).pipe(
     Effect.mapError(() =>
       publicationError(operation, "Quran row failed its signed contract.")
     )
@@ -133,7 +129,7 @@ const decodeRow = Effect.fn("NakafaQuran.decodeRow")(function* <A, I>(
       "Quran row belongs to another signed snapshot."
     );
   }
-  return yield* Schema.decodeUnknown(schema)(row.record.payload, {
+  return yield* Schema.decodeUnknownEffect(schema)(row.record.payload, {
     onExcessProperty: "error",
   }).pipe(
     Effect.mapError(() =>
@@ -141,7 +137,6 @@ const decodeRow = Effect.fn("NakafaQuran.decodeRow")(function* <A, I>(
     )
   );
 });
-
 /** Decodes bounded chunks and returns their exact ordered verses. */
 const decodeChunks = Effect.fn("NakafaQuran.decodeChunks")(function* (
   sources: readonly string[],
@@ -158,10 +153,8 @@ const decodeChunks = Effect.fn("NakafaQuran.decodeChunks")(function* (
       "Quran chunks are missing, out of order, or belong to another surah."
     );
   }
-
   return chunks.flatMap((chunk: QuranChunkRow) => chunk.verses);
 });
-
 /** Checks cross-chunk Quran ordering that individual row schemas cannot see. */
 function hasContiguousChunks(
   chunks: readonly QuranChunkRow[],
@@ -170,7 +163,6 @@ function hasContiguousChunks(
   if (chunks.length === 0) {
     return false;
   }
-
   return chunks.every((chunk, index) => {
     if (chunk.surahNumber !== surahNumber) {
       return false;
@@ -178,20 +170,17 @@ function hasContiguousChunks(
     if (index === 0) {
       return true;
     }
-
     const previous = chunks[index - 1];
     const previousVerse = previous?.verses.at(-1);
     if (!(previous && previousVerse)) {
       return false;
     }
-
     return (
       chunk.firstVerse === previous.lastVerse + 1 &&
       chunk.firstQuranNumber === previousVerse.number.inQuran + 1
     );
   });
 }
-
 /** Checks the app-locale search identity returned beside one surah. */
 function hasExpectedSearchIdentity(
   search: QuranSearchRow,
@@ -204,7 +193,6 @@ function hasExpectedSearchIdentity(
     search.route === `quran/${surahNumber}`
   );
 }
-
 /** Decodes the complete active signed Quran metadata catalog. */
 export const decodePublishedQuranCatalog = Effect.fn(
   "NakafaQuran.decodeCatalog"
@@ -220,10 +208,8 @@ export const decodePublishedQuranCatalog = Effect.fn(
       "Signed Quran catalog is incomplete or out of order."
     );
   }
-
   return { ...source, surahs } satisfies PublishedQuranCatalog;
 });
-
 /** Decodes one bounded active signed Quran verse reference. */
 export const decodePublishedQuranReference = Effect.fn(
   "NakafaQuran.decodeReference"
@@ -278,7 +264,6 @@ export const decodePublishedQuranReference = Effect.fn(
       "Signed Quran reference identity is inconsistent."
     );
   }
-
   return {
     ...source,
     fromVerse: result.fromVerse,

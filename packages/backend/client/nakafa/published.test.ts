@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { ContentTransportError } from "@repo/backend/client/content/errors";
 import { readPublishedMarkdown } from "@repo/backend/client/nakafa/published";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import { TEST_ARTICLE_PROJECTION } from "@repo/backend/test/content-runtime";
@@ -72,7 +73,11 @@ describe("Nakafa signed public reader", () => {
       },
       Effect.succeed({ projection: material }),
     ],
-    ["runtime", () => target, Effect.fail(new Error("runtime unavailable"))],
+    [
+      "runtime",
+      () => target,
+      Effect.fail(new ContentTransportError({ reason: "fetch" })),
+    ],
     [
       "family",
       () => target,

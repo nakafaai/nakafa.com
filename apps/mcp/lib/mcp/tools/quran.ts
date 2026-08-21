@@ -12,12 +12,10 @@ import {
   toMcpStructuredResult,
   toMcpToolError,
 } from "@/lib/mcp/result";
-
 export const NakafaGetQuranReferenceToolInputSchema =
   NakafaAgentQuranReferenceOptionsSchema;
 export const NakafaGetQuranReferenceToolOutputSchema =
   NakafaAgentQuranReferenceSchema;
-
 /** Builds a Quran reference tool result after enforcing the MCP range limit. */
 export function getNakafaQuranReferenceToolResult(args: unknown) {
   return Effect.gen(function* () {
@@ -28,24 +26,20 @@ export function getNakafaQuranReferenceToolResult(args: unknown) {
     );
     const lastVerse = input.to_verse ?? input.from_verse;
     const requestedVerseCount = lastVerse - input.from_verse + 1;
-
     if (lastVerse < input.from_verse) {
       return toMcpToolError("Invalid Quran verse range.", [
         "`to_verse` must be greater than or equal to `from_verse`.",
       ]);
     }
-
     if (requestedVerseCount > NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES) {
       return toMcpToolError("Quran reference range is too large.", [
         `Request at most ${NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES} verses at a time.`,
         "Use `nakafa_get_content` with `https://nakafa.com/en/quran/{surah}` when you need a full surah.",
       ]);
     }
-
-    const reference = yield* Nakafa.quran(input).pipe(
+    const reference = yield* Nakafa.use((service) => service.quran(input)).pipe(
       Effect.provideService(Nakafa, nakafaContent)
     );
-
     return Option.match(reference, {
       onNone: () =>
         toMcpToolError("Nakafa Quran reference was not found.", [

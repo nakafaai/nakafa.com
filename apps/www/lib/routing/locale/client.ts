@@ -1,5 +1,4 @@
 "use client";
-
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { Data, Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
@@ -11,16 +10,13 @@ class LocalizedHrefClientError extends Data.TaggedError(
 )<{
   message: string;
 }> {}
-
 const LocalizedHrefResponseSchema = Schema.Struct({
   href: Schema.String,
 });
-
 /** Reads the browser location without keeping stale React state around. */
 function readCurrentHref() {
   return `${window.location.pathname}${window.location.search}${window.location.hash}`;
 }
-
 /**
  * Calls the internal route-localization endpoint from a browser event and
  * decodes the JSON contract before the caller hands it to `router.replace`.
@@ -30,7 +26,6 @@ const readLocalizedHref = Effect.fn("www.routing.locale.client.read")(
     const url = new URL("/api/internal/routing/locale", window.location.origin);
     url.searchParams.set("href", href);
     url.searchParams.set("locale", locale);
-
     const response = yield* Effect.tryPromise({
       catch: (cause) =>
         new LocalizedHrefClientError({ message: String(cause) }),
@@ -39,13 +34,11 @@ const readLocalizedHref = Effect.fn("www.routing.locale.client.read")(
           headers: { accept: "application/json" },
         }),
     });
-
     if (!response.ok) {
       return yield* new LocalizedHrefClientError({
         message: `Locale route lookup failed with ${response.status}`,
       });
     }
-
     const responseText = yield* Effect.tryPromise({
       catch: (cause) =>
         new LocalizedHrefClientError({ message: String(cause) }),
@@ -59,15 +52,15 @@ const readLocalizedHref = Effect.fn("www.routing.locale.client.read")(
         return value;
       },
     });
-
-    return yield* Schema.decodeUnknown(LocalizedHrefResponseSchema)(body).pipe(
+    return yield* Schema.decodeUnknownEffect(LocalizedHrefResponseSchema)(
+      body
+    ).pipe(
       Effect.mapError(
         (error) => new LocalizedHrefClientError({ message: String(error) })
       )
     );
   }
 );
-
 /**
  * Drives locale switches through the route-owned localization API instead of
  * preserving localized slug text across languages.
@@ -75,7 +68,6 @@ const readLocalizedHref = Effect.fn("www.routing.locale.client.read")(
 export function useLocalizedRouteSwitch() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-
   function replace(locale: Locale) {
     startTransition(() => {
       Effect.runPromise(
@@ -85,11 +77,10 @@ export function useLocalizedRouteSwitch() {
               router.replace(href, { locale });
             })
           ),
-          Effect.catchAll(() => Effect.void)
+          Effect.catch(() => Effect.void)
         )
       );
     });
   }
-
   return { isPending, replace };
 }

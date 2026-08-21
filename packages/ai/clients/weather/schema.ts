@@ -3,7 +3,7 @@ import { Schema } from "effect";
 /** Fields consumed from OpenWeather's current-weather response. */
 export const OpenWeatherCurrentResponseSchema = Schema.Struct({
   main: Schema.Struct({
-    temp: Schema.Number,
+    temp: Schema.Finite,
   }),
   name: Schema.String,
   sys: Schema.Struct({
@@ -23,7 +23,7 @@ export const CurrentWeatherSummarySchema = Schema.Struct({
   condition: Schema.String,
   country: Schema.String,
   icon: Schema.String,
-  temperatureKelvin: Schema.Number,
+  temperatureKelvin: Schema.Finite,
 });
 
 export type CurrentWeatherSummary = Schema.Schema.Type<

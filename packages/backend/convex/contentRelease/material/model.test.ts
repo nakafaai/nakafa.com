@@ -154,9 +154,7 @@ describe("contentRelease/material/model", () => {
     const target = convexTest(schema, convexModules);
     const requested = makeMaterialProjection("en", 1);
     const other = makeMaterialProjection("en", 2);
-    const conflicting = Schema.decodeUnknownSync(
-      MaterialLessonProjectionSchema
-    )({
+    const conflicting = Schema.decodeSync(MaterialLessonProjectionSchema)({
       ...other,
       parentPath: "subjects/test/other-topic",
       publicPath: "subjects/test/other-topic/section-2",

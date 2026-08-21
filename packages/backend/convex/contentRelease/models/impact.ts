@@ -33,8 +33,8 @@ export function getReadModelImpact(scope: PublicationScope): ReadModelImpact {
 /**
  * Transfers ownership for read models whose source families are unchanged.
  *
- * Question content and structured snapshots have their own runtime models, so
- * they cannot change article, material, or public-search rows.
+ * Page and question content plus structured snapshots have their own runtime
+ * models, so they cannot change article, material, or public-search rows.
  */
 export const claimUnchangedReadModels = Effect.fn(
   "contentRelease.claimUnchangedReadModels"

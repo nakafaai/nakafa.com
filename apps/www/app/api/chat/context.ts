@@ -8,7 +8,7 @@ import {
 } from "@repo/ai/nina/memory/pack";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { cleanSlug } from "@repo/utilities/helper";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Option, Schema, Struct } from "effect";
 import {
   isPublishedMaterialPath,
   readPublishedNinaMaterial,
@@ -16,8 +16,7 @@ import {
 
 const ClientNinaContextInputSchema = Schema.Struct({
   materialContextHint: Schema.optional(Schema.NullOr(Schema.String)),
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 /** Route-bound facts needed to open one validated Nina learning session. */
 const ResolveNinaLearningSessionInputSchema = Schema.Struct({
   capturedAt: Schema.String,
@@ -27,28 +26,23 @@ const ResolveNinaLearningSessionInputSchema = Schema.Struct({
   slug: Schema.String,
   url: Schema.String,
   verified: Schema.Boolean,
-}).pipe(Schema.mutable);
-
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 type ClientNinaContextInput = Schema.Schema.Type<
   typeof ClientNinaContextInputSchema
 >;
 type ResolveNinaLearningSessionInput = Schema.Schema.Type<
   typeof ResolveNinaLearningSessionInputSchema
 >;
-
 /** Decodes the optional browser-provided Nina context payload. */
 function readClientNinaContextInput(value: unknown): ClientNinaContextInput {
   const decoded = Schema.decodeUnknownOption(ClientNinaContextInputSchema)(
     value
   );
-
   if (Option.isNone(decoded)) {
     return {};
   }
-
   return decoded.value;
 }
-
 /** Builds NinaHarness input from the current verified publication owner. */
 const createNinaLearningSessionInput = Effect.fn(
   "chat.createNinaLearningSessionInput"
@@ -67,7 +61,6 @@ const createNinaLearningSessionInput = Effect.fn(
       snapshot: pinnedContext,
     });
   }
-
   const cleanPath = cleanSlug(slug);
   const clientContext = readClientNinaContextInput(rawContext);
   if (verified && isPublishedMaterialPath(locale, cleanPath)) {
@@ -84,7 +77,6 @@ const createNinaLearningSessionInput = Effect.fn(
       ...(published.placement ? { placement: published.placement } : {}),
     } satisfies NinaLearningSessionInput;
   }
-
   return {
     capturedAt,
     learning: {
@@ -96,7 +88,6 @@ const createNinaLearningSessionInput = Effect.fn(
     source: "current-page",
   } satisfies NinaLearningSessionInput;
 });
-
 /** Builds NinaHarness input from the latest stored context in an existing chat. */
 function createPinnedNinaLearningSessionInput({
   capturedAt,
@@ -112,15 +103,13 @@ function createPinnedNinaLearningSessionInput({
     ...(snapshot.placement ? { placement: snapshot.placement } : {}),
   };
 }
-
 /** Resolves one Effect-native Nina learning session for the chat route. */
 export const resolveNinaLearningSession = Effect.fn(
   "chat.resolveNinaLearningSession"
 )(function* (input: ResolveNinaLearningSessionInput) {
-  const routeInput = yield* Schema.decodeUnknown(
+  const routeInput = yield* Schema.decodeEffect(
     ResolveNinaLearningSessionInputSchema
   )(input);
-
   const sessionInput = yield* createNinaLearningSessionInput(routeInput);
   return yield* openNinaLearningSession(sessionInput);
 });

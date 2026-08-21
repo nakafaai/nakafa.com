@@ -1,5 +1,4 @@
 import "server-only";
-
 import type { AppLocale } from "@nakafa/aksara-contracts/locale";
 import {
   previewDocumentRoute,
@@ -31,18 +30,17 @@ import type { RenderableContent } from "@/lib/content/published/artifact";
 type QuestionPreviewDocument =
   | QuestionAnswerPreviewDocument
   | QuestionPromptPreviewDocument;
-
 type ReadyPreviewManifest = Extract<
   LocalPreviewManifest,
-  { readonly status: "ready" }
+  {
+    readonly status: "ready";
+  }
 >;
-
 /** Exact try-out route identity requested by one Next server boundary. */
 export interface QuestionPreviewInput {
   readonly appLocale: AppLocale;
   readonly publicPath: string;
 }
-
 /** Authenticated prompt and optional answer rendered by the actual Nakafa app. */
 export interface QuestionPreviewContent {
   readonly Answer: RenderableContent["Content"] | null;
@@ -53,27 +51,24 @@ export interface QuestionPreviewContent {
   readonly selectedBodyKind: QuestionPreviewDocument["identity"]["bodyKind"];
   readonly target: TryoutPreviewTarget;
 }
-
 /** Decodes one prompt projection without leaking a generic parse failure. */
 function decodePromptProjection(artifact: PreviewArtifact) {
-  return Schema.decodeUnknown(QuestionPromptProjectionSchema)(
+  return Schema.decodeUnknownEffect(QuestionPromptProjectionSchema)(
     artifact.projection,
     { onExcessProperty: "error" }
   ).pipe(
     Effect.mapError(() => new PreviewIntegrityError({ check: "projection" }))
   );
 }
-
 /** Decodes one answer projection without weakening the manifest contract. */
 function decodeAnswerProjection(artifact: PreviewArtifact) {
-  return Schema.decodeUnknown(QuestionAnswerProjectionSchema)(
+  return Schema.decodeUnknownEffect(QuestionAnswerProjectionSchema)(
     artifact.projection,
     { onExcessProperty: "error" }
   ).pipe(
     Effect.mapError(() => new PreviewIntegrityError({ check: "projection" }))
   );
 }
-
 /** Authenticates and executes an exact manifest-owned artifact reference. */
 function executeArtifact(
   config: PreviewConfig,
@@ -88,7 +83,6 @@ function executeArtifact(
     previewArtifact,
   });
 }
-
 /** Authenticates one ready prompt or the ordered prompt-answer closure. */
 const readReadyQuestion = Effect.fn("NakafaContent.readReadyQuestionPreview")(
   function* (
@@ -104,7 +98,6 @@ const readReadyQuestion = Effect.fn("NakafaContent.readReadyQuestionPreview")(
       manifest,
       promptArtifact
     );
-
     if (document.identity.bodyKind === "question") {
       return {
         Answer: null,
@@ -116,7 +109,6 @@ const readReadyQuestion = Effect.fn("NakafaContent.readReadyQuestionPreview")(
         target: document.target,
       } satisfies QuestionPreviewContent;
     }
-
     const answerArtifact = manifest.artifacts[1];
     if (answerArtifact === undefined) {
       return yield* new PreviewIntegrityError({ check: "artifact" });
@@ -128,7 +120,6 @@ const readReadyQuestion = Effect.fn("NakafaContent.readReadyQuestionPreview")(
       manifest,
       answerArtifact
     );
-
     return {
       Answer: renderedAnswer.Content,
       Question: renderedPrompt.Content,
@@ -140,7 +131,6 @@ const readReadyQuestion = Effect.fn("NakafaContent.readReadyQuestionPreview")(
     } satisfies QuestionPreviewContent;
   }
 );
-
 /** Reports whether one selected question owns the requested public route. */
 function matchesQuestionRoute(
   document: QuestionPreviewDocument,
@@ -151,7 +141,6 @@ function matchesQuestionRoute(
     route.appLocale === input.appLocale && route.publicPath === input.publicPath
   );
 }
-
 /** Reads a matching local question before any published catalog lookup. */
 export const readQuestionPreview = Effect.fn(
   "NakafaContent.readQuestionPreview"
@@ -160,7 +149,6 @@ export const readQuestionPreview = Effect.fn(
   if (Option.isNone(snapshot)) {
     return Option.none<QuestionPreviewContent>();
   }
-
   const { config, manifest } = snapshot.value;
   const document = manifest.document;
   if (
@@ -179,6 +167,5 @@ export const readQuestionPreview = Effect.fn(
       revision: manifest.revision,
     });
   }
-
   return Option.some(yield* readReadyQuestion(manifest, document, config));
 });

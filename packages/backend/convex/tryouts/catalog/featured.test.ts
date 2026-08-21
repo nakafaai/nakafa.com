@@ -102,7 +102,7 @@ function makeInternalThenVisibleCatalog(locale: ActiveAppLocaleCode) {
     }
   );
 
-  return Schema.decodeUnknownSync(Schema.Array(TryoutCatalogRowSchema))([
+  return Schema.decodeSync(Schema.Array(TryoutCatalogRowSchema))([
     ...privateFirstHierarchy,
     ...publicSecondSet,
   ]);
@@ -114,7 +114,7 @@ function makeSecondSetPlacement(locale: ActiveAppLocaleCode) {
   const moveToSecondSet = (value: string) =>
     value.replace(FIRST_SOURCE_SEGMENT, SECOND_SOURCE_SEGMENT);
 
-  return Schema.decodeUnknownSync(TryoutPlacementSchema)({
+  return Schema.decodeSync(TryoutPlacementSchema)({
     ...placement,
     answerContentKey: moveToSecondSet(placement.answerContentKey),
     questionContentKey: moveToSecondSet(placement.questionContentKey),
@@ -169,7 +169,7 @@ function makeInternalTrackThenVisibleCatalog(locale: ActiveAppLocaleCode) {
       };
     });
 
-  return Schema.decodeUnknownSync(Schema.Array(TryoutCatalogRowSchema))([
+  return Schema.decodeSync(Schema.Array(TryoutCatalogRowSchema))([
     ...privateFirstTrack,
     ...publicSecondTrack,
   ]);
@@ -177,7 +177,7 @@ function makeInternalTrackThenVisibleCatalog(locale: ActiveAppLocaleCode) {
 
 /** Moves the public technical placement into the second authored track. */
 function makeSecondTrackPlacement(locale: ActiveAppLocaleCode) {
-  return Schema.decodeUnknownSync(TryoutPlacementSchema)({
+  return Schema.decodeSync(TryoutPlacementSchema)({
     ...makeSecondSetPlacement(locale),
     trackKey: SECOND_TRACK,
   });

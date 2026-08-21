@@ -9,12 +9,10 @@ import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import type { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
 import type { TrackIdentity } from "@repo/backend/convex/tryouts/sets/spec";
 import { Effect } from "effect";
-
 /** Verified localized catalog selected by the active release owner. */
-export type PublishedCatalog = Effect.Effect.Success<
+export type PublishedCatalog = Effect.Success<
   ReturnType<typeof loadTryoutCatalog>
 >;
-
 /** Signed catalog rows split into their exact discriminated hierarchy kinds. */
 export interface PublishedCatalogIndex {
   readonly countries: readonly TryoutCountry[];
@@ -23,7 +21,6 @@ export interface PublishedCatalogIndex {
   readonly sets: readonly TryoutSet[];
   readonly tracks: readonly TryoutTrack[];
 }
-
 /** Splits verified catalog rows and rejects duplicate public routes. */
 export const indexPublishedCatalog = Effect.fn(
   "tryouts.catalog.indexPublishedCatalog"
@@ -34,7 +31,6 @@ export const indexPublishedCatalog = Effect.fn(
   const sets: TryoutSet[] = [];
   const tracks: TryoutTrack[] = [];
   const publicPaths = new Set<string>();
-
   for (const { row } of catalog.entries) {
     if ("publicPath" in row && row.publicPath !== undefined) {
       if (publicPaths.has(row.publicPath)) {
@@ -44,7 +40,6 @@ export const indexPublishedCatalog = Effect.fn(
       }
       publicPaths.add(row.publicPath);
     }
-
     switch (row.kind) {
       case "country":
         countries.push(row);
@@ -67,7 +62,6 @@ export const indexPublishedCatalog = Effect.fn(
         );
     }
   }
-
   const index: PublishedCatalogIndex = {
     countries,
     exams,
@@ -77,7 +71,6 @@ export const indexPublishedCatalog = Effect.fn(
   };
   return index;
 });
-
 /** Resolves and validates the country and exam parents of one track. */
 export const readPublishedTrackParents = Effect.fn(
   "tryouts.catalog.readPublishedTrackParents"
@@ -94,7 +87,6 @@ export const readPublishedTrackParents = Effect.fn(
   }
   return { country, exam };
 });
-
 /** Resolves and validates the hierarchy parents of one set. */
 export const readPublishedSetParents = Effect.fn(
   "tryouts.catalog.readPublishedSetParents"
@@ -111,7 +103,6 @@ export const readPublishedSetParents = Effect.fn(
   const parents = yield* readPublishedTrackParents(index, track);
   return { ...parents, track };
 });
-
 /** Reads and validates every ordered section owned by one signed set. */
 export const readPublishedSetSections = Effect.fn(
   "tryouts.catalog.readPublishedSetSections"
@@ -143,12 +134,13 @@ export const readPublishedSetSections = Effect.fn(
   }
   return sections;
 });
-
 /** Finds one signed set by its stable authored identity. */
 export const readPublishedSet = Effect.fn("tryouts.catalog.readPublishedSet")(
   function* (
     catalog: PublishedCatalog,
-    identity: TrackIdentity & { readonly setKey: string }
+    identity: TrackIdentity & {
+      readonly setKey: string;
+    }
   ) {
     const index = yield* indexPublishedCatalog(catalog);
     return (
@@ -163,7 +155,6 @@ export const readPublishedSet = Effect.fn("tryouts.catalog.readPublishedSet")(
     );
   }
 );
-
 /** Finds one visible signed section by its stable authored identity. */
 export const readPublishedSection = Effect.fn(
   "tryouts.catalog.readPublishedSection"
@@ -188,7 +179,6 @@ export const readPublishedSection = Effect.fn(
     ) ?? null
   );
 });
-
 /** Finds one signed set by its localized public path. */
 export const readPublishedSetByPath = Effect.fn(
   "tryouts.catalog.readPublishedSetByPath"
@@ -196,7 +186,6 @@ export const readPublishedSetByPath = Effect.fn(
   const index = yield* indexPublishedCatalog(catalog);
   return index.sets.find((set) => set.publicPath === publicPath) ?? null;
 });
-
 /** Reads one signed track and all of its authored sets. */
 export const readPublishedTrackSets = Effect.fn(
   "tryouts.catalog.readPublishedTrackSets"
@@ -228,7 +217,6 @@ export const readPublishedTrackSets = Effect.fn(
   }
   return { sets, track };
 });
-
 /** Resolves the set that owns one signed section. */
 export function findPublishedSet(
   index: PublishedCatalogIndex,
@@ -242,14 +230,14 @@ export function findPublishedSet(
       set.setKey === section.setKey
   );
 }
-
 /** Returns a copied catalog list in stable authored order. */
-export function sortCatalogRows<Row extends { readonly order: number }>(
-  rows: readonly Row[]
-) {
+export function sortCatalogRows<
+  Row extends {
+    readonly order: number;
+  },
+>(rows: readonly Row[]) {
   return [...rows].sort((left, right) => left.order - right.order);
 }
-
 /** Creates one typed fail-closed published catalog error. */
 function catalogIntegrity(message: string) {
   return releaseFail("CONTENT_RELEASE_INTEGRITY", message);

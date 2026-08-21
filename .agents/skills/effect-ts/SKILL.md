@@ -1,208 +1,102 @@
 ---
 name: effect-ts
-description: Effect-TS library usage in TypeScript — Effect.gen generators, Schema.Struct/Schema.Class definitions, Layer/Context.Tag/Service patterns, Effect.pipe pipelines, Data.TaggedError/Data.Class error types, Ref/Queue/PubSub/Deferred concurrency primitives, Match module, Config providers, Scope/Exit/Cause/Runtime patterns, or any code using Effect's typed error channel (E parameter). Trigger when writing, reviewing, debugging, or refactoring TypeScript code that uses Effect — when you see imports from `effect`, `effect/*`, or any `@effect/*` scoped package (schema, platform, sql, opentelemetry, cli, cluster, rpc, vitest). Also trigger when the user asks about Effect patterns, migration from Promises/fp-ts/neverthrow to Effect, or how to structure an Effect application. Do NOT trigger for React's useEffect, Redux side effects, or general English usage of "effect" unless the context clearly involves the Effect-TS library.
+description: Effect v4 implementation and review workflow for Nakafa. Use for TypeScript that imports effect, @effect/vitest, @effect/tsgo, or a remaining v4 ecosystem package.
 ---
-# Effect TypeScript Best Practices
 
-Effect is a TypeScript library for building complex, type-safe applications with structured
-error handling, dependency injection via services/layers, fiber-based concurrency, and
-resource safety.
+# Effect v4 in Nakafa
 
-## When to Apply
+Use retrieval-led reasoning. This repository deliberately targets one exact Effect v4 cohort and does not retain v3 compatibility code.
 
-- Writing or reviewing TypeScript code that imports from `effect`, `@effect/schema`, or `@effect/platform`
-- Implementing typed error handling with `Effect<Success, Error, Requirements>`
-- Building services and layers for dependency injection
-- Working with Schema for data validation, decoding, and transformation
-- Using fiber-based concurrency (queues, semaphores, PubSub, deferred)
-- Processing data with Stream and Sink
-- Migrating from Promises, fp-ts, neverthrow, or ZIO to Effect
+## Required sources
 
-## How to Use
+Before writing or reviewing Effect code:
 
-This skill is organized by domain. Read the relevant reference file for the area you're working in.
+1. Read the root and nearest package `AGENTS.md` files.
+2. Read `repos/effect/AGENTS.md` completely.
+3. Confirm `pnpm effect:source:check` passes.
+4. Inspect the matching implementation, tests, type tests, and JSDoc under `repos/effect/packages/effect`.
+5. Inspect the installed package source when behavior involves `@effect/vitest`, `@effect/tsgo`, or another separate package.
+6. Use the official v4 migration guide for renamed or removed APIs: <https://github.com/Effect-TS/effect/blob/main/MIGRATION.md>.
 
-### Read First: The Paradigm
+Do not use examples for Effect v3 or another prerelease. Do not guess API shape from memory.
 
-**Always read this before diving into API references**, especially when refactoring existing
-code to use Effect or writing new Effect services:
+## Package rules
 
-| Reference | When to Read |
-|-----------|-------------|
-| [**Think in Effect: The Paradigm Shift**](references/getting-paradigm.md) | **Before any other reference.** Mental model shifts, refactoring recipes, anti-patterns, application architecture. Read this to understand HOW to think in Effect — the other files teach WHAT to type. |
+- Keep `effect`, `@effect/vitest`, and every remaining Effect ecosystem package on one exact version.
+- Core functionality formerly published through `@effect/platform`, `@effect/rpc`, and similar packages now belongs to `effect`.
+- Use core exports such as `effect/Schema`, `effect/Cause`, or the top-level `effect` entrypoint for stable modules.
+- Use `effect/unstable/*` only where the capability still lives in the v4 unstable module system.
+- Keep provider and runtime packages such as `@effect/platform-node` only when their implementation is required.
+- Never add a standalone `@effect/language-service` dependency. The tsconfig plugin string remains `@effect/language-service` because `@effect/tsgo` reads it.
 
-### Core Foundations
+## Services and layers
 
-| Reference | When to Read |
-|-----------|-------------|
-| [Getting Started](references/getting-started.md) | Creating the Effect type, pipelines, generators, running effects |
-| [Error Management](references/error-management.md) | Typed errors, recovery, retrying, timeouts, sandboxing |
-| [Core Concepts](references/core-concepts.md) | Request batching, configuration management, runtime system |
+- Define real dependency seams with `Context.Service`.
+- Keep the service Interface separate from its live Implementation unless the owning Module intentionally provides both.
+- Construct implementations with `Layer.succeed`, `Layer.effect`, or a scoped Layer as required by the resource lifetime.
+- Provide dependencies at composition roots.
+- Do not add service abstractions for pure helpers, one caller, or values that do not need substitution.
 
-### Data & Validation
-
-| Reference | When to Read |
-|-----------|-------------|
-| [Data Types](references/data-types.md) | Option, Either, Cause, Chunk, DateTime, Duration, Exit, Data |
-| [Schema Basics](references/schema-basics.md) | Schema intro, basic usage, classes, constructors, effect data types |
-| [Schema Advanced](references/schema-advanced.md) | Transformations, filters, annotations, error formatting, JSON Schema output |
-
-### Architecture & Dependencies
-
-| Reference | When to Read |
-|-----------|-------------|
-| [Requirements Management](references/req-management.md) | Services, Layers, dependency injection, layer memoization |
-| [Resource Management](references/resource-management.md) | Scope, safe resource acquisition/release, caching |
-| [State Management](references/state-management.md) | Ref, SubscriptionRef, SynchronizedRef for concurrent state |
-
-### Concurrency & Streaming
-
-| Reference | When to Read |
-|-----------|-------------|
-| [Concurrency](references/conc-concurrency.md) | Fibers, Deferred, Latch, PubSub, Queue, Semaphore |
-| [Streams and Sinks](references/streams-and-sinks.md) | Creating, consuming, transforming streams; sink operations |
-| [Scheduling](references/sched-scheduling.md) | Built-in schedules, cron, combinators, repetition |
-
-### Platform & Observability
-
-| Reference | When to Read |
-|-----------|-------------|
-| [Platform](references/plat-platform.md) | FileSystem, Command, Terminal, KeyValueStore, Path |
-| [Observability](references/obs-observability.md) | Logging, metrics, tracing, Supervisor |
-| [Testing](references/test-testing.md) | TestClock for time simulation; for service mocking and layer testing, see [Requirements Management](references/req-management.md) |
-
-### Style, AI & Migration
-
-| Reference | When to Read |
-|-----------|-------------|
-| [Code Style](references/code-style.md) | Branded types, pattern matching, dual APIs, guidelines, traits |
-| [AI Integration](references/ai-integration.md) | Effect AI packages for LLM tool use and execution planning |
-| [Micro](references/micro-module.md) | Lightweight Effect alternative for smaller bundles |
-| [Migration Guides](references/migration-guides.md) | Coming from Promises, fp-ts, neverthrow, or ZIO |
-
-## Quick Reference — Common Patterns
-
-### The Effect Type
-```ts
-//         ┌─── Success type
-//         │        ┌─── Error type
-//         │        │      ┌─── Required dependencies
-//         ▼        ▼      ▼
-Effect<Success, Error, Requirements>
-```
-
-### Creating Effects
-```ts
-import { Effect } from "effect"
-
-// From sync values
-const succeed = Effect.succeed(42)
-const fail = Effect.fail(new Error("oops"))
-
-// From sync code that may throw
-const sync = Effect.try(() => JSON.parse(data))
-
-// From promises
-const async = Effect.tryPromise(() => fetch(url))
-
-// From generators (recommended for complex flows)
-const program = Effect.gen(function* () {
-  const user = yield* getUser(id)
-  const todos = yield* getTodos(user.id)
-  return { user, todos }
-})
-```
-
-### Running Effects
-```ts
-// Async (returns Promise)
-Effect.runPromise(program)
-
-// With full Exit information
-Effect.runPromiseExit(program)
-
-// Sync (throws on async)
-Effect.runSync(program)
-```
-
-### Typed Errors
-```ts
-import { Data, Effect } from "effect"
-
-class NotFound extends Data.TaggedError("NotFound")<{
-  readonly id: string
-}> {}
-
-class Unauthorized extends Data.TaggedError("Unauthorized")<{}> {}
-
-// Error type is tracked: Effect<User, NotFound | Unauthorized>
-const getUser = (id: string) =>
-  Effect.gen(function* () {
-    // ...
-  })
-```
-
-### Services and Layers
 ```ts
 import { Context, Effect, Layer } from "effect"
 
-// Define a service
-class UserRepo extends Context.Tag("UserRepo")<
-  UserRepo,
-  { readonly findById: (id: string) => Effect.Effect<User, NotFound> }
->() {}
+interface ClockService {
+  readonly now: Effect.Effect<number>
+}
 
-// Use in effects — adds to Requirements channel
-const program = Effect.gen(function* () {
-  const repo = yield* UserRepo
-  return yield* repo.findById("1")
+class Clock extends Context.Service<Clock, ClockService>()("Clock") {}
+
+const ClockLive = Layer.succeed(Clock, {
+  now: Effect.sync(() => Date.now())
 })
-
-// Implement with a Layer
-const UserRepoLive = Layer.succeed(UserRepo, {
-  findById: (id) => Effect.succeed({ id, name: "Alice" })
-})
-
-// Provide and run
-program.pipe(Effect.provide(UserRepoLive), Effect.runPromise)
 ```
 
-### Schema Validation
-```ts
-import { Schema } from "effect"
+## Programs and failures
 
-const User = Schema.Struct({
-  id: Schema.Number,
-  name: Schema.String,
-  email: Schema.String.pipe(Schema.pattern(/@/))
-})
+- Use `Effect.fn("domain.operation")` for exported fallible or effectful operations.
+- Keep generators flat and name meaningful stages.
+- Model expected failures with specific `Schema.TaggedError` classes.
+- Handle known errors with `catchTag` or `catchTags`.
+- Preserve the full Cause at outer diagnostic boundaries instead of flattening defects into generic errors.
+- Use `Effect.try`, `Effect.tryPromise`, `Effect.promise`, and resource-safe constructors for external work.
+- Keep pure deterministic transformations pure.
+- Run Effects only at framework, CLI, script, event, or explicit test boundaries.
 
-type User = typeof User.Type
+## Schemas
 
-// Decode (parse + validate)
-const decode = Schema.decodeUnknownSync(User)
-const user = decode({ id: 1, name: "Alice", email: "a@b.com" })
-```
+- Derive public types from their runtime Schema.
+- Use `Schema.optionalKey` when a generated JSON object property may be absent but must not encode JavaScript `undefined`.
+- Use `Schema.optional` only when both absence and `undefined` are meaningful in the TypeScript contract.
+- Validate model-facing JSON Schema output against actual v4 output, including references and composition keywords.
+- Do not preserve v3 parser errors, v3 class helpers, or manual duplicate unions.
 
-### Pipelines
-```ts
-import { Effect, pipe } from "effect"
+## Testing
 
-// Data-last (pipe style)
-const result = pipe(
-  getTodos,
-  Effect.map((todos) => todos.filter((t) => !t.done)),
-  Effect.flatMap((active) => sendNotification(active.length)),
-  Effect.catchTag("NetworkError", () => Effect.succeed("offline"))
-)
+The repository shared adapter is `@repo/testing/effect`, backed by the matching `@effect/vitest` cohort.
 
-// Fluent (method style)
-const result2 = getTodos.pipe(
-  Effect.map((todos) => todos.filter((t) => !t.done)),
-  Effect.flatMap((active) => sendNotification(active.length))
-)
-```
+- Use `it.effect` for Effect programs with test services and a Scope.
+- Use `it.live` only when the test intentionally needs live services.
+- Use `it.layer` or the exported `layer` helper when several tests share a Layer.
+- Keep pure tests as normal Vitest tests.
+- Assert tagged failures and their domain fields directly. Do not assert Effect v3 FiberFailure display strings.
+- Make scheduling explicit with Effect primitives such as `Deferred`, `TestClock`, or `Effect.yieldNow`. Do not depend on incidental fiber ordering.
 
-## Gotchas
+## TypeScript and diagnostics
 
-See [gotchas.md](gotchas.md) for known failure points.
+- Keep `@effect/tsgo` pinned in the root toolchain.
+- Keep `effect-tsgo patch --typescript-package @typescript/native` in the root `prepare` script.
+- Use the patched native TypeScript 7 compiler for repository typechecks.
+- Keep TypeScript 6 only at documented JavaScript compiler API boundaries.
+- Do not run plain tsgo and effect-tsgo as parallel editor servers.
+- Zed uses its official `typescript-ls` server. Repository and CI diagnostics come from the patched native compiler.
+
+## Verification
+
+Run the smallest relevant checks first, then the repository gates. A complete migration must prove:
+
+- one exact Effect v4 cohort in the dependency graph;
+- no v3 packages, consolidated package imports, or removed v3 APIs in authored code, tests, configs, docs, skills, or scripts;
+- only the required tsconfig plugin string mentions `@effect/language-service`;
+- `pnpm effect:source:check` passes;
+- the temporary floating-Effect fixture produces the expected diagnostic and is removed;
+- affected typechecks, tests, lint, boundaries, and build pass.

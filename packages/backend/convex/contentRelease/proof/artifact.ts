@@ -24,34 +24,36 @@ export const verifyArtifactBatch = Effect.fn(
   rendererContractVersion: RendererContractVersion
 ) {
   return yield* Stream.fromIterable(rows).pipe(
-    Stream.runFoldEffect(0, (count, row) =>
-      Effect.gen(function* () {
-        const item = yield* decodeItemJson(row.itemJson);
-        if (item.change.operation === "delete") {
-          return yield* releaseFail(
-            "CONTENT_RELEASE_INTEGRITY",
-            `Delete item ${releaseId}/${row.index} entered an artifact batch.`
-          );
-        }
-        const artifact = yield* decodeArtifactJson(row.artifactJson);
-        const verified = yield* verifySignedContentArtifact({
-          artifact,
-          rendererContractVersion,
-          rendererManifest: renderer,
-        }).pipe(Effect.mapError(contractFailure));
-        if (
-          verified.artifactHash !== item.change.artifactHash ||
-          verified.payload.contentKey !== item.change.contentKey ||
-          verified.payload.artifactLocale !== item.change.artifactLocale ||
-          verified.payload.rendererDomain !== item.change.rendererDomain
-        ) {
-          return yield* releaseFail(
-            "CONTENT_RELEASE_INTEGRITY",
-            `Artifact for ${releaseId}/${row.index} does not match its item.`
-          );
-        }
-        return count + 1;
-      })
+    Stream.runFoldEffect(
+      () => 0,
+      (count, row) =>
+        Effect.gen(function* () {
+          const item = yield* decodeItemJson(row.itemJson);
+          if (item.change.operation === "delete") {
+            return yield* releaseFail(
+              "CONTENT_RELEASE_INTEGRITY",
+              `Delete item ${releaseId}/${row.index} entered an artifact batch.`
+            );
+          }
+          const artifact = yield* decodeArtifactJson(row.artifactJson);
+          const verified = yield* verifySignedContentArtifact({
+            artifact,
+            rendererContractVersion,
+            rendererManifest: renderer,
+          }).pipe(Effect.mapError(contractFailure));
+          if (
+            verified.artifactHash !== item.change.artifactHash ||
+            verified.payload.contentKey !== item.change.contentKey ||
+            verified.payload.artifactLocale !== item.change.artifactLocale ||
+            verified.payload.rendererDomain !== item.change.rendererDomain
+          ) {
+            return yield* releaseFail(
+              "CONTENT_RELEASE_INTEGRITY",
+              `Artifact for ${releaseId}/${row.index} does not match its item.`
+            );
+          }
+          return count + 1;
+        })
     )
   );
 });

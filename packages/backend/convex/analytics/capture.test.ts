@@ -1,18 +1,14 @@
-import { chatResponseFailureCode } from "@repo/ai/config/generation";
-import { getModelCreditCost, ModelIdSchema } from "@repo/ai/config/model";
 import { internal } from "@repo/backend/convex/_generated/api";
 import {
   captureActionProductEventProgram,
   captureProductEvent,
   deliverProductAnalyticsProgram,
-  identifyProductUser,
   ProductAnalyticsCaptureError,
 } from "@repo/backend/convex/analytics/capture";
-import { productAnalyticsEventValidator } from "@repo/backend/convex/analytics/events";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
+import { seedAnalyticsConsent } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { validate } from "convex-helpers/validators";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -42,8 +38,6 @@ const checkoutStartedEvent = {
 } as const;
 
 describe("analytics/capture", () => {
-  const liteModel = ModelIdSchema.make("nakafa-lite");
-
   beforeEach(() => {
     vi.setSystemTime(new Date(NOW));
   });
@@ -52,143 +46,7 @@ describe("analytics/capture", () => {
     vi.useRealTimers();
   });
 
-  it("keeps the product analytics contract on approved event names", () => {
-    expect(
-      validate(productAnalyticsEventValidator, {
-        name: "user signed up",
-        properties: { plan: "free" },
-      })
-    ).toBe(true);
-    expect(
-      validate(productAnalyticsEventValidator, {
-        name: "content viewed",
-        properties: contentViewProperties,
-      })
-    ).toBe(true);
-    expect(
-      validate(productAnalyticsEventValidator, {
-        name: "content viewed",
-        properties: {
-          content_type: "article",
-          is_new_view: true,
-          locale: "id",
-          slug: "articles/example",
-        },
-      })
-    ).toBe(false);
-    expect(
-      validate(productAnalyticsEventValidator, {
-        name: "tryout attempt started",
-        properties: {
-          access_source: "free",
-          attempt_number: 1,
-          country_key: "indonesia",
-          exam_key: "snbt",
-          locale: "id",
-          score_status: "official",
-          set_key: "set-1",
-          track_key: "2027",
-        },
-      })
-    ).toBe(true);
-    expect(
-      validate(productAnalyticsEventValidator, {
-        name: "tryout paywall viewed",
-        properties: { source: "access-query" },
-      })
-    ).toBe(true);
-    expect(
-      validate(productAnalyticsEventValidator, {
-        name: "tryout attempt completed",
-        properties: {
-          attempt_number: 1,
-          country_key: "indonesia",
-          exam_key: "snbt",
-          locale: "id",
-          raw_score_percentage: 75,
-          score_status: "official",
-          set_key: "set-1",
-          theta: 0.4,
-          total_correct: 15,
-          total_questions: 20,
-          track_key: "2027",
-        },
-      })
-    ).toBe(true);
-    expect(
-      validate(productAnalyticsEventValidator, {
-        name: "chat message sent",
-        properties: {
-          chat_type: "study",
-          model_id: "nakafa-lite",
-        },
-      })
-    ).toBe(true);
-    expect(
-      validate(productAnalyticsEventValidator, {
-        name: "chat response completed",
-        properties: {
-          chat_type: "study",
-          credits: getModelCreditCost(liteModel),
-          input_tokens: 10,
-          model_id: "nakafa-lite",
-          output_tokens: 20,
-          total_tokens: 30,
-        },
-      })
-    ).toBe(true);
-    expect(
-      validate(productAnalyticsEventValidator, {
-        name: "chat response failed",
-        properties: {
-          chat_type: "study",
-          error_code: chatResponseFailureCode,
-          model_id: "nakafa-lite",
-        },
-      })
-    ).toBe(true);
-    expect(validate(productAnalyticsEventValidator, checkoutStartedEvent)).toBe(
-      true
-    );
-    expect(
-      validate(productAnalyticsEventValidator, {
-        name: "subscription started",
-        properties: {
-          product_id: "product-pro",
-          status: "active",
-          subscription_id: "sub-pro",
-        },
-      })
-    ).toBe(true);
-    expect(
-      validate(productAnalyticsEventValidator, {
-        name: "subscription canceled",
-        properties: {
-          product_id: "product-pro",
-          status: "canceled",
-          subscription_id: "sub-pro",
-        },
-      })
-    ).toBe(true);
-    expect(
-      validate(productAnalyticsEventValidator, {
-        name: "plan changed",
-        properties: {
-          new_plan: "pro",
-          previous_plan: "free",
-          subscription_id: "sub-pro",
-        },
-      })
-    ).toBe(true);
-    expect(
-      validate(productAnalyticsEventValidator, {
-        name: "pageview",
-        properties: {},
-      })
-    ).toBe(false);
-  });
-
-  it("schedules deletion-aware product delivery with the validated payload", async () => {
+  it("schedules current-consent product delivery with validated payload", async () => {
     const t = convexTest(schema, convexModules);
 
     const scheduledJobs = await t.mutation(async (ctx) => {
@@ -200,6 +58,7 @@ describe("analytics/capture", () => {
         name: "Analytics User",
         plan: "free",
       });
+      await seedAnalyticsConsent(ctx, { decidedAt: NOW, userId });
 
       await runConvexProgram(
         captureProductEvent(ctx, {
@@ -231,72 +90,39 @@ describe("analytics/capture", () => {
 
   it("drops a queued event when deletion starts before delivery", async () => {
     const capture = vi.fn(async () => undefined);
-    const erase = vi.fn(() => Effect.void);
+    const requestErasure = vi.fn(() => Effect.void);
 
     await Effect.runPromise(
       deliverProductAnalyticsProgram({
         capture,
-        erase,
-        isUserActive: vi.fn(async () => false),
+        isUserEligible: vi.fn(async () => false),
+        requestErasure,
       })
     );
 
     expect(capture).not.toHaveBeenCalled();
-    expect(erase).not.toHaveBeenCalled();
-  });
-
-  it("queues signup identification behind the delivery gate", async () => {
-    const t = convexTest(schema, convexModules);
-
-    const scheduledJobs = await t.mutation(async (ctx) => {
-      const userId = await ctx.db.insert("users", {
-        authId: "identify-user-auth",
-        credits: 10,
-        creditsResetAt: NOW,
-        email: "identify@example.com",
-        name: "Identify User",
-        plan: "free",
-      });
-
-      await runConvexProgram(
-        identifyProductUser(ctx, {
-          distinctId: userId,
-          email: "identify@example.com",
-          name: "Identify User",
-          plan: "free",
-          signedUpAt: new Date(NOW).toISOString(),
-        })
-      );
-
-      return await ctx.db.system.query("_scheduled_functions").collect();
-    });
-
-    expect(scheduledJobs).toEqual([
-      expect.objectContaining({
-        name: expect.stringContaining("deliverProductIdentify"),
-      }),
-    ]);
+    expect(requestErasure).not.toHaveBeenCalled();
   });
 
   it("keeps delivered analytics when the user remains active", async () => {
     const capture = vi.fn(async () => undefined);
-    const erase = vi.fn(() => Effect.void);
+    const requestErasure = vi.fn(() => Effect.void);
 
     await Effect.runPromise(
       deliverProductAnalyticsProgram({
         capture,
-        erase,
-        isUserActive: vi.fn(async () => true),
+        isUserEligible: vi.fn(async () => true),
+        requestErasure,
       })
     );
 
     expect(capture).toHaveBeenCalledOnce();
-    expect(erase).not.toHaveBeenCalled();
+    expect(requestErasure).not.toHaveBeenCalled();
   });
 
-  it("re-erases analytics when deletion overlaps the external send", async () => {
+  it("durably erases analytics when withdrawal overlaps the send", async () => {
     const capture = vi.fn(async () => undefined);
-    const erase = vi.fn(() => Effect.void);
+    const requestErasure = vi.fn(() => Effect.void);
     const isUserActive = vi
       .fn<() => Promise<boolean>>()
       .mockResolvedValueOnce(true)
@@ -305,17 +131,17 @@ describe("analytics/capture", () => {
     await Effect.runPromise(
       deliverProductAnalyticsProgram({
         capture,
-        erase,
-        isUserActive,
+        isUserEligible: isUserActive,
+        requestErasure,
       })
     );
 
     expect(capture).toHaveBeenCalledOnce();
-    expect(erase).toHaveBeenCalledOnce();
+    expect(requestErasure).toHaveBeenCalledOnce();
   });
 
-  it("re-erases after a failed send that overlaps deletion", async () => {
-    const erase = vi.fn(() => Effect.void);
+  it("requests erasure after a failed send that overlaps withdrawal", async () => {
+    const requestErasure = vi.fn(() => Effect.void);
     const isUserActive = vi
       .fn<() => Promise<boolean>>()
       .mockResolvedValueOnce(true)
@@ -324,30 +150,57 @@ describe("analytics/capture", () => {
     const failure = await Effect.runPromise(
       deliverProductAnalyticsProgram({
         capture: vi.fn(() => Promise.reject(new Error("capture uncertain"))),
-        erase,
-        isUserActive,
+        isUserEligible: isUserActive,
+        requestErasure,
       }).pipe(Effect.flip)
     );
 
-    expect(erase).toHaveBeenCalledOnce();
+    expect(requestErasure).toHaveBeenCalledOnce();
     expect(failure).toMatchObject({
       _tag: "ProductAnalyticsCaptureError",
       message: "capture uncertain",
     });
   });
 
+  it("requests erasure after a send when final eligibility is unknown", async () => {
+    const requestErasure = vi.fn(() => Effect.void);
+    const isUserActive = vi
+      .fn<() => Promise<boolean>>()
+      .mockResolvedValueOnce(true)
+      .mockRejectedValueOnce(new Error("eligibility unavailable"));
+
+    const failure = await Effect.runPromise(
+      deliverProductAnalyticsProgram({
+        capture: vi.fn(async () => undefined),
+        isUserEligible: isUserActive,
+        requestErasure,
+      }).pipe(Effect.flip)
+    );
+
+    expect(requestErasure).toHaveBeenCalledOnce();
+    expect(failure).toMatchObject({
+      _tag: "ProductAnalyticsCaptureError",
+      message: "eligibility unavailable",
+    });
+  });
+
   it("admits an action event while its app user remains active", async () => {
     const t = convexTest(schema, convexModules);
-    const userId = await t.mutation((ctx) =>
-      ctx.db.insert("users", {
+    const userId = await t.mutation(async (ctx) => {
+      const insertedUserId = await ctx.db.insert("users", {
         authId: "active-analytics-user-auth",
         credits: 10,
         creditsResetAt: NOW,
         email: "active-analytics@example.com",
         name: "Active Analytics User",
         plan: "free",
-      })
-    );
+      });
+      await seedAnalyticsConsent(ctx, {
+        decidedAt: NOW,
+        userId: insertedUserId,
+      });
+      return insertedUserId;
+    });
 
     const admitted = await t.mutation(
       internal.analytics.capture.captureActionProductEvent,
@@ -379,8 +232,8 @@ describe("analytics/capture", () => {
   it("drops an action event while account deletion is prepared", async () => {
     const t = convexTest(schema, convexModules);
 
-    const userId = await t.mutation((ctx) =>
-      ctx.db.insert("users", {
+    const userId = await t.mutation(async (ctx) => {
+      const insertedUserId = await ctx.db.insert("users", {
         authId: "deleting-analytics-user-auth",
         credits: 10,
         creditsResetAt: NOW,
@@ -388,8 +241,13 @@ describe("analytics/capture", () => {
         email: "deleting-analytics@example.com",
         name: "Deleting Analytics User",
         plan: "free",
-      })
-    );
+      });
+      await seedAnalyticsConsent(ctx, {
+        decidedAt: NOW,
+        userId: insertedUserId,
+      });
+      return insertedUserId;
+    });
 
     const admitted = await t.mutation(
       internal.analytics.capture.captureActionProductEvent,
@@ -407,21 +265,18 @@ describe("analytics/capture", () => {
     expect(scheduledJobs).toEqual([]);
   });
 
-  it("drops an action event after its app user is removed", async () => {
+  it("drops an action event without current analytics consent", async () => {
     const t = convexTest(schema, convexModules);
-    const userId = await t.mutation(async (ctx) => {
-      const id = await ctx.db.insert("users", {
+    const userId = await t.mutation((ctx) =>
+      ctx.db.insert("users", {
         authId: "removed-analytics-user-auth",
         credits: 10,
         creditsResetAt: NOW,
         email: "removed-analytics@example.com",
         name: "Removed Analytics User",
         plan: "free",
-      });
-
-      await ctx.db.delete(id);
-      return id;
-    });
+      })
+    );
 
     const admitted = await t.mutation(
       internal.analytics.capture.captureActionProductEvent,

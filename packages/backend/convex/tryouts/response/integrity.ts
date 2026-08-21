@@ -7,31 +7,28 @@ type TryoutResponse = Doc<"tryoutResponses">;
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type TryoutSectionAttempt = Doc<"tryoutSectionAttempts">;
 type TryoutSectionSnapshot = TryoutAttempt["sectionSnapshots"][number];
-
 interface ResponsePlacementLink {
   readonly placement: TryoutPlacement;
   readonly sectionAttemptId: Id<"tryoutSectionAttempts">;
 }
-
 /** Stable corruption detected across response, placement, and attempt rows. */
 export class TryoutResponseIntegrityError
   extends Schema.TaggedError<TryoutResponseIntegrityError>()(
     "TryoutResponseIntegrityError",
     {
-      code: Schema.Literal(
+      code: Schema.Literals([
         "TRYOUT_PLACEMENT_COUNT_MISMATCH",
         "TRYOUT_PLACEMENT_DUPLICATE",
         "TRYOUT_RESPONSE_CHOICE_MISMATCH",
         "TRYOUT_RESPONSE_COUNT_EXCEEDED",
         "TRYOUT_RESPONSE_LINK_MISMATCH",
         "TRYOUT_RESPONSE_PLACEMENT_DUPLICATE",
-        "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH"
-      ),
+        "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH",
+      ]),
       message: Schema.String,
     }
   )
   implements ConvexTaggedError {}
-
 /** Indexes one unique frozen section graph by immutable identity. */
 export const validateTryoutSectionSnapshots = Effect.fn(
   "tryouts.response.validateSectionSnapshots"
@@ -39,7 +36,6 @@ export const validateTryoutSectionSnapshots = Effect.fn(
   const snapshotsByIdentity = new Map<string, TryoutSectionSnapshot>();
   const sectionKeys = new Set<string>();
   const sectionOrders = new Set<number>();
-
   for (const snapshot of snapshots) {
     if (
       snapshotsByIdentity.has(snapshot.sectionIdentity) ||
@@ -51,15 +47,12 @@ export const validateTryoutSectionSnapshots = Effect.fn(
         "Try-out section snapshots contain a duplicate identity, key, or order."
       );
     }
-
     snapshotsByIdentity.set(snapshot.sectionIdentity, snapshot);
     sectionKeys.add(snapshot.sectionKey);
     sectionOrders.add(snapshot.sectionOrder);
   }
-
   return snapshotsByIdentity;
 });
-
 /** Resolves and validates the frozen section owned by one response graph. */
 export const requireTryoutResponseSectionSnapshot = Effect.fn(
   "tryouts.response.requireSectionSnapshot"
@@ -80,10 +73,8 @@ export const requireTryoutResponseSectionSnapshot = Effect.fn(
       "Try-out section attempt differs from its frozen snapshot."
     );
   }
-
   return snapshot;
 });
-
 /** Validates placements against one exact attempt-owned section snapshot. */
 export const validateTryoutResponsePlacements = Effect.fn(
   "tryouts.response.validatePlacements"
@@ -106,7 +97,6 @@ export const validateTryoutResponsePlacements = Effect.fn(
     );
   }
 });
-
 /** Validates one complete placement inventory against frozen section slots. */
 export const validateTryoutResponsePlacementInventory = Effect.fn(
   "tryouts.response.validatePlacementInventory"
@@ -132,12 +122,10 @@ export const validateTryoutResponsePlacementInventory = Effect.fn(
       "Try-out placement count does not match its frozen snapshot."
     );
   }
-
   const questionOrdersBySection = new Map<string, Set<number>>();
   for (const snapshot of input.snapshots) {
     questionOrdersBySection.set(snapshot.sectionIdentity, new Set());
   }
-
   const placementIdentities = new Set<string>();
   for (const placement of input.placements) {
     const snapshot = snapshotsByIdentity.get(placement.sectionIdentity);
@@ -151,7 +139,6 @@ export const validateTryoutResponsePlacementInventory = Effect.fn(
         "Try-out placement differs from its frozen section snapshot."
       );
     }
-
     const questionOrder = placement.questionOrder;
     if (
       !Number.isSafeInteger(questionOrder) ||
@@ -163,7 +150,6 @@ export const validateTryoutResponsePlacementInventory = Effect.fn(
         "Try-out placement slots do not match its frozen section snapshot."
       );
     }
-
     const questionOrders = questionOrdersBySection.get(
       placement.sectionIdentity
     );
@@ -177,11 +163,9 @@ export const validateTryoutResponsePlacementInventory = Effect.fn(
         "Try-out placement inventory contains a duplicate identity or slot."
       );
     }
-
     questionOrders.add(questionOrder);
     placementIdentities.add(placement.placementIdentity);
   }
-
   for (const snapshot of input.snapshots) {
     const questionOrders = questionOrdersBySection.get(
       snapshot.sectionIdentity
@@ -193,10 +177,8 @@ export const validateTryoutResponsePlacementInventory = Effect.fn(
       );
     }
   }
-
   return input.placements;
 });
-
 /** Validates and indexes response rows against immutable placements. */
 export const indexTryoutResponses = Effect.fn(
   "tryouts.response.indexIntegrity"
@@ -221,7 +203,6 @@ export const indexTryoutResponses = Effect.fn(
     }
     linksByPlacement.set(link.placement._id, link);
   }
-
   const responsesByPlacement = new Map<
     Id<"tryoutAttemptPlacements">,
     TryoutResponse
@@ -244,7 +225,6 @@ export const indexTryoutResponses = Effect.fn(
         "Try-out placement has more than one response."
       );
     }
-
     const selectedOptionId = response.selectedOptionId;
     if (selectedOptionId === undefined) {
       if (response.textAnswer === undefined) {
@@ -264,13 +244,10 @@ export const indexTryoutResponses = Effect.fn(
         );
       }
     }
-
     responsesByPlacement.set(response.placementId, response);
   }
-
   return responsesByPlacement;
 });
-
 /** Creates one typed fail-closed response graph error. */
 function responseIntegrity(
   code: TryoutResponseIntegrityError["code"],

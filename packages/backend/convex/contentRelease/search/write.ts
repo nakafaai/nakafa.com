@@ -1,7 +1,4 @@
-import {
-  type ContentProjection,
-  familyForProjection,
-} from "@nakafa/aksara-contracts/projection/spec";
+import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -12,13 +9,13 @@ import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
-type PublicProjection = Exclude<
+type SearchProjection = Extract<
   ContentProjection,
-  { readonly kind: "question-body" }
+  { readonly kind: "article" | "subject-lesson" }
 >;
 
 /** Builds deterministic searchable text from authenticated public source data. */
-function searchableText(projection: PublicProjection, plainText: string) {
+function searchableText(projection: SearchProjection, plainText: string) {
   return [
     projection.metadata.title,
     projection.metadata.description ?? "",
@@ -54,9 +51,8 @@ export const writeSearchEntry = Effect.fn("contentRelease.writeSearchEntry")(
     if (
       head.operation !== "upsert" ||
       head.delivery !== "public" ||
-      projection.kind === "question-body" ||
+      (projection.kind !== "article" && projection.kind !== "subject-lesson") ||
       !head.projectionHash ||
-      familyForProjection(projection) !== head.family ||
       projection.contentKey !== head.contentKey ||
       projection.artifactLocale !== head.artifactLocale
     ) {
@@ -65,9 +61,16 @@ export const writeSearchEntry = Effect.fn("contentRelease.writeSearchEntry")(
         `Search entry ${head.contentKey}/${head.artifactLocale} lost its public identity.`
       );
     }
-    const entry = {
+    const family = projection.kind === "article" ? "article" : "material";
+    if (family !== head.family) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Search entry ${head.contentKey}/${head.artifactLocale} changed family.`
+      );
+    }
+    const entry: WithoutSystemFields<Doc<"contentIndex">> = {
       contentKey: head.contentKey,
-      family: head.family,
+      family,
       appLocale: projection.appLocale,
       projectionHash: head.projectionHash,
       publicPath: projection.publicPath,

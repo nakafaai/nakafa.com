@@ -1,78 +1,90 @@
 import { NakafaAgentReadableContentRefSchema } from "@repo/contents/_lib/agent/schema/ref";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";
-import { Schema } from "effect";
-
+import { Effect, Schema, Struct } from "effect";
 /** Runtime schema for Quran reference input. */
 export const NakafaAgentQuranReferenceOptionsSchema = Schema.Struct({
-  from_verse: Schema.optionalWith(
-    Schema.Number.pipe(Schema.int(), Schema.positive()),
-    { default: () => 1 }
-  ).annotations({ description: "First verse number to include." }),
-  include_tafsir: Schema.optionalWith(Schema.Boolean, {
-    default: () => false,
-  }).annotations({
+  from_verse: Schema.Finite.pipe(
+    Schema.check(Schema.isInt()),
+    Schema.check(Schema.isGreaterThan(0)),
+    Schema.withDecodingDefaultType(Effect.succeed(1))
+  ).annotate({ description: "First verse number to include." }),
+  include_tafsir: Schema.Boolean.pipe(
+    Schema.withDecodingDefaultType(Effect.succeed(false))
+  ).annotate({
     description:
       "Whether to include the published tafsir text for the requested locale when available.",
   }),
-  locale: Schema.optionalWith(LocaleSchema, {
-    default: () => routing.defaultLocale,
-  }).annotations({ description: "Translation locale." }),
-  surah: Schema.Number.pipe(Schema.int(), Schema.between(1, 114)).annotations({
+  locale: LocaleSchema.pipe(
+    Schema.withDecodingDefaultType(Effect.succeed(routing.defaultLocale))
+  ).annotate({ description: "Translation locale." }),
+  surah: Schema.Finite.pipe(
+    Schema.check(Schema.isInt()),
+    Schema.check(
+      Schema.isBetween(
+        { minimum: 1, maximum: 114 },
+        { message: "Surah number must be between 1 and 114." }
+      )
+    )
+  ).annotate({
     description: "Surah number.",
   }),
   to_verse: Schema.optional(
-    Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({
+    Schema.Finite.pipe(
+      Schema.check(Schema.isInt()),
+      Schema.check(Schema.isGreaterThan(0))
+    ).annotate({
       description: "Last verse number to include; defaults to from_verse.",
     })
   ),
 })
-  .pipe(Schema.mutable)
-  .annotations({ description: "Nakafa Quran reference options." });
-
+  .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+  .annotate({ description: "Nakafa Quran reference options." });
 /** Runtime schema for one Quran verse returned to agents. */
 const NakafaAgentQuranVerseSchema = Schema.Struct({
-  arabic: Schema.String.annotations({
+  arabic: Schema.String.annotate({
     description: "Arabic Quran verse text.",
   }),
-  number: Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({
+  number: Schema.Finite.pipe(
+    Schema.check(Schema.isInt()),
+    Schema.check(Schema.isGreaterThan(0))
+  ).annotate({
     description: "Verse number inside the surah.",
   }),
   tafsir: Schema.optional(
-    Schema.String.annotations({
+    Schema.String.annotate({
       description: "Optional published tafsir text.",
     })
   ),
-  translation: Schema.String.annotations({
+  translation: Schema.String.annotate({
     description: "Selected translation text.",
   }),
 })
-  .pipe(Schema.mutable)
-  .annotations({ description: "Nakafa Quran verse reference." });
-
+  .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+  .annotate({ description: "Nakafa Quran verse reference." });
 /** Runtime schema for Quran reference output. */
 export const NakafaAgentQuranReferenceSchema =
-  NakafaAgentReadableContentRefSchema.pipe(
-    Schema.extend(
-      Schema.Struct({
-        name: Schema.String.annotations({
-          description: "Source-authenticated transliterated surah name.",
-        }),
-        revelation: Schema.String.annotations({
-          description: "Source-authenticated revelation place.",
-        }),
-        translation: Schema.String.annotations({
-          description: "Source-authenticated surah name translation.",
-        }),
-        verses: Schema.Array(NakafaAgentQuranVerseSchema)
-          .pipe(Schema.minItems(1), Schema.mutable)
-          .annotations({ description: "Bounded Quran verses." }),
-      })
-    ),
-    Schema.mutable
-  ).annotations({ description: "Nakafa Quran reference result." });
-
-export type NakafaAgentQuranReferenceOptions = Schema.Schema.Encoded<
+  NakafaAgentReadableContentRefSchema.mapFields(
+    (fields) => ({
+      ...fields,
+      name: Schema.String.annotate({
+        description: "Source-authenticated transliterated surah name.",
+      }),
+      revelation: Schema.String.annotate({
+        description: "Source-authenticated revelation place.",
+      }),
+      translation: Schema.String.annotate({
+        description: "Source-authenticated surah name translation.",
+      }),
+      verses: Schema.Array(NakafaAgentQuranVerseSchema)
+        .pipe(Schema.mutable, Schema.check(Schema.isMinLength(1)))
+        .annotate({ description: "Bounded Quran verses." }),
+    }),
+    { unsafePreserveChecks: true }
+  )
+    .mapFields(Struct.map(Schema.mutableKey), { unsafePreserveChecks: true })
+    .annotate({ description: "Nakafa Quran reference result." });
+export type NakafaAgentQuranReferenceOptions = Schema.Codec.Encoded<
   typeof NakafaAgentQuranReferenceOptionsSchema
 >;
 export type NakafaAgentQuranReference = Schema.Schema.Type<

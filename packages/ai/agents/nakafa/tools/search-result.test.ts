@@ -23,7 +23,7 @@ function searchResult(
   const limit = options.limit ?? 10;
   const offset = options.offset ?? 0;
 
-  return Schema.decodeUnknownSync(NakafaAgentSearchResultSchema)({
+  return Schema.decodeSync(NakafaAgentSearchResultSchema)({
     count: items.length,
     has_more: options.hasMore ?? false,
     items,

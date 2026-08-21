@@ -3,6 +3,7 @@ import { chatResponseFailureCode } from "@repo/ai/config/generation";
 import { getModelCreditCost, ModelIdSchema } from "@repo/ai/config/model";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
+import { seedAnalyticsConsent } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -29,6 +30,7 @@ describe("chats/assistantResponses", () => {
         name: "Chat User",
         plan: "free",
       });
+      await seedAnalyticsConsent(ctx, { decidedAt: NOW, userId });
       const chatId = await ctx.db.insert("chats", {
         title: "Set 1",
         type: "study",
@@ -130,6 +132,7 @@ describe("chats/assistantResponses", () => {
         name: "Failed Chat User",
         plan: "free",
       });
+      await seedAnalyticsConsent(ctx, { decidedAt: NOW, userId });
       const chatId = await ctx.db.insert("chats", {
         title: "Failure",
         type: "study",

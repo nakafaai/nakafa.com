@@ -16,6 +16,12 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type schema from "@repo/backend/convex/schema";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
 import { testProjectionJson } from "@repo/backend/test/content-material";
+import {
+  TEST_PAGE_KEY,
+  TEST_PAGE_PATH,
+  TEST_PAGE_PROJECTION_JSON,
+  TEST_PAGE_SOURCE,
+} from "@repo/backend/test/content-page";
 import { TEST_KEY_RESOLVER } from "@repo/backend/test/content-proof";
 import {
   TEST_RELEASE_ID,
@@ -52,12 +58,12 @@ const COMPLETED_PROOF_WORKFLOW_STATUS = {
 } satisfies WorkflowStatus;
 const completedProofCoordinator = {
   cleanup: () => Effect.succeed(true),
-  start: () => Effect.dieMessage("Unexpected proof coordinator start."),
+  start: () => Effect.die(new Error("Unexpected proof coordinator start.")),
   status: () => Effect.succeed(COMPLETED_PROOF_WORKFLOW_STATUS),
 } satisfies ProofPollCoordinatorService;
-
+type RoutedContentFamily = Exclude<ContentFamily, "question">;
 /** Selects one complete family-owned upsert fixture without parallel helpers. */
-function upsertFixture(family: ContentFamily) {
+function upsertFixture(family: RoutedContentFamily) {
   if (family === "article") {
     return {
       artifactJson: testArtifactJson({
@@ -77,6 +83,25 @@ function upsertFixture(family: ContentFamily) {
       }),
     };
   }
+  if (family === "page") {
+    return {
+      artifactJson: testArtifactJson({
+        contentKey: TEST_PAGE_KEY,
+        rendererDomain: "site",
+      }),
+      itemJson: testUpsertJson({
+        contentKey: TEST_PAGE_KEY,
+        family,
+        rendererDomain: "site",
+        sourcePath: TEST_PAGE_SOURCE,
+      }),
+      projectionJson: TEST_PAGE_PROJECTION_JSON,
+      routeJson: testRouteJson({
+        contentKey: TEST_PAGE_KEY,
+        publicPath: TEST_PAGE_PATH,
+      }),
+    };
+  }
   return {
     artifactJson: testArtifactJson(),
     itemJson: testUpsertJson(),
@@ -84,11 +109,40 @@ function upsertFixture(family: ContentFamily) {
     routeJson: testRouteJson(),
   };
 }
-
+/** Selects one complete prior routed state for a deletion fixture. */
+function deleteFixture(family: RoutedContentFamily) {
+  if (family === "article") {
+    return {
+      contentKey: TEST_ARTICLE_KEY,
+      projectionJson: TEST_ARTICLE_PROJECTION_JSON,
+      publicPath: TEST_ARTICLE_PATH,
+      rendererDomain: "politics" as const,
+      sourcePath: TEST_ARTICLE_SOURCE,
+    };
+  }
+  if (family === "page") {
+    return {
+      contentKey: TEST_PAGE_KEY,
+      projectionJson: TEST_PAGE_PROJECTION_JSON,
+      publicPath: TEST_PAGE_PATH,
+      rendererDomain: "site" as const,
+      sourcePath: TEST_PAGE_SOURCE,
+    };
+  }
+  const contentKey = "test:deleted";
+  const publicPath = "subjects/test/deleted";
+  return {
+    contentKey,
+    projectionJson: testProjectionJson({ contentKey, publicPath }),
+    publicPath,
+    rendererDomain: "mathematics" as const,
+    sourcePath: undefined,
+  };
+}
 /** Stages one complete technical upsert through every real mutation. */
 export async function stageUpsertFixture(
   t: TestConvex<typeof schema>,
-  family: ContentFamily = "material"
+  family: RoutedContentFamily = "material"
 ) {
   const fixture = upsertFixture(family);
   await t.mutation((ctx) => insertTestRelease(ctx));
@@ -113,18 +167,12 @@ export async function stageUpsertFixture(
     routeJson: [fixture.routeJson],
   });
 }
-
 /** Stages one complete delete plus its required route tombstone. */
 export async function stageDeleteFixture(
   t: TestConvex<typeof schema>,
-  family: ContentFamily = "material"
+  family: RoutedContentFamily = "material"
 ) {
-  const article = family === "article";
-  const contentKey = article ? TEST_ARTICLE_KEY : "test:deleted";
-  const publicPath = article ? TEST_ARTICLE_PATH : "subjects/test/deleted";
-  const projectionJson = article
-    ? TEST_ARTICLE_PROJECTION_JSON
-    : testProjectionJson({ contentKey, publicPath });
+  const fixture = deleteFixture(family);
   await t.mutation(async (ctx) => {
     await insertTestRelease(ctx, {
       deleteCount: 1,
@@ -133,18 +181,18 @@ export async function stageDeleteFixture(
       sequence: 2,
       upsertCount: 0,
     });
-    await insertRuntimeVersion(ctx, "public", contentKey, {
+    await insertRuntimeVersion(ctx, "public", fixture.contentKey, {
       headReleaseId: "release-base",
       headSequence: 1,
-      projectionJson,
-      publicPath,
-      rendererDomain: article ? "politics" : "mathematics",
-      sourcePath: article ? TEST_ARTICLE_SOURCE : undefined,
+      projectionJson: fixture.projectionJson,
+      publicPath: fixture.publicPath,
+      rendererDomain: fixture.rendererDomain,
+      sourcePath: fixture.sourcePath,
     });
-    await insertRuntimeBinding(ctx, contentKey, {
+    await insertRuntimeBinding(ctx, fixture.contentKey, {
       bindingReleaseId: "release-base",
       bindingSequence: 1,
-      publicPath,
+      publicPath: fixture.publicPath,
     });
     const state = await ctx.db.query("contentState").unique();
     if (!state) {
@@ -158,23 +206,26 @@ export async function stageDeleteFixture(
   });
   await t.mutation(stageItems, {
     batchIndex: 0,
-    itemJson: [testDeleteJson({ contentKey, family })],
+    itemJson: [testDeleteJson({ contentKey: fixture.contentKey, family })],
     releaseId: TEST_RELEASE_ID,
   });
   await t.mutation(stageRoutes, {
     batchIndex: 0,
     releaseId: TEST_RELEASE_ID,
-    routeJson: [testRouteJson({ operation: "delete", publicPath })],
+    routeJson: [
+      testRouteJson({
+        operation: "delete",
+        publicPath: fixture.publicPath,
+      }),
+    ],
   });
 }
-
 /** Freezes one fully staged fixture before item verification. */
 export function beginFixture(t: TestConvex<typeof schema>) {
   return t.mutation((ctx) =>
     runConvexProgram(beginVerification(ctx, TEST_RELEASE_ID))
   );
 }
-
 /** Freezes one release with validator-derived test coordinator identity. */
 export async function prepareContentProof(
   target: TestConvex<typeof schema>,
@@ -194,7 +245,6 @@ export async function prepareContentProof(
     });
   });
 }
-
 /** Recomputes proof with the production verifier and technical test key. */
 export async function recomputeContentProof(
   target: TestConvex<typeof schema>,
@@ -229,7 +279,6 @@ export async function recomputeContentProof(
     )
   );
 }
-
 /** Finalizes recomputed proof when a test owns no Workflow component state. */
 export async function completeContentProof(
   target: TestConvex<typeof schema>,

@@ -8,7 +8,6 @@ import { NakafaAgentSearchResultSchema } from "@repo/contents/_lib/agent/schema/
 import { fetchQuery } from "convex/nextjs";
 import type { Context } from "effect";
 import { Effect, Schema } from "effect";
-
 /**
  * Convex-backed Nakafa search adapter for Nina.
  *
@@ -29,7 +28,7 @@ export const search = {
         }),
     }).pipe(
       Effect.flatMap((result) =>
-        Schema.decodeUnknown(NakafaAgentSearchResultSchema)(result).pipe(
+        Schema.decodeEffect(NakafaAgentSearchResultSchema)(result).pipe(
           Effect.mapError(
             (error) =>
               new NakafaAgentDataReadError({
@@ -40,4 +39,4 @@ export const search = {
         )
       )
     ),
-} satisfies Context.Tag.Service<typeof NakafaSearch>;
+} satisfies Context.Service.Shape<typeof NakafaSearch>;

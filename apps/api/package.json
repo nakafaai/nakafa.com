@@ -13,18 +13,18 @@
     "typecheck": "next typegen && tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@convex-dev/better-auth": "^0.12.5",
-    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.13.1/nakafa-aksara-contracts-0.13.1.tgz",
+    "@convex-dev/better-auth": "0.12.5",
+    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.0/nakafa-aksara-contracts-0.15.0.tgz",
     "@repo/backend": "workspace:*",
     "@repo/contents": "workspace:*",
     "@repo/design-system": "workspace:*",
     "@repo/next-config": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "better-auth": "1.6.26",
-    "convex": "^1.43.0",
+    "better-auth": "1.6.30",
+    "convex": "1.44.0",
     "effect": "catalog:",
-    "next": "16.3.0",
+    "next": "16.3.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "server-only": "0.0.1"
@@ -33,10 +33,10 @@
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/react": "19.2.18",
-    "@vercel/config": "^0.5.6",
-    "@vitest/coverage-istanbul": "^4.1.10",
+    "@vercel/config": "^0.6.1",
+    "@vitest/coverage-istanbul": "^4.1.11",
     "typescript": "7.0.2",
-    "vite": "^8.2.1",
-    "vitest": "^4.1.10"
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11"
   }
 }

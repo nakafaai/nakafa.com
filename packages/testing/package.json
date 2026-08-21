@@ -7,6 +7,7 @@
     "#testing/*": "./*.ts"
   },
   "exports": {
+    "./effect": "./effect.ts",
     "./node": "./node.ts",
     "./react": "./react.ts"
   },
@@ -14,10 +15,14 @@
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
+  "dependencies": {
+    "@effect/vitest": "catalog:",
+    "effect": "catalog:"
+  },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@vitejs/plugin-react": "^6.0.5",
-    "@vitest/coverage-istanbul": "^4.1.10",
-    "vitest": "^4.1.10"
+    "@vitejs/plugin-react": "^6.1.0",
+    "@vitest/coverage-istanbul": "^4.1.11",
+    "vitest": "^4.1.11"
   }
 }

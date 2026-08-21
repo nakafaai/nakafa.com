@@ -46,8 +46,7 @@ function categoryPage({
     categories: [
       {
         category: ArticleCategorySchema.make(category),
-        rendererDomain:
-          Schema.decodeUnknownSync(RendererDomainSchema)("politics"),
+        rendererDomain: Schema.decodeSync(RendererDomainSchema)("politics"),
         title: ArticleCategoryTitleSchema.make(title),
       },
     ],

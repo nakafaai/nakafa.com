@@ -45,10 +45,8 @@ const captureTryoutScoreEvent = Effect.fn(
     try: () => ctx.db.get("tryoutAttempts", score.tryoutAttemptId),
   });
   if (!attempt) {
-    return yield* Effect.fail(
-      toTryoutScoreAnalyticsError(
-        "A completed try-out score is missing its attempt."
-      )
+    return yield* toTryoutScoreAnalyticsError(
+      "A completed try-out score is missing its attempt."
     );
   }
   const identity = readAttemptSetIdentity(attempt);
@@ -62,11 +60,8 @@ const captureTryoutScoreEvent = Effect.fn(
         country_key: identity.countryKey,
         exam_key: identity.examKey,
         locale: identity.locale,
-        raw_score_percentage: score.rawScore,
         score_status: score.scoreStatus,
         set_key: identity.setKey,
-        theta: score.theta,
-        total_correct: score.totalCorrect,
         total_questions: score.totalQuestions,
         track_key: identity.trackKey,
       },

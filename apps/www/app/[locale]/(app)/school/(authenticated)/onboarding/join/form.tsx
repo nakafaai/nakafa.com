@@ -1,5 +1,4 @@
 "use client";
-
 import { InLoveIcon } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -21,14 +20,11 @@ import {
   schoolJoinFormSchema,
 } from "@/app/[locale]/(app)/school/(authenticated)/onboarding/join/schema";
 import { reportClientException } from "@/lib/analytics/client";
-
 /** Render the onboarding form for joining an existing school. */
 export function SchoolOnboardingJoinForm() {
   const t = useTranslations("School.Onboarding");
-
   const router = useRouter();
   const joinSchool = useMutation(api.schools.mutations.joinSchool);
-
   const form = useForm({
     defaultValues: schoolJoinDefaultValues,
     validators: {
@@ -40,11 +36,11 @@ export function SchoolOnboardingJoinForm() {
           const { slug } = await joinSchool(value);
           router.push(`/school/${slug}`);
         }).pipe(
-          Effect.catchTag("UnknownException", ({ error }) =>
+          Effect.catchTag("UnknownError", ({ cause: error }) =>
             reportClientException(error, {
               source: "school-onboarding-join",
             }).pipe(
-              Effect.zipRight(
+              Effect.andThen(
                 Effect.sync(() => {
                   toast.error(t("school-joining-failed"));
                 })
@@ -55,7 +51,6 @@ export function SchoolOnboardingJoinForm() {
       );
     },
   });
-
   return (
     <form
       action={() => form.handleSubmit()}

@@ -1,5 +1,4 @@
 import "server-only";
-
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import {
@@ -26,12 +25,10 @@ type ContentRouteArgs = FunctionArgs<
 type ContentRouteResult = FunctionReturnType<
   typeof api.contentRelease.ownership.resolve
 >;
-
 /** Active identity and route pair that must be read from one publication. */
 interface ActiveContentRouteInput extends ContentRouteArgs {
   readonly activeReleaseId: ActiveContentReleaseId | null;
 }
-
 /** One active Aksara route selected without exposing executable code. */
 type ActiveContentRoute =
   | {
@@ -47,12 +44,16 @@ type ActiveContentRoute =
       readonly kind: "found";
       readonly projection: typeof RoutedContentProjectionSchema.Type;
     };
-
 /** Verifies one found projection against its requested family and route. */
 const decodeActiveProjection = Effect.fn(
   "NakafaContent.decodeActiveProjection"
 )(function* (
-  input: Extract<ContentRouteResult, { readonly kind: "found" }>,
+  input: Extract<
+    ContentRouteResult,
+    {
+      readonly kind: "found";
+    }
+  >,
   identity: {
     readonly family: ContentFamily;
     readonly appLocale: AppLocale;
@@ -63,10 +64,11 @@ const decodeActiveProjection = Effect.fn(
     catch: () => new PublishedProjectionError(identity),
     try: (): unknown => JSON.parse(input.projectionJson),
   });
-  const projection = yield* Schema.decodeUnknown(RoutedContentProjectionSchema)(
-    parsed,
-    { onExcessProperty: "error" }
-  ).pipe(Effect.mapError(() => new PublishedProjectionError(identity)));
+  const projection = yield* Schema.decodeUnknownEffect(
+    RoutedContentProjectionSchema
+  )(parsed, { onExcessProperty: "error" }).pipe(
+    Effect.mapError(() => new PublishedProjectionError(identity))
+  );
   if (
     familyForProjection(projection) !== identity.family ||
     projection.appLocale !== identity.appLocale ||
@@ -76,7 +78,6 @@ const decodeActiveProjection = Effect.fn(
   }
   return projection;
 });
-
 /** Resolves active ownership through one family-agnostic route seam. */
 export const readActiveContentRoute = Effect.fn(
   "NakafaContent.readActiveContentRoute"
@@ -88,7 +89,6 @@ export const readActiveContentRoute = Effect.fn(
       kind: "unmanaged",
     } satisfies ActiveContentRoute;
   }
-
   const args = {
     appLocale,
     family: input.family,
@@ -99,7 +99,7 @@ export const readActiveContentRoute = Effect.fn(
     args
   );
   if (result.kind === "unmanaged") {
-    const activeReleaseId = yield* Schema.decodeUnknown(
+    const activeReleaseId = yield* Schema.decodeEffect(
       Schema.NullOr(ReleaseIdSchema)
     )(result.activeReleaseId);
     if (activeReleaseId !== input.activeReleaseId) {
@@ -108,11 +108,9 @@ export const readActiveContentRoute = Effect.fn(
         expectedReleaseId: input.activeReleaseId,
       });
     }
-
     return { activeReleaseId, kind: result.kind } satisfies ActiveContentRoute;
   }
-
-  const activeReleaseId = yield* Schema.decodeUnknown(ReleaseIdSchema)(
+  const activeReleaseId = yield* Schema.decodeEffect(ReleaseIdSchema)(
     result.activeReleaseId
   );
   if (activeReleaseId !== input.activeReleaseId) {
@@ -125,7 +123,6 @@ export const readActiveContentRoute = Effect.fn(
     return { activeReleaseId, kind: result.kind } satisfies ActiveContentRoute;
   }
   const projection = yield* decodeActiveProjection(result, args);
-
   return {
     activeReleaseId,
     kind: "found",

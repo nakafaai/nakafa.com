@@ -18,10 +18,9 @@ import { Effect } from "effect";
 
 type ContentSearchInput = Infer<typeof contentSearchInputValidator>;
 type PublishedSearchOwner = NonNullable<
-  Effect.Effect.Success<ReturnType<typeof loadSearchOwner>>
+  Effect.Success<ReturnType<typeof loadSearchOwner>>
 >;
 type PublishedFamily = "article" | "material";
-
 /** Returns active searchable families selected by the requested UI section. */
 export function getPublishedSearchFamilies(
   owner: PublishedSearchOwner | null,
@@ -45,7 +44,6 @@ export function getPublishedSearchFamilies(
   }
   return families;
 }
-
 /** Reads authenticated documents from the active release-owned search model. */
 export const readPublishedSearchDocuments = Effect.fn(
   "contents.search.readPublishedDocuments"
@@ -105,15 +103,12 @@ export const readPublishedSearchDocuments = Effect.fn(
   );
   const rankedGroups = groups.map(({ queryText, rows: queryRows }) => {
     const documents: ContentSearchDocument[] = [];
-
     for (const row of queryRows) {
       const document = documentsByRow.get(row._id);
-
       if (document) {
         documents.push(document);
       }
     }
-
     return rankContentSearchDocuments(documents, queryText);
   });
   return interleaveSearchGroups(
@@ -122,7 +117,6 @@ export const readPublishedSearchDocuments = Effect.fn(
     (document) => document.content_id
   );
 });
-
 /** Reads one fixed raw candidate window across active published families. */
 const searchQuery = Effect.fn("contents.search.searchPublishedQuery")(
   function* (
@@ -142,7 +136,6 @@ const searchQuery = Effect.fn("contents.search.searchPublishedQuery")(
     return interleaveSearchGroups(groups, scanLimit, (row) => row._id);
   }
 );
-
 /** Reads full-text and exact-path candidates for one active family. */
 const searchFamily = Effect.fn("contents.search.searchPublishedFamily")(
   function* (
@@ -186,7 +179,6 @@ const searchFamily = Effect.fn("contents.search.searchPublishedFamily")(
     return rows.slice(0, scanLimit);
   }
 );
-
 /** Browses one active family through its stable route ordering. */
 const browseFamily = Effect.fn("contents.search.browsePublishedFamily")(
   function* (
@@ -209,7 +201,6 @@ const browseFamily = Effect.fn("contents.search.browsePublishedFamily")(
     return rows;
   }
 );
-
 /** Authenticates indexed hits before projecting public search documents. */
 function authenticateSearchRows(
   ctx: QueryCtx,
@@ -226,7 +217,6 @@ function authenticateSearchRows(
     { concurrency: "unbounded" }
   ).pipe(Effect.map((results) => results.filter((result) => result !== null)));
 }
-
 /** Verifies one search hit against its active immutable projection. */
 const authenticateSearchRow = Effect.fn(
   "contents.search.authenticatePublishedRow"
@@ -247,10 +237,10 @@ const authenticateSearchRow = Effect.fn(
     return null;
   }
   const projection = yield* decodeProjectionJson(resolved.projectionJson);
-  if (projection.kind === "question-body") {
+  if (projection.kind !== "article" && projection.kind !== "subject-lesson") {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Active search entry ${row.contentKey}/${row.appLocale} exposes a question body.`
+      `Active search entry ${row.contentKey}/${row.appLocale} exposes a non-search projection.`
     );
   }
   const section = projection.kind === "article" ? "articles" : "material";

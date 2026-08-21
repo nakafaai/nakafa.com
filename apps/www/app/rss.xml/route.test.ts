@@ -122,7 +122,11 @@ describe("rss route", () => {
       .mockReturnValueOnce(Effect.succeed({ releaseId: activeReleaseId }))
       .mockReturnValueOnce(Effect.succeed(null));
 
-    await expect(GET()).rejects.toThrow('"actualReleaseId": null');
+    await expect(GET()).rejects.toMatchObject({
+      _tag: "PublishedReleaseMismatchError",
+      actualReleaseId: null,
+      expectedReleaseId: activeReleaseId,
+    });
   });
 
   it("rejects a feed assembled across different active releases", async () => {
@@ -134,8 +138,10 @@ describe("rss route", () => {
       .mockReturnValueOnce(Effect.succeed({ releaseId: "release-a" }))
       .mockReturnValueOnce(Effect.succeed({ releaseId: "release-b" }));
 
-    await expect(GET()).rejects.toThrow(
-      '"actualReleaseId": "release-b", "expectedReleaseId": "release-a"'
-    );
+    await expect(GET()).rejects.toMatchObject({
+      _tag: "PublishedReleaseMismatchError",
+      actualReleaseId: "release-b",
+      expectedReleaseId: "release-a",
+    });
   });
 });

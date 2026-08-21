@@ -1,6 +1,6 @@
 "use client"; // Error boundaries must be Client Components
 
-import { captureException } from "@repo/analytics/posthog";
+import { captureException } from "@repo/analytics/posthog/browser";
 import { DesignSystemProvider } from "@repo/design-system";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Particles } from "@repo/design-system/components/ui/particles";

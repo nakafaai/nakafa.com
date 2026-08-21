@@ -33,7 +33,7 @@ import {
   pruneMessages,
   type UIMessageStreamWriter,
 } from "ai";
-import { Effect, Runtime, Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 /** Raised when NinaHarness cannot prepare or stream one turn. */
 export class NinaStreamError extends Schema.TaggedError<NinaStreamError>()(
@@ -51,10 +51,10 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
     const reporter = yield* NinaReporter;
     const nakafa = yield* Nakafa;
     const search = yield* NakafaSearch;
-    const effectRuntime = yield* Effect.runtime();
-    const runFork = Runtime.runFork(effectRuntime);
-    const runPromise = Runtime.runPromise(effectRuntime);
-    const messages = yield* store.loadMessages();
+    const services = yield* Effect.context<never>();
+    const runFork = Effect.runForkWith(services);
+    const runPromise = Effect.runPromiseWith(services);
+    const messages = yield* store.loadMessages;
     const logContext = createNinaLogContext(turn);
     const originalMessageCount = messages.length;
     const { messages: compressedMessages, tokens } = compressMessages(messages);
@@ -110,7 +110,7 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
           [
             reporter.report({ error, source }),
             store.saveFailure({ responseMessageId }).pipe(
-              Effect.catchAll((saveError) =>
+              Effect.catch((saveError) =>
                 reporter.report({
                   error: saveError,
                   source: "saveAssistantFailure",
@@ -175,7 +175,7 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
             store
               .saveTitle({ messages: updatedMessages })
               .pipe(
-                Effect.catchAll((error) =>
+                Effect.catch((error) =>
                   reporter.report({ error, source: "saveTitle" })
                 )
               )
@@ -189,7 +189,7 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
               responseMessage,
             })
             .pipe(
-              Effect.catchAll((error) =>
+              Effect.catch((error) =>
                 reporter.report({ error, source: "saveAssistantResponse" })
               )
             )
@@ -224,9 +224,9 @@ const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
   readonly user: NinaTurn["user"];
   readonly writer: UIMessageStreamWriter<MyUIMessage>;
 }) {
-  const effectRuntime = yield* Effect.runtime();
-  const runPromise = Runtime.runPromise(effectRuntime);
-  const runSync = Runtime.runSync(effectRuntime);
+  const services = yield* Effect.context<never>();
+  const runPromise = Effect.runPromiseWith(services);
+  const runSync = Effect.runSyncWith(services);
   const usage = yield* trackUsage();
   const context = createNinaAgentContext({ page, runtime, user });
   const pageFetch = createPageFetchState(context.needsPageFetch);
@@ -284,7 +284,7 @@ const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
     messages: [...finalMessages, ...responseMessages],
     writer,
   }).pipe(
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       reporter.report({ error, source: "writeNinaSuggestions" })
     )
   );
