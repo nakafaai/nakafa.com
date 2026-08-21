@@ -9,9 +9,20 @@ export const CONTRACT_ARCHIVE =
 export const DEPENDENCY_RELEASE_AGE_MINUTES = 1440;
 
 export const DEPENDENCY_RELEASE_AGE_EXCLUSIONS = [
-  "@ai-sdk/gateway@4.0.60",
+  "@ai-sdk/gateway@4.0.61",
   "@ai-sdk/google@4.0.49",
-  "@ai-sdk/react@4.0.77",
+  "@ai-sdk/mcp@2.0.35",
+  "@ai-sdk/react@4.0.79",
+  "@biomejs/biome@2.5.10",
+  "@biomejs/cli-darwin-arm64@2.5.10",
+  "@biomejs/cli-darwin-x64@2.5.10",
+  "@biomejs/cli-linux-arm64-musl@2.5.10",
+  "@biomejs/cli-linux-arm64@2.5.10",
+  "@biomejs/cli-linux-x64-musl@2.5.10",
+  "@biomejs/cli-linux-x64@2.5.10",
+  "@biomejs/cli-win32-arm64@2.5.10",
+  "@biomejs/cli-win32-x64@2.5.10",
+  "@mendable/firecrawl-js@4.35.0",
   "@next/bundle-analyzer@16.3.2",
   "@next/env@16.3.2",
   "@next/mdx@16.3.2",
@@ -24,7 +35,8 @@ export const DEPENDENCY_RELEASE_AGE_EXCLUSIONS = [
   "@next/swc-win32-arm64-msvc@16.3.2",
   "@next/swc-win32-x64-msvc@16.3.2",
   "@next/third-parties@16.3.2",
-  "ai@7.0.74",
+  "ai@7.0.76",
+  "convex@1.45.0",
   "next@16.3.2",
 ];
 
@@ -71,10 +83,10 @@ export const DEPENDENCY_HOLDS = [
     dependency: "@next/third-parties",
     minimumDeclarations: 1,
   },
-  { approved: "1.44.0", dependency: "convex", minimumDeclarations: 1 },
-  { approved: "7.0.74", dependency: "ai", minimumDeclarations: 1 },
+  { approved: "1.45.0", dependency: "convex", minimumDeclarations: 1 },
+  { approved: "7.0.76", dependency: "ai", minimumDeclarations: 1 },
   {
-    approved: "4.0.77",
+    approved: "4.0.79",
     dependency: "@ai-sdk/react",
     minimumDeclarations: 1,
   },
@@ -84,7 +96,7 @@ export const DEPENDENCY_HOLDS = [
     minimumDeclarations: 1,
   },
   {
-    approved: "4.0.60",
+    approved: "4.0.61",
     dependency: "@ai-sdk/gateway",
     minimumDeclarations: 1,
   },
@@ -110,7 +122,7 @@ export const DEPENDENCY_HOLDS = [
     minimumDeclarations: 6,
   },
   {
-    approved: "2.5.9",
+    approved: "2.5.10",
     dependency: "@biomejs/biome",
     minimumDeclarations: 1,
   },
@@ -152,11 +164,11 @@ export const REGISTRY_REVIEWS = [
     "16.3.2",
     "Stable 16.3.2 contains the reviewed catch-all cache-key backport.",
   ],
-  ["convex@latest", "1.44.0", "Convex acceptance uses an isolated deployment."],
-  ["ai@latest", "7.0.74", "AI SDK packages move as one reviewed cohort."],
+  ["convex@latest", "1.45.0", "Convex acceptance uses an isolated deployment."],
+  ["ai@latest", "7.0.76", "AI SDK packages move as one reviewed cohort."],
   [
     "@ai-sdk/react@latest",
-    "4.0.77",
+    "4.0.79",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
@@ -166,7 +178,7 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@ai-sdk/gateway@latest",
-    "4.0.60",
+    "4.0.61",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
@@ -184,7 +196,7 @@ export const REGISTRY_REVIEWS = [
     "0.12.5",
     "The adapter defines the accepted Better Auth peer range.",
   ],
-  ["@biomejs/biome@latest", "2.5.9", "Formatting is reviewed with Ultracite."],
+  ["@biomejs/biome@latest", "2.5.10", "Formatting is reviewed with Ultracite."],
   ["ultracite@latest", "7.10.6", "Formatting is reviewed with Biome."],
   ["@types/node@24", "24.13.3", "Declarations remain on the Node 24 line."],
   ["node@24", "24.19.0", "The repository supports the Node 24 runtime line."],

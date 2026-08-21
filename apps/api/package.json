@@ -22,7 +22,7 @@
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
     "better-auth": "1.6.30",
-    "convex": "1.44.0",
+    "convex": "1.45.0",
     "effect": "catalog:",
     "next": "16.3.2",
     "react": "^19.2.8",

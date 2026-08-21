@@ -7,7 +7,7 @@ export const CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT = "dapper-antelope-269";
 /**
  * Largest safe CLI export below Convex's 32,000-row pagination ceiling.
  * Convex CLI adds one row to detect a truncated result.
- * @see https://github.com/get-convex/convex-js/blob/npm/1.44.0/src/cli/lib/data.ts
+ * @see https://github.com/get-convex/convex-js/blob/8e20ab9e02baab41969f998122d9b926ec80effd/src/cli/lib/data.ts
  * @see https://github.com/get-convex/convex-backend/blob/ba336a65e20d53a7d4f646efd302af92325112b4/crates/common/src/knobs.rs#L580-L582
  */
 export const MAX_CONTENT_RUNTIME_EXPORT_LIMIT = 31_999;
