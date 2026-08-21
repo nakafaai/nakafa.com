@@ -6,6 +6,8 @@ import { parse } from "yaml";
 export const CONTRACT_ARCHIVE =
   "https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.0/nakafa-aksara-contracts-0.15.0.tgz";
 
+export const DEPENDENCY_RELEASE_AGE_MINUTES = 1440;
+
 export const DEPENDENCY_HOLDS = [
   {
     approved: "catalog:",
@@ -315,6 +317,12 @@ export function validateDependencyPolicy({
   }
   if (rootManifest.devEngines?.runtime?.version !== "24.19.0") {
     problems.push("The managed Node runtime must be 24.19.0.");
+  }
+  if (workspace.minimumReleaseAge !== DEPENDENCY_RELEASE_AGE_MINUTES) {
+    problems.push("Dependency releases must mature for exactly 1440 minutes.");
+  }
+  if (workspace.minimumReleaseAgeStrict !== true) {
+    problems.push("Dependency release-age enforcement must remain strict.");
   }
 
   return problems;

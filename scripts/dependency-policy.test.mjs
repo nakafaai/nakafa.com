@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   CONTRACT_ARCHIVE,
   DEPENDENCY_HOLDS,
+  DEPENDENCY_RELEASE_AGE_MINUTES,
   dependencyDeclarations,
   validateDependencyPolicy,
 } from "./dependency-policy.mjs";
@@ -44,6 +45,8 @@ function validInput() {
       packageManager: "pnpm@11.22.0",
     },
     workspace: {
+      minimumReleaseAge: DEPENDENCY_RELEASE_AGE_MINUTES,
+      minimumReleaseAgeStrict: true,
       catalog: {
         "@effect/platform-node": "4.0.0-rc.110",
         "@effect/vitest": "4.0.0-rc.110",
@@ -65,6 +68,8 @@ test("reports drift, missing consumers, and obsolete Effect packages", () => {
   input.manifests[0].manifest.dependencies["@effect/platform"] = "0.97.1";
   input.manifests[0].manifest.scripts.doctor = "pnpm dlx react-doctor@0.9.5";
   input.manifests.splice(1);
+  input.workspace.minimumReleaseAge = 0;
+  input.workspace.minimumReleaseAgeStrict = false;
   input.workspace.update.ignoreDeps = [];
 
   const problems = validateDependencyPolicy(input);
@@ -75,6 +80,8 @@ test("reports drift, missing consumers, and obsolete Effect packages", () => {
   assert.ok(problems.some((problem) => problem.includes("obsolete Effect")));
   assert.ok(problems.some((problem) => problem.includes("react-doctor")));
   assert.ok(problems.some((problem) => problem.includes("update.ignoreDeps")));
+  assert.ok(problems.some((problem) => problem.includes("1440 minutes")));
+  assert.ok(problems.some((problem) => problem.includes("remain strict")));
 });
 
 test("finds declarations in every dependency group", () => {

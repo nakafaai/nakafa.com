@@ -120,5 +120,5 @@ if (problems.length > 0) {
 }
 
 process.stdout.write(
-  "Routine dependencies and every reviewed hold are current.\n"
+  "Routine dependencies and every reviewed hold are current under the repository's 24-hour release-maturity policy.\n"
 );
