@@ -1,6 +1,15 @@
 import { scopeSources } from "@repo/ai/agents/research/search/scope";
 import { describe, expect, it } from "vitest";
 
+function makeSearchSource(title: string, url: string) {
+  return {
+    content: `${title} content.`,
+    description: `${title} description.`,
+    title,
+    url,
+  };
+}
+
 describe("scopeSources", () => {
   it("prefers first-party product domains when primary sources are requested", () => {
     const sources = scopeSources({
@@ -251,5 +260,76 @@ describe("scopeSources", () => {
     expect(sources.map((source) => source.url)).toEqual([
       "https://react.dev/blog/2024/12/05/react-19",
     ]);
+  });
+
+  it.each([
+    {
+      expectedUrls: ["https://ai-sdk.dev/docs/ai-sdk-core/devtools"],
+      name: "natural multilingual product terms",
+      query: "AI SDK DevTools official documentation terbaru",
+      sources: [
+        makeSearchSource(
+          "AI SDK Core: DevTools",
+          "https://ai-sdk.dev/docs/ai-sdk-core/devtools"
+        ),
+        makeSearchSource(
+          "Mengaktifkan bantuan AI di DevTools",
+          "https://developer.chrome.com/docs/devtools/ai-assistance?hl=id"
+        ),
+      ],
+      task: "AI SDK DevTools official documentation terbaru",
+    },
+    {
+      expectedUrls: ["https://example.com/devtools"],
+      name: "one mixed-case product term",
+      query: "devTools",
+      sources: [
+        makeSearchSource("DevTools Reference", "https://example.com/devtools"),
+        makeSearchSource(
+          "Developer Tools",
+          "https://example.com/general-tools"
+        ),
+      ],
+      task: "devTools",
+    },
+    {
+      expectedUrls: ["https://example.com/ai-sdk"],
+      name: "task terms when a generic source ranks first",
+      query: "AI SDK",
+      sources: [
+        makeSearchSource("AI Platform", "https://example.com/ai-platform"),
+        makeSearchSource("AI SDK", "https://example.com/ai-sdk"),
+      ],
+      task: "AI SDK",
+    },
+    {
+      expectedUrls: ["https://example.com/ai-sdk"],
+      name: "one lowercase hyphenated term",
+      query: "ai-sdk",
+      sources: [
+        makeSearchSource("ai-sdk", "https://example.com/ai-sdk"),
+        makeSearchSource("AI Packages", "https://example.com/packages"),
+      ],
+      task: "ai-sdk",
+    },
+    {
+      expectedUrls: ["https://example.com/ai", "https://example.com/platform"],
+      name: "one short acronym",
+      query: "AI",
+      sources: [
+        makeSearchSource("AI Overview", "https://example.com/ai"),
+        makeSearchSource("Platform Update", "https://example.com/platform"),
+      ],
+      task: "AI",
+    },
+  ])("scopes sources for $name", ({ expectedUrls, query, sources, task }) => {
+    const scopedSources = scopeSources({
+      query,
+      sourcePreference: "any",
+      sources,
+      task,
+    });
+
+    expect(scopedSources.map((source) => source.url)).toEqual(expectedUrls);
   });
 });

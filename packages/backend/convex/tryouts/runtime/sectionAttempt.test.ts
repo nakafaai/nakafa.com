@@ -1,6 +1,6 @@
 import { requireInternalEntrySection } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 const unavailableSections: Parameters<typeof requireInternalEntrySection>[0] = [
   { sectionKey: "entry", visibility: "visible" },
@@ -8,27 +8,30 @@ const unavailableSections: Parameters<typeof requireInternalEntrySection>[0] = [
 ];
 
 describe("tryouts/runtime/sectionAttempt", () => {
-  it("accepts the requested internal entry section", () => {
-    const sections: Parameters<typeof requireInternalEntrySection>[0] = [
-      { sectionKey: "entry", visibility: "internal-entry" },
-    ];
+  it.live("accepts the requested internal entry section", () =>
+    Effect.gen(function* () {
+      const sections: Parameters<typeof requireInternalEntrySection>[0] = [
+        { sectionKey: "entry", visibility: "internal-entry" },
+      ];
 
-    expect(
-      Effect.runSync(requireInternalEntrySection(sections, "entry"))
-    ).toBeUndefined();
-  });
+      expect(
+        yield* requireInternalEntrySection(sections, "entry")
+      ).toBeUndefined();
+    })
+  );
 
-  it.each(unavailableSections)(
+  it.live.each(unavailableSections)(
     "rejects unavailable entry section $sectionKey",
-    (section) => {
-      const error = Effect.runSync(
-        Effect.flip(requireInternalEntrySection([section], "entry"))
-      );
+    (section) =>
+      Effect.gen(function* () {
+        const error = yield* Effect.flip(
+          requireInternalEntrySection([section], "entry")
+        );
 
-      expect(error).toMatchObject({
-        _tag: "TryoutRuntimeError",
-        code: "TRYOUT_ENTRY_SECTION_NOT_FOUND",
-      });
-    }
+        expect(error).toMatchObject({
+          _tag: "TryoutRuntimeError",
+          code: "TRYOUT_ENTRY_SECTION_NOT_FOUND",
+        });
+      })
   );
 });

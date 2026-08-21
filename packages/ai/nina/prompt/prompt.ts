@@ -19,8 +19,7 @@ const SystemPromptPropsSchema = RuntimePromptContextSchema.mapFields(
   (fields) => ({
     ...fields,
     userRole: Schema.optional(PromptUserRoleSchema),
-  }),
-  { unsafePreserveChecks: true }
+  })
 );
 
 type SystemPromptProps = Schema.Schema.Type<typeof SystemPromptPropsSchema>;

@@ -5,9 +5,9 @@ import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { insertTestRelease } from "@repo/backend/test/content-stage";
 import { makeProgramSnapshotData } from "@repo/backend/test/program-snapshot";
+import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 /** Inserts one expired manifest and a requested number of physical rows. */
 async function insertExpiredProgram(
@@ -296,32 +296,56 @@ describe("contentRelease/snapshot/cleanup", () => {
     ).resolves.toEqual({ rows: [], search: [], snapshot: [] });
   });
 
-  it("extends retained snapshots selected by protected release history", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) =>
-      insertTestRelease(ctx, { snapshots: data.snapshots })
-    );
-    await t.mutation((ctx) => insertExpiredProgram(ctx, data.snapshotId, 0));
+  it.live(
+    "extends retained snapshots selected by protected release history",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* makeProgramSnapshotData();
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            insertTestRelease(ctx, { snapshots: data.snapshots })
+          )
+        );
+        yield* Effect.promise(() =>
+          t.mutation((ctx) => insertExpiredProgram(ctx, data.snapshotId, 0))
+        );
 
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).resolves.toEqual({ cursor: null, deleted: 0, done: false });
-    await expect(
-      t.run((ctx) => ctx.db.query("contentSnapshots").unique())
-    ).resolves.toMatchObject({ retainUntil: expect.any(Number) });
-  });
+        yield* Effect.promise(() =>
+          expect(
+            t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
+          ).resolves.toEqual({ cursor: null, deleted: 0, done: false })
+        );
+        yield* Effect.promise(() =>
+          expect(
+            t.run((ctx) => ctx.db.query("contentSnapshots").unique())
+          ).resolves.toMatchObject({ retainUntil: expect.any(Number) })
+        );
+      })
+  );
 
-  it("fails closed when a partially cleaned snapshot becomes referenced", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) =>
-      insertTestRelease(ctx, { snapshots: data.snapshots })
-    );
-    await t.mutation((ctx) => insertExpiredProgram(ctx, data.snapshotId, 0, 0));
+  it.live(
+    "fails closed when a partially cleaned snapshot becomes referenced",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* makeProgramSnapshotData();
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            insertTestRelease(ctx, { snapshots: data.snapshots })
+          )
+        );
+        yield* Effect.promise(() =>
+          t.mutation((ctx) => insertExpiredProgram(ctx, data.snapshotId, 0, 0))
+        );
 
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
-  });
+        yield* Effect.promise(() =>
+          expect(
+            t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
+          ).rejects.toMatchObject({
+            data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          })
+        );
+      })
+  );
 });

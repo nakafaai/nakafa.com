@@ -44,7 +44,7 @@ interface RuntimeCommand {
 /**
  * Runs one runtime command with mode-600 output captured at process startup.
  * Paths and arguments stay positional so the shell never reparses them.
- * @see https://www.effect.website/docs/v3/platform/command
+ * @see https://github.com/Effect-TS/effect/blob/66114151c2b4640bf773f2b3456ce70d679422f6/packages/effect/src/unstable/process/ChildProcess.ts
  * @see https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html#tag_19_07
  */
 export const runRuntimeCommand = Effect.fn("contentRuntime.runCommand")(

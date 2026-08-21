@@ -27,10 +27,10 @@ import {
   makeProgramSnapshotData,
   type ProgramSnapshotData,
 } from "@repo/backend/test/program-snapshot";
+import { describe, expect, it } from "@repo/testing/effect";
 import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 const PROGRAM_KEY = LearningProgramKeySchema.make("technical-program-1");
 const SOURCE_MATERIAL = makeMaterialProjection("en", 1);
@@ -176,218 +176,290 @@ describe("contentRelease/program/context", () => {
     });
   });
 
-  it("resolves one verified material context and its card-list parent", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const t = convexTest(schema, convexModules);
-    await activateProgramSnapshot(t, data);
-    await stageRoutes(t, data, [subjectRoute(), groupRoute(), mappingRoute()]);
+  it.live(
+    "resolves one verified material context and its card-list parent",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* makeProgramSnapshotData();
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() => activateProgramSnapshot(t, data));
+        yield* Effect.promise(() =>
+          stageRoutes(t, data, [subjectRoute(), groupRoute(), mappingRoute()])
+        );
 
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(readProgramContext(ctx, "en", CONTEXT_INPUT))
-      )
-    ).resolves.toMatchObject({
-      context: {
-        groupJson: expect.any(String),
-        mappingJson: expect.any(String),
-        parentJson: expect.any(String),
-      },
-      managed: true,
-    });
-  });
-
-  it("resolves a moved exact lesson from the current signed projection", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const target = convexTest(schema, convexModules);
-    const source = SOURCE_MATERIAL;
-    const renamedParent = PublicPathSchema.make(
-      "subjects/test/renamed-technical-topic"
-    );
-    const renamed = MaterialLessonProjectionSchema.make({
-      ...source,
-      parentPath: renamedParent,
-      publicPath: PublicPathSchema.make(
-        `${renamedParent}/renamed-technical-section`
-      ),
-    });
-    await activateProgramSnapshot(target, data);
-    await stageRoutes(target, data, [
-      subjectRoute(),
-      groupRoute(),
-      mappingRoute(1, renamed.parentPath),
-    ]);
-    await target.mutation(async (ctx) => {
-      await insertMaterialProjection(ctx, renamed);
-    });
-
-    await expect(
-      target.query((ctx) =>
-        runConvexProgram(
-          readProgramContext(ctx, "en", {
-            ...CONTEXT_INPUT,
-            parentPath: renamed.parentPath,
-            publicPath: renamed.publicPath,
+        yield* Effect.promise(() =>
+          expect(
+            t.query((ctx) =>
+              runConvexProgram(readProgramContext(ctx, "en", CONTEXT_INPUT))
+            )
+          ).resolves.toMatchObject({
+            context: {
+              groupJson: expect.any(String),
+              mappingJson: expect.any(String),
+              parentJson: expect.any(String),
+            },
+            managed: true,
           })
-        )
-      )
-    ).resolves.toMatchObject({
-      context: {
-        mappingJson: expect.any(String),
-        resolvedCanonicalPath: renamed.parentPath,
-      },
-      managed: true,
-    });
-  });
+        );
+      })
+  );
 
-  it("ignores missing, root, and unmapped context hints", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const t = convexTest(schema, convexModules);
-    await activateProgramSnapshot(t, data);
-    await stageRoutes(t, data, [subjectRoute(), groupRoute()]);
+  it.live(
+    "resolves a moved exact lesson from the current signed projection",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* makeProgramSnapshotData();
+        const target = convexTest(schema, convexModules);
+        const source = SOURCE_MATERIAL;
+        const renamedParent = PublicPathSchema.make(
+          "subjects/test/renamed-technical-topic"
+        );
+        const renamed = MaterialLessonProjectionSchema.make({
+          ...source,
+          parentPath: renamedParent,
+          publicPath: PublicPathSchema.make(
+            `${renamedParent}/renamed-technical-section`
+          ),
+        });
+        yield* Effect.promise(() => activateProgramSnapshot(target, data));
+        yield* Effect.promise(() =>
+          stageRoutes(target, data, [
+            subjectRoute(),
+            groupRoute(),
+            mappingRoute(1, renamed.parentPath),
+          ])
+        );
+        yield* Effect.promise(() =>
+          target.mutation(async (ctx) => {
+            await insertMaterialProjection(ctx, renamed);
+          })
+        );
 
-    for (const nodeKey of ["missing-group", `${PROGRAM_KEY}:root`, GROUP_KEY]) {
-      await expect(
-        t.query((ctx) =>
-          runConvexProgram(
-            readProgramContext(ctx, "en", {
-              ...CONTEXT_INPUT,
-              nodeKey,
-            })
+        yield* Effect.promise(() =>
+          expect(
+            target.query((ctx) =>
+              runConvexProgram(
+                readProgramContext(ctx, "en", {
+                  ...CONTEXT_INPUT,
+                  parentPath: renamed.parentPath,
+                  publicPath: renamed.publicPath,
+                })
+              )
+            )
+          ).resolves.toMatchObject({
+            context: {
+              mappingJson: expect.any(String),
+              resolvedCanonicalPath: renamed.parentPath,
+            },
+            managed: true,
+          })
+        );
+      })
+  );
+
+  it.live("ignores missing, root, and unmapped context hints", () =>
+    Effect.gen(function* () {
+      const data = yield* makeProgramSnapshotData();
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(() => activateProgramSnapshot(t, data));
+      yield* Effect.promise(() =>
+        stageRoutes(t, data, [subjectRoute(), groupRoute()])
+      );
+
+      for (const nodeKey of [
+        "missing-group",
+        `${PROGRAM_KEY}:root`,
+        GROUP_KEY,
+      ]) {
+        yield* Effect.promise(() =>
+          expect(
+            t.query((ctx) =>
+              runConvexProgram(
+                readProgramContext(ctx, "en", {
+                  ...CONTEXT_INPUT,
+                  nodeKey,
+                })
+              )
+            )
+          ).resolves.toEqual({
+            context: null,
+            managed: true,
+          })
+        );
+      }
+    })
+  );
+
+  it.live(
+    "ignores a context whose direct parent is not a card-list route",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* makeProgramSnapshotData();
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() => activateProgramSnapshot(t, data));
+        const directPath = PublicPathSchema.make(`${ROOT_PATH}/direct-group`);
+        yield* Effect.promise(() =>
+          stageRoutes(t, data, [
+            groupRoute(
+              ROOT_PATH,
+              directPath,
+              CurriculumNodeKeySchema.make("direct-group")
+            ),
+          ])
+        );
+
+        yield* Effect.promise(() =>
+          expect(
+            t.query((ctx) =>
+              runConvexProgram(
+                readProgramContext(ctx, "en", {
+                  ...CONTEXT_INPUT,
+                  nodeKey: "direct-group",
+                })
+              )
+            )
+          ).resolves.toEqual({
+            context: null,
+            managed: true,
+          })
+        );
+      })
+  );
+
+  it.live("rejects a context group whose stored parent disappeared", () =>
+    Effect.gen(function* () {
+      const data = yield* makeProgramSnapshotData();
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(() => activateProgramSnapshot(t, data));
+      const missingParent = PublicPathSchema.make(
+        `${ROOT_PATH}/missing-parent`
+      );
+      const orphanPath = PublicPathSchema.make(`${missingParent}/orphan-group`);
+      yield* Effect.promise(() =>
+        stageRoutes(t, data, [
+          groupRoute(
+            missingParent,
+            orphanPath,
+            CurriculumNodeKeySchema.make("orphan-group")
+          ),
+        ])
+      );
+
+      yield* Effect.promise(() =>
+        expect(
+          t.query((ctx) =>
+            runConvexProgram(
+              readProgramContext(ctx, "en", {
+                ...CONTEXT_INPUT,
+                nodeKey: "orphan-group",
+              })
+            )
           )
-        )
-      ).resolves.toEqual({
-        context: null,
-        managed: true,
-      });
-    }
-  });
+        ).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        })
+      );
+    })
+  );
 
-  it("ignores a context whose direct parent is not a card-list route", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const t = convexTest(schema, convexModules);
-    await activateProgramSnapshot(t, data);
-    const directPath = PublicPathSchema.make(`${ROOT_PATH}/direct-group`);
-    await stageRoutes(t, data, [
-      groupRoute(
-        ROOT_PATH,
-        directPath,
-        CurriculumNodeKeySchema.make("direct-group")
-      ),
-    ]);
+  it.live(
+    "rejects a context relationship beyond its bounded read contract",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* makeProgramSnapshotData();
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() => activateProgramSnapshot(t, data));
+        yield* Effect.promise(() =>
+          stageRoutes(t, data, [
+            subjectRoute(),
+            groupRoute(),
+            ...Array.from({ length: 101 }, (_, index) =>
+              mappingRoute(index + 1)
+            ),
+          ])
+        );
 
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(
-          readProgramContext(ctx, "en", {
-            ...CONTEXT_INPUT,
-            nodeKey: "direct-group",
+        yield* Effect.promise(() =>
+          expect(
+            t.query((ctx) =>
+              runConvexProgram(readProgramContext(ctx, "en", CONTEXT_INPUT))
+            )
+          ).rejects.toMatchObject({
+            data: { code: "CONTENT_RELEASE_LIMIT" },
           })
-        )
-      )
-    ).resolves.toEqual({
-      context: null,
-      managed: true,
-    });
-  });
+        );
+      })
+  );
 
-  it("rejects a context group whose stored parent disappeared", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const t = convexTest(schema, convexModules);
-    await activateProgramSnapshot(t, data);
-    const missingParent = PublicPathSchema.make(`${ROOT_PATH}/missing-parent`);
-    const orphanPath = PublicPathSchema.make(`${missingParent}/orphan-group`);
-    await stageRoutes(t, data, [
-      groupRoute(
-        missingParent,
-        orphanPath,
-        CurriculumNodeKeySchema.make("orphan-group")
-      ),
-    ]);
+  it.live(
+    "rejects a sibling lesson when a mapping names one exact lesson",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* makeProgramSnapshotData();
+        const t = convexTest(schema, convexModules);
+        const sibling = makeMaterialProjection("en", 2);
+        yield* Effect.promise(() => activateProgramSnapshot(t, data));
+        yield* Effect.promise(() =>
+          stageRoutes(t, data, [
+            subjectRoute(),
+            groupRoute(),
+            mappingRoute(1, MATERIAL_PUBLIC_PATH),
+          ])
+        );
+        yield* Effect.promise(() =>
+          t.mutation((ctx) => insertMaterialProjection(ctx, sibling))
+        );
 
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(
-          readProgramContext(ctx, "en", {
-            ...CONTEXT_INPUT,
-            nodeKey: "orphan-group",
+        yield* Effect.promise(() =>
+          expect(
+            t.query((ctx) =>
+              runConvexProgram(readProgramContext(ctx, "en", CONTEXT_INPUT))
+            )
+          ).resolves.toMatchObject({
+            context: { mappingJson: expect.any(String) },
+            managed: true,
           })
-        )
-      )
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-  });
+        );
+        yield* Effect.promise(() =>
+          expect(
+            t.query((ctx) =>
+              runConvexProgram(
+                readProgramContext(ctx, "en", {
+                  ...CONTEXT_INPUT,
+                  contentKey: sibling.contentKey,
+                  parentPath: sibling.parentPath,
+                  publicPath: sibling.publicPath,
+                })
+              )
+            )
+          ).resolves.toEqual({ context: null, managed: true })
+        );
+      })
+  );
 
-  it("rejects a context relationship beyond its bounded read contract", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const t = convexTest(schema, convexModules);
-    await activateProgramSnapshot(t, data);
-    await stageRoutes(t, data, [
-      subjectRoute(),
-      groupRoute(),
-      ...Array.from({ length: 101 }, (_, index) => mappingRoute(index + 1)),
-    ]);
+  it.live("rejects ambiguous mappings for one exact material context", () =>
+    Effect.gen(function* () {
+      const data = yield* makeProgramSnapshotData();
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(() => activateProgramSnapshot(t, data));
+      yield* Effect.promise(() =>
+        stageRoutes(t, data, [
+          subjectRoute(),
+          groupRoute(),
+          mappingRoute(1),
+          mappingRoute(2),
+        ])
+      );
 
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(readProgramContext(ctx, "en", CONTEXT_INPUT))
-      )
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_LIMIT" },
-    });
-  });
-
-  it("rejects a sibling lesson when a mapping names one exact lesson", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const t = convexTest(schema, convexModules);
-    const sibling = makeMaterialProjection("en", 2);
-    await activateProgramSnapshot(t, data);
-    await stageRoutes(t, data, [
-      subjectRoute(),
-      groupRoute(),
-      mappingRoute(1, MATERIAL_PUBLIC_PATH),
-    ]);
-    await t.mutation((ctx) => insertMaterialProjection(ctx, sibling));
-
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(readProgramContext(ctx, "en", CONTEXT_INPUT))
-      )
-    ).resolves.toMatchObject({
-      context: { mappingJson: expect.any(String) },
-      managed: true,
-    });
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(
-          readProgramContext(ctx, "en", {
-            ...CONTEXT_INPUT,
-            contentKey: sibling.contentKey,
-            parentPath: sibling.parentPath,
-            publicPath: sibling.publicPath,
-          })
-        )
-      )
-    ).resolves.toEqual({ context: null, managed: true });
-  });
-
-  it("rejects ambiguous mappings for one exact material context", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const t = convexTest(schema, convexModules);
-    await activateProgramSnapshot(t, data);
-    await stageRoutes(t, data, [
-      subjectRoute(),
-      groupRoute(),
-      mappingRoute(1),
-      mappingRoute(2),
-    ]);
-
-    await expect(
-      t.query((ctx) =>
-        runConvexProgram(readProgramContext(ctx, "en", CONTEXT_INPUT))
-      )
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-  });
+      yield* Effect.promise(() =>
+        expect(
+          t.query((ctx) =>
+            runConvexProgram(readProgramContext(ctx, "en", CONTEXT_INPUT))
+          )
+        ).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        })
+      );
+    })
+  );
 });

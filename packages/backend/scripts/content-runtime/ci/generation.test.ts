@@ -6,8 +6,8 @@ import {
 } from "@repo/backend/scripts/content-runtime/ci/generation";
 import { decodeJsonRows } from "@repo/backend/scripts/content-runtime/ci/json";
 import { CONTENT_RUNTIME_CACHE_VERSION } from "@repo/backend/scripts/content-runtime/tables";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 const ACTIVE_HASH = `sha256:${"a".repeat(64)}`;
 const NEXT_HASH = `sha256:${"b".repeat(64)}`;
@@ -33,89 +33,84 @@ const contentStateRow = {
 const contentState = [contentStateRow];
 
 describe("content runtime generations", () => {
-  it("separates portable cache state from the public signed selection", async () => {
-    const baseline = await Effect.runPromise(
-      buildRuntimeGenerations(contentState)
-    );
-    const systemFieldsChanged = await Effect.runPromise(
-      buildRuntimeGenerations([
-        { ...contentStateRow, _creationTime: 999, _id: "different" },
-      ])
-    );
-    expect(systemFieldsChanged).toEqual(baseline);
-    expect(baseline.contentStateHash).toBe(
-      "21bb4b24ec4dd2151567a1850ab3899b457f01f93f4d9b80f983442a0be6440a"
-    );
-    expect(baseline.runtimeSelectionHash).toBe(
-      "3579932e4fad16d4c08279cb35248e171d5f8b1ce9db4ea4a481acd84112d088"
-    );
-    expect(formatGenerationEnvironment(baseline)).toBe(
-      [
-        `AGENT_DOCS_CONTENT_STATE_HASH=${baseline.contentStateHash}`,
-        `AGENT_DOCS_RUNTIME_SELECTION_HASH=${baseline.runtimeSelectionHash}`,
-      ].join("\n")
-    );
-  });
+  it.live(
+    "separates portable cache state from the public signed selection",
+    () =>
+      Effect.gen(function* () {
+        const baseline = yield* buildRuntimeGenerations(contentState);
+        const systemFieldsChanged = yield* buildRuntimeGenerations([
+          { ...contentStateRow, _creationTime: 999, _id: "different" },
+        ]);
+        expect(systemFieldsChanged).toEqual(baseline);
+        expect(baseline.contentStateHash).toBe(
+          "21bb4b24ec4dd2151567a1850ab3899b457f01f93f4d9b80f983442a0be6440a"
+        );
+        expect(baseline.runtimeSelectionHash).toBe(
+          "3579932e4fad16d4c08279cb35248e171d5f8b1ce9db4ea4a481acd84112d088"
+        );
+        expect(formatGenerationEnvironment(baseline)).toBe(
+          [
+            `AGENT_DOCS_CONTENT_STATE_HASH=${baseline.contentStateHash}`,
+            `AGENT_DOCS_RUNTIME_SELECTION_HASH=${baseline.runtimeSelectionHash}`,
+          ].join("\n")
+        );
+      })
+  );
 
-  it("accepts compaction and inactive-slot drift only for runtime selection", async () => {
-    const baseline = await Effect.runPromise(
-      buildRuntimeGenerations(contentState)
-    );
-    const operationalDrift = await Effect.runPromise(
-      buildRuntimeGenerations([
-        {
-          ...contentStateRow,
-          candidateManifestHash: NEXT_HASH,
-          candidateReleaseId: "candidate-release",
-          candidateSequence: 10,
-          compactCursor: "next-page",
-          compactFloor: 9,
-          compactFrom: 0,
-          compactPhase: "heads",
-          compactStartedAt: 200.5,
-          compactedFloor: 0,
-          nextSequence: 12,
-          recoveryManifestHash: `sha256:${"c".repeat(64)}`,
-          recoveryReleaseId: "recovery-release",
-          recoverySequence: 11,
-          updatedAt: 300,
-        },
-      ])
-    );
+  it.live(
+    "accepts compaction and inactive-slot drift only for runtime selection",
+    () =>
+      Effect.gen(function* () {
+        const baseline = yield* buildRuntimeGenerations(contentState);
+        const operationalDrift = yield* buildRuntimeGenerations([
+          {
+            ...contentStateRow,
+            candidateManifestHash: NEXT_HASH,
+            candidateReleaseId: "candidate-release",
+            candidateSequence: 10,
+            compactCursor: "next-page",
+            compactFloor: 9,
+            compactFrom: 0,
+            compactPhase: "heads",
+            compactStartedAt: 200.5,
+            compactedFloor: 0,
+            nextSequence: 12,
+            recoveryManifestHash: `sha256:${"c".repeat(64)}`,
+            recoveryReleaseId: "recovery-release",
+            recoverySequence: 11,
+            updatedAt: 300,
+          },
+        ]);
 
-    expect(operationalDrift.contentStateHash).not.toBe(
-      baseline.contentStateHash
-    );
-    expect(operationalDrift.runtimeSelectionHash).toBe(
-      baseline.runtimeSelectionHash
-    );
-    await expect(
-      Effect.runPromise(
-        verifyRuntimeSelection(
-          { runtimeSelectionHash: baseline.runtimeSelectionHash },
-          operationalDrift
-        )
-      )
-    ).resolves.toBeUndefined();
-    await expect(
-      Effect.runPromise(
-        verifyStableRuntimeExport(
-          cacheIdentity(baseline.contentStateHash),
-          operationalDrift
-        ).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({
-      _tag: "ContentRuntimeCiError",
-      message: "Production content state changed during signed runtime export.",
-    });
-  });
+        expect(operationalDrift.contentStateHash).not.toBe(
+          baseline.contentStateHash
+        );
+        expect(operationalDrift.runtimeSelectionHash).toBe(
+          baseline.runtimeSelectionHash
+        );
+        expect(
+          yield* verifyRuntimeSelection(
+            { runtimeSelectionHash: baseline.runtimeSelectionHash },
+            operationalDrift
+          )
+        ).toBeUndefined();
+        expect(
+          yield* verifyStableRuntimeExport(
+            cacheIdentity(baseline.contentStateHash),
+            operationalDrift
+          ).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "ContentRuntimeCiError",
+          message:
+            "Production content state changed during signed runtime export.",
+        });
+      })
+  );
 
-  it("rejects a coherent change to the public signed selection", async () => {
-    const baseline = await Effect.runPromise(
-      buildRuntimeGenerations(contentState)
-    );
-    const changed = await Effect.runPromise(
-      buildRuntimeGenerations([
+  it.live("rejects a coherent change to the public signed selection", () =>
+    Effect.gen(function* () {
+      const baseline = yield* buildRuntimeGenerations(contentState);
+      const changed = yield* buildRuntimeGenerations([
         {
           ...contentStateRow,
           activeManifestHash: NEXT_HASH,
@@ -133,101 +128,102 @@ describe("content runtime generations", () => {
           searchSequence: 10,
           updatedAt: 200,
         },
-      ])
-    );
+      ]);
 
-    expect(changed.contentStateHash).not.toBe(baseline.contentStateHash);
-    expect(changed.runtimeSelectionHash).not.toBe(
-      baseline.runtimeSelectionHash
-    );
-    await expect(
-      Effect.runPromise(
-        verifyRuntimeSelection(
+      expect(changed.contentStateHash).not.toBe(baseline.contentStateHash);
+      expect(changed.runtimeSelectionHash).not.toBe(
+        baseline.runtimeSelectionHash
+      );
+      expect(
+        yield* verifyRuntimeSelection(
           { runtimeSelectionHash: baseline.runtimeSelectionHash },
           changed
         ).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({
-      _tag: "ContentRuntimeCiError",
-      message:
-        "Production signed content pointer changed during runtime verification.",
-    });
-  });
-
-  it("rejects incomplete slots and unsynchronized read models", async () => {
-    const invalidRows = [
-      { ...contentStateRow, articleSequence: 8 },
-      { ...contentStateRow, candidateReleaseId: "partial-candidate" },
-      { ...contentStateRow, compactPhase: "unknown-phase" },
-      { ...contentStateRow, recoveryManifestHash: NEXT_HASH },
-    ];
-
-    for (const row of invalidRows) {
-      await expect(
-        Effect.runPromise(buildRuntimeGenerations([row]).pipe(Effect.flip))
-      ).resolves.toMatchObject({ _tag: "ContentRuntimeCiError" });
-    }
-  });
-
-  it("rejects partial or invalid compaction identities", async () => {
-    const invalidRows = [
-      { ...contentStateRow, compactFloor: 9 },
-      { ...contentStateRow, compactCursor: "orphaned-cursor" },
-      {
-        ...contentStateRow,
-        compactCursor: "",
-        compactFloor: 9,
-        compactFrom: 0,
-        compactPhase: "heads",
-        compactStartedAt: 200,
-      },
-      {
-        ...contentStateRow,
-        compactFloor: 9,
-        compactFrom: 1,
-        compactPhase: "heads",
-        compactStartedAt: 200,
-        compactedFloor: 0,
-      },
-    ];
-
-    for (const row of invalidRows) {
-      await expect(
-        Effect.runPromise(buildRuntimeGenerations([row]).pipe(Effect.flip))
-      ).resolves.toMatchObject({
+      ).toMatchObject({
         _tag: "ContentRuntimeCiError",
-        message: "Production contentState has an invalid compaction identity.",
+        message:
+          "Production signed content pointer changed during runtime verification.",
       });
-    }
-  });
+    })
+  );
 
-  it("rejects incomplete, malformed, excess, or non-singleton rows", async () => {
-    await expect(Effect.runPromise(decodeJsonRows(""))).resolves.toEqual([]);
-    await expect(
-      Effect.runPromise(buildRuntimeGenerations([]).pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "ContentRuntimeCiError" });
-    await expect(
-      Effect.runPromise(
-        buildRuntimeGenerations([...contentState, ...contentState]).pipe(
+  it.live("rejects incomplete slots and unsynchronized read models", () =>
+    Effect.gen(function* () {
+      const invalidRows = [
+        { ...contentStateRow, articleSequence: 8 },
+        { ...contentStateRow, candidateReleaseId: "partial-candidate" },
+        { ...contentStateRow, compactPhase: "unknown-phase" },
+        { ...contentStateRow, recoveryManifestHash: NEXT_HASH },
+      ];
+
+      for (const row of invalidRows) {
+        expect(
+          yield* buildRuntimeGenerations([row]).pipe(Effect.flip)
+        ).toMatchObject({ _tag: "ContentRuntimeCiError" });
+      }
+    })
+  );
+
+  it.live("rejects partial or invalid compaction identities", () =>
+    Effect.gen(function* () {
+      const invalidRows = [
+        { ...contentStateRow, compactFloor: 9 },
+        { ...contentStateRow, compactCursor: "orphaned-cursor" },
+        {
+          ...contentStateRow,
+          compactCursor: "",
+          compactFloor: 9,
+          compactFrom: 0,
+          compactPhase: "heads",
+          compactStartedAt: 200,
+        },
+        {
+          ...contentStateRow,
+          compactFloor: 9,
+          compactFrom: 1,
+          compactPhase: "heads",
+          compactStartedAt: 200,
+          compactedFloor: 0,
+        },
+      ];
+
+      for (const row of invalidRows) {
+        expect(
+          yield* buildRuntimeGenerations([row]).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "ContentRuntimeCiError",
+          message:
+            "Production contentState has an invalid compaction identity.",
+        });
+      }
+    })
+  );
+
+  it.live("rejects incomplete, malformed, excess, or non-singleton rows", () =>
+    Effect.gen(function* () {
+      expect(yield* decodeJsonRows("")).toEqual([]);
+      expect(
+        yield* buildRuntimeGenerations([]).pipe(Effect.flip)
+      ).toMatchObject({ _tag: "ContentRuntimeCiError" });
+      expect(
+        yield* buildRuntimeGenerations([...contentState, ...contentState]).pipe(
           Effect.flip
         )
-      )
-    ).resolves.toMatchObject({ _tag: "ContentRuntimeCiError" });
-    await expect(
-      Effect.runPromise(
-        buildRuntimeGenerations([
+      ).toMatchObject({ _tag: "ContentRuntimeCiError" });
+      expect(
+        yield* buildRuntimeGenerations([
           { ...contentStateRow, unexpectedField: true },
         ]).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({ _tag: "ContentRuntimeCiError" });
-    const { articleManifestHash: _missing, ...incomplete } = contentStateRow;
-    await expect(
-      Effect.runPromise(buildRuntimeGenerations([incomplete]).pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "ContentRuntimeCiError" });
-    await expect(
-      Effect.runPromise(decodeJsonRows("not-json").pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "ContentRuntimeCiError" });
-  });
+      ).toMatchObject({ _tag: "ContentRuntimeCiError" });
+      const { articleManifestHash: _missing, ...incomplete } = contentStateRow;
+      expect(
+        yield* buildRuntimeGenerations([incomplete]).pipe(Effect.flip)
+      ).toMatchObject({ _tag: "ContentRuntimeCiError" });
+      expect(yield* decodeJsonRows("not-json").pipe(Effect.flip)).toMatchObject(
+        { _tag: "ContentRuntimeCiError" }
+      );
+    })
+  );
 });
 
 function cacheIdentity(contentStateHash: string) {

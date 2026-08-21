@@ -8,10 +8,10 @@ import {
   toQuranInterpretationRequestError,
 } from "@repo/backend/client/quran/interpretation";
 import type { api } from "@repo/backend/convex/_generated/api";
+import { describe, expect, it } from "@repo/testing/effect";
 import type { FunctionReturnType } from "convex/server";
 import { ConvexError } from "convex/values";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 const source = {
   activeManifestHash: `sha256:${"a".repeat(64)}`,
@@ -31,63 +31,68 @@ const activeInterpretation: QuranInterpretationResult = {
   verseNumber: 7,
 };
 describe("signed Quran interpretation decoder", () => {
-  it("preserves one exact active tafsir", async () => {
-    const interpretation = await Effect.runPromise(
-      decodePublishedQuranInterpretation(activeInterpretation, {
+  it.live("preserves one exact active tafsir", () =>
+    Effect.gen(function* () {
+      const interpretation = yield* decodePublishedQuranInterpretation(
+        activeInterpretation,
+        {
+          appLocale: "id",
+          snapshotId: source.snapshotId,
+          surahNumber: 1,
+          verseNumber: 7,
+        }
+      );
+      expect(interpretation).toMatchObject({
+        interpretation: "Tafsir ayat tujuh.",
         appLocale: "id",
-        snapshotId: source.snapshotId,
         surahNumber: 1,
         verseNumber: 7,
+      } satisfies Partial<PublishedQuranInterpretation>);
+    })
+  );
+  it.live(
+    "fails closed for inactive, stale, mismatched, and empty responses",
+    () =>
+      Effect.gen(function* () {
+        const inactive: QuranInterpretationResult = {
+          activeManifestHash: null,
+          activeReleaseId: null,
+          interpretation: null,
+          appLocale: "id",
+          managed: false,
+          snapshotId: null,
+          sourceRevision: null,
+          surahNumber: 1,
+          verseNumber: 7,
+        };
+        const mismatched: QuranInterpretationResult = {
+          ...activeInterpretation,
+          verseNumber: 6,
+        };
+        const stale: QuranInterpretationResult = {
+          ...activeInterpretation,
+          snapshotId: Sha256HashSchema.make(`sha256:${"d".repeat(64)}`),
+        };
+        const empty: QuranInterpretationResult = {
+          ...activeInterpretation,
+          interpretation: "   ",
+        };
+        for (const result of [inactive, stale, mismatched, empty]) {
+          const decoded = yield* Effect.result(
+            decodePublishedQuranInterpretation(result, {
+              appLocale: "id",
+              snapshotId: source.snapshotId,
+              surahNumber: 1,
+              verseNumber: 7,
+            })
+          );
+          expect(decoded._tag).toBe("Failure");
+          if (decoded._tag === "Failure") {
+            expect(decoded.failure).toBeInstanceOf(QuranPublicationError);
+          }
+        }
       })
-    );
-    expect(interpretation).toMatchObject({
-      interpretation: "Tafsir ayat tujuh.",
-      appLocale: "id",
-      surahNumber: 1,
-      verseNumber: 7,
-    } satisfies Partial<PublishedQuranInterpretation>);
-  });
-  it("fails closed for inactive, stale, mismatched, and empty responses", async () => {
-    const inactive: QuranInterpretationResult = {
-      activeManifestHash: null,
-      activeReleaseId: null,
-      interpretation: null,
-      appLocale: "id",
-      managed: false,
-      snapshotId: null,
-      sourceRevision: null,
-      surahNumber: 1,
-      verseNumber: 7,
-    };
-    const mismatched: QuranInterpretationResult = {
-      ...activeInterpretation,
-      verseNumber: 6,
-    };
-    const stale: QuranInterpretationResult = {
-      ...activeInterpretation,
-      snapshotId: Sha256HashSchema.make(`sha256:${"d".repeat(64)}`),
-    };
-    const empty: QuranInterpretationResult = {
-      ...activeInterpretation,
-      interpretation: "   ",
-    };
-    for (const result of [inactive, stale, mismatched, empty]) {
-      const decoded = await Effect.runPromise(
-        Effect.result(
-          decodePublishedQuranInterpretation(result, {
-            appLocale: "id",
-            snapshotId: source.snapshotId,
-            surahNumber: 1,
-            verseNumber: 7,
-          })
-        )
-      );
-      expect(decoded._tag).toBe("Failure");
-      if (decoded._tag === "Failure") {
-        expect(decoded.failure).toBeInstanceOf(QuranPublicationError);
-      }
-    }
-  });
+  );
   it("recognizes only a typed snapshot conflict request failure", () => {
     const conflict = toQuranInterpretationRequestError(
       new ConvexError({

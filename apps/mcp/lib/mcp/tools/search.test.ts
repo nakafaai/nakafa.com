@@ -2,9 +2,10 @@ import {
   NAKAFA_AGENT_DEFAULT_LIMIT,
   NAKAFA_AGENT_MAX_LIMIT,
 } from "@repo/contents/_types/agent/search";
+import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { fetchQuery } from "convex/nextjs";
 import { Effect, Schema } from "effect";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import { getNakafaSearchContentToolResult } from "@/lib/mcp/tools/search";
 
 vi.mock("convex/nextjs", () => ({
@@ -34,57 +35,59 @@ const ToolErrorResultSchema = Schema.Struct({
 });
 
 describe("nakafa_search_content", () => {
-  it("decodes omitted search options with native Effect schema defaults", async () => {
-    const result = await Effect.runPromise(
-      getNakafaSearchContentToolResult({})
-    );
-    const searchInput = vi.mocked(fetchQuery).mock.calls.at(0)?.at(1);
+  it.live(
+    "decodes omitted search options with native Effect schema defaults",
+    () =>
+      Effect.gen(function* () {
+        const result = yield* getNakafaSearchContentToolResult({});
+        const searchInput = vi.mocked(fetchQuery).mock.calls.at(0)?.at(1);
 
-    expect(result.isError).not.toBe(true);
-    expect(searchInput).toStrictEqual({
-      limit: NAKAFA_AGENT_DEFAULT_LIMIT,
-      locale: "en",
-      offset: 0,
-    });
-  });
+        expect(result.isError).not.toBe(true);
+        expect(searchInput).toStrictEqual({
+          limit: NAKAFA_AGENT_DEFAULT_LIMIT,
+          locale: "en",
+          offset: 0,
+        });
+      })
+  );
 
-  it("returns structured read-model input errors", async () => {
-    const result = await Effect.runPromise(
-      getNakafaSearchContentToolResult({
+  it.live("returns structured read-model input errors", () =>
+    Effect.gen(function* () {
+      const result = yield* getNakafaSearchContentToolResult({
         limit: 99,
         locale: "en",
-      })
-    );
+      });
+      const error = yield* Schema.decodeUnknownEffect(ToolErrorResultSchema)(
+        result
+      );
 
-    expect(
-      Schema.decodeUnknownSync(ToolErrorResultSchema)(result).structuredContent
-        .error
-    ).toStrictEqual({
-      message: "Invalid Nakafa content search options.",
-      suggestions: [
-        expect.stringContaining(
-          `Expected a number between 1 and ${NAKAFA_AGENT_MAX_LIMIT}`
-        ),
-      ],
-    });
-  });
+      expect(error.structuredContent.error).toStrictEqual({
+        message: "Invalid Nakafa content search options.",
+        suggestions: [
+          expect.stringContaining(
+            `Expected a number between 1 and ${NAKAFA_AGENT_MAX_LIMIT}`
+          ),
+        ],
+      });
+    })
+  );
 
-  it("returns structured read-model data errors", async () => {
-    vi.mocked(fetchQuery).mockRejectedValueOnce(new Error("Convex offline"));
+  it.live("returns structured read-model data errors", () =>
+    Effect.gen(function* () {
+      vi.mocked(fetchQuery).mockRejectedValueOnce(new Error("Convex offline"));
 
-    const result = await Effect.runPromise(
-      getNakafaSearchContentToolResult({
+      const result = yield* getNakafaSearchContentToolResult({
         locale: "en",
         queries: ["rational function"],
-      })
-    );
+      });
+      const error = yield* Schema.decodeUnknownEffect(ToolErrorResultSchema)(
+        result
+      );
 
-    expect(
-      Schema.decodeUnknownSync(ToolErrorResultSchema)(result).structuredContent
-        .error
-    ).toStrictEqual({
-      message: "Unable to search Nakafa content.",
-      suggestions: ["Convex offline"],
-    });
-  });
+      expect(error.structuredContent.error).toStrictEqual({
+        message: "Unable to search Nakafa content.",
+        suggestions: ["Convex offline"],
+      });
+    })
+  );
 });

@@ -5,9 +5,10 @@ import { cancelPendingWelcomeEmail } from "@repo/backend/convex/emails/deletion"
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import { cancelWelcomeEmailProgram } from "./deletion";
 
 const testResend = new Resend(components.resend, {
@@ -62,14 +63,14 @@ describe("emails/deletion", () => {
     expect(user).not.toHaveProperty("welcomeEmailId");
   });
 
-  it.each(["waiting", "queued"] as const)(
+  it.live.each(["waiting", "queued"] as const)(
     "cancels and clears a %s welcome email",
-    async (status) => {
-      const cancel = vi.fn(async () => undefined);
-      const clear = vi.fn(async () => undefined);
+    (status) =>
+      Effect.gen(function* () {
+        const cancel = vi.fn(async () => undefined);
+        const clear = vi.fn(async () => undefined);
 
-      await Effect.runPromise(
-        cancelWelcomeEmailProgram({
+        yield* cancelWelcomeEmailProgram({
           cancel,
           clear,
           loadStatus: vi.fn(async () => ({
@@ -82,22 +83,21 @@ describe("emails/deletion", () => {
             opened: false,
             status,
           })),
-        })
-      );
+        });
 
-      expect(cancel).toHaveBeenCalledOnce();
-      expect(clear).toHaveBeenCalledOnce();
-    }
+        expect(cancel).toHaveBeenCalledOnce();
+        expect(clear).toHaveBeenCalledOnce();
+      })
   );
 
-  it.each([null, "sent", "delivered", "cancelled"] as const)(
+  it.live.each([null, "sent", "delivered", "cancelled"] as const)(
     "clears a non-cancellable %s welcome email without failing deletion",
-    async (status) => {
-      const cancel = vi.fn(async () => undefined);
-      const clear = vi.fn(async () => undefined);
+    (status) =>
+      Effect.gen(function* () {
+        const cancel = vi.fn(async () => undefined);
+        const clear = vi.fn(async () => undefined);
 
-      await Effect.runPromise(
-        cancelWelcomeEmailProgram({
+        yield* cancelWelcomeEmailProgram({
           cancel,
           clear,
           loadStatus: vi.fn(async () =>
@@ -114,11 +114,10 @@ describe("emails/deletion", () => {
                   status,
                 }
           ),
-        })
-      );
+        });
 
-      expect(cancel).not.toHaveBeenCalled();
-      expect(clear).toHaveBeenCalledOnce();
-    }
+        expect(cancel).not.toHaveBeenCalled();
+        expect(clear).toHaveBeenCalledOnce();
+      })
   );
 });

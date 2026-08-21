@@ -27,9 +27,9 @@ import {
 } from "@repo/backend/test/content-runtime";
 import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
 import { insertRuntimeBinding } from "@repo/backend/test/runtime-head";
+import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest, type TestConvex } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 /** Runs one incoming-route validation through the production Effect boundary. */
 function validateIncomingTarget(
@@ -52,16 +52,20 @@ function hydrateDurableTarget(
 }
 
 describe("contents/views/target", () => {
-  it("fails with the typed view error for an invalid material domain", async () => {
-    await expect(
-      Effect.runPromise(
-        Effect.flip(decodeMaterialDomain("lesson.Invalid.technical-topic"))
-      )
-    ).resolves.toMatchObject({
-      _tag: "ContentViewIoError",
-      code: "CONTENT_VIEW_IO_FAILED",
-    });
-  });
+  it.live(
+    "fails with the typed view error for an invalid material domain",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* Effect.flip(
+            decodeMaterialDomain("lesson.Invalid.technical-topic")
+          )
+        ).toMatchObject({
+          _tag: "ContentViewIoError",
+          code: "CONTENT_VIEW_IO_FAILED",
+        });
+      })
+  );
 
   it("fails closed before current signed ownership is available", async () => {
     const target = convexTest(schema, convexModules);

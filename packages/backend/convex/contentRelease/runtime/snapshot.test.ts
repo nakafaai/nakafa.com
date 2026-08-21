@@ -25,10 +25,10 @@ import {
   activateQuranSource,
   makeBlockedQuranSnapshot,
 } from "@repo/backend/test/quran-snapshot";
+import { describe, expect, it } from "@repo/testing/effect";
 import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 /** Promotes the staged technical release to the exact active identity. */
 async function activateProgram(
@@ -91,52 +91,66 @@ describe("contentRelease/runtime/snapshot", () => {
     ).resolves.toBeNull();
   });
 
-  it("selects only the verified manifest signed by the active release", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const missing = convexTest(schema, convexModules);
-    await activateProgram(missing, data, false);
-    await expect(
-      missing.query((ctx) =>
-        runConvexProgram(loadActiveSnapshot(ctx, "program"))
-      )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
+  it.live(
+    "selects only the verified manifest signed by the active release",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* makeProgramSnapshotData();
+        const missing = convexTest(schema, convexModules);
+        yield* Effect.promise(() => activateProgram(missing, data, false));
+        yield* Effect.promise(() =>
+          expect(
+            missing.query((ctx) =>
+              runConvexProgram(loadActiveSnapshot(ctx, "program"))
+            )
+          ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } })
+        );
 
-    const active = convexTest(schema, convexModules);
-    await activateProgram(active, data, true);
-    await expect(
-      active.query((ctx) =>
-        runConvexProgram(loadActiveSnapshot(ctx, "program"))
-      )
-    ).resolves.toMatchObject({
-      snapshot: data.snapshot,
-      snapshotId: data.snapshotId,
-    });
-  });
+        const active = convexTest(schema, convexModules);
+        yield* Effect.promise(() => activateProgram(active, data, true));
+        yield* Effect.promise(() =>
+          expect(
+            active.query((ctx) =>
+              runConvexProgram(loadActiveSnapshot(ctx, "program"))
+            )
+          ).resolves.toMatchObject({
+            snapshot: data.snapshot,
+            snapshotId: data.snapshotId,
+          })
+        );
+      })
+  );
 
-  it("rejects a verified manifest whose stored identity drifted", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const t = convexTest(schema, convexModules);
-    await activateProgram(t, data, true);
-    await t.mutation(async (ctx) => {
-      const stored = await ctx.db.query("contentSnapshots").unique();
-      if (!stored) {
-        throw new Error("Expected active program snapshot.");
-      }
-      await ctx.db.patch("contentSnapshots", stored._id, {
-        snapshotJson: encodeSnapshotJson({
-          family: "program",
-          manifest: {
-            ...data.snapshot.manifest,
-            snapshotId: Sha256HashSchema.make(`sha256:${"9".repeat(64)}`),
-          },
-        }),
-      });
-    });
+  it.live("rejects a verified manifest whose stored identity drifted", () =>
+    Effect.gen(function* () {
+      const data = yield* makeProgramSnapshotData();
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(() => activateProgram(t, data, true));
+      yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const stored = await ctx.db.query("contentSnapshots").unique();
+          if (!stored) {
+            throw new Error("Expected active program snapshot.");
+          }
+          await ctx.db.patch("contentSnapshots", stored._id, {
+            snapshotJson: encodeSnapshotJson({
+              family: "program",
+              manifest: {
+                ...data.snapshot.manifest,
+                snapshotId: Sha256HashSchema.make(`sha256:${"9".repeat(64)}`),
+              },
+            }),
+          });
+        })
+      );
 
-    await expect(
-      t.query((ctx) => runConvexProgram(loadActiveSnapshot(ctx, "program")))
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
-  });
+      yield* Effect.promise(() =>
+        expect(
+          t.query((ctx) => runConvexProgram(loadActiveSnapshot(ctx, "program")))
+        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } })
+      );
+    })
+  );
 
   it("rejects blocked Quran provenance even if a stored row is marked verified", async () => {
     const snapshot = makeBlockedQuranSnapshot();

@@ -12,7 +12,7 @@ Use retrieval-led reasoning. This repository deliberately targets one exact Effe
 Before writing or reviewing Effect code:
 
 1. Read the root and nearest package `AGENTS.md` files.
-2. Read `repos/effect/AGENTS.md` completely.
+2. Read `repos/effect/.agents/AGENTS.md` completely.
 3. Confirm `pnpm effect:source:check` passes.
 4. Inspect the matching implementation, tests, type tests, and JSDoc under `repos/effect/packages/effect`.
 5. Inspect the installed package source when behavior involves `@effect/vitest`, `@effect/tsgo`, or another separate package.

@@ -9,102 +9,103 @@ import {
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 28, 11, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 
 describe("auth/deletion/recovery", () => {
-  it("cancels preparation while the auth user still exists", async () => {
-    const cancel = vi.fn(async () => false);
-    const finalize = vi.fn(async () => undefined);
+  it.live("cancels preparation while the auth user still exists", () =>
+    Effect.gen(function* () {
+      const cancel = vi.fn(async () => false);
+      const finalize = vi.fn(async () => undefined);
 
-    await Effect.runPromise(
-      recoverAccountDeletionProgram({
+      yield* recoverAccountDeletionProgram({
         authUserExists: vi.fn(async () => true),
         cancel,
         continueCommit: vi.fn(async () => false),
         finalize,
-      })
-    );
+      });
 
-    expect(cancel).toHaveBeenCalledOnce();
-    expect(finalize).not.toHaveBeenCalled();
-  });
+      expect(cancel).toHaveBeenCalledOnce();
+      expect(finalize).not.toHaveBeenCalled();
+    })
+  );
 
-  it("finalizes preparation after the auth user is gone", async () => {
-    const cancel = vi.fn(async () => false);
-    const finalize = vi.fn(async () => undefined);
+  it.live("finalizes preparation after the auth user is gone", () =>
+    Effect.gen(function* () {
+      const cancel = vi.fn(async () => false);
+      const finalize = vi.fn(async () => undefined);
 
-    await Effect.runPromise(
-      recoverAccountDeletionProgram({
+      yield* recoverAccountDeletionProgram({
         authUserExists: vi.fn(async () => false),
         cancel,
         continueCommit: vi.fn(async () => false),
         finalize,
-      })
-    );
+      });
 
-    expect(cancel).not.toHaveBeenCalled();
-    expect(finalize).toHaveBeenCalledOnce();
-  });
+      expect(cancel).not.toHaveBeenCalled();
+      expect(finalize).toHaveBeenCalledOnce();
+    })
+  );
 
-  it("keeps failed recovery typed for the durable sweep to retry", async () => {
-    const failure = await Effect.runPromise(
-      recoverAccountDeletionProgram({
+  it.live("keeps failed recovery typed for the durable sweep to retry", () =>
+    Effect.gen(function* () {
+      const failure = yield* recoverAccountDeletionProgram({
         authUserExists: vi.fn(() =>
           Promise.reject(new Error("auth unavailable"))
         ),
         cancel: vi.fn(async () => false),
         continueCommit: vi.fn(async () => false),
         finalize: vi.fn(async () => undefined),
-      }).pipe(Effect.flip)
-    );
+      }).pipe(Effect.flip);
 
-    expect(failure).toMatchObject({
-      _tag: "UserCleanupError",
-      code: "USER_CLEANUP_FAILED",
-      message: "auth unavailable",
-    });
-  });
+      expect(failure).toMatchObject({
+        _tag: "UserCleanupError",
+        code: "USER_CLEANUP_FAILED",
+        message: "auth unavailable",
+      });
+    })
+  );
 
-  it("delegates exactly one bounded cancellation batch", async () => {
-    const cancel = vi.fn(async () => true);
+  it.live("delegates exactly one bounded cancellation batch", () =>
+    Effect.gen(function* () {
+      const cancel = vi.fn(async () => true);
 
-    await Effect.runPromise(
-      recoverAccountDeletionProgram({
+      yield* recoverAccountDeletionProgram({
         authUserExists: vi.fn(async () => true),
         cancel,
         continueCommit: vi.fn(async () => false),
         finalize: vi.fn(async () => undefined),
-      })
-    );
+      });
 
-    expect(cancel).toHaveBeenCalledOnce();
-  });
+      expect(cancel).toHaveBeenCalledOnce();
+    })
+  );
 
-  it("continues a claimed deletion without reopening cancellation", async () => {
-    const authUserExists = vi.fn(async () => true);
-    const cancel = vi.fn(async () => false);
-    const continueCommit = vi.fn(async () => true);
-    const finalize = vi.fn(async () => undefined);
+  it.live("continues a claimed deletion without reopening cancellation", () =>
+    Effect.gen(function* () {
+      const authUserExists = vi.fn(async () => true);
+      const cancel = vi.fn(async () => false);
+      const continueCommit = vi.fn(async () => true);
+      const finalize = vi.fn(async () => undefined);
 
-    await Effect.runPromise(
-      recoverAccountDeletionProgram({
+      yield* recoverAccountDeletionProgram({
         authUserExists,
         cancel,
         continueCommit,
         finalize,
-      })
-    );
+      });
 
-    expect(continueCommit).toHaveBeenCalledOnce();
-    expect(authUserExists).not.toHaveBeenCalled();
-    expect(cancel).not.toHaveBeenCalled();
-    expect(finalize).not.toHaveBeenCalled();
-  });
+      expect(continueCommit).toHaveBeenCalledOnce();
+      expect(authUserExists).not.toHaveBeenCalled();
+      expect(cancel).not.toHaveBeenCalled();
+      expect(finalize).not.toHaveBeenCalled();
+    })
+  );
 
   it("claims only due preparations before scheduling recovery", async () => {
     vi.setSystemTime(NOW);

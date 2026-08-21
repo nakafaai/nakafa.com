@@ -2,8 +2,8 @@ import { validateTryoutSectionSnapshots } from "@repo/backend/convex/tryouts/res
 import { tryoutSectionSnapshot } from "@repo/backend/test/tryout-runtime";
 import { makeSignedTryoutSection } from "@repo/backend/test/tryout-section";
 import { makeTryoutSection } from "@repo/backend/test/tryouts";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 const firstSnapshot = tryoutSectionSnapshot({
   signed: makeSignedTryoutSection(
@@ -17,7 +17,7 @@ const secondSnapshot = tryoutSectionSnapshot({
 });
 
 describe("tryouts/response/integrity", () => {
-  it.each([
+  it.live.each([
     {
       kind: "identity",
       snapshot: {
@@ -36,14 +36,16 @@ describe("tryouts/response/integrity", () => {
         sectionOrder: firstSnapshot.sectionOrder,
       },
     },
-  ])("rejects duplicate snapshot $kind", ({ snapshot }) => {
-    const error = Effect.runSync(
-      Effect.flip(validateTryoutSectionSnapshots([firstSnapshot, snapshot]))
-    );
+  ])("rejects duplicate snapshot $kind", ({ snapshot }) =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        validateTryoutSectionSnapshots([firstSnapshot, snapshot])
+      );
 
-    expect(error).toMatchObject({
-      _tag: "TryoutResponseIntegrityError",
-      code: "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH",
-    });
-  });
+      expect(error).toMatchObject({
+        _tag: "TryoutResponseIntegrityError",
+        code: "TRYOUT_SECTION_ATTEMPT_SNAPSHOT_MISMATCH",
+      });
+    })
+  );
 });

@@ -1,5 +1,6 @@
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, Schema } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import { getNakafaContentToolResult } from "@/lib/mcp/tools/content";
 
 vi.mock("@/lib/mcp/nakafa", async () => {
@@ -24,16 +25,18 @@ const ToolErrorResultSchema = Schema.Struct({
 });
 
 describe("nakafa_get_content", () => {
-  it("returns structured not-found errors", async () => {
-    const result = await Effect.runPromise(
-      getNakafaContentToolResult({
+  it.live("returns structured not-found errors", () =>
+    Effect.gen(function* () {
+      const result = yield* getNakafaContentToolResult({
         content_ref: "https://nakafa.com/en/articles/politics/missing",
-      })
-    );
+      });
+      const error = yield* Schema.decodeUnknownEffect(ToolErrorResultSchema)(
+        result
+      );
 
-    expect(
-      Schema.decodeUnknownSync(ToolErrorResultSchema)(result).structuredContent
-        .error.message
-    ).toBe("Nakafa content was not found.");
-  });
+      expect(error.structuredContent.error.message).toBe(
+        "Nakafa content was not found."
+      );
+    })
+  );
 });

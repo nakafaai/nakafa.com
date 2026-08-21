@@ -1,5 +1,6 @@
+import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import {
   clearAiDraftText,
   readAiDraftText,
@@ -14,124 +15,132 @@ afterEach(() => {
 });
 
 describe("ai/store/draft", () => {
-  it("saves, reads, and clears the current tab draft", () => {
-    Effect.runSync(saveAiDraftText("Explain this step", "learner-a"));
+  it.live("saves, reads, and clears the current tab draft", () =>
+    Effect.gen(function* () {
+      yield* saveAiDraftText("Explain this step", "learner-a");
 
-    expect(Effect.runSync(readAiDraftText("learner-a"))).toBe(
-      "Explain this step"
-    );
+      expect(yield* readAiDraftText("learner-a")).toBe("Explain this step");
 
-    Effect.runSync(clearAiDraftText);
+      yield* clearAiDraftText;
 
-    expect(Effect.runSync(readAiDraftText("learner-a"))).toBeNull();
-  });
+      expect(yield* readAiDraftText("learner-a")).toBeNull();
+    })
+  );
 
-  it("claims an anonymous draft for the account completing authentication", () => {
-    Effect.runSync(saveAiDraftText("Carry this question", null));
+  it.live(
+    "claims an anonymous draft for the account completing authentication",
+    () =>
+      Effect.gen(function* () {
+        yield* saveAiDraftText("Carry this question", null);
 
-    expect(Effect.runSync(readAiDraftText("learner-a"))).toBe(
-      "Carry this question"
-    );
-    expect(Effect.runSync(readAiDraftText("learner-a"))).toBe(
-      "Carry this question"
-    );
-  });
+        expect(yield* readAiDraftText("learner-a")).toBe("Carry this question");
+        expect(yield* readAiDraftText("learner-a")).toBe("Carry this question");
+      })
+  );
 
-  it("discards a legacy tab draft without atomic ownership", () => {
-    window.sessionStorage.setItem("nakafa-ai-draft", "Legacy question");
+  it.live("discards a legacy tab draft without atomic ownership", () =>
+    Effect.gen(function* () {
+      window.sessionStorage.setItem("nakafa-ai-draft", "Legacy question");
 
-    expect(Effect.runSync(readAiDraftText("learner-a"))).toBeNull();
-    expect(window.sessionStorage.getItem("nakafa-ai-draft")).toBeNull();
-  });
+      expect(yield* readAiDraftText("learner-a")).toBeNull();
+      expect(window.sessionStorage.getItem("nakafa-ai-draft")).toBeNull();
+    })
+  );
 
-  it("writes text and ownership in one storage record", () => {
-    const setItem = vi.spyOn(Storage.prototype, "setItem");
+  it.live("writes text and ownership in one storage record", () =>
+    Effect.gen(function* () {
+      const setItem = vi.spyOn(Storage.prototype, "setItem");
 
-    Effect.runSync(saveAiDraftText("One record", "learner-a"));
+      yield* saveAiDraftText("One record", "learner-a");
 
-    expect(setItem).toHaveBeenCalledOnce();
-    expect(setItem).toHaveBeenCalledWith(
-      "nakafa-ai-draft",
-      '{"owner":"learner-a","text":"One record"}'
-    );
-  });
+      expect(setItem).toHaveBeenCalledOnce();
+      expect(setItem).toHaveBeenCalledWith(
+        "nakafa-ai-draft",
+        '{"owner":"learner-a","text":"One record"}'
+      );
+    })
+  );
 
-  it("keeps newer input entered while account ownership resolves", () => {
-    Effect.runSync(saveAiDraftText("Older question", "learner-a"));
+  it.live("keeps newer input entered while account ownership resolves", () =>
+    Effect.gen(function* () {
+      yield* saveAiDraftText("Older question", "learner-a");
 
-    expect(
-      Effect.runSync(
-        resolveAiDraftText({
+      expect(
+        yield* resolveAiDraftText({
           ownerId: "learner-a",
           pendingText: "",
           pendingTextChanged: false,
         })
-      )
-    ).toBe("Older question");
-    expect(
-      Effect.runSync(
-        resolveAiDraftText({
+      ).toBe("Older question");
+      expect(
+        yield* resolveAiDraftText({
           ownerId: "learner-a",
           pendingText: "Newer question",
           pendingTextChanged: true,
         })
-      )
-    ).toBe("Newer question");
-    expect(Effect.runSync(readAiDraftText("learner-a"))).toBe("Newer question");
-  });
+      ).toBe("Newer question");
+      expect(yield* readAiDraftText("learner-a")).toBe("Newer question");
+    })
+  );
 
-  it("keeps an intentional empty draft during account resolution", () => {
-    Effect.runSync(saveAiDraftText("Older question", "learner-a"));
+  it.live("keeps an intentional empty draft during account resolution", () =>
+    Effect.gen(function* () {
+      yield* saveAiDraftText("Older question", "learner-a");
 
-    expect(
-      Effect.runSync(
-        resolveAiDraftText({
+      expect(
+        yield* resolveAiDraftText({
           ownerId: "learner-a",
           pendingText: "",
           pendingTextChanged: true,
         })
-      )
-    ).toBe("");
-    expect(Effect.runSync(readAiDraftText("learner-a"))).toBeNull();
-  });
+      ).toBe("");
+      expect(yield* readAiDraftText("learner-a")).toBeNull();
+    })
+  );
 
-  it("clears a draft when another account owns it", () => {
-    Effect.runSync(saveAiDraftText("Private question", "learner-a"));
+  it.live("clears a draft when another account owns it", () =>
+    Effect.gen(function* () {
+      yield* saveAiDraftText("Private question", "learner-a");
 
-    expect(Effect.runSync(readAiDraftText("learner-b"))).toBeNull();
-    expect(Effect.runSync(readAiDraftText("learner-a"))).toBeNull();
-  });
+      expect(yield* readAiDraftText("learner-b")).toBeNull();
+      expect(yield* readAiDraftText("learner-a")).toBeNull();
+    })
+  );
 
-  it("keeps draft persistence best effort when storage rejects access", () => {
-    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
-      throw new DOMException("Storage blocked");
-    });
+  it.live(
+    "keeps draft persistence best effort when storage rejects access",
+    () =>
+      Effect.gen(function* () {
+        vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+          throw new DOMException("Storage blocked");
+        });
 
-    expect(() =>
-      Effect.runSync(saveAiDraftText("Keep typing", "learner-a"))
-    ).not.toThrow();
+        expect(
+          yield* saveAiDraftText("Keep typing", "learner-a")
+        ).toBeUndefined();
 
-    vi.restoreAllMocks();
-    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
-      throw new DOMException("Storage blocked");
-    });
+        vi.restoreAllMocks();
+        vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+          throw new DOMException("Storage blocked");
+        });
 
-    expect(Effect.runSync(readAiDraftText("learner-a"))).toBeNull();
+        expect(yield* readAiDraftText("learner-a")).toBeNull();
 
-    vi.restoreAllMocks();
-    vi.spyOn(Storage.prototype, "removeItem").mockImplementation(() => {
-      throw new DOMException("Storage blocked");
-    });
+        vi.restoreAllMocks();
+        vi.spyOn(Storage.prototype, "removeItem").mockImplementation(() => {
+          throw new DOMException("Storage blocked");
+        });
 
-    expect(() => Effect.runSync(clearAiDraftText)).not.toThrow();
-  });
+        expect(yield* clearAiDraftText).toBeUndefined();
+      })
+  );
 
-  it("does nothing when rendered without browser storage", () => {
-    vi.stubGlobal("window", undefined);
+  it.live("does nothing when rendered without browser storage", () =>
+    Effect.gen(function* () {
+      vi.stubGlobal("window", undefined);
 
-    expect(() =>
-      Effect.runSync(saveAiDraftText("Server render", null))
-    ).not.toThrow();
-    expect(Effect.runSync(readAiDraftText(null))).toBeNull();
-  });
+      expect(yield* saveAiDraftText("Server render", null)).toBeUndefined();
+      expect(yield* readAiDraftText(null)).toBeNull();
+    })
+  );
 });

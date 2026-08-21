@@ -4,14 +4,14 @@ import {
   createNakafaTestService,
   createWriter,
 } from "@repo/ai/agents/nakafa/tools/test";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("nakafa Quran tool", () => {
-  it("writes loading and done parts for bounded Quran references", async () => {
-    const { parts, writer } = createWriter();
-    const output = await Effect.runPromise(
-      quran({
+  it.live("writes loading and done parts for bounded Quran references", () =>
+    Effect.gen(function* () {
+      const { parts, writer } = createWriter();
+      const output = yield* quran({
         input: {
           from_verse: 1,
           include_tafsir: false,
@@ -22,51 +22,53 @@ describe("nakafa Quran tool", () => {
         locale: "en",
         toolCallId: "quran-1",
         writer,
-      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
-    );
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()));
 
-    expect(output).toContain("# Nakafa Quran Reference");
-    expect(parts.at(-1)).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          kind: "quran",
-          status: "done",
-          result: expect.objectContaining({ verse_count: 1 }),
-        }),
-      })
-    );
-  });
+      expect(output).toContain("# Nakafa Quran Reference");
+      expect(parts.at(-1)).toEqual(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            kind: "quran",
+            status: "done",
+            result: expect.objectContaining({ verse_count: 1 }),
+          }),
+        })
+      );
+    })
+  );
 
-  it("applies defaults and preserves tafsir requests in persisted input", async () => {
-    const { parts, writer } = createWriter();
-    const output = await Effect.runPromise(
-      quran({
-        input: {
-          include_tafsir: true,
-          surah: 1,
-        },
-        locale: "id",
-        toolCallId: "quran-defaults",
-        writer,
-      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
-    );
-
-    expect(output).toContain("- Tafsir:");
-    expect(parts.at(0)).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({
+  it.live(
+    "applies defaults and preserves tafsir requests in persisted input",
+    () =>
+      Effect.gen(function* () {
+        const { parts, writer } = createWriter();
+        const output = yield* quran({
           input: {
-            from_verse: 1,
             include_tafsir: true,
-            locale: "id",
             surah: 1,
           },
-        }),
-      })
-    );
-  });
+          locale: "id",
+          toolCallId: "quran-defaults",
+          writer,
+        }).pipe(Effect.provideService(Nakafa, createNakafaTestService()));
 
-  it.each([
+        expect(output).toContain("- Tafsir:");
+        expect(parts.at(0)).toEqual(
+          expect.objectContaining({
+            data: expect.objectContaining({
+              input: {
+                from_verse: 1,
+                include_tafsir: true,
+                locale: "id",
+                surah: 1,
+              },
+            }),
+          })
+        );
+      })
+  );
+
+  it.live.each([
     [
       "reversed range",
       { from_verse: 2, locale: "en", surah: 1, to_verse: 1 },
@@ -87,26 +89,26 @@ describe("nakafa Quran tool", () => {
       { from_verse: 999, locale: "en", surah: 1 },
       "Nakafa Quran reference was not found.",
     ],
-  ] as const)("writes an error part for %s", async (_, input, message) => {
-    const { parts, writer } = createWriter();
-    const output = await Effect.runPromise(
-      quran({
+  ] as const)("writes an error part for %s", ([, input, message]) =>
+    Effect.gen(function* () {
+      const { parts, writer } = createWriter();
+      const output = yield* quran({
         input,
         locale: "en",
         toolCallId: "quran-error",
         writer,
-      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
-    );
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()));
 
-    expect(output).toBe(message);
-    expect(parts.at(-1)).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          kind: "quran",
-          status: "error",
-          error: message,
-        }),
-      })
-    );
-  });
+      expect(output).toBe(message);
+      expect(parts.at(-1)).toEqual(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            kind: "quran",
+            status: "error",
+            error: message,
+          }),
+        })
+      );
+    })
+  );
 });

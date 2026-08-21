@@ -16,41 +16,41 @@ import {
   makeTryoutPlacementRow,
   makeTryoutSnapshotManifest,
 } from "@repo/backend/test/tryout-snapshot";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 const otherSnapshotId = Sha256HashSchema.make(`sha256:${"9".repeat(64)}`);
 
 describe("contentRelease/ingress/snapshot", () => {
-  it("authenticates every structured manifest through its domain hash", async () => {
-    const program = await Effect.runPromise(makeProgramSnapshotData());
-    const quran = await Effect.runPromise(makeQuranSnapshot());
-    const tryout = await Effect.runPromise(makeTryoutSnapshotManifest());
+  it.live(
+    "authenticates every structured manifest through its domain hash",
+    () =>
+      Effect.gen(function* () {
+        const program = yield* makeProgramSnapshotData();
+        const quran = yield* makeQuranSnapshot();
+        const tryout = yield* makeTryoutSnapshotManifest();
 
-    await expect(
-      Effect.runPromise(
-        Effect.all([
-          verifySnapshotManifest(program.snapshot),
-          verifySnapshotManifest(quran),
-          verifySnapshotManifest(tryout),
-        ])
-      )
-    ).resolves.toEqual([undefined, undefined, undefined]);
-  });
+        expect(
+          yield* Effect.all([
+            verifySnapshotManifest(program.snapshot),
+            verifySnapshotManifest(quran),
+            verifySnapshotManifest(tryout),
+          ])
+        ).toEqual([undefined, undefined, undefined]);
+      })
+  );
 
-  it("authenticates every structured row through its domain hash", async () => {
-    const program = await Effect.runPromise(makeProgramSnapshotData());
-    const quran = await Effect.runPromise(makeQuranSnapshot());
-    const quranRow = await Effect.runPromise(
-      makeQuranSnapshotRow(quran.manifest.snapshotId)
-    );
-    const tryout = await Effect.runPromise(makeTryoutSnapshotManifest());
-    const catalog = makeTryoutCatalogRow();
-    const placement = makeTryoutPlacementRow();
+  it.live("authenticates every structured row through its domain hash", () =>
+    Effect.gen(function* () {
+      const program = yield* makeProgramSnapshotData();
+      const quran = yield* makeQuranSnapshot();
+      const quranRow = yield* makeQuranSnapshotRow(quran.manifest.snapshotId);
+      const tryout = yield* makeTryoutSnapshotManifest();
+      const catalog = makeTryoutCatalogRow();
+      const placement = makeTryoutPlacementRow();
 
-    await expect(
-      Effect.runPromise(
-        Effect.all([
+      expect(
+        yield* Effect.all([
           verifySnapshotBatch("program", program.snapshotId, program.rows),
           verifySnapshotBatch("quran", quran.manifest.snapshotId, [quranRow]),
           verifySnapshotBatch("tryout", tryout.manifest.snapshotId, [
@@ -58,47 +58,52 @@ describe("contentRelease/ingress/snapshot", () => {
             placement,
           ]),
         ])
-      )
-    ).resolves.toEqual([undefined, undefined, undefined]);
-  });
+      ).toEqual([undefined, undefined, undefined]);
+    })
+  );
 
-  it("rejects cross-family and cross-snapshot rows before storage", async () => {
-    const program = await Effect.runPromise(makeProgramSnapshotData());
-    const quran = await Effect.runPromise(makeQuranSnapshot());
-    const quranRow = await Effect.runPromise(
-      makeQuranSnapshotRow(quran.manifest.snapshotId)
-    );
-    const [programRow] = program.rows;
-    if (!programRow) {
-      throw new Error("Expected one technical program row.");
-    }
+  it.live("rejects cross-family and cross-snapshot rows before storage", () =>
+    Effect.gen(function* () {
+      const program = yield* makeProgramSnapshotData();
+      const quran = yield* makeQuranSnapshot();
+      const quranRow = yield* makeQuranSnapshotRow(quran.manifest.snapshotId);
+      const [programRow] = program.rows;
+      if (!programRow) {
+        return yield* Effect.die(
+          new Error("Expected one technical program row.")
+        );
+      }
 
-    await expect(
-      Effect.runPromise(
-        verifySnapshotBatch("quran", program.snapshotId, [programRow])
-      )
-    ).rejects.toThrow("received a program row");
-    await expect(
-      Effect.runPromise(
-        verifySnapshotBatch("quran", otherSnapshotId, [quranRow])
-      )
-    ).rejects.toThrow("not bound to snapshot");
-  });
+      const crossFamily = yield* verifySnapshotBatch(
+        "quran",
+        program.snapshotId,
+        [programRow]
+      ).pipe(Effect.flip);
+      const crossSnapshot = yield* verifySnapshotBatch(
+        "quran",
+        otherSnapshotId,
+        [quranRow]
+      ).pipe(Effect.flip);
+      expect(crossFamily.message).toContain("received a program row");
+      expect(crossSnapshot.message).toContain("not bound to snapshot");
+    })
+  );
 
-  it("rejects a tampered try-out row hash before storage", async () => {
-    const row = makeTryoutCatalogRow();
-    const tampered: ContentSnapshotRow = {
-      ...row,
-      record: {
-        ...row.record,
-        rowHash: otherSnapshotId,
-      },
-    };
+  it.live("rejects a tampered try-out row hash before storage", () =>
+    Effect.gen(function* () {
+      const row = makeTryoutCatalogRow();
+      const tampered: ContentSnapshotRow = {
+        ...row,
+        record: {
+          ...row.record,
+          rowHash: otherSnapshotId,
+        },
+      };
 
-    await expect(
-      Effect.runPromise(
-        verifySnapshotBatch("tryout", otherSnapshotId, [tampered])
-      )
-    ).rejects.toThrow("invalid content identity");
-  });
+      const failure = yield* verifySnapshotBatch("tryout", otherSnapshotId, [
+        tampered,
+      ]).pipe(Effect.flip);
+      expect(failure.message).toContain("invalid content identity");
+    })
+  );
 });

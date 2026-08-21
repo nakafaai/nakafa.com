@@ -1,7 +1,9 @@
 import { ConvexRuntimeQueryError } from "@repo/backend/client/runtime";
+import { toRuntimeQueryError } from "@repo/backend/test/runtime-query";
+import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { locales } from "@repo/utilities/locales";
-import { Effect } from "effect";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { Effect, Fiber } from "effect";
+import { vi } from "vitest";
 import {
   getApiContentReferenceByContentId,
   getArticleApiContentPage,
@@ -25,16 +27,6 @@ vi.mock("@repo/backend/client/runtime", async (importOriginal) => ({
       try: () => runtimeClientMocks.runtimeQuery(url, query, args),
     }),
 }));
-function toRuntimeQueryError(cause: unknown) {
-  if (cause instanceof ConvexRuntimeQueryError) {
-    return cause;
-  }
-  return new ConvexRuntimeQueryError({
-    networkCodes: [],
-    query: "test-runtime-query",
-    reason: "query",
-  });
-}
 vi.mock("@/lib/content/published", () => publishedContentMocks);
 describe("API content runtime", () => {
   afterEach(() => {
@@ -64,7 +56,7 @@ describe("API content runtime", () => {
     );
     expect(parseApiContentId("en/articles/a")).toBeNull();
   });
-  it.each([
+  it.live.each([
     {
       args: {
         appLocale: "en" as const,
@@ -85,9 +77,8 @@ describe("API content runtime", () => {
       family: "material" as const,
       read: getMaterialApiContentPage,
     },
-  ])(
-    "hydrates one current signed $family page",
-    async ({ args, family, read }) => {
+  ])("hydrates one current signed $family page", ({ args, family, read }) =>
+    Effect.gen(function* () {
       const publishedItem = { slug: `${family}/published` };
       runtimeClientMocks.runtimeQuery
         .mockResolvedValueOnce({
@@ -102,7 +93,7 @@ describe("API content runtime", () => {
       publishedContentMocks.readPublishedApiItems.mockReturnValue(
         Effect.succeed([publishedItem])
       );
-      await expect(Effect.runPromise(read(args))).resolves.toEqual({
+      expect(yield* read(args)).toEqual({
         continueCursor: "",
         isDone: true,
         page: [publishedItem],
@@ -121,159 +112,168 @@ describe("API content runtime", () => {
         expect.anything(),
         args
       );
-    }
+    })
   );
-  it("chunks by eight and runs at most four batch reads concurrently", async () => {
-    const appLocale = "en";
-    const entries = Array.from({ length: 33 }, (_, index) => ({
-      appLocale,
-      publicPath: `articles/politics/article-${index}`,
-    }));
-    const releaseBatch: (() => void)[] = [];
-    let activeBatches = 0;
-    let maximumActiveBatches = 0;
-    runtimeClientMocks.runtimeQuery
-      .mockResolvedValueOnce({
-        activeReleaseId: "release-test",
-        continueCursor: "next",
-        isDone: false,
-        page: entries,
-      })
-      .mockResolvedValueOnce({ releaseId: "release-test" });
-    publishedContentMocks.readPublishedApiItems.mockImplementation(
-      (
-        items: readonly {
-          readonly publicPath: string;
-        }[]
-      ) =>
-        Effect.callback((resume) => {
-          activeBatches += 1;
-          maximumActiveBatches = Math.max(maximumActiveBatches, activeBatches);
-          releaseBatch.push(() => {
-            activeBatches -= 1;
-            resume(
-              Effect.succeed(
-                items.map(({ publicPath }) => ({ slug: publicPath }))
-              )
-            );
-          });
-        })
-    );
-    const running = Effect.runPromise(
-      getArticleApiContentPage({
-        appLocale: "en",
-        cursor: null,
-        limit: 33,
-        prefix: "articles/politics",
-      })
-    );
-    await vi.waitFor(() => expect(releaseBatch).toHaveLength(4));
-    expect(maximumActiveBatches).toBe(4);
-    releaseBatch.shift()?.();
-    await vi.waitFor(() =>
-      expect(publishedContentMocks.readPublishedApiItems).toHaveBeenCalledTimes(
-        5
-      )
-    );
-    for (const release of releaseBatch.splice(0)) {
-      release();
-    }
-    const result = await running;
-    expect(
-      publishedContentMocks.readPublishedApiItems.mock.calls.map(
-        ([items]) => items.length
-      )
-    ).toEqual([8, 8, 8, 8, 1]);
-    expect(result.page.map(({ slug }) => slug)).toEqual(
-      entries.map(({ publicPath }) => publicPath)
-    );
-    expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledTimes(2);
-  });
-  it.each([{ releaseId: "release-after" }, null])(
-    "rejects a page when its signed release changes or disappears",
-    async (active) => {
-      runtimeClientMocks.runtimeQuery
-        .mockResolvedValueOnce({
-          activeReleaseId: "release-before",
-          continueCursor: "",
-          isDone: true,
-          page: [],
-        })
-        .mockResolvedValueOnce(active);
-      await expect(
-        Effect.runPromise(
+  it.live(
+    "chunks by eight and runs at most four batch reads concurrently",
+    () =>
+      Effect.gen(function* () {
+        const appLocale = "en";
+        const entries = Array.from({ length: 33 }, (_, index) => ({
+          appLocale,
+          publicPath: `articles/politics/article-${index}`,
+        }));
+        const releaseBatch: (() => void)[] = [];
+        let activeBatches = 0;
+        let maximumActiveBatches = 0;
+        runtimeClientMocks.runtimeQuery
+          .mockResolvedValueOnce({
+            activeReleaseId: "release-test",
+            continueCursor: "next",
+            isDone: false,
+            page: entries,
+          })
+          .mockResolvedValueOnce({ releaseId: "release-test" });
+        publishedContentMocks.readPublishedApiItems.mockImplementation(
+          (
+            items: readonly {
+              readonly publicPath: string;
+            }[]
+          ) =>
+            Effect.callback((resume) => {
+              activeBatches += 1;
+              maximumActiveBatches = Math.max(
+                maximumActiveBatches,
+                activeBatches
+              );
+              releaseBatch.push(() => {
+                activeBatches -= 1;
+                resume(
+                  Effect.succeed(
+                    items.map(({ publicPath }) => ({ slug: publicPath }))
+                  )
+                );
+              });
+            })
+        );
+        const running = yield* Effect.forkChild(
           getArticleApiContentPage({
             appLocale: "en",
             cursor: null,
-            limit: 10,
+            limit: 33,
             prefix: "articles/politics",
           })
-        )
-      ).rejects.toThrow(
-        "Content ownership changed during the public API read."
-      );
-    }
+        );
+        yield* Effect.promise(() =>
+          vi.waitFor(() => expect(releaseBatch).toHaveLength(4))
+        );
+        expect(maximumActiveBatches).toBe(4);
+        releaseBatch.shift()?.();
+        yield* Effect.promise(() =>
+          vi.waitFor(() =>
+            expect(
+              publishedContentMocks.readPublishedApiItems
+            ).toHaveBeenCalledTimes(5)
+          )
+        );
+        for (const release of releaseBatch.splice(0)) {
+          release();
+        }
+        const result = yield* Fiber.join(running);
+        expect(
+          publishedContentMocks.readPublishedApiItems.mock.calls.map(
+            ([items]) => items.length
+          )
+        ).toEqual([8, 8, 8, 8, 1]);
+        expect(result.page.map(({ slug }) => slug)).toEqual(
+          entries.map(({ publicPath }) => publicPath)
+        );
+        expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledTimes(2);
+      })
   );
-  it("maps signed hydration failures into the API runtime error", async () => {
-    runtimeClientMocks.runtimeQuery.mockResolvedValueOnce({
-      activeReleaseId: "release-test",
-      continueCursor: "",
-      isDone: true,
-      page: [{ appLocale: "en", publicPath: "articles/politics/test" }],
-    });
-    publishedContentMocks.readPublishedApiItems.mockReturnValue(
-      Effect.fail(
+  it.live.each([{ releaseId: "release-after" }, null])(
+    "rejects a page when its signed release changes or disappears",
+    (active) =>
+      Effect.gen(function* () {
+        runtimeClientMocks.runtimeQuery
+          .mockResolvedValueOnce({
+            activeReleaseId: "release-before",
+            continueCursor: "",
+            isDone: true,
+            page: [],
+          })
+          .mockResolvedValueOnce(active);
+        const failure = yield* getArticleApiContentPage({
+          appLocale: "en",
+          cursor: null,
+          limit: 10,
+          prefix: "articles/politics",
+        }).pipe(Effect.flip);
+        expect(failure.message).toContain(
+          "Content ownership changed during the public API read."
+        );
+      })
+  );
+  it.live("maps signed hydration failures into the API runtime error", () =>
+    Effect.gen(function* () {
+      runtimeClientMocks.runtimeQuery.mockResolvedValueOnce({
+        activeReleaseId: "release-test",
+        continueCursor: "",
+        isDone: true,
+        page: [{ appLocale: "en", publicPath: "articles/politics/test" }],
+      });
+      publishedContentMocks.readPublishedApiItems.mockReturnValue(
+        Effect.fail(
+          new ConvexRuntimeQueryError({
+            networkCodes: [],
+            query: "contentRuntime/batch",
+            reason: "query",
+          })
+        )
+      );
+      const failure = yield* getArticleApiContentPage({
+        appLocale: "en",
+        cursor: null,
+        limit: 10,
+        prefix: "articles/politics",
+      }).pipe(Effect.flip);
+      expect(failure.message).toContain(
+        "Unable to read signed content for the public API."
+      );
+    })
+  );
+  it.live("reads one current reference by stable graph content ID", () =>
+    Effect.gen(function* () {
+      const row = { contentId: "asset:en:article:politics:article:a" };
+      runtimeClientMocks.runtimeQuery.mockResolvedValueOnce(row);
+      expect(
+        yield* getApiContentReferenceByContentId({ contentId: row.contentId })
+      ).toEqual(row);
+      expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledWith(
+        "https://test.convex.cloud",
+        expect.anything(),
+        { input: { contentId: row.contentId, kind: "content" } }
+      );
+    })
+  );
+  it.live("wraps runtime query failures with query context", () =>
+    Effect.gen(function* () {
+      runtimeClientMocks.runtimeQuery.mockRejectedValueOnce(
         new ConvexRuntimeQueryError({
           networkCodes: [],
-          query: "contentRuntime/batch",
-          reason: "query",
+          query: "contentRelease/article:apiPage",
+          reason: "transport",
         })
-      )
-    );
-    await expect(
-      Effect.runPromise(
-        getArticleApiContentPage({
-          appLocale: "en",
-          cursor: null,
-          limit: 10,
-          prefix: "articles/politics",
-        })
-      )
-    ).rejects.toThrow("Unable to read signed content for the public API.");
-  });
-  it("reads one current reference by stable graph content ID", async () => {
-    const row = { contentId: "asset:en:article:politics:article:a" };
-    runtimeClientMocks.runtimeQuery.mockResolvedValueOnce(row);
-    await expect(
-      Effect.runPromise(
-        getApiContentReferenceByContentId({ contentId: row.contentId })
-      )
-    ).resolves.toEqual(row);
-    expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledWith(
-      "https://test.convex.cloud",
-      expect.anything(),
-      { input: { contentId: row.contentId, kind: "content" } }
-    );
-  });
-  it("wraps runtime query failures with query context", async () => {
-    runtimeClientMocks.runtimeQuery.mockRejectedValueOnce(
-      new ConvexRuntimeQueryError({
-        networkCodes: [],
-        query: "contentRelease/article:apiPage",
-        reason: "transport",
-      })
-    );
-    await expect(
-      Effect.runPromise(
-        getArticleApiContentPage({
-          appLocale: "en",
-          cursor: null,
-          limit: 10,
-          prefix: "articles/politics",
-        })
-      )
-    ).rejects.toThrow(
-      "Unable to read API content runtime query: contentRelease/article:apiPage."
-    );
-  });
+      );
+      const failure = yield* getArticleApiContentPage({
+        appLocale: "en",
+        cursor: null,
+        limit: 10,
+        prefix: "articles/politics",
+      }).pipe(Effect.flip);
+      expect(failure.message).toContain(
+        "Unable to read API content runtime query: contentRelease/article:apiPage."
+      );
+    })
+  );
 });

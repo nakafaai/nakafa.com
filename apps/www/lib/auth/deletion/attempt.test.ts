@@ -1,6 +1,6 @@
 import { accountDeletionRequestPhase } from "@repo/backend/convex/auth/deletion/spec";
+import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it } from "vitest";
 import {
   AccountDeletionAttemptStorageFailed,
   clearAccountDeletionAttempt,
@@ -16,97 +16,98 @@ describe("account deletion attempt", () => {
     window.sessionStorage.clear();
   });
 
-  it("creates and reloads one tab-owned browser capability", async () => {
-    const created = await Effect.runPromise(
-      loadOrCreateAccountDeletionAttempt(USER_ID)
-    );
-    const reloaded = await Effect.runPromise(
-      loadOrCreateAccountDeletionAttempt(USER_ID)
-    );
+  it.live("creates and reloads one tab-owned browser capability", () =>
+    Effect.gen(function* () {
+      const created = yield* loadOrCreateAccountDeletionAttempt(USER_ID);
+      const reloaded = yield* loadOrCreateAccountDeletionAttempt(USER_ID);
 
-    expect(created).toMatchObject({
-      attemptId: expect.any(String),
-      phase: accountDeletionRequestPhase.preparation,
-      userId: USER_ID,
-    });
-    expect(reloaded).toEqual(created);
-  });
+      expect(created).toMatchObject({
+        attemptId: expect.any(String),
+        phase: accountDeletionRequestPhase.preparation,
+        userId: USER_ID,
+      });
+      expect(reloaded).toEqual(created);
+    })
+  );
 
-  it("persists the irreversible phase before auth deletion", async () => {
-    const deletionAttempt = {
-      attemptId: ATTEMPT_ID,
-      phase: accountDeletionRequestPhase.deletion,
-      userId: USER_ID,
-    } as const;
+  it.live("persists the irreversible phase before auth deletion", () =>
+    Effect.gen(function* () {
+      const deletionAttempt = {
+        attemptId: ATTEMPT_ID,
+        phase: accountDeletionRequestPhase.deletion,
+        userId: USER_ID,
+      } as const;
 
-    await Effect.runPromise(saveAccountDeletionAttempt(deletionAttempt));
+      yield* saveAccountDeletionAttempt(deletionAttempt);
 
-    await expect(
-      Effect.runPromise(loadOrCreateAccountDeletionAttempt(USER_ID))
-    ).resolves.toEqual(deletionAttempt);
-  });
+      expect(yield* loadOrCreateAccountDeletionAttempt(USER_ID)).toEqual(
+        deletionAttempt
+      );
+    })
+  );
 
-  it("rotates a persisted capability when the signed-in account changes", async () => {
-    const first = await Effect.runPromise(
-      loadOrCreateAccountDeletionAttempt(USER_ID)
-    );
-    const second = await Effect.runPromise(
-      loadOrCreateAccountDeletionAttempt("user-2")
-    );
+  it.live(
+    "rotates a persisted capability when the signed-in account changes",
+    () =>
+      Effect.gen(function* () {
+        const first = yield* loadOrCreateAccountDeletionAttempt(USER_ID);
+        const second = yield* loadOrCreateAccountDeletionAttempt("user-2");
 
-    expect(second).toMatchObject({
-      phase: accountDeletionRequestPhase.preparation,
-      userId: "user-2",
-    });
-    expect(second.attemptId).not.toBe(first.attemptId);
-  });
+        expect(second).toMatchObject({
+          phase: accountDeletionRequestPhase.preparation,
+          userId: "user-2",
+        });
+        expect(second.attemptId).not.toBe(first.attemptId);
+      })
+  );
 
-  it("rotates a capability after its cancellation is proven", async () => {
-    const canceled = await Effect.runPromise(
-      loadOrCreateAccountDeletionAttempt(USER_ID)
-    );
+  it.live("rotates a capability after its cancellation is proven", () =>
+    Effect.gen(function* () {
+      const canceled = yield* loadOrCreateAccountDeletionAttempt(USER_ID);
 
-    await Effect.runPromise(clearAccountDeletionAttempt());
+      yield* clearAccountDeletionAttempt();
 
-    const next = await Effect.runPromise(
-      loadOrCreateAccountDeletionAttempt(USER_ID)
-    );
+      const next = yield* loadOrCreateAccountDeletionAttempt(USER_ID);
 
-    expect(next.attemptId).not.toBe(canceled.attemptId);
-  });
+      expect(next.attemptId).not.toBe(canceled.attemptId);
+    })
+  );
 
-  it("fails closed when persisted state is malformed", async () => {
-    window.sessionStorage.setItem(
-      "nakafa-account-deletion-attempt",
-      '{"attemptId":1}'
-    );
+  it.live("fails closed when persisted state is malformed", () =>
+    Effect.gen(function* () {
+      window.sessionStorage.setItem(
+        "nakafa-account-deletion-attempt",
+        '{"attemptId":1}'
+      );
 
-    const failure = await Effect.runPromise(
-      loadOrCreateAccountDeletionAttempt(USER_ID).pipe(Effect.flip)
-    );
-
-    expect(failure).toBeInstanceOf(AccountDeletionAttemptStorageFailed);
-  });
-
-  it("fails closed when session storage is unavailable", async () => {
-    const unavailableStorage = {
-      getItem: () => {
-        throw new Error("storage unavailable");
-      },
-      removeItem: () => {
-        throw new Error("storage unavailable");
-      },
-      setItem: () => {
-        throw new Error("storage unavailable");
-      },
-    };
-
-    const failure = await Effect.runPromise(
-      loadOrCreateAccountDeletionAttempt(USER_ID, unavailableStorage).pipe(
+      const failure = yield* loadOrCreateAccountDeletionAttempt(USER_ID).pipe(
         Effect.flip
-      )
-    );
+      );
 
-    expect(failure).toBeInstanceOf(AccountDeletionAttemptStorageFailed);
-  });
+      expect(failure).toBeInstanceOf(AccountDeletionAttemptStorageFailed);
+    })
+  );
+
+  it.live("fails closed when session storage is unavailable", () =>
+    Effect.gen(function* () {
+      const unavailableStorage = {
+        getItem: () => {
+          throw new Error("storage unavailable");
+        },
+        removeItem: () => {
+          throw new Error("storage unavailable");
+        },
+        setItem: () => {
+          throw new Error("storage unavailable");
+        },
+      };
+
+      const failure = yield* loadOrCreateAccountDeletionAttempt(
+        USER_ID,
+        unavailableStorage
+      ).pipe(Effect.flip);
+
+      expect(failure).toBeInstanceOf(AccountDeletionAttemptStorageFailed);
+    })
+  );
 });

@@ -6,10 +6,10 @@ import {
   makeProgramSnapshotData,
   stageProgramSnapshot,
 } from "@repo/backend/test/program-snapshot";
+import { describe, expect, it } from "@repo/testing/effect";
 import { makeFunctionReference } from "convex/server";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 type SnapshotFamily = ContentSnapshotManifest["family"];
 
@@ -41,136 +41,162 @@ const readRows = makeFunctionReference<"query", RowArgs, RowPage>(
 );
 
 describe("contentRelease/snapshot/read", () => {
-  it("replays one manifest and contiguous bounded row pages", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const t = convexTest(schema, convexModules);
-    const batchSize = 3;
-    await stageProgramSnapshot(t, data, batchSize);
+  it.live("replays one manifest and contiguous bounded row pages", () =>
+    Effect.gen(function* () {
+      const data = yield* makeProgramSnapshotData();
+      const t = convexTest(schema, convexModules);
+      const batchSize = 3;
+      yield* Effect.promise(() => stageProgramSnapshot(t, data, batchSize));
 
-    await expect(
-      t.query(readManifest, {
-        family: "program",
-        releaseId: TEST_RELEASE_ID,
-      })
-    ).resolves.toBe(data.manifestJson);
-    await expect(
-      t.query(readRows, {
-        afterBatchIndex: -1,
-        family: "program",
-        releaseId: TEST_RELEASE_ID,
-      })
-    ).resolves.toEqual({
-      batchIndex: 0,
-      done: false,
-      firstIndex: 0,
-      nextBatchIndex: 0,
-      rowJson: data.rowJson.slice(0, batchSize),
-      snapshotId: data.snapshotId,
-    });
-    await expect(
-      t.query(readRows, {
-        afterBatchIndex: 0,
-        family: "program",
-        releaseId: TEST_RELEASE_ID,
-      })
-    ).resolves.toEqual({
-      batchIndex: 1,
-      done: false,
-      firstIndex: batchSize,
-      nextBatchIndex: 1,
-      rowJson: data.rowJson.slice(batchSize, batchSize * 2),
-      snapshotId: data.snapshotId,
-    });
-    await expect(
-      t.query(readRows, {
-        afterBatchIndex: 1,
-        family: "program",
-        releaseId: TEST_RELEASE_ID,
-      })
-    ).resolves.toEqual({
-      batchIndex: 2,
-      done: true,
-      firstIndex: batchSize * 2,
-      nextBatchIndex: 2,
-      rowJson: data.rowJson.slice(batchSize * 2),
-      snapshotId: data.snapshotId,
-    });
-    await expect(
-      t.query(readRows, {
-        afterBatchIndex: 2,
-        family: "program",
-        releaseId: TEST_RELEASE_ID,
-      })
-    ).resolves.toEqual({
-      batchIndex: 2,
-      done: true,
-      firstIndex: data.rowJson.length,
-      nextBatchIndex: 2,
-      rowJson: [],
-      snapshotId: data.snapshotId,
-    });
-  });
+      yield* Effect.promise(() =>
+        expect(
+          t.query(readManifest, {
+            family: "program",
+            releaseId: TEST_RELEASE_ID,
+          })
+        ).resolves.toBe(data.manifestJson)
+      );
+      yield* Effect.promise(() =>
+        expect(
+          t.query(readRows, {
+            afterBatchIndex: -1,
+            family: "program",
+            releaseId: TEST_RELEASE_ID,
+          })
+        ).resolves.toEqual({
+          batchIndex: 0,
+          done: false,
+          firstIndex: 0,
+          nextBatchIndex: 0,
+          rowJson: data.rowJson.slice(0, batchSize),
+          snapshotId: data.snapshotId,
+        })
+      );
+      yield* Effect.promise(() =>
+        expect(
+          t.query(readRows, {
+            afterBatchIndex: 0,
+            family: "program",
+            releaseId: TEST_RELEASE_ID,
+          })
+        ).resolves.toEqual({
+          batchIndex: 1,
+          done: false,
+          firstIndex: batchSize,
+          nextBatchIndex: 1,
+          rowJson: data.rowJson.slice(batchSize, batchSize * 2),
+          snapshotId: data.snapshotId,
+        })
+      );
+      yield* Effect.promise(() =>
+        expect(
+          t.query(readRows, {
+            afterBatchIndex: 1,
+            family: "program",
+            releaseId: TEST_RELEASE_ID,
+          })
+        ).resolves.toEqual({
+          batchIndex: 2,
+          done: true,
+          firstIndex: batchSize * 2,
+          nextBatchIndex: 2,
+          rowJson: data.rowJson.slice(batchSize * 2),
+          snapshotId: data.snapshotId,
+        })
+      );
+      yield* Effect.promise(() =>
+        expect(
+          t.query(readRows, {
+            afterBatchIndex: 2,
+            family: "program",
+            releaseId: TEST_RELEASE_ID,
+          })
+        ).resolves.toEqual({
+          batchIndex: 2,
+          done: true,
+          firstIndex: data.rowJson.length,
+          nextBatchIndex: 2,
+          rowJson: [],
+          snapshotId: data.snapshotId,
+        })
+      );
+    })
+  );
 
-  it("rejects inherited-family reads and missing physical rows", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const inherited = convexTest(schema, convexModules);
-    await stageProgramSnapshot(inherited, data);
-    await expect(
-      inherited.query(readManifest, {
-        family: "quran",
-        releaseId: TEST_RELEASE_ID,
-      })
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
+  it.live("rejects inherited-family reads and missing physical rows", () =>
+    Effect.gen(function* () {
+      const data = yield* makeProgramSnapshotData();
+      const inherited = convexTest(schema, convexModules);
+      yield* Effect.promise(() => stageProgramSnapshot(inherited, data));
+      yield* Effect.promise(() =>
+        expect(
+          inherited.query(readManifest, {
+            family: "quran",
+            releaseId: TEST_RELEASE_ID,
+          })
+        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } })
+      );
 
-    const missing = convexTest(schema, convexModules);
-    await stageProgramSnapshot(missing, data);
-    await missing.mutation(async (ctx) => {
-      const row = await ctx.db
-        .query("curriculumRoutes")
-        .withIndex("by_snapshotId_and_index", (query) =>
-          query.eq("snapshotId", data.snapshotId).eq("index", 2)
-        )
-        .unique();
-      if (!row) {
-        throw new Error("Expected staged program row.");
-      }
-      await ctx.db.delete("curriculumRoutes", row._id);
-    });
-    await expect(
-      missing.query(readRows, {
-        afterBatchIndex: -1,
-        family: "program",
-        releaseId: TEST_RELEASE_ID,
-      })
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
-  });
+      const missing = convexTest(schema, convexModules);
+      yield* Effect.promise(() => stageProgramSnapshot(missing, data));
+      yield* Effect.promise(() =>
+        missing.mutation(async (ctx) => {
+          const row = await ctx.db
+            .query("curriculumRoutes")
+            .withIndex("by_snapshotId_and_index", (query) =>
+              query.eq("snapshotId", data.snapshotId).eq("index", 2)
+            )
+            .unique();
+          if (!row) {
+            throw new Error("Expected staged program row.");
+          }
+          await ctx.db.delete("curriculumRoutes", row._id);
+        })
+      );
+      yield* Effect.promise(() =>
+        expect(
+          missing.query(readRows, {
+            afterBatchIndex: -1,
+            family: "program",
+            releaseId: TEST_RELEASE_ID,
+          })
+        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } })
+      );
+    })
+  );
 
-  it("rejects a non-contiguous immutable batch ledger", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const t = convexTest(schema, convexModules);
-    await stageProgramSnapshot(t, data, 3);
-    await t.mutation(async (ctx) => {
-      const second = await ctx.db
-        .query("snapshotBatches")
-        .withIndex("by_releaseId_and_family_and_batchIndex", (query) =>
-          query
-            .eq("releaseId", TEST_RELEASE_ID)
-            .eq("family", "program")
-            .eq("batchIndex", 1)
-        )
-        .unique();
-      if (!second) {
-        throw new Error("Expected second snapshot batch.");
-      }
-      await ctx.db.patch("snapshotBatches", second._id, { batchIndex: 2 });
-    });
+  it.live("rejects a non-contiguous immutable batch ledger", () =>
+    Effect.gen(function* () {
+      const data = yield* makeProgramSnapshotData();
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(() => stageProgramSnapshot(t, data, 3));
+      yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const second = await ctx.db
+            .query("snapshotBatches")
+            .withIndex("by_releaseId_and_family_and_batchIndex", (query) =>
+              query
+                .eq("releaseId", TEST_RELEASE_ID)
+                .eq("family", "program")
+                .eq("batchIndex", 1)
+            )
+            .unique();
+          if (!second) {
+            throw new Error("Expected second snapshot batch.");
+          }
+          await ctx.db.patch("snapshotBatches", second._id, { batchIndex: 2 });
+        })
+      );
 
-    await expect(
-      t.query(readRows, {
-        afterBatchIndex: 0,
-        family: "program",
-        releaseId: TEST_RELEASE_ID,
-      })
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
-  });
+      yield* Effect.promise(() =>
+        expect(
+          t.query(readRows, {
+            afterBatchIndex: 0,
+            family: "program",
+            releaseId: TEST_RELEASE_ID,
+          })
+        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } })
+      );
+    })
+  );
 });

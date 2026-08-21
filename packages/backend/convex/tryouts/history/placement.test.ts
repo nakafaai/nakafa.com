@@ -4,8 +4,8 @@ import {
   verifyStoredTryoutPlacement,
 } from "@repo/backend/convex/tryouts/history/placement";
 import { TEST_STORED_TRYOUT_PLACEMENT } from "@repo/backend/test/tryout-history";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 const FROZEN_CONTENT_HASH = "f".repeat(64);
 const CORPUS_ROOT_PATTERN = /^packages\/corpus\//;
@@ -36,58 +36,58 @@ const readPlacementPair = Effect.fn("test.readHistoricalTryoutPlacementPair")(
   }
 );
 describe("tryouts/history/placement", () => {
-  it("returns the attempt-owned hash after authenticating the signed row", async () => {
-    const { frozen, historical } = await Effect.runPromise(readPlacementPair());
-    const verified = await Effect.runPromise(
-      verifyStoredTryoutPlacement(historical, frozen)
-    );
-    expect(verified).toEqual({
-      answerArtifactHash: historical.answerArtifactHash,
-      answerContentKey: historical.answerContentKey,
-      artifactLocale: historical.locale,
-      contentHash: FROZEN_CONTENT_HASH,
-      questionArtifactHash: historical.questionArtifactHash,
-      questionContentKey: historical.questionContentKey,
-      questionOrder: historical.questionOrder,
-      questionSourcePath: historical.questionSourcePath,
-      sourceRevision: historical.sourceRevision,
-    });
-    expect(verified).not.toHaveProperty("appLocale");
-  });
-  it("returns one typed failure for frozen field or choice drift", async () => {
-    const { frozen, historical } = await Effect.runPromise(readPlacementPair());
-    await expect(
-      Effect.runPromise(
-        verifyStoredTryoutPlacement(historical, {
+  it.live(
+    "returns the attempt-owned hash after authenticating the signed row",
+    () =>
+      Effect.gen(function* () {
+        const { frozen, historical } = yield* readPlacementPair();
+        const verified = yield* verifyStoredTryoutPlacement(historical, frozen);
+        expect(verified).toEqual({
+          answerArtifactHash: historical.answerArtifactHash,
+          answerContentKey: historical.answerContentKey,
+          artifactLocale: historical.locale,
+          contentHash: FROZEN_CONTENT_HASH,
+          questionArtifactHash: historical.questionArtifactHash,
+          questionContentKey: historical.questionContentKey,
+          questionOrder: historical.questionOrder,
+          questionSourcePath: historical.questionSourcePath,
+          sourceRevision: historical.sourceRevision,
+        });
+        expect(verified).not.toHaveProperty("appLocale");
+      })
+  );
+  it.live("returns one typed failure for frozen field or choice drift", () =>
+    Effect.gen(function* () {
+      const { frozen, historical } = yield* readPlacementPair();
+      expect(
+        yield* verifyStoredTryoutPlacement(historical, {
           ...frozen,
           sourceRevision: "changed",
         }).pipe(Effect.flip)
-      )
-    ).resolves.toEqual(new StoredTryoutPlacementMismatchError());
-    await expect(
-      Effect.runPromise(
-        verifyStoredTryoutPlacement(historical, {
+      ).toEqual(new StoredTryoutPlacementMismatchError());
+      expect(
+        yield* verifyStoredTryoutPlacement(historical, {
           ...frozen,
           choiceSnapshots: frozen.choiceSnapshots.map((choice, index) =>
             index === 0 ? { ...choice, isCorrect: false } : choice
           ),
         }).pipe(Effect.flip)
-      )
-    ).resolves.toEqual(new StoredTryoutPlacementMismatchError());
-  });
-  it("accepts a root-relative frozen source path", async () => {
-    const { frozen, historical } = await Effect.runPromise(readPlacementPair());
-    const relativeSourcePath = historical.questionSourcePath.replace(
-      CORPUS_ROOT_PATTERN,
-      ""
-    );
-    await expect(
-      Effect.runPromise(
-        verifyStoredTryoutPlacement(historical, {
+      ).toEqual(new StoredTryoutPlacementMismatchError());
+    })
+  );
+  it.live("accepts a root-relative frozen source path", () =>
+    Effect.gen(function* () {
+      const { frozen, historical } = yield* readPlacementPair();
+      const relativeSourcePath = historical.questionSourcePath.replace(
+        CORPUS_ROOT_PATTERN,
+        ""
+      );
+      expect(
+        yield* verifyStoredTryoutPlacement(historical, {
           ...frozen,
           sourcePath: relativeSourcePath,
         })
-      )
-    ).resolves.toMatchObject({ contentHash: FROZEN_CONTENT_HASH });
-  });
+      ).toMatchObject({ contentHash: FROZEN_CONTENT_HASH });
+    })
+  );
 });

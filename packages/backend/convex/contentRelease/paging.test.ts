@@ -1,39 +1,39 @@
 import { validateProjectionPage } from "@repo/backend/convex/contentRelease/paging";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("contentRelease/paging", () => {
-  it("preserves complete bounded native pagination options", async () => {
-    const options = {
-      cursor: null,
-      endCursor: null,
-      maximumBytesRead: 4096,
-      maximumRowsRead: 4,
-      numItems: 4,
-    };
+  it.live("preserves complete bounded native pagination options", () =>
+    Effect.gen(function* () {
+      const options = {
+        cursor: null,
+        endCursor: null,
+        maximumBytesRead: 4096,
+        maximumRowsRead: 4,
+        numItems: 4,
+      };
 
-    await expect(
-      Effect.runPromise(validateProjectionPage(options))
-    ).resolves.toEqual(options);
-  });
+      expect(yield* validateProjectionPage(options)).toEqual(options);
+    })
+  );
 
-  it("adds safe read budgets when native callers omit them", async () => {
-    await expect(
-      Effect.runPromise(
-        validateProjectionPage({
+  it.live("adds safe read budgets when native callers omit them", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* validateProjectionPage({
           cursor: null,
           numItems: 4,
         })
-      )
-    ).resolves.toEqual({
-      cursor: null,
-      maximumBytesRead: 4 * 1024 * 1024,
-      maximumRowsRead: 32,
-      numItems: 4,
-    });
-  });
+      ).toEqual({
+        cursor: null,
+        maximumBytesRead: 4 * 1024 * 1024,
+        maximumRowsRead: 32,
+        numItems: 4,
+      });
+    })
+  );
 
-  it.each([
+  it.live.each([
     [{ cursor: null, numItems: 0 }],
     [{ cursor: null, numItems: 1.5 }],
     [{ cursor: null, numItems: 33 }],
@@ -42,9 +42,11 @@ describe("contentRelease/paging", () => {
     [{ cursor: null, maximumRowsRead: 33, numItems: 1 }],
     [{ cursor: null, maximumBytesRead: 0, numItems: 1 }],
     [{ cursor: null, maximumBytesRead: 4 * 1024 * 1024 + 1, numItems: 1 }],
-  ])("rejects unsafe pagination options %#", async (options) => {
-    await expect(
-      Effect.runPromise(validateProjectionPage(options).pipe(Effect.flip))
-    ).resolves.toMatchObject({ code: "CONTENT_RELEASE_LIMIT" });
-  });
+  ])("rejects unsafe pagination options %#", ([options]) =>
+    Effect.gen(function* () {
+      expect(
+        yield* validateProjectionPage(options).pipe(Effect.flip)
+      ).toMatchObject({ code: "CONTENT_RELEASE_LIMIT" });
+    })
+  );
 });

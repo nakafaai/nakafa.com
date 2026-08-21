@@ -26,54 +26,72 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout-source";
 import { seedTryoutStartSet } from "@repo/backend/test/tryout-start";
+import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("contentRelease/snapshot/retention", () => {
-  it("protects snapshots selected by publication slots and recent history", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const candidate = convexTest(schema, convexModules);
-    await candidate.mutation((ctx) =>
-      insertTestRelease(ctx, { snapshots: data.snapshots })
-    );
-    await expect(
-      candidate.mutation((ctx) =>
-        runConvexProgram(isSnapshotReferenced(ctx, "program", data.snapshotId))
-      )
-    ).resolves.toBe(true);
-    await expect(
-      candidate.mutation((ctx) =>
-        runConvexProgram(
-          isSnapshotReferenced(ctx, "program", `sha256:${"9".repeat(64)}`)
-        )
-      )
-    ).resolves.toBe(false);
+  it.live(
+    "protects snapshots selected by publication slots and recent history",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* makeProgramSnapshotData();
+        const candidate = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          candidate.mutation((ctx) =>
+            insertTestRelease(ctx, { snapshots: data.snapshots })
+          )
+        );
+        yield* Effect.promise(() =>
+          expect(
+            candidate.mutation((ctx) =>
+              runConvexProgram(
+                isSnapshotReferenced(ctx, "program", data.snapshotId)
+              )
+            )
+          ).resolves.toBe(true)
+        );
+        yield* Effect.promise(() =>
+          expect(
+            candidate.mutation((ctx) =>
+              runConvexProgram(
+                isSnapshotReferenced(ctx, "program", `sha256:${"9".repeat(64)}`)
+              )
+            )
+          ).resolves.toBe(false)
+        );
 
-    await candidate.mutation(async (ctx) => {
-      const [release, state] = await Promise.all([
-        ctx.db.query("contentReleases").unique(),
-        ctx.db.query("contentState").unique(),
-      ]);
-      if (!(release && state)) {
-        throw new Error("Expected candidate snapshot release.");
-      }
-      await ctx.db.patch("contentReleases", release._id, {
-        completedAt: 1,
-        status: "completed",
-      });
-      await ctx.db.patch("contentState", state._id, {
-        candidateManifestHash: undefined,
-        candidateReleaseId: undefined,
-        candidateSequence: undefined,
-      });
-    });
-    await expect(
-      candidate.mutation((ctx) =>
-        runConvexProgram(isSnapshotReferenced(ctx, "program", data.snapshotId))
-      )
-    ).resolves.toBe(true);
-  });
+        yield* Effect.promise(() =>
+          candidate.mutation(async (ctx) => {
+            const [release, state] = await Promise.all([
+              ctx.db.query("contentReleases").unique(),
+              ctx.db.query("contentState").unique(),
+            ]);
+            if (!(release && state)) {
+              throw new Error("Expected candidate snapshot release.");
+            }
+            await ctx.db.patch("contentReleases", release._id, {
+              completedAt: 1,
+              status: "completed",
+            });
+            await ctx.db.patch("contentState", state._id, {
+              candidateManifestHash: undefined,
+              candidateReleaseId: undefined,
+              candidateSequence: undefined,
+            });
+          })
+        );
+        yield* Effect.promise(() =>
+          expect(
+            candidate.mutation((ctx) =>
+              runConvexProgram(
+                isSnapshotReferenced(ctx, "program", data.snapshotId)
+              )
+            )
+          ).resolves.toBe(true)
+        );
+      })
+  );
 
   it("finds question and answer artifacts retained by try-out placements", async () => {
     const t = convexTest(schema, convexModules);

@@ -1,7 +1,8 @@
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, Schema } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import { getNakafaQuranReferenceToolResult } from "@/lib/mcp/tools/quran";
 
 vi.mock("@/lib/mcp/nakafa", async () => {
@@ -53,83 +54,81 @@ const ToolErrorResultSchema = Schema.Struct({
 });
 
 describe("nakafa_get_quran_reference", () => {
-  it("returns structured Quran references", async () => {
-    const result = await Effect.runPromise(
-      getNakafaQuranReferenceToolResult({
+  it.live("returns structured Quran references", () =>
+    Effect.gen(function* () {
+      const result = yield* getNakafaQuranReferenceToolResult({
         from_verse: 1,
         include_tafsir: true,
         locale: "en",
         surah: 1,
         to_verse: 2,
-      })
-    );
-    const reference = Schema.decodeUnknownSync(NakafaAgentQuranReferenceSchema)(
-      result.structuredContent
-    );
+      });
+      const reference = yield* Schema.decodeUnknownEffect(
+        NakafaAgentQuranReferenceSchema
+      )(result.structuredContent);
 
-    expect(result.isError).not.toBe(true);
-    expect(reference.content_id).toBe(
-      readNakafaContentRefFixture("en", "quran/1", "quran").content_id
-    );
-    expect(reference.verses).toHaveLength(2);
-    expect(reference.verses[0].tafsir).toBeTruthy();
-  });
+      expect(result.isError).not.toBe(true);
+      expect(reference.content_id).toBe(
+        readNakafaContentRefFixture("en", "quran/1", "quran").content_id
+      );
+      expect(reference.verses).toHaveLength(2);
+      expect(reference.verses[0].tafsir).toBeTruthy();
+    })
+  );
 
-  it("returns structured read-model input errors", async () => {
-    const result = await Effect.runPromise(
-      getNakafaQuranReferenceToolResult({
+  it.live("returns structured read-model input errors", () =>
+    Effect.gen(function* () {
+      const result = yield* getNakafaQuranReferenceToolResult({
         from_verse: 1,
         include_tafsir: false,
         locale: "en",
         surah: 999,
-      })
-    );
+      });
+      const error = yield* Schema.decodeUnknownEffect(ToolErrorResultSchema)(
+        result
+      );
 
-    expect(
-      Schema.decodeUnknownSync(ToolErrorResultSchema)(result).structuredContent
-        .error
-    ).toStrictEqual({
-      message: "Invalid Nakafa Quran reference options.",
-      suggestions: [expect.stringContaining("Surah number")],
-    });
-  });
+      expect(error.structuredContent.error).toStrictEqual({
+        message: "Invalid Nakafa Quran reference options.",
+        suggestions: [expect.stringContaining("Surah number")],
+      });
+    })
+  );
 
-  it("returns structured range and missing-reference errors", async () => {
-    const reversed = await Effect.runPromise(
-      getNakafaQuranReferenceToolResult({
+  it.live("returns structured range and missing-reference errors", () =>
+    Effect.gen(function* () {
+      const reversed = yield* getNakafaQuranReferenceToolResult({
         from_verse: 3,
         locale: "en",
         surah: 1,
         to_verse: 2,
-      })
-    );
-    const large = await Effect.runPromise(
-      getNakafaQuranReferenceToolResult({
+      });
+      const large = yield* getNakafaQuranReferenceToolResult({
         from_verse: 1,
         locale: "en",
         surah: 2,
         to_verse: 30,
-      })
-    );
-    const missing = await Effect.runPromise(
-      getNakafaQuranReferenceToolResult({
+      });
+      const missing = yield* getNakafaQuranReferenceToolResult({
         from_verse: 999,
         locale: "en",
         surah: 1,
-      })
-    );
+      });
+      const [reversedError, largeError, missingError] = yield* Effect.all([
+        Schema.decodeUnknownEffect(ToolErrorResultSchema)(reversed),
+        Schema.decodeUnknownEffect(ToolErrorResultSchema)(large),
+        Schema.decodeUnknownEffect(ToolErrorResultSchema)(missing),
+      ]);
 
-    expect(
-      Schema.decodeUnknownSync(ToolErrorResultSchema)(reversed)
-        .structuredContent.error.message
-    ).toBe("Invalid Quran verse range.");
-    expect(
-      Schema.decodeUnknownSync(ToolErrorResultSchema)(large).structuredContent
-        .error.message
-    ).toBe("Quran reference range is too large.");
-    expect(
-      Schema.decodeUnknownSync(ToolErrorResultSchema)(missing).structuredContent
-        .error.message
-    ).toBe("Nakafa Quran reference was not found.");
-  });
+      expect(reversedError.structuredContent.error.message).toBe(
+        "Invalid Quran verse range."
+      );
+      expect(largeError.structuredContent.error.message).toBe(
+        "Quran reference range is too large."
+      );
+      expect(missingError.structuredContent.error.message).toBe(
+        "Nakafa Quran reference was not found."
+      );
+    })
+  );
 });

@@ -1,19 +1,25 @@
 import { rejectReservedUsername } from "@repo/backend/convex/auth/username/request";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, Exit } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("auth/username request", () => {
-  it("rejects user-provided usernames from the generated namespace", async () => {
-    const exit = await Effect.runPromiseExit(
-      rejectReservedUsername({ username: "g_student_ng64hohj4t2h3" })
-    );
+  it.live("rejects user-provided usernames from the generated namespace", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        rejectReservedUsername({ username: "g_student_ng64hohj4t2h3" })
+      );
 
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
 
-  it("allows user-provided usernames outside the generated namespace", async () => {
-    await expect(
-      Effect.runPromise(rejectReservedUsername({ username: "student" }))
-    ).resolves.toBeUndefined();
-  });
+  it.live(
+    "allows user-provided usernames outside the generated namespace",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* rejectReservedUsername({ username: "student" })
+        ).toBeUndefined();
+      })
+  );
 });

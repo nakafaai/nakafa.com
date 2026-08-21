@@ -9,9 +9,9 @@ import {
   makeTryoutCatalogRow,
   makeTryoutPlacementRow,
 } from "@repo/backend/test/tryout-snapshot";
+import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 /** Creates one technical track used to break localized count symmetry. */
 function makeTechnicalTrack() {
@@ -67,24 +67,31 @@ describe("contentRelease/tryout/catalog", () => {
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_MISSING" } });
   });
 
-  it("returns one verified localized hierarchy from the active snapshot", async () => {
-    const { snapshotId, t } = await activateCatalog();
-    const result = await t.query((ctx) =>
-      runConvexProgram(readTryoutCatalog(ctx, "id"))
-    );
-    const rows = await Effect.runPromise(
-      Effect.forEach(result.rowJson, decodeSnapshotRowJson)
-    );
+  it.live(
+    "returns one verified localized hierarchy from the active snapshot",
+    () =>
+      Effect.gen(function* () {
+        const { snapshotId, t } = yield* Effect.promise(() =>
+          activateCatalog()
+        );
+        const result = yield* Effect.promise(() =>
+          t.query((ctx) => runConvexProgram(readTryoutCatalog(ctx, "id")))
+        );
+        const rows = yield* Effect.forEach(
+          result.rowJson,
+          decodeSnapshotRowJson
+        );
 
-    expect(result).toMatchObject({ snapshotId });
-    expect(rows).toMatchObject([
-      {
-        family: "tryout",
-        record: { row: { appLocale: "id", kind: "country" } },
-        rowKind: "catalog",
-      },
-    ]);
-  });
+        expect(result).toMatchObject({ snapshotId });
+        expect(rows).toMatchObject([
+          {
+            family: "tryout",
+            record: { row: { appLocale: "id", kind: "country" } },
+            rowKind: "catalog",
+          },
+        ]);
+      })
+  );
 
   it("requires active signed question ownership", async () => {
     const { t } = await activateCatalog();

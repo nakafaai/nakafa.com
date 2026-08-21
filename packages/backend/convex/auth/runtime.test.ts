@@ -5,20 +5,23 @@ import {
 } from "@repo/backend/convex/auth/deletion/constants";
 import { accountDeletionPreparationOutcome } from "@repo/backend/convex/auth/deletion/spec";
 import { verifyAccountDeletionPreparation } from "@repo/backend/convex/auth/runtime";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 describe("auth/runtime", () => {
-  it("accepts one ready preparation step", async () => {
-    const prepare = vi.fn(async () => accountDeletionPreparationOutcome.ready);
+  it.live("accepts one ready preparation step", () =>
+    Effect.gen(function* () {
+      const prepare = vi.fn(
+        async () => accountDeletionPreparationOutcome.ready
+      );
 
-    await expect(
-      Effect.runPromise(verifyAccountDeletionPreparation(prepare))
-    ).resolves.toBeUndefined();
-    expect(prepare).toHaveBeenCalledOnce();
-  });
+      expect(yield* verifyAccountDeletionPreparation(prepare)).toBeUndefined();
+      expect(prepare).toHaveBeenCalledOnce();
+    })
+  );
 
-  it.each([
+  it.live.each([
     {
       code: ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
       outcome: accountDeletionPreparationOutcome.continue,
@@ -34,37 +37,43 @@ describe("auth/runtime", () => {
       outcome: accountDeletionPreparationOutcome.temporarilyUnavailable,
       status: "INTERNAL_SERVER_ERROR",
     },
-  ])("maps $outcome without draining another step", async (testCase) => {
-    const prepare = vi.fn(async () => testCase.outcome);
-    const failure = await Effect.runPromise(
-      verifyAccountDeletionPreparation(prepare).pipe(Effect.flip)
-    );
+  ])("maps $outcome without draining another step", (testCase) =>
+    Effect.gen(function* () {
+      const prepare = vi.fn(async () => testCase.outcome);
+      const failure = yield* verifyAccountDeletionPreparation(prepare).pipe(
+        Effect.flip
+      );
 
-    expect(failure).toMatchObject({
-      body: {
-        code: testCase.code,
-      },
-      name: "APIError",
-      status: testCase.status,
-    });
-    expect(prepare).toHaveBeenCalledOnce();
-  });
+      expect(failure).toMatchObject({
+        body: {
+          code: testCase.code,
+        },
+        name: "APIError",
+        status: testCase.status,
+      });
+      expect(prepare).toHaveBeenCalledOnce();
+    })
+  );
 
-  it("maps adapter failures without retrying inside the auth request", async () => {
-    const prepare = vi.fn(() =>
-      Promise.reject(new Error("preparation unavailable"))
-    );
-    const failure = await Effect.runPromise(
-      verifyAccountDeletionPreparation(prepare).pipe(Effect.flip)
-    );
+  it.live(
+    "maps adapter failures without retrying inside the auth request",
+    () =>
+      Effect.gen(function* () {
+        const prepare = vi.fn(() =>
+          Promise.reject(new Error("preparation unavailable"))
+        );
+        const failure = yield* verifyAccountDeletionPreparation(prepare).pipe(
+          Effect.flip
+        );
 
-    expect(failure).toMatchObject({
-      body: {
-        code: ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
-      },
-      name: "APIError",
-      status: "INTERNAL_SERVER_ERROR",
-    });
-    expect(prepare).toHaveBeenCalledOnce();
-  });
+        expect(failure).toMatchObject({
+          body: {
+            code: ACCOUNT_DELETION_TEMPORARILY_UNAVAILABLE_CODE,
+          },
+          name: "APIError",
+          status: "INTERNAL_SERVER_ERROR",
+        });
+        expect(prepare).toHaveBeenCalledOnce();
+      })
+  );
 });

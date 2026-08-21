@@ -7,8 +7,8 @@ import {
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 const ARTICLE_CONTENT_ID = NakafaAgentContentRefInputSchema.make(
   readNakafaContentRefFixture(
@@ -28,84 +28,84 @@ const TRYOUT_URL = NakafaAgentContentRefInputSchema.make(
   "https://nakafa.com/en/try-out/indonesia/snbt/2027/set-2"
 );
 describe("nakafa read tool", () => {
-  it("writes loading and done parts for content reads", async () => {
-    const { parts, writer } = createWriter();
-    const output = await Effect.runPromise(
-      read({
+  it.live("writes loading and done parts for content reads", () =>
+    Effect.gen(function* () {
+      const { parts, writer } = createWriter();
+      const output = yield* read({
         input: { content_ref: ARTICLE_CONTENT_ID },
         toolCallId: "read-1",
         writer,
-      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
-    );
-    expect(output).toContain("# Nakafa Content");
-    expect(parts.at(-1)).toEqual(
-      expect.objectContaining({
-        type: "data-nakafa",
-        data: expect.objectContaining({
-          kind: "content",
-          status: "done",
-          result: expect.objectContaining({
-            content_id: ARTICLE_CONTENT_ID,
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()));
+      expect(output).toContain("# Nakafa Content");
+      expect(parts.at(-1)).toEqual(
+        expect.objectContaining({
+          type: "data-nakafa",
+          data: expect.objectContaining({
+            kind: "content",
+            status: "done",
+            result: expect.objectContaining({
+              content_id: ARTICLE_CONTENT_ID,
+            }),
           }),
-        }),
-      })
-    );
-  });
-  it("accepts canonical URL projections for current-page reads", async () => {
-    const { parts, writer } = createWriter();
-    const output = await Effect.runPromise(
-      read({
+        })
+      );
+    })
+  );
+  it.live("accepts canonical URL projections for current-page reads", () =>
+    Effect.gen(function* () {
+      const { parts, writer } = createWriter();
+      const output = yield* read({
         input: { content_ref: ARTICLE_URL },
         toolCallId: "read-url",
         writer,
-      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
-    );
-    expect(output).toContain("# Nakafa Content");
-    expect(parts.at(-1)).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          kind: "content",
-          status: "done",
-        }),
-      })
-    );
-  });
-  it("writes an error part when content is missing", async () => {
-    const { parts, writer } = createWriter();
-    const output = await Effect.runPromise(
-      read({
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()));
+      expect(output).toContain("# Nakafa Content");
+      expect(parts.at(-1)).toEqual(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            kind: "content",
+            status: "done",
+          }),
+        })
+      );
+    })
+  );
+  it.live("writes an error part when content is missing", () =>
+    Effect.gen(function* () {
+      const { parts, writer } = createWriter();
+      const output = yield* read({
         input: { content_ref: MISSING_CONTENT_ID },
         toolCallId: "read-2",
         writer,
-      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
-    );
-    expect(output).toBe("Nakafa content was not found.");
-    expect(parts.at(-1)).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({ kind: "content", status: "error" }),
-      })
-    );
-  });
-  it("does not invent a markdown read for tryout references", async () => {
-    const { parts, writer } = createWriter();
-    const output = await Effect.runPromise(
-      read({
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()));
+      expect(output).toBe("Nakafa content was not found.");
+      expect(parts.at(-1)).toEqual(
+        expect.objectContaining({
+          data: expect.objectContaining({ kind: "content", status: "error" }),
+        })
+      );
+    })
+  );
+  it.live("does not invent a markdown read for tryout references", () =>
+    Effect.gen(function* () {
+      const { parts, writer } = createWriter();
+      const output = yield* read({
         input: { content_ref: TRYOUT_URL },
         toolCallId: "read-tryout",
         writer,
-      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
-    );
-    expect(output).toBe("Nakafa content was not found.");
-    expect(parts.at(-1)).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({ kind: "content", status: "error" }),
-      })
-    );
-  });
-  it("writes an error part when content reading fails", async () => {
-    const { parts, writer } = createWriter();
-    const output = await Effect.runPromise(
-      read({
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()));
+      expect(output).toBe("Nakafa content was not found.");
+      expect(parts.at(-1)).toEqual(
+        expect.objectContaining({
+          data: expect.objectContaining({ kind: "content", status: "error" }),
+        })
+      );
+    })
+  );
+  it.live("writes an error part when content reading fails", () =>
+    Effect.gen(function* () {
+      const { parts, writer } = createWriter();
+      const output = yield* read({
         input: { content_ref: ARTICLE_CONTENT_ID },
         toolCallId: "read-3",
         writer,
@@ -124,17 +124,17 @@ describe("nakafa read tool", () => {
             verify: () => Effect.succeed(false),
           })
         )
-      )
-    );
-    expect(output).toBe("Read failed.");
-    expect(parts.at(-1)).toEqual(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          kind: "content",
-          status: "error",
-          error: "Read failed.",
-        }),
-      })
-    );
-  });
+      );
+      expect(output).toBe("Read failed.");
+      expect(parts.at(-1)).toEqual(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            kind: "content",
+            status: "error",
+            error: "Read failed.",
+          }),
+        })
+      );
+    })
+  );
 });

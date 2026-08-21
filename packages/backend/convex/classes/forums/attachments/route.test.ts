@@ -16,8 +16,15 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@repo/testing/effect";
 import { Effect, Schema } from "effect";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const NOW = Date.UTC(2026, 4, 29, 15, 0, 0);
 const LEASE_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
@@ -124,62 +131,81 @@ afterEach(() => {
   delete process.env[polarSecretName];
 });
 describe("classes/forums/attachments/route", () => {
-  it("stores, binds, and finalizes an attachment through the browser protocol", async () => {
-    const { capabilityPath, owner, t, uploadId } = await createPendingUpload();
-    const response = await t.fetch(capabilityPath, {
-      body: "hello",
-      headers: {
-        "content-type": "text/plain",
-        origin: "http://localhost:3000",
-      },
-      method: "POST",
-    });
-    expect(response.status).toBe(200);
-    expectPrivate(response);
-    expect(response.headers.get("access-control-allow-origin")).toBe(
-      "http://localhost:3000"
-    );
-    const body = await Effect.runPromise(
-      Schema.decodeUnknownEffect(Schema.Struct({ storageId: Schema.String }))(
-        await response.json()
-      )
-    );
-    const boundUpload = await t.query((ctx) =>
-      ctx.db.get("schoolClassForumPendingUploads", uploadId)
-    );
-    if (!boundUpload?.storageId) {
-      throw new Error("Expected the HTTP action to bind its stored object.");
-    }
-    expect(body.storageId).toBe(boundUpload.storageId);
-    await expect(
-      owner.mutation(api.classes.forums.mutations.uploads.saveForumUpload, {
-        name: "notes.txt",
-        size: 5,
-        storageId: boundUpload.storageId,
-        type: "text/plain",
-        uploadId,
+  it.live(
+    "stores, binds, and finalizes an attachment through the browser protocol",
+    () =>
+      Effect.gen(function* () {
+        const { capabilityPath, owner, t, uploadId } = yield* Effect.promise(
+          () => createPendingUpload()
+        );
+        const response = yield* Effect.promise(() =>
+          t.fetch(capabilityPath, {
+            body: "hello",
+            headers: {
+              "content-type": "text/plain",
+              origin: "http://localhost:3000",
+            },
+            method: "POST",
+          })
+        );
+        expect(response.status).toBe(200);
+        expectPrivate(response);
+        expect(response.headers.get("access-control-allow-origin")).toBe(
+          "http://localhost:3000"
+        );
+        const responseBody = yield* Effect.promise(() => response.json());
+        const body = yield* Schema.decodeUnknownEffect(
+          Schema.Struct({ storageId: Schema.String })
+        )(responseBody);
+        const boundUpload = yield* Effect.promise(() =>
+          t.query((ctx) =>
+            ctx.db.get("schoolClassForumPendingUploads", uploadId)
+          )
+        );
+        if (!boundUpload?.storageId) {
+          throw new Error(
+            "Expected the HTTP action to bind its stored object."
+          );
+        }
+        const storageId = boundUpload.storageId;
+        expect(body.storageId).toBe(storageId);
+        yield* Effect.promise(() =>
+          expect(
+            owner.mutation(
+              api.classes.forums.mutations.uploads.saveForumUpload,
+              {
+                name: "notes.txt",
+                size: 5,
+                storageId,
+                type: "text/plain",
+                uploadId,
+              }
+            )
+          ).resolves.toBe(uploadId)
+        );
+        const state = yield* Effect.promise(() =>
+          t.query(async (ctx) => {
+            const pendingUpload = await ctx.db.get(
+              "schoolClassForumPendingUploads",
+              uploadId
+            );
+            return {
+              pendingUpload,
+              storageMetadata: pendingUpload?.storageId
+                ? await ctx.db.system.get("_storage", pendingUpload.storageId)
+                : null,
+            };
+          })
+        );
+        expect(state.pendingUpload).toMatchObject({
+          mimeType: "text/plain",
+          name: "notes.txt",
+          size: 5,
+          storageId: body.storageId,
+        });
+        expect(state.storageMetadata).toMatchObject({ size: 5 });
       })
-    ).resolves.toBe(uploadId);
-    const state = await t.query(async (ctx) => {
-      const pendingUpload = await ctx.db.get(
-        "schoolClassForumPendingUploads",
-        uploadId
-      );
-      return {
-        pendingUpload,
-        storageMetadata: pendingUpload?.storageId
-          ? await ctx.db.system.get("_storage", pendingUpload.storageId)
-          : null,
-      };
-    });
-    expect(state.pendingUpload).toMatchObject({
-      mimeType: "text/plain",
-      name: "notes.txt",
-      size: 5,
-      storageId: body.storageId,
-    });
-    expect(state.storageMetadata).toMatchObject({ size: 5 });
-  });
+  );
   it("rejects a wrong capability before consuming a hostile body", async () => {
     const { capabilityPath, t } = await createPendingUpload();
     const wrongPath = capabilityPath.replace(

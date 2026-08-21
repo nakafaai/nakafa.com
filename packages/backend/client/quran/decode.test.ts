@@ -14,8 +14,8 @@ import {
   makeQuranSearch,
   makeQuranSurah,
 } from "@repo/backend/test/quran-rows";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 const source = {
   activeManifestHash: Sha256HashSchema.make(`sha256:${"a".repeat(64)}`),
@@ -26,24 +26,24 @@ const source = {
 };
 const otherSnapshotId = Sha256HashSchema.make(`sha256:${"d".repeat(64)}`);
 describe("signed Quran decoder", () => {
-  it("decodes the complete ordered signed catalog", async () => {
-    const catalog = await Effect.runPromise(
-      decodePublishedQuranCatalog(catalogResult())
-    );
-    expect(catalog.surahs).toHaveLength(114);
-    expect(catalog.surahs.at(0)?.number).toBe(1);
-    expect(catalog.surahs.at(-1)?.number).toBe(114);
-    expect(catalog.activeReleaseId).toBe("quran-release");
-  });
-  it("selects the exact bounded signed reference verses", async () => {
-    const chunk = makeQuranChunk({
-      firstQuranNumber: 1,
-      firstVerse: 1,
-      surahNumber: 1,
-      verseCount: 6,
-    });
-    const reference = await Effect.runPromise(
-      decodePublishedQuranReference(
+  it.live("decodes the complete ordered signed catalog", () =>
+    Effect.gen(function* () {
+      const catalog = yield* decodePublishedQuranCatalog(catalogResult());
+      expect(catalog.surahs).toHaveLength(114);
+      expect(catalog.surahs.at(0)?.number).toBe(1);
+      expect(catalog.surahs.at(-1)?.number).toBe(114);
+      expect(catalog.activeReleaseId).toBe("quran-release");
+    })
+  );
+  it.live("selects the exact bounded signed reference verses", () =>
+    Effect.gen(function* () {
+      const chunk = makeQuranChunk({
+        firstQuranNumber: 1,
+        firstVerse: 1,
+        surahNumber: 1,
+        verseCount: 6,
+      });
+      const reference = yield* decodePublishedQuranReference(
         {
           ...source,
           chunkJson: [encodeTestQuranRow(source.snapshotId, chunk)],
@@ -59,50 +59,48 @@ describe("signed Quran decoder", () => {
           toVerse: 3,
         },
         { appLocale: "en", surahNumber: 1 }
-      )
-    );
-    expect(reference.verses.map((verse) => verse.number.inSurah)).toEqual([
-      2, 3,
-    ]);
-  });
-  it("fails closed for inactive, malformed, or inconsistent publication data", async () => {
-    const inactive = await Effect.runPromise(
-      Effect.result(
-        decodePublishedQuranCatalog({
-          activeManifestHash: null,
-          activeReleaseId: null,
-          managed: false,
-          rowJson: [],
-          snapshotId: null,
-          sourceRevision: null,
-        })
-      )
-    );
-    const malformed = await Effect.runPromise(
-      Effect.result(
-        decodePublishedQuranCatalog({
-          ...source,
-          rowJson: ["not-json"],
-        })
-      )
-    );
-    const wrongSnapshot = await Effect.runPromise(
-      Effect.result(
-        decodePublishedQuranCatalog({
-          ...source,
-          rowJson: Array.from({ length: 114 }, (_, index) =>
-            encodeTestQuranRow(otherSnapshotId, makeQuranSurah(index + 1))
-          ),
-        })
-      )
-    );
-    for (const result of [inactive, malformed, wrongSnapshot]) {
-      expect(result._tag).toBe("Failure");
-      if (result._tag === "Failure") {
-        expect(result.failure).toBeInstanceOf(QuranPublicationError);
-      }
-    }
-  });
+      );
+      expect(reference.verses.map((verse) => verse.number.inSurah)).toEqual([
+        2, 3,
+      ]);
+    })
+  );
+  it.live(
+    "fails closed for inactive, malformed, or inconsistent publication data",
+    () =>
+      Effect.gen(function* () {
+        const inactive = yield* Effect.result(
+          decodePublishedQuranCatalog({
+            activeManifestHash: null,
+            activeReleaseId: null,
+            managed: false,
+            rowJson: [],
+            snapshotId: null,
+            sourceRevision: null,
+          })
+        );
+        const malformed = yield* Effect.result(
+          decodePublishedQuranCatalog({
+            ...source,
+            rowJson: ["not-json"],
+          })
+        );
+        const wrongSnapshot = yield* Effect.result(
+          decodePublishedQuranCatalog({
+            ...source,
+            rowJson: Array.from({ length: 114 }, (_, index) =>
+              encodeTestQuranRow(otherSnapshotId, makeQuranSurah(index + 1))
+            ),
+          })
+        );
+        for (const result of [inactive, malformed, wrongSnapshot]) {
+          expect(result._tag).toBe("Failure");
+          if (result._tag === "Failure") {
+            expect(result.failure).toBeInstanceOf(QuranPublicationError);
+          }
+        }
+      })
+  );
 });
 /** Builds all 114 schema-valid signed metadata rows. */
 function catalogResult() {

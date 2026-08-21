@@ -1,5 +1,5 @@
-import { Effect, Exit, Queue, Ref, Scope, SubscriptionRef } from "effect";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@repo/testing/effect";
+import { Effect, Queue, Ref, SubscriptionRef } from "effect";
 import {
   type ActiveTranscriptModel,
   createActiveTranscriptModel,
@@ -192,11 +192,12 @@ describe("conversation/viewport/measure", () => {
     await shutdownViewport(viewport);
   });
 
-  it("keeps back history when a manual scroll has no previous measurement", async () => {
-    const rig = createAdapters();
-
-    await Effect.runPromise(
+  it.live(
+    "keeps back history when a manual scroll has no previous measurement",
+    () =>
       Effect.gen(function* () {
+        const rig = createAdapters();
+
         const runtime = yield* makeMeasurementRuntime({
           adapters: {
             ...rig.adapters,
@@ -228,21 +229,23 @@ describe("conversation/viewport/measure", () => {
         );
         const state = yield* SubscriptionRef.get(runtime.stateRef);
 
-        expect(state.jumpControl).toEqual({ showBack: true, showLatest: true });
-        yield* Scope.close(runtime.scope, Exit.succeed(undefined));
+        expect(state.jumpControl).toEqual({
+          showBack: true,
+          showLatest: true,
+        });
       })
-    );
-  });
+  );
 
-  it("keeps pending post placement when scroll rows cannot be mapped", async () => {
-    const rig = createAdapters();
-    const missingPost = createConversationTestPost({
-      postId: "post_missing",
-      sequence: 5,
-    });
-
-    await Effect.runPromise(
+  it.live(
+    "keeps pending post placement when scroll rows cannot be mapped",
+    () =>
       Effect.gen(function* () {
+        const rig = createAdapters();
+        const missingPost = createConversationTestPost({
+          postId: "post_missing",
+          sequence: 5,
+        });
+
         const runtime = yield* makeMeasurementRuntime({
           adapters: rig.adapters,
           lastMeasurement: makePostMeasurement(secondPost._id, 80),
@@ -275,13 +278,8 @@ describe("conversation/viewport/measure", () => {
           postId: firstPost._id,
         });
         expect(state.backStack).toEqual([{ kind: "bottom" }]);
-        yield* Scope.close(runtime.scope, Exit.succeed(undefined));
-      })
-    );
 
-    await Effect.runPromise(
-      Effect.gen(function* () {
-        const runtime = yield* makeMeasurementRuntime({
+        const missingPostRuntime = yield* makeMeasurementRuntime({
           activeTranscript: viewportTestTranscript,
           adapters: rig.adapters,
           lastMeasurement: makePostMeasurement(secondPost._id, 80),
@@ -300,30 +298,31 @@ describe("conversation/viewport/measure", () => {
         });
 
         yield* handleViewportMeasurement(
-          runtime,
+          missingPostRuntime,
           {
             ...makePostMeasurement(secondPost._id, 120),
             offset: 260,
           },
           "scroll"
         );
-        const state = yield* SubscriptionRef.get(runtime.stateRef);
+        const missingPostState = yield* SubscriptionRef.get(
+          missingPostRuntime.stateRef
+        );
 
-        expect(state.pendingPlacement?.view).toEqual({
+        expect(missingPostState.pendingPlacement?.view).toEqual({
           kind: "post",
           postId: missingPost._id,
         });
-        expect(state.backStack).toEqual([{ kind: "bottom" }]);
-        yield* Scope.close(runtime.scope, Exit.succeed(undefined));
+        expect(missingPostState.backStack).toEqual([{ kind: "bottom" }]);
       })
-    );
-  });
+  );
 
-  it("keeps pending post placement when scroll measurements still approach the target", async () => {
-    const rig = createAdapters();
-
-    await Effect.runPromise(
+  it.live(
+    "keeps pending post placement when scroll measurements still approach the target",
+    () =>
       Effect.gen(function* () {
+        const rig = createAdapters();
+
         const runtime = yield* makeMeasurementRuntime({
           activeTranscript: viewportTestTranscript,
           adapters: rig.adapters,
@@ -354,16 +353,15 @@ describe("conversation/viewport/measure", () => {
           postId: firstPost._id,
         });
         expect(state.backStack).toEqual([{ kind: "bottom" }]);
-        yield* Scope.close(runtime.scope, Exit.succeed(undefined));
       })
-    );
-  });
+  );
 
-  it("reattaches latest affinity when a reached post placement is clamped at bottom", async () => {
-    const rig = createAdapters();
-
-    await Effect.runPromise(
+  it.live(
+    "reattaches latest affinity when a reached post placement is clamped at bottom",
+    () =>
       Effect.gen(function* () {
+        const rig = createAdapters();
+
         const runtime = yield* makeMeasurementRuntime({
           adapters: rig.adapters,
           state: {
@@ -390,10 +388,8 @@ describe("conversation/viewport/measure", () => {
 
         expect(state.pendingPlacement).toBeNull();
         expect(state.latestAffinity).toBe("latest");
-        yield* Scope.close(runtime.scope, Exit.succeed(undefined));
       })
-    );
-  });
+  );
 
   it("detaches latest affinity on away user intent before the next measurement", async () => {
     const rig = createAdapters();
@@ -479,7 +475,7 @@ function makeMeasurementRuntime({
   state: Omit<ViewportState, "jumpControl">;
 }) {
   return Effect.gen(function* () {
-    const scope = yield* Scope.make();
+    const scope = yield* Effect.scope;
 
     return {
       activeTranscriptRef: yield* Ref.make<ActiveTranscript>(activeTranscript),

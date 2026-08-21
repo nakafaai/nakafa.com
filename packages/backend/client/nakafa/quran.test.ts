@@ -9,14 +9,15 @@ import {
   readNakafaQuranReference,
   readQuranMarkdown,
 } from "@repo/backend/client/nakafa/quran";
-import { ConvexRuntimeQueryError } from "@repo/backend/client/runtime";
 import { api } from "@repo/backend/convex/_generated/api";
 import { encodeTestQuranRow } from "@repo/backend/test/quran-rows";
+import { toRuntimeQueryError } from "@repo/backend/test/runtime-query";
 import { NakafaAgentInputError } from "@repo/contents/_lib/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option, Schema } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const runtimeMocks = vi.hoisted(() => ({
   runtimeQuery: vi.fn(),
@@ -28,16 +29,6 @@ vi.mock("@repo/backend/client/runtime", () => ({
       try: () => runtimeMocks.runtimeQuery(url, query, args),
     }),
 }));
-function toRuntimeQueryError(cause: unknown) {
-  if (cause instanceof ConvexRuntimeQueryError) {
-    return cause;
-  }
-  return new ConvexRuntimeQueryError({
-    networkCodes: [],
-    query: "test-runtime-query",
-    reason: "query",
-  });
-}
 const convexUrl = "https://example.convex.cloud";
 const source = {
   activeManifestHash: `sha256:${"a".repeat(64)}`,
@@ -51,72 +42,80 @@ beforeEach(() => {
   runtimeMocks.runtimeQuery.mockImplementation(readRuntimeFixture);
 });
 describe("Quran Nakafa reader", () => {
-  it("reads signed Quran references and includes published Indonesian tafsir", async () => {
-    const reference = await Effect.runPromise(
-      readNakafaQuranReference(convexUrl, {
-        from_verse: 1,
-        include_tafsir: true,
-        locale: "id",
-        surah: 1,
-        to_verse: 1,
+  it.live(
+    "reads signed Quran references and includes published Indonesian tafsir",
+    () =>
+      Effect.gen(function* () {
+        const reference = yield* readNakafaQuranReference(convexUrl, {
+          from_verse: 1,
+          include_tafsir: true,
+          locale: "id",
+          surah: 1,
+          to_verse: 1,
+        });
+        expect(Option.getOrUndefined(reference)?.verses[0]?.tafsir).toBe(
+          "Tafsir lengkap."
+        );
+        expect(Option.getOrUndefined(reference)?.name).toBe("Al-Fatihah");
       })
-    );
-    expect(Option.getOrUndefined(reference)?.verses[0]?.tafsir).toBe(
-      "Tafsir lengkap."
-    );
-    expect(Option.getOrUndefined(reference)?.name).toBe("Al-Fatihah");
-  });
-  it("does not invent tafsir for a locale without published tafsir", async () => {
-    const reference = await Effect.runPromise(
-      readNakafaQuranReference(convexUrl, {
+  );
+  it.live("does not invent tafsir for a locale without published tafsir", () =>
+    Effect.gen(function* () {
+      const reference = yield* readNakafaQuranReference(convexUrl, {
         from_verse: 1,
         include_tafsir: true,
         locale: "en",
         surah: 1,
+      });
+      expect(
+        Option.getOrUndefined(reference)?.verses[0]?.tafsir
+      ).toBeUndefined();
+    })
+  );
+  it.live("maps malformed reference input to the agent input error", () =>
+    Effect.gen(function* () {
+      const invalid = yield* Effect.result(
+        readNakafaQuranReference(convexUrl, { surah: "one" })
+      );
+      expect(invalid._tag).toBe("Failure");
+      if (invalid._tag === "Failure") {
+        expect(invalid.failure).toBeInstanceOf(NakafaAgentInputError);
+      }
+    })
+  );
+  it.live(
+    "renders full signed surah markdown without blocked legacy fields",
+    () =>
+      Effect.gen(function* () {
+        const markdown = yield* readQuranMarkdown(
+          convexUrl,
+          readNakafaContentRefFixture("id", "quran/1", "quran")
+        );
+        expect(Option.getOrUndefined(markdown)?.title).toBe("Al-Fatihah");
+        expect(Option.getOrUndefined(markdown)?.description).toBe("Pembukaan");
+        expect(Option.getOrUndefined(markdown)?.text).toContain("## Verses");
+        expect(Option.getOrUndefined(markdown)?.text).toContain(
+          "Dengan nama Allah."
+        );
+        expect(Option.getOrUndefined(markdown)?.text).not.toContain(
+          "Transliteration"
+        );
       })
-    );
-    expect(Option.getOrUndefined(reference)?.verses[0]?.tafsir).toBeUndefined();
-  });
-  it("maps malformed reference input to the agent input error", async () => {
-    const invalid = await Effect.runPromise(
-      Effect.result(readNakafaQuranReference(convexUrl, { surah: "one" }))
-    );
-    expect(invalid._tag).toBe("Failure");
-    if (invalid._tag === "Failure") {
-      expect(invalid.failure).toBeInstanceOf(NakafaAgentInputError);
-    }
-  });
-  it("renders full signed surah markdown without blocked legacy fields", async () => {
-    const markdown = await Effect.runPromise(
-      readQuranMarkdown(
-        convexUrl,
-        readNakafaContentRefFixture("id", "quran/1", "quran")
-      )
-    );
-    expect(Option.getOrUndefined(markdown)?.title).toBe("Al-Fatihah");
-    expect(Option.getOrUndefined(markdown)?.description).toBe("Pembukaan");
-    expect(Option.getOrUndefined(markdown)?.text).toContain("## Verses");
-    expect(Option.getOrUndefined(markdown)?.text).toContain(
-      "Dengan nama Allah."
-    );
-    expect(Option.getOrUndefined(markdown)?.text).not.toContain(
-      "Transliteration"
-    );
-  });
-  it("rejects non-Quran routes and reads source names directly", async () => {
-    const missing = await Effect.runPromise(
-      readQuranMarkdown(
+  );
+  it.live("rejects non-Quran routes and reads source names directly", () =>
+    Effect.gen(function* () {
+      const missing = yield* readQuranMarkdown(
         convexUrl,
         readNakafaContentRefFixture(
           "en",
           "articles/politics/example",
           "articles"
         )
-      )
-    );
-    expect(Option.isNone(missing)).toBe(true);
-    expect(getSurahName(surahRow())).toBe("Al-Fatihah");
-  });
+      );
+      expect(Option.isNone(missing)).toBe(true);
+      expect(getSurahName(surahRow())).toBe("Al-Fatihah");
+    })
+  );
 });
 /** Routes generated Convex query refs to signed Quran fixtures. */
 function readRuntimeFixture(

@@ -20,26 +20,22 @@ const ContentPreviewSchema = NakafaAgentContentRefSchema.mapFields(
     ...fields,
     description: Schema.optional(Schema.String),
     title: Schema.String,
-  }),
-  { unsafePreserveChecks: true }
-).mapFields(Struct.map(Schema.mutableKey), { unsafePreserveChecks: true });
+  })
+).mapFields(Struct.map(Schema.mutableKey));
 const SearchInputSchema = NakafaAgentSearchOptionsSchema;
 const SearchResultSchema = NakafaAgentSearchResultSchema;
 const ReadInputSchema = NakafaAgentReadOptionsSchema;
 const QuranInputSchema = NakafaAgentQuranReferenceOptionsSchema;
 const TaxonomyInputSchema = NakafaAgentTaxonomyOptionsSchema;
-const QuranPreviewSchema = NakafaAgentContentRefSchema.mapFields(
-  (fields) => ({
-    ...fields,
-    from_verse: Schema.Finite,
-    name: Schema.String,
-    revelation: Schema.String,
-    to_verse: Schema.Finite,
-    translation: Schema.String,
-    verse_count: Schema.Finite,
-  }),
-  { unsafePreserveChecks: true }
-).mapFields(Struct.map(Schema.mutableKey), { unsafePreserveChecks: true });
+const QuranPreviewSchema = NakafaAgentContentRefSchema.mapFields((fields) => ({
+  ...fields,
+  from_verse: Schema.Finite,
+  name: Schema.String,
+  revelation: Schema.String,
+  to_verse: Schema.Finite,
+  translation: Schema.String,
+  verse_count: Schema.Finite,
+})).mapFields(Struct.map(Schema.mutableKey));
 const TaxonomyPreviewSchema = Schema.Struct({
   content_counts: Schema.Array(
     Schema.Struct({

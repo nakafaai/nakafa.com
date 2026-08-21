@@ -5,8 +5,9 @@ import { readPublishedMarkdown } from "@repo/backend/client/nakafa/published";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import { TEST_ARTICLE_PROJECTION } from "@repo/backend/test/content-runtime";
 import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
+import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect, Option } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const readMock = vi.hoisted(() => vi.fn());
 const material = makeMaterialProjection("en", 1);
@@ -25,47 +26,47 @@ beforeEach(() => {
 });
 
 describe("Nakafa signed public reader", () => {
-  it.each([
+  it.live.each([
     ["articles" as const, TEST_ARTICLE_PROJECTION],
     ["material" as const, material],
-  ])("reads verified %s raw MDX", async (section, projection) => {
-    const ref = currentRef(section, projection);
-    readMock.mockReturnValue(
-      Effect.succeed({
-        activeReleaseId: "release-example",
-        artifact: {
-          payload: {
-            rawMdx:
-              'export const metadata = { title: "Ignored" }\n\n## Current body',
+  ] as const)("reads verified %s raw MDX", ([section, projection]) =>
+    Effect.gen(function* () {
+      const ref = currentRef(section, projection);
+      readMock.mockReturnValue(
+        Effect.succeed({
+          activeReleaseId: "release-example",
+          artifact: {
+            payload: {
+              rawMdx:
+                'export const metadata = { title: "Ignored" }\n\n## Current body',
+            },
           },
-        },
-        delivery: "public",
-        projection,
-      })
-    );
+          delivery: "public",
+          projection,
+        })
+      );
 
-    const result = await Effect.runPromise(
-      readPublishedMarkdown(() => target, ref)
-    );
+      const result = yield* readPublishedMarkdown(() => target, ref);
 
-    expect(readMock).toHaveBeenCalledWith(target, {
-      appLocale: projection.appLocale,
-      publicPath: projection.publicPath,
-    });
-    if (Option.isNone(result)) {
-      expect.fail("Expected signed public markdown.");
-    }
-    expect(result.value).toMatchObject({
-      content_id: projection.graph.assetId,
-      text: `# ${projection.metadata.title}\n\n## Current body`,
-      title: projection.metadata.title,
-    });
-    if (section === "material") {
-      expect(result.value).not.toHaveProperty("description");
-    }
-  });
+      expect(readMock).toHaveBeenCalledWith(target, {
+        appLocale: projection.appLocale,
+        publicPath: projection.publicPath,
+      });
+      if (Option.isNone(result)) {
+        expect.fail("Expected signed public markdown.");
+      }
+      expect(result.value).toMatchObject({
+        content_id: projection.graph.assetId,
+        text: `# ${projection.metadata.title}\n\n## Current body`,
+        title: projection.metadata.title,
+      });
+      if (section === "material") {
+        expect(result.value).not.toHaveProperty("description");
+      }
+    })
+  );
 
-  it.each([
+  it.live.each([
     [
       "configuration",
       () => {
@@ -105,22 +106,22 @@ describe("Nakafa signed public reader", () => {
         projection: material,
       }),
     ],
-  ])(
+  ] as const)(
     "maps %s failures into one agent read error",
-    async (_kind, reader, read) => {
-      readMock.mockReturnValue(read);
+    ([_kind, reader, read]) =>
+      Effect.gen(function* () {
+        readMock.mockReturnValue(read);
 
-      await expect(
-        Effect.runPromise(
-          readPublishedMarkdown(reader, currentRef("material", material)).pipe(
-            Effect.flip
-          )
-        )
-      ).resolves.toMatchObject({
-        _tag: "NakafaAgentDataReadError",
-        message: "Unable to read signed Nakafa public content.",
-      });
-    }
+        expect(
+          yield* readPublishedMarkdown(
+            reader,
+            currentRef("material", material)
+          ).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "NakafaAgentDataReadError",
+          message: "Unable to read signed Nakafa public content.",
+        });
+      })
   );
 });
 

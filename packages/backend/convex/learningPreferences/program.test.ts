@@ -7,40 +7,57 @@ import {
   makeProgramSnapshotData,
   makeTechnicalProgram,
 } from "@repo/backend/test/program-snapshot";
+import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("learningPreferences/program", () => {
-  it("filters program kinds before enforcing the curriculum preference limit", async () => {
-    const unrelated = Array.from({ length: 51 }, (_, index) =>
-      makeTechnicalProgram(index + 1, "admission-exam")
-    );
-    const curricula = [makeTechnicalProgram(52), makeTechnicalProgram(53)];
-    const data = await Effect.runPromise(
-      makeProgramSnapshotData([...unrelated, ...curricula])
-    );
-    const t = convexTest(schema, convexModules);
-    await activateProgramSnapshot(t, data, 16);
+  it.live(
+    "filters program kinds before enforcing the curriculum preference limit",
+    () =>
+      Effect.gen(function* () {
+        const unrelated = Array.from({ length: 51 }, (_, index) =>
+          makeTechnicalProgram(index + 1, "admission-exam")
+        );
+        const curricula = [makeTechnicalProgram(52), makeTechnicalProgram(53)];
+        const data = yield* makeProgramSnapshotData([
+          ...unrelated,
+          ...curricula,
+        ]);
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() => activateProgramSnapshot(t, data, 16));
 
-    await expect(
-      t.query((ctx) => runConvexProgram(listCurriculumPrograms(ctx, "en")))
-    ).resolves.toMatchObject([
-      { key: "technical-program-52" },
-      { key: "technical-program-53" },
-    ]);
-  });
+        yield* Effect.promise(() =>
+          expect(
+            t.query((ctx) =>
+              runConvexProgram(listCurriculumPrograms(ctx, "en"))
+            )
+          ).resolves.toMatchObject([
+            { key: "technical-program-52" },
+            { key: "technical-program-53" },
+          ])
+        );
+      })
+  );
 
-  it("rejects a published preference list beyond its bounded UI contract", async () => {
-    const programs = Array.from({ length: 51 }, (_, index) =>
-      makeTechnicalProgram(index + 1)
-    );
-    const data = await Effect.runPromise(makeProgramSnapshotData(programs));
-    const t = convexTest(schema, convexModules);
-    await activateProgramSnapshot(t, data, 16);
+  it.live(
+    "rejects a published preference list beyond its bounded UI contract",
+    () =>
+      Effect.gen(function* () {
+        const programs = Array.from({ length: 51 }, (_, index) =>
+          makeTechnicalProgram(index + 1)
+        );
+        const data = yield* makeProgramSnapshotData(programs);
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() => activateProgramSnapshot(t, data, 16));
 
-    await expect(
-      t.query((ctx) => runConvexProgram(listCurriculumPrograms(ctx, "en")))
-    ).rejects.toThrow("Curriculum program catalog exceeds 50 rows.");
-  });
+        yield* Effect.promise(() =>
+          expect(
+            t.query((ctx) =>
+              runConvexProgram(listCurriculumPrograms(ctx, "en"))
+            )
+          ).rejects.toThrow("Curriculum program catalog exceeds 50 rows.")
+        );
+      })
+  );
 });

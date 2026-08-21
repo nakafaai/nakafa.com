@@ -1,8 +1,8 @@
 import { StoredProtectedRuntimeRequestSchema } from "@nakafa/aksara-contracts/history/decode";
 import { decodeProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, Schema } from "effect";
-import { describe, expect, it } from "vitest";
 import type {
   CurrentTryoutQuestionSelector,
   HistoryTryoutQuestionSelector,
@@ -36,60 +36,72 @@ const historyQuestion: HistoryTryoutQuestionSelector = {
 };
 
 describe("try-out protected runtime requests", () => {
-  it("rejects an empty protected content batch", async () => {
-    await expect(
-      Effect.runPromise(makeCurrentTryoutRuntimeRequest([]).pipe(Effect.flip))
-    ).resolves.toBeInstanceOf(ContentRuntimeVerificationError);
-  });
+  it.live("rejects an empty protected content batch", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* makeCurrentTryoutRuntimeRequest([]).pipe(Effect.flip)
+      ).toBeInstanceOf(ContentRuntimeVerificationError);
+    })
+  );
 
-  it("keeps the current request free of attempt and historical fields", async () => {
-    const request = await Effect.runPromise(
-      makeCurrentTryoutRuntimeRequest([currentQuestion])
-    );
+  it.live(
+    "keeps the current request free of attempt and historical fields",
+    () =>
+      Effect.gen(function* () {
+        const request = yield* makeCurrentTryoutRuntimeRequest([
+          currentQuestion,
+        ]);
 
-    await expect(
-      Effect.runPromise(decodeProtectedContentRuntimeRequest(request))
-    ).resolves.toEqual(request);
-    expect(request).not.toHaveProperty("attemptId");
-    expect(request.selectors[0]).not.toHaveProperty("artifactLocale");
-  });
+        expect(yield* decodeProtectedContentRuntimeRequest(request)).toEqual(
+          request
+        );
+        expect(request).not.toHaveProperty("attemptId");
+        expect(request.selectors[0]).not.toHaveProperty("artifactLocale");
+      })
+  );
 
-  it("binds history to one attempt and each selector artifact locale", async () => {
-    const request = await Effect.runPromise(
-      makeHistoryTryoutRuntimeRequest("attempt-1", [historyQuestion])
-    );
+  it.live(
+    "binds history to one attempt and each selector artifact locale",
+    () =>
+      Effect.gen(function* () {
+        const request = yield* makeHistoryTryoutRuntimeRequest("attempt-1", [
+          historyQuestion,
+        ]);
 
-    expect(
-      Schema.decodeUnknownSync(StoredProtectedRuntimeRequestSchema)(request)
-    ).toEqual(request);
-    expect(request).toMatchObject({
-      appLocale: "id",
-      attemptId: "attempt-1",
-      selectors: [{ artifactLocale: "en" }],
-      snapshotId: digest,
-      snapshotReleaseId: "history-release",
-    });
-  });
+        expect(
+          yield* Schema.decodeUnknownEffect(
+            StoredProtectedRuntimeRequestSchema
+          )(request)
+        ).toEqual(request);
+        expect(request).toMatchObject({
+          appLocale: "id",
+          attemptId: "attempt-1",
+          selectors: [{ artifactLocale: "en" }],
+          snapshotId: digest,
+          snapshotReleaseId: "history-release",
+        });
+      })
+  );
 
-  it("fails before transport when one batch spans snapshots", async () => {
-    await expect(
-      Effect.runPromise(
-        makeCurrentTryoutRuntimeRequest([
+  it.live("fails before transport when one batch spans snapshots", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* makeCurrentTryoutRuntimeRequest([
           currentQuestion,
           { ...currentQuestion, snapshotReleaseId: "another-release" },
         ]).pipe(Effect.flip)
-      )
-    ).resolves.toBeInstanceOf(ContentRuntimeVerificationError);
-  });
+      ).toBeInstanceOf(ContentRuntimeVerificationError);
+    })
+  );
 
-  it("keeps the featured operation current-only", async () => {
-    await expect(
-      Effect.runPromise(requireCurrentTryoutQuestion(currentQuestion))
-    ).resolves.toEqual(currentQuestion);
-    await expect(
-      Effect.runPromise(
-        requireCurrentTryoutQuestion(historyQuestion).pipe(Effect.flip)
-      )
-    ).resolves.toBeInstanceOf(ContentRuntimeVerificationError);
-  });
+  it.live("keeps the featured operation current-only", () =>
+    Effect.gen(function* () {
+      expect(yield* requireCurrentTryoutQuestion(currentQuestion)).toEqual(
+        currentQuestion
+      );
+      expect(
+        yield* requireCurrentTryoutQuestion(historyQuestion).pipe(Effect.flip)
+      ).toBeInstanceOf(ContentRuntimeVerificationError);
+    })
+  );
 });

@@ -19,8 +19,8 @@ import {
   testRouteJson,
   testUpsertJson,
 } from "@repo/backend/test/content-release";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Cause, Effect, Exit, Result, Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 /** Strictly decodes one technical request through the shared contract. */
 function request(input: unknown) {
@@ -134,7 +134,7 @@ const requests = {
 
 /** Runs one request-failure conversion at the Vitest boundary. */
 function failure(request: PublicationRequest, code: ReleaseError["code"]) {
-  return Effect.runPromiseExit(
+  return Effect.exit(
     requestFailure(
       request,
       new ReleaseError({ code, message: "Technical failure." }),
@@ -185,89 +185,100 @@ describe("content publication failure mapping", () => {
     });
   });
 
-  it("preserves every operation identity for domain rejection", async () => {
-    for (const publicationRequest of Object.values(requests)) {
-      const exit = await failure(publicationRequest, "CONTENT_RELEASE_STATE");
-      expect(exit).toMatchObject({
-        _tag: "Success",
-        value: {
-          code: "CONTENT_RELEASE_STATE",
-          operation: publicationRequest.operation,
-        },
-      });
-    }
-  });
-
-  it("preserves only contract-supported immutable conflicts", async () => {
-    for (const operation of [
-      "stageItemBatch",
-      "stageRouteBatch",
-      "stageProjectionBatch",
-      "stageArtifactBatch",
-    ] as const) {
-      const exit = await failure(
-        requests[operation],
-        "CONTENT_RELEASE_CONFLICT"
-      );
-      expect(exit).toMatchObject({
-        _tag: "Success",
-        value: { batchIndex: 0, kind: "conflict", operation },
-      });
-    }
-    for (const operation of [
-      "accept",
-      "abort",
-      "stageRelease",
-      "stageRecovery",
-      "stageGroup",
-      "status",
-      "verify",
-      "activate",
-      "activateRecovery",
-      "rollbackPage",
-      "routePage",
-      "cleanup",
-    ] as const) {
-      const exit = await failure(
-        requests[operation],
-        "CONTENT_RELEASE_CONFLICT"
-      );
-      expect(exit).toMatchObject({
-        _tag: "Success",
-        value: { kind: "conflict", operation },
-      });
-    }
-  });
-
-  it("builds stale-base evidence only for its two legal operations", async () => {
-    for (const operation of ["stageRelease", "activate"] as const) {
-      const exit = await failure(
-        requests[operation],
-        "CONTENT_RELEASE_STALE_BASE"
-      );
-      expect(exit).toMatchObject({
-        _tag: "Success",
-        value: { kind: "stale-base", operation },
-      });
-    }
-  });
-
-  it("defects on impossible request and error pairings", async () => {
-    for (const [operation, code] of [
-      ["current", "CONTENT_RELEASE_CONFLICT"],
-      ["headPage", "CONTENT_RELEASE_CONFLICT"],
-      ["recovery", "CONTENT_RELEASE_CONFLICT"],
-      ["rollbackPage", "CONTENT_RELEASE_STALE_BASE"],
-      ["current", "CONTENT_RELEASE_INVALID_REQUEST"],
-      ["current", "CONTENT_RELEASE_UNAUTHORIZED"],
-    ] as const) {
-      const exit = await failure(requests[operation], code);
-      expect(Exit.isFailure(exit)).toBe(true);
-      if (Exit.isFailure(exit)) {
-        expect(Cause.findDefect(exit.cause)).toEqual(
-          Result.succeed(new PublicationFailureDefect({ code, operation }))
+  it.live("preserves every operation identity for domain rejection", () =>
+    Effect.gen(function* () {
+      for (const publicationRequest of Object.values(requests)) {
+        const exit = yield* failure(
+          publicationRequest,
+          "CONTENT_RELEASE_STATE"
         );
+        expect(exit).toMatchObject({
+          _tag: "Success",
+          value: {
+            code: "CONTENT_RELEASE_STATE",
+            operation: publicationRequest.operation,
+          },
+        });
       }
-    }
-  });
+    })
+  );
+
+  it.live("preserves only contract-supported immutable conflicts", () =>
+    Effect.gen(function* () {
+      for (const operation of [
+        "stageItemBatch",
+        "stageRouteBatch",
+        "stageProjectionBatch",
+        "stageArtifactBatch",
+      ] as const) {
+        const exit = yield* failure(
+          requests[operation],
+          "CONTENT_RELEASE_CONFLICT"
+        );
+        expect(exit).toMatchObject({
+          _tag: "Success",
+          value: { batchIndex: 0, kind: "conflict", operation },
+        });
+      }
+      for (const operation of [
+        "accept",
+        "abort",
+        "stageRelease",
+        "stageRecovery",
+        "stageGroup",
+        "status",
+        "verify",
+        "activate",
+        "activateRecovery",
+        "rollbackPage",
+        "routePage",
+        "cleanup",
+      ] as const) {
+        const exit = yield* failure(
+          requests[operation],
+          "CONTENT_RELEASE_CONFLICT"
+        );
+        expect(exit).toMatchObject({
+          _tag: "Success",
+          value: { kind: "conflict", operation },
+        });
+      }
+    })
+  );
+
+  it.live("builds stale-base evidence only for its two legal operations", () =>
+    Effect.gen(function* () {
+      for (const operation of ["stageRelease", "activate"] as const) {
+        const exit = yield* failure(
+          requests[operation],
+          "CONTENT_RELEASE_STALE_BASE"
+        );
+        expect(exit).toMatchObject({
+          _tag: "Success",
+          value: { kind: "stale-base", operation },
+        });
+      }
+    })
+  );
+
+  it.live("defects on impossible request and error pairings", () =>
+    Effect.gen(function* () {
+      for (const [operation, code] of [
+        ["current", "CONTENT_RELEASE_CONFLICT"],
+        ["headPage", "CONTENT_RELEASE_CONFLICT"],
+        ["recovery", "CONTENT_RELEASE_CONFLICT"],
+        ["rollbackPage", "CONTENT_RELEASE_STALE_BASE"],
+        ["current", "CONTENT_RELEASE_INVALID_REQUEST"],
+        ["current", "CONTENT_RELEASE_UNAUTHORIZED"],
+      ] as const) {
+        const exit = yield* failure(requests[operation], code);
+        expect(Exit.isFailure(exit)).toBe(true);
+        if (Exit.isFailure(exit)) {
+          expect(Cause.findDefect(exit.cause)).toEqual(
+            Result.succeed(new PublicationFailureDefect({ code, operation }))
+          );
+        }
+      }
+    })
+  );
 });

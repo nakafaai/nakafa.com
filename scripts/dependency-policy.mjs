@@ -6,6 +6,28 @@ import { parse } from "yaml";
 export const CONTRACT_ARCHIVE =
   "https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.0/nakafa-aksara-contracts-0.15.0.tgz";
 
+export const DEPENDENCY_RELEASE_AGE_MINUTES = 1440;
+
+export const DEPENDENCY_RELEASE_AGE_EXCLUSIONS = [
+  "@ai-sdk/gateway@4.0.60",
+  "@ai-sdk/google@4.0.49",
+  "@ai-sdk/react@4.0.77",
+  "@next/bundle-analyzer@16.3.2",
+  "@next/env@16.3.2",
+  "@next/mdx@16.3.2",
+  "@next/swc-darwin-arm64@16.3.2",
+  "@next/swc-darwin-x64@16.3.2",
+  "@next/swc-linux-arm64-gnu@16.3.2",
+  "@next/swc-linux-arm64-musl@16.3.2",
+  "@next/swc-linux-x64-gnu@16.3.2",
+  "@next/swc-linux-x64-musl@16.3.2",
+  "@next/swc-win32-arm64-msvc@16.3.2",
+  "@next/swc-win32-x64-msvc@16.3.2",
+  "@next/third-parties@16.3.2",
+  "ai@7.0.74",
+  "next@16.3.2",
+];
+
 export const DEPENDENCY_HOLDS = [
   {
     approved: "catalog:",
@@ -37,32 +59,32 @@ export const DEPENDENCY_HOLDS = [
     dependency: "typescript",
     minimumDeclarations: 1,
   },
-  { approved: "16.3.1", dependency: "next", minimumDeclarations: 1 },
+  { approved: "16.3.2", dependency: "next", minimumDeclarations: 1 },
   {
-    approved: "16.3.1",
+    approved: "16.3.2",
     dependency: "@next/bundle-analyzer",
     minimumDeclarations: 1,
   },
-  { approved: "16.3.1", dependency: "@next/mdx", minimumDeclarations: 1 },
+  { approved: "16.3.2", dependency: "@next/mdx", minimumDeclarations: 1 },
   {
-    approved: "16.3.1",
+    approved: "16.3.2",
     dependency: "@next/third-parties",
     minimumDeclarations: 1,
   },
   { approved: "1.44.0", dependency: "convex", minimumDeclarations: 1 },
-  { approved: "7.0.70", dependency: "ai", minimumDeclarations: 1 },
+  { approved: "7.0.74", dependency: "ai", minimumDeclarations: 1 },
   {
-    approved: "4.0.73",
+    approved: "4.0.77",
     dependency: "@ai-sdk/react",
     minimumDeclarations: 1,
   },
   {
-    approved: "4.0.47",
+    approved: "4.0.49",
     dependency: "@ai-sdk/google",
     minimumDeclarations: 1,
   },
   {
-    approved: "4.0.56",
+    approved: "4.0.60",
     dependency: "@ai-sdk/gateway",
     minimumDeclarations: 1,
   },
@@ -97,7 +119,7 @@ export const DEPENDENCY_HOLDS = [
     dependency: "@types/node",
     minimumDeclarations: 1,
   },
-  { approved: "7.10.5", dependency: "ultracite", minimumDeclarations: 1 },
+  { approved: "7.10.6", dependency: "ultracite", minimumDeclarations: 1 },
   { approved: "2.10.11", dependency: "turbo", minimumDeclarations: 1 },
   {
     approved: "2.10.11",
@@ -125,22 +147,26 @@ export const REGISTRY_REVIEWS = [
     "6.0.2",
     "Programmatic consumers still require the TypeScript 6 API.",
   ],
-  ["next@latest", "16.3.1", "The retained patch is rebased for this release."],
+  [
+    "next@latest",
+    "16.3.2",
+    "Stable 16.3.2 contains the reviewed catch-all cache-key backport.",
+  ],
   ["convex@latest", "1.44.0", "Convex acceptance uses an isolated deployment."],
-  ["ai@latest", "7.0.70", "AI SDK packages move as one reviewed cohort."],
+  ["ai@latest", "7.0.74", "AI SDK packages move as one reviewed cohort."],
   [
     "@ai-sdk/react@latest",
-    "4.0.73",
+    "4.0.77",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "@ai-sdk/google@latest",
-    "4.0.47",
+    "4.0.49",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "@ai-sdk/gateway@latest",
-    "4.0.56",
+    "4.0.60",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
@@ -159,15 +185,24 @@ export const REGISTRY_REVIEWS = [
     "The adapter defines the accepted Better Auth peer range.",
   ],
   ["@biomejs/biome@latest", "2.5.9", "Formatting is reviewed with Ultracite."],
-  [
-    "ultracite@latest",
-    "7.10.6",
-    "The approved migration target remains 7.10.5 for this pull request.",
-  ],
+  ["ultracite@latest", "7.10.6", "Formatting is reviewed with Biome."],
   ["@types/node@24", "24.13.3", "Declarations remain on the Node 24 line."],
   ["node@24", "24.19.0", "The repository supports the Node 24 runtime line."],
   ["pnpm@latest", "11.22.0", "pnpm owns workspace and lockfile semantics."],
+  [
+    "react-doctor@latest",
+    "0.9.12",
+    "The local and CI scanners move as one reviewed cohort.",
+  ],
   ["turbo@latest", "2.10.11", "Turbo and its generator move together."],
+];
+
+export const SCRIPT_DEPENDENCY_HOLDS = [
+  {
+    approved: "pnpm dlx react-doctor@0.9.12",
+    manifestPath: "apps/www/package.json",
+    script: "doctor",
+  },
 ];
 
 export const FORBIDDEN_EFFECT_DEPENDENCIES = new Set([
@@ -257,6 +292,18 @@ export function validateDependencyPolicy({
     }
   }
 
+  for (const hold of SCRIPT_DEPENDENCY_HOLDS) {
+    const manifest = manifests.find(
+      ({ path: manifestPath }) => manifestPath === hold.manifestPath
+    )?.manifest;
+    const actual = manifest?.scripts?.[hold.script];
+    if (actual !== hold.approved) {
+      problems.push(
+        `${hold.manifestPath} script ${hold.script} is ${String(actual ?? "missing")}; approved ${hold.approved}.`
+      );
+    }
+  }
+
   const expectedIgnores = [
     ...new Set([
       ...DEPENDENCY_HOLDS.map(({ dependency }) => dependency),
@@ -290,6 +337,21 @@ export function validateDependencyPolicy({
   }
   if (rootManifest.devEngines?.runtime?.version !== "24.19.0") {
     problems.push("The managed Node runtime must be 24.19.0.");
+  }
+  if (workspace.minimumReleaseAge !== DEPENDENCY_RELEASE_AGE_MINUTES) {
+    problems.push("Dependency releases must mature for exactly 1440 minutes.");
+  }
+  if (workspace.minimumReleaseAgeStrict !== true) {
+    problems.push("Dependency release-age enforcement must remain strict.");
+  }
+  const expectedExclusions = [...DEPENDENCY_RELEASE_AGE_EXCLUSIONS].sort();
+  const actualExclusions = [
+    ...(workspace.minimumReleaseAgeExclude ?? []),
+  ].sort();
+  if (JSON.stringify(actualExclusions) !== JSON.stringify(expectedExclusions)) {
+    problems.push(
+      "pnpm minimumReleaseAgeExclude does not match the reviewed exception policy."
+    );
   }
 
   return problems;

@@ -29,8 +29,15 @@ import {
   testSignedRelease,
 } from "@repo/backend/test/content-proof";
 import { testPublicationScope } from "@repo/backend/test/content-release";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@repo/testing/effect";
 import { Effect } from "effect";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const endpoint =
   "https://example.convex.site/internal/content/runtime/protected";
@@ -124,59 +131,53 @@ afterEach(() => {
 });
 
 describe("protected content runtime client", () => {
-  it("posts and verifies one retained-snapshot batch", async () => {
-    fetchMock.mockResolvedValue(createResponse(found, 200, false));
+  it.live("posts and verifies one retained-snapshot batch", () =>
+    Effect.gen(function* () {
+      fetchMock.mockResolvedValue(createResponse(found, 200, false));
 
-    await expect(
-      Effect.runPromise(
-        readProtectedContent(target, request, TEST_PROOF_RENDERER)
-      )
-    ).resolves.toMatchObject({ items: [{ delivery: "authenticated" }] });
-    expect(fetchMock).toHaveBeenCalledOnce();
-    const call = fetchMock.mock.calls.at(0);
-    if (!call || typeof call[1]?.body !== "string") {
-      throw new Error("Expected one JSON protected runtime request.");
-    }
-    expect(call[0]).toBe(endpoint);
-    expect(JSON.parse(call[1].body)).toEqual(request);
-    expect(verifyProtectedContentRuntimeExchange).toHaveBeenCalledOnce();
-  });
+      expect(
+        yield* readProtectedContent(target, request, TEST_PROOF_RENDERER)
+      ).toMatchObject({ items: [{ delivery: "authenticated" }] });
+      expect(fetchMock).toHaveBeenCalledOnce();
+      const call = fetchMock.mock.calls.at(0);
+      if (!call || typeof call[1]?.body !== "string") {
+        throw new Error("Expected one JSON protected runtime request.");
+      }
+      expect(call[0]).toBe(endpoint);
+      expect(JSON.parse(call[1].body)).toEqual(request);
+      expect(verifyProtectedContentRuntimeExchange).toHaveBeenCalledOnce();
+    })
+  );
 
-  it("returns a typed absence bound to the complete batch request", async () => {
-    fetchMock.mockResolvedValue(createResponse({ kind: "missing" }, 404));
+  it.live("returns a typed absence bound to the complete batch request", () =>
+    Effect.gen(function* () {
+      fetchMock.mockResolvedValue(createResponse({ kind: "missing" }, 404));
 
-    await expect(
-      Effect.runPromise(
-        readProtectedContent(target, request, TEST_PROOF_RENDERER).pipe(
+      expect(
+        yield* readProtectedContent(target, request, TEST_PROOF_RENDERER).pipe(
           Effect.flip
         )
-      )
-    ).resolves.toEqual(new ContentRuntimeMissingError({ request }));
-  });
+      ).toEqual(new ContentRuntimeMissingError({ request }));
+    })
+  );
 
-  it("classifies valid JSON outside the protected response contract", async () => {
-    fetchMock
-      .mockResolvedValueOnce(createResponse({ unexpected: true }, 200, false))
-      .mockResolvedValueOnce(createResponse({ unexpected: true }, 200));
+  it.live("classifies valid JSON outside the protected response contract", () =>
+    Effect.gen(function* () {
+      fetchMock
+        .mockResolvedValueOnce(createResponse({ unexpected: true }, 200, false))
+        .mockResolvedValueOnce(createResponse({ unexpected: true }, 200));
 
-    await expect(
-      Effect.runPromise(
-        readProtectedContent(target, request, TEST_PROOF_RENDERER).pipe(
+      expect(
+        yield* readProtectedContent(target, request, TEST_PROOF_RENDERER).pipe(
           Effect.flip
         )
-      )
-    ).resolves.toEqual(
-      new ContentTransportError({ reason: "response-unmarked" })
-    );
-    await expect(
-      Effect.runPromise(
-        readProtectedContent(target, request, TEST_PROOF_RENDERER).pipe(
+      ).toEqual(new ContentTransportError({ reason: "response-unmarked" }));
+      expect(
+        yield* readProtectedContent(target, request, TEST_PROOF_RENDERER).pipe(
           Effect.flip
         )
-      )
-    ).resolves.toEqual(
-      new ContentTransportError({ reason: "response-contract" })
-    );
-    expect(verifyProtectedContentRuntimeExchange).not.toHaveBeenCalled();
-  });
+      ).toEqual(new ContentTransportError({ reason: "response-contract" }));
+      expect(verifyProtectedContentRuntimeExchange).not.toHaveBeenCalled();
+    })
+  );
 });

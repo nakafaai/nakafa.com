@@ -3,8 +3,9 @@ import {
   readNakafaReleasePin,
   verifyNakafaReleasePin,
 } from "@repo/backend/client/nakafa/release";
+import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const queryMock = vi.hoisted(() => vi.fn());
 
@@ -23,47 +24,54 @@ describe("Nakafa release pin", () => {
     queryMock.mockReset();
   });
 
-  it("reads the complete active publication identity", async () => {
-    queryMock.mockReturnValue(Effect.succeed(ACTIVE_RELEASE));
+  it.live("reads the complete active publication identity", () =>
+    Effect.gen(function* () {
+      queryMock.mockReturnValue(Effect.succeed(ACTIVE_RELEASE));
 
-    await expect(
-      Effect.runPromise(readNakafaReleasePin("https://example.convex.cloud"))
-    ).resolves.toEqual(ACTIVE_RELEASE);
-    expect(readNakafaRuntimeQuery).toHaveBeenCalledWith(
-      "https://example.convex.cloud",
-      expect.anything(),
-      {}
-    );
-  });
+      expect(
+        yield* readNakafaReleasePin("https://example.convex.cloud")
+      ).toEqual(ACTIVE_RELEASE);
+      expect(readNakafaRuntimeQuery).toHaveBeenCalledWith(
+        "https://example.convex.cloud",
+        expect.anything(),
+        {}
+      );
+    })
+  );
 
-  it("rejects a malformed active publication identity", async () => {
-    queryMock.mockReturnValue(
-      Effect.succeed({ ...ACTIVE_RELEASE, manifestHash: "not-a-hash" })
-    );
+  it.live("rejects a malformed active publication identity", () =>
+    Effect.gen(function* () {
+      queryMock.mockReturnValue(
+        Effect.succeed({ ...ACTIVE_RELEASE, manifestHash: "not-a-hash" })
+      );
 
-    await expect(
-      Effect.runPromise(
-        readNakafaReleasePin("https://example.convex.cloud").pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({
-      _tag: "NakafaAgentDataReadError",
-      message: "Unable to decode the active Nakafa content release.",
-    });
-  });
-
-  it("accepts stable active and empty publication identities", async () => {
-    for (const identity of [ACTIVE_RELEASE, null]) {
-      queryMock.mockReturnValue(Effect.succeed(identity));
-
-      await expect(
-        Effect.runPromise(
-          verifyNakafaReleasePin("https://example.convex.cloud", identity)
+      expect(
+        yield* readNakafaReleasePin("https://example.convex.cloud").pipe(
+          Effect.flip
         )
-      ).resolves.toEqual(identity);
-    }
-  });
+      ).toMatchObject({
+        _tag: "NakafaAgentDataReadError",
+        message: "Unable to decode the active Nakafa content release.",
+      });
+    })
+  );
 
-  it.each([
+  it.live("accepts stable active and empty publication identities", () =>
+    Effect.gen(function* () {
+      for (const identity of [ACTIVE_RELEASE, null]) {
+        queryMock.mockReturnValue(Effect.succeed(identity));
+
+        expect(
+          yield* verifyNakafaReleasePin(
+            "https://example.convex.cloud",
+            identity
+          )
+        ).toEqual(identity);
+      }
+    })
+  );
+
+  it.live.each([
     [
       "manifest hash",
       {
@@ -77,36 +85,37 @@ describe("Nakafa release pin", () => {
     ],
     ["sequence", { ...ACTIVE_RELEASE, sequence: 26 }],
     ["missing publication", null],
-  ])("rejects a changed %s", async (_label, actual) => {
-    queryMock.mockReturnValue(Effect.succeed(actual));
+  ])("rejects a changed %s", ([_label, actual]) =>
+    Effect.gen(function* () {
+      queryMock.mockReturnValue(Effect.succeed(actual));
 
-    await expect(
-      Effect.runPromise(
-        verifyNakafaReleasePin(
+      expect(
+        yield* verifyNakafaReleasePin(
           "https://example.convex.cloud",
           ACTIVE_RELEASE
         ).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({
-      _tag: "NakafaAgentDataReadError",
-      message: "Unable to complete one release-pinned Nakafa content read.",
-    });
-  });
+      ).toMatchObject({
+        _tag: "NakafaAgentDataReadError",
+        message: "Unable to complete one release-pinned Nakafa content read.",
+      });
+    })
+  );
 
-  it("rejects activation from an empty publication", async () => {
-    queryMock.mockReturnValue(Effect.succeed(ACTIVE_RELEASE));
+  it.live("rejects activation from an empty publication", () =>
+    Effect.gen(function* () {
+      queryMock.mockReturnValue(Effect.succeed(ACTIVE_RELEASE));
 
-    await expect(
-      Effect.runPromise(
-        verifyNakafaReleasePin("https://example.convex.cloud", null).pipe(
-          Effect.flip
-        )
-      )
-    ).resolves.toMatchObject({
-      _tag: "NakafaAgentDataReadError",
-      message: "Unable to complete one release-pinned Nakafa content read.",
-    });
-  });
+      expect(
+        yield* verifyNakafaReleasePin(
+          "https://example.convex.cloud",
+          null
+        ).pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "NakafaAgentDataReadError",
+        message: "Unable to complete one release-pinned Nakafa content read.",
+      });
+    })
+  );
 });
 
 import {

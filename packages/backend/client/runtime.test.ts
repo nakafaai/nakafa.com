@@ -5,12 +5,12 @@ import {
   readConvexRuntimeQuery,
 } from "@repo/backend/client/runtime";
 import { api } from "@repo/backend/convex/_generated/api";
-import { describe, expect, it } from "@repo/testing/effect";
+import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import type { FunctionArgs } from "convex/server";
 import { ConvexError } from "convex/values";
 import { Duration, Effect, Fiber } from "effect";
 import { TestClock } from "effect/testing";
-import { afterEach, vi } from "vitest";
+import { vi } from "vitest";
 
 const clientState = vi.hoisted(() => {
   const constructorFailure: { error: Error | undefined } = {
@@ -133,22 +133,24 @@ describe("Convex runtime query", () => {
     });
   });
 
-  it("does not retry Convex function failures", async () => {
-    clientState.query.mockRejectedValueOnce(new ConvexError("public failure"));
+  it.live("does not retry Convex function failures", () =>
+    Effect.gen(function* () {
+      clientState.query.mockRejectedValueOnce(
+        new ConvexError("public failure")
+      );
 
-    await expect(
-      Effect.runPromise(
-        readConvexRuntimeQuery(runtimeUrl, query, args).pipe(Effect.flip)
-      )
-    ).resolves.toEqual(
-      new ConvexRuntimeQueryError({
-        networkCodes: [],
-        query: queryName,
-        reason: "query",
-      })
-    );
-    expect(clientState.query).toHaveBeenCalledOnce();
-  });
+      expect(
+        yield* readConvexRuntimeQuery(runtimeUrl, query, args).pipe(Effect.flip)
+      ).toEqual(
+        new ConvexRuntimeQueryError({
+          networkCodes: [],
+          query: queryName,
+          reason: "query",
+        })
+      );
+      expect(clientState.query).toHaveBeenCalledOnce();
+    })
+  );
 
   it.effect("preserves sanitized codes after retry exhaustion", () => {
     const fetchMock = vi
@@ -175,60 +177,70 @@ describe("Convex runtime query", () => {
     });
   });
 
-  it("does not retry unclassified or timeout fetch failures", async () => {
-    const fetchMock = vi
-      .fn<typeof fetch>()
-      .mockRejectedValue(createFetchFailure("UND_ERR_CONNECT_TIMEOUT"));
-    vi.stubGlobal("fetch", fetchMock);
-    queryThroughFetch();
+  it.live("does not retry unclassified or timeout fetch failures", () =>
+    Effect.gen(function* () {
+      const fetchMock = vi
+        .fn<typeof fetch>()
+        .mockRejectedValue(createFetchFailure("UND_ERR_CONNECT_TIMEOUT"));
+      vi.stubGlobal("fetch", fetchMock);
+      queryThroughFetch();
 
-    await expect(
-      Effect.runPromise(
-        readConvexRuntimeQuery(runtimeUrl, query, args).pipe(Effect.flip)
-      )
-    ).resolves.toEqual(
-      new ConvexRuntimeQueryError({
-        networkCodes: [],
-        query: queryName,
-        reason: "transport",
+      expect(
+        yield* readConvexRuntimeQuery(runtimeUrl, query, args).pipe(Effect.flip)
+      ).toEqual(
+        new ConvexRuntimeQueryError({
+          networkCodes: [],
+          query: queryName,
+          reason: "transport",
+        })
+      );
+      expect(clientState.query).toHaveBeenCalledOnce();
+    })
+  );
+
+  it.live("sanitizes non-Convex query failures", () =>
+    Effect.gen(function* () {
+      clientState.query.mockRejectedValueOnce(
+        new Error("private client detail")
+      );
+
+      const result = yield* readConvexRuntimeQuery(
+        runtimeUrl,
+        query,
+        args
+      ).pipe(Effect.flip);
+
+      expect(result).toEqual(
+        new ConvexRuntimeQueryError({
+          networkCodes: [],
+          query: queryName,
+          reason: "query",
+        })
+      );
+      expect(JSON.stringify(result)).not.toContain("private client detail");
+    })
+  );
+
+  it.live(
+    "converts synchronous client construction failures to typed errors",
+    () =>
+      Effect.gen(function* () {
+        clientState.constructorFailure.error = new Error(
+          "private constructor detail"
+        );
+
+        expect(
+          yield* readConvexRuntimeQuery(runtimeUrl, query, args).pipe(
+            Effect.flip
+          )
+        ).toEqual(
+          new ConvexRuntimeQueryError({
+            networkCodes: [],
+            query: queryName,
+            reason: "client",
+          })
+        );
+        expect(clientState.query).not.toHaveBeenCalled();
       })
-    );
-    expect(clientState.query).toHaveBeenCalledOnce();
-  });
-
-  it("sanitizes non-Convex query failures", async () => {
-    clientState.query.mockRejectedValueOnce(new Error("private client detail"));
-
-    const result = Effect.runPromise(
-      readConvexRuntimeQuery(runtimeUrl, query, args).pipe(Effect.flip)
-    );
-
-    await expect(result).resolves.toEqual(
-      new ConvexRuntimeQueryError({
-        networkCodes: [],
-        query: queryName,
-        reason: "query",
-      })
-    );
-    expect(JSON.stringify(await result)).not.toContain("private client detail");
-  });
-
-  it("converts synchronous client construction failures to typed errors", async () => {
-    clientState.constructorFailure.error = new Error(
-      "private constructor detail"
-    );
-
-    await expect(
-      Effect.runPromise(
-        readConvexRuntimeQuery(runtimeUrl, query, args).pipe(Effect.flip)
-      )
-    ).resolves.toEqual(
-      new ConvexRuntimeQueryError({
-        networkCodes: [],
-        query: queryName,
-        reason: "client",
-      })
-    );
-    expect(clientState.query).not.toHaveBeenCalled();
-  });
+  );
 });

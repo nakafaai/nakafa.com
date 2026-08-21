@@ -20,8 +20,15 @@ import {
   RETAINED_RUNTIME_RELEASE,
   retainedRuntimeFound,
 } from "@repo/backend/test/retained-runtime";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@repo/testing/effect";
 import { Effect, Schema } from "effect";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const endpoint = `https://example.convex.site${RETAINED_PROTECTED_CONTENT_RUNTIME_PATH}`;
 const target = {
@@ -77,92 +84,86 @@ afterEach(() => {
 });
 
 describe("retained protected content runtime client", () => {
-  it("posts and authenticates one fixed historical wire exchange", async () => {
-    const found = retainedRuntimeFound(request.attemptId);
-    fetchMock.mockResolvedValue(createResponse(found, 200, false));
+  it.live("posts and authenticates one fixed historical wire exchange", () =>
+    Effect.gen(function* () {
+      const found = retainedRuntimeFound(request.attemptId);
+      fetchMock.mockResolvedValue(createResponse(found, 200, false));
 
-    await expect(
-      Effect.runPromise(
-        readRetainedProtectedContent(
+      expect(
+        yield* readRetainedProtectedContent(
           target,
           request,
           RETAINED_RUNTIME_LIVE_RENDERER
         )
-      )
-    ).resolves.toEqual(found);
-    const call = fetchMock.mock.calls.at(0);
-    if (!call || typeof call[1]?.body !== "string") {
-      throw new Error("Expected one retained runtime JSON request.");
-    }
-    expect(call[0]).toBe(endpoint);
-    expect(JSON.parse(call[1].body)).toEqual(request);
-  });
+      ).toEqual(found);
+      const call = fetchMock.mock.calls.at(0);
+      if (!call || typeof call[1]?.body !== "string") {
+        throw new Error("Expected one retained runtime JSON request.");
+      }
+      expect(call[0]).toBe(endpoint);
+      expect(JSON.parse(call[1].body)).toEqual(request);
+    })
+  );
 
-  it("returns typed attempt-bound absence", async () => {
-    fetchMock.mockResolvedValue(
-      createResponse(
-        {
-          appLocale: request.appLocale,
-          attemptId: request.attemptId,
-          kind: "missing",
-        },
-        404
-      )
-    );
+  it.live("returns typed attempt-bound absence", () =>
+    Effect.gen(function* () {
+      fetchMock.mockResolvedValue(
+        createResponse(
+          {
+            appLocale: request.appLocale,
+            attemptId: request.attemptId,
+            kind: "missing",
+          },
+          404
+        )
+      );
 
-    await expect(
-      Effect.runPromise(
-        readRetainedProtectedContent(
+      expect(
+        yield* readRetainedProtectedContent(
           target,
           request,
           RETAINED_RUNTIME_LIVE_RENDERER
         ).pipe(Effect.flip)
-      )
-    ).resolves.toEqual(new RetainedContentRuntimeMissingError({ request }));
-  });
+      ).toEqual(new RetainedContentRuntimeMissingError({ request }));
+    })
+  );
 
-  it("rejects cross-attempt replay before exposing historical bytes", async () => {
-    fetchMock.mockResolvedValue(
-      createResponse(retainedRuntimeFound("another-attempt"), 200)
-    );
+  it.live("rejects cross-attempt replay before exposing historical bytes", () =>
+    Effect.gen(function* () {
+      fetchMock.mockResolvedValue(
+        createResponse(retainedRuntimeFound("another-attempt"), 200)
+      );
 
-    await expect(
-      Effect.runPromise(
-        readRetainedProtectedContent(
+      expect(
+        yield* readRetainedProtectedContent(
           target,
           request,
           RETAINED_RUNTIME_LIVE_RENDERER
         ).pipe(Effect.flip)
-      )
-    ).resolves.toBeInstanceOf(ContentRuntimeVerificationError);
-  });
+      ).toBeInstanceOf(ContentRuntimeVerificationError);
+    })
+  );
 
-  it("rejects unmarked or out-of-contract history responses", async () => {
-    fetchMock
-      .mockResolvedValueOnce(createResponse({ unexpected: true }, 200, false))
-      .mockResolvedValueOnce(createResponse({ unexpected: true }, 200));
+  it.live("rejects unmarked or out-of-contract history responses", () =>
+    Effect.gen(function* () {
+      fetchMock
+        .mockResolvedValueOnce(createResponse({ unexpected: true }, 200, false))
+        .mockResolvedValueOnce(createResponse({ unexpected: true }, 200));
 
-    await expect(
-      Effect.runPromise(
-        readRetainedProtectedContent(
+      expect(
+        yield* readRetainedProtectedContent(
           target,
           request,
           RETAINED_RUNTIME_LIVE_RENDERER
         ).pipe(Effect.flip)
-      )
-    ).resolves.toEqual(
-      new ContentTransportError({ reason: "response-unmarked" })
-    );
-    await expect(
-      Effect.runPromise(
-        readRetainedProtectedContent(
+      ).toEqual(new ContentTransportError({ reason: "response-unmarked" }));
+      expect(
+        yield* readRetainedProtectedContent(
           target,
           request,
           RETAINED_RUNTIME_LIVE_RENDERER
         ).pipe(Effect.flip)
-      )
-    ).resolves.toEqual(
-      new ContentTransportError({ reason: "response-contract" })
-    );
-  });
+      ).toEqual(new ContentTransportError({ reason: "response-contract" }));
+    })
+  );
 });

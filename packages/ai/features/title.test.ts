@@ -2,8 +2,9 @@ import { ModelIdSchema } from "@repo/ai/config/model";
 import { DEFAULT_TITLE, MAX_TITLE_LENGTH } from "@repo/ai/features/constants";
 import { generateTitle } from "@repo/ai/features/title";
 import type { MyUIMessage } from "@repo/ai/types/message";
+import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const generateText = vi.hoisted(() => vi.fn());
 const modelId = ModelIdSchema.make("nakafa-lite");
@@ -28,13 +29,13 @@ afterEach(() => {
 });
 
 describe("generateTitle", () => {
-  it("summarizes the first user message without assistant internals", async () => {
-    generateText.mockResolvedValue({
-      text: "Latihan Matriks Eigen",
-    });
+  it.live("summarizes the first user message without assistant internals", () =>
+    Effect.gen(function* () {
+      generateText.mockResolvedValue({
+        text: "Latihan Matriks Eigen",
+      });
 
-    await Effect.runPromise(
-      generateTitle({
+      yield* generateTitle({
         messages: [
           {
             id: "user-1",
@@ -59,28 +60,28 @@ describe("generateTitle", () => {
             role: "assistant",
           },
         ] satisfies MyUIMessage[],
-      })
-    );
+      });
 
-    expect(generateText).toHaveBeenCalledWith(
-      expect.objectContaining({
-        prompt: "Cek apakah matriks ini bisa didiagonalkan.",
-      })
-    );
-    expect(generateText).not.toHaveBeenCalledWith(
-      expect.objectContaining({
-        prompt: expect.stringContaining("Internal reasoning"),
-      })
-    );
-  });
+      expect(generateText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          prompt: "Cek apakah matriks ini bisa didiagonalkan.",
+        })
+      );
+      expect(generateText).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          prompt: expect.stringContaining("Internal reasoning"),
+        })
+      );
+    })
+  );
 
-  it("removes surrounding title quotes", async () => {
-    generateText.mockResolvedValue({
-      text: '"Belajar Fungsi Kuadrat"',
-    });
+  it.live("removes surrounding title quotes", () =>
+    Effect.gen(function* () {
+      generateText.mockResolvedValue({
+        text: '"Belajar Fungsi Kuadrat"',
+      });
 
-    const title = await Effect.runPromise(
-      generateTitle({
+      const title = yield* generateTitle({
         messages: [
           {
             id: "user-1",
@@ -94,19 +95,19 @@ describe("generateTitle", () => {
             role: "user",
           },
         ] satisfies MyUIMessage[],
-      })
-    );
+      });
 
-    expect(title).toBe("Belajar Fungsi Kuadrat");
-  });
+      expect(title).toBe("Belajar Fungsi Kuadrat");
+    })
+  );
 
-  it("truncates long generated titles", async () => {
-    generateText.mockResolvedValue({
-      text: "Analisis Persamaan Diferensial Linear Orde Dua Homogen dengan Koefisien Variabel dan Kondisi Awal",
-    });
+  it.live("truncates long generated titles", () =>
+    Effect.gen(function* () {
+      generateText.mockResolvedValue({
+        text: "Analisis Persamaan Diferensial Linear Orde Dua Homogen dengan Koefisien Variabel dan Kondisi Awal",
+      });
 
-    const title = await Effect.runPromise(
-      generateTitle({
+      const title = yield* generateTitle({
         messages: [
           {
             id: "user-1",
@@ -120,18 +121,18 @@ describe("generateTitle", () => {
             role: "user",
           },
         ] satisfies MyUIMessage[],
-      })
-    );
+      });
 
-    expect(title).toHaveLength(MAX_TITLE_LENGTH);
-    expect(title.endsWith("...")).toBe(true);
-  });
+      expect(title).toHaveLength(MAX_TITLE_LENGTH);
+      expect(title.endsWith("...")).toBe(true);
+    })
+  );
 
-  it("falls back when generation fails", async () => {
-    generateText.mockRejectedValue(new Error("model unavailable"));
+  it.live("falls back when generation fails", () =>
+    Effect.gen(function* () {
+      generateText.mockRejectedValue(new Error("model unavailable"));
 
-    const title = await Effect.runPromise(
-      generateTitle({
+      const title = yield* generateTitle({
         messages: [
           {
             id: "user-1",
@@ -145,19 +146,19 @@ describe("generateTitle", () => {
             role: "user",
           },
         ] satisfies MyUIMessage[],
-      })
-    );
+      });
 
-    expect(title).toBe(DEFAULT_TITLE);
-  });
+      expect(title).toBe(DEFAULT_TITLE);
+    })
+  );
 
-  it("uses an empty title prompt when no user text exists", async () => {
-    generateText.mockResolvedValue({
-      text: "Obrolan Baru",
-    });
+  it.live("uses an empty title prompt when no user text exists", () =>
+    Effect.gen(function* () {
+      generateText.mockResolvedValue({
+        text: "Obrolan Baru",
+      });
 
-    await Effect.runPromise(
-      generateTitle({
+      yield* generateTitle({
         messages: [
           {
             id: "assistant-1",
@@ -171,23 +172,23 @@ describe("generateTitle", () => {
             role: "assistant",
           },
         ] satisfies MyUIMessage[],
-      })
-    );
+      });
 
-    expect(generateText).toHaveBeenCalledWith(
-      expect.objectContaining({
-        prompt: "",
-      })
-    );
-  });
+      expect(generateText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          prompt: "",
+        })
+      );
+    })
+  );
 
-  it("ignores non-text user parts when building the title prompt", async () => {
-    generateText.mockResolvedValue({
-      text: "Latihan Kombinatorika",
-    });
+  it.live("ignores non-text user parts when building the title prompt", () =>
+    Effect.gen(function* () {
+      generateText.mockResolvedValue({
+        text: "Latihan Kombinatorika",
+      });
 
-    await Effect.runPromise(
-      generateTitle({
+      yield* generateTitle({
         messages: [
           {
             id: "user-1",
@@ -206,13 +207,13 @@ describe("generateTitle", () => {
             role: "user",
           },
         ] satisfies MyUIMessage[],
-      })
-    );
+      });
 
-    expect(generateText).toHaveBeenCalledWith(
-      expect.objectContaining({
-        prompt: "Bantu cek kombinatorika ini.",
-      })
-    );
-  });
+      expect(generateText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          prompt: "Bantu cek kombinatorika ini.",
+        })
+      );
+    })
+  );
 });

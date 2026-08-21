@@ -1,9 +1,9 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { decodePublishedQuranView } from "@repo/backend/client/quran/view";
 import type { api } from "@repo/backend/convex/_generated/api";
+import { describe, expect, it } from "@repo/testing/effect";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 const source = {
   activeManifestHash: `sha256:${"a".repeat(64)}`,
@@ -22,34 +22,35 @@ const surah = {
 };
 type QuranViewResult = FunctionReturnType<typeof api.contentRelease.quran.view>;
 describe("signed Quran view decoder", () => {
-  it("preserves each validator-derived app-locale projection", async () => {
-    const english = await Effect.runPromise(
-      decodePublishedQuranView(englishViewResult(), {
+  it.live("preserves each validator-derived app-locale projection", () =>
+    Effect.gen(function* () {
+      const english = yield* decodePublishedQuranView(englishViewResult(), {
         appLocale: "en",
         surahNumber: 1,
-      })
-    );
-    const indonesian = await Effect.runPromise(
-      decodePublishedQuranView(indonesianViewResult(), {
-        appLocale: "id",
-        surahNumber: 1,
-      })
-    );
-    expect(english.verses[0]).toEqual({
-      arabic: "بِسْمِ اللّٰهِ",
-      number: { inQuran: 1, inSurah: 1 },
-      translation: "In the name of Allah.",
-    });
-    expect(indonesian.verses[0]).toEqual({
-      arabic: "بِسْمِ اللّٰهِ",
-      number: { inQuran: 1, inSurah: 1 },
-      translation: "Dengan nama Allah.",
-    });
-    expect(JSON.stringify(indonesian)).not.toContain("Tafsir lengkap");
-  });
-  it("fails closed for inactive and inconsistent views", async () => {
-    const inactive = await Effect.runPromise(
-      Effect.result(
+      });
+      const indonesian = yield* decodePublishedQuranView(
+        indonesianViewResult(),
+        {
+          appLocale: "id",
+          surahNumber: 1,
+        }
+      );
+      expect(english.verses[0]).toEqual({
+        arabic: "بِسْمِ اللّٰهِ",
+        number: { inQuran: 1, inSurah: 1 },
+        translation: "In the name of Allah.",
+      });
+      expect(indonesian.verses[0]).toEqual({
+        arabic: "بِسْمِ اللّٰهِ",
+        number: { inQuran: 1, inSurah: 1 },
+        translation: "Dengan nama Allah.",
+      });
+      expect(JSON.stringify(indonesian)).not.toContain("Tafsir lengkap");
+    })
+  );
+  it.live("fails closed for inactive and inconsistent views", () =>
+    Effect.gen(function* () {
+      const inactive = yield* Effect.result(
         decodePublishedQuranView(
           {
             activeManifestHash: null,
@@ -65,19 +66,17 @@ describe("signed Quran view decoder", () => {
           },
           { appLocale: "en", surahNumber: 1 }
         )
-      )
-    );
-    const inconsistent = await Effect.runPromise(
-      Effect.result(
+      );
+      const inconsistent = yield* Effect.result(
         decodePublishedQuranView(englishViewResult(), {
           appLocale: "en",
           surahNumber: 2,
         })
-      )
-    );
-    expect(inactive._tag).toBe("Failure");
-    expect(inconsistent._tag).toBe("Failure");
-  });
+      );
+      expect(inactive._tag).toBe("Failure");
+      expect(inconsistent._tag).toBe("Failure");
+    })
+  );
 });
 /** Builds source and metadata shared by app-locale view fixtures. */
 function viewBase() {

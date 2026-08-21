@@ -3,8 +3,9 @@ import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/convex/au
 import { createDeletedUserTombstone } from "@repo/backend/convex/auth/deletion/tombstone";
 import { drainDeletedUserVerificationsProgram } from "@repo/backend/convex/auth/deletion/verification";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, Result, Schema } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 28, 21, 0, 0);
 const decodeVerificationPage = Schema.decodeUnknownSync(
@@ -17,54 +18,58 @@ const decodeVerificationPage = Schema.decodeUnknownSync(
   })
 );
 describe("auth/deletion/verification", () => {
-  it("resumes from the last committed verification page after an action retry", async () => {
-    let durableCursor: string | null = null;
-    let interruptNextPage = true;
-    const deletePage = vi.fn((cursor: string | null) => {
-      if (cursor === null) {
-        return Promise.resolve({
-          continueCursor: "verification-cursor-1",
-          isDone: false,
+  it.live(
+    "resumes from the last committed verification page after an action retry",
+    () =>
+      Effect.gen(function* () {
+        let durableCursor: string | null = null;
+        let interruptNextPage = true;
+        const deletePage = vi.fn((cursor: string | null) => {
+          if (cursor === null) {
+            return Promise.resolve({
+              continueCursor: "verification-cursor-1",
+              isDone: false,
+            });
+          }
+          if (interruptNextPage) {
+            interruptNextPage = false;
+            return Promise.reject(new Error("action interrupted"));
+          }
+          return Promise.resolve({
+            continueCursor: "verification-cursor-2",
+            isDone: true,
+          });
         });
-      }
-      if (interruptNextPage) {
-        interruptNextPage = false;
-        return Promise.reject(new Error("action interrupted"));
-      }
-      return Promise.resolve({
-        continueCursor: "verification-cursor-2",
-        isDone: true,
-      });
-    });
-    const operations = {
-      deletePage,
-      loadCursor: vi.fn(() => Promise.resolve(durableCursor)),
-      saveCursor: vi.fn((cursor: string | null) => {
-        durableCursor = cursor;
-        return Promise.resolve();
-      }),
-    };
-    const interrupted = await Effect.runPromise(
-      drainDeletedUserVerificationsProgram(operations).pipe(Effect.result)
-    );
-    expect(Result.isFailure(interrupted)).toBe(true);
-    if (Result.isSuccess(interrupted)) {
-      throw new Error("Expected verification cleanup to be interrupted.");
-    }
-    expect(interrupted.failure).toMatchObject({
-      _tag: "UserCleanupError",
-    });
-    expect(durableCursor).toBe("verification-cursor-1");
-    await expect(
-      Effect.runPromise(drainDeletedUserVerificationsProgram(operations))
-    ).resolves.toBeUndefined();
-    expect(deletePage.mock.calls.map(([cursor]) => cursor)).toEqual([
-      null,
-      "verification-cursor-1",
-      "verification-cursor-1",
-    ]);
-    expect(durableCursor).toBeNull();
-  });
+        const operations = {
+          deletePage,
+          loadCursor: vi.fn(() => Promise.resolve(durableCursor)),
+          saveCursor: vi.fn((cursor: string | null) => {
+            durableCursor = cursor;
+            return Promise.resolve();
+          }),
+        };
+        const interrupted = yield* drainDeletedUserVerificationsProgram(
+          operations
+        ).pipe(Effect.result);
+        expect(Result.isFailure(interrupted)).toBe(true);
+        if (Result.isSuccess(interrupted)) {
+          throw new Error("Expected verification cleanup to be interrupted.");
+        }
+        expect(interrupted.failure).toMatchObject({
+          _tag: "UserCleanupError",
+        });
+        expect(durableCursor).toBe("verification-cursor-1");
+        expect(
+          yield* drainDeletedUserVerificationsProgram(operations)
+        ).toBeUndefined();
+        expect(deletePage.mock.calls.map(([cursor]) => cursor)).toEqual([
+          null,
+          "verification-cursor-1",
+          "verification-cursor-1",
+        ]);
+        expect(durableCursor).toBeNull();
+      })
+  );
   it("drains direct tokens and OAuth-link state across bounded pages", async () => {
     const t = createConvexTestWithBetterAuth();
     const authUser = await t.mutation(components.betterAuth.adapter.create, {

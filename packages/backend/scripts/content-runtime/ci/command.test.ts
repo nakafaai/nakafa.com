@@ -5,8 +5,9 @@ import {
   runRuntimeCommand,
   sanitizeRuntimeCommandError,
 } from "@repo/backend/scripts/content-runtime/ci/command";
+import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect, FileSystem } from "effect";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 describe("content runtime command diagnostics", () => {
   afterEach(() => {
@@ -35,10 +36,10 @@ describe("content runtime command diagnostics", () => {
     ).toBe("You do not have permission (deployment:data:view).");
   });
 
-  it("turns failed child stderr into a redacted typed error", async () => {
-    const sensitiveValue = "sensitive-deploy-key";
-    const result = await Effect.runPromise(
-      Effect.scoped(
+  it.live("turns failed child stderr into a redacted typed error", () =>
+    Effect.gen(function* () {
+      const sensitiveValue = "sensitive-deploy-key";
+      const result = yield* Effect.scoped(
         Effect.gen(function* () {
           const fileSystem = yield* FileSystem.FileSystem;
           const root = yield* fileSystem.makeTempDirectoryScoped({
@@ -66,26 +67,26 @@ describe("content runtime command diagnostics", () => {
             stdout: yield* fileSystem.readFileString(stdoutPath),
           };
         })
-      ).pipe(Effect.provide(NodeServices.layer))
-    );
+      ).pipe(Effect.provide(NodeServices.layer));
 
-    expect(result.failure).toMatchObject({
-      _tag: "ContentRuntimeCiError",
-      message: "Production probe failed: Permission denied for [redacted]",
-    });
-    expect(result.failure.message).not.toContain(sensitiveValue);
-    expect(result.stderr).toContain(sensitiveValue);
-    expect(result.stdout).toBe("");
-  });
+      expect(result.failure).toMatchObject({
+        _tag: "ContentRuntimeCiError",
+        message: "Production probe failed: Permission denied for [redacted]",
+      });
+      expect(result.failure.message).not.toContain(sensitiveValue);
+      expect(result.stderr).toContain(sensitiveValue);
+      expect(result.stdout).toBe("");
+    })
+  );
 
-  it("scrubs inherited secrets before spawning a child process", async () => {
-    const sensitiveValue = "inherited-sensitive-value";
-    vi.stubEnv("AGENT_DOCS_CONTENT_CACHE_KEY", sensitiveValue);
-    vi.stubEnv("CONVEX_DEPLOY_KEY", sensitiveValue);
-    vi.stubEnv("CONVEX_DEPLOYMENT_TOKEN", sensitiveValue);
+  it.live("scrubs inherited secrets before spawning a child process", () =>
+    Effect.gen(function* () {
+      const sensitiveValue = "inherited-sensitive-value";
+      vi.stubEnv("AGENT_DOCS_CONTENT_CACHE_KEY", sensitiveValue);
+      vi.stubEnv("CONVEX_DEPLOY_KEY", sensitiveValue);
+      vi.stubEnv("CONVEX_DEPLOYMENT_TOKEN", sensitiveValue);
 
-    const result = await Effect.runPromise(
-      Effect.scoped(
+      const result = yield* Effect.scoped(
         Effect.gen(function* () {
           const fileSystem = yield* FileSystem.FileSystem;
           const root = yield* fileSystem.makeTempDirectoryScoped({
@@ -111,19 +112,19 @@ describe("content runtime command diagnostics", () => {
             stdout: yield* fileSystem.readFileString(stdoutPath),
           };
         })
-      ).pipe(Effect.provide(NodeServices.layer))
-    );
+      ).pipe(Effect.provide(NodeServices.layer));
 
-    expect(result.stderr).toBe("");
-    expect(result.stdout).toBe("|||true");
-    expect(result.stdout).not.toContain(sensitiveValue);
-  });
+      expect(result.stderr).toBe("");
+      expect(result.stdout).toBe("|||true");
+      expect(result.stdout).not.toContain(sensitiveValue);
+    })
+  );
 
-  it("captures output from fast child processes", async () => {
-    const stdoutValue = 'stdout $HOME ; "literal"';
-    const stderrValue = 'stderr $HOME ; "literal"';
-    const results = await Effect.runPromise(
-      Effect.scoped(
+  it.live("captures output from fast child processes", () =>
+    Effect.gen(function* () {
+      const stdoutValue = 'stdout $HOME ; "literal"';
+      const stderrValue = 'stderr $HOME ; "literal"';
+      const results = yield* Effect.scoped(
         Effect.gen(function* () {
           const fileSystem = yield* FileSystem.FileSystem;
           const root = yield* fileSystem.makeTempDirectoryScoped({
@@ -157,54 +158,57 @@ describe("content runtime command diagnostics", () => {
             })
           );
         })
-      ).pipe(Effect.provide(NodeServices.layer))
-    );
+      ).pipe(Effect.provide(NodeServices.layer));
 
-    expect(results).toEqual(
-      Array.from({ length: 20 }, () => ({
-        stderr: stderrValue,
-        stdout: stdoutValue,
-      }))
-    );
-  });
+      expect(results).toEqual(
+        Array.from({ length: 20 }, () => ({
+          stderr: stderrValue,
+          stdout: stdoutValue,
+        }))
+      );
+    })
+  );
 
-  it("keeps entrypoint failures off stdout", async () => {
-    const tsxCli = fileURLToPath(import.meta.resolve("tsx/cli"));
-    const entrypoint = fileURLToPath(new URL("./main.ts", import.meta.url));
-    const result = await Effect.runPromise(
-      Effect.scoped(
-        Effect.gen(function* () {
-          const fileSystem = yield* FileSystem.FileSystem;
-          const root = yield* fileSystem.makeTempDirectoryScoped({
-            directory: tmpdir(),
-            prefix: "content-runtime-entrypoint-test-",
-          });
-          const stderrPath = `${root}/stderr.log`;
-          const stdoutPath = `${root}/stdout.log`;
-          const failure = yield* runRuntimeCommand({
-            args: [tsxCli, "--conditions=import", entrypoint, "unsupported"],
-            command: process.execPath,
-            operation: "Entrypoint smoke",
-            reportStderr: true,
-            stderrPath,
-            stdoutPath,
-          }).pipe(Effect.flip);
+  it.live(
+    "keeps entrypoint failures off stdout",
+    () =>
+      Effect.gen(function* () {
+        const tsxCli = fileURLToPath(import.meta.resolve("tsx/cli"));
+        const entrypoint = fileURLToPath(new URL("./main.ts", import.meta.url));
+        const result = yield* Effect.scoped(
+          Effect.gen(function* () {
+            const fileSystem = yield* FileSystem.FileSystem;
+            const root = yield* fileSystem.makeTempDirectoryScoped({
+              directory: tmpdir(),
+              prefix: "content-runtime-entrypoint-test-",
+            });
+            const stderrPath = `${root}/stderr.log`;
+            const stdoutPath = `${root}/stdout.log`;
+            const failure = yield* runRuntimeCommand({
+              args: [tsxCli, "--conditions=import", entrypoint, "unsupported"],
+              command: process.execPath,
+              operation: "Entrypoint smoke",
+              reportStderr: true,
+              stderrPath,
+              stdoutPath,
+            }).pipe(Effect.flip);
 
-          return {
-            failure,
-            stderr: yield* fileSystem.readFileString(stderrPath),
-            stdout: yield* fileSystem.readFileString(stdoutPath),
-          };
-        })
-      ).pipe(Effect.provide(NodeServices.layer))
-    );
+            return {
+              failure,
+              stderr: yield* fileSystem.readFileString(stderrPath),
+              stdout: yield* fileSystem.readFileString(stdoutPath),
+            };
+          })
+        ).pipe(Effect.provide(NodeServices.layer));
 
-    expect(result.failure.message).toContain(
-      "Usage: runtime:ci <fingerprint|generations|verify-generations|export|import>"
-    );
-    expect(result.stderr).toBe(
-      "ERROR: Usage: runtime:ci <fingerprint|generations|verify-generations|export|import>\n"
-    );
-    expect(result.stdout).toBe("");
-  }, 15_000);
+        expect(result.failure.message).toContain(
+          "Usage: runtime:ci <fingerprint|generations|verify-generations|export|import>"
+        );
+        expect(result.stderr).toBe(
+          "ERROR: Usage: runtime:ci <fingerprint|generations|verify-generations|export|import>\n"
+        );
+        expect(result.stdout).toBe("");
+      }),
+    15_000
+  );
 });

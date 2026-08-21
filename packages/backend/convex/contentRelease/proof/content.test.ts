@@ -20,67 +20,69 @@ import {
   testEmptyManifest,
   testSignedRelease,
 } from "@repo/backend/test/content-proof";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, Stream } from "effect";
-import { describe, expect, it } from "vitest";
 
 const releaseId = ReleaseIdSchema.make("release-one-pass-proof");
 
 describe("content proof streams", () => {
-  it("verifies three digests while visiting each stored row once", async () => {
-    const items = Array.from({ length: 3 }, (_, index) =>
-      ContentReleaseItemSchema.make({
-        change: {
-          contentKey: ContentKeySchema.make(`test:one-pass-${index}`),
-          family: "material",
-          artifactLocale: ArtifactLocaleSchema.make("en"),
-          operation: "delete",
-        },
-        index,
+  it.live("verifies three digests while visiting each stored row once", () =>
+    Effect.gen(function* () {
+      const items = Array.from({ length: 3 }, (_, index) =>
+        ContentReleaseItemSchema.make({
+          change: {
+            contentKey: ContentKeySchema.make(`test:one-pass-${index}`),
+            family: "material",
+            artifactLocale: ArtifactLocaleSchema.make("en"),
+            operation: "delete",
+          },
+          index,
+          releaseId,
+        })
+      );
+      const rollbacks = items.map((item) =>
+        RollbackSnapshotEntrySchema.make({
+          index: item.index,
+          releaseId,
+          snapshot: {
+            contentKey: item.change.contentKey,
+            family: item.change.family,
+            artifactLocale: item.change.artifactLocale,
+            state: "absent",
+          },
+        })
+      );
+      const itemDigest = yield* digestItems(
         releaseId,
-      })
-    );
-    const rollbacks = items.map((item) =>
-      RollbackSnapshotEntrySchema.make({
-        index: item.index,
+        Stream.fromIterable(items)
+      );
+      const rollbackDigest = yield* digestRollbackSnapshot(
         releaseId,
-        snapshot: {
-          contentKey: item.change.contentKey,
-          family: item.change.family,
-          artifactLocale: item.change.artifactLocale,
-          state: "absent",
-        },
-      })
-    );
-    const itemDigest = Effect.runSync(
-      digestItems(releaseId, Stream.fromIterable(items))
-    );
-    const rollbackDigest = Effect.runSync(
-      digestRollbackSnapshot(releaseId, Stream.fromIterable(rollbacks))
-    );
-    const release = testSignedRelease(
-      ContentReleaseManifestSchema.make({
-        ...testEmptyManifest(releaseId),
-        deleteCount: items.length,
-        itemCount: items.length,
-        itemsDigest: itemDigest.digest,
-        rollbackCount: rollbacks.length,
-        rollbackDigest: rollbackDigest.digest,
-      })
-    );
-    const rows = items.map((item, index) => {
-      const rollback = rollbacks[index];
-      if (!rollback) {
-        throw new Error(`Expected rollback row ${index}.`);
-      }
-      return {
-        index: item.index,
-        itemJson: JSON.stringify(item),
-        rollbackJson: canonicalizeRollbackSnapshotEntry(rollback),
-      };
-    });
-    let visits = 0;
-    const result = await Effect.runPromise(
-      verifyContentStreams(
+        Stream.fromIterable(rollbacks)
+      );
+      const release = testSignedRelease(
+        ContentReleaseManifestSchema.make({
+          ...testEmptyManifest(releaseId),
+          deleteCount: items.length,
+          itemCount: items.length,
+          itemsDigest: itemDigest.digest,
+          rollbackCount: rollbacks.length,
+          rollbackDigest: rollbackDigest.digest,
+        })
+      );
+      const rows = items.map((item, index) => {
+        const rollback = rollbacks[index];
+        if (!rollback) {
+          throw new Error(`Expected rollback row ${index}.`);
+        }
+        return {
+          index: item.index,
+          itemJson: JSON.stringify(item),
+          rollbackJson: canonicalizeRollbackSnapshotEntry(rollback),
+        };
+      });
+      let visits = 0;
+      const result = yield* verifyContentStreams(
         release,
         Stream.fromIterable(rows).pipe(
           Stream.tap(() =>
@@ -89,14 +91,14 @@ describe("content proof streams", () => {
             })
           )
         )
-      )
-    );
+      );
 
-    expect(result).toMatchObject({
-      items: { deleteCount: items.length, upsertCount: 0 },
-      projections: { count: 0 },
-      rollback: { count: rollbacks.length },
-    });
-    expect(visits).toBe(items.length);
-  });
+      expect(result).toMatchObject({
+        items: { deleteCount: items.length, upsertCount: 0 },
+        projections: { count: 0 },
+        rollback: { count: rollbacks.length },
+      });
+      expect(visits).toBe(items.length);
+    })
+  );
 });

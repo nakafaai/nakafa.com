@@ -4,49 +4,51 @@ import {
   createNakafaTestService,
   createWriter,
 } from "@repo/ai/agents/nakafa/tools/test";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("nakafa taxonomy tool", () => {
-  it("writes loading and done parts for taxonomy", async () => {
-    const { parts, writer } = createWriter();
-    const output = await Effect.runPromise(
-      taxonomy({
+  it.live("writes loading and done parts for taxonomy", () =>
+    Effect.gen(function* () {
+      const { parts, writer } = createWriter();
+      const output = yield* taxonomy({
         input: { locale: "en" },
         locale: "id",
         toolCallId: "taxonomy-1",
         writer,
-      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()))
-    );
+      }).pipe(Effect.provideService(Nakafa, createNakafaTestService()));
 
-    expect(output).toContain("# Nakafa Taxonomy");
-    expect(parts).toEqual([
-      expect.objectContaining({
-        data: expect.objectContaining({
-          kind: "taxonomy",
-          input: { locale: "id" },
-          status: "loading",
-        }),
-      }),
-      expect.objectContaining({
-        data: expect.objectContaining({
-          kind: "taxonomy",
-          input: { locale: "id" },
-          status: "done",
-          result: expect.objectContaining({
-            sections: expect.arrayContaining(["articles"]),
+      expect(output).toContain("# Nakafa Taxonomy");
+      expect(parts).toEqual([
+        expect.objectContaining({
+          data: expect.objectContaining({
+            kind: "taxonomy",
+            input: { locale: "id" },
+            status: "loading",
           }),
         }),
-      }),
-    ]);
-  });
+        expect.objectContaining({
+          data: expect.objectContaining({
+            kind: "taxonomy",
+            input: { locale: "id" },
+            status: "done",
+            result: expect.objectContaining({
+              sections: expect.arrayContaining(["articles"]),
+            }),
+          }),
+        }),
+      ]);
+    })
+  );
 
-  it("uses the injected test service for invalid route verification", async () => {
-    const service = createNakafaTestService();
-    const isVerified = await Effect.runPromise(service.verify(""));
-    const taxonomyResult = await Effect.runPromise(service.taxonomy());
+  it.live("uses the injected test service for invalid route verification", () =>
+    Effect.gen(function* () {
+      const service = createNakafaTestService();
+      const isVerified = yield* service.verify("");
+      const taxonomyResult = yield* service.taxonomy();
 
-    expect(isVerified).toBe(false);
-    expect(taxonomyResult.locale).toBe("en");
-  });
+      expect(isVerified).toBe(false);
+      expect(taxonomyResult.locale).toBe("en");
+    })
+  );
 });

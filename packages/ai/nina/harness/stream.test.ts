@@ -10,8 +10,9 @@ import {
 } from "@repo/ai/nina/harness/stream";
 import { NinaReporter } from "@repo/ai/nina/runtime/report";
 import { NinaStore } from "@repo/ai/nina/runtime/store";
+import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Cause, Effect, Exit, Option } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const createNinaStreamResponseMock = vi.hoisted(() => vi.fn());
 vi.mock("@repo/ai/nina/runtime/stream", () => ({
@@ -108,33 +109,38 @@ describe("nina/harness/stream", () => {
       Effect.succeed(new Response(input.page.slug))
     );
   });
-  it("decodes one turn and delegates response creation through the harness Interface", async () => {
-    const response = await Effect.runPromise(
-      provideHarnessServices(NinaHarness.use((service) => service.stream(turn)))
-    );
-    await expect(response.text()).resolves.toBe(
-      "/subjects/mathematics/vector/addition"
-    );
-    expect(createNinaStreamResponseMock).toHaveBeenCalledWith(turn);
-  });
-  it("rejects invalid route input with a tagged harness error", async () => {
-    const exit = await Effect.runPromiseExit(
-      provideHarnessServices(
-        NinaHarness.use((service) =>
-          service.stream({ ...turn, page: undefined })
+  it.live(
+    "decodes one turn and delegates response creation through the harness Interface",
+    () =>
+      Effect.gen(function* () {
+        const response = yield* provideHarnessServices(
+          NinaHarness.use((service) => service.stream(turn))
+        );
+        const body = yield* Effect.promise(() => response.text());
+        expect(body).toBe("/subjects/mathematics/vector/addition");
+        expect(createNinaStreamResponseMock).toHaveBeenCalledWith(turn);
+      })
+  );
+  it.live("rejects invalid route input with a tagged harness error", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        provideHarnessServices(
+          NinaHarness.use((service) =>
+            service.stream({ ...turn, page: undefined })
+          )
         )
-      )
-    );
-    expect(Exit.isFailure(exit)).toBe(true);
-    const failure = Exit.isFailure(exit)
-      ? Cause.findErrorOption(exit.cause)
-      : Option.none();
-    expect(Option.isSome(failure)).toBe(true);
-    if (Option.isSome(failure)) {
-      expect(failure.value).toBeInstanceOf(NinaHarnessInputError);
-      expect(failure.value.message).toBe("Invalid Nina harness turn input.");
-    }
-  });
+      );
+      expect(Exit.isFailure(exit)).toBe(true);
+      const failure = Exit.isFailure(exit)
+        ? Cause.findErrorOption(exit.cause)
+        : Option.none();
+      expect(Option.isSome(failure)).toBe(true);
+      if (Option.isSome(failure)) {
+        expect(failure.value).toBeInstanceOf(NinaHarnessInputError);
+        expect(failure.value.message).toBe("Invalid Nina harness turn input.");
+      }
+    })
+  );
 });
 /** Provides the app-owned services required by the default NinaHarness layer. */
 function provideHarnessServices<A, E>(
