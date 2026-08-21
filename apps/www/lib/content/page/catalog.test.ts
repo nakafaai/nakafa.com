@@ -105,6 +105,33 @@ describe("published Page catalog", () => {
     });
   });
 
+  it.each(["search", "lehrplaene/merdeka"])(
+    "rejects a Page shadowed by the application route %s",
+    async (publicPath) => {
+      const projection = {
+        ...testPageProjection,
+        appLocale: AppLocaleSchema.make("de"),
+        artifactLocale: ArtifactLocaleSchema.make("de"),
+        publicPath: PublicPathSchema.make(publicPath),
+      };
+      runtimeQueryMock.mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId,
+          managed: true,
+          projectionJson: [JSON.stringify(projection)],
+        })
+      );
+
+      await expect(
+        Effect.runPromise(readPublishedPageCatalog().pipe(Effect.flip))
+      ).resolves.toMatchObject({
+        _tag: "PublishedProjectionError",
+        appLocale: "de",
+        publicPath,
+      });
+    }
+  );
+
   it("verifies the exact runtime Page against its localized catalog", async () => {
     const catalog = {
       activeReleaseId,

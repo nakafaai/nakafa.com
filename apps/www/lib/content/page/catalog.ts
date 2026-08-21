@@ -20,6 +20,7 @@ import {
 import { decodePublishedPageJson } from "@/lib/content/published/projection";
 import { decodeContentReleasePin } from "@/lib/content/published/release";
 import { readRuntimeQuery } from "@/lib/content/runtime/query";
+import { isReservedPagePath } from "@/lib/routing/public/ownership";
 
 /** Complete signed Page catalog selected from one active release. */
 export interface PublishedPageCatalog {
@@ -58,6 +59,15 @@ export const readPublishedPageCatalog = Effect.fn(
   const projections = yield* Effect.forEach(result.projectionJson, (source) =>
     decodePublishedPageJson(source, identity)
   );
+  const collision = projections.find(({ appLocale, publicPath }) =>
+    isReservedPagePath(appLocale, publicPath)
+  );
+  if (collision) {
+    return yield* new PublishedProjectionError({
+      appLocale: collision.appLocale,
+      publicPath: collision.publicPath,
+    });
+  }
   return { activeReleaseId, projections } satisfies PublishedPageCatalog;
 });
 

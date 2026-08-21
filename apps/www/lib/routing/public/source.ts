@@ -13,19 +13,9 @@ import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { readActiveContentRoute } from "@/lib/content/published/route";
+import { isApplicationRouteRoot } from "@/lib/routing/public/ownership";
 
 const REJECTED_PUBLIC_ROOTS = new Set(["/learn"]);
-const APPLICATION_ROUTE_ROOTS = new Set([
-  "auth",
-  "chat",
-  "contributor",
-  "home",
-  "og",
-  "onboarding",
-  "school",
-  "search",
-  "user",
-]);
 const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
 const QURAN_SURAH_COUNT = 114;
 
@@ -135,20 +125,6 @@ function readMissingHtmlRouteLocale({
     locale,
     publicPath,
   });
-}
-
-/** Checks whether one root belongs to a concrete application route. */
-function isApplicationRouteRoot(
-  locale: (typeof routing.locales)[number],
-  root: string
-) {
-  if (APPLICATION_ROUTE_ROOTS.has(root)) {
-    return true;
-  }
-
-  return PUBLIC_ROUTE_SURFACES.some(
-    (surface) => surface.routeSlugs[locale] === root
-  );
 }
 
 /** Checks whether one Quran route path can be rendered. */
