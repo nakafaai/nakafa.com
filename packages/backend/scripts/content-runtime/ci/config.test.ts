@@ -1,6 +1,7 @@
 import {
   CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT,
   clearContentRuntimeSecrets,
+  DEFAULT_CONTENT_RUNTIME_EXPORT_LIMIT,
   readExportConfig,
   readProductionSelectionConfig,
   validateProductionDeployKey,
@@ -79,6 +80,7 @@ describe("content runtime CI config", () => {
       stubCacheIdentity(contentStateHash);
       expect(yield* withStubbedEnv(readExportConfig)).toMatchObject({
         contentStateHash,
+        exportLimit: DEFAULT_CONTENT_RUNTIME_EXPORT_LIMIT,
       });
     })
   );

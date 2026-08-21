@@ -4,6 +4,9 @@ import { contentRuntimeCiError } from "./error";
 
 export const CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT = "dapper-antelope-269";
 
+/** Bounded trusted-snapshot capacity for active and retained content history. */
+export const DEFAULT_CONTENT_RUNTIME_EXPORT_LIMIT = 50_000;
+
 const HEX_64 = /^[a-f0-9]{64}$/;
 const WHITESPACE = /\s/u;
 
@@ -151,7 +154,7 @@ export const readExportConfig = Effect.gen(function* () {
   const cacheIdentity = yield* readCacheIdentity;
   const cacheKey = yield* Config.redacted("AGENT_DOCS_CONTENT_CACHE_KEY");
   const exportLimit = yield* Config.int("CONTENT_RUNTIME_EXPORT_LIMIT").pipe(
-    Config.withDefault(10_000)
+    Config.withDefault(DEFAULT_CONTENT_RUNTIME_EXPORT_LIMIT)
   );
 
   if (Redacted.value(cacheKey).length < 43) {
