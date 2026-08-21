@@ -381,6 +381,7 @@ describe("proxy", () => {
 
   it.each([
     ["/id/quran/999", "id", null],
+    ["/en/search/fabricated", "en", null],
     [
       "/en/curriculum/merdeka/class-11-afdocs-nonexistent-8f3a",
       "en",

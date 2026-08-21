@@ -13,7 +13,10 @@ import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { readActiveContentRoute } from "@/lib/content/published/route";
-import { isApplicationRouteRoot } from "@/lib/routing/public/ownership";
+import {
+  isApplicationRoutePath,
+  isApplicationRouteRoot,
+} from "@/lib/routing/public/ownership";
 
 const REJECTED_PUBLIC_ROOTS = new Set(["/learn"]);
 const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
@@ -112,7 +115,10 @@ function readMissingHtmlRouteLocale({
   }
 
   if (isApplicationRouteRoot(locale, root)) {
-    return Effect.succeed(null);
+    const publicPath = [root, ...segments].join("/");
+    return Effect.succeed(
+      isApplicationRoutePath(locale, publicPath) ? null : locale
+    );
   }
 
   const publicPath = [root, ...segments].join("/");

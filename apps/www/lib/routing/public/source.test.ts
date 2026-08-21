@@ -332,6 +332,33 @@ describe("public HTML route rejection", () => {
     expect(publishedMocks.readActiveContentRoute).not.toHaveBeenCalled();
   });
 
+  it("rejects invalid descendants inside reserved application roots", async () => {
+    const paths = [
+      "/de/search/fabricated",
+      "/de/auth/fabricated",
+      "/de/onboarding/fabricated",
+      "/de/home/fabricated",
+      "/de/contributor/fabricated",
+      "/de/user",
+      "/de/user/settings/fabricated",
+      "/en/school/select/fabricated",
+      "/de/og",
+      "/de/faecher",
+      "/en/subjects/mathematics",
+      "/de/try-out/a/b/c/d/e/f",
+    ];
+
+    for (const pathname of paths) {
+      await expect(
+        Effect.runPromise(
+          readSourceBackedHtmlRouteRejection({ method: "GET", pathname })
+        )
+      ).resolves.toBe(pathname.startsWith("/en/") ? "en" : "de");
+    }
+    expect(publishedMocks.readActiveContentIdentity).not.toHaveBeenCalled();
+    expect(publishedMocks.readActiveContentRoute).not.toHaveBeenCalled();
+  });
+
   it("rejects malformed Page paths without a publication lookup", async () => {
     await expect(
       Effect.runPromise(
