@@ -2,7 +2,7 @@ import type { GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { isActionCtx } from "@convex-dev/better-auth/utils";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
-import { ensurePostHogDeletionConfigured } from "@repo/backend/convex/analytics/deletion";
+import { ensurePostHogErasureConfigured } from "@repo/backend/convex/analytics/erasure/action";
 import { authComponent } from "@repo/backend/convex/auth/client";
 import {
   ACCOUNT_DELETION_ATTEMPT_HEADER,
@@ -80,7 +80,7 @@ const ensureAccountDeletionReady = Effect.fn("auth.ensureAccountDeletionReady")(
     authId: string,
     rawAttemptId: string | null
   ) {
-    yield* ensurePostHogDeletionConfigured().pipe(
+    yield* ensurePostHogErasureConfigured().pipe(
       Effect.mapError(deletionUnavailableError)
     );
     if (!isActionCtx(ctx)) {

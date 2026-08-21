@@ -1,9 +1,9 @@
 import {
-  deletePostHogPerson,
-  ensurePostHogDeletionConfigured,
-  PostHogDeletionConfigError,
-  PostHogDeletionRequestError,
-} from "@repo/backend/convex/analytics/deletion";
+  ensurePostHogErasureConfigured,
+  erasePostHogPerson,
+  PostHogErasureConfigError,
+  PostHogErasureRequestError,
+} from "@repo/backend/convex/analytics/erasure/action";
 import { Effect } from "effect";
 import { describe, expect, it, vi } from "vitest";
 
@@ -13,8 +13,8 @@ const config = {
   projectId: "114144",
 };
 
-describe("analytics/deletion", () => {
-  it("requests person, event, and recording deletion", async () => {
+describe("analytics erasure action", () => {
+  it("requests person, event, and recording erasure", async () => {
     const request = vi.fn(
       async () =>
         new Response(
@@ -29,7 +29,7 @@ describe("analytics/deletion", () => {
         )
     );
 
-    await Effect.runPromise(deletePostHogPerson("user-1", { config, request }));
+    await Effect.runPromise(erasePostHogPerson("user-1", { config, request }));
 
     expect(request).toHaveBeenCalledWith(
       "https://eu.posthog.com/api/projects/114144/persons/bulk_delete/",
@@ -65,13 +65,13 @@ describe("analytics/deletion", () => {
     );
 
     await expect(
-      Effect.runPromise(deletePostHogPerson("user-1", { config, request }))
+      Effect.runPromise(erasePostHogPerson("user-1", { config, request }))
     ).resolves.toBeUndefined();
   });
 
   it("returns a typed failure when credentials are missing", async () => {
     const failure = await Effect.runPromise(
-      deletePostHogPerson("user-1", {
+      erasePostHogPerson("user-1", {
         config: {
           ...config,
           deletionApiKey: "",
@@ -80,34 +80,34 @@ describe("analytics/deletion", () => {
       }).pipe(Effect.flip)
     );
 
-    expect(failure).toBeInstanceOf(PostHogDeletionConfigError);
+    expect(failure).toBeInstanceOf(PostHogErasureConfigError);
   });
 
   it("rejects account deletion before auth removal without credentials", async () => {
     const failure = await Effect.runPromise(
-      ensurePostHogDeletionConfigured({
+      ensurePostHogErasureConfigured({
         ...config,
         deletionApiKey: " ",
       }).pipe(Effect.flip)
     );
 
-    expect(failure).toBeInstanceOf(PostHogDeletionConfigError);
+    expect(failure).toBeInstanceOf(PostHogErasureConfigError);
   });
 
   it("rejects a non-numeric PostHog project id before auth removal", async () => {
     const failure = await Effect.runPromise(
-      ensurePostHogDeletionConfigured({
+      ensurePostHogErasureConfigured({
         ...config,
         projectId: "not-a-project-id",
       }).pipe(Effect.flip)
     );
 
-    expect(failure).toBeInstanceOf(PostHogDeletionConfigError);
+    expect(failure).toBeInstanceOf(PostHogErasureConfigError);
   });
 
   it("returns a typed failure for an invalid host", async () => {
     const failure = await Effect.runPromise(
-      deletePostHogPerson("user-1", {
+      erasePostHogPerson("user-1", {
         config: {
           ...config,
           host: "not a URL",
@@ -116,13 +116,13 @@ describe("analytics/deletion", () => {
       }).pipe(Effect.flip)
     );
 
-    expect(failure).toBeInstanceOf(PostHogDeletionConfigError);
+    expect(failure).toBeInstanceOf(PostHogErasureConfigError);
   });
 
   it("never sends the deletion credential outside PostHog", async () => {
     const request = vi.fn<typeof fetch>();
     const failure = await Effect.runPromise(
-      deletePostHogPerson("user-1", {
+      erasePostHogPerson("user-1", {
         config: {
           ...config,
           host: "https://eu.i.posthog.com.example.com",
@@ -131,50 +131,50 @@ describe("analytics/deletion", () => {
       }).pipe(Effect.flip)
     );
 
-    expect(failure).toBeInstanceOf(PostHogDeletionConfigError);
+    expect(failure).toBeInstanceOf(PostHogErasureConfigError);
     expect(request).not.toHaveBeenCalled();
   });
 
   it("returns a typed failure when the request cannot be sent", async () => {
     const failure = await Effect.runPromise(
-      deletePostHogPerson("user-1", {
+      erasePostHogPerson("user-1", {
         config,
         request: async () => await Promise.reject(new Error("offline")),
       }).pipe(Effect.flip)
     );
 
-    expect(failure).toBeInstanceOf(PostHogDeletionRequestError);
+    expect(failure).toBeInstanceOf(PostHogErasureRequestError);
   });
 
-  it("returns a typed failure when PostHog rejects deletion", async () => {
+  it("returns a typed failure when PostHog rejects erasure", async () => {
     const failure = await Effect.runPromise(
-      deletePostHogPerson("user-1", {
+      erasePostHogPerson("user-1", {
         config,
         request: async () => new Response(null, { status: 403 }),
       }).pipe(Effect.flip)
     );
 
-    expect(failure).toBeInstanceOf(PostHogDeletionRequestError);
-    expect(failure.message).toBe("PostHog person deletion returned HTTP 403.");
+    expect(failure).toBeInstanceOf(PostHogErasureRequestError);
+    expect(failure.message).toBe("PostHog person erasure returned HTTP 403.");
   });
 
   it("returns a typed failure for an invalid success response", async () => {
     const failure = await Effect.runPromise(
-      deletePostHogPerson("user-1", {
+      erasePostHogPerson("user-1", {
         config,
         request: async () => new Response(null, { status: 202 }),
       }).pipe(Effect.flip)
     );
 
-    expect(failure).toBeInstanceOf(PostHogDeletionRequestError);
+    expect(failure).toBeInstanceOf(PostHogErasureRequestError);
     expect(failure.message).toBe(
-      "PostHog person deletion returned an invalid response."
+      "PostHog person erasure returned an invalid response."
     );
   });
 
-  it("retries when PostHog reports a partial deletion failure", async () => {
+  it("retries when PostHog reports a partial erasure failure", async () => {
     const failure = await Effect.runPromise(
-      deletePostHogPerson("user-1", {
+      erasePostHogPerson("user-1", {
         config,
         request: async () =>
           new Response(
@@ -190,9 +190,9 @@ describe("analytics/deletion", () => {
       }).pipe(Effect.flip)
     );
 
-    expect(failure).toBeInstanceOf(PostHogDeletionRequestError);
+    expect(failure).toBeInstanceOf(PostHogErasureRequestError);
     expect(failure.message).toBe(
-      "PostHog did not accept complete analytics deletion."
+      "PostHog did not accept complete analytics erasure."
     );
   });
 
@@ -217,7 +217,7 @@ describe("analytics/deletion", () => {
     },
   ])("retries an incomplete accepted response", async (result) => {
     const failure = await Effect.runPromise(
-      deletePostHogPerson("user-1", {
+      erasePostHogPerson("user-1", {
         config,
         request: async () =>
           new Response(
@@ -230,9 +230,9 @@ describe("analytics/deletion", () => {
       }).pipe(Effect.flip)
     );
 
-    expect(failure).toBeInstanceOf(PostHogDeletionRequestError);
+    expect(failure).toBeInstanceOf(PostHogErasureRequestError);
     expect(failure.message).toBe(
-      "PostHog did not accept complete analytics deletion."
+      "PostHog did not accept complete analytics erasure."
     );
   });
 });

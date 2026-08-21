@@ -9,7 +9,10 @@
  */
 
 import type * as analytics_capture from "../analytics/capture.js";
-import type * as analytics_deletion from "../analytics/deletion.js";
+import type * as analytics_erasure_action from "../analytics/erasure/action.js";
+import type * as analytics_erasure_policy from "../analytics/erasure/policy.js";
+import type * as analytics_erasure_request from "../analytics/erasure/request.js";
+import type * as analytics_erasure_workflow from "../analytics/erasure/workflow.js";
 import type * as analytics_events from "../analytics/events.js";
 import type * as assessments_helpers_access from "../assessments/helpers/access.js";
 import type * as assessments_helpers_attempts from "../assessments/helpers/attempts.js";
@@ -371,7 +374,6 @@ import type * as customers_checkout_spec from "../customers/checkout/spec.js";
 import type * as customers_deletion_billing from "../customers/deletion/billing.js";
 import type * as customers_deletion_billingState from "../customers/deletion/billingState.js";
 import type * as customers_deletion_cleanup from "../customers/deletion/cleanup.js";
-import type * as customers_deletion_recovery from "../customers/deletion/recovery.js";
 import type * as customers_deletion_workflow from "../customers/deletion/workflow.js";
 import type * as customers_integrity_internal from "../customers/integrity/internal.js";
 import type * as customers_mutations_internal from "../customers/mutations/internal.js";
@@ -415,6 +417,8 @@ import type * as lib_validators_vv from "../lib/validators/vv.js";
 import type * as notifications_mutations from "../notifications/mutations.js";
 import type * as notifications_queries from "../notifications/queries.js";
 import type * as polyfills from "../polyfills.js";
+import type * as privacy_recovery from "../privacy/recovery.js";
+import type * as privacy_spec from "../privacy/spec.js";
 import type * as routes_constants from "../routes/constants.js";
 import type * as routes_middleware_requestId from "../routes/middleware/requestId.js";
 import type * as routes_polar from "../routes/polar.js";
@@ -557,7 +561,10 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   "analytics/capture": typeof analytics_capture;
-  "analytics/deletion": typeof analytics_deletion;
+  "analytics/erasure/action": typeof analytics_erasure_action;
+  "analytics/erasure/policy": typeof analytics_erasure_policy;
+  "analytics/erasure/request": typeof analytics_erasure_request;
+  "analytics/erasure/workflow": typeof analytics_erasure_workflow;
   "analytics/events": typeof analytics_events;
   "assessments/helpers/access": typeof assessments_helpers_access;
   "assessments/helpers/attempts": typeof assessments_helpers_attempts;
@@ -919,7 +926,6 @@ declare const fullApi: ApiFromModules<{
   "customers/deletion/billing": typeof customers_deletion_billing;
   "customers/deletion/billingState": typeof customers_deletion_billingState;
   "customers/deletion/cleanup": typeof customers_deletion_cleanup;
-  "customers/deletion/recovery": typeof customers_deletion_recovery;
   "customers/deletion/workflow": typeof customers_deletion_workflow;
   "customers/integrity/internal": typeof customers_integrity_internal;
   "customers/mutations/internal": typeof customers_mutations_internal;
@@ -963,6 +969,8 @@ declare const fullApi: ApiFromModules<{
   "notifications/mutations": typeof notifications_mutations;
   "notifications/queries": typeof notifications_queries;
   polyfills: typeof polyfills;
+  "privacy/recovery": typeof privacy_recovery;
+  "privacy/spec": typeof privacy_spec;
   "routes/constants": typeof routes_constants;
   "routes/middleware/requestId": typeof routes_middleware_requestId;
   "routes/polar": typeof routes_polar;

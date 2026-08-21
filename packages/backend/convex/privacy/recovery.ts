@@ -6,12 +6,14 @@ import {
 import { vResultValidator } from "@convex-dev/workpool";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import {
-  tryUserCleanup,
-  type UserCleanupError,
-} from "@repo/backend/convex/auth/cleanup/spec";
 import { internalMutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import {
+  type CleanupSource,
+  cleanupSourceValidator,
+  type PrivacyCleanupError,
+  tryPrivacyCleanup,
+} from "@repo/backend/convex/privacy/spec";
 import { logger } from "@repo/backend/convex/utils/logger";
 import { workflow } from "@repo/backend/convex/workflow";
 import { v } from "convex/values";
@@ -32,97 +34,112 @@ type RestartCleanupWorkflow = (
 ) => Promise<void>;
 type ScheduleCleanupRecovery = (
   ctx: MutationCtx,
-  workflowId: WorkflowId
+  workflowId: WorkflowId,
+  source: CleanupSource
 ) => Promise<unknown>;
 type CleanupWorkflowStorage = (
   ctx: MutationCtx,
   workflowId: WorkflowId
 ) => Promise<unknown>;
-/** Restarts every idempotent cleanup step after a recoverable terminal state. */
-export const retryDeletedUserCleanupProgram: (
+
+/** Restarts an idempotent privacy workflow after a recoverable terminal state. */
+export const retryCleanupWorkflowProgram: (
   ctx: MutationCtx,
   workflowId: WorkflowId,
+  source: CleanupSource,
   getStatus?: GetCleanupWorkflowStatus,
   restartWorkflow?: RestartCleanupWorkflow,
   scheduleRecovery?: ScheduleCleanupRecovery
-) => Effect.Effect<void, UserCleanupError> = Effect.fn(
-  "customers.deletion.retryDeletedUserCleanup"
+) => Effect.Effect<void, PrivacyCleanupError> = Effect.fn(
+  "privacy.retryCleanupWorkflow"
 )(function* (
   ctx: MutationCtx,
   workflowId: WorkflowId,
+  source: CleanupSource,
   getStatus: GetCleanupWorkflowStatus = (workflowCtx, id) =>
     workflow.status(workflowCtx, id),
   restartWorkflow: RestartCleanupWorkflow = (workflowCtx, id, options) =>
     workflow.restart(workflowCtx, id, options),
-  scheduleRecovery: ScheduleCleanupRecovery = (workflowCtx, id) =>
+  scheduleRecovery: ScheduleCleanupRecovery = (
+    workflowCtx,
+    id,
+    cleanupSourceName
+  ) =>
     workflowCtx.scheduler.runAfter(
       WORKFLOW_RECOVERY_DELAY_MS,
-      internal.customers.deletion.recovery.retryDeletedUserCleanup,
-      { workflowId: id }
+      internal.privacy.recovery.retryCleanupWorkflow,
+      { source: cleanupSourceName, workflowId: id }
     )
 ) {
   const recoverFailedWorkflow = Effect.gen(function* () {
-    const status = yield* tryUserCleanup(() => getStatus(ctx, workflowId));
+    const status = yield* tryPrivacyCleanup(() => getStatus(ctx, workflowId));
     if (status.type !== "failed" && status.type !== "canceled") {
       return;
     }
-    yield* tryUserCleanup(() =>
+    yield* tryPrivacyCleanup(() =>
       restartWorkflow(ctx, workflowId, { from: 0, startAsync: true })
     );
   });
   yield* recoverFailedWorkflow.pipe(
-    Effect.catchTag("UserCleanupError", (error) =>
-      Effect.logError("Deleted-user cleanup recovery attempt failed").pipe(
+    Effect.catchTag("PrivacyCleanupError", (error) =>
+      Effect.logError("Privacy cleanup recovery attempt failed").pipe(
         Effect.annotateLogs({
           error: error.message,
+          source,
           workflowId,
         }),
-        Effect.andThen(tryUserCleanup(() => scheduleRecovery(ctx, workflowId)))
+        Effect.andThen(
+          tryPrivacyCleanup(() => scheduleRecovery(ctx, workflowId, source))
+        )
       )
     )
   );
 });
-/** Retries one retained recoverable workflow after its recovery delay. */
-export const retryDeletedUserCleanup = internalMutation({
+
+/** Retries one retained privacy workflow after its recovery delay. */
+export const retryCleanupWorkflow = internalMutation({
   args: {
+    source: cleanupSourceValidator,
     workflowId: vWorkflowId,
   },
   returns: v.null(),
   handler: async (ctx, args) => {
     await runConvexProgram(
-      retryDeletedUserCleanupProgram(ctx, args.workflowId)
+      retryCleanupWorkflowProgram(ctx, args.workflowId, args.source)
     );
     return null;
   },
 });
-/** Retains incomplete cleanup journals and releases successful ones. */
-export const handleDeletedUserCleanupComplete = internalMutation({
+
+/** Retains incomplete privacy journals and releases successful ones. */
+export const handleCleanupComplete = internalMutation({
   args: {
     workflowId: vWorkflowId,
     result: vResultValidator,
-    context: v.object({}),
+    context: v.object({ source: cleanupSourceValidator }),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
     if (args.result.kind === "success") {
       await ctx.scheduler.runAfter(
         0,
-        internal.customers.deletion.recovery.cleanupDeletedUserWorkflowStorage,
-        { workflowId: args.workflowId }
+        internal.privacy.recovery.cleanupWorkflowStorage,
+        { source: args.context.source, workflowId: args.workflowId }
       );
       return null;
     }
-    logger.error("Deleted-user cleanup workflow requires recovery", {
+    logger.error("Privacy cleanup workflow requires recovery", {
       resultKind: args.result.kind,
+      source: args.context.source,
       workflowId: args.workflowId,
     });
     if (args.result.kind === "failed" || args.result.kind === "canceled") {
       await runConvexProgram(
-        tryUserCleanup(() =>
+        tryPrivacyCleanup(() =>
           ctx.scheduler.runAfter(
             WORKFLOW_RECOVERY_DELAY_MS,
-            internal.customers.deletion.recovery.retryDeletedUserCleanup,
-            { workflowId: args.workflowId }
+            internal.privacy.recovery.retryCleanupWorkflow,
+            { source: args.context.source, workflowId: args.workflowId }
           )
         )
       );
@@ -130,47 +147,59 @@ export const handleDeletedUserCleanupComplete = internalMutation({
     return null;
   },
 });
-/** Retries journal release until the component accepts the cleanup. */
-export const cleanupDeletedUserWorkflowStorageProgram: (
+
+/** Retries journal release until the workflow component accepts cleanup. */
+export const cleanupWorkflowStorageProgram: (
   ctx: MutationCtx,
   workflowId: WorkflowId,
+  source: CleanupSource,
   cleanupStorage?: CleanupWorkflowStorage,
   scheduleRecovery?: ScheduleCleanupRecovery
-) => Effect.Effect<void, UserCleanupError> = Effect.fn(
-  "customers.deletion.cleanupDeletedUserWorkflowStorage"
+) => Effect.Effect<void, PrivacyCleanupError> = Effect.fn(
+  "privacy.cleanupWorkflowStorage"
 )(function* (
   ctx: MutationCtx,
   workflowId: WorkflowId,
+  source: CleanupSource,
   cleanupStorage: CleanupWorkflowStorage = (workflowCtx, id) =>
     workflow.cleanup(workflowCtx, id),
-  scheduleRecovery: ScheduleCleanupRecovery = (workflowCtx, id) =>
+  scheduleRecovery: ScheduleCleanupRecovery = (
+    workflowCtx,
+    id,
+    cleanupSourceName
+  ) =>
     workflowCtx.scheduler.runAfter(
       WORKFLOW_RECOVERY_DELAY_MS,
-      internal.customers.deletion.recovery.cleanupDeletedUserWorkflowStorage,
-      { workflowId: id }
+      internal.privacy.recovery.cleanupWorkflowStorage,
+      { source: cleanupSourceName, workflowId: id }
     )
 ) {
-  yield* tryUserCleanup(() => cleanupStorage(ctx, workflowId)).pipe(
-    Effect.catchTag("UserCleanupError", (error) =>
-      Effect.logError("Deleted-user workflow journal cleanup failed").pipe(
+  yield* tryPrivacyCleanup(() => cleanupStorage(ctx, workflowId)).pipe(
+    Effect.catchTag("PrivacyCleanupError", (error) =>
+      Effect.logError("Privacy workflow journal cleanup failed").pipe(
         Effect.annotateLogs({
           error: error.message,
+          source,
           workflowId,
         }),
-        Effect.andThen(tryUserCleanup(() => scheduleRecovery(ctx, workflowId)))
+        Effect.andThen(
+          tryPrivacyCleanup(() => scheduleRecovery(ctx, workflowId, source))
+        )
       )
     )
   );
 });
-/** Releases the journal after completion and retries transient failures. */
-export const cleanupDeletedUserWorkflowStorage = internalMutation({
+
+/** Releases a completed privacy workflow journal with durable retries. */
+export const cleanupWorkflowStorage = internalMutation({
   args: {
+    source: cleanupSourceValidator,
     workflowId: vWorkflowId,
   },
   returns: v.null(),
   handler: async (ctx, args) => {
     await runConvexProgram(
-      cleanupDeletedUserWorkflowStorageProgram(ctx, args.workflowId)
+      cleanupWorkflowStorageProgram(ctx, args.workflowId, args.source)
     );
     return null;
   },

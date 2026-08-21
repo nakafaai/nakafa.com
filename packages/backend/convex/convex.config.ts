@@ -17,8 +17,8 @@ const app = defineApp({
     AKSARA_AGENT_SIGNING_PUBLIC_KEY: v.optional(v.string()),
     AKSARA_PUBLICATION_TOKEN: v.string(),
     CONTENT_RUNTIME_TOKEN: v.string(),
-    // Dedicated least-privilege key for permanent account erasure.
-    POSTHOG_ACCOUNT_DELETION_API_KEY: v.string(),
+    // Dedicated least-privilege key for permanent analytics erasure.
+    POSTHOG_ERASURE_API_KEY: v.string(),
     POSTHOG_HOST: v.string(),
     POSTHOG_PROJECT_ID: v.string(),
     POSTHOG_PROJECT_TOKEN: v.string(),

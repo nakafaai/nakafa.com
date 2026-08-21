@@ -8,7 +8,7 @@ import {
   type MutationCtx,
   type QueryCtx,
 } from "@repo/backend/convex/_generated/server";
-import { deletePostHogPerson } from "@repo/backend/convex/analytics/deletion";
+import { requestAnalyticsErasure } from "@repo/backend/convex/analytics/erasure/request";
 import {
   type ProductAnalyticsEvent,
   productAnalyticsEventValidator,
@@ -37,8 +37,11 @@ interface ProductAnalyticsCaptureOperations {
 }
 interface ProductAnalyticsDeliveryOperations {
   readonly capture: () => Promise<void>;
-  readonly erase: () => Effect.Effect<void, ProductAnalyticsCaptureError>;
   readonly isUserEligible: () => Promise<boolean>;
+  readonly requestErasure: () => Effect.Effect<
+    void,
+    ProductAnalyticsCaptureError
+  >;
 }
 const deliverProductEventReference = makeFunctionReference<
   "action",
@@ -132,11 +135,11 @@ export const deliverProductAnalyticsProgram = Effect.fn(
     })
   );
   if (Result.isFailure(eligibilityAfterSend)) {
-    yield* operations.erase();
+    yield* operations.requestErasure();
     return yield* eligibilityAfterSend.failure;
   }
   if (!eligibilityAfterSend.success) {
-    yield* operations.erase();
+    yield* operations.requestErasure();
   }
   if (Result.isFailure(captureResult)) {
     return yield* captureResult.failure;
@@ -184,14 +187,14 @@ export const deliverProductEvent = internalAction({
             properties: args.properties,
             timestamp: args.timestamp,
           }),
-        erase: () =>
-          deletePostHogPerson(args.distinctId).pipe(
-            Effect.mapError(toProductAnalyticsCaptureError)
-          ),
         isUserEligible: () =>
           ctx.runQuery(isProductAnalyticsUserEligibleReference, {
             userId: args.distinctId,
           }),
+        requestErasure: () =>
+          requestAnalyticsErasure(ctx, args.distinctId).pipe(
+            Effect.mapError(toProductAnalyticsCaptureError)
+          ),
       })
     );
     return null;

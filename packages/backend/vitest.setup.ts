@@ -4,7 +4,7 @@ import { afterEach, vi } from "vitest";
 // Override shell env so tests never send real analytics events.
 // @see https://docs.convex.dev/components/authoring#environment-variables
 process.env.POSTHOG_HOST = "http://127.0.0.1:9";
-process.env.POSTHOG_ACCOUNT_DELETION_API_KEY = "phx_test";
+process.env.POSTHOG_ERASURE_API_KEY = "phx_test";
 process.env.POSTHOG_PROJECT_ID = "114144";
 process.env.POSTHOG_PROJECT_TOKEN = "phc_test";
 process.env.CONVEX_SITE_URL = "https://example.convex.site";

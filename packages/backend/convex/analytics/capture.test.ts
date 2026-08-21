@@ -90,39 +90,39 @@ describe("analytics/capture", () => {
 
   it("drops a queued event when deletion starts before delivery", async () => {
     const capture = vi.fn(async () => undefined);
-    const erase = vi.fn(() => Effect.void);
+    const requestErasure = vi.fn(() => Effect.void);
 
     await Effect.runPromise(
       deliverProductAnalyticsProgram({
         capture,
-        erase,
         isUserEligible: vi.fn(async () => false),
+        requestErasure,
       })
     );
 
     expect(capture).not.toHaveBeenCalled();
-    expect(erase).not.toHaveBeenCalled();
+    expect(requestErasure).not.toHaveBeenCalled();
   });
 
   it("keeps delivered analytics when the user remains active", async () => {
     const capture = vi.fn(async () => undefined);
-    const erase = vi.fn(() => Effect.void);
+    const requestErasure = vi.fn(() => Effect.void);
 
     await Effect.runPromise(
       deliverProductAnalyticsProgram({
         capture,
-        erase,
         isUserEligible: vi.fn(async () => true),
+        requestErasure,
       })
     );
 
     expect(capture).toHaveBeenCalledOnce();
-    expect(erase).not.toHaveBeenCalled();
+    expect(requestErasure).not.toHaveBeenCalled();
   });
 
-  it("re-erases analytics when deletion overlaps the external send", async () => {
+  it("durably erases analytics when withdrawal overlaps the send", async () => {
     const capture = vi.fn(async () => undefined);
-    const erase = vi.fn(() => Effect.void);
+    const requestErasure = vi.fn(() => Effect.void);
     const isUserActive = vi
       .fn<() => Promise<boolean>>()
       .mockResolvedValueOnce(true)
@@ -131,17 +131,17 @@ describe("analytics/capture", () => {
     await Effect.runPromise(
       deliverProductAnalyticsProgram({
         capture,
-        erase,
         isUserEligible: isUserActive,
+        requestErasure,
       })
     );
 
     expect(capture).toHaveBeenCalledOnce();
-    expect(erase).toHaveBeenCalledOnce();
+    expect(requestErasure).toHaveBeenCalledOnce();
   });
 
-  it("re-erases after a failed send that overlaps deletion", async () => {
-    const erase = vi.fn(() => Effect.void);
+  it("requests erasure after a failed send that overlaps withdrawal", async () => {
+    const requestErasure = vi.fn(() => Effect.void);
     const isUserActive = vi
       .fn<() => Promise<boolean>>()
       .mockResolvedValueOnce(true)
@@ -150,20 +150,20 @@ describe("analytics/capture", () => {
     const failure = await Effect.runPromise(
       deliverProductAnalyticsProgram({
         capture: vi.fn(() => Promise.reject(new Error("capture uncertain"))),
-        erase,
         isUserEligible: isUserActive,
+        requestErasure,
       }).pipe(Effect.flip)
     );
 
-    expect(erase).toHaveBeenCalledOnce();
+    expect(requestErasure).toHaveBeenCalledOnce();
     expect(failure).toMatchObject({
       _tag: "ProductAnalyticsCaptureError",
       message: "capture uncertain",
     });
   });
 
-  it("re-erases after a send when final eligibility is unknown", async () => {
-    const erase = vi.fn(() => Effect.void);
+  it("requests erasure after a send when final eligibility is unknown", async () => {
+    const requestErasure = vi.fn(() => Effect.void);
     const isUserActive = vi
       .fn<() => Promise<boolean>>()
       .mockResolvedValueOnce(true)
@@ -172,12 +172,12 @@ describe("analytics/capture", () => {
     const failure = await Effect.runPromise(
       deliverProductAnalyticsProgram({
         capture: vi.fn(async () => undefined),
-        erase,
         isUserEligible: isUserActive,
+        requestErasure,
       }).pipe(Effect.flip)
     );
 
-    expect(erase).toHaveBeenCalledOnce();
+    expect(requestErasure).toHaveBeenCalledOnce();
     expect(failure).toMatchObject({
       _tag: "ProductAnalyticsCaptureError",
       message: "eligibility unavailable",

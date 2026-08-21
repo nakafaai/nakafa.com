@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ANALYTICS_BROWSER_SIGNAL_MECHANISM,
   ANALYTICS_CONSENT_CATEGORY,
   ANALYTICS_CONSENT_MECHANISM,
   ANALYTICS_CONSENT_NOTICE_VERSION,
@@ -14,7 +13,7 @@ import {
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { useConvexAuth, useMutation } from "convex/react";
-import { Effect, Fiber, Schedule } from "effect";
+import { Effect, Fiber } from "effect";
 import { type ReactNode, useEffect, useState, useTransition } from "react";
 import { env } from "@/env";
 import { useAnonymousAnalyticsConsent } from "@/lib/analytics/consent/browser";
@@ -22,6 +21,7 @@ import {
   AnalyticsConsentContext,
   type AnalyticsConsentError,
 } from "@/lib/analytics/consent/context";
+import { revokeAccountAnalyticsGrant } from "@/lib/analytics/consent/signal";
 import {
   createBrowserAnalyticsIdentity,
   resolveBrowserAnalyticsConsentState,
@@ -30,7 +30,6 @@ import {
 import { useUser } from "@/lib/context/use-user";
 
 const isPreviewChild = env.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD === "true";
-const browserSignalRetrySchedule = Schedule.spaced("10 seconds");
 
 /** Owns the state that exclusively controls optional product analytics. */
 export function AnalyticsConsentProvider({
@@ -76,17 +75,7 @@ export function AnalyticsConsentProvider({
     }
 
     const revokeFiber = Effect.runFork(
-      Effect.tryPromise(() =>
-        setAccountConsent({
-          decision: {
-            category: ANALYTICS_CONSENT_CATEGORY,
-            granted: false,
-            mechanism: ANALYTICS_BROWSER_SIGNAL_MECHANISM,
-            noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
-          },
-        })
-      ).pipe(
-        Effect.retry(browserSignalRetrySchedule),
+      revokeAccountAnalyticsGrant(setAccountConsent).pipe(
         Effect.matchEffect({
           onFailure: () => Effect.sync(() => setOperationError("save")),
           onSuccess: () => Effect.sync(() => setOperationError(null)),

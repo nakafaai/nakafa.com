@@ -1,15 +1,16 @@
 import type { WorkflowId } from "@convex-dev/workflow";
-import {
-  cleanupDeletedUserWorkflowStorageProgram,
-  retryDeletedUserCleanupProgram,
-} from "@repo/backend/convex/customers/deletion/recovery";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import {
+  cleanupWorkflowStorageProgram,
+  retryCleanupWorkflowProgram,
+} from "@repo/backend/convex/privacy/recovery";
+import { cleanupSource } from "@repo/backend/convex/privacy/spec";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
 import { describe, expect, it, vi } from "vitest";
 
-describe("customers/deletion/recovery", () => {
+describe("privacy workflow recovery", () => {
   it("restarts a retained failed cleanup asynchronously", async () => {
     const t = convexTest(schema, convexModules);
     const workflowId = "failed-workflow" as WorkflowId;
@@ -21,9 +22,10 @@ describe("customers/deletion/recovery", () => {
 
     await t.mutation((ctx) =>
       runConvexProgram(
-        retryDeletedUserCleanupProgram(
+        retryCleanupWorkflowProgram(
           ctx,
           workflowId,
+          cleanupSource.consentOverlap,
           getStatus,
           restartWorkflow
         )
@@ -48,9 +50,10 @@ describe("customers/deletion/recovery", () => {
 
     await t.mutation((ctx) =>
       runConvexProgram(
-        retryDeletedUserCleanupProgram(
+        retryCleanupWorkflowProgram(
           ctx,
           workflowId,
+          cleanupSource.accountDeletion,
           getStatus,
           restartWorkflow
         )
@@ -75,9 +78,10 @@ describe("customers/deletion/recovery", () => {
 
     await t.mutation((ctx) =>
       runConvexProgram(
-        retryDeletedUserCleanupProgram(
+        retryCleanupWorkflowProgram(
           ctx,
           workflowId,
+          cleanupSource.accountDeletion,
           getStatus,
           restartWorkflow
         )
@@ -87,7 +91,7 @@ describe("customers/deletion/recovery", () => {
     expect(restartWorkflow).not.toHaveBeenCalled();
   });
 
-  it("requeues recovery when a retained workflow cannot be inspected", async () => {
+  it("requeues recovery when a workflow cannot be inspected", async () => {
     const t = convexTest(schema, convexModules);
     const workflowId = "unavailable-workflow" as WorkflowId;
     const getStatus = vi.fn(async () =>
@@ -98,9 +102,10 @@ describe("customers/deletion/recovery", () => {
 
     await t.mutation((ctx) =>
       runConvexProgram(
-        retryDeletedUserCleanupProgram(
+        retryCleanupWorkflowProgram(
           ctx,
           workflowId,
+          cleanupSource.consentOverlap,
           getStatus,
           restartWorkflow,
           scheduleRecovery
@@ -111,7 +116,8 @@ describe("customers/deletion/recovery", () => {
     expect(restartWorkflow).not.toHaveBeenCalled();
     expect(scheduleRecovery).toHaveBeenCalledWith(
       expect.any(Object),
-      workflowId
+      workflowId,
+      cleanupSource.consentOverlap
     );
   });
 
@@ -129,9 +135,10 @@ describe("customers/deletion/recovery", () => {
 
     await t.mutation((ctx) =>
       runConvexProgram(
-        retryDeletedUserCleanupProgram(
+        retryCleanupWorkflowProgram(
           ctx,
           workflowId,
+          cleanupSource.accountDeletion,
           getStatus,
           restartWorkflow,
           scheduleRecovery
@@ -141,7 +148,8 @@ describe("customers/deletion/recovery", () => {
 
     expect(scheduleRecovery).toHaveBeenCalledWith(
       expect.any(Object),
-      workflowId
+      workflowId,
+      cleanupSource.accountDeletion
     );
   });
 
@@ -155,9 +163,10 @@ describe("customers/deletion/recovery", () => {
 
     await t.mutation((ctx) =>
       runConvexProgram(
-        cleanupDeletedUserWorkflowStorageProgram(
+        cleanupWorkflowStorageProgram(
           ctx,
           workflowId,
+          cleanupSource.consentOverlap,
           cleanupStorage,
           scheduleRecovery
         )
@@ -167,7 +176,8 @@ describe("customers/deletion/recovery", () => {
     expect(cleanupStorage).toHaveBeenCalledWith(expect.any(Object), workflowId);
     expect(scheduleRecovery).toHaveBeenCalledWith(
       expect.any(Object),
-      workflowId
+      workflowId,
+      cleanupSource.consentOverlap
     );
   });
 
@@ -179,9 +189,10 @@ describe("customers/deletion/recovery", () => {
 
     await t.mutation((ctx) =>
       runConvexProgram(
-        cleanupDeletedUserWorkflowStorageProgram(
+        cleanupWorkflowStorageProgram(
           ctx,
           workflowId,
+          cleanupSource.accountDeletion,
           cleanupStorage,
           scheduleRecovery
         )
