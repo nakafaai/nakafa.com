@@ -14,6 +14,7 @@ import {
   readPagePreview,
 } from "@/lib/content/page/preview";
 import {
+  type CurrentPublishedPageInput,
   getCurrentPublishedPage,
   renderCurrentPublishedPage,
 } from "@/lib/content/page/published";
@@ -46,6 +47,23 @@ async function readPagePreviewContent(input: PagePreviewInput) {
 
   await io();
   return Effect.runPromise(readPagePreview(input));
+}
+
+/** Caches published Page metadata and its release-coherent counterparts. */
+async function readPublishedPageMetadata(input: CurrentPublishedPageInput) {
+  "use cache";
+
+  const [page, catalog] = await Promise.all([
+    getCurrentPublishedPage(input),
+    getPublishedPageCatalog(),
+  ]);
+  if (!page) {
+    return null;
+  }
+  const counterparts = await Effect.runPromise(
+    verifyPublishedPageCatalog(catalog, page)
+  );
+  return { counterparts, projection: page.projection };
 }
 
 /** Prebuilds every locale-owned route from the signed Page catalog. */
@@ -89,23 +107,21 @@ export async function generateMetadata({
       }),
     };
   }
-  const [page, catalog] = await Promise.all([
-    getCurrentPublishedPage(input),
-    getPublishedPageCatalog(),
-  ]);
-  if (!page) {
+  const metadata = await readPublishedPageMetadata(input);
+  if (!metadata) {
     notFound();
   }
-  const counterparts = await Effect.runPromise(
-    verifyPublishedPageCatalog(catalog, page)
-  );
-  const path = `/${page.projection.appLocale}/${page.projection.publicPath}`;
+  const path = `/${metadata.projection.appLocale}/${metadata.projection.publicPath}`;
   return {
-    title: { absolute: page.projection.metadata.title },
-    description: page.projection.metadata.description,
-    alternates: createResolvedRouteAlternates(page.projection, counterparts, {
-      types: { "text/markdown": `${path}.md` },
-    }),
+    title: { absolute: metadata.projection.metadata.title },
+    description: metadata.projection.metadata.description,
+    alternates: createResolvedRouteAlternates(
+      metadata.projection,
+      metadata.counterparts,
+      {
+        types: { "text/markdown": `${path}.md` },
+      }
+    ),
   };
 }
 
