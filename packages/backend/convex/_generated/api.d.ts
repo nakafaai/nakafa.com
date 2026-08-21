@@ -431,6 +431,7 @@ import type * as routes_polar from "../routes/polar.js";
 import type * as routes_v1_index from "../routes/v1/index.js";
 import type * as schools_mutations from "../schools/mutations.js";
 import type * as schools_queries from "../schools/queries.js";
+import type * as schools_slug from "../schools/slug.js";
 import type * as schools_utils from "../schools/utils.js";
 import type * as schools_validators from "../schools/validators.js";
 import type * as subscriptions_mutations from "../subscriptions/mutations.js";
@@ -989,6 +990,7 @@ declare const fullApi: ApiFromModules<{
   "routes/v1/index": typeof routes_v1_index;
   "schools/mutations": typeof schools_mutations;
   "schools/queries": typeof schools_queries;
+  "schools/slug": typeof schools_slug;
   "schools/utils": typeof schools_utils;
   "schools/validators": typeof schools_validators;
   "subscriptions/mutations": typeof subscriptions_mutations;
