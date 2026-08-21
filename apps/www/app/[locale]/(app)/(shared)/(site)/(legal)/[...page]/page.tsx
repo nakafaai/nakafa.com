@@ -2,13 +2,17 @@ import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { Effect, Option, Schema } from "effect";
 import type { Metadata } from "next";
+import { io } from "next/cache";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import {
   getPublishedPageCatalog,
   verifyPublishedPageCatalog,
 } from "@/lib/content/page/catalog";
-import { readPagePreview } from "@/lib/content/page/preview";
+import {
+  type PagePreviewInput,
+  readPagePreview,
+} from "@/lib/content/page/preview";
 import {
   getCurrentPublishedPage,
   renderCurrentPublishedPage,
@@ -32,6 +36,16 @@ async function resolvePageParams(params: PublicPageProps["params"]) {
     appLocale: AppLocaleSchema.make(locale),
     publicPath: PublicPathSchema.make(publicPath),
   };
+}
+
+/** Reads local preview ownership without starting Effect during prerendering. */
+async function readPagePreviewContent(input: PagePreviewInput) {
+  if (!hasPreviewConfig()) {
+    return Option.none();
+  }
+
+  await io();
+  return Effect.runPromise(readPagePreview(input));
 }
 
 /** Prebuilds every locale-owned route from the signed Page catalog. */
@@ -63,7 +77,7 @@ export async function generateMetadata({
   params,
 }: PublicPageProps): Promise<Metadata> {
   const input = await resolvePageParams(params);
-  const preview = await Effect.runPromise(readPagePreview(input));
+  const preview = await readPagePreviewContent(input);
   if (Option.isSome(preview)) {
     const page = preview.value.projection;
     const path = `/${page.appLocale}/${page.publicPath}`;
@@ -107,7 +121,7 @@ export default function Page({ params }: PublicPageProps) {
 /** Resolves the URL-specific Page inside its request-aware boundary. */
 async function PageContent({ params }: Pick<PublicPageProps, "params">) {
   const input = await resolvePageParams(params);
-  const preview = await Effect.runPromise(readPagePreview(input));
+  const preview = await readPagePreviewContent(input);
   if (Option.isSome(preview)) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-20">{preview.value.body}</main>
