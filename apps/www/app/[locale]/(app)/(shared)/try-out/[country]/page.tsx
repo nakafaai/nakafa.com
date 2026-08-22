@@ -1,4 +1,3 @@
-import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
@@ -18,7 +17,6 @@ import {
 import { getTryoutHref } from "@/components/tryout/route/path";
 import { TryoutHeader } from "@/components/tryout/shell/chrome";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { resolveTryoutExamSocialImage } from "@/lib/tryout/social-images";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
 
 /** Builds route-owned metadata for one localized try-out country. */
@@ -72,17 +70,6 @@ async function TryoutCountryRoute({
     getTranslations({ locale, namespace: "Tryouts" }),
   ]);
   const countryOptions = buildTryoutCountryOptions(locale, hub.countries);
-  const exams = page.exams.map((exam) => ({
-    ...exam,
-    imageSrc: Effect.runSync(
-      resolveTryoutExamSocialImage({
-        countryKey: page.country.countryKey,
-        examKey: exam.examKey,
-        appLocale: locale,
-        publicPath: exam.publicPath,
-      })
-    ),
-  }));
   const sourceUrl = page.sourceRevision
     ? getAksaraTreeUrl({
         path: `packages/corpus/tryout/${country}`,
@@ -109,10 +96,7 @@ async function TryoutCountryRoute({
           }}
         />
         <LayoutContent>
-          <TryoutCountryPageClient
-            actionLabel={tTryouts("open-exam-cta")}
-            page={{ exams }}
-          />
+          <TryoutCountryPageClient page={page} />
         </LayoutContent>
         <FooterContent>
           <RefContent githubUrl={sourceUrl} />

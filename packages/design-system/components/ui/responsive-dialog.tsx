@@ -25,6 +25,7 @@ interface Props {
   children?: ReactNode;
   description?: ReactNode;
   footer?: ReactNode;
+  footerVariant?: "bare" | "default";
   open: boolean;
   setOpen: (open: boolean) => void;
   title: ReactNode;
@@ -37,6 +38,7 @@ export function ResponsiveDialog({
   description,
   children,
   footer,
+  footerVariant = "default",
 }: Props) {
   const isDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp);
 
@@ -51,7 +53,9 @@ export function ResponsiveDialog({
             )}
           </DialogHeader>
           {!!children && <DialogPanel>{children}</DialogPanel>}
-          {!!footer && <DialogFooter>{footer}</DialogFooter>}
+          {!!footer && (
+            <DialogFooter variant={footerVariant}>{footer}</DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
     );
@@ -66,12 +70,12 @@ export function ResponsiveDialog({
             <DrawerDescription>{description}</DrawerDescription>
           )}
         </DrawerHeader>
-        <DrawerPanel
-          className={cn("flex-1 overflow-y-auto", !children && "hidden")}
-        >
-          {children}
-        </DrawerPanel>
-        {!!footer && <DrawerFooter>{footer}</DrawerFooter>}
+        <div className={cn("min-h-0 flex-1", !children && "hidden")}>
+          <DrawerPanel>{children}</DrawerPanel>
+        </div>
+        {!!footer && (
+          <DrawerFooter variant={footerVariant}>{footer}</DrawerFooter>
+        )}
       </DrawerPopup>
     </Drawer>
   );

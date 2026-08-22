@@ -1,6 +1,7 @@
 import {
   ANALYTICS_CONSENT_NOTICE_VERSION,
   AnonymousAnalyticsConsentRecordSchema,
+  CONSENT_NOTICE_VERSIONS,
   createAnonymousAnalyticsBrowserSignalDenial,
   createAnonymousAnalyticsConsent,
   decodeAnonymousAnalyticsConsent,
@@ -19,6 +20,20 @@ const grantedAnonymousConsent = Schema.decodeSync(
   decision: "granted",
   mechanism: "privacy-controls",
   noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+});
+
+const retainedAnonymousGrant = Schema.decodeSync(
+  AnonymousAnalyticsConsentRecordSchema
+)({
+  ...grantedAnonymousConsent,
+  noticeVersion: CONSENT_NOTICE_VERSIONS[1],
+});
+
+const retainedAnonymousDenial = Schema.decodeSync(
+  AnonymousAnalyticsConsentRecordSchema
+)({
+  ...retainedAnonymousGrant,
+  decision: "denied",
 });
 
 describe("analytics consent contract", () => {
@@ -223,21 +238,59 @@ describe("analytics consent contract", () => {
     ).toEqual({ scope: "anonymous", status: "granted" });
   });
 
-  it("prompts again when a retained anonymous decision is no longer current", () => {
+  it("requires renewed grants while preserving prior anonymous denials", () => {
     expect(
-      Reflect.apply(resolveAnalyticsConsentState, undefined, [
-        {
-          accountConsent: null,
-          anonymousConsent: Option.some({
-            ...grantedAnonymousConsent,
-            noticeVersion: "privacy-retained",
-          }),
-          hasBrowserPrivacySignal: false,
-          isAccountConsentResolved: false,
-          isAuthenticated: false,
-          isAuthLoading: false,
-        },
-      ])
+      Option.getOrUndefined(
+        decodeAnonymousAnalyticsConsent(JSON.stringify(retainedAnonymousGrant))
+      )
+    ).toEqual(retainedAnonymousGrant);
+    expect(
+      resolveAnalyticsConsentState({
+        accountConsent: null,
+        anonymousConsent: Option.some(retainedAnonymousGrant),
+        hasBrowserPrivacySignal: false,
+        isAccountConsentResolved: false,
+        isAuthenticated: false,
+        isAuthLoading: false,
+      })
     ).toEqual({ scope: "anonymous", status: "prompt" });
+    expect(
+      resolveAnalyticsConsentState({
+        accountConsent: null,
+        anonymousConsent: Option.some(retainedAnonymousDenial),
+        hasBrowserPrivacySignal: false,
+        isAccountConsentResolved: false,
+        isAuthenticated: false,
+        isAuthLoading: false,
+      })
+    ).toEqual({ scope: "anonymous", status: "denied" });
+  });
+
+  it("requires renewed grants while preserving prior account denials", () => {
+    const retainedAccountConsent = {
+      granted: true,
+      noticeVersion: CONSENT_NOTICE_VERSIONS[1],
+    };
+
+    expect(
+      resolveAnalyticsConsentState({
+        accountConsent: retainedAccountConsent,
+        anonymousConsent: Option.none(),
+        hasBrowserPrivacySignal: false,
+        isAccountConsentResolved: true,
+        isAuthenticated: true,
+        isAuthLoading: false,
+      })
+    ).toEqual({ scope: "account", status: "prompt" });
+    expect(
+      resolveAnalyticsConsentState({
+        accountConsent: { ...retainedAccountConsent, granted: false },
+        anonymousConsent: Option.none(),
+        hasBrowserPrivacySignal: false,
+        isAccountConsentResolved: true,
+        isAuthenticated: true,
+        isAuthLoading: false,
+      })
+    ).toEqual({ scope: "account", status: "denied" });
   });
 });

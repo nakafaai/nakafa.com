@@ -20,97 +20,119 @@ import { usePageNavigation } from "@/lib/content/page/context";
 /** Renders the non-blocking first decision and permanent preferences dialog. */
 export function AnalyticsConsentControls() {
   const t = useTranslations("AnalyticsConsent");
-  const controller = useAnalyticsConsent((state) => state);
+  const error = useAnalyticsConsent((state) => state.error);
+  const isAvailable = useAnalyticsConsent((state) => state.isAvailable);
+  const isPreferencesOpen = useAnalyticsConsent(
+    (state) => state.isPreferencesOpen
+  );
+  const setPreferencesOpen = useAnalyticsConsent(
+    (state) => state.setPreferencesOpen
+  );
+  const status = useAnalyticsConsent((state) => state.state.status);
 
-  if (!controller.isAvailable) {
+  if (!isAvailable) {
     return null;
   }
 
   const shouldPrompt =
-    controller.state.status === "prompt" ||
-    (controller.error === "load" && controller.state.status === "pending");
+    status === "prompt" || (error === "load" && status === "pending");
 
   return (
     <>
       {shouldPrompt ? (
         <section
           aria-label={t("title")}
-          className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-2xl sm:bottom-6"
+          className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-md sm:bottom-6"
         >
-          <Card className="shadow-lg" size="sm">
+          <Card className="max-h-[calc(100dvh-2rem)] shadow-lg" size="sm">
             <CardHeader>
               <CardTitle>{t("title")}</CardTitle>
-              <CardDescription>{t("description")}</CardDescription>
+              <CardDescription>{t("prompt-description")}</CardDescription>
             </CardHeader>
-            <CardContent>
-              <PrivacyPolicyLink />
-              <ConsentAgeNotice />
-              {controller.error ? (
-                <ConsentError error={controller.error} />
-              ) : null}
+            <CardContent className="min-h-0 flex-1 overflow-y-auto">
+              <ConsentDetails />
             </CardContent>
-            <CardFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
-              <Button
-                className="w-full sm:w-auto"
-                disabled={!controller.canDecline || controller.isSaving}
-                onClick={() => controller.decide(false)}
-                type="button"
-                variant="outline"
-              >
-                {t("decline")}
-              </Button>
-              <Button
-                className="w-full sm:w-auto"
-                disabled={!controller.canGrant || controller.isSaving}
-                onClick={() => controller.decide(true)}
-                type="button"
-                variant="outline"
-              >
-                {t("allow")}
-              </Button>
+            <CardFooter className="flex-col gap-2 sm:flex-row sm:justify-end max-sm:[&>[data-slot=button]]:w-full">
+              <ConsentActions />
             </CardFooter>
           </Card>
         </section>
       ) : null}
 
       <ResponsiveDialog
-        description={t("preferences-description")}
-        footer={
-          <>
-            <Button
-              disabled={!controller.canDecline || controller.isSaving}
-              onClick={() => controller.decide(false)}
-              type="button"
-              variant="outline"
-            >
-              {t("decline")}
-            </Button>
-            <Button
-              disabled={!controller.canGrant || controller.isSaving}
-              onClick={() => controller.decide(true)}
-              type="button"
-              variant="outline"
-            >
-              {t("allow")}
-            </Button>
-          </>
-        }
-        open={controller.isPreferencesOpen}
-        setOpen={controller.setPreferencesOpen}
-        title={t("preferences-title")}
+        description={<ConsentStatus />}
+        footer={<ConsentActions />}
+        footerVariant="bare"
+        open={isPreferencesOpen}
+        setOpen={setPreferencesOpen}
+        title={t("title")}
       >
-        <div className="flex flex-col gap-4">
-          <div className="rounded-lg border bg-muted/30 p-4">
-            <p className="font-medium text-sm">{t("current-choice")}</p>
-            <p className="mt-1 text-muted-foreground text-sm">
-              {t(`status-${controller.state.status}`)}
-            </p>
-          </div>
-          <PrivacyPolicyLink />
-          <ConsentAgeNotice />
-          {controller.error ? <ConsentError error={controller.error} /> : null}
+        <div className="flex flex-col gap-3">
+          <ConsentDetails />
         </div>
       </ResponsiveDialog>
+    </>
+  );
+}
+
+function ConsentStatus() {
+  const t = useTranslations("AnalyticsConsent");
+  const status = useAnalyticsConsent((state) => state.state.status);
+
+  return <span aria-live="polite">{t(`status-${status}`)}</span>;
+}
+
+function ConsentActions() {
+  const t = useTranslations("AnalyticsConsent");
+  const canDecline = useAnalyticsConsent((state) => state.canDecline);
+  const canGrant = useAnalyticsConsent((state) => state.canGrant);
+  const decide = useAnalyticsConsent((state) => state.decide);
+  const isSaving = useAnalyticsConsent((state) => state.isSaving);
+
+  return (
+    <>
+      <Button
+        disabled={!canDecline || isSaving}
+        onClick={() => decide(false)}
+        type="button"
+        variant="outline"
+      >
+        {t("decline")}
+      </Button>
+      <Button
+        disabled={!canGrant || isSaving}
+        onClick={() => decide(true)}
+        type="button"
+      >
+        {t("allow")}
+      </Button>
+    </>
+  );
+}
+
+function ConsentDetails() {
+  return (
+    <>
+      <ConsentDisclosure />
+      <ConsentNotices />
+    </>
+  );
+}
+
+function ConsentDisclosure() {
+  const t = useTranslations("AnalyticsConsent");
+
+  return <p className="text-muted-foreground text-sm">{t("description")}</p>;
+}
+
+function ConsentNotices() {
+  const error = useAnalyticsConsent((state) => state.error);
+
+  return (
+    <>
+      <ConsentAgeNotice />
+      <PrivacyPolicyLink />
+      {error ? <ConsentError error={error} /> : null}
     </>
   );
 }
@@ -145,9 +167,7 @@ function ConsentAgeNotice() {
   const t = useTranslations("AnalyticsConsent");
 
   return (
-    <p className="mt-2 text-muted-foreground text-sm">
-      {t("age-confirmation")}
-    </p>
+    <p className="text-muted-foreground text-sm">{t("age-confirmation")}</p>
   );
 }
 

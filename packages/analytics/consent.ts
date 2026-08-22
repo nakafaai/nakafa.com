@@ -23,8 +23,9 @@ export const ANALYTICS_BROWSER_SIGNAL_MECHANISM =
 
 /** Notice versions retained with legally relevant consent decisions. */
 export const CONSENT_NOTICE_VERSIONS = [
+  "privacy-2026-08-22",
   "privacy-2026-08-21",
-] satisfies readonly ["privacy-2026-08-21"];
+] satisfies readonly ["privacy-2026-08-22", "privacy-2026-08-21"];
 
 /** Privacy notice that currently governs optional product analytics. */
 export const ANALYTICS_CONSENT_NOTICE_VERSION = CONSENT_NOTICE_VERSIONS[0];
@@ -160,27 +161,33 @@ export function resolveAnalyticsConsentState({
       return { status: "pending" };
     }
 
-    if (
-      !accountConsent ||
-      accountConsent.noticeVersion !== ANALYTICS_CONSENT_NOTICE_VERSION
-    ) {
+    if (!accountConsent) {
       return { scope: "account", status: "prompt" };
     }
 
-    return {
-      scope: "account",
-      status: accountConsent.granted ? "granted" : "denied",
-    };
+    if (!accountConsent.granted) {
+      return { scope: "account", status: "denied" };
+    }
+
+    if (accountConsent.noticeVersion !== ANALYTICS_CONSENT_NOTICE_VERSION) {
+      return { scope: "account", status: "prompt" };
+    }
+
+    return { scope: "account", status: "granted" };
   }
 
   return Option.match(anonymousConsent, {
     onNone: () => ({ scope: "anonymous", status: "prompt" }),
     onSome: (record) => {
+      if (record.decision === "denied") {
+        return { scope: "anonymous", status: "denied" };
+      }
+
       if (record.noticeVersion !== ANALYTICS_CONSENT_NOTICE_VERSION) {
         return { scope: "anonymous", status: "prompt" };
       }
 
-      return { scope: "anonymous", status: record.decision };
+      return { scope: "anonymous", status: "granted" };
     },
   });
 }
