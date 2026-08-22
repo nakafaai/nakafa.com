@@ -22,6 +22,7 @@ catalogs:
 overrides:
   '@ai-sdk/devtools@1.0.12>@hono/node-server': 2.0.11
   '@changesets/parse@0.4.3>js-yaml': 4.3.1
+  '@effect/platform-node-shared': 4.0.0-rc.110
   '@modelcontextprotocol/sdk@1.30.0>@hono/node-server': 2.0.11
   '@react-email/ui@6.9.2>next': 16.3.2
   '@vercel/routing-utils@6.5.0>path-to-regexp': 6.3.0
@@ -1735,11 +1736,11 @@ packages:
     resolution: {integrity: sha512-NKBGBSIKUG584qrS1tyxVpX/AKJKQw5HgjYEnPLC0QsTw79JrGn+qUr8CXFb955Iy7GUdiiUv1rJ6JBGvaKb6w==}
     engines: {node: '>=18'}
 
-  '@effect/platform-node-shared@4.0.0-rc.111':
-    resolution: {integrity: sha512-iES0Q9vmjhaUKqeW9ceonuD45MUg/Ouk08LzRSptZ+B5qB0w9WlRjDmUz5TJmY2betNop5FRI5k4AD4mtQt3Bw==}
+  '@effect/platform-node-shared@4.0.0-rc.110':
+    resolution: {integrity: sha512-P8EZloxS7RtCOSL3VSBPyqSenUm93xLbXf9jkWoy67cibZ2wgZ9nAou9iN8f1i4vzgxUsWtDuy6BEmg67np6Zw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      effect: ^4.0.0-rc.111
+      effect: ^4.0.0-rc.110
 
   '@effect/platform-node@4.0.0-rc.110':
     resolution: {integrity: sha512-poj6VxTc2kRDowUHgjGXAZL2nWHTyGi/18607jK+pV9A9CH/wqZ4NeYj38rij95j5SiZ3U7Y1iOsk2Vfnr4GEw==}
@@ -8645,7 +8646,7 @@ snapshots:
     dependencies:
       '@edge-runtime/primitives': 6.0.0
 
-  '@effect/platform-node-shared@4.0.0-rc.111(effect@4.0.0-rc.110)':
+  '@effect/platform-node-shared@4.0.0-rc.110(effect@4.0.0-rc.110)':
     dependencies:
       '@types/ws': 8.18.1
       effect: 4.0.0-rc.110
@@ -8656,7 +8657,7 @@ snapshots:
 
   '@effect/platform-node@4.0.0-rc.110(effect@4.0.0-rc.110)(redis@6.2.1)':
     dependencies:
-      '@effect/platform-node-shared': 4.0.0-rc.111(effect@4.0.0-rc.110)
+      '@effect/platform-node-shared': 4.0.0-rc.110(effect@4.0.0-rc.110)
       effect: 4.0.0-rc.110
       mime: 4.1.0
       redis: 6.2.1

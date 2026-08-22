@@ -148,6 +148,11 @@ export const REGISTRY_REVIEWS = [
     "The platform package must match the Effect cohort.",
   ],
   [
+    "@effect/platform-node-shared@rc",
+    "4.0.0-rc.111",
+    "The transitive platform package must match the Effect cohort.",
+  ],
+  [
     "@effect/vitest@rc",
     "4.0.0-rc.111",
     "The test adapter must match the Effect cohort.",
@@ -338,6 +343,13 @@ export function validateDependencyPolicy({
   }
   if (workspace.catalog?.["@effect/vitest"] !== "4.0.0-rc.110") {
     problems.push("The Effect Vitest catalog must match Effect RC 110.");
+  }
+  if (
+    workspace.overrides?.["@effect/platform-node-shared"] !== "4.0.0-rc.110"
+  ) {
+    problems.push(
+      "The platform-node-shared override must match Effect RC 110."
+    );
   }
   if (workspace.catalog?.typescript !== "npm:@typescript/typescript6@6.0.2") {
     problems.push(
