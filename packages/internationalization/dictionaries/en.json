@@ -891,6 +891,7 @@
   },
   "AnalyticsConsent": {
     "title": "Optional analytics",
+    "prompt-description": "Choose whether Nakafa may use optional browser analytics.",
     "description": "If you choose Allow, PostHog records selected feature use and minimized browser error reports. Session replay stays off. Nakafa may separately send minimized server error reports without an account or browser identity to keep the service reliable.",
     "allow": "Allow",
     "decline": "Decline",

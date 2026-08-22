@@ -891,6 +891,7 @@
   },
   "AnalyticsConsent": {
     "title": "Analitik opsional",
+    "prompt-description": "Pilih apakah Nakafa boleh menggunakan analitik browser opsional.",
     "description": "Jika kamu memilih Izinkan, PostHog mencatat penggunaan fitur tertentu dan laporan kesalahan browser yang dibatasi. Rekaman sesi tetap nonaktif. Nakafa dapat mengirim laporan kesalahan server yang dibatasi secara terpisah tanpa identitas akun atau browser agar layanan tetap andal.",
     "allow": "Izinkan",
     "decline": "Tolak",

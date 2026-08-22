@@ -891,6 +891,7 @@
   },
   "AnalyticsConsent": {
     "title": "Optionale Analysen",
+    "prompt-description": "Entscheide, ob Nakafa optionale Browseranalysen nutzen darf.",
     "description": "Wenn du Erlauben wählst, erfasst PostHog ausgewählte Funktionsnutzung und minimierte Browserfehlerberichte. Sitzungsaufzeichnungen bleiben aus. Nakafa kann separat minimierte Serverfehlerberichte ohne Konto- oder Browserkennung senden, damit der Dienst zuverlässig bleibt.",
     "allow": "Erlauben",
     "decline": "Ablehnen",

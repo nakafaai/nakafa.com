@@ -47,12 +47,10 @@ export function AnalyticsConsentControls() {
           <Card className="max-h-[calc(100dvh-2rem)] shadow-lg" size="sm">
             <CardHeader>
               <CardTitle>{t("title")}</CardTitle>
-              <CardDescription>
-                <ConsentDisclosure />
-              </CardDescription>
+              <CardDescription>{t("prompt-description")}</CardDescription>
             </CardHeader>
             <CardContent className="min-h-0 flex-1 overflow-y-auto">
-              <ConsentNotices />
+              <ConsentDetails />
             </CardContent>
             <CardFooter className="flex-col gap-2 sm:flex-row sm:justify-end max-sm:[&>[data-slot=button]]:w-full">
               <ConsentActions />
