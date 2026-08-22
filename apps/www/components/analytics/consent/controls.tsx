@@ -55,7 +55,7 @@ export function AnalyticsConsentControls() {
                 disabled={!controller.canDecline || controller.isSaving}
                 onClick={() => controller.decide(false)}
                 type="button"
-                variant="outline"
+                variant="ghost"
               >
                 {t("decline")}
               </Button>
@@ -64,7 +64,6 @@ export function AnalyticsConsentControls() {
                 disabled={!controller.canGrant || controller.isSaving}
                 onClick={() => controller.decide(true)}
                 type="button"
-                variant="outline"
               >
                 {t("allow")}
               </Button>
@@ -74,14 +73,14 @@ export function AnalyticsConsentControls() {
       ) : null}
 
       <ResponsiveDialog
-        description={t("preferences-description")}
+        description={t("description")}
         footer={
           <>
             <Button
               disabled={!controller.canDecline || controller.isSaving}
               onClick={() => controller.decide(false)}
               type="button"
-              variant="outline"
+              variant="ghost"
             >
               {t("decline")}
             </Button>
@@ -89,25 +88,22 @@ export function AnalyticsConsentControls() {
               disabled={!controller.canGrant || controller.isSaving}
               onClick={() => controller.decide(true)}
               type="button"
-              variant="outline"
             >
               {t("allow")}
             </Button>
           </>
         }
+        footerVariant="bare"
         open={controller.isPreferencesOpen}
         setOpen={controller.setPreferencesOpen}
-        title={t("preferences-title")}
+        title={t("title")}
       >
-        <div className="flex flex-col gap-4">
-          <div className="rounded-lg border bg-muted/30 p-4">
-            <p className="font-medium text-sm">{t("current-choice")}</p>
-            <p className="mt-1 text-muted-foreground text-sm">
-              {t(`status-${controller.state.status}`)}
-            </p>
-          </div>
-          <PrivacyPolicyLink />
+        <div className="flex flex-col gap-3">
+          <p aria-live="polite" className="font-medium text-sm">
+            {t(`status-${controller.state.status}`)}
+          </p>
           <ConsentAgeNotice />
+          <PrivacyPolicyLink />
           {controller.error ? <ConsentError error={controller.error} /> : null}
         </div>
       </ResponsiveDialog>
@@ -145,9 +141,7 @@ function ConsentAgeNotice() {
   const t = useTranslations("AnalyticsConsent");
 
   return (
-    <p className="mt-2 text-muted-foreground text-sm">
-      {t("age-confirmation")}
-    </p>
+    <p className="text-muted-foreground text-sm">{t("age-confirmation")}</p>
   );
 }
 

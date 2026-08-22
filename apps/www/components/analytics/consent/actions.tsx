@@ -1,6 +1,6 @@
 "use client";
 
-import { LockIcon } from "@hugeicons/core-free-icons";
+import { Analytics01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -54,7 +54,7 @@ export function AnalyticsConsentMenuItem() {
       className="cursor-pointer"
       onClick={() => setPreferencesOpen(true)}
     >
-      <HugeIcons icon={LockIcon} />
+      <HugeIcons icon={Analytics01Icon} />
       {t("manage")}
     </DropdownMenuItem>
   );
@@ -75,7 +75,7 @@ export function AnalyticsConsentSidebarItem() {
   return (
     <SidebarMenuItem>
       <SidebarMenuButton onClick={() => setPreferencesOpen(true)}>
-        <HugeIcons icon={LockIcon} />
+        <HugeIcons icon={Analytics01Icon} />
         {t("manage")}
       </SidebarMenuButton>
     </SidebarMenuItem>
