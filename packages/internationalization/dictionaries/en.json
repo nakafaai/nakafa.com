@@ -892,10 +892,10 @@
   "AnalyticsConsent": {
     "title": "Usage data",
     "prompt-description": "Sharing it is optional.",
-    "description": "If you allow it, we can see which features people use and what needs fixing. We never record your screen. Nakafa may still learn that something broke, even when you decline, but the report is not linked to your account or browser.",
+    "description": "Allow Nakafa to see which features you use and what needs fixing. We never record your screen.",
     "allow": "Allow",
     "decline": "Decline",
-    "age-confirmation": "Choose Allow only if you are 18 or older, or 13 to 17 with approval from a parent or legal guardian.",
+    "age-confirmation": "Allow only if you are 18 or older, or 13 to 17 with a parent or legal guardian's approval.",
     "manage": "Usage data",
     "status-granted": "Usage sharing is on",
     "status-denied": "Usage sharing is off",
