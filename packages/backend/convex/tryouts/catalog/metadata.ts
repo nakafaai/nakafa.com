@@ -32,6 +32,10 @@ const tryoutAlternateValidator = v.object({
   appLocale: appLocaleValidator,
   publicPath: v.string(),
 });
+const tryoutSocialImageIdentityValidator = v.object({
+  countryKey: v.string(),
+  examKey: v.string(),
+});
 
 export const tryoutMetadataReturnValidator = v.object({
   route: v.union(
@@ -40,6 +44,10 @@ export const tryoutMetadataReturnValidator = v.object({
       alternates: v.array(tryoutAlternateValidator),
       description: v.optional(v.string()),
       publicPath: v.string(),
+      socialImageIdentity: v.union(
+        v.null(),
+        tryoutSocialImageIdentityValidator
+      ),
       title: v.string(),
     })
   ),
@@ -102,6 +110,13 @@ export const readTryoutMetadata = Effect.fn("tryouts.catalog.readMetadata")(
         alternates,
         description: current.description,
         publicPath: currentPublicPath,
+        socialImageIdentity:
+          current.kind === "exam"
+            ? {
+                countryKey: current.countryKey,
+                examKey: current.examKey,
+              }
+            : null,
         title: current.title,
       },
     };

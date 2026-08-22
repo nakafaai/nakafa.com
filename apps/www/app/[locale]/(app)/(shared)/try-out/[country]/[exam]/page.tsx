@@ -25,8 +25,6 @@ export async function generateMetadata({
   const locale = getLocaleOrThrow(localeParam);
 
   return generateTryoutRouteMetadata({
-    countryKey: country,
-    examKey: exam,
     kind: "exam",
     locale,
     publicPath: getTryoutHref({ country, exam }).slice(1),

@@ -1,4 +1,5 @@
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
+import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -21,6 +22,7 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout-source";
 import { convexTest } from "convex-test";
+import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 /** Activates the smallest coherent two-locale catalog. */
@@ -78,6 +80,49 @@ describe("tryouts/catalog/metadata", () => {
           { appLocale: "id", publicPath: "try-out/indonesia" },
         ],
         publicPath: "try-out/indonesia",
+      },
+    });
+  });
+
+  it("returns stable exam identity with a localized German route", async () => {
+    const t = convexTest(schema, convexModules);
+    const catalog = Schema.decodeSync(Schema.Array(TryoutCatalogRowSchema))(
+      makeTryoutStartHierarchy("de", "visible").map((row) => {
+        if (!row.publicPath) {
+          return row;
+        }
+        return {
+          ...row,
+          publicPath: PublicPathSchema.make(
+            row.publicPath.replace("try-out/indonesia", "try-out/indonesien")
+          ),
+        };
+      })
+    );
+    await t.mutation((ctx) =>
+      activateTryoutSnapshot(ctx, {
+        catalog,
+        placements: [makeTryoutStartPlacement("de")],
+      })
+    );
+
+    await expect(
+      t.query((ctx) =>
+        runConvexProgram(
+          readTryoutMetadata(ctx, {
+            kind: "exam",
+            appLocale: "de",
+            publicPath: "try-out/indonesien/tka",
+          })
+        )
+      )
+    ).resolves.toMatchObject({
+      route: {
+        publicPath: "try-out/indonesien/tka",
+        socialImageIdentity: {
+          countryKey: "indonesia",
+          examKey: "tka",
+        },
       },
     });
   });

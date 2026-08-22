@@ -14,19 +14,10 @@ import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
 type TryoutMetadataKind = Parameters<typeof readTryoutMetadata>[0]["kind"];
 
 interface TryoutMetadataQueryInput {
+  readonly kind: TryoutMetadataKind;
   readonly locale: Locale;
   readonly publicPath: string;
 }
-
-type TryoutMetadataInput =
-  | (TryoutMetadataQueryInput & {
-      readonly countryKey: string;
-      readonly examKey: string;
-      readonly kind: "exam";
-    })
-  | (TryoutMetadataQueryInput & {
-      readonly kind: Exclude<TryoutMetadataKind, "exam">;
-    });
 
 interface RetainedTryoutMetadataSource {
   readonly description?: string;
@@ -46,7 +37,7 @@ export function createRetainedTryoutMetadata(
 
 /** Generates exact canonical metadata for one public try-out hierarchy route. */
 export async function generateTryoutRouteMetadata(
-  input: TryoutMetadataInput
+  input: TryoutMetadataQueryInput
 ): Promise<Metadata> {
   const appLocale = AppLocaleSchema.make(input.locale);
   const queryInput = {
@@ -66,17 +57,21 @@ export async function generateTryoutRouteMetadata(
 
   const path = `/${input.locale}/${source.publicPath}`;
   const description = source.description ?? tTryouts("metadata-description");
-  const image =
-    input.kind === "exam"
-      ? Effect.runSync(
-          resolveTryoutExamSocialImage({
-            countryKey: input.countryKey,
-            examKey: input.examKey,
-            appLocale,
-            publicPath: source.publicPath,
-          })
-        )
-      : getOgUrl(input.locale, source.publicPath);
+  let image: string;
+  if (input.kind === "exam") {
+    if (!source.socialImageIdentity) {
+      notFound();
+    }
+    image = Effect.runSync(
+      resolveTryoutExamSocialImage({
+        ...source.socialImageIdentity,
+        appLocale,
+        publicPath: source.publicPath,
+      })
+    );
+  } else {
+    image = getOgUrl(input.locale, source.publicPath);
+  }
 
   return {
     title: { absolute: source.title },
