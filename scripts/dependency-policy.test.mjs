@@ -56,6 +56,9 @@ function validInput() {
         effect: "4.0.0-rc.110",
         typescript: "npm:@typescript/typescript6@6.0.2",
       },
+      overrides: {
+        "@effect/platform-node-shared": "4.0.0-rc.110",
+      },
       update: { ignoreDeps },
     },
   };
@@ -95,6 +98,7 @@ test("reports drift, missing consumers, and obsolete Effect packages", () => {
     "effect",
   ];
   input.workspace.minimumReleaseAgeStrict = false;
+  input.workspace.overrides["@effect/platform-node-shared"] = "4.0.0-rc.111";
   input.workspace.update.ignoreDeps = [];
 
   const problems = validateDependencyPolicy(input);
@@ -103,6 +107,9 @@ test("reports drift, missing consumers, and obsolete Effect packages", () => {
     problems.some((problem) => problem.includes("expected at least 6"))
   );
   assert.ok(problems.some((problem) => problem.includes("obsolete Effect")));
+  assert.ok(
+    problems.some((problem) => problem.includes("platform-node-shared"))
+  );
   assert.ok(problems.some((problem) => problem.includes("react-doctor")));
   assert.ok(problems.some((problem) => problem.includes("update.ignoreDeps")));
   assert.ok(problems.some((problem) => problem.includes("1440 minutes")));
