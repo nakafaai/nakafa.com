@@ -892,7 +892,7 @@
   },
   "AnalyticsConsent": {
     "title": "Optional analytics",
-    "description": "Nakafa uses PostHog only after you allow it. It records selected feature use and minimized browser error reports. Session replay stays off.",
+    "description": "Optional browser analytics with PostHog starts only after you allow it and records selected feature use plus minimized browser errors without session replay. Separately, Nakafa may send minimized server errors without an account or analytics identity to keep the service reliable.",
     "allow": "Allow",
     "decline": "Decline",
     "age-confirmation": "By choosing Allow, you confirm that you are at least 18. If you are 13 to 17, a parent or legal guardian must approve this choice with you.",

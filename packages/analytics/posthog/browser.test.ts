@@ -169,7 +169,7 @@ describe("consent-aware PostHog browser runtime", () => {
       analytics.synchronizeBrowserAnalyticsIdentity({
         consentDecidedAt: 100,
         consentMechanism: "privacy-controls",
-        consentNoticeVersion: "privacy-2026-08-21",
+        consentNoticeVersion: "privacy-2026-08-22",
         status: "anonymous",
       })
     );
@@ -211,7 +211,7 @@ describe("consent-aware PostHog browser runtime", () => {
       analytics.synchronizeBrowserAnalyticsIdentity({
         consentDecidedAt: 100,
         consentMechanism: "privacy-controls",
-        consentNoticeVersion: "privacy-2026-08-21",
+        consentNoticeVersion: "privacy-2026-08-22",
         status: "anonymous",
       })
     );
@@ -221,7 +221,7 @@ describe("consent-aware PostHog browser runtime", () => {
       analytics.synchronizeBrowserAnalyticsIdentity({
         consentDecidedAt: 100,
         consentMechanism: "privacy-controls",
-        consentNoticeVersion: "privacy-2026-08-21",
+        consentNoticeVersion: "privacy-2026-08-22",
         status: "anonymous",
       })
     );
@@ -231,7 +231,7 @@ describe("consent-aware PostHog browser runtime", () => {
       analytics.synchronizeBrowserAnalyticsIdentity({
         consentDecidedAt: 100,
         consentMechanism: "privacy-controls",
-        consentNoticeVersion: "privacy-2026-08-21",
+        consentNoticeVersion: "privacy-2026-08-22",
         plan: "free",
         role: "student",
         status: "identified",
@@ -244,7 +244,7 @@ describe("consent-aware PostHog browser runtime", () => {
       analytics.synchronizeBrowserAnalyticsIdentity({
         consentDecidedAt: 100,
         consentMechanism: "privacy-controls",
-        consentNoticeVersion: "privacy-2026-08-21",
+        consentNoticeVersion: "privacy-2026-08-22",
         plan: "free",
         role: null,
         status: "identified",
@@ -259,7 +259,7 @@ describe("consent-aware PostHog browser runtime", () => {
       consent_decided_at: "1970-01-01T00:00:00.100Z",
       consent_decision: "granted",
       consent_mechanism: "privacy-controls",
-      consent_notice_version: "privacy-2026-08-21",
+      consent_notice_version: "privacy-2026-08-22",
       consent_scope: "account",
     });
   });
@@ -271,7 +271,7 @@ describe("consent-aware PostHog browser runtime", () => {
       analytics.synchronizeBrowserAnalyticsIdentity({
         consentDecidedAt: 100,
         consentMechanism: "privacy-controls",
-        consentNoticeVersion: "privacy-2026-08-21",
+        consentNoticeVersion: "privacy-2026-08-22",
         status: "anonymous",
       })
     );
@@ -295,7 +295,7 @@ describe("consent-aware PostHog browser runtime", () => {
         .synchronizeBrowserAnalyticsIdentity({
           consentDecidedAt: 100,
           consentMechanism: "privacy-controls",
-          consentNoticeVersion: "privacy-2026-08-21",
+          consentNoticeVersion: "privacy-2026-08-22",
           status: "anonymous",
         })
         .pipe(Effect.flip)

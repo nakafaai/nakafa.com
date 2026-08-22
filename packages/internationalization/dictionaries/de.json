@@ -892,7 +892,7 @@
   },
   "AnalyticsConsent": {
     "title": "Optionale Analysen",
-    "description": "Nakafa nutzt PostHog erst nach deiner Erlaubnis. Es erfasst die Nutzung ausgewählter Funktionen und minimierte Browserfehlerberichte. Sitzungsaufzeichnungen bleiben aus.",
+    "description": "Optionale Browseranalysen mit PostHog starten erst nach deiner Erlaubnis und erfassen ausgewählte Funktionsnutzung sowie minimierte Browserfehler ohne Sitzungsaufzeichnungen. Separat kann Nakafa minimierte Serverfehler ohne Konto- oder Analysekennung senden, um den Dienst zuverlässig zu betreiben.",
     "allow": "Erlauben",
     "decline": "Ablehnen",
     "age-confirmation": "Wenn du Erlauben wählst, bestätigst du, dass du mindestens 18 Jahre alt bist. Bist du 13 bis 17 Jahre alt, brauchst du dafür die Zustimmung eines Elternteils oder deiner gesetzlichen Vertretung.",

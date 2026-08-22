@@ -1,6 +1,7 @@
 import {
   ANALYTICS_CONSENT_NOTICE_VERSION,
   AnonymousAnalyticsConsentRecordSchema,
+  CONSENT_NOTICE_VERSIONS,
   createAnonymousAnalyticsBrowserSignalDenial,
   createAnonymousAnalyticsConsent,
   decodeAnonymousAnalyticsConsent,
@@ -19,6 +20,13 @@ const grantedAnonymousConsent = Schema.decodeSync(
   decision: "granted",
   mechanism: "privacy-controls",
   noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+});
+
+const retainedAnonymousConsent = Schema.decodeSync(
+  AnonymousAnalyticsConsentRecordSchema
+)({
+  ...grantedAnonymousConsent,
+  noticeVersion: CONSENT_NOTICE_VERSIONS[1],
 });
 
 describe("analytics consent contract", () => {
@@ -223,21 +231,23 @@ describe("analytics consent contract", () => {
     ).toEqual({ scope: "anonymous", status: "granted" });
   });
 
-  it("prompts again when a retained anonymous decision is no longer current", () => {
+  it("retains prior provenance and prompts again under the current notice", () => {
     expect(
-      Reflect.apply(resolveAnalyticsConsentState, undefined, [
-        {
-          accountConsent: null,
-          anonymousConsent: Option.some({
-            ...grantedAnonymousConsent,
-            noticeVersion: "privacy-retained",
-          }),
-          hasBrowserPrivacySignal: false,
-          isAccountConsentResolved: false,
-          isAuthenticated: false,
-          isAuthLoading: false,
-        },
-      ])
+      Option.getOrUndefined(
+        decodeAnonymousAnalyticsConsent(
+          JSON.stringify(retainedAnonymousConsent)
+        )
+      )
+    ).toEqual(retainedAnonymousConsent);
+    expect(
+      resolveAnalyticsConsentState({
+        accountConsent: null,
+        anonymousConsent: Option.some(retainedAnonymousConsent),
+        hasBrowserPrivacySignal: false,
+        isAccountConsentResolved: false,
+        isAuthenticated: false,
+        isAuthLoading: false,
+      })
     ).toEqual({ scope: "anonymous", status: "prompt" });
   });
 });

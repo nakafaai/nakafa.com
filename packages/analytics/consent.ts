@@ -23,8 +23,9 @@ export const ANALYTICS_BROWSER_SIGNAL_MECHANISM =
 
 /** Notice versions retained with legally relevant consent decisions. */
 export const CONSENT_NOTICE_VERSIONS = [
+  "privacy-2026-08-22",
   "privacy-2026-08-21",
-] satisfies readonly ["privacy-2026-08-21"];
+] satisfies readonly ["privacy-2026-08-22", "privacy-2026-08-21"];
 
 /** Privacy notice that currently governs optional product analytics. */
 export const ANALYTICS_CONSENT_NOTICE_VERSION = CONSENT_NOTICE_VERSIONS[0];
