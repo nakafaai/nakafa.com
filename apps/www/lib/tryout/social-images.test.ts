@@ -79,9 +79,22 @@ describe("try-out social images", () => {
           countryKey: "indonesia",
           examKey: "tka",
           appLocale: "de",
-          publicPath: "try-out/indonesia/tka",
+          publicPath: "try-out/indonesien/tka",
         })
-      ).toBe("/de/og/try-out/indonesia/tka/image.png");
+      ).toBe("/de/og/try-out/indonesien/tka/image.png");
+    })
+  );
+
+  it.live("keeps stable source keys separate from localized route slugs", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* resolveTryoutExamSocialImage({
+          countryKey: "indonesia",
+          examKey: "snbt",
+          appLocale: "de",
+          publicPath: "try-out/indonesien/snbt",
+        })
+      ).toBe("/de/og/try-out/indonesien/snbt/image.png");
     })
   );
 
@@ -121,26 +134,25 @@ describe("try-out social images", () => {
       })
   );
 
-  it.live(
-    "rejects a valid identity whose public path belongs to another exam",
-    () =>
-      Effect.gen(function* () {
-        const error = yield* Effect.flip(
-          resolveTryoutExamSocialImage({
-            countryKey: "indonesia",
-            examKey: "tka",
-            appLocale: "id",
-            publicPath: "try-out/indonesia/snbt",
-          })
-        );
+  it.live.each([
+    "try-out",
+    "try-out/indonesien",
+    "try-out/indonesien/snbt/2027",
+  ])("rejects non-exam public path %s", (publicPath) =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        resolveTryoutExamSocialImage({
+          countryKey: "indonesia",
+          examKey: "snbt",
+          appLocale: "de",
+          publicPath,
+        })
+      );
 
-        expect(error).toMatchObject({
-          _tag: "TryoutSocialImageIdentityMismatchError",
-          actualPublicPath: "try-out/indonesia/snbt",
-          expectedPublicPath: "try-out/indonesia/tka",
-          message:
-            "Try-out social image identity does not match its public path",
-        });
-      })
+      expect(error).toMatchObject({
+        _tag: "InvalidTryoutSocialImageIdentityError",
+        message: "Invalid try-out social image identity",
+      });
+    })
   );
 });

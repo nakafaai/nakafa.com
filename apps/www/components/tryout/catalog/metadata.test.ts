@@ -61,6 +61,7 @@ describe("try-out route metadata", () => {
         ],
         description: "Signed section description",
         publicPath: "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
+        socialImageIdentity: null,
         title: "Quantitative Knowledge",
       },
     });
@@ -107,13 +108,15 @@ describe("try-out route metadata", () => {
         alternates: [],
         description: "Signed SNBT description",
         publicPath: "try-out/indonesia/snbt",
+        socialImageIdentity: {
+          countryKey: "indonesia",
+          examKey: "snbt",
+        },
         title: "SNBT",
       },
     });
 
     const metadata = await generateTryoutRouteMetadata({
-      countryKey: "indonesia",
-      examKey: "snbt",
       kind: "exam",
       locale: "id",
       publicPath: "try-out/indonesia/snbt",
@@ -134,6 +137,36 @@ describe("try-out route metadata", () => {
     });
   });
 
+  it("uses the signed localized path with stable source identity", async () => {
+    runtimeMocks.readTryoutMetadata.mockResolvedValue({
+      route: {
+        alternates: [],
+        description: "Signierte SNBT-Beschreibung",
+        publicPath: "try-out/indonesien/snbt",
+        socialImageIdentity: {
+          countryKey: "indonesia",
+          examKey: "snbt",
+        },
+        title: "SNBT",
+      },
+    });
+
+    const metadata = await generateTryoutRouteMetadata({
+      kind: "exam",
+      locale: "de",
+      publicPath: "try-out/indonesien/snbt",
+    });
+
+    expect(metadata).toMatchObject({
+      openGraph: {
+        images: [{ url: "/de/og/try-out/indonesien/snbt/image.png" }],
+      },
+      twitter: {
+        images: [{ url: "/de/og/try-out/indonesien/snbt/image.png" }],
+      },
+    });
+  });
+
   it.each(["country", "track", "set", "section"] as const)(
     "keeps generated social images for a %s route",
     async (kind) => {
@@ -142,6 +175,7 @@ describe("try-out route metadata", () => {
         route: {
           alternates: [],
           publicPath,
+          socialImageIdentity: null,
           title: "Signed route",
         },
       });
@@ -176,6 +210,7 @@ describe("try-out route metadata", () => {
       route: {
         alternates: [],
         publicPath: "try-out/indonesia",
+        socialImageIdentity: null,
         title: "Indonesia",
       },
     });
@@ -187,6 +222,26 @@ describe("try-out route metadata", () => {
     });
 
     expect(metadata.description).toBe("translated:metadata-description");
+  });
+
+  it("fails closed when a signed exam has no stable image identity", async () => {
+    runtimeMocks.readTryoutMetadata.mockResolvedValue({
+      route: {
+        alternates: [],
+        publicPath: "try-out/indonesien/snbt",
+        socialImageIdentity: null,
+        title: "SNBT",
+      },
+    });
+
+    await expect(
+      generateTryoutRouteMetadata({
+        kind: "exam",
+        locale: "de",
+        publicPath: "try-out/indonesien/snbt",
+      })
+    ).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(navigationMocks.notFound).toHaveBeenCalledOnce();
   });
 
   it("returns the route-level 404 for an unknown hierarchy path", async () => {

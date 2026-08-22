@@ -46,7 +46,17 @@ const TryoutExamSocialImageIdentitySchema = Schema.Struct({
   countryKey: TryoutKeySchema,
   examKey: TryoutKeySchema,
   appLocale: ActiveAppLocaleSchema,
-  publicPath: PublicPathSchema,
+  publicPath: PublicPathSchema.pipe(
+    Schema.check(
+      Schema.makeFilter(
+        (publicPath) => {
+          const segments = publicPath.split("/");
+          return segments.length === 3 && segments[0] === "try-out";
+        },
+        { message: "Expected one localized try-out exam public path." }
+      )
+    )
+  ),
 });
 export class InvalidTryoutSocialImageIdentityError extends Schema.TaggedError<InvalidTryoutSocialImageIdentityError>()(
   "InvalidTryoutSocialImageIdentityError",
@@ -57,14 +67,6 @@ export class InvalidTryoutSocialImageIdentityError extends Schema.TaggedError<In
 class InvalidReviewedTryoutSocialImageRegistryError extends Schema.TaggedError<InvalidReviewedTryoutSocialImageRegistryError>()(
   "InvalidReviewedTryoutSocialImageRegistryError",
   {
-    message: Schema.String,
-  }
-) {}
-export class TryoutSocialImageIdentityMismatchError extends Schema.TaggedError<TryoutSocialImageIdentityMismatchError>()(
-  "TryoutSocialImageIdentityMismatchError",
-  {
-    actualPublicPath: Schema.String,
-    expectedPublicPath: Schema.String,
     message: Schema.String,
   }
 ) {}
@@ -104,7 +106,6 @@ export function resolveTryoutExamSocialImage(
   string,
   | InvalidReviewedTryoutSocialImageRegistryError
   | InvalidTryoutSocialImageIdentityError
-  | TryoutSocialImageIdentityMismatchError
 > {
   const decodedIdentity = decodeTryoutExamSocialImageIdentity(input);
   if (Result.isFailure(decodedIdentity)) {
@@ -115,16 +116,6 @@ export function resolveTryoutExamSocialImage(
     );
   }
   const identity = decodedIdentity.success;
-  const expectedPublicPath = `try-out/${identity.countryKey}/${identity.examKey}`;
-  if (identity.publicPath !== expectedPublicPath) {
-    return Effect.fail(
-      new TryoutSocialImageIdentityMismatchError({
-        actualPublicPath: identity.publicPath,
-        expectedPublicPath,
-        message: "Try-out social image identity does not match its public path",
-      })
-    );
-  }
   /* istanbul ignore next -- invalid authored registry fails every real resolver fixture */
   if (Result.isFailure(reviewedTryoutSocialImageByIdentity)) {
     return Effect.fail(reviewedTryoutSocialImageByIdentity.failure);
