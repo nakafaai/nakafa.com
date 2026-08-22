@@ -42,17 +42,17 @@ export function AnalyticsConsentControls() {
       {shouldPrompt ? (
         <section
           aria-label={t("title")}
-          className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-2xl sm:bottom-6"
+          className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-md sm:bottom-6"
         >
           <Card className="max-h-[calc(100dvh-2rem)] shadow-lg" size="sm">
             <CardHeader>
               <CardTitle>{t("title")}</CardTitle>
               <CardDescription>
-                <ConsentStatus />
+                <ConsentDisclosure />
               </CardDescription>
             </CardHeader>
             <CardContent className="min-h-0 flex-1 overflow-y-auto">
-              <ConsentDetails />
+              <ConsentNotices />
             </CardContent>
             <CardFooter className="flex-col gap-2 sm:flex-row sm:justify-end max-sm:[&>[data-slot=button]]:w-full">
               <ConsentActions />
@@ -114,12 +114,25 @@ function ConsentActions() {
 }
 
 function ConsentDetails() {
+  return (
+    <>
+      <ConsentDisclosure />
+      <ConsentNotices />
+    </>
+  );
+}
+
+function ConsentDisclosure() {
   const t = useTranslations("AnalyticsConsent");
+
+  return <p className="text-muted-foreground text-sm">{t("description")}</p>;
+}
+
+function ConsentNotices() {
   const error = useAnalyticsConsent((state) => state.error);
 
   return (
     <>
-      <p className="text-muted-foreground text-sm">{t("description")}</p>
       <ConsentAgeNotice />
       <PrivacyPolicyLink />
       {error ? <ConsentError error={error} /> : null}
