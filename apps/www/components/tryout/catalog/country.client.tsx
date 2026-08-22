@@ -3,22 +3,23 @@
 import type { api } from "@repo/backend/convex/_generated/api";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import type { FunctionReturnType } from "convex/server";
-import { ChoiceCardContent } from "@/components/shared/choice/card";
-import { choiceCardVariants } from "@/components/shared/choice/variants";
 import {
-  ChoiceCardIcon,
-  ChoiceCardVisual,
-} from "@/components/shared/choice/visual";
+  CatalogCard,
+  CatalogCardGradient,
+} from "@/components/shared/catalog/card";
+import { ChoiceCardIcon } from "@/components/shared/choice/visual";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { getTryoutExamIcon } from "@/components/tryout/catalog/icons";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 
 type CountryPageQuery = typeof api.tryouts.queries.catalog.getCountryPage;
 
-/** Renders one compact exam chooser with identity-owned gradient icons. */
+/** Renders one signed try-out country catalog with gradient exam artwork. */
 export function TryoutCountryPageClient({
+  actionLabel,
   page,
 }: {
+  actionLabel: string;
   page: {
     readonly exams: NonNullable<FunctionReturnType<CountryPageQuery>>["exams"];
   };
@@ -28,20 +29,20 @@ export function TryoutCountryPageClient({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4 pt-6 pb-24 md:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
       {page.exams.map((exam) => (
-        <IntentLink
-          className={choiceCardVariants()}
-          href={getTryoutPublicPathHref(exam.publicPath)}
+        <CatalogCard
+          action={
+            <IntentLink href={getTryoutPublicPathHref(exam.publicPath)} />
+          }
+          actionLabel={actionLabel}
           key={exam.examKey}
+          title={exam.title}
         >
-          <ChoiceCardVisual seed={exam.publicPath}>
+          <CatalogCardGradient seed={exam.publicPath}>
             <ChoiceCardIcon icon={getTryoutExamIcon(exam.examKey)} />
-          </ChoiceCardVisual>
-          <ChoiceCardContent>
-            <h2>{exam.title}</h2>
-          </ChoiceCardContent>
-        </IntentLink>
+          </CatalogCardGradient>
+        </CatalogCard>
       ))}
     </div>
   );

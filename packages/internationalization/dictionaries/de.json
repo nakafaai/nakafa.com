@@ -345,6 +345,7 @@
     "exam-count": "{count, plural, =0 {Noch keine Prüfungen} =1 {# Prüfung} other {# Prüfungen}}",
     "set-count": "{count, plural, =0 {Noch keine Aufgabensätze} =1 {# Aufgabensatz} other {# Aufgabensätze}}",
     "open-country-cta": "Prüfungen anzeigen",
+    "open-exam-cta": "Optionen anzeigen",
     "open-set-cta": "Aufgabensätze anzeigen",
     "open-section-cta": "Abschnitt öffnen",
     "back-to-tryout": "Zurück zu den Probetests",
