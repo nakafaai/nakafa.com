@@ -161,27 +161,33 @@ export function resolveAnalyticsConsentState({
       return { status: "pending" };
     }
 
-    if (
-      !accountConsent ||
-      accountConsent.noticeVersion !== ANALYTICS_CONSENT_NOTICE_VERSION
-    ) {
+    if (!accountConsent) {
       return { scope: "account", status: "prompt" };
     }
 
-    return {
-      scope: "account",
-      status: accountConsent.granted ? "granted" : "denied",
-    };
+    if (!accountConsent.granted) {
+      return { scope: "account", status: "denied" };
+    }
+
+    if (accountConsent.noticeVersion !== ANALYTICS_CONSENT_NOTICE_VERSION) {
+      return { scope: "account", status: "prompt" };
+    }
+
+    return { scope: "account", status: "granted" };
   }
 
   return Option.match(anonymousConsent, {
     onNone: () => ({ scope: "anonymous", status: "prompt" }),
     onSome: (record) => {
+      if (record.decision === "denied") {
+        return { scope: "anonymous", status: "denied" };
+      }
+
       if (record.noticeVersion !== ANALYTICS_CONSENT_NOTICE_VERSION) {
         return { scope: "anonymous", status: "prompt" };
       }
 
-      return { scope: "anonymous", status: record.decision };
+      return { scope: "anonymous", status: "granted" };
     },
   });
 }

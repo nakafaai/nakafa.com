@@ -70,11 +70,9 @@ export function ResponsiveDialog({
             <DrawerDescription>{description}</DrawerDescription>
           )}
         </DrawerHeader>
-        <DrawerPanel
-          className={cn("flex-1 overflow-y-auto", !children && "hidden")}
-        >
-          {children}
-        </DrawerPanel>
+        <div className={cn("min-h-0 flex-1", !children && "hidden")}>
+          <DrawerPanel>{children}</DrawerPanel>
+        </div>
         {!!footer && (
           <DrawerFooter variant={footerVariant}>{footer}</DrawerFooter>
         )}
