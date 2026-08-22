@@ -892,10 +892,10 @@
   "AnalyticsConsent": {
     "title": "Nutzungsdaten",
     "prompt-description": "Du entscheidest, ob du sie teilen möchtest.",
-    "description": "Wenn du zustimmst, sehen wir, was genutzt wird und was wir verbessern müssen. Wir zeichnen deinen Bildschirm nie auf. Auch wenn du ablehnst, kann Nakafa erfahren, dass etwas nicht funktioniert, aber der Bericht ist nicht mit deinem Konto oder Browser verknüpft.",
+    "description": "Mit deiner Erlaubnis sieht Nakafa, welche Funktionen du nutzt und was verbessert werden muss. Wir zeichnen deinen Bildschirm nie auf.",
     "allow": "Erlauben",
     "decline": "Ablehnen",
-    "age-confirmation": "Wähle Erlauben nur, wenn du mindestens 18 bist. Mit 13 bis 17 Jahren brauchst du die Zustimmung eines Elternteils oder deiner gesetzlichen Vertretung.",
+    "age-confirmation": "Erlaube dies nur, wenn du mindestens 18 bist. Mit 13 bis 17 Jahren brauchst du die Zustimmung eines Elternteils oder deiner gesetzlichen Vertretung.",
     "manage": "Nutzungsdaten",
     "status-granted": "Nutzungsdaten werden geteilt",
     "status-denied": "Nutzungsdaten werden nicht geteilt",

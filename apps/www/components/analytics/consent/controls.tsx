@@ -62,7 +62,6 @@ export function AnalyticsConsentControls() {
       <ResponsiveDialog
         description={<ConsentStatus />}
         footer={<ConsentActions />}
-        footerVariant="bare"
         open={isPreferencesOpen}
         setOpen={setPreferencesOpen}
         title={t("title")}
@@ -111,26 +110,13 @@ function ConsentActions() {
 }
 
 function ConsentDetails() {
-  return (
-    <>
-      <ConsentDisclosure />
-      <ConsentNotices />
-    </>
-  );
-}
-
-function ConsentDisclosure() {
   const t = useTranslations("AnalyticsConsent");
-
-  return <p className="text-muted-foreground text-sm">{t("description")}</p>;
-}
-
-function ConsentNotices() {
   const error = useAnalyticsConsent((state) => state.error);
 
   return (
     <>
-      <ConsentAgeNotice />
+      <p className="text-muted-foreground text-sm">{t("description")}</p>
+      <p className="text-muted-foreground text-sm">{t("age-confirmation")}</p>
       <PrivacyPolicyLink />
       {error ? <ConsentError error={error} /> : null}
     </>
@@ -160,14 +146,6 @@ function PrivacyPolicyLink() {
         ),
       })}
     </p>
-  );
-}
-
-function ConsentAgeNotice() {
-  const t = useTranslations("AnalyticsConsent");
-
-  return (
-    <p className="text-muted-foreground text-sm">{t("age-confirmation")}</p>
   );
 }
 

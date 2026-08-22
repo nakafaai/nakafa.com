@@ -892,10 +892,10 @@
   "AnalyticsConsent": {
     "title": "Data penggunaan",
     "prompt-description": "Kamu bebas memilih apakah ingin membagikannya.",
-    "description": "Jika kamu mengizinkannya, kami dapat melihat fitur yang digunakan dan bagian yang perlu diperbaiki. Kami tidak pernah merekam layarmu. Meski kamu menolak, Nakafa mungkin tetap mengetahui bahwa ada masalah, tetapi laporannya tidak terhubung ke akun atau browsermu.",
+    "description": "Izinkan Nakafa melihat fitur yang kamu gunakan dan bagian yang perlu diperbaiki. Kami tidak pernah merekam layarmu.",
     "allow": "Izinkan",
     "decline": "Tolak",
-    "age-confirmation": "Pilih Izinkan hanya jika kamu berusia minimal 18 tahun, atau berusia 13 sampai 17 tahun dengan persetujuan orang tua atau wali sah.",
+    "age-confirmation": "Izinkan hanya jika kamu berusia minimal 18 tahun, atau 13 sampai 17 tahun dengan persetujuan orang tua atau wali sah.",
     "manage": "Data penggunaan",
     "status-granted": "Data penggunaan diizinkan",
     "status-denied": "Data penggunaan ditolak",
