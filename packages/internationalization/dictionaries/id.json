@@ -892,7 +892,7 @@
   },
   "AnalyticsConsent": {
     "title": "Analitik opsional",
-    "description": "Analitik browser opsional dengan PostHog baru dimulai setelah kamu mengizinkannya dan mencatat penggunaan fitur tertentu serta kesalahan browser yang dibatasi tanpa rekaman sesi. Secara terpisah, Nakafa dapat mengirim kesalahan server yang dibatasi tanpa identitas akun atau analitik untuk menjaga keandalan layanan.",
+    "description": "Analitik browser opsional dengan PostHog baru dimulai setelah kamu mengizinkannya dan mencatat penggunaan fitur tertentu serta laporan kesalahan browser yang dibatasi tanpa rekaman sesi. Secara terpisah, Nakafa dapat mengirim laporan kesalahan server yang dibatasi tanpa identitas akun atau browser untuk menjaga keandalan layanan.",
     "allow": "Izinkan",
     "decline": "Tolak",
     "age-confirmation": "Dengan memilih Izinkan, kamu menyatakan bahwa kamu berusia minimal 18 tahun. Jika kamu berusia 13 sampai 17 tahun, orang tua atau wali sah harus menyetujui pilihan ini bersamamu.",
