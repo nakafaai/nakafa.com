@@ -890,22 +890,22 @@
     "legal-description": "Dengan menggunakan layanan kami, Anda setuju dengan <terms-of-service>Syarat dan Ketentuan</terms-of-service> dan <privacy-policy>Kebijakan Privasi</privacy-policy>."
   },
   "AnalyticsConsent": {
-    "title": "Analitik opsional",
-    "prompt-description": "Pilih apakah Nakafa boleh menggunakan analitik browser opsional.",
-    "description": "Jika kamu memilih Izinkan, PostHog mencatat penggunaan fitur tertentu dan laporan kesalahan browser yang dibatasi. Rekaman sesi tetap nonaktif. Nakafa dapat mengirim laporan kesalahan server yang dibatasi secara terpisah tanpa identitas akun atau browser agar layanan tetap andal.",
+    "title": "Data penggunaan",
+    "prompt-description": "Kamu bebas memilih apakah ingin membagikannya.",
+    "description": "Jika kamu mengizinkannya, kami dapat melihat fitur yang digunakan dan bagian yang perlu diperbaiki. Kami tidak pernah merekam layarmu. Meski kamu menolak, Nakafa mungkin tetap mengetahui bahwa ada masalah, tetapi laporannya tidak terhubung ke akun atau browsermu.",
     "allow": "Izinkan",
     "decline": "Tolak",
     "age-confirmation": "Pilih Izinkan hanya jika kamu berusia minimal 18 tahun, atau berusia 13 sampai 17 tahun dengan persetujuan orang tua atau wali sah.",
-    "manage": "Analitik",
-    "status-granted": "Saat ini diizinkan",
-    "status-denied": "Saat ini ditolak",
-    "status-browser-signal": "Browsermu memblokir analitik lewat Do Not Track atau Global Privacy Control",
+    "manage": "Data penggunaan",
+    "status-granted": "Data penggunaan diizinkan",
+    "status-denied": "Data penggunaan ditolak",
+    "status-browser-signal": "Pengaturan privasi browsermu menonaktifkan pembagian data",
     "status-pending": "Memuat pilihanmu",
-    "status-prompt": "Belum ada pilihan tersimpan",
+    "status-prompt": "Belum ada pilihan",
     "policy": "<privacy-policy>Kebijakan Privasi</privacy-policy>",
-    "load-error": "Kami tidak dapat memuat pilihan privasimu. Analitik tetap nonaktif selama kami mencoba lagi.",
-    "runtime-error": "Pilihanmu sudah disimpan, tetapi analitik tidak dapat dimulai. Analitik tetap nonaktif.",
-    "save-error": "Kami tidak dapat menyimpan pilihanmu. Analitik tetap nonaktif. Silakan coba lagi."
+    "load-error": "Kami tidak dapat memuat pilihanmu. Pembagian data tetap nonaktif selama kami mencoba lagi.",
+    "runtime-error": "Pilihanmu sudah disimpan, tetapi pembagian data tidak dapat dimulai. Pembagian data tetap nonaktif.",
+    "save-error": "Kami tidak dapat menyimpan pilihanmu. Pembagian data tetap nonaktif. Coba lagi."
   },
   "School": {
     "Common": {

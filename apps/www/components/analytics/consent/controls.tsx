@@ -103,7 +103,6 @@ function ConsentActions() {
         disabled={!canGrant || isSaving}
         onClick={() => decide(true)}
         type="button"
-        variant="outline"
       >
         {t("allow")}
       </Button>

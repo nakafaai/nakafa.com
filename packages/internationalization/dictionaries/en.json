@@ -890,22 +890,22 @@
     "legal-description": "By using our services, you agree to our <terms-of-service>Terms of Service</terms-of-service> and <privacy-policy>Privacy Policy</privacy-policy>."
   },
   "AnalyticsConsent": {
-    "title": "Optional analytics",
-    "prompt-description": "Choose whether Nakafa may use optional browser analytics.",
-    "description": "If you choose Allow, PostHog records selected feature use and minimized browser error reports. Session replay stays off. Nakafa may separately send minimized server error reports without an account or browser identity to keep the service reliable.",
+    "title": "Usage data",
+    "prompt-description": "Sharing it is optional.",
+    "description": "If you allow it, we can see which features people use and what needs fixing. We never record your screen. Nakafa may still learn that something broke, even when you decline, but the report is not linked to your account or browser.",
     "allow": "Allow",
     "decline": "Decline",
     "age-confirmation": "Choose Allow only if you are 18 or older, or 13 to 17 with approval from a parent or legal guardian.",
-    "manage": "Analytics",
-    "status-granted": "Currently allowed",
-    "status-denied": "Currently declined",
-    "status-browser-signal": "Your browser blocks analytics with Do Not Track or Global Privacy Control",
+    "manage": "Usage data",
+    "status-granted": "Usage sharing is on",
+    "status-denied": "Usage sharing is off",
+    "status-browser-signal": "Your browser privacy settings keep usage sharing off",
     "status-pending": "Loading your choice",
-    "status-prompt": "No choice saved yet",
+    "status-prompt": "No choice yet",
     "policy": "<privacy-policy>Privacy Policy</privacy-policy>",
-    "load-error": "We could not load your privacy choice. Analytics remains off while we retry.",
-    "runtime-error": "Your choice was saved, but analytics could not start. Analytics remains off.",
-    "save-error": "We could not save your choice. Analytics remains off. Please try again."
+    "load-error": "We could not load your choice. Usage sharing stays off while we retry.",
+    "runtime-error": "Your choice was saved, but usage sharing could not start. It stays off.",
+    "save-error": "We could not save your choice. Usage sharing stays off. Try again."
   },
   "School": {
     "Common": {
