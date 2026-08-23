@@ -345,6 +345,7 @@
     "exam-count": "{count, plural, =0 {No exams yet} =1 {# exam} other {# exams}}",
     "set-count": "{count, plural, =0 {No sets yet} =1 {# set} other {# sets}}",
     "open-country-cta": "View exams",
+    "open-exam-cta": "View options",
     "open-set-cta": "View sets",
     "open-section-cta": "Open section",
     "back-to-tryout": "Back to tryout",
