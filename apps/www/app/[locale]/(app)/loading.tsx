@@ -1,4 +1,4 @@
-/** Renders the route-group fallback while the shared app auth token resolves. */
+/** Keeps app navigation empty until the destination has truthful UI. */
 export default function Loading() {
-  return <div className="min-h-svh bg-background" />;
+  return null;
 }

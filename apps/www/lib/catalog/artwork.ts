@@ -1,6 +1,13 @@
 import type { Locale } from "next-intl";
 import { hasStaticArtwork } from "@/lib/og/artwork";
 
+const CURRICULUM_ARTWORK_KEYS = new Set([
+  "cambridge-international",
+  "merdeka",
+  "singapore-moe",
+  "united-states",
+]);
+
 const GRADE_ARTWORK_BY_ICON_KEY = new Map([
   ["grade-9", "9"],
   ["grade-10", "10"],
@@ -37,6 +44,18 @@ const CURRICULUM_SUBJECT_ARTWORK_KEY_BY_MATERIAL_DOMAIN = new Map([
 const TRYOUT_SUBJECT_ARTWORK_KEY_BY_TRACK_KEY = new Map([
   ["matematika", "mathematics"],
 ]);
+
+/** Resolves reviewed curriculum artwork without using generated social art. */
+export function getCurriculumCatalogArtwork(
+  locale: Locale,
+  programKey: string
+) {
+  if (!(hasStaticArtwork(locale) && CURRICULUM_ARTWORK_KEYS.has(programKey))) {
+    return;
+  }
+
+  return `/open-graph/curriculum/${locale}-${programKey}.png`;
+}
 
 /** Resolves reviewed grade artwork from a stable curriculum icon identity. */
 export function getGradeCatalogArtwork(locale: Locale, iconKey: string) {

@@ -24,10 +24,10 @@ import {
 } from "@/components/shared/catalog/card";
 import { ChoiceCardIcon } from "@/components/shared/choice/visual";
 import {
+  getCurriculumCatalogArtwork,
   getCurriculumSubjectCatalogArtwork,
   getGradeCatalogArtwork,
 } from "@/lib/catalog/artwork";
-import { getCurriculumRouteSocialImage } from "@/lib/curriculum/social-images";
 
 /** Renders the curriculum index header with breadcrumb context. */
 export function CurriculumIndexHeader({
@@ -105,19 +105,26 @@ export function CurriculumCatalogCards({
 }) {
   return (
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
-      {entries.map(({ program, route }, index) => (
-        <CatalogCard
-          action={<NavigationLink href={`/${locale}/${route.publicPath}`} />}
-          actionLabel={actionLabel}
-          key={route.publicPath}
-          title={route.title}
-        >
-          <CatalogCardImage
-            preload={index === 0}
-            src={getCurriculumRouteSocialImage(locale, program.key, route)}
-          />
-        </CatalogCard>
-      ))}
+      {entries.map(({ program, route }, index) => {
+        const imageSrc = getCurriculumCatalogArtwork(locale, program.key);
+
+        return (
+          <CatalogCard
+            action={<NavigationLink href={`/${locale}/${route.publicPath}`} />}
+            actionLabel={actionLabel}
+            key={route.publicPath}
+            title={route.title}
+          >
+            {imageSrc ? (
+              <CatalogCardImage preload={index === 0} src={imageSrc} />
+            ) : (
+              <CatalogCardGradient seed={route.nodeKey}>
+                <ChoiceCardIcon icon={readCurriculumRouteIcon(route)} />
+              </CatalogCardGradient>
+            )}
+          </CatalogCard>
+        );
+      })}
     </div>
   );
 }
