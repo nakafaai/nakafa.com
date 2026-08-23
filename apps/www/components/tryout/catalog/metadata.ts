@@ -7,7 +7,7 @@ import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { readTryoutMetadata } from "@/components/tryout/catalog/server";
-import { resolveTryoutExamSocialImage } from "@/lib/tryout/social-images";
+import { resolveTryoutExamArtwork } from "@/lib/tryout/artwork";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
 
@@ -63,12 +63,12 @@ export async function generateTryoutRouteMetadata(
       notFound();
     }
     image = Effect.runSync(
-      resolveTryoutExamSocialImage({
+      resolveTryoutExamArtwork({
         ...source.socialImageIdentity,
         appLocale,
         publicPath: source.publicPath,
       })
-    );
+    ).socialImageSrc;
   } else {
     image = getOgUrl(input.locale, source.publicPath);
   }

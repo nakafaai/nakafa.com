@@ -4,9 +4,9 @@ import { access } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { resolveTryoutExamSocialImage } from "@/lib/tryout/social-images";
+import { resolveTryoutExamArtwork } from "@/lib/tryout/artwork";
 
-const reviewedTryoutSocialImageFixtures = [
+const reviewedTryoutExamArtworkFixtures = [
   {
     countryKey: "indonesia",
     examKey: "snbt",
@@ -33,7 +33,7 @@ const reviewedTryoutSocialImageFixtures = [
   },
 ];
 
-describe("try-out social images", () => {
+describe("try-out exam artwork", () => {
   it.live("resolves every reviewed exam artwork to an existing asset", () =>
     Effect.gen(function* () {
       for (const {
@@ -41,60 +41,71 @@ describe("try-out social images", () => {
         examKey,
         imagePath,
         appLocale,
-      } of reviewedTryoutSocialImageFixtures) {
-        const resolvedPath = yield* resolveTryoutExamSocialImage({
+      } of reviewedTryoutExamArtworkFixtures) {
+        const artwork = yield* resolveTryoutExamArtwork({
           countryKey,
           examKey,
           appLocale,
           publicPath: `try-out/${countryKey}/${examKey}`,
         });
 
-        expect(resolvedPath).toBe(imagePath);
+        expect(artwork).toEqual({
+          cardImageSrc: imagePath,
+          socialImageSrc: imagePath,
+        });
         yield* Effect.promise(() =>
           expect(
-            access(join(process.cwd(), "public", resolvedPath.slice(1)))
+            access(join(process.cwd(), "public", imagePath.slice(1)))
           ).resolves.toBeUndefined()
         );
       }
     })
   );
 
-  it.live("keeps generated images for future valid exams", () =>
-    Effect.gen(function* () {
-      expect(
-        yield* resolveTryoutExamSocialImage({
-          countryKey: "indonesia",
-          examKey: "future-exam",
-          appLocale: "en",
-          publicPath: "try-out/indonesia/future-exam",
-        })
-      ).toBe("/en/og/try-out/indonesia/future-exam/image.png");
-    })
+  it.live(
+    "keeps future exams on card gradients and generated social images",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* resolveTryoutExamArtwork({
+            countryKey: "indonesia",
+            examKey: "future-exam",
+            appLocale: "en",
+            publicPath: "try-out/indonesia/future-exam",
+          })
+        ).toEqual({
+          socialImageSrc: "/en/og/try-out/indonesia/future-exam/image.png",
+        });
+      })
   );
 
-  it.live("keeps generated images for German signed routes", () =>
+  it.live("keeps German cards on gradients and social metadata localized", () =>
     Effect.gen(function* () {
       expect(
-        yield* resolveTryoutExamSocialImage({
+        yield* resolveTryoutExamArtwork({
           countryKey: "indonesia",
           examKey: "tka",
           appLocale: "de",
           publicPath: "try-out/indonesien/tka",
         })
-      ).toBe("/de/og/try-out/indonesien/tka/image.png");
+      ).toEqual({
+        socialImageSrc: "/de/og/try-out/indonesien/tka/image.png",
+      });
     })
   );
 
   it.live("keeps stable source keys separate from localized route slugs", () =>
     Effect.gen(function* () {
       expect(
-        yield* resolveTryoutExamSocialImage({
+        yield* resolveTryoutExamArtwork({
           countryKey: "indonesia",
           examKey: "snbt",
           appLocale: "de",
           publicPath: "try-out/indonesien/snbt",
         })
-      ).toBe("/de/og/try-out/indonesien/snbt/image.png");
+      ).toEqual({
+        socialImageSrc: "/de/og/try-out/indonesien/snbt/image.png",
+      });
     })
   );
 
@@ -103,13 +114,15 @@ describe("try-out social images", () => {
     () =>
       Effect.gen(function* () {
         expect(
-          yield* resolveTryoutExamSocialImage({
+          yield* resolveTryoutExamArtwork({
             countryKey: "germany",
             examKey: "snbt",
             appLocale: "en",
             publicPath: "try-out/germany/snbt",
           })
-        ).toBe("/en/og/try-out/germany/snbt/image.png");
+        ).toEqual({
+          socialImageSrc: "/en/og/try-out/germany/snbt/image.png",
+        });
       })
   );
 
@@ -121,15 +134,15 @@ describe("try-out social images", () => {
     (input) =>
       Effect.gen(function* () {
         const error = yield* Effect.flip(
-          resolveTryoutExamSocialImage({
+          resolveTryoutExamArtwork({
             ...input,
             publicPath: "try-out/indonesia/tka",
           })
         );
 
         expect(error).toMatchObject({
-          _tag: "InvalidTryoutSocialImageIdentityError",
-          message: "Invalid try-out social image identity",
+          _tag: "InvalidTryoutExamArtworkIdentityError",
+          message: "Invalid try-out exam artwork identity",
         });
       })
   );
@@ -141,7 +154,7 @@ describe("try-out social images", () => {
   ])("rejects non-exam public path %s", (publicPath) =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(
-        resolveTryoutExamSocialImage({
+        resolveTryoutExamArtwork({
           countryKey: "indonesia",
           examKey: "snbt",
           appLocale: "de",
@@ -150,8 +163,8 @@ describe("try-out social images", () => {
       );
 
       expect(error).toMatchObject({
-        _tag: "InvalidTryoutSocialImageIdentityError",
-        message: "Invalid try-out social image identity",
+        _tag: "InvalidTryoutExamArtworkIdentityError",
+        message: "Invalid try-out exam artwork identity",
       });
     })
   );

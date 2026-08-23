@@ -1,13 +1,45 @@
 // @vitest-environment node
 
+import { access } from "node:fs/promises";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  getCurriculumCatalogArtwork,
   getCurriculumSubjectCatalogArtwork,
   getGradeCatalogArtwork,
   getTryoutSubjectCatalogArtwork,
 } from "@/lib/catalog/artwork";
 
+const reviewedCurriculumArtworkFixtures = [
+  ["en", "cambridge-international"],
+  ["en", "merdeka"],
+  ["en", "singapore-moe"],
+  ["en", "united-states"],
+  ["id", "cambridge-international"],
+  ["id", "merdeka"],
+  ["id", "singapore-moe"],
+  ["id", "united-states"],
+] as const;
+
 describe("catalog artwork", () => {
+  it.each(reviewedCurriculumArtworkFixtures)(
+    "resolves existing %s %s curriculum artwork",
+    async (locale, programKey) => {
+      const expectedPath = `/open-graph/curriculum/${locale}-${programKey}.png`;
+      const imagePath = getCurriculumCatalogArtwork(locale, programKey);
+
+      expect(imagePath).toBe(expectedPath);
+      await expect(
+        access(join(process.cwd(), "public", expectedPath.slice(1)))
+      ).resolves.toBeUndefined();
+    }
+  );
+
+  it("keeps missing curriculum artwork on gradients", () => {
+    expect(getCurriculumCatalogArtwork("de", "merdeka")).toBeUndefined();
+    expect(getCurriculumCatalogArtwork("en", "future")).toBeUndefined();
+  });
+
   it.each([
     ["en", "grade-9", "/open-graph/grade/en-9.png"],
     ["id", "grade-10", "/open-graph/grade/id-10.png"],
