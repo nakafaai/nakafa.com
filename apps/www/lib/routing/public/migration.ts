@@ -8,12 +8,41 @@ import { readRuntimeQuery } from "@/lib/content/runtime/query";
 const PREVIOUS_SUBJECT_NAMESPACE = "subject";
 const REDIRECTABLE_METHODS = new Set(["GET", "HEAD"]);
 
-/** Resolves a retired material URL through the active signed publication. */
+/** Resolves the German article URLs exposed before localized routes shipped. */
+function readPreviousArticleRedirect(pathname: string) {
+  switch (pathname) {
+    case "/de/articles/politics":
+      return "/de/articles/politik";
+    case "/de/articles/politics/regional-elections-turmoil":
+      return "/de/articles/politik/pilkada-2024-gerichtsurteile-und-kandidaturen";
+    case "/de/articles/politics/pork-barrel-politics-power":
+      return "/de/articles/politik/sozialhilfe-und-wahlpolitische-anreize";
+    case "/de/articles/politics/nepotism-in-political-governance":
+      return "/de/articles/politik/nepotismus-und-politische-verantwortung";
+    case "/de/articles/politics/merah-putih-cabinet-analysis":
+      return "/de/articles/politik/kabinett-merah-putih-und-koalitionspolitik";
+    case "/de/articles/politics/kim-plus-empty-box":
+      return "/de/articles/politik/kim-plus-und-das-leere-feld";
+    case "/de/articles/politics/flawed-legal-geopolitics":
+      return "/de/articles/politik/nusantara-rechtsgrundlage-und-sicherheit";
+    case "/de/articles/politics/dynastic-politics-asian-values":
+      return "/de/articles/politik/politische-dynastien-und-asiatische-werte";
+    default:
+      return null;
+  }
+}
+
+/** Resolves one retired public URL to its exact current successor. */
 export const readPublicUrlMigrationRedirect = Effect.fn(
   "www.routing.publicHtml.urlMigrationRedirect"
 )(function* ({ method, pathname }: { method: string; pathname: string }) {
   if (!REDIRECTABLE_METHODS.has(method)) {
     return null;
+  }
+
+  const articleRedirect = readPreviousArticleRedirect(pathname);
+  if (articleRedirect) {
+    return articleRedirect;
   }
 
   const identity = readPreviousMaterialIdentity(pathname);
