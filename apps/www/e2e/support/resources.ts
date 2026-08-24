@@ -1,4 +1,4 @@
-import type { Browser, Page } from "@playwright/test";
+import type { Browser, Page, Request } from "@playwright/test";
 import { Clock, Duration, Effect, Schema } from "effect";
 import { withBrowserContext } from "./browser-context";
 
@@ -18,6 +18,11 @@ export interface JavascriptRun {
 export interface JavascriptMeasurement {
   readonly runs: readonly JavascriptRun[];
   readonly worst: Omit<JavascriptRun, "urls">;
+}
+
+interface JavascriptRequestTracker {
+  readonly pendingCount: number;
+  readonly revision: number;
 }
 
 /** A route did not return one successful document response. */
@@ -59,21 +64,93 @@ const countJavascriptResources = Effect.fn(
   );
 });
 
+const withJavascriptRequestTracker = Effect.fn(
+  "NakafaE2E.withJavascriptRequestTracker"
+)(function* <A, E, R>(
+  page: Page,
+  applicationOrigin: string,
+  use: (tracker: JavascriptRequestTracker) => Effect.Effect<A, E, R>
+) {
+  return yield* Effect.acquireUseRelease(
+    Effect.sync(() => {
+      const pendingRequests = new Set<Request>();
+      let revision = 0;
+
+      const isMatchingRequest = (request: Request) => {
+        const resourceUrl = new URL(request.url());
+        return (
+          resourceUrl.origin === applicationOrigin &&
+          JAVASCRIPT_RESOURCE_PATTERN.test(resourceUrl.pathname)
+        );
+      };
+      const handleRequest = (request: Request) => {
+        if (!isMatchingRequest(request)) {
+          return;
+        }
+        pendingRequests.add(request);
+        revision += 1;
+      };
+      const handleRequestSettled = (request: Request) => {
+        if (!pendingRequests.delete(request)) {
+          return;
+        }
+        revision += 1;
+      };
+
+      page.on("request", handleRequest);
+      page.on("requestfailed", handleRequestSettled);
+      page.on("requestfinished", handleRequestSettled);
+
+      return {
+        handleRequest,
+        handleRequestSettled,
+        tracker: {
+          get pendingCount() {
+            return pendingRequests.size;
+          },
+          get revision() {
+            return revision;
+          },
+        },
+      };
+    }),
+    ({ tracker }) => use(tracker),
+    ({ handleRequest, handleRequestSettled }) =>
+      Effect.sync(() => {
+        page.off("request", handleRequest);
+        page.off("requestfailed", handleRequestSettled);
+        page.off("requestfinished", handleRequestSettled);
+      })
+  );
+});
+
 const waitForJavascriptResourcesToSettle = Effect.fn(
   "NakafaE2E.waitForJavascriptResourcesToSettle"
-)(function* (page: Page, href: string) {
+)(function* (
+  page: Page,
+  href: string,
+  requestTracker: JavascriptRequestTracker
+) {
   const startedAt = yield* Clock.currentTimeMillis;
   let lastChangeAt = startedAt;
   let previousCount = -1;
+  let previousRevision = -1;
 
   while (true) {
     const currentCount = yield* countJavascriptResources(page);
     const observedAt = yield* Clock.currentTimeMillis;
-    if (currentCount !== previousCount) {
+    if (
+      currentCount !== previousCount ||
+      requestTracker.revision !== previousRevision
+    ) {
       previousCount = currentCount;
+      previousRevision = requestTracker.revision;
       lastChangeAt = observedAt;
     }
-    if (observedAt - lastChangeAt >= RESOURCE_IDLE_MILLISECONDS) {
+    if (
+      requestTracker.pendingCount === 0 &&
+      observedAt - lastChangeAt >= RESOURCE_IDLE_MILLISECONDS
+    ) {
       return;
     }
     if (observedAt - startedAt > RESOURCE_SETTLE_TIMEOUT_MILLISECONDS) {
@@ -143,28 +220,41 @@ export const measureRouteJavascript = Effect.fn(
       (context) =>
         Effect.gen(function* () {
           const page = yield* Effect.promise(() => context.newPage());
-          const session = yield* Effect.promise(() =>
-            context.newCDPSession(page)
-          );
-          yield* Effect.promise(() => session.send("Network.enable"));
-          yield* Effect.promise(() =>
-            session.send("Network.setCacheDisabled", {
-              cacheDisabled: true,
-            })
-          );
+          const applicationOrigin = new URL(baseURL).origin;
 
-          const response = yield* Effect.promise(() =>
-            page.goto(href, { waitUntil: "domcontentloaded" })
-          );
-          if (!response?.ok()) {
-            return yield* new JavascriptResourceResponseError({
-              href,
-              status: response?.status(),
-            });
-          }
+          return yield* withJavascriptRequestTracker(
+            page,
+            applicationOrigin,
+            (requestTracker) =>
+              Effect.gen(function* () {
+                const session = yield* Effect.promise(() =>
+                  context.newCDPSession(page)
+                );
+                yield* Effect.promise(() => session.send("Network.enable"));
+                yield* Effect.promise(() =>
+                  session.send("Network.setCacheDisabled", {
+                    cacheDisabled: true,
+                  })
+                );
 
-          yield* waitForJavascriptResourcesToSettle(page, href);
-          return yield* readJavascriptRun(page);
+                const response = yield* Effect.promise(() =>
+                  page.goto(href, { waitUntil: "domcontentloaded" })
+                );
+                if (!response?.ok()) {
+                  return yield* new JavascriptResourceResponseError({
+                    href,
+                    status: response?.status(),
+                  });
+                }
+
+                yield* waitForJavascriptResourcesToSettle(
+                  page,
+                  href,
+                  requestTracker
+                );
+                return yield* readJavascriptRun(page);
+              })
+          );
         })
     );
     runs.push(javascriptRun);

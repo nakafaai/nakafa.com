@@ -5,6 +5,7 @@ const HOMEPAGE_HEADING_PATTERN = /Learn until it clicks/i;
 const QURAN_HEADING_PATTERN = /Al-Baqara/i;
 const TRYOUT_TITLE_PATTERN = /Try out/i;
 const CURRICULUM_HREF_PATTERN = /^\/en\/curriculum\/[^/]+\/[^/]+\/[^/.]+$/;
+const ARTICLE_CATEGORY_HREF_PATTERN = /^\/en\/articles\/[^/.]+$/;
 const ARTICLE_HREF_PATTERN = /^\/en\/articles\/[^/]+\/[^/.]+$/;
 const MATERIAL_HREF_PATTERN = /^\/en\/subjects\/[^/]+\/[^/]+\/[^/.]+$/;
 const CLIENT_PREFETCH_SETTLE_MILLISECONDS = 1000;
@@ -214,7 +215,12 @@ const curriculumCase: NavigationCase = {
 const articleCase: NavigationCase = {
   name: "article",
   resolve: async (page) => {
-    const sourceHref = "/en/articles/politics";
+    const categoryHref = await discoverLinkedHref(
+      page,
+      "/en/articles",
+      (candidate) => ARTICLE_CATEGORY_HREF_PATTERN.test(candidate)
+    );
+    const sourceHref = categoryHref;
     const href = await discoverLinkedHref(page, sourceHref, (candidate) =>
       ARTICLE_HREF_PATTERN.test(candidate)
     );
