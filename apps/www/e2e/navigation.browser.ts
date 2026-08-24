@@ -34,11 +34,11 @@ for (const viewport of targetViewports) {
           (context) =>
             Effect.gen(function* () {
               const page = yield* Effect.promise(() => context.newPage());
-              const target = yield* Effect.promise(() =>
-                navigationCase.resolve(page)
-              );
-              yield* Effect.promise(() =>
-                verifyHardAndClientNavigation(page, configuredBaseURL, target)
+              const target = yield* navigationCase.resolve(page);
+              yield* verifyHardAndClientNavigation(
+                page,
+                configuredBaseURL,
+                target
               );
             })
         )

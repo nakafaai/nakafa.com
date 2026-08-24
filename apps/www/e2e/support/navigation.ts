@@ -1,5 +1,6 @@
 import { instant } from "@next/playwright";
 import { expect, type Locator, type Page } from "@playwright/test";
+import { Duration, Effect, Schedule, Schema } from "effect";
 
 const HOMEPAGE_HEADING_PATTERN = /Learn until it clicks/i;
 const QURAN_HEADING_PATTERN = /Al-Baqara/i;
@@ -9,11 +10,29 @@ const ARTICLE_CATEGORY_HREF_PATTERN = /^\/en\/articles\/[^/.]+$/;
 const ARTICLE_HREF_PATTERN = /^\/en\/articles\/[^/]+\/[^/.]+$/;
 const MATERIAL_HREF_PATTERN = /^\/en\/subjects\/[^/]+\/[^/]+\/[^/.]+$/;
 const CLIENT_PREFETCH_SETTLE_MILLISECONDS = 1000;
+const LINK_POLL_MILLISECONDS = 100;
 const NAVIGATION_TIMEOUT_MILLISECONDS = 15_000;
+
+const linkedHrefRetrySchedule = Schedule.spaced(
+  Duration.millis(LINK_POLL_MILLISECONDS)
+).pipe(
+  Schedule.upTo({
+    duration: Duration.millis(NAVIGATION_TIMEOUT_MILLISECONDS),
+  })
+);
 
 type InstantMarker =
   | { readonly kind: "heading"; readonly text?: RegExp }
   | { readonly kind: "title"; readonly text: RegExp };
+
+/** A rendered source route has no visible link matching its signed catalog. */
+export class NavigationLinkMissing extends Schema.TaggedError<NavigationLinkMissing>()(
+  "NavigationLinkMissing",
+  {
+    hrefPattern: Schema.String,
+    sourceHref: Schema.String,
+  }
+) {}
 
 export interface NavigationTarget {
   readonly href: string;
@@ -24,234 +43,264 @@ export interface NavigationTarget {
 
 export interface NavigationCase {
   readonly name: string;
-  readonly resolve: (page: Page) => Promise<NavigationTarget>;
+  readonly resolve: (
+    page: Page
+  ) => Effect.Effect<NavigationTarget, NavigationLinkMissing>;
 }
 
-async function assertSettledNavigation(page: Page, target: NavigationTarget) {
-  await expect(page).toHaveURL((url) => url.pathname === target.href, {
-    timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-  });
+const assertSettledNavigation = Effect.fn("NakafaE2E.assertSettledNavigation")(
+  function* (page: Page, target: NavigationTarget) {
+    yield* Effect.promise(() =>
+      expect(page).toHaveURL((url) => url.pathname === target.href, {
+        timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+      })
+    );
 
-  if (target.marker.kind === "title") {
-    await expect(page).toHaveTitle(target.marker.text, {
-      timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-    });
-    return;
+    if (target.marker.kind === "title") {
+      const titleText = target.marker.text;
+      yield* Effect.promise(() =>
+        expect(page).toHaveTitle(titleText, {
+          timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+        })
+      );
+      return;
+    }
+
+    const markerText = target.marker.text;
+    const heading = markerText
+      ? page.locator("h1:visible").filter({ hasText: markerText }).first()
+      : page.locator("h1:visible").first();
+    yield* Effect.promise(() =>
+      expect(heading).toBeVisible({
+        timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+      })
+    );
+    if (markerText) {
+      yield* Effect.promise(() => expect(heading).toContainText(markerText));
+    }
   }
+);
 
-  const heading = target.marker.text
-    ? page.locator("h1:visible").filter({ hasText: target.marker.text }).first()
-    : page.locator("h1:visible").first();
-  await expect(heading).toBeVisible({
-    timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-  });
-  if (target.marker.text) {
-    await expect(heading).toContainText(target.marker.text);
-  }
-}
-
-async function findVisibleLink(page: Page, href: string): Promise<Locator> {
+const findVisibleLink = Effect.fn("NakafaE2E.findVisibleLink")(function* (
+  page: Page,
+  href: string
+) {
   const link = page.locator(`a[href="${href}"]:visible`).first();
-  if (href === "/en" && !(await link.isVisible())) {
+  const linkIsVisible = yield* Effect.promise(() => link.isVisible());
+  if (href === "/en" && !linkIsVisible) {
     const sidebarTrigger = page
       .locator('[data-slot="sidebar-trigger"]:visible')
       .first();
-    if (await sidebarTrigger.isVisible()) {
-      await sidebarTrigger.click();
+    const triggerIsVisible = yield* Effect.promise(() =>
+      sidebarTrigger.isVisible()
+    );
+    if (triggerIsVisible) {
+      yield* Effect.promise(() => sidebarTrigger.click());
     }
   }
 
-  await expect(link, `No visible link to ${href} was found.`).toBeVisible({
-    timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-  });
+  yield* Effect.promise(() =>
+    expect(link, `No visible link to ${href} was found.`).toBeVisible({
+      timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+    })
+  );
   return link;
-}
+});
 
-async function discoverLinkedHref(
+const readVisibleLinkedHref = Effect.fn("NakafaE2E.readVisibleLinkedHref")(
+  function* (page: Page, sourceHref: string, hrefPattern: RegExp) {
+    const candidates = page.locator("a[href]");
+    const candidateCount = yield* Effect.promise(() => candidates.count());
+
+    for (let index = 0; index < candidateCount; index += 1) {
+      const candidate = candidates.nth(index);
+      const href = yield* Effect.promise(() => candidate.getAttribute("href"));
+      if (!href) {
+        continue;
+      }
+      if (!hrefPattern.test(href)) {
+        continue;
+      }
+      const isVisible = yield* Effect.promise(() => candidate.isVisible());
+      if (isVisible) {
+        return href;
+      }
+    }
+
+    return yield* new NavigationLinkMissing({
+      hrefPattern: hrefPattern.source,
+      sourceHref,
+    });
+  }
+);
+
+const discoverLinkedHref = Effect.fn("NakafaE2E.discoverLinkedHref")(function* (
   page: Page,
   sourceHref: string,
-  matches: (href: string) => boolean
+  hrefPattern: RegExp
 ) {
-  const response = await page.goto(sourceHref, {
-    waitUntil: "domcontentloaded",
-  });
-  expect(response?.ok()).toBe(true);
-
-  let resolvedHref: string | undefined;
-  await expect
-    .poll(
-      async () => {
-        const candidates = page.locator("a[href]");
-        const count = await candidates.count();
-        for (let index = 0; index < count; index += 1) {
-          const candidate = candidates.nth(index);
-          const href = await candidate.getAttribute("href");
-          if (href && matches(href) && (await candidate.isVisible())) {
-            resolvedHref = href;
-            return true;
-          }
-        }
-        return false;
-      },
-      {
-        message: `No matching visible content link was found on ${sourceHref}.`,
-        timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-      }
-    )
-    .toBe(true);
-
-  if (!resolvedHref) {
-    throw new Error(
-      `No matching visible content link was found on ${sourceHref}.`
-    );
-  }
-  return resolvedHref;
-}
-
-async function waitForDestination(page: Page, href: string) {
-  await page.waitForURL((url) => url.pathname === href, {
-    timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-  });
-}
-
-async function warmClientPrefetch(link: Locator) {
-  await link.scrollIntoViewIfNeeded();
-  await link.hover();
-  await link.page().waitForTimeout(CLIENT_PREFETCH_SETTLE_MILLISECONDS);
-}
-
-async function navigateHard(
-  page: Page,
-  baseURL: string,
-  target: NavigationTarget
-) {
-  await instant(
-    page,
-    async () => {
-      const response = await page.goto(target.href, {
-        waitUntil: "domcontentloaded",
-      });
-      expect(response?.ok()).toBe(true);
-      await waitForDestination(page, target.href);
-    },
-    { baseURL }
+  const response = yield* Effect.promise(() =>
+    page.goto(sourceHref, { waitUntil: "domcontentloaded" })
   );
-  await assertSettledNavigation(page, target);
-}
+  yield* Effect.sync(() => expect(response?.ok()).toBe(true));
 
-async function navigateClient(page: Page, target: NavigationTarget) {
-  const sourceResponse = await page.goto(target.sourceHref, {
-    waitUntil: "domcontentloaded",
-  });
-  expect(sourceResponse?.ok()).toBe(true);
-  const link = await findVisibleLink(page, target.href);
-  await warmClientPrefetch(link);
+  return yield* readVisibleLinkedHref(page, sourceHref, hrefPattern).pipe(
+    Effect.retry(linkedHrefRetrySchedule)
+  );
+});
 
-  await instant(page, async () => {
-    await link.click();
-    await waitForDestination(page, target.href);
-  });
-  await assertSettledNavigation(page, target);
-}
+const warmClientPrefetch = Effect.fn("NakafaE2E.warmClientPrefetch")(function* (
+  link: Locator
+) {
+  yield* Effect.promise(() => link.scrollIntoViewIfNeeded());
+  yield* Effect.promise(() => link.hover());
+  yield* Effect.sleep(Duration.millis(CLIENT_PREFETCH_SETTLE_MILLISECONDS));
+});
 
-export async function verifyHardAndClientNavigation(
+const navigateHard = Effect.fn("NakafaE2E.navigateHard")(function* (
   page: Page,
   baseURL: string,
   target: NavigationTarget
 ) {
-  await navigateHard(page, baseURL, target);
-  await navigateClient(page, target);
-}
-
-const staticNavigationCases: readonly NavigationCase[] = [
-  {
-    name: "homepage",
-    resolve: () =>
-      Promise.resolve({
-        href: "/en",
-        marker: { kind: "heading", text: HOMEPAGE_HEADING_PATTERN },
-        name: "homepage",
-        sourceHref: "/en/quran",
-      }),
-  },
-  {
-    name: "Quran",
-    resolve: () =>
-      Promise.resolve({
-        href: "/id/quran/2",
-        marker: { kind: "heading", text: QURAN_HEADING_PATTERN },
-        name: "Quran",
-        sourceHref: "/id/quran",
-      }),
-  },
-  {
-    name: "tryout",
-    resolve: () =>
-      Promise.resolve({
-        href: "/en/try-out",
-        marker: { kind: "title", text: TRYOUT_TITLE_PATTERN },
-        name: "tryout",
-        sourceHref: "/en",
-      }),
-  },
-];
-
-const curriculumCase: NavigationCase = {
-  name: "curriculum",
-  resolve: async (page) => {
-    const sourceHref = "/en";
-    const href = await discoverLinkedHref(page, sourceHref, (candidate) =>
-      CURRICULUM_HREF_PATTERN.test(candidate)
-    );
-    return {
-      href,
-      marker: { kind: "heading" },
-      name: "curriculum",
-      sourceHref,
-    };
-  },
-};
-
-const articleCase: NavigationCase = {
-  name: "article",
-  resolve: async (page) => {
-    const categoryHref = await discoverLinkedHref(
+  // @next/playwright requires this callback to return its native Promise.
+  // The surrounding operation remains one Effect run by the test boundary.
+  yield* Effect.promise(() =>
+    instant(
       page,
-      "/en/articles",
-      (candidate) => ARTICLE_CATEGORY_HREF_PATTERN.test(candidate)
-    );
-    const sourceHref = categoryHref;
-    const href = await discoverLinkedHref(page, sourceHref, (candidate) =>
-      ARTICLE_HREF_PATTERN.test(candidate)
-    );
-    return {
-      href,
-      marker: { kind: "heading" },
-      name: "article",
-      sourceHref,
-    };
-  },
-};
+      () =>
+        page
+          .goto(target.href, { waitUntil: "domcontentloaded" })
+          .then((response) => {
+            expect(response?.ok()).toBe(true);
+            return page.waitForURL((url) => url.pathname === target.href, {
+              timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+            });
+          }),
+      { baseURL }
+    )
+  );
+  yield* assertSettledNavigation(page, target);
+});
 
-const materialCase: NavigationCase = {
-  name: "material",
-  resolve: async (page) => {
-    const sourceHref = "/en";
-    const href = await discoverLinkedHref(page, sourceHref, (candidate) =>
-      MATERIAL_HREF_PATTERN.test(candidate)
-    );
-    return {
-      href,
-      marker: { kind: "heading" },
-      name: "material",
-      sourceHref,
-    };
-  },
-};
+const navigateClient = Effect.fn("NakafaE2E.navigateClient")(function* (
+  page: Page,
+  target: NavigationTarget
+) {
+  const sourceResponse = yield* Effect.promise(() =>
+    page.goto(target.sourceHref, { waitUntil: "domcontentloaded" })
+  );
+  yield* Effect.sync(() => expect(sourceResponse?.ok()).toBe(true));
+  const link = yield* findVisibleLink(page, target.href);
+  yield* warmClientPrefetch(link);
+
+  // @next/playwright owns this native Promise callback while its lock is held.
+  yield* Effect.promise(() =>
+    instant(page, () =>
+      link.click().then(() =>
+        page.waitForURL((url) => url.pathname === target.href, {
+          timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+        })
+      )
+    )
+  );
+  yield* assertSettledNavigation(page, target);
+});
+
+export const verifyHardAndClientNavigation = Effect.fn(
+  "NakafaE2E.verifyHardAndClientNavigation"
+)(function* (page: Page, baseURL: string, target: NavigationTarget) {
+  yield* navigateHard(page, baseURL, target);
+  yield* navigateClient(page, target);
+});
+
+const resolveHomepage = Effect.fn("NakafaE2E.resolveHomepage")(() =>
+  Effect.succeed({
+    href: "/en",
+    marker: { kind: "heading", text: HOMEPAGE_HEADING_PATTERN },
+    name: "homepage",
+    sourceHref: "/en/quran",
+  } satisfies NavigationTarget)
+);
+
+const resolveQuran = Effect.fn("NakafaE2E.resolveQuran")(() =>
+  Effect.succeed({
+    href: "/id/quran/2",
+    marker: { kind: "heading", text: QURAN_HEADING_PATTERN },
+    name: "Quran",
+    sourceHref: "/id/quran",
+  } satisfies NavigationTarget)
+);
+
+const resolveTryout = Effect.fn("NakafaE2E.resolveTryout")(() =>
+  Effect.succeed({
+    href: "/en/try-out",
+    marker: { kind: "title", text: TRYOUT_TITLE_PATTERN },
+    name: "tryout",
+    sourceHref: "/en",
+  } satisfies NavigationTarget)
+);
+
+const resolveCurriculum = Effect.fn("NakafaE2E.resolveCurriculum")(function* (
+  page: Page
+) {
+  const sourceHref = "/en";
+  const href = yield* discoverLinkedHref(
+    page,
+    sourceHref,
+    CURRICULUM_HREF_PATTERN
+  );
+  return {
+    href,
+    marker: { kind: "heading" },
+    name: "curriculum",
+    sourceHref,
+  } satisfies NavigationTarget;
+});
+
+const resolveArticle = Effect.fn("NakafaE2E.resolveArticle")(function* (
+  page: Page
+) {
+  const categoryHref = yield* discoverLinkedHref(
+    page,
+    "/en/articles",
+    ARTICLE_CATEGORY_HREF_PATTERN
+  );
+  const sourceHref = categoryHref;
+  const href = yield* discoverLinkedHref(
+    page,
+    sourceHref,
+    ARTICLE_HREF_PATTERN
+  );
+  return {
+    href,
+    marker: { kind: "heading" },
+    name: "article",
+    sourceHref,
+  } satisfies NavigationTarget;
+});
+
+const resolveMaterial = Effect.fn("NakafaE2E.resolveMaterial")(function* (
+  page: Page
+) {
+  const sourceHref = "/en";
+  const href = yield* discoverLinkedHref(
+    page,
+    sourceHref,
+    MATERIAL_HREF_PATTERN
+  );
+  return {
+    href,
+    marker: { kind: "heading" },
+    name: "material",
+    sourceHref,
+  } satisfies NavigationTarget;
+});
 
 export const navigationCases = [
-  ...staticNavigationCases,
-  curriculumCase,
-  articleCase,
-  materialCase,
-] as const;
+  { name: "homepage", resolve: resolveHomepage },
+  { name: "Quran", resolve: resolveQuran },
+  { name: "tryout", resolve: resolveTryout },
+  { name: "curriculum", resolve: resolveCurriculum },
+  { name: "article", resolve: resolveArticle },
+  { name: "material", resolve: resolveMaterial },
+] as const satisfies readonly NavigationCase[];
