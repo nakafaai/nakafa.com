@@ -359,6 +359,25 @@ describe("published article catalog", () => {
     ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
   });
 
+  it("rejects a malformed active generation identity", async () => {
+    runtimeQueryMock.mockResolvedValueOnce({
+      ...articlePage(),
+      activeManifestHash: "sha256:invalid",
+    });
+
+    await expect(
+      Effect.runPromise(
+        readPublishedArticlePage({
+          category: testArticleProjection.category,
+          cursor: null,
+          expectedManifestHash: null,
+          expectedReleaseId: null,
+          locale: "en",
+        }).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+  });
+
   it("rejects unmanaged article and category catalogs", async () => {
     runtimeQueryMock
       .mockResolvedValueOnce({

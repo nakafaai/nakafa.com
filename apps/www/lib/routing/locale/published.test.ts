@@ -174,6 +174,18 @@ describe("published localized route ownership", () => {
   );
 
   it("fails closed for missing or malformed article projections", () => {
+    expect(
+      Effect.runSync(
+        readPublishedLocalizedHref({
+          currentLocale: "en",
+          hash: "",
+          locale: "id",
+          publicPath: "articles",
+          search: "",
+        })
+      )
+    ).toBeNull();
+
     publishedMocks.articleCategory.mockReturnValueOnce(
       Effect.succeed(Option.none())
     );
@@ -189,8 +201,47 @@ describe("published localized route ownership", () => {
       )
     ).toThrow();
 
+    publishedMocks.categoryAlternates.mockReturnValueOnce(
+      Effect.succeed([
+        {
+          appLocale: testArticleProjection.appLocale,
+          publicPath: testArticleProjection.parentPath,
+        },
+      ])
+    );
+    expect(() =>
+      Effect.runSync(
+        readPublishedLocalizedHref({
+          currentLocale: "en",
+          hash: "",
+          locale: "de",
+          publicPath: testArticleProjection.parentPath,
+          search: "",
+        })
+      )
+    ).toThrow();
+
     publishedMocks.articleRoute.mockReturnValueOnce(
       Effect.succeed({ activeReleaseId, alternates: [], projection: null })
+    );
+    expect(() =>
+      Effect.runSync(
+        readPublishedLocalizedHref({
+          currentLocale: "en",
+          hash: "",
+          locale: "de",
+          publicPath: testArticleProjection.publicPath,
+          search: "",
+        })
+      )
+    ).toThrow();
+
+    publishedMocks.articleRoute.mockReturnValueOnce(
+      Effect.succeed({
+        activeReleaseId,
+        alternates: [testArticleProjection],
+        projection: testArticleProjection,
+      })
     );
     expect(() =>
       Effect.runSync(

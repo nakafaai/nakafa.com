@@ -46,8 +46,10 @@ function articleSummary(selected: (typeof localeCases)[number]) {
     authors: [{ name: "Nakafa" }],
     category: "politics",
     categoryTitle: selected.categoryTitle,
+    ...(selected.appLocale === "id" ? { dateModified: "2026-08-22" } : {}),
     datePublished: selected.appLocale === "de" ? "2026-08-22" : "2025-06-05",
-    description: "Reviewed article summary.",
+    description:
+      selected.appLocale === "de" ? undefined : "Reviewed article summary.",
     official: false,
     publicPath,
     route: {
@@ -188,5 +190,66 @@ describe("published article discovery", () => {
     await expect(
       Effect.runPromise(readPublishedLatestArticles("en", 10).pipe(Effect.flip))
     ).resolves.toMatchObject({ _tag: "TestRuntimeQueryError" });
+  });
+
+  it("distinguishes unmanaged, inactive, and absent discovery partitions", async () => {
+    runtimeQueryMock
+      .mockResolvedValueOnce({
+        activeReleaseId,
+        articles: null,
+        managed: false,
+      })
+      .mockResolvedValueOnce({
+        activeReleaseId: null,
+        articles: null,
+        managed: true,
+      })
+      .mockResolvedValueOnce({
+        activeReleaseId,
+        articles: null,
+        managed: true,
+      })
+      .mockResolvedValueOnce({
+        activeReleaseId: null,
+        articles: [],
+        managed: true,
+      })
+      .mockResolvedValueOnce({
+        activeReleaseId,
+        articles: [],
+        managed: false,
+      })
+      .mockResolvedValueOnce({
+        activeReleaseId: null,
+        articles: [],
+        managed: true,
+      });
+
+    await expect(
+      Effect.runPromise(
+        readPublishedArticleBucket("en", "abc").pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+    await expect(
+      Effect.runPromise(
+        readPublishedArticleBucket("en", "abc").pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+    await expect(
+      Effect.runPromise(readPublishedArticleBucket("en", "abc"))
+    ).resolves.toEqual({ activeReleaseId, articles: null });
+    await expect(
+      Effect.runPromise(readPublishedLatestArticles("en", 10).pipe(Effect.flip))
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+    await expect(
+      Effect.runPromise(
+        readPublishedCategoryArticles("en", "politics", 10).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+    await expect(
+      Effect.runPromise(
+        readPublishedCategoryArticles("en", "politics", 10).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
   });
 });

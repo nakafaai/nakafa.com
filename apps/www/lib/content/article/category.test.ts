@@ -237,9 +237,8 @@ describe("published article category", () => {
     ).resolves.toEqual(page);
     expect(cacheMock).toHaveBeenCalledWith("article");
 
-    articleReaderMock.mockReturnValueOnce(
-      Effect.succeed({ ...page, activeReleaseId: "release-next" })
-    );
+    const stalePage = { ...page, stale: true };
+    articleReaderMock.mockReturnValueOnce(Effect.succeed(stalePage));
     await expect(
       Effect.runPromise(
         readPublishedCategoryPage(model, {
@@ -248,7 +247,42 @@ describe("published article category", () => {
           expectedReleaseId: null,
         })
       )
-    ).rejects.toThrow();
+    ).resolves.toEqual(stalePage);
+
+    const mismatches = [
+      { ...page, activeManifestHash: `sha256:${"b".repeat(64)}` },
+      { ...page, activeReleaseId: "release-next" },
+      {
+        ...page,
+        articles: [{ ...page.articles[0], category: "science" }],
+      },
+      {
+        ...page,
+        articles: [{ ...page.articles[0], categoryTitle: "Politik" }],
+      },
+      {
+        ...page,
+        articles: [
+          {
+            ...page.articles[0],
+            route: { category: "wissenschaft", slug: "artikel" },
+          },
+        ],
+      },
+    ];
+
+    for (const mismatch of mismatches) {
+      articleReaderMock.mockReturnValueOnce(Effect.succeed(mismatch));
+      await expect(
+        Effect.runPromise(
+          readPublishedCategoryPage(model, {
+            cursor: null,
+            expectedManifestHash: null,
+            expectedReleaseId: null,
+          })
+        )
+      ).rejects.toThrow();
+    }
   });
 
   it("preserves catalog failures in the Effect error channel", async () => {
