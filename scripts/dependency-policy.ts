@@ -1,7 +1,21 @@
-import { readdirSync, readFileSync } from "node:fs";
-import path from "node:path";
+import type {
+  FirstPartyManifest,
+  PackageManifest,
+  WorkspaceManifest,
+} from "./dependency-source.ts";
 
-import { parse } from "yaml";
+interface DependencyPolicyInput {
+  readonly manifests: readonly FirstPartyManifest[];
+  readonly rootManifest: PackageManifest;
+  readonly workspace: WorkspaceManifest;
+}
+
+interface DependencyHold {
+  readonly allowed?: readonly string[];
+  readonly approved?: string;
+  readonly dependency: string;
+  readonly minimumDeclarations: number;
+}
 
 export const CONTRACT_ARCHIVE =
   "https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.0/nakafa-aksara-contracts-0.15.0.tgz";
@@ -59,7 +73,7 @@ export const DEPENDENCY_RELEASE_AGE_EXCLUSIONS = [
   "takumi-js@2.12.0",
 ];
 
-export const DEPENDENCY_HOLDS = [
+export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   {
     approved: "catalog:",
     dependency: "effect",
@@ -256,31 +270,18 @@ const DEPENDENCY_GROUPS = [
   "devDependencies",
   "optionalDependencies",
   "peerDependencies",
-];
-
-/** Reads every first-party package manifest without entering vendored source. */
-export function readFirstPartyManifests(root) {
-  const manifests = [path.join(root, "package.json")];
-
-  for (const workspaceDirectory of ["apps", "packages"]) {
-    const workspaceRoot = path.join(root, workspaceDirectory);
-    for (const entry of readdirSync(workspaceRoot, { withFileTypes: true })) {
-      if (!entry.isDirectory()) {
-        continue;
-      }
-      manifests.push(path.join(workspaceRoot, entry.name, "package.json"));
-    }
-  }
-
-  return manifests.map((manifestPath) => ({
-    manifest: JSON.parse(readFileSync(manifestPath, "utf8")),
-    path: path.relative(root, manifestPath),
-  }));
-}
+] as const;
 
 /** Returns every first-party declaration for one dependency. */
-export function dependencyDeclarations(manifests, dependency) {
-  const declarations = [];
+export function dependencyDeclarations(
+  manifests: readonly FirstPartyManifest[],
+  dependency: string
+) {
+  const declarations: Array<{
+    group: (typeof DEPENDENCY_GROUPS)[number];
+    manifestPath: string;
+    spec: string;
+  }> = [];
 
   for (const { manifest, path: manifestPath } of manifests) {
     for (const group of DEPENDENCY_GROUPS) {
@@ -299,8 +300,8 @@ export function validateDependencyPolicy({
   manifests,
   rootManifest,
   workspace,
-}) {
-  const problems = [];
+}: DependencyPolicyInput) {
+  const problems: string[] = [];
 
   for (const hold of DEPENDENCY_HOLDS) {
     const declarations = dependencyDeclarations(manifests, hold.dependency);
@@ -310,7 +311,9 @@ export function validateDependencyPolicy({
       );
     }
 
-    const allowed = new Set(hold.allowed ?? [hold.approved]);
+    const allowed = new Set(
+      hold.allowed ?? (hold.approved ? [hold.approved] : [])
+    );
     for (const declaration of declarations) {
       if (!allowed.has(declaration.spec)) {
         problems.push(
@@ -398,16 +401,4 @@ export function validateDependencyPolicy({
   }
 
   return problems;
-}
-
-/** Reads and validates the repository dependency policy. */
-export function inspectDependencyPolicy(root) {
-  const rootManifest = JSON.parse(
-    readFileSync(path.join(root, "package.json"), "utf8")
-  );
-  const workspace = parse(
-    readFileSync(path.join(root, "pnpm-workspace.yaml"), "utf8")
-  );
-  const manifests = readFirstPartyManifests(root);
-  return validateDependencyPolicy({ manifests, rootManifest, workspace });
 }

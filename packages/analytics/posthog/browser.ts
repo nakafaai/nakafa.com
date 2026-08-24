@@ -230,8 +230,8 @@ export const disableBrowserAnalytics = Effect.fn(
 
   yield* Effect.try({
     try: () => {
-      client.reset(true);
       client.opt_out_capturing();
+      client.reset(true);
     },
     catch: browserAnalyticsLoadFailure,
   }).pipe(Effect.ignore);

@@ -27,6 +27,7 @@ vi.mock("@repo/analytics/posthog/server", () => ({
 describe("sitemap page route", () => {
   beforeEach(() => {
     mockCaptureServerException.mockReset();
+    mockCaptureServerException.mockReturnValue(Effect.void);
     mockGetSitemapEntries.mockReset();
     mockGetSitemapPageDescriptor.mockReset();
     mockGetSitemapPageDescriptor.mockImplementation((pageId) =>

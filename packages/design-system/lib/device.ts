@@ -11,29 +11,6 @@ export function isMobileDevice(): boolean {
 }
 
 /**
- * Checks if WebGL2 is supported in the current browser
- *
- * Attempts to create a canvas and get a WebGL2 context. Returns false if
- * window or document is undefined, or if context creation fails.
- *
- * @returns true if WebGL2 is supported, false otherwise
- */
-export function checkWebGL2Support(): boolean {
-  if (typeof window === "undefined" || typeof document === "undefined") {
-    return false;
-  }
-
-  try {
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("webgl2");
-
-    return context !== null;
-  } catch {
-    return false;
-  }
-}
-
-/**
  * Determines the appropriate GPU power preference for the device
  *
  * Mobile devices always use "default" to preserve battery.

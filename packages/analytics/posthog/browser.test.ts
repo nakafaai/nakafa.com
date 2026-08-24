@@ -179,6 +179,10 @@ describe("consent-aware PostHog browser runtime", () => {
 
     expect(client.reset).toHaveBeenLastCalledWith(true);
     expect(client.opt_out_capturing).toHaveBeenCalledOnce();
+    const optOutOrder =
+      client.opt_out_capturing.mock.invocationCallOrder[0] ?? 0;
+    const resetOrder = client.reset.mock.invocationCallOrder.at(-1) ?? 0;
+    expect(optOutOrder).toBeLessThan(resetOrder);
     expect(client.captureException).not.toHaveBeenCalled();
   });
 

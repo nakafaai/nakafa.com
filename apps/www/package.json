@@ -34,7 +34,6 @@
     "@repo/internationalization": "workspace:*",
     "@repo/math": "workspace:*",
     "@repo/next-config": "workspace:*",
-    "@repo/security": "workspace:*",
     "@repo/seo": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",

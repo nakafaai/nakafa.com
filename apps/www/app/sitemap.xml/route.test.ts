@@ -22,6 +22,7 @@ vi.mock("@repo/analytics/posthog/server", () => ({
 describe("sitemap index route", () => {
   beforeEach(() => {
     mockCaptureServerException.mockReset();
+    mockCaptureServerException.mockReturnValue(Effect.void);
     mockReadSitemapPageDescriptors.mockReset();
     mockReadSitemapPageDescriptors.mockReturnValue(
       Effect.succeed([{ id: "base" }, { id: "content_id_quran_0" }])

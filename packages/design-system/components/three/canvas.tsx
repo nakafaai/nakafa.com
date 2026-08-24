@@ -56,11 +56,10 @@ function ErrorFallback({
 }
 
 /**
- * ThreeCanvas component with WebGL capability detection and error tracking
+ * Shared Three.js canvas with a WebGL fallback and render error boundary.
  *
- * Automatically detects WebGL2 support, selects appropriate GPU power preference,
- * and tracks initialization status to PostHog. Uses Canvas fallback for WebGL
- * unsupported devices.
+ * Selects an appropriate GPU power preference and lets React Three Fiber own
+ * capability detection through its Canvas fallback.
  *
  * @param children - React Three.js children to render
  * @param frameloop - Frame update strategy ("always" | "demand" | "never")

@@ -8,14 +8,6 @@ import { describe, expect, it } from "vitest";
 
 const NOW = Date.UTC(2026, 4, 29, 12, 0, 0);
 
-function getConvexErrorData(error: unknown) {
-  if (typeof error !== "object" || error === null || !("data" in error)) {
-    throw new Error("Expected a ConvexError with data.");
-  }
-
-  return error.data;
-}
-
 describe("chats/read", () => {
   it("hydrates each message with parts in persisted order", async () => {
     const t = createConvexTestWithBetterAuth();
@@ -98,19 +90,16 @@ describe("chats/read", () => {
       return chatId;
     });
 
-    let thrown: unknown;
-    try {
-      await t.query(api.chats.queries.loadMessagesPage, {
+    await expect(
+      t.query(api.chats.queries.loadMessagesPage, {
         chatId,
         paginationOpts: { cursor: null, numItems: 10 },
-      });
-    } catch (error) {
-      thrown = error;
-    }
-
-    expect(getConvexErrorData(thrown)).toEqual({
-      code: "CHAT_MESSAGE_PART_LIMIT_EXCEEDED",
-      message: "Chat message part count exceeds the supported load limit.",
+      })
+    ).rejects.toMatchObject({
+      data: {
+        code: "CHAT_MESSAGE_PART_LIMIT_EXCEEDED",
+        message: "Chat message part count exceeds the supported load limit.",
+      },
     });
   });
 });
