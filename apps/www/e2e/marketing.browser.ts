@@ -142,10 +142,15 @@ for (const viewport of targetViewports) {
       }
 
       const firstTrigger = triggers.first();
-      await firstTrigger.click();
+      if ("hasTouch" in viewport && viewport.hasTouch) {
+        await firstTrigger.tap();
+      } else {
+        await firstTrigger.click();
+      }
       const drawer = page.locator("[data-contributor-drawer]");
       await expect(drawer).toHaveCount(1);
       await expect(drawer).toBeVisible();
+      await expect(drawer).toHaveAccessibleName(contributors[0]?.name ?? "");
       await expect(drawer).toHaveAttribute(
         "data-contributor-username",
         contributors[0]?.username ?? ""
@@ -168,7 +173,11 @@ for (const viewport of targetViewports) {
       await expect(drawer).toHaveCount(0);
       await expect(firstTrigger).toBeFocused();
 
-      await firstTrigger.click();
+      if ("hasTouch" in viewport && viewport.hasTouch) {
+        await firstTrigger.tap();
+      } else {
+        await firstTrigger.click();
+      }
       await page
         .locator('[data-slot="drawer-backdrop"]')
         .click({ position: { x: 2, y: 2 } });
@@ -187,6 +196,21 @@ test.describe("detached contributor payloads", () => {
     await page.goto("/en", { waitUntil: "domcontentloaded" });
     const gallery = page.locator("#community [data-contributor-gallery]");
     const drawer = page.locator("[data-contributor-drawer]");
+    const firstContributor = contributors[0];
+    const firstTrigger = gallery.locator(
+      `[data-contributor-username="${firstContributor?.username ?? ""}"]`
+    );
+
+    await firstTrigger.hover();
+    await expect(page.getByRole("tooltip")).toHaveText(
+      firstContributor?.name ?? ""
+    );
+    await page.mouse.move(0, 0);
+    await expect(page.getByRole("tooltip")).toHaveCount(0);
+    await firstTrigger.focus();
+    await expect(page.getByRole("tooltip")).toHaveText(
+      firstContributor?.name ?? ""
+    );
 
     for (const contributor of contributors) {
       const trigger = gallery.locator(
@@ -201,6 +225,7 @@ test.describe("detached contributor payloads", () => {
       await expect(drawer.locator('[data-slot="drawer-title"]')).toHaveText(
         contributor.name
       );
+      await expect(drawer).toHaveAccessibleName(contributor.name);
 
       const actualSocialLinks = await drawer
         .locator('a[target="_blank"]')
@@ -240,7 +265,11 @@ async function verifyDesktopSplitter(
 ) {
   await expect(splitter).toBeVisible();
   await expect(splitter).toHaveAttribute("role", "separator");
+  await expect(splitter).toHaveAccessibleName(
+    "Resize the human and agent views"
+  );
   await expect(splitter).toHaveAttribute("aria-controls", "trust-primary-pane");
+  await expect(splitter).toHaveAttribute("aria-orientation", "vertical");
   await expect(splitter).toHaveAttribute("aria-valuemin", "36");
   await expect(splitter).toHaveAttribute("aria-valuemax", "64");
   await expect(splitter).toHaveAttribute("aria-valuenow", "50");
