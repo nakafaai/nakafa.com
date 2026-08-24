@@ -10,9 +10,12 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
+import { Effect } from "effect";
 import { useReducedMotion } from "motion/react";
 import dynamic from "next/dynamic";
 import { type ReactNode, useState } from "react";
+import { loadProjectileScene } from "@/components/marketing/about/projectile/loader";
+import { reportClientException } from "@/lib/analytics/client";
 
 /**
  * Imports the scene module after viewport intent.
@@ -20,8 +23,19 @@ import { type ReactNode, useState } from "react";
  * @see https://nextjs.org/docs/app/guides/lazy-loading
  */
 const ProjectileScene = dynamic(() =>
-  import("@/components/marketing/about/projectile/scene").then(
-    ({ ProjectileScene: Scene }) => Scene
+  Effect.runPromise(
+    loadProjectileScene(() =>
+      import("@/components/marketing/about/projectile/scene").then(
+        ({ ProjectileScene: Scene }) => Scene
+      )
+    ).pipe(
+      Effect.tapError((error) =>
+        reportClientException(error, {
+          operation: "load-projectile-scene",
+          source: "home-features",
+        })
+      )
+    )
   )
 );
 

@@ -11,9 +11,9 @@ import {
   PROJECTILE_SCENARIOS,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import type { Locale } from "next-intl";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { ProjectileClient } from "@/components/marketing/about/projectile/client";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 const decimalSeparators = {
   de: "comma",
@@ -22,7 +22,8 @@ const decimalSeparators = {
 } as const satisfies Record<ActiveAppLocaleCode, "comma" | "dot">;
 
 /** Renders deterministic projectile formulas on the server for every scenario. */
-export async function FeaturesProjectile({ locale }: { locale: Locale }) {
+export async function FeaturesProjectile() {
+  const locale = getLocaleOrThrow(await getLocale());
   const t = await getTranslations({ locale, namespace: "Features" });
   const decimalSeparator = decimalSeparators[locale];
   const scenarios = PROJECTILE_SCENARIOS.map((scenario) => {

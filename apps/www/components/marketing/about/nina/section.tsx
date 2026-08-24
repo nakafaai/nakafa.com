@@ -1,11 +1,14 @@
 import type { DataPart } from "@repo/ai/schema/data";
+import {
+  Conversation,
+  ConversationContent,
+} from "@repo/design-system/components/ai/conversation";
 import { MarkdownResponse } from "@repo/design-system/components/ai/markdown";
 import {
   Message,
   MessageContent,
 } from "@repo/design-system/components/ai/message";
-import type { Locale } from "next-intl";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { MathEvidence } from "@/components/ai/message-part/math/evidence";
 import {
@@ -13,6 +16,7 @@ import {
   NinaPrompt,
   NinaReasoning,
 } from "@/components/marketing/about/nina/client";
+import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 const featuresNinaMathInput: DataPart["math"]["input"] = {
   expression: "5 * 2 + 9 / 1",
@@ -64,7 +68,8 @@ const featuresNinaMath: DataPart["math"] = {
 };
 
 /** Renders Nina's fixed example transcript on the server. */
-export async function FeaturesNina({ locale }: { locale: Locale }) {
+export async function FeaturesNina() {
+  const locale = getLocaleOrThrow(await getLocale());
   const [t, aiT] = await Promise.all([
     getTranslations({ locale, namespace: "Features" }),
     getTranslations({ locale, namespace: "Ai" }),
@@ -78,46 +83,34 @@ export async function FeaturesNina({ locale }: { locale: Locale }) {
         })}
       </h3>
 
-      <div
-        className="[&>div]:scrollbar-hide relative min-h-0 flex-1 overflow-hidden"
-        role="log"
-      >
-        <div
-          style={{
-            height: "100%",
-            overflow: "auto",
-            scrollbarGutter: "stable both-edges",
-            width: "100%",
-          }}
-        >
-          <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6 px-8 pt-8 pb-14 lg:px-10 lg:pt-12">
-            <Message from="user">
+      <Conversation className="min-h-0">
+        <ConversationContent className="mx-auto w-full max-w-3xl gap-6 px-8 pt-8 pb-14 lg:px-10 lg:pt-12">
+          <Message from="user">
+            <MessageContent>
+              <MarkdownResponse id="features-nina-question">
+                {t.raw("nina-prompt")}
+              </MarkdownResponse>
+            </MessageContent>
+          </Message>
+          <Message from="assistant">
+            <div className="flex size-full flex-col gap-6">
+              <NinaReasoning label={aiT("thought-for-a-few-seconds")}>
+                <MarkdownResponse id="features-nina-reasoning">
+                  {t.raw("nina-reasoning")}
+                </MarkdownResponse>
+              </NinaReasoning>
+              <NinaMath label={aiT("math-evaluate")}>
+                <MathEvidence message={featuresNinaMath} />
+              </NinaMath>
               <MessageContent>
-                <MarkdownResponse id="features-nina-question">
-                  {t.raw("nina-prompt")}
+                <MarkdownResponse id="features-nina-answer">
+                  {t.raw("nina-answer")}
                 </MarkdownResponse>
               </MessageContent>
-            </Message>
-            <Message from="assistant">
-              <div className="flex size-full flex-col gap-6">
-                <NinaReasoning label={aiT("thought-for-a-few-seconds")}>
-                  <MarkdownResponse id="features-nina-reasoning">
-                    {t.raw("nina-reasoning")}
-                  </MarkdownResponse>
-                </NinaReasoning>
-                <NinaMath label={aiT("math-evaluate")}>
-                  <MathEvidence message={featuresNinaMath} />
-                </NinaMath>
-                <MessageContent>
-                  <MarkdownResponse id="features-nina-answer">
-                    {t.raw("nina-answer")}
-                  </MarkdownResponse>
-                </MessageContent>
-              </div>
-            </Message>
-          </div>
-        </div>
-      </div>
+            </div>
+          </Message>
+        </ConversationContent>
+      </Conversation>
 
       <div className="mx-auto grid w-full max-w-3xl shrink-0 px-8 pb-8 lg:px-10 lg:pb-10">
         <NinaPrompt placeholder={aiT("text-placeholder")} />

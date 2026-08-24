@@ -1,5 +1,4 @@
 import type { IconSvgElement } from "@hugeicons/react";
-import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import {
   FeaturesTryout,
@@ -19,14 +18,12 @@ interface SubjectPath {
 
 interface FeaturesBentoProps {
   featuredTryout: FeaturesTryoutModel;
-  locale: Locale;
   subjectPaths: readonly SubjectPath[];
 }
 
 /** Composes four independent Nakafa learning moments into one bordered grid. */
 export function FeaturesBento({
   featuredTryout,
-  locale,
   subjectPaths,
 }: FeaturesBentoProps) {
   const t = useTranslations("Features");
@@ -59,8 +56,8 @@ export function FeaturesBento({
       </div>
 
       <FeaturesTryout value={featuredTryout} />
-      <FeaturesNina locale={locale} />
-      <FeaturesProjectile locale={locale} />
+      <FeaturesNina />
+      <FeaturesProjectile />
     </div>
   );
 }

@@ -6,7 +6,10 @@ import {
   test,
 } from "@playwright/test";
 import { Effect, Schema } from "effect";
-import { withBrowserContext } from "./support/browser-context";
+import {
+  withBrowserContext,
+  withObservedPageErrors,
+} from "./support/browser-context";
 
 const ANALYTICS_CONSENT_STORAGE_KEY = "nakafa-analytics-consent";
 const deniedConsent = JSON.stringify({
@@ -139,29 +142,6 @@ const swipeDrawerClosed = Effect.fn("NakafaE2E.swipeConsentDrawerClosed")(
           );
         }),
       (session) => Effect.promise(() => session.detach())
-    );
-  }
-);
-
-const withObservedPageErrors = Effect.fn("NakafaE2E.withObservedPageErrors")(
-  function* <A, E, R>(
-    page: Page,
-    use: Effect.Effect<A, E, R>
-  ): Effect.fn.Return<A, E, R> {
-    return yield* Effect.acquireUseRelease(
-      Effect.sync(() => {
-        const errors: Error[] = [];
-        const recordError = (error: Error) => errors.push(error);
-        page.on("pageerror", recordError);
-        return { errors, recordError };
-      }),
-      ({ errors }) =>
-        use.pipe(
-          Effect.tap(() =>
-            Effect.sync(() => expect(errors.map(String)).toEqual([]))
-          )
-        ),
-      ({ recordError }) => Effect.sync(() => page.off("pageerror", recordError))
     );
   }
 );

@@ -34,24 +34,23 @@ const verifyFeaturedRenderer = Effect.fn(
   const selectedRenderers = yield* selectRendererImplementations(
     item.artifact.payload
   );
-  const selectedCustomNames = selectedRenderers
-    .filter(({ kind }) => kind === "implementation")
+  const selectedRendererNames = selectedRenderers
     .map(({ name }) => name)
     .sort();
-  const signedCustomNames = item.artifact.payload.requiredComponents
+  const signedRendererNames = item.artifact.payload.requiredComponents
     .map(({ name }) => name)
     .sort();
 
   assert.deepEqual(
-    selectedCustomNames,
-    signedCustomNames,
-    "Selected custom renderers differ from the authenticated artifact requirements."
+    selectedRendererNames,
+    signedRendererNames,
+    "Selected renderers differ from the authenticated artifact requirements."
   );
 
   return {
     contentKey: item.artifact.payload.contentKey,
-    selectedCustomNames,
     rendererDomain: item.artifact.payload.rendererDomain,
+    selectedRendererNames,
   };
 });
 
