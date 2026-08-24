@@ -36,6 +36,34 @@ export const baseComponentNames = {
   youtube: "Youtube",
 } as const;
 
+/** Canonical semantic names implemented for every MDX document. */
+export const semanticComponentNames = [
+  baseComponentNames.heading1,
+  baseComponentNames.heading2,
+  baseComponentNames.heading3,
+  baseComponentNames.heading4,
+  baseComponentNames.heading5,
+  baseComponentNames.heading6,
+  baseComponentNames.paragraph,
+  baseComponentNames.orderedList,
+  baseComponentNames.unorderedList,
+  baseComponentNames.listItem,
+  baseComponentNames.emphasis,
+  baseComponentNames.strong,
+  baseComponentNames.blockquote,
+  baseComponentNames.anchor,
+  baseComponentNames.code,
+  baseComponentNames.table,
+  baseComponentNames.tableHeader,
+  baseComponentNames.tableBody,
+  baseComponentNames.tableRow,
+  baseComponentNames.tableHead,
+  baseComponentNames.tableCell,
+  baseComponentNames.pre,
+  baseComponentNames.superscript,
+  baseComponentNames.subscript,
+] as const;
+
 /** Canonical rich component names owned by chemistry routes. */
 export const chemistryComponentNames = {
   ancientAtomLab: "AncientAtomLab",

@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test";
+import { Effect } from "effect";
+import { withBrowserContext } from "./support/browser-context";
 import {
   navigationCases,
   verifyHardAndClientNavigation,
@@ -20,20 +22,27 @@ for (const viewport of targetViewports) {
     }) => {
       expect(baseURL).toBeTruthy();
       const configuredBaseURL = baseURL ?? "";
-      const context = await browser.newContext({
-        baseURL: configuredBaseURL,
-        hasTouch: "hasTouch" in viewport ? viewport.hasTouch : false,
-        serviceWorkers: "block",
-        viewport: { height: viewport.height, width: viewport.width },
-      });
-
-      try {
-        const page = await context.newPage();
-        const target = await navigationCase.resolve(page);
-        await verifyHardAndClientNavigation(page, configuredBaseURL, target);
-      } finally {
-        await context.close();
-      }
+      await Effect.runPromise(
+        withBrowserContext(
+          browser,
+          {
+            baseURL: configuredBaseURL,
+            hasTouch: "hasTouch" in viewport ? viewport.hasTouch : false,
+            serviceWorkers: "block",
+            viewport: { height: viewport.height, width: viewport.width },
+          },
+          (context) =>
+            Effect.gen(function* () {
+              const page = yield* Effect.promise(() => context.newPage());
+              const target = yield* Effect.promise(() =>
+                navigationCase.resolve(page)
+              );
+              yield* Effect.promise(() =>
+                verifyHardAndClientNavigation(page, configuredBaseURL, target)
+              );
+            })
+        )
+      );
     });
   }
 }

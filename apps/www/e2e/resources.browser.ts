@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { Effect } from "effect";
 import { measureRouteJavascript } from "./support/resources";
 
 const HOMEPAGE_MAX_ENCODED_BYTES = 1_168_654;
@@ -27,10 +28,8 @@ for (const budget of routeBudgets) {
     browser,
   }, testInfo) => {
     expect(baseURL).toBeTruthy();
-    const measurement = await measureRouteJavascript(
-      browser,
-      baseURL ?? "",
-      budget.href
+    const measurement = await Effect.runPromise(
+      measureRouteJavascript(browser, baseURL ?? "", budget.href)
     );
 
     await testInfo.attach(

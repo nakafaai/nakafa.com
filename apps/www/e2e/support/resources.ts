@@ -1,4 +1,6 @@
-import type { Browser } from "@playwright/test";
+import type { Browser, Page } from "@playwright/test";
+import { Clock, Duration, Effect, Schema } from "effect";
+import { withBrowserContext } from "./browser-context";
 
 const JAVASCRIPT_RESOURCE_PATTERN =
   /^\/_next\/static\/(?:immutable\/)?chunks\/.+\.js$/;
@@ -18,119 +20,154 @@ export interface JavascriptMeasurement {
   readonly worst: Omit<JavascriptRun, "urls">;
 }
 
-function countJavascriptResources(page: import("@playwright/test").Page) {
-  return page.evaluate((patternSource) => {
-    const pattern = new RegExp(patternSource);
-    const urls = performance
-      .getEntriesByType("resource")
-      .map(({ name }) => name)
-      .filter((url) => {
-        const resourceUrl = new URL(url);
-        return (
-          resourceUrl.origin === location.origin &&
-          pattern.test(resourceUrl.pathname)
-        );
-      });
-    return new Set(urls).size;
-  }, JAVASCRIPT_RESOURCE_PATTERN.source);
-}
+/** A route did not return one successful document response. */
+export class JavascriptResourceResponseError extends Schema.TaggedError<JavascriptResourceResponseError>()(
+  "JavascriptResourceResponseError",
+  {
+    href: Schema.String,
+    status: Schema.optional(Schema.Finite),
+  }
+) {}
 
-async function waitForJavascriptResourcesToSettle(
-  page: import("@playwright/test").Page
-) {
-  const startedAt = Date.now();
+/** Matching JavaScript resources continued loading beyond the fixed window. */
+export class JavascriptResourceSettleTimeout extends Schema.TaggedError<JavascriptResourceSettleTimeout>()(
+  "JavascriptResourceSettleTimeout",
+  {
+    href: Schema.String,
+    timeoutMilliseconds: Schema.Finite,
+  }
+) {}
+
+const countJavascriptResources = Effect.fn(
+  "NakafaE2E.countJavascriptResources"
+)(function* (page: Page) {
+  return yield* Effect.promise(() =>
+    page.evaluate((patternSource) => {
+      const pattern = new RegExp(patternSource);
+      const urls = performance
+        .getEntriesByType("resource")
+        .map(({ name }) => name)
+        .filter((url) => {
+          const resourceUrl = new URL(url);
+          return (
+            resourceUrl.origin === location.origin &&
+            pattern.test(resourceUrl.pathname)
+          );
+        });
+      return new Set(urls).size;
+    }, JAVASCRIPT_RESOURCE_PATTERN.source)
+  );
+});
+
+const waitForJavascriptResourcesToSettle = Effect.fn(
+  "NakafaE2E.waitForJavascriptResourcesToSettle"
+)(function* (page: Page, href: string) {
+  const startedAt = yield* Clock.currentTimeMillis;
   let lastChangeAt = startedAt;
   let previousCount = -1;
 
-  while (Date.now() - startedAt <= RESOURCE_SETTLE_TIMEOUT_MILLISECONDS) {
-    const currentCount = await countJavascriptResources(page);
+  while (true) {
+    const currentCount = yield* countJavascriptResources(page);
+    const observedAt = yield* Clock.currentTimeMillis;
     if (currentCount !== previousCount) {
       previousCount = currentCount;
-      lastChangeAt = Date.now();
+      lastChangeAt = observedAt;
     }
-    if (Date.now() - lastChangeAt >= RESOURCE_IDLE_MILLISECONDS) {
+    if (observedAt - lastChangeAt >= RESOURCE_IDLE_MILLISECONDS) {
       return;
     }
-    await page.waitForTimeout(RESOURCE_POLL_MILLISECONDS);
-  }
-
-  throw new Error(
-    `JavaScript resources did not settle within ${RESOURCE_SETTLE_TIMEOUT_MILLISECONDS}ms.`
-  );
-}
-
-function readJavascriptRun(
-  page: import("@playwright/test").Page
-): Promise<JavascriptRun> {
-  return page.evaluate((patternSource) => {
-    const pattern = new RegExp(patternSource);
-    const resources = performance
-      .getEntriesByType("resource")
-      .filter(
-        (entry): entry is PerformanceResourceTiming =>
-          entry instanceof PerformanceResourceTiming
-      )
-      .filter((entry) => {
-        const resourceUrl = new URL(entry.name);
-        return (
-          resourceUrl.origin === location.origin &&
-          pattern.test(resourceUrl.pathname)
-        );
+    if (observedAt - startedAt > RESOURCE_SETTLE_TIMEOUT_MILLISECONDS) {
+      return yield* new JavascriptResourceSettleTimeout({
+        href,
+        timeoutMilliseconds: RESOURCE_SETTLE_TIMEOUT_MILLISECONDS,
       });
-    const uniqueResources = new Map(
-      resources.map((resource) => [resource.name, resource])
-    );
-    const entries = [...uniqueResources.values()];
+    }
+    yield* Effect.sleep(Duration.millis(RESOURCE_POLL_MILLISECONDS));
+  }
+});
 
-    return {
-      decodedBodySize: entries.reduce(
-        (total, entry) => total + entry.decodedBodySize,
-        0
-      ),
-      encodedBodySize: entries.reduce(
-        (total, entry) => total + entry.encodedBodySize,
-        0
-      ),
-      resourceCount: entries.length,
-      urls: [...uniqueResources.keys()].sort(),
-    };
-  }, JAVASCRIPT_RESOURCE_PATTERN.source);
-}
+const readJavascriptRun = Effect.fn("NakafaE2E.readJavascriptRun")(function* (
+  page: Page
+) {
+  return yield* Effect.promise(() =>
+    page.evaluate((patternSource) => {
+      const pattern = new RegExp(patternSource);
+      const resources = performance
+        .getEntriesByType("resource")
+        .filter(
+          (entry): entry is PerformanceResourceTiming =>
+            entry instanceof PerformanceResourceTiming
+        )
+        .filter((entry) => {
+          const resourceUrl = new URL(entry.name);
+          return (
+            resourceUrl.origin === location.origin &&
+            pattern.test(resourceUrl.pathname)
+          );
+        });
+      const uniqueResources = new Map(
+        resources.map((resource) => [resource.name, resource])
+      );
+      const entries = [...uniqueResources.values()];
+
+      return {
+        decodedBodySize: entries.reduce(
+          (total, entry) => total + entry.decodedBodySize,
+          0
+        ),
+        encodedBodySize: entries.reduce(
+          (total, entry) => total + entry.encodedBodySize,
+          0
+        ),
+        resourceCount: entries.length,
+        urls: [...uniqueResources.keys()].sort(),
+      };
+    }, JAVASCRIPT_RESOURCE_PATTERN.source)
+  );
+});
 
 /** Measures one route in three isolated, uncached Chromium contexts. */
-export async function measureRouteJavascript(
-  browser: Browser,
-  baseURL: string,
-  href: string
-): Promise<JavascriptMeasurement> {
+export const measureRouteJavascript = Effect.fn(
+  "NakafaE2E.measureRouteJavascript"
+)(function* (browser: Browser, baseURL: string, href: string) {
   const runs: JavascriptRun[] = [];
 
   for (let run = 0; run < 3; run += 1) {
-    const context = await browser.newContext({
-      serviceWorkers: "block",
-      viewport: { height: 900, width: 1440 },
-    });
+    const javascriptRun = yield* withBrowserContext(
+      browser,
+      {
+        baseURL,
+        serviceWorkers: "block",
+        viewport: { height: 900, width: 1440 },
+      },
+      (context) =>
+        Effect.gen(function* () {
+          const page = yield* Effect.promise(() => context.newPage());
+          const session = yield* Effect.promise(() =>
+            context.newCDPSession(page)
+          );
+          yield* Effect.promise(() => session.send("Network.enable"));
+          yield* Effect.promise(() =>
+            session.send("Network.setCacheDisabled", {
+              cacheDisabled: true,
+            })
+          );
 
-    try {
-      const page = await context.newPage();
-      const session = await context.newCDPSession(page);
-      await session.send("Network.enable");
-      await session.send("Network.setCacheDisabled", { cacheDisabled: true });
+          const response = yield* Effect.promise(() =>
+            page.goto(href, { waitUntil: "domcontentloaded" })
+          );
+          if (!response?.ok()) {
+            return yield* new JavascriptResourceResponseError({
+              href,
+              status: response?.status(),
+            });
+          }
 
-      const response = await page.goto(new URL(href, baseURL).href, {
-        waitUntil: "domcontentloaded",
-      });
-      if (!response?.ok()) {
-        throw new Error(
-          `Resource measurement failed for ${href} with status ${response?.status() ?? "unknown"}.`
-        );
-      }
-
-      await waitForJavascriptResourcesToSettle(page);
-      runs.push(await readJavascriptRun(page));
-    } finally {
-      await context.close();
-    }
+          yield* waitForJavascriptResourcesToSettle(page, href);
+          return yield* readJavascriptRun(page);
+        })
+    );
+    runs.push(javascriptRun);
   }
 
   return {
@@ -147,4 +184,4 @@ export async function measureRouteJavascript(
       ),
     },
   };
-}
+});

@@ -1,14 +1,13 @@
 import assert from "node:assert/strict";
 import { readProtectedContent } from "@repo/backend/client/content/protected";
 import { api } from "@repo/backend/convex/_generated/api";
-import { semanticMdxComponents } from "@repo/design-system/lib/markdown/semantic";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
 import { ConvexHttpClient } from "convex/browser";
 import { Effect } from "effect";
 import { makeCurrentTryoutRuntimeRequest } from "@/components/tryout/content/request";
 import { env } from "@/env";
-import { resolveRendererComponents } from "@/lib/content/renderer/components";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
+import { selectRendererImplementations } from "@/lib/content/renderer/selection";
 
 const verifyFeaturedRenderer = Effect.fn(
   "NakafaContent.verifyFeaturedRenderer"
@@ -32,24 +31,26 @@ const verifyFeaturedRenderer = Effect.fn(
   const item = response.items[0];
   assert(item, "The featured signed snapshot returned no question artifact.");
 
-  const components = yield* resolveRendererComponents(item.artifact.payload);
-  const semanticNames = new Set(Object.keys(semanticMdxComponents));
-  const loadedCustomNames = Object.keys(components)
-    .filter((name) => !semanticNames.has(name))
+  const selectedRenderers = yield* selectRendererImplementations(
+    item.artifact.payload
+  );
+  const selectedCustomNames = selectedRenderers
+    .filter(({ kind }) => kind === "implementation")
+    .map(({ name }) => name)
     .sort();
   const signedCustomNames = item.artifact.payload.requiredComponents
     .map(({ name }) => name)
     .sort();
 
   assert.deepEqual(
-    loadedCustomNames,
+    selectedCustomNames,
     signedCustomNames,
-    "Loaded custom renderers differ from the authenticated artifact requirements."
+    "Selected custom renderers differ from the authenticated artifact requirements."
   );
 
   return {
     contentKey: item.artifact.payload.contentKey,
-    loadedCustomNames,
+    selectedCustomNames,
     rendererDomain: item.artifact.payload.rendererDomain,
   };
 });

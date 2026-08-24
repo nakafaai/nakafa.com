@@ -18,7 +18,7 @@
     "test:ui": "NODE_OPTIONS='--no-experimental-webstorage' vitest --ui",
     "test:watch": "NODE_OPTIONS='--no-experimental-webstorage' vitest watch",
     "typecheck": "next typegen && tsc --noEmit --emitDeclarationOnly false",
-    "verify:featured-renderer": "node --conditions=react-server --import tsx e2e/featured-renderer.ts"
+    "verify:featured-renderer": "tsx --conditions=import --conditions=react-server e2e/featured-renderer.mts"
   },
   "dependencies": {
     "@ai-sdk/react": "4.0.80",

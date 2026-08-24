@@ -20,6 +20,7 @@ vi.mock("next-intl", () => ({
 const contentKey = ContentKeySchema.make("test:renderer-components");
 
 afterEach(() => {
+  vi.doUnmock("@repo/design-system/lib/markdown/semantic");
   vi.doUnmock("@/lib/content/renderer/domain/site");
   vi.resetModules();
 });
@@ -61,6 +62,30 @@ describe("renderer components", () => {
     ).resolves.toMatchObject({
       _tag: "RendererImplementationMissing",
       componentName: "MissingRenderer",
+      contentKey,
+      rendererDomain: "site",
+    });
+  });
+
+  it("fails when semantic ownership and implementation coverage drift", async () => {
+    vi.doMock("@repo/design-system/lib/markdown/semantic", () => ({
+      semanticMdxComponents: {},
+    }));
+    const { resolveRendererComponents } = await import(
+      "@/lib/content/renderer/components"
+    );
+
+    await expect(
+      Effect.runPromise(
+        resolveRendererComponents({
+          contentKey,
+          rendererDomain: "site",
+          requiredComponents: [{ name: "p", version: 1 }],
+        }).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({
+      _tag: "RendererImplementationMissing",
+      componentName: "p",
       contentKey,
       rendererDomain: "site",
     });
