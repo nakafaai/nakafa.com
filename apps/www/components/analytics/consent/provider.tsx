@@ -287,7 +287,7 @@ export function AnalyticsConsentProvider({
     isPromptOpen: sessionPolicy.isPromptOpen,
     isSaving: sessionPolicy.isSaving,
     setPreferencesOpen,
-    state,
+    status: sessionPolicy.status,
   };
 
   return (

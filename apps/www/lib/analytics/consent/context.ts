@@ -15,7 +15,7 @@ export interface AnalyticsConsentContextValue {
   readonly isPromptOpen: boolean;
   readonly isSaving: boolean;
   readonly setPreferencesOpen: (open: boolean) => void;
-  readonly state: AnalyticsConsentState;
+  readonly status: AnalyticsConsentState["status"];
 }
 
 export const AnalyticsConsentContext =

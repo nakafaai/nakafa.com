@@ -42,6 +42,9 @@ const userWithoutRole = {
   ...user,
   appUser: { ...user.appUser, role: undefined },
 } satisfies BrowserAnalyticsUser;
+type SessionPolicyInput = Parameters<
+  typeof resolveAnalyticsConsentSessionPolicy
+>[0];
 
 describe("browser analytics consent state", () => {
   it("keeps failures scoped and clears synchronized choices", () => {
@@ -82,45 +85,46 @@ describe("browser analytics consent state", () => {
       overrides,
       promptIdentity: accountB,
     });
-    const currentSource = {
-      decidedAt: 300,
-      noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
-    };
-    const resolveFor = (
+    const currentSource = { ...accountConsent, decidedAt: 300 };
+    const resolve = (
       promptIdentity: typeof accountA,
-      durableConsent: Parameters<
-        typeof resolveAnalyticsConsentSessionPolicy
-      >[0]["durableConsent"] = null
+      durableConsent: SessionPolicyInput["durableConsent"] = null,
+      status: SessionPolicyInput["status"] = "granted"
     ) =>
       resolveAnalyticsConsentSessionPolicy({
         durableConsent,
         hasLoadError: false,
         overrides,
         promptIdentity,
-        status: "granted",
+        status,
       });
     expect(
       [
-        resolveFor(anonymous),
-        resolveFor(accountA, currentSource),
-        resolveFor(accountB),
-        resolveFor(accountB, { ...currentSource, decidedAt: 299 }),
-        resolveFor(accountB, {
+        resolve(anonymous),
+        resolve(accountA),
+        resolve(accountB),
+        resolve(accountB, { ...currentSource, decidedAt: 299 }),
+        resolve(accountB, {
           ...currentSource,
           noticeVersion: "privacy-retained",
         }),
-        resolveFor(accountB, currentSource),
-        resolveFor(accountB, { ...currentSource, decidedAt: 301 }),
-      ].map((policy) => [policy.hasSaveError, policy.isRuntimeSuppressed])
+        resolve(accountB, currentSource),
+      ].map((policy) => [
+        policy.hasSaveError,
+        policy.isRuntimeSuppressed,
+        policy.status,
+      ])
     ).toEqual([
-      [true, true],
-      [true, true],
-      [false, true],
-      [false, true],
-      [false, true],
-      [false, false],
-      [false, false],
+      [true, true, "denied"],
+      [true, true, "denied"],
+      [false, true, "denied"],
+      [false, true, "denied"],
+      [false, true, "denied"],
+      [false, false, "granted"],
     ]);
+    expect(resolve(anonymous, null, "browser-signal").status).toBe(
+      "browser-signal"
+    );
   });
 
   it("shows a prompt only until that visitor has a pending choice", () => {
@@ -151,6 +155,7 @@ describe("browser analytics consent state", () => {
     ]);
     expect(pending.isSaving).toBe(true);
     expect(pending.isRuntimeSuppressed).toBe(true);
+    expect(pending.status).toBe("pending");
     expect(
       resolveAnalyticsConsentSessionPolicy({
         durableConsent: null,
@@ -158,8 +163,8 @@ describe("browser analytics consent state", () => {
         overrides: new Map(),
         promptIdentity,
         status: "prompt",
-      }).isPromptOpen
-    ).toBe(true);
+      })
+    ).toMatchObject({ isPromptOpen: true, status: "prompt" });
     expect(
       resolveAnalyticsConsentSessionPolicy({
         durableConsent: null,

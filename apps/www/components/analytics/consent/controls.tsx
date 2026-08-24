@@ -72,7 +72,7 @@ export function AnalyticsConsentControls() {
 
 function ConsentStatus() {
   const t = useTranslations("AnalyticsConsent");
-  const status = useAnalyticsConsent((state) => state.state.status);
+  const status = useAnalyticsConsent((state) => state.status);
 
   return <span aria-live="polite">{t(`status-${status}`)}</span>;
 }

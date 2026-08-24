@@ -101,6 +101,14 @@ export function resolveAnalyticsConsentSessionPolicy({
     durableConsent.decidedAt >= storedOverride.decidedAt;
   const override = isSavedChoiceSynchronized ? undefined : storedOverride;
   const hasHandledPrompt = override !== undefined;
+  let effectiveStatus: AnalyticsConsentState["status"] = status;
+  if (status !== "browser-signal") {
+    if (override?.persistence === "pending") {
+      effectiveStatus = "pending";
+    } else if (override) {
+      effectiveStatus = "denied";
+    }
+  }
 
   return {
     hasSaveError: override?.persistence === "failed",
@@ -110,6 +118,7 @@ export function resolveAnalyticsConsentSessionPolicy({
       (status === "prompt" || (hasLoadError && status === "pending")),
     isRuntimeSuppressed: override !== undefined,
     isSaving: override?.persistence === "pending",
+    status: effectiveStatus,
   };
 }
 
