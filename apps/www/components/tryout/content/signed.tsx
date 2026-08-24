@@ -36,7 +36,6 @@ import {
   evaluateVerifiedHistoricalArtifact,
 } from "@/lib/content/published/artifact";
 import { ContentRuntimeConfigurationError } from "@/lib/content/published/errors";
-import { getRendererComponents } from "@/lib/content/renderer/components";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 
 const SIGNED_RENDER_CONCURRENCY = 4;
@@ -212,12 +211,8 @@ const renderCurrentItem = Effect.fn("NakafaContent.renderCurrentTryoutItem")(
         "Protected content batch lost an ordered item."
       );
     }
-    const components = getRendererComponents(
-      item.artifact.payload.rendererDomain
-    );
     const rendered = yield* evaluateVerifiedArtifact({
       artifact: item.artifact,
-      components,
     });
     return projectRenderedArtifact(rendered, selector);
   }
@@ -234,12 +229,8 @@ const renderHistoryItem = Effect.fn("NakafaContent.renderHistoryTryoutItem")(
         "Protected content batch lost an ordered item."
       );
     }
-    const components = getRendererComponents(
-      item.artifact.payload.rendererDomain
-    );
     const rendered = yield* evaluateVerifiedHistoricalArtifact({
       artifact: item.artifact,
-      components,
     });
     return projectRenderedArtifact(rendered, selector);
   }

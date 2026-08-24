@@ -23,9 +23,13 @@ const configEnv = createEnv({
     CONVEX_AGENT_MODE: Schema.toStandardSchemaV1(
       Schema.UndefinedOr(Schema.Literal("anonymous"))
     ),
+    NEXT_EXPOSE_TESTING_API: Schema.toStandardSchemaV1(
+      Schema.UndefinedOr(Schema.Literal("true"))
+    ),
   },
   runtimeEnv: {
     CONVEX_AGENT_MODE: process.env.CONVEX_AGENT_MODE,
+    NEXT_EXPOSE_TESTING_API: process.env.NEXT_EXPOSE_TESTING_API,
   },
 });
 const isAksaraPreviewChild =
@@ -197,6 +201,9 @@ const nextConfig = {
   headers: createAppHeaders,
   experimental: {
     ...config.experimental,
+    ...(configEnv.NEXT_EXPOSE_TESTING_API === "true"
+      ? { exposeTestingApiInProductionBuild: true }
+      : {}),
     globalNotFound: true,
     instantInsights: {
       validationLevel: "warning",

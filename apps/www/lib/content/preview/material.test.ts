@@ -56,13 +56,6 @@ vi.mock("next/navigation", () => ({
   usePathname: vi.fn(),
   useRouter: vi.fn(),
 }));
-const rendererMocks = vi.hoisted(() => ({
-  components: {},
-  getRendererComponents: vi.fn(),
-}));
-vi.mock("@/lib/content/renderer/components", () => ({
-  getRendererComponents: rendererMocks.getRendererComponents,
-}));
 vi.mock("@/lib/content/preview/config", async (importOriginal) => ({
   ...(await importOriginal()),
   readPreviewConfig: vi.fn(),
@@ -106,8 +99,6 @@ beforeEach(() => {
   configMock.mockReset();
   fetchMock.mockReset();
   executeMock.mockReset();
-  rendererMocks.getRendererComponents.mockReset();
-  rendererMocks.getRendererComponents.mockReturnValue(rendererMocks.components);
   configMock.mockReturnValue(Effect.succeed(Option.some(config)));
   executeMock.mockImplementation(() =>
     Effect.gen(function* () {
@@ -181,10 +172,7 @@ describe("local material preview", () => {
       expect.any(Number)
     );
     expect(executeMock).toHaveBeenCalledWith(
-      expect.objectContaining({ components: rendererMocks.components })
-    );
-    expect(rendererMocks.getRendererComponents).toHaveBeenCalledWith(
-      "mathematics"
+      expect.not.objectContaining({ components: expect.anything() })
     );
   });
 

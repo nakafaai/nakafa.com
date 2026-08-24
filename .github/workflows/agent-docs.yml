@@ -217,11 +217,30 @@ jobs:
           AGENT_DOCS_CONTENT_CACHE_KEY: ${{ secrets.AGENT_DOCS_CONTENT_CACHE_KEY_V1 }}
         run: pnpm --silent --dir packages/backend runtime:ci import
 
+      - name: Verify signed featured renderer graph
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        run: pnpm --filter www verify:featured-renderer
+
+      - name: Analyze production bundles
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        run: pnpm --filter www exec next experimental-analyze --output
+        env:
+          NODE_ENV: production
+
+      - name: Archive production bundle analysis
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: www-production-bundle-analysis
+          path: apps/www/.next/diagnostics/analyze
+          retention-days: 7
+
       - name: Build production app
         id: production_build
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: pnpm build
         env:
+          NEXT_EXPOSE_TESTING_API: "true"
           NODE_ENV: production
 
       - name: Classify local backend build failure
@@ -296,6 +315,14 @@ jobs:
           done
           echo "The local production app did not become ready." >&2
           exit 1
+
+      - name: Install Chromium
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        run: pnpm --filter www exec playwright install --with-deps chromium
+
+      - name: Run production browser checks
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        run: pnpm --filter www test:browser
 
       - name: Run AFDocs checks
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'

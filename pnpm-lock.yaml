@@ -428,6 +428,9 @@ importers:
         specifier: ^5.0.15
         version: 5.0.15(@types/react@19.2.18)(immer@11.1.18)(react@19.2.8)(use-sync-external-store@1.6.0(react@19.2.8))
     devDependencies:
+      '@next/playwright':
+        specifier: 16.3.2
+        version: 16.3.2(@playwright/test@1.62.1)
       '@playwright/test':
         specifier: ^1.62.1
         version: 1.62.1
@@ -2754,6 +2757,14 @@ packages:
       '@mdx-js/loader':
         optional: true
       '@mdx-js/react':
+        optional: true
+
+  '@next/playwright@16.3.2':
+    resolution: {integrity: sha512-UpgLbbWMleUS1lrWAL/rp+yJETnKaGxDhtSYvj1QCKU3vS8EuoHVsA+28YLp2Ew/mkGciAzSsNoGVveMa9RomQ==}
+    peerDependencies:
+      '@playwright/test': '>=1.0.0'
+    peerDependenciesMeta:
+      '@playwright/test':
         optional: true
 
   '@next/swc-darwin-arm64@16.3.2':
@@ -9404,6 +9415,10 @@ snapshots:
     optionalDependencies:
       '@mdx-js/loader': 3.1.1(supports-color@7.2.0)
       '@mdx-js/react': 3.1.1(@types/react@19.2.18)(react@19.2.8)
+
+  '@next/playwright@16.3.2(@playwright/test@1.62.1)':
+    optionalDependencies:
+      '@playwright/test': 1.62.1
 
   '@next/swc-darwin-arm64@16.3.2':
     optional: true

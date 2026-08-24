@@ -1,0 +1,56 @@
+import { Anchor } from "@repo/design-system/components/markdown/anchor";
+import {
+  MdxBlockquote,
+  MdxCode,
+  MdxEmphasis,
+  MdxHeading1,
+  MdxHeading2,
+  MdxHeading3,
+  MdxHeading4,
+  MdxHeading5,
+  MdxHeading6,
+  MdxListItem,
+  MdxOrderedList,
+  MdxPre,
+  MdxStrong,
+  MdxSubscript,
+  MdxSuperscript,
+  MdxTable,
+  MdxTableBody,
+  MdxTableCell,
+  MdxTableHead,
+  MdxTableHeader,
+  MdxTableRow,
+  MdxUnorderedList,
+} from "@repo/design-system/components/markdown/mdx";
+import { Paragraph } from "@repo/design-system/components/markdown/paragraph";
+import { baseComponentNames } from "@repo/design-system/lib/markdown/names";
+import type { MDXComponents } from "@repo/design-system/types/markdown";
+
+/** Styled HTML elements available to every trusted and local MDX document. */
+export const semanticMdxComponents = {
+  [baseComponentNames.heading1]: MdxHeading1,
+  [baseComponentNames.heading2]: MdxHeading2,
+  [baseComponentNames.heading3]: MdxHeading3,
+  [baseComponentNames.heading4]: MdxHeading4,
+  [baseComponentNames.heading5]: MdxHeading5,
+  [baseComponentNames.heading6]: MdxHeading6,
+  [baseComponentNames.paragraph]: Paragraph,
+  [baseComponentNames.orderedList]: MdxOrderedList,
+  [baseComponentNames.unorderedList]: MdxUnorderedList,
+  [baseComponentNames.listItem]: MdxListItem,
+  [baseComponentNames.emphasis]: MdxEmphasis,
+  [baseComponentNames.strong]: MdxStrong,
+  [baseComponentNames.blockquote]: MdxBlockquote,
+  [baseComponentNames.anchor]: Anchor,
+  [baseComponentNames.code]: MdxCode,
+  [baseComponentNames.table]: MdxTable,
+  [baseComponentNames.tableHeader]: MdxTableHeader,
+  [baseComponentNames.tableBody]: MdxTableBody,
+  [baseComponentNames.tableRow]: MdxTableRow,
+  [baseComponentNames.tableHead]: MdxTableHead,
+  [baseComponentNames.tableCell]: MdxTableCell,
+  [baseComponentNames.pre]: MdxPre,
+  [baseComponentNames.superscript]: MdxSuperscript,
+  [baseComponentNames.subscript]: MdxSubscript,
+} satisfies MDXComponents;

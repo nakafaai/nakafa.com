@@ -13,10 +13,12 @@
     "index-now": "node --env-file=.env.local --import tsx scripts/index-now.ts",
     "start": "next start -p 3000",
     "test": "NODE_OPTIONS='--no-experimental-webstorage' vitest run",
+    "test:browser": "playwright test",
     "test:coverage": "NODE_OPTIONS='--no-experimental-webstorage' vitest run --coverage",
     "test:ui": "NODE_OPTIONS='--no-experimental-webstorage' vitest --ui",
     "test:watch": "NODE_OPTIONS='--no-experimental-webstorage' vitest watch",
-    "typecheck": "next typegen && tsc --noEmit --emitDeclarationOnly false"
+    "typecheck": "next typegen && tsc --noEmit --emitDeclarationOnly false",
+    "verify:featured-renderer": "node --conditions=react-server --import tsx e2e/featured-renderer.ts"
   },
   "dependencies": {
     "@ai-sdk/react": "4.0.80",
@@ -72,6 +74,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@next/playwright": "16.3.2",
     "@playwright/test": "^1.62.1",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
