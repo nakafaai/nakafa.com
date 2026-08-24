@@ -3,6 +3,7 @@ import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadRelease } from "@repo/backend/convex/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/convex/contentRelease/parse";
+import { releaseRoleValidator } from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
 import { Effect } from "effect";
@@ -10,6 +11,9 @@ import { Effect } from "effect";
 const envelopeValidator = v.object({
   releaseJson: v.string(),
   rendererJson: v.string(),
+});
+const stageEnvelopeValidator = envelopeValidator.extend({
+  role: releaseRoleValidator,
 });
 
 /** Reads stored authenticated envelopes only for one exact manifest identity. */
@@ -43,13 +47,14 @@ export const get = internalQuery({
 /** Returns stored bundle bytes for Node-side verification by release identity. */
 export const byRelease = internalQuery({
   args: { releaseId: v.string() },
-  returns: envelopeValidator,
+  returns: stageEnvelopeValidator,
   handler: (ctx, args) =>
     runConvexProgram(
       loadRelease(ctx, args.releaseId).pipe(
         Effect.map((release) => ({
           releaseJson: release.releaseJson,
           rendererJson: release.rendererJson,
+          role: release.role,
         }))
       )
     ),

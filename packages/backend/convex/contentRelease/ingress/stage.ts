@@ -20,6 +20,7 @@ import {
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
 import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/renderer";
 import type {
+  releaseRoleValidator,
   stageReceiptValidator,
   statusValidator,
 } from "@repo/backend/convex/contentRelease/spec";
@@ -57,6 +58,7 @@ type ReleaseRequest = Extract<
 interface StoredEnvelope {
   readonly releaseJson: string;
   readonly rendererJson: string;
+  readonly role: Infer<typeof releaseRoleValidator>;
 }
 type StageReceipt = Infer<typeof stageReceiptValidator>;
 type Status = Infer<typeof statusValidator>;
@@ -157,10 +159,10 @@ const loadEnvelope = Effect.fn("contentRelease.loadStageEnvelope")(function* (
       "Staged release identity does not match its stored envelope."
     );
   }
-  return verified;
+  return { ...verified, role: stored.role };
 });
 
-/** Authenticates every artifact against the frozen release renderer. */
+/** Authenticates candidate and retained recovery artifacts against their keys. */
 const verifyArtifactBatch = Effect.fn("contentRelease.verifyArtifactBatch")(
   function* (
     ctx: ActionCtx,
@@ -170,12 +172,16 @@ const verifyArtifactBatch = Effect.fn("contentRelease.verifyArtifactBatch")(
     const verified = yield* loadEnvelope(ctx, request.releaseId);
     yield* Effect.forEach(
       request.artifacts,
-      (artifact) =>
-        requireActiveKey(
-          artifact.keyId,
-          activeKeyId,
-          `Artifact ${artifact.artifactHash}`
-        ).pipe(
+      (artifact) => {
+        const keyGate =
+          verified.role === "candidate"
+            ? requireActiveKey(
+                artifact.keyId,
+                activeKeyId,
+                `Artifact ${artifact.artifactHash}`
+              )
+            : Effect.void;
+        return keyGate.pipe(
           Effect.andThen(
             verifySignedContentArtifact({
               artifact,
@@ -184,7 +190,8 @@ const verifyArtifactBatch = Effect.fn("contentRelease.verifyArtifactBatch")(
               rendererManifest: verified.renderer,
             }).pipe(Effect.mapError(contractFailure))
           )
-        ),
+        );
+      },
       { concurrency: "unbounded", discard: true }
     );
   }

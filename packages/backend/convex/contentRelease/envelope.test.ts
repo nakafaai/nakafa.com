@@ -19,7 +19,11 @@ const getEnvelope = makeFunctionReference<
 const getReleaseEnvelope = makeFunctionReference<
   "query",
   { releaseId: string },
-  { releaseJson: string; rendererJson: string }
+  {
+    releaseJson: string;
+    rendererJson: string;
+    role: "candidate" | "recovery";
+  }
 >("contentRelease/envelope:byRelease");
 
 describe("content release envelope", () => {
@@ -41,6 +45,7 @@ describe("content release envelope", () => {
     ).resolves.toEqual({
       releaseJson: testReleaseJson(),
       rendererJson: testRendererJson(),
+      role: "candidate",
     });
   });
 
