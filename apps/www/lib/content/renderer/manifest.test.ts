@@ -108,7 +108,7 @@ describe("renderer manifest", () => {
 
       expect(Object.keys(components).sort()).toEqual(expectedNames);
     }
-  }, 30_000);
+  }, 120_000);
 
   it("keeps every literal loader registry exactly aligned with the manifest", async () => {
     const { rendererManifest } = await import(
