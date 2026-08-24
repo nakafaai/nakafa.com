@@ -8,13 +8,22 @@ import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   type BrowserAnalyticsUser,
+  createAnalyticsConsentPromptIdentity,
   createBrowserAnalyticsIdentity,
+  resolveAnalyticsConsentSessionPolicy,
   resolveBrowserAnalyticsConsentState,
+  setAnalyticsConsentSessionOverride,
   shouldPersistAnonymousAnalyticsDenial,
   shouldRevokeAccountAnalyticsGrant,
 } from "@/lib/analytics/consent/state";
 
 const anonymousConsent = createAnonymousAnalyticsConsent("granted", 100);
+const emptyBrowserConsent = {
+  anonymousConsent: Option.none(),
+  hasBrowserPrivacySignal: false,
+  isResolved: true,
+};
+const pendingBrowserConsent = { ...emptyBrowserConsent, isResolved: false };
 const accountConsent = {
   category: ANALYTICS_CONSENT_CATEGORY,
   decidedAt: 200,
@@ -33,8 +42,139 @@ const userWithoutRole = {
   ...user,
   appUser: { ...user.appUser, role: undefined },
 } satisfies BrowserAnalyticsUser;
+type SessionPolicyInput = Parameters<
+  typeof resolveAnalyticsConsentSessionPolicy
+>[0];
 
 describe("browser analytics consent state", () => {
+  it("keeps failures scoped and clears synchronized choices", () => {
+    const anonymous = createAnalyticsConsentPromptIdentity({
+      isAuthenticated: false,
+      user: null,
+    });
+    const accountA = createAnalyticsConsentPromptIdentity({
+      isAuthenticated: true,
+      user,
+    });
+    const accountB = createAnalyticsConsentPromptIdentity({
+      isAuthenticated: true,
+      user: { appUser: { ...user.appUser, _id: "user-2" } },
+    });
+    expect(accountA).toBe(`account:user-1:${ANALYTICS_CONSENT_NOTICE_VERSION}`);
+    expect(
+      createAnalyticsConsentPromptIdentity({
+        isAuthenticated: true,
+        user: null,
+      })
+    ).toBeNull();
+    if (!(anonymous && accountA && accountB)) {
+      return;
+    }
+    let overrides = setAnalyticsConsentSessionOverride({
+      override: { persistence: "failed" },
+      overrides: new Map(),
+      promptIdentity: anonymous,
+    });
+    overrides = setAnalyticsConsentSessionOverride({
+      override: { persistence: "failed" },
+      overrides,
+      promptIdentity: accountA,
+    });
+    overrides = setAnalyticsConsentSessionOverride({
+      override: { decidedAt: 300, persistence: "saved" },
+      overrides,
+      promptIdentity: accountB,
+    });
+    const currentSource = { ...accountConsent, decidedAt: 300 };
+    const resolve = (
+      promptIdentity: typeof accountA,
+      durableConsent: SessionPolicyInput["durableConsent"] = null,
+      status: SessionPolicyInput["status"] = "granted"
+    ) =>
+      resolveAnalyticsConsentSessionPolicy({
+        durableConsent,
+        hasLoadError: false,
+        overrides,
+        promptIdentity,
+        status,
+      });
+    expect(
+      [
+        resolve(anonymous),
+        resolve(accountA),
+        resolve(accountB),
+        resolve(accountB, { ...currentSource, decidedAt: 299 }),
+        resolve(accountB, {
+          ...currentSource,
+          noticeVersion: "privacy-retained",
+        }),
+        resolve(accountB, currentSource),
+      ].map((policy) => [
+        policy.hasSaveError,
+        policy.isRuntimeSuppressed,
+        policy.status,
+      ])
+    ).toEqual([
+      [true, true, "denied"],
+      [true, true, "denied"],
+      [false, true, "denied"],
+      [false, true, "denied"],
+      [false, true, "denied"],
+      [false, false, "granted"],
+    ]);
+    expect(resolve(anonymous, null, "browser-signal").status).toBe(
+      "browser-signal"
+    );
+  });
+
+  it("shows a prompt only until that visitor has a pending choice", () => {
+    const promptIdentity = createAnalyticsConsentPromptIdentity({
+      isAuthenticated: false,
+      user: null,
+    });
+    if (!promptIdentity) {
+      return;
+    }
+    const unresolved = resolveAnalyticsConsentSessionPolicy({
+      durableConsent: null,
+      hasLoadError: true,
+      overrides: new Map(),
+      promptIdentity,
+      status: "pending",
+    });
+    const pending = resolveAnalyticsConsentSessionPolicy({
+      durableConsent: null,
+      hasLoadError: true,
+      overrides: new Map([[promptIdentity, { persistence: "pending" }]]),
+      promptIdentity,
+      status: "pending",
+    });
+    expect([unresolved.isPromptOpen, pending.isPromptOpen]).toEqual([
+      true,
+      false,
+    ]);
+    expect(pending.isSaving).toBe(true);
+    expect(pending.isRuntimeSuppressed).toBe(true);
+    expect(pending.status).toBe("pending");
+    expect(
+      resolveAnalyticsConsentSessionPolicy({
+        durableConsent: null,
+        hasLoadError: false,
+        overrides: new Map(),
+        promptIdentity,
+        status: "prompt",
+      })
+    ).toMatchObject({ isPromptOpen: true, status: "prompt" });
+    expect(
+      resolveAnalyticsConsentSessionPolicy({
+        durableConsent: null,
+        hasLoadError: true,
+        overrides: new Map(),
+        promptIdentity: null,
+        status: "pending",
+      }).isPromptOpen
+    ).toBe(false);
+  });
   it("persists an anonymous denial after a signal or account withdrawal", () => {
     const unresolvedBrowser = {
       anonymousConsent: Option.none(),
@@ -42,41 +182,49 @@ describe("browser analytics consent state", () => {
       isResolved: false,
     };
     const resolvedBrowser = { ...unresolvedBrowser, isResolved: true };
-
-    expect(
-      shouldPersistAnonymousAnalyticsDenial({
+    const inputs = [
+      {
         accountConsent,
         browserConsent: unresolvedBrowser,
         isAuthenticated: true,
-      })
-    ).toBe(false);
-    expect(
-      shouldPersistAnonymousAnalyticsDenial({
+      },
+      {
         accountConsent,
         browserConsent: resolvedBrowser,
         isAuthenticated: true,
-      })
-    ).toBe(true);
-    expect(
-      shouldPersistAnonymousAnalyticsDenial({
+      },
+      {
         accountConsent: { ...accountConsent, granted: false },
-        browserConsent: {
-          ...resolvedBrowser,
-          hasBrowserPrivacySignal: false,
-        },
+        browserConsent: { ...resolvedBrowser, hasBrowserPrivacySignal: false },
         isAuthenticated: true,
-      })
-    ).toBe(true);
-    expect(
-      shouldPersistAnonymousAnalyticsDenial({
+      },
+      {
         accountConsent,
         browserConsent: {
           ...resolvedBrowser,
           anonymousConsent: Option.some(anonymousConsent),
         },
         isAuthenticated: true,
-      })
-    ).toBe(true);
+      },
+      {
+        accountConsent,
+        browserConsent: {
+          ...resolvedBrowser,
+          anonymousConsent: Option.some(
+            createAnonymousAnalyticsConsent("denied", 100)
+          ),
+        },
+        isAuthenticated: true,
+      },
+      {
+        accountConsent,
+        browserConsent: { ...resolvedBrowser, hasBrowserPrivacySignal: false },
+        isAuthenticated: true,
+      },
+    ];
+    expect(
+      inputs.map((input) => shouldPersistAnonymousAnalyticsDenial(input))
+    ).toEqual([false, true, true, true, false, false]);
     expect(
       Reflect.apply(shouldPersistAnonymousAnalyticsDenial, undefined, [
         {
@@ -92,98 +240,51 @@ describe("browser analytics consent state", () => {
         },
       ])
     ).toBe(true);
-    expect(
-      shouldPersistAnonymousAnalyticsDenial({
-        accountConsent,
-        browserConsent: {
-          ...resolvedBrowser,
-          anonymousConsent: Option.some(
-            createAnonymousAnalyticsConsent("denied", 100)
-          ),
-        },
-        isAuthenticated: true,
-      })
-    ).toBe(false);
-    expect(
-      shouldPersistAnonymousAnalyticsDenial({
-        accountConsent,
-        browserConsent: {
-          ...resolvedBrowser,
-          hasBrowserPrivacySignal: false,
-        },
-        isAuthenticated: true,
-      })
-    ).toBe(false);
   });
-
   it("revokes only a current account grant overridden by a browser signal", () => {
     const browserConsent = {
       anonymousConsent: Option.none(),
       hasBrowserPrivacySignal: true,
       isResolved: true,
     };
-
-    expect(
-      shouldRevokeAccountAnalyticsGrant({
-        accountConsent,
-        browserConsent,
-        isAccountConsentResolved: true,
-        isAuthenticated: true,
-      })
-    ).toBe(true);
-    expect(
-      shouldRevokeAccountAnalyticsGrant({
+    const baseInput = {
+      accountConsent,
+      browserConsent,
+      isAccountConsentResolved: true,
+      isAuthenticated: true,
+    };
+    const inputs = [
+      baseInput,
+      {
+        ...baseInput,
         accountConsent: { ...accountConsent, granted: false },
-        browserConsent,
-        isAccountConsentResolved: true,
-        isAuthenticated: true,
-      })
-    ).toBe(false);
+      },
+      {
+        ...baseInput,
+        browserConsent: { ...browserConsent, hasBrowserPrivacySignal: false },
+      },
+      { ...baseInput, isAccountConsentResolved: false },
+      { ...baseInput, accountConsent: null },
+      { ...baseInput, isAuthenticated: false },
+    ];
     expect(
-      shouldRevokeAccountAnalyticsGrant({
-        accountConsent,
-        browserConsent: {
-          ...browserConsent,
-          hasBrowserPrivacySignal: false,
-        },
-        isAccountConsentResolved: true,
-        isAuthenticated: true,
-      })
-    ).toBe(false);
-    expect(
-      shouldRevokeAccountAnalyticsGrant({
-        accountConsent,
-        browserConsent,
-        isAccountConsentResolved: false,
-        isAuthenticated: true,
-      })
-    ).toBe(false);
-    expect(
-      shouldRevokeAccountAnalyticsGrant({
-        accountConsent: null,
-        browserConsent,
-        isAccountConsentResolved: true,
-        isAuthenticated: true,
-      })
-    ).toBe(false);
-    expect(
-      shouldRevokeAccountAnalyticsGrant({
-        accountConsent,
-        browserConsent,
-        isAccountConsentResolved: true,
-        isAuthenticated: false,
-      })
-    ).toBe(false);
+      inputs.map((input) =>
+        shouldRevokeAccountAnalyticsGrant({
+          accountConsent: input.accountConsent,
+          browserConsent: input.browserConsent,
+          isAccountConsentResolved: input.isAccountConsentResolved,
+          isAuthenticated: input.isAuthenticated,
+        })
+      )
+    ).toEqual([true, false, false, false, false, false]);
   });
-
   it("keeps preview children disabled", () => {
     expect(
       resolveBrowserAnalyticsConsentState({
         accountConsent,
         browserConsent: {
+          ...emptyBrowserConsent,
           anonymousConsent: Option.some(anonymousConsent),
-          hasBrowserPrivacySignal: false,
-          isResolved: true,
         },
         isAccountConsentResolved: true,
         isAuthenticated: true,
@@ -197,44 +298,28 @@ describe("browser analytics consent state", () => {
 
   it.each([
     {
-      browserConsent: {
-        anonymousConsent: Option.none(),
-        hasBrowserPrivacySignal: false,
-        isResolved: false,
-      },
+      browserConsent: pendingBrowserConsent,
       isAuthenticated: false,
       isAuthLoading: true,
       isUserPending: false,
       name: "auth loading",
     },
     {
-      browserConsent: {
-        anonymousConsent: Option.none(),
-        hasBrowserPrivacySignal: false,
-        isResolved: false,
-      },
+      browserConsent: pendingBrowserConsent,
       isAuthenticated: false,
       isAuthLoading: false,
       isUserPending: true,
       name: "user loading",
     },
     {
-      browserConsent: {
-        anonymousConsent: Option.none(),
-        hasBrowserPrivacySignal: false,
-        isResolved: true,
-      },
+      browserConsent: emptyBrowserConsent,
       isAuthenticated: true,
       isAuthLoading: false,
       isUserPending: false,
       name: "missing authenticated user",
     },
     {
-      browserConsent: {
-        anonymousConsent: Option.none(),
-        hasBrowserPrivacySignal: false,
-        isResolved: false,
-      },
+      browserConsent: pendingBrowserConsent,
       isAuthenticated: false,
       isAuthLoading: false,
       isUserPending: false,
@@ -260,9 +345,8 @@ describe("browser analytics consent state", () => {
       resolveBrowserAnalyticsConsentState({
         accountConsent: null,
         browserConsent: {
+          ...emptyBrowserConsent,
           anonymousConsent: Option.some(anonymousConsent),
-          hasBrowserPrivacySignal: false,
-          isResolved: true,
         },
         isAccountConsentResolved: false,
         isAuthenticated: false,
@@ -275,11 +359,7 @@ describe("browser analytics consent state", () => {
     expect(
       resolveBrowserAnalyticsConsentState({
         accountConsent,
-        browserConsent: {
-          anonymousConsent: Option.none(),
-          hasBrowserPrivacySignal: false,
-          isResolved: true,
-        },
+        browserConsent: emptyBrowserConsent,
         isAccountConsentResolved: true,
         isAuthenticated: true,
         isAuthLoading: false,
@@ -343,33 +423,28 @@ describe("browser analytics consent state", () => {
       status: "identified",
       userId: "user-1",
     });
-    expect(
-      createBrowserAnalyticsIdentity({
+    const rejectedInputs = [
+      {
         accountConsent: null,
         anonymousConsent: Option.some(anonymousConsent),
-        isAuthenticated: true,
-        status: "granted",
         user,
-      })
-    ).toBeNull();
-    expect(
-      createBrowserAnalyticsIdentity({
+      },
+      {
         accountConsent: { ...accountConsent, granted: false },
         anonymousConsent: Option.none(),
-        isAuthenticated: true,
-        status: "granted",
         user,
-      })
-    ).toBeNull();
+      },
+      { accountConsent, anonymousConsent: Option.none(), user: null },
+    ];
     expect(
-      createBrowserAnalyticsIdentity({
-        accountConsent,
-        anonymousConsent: Option.none(),
-        isAuthenticated: true,
-        status: "granted",
-        user: null,
-      })
-    ).toBeNull();
+      rejectedInputs.map((input) =>
+        createBrowserAnalyticsIdentity({
+          ...input,
+          isAuthenticated: true,
+          status: "granted",
+        })
+      )
+    ).toEqual([null, null, null]);
   });
 
   it("does not authorize unresolved or denied state", () => {

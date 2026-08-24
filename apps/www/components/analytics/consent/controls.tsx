@@ -20,7 +20,6 @@ import { usePageNavigation } from "@/lib/content/page/context";
 /** Renders the non-blocking first decision and permanent preferences dialog. */
 export function AnalyticsConsentControls() {
   const t = useTranslations("AnalyticsConsent");
-  const error = useAnalyticsConsent((state) => state.error);
   const isAvailable = useAnalyticsConsent((state) => state.isAvailable);
   const isPreferencesOpen = useAnalyticsConsent(
     (state) => state.isPreferencesOpen
@@ -28,21 +27,18 @@ export function AnalyticsConsentControls() {
   const setPreferencesOpen = useAnalyticsConsent(
     (state) => state.setPreferencesOpen
   );
-  const status = useAnalyticsConsent((state) => state.state.status);
+  const isPromptOpen = useAnalyticsConsent((state) => state.isPromptOpen);
 
   if (!isAvailable) {
     return null;
   }
 
-  const shouldPrompt =
-    status === "prompt" || (error === "load" && status === "pending");
-
   return (
     <>
-      {shouldPrompt ? (
+      {isPromptOpen ? (
         <section
           aria-label={t("title")}
-          className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-md sm:bottom-6"
+          className="fixed right-4 bottom-4 left-4 z-50 sm:right-6 sm:bottom-6 sm:left-auto sm:w-full sm:max-w-md"
         >
           <Card className="max-h-[calc(100dvh-2rem)] shadow-lg" size="sm">
             <CardHeader>
@@ -76,7 +72,7 @@ export function AnalyticsConsentControls() {
 
 function ConsentStatus() {
   const t = useTranslations("AnalyticsConsent");
-  const status = useAnalyticsConsent((state) => state.state.status);
+  const status = useAnalyticsConsent((state) => state.status);
 
   return <span aria-live="polite">{t(`status-${status}`)}</span>;
 }
@@ -116,7 +112,6 @@ function ConsentDetails() {
   return (
     <>
       <p className="text-muted-foreground text-sm">{t("description")}</p>
-      <p className="text-muted-foreground text-sm">{t("age-confirmation")}</p>
       <PrivacyPolicyLink />
       {error ? <ConsentError error={error} /> : null}
     </>
@@ -154,7 +149,7 @@ function ConsentError({ error }: { error: "load" | "runtime" | "save" }) {
 
   return (
     <p className="flex items-start gap-2 text-destructive text-sm" role="alert">
-      <HugeIcons className="mt-0.5" icon={Alert02Icon} />
+      <HugeIcons className="mt-0.5 size-4 shrink-0" icon={Alert02Icon} />
       {t(`${error}-error`)}
     </p>
   );

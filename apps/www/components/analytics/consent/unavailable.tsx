@@ -17,9 +17,10 @@ const unavailableAnalyticsConsent = {
   error: null,
   isAvailable: false,
   isPreferencesOpen: false,
+  isPromptOpen: false,
   isSaving: false,
   setPreferencesOpen: ignoreUnavailableConsentAction,
-  state: { status: "pending" },
+  status: "pending",
 } satisfies AnalyticsConsentContextValue;
 
 /** Keeps optional analytics unavailable until its signed privacy notice is live. */
