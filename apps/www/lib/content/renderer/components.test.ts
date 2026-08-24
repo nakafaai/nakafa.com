@@ -92,6 +92,33 @@ describe("renderer components", () => {
     });
   });
 
+  it("rejects duplicate implementations inside the selected domain", async () => {
+    vi.doMock("@/lib/content/renderer/domain/site", () => ({
+      domainComponentLoaders: [
+        { load: () => Promise.resolve(() => null), name: "SiteWidget" },
+        { load: () => Promise.resolve(() => null), name: "SiteWidget" },
+      ],
+    }));
+    const { resolveRendererComponents } = await import(
+      "@/lib/content/renderer/components"
+    );
+
+    await expect(
+      Effect.runPromise(
+        resolveRendererComponents({
+          contentKey,
+          rendererDomain: "site",
+          requiredComponents: [{ name: "SiteWidget", version: 1 }],
+        }).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({
+      _tag: "RendererComponentCollision",
+      componentName: "SiteWidget",
+      contentKey,
+      rendererDomain: "site",
+    });
+  });
+
   it("preserves domain import failures in the typed error channel", async () => {
     vi.doMock("@/lib/content/renderer/domain/site", () => {
       throw new Error("domain unavailable");

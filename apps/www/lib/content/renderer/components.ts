@@ -83,11 +83,11 @@ function findSemanticComponent(componentName: string) {
   )?.[1];
 }
 
-function findLoader(
+function findLoaders(
   componentName: string,
   loaders: readonly RendererComponentLoader[]
 ) {
-  return loaders.find(({ name }) => name === componentName);
+  return loaders.filter(({ name }) => name === componentName);
 }
 
 const loadRendererImplementation = Effect.fn(
@@ -124,15 +124,15 @@ export const resolveRendererComponents = Effect.fn(
     selection.requiredComponents.map(({ name }) =>
       Effect.gen(function* () {
         const semanticComponent = findSemanticComponent(name);
-        const baseLoader = findLoader(name, baseComponentLoaders);
-        const domainLoader = findLoader(
+        const baseLoaders = findLoaders(name, baseComponentLoaders);
+        const domainLoaders = findLoaders(
           name,
           domainModule.domainComponentLoaders
         );
         const matchCount =
           Number(semanticComponent !== undefined) +
-          Number(baseLoader !== undefined) +
-          Number(domainLoader !== undefined);
+          baseLoaders.length +
+          domainLoaders.length;
 
         if (matchCount > 1) {
           return yield* new RendererComponentCollision({
@@ -144,6 +144,7 @@ export const resolveRendererComponents = Effect.fn(
         if (semanticComponent !== undefined) {
           return { component: semanticComponent, name };
         }
+        const baseLoader = baseLoaders[0];
         if (baseLoader !== undefined) {
           return yield* loadRendererImplementation({
             componentName: name,
@@ -151,6 +152,7 @@ export const resolveRendererComponents = Effect.fn(
             selection,
           });
         }
+        const domainLoader = domainLoaders[0];
         if (domainLoader !== undefined) {
           return yield* loadRendererImplementation({
             componentName: name,

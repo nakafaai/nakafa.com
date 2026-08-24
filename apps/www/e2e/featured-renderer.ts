@@ -60,4 +60,4 @@ const main = verifyFeaturedRenderer().pipe(
   )
 );
 
-void Effect.runPromise(main);
+Effect.runPromise(main);
