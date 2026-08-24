@@ -3,8 +3,8 @@ import { expect, type Locator, type Page } from "@playwright/test";
 
 const HOMEPAGE_HEADING_PATTERN = /Learn until it clicks/i;
 const QURAN_HEADING_PATTERN = /Al-Baqara/i;
-const CURRICULUM_HEADING_PATTERN = /Mathematics/i;
 const TRYOUT_TITLE_PATTERN = /Try out/i;
+const CURRICULUM_HREF_PATTERN = /^\/en\/curriculum\/[^/]+\/[^/]+\/[^/.]+$/;
 const ARTICLE_HREF_PATTERN = /^\/en\/articles\/[^/]+\/[^/.]+$/;
 const MATERIAL_HREF_PATTERN = /^\/en\/subjects\/[^/]+\/[^/]+\/[^/.]+$/;
 
@@ -134,16 +134,6 @@ const staticNavigationCases: readonly NavigationCase[] = [
       }),
   },
   {
-    name: "curriculum",
-    resolve: () =>
-      Promise.resolve({
-        href: "/en/curriculum/merdeka/class-10/mathematics",
-        marker: { kind: "heading", text: CURRICULUM_HEADING_PATTERN },
-        name: "curriculum",
-        sourceHref: "/en",
-      }),
-  },
-  {
     name: "tryout",
     resolve: () =>
       Promise.resolve({
@@ -154,6 +144,22 @@ const staticNavigationCases: readonly NavigationCase[] = [
       }),
   },
 ];
+
+const curriculumCase: NavigationCase = {
+  name: "curriculum",
+  resolve: async (page) => {
+    const sourceHref = "/en";
+    const href = await discoverLinkedHref(page, sourceHref, (candidate) =>
+      CURRICULUM_HREF_PATTERN.test(candidate)
+    );
+    return {
+      href,
+      marker: { kind: "heading" },
+      name: "curriculum",
+      sourceHref,
+    };
+  },
+};
 
 const articleCase: NavigationCase = {
   name: "article",
@@ -189,6 +195,7 @@ const materialCase: NavigationCase = {
 
 export const navigationCases = [
   ...staticNavigationCases,
+  curriculumCase,
   articleCase,
   materialCase,
 ] as const;

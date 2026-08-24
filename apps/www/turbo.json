@@ -3,7 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "env": ["CONVEX_AGENT_MODE"]
+      "env": ["CONVEX_AGENT_MODE", "NEXT_EXPOSE_TESTING_API"]
     }
   }
 }

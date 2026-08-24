@@ -19,7 +19,9 @@ for (const viewport of targetViewports) {
       browser,
     }) => {
       expect(baseURL).toBeTruthy();
+      const configuredBaseURL = baseURL ?? "";
       const context = await browser.newContext({
+        baseURL: configuredBaseURL,
         hasTouch: "hasTouch" in viewport ? viewport.hasTouch : false,
         serviceWorkers: "block",
         viewport: { height: viewport.height, width: viewport.width },
@@ -28,7 +30,7 @@ for (const viewport of targetViewports) {
       try {
         const page = await context.newPage();
         const target = await navigationCase.resolve(page);
-        await verifyHardAndClientNavigation(page, baseURL ?? "", target);
+        await verifyHardAndClientNavigation(page, configuredBaseURL, target);
       } finally {
         await context.close();
       }
