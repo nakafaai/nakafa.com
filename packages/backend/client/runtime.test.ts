@@ -82,7 +82,7 @@ function queryThroughFetch(result: unknown = null) {
 }
 
 /** Creates the nested rejection shape produced by Node fetch. */
-function createFetchFailure(code?: string) {
+function createNetworkFailure(code?: string) {
   const cause = code
     ? Object.assign(new Error("private network detail"), { code })
     : new Error("private network detail");
@@ -100,8 +100,8 @@ describe("Convex runtime query", () => {
   it.effect("retries Effect callers through the typed network channel", () => {
     const fetchMock = vi
       .fn<typeof fetch>()
-      .mockRejectedValueOnce(createFetchFailure("ECONNRESET"))
-      .mockRejectedValueOnce(createFetchFailure("UND_ERR_SOCKET"))
+      .mockRejectedValueOnce(createNetworkFailure("ECONNRESET"))
+      .mockRejectedValueOnce(createNetworkFailure("UND_ERR_SOCKET"))
       .mockResolvedValueOnce(new Response("ok"));
     vi.stubGlobal("fetch", fetchMock);
     queryThroughFetch(42);
@@ -133,6 +133,22 @@ describe("Convex runtime query", () => {
     });
   });
 
+  it.effect("retries allowlisted response-stream network failures", () => {
+    clientState.query
+      .mockRejectedValueOnce(createNetworkFailure("UND_ERR_SOCKET"))
+      .mockResolvedValueOnce(42);
+
+    return Effect.gen(function* () {
+      const fiber = yield* Effect.forkChild(
+        readConvexRuntimeQuery(runtimeUrl, query, args)
+      );
+      yield* TestClock.adjust(Duration.millis(500));
+
+      expect(yield* Fiber.join(fiber)).toBe(42);
+      expect(clientState.query).toHaveBeenCalledTimes(2);
+    });
+  });
+
   it.live("does not retry Convex function failures", () =>
     Effect.gen(function* () {
       clientState.query.mockRejectedValueOnce(
@@ -155,7 +171,7 @@ describe("Convex runtime query", () => {
   it.effect("preserves sanitized codes after retry exhaustion", () => {
     const fetchMock = vi
       .fn<typeof fetch>()
-      .mockRejectedValue(createFetchFailure("EPIPE"));
+      .mockRejectedValue(createNetworkFailure("EPIPE"));
     vi.stubGlobal("fetch", fetchMock);
     queryThroughFetch();
     return Effect.gen(function* () {
@@ -181,7 +197,7 @@ describe("Convex runtime query", () => {
     Effect.gen(function* () {
       const fetchMock = vi
         .fn<typeof fetch>()
-        .mockRejectedValue(createFetchFailure("UND_ERR_CONNECT_TIMEOUT"));
+        .mockRejectedValue(createNetworkFailure("UND_ERR_CONNECT_TIMEOUT"));
       vi.stubGlobal("fetch", fetchMock);
       queryThroughFetch();
 
