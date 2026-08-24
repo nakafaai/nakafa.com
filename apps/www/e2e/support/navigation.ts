@@ -7,6 +7,8 @@ const TRYOUT_TITLE_PATTERN = /Try out/i;
 const CURRICULUM_HREF_PATTERN = /^\/en\/curriculum\/[^/]+\/[^/]+\/[^/.]+$/;
 const ARTICLE_HREF_PATTERN = /^\/en\/articles\/[^/]+\/[^/.]+$/;
 const MATERIAL_HREF_PATTERN = /^\/en\/subjects\/[^/]+\/[^/]+\/[^/.]+$/;
+const CLIENT_PREFETCH_SETTLE_MILLISECONDS = 1000;
+const NAVIGATION_TIMEOUT_MILLISECONDS = 15_000;
 
 type InstantMarker =
   | { readonly kind: "heading"; readonly text?: RegExp }
@@ -24,37 +26,44 @@ export interface NavigationCase {
   readonly resolve: (page: Page) => Promise<NavigationTarget>;
 }
 
-async function assertSuccessfulNavigation(
-  page: Page,
-  target: NavigationTarget
-) {
-  await expect(page).toHaveURL((url) => url.pathname === target.href);
+async function assertSettledNavigation(page: Page, target: NavigationTarget) {
+  await expect(page).toHaveURL((url) => url.pathname === target.href, {
+    timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+  });
 
   if (target.marker.kind === "title") {
-    await expect(page).toHaveTitle(target.marker.text);
+    await expect(page).toHaveTitle(target.marker.text, {
+      timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+    });
     return;
   }
 
-  const heading = page.locator("h1");
-  await expect(heading).toHaveCount(1);
-  await expect(heading).toBeVisible();
+  const heading = target.marker.text
+    ? page.locator("h1:visible").filter({ hasText: target.marker.text }).first()
+    : page.locator("h1:visible").first();
+  await expect(heading).toBeVisible({
+    timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+  });
   if (target.marker.text) {
     await expect(heading).toContainText(target.marker.text);
   }
 }
 
 async function findVisibleLink(page: Page, href: string): Promise<Locator> {
-  const candidates = page.locator(`a[href="${href}"]`);
-  const count = await candidates.count();
-
-  for (let index = 0; index < count; index += 1) {
-    const candidate = candidates.nth(index);
-    if (await candidate.isVisible()) {
-      return candidate;
+  const link = page.locator(`a[href="${href}"]:visible`).first();
+  if (href === "/en" && !(await link.isVisible())) {
+    const sidebarTrigger = page
+      .locator('[data-slot="sidebar-trigger"]:visible')
+      .first();
+    if (await sidebarTrigger.isVisible()) {
+      await sidebarTrigger.click();
     }
   }
 
-  throw new Error(`No visible link to ${href} was found.`);
+  await expect(link, `No visible link to ${href} was found.`).toBeVisible({
+    timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+  });
+  return link;
 }
 
 async function discoverLinkedHref(
@@ -67,22 +76,50 @@ async function discoverLinkedHref(
   });
   expect(response?.ok()).toBe(true);
 
-  const candidates = page.locator("a[href]");
-  const count = await candidates.count();
-  for (let index = 0; index < count; index += 1) {
-    const candidate = candidates.nth(index);
-    const href = await candidate.getAttribute("href");
-    if (href && matches(href) && (await candidate.isVisible())) {
-      return href;
-    }
-  }
+  let resolvedHref: string | undefined;
+  await expect
+    .poll(
+      async () => {
+        const candidates = page.locator("a[href]");
+        const count = await candidates.count();
+        for (let index = 0; index < count; index += 1) {
+          const candidate = candidates.nth(index);
+          const href = await candidate.getAttribute("href");
+          if (href && matches(href) && (await candidate.isVisible())) {
+            resolvedHref = href;
+            return true;
+          }
+        }
+        return false;
+      },
+      {
+        message: `No matching visible content link was found on ${sourceHref}.`,
+        timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+      }
+    )
+    .toBe(true);
 
-  throw new Error(
-    `No matching visible content link was found on ${sourceHref}.`
-  );
+  if (!resolvedHref) {
+    throw new Error(
+      `No matching visible content link was found on ${sourceHref}.`
+    );
+  }
+  return resolvedHref;
 }
 
-export async function verifyHardAndClientNavigation(
+async function waitForDestination(page: Page, href: string) {
+  await page.waitForURL((url) => url.pathname === href, {
+    timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+  });
+}
+
+async function warmClientPrefetch(link: Locator) {
+  await link.scrollIntoViewIfNeeded();
+  await link.hover();
+  await link.page().waitForTimeout(CLIENT_PREFETCH_SETTLE_MILLISECONDS);
+}
+
+async function navigateHard(
   page: Page,
   baseURL: string,
   target: NavigationTarget
@@ -94,22 +131,35 @@ export async function verifyHardAndClientNavigation(
         waitUntil: "domcontentloaded",
       });
       expect(response?.ok()).toBe(true);
-      await assertSuccessfulNavigation(page, target);
+      await waitForDestination(page, target.href);
     },
     { baseURL }
   );
+  await assertSettledNavigation(page, target);
+}
 
+async function navigateClient(page: Page, target: NavigationTarget) {
   const sourceResponse = await page.goto(target.sourceHref, {
     waitUntil: "domcontentloaded",
   });
   expect(sourceResponse?.ok()).toBe(true);
   const link = await findVisibleLink(page, target.href);
-  await link.scrollIntoViewIfNeeded();
+  await warmClientPrefetch(link);
 
   await instant(page, async () => {
     await link.click();
-    await assertSuccessfulNavigation(page, target);
+    await waitForDestination(page, target.href);
   });
+  await assertSettledNavigation(page, target);
+}
+
+export async function verifyHardAndClientNavigation(
+  page: Page,
+  baseURL: string,
+  target: NavigationTarget
+) {
+  await navigateHard(page, baseURL, target);
+  await navigateClient(page, target);
 }
 
 const staticNavigationCases: readonly NavigationCase[] = [

@@ -31,6 +31,7 @@ for (const budget of routeBudgets) {
     const measurement = await Effect.runPromise(
       measureRouteJavascript(browser, baseURL ?? "", budget.href)
     );
+    const measurementEvidence = JSON.stringify(measurement);
 
     await testInfo.attach(
       `${budget.href.replaceAll("/", "_")}-resources.json`,
@@ -43,11 +44,11 @@ for (const budget of routeBudgets) {
     expect(measurement.worst.resourceCount).toBeGreaterThan(0);
     expect(
       measurement.worst.encodedBodySize,
-      JSON.stringify(measurement.worst)
+      measurementEvidence
     ).toBeLessThanOrEqual(budget.encodedBodySize);
     expect(
       measurement.worst.decodedBodySize,
-      JSON.stringify(measurement.worst)
+      measurementEvidence
     ).toBeLessThanOrEqual(budget.decodedBodySize);
   });
 }
