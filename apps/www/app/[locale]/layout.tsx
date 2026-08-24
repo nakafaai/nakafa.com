@@ -10,7 +10,6 @@ import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
 import { WebsiteJsonLd } from "@repo/seo/json-ld/website";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { PreviewRefresh } from "@/components/dev/preview-refresh";
@@ -154,13 +153,20 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
     >
       <head>
         <ThemeBootstrap />
+        <link
+          href="/developers"
+          rel="help"
+          title="Nakafa Developer Resources"
+        />
+        <link
+          href="/openapi.json"
+          rel="service-desc"
+          type="application/vnd.oai.openapi+json;version=3.1"
+        />
+        <link href="/llms.txt" rel="alternate" type="text/markdown" />
       </head>
       <body className="relative">
         {hasPreviewConfig() ? <PreviewRefresh /> : null}
-        <p className="sr-only">
-          For AI agents: use <Link href="/llms.txt">/llms.txt</Link> for the
-          Nakafa content index.
-        </p>
         <EducationalOrgJsonLd />
         <WebsiteJsonLd locale={locale} />
         <NextIntlClientProvider locale={locale} messages={messages}>

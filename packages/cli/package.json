@@ -1,0 +1,56 @@
+{
+  "name": "nakafa-cli",
+  "version": "0.1.0",
+  "description": "Official command-line client for the public Nakafa REST API and MCP server.",
+  "keywords": [
+    "nakafa",
+    "education",
+    "agent",
+    "mcp",
+    "openapi"
+  ],
+  "homepage": "https://nakafa.com/developers",
+  "bugs": {
+    "url": "https://github.com/nakafaai/nakafa.com/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nakafaai/nakafa.com.git",
+    "directory": "packages/cli"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "type": "module",
+  "bin": {
+    "nakafa": "dist/main.js"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "clean": "git clean -xdf dist node_modules",
+    "test": "pnpm build && vitest run",
+    "test:coverage": "pnpm build && vitest run --coverage",
+    "test:watch": "vitest watch",
+    "typecheck": "tsc --project tsconfig.json --noEmit --emitDeclarationOnly false"
+  },
+  "devDependencies": {
+    "@repo/testing": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@vitest/coverage-istanbul": "^4.1.11",
+    "effect": "catalog:",
+    "esbuild": "0.28.2",
+    "typescript": "7.0.2",
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11"
+  },
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

@@ -1,5 +1,6 @@
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import {
+  FOUNDER,
   ORGANIZATION,
   ORGANIZATION_ID,
   ORGANIZATION_REFERENCE,
@@ -24,6 +25,29 @@ describe("organization JSON-LD", () => {
       url: COMPANY_IDENTITY.url,
       email: COMPANY_IDENTITY.email,
       telephone: COMPANY_IDENTITY.phone,
+    });
+  });
+
+  it("publishes a complete customer support contact point", () => {
+    expect(ORGANIZATION.contactPoint).toEqual({
+      "@type": "ContactPoint",
+      availableLanguage: ["English", "Indonesian", "German"],
+      contactType: "customer support",
+      email: COMPANY_IDENTITY.email,
+      telephone: COMPANY_IDENTITY.phone,
+    });
+  });
+
+  it("publishes the founder role and verified identity profiles", () => {
+    expect(FOUNDER).toMatchObject({
+      jobTitle: "Founder",
+      name: "Nabil Akbarazzima Fatih",
+      sameAs: [
+        "https://github.com/nabilfatih",
+        "https://www.linkedin.com/in/nabilfatih",
+        "https://x.com/nabilfatih_",
+      ],
+      url: "https://nakafa.com/en/contributor",
     });
   });
 

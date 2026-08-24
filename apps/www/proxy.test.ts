@@ -4,9 +4,10 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { config, proxy } from "@/proxy";
 
-type NextRequestInit = ConstructorParameters<typeof NextRequest>[1];
-
-function requestProxy(pathname: string, init?: NextRequestInit) {
+function requestProxy(
+  pathname: string,
+  init?: ConstructorParameters<typeof NextRequest>[1]
+) {
   return proxy(new NextRequest(`http://localhost:3000${pathname}`, init));
 }
 
@@ -28,13 +29,12 @@ function expectNoLocaleProxy() {
 }
 
 function expectHardNotFound(response: Response, locale: string) {
+  const headers = response.headers;
   expect(response.status).toBe(404);
-  expect(response.headers.get("x-middleware-rewrite")).toBe(
+  expect(headers.get("x-middleware-rewrite")).toBe(
     `http://localhost:3000/_not-found/${locale}`
   );
-  expect(response.headers.get("x-middleware-request-x-next-intl-locale")).toBe(
-    locale
-  );
+  expect(headers.get("x-middleware-request-x-next-intl-locale")).toBe(locale);
   expectNoLocaleProxy();
 }
 
@@ -182,14 +182,12 @@ describe("proxy", () => {
   it("runs only unsupported root files through the locale proxy", () => {
     const matches = (url: string) =>
       unstable_doesMiddlewareMatch({ config, url });
-    const rootFileExtensions =
+    const extensions =
       "svg jpg jpeg gif webp glb gltf bin ktx2 hdr exr js css xml webmanifest txt".split(
         " "
       );
 
-    const matched = rootFileExtensions.map(
-      (extension) => `/missing.${extension}`
-    );
+    const matched = extensions.map((extension) => `/missing.${extension}`);
     const bypassed = [
       "/.well-known/llms.txt",
       "/sitemap/base.xml",
@@ -358,24 +356,22 @@ describe("proxy", () => {
 
   it.each([
     [
-      "accept header",
-      "/en/terms-of-service",
       { headers: { accept: "text/markdown" } },
       "http://localhost:3000/llms.mdx/en/terms-of-service",
+      200,
     ],
-    [
-      "explicit suffix",
-      "/en/quran/1.md",
-      undefined,
-      "http://localhost:3000/llms.mdx/en/quran/1",
-    ],
+    [{ headers: { accept: "text/html;q=0, text/markdown;q=0" } }, null, 406],
   ])(
-    "rewrites markdown requests with an %s",
-    async (_kind, path, init, expected) => {
-      const response = await requestProxy(path, init);
+    "negotiates public representations",
+    async (init, expectedRewrite, expectedStatus) => {
+      const response = await requestProxy("/en/terms-of-service", init);
 
       expectNoLocaleProxy();
-      expect(response.headers.get("x-middleware-rewrite")).toBe(expected);
+      expect([
+        response.status,
+        response.headers.get("x-middleware-rewrite"),
+        response.headers.get("vary"),
+      ]).toEqual([expectedStatus, expectedRewrite, "Accept, Accept-Encoding"]);
     }
   );
 

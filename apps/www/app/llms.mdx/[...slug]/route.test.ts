@@ -8,6 +8,7 @@ import { BASE_URL } from "@/lib/llms/constants";
 const mockGetLlmsMarkdownText = vi.hoisted(() => vi.fn());
 const mockGetCachedLlmsSectionIndexText = vi.hoisted(() => vi.fn());
 const mockResolvePublicLlmsSectionIndex = vi.hoisted(() => vi.fn());
+const mockBuildDeveloperLlmsIndexText = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/llms/content", () => ({
   getLlmsMarkdownText: mockGetLlmsMarkdownText,
@@ -15,6 +16,10 @@ vi.mock("@/lib/llms/content", () => ({
 
 vi.mock("@/lib/llms/indexes", () => ({
   getCachedLlmsSectionIndexText: mockGetCachedLlmsSectionIndexText,
+}));
+
+vi.mock("@/lib/llms/developers", () => ({
+  buildDeveloperLlmsIndexText: mockBuildDeveloperLlmsIndexText,
 }));
 
 vi.mock("@/lib/llms/public-index", () => ({
@@ -28,6 +33,9 @@ describe("llms.mdx route", () => {
     mockGetCachedLlmsSectionIndexText.mockReset();
     mockGetLlmsMarkdownText.mockReset();
     mockResolvePublicLlmsSectionIndex.mockReset();
+    mockBuildDeveloperLlmsIndexText
+      .mockReset()
+      .mockReturnValue("# Nakafa Developer Resources\n");
     mockGetCachedLlmsSectionIndexText.mockResolvedValue(null);
     mockGetLlmsMarkdownText.mockReturnValue(Effect.succeed(null));
     mockResolvePublicLlmsSectionIndex.mockReturnValue(null);
@@ -111,6 +119,22 @@ describe("llms.mdx route", () => {
 
     await expect(response.text()).resolves.toBe("# Nakafa llms index\n");
     expect(response.status).toBe(200);
+    expect(mockGetLlmsMarkdownText).not.toHaveBeenCalled();
+  });
+
+  it("serves the scoped developer index from its predictable URL", async () => {
+    const response = await GET(
+      new NextRequest("https://nakafa.com/llms.mdx/developers/llms.txt"),
+      {
+        params: Promise.resolve({ slug: ["developers", "llms.txt"] }),
+      }
+    );
+
+    await expect(response.text()).resolves.toBe(
+      "# Nakafa Developer Resources\n"
+    );
+    expect(response.status).toBe(200);
+    expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding");
     expect(mockGetLlmsMarkdownText).not.toHaveBeenCalled();
   });
 

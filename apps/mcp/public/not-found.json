@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Use the Nakafa MCP endpoint at /mcp."
+  }
+}

@@ -105,6 +105,27 @@ describe("published Page catalog", () => {
     });
   });
 
+  it("accepts the signed developer Page as publication-owned content", async () => {
+    const developerProjection = {
+      ...testPageProjection,
+      publicPath: PublicPathSchema.make("developers"),
+    };
+    runtimeQueryMock.mockReturnValueOnce(
+      Effect.succeed({
+        activeReleaseId,
+        managed: true,
+        projectionJson: [JSON.stringify(developerProjection)],
+      })
+    );
+
+    await expect(
+      Effect.runPromise(readPublishedPageCatalog())
+    ).resolves.toEqual({
+      activeReleaseId,
+      projections: [developerProjection],
+    });
+  });
+
   it.each(["search", "lehrplaene/merdeka"])(
     "rejects a Page shadowed by the application route %s",
     async (publicPath) => {

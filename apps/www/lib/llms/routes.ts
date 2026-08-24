@@ -1,4 +1,5 @@
 import { routing } from "@repo/internationalization/src/routing";
+import { negotiateMediaType } from "@repo/utilities/http/accept";
 
 type SupportedLocale = (typeof routing.locales)[number];
 
@@ -10,15 +11,18 @@ export interface LocalizedLlmsRoute {
 
 export interface LlmsProxyRouteRequest {
   acceptHeader: string | null;
+  method: string;
   pathname: string;
 }
 
 export type LlmsProxyRouteDecision =
   | { kind: "delegate" }
+  | { kind: "not-acceptable" }
   | { kind: "rewrite-markdown"; localizedRoute: LocalizedLlmsRoute };
 
 const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
-const ROOT_PUBLIC_ROUTE = "/";
+const HTML_MEDIA_TYPE = "text/html";
+const MARKDOWN_MEDIA_TYPE = "text/markdown";
 
 /**
  * Classifies localized Markdown negotiation before the Next route handler.
@@ -36,16 +40,26 @@ export function resolveLlmsProxyRoute(
     return { kind: "delegate" };
   }
 
-  if (
-    !isLlmsMarkdownRequest({
-      acceptHeader: request.acceptHeader,
-      markdownExtension: localizedRoute.markdownExtension,
-    })
-  ) {
+  if (!isDocumentRequest(request)) {
     return { kind: "delegate" };
   }
 
-  if (localizedRoute.route === ROOT_PUBLIC_ROUTE) {
+  if (localizedRoute.markdownExtension) {
+    return {
+      kind: "rewrite-markdown",
+      localizedRoute,
+    };
+  }
+
+  const negotiatedMediaType = negotiateMediaType(request.acceptHeader, [
+    HTML_MEDIA_TYPE,
+    MARKDOWN_MEDIA_TYPE,
+  ]);
+  if (negotiatedMediaType === null) {
+    return { kind: "not-acceptable" };
+  }
+
+  if (negotiatedMediaType === HTML_MEDIA_TYPE) {
     return { kind: "delegate" };
   }
 
@@ -55,8 +69,30 @@ export function resolveLlmsProxyRoute(
   };
 }
 
+/** Keeps Server Actions and React Server Component traffic inside Next.js. */
+function isDocumentRequest(request: LlmsProxyRouteRequest) {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return false;
+  }
+
+  return !request.acceptHeader
+    ?.toLowerCase()
+    .split(",")
+    .some(
+      (mediaRange) => mediaRange.split(";", 1)[0]?.trim() === "text/x-component"
+    );
+}
+
 /** Parses one locale-prefixed URL and removes its Markdown extension. */
 function getLocalizedLlmsRoute(pathname: string): LocalizedLlmsRoute | null {
+  if (pathname === "/") {
+    return {
+      locale: routing.defaultLocale,
+      markdownExtension: "",
+      route: "/",
+    };
+  }
+
   const [rawLocale, ...routeSegments] = pathname.split("/").filter(Boolean);
   const locale = getSupportedLocale(rawLocale);
 
@@ -84,18 +120,4 @@ function getSupportedLocale(locale: string | undefined) {
   }
 
   return null;
-}
-
-/** Detects explicit Markdown suffixes and `Accept: text/markdown`. */
-function isLlmsMarkdownRequest({
-  acceptHeader,
-  markdownExtension,
-}: {
-  acceptHeader: string | null;
-  markdownExtension: string;
-}) {
-  return (
-    Boolean(markdownExtension) ||
-    acceptHeader?.includes("text/markdown") === true
-  );
 }

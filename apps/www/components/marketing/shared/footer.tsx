@@ -116,6 +116,9 @@ export function Footer({
                     label={t("community")}
                   />
                 </li>
+                <li>
+                  <LinkItem href="/developers" label={t("developers")} />
+                </li>
               </ul>
             </div>
 

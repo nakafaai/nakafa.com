@@ -1,5 +1,11 @@
-import { handler } from "@/lib/auth-server";
+import { proxyPublicApiRequest } from "@/lib/agent-origin";
 
-// Proxy all /v1/* requests to Convex HTTP endpoints
-// Uses the Better Auth handler for routing
-export const { GET, POST } = handler;
+// Vercel routes production traffic directly to Convex before this filesystem
+// adapter. These exports preserve the documented local Next.js command only.
+export const GET = proxyPublicApiRequest;
+export const HEAD = proxyPublicApiRequest;
+export const POST = proxyPublicApiRequest;
+export const PUT = proxyPublicApiRequest;
+export const PATCH = proxyPublicApiRequest;
+export const DELETE = proxyPublicApiRequest;
+export const OPTIONS = proxyPublicApiRequest;

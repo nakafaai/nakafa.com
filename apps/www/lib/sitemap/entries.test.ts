@@ -34,7 +34,14 @@ vi.mock("@repo/internationalization/src/routing", () => ({
 }));
 
 vi.mock("@/lib/sitemap/routes", () => ({
-  baseRoutes: ["/", "/search", "/contributor", "/curricula", "/quran"],
+  baseRoutes: [
+    "/",
+    "/contact",
+    "/search",
+    "/contributor",
+    "/curricula",
+    "/quran",
+  ],
   readSitemapRoutePage: mockReadSitemapRoutePage,
 }));
 
@@ -53,6 +60,7 @@ beforeEach(() => {
       routes: [
         { path: "/" },
         { path: "/search" },
+        { path: "/contact" },
         {
           lastModified: new Date(2024, 0, 2).getTime(),
           path: "/articles/politics/dynastic-politics-asian-values",
@@ -81,6 +89,7 @@ describe("sitemap entries", () => {
     expect(urls).toContain("https://nakafa.com/en");
     expect(urls).toContain("https://nakafa.com/id");
     expect(urls).toContain("https://nakafa.com/de");
+    expect(urls).toContain("https://nakafa.com/en/contact");
     expect(urls).not.toContain("https://nakafa.com/en/about");
     expect(urls).not.toContain("https://nakafa.com/id/about");
     expect(urls).toContain(
@@ -253,6 +262,40 @@ describe("sitemap entries", () => {
         },
         lastModified: new Date("2026-08-21T00:00:00.000Z"),
         url: "https://nakafa.com/de/impressum",
+      }),
+    ]);
+  });
+
+  it("publishes developer documentation from the signed Page sitemap", async () => {
+    mockGetSitemapPageDescriptor.mockReturnValueOnce({
+      id: "page_en",
+      kind: "page",
+      locale: "en",
+    });
+    mockReadSitemapRoutePage.mockReturnValueOnce(
+      Effect.succeed({
+        routes: [
+          {
+            alternatePaths: {
+              de: "/developers",
+              en: "/developers",
+              id: "/developers",
+            },
+            lastModified: Date.parse("2026-08-24T00:00:00.000Z"),
+            path: "/developers",
+          },
+        ],
+      })
+    );
+
+    const entries = await Effect.runPromise(
+      getSitemapEntries({ pageId: "page_en" })
+    );
+
+    expect(entries).toEqual([
+      expect.objectContaining({
+        lastModified: new Date("2026-08-24T00:00:00.000Z"),
+        url: "https://nakafa.com/en/developers",
       }),
     ]);
   });

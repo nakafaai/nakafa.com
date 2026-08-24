@@ -7,6 +7,7 @@ export function GET() {
     headers: {
       "Cache-Control": LLMS_CACHE_CONTROL,
       "Content-Type": "text/markdown; charset=utf-8",
+      Vary: "Accept, Accept-Encoding",
     },
   });
 }

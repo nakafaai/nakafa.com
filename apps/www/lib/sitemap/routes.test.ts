@@ -84,6 +84,7 @@ describe("sitemap route pages", () => {
   it("serves base and signed Quran route pages", async () => {
     await expect(readPaths("base")).resolves.toEqual([
       "/",
+      "/contact",
       "/contributor",
       "/curricula",
       "/quran",
@@ -146,6 +147,9 @@ describe("sitemap route pages", () => {
       Effect.succeed({
         activeReleaseId: "release-pages",
         projections: [
+          pageProjection("de", "developers", "developers"),
+          pageProjection("en", "developers", "developers"),
+          pageProjection("id", "developers", "developers"),
           pageProjection("de", "impressum", "imprint"),
           pageProjection("en", "legal-notice", "imprint"),
           pageProjection("id", "informasi-perusahaan", "imprint"),
@@ -159,6 +163,15 @@ describe("sitemap route pages", () => {
     const page = await Effect.runPromise(readSitemapRoutePage("page_de"));
 
     expect(page.routes).toEqual([
+      {
+        alternatePaths: {
+          de: "/developers",
+          en: "/developers",
+          id: "/developers",
+        },
+        lastModified: Date.parse("2026-08-21T00:00:00.000Z"),
+        path: "/developers",
+      },
       {
         alternatePaths: {
           de: "/impressum",

@@ -10,6 +10,7 @@ import {
 describe("public route ownership", () => {
   it.each([
     ["de", "search"],
+    ["en", "contact"],
     ["en", "articles"],
     ["id", "quran"],
     ["de", "lehrplaene"],
@@ -22,6 +23,7 @@ describe("public route ownership", () => {
   it("keeps signed Page paths outside application ownership", () => {
     expect(isReservedPagePath("de", "impressum")).toBe(false);
     expect(isReservedPagePath("en", "policies/accessibility")).toBe(false);
+    expect(isReservedPagePath("id", "developers")).toBe(false);
     expect(isReservedPagePath("en", "")).toBe(false);
   });
 
@@ -32,6 +34,7 @@ describe("public route ownership", () => {
 
   it.each([
     ["de", "search"],
+    ["de", "contact"],
     ["de", "onboarding"],
     ["de", "chat/new"],
     ["de", "onboarding/focus"],
@@ -61,6 +64,7 @@ describe("public route ownership", () => {
     ["de", "search/fabricated"],
     ["de", ""],
     ["de", "fabricated"],
+    ["de", "developers"],
     ["de", "auth/fabricated"],
     ["de", "chat/id/fabricated"],
     ["de", "onboarding/fabricated"],

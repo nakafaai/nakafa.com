@@ -855,6 +855,7 @@
     "lesson-sequence-math": "1 = 2^0 \\quad 2 = 2^1 \\quad 4 = 2 \\times 2 = 2^2 \\quad 8 = 2 \\times 2 \\times 2 = 2^3 \\quad 16 = 2 \\times 2 \\times 2 \\times 2 = 2^4"
   },
   "About": {
+    "contact": "Kontak",
     "meta-title": "Materi Belajar Terbuka Gratis dari SD sampai Universitas",
     "title": "Belajar sampai <mark>paham.</mark>",
     "description": "Pilih pelajaran, uji pemahaman lewat Tryout, lalu tanya Nina saat kamu buntu.",
@@ -869,6 +870,7 @@
     "curriculum-description": "Pilih tingkatmu, pelajari materi apa saja, atau cari solusi masalahmu. Nggak perlu scroll lama-lama.",
     "company": "Perusahaan",
     "community": "Komunitas",
+    "developers": "Developer",
     "about-us": "Tentang Kami",
     "trusted-badge": "Belajar bersama",
     "trusted-headline": "<mark>Siswa dan mahasiswa</mark> dari sekolah dan universitas ini belajar dengan <mark>Nakafa.</mark>",

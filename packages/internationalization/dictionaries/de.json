@@ -855,6 +855,7 @@
     "lesson-sequence-math": "1 = 2^0 \\quad 2 = 2^1 \\quad 4 = 2 \\times 2 = 2^2 \\quad 8 = 2 \\times 2 \\times 2 = 2^3 \\quad 16 = 2 \\times 2 \\times 2 \\times 2 = 2^4"
   },
   "About": {
+    "contact": "Kontakt",
     "meta-title": "Kostenlose offene Lernmaterialien von der Grundschule bis zur Universität",
     "title": "Lerne, bis es <mark>wirklich klickt.</mark>",
     "description": "Wähle ein Fach, prüfe dein Wissen mit einem Probetest und frage Nina, wenn du nicht weiterkommst.",
@@ -869,6 +870,7 @@
     "curriculum-description": "Wähle deine Klassenstufe und ein Fach oder suche direkt nach deinem aktuellen Thema. Kein endloses Scrollen.",
     "company": "Unternehmen",
     "community": "Community",
+    "developers": "Entwickler",
     "about-us": "Über uns",
     "trusted-badge": "Gemeinsam lernen",
     "trusted-headline": "<mark>Lernende</mark> dieser Schulen und Hochschulen lernen mit <mark>Nakafa.</mark>",

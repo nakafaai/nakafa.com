@@ -111,7 +111,7 @@ const nakafaTestRuntime = {
       default_locale: defaultLocale,
       endpoints: {
         direct: "https://mcp.nakafa.com/mcp",
-        recommended: "https://nakafa.com/mcp",
+        recommended: "https://mcp.nakafa.com/mcp",
         root_note: "https://mcp.nakafa.com is informational only.",
       },
       tryout: {

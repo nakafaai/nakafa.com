@@ -1,5 +1,9 @@
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { COMPANY_SOCIAL_PROFILE_URLS } from "@repo/seo/company-profiles";
+import {
+  FOUNDER_IDENTITY,
+  FOUNDER_SOCIAL_PROFILE_URLS,
+} from "@repo/seo/founder";
 import type { IdReference, OrganizationLeaf, Person } from "schema-dts";
 
 export const ORGANIZATION_ID = new URL("#organization", COMPANY_IDENTITY.url)
@@ -19,6 +23,13 @@ export const ORGANIZATION: OrganizationLeaf = {
   email: COMPANY_IDENTITY.email,
   telephone: COMPANY_IDENTITY.phone,
   sameAs: COMPANY_SOCIAL_PROFILE_URLS,
+  contactPoint: {
+    "@type": "ContactPoint",
+    availableLanguage: ["English", "Indonesian", "German"],
+    contactType: "customer support",
+    email: COMPANY_IDENTITY.email,
+    telephone: COMPANY_IDENTITY.phone,
+  },
   employee: {
     "@type": "Person",
     name: COMPANY_IDENTITY.representative.name,
@@ -52,6 +63,9 @@ export const ORGANIZATION: OrganizationLeaf = {
 
 export const FOUNDER: Person = {
   "@type": "Person",
-  name: "Nabil Akbarazzima Fatih",
-  url: new URL("/en/contributor", COMPANY_IDENTITY.url).href,
+  description: FOUNDER_IDENTITY.description,
+  jobTitle: FOUNDER_IDENTITY.jobTitle,
+  name: FOUNDER_IDENTITY.name,
+  sameAs: FOUNDER_SOCIAL_PROFILE_URLS,
+  url: FOUNDER_IDENTITY.url,
 };

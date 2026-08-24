@@ -10,9 +10,10 @@ import { registerRetainedProtectedContentRuntimeRoute } from "@repo/backend/conv
 import { registerProtectedContentRuntimeRoute } from "@repo/backend/convex/contentRelease/http/runtime/protected";
 import { registerPublicContentRuntimeRoute } from "@repo/backend/convex/contentRelease/http/runtime/public";
 import { registerContentReleaseRoutes } from "@repo/backend/convex/contentRelease/ingress/route";
+import { registerAgentApiRoutes } from "@repo/backend/convex/routes/agent/api";
+import { registerAgentMcpRoutes } from "@repo/backend/convex/routes/agent/mcp";
 import { requestId } from "@repo/backend/convex/routes/middleware/requestId";
 import { registerPolarRoutes } from "@repo/backend/convex/routes/polar";
-import v1 from "@repo/backend/convex/routes/v1";
 import {
   type HonoWithConvex,
   HttpRouterWithHono,
@@ -35,8 +36,7 @@ app.use("*", (c, next) =>
   isForumAttachmentUploadPath(c.req.path) ? next() : requestLogger(c, next)
 );
 
-// Note: CORS is handled in Next.js middleware (apps/api/proxy.ts)
-// All requests to Convex come from Next.js (server-to-server)
+// Domain-owned routes define CORS and origin authentication at their boundary.
 
 // OpenID Connect discovery - redirect to Better Auth endpoint
 app.get("/.well-known/openid-configuration", (c) =>
@@ -49,8 +49,9 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => {
   return auth.handler(c.req.raw);
 });
 
-// Register public API v1 routes
-app.route("/v1", v1);
+// Register the public read API and its machine-readable contract.
+registerAgentApiRoutes(app);
+registerAgentMcpRoutes(app);
 
 // Register webhook routes (internal - called by external services)
 registerPolarRoutes(app);

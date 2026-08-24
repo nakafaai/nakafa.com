@@ -8,6 +8,7 @@ const PUBLISHED_PATH =
   "subjects/mathematics/function-composition-inverse-function/function-concept";
 const PUBLISHED_ARTICLE_PATH = "articles/politics/regional-elections-turmoil";
 const PUBLISHED_PAGE_PATH = "terms-of-service";
+const PUBLISHED_DEVELOPER_PATH = "developers";
 const PUBLISHED_NESTED_PAGE_PATH = "legal/terms-of-service";
 const NEW_PATH = "subjects/mathematics/new-topic/new-lesson";
 const SOURCE_PUBLIC_PATH = "subjects/chemistry/green-chemistry/definition";
@@ -16,6 +17,7 @@ const mockGetCachedPublishedText = vi.hoisted(() => vi.fn());
 const mockGetQuranLlmsText = vi.hoisted(() => vi.fn());
 const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
+const mockReadContactPageInput = vi.hoisted(() => vi.fn());
 const activeReleaseId = "release-active";
 
 vi.mock("@/lib/content/published/route", () => ({
@@ -24,7 +26,9 @@ vi.mock("@/lib/content/published/route", () => ({
 vi.mock("@/lib/content/published/active", () => ({
   readActiveContentIdentity: mockReadActiveContentIdentity,
 }));
-
+vi.mock("@/lib/content/page/contact", () => ({
+  readContactPageInput: mockReadContactPageInput,
+}));
 vi.mock("@/lib/llms/indexes", () => ({
   getCachedLlmsSectionIndexText: mockGetCachedLlmsSectionIndexText,
 }));
@@ -68,6 +72,7 @@ describe("llms markdown content resolver", () => {
     mockGetCachedPublishedText.mockReset().mockResolvedValue(null);
     mockGetQuranLlmsText.mockReset().mockReturnValue(Effect.succeed(null));
     mockReadActiveContentRoute.mockReset();
+    mockReadContactPageInput.mockReset();
     mockReadActiveContentIdentity
       .mockReset()
       .mockReturnValue(Effect.succeed({ releaseId: activeReleaseId }));
@@ -77,11 +82,26 @@ describe("llms markdown content resolver", () => {
         publicPath === PUBLISHED_PATH ||
           publicPath === PUBLISHED_ARTICLE_PATH ||
           publicPath === PUBLISHED_PAGE_PATH ||
+          publicPath === PUBLISHED_DEVELOPER_PATH ||
           publicPath === PUBLISHED_NESTED_PAGE_PATH
           ? { activeReleaseId, kind: "found" }
           : { activeReleaseId, kind: "unmanaged" }
       )
     );
+  });
+
+  it("reads the developer guide from the signed Aksara Page", async () => {
+    mockGetCachedPublishedText.mockResolvedValue("Signed developer guide");
+
+    await expect(readMarkdown("developers", "de")).resolves.toBe(
+      "Signed developer guide"
+    );
+    expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
+      activeReleaseId,
+      appLocale: "de",
+      family: "page",
+      publicPath: PUBLISHED_DEVELOPER_PATH,
+    });
   });
 
   it("reads migrated public material markdown only from Aksara", async () => {
@@ -207,6 +227,29 @@ describe("llms markdown content resolver", () => {
       publicPath: PUBLISHED_PAGE_PATH,
     });
     expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
+  });
+
+  it("resolves the contact alias through the reviewed signed Page", async () => {
+    mockReadContactPageInput.mockReturnValue(
+      Effect.succeed({
+        activeReleaseId,
+        appLocale: "en",
+        publicPath: PUBLISHED_PAGE_PATH,
+      })
+    );
+    mockGetCachedPublishedText.mockResolvedValue("Signed contact markdown");
+
+    await expect(readMarkdown("contact")).resolves.toBe(
+      "Signed contact markdown"
+    );
+    expect(mockReadContactPageInput).toHaveBeenCalledWith("en");
+    expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
+      activeReleaseId,
+      appLocale: "en",
+      family: "page",
+      publicPath: PUBLISHED_PAGE_PATH,
+    });
+    expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
   });
 
   it("reads a nested reviewed Page without assuming one route segment", async () => {

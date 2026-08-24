@@ -36,6 +36,7 @@ export class SitemapPageNotFoundError extends Data.TaggedError(
 /** Static top-level routes in canonical lexical order. */
 export const baseRoutes: readonly string[] = [
   "/",
+  "/contact",
   "/contributor",
   "/curricula",
   quranRootRoute,

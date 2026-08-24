@@ -8,16 +8,23 @@ export const NakafaAgentQuranReferenceOptionsSchema = Schema.Struct({
     Schema.check(Schema.isInt()),
     Schema.check(Schema.isGreaterThan(0)),
     Schema.withDecodingDefaultType(Effect.succeed(1))
-  ).annotate({ description: "First verse number to include." }),
+  ).annotate({
+    default: 1,
+    description: "First verse number to include.",
+  }),
   include_tafsir: Schema.Boolean.pipe(
     Schema.withDecodingDefaultType(Effect.succeed(false))
   ).annotate({
+    default: false,
     description:
       "Whether to include the published tafsir text for the requested locale when available.",
   }),
   locale: LocaleSchema.pipe(
     Schema.withDecodingDefaultType(Effect.succeed(routing.defaultLocale))
-  ).annotate({ description: "Translation locale." }),
+  ).annotate({
+    default: routing.defaultLocale,
+    description: "Translation locale.",
+  }),
   surah: Schema.Finite.pipe(
     Schema.check(Schema.isInt()),
     Schema.check(

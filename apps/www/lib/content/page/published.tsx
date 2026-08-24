@@ -110,6 +110,15 @@ export async function getCurrentPublishedPage(
   return result.value;
 }
 
+/** Caches one Page pinned to the release selected by a trusted catalog read. */
+export async function getPublishedPage(input: PublishedPageInput) {
+  "use cache";
+
+  const data = await Effect.runPromise(readPublishedPage(input));
+  applyPublishedContentCache("page", data.artifact.artifactHash);
+  return data;
+}
+
 /** Caches current Page JSX resolved without a second runtime lookup. */
 export async function renderCurrentPublishedPage(
   input: CurrentPublishedPageInput
@@ -121,6 +130,16 @@ export async function renderCurrentPublishedPage(
     applyPublishedCatalogCache("page");
     return null;
   }
+  const rendered = await Effect.runPromise(renderPageArtifact(data));
+  applyPublishedContentCache("page", data.artifact.artifactHash);
+  return rendered;
+}
+
+/** Renders one Page without rereading or changing its selected release. */
+export async function renderPublishedPage(input: PublishedPageInput) {
+  "use cache";
+
+  const data = await getPublishedPage(input);
   const rendered = await Effect.runPromise(renderPageArtifact(data));
   applyPublishedContentCache("page", data.artifact.artifactHash);
   return rendered;

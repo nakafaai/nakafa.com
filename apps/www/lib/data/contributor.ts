@@ -1,14 +1,15 @@
 import type { Contributor } from "@repo/contents/_types/contributor";
+import { FOUNDER_IDENTITY } from "@repo/seo/founder";
 
 export const contributors: Contributor[] = [
   {
-    name: "Nabil Akbarazzima Fatih",
-    username: "nabilfatih",
+    name: FOUNDER_IDENTITY.name,
+    username: FOUNDER_IDENTITY.username,
     type: "official",
     social: {
-      twitter: "https://x.com/nabilfatih_",
-      github: "https://github.com/nabilfatih",
-      linkedin: "https://www.linkedin.com/in/nabilfatih",
+      github: FOUNDER_IDENTITY.socialProfiles.github,
+      linkedin: FOUNDER_IDENTITY.socialProfiles.linkedin,
+      twitter: FOUNDER_IDENTITY.socialProfiles.twitter,
     },
   },
   {

@@ -101,7 +101,7 @@ describe("Nakafa formatter", () => {
       default_locale: defaultLocale,
       endpoints: {
         direct: "https://mcp.nakafa.com/mcp",
-        recommended: "https://nakafa.com/mcp",
+        recommended: "https://mcp.nakafa.com/mcp",
         root_note: "Use /mcp for MCP transport.",
       },
       locale: "id",

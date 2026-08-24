@@ -31,7 +31,11 @@ function makeGermanPage({
   publicPath,
   title,
 }: {
-  pageKey: "privacy-policy" | "security-policy" | "terms-of-service";
+  pageKey:
+    | "developers"
+    | "privacy-policy"
+    | "security-policy"
+    | "terms-of-service";
   publicPath: string;
   title: string;
 }) {
@@ -53,6 +57,11 @@ function makeGermanPage({
 }
 
 const germanPages = [
+  makeGermanPage({
+    pageKey: "developers",
+    publicPath: "developers",
+    title: "Nakafa Entwicklerressourcen",
+  }),
   makeGermanPage({
     pageKey: "privacy-policy",
     publicPath: "privacy-policy",
@@ -116,6 +125,14 @@ describe("signed Page navigation", () => {
       privacyPolicyHref: "/privacy-policy",
       termsOfServiceHref: "/terms-of-service",
     });
+  });
+
+  it("keeps non-legal signed Pages out of the policy navigation", async () => {
+    const navigation = await Effect.runPromise(readPageNavigation("de"));
+
+    expect(navigation.items).not.toContainEqual(
+      expect.objectContaining({ pageKey: "developers" })
+    );
   });
 
   it("fails closed when a required legal destination is absent", async () => {

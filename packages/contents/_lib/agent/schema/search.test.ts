@@ -1,12 +1,15 @@
 import { NakafaAgentSearchOptionsSchema } from "@repo/contents/_lib/agent/schema/search";
-import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/_types/agent/search";
+import {
+  NAKAFA_AGENT_DEFAULT_LIMIT,
+  NAKAFA_AGENT_SEARCH_WINDOW,
+} from "@repo/contents/_types/agent/search";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("NakafaAgentSearchOptionsSchema", () => {
   it("applies the documented search defaults", () => {
     expect(Schema.decodeSync(NakafaAgentSearchOptionsSchema)({})).toEqual({
-      limit: NAKAFA_AGENT_SEARCH_WINDOW,
+      limit: NAKAFA_AGENT_DEFAULT_LIMIT,
       locale: "en",
       offset: 0,
     });
@@ -18,7 +21,7 @@ describe("NakafaAgentSearchOptionsSchema", () => {
         offset: NAKAFA_AGENT_SEARCH_WINDOW - 1,
       })
     ).toEqual({
-      limit: NAKAFA_AGENT_SEARCH_WINDOW,
+      limit: NAKAFA_AGENT_DEFAULT_LIMIT,
       locale: "en",
       offset: NAKAFA_AGENT_SEARCH_WINDOW - 1,
     });

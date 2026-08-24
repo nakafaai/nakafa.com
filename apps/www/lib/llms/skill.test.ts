@@ -17,8 +17,11 @@ describe("Nakafa public agent skill", () => {
     expect(text).toContain("# Nakafa Agent Skill");
     expect(text).toContain("https://nakafa.com/llms.txt");
     expect(text).toContain("bounded page-index links");
-    expect(text).toContain("https://nakafa.com/mcp");
+    expect(text).toContain("https://mcp.nakafa.com/mcp");
     expect(text).toContain("Accept: text/markdown");
+    expect(text).toContain("only when that result includes `markdown_url`");
+    expect(text).toContain("try-out catalog results without `markdown_url`");
+    expect(text).toContain("do not request or invent attempt-specific");
 
     for (const language of languages) {
       expect(text).toContain(`/${language.value}`);

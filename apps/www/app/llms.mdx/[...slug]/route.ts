@@ -8,6 +8,7 @@ import {
 } from "@/lib/agent-discovery";
 import { LLMS_CACHE_CONTROL } from "@/lib/llms/constants";
 import { getLlmsMarkdownText } from "@/lib/llms/content";
+import { buildDeveloperLlmsIndexText } from "@/lib/llms/developers";
 import { stripLlmsRouteExtension } from "@/lib/llms/format";
 import { getCachedLlmsSectionIndexText } from "@/lib/llms/indexes";
 import {
@@ -20,13 +21,13 @@ import { buildUnsupportedMarkdownRouteText } from "@/lib/llms/unsupported";
 const MARKDOWN_HEADERS = {
   "Cache-Control": LLMS_CACHE_CONTROL,
   "Content-Type": "text/markdown; charset=utf-8",
-  Vary: "Accept",
+  Vary: "Accept, Accept-Encoding",
 };
 
 const TEXT_HEADERS = {
   "Cache-Control": LLMS_CACHE_CONTROL,
   "Content-Type": "text/plain; charset=utf-8",
-  Vary: "Accept",
+  Vary: "Accept, Accept-Encoding",
 };
 
 const MARKDOWN_NOT_FOUND_HEADERS = {
@@ -68,6 +69,12 @@ export async function GET(
 
   if (cleanSlug === "llms") {
     return new Response(buildRootLlmsIndexText(), {
+      headers: MARKDOWN_HEADERS,
+    });
+  }
+
+  if (cleanSlug === "developers/llms") {
+    return new Response(buildDeveloperLlmsIndexText(), {
       headers: MARKDOWN_HEADERS,
     });
   }

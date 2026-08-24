@@ -186,6 +186,23 @@ describe("public HTML route rejection", () => {
     });
   });
 
+  it("treats developers as a signed Page instead of an app-owned route", async () => {
+    await expect(
+      Effect.runPromise(
+        readSourceBackedHtmlRouteRejection({
+          method: "GET",
+          pathname: "/id/developers",
+        })
+      )
+    ).resolves.toBeNull();
+    expect(publishedMocks.readActiveContentRoute).toHaveBeenCalledWith({
+      activeReleaseId: "release-active",
+      appLocale: "id",
+      family: "page",
+      publicPath: "developers",
+    });
+  });
+
   it("accepts the exact selected local preview before publication lookup", async () => {
     previewMocks.matchesPreviewRoute.mockReturnValueOnce(Effect.succeed(true));
 

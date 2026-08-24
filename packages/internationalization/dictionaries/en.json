@@ -855,6 +855,7 @@
     "lesson-sequence-math": "1 = 2^0 \\quad 2 = 2^1 \\quad 4 = 2 \\times 2 = 2^2 \\quad 8 = 2 \\times 2 \\times 2 = 2^3 \\quad 16 = 2 \\times 2 \\times 2 \\times 2 = 2^4"
   },
   "About": {
+    "contact": "Contact",
     "meta-title": "Free Open Learning Materials from K-12 to University",
     "title": "Learn until it <mark>clicks.</mark>",
     "description": "Pick a subject, test what you know with Tryout, and ask Nina when you get stuck.",
@@ -869,6 +870,7 @@
     "curriculum-description": "Pick your grade, choose a subject, or search for the topic you are studying. No endless scrolling.",
     "company": "Company",
     "community": "Community",
+    "developers": "Developers",
     "about-us": "About Us",
     "trusted-badge": "Learning together",
     "trusted-headline": "<mark>Students</mark> from these schools and universities learn with <mark>Nakafa.</mark>",

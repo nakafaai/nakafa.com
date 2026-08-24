@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "agent-docs": "pnpm --filter www exec vitest run --config vitest.agent-docs.config.mts --coverage.enabled=false",
+    "agent-surface": "pnpm --filter www exec vitest run --config vitest.agent-surface.config.mts --coverage.enabled=false",
     "analyze": "turbo run analyze",
     "boundaries": "turbo boundaries",
     "build": "pnpm check:patches && pnpm check:tests && turbo run build",

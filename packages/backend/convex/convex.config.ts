@@ -17,6 +17,9 @@ const app = defineApp({
     AKSARA_AGENT_SIGNING_PUBLIC_KEY: v.optional(v.string()),
     AKSARA_PUBLICATION_TOKEN: v.string(),
     CONTENT_RUNTIME_TOKEN: v.string(),
+    NAKAFA_API_EDGE_SECRET: v.string(),
+    NAKAFA_MCP_ALLOWED_ORIGINS: v.optional(v.string()),
+    NAKAFA_MCP_EDGE_SECRET: v.string(),
     // Dedicated least-privilege key for permanent analytics erasure.
     POSTHOG_ERASURE_API_KEY: v.string(),
     POSTHOG_HOST: v.string(),

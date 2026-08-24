@@ -10,7 +10,7 @@ import {
 } from "@/lib/llms/public-index";
 
 describe("public llms discovery indexes", () => {
-  it("builds a constant root that links only locale aggregates", () => {
+  it("builds a constant root with specific usage and developer guidance", () => {
     const text = buildRootLlmsIndexText();
 
     expect(text.startsWith("# Nakafa\n\n> ")).toBe(true);
@@ -18,8 +18,15 @@ describe("public llms discovery indexes", () => {
     expect(text).toContain(`${BASE_URL}/id/llms.txt`);
     expect(text).not.toContain(`${BASE_URL}/llms/en`);
     expect(text).not.toContain("/page/");
-    expect(text).toContain("https://nakafa.com/mcp");
+    expect(text).toContain("https://mcp.nakafa.com/mcp");
     expect(text).toContain(`${BASE_URL}/skill.md`);
+    expect(text).toContain("## When to use Nakafa");
+    expect(text).toContain(`${BASE_URL}/developers`);
+    expect(text).toContain(`${BASE_URL}/developers/llms.txt`);
+    expect(text).toContain(`${BASE_URL}/openapi.json`);
+    expect(text).toContain("read-only");
+    expect(text).toContain("only when it includes `markdown_url`");
+    expect(text).toContain("without requesting private attempt content");
   });
 
   it("derives localized nested indexes from canonical route surfaces", () => {

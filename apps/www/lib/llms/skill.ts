@@ -35,7 +35,7 @@ export function getNakafaSkillText() {
     "- Prefer same-origin `.md` URLs for focused page retrieval.",
     "- Send `Accept: text/markdown` when requesting normal content URLs.",
     `- Use \`${NAKAFA_MCP_RECOMMENDED_ENDPOINT}\` when the client supports Streamable HTTP MCP tools.`,
-    "- Prefer `nakafa_search_content` first, then pass returned source-backed `content_id` values as `content_ref` to `nakafa_get_content`.",
+    "- Prefer `nakafa_search_content` first. Pass a returned `content_id` as `content_ref` only when that result includes `markdown_url`.",
     "- Use `nakafa_get_taxonomy` to inspect supported locales, sections, categories, grades, materials, try-out values, and endpoint guidance.",
     "",
     "## Locale Rules",
@@ -49,7 +49,7 @@ export function getNakafaSkillText() {
     "- Cite the exact Nakafa URL used for each answer.",
     "- Prefer page-level markdown over HTML because it contains the documentation content without navigation boilerplate.",
     "- Do not invent lesson, try-out, or Quran content that is not present in the retrieved Nakafa source.",
-    "- For try-out catalog results, cite the app URL and avoid inventing attempt-specific questions or scores.",
+    "- For try-out catalog results without `markdown_url`, cite the app URL and do not request or invent attempt-specific questions or scores.",
     "- For Quran references, include the Surah and verse numbers from the retrieved page.",
     "",
   ].join("\n");

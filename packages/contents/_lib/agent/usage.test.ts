@@ -12,5 +12,8 @@ describe("Nakafa MCP usage resource", () => {
     expect(usage).toContain(NAKAFA_MCP_RECOMMENDED_ENDPOINT);
     expect(usage).toContain(NAKAFA_MCP_DIRECT_ENDPOINT);
     expect(usage).toContain("nakafa_search_content");
+    expect(usage).toContain("result with `markdown_url`");
+    expect(usage).toContain("try-out catalog result without `markdown_url`");
+    expect(usage).toContain("without requesting private attempt content");
   });
 });

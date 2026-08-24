@@ -65,8 +65,9 @@ describe("readContentSearchDocuments", () => {
 
   it("fills an unscoped search window from current signed materials", async () => {
     const t = createConvexTestWithBetterAuth();
-    const projections = Array.from({ length: 25 }, (_, index) =>
-      makeMaterialProjection("en", index + 1)
+    const projections = Array.from(
+      { length: NAKAFA_AGENT_SEARCH_WINDOW + 5 },
+      (_, index) => makeMaterialProjection("en", index + 1)
     );
 
     await t.mutation(async (ctx) => {

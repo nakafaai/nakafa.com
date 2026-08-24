@@ -2,6 +2,7 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
+import { readContactPageInput } from "@/lib/content/page/contact";
 import {
   type ActiveContentReleaseId,
   readActiveContentIdentity,
@@ -72,7 +73,15 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
 const getPublishedMarkdownSource = Effect.fn("www.llms.markdown.source")(
   function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
     const appLocale = AppLocaleSchema.make(locale);
-    const publishedFamily = readPublishedFamily(cleanSlug);
+    if (cleanSlug === "contact") {
+      const contactPage = yield* readContactPageInput(locale);
+      return {
+        ...contactPage,
+        family: "page" as const,
+      };
+    }
+    const publicPath = cleanSlug;
+    const publishedFamily = readPublishedFamily(publicPath);
     if (!publishedFamily) {
       return null;
     }
@@ -81,7 +90,7 @@ const getPublishedMarkdownSource = Effect.fn("www.llms.markdown.source")(
       activeReleaseId: active?.releaseId ?? null,
       appLocale,
       family: publishedFamily,
-      publicPath: cleanSlug,
+      publicPath,
     });
     if (activeRoute.kind !== "found") {
       return null;
@@ -89,7 +98,7 @@ const getPublishedMarkdownSource = Effect.fn("www.llms.markdown.source")(
     return {
       activeReleaseId: activeRoute.activeReleaseId,
       family: publishedFamily,
-      publicPath: cleanSlug,
+      publicPath,
     };
   }
 );

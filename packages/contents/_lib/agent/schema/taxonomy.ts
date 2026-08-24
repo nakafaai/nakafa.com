@@ -38,6 +38,7 @@ export const NakafaAgentTaxonomyOptionsSchema = Schema.Struct({
   locale: LocaleSchema.pipe(
     Schema.withDecodingDefaultType(Effect.succeed(routing.defaultLocale))
   ).annotate({
+    default: routing.defaultLocale,
     description: "Locale used for localized labels and content counts.",
   }),
 })

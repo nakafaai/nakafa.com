@@ -36,6 +36,12 @@ export class PageNavigationMissingError extends Schema.TaggedError<PageNavigatio
 
 const privacyPolicyKey = PageKeySchema.make("privacy-policy");
 const termsOfServiceKey = PageKeySchema.make("terms-of-service");
+const footerPageKeys: ReadonlySet<PageKey> = new Set([
+  PageKeySchema.make("imprint"),
+  privacyPolicyKey,
+  PageKeySchema.make("security-policy"),
+  termsOfServiceKey,
+]);
 
 /** Resolves one required stable Page identity without owning its public path. */
 const readRequiredPageHref = Effect.fn("www.pages.readRequiredHref")(function* (
@@ -61,7 +67,7 @@ export const readPageNavigation = Effect.fn("www.pages.readNavigation")(
       pageKey,
       publicPath,
     } of catalog.projections) {
-      if (appLocale !== locale) {
+      if (appLocale !== locale || !footerPageKeys.has(pageKey)) {
         continue;
       }
       items.push({

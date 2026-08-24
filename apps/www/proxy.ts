@@ -7,6 +7,7 @@ import {
   previewRouting,
   routing,
 } from "@repo/internationalization/src/routing";
+import { mergeVaryHeader } from "@repo/utilities/http/accept";
 import { getSessionCookie } from "better-auth/cookies";
 import { Effect } from "effect";
 import type { ProxyConfig } from "next/server";
@@ -40,6 +41,7 @@ const handlePreviewLocalizedRequest = createMiddleware(previewRouting);
 const TRAILING_SLASH_PATTERN = /\/+$/;
 const NEXT_INTL_LOCALE_HEADER = "x-next-intl-locale";
 const CONTENT_NOT_FOUND_SEGMENT = "_not-found";
+const REPRESENTATION_VARY_FIELDS = ["Accept", "Accept-Encoding"];
 
 /**
  * Adapts Next/Vercel proxy requests to Nakafa route decisions.
@@ -112,11 +114,16 @@ export async function proxy(request: NextRequest) {
 
   const routeDecision = resolveLlmsProxyRoute({
     acceptHeader: request.headers.get("accept"),
+    method: request.method,
     pathname,
   });
 
   if (routeDecision.kind === "rewrite-markdown") {
     return rewriteToLlmsMdx(request, routeDecision.localizedRoute);
+  }
+
+  if (routeDecision.kind === "not-acceptable") {
+    return representationNotAcceptable();
   }
 
   const urlMigrationRedirect = await Effect.runPromise(
@@ -213,6 +220,7 @@ function routeLocalizedRequest(
     : handleLocalizedRequest(request);
   response.headers.append("Link", AGENT_DISCOVERY_LINK_HEADER);
   response.headers.set("X-Llms-Txt", LLMS_TEXT_PATH);
+  mergeRepresentationVary(response);
 
   return response;
 }
@@ -225,7 +233,28 @@ function rewriteToLlmsMdx(
   const rewriteUrl = new URL(request.url);
   rewriteUrl.pathname = `/llms.mdx/${localizedRoute.locale}${localizedRoute.route}`;
 
-  return NextResponse.rewrite(rewriteUrl);
+  const response = NextResponse.rewrite(rewriteUrl);
+  mergeRepresentationVary(response);
+  return response;
+}
+
+/** Returns a hard 406 when neither public page representation is acceptable. */
+function representationNotAcceptable() {
+  return new Response("Not Acceptable\n", {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      Vary: REPRESENTATION_VARY_FIELDS.join(", "),
+    },
+    status: 406,
+  });
+}
+
+/** Preserves framework Vary fields and adds representation cache keys. */
+function mergeRepresentationVary(response: Response) {
+  response.headers.set(
+    "Vary",
+    mergeVaryHeader(response.headers.get("Vary"), REPRESENTATION_VARY_FIELDS)
+  );
 }
 
 /** Rewrites missing content to the styled app not-found route with 404 status. */
