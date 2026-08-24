@@ -1,17 +1,25 @@
 import "server-only";
-import type { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  type GitCommitShaSchema,
+  ReleaseIdSchema,
+  Sha256HashSchema,
+} from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   type ArticleCategory,
   ArticleCategorySchema,
   ArticleCategoryTitleSchema,
+  type ArticleMetadata,
   ArticleProjectionSchema,
+  type ArticleRouteSlug,
+  ArticleRouteSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
+import { normalizeArticleMetadata } from "@/lib/content/article/decode";
 import { applyPublishedCatalogCache } from "@/lib/content/cache";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
@@ -33,13 +41,14 @@ type CategoryPageItem = CategoryPageResult["result"]["page"][number];
 /** Active release identity required to continue one stable catalog read. */
 export interface ArticlePageCursor {
   readonly cursor: null | string;
-  readonly expectedManifestHash: null | string;
-  readonly expectedReleaseId: null | string;
+  readonly expectedManifestHash: null | typeof Sha256HashSchema.Type;
+  readonly expectedReleaseId: null | typeof ReleaseIdSchema.Type;
 }
 /** One localized category title verified against the active article model. */
 export interface PublishedArticleCategory {
   readonly category: ArticleCategory;
   readonly rendererDomain: CategoryPageItem["rendererDomain"];
+  readonly route: ArticleRouteSlug;
   readonly title: typeof ArticleCategoryTitleSchema.Type;
 }
 /** One verified article card selected from the active Aksara release. */
@@ -47,17 +56,21 @@ export interface PublishedArticleSummary {
   readonly authors: (typeof ArticleProjectionSchema.Type)["metadata"]["authors"];
   readonly category: ArticleCategory;
   readonly categoryTitle: typeof ArticleCategoryTitleSchema.Type;
-  readonly date: (typeof ArticleProjectionSchema.Type)["metadata"]["date"];
+  readonly dateModified?: ArticleMetadata["dateModified"];
+  readonly datePublished: ArticleMetadata["datePublished"];
   readonly description: string;
   readonly official: boolean;
   readonly publicPath: (typeof ArticleProjectionSchema.Type)["publicPath"];
-  readonly slug: (typeof ArticleProjectionSchema.Type)["articleSlug"];
+  readonly route: {
+    readonly category: ArticleRouteSlug;
+    readonly slug: ArticleRouteSlug;
+  };
   readonly title: string;
 }
 /** One bounded active article page with immutable provenance. */
 export interface PublishedArticlePage {
-  readonly activeManifestHash: string;
-  readonly activeReleaseId: string;
+  readonly activeManifestHash: typeof Sha256HashSchema.Type;
+  readonly activeReleaseId: typeof ReleaseIdSchema.Type;
   readonly articles: readonly PublishedArticleSummary[];
   readonly done: boolean;
   readonly nextCursor: null | string;
@@ -66,8 +79,8 @@ export interface PublishedArticlePage {
 }
 /** One bounded active category page with immutable provenance. */
 export interface PublishedCategoryPage {
-  readonly activeManifestHash: string;
-  readonly activeReleaseId: string;
+  readonly activeManifestHash: typeof Sha256HashSchema.Type;
+  readonly activeReleaseId: typeof ReleaseIdSchema.Type;
   readonly categories: readonly PublishedArticleCategory[];
   readonly done: boolean;
   readonly nextCursor: null | string;
@@ -81,6 +94,25 @@ function projectionError(locale: Locale, publicPath = "articles") {
     publicPath,
   });
 }
+/** Decodes the immutable generation identity shared by one catalog page. */
+const decodeCatalogIdentity = Effect.fn("www.articles.decodeIdentity")(
+  function* (
+    locale: Locale,
+    activeManifestHash: null | string,
+    activeReleaseId: null | string,
+    managed: boolean
+  ) {
+    if (!managed || activeManifestHash === null || activeReleaseId === null) {
+      return yield* projectionError(locale);
+    }
+
+    const [manifestHash, releaseId] = yield* Effect.all([
+      Schema.decodeEffect(Sha256HashSchema)(activeManifestHash),
+      Schema.decodeEffect(ReleaseIdSchema)(activeReleaseId),
+    ]).pipe(Effect.mapError(() => projectionError(locale)));
+    return { manifestHash, releaseId };
+  }
+);
 /** Strictly decodes one backend-verified article catalog row. */
 const decodeArticleItem = Effect.fn("www.articles.decodeItem")(function* (
   item: ArticlePageItem,
@@ -103,16 +135,23 @@ const decodeArticleItem = Effect.fn("www.articles.decodeItem")(function* (
   ) {
     return yield* projectionError(locale, item.publicPath);
   }
+  const metadata = normalizeArticleMetadata(projection.metadata);
   return {
-    authors: projection.metadata.authors,
+    authors: metadata.authors,
     category: projection.category,
     categoryTitle: projection.categoryTitle,
-    date: projection.metadata.date,
-    description: projection.metadata.description ?? "",
+    ...(metadata.dateModified === undefined
+      ? {}
+      : { dateModified: metadata.dateModified }),
+    datePublished: metadata.datePublished,
+    description: metadata.description ?? "",
     official: projection.official,
     publicPath: projection.publicPath,
-    slug: projection.articleSlug,
-    title: projection.metadata.title,
+    route: {
+      category: projection.categoryRouteSlug,
+      slug: projection.articleRouteSlug,
+    },
+    title: metadata.title,
   } satisfies PublishedArticleSummary;
 });
 /** Strictly decodes one backend-verified category catalog row. */
@@ -120,13 +159,15 @@ const decodeCategoryItem = Effect.fn("www.articles.decodeCategory")(function* (
   item: CategoryPageItem,
   locale: Locale
 ) {
-  const [category, title] = yield* Effect.all([
+  const [category, route, title] = yield* Effect.all([
     Schema.decodeEffect(ArticleCategorySchema)(item.category),
+    Schema.decodeEffect(ArticleRouteSlugSchema)(item.route),
     Schema.decodeEffect(ArticleCategoryTitleSchema)(item.title),
   ]).pipe(Effect.mapError(() => projectionError(locale)));
   return {
     category,
     rendererDomain: item.rendererDomain,
+    route,
     title,
   } satisfies PublishedArticleCategory;
 });
@@ -152,13 +193,20 @@ export const readPublishedArticlePage = Effect.fn(
   } satisfies ArticlePageArgs;
   const result = yield* readRuntimeQuery(api.contentRelease.article.page, args);
   const {
-    activeManifestHash,
-    activeReleaseId,
+    activeManifestHash: rawManifestHash,
+    activeReleaseId: rawReleaseId,
     managed,
     result: page,
     sourceRevision: rawSourceRevision,
     stale,
   } = result;
+  const { manifestHash: activeManifestHash, releaseId: activeReleaseId } =
+    yield* decodeCatalogIdentity(
+      input.locale,
+      rawManifestHash,
+      rawReleaseId,
+      managed
+    );
   const articles = yield* Effect.forEach(page.page, (item) =>
     decodeArticleItem(item, input.locale)
   );
@@ -168,9 +216,6 @@ export const readPublishedArticlePage = Effect.fn(
   });
   const done = page.isDone;
   const nextCursor = done ? null : page.continueCursor;
-  if (!managed || activeManifestHash === null || activeReleaseId === null) {
-    return yield* projectionError(input.locale);
-  }
   return {
     activeManifestHash,
     activeReleaseId,
@@ -204,13 +249,20 @@ export const readPublishedCategories = Effect.fn(
     args
   );
   const {
-    activeManifestHash,
-    activeReleaseId,
+    activeManifestHash: rawManifestHash,
+    activeReleaseId: rawReleaseId,
     managed,
     result: page,
     sourceRevision: rawSourceRevision,
     stale,
   } = result;
+  const { manifestHash: activeManifestHash, releaseId: activeReleaseId } =
+    yield* decodeCatalogIdentity(
+      input.locale,
+      rawManifestHash,
+      rawReleaseId,
+      managed
+    );
   const categories = yield* Effect.forEach(page.page, (item) =>
     decodeCategoryItem(item, input.locale)
   );
@@ -220,9 +272,6 @@ export const readPublishedCategories = Effect.fn(
   });
   const done = page.isDone;
   const nextCursor = done ? null : page.continueCursor;
-  if (!managed || activeManifestHash === null || activeReleaseId === null) {
-    return yield* projectionError(input.locale);
-  }
   return {
     activeManifestHash,
     activeReleaseId,

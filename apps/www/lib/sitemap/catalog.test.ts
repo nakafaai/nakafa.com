@@ -69,7 +69,11 @@ beforeEach(() => {
   );
   articleMocks.readPublishedArticleBuckets.mockReset();
   articleMocks.readPublishedArticleBuckets.mockReturnValue(
-    Effect.succeed({ articleCount: 0, buckets: [] })
+    Effect.succeed({
+      activeReleaseId: "release-material",
+      articleCount: 0,
+      buckets: [],
+    })
   );
   materialMocks.readPublishedMaterialBuckets.mockReset();
   materialMocks.readPublishedMaterialBuckets.mockReturnValue(
@@ -123,11 +127,15 @@ describe("sitemap page catalog", () => {
   });
 
   it("adds signed article partitions", async () => {
-    articleMocks.readPublishedArticleBuckets.mockImplementation((locale) =>
-      Effect.succeed({
-        articleCount: locale === "en" ? 1 : 0,
-        buckets: locale === "en" ? ["abc"] : [],
-      })
+    articleMocks.readPublishedArticleBuckets.mockImplementation(
+      (locale, expectedReleaseId) => {
+        expect(expectedReleaseId).toBe("release-material");
+        return Effect.succeed({
+          activeReleaseId: "release-material",
+          articleCount: locale === "en" ? 1 : 0,
+          buckets: locale === "en" ? ["abc"] : [],
+        });
+      }
     );
 
     const descriptors = await Effect.runPromise(readSitemapPageDescriptors());

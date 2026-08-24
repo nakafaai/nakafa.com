@@ -18,10 +18,9 @@ import { useTranslations } from "next-intl";
 
 interface Props {
   article: Article;
-  category: string;
 }
 
-export function CardArticle({ category, article }: Props) {
+export function CardArticle({ article }: Props) {
   const t = useTranslations("Articles");
 
   const id = slugify(article.title);
@@ -29,8 +28,7 @@ export function CardArticle({ category, article }: Props) {
   return (
     <NavigationLink
       className="group"
-      href={`/articles/${category}/${article.slug}`}
-      key={article.slug}
+      href={`/${article.publicPath}`}
       title={article.title}
     >
       <Card className="relative h-full overflow-hidden">
@@ -43,8 +41,11 @@ export function CardArticle({ category, article }: Props) {
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex items-center justify-between">
-          <time className="text-muted-foreground text-sm">
-            {format(article.date, "d MMM, yyyy")}
+          <time
+            className="text-muted-foreground text-sm"
+            dateTime={article.datePublished}
+          >
+            {format(article.datePublished, "d MMM, yyyy")}
           </time>
           <Tooltip>
             <TooltipTrigger

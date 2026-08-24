@@ -7,6 +7,7 @@ import {
   isProjectionBucket,
 } from "@repo/backend/convex/contentRelease/bucket";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import { Effect } from "effect";
 
 /** Lists non-empty deterministic sitemap partitions for managed articles. */
@@ -14,8 +15,14 @@ export const readArticleBuckets = Effect.fn(
   "contentRelease.readArticleBuckets"
 )(function* (ctx: QueryCtx, appLocale: Parameters<typeof loadArticleOwner>[1]) {
   const owner = yield* loadArticleOwner(ctx, appLocale);
+  const activeReleaseId = owner.active?.releaseId ?? null;
   if (!(owner.managed && owner.active)) {
-    return { articleCount: 0, buckets: [], managed: false };
+    return {
+      activeReleaseId,
+      articleCount: 0,
+      buckets: [],
+      managed: false,
+    };
   }
 
   const rows = yield* Effect.promise(() =>
@@ -49,6 +56,7 @@ export const readArticleBuckets = Effect.fn(
   }
 
   return {
+    activeReleaseId,
     articleCount: rows.reduce(
       (total, { articleCount }) => total + articleCount,
       0
@@ -73,14 +81,17 @@ export const readArticleSitemap = Effect.fn(
 
   return {
     routes: [
-      ...partition.categories.map(({ category }) => ({
-        date: null,
-        publicPath: `articles/${category}`,
+      ...partition.categories.map(({ route }) => ({
+        lastModified: null,
+        publicPath: `articles/${route}`,
       })),
-      ...partition.articles.map(({ projection }) => ({
-        date: projection.metadata.date,
-        publicPath: projection.publicPath,
-      })),
+      ...partition.articles.map(({ projection }) => {
+        const dates = normalizePublicationDates(projection.metadata);
+        return {
+          lastModified: dates.dateModified ?? dates.datePublished,
+          publicPath: projection.publicPath,
+        };
+      }),
     ],
   };
 });

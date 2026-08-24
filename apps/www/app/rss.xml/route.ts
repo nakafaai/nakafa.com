@@ -56,7 +56,7 @@ export async function GET() {
       title: route.title,
       description: route.description ?? route.title,
       link,
-      date: new Date(route.date),
+      date: new Date(route.datePublished),
       id: link,
       author: route.authors,
       image: `${baseUrl}/${route.appLocale}/og/${route.route}/image.png`,
@@ -89,7 +89,7 @@ function getFeedContentRoutes() {
         routing.locales,
         (locale) =>
           Effect.all([
-            readFeedArticles(locale),
+            readFeedArticles(locale, activeReleaseId),
             readFeedMaterials(locale, activeReleaseId),
           ]),
         { concurrency: routing.locales.length }
@@ -106,7 +106,7 @@ function getFeedContentRoutes() {
 
       return routes
         .flat(2)
-        .sort((left, right) => right.date - left.date)
+        .sort((left, right) => right.datePublished - left.datePublished)
         .slice(0, RSS_CONTENT_ROUTE_LIMIT);
     })
   );
@@ -114,17 +114,19 @@ function getFeedContentRoutes() {
 
 /** Selects signed published articles. */
 const readFeedArticles = Effect.fn("www.rss.readArticles")(function* (
-  locale: (typeof routing.locales)[number]
+  locale: (typeof routing.locales)[number],
+  expectedActiveReleaseId: ContentReleasePin
 ) {
   const appLocale = AppLocaleSchema.make(locale);
   const published = yield* readPublishedLatestArticles(
     locale,
-    RSS_CONTENT_ROUTE_LIMIT
+    RSS_CONTENT_ROUTE_LIMIT,
+    expectedActiveReleaseId
   );
   return published.articles.map((article) => ({
     authors: article.authors,
     appLocale,
-    date: Date.parse(`${article.date}T00:00:00.000Z`),
+    datePublished: Date.parse(`${article.datePublished}T00:00:00.000Z`),
     description: article.description,
     route: article.publicPath,
     title: article.title,
@@ -139,16 +141,12 @@ const readFeedMaterials = Effect.fn("www.rss.readMaterials")(function* (
   const appLocale = AppLocaleSchema.make(locale);
   const published = yield* readPublishedLatestMaterials(
     locale,
-    RSS_CONTENT_ROUTE_LIMIT
-  );
-  yield* decodeContentReleasePin(
-    published.activeReleaseId,
-    expectedActiveReleaseId,
-    { appLocale, publicPath: "rss.xml" }
+    RSS_CONTENT_ROUTE_LIMIT,
+    expectedActiveReleaseId
   );
   const publishedRoutes = published.materials.map((material) => ({
     authors: material.authors,
-    date: Date.parse(`${material.date}T00:00:00.000Z`),
+    datePublished: Date.parse(`${material.datePublished}T00:00:00.000Z`),
     description: material.description,
     appLocale,
     route: material.publicPath,

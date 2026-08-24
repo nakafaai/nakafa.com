@@ -9,6 +9,7 @@ import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/cat
 import { hashText } from "@repo/backend/convex/contentRelease/digest";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
+import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import { Effect } from "effect";
 
 type MaterialRow = Doc<"materialCatalog">;
@@ -24,6 +25,8 @@ export const verifyMaterial = Effect.fn("contentRelease.verifyMaterial")(
         `Active material ${row.contentKey}/${row.appLocale} has a non-material projection.`
       );
     }
+    const projectionDates = normalizePublicationDates(projection.metadata);
+    const rowDates = normalizePublicationDates(row);
     const projectionJson = canonicalizeMaterialProjection(projection);
     const projectionHash = yield* hashText(
       "the active material projection",
@@ -34,7 +37,8 @@ export const verifyMaterial = Effect.fn("contentRelease.verifyMaterial")(
       projectionHash !== row.projectionHash ||
       getHashBucket(projectionHash) !== row.bucket ||
       projection.graph.assetId !== row.assetId ||
-      projection.metadata.date !== row.date ||
+      projectionDates.dateModified !== rowDates.dateModified ||
+      projectionDates.datePublished !== rowDates.datePublished ||
       projection.contentKey !== row.contentKey ||
       projection.appLocale !== row.appLocale ||
       projection.materialKey !== row.materialKey ||

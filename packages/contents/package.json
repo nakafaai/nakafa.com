@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@hugeicons/core-free-icons": "^4.3.0",
-    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.0/nakafa-aksara-contracts-0.15.0.tgz",
+    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.1/nakafa-aksara-contracts-0.15.1.tgz",
     "@repo/design-system": "workspace:*",
     "@repo/internationalization": "workspace:*",
     "@repo/utilities": "workspace:*",

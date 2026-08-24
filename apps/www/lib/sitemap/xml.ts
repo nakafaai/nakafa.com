@@ -33,43 +33,20 @@ export function buildSitemapUrlSetXml(entries: readonly SitemapEntry[]) {
 
   return [
     xmlHeader,
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
     ...urlLines,
     "</urlset>",
     "",
   ].join("\n");
 }
 
-/** Formats one sitemap entry including optional alternates and metadata. */
+/** Formats one sitemap entry with an optional truthful modification date. */
 function formatSitemapEntry(entry: SitemapEntry) {
   const lines = ["  <url>", `    <loc>${escapeXml(entry.url)}</loc>`];
   const lastModified = formatLastModified(entry.lastModified);
 
   if (lastModified) {
     lines.push(`    <lastmod>${escapeXml(lastModified)}</lastmod>`);
-  }
-
-  if (entry.changeFrequency) {
-    lines.push(
-      `    <changefreq>${escapeXml(entry.changeFrequency)}</changefreq>`
-    );
-  }
-
-  if (typeof entry.priority === "number") {
-    lines.push(`    <priority>${entry.priority}</priority>`);
-  }
-
-  const languages = entry.alternates?.languages;
-  if (languages) {
-    for (const [language, href] of Object.entries(languages)) {
-      if (!href) {
-        continue;
-      }
-
-      lines.push(
-        `    <xhtml:link rel="alternate" hreflang="${escapeXml(language)}" href="${escapeXml(String(href))}" />`
-      );
-    }
   }
 
   lines.push("  </url>");

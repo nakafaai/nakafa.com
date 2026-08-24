@@ -95,7 +95,7 @@ export const ingressProjection = MaterialLessonProjectionSchema.make({
   materialKey: MaterialKeySchema.make("lesson.mathematics.technical-heads"),
   metadata: {
     authors: [{ name: "Nakafa" }],
-    date: "2026-07-22",
+    datePublished: "2026-07-22",
     title: "Technical Head",
   },
   order: 1,

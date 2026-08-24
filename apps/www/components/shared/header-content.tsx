@@ -1,26 +1,13 @@
-import { Calendar03Icon, QuillWrite01Icon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { format } from "date-fns";
 import { OpenContent } from "@/components/shared/open-content/actions";
 
 interface Props {
-  /** The authors of the content */
-  authors?: {
-    name: string;
-  }[];
-  /** The category of the content */
-  category?: {
-    icon: IconSvgElement;
-    name: string;
-  };
   /** The raw content, used for copying */
   content?: string;
   /** Immutable raw content URL, fetched only when copying */
   copySourceUrl?: null | string;
-  /** The date of the content creation */
-  date?: string;
   /** The description of the content */
   description?: string;
   /** The icon of the title */
@@ -44,15 +31,11 @@ export function HeaderContent({
   link,
   description,
   icon: Icon,
-  category,
-  authors,
-  date,
   slug,
   sourceUrl,
   content,
   copySourceUrl,
 }: Props) {
-  const showFooter = authors || date;
   return (
     <header className="relative py-20">
       <div className="z-10 mx-auto max-w-3xl space-y-6 px-6">
@@ -80,50 +63,9 @@ export function HeaderContent({
           </div>
         </div>
 
-        {(!!description || !!showFooter) && (
+        {!!description && (
           <div className="space-y-3">
-            {!!description && (
-              <p className="text-muted-foreground">{description}</p>
-            )}
-            {!!showFooter && (
-              <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center sm:gap-4">
-                {!!authors && (
-                  <p className="inline-flex items-center gap-1 text-muted-foreground">
-                    <HugeIcons
-                      className="size-4 shrink-0"
-                      icon={QuillWrite01Icon}
-                    />
-                    <span className="text-sm">
-                      {authors.map((author) => author.name).join(", ")}
-                    </span>
-                  </p>
-                )}
-
-                <div className="flex items-center gap-4">
-                  {!!date && (
-                    <p className="inline-flex items-center gap-1 text-muted-foreground">
-                      <HugeIcons
-                        className="size-4 shrink-0"
-                        icon={Calendar03Icon}
-                      />
-                      <span className="text-sm">
-                        {format(date, "d MMM, yyyy")}
-                      </span>
-                    </p>
-                  )}
-
-                  {!!category && (
-                    <p className="inline-flex items-center gap-1 text-muted-foreground">
-                      <HugeIcons
-                        className="size-4 shrink-0"
-                        icon={category.icon}
-                      />
-                      <span className="text-sm">{category.name}</span>
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
+            <p className="text-muted-foreground">{description}</p>
           </div>
         )}
 

@@ -68,7 +68,7 @@ export function ArticleJsonLd({
       "@id": absoluteUrl,
     },
     datePublished,
-    dateModified: dateModified || datePublished,
+    ...(dateModified === undefined ? {} : { dateModified }),
     author: authors,
     image: absoluteImageUrl ? [absoluteImageUrl] : undefined,
     description,

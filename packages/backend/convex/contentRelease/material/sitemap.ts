@@ -7,6 +7,7 @@ import {
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadMaterialOwner } from "@repo/backend/convex/contentRelease/material/owner";
 import { readMaterialPartition } from "@repo/backend/convex/contentRelease/material/partition";
+import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import { Effect } from "effect";
 
 /** Lists non-empty deterministic partitions for visible published materials. */
@@ -73,9 +74,12 @@ export const readMaterialSitemap = Effect.fn(
     return null;
   }
   return {
-    routes: partition.materials.map(({ projection }) => ({
-      date: projection.metadata.date,
-      publicPath: projection.publicPath,
-    })),
+    routes: partition.materials.map(({ projection }) => {
+      const dates = normalizePublicationDates(projection.metadata);
+      return {
+        lastModified: dates.dateModified ?? dates.datePublished,
+        publicPath: projection.publicPath,
+      };
+    }),
   };
 });

@@ -1,7 +1,10 @@
 // @vitest-environment node
 
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
-import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
+import {
+  canonicalizeMaterialProjection,
+  MaterialMetadataSchema,
+} from "@nakafa/aksara-contracts/projection/material";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 import {
@@ -9,6 +12,7 @@ import {
   decodeMaterialProjection,
   isMaterialCounterpart,
   isMaterialSibling,
+  normalizeMaterialMetadata,
   verifyMaterialPublication,
 } from "@/lib/content/material/decode";
 import { previewIdProjection, previewProjection } from "@/test/content-preview";
@@ -31,6 +35,16 @@ describe("published material decoding", () => {
         ])
       )
     ).resolves.toEqual([previewProjection, previewProjection]);
+  });
+
+  it("preserves metadata without inventing optional source fields", () => {
+    const metadata = MaterialMetadataSchema.make({
+      authors: previewProjection.metadata.authors,
+      datePublished: "2025-04-27",
+      title: previewProjection.metadata.title,
+    });
+
+    expect(normalizeMaterialMetadata(metadata)).toEqual(metadata);
   });
 
   it.each([

@@ -88,7 +88,8 @@ export const previewRoute = Schema.decodeSync(MaterialLessonRouteSchema)({
 /** Exact metadata authored by the real English Function Concept lesson. */
 export const previewMetadata = MaterialMetadataSchema.make({
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
-  date: "2025-04-27",
+  dateModified: "2026-08-22",
+  datePublished: "2025-04-27",
   description:
     "Understand functions as magic machines with interactive examples. Learn f(x) notation, input-output relationships, and the one-to-one rule.",
   subject: "Function Composition and Inverse Function",
@@ -125,7 +126,8 @@ export const previewNextRoute = Schema.decodeSync(MaterialLessonRouteSchema)({
 /** Exact metadata authored by the next real Function Concept sibling. */
 export const previewNextMetadata = MaterialMetadataSchema.make({
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
-  date: "2025-04-27",
+  dateModified: "2026-08-22",
+  datePublished: "2025-04-27",
   description:
     "Learn one-to-one, onto, and bijective function types with clear examples. Understand mapping properties and inverse function requirements.",
   subject: "Function Composition and Inverse Function",
@@ -160,7 +162,8 @@ export const previewIdRoute = Schema.decodeSync(MaterialLessonRouteSchema)({
 /** Exact Indonesian metadata authored by the real Function Concept lesson. */
 export const previewIdMetadata = MaterialMetadataSchema.make({
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
-  date: "2025-04-27",
+  dateModified: "2026-08-22",
+  datePublished: "2025-04-27",
   description:
     "Pahami fungsi sebagai mesin ajaib dengan contoh interaktif. Pelajari notasi f(x), hubungan input-output, dan aturan tepat satu.",
   subject: "Fungsi Komposisi dan Fungsi Invers",
@@ -195,7 +198,7 @@ export const previewDeRoute = Schema.decodeSync(MaterialLessonRouteSchema)({
 /** Exact German metadata authored by the real Function Concept lesson. */
 export const previewDeMetadata = MaterialMetadataSchema.make({
   authors: [{ name: "Nabil Akbarazzima Fatih" }],
-  date: "2025-04-27",
+  datePublished: "2026-08-22",
   description:
     "Verstehe Funktionen als Regeln, die jeder zulässigen Eingabe genau eine Ausgabe zuordnen, und lies anschließend Notation, Tabellen und geordnete Paare.",
   subject: "Funktionszusammensetzung und Umkehrfunktion",

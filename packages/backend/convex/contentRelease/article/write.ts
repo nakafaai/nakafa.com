@@ -2,12 +2,14 @@ import type { ArticleProjection } from "@nakafa/aksara-contracts/projection/arti
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { adjustArticleBucket } from "@repo/backend/convex/contentRelease/article/bucket";
+import { readOrderedArticles } from "@repo/backend/convex/contentRelease/article/order";
 import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
 import {
   ensureDocumentSize,
   READ_MODEL_DOCUMENT_LIMIT,
 } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
@@ -116,17 +118,12 @@ const writeCategory = Effect.fn("contentRelease.writeArticleCategory")(
 /** Rebuilds one category after its selected article moves or disappears. */
 const reconcileCategory = Effect.fn("contentRelease.reconcileArticleCategory")(
   function* (ctx: MutationCtx, appLocale: AppLocale, category: string) {
-    const articles = yield* Effect.promise(() =>
-      ctx.db
-        .query("articleCatalog")
-        .withIndex(
-          "by_appLocale_and_category_and_date_and_contentKey",
-          (index) => index.eq("appLocale", appLocale).eq("category", category)
-        )
-        .order("desc")
-        .take(1)
+    const [representative] = yield* readOrderedArticles(
+      ctx,
+      appLocale,
+      category,
+      1
     );
-    const representative = articles[0];
     if (representative) {
       yield* writeCategory(ctx, representative);
       return;
@@ -174,6 +171,7 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
       `Article entry ${head.contentKey}/${head.artifactLocale} has an invalid projection hash.`
     );
   }
+  const dates = normalizePublicationDates(projection.metadata);
   const entry = {
     appLocale: projection.appLocale,
     assetId: projection.graph.assetId,
@@ -181,7 +179,7 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
     category: projection.category,
     categoryTitle: projection.categoryTitle,
     contentKey: head.contentKey,
-    date: projection.metadata.date,
+    ...dates,
     projectionHash: head.projectionHash,
     publicPath: projection.publicPath,
     releaseId: head.releaseId,

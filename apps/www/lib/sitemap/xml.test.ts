@@ -19,44 +19,28 @@ describe("sitemap XML serialization", () => {
     expect(xml.endsWith("\n")).toBe(true);
   });
 
-  it("builds a sitemap URL set with metadata and alternate links", () => {
+  it("builds a sitemap URL set with a truthful source date", () => {
     const xml = buildSitemapUrlSetXml([
       {
-        alternates: {
-          languages: {
-            en: "https://nakafa.com/en/articles/example",
-            id: "https://nakafa.com/id/articles/example",
-            "x-default": "https://nakafa.com/en/articles/example",
-          },
-        },
-        changeFrequency: "monthly",
-        lastModified: new Date("2025-01-01T00:00:00.000Z"),
-        priority: 0.5,
+        lastModified: "2025-01-01",
         url: "https://nakafa.com/en/articles/example",
       },
     ]);
 
     expect(xml).toContain(
-      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">'
+      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
     );
     expect(xml).toContain("<loc>https://nakafa.com/en/articles/example</loc>");
-    expect(xml).toContain("<lastmod>2025-01-01T00:00:00.000Z</lastmod>");
-    expect(xml).toContain("<changefreq>monthly</changefreq>");
-    expect(xml).toContain("<priority>0.5</priority>");
-    expect(xml).toContain(
-      '<xhtml:link rel="alternate" hreflang="id" href="https://nakafa.com/id/articles/example" />'
-    );
+    expect(xml).toContain("<lastmod>2025-01-01</lastmod>");
+    expect(xml).not.toContain("changefreq");
+    expect(xml).not.toContain("priority");
+    expect(xml).not.toContain("xhtml");
+    expect(xml).not.toContain("hreflang");
   });
 
-  it("omits optional metadata and empty alternate URLs", () => {
+  it("omits optional metadata and escapes canonical URLs", () => {
     const xml = buildSitemapUrlSetXml([
       {
-        alternates: {
-          languages: {
-            en: undefined,
-            id: "https://nakafa.com/id/articles/string-date",
-          },
-        },
         lastModified: "2025-02-01",
         url: "https://nakafa.com/en/articles/string-date",
       },
@@ -66,10 +50,6 @@ describe("sitemap XML serialization", () => {
     ]);
 
     expect(xml).toContain("<lastmod>2025-02-01</lastmod>");
-    expect(xml).toContain(
-      '<xhtml:link rel="alternate" hreflang="id" href="https://nakafa.com/id/articles/string-date" />'
-    );
-    expect(xml).not.toContain('hreflang="en"');
     expect(xml).toContain(
       "<loc>https://nakafa.com/en/articles/plain?title=&lt;plain&gt;</loc>"
     );

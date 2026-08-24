@@ -1,10 +1,10 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import { readArticleCategory } from "@repo/backend/convex/contentRelease/article/category";
 import {
   readArticleBucket,
   readCategoryArticles,
   readLatestArticles,
 } from "@repo/backend/convex/contentRelease/article/discovery";
+import { readArticleModel } from "@repo/backend/convex/contentRelease/article/model";
 import {
   readArticlePage,
   readCategoryPage,
@@ -44,18 +44,23 @@ const projectionValidator = v.object({
 const categoryValidator = v.object({
   category: v.string(),
   rendererDomain: rendererDomainValidator,
+  route: v.string(),
   title: v.string(),
 });
 
 const articleSummaryValidator = v.object({
-  articleSlug: v.string(),
   authors: v.array(v.object({ name: v.string() })),
   category: v.string(),
   categoryTitle: v.string(),
-  date: v.string(),
+  dateModified: v.optional(v.string()),
+  datePublished: v.string(),
   description: v.optional(v.string()),
   official: v.boolean(),
   publicPath: v.string(),
+  route: v.object({
+    category: v.string(),
+    slug: v.string(),
+  }),
   title: v.string(),
 });
 
@@ -77,23 +82,21 @@ const categoryPageValidator = v.object({
   stale: v.boolean(),
 });
 
-const categoryLookupValidator = v.object({
-  exists: v.boolean(),
-  managed: v.boolean(),
-});
-
 const sitemapBucketsValidator = v.object({
+  activeReleaseId: v.union(v.string(), v.null()),
   articleCount: v.number(),
   buckets: v.array(v.string()),
   managed: v.boolean(),
 });
 
 const articleDiscoveryValidator = v.object({
+  activeReleaseId: v.union(v.string(), v.null()),
   articles: v.array(articleSummaryValidator),
   managed: v.boolean(),
 });
 
 const articleBucketValidator = v.object({
+  activeReleaseId: v.union(v.string(), v.null()),
   articles: v.union(v.array(articleSummaryValidator), v.null()),
   managed: v.boolean(),
 });
@@ -102,13 +105,20 @@ const sitemapPageValidator = v.union(
   v.object({
     routes: v.array(
       v.object({
-        date: v.union(v.string(), v.null()),
+        lastModified: v.union(v.string(), v.null()),
         publicPath: v.string(),
       })
     ),
   }),
   v.null()
 );
+
+const articleModelValidator = v.object({
+  activeAppLocales: v.array(appLocaleValidator),
+  activeReleaseId: v.string(),
+  alternateJson: v.array(v.string()),
+  projectionJson: v.union(v.string(), v.null()),
+});
 
 /** Returns one current signed article partner API page. */
 export const apiPage = query({
@@ -121,6 +131,20 @@ export const apiPage = query({
   returns: articleApiPageValidator,
   handler: (ctx, args) =>
     runConvexProgram(readPartnerApiPage(ctx, { ...args, family: "article" })),
+});
+
+/** Resolves one complete active article route and its locale counterparts. */
+export const route = query({
+  args: {
+    appLocale: appLocaleValidator,
+    expectedActiveReleaseId: v.optional(v.union(v.string(), v.null())),
+    publicPath: v.string(),
+  },
+  returns: articleModelValidator,
+  handler: (ctx, { appLocale, expectedActiveReleaseId, publicPath }) =>
+    runConvexProgram(
+      readArticleModel(ctx, appLocale, publicPath, expectedActiveReleaseId)
+    ),
 });
 
 /** Returns one release-bound newest-first article page. */
@@ -165,17 +189,6 @@ export const categories = query({
         args.paginationOpts
       )
     ),
-});
-
-/** Resolves one exact category without scanning its article rows. */
-export const category = query({
-  args: {
-    category: v.string(),
-    appLocale: appLocaleValidator,
-  },
-  returns: categoryLookupValidator,
-  handler: (ctx, args) =>
-    runConvexProgram(readArticleCategory(ctx, args.appLocale, args.category)),
 });
 
 /** Returns one managed hash partition for agent-facing article indexes. */

@@ -1,5 +1,5 @@
 import "server-only";
-import { DateOnlySchema } from "@nakafa/aksara-contracts/date";
+import { PublicationDatesSchema } from "@nakafa/aksara-contracts/date";
 import {
   CorpusSourcePathSchema,
   PublicPathSchema,
@@ -24,7 +24,11 @@ export interface PublishedMaterialSummary {
   readonly authors: readonly {
     readonly name: string;
   }[];
-  readonly date: typeof DateOnlySchema.Type;
+  readonly dateModified?: Exclude<
+    (typeof PublicationDatesSchema.Type)["dateModified"],
+    undefined
+  >;
+  readonly datePublished: (typeof PublicationDatesSchema.Type)["datePublished"];
   readonly description: string | undefined;
   readonly publicPath: typeof PublicPathSchema.Type;
   readonly sourcePath: typeof CorpusSourcePathSchema.Type;
@@ -34,8 +38,13 @@ export interface PublishedMaterialSummary {
 const decodeMaterialSummary = Effect.fn("www.materials.decodeDiscovery")(
   function* (summary: MaterialSummary, locale: Locale) {
     const appLocale = AppLocaleSchema.make(locale);
-    const [date, publicPath, sourcePath] = yield* Effect.all([
-      Schema.decodeEffect(DateOnlySchema)(summary.date),
+    const [dates, publicPath, sourcePath] = yield* Effect.all([
+      Schema.decodeEffect(PublicationDatesSchema)({
+        ...(summary.dateModified === undefined
+          ? {}
+          : { dateModified: summary.dateModified }),
+        datePublished: summary.datePublished,
+      }),
       Schema.decodeEffect(PublicPathSchema)(summary.publicPath),
       Schema.decodeEffect(CorpusSourcePathSchema)(summary.sourcePath),
     ]).pipe(
@@ -49,7 +58,7 @@ const decodeMaterialSummary = Effect.fn("www.materials.decodeDiscovery")(
     );
     return {
       authors: summary.authors,
-      date,
+      ...dates,
       description: summary.description,
       publicPath,
       sourcePath,
@@ -92,7 +101,11 @@ export const readPublishedMaterialBucket = Effect.fn(
 /** Reads a bounded newest-first material set for feed discovery. */
 export const readPublishedLatestMaterials = Effect.fn(
   "www.materials.readLatest"
-)(function* (locale: Locale, limit: number) {
+)(function* (
+  locale: Locale,
+  limit: number,
+  expectedActiveReleaseId?: ContentReleasePin
+) {
   const appLocale = AppLocaleSchema.make(locale);
   const result = yield* readRuntimeQuery(api.contentRelease.material.latest, {
     appLocale,
@@ -100,7 +113,7 @@ export const readPublishedLatestMaterials = Effect.fn(
   });
   const activeReleaseId = yield* decodeContentReleasePin(
     result.activeReleaseId,
-    undefined,
+    expectedActiveReleaseId,
     { appLocale, publicPath: "materials" }
   );
   if (!result.managed || activeReleaseId === null) {

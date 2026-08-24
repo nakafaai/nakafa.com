@@ -18,16 +18,14 @@ import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { ContentViewTracker } from "@/components/tracking/tracker";
-import {
-  getPublishedArticlePage,
-  getPublishedCategories,
-} from "@/lib/content/article/catalog";
+import { getPublishedCategories } from "@/lib/content/article/catalog";
+import { getPublishedCategoryPage } from "@/lib/content/article/category";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { readArticlePreviewStaticParams } from "@/lib/content/preview/route";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { selectLearningStaticParams } from "@/lib/routing/prerender";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
-import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
+import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 import type { SEOContext } from "@/lib/utils/seo/types";
@@ -70,11 +68,15 @@ export async function generateMetadata({
   const filePath = `/${publicPath}`;
   const path = `/${locale}${filePath}`;
   const categoryLabel = article.categoryTitle;
-  const alternates = createLocalizedAlternates(path, {
-    types: {
-      "text/markdown": `${path}.md`,
-    },
-  });
+  const alternates = createResolvedRouteAlternates(
+    article.route,
+    article.alternates,
+    {
+      types: {
+        "text/markdown": `${path}.md`,
+      },
+    }
+  );
   // Evidence: Use ICU-based SEO generator for type-safe, locale-aware metadata
   // Source: https://developers.google.com/search/docs/appearance/title-link
   const seoContext: SEOContext = {
@@ -131,20 +133,26 @@ export async function generateStaticParams({
     locale,
   });
   const pages = await Promise.all(
-    categories.categories.map(({ category }) =>
-      getPublishedArticlePage({
-        category,
-        cursor: null,
-        expectedManifestHash: null,
-        expectedReleaseId: null,
-        locale,
-      })
+    categories.categories.map((category) =>
+      getPublishedCategoryPage(
+        {
+          ...category,
+          activeManifestHash: categories.activeManifestHash,
+          activeReleaseId: categories.activeReleaseId,
+          appLocale: locale,
+        },
+        {
+          cursor: null,
+          expectedManifestHash: null,
+          expectedReleaseId: null,
+        }
+      )
     )
   );
   const articles = pages.flatMap((page) =>
     page.articles.map((article) => ({
-      category: article.category,
-      slug: article.slug,
+      category: article.route.category,
+      slug: article.route.slug,
     }))
   );
   return selectLearningStaticParams(articles, {
@@ -181,9 +189,8 @@ async function ArticleRouteContent({
 
   const tCommon = await getTranslations("Common");
   const categoryLabel = article.categoryTitle;
-  const publishedAt = new Date(
-    `${contentMetadata.date}T00:00:00.000Z`
-  ).toISOString();
+  const publishedAt = contentMetadata.datePublished;
+  const modifiedAt = contentMetadata.dateModified;
   const authorJsonLd: ArticleJsonLdAuthor[] = contentMetadata.authors.map(
     (author) => ({
       "@type": "Person",
@@ -210,6 +217,7 @@ async function ArticleRouteContent({
       />
       <ArticleJsonLd
         author={authorJsonLd}
+        dateModified={modifiedAt}
         datePublished={publishedAt}
         description={contentMetadata.description ?? ""}
         headline={contentMetadata.title}
@@ -218,6 +226,7 @@ async function ArticleRouteContent({
       />
       <LearningResourceJsonLd
         author={authorJsonLd}
+        dateModified={modifiedAt}
         datePublished={publishedAt}
         description={contentMetadata.description ?? ""}
         educationalLevel={categoryLabel}

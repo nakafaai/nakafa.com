@@ -3,9 +3,14 @@ import {
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resolveLocalizedNavigationHref } from "@/lib/routing/locale/resolve";
+import {
+  testArticleDeProjection,
+  testArticleIdProjection,
+  testArticleProjection,
+} from "@/test/content-article";
 import { previewIdProjection, previewProjection } from "@/test/content-preview";
 import {
   readTestPublishedRoute,
@@ -13,6 +18,9 @@ import {
 } from "@/test/content-program";
 
 const publishedMocks = vi.hoisted(() => ({
+  articleCategory: vi.fn(),
+  articleRoute: vi.fn(),
+  categoryAlternates: vi.fn(),
   materialContext: vi.fn(),
   materialRoute: vi.fn(),
   pagePath: vi.fn(),
@@ -20,6 +28,11 @@ const publishedMocks = vi.hoisted(() => ({
   tryoutPath: vi.fn(),
 }));
 const activeReleaseId = ReleaseIdSchema.make("release-material");
+const articleProjections = [
+  testArticleProjection,
+  testArticleIdProjection,
+  testArticleDeProjection,
+];
 const activeMaterialRoute = {
   activeReleaseId,
   alternates: [previewProjection, previewIdProjection],
@@ -34,6 +47,13 @@ const deProgramSubject = readTestPublishedRoute(
   "de"
 );
 
+vi.mock("@/lib/content/article/category", () => ({
+  readPublishedArticleCategory: publishedMocks.articleCategory,
+  readPublishedCategoryAlternates: publishedMocks.categoryAlternates,
+}));
+vi.mock("@/lib/content/article/route", () => ({
+  readPublishedArticleRoute: publishedMocks.articleRoute,
+}));
 vi.mock("@/lib/content/material/context", () => ({
   readPublishedMaterialContext: publishedMocks.materialContext,
 }));
@@ -55,6 +75,44 @@ function resolveHref(href: string, locale: ActiveAppLocaleCode) {
 }
 
 beforeEach(() => {
+  publishedMocks.articleCategory
+    .mockReset()
+    .mockImplementation((route: string, locale: string) => {
+      const projection = articleProjections.find(
+        (article) =>
+          article.appLocale === locale && article.categoryRouteSlug === route
+      );
+      return Effect.succeed(
+        projection
+          ? Option.some({ category: projection.category })
+          : Option.none()
+      );
+    });
+  publishedMocks.articleRoute
+    .mockReset()
+    .mockImplementation((locale: string, publicPath: string) => {
+      const projection = articleProjections.find(
+        (article) =>
+          article.appLocale === locale && article.publicPath === publicPath
+      );
+      return Effect.succeed(
+        projection
+          ? {
+              activeReleaseId,
+              alternates: articleProjections,
+              projection,
+            }
+          : { activeReleaseId, alternates: [], projection: null }
+      );
+    });
+  publishedMocks.categoryAlternates.mockReset().mockReturnValue(
+    Effect.succeed(
+      articleProjections.map((article) => ({
+        appLocale: article.appLocale,
+        publicPath: article.parentPath,
+      }))
+    )
+  );
   publishedMocks.materialContext
     .mockReset()
     .mockReturnValue(Effect.succeed(null));
@@ -80,6 +138,36 @@ beforeEach(() => {
 });
 
 describe("resolveLocalizedNavigationHref", () => {
+  it("projects every EN, ID, and DE article route direction", () => {
+    for (const current of articleProjections) {
+      for (const target of articleProjections) {
+        if (current.appLocale === target.appLocale) {
+          continue;
+        }
+
+        expect(
+          resolveHref(
+            `/${current.appLocale}/${current.parentPath}`,
+            target.appLocale
+          )
+        ).toBe(`/${target.parentPath}`);
+        expect(
+          resolveHref(
+            `/${current.appLocale}/${current.publicPath}`,
+            target.appLocale
+          )
+        ).toBe(`/${target.publicPath}`);
+      }
+    }
+
+    expect(
+      resolveHref(
+        `/${testArticleProjection.appLocale}/${testArticleProjection.publicPath}?source=locale#references`,
+        "de"
+      )
+    ).toBe(`/${testArticleDeProjection.publicPath}?source=locale#references`);
+  });
+
   it("projects signed material and curriculum counterparts", () => {
     expect(
       resolveHref(

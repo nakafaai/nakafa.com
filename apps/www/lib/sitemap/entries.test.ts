@@ -54,7 +54,7 @@ beforeEach(() => {
         { path: "/" },
         { path: "/search" },
         {
-          lastModified: new Date(2024, 0, 2).getTime(),
+          lastModified: "2024-01-02",
           path: "/articles/politics/dynastic-politics-asian-values",
         },
         { path: "/quran/1" },
@@ -86,27 +86,21 @@ describe("sitemap entries", () => {
     expect(urls).toContain(
       "https://nakafa.com/en/subjects/chemistry/green-chemistry/definition"
     );
-    expect(entries).toContainEqual(
-      expect.objectContaining({
-        changeFrequency: "monthly",
-        priority: 0.8,
-        url: "https://nakafa.com/en/subjects/chemistry/green-chemistry/definition",
-      })
-    );
-    expect(entries).toContainEqual(
-      expect.objectContaining({
-        changeFrequency: "monthly",
-        priority: 0.7,
-        url: "https://nakafa.com/en/curriculum/merdeka/class-10/mathematics/integral",
-      })
-    );
-    expect(entries).toContainEqual(
-      expect.objectContaining({
-        changeFrequency: "monthly",
-        priority: 0.6,
-        url: "https://nakafa.com/en/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge",
-      })
-    );
+    expect(entries).toContainEqual({
+      lastModified: "2024-01-02",
+      url: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values",
+    });
+    expect(entries).toContainEqual({
+      url: "https://nakafa.com/en/subjects/chemistry/green-chemistry/definition",
+    });
+    expect(
+      entries.every(
+        (entry) =>
+          entry.changeFrequency === undefined &&
+          entry.priority === undefined &&
+          entry.alternates === undefined
+      )
+    ).toBe(true);
   });
 
   it("keeps English content sitemap pages scoped to English URLs", async () => {
@@ -121,7 +115,7 @@ describe("sitemap entries", () => {
       Effect.succeed({
         routes: [
           {
-            lastModified: new Date(2024, 0, 2).getTime(),
+            lastModified: "2024-01-02",
             path: "/articles/politics/dynastic-politics-asian-values",
           },
         ],
@@ -136,10 +130,9 @@ describe("sitemap entries", () => {
     expect(entries[0]?.url).toBe(
       "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values"
     );
-    expect(entries[0]?.alternates?.languages).toEqual({
-      en: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values",
-      "x-default":
-        "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values",
+    expect(entries[0]).toEqual({
+      lastModified: "2024-01-02",
+      url: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values",
     });
   });
 
@@ -155,7 +148,7 @@ describe("sitemap entries", () => {
       Effect.succeed({
         routes: [
           {
-            lastModified: new Date(2024, 0, 2).getTime(),
+            lastModified: "2024-01-02",
             path: "/articles/politics/nepotism-in-political-governance",
           },
         ],
@@ -170,8 +163,9 @@ describe("sitemap entries", () => {
     expect(entries[0]?.url).toBe(
       "https://nakafa.com/id/articles/politics/nepotism-in-political-governance"
     );
-    expect(entries[0]?.alternates?.languages).toEqual({
-      id: "https://nakafa.com/id/articles/politics/nepotism-in-political-governance",
+    expect(entries[0]).toEqual({
+      lastModified: "2024-01-02",
+      url: "https://nakafa.com/id/articles/politics/nepotism-in-political-governance",
     });
   });
 
@@ -190,12 +184,7 @@ describe("sitemap entries", () => {
       "https://nakafa.com/id/search",
       "https://nakafa.com/de/search",
     ]);
-    expect(entries[0]?.alternates?.languages).toEqual({
-      de: "https://nakafa.com/de/search",
-      en: "https://nakafa.com/en/search",
-      id: "https://nakafa.com/id/search",
-      "x-default": "https://nakafa.com/en/search",
-    });
+    expect(entries.every((entry) => entry.alternates === undefined)).toBe(true);
   });
 
   it("localizes the curriculum index route in base sitemap entries", async () => {
@@ -215,7 +204,7 @@ describe("sitemap entries", () => {
     ]);
   });
 
-  it("publishes signed Page paths with exact localized alternates", async () => {
+  it("publishes signed Page paths with only their source-owned date", async () => {
     mockGetSitemapPageDescriptor.mockReturnValueOnce({
       id: "page_de",
       kind: "page",
@@ -225,12 +214,7 @@ describe("sitemap entries", () => {
       Effect.succeed({
         routes: [
           {
-            alternatePaths: {
-              de: "/impressum",
-              en: "/legal-notice",
-              id: "/informasi-perusahaan",
-            },
-            lastModified: Date.parse("2026-08-21T00:00:00.000Z"),
+            lastModified: "2026-08-21",
             path: "/impressum",
           },
         ],
@@ -243,21 +227,13 @@ describe("sitemap entries", () => {
 
     expect(entries).toEqual([
       expect.objectContaining({
-        alternates: {
-          languages: {
-            de: "https://nakafa.com/de/impressum",
-            en: "https://nakafa.com/en/legal-notice",
-            id: "https://nakafa.com/id/informasi-perusahaan",
-            "x-default": "https://nakafa.com/en/legal-notice",
-          },
-        },
-        lastModified: new Date("2026-08-21T00:00:00.000Z"),
+        lastModified: "2026-08-21",
         url: "https://nakafa.com/de/impressum",
       }),
     ]);
   });
 
-  it("omits unavailable Page alternates and an unavailable default", async () => {
+  it("does not invent dates for undated routes", async () => {
     mockGetSitemapPageDescriptor.mockReturnValueOnce({
       id: "page_de",
       kind: "page",
@@ -267,10 +243,6 @@ describe("sitemap entries", () => {
       Effect.succeed({
         routes: [
           {
-            alternatePaths: {
-              de: "/impressum",
-              id: "/informasi-perusahaan",
-            },
             path: "/impressum",
           },
         ],
@@ -281,9 +253,6 @@ describe("sitemap entries", () => {
       getSitemapEntries({ pageId: "page_de" })
     );
 
-    expect(entries[0]?.alternates?.languages).toEqual({
-      de: "https://nakafa.com/de/impressum",
-      id: "https://nakafa.com/id/informasi-perusahaan",
-    });
+    expect(entries).toEqual([{ url: "https://nakafa.com/de/impressum" }]);
   });
 });

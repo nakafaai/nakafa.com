@@ -1,5 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { paginateArticles } from "@repo/backend/convex/contentRelease/article/order";
 import { loadArticleOwner } from "@repo/backend/convex/contentRelease/article/owner";
 import {
   decodeCategory,
@@ -79,16 +80,7 @@ export const readArticlePage = Effect.fn("contentRelease.readArticlePage")(
         stale: false,
       };
     }
-    const stored = yield* Effect.promise(() =>
-      ctx.db
-        .query("articleCatalog")
-        .withIndex(
-          "by_appLocale_and_category_and_date_and_contentKey",
-          (index) => index.eq("appLocale", appLocale).eq("category", category)
-        )
-        .order("desc")
-        .paginate(options)
-    );
+    const stored = yield* paginateArticles(ctx, appLocale, category, options);
     const page = yield* Effect.forEach(stored.page, (row) =>
       verifyArticle(ctx, row, owner.active.sequence).pipe(
         Effect.map(({ resolved }) => resolved)

@@ -2,6 +2,7 @@
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { normalizeMaterialMetadata } from "@/lib/content/material/decode";
 import { BASE_URL } from "@/lib/llms/constants";
 import { getContentPageLlmsEntries } from "@/lib/llms/content-entries";
 import type { LlmsEntry } from "@/lib/llms/entries";
@@ -15,6 +16,7 @@ const mockReadPublishedArticleBuckets = vi.hoisted(() => vi.fn());
 const mockReadPublishedMaterialBucket = vi.hoisted(() => vi.fn());
 const mockReadMaterialInventory = vi.hoisted(() => vi.fn());
 const mockReadQuranPageEntries = vi.hoisted(() => vi.fn());
+const activeArticleReleaseId = "release-article";
 const activeMaterialReleaseId = "release-material";
 
 vi.mock("@/lib/content/article/discovery", () => ({
@@ -39,24 +41,27 @@ const publishedArticles = [
     authors: [{ name: "Shifna Zihdatal Haq" }],
     category: "politics",
     categoryTitle: "Politics",
-    date: "2024-08-08",
+    datePublished: "2024-08-08",
     description:
       "How Asian values are used to justify dynastic politics in Indonesian local elections, and why that argument matters for democracy.",
     official: true,
     publicPath: "articles/politics/dynastic-politics-asian-values",
-    slug: "dynastic-politics-asian-values",
+    route: {
+      category: "politics",
+      slug: "dynastic-politics-asian-values",
+    },
     title: "Framing Dynastic Politics in Local Elections within Asian Values",
   },
   {
     authors: [{ name: "Shifna Zihdatal Haq" }],
     category: "politics",
     categoryTitle: "Politics",
-    date: "2024-10-27",
+    datePublished: "2024-10-27",
     description:
       "The political anomaly in Indonesia as it prepares for the 2024 Regional Elections.",
     official: false,
     publicPath: "articles/politics/regional-elections-turmoil",
-    slug: "regional-elections-turmoil",
+    route: { category: "politics", slug: "regional-elections-turmoil" },
     title:
       "Political Turmoil Ahead of Regional Elections: Politics in Chaos, The People Cry Out",
   },
@@ -64,12 +69,14 @@ const publishedArticles = [
 
 /** Builds one published material summary from a real projection fixture. */
 function makeMaterialSummary(projection: MaterialLessonProjection) {
+  const metadata = normalizeMaterialMetadata(projection.metadata);
   return {
-    authors: projection.metadata.authors.map(({ name }) => ({ name })),
-    date: projection.metadata.date,
-    description: projection.metadata.description,
+    authors: metadata.authors.map(({ name }) => ({ name })),
+    dateModified: metadata.dateModified,
+    datePublished: metadata.datePublished,
+    description: metadata.description,
     publicPath: projection.publicPath,
-    title: projection.metadata.title,
+    title: metadata.title,
   };
 }
 
@@ -80,10 +87,17 @@ beforeEach(() => {
   mockReadMaterialInventory.mockReset();
   mockReadQuranPageEntries.mockReset();
   mockReadPublishedArticleBuckets.mockReturnValue(
-    Effect.succeed({ articleCount: 2, buckets: ["abc"] })
+    Effect.succeed({
+      activeReleaseId: activeArticleReleaseId,
+      articleCount: 2,
+      buckets: ["abc"],
+    })
   );
   mockReadPublishedArticleBucket.mockReturnValue(
-    Effect.succeed({ articles: publishedArticles })
+    Effect.succeed({
+      activeReleaseId: activeArticleReleaseId,
+      articles: publishedArticles,
+    })
   );
   mockReadPublishedMaterialBucket.mockReturnValue(
     Effect.succeed({
@@ -167,12 +181,16 @@ describe("llms content entries", () => {
   it("uses one exact signed article partition", async () => {
     mockReadPublishedArticleBuckets.mockReturnValue(
       Effect.succeed({
+        activeReleaseId: activeArticleReleaseId,
         articleCount: 2,
         buckets: ["abc"],
       })
     );
     mockReadPublishedArticleBucket.mockReturnValue(
-      Effect.succeed({ articles: publishedArticles })
+      Effect.succeed({
+        activeReleaseId: activeArticleReleaseId,
+        articles: publishedArticles,
+      })
     );
 
     await expect(
@@ -206,6 +224,11 @@ describe("llms content entries", () => {
       },
     ]);
     expect(mockReadQuranPageEntries).not.toHaveBeenCalled();
+    expect(mockReadPublishedArticleBucket).toHaveBeenCalledWith(
+      "en",
+      "abc",
+      activeArticleReleaseId
+    );
   });
 
   it("uses published material partitions after ownership activates", async () => {
@@ -285,6 +308,7 @@ describe("llms content entries", () => {
   it("rejects absent or changed published partitions without source fallback", async () => {
     mockReadPublishedArticleBuckets.mockReturnValue(
       Effect.succeed({
+        activeReleaseId: activeArticleReleaseId,
         articleCount: 1,
         buckets: ["abc"],
       })
@@ -301,7 +325,10 @@ describe("llms content entries", () => {
     ).resolves.toBeNull();
 
     mockReadPublishedArticleBucket.mockReturnValue(
-      Effect.succeed({ articles: null })
+      Effect.succeed({
+        activeReleaseId: activeArticleReleaseId,
+        articles: null,
+      })
     );
     await expect(
       Effect.runPromise(
@@ -314,7 +341,10 @@ describe("llms content entries", () => {
     ).resolves.toBeNull();
 
     mockReadPublishedArticleBucket.mockReturnValue(
-      Effect.succeed({ articles: [] })
+      Effect.succeed({
+        activeReleaseId: activeArticleReleaseId,
+        articles: [],
+      })
     );
     await expect(
       Effect.runPromise(

@@ -9,6 +9,7 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import { TEST_ARTICLE_PROJECTION_JSON } from "@repo/backend/test/content-runtime";
 import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
+import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import { convexTest } from "convex-test";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
@@ -185,11 +186,12 @@ describe("contentRelease/material/model", () => {
     await target.mutation(async (ctx) => {
       for (let order = 3; order <= 101; order += 1) {
         const projection = makeMaterialProjection("en", order);
+        const dates = normalizePublicationDates(projection.metadata);
         await ctx.db.insert("materialCatalog", {
           assetId: projection.graph.assetId,
           bucket: "abc",
           contentKey: projection.contentKey,
-          date: projection.metadata.date,
+          date: dates.datePublished,
           appLocale: projection.appLocale,
           materialKey: projection.materialKey,
           order: projection.order,

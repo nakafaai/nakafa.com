@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -8,6 +9,7 @@ import {
 } from "@/lib/content/article/sitemap";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
+const activeReleaseId = ReleaseIdSchema.make("release-article");
 
 vi.mock("@/lib/content/runtime/query", async () => {
   const { createTestRuntimeQuery } = await import("@/test/runtime-query");
@@ -24,6 +26,7 @@ describe("published article sitemap", () => {
   it("reads bucket discovery and one exact route partition", async () => {
     runtimeQueryMock
       .mockResolvedValueOnce({
+        activeReleaseId,
         articleCount: 1,
         buckets: ["abc"],
         managed: true,
@@ -31,7 +34,7 @@ describe("published article sitemap", () => {
       .mockResolvedValueOnce({
         routes: [
           {
-            date: "2026-07-23",
+            lastModified: "2026-07-23",
             publicPath: "articles/politics/article",
           },
         ],
@@ -40,6 +43,7 @@ describe("published article sitemap", () => {
     await expect(
       Effect.runPromise(readPublishedArticleBuckets("en"))
     ).resolves.toEqual({
+      activeReleaseId,
       articleCount: 1,
       buckets: ["abc"],
     });
@@ -59,6 +63,7 @@ describe("published article sitemap", () => {
 
   it("rejects an unmanaged article sitemap inventory", async () => {
     runtimeQueryMock.mockResolvedValueOnce({
+      activeReleaseId: null,
       articleCount: 0,
       buckets: [],
       managed: false,
@@ -75,5 +80,20 @@ describe("published article sitemap", () => {
     await expect(
       Effect.runPromise(readPublishedArticleBuckets("id"))
     ).rejects.toThrow("sitemap unavailable");
+  });
+
+  it("rejects a sitemap inventory from another signed release", async () => {
+    runtimeQueryMock.mockResolvedValueOnce({
+      activeReleaseId: "release-next",
+      articleCount: 1,
+      buckets: ["abc"],
+      managed: true,
+    });
+
+    await expect(
+      Effect.runPromise(
+        readPublishedArticleBuckets("de", activeReleaseId).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({ _tag: "PublishedReleaseMismatchError" });
   });
 });

@@ -3,6 +3,10 @@ import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadMaterialOwner } from "@repo/backend/convex/contentRelease/material/owner";
 import { readMaterialPartition } from "@repo/backend/convex/contentRelease/material/partition";
 import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
+import {
+  comparePublicationDates,
+  normalizePublicationDates,
+} from "@repo/contents/_types/publication";
 import { Effect } from "effect";
 
 const MATERIAL_DISCOVERY_LIMIT = 100;
@@ -12,9 +16,10 @@ function summarizeMaterial(
   sourcePath: string
 ) {
   const { projection } = verified;
+  const dates = normalizePublicationDates(projection.metadata);
   return {
     authors: projection.metadata.authors.map(({ name }) => ({ name })),
-    date: projection.metadata.date,
+    ...dates,
     description: projection.metadata.description,
     publicPath: projection.publicPath,
     sourcePath,
@@ -85,15 +90,29 @@ export const readLatestMaterials = Effect.fn(
       materials: [],
     };
   }
-  const rows = yield* Effect.promise(() =>
-    ctx.db
-      .query("materialCatalog")
-      .withIndex("by_appLocale_and_date_and_contentKey", (index) =>
-        index.eq("appLocale", appLocale)
-      )
-      .order("desc")
-      .take(limit)
-  );
+  const [legacy, current] = yield* Effect.all([
+    Effect.promise(() =>
+      ctx.db
+        .query("materialCatalog")
+        .withIndex("by_appLocale_and_date_and_contentKey", (index) =>
+          index.eq("appLocale", appLocale).gte("date", "")
+        )
+        .order("desc")
+        .take(limit)
+    ),
+    Effect.promise(() =>
+      ctx.db
+        .query("materialCatalog")
+        .withIndex("by_appLocale_and_datePublished_and_contentKey", (index) =>
+          index.eq("appLocale", appLocale).gte("datePublished", "")
+        )
+        .order("desc")
+        .take(limit)
+    ),
+  ]);
+  const rows = [...legacy, ...current]
+    .sort(comparePublicationDates)
+    .slice(0, limit);
   const materials = yield* Effect.forEach(rows, (row) =>
     verifyMaterial(row).pipe(
       Effect.map((verified) => summarizeMaterial(verified, row.sourcePath))

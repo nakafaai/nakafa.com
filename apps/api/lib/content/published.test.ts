@@ -1,6 +1,6 @@
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import { TEST_PAGE_PROJECTION } from "@repo/backend/test/content-page";
-import { TEST_ARTICLE_PROJECTION } from "@repo/backend/test/content-runtime";
+import { testLocalizedArticleProjection } from "@repo/backend/test/content-runtime";
 import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import { vi } from "vitest";
@@ -15,6 +15,7 @@ const projection = {
   ...baseProjection,
   metadata: {
     ...baseProjection.metadata,
+    dateModified: "2026-08-22",
     description: "Technical description",
     subject: "Technical subject",
   },
@@ -54,7 +55,8 @@ describe("published API content", () => {
           locale: "en",
           metadata: {
             authors: projection.metadata.authors,
-            date: projection.metadata.date,
+            dateModified: projection.metadata.dateModified,
+            datePublished: projection.metadata.datePublished,
             description: projection.metadata.description,
             subject: projection.metadata.subject,
             title: projection.metadata.title,
@@ -75,31 +77,49 @@ describe("published API content", () => {
     })
   );
 
-  it.live(
-    "accepts an article projection through the same current Interface",
-    () =>
+  it.live.each(["en", "id", "de"] as const)(
+    "accepts current article and material projections for %s",
+    (appLocale) =>
       Effect.gen(function* () {
-        const articleInput = {
-          activeReleaseId: input.activeReleaseId,
-          appLocale: TEST_ARTICLE_PROJECTION.appLocale,
-          family: "article" as const,
-          publicPath: TEST_ARTICLE_PROJECTION.publicPath,
-        };
+        const article = testLocalizedArticleProjection(0, appLocale);
+        const material = makeMaterialProjection(appLocale, 1);
+        const inputs = [
+          {
+            activeReleaseId: input.activeReleaseId,
+            appLocale: article.appLocale,
+            family: "article" as const,
+            publicPath: article.publicPath,
+          },
+          {
+            activeReleaseId: input.activeReleaseId,
+            appLocale: material.appLocale,
+            family: "material" as const,
+            publicPath: material.publicPath,
+          },
+        ];
         readPublicContentBatchMock.mockReturnValue(
-          Effect.succeed([
-            {
+          Effect.succeed(
+            [article, material].map((selected) => ({
               activeReleaseId: input.activeReleaseId,
-              artifact: { payload: { rawMdx: "## Article" } },
+              artifact: { payload: { rawMdx: "## Signed content" } },
               delivery: "public",
-              projection: TEST_ARTICLE_PROJECTION,
-            },
-          ])
+              projection: selected,
+            }))
+          )
         );
 
-        expect(yield* readPublishedApiItems([articleInput])).toMatchObject([
+        expect(yield* readPublishedApiItems(inputs)).toMatchObject([
           {
-            raw: "## Article",
-            slug: TEST_ARTICLE_PROJECTION.contentKey,
+            locale: appLocale,
+            raw: "## Signed content",
+            slug: article.contentKey,
+            url: `https://nakafa.com/${appLocale}/${article.publicPath}`,
+          },
+          {
+            locale: appLocale,
+            raw: "## Signed content",
+            slug: material.contentKey,
+            url: `https://nakafa.com/${appLocale}/${material.publicPath}`,
           },
         ]);
       })
@@ -122,8 +142,39 @@ describe("published API content", () => {
 
       expect(item?.metadata).toEqual({
         authors: baseProjection.metadata.authors,
-        date: baseProjection.metadata.date,
+        datePublished: baseProjection.metadata.datePublished,
         title: baseProjection.metadata.title,
+      });
+    })
+  );
+
+  it.live("normalizes an authenticated legacy projection once", () =>
+    Effect.gen(function* () {
+      const legacyProjection = {
+        ...baseProjection,
+        metadata: {
+          authors: baseProjection.metadata.authors,
+          date: "2026-07-24",
+          title: baseProjection.metadata.title,
+        },
+      };
+      readPublicContentBatchMock.mockReturnValue(
+        Effect.succeed([
+          {
+            activeReleaseId: input.activeReleaseId,
+            artifact: { payload: { rawMdx: "## Signed body" } },
+            delivery: "public",
+            projection: legacyProjection,
+          },
+        ])
+      );
+
+      const [item] = yield* readPublishedApiItems([input]);
+
+      expect(item?.metadata).toEqual({
+        authors: legacyProjection.metadata.authors,
+        datePublished: legacyProjection.metadata.date,
+        title: legacyProjection.metadata.title,
       });
     })
   );

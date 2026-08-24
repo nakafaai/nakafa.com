@@ -4,6 +4,7 @@ import type { LearningResource, Person, WithContext } from "schema-dts";
 
 interface Props {
   author: Person | Person[];
+  dateModified?: string;
   datePublished: string;
   description: string;
   educationalLevel: string;
@@ -14,6 +15,7 @@ export function LearningResourceJsonLd({
   name,
   description,
   educationalLevel,
+  dateModified,
   datePublished,
   author,
 }: Props) {
@@ -24,6 +26,7 @@ export function LearningResourceJsonLd({
     description,
     educationalLevel,
     datePublished,
+    ...(dateModified === undefined ? {} : { dateModified }),
     author: Array.isArray(author) ? author : [author],
     publisher: ORGANIZATION,
     maintainer: ORGANIZATION,

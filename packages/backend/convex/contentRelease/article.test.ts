@@ -11,7 +11,6 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const categories = api.contentRelease.article.categories;
-const category = api.contentRelease.article.category;
 const page = api.contentRelease.article.page;
 
 describe("contentRelease/article", () => {
@@ -35,19 +34,13 @@ describe("contentRelease/article", () => {
           {
             category: "politics",
             rendererDomain: "politics",
+            route: "politics",
             title: "Politics",
           },
         ],
       },
       sourceRevision: "a".repeat(40),
     });
-    await expect(
-      t.query(category, { category: "politics", appLocale: "en" })
-    ).resolves.toEqual({ exists: true, managed: true });
-    await expect(
-      t.query(category, { category: "public-affairs", appLocale: "en" })
-    ).resolves.toEqual({ exists: false, managed: true });
-
     const first = await t.query(page, {
       category: "politics",
       expectedManifestHash: null,
@@ -78,6 +71,43 @@ describe("contentRelease/article", () => {
     expect(second.result.isDone).toBe(true);
   });
 
+  it("paginates legacy article rows by their truthful publication date", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertRuntimeArticles(ctx, 2);
+      const rows = await ctx.db.query("articleCatalog").collect();
+
+      for (const row of rows) {
+        if (!("datePublished" in row)) {
+          throw new Error("Expected one current article date shape.");
+        }
+        const {
+          _creationTime: _createdAt,
+          _id,
+          dateModified: _dateModified,
+          datePublished,
+          ...fields
+        } = row;
+        await ctx.db.replace("articleCatalog", _id, {
+          ...fields,
+          date: datePublished,
+        });
+      }
+    });
+
+    const result = await t.query(page, {
+      category: "politics",
+      expectedManifestHash: null,
+      expectedReleaseId: null,
+      appLocale: "en",
+      paginationOpts: { cursor: null, numItems: 1 },
+    });
+
+    expect(result.result.page).toMatchObject([
+      { contentKey: testArticleProjection(1).contentKey },
+    ]);
+  });
+
   it("keeps absent article ownership unmanaged before the first cutover", async () => {
     const empty = convexTest(schema, convexModules);
     await expect(
@@ -93,10 +123,6 @@ describe("contentRelease/article", () => {
       managed: false,
       result: { isDone: true, page: [] },
     });
-    await expect(
-      empty.query(category, { category: "politics", appLocale: "en" })
-    ).resolves.toEqual({ exists: false, managed: false });
-
     const materialOnly = convexTest(schema, convexModules);
     await materialOnly.mutation((ctx) =>
       insertRuntimeRelease(ctx, ["material"])

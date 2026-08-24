@@ -1,6 +1,7 @@
-import { ArticleCategorySchema } from "@nakafa/aksara-contracts/projection/article";
-import { Effect, Schema } from "effect";
+import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
+import { Effect, Option, Schema } from "effect";
 import type { Locale } from "next-intl";
+import { readPublishedArticleCategory } from "@/lib/content/article/category";
 import { readPublishedCategoryArticles } from "@/lib/content/article/discovery";
 import { buildPublishedContentLlmsEntries } from "@/lib/llms/entries";
 
@@ -16,15 +17,20 @@ export const getContentListingLlmsEntries = Effect.fn(
   "www.llms.contentListingEntries"
 )(function* ({ locale, route }: { locale: Locale; route: string }) {
   const cleanRoute = route.replace(/^\/+|\/+$/g, "");
-  const category = readArticleListingCategory(cleanRoute);
-  if (!category) {
+  const routeCategory = readArticleListingCategory(cleanRoute);
+  if (!routeCategory) {
+    return null;
+  }
+  const category = yield* readPublishedArticleCategory(routeCategory, locale);
+  if (Option.isNone(category)) {
     return null;
   }
 
   const published = yield* readPublishedCategoryArticles(
     locale,
-    category,
-    LLMS_LISTING_ENTRY_LIMIT
+    category.value.category,
+    LLMS_LISTING_ENTRY_LIMIT,
+    category.value.activeReleaseId
   );
   return buildPublishedContentLlmsEntries({
     locale,
@@ -39,7 +45,7 @@ function readArticleListingCategory(route: string) {
   if (
     root !== "articles" ||
     remaining.length > 0 ||
-    !Schema.is(ArticleCategorySchema)(category)
+    !Schema.is(ArticleRouteSlugSchema)(category)
   ) {
     return null;
   }

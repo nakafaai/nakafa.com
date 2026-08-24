@@ -36,15 +36,7 @@ describe("sitemap page route", () => {
     mockGetSitemapEntries.mockReturnValue(
       Effect.succeed([
         {
-          alternates: {
-            languages: {
-              en: "https://nakafa.com/en",
-              id: "https://nakafa.com/id",
-            },
-          },
-          changeFrequency: "monthly",
           lastModified: new Date("2025-01-01T00:00:00.000Z"),
-          priority: 1,
           url: "https://nakafa.com/en",
         },
       ])
@@ -99,23 +91,22 @@ describe("sitemap page route", () => {
 
   it("rejects canonical ids whose materialized page does not exist", async () => {
     mockGetSitemapPageDescriptor.mockReturnValueOnce({
-      id: "content_en_articles_999",
-      kind: "content",
+      bucket: "fff",
+      id: "article_en_fff",
+      kind: "article",
       locale: "en",
-      page: 999,
-      section: "articles",
     });
     mockGetSitemapEntries.mockReturnValueOnce(
       Effect.fail({
         _tag: "SitemapPageNotFoundError" as const,
-        pageId: "content_en_articles_999",
+        pageId: "article_en_fff",
       })
     );
 
     const response = await GET(
-      new Request("https://nakafa.com/sitemap/content_en_articles_999.xml"),
+      new Request("https://nakafa.com/sitemap/article_en_fff.xml"),
       {
-        params: Promise.resolve({ id: "content_en_articles_999.xml" }),
+        params: Promise.resolve({ id: "article_en_fff.xml" }),
       }
     );
 

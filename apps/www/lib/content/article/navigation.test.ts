@@ -3,6 +3,7 @@
 import {
   ArticleCategorySchema,
   ArticleCategoryTitleSchema,
+  ArticleRouteSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
 import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
 import { Effect, Schema } from "effect";
@@ -32,11 +33,13 @@ vi.mock("@/lib/content/preview/config", () => ({
 function categoryPage({
   category,
   done,
+  route = category,
   stale = false,
   title,
 }: {
   readonly category: string;
   readonly done: boolean;
+  readonly route?: string;
   readonly stale?: boolean;
   readonly title: string;
 }) {
@@ -47,6 +50,7 @@ function categoryPage({
       {
         category: ArticleCategorySchema.make(category),
         rendererDomain: Schema.decodeSync(RendererDomainSchema)("politics"),
+        route: ArticleRouteSlugSchema.make(route),
         title: ArticleCategoryTitleSchema.make(title),
       },
     ],
@@ -102,6 +106,29 @@ describe("article navigation", () => {
     });
     expect(cacheMock).toHaveBeenCalledWith("article");
   });
+
+  it.each([
+    { locale: "en", route: "politics", title: "Politics" },
+    { locale: "id", route: "politics", title: "Politik" },
+    { locale: "de", route: "politik", title: "Politik" },
+  ] as const)(
+    "preserves the signed $locale category route",
+    async ({ locale, route, title }) => {
+      categoryReaderMock.mockReturnValueOnce(
+        Effect.succeed(
+          categoryPage({ category: "politics", done: true, route, title })
+        )
+      );
+
+      await expect(getShellArticleNavigation(locale)).resolves.toEqual([
+        {
+          category: "politics",
+          href: `/articles/${route}`,
+          title,
+        },
+      ]);
+    }
+  );
 
   it("rejects a stale category release without local fallback", async () => {
     categoryReaderMock.mockReturnValueOnce(

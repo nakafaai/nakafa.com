@@ -37,9 +37,9 @@ async function insertArticle(
   ctx: MutationCtx,
   identity: TestIdentity,
   index: number,
-  date?: string
+  datePublished?: string
 ) {
-  const projection = testArticleProjection(index, date);
+  const projection = testArticleProjection(index, datePublished);
   const projectionJson = canonicalizeArticleProjection(projection);
   await insertReleaseItem(
     ctx,
@@ -178,7 +178,7 @@ describe("contentRelease/article/sync", () => {
     expect(rows).toMatchObject([
       {
         contentKey: testArticleProjection(0).contentKey,
-        date: "2026-08-01",
+        datePublished: "2026-08-01",
         releaseId: NEXT.releaseId,
       },
     ]);

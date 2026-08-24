@@ -29,7 +29,11 @@ export const getContentPageLlmsEntries = Effect.fn(
     if (!bucket) {
       return null;
     }
-    const partition = yield* readPublishedArticleBucket(locale, bucket);
+    const partition = yield* readPublishedArticleBucket(
+      locale,
+      bucket,
+      published.activeReleaseId
+    );
     if (!partition.articles) {
       return null;
     }

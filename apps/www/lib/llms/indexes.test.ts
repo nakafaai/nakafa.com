@@ -89,6 +89,7 @@ beforeEach(() => {
   mockReadSiteLlmsEntries.mockReturnValue(Effect.succeed([siteEntry]));
   mockReadPublishedArticleBuckets.mockReturnValue(
     Effect.succeed({
+      activeReleaseId: "release-article",
       articleCount: 250,
       buckets: ["000", "abc", "fff"],
     })
@@ -163,6 +164,7 @@ describe("llms indexes", () => {
   it("builds article page maps from the signed catalog", async () => {
     mockReadPublishedArticleBuckets.mockReturnValue(
       Effect.succeed({
+        activeReleaseId: "release-article",
         articleCount: 42,
         buckets: ["000", "abc"],
       })
@@ -188,7 +190,11 @@ describe("llms indexes", () => {
     expect(singlePageIndex).not.toContain("last bounded route-catalog page");
 
     mockReadPublishedArticleBuckets.mockReturnValueOnce(
-      Effect.succeed({ articleCount: 0, buckets: [] })
+      Effect.succeed({
+        activeReleaseId: "release-article",
+        articleCount: 0,
+        buckets: [],
+      })
     );
 
     const emptyIndex = await Effect.runPromise(

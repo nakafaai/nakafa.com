@@ -1,3 +1,4 @@
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import {
   readLatestMaterials,
   readMaterialBucket,
@@ -5,6 +6,7 @@ import {
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import {
   activateMaterialCatalog,
   MATERIAL_IDENTITY,
@@ -46,6 +48,36 @@ describe("contentRelease/material/discovery", () => {
   it("reads complete partitions and newest-first material summaries", async () => {
     const target = convexTest(schema, convexModules);
     await activateMaterialCatalog(target);
+    await target.mutation(async (ctx) => {
+      const newest = await ctx.db
+        .query("materialCatalog")
+        .withIndex("by_contentKey_and_appLocale", (index) =>
+          index
+            .eq(
+              "contentKey",
+              "material/lesson/mathematics/technical-topic/section-2"
+            )
+            .eq("appLocale", "en")
+        )
+        .unique();
+      if (!newest) {
+        throw new Error("Expected the newest material catalog row.");
+      }
+      if (!("datePublished" in newest)) {
+        throw new Error("Expected one current material date shape.");
+      }
+      const {
+        _creationTime: _createdAt,
+        _id,
+        dateModified: _dateModified,
+        datePublished,
+        ...fields
+      } = newest;
+      await ctx.db.replace("materialCatalog", _id, {
+        ...fields,
+        date: datePublished,
+      });
+    });
     const count = await target.run((ctx) =>
       ctx.db
         .query("materialBuckets")
@@ -77,7 +109,7 @@ describe("contentRelease/material/discovery", () => {
       materials: [
         {
           authors: [{ name: "Nakafa" }],
-          date: "2026-07-24",
+          datePublished: "2026-07-24",
           publicPath: expect.stringContaining("subjects/mathematics/"),
           title: expect.stringContaining("EN Section"),
         },
@@ -88,7 +120,32 @@ describe("contentRelease/material/discovery", () => {
     ).resolves.toMatchObject({
       activeReleaseId: MATERIAL_IDENTITY.releaseId,
       managed: true,
-      materials: [{ date: "2026-07-24", title: "EN Section 2" }],
+      materials: [{ datePublished: "2026-07-24", title: "EN Section 2" }],
     });
   });
+
+  it.each(ACTIVE_APP_LOCALE_CODES)(
+    "reads current %s material routes and dates from the localized catalog",
+    async (appLocale) => {
+      const target = convexTest(schema, convexModules);
+      await activateMaterialCatalog(target);
+      const expected = makeMaterialProjection(appLocale, 2);
+
+      await expect(
+        target.query((ctx) =>
+          runConvexProgram(readLatestMaterials(ctx, appLocale, 1))
+        )
+      ).resolves.toMatchObject({
+        activeReleaseId: MATERIAL_IDENTITY.releaseId,
+        managed: true,
+        materials: [
+          {
+            datePublished: expected.metadata.datePublished,
+            publicPath: expected.publicPath,
+            title: expected.metadata.title,
+          },
+        ],
+      });
+    }
+  );
 });

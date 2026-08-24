@@ -7,6 +7,7 @@ import {
   releaseFail,
 } from "@repo/backend/convex/contentRelease/error";
 import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
+import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import { Effect, Schema } from "effect";
 
 type ArticleRow = Doc<"articleCatalog">;
@@ -34,12 +35,20 @@ export const verifyArticle = Effect.fn("contentRelease.verifyArticle")(
       );
     }
     const projection = yield* decodeProjectionJson(resolved.projectionJson);
+    if (projection.kind !== "article") {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Active article ${row.contentKey}/${row.appLocale} has a non-article projection.`
+      );
+    }
+    const projectionDates = normalizePublicationDates(projection.metadata);
+    const rowDates = normalizePublicationDates(row);
     if (
-      projection.kind !== "article" ||
       projection.graph.assetId !== row.assetId ||
       projection.category !== row.category ||
       projection.categoryTitle !== row.categoryTitle ||
-      projection.metadata.date !== row.date
+      projectionDates.dateModified !== rowDates.dateModified ||
+      projectionDates.datePublished !== rowDates.datePublished
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
@@ -100,6 +109,7 @@ export const verifyCategory = Effect.fn("contentRelease.verifyArticleCategory")(
     return {
       category: category.category,
       rendererDomain: category.rendererDomain,
+      route: verified.projection.categoryRouteSlug,
       title: category.title,
     };
   }

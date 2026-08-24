@@ -5,26 +5,36 @@ import {
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 
+const materialFields = {
+  appLocale: appLocaleValidator,
+  assetId: v.string(),
+  bucket: v.string(),
+  contentKey: v.string(),
+  materialKey: v.string(),
+  order: v.number(),
+  parentPath: v.string(),
+  projectionHash: v.string(),
+  projectionJson: v.string(),
+  publicPath: v.string(),
+  releaseId: v.string(),
+  rendererDomain: rendererDomainValidator,
+  sequence: v.number(),
+  sourcePath: v.string(),
+  topicAssetId: v.string(),
+};
+
 const tables = {
   /** Active public material lessons indexed for curriculum-card assembly. */
-  materialCatalog: defineTable({
-    appLocale: appLocaleValidator,
-    assetId: v.string(),
-    bucket: v.string(),
-    contentKey: v.string(),
-    date: v.string(),
-    materialKey: v.string(),
-    order: v.number(),
-    parentPath: v.string(),
-    projectionHash: v.string(),
-    projectionJson: v.string(),
-    publicPath: v.string(),
-    releaseId: v.string(),
-    rendererDomain: rendererDomainValidator,
-    sequence: v.number(),
-    sourcePath: v.string(),
-    topicAssetId: v.string(),
-  })
+  materialCatalog: defineTable(
+    v.union(
+      v.object({ ...materialFields, date: v.string() }),
+      v.object({
+        ...materialFields,
+        dateModified: v.optional(v.string()),
+        datePublished: v.string(),
+      })
+    )
+  )
     .index("by_contentKey_and_appLocale", ["contentKey", "appLocale"])
     .index("by_appLocale_and_contentKey", ["appLocale", "contentKey"])
     .index("by_appLocale_and_assetId", ["appLocale", "assetId"])
@@ -37,6 +47,11 @@ const tables = {
     .index("by_appLocale_and_date_and_contentKey", [
       "appLocale",
       "date",
+      "contentKey",
+    ])
+    .index("by_appLocale_and_datePublished_and_contentKey", [
+      "appLocale",
+      "datePublished",
       "contentKey",
     ])
     .index("by_appLocale_and_bucket_and_publicPath", [

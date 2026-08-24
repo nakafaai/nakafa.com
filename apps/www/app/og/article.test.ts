@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readArticleOgMetadata } from "@/app/og/article";
 
 const mocks = vi.hoisted(() => ({
-  getPublishedArticlePage: vi.fn(),
+  getPublishedArticleCategory: vi.fn(),
   getPublishedCategories: vi.fn(),
   getTranslations: vi.fn(),
   readArticleMetadata: vi.fn(),
@@ -15,8 +15,10 @@ vi.mock(
   () => ({ readArticleMetadata: mocks.readArticleMetadata })
 );
 vi.mock("@/lib/content/article/catalog", () => ({
-  getPublishedArticlePage: mocks.getPublishedArticlePage,
   getPublishedCategories: mocks.getPublishedCategories,
+}));
+vi.mock("@/lib/content/article/category", () => ({
+  getPublishedArticleCategory: mocks.getPublishedArticleCategory,
 }));
 vi.mock("next-intl/server", () => ({
   getTranslations: mocks.getTranslations,
@@ -25,8 +27,10 @@ vi.mock("next-intl/server", () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.getPublishedCategories.mockResolvedValue({ categories: [] });
-  mocks.getPublishedArticlePage.mockResolvedValue({
-    articles: [{ categoryTitle: "Politics" }],
+  mocks.getPublishedArticleCategory.mockResolvedValue({
+    category: "politics",
+    route: "politik",
+    title: "Politik",
   });
   mocks.getTranslations.mockImplementation(({ namespace }) =>
     Promise.resolve((key: string) => `${namespace}.${key}`)
@@ -53,24 +57,17 @@ describe("article OG metadata", () => {
     });
   });
 
-  it("reads a signed category and rejects an empty category", async () => {
+  it("reads a signed localized category and rejects an absent category", async () => {
     await expect(
-      readArticleOgMetadata("en", ["articles", "politics"])
+      readArticleOgMetadata("de", ["articles", "politik"])
     ).resolves.toEqual({
       description: "Articles.description",
-      title: "Politics",
-    });
-    expect(mocks.getPublishedArticlePage).toHaveBeenCalledWith({
-      category: "politics",
-      cursor: null,
-      expectedManifestHash: null,
-      expectedReleaseId: null,
-      locale: "en",
+      title: "Politik",
     });
 
-    mocks.getPublishedArticlePage.mockResolvedValueOnce({ articles: [] });
+    mocks.getPublishedArticleCategory.mockResolvedValueOnce(null);
     await expect(
-      readArticleOgMetadata("id", ["articles", "politics"])
+      readArticleOgMetadata("de", ["articles", "fehlend"])
     ).resolves.toBeNull();
   });
 
@@ -108,7 +105,7 @@ describe("article OG metadata", () => {
     for (const slug of slugs) {
       await expect(readArticleOgMetadata("en", slug)).resolves.toBeNull();
     }
-    expect(mocks.getPublishedArticlePage).not.toHaveBeenCalled();
+    expect(mocks.getPublishedArticleCategory).not.toHaveBeenCalled();
     expect(mocks.getPublishedCategories).not.toHaveBeenCalled();
     expect(mocks.readArticleMetadata).not.toHaveBeenCalled();
   });

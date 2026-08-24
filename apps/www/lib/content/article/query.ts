@@ -20,8 +20,8 @@ export interface ArticlePageQuery {
 }
 /** Minimal active page identity used to build one continuation URL. */
 export interface ArticleNextPage {
-  readonly activeManifestHash: null | string;
-  readonly activeReleaseId: null | string;
+  readonly activeManifestHash: ArticlePageCursor["expectedManifestHash"] | null;
+  readonly activeReleaseId: ArticlePageCursor["expectedReleaseId"] | null;
   readonly nextCursor: null | string;
 }
 /** Decodes an initial or release-bound article pagination request. */

@@ -8,6 +8,7 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   insertRuntimeArticles,
   testArticleProjection,
+  testLocalizedArticleProjection,
 } from "@repo/backend/test/content-runtime";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -19,6 +20,7 @@ describe("contentRelease/article/sitemap", () => {
     await expect(
       t.query((ctx) => runConvexProgram(readArticleBuckets(ctx, "en")))
     ).resolves.toEqual({
+      activeReleaseId: null,
       articleCount: 0,
       buckets: [],
       managed: false,
@@ -39,6 +41,7 @@ describe("contentRelease/article/sitemap", () => {
     await expect(
       t.query((ctx) => runConvexProgram(readArticleBuckets(ctx, "en")))
     ).resolves.toEqual({
+      activeReleaseId: expect.any(String),
       articleCount: 1,
       buckets: [row.bucket],
       managed: true,
@@ -49,9 +52,9 @@ describe("contentRelease/article/sitemap", () => {
       )
     ).resolves.toMatchObject({
       routes: [
-        { date: null, publicPath: "articles/politics" },
+        { lastModified: null, publicPath: "articles/politics" },
         {
-          date: testArticleProjection(0).metadata.date,
+          lastModified: testArticleProjection(0).metadata.datePublished,
           publicPath: testArticleProjection(0).publicPath,
         },
       ],
@@ -65,6 +68,37 @@ describe("contentRelease/article/sitemap", () => {
       data: { code: "CONTENT_RELEASE_LIMIT" },
     });
   });
+
+  it.each(["id", "de"] as const)(
+    "uses signed %s category and article routes instead of canonical identity keys",
+    async (appLocale) => {
+      const t = convexTest(schema, convexModules);
+      await t.mutation((ctx) =>
+        insertRuntimeArticles(ctx, 1, (index) =>
+          testLocalizedArticleProjection(index, appLocale)
+        )
+      );
+      const row = await t.run((ctx) => ctx.db.query("articleCatalog").unique());
+      if (!row) {
+        throw new Error("Expected one localized article row.");
+      }
+
+      const projection = testLocalizedArticleProjection(0, appLocale);
+      await expect(
+        t.query((ctx) =>
+          runConvexProgram(readArticleSitemap(ctx, appLocale, row.bucket))
+        )
+      ).resolves.toMatchObject({
+        routes: [
+          { lastModified: null, publicPath: projection.parentPath },
+          {
+            lastModified: projection.metadata.datePublished,
+            publicPath: projection.publicPath,
+          },
+        ],
+      });
+    }
+  );
 
   it("rejects sitemap metadata outside the fixed partition space", async () => {
     const t = convexTest(schema, convexModules);

@@ -1,16 +1,11 @@
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
-import {
-  ArticleCategorySchema,
-  ArticleSlugSchema,
-} from "@nakafa/aksara-contracts/projection/article";
+import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
 import { Schema } from "effect";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { readArticleMetadata } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/content";
-import {
-  getPublishedArticlePage,
-  getPublishedCategories,
-} from "@/lib/content/article/catalog";
+import { getPublishedCategories } from "@/lib/content/article/catalog";
+import { getPublishedArticleCategory } from "@/lib/content/article/category";
 
 /** Reads Open Graph copy exclusively from signed or preview article ownership. */
 export async function readArticleOgMetadata(
@@ -39,32 +34,23 @@ export async function readArticleOgMetadata(
     };
   }
 
-  if (!Schema.is(ArticleCategorySchema)(category)) {
+  if (!Schema.is(ArticleRouteSlugSchema)(category)) {
     return null;
   }
 
   if (!articleSlug) {
-    const [page, tArticles] = await Promise.all([
-      getPublishedArticlePage({
-        category,
-        cursor: null,
-        expectedManifestHash: null,
-        expectedReleaseId: null,
-        locale,
-      }),
-      getTranslations({ locale, namespace: "Articles" }),
-    ]);
-    const article = page.articles[0];
-    if (!article) {
+    const resolved = await getPublishedArticleCategory(category, locale);
+    if (!resolved) {
       return null;
     }
+    const tArticles = await getTranslations({ locale, namespace: "Articles" });
     return {
       description: tArticles("description"),
-      title: article.categoryTitle,
+      title: resolved.title,
     };
   }
 
-  if (remaining.length > 0 || !Schema.is(ArticleSlugSchema)(articleSlug)) {
+  if (remaining.length > 0 || !Schema.is(ArticleRouteSlugSchema)(articleSlug)) {
     return null;
   }
 
