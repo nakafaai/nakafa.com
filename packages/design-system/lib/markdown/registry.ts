@@ -1,5 +1,5 @@
 import { AgentContext } from "@repo/design-system/components/markdown/agent-context";
-import { CodeBlockMdx } from "@repo/design-system/components/markdown/code-block";
+import { CodeBlockMdx } from "@repo/design-system/components/markdown/code/block";
 import {
   BlockMath,
   InlineMath,

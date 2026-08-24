@@ -5,81 +5,78 @@ export const domainComponentLoaders = [
   {
     name: snbtGeneralComponentNames.set10Question2RecruitmentChart,
     load: () =>
-      import("@/lib/content/renderer/client/snbt-general").then(
-        ({ LazySet10Question2RecruitmentChart }) =>
-          LazySet10Question2RecruitmentChart
+      import("@/lib/content/renderer/client/snbt/general/set10").then(
+        ({ Set10Question2RecruitmentChart }) => Set10Question2RecruitmentChart
       ),
   },
   {
     name: snbtGeneralComponentNames.set2Question15SalesChart,
     load: () =>
-      import("@/lib/content/renderer/client/snbt-general").then(
-        ({ LazySet2Question15SalesChart }) => LazySet2Question15SalesChart
+      import("@/lib/content/renderer/client/snbt/general/set2").then(
+        ({ Set2Question15SalesChart }) => Set2Question15SalesChart
       ),
   },
   {
     name: snbtGeneralComponentNames.set2Question5SalesChart,
     load: () =>
-      import("@/lib/content/renderer/client/snbt-general").then(
-        ({ LazySet2Question5SalesChart }) => LazySet2Question5SalesChart
+      import("@/lib/content/renderer/client/snbt/general/set2").then(
+        ({ Set2Question5SalesChart }) => Set2Question5SalesChart
       ),
   },
   {
     name: snbtGeneralComponentNames.set3Question14SpiceSalesChart,
     load: () =>
-      import("@/lib/content/renderer/client/snbt-general").then(
-        ({ LazySet3Question14SpiceSalesChart }) =>
-          LazySet3Question14SpiceSalesChart
+      import("@/lib/content/renderer/client/snbt/general/set3").then(
+        ({ Set3Question14SpiceSalesChart }) => Set3Question14SpiceSalesChart
       ),
   },
   {
     name: snbtGeneralComponentNames.set4Question14PriceChart,
     load: () =>
-      import("@/lib/content/renderer/client/snbt-general").then(
-        ({ LazySet4Question14PriceChart }) => LazySet4Question14PriceChart
+      import("@/lib/content/renderer/client/snbt/general/set4").then(
+        ({ Set4Question14PriceChart }) => Set4Question14PriceChart
       ),
   },
   {
     name: snbtGeneralComponentNames.set5Question18GrowthChart,
     load: () =>
-      import("@/lib/content/renderer/client/snbt-general").then(
-        ({ LazySet5Question18GrowthChart }) => LazySet5Question18GrowthChart
+      import("@/lib/content/renderer/client/snbt/general/set5").then(
+        ({ Set5Question18GrowthChart }) => Set5Question18GrowthChart
       ),
   },
   {
     name: snbtGeneralComponentNames.set5Question6SalesChart,
     load: () =>
-      import("@/lib/content/renderer/client/snbt-general").then(
-        ({ LazySet5Question6SalesChart }) => LazySet5Question6SalesChart
+      import("@/lib/content/renderer/client/snbt/general/set5").then(
+        ({ Set5Question6SalesChart }) => Set5Question6SalesChart
       ),
   },
   {
     name: snbtGeneralComponentNames.set7Question9VisitorChart,
     load: () =>
-      import("@/lib/content/renderer/client/snbt-general").then(
-        ({ LazySet7Question9VisitorChart }) => LazySet7Question9VisitorChart
+      import("@/lib/content/renderer/client/snbt/general/set7").then(
+        ({ Set7Question9VisitorChart }) => Set7Question9VisitorChart
       ),
   },
   {
     name: snbtGeneralComponentNames.set8Question17ProfitChart,
     load: () =>
-      import("@/lib/content/renderer/client/snbt-general").then(
-        ({ LazySet8Question17ProfitChart }) => LazySet8Question17ProfitChart
+      import("@/lib/content/renderer/client/snbt/general/set8").then(
+        ({ Set8Question17ProfitChart }) => Set8Question17ProfitChart
       ),
   },
   {
     name: snbtGeneralComponentNames.set8Question1SalesChart,
     load: () =>
-      import("@/lib/content/renderer/client/snbt-general").then(
-        ({ LazySet8Question1SalesChart }) => LazySet8Question1SalesChart
+      import("@/lib/content/renderer/client/snbt/general/set8").then(
+        ({ Set8Question1SalesChart }) => Set8Question1SalesChart
       ),
   },
   {
     name: snbtGeneralComponentNames.set9Question9GraduationChart,
     load: () =>
-      import("@/lib/content/renderer/client/snbt-general").then(
-        ({ LazySet9Question9GraduationChart }) =>
-          LazySet9Question9GraduationChart
+      import("@/lib/content/renderer/client/snbt/general/set9").then(
+        ({ Set9Question9GraduationChart }) => Set9Question9GraduationChart
       ),
   },
 ] satisfies readonly RendererComponentLoader[];

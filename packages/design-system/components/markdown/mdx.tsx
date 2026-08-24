@@ -1,4 +1,4 @@
-import { LazyCodeBlockMdx } from "@repo/design-system/components/markdown/code-block-lazy";
+import { CodeBlockMdx } from "@repo/design-system/components/markdown/code/client";
 import { Heading } from "@repo/design-system/components/markdown/heading";
 import {
   Table,
@@ -243,7 +243,7 @@ export function MdxPre({ node, children }: MdxPreProps) {
     },
   ];
 
-  return <LazyCodeBlockMdx data={data} />;
+  return <CodeBlockMdx data={data} />;
 }
 
 /** Renders superscript MDX text at the shared annotation size. */

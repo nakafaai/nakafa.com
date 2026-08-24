@@ -1,10 +1,11 @@
 import type { IconSvgElement } from "@hugeicons/react";
+import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
-import { FeaturesNina } from "@/components/marketing/about/features-practice";
 import {
   FeaturesTryout,
   type FeaturesTryoutModel,
 } from "@/components/marketing/about/features-tryout";
+import { FeaturesNina } from "@/components/marketing/about/nina/section";
 import { FeaturesProjectile } from "@/components/marketing/about/projectile/features";
 import { SubjectsArt } from "@/components/marketing/about/subjects-art";
 import { SubjectItem } from "@/components/shared/subject-item";
@@ -18,12 +19,14 @@ interface SubjectPath {
 
 interface FeaturesBentoProps {
   featuredTryout: FeaturesTryoutModel;
+  locale: Locale;
   subjectPaths: readonly SubjectPath[];
 }
 
 /** Composes four independent Nakafa learning moments into one bordered grid. */
 export function FeaturesBento({
   featuredTryout,
+  locale,
   subjectPaths,
 }: FeaturesBentoProps) {
   const t = useTranslations("Features");
@@ -56,8 +59,8 @@ export function FeaturesBento({
       </div>
 
       <FeaturesTryout value={featuredTryout} />
-      <FeaturesNina />
-      <FeaturesProjectile />
+      <FeaturesNina locale={locale} />
+      <FeaturesProjectile locale={locale} />
     </div>
   );
 }

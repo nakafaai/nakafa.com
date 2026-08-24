@@ -1,4 +1,5 @@
 import type { api } from "@repo/backend/convex/_generated/api";
+import { MarkdownResponse } from "@repo/design-system/components/ai/markdown";
 import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -31,7 +32,19 @@ export function FeaturesTryout({
       <article className="mt-auto px-8 pt-10 pb-8 lg:px-10 lg:pt-12 lg:pb-10">
         <section className="my-6">{value.question}</section>
         <section className="my-8">
-          <TryoutChoicePreview choices={value.choices} />
+          <TryoutChoicePreview
+            choices={value.choices.map((choice) => ({
+              ...choice,
+              content: (
+                <MarkdownResponse
+                  className="wrap-anywhere h-auto whitespace-normal"
+                  id={`features-tryout-choice-${choice.optionKey}`}
+                >
+                  {choice.label}
+                </MarkdownResponse>
+              ),
+            }))}
+          />
         </section>
       </article>
     </div>

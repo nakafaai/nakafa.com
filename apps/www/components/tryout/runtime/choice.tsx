@@ -1,5 +1,6 @@
 "use client";
 import { api } from "@repo/backend/convex/_generated/api";
+import { Response } from "@repo/design-system/components/ai/response";
 import { useMutation } from "convex/react";
 import type { FunctionArgs } from "convex/server";
 import { ConvexError } from "convex/values";
@@ -107,7 +108,14 @@ function TryoutChoice({ value }: { value: TryoutChoiceValue }) {
       checked={checked}
       disabled={disabled}
       id={`${question.placementId}-${choice.optionKey}`}
-      label={choice.label}
+      label={
+        <Response
+          className="wrap-anywhere h-auto whitespace-normal"
+          id={`${question.placementId}-${choice.optionKey}`}
+        >
+          {choice.label}
+        </Response>
+      }
       onSelect={onSelect}
     />
   );

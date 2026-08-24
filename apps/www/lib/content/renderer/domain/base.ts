@@ -20,8 +20,8 @@ export const baseComponentLoaders = [
   {
     name: baseComponentNames.codeBlock,
     load: () =>
-      import("@repo/design-system/components/markdown/code-block-lazy").then(
-        ({ LazyCodeBlockMdx }) => LazyCodeBlockMdx
+      import("@repo/design-system/components/markdown/code/client").then(
+        ({ CodeBlockMdx }) => CodeBlockMdx
       ),
   },
   {
@@ -62,14 +62,14 @@ export const baseComponentLoaders = [
   {
     name: baseComponentNames.mermaid,
     load: () =>
-      import("@/lib/content/renderer/client/base").then(
-        ({ LazyMermaidMdx }) => LazyMermaidMdx
+      import("@/lib/content/renderer/client/base/media").then(
+        ({ MermaidMdx }) => MermaidMdx
       ),
   },
   {
     name: baseComponentNames.youtube,
     load: () =>
-      import("@repo/design-system/components/markdown/youtube").then(
+      import("@/lib/content/renderer/client/base/media").then(
         ({ Youtube }) => Youtube
       ),
   },

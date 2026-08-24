@@ -87,11 +87,11 @@ function findLoaders(
   return loaders.filter(({ name }) => name === componentName);
 }
 
-/** Resolves signed names to one semantic or physical implementation owner. */
-export const selectRendererImplementations = Effect.fn(
-  "NakafaContent.selectRendererImplementations"
+/** Loads the one literal domain registry selected by an authenticated payload. */
+export const loadRendererDomainModule = Effect.fn(
+  "NakafaContent.loadRendererDomainModule"
 )(function* (selection: RendererSelection) {
-  const domainModule = yield* Effect.tryPromise({
+  return yield* Effect.tryPromise({
     catch: (cause) =>
       new RendererDomainLoadError({
         cause,
@@ -100,6 +100,13 @@ export const selectRendererImplementations = Effect.fn(
       }),
     try: rendererDomainModuleLoaders[selection.rendererDomain],
   });
+});
+
+/** Resolves signed names to one semantic or physical implementation owner. */
+export const selectRendererImplementations = Effect.fn(
+  "NakafaContent.selectRendererImplementations"
+)(function* (selection: RendererSelection) {
+  const domainModule = yield* loadRendererDomainModule(selection);
 
   const selected: SelectedRenderer[] = [];
   for (const { name } of selection.requiredComponents) {

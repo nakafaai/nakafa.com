@@ -5,131 +5,130 @@ export const domainComponentLoaders = [
   {
     name: mathematicsComponentNames.bacterialGrowth,
     load: () =>
-      import("@/lib/content/renderer/client/mathematics").then(
-        ({ LazyBacterialGrowth }) => LazyBacterialGrowth
+      import("@/lib/content/renderer/client/mathematics/growth").then(
+        ({ BacterialGrowth }) => BacterialGrowth
       ),
   },
   {
     name: mathematicsComponentNames.barChart,
     load: () =>
-      import("@/lib/content/renderer/client/mathematics").then(
-        ({ LazyBarChart }) => LazyBarChart
+      import("@/lib/content/renderer/client/mathematics/charts").then(
+        ({ BarChart }) => BarChart
       ),
   },
   {
     name: mathematicsComponentNames.functionAndNonFunctionDiagram,
     load: () =>
-      import("@/lib/content/renderer/client/mathematics").then(
-        ({ LazyFunctionAndNonFunctionDiagram }) =>
-          LazyFunctionAndNonFunctionDiagram
+      import("@/lib/content/renderer/client/mathematics/function").then(
+        ({ FunctionAndNonFunctionDiagram }) => FunctionAndNonFunctionDiagram
       ),
   },
   {
     name: mathematicsComponentNames.functionAndNonFunctionRelationVisualizer,
     load: () =>
-      import("@/lib/content/renderer/client/mathematics").then(
-        ({ LazyFunctionAndNonFunctionRelationVisualizer }) =>
-          LazyFunctionAndNonFunctionRelationVisualizer
+      import("@/lib/content/renderer/client/mathematics/function").then(
+        ({ FunctionAndNonFunctionRelationVisualizer }) =>
+          FunctionAndNonFunctionRelationVisualizer
       ),
   },
   {
     name: mathematicsComponentNames.functionChart,
     load: () =>
-      import("@/lib/content/renderer/client/mathematics").then(
-        ({ LazyFunctionChart }) => LazyFunctionChart
+      import("@/lib/content/renderer/client/mathematics/charts").then(
+        ({ FunctionChart }) => FunctionChart
       ),
   },
   {
     name: mathematicsComponentNames.functionExplorationVirusChart,
     load: () =>
-      import("@/lib/content/renderer/client/mathematics").then(
-        ({ LazyFunctionExplorationVirusChart }) =>
-          LazyFunctionExplorationVirusChart
+      import("@/lib/content/renderer/client/mathematics/growth").then(
+        ({ FunctionExplorationVirusChart }) => FunctionExplorationVirusChart
       ),
   },
   {
     name: mathematicsComponentNames.functionMachine,
     load: () =>
-      import("@/lib/content/renderer/client/mathematics").then(
-        ({ LazyFunctionMachine }) => LazyFunctionMachine
+      import("@/lib/content/renderer/client/mathematics/function").then(
+        ({ FunctionMachine }) => FunctionMachine
       ),
   },
   {
     name: mathematicsComponentNames.histogramChart,
     load: () =>
-      import("@/lib/content/renderer/client/mathematics").then(
-        ({ LazyHistogramChart }) => LazyHistogramChart
+      import("@/lib/content/renderer/client/mathematics/charts").then(
+        ({ HistogramChart }) => HistogramChart
       ),
   },
   {
     name: mathematicsComponentNames.inequality,
     load: () =>
-      import(
-        "@repo/design-system/components/contents/mathematics/inequality"
-      ).then(({ Inequality }) => Inequality),
+      import("@/lib/content/renderer/client/mathematics/equation").then(
+        ({ Inequality }) => Inequality
+      ),
   },
   {
     name: mathematicsComponentNames.inverseFunctionIllustration,
     load: () =>
-      import(
-        "@repo/design-system/components/contents/mathematics/function/illustration"
-      ).then(({ FunctionIllustration }) => FunctionIllustration),
+      import("@/lib/content/renderer/client/mathematics/function").then(
+        ({ InverseFunctionIllustration }) => InverseFunctionIllustration
+      ),
   },
   {
     name: mathematicsComponentNames.lineEquation,
     load: () =>
-      import(
-        "@repo/design-system/components/contents/mathematics/line-equation"
-      ).then(({ LineEquation }) => LineEquation),
+      import("@/lib/content/renderer/client/mathematics/equation").then(
+        ({ LineEquation }) => LineEquation
+      ),
   },
   {
     name: mathematicsComponentNames.quadraticEquationReadingRoomProblem,
     load: () =>
-      import(
-        "@repo/design-system/components/contents/mathematics/quadratic/reading-room"
-      ).then(({ ReadingRoomProblem }) => ReadingRoomProblem),
+      import("@/lib/content/renderer/client/mathematics/equation").then(
+        ({ QuadraticEquationReadingRoomProblem }) =>
+          QuadraticEquationReadingRoomProblem
+      ),
   },
   {
     name: mathematicsComponentNames.scatterDiagram,
     load: () =>
-      import("@/lib/content/renderer/client/mathematics").then(
-        ({ LazyScatterDiagram }) => LazyScatterDiagram
+      import("@/lib/content/renderer/client/mathematics/charts").then(
+        ({ ScatterDiagram }) => ScatterDiagram
       ),
   },
   {
     name: mathematicsComponentNames.sequenceConceptTableChairsAnimation,
     load: () =>
-      import("@/lib/content/renderer/client/mathematics").then(
-        ({ LazySequenceConceptTableChairsAnimation }) =>
-          LazySequenceConceptTableChairsAnimation
+      import("@/lib/content/renderer/client/mathematics/sequence").then(
+        ({ SequenceConceptTableChairsAnimation }) =>
+          SequenceConceptTableChairsAnimation
       ),
   },
   {
     name: mathematicsComponentNames.triangle,
     load: () =>
-      import("@/lib/content/renderer/client/mathematics").then(
-        ({ LazyTriangle }) => LazyTriangle
+      import("@/lib/content/renderer/client/mathematics/geometry").then(
+        ({ Triangle }) => Triangle
       ),
   },
   {
     name: mathematicsComponentNames.unitCircle,
     load: () =>
-      import("@/lib/content/renderer/client/mathematics").then(
-        ({ LazyUnitCircle }) => LazyUnitCircle
+      import("@/lib/content/renderer/client/mathematics/geometry").then(
+        ({ UnitCircle }) => UnitCircle
       ),
   },
   {
     name: mathematicsComponentNames.vector3d,
     load: () =>
-      import(
-        "@repo/design-system/components/contents/mathematics/vector-3d"
-      ).then(({ Vector3d }) => Vector3d),
+      import("@/lib/content/renderer/client/mathematics/vector").then(
+        ({ Vector3d }) => Vector3d
+      ),
   },
   {
     name: mathematicsComponentNames.vectorChart,
     load: () =>
-      import("@/lib/content/renderer/client/mathematics").then(
-        ({ LazyVectorChart }) => LazyVectorChart
+      import("@/lib/content/renderer/client/mathematics/charts").then(
+        ({ VectorChart }) => VectorChart
       ),
   },
 ] satisfies readonly RendererComponentLoader[];

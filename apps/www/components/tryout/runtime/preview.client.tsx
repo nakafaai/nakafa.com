@@ -1,11 +1,12 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { TryoutPreviewChoice } from "@/components/tryout/runtime/choice-surface.client";
 
 /** Minimal immutable choice model shared by signed and local preview sources. */
 export interface TryoutPreviewChoiceItem {
+  readonly content: ReactNode;
   readonly isCorrect: boolean;
   readonly label: string;
   readonly optionKey: string;
@@ -40,7 +41,7 @@ export function TryoutChoicePreview({
             disabled={false}
             id={`features-tryout-choice-${choice.optionKey}`}
             key={choice.optionKey}
-            label={choice.label}
+            label={choice.content}
             onSelect={() => setSelectedOptionKey(choice.optionKey)}
           />
         ))}

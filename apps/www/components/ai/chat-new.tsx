@@ -2,14 +2,15 @@
 
 import { DEFAULT_TITLE } from "@repo/ai/features/constants";
 import { api } from "@repo/backend/convex/_generated/api";
-import { PromptInput } from "@repo/design-system/components/ai/input";
 import {
   PromptInputSubmit,
-  PromptInputTextarea,
   PromptInputToolbar,
   PromptInputTools,
 } from "@repo/design-system/components/ai/input-controls";
-import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
+import {
+  TextPrompt,
+  TextPromptTextarea,
+} from "@repo/design-system/components/ai/prompt/text";
 import {
   usePathname,
   useRouter,
@@ -45,9 +46,9 @@ export function ChatNew() {
   const [isPending, startTransition] = useTransition();
 
   /** Creates the chat, starts the stream, and moves the user to the chat page. */
-  function handleSubmit(message: PromptInputMessage) {
+  function handleSubmit(textValue: string) {
     startTransition(async () => {
-      const query = message.text?.trim();
+      const query = textValue.trim();
 
       if (!query) {
         return;
@@ -90,8 +91,8 @@ export function ChatNew() {
   }
 
   return (
-    <PromptInput onSubmit={handleSubmit}>
-      <PromptInputTextarea
+    <TextPrompt onSubmit={handleSubmit}>
+      <TextPromptTextarea
         aria-label={t("text-placeholder")}
         className="p-4"
         onChange={(e) => setText(e.target.value)}
@@ -107,6 +108,6 @@ export function ChatNew() {
           isPending={isPending || isUserPending}
         />
       </PromptInputToolbar>
-    </PromptInput>
+    </TextPrompt>
   );
 }

@@ -5,30 +5,30 @@ export const domainComponentLoaders = [
   {
     name: politicsComponentNames.kimPlusElectabilityChart,
     load: () =>
-      import("@/lib/content/renderer/client/politics").then(
-        ({ LazyKimPlusElectabilityChart }) => LazyKimPlusElectabilityChart
+      import("@/lib/content/renderer/client/politics/elections").then(
+        ({ KimPlusElectabilityChart }) => KimPlusElectabilityChart
       ),
   },
   {
     name: politicsComponentNames.merahPutihCabinetChart,
     load: () =>
-      import("@/lib/content/renderer/client/politics").then(
-        ({ LazyMerahPutihCabinetChart }) => LazyMerahPutihCabinetChart
+      import("@/lib/content/renderer/client/politics/cabinet").then(
+        ({ MerahPutihCabinetChart }) => MerahPutihCabinetChart
       ),
   },
   {
     name: politicsComponentNames.merahPutihCompositionChart,
     load: () =>
-      import("@/lib/content/renderer/client/politics").then(
-        ({ LazyMerahPutihCompositionChart }) => LazyMerahPutihCompositionChart
+      import("@/lib/content/renderer/client/politics/cabinet").then(
+        ({ MerahPutihCompositionChart }) => MerahPutihCompositionChart
       ),
   },
   {
     name: politicsComponentNames.nepotismStage,
     load: () =>
-      import(
-        "@repo/design-system/components/contents/politics/nepotism/stage"
-      ).then(({ Stage }) => Stage),
+      import("@/lib/content/renderer/client/politics/nepotism").then(
+        ({ NepotismStage }) => NepotismStage
+      ),
   },
   {
     name: politicsComponentNames.nepotismStateTable,
@@ -40,22 +40,22 @@ export const domainComponentLoaders = [
   {
     name: politicsComponentNames.porkBarrelBudgetChart,
     load: () =>
-      import("@/lib/content/renderer/client/politics").then(
-        ({ LazyPorkBarrelBudgetChart }) => LazyPorkBarrelBudgetChart
+      import("@/lib/content/renderer/client/politics/budget").then(
+        ({ PorkBarrelBudgetChart }) => PorkBarrelBudgetChart
       ),
   },
   {
     name: politicsComponentNames.porkBarrelElectabilityChart,
     load: () =>
-      import("@/lib/content/renderer/client/politics").then(
-        ({ LazyPorkBarrelElectabilityChart }) => LazyPorkBarrelElectabilityChart
+      import("@/lib/content/renderer/client/politics/elections").then(
+        ({ PorkBarrelElectabilityChart }) => PorkBarrelElectabilityChart
       ),
   },
   {
     name: politicsComponentNames.porkBarrelFundChart,
     load: () =>
-      import("@/lib/content/renderer/client/politics").then(
-        ({ LazyPorkBarrelFundChart }) => LazyPorkBarrelFundChart
+      import("@/lib/content/renderer/client/politics/budget").then(
+        ({ PorkBarrelFundChart }) => PorkBarrelFundChart
       ),
   },
 ] satisfies readonly RendererComponentLoader[];

@@ -1,5 +1,3 @@
-"use client";
-
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 
 interface ExpressionProps {

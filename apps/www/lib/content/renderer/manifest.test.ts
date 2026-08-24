@@ -9,8 +9,11 @@ import {
   validateLiveRendererManifestHash,
   validateRendererManifestHash,
 } from "@nakafa/aksara-contracts/renderer/manifest";
+import { semanticComponentNames } from "@repo/design-system/lib/markdown/names";
 import { Effect, Exit, Schema } from "effect";
 import { describe, expect, it, vi } from "vitest";
+import { baseComponentLoaders } from "@/lib/content/renderer/domain/base";
+import { loadRendererDomainModule } from "@/lib/content/renderer/selection";
 
 vi.mock("@repo/internationalization/src/navigation", () => ({
   getPathname: vi.fn(),
@@ -106,4 +109,38 @@ describe("renderer manifest", () => {
       expect(Object.keys(components).sort()).toEqual(expectedNames);
     }
   }, 30_000);
+
+  it("keeps every literal loader registry exactly aligned with the manifest", async () => {
+    const { rendererManifest } = await import(
+      "@/lib/content/renderer/manifest"
+    );
+    const manifest = await Effect.runPromise(rendererManifest);
+    const contentKey = ContentKeySchema.make("test:renderer-loaders");
+    const semanticNames = new Set<string>(semanticComponentNames);
+    const expectedBaseNames = manifest.base.supportedComponents
+      .map(({ name }) => name)
+      .filter((name) => !semanticNames.has(name))
+      .sort();
+
+    expect(baseComponentLoaders.map(({ name }) => name).sort()).toEqual(
+      expectedBaseNames
+    );
+
+    for (const domain of manifest.domains) {
+      const domainModule = await Effect.runPromise(
+        loadRendererDomainModule({
+          contentKey,
+          rendererDomain: domain.name,
+          requiredComponents: [],
+        })
+      );
+      const expectedDomainNames = domain.supportedComponents
+        .map(({ name }) => name)
+        .sort();
+
+      expect(
+        domainModule.domainComponentLoaders.map(({ name }) => name).sort()
+      ).toEqual(expectedDomainNames);
+    }
+  });
 });

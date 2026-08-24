@@ -5,36 +5,36 @@ export const domainComponentLoaders = [
   {
     name: tkaMathComponentNames.histogramChart,
     load: () =>
-      import("@/lib/content/renderer/client/tka-math").then(
-        ({ LazyHistogramChart }) => LazyHistogramChart
+      import("@/lib/content/renderer/client/tka/basics").then(
+        ({ HistogramChart }) => HistogramChart
       ),
   },
   {
     name: tkaMathComponentNames.lineEquation,
     load: () =>
-      import(
-        "@repo/design-system/components/contents/mathematics/line-equation"
-      ).then(({ LineEquation }) => LineEquation),
+      import("@/lib/content/renderer/client/tka/basics").then(
+        ({ LineEquation }) => LineEquation
+      ),
   },
   {
     name: tkaMathComponentNames.numberLine,
     load: () =>
-      import(
-        "@repo/design-system/components/contents/mathematics/number-line"
-      ).then(({ NumberLine }) => NumberLine),
+      import("@/lib/content/renderer/client/tka/basics").then(
+        ({ NumberLine }) => NumberLine
+      ),
   },
   {
     name: tkaMathComponentNames.set1Question19Graph,
     load: () =>
-      import("@/lib/content/renderer/client/tka-math").then(
-        ({ LazySet1Question19Graph }) => LazySet1Question19Graph
+      import("@/lib/content/renderer/client/tka/set1").then(
+        ({ Set1Question19Graph }) => Set1Question19Graph
       ),
   },
   {
     name: tkaMathComponentNames.set1Question30Illustration,
     load: () =>
-      import(
-        "@repo/design-system/components/contents/tka/mathematics/set-1/question-30"
-      ).then(({ Illustration }) => Illustration),
+      import("@/lib/content/renderer/client/tka/set1").then(
+        ({ Set1Question30Illustration }) => Set1Question30Illustration
+      ),
   },
 ] satisfies readonly RendererComponentLoader[];

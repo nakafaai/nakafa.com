@@ -5,144 +5,141 @@ export const domainComponentLoaders = [
   {
     name: physicsComponentNames.accelerationGraphCard,
     load: () =>
-      import("@/lib/content/renderer/client/physics").then(
-        ({ LazyAccelerationGraphCard }) => LazyAccelerationGraphCard
+      import("@/lib/content/renderer/client/physics/acceleration").then(
+        ({ AccelerationGraphCard }) => AccelerationGraphCard
       ),
   },
   {
     name: physicsComponentNames.accelerationLab,
     load: () =>
-      import("@/lib/content/renderer/client/physics").then(
-        ({ LazyAccelerationLab }) => LazyAccelerationLab
+      import("@/lib/content/renderer/client/physics/acceleration").then(
+        ({ AccelerationLab }) => AccelerationLab
       ),
   },
   {
     name: physicsComponentNames.averageVelocitySpeedLab,
     load: () =>
-      import("@/lib/content/renderer/client/physics").then(
-        ({ LazyAverageVelocitySpeedLab }) => LazyAverageVelocitySpeedLab
+      import("@/lib/content/renderer/client/physics/velocity").then(
+        ({ AverageVelocitySpeedLab }) => AverageVelocitySpeedLab
       ),
   },
   {
     name: physicsComponentNames.dimensionLab,
     load: () =>
-      import("@/lib/content/renderer/client/physics").then(
-        ({ LazyDimensionLab }) => LazyDimensionLab
+      import("@/lib/content/renderer/client/physics/measurement").then(
+        ({ DimensionLab }) => DimensionLab
       ),
   },
   {
     name: physicsComponentNames.displacementDistanceLab,
     load: () =>
-      import("@/lib/content/renderer/client/physics").then(
-        ({ LazyDisplacementDistanceLab }) => LazyDisplacementDistanceLab
+      import("@/lib/content/renderer/client/physics/distance").then(
+        ({ DisplacementDistanceLab }) => DisplacementDistanceLab
       ),
   },
   {
     name: physicsComponentNames.instantaneousVelocitySpeedLab,
     load: () =>
-      import("@/lib/content/renderer/client/physics").then(
-        ({ LazyInstantaneousVelocitySpeedLab }) =>
-          LazyInstantaneousVelocitySpeedLab
+      import("@/lib/content/renderer/client/physics/velocity").then(
+        ({ InstantaneousVelocitySpeedLab }) => InstantaneousVelocitySpeedLab
       ),
   },
   {
     name: physicsComponentNames.measurementToolsLab,
     load: () =>
-      import("@/lib/content/renderer/client/physics").then(
-        ({ LazyMeasurementToolsLab }) => LazyMeasurementToolsLab
+      import("@/lib/content/renderer/client/physics/measurement").then(
+        ({ MeasurementToolsLab }) => MeasurementToolsLab
       ),
   },
   {
     name: physicsComponentNames.nonUniformLinearMotionGraphCard,
     load: () =>
-      import("@/lib/content/renderer/client/physics").then(
-        ({ LazyNonUniformLinearMotionGraphCard }) =>
-          LazyNonUniformLinearMotionGraphCard
+      import("@/lib/content/renderer/client/physics/linear").then(
+        ({ NonUniformLinearMotionGraphCard }) => NonUniformLinearMotionGraphCard
       ),
   },
   {
     name: physicsComponentNames.nonUniformLinearMotionLab,
     load: () =>
-      import("@/lib/content/renderer/client/physics").then(
-        ({ LazyNonUniformLinearMotionLab }) => LazyNonUniformLinearMotionLab
+      import("@/lib/content/renderer/client/physics/linear").then(
+        ({ NonUniformLinearMotionLab }) => NonUniformLinearMotionLab
       ),
   },
   {
     name: physicsComponentNames.parabolicMovementAnalysisLab,
     load: () =>
-      import("@/lib/content/renderer/client/physics").then(
-        ({ LazyParabolicMovementAnalysisLab }) =>
-          LazyParabolicMovementAnalysisLab
+      import("@/lib/content/renderer/client/physics/parabolic").then(
+        ({ ParabolicMovementAnalysisLab }) => ParabolicMovementAnalysisLab
       ),
   },
   {
     name: physicsComponentNames.parabolicMovementLab,
     load: () =>
-      import("@/lib/content/renderer/client/physics").then(
-        ({ LazyParabolicMovementLab }) => LazyParabolicMovementLab
+      import("@/lib/content/renderer/client/physics/parabolic").then(
+        ({ ParabolicMovementLab }) => ParabolicMovementLab
       ),
   },
   {
     name: physicsComponentNames.relativeMovementLab,
     load: () =>
-      import("@/lib/content/renderer/client/physics").then(
-        ({ LazyRelativeMovementLab }) => LazyRelativeMovementLab
+      import("@/lib/content/renderer/client/physics/movement").then(
+        ({ RelativeMovementLab }) => RelativeMovementLab
       ),
   },
   {
     name: physicsComponentNames.stoppingDistanceLab,
     load: () =>
-      import("@/lib/content/renderer/client/physics").then(
-        ({ LazyStoppingDistanceLab }) => LazyStoppingDistanceLab
+      import("@/lib/content/renderer/client/physics/distance").then(
+        ({ StoppingDistanceLab }) => StoppingDistanceLab
       ),
   },
   {
     name: physicsComponentNames.uniformCircularMotionLab,
     load: () =>
-      import("@/lib/content/renderer/client/physics").then(
-        ({ LazyUniformCircularMotionLab }) => LazyUniformCircularMotionLab
+      import("@/lib/content/renderer/client/physics/circular").then(
+        ({ UniformCircularMotionLab }) => UniformCircularMotionLab
       ),
   },
   {
     name: physicsComponentNames.uniformLinearMotionLab,
     load: () =>
-      import("@/lib/content/renderer/client/physics").then(
-        ({ LazyUniformLinearMotionLab }) => LazyUniformLinearMotionLab
+      import("@/lib/content/renderer/client/physics/linear").then(
+        ({ UniformLinearMotionLab }) => UniformLinearMotionLab
       ),
   },
   {
     name: physicsComponentNames.vector3d,
     load: () =>
-      import(
-        "@repo/design-system/components/contents/mathematics/vector-3d"
-      ).then(({ Vector3d }) => Vector3d),
+      import("@/lib/content/renderer/client/physics/vector").then(
+        ({ Vector3d }) => Vector3d
+      ),
   },
   {
     name: physicsComponentNames.vectorConceptLab,
     load: () =>
-      import("@/lib/content/renderer/client/physics").then(
-        ({ LazyVectorConceptLab }) => LazyVectorConceptLab
+      import("@/lib/content/renderer/client/physics/vector").then(
+        ({ VectorConceptLab }) => VectorConceptLab
       ),
   },
   {
     name: physicsComponentNames.velocitySpeedLab,
     load: () =>
-      import("@/lib/content/renderer/client/physics").then(
-        ({ LazyVelocitySpeedLab }) => LazyVelocitySpeedLab
+      import("@/lib/content/renderer/client/physics/velocity").then(
+        ({ VelocitySpeedLab }) => VelocitySpeedLab
       ),
   },
   {
     name: physicsComponentNames.verticalMovementLab,
     load: () =>
-      import("@/lib/content/renderer/client/physics").then(
-        ({ LazyVerticalMovementLab }) => LazyVerticalMovementLab
+      import("@/lib/content/renderer/client/physics/movement").then(
+        ({ VerticalMovementLab }) => VerticalMovementLab
       ),
   },
   {
     name: physicsComponentNames.windEnergyConversionLab,
     load: () =>
-      import("@/lib/content/renderer/client/physics").then(
-        ({ LazyWindEnergyConversionLab }) => LazyWindEnergyConversionLab
+      import("@/lib/content/renderer/client/physics/energy").then(
+        ({ WindEnergyConversionLab }) => WindEnergyConversionLab
       ),
   },
 ] satisfies readonly RendererComponentLoader[];

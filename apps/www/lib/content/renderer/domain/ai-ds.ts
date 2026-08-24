@@ -5,8 +5,8 @@ export const domainComponentLoaders = [
   {
     name: aiDsComponentNames.lineEquation,
     load: () =>
-      import(
-        "@repo/design-system/components/contents/mathematics/line-equation"
-      ).then(({ LineEquation }) => LineEquation),
+      import("@/lib/content/renderer/client/ai/equation").then(
+        ({ LineEquation }) => LineEquation
+      ),
   },
 ] satisfies readonly RendererComponentLoader[];

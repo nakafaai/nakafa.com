@@ -35,6 +35,7 @@ export async function Features({ locale }: { locale: Locale }) {
         </div>
         <FeaturesBento
           featuredTryout={featuredTryout}
+          locale={locale}
           subjectPaths={subjectPaths}
         />
       </div>
