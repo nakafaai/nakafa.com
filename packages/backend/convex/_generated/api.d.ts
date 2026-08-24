@@ -127,6 +127,7 @@ import type * as classes_utils from "../classes/utils.js";
 import type * as classes_validators from "../classes/validators.js";
 import type * as comments_mutations from "../comments/mutations.js";
 import type * as comments_queries from "../comments/queries.js";
+import type * as consents_current from "../consents/current.js";
 import type * as consents_impl from "../consents/impl.js";
 import type * as consents_mutations from "../consents/mutations.js";
 import type * as consents_queries from "../consents/queries.js";
@@ -686,6 +687,7 @@ declare const fullApi: ApiFromModules<{
   "classes/validators": typeof classes_validators;
   "comments/mutations": typeof comments_mutations;
   "comments/queries": typeof comments_queries;
+  "consents/current": typeof consents_current;
   "consents/impl": typeof consents_impl;
   "consents/mutations": typeof consents_mutations;
   "consents/queries": typeof consents_queries;
