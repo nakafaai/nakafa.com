@@ -20,7 +20,7 @@ export const baseComponentLoaders = [
   {
     name: baseComponentNames.codeBlock,
     load: () =>
-      import("@/lib/content/renderer/client/base").then(
+      import("@repo/design-system/components/markdown/code-block-lazy").then(
         ({ LazyCodeBlockMdx }) => LazyCodeBlockMdx
       ),
   },
