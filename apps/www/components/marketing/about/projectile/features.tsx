@@ -21,30 +21,21 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
-import { Effect, Fiber } from "effect";
 import { useReducedMotion } from "motion/react";
+import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
-import {
-  type ComponentType,
-  useEffect,
-  useEffectEvent,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
-import { loadProjectileScene } from "@/components/marketing/about/projectile/loader";
-import type { ProjectileSceneProps } from "@/components/marketing/about/projectile/scene";
-import { reportClientException } from "@/lib/analytics/client";
+import { useState } from "react";
 
 /**
  * Imports the scene module after viewport intent.
  *
  * @see https://nextjs.org/docs/app/guides/lazy-loading
  */
-const importProjectileScene = () =>
+const ProjectileScene = dynamic(() =>
   import("@/components/marketing/about/projectile/scene").then(
     (module) => module.ProjectileScene
-  );
+  )
+);
 
 const decimalSeparators = {
   de: "comma",
@@ -62,9 +53,6 @@ export function FeaturesProjectile() {
   const t = useTranslations("Features");
   const locale = useLocale();
   const shouldReduceMotion = useReducedMotion() ?? false;
-  const sceneLoadFiber = useRef<ReturnType<typeof Effect.runFork> | null>(null);
-  const [Scene, setScene] =
-    useState<ComponentType<ProjectileSceneProps> | null>(null);
   const [scenarioId, setScenarioId] = useState<ProjectileScenarioId>(
     DEFAULT_PROJECTILE_SCENARIO_ID
   );
@@ -147,60 +135,6 @@ export function FeaturesProjectile() {
     setScenarioId(value);
   }
 
-  /** Starts the WebGL import only when the lesson approaches the viewport. */
-  const handleSceneIntent = useEffectEvent(() => {
-    if (Scene || sceneLoadFiber.current) {
-      return;
-    }
-
-    sceneLoadFiber.current = Effect.runFork(
-      loadProjectileScene(importProjectileScene).pipe(
-        Effect.matchEffect({
-          onFailure: (error) =>
-            Effect.sync(() => {
-              sceneLoadFiber.current = null;
-            }).pipe(
-              Effect.andThen(
-                reportClientException(error, {
-                  operation: "load-projectile-scene",
-                  source: "home-features",
-                })
-              )
-            ),
-          onSuccess: (SceneComponent) =>
-            Effect.sync(() => setScene(() => SceneComponent)),
-        })
-      )
-    );
-  });
-
-  useEffect(() => {
-    if (!entry?.isIntersecting) {
-      return;
-    }
-
-    handleSceneIntent();
-  }, [entry]);
-
-  /**
-   * Interrupts the scene loader before Next Activity hides the route.
-   *
-   * @see https://nextjs.org/docs/app/guides/preserving-ui-state#effect-and-media-cleanup
-   */
-  useLayoutEffect(
-    () => () => {
-      const currentSceneLoad = sceneLoadFiber.current;
-      sceneLoadFiber.current = null;
-
-      if (!currentSceneLoad) {
-        return;
-      }
-
-      Effect.runFork(Fiber.interrupt(currentSceneLoad));
-    },
-    []
-  );
-
   return (
     <div
       className="relative flex min-h-[42rem] flex-col overflow-hidden bg-background lg:col-span-7 lg:min-h-[44rem]"
@@ -233,8 +167,11 @@ export function FeaturesProjectile() {
             aria-label={t("projectile-view-label")}
             className={threeSceneFrameVariants()}
           >
-            {entry?.isIntersecting && Scene ? (
-              <Scene motion={motion} shouldReduceMotion={shouldReduceMotion} />
+            {entry?.isIntersecting ? (
+              <ProjectileScene
+                motion={motion}
+                shouldReduceMotion={shouldReduceMotion}
+              />
             ) : null}
           </section>
         </div>
