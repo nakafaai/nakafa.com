@@ -1,61 +1,186 @@
 import {
   ANALYTICS_BROWSER_SIGNAL_MECHANISM,
   ANALYTICS_CONSENT_CATEGORY,
+  ANALYTICS_CONSENT_MECHANISM,
   ANALYTICS_CONSENT_NOTICE_VERSION,
+  hasBrowserPrivacySignal,
 } from "@repo/analytics/consent";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
-import { Effect, Schedule, Schema } from "effect";
+import { ConvexError } from "convex/values";
+import { Effect, Option, Schedule, Schema } from "effect";
 
-const browserSignalRevocationFailedCode = "BROWSER_SIGNAL_REVOCATION_FAILED";
-const browserSignalRetrySchedule = Schedule.spaced("10 seconds");
+const accountConsentPersistenceFailedCode =
+  "ACCOUNT_CONSENT_PERSISTENCE_FAILED";
+const accountConsentRejectedCode = "ACCOUNT_CONSENT_REJECTED";
+const accountConsentRetrySchedule = Schedule.spaced("10 seconds");
 type SetAccountConsentArgs = FunctionArgs<typeof api.consents.current.set>;
 type SetAccountConsent = (
   args: SetAccountConsentArgs
 ) => Promise<FunctionReturnType<typeof api.consents.current.set>>;
 
-/** Raised after a browser privacy signal cannot persist its account override. */
-export class BrowserSignalRevocationError extends Schema.TaggedError<BrowserSignalRevocationError>()(
-  "BrowserSignalRevocationError",
+export interface BrowserPrivacySignalSource {
+  readonly read: () => {
+    readonly doNotTrack: string | null | undefined;
+    readonly globalPrivacyControl: unknown;
+  };
+}
+
+/** Reads current DNT and GPC values each time the Effect executes. */
+export const readBrowserPrivacySignal = Effect.fn(
+  "analytics.consent.readBrowserPrivacySignal"
+)((source: BrowserPrivacySignalSource) =>
+  Effect.sync(() => {
+    const signal = source.read();
+
+    return hasBrowserPrivacySignal({
+      doNotTrack: [signal.doNotTrack],
+      globalPrivacyControl: signal.globalPrivacyControl,
+    });
+  })
+);
+
+/** Raised when the browser cannot persist an account analytics decision. */
+export class AccountConsentPersistenceError extends Schema.TaggedError<AccountConsentPersistenceError>()(
+  "AccountConsentPersistenceError",
   {
-    code: Schema.Literal(browserSignalRevocationFailedCode),
+    cause: Schema.Unknown,
+    code: Schema.Literal(accountConsentPersistenceFailedCode),
     message: Schema.Literal(
-      "Unable to persist the browser privacy signal for this account."
+      "Unable to persist the analytics decision for this account."
     ),
   }
 ) {}
 
-function toBrowserSignalRevocationError() {
-  return new BrowserSignalRevocationError({
-    code: browserSignalRevocationFailedCode,
-    message: "Unable to persist the browser privacy signal for this account.",
+/** Raised when Convex authoritatively rejects an account analytics decision. */
+export class AccountConsentRejectedError extends Schema.TaggedError<AccountConsentRejectedError>()(
+  "AccountConsentRejectedError",
+  {
+    cause: Schema.Unknown,
+    code: Schema.Literal(accountConsentRejectedCode),
+    message: Schema.Literal(
+      "The analytics decision was rejected for this account."
+    ),
+  }
+) {}
+
+function toAccountConsentWriteError(cause: unknown) {
+  if (cause instanceof ConvexError) {
+    return new AccountConsentRejectedError({
+      cause,
+      code: accountConsentRejectedCode,
+      message: "The analytics decision was rejected for this account.",
+    });
+  }
+
+  return new AccountConsentPersistenceError({
+    cause,
+    code: accountConsentPersistenceFailedCode,
+    message: "Unable to persist the analytics decision for this account.",
   });
 }
 
-/** Persists a browser privacy signal with two delayed retries, then fails. */
+const persistAccountAnalyticsConsent = Effect.fnUntraced(function* (
+  setAccountConsent: SetAccountConsent,
+  expectedUserId: SetAccountConsentArgs["expectedUserId"],
+  decision: SetAccountConsentArgs["decision"]
+) {
+  return yield* Effect.tryPromise({
+    catch: toAccountConsentWriteError,
+    try: () => setAccountConsent({ decision, expectedUserId }),
+  });
+});
+
+const persistAccountAnalyticsChoice = Effect.fnUntraced(function* (
+  setAccountConsent: SetAccountConsent,
+  expectedUserId: SetAccountConsentArgs["expectedUserId"],
+  granted: boolean,
+  currentBrowserPrivacySignal: Effect.Effect<boolean>
+) {
+  const hasBrowserPrivacySignal = granted
+    ? yield* currentBrowserPrivacySignal
+    : false;
+  if (hasBrowserPrivacySignal) {
+    return yield* persistAccountAnalyticsConsent(
+      setAccountConsent,
+      expectedUserId,
+      {
+        category: ANALYTICS_CONSENT_CATEGORY,
+        granted: false,
+        mechanism: ANALYTICS_BROWSER_SIGNAL_MECHANISM,
+        noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+      }
+    );
+  }
+
+  return yield* persistAccountAnalyticsConsent(
+    setAccountConsent,
+    expectedUserId,
+    {
+      category: ANALYTICS_CONSENT_CATEGORY,
+      granted,
+      mechanism: ANALYTICS_CONSENT_MECHANISM,
+      noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+    }
+  );
+});
+
+/** Persists an explicit choice after enforcing the current browser signal. */
+export const saveAccountAnalyticsChoice = Effect.fn(
+  "analytics.consent.saveAccountAnalyticsChoice"
+)(function* (
+  setAccountConsent: SetAccountConsent,
+  expectedUserId: SetAccountConsentArgs["expectedUserId"],
+  granted: boolean,
+  currentBrowserPrivacySignal: Effect.Effect<boolean>
+) {
+  return yield* persistAccountAnalyticsChoice(
+    setAccountConsent,
+    expectedUserId,
+    granted,
+    currentBrowserPrivacySignal
+  ).pipe(
+    Effect.retry({
+      schedule: accountConsentRetrySchedule,
+      times: 2,
+      while: (error) => error._tag === "AccountConsentPersistenceError",
+    })
+  );
+});
+
+/** Revalidates and persists a browser signal with two delayed retries. */
 export const revokeAccountAnalyticsGrant = Effect.fn(
   "analytics.consent.revokeAccountAnalyticsGrant"
 )(
   (
     setAccountConsent: SetAccountConsent,
-    expectedUserId: SetAccountConsentArgs["expectedUserId"]
+    expectedUserId: SetAccountConsentArgs["expectedUserId"],
+    currentBrowserPrivacySignal: Effect.Effect<boolean>
   ) =>
-    Effect.tryPromise({
-      catch: toBrowserSignalRevocationError,
-      try: () =>
-        setAccountConsent({
-          decision: {
-            category: ANALYTICS_CONSENT_CATEGORY,
-            granted: false,
-            mechanism: ANALYTICS_BROWSER_SIGNAL_MECHANISM,
-            noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
-          },
-          expectedUserId,
-        }),
+    Effect.gen(function* () {
+      const hasBrowserPrivacySignal = yield* currentBrowserPrivacySignal;
+      if (!hasBrowserPrivacySignal) {
+        return Option.none<
+          FunctionReturnType<typeof api.consents.current.set>
+        >();
+      }
+
+      const decision = yield* persistAccountAnalyticsConsent(
+        setAccountConsent,
+        expectedUserId,
+        {
+          category: ANALYTICS_CONSENT_CATEGORY,
+          granted: false,
+          mechanism: ANALYTICS_BROWSER_SIGNAL_MECHANISM,
+          noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+        }
+      );
+      return Option.some(decision);
     }).pipe(
       Effect.retry({
-        schedule: browserSignalRetrySchedule,
+        schedule: accountConsentRetrySchedule,
         times: 2,
+        while: (error) => error._tag === "AccountConsentPersistenceError",
       })
     )
 );

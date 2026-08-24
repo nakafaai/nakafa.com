@@ -5,6 +5,7 @@ import {
   AnalyticsConsentContext,
   type AnalyticsConsentContextValue,
 } from "@/lib/analytics/consent/context";
+import { initialConsentPreferences } from "@/lib/analytics/consent/preferences";
 
 function ignoreUnavailableConsentAction() {
   // Optional analytics cannot accept a decision before its signed notice is live.
@@ -16,9 +17,9 @@ const unavailableAnalyticsConsent = {
   decide: ignoreUnavailableConsentAction,
   error: null,
   isAvailable: false,
-  isPreferencesOpen: false,
   isPromptOpen: false,
   isSaving: false,
+  preferences: initialConsentPreferences,
   setPreferencesOpen: ignoreUnavailableConsentAction,
   status: "pending",
 } satisfies AnalyticsConsentContextValue;
