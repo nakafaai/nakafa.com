@@ -8,7 +8,8 @@ export type AnalyticsConsentPromptIdentity =
   | `anonymous:${typeof ANALYTICS_CONSENT_NOTICE_VERSION}`;
 
 export type AnalyticsConsentSessionOverride =
-  | { readonly persistence: "failed" | "pending" }
+  | { readonly owner: symbol; readonly persistence: "pending" }
+  | { readonly persistence: "failed" }
   | { readonly decidedAt: number; readonly persistence: "saved" };
 
 export type AnalyticsConsentSessionOverrides = ReadonlyMap<
@@ -47,6 +48,59 @@ export function setAnalyticsConsentSessionOverride({
 }): AnalyticsConsentSessionOverrides {
   const nextOverrides = new Map(overrides);
   nextOverrides.set(promptIdentity, override);
+  return nextOverrides;
+}
+
+/** Completes only the pending save that still owns this visitor scope. */
+export function completeAnalyticsConsentSessionSave({
+  nextOverride,
+  overrides,
+  owner,
+  promptIdentity,
+}: {
+  readonly nextOverride: Exclude<
+    AnalyticsConsentSessionOverride,
+    { readonly persistence: "pending" }
+  >;
+  readonly overrides: AnalyticsConsentSessionOverrides;
+  readonly owner: symbol;
+  readonly promptIdentity: AnalyticsConsentPromptIdentity;
+}): AnalyticsConsentSessionOverrides {
+  const currentOverride = overrides.get(promptIdentity);
+  if (
+    currentOverride?.persistence !== "pending" ||
+    currentOverride.owner !== owner
+  ) {
+    return overrides;
+  }
+
+  return setAnalyticsConsentSessionOverride({
+    override: nextOverride,
+    overrides,
+    promptIdentity,
+  });
+}
+
+/** Removes only the pending save interrupted by its owning Effect fiber. */
+export function cancelAnalyticsConsentSessionSave({
+  overrides,
+  owner,
+  promptIdentity,
+}: {
+  readonly overrides: AnalyticsConsentSessionOverrides;
+  readonly owner: symbol;
+  readonly promptIdentity: AnalyticsConsentPromptIdentity;
+}): AnalyticsConsentSessionOverrides {
+  const currentOverride = overrides.get(promptIdentity);
+  if (
+    currentOverride?.persistence !== "pending" ||
+    currentOverride.owner !== owner
+  ) {
+    return overrides;
+  }
+
+  const nextOverrides = new Map(overrides);
+  nextOverrides.delete(promptIdentity);
   return nextOverrides;
 }
 

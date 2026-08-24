@@ -5,6 +5,9 @@ import {
 } from "@repo/analytics/consent";
 import { describe, expect, it } from "vitest";
 import {
+  type AnalyticsConsentSessionOverrides,
+  cancelAnalyticsConsentSessionSave,
+  completeAnalyticsConsentSessionSave,
   createAnalyticsConsentPromptIdentity,
   resolveAnalyticsConsentSessionPolicy,
   setAnalyticsConsentSessionOverride,
@@ -121,10 +124,13 @@ describe("analytics consent session", () => {
       promptIdentity,
       status: "pending",
     });
+    const pendingOwner = Symbol("pending save");
     const pending = resolveAnalyticsConsentSessionPolicy({
       durableConsent: null,
       hasLoadError: true,
-      overrides: new Map([[promptIdentity, { persistence: "pending" }]]),
+      overrides: new Map([
+        [promptIdentity, { owner: pendingOwner, persistence: "pending" }],
+      ]),
       promptIdentity,
       status: "pending",
     });
@@ -153,5 +159,51 @@ describe("analytics consent session", () => {
         status: "pending",
       }).isPromptOpen
     ).toBe(false);
+  });
+
+  it("lets only the owning save complete or cancel a pending choice", () => {
+    const promptIdentity = createAnalyticsConsentPromptIdentity({
+      isAuthenticated: false,
+      user: null,
+    });
+    if (!promptIdentity) {
+      return;
+    }
+
+    const currentOwner = Symbol("current save");
+    const staleOwner = Symbol("stale save");
+    const pending: AnalyticsConsentSessionOverrides = new Map([
+      [promptIdentity, { owner: currentOwner, persistence: "pending" }],
+    ]);
+    const staleCompletion = completeAnalyticsConsentSessionSave({
+      nextOverride: { persistence: "failed" },
+      overrides: pending,
+      owner: staleOwner,
+      promptIdentity,
+    });
+    const staleCancellation = cancelAnalyticsConsentSessionSave({
+      overrides: pending,
+      owner: staleOwner,
+      promptIdentity,
+    });
+    const completed = completeAnalyticsConsentSessionSave({
+      nextOverride: { decidedAt: 300, persistence: "saved" },
+      overrides: pending,
+      owner: currentOwner,
+      promptIdentity,
+    });
+    const canceled = cancelAnalyticsConsentSessionSave({
+      overrides: pending,
+      owner: currentOwner,
+      promptIdentity,
+    });
+
+    expect(staleCompletion).toBe(pending);
+    expect(staleCancellation).toBe(pending);
+    expect(completed.get(promptIdentity)).toEqual({
+      decidedAt: 300,
+      persistence: "saved",
+    });
+    expect(canceled.has(promptIdentity)).toBe(false);
   });
 });

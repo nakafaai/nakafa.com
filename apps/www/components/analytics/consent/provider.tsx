@@ -23,7 +23,10 @@ import {
   updateConsentPreferences,
 } from "@/lib/analytics/consent/preferences";
 import {
+  type AnalyticsConsentPromptIdentity,
   type AnalyticsConsentSessionOverrides,
+  cancelAnalyticsConsentSessionSave,
+  completeAnalyticsConsentSessionSave,
   createAnalyticsConsentPromptIdentity,
   resolveAnalyticsConsentSessionPolicy,
   setAnalyticsConsentSessionOverride,
@@ -41,6 +44,12 @@ import { useUser } from "@/lib/context/use-user";
 
 const isPreviewChild = env.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD === "true";
 
+interface ActiveAnalyticsConsentSave {
+  readonly fiber: Fiber.Fiber<void, never>;
+  readonly owner: symbol;
+  readonly promptIdentity: AnalyticsConsentPromptIdentity;
+}
+
 /** Owns the state that exclusively controls optional product analytics. */
 export function AnalyticsConsentProvider({
   children,
@@ -56,7 +65,7 @@ export function AnalyticsConsentProvider({
   const [sessionOverrides, setSessionOverrides] =
     useState<AnalyticsConsentSessionOverrides>(() => new Map());
   const [preferences, setPreferences] = useState(initialConsentPreferences);
-  const explicitSaveFiberRef = useRef<Fiber.Fiber<void, never> | null>(null);
+  const explicitSaveRef = useRef<ActiveAnalyticsConsentSave | null>(null);
   const { online: isOnline } = useNetwork();
   const setAccountConsent = useMutation(api.consents.current.set);
   const shouldLoadAccountConsent =
@@ -94,13 +103,27 @@ export function AnalyticsConsentProvider({
 
   useEffect(() => {
     const interruptExplicitSave = () => {
-      const fiber = explicitSaveFiberRef.current;
-      if (!fiber) {
+      const activeSave = explicitSaveRef.current;
+      if (!activeSave) {
         return;
       }
 
-      explicitSaveFiberRef.current = null;
-      Effect.runFork(Fiber.interrupt(fiber));
+      explicitSaveRef.current = null;
+      Effect.runFork(
+        Fiber.interrupt(activeSave.fiber).pipe(
+          Effect.andThen(
+            Effect.sync(() =>
+              setSessionOverrides((current) =>
+                cancelAnalyticsConsentSessionSave({
+                  overrides: current,
+                  owner: activeSave.owner,
+                  promptIdentity: activeSave.promptIdentity,
+                })
+              )
+            )
+          )
+        )
+      );
     };
 
     if (!promptIdentity) {
@@ -263,9 +286,10 @@ export function AnalyticsConsentProvider({
       return;
     }
 
+    const saveOwner = Symbol("analytics consent save");
     setSessionOverrides((current) =>
       setAnalyticsConsentSessionOverride({
-        override: { persistence: "pending" },
+        override: { owner: saveOwner, persistence: "pending" },
         overrides: current,
         promptIdentity,
       })
@@ -273,9 +297,10 @@ export function AnalyticsConsentProvider({
     setPreferencesOpen(false);
     const recordPersistenceFailure = Effect.sync(() =>
       setSessionOverrides((current) =>
-        setAnalyticsConsentSessionOverride({
-          override: { persistence: "failed" },
+        completeAnalyticsConsentSessionSave({
+          nextOverride: { persistence: "failed" },
           overrides: current,
+          owner: saveOwner,
           promptIdentity,
         })
       )
@@ -283,21 +308,39 @@ export function AnalyticsConsentProvider({
     const recordPersistenceSuccess = (decidedAt: number) =>
       Effect.sync(() =>
         setSessionOverrides((current) =>
-          setAnalyticsConsentSessionOverride({
-            override: { decidedAt, persistence: "saved" },
+          completeAnalyticsConsentSessionSave({
+            nextOverride: { decidedAt, persistence: "saved" },
             overrides: current,
+            owner: saveOwner,
             promptIdentity,
           })
         )
       );
 
     const runExplicitSave = (program: Effect.Effect<void, never>) => {
-      const previousFiber = explicitSaveFiberRef.current;
-      const nextProgram = previousFiber
-        ? Fiber.interrupt(previousFiber).pipe(Effect.andThen(program))
+      const previousSave = explicitSaveRef.current;
+      const nextProgram = previousSave
+        ? Fiber.interrupt(previousSave.fiber).pipe(
+            Effect.andThen(
+              Effect.sync(() =>
+                setSessionOverrides((current) =>
+                  cancelAnalyticsConsentSessionSave({
+                    overrides: current,
+                    owner: previousSave.owner,
+                    promptIdentity: previousSave.promptIdentity,
+                  })
+                )
+              )
+            ),
+            Effect.andThen(program)
+          )
         : program;
 
-      explicitSaveFiberRef.current = Effect.runFork(nextProgram);
+      explicitSaveRef.current = {
+        fiber: Effect.runFork(nextProgram),
+        owner: saveOwner,
+        promptIdentity,
+      };
     };
 
     if (expectedUserId) {
