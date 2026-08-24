@@ -129,8 +129,6 @@ import type * as comments_mutations from "../comments/mutations.js";
 import type * as comments_queries from "../comments/queries.js";
 import type * as consents_current from "../consents/current.js";
 import type * as consents_impl from "../consents/impl.js";
-import type * as consents_mutations from "../consents/mutations.js";
-import type * as consents_queries from "../consents/queries.js";
 import type * as contentRelease_abort from "../contentRelease/abort.js";
 import type * as contentRelease_abort_budget from "../contentRelease/abort/budget.js";
 import type * as contentRelease_abort_rows from "../contentRelease/abort/rows.js";
@@ -689,8 +687,6 @@ declare const fullApi: ApiFromModules<{
   "comments/queries": typeof comments_queries;
   "consents/current": typeof consents_current;
   "consents/impl": typeof consents_impl;
-  "consents/mutations": typeof consents_mutations;
-  "consents/queries": typeof consents_queries;
   "contentRelease/abort": typeof contentRelease_abort;
   "contentRelease/abort/budget": typeof contentRelease_abort_budget;
   "contentRelease/abort/rows": typeof contentRelease_abort_rows;

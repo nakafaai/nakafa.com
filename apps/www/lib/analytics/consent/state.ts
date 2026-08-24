@@ -24,7 +24,7 @@ export interface BrowserConsentSnapshot {
 }
 
 export type AccountConsentDecision = NonNullable<
-  FunctionReturnType<typeof api.consents.queries.getCurrent>["decision"]
+  FunctionReturnType<typeof api.consents.current.get>["decision"]
 >;
 
 export type AnalyticsConsentPromptIdentity =

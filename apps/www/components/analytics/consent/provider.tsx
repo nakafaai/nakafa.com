@@ -54,11 +54,11 @@ export function AnalyticsConsentProvider({
   const [isPreferencesOpen, setPreferencesOpen] = useState(false);
   const [, startSaving] = useTransition();
   const { online: isOnline } = useNetwork();
-  const setAccountConsent = useMutation(api.consents.mutations.setCurrent);
+  const setAccountConsent = useMutation(api.consents.current.set);
   const shouldLoadAccountConsent =
     !isPreviewChild && isAuthenticated && !isAuthLoading && !!user;
   const accountConsentQuery = useQueryWithStatus(
-    api.consents.queries.getCurrent,
+    api.consents.current.get,
     shouldLoadAccountConsent ? { category: ANALYTICS_CONSENT_CATEGORY } : "skip"
   );
   const accountConsent = accountConsentQuery.isSuccess

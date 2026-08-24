@@ -9,9 +9,7 @@ import { Effect, Schedule, Schema } from "effect";
 
 const browserSignalRevocationFailedCode = "BROWSER_SIGNAL_REVOCATION_FAILED";
 const browserSignalRetrySchedule = Schedule.spaced("10 seconds");
-type SetAccountConsentArgs = FunctionArgs<
-  typeof api.consents.mutations.setCurrent
->;
+type SetAccountConsentArgs = FunctionArgs<typeof api.consents.current.set>;
 type SetAccountConsent = (args: SetAccountConsentArgs) => Promise<unknown>;
 
 /** Raised after a browser privacy signal cannot persist its account override. */
