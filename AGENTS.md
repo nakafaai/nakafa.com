@@ -288,7 +288,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
   deployment is not proof that older browser clients have stopped calling the
   predecessor. Temporary compatibility is allowed only for this bounded
   migration phase and must have an owner, an exit criterion, and a removal
-  change.
+  change. The migration is not complete until that cleanup is merged.
 
 ## Testing Rules
 
