@@ -3,6 +3,17 @@ import packageJson from "@/package.json";
 import { config } from "@/vercel";
 
 describe("www Vercel configuration", () => {
+  it("builds only affected production commits", () => {
+    expect(config.ignoreCommand).toBe(
+      'if [ "$VERCEL_ENV" != "production" ]; then exit 0; fi; turbo query affected --base="$VERCEL_GIT_PREVIOUS_SHA" --packages www --exit-code || exit 1'
+    );
+    expect(config.git?.deploymentEnabled).toEqual({
+      "**": false,
+      "changeset-release/main": false,
+      main: true,
+    });
+  });
+
   it("deploys the matching Convex backend with the production web build", () => {
     const buildCommand = config.buildCommand ?? "";
     const deploymentCommand = packageJson.scripts["build:vercel"];

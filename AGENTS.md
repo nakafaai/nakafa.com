@@ -153,6 +153,17 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Run the smallest useful verification set after changes, then expand if risk is high.
 - Prefer `pnpm start` over `pnpm dev` when you only need to run the built app. Use `pnpm dev` when the task needs devtools, hot reload, development-mode diagnostics, or Convex live debugging.
 
+## Vercel Cost And Deployment Policy
+
+- Vercel Preview deployments are prohibited for every Nakafa project.
+- Never call the Vercel deploy connector, `vercel`, or `vercel deploy` for a feature branch or pull request.
+- Never require a Vercel Preview URL as a pull request gate.
+- Verify feature work with local production-mode builds and starts, exact-head GitHub CI, Browser or Playwright, and isolated Convex Agent Mode deployments where needed.
+- Vercel Production deployment is allowed only after a protected merge to `main`, through the existing `main` Git integration.
+- Keep every app Vercel config restricted to `main`; all other branch patterns remain disabled.
+- Do not enable external Turborepo Remote Cache for the signed `www` production build until every server-side environment input and signed-content generation is included in its task hash.
+- If an accidental Preview deployment starts, cancel it immediately, identify the owner, and remove every task-owned Preview artifact during cleanup.
+
 ## Module Size And Decomposition
 
 - Hand-written `.ts` and `.tsx` Modules should target 300 LOC or less.
