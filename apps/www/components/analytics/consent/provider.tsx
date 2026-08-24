@@ -24,9 +24,11 @@ import {
 } from "@/lib/analytics/consent/context";
 import { revokeAccountAnalyticsGrant } from "@/lib/analytics/consent/signal";
 import {
+  createAnalyticsConsentPromptIdentity,
   createBrowserAnalyticsIdentity,
   resolveBrowserAnalyticsConsentState,
   shouldRevokeAccountAnalyticsGrant,
+  shouldShowAnalyticsConsentPrompt,
 } from "@/lib/analytics/consent/state";
 import { useUser } from "@/lib/context/use-user";
 
@@ -45,6 +47,9 @@ export function AnalyticsConsentProvider({
   }));
   const [operationError, setOperationError] =
     useState<AnalyticsConsentError | null>(null);
+  const [dismissedPromptIdentity, setDismissedPromptIdentity] = useState<
+    string | null
+  >(null);
   const [isPreferencesOpen, setPreferencesOpen] = useState(false);
   const [isSaving, startSaving] = useTransition();
   const { online: isOnline } = useNetwork();
@@ -152,6 +157,16 @@ export function AnalyticsConsentProvider({
     accountConsentQuery.isError || (!isAuthenticated && hasStorageError)
       ? "load"
       : operationError;
+  const promptIdentity = createAnalyticsConsentPromptIdentity({
+    isAuthenticated,
+    user,
+  });
+  const isPromptOpen = shouldShowAnalyticsConsentPrompt({
+    dismissedPromptIdentity,
+    hasLoadError: error === "load",
+    promptIdentity,
+    status: state.status,
+  });
 
   function decide(granted: boolean) {
     const isAllowed = granted ? canGrant : canDecline;
@@ -160,18 +175,18 @@ export function AnalyticsConsentProvider({
     }
 
     setOperationError(null);
+    setDismissedPromptIdentity(promptIdentity);
+    setPreferencesOpen(false);
     const onSaveFailure = () =>
-      Effect.sync(() => {
-        setOperationError("save");
-      });
-    const onSaveSuccess = () =>
-      (granted ? Effect.void : disableBrowserAnalytics()).pipe(
+      disableBrowserAnalytics().pipe(
         Effect.andThen(
           Effect.sync(() => {
-            setPreferencesOpen(false);
+            setOperationError("save");
           })
         )
       );
+    const onSaveSuccess = () =>
+      granted ? Effect.void : disableBrowserAnalytics();
 
     if (isAuthenticated) {
       const accountSave = Effect.tryPromise(() =>
@@ -210,6 +225,7 @@ export function AnalyticsConsentProvider({
     error,
     isAvailable: !isPreviewChild,
     isPreferencesOpen,
+    isPromptOpen,
     isSaving,
     setPreferencesOpen,
     state,

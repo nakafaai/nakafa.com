@@ -12,6 +12,7 @@ export interface AnalyticsConsentContextValue {
   readonly error: AnalyticsConsentError | null;
   readonly isAvailable: boolean;
   readonly isPreferencesOpen: boolean;
+  readonly isPromptOpen: boolean;
   readonly isSaving: boolean;
   readonly setPreferencesOpen: (open: boolean) => void;
   readonly state: AnalyticsConsentState;

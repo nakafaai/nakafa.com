@@ -17,6 +17,7 @@ const unavailableAnalyticsConsent = {
   error: null,
   isAvailable: false,
   isPreferencesOpen: false,
+  isPromptOpen: false,
   isSaving: false,
   setPreferencesOpen: ignoreUnavailableConsentAction,
   state: { status: "pending" },

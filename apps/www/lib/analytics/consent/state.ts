@@ -27,6 +27,44 @@ export type AccountConsentDecision = NonNullable<
   FunctionReturnType<typeof api.consents.queries.getCurrent>["decision"]
 >;
 
+/** Identifies the exact visitor and notice that owns a consent prompt. */
+export function createAnalyticsConsentPromptIdentity({
+  isAuthenticated,
+  user,
+}: {
+  readonly isAuthenticated: boolean;
+  readonly user: BrowserAnalyticsUser | null;
+}) {
+  if (!isAuthenticated) {
+    return `anonymous:${ANALYTICS_CONSENT_NOTICE_VERSION}`;
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  return `account:${user.appUser._id}:${ANALYTICS_CONSENT_NOTICE_VERSION}`;
+}
+
+/** Keeps a handled or failed prompt out of the user's current app session. */
+export function shouldShowAnalyticsConsentPrompt({
+  dismissedPromptIdentity,
+  hasLoadError,
+  promptIdentity,
+  status,
+}: {
+  readonly dismissedPromptIdentity: string | null;
+  readonly hasLoadError: boolean;
+  readonly promptIdentity: string | null;
+  readonly status: AnalyticsConsentState["status"];
+}) {
+  if (!promptIdentity || dismissedPromptIdentity === promptIdentity) {
+    return false;
+  }
+
+  return status === "prompt" || (hasLoadError && status === "pending");
+}
+
 /** Returns whether a browser privacy signal must revoke an account grant. */
 export function shouldRevokeAccountAnalyticsGrant({
   accountConsent,

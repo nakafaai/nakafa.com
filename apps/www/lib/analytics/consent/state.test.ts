@@ -8,10 +8,12 @@ import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   type BrowserAnalyticsUser,
+  createAnalyticsConsentPromptIdentity,
   createBrowserAnalyticsIdentity,
   resolveBrowserAnalyticsConsentState,
   shouldPersistAnonymousAnalyticsDenial,
   shouldRevokeAccountAnalyticsGrant,
+  shouldShowAnalyticsConsentPrompt,
 } from "@/lib/analytics/consent/state";
 
 const anonymousConsent = createAnonymousAnalyticsConsent("granted", 100);
@@ -35,6 +37,74 @@ const userWithoutRole = {
 } satisfies BrowserAnalyticsUser;
 
 describe("browser analytics consent state", () => {
+  it("scopes a prompt dismissal to the current visitor and notice", () => {
+    expect([
+      createAnalyticsConsentPromptIdentity({
+        isAuthenticated: false,
+        user: null,
+      }),
+      createAnalyticsConsentPromptIdentity({
+        isAuthenticated: true,
+        user,
+      }),
+      createAnalyticsConsentPromptIdentity({
+        isAuthenticated: true,
+        user: null,
+      }),
+    ]).toEqual([
+      `anonymous:${ANALYTICS_CONSENT_NOTICE_VERSION}`,
+      `account:user-1:${ANALYTICS_CONSENT_NOTICE_VERSION}`,
+      null,
+    ]);
+  });
+
+  it("dismisses only the handled visitor prompt", () => {
+    const accountPromptIdentity = createAnalyticsConsentPromptIdentity({
+      isAuthenticated: true,
+      user,
+    });
+
+    expect(
+      [null, accountPromptIdentity].map((dismissedPromptIdentity) =>
+        shouldShowAnalyticsConsentPrompt({
+          dismissedPromptIdentity,
+          hasLoadError: false,
+          promptIdentity: accountPromptIdentity,
+          status: "prompt",
+        })
+      )
+    ).toEqual([true, false]);
+    expect(
+      shouldShowAnalyticsConsentPrompt({
+        dismissedPromptIdentity: accountPromptIdentity,
+        hasLoadError: false,
+        promptIdentity: `account:user-2:${ANALYTICS_CONSENT_NOTICE_VERSION}`,
+        status: "prompt",
+      })
+    ).toBe(true);
+  });
+
+  it("shows load failures only until that prompt is dismissed", () => {
+    const promptIdentity = createAnalyticsConsentPromptIdentity({
+      isAuthenticated: false,
+      user: null,
+    });
+
+    expect(
+      [
+        { dismissedPromptIdentity: null, hasLoadError: true },
+        { dismissedPromptIdentity: promptIdentity, hasLoadError: true },
+        { dismissedPromptIdentity: null, hasLoadError: false },
+      ].map((input) =>
+        shouldShowAnalyticsConsentPrompt({
+          ...input,
+          promptIdentity,
+          status: "pending",
+        })
+      )
+    ).toEqual([true, false, false]);
+  });
+
   it("persists an anonymous denial after a signal or account withdrawal", () => {
     const unresolvedBrowser = {
       anonymousConsent: Option.none(),
