@@ -25,6 +25,7 @@ interface Props {
   children?: ReactNode;
   description?: ReactNode;
   footer?: ReactNode;
+  isDesktop?: boolean;
   open: boolean;
   setOpen: (open: boolean) => void;
   title: ReactNode;
@@ -37,8 +38,10 @@ export function ResponsiveDialog({
   description,
   children,
   footer,
+  isDesktop: isDesktopOverride,
 }: Props) {
-  const isDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp);
+  const detectedDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp);
+  const isDesktop = isDesktopOverride ?? detectedDesktop;
 
   if (isDesktop) {
     return (

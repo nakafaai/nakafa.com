@@ -1,6 +1,7 @@
 "use client";
 
 import { Alert02Icon } from "@hugeicons/core-free-icons";
+import { useMediaQuery } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Card,
@@ -12,10 +13,16 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
+import { loadConsentDialog } from "@/components/analytics/consent/dialog";
 import { useAnalyticsConsent } from "@/lib/analytics/consent/context";
 import { usePageNavigation } from "@/lib/content/page/context";
+
+const ConsentPreferences = dynamic(() =>
+  loadConsentDialog().then((module) => module.ResponsiveDialog)
+);
 
 /** Renders the non-blocking first decision and permanent preferences dialog. */
 export function AnalyticsConsentControls() {
@@ -26,6 +33,9 @@ export function AnalyticsConsentControls() {
     (state) => state.setPreferencesOpen
   );
   const isPromptOpen = useAnalyticsConsent((state) => state.isPromptOpen);
+  const isDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp, false, {
+    getInitialValueInEffect: false,
+  });
 
   if (!isAvailable) {
     return null;
@@ -53,17 +63,20 @@ export function AnalyticsConsentControls() {
         </section>
       ) : null}
 
-      <ResponsiveDialog
-        description={t(`status-${preferences.statusAtOpen}`)}
-        footer={<ConsentActions />}
-        open={preferences.isOpen}
-        setOpen={setPreferencesOpen}
-        title={t("title")}
-      >
-        <div className="flex flex-col gap-3">
-          <ConsentDetails />
-        </div>
-      </ResponsiveDialog>
+      {preferences.isOpen ? (
+        <ConsentPreferences
+          description={t(`status-${preferences.statusAtOpen}`)}
+          footer={<ConsentActions />}
+          isDesktop={isDesktop}
+          open
+          setOpen={setPreferencesOpen}
+          title={t("title")}
+        >
+          <div className="flex flex-col gap-3">
+            <ConsentDetails />
+          </div>
+        </ConsentPreferences>
+      ) : null}
     </>
   );
 }

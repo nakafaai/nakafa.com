@@ -1,5 +1,6 @@
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { ConvexProvider } from "@/components/providers/convex";
+import { env } from "@/env";
 import { UserContextProvider } from "@/lib/context/use-user";
 
 /**
@@ -15,7 +16,7 @@ import { UserContextProvider } from "@/lib/context/use-user";
 export default function Layout({ children }: LayoutProps<"/[locale]">) {
   return (
     <NuqsAdapter>
-      <ConvexProvider>
+      <ConvexProvider convexUrl={env.NEXT_PUBLIC_CONVEX_URL}>
         <UserContextProvider>{children}</UserContextProvider>
       </ConvexProvider>
     </NuqsAdapter>

@@ -8,7 +8,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
+import { Effect } from "effect";
 import { useTranslations } from "next-intl";
+import { preloadConsentDialog } from "@/components/analytics/consent/dialog";
 import { useAnalyticsConsent } from "@/lib/analytics/consent/context";
 
 /** Adds a permanent privacy preference action to the marketing footer. */
@@ -19,6 +21,15 @@ export function AnalyticsConsentFooterItem() {
     (state) => state.setPreferencesOpen
   );
 
+  function handleIntent() {
+    Effect.runFork(preloadConsentDialog());
+  }
+
+  function handleOpen() {
+    Effect.runFork(preloadConsentDialog());
+    setPreferencesOpen(true);
+  }
+
   if (!isAvailable) {
     return null;
   }
@@ -27,7 +38,10 @@ export function AnalyticsConsentFooterItem() {
     <li>
       <Button
         className="h-auto justify-start p-0 text-foreground no-underline transition-colors ease-out hover:text-primary"
-        onClick={() => setPreferencesOpen(true)}
+        onClick={handleOpen}
+        onFocus={handleIntent}
+        onMouseEnter={handleIntent}
+        onTouchStart={handleIntent}
         type="button"
         variant="link"
       >
@@ -45,6 +59,15 @@ export function AnalyticsConsentMenuItem() {
     (state) => state.setPreferencesOpen
   );
 
+  function handleIntent() {
+    Effect.runFork(preloadConsentDialog());
+  }
+
+  function handleOpen() {
+    Effect.runFork(preloadConsentDialog());
+    setPreferencesOpen(true);
+  }
+
   if (!isAvailable) {
     return null;
   }
@@ -52,7 +75,10 @@ export function AnalyticsConsentMenuItem() {
   return (
     <DropdownMenuItem
       className="cursor-pointer"
-      onClick={() => setPreferencesOpen(true)}
+      onClick={handleOpen}
+      onFocus={handleIntent}
+      onMouseEnter={handleIntent}
+      onTouchStart={handleIntent}
     >
       <HugeIcons icon={Analytics01Icon} />
       {t("manage")}
@@ -68,13 +94,27 @@ export function AnalyticsConsentSidebarItem() {
     (state) => state.setPreferencesOpen
   );
 
+  function handleIntent() {
+    Effect.runFork(preloadConsentDialog());
+  }
+
+  function handleOpen() {
+    Effect.runFork(preloadConsentDialog());
+    setPreferencesOpen(true);
+  }
+
   if (!isAvailable) {
     return null;
   }
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton onClick={() => setPreferencesOpen(true)}>
+      <SidebarMenuButton
+        onClick={handleOpen}
+        onFocus={handleIntent}
+        onMouseEnter={handleIntent}
+        onTouchStart={handleIntent}
+      >
         <HugeIcons icon={Analytics01Icon} />
         {t("manage")}
       </SidebarMenuButton>
