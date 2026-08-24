@@ -2,6 +2,7 @@
 
 import type { AnalyticsConsentState } from "@repo/analytics/consent";
 import { createContext, useContextSelector } from "use-context-selector";
+import type { AnalyticsConsentPreferences } from "@/lib/analytics/consent/preferences";
 
 export type AnalyticsConsentError = "load" | "runtime" | "save";
 
@@ -11,9 +12,9 @@ export interface AnalyticsConsentContextValue {
   readonly decide: (granted: boolean) => void;
   readonly error: AnalyticsConsentError | null;
   readonly isAvailable: boolean;
-  readonly isPreferencesOpen: boolean;
   readonly isPromptOpen: boolean;
   readonly isSaving: boolean;
+  readonly preferences: AnalyticsConsentPreferences;
   readonly setPreferencesOpen: (open: boolean) => void;
   readonly status: AnalyticsConsentState["status"];
 }

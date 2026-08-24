@@ -21,9 +21,7 @@ import { usePageNavigation } from "@/lib/content/page/context";
 export function AnalyticsConsentControls() {
   const t = useTranslations("AnalyticsConsent");
   const isAvailable = useAnalyticsConsent((state) => state.isAvailable);
-  const isPreferencesOpen = useAnalyticsConsent(
-    (state) => state.isPreferencesOpen
-  );
+  const preferences = useAnalyticsConsent((state) => state.preferences);
   const setPreferencesOpen = useAnalyticsConsent(
     (state) => state.setPreferencesOpen
   );
@@ -56,9 +54,9 @@ export function AnalyticsConsentControls() {
       ) : null}
 
       <ResponsiveDialog
-        description={<ConsentStatus />}
+        description={t(`status-${preferences.statusAtOpen}`)}
         footer={<ConsentActions />}
-        open={isPreferencesOpen}
+        open={preferences.isOpen}
         setOpen={setPreferencesOpen}
         title={t("title")}
       >
@@ -68,13 +66,6 @@ export function AnalyticsConsentControls() {
       </ResponsiveDialog>
     </>
   );
-}
-
-function ConsentStatus() {
-  const t = useTranslations("AnalyticsConsent");
-  const status = useAnalyticsConsent((state) => state.status);
-
-  return <span aria-live="polite">{t(`status-${status}`)}</span>;
 }
 
 function ConsentActions() {

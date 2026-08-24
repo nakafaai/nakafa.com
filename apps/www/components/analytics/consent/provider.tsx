@@ -1,11 +1,7 @@
 "use client";
 
 import { useNetwork } from "@mantine/hooks";
-import {
-  ANALYTICS_CONSENT_CATEGORY,
-  ANALYTICS_CONSENT_MECHANISM,
-  ANALYTICS_CONSENT_NOTICE_VERSION,
-} from "@repo/analytics/consent";
+import { ANALYTICS_CONSENT_CATEGORY } from "@repo/analytics/consent";
 import {
   disableBrowserAnalytics,
   enableBrowserAnalytics,
@@ -22,14 +18,24 @@ import {
   AnalyticsConsentContext,
   type AnalyticsConsentError,
 } from "@/lib/analytics/consent/context";
-import { revokeAccountAnalyticsGrant } from "@/lib/analytics/consent/signal";
+import {
+  initialConsentPreferences,
+  updateConsentPreferences,
+} from "@/lib/analytics/consent/preferences";
 import {
   type AnalyticsConsentSessionOverrides,
+  clearAnalyticsConsentSessionOverride,
   createAnalyticsConsentPromptIdentity,
-  createBrowserAnalyticsIdentity,
   resolveAnalyticsConsentSessionPolicy,
-  resolveBrowserAnalyticsConsentState,
   setAnalyticsConsentSessionOverride,
+} from "@/lib/analytics/consent/session";
+import {
+  revokeAccountAnalyticsGrant,
+  saveAccountAnalyticsChoice,
+} from "@/lib/analytics/consent/signal";
+import {
+  createBrowserAnalyticsIdentity,
+  resolveBrowserAnalyticsConsentState,
   shouldRevokeAccountAnalyticsGrant,
 } from "@/lib/analytics/consent/state";
 import { useUser } from "@/lib/context/use-user";
@@ -50,7 +56,7 @@ export function AnalyticsConsentProvider({
   const [hasRuntimeError, setRuntimeError] = useState(false);
   const [sessionOverrides, setSessionOverrides] =
     useState<AnalyticsConsentSessionOverrides>(() => new Map());
-  const [isPreferencesOpen, setPreferencesOpen] = useState(false);
+  const [preferences, setPreferences] = useState(initialConsentPreferences);
   const [, startSaving] = useTransition();
   const { online: isOnline } = useNetwork();
   const setAccountConsent = useMutation(api.consents.current.set);
@@ -63,12 +69,16 @@ export function AnalyticsConsentProvider({
   const accountConsent = accountConsentQuery.isSuccess
     ? accountConsentQuery.data.decision
     : null;
-  const { browserConsent, hasStorageError, saveDecision } =
-    useAnonymousAnalyticsConsent({
-      accountConsent,
-      isAuthenticated,
-      isPreviewChild,
-    });
+  const {
+    browserConsent,
+    currentBrowserPrivacySignal,
+    hasStorageError,
+    saveDecision,
+  } = useAnonymousAnalyticsConsent({
+    accountConsent,
+    isAuthenticated,
+    isPreviewChild,
+  });
   const promptIdentity = createAnalyticsConsentPromptIdentity({
     isAuthenticated,
     user,
@@ -114,13 +124,31 @@ export function AnalyticsConsentProvider({
           })
         )
       );
+    const clearRevocationOverride = Effect.sync(() =>
+      setSessionOverrides((current) =>
+        clearAnalyticsConsentSessionOverride({
+          overrides: current,
+          promptIdentity,
+        })
+      )
+    );
 
     const revokeFiber = Effect.runFork(
-      revokeAccountAnalyticsGrant(setAccountConsent, currentAccountUserId).pipe(
-        Effect.matchEffect({
-          onFailure: () => recordRevocationFailure,
-          onSuccess: (decision) => recordRevocationSuccess(decision.decidedAt),
-        })
+      revokeAccountAnalyticsGrant(
+        setAccountConsent,
+        currentAccountUserId,
+        currentBrowserPrivacySignal
+      ).pipe(
+        Effect.flatMap(
+          Option.match({
+            onNone: () => clearRevocationOverride,
+            onSome: (decision) => recordRevocationSuccess(decision.decidedAt),
+          })
+        ),
+        Effect.catchTag(
+          "AccountConsentPersistenceError",
+          () => recordRevocationFailure
+        )
       )
     );
 
@@ -131,6 +159,7 @@ export function AnalyticsConsentProvider({
     currentAccountUserId,
     isOnline,
     promptIdentity,
+    currentBrowserPrivacySignal,
     setAccountConsent,
     shouldRevokeAccountGrant,
   ]);
@@ -208,6 +237,16 @@ export function AnalyticsConsentProvider({
     error = "runtime";
   }
 
+  function setPreferencesOpen(isOpen: boolean) {
+    setPreferences((current) =>
+      updateConsentPreferences({
+        current,
+        isOpen,
+        status: sessionPolicy.status,
+      })
+    );
+  }
+
   function decide(granted: boolean) {
     const isAllowed = granted ? canGrant : canDecline;
     if (!(isAllowed && !sessionPolicy.isSaving && promptIdentity)) {
@@ -247,16 +286,11 @@ export function AnalyticsConsentProvider({
       );
 
     if (expectedUserId) {
-      const accountSave = Effect.tryPromise(() =>
-        setAccountConsent({
-          decision: {
-            category: ANALYTICS_CONSENT_CATEGORY,
-            granted,
-            mechanism: ANALYTICS_CONSENT_MECHANISM,
-            noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
-          },
-          expectedUserId,
-        })
+      const accountSave = saveAccountAnalyticsChoice(
+        setAccountConsent,
+        expectedUserId,
+        granted,
+        currentBrowserPrivacySignal
       ).pipe(
         Effect.matchEffect({
           onFailure: () => recordPersistenceFailure,
@@ -283,9 +317,9 @@ export function AnalyticsConsentProvider({
     decide,
     error,
     isAvailable: !isPreviewChild,
-    isPreferencesOpen,
     isPromptOpen: sessionPolicy.isPromptOpen,
     isSaving: sessionPolicy.isSaving,
+    preferences,
     setPreferencesOpen,
     status: sessionPolicy.status,
   };
