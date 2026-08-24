@@ -33,7 +33,7 @@ export type AnalyticsConsentPromptIdentity =
 
 export interface AnalyticsConsentSessionOverride {
   readonly granted: boolean;
-  readonly persistence: "failed" | "pending" | "saved";
+  readonly persistence: "failed" | "pending";
 }
 
 export type AnalyticsConsentSessionOverrides = ReadonlyMap<
@@ -72,6 +72,19 @@ export function setAnalyticsConsentSessionOverride({
 }): AnalyticsConsentSessionOverrides {
   const nextOverrides = new Map(overrides);
   nextOverrides.set(promptIdentity, override);
+  return nextOverrides;
+}
+
+/** Clears transient state after its durable source has synchronized. */
+export function clearAnalyticsConsentSessionOverride({
+  overrides,
+  promptIdentity,
+}: {
+  readonly overrides: AnalyticsConsentSessionOverrides;
+  readonly promptIdentity: AnalyticsConsentPromptIdentity;
+}): AnalyticsConsentSessionOverrides {
+  const nextOverrides = new Map(overrides);
+  nextOverrides.delete(promptIdentity);
   return nextOverrides;
 }
 

@@ -8,6 +8,7 @@ import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   type BrowserAnalyticsUser,
+  clearAnalyticsConsentSessionOverride,
   createAnalyticsConsentPromptIdentity,
   createBrowserAnalyticsIdentity,
   resolveAnalyticsConsentSessionPolicy,
@@ -38,7 +39,7 @@ const userWithoutRole = {
 } satisfies BrowserAnalyticsUser;
 
 describe("browser analytics consent state", () => {
-  it("retains scoped choices and failures across visitor changes", () => {
+  it("keeps failures scoped and clears synchronized choices", () => {
     const anonymous = createAnalyticsConsentPromptIdentity({
       isAuthenticated: false,
       user: null,
@@ -62,7 +63,7 @@ describe("browser analytics consent state", () => {
       return;
     }
     let overrides = setAnalyticsConsentSessionOverride({
-      override: { granted: true, persistence: "saved" },
+      override: { granted: true, persistence: "failed" },
       overrides: new Map(),
       promptIdentity: anonymous,
     });
@@ -72,7 +73,11 @@ describe("browser analytics consent state", () => {
       promptIdentity: accountA,
     });
     overrides = setAnalyticsConsentSessionOverride({
-      override: { granted: true, persistence: "saved" },
+      override: { granted: true, persistence: "pending" },
+      overrides,
+      promptIdentity: accountB,
+    });
+    overrides = clearAnalyticsConsentSessionOverride({
       overrides,
       promptIdentity: accountB,
     });
@@ -88,7 +93,7 @@ describe("browser analytics consent state", () => {
         .map(resolveFor)
         .map((policy) => [policy.hasSaveError, policy.isRuntimeSuppressed])
     ).toEqual([
-      [false, false],
+      [true, true],
       [true, true],
       [false, false],
       [true, true],
