@@ -79,8 +79,10 @@ export function useAnonymousAnalyticsConsent({
     })
   );
   const [hasStorageError, setHasStorageError] = useState(false);
-  const currentBrowserPrivacySignal =
-    refreshBrowserPrivacySignal(setBrowserConsent);
+  // One stable Effect identity owns each bounded revocation lifetime.
+  const [currentBrowserPrivacySignal] = useState(() =>
+    refreshBrowserPrivacySignal(setBrowserConsent)
+  );
 
   useEffect(() => {
     if (isPreviewChild) {
