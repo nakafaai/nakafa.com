@@ -19,7 +19,7 @@ authored content source or publication path.
 `package.json` is the toolchain source of truth:
 
 - Node.js 24
-- pnpm 11.22.0
+- pnpm 11.23.0
 - Turborepo
 - Next.js 16 and React 19
 - TypeScript 7 CLI with TypeScript 6 API compatibility
