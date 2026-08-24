@@ -74,6 +74,7 @@ export function AnalyticsConsentProvider({
     isAuthenticated,
     user,
   });
+  const currentAccountUserId = user?.appUser._id ?? null;
   const shouldRevokeAccountGrant = shouldRevokeAccountAnalyticsGrant({
     accountConsent,
     browserConsent,
@@ -82,7 +83,14 @@ export function AnalyticsConsentProvider({
   });
 
   useEffect(() => {
-    if (!(shouldRevokeAccountGrant && isOnline && promptIdentity)) {
+    if (
+      !(
+        shouldRevokeAccountGrant &&
+        isOnline &&
+        promptIdentity &&
+        currentAccountUserId
+      )
+    ) {
       return;
     }
 
@@ -105,7 +113,7 @@ export function AnalyticsConsentProvider({
     );
 
     const revokeFiber = Effect.runFork(
-      revokeAccountAnalyticsGrant(setAccountConsent).pipe(
+      revokeAccountAnalyticsGrant(setAccountConsent, currentAccountUserId).pipe(
         Effect.matchEffect({
           onFailure: () => recordRevocationFailure,
           onSuccess: () => clearRevocationOverride,
@@ -116,7 +124,13 @@ export function AnalyticsConsentProvider({
     return () => {
       Effect.runFork(Fiber.interrupt(revokeFiber));
     };
-  }, [isOnline, promptIdentity, setAccountConsent, shouldRevokeAccountGrant]);
+  }, [
+    currentAccountUserId,
+    isOnline,
+    promptIdentity,
+    setAccountConsent,
+    shouldRevokeAccountGrant,
+  ]);
 
   const state = resolveBrowserAnalyticsConsentState({
     accountConsent,
@@ -195,6 +209,10 @@ export function AnalyticsConsentProvider({
     if (!(isAllowed && !sessionPolicy.isSaving && promptIdentity)) {
       return;
     }
+    const expectedUserId = isAuthenticated ? (user?.appUser._id ?? null) : null;
+    if (isAuthenticated && !expectedUserId) {
+      return;
+    }
 
     setSessionOverrides((current) =>
       setAnalyticsConsentSessionOverride({
@@ -222,7 +240,7 @@ export function AnalyticsConsentProvider({
       )
     );
 
-    if (isAuthenticated) {
+    if (expectedUserId) {
       const accountSave = Effect.tryPromise(() =>
         setAccountConsent({
           decision: {
@@ -231,6 +249,7 @@ export function AnalyticsConsentProvider({
             mechanism: ANALYTICS_CONSENT_MECHANISM,
             noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
           },
+          expectedUserId,
         })
       ).pipe(
         Effect.matchEffect({

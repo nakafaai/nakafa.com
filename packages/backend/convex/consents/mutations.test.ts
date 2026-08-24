@@ -21,6 +21,9 @@ describe("consents/mutations", () => {
 
   it("requires an authenticated account", async () => {
     const t = createConvexTestWithBetterAuth();
+    const identity = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW, suffix: "consent-unauthorized" })
+    );
 
     await expect(
       t.mutation(api.consents.mutations.setCurrent, {
@@ -30,8 +33,41 @@ describe("consents/mutations", () => {
           mechanism: ANALYTICS_CONSENT_MECHANISM,
           noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
         },
+        expectedUserId: identity.userId,
       })
     ).rejects.toThrow();
+  });
+
+  it("rejects a decision queued by a different account", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const original = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW, suffix: "consent-original" })
+    );
+    const current = await t.mutation((ctx) =>
+      seedAuthenticatedUser(ctx, { now: NOW, suffix: "consent-current" })
+    );
+    const authenticated = t.withIdentity({
+      sessionId: current.sessionId,
+      subject: current.authUserId,
+    });
+
+    await expect(
+      authenticated.mutation(api.consents.mutations.setCurrent, {
+        decision: {
+          category: analyticsCategory,
+          granted: true,
+          mechanism: ANALYTICS_CONSENT_MECHANISM,
+          noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+        },
+        expectedUserId: original.userId,
+      })
+    ).rejects.toMatchObject({
+      data: { code: "CONSENT_ACCOUNT_CHANGED" },
+    });
+    const stored = await t.query(async (ctx) =>
+      ctx.db.query("accountConsentDecisions").take(1)
+    );
+    expect(stored).toEqual([]);
   });
 
   it("atomically records grant and withdrawal while replacing current state", async () => {
@@ -54,6 +90,7 @@ describe("consents/mutations", () => {
           mechanism: ANALYTICS_CONSENT_MECHANISM,
           noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
         },
+        expectedUserId: identity.userId,
       }
     );
     vi.setSystemTime(new Date(NOW + 1000));
@@ -66,6 +103,7 @@ describe("consents/mutations", () => {
           mechanism: ANALYTICS_BROWSER_SIGNAL_MECHANISM,
           noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
         },
+        expectedUserId: identity.userId,
       }
     );
     const stored = await t.query(async (ctx) => ({
@@ -131,6 +169,7 @@ describe("consents/mutations", () => {
         mechanism: ANALYTICS_CONSENT_MECHANISM,
         noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
       },
+      expectedUserId: identity.userId,
     } as const;
 
     const first = await authenticated.mutation(

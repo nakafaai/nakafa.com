@@ -35,22 +35,27 @@ function toBrowserSignalRevocationError() {
 /** Persists a browser privacy signal with two delayed retries, then fails. */
 export const revokeAccountAnalyticsGrant = Effect.fn(
   "analytics.consent.revokeAccountAnalyticsGrant"
-)((setAccountConsent: SetAccountConsent) =>
-  Effect.tryPromise({
-    catch: toBrowserSignalRevocationError,
-    try: () =>
-      setAccountConsent({
-        decision: {
-          category: ANALYTICS_CONSENT_CATEGORY,
-          granted: false,
-          mechanism: ANALYTICS_BROWSER_SIGNAL_MECHANISM,
-          noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
-        },
-      }),
-  }).pipe(
-    Effect.retry({
-      schedule: browserSignalRetrySchedule,
-      times: 2,
-    })
-  )
+)(
+  (
+    setAccountConsent: SetAccountConsent,
+    expectedUserId: SetAccountConsentArgs["expectedUserId"]
+  ) =>
+    Effect.tryPromise({
+      catch: toBrowserSignalRevocationError,
+      try: () =>
+        setAccountConsent({
+          decision: {
+            category: ANALYTICS_CONSENT_CATEGORY,
+            granted: false,
+            mechanism: ANALYTICS_BROWSER_SIGNAL_MECHANISM,
+            noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
+          },
+          expectedUserId,
+        }),
+    }).pipe(
+      Effect.retry({
+        schedule: browserSignalRetrySchedule,
+        times: 2,
+      })
+    )
 );
