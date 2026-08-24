@@ -279,11 +279,13 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Prefer installed helpers/components when they fit: Better Auth, Workflow, Aggregate, Workpool, `convex-helpers`.
 - Keep pagination, relationships, aggregates, workflows, and cron jobs aligned with official patterns.
 - Make Convex schema and index names explicit and readable.
-- Treat every public Convex function used by the deployed website as a rollout
-  contract. A rename or deletion uses three releases: add the successor, switch
-  the website while both functions exist, then remove the predecessor after
-  promotion. The predecessor is a temporary deployment phase and must be
-  deleted in the immediately following cleanup pull request.
+- Treat every public Convex function used by a deployed product consumer as a
+  rollout contract. A rename or deletion uses three releases: add the
+  successor, switch every consumer while both functions exist, then remove the
+  predecessor after production promotion. The release gate resolves the last
+  successful www, API, and MCP revisions before a production Convex deploy. The
+  predecessor is a temporary deployment phase and must be deleted in the
+  immediately following cleanup pull request.
 
 ## Testing Rules
 
