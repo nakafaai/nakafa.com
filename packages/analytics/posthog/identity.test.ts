@@ -72,9 +72,12 @@ describe("PostHog browser identity gate", () => {
     expect(optedOutClient.reset).toHaveBeenCalledExactlyOnceWith(true);
     expect(optedOutClient.opt_in_capturing).not.toHaveBeenCalled();
     expect(optedOutClient.opt_out_capturing).toHaveBeenCalledOnce();
+    expect(
+      optedOutClient.opt_out_capturing.mock.invocationCallOrder[0]
+    ).toBeLessThan(optedOutClient.reset.mock.invocationCallOrder[0] ?? 0);
   });
 
-  it("replaces analytics identity without adding an opt-out", () => {
+  it("replaces a capturing identity without exposing reset state", () => {
     const capturingClient = {
       get_property: () => "deleted-user",
       has_opted_out_capturing: () => false,
@@ -89,6 +92,14 @@ describe("PostHog browser identity gate", () => {
     expect(capturingClient.opt_in_capturing).toHaveBeenCalledExactlyOnceWith({
       captureEventName: false,
     });
-    expect(capturingClient.opt_out_capturing).not.toHaveBeenCalled();
+    expect(capturingClient.opt_out_capturing).toHaveBeenCalledOnce();
+    const optOutOrder =
+      capturingClient.opt_out_capturing.mock.invocationCallOrder[0] ?? 0;
+    const resetOrder = capturingClient.reset.mock.invocationCallOrder[0] ?? 0;
+    const optInOrder =
+      capturingClient.opt_in_capturing.mock.invocationCallOrder[0] ?? 0;
+
+    expect(optOutOrder).toBeLessThan(resetOrder);
+    expect(resetOrder).toBeLessThan(optInOrder);
   });
 });

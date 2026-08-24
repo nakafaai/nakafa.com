@@ -2,6 +2,7 @@
 
 import { ModelIdSchema } from "@repo/ai/config/model";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createChatErrorReporter } from "@/app/api/chat/observability";
 
@@ -41,7 +42,7 @@ describe("chat stream observability", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     observabilityMocks.pending.length = 0;
-    observabilityMocks.captureServerException.mockResolvedValue(undefined);
+    observabilityMocks.captureServerException.mockReturnValue(Effect.void);
     observabilityMocks.getGatewayErrorContext.mockReturnValue({});
   });
 
@@ -78,8 +79,8 @@ describe("chat stream observability", () => {
   });
 
   it("contains provider failure and records it in service logs", async () => {
-    observabilityMocks.captureServerException.mockRejectedValue(
-      new Error("provider unavailable")
+    observabilityMocks.captureServerException.mockReturnValue(
+      Effect.fail({ cause: new Error("provider unavailable") })
     );
     observabilityMocks.getGatewayErrorContext.mockReturnValue({
       gatewayErrorType: "rate_limit",

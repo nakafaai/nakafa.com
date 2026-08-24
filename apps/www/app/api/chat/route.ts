@@ -11,7 +11,6 @@ import { NinaStore } from "@repo/ai/nina/runtime/store";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { LocaleSchema } from "@repo/contents/_types/content";
-import { CorsValidator } from "@repo/security/lib/cors-validator";
 import { cleanSlug } from "@repo/utilities/helper";
 import { geolocation } from "@vercel/functions";
 import { Effect, Option, Schema } from "effect";
@@ -37,8 +36,10 @@ import {
   getVerified,
 } from "@/app/api/chat/utils";
 import { getToken } from "@/lib/auth/server";
-
-const corsValidator = new CorsValidator();
+import {
+  createCorsForbiddenResponse,
+  isCorsRequestAllowed,
+} from "@/lib/security/cors";
 
 /**
  * Keeps the streamed chat route aligned with the longest normal AI SDK chat
@@ -62,8 +63,9 @@ export const maxDuration = 300;
 export function POST(req: Request) {
   return Effect.runPromise(
     Effect.gen(function* () {
-      if (!corsValidator.isRequestFromAllowedDomain(req)) {
-        return corsValidator.createForbiddenResponse();
+      const isAllowedOrigin = yield* isCorsRequestAllowed(req);
+      if (!isAllowedOrigin) {
+        return createCorsForbiddenResponse();
       }
 
       const {

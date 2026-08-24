@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const instrumentationMocks = vi.hoisted(() => ({
@@ -51,7 +52,7 @@ describe("Next.js instrumentation", () => {
     vi.resetModules();
     vi.clearAllMocks();
     vi.unstubAllEnvs();
-    instrumentationMocks.captureServerException.mockResolvedValue(undefined);
+    instrumentationMocks.captureServerException.mockReturnValue(Effect.void);
     instrumentationMocks.isAiSdkDevToolsTelemetryEnabled.mockReturnValue(false);
     instrumentationMocks.isServerExceptionReportingEnabled.mockReturnValue(
       false
@@ -153,8 +154,8 @@ describe("Next.js instrumentation", () => {
     instrumentationMocks.isServerExceptionReportingEnabled.mockReturnValue(
       true
     );
-    instrumentationMocks.captureServerException.mockRejectedValue(
-      new Error("provider unavailable")
+    instrumentationMocks.captureServerException.mockReturnValue(
+      Effect.fail({ cause: new Error("provider unavailable") })
     );
 
     await expect(

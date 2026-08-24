@@ -3,15 +3,17 @@ import {
   DEFAULT_LONGITUDE,
   getCurrentWeather,
 } from "@repo/ai/clients/weather/client";
-import { CorsValidator } from "@repo/security/lib/cors-validator";
 import { logError, logHttpRequest } from "@repo/utilities/logging/effect";
 import { geolocation } from "@vercel/functions";
 import { Cause, Effect } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
 import { NextResponse } from "next/server";
 import { scheduleServerExceptionCapture } from "@/lib/analytics/server";
+import {
+  createCorsForbiddenResponse,
+  isCorsRequestAllowed,
+} from "@/lib/security/cors";
 
-const corsValidator = new CorsValidator();
 const logContext = {
   service: "weather-api",
   endpoint: "/api/weather",
@@ -22,8 +24,9 @@ export function POST(req: Request) {
 
   return Effect.runPromise(
     Effect.gen(function* () {
-      if (!corsValidator.isRequestFromAllowedDomain(req)) {
-        return corsValidator.createForbiddenResponse();
+      const isAllowedOrigin = yield* isCorsRequestAllowed(req);
+      if (!isAllowedOrigin) {
+        return createCorsForbiddenResponse();
       }
 
       const geo = geolocation(req);

@@ -25,24 +25,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const NOW = Date.UTC(2026, 4, 29, 15, 0, 0);
 const UPLOAD_TOKEN = "forum-upload-token";
 
-function getConvexErrorData(error: unknown) {
-  if (typeof error !== "object" || error === null || !("data" in error)) {
-    throw new Error("Expected a ConvexError with data.");
-  }
-
-  return error.data;
-}
-
-async function getRejectedConvexErrorData(promise: Promise<unknown>) {
-  try {
-    await promise;
-  } catch (error) {
-    return getConvexErrorData(error);
-  }
-
-  throw new Error("Expected a ConvexError rejection.");
-}
-
 async function seedOpenForum(ctx: MutationCtx) {
   const user = await seedAuthenticatedUser(ctx, {
     now: NOW,
@@ -145,10 +127,8 @@ describe("classes/forums/attachments/impl", () => {
       ],
     ] as const) {
       await expect(
-        getRejectedConvexErrorData(
-          runConvexProgram(validateForumAttachmentPolicy(input))
-        )
-      ).resolves.toMatchObject({ code });
+        runConvexProgram(validateForumAttachmentPolicy(input))
+      ).rejects.toMatchObject({ data: { code } });
     }
   });
 
@@ -163,16 +143,16 @@ describe("classes/forums/attachments/impl", () => {
     const storageId = await storeTextFile(t);
 
     await expect(
-      getRejectedConvexErrorData(
-        owner.mutation(api.classes.forums.mutations.posts.createForumPost, {
-          attachmentUploadIds: [upload.uploadId, upload.uploadId],
-          body: "Duplicate attachment",
-          forumId: seeded.forumId,
-        })
-      )
-    ).resolves.toEqual({
-      code: "FORUM_ATTACHMENT_DUPLICATE",
-      message: "Forum post attachments must reference distinct uploads.",
+      owner.mutation(api.classes.forums.mutations.posts.createForumPost, {
+        attachmentUploadIds: [upload.uploadId, upload.uploadId],
+        body: "Duplicate attachment",
+        forumId: seeded.forumId,
+      })
+    ).rejects.toMatchObject({
+      data: {
+        code: "FORUM_ATTACHMENT_DUPLICATE",
+        message: "Forum post attachments must reference distinct uploads.",
+      },
     });
 
     await t.mutation(async (ctx) => {
@@ -212,18 +192,18 @@ describe("classes/forums/attachments/impl", () => {
     const storageId = await storeTextFile(t);
 
     await expect(
-      getRejectedConvexErrorData(
-        owner.mutation(api.classes.forums.mutations.uploads.saveForumUpload, {
-          name: "notes.txt",
-          size: 6,
-          storageId,
-          type: "text/plain",
-          uploadId: upload.uploadId,
-        })
-      )
-    ).resolves.toEqual({
-      code: "FORUM_ATTACHMENT_METADATA_MISMATCH",
-      message: "Forum post attachment metadata no longer matches the upload.",
+      owner.mutation(api.classes.forums.mutations.uploads.saveForumUpload, {
+        name: "notes.txt",
+        size: 6,
+        storageId,
+        type: "text/plain",
+        uploadId: upload.uploadId,
+      })
+    ).rejects.toMatchObject({
+      data: {
+        code: "FORUM_ATTACHMENT_METADATA_MISMATCH",
+        message: "Forum post attachment metadata no longer matches the upload.",
+      },
     });
   });
 
@@ -251,17 +231,15 @@ describe("classes/forums/attachments/impl", () => {
     );
 
     await expect(
-      getRejectedConvexErrorData(
-        t.mutation(api.classes.forums.mutations.uploads.saveForumUpload, {
-          name: "notes.txt",
-          size: 5,
-          storageId: unrelatedStorageId,
-          type: "text/plain",
-          uploadId: upload.uploadId,
-        })
-      )
-    ).resolves.toMatchObject({
-      code: "FORUM_ATTACHMENT_UPLOAD_NOT_FOUND",
+      t.mutation(api.classes.forums.mutations.uploads.saveForumUpload, {
+        name: "notes.txt",
+        size: 5,
+        storageId: unrelatedStorageId,
+        type: "text/plain",
+        uploadId: upload.uploadId,
+      })
+    ).rejects.toMatchObject({
+      data: { code: "FORUM_ATTACHMENT_UPLOAD_NOT_FOUND" },
     });
 
     await expect(
@@ -371,18 +349,16 @@ describe("classes/forums/attachments/impl", () => {
     });
 
     await expect(
-      getRejectedConvexErrorData(
-        t.run((ctx) =>
-          runConvexProgram(
-            validateForumAttachmentStorageClaim(ctx, {
-              storageId,
-              uploadId: uploadIds.secondUploadId,
-            })
-          )
+      t.run((ctx) =>
+        runConvexProgram(
+          validateForumAttachmentStorageClaim(ctx, {
+            storageId,
+            uploadId: uploadIds.secondUploadId,
+          })
         )
       )
-    ).resolves.toMatchObject({
-      code: "FORUM_ATTACHMENT_UPLOAD_ALREADY_CLAIMED",
+    ).rejects.toMatchObject({
+      data: { code: "FORUM_ATTACHMENT_UPLOAD_ALREADY_CLAIMED" },
     });
   });
 
@@ -424,18 +400,16 @@ describe("classes/forums/attachments/impl", () => {
     });
 
     await expect(
-      getRejectedConvexErrorData(
-        t.run((ctx) =>
-          runConvexProgram(
-            validateForumAttachmentStorageClaim(ctx, {
-              storageId,
-              uploadId,
-            })
-          )
+      t.run((ctx) =>
+        runConvexProgram(
+          validateForumAttachmentStorageClaim(ctx, {
+            storageId,
+            uploadId,
+          })
         )
       )
-    ).resolves.toMatchObject({
-      code: "FORUM_ATTACHMENT_ALREADY_ATTACHED",
+    ).rejects.toMatchObject({
+      data: { code: "FORUM_ATTACHMENT_ALREADY_ATTACHED" },
     });
   });
 
@@ -452,14 +426,14 @@ describe("classes/forums/attachments/impl", () => {
     }
 
     await expect(
-      getRejectedConvexErrorData(
-        owner.mutation(api.classes.forums.mutations.uploads.generateUploadUrl, {
-          forumId: seeded.forumId,
-        })
-      )
-    ).resolves.toEqual({
-      code: "FORUM_ATTACHMENT_LIMIT_EXCEEDED",
-      message: "Forum post attachment count exceeds the supported limit.",
+      owner.mutation(api.classes.forums.mutations.uploads.generateUploadUrl, {
+        forumId: seeded.forumId,
+      })
+    ).rejects.toMatchObject({
+      data: {
+        code: "FORUM_ATTACHMENT_LIMIT_EXCEEDED",
+        message: "Forum post attachment count exceeds the supported limit.",
+      },
     });
   });
 });

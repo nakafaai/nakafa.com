@@ -7,11 +7,27 @@ import {
   type OperationalExceptionProperties,
 } from "@repo/analytics/posthog/exception";
 import { isServerExceptionReportingEnabled } from "@repo/analytics/server-reporting";
-import { Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { PostHog } from "posthog-node";
 
 let analyticsKeys: ReturnType<typeof keys> | undefined;
 let serverAnalytics: PostHog | undefined;
+
+/** Expected failure while initializing or using server exception reporting. */
+export class ServerAnalyticsCaptureError extends Schema.TaggedError<ServerAnalyticsCaptureError>()(
+  "ServerAnalyticsCaptureError",
+  {
+    cause: Schema.Unknown,
+    message: Schema.String,
+  }
+) {}
+
+function captureError(cause: unknown) {
+  return new ServerAnalyticsCaptureError({
+    cause,
+    message: "Failed to capture the server exception.",
+  });
+}
 
 /** Lazily validates server analytics configuration after the runtime gate. */
 function getAnalyticsKeys() {
@@ -56,7 +72,9 @@ function getServerAnalytics() {
  * https://posthog.com/docs/error-tracking/capture
  * https://posthog.com/docs/error-tracking/installation/nextjs
  */
-export async function captureServerException(
+export const captureServerException = Effect.fn(
+  "Analytics.captureServerException"
+)(function* (
   error: unknown,
   additionalProperties: OperationalExceptionProperties
 ) {
@@ -69,9 +87,17 @@ export async function captureServerException(
     return;
   }
 
-  await getServerAnalytics().captureExceptionImmediate(
-    createOperationalException(error),
-    undefined,
-    decodedProperties.value
-  );
-}
+  const analytics = yield* Effect.try({
+    try: getServerAnalytics,
+    catch: captureError,
+  });
+  yield* Effect.tryPromise({
+    try: () =>
+      analytics.captureExceptionImmediate(
+        createOperationalException(error),
+        undefined,
+        decodedProperties.value
+      ),
+    catch: captureError,
+  });
+});

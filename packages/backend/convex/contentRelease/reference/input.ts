@@ -59,9 +59,7 @@ export const resolveReferenceInput = Effect.fn(
     if (Option.isNone(appLocale)) {
       return null;
     }
-    const publicLocale = Schema.decodeUnknownOption(LocaleSchema)(
-      appLocale.value
-    );
+    const publicLocale = Schema.decodeOption(LocaleSchema)(appLocale.value);
     if (Option.isNone(publicLocale)) {
       return null;
     }
@@ -76,9 +74,7 @@ export const resolveReferenceInput = Effect.fn(
   if (Option.isNone(appLocale)) {
     return null;
   }
-  const publicLocale = Schema.decodeUnknownOption(LocaleSchema)(
-    appLocale.value
-  );
+  const publicLocale = Schema.decodeOption(LocaleSchema)(appLocale.value);
   if (Option.isNone(publicLocale)) {
     return null;
   }

@@ -41,6 +41,7 @@ describe("request-time server exception reporting", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     analyticsMocks.tasks.length = 0;
+    analyticsMocks.captureServerException.mockReturnValue(Effect.void);
     analyticsMocks.after.mockImplementation((task) => {
       analyticsMocks.tasks.push(task);
     });
@@ -103,8 +104,8 @@ describe("request-time server exception reporting", () => {
 
   it.live("contains provider failures inside the request task", () =>
     Effect.gen(function* () {
-      analyticsMocks.captureServerException.mockRejectedValue(
-        new Error("provider unavailable")
+      analyticsMocks.captureServerException.mockReturnValue(
+        Effect.fail({ cause: new Error("provider unavailable") })
       );
 
       yield* scheduleCurrentServerExceptionCapture(

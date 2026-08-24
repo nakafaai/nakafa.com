@@ -1,3 +1,4 @@
+import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const postHogMocks = vi.hoisted(() => ({
@@ -47,9 +48,11 @@ describe("PostHog server reporting", () => {
       "@repo/analytics/posthog/server"
     );
 
-    await captureServerException(new Error("request failed"), {
-      source: "disabled-test",
-    });
+    await Effect.runPromise(
+      captureServerException(new Error("request failed"), {
+        source: "disabled-test",
+      })
+    );
 
     expect(postHogMocks.keys).not.toHaveBeenCalled();
     expect(postHogMocks.constructor).not.toHaveBeenCalled();
@@ -64,13 +67,20 @@ describe("PostHog server reporting", () => {
     const error = new Error("request failed for user@example.com");
     const properties = { source: "request" };
 
-    await captureServerException(error, properties);
-    await captureServerException(new Error("second failure"), {
-      source: "second-request",
-    });
-    await captureServerException(
-      { message: "object secret" },
-      { source: "non-error-request" }
+    await Effect.runPromise(
+      Effect.all(
+        [
+          captureServerException(error, properties),
+          captureServerException(new Error("second failure"), {
+            source: "second-request",
+          }),
+          captureServerException(
+            { message: "object secret" },
+            { source: "non-error-request" }
+          ),
+        ],
+        { concurrency: 1 }
+      )
     );
 
     expect(postHogMocks.keys).toHaveBeenCalledOnce();
@@ -113,13 +123,33 @@ describe("PostHog server reporting", () => {
       "@repo/analytics/posthog/server"
     );
 
-    await Reflect.apply(captureServerException, undefined, [
-      new Error("blocked"),
-      { source: "server-test", userId: "user-1" },
-    ]);
+    await Effect.runPromise(
+      Reflect.apply(captureServerException, undefined, [
+        new Error("blocked"),
+        { source: "server-test", userId: "user-1" },
+      ])
+    );
 
     expect(postHogMocks.keys).not.toHaveBeenCalled();
     expect(postHogMocks.constructor).not.toHaveBeenCalled();
     expect(postHogMocks.captureExceptionImmediate).not.toHaveBeenCalled();
+  });
+
+  it("surfaces provider failures through the typed error channel", async () => {
+    vi.stubEnv("VERCEL_ENV", "production");
+    vi.stubEnv("NEXT_PHASE", "phase-production-server");
+    postHogMocks.captureExceptionImmediate.mockRejectedValueOnce(
+      new Error("provider unavailable")
+    );
+    const { captureServerException, ServerAnalyticsCaptureError } =
+      await import("@repo/analytics/posthog/server");
+
+    const failure = await Effect.runPromise(
+      captureServerException(new Error("request failed"), {
+        source: "provider-failure-test",
+      }).pipe(Effect.flip)
+    );
+
+    expect(failure).toBeInstanceOf(ServerAnalyticsCaptureError);
   });
 });

@@ -28,10 +28,10 @@ export function resetAnalyticsIdentity(
   resetDeviceId = false
 ) {
   const wasOptedOut = client.has_opted_out_capturing();
+  client.opt_out_capturing();
   client.reset(resetDeviceId);
 
   if (wasOptedOut) {
-    client.opt_out_capturing();
     return;
   }
 

@@ -5,15 +5,6 @@ import { isServerExceptionReportingEnabled } from "@repo/analytics/server-report
 import { Effect, Schema } from "effect";
 import { after } from "next/server";
 
-/** Expected failure while sending a handled server exception to analytics. */
-class ServerExceptionCaptureError extends Schema.TaggedError<ServerExceptionCaptureError>()(
-  "ServerExceptionCaptureError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
-
 /** Expected failure while registering request completion work with Next.js. */
 class ServerExceptionScheduleError extends Schema.TaggedError<ServerExceptionScheduleError>()(
   "ServerExceptionScheduleError",
@@ -27,19 +18,12 @@ class ServerExceptionScheduleError extends Schema.TaggedError<ServerExceptionSch
 const captureServerExceptionSafely = Effect.fn(
   "www.analytics.captureServerExceptionSafely"
 )(function* (error: unknown, properties: OperationalExceptionProperties) {
-  yield* Effect.tryPromise({
-    try: async () => {
-      const { captureServerException } = await import(
-        "@repo/analytics/posthog/server"
-      );
-      await captureServerException(error, properties);
-    },
-    catch: (cause) =>
-      new ServerExceptionCaptureError({
-        cause,
-        message: "Failed to capture server exception.",
-      }),
-  }).pipe(Effect.ignore);
+  yield* Effect.tryPromise(() => import("@repo/analytics/posthog/server")).pipe(
+    Effect.flatMap((reporting) =>
+      reporting.captureServerException(error, properties)
+    ),
+    Effect.ignore
+  );
 });
 
 /**

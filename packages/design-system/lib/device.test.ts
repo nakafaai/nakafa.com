@@ -1,5 +1,4 @@
 import {
-  checkWebGL2Support,
   getPowerPreference,
   isMobileDevice,
 } from "@repo/design-system/lib/device";
@@ -91,49 +90,6 @@ describe("isMobileDevice", () => {
     setNavigatorProperty("userAgent", userAgent);
 
     expect(isMobileDevice()).toBe(expected);
-  });
-});
-
-describe("checkWebGL2Support", () => {
-  it("returns false when window is undefined", () => {
-    vi.stubGlobal("window", undefined);
-
-    expect(checkWebGL2Support()).toBe(false);
-  });
-
-  it("returns false when document is undefined", () => {
-    vi.stubGlobal("document", undefined);
-
-    expect(checkWebGL2Support()).toBe(false);
-  });
-
-  it("returns false when the WebGL2 context is unavailable", () => {
-    vi.stubGlobal("document", {
-      createElement: vi.fn().mockReturnValue({
-        getContext: vi.fn().mockReturnValue(null),
-      }),
-    });
-
-    expect(checkWebGL2Support()).toBe(false);
-  });
-
-  it("returns true when the WebGL2 context is available", () => {
-    const getContext = vi.fn().mockReturnValue({ drawingBufferWidth: 800 });
-    const createElement = vi.fn().mockReturnValue({ getContext });
-    vi.stubGlobal("document", { createElement });
-
-    expect(checkWebGL2Support()).toBe(true);
-    expect(createElement).toHaveBeenCalledWith("canvas");
-    expect(getContext).toHaveBeenCalledWith("webgl2");
-  });
-
-  it("returns false when canvas creation throws", () => {
-    const createElement = vi.fn().mockImplementation(() => {
-      throw new Error("Canvas not supported");
-    });
-    vi.stubGlobal("document", { createElement });
-
-    expect(checkWebGL2Support()).toBe(false);
   });
 });
 

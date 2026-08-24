@@ -32,9 +32,9 @@ function hasConvexErrorCode(error: unknown, allowedCodes: readonly string[]) {
 /** Captures an unexpected school route error and preserves the original failure. */
 function captureSchoolRouteError(failure: Cause.UnknownError, source: string) {
   return Effect.gen(function* () {
-    yield* Effect.tryPromise(() =>
-      captureServerException(failure.cause, { source })
-    ).pipe(Effect.ignore);
+    yield* captureServerException(failure.cause, { source }).pipe(
+      Effect.ignore
+    );
 
     return yield* failure;
   });

@@ -4,7 +4,7 @@ import {
   runConvexActionProgram,
   runConvexProgram,
 } from "@repo/backend/convex/lib/effect";
-import { describe, expect, it } from "@repo/testing/effect";
+import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { ConvexError } from "convex/values";
 import { Cause, Clock, Effect, Schema } from "effect";
 import { vi } from "vitest";
@@ -19,13 +19,17 @@ class BoundaryFailure extends Schema.TaggedError<BoundaryFailure>()(
   }
 ) {}
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe("lib/effect", () => {
   it("runs successful programs at the Convex boundary", async () => {
     await expect(runConvexProgram(Effect.succeed("ok"))).resolves.toBe("ok");
   });
 
   it("does not use the Performance API while running traced programs", async () => {
-    const nowSpy = vi.spyOn(performance, "now").mockImplementation(() => {
+    vi.spyOn(performance, "now").mockImplementation(() => {
       throw new Error("Performance API is unavailable");
     });
     const tracedProgram = Effect.fn("test.tracedProgram")(function* () {
@@ -33,13 +37,11 @@ describe("lib/effect", () => {
     });
 
     await expect(runConvexProgram(tracedProgram())).resolves.toBe("ok");
-
-    nowSpy.mockRestore();
   });
 
   it("uses a Date-backed clock inside native Convex handlers", async () => {
     const now = 1_780_000_000_000;
-    const dateNowSpy = vi.spyOn(Date, "now").mockReturnValue(now);
+    vi.spyOn(Date, "now").mockReturnValue(now);
 
     await expect(runConvexProgram(Clock.currentTimeMillis)).resolves.toBe(now);
     await expect(runConvexProgram(Clock.currentTimeNanos)).resolves.toBe(
@@ -55,8 +57,6 @@ describe("lib/effect", () => {
         )
       )
     ).resolves.toEqual([now, BigInt(now) * 1_000_000n]);
-
-    dateNowSpy.mockRestore();
   });
 
   it("rejects sleeping inside native Convex handlers", async () => {
@@ -77,16 +77,11 @@ describe("lib/effect", () => {
         throw new Error("setTimeout is unavailable in native Convex");
       });
 
-    try {
-      await expect(
-        runConvexProgram(Effect.yieldNow.pipe(Effect.as("done")))
-      ).resolves.toBe("done");
-      expect(setImmediateSpy).not.toHaveBeenCalled();
-      expect(setTimeoutSpy).not.toHaveBeenCalled();
-    } finally {
-      setImmediateSpy.mockRestore();
-      setTimeoutSpy.mockRestore();
-    }
+    await expect(
+      runConvexProgram(Effect.yieldNow.pipe(Effect.as("done")))
+    ).resolves.toBe("done");
+    expect(setImmediateSpy).not.toHaveBeenCalled();
+    expect(setTimeoutSpy).not.toHaveBeenCalled();
   });
 
   it("supports the live clock at the Node action boundary", async () => {
@@ -96,30 +91,20 @@ describe("lib/effect", () => {
   });
 
   it("maps tagged Effect failures into ConvexError payloads", async () => {
-    let thrown: unknown;
-
-    try {
-      await runConvexProgram(
+    await expect(
+      runConvexProgram(
         Effect.fail(
           new BoundaryFailure({
             code: boundaryFailureCode,
             message: "Boundary failed",
           })
         )
-      );
-    } catch (error) {
-      thrown = error;
-    }
-
-    if (typeof thrown !== "object" || thrown === null || !("data" in thrown)) {
-      throw new Error(
-        "Expected runConvexProgram to throw a ConvexError shape."
-      );
-    }
-
-    expect(thrown.data).toEqual({
-      code: boundaryFailureCode,
-      message: "Boundary failed",
+      )
+    ).rejects.toMatchObject({
+      data: {
+        code: boundaryFailureCode,
+        message: "Boundary failed",
+      },
     });
   });
 

@@ -1,5 +1,7 @@
 import { isAiSdkDevToolsTelemetryEnabled } from "@repo/ai/config/devtools-runtime";
+import type { OperationalExceptionProperties } from "@repo/analytics/posthog/exception";
 import { isServerExceptionReportingEnabled } from "@repo/analytics/server-reporting";
+import { Effect } from "effect";
 import type { Instrumentation } from "next";
 
 /**
@@ -45,6 +47,17 @@ function getErrorDigest(error: unknown) {
   return;
 }
 
+/** Loads Node-only reporting and captures one Next.js request failure. */
+const captureRequestError = Effect.fn(
+  "www.instrumentation.captureRequestError"
+)(function* (error: unknown, properties: OperationalExceptionProperties) {
+  const reporting = yield* Effect.tryPromise(
+    () => import("@repo/analytics/posthog/server")
+  );
+
+  yield* reporting.captureServerException(error, properties);
+});
+
 /**
  * Capture uncaught server-side request failures through Next.js instrumentation.
  *
@@ -65,18 +78,16 @@ export const onRequestError: Instrumentation.onRequestError = async (
     return;
   }
 
-  const { captureServerException } = await import(
-    "@repo/analytics/posthog/server"
+  await Effect.runPromise(
+    captureRequestError(error, {
+      error_digest: getErrorDigest(error),
+      method: request.method,
+      render_source: context.renderSource,
+      revalidate_reason: context.revalidateReason,
+      route_path: context.routePath,
+      route_type: context.routeType,
+      router_kind: context.routerKind,
+      source: "next-on-request-error",
+    }).pipe(Effect.ignore)
   );
-
-  await captureServerException(error, {
-    error_digest: getErrorDigest(error),
-    method: request.method,
-    render_source: context.renderSource,
-    revalidate_reason: context.revalidateReason,
-    route_path: context.routePath,
-    route_type: context.routeType,
-    router_kind: context.routerKind,
-    source: "next-on-request-error",
-  }).catch(() => undefined);
 };
