@@ -5,6 +5,14 @@ const COMMUNITY_MAX_DESCENDANTS = 400;
 const COMMUNITY_MAX_HTML_BYTES = 110_000;
 const HOMEPAGE_MAX_DESCENDANTS = 2600;
 const TRUST_MAX_DESCENDANTS = 330;
+// react-nice-avatar@1.5.0 emits these fixed SVG fragment IDs. Character stays
+// unchanged in this performance PR, while every other duplicate remains fatal.
+const LEGACY_AVATAR_FRAGMENT_IDS = new Set([
+  "clip0",
+  "mask-id",
+  "mouth-laugh-id",
+  "path-id",
+]);
 
 const targetViewports = [
   { desktop: false, height: 800, name: "compact", width: 320 },
@@ -32,25 +40,66 @@ for (const viewport of targetViewports) {
     }) => {
       await page.goto("/en", { waitUntil: "domcontentloaded" });
 
-      const measurements = await page.evaluate(() => {
-        const community = document.querySelector("#community");
-        const trust = document.querySelector("#trust");
-        const duplicateIds = [...document.querySelectorAll("[id]")]
-          .map(({ id }) => id)
-          .filter((id, index, ids) => ids.indexOf(id) !== index);
+      const measurements = await page.evaluate(
+        (legacyAvatarFragmentIds) => {
+          const knownAvatarFragmentIds = new Set(legacyAvatarFragmentIds);
+          const community = document.querySelector("#community");
+          const trust = document.querySelector("#trust");
+          const ids = [...document.querySelectorAll("[id]")].map(
+            ({ id }) => id
+          );
+          const duplicateIds = [
+            ...new Set(ids.filter((id, index) => ids.indexOf(id) !== index)),
+          ];
+          const unexpectedDuplicateIds = duplicateIds.filter((id) => {
+            if (!knownAvatarFragmentIds.has(id)) {
+              return true;
+            }
 
-        return {
-          communityDescendants: community?.querySelectorAll("*").length ?? -1,
-          communityHtmlBytes: new TextEncoder().encode(
-            community?.outerHTML ?? ""
-          ).byteLength,
-          duplicateIds: [...new Set(duplicateIds)],
-          homepageDescendants: document.body.querySelectorAll("*").length,
-          trustDescendants: trust?.querySelectorAll("*").length ?? -1,
-        };
-      });
+            const matchingElements = [
+              ...document.querySelectorAll(`[id="${CSS.escape(id)}"]`),
+            ];
+            return matchingElements.some(
+              (element) =>
+                !element.closest("#community [data-contributor-gallery] svg")
+            );
+          });
+          const fragmentReferences = [
+            ...document.querySelectorAll("[clip-path], [mask]"),
+          ].flatMap((element) =>
+            [element.getAttribute("clip-path"), element.getAttribute("mask")]
+              .filter((value) => value?.startsWith("url(#"))
+              .map((value) => value?.slice(5, -1) ?? "")
+          );
 
-      expect(measurements.duplicateIds).toEqual([]);
+          return {
+            communityDescendants: community?.querySelectorAll("*").length ?? -1,
+            communityHtmlBytes: new TextEncoder().encode(
+              community?.outerHTML ?? ""
+            ).byteLength,
+            legacyAvatarDuplicateIds: duplicateIds
+              .filter((id) => knownAvatarFragmentIds.has(id))
+              .sort(),
+            homepageDescendants: document.body.querySelectorAll("*").length,
+            missingFragmentReferences: [
+              ...new Set(
+                fragmentReferences.filter(
+                  (fragmentId) => !document.getElementById(fragmentId)
+                )
+              ),
+            ],
+            trustDescendants: trust?.querySelectorAll("*").length ?? -1,
+            unexpectedDuplicateIds: unexpectedDuplicateIds.sort(),
+          };
+        },
+        [...LEGACY_AVATAR_FRAGMENT_IDS]
+      );
+
+      expect(measurements.unexpectedDuplicateIds).toEqual([]);
+      expect(measurements.legacyAvatarDuplicateIds).toEqual(
+        [...LEGACY_AVATAR_FRAGMENT_IDS].sort()
+      );
+      expect(measurements.missingFragmentReferences).toEqual([]);
       expect(measurements.communityDescendants).toBeLessThanOrEqual(
         COMMUNITY_MAX_DESCENDANTS
       );

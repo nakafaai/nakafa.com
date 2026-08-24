@@ -57,13 +57,13 @@ export function TrustLayout({
           aria-valuemax={handleProps["aria-valuemax"]}
           aria-valuemin={handleProps["aria-valuemin"]}
           aria-valuenow={handleProps["aria-valuenow"]}
-          className="peer absolute -inset-x-2 inset-y-0 z-20 m-0 cursor-col-resize border-0 bg-transparent outline-none"
+          className="absolute inset-y-0 left-0 z-20 m-0 w-px cursor-col-resize border-0 bg-transparent after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1"
           data-trust-splitter=""
           tabIndex={handleProps.tabIndex}
         />
         <div
           aria-hidden="true"
-          className="z-10 flex h-4 w-3 items-center justify-center rounded-xs border bg-border peer-focus-visible:ring-1 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-1"
+          className="z-10 flex h-4 w-3 items-center justify-center rounded-xs border bg-border"
         >
           <HugeIcons className="size-2.5" icon={DragDropVerticalIcon} />
         </div>
