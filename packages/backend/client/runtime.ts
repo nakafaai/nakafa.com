@@ -62,6 +62,16 @@ function mapQueryFailure(query: string, cause: unknown) {
   if (cause instanceof NetworkRequestError) {
     return createRuntimeQueryError(query, "transport", cause.networkCodes);
   }
+
+  const responseNetworkError = createNetworkRequestError(cause);
+  if (responseNetworkError.networkCodes.length > 0) {
+    return createRuntimeQueryError(
+      query,
+      "transport",
+      responseNetworkError.networkCodes
+    );
+  }
+
   return createRuntimeQueryError(query, "query");
 }
 
@@ -72,12 +82,13 @@ function isRetryableQueryError(error: ConvexRuntimeQueryError) {
 /**
  * Reads one public Convex query through the Effect error channel.
  *
- * Only allowlisted pre-response network failures receive the shared bounded
- * retry schedule. Convex function, HTTP, protocol, timeout, and unknown
- * failures remain terminal.
+ * Only allowlisted network failures receive the shared bounded retry schedule,
+ * including response-stream failures surfaced by the official client. Convex
+ * function, HTTP, protocol, timeout, and unknown failures remain terminal.
  *
  * @see https://docs.convex.dev/functions/error-handling/
  * @see https://effect.website/docs/error-management/retrying/
+ * @see https://github.com/nodejs/undici/blob/v7.29.0/lib/web/fetch/index.js#L2130-L2135
  */
 export const readConvexRuntimeQuery = Effect.fn("ConvexRuntime.query")(
   function* <Query extends FunctionReference<"query">>(
