@@ -27,14 +27,28 @@ export type AccountConsentDecision = NonNullable<
   FunctionReturnType<typeof api.consents.queries.getCurrent>["decision"]
 >;
 
-/** Identifies the exact visitor and notice that owns a consent prompt. */
+export type AnalyticsConsentPromptIdentity =
+  | `account:${string}:${typeof ANALYTICS_CONSENT_NOTICE_VERSION}`
+  | `anonymous:${typeof ANALYTICS_CONSENT_NOTICE_VERSION}`;
+
+export interface AnalyticsConsentSessionOverride {
+  readonly granted: boolean;
+  readonly persistence: "failed" | "pending" | "saved";
+}
+
+export type AnalyticsConsentSessionOverrides = ReadonlyMap<
+  AnalyticsConsentPromptIdentity,
+  AnalyticsConsentSessionOverride
+>;
+
+/** Identifies the current account or anonymous scope and consent notice. */
 export function createAnalyticsConsentPromptIdentity({
   isAuthenticated,
   user,
 }: {
   readonly isAuthenticated: boolean;
   readonly user: BrowserAnalyticsUser | null;
-}) {
+}): AnalyticsConsentPromptIdentity | null {
   if (!isAuthenticated) {
     return `anonymous:${ANALYTICS_CONSENT_NOTICE_VERSION}`;
   }
@@ -46,23 +60,46 @@ export function createAnalyticsConsentPromptIdentity({
   return `account:${user.appUser._id}:${ANALYTICS_CONSENT_NOTICE_VERSION}`;
 }
 
-/** Keeps a handled or failed prompt out of the user's current app session. */
-export function shouldShowAnalyticsConsentPrompt({
-  dismissedPromptIdentity,
+/** Records one visitor-scoped choice without mutating prior session state. */
+export function setAnalyticsConsentSessionOverride({
+  override,
+  overrides,
+  promptIdentity,
+}: {
+  readonly override: AnalyticsConsentSessionOverride;
+  readonly overrides: AnalyticsConsentSessionOverrides;
+  readonly promptIdentity: AnalyticsConsentPromptIdentity;
+}): AnalyticsConsentSessionOverrides {
+  const nextOverrides = new Map(overrides);
+  nextOverrides.set(promptIdentity, override);
+  return nextOverrides;
+}
+
+/** Projects transient prompt, runtime, and persistence policy for one visitor. */
+export function resolveAnalyticsConsentSessionPolicy({
   hasLoadError,
+  overrides,
   promptIdentity,
   status,
 }: {
-  readonly dismissedPromptIdentity: string | null;
   readonly hasLoadError: boolean;
-  readonly promptIdentity: string | null;
+  readonly overrides: AnalyticsConsentSessionOverrides;
+  readonly promptIdentity: AnalyticsConsentPromptIdentity | null;
   readonly status: AnalyticsConsentState["status"];
 }) {
-  if (!promptIdentity || dismissedPromptIdentity === promptIdentity) {
-    return false;
-  }
+  const override = promptIdentity ? overrides.get(promptIdentity) : undefined;
+  const hasHandledPrompt = override !== undefined;
 
-  return status === "prompt" || (hasLoadError && status === "pending");
+  return {
+    hasSaveError: override?.persistence === "failed",
+    isPromptOpen:
+      !!promptIdentity &&
+      !hasHandledPrompt &&
+      (status === "prompt" || (hasLoadError && status === "pending")),
+    isRuntimeSuppressed:
+      !!override && (!override.granted || override.persistence === "failed"),
+    isSaving: override?.persistence === "pending",
+  };
 }
 
 /** Returns whether a browser privacy signal must revoke an account grant. */
