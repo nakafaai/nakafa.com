@@ -123,7 +123,7 @@ export function ConvexProvider({
     () =>
       new ConvexReactClient(convexUrl, {
         initialAuthTokenReuse: true,
-        verbose: false,
+        logger: false,
       }),
     [convexUrl]
   );
