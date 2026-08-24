@@ -9,10 +9,10 @@ export const CONTRACT_ARCHIVE =
 export const DEPENDENCY_RELEASE_AGE_MINUTES = 1440;
 
 export const DEPENDENCY_RELEASE_AGE_EXCLUSIONS = [
-  "@ai-sdk/gateway@4.0.61",
-  "@ai-sdk/google@4.0.49",
-  "@ai-sdk/mcp@2.0.35",
-  "@ai-sdk/react@4.0.79",
+  "@ai-sdk/gateway@4.0.62",
+  "@ai-sdk/google@4.0.50",
+  "@ai-sdk/mcp@2.0.36",
+  "@ai-sdk/react@4.0.80",
   "@biomejs/biome@2.5.10",
   "@biomejs/cli-darwin-arm64@2.5.10",
   "@biomejs/cli-darwin-x64@2.5.10",
@@ -35,9 +35,28 @@ export const DEPENDENCY_RELEASE_AGE_EXCLUSIONS = [
   "@next/swc-win32-arm64-msvc@16.3.2",
   "@next/swc-win32-x64-msvc@16.3.2",
   "@next/third-parties@16.3.2",
-  "ai@7.0.76",
+  "@takumi-rs/core-darwin-arm64@2.12.0",
+  "@takumi-rs/core-darwin-x64@2.12.0",
+  "@takumi-rs/core-linux-arm64-gnu@2.12.0",
+  "@takumi-rs/core-linux-arm64-musl@2.12.0",
+  "@takumi-rs/core-linux-x64-gnu@2.12.0",
+  "@takumi-rs/core-linux-x64-musl@2.12.0",
+  "@takumi-rs/core-win32-arm64-msvc@2.12.0",
+  "@takumi-rs/core-win32-x64-msvc@2.12.0",
+  "@takumi-rs/core@2.12.0",
+  "@takumi-rs/helpers@2.12.0",
+  "@takumi-rs/wasm@2.12.0",
+  "@tanstack/query-core@5.102.2",
+  "@tanstack/query-devtools@5.102.2",
+  "@tanstack/react-query-devtools@5.102.2",
+  "@tanstack/react-query@5.102.2",
+  "@types/react-dom@19.2.5",
+  "afdocs@0.20.0",
+  "ai@7.0.77",
   "convex@1.45.0",
   "next@16.3.2",
+  "pnpm@11.23.0",
+  "takumi-js@2.12.0",
 ];
 
 export const DEPENDENCY_HOLDS = [
@@ -84,19 +103,19 @@ export const DEPENDENCY_HOLDS = [
     minimumDeclarations: 1,
   },
   { approved: "1.45.0", dependency: "convex", minimumDeclarations: 1 },
-  { approved: "7.0.76", dependency: "ai", minimumDeclarations: 1 },
+  { approved: "7.0.77", dependency: "ai", minimumDeclarations: 1 },
   {
-    approved: "4.0.79",
+    approved: "4.0.80",
     dependency: "@ai-sdk/react",
     minimumDeclarations: 1,
   },
   {
-    approved: "4.0.49",
+    approved: "4.0.50",
     dependency: "@ai-sdk/google",
     minimumDeclarations: 1,
   },
   {
-    approved: "4.0.61",
+    approved: "4.0.62",
     dependency: "@ai-sdk/gateway",
     minimumDeclarations: 1,
   },
@@ -170,20 +189,20 @@ export const REGISTRY_REVIEWS = [
     "Stable 16.3.2 contains the reviewed catch-all cache-key backport.",
   ],
   ["convex@latest", "1.45.0", "Convex acceptance uses an isolated deployment."],
-  ["ai@latest", "7.0.76", "AI SDK packages move as one reviewed cohort."],
+  ["ai@latest", "7.0.77", "AI SDK packages move as one reviewed cohort."],
   [
     "@ai-sdk/react@latest",
-    "4.0.79",
+    "4.0.80",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "@ai-sdk/google@latest",
-    "4.0.49",
+    "4.0.50",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
     "@ai-sdk/gateway@latest",
-    "4.0.61",
+    "4.0.62",
     "AI SDK packages move as one reviewed cohort.",
   ],
   [
@@ -205,7 +224,7 @@ export const REGISTRY_REVIEWS = [
   ["ultracite@latest", "7.10.6", "Formatting is reviewed with Biome."],
   ["@types/node@24", "24.13.3", "Declarations remain on the Node 24 line."],
   ["node@24", "24.19.0", "The repository supports the Node 24 runtime line."],
-  ["pnpm@latest", "11.22.0", "pnpm owns workspace and lockfile semantics."],
+  ["pnpm@latest", "11.23.0", "pnpm owns workspace and lockfile semantics."],
   [
     "react-doctor@latest",
     "0.9.12",
@@ -356,8 +375,8 @@ export function validateDependencyPolicy({
       "The TypeScript JavaScript API compatibility alias must be 6.0.2."
     );
   }
-  if (rootManifest.packageManager !== "pnpm@11.22.0") {
-    problems.push("packageManager must be pnpm@11.22.0.");
+  if (rootManifest.packageManager !== "pnpm@11.23.0") {
+    problems.push("packageManager must be pnpm@11.23.0.");
   }
   if (rootManifest.devEngines?.runtime?.version !== "24.19.0") {
     problems.push("The managed Node runtime must be 24.19.0.");

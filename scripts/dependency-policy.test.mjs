@@ -44,7 +44,7 @@ function validInput() {
     manifests,
     rootManifest: {
       devEngines: { runtime: { version: "24.19.0" } },
-      packageManager: "pnpm@11.22.0",
+      packageManager: "pnpm@11.23.0",
     },
     workspace: {
       minimumReleaseAge: DEPENDENCY_RELEASE_AGE_MINUTES,

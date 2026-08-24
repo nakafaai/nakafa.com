@@ -64,7 +64,6 @@ overrides:
   "next@16.3.2>postcss": "8.5.26"
   "next@16.3.2>sharp": "0.35.3"
   "postcss@8.5.23>nanoid": "^3.3.17"
-  "posthog-js@1.418.6>dompurify": "^3.4.13"
   "read-yaml-file@1.1.0>js-yaml": "3.15.1"
 
 allowBuilds:
@@ -79,10 +78,10 @@ allowBuilds:
   sharp: true
 
 minimumReleaseAgeExclude:
-  - '@ai-sdk/gateway@4.0.61'
-  - '@ai-sdk/google@4.0.49'
-  - '@ai-sdk/mcp@2.0.35'
-  - '@ai-sdk/react@4.0.79'
+  - '@ai-sdk/gateway@4.0.62'
+  - '@ai-sdk/google@4.0.50'
+  - '@ai-sdk/mcp@2.0.36'
+  - '@ai-sdk/react@4.0.80'
   - '@biomejs/biome@2.5.10'
   - '@biomejs/cli-darwin-arm64@2.5.10'
   - '@biomejs/cli-darwin-x64@2.5.10'
@@ -105,6 +104,25 @@ minimumReleaseAgeExclude:
   - '@next/swc-win32-arm64-msvc@16.3.2'
   - '@next/swc-win32-x64-msvc@16.3.2'
   - '@next/third-parties@16.3.2'
-  - ai@7.0.76
+  - '@takumi-rs/core-darwin-arm64@2.12.0'
+  - '@takumi-rs/core-darwin-x64@2.12.0'
+  - '@takumi-rs/core-linux-arm64-gnu@2.12.0'
+  - '@takumi-rs/core-linux-arm64-musl@2.12.0'
+  - '@takumi-rs/core-linux-x64-gnu@2.12.0'
+  - '@takumi-rs/core-linux-x64-musl@2.12.0'
+  - '@takumi-rs/core-win32-arm64-msvc@2.12.0'
+  - '@takumi-rs/core-win32-x64-msvc@2.12.0'
+  - '@takumi-rs/core@2.12.0'
+  - '@takumi-rs/helpers@2.12.0'
+  - '@takumi-rs/wasm@2.12.0'
+  - '@tanstack/query-core@5.102.2'
+  - '@tanstack/query-devtools@5.102.2'
+  - '@tanstack/react-query-devtools@5.102.2'
+  - '@tanstack/react-query@5.102.2'
+  - '@types/react-dom@19.2.5'
+  - afdocs@0.20.0
+  - ai@7.0.77
   - convex@1.45.0
   - next@16.3.2
+  - pnpm@11.23.0
+  - takumi-js@2.12.0
