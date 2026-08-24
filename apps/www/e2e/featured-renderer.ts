@@ -54,5 +54,10 @@ const verifyFeaturedRenderer = Effect.fn(
   };
 });
 
-const result = await Effect.runPromise(verifyFeaturedRenderer());
-process.stdout.write(`${JSON.stringify(result)}\n`);
+const main = verifyFeaturedRenderer().pipe(
+  Effect.tap((result) =>
+    Effect.sync(() => process.stdout.write(`${JSON.stringify(result)}\n`))
+  )
+);
+
+void Effect.runPromise(main);
