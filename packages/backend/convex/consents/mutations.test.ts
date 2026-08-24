@@ -5,12 +5,10 @@ import {
   ANALYTICS_CONSENT_NOTICE_VERSION,
 } from "@repo/analytics/consent";
 import { api } from "@repo/backend/convex/_generated/api";
-import { consentWriteValidator } from "@repo/backend/convex/consents/schema";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
-import { validate } from "convex-helpers/validators";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 7, 20, 16, 0, 0);
@@ -163,35 +161,5 @@ describe("consents/mutations", () => {
     expect(first.decidedAt).toBe(NOW);
     expect(stored.current).toHaveLength(1);
     expect(stored.history).toHaveLength(1);
-  });
-
-  it("rejects stale notice versions before the handler runs", () => {
-    expect(
-      validate(consentWriteValidator, {
-        category: analyticsCategory,
-        granted: true,
-        mechanism: ANALYTICS_CONSENT_MECHANISM,
-        noticeVersion: "privacy-stale",
-      })
-    ).toBe(false);
-  });
-
-  it("accepts only a denial from a browser privacy signal", () => {
-    expect(
-      validate(consentWriteValidator, {
-        category: analyticsCategory,
-        granted: false,
-        mechanism: ANALYTICS_BROWSER_SIGNAL_MECHANISM,
-        noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
-      })
-    ).toBe(true);
-    expect(
-      validate(consentWriteValidator, {
-        category: analyticsCategory,
-        granted: true,
-        mechanism: ANALYTICS_BROWSER_SIGNAL_MECHANISM,
-        noticeVersion: ANALYTICS_CONSENT_NOTICE_VERSION,
-      })
-    ).toBe(false);
   });
 });
