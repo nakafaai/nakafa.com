@@ -73,6 +73,13 @@ export const GITHUB_ACTION_REVIEWS: readonly GithubActionReview[] = [
     expectedUsages: 1,
     reason: "The cache restore and save actions move as one cohort.",
   },
+  {
+    action: "actions/upload-artifact",
+    approvedSha: "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+    expectedTag: "v7.0.1",
+    expectedUsages: 1,
+    reason: "Bundle analysis uses the latest reviewed stable release.",
+  },
 ];
 
 /** Expected failure while reading or decoding repository workflow policy. */
