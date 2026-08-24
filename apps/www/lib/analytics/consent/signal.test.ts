@@ -10,11 +10,13 @@ import type { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { describe, expect, it } from "@repo/testing/effect";
 import type { FunctionReturnType } from "convex/server";
+import { ConvexError } from "convex/values";
 import { Duration, Effect, Fiber, Option } from "effect";
 import { TestClock } from "effect/testing";
 import { vi } from "vitest";
 import {
   AccountConsentPersistenceError,
+  AccountConsentRejectedError,
   readBrowserPrivacySignal,
   revokeAccountAnalyticsGrant,
   saveAccountAnalyticsChoice,
@@ -98,6 +100,30 @@ describe("browser analytics privacy signal", () => {
       const failure = yield* Fiber.join(fiber);
       expect(failure).toBeInstanceOf(AccountConsentPersistenceError);
       expect(setAccountConsent).toHaveBeenCalledTimes(3);
+    })
+  );
+
+  it.effect("does not retry an authoritative account rejection", () =>
+    Effect.gen(function* () {
+      const setAccountConsent = vi.fn(() =>
+        Promise.reject(
+          new ConvexError({
+            code: "CONSENT_ACCOUNT_CHANGED",
+            message:
+              "The active account changed before consent could be saved.",
+          })
+        )
+      );
+
+      const failure = yield* saveAccountAnalyticsChoice(
+        setAccountConsent,
+        expectedUserId,
+        true,
+        Effect.succeed(false)
+      ).pipe(Effect.flip);
+
+      expect(failure).toBeInstanceOf(AccountConsentRejectedError);
+      expect(setAccountConsent).toHaveBeenCalledTimes(1);
     })
   );
 

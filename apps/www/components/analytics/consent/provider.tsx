@@ -139,16 +139,13 @@ export function AnalyticsConsentProvider({
         currentAccountUserId,
         currentBrowserPrivacySignal
       ).pipe(
-        Effect.flatMap(
-          Option.match({
+        Effect.matchEffect({
+          onFailure: () => recordRevocationFailure,
+          onSuccess: Option.match({
             onNone: () => clearRevocationOverride,
             onSome: (decision) => recordRevocationSuccess(decision.decidedAt),
-          })
-        ),
-        Effect.catchTag(
-          "AccountConsentPersistenceError",
-          () => recordRevocationFailure
-        )
+          }),
+        })
       )
     );
 

@@ -7,10 +7,12 @@ import {
 } from "@repo/analytics/consent";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
+import { ConvexError } from "convex/values";
 import { Effect, Option, Schedule, Schema } from "effect";
 
 const accountConsentPersistenceFailedCode =
   "ACCOUNT_CONSENT_PERSISTENCE_FAILED";
+const accountConsentRejectedCode = "ACCOUNT_CONSENT_REJECTED";
 const accountConsentRetrySchedule = Schedule.spaced("10 seconds");
 type SetAccountConsentArgs = FunctionArgs<typeof api.consents.current.set>;
 type SetAccountConsent = (
@@ -42,6 +44,7 @@ export const readBrowserPrivacySignal = Effect.fn(
 export class AccountConsentPersistenceError extends Schema.TaggedError<AccountConsentPersistenceError>()(
   "AccountConsentPersistenceError",
   {
+    cause: Schema.Unknown,
     code: Schema.Literal(accountConsentPersistenceFailedCode),
     message: Schema.Literal(
       "Unable to persist the analytics decision for this account."
@@ -49,8 +52,29 @@ export class AccountConsentPersistenceError extends Schema.TaggedError<AccountCo
   }
 ) {}
 
-function toAccountConsentPersistenceError() {
+/** Raised when Convex authoritatively rejects an account analytics decision. */
+export class AccountConsentRejectedError extends Schema.TaggedError<AccountConsentRejectedError>()(
+  "AccountConsentRejectedError",
+  {
+    cause: Schema.Unknown,
+    code: Schema.Literal(accountConsentRejectedCode),
+    message: Schema.Literal(
+      "The analytics decision was rejected for this account."
+    ),
+  }
+) {}
+
+function toAccountConsentWriteError(cause: unknown) {
+  if (cause instanceof ConvexError) {
+    return new AccountConsentRejectedError({
+      cause,
+      code: accountConsentRejectedCode,
+      message: "The analytics decision was rejected for this account.",
+    });
+  }
+
   return new AccountConsentPersistenceError({
+    cause,
     code: accountConsentPersistenceFailedCode,
     message: "Unable to persist the analytics decision for this account.",
   });
@@ -62,7 +86,7 @@ const persistAccountAnalyticsConsent = Effect.fnUntraced(function* (
   decision: SetAccountConsentArgs["decision"]
 ) {
   return yield* Effect.tryPromise({
-    catch: toAccountConsentPersistenceError,
+    catch: toAccountConsentWriteError,
     try: () => setAccountConsent({ decision, expectedUserId }),
   });
 });
@@ -115,7 +139,13 @@ export const saveAccountAnalyticsChoice = Effect.fn(
     expectedUserId,
     granted,
     currentBrowserPrivacySignal
-  ).pipe(Effect.retry({ schedule: accountConsentRetrySchedule, times: 2 }));
+  ).pipe(
+    Effect.retry({
+      schedule: accountConsentRetrySchedule,
+      times: 2,
+      while: (error) => error._tag === "AccountConsentPersistenceError",
+    })
+  );
 });
 
 /** Revalidates and persists a browser signal with two delayed retries. */
@@ -146,5 +176,11 @@ export const revokeAccountAnalyticsGrant = Effect.fn(
         }
       );
       return Option.some(decision);
-    }).pipe(Effect.retry({ schedule: accountConsentRetrySchedule, times: 2 }))
+    }).pipe(
+      Effect.retry({
+        schedule: accountConsentRetrySchedule,
+        times: 2,
+        while: (error) => error._tag === "AccountConsentPersistenceError",
+      })
+    )
 );
