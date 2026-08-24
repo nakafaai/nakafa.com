@@ -279,6 +279,16 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Prefer installed helpers/components when they fit: Better Auth, Workflow, Aggregate, Workpool, `convex-helpers`.
 - Keep pagination, relationships, aggregates, workflows, and cron jobs aligned with official patterns.
 - Make Convex schema and index names explicit and readable.
+- Treat every public Convex function used by a deployed product consumer as a
+  rollout contract. Renames and removals use an expand, switch, observe,
+  contract sequence: deploy the successor while the predecessor remains,
+  switch every consumer, verify that the predecessor has no readers for an
+  explicit migration-owned observation window, then delete it and every
+  temporary migration artifact in the cleanup pull request. A promoted web
+  deployment is not proof that older browser clients have stopped calling the
+  predecessor. Temporary compatibility is allowed only for this bounded
+  migration phase and must have an owner, an exit criterion, and a removal
+  change. The migration is not complete until that cleanup is merged.
 
 ## Testing Rules
 
