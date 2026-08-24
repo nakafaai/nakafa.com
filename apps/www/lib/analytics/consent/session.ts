@@ -17,6 +17,11 @@ export type AnalyticsConsentSessionOverrides = ReadonlyMap<
   AnalyticsConsentSessionOverride
 >;
 
+export interface AnalyticsConsentSessionOperation {
+  readonly owner: symbol;
+  readonly promptIdentity: AnalyticsConsentPromptIdentity;
+}
+
 /** Identifies the current account or anonymous scope and consent notice. */
 export function createAnalyticsConsentPromptIdentity({
   isAuthenticated,
@@ -102,6 +107,33 @@ export function cancelAnalyticsConsentSessionSave({
   const nextOverrides = new Map(overrides);
   nextOverrides.delete(promptIdentity);
   return nextOverrides;
+}
+
+/** Allows only the latest revocation without a superseding explicit save. */
+export function canCommitAnalyticsConsentRevocation({
+  explicitSaveOwnerAtStart,
+  latestExplicitSave,
+  latestRevocation,
+  promptIdentity,
+  revocationOwner,
+}: {
+  readonly explicitSaveOwnerAtStart: symbol | null;
+  readonly latestExplicitSave: AnalyticsConsentSessionOperation | null;
+  readonly latestRevocation: AnalyticsConsentSessionOperation | null;
+  readonly promptIdentity: AnalyticsConsentPromptIdentity;
+  readonly revocationOwner: symbol;
+}) {
+  if (
+    latestRevocation?.owner !== revocationOwner ||
+    latestRevocation.promptIdentity !== promptIdentity
+  ) {
+    return false;
+  }
+
+  return !(
+    latestExplicitSave?.promptIdentity === promptIdentity &&
+    latestExplicitSave.owner !== explicitSaveOwnerAtStart
+  );
 }
 
 /** Projects transient prompt, runtime, and persistence policy for one visitor. */

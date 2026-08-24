@@ -22,8 +22,9 @@ import {
   initialConsentPreferences,
   updateConsentPreferences,
 } from "@/lib/analytics/consent/preferences";
+import { useAccountAnalyticsConsentRevocation } from "@/lib/analytics/consent/revocation";
 import {
-  type AnalyticsConsentPromptIdentity,
+  type AnalyticsConsentSessionOperation,
   type AnalyticsConsentSessionOverrides,
   cancelAnalyticsConsentSessionSave,
   completeAnalyticsConsentSessionSave,
@@ -31,10 +32,7 @@ import {
   resolveAnalyticsConsentSessionPolicy,
   setAnalyticsConsentSessionOverride,
 } from "@/lib/analytics/consent/session";
-import {
-  revokeAccountAnalyticsGrant,
-  saveAccountAnalyticsChoice,
-} from "@/lib/analytics/consent/signal";
+import { saveAccountAnalyticsChoice } from "@/lib/analytics/consent/signal";
 import {
   createBrowserAnalyticsIdentity,
   resolveBrowserAnalyticsConsentState,
@@ -44,10 +42,8 @@ import { useUser } from "@/lib/context/use-user";
 
 const isPreviewChild = env.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD === "true";
 
-interface ActiveAnalyticsConsentSave {
+interface LatestAnalyticsConsentSave extends AnalyticsConsentSessionOperation {
   readonly fiber: Fiber.Fiber<void, never>;
-  readonly owner: symbol;
-  readonly promptIdentity: AnalyticsConsentPromptIdentity;
 }
 
 /** Owns the state that exclusively controls optional product analytics. */
@@ -65,7 +61,7 @@ export function AnalyticsConsentProvider({
   const [sessionOverrides, setSessionOverrides] =
     useState<AnalyticsConsentSessionOverrides>(() => new Map());
   const [preferences, setPreferences] = useState(initialConsentPreferences);
-  const explicitSaveRef = useRef<ActiveAnalyticsConsentSave | null>(null);
+  const explicitSaveRef = useRef<LatestAnalyticsConsentSave | null>(null);
   const { online: isOnline } = useNetwork();
   const setAccountConsent = useMutation(api.consents.current.set);
   const shouldLoadAccountConsent =
@@ -102,9 +98,14 @@ export function AnalyticsConsentProvider({
   });
 
   useEffect(() => {
-    const interruptExplicitSave = () => {
+    if (!promptIdentity) {
+      return;
+    }
+
+    const departedIdentity = promptIdentity;
+    return () => {
       const activeSave = explicitSaveRef.current;
-      if (!activeSave) {
+      if (activeSave?.promptIdentity !== departedIdentity) {
         return;
       }
 
@@ -125,73 +126,18 @@ export function AnalyticsConsentProvider({
         )
       );
     };
-
-    if (!promptIdentity) {
-      interruptExplicitSave();
-      return;
-    }
-
-    return interruptExplicitSave;
   }, [promptIdentity]);
 
-  useEffect(() => {
-    if (
-      !(
-        shouldRevokeAccountGrant &&
-        isOnline &&
-        promptIdentity &&
-        currentAccountUserId
-      )
-    ) {
-      return;
-    }
-
-    const recordRevocationFailure = Effect.sync(() =>
-      setSessionOverrides((current) =>
-        setAnalyticsConsentSessionOverride({
-          override: { persistence: "failed" },
-          overrides: current,
-          promptIdentity,
-        })
-      )
-    );
-    const recordRevocationSuccess = (decidedAt: number) =>
-      Effect.sync(() =>
-        setSessionOverrides((current) =>
-          setAnalyticsConsentSessionOverride({
-            override: { decidedAt, persistence: "saved" },
-            overrides: current,
-            promptIdentity,
-          })
-        )
-      );
-    const revokeFiber = Effect.runFork(
-      revokeAccountAnalyticsGrant(
-        setAccountConsent,
-        currentAccountUserId,
-        currentBrowserPrivacySignal
-      ).pipe(
-        Effect.matchEffect({
-          onFailure: () => recordRevocationFailure,
-          onSuccess: Option.match({
-            onNone: () => Effect.void,
-            onSome: (decision) => recordRevocationSuccess(decision.decidedAt),
-          }),
-        })
-      )
-    );
-
-    return () => {
-      Effect.runFork(Fiber.interrupt(revokeFiber));
-    };
-  }, [
+  useAccountAnalyticsConsentRevocation({
     currentAccountUserId,
+    currentBrowserPrivacySignal,
+    explicitSaveRef,
     isOnline,
     promptIdentity,
-    currentBrowserPrivacySignal,
     setAccountConsent,
+    setSessionOverrides,
     shouldRevokeAccountGrant,
-  ]);
+  });
 
   const state = resolveBrowserAnalyticsConsentState({
     accountConsent,

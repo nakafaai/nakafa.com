@@ -6,6 +6,7 @@ import {
 import { describe, expect, it } from "vitest";
 import {
   type AnalyticsConsentSessionOverrides,
+  canCommitAnalyticsConsentRevocation,
   cancelAnalyticsConsentSessionSave,
   completeAnalyticsConsentSessionSave,
   createAnalyticsConsentPromptIdentity,
@@ -205,5 +206,54 @@ describe("analytics consent session", () => {
       persistence: "saved",
     });
     expect(canceled.has(promptIdentity)).toBe(false);
+  });
+
+  it("commits only the latest revocation without a newer explicit save", () => {
+    const promptIdentity = createAnalyticsConsentPromptIdentity({
+      isAuthenticated: true,
+      user,
+    });
+    if (!promptIdentity) {
+      return;
+    }
+
+    const originalSaveOwner = Symbol("original save");
+    const newerSaveOwner = Symbol("newer save");
+    const currentRevocationOwner = Symbol("current revocation");
+    const staleRevocationOwner = Symbol("stale revocation");
+    const currentRevocation = {
+      owner: currentRevocationOwner,
+      promptIdentity,
+    };
+    const canCommit = (
+      latestExplicitSave: Parameters<
+        typeof canCommitAnalyticsConsentRevocation
+      >[0]["latestExplicitSave"],
+      latestRevocation: Parameters<
+        typeof canCommitAnalyticsConsentRevocation
+      >[0]["latestRevocation"] = currentRevocation,
+      revocationOwner = currentRevocationOwner
+    ) =>
+      canCommitAnalyticsConsentRevocation({
+        explicitSaveOwnerAtStart: originalSaveOwner,
+        latestExplicitSave,
+        latestRevocation,
+        promptIdentity,
+        revocationOwner,
+      });
+
+    expect(canCommit({ owner: originalSaveOwner, promptIdentity })).toBe(true);
+    expect(canCommit(null)).toBe(true);
+    expect(canCommit({ owner: newerSaveOwner, promptIdentity })).toBe(false);
+    expect(
+      canCommit({
+        owner: newerSaveOwner,
+        promptIdentity: `anonymous:${ANALYTICS_CONSENT_NOTICE_VERSION}`,
+      })
+    ).toBe(true);
+    expect(canCommit(null, null)).toBe(false);
+    expect(canCommit(null, currentRevocation, staleRevocationOwner)).toBe(
+      false
+    );
   });
 });

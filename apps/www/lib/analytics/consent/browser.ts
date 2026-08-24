@@ -8,7 +8,7 @@ import {
   createAnonymousAnalyticsConsent,
 } from "@repo/analytics/consent";
 import { Clock, Effect, Fiber, Option } from "effect";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   type BrowserPrivacySignalSource,
   readBrowserPrivacySignal,
@@ -79,10 +79,8 @@ export function useAnonymousAnalyticsConsent({
     })
   );
   const [hasStorageError, setHasStorageError] = useState(false);
-  const currentBrowserPrivacySignal = useMemo(
-    () => refreshBrowserPrivacySignal(setBrowserConsent),
-    []
-  );
+  const currentBrowserPrivacySignal =
+    refreshBrowserPrivacySignal(setBrowserConsent);
 
   useEffect(() => {
     if (isPreviewChild) {
