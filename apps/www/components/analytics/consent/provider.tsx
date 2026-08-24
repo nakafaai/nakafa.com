@@ -14,7 +14,7 @@ import {
 import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { useConvexAuth, useMutation } from "convex/react";
-import { Effect, Fiber } from "effect";
+import { Effect, Fiber, Option } from "effect";
 import { type ReactNode, useEffect, useState, useTransition } from "react";
 import { env } from "@/env";
 import { useAnonymousAnalyticsConsent } from "@/lib/analytics/consent/browser";
@@ -25,7 +25,6 @@ import {
 import { revokeAccountAnalyticsGrant } from "@/lib/analytics/consent/signal";
 import {
   type AnalyticsConsentSessionOverrides,
-  clearAnalyticsConsentSessionOverride,
   createAnalyticsConsentPromptIdentity,
   createBrowserAnalyticsIdentity,
   resolveAnalyticsConsentSessionPolicy,
@@ -74,6 +73,8 @@ export function AnalyticsConsentProvider({
     isAuthenticated,
     user,
   });
+  const anonymousConsent = Option.getOrNull(browserConsent.anonymousConsent);
+  const durableConsent = isAuthenticated ? accountConsent : anonymousConsent;
   const currentAccountUserId = user?.appUser._id ?? null;
   const shouldRevokeAccountGrant = shouldRevokeAccountAnalyticsGrant({
     accountConsent,
@@ -97,26 +98,28 @@ export function AnalyticsConsentProvider({
     const recordRevocationFailure = Effect.sync(() =>
       setSessionOverrides((current) =>
         setAnalyticsConsentSessionOverride({
-          override: { granted: false, persistence: "failed" },
+          override: { persistence: "failed" },
           overrides: current,
           promptIdentity,
         })
       )
     );
-    const clearRevocationOverride = Effect.sync(() =>
-      setSessionOverrides((current) =>
-        clearAnalyticsConsentSessionOverride({
-          overrides: current,
-          promptIdentity,
-        })
-      )
-    );
+    const recordRevocationSuccess = (decidedAt: number) =>
+      Effect.sync(() =>
+        setSessionOverrides((current) =>
+          setAnalyticsConsentSessionOverride({
+            override: { decidedAt, persistence: "saved" },
+            overrides: current,
+            promptIdentity,
+          })
+        )
+      );
 
     const revokeFiber = Effect.runFork(
       revokeAccountAnalyticsGrant(setAccountConsent, currentAccountUserId).pipe(
         Effect.matchEffect({
           onFailure: () => recordRevocationFailure,
-          onSuccess: () => clearRevocationOverride,
+          onSuccess: (decision) => recordRevocationSuccess(decision.decidedAt),
         })
       )
     );
@@ -145,6 +148,7 @@ export function AnalyticsConsentProvider({
   const hasLoadError =
     accountConsentQuery.isError || (!isAuthenticated && hasStorageError);
   const sessionPolicy = resolveAnalyticsConsentSessionPolicy({
+    durableConsent,
     hasLoadError,
     overrides: sessionOverrides,
     promptIdentity,
@@ -216,7 +220,7 @@ export function AnalyticsConsentProvider({
 
     setSessionOverrides((current) =>
       setAnalyticsConsentSessionOverride({
-        override: { granted, persistence: "pending" },
+        override: { persistence: "pending" },
         overrides: current,
         promptIdentity,
       })
@@ -225,20 +229,22 @@ export function AnalyticsConsentProvider({
     const recordPersistenceFailure = Effect.sync(() =>
       setSessionOverrides((current) =>
         setAnalyticsConsentSessionOverride({
-          override: { granted, persistence: "failed" },
+          override: { persistence: "failed" },
           overrides: current,
           promptIdentity,
         })
       )
     );
-    const clearPersistenceOverride = Effect.sync(() =>
-      setSessionOverrides((current) =>
-        clearAnalyticsConsentSessionOverride({
-          overrides: current,
-          promptIdentity,
-        })
-      )
-    );
+    const recordPersistenceSuccess = (decidedAt: number) =>
+      Effect.sync(() =>
+        setSessionOverrides((current) =>
+          setAnalyticsConsentSessionOverride({
+            override: { decidedAt, persistence: "saved" },
+            overrides: current,
+            promptIdentity,
+          })
+        )
+      );
 
     if (expectedUserId) {
       const accountSave = Effect.tryPromise(() =>
@@ -254,7 +260,7 @@ export function AnalyticsConsentProvider({
       ).pipe(
         Effect.matchEffect({
           onFailure: () => recordPersistenceFailure,
-          onSuccess: () => clearPersistenceOverride,
+          onSuccess: (decision) => recordPersistenceSuccess(decision.decidedAt),
         })
       );
       startSaving(() => Effect.runPromise(accountSave));
@@ -264,7 +270,7 @@ export function AnalyticsConsentProvider({
     const anonymousSave = saveDecision(granted).pipe(
       Effect.matchEffect({
         onFailure: () => recordPersistenceFailure,
-        onSuccess: () => clearPersistenceOverride,
+        onSuccess: (consent) => recordPersistenceSuccess(consent.decidedAt),
       })
     );
 

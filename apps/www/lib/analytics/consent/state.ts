@@ -31,10 +31,9 @@ export type AnalyticsConsentPromptIdentity =
   | `account:${string}:${typeof ANALYTICS_CONSENT_NOTICE_VERSION}`
   | `anonymous:${typeof ANALYTICS_CONSENT_NOTICE_VERSION}`;
 
-export interface AnalyticsConsentSessionOverride {
-  readonly granted: boolean;
-  readonly persistence: "failed" | "pending";
-}
+export type AnalyticsConsentSessionOverride =
+  | { readonly persistence: "failed" | "pending" }
+  | { readonly decidedAt: number; readonly persistence: "saved" };
 
 export type AnalyticsConsentSessionOverrides = ReadonlyMap<
   AnalyticsConsentPromptIdentity,
@@ -75,32 +74,32 @@ export function setAnalyticsConsentSessionOverride({
   return nextOverrides;
 }
 
-/** Clears transient state after its durable source has synchronized. */
-export function clearAnalyticsConsentSessionOverride({
-  overrides,
-  promptIdentity,
-}: {
-  readonly overrides: AnalyticsConsentSessionOverrides;
-  readonly promptIdentity: AnalyticsConsentPromptIdentity;
-}): AnalyticsConsentSessionOverrides {
-  const nextOverrides = new Map(overrides);
-  nextOverrides.delete(promptIdentity);
-  return nextOverrides;
-}
-
 /** Projects transient prompt, runtime, and persistence policy for one visitor. */
 export function resolveAnalyticsConsentSessionPolicy({
+  durableConsent,
   hasLoadError,
   overrides,
   promptIdentity,
   status,
 }: {
+  readonly durableConsent: {
+    readonly decidedAt: number;
+    readonly noticeVersion: string;
+  } | null;
   readonly hasLoadError: boolean;
   readonly overrides: AnalyticsConsentSessionOverrides;
   readonly promptIdentity: AnalyticsConsentPromptIdentity | null;
   readonly status: AnalyticsConsentState["status"];
 }) {
-  const override = promptIdentity ? overrides.get(promptIdentity) : undefined;
+  const storedOverride = promptIdentity
+    ? overrides.get(promptIdentity)
+    : undefined;
+  const isSavedChoiceSynchronized =
+    storedOverride?.persistence === "saved" &&
+    durableConsent !== null &&
+    durableConsent.noticeVersion === ANALYTICS_CONSENT_NOTICE_VERSION &&
+    durableConsent.decidedAt >= storedOverride.decidedAt;
+  const override = isSavedChoiceSynchronized ? undefined : storedOverride;
   const hasHandledPrompt = override !== undefined;
 
   return {
@@ -109,8 +108,7 @@ export function resolveAnalyticsConsentSessionPolicy({
       !!promptIdentity &&
       !hasHandledPrompt &&
       (status === "prompt" || (hasLoadError && status === "pending")),
-    isRuntimeSuppressed:
-      !!override && (!override.granted || override.persistence === "failed"),
+    isRuntimeSuppressed: override !== undefined,
     isSaving: override?.persistence === "pending",
   };
 }

@@ -4,13 +4,15 @@ import {
   ANALYTICS_CONSENT_NOTICE_VERSION,
 } from "@repo/analytics/consent";
 import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionArgs } from "convex/server";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schedule, Schema } from "effect";
 
 const browserSignalRevocationFailedCode = "BROWSER_SIGNAL_REVOCATION_FAILED";
 const browserSignalRetrySchedule = Schedule.spaced("10 seconds");
 type SetAccountConsentArgs = FunctionArgs<typeof api.consents.current.set>;
-type SetAccountConsent = (args: SetAccountConsentArgs) => Promise<unknown>;
+type SetAccountConsent = (
+  args: SetAccountConsentArgs
+) => Promise<FunctionReturnType<typeof api.consents.current.set>>;
 
 /** Raised after a browser privacy signal cannot persist its account override. */
 export class BrowserSignalRevocationError extends Schema.TaggedError<BrowserSignalRevocationError>()(

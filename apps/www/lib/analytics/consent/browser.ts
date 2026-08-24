@@ -164,8 +164,7 @@ export function useAnonymousAnalyticsConsent({
           }));
           setHasStorageError(false);
         })
-      ),
-      Effect.asVoid
+      )
     );
 
   return {
