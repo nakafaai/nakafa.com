@@ -1,14 +1,14 @@
+import type {
+  ResolvedLine,
+  ResolvedLineLabel,
+} from "@repo/design-system/components/contents/mathematics/line/spec";
 import {
   GRAPH_ANGLE_ARC_SEGMENTS,
   GRAPH_FULL_CIRCLE_SEGMENTS,
 } from "@repo/design-system/components/three/helpers/quality";
-import type {
-  Props as LineEquationProps,
-  LineLabel,
-} from "@repo/design-system/components/three/line-equation";
 import { getRadians } from "@repo/design-system/lib/geometry/angles";
 
-type CircleLineLabel = Omit<LineLabel, "at"> & {
+type CircleLineLabel = Omit<ResolvedLineLabel, "at"> & {
   progress?: number;
 };
 
@@ -28,9 +28,9 @@ interface CircleRadius {
 }
 
 interface CircleArcLine extends CircleArc {
-  color: NonNullable<LineEquationProps["color"]>;
+  color: NonNullable<ResolvedLine["color"]>;
   label?: CircleLineLabel;
-  lineWidth?: LineEquationProps["lineWidth"];
+  lineWidth?: ResolvedLine["lineWidth"];
 }
 
 const FULL_CIRCLE_DEGREES = 360;

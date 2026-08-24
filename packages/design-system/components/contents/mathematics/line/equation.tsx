@@ -1,12 +1,6 @@
-// CoordinateSystem renders a dynamic WebGL canvas with SSR disabled.
-// https://nextjs.org/docs/app/guides/lazy-loading#skipping-ssr
-
-import {
-  type AuthoredLine,
-  resolveAuthoredLines,
-} from "@repo/design-system/components/contents/mathematics/circle-lines";
-import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
-import { LineEquation as LineEquation3D } from "@repo/design-system/components/three/line-equation";
+import { DeferredLineScene } from "@repo/design-system/components/contents/mathematics/line/deferred";
+import { resolveAuthoredLines } from "@repo/design-system/components/contents/mathematics/line/resolve";
+import type { AuthoredLine } from "@repo/design-system/components/contents/mathematics/line/spec";
 import {
   Card,
   CardContent,
@@ -28,9 +22,7 @@ interface Props {
   title: ReactNode;
 }
 
-/**
- * Renders one interactive line-equation card with the shared coordinate system.
- */
+/** Renders one interactive line-equation card. */
 export function LineEquation({
   title,
   description,
@@ -51,18 +43,11 @@ export function LineEquation({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        <CoordinateSystem
+        <DeferredLineScene
           cameraPosition={cameraPosition}
-          showGizmo={showZAxis}
+          lines={lines}
           showZAxis={showZAxis}
-        >
-          {lines.map((item) => (
-            <LineEquation3D
-              key={`line-${item.points.map((p) => `${p.x},${p.y},${p.z}`).join(";")}`}
-              {...item}
-            />
-          ))}
-        </CoordinateSystem>
+        />
       </CardContent>
     </Card>
   );

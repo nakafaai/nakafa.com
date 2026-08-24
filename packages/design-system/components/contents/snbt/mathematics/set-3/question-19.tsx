@@ -1,4 +1,4 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import {
   getArcPoints,
   getMidpoint,
