@@ -115,7 +115,7 @@ export const reactTextComponents: ReactMarkdownComponents = {
   li: memo(
     ({ ...props }) => (
       <li
-        className="space-y-4 text-pretty pl-1 leading-relaxed"
+        className="text-pretty pl-1 leading-relaxed [&>*+*]:mt-4 [&>p:first-child]:inline"
         data-nakafa="list-item"
         {...props}
       />

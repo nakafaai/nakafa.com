@@ -15,4 +15,8 @@ describe("appViewport", () => {
       },
     ]);
   });
+
+  it("keeps the default interactive widget mode implicit", () => {
+    expect(appViewport).not.toHaveProperty("interactiveWidget");
+  });
 });
