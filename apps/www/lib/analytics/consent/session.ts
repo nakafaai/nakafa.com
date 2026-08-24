@@ -50,23 +50,6 @@ export function setAnalyticsConsentSessionOverride({
   return nextOverrides;
 }
 
-/** Clears transient state after current browser evidence cancels a write. */
-export function clearAnalyticsConsentSessionOverride({
-  overrides,
-  promptIdentity,
-}: {
-  readonly overrides: AnalyticsConsentSessionOverrides;
-  readonly promptIdentity: AnalyticsConsentPromptIdentity;
-}): AnalyticsConsentSessionOverrides {
-  if (!overrides.has(promptIdentity)) {
-    return overrides;
-  }
-
-  const nextOverrides = new Map(overrides);
-  nextOverrides.delete(promptIdentity);
-  return nextOverrides;
-}
-
 /** Projects transient prompt, runtime, and persistence policy for one visitor. */
 export function resolveAnalyticsConsentSessionPolicy({
   durableConsent,

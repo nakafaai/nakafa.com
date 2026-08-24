@@ -11,7 +11,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { useConvexAuth, useMutation } from "convex/react";
 import { Effect, Fiber, Option } from "effect";
-import { type ReactNode, useEffect, useState, useTransition } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { env } from "@/env";
 import { useAnonymousAnalyticsConsent } from "@/lib/analytics/consent/browser";
 import {
@@ -24,7 +24,6 @@ import {
 } from "@/lib/analytics/consent/preferences";
 import {
   type AnalyticsConsentSessionOverrides,
-  clearAnalyticsConsentSessionOverride,
   createAnalyticsConsentPromptIdentity,
   resolveAnalyticsConsentSessionPolicy,
   setAnalyticsConsentSessionOverride,
@@ -57,7 +56,7 @@ export function AnalyticsConsentProvider({
   const [sessionOverrides, setSessionOverrides] =
     useState<AnalyticsConsentSessionOverrides>(() => new Map());
   const [preferences, setPreferences] = useState(initialConsentPreferences);
-  const [, startSaving] = useTransition();
+  const explicitSaveFiberRef = useRef<Fiber.Fiber<void, never> | null>(null);
   const { online: isOnline } = useNetwork();
   const setAccountConsent = useMutation(api.consents.current.set);
   const shouldLoadAccountConsent =
@@ -94,6 +93,25 @@ export function AnalyticsConsentProvider({
   });
 
   useEffect(() => {
+    const interruptExplicitSave = () => {
+      const fiber = explicitSaveFiberRef.current;
+      if (!fiber) {
+        return;
+      }
+
+      explicitSaveFiberRef.current = null;
+      Effect.runFork(Fiber.interrupt(fiber));
+    };
+
+    if (!promptIdentity) {
+      interruptExplicitSave();
+      return;
+    }
+
+    return interruptExplicitSave;
+  }, [promptIdentity]);
+
+  useEffect(() => {
     if (
       !(
         shouldRevokeAccountGrant &&
@@ -124,15 +142,6 @@ export function AnalyticsConsentProvider({
           })
         )
       );
-    const clearRevocationOverride = Effect.sync(() =>
-      setSessionOverrides((current) =>
-        clearAnalyticsConsentSessionOverride({
-          overrides: current,
-          promptIdentity,
-        })
-      )
-    );
-
     const revokeFiber = Effect.runFork(
       revokeAccountAnalyticsGrant(
         setAccountConsent,
@@ -142,7 +151,7 @@ export function AnalyticsConsentProvider({
         Effect.matchEffect({
           onFailure: () => recordRevocationFailure,
           onSuccess: Option.match({
-            onNone: () => clearRevocationOverride,
+            onNone: () => Effect.void,
             onSome: (decision) => recordRevocationSuccess(decision.decidedAt),
           }),
         })
@@ -282,6 +291,15 @@ export function AnalyticsConsentProvider({
         )
       );
 
+    const runExplicitSave = (program: Effect.Effect<void, never>) => {
+      const previousFiber = explicitSaveFiberRef.current;
+      const nextProgram = previousFiber
+        ? Fiber.interrupt(previousFiber).pipe(Effect.andThen(program))
+        : program;
+
+      explicitSaveFiberRef.current = Effect.runFork(nextProgram);
+    };
+
     if (expectedUserId) {
       const accountSave = saveAccountAnalyticsChoice(
         setAccountConsent,
@@ -294,7 +312,7 @@ export function AnalyticsConsentProvider({
           onSuccess: (decision) => recordPersistenceSuccess(decision.decidedAt),
         })
       );
-      startSaving(() => Effect.runPromise(accountSave));
+      runExplicitSave(accountSave);
       return;
     }
 
@@ -305,7 +323,7 @@ export function AnalyticsConsentProvider({
       })
     );
 
-    startSaving(() => Effect.runPromise(anonymousSave));
+    runExplicitSave(anonymousSave);
   }
 
   const contextValue = {

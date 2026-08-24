@@ -5,7 +5,6 @@ import {
 } from "@repo/analytics/consent";
 import { describe, expect, it } from "vitest";
 import {
-  clearAnalyticsConsentSessionOverride,
   createAnalyticsConsentPromptIdentity,
   resolveAnalyticsConsentSessionPolicy,
   setAnalyticsConsentSessionOverride,
@@ -104,18 +103,6 @@ describe("analytics consent session", () => {
     expect(resolve(anonymous, null, "browser-signal").status).toBe(
       "browser-signal"
     );
-
-    const cleared = clearAnalyticsConsentSessionOverride({
-      overrides,
-      promptIdentity: accountA,
-    });
-    expect(cleared.has(accountA)).toBe(false);
-    expect(
-      clearAnalyticsConsentSessionOverride({
-        overrides: cleared,
-        promptIdentity: accountA,
-      })
-    ).toBe(cleared);
   });
 
   it("shows a prompt only until that visitor has a pending choice", () => {

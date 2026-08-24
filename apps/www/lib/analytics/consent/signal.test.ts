@@ -127,6 +127,30 @@ describe("browser analytics privacy signal", () => {
     })
   );
 
+  it.effect("stops a delayed explicit retry when its owner interrupts it", () =>
+    Effect.gen(function* () {
+      const setAccountConsent = vi.fn(() =>
+        Promise.reject(new Error("offline"))
+      );
+      const fiber = yield* Effect.forkChild(
+        saveAccountAnalyticsChoice(
+          setAccountConsent,
+          expectedUserId,
+          true,
+          Effect.succeed(false)
+        )
+      );
+
+      yield* TestClock.adjust(Duration.zero);
+      expect(setAccountConsent).toHaveBeenCalledTimes(1);
+
+      yield* Fiber.interrupt(fiber);
+      yield* TestClock.adjust(Duration.seconds(20));
+
+      expect(setAccountConsent).toHaveBeenCalledTimes(1);
+    })
+  );
+
   it.effect("skips revocation after a stale signal clears", () =>
     Effect.gen(function* () {
       const setAccountConsent = vi.fn(() => Promise.resolve(revokedDecision));
