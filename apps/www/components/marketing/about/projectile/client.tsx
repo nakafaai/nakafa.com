@@ -15,7 +15,13 @@ import { useReducedMotion } from "motion/react";
 import dynamic from "next/dynamic";
 import { type ReactNode, useState } from "react";
 import { loadProjectileScene } from "@/components/marketing/about/projectile/loader";
+import type { ProjectileSceneProps } from "@/components/marketing/about/projectile/scene";
 import { reportClientException } from "@/lib/analytics/client";
+
+/** Keeps the optional WebGL frame empty after a reported terminal load failure. */
+function UnavailableProjectileScene(_props: ProjectileSceneProps) {
+  return null;
+}
 
 /**
  * Imports the scene module after viewport intent.
@@ -29,12 +35,14 @@ const ProjectileScene = dynamic(() =>
         ({ ProjectileScene: Scene }) => Scene
       )
     ).pipe(
-      Effect.tapError((error) =>
-        reportClientException(error, {
-          operation: "load-projectile-scene",
-          source: "home-features",
-        })
-      )
+      Effect.matchEffect({
+        onFailure: (error) =>
+          reportClientException(error, {
+            operation: "load-projectile-scene",
+            source: "home-features",
+          }).pipe(Effect.as(UnavailableProjectileScene)),
+        onSuccess: Effect.succeed,
+      })
     )
   )
 );

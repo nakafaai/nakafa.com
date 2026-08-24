@@ -2,8 +2,19 @@
 
 import { ConvexProviderWithAuth, ConvexReactClient } from "convex/react";
 import { Data, Effect } from "effect";
-import { type ReactNode, useCallback, useMemo, useRef } from "react";
+import { type ReactNode, useCallback, useRef } from "react";
 import { authClient } from "@/lib/auth/client";
+
+let sharedConvexClient: ConvexReactClient | undefined;
+
+/** Returns the one page-lifetime Convex client recommended by the React API. */
+function getSharedConvexClient(convexUrl: string) {
+  sharedConvexClient ??= new ConvexReactClient(convexUrl, {
+    initialAuthTokenReuse: true,
+    logger: false,
+  });
+  return sharedConvexClient;
+}
 
 /** A Better Auth token request could not produce a usable Convex credential. */
 class ConvexTokenReadError extends Data.TaggedError("ConvexTokenReadError")<{
@@ -119,14 +130,7 @@ export function ConvexProvider({
   children: ReactNode;
   convexUrl: string;
 }) {
-  const convex = useMemo(
-    () =>
-      new ConvexReactClient(convexUrl, {
-        initialAuthTokenReuse: true,
-        logger: false,
-      }),
-    [convexUrl]
-  );
+  const convex = getSharedConvexClient(convexUrl);
 
   return (
     // Convex's public API explicitly requires an authentication Hook prop.

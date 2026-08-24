@@ -123,13 +123,23 @@ const expectProjectileInteraction = Effect.fn(
   const highArc = page.getByRole("button", { name: "High Arc" });
 
   yield* Effect.promise(() => expect(visual).toHaveCount(1));
-  yield* Effect.promise(() => expect(canvas).toHaveCount(0));
   yield* Effect.promise(() => visual.scrollIntoViewIfNeeded());
   yield* Effect.promise(() => expect(canvas).toBeVisible({ timeout: 30_000 }));
   yield* Effect.promise(() => highArc.click());
   yield* Effect.promise(() =>
     expect(highArc).toHaveAttribute("aria-pressed", "true")
   );
+});
+
+const expectProjectileDeferred = Effect.fn(
+  "NakafaE2E.expectProjectileDeferred"
+)(function* (page: Page) {
+  const visual = page.getByRole("region", {
+    name: "Cannonball projectile analysis visual",
+  });
+
+  yield* Effect.promise(() => expect(visual).toHaveCount(1));
+  yield* Effect.promise(() => expect(visual.locator("canvas")).toHaveCount(0));
 });
 
 for (const viewport of targetViewports) {
@@ -154,6 +164,7 @@ for (const viewport of targetViewports) {
               page,
               Effect.gen(function* () {
                 yield* prepareFeaturesPage(page);
+                yield* expectProjectileDeferred(page);
                 yield* expectResponsiveFeatureLayout(page, viewport.width);
                 yield* expectNinaAtBottom(page);
                 yield* expectProjectileInteraction(page);
