@@ -121,7 +121,10 @@ export function MdxUnorderedList(props: ListProps) {
 /** Renders one MDX list item with consistent prose spacing. */
 export function MdxListItem(props: ListItemProps) {
   return (
-    <li className="space-y-4 text-pretty pl-1 leading-relaxed" {...props} />
+    <li
+      className="text-pretty pl-1 leading-relaxed [&>*+*]:mt-4 [&>p:first-child]:inline"
+      {...props}
+    />
   );
 }
 
