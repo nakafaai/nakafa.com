@@ -7,7 +7,7 @@ import {
   createNetworkRequestError,
   isRetryableNetworkError,
   NETWORK_RETRY_DELAYS_MILLISECONDS,
-  type NetworkRequestError,
+  NetworkRequestError,
 } from "@repo/backend/client/network";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
@@ -44,14 +44,27 @@ class RetryableContentResponse extends Data.TaggedError(
   readonly response: Response;
 }> {}
 
-type ContentRequestFailure = NetworkRequestError | RetryableContentResponse;
+/** One received response failed while its bounded body stream was read. */
+class RetryableContentBody extends Data.TaggedError("RetryableContentBody")<{
+  readonly cause: ContentTransportError;
+}> {}
+
+type ContentRequestFailure =
+  | NetworkRequestError
+  | RetryableContentBody
+  | RetryableContentResponse;
 
 /** Returns whether one failure is safe to retry as the same read request. */
-function isRetryableContentFailure(error: ContentRequestFailure) {
-  if (error._tag === "RetryableContentResponse") {
+function isRetryableContentFailure(
+  error: unknown
+): error is ContentRequestFailure {
+  if (
+    error instanceof RetryableContentBody ||
+    error instanceof RetryableContentResponse
+  ) {
     return true;
   }
-  return isRetryableNetworkError(error);
+  return error instanceof NetworkRequestError && isRetryableNetworkError(error);
 }
 
 /** Returns whether an exact unmarked JSON 500 is eligible for read retry. */
@@ -92,24 +105,32 @@ const cancelRetryResponse = Effect.fn("NakafaContent.cancelRetryResponse")(
   }
 );
 
-const CONTENT_RETRY_SCHEDULE: Schedule.Schedule<
-  ContentRequestFailure,
-  ContentRequestFailure
-> = Schedule.recurs(2).pipe(
-  Schedule.addDelay(({ attempt }) =>
-    Effect.succeed(
-      attempt === 1
-        ? NETWORK_RETRY_DELAYS_MILLISECONDS[0]
-        : NETWORK_RETRY_DELAYS_MILLISECONDS[1]
-    )
-  ),
-  Schedule.while(
-    ({ input }: Schedule.Metadata<number, ContentRequestFailure>) =>
+const CONTENT_RETRY_SCHEDULE: Schedule.Schedule<number, unknown> =
+  Schedule.recurs(2).pipe(
+    Schedule.addDelay(({ attempt }) =>
+      Effect.succeed(
+        attempt === 1
+          ? NETWORK_RETRY_DELAYS_MILLISECONDS[0]
+          : NETWORK_RETRY_DELAYS_MILLISECONDS[1]
+      )
+    ),
+    Schedule.while(({ input }: Schedule.Metadata<number, unknown>) =>
       isRetryableContentFailure(input)
-  ),
-  Schedule.passthrough,
-  Schedule.tap(({ input }) => cancelRetryResponse(input))
-);
+    ),
+    Schedule.tap(({ input }) =>
+      input instanceof RetryableContentResponse
+        ? cancelRetryResponse(input)
+        : Effect.void
+    )
+  );
+
+/** Preserves terminal reader failures and marks only interrupted bodies retryable. */
+function classifyContentBodyFailure<Failure>(failure: Failure) {
+  if (failure instanceof ContentTransportError && failure.reason === "body") {
+    return new RetryableContentBody({ cause: failure });
+  }
+  return failure;
+}
 
 /** Returns whether the response carries the current diagnostic marker. */
 function hasContentRuntimeMarker(response: Response) {
@@ -206,25 +227,33 @@ export const encodeContentRequest = Effect.fn(
 });
 
 /**
- * Posts one no-store request with the server-owned runtime capability.
+ * Requests and reads one response with the server-owned runtime capability.
  *
  * The runtime action is read-only. Allowlisted network failures and the exact
  * unmarked JSON 500 that the pinned Convex backend creates when Nakafa does not
- * complete the action share two bounded retries. Every other HTTP response
- * continues without retry into the exact status, response, and signature
- * checks.
+ * complete the action share two bounded retries with an interrupted response
+ * body. Every other HTTP response and reader failure continues without retry
+ * into the exact status, response, and signature checks.
  *
  * @see https://docs.convex.dev/functions/http-actions
  * @see https://github.com/get-convex/convex-backend/blob/38abb46277140838cc5cdad59c6e85ad0432fc9a/crates/application/src/redaction.rs#L143-L160
  * @see https://effect.website/docs/error-management/retrying/
  */
-export const postContentRequest = Effect.fn("NakafaContent.postContentRequest")(
-  function* (input: {
+export const requestContentResponse = Effect.fn(
+  "NakafaContent.requestContentResponse"
+)(function* <Value, Failure, Requirements>(
+  input: {
     readonly endpoint: string;
     readonly source: string;
     readonly target: ContentHttpTarget;
-  }) {
-    const request = Effect.tryPromise({
+  },
+  read: (
+    response: Response,
+    endpoint: string
+  ) => Effect.Effect<Value, Failure, Requirements>
+) {
+  const attempt = Effect.gen(function* () {
+    const response = yield* Effect.tryPromise({
       catch: createNetworkRequestError,
       try: () =>
         fetch(input.endpoint, {
@@ -247,25 +276,40 @@ export const postContentRequest = Effect.fn("NakafaContent.postContentRequest")(
         return Effect.fail(new RetryableContentResponse({ response }));
       })
     );
-    const response = yield* request.pipe(
-      Effect.retryOrElse(CONTENT_RETRY_SCHEDULE, (failure) => {
-        if (failure._tag === "RetryableContentResponse") {
-          return Effect.succeed(failure.response);
-        }
-        return Effect.fail(failure);
-      }),
-      Effect.mapError(
-        (error) =>
+    const value = yield* read(response, input.endpoint).pipe(
+      Effect.mapError(classifyContentBodyFailure)
+    );
+    return { response, value };
+  });
+
+  return yield* attempt.pipe(
+    Effect.retry(CONTENT_RETRY_SCHEDULE),
+    Effect.catchIf(
+      (failure): failure is RetryableContentResponse =>
+        failure instanceof RetryableContentResponse,
+      (failure) =>
+        read(failure.response, input.endpoint).pipe(
+          Effect.map((value) => ({ response: failure.response, value }))
+        )
+    ),
+    Effect.catchIf(
+      (failure): failure is RetryableContentBody =>
+        failure instanceof RetryableContentBody,
+      (failure) => Effect.fail(failure.cause)
+    ),
+    Effect.catchIf(
+      (failure): failure is NetworkRequestError =>
+        failure instanceof NetworkRequestError,
+      (failure) =>
+        Effect.fail(
           new ContentTransportError({
-            networkCodes: error.networkCodes,
+            networkCodes: failure.networkCodes,
             reason: "fetch",
           })
-      )
-    );
-
-    return response;
-  }
-);
+        )
+    )
+  );
+});
 
 /** Reads one private JSON response without trusting advertised byte counts. */
 export const readContentResponse = Effect.fn(

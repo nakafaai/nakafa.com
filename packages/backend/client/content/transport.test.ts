@@ -5,8 +5,8 @@ import {
   createContentContractError,
   createContentEndpoint,
   encodeContentRequest,
-  postContentRequest,
   readContentResponse,
+  requestContentResponse,
   validateContentRuntimeStatus,
 } from "@repo/backend/client/content/transport";
 import {
@@ -60,6 +60,14 @@ function createResponse(
   return response;
 }
 
+/** Creates one marked response whose body stream fails after headers. */
+function createBrokenBodyResponse() {
+  const body = new ReadableStream<Uint8Array>({
+    start: (controller) => controller.error(new Error("private body failure")),
+  });
+  return createResponse(body, 200);
+}
+
 /** Observes cancellation of one concrete response body. */
 function observeResponseCancel(response: Response) {
   const body = response.body;
@@ -76,6 +84,12 @@ const runRetryRequest = <Value, Error>(program: Effect.Effect<Value, Error>) =>
     yield* TestClock.adjust(Duration.seconds(2));
     return yield* Fiber.join(fiber);
   });
+
+/** Requests one response without adding a test-only reader behavior. */
+const requestResponse = () =>
+  requestContentResponse({ endpoint, source: "{}", target }, (response) =>
+    Effect.succeed(response)
+  ).pipe(Effect.map(({ response }) => response));
 
 beforeEach(() => {
   fetchMock.mockReset();
@@ -141,9 +155,7 @@ describe("content runtime transport", () => {
       const response = createResponse("{}", 200);
       fetchMock.mockResolvedValue(response);
 
-      expect(
-        yield* postContentRequest({ endpoint, source: "{}", target })
-      ).toBe(response);
+      expect(yield* requestResponse()).toBe(response);
       expect(fetchMock).toHaveBeenCalledWith(
         endpoint,
         expect.objectContaining({
@@ -178,14 +190,48 @@ describe("content runtime transport", () => {
           .mockResolvedValueOnce(platformFailure)
           .mockResolvedValueOnce(response);
 
-        expect(
-          yield* runRetryRequest(
-            postContentRequest({ endpoint, source: "{}", target })
-          )
-        ).toBe(response);
+        expect(yield* runRetryRequest(requestResponse())).toBe(response);
         expect(fetchMock).toHaveBeenCalledTimes(3);
         expect(cancelPlatformFailure).toHaveBeenCalledOnce();
       })
+  );
+
+  it.effect("retries a read-only request after an interrupted body", () =>
+    Effect.gen(function* () {
+      fetchMock
+        .mockResolvedValueOnce(createBrokenBodyResponse())
+        .mockResolvedValueOnce(createResponse('{"kind":"found"}', 200));
+
+      const result = yield* runRetryRequest(
+        requestContentResponse(
+          { endpoint, source: "{}", target },
+          (response, responseEndpoint) =>
+            readContentResponse(response, responseEndpoint, 1024)
+        )
+      );
+
+      expect(result.value).toEqual({ kind: "found" });
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    })
+  );
+
+  it.effect("preserves an interrupted body after bounded retries", () =>
+    Effect.gen(function* () {
+      fetchMock.mockImplementation(() =>
+        Promise.resolve(createBrokenBodyResponse())
+      );
+
+      const failure = yield* runRetryRequest(
+        requestContentResponse(
+          { endpoint, source: "{}", target },
+          (response, responseEndpoint) =>
+            readContentResponse(response, responseEndpoint, 1024)
+        ).pipe(Effect.flip)
+      );
+
+      expect(failure).toEqual(new ContentTransportError({ reason: "body" }));
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+    })
   );
 
   it.effect("cancels only discarded unmarked platform responses", () =>
@@ -201,11 +247,7 @@ describe("content runtime transport", () => {
         .mockResolvedValueOnce(second)
         .mockResolvedValueOnce(success);
 
-      expect(
-        yield* runRetryRequest(
-          postContentRequest({ endpoint, source: "{}", target })
-        )
-      ).toBe(success);
+      expect(yield* runRetryRequest(requestResponse())).toBe(success);
       expect(fetchMock).toHaveBeenCalledTimes(3);
       expect(cancelFirst).toHaveBeenCalledOnce();
       expect(cancelSecond).toHaveBeenCalledOnce();
@@ -232,9 +274,7 @@ describe("content runtime transport", () => {
           .mockResolvedValueOnce(second)
           .mockResolvedValueOnce(final);
 
-        const response = yield* runRetryRequest(
-          postContentRequest({ endpoint, source: "{}", target })
-        );
+        const response = yield* runRetryRequest(requestResponse());
 
         expect(response).toBe(final);
         expect(fetchMock).toHaveBeenCalledTimes(3);
@@ -276,9 +316,7 @@ describe("content runtime transport", () => {
         fetchMock.mockReset();
         fetchMock.mockResolvedValue(response);
 
-        expect(
-          yield* postContentRequest({ endpoint, source: "{}", target })
-        ).toBe(response);
+        expect(yield* requestResponse()).toBe(response);
         expect(fetchMock).toHaveBeenCalledOnce();
       }
     })
@@ -299,11 +337,9 @@ describe("content runtime transport", () => {
       fetchMock
         .mockResolvedValueOnce(platformFailure)
         .mockResolvedValueOnce(success);
-      const request = postContentRequest({
-        endpoint,
-        source: "{}",
-        target,
-      }).pipe(Effect.provide(Logger.layer([logger])));
+      const request = requestResponse().pipe(
+        Effect.provide(Logger.layer([logger]))
+      );
 
       expect(yield* runRetryRequest(request)).toBe(success);
       expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -320,11 +356,7 @@ describe("content runtime transport", () => {
         .mockResolvedValueOnce(createResponse(null, 500, unmarkedJsonHeaders))
         .mockResolvedValueOnce(success);
 
-      expect(
-        yield* runRetryRequest(
-          postContentRequest({ endpoint, source: "{}", target })
-        )
-      ).toBe(success);
+      expect(yield* runRetryRequest(requestResponse())).toBe(success);
       expect(fetchMock).toHaveBeenCalledTimes(2);
     })
   );
@@ -334,11 +366,7 @@ describe("content runtime transport", () => {
       fetchMock.mockRejectedValue(createFetchFailure("EPIPE"));
 
       expect(
-        yield* runRetryRequest(
-          postContentRequest({ endpoint, source: "{}", target }).pipe(
-            Effect.flip
-          )
-        )
+        yield* runRetryRequest(requestResponse().pipe(Effect.flip))
       ).toEqual(
         new ContentTransportError({
           networkCodes: ["EPIPE"],
@@ -355,11 +383,7 @@ describe("content runtime transport", () => {
         createFetchFailure("UND_ERR_CONNECT_TIMEOUT")
       );
 
-      expect(
-        yield* postContentRequest({ endpoint, source: "{}", target }).pipe(
-          Effect.flip
-        )
-      ).toEqual(
+      expect(yield* requestResponse().pipe(Effect.flip)).toEqual(
         new ContentTransportError({ networkCodes: [], reason: "fetch" })
       );
       expect(fetchMock).toHaveBeenCalledOnce();

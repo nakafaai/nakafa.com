@@ -20,8 +20,8 @@ import {
   createContentContractError,
   createContentEndpoint,
   encodeContentRequest,
-  postContentRequest,
   readContentResponse,
+  requestContentResponse,
   validateContentRuntimeStatus,
 } from "@repo/backend/client/content/transport";
 import {
@@ -130,8 +130,10 @@ const readPublicContentProgram = Effect.fn(
     target.siteUrl,
     PUBLIC_CONTENT_RUNTIME_PATH
   );
-  const response = yield* postContentRequest({ endpoint, source, target });
-  const decoded = yield* readPublicRuntimeResponse(response, endpoint);
+  const { response, value: decoded } = yield* requestContentResponse(
+    { endpoint, source, target },
+    readPublicRuntimeResponse
+  );
   return yield* verifyPublicContentResponse(
     request,
     decoded,
@@ -198,8 +200,10 @@ export const readPublicContentEvidenceBatch = Effect.fn(
     target.siteUrl,
     PUBLIC_CONTENT_RUNTIME_BATCH_PATH
   );
-  const response = yield* postContentRequest({ endpoint, source, target });
-  const decoded = yield* readPublicRuntimeBatchResponse(response, endpoint);
+  const { response, value: decoded } = yield* requestContentResponse(
+    { endpoint, source, target },
+    readPublicRuntimeBatchResponse
+  );
   if (decoded.responses.length !== requests.length) {
     return yield* createContentContractError(response);
   }
