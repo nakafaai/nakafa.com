@@ -146,6 +146,7 @@ import type * as contentRelease_article_order from "../contentRelease/article/or
 import type * as contentRelease_article_owner from "../contentRelease/article/owner.js";
 import type * as contentRelease_article_ownership from "../contentRelease/article/ownership.js";
 import type * as contentRelease_article_partition from "../contentRelease/article/partition.js";
+import type * as contentRelease_article_predecessor from "../contentRelease/article/predecessor.js";
 import type * as contentRelease_article_read from "../contentRelease/article/read.js";
 import type * as contentRelease_article_route from "../contentRelease/article/route.js";
 import type * as contentRelease_article_sitemap from "../contentRelease/article/sitemap.js";
@@ -203,6 +204,7 @@ import type * as contentRelease_material_model from "../contentRelease/material/
 import type * as contentRelease_material_owner from "../contentRelease/material/owner.js";
 import type * as contentRelease_material_page from "../contentRelease/material/page.js";
 import type * as contentRelease_material_partition from "../contentRelease/material/partition.js";
+import type * as contentRelease_material_predecessor from "../contentRelease/material/predecessor.js";
 import type * as contentRelease_material_route from "../contentRelease/material/route.js";
 import type * as contentRelease_material_sitemap from "../contentRelease/material/sitemap.js";
 import type * as contentRelease_material_spec from "../contentRelease/material/spec.js";
@@ -712,6 +714,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/article/owner": typeof contentRelease_article_owner;
   "contentRelease/article/ownership": typeof contentRelease_article_ownership;
   "contentRelease/article/partition": typeof contentRelease_article_partition;
+  "contentRelease/article/predecessor": typeof contentRelease_article_predecessor;
   "contentRelease/article/read": typeof contentRelease_article_read;
   "contentRelease/article/route": typeof contentRelease_article_route;
   "contentRelease/article/sitemap": typeof contentRelease_article_sitemap;
@@ -769,6 +772,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/material/owner": typeof contentRelease_material_owner;
   "contentRelease/material/page": typeof contentRelease_material_page;
   "contentRelease/material/partition": typeof contentRelease_material_partition;
+  "contentRelease/material/predecessor": typeof contentRelease_material_predecessor;
   "contentRelease/material/route": typeof contentRelease_material_route;
   "contentRelease/material/sitemap": typeof contentRelease_material_sitemap;
   "contentRelease/material/spec": typeof contentRelease_material_spec;
