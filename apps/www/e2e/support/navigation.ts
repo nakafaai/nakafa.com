@@ -9,7 +9,6 @@ const CURRICULUM_HREF_PATTERN = /^\/en\/curriculum\/[^/]+\/[^/]+\/[^/.]+$/;
 const ARTICLE_CATEGORY_HREF_PATTERN = /^\/en\/articles\/[^/.]+$/;
 const ARTICLE_HREF_PATTERN = /^\/en\/articles\/[^/]+\/[^/.]+$/;
 const MATERIAL_HREF_PATTERN = /^\/en\/subjects\/[^/]+\/[^/]+\/[^/.]+$/;
-const CLIENT_PREFETCH_SETTLE_MILLISECONDS = 1000;
 const LINK_POLL_MILLISECONDS = 100;
 const NAVIGATION_TIMEOUT_MILLISECONDS = 15_000;
 
@@ -123,7 +122,12 @@ const findVisibleLink = Effect.fn("NakafaE2E.findVisibleLink")(function* (
   const sidebarTrigger = page
     .locator('[data-slot="sidebar-trigger"]:visible')
     .first();
-  yield* waitForVisibleLocator(sidebarTrigger, missingLink);
+  const sidebarTriggerIsVisible = yield* Effect.promise(() =>
+    sidebarTrigger.isVisible()
+  );
+  if (!sidebarTriggerIsVisible) {
+    return yield* waitForVisibleLocator(link, missingLink);
+  }
   yield* Effect.promise(() =>
     sidebarTrigger.click({ timeout: NAVIGATION_TIMEOUT_MILLISECONDS })
   );
@@ -172,14 +176,6 @@ const discoverLinkedHref = Effect.fn("NakafaE2E.discoverLinkedHref")(function* (
   );
 });
 
-const warmClientPrefetch = Effect.fn("NakafaE2E.warmClientPrefetch")(function* (
-  link: Locator
-) {
-  yield* Effect.promise(() => link.scrollIntoViewIfNeeded());
-  yield* Effect.promise(() => link.hover());
-  yield* Effect.sleep(Duration.millis(CLIENT_PREFETCH_SETTLE_MILLISECONDS));
-});
-
 const navigateHard = Effect.fn("NakafaE2E.navigateHard")(function* (
   page: Page,
   baseURL: string,
@@ -207,19 +203,22 @@ const navigateHard = Effect.fn("NakafaE2E.navigateHard")(function* (
 
 const navigateClient = Effect.fn("NakafaE2E.navigateClient")(function* (
   page: Page,
-  target: NavigationTarget
+  target: NavigationTarget,
+  hasTouch: boolean
 ) {
   const sourceResponse = yield* Effect.promise(() =>
     page.goto(target.sourceHref, { waitUntil: "domcontentloaded" })
   );
   yield* Effect.sync(() => expect(sourceResponse?.ok()).toBe(true));
   const link = yield* findVisibleLink(page, target.href, target.sourceHref);
-  yield* warmClientPrefetch(link);
 
   // @next/playwright owns this native Promise callback while its lock is held.
   yield* Effect.promise(() =>
     instant(page, () =>
-      link.click({ timeout: NAVIGATION_TIMEOUT_MILLISECONDS }).then(() =>
+      (hasTouch
+        ? link.tap({ timeout: NAVIGATION_TIMEOUT_MILLISECONDS })
+        : link.click({ timeout: NAVIGATION_TIMEOUT_MILLISECONDS })
+      ).then(() =>
         page.waitForURL((url) => url.pathname === target.href, {
           timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
         })
@@ -231,9 +230,14 @@ const navigateClient = Effect.fn("NakafaE2E.navigateClient")(function* (
 
 export const verifyHardAndClientNavigation = Effect.fn(
   "NakafaE2E.verifyHardAndClientNavigation"
-)(function* (page: Page, baseURL: string, target: NavigationTarget) {
+)(function* (
+  page: Page,
+  baseURL: string,
+  target: NavigationTarget,
+  hasTouch: boolean
+) {
   yield* navigateHard(page, baseURL, target);
-  yield* navigateClient(page, target);
+  yield* navigateClient(page, target, hasTouch);
 });
 
 const resolveHomepage = Effect.fn("NakafaE2E.resolveHomepage")(() =>

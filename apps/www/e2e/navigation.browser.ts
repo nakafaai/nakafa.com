@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { withBrowserContext } from "./support/browser-context";
+import { seedDeniedAnalyticsConsent } from "./support/consent";
 import {
   navigationCases,
   verifyHardAndClientNavigation,
@@ -34,11 +35,13 @@ for (const viewport of targetViewports) {
           (context) =>
             Effect.gen(function* () {
               const page = yield* Effect.promise(() => context.newPage());
+              yield* seedDeniedAnalyticsConsent(page);
               const target = yield* navigationCase.resolve(page);
               yield* verifyHardAndClientNavigation(
                 page,
                 configuredBaseURL,
-                target
+                target,
+                "hasTouch" in viewport ? viewport.hasTouch : false
               );
             })
         )

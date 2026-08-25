@@ -1,6 +1,7 @@
 import type { Browser, Page } from "@playwright/test";
 import { Clock, Duration, Effect, Schema } from "effect";
 import { withBrowserContext } from "./browser-context";
+import { seedDeniedAnalyticsConsent } from "./consent";
 import {
   JavascriptRequestFailureKindSchema,
   type JavascriptRequestTracker,
@@ -219,6 +220,7 @@ export const measureRouteJavascript = Effect.fn(
       (context) =>
         Effect.gen(function* () {
           const page = yield* Effect.promise(() => context.newPage());
+          yield* seedDeniedAnalyticsConsent(page);
           const applicationOrigin = new URL(baseURL).origin;
 
           return yield* withJavascriptRequestTracker(

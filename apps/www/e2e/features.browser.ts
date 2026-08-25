@@ -4,18 +4,11 @@ import {
   withBrowserContext,
   withObservedPageErrors,
 } from "./support/browser-context";
+import { seedDeniedAnalyticsConsent } from "./support/consent";
 
-const ANALYTICS_CONSENT_STORAGE_KEY = "nakafa-analytics-consent";
 const NINA_ANSWER_TEXT = "Subtract the first equation";
 const NINA_HEADING_PATTERN = /Nina already knows/;
 const NINA_REASONING_TEXT = "Compare the two known equations";
-const deniedConsent = JSON.stringify({
-  category: "analytics",
-  decidedAt: 1,
-  decision: "denied",
-  mechanism: "privacy-controls",
-  noticeVersion: "privacy-2026-08-22",
-});
 
 // Normal motion remains covered at three widths. Wide layouts use the product's
 // reduced-motion path so continuous WebGL frames cannot starve pointer checks.
@@ -55,12 +48,7 @@ const targetViewports = [
 
 const prepareFeaturesPage = Effect.fn("NakafaE2E.prepareFeaturesPage")(
   function* (page: Page) {
-    yield* Effect.promise(() =>
-      page.addInitScript(({ key, value }) => localStorage.setItem(key, value), {
-        key: ANALYTICS_CONSENT_STORAGE_KEY,
-        value: deniedConsent,
-      })
-    );
+    yield* seedDeniedAnalyticsConsent(page);
     const response = yield* Effect.promise(() =>
       page.goto("/en", { waitUntil: "domcontentloaded" })
     );

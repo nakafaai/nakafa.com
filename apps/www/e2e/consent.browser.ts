@@ -10,15 +10,7 @@ import {
   withBrowserContext,
   withObservedPageErrors,
 } from "./support/browser-context";
-
-const ANALYTICS_CONSENT_STORAGE_KEY = "nakafa-analytics-consent";
-const deniedConsent = JSON.stringify({
-  category: "analytics",
-  decidedAt: 1,
-  decision: "denied",
-  mechanism: "privacy-controls",
-  noticeVersion: "privacy-2026-08-22",
-});
+import { seedDeniedAnalyticsConsent } from "./support/consent";
 
 const targetViewports = [
   { height: 800, name: "compact", slot: "drawer-popup", width: 320 },
@@ -48,12 +40,7 @@ class ConsentDrawerBoundsMissing extends Schema.TaggedError<ConsentDrawerBoundsM
 const prepareConsentPage = Effect.fn("NakafaE2E.prepareConsentPage")(function* (
   page: Page
 ) {
-  yield* Effect.promise(() =>
-    page.addInitScript(({ key, value }) => localStorage.setItem(key, value), {
-      key: ANALYTICS_CONSENT_STORAGE_KEY,
-      value: deniedConsent,
-    })
-  );
+  yield* seedDeniedAnalyticsConsent(page);
   const response = yield* Effect.promise(() =>
     page.goto("/en", { waitUntil: "domcontentloaded" })
   );
