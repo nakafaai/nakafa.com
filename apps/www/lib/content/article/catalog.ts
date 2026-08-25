@@ -26,9 +26,11 @@ import { decodeSourceRevision } from "@/lib/content/published/origin";
 import { readRuntimeQuery } from "@/lib/content/runtime/query";
 /** Stable source root for immutable Aksara article links. */
 export const ARTICLE_SOURCE_ROOT = "packages/corpus/articles";
-type ArticlePageArgs = FunctionArgs<typeof api.contentRelease.article.page>;
+type ArticlePageArgs = FunctionArgs<
+  typeof api.contentRelease.article.publications
+>;
 type ArticlePageResult = FunctionReturnType<
-  typeof api.contentRelease.article.page
+  typeof api.contentRelease.article.publications
 >;
 type ArticlePageItem = ArticlePageResult["result"]["page"][number];
 type CategoryPageArgs = FunctionArgs<
@@ -193,7 +195,10 @@ export const readPublishedArticlePage = Effect.fn(
       numItems: PROJECTION_PAGE_LIMIT,
     },
   } satisfies ArticlePageArgs;
-  const result = yield* readRuntimeQuery(api.contentRelease.article.page, args);
+  const result = yield* readRuntimeQuery(
+    api.contentRelease.article.publications,
+    args
+  );
   const {
     activeManifestHash: rawManifestHash,
     activeReleaseId: rawReleaseId,

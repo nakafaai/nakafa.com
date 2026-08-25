@@ -12,10 +12,21 @@ interface CurrentDates<Date extends string> {
   readonly datePublished: Date;
 }
 
+interface BridgeDates<Date extends string> {
+  readonly date: Date;
+  readonly dateModified?: Date;
+  readonly datePublished: Date;
+}
+
 /** Exact signed date shapes accepted only during the 0.15.1 cutover. */
 export type ProjectionDates<Date extends string = DateOnly> =
   | LegacyDates<Date>
   | CurrentDates<Date>;
+
+/** Exact legacy or dual-written dates stored during the bounded bridge. */
+export type ReadModelDates<Date extends string = DateOnly> =
+  | LegacyDates<Date>
+  | BridgeDates<Date>;
 
 /** Current public date model produced from a decoded transition shape. */
 export interface NormalizedDates<Date extends string = DateOnly> {
@@ -23,18 +34,18 @@ export interface NormalizedDates<Date extends string = DateOnly> {
   readonly datePublished: Date;
 }
 
-/** Narrows the exact transition union without accepting explicit undefined. */
-function hasLegacyDate<Date extends string>(
-  dates: ProjectionDates<Date>
-): dates is LegacyDates<Date> {
-  return typeof dates.date === "string";
+/** Narrows current and dual-written fields without accepting undefined. */
+function hasCurrentDate<Date extends string>(
+  dates: ProjectionDates<Date> | ReadModelDates<Date>
+): dates is CurrentDates<Date> | BridgeDates<Date> {
+  return typeof dates.datePublished === "string";
 }
 
 /** Normalizes one decoded signed projection into Nakafa's current date model. */
 export function normalizePublicationDates<const Date extends string>(
-  dates: ProjectionDates<Date>
+  dates: ProjectionDates<Date> | ReadModelDates<Date>
 ): NormalizedDates<Date> {
-  if (hasLegacyDate(dates)) {
+  if (!hasCurrentDate(dates)) {
     return { datePublished: dates.date };
   }
 
@@ -51,7 +62,7 @@ export function normalizePublicationDates<const Date extends string>(
 /** Orders transition rows by truthful publication date and stable identity. */
 export function comparePublicationDates<
   const Date extends string,
-  const Content extends ProjectionDates<Date> & {
+  const Content extends (ProjectionDates<Date> | ReadModelDates<Date>) & {
     readonly contentKey: string;
   },
 >(left: Content, right: Content) {

@@ -33,6 +33,19 @@ describe("normalizePublicationDates", () => {
     });
   });
 
+  it("normalizes an equal dual-written bridge date", () => {
+    expect(
+      normalizePublicationDates({
+        date: firstPublished,
+        dateModified: laterModified,
+        datePublished: firstPublished,
+      })
+    ).toEqual({
+      dateModified: laterModified,
+      datePublished: firstPublished,
+    });
+  });
+
   it("orders mixed transition rows by publication date and content key", () => {
     const rows = [
       { contentKey: "article-b", date: firstPublished },

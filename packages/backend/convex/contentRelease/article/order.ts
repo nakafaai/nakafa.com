@@ -3,6 +3,13 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import {
+  articlePublicationCursor,
+  decodePublicationCursor,
+  encodePublicationCursor,
+} from "@repo/backend/convex/contentRelease/article/cursor";
+import { readArticleDates } from "@repo/backend/convex/contentRelease/article/dates";
+import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import schema from "@repo/backend/convex/schema";
 import { comparePublicationDates } from "@repo/contents/_types/publication";
 import type { PaginationOptions } from "convex/server";
@@ -21,6 +28,8 @@ type AppLocale = Doc<"articleCatalog">["appLocale"];
 type ArticleRow = Doc<"articleCatalog">;
 
 const PUBLICATION_INDEX_FIELDS = [
+  "appLocale",
+  "category",
   "publicationDate",
   "contentKey",
   "_creationTime",
@@ -37,7 +46,7 @@ class PublicationStream extends QueryStream<ArticleRow> {
   }
 
   getEqualityIndexFilter(): Value[] {
-    return [];
+    return this.#source.getEqualityIndexFilter();
   }
 
   getIndexFields(): string[] {
@@ -51,7 +60,6 @@ class PublicationStream extends QueryStream<ArticleRow> {
   iterWithKeys(
     trackBandwidth = false
   ): ReturnType<QueryStream<ArticleRow>["iterWithKeys"]> {
-    const equalityFieldCount = this.#source.getEqualityIndexFilter().length;
     const source = this.#source;
 
     return {
@@ -62,7 +70,7 @@ class PublicationStream extends QueryStream<ArticleRow> {
         for await (const [row, indexKey, bandwidth] of source.iterWithKeys(
           trackBandwidth
         )) {
-          yield [row, indexKey.slice(equalityFieldCount), bandwidth];
+          yield [row, indexKey, bandwidth];
         }
         return;
       },
@@ -70,19 +78,11 @@ class PublicationStream extends QueryStream<ArticleRow> {
   }
 
   narrow(bounds: IndexBounds): QueryStream<ArticleRow> {
-    const equality = this.#source.getEqualityIndexFilter();
-    return new PublicationStream(
-      this.#source.narrow({
-        lowerBound: [...equality, ...bounds.lowerBound],
-        lowerBoundInclusive: bounds.lowerBoundInclusive,
-        upperBound: [...equality, ...bounds.upperBound],
-        upperBoundInclusive: bounds.upperBoundInclusive,
-      })
-    );
+    return new PublicationStream(this.#source.narrow(bounds));
   }
 }
 
-/** Builds the two disjoint transition streams for one localized category. */
+/** Builds both transition-index streams for one localized category. */
 function categoryPublicationStreams(
   ctx: ReadCtx,
   appLocale: AppLocale,
@@ -109,32 +109,89 @@ function categoryPublicationStreams(
   return [new PublicationStream(legacy), new PublicationStream(current)];
 }
 
-/** Paginates one merged stream and removes an empty phantom continuation. */
-const paginatePublicationStreams = Effect.fn(
-  "contentRelease.paginatePublicationStreams"
-)(function* (streams: PublicationStream[], options: PaginationOptions) {
-  const publications = mergedStream(streams, [...PUBLICATION_INDEX_FIELDS]);
-  const page = yield* Effect.promise(() => publications.paginate(options));
-  if (page.isDone) {
-    return page;
-  }
-
-  const probe = yield* Effect.promise(() =>
-    publications.paginate({
-      ...options,
-      cursor: page.continueCursor,
-      maximumRowsRead: 1,
-      numItems: 1,
-    })
+/** Preserves the predecessor native cursor contract during the expand phase. */
+export const paginatePredecessorArticles = Effect.fn(
+  "contentRelease.paginatePredecessorArticles"
+)(function* (
+  ctx: ReadCtx,
+  appLocale: AppLocale,
+  category: string,
+  options: PaginationOptions
+) {
+  return yield* Effect.promise(() =>
+    ctx.db
+      .query("articleCatalog")
+      .withIndex("by_appLocale_and_category_and_date_and_contentKey", (index) =>
+        index.eq("appLocale", appLocale).eq("category", category)
+      )
+      .order("desc")
+      .paginate(options)
   );
-  if (probe.page.length > 0) {
-    return page;
-  }
-
-  return { ...page, isDone: true };
 });
 
-/** Reads both disjoint transition indexes and restores one truthful order. */
+/** Paginates both streams with one bounded lookahead scan. */
+const paginatePublicationStreams = Effect.fn(
+  "contentRelease.paginatePublicationStreams"
+)(function* (
+  streams: PublicationStream[],
+  options: PaginationOptions & {
+    maximumBytesRead: number;
+    maximumRowsRead: number;
+  }
+) {
+  const seen = new Set<string>();
+  const publications = mergedStream(streams, [
+    ...PUBLICATION_INDEX_FIELDS,
+  ]).filterWith((row) => {
+    if (seen.has(row._id)) {
+      return Promise.resolve(false);
+    }
+    seen.add(row._id);
+    return Promise.resolve(true);
+  });
+  const cursor = yield* decodePublicationCursor(options.cursor);
+  const scanned = yield* Effect.promise(() =>
+    publications.paginate({
+      ...options,
+      cursor,
+      maximumRowsRead: options.maximumRowsRead,
+      numItems: options.numItems + 1,
+    })
+  );
+  if (scanned.page.length <= options.numItems) {
+    return {
+      ...scanned,
+      continueCursor: encodePublicationCursor(scanned.continueCursor),
+      ...(scanned.splitCursor == null
+        ? {}
+        : {
+            splitCursor: encodePublicationCursor(scanned.splitCursor),
+          }),
+    };
+  }
+
+  const page = scanned.page.slice(0, options.numItems);
+  const last = page.at(-1);
+  if (!last) {
+    return yield* new ReleaseError({
+      code: "CONTENT_RELEASE_INTEGRITY",
+      message: "Article publication lookahead lost its retained row.",
+    });
+  }
+  return {
+    ...scanned,
+    continueCursor: articlePublicationCursor(last),
+    isDone: false,
+    page,
+    ...(scanned.splitCursor == null
+      ? {}
+      : {
+          splitCursor: encodePublicationCursor(scanned.splitCursor),
+        }),
+  };
+});
+
+/** Reads both transition indexes and restores one truthful order. */
 export const readOrderedArticles = Effect.fn(
   "contentRelease.readOrderedArticles"
 )(function* (
@@ -194,16 +251,23 @@ export const readOrderedArticles = Effect.fn(
     }),
   ]);
 
-  return [...legacy, ...current].sort(comparePublicationDates).slice(0, limit);
+  const rows = [
+    ...new Map([...legacy, ...current].map((row) => [row._id, row])).values(),
+  ];
+  yield* Effect.forEach(rows, readArticleDates);
+  return rows.sort(comparePublicationDates).slice(0, limit);
 });
 
-/** Paginates both disjoint transition indexes through one stable cursor. */
+/** Paginates both transition indexes through one stable cursor. */
 export const paginateArticles = Effect.fn("contentRelease.paginateArticles")(
   function* (
     ctx: ReadCtx,
     appLocale: AppLocale,
     category: string,
-    options: PaginationOptions
+    options: PaginationOptions & {
+      maximumBytesRead: number;
+      maximumRowsRead: number;
+    }
   ) {
     const streams = categoryPublicationStreams(ctx, appLocale, category);
     return yield* paginatePublicationStreams(streams, options);

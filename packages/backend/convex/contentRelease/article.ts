@@ -156,7 +156,7 @@ export const route = query({
     ),
 });
 
-/** Returns one release-bound newest-first article page. */
+/** Retains the predecessor native article cursor during the expand phase. */
 export const page = query({
   args: {
     category: v.string(),
@@ -174,7 +174,32 @@ export const page = query({
         args.appLocale,
         args.expectedManifestHash,
         args.expectedReleaseId,
-        args.paginationOpts
+        args.paginationOpts,
+        "predecessor"
+      )
+    ),
+});
+
+/** Returns one release-bound page across both publication-date shapes. */
+export const publications = query({
+  args: {
+    category: v.string(),
+    expectedManifestHash: v.union(v.string(), v.null()),
+    expectedReleaseId: v.union(v.string(), v.null()),
+    appLocale: appLocaleValidator,
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: articlePageValidator,
+  handler: (ctx, args) =>
+    runConvexProgram(
+      readArticlePage(
+        ctx,
+        args.category,
+        args.appLocale,
+        args.expectedManifestHash,
+        args.expectedReleaseId,
+        args.paginationOpts,
+        "publication"
       )
     ),
 });

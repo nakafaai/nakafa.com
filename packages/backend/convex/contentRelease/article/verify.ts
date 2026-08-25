@@ -1,6 +1,7 @@
 import { ArticleCategorySchema } from "@nakafa/aksara-contracts/projection/article";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { readArticleDates } from "@repo/backend/convex/contentRelease/article/dates";
 import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import {
   ReleaseError,
@@ -42,7 +43,7 @@ export const verifyArticle = Effect.fn("contentRelease.verifyArticle")(
       );
     }
     const projectionDates = normalizePublicationDates(projection.metadata);
-    const rowDates = normalizePublicationDates(row);
+    const rowDates = yield* readArticleDates(row);
     if (
       projection.graph.assetId !== row.assetId ||
       projection.category !== row.category ||

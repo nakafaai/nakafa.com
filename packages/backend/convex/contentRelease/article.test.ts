@@ -11,7 +11,9 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 const categories = api.contentRelease.article.categories;
-const page = api.contentRelease.article.page;
+const page = api.contentRelease.article.publications;
+const predecessorPage = api.contentRelease.article.page;
+const PUBLICATION_CURSOR_PATTERN = /^article-publication:v1:/;
 
 describe("contentRelease/article", () => {
   it("returns localized categories and newest articles through exact indexes", async () => {
@@ -108,6 +110,90 @@ describe("contentRelease/article", () => {
     ]);
   });
 
+  it("continues an in-flight predecessor article cursor", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) => insertRuntimeArticles(ctx, 3));
+    const stored = await t.run((ctx) =>
+      ctx.db.query("articleCatalog").collect()
+    );
+    expect(stored).toHaveLength(3);
+    for (const row of stored) {
+      expect(row).toHaveProperty("datePublished", row.date);
+    }
+
+    const predecessor = await t.query((ctx) =>
+      ctx.db
+        .query("articleCatalog")
+        .withIndex(
+          "by_appLocale_and_category_and_date_and_contentKey",
+          (index) => index.eq("appLocale", "en").eq("category", "politics")
+        )
+        .order("desc")
+        .paginate({ cursor: null, numItems: 1 })
+    );
+    const oldLoad = await t.query(predecessorPage, {
+      category: "politics",
+      expectedManifestHash: null,
+      expectedReleaseId: null,
+      appLocale: "en",
+      paginationOpts: { cursor: null, numItems: 1 },
+    });
+    const continued = await t.query(predecessorPage, {
+      category: "politics",
+      expectedManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
+      expectedReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+      appLocale: "en",
+      paginationOpts: {
+        cursor: predecessor.continueCursor,
+        numItems: 1,
+      },
+    });
+
+    expect(predecessor.page).toMatchObject([
+      { contentKey: testArticleProjection(2).contentKey },
+    ]);
+    expect(oldLoad.result.page).toMatchObject([
+      { contentKey: testArticleProjection(2).contentKey },
+    ]);
+    expect(continued.result.page).toMatchObject([
+      { contentKey: testArticleProjection(1).contentKey },
+    ]);
+    await expect(
+      t.query(page, {
+        category: "politics",
+        expectedManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
+        expectedReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+        appLocale: "en",
+        paginationOpts: {
+          cursor: predecessor.continueCursor,
+          numItems: 1,
+        },
+      })
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
+  it.each(["article-publication:v1:not-json", "article-publication:v1:[]"])(
+    "rejects malformed publication cursor %s",
+    async (cursor) => {
+      const t = convexTest(schema, convexModules);
+      await t.mutation((ctx) => insertRuntimeArticles(ctx, 1));
+
+      await expect(
+        t.query(page, {
+          category: "politics",
+          expectedManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
+          expectedReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+          appLocale: "en",
+          paginationOpts: { cursor, numItems: 1 },
+        })
+      ).rejects.toMatchObject({
+        data: { code: "CONTENT_RELEASE_INTEGRITY" },
+      });
+    }
+  );
+
   it("paginates mixed transition rows without hiding either date shape", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -169,6 +255,8 @@ describe("contentRelease/article", () => {
         contentKey: testArticleProjection(index).contentKey,
       }))
     );
+    expect(first.result.continueCursor).toMatch(PUBLICATION_CURSOR_PATTERN);
+    expect(second.result.continueCursor).toMatch(PUBLICATION_CURSOR_PATTERN);
     expect(third.result.isDone).toBe(true);
   });
 

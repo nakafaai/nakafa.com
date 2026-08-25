@@ -1,4 +1,7 @@
-import { validateProjectionPage } from "@repo/backend/convex/contentRelease/paging";
+import {
+  validateProjectionPage,
+  validatePublicationPage,
+} from "@repo/backend/convex/contentRelease/paging";
 import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
@@ -46,6 +49,38 @@ describe("contentRelease/paging", () => {
     Effect.gen(function* () {
       expect(
         yield* validateProjectionPage(options).pipe(Effect.flip)
+      ).toMatchObject({ code: "CONTENT_RELEASE_LIMIT" });
+    })
+  );
+
+  it.live("reserves both index reads through publication lookahead", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* validatePublicationPage({
+          cursor: null,
+          numItems: 32,
+        })
+      ).toMatchObject({ maximumRowsRead: 66, numItems: 32 });
+      expect(
+        yield* validatePublicationPage({
+          cursor: null,
+          maximumRowsRead: 4,
+          numItems: 1,
+        })
+      ).toMatchObject({ maximumRowsRead: 4, numItems: 1 });
+      expect(
+        yield* validatePublicationPage({
+          cursor: null,
+          maximumRowsRead: 65,
+          numItems: 32,
+        }).pipe(Effect.flip)
+      ).toMatchObject({ code: "CONTENT_RELEASE_LIMIT" });
+      expect(
+        yield* validatePublicationPage({
+          cursor: null,
+          maximumRowsRead: 3,
+          numItems: 1,
+        }).pipe(Effect.flip)
       ).toMatchObject({ code: "CONTENT_RELEASE_LIMIT" });
     })
   );

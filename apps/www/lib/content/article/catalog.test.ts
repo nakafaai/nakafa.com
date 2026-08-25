@@ -35,7 +35,7 @@ const activeReleaseId = ReleaseIdSchema.make("release-article");
 const staleManifestHash = Sha256HashSchema.make(`sha256:${"c".repeat(64)}`);
 const staleReleaseId = ReleaseIdSchema.make("release-old");
 type ArticleRow = FunctionReturnType<
-  typeof api.contentRelease.article.page
+  typeof api.contentRelease.article.publications
 >["result"]["page"][number];
 type CategoryRow = FunctionReturnType<
   typeof api.contentRelease.article.categories

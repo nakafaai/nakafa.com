@@ -1,6 +1,9 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { paginateArticles } from "@repo/backend/convex/contentRelease/article/order";
+import {
+  paginateArticles,
+  paginatePredecessorArticles,
+} from "@repo/backend/convex/contentRelease/article/order";
 import { loadArticleOwner } from "@repo/backend/convex/contentRelease/article/owner";
 import {
   decodeCategory,
@@ -12,7 +15,10 @@ import {
   validateReleaseCursor,
 } from "@repo/backend/convex/contentRelease/cursor";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { validateProjectionPage } from "@repo/backend/convex/contentRelease/paging";
+import {
+  validateProjectionPage,
+  validatePublicationPage,
+} from "@repo/backend/convex/contentRelease/paging";
 import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
 import { Effect } from "effect";
 
@@ -33,11 +39,16 @@ export const readArticlePage = Effect.fn("contentRelease.readArticlePage")(
     appLocale: Doc<"articleCatalog">["appLocale"],
     expectedManifestHash: null | string,
     expectedReleaseId: null | string,
-    paginationOpts: Parameters<typeof validateProjectionPage>[0]
+    paginationOpts: Parameters<typeof validateProjectionPage>[0],
+    contract: "predecessor" | "publication"
   ) {
+    const validatePage =
+      contract === "predecessor"
+        ? validateProjectionPage
+        : validatePublicationPage;
     const [category, options, owner] = yield* Effect.all([
       decodeCategory(categorySource),
-      validateProjectionPage(paginationOpts),
+      validatePage(paginationOpts),
       loadArticleOwner(ctx, appLocale),
     ]);
     if (options.endCursor !== undefined && options.endCursor !== null) {
@@ -80,7 +91,11 @@ export const readArticlePage = Effect.fn("contentRelease.readArticlePage")(
         stale: false,
       };
     }
-    const stored = yield* paginateArticles(ctx, appLocale, category, options);
+    const paginate =
+      contract === "predecessor"
+        ? paginatePredecessorArticles
+        : paginateArticles;
+    const stored = yield* paginate(ctx, appLocale, category, options);
     const page = yield* Effect.forEach(stored.page, (row) =>
       verifyArticle(ctx, row, owner.active.sequence).pipe(
         Effect.map(({ resolved }) => resolved)
