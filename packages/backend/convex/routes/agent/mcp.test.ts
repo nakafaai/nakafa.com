@@ -101,8 +101,12 @@ describe("Nakafa MCP HTTP route", () => {
 
   it("serves a valid Registry manifest through the protected edge path", async () => {
     const response = await fetchMcp();
+    const parameterized = await fetchMcp({
+      headers: { Accept: "application/json; charset=utf-8" },
+    });
 
     expect(response.status).toBe(200);
+    expect(parameterized.status).toBe(200);
     expect(response.headers.get("content-type")).toBe(
       "application/json; charset=utf-8"
     );
@@ -115,6 +119,28 @@ describe("Nakafa MCP HTTP route", () => {
         },
       ],
     });
+  });
+
+  it("keeps event-stream GET requests off the modern POST-only transport", async () => {
+    const eventStream = await fetchMcp({
+      headers: { Accept: "text/event-stream" },
+    });
+    const unacceptable = await fetchMcp({
+      headers: {
+        Accept: "application/json;q=0, text/event-stream;q=0",
+      },
+    });
+
+    expect(eventStream.status).toBe(405);
+    await expect(eventStream.json()).resolves.toMatchObject({
+      error: {
+        code: -32_600,
+        message: "The current Nakafa MCP transport is POST-only.",
+      },
+      id: null,
+      jsonrpc: "2.0",
+    });
+    expect(unacceptable.status).toBe(406);
   });
 
   it("preserves the public MCP health endpoint and server identity", async () => {

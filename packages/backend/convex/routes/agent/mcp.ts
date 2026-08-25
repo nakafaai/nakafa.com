@@ -17,6 +17,7 @@ import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
 } from "@repo/contents/_lib/agent/errors";
+import { negotiateMediaType } from "@repo/utilities/http/accept";
 import type { HonoWithConvex } from "convex-helpers/server/hono";
 import { Effect, Option } from "effect";
 import { Hono } from "hono";
@@ -34,6 +35,8 @@ const MCP_HEADERS = {
   "Cache-Control": "no-store",
   Vary: "Accept, Accept-Encoding, Origin",
 };
+const MCP_EVENT_STREAM_MEDIA_TYPE = "text/event-stream";
+const MCP_JSON_MEDIA_TYPE = "application/json; charset=utf-8";
 const mcp: AgentHono = new Hono();
 
 /** Handles the canonical MCP transport and its Registry manifest. */
@@ -84,7 +87,7 @@ mcp.get("/health", (c) => {
     {
       headers: {
         ...withCorsHeaders(request),
-        "Content-Type": "application/json; charset=utf-8",
+        "Content-Type": MCP_JSON_MEDIA_TYPE,
       },
     }
   );
@@ -101,10 +104,30 @@ mcp.all("/", async (c) => {
     });
   }
   if (request.method === "GET") {
+    const representation = negotiateMediaType(request.headers.get("accept"), [
+      MCP_JSON_MEDIA_TYPE,
+      MCP_EVENT_STREAM_MEDIA_TYPE,
+    ]);
+    if (representation === MCP_EVENT_STREAM_MEDIA_TYPE) {
+      return mcpErrorResponse(
+        405,
+        -32_600,
+        "The current Nakafa MCP transport is POST-only.",
+        requestId
+      );
+    }
+    if (representation === null) {
+      return mcpErrorResponse(
+        406,
+        -32_600,
+        "MCP Registry discovery requires an acceptable JSON representation.",
+        requestId
+      );
+    }
     return new Response(JSON.stringify(NAKAFA_MCP_REGISTRY_MANIFEST), {
       headers: {
         ...withCorsHeaders(request),
-        "Content-Type": "application/json; charset=utf-8",
+        "Content-Type": MCP_JSON_MEDIA_TYPE,
       },
     });
   }
@@ -263,7 +286,7 @@ function mcpErrorResponse(
         ...MCP_HEADERS,
         "Access-Control-Allow-Origin": "*",
         ...(status === 405 ? { Allow: "GET, POST, OPTIONS" } : {}),
-        "Content-Type": "application/json; charset=utf-8",
+        "Content-Type": MCP_JSON_MEDIA_TYPE,
         "MCP-Protocol-Version": NAKAFA_MCP_PROTOCOL_VERSION,
         ...(retryAfter === undefined
           ? {}
