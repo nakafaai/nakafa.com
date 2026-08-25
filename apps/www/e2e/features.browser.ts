@@ -17,12 +17,40 @@ const deniedConsent = JSON.stringify({
   noticeVersion: "privacy-2026-08-22",
 });
 
+// Normal motion remains covered at three widths. Wide layouts use the product's
+// reduced-motion path so continuous WebGL frames cannot starve pointer checks.
 const targetViewports = [
-  { height: 800, name: "compact", width: 320 },
-  { height: 844, hasTouch: true, name: "touch", width: 390 },
-  { height: 1024, name: "tablet-portrait", width: 768 },
-  { height: 768, name: "tablet-landscape", width: 1024 },
-  { height: 900, name: "desktop", width: 1440 },
+  {
+    height: 800,
+    name: "compact",
+    reducedMotion: "no-preference",
+    width: 320,
+  },
+  {
+    hasTouch: true,
+    height: 844,
+    name: "touch",
+    reducedMotion: "no-preference",
+    width: 390,
+  },
+  {
+    height: 1024,
+    name: "tablet-portrait",
+    reducedMotion: "no-preference",
+    width: 768,
+  },
+  {
+    height: 768,
+    name: "tablet-landscape",
+    reducedMotion: "reduce",
+    width: 1024,
+  },
+  {
+    height: 900,
+    name: "desktop",
+    reducedMotion: "reduce",
+    width: 1440,
+  },
 ] as const;
 
 const prepareFeaturesPage = Effect.fn("NakafaE2E.prepareFeaturesPage")(
@@ -154,6 +182,7 @@ for (const viewport of targetViewports) {
         {
           baseURL: baseURL ?? "",
           hasTouch: "hasTouch" in viewport ? viewport.hasTouch : false,
+          reducedMotion: viewport.reducedMotion,
           serviceWorkers: "block",
           viewport: { height: viewport.height, width: viewport.width },
         },

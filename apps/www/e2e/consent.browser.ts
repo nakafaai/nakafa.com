@@ -88,12 +88,25 @@ const openConsentPreferences = Effect.fn("NakafaE2E.openConsentPreferences")(
 
 const expectFocusContained = Effect.fn("NakafaE2E.expectConsentFocusContained")(
   function* (page: Page, popup: Locator) {
+    yield* Effect.promise(() =>
+      expect
+        .poll(() =>
+          popup.evaluate((element) => element.contains(document.activeElement))
+        )
+        .toBe(true)
+    );
+
     for (let press = 0; press < 8; press += 1) {
       yield* Effect.promise(() => page.keyboard.press("Tab"));
-      const containsFocus = yield* Effect.promise(() =>
-        popup.evaluate((element) => element.contains(document.activeElement))
+      yield* Effect.promise(() =>
+        expect
+          .poll(() =>
+            popup.evaluate((element) =>
+              element.contains(document.activeElement)
+            )
+          )
+          .toBe(true)
       );
-      yield* Effect.sync(() => expect(containsFocus).toBe(true));
     }
   }
 );
