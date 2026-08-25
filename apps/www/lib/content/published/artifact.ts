@@ -23,23 +23,21 @@ import { Effect } from "effect";
 import type { ComponentType } from "react";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { ContentExecutionError } from "@/lib/content/published/errors";
+import { resolveRendererComponents } from "@/lib/content/renderer/components";
 
 /** Inputs required to authenticate and execute one trusted content artifact. */
 interface ExecuteArtifactInput {
   readonly artifact: unknown;
-  readonly components: MDXComponents;
   readonly rendererContractVersion: RendererContractVersion;
   readonly rendererManifest: RendererManifestEnvelope;
 }
 
 interface EvaluateArtifactInput {
   readonly artifact: SignedContentArtifact;
-  readonly components: MDXComponents;
 }
 
 interface EvaluateHistoricalArtifactInput {
   readonly artifact: StoredProtectedRuntimeItem["artifact"];
-  readonly components: MDXComponents;
 }
 
 interface EvaluateCompiledCodeInput {
@@ -92,9 +90,10 @@ const evaluateCompiledCode = Effect.fn("NakafaContent.evaluateCompiledCode")(
 export const evaluateVerifiedArtifact = Effect.fn(
   "NakafaContent.evaluateVerifiedArtifact"
 )(function* (input: EvaluateArtifactInput) {
+  const components = yield* resolveRendererComponents(input.artifact.payload);
   const Content = yield* evaluateCompiledCode({
     compiledCode: input.artifact.payload.compiledCode,
-    components: input.components,
+    components,
     contentKey: input.artifact.payload.contentKey,
   });
 
@@ -108,9 +107,10 @@ export const evaluateVerifiedArtifact = Effect.fn(
 export const evaluateVerifiedHistoricalArtifact = Effect.fn(
   "NakafaContent.evaluateVerifiedHistoricalArtifact"
 )(function* (input: EvaluateHistoricalArtifactInput) {
+  const components = yield* resolveRendererComponents(input.artifact.payload);
   const Content = yield* evaluateCompiledCode({
     compiledCode: input.artifact.payload.compiledCode,
-    components: input.components,
+    components,
     contentKey: input.artifact.payload.contentKey,
   });
 
@@ -134,8 +134,5 @@ export const executeSignedArtifact = Effect.fn(
     rendererContractVersion: input.rendererContractVersion,
     rendererManifest: input.rendererManifest,
   });
-  return yield* evaluateVerifiedArtifact({
-    artifact,
-    components: input.components,
-  });
+  return yield* evaluateVerifiedArtifact({ artifact });
 });

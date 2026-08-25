@@ -1,7 +1,7 @@
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 
 type SubjectItemProps = Readonly<{
   href: string;
@@ -18,7 +18,7 @@ export function SubjectItem({
   labelElement: Label = "h2",
 }: SubjectItemProps) {
   return (
-    <NavigationLink className="group block min-w-0" href={href} title={label}>
+    <IntentLink className="group block min-w-0" href={href} title={label}>
       <div className="relative overflow-hidden p-6 transition-colors ease-out group-hover:bg-accent group-hover:text-accent-foreground">
         <div className="flex items-center gap-2">
           <HugeIcons className="size-5 shrink-0" icon={icon} />
@@ -31,6 +31,6 @@ export function SubjectItem({
           />
         </div>
       </div>
-    </NavigationLink>
+    </IntentLink>
   );
 }

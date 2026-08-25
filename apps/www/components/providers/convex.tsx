@@ -1,21 +1,25 @@
 "use client";
 
 import { ConvexProviderWithAuth, ConvexReactClient } from "convex/react";
-import { Effect, Schema } from "effect";
+import { Data, Effect } from "effect";
 import { type ReactNode, useCallback, useRef } from "react";
-import { env } from "@/env";
 import { authClient } from "@/lib/auth/client";
 
-const convex = new ConvexReactClient(env.NEXT_PUBLIC_CONVEX_URL, {
-  initialAuthTokenReuse: true,
-  verbose: false,
-});
+let sharedConvexClient: ConvexReactClient | undefined;
+
+/** Returns the one page-lifetime Convex client recommended by the React API. */
+function getSharedConvexClient(convexUrl: string) {
+  sharedConvexClient ??= new ConvexReactClient(convexUrl, {
+    initialAuthTokenReuse: true,
+    logger: false,
+  });
+  return sharedConvexClient;
+}
 
 /** A Better Auth token request could not produce a usable Convex credential. */
-class ConvexTokenReadError extends Schema.TaggedError<ConvexTokenReadError>()(
-  "ConvexTokenReadError",
-  { detail: Schema.String }
-) {}
+class ConvexTokenReadError extends Data.TaggedError("ConvexTokenReadError")<{
+  readonly detail: string;
+}> {}
 
 /** Reads a fresh Convex JWT through the installed Better Auth client plugin. */
 const readConvexToken = Effect.fn("NakafaAuth.readConvexToken")(function* () {
@@ -119,7 +123,15 @@ function useBetterAuth() {
 /**
  * Provides one shared Convex client authenticated by Nakafa's Better Auth session.
  */
-export function ConvexProvider({ children }: { children: ReactNode }) {
+export function ConvexProvider({
+  children,
+  convexUrl,
+}: {
+  children: ReactNode;
+  convexUrl: string;
+}) {
+  const convex = getSharedConvexClient(convexUrl);
+
   return (
     // Convex's public API explicitly requires an authentication Hook prop.
     // https://docs.convex.dev/api/modules/react#convexproviderwithauth

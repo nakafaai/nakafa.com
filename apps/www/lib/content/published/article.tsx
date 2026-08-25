@@ -20,7 +20,6 @@ import {
   readPublishedContent,
 } from "@/lib/content/published/exchange";
 import { decodePublishedArticle } from "@/lib/content/published/projection";
-import { getRendererComponents } from "@/lib/content/renderer/components";
 
 /** Exact public article identity sent to the shared runtime seam. */
 export type PublishedArticleInput = PublishedContentInput;
@@ -83,12 +82,8 @@ export const readCurrentPublishedArticle = Effect.fn(
 /** Renders one article already authenticated by the runtime exchange. */
 const renderArticleArtifact = Effect.fn("NakafaContent.renderArticleArtifact")(
   function* (data: PublishedArticleData) {
-    const components = getRendererComponents(
-      data.artifact.payload.rendererDomain
-    );
     const rendered = yield* evaluateVerifiedArtifact({
       artifact: data.artifact,
-      components,
     });
 
     return {

@@ -1,10 +1,10 @@
 import type { IconSvgElement } from "@hugeicons/react";
 import { useTranslations } from "next-intl";
-import { FeaturesNina } from "@/components/marketing/about/features-practice";
 import {
   FeaturesTryout,
   type FeaturesTryoutModel,
 } from "@/components/marketing/about/features-tryout";
+import { FeaturesNina } from "@/components/marketing/about/nina/section";
 import { FeaturesProjectile } from "@/components/marketing/about/projectile/features";
 import { SubjectsArt } from "@/components/marketing/about/subjects-art";
 import { SubjectItem } from "@/components/shared/subject-item";

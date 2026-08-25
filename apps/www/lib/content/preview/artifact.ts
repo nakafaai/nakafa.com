@@ -17,7 +17,6 @@ import type { PreviewConfig } from "@/lib/content/preview/config";
 import { PreviewIntegrityError } from "@/lib/content/preview/errors";
 import { fetchPreviewJson } from "@/lib/content/preview/request";
 import { executeSignedArtifact } from "@/lib/content/published/artifact";
-import { getRendererComponents } from "@/lib/content/renderer/components";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 
 type ReadyPreviewManifest = Extract<
@@ -72,7 +71,6 @@ export const executePreviewArtifact = Effect.fn(
   );
   const rendered = yield* executeSignedArtifact({
     artifact: wireArtifact,
-    components: getRendererComponents(document.rendererDomain),
     rendererContractVersion: activeManifest.rendererContractVersion,
     rendererManifest: activeManifest,
   }).pipe(

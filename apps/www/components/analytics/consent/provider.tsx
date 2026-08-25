@@ -12,7 +12,6 @@ import { useQueryWithStatus } from "@repo/backend/helpers/react";
 import { useConvexAuth, useMutation } from "convex/react";
 import { Effect, Fiber, Option } from "effect";
 import { type ReactNode, useEffect, useRef, useState } from "react";
-import { env } from "@/env";
 import { useAnonymousAnalyticsConsent } from "@/lib/analytics/consent/browser";
 import {
   AnalyticsConsentContext,
@@ -40,8 +39,6 @@ import {
 } from "@/lib/analytics/consent/state";
 import { useUser } from "@/lib/context/use-user";
 
-const isPreviewChild = env.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD === "true";
-
 interface LatestAnalyticsConsentSave extends AnalyticsConsentSessionOperation {
   readonly fiber: Fiber.Fiber<void, never>;
 }
@@ -49,8 +46,10 @@ interface LatestAnalyticsConsentSave extends AnalyticsConsentSessionOperation {
 /** Owns the state that exclusively controls optional product analytics. */
 export function AnalyticsConsentProvider({
   children,
+  isPreviewChild,
 }: {
   children: ReactNode;
+  isPreviewChild: boolean;
 }) {
   const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
   const { isPending: isUserPending, user } = useUser((state) => ({

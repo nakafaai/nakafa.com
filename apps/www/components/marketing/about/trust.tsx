@@ -14,6 +14,7 @@ import {
 import { Paragraph } from "@repo/design-system/components/markdown/paragraph";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   ResizableHandle,
@@ -240,10 +241,10 @@ export function Trust({
             className="mt-8"
             nativeButton={false}
             render={
-              <NavigationLink href={lessonHref}>
+              <IntentLink href={lessonHref}>
                 {t("open-lesson")}
                 <HugeIcons icon={ArrowUpRight01Icon} />
-              </NavigationLink>
+              </IntentLink>
             }
           />
         </div>

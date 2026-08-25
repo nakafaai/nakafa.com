@@ -1,6 +1,5 @@
 "use client";
 
-import { Response } from "@repo/design-system/components/ai/response";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { Label } from "@repo/design-system/components/ui/label";
 import { buttonVariants } from "@repo/design-system/lib/button";
@@ -17,7 +16,7 @@ interface TryoutSelectableChoiceProps {
   checked: boolean;
   disabled: boolean;
   id: string;
-  label: string;
+  label: ReactNode;
   onSelect: () => void;
 }
 
@@ -81,7 +80,7 @@ interface TryoutReviewedChoiceProps {
   checked: boolean;
   id: string;
   isCorrect: boolean | undefined;
-  label: string;
+  label: ReactNode;
 }
 
 /** Renders one locked terminal choice without a mutation Interface. */
@@ -141,7 +140,7 @@ type ButtonVariantOptions = NonNullable<Parameters<typeof buttonVariants>[0]>;
 interface TryoutChoiceFrameProps {
   children: ReactNode;
   id: string;
-  label: string;
+  label: ReactNode;
   variant: NonNullable<ButtonVariantOptions["variant"]>;
 }
 
@@ -163,9 +162,7 @@ function TryoutChoiceFrame({
     >
       {children}
       <div className="min-w-0 flex-1" id={labelId}>
-        <Response className="wrap-anywhere h-auto whitespace-normal" id={id}>
-          {label}
-        </Response>
+        {label}
       </div>
     </Label>
   );

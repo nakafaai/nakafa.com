@@ -4,10 +4,10 @@ import { usePathname } from "@repo/internationalization/src/navigation";
 import {
   domAnimation,
   LazyMotion,
-  m,
   useScroll,
   useTransform,
 } from "motion/react";
+import * as m from "motion/react-m";
 import type { ReactNode } from "react";
 
 const BORDER_OPACITY_MIN = 0;

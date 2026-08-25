@@ -16,7 +16,6 @@ import {
   readPublishedContent,
 } from "@/lib/content/published/exchange";
 import { decodePublishedPage } from "@/lib/content/published/projection";
-import { getRendererComponents } from "@/lib/content/renderer/components";
 
 /** Public Page identity pinned to one selected release. */
 export type PublishedPageInput = PublishedContentInput;
@@ -75,12 +74,8 @@ export const readCurrentPublishedPage = Effect.fn(
 /** Evaluates one Page artifact already authenticated by its runtime exchange. */
 const renderPageArtifact = Effect.fn("NakafaContent.renderPageArtifact")(
   function* (data: PublishedPageData) {
-    const components = getRendererComponents(
-      data.artifact.payload.rendererDomain
-    );
     const rendered = yield* evaluateVerifiedArtifact({
       artifact: data.artifact,
-      components,
     });
     return {
       artifactHash: data.artifact.artifactHash,

@@ -1,4 +1,4 @@
-import { CodeBlockMdx } from "@repo/design-system/components/markdown/code-block";
+import { CodeBlockMdx } from "@repo/design-system/components/markdown/code/client";
 import { Heading } from "@repo/design-system/components/markdown/heading";
 import {
   Table,

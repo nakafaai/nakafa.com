@@ -1,5 +1,6 @@
 import "server-only";
 
+import { MarkdownResponse } from "@repo/design-system/components/ai/markdown";
 import { Effect } from "effect";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
@@ -55,7 +56,14 @@ export async function TryoutReview({
                   id={`review-question-${question.questionOrder}-${choice.optionKey}`}
                   isCorrect={choice.isCorrect}
                   key={choice.optionKey}
-                  label={choice.label}
+                  label={
+                    <MarkdownResponse
+                      className="wrap-anywhere h-auto whitespace-normal"
+                      id={`review-question-${question.questionOrder}-${choice.optionKey}`}
+                    >
+                      {choice.label}
+                    </MarkdownResponse>
+                  }
                 />
               ))}
             </div>

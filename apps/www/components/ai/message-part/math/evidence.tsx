@@ -1,5 +1,3 @@
-"use client";
-
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { DataPart } from "@repo/ai/schema/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";

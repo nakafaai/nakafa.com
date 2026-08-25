@@ -18,7 +18,6 @@ import {
   type PublishedContentRouteInput,
   readCurrentPublishedContent,
 } from "@/lib/content/published/exchange";
-import { getRendererComponents } from "@/lib/content/renderer/components";
 
 /** Exact public material identity sent to the shared runtime seam. */
 export type PublishedMaterialInput = PublishedContentRouteInput;
@@ -64,13 +63,7 @@ export const readPublishedMaterial = Effect.fn(
 const renderMaterialArtifact = Effect.fn(
   "NakafaContent.renderMaterialArtifact"
 )(function* (data: PublishedMaterialData) {
-  const components = getRendererComponents(
-    data.artifact.payload.rendererDomain
-  );
-  const rendered = yield* evaluateVerifiedArtifact({
-    artifact: data.artifact,
-    components,
-  });
+  const rendered = yield* evaluateVerifiedArtifact({ artifact: data.artifact });
 
   return {
     activeReleaseId: data.activeReleaseId,

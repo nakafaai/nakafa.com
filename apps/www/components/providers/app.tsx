@@ -5,6 +5,7 @@ import { AnalyticsConsentProvider } from "@/components/analytics/consent/provide
 import { AnalyticsUnavailableProvider } from "@/components/analytics/consent/unavailable";
 import { ConvexProvider } from "@/components/providers/convex";
 import { ReactQueryProviders } from "@/components/providers/react-query";
+import { env } from "@/env";
 import { PageNavigationProvider } from "@/lib/content/page/context";
 import type { PageNavigation } from "@/lib/content/page/navigation";
 import { UserContextProvider } from "@/lib/context/use-user";
@@ -28,7 +29,9 @@ export function AppProviders({
   pageNavigation: PageNavigation | null;
 }) {
   const content = pageNavigation ? (
-    <AnalyticsConsentProvider>
+    <AnalyticsConsentProvider
+      isPreviewChild={env.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD === "true"}
+    >
       {children}
       <AnalyticsConsentControls />
     </AnalyticsConsentProvider>
@@ -39,7 +42,7 @@ export function AppProviders({
   return (
     <NuqsAdapter>
       <ReactQueryProviders>
-        <ConvexProvider>
+        <ConvexProvider convexUrl={env.NEXT_PUBLIC_CONVEX_URL}>
           <UserContextProvider>
             <PageNavigationProvider navigation={pageNavigation}>
               {content}
