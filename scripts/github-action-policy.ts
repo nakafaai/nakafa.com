@@ -55,9 +55,8 @@ export const GITHUB_ACTION_REVIEWS: readonly GithubActionReview[] = [
     action: "astral-sh/setup-uv",
     approvedSha: "20cfd1bf945f4377ade1205e4dbc17946fc9a30d",
     expectedTag: "v10.0.1",
-    expectedUsages: 1,
-    reason:
-      "uv setup retains explicit trusted-event caching on the reviewed release.",
+    expectedUsages: 2,
+    reason: "Python quality and production jobs share the reviewed release.",
   },
   {
     action: "actions/cache/restore",
