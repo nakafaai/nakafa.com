@@ -18,6 +18,7 @@ import { Effect } from "effect";
 import {
   type MouseEvent,
   type ReactNode,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -60,6 +61,7 @@ export function QuranInterpretationControls({
   const [pendingVerseNumber, setPendingVerseNumber] = useState<number | null>(
     null
   );
+  const [isControllerActive, setControllerActive] = useState(false);
   const [isPending, startTransition] = useTransition();
   const requestSequence = useRef(0);
   const pendingRequestId = useRef<number | null>(null);
@@ -182,7 +184,18 @@ export function QuranInterpretationControls({
     startTransition(() => Effect.runPromise(program));
   };
   const selectInterpretation = useCallbackRef(handleInterpretationClick);
+  // Activity reconnects passive effects when this route becomes visible. Keep
+  // this after useCallbackRef so triggers enable only after its handler is live.
+  // https://react.dev/reference/react/Activity
+  useEffect(() => {
+    setControllerActive(true);
+
+    return () => {
+      setControllerActive(false);
+    };
+  }, []);
   const contextValue = {
+    isActive: isControllerActive,
     pendingVerseNumber: isPending ? pendingVerseNumber : null,
     selectInterpretation,
   };

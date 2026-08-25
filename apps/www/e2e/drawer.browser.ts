@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
@@ -6,39 +6,8 @@ import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 
 const usageDataName = "Usage data";
 const readinessTimeoutMilliseconds = 15_000;
-
-const waitForReactClick = Effect.fn("NakafaE2E.waitForReactClick")(function* (
-  trigger: Locator
-) {
-  /**
-   * React 19.2.8 stores hydrated host props under `__reactProps$...` and
-   * reads `onClick` from that same store during event dispatch. Waiting for
-   * the exact host prop distinguishes visible server HTML from an
-   * interactive button without adding a product-only readiness marker.
-   *
-   * @see https://github.com/facebook/react/blob/v19.2.8/packages/react-dom-bindings/src/client/ReactDOMComponentTree.js
-   * @see https://github.com/facebook/react/blob/v19.2.8/packages/react-dom-bindings/src/events/getListener.js
-   */
-  yield* Effect.promise(() =>
-    trigger.waitForFunction(
-      (element) =>
-        Object.keys(element).some((key) => {
-          if (!key.startsWith("__reactProps$")) {
-            return false;
-          }
-
-          const props = Reflect.get(element, key);
-          if (typeof props !== "object" || props === null) {
-            return false;
-          }
-
-          return typeof Reflect.get(props, "onClick") === "function";
-        }),
-      undefined,
-      { timeout: readinessTimeoutMilliseconds }
-    )
-  );
-});
+const quranIndexUrlPattern = /\/id\/quran$/;
+const quranSurahUrlPattern = /\/id\/quran\/2$/;
 
 const prepareConsentPreferences = Effect.fn(
   "NakafaE2E.prepareDrawerConsentPreferences"
@@ -133,7 +102,7 @@ const verifyQuranInterpretationDrawer = Effect.fn(
 
   const trigger = page.locator("[data-quran-interpretation-verse]").first();
   yield* Effect.promise(() => expect(trigger).toBeVisible({ timeout: 15_000 }));
-  yield* waitForReactClick(trigger);
+  yield* Effect.promise(() => expect(trigger).toBeEnabled({ timeout: 15_000 }));
   yield* Effect.promise(() => trigger.click());
 
   const drawer = page.locator('[data-slot="drawer-popup"]');
@@ -148,6 +117,31 @@ const verifyQuranInterpretationDrawer = Effect.fn(
     expect(drawer.locator('[data-slot="drawer-panel"]')).not.toBeEmpty()
   );
 
+  yield* Effect.promise(() => page.keyboard.press("Escape"));
+  yield* Effect.promise(() => expect(drawer).toHaveCount(0));
+
+  const quranIndexLink = page.locator('a[href="/id/quran"]').first();
+  yield* Effect.promise(() => expect(quranIndexLink).toBeVisible());
+  yield* Effect.promise(() => quranIndexLink.click());
+  yield* Effect.promise(() => expect(page).toHaveURL(quranIndexUrlPattern));
+  yield* Effect.promise(() => expect(trigger).toBeAttached());
+  yield* Effect.promise(() => expect(trigger).toBeHidden());
+  yield* Effect.promise(() => expect(trigger).toBeDisabled());
+  yield* Effect.promise(() => expect(trigger).toHaveCSS("opacity", "1"));
+
+  yield* Effect.promise(() => page.goBack());
+  yield* Effect.promise(() => expect(page).toHaveURL(quranSurahUrlPattern));
+  yield* waitForCommittedAppRouter(
+    page,
+    "/id/quran",
+    "/id/quran/2",
+    readinessTimeoutMilliseconds
+  );
+  yield* Effect.promise(() => expect(trigger).toBeVisible());
+  yield* Effect.promise(() => expect(trigger).toBeEnabled());
+  yield* Effect.promise(() => expect(trigger).toHaveCSS("opacity", "1"));
+  yield* Effect.promise(() => trigger.click());
+  yield* Effect.promise(() => expect(drawer).toBeVisible({ timeout: 15_000 }));
   yield* Effect.promise(() => page.keyboard.press("Escape"));
   yield* Effect.promise(() => expect(drawer).toHaveCount(0));
 });
