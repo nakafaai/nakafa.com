@@ -7,8 +7,9 @@ import {
   previewRouting,
   routing,
 } from "@repo/internationalization/src/routing";
+import { mergeVaryHeader } from "@repo/utilities/http/accept";
 import { getSessionCookie } from "better-auth/cookies";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import type { ProxyConfig } from "next/server";
 import { type NextRequest, NextResponse } from "next/server";
 import { hasLocale } from "next-intl";
@@ -24,6 +25,7 @@ import {
   matchesPreviewPathname,
 } from "@/lib/content/preview/route";
 import {
+  LLMS_REPRESENTATION_VARY_FIELDS,
   type LocalizedLlmsRoute,
   resolveLlmsProxyRoute,
 } from "@/lib/llms/routes";
@@ -111,9 +113,14 @@ export async function proxy(request: NextRequest) {
   }
 
   const routeDecision = resolveLlmsProxyRoute({
-    acceptHeader: request.headers.get("accept"),
+    acceptHeader: Option.fromNullOr(request.headers.get("accept")),
+    method: request.method,
     pathname,
   });
+  if (routeDecision.kind === "not-acceptable") {
+    return representationNotAcceptable();
+  }
+
   let migrationPathname = pathname;
   let migrationSuffix = "";
   if (routeDecision.kind === "rewrite-markdown") {
@@ -132,7 +139,9 @@ export async function proxy(request: NextRequest) {
     const redirectUrl = new URL(request.url);
     redirectUrl.pathname = `${urlMigrationRedirect}${migrationSuffix}`;
 
-    return NextResponse.redirect(redirectUrl, 308);
+    const response = NextResponse.redirect(redirectUrl, 308);
+    mergeRepresentationVary(response);
+    return response;
   }
 
   if (routeDecision.kind === "rewrite-markdown") {
@@ -220,6 +229,7 @@ function routeLocalizedRequest(
     : handleLocalizedRequest(request);
   response.headers.append("Link", AGENT_DISCOVERY_LINK_HEADER);
   response.headers.set("X-Llms-Txt", LLMS_TEXT_PATH);
+  mergeRepresentationVary(response);
 
   return response;
 }
@@ -232,7 +242,31 @@ function rewriteToLlmsMdx(
   const rewriteUrl = new URL(request.url);
   rewriteUrl.pathname = `/llms.mdx/${localizedRoute.locale}${localizedRoute.route}`;
 
-  return NextResponse.rewrite(rewriteUrl);
+  const response = NextResponse.rewrite(rewriteUrl);
+  mergeRepresentationVary(response);
+  return response;
+}
+
+/** Returns a hard 406 when neither public page representation is acceptable. */
+function representationNotAcceptable() {
+  return new Response("Not Acceptable\n", {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      Vary: LLMS_REPRESENTATION_VARY_FIELDS.join(", "),
+    },
+    status: 406,
+  });
+}
+
+/** Preserves framework Vary fields and adds representation cache keys. */
+function mergeRepresentationVary(response: Response) {
+  response.headers.set(
+    "Vary",
+    mergeVaryHeader(
+      Option.fromNullOr(response.headers.get("Vary")),
+      LLMS_REPRESENTATION_VARY_FIELDS
+    )
+  );
 }
 
 /** Rewrites missing content to the styled app not-found route with 404 status. */
@@ -244,7 +278,7 @@ function rewriteToContentNotFound(request: NextRequest, locale: AppLocaleCode) {
     request.url
   );
 
-  return NextResponse.rewrite(rewriteUrl, {
+  const response = NextResponse.rewrite(rewriteUrl, {
     headers: {
       "X-Robots-Tag": "noindex",
     },
@@ -253,6 +287,8 @@ function rewriteToContentNotFound(request: NextRequest, locale: AppLocaleCode) {
     },
     status: 404,
   });
+  mergeRepresentationVary(response);
+  return response;
 }
 
 export const config: ProxyConfig = {

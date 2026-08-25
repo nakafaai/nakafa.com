@@ -15,18 +15,22 @@ import {
   buildRootLlmsIndexText,
   resolvePublicLlmsSectionIndex,
 } from "@/lib/llms/public-index";
+import {
+  LLMS_MARKDOWN_MEDIA_TYPE,
+  LLMS_REPRESENTATION_VARY_FIELDS,
+} from "@/lib/llms/routes";
 import { buildUnsupportedMarkdownRouteText } from "@/lib/llms/unsupported";
 
 const MARKDOWN_HEADERS = {
   "Cache-Control": LLMS_CACHE_CONTROL,
-  "Content-Type": "text/markdown; charset=utf-8",
-  Vary: "Accept",
+  "Content-Type": LLMS_MARKDOWN_MEDIA_TYPE,
+  Vary: LLMS_REPRESENTATION_VARY_FIELDS.join(", "),
 };
 
 const TEXT_HEADERS = {
   "Cache-Control": LLMS_CACHE_CONTROL,
   "Content-Type": "text/plain; charset=utf-8",
-  Vary: "Accept",
+  Vary: LLMS_REPRESENTATION_VARY_FIELDS.join(", "),
 };
 
 const MARKDOWN_NOT_FOUND_HEADERS = {

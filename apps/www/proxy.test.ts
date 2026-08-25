@@ -226,10 +226,10 @@ describe("proxy", () => {
     "delegates the active route %s to the locale middleware",
     async (path) => {
       const response = await requestProxy(path);
-
       expectLocaleProxy(response);
       expect(response.headers.get("link")).toBe('</llms.txt>; rel="llms-txt"');
       expect(response.headers.get("x-llms-txt")).toBe("/llms.txt");
+      expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding");
     }
   );
 
@@ -370,23 +370,22 @@ describe("proxy", () => {
   it.each([
     [
       "accept header",
-      "/en/terms-of-service",
       { headers: { accept: "text/markdown" } },
       "http://localhost:3000/llms.mdx/en/terms-of-service",
     ],
     [
-      "explicit suffix",
-      "/en/quran/1.md",
-      undefined,
-      "http://localhost:3000/llms.mdx/en/quran/1",
+      "unacceptable header",
+      { headers: { accept: "text/html;q=0, text/markdown;q=0" } },
+      null,
     ],
   ])(
-    "rewrites markdown requests with an %s",
-    async (_kind, path, init, expected) => {
-      const response = await requestProxy(path, init);
-
+    "negotiates public representations with an %s",
+    async (_kind, init, expected) => {
+      const response = await requestProxy("/en/terms-of-service", init);
       expectNoLocaleProxy();
+      expect(response.status).toBe(expected === null ? 406 : 200);
       expect(response.headers.get("x-middleware-rewrite")).toBe(expected);
+      expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding");
     }
   );
 
