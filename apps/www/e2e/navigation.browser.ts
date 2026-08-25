@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { withBrowserContext } from "./support/browser-context";
-import { seedDeniedAnalyticsConsent } from "./support/consent";
+import { withBrowserContext } from "@/e2e/support/browser-context";
+import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 import {
   navigationCases,
   verifyHardAndClientNavigation,
-} from "./support/navigation/cases";
+} from "@/e2e/support/navigation/cases";
 
 const targetViewports = [
   { height: 800, name: "compact", width: 320 },
@@ -14,6 +14,8 @@ const targetViewports = [
   { height: 768, name: "tablet-landscape", width: 1024 },
   { height: 900, name: "desktop", width: 1440 },
 ] as const;
+
+test.describe.configure({ mode: "parallel" });
 
 for (const viewport of targetViewports) {
   for (const navigationCase of navigationCases) {
