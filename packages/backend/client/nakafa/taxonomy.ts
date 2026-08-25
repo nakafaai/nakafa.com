@@ -16,8 +16,6 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import {
   NAKAFA_AGENT_SECTIONS,
-  NAKAFA_MCP_DIRECT_ENDPOINT,
-  NAKAFA_MCP_INFORMATIONAL_ROOT,
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
 } from "@repo/contents/_lib/agent/constants";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
@@ -76,9 +74,7 @@ export function readNakafaTaxonomy(
       content_counts: contentCounts,
       default_locale: defaultLocale,
       endpoints: {
-        direct: NAKAFA_MCP_DIRECT_ENDPOINT,
-        recommended: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
-        root_note: `${NAKAFA_MCP_INFORMATIONAL_ROOT} is informational only.`,
+        mcp: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
       },
       tryout: signedInventory.tryout,
       locale,

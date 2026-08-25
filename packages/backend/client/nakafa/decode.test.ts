@@ -122,9 +122,7 @@ function taxonomy() {
     ],
     default_locale: defaultLocale,
     endpoints: {
-      direct: "https://mcp.nakafa.com/mcp",
-      recommended: "https://mcp.nakafa.com/mcp",
-      root_note: "Root is informational only.",
+      mcp: "https://mcp.nakafa.com/mcp",
     },
     locale: "en",
     locales: Array.from(ACTIVE_APP_LOCALE_CODES),

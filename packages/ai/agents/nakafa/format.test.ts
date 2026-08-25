@@ -100,9 +100,7 @@ describe("Nakafa formatter", () => {
       content_counts: [{ count: 12, locale: "id" }],
       default_locale: defaultLocale,
       endpoints: {
-        direct: "https://mcp.nakafa.com/mcp",
-        recommended: "https://mcp.nakafa.com/mcp",
-        root_note: "Use /mcp for MCP transport.",
+        mcp: "https://mcp.nakafa.com/mcp",
       },
       locale: "id",
       locales: Array.from(ACTIVE_APP_LOCALE_CODES),

@@ -110,9 +110,7 @@ const nakafaTestRuntime = {
       content_counts: [{ count: 1, locale }],
       default_locale: defaultLocale,
       endpoints: {
-        direct: "https://mcp.nakafa.com/mcp",
-        recommended: "https://mcp.nakafa.com/mcp",
-        root_note: "https://mcp.nakafa.com is informational only.",
+        mcp: "https://mcp.nakafa.com/mcp",
       },
       tryout: {
         countries: [{ id: "indonesia", label: "Indonesia" }],

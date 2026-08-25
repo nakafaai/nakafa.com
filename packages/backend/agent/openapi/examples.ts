@@ -1,3 +1,12 @@
+import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
+import {
+  NAKAFA_API_BASE_URL,
+  NAKAFA_BASE_URL,
+  NAKAFA_MCP_RECOMMENDED_ENDPOINT,
+  NAKAFA_PUBLIC_API_VERSION,
+} from "@repo/contents/_lib/agent/constants";
+import { NAKAFA_AGENT_DEFAULT_LIMIT } from "@repo/contents/_types/agent/search";
+
 export const OPENAPI_CONTENT_ID_EXAMPLE =
   "asset:example:material:linear-equations";
 
@@ -46,19 +55,19 @@ export const OPENAPI_RESPONSE_EXAMPLES = {
     service: "nakafa-public-api",
     status: "ok",
     timestamp: 1_777_072_400_000,
-    version: "1.0.0",
+    version: NAKAFA_PUBLIC_API_VERSION,
   },
   ApiIndex: {
     authentication: "none",
     description:
       "Read-only access to Nakafa's signed educational content for developers and agents.",
-    docs: "https://nakafa.com/developers",
-    documentation: "https://nakafa.com/developers",
-    mcp: "https://mcp.nakafa.com/mcp",
+    docs: `${NAKAFA_BASE_URL}/developers`,
+    documentation: `${NAKAFA_BASE_URL}/developers`,
+    mcp: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
     name: "Nakafa Public API",
-    openapi: "https://api.nakafa.com/openapi.json",
+    openapi: `${NAKAFA_API_BASE_URL}/openapi.json`,
     status: "active",
-    version: "1.0.0",
+    version: NAKAFA_PUBLIC_API_VERSION,
   },
   Content: {
     ...CONTENT_REFERENCE_EXAMPLE,
@@ -67,7 +76,7 @@ export const OPENAPI_RESPONSE_EXAMPLES = {
     title: "Linear equations",
   },
   OpenApi: {
-    info: { title: "Nakafa Public API", version: "1.0.0" },
+    info: { title: "Nakafa Public API", version: NAKAFA_PUBLIC_API_VERSION },
     openapi: "3.1.1",
     paths: {},
   },
@@ -83,7 +92,7 @@ export const OPENAPI_RESPONSE_EXAMPLES = {
         title: "Linear equations",
       },
     ],
-    limit: 10,
+    limit: NAKAFA_AGENT_DEFAULT_LIMIT,
     offset: 0,
   },
   Taxonomy: {
@@ -95,13 +104,11 @@ export const OPENAPI_RESPONSE_EXAMPLES = {
     ],
     default_locale: "en",
     endpoints: {
-      direct: "https://mcp.nakafa.com/mcp",
-      recommended: "https://mcp.nakafa.com/mcp",
-      root_note: "https://mcp.nakafa.com is informational only.",
+      mcp: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
     },
     locale: "en",
     locales: ["en", "id", "de"],
-    quran: { surah_count: 114 },
+    quran: { surah_count: QURAN_SURAH_COUNT },
     sections: ["articles", "material", "tryout", "quran"],
     tools: [
       "nakafa_search_content",

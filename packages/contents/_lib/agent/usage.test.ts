@@ -1,7 +1,4 @@
-import {
-  NAKAFA_MCP_DIRECT_ENDPOINT,
-  NAKAFA_MCP_RECOMMENDED_ENDPOINT,
-} from "@repo/contents/_lib/agent/constants";
+import { NAKAFA_MCP_RECOMMENDED_ENDPOINT } from "@repo/contents/_lib/agent/constants";
 import { getNakafaMcpUsageMarkdown } from "@repo/contents/_lib/agent/usage";
 import { describe, expect, it } from "vitest";
 
@@ -10,7 +7,7 @@ describe("Nakafa MCP usage resource", () => {
     const usage = getNakafaMcpUsageMarkdown();
 
     expect(usage).toContain(NAKAFA_MCP_RECOMMENDED_ENDPOINT);
-    expect(usage).toContain(NAKAFA_MCP_DIRECT_ENDPOINT);
+    expect(usage.match(/https:\/\/mcp\.nakafa\.com\/mcp/g)).toHaveLength(1);
     expect(usage).toContain("nakafa_search_content");
     expect(usage).toContain("result with `markdown_url`");
     expect(usage).toContain("try-out catalog result without `markdown_url`");

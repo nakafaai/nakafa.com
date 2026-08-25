@@ -60,18 +60,12 @@ export const NakafaAgentTaxonomySchema = Schema.Struct({
     description: "Default Nakafa locale.",
   }),
   endpoints: Schema.Struct({
-    direct: UrlStringSchema.annotate({
-      description: "Direct MCP endpoint.",
-    }),
-    recommended: UrlStringSchema.annotate({
-      description: "Recommended MCP endpoint.",
-    }),
-    root_note: Schema.String.annotate({
-      description: "Root URL connection guidance.",
+    mcp: UrlStringSchema.annotate({
+      description: "Canonical Streamable HTTP MCP endpoint.",
     }),
   })
     .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
-    .annotate({ description: "MCP endpoint guidance." }),
+    .annotate({ description: "Canonical agent endpoints." }),
   tryout: Schema.Struct({
     countries: Schema.Array(NakafaAgentTaxonomyOptionSchema)
       .pipe(Schema.mutable)

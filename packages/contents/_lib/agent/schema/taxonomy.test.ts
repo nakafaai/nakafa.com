@@ -21,9 +21,7 @@ describe("NakafaAgentTaxonomySchema", () => {
         content_counts: [{ count: 1, locale: "en" }],
         default_locale: "en",
         endpoints: {
-          direct: "not-a-url",
-          recommended: "https://mcp.nakafa.com/mcp",
-          root_note: "Use the direct endpoint.",
+          mcp: "not-a-url",
         },
         exercises: { categories: [], materials: [], types: [] },
         locale: "en",
