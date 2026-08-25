@@ -56,6 +56,28 @@ const loadCategory = Effect.fn("contentRelease.loadArticleCategory")(function* (
   );
 });
 
+/** Loads the sole category claiming one localized route in one release. */
+const loadCategoryRoute = Effect.fn("contentRelease.loadArticleCategoryRoute")(
+  function* (
+    ctx: MutationCtx,
+    appLocale: AppLocale,
+    route: ArticleRouteSlug,
+    sequence: number
+  ) {
+    return yield* Effect.promise(() =>
+      ctx.db
+        .query("articleCategories")
+        .withIndex("by_appLocale_and_route_and_sequence", (index) =>
+          index
+            .eq("appLocale", appLocale)
+            .eq("route", route)
+            .eq("sequence", sequence)
+        )
+        .unique()
+    );
+  }
+);
+
 /** Converts one active article into its category representative row. */
 function categoryRow(article: ArticleEntry, route: ArticleRouteSlug) {
   return {
@@ -80,6 +102,18 @@ const writeCategory = Effect.fn("contentRelease.writeArticleCategory")(
       article.appLocale,
       article.category
     );
+    const routeOwner = yield* loadCategoryRoute(
+      ctx,
+      article.appLocale,
+      route,
+      article.sequence
+    );
+    if (routeOwner && routeOwner.category !== article.category) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Article category route ${article.appLocale}/${route} is already claimed by ${routeOwner.category} within release ${article.releaseId}.`
+      );
+    }
     if (
       existing?.sequence === article.sequence &&
       (existing.title !== article.categoryTitle ||

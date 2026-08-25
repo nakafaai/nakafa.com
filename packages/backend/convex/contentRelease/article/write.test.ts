@@ -243,4 +243,26 @@ describe("contentRelease/article/write", () => {
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
   });
+
+  it("rejects a route claimed by another category in the same release", async () => {
+    const conflict = convexTest(schema, convexModules);
+    await conflict.mutation(async (ctx) => {
+      await ctx.db.insert("articleCategories", {
+        appLocale: "en",
+        bucket: "aaa",
+        category: "history",
+        contentKey: "articles/history/first",
+        projectionHash: `sha256:${"a".repeat(64)}`,
+        releaseId: "release-conflict",
+        rendererDomain: "politics",
+        route: TEST_ARTICLE_PROJECTION.categoryRouteSlug,
+        sequence: 1,
+        title: "History",
+      });
+    });
+
+    await expect(conflict.mutation((ctx) => write(ctx))).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
 });
