@@ -1,5 +1,10 @@
+import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import { OPENAPI_CONTENT_ID_EXAMPLE } from "@repo/backend/agent/openapi/examples";
 import { OPENAPI_PARAMETER_SCHEMAS } from "@repo/backend/agent/openapi/schema";
+import {
+  NAKAFA_AGENT_DEFAULT_LIMIT,
+  NAKAFA_AGENT_MAX_LIMIT,
+} from "@repo/contents/_types/agent/search";
 
 interface ParameterInput {
   readonly description: string;
@@ -47,8 +52,8 @@ export const SEARCH_PARAMETERS = [
     schema: OPENAPI_PARAMETER_SCHEMAS.searchLocale,
   }),
   queryParameter({
-    description: "Page size. Defaults to 10 and cannot exceed 50.",
-    example: 10,
+    description: `Page size. Defaults to ${NAKAFA_AGENT_DEFAULT_LIMIT} and cannot exceed ${NAKAFA_AGENT_MAX_LIMIT}.`,
+    example: NAKAFA_AGENT_DEFAULT_LIMIT,
     name: "limit",
     schema: OPENAPI_PARAMETER_SCHEMAS.searchLimit,
   }),
@@ -82,7 +87,7 @@ export const TAXONOMY_PARAMETERS = [
 
 export const QURAN_PARAMETERS = [
   {
-    description: "Surah number from 1 through 114.",
+    description: `Surah number from 1 through ${QURAN_SURAH_COUNT}.`,
     example: 1,
     in: "path",
     name: "surah",

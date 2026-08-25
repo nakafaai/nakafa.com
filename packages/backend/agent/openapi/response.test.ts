@@ -20,6 +20,34 @@ describe("OpenAPI HTTP response", () => {
     expect(revalidated.headers.get("etag")).toBe(NAKAFA_OPENAPI_ETAG);
   });
 
+  it("uses weak comparison across If-None-Match validator lists", () => {
+    const strongEntityTag = NAKAFA_OPENAPI_ETAG.slice("W/".length);
+    const listed = createOpenApiResponse(
+      `, "older,validator" \t, ${strongEntityTag}`
+    );
+    const wildcard = createOpenApiResponse("\t* ");
+
+    expect(listed.status).toBe(304);
+    expect(wildcard.status).toBe(304);
+  });
+
+  it("ignores malformed or unbounded If-None-Match values", () => {
+    const invalidValues = [
+      " \t",
+      '"different"',
+      "not-an-entity-tag",
+      '"unterminated',
+      '"invalid\u0001value"',
+      `"older" suffix, ${NAKAFA_OPENAPI_ETAG}`,
+      `${NAKAFA_OPENAPI_ETAG}, invalid`,
+      `${", ".repeat(33)}${NAKAFA_OPENAPI_ETAG}`,
+    ];
+
+    for (const value of invalidValues) {
+      expect(createOpenApiResponse(value).status).toBe(200);
+    }
+  });
+
   it("serves a public read-only CORS preflight", () => {
     const response = createOpenApiOptionsResponse();
 
@@ -27,6 +55,9 @@ describe("OpenAPI HTTP response", () => {
     expect(response.headers.get("access-control-allow-origin")).toBe("*");
     expect(response.headers.get("access-control-allow-methods")).toBe(
       "GET, HEAD, OPTIONS"
+    );
+    expect(response.headers.get("access-control-allow-headers")).toBe(
+      "Accept, If-None-Match"
     );
   });
 });

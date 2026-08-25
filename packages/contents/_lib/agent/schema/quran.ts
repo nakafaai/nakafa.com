@@ -1,3 +1,4 @@
+import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import { NakafaAgentReadableContentRefSchema } from "@repo/contents/_lib/agent/schema/ref";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { routing } from "@repo/internationalization/src/routing";
@@ -29,8 +30,10 @@ export const NakafaAgentQuranReferenceOptionsSchema = Schema.Struct({
     Schema.check(Schema.isInt()),
     Schema.check(
       Schema.isBetween(
-        { minimum: 1, maximum: 114 },
-        { message: "Surah number must be between 1 and 114." }
+        { minimum: 1, maximum: QURAN_SURAH_COUNT },
+        {
+          message: `Surah number must be between 1 and ${QURAN_SURAH_COUNT}.`,
+        }
       )
     )
   ).annotate({

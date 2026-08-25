@@ -1,11 +1,11 @@
+import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import { getNakafaContent } from "@repo/backend/agent/content";
 import { decodeAgentInput } from "@repo/backend/agent/decode";
 import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import {
-  NAKAFA_OPENAPI_ETAG,
-  NAKAFA_OPENAPI_JSON,
-  NAKAFA_PUBLIC_API_VERSION,
-} from "@repo/backend/agent/openapi/document";
+  createOpenApiOptionsResponse,
+  createOpenApiResponse,
+} from "@repo/backend/agent/openapi/response";
 import { getNakafaQuranReference } from "@repo/backend/agent/quran";
 import { searchNakafaContent } from "@repo/backend/agent/search";
 import { getNakafaTaxonomy } from "@repo/backend/agent/taxonomy";
@@ -31,7 +31,9 @@ import { hasValidEdgeSecret } from "@repo/backend/convex/routes/agent/security";
 import { requestId } from "@repo/backend/convex/routes/middleware/requestId";
 import {
   NAKAFA_API_BASE_URL,
+  NAKAFA_BASE_URL,
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
+  NAKAFA_PUBLIC_API_VERSION,
 } from "@repo/contents/_lib/agent/constants";
 import type {
   NakafaAgentDataReadError,
@@ -53,7 +55,7 @@ interface AgentHonoEnvironment {
 }
 type AgentHono = Hono<AgentHonoEnvironment>;
 
-const API_DOCUMENTATION_URL = "https://nakafa.com/developers";
+const API_DOCUMENTATION_URL = `${NAKAFA_BASE_URL}/developers`;
 const v1: AgentHono = new Hono();
 
 /** Protects direct origin access and validates representation metadata. */
@@ -76,7 +78,7 @@ v1.use("*", async (c, next) => {
       detail: "The public edge authentication boundary is unavailable.",
       instance,
       requestId,
-      resolution: "Retry through https://api.nakafa.com later.",
+      resolution: `Retry through ${NAKAFA_API_BASE_URL} later.`,
       status: 503,
       title: "Service unavailable",
       type: "service-unavailable",
@@ -88,7 +90,7 @@ v1.use("*", async (c, next) => {
       detail: "Direct access to this Convex origin is not allowed.",
       instance,
       requestId,
-      resolution: "Send the request through https://api.nakafa.com.",
+      resolution: `Send the request through ${NAKAFA_API_BASE_URL}.`,
       status: 403,
       title: "Forbidden",
       type: "origin-access-denied",
@@ -286,7 +288,7 @@ v1.get("/quran/:surah", (c) =>
               detail: "The requested Quran reference was not found.",
               instance: new URL(c.req.url).pathname,
               requestId: c.get("requestId"),
-              resolution: "Pass a surah number from 1 through 114.",
+              resolution: `Pass a surah number from 1 through ${QURAN_SURAH_COUNT}.`,
               status: 404,
               title: "Quran reference not found",
               type: "quran-reference-not-found",
@@ -314,7 +316,7 @@ v1.all("*", (c) => {
       detail: "The requested public API endpoint does not exist.",
       instance,
       requestId,
-      resolution: "Consult https://api.nakafa.com/openapi.json.",
+      resolution: `Consult ${NAKAFA_API_BASE_URL}/openapi.json.`,
       status: 404,
       title: "Endpoint not found",
       type: "endpoint-not-found",
@@ -360,28 +362,9 @@ function runAgentRequest(
 
 /** Registers the protected read-only API and public OpenAPI contract. */
 export function registerAgentApiRoutes(app: HonoWithConvex<ActionCtx>) {
-  app.get("/openapi.json", (c) => {
-    if (c.req.header("if-none-match") === NAKAFA_OPENAPI_ETAG) {
-      return new Response(null, {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Cache-Control": "public, max-age=3600, s-maxage=3600",
-          ETag: NAKAFA_OPENAPI_ETAG,
-          Vary: "Accept, Accept-Encoding",
-        },
-        status: 304,
-      });
-    }
-    return new Response(NAKAFA_OPENAPI_JSON, {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Cache-Control": "public, max-age=3600, s-maxage=3600",
-        "Content-Type": "application/json; charset=utf-8",
-        ETag: NAKAFA_OPENAPI_ETAG,
-        Vary: "Accept, Accept-Encoding",
-      },
-    });
-  });
-  app.options("/openapi.json", () => agentOptionsResponse());
+  app.get("/openapi.json", (c) =>
+    createOpenApiResponse(c.req.header("if-none-match"))
+  );
+  app.options("/openapi.json", () => createOpenApiOptionsResponse());
   app.route("/v1", v1);
 }
