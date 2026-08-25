@@ -42,7 +42,7 @@ export function buildRootLlmsIndexText() {
     "## Developer resources",
     "",
     `- [Nakafa developer resources](${BASE_URL}/developers/llms.txt): scoped REST, OpenAPI, MCP, CLI, errors, versioning, and rate-limit guidance.`,
-    `- [Nakafa OpenAPI 3.1](${BASE_URL}/openapi.json): typed public API contract.`,
+    `- Nakafa OpenAPI 3.1: \`${BASE_URL}/openapi.json\` for the typed public API contract.`,
     "",
     "## References",
     "",

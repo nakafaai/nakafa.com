@@ -22,7 +22,10 @@ describe("public llms discovery indexes", () => {
     expect(text).toContain(`${BASE_URL}/skill.md`);
     expect(text).toContain("## When to use Nakafa");
     expect(text).toContain(`${BASE_URL}/developers/llms.txt`);
-    expect(text).toContain(`${BASE_URL}/openapi.json`);
+    expect(text).toContain(`Nakafa OpenAPI 3.1: \`${BASE_URL}/openapi.json\``);
+    expect(text).not.toContain(
+      `[Nakafa OpenAPI 3.1](${BASE_URL}/openapi.json)`
+    );
     expect(text).toContain("read-only");
     expect(text).toContain("only when it includes `markdown_url`");
     expect(text).toContain("without requesting private attempt content");
