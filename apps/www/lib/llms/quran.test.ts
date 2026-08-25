@@ -46,7 +46,10 @@ describe("quran llms text", () => {
       "quran/",
       "quran/0",
       "quran/01",
+      "quran/1.5",
       "quran/115",
+      "quran/Infinity",
+      "quran/NaN",
       "quran/not-a-number",
       "quran/1/extra",
     ]) {

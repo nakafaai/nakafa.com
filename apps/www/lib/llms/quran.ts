@@ -1,4 +1,5 @@
 import { QuranSurahNumberSchema } from "@nakafa/aksara-contracts/quran/spec";
+import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
 import { Effect, Option, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
@@ -36,13 +37,8 @@ export function classifyQuranLlmsRoute(
     return Option.some({ kind: "index" });
   }
 
-  const surahNumber = Schema.decodeOption(QuranSurahNumberSchema)(
-    Number(rawSurahNumber)
-  );
-  if (
-    Option.isNone(surahNumber) ||
-    surahNumber.value.toString() !== rawSurahNumber
-  ) {
+  const surahNumber = Option.fromNullOr(parseQuranSurahNumber(rawSurahNumber));
+  if (Option.isNone(surahNumber)) {
     return Option.none();
   }
 
