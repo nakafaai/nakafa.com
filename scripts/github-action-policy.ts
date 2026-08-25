@@ -77,8 +77,8 @@ export const GITHUB_ACTION_REVIEWS: readonly GithubActionReview[] = [
     action: "actions/upload-artifact",
     approvedSha: "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
     expectedTag: "v7.0.1",
-    expectedUsages: 1,
-    reason: "Bundle analysis uses the latest reviewed stable release.",
+    expectedUsages: 2,
+    reason: "Bundle and failure diagnostics use the reviewed stable release.",
   },
 ];
 

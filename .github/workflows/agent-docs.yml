@@ -321,8 +321,20 @@ jobs:
         run: pnpm --filter www exec playwright install --with-deps chromium
 
       - name: Run production browser checks
+        id: production_browser
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: pnpm --filter www test:browser
+
+      - name: Archive production browser failures
+        if: failure() && steps.production_browser.outcome == 'failure'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: www-production-browser-failures-${{ github.run_attempt }}
+          path: .cache/playwright/www
+          compression-level: 0
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 1
 
       - name: Run AFDocs checks
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
