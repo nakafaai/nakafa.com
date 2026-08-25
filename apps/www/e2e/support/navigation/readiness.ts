@@ -33,7 +33,7 @@ const loadSourceRoute = Effect.fn("NakafaE2E.loadNavigationSource")(function* (
       return new NavigationRequestError({
         errorText: readErrorText(error),
         href: targetHref,
-        kind: "network",
+        outcome: "network",
         sourceHref,
         url: sourceHref,
       });
@@ -42,7 +42,7 @@ const loadSourceRoute = Effect.fn("NakafaE2E.loadNavigationSource")(function* (
   if (!response) {
     return yield* new NavigationRequestError({
       href: targetHref,
-      kind: "missing-response",
+      outcome: "missing-response",
       sourceHref,
       url: sourceHref,
     });
@@ -50,7 +50,7 @@ const loadSourceRoute = Effect.fn("NakafaE2E.loadNavigationSource")(function* (
   if (!response.ok()) {
     return yield* new NavigationRequestError({
       href: targetHref,
-      kind: "http",
+      outcome: "http",
       sourceHref,
       status: response.status(),
       url: response.url(),

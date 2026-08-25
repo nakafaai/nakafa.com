@@ -3,8 +3,10 @@ import { Clock, Duration, Effect, Schema } from "effect";
 import { withBrowserContext } from "./browser-context";
 import { seedDeniedAnalyticsConsent } from "./consent";
 import {
-  RequestFailureKindSchema,
+  formatRequestFailure,
+  NEXT_ROUTER_PREFETCH_HEADER,
   type RequestTracker,
+  requestFailureFields,
   type TrackedRequestKind,
   withRequestTracker,
 } from "./request-tracker";
@@ -26,7 +28,7 @@ const createResourceRequestClassifier = (applicationOrigin: string) =>
     if (JAVASCRIPT_RESOURCE_PATTERN.test(resourceUrl.pathname)) {
       return "javascript";
     }
-    if (request.headers()["next-router-prefetch"] !== undefined) {
+    if (request.headers()[NEXT_ROUTER_PREFETCH_HEADER] !== undefined) {
       return "prefetch";
     }
   };
@@ -56,18 +58,12 @@ export class JavascriptResourceResponseError extends Schema.TaggedError<Javascri
 export class JavascriptResourceRequestError extends Schema.TaggedError<JavascriptResourceRequestError>()(
   "JavascriptResourceRequestError",
   {
-    errorText: Schema.optional(Schema.String),
     href: Schema.String,
-    kind: RequestFailureKindSchema,
-    status: Schema.optional(Schema.Finite),
-    url: Schema.String,
+    ...requestFailureFields,
   }
 ) {
   get message() {
-    const status = this.status === undefined ? "" : ` status=${this.status}`;
-    const errorText =
-      this.errorText === undefined ? "" : ` errorText=${this.errorText}`;
-    return `JavaScript resource request failed: kind=${this.kind} href=${this.href} url=${this.url}${status}${errorText}`;
+    return `JavaScript resource request failed: href=${this.href} ${formatRequestFailure(this)}`;
   }
 }
 

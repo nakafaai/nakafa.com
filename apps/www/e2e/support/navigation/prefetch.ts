@@ -1,13 +1,13 @@
 import type { Frame, Page, Request } from "@playwright/test";
 import { Clock, Duration, Effect } from "effect";
 import {
+  NEXT_ROUTER_PREFETCH_HEADER,
   type RequestTracker,
   type TrackedRequestKind,
   withRequestTracker,
 } from "../request-tracker";
 import { NavigationReadinessTimeout, NavigationRequestError } from "./failure";
 
-const NEXT_ROUTER_PREFETCH_HEADER = "next-router-prefetch";
 const PREFETCH_POLL_MILLISECONDS = 25;
 
 const waitForTargetPrefetch = Effect.fn("NakafaE2E.waitForTargetPrefetch")(
@@ -39,8 +39,11 @@ const waitForTargetPrefetch = Effect.fn("NakafaE2E.waitForTargetPrefetch")(
       if (observedAt - startedAt > timeoutMilliseconds) {
         return yield* new NavigationReadinessTimeout({
           href: targetHref,
+          pendingPrefetches: tracker.pendingRequests("prefetch"),
           phase: "prefetch",
+          prefetchObserved: tracker.hasObserved("prefetch"),
           sourceHref,
+          successfulPrefetches: tracker.successfulCount("prefetch"),
           timeoutMilliseconds,
         });
       }

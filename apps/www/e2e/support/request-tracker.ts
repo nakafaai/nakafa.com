@@ -6,35 +6,87 @@ export const TrackedRequestKindSchema = Schema.Literals([
   "prefetch",
 ]);
 
+export const NEXT_ROUTER_PREFETCH_HEADER = "next-router-prefetch";
+export const NEXT_ROUTER_SEGMENT_PREFETCH_HEADER =
+  "next-router-segment-prefetch";
+
 export type TrackedRequestKind = Schema.Schema.Type<
   typeof TrackedRequestKindSchema
 >;
 
-export const RequestFailureKindSchema = Schema.Literals([
+export const RequestOutcomeSchema = Schema.Literals([
   "http",
   "missing-response",
   "network",
 ]);
 
-export const RequestFailureSchema = Schema.Struct({
-  errorText: Schema.optional(Schema.String),
-  kind: RequestFailureKindSchema,
-  status: Schema.optional(Schema.Finite),
+export const TrackedRequestSchema = Schema.Struct({
+  prefetchHeader: Schema.optional(Schema.String),
+  segmentPrefetchHeader: Schema.optional(Schema.String),
   url: Schema.String,
 });
 
+export type TrackedRequest = Schema.Schema.Type<typeof TrackedRequestSchema>;
+
+export const requestFailureFields = {
+  errorText: Schema.optional(Schema.String),
+  outcome: RequestOutcomeSchema,
+  prefetchHeader: Schema.optional(Schema.String),
+  segmentPrefetchHeader: Schema.optional(Schema.String),
+  status: Schema.optional(Schema.Finite),
+  url: Schema.String,
+};
+
+export const RequestFailureSchema = Schema.Struct(requestFailureFields);
+
 export type RequestFailure = Schema.Schema.Type<typeof RequestFailureSchema>;
+
+export const formatRequestFailure = (failure: RequestFailure) => {
+  const prefetchHeader =
+    failure.prefetchHeader === undefined
+      ? ""
+      : ` prefetchHeader=${failure.prefetchHeader}`;
+  const segmentPrefetchHeader =
+    failure.segmentPrefetchHeader === undefined
+      ? ""
+      : ` segmentPrefetchHeader=${failure.segmentPrefetchHeader}`;
+  const status =
+    failure.status === undefined ? "" : ` status=${failure.status}`;
+  const errorText =
+    failure.errorText === undefined ? "" : ` errorText=${failure.errorText}`;
+  return `outcome=${failure.outcome} url=${failure.url}${prefetchHeader}${segmentPrefetchHeader}${status}${errorText}`;
+};
 
 export interface RequestTracker {
   readonly getFailure: () => RequestFailure | undefined;
   readonly hasObserved: (kind: TrackedRequestKind) => boolean;
   readonly pendingCount: number;
+  readonly pendingRequests: (
+    kind: TrackedRequestKind
+  ) => readonly TrackedRequest[];
   readonly reset: () => void;
   readonly revision: number;
   readonly successfulCount: (kind: TrackedRequestKind) => number;
 }
 
 type RequestClassifier = (request: Request) => TrackedRequestKind | undefined;
+
+interface PendingRequest {
+  readonly details: TrackedRequest;
+  readonly kind: TrackedRequestKind;
+}
+
+const readTrackedRequest = (request: Request): TrackedRequest => {
+  const headers = request.headers();
+  const prefetchHeader = headers[NEXT_ROUTER_PREFETCH_HEADER];
+  const segmentPrefetchHeader = headers[NEXT_ROUTER_SEGMENT_PREFETCH_HEADER];
+
+  return {
+    ...(prefetchHeader === undefined ? {} : { prefetchHeader }),
+    ...(segmentPrefetchHeader === undefined ? {} : { segmentPrefetchHeader }),
+    url: request.url(),
+  };
+};
 
 /** Owns one classified Playwright request lifecycle and its truthful outcome. */
 export const withRequestTracker = Effect.fn("NakafaE2E.withRequestTracker")(
@@ -46,7 +98,7 @@ export const withRequestTracker = Effect.fn("NakafaE2E.withRequestTracker")(
     return yield* Effect.acquireUseRelease(
       Effect.sync(() => {
         const observedKinds = new Set<TrackedRequestKind>();
-        const pendingRequests = new Map<Request, TrackedRequestKind>();
+        const pendingRequests = new Map<Request, PendingRequest>();
         const successfulCounts = new Map<TrackedRequestKind, number>();
         let failure: RequestFailure | undefined;
         let revision = 0;
@@ -64,55 +116,62 @@ export const withRequestTracker = Effect.fn("NakafaE2E.withRequestTracker")(
             return;
           }
           observedKinds.add(requestKind);
-          pendingRequests.set(request, requestKind);
+          pendingRequests.set(request, {
+            details: readTrackedRequest(request),
+            kind: requestKind,
+          });
           revision += 1;
         };
         const settleRequest = (request: Request) => {
-          const requestKind = pendingRequests.get(request);
-          if (!requestKind) {
+          const pendingRequest = pendingRequests.get(request);
+          if (!pendingRequest) {
             return;
           }
           pendingRequests.delete(request);
           revision += 1;
-          return requestKind;
+          return pendingRequest;
         };
         const handleRequestFailed = (request: Request) => {
-          if (!settleRequest(request)) {
+          const pendingRequest = settleRequest(request);
+          if (!pendingRequest) {
             return;
           }
           const requestFailure = request.failure();
           failure ??= requestFailure
             ? {
+                ...pendingRequest.details,
                 errorText: requestFailure.errorText,
-                kind: "network",
-                url: request.url(),
+                outcome: "network",
               }
-            : { kind: "network", url: request.url() };
+            : {
+                ...pendingRequest.details,
+                outcome: "network",
+              };
         };
         const handleRequestFinished = (request: Request) => {
-          const requestKind = settleRequest(request);
-          if (!requestKind) {
+          const pendingRequest = settleRequest(request);
+          if (!pendingRequest) {
             return;
           }
           const response = request.existingResponse();
           if (!response) {
             failure ??= {
-              kind: "missing-response",
-              url: request.url(),
+              ...pendingRequest.details,
+              outcome: "missing-response",
             };
             return;
           }
           if (!response.ok()) {
             failure ??= {
-              kind: "http",
+              ...pendingRequest.details,
+              outcome: "http",
               status: response.status(),
-              url: request.url(),
             };
             return;
           }
           successfulCounts.set(
-            requestKind,
-            (successfulCounts.get(requestKind) ?? 0) + 1
+            pendingRequest.kind,
+            (successfulCounts.get(pendingRequest.kind) ?? 0) + 1
           );
         };
 
@@ -137,6 +196,11 @@ export const withRequestTracker = Effect.fn("NakafaE2E.withRequestTracker")(
             },
             hasObserved(kind: TrackedRequestKind) {
               return observedKinds.has(kind);
+            },
+            pendingRequests(kind: TrackedRequestKind) {
+              return Array.from(pendingRequests.values())
+                .filter((request) => request.kind === kind)
+                .map((request) => request.details);
             },
             get pendingCount() {
               return pendingRequests.size;
