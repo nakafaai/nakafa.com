@@ -159,6 +159,49 @@ Fragment child with <InlineMath math="x" />.
   );
 
   it.live(
+    "projects deterministic trigonometry readouts without evaluating expressions",
+    () =>
+      Effect.gen(function* () {
+        const markdown = yield* projectMdxForAgentMarkdown(`
+<Triangle angle={30} title="Thirty degrees" description="A right triangle" />
+
+<UnitCircle title="Default angle" description="The default unit circle" />
+
+<Triangle angle={90} title="Undefined tangent" description="A vertical ray" />
+
+<UnitCircle
+  angle={30}
+  trigValues={{ sin: "1/2", cos: "sqrt(3)/2", tan: "1/sqrt(3)" }}
+  title="Exact values"
+  description="Authored overrides"
+/>
+
+<Triangle
+  angle={angleFromRegistry}
+  title="Runtime expression"
+  description="An expression the projection must not execute"
+/>
+
+<Triangle
+  angle={1e999}
+  title="Non-finite literal"
+  description="A literal outside the finite numeric range"
+/>
+`);
+
+        expect(markdown).toContain(
+          "Visible readout: Sin (30°) = 0.50Cos (30°) = 0.87Tan (30°) = 0.58"
+        );
+        expect(markdown).toContain(
+          "Visible readout: Sin (45°) = 0.71Cos (45°) = 0.71Tan (45°) = 1.00"
+        );
+        expect(markdown.match(/Visible readout:/g)).toHaveLength(2);
+        expect(markdown).toContain("angle: angleFromRegistry");
+        expect(markdown).toContain('sin: "1/2"');
+      })
+  );
+
+  it.live(
     "keeps unknown instructional components bounded instead of using a hardcoded allowlist",
     () =>
       Effect.gen(function* () {

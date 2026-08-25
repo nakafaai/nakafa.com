@@ -16,10 +16,8 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Label as LabelUi } from "@repo/design-system/components/ui/label";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import {
-  getCos,
   getRadians,
-  getSin,
-  getTan,
+  getTrigonometricReadout,
 } from "@repo/design-system/lib/geometry/angles";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -76,6 +74,7 @@ function Content({
   const t = useTranslations("Common");
   const [angleOverride, setAngleOverride] = useState<number | null>(null);
   const angleValue = angleOverride ?? angle;
+  const readout = getTrigonometricReadout(angleValue);
 
   return (
     <>
@@ -92,16 +91,13 @@ function Content({
         <div className="flex w-full flex-col gap-4">
           <div className="flex flex-wrap items-center justify-center gap-2 px-6">
             <Badge className="font-mono" variant="outline">
-              Sin ({angleValue}°) = {getSin(angleValue).toFixed(2)}
+              Sin ({angleValue}°) = {readout.sin}
             </Badge>
             <Badge className="font-mono" variant="outline">
-              Cos ({angleValue}°) = {getCos(angleValue).toFixed(2)}
+              Cos ({angleValue}°) = {readout.cos}
             </Badge>
             <Badge className="font-mono" variant="outline">
-              Tan ({angleValue}°) ={" "}
-              {Number.isFinite(getTan(angleValue))
-                ? getTan(angleValue).toFixed(2)
-                : t("undefined")}
+              Tan ({angleValue}°) = {readout.tan ?? t("undefined")}
             </Badge>
           </div>
 

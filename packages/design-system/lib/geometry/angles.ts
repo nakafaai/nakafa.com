@@ -2,6 +2,12 @@ const DEGREES_IN_HALF_CIRCLE = 180;
 const DEGREES_TO_RADIANS = Math.PI / DEGREES_IN_HALF_CIRCLE;
 const EPSILON = 1e-10;
 
+interface TrigonometricReadoutOverrides {
+  readonly cos?: string;
+  readonly sin?: string;
+  readonly tan?: string;
+}
+
 /** Converts a degree value to radians for JavaScript trigonometry APIs. */
 export function getRadians(angle: number) {
   return angle * DEGREES_TO_RADIANS;
@@ -23,4 +29,20 @@ export function getTan(angle: number) {
   return Math.abs(Math.cos(getRadians(angle))) < EPSILON
     ? Number.POSITIVE_INFINITY
     : Math.tan(getRadians(angle));
+}
+
+/** Formats the values shown by Nakafa's interactive trigonometry controls. */
+export function getTrigonometricReadout(
+  angle: number,
+  overrides?: TrigonometricReadoutOverrides
+) {
+  const tangent = getTan(angle);
+
+  return {
+    cos: overrides?.cos ?? getCos(angle).toFixed(2),
+    sin: overrides?.sin ?? getSin(angle).toFixed(2),
+    tan:
+      overrides?.tan ??
+      (Number.isFinite(tangent) ? tangent.toFixed(2) : undefined),
+  };
 }

@@ -1,4 +1,5 @@
 import { formatCodeBlockData } from "@repo/contents/_types/llms/code";
+import { getTrigonometricReadout } from "@repo/design-system/lib/geometry/angles";
 import { preprocessLaTeX } from "@repo/design-system/lib/markdown/math";
 import { Effect, Schema } from "effect";
 import type { Parent, Root, RootContent } from "mdast";
@@ -26,6 +27,10 @@ const INLINE_MATH_COMPONENT_PATTERN =
   /<InlineMath\s+math=(?:"[^"]*"|'[^']*'|\{[^}]*\})\s*\/?>/g;
 const INLINE_MATH_MARKDOWN_PATTERN = /\$\$[\s\S]*?\$\$/g;
 const JSX_SPACING_EXPRESSION_PATTERN = /\{\s*["'`]([^"'`}]*)["'`]\s*\}/g;
+const NUMERIC_LITERAL_PATTERN =
+  /^[+-]?(?:(?:\d+(?:\.\d*)?)|(?:\.\d+))(?:e[+-]?\d+)?$/i;
+const TRIGONOMETRY_COMPONENTS = new Set(["Triangle", "UnitCircle"]);
+const DEFAULT_TRIGONOMETRY_ANGLE = 45;
 const MdxPositionSchema = Schema.Struct({
   start: Schema.Struct({
     offset: Schema.Finite,
@@ -181,12 +186,64 @@ function renderGenericComponentRows(
     rows.push(...props);
   }
 
+  const visibleReadout = renderTrigonometricReadout(name, attributes);
+  if (visibleReadout) {
+    rows.push(visibleReadout);
+  }
+
   if (children) {
     rows.push("Children:");
     rows.push(limitText(children, COMPONENT_CHILD_LIMIT));
   }
 
   return rows;
+}
+
+/** Projects the deterministic badge row rendered by trigonometry components. */
+function renderTrigonometricReadout(name: string, attributes: MdxAttribute[]) {
+  if (!TRIGONOMETRY_COMPONENTS.has(name)) {
+    return "";
+  }
+
+  if (hasAttribute(attributes, "trigValues")) {
+    return "";
+  }
+
+  const angle = readTrigonometricAngle(attributes);
+  if (angle === null) {
+    return "";
+  }
+
+  const readout = getTrigonometricReadout(angle);
+  if (readout.tan === undefined) {
+    return "";
+  }
+
+  return `Visible readout: Sin (${angle}°) = ${readout.sin}Cos (${angle}°) = ${readout.cos}Tan (${angle}°) = ${readout.tan}`;
+}
+
+/** Reads a literal angle without evaluating arbitrary authored expressions. */
+function readTrigonometricAngle(attributes: MdxAttribute[]) {
+  for (const attribute of attributes) {
+    if (readAttributeName(attribute) !== "angle") {
+      continue;
+    }
+
+    const value = readAttributeValue(attribute).trim();
+    if (!NUMERIC_LITERAL_PATTERN.test(value)) {
+      return null;
+    }
+
+    const angle = Number(value);
+    return Number.isFinite(angle) ? angle : null;
+  }
+
+  return DEFAULT_TRIGONOMETRY_ANGLE;
+}
+
+/** Checks whether an authored component explicitly provides one prop. */
+function hasAttribute(attributes: MdxAttribute[], name: string) {
+  return attributes.some((attribute) => readAttributeName(attribute) === name);
 }
 
 /** Formats one MDX attribute row unless the caller intentionally omits it. */
