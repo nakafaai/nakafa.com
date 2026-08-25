@@ -10,11 +10,10 @@ import {
   insertRuntimeArticles,
   testArticleProjection,
 } from "@repo/backend/test/content-runtime";
+import { ARTICLE_PUBLICATION_CURSOR_PREFIX } from "@repo/contents/_types/publication";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
-
-const PUBLICATION_CURSOR_PATTERN = /^article-publication:v1:/;
 
 describe("contentRelease/article/order", () => {
   it("returns one full page without a false split boundary", async () => {
@@ -43,7 +42,9 @@ describe("contentRelease/article/order", () => {
     expect(first.result.isDone).toBe(false);
     expect(first.result.pageStatus).toBeUndefined();
     expect(first.result.splitCursor).toBeUndefined();
-    expect(first.result.continueCursor).toMatch(PUBLICATION_CURSOR_PATTERN);
+    expect(
+      first.result.continueCursor.startsWith(ARTICLE_PUBLICATION_CURSOR_PREFIX)
+    ).toBe(true);
     expect(first.metrics.documentsRead.used).toBeLessThanOrEqual(
       PUBLICATION_SCAN_LIMIT
     );
@@ -93,7 +94,11 @@ describe("contentRelease/article/order", () => {
     expect(rowBound.result.page).toMatchObject([
       { contentKey: testArticleProjection(2).contentKey },
     ]);
-    expect(rowBound.result.continueCursor).toMatch(PUBLICATION_CURSOR_PATTERN);
+    expect(
+      rowBound.result.continueCursor.startsWith(
+        ARTICLE_PUBLICATION_CURSOR_PREFIX
+      )
+    ).toBe(true);
     expect(rowBound.metrics.documentsRead.used).toBeLessThanOrEqual(4);
 
     const byteBound = await t.query(async (ctx) => {
@@ -113,8 +118,16 @@ describe("contentRelease/article/order", () => {
       pageStatus: "SplitRequired",
       page: [{ contentKey: testArticleProjection(2).contentKey }],
     });
-    expect(byteBound.result.continueCursor).toMatch(PUBLICATION_CURSOR_PATTERN);
-    expect(byteBound.result.splitCursor).toMatch(PUBLICATION_CURSOR_PATTERN);
+    expect(
+      byteBound.result.continueCursor.startsWith(
+        ARTICLE_PUBLICATION_CURSOR_PREFIX
+      )
+    ).toBe(true);
+    expect(
+      byteBound.result.splitCursor?.startsWith(
+        ARTICLE_PUBLICATION_CURSOR_PREFIX
+      )
+    ).toBe(true);
     expect(byteBound.metrics.bytesRead.used).toBeGreaterThan(1);
     expect(byteBound.metrics.databaseQueries.used).toBe(2);
     expect(byteBound.metrics.documentsRead.used).toBe(2);

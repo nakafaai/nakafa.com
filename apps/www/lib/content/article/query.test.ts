@@ -2,11 +2,13 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { encodeArticlePublicationCursor } from "@repo/contents/_types/publication";
 import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   getArticleNextHref,
   readArticlePageCursor,
+  shouldResetArticlePublicationCursor,
   stripArticlePagination,
 } from "@/lib/content/article/query";
 
@@ -66,6 +68,46 @@ describe("article catalog query", () => {
     expect(
       stripArticlePagination("?cursor=next&manifest=source&release=source")
     ).toBe("");
+  });
+
+  it("resets only predecessor cursors on article category pages", () => {
+    const identity = {
+      expectedManifestHash: manifest,
+      expectedReleaseId: releaseId,
+    };
+    const current = encodeArticlePublicationCursor(
+      JSON.stringify([
+        "en",
+        "politics",
+        "2026-08-22",
+        "articles/politics/current",
+        1,
+        "article-id",
+      ])
+    );
+
+    expect(
+      shouldResetArticlePublicationCursor({
+        ...identity,
+        cursor: "native-predecessor-position",
+      })
+    ).toBe(true);
+    expect(
+      shouldResetArticlePublicationCursor({ ...identity, cursor: current })
+    ).toBe(false);
+    expect(
+      shouldResetArticlePublicationCursor({
+        ...identity,
+        cursor: encodeArticlePublicationCursor("{"),
+      })
+    ).toBe(false);
+    expect(
+      shouldResetArticlePublicationCursor({
+        cursor: null,
+        expectedManifestHash: null,
+        expectedReleaseId: null,
+      })
+    ).toBe(false);
   });
 
   it("builds encoded next links only for complete page identities", () => {

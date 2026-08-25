@@ -4,10 +4,14 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { ArticleCategorySchema } from "@nakafa/aksara-contracts/projection/article";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
+import {
+  ARTICLE_PUBLICATION_CURSOR_PREFIX,
+  encodeArticlePublicationCursor,
+  hasArticlePublicationCursorPrefix,
+} from "@repo/contents/_types/publication";
 import { convexToJson } from "convex/values";
 import { Effect, Schema } from "effect";
 
-const PUBLICATION_CURSOR_PREFIX = "article-publication:v1:";
 const PublicationCursorSchema = Schema.Tuple([
   AppLocaleSchema,
   ArticleCategorySchema,
@@ -24,10 +28,10 @@ export const decodePublicationCursor = Effect.fn(
   if (cursor === null) {
     return null;
   }
-  if (!cursor.startsWith(PUBLICATION_CURSOR_PREFIX)) {
+  if (!hasArticlePublicationCursorPrefix(cursor)) {
     return yield* invalidCursor("unsupported format");
   }
-  const payload = cursor.slice(PUBLICATION_CURSOR_PREFIX.length);
+  const payload = cursor.slice(ARTICLE_PUBLICATION_CURSOR_PREFIX.length);
   const parsed = yield* Effect.try({
     try: (): unknown => JSON.parse(payload),
     catch: () => invalidCursorError("invalid position"),
@@ -38,15 +42,10 @@ export const decodePublicationCursor = Effect.fn(
   return JSON.stringify(convexToJson([...key]));
 });
 
-/** Prefixes one raw convex-helpers cursor with its durable format version. */
-export function encodePublicationCursor(cursor: string) {
-  return `${PUBLICATION_CURSOR_PREFIX}${cursor}`;
-}
-
 /** Encodes one shared merged-index position from a verified catalog row. */
 export function articlePublicationCursor(row: Doc<"articleCatalog">) {
   const publicationDate = "datePublished" in row ? row.datePublished : row.date;
-  return encodePublicationCursor(
+  return encodeArticlePublicationCursor(
     JSON.stringify(
       convexToJson([
         row.appLocale,

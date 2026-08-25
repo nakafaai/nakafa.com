@@ -6,12 +6,14 @@ import type {
 import {
   articlePublicationCursor,
   decodePublicationCursor,
-  encodePublicationCursor,
 } from "@repo/backend/convex/contentRelease/article/cursor";
 import { readArticleDates } from "@repo/backend/convex/contentRelease/article/dates";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import schema from "@repo/backend/convex/schema";
-import { comparePublicationDates } from "@repo/contents/_types/publication";
+import {
+  comparePublicationDates,
+  encodeArticlePublicationCursor,
+} from "@repo/contents/_types/publication";
 import type { PaginationOptions } from "convex/server";
 import type { Value } from "convex/values";
 import {
@@ -161,11 +163,11 @@ const paginatePublicationStreams = Effect.fn(
   if (scanned.page.length <= options.numItems) {
     return {
       ...scanned,
-      continueCursor: encodePublicationCursor(scanned.continueCursor),
+      continueCursor: encodeArticlePublicationCursor(scanned.continueCursor),
       ...(scanned.splitCursor == null
         ? {}
         : {
-            splitCursor: encodePublicationCursor(scanned.splitCursor),
+            splitCursor: encodeArticlePublicationCursor(scanned.splitCursor),
           }),
     };
   }
@@ -186,7 +188,7 @@ const paginatePublicationStreams = Effect.fn(
     ...(scanned.splitCursor == null
       ? {}
       : {
-          splitCursor: encodePublicationCursor(scanned.splitCursor),
+          splitCursor: encodeArticlePublicationCursor(scanned.splitCursor),
         }),
   };
 });

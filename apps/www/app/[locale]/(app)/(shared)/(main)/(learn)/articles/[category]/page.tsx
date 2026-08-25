@@ -32,6 +32,7 @@ import {
 import {
   getArticleNextHref,
   readArticlePageCursor,
+  shouldResetArticlePublicationCursor,
 } from "@/lib/content/article/query";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { readArticlePreviewStaticParams } from "@/lib/content/preview/route";
@@ -153,8 +154,11 @@ async function PageContent({
   if (Option.isNone(cursor)) {
     notFound();
   }
-  const catalog = await getPublishedCategoryPage(model, cursor.value);
   const categoryPath = `/articles/${model.route}`;
+  if (shouldResetArticlePublicationCursor(cursor.value)) {
+    redirect(`/${locale}${categoryPath}`);
+  }
+  const catalog = await getPublishedCategoryPage(model, cursor.value);
   if (catalog.stale) {
     redirect(`/${locale}${categoryPath}`);
   }

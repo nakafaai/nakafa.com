@@ -2,6 +2,7 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { hasArticlePublicationCursorPrefix } from "@repo/contents/_types/publication";
 import { Option, Schema } from "effect";
 import type { ArticlePageCursor } from "@/lib/content/article/catalog";
 
@@ -60,6 +61,12 @@ export function readArticlePageCursor(
       expectedManifestHash: query.manifest,
       expectedReleaseId: query.release,
     }))
+  );
+}
+/** Restarts only unversioned predecessor pagination on article category pages. */
+export function shouldResetArticlePublicationCursor(page: ArticlePageCursor) {
+  return (
+    page.cursor !== null && !hasArticlePublicationCursorPrefix(page.cursor)
   );
 }
 /** Builds the next release-bound catalog URL when another page exists. */

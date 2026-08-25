@@ -1,6 +1,8 @@
 import { DateOnlySchema } from "@nakafa/aksara-contracts/date";
 import {
   comparePublicationDates,
+  encodeArticlePublicationCursor,
+  hasArticlePublicationCursorPrefix,
   normalizePublicationDates,
 } from "@repo/contents/_types/publication";
 import { describe, expect, it } from "vitest";
@@ -9,6 +11,14 @@ const firstPublished = DateOnlySchema.make("2025-06-05");
 const laterModified = DateOnlySchema.make("2026-08-22");
 
 describe("normalizePublicationDates", () => {
+  it("owns the article publication cursor wire prefix", () => {
+    const cursor = encodeArticlePublicationCursor("current-position");
+
+    expect(cursor).toBe("article-publication:v1:current-position");
+    expect(hasArticlePublicationCursorPrefix(cursor)).toBe(true);
+    expect(hasArticlePublicationCursorPrefix("native-position")).toBe(false);
+  });
+
   it("maps an exact legacy date to the current publication field", () => {
     expect(normalizePublicationDates({ date: firstPublished })).toEqual({
       datePublished: firstPublished,
