@@ -86,7 +86,7 @@ describe("GitHub Action policy", () => {
       true
     );
     expect(problems.some((problem) => problem.includes("cache"))).toBe(true);
-    expect(problems.some((problem) => problem.includes("expected 3"))).toBe(
+    expect(problems.some((problem) => problem.includes("expected 4"))).toBe(
       true
     );
   });
