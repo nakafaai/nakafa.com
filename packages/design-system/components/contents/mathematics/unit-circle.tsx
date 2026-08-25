@@ -92,10 +92,10 @@ function Content({
           <div className="flex flex-wrap items-center justify-center gap-2 px-6">
             <Badge className="font-mono" variant="outline">
               Sin ({angleValue}°) = {readout.sin}
-            </Badge>
+            </Badge>{" "}
             <Badge className="font-mono" variant="outline">
               Cos ({angleValue}°) = {readout.cos}
-            </Badge>
+            </Badge>{" "}
             <Badge className="font-mono" variant="outline">
               Tan ({angleValue}°) = {readout.tan ?? t("undefined")}
             </Badge>
