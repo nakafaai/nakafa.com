@@ -63,6 +63,7 @@ export const claimUnchangedReadModels = Effect.fn(
     yield* Effect.promise(() =>
       ctx.db.patch("contentReleases", release._id, {
         articleIndex: completedIndex,
+        articleRouteIndex: completedIndex,
         articleSyncedAt: now,
         updatedAt: now,
       })

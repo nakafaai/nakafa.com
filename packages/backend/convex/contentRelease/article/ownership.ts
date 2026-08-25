@@ -43,29 +43,36 @@ const loadCategory = Effect.fn("contentRelease.loadArticleCategory")(function* (
   appLocale: AppLocale,
   category: string
 ) {
-  return yield* Effect.promise(() =>
+  const categories = yield* Effect.promise(() =>
     ctx.db
       .query("articleCategories")
       .withIndex("by_appLocale_and_category", (index) =>
         index.eq("appLocale", appLocale).eq("category", category)
       )
-      .unique()
+      .take(2)
   );
-});
-
-/** Loads the sole active category claiming one localized route. */
-const loadCategoryRoute = Effect.fn("contentRelease.loadArticleCategoryRoute")(
-  function* (ctx: MutationCtx, appLocale: AppLocale, route: ArticleRouteSlug) {
-    return yield* Effect.promise(() =>
-      ctx.db
-        .query("articleCategories")
-        .withIndex("by_appLocale_and_route", (index) =>
-          index.eq("appLocale", appLocale).eq("route", route)
-        )
-        .unique()
+  if (categories.length > 1) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Article category ${appLocale}/${category} has multiple active owners.`
     );
   }
-);
+  return categories[0] ?? null;
+});
+
+/** Loads at most two explicit category owners for one localized route. */
+const loadCategoryRoutes = Effect.fn(
+  "contentRelease.loadArticleCategoryRoutes"
+)(function* (ctx: MutationCtx, appLocale: AppLocale, route: ArticleRouteSlug) {
+  return yield* Effect.promise(() =>
+    ctx.db
+      .query("articleCategories")
+      .withIndex("by_appLocale_and_route", (index) =>
+        index.eq("appLocale", appLocale).eq("route", route)
+      )
+      .take(2)
+  );
+});
 
 /** Recovers one signed category route from an immutable article public path. */
 const decodeCategoryRoute = Effect.fn("contentRelease.decodeCategoryRoute")(
@@ -90,7 +97,7 @@ const decodeCategoryRoute = Effect.fn("contentRelease.decodeCategoryRoute")(
 );
 
 /** Resolves route ownership for bounded predecessor rows without stored routes. */
-const loadBridgeRoute = Effect.fn("contentRelease.loadBridgeArticleRoute")(
+const loadBridgeRoutes = Effect.fn("contentRelease.loadBridgeArticleRoutes")(
   function* (ctx: MutationCtx, appLocale: AppLocale, route: ArticleRouteSlug) {
     const categories = yield* Effect.promise(() =>
       ctx.db
@@ -106,26 +113,25 @@ const loadBridgeRoute = Effect.fn("contentRelease.loadBridgeArticleRoute")(
         `Article route verification accepts at most ${CONTENT_BUCKET_SIZE} predecessor categories per locale.`
       );
     }
-    for (const category of categories) {
-      const representative = yield* loadArticle(
-        ctx,
-        category.contentKey,
-        category.appLocale
-      );
-      if (!representative) {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_INTEGRITY",
-          `Article category ${category.appLocale}/${category.category} lost its predecessor representative.`
+    return yield* Effect.filter(categories, (category) =>
+      Effect.gen(function* () {
+        const representative = yield* loadArticle(
+          ctx,
+          category.contentKey,
+          category.appLocale
         );
-      }
-      const predecessorRoute = yield* decodeCategoryRoute(
-        representative.publicPath
-      );
-      if (predecessorRoute === route) {
-        return category;
-      }
-    }
-    return null;
+        if (!representative) {
+          return yield* releaseFail(
+            "CONTENT_RELEASE_INTEGRITY",
+            `Article category ${category.appLocale}/${category.category} lost its predecessor representative.`
+          );
+        }
+        const predecessorRoute = yield* decodeCategoryRoute(
+          representative.publicPath
+        );
+        return predecessorRoute === route;
+      })
+    );
   }
 );
 
@@ -145,27 +151,14 @@ function categoryRow(article: ArticleEntry, route: ArticleRouteSlug) {
   };
 }
 
-/** Claims one category identity while rejecting active route contradictions. */
-export const writeCategory = Effect.fn("contentRelease.writeArticleCategory")(
+/** Stages one category identity before final release route validation. */
+export const stageCategory = Effect.fn("contentRelease.stageArticleCategory")(
   function* (ctx: MutationCtx, article: ArticleEntry, route: ArticleRouteSlug) {
     const existing = yield* loadCategory(
       ctx,
       article.appLocale,
       article.category
     );
-    const [routeOwner, bridgeRouteOwner] = yield* Effect.all([
-      loadCategoryRoute(ctx, article.appLocale, route),
-      loadBridgeRoute(ctx, article.appLocale, route),
-    ]);
-    const conflictingOwner = [routeOwner, bridgeRouteOwner].find(
-      (owner) => owner !== null && owner.category !== article.category
-    );
-    if (conflictingOwner) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Article category route ${article.appLocale}/${route} is already claimed by active category ${conflictingOwner.category}.`
-      );
-    }
     if (
       existing?.sequence === article.sequence &&
       (existing.title !== article.categoryTitle ||
@@ -210,6 +203,37 @@ export const writeCategory = Effect.fn("contentRelease.writeArticleCategory")(
   }
 );
 
+/** Validates one staged category route against the effective final model. */
+export const validateCategoryRoute = Effect.fn(
+  "contentRelease.validateArticleCategoryRoute"
+)(function* (
+  ctx: MutationCtx,
+  appLocale: AppLocale,
+  category: string,
+  route: ArticleRouteSlug
+) {
+  const categoryOwner = yield* loadCategory(ctx, appLocale, category);
+  if (categoryOwner?.route !== route) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Article category ${appLocale}/${category} lost its final route ${route}.`
+    );
+  }
+  const [routeOwners, bridgeRouteOwners] = yield* Effect.all([
+    loadCategoryRoutes(ctx, appLocale, route),
+    loadBridgeRoutes(ctx, appLocale, route),
+  ]);
+  const conflictingOwner = [...routeOwners, ...bridgeRouteOwners].find(
+    (owner) => owner.category !== category
+  );
+  if (routeOwners.length !== 1 || conflictingOwner) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Article category route ${appLocale}/${route} conflicts with active category ${conflictingOwner?.category ?? category}.`
+    );
+  }
+});
+
 /** Rebuilds one category after its selected article moves or disappears. */
 export const reconcileCategory = Effect.fn(
   "contentRelease.reconcileArticleCategory"
@@ -222,7 +246,7 @@ export const reconcileCategory = Effect.fn(
   );
   if (representative) {
     const route = yield* decodeCategoryRoute(representative.publicPath);
-    yield* writeCategory(ctx, representative, route);
+    yield* stageCategory(ctx, representative, route);
     return;
   }
   const existing = yield* loadCategory(ctx, appLocale, category);

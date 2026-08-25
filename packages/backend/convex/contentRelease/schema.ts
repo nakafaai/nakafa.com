@@ -172,6 +172,7 @@ const tables = {
     abortedRows: v.optional(v.number()),
     abortingAt: v.optional(v.number()),
     articleIndex: v.optional(v.number()),
+    articleRouteIndex: v.optional(v.number()),
     articleSyncedAt: v.optional(v.number()),
     baseFamilies: v.array(contentFamilyValidator),
     cleanupAt: v.optional(v.number()),

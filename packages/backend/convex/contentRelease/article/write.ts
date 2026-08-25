@@ -5,7 +5,7 @@ import { adjustArticleBucket } from "@repo/backend/convex/contentRelease/article
 import {
   loadArticle,
   reconcileCategory,
-  writeCategory,
+  stageCategory,
 } from "@repo/backend/convex/contentRelease/article/ownership";
 import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
 import {
@@ -106,7 +106,7 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
     );
     yield* Effect.promise(() => ctx.db.insert("articleCatalog", entry));
   }
-  yield* writeCategory(ctx, entry, projection.categoryRouteSlug);
+  yield* stageCategory(ctx, entry, projection.categoryRouteSlug);
 });
 
 /** Deletes one active article row and reconciles its former category. */
