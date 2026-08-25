@@ -1,3 +1,6 @@
+import { NAKAFA_MCP_SERVER_VERSION } from "@repo/backend/agent/mcp/identity";
+import { NAKAFA_MCP_RECOMMENDED_ENDPOINT } from "@repo/contents/_lib/agent/constants";
+
 export const NAKAFA_MCP_REGISTRY_MANIFEST = {
   $schema:
     "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
@@ -7,7 +10,7 @@ export const NAKAFA_MCP_REGISTRY_MANIFEST = {
   remotes: [
     {
       type: "streamable-http",
-      url: "https://mcp.nakafa.com/mcp",
+      url: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
     },
   ],
   repository: {
@@ -15,6 +18,6 @@ export const NAKAFA_MCP_REGISTRY_MANIFEST = {
     url: "https://github.com/nakafaai/nakafa.com",
   },
   title: "Nakafa",
-  version: "1.0.0",
-  websiteUrl: "https://nakafa.com/developers",
+  version: NAKAFA_MCP_SERVER_VERSION,
+  websiteUrl: "https://nakafa.com",
 };

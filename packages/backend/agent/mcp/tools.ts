@@ -1,4 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/server";
+import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import { getNakafaContent } from "@repo/backend/agent/content";
 import { decodeAgentInput } from "@repo/backend/agent/decode";
 import { runMcpTool } from "@repo/backend/agent/mcp/result";
@@ -146,7 +147,7 @@ function registerQuranTool(server: McpServer, ctx: ActionCtx) {
               onNone: () =>
                 new NakafaAgentInputError({
                   cause: "The requested surah does not exist.",
-                  message: "Pass a surah number from 1 through 114.",
+                  message: `Pass a surah number from 1 through ${QURAN_SURAH_COUNT}.`,
                 }),
               onSome: Effect.succeed,
             })

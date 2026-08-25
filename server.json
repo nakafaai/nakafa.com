@@ -3,12 +3,12 @@
   "name": "io.github.nakafaai/nakafa",
   "description": "Read-only access to Nakafa's signed educational content and reviewed Quran references.",
   "title": "Nakafa",
-  "websiteUrl": "https://nakafa.com/developers",
+  "websiteUrl": "https://nakafa.com",
   "repository": {
     "url": "https://github.com/nakafaai/nakafa.com",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "remotes": [
     {
       "type": "streamable-http",

@@ -1,8 +1,12 @@
 // @vitest-environment node
 import { createMcpHandler } from "@modelcontextprotocol/server";
-import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/backend/agent/mcp/protocol";
+import {
+  NAKAFA_MCP_SERVER_NAME,
+  NAKAFA_MCP_SERVER_VERSION,
+} from "@repo/backend/agent/mcp/identity";
 import { createNakafaMcpServer } from "@repo/backend/agent/mcp/server";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
+import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/_lib/agent/constants";
 import { describe, expect, it } from "@repo/testing/effect";
 
 const MODERN_META = {
@@ -33,7 +37,7 @@ function postModern(
   }
   const handler = createMcpHandler(
     () => createNakafaMcpServer(UNUSED_ACTION_CONTEXT),
-    { legacy: "stateless" }
+    { legacy: "reject" }
   );
   return handler.fetch(
     new Request("https://mcp.nakafa.com/mcp", {
@@ -50,6 +54,22 @@ function postModern(
 }
 
 describe("Nakafa MCP server composition", () => {
+  it("preserves the established server identity", async () => {
+    const response = await postModern(0, "server/discover");
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      result: {
+        _meta: {
+          "io.modelcontextprotocol/serverInfo": {
+            name: NAKAFA_MCP_SERVER_NAME,
+            version: NAKAFA_MCP_SERVER_VERSION,
+          },
+        },
+      },
+    });
+  });
+
   it("preserves the established resources and prompts", async () => {
     const usageUri = "nakafa://usage";
     const [

@@ -1,4 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/server";
+import {
+  NAKAFA_MCP_SERVER_NAME,
+  NAKAFA_MCP_SERVER_VERSION,
+} from "@repo/backend/agent/mcp/identity";
 import { registerNakafaMcpPrompts } from "@repo/backend/agent/mcp/prompts";
 import { registerNakafaMcpResources } from "@repo/backend/agent/mcp/resources";
 import { registerNakafaMcpTools } from "@repo/backend/agent/mcp/tools";
@@ -10,7 +14,11 @@ const SERVER_INSTRUCTIONS =
 /** Creates one complete per-request MCP server over shared Convex programs. */
 export function createNakafaMcpServer(ctx: ActionCtx) {
   const server = new McpServer(
-    { name: "nakafa", title: "Nakafa", version: "1.0.0" },
+    {
+      name: NAKAFA_MCP_SERVER_NAME,
+      title: "Nakafa",
+      version: NAKAFA_MCP_SERVER_VERSION,
+    },
     { instructions: SERVER_INSTRUCTIONS }
   );
 
