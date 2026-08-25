@@ -2,6 +2,9 @@ import { products } from "@repo/backend/convex/utils/polar/products";
 
 export const pricingCountryHeaderName = "x-vercel-ip-country";
 
+type MonthlyPrice =
+  (typeof products.pro.monthlyPrices)[keyof typeof products.pro.monthlyPrices];
+
 /**
  * Territory codes that Polar currently maps to EUR through Babel's territory
  * currency data. Keeping the same mapping prevents the marketing price from
@@ -53,51 +56,42 @@ const polarEuroTerritoryCodes = new Set([
   "YT",
 ]);
 
-/** Selects the Polar catalog price for the request country. */
-function getProMonthlyPrice(countryCode: string | null) {
+function createPricingDisplay(price: MonthlyPrice) {
+  const formatter = new Intl.NumberFormat(price.locale, {
+    currency: price.currency,
+    maximumFractionDigits: price.fractionDigits,
+    minimumFractionDigits: price.fractionDigits,
+    style: "currency",
+  });
+
+  return {
+    free: formatter.format(0),
+    pro: formatter.format(price.amount),
+  };
+}
+
+const indonesianPricingDisplay = createPricingDisplay(
+  products.pro.monthlyPrices.IDR
+);
+const euroPricingDisplay = createPricingDisplay(products.pro.monthlyPrices.EUR);
+const defaultPricingDisplay = createPricingDisplay(
+  products.pro.monthlyPrices.USD
+);
+
+/** Selects the formatted Polar catalog price for the request country. */
+export function getProPricingDisplay(countryCode: string | null) {
   const normalizedCountryCode = countryCode?.toUpperCase();
 
   if (normalizedCountryCode === "ID") {
-    return products.pro.monthlyPrices.IDR;
+    return indonesianPricingDisplay;
   }
 
   if (
     normalizedCountryCode &&
     polarEuroTerritoryCodes.has(normalizedCountryCode)
   ) {
-    return products.pro.monthlyPrices.EUR;
+    return euroPricingDisplay;
   }
 
-  return products.pro.monthlyPrices.USD;
-}
-
-/**
- * Prepares NumberFlow pricing props from Vercel country geolocation.
- *
- * References:
- * - https://examples.vercel.com/kb/guide/geo-ip-headers-geolocation-vercel-functions
- * - https://polar.sh/docs/features/products#multiple-payment-currencies
- * - https://number-flow.barvian.me/
- */
-export function getProPricingDisplay(countryCode: string | null) {
-  const price = getProMonthlyPrice(countryCode);
-  const format = {
-    currency: price.currency,
-    maximumFractionDigits: price.fractionDigits,
-    minimumFractionDigits: price.fractionDigits,
-    style: "currency",
-  } satisfies Intl.NumberFormatOptions;
-
-  return {
-    free: {
-      format,
-      locales: price.locale,
-      value: 0,
-    },
-    pro: {
-      format,
-      locales: price.locale,
-      value: price.amount,
-    },
-  };
+  return defaultPricingDisplay;
 }

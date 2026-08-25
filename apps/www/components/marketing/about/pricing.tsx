@@ -6,7 +6,6 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { headers } from "next/headers";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
@@ -70,12 +69,9 @@ function PricingPlanCards({ pricingDisplay }: PricingPlanCardsProps) {
             {t("free-description")}
           </p>
           <div className="pt-2">
-            <NumberFormat
-              className="font-semibold text-4xl tracking-tight"
-              format={pricingDisplay.free.format}
-              locales={pricingDisplay.free.locales}
-              value={pricingDisplay.free.value}
-            />
+            <span className="font-semibold text-4xl tracking-tight">
+              {pricingDisplay.free}
+            </span>
           </div>
         </div>
 
@@ -113,12 +109,9 @@ function PricingPlanCards({ pricingDisplay }: PricingPlanCardsProps) {
             {t("pro-description")}
           </p>
           <div className="flex items-baseline gap-1 pt-2">
-            <NumberFormat
-              className="font-semibold text-4xl tracking-tight"
-              format={pricingDisplay.pro.format}
-              locales={pricingDisplay.pro.locales}
-              value={pricingDisplay.pro.value}
-            />
+            <span className="font-semibold text-4xl tracking-tight">
+              {pricingDisplay.pro}
+            </span>
             <span className="ml-1 text-muted-foreground">
               {t("pro-period")}
             </span>
