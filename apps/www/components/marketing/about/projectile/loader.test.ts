@@ -45,4 +45,20 @@ describe("deferred projectile scene loading", () => {
       expect(loadScene).toHaveBeenCalledTimes(4);
     })
   );
+
+  it.effect("bounds a never-settling import across every retry", () =>
+    Effect.gen(function* () {
+      const loadScene = vi.fn(() => new Promise<never>(() => undefined));
+      const fiber = yield* Effect.forkChild(
+        loadProjectileScene(loadScene).pipe(Effect.flip)
+      );
+      yield* TestClock.adjust(Duration.seconds(24));
+      expect(yield* Fiber.join(fiber)).toMatchObject({
+        _tag: "ProjectileSceneLoadError",
+        cause: { _tag: "TimeoutError" },
+        message: "Timed out while loading the projectile lesson scene.",
+      });
+      expect(loadScene).toHaveBeenCalledTimes(4);
+    })
+  );
 });

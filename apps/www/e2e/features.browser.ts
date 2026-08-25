@@ -3,12 +3,13 @@ import { Effect } from "effect";
 import {
   withBrowserContext,
   withObservedPageErrors,
-} from "./support/browser-context";
-import { seedDeniedAnalyticsConsent } from "./support/consent";
+} from "@/e2e/support/browser-context";
+import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 
 const NINA_ANSWER_TEXT = "Subtract the first equation";
 const NINA_HEADING_PATTERN = /Nina already knows/;
 const NINA_REASONING_TEXT = "Compare the two known equations";
+const NEXT_CHUNK_PATH = /\/_next\/static\/chunks\/.*\.js(?:\?.*)?$/;
 
 // Normal motion remains covered at three widths. Wide layouts use the product's
 // reduced-motion path so continuous WebGL frames cannot starve pointer checks.
@@ -136,15 +137,55 @@ const expectProjectileInteraction = Effect.fn(
     name: "Cannonball projectile analysis visual",
   });
   const canvas = visual.locator("canvas");
+  const readiness = canvas.or(visual.getByRole("status"));
   const highArc = page.getByRole("button", { name: "High Arc" });
 
   yield* Effect.promise(() => expect(visual).toHaveCount(1));
   yield* Effect.promise(() => visual.scrollIntoViewIfNeeded());
+  yield* Effect.promise(() => expect(readiness).toBeVisible({ timeout: 5000 }));
   yield* Effect.promise(() => expect(canvas).toBeVisible({ timeout: 30_000 }));
   yield* Effect.promise(() => highArc.click());
   yield* Effect.promise(() =>
     expect(highArc).toHaveAttribute("aria-pressed", "true")
   );
+});
+
+const expectProjectileRecovery = Effect.fn(
+  "NakafaE2E.expectProjectileRecovery"
+)(function* (page: Page) {
+  const visual = page.getByRole("region", {
+    name: "Cannonball projectile analysis visual",
+  });
+  const error = visual.getByRole("alert");
+
+  yield* Effect.promise(() =>
+    page.route(NEXT_CHUNK_PATH, (route) => route.abort("failed"))
+  );
+  yield* Effect.promise(() => visual.scrollIntoViewIfNeeded());
+  yield* Effect.promise(() => expect(error).toBeVisible({ timeout: 15_000 }));
+  yield* Effect.promise(() =>
+    expect(error.getByRole("button", { name: "Retry" })).toBeVisible()
+  );
+  yield* Effect.promise(() => page.unroute(NEXT_CHUNK_PATH));
+  yield* Effect.promise(() =>
+    Promise.all([
+      page.waitForNavigation({ waitUntil: "domcontentloaded" }),
+      error.getByRole("button", { name: "Retry" }).click(),
+    ])
+  );
+  yield* Effect.promise(() =>
+    expect
+      .poll(() =>
+        page.evaluate(() => {
+          const [entry] = performance.getEntriesByType("navigation");
+          return entry instanceof PerformanceNavigationTiming
+            ? entry.type
+            : null;
+        })
+      )
+      .toBe("reload")
+  );
+  yield* expectProjectileInteraction(page);
 });
 
 const expectProjectileDeferred = Effect.fn(
@@ -192,3 +233,33 @@ for (const viewport of targetViewports) {
     );
   });
 }
+
+test("homepage projectile recovers from a terminal scene load failure", async ({
+  baseURL,
+  browser,
+}) => {
+  expect(baseURL).toBeTruthy();
+  await Effect.runPromise(
+    withBrowserContext(
+      browser,
+      {
+        baseURL: baseURL ?? "",
+        reducedMotion: "reduce",
+        serviceWorkers: "block",
+        viewport: { height: 768, width: 1024 },
+      },
+      (context) =>
+        Effect.gen(function* () {
+          const page = yield* Effect.promise(() => context.newPage());
+          yield* withObservedPageErrors(
+            page,
+            Effect.gen(function* () {
+              yield* prepareFeaturesPage(page);
+              yield* expectProjectileDeferred(page);
+              yield* expectProjectileRecovery(page);
+            })
+          );
+        })
+    )
+  );
+});

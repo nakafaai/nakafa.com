@@ -1,5 +1,8 @@
-import { Data, Effect, Schedule } from "effect";
+import { Cause, Data, Effect, Schedule } from "effect";
 
+// Four attempts plus the exponential delays stay inside the 30-second browser
+// readiness contract while giving each local module evaluation five seconds.
+const SCENE_LOAD_ATTEMPT_TIMEOUT = "5 seconds";
 const sceneLoadRetrySchedule = Schedule.exponential("500 millis");
 
 type ProjectileSceneLoader = () => Promise<
@@ -29,6 +32,16 @@ export const loadProjectileScene = Effect.fn("www.home.loadProjectileScene")(
         }),
       try: loadScene,
     }).pipe(
+      Effect.timeoutOrElse({
+        duration: SCENE_LOAD_ATTEMPT_TIMEOUT,
+        orElse: () =>
+          Effect.fail(
+            new ProjectileSceneLoadError({
+              cause: new Cause.TimeoutError(),
+              message: "Timed out while loading the projectile lesson scene.",
+            })
+          ),
+      }),
       Effect.retry({
         schedule: sceneLoadRetrySchedule,
         times: 3,
