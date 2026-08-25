@@ -4,9 +4,16 @@ import {
   Ed25519SignatureSchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
+import {
+  ContentReleaseManifestSchema,
+  RollbackSignedContentReleaseSchema,
+  type SignedContentRelease,
+} from "@nakafa/aksara-contracts/release";
+import { PublicationScopeSchema } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { advancePublication } from "@repo/backend/convex/contentRelease/ingress/lifecycle";
+import { encodeRendererJson } from "@repo/backend/convex/contentRelease/wire";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
@@ -17,10 +24,14 @@ import {
   testSignedRelease,
 } from "@repo/backend/test/content-proof";
 import { insertSignedCandidate } from "@repo/backend/test/content-stage";
+import {
+  insertTestState,
+  insertZeroRelease,
+} from "@repo/backend/test/content-state";
 import { completeContentProof } from "@repo/backend/test/content-verify";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@repo/backend/content/trust", async () => {
   const { TEST_KEY_RESOLVER } = await import(
@@ -31,6 +42,9 @@ vi.mock("@repo/backend/content/trust", async () => {
 
 const releaseId = ReleaseIdSchema.make("release-lifecycle-ingress");
 const release = testSignedRelease(testEmptyManifest(releaseId));
+const recoveryReleaseId = ReleaseIdSchema.make(
+  "release-lifecycle-ingress-recovery"
+);
 
 /** Inserts one verified release with explicit frozen renderer bytes. */
 async function insertRelease(ctx: MutationCtx, rendererJson: string) {
@@ -70,6 +84,85 @@ async function insertRelease(ctx: MutationCtx, rendererJson: string) {
   });
 }
 
+/** Inserts one authenticated zero-impact candidate and its exact inverse. */
+async function insertActivationPair(
+  ctx: MutationCtx,
+  candidate: SignedContentRelease,
+  recovery: SignedContentRelease
+) {
+  const candidateIdentity = {
+    manifestHash: candidate.manifestHash,
+    releaseId: candidate.manifest.releaseId,
+    sequence: 1,
+  };
+  const recoveryIdentity = {
+    manifestHash: recovery.manifestHash,
+    releaseId: recovery.manifest.releaseId,
+    sequence: 2,
+  };
+  await insertZeroRelease(ctx, {
+    ...candidateIdentity,
+    ownership: { base: [], result: [] },
+    role: "candidate",
+    scope: candidate.manifest.scope,
+    snapshots: candidate.manifest.snapshots,
+    status: "verified",
+  });
+  await insertZeroRelease(ctx, {
+    ...recoveryIdentity,
+    base: candidateIdentity,
+    originReleaseId: candidate.manifest.releaseId,
+    ownership: { base: [], result: [] },
+    role: "recovery",
+    scope: recovery.manifest.scope,
+    snapshots: recovery.manifest.snapshots,
+    status: "verified",
+  });
+  const rendererJson = encodeRendererJson(TEST_PROOF_RENDERER);
+  const releases = await ctx.db.query("contentReleases").collect();
+  for (const stored of releases) {
+    const signed =
+      stored.releaseId === candidate.manifest.releaseId ? candidate : recovery;
+    await ctx.db.patch("contentReleases", stored._id, {
+      releaseJson: JSON.stringify(signed),
+      rendererJson,
+    });
+  }
+  await insertTestState(ctx, {
+    candidate: candidateIdentity,
+    nextSequence: 3,
+    recovery: recoveryIdentity,
+  });
+}
+
+/** Creates signed zero-impact manifests that complete read models immediately. */
+function makeActivationPair() {
+  const scope = PublicationScopeSchema.make({
+    content: [],
+    families: ["page"],
+    snapshots: [],
+  });
+  const candidateManifest = ContentReleaseManifestSchema.make({
+    ...testEmptyManifest(releaseId),
+    scope,
+  });
+  const candidate = testSignedRelease(candidateManifest);
+  const recoveryManifest = ContentReleaseManifestSchema.make({
+    ...testEmptyManifest(recoveryReleaseId),
+    baseActiveAppLocales: candidateManifest.activeAppLocales,
+    baseManifestHash: candidate.manifestHash,
+    baseReleaseId: releaseId,
+    origin: { kind: "rollback", releaseId },
+    scope,
+  });
+  return {
+    candidate,
+    recovery: RollbackSignedContentReleaseSchema.make(
+      testSignedRelease(recoveryManifest)
+    ),
+  };
+}
+
 /** Runs one lifecycle program through the explicit technical verification key. */
 function runLifecycle<A, E>(
   program: Effect.Effect<A, E, ContentVerificationKeyResolver>
@@ -80,6 +173,8 @@ function runLifecycle<A, E>(
     )
   );
 }
+
+afterEach(() => vi.useRealTimers());
 
 describe("content release lifecycle ingress", () => {
   it("returns authenticated evidence after durable proof completion", async () => {
@@ -193,5 +288,77 @@ describe("content release lifecycle ingress", () => {
         )
       )
     ).rejects.toThrow("Content release verification failed");
+  });
+
+  it("keeps the external activation receipt unchanged", async () => {
+    vi.useFakeTimers();
+    const t = convexTest(schema, convexModules);
+    const pair = makeActivationPair();
+    await t.mutation((ctx) =>
+      insertActivationPair(ctx, pair.candidate, pair.recovery)
+    );
+
+    const activated = await t.action((ctx) =>
+      runLifecycle(
+        advancePublication(ctx, {
+          operation: "activate",
+          release: pair.candidate,
+        })
+      )
+    );
+    const repeated = await t.action((ctx) =>
+      runLifecycle(
+        advancePublication(ctx, {
+          operation: "activate",
+          release: pair.candidate,
+        })
+      )
+    );
+
+    expect(activated).toEqual(repeated);
+    expect(activated).toMatchObject({
+      ok: true,
+      operation: "activate",
+      value: {
+        manifestHash: pair.candidate.manifestHash,
+        releaseId,
+      },
+    });
+    expect(activated.value).not.toHaveProperty("kind");
+    await expect(
+      t.run((ctx) => ctx.db.system.query("_scheduled_functions").collect())
+    ).resolves.toHaveLength(1);
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+    const recovered = await t.action((ctx) =>
+      runLifecycle(
+        advancePublication(ctx, {
+          operation: "activateRecovery",
+          release: pair.recovery,
+        })
+      )
+    );
+    expect(recovered).toMatchObject({
+      ok: true,
+      operation: "activateRecovery",
+      value: {
+        manifestHash: pair.recovery.manifestHash,
+        releaseId: recoveryReleaseId,
+      },
+    });
+    expect(recovered.value).not.toHaveProperty("kind");
+    const repeatedRecovery = await t.action((ctx) =>
+      runLifecycle(
+        advancePublication(ctx, {
+          operation: "activateRecovery",
+          release: pair.recovery,
+        })
+      )
+    );
+    expect(repeatedRecovery).toEqual(recovered);
+    await expect(
+      t.run((ctx) => ctx.db.system.query("_scheduled_functions").collect())
+    ).resolves.toHaveLength(2);
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
   });
 });

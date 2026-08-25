@@ -4,9 +4,13 @@ import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/ver
 import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
 import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
+import type { ActivationResult } from "@repo/backend/convex/contentRelease/activate";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
-import type { ReadModelStatus } from "@repo/backend/convex/contentRelease/models";
+import {
+  makeReadModelCoordinatorLive,
+  waitForReadModels,
+} from "@repo/backend/convex/contentRelease/ingress/readModels";
 import {
   decodeProofJson,
   decodeRendererJson,
@@ -14,13 +18,10 @@ import {
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
 import type { proofPollValidator } from "@repo/backend/convex/contentRelease/proof/spec";
 import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/renderer";
-import type {
-  abortReceiptValidator,
-  publicationReceiptValidator,
-} from "@repo/backend/convex/contentRelease/spec";
+import type { abortReceiptValidator } from "@repo/backend/convex/contentRelease/spec";
 import { makeFunctionReference } from "convex/server";
 import type { Infer } from "convex/values";
-import { Duration, Effect } from "effect";
+import { Effect } from "effect";
 
 type LifecycleRequest = Extract<
   PublicationRequest,
@@ -44,7 +45,6 @@ interface StoredEnvelope {
 }
 type AbortReceipt = Infer<typeof abortReceiptValidator>;
 type ProofPoll = Infer<typeof proofPollValidator>;
-type PublicationReceipt = Infer<typeof publicationReceiptValidator>;
 const envelopeReference = makeFunctionReference<
   "query",
   { manifestHash: string; releaseId: string },
@@ -63,18 +63,13 @@ const abortReference = makeFunctionReference<
 const activateReference = makeFunctionReference<
   "mutation",
   { manifestHash: string; releaseId: string; rendererJson: string },
-  PublicationReceipt
+  ActivationResult
 >("contentRelease/activate:activate");
 const recoveryReference = makeFunctionReference<
   "mutation",
   { manifestHash: string; releaseId: string; rendererJson: string },
-  PublicationReceipt
+  ActivationResult
 >("contentRelease/activate:activateRecovery");
-const modelStatusReference = makeFunctionReference<
-  "query",
-  { releaseId: string },
-  ReadModelStatus
->("contentRelease/models:status");
 const proofPollReference = makeFunctionReference<
   "mutation",
   { manifestHash: string; releaseId: string },
@@ -111,27 +106,6 @@ const loadRenderer = Effect.fn("contentRelease.loadRenderer")(function* (
   }
   return envelope.rendererJson;
 });
-
-/** Waits until the single durable model lineage converges or fails visibly. */
-const waitForReadModels = Effect.fn("contentRelease.waitForReadModels")(
-  function* (ctx: ActionCtx, releaseId: string) {
-    while (true) {
-      const status = yield* callInternal(() =>
-        ctx.runQuery(modelStatusReference, { releaseId })
-      );
-      if (status.phase === "completed") {
-        return;
-      }
-      if (status.phase === "failed") {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_INTEGRITY",
-          `Read-model sync ${releaseId} failed before completion.`
-        );
-      }
-      yield* Effect.sleep(Duration.millis(100));
-    }
-  }
-);
 
 /** Executes authenticated verification, activation, or recovery activation. */
 export const advancePublication = Effect.fn(
@@ -188,24 +162,31 @@ export const advancePublication = Effect.fn(
     };
   }
   const rendererJson = yield* loadRenderer(ctx, release);
+  const coordinator = makeReadModelCoordinatorLive(ctx);
   if (request.operation === "activate") {
-    const value = yield* callInternal(() =>
+    const result = yield* callInternal(() =>
       ctx.runMutation(activateReference, {
         manifestHash: release.manifestHash,
         releaseId,
         rendererJson,
       })
     );
-    yield* waitForReadModels(ctx, releaseId);
-    return { ok: true, operation: request.operation, value };
+    const policy =
+      result.kind === "completed" ? "restart-failed-once" : "observe";
+    yield* waitForReadModels(releaseId, policy).pipe(
+      Effect.provide(coordinator)
+    );
+    return { ok: true, operation: request.operation, value: result.receipt };
   }
-  const value = yield* callInternal(() =>
+  const result = yield* callInternal(() =>
     ctx.runMutation(recoveryReference, {
       manifestHash: release.manifestHash,
       releaseId,
       rendererJson,
     })
   );
-  yield* waitForReadModels(ctx, releaseId);
-  return { ok: true, operation: request.operation, value };
+  const policy =
+    result.kind === "completed" ? "restart-failed-once" : "observe";
+  yield* waitForReadModels(releaseId, policy).pipe(Effect.provide(coordinator));
+  return { ok: true, operation: request.operation, value: result.receipt };
 });
