@@ -182,11 +182,11 @@ const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
     yield* Effect.promise(() =>
       hasTouch ? firstTrigger.tap() : firstTrigger.click()
     );
-    const backdrop = page.locator('[data-slot="drawer-backdrop"]');
+    const outsideSurface = page.locator('[data-slot="drawer-viewport"]');
     yield* Effect.promise(() =>
       hasTouch
-        ? backdrop.tap({ position: { x: 2, y: 2 } })
-        : backdrop.click({ position: { x: 2, y: 2 } })
+        ? outsideSurface.tap({ position: { x: 2, y: 2 } })
+        : outsideSurface.click({ position: { x: 2, y: 2 } })
     );
     yield* Effect.promise(() => expect(drawer).toHaveCount(0));
     yield* Effect.promise(() => expect(firstTrigger).toBeFocused());
@@ -204,16 +204,28 @@ const verifyContributorPayloads = Effect.fn(
     `[data-contributor-username="${firstContributor.username}"]`
   );
 
+  // Opening and closing proves this detached client boundary is interactive
+  // before the tooltip-specific hover and focus checks begin.
+  yield* Effect.promise(() => firstTrigger.click());
+  yield* Effect.promise(() => expect(drawer).toHaveCount(1));
+  yield* Effect.promise(() => page.keyboard.press("Escape"));
+  yield* Effect.promise(() => expect(drawer).toHaveCount(0));
+  yield* Effect.promise(() => expect(firstTrigger).toBeFocused());
+  yield* Effect.promise(() => page.keyboard.press("Tab"));
+  yield* Effect.promise(() => page.keyboard.press("Shift+Tab"));
+  yield* Effect.promise(() => expect(firstTrigger).toBeFocused());
+  yield* Effect.promise(() =>
+    expect(page.getByRole("tooltip")).toHaveText(firstContributor.name)
+  );
+  yield* Effect.promise(() => page.keyboard.press("Escape"));
+  yield* Effect.promise(() => expect(page.getByRole("tooltip")).toHaveCount(0));
+  yield* Effect.promise(() => page.mouse.move(0, 0));
   yield* Effect.promise(() => firstTrigger.hover());
   yield* Effect.promise(() =>
     expect(page.getByRole("tooltip")).toHaveText(firstContributor.name)
   );
   yield* Effect.promise(() => page.mouse.move(0, 0));
   yield* Effect.promise(() => expect(page.getByRole("tooltip")).toHaveCount(0));
-  yield* Effect.promise(() => firstTrigger.focus());
-  yield* Effect.promise(() =>
-    expect(page.getByRole("tooltip")).toHaveText(firstContributor.name)
-  );
 
   for (const contributor of contributors) {
     const trigger = gallery.locator(

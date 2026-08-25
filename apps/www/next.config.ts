@@ -1,9 +1,11 @@
 import path from "node:path";
 import { postHogProxyKeys } from "@repo/analytics/keys";
 import { createPostHogProxyRewrites } from "@repo/analytics/posthog/config";
+import { convexKeys } from "@repo/backend/keys";
 import { hasCandidateLocalePreview } from "@repo/internationalization/src/environment";
 import {
   config,
+  createLoopbackConnectSources,
   createSecurityHeaders,
   withAnalyzer,
   withMDX,
@@ -18,7 +20,7 @@ import { AGENT_DISCOVERY_HEADERS } from "@/lib/agent-discovery";
 import { hasPreviewRendererEnvironment } from "@/lib/content/preview/environment";
 
 const configEnv = createEnv({
-  extends: [analyzeKeys()],
+  extends: [analyzeKeys(), convexKeys()],
   server: {
     CONVEX_AGENT_MODE: Schema.toStandardSchemaV1(
       Schema.UndefinedOr(Schema.Literal("anonymous"))
@@ -32,6 +34,9 @@ const configEnv = createEnv({
     NEXT_EXPOSE_TESTING_API: process.env.NEXT_EXPOSE_TESTING_API,
   },
 });
+const localConvexConnectSources = createLoopbackConnectSources(
+  new URL(configEnv.NEXT_PUBLIC_CONVEX_URL)
+);
 const isAksaraPreviewChild =
   hasCandidateLocalePreview() || hasPreviewRendererEnvironment();
 const postHogProxyEnv = isAksaraPreviewChild ? null : postHogProxyKeys();
@@ -157,7 +162,10 @@ function createAppHeaders() {
       source: "/:path*",
       headers: [
         ...createSecurityHeaders({
-          additionalConnectSources: ["https://raw.githubusercontent.com"],
+          additionalConnectSources: [
+            "https://raw.githubusercontent.com",
+            ...localConvexConnectSources,
+          ],
         }),
         ...AGENT_DISCOVERY_HEADERS,
       ],

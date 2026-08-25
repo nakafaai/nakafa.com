@@ -1,5 +1,6 @@
 import {
   config,
+  createLoopbackConnectSources,
   createSecurityHeaders,
   securityHeaders,
   withAnalyzer,
@@ -20,6 +21,28 @@ vi.mock("@next/mdx", () => ({
     mdxConfig,
   }),
 }));
+
+describe("createLoopbackConnectSources", () => {
+  it("allows the exact HTTP and WebSocket origins for local Convex", () => {
+    expect(
+      createLoopbackConnectSources(new URL("http://127.0.0.1:3210/api/query"))
+    ).toEqual(["http://127.0.0.1:3210", "ws://127.0.0.1:3210"]);
+    expect(
+      createLoopbackConnectSources(new URL("http://localhost:3210"))
+    ).toEqual(["http://localhost:3210", "ws://localhost:3210"]);
+  });
+
+  it("does not widen remote or secure Convex origins", () => {
+    expect(
+      createLoopbackConnectSources(
+        new URL("https://dapper-antelope-269.convex.cloud")
+      )
+    ).toEqual([]);
+    expect(
+      createLoopbackConnectSources(new URL("http://example.com:3210"))
+    ).toEqual([]);
+  });
+});
 
 describe("createSecurityHeaders", () => {
   it("builds the default CSP header", () => {

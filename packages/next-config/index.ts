@@ -26,6 +26,30 @@ const BASE_CONTENT_SECURITY_POLICY = {
 } as const;
 
 /**
+ * Returns the exact loopback origins required by a local Convex Agent Mode
+ * client without widening production network access.
+ *
+ * References:
+ * https://docs.convex.dev/cli/agent-mode
+ * https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy/connect-src
+ */
+export function createLoopbackConnectSources(source: URL) {
+  const isLoopback =
+    source.hostname === "127.0.0.1" ||
+    source.hostname === "localhost" ||
+    source.hostname === "[::1]";
+
+  if (source.protocol !== "http:" || !isLoopback) {
+    return [];
+  }
+
+  const webSocketSource = new URL(source);
+  webSocketSource.protocol = "ws:";
+
+  return [source.origin, webSocketSource.origin];
+}
+
+/**
  * Builds the shared security headers used by the Next.js apps in this repo.
  *
  * PostHog traffic is routed through a same-origin proxy path, so the default
