@@ -1,5 +1,6 @@
 import { instant } from "@next/playwright";
 import { expect, type Locator, type Page } from "@playwright/test";
+import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { Duration, Effect, Schedule, Schema } from "effect";
 import { prepareClientNavigation } from "./readiness";
 
@@ -25,6 +26,13 @@ type InstantMarker =
   | { readonly kind: "heading"; readonly text?: RegExp }
   | { readonly kind: "title"; readonly text: RegExp };
 
+type InstantShell = "app" | "marketing";
+
+const instantShellSelector = {
+  app: 'main[data-slot="sidebar-inset"]',
+  marketing: 'main[data-marketing-page="true"]',
+} as const;
+
 /** A rendered source route has no visible link matching its signed catalog. */
 export class NavigationLinkMissing extends Schema.TaggedError<NavigationLinkMissing>()(
   "NavigationLinkMissing",
@@ -42,6 +50,7 @@ export interface NavigationTarget {
   readonly href: string;
   readonly marker: InstantMarker;
   readonly name: string;
+  readonly shell: InstantShell;
   readonly sourceHref: string;
 }
 
@@ -120,15 +129,20 @@ const findVisibleLink = Effect.fn("NakafaE2E.findVisibleLink")(function* (
     return yield* waitForVisibleLocator(link, missingLink);
   }
 
+  const usesMobileSidebar = yield* Effect.promise(() =>
+    page.evaluate(
+      (mediaQuery) => window.matchMedia(mediaQuery).matches,
+      TAILWIND_MEDIA_QUERIES.belowLg
+    )
+  );
+  if (!usesMobileSidebar) {
+    return yield* waitForVisibleLocator(link, missingLink);
+  }
+
   const sidebarTrigger = page
     .locator('[data-slot="sidebar-trigger"]:visible')
     .first();
-  const sidebarTriggerIsVisible = yield* Effect.promise(() =>
-    sidebarTrigger.isVisible()
-  );
-  if (!sidebarTriggerIsVisible) {
-    return yield* waitForVisibleLocator(link, missingLink);
-  }
+  yield* waitForVisibleLocator(sidebarTrigger, missingLink);
   yield* Effect.promise(() =>
     sidebarTrigger.click({ timeout: NAVIGATION_TIMEOUT_MILLISECONDS })
   );
@@ -178,10 +192,9 @@ const discoverLinkedHref = Effect.fn("NakafaE2E.discoverLinkedHref")(function* (
 });
 
 /**
- * The installed instant lock completes the target prefetch before navigation
- * and withholds dynamic data until its callback returns. The callback therefore
- * owns the shell assertion, while the Effect program verifies settled content
- * after release.
+ * The installed instant lock withholds dynamic data until its callback returns.
+ * The callback therefore verifies the committed route shell, while the Effect
+ * program verifies destination-specific content after release.
  *
  * @see https://github.com/vercel/next.js/blob/v16.3.2/packages/next/src/client/components/segment-cache/navigation.ts
  * @see https://github.com/vercel/next.js/blob/v16.3.2/packages/next-playwright/README.md
@@ -206,28 +219,10 @@ const navigateHard = Effect.fn("NakafaE2E.navigateHard")(function* (
             });
           })
           .then(() => {
-            if (target.marker.kind === "title") {
-              return expect(page).toHaveTitle(target.marker.text, {
-                timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-              });
-            }
-
-            const markerText = target.marker.text;
-            const heading = markerText
-              ? page
-                  .locator("h1:visible")
-                  .filter({ hasText: markerText })
-                  .first()
-              : page.locator("h1:visible").first();
-            return expect(heading)
-              .toBeVisible({ timeout: NAVIGATION_TIMEOUT_MILLISECONDS })
-              .then(() =>
-                markerText
-                  ? expect(heading).toContainText(markerText, {
-                      timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-                    })
-                  : undefined
-              );
+            const shell = page.locator(instantShellSelector[target.shell]);
+            return expect(shell).toBeVisible({
+              timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+            });
           }),
       { baseURL }
     )
@@ -261,25 +256,10 @@ const navigateClient = Effect.fn("NakafaE2E.navigateClient")(function* (
           })
         )
         .then(() => {
-          if (target.marker.kind === "title") {
-            return expect(page).toHaveTitle(target.marker.text, {
-              timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-            });
-          }
-
-          const markerText = target.marker.text;
-          const heading = markerText
-            ? page.locator("h1:visible").filter({ hasText: markerText }).first()
-            : page.locator("h1:visible").first();
-          return expect(heading)
-            .toBeVisible({ timeout: NAVIGATION_TIMEOUT_MILLISECONDS })
-            .then(() =>
-              markerText
-                ? expect(heading).toContainText(markerText, {
-                    timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-                  })
-                : undefined
-            );
+          const shell = page.locator(instantShellSelector[target.shell]);
+          return expect(shell).toBeVisible({
+            timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+          });
         })
     )
   );
@@ -303,6 +283,7 @@ const resolveHomepage = Effect.fn("NakafaE2E.resolveHomepage")(() =>
     href: "/en",
     marker: { kind: "heading", text: HOMEPAGE_HEADING_PATTERN },
     name: "homepage",
+    shell: "marketing",
     sourceHref: "/en/quran",
   } satisfies NavigationTarget)
 );
@@ -312,6 +293,7 @@ const resolveQuran = Effect.fn("NakafaE2E.resolveQuran")(() =>
     href: "/id/quran/2",
     marker: { kind: "heading", text: QURAN_HEADING_PATTERN },
     name: "Quran",
+    shell: "app",
     sourceHref: "/id/quran",
   } satisfies NavigationTarget)
 );
@@ -321,6 +303,7 @@ const resolveTryout = Effect.fn("NakafaE2E.resolveTryout")(() =>
     href: "/en/try-out",
     marker: { kind: "title", text: TRYOUT_TITLE_PATTERN },
     name: "tryout",
+    shell: "app",
     sourceHref: "/en",
   } satisfies NavigationTarget)
 );
@@ -338,6 +321,7 @@ const resolveCurriculum = Effect.fn("NakafaE2E.resolveCurriculum")(function* (
     href,
     marker: { kind: "heading" },
     name: "curriculum",
+    shell: "app",
     sourceHref,
   } satisfies NavigationTarget;
 });
@@ -360,6 +344,7 @@ const resolveArticle = Effect.fn("NakafaE2E.resolveArticle")(function* (
     href,
     marker: { kind: "heading" },
     name: "article",
+    shell: "app",
     sourceHref,
   } satisfies NavigationTarget;
 });
@@ -377,6 +362,7 @@ const resolveMaterial = Effect.fn("NakafaE2E.resolveMaterial")(function* (
     href,
     marker: { kind: "heading" },
     name: "material",
+    shell: "app",
     sourceHref,
   } satisfies NavigationTarget;
 });
