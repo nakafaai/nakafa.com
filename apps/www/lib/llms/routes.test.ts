@@ -218,6 +218,20 @@ describe("llms proxy route resolver", () => {
     expect(mockHasLlmsMarkdownSource).not.toHaveBeenCalled();
   });
 
+  it("falls back to HTML when wildcard-preferred Markdown is unavailable", () => {
+    mockHasLlmsMarkdownSource.mockReturnValueOnce(Effect.succeed(false));
+
+    expect(
+      resolveLlmsProxyRoute({
+        acceptHeader: Option.some("text/*;q=1, text/html;q=0.8"),
+        method: "GET",
+        pathname: "/en/search",
+      })
+    ).toEqual({ kind: "delegate" });
+
+    expect(mockHasLlmsMarkdownSource).toHaveBeenCalledOnce();
+  });
+
   it("delegates only when an acceptable explicit RSC type wins", () => {
     expect(
       resolveLlmsProxyRoute({
