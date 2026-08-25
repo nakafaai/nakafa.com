@@ -4,14 +4,33 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 
 const readRuntimeQueryMock = vi.hoisted(() => vi.fn());
+const articleMocks = vi.hoisted(() => ({
+  hasCategory: vi.fn(),
+  readActiveIdentity: vi.fn(),
+  readActiveRoute: vi.fn(),
+}));
 
 vi.mock("@/lib/content/runtime/query", () => ({
   readRuntimeQuery: readRuntimeQueryMock,
+}));
+vi.mock("@/lib/content/article/category", () => ({
+  hasPublishedArticleCategory: articleMocks.hasCategory,
+}));
+vi.mock("@/lib/content/published/active", () => ({
+  readActiveContentIdentity: articleMocks.readActiveIdentity,
+}));
+vi.mock("@/lib/content/published/route", () => ({
+  readActiveContentRoute: articleMocks.readActiveRoute,
 }));
 
 describe("public URL migration redirects", () => {
   beforeEach(() => {
     readRuntimeQueryMock.mockReset();
+    articleMocks.hasCategory.mockReset();
+    articleMocks.readActiveIdentity
+      .mockReset()
+      .mockReturnValue(Effect.succeed({ releaseId: "release-current" }));
+    articleMocks.readActiveRoute.mockReset();
   });
 
   it("redirects a retired URL to its authenticated current route", async () => {
@@ -75,6 +94,23 @@ describe("public URL migration redirects", () => {
       "/de/articles/politik/politische-dynastien-und-asiatische-werte",
     ],
   ])("redirects exposed German article URL %s", async (pathname, expected) => {
+    articleMocks.hasCategory
+      .mockReturnValueOnce(Effect.succeed(false))
+      .mockReturnValueOnce(Effect.succeed(true));
+    articleMocks.readActiveRoute
+      .mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId: "release-current",
+          kind: "missing",
+        })
+      )
+      .mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId: "release-current",
+          kind: "found",
+        })
+      );
+
     await expect(
       Effect.runPromise(
         readPublicUrlMigrationRedirect({ method: "GET", pathname })
@@ -84,6 +120,10 @@ describe("public URL migration redirects", () => {
   });
 
   it("redirects HEAD requests for an exposed article category", async () => {
+    articleMocks.hasCategory
+      .mockReturnValueOnce(Effect.succeed(false))
+      .mockReturnValueOnce(Effect.succeed(true));
+
     await expect(
       Effect.runPromise(
         readPublicUrlMigrationRedirect({
@@ -92,6 +132,60 @@ describe("public URL migration redirects", () => {
         })
       )
     ).resolves.toBe("/de/articles/politik");
+  });
+
+  it("keeps article routes owned by a recovered signed release", async () => {
+    articleMocks.readActiveRoute
+      .mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId: "release-recovery",
+          kind: "found",
+        })
+      )
+      .mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId: "release-recovery",
+          kind: "missing",
+        })
+      );
+
+    await expect(
+      Effect.runPromise(
+        readPublicUrlMigrationRedirect({
+          method: "GET",
+          pathname: "/de/articles/politics/regional-elections-turmoil",
+        })
+      )
+    ).resolves.toBeNull();
+  });
+
+  it("keeps category routes owned by a recovered signed release", async () => {
+    articleMocks.hasCategory
+      .mockReturnValueOnce(Effect.succeed(true))
+      .mockReturnValueOnce(Effect.succeed(false));
+
+    await expect(
+      Effect.runPromise(
+        readPublicUrlMigrationRedirect({
+          method: "HEAD",
+          pathname: "/de/articles/politics",
+        })
+      )
+    ).resolves.toBeNull();
+  });
+
+  it("does not redirect an article without active signed ownership", async () => {
+    articleMocks.readActiveIdentity.mockReturnValueOnce(Effect.succeed(null));
+
+    await expect(
+      Effect.runPromise(
+        readPublicUrlMigrationRedirect({
+          method: "GET",
+          pathname: "/de/articles/politics/regional-elections-turmoil",
+        })
+      )
+    ).resolves.toBeNull();
+    expect(articleMocks.readActiveRoute).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -149,5 +243,7 @@ describe("public URL migration redirects", () => {
       Effect.runPromise(readPublicUrlMigrationRedirect(request))
     ).resolves.toBeNull();
     expect(readRuntimeQueryMock).not.toHaveBeenCalled();
+    expect(articleMocks.hasCategory).not.toHaveBeenCalled();
+    expect(articleMocks.readActiveIdentity).not.toHaveBeenCalled();
   });
 });
