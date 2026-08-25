@@ -4,7 +4,7 @@ import { Effect, Schema } from "effect";
 import {
   withBrowserContext,
   withObservedPageErrors,
-} from "./support/browser-context";
+} from "@/e2e/support/browser-context";
 
 const APP_ORIGIN = "https://nakafa.com";
 const CLASS_SEPARATOR_PATTERN = /\s+/;
