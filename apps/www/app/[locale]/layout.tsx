@@ -164,7 +164,6 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
           rel="service-desc"
           type="application/vnd.oai.openapi+json;version=3.1"
         />
-        <link href="/llms.txt" rel="alternate" type="text/markdown" />
       </head>
       <body className="relative">
         {hasPreviewConfig() ? <PreviewRefresh /> : null}
