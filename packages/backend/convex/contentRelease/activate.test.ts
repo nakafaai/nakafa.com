@@ -103,7 +103,7 @@ describe("contentRelease/activate", () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(seedVerifiedPair);
 
-    const receipt = await t.mutation(activate, {
+    const activation = await t.mutation(activate, {
       manifestHash: CANDIDATE.manifestHash,
       releaseId: CANDIDATE.releaseId,
       rendererJson: testRendererJson(),
@@ -145,9 +145,15 @@ describe("contentRelease/activate", () => {
     await t.finishAllScheduledFunctions(vi.runAllTimers);
     const state = await t.run((ctx) => ctx.db.query("contentState").unique());
 
-    expect(receipt).toEqual(expectedReceipt(CANDIDATE));
-    expect(repeatedPending).toEqual(receipt);
-    expect(repeated).toEqual(receipt);
+    expect(activation).toEqual({
+      kind: "activated",
+      receipt: expectedReceipt(CANDIDATE),
+    });
+    expect(repeatedPending).toEqual({
+      kind: "completed",
+      receipt: activation.receipt,
+    });
+    expect(repeated).toEqual(repeatedPending);
     expect(state).toMatchObject({
       activeManifestHash: CANDIDATE.manifestHash,
       activeReleaseId: CANDIDATE.releaseId,
@@ -226,7 +232,7 @@ describe("contentRelease/activate", () => {
     });
     await t.finishAllScheduledFunctions(vi.runAllTimers);
 
-    const receipt = await t.mutation(activateRecovery, {
+    const activation = await t.mutation(activateRecovery, {
       manifestHash: RECOVERY.manifestHash,
       releaseId: RECOVERY.releaseId,
       rendererJson: testRendererJson(),
@@ -234,7 +240,10 @@ describe("contentRelease/activate", () => {
     await t.finishAllScheduledFunctions(vi.runAllTimers);
     const state = await t.run((ctx) => ctx.db.query("contentState").unique());
 
-    expect(receipt).toEqual(expectedReceipt(RECOVERY));
+    expect(activation).toEqual({
+      kind: "activated",
+      receipt: expectedReceipt(RECOVERY),
+    });
     expect(state).toMatchObject({
       activeManifestHash: RECOVERY.manifestHash,
       activeReleaseId: RECOVERY.releaseId,
@@ -269,14 +278,14 @@ describe("contentRelease/activate", () => {
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
   });
 
-  it("restarts a failed model lineage under one new generation", async () => {
+  it("returns completed evidence without rescheduling a failed lineage", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await seedVerifiedPair(ctx);
       await insertReleaseItem(ctx, CANDIDATE, "test:unexpected", 0);
     });
 
-    await t.mutation(activate, {
+    const activation = await t.mutation(activate, {
       manifestHash: CANDIDATE.manifestHash,
       releaseId: CANDIDATE.releaseId,
       rendererJson: testRendererJson(),
@@ -307,7 +316,7 @@ describe("contentRelease/activate", () => {
     expect(failed.state?.materialReleaseId).toBeUndefined();
     expect(failed.state?.searchReleaseId).toBeUndefined();
 
-    await t.mutation(activate, {
+    const repeated = await t.mutation(activate, {
       manifestHash: CANDIDATE.manifestHash,
       releaseId: CANDIDATE.releaseId,
       rendererJson: testRendererJson(),
@@ -322,9 +331,16 @@ describe("contentRelease/activate", () => {
         .unique(),
     }));
 
-    expect(restarted.jobs).toHaveLength(2);
-    expect(restarted.jobs.at(-1)?.state).toEqual({ kind: "pending" });
-    expect(restarted.release?.syncGeneration).toBe(2);
+    expect(activation.kind).toBe("activated");
+    expect(repeated).toEqual({
+      kind: "completed",
+      receipt: expectedReceipt(CANDIDATE),
+    });
+    expect(restarted.jobs).toHaveLength(1);
+    expect(restarted.jobs.at(-1)?.state).toEqual(
+      expect.objectContaining({ kind: "failed" })
+    );
+    expect(restarted.release?.syncGeneration).toBe(1);
   });
 
   it("rejects renderer drift and a stale active base", async () => {

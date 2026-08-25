@@ -5,6 +5,7 @@ import {
   Linkedin02Icon,
   NewTwitterIcon,
 } from "@hugeicons/core-free-icons";
+import { useMounted } from "@mantine/hooks";
 import type { Contributor } from "@repo/contents/_types/contributor";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -63,6 +64,7 @@ export function ContributorGallery({
 }: ContributorGalleryProps) {
   const t = useTranslations("Common");
   const [contributorDrawer] = useState(() => DrawerCreateHandle<Contributor>());
+  const isMounted = useMounted();
 
   return (
     <>
@@ -73,8 +75,9 @@ export function ContributorGallery({
               render={
                 <DrawerTrigger
                   aria-label={`${t("open")} ${contributor.name}`}
-                  className="cursor-pointer"
+                  className="cursor-pointer disabled:cursor-default"
                   data-contributor-username={contributor.username}
+                  disabled={!isMounted}
                   handle={contributorDrawer}
                   payload={contributor}
                   title={contributor.name}

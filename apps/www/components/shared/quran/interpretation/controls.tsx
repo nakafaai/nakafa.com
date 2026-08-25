@@ -1,5 +1,5 @@
 "use client";
-import { useCallbackRef, useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useMounted } from "@mantine/hooks";
 import {
   decodePublishedQuranInterpretation,
   isQuranSnapshotConflict,
@@ -60,6 +60,7 @@ export function QuranInterpretationControls({
   const [pendingVerseNumber, setPendingVerseNumber] = useState<number | null>(
     null
   );
+  const isControllerActive = useMounted();
   const [isPending, startTransition] = useTransition();
   const requestSequence = useRef(0);
   const pendingRequestId = useRef<number | null>(null);
@@ -76,12 +77,12 @@ export function QuranInterpretationControls({
     },
     [close, toastId]
   );
-  const handleInterpretationClick = (event: MouseEvent<HTMLButtonElement>) => {
+  const selectInterpretation = (event: MouseEvent<HTMLButtonElement>) => {
     const verseNumber = getVerseNumber(event.currentTarget);
     if (verseNumber === null) {
       return;
     }
-    if (isPending || pendingRequestId.current !== null) {
+    if (pendingRequestId.current !== null) {
       return;
     }
     requestSequence.current += 1;
@@ -181,8 +182,8 @@ export function QuranInterpretationControls({
     );
     startTransition(() => Effect.runPromise(program));
   };
-  const selectInterpretation = useCallbackRef(handleInterpretationClick);
   const contextValue = {
+    isActive: isControllerActive,
     pendingVerseNumber: isPending ? pendingVerseNumber : null,
     selectInterpretation,
   };

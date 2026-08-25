@@ -10,7 +10,7 @@ import {
   loadRelease,
   loadState,
 } from "@repo/backend/convex/contentRelease/model";
-import { scheduleReadModels } from "@repo/backend/convex/contentRelease/models";
+import { startReadModels } from "@repo/backend/convex/contentRelease/models";
 import {
   decodeReleaseJson,
   decodeRendererJson,
@@ -25,8 +25,20 @@ import { publicationReceiptValidator } from "@repo/backend/convex/contentRelease
 import { retainActivatedTryoutBundle } from "@repo/backend/convex/contentRelease/tryout/bundle";
 import { encodeRendererJson } from "@repo/backend/convex/contentRelease/wire";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { v } from "convex/values";
+import { type Infer, v } from "convex/values";
 import { Effect } from "effect";
+
+const activationResultValidator = v.union(
+  v.object({
+    kind: v.literal("activated"),
+    receipt: publicationReceiptValidator,
+  }),
+  v.object({
+    kind: v.literal("completed"),
+    receipt: publicationReceiptValidator,
+  })
+);
+export type ActivationResult = Infer<typeof activationResultValidator>;
 
 /** Confirms one activation request uses the frozen live renderer envelope. */
 const validateRenderer = Effect.fn("contentRelease.validateActivationRenderer")(
@@ -106,8 +118,7 @@ const activateCandidate = Effect.fn("contentRelease.activateCandidate")(
         release.sequence,
         release
       );
-      yield* scheduleReadModels(ctx, releaseId);
-      return receipt;
+      return { kind: "completed", receipt } satisfies ActivationResult;
     }
     const state = yield* loadState(ctx);
     if (
@@ -181,8 +192,8 @@ const activateCandidate = Effect.fn("contentRelease.activateCandidate")(
         updatedAt: now,
       })
     );
-    yield* scheduleReadModels(ctx, releaseId);
-    return receipt;
+    yield* startReadModels(ctx, releaseId);
+    return { kind: "activated", receipt } satisfies ActivationResult;
   }
 );
 
@@ -209,8 +220,7 @@ const activateRecoveryProgram = Effect.fn("contentRelease.activateRecovery")(
         release.sequence,
         release
       );
-      yield* scheduleReadModels(ctx, releaseId);
-      return receipt;
+      return { kind: "completed", receipt } satisfies ActivationResult;
     }
     const state = yield* loadState(ctx);
     if (
@@ -252,8 +262,8 @@ const activateRecoveryProgram = Effect.fn("contentRelease.activateRecovery")(
         updatedAt: now,
       })
     );
-    yield* scheduleReadModels(ctx, releaseId);
-    return receipt;
+    yield* startReadModels(ctx, releaseId);
+    return { kind: "activated", receipt } satisfies ActivationResult;
   }
 );
 
@@ -264,7 +274,7 @@ export const activate = internalMutation({
     releaseId: v.string(),
     rendererJson: v.string(),
   },
-  returns: publicationReceiptValidator,
+  returns: activationResultValidator,
   handler: (ctx, args) =>
     runConvexProgram(
       activateCandidate(
@@ -283,7 +293,7 @@ export const activateRecovery = internalMutation({
     releaseId: v.string(),
     rendererJson: v.string(),
   },
-  returns: publicationReceiptValidator,
+  returns: activationResultValidator,
   handler: (ctx, args) =>
     runConvexProgram(
       activateRecoveryProgram(
