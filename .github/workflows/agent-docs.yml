@@ -14,7 +14,33 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  agent-docs:
+  quality:
+    name: Quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup toolchain
+        uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
+        with:
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Audit dependencies
+        run: pnpm security:audit
+
+      - name: Run tests
+        run: pnpm test
+
+  production:
+    name: Production acceptance
+    if: github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih')
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
@@ -26,7 +52,6 @@ jobs:
       NEXT_PUBLIC_POSTHOG_UI_HOST: https://eu.posthog.com
       POSTHOG_PROXY_HOST: https://t.nakafa.com
       SITE_URL: http://localhost:3000
-      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -47,19 +72,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Audit dependencies
-        run: pnpm security:audit
-
       - name: Export app version
         run: |
           app_version="$(node -p 'require("./package.json").version')"
           echo "NEXT_PUBLIC_VERSION=$app_version" >> "$GITHUB_ENV"
 
-      - name: Run tests
-        run: pnpm test
-
       - name: Fingerprint signed runtime contract
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: |
           output="$RUNNER_TEMP/agent-docs-fingerprint.env"
           rm -f -- "$output"
@@ -78,7 +96,6 @@ jobs:
           rm -f -- "$output"
 
       - name: Fingerprint production runtime generations
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.AGENT_DOCS_CONVEX_DEPLOY_KEY }}
         run: |
@@ -99,7 +116,6 @@ jobs:
           rm -f -- "$output"
 
       - name: Verify selected production runtime generation
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.AGENT_DOCS_CONVEX_DEPLOY_KEY }}
         run: pnpm --silent --dir packages/backend runtime:ci verify-generations
@@ -107,21 +123,19 @@ jobs:
       # Protected signed runtime, including tryout content, is never cached raw.
       - name: Restore encrypted signed content snapshot
         id: signed-content-cache
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/agent-docs-content-cache
           key: agent-docs-content-${{ env.AGENT_DOCS_CONTENT_CACHE_VERSION }}-${{ env.AGENT_DOCS_CONTENT_STATE_HASH }}-${{ env.AGENT_DOCS_RUNTIME_SCHEMA_FINGERPRINT }}
 
       - name: Export encrypted signed content snapshot
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true' && steps.signed-content-cache.outputs.cache-hit != 'true'
+        if: steps.signed-content-cache.outputs.cache-hit != 'true'
         env:
           AGENT_DOCS_CONTENT_CACHE_KEY: ${{ secrets.AGENT_DOCS_CONTENT_CACHE_KEY_V1 }}
           CONVEX_DEPLOY_KEY: ${{ secrets.AGENT_DOCS_CONVEX_DEPLOY_KEY }}
         run: pnpm --silent --dir packages/backend runtime:ci export
 
       - name: Initialize anonymous local backend
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: |
           umask 077
           CONVEX_AGENT_MODE=anonymous pnpm --dir packages/backend exec convex init
@@ -156,7 +170,6 @@ jobs:
           } >> "$GITHUB_ENV"
 
       - name: Configure anonymous local backend
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: |
           # Agent docs exercises content reads only. External integrations stay inert.
           pnpm --dir packages/backend exec convex env set --force <<EOF
@@ -183,7 +196,6 @@ jobs:
           EOF
 
       - name: Start anonymous local backend
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: |
           umask 077
           convex_log="$RUNNER_TEMP/agent-docs-convex.log"
@@ -212,32 +224,15 @@ jobs:
           exit 1
 
       - name: Import signed content snapshot
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         env:
           AGENT_DOCS_CONTENT_CACHE_KEY: ${{ secrets.AGENT_DOCS_CONTENT_CACHE_KEY_V1 }}
         run: pnpm --silent --dir packages/backend runtime:ci import
 
       - name: Verify signed featured renderer graph
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: pnpm --filter www verify:featured-renderer
-
-      - name: Analyze production bundles
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
-        run: pnpm --filter www exec next experimental-analyze --output
-        env:
-          NODE_ENV: production
-
-      - name: Archive production bundle analysis
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: www-production-bundle-analysis
-          path: apps/www/.next/diagnostics/analyze
-          retention-days: 7
 
       - name: Build production app
         id: production_build
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: pnpm build
         env:
           NEXT_EXPOSE_TESTING_API: "true"
@@ -293,7 +288,6 @@ jobs:
             "local_backend_request_id_present=$request_id_present"
 
       - name: Start web app
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: |
           umask 077
           web_log="$RUNNER_TEMP/agent-docs-www.log"
@@ -304,7 +298,6 @@ jobs:
           echo "$!" > "$web_pid"
 
       - name: Wait for web app
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: |
           for _attempt in {1..60}; do
             if curl -fsS http://localhost:3000/llms.txt > /dev/null && \
@@ -317,12 +310,10 @@ jobs:
           exit 1
 
       - name: Install Chromium
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: pnpm --filter www exec playwright install --with-deps chromium
 
       - name: Run production browser checks
         id: production_browser
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: pnpm --filter www test:browser
 
       - name: Archive production browser failures
@@ -337,11 +328,9 @@ jobs:
           retention-days: 1
 
       - name: Run AFDocs checks
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: pnpm agent-docs
 
       - name: Verify final production runtime generation
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.AGENT_DOCS_CONVEX_DEPLOY_KEY }}
         run: pnpm --silent --dir packages/backend runtime:ci verify-generations
@@ -354,7 +343,7 @@ jobs:
           key: ${{ steps.signed-content-cache.outputs.cache-primary-key }}
 
       - name: Stop local services and erase temporary state
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true' && always()
+        if: always()
         run: |
           stop_process_group() {
             local pid_file="$1"
@@ -402,3 +391,33 @@ jobs:
             -o -name 'agent-docs-generations-*' \
             -o -name 'agent-docs-import-*' \) \
             -exec rm -rf -- {} +
+
+  agent-docs:
+    if: always()
+    needs: [quality, production]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    env:
+      PRODUCTION_RESULT: ${{ needs.production.result }}
+      QUALITY_RESULT: ${{ needs.quality.result }}
+      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') }}
+    steps:
+      - name: Verify acceptance jobs
+        run: |
+          if [ "$QUALITY_RESULT" != "success" ]; then
+            echo "Quality checks finished with $QUALITY_RESULT." >&2
+            exit 1
+          fi
+
+          if [ "$TRUSTED_CONTENT_ENVIRONMENT" = "true" ]; then
+            if [ "$PRODUCTION_RESULT" != "success" ]; then
+              echo "Production acceptance finished with $PRODUCTION_RESULT." >&2
+              exit 1
+            fi
+            exit 0
+          fi
+
+          if [ "$PRODUCTION_RESULT" != "skipped" ]; then
+            echo "Untrusted production acceptance finished with $PRODUCTION_RESULT." >&2
+            exit 1
+          fi
