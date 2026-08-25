@@ -1,6 +1,11 @@
-import type { Browser, Page, Request } from "@playwright/test";
+import type { Browser, Page } from "@playwright/test";
 import { Clock, Duration, Effect, Schema } from "effect";
 import { withBrowserContext } from "./browser-context";
+import {
+  JavascriptRequestFailureKindSchema,
+  type JavascriptRequestTracker,
+  withJavascriptRequestTracker,
+} from "./request-tracker";
 
 const JAVASCRIPT_RESOURCE_PATTERN =
   /^\/_next\/static\/(?:immutable\/)?chunks\/.+\.js$/;
@@ -20,17 +25,33 @@ export interface JavascriptMeasurement {
   readonly worst: Omit<JavascriptRun, "urls">;
 }
 
-interface JavascriptRequestTracker {
-  readonly pendingCount: number;
-  readonly revision: number;
-}
-
 /** A route did not return one successful document response. */
 export class JavascriptResourceResponseError extends Schema.TaggedError<JavascriptResourceResponseError>()(
   "JavascriptResourceResponseError",
   {
     href: Schema.String,
     status: Schema.optional(Schema.Finite),
+  }
+) {}
+
+/** A required JavaScript or router-prefetch request did not complete. */
+export class JavascriptResourceRequestError extends Schema.TaggedError<JavascriptResourceRequestError>()(
+  "JavascriptResourceRequestError",
+  {
+    errorText: Schema.optional(Schema.String),
+    href: Schema.String,
+    kind: JavascriptRequestFailureKindSchema,
+    status: Schema.optional(Schema.Finite),
+    url: Schema.String,
+  }
+) {}
+
+/** Next.js did not register a visible-link prefetch within the fixed window. */
+export class JavascriptPrefetchReadinessTimeout extends Schema.TaggedError<JavascriptPrefetchReadinessTimeout>()(
+  "JavascriptPrefetchReadinessTimeout",
+  {
+    href: Schema.String,
+    timeoutMilliseconds: Schema.Finite,
   }
 ) {}
 
@@ -62,105 +83,6 @@ const countJavascriptResources = Effect.fn(
       return new Set(urls).size;
     }, JAVASCRIPT_RESOURCE_PATTERN.source)
   );
-});
-
-const withJavascriptRequestTracker = Effect.fn(
-  "NakafaE2E.withJavascriptRequestTracker"
-)(function* <A, E, R>(
-  page: Page,
-  applicationOrigin: string,
-  use: (tracker: JavascriptRequestTracker) => Effect.Effect<A, E, R>
-) {
-  return yield* Effect.acquireUseRelease(
-    Effect.sync(() => {
-      const pendingRequests = new Set<Request>();
-      let revision = 0;
-
-      const isMatchingRequest = (request: Request) => {
-        const resourceUrl = new URL(request.url());
-        return (
-          resourceUrl.origin === applicationOrigin &&
-          JAVASCRIPT_RESOURCE_PATTERN.test(resourceUrl.pathname)
-        );
-      };
-      const handleRequest = (request: Request) => {
-        if (!isMatchingRequest(request)) {
-          return;
-        }
-        pendingRequests.add(request);
-        revision += 1;
-      };
-      const handleRequestSettled = (request: Request) => {
-        if (!pendingRequests.delete(request)) {
-          return;
-        }
-        revision += 1;
-      };
-
-      page.on("request", handleRequest);
-      page.on("requestfailed", handleRequestSettled);
-      page.on("requestfinished", handleRequestSettled);
-
-      return {
-        handleRequest,
-        handleRequestSettled,
-        tracker: {
-          get pendingCount() {
-            return pendingRequests.size;
-          },
-          get revision() {
-            return revision;
-          },
-        },
-      };
-    }),
-    ({ tracker }) => use(tracker),
-    ({ handleRequest, handleRequestSettled }) =>
-      Effect.sync(() => {
-        page.off("request", handleRequest);
-        page.off("requestfailed", handleRequestSettled);
-        page.off("requestfinished", handleRequestSettled);
-      })
-  );
-});
-
-const waitForJavascriptResourcesToSettle = Effect.fn(
-  "NakafaE2E.waitForJavascriptResourcesToSettle"
-)(function* (
-  page: Page,
-  href: string,
-  requestTracker: JavascriptRequestTracker
-) {
-  const startedAt = yield* Clock.currentTimeMillis;
-  let lastChangeAt = startedAt;
-  let previousCount = -1;
-  let previousRevision = -1;
-
-  while (true) {
-    const currentCount = yield* countJavascriptResources(page);
-    const observedAt = yield* Clock.currentTimeMillis;
-    if (
-      currentCount !== previousCount ||
-      requestTracker.revision !== previousRevision
-    ) {
-      previousCount = currentCount;
-      previousRevision = requestTracker.revision;
-      lastChangeAt = observedAt;
-    }
-    if (
-      requestTracker.pendingCount === 0 &&
-      observedAt - lastChangeAt >= RESOURCE_IDLE_MILLISECONDS
-    ) {
-      return;
-    }
-    if (observedAt - startedAt > RESOURCE_SETTLE_TIMEOUT_MILLISECONDS) {
-      return yield* new JavascriptResourceSettleTimeout({
-        href,
-        timeoutMilliseconds: RESOURCE_SETTLE_TIMEOUT_MILLISECONDS,
-      });
-    }
-    yield* Effect.sleep(Duration.millis(RESOURCE_POLL_MILLISECONDS));
-  }
 });
 
 const readJavascriptRun = Effect.fn("NakafaE2E.readJavascriptRun")(function* (
@@ -203,6 +125,76 @@ const readJavascriptRun = Effect.fn("NakafaE2E.readJavascriptRun")(function* (
   );
 });
 
+const readSettledJavascriptRun = Effect.fn(
+  "NakafaE2E.readSettledJavascriptRun"
+)(function* (
+  page: Page,
+  href: string,
+  requestTracker: JavascriptRequestTracker
+) {
+  const startedAt = yield* Clock.currentTimeMillis;
+  let lastChangeAt = startedAt;
+  let previousCount = -1;
+  let previousRevision = -1;
+
+  while (true) {
+    const currentCount = yield* countJavascriptResources(page);
+    const observedAt = yield* Clock.currentTimeMillis;
+    const requestFailure = requestTracker.getFailure();
+    if (requestFailure) {
+      return yield* new JavascriptResourceRequestError({
+        ...requestFailure,
+        href,
+      });
+    }
+    if (
+      currentCount !== previousCount ||
+      requestTracker.revision !== previousRevision
+    ) {
+      previousCount = currentCount;
+      previousRevision = requestTracker.revision;
+      lastChangeAt = observedAt;
+    }
+    if (!requestTracker.prefetchObserved) {
+      if (observedAt - startedAt > RESOURCE_SETTLE_TIMEOUT_MILLISECONDS) {
+        return yield* new JavascriptPrefetchReadinessTimeout({
+          href,
+          timeoutMilliseconds: RESOURCE_SETTLE_TIMEOUT_MILLISECONDS,
+        });
+      }
+      yield* Effect.sleep(Duration.millis(RESOURCE_POLL_MILLISECONDS));
+      continue;
+    }
+    if (
+      requestTracker.pendingCount === 0 &&
+      observedAt - lastChangeAt >= RESOURCE_IDLE_MILLISECONDS
+    ) {
+      const snapshotRevision = requestTracker.revision;
+      const javascriptRun = yield* readJavascriptRun(page);
+      const snapshotFailure = requestTracker.getFailure();
+      if (snapshotFailure) {
+        return yield* new JavascriptResourceRequestError({
+          ...snapshotFailure,
+          href,
+        });
+      }
+      if (
+        requestTracker.pendingCount === 0 &&
+        requestTracker.revision === snapshotRevision
+      ) {
+        return javascriptRun;
+      }
+    }
+    if (observedAt - startedAt > RESOURCE_SETTLE_TIMEOUT_MILLISECONDS) {
+      return yield* new JavascriptResourceSettleTimeout({
+        href,
+        timeoutMilliseconds: RESOURCE_SETTLE_TIMEOUT_MILLISECONDS,
+      });
+    }
+    yield* Effect.sleep(Duration.millis(RESOURCE_POLL_MILLISECONDS));
+  }
+});
+
 /** Measures one route in three isolated, uncached Chromium contexts. */
 export const measureRouteJavascript = Effect.fn(
   "NakafaE2E.measureRouteJavascript"
@@ -225,6 +217,7 @@ export const measureRouteJavascript = Effect.fn(
           return yield* withJavascriptRequestTracker(
             page,
             applicationOrigin,
+            JAVASCRIPT_RESOURCE_PATTERN,
             (requestTracker) =>
               Effect.gen(function* () {
                 const session = yield* Effect.promise(() =>
@@ -247,12 +240,11 @@ export const measureRouteJavascript = Effect.fn(
                   });
                 }
 
-                yield* waitForJavascriptResourcesToSettle(
+                return yield* readSettledJavascriptRun(
                   page,
                   href,
                   requestTracker
                 );
-                return yield* readJavascriptRun(page);
               })
           );
         })
