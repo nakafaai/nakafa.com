@@ -1,8 +1,8 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { withObservedPageErrors } from "./support/browser-context";
-import { seedDeniedAnalyticsConsent } from "./support/consent";
-import { waitForCommittedAppRouter } from "./support/navigation/readiness";
+import { withObservedPageErrors } from "@/e2e/support/browser-context";
+import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 
 const usageDataName = "Usage data";
 const readinessTimeoutMilliseconds = 15_000;

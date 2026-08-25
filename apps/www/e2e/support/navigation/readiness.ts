@@ -5,7 +5,7 @@ import {
   NavigationReadinessTimeout,
   NavigationRequestError,
   readErrorText,
-} from "./failure";
+} from "@/e2e/support/navigation/failure";
 
 const loadSourceRoute = Effect.fn("NakafaE2E.loadNavigationSource")(function* (
   page: Page,

@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import type { Contributor } from "@repo/contents/_types/contributor";
 import { Effect, Schema } from "effect";
-import { dragTouch } from "./touch";
+import { dragTouch } from "@/e2e/support/touch";
 
 const COARSE_SPLITTER_TARGET_WIDTH = 44;
 const FINE_SPLITTER_TARGET_WIDTH = 24;

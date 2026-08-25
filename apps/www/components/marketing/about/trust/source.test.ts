@@ -2,7 +2,10 @@
 
 import { describe, expect, it } from "vitest";
 
-import { buildTrustSourceExcerpt, type TrustLessonExcerpt } from "./source";
+import {
+  buildTrustSourceExcerpt,
+  type TrustLessonExcerpt,
+} from "@/components/marketing/about/trust/source";
 
 const excerpt = {
   definition: "A sequence follows a repeated rule.",

@@ -1,16 +1,16 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { contributors } from "@/lib/data/contributor";
-import { withObservedPageErrors } from "./support/browser-context";
-import { seedDeniedAnalyticsConsent } from "./support/consent";
+import { withObservedPageErrors } from "@/e2e/support/browser-context";
+import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 import {
   legacyAvatarFragmentIds,
   measureMarketingPage,
   readFirstContributor,
   swipeContributorDrawer,
   verifyDesktopSplitter,
-} from "./support/marketing";
-import { waitForCommittedAppRouter } from "./support/navigation/readiness";
+} from "@/e2e/support/marketing";
+import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { contributors } from "@/lib/data/contributor";
 
 /**
  * Raw Community markup is dominated by the 16 preserved vector Characters.

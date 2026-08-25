@@ -3,9 +3,9 @@ import { Effect, Schema } from "effect";
 import {
   withBrowserContext,
   withObservedPageErrors,
-} from "./support/browser-context";
-import { seedDeniedAnalyticsConsent } from "./support/consent";
-import { dragTouch } from "./support/touch";
+} from "@/e2e/support/browser-context";
+import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { dragTouch } from "@/e2e/support/touch";
 
 const targetViewports = [
   { height: 800, name: "compact", slot: "drawer-popup", width: 320 },
