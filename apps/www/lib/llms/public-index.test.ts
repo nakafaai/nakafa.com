@@ -6,6 +6,7 @@ import {
   buildPublicLlmsAppSectionIndexText,
   buildRootLlmsIndexText,
   getPublicLlmsSectionIndexLines,
+  isPublicLlmsLocaleIndexRoute,
   resolvePublicLlmsSectionIndex,
 } from "@/lib/llms/public-index";
 
@@ -38,6 +39,13 @@ describe("public llms discovery indexes", () => {
     expect(indonesianLines).toContainEqual(
       expect.stringContaining(`${BASE_URL}/id/kurikulum/llms.txt`)
     );
+  });
+
+  it("classifies only localized public locale-index slugs", () => {
+    expect(isPublicLlmsLocaleIndexRoute("")).toBe(true);
+    expect(isPublicLlmsLocaleIndexRoute("llms")).toBe(true);
+    expect(isPublicLlmsLocaleIndexRoute("articles")).toBe(false);
+    expect(isPublicLlmsLocaleIndexRoute("llms/en")).toBe(false);
   });
 
   it("resolves public prefixes to their bounded content sections", () => {

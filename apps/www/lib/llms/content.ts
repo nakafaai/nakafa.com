@@ -8,7 +8,10 @@ import {
 } from "@/lib/content/published/active";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { getCachedLlmsSectionIndexText } from "@/lib/llms/indexes";
-import { resolvePublicLlmsSectionIndex } from "@/lib/llms/public-index";
+import {
+  isPublicLlmsLocaleIndexRoute,
+  resolvePublicLlmsSectionIndex,
+} from "@/lib/llms/public-index";
 import {
   getCachedPublishedText,
   type PublishedMarkdownInput,
@@ -76,6 +79,10 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
 /** Checks the exact route owners used by the public Markdown handler. */
 export const hasLlmsMarkdownSource = Effect.fn("www.llms.markdown.hasSource")(
   function* (input: LlmsMarkdownInput) {
+    if (isPublicLlmsLocaleIndexRoute(input.cleanSlug)) {
+      return true;
+    }
+
     if (resolvePublicLlmsSectionIndex(input)) {
       return true;
     }

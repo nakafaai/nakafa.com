@@ -13,6 +13,7 @@ import { getCachedLlmsSectionIndexText } from "@/lib/llms/indexes";
 import {
   buildPublicLlmsAppSectionIndexText,
   buildRootLlmsIndexText,
+  isPublicLlmsLocaleIndexRoute,
   resolvePublicLlmsSectionIndex,
 } from "@/lib/llms/public-index";
 import {
@@ -59,7 +60,7 @@ export async function GET(
   const cleanSlug = stripLlmsRouteExtension(slugParts.join("/"));
 
   const isPublicLocaleIndex =
-    hasLocalePrefix && (cleanSlug === "" || cleanSlug === "llms");
+    hasLocalePrefix && isPublicLlmsLocaleIndexRoute(cleanSlug);
   if (isPublicLocaleIndex) {
     const localeIndexText = await getCachedLlmsSectionIndexText({
       cleanSlug: `llms/${locale}`,

@@ -15,6 +15,7 @@ const mockGetCachedLlmsSectionIndexText = vi.hoisted(() => vi.fn());
 const mockGetCachedPublishedText = vi.hoisted(() => vi.fn());
 const mockClassifyQuranLlmsRoute = vi.hoisted(() => vi.fn());
 const mockGetQuranLlmsText = vi.hoisted(() => vi.fn());
+const mockIsPublicLlmsLocaleIndexRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
 const mockResolvePublicLlmsSectionIndex = vi.hoisted(() => vi.fn());
@@ -41,6 +42,7 @@ vi.mock("@/lib/llms/quran", () => ({
 }));
 
 vi.mock("@/lib/llms/public-index", () => ({
+  isPublicLlmsLocaleIndexRoute: mockIsPublicLlmsLocaleIndexRoute,
   resolvePublicLlmsSectionIndex: mockResolvePublicLlmsSectionIndex,
 }));
 
@@ -75,6 +77,7 @@ describe("llms markdown content resolver", () => {
     mockGetCachedPublishedText.mockReset().mockResolvedValue(null);
     mockClassifyQuranLlmsRoute.mockReset().mockReturnValue(Option.none());
     mockGetQuranLlmsText.mockReset().mockReturnValue(Effect.succeed(null));
+    mockIsPublicLlmsLocaleIndexRoute.mockReset().mockReturnValue(false);
     mockReadActiveContentRoute.mockReset();
     mockResolvePublicLlmsSectionIndex.mockReset().mockReturnValue(null);
     mockReadActiveContentIdentity
@@ -276,6 +279,25 @@ describe("llms markdown content resolver", () => {
     expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
     expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
   });
+
+  it.each(["", "llms"])(
+    "recognizes locale index %j without reading its body",
+    async (cleanSlug) => {
+      mockIsPublicLlmsLocaleIndexRoute.mockReturnValueOnce(true);
+
+      await expect(
+        Effect.runPromise(hasLlmsMarkdownSource({ cleanSlug, locale: "en" }))
+      ).resolves.toBe(true);
+
+      expect(mockIsPublicLlmsLocaleIndexRoute).toHaveBeenCalledWith(cleanSlug);
+      expect(mockResolvePublicLlmsSectionIndex).not.toHaveBeenCalled();
+      expect(mockClassifyQuranLlmsRoute).not.toHaveBeenCalled();
+      expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
+      expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
+      expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
+      expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
+    }
+  );
 
   it("recognizes Quran ownership without reading its body twice", async () => {
     mockClassifyQuranLlmsRoute.mockReturnValueOnce(
