@@ -108,6 +108,70 @@ describe("contentRelease/article", () => {
     ]);
   });
 
+  it("paginates mixed transition rows without hiding either date shape", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await insertRuntimeArticles(ctx, 3);
+      const rows = await ctx.db.query("articleCatalog").collect();
+      const legacy = rows.find(
+        (row) => row.contentKey === testArticleProjection(1).contentKey
+      );
+      if (!(legacy && "datePublished" in legacy)) {
+        throw new Error("Expected one current article date shape.");
+      }
+      const {
+        _creationTime: _createdAt,
+        _id,
+        dateModified: _dateModified,
+        datePublished,
+        ...fields
+      } = legacy;
+      await ctx.db.replace("articleCatalog", _id, {
+        ...fields,
+        date: datePublished,
+      });
+    });
+
+    const first = await t.query(page, {
+      category: "politics",
+      expectedManifestHash: null,
+      expectedReleaseId: null,
+      appLocale: "en",
+      paginationOpts: { cursor: null, numItems: 1 },
+    });
+    const second = await t.query(page, {
+      category: "politics",
+      expectedManifestHash: first.activeManifestHash,
+      expectedReleaseId: first.activeReleaseId,
+      appLocale: "en",
+      paginationOpts: {
+        cursor: first.result.continueCursor,
+        numItems: 1,
+      },
+    });
+    const third = await t.query(page, {
+      category: "politics",
+      expectedManifestHash: second.activeManifestHash,
+      expectedReleaseId: second.activeReleaseId,
+      appLocale: "en",
+      paginationOpts: {
+        cursor: second.result.continueCursor,
+        numItems: 1,
+      },
+    });
+
+    expect([
+      ...first.result.page,
+      ...second.result.page,
+      ...third.result.page,
+    ]).toMatchObject(
+      [2, 1, 0].map((index) => ({
+        contentKey: testArticleProjection(index).contentKey,
+      }))
+    );
+    expect(third.result.isDone).toBe(true);
+  });
+
   it("keeps absent article ownership unmanaged before the first cutover", async () => {
     const empty = convexTest(schema, convexModules);
     await expect(
