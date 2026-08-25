@@ -1,4 +1,3 @@
-import { PublicationDatesSchema } from "@nakafa/aksara-contracts/date";
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Schema } from "effect";
@@ -70,15 +69,22 @@ class ContentDateContractError extends Schema.TaggedError<ContentDateContractErr
   { href: Schema.String, surface: Schema.String }
 ) {}
 
+function contentDateError(href: string, surface: string) {
+  return new ContentDateContractError({ href, surface });
+}
+
 /** Reads one date-bearing JSON-LD node selected by its public schema type. */
 const readJsonLdDates = Effect.fn("NakafaE2E.readJsonLdDates")(function* (
   page: Page,
   href: string,
   jsonLdType: JsonLdType
 ) {
+  const { PublicationDatesSchema } = yield* Effect.tryPromise({
+    catch: () => contentDateError(href, "publication date schema"),
+    try: () => import("@nakafa/aksara-contracts/date"),
+  });
   const raw = yield* Effect.tryPromise({
-    catch: () =>
-      new ContentDateContractError({ href, surface: `${jsonLdType} JSON-LD` }),
+    catch: () => contentDateError(href, `${jsonLdType} JSON-LD`),
     try: () =>
       page
         .locator('script[type="application/ld+json"]')
@@ -100,13 +106,7 @@ const readJsonLdDates = Effect.fn("NakafaE2E.readJsonLdDates")(function* (
   });
 
   return yield* Schema.decodeUnknownEffect(PublicationDatesSchema)(raw).pipe(
-    Effect.mapError(
-      () =>
-        new ContentDateContractError({
-          href,
-          surface: `${jsonLdType} JSON-LD dates`,
-        })
-    )
+    Effect.mapError(() => contentDateError(href, `${jsonLdType} JSON-LD dates`))
   );
 });
 
@@ -153,12 +153,8 @@ const expectTruthfulDates = Effect.fn("NakafaE2E.expectTruthfulDates")(
     const timeDates = yield* Schema.decodeUnknownEffect(
       Schema.Array(Schema.String)
     )(rawTimeDates).pipe(
-      Effect.mapError(
-        () =>
-          new ContentDateContractError({
-            href: route.href,
-            surface: "semantic time elements",
-          })
+      Effect.mapError(() =>
+        contentDateError(route.href, "semantic time elements")
       )
     );
     const expectedDates = yield* Effect.forEach(jsonLdTypes, (jsonLdType) =>
@@ -166,10 +162,7 @@ const expectTruthfulDates = Effect.fn("NakafaE2E.expectTruthfulDates")(
     );
     const firstDates = expectedDates[0];
     if (!firstDates) {
-      return yield* new ContentDateContractError({
-        href: route.href,
-        surface: "structured date types",
-      });
+      return yield* contentDateError(route.href, "structured date types");
     }
 
     const blockText = yield* Effect.promise(() => dateBlock.textContent());
@@ -224,10 +217,7 @@ const expectCanonicalAlternates = Effect.fn(
   }
   const englishRoute = routes.find((alternate) => alternate.locale === "en");
   if (!englishRoute) {
-    return yield* new ContentDateContractError({
-      href: route.href,
-      surface: "x-default alternate",
-    });
+    return yield* contentDateError(route.href, "x-default alternate");
   }
   yield* expectSingleLink(
     page,
