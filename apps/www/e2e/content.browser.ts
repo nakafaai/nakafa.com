@@ -1,3 +1,4 @@
+import { PublicationDatesSchema } from "@nakafa/aksara-contracts/date";
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Schema } from "effect";
@@ -8,10 +9,6 @@ import {
 
 const APP_ORIGIN = "https://nakafa.com";
 const CLASS_SEPARATOR_PATTERN = /\s+/;
-const RenderedDatesSchema = Schema.Struct({
-  dateModified: Schema.optionalKey(Schema.String),
-  datePublished: Schema.String,
-});
 type DateLabels = Readonly<{ published: string; updated: string }>;
 type JsonLdType = "Article" | "LearningResource";
 const dateLabels = {
@@ -102,7 +99,7 @@ const readJsonLdDates = Effect.fn("NakafaE2E.readJsonLdDates")(function* (
         }, jsonLdType),
   });
 
-  return yield* Schema.decodeUnknownEffect(RenderedDatesSchema)(raw).pipe(
+  return yield* Schema.decodeUnknownEffect(PublicationDatesSchema)(raw).pipe(
     Effect.mapError(
       () =>
         new ContentDateContractError({

@@ -6,7 +6,7 @@ interface Props {
   author: Person | Person[];
   dateModified?: string;
   datePublished: string;
-  description: string;
+  description?: string;
   educationalLevel: string;
   name: string;
 }
@@ -23,7 +23,7 @@ export function LearningResourceJsonLd({
     "@context": "https://schema.org",
     "@type": "LearningResource",
     name,
-    description,
+    ...(description === undefined ? {} : { description }),
     educationalLevel,
     datePublished,
     ...(dateModified === undefined ? {} : { dateModified }),

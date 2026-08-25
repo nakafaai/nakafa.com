@@ -219,7 +219,7 @@ async function ArticleRouteContent({
         author={authorJsonLd}
         dateModified={modifiedAt}
         datePublished={publishedAt}
-        description={contentMetadata.description ?? ""}
+        description={contentMetadata.description}
         headline={contentMetadata.title}
         image={getOgUrl(locale, filePath)}
         url={`/${locale}${filePath}`}
@@ -228,7 +228,7 @@ async function ArticleRouteContent({
         author={authorJsonLd}
         dateModified={modifiedAt}
         datePublished={publishedAt}
-        description={contentMetadata.description ?? ""}
+        description={contentMetadata.description}
         educationalLevel={categoryLabel}
         name={contentMetadata.title}
       />

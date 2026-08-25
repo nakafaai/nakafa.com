@@ -228,7 +228,7 @@ async function MaterialLessonPage({
         author={authorJsonLd}
         dateModified={modifiedAt}
         datePublished={publishedAt}
-        description={metadata.description ?? metadata.subject ?? ""}
+        description={metadata.description ?? metadata.subject}
         headline={metadata.title}
         image={getOgUrl(locale, route.publicPath)}
         url={toMaterialHref(route)}
@@ -237,7 +237,7 @@ async function MaterialLessonPage({
         author={authorJsonLd}
         dateModified={modifiedAt}
         datePublished={publishedAt}
-        description={metadata.description ?? metadata.subject ?? ""}
+        description={metadata.description ?? metadata.subject}
         educationalLevel={parentTitle}
         name={metadata.title}
       />
