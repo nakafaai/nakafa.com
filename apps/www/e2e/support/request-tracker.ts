@@ -58,13 +58,11 @@ export const formatRequestFailure = (failure: RequestFailure) => {
 };
 
 export interface RequestTracker {
-  readonly getFailure: () => RequestFailure | undefined;
-  readonly hasObserved: (kind: TrackedRequestKind) => boolean;
+  readonly getFailure: (kind: TrackedRequestKind) => RequestFailure | undefined;
   readonly pendingCount: number;
   readonly pendingRequests: (
     kind: TrackedRequestKind
   ) => readonly TrackedRequest[];
-  readonly reset: () => void;
   readonly revision: number;
   readonly successfulCount: (kind: TrackedRequestKind) => number;
 }
@@ -97,25 +95,16 @@ export const withRequestTracker = Effect.fn("NakafaE2E.withRequestTracker")(
   ) {
     return yield* Effect.acquireUseRelease(
       Effect.sync(() => {
-        const observedKinds = new Set<TrackedRequestKind>();
+        const failures = new Map<TrackedRequestKind, RequestFailure>();
         const pendingRequests = new Map<Request, PendingRequest>();
         const successfulCounts = new Map<TrackedRequestKind, number>();
-        let failure: RequestFailure | undefined;
         let revision = 0;
 
-        const reset = () => {
-          failure = undefined;
-          observedKinds.clear();
-          pendingRequests.clear();
-          successfulCounts.clear();
-          revision += 1;
-        };
         const handleRequest = (request: Request) => {
           const requestKind = classifyRequest(request);
           if (!requestKind) {
             return;
           }
-          observedKinds.add(requestKind);
           pendingRequests.set(request, {
             details: readTrackedRequest(request),
             kind: requestKind,
@@ -131,22 +120,33 @@ export const withRequestTracker = Effect.fn("NakafaE2E.withRequestTracker")(
           revision += 1;
           return pendingRequest;
         };
+        const recordFailure = (
+          pendingRequest: PendingRequest,
+          requestFailure: RequestFailure
+        ) => {
+          if (!failures.has(pendingRequest.kind)) {
+            failures.set(pendingRequest.kind, requestFailure);
+          }
+        };
         const handleRequestFailed = (request: Request) => {
           const pendingRequest = settleRequest(request);
           if (!pendingRequest) {
             return;
           }
           const requestFailure = request.failure();
-          failure ??= requestFailure
-            ? {
-                ...pendingRequest.details,
-                errorText: requestFailure.errorText,
-                outcome: "network",
-              }
-            : {
-                ...pendingRequest.details,
-                outcome: "network",
-              };
+          recordFailure(
+            pendingRequest,
+            requestFailure
+              ? {
+                  ...pendingRequest.details,
+                  errorText: requestFailure.errorText,
+                  outcome: "network",
+                }
+              : {
+                  ...pendingRequest.details,
+                  outcome: "network",
+                }
+          );
         };
         const handleRequestFinished = (request: Request) => {
           const pendingRequest = settleRequest(request);
@@ -155,18 +155,18 @@ export const withRequestTracker = Effect.fn("NakafaE2E.withRequestTracker")(
           }
           const response = request.existingResponse();
           if (!response) {
-            failure ??= {
+            recordFailure(pendingRequest, {
               ...pendingRequest.details,
               outcome: "missing-response",
-            };
+            });
             return;
           }
           if (!response.ok()) {
-            failure ??= {
+            recordFailure(pendingRequest, {
               ...pendingRequest.details,
               outcome: "http",
               status: response.status(),
-            };
+            });
             return;
           }
           successfulCounts.set(
@@ -191,11 +191,8 @@ export const withRequestTracker = Effect.fn("NakafaE2E.withRequestTracker")(
           handleRequestFailed,
           handleRequestFinished,
           tracker: {
-            getFailure() {
-              return failure;
-            },
-            hasObserved(kind: TrackedRequestKind) {
-              return observedKinds.has(kind);
+            getFailure(kind: TrackedRequestKind) {
+              return failures.get(kind);
             },
             pendingRequests(kind: TrackedRequestKind) {
               return Array.from(pendingRequests.values())
@@ -205,7 +202,6 @@ export const withRequestTracker = Effect.fn("NakafaE2E.withRequestTracker")(
             get pendingCount() {
               return pendingRequests.size;
             },
-            reset,
             get revision() {
               return revision;
             },

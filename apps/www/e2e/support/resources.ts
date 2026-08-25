@@ -5,6 +5,7 @@ import { seedDeniedAnalyticsConsent } from "./consent";
 import {
   formatRequestFailure,
   NEXT_ROUTER_PREFETCH_HEADER,
+  RequestFailureSchema,
   type RequestTracker,
   requestFailureFields,
   type TrackedRequestKind,
@@ -54,7 +55,7 @@ export class JavascriptResourceResponseError extends Schema.TaggedError<Javascri
   }
 ) {}
 
-/** A required JavaScript or router-prefetch request did not complete. */
+/** A required JavaScript request did not complete. */
 export class JavascriptResourceRequestError extends Schema.TaggedError<JavascriptResourceRequestError>()(
   "JavascriptResourceRequestError",
   {
@@ -72,9 +73,17 @@ export class JavascriptPrefetchReadinessTimeout extends Schema.TaggedError<Javas
   "JavascriptPrefetchReadinessTimeout",
   {
     href: Schema.String,
+    lastFailure: Schema.optional(RequestFailureSchema),
     timeoutMilliseconds: Schema.Finite,
   }
-) {}
+) {
+  get message() {
+    const failure = this.lastFailure
+      ? ` lastFailure=${formatRequestFailure(this.lastFailure)}`
+      : "";
+    return `JavaScript prefetch readiness timed out: href=${this.href} timeoutMilliseconds=${this.timeoutMilliseconds}${failure}`;
+  }
+}
 
 /** Matching JavaScript resources continued loading beyond the fixed window. */
 export class JavascriptResourceSettleTimeout extends Schema.TaggedError<JavascriptResourceSettleTimeout>()(
@@ -157,7 +166,7 @@ const readSettledJavascriptRun = Effect.fn(
   while (true) {
     const currentCount = yield* countJavascriptResources(page);
     const observedAt = yield* Clock.currentTimeMillis;
-    const requestFailure = requestTracker.getFailure();
+    const requestFailure = requestTracker.getFailure("javascript");
     if (requestFailure) {
       return yield* new JavascriptResourceRequestError({
         ...requestFailure,
@@ -172,10 +181,12 @@ const readSettledJavascriptRun = Effect.fn(
       previousRevision = requestTracker.revision;
       lastChangeAt = observedAt;
     }
-    if (!requestTracker.hasObserved("prefetch")) {
+    if (requestTracker.successfulCount("prefetch") === 0) {
       if (observedAt - startedAt > RESOURCE_SETTLE_TIMEOUT_MILLISECONDS) {
+        const lastFailure = requestTracker.getFailure("prefetch");
         return yield* new JavascriptPrefetchReadinessTimeout({
           href,
+          ...(lastFailure ? { lastFailure } : {}),
           timeoutMilliseconds: RESOURCE_SETTLE_TIMEOUT_MILLISECONDS,
         });
       }
@@ -188,7 +199,7 @@ const readSettledJavascriptRun = Effect.fn(
     ) {
       const snapshotRevision = requestTracker.revision;
       const javascriptRun = yield* readJavascriptRun(page);
-      const snapshotFailure = requestTracker.getFailure();
+      const snapshotFailure = requestTracker.getFailure("javascript");
       if (snapshotFailure) {
         return yield* new JavascriptResourceRequestError({
           ...snapshotFailure,
