@@ -32,10 +32,24 @@ export type PredecessorRecordArgs = Infer<
   typeof predecessorRecordArgsValidator
 >;
 
-/** Whether one authenticated predecessor read was durably recorded. */
-export const predecessorRecordResultValidator = v.object({
-  observed: v.boolean(),
+/** Exact server-owned release identity used by the temporary observer. */
+export const predecessorIdentityValidator = v.object({
+  manifestHash: v.string(),
+  releaseId: v.string(),
+  sequence: v.number(),
 });
+export type PredecessorIdentity = Infer<typeof predecessorIdentityValidator>;
+
+/** Outcome of one authenticated predecessor read marker. */
+export const predecessorRecordResultValidator = v.union(
+  v.object({ kind: v.literal("inactive") }),
+  v.object({ kind: v.literal("recorded") }),
+  v.object({
+    kind: v.literal("drifted"),
+    live: predecessorIdentityValidator,
+    stored: predecessorIdentityValidator,
+  })
+);
 export type PredecessorRecordResult = Infer<
   typeof predecessorRecordResultValidator
 >;
@@ -58,18 +72,29 @@ const predecessorRouteStatusValidator = v.object({
   sealedAt: v.optional(v.number()),
 });
 
-/** Server-derived status for one exact observation and active release. */
-export const predecessorStatusValidator = v.object({
-  activeManifestHash: v.string(),
-  activeReleaseId: v.string(),
-  activeSequence: v.number(),
+const predecessorStatusFields = {
   deploymentName: v.string(),
   observationId: v.string(),
   routes: v.object({
     batch: predecessorRouteStatusValidator,
     singular: predecessorRouteStatusValidator,
   }),
-});
+};
+
+/** Server-derived status for one exact observation and live release. */
+export const predecessorStatusValidator = v.union(
+  v.object({
+    ...predecessorStatusFields,
+    active: predecessorIdentityValidator,
+    kind: v.literal("active"),
+  }),
+  v.object({
+    ...predecessorStatusFields,
+    kind: v.literal("drifted"),
+    live: predecessorIdentityValidator,
+    stored: predecessorIdentityValidator,
+  })
+);
 export type PredecessorStatus = Infer<typeof predecessorStatusValidator>;
 
 const predecessorClearRouteValidator = v.object({
@@ -82,20 +107,36 @@ const predecessorClearRouteValidator = v.object({
   sealedAt: v.number(),
 });
 
-/** Honest server-side receipt for deleting one sealed observation. */
-export const predecessorClearReceiptValidator = v.object({
-  activeManifestHash: v.string(),
-  activeReleaseId: v.string(),
-  activeSequence: v.number(),
-  clearedAt: v.number(),
-  deleted: v.number(),
+const predecessorClearFields = {
+  deleted: v.literal(2),
   deploymentName: v.string(),
   observationId: v.string(),
-  routes: v.object({
-    batch: predecessorClearRouteValidator,
-    singular: predecessorClearRouteValidator,
+};
+
+/** Honest server-side receipt for deleting one exact observation. */
+export const predecessorClearReceiptValidator = v.union(
+  v.object({
+    ...predecessorClearFields,
+    active: predecessorIdentityValidator,
+    clearedAt: v.number(),
+    kind: v.literal("cleared"),
+    routes: v.object({
+      batch: predecessorClearRouteValidator,
+      singular: predecessorClearRouteValidator,
+    }),
   }),
-});
+  v.object({
+    ...predecessorClearFields,
+    abandonedAt: v.number(),
+    kind: v.literal("abandoned"),
+    live: predecessorIdentityValidator,
+    routes: v.object({
+      batch: predecessorRouteStatusValidator,
+      singular: predecessorRouteStatusValidator,
+    }),
+    stored: predecessorIdentityValidator,
+  })
+);
 export type PredecessorClearReceipt = Infer<
   typeof predecessorClearReceiptValidator
 >;

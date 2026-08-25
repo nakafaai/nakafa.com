@@ -8,7 +8,10 @@ import { loadState } from "@repo/backend/convex/contentRelease/model";
 import {
   decodePredecessorObservationId,
   PREDECESSOR_QUIET_WINDOW_MS,
+  type PredecessorClearReceipt,
+  type PredecessorIdentity,
   type PredecessorObservationId,
+  type PredecessorRecordResult,
   type PredecessorRoute,
   type PredecessorStatus,
 } from "@repo/backend/convex/contentRelease/predecessor/spec";
@@ -17,14 +20,13 @@ import { Clock, Effect } from "effect";
 type ReadCtx = MutationCtx | QueryCtx;
 type PredecessorRead = Doc<"contentPredecessorReads">;
 type PredecessorReadFields = Omit<PredecessorRead, "_creationTime" | "_id">;
-interface ActiveIdentity {
-  readonly manifestHash: string;
-  readonly releaseId: string;
-  readonly sequence: number;
-}
 interface StoredRows {
   readonly batch: PredecessorRead | null;
   readonly singular: PredecessorRead | null;
+}
+interface ObservationFields {
+  readonly batch: PredecessorReadFields;
+  readonly singular: PredecessorReadFields;
 }
 interface ObservationRows {
   readonly batch: PredecessorRead;
@@ -80,7 +82,7 @@ const loadActiveIdentity = Effect.fn(
     manifestHash: state.activeManifestHash,
     releaseId: state.activeReleaseId,
     sequence: state.activeSequence,
-  } satisfies ActiveIdentity;
+  } satisfies PredecessorIdentity;
 });
 
 /** Reads the server-verified Convex deployment name. */
@@ -135,21 +137,37 @@ const requireOwnedRows = Effect.fn(
   return complete;
 });
 
-/** Verifies both stored release triples against the live transaction read. */
+/** Returns the release identity durably owned by one consistent pair. */
+function storedIdentity(rows: ObservationFields): PredecessorIdentity {
+  return {
+    manifestHash: rows.singular.activeManifestHash,
+    releaseId: rows.singular.activeReleaseId,
+    sequence: rows.singular.activeSequence,
+  };
+}
+
+/** Compares one consistent stored pair with the live release identity. */
+function hasActiveIdentity(
+  rows: ObservationFields,
+  active: PredecessorIdentity
+) {
+  const stored = storedIdentity(rows);
+  return (
+    stored.manifestHash === active.manifestHash &&
+    stored.releaseId === active.releaseId &&
+    stored.sequence === active.sequence
+  );
+}
+
+/** Rejects reuse of a quiet window after the active release changes. */
 const requireActiveIdentity = Effect.fn(
   "contentRelease.predecessor.requireActiveIdentity"
-)(function* (rows: ObservationRows, active: ActiveIdentity) {
-  for (const row of [rows.singular, rows.batch]) {
-    if (
-      row.activeManifestHash !== active.manifestHash ||
-      row.activeReleaseId !== active.releaseId ||
-      row.activeSequence !== active.sequence
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_STATE",
-        "Active release changed during predecessor observation."
-      );
-    }
+)(function* (rows: ObservationRows, active: PredecessorIdentity) {
+  if (!hasActiveIdentity(rows, active)) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_STATE",
+      "Active release changed during predecessor observation."
+    );
   }
 });
 
@@ -168,22 +186,20 @@ const requireDeployment = Effect.fn(
   }
 });
 
-/** Loads one fully verified observation for status or sealing. */
-const loadVerifiedObservation = Effect.fn(
-  "contentRelease.predecessor.loadVerifiedObservation"
-)(function* (ctx: ReadCtx, rawObservationId: string) {
-  const observationId = yield* decodePredecessorObservationId(rawObservationId);
-  const rows = yield* requireOwnedRows(yield* loadRoutes(ctx), observationId);
-  yield* requireDeployment(rows, yield* loadDeploymentName(ctx));
-  yield* requireActiveIdentity(rows, yield* loadActiveIdentity(ctx));
-  return rows;
-});
+/** Loads one owned observation plus its live release identity. */
+const loadObservation = Effect.fn("contentRelease.predecessor.loadObservation")(
+  function* (ctx: ReadCtx, rawObservationId: string) {
+    const observationId =
+      yield* decodePredecessorObservationId(rawObservationId);
+    const rows = yield* requireOwnedRows(yield* loadRoutes(ctx), observationId);
+    yield* requireDeployment(rows, yield* loadDeploymentName(ctx));
+    const active = yield* loadActiveIdentity(ctx);
+    return { active, rows };
+  }
+);
 
-/** Builds status only from durable rows so query caching cannot stale time. */
-function buildStatus(rows: {
-  readonly batch: PredecessorReadFields;
-  readonly singular: PredecessorReadFields;
-}): PredecessorStatus {
+/** Builds route evidence only from durable observation rows. */
+function buildRoutes(rows: ObservationFields) {
   const routeStatus = (row: PredecessorReadFields) => ({
     armedAt: row.armedAt,
     invocationCount: row.invocationCount,
@@ -196,15 +212,29 @@ function buildStatus(rows: {
     ...(row.sealedAt === undefined ? {} : { sealedAt: row.sealedAt }),
   });
   return {
-    activeManifestHash: rows.singular.activeManifestHash,
-    activeReleaseId: rows.singular.activeReleaseId,
-    activeSequence: rows.singular.activeSequence,
+    batch: routeStatus(rows.batch),
+    singular: routeStatus(rows.singular),
+  };
+}
+
+/** Builds status without deriving time from a cacheable query execution. */
+function buildStatus(
+  rows: ObservationFields,
+  active: PredecessorIdentity
+): PredecessorStatus {
+  const common = {
     deploymentName: rows.singular.deploymentName,
     observationId: rows.singular.observationId,
-    routes: {
-      batch: routeStatus(rows.batch),
-      singular: routeStatus(rows.singular),
-    },
+    routes: buildRoutes(rows),
+  };
+  if (hasActiveIdentity(rows, active)) {
+    return { ...common, active, kind: "active" };
+  }
+  return {
+    ...common,
+    kind: "drifted",
+    live: active,
+    stored: storedIdentity(rows),
   };
 }
 
@@ -217,8 +247,7 @@ export const armPredecessorObservation = Effect.fn(
   if (existing.singular || existing.batch) {
     const rows = yield* requireOwnedRows(existing, observationId);
     yield* requireDeployment(rows, yield* loadDeploymentName(ctx));
-    yield* requireActiveIdentity(rows, yield* loadActiveIdentity(ctx));
-    return buildStatus(rows);
+    return buildStatus(rows, yield* loadActiveIdentity(ctx));
   }
   const active = yield* loadActiveIdentity(ctx);
   const deploymentName = yield* loadDeploymentName(ctx);
@@ -240,15 +269,15 @@ export const armPredecessorObservation = Effect.fn(
     ctx.db.insert("contentPredecessorReads", singular)
   );
   yield* Effect.promise(() => ctx.db.insert("contentPredecessorReads", batch));
-  return buildStatus({ batch, singular });
+  return buildStatus({ batch, singular }, active);
 });
 
 /** Reads exact observation status without changing its quiet clock. */
 export const readPredecessorObservation = Effect.fn(
   "contentRelease.predecessor.status"
 )(function* (ctx: ReadCtx, observationId: string) {
-  const rows = yield* loadVerifiedObservation(ctx, observationId);
-  return buildStatus(rows);
+  const observation = yield* loadObservation(ctx, observationId);
+  return buildStatus(observation.rows, observation.active);
 });
 
 /**
@@ -257,23 +286,32 @@ export const readPredecessorObservation = Effect.fn(
  * Both rows are read deliberately. Convex OCC therefore serializes unexpected
  * cross-route traffic, preserving the fail-closed pair invariant. This
  * temporary observer expects zero traffic, so correctness owns the tradeoff.
+ * Release drift returns both identities without writing, which keeps the
+ * predecessor route available while seal rejects and clear owns abandonment.
  */
 export const recordPredecessorRead = Effect.fn(
   "contentRelease.predecessor.record"
 )(function* (ctx: MutationCtx, route: PredecessorRoute) {
   const stored = yield* loadRoutes(ctx);
   if (!(stored.singular || stored.batch)) {
-    return { observed: false };
+    return { kind: "inactive" } satisfies PredecessorRecordResult;
   }
   const rows = yield* requireConsistentRows(stored);
+  yield* requireDeployment(rows, yield* loadDeploymentName(ctx));
+  const active = yield* loadActiveIdentity(ctx);
+  if (!hasActiveIdentity(rows, active)) {
+    return {
+      kind: "drifted",
+      live: active,
+      stored: storedIdentity(rows),
+    } satisfies PredecessorRecordResult;
+  }
   if (rows.singular.phase !== "armed") {
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",
       "Predecessor observation is sealed."
     );
   }
-  yield* requireDeployment(rows, yield* loadDeploymentName(ctx));
-  yield* requireActiveIdentity(rows, yield* loadActiveIdentity(ctx));
   const row = rows[route];
   if (row.invocationCount >= Number.MAX_SAFE_INTEGER) {
     return yield* releaseFail(
@@ -289,14 +327,16 @@ export const recordPredecessorRead = Effect.fn(
       quietSince: now,
     })
   );
-  return { observed: true };
+  return { kind: "recorded" } satisfies PredecessorRecordResult;
 });
 
 /** Seals both routes only after their quiet windows remain intact. */
 export const sealPredecessorObservation = Effect.fn(
   "contentRelease.predecessor.seal"
 )(function* (ctx: MutationCtx, observationId: string) {
-  const rows = yield* loadVerifiedObservation(ctx, observationId);
+  const observation = yield* loadObservation(ctx, observationId);
+  const { active, rows } = observation;
+  yield* requireActiveIdentity(rows, active);
   if (rows.singular.phase !== "armed") {
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",
@@ -325,17 +365,47 @@ export const sealPredecessorObservation = Effect.fn(
       sealedAt: now,
     })
   );
-  return buildStatus({
-    batch: { ...rows.batch, phase: "sealed", sealedAt: now },
-    singular: { ...rows.singular, phase: "sealed", sealedAt: now },
-  });
+  return buildStatus(
+    {
+      batch: { ...rows.batch, phase: "sealed", sealedAt: now },
+      singular: { ...rows.singular, phase: "sealed", sealedAt: now },
+    },
+    active
+  );
 });
 
-/** Deletes only two exact sealed rows and returns server-owned evidence. */
+/** Deletes exactly one complete observation pair in the current transaction. */
+const deleteObservation = Effect.fn(
+  "contentRelease.predecessor.deleteObservation"
+)(function* (ctx: MutationCtx, rows: ObservationRows) {
+  yield* Effect.promise(() =>
+    ctx.db.delete("contentPredecessorReads", rows.singular._id)
+  );
+  yield* Effect.promise(() =>
+    ctx.db.delete("contentPredecessorReads", rows.batch._id)
+  );
+});
+
+/** Deletes one sealed observation or abandons one invalidated by drift. */
 export const clearPredecessorObservation = Effect.fn(
   "contentRelease.predecessor.clear"
 )(function* (ctx: MutationCtx, rawObservationId: string) {
-  const rows = yield* loadVerifiedObservation(ctx, rawObservationId);
+  const observation = yield* loadObservation(ctx, rawObservationId);
+  const { active, rows } = observation;
+  if (!hasActiveIdentity(rows, active)) {
+    const abandonedAt = yield* Clock.currentTimeMillis;
+    yield* deleteObservation(ctx, rows);
+    return {
+      abandonedAt,
+      deleted: 2,
+      deploymentName: rows.singular.deploymentName,
+      kind: "abandoned",
+      live: active,
+      observationId: rows.singular.observationId,
+      routes: buildRoutes(rows),
+      stored: storedIdentity(rows),
+    } satisfies PredecessorClearReceipt;
+  }
   const singularSealedAt = rows.singular.sealedAt;
   const batchSealedAt = rows.batch.sealedAt;
   if (
@@ -349,19 +419,13 @@ export const clearPredecessorObservation = Effect.fn(
     );
   }
   const clearedAt = yield* Clock.currentTimeMillis;
-  yield* Effect.promise(() =>
-    ctx.db.delete("contentPredecessorReads", rows.singular._id)
-  );
-  yield* Effect.promise(() =>
-    ctx.db.delete("contentPredecessorReads", rows.batch._id)
-  );
+  yield* deleteObservation(ctx, rows);
   return {
-    activeManifestHash: rows.singular.activeManifestHash,
-    activeReleaseId: rows.singular.activeReleaseId,
-    activeSequence: rows.singular.activeSequence,
+    active,
     clearedAt,
     deleted: 2,
     deploymentName: rows.singular.deploymentName,
+    kind: "cleared",
     observationId: rows.singular.observationId,
     routes: {
       batch: {
@@ -387,5 +451,5 @@ export const clearPredecessorObservation = Effect.fn(
         sealedAt: singularSealedAt,
       },
     },
-  };
+  } satisfies PredecessorClearReceipt;
 });

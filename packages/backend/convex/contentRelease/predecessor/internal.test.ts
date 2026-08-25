@@ -11,7 +11,7 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { insertRuntimeRelease } from "@repo/backend/test/content-runtime";
 import { makeFunctionReference } from "convex/server";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const OBSERVATION_ID = "dates-cutover-4974ee8c";
 const arm = makeFunctionReference<
@@ -46,10 +46,13 @@ const clear = makeFunctionReference<
 >("contentRelease/predecessor/internal:clear");
 
 describe("contentRelease/predecessor/internal", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
   it("registers the complete temporary observation lifecycle", async () => {
     const target = convexTest(schema, convexModules);
     await expect(target.mutation(recordSingular, {})).resolves.toEqual({
-      observed: false,
+      kind: "inactive",
     });
     await target.mutation((ctx) => insertRuntimeRelease(ctx));
 
@@ -61,10 +64,10 @@ describe("contentRelease/predecessor/internal", () => {
       target.mutation(arm, { observationId: OBSERVATION_ID })
     ).resolves.toEqual(armed);
     await expect(target.mutation(recordSingular, {})).resolves.toEqual({
-      observed: true,
+      kind: "recorded",
     });
     await expect(target.mutation(recordBatch, {})).resolves.toEqual({
-      observed: true,
+      kind: "recorded",
     });
     await expect(
       target.query(status, { observationId: OBSERVATION_ID })
@@ -75,14 +78,7 @@ describe("contentRelease/predecessor/internal", () => {
       },
     });
 
-    await target.mutation(async (ctx) => {
-      const rows = await ctx.db.query("contentPredecessorReads").collect();
-      for (const row of rows) {
-        await ctx.db.patch("contentPredecessorReads", row._id, {
-          quietSince: Date.now() - PREDECESSOR_QUIET_WINDOW_MS,
-        });
-      }
-    });
+    vi.setSystemTime(Date.now() + PREDECESSOR_QUIET_WINDOW_MS);
     await expect(
       target.mutation(seal, { observationId: OBSERVATION_ID })
     ).resolves.toMatchObject({
@@ -90,6 +86,10 @@ describe("contentRelease/predecessor/internal", () => {
     });
     await expect(
       target.mutation(clear, { observationId: OBSERVATION_ID })
-    ).resolves.toMatchObject({ deleted: 2, observationId: OBSERVATION_ID });
+    ).resolves.toMatchObject({
+      deleted: 2,
+      kind: "cleared",
+      observationId: OBSERVATION_ID,
+    });
   });
 });

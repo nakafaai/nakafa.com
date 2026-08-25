@@ -5,14 +5,17 @@ import {
   recordPredecessorRead,
   sealPredecessorObservation,
 } from "@repo/backend/convex/contentRelease/predecessor/model";
-import { PREDECESSOR_QUIET_WINDOW_MS } from "@repo/backend/convex/contentRelease/predecessor/spec";
+import {
+  PREDECESSOR_QUIET_WINDOW_MS,
+  PREDECESSOR_ROUTES,
+} from "@repo/backend/convex/contentRelease/predecessor/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { insertRuntimeRelease } from "@repo/backend/test/content-runtime";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
 import { convexTest, type TestConvex } from "convex-test";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const OBSERVATION_ID = "dates-cutover-4974ee8c";
 type Target = TestConvex<typeof schema>;
@@ -44,7 +47,6 @@ function patchRows(
   target: Target,
   patch: {
     readonly deploymentName?: string;
-    readonly quietSince?: number;
   }
 ) {
   return target.mutation(async (ctx) => {
@@ -56,6 +58,9 @@ function patchRows(
 }
 
 describe("contentRelease/predecessor/model", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
   it("rejects arm without one complete active release", async () => {
     const target = convexTest(schema, convexModules);
     await expect(
@@ -71,14 +76,13 @@ describe("contentRelease/predecessor/model", () => {
       target.mutation((ctx) =>
         runConvexProgram(recordPredecessorRead(ctx, "singular"))
       )
-    ).resolves.toEqual({ observed: false });
+    ).resolves.toEqual({ kind: "inactive" });
 
     const armed = await seedAndArm(target);
     expect(armed).toMatchObject({
-      activeManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
-      activeReleaseId: TEST_RUNTIME_RELEASE.releaseId,
-      activeSequence: TEST_RUNTIME_RELEASE.sequence,
+      active: TEST_RUNTIME_RELEASE,
       deploymentName: "test",
+      kind: "active",
       observationId: OBSERVATION_ID,
       routes: {
         batch: { invocationCount: 0, phase: "armed", route: "batch" },
@@ -127,7 +131,7 @@ describe("contentRelease/predecessor/model", () => {
       )
     );
     expect(results).toEqual(
-      Array.from({ length: routes.length }, () => ({ observed: true }))
+      Array.from({ length: routes.length }, () => ({ kind: "recorded" }))
     );
 
     const status = await target.query((ctx) =>
@@ -145,7 +149,7 @@ describe("contentRelease/predecessor/model", () => {
     expect(status.routes.singular).not.toHaveProperty("quietForMs");
   });
 
-  it("fails closed for partial, competing, deployment, and release drift", async () => {
+  it("fails closed for partial, competing, and deployment state", async () => {
     const partial = convexTest(schema, convexModules);
     await seedAndArm(partial);
     await partial.mutation(async (ctx) => {
@@ -163,6 +167,14 @@ describe("contentRelease/predecessor/model", () => {
         runConvexProgram(recordPredecessorRead(ctx, "singular"))
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
+    await expect(
+      partial.mutation((ctx) =>
+        runConvexProgram(clearPredecessorObservation(ctx, OBSERVATION_ID))
+      )
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
+    await expect(readRows(partial)).resolves.toMatchObject({
+      singular: { observationId: OBSERVATION_ID },
+    });
 
     const competing = convexTest(schema, convexModules);
     await seedAndArm(competing);
@@ -183,6 +195,15 @@ describe("contentRelease/predecessor/model", () => {
         runConvexProgram(recordPredecessorRead(ctx, "singular"))
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    await expect(
+      competing.mutation((ctx) =>
+        runConvexProgram(clearPredecessorObservation(ctx, OBSERVATION_ID))
+      )
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+    await expect(readRows(competing)).resolves.toMatchObject({
+      batch: { observationId: "dates-competing-4974ee8c" },
+      singular: { observationId: OBSERVATION_ID },
+    });
 
     const deployment = convexTest(schema, convexModules);
     await seedAndArm(deployment);
@@ -192,26 +213,6 @@ describe("contentRelease/predecessor/model", () => {
         runConvexProgram(recordPredecessorRead(ctx, "batch"))
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
-
-    const drift = convexTest(schema, convexModules);
-    await seedAndArm(drift);
-    await drift.mutation(async (ctx) => {
-      const state = await ctx.db.query("contentState").unique();
-      if (!state) {
-        throw new Error("Expected active content state.");
-      }
-      await ctx.db.patch("contentState", state._id, {
-        activeSequence: TEST_RUNTIME_RELEASE.sequence + 1,
-      });
-    });
-    await expect(
-      drift.mutation((ctx) =>
-        runConvexProgram(recordPredecessorRead(ctx, "singular"))
-      )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
-    await expect(readRows(drift)).resolves.toMatchObject({
-      singular: { invocationCount: 0 },
-    });
   });
 
   it("rejects duplicate route rows and a saturated invocation counter", async () => {
@@ -265,33 +266,53 @@ describe("contentRelease/predecessor/model", () => {
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
   });
 
-  it("seals only after 24 quiet hours and clears only that sealed identity", async () => {
+  it.each(PREDECESSOR_ROUTES)(
+    "seals %s at the exact 24-hour boundary",
+    async (route) => {
+      const target = convexTest(schema, convexModules);
+      const armedAt = Date.UTC(2026, 7, 26, 8);
+      const invokedAt = armedAt + 1000;
+      vi.setSystemTime(armedAt);
+      await seedAndArm(target);
+      vi.setSystemTime(invokedAt);
+      await target.mutation((ctx) =>
+        runConvexProgram(recordPredecessorRead(ctx, route))
+      );
+
+      vi.setSystemTime(invokedAt + PREDECESSOR_QUIET_WINDOW_MS - 1);
+      await expect(
+        target.mutation((ctx) =>
+          runConvexProgram(sealPredecessorObservation(ctx, OBSERVATION_ID))
+        )
+      ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
+
+      vi.setSystemTime(invokedAt + PREDECESSOR_QUIET_WINDOW_MS);
+      await expect(
+        target.mutation((ctx) =>
+          runConvexProgram(sealPredecessorObservation(ctx, OBSERVATION_ID))
+        )
+      ).resolves.toMatchObject({
+        kind: "active",
+        routes: {
+          [route]: {
+            phase: "sealed",
+            quietSince: invokedAt,
+            sealedAt: invokedAt + PREDECESSOR_QUIET_WINDOW_MS,
+          },
+        },
+      });
+    }
+  );
+
+  it("clears only the exact sealed identity with its durable evidence", async () => {
     const target = convexTest(schema, convexModules);
+    const armedAt = Date.UTC(2026, 7, 26, 8);
+    vi.setSystemTime(armedAt);
     await seedAndArm(target);
-    await expect(
-      target.mutation((ctx) =>
-        runConvexProgram(sealPredecessorObservation(ctx, OBSERVATION_ID))
-      )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
-
-    await patchRows(target, {
-      quietSince: Date.now() - PREDECESSOR_QUIET_WINDOW_MS,
-    });
-    const ready = await target.query((ctx) =>
-      runConvexProgram(readPredecessorObservation(ctx, OBSERVATION_ID))
-    );
-    expect(ready).not.toHaveProperty("readyToSeal");
-    expect(ready.routes.batch).not.toHaveProperty("quietForMs");
-
+    vi.setSystemTime(armedAt + PREDECESSOR_QUIET_WINDOW_MS);
     const sealed = await target.mutation((ctx) =>
       runConvexProgram(sealPredecessorObservation(ctx, OBSERVATION_ID))
     );
-    expect(sealed).toMatchObject({
-      routes: {
-        batch: { phase: "sealed", sealedAt: expect.any(Number) },
-        singular: { phase: "sealed", sealedAt: expect.any(Number) },
-      },
-    });
     await expect(
       target.mutation((ctx) =>
         runConvexProgram(armPredecessorObservation(ctx, OBSERVATION_ID))
@@ -299,12 +320,12 @@ describe("contentRelease/predecessor/model", () => {
     ).resolves.toEqual(sealed);
     await expect(
       target.mutation((ctx) =>
-        runConvexProgram(recordPredecessorRead(ctx, "singular"))
+        runConvexProgram(sealPredecessorObservation(ctx, OBSERVATION_ID))
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
     await expect(
       target.mutation((ctx) =>
-        runConvexProgram(sealPredecessorObservation(ctx, OBSERVATION_ID))
+        runConvexProgram(recordPredecessorRead(ctx, "singular"))
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
     await expect(
@@ -315,54 +336,19 @@ describe("contentRelease/predecessor/model", () => {
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
 
-    await target.mutation(async (ctx) => {
-      const state = await ctx.db.query("contentState").unique();
-      if (!state) {
-        throw new Error("Expected active content state.");
-      }
-      await ctx.db.patch("contentState", state._id, {
-        activeSequence: TEST_RUNTIME_RELEASE.sequence + 1,
-      });
-    });
-    await expect(
-      target.mutation((ctx) =>
-        runConvexProgram(clearPredecessorObservation(ctx, OBSERVATION_ID))
-      )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
-    await target.mutation(async (ctx) => {
-      const state = await ctx.db.query("contentState").unique();
-      if (!state) {
-        throw new Error("Expected active content state.");
-      }
-      await ctx.db.patch("contentState", state._id, {
-        activeSequence: TEST_RUNTIME_RELEASE.sequence,
-      });
-    });
-
     const cleared = await target.mutation((ctx) =>
       runConvexProgram(clearPredecessorObservation(ctx, OBSERVATION_ID))
     );
     expect(cleared).toMatchObject({
-      activeManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
-      activeReleaseId: TEST_RUNTIME_RELEASE.releaseId,
-      activeSequence: TEST_RUNTIME_RELEASE.sequence,
-      clearedAt: expect.any(Number),
+      active: TEST_RUNTIME_RELEASE,
+      clearedAt: armedAt + PREDECESSOR_QUIET_WINDOW_MS,
       deleted: 2,
       deploymentName: "test",
+      kind: "cleared",
       observationId: OBSERVATION_ID,
       routes: {
-        batch: {
-          invocationCount: 0,
-          phase: "sealed",
-          quietSince: ready.routes.batch.quietSince,
-          sealedAt: sealed.routes.batch.sealedAt,
-        },
-        singular: {
-          invocationCount: 0,
-          phase: "sealed",
-          quietSince: ready.routes.singular.quietSince,
-          sealedAt: sealed.routes.singular.sealedAt,
-        },
+        batch: { invocationCount: 0, phase: "sealed" },
+        singular: { invocationCount: 0, phase: "sealed" },
       },
     });
     await expect(readRows(target)).resolves.toEqual({
