@@ -3,6 +3,7 @@
 import { type CheckResult, getChecksSorted, runChecks } from "afdocs";
 import { loadConfig } from "afdocs/helpers";
 import { beforeAll, describe, expect, it } from "vitest";
+import { formatAgentDocsFailure } from "@/lib/agent-docs/failure";
 
 const AGENT_DOCS_TIMEOUT_MS = 600_000;
 const ALLOWED_SKIP_CHECKS = new Set(["auth-alternative-access"]);
@@ -45,7 +46,7 @@ describe("Agent-Friendly Documentation", () => {
         return;
       }
 
-      expect.fail(`[${result.status}] ${result.message}`);
+      expect.fail(formatAgentDocsFailure(result));
     });
   }
 });

@@ -6,6 +6,7 @@ import {
 
 describe("routing bypass", () => {
   it.each([
+    "/openapi.json",
     "/mcp",
     "/llms.txt",
     "/logo.svg",
