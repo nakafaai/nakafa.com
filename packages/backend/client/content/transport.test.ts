@@ -25,7 +25,7 @@ import { Duration, Effect, Fiber, Logger } from "effect";
 import { TestClock } from "effect/testing";
 import { vi } from "vitest";
 
-const endpoint = "https://example.convex.site/internal/content/runtime";
+const endpoint = `https://example.convex.site${PUBLIC_CONTENT_RUNTIME_PATH}`;
 const target = {
   siteUrl: "https://example.convex.site",
   token: "runtime-test-token",
@@ -114,7 +114,7 @@ describe("content runtime transport", () => {
           "http://localhost:3211/ignored",
           PUBLIC_CONTENT_RUNTIME_PATH
         )
-      ).toBe("http://localhost:3211/internal/content/runtime");
+      ).toBe(`http://localhost:3211${PUBLIC_CONTENT_RUNTIME_PATH}`);
 
       for (const siteUrl of [
         "not a URL",

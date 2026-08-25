@@ -11,7 +11,10 @@ import {
   publicRuntimeResponseBytes,
 } from "@repo/backend/content/batch";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import { decodePublicRuntimeRow } from "@repo/backend/convex/contentRelease/runtime/public/dispatch";
+import {
+  decodePredecessorRuntimeRow,
+  decodePublicRuntimeRow,
+} from "@repo/backend/convex/contentRelease/runtime/public/dispatch";
 import type { PublicRuntimeRow } from "@repo/backend/convex/contentRelease/runtime/public/internal";
 import {
   encodeRuntimeResult,
@@ -38,6 +41,7 @@ class PublicRuntimeBatchReadError extends Schema.TaggedError<PublicRuntimeBatchR
   "PublicRuntimeBatchReadError",
   {}
 ) {}
+type RuntimeRowDecoder = typeof decodePublicRuntimeRow;
 /** Strictly parses one bounded UTF-8 public batch request. */
 const decodeBatchRequest = Effect.fn("contentRelease.decodePublicBatchRequest")(
   function* (source: string, byteLength: number) {
@@ -62,7 +66,11 @@ const decodeBatchRequest = Effect.fn("contentRelease.decodePublicBatchRequest")(
 /** Reads and decodes one transactionally consistent public batch. */
 const resolvePublicRuntimeBatch = Effect.fn(
   "contentRelease.resolvePublicRuntimeBatch"
-)(function* (ctx: ActionCtx, requests: readonly PublicContentRuntimeRequest[]) {
+)(function* (
+  ctx: ActionCtx,
+  requests: readonly PublicContentRuntimeRequest[],
+  decodeRow: RuntimeRowDecoder
+) {
   const rows = yield* Effect.tryPromise({
     catch: () => new PublicRuntimeBatchReadError(),
     try: () =>
@@ -77,7 +85,7 @@ const resolvePublicRuntimeBatch = Effect.fn(
     return yield* new PublicRuntimeBatchReadError();
   }
   return yield* Effect.forEach(rows, (row) =>
-    decodePublicRuntimeRow(row).pipe(
+    decodeRow(row).pipe(
       Effect.map(
         (
           response
@@ -93,9 +101,14 @@ const resolvePublicRuntimeBatch = Effect.fn(
   );
 });
 /** Decodes, resolves, and safely encodes one public runtime batch. */
-export const dispatchBatchProgram = Effect.fn(
-  "contentRelease.publicRuntimeBatchDispatch"
-)(function* (ctx: ActionCtx, source: string, byteLength: number) {
+const dispatchRuntimeBatchProgram = Effect.fn(
+  "contentRelease.dispatchPublicRuntimeBatch"
+)(function* (
+  ctx: ActionCtx,
+  source: string,
+  byteLength: number,
+  decodeRow: RuntimeRowDecoder
+) {
   const decoded = yield* decodeBatchRequest(source, byteLength).pipe(
     Effect.result
   );
@@ -104,7 +117,8 @@ export const dispatchBatchProgram = Effect.fn(
   }
   const responses = yield* resolvePublicRuntimeBatch(
     ctx,
-    decoded.success.requests
+    decoded.success.requests,
+    decodeRow
   ).pipe(Effect.result);
   if (Result.isFailure(responses)) {
     return failureResult("CONTENT_RUNTIME_INTERNAL", 500);
@@ -122,5 +136,29 @@ export const dispatchBatchProgram = Effect.fn(
     MAX_PUBLIC_RUNTIME_BATCH_RESPONSE_BYTES,
     { responses: responses.success },
     200
+  );
+});
+
+/** Serves the versioned current public runtime batch contract. */
+export const dispatchBatchProgram = Effect.fn(
+  "contentRelease.publicRuntimeBatchDispatch"
+)(function* (ctx: ActionCtx, source: string, byteLength: number) {
+  return yield* dispatchRuntimeBatchProgram(
+    ctx,
+    source,
+    byteLength,
+    decodePublicRuntimeRow
+  );
+});
+
+/** Serves the bounded 0.15.0 predecessor batch contract. */
+export const dispatchPredecessorBatchProgram = Effect.fn(
+  "contentRelease.predecessorPublicRuntimeBatchDispatch"
+)(function* (ctx: ActionCtx, source: string, byteLength: number) {
+  return yield* dispatchRuntimeBatchProgram(
+    ctx,
+    source,
+    byteLength,
+    decodePredecessorRuntimeRow
   );
 });

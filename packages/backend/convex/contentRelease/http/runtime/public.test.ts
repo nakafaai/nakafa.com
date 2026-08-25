@@ -9,6 +9,7 @@ import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signatu
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
+  PREDECESSOR_PUBLIC_CONTENT_RUNTIME_PATH,
   PUBLIC_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
 import { contentKeyResolver } from "@repo/backend/content/trust";
@@ -38,8 +39,13 @@ const polarName = "POLAR_WEBHOOK_SECRET";
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 type RuntimeFetcher = Pick<RuntimeTest, "fetch">;
 /** Sends one request through the actual registered Convex HTTP route. */
-function post(t: RuntimeFetcher, body: BodyInit | null, headers?: HeadersInit) {
-  return t.fetch(PUBLIC_CONTENT_RUNTIME_PATH, {
+function post(
+  t: RuntimeFetcher,
+  body: BodyInit | null,
+  headers?: HeadersInit,
+  path = PUBLIC_CONTENT_RUNTIME_PATH
+) {
+  return t.fetch(path, {
     body,
     headers: {
       "content-type": "application/json",
@@ -77,7 +83,43 @@ afterEach(() => {
   delete process.env[polarName];
 });
 describe("public content runtime HTTP route", () => {
-  it("authenticates the server secret before consuming a request body", async () => {
+  it("routes predecessor and current contracts without changing active identity", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await seedRuntime(t, "public");
+
+    const [predecessor, current] = await Promise.all([
+      post(
+        t,
+        publicRuntimeRequest(),
+        undefined,
+        PREDECESSOR_PUBLIC_CONTENT_RUNTIME_PATH
+      ),
+      post(t, publicRuntimeRequest()),
+    ]);
+    const predecessorBody = await predecessor.json();
+    const currentBody = await current.json();
+
+    expect(predecessor.status).toBe(200);
+    expect(current.status).toBe(200);
+    expect(predecessorBody.projection.metadata).toHaveProperty("date");
+    expect(predecessorBody.projection.metadata).not.toHaveProperty(
+      "datePublished"
+    );
+    expect(currentBody.projection.metadata).toHaveProperty("datePublished");
+    expect(currentBody.projection.metadata).not.toHaveProperty("date");
+    expect(predecessorBody.projectionHash).not.toBe(currentBody.projectionHash);
+    expect(predecessorBody.activeManifestHash).toBe(
+      currentBody.activeManifestHash
+    );
+    expect(predecessorBody.activeReleaseId).toBe(currentBody.activeReleaseId);
+    expectPrivate(predecessor);
+    expectPrivate(current);
+  });
+
+  it.each([
+    PREDECESSOR_PUBLIC_CONTENT_RUNTIME_PATH,
+    PUBLIC_CONTENT_RUNTIME_PATH,
+  ])("authenticates before consuming a request body at %s", async (path) => {
     const t = createConvexTestWithBetterAuth();
     let pulls = 0;
     const body = new ReadableStream<Uint8Array>(
@@ -101,7 +143,7 @@ describe("public content runtime HTTP route", () => {
     } satisfies RequestInit & {
       readonly duplex: "half";
     };
-    const response = await t.fetch(PUBLIC_CONTENT_RUNTIME_PATH, request);
+    const response = await t.fetch(path, request);
     expect(response.status).toBe(401);
     await expect(response.json()).resolves.toEqual({
       code: "CONTENT_RUNTIME_UNAUTHORIZED",

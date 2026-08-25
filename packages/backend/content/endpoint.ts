@@ -1,11 +1,19 @@
-/** Private Convex endpoint for active public content reads. */
-export const PUBLIC_CONTENT_RUNTIME_PATH = "/internal/content/runtime";
+const CONTENT_RUNTIME_PATH = "/internal/content/runtime";
 
-/** Private Convex endpoint for bounded active public content batches. */
+/** Bounded predecessor endpoint for 0.15.0 public content reads. */
+export const PREDECESSOR_PUBLIC_CONTENT_RUNTIME_PATH = CONTENT_RUNTIME_PATH;
+
+/** Bounded predecessor endpoint for 0.15.0 public content batches. */
+export const PREDECESSOR_PUBLIC_CONTENT_RUNTIME_BATCH_PATH = `${PREDECESSOR_PUBLIC_CONTENT_RUNTIME_PATH}/batch`;
+
+/** Versioned endpoint for current public content reads. */
+export const PUBLIC_CONTENT_RUNTIME_PATH = `${CONTENT_RUNTIME_PATH}/v2`;
+
+/** Versioned endpoint for current public content batches. */
 export const PUBLIC_CONTENT_RUNTIME_BATCH_PATH = `${PUBLIC_CONTENT_RUNTIME_PATH}/batch`;
 
 /** Private Convex endpoint for current protected content reads. */
-export const PROTECTED_CONTENT_RUNTIME_PATH = `${PUBLIC_CONTENT_RUNTIME_PATH}/protected`;
+export const PROTECTED_CONTENT_RUNTIME_PATH = `${CONTENT_RUNTIME_PATH}/protected`;
 
 /** Private attempt-bound endpoint for immutable retained-history reads. */
 export const RETAINED_PROTECTED_CONTENT_RUNTIME_PATH = `${PROTECTED_CONTENT_RUNTIME_PATH}/history`;

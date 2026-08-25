@@ -4,6 +4,7 @@ import { MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES } from "@repo/backend/content/ba
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
+  PREDECESSOR_PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
   PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
 } from "@repo/backend/content/endpoint";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
@@ -29,8 +30,13 @@ type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 type RuntimeFetcher = Pick<RuntimeTest, "fetch">;
 
 /** Sends one batch through the actual registered Convex HTTP route. */
-function post(t: RuntimeFetcher, body: BodyInit | null, headers?: HeadersInit) {
-  return t.fetch(PUBLIC_CONTENT_RUNTIME_BATCH_PATH, {
+function post(
+  t: RuntimeFetcher,
+  body: BodyInit | null,
+  headers?: HeadersInit,
+  path = PUBLIC_CONTENT_RUNTIME_BATCH_PATH
+) {
+  return t.fetch(path, {
     body,
     headers: {
       "content-type": "application/json",
@@ -69,7 +75,45 @@ afterEach(() => {
 });
 
 describe("public content runtime batch HTTP route", () => {
-  it("authenticates before consuming the batch request body", async () => {
+  it("routes predecessor and current batches without changing active identity", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await seedPublicRuntime(t);
+    const body = JSON.stringify({ requests: [foundRequest, missingRequest] });
+
+    const [predecessor, current] = await Promise.all([
+      post(t, body, undefined, PREDECESSOR_PUBLIC_CONTENT_RUNTIME_BATCH_PATH),
+      post(t, body),
+    ]);
+    const predecessorBody = await predecessor.json();
+    const currentBody = await current.json();
+    const predecessorFound = predecessorBody.responses[0];
+    const currentFound = currentBody.responses[0];
+
+    expect(predecessor.status).toBe(200);
+    expect(current.status).toBe(200);
+    expect(predecessorFound.projection.metadata).toHaveProperty("date");
+    expect(predecessorFound.projection.metadata).not.toHaveProperty(
+      "datePublished"
+    );
+    expect(currentFound.projection.metadata).toHaveProperty("datePublished");
+    expect(currentFound.projection.metadata).not.toHaveProperty("date");
+    expect(predecessorFound.projectionHash).not.toBe(
+      currentFound.projectionHash
+    );
+    expect(predecessorFound.activeManifestHash).toBe(
+      currentFound.activeManifestHash
+    );
+    expect(predecessorFound.activeReleaseId).toBe(currentFound.activeReleaseId);
+    expect(predecessorBody.responses[1]).toEqual({ kind: "missing" });
+    expect(currentBody.responses[1]).toEqual({ kind: "missing" });
+    expectPrivate(predecessor);
+    expectPrivate(current);
+  });
+
+  it.each([
+    PREDECESSOR_PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
+    PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
+  ])("authenticates before consuming the request body at %s", async (path) => {
     const t = createConvexTestWithBetterAuth();
     let pulls = 0;
     const body = new ReadableStream<Uint8Array>(
@@ -90,7 +134,7 @@ describe("public content runtime batch HTTP route", () => {
       },
       method: "POST",
     } satisfies RequestInit & { readonly duplex: "half" };
-    const response = await t.fetch(PUBLIC_CONTENT_RUNTIME_BATCH_PATH, request);
+    const response = await t.fetch(path, request);
 
     expect(response.status).toBe(401);
     expect(pulls).toBe(0);

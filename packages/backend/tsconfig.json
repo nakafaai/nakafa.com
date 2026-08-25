@@ -12,7 +12,12 @@
     "moduleResolution": "Bundler",
     "isolatedModules": true,
     "noEmit": true,
-    "plugins": [{ "name": "@effect/language-service" }],
+    "plugins": [
+      {
+        "name": "@effect/language-service",
+        "allowedDuplicatedPackages": ["@nakafa/aksara-contracts"]
+      }
+    ],
     "types": ["node"],
     "paths": {
       "@/*": ["./*"],

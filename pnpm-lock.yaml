@@ -653,6 +653,9 @@ importers:
       '@edge-runtime/vm':
         specifier: ^5.0.0
         version: 5.0.0
+      '@nakafa/aksara-v150':
+        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.0/nakafa-aksara-contracts-0.15.0.tgz
+        version: '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.0/nakafa-aksara-contracts-0.15.0.tgz(effect@4.0.0-rc.110)'
       '@repo/testing':
         specifier: workspace:*
         version: link:../testing
@@ -2734,6 +2737,13 @@ packages:
     resolution: {integrity: sha512-CmCXPQrkbwExx3j946/PtHWHbYJiCRBRDl4BlkRQcJB/YOwQxJRTpoo7aTsortjgoJ1x7opzTSxn7C+ASSLVjQ==}
     cpu: [x64]
     os: [win32]
+
+  '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.0/nakafa-aksara-contracts-0.15.0.tgz':
+    resolution: {integrity: sha512-Ty6Af71mH/fDrwkbO+tKNVXFiq2IKt8vENAU9O0azHy8BzV/jSuUn3uqmFwBHHEjZ5VxcVVmw4bG0Fx3oCZ7Mw==, tarball: https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.0/nakafa-aksara-contracts-0.15.0.tgz}
+    version: 0.15.0
+    engines: {node: '>=24.0.0 <25.0.0'}
+    peerDependencies:
+      effect: 4.0.0-rc.110
 
   '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.1/nakafa-aksara-contracts-0.15.1.tgz':
     resolution: {integrity: sha512-GXww0+WRV37RLP7o8rwXauJaJdZFksGGfuSsomtdBklL8xIbQv2COdDd+s1iOireN7kPakSWB6LvAnqt01UttQ==, tarball: https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.1/nakafa-aksara-contracts-0.15.1.tgz}
@@ -9358,6 +9368,10 @@ snapshots:
 
   '@msgpackr-extract/msgpackr-extract-win32-x64@3.0.4':
     optional: true
+
+  '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.0/nakafa-aksara-contracts-0.15.0.tgz(effect@4.0.0-rc.110)':
+    dependencies:
+      effect: 4.0.0-rc.110
 
   '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.1/nakafa-aksara-contracts-0.15.1.tgz(effect@4.0.0-rc.110)':
     dependencies:
