@@ -80,7 +80,6 @@ describe("contentRelease/predecessor/model", () => {
       activeSequence: TEST_RUNTIME_RELEASE.sequence,
       deploymentName: "test",
       observationId: OBSERVATION_ID,
-      readyToSeal: false,
       routes: {
         batch: { invocationCount: 0, phase: "armed", route: "batch" },
         singular: {
@@ -90,6 +89,20 @@ describe("contentRelease/predecessor/model", () => {
         },
       },
     });
+    await target.mutation((ctx) =>
+      runConvexProgram(recordPredecessorRead(ctx, "singular"))
+    );
+    const rowsBeforeReplay = await readRows(target);
+    const replay = await target.mutation((ctx) =>
+      runConvexProgram(armPredecessorObservation(ctx, OBSERVATION_ID))
+    );
+    expect(replay).toMatchObject({
+      routes: {
+        batch: { invocationCount: 0, phase: "armed" },
+        singular: { invocationCount: 1, phase: "armed" },
+      },
+    });
+    await expect(readRows(target)).resolves.toEqual(rowsBeforeReplay);
     await expect(
       target.mutation((ctx) =>
         runConvexProgram(
@@ -128,7 +141,8 @@ describe("contentRelease/predecessor/model", () => {
     expect(status.routes.batch.quietSince).toBe(
       status.routes.batch.lastInvokedAt
     );
-    expect(status.readyToSeal).toBe(false);
+    expect(status).not.toHaveProperty("readyToSeal");
+    expect(status.routes.singular).not.toHaveProperty("quietForMs");
   });
 
   it("fails closed for partial, competing, deployment, and release drift", async () => {
@@ -266,18 +280,23 @@ describe("contentRelease/predecessor/model", () => {
     const ready = await target.query((ctx) =>
       runConvexProgram(readPredecessorObservation(ctx, OBSERVATION_ID))
     );
-    expect(ready.readyToSeal).toBe(true);
+    expect(ready).not.toHaveProperty("readyToSeal");
+    expect(ready.routes.batch).not.toHaveProperty("quietForMs");
 
     const sealed = await target.mutation((ctx) =>
       runConvexProgram(sealPredecessorObservation(ctx, OBSERVATION_ID))
     );
     expect(sealed).toMatchObject({
-      readyToSeal: false,
       routes: {
         batch: { phase: "sealed", sealedAt: expect.any(Number) },
         singular: { phase: "sealed", sealedAt: expect.any(Number) },
       },
     });
+    await expect(
+      target.mutation((ctx) =>
+        runConvexProgram(armPredecessorObservation(ctx, OBSERVATION_ID))
+      )
+    ).resolves.toEqual(sealed);
     await expect(
       target.mutation((ctx) =>
         runConvexProgram(recordPredecessorRead(ctx, "singular"))
@@ -296,14 +315,55 @@ describe("contentRelease/predecessor/model", () => {
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
 
+    await target.mutation(async (ctx) => {
+      const state = await ctx.db.query("contentState").unique();
+      if (!state) {
+        throw new Error("Expected active content state.");
+      }
+      await ctx.db.patch("contentState", state._id, {
+        activeSequence: TEST_RUNTIME_RELEASE.sequence + 1,
+      });
+    });
+    await expect(
+      target.mutation((ctx) =>
+        runConvexProgram(clearPredecessorObservation(ctx, OBSERVATION_ID))
+      )
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
+    await target.mutation(async (ctx) => {
+      const state = await ctx.db.query("contentState").unique();
+      if (!state) {
+        throw new Error("Expected active content state.");
+      }
+      await ctx.db.patch("contentState", state._id, {
+        activeSequence: TEST_RUNTIME_RELEASE.sequence,
+      });
+    });
+
     const cleared = await target.mutation((ctx) =>
       runConvexProgram(clearPredecessorObservation(ctx, OBSERVATION_ID))
     );
     expect(cleared).toMatchObject({
+      activeManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
+      activeReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+      activeSequence: TEST_RUNTIME_RELEASE.sequence,
       clearedAt: expect.any(Number),
       deleted: 2,
       deploymentName: "test",
       observationId: OBSERVATION_ID,
+      routes: {
+        batch: {
+          invocationCount: 0,
+          phase: "sealed",
+          quietSince: ready.routes.batch.quietSince,
+          sealedAt: sealed.routes.batch.sealedAt,
+        },
+        singular: {
+          invocationCount: 0,
+          phase: "sealed",
+          quietSince: ready.routes.singular.quietSince,
+          sealedAt: sealed.routes.singular.sealedAt,
+        },
+      },
     });
     await expect(readRows(target)).resolves.toEqual({
       batch: null,

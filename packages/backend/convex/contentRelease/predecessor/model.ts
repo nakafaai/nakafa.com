@@ -179,42 +179,32 @@ const loadVerifiedObservation = Effect.fn(
   return rows;
 });
 
-/** Builds the server-derived status for both route rows. */
-function buildStatus(
-  rows: {
-    readonly batch: PredecessorReadFields;
-    readonly singular: PredecessorReadFields;
-  },
-  checkedAt: number
-): PredecessorStatus {
-  const routeStatus = (row: PredecessorReadFields) => {
-    const quietForMs = Math.max(0, checkedAt - row.quietSince);
-    return {
-      armedAt: row.armedAt,
-      invocationCount: row.invocationCount,
-      ...(row.lastInvokedAt === undefined
-        ? {}
-        : { lastInvokedAt: row.lastInvokedAt }),
-      phase: row.phase,
-      quietForMs,
-      quietSince: row.quietSince,
-      readyToSeal:
-        row.phase === "armed" && quietForMs >= PREDECESSOR_QUIET_WINDOW_MS,
-      route: row.route,
-      ...(row.sealedAt === undefined ? {} : { sealedAt: row.sealedAt }),
-    };
-  };
-  const singular = routeStatus(rows.singular);
-  const batch = routeStatus(rows.batch);
+/** Builds status only from durable rows so query caching cannot stale time. */
+function buildStatus(rows: {
+  readonly batch: PredecessorReadFields;
+  readonly singular: PredecessorReadFields;
+}): PredecessorStatus {
+  const routeStatus = (row: PredecessorReadFields) => ({
+    armedAt: row.armedAt,
+    invocationCount: row.invocationCount,
+    ...(row.lastInvokedAt === undefined
+      ? {}
+      : { lastInvokedAt: row.lastInvokedAt }),
+    phase: row.phase,
+    quietSince: row.quietSince,
+    route: row.route,
+    ...(row.sealedAt === undefined ? {} : { sealedAt: row.sealedAt }),
+  });
   return {
     activeManifestHash: rows.singular.activeManifestHash,
     activeReleaseId: rows.singular.activeReleaseId,
     activeSequence: rows.singular.activeSequence,
-    checkedAt,
     deploymentName: rows.singular.deploymentName,
     observationId: rows.singular.observationId,
-    readyToSeal: singular.readyToSeal && batch.readyToSeal,
-    routes: { batch, singular },
+    routes: {
+      batch: routeStatus(rows.batch),
+      singular: routeStatus(rows.singular),
+    },
   };
 }
 
@@ -225,10 +215,10 @@ export const armPredecessorObservation = Effect.fn(
   const observationId = yield* decodePredecessorObservationId(rawObservationId);
   const existing = yield* loadRoutes(ctx);
   if (existing.singular || existing.batch) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_STATE",
-      "A predecessor observation already exists."
-    );
+    const rows = yield* requireOwnedRows(existing, observationId);
+    yield* requireDeployment(rows, yield* loadDeploymentName(ctx));
+    yield* requireActiveIdentity(rows, yield* loadActiveIdentity(ctx));
+    return buildStatus(rows);
   }
   const active = yield* loadActiveIdentity(ctx);
   const deploymentName = yield* loadDeploymentName(ctx);
@@ -250,7 +240,7 @@ export const armPredecessorObservation = Effect.fn(
     ctx.db.insert("contentPredecessorReads", singular)
   );
   yield* Effect.promise(() => ctx.db.insert("contentPredecessorReads", batch));
-  return buildStatus({ batch, singular }, armedAt);
+  return buildStatus({ batch, singular });
 });
 
 /** Reads exact observation status without changing its quiet clock. */
@@ -258,10 +248,16 @@ export const readPredecessorObservation = Effect.fn(
   "contentRelease.predecessor.status"
 )(function* (ctx: ReadCtx, observationId: string) {
   const rows = yield* loadVerifiedObservation(ctx, observationId);
-  return buildStatus(rows, yield* Clock.currentTimeMillis);
+  return buildStatus(rows);
 });
 
-/** Records one authenticated predecessor call before content dispatch. */
+/**
+ * Records one authenticated predecessor call before content dispatch.
+ *
+ * Both rows are read deliberately. Convex OCC therefore serializes unexpected
+ * cross-route traffic, preserving the fail-closed pair invariant. This
+ * temporary observer expects zero traffic, so correctness owns the tradeoff.
+ */
 export const recordPredecessorRead = Effect.fn(
   "contentRelease.predecessor.record"
 )(function* (ctx: MutationCtx, route: PredecessorRoute) {
@@ -329,28 +325,30 @@ export const sealPredecessorObservation = Effect.fn(
       sealedAt: now,
     })
   );
-  return buildStatus(
-    {
-      batch: { ...rows.batch, phase: "sealed", sealedAt: now },
-      singular: { ...rows.singular, phase: "sealed", sealedAt: now },
-    },
-    now
-  );
+  return buildStatus({
+    batch: { ...rows.batch, phase: "sealed", sealedAt: now },
+    singular: { ...rows.singular, phase: "sealed", sealedAt: now },
+  });
 });
 
 /** Deletes only two exact sealed rows and returns server-owned evidence. */
 export const clearPredecessorObservation = Effect.fn(
   "contentRelease.predecessor.clear"
 )(function* (ctx: MutationCtx, rawObservationId: string) {
-  const observationId = yield* decodePredecessorObservationId(rawObservationId);
-  const rows = yield* requireOwnedRows(yield* loadRoutes(ctx), observationId);
-  yield* requireDeployment(rows, yield* loadDeploymentName(ctx));
-  if (rows.singular.phase !== "sealed") {
+  const rows = yield* loadVerifiedObservation(ctx, rawObservationId);
+  const singularSealedAt = rows.singular.sealedAt;
+  const batchSealedAt = rows.batch.sealedAt;
+  if (
+    rows.singular.phase !== "sealed" ||
+    singularSealedAt === undefined ||
+    batchSealedAt === undefined
+  ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",
       "Only an exact sealed predecessor observation can be cleared."
     );
   }
+  const clearedAt = yield* Clock.currentTimeMillis;
   yield* Effect.promise(() =>
     ctx.db.delete("contentPredecessorReads", rows.singular._id)
   );
@@ -358,9 +356,36 @@ export const clearPredecessorObservation = Effect.fn(
     ctx.db.delete("contentPredecessorReads", rows.batch._id)
   );
   return {
-    clearedAt: yield* Clock.currentTimeMillis,
+    activeManifestHash: rows.singular.activeManifestHash,
+    activeReleaseId: rows.singular.activeReleaseId,
+    activeSequence: rows.singular.activeSequence,
+    clearedAt,
     deleted: 2,
     deploymentName: rows.singular.deploymentName,
-    observationId,
+    observationId: rows.singular.observationId,
+    routes: {
+      batch: {
+        armedAt: rows.batch.armedAt,
+        invocationCount: rows.batch.invocationCount,
+        ...(rows.batch.lastInvokedAt === undefined
+          ? {}
+          : { lastInvokedAt: rows.batch.lastInvokedAt }),
+        phase: "sealed" as const,
+        quietSince: rows.batch.quietSince,
+        route: rows.batch.route,
+        sealedAt: batchSealedAt,
+      },
+      singular: {
+        armedAt: rows.singular.armedAt,
+        invocationCount: rows.singular.invocationCount,
+        ...(rows.singular.lastInvokedAt === undefined
+          ? {}
+          : { lastInvokedAt: rows.singular.lastInvokedAt }),
+        phase: "sealed" as const,
+        quietSince: rows.singular.quietSince,
+        route: rows.singular.route,
+        sealedAt: singularSealedAt,
+      },
+    },
   };
 });

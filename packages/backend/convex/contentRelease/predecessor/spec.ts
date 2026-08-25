@@ -53,9 +53,7 @@ const predecessorRouteStatusValidator = v.object({
   invocationCount: v.number(),
   lastInvokedAt: v.optional(v.number()),
   phase: predecessorPhaseValidator,
-  quietForMs: v.number(),
   quietSince: v.number(),
-  readyToSeal: v.boolean(),
   route: predecessorRouteValidator,
   sealedAt: v.optional(v.number()),
 });
@@ -65,10 +63,8 @@ export const predecessorStatusValidator = v.object({
   activeManifestHash: v.string(),
   activeReleaseId: v.string(),
   activeSequence: v.number(),
-  checkedAt: v.number(),
   deploymentName: v.string(),
   observationId: v.string(),
-  readyToSeal: v.boolean(),
   routes: v.object({
     batch: predecessorRouteStatusValidator,
     singular: predecessorRouteStatusValidator,
@@ -76,12 +72,29 @@ export const predecessorStatusValidator = v.object({
 });
 export type PredecessorStatus = Infer<typeof predecessorStatusValidator>;
 
+const predecessorClearRouteValidator = v.object({
+  armedAt: v.number(),
+  invocationCount: v.number(),
+  lastInvokedAt: v.optional(v.number()),
+  phase: v.literal("sealed"),
+  quietSince: v.number(),
+  route: predecessorRouteValidator,
+  sealedAt: v.number(),
+});
+
 /** Honest server-side receipt for deleting one sealed observation. */
 export const predecessorClearReceiptValidator = v.object({
+  activeManifestHash: v.string(),
+  activeReleaseId: v.string(),
+  activeSequence: v.number(),
   clearedAt: v.number(),
   deleted: v.number(),
   deploymentName: v.string(),
   observationId: v.string(),
+  routes: v.object({
+    batch: predecessorClearRouteValidator,
+    singular: predecessorClearRouteValidator,
+  }),
 });
 export type PredecessorClearReceipt = Infer<
   typeof predecessorClearReceiptValidator

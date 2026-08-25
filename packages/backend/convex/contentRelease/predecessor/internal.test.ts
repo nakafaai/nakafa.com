@@ -57,6 +57,9 @@ describe("contentRelease/predecessor/internal", () => {
       observationId: OBSERVATION_ID,
     });
     expect(armed.observationId).toBe(OBSERVATION_ID);
+    await expect(
+      target.mutation(arm, { observationId: OBSERVATION_ID })
+    ).resolves.toEqual(armed);
     await expect(target.mutation(recordSingular, {})).resolves.toEqual({
       observed: true,
     });
