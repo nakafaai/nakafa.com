@@ -177,6 +177,15 @@ const discoverLinkedHref = Effect.fn("NakafaE2E.discoverLinkedHref")(function* (
   );
 });
 
+/**
+ * The installed instant lock completes the target prefetch before navigation
+ * and withholds dynamic data until its callback returns. The callback therefore
+ * owns the shell assertion, while the Effect program verifies settled content
+ * after release.
+ *
+ * @see https://github.com/vercel/next.js/blob/v16.3.2/packages/next/src/client/components/segment-cache/navigation.ts
+ * @see https://github.com/vercel/next.js/blob/v16.3.2/packages/next-playwright/README.md
+ */
 const navigateHard = Effect.fn("NakafaE2E.navigateHard")(function* (
   page: Page,
   baseURL: string,
@@ -195,6 +204,30 @@ const navigateHard = Effect.fn("NakafaE2E.navigateHard")(function* (
             return page.waitForURL((url) => url.pathname === target.href, {
               timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
             });
+          })
+          .then(() => {
+            if (target.marker.kind === "title") {
+              return expect(page).toHaveTitle(target.marker.text, {
+                timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+              });
+            }
+
+            const markerText = target.marker.text;
+            const heading = markerText
+              ? page
+                  .locator("h1:visible")
+                  .filter({ hasText: markerText })
+                  .first()
+              : page.locator("h1:visible").first();
+            return expect(heading)
+              .toBeVisible({ timeout: NAVIGATION_TIMEOUT_MILLISECONDS })
+              .then(() =>
+                markerText
+                  ? expect(heading).toContainText(markerText, {
+                      timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+                    })
+                  : undefined
+              );
           }),
       { baseURL }
     )
@@ -204,13 +237,11 @@ const navigateHard = Effect.fn("NakafaE2E.navigateHard")(function* (
 
 const navigateClient = Effect.fn("NakafaE2E.navigateClient")(function* (
   page: Page,
-  baseURL: string,
   target: NavigationTarget,
   hasTouch: boolean
 ) {
   const link = yield* prepareClientNavigation(
     page,
-    baseURL,
     target.sourceHref,
     target.href,
     NAVIGATION_TIMEOUT_MILLISECONDS,
@@ -223,11 +254,33 @@ const navigateClient = Effect.fn("NakafaE2E.navigateClient")(function* (
       (hasTouch
         ? link.tap({ timeout: NAVIGATION_TIMEOUT_MILLISECONDS })
         : link.click({ timeout: NAVIGATION_TIMEOUT_MILLISECONDS })
-      ).then(() =>
-        page.waitForURL((url) => url.pathname === target.href, {
-          timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-        })
       )
+        .then(() =>
+          page.waitForURL((url) => url.pathname === target.href, {
+            timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+          })
+        )
+        .then(() => {
+          if (target.marker.kind === "title") {
+            return expect(page).toHaveTitle(target.marker.text, {
+              timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+            });
+          }
+
+          const markerText = target.marker.text;
+          const heading = markerText
+            ? page.locator("h1:visible").filter({ hasText: markerText }).first()
+            : page.locator("h1:visible").first();
+          return expect(heading)
+            .toBeVisible({ timeout: NAVIGATION_TIMEOUT_MILLISECONDS })
+            .then(() =>
+              markerText
+                ? expect(heading).toContainText(markerText, {
+                    timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+                  })
+                : undefined
+            );
+        })
     )
   );
   yield* assertSettledNavigation(page, target);
@@ -242,7 +295,7 @@ export const verifyHardAndClientNavigation = Effect.fn(
   hasTouch: boolean
 ) {
   yield* navigateHard(page, baseURL, target);
-  yield* navigateClient(page, baseURL, target, hasTouch);
+  yield* navigateClient(page, target, hasTouch);
 });
 
 const resolveHomepage = Effect.fn("NakafaE2E.resolveHomepage")(() =>

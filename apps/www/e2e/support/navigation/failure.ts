@@ -1,13 +1,8 @@
 import { Schema } from "effect";
-import {
-  formatRequestFailure,
-  requestFailureFields,
-  TrackedRequestSchema,
-} from "../request-tracker";
+import { formatRequestFailure, requestFailureFields } from "../request-tracker";
 
 export const NavigationReadinessPhaseSchema = Schema.Literals([
   "hydration",
-  "prefetch",
   "source",
   "viewport",
 ]);
@@ -18,30 +13,15 @@ export class NavigationReadinessTimeout extends Schema.TaggedError<NavigationRea
   {
     errorText: Schema.optional(Schema.String),
     href: Schema.String,
-    pendingPrefetches: Schema.optional(Schema.Array(TrackedRequestSchema)),
     phase: NavigationReadinessPhaseSchema,
-    prefetchObserved: Schema.optional(Schema.Boolean),
     sourceHref: Schema.String,
-    successfulPrefetches: Schema.optional(Schema.Finite),
     timeoutMilliseconds: Schema.Finite,
   }
 ) {
   get message() {
     const errorText =
       this.errorText === undefined ? "" : ` errorText=${this.errorText}`;
-    const prefetchObserved =
-      this.prefetchObserved === undefined
-        ? ""
-        : ` prefetchObserved=${this.prefetchObserved}`;
-    const successfulPrefetches =
-      this.successfulPrefetches === undefined
-        ? ""
-        : ` successfulPrefetches=${this.successfulPrefetches}`;
-    const pendingPrefetches =
-      this.pendingPrefetches === undefined
-        ? ""
-        : ` pendingPrefetches=${JSON.stringify(this.pendingPrefetches)}`;
-    return `Navigation readiness timed out: phase=${this.phase} sourceHref=${this.sourceHref} href=${this.href} timeoutMilliseconds=${this.timeoutMilliseconds}${prefetchObserved}${successfulPrefetches}${pendingPrefetches}${errorText}`;
+    return `Navigation readiness timed out: phase=${this.phase} sourceHref=${this.sourceHref} href=${this.href} timeoutMilliseconds=${this.timeoutMilliseconds}${errorText}`;
   }
 }
 
@@ -62,7 +42,7 @@ export class NavigationBrowserReadinessError extends Schema.TaggedError<Navigati
   }
 }
 
-/** A source document or exact target prefetch request did not succeed. */
+/** A source document request did not succeed. */
 export class NavigationRequestError extends Schema.TaggedError<NavigationRequestError>()(
   "NavigationRequestError",
   {

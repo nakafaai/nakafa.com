@@ -6,7 +6,6 @@ import {
   NavigationRequestError,
   readErrorText,
 } from "./failure";
-import { withTargetPrefetch } from "./prefetch";
 
 const loadSourceRoute = Effect.fn("NakafaE2E.loadNavigationSource")(function* (
   page: Page,
@@ -132,57 +131,40 @@ const ensureLinkInViewport = Effect.fn("NakafaE2E.ensureLinkInViewport")(
   }
 );
 
-/** Loads one source route and returns its hydrated, prefetched target Link. */
+/** Loads one source route and returns its hydrated target Link in the viewport. */
 export const prepareClientNavigation = Effect.fn(
   "NakafaE2E.prepareClientNavigation"
 )(function* <E, R>(
   page: Page,
-  baseURL: string,
   sourceHref: string,
   targetHref: string,
   timeoutMilliseconds: number,
   findLink: () => Effect.Effect<Locator, E, R>
 ) {
-  const applicationOrigin = new URL(baseURL).origin;
+  yield* loadSourceRoute(page, sourceHref, targetHref, timeoutMilliseconds);
 
-  return yield* withTargetPrefetch(
+  /**
+   * Next.js commits `__NA` and its internal tree in HistoryUpdater's
+   * useInsertionEffect. Link callback refs are mounted in that commit. The
+   * installed `instant()` lock owns exact-target prefetch completion after the
+   * interaction begins, so readiness only prepares the real target Link.
+   *
+   * @see https://github.com/vercel/next.js/blob/v16.3.2/packages/next/src/client/components/app-router.tsx
+   * @see https://github.com/vercel/next.js/blob/v16.3.2/packages/next/src/client/app-dir/link.tsx
+   * @see https://github.com/vercel/next.js/blob/v16.3.2/packages/next/src/client/components/segment-cache/navigation.ts
+   */
+  yield* waitForCommittedAppRouter(
     page,
-    applicationOrigin,
     sourceHref,
     targetHref,
-    timeoutMilliseconds,
-    () =>
-      Effect.gen(function* () {
-        yield* loadSourceRoute(
-          page,
-          sourceHref,
-          targetHref,
-          timeoutMilliseconds
-        );
-
-        /**
-         * Next.js commits `__NA` and its internal tree in HistoryUpdater's
-         * useInsertionEffect. Link callback refs are mounted in that commit, and
-         * visible Links then schedule requests carrying `next-router-prefetch`.
-         *
-         * @see https://github.com/vercel/next.js/blob/v16.3.2/packages/next/src/client/components/app-router.tsx
-         * @see https://github.com/vercel/next.js/blob/v16.3.2/packages/next/src/client/app-dir/link.tsx
-         * @see https://github.com/vercel/next.js/blob/v16.3.2/packages/next/src/client/components/links.ts
-         */
-        yield* waitForCommittedAppRouter(
-          page,
-          sourceHref,
-          targetHref,
-          timeoutMilliseconds
-        );
-        const link = yield* findLink();
-        yield* ensureLinkInViewport(
-          link,
-          sourceHref,
-          targetHref,
-          timeoutMilliseconds
-        );
-        return link;
-      })
+    timeoutMilliseconds
   );
+  const link = yield* findLink();
+  yield* ensureLinkInViewport(
+    link,
+    sourceHref,
+    targetHref,
+    timeoutMilliseconds
+  );
+  return link;
 });
