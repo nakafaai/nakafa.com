@@ -54,7 +54,7 @@ describe("contentRelease/models", () => {
   afterEach(() => vi.useRealTimers());
 
   it.each(["page", "question"] as const)(
-    "claims unchanged models for %s content under one activation lineage",
+    "claims unchanged models for %s content without scheduling",
     async (family) => {
       const t = convexTest(schema, convexModules);
       await t.mutation((ctx) =>
@@ -67,9 +67,10 @@ describe("contentRelease/models", () => {
           })
         )
       );
-      await t.mutation((ctx) =>
+      const started = await t.mutation((ctx) =>
         runConvexProgram(startReadModels(ctx, ACTIVE.releaseId))
       );
+      expect(started).toBeNull();
 
       const claimed = await t.run(async (ctx) => ({
         jobs: await ctx.db.system.query("_scheduled_functions").collect(),
@@ -81,16 +82,14 @@ describe("contentRelease/models", () => {
           .unique(),
         state: await ctx.db.query("contentState").unique(),
       }));
-      expect(claimed.jobs).toEqual([
-        expect.objectContaining({ state: { kind: "pending" } }),
-      ]);
+      expect(claimed.jobs).toEqual([]);
       expect(claimed.release).toMatchObject({
         articleIndex: -1,
         materialIndex: -1,
         searchIndex: -1,
-        syncGeneration: 1,
-        syncJobId: expect.any(String),
       });
+      expect(claimed.release).not.toHaveProperty("syncGeneration");
+      expect(claimed.release).not.toHaveProperty("syncJobId");
       expect(claimed.state).toMatchObject({
         articleReleaseId: ACTIVE.releaseId,
         materialReleaseId: ACTIVE.releaseId,
@@ -104,17 +103,6 @@ describe("contentRelease/models", () => {
         phase: "completed",
         releaseId: ACTIVE.releaseId,
       });
-      const [initialJob] = claimed.jobs;
-      if (!initialJob) {
-        expect.fail("Expected one generation-1 read-model job.");
-      }
-      await expect(
-        t.mutation(internal.contentRelease.models.restart, {
-          expectedGeneration: 1,
-          expectedJobId: initialJob._id,
-          releaseId: ACTIVE.releaseId,
-        })
-      ).resolves.toEqual({ status: "stale" });
     }
   );
 

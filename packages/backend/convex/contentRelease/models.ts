@@ -217,7 +217,7 @@ const resumeReadModels = Effect.fn("contentRelease.resumeReadModels")(
 );
 
 /**
- * Starts exactly one generation-1 read-model lineage during activation.
+ * Claims unchanged models and starts one generation-1 lineage when needed.
  *
  * Scheduling and persisted identity are part of the same activation
  * transaction. Completed activation retries never call this program.
@@ -225,7 +225,19 @@ const resumeReadModels = Effect.fn("contentRelease.resumeReadModels")(
 export const startReadModels = Effect.fn("contentRelease.startReadModels")(
   function* (ctx: MutationCtx, releaseId: string) {
     const { release, signed, state } = yield* loadSyncRelease(ctx, releaseId);
-    yield* claimUnchangedReadModels(ctx, release, signed, state);
+    const claimedState = yield* claimUnchangedReadModels(
+      ctx,
+      release,
+      signed,
+      state
+    );
+    if (
+      hasCompletedReadModels(
+        getReadModelOwnership(release, signed, claimedState)
+      )
+    ) {
+      return null;
+    }
     const syncGeneration = 1;
     const syncJobId = yield* Effect.promise(() =>
       ctx.scheduler.runAfter(0, resumeReference, {

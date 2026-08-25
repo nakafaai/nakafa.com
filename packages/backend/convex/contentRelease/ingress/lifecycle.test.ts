@@ -31,7 +31,7 @@ import {
 import { completeContentProof } from "@repo/backend/test/content-verify";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@repo/backend/content/trust", async () => {
   const { TEST_KEY_RESOLVER } = await import(
@@ -174,8 +174,6 @@ function runLifecycle<A, E>(
   );
 }
 
-afterEach(() => vi.useRealTimers());
-
 describe("content release lifecycle ingress", () => {
   it("returns authenticated evidence after durable proof completion", async () => {
     const t = convexTest(schema, convexModules);
@@ -291,7 +289,6 @@ describe("content release lifecycle ingress", () => {
   });
 
   it("keeps the external activation receipt unchanged", async () => {
-    vi.useFakeTimers();
     const t = convexTest(schema, convexModules);
     const pair = makeActivationPair();
     await t.mutation((ctx) =>
@@ -327,8 +324,7 @@ describe("content release lifecycle ingress", () => {
     expect(activated.value).not.toHaveProperty("kind");
     await expect(
       t.run((ctx) => ctx.db.system.query("_scheduled_functions").collect())
-    ).resolves.toHaveLength(1);
-    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    ).resolves.toEqual([]);
 
     const recovered = await t.action((ctx) =>
       runLifecycle(
@@ -358,7 +354,6 @@ describe("content release lifecycle ingress", () => {
     expect(repeatedRecovery).toEqual(recovered);
     await expect(
       t.run((ctx) => ctx.db.system.query("_scheduled_functions").collect())
-    ).resolves.toHaveLength(2);
-    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    ).resolves.toEqual([]);
   });
 });
