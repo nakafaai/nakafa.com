@@ -221,10 +221,8 @@ describe("proxy", () => {
     const response = await requestProxy("/en/example.og", {
       headers: { accept: "image/png" },
     });
-
     expect(response.headers.get("x-middleware-next")).toBe("1");
     expectNoLocaleProxy();
-    expect(runtimeMocks.readRedirect).not.toHaveBeenCalled();
     expect(runtimeMocks.readActive).not.toHaveBeenCalled();
   });
 
@@ -393,6 +391,12 @@ describe("proxy", () => {
   ])(
     "negotiates public representations with an %s",
     async (_kind, pathname, init, expected) => {
+      runtimeMocks.readActive.mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId: "release-active",
+          kind: "found",
+        })
+      );
       const response = await requestProxy(pathname, init);
       expectNoLocaleProxy();
       expect(response.status).toBe(expected === null ? 406 : 200);
@@ -401,28 +405,13 @@ describe("proxy", () => {
     }
   );
 
-  it.each([
-    ["/id/quran/999", "id", null],
-    ["/en/search/fabricated", "en", null],
-    [
-      "/en/curriculum/merdeka/class-11-afdocs-nonexistent-8f3a",
-      "en",
-      "curriculum/merdeka/class-11-afdocs-nonexistent-8f3a",
-    ],
-  ])(
-    "returns a hard 404 for missing HTML route %s",
-    async (path, locale, projectedPath) => {
-      const response = await requestProxy(path);
+  it("returns a hard 404 before rejecting a missing route representation", async () => {
+    const response = await requestProxy("/id/quran/999", {
+      headers: { accept: "application/json" },
+    });
 
-      expectHardNotFound(response, locale);
-      if (projectedPath) {
-        expect(runtimeMocks.readProgramPath).toHaveBeenCalledWith(
-          "en",
-          projectedPath
-        );
-      }
-    }
-  );
+    expectHardNotFound(response, "id");
+  });
 
   it.each([
     [

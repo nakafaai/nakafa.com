@@ -28,16 +28,14 @@ import {
   LLMS_REPRESENTATION_VARY_FIELDS,
   type LocalizedLlmsRoute,
   readLlmsMarkdownPathname,
-  resolveLlmsProxyRoute,
 } from "@/lib/llms/routes";
 import { isOgRouteAliasPathname } from "@/lib/og/route";
 import {
   isLocaleBypassPath,
   isUnsupportedRootFilePath,
 } from "@/lib/routing/bypass";
+import { resolvePublicDocumentRoute } from "@/lib/routing/public/document";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
-import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
-import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source";
 
 const handleLocalizedRequest = createMiddleware(routing);
 const handlePreviewLocalizedRequest = createMiddleware(previewRouting);
@@ -136,43 +134,26 @@ export async function proxy(request: NextRequest) {
   }
 
   const routeDecision = await Effect.runPromise(
-    resolveLlmsProxyRoute({
+    resolvePublicDocumentRoute({
       acceptHeader: Option.fromNullOr(request.headers.get("accept")),
+      hasAttemptCapability: hasTryoutAttemptCapability(
+        request.nextUrl.searchParams
+      ),
       method: request.method,
       pathname,
     })
   );
 
-  if (routeDecision.kind === "not-acceptable") {
-    return representationNotAcceptable();
+  if (routeDecision.kind === "not-found") {
+    return rewriteToContentNotFound(request, routeDecision.locale);
   }
 
   if (routeDecision.kind === "rewrite-markdown") {
     return rewriteToLlmsMdx(request, routeDecision.localizedRoute);
   }
 
-  const sourceBackedRouteRejection = await Effect.runPromise(
-    readSourceBackedHtmlRouteRejection({
-      method: request.method,
-      pathname,
-    })
-  );
-
-  if (sourceBackedRouteRejection) {
-    return rewriteToContentNotFound(request, sourceBackedRouteRejection);
-  }
-
-  const projectedRouteRejection = await Effect.runPromise(
-    readProjectedHtmlRouteRejection({
-      hasAttemptCapability: hasTryoutAttemptCapability(
-        request.nextUrl.searchParams
-      ),
-      pathname,
-    })
-  );
-
-  if (projectedRouteRejection) {
-    return rewriteToContentNotFound(request, projectedRouteRejection);
+  if (routeDecision.kind === "not-acceptable") {
+    return representationNotAcceptable();
   }
 
   return routeLocalizedRequest(request, candidateLocale !== null);
