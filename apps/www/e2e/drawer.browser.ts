@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { withObservedPageErrors } from "./support/browser-context";
 import { seedDeniedAnalyticsConsent } from "./support/consent";
@@ -6,6 +6,39 @@ import { waitForCommittedAppRouter } from "./support/navigation/readiness";
 
 const usageDataName = "Usage data";
 const readinessTimeoutMilliseconds = 15_000;
+
+const waitForReactClick = Effect.fn("NakafaE2E.waitForReactClick")(function* (
+  trigger: Locator
+) {
+  /**
+   * React 19.2.8 stores hydrated host props under `__reactProps$...` and
+   * reads `onClick` from that same store during event dispatch. Waiting for
+   * the exact host prop distinguishes visible server HTML from an
+   * interactive button without adding a product-only readiness marker.
+   *
+   * @see https://github.com/facebook/react/blob/v19.2.8/packages/react-dom-bindings/src/client/ReactDOMComponentTree.js
+   * @see https://github.com/facebook/react/blob/v19.2.8/packages/react-dom-bindings/src/events/getListener.js
+   */
+  yield* Effect.promise(() =>
+    trigger.waitForFunction(
+      (element) =>
+        Object.keys(element).some((key) => {
+          if (!key.startsWith("__reactProps$")) {
+            return false;
+          }
+
+          const props = Reflect.get(element, key);
+          if (typeof props !== "object" || props === null) {
+            return false;
+          }
+
+          return typeof Reflect.get(props, "onClick") === "function";
+        }),
+      undefined,
+      { timeout: readinessTimeoutMilliseconds }
+    )
+  );
+});
 
 const prepareConsentPreferences = Effect.fn(
   "NakafaE2E.prepareDrawerConsentPreferences"
@@ -100,6 +133,7 @@ const verifyQuranInterpretationDrawer = Effect.fn(
 
   const trigger = page.locator("[data-quran-interpretation-verse]").first();
   yield* Effect.promise(() => expect(trigger).toBeVisible({ timeout: 15_000 }));
+  yield* waitForReactClick(trigger);
   yield* Effect.promise(() => trigger.click());
 
   const drawer = page.locator('[data-slot="drawer-popup"]');

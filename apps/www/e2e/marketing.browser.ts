@@ -214,18 +214,24 @@ const verifyContributorPayloads = Effect.fn(
   yield* Effect.promise(() => page.keyboard.press("Tab"));
   yield* Effect.promise(() => page.keyboard.press("Shift+Tab"));
   yield* Effect.promise(() => expect(firstTrigger).toBeFocused());
+  // Base UI 1.7 describes Tooltip as a visual hint and its Popup renders a
+  // div without a tooltip role. The trigger's aria-label owns its identity.
+  // @see https://base-ui.com/react/components/tooltip
+  const tooltip = page.locator('[data-slot="tooltip-content"][data-open]');
   yield* Effect.promise(() =>
-    expect(page.getByRole("tooltip")).toHaveText(firstContributor.name)
+    expect(tooltip).toHaveText(firstContributor.name)
   );
+  yield* Effect.promise(() => expect(tooltip).toBeVisible());
   yield* Effect.promise(() => page.keyboard.press("Escape"));
-  yield* Effect.promise(() => expect(page.getByRole("tooltip")).toHaveCount(0));
+  yield* Effect.promise(() => expect(tooltip).toHaveCount(0));
   yield* Effect.promise(() => page.mouse.move(0, 0));
   yield* Effect.promise(() => firstTrigger.hover());
   yield* Effect.promise(() =>
-    expect(page.getByRole("tooltip")).toHaveText(firstContributor.name)
+    expect(tooltip).toHaveText(firstContributor.name)
   );
+  yield* Effect.promise(() => expect(tooltip).toBeVisible());
   yield* Effect.promise(() => page.mouse.move(0, 0));
-  yield* Effect.promise(() => expect(page.getByRole("tooltip")).toHaveCount(0));
+  yield* Effect.promise(() => expect(tooltip).toHaveCount(0));
 
   for (const contributor of contributors) {
     const trigger = gallery.locator(
