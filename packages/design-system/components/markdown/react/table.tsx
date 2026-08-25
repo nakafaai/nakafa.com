@@ -1,7 +1,4 @@
-import {
-  type ReactMarkdownComponents,
-  sameClassAndNode,
-} from "@repo/design-system/components/markdown/react/node";
+import type { ReactMarkdownComponents } from "@repo/design-system/components/markdown/react/node";
 import {
   Table,
   TableBody,
@@ -11,75 +8,56 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { filterWhitespaceNodes } from "@repo/design-system/lib/markdown/children";
-import { memo } from "react";
 
 export const reactTableComponents: ReactMarkdownComponents = {
-  table: memo(
-    ({ children, ...props }) => (
-      <Table
-        containerClassName="my-4 rounded-xl border"
-        data-nakafa="table"
-        {...props}
-      >
-        {filterWhitespaceNodes(children)}
-      </Table>
-    ),
-    (previous, next) => sameClassAndNode(previous, next)
+  table: ({ children, ...props }) => (
+    <Table
+      containerClassName="my-4 rounded-xl border"
+      data-nakafa="table"
+      {...props}
+    >
+      {filterWhitespaceNodes(children)}
+    </Table>
   ),
-  tbody: memo(
-    ({ children, ...props }) => (
-      <TableBody className="bg-muted/40" data-nakafa="table-body" {...props}>
-        {filterWhitespaceNodes(children)}
-      </TableBody>
-    ),
-    (previous, next) => sameClassAndNode(previous, next)
+  tbody: ({ children, ...props }) => (
+    <TableBody className="bg-muted/40" data-nakafa="table-body" {...props}>
+      {filterWhitespaceNodes(children)}
+    </TableBody>
   ),
-  td: memo(
-    ({ children, ...props }) => (
-      <TableCell
-        className="border-r last:border-r-0"
-        data-nakafa="table-cell"
-        {...props}
-      >
-        {filterWhitespaceNodes(children)}
-      </TableCell>
-    ),
-    (previous, next) => sameClassAndNode(previous, next)
+  td: ({ children, ...props }) => (
+    <TableCell
+      className="border-r last:border-r-0"
+      data-nakafa="table-cell"
+      {...props}
+    >
+      {filterWhitespaceNodes(children)}
+    </TableCell>
   ),
-  th: memo(
-    ({ children, ...props }) => (
-      <TableHead
-        className="border-r font-medium last:border-r-0"
-        data-nakafa="table-head"
-        {...props}
-      >
-        {filterWhitespaceNodes(children)}
-      </TableHead>
-    ),
-    (previous, next) => sameClassAndNode(previous, next)
+  th: ({ children, ...props }) => (
+    <TableHead
+      className="border-r font-medium last:border-r-0"
+      data-nakafa="table-head"
+      {...props}
+    >
+      {filterWhitespaceNodes(children)}
+    </TableHead>
   ),
-  thead: memo(
-    ({ children, ...props }) => (
-      <TableHeader
-        className="border-b bg-muted/80"
-        data-nakafa="table-header"
-        {...props}
-      >
-        {filterWhitespaceNodes(children)}
-      </TableHeader>
-    ),
-    (previous, next) => sameClassAndNode(previous, next)
+  thead: ({ children, ...props }) => (
+    <TableHeader
+      className="border-b bg-muted/80"
+      data-nakafa="table-header"
+      {...props}
+    >
+      {filterWhitespaceNodes(children)}
+    </TableHeader>
   ),
-  tr: memo(
-    ({ children, ...props }) => (
-      <TableRow
-        className="border-b last:border-b-0"
-        data-nakafa="table-row"
-        {...props}
-      >
-        {filterWhitespaceNodes(children)}
-      </TableRow>
-    ),
-    (previous, next) => sameClassAndNode(previous, next)
+  tr: ({ children, ...props }) => (
+    <TableRow
+      className="border-b last:border-b-0"
+      data-nakafa="table-row"
+      {...props}
+    >
+      {filterWhitespaceNodes(children)}
+    </TableRow>
   ),
 };

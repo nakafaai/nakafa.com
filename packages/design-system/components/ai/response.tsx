@@ -13,10 +13,7 @@ import { memo, useMemo } from "react";
 export type HardenedMarkdownProps = MarkdownSecurityProps;
 export type ResponseProps = MarkdownResponseProps;
 
-const MemoizedMarkdownBlock = memo(
-  MarkdownBlock,
-  (previous, next) => previous.children === next.children
-);
+const MemoizedMarkdownBlock = memo(MarkdownBlock);
 
 /** Splits a response into stable markdown blocks for streaming updates. */
 function Blocks({
@@ -43,10 +40,7 @@ function Blocks({
   ));
 }
 
-const MemoizedBlocks = memo(
-  Blocks,
-  (previous, next) => previous.children === next.children
-);
+const MemoizedBlocks = memo(Blocks);
 
 /** Renders the hardened block collection for one response. */
 function ResponseContent({
@@ -71,10 +65,7 @@ function ResponseContent({
   );
 }
 
-const MemoizedResponseContent = memo(
-  ResponseContent,
-  (previous, next) => previous.children === next.children
-);
+const MemoizedResponseContent = memo(ResponseContent);
 
 /** Normalizes and renders one streamed markdown response. */
 export function Response({ children, ...props }: ResponseProps) {
