@@ -1,5 +1,5 @@
 "use client";
-import { useCallbackRef, useDisclosure } from "@mantine/hooks";
+import { useDisclosure } from "@mantine/hooks";
 import {
   decodePublishedQuranInterpretation,
   isQuranSnapshotConflict,
@@ -18,7 +18,6 @@ import { Effect } from "effect";
 import {
   type MouseEvent,
   type ReactNode,
-  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -61,7 +60,6 @@ export function QuranInterpretationControls({
   const [pendingVerseNumber, setPendingVerseNumber] = useState<number | null>(
     null
   );
-  const [isControllerActive, setControllerActive] = useState(false);
   const [isPending, startTransition] = useTransition();
   const requestSequence = useRef(0);
   const pendingRequestId = useRef<number | null>(null);
@@ -78,12 +76,12 @@ export function QuranInterpretationControls({
     },
     [close, toastId]
   );
-  const handleInterpretationClick = (event: MouseEvent<HTMLButtonElement>) => {
+  const selectInterpretation = (event: MouseEvent<HTMLButtonElement>) => {
     const verseNumber = getVerseNumber(event.currentTarget);
     if (verseNumber === null) {
       return;
     }
-    if (isPending || pendingRequestId.current !== null) {
+    if (pendingRequestId.current !== null) {
       return;
     }
     requestSequence.current += 1;
@@ -183,20 +181,7 @@ export function QuranInterpretationControls({
     );
     startTransition(() => Effect.runPromise(program));
   };
-  const selectInterpretation = useCallbackRef(handleInterpretationClick);
-  // Activity defers cleanup updates until this route becomes visible again.
-  // Keep this after useCallbackRef so triggers re-enable only after their
-  // handler is live again.
-  // https://react.dev/reference/react/Activity
-  useEffect(() => {
-    setControllerActive(true);
-
-    return () => {
-      setControllerActive(false);
-    };
-  }, []);
   const contextValue = {
-    isActive: isControllerActive,
     pendingVerseNumber: isPending ? pendingVerseNumber : null,
     selectInterpretation,
   };
