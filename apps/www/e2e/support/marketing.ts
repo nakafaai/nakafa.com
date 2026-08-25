@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import type { Contributor } from "@repo/contents/_types/contributor";
 import { Effect, Schema } from "effect";
+import { dragTouch } from "./touch";
 
 export const legacyAvatarFragmentIds = [
   "clip0",
@@ -135,47 +136,6 @@ export const measureMarketingPage = Effect.fn("NakafaE2E.measureMarketingPage")(
   }
 );
 
-const dispatchTouchDrag = Effect.fn("NakafaE2E.dispatchMarketingTouchDrag")(
-  function* (
-    page: Page,
-    start: { x: number; y: number },
-    end: { x: number; y: number }
-  ) {
-    yield* Effect.acquireUseRelease(
-      Effect.promise(() => page.context().newCDPSession(page)),
-      (session) =>
-        Effect.gen(function* () {
-          yield* Effect.promise(() =>
-            session.send("Input.dispatchTouchEvent", {
-              touchPoints: [start],
-              type: "touchStart",
-            })
-          );
-          for (let step = 1; step <= 5; step += 1) {
-            yield* Effect.promise(() =>
-              session.send("Input.dispatchTouchEvent", {
-                touchPoints: [
-                  {
-                    x: start.x + ((end.x - start.x) * step) / 5,
-                    y: start.y + ((end.y - start.y) * step) / 5,
-                  },
-                ],
-                type: "touchMove",
-              })
-            );
-          }
-          yield* Effect.promise(() =>
-            session.send("Input.dispatchTouchEvent", {
-              touchPoints: [],
-              type: "touchEnd",
-            })
-          );
-        }),
-      (session) => Effect.promise(() => session.detach())
-    );
-  }
-);
-
 const readBounds = Effect.fn("NakafaE2E.readMarketingBounds")(function* (
   locator: Locator,
   surface: Schema.Schema.Type<typeof MarketingSurfaceSchema>
@@ -260,7 +220,7 @@ export const verifyDesktopSplitter = Effect.fn(
   );
 
   yield* Effect.promise(() => page.keyboard.press("Home"));
-  yield* dispatchTouchDrag(
+  yield* dragTouch(
     page,
     { x: centerX, y: centerY },
     { x: centerX + 200, y: centerY }
@@ -290,7 +250,7 @@ export const swipeContributorDrawer = Effect.fn(
     x: bounds.x + bounds.width / 2,
     y: bounds.y + 20,
   };
-  yield* dispatchTouchDrag(page, start, {
+  yield* dragTouch(page, start, {
     x: start.x,
     y: Math.min(start.y + 320, bounds.y + bounds.height - 4),
   });

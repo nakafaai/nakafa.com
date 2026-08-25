@@ -1,16 +1,11 @@
-import {
-  type BrowserContext,
-  expect,
-  type Locator,
-  type Page,
-  test,
-} from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect, Schema } from "effect";
 import {
   withBrowserContext,
   withObservedPageErrors,
 } from "./support/browser-context";
 import { seedDeniedAnalyticsConsent } from "./support/consent";
+import { dragTouch } from "./support/touch";
 
 const targetViewports = [
   { height: 800, name: "compact", slot: "drawer-popup", width: 320 },
@@ -106,7 +101,7 @@ const expectClosedWithFocusReturned = Effect.fn(
 });
 
 const swipeDrawerClosed = Effect.fn("NakafaE2E.swipeConsentDrawerClosed")(
-  function* (context: BrowserContext, page: Page, popup: Locator) {
+  function* (page: Page, popup: Locator) {
     const bounds = yield* Effect.promise(() => popup.boundingBox());
     if (!bounds) {
       return yield* new ConsentDrawerBoundsMissing();
@@ -116,33 +111,7 @@ const swipeDrawerClosed = Effect.fn("NakafaE2E.swipeConsentDrawerClosed")(
     const startY = bounds.y + 12;
     const endY = Math.min(page.viewportSize()?.height ?? 844, startY + 320);
 
-    yield* Effect.acquireUseRelease(
-      Effect.promise(() => context.newCDPSession(page)),
-      (session) =>
-        Effect.gen(function* () {
-          yield* Effect.promise(() =>
-            session.send("Input.dispatchTouchEvent", {
-              touchPoints: [{ x, y: startY }],
-              type: "touchStart",
-            })
-          );
-          for (let step = 1; step <= 5; step += 1) {
-            yield* Effect.promise(() =>
-              session.send("Input.dispatchTouchEvent", {
-                touchPoints: [{ x, y: startY + ((endY - startY) * step) / 5 }],
-                type: "touchMove",
-              })
-            );
-          }
-          yield* Effect.promise(() =>
-            session.send("Input.dispatchTouchEvent", {
-              touchPoints: [],
-              type: "touchEnd",
-            })
-          );
-        }),
-      (session) => Effect.promise(() => session.detach())
-    );
+    yield* dragTouch(page, { x, y: startY }, { x, y: endY });
   }
 );
 
@@ -228,7 +197,7 @@ test("compact consent drawer preserves outside and swipe dismissal", async ({
                 page,
                 "drawer-popup"
               );
-              yield* swipeDrawerClosed(context, page, swipeCase.popup);
+              yield* swipeDrawerClosed(page, swipeCase.popup);
               yield* expectClosedWithFocusReturned(
                 swipeCase.popup,
                 swipeCase.trigger
