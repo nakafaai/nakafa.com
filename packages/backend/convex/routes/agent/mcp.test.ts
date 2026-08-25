@@ -1,6 +1,5 @@
 // @vitest-environment node
 import { NAKAFA_EDGE_CLIENT_IP_HEADER } from "@repo/backend/agent/edge";
-import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/backend/agent/mcp/protocol";
 import { components } from "@repo/backend/convex/_generated/api";
 import {
   AGENT_RATE_LIMIT_CONFIG,
@@ -9,6 +8,7 @@ import {
   getAgentRateLimitName,
 } from "@repo/backend/convex/routes/agent/rateLimit";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/_lib/agent/constants";
 import {
   afterEach,
   beforeEach,
@@ -66,26 +66,6 @@ function postModern(
   });
 }
 
-/** Decodes one JSON-RPC message carried by the legacy SSE response mode. */
-async function readLegacyMessage(response: Response) {
-  const source = await response.text();
-  const data = source
-    .split("\n")
-    .find((line) => line.startsWith("data: "))
-    ?.slice("data: ".length);
-  if (!data) {
-    throw new Error("Expected one legacy SSE data event.");
-  }
-  return JSON.parse(data) as {
-    readonly result?: {
-      readonly prompts?: readonly { readonly name: string }[];
-      readonly protocolVersion?: string;
-      readonly resources?: readonly { readonly uri: string }[];
-      readonly tools?: readonly { readonly name: string }[];
-    };
-  };
-}
-
 beforeEach(() => {
   process.env[MCP_SECRET_NAME] = MCP_SECRET;
   process.env[MCP_ORIGINS_NAME] =
@@ -138,7 +118,7 @@ describe("Nakafa MCP HTTP route", () => {
 
     expect(direct.status).toBe(403);
     expect(direct.headers.get("access-control-expose-headers")).toBe(
-      "MCP-Protocol-Version, MCP-Session-Id, Retry-After"
+      "MCP-Protocol-Version, Retry-After"
     );
     await expect(direct.json()).resolves.toMatchObject({
       error: {
@@ -167,7 +147,7 @@ describe("Nakafa MCP HTTP route", () => {
       "https://agent.example.com"
     );
     expect(browser.headers.get("access-control-expose-headers")).toBe(
-      "MCP-Protocol-Version, MCP-Session-Id, Retry-After"
+      "MCP-Protocol-Version, Retry-After"
     );
     expect(server.status).toBe(204);
     expect(server.headers.get("access-control-allow-origin")).toBe("*");
@@ -338,6 +318,7 @@ describe("Nakafa MCP HTTP route", () => {
       headers: {
         accept: "application/json, text/event-stream",
         "content-type": "application/json",
+        "mcp-protocol-version": NAKAFA_MCP_PROTOCOL_VERSION,
       },
       method: "POST",
     });
@@ -450,8 +431,8 @@ describe("Nakafa MCP HTTP route", () => {
     });
   });
 
-  it("retains stateless compatibility for 2025 protocol clients", async () => {
-    const initialize = await fetchMcp({
+  it("rejects 2025 protocol clients without a compatibility transport", async () => {
+    const response = await fetchMcp({
       body: JSON.stringify({
         id: 30,
         jsonrpc: "2.0",
@@ -465,48 +446,22 @@ describe("Nakafa MCP HTTP route", () => {
       headers: {
         accept: "application/json, text/event-stream",
         "content-type": "application/json",
+        "mcp-protocol-version": "2025-11-25",
       },
       method: "POST",
     });
-    const legacyRequest = (id: number, method: string) =>
-      fetchMcp({
-        body: JSON.stringify({ id, jsonrpc: "2.0", method, params: {} }),
-        headers: {
-          accept: "application/json, text/event-stream",
-          "content-type": "application/json",
-          "mcp-protocol-version": "2025-11-25",
-        },
-        method: "POST",
-      });
-    const [list, resources, prompts] = await Promise.all([
-      legacyRequest(31, "tools/list"),
-      legacyRequest(32, "resources/list"),
-      legacyRequest(33, "prompts/list"),
-    ]);
-    const initializeBody = await readLegacyMessage(initialize);
-    const [listBody, resourcesBody, promptsBody] = await Promise.all([
-      readLegacyMessage(list),
-      readLegacyMessage(resources),
-      readLegacyMessage(prompts),
-    ]);
 
-    expect(initialize.status).toBe(200);
-    expect(initializeBody.result?.protocolVersion).toBe("2025-11-25");
-    expect(list.status).toBe(200);
-    expect(listBody.result?.tools?.map(({ name }) => name)).toEqual([
-      "nakafa_search_content",
-      "nakafa_get_content",
-      "nakafa_get_taxonomy",
-      "nakafa_get_quran_reference",
-    ]);
-    expect(resourcesBody.result?.resources?.map(({ uri }) => uri)).toEqual([
-      "nakafa://usage",
-      "nakafa://taxonomy",
-    ]);
-    expect(promptsBody.result?.prompts?.map(({ name }) => name)).toEqual([
-      "nakafa_find_lesson",
-      "nakafa_answer_from_content",
-      "nakafa_quran_reference",
-    ]);
+    expect(response.status).toBe(400);
+    expect(response.headers.get("mcp-protocol-version")).toBe(
+      NAKAFA_MCP_PROTOCOL_VERSION
+    );
+    await expect(response.json()).resolves.toMatchObject({
+      error: {
+        code: -32_020,
+        message: `The Nakafa MCP server supports protocol ${NAKAFA_MCP_PROTOCOL_VERSION} only.`,
+      },
+      id: 30,
+      jsonrpc: "2.0",
+    });
   });
 });

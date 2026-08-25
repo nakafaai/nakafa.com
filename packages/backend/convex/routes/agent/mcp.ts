@@ -1,6 +1,5 @@
 import { NAKAFA_MCP_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import { NAKAFA_MCP_REGISTRY_MANIFEST } from "@repo/backend/agent/mcp/manifest";
-import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/backend/agent/mcp/protocol";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { limitAgentRequest } from "@repo/backend/convex/routes/agent/rateLimit";
 import {
@@ -9,6 +8,7 @@ import {
   readTrustedMcpOrigins,
 } from "@repo/backend/convex/routes/agent/security";
 import { requestId } from "@repo/backend/convex/routes/middleware/requestId";
+import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/_lib/agent/constants";
 import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
@@ -26,8 +26,7 @@ const MCP_HEADERS = {
   "Access-Control-Allow-Headers":
     "Accept, Content-Type, MCP-Protocol-Version, Mcp-Method, Mcp-Name, traceparent, tracestate, baggage",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Expose-Headers":
-    "MCP-Protocol-Version, MCP-Session-Id, Retry-After",
+  "Access-Control-Expose-Headers": "MCP-Protocol-Version, Retry-After",
   "Cache-Control": "no-store",
   Vary: "Accept, Accept-Encoding, Origin",
 };
@@ -87,6 +86,28 @@ mcp.all("/", async (c) => {
     );
   }
 
+  const requestedProtocol = request.headers.get("mcp-protocol-version");
+  if (requestedProtocol === null) {
+    const responseId = await readJsonRpcRequestId(request);
+    return mcpErrorResponse(
+      400,
+      -32_020,
+      "The MCP-Protocol-Version header is required for modern requests.",
+      requestId,
+      responseId
+    );
+  }
+  if (requestedProtocol !== NAKAFA_MCP_PROTOCOL_VERSION) {
+    const responseId = await readJsonRpcRequestId(request);
+    return mcpErrorResponse(
+      400,
+      -32_020,
+      `The Nakafa MCP server supports protocol ${NAKAFA_MCP_PROTOCOL_VERSION} only.`,
+      requestId,
+      responseId
+    );
+  }
+
   const rateLimit = await Effect.runPromise(
     limitAgentRequest(c.env, request, "mcp").pipe(
       Effect.match({
@@ -125,29 +146,12 @@ mcp.all("/", async (c) => {
     );
   }
 
-  const legacyRequest = await runtime.value.sdk.isLegacyRequest(request);
-  if (!legacyRequest && request.headers.get("mcp-protocol-version") === null) {
-    const responseId = await readJsonRpcRequestId(request);
-    return mcpErrorResponse(
-      400,
-      -32_020,
-      "The MCP-Protocol-Version header is required for modern requests.",
-      requestId,
-      responseId
-    );
-  }
-
   const handler = runtime.value.sdk.createMcpHandler(
     () => runtime.value.server.createNakafaMcpServer(c.env),
-    { legacy: "stateless" }
-  );
-  const protocolVersion = readResponseProtocolVersion(
-    request,
-    legacyRequest,
-    runtime.value.sdk.LATEST_PROTOCOL_VERSION
+    { legacy: "reject" }
   );
   const response = await handler.fetch(request);
-  return withResponseHeaders(response, request, protocolVersion);
+  return withResponseHeaders(response, request);
 });
 
 /** Registers the canonical MCP transport and its Registry manifest. */
@@ -261,15 +265,9 @@ function readJsonRpcRequestId(request: Request) {
 }
 
 /** Adds protocol and CORS metadata without discarding SDK response headers. */
-function withResponseHeaders(
-  response: Response,
-  request: Request,
-  protocolVersion: string
-) {
+function withResponseHeaders(response: Response, request: Request) {
   const headers = new Headers(response.headers);
-  for (const [name, value] of Object.entries(
-    withCorsHeaders(request, protocolVersion)
-  )) {
+  for (const [name, value] of Object.entries(withCorsHeaders(request))) {
     headers.set(name, value);
   }
   return new Response(response.body, {
@@ -289,19 +287,4 @@ function withCorsHeaders(
     "Access-Control-Allow-Origin": request.headers.get("origin") ?? "*",
     "MCP-Protocol-Version": protocolVersion,
   };
-}
-
-/** Preserves the negotiated revision for modern and stateless legacy clients. */
-function readResponseProtocolVersion(
-  request: Request,
-  legacyRequest: boolean,
-  latestLegacyProtocolVersion: string
-) {
-  const requested = request.headers.get("mcp-protocol-version");
-  if (requested) {
-    return requested;
-  }
-  return legacyRequest
-    ? latestLegacyProtocolVersion
-    : NAKAFA_MCP_PROTOCOL_VERSION;
 }
