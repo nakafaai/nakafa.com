@@ -5,6 +5,7 @@ import {
   NAKAFA_OPENAPI_JSON,
 } from "@repo/backend/agent/openapi/document";
 import { dereference, validate } from "@scalar/openapi-parser";
+import { Predicate } from "effect";
 import { describe, expect, it } from "vitest";
 
 interface OpenApiOperation {
@@ -31,11 +32,11 @@ function readOperations() {
 /** Narrows one generated path value to the required operation surface. */
 function isOperation(value: unknown): value is OpenApiOperation {
   return (
-    isObject(value) &&
+    Predicate.isReadonlyObject(value) &&
     typeof value.description === "string" &&
     typeof value.operationId === "string" &&
     Array.isArray(value.parameters) &&
-    isObject(value.responses)
+    Predicate.isReadonlyObject(value.responses)
   );
 }
 
@@ -44,10 +45,15 @@ function projectFunction(operation: OpenApiOperation) {
   const properties: Record<string, unknown> = {};
   const required: string[] = [];
   for (const parameter of operation.parameters) {
-    if (!(isObject(parameter) && typeof parameter.name === "string")) {
+    if (
+      !(
+        Predicate.isReadonlyObject(parameter) &&
+        typeof parameter.name === "string"
+      )
+    ) {
       throw new Error("OpenAPI operations must use inline typed parameters.");
     }
-    if (!isObject(parameter.schema)) {
+    if (!Predicate.isReadonlyObject(parameter.schema)) {
       throw new Error(`Parameter ${parameter.name} must have a schema.`);
     }
     properties[parameter.name] = parameter.schema;
@@ -65,11 +71,6 @@ function projectFunction(operation: OpenApiOperation) {
       type: "object",
     },
   };
-}
-
-/** Narrows non-array object values used by the test traversal. */
-function isObject(value: unknown): value is Readonly<Record<string, unknown>> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 describe("Nakafa OpenAPI document", () => {

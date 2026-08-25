@@ -19,7 +19,7 @@ import {
   NakafaAgentTaxonomyOptionsSchema,
   NakafaAgentTaxonomySchema,
 } from "@repo/contents/_lib/agent/schema/taxonomy";
-import { Schema } from "effect";
+import { Predicate, Schema } from "effect";
 
 const LOCAL_DEFINITION_REFERENCE_PATTERN = /^#\/\$defs\/(.+)$/;
 
@@ -81,13 +81,19 @@ export const OPENAPI_PARAMETER_SCHEMAS = {
 /** Removes transport-inexpressible null alternatives from query parameters. */
 function toOpenApiParameterSchema(schema: Schema.Constraint) {
   const generated = toOpenApiSchema(schema);
-  if (!(isObject(generated) && Array.isArray(generated.anyOf))) {
+  if (
+    !(Predicate.isReadonlyObject(generated) && Array.isArray(generated.anyOf))
+  ) {
     return generated;
   }
   const alternatives = generated.anyOf.filter(
-    (candidate) => !(isObject(candidate) && candidate.type === "null")
+    (candidate) =>
+      !(Predicate.isReadonlyObject(candidate) && candidate.type === "null")
   );
-  if (alternatives.length !== 1 || !isObject(alternatives[0])) {
+  if (
+    alternatives.length !== 1 ||
+    !Predicate.isReadonlyObject(alternatives[0])
+  ) {
     return { ...generated, anyOf: alternatives };
   }
   const siblings = Object.fromEntries(
@@ -107,7 +113,7 @@ function inlineDefinitions(
       inlineDefinitions(item, definitions, activeDefinitions)
     );
   }
-  if (!isObject(value)) {
+  if (!Predicate.isReadonlyObject(value)) {
     return value;
   }
 
@@ -126,7 +132,9 @@ function inlineDefinitions(
       const siblings = inlineEntries(value, definitions, activeDefinitions, [
         "$ref",
       ]);
-      return isObject(resolved) ? { ...resolved, ...siblings } : resolved;
+      return Predicate.isReadonlyObject(resolved)
+        ? { ...resolved, ...siblings }
+        : resolved;
     }
   }
   return inlineEntries(value, definitions, activeDefinitions, []);
@@ -147,9 +155,4 @@ function inlineEntries(
         inlineDefinitions(item, definitions, activeDefinitions),
       ])
   );
-}
-
-/** Narrows non-array object values for JSON Schema traversal. */
-function isObject(value: unknown): value is Readonly<Record<string, unknown>> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { Predicate } from "effect";
 import { describe, expect, it } from "vitest";
 
 const WEB_BASE_URL =
@@ -62,15 +63,11 @@ function readJsonLd(source: string) {
   ].map((match) => JSON.parse(match[1] ?? "null"));
 }
 
-function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 function hasSchemaType(value: unknown, type: string): boolean {
   if (Array.isArray(value)) {
     return value.some((item) => hasSchemaType(item, type));
   }
-  if (!isRecord(value)) {
+  if (!Predicate.isReadonlyObject(value)) {
     return false;
   }
   if (value["@type"] === type) {

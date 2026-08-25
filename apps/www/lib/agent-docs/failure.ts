@@ -1,4 +1,5 @@
 import type { CheckResult } from "afdocs";
+import { Predicate } from "effect";
 
 const MAX_DETAIL_ITEMS = 5;
 const MAX_STRING_LENGTH = 160;
@@ -61,7 +62,7 @@ function readDetailLines(details: CheckResult["details"]) {
 }
 
 function isOffender(item: unknown) {
-  if (typeof item !== "object" || item === null || Array.isArray(item)) {
+  if (!Predicate.isReadonlyObject(item)) {
     return false;
   }
 
@@ -86,7 +87,7 @@ function isOffender(item: unknown) {
 }
 
 function formatDetailItem(item: unknown) {
-  if (typeof item !== "object" || item === null || Array.isArray(item)) {
+  if (!Predicate.isReadonlyObject(item)) {
     return null;
   }
 
