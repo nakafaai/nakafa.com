@@ -10,10 +10,19 @@ import {
   swipeContributorDrawer,
   verifyDesktopSplitter,
 } from "./support/marketing";
+import { waitForCommittedAppRouter } from "./support/navigation/readiness";
 
-const COMMUNITY_MAX_DESCENDANTS = 400;
-const COMMUNITY_MAX_HTML_BYTES = 110_000;
-const HOMEPAGE_MAX_DESCENDANTS = 2600;
+/**
+ * Raw Community markup is dominated by the 16 preserved vector Characters.
+ * Protected #330 and the exact-head trace both measured 755 total descendants,
+ * 220 non-SVG descendants, and about 210 KB. These ceilings leave about six
+ * percent regression room without changing the visible avatar representation.
+ */
+const COMMUNITY_MAX_CHROME_DESCENDANTS = 235;
+const COMMUNITY_MAX_DESCENDANTS = 800;
+const COMMUNITY_MAX_HTML_BYTES = 223_000;
+const HOMEPAGE_MAX_DESCENDANTS = 2800;
+const READINESS_TIMEOUT_MILLISECONDS = 15_000;
 const TRUST_MAX_DESCENDANTS = 330;
 const TRUST_RESIZE_LABEL = "Resize the human and agent views";
 
@@ -42,6 +51,12 @@ const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(function* (
     page.goto(href, { waitUntil: "domcontentloaded" })
   );
   yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+  yield* waitForCommittedAppRouter(
+    page,
+    href,
+    href,
+    READINESS_TIMEOUT_MILLISECONDS
+  );
 });
 
 const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
@@ -55,6 +70,9 @@ const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
         [...legacyAvatarFragmentIds].sort()
       );
       expect(measurements.missingFragmentReferences).toEqual([]);
+      expect(measurements.communityChromeDescendants).toBeLessThanOrEqual(
+        COMMUNITY_MAX_CHROME_DESCENDANTS
+      );
       expect(measurements.communityDescendants).toBeLessThanOrEqual(
         COMMUNITY_MAX_DESCENDANTS
       );

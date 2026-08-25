@@ -97,6 +97,9 @@ export const measureMarketingPage = Effect.fn("NakafaE2E.measureMarketingPage")(
         });
 
         return {
+          communityChromeDescendants: community
+            ? community.querySelectorAll(":scope *:not(svg *)").length
+            : -1,
           communityDescendants: community
             ? community.querySelectorAll("*").length
             : -1,

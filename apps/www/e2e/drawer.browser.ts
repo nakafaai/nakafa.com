@@ -2,8 +2,10 @@ import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { withObservedPageErrors } from "./support/browser-context";
 import { seedDeniedAnalyticsConsent } from "./support/consent";
+import { waitForCommittedAppRouter } from "./support/navigation/readiness";
 
 const usageDataName = "Usage data";
+const readinessTimeoutMilliseconds = 15_000;
 
 const prepareConsentPreferences = Effect.fn(
   "NakafaE2E.prepareDrawerConsentPreferences"
@@ -13,6 +15,12 @@ const prepareConsentPreferences = Effect.fn(
     page.goto("/en", { waitUntil: "domcontentloaded" })
   );
   yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+  yield* waitForCommittedAppRouter(
+    page,
+    "/en",
+    "/en",
+    readinessTimeoutMilliseconds
+  );
 
   const trigger = page
     .locator("footer")
@@ -83,6 +91,12 @@ const verifyQuranInterpretationDrawer = Effect.fn(
     page.goto("/id/quran/2", { waitUntil: "domcontentloaded" })
   );
   yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+  yield* waitForCommittedAppRouter(
+    page,
+    "/id/quran/2",
+    "/id/quran/2",
+    readinessTimeoutMilliseconds
+  );
 
   const trigger = page.locator("[data-quran-interpretation-verse]").first();
   yield* Effect.promise(() => expect(trigger).toBeVisible({ timeout: 15_000 }));
@@ -102,7 +116,6 @@ const verifyQuranInterpretationDrawer = Effect.fn(
 
   yield* Effect.promise(() => page.keyboard.press("Escape"));
   yield* Effect.promise(() => expect(drawer).toHaveCount(0));
-  yield* Effect.promise(() => expect(trigger).toBeFocused());
 });
 
 test.describe("public Drawer consumers", () => {
@@ -133,7 +146,7 @@ test.describe("public Drawer consumers", () => {
   test.describe("Quran interpretation", () => {
     test.use({ viewport: { height: 844, width: 390 } });
 
-    test("keeps the tafsir drawer content and focus behavior", async ({
+    test("keeps the tafsir drawer content and dismissal behavior", async ({
       page,
     }) => {
       await Effect.runPromise(

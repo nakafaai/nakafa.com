@@ -57,7 +57,7 @@ const loadSourceRoute = Effect.fn("NakafaE2E.loadNavigationSource")(function* (
   }
 });
 
-const waitForCommittedAppRouter = Effect.fn(
+export const waitForCommittedAppRouter = Effect.fn(
   "NakafaE2E.waitForCommittedAppRouter"
 )(function* (
   page: Page,
