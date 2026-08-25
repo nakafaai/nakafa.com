@@ -559,6 +559,9 @@ importers:
       '@convex-dev/migrations':
         specifier: 0.3.6
         version: 0.3.6(convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(react@19.2.8))(hono@4.13.3)(react@19.2.8)(typescript@7.0.2)(zod@4.4.3))(convex@1.45.0(react@19.2.8))
+      '@convex-dev/rate-limiter':
+        specifier: 0.3.2
+        version: 0.3.2(convex@1.45.0(react@19.2.8))(react@19.2.8)
       '@convex-dev/resend':
         specifier: ^0.2.7
         version: 0.2.7(@react-email/render@2.1.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(react@19.2.8))(hono@4.13.3)(react@19.2.8)(typescript@7.0.2)(zod@4.4.3))(convex@1.45.0(react@19.2.8))(react@19.2.8)

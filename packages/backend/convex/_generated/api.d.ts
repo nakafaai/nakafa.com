@@ -427,6 +427,7 @@ import type * as privacy_spec from "../privacy/spec.js";
 import type * as routes_agent_api from "../routes/agent/api.js";
 import type * as routes_agent_input from "../routes/agent/input.js";
 import type * as routes_agent_mcp from "../routes/agent/mcp.js";
+import type * as routes_agent_rateLimit from "../routes/agent/rateLimit.js";
 import type * as routes_agent_response from "../routes/agent/response.js";
 import type * as routes_agent_security from "../routes/agent/security.js";
 import type * as routes_constants from "../routes/constants.js";
@@ -989,6 +990,7 @@ declare const fullApi: ApiFromModules<{
   "routes/agent/api": typeof routes_agent_api;
   "routes/agent/input": typeof routes_agent_input;
   "routes/agent/mcp": typeof routes_agent_mcp;
+  "routes/agent/rateLimit": typeof routes_agent_rateLimit;
   "routes/agent/response": typeof routes_agent_response;
   "routes/agent/security": typeof routes_agent_security;
   "routes/constants": typeof routes_constants;
@@ -1155,6 +1157,7 @@ export declare const internal: FilterApi<
 export declare const components: {
   betterAuth: import("@repo/backend/convex/betterAuth/_generated/component.js").ComponentApi<"betterAuth">;
   migrations: import("@convex-dev/migrations/_generated/component.js").ComponentApi<"migrations">;
+  rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
   workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
   resend: import("@convex-dev/resend/_generated/component.js").ComponentApi<"resend">;
   posthog: import("@posthog/convex/_generated/component.js").ComponentApi<"posthog">;
