@@ -48,8 +48,9 @@ function articleSummary(selected: (typeof localeCases)[number]) {
     categoryTitle: selected.categoryTitle,
     ...(selected.appLocale === "id" ? { dateModified: "2026-08-22" } : {}),
     datePublished: selected.appLocale === "de" ? "2026-08-22" : "2025-06-05",
-    description:
-      selected.appLocale === "de" ? undefined : "Reviewed article summary.",
+    ...(selected.appLocale === "de"
+      ? {}
+      : { description: "Reviewed article summary." }),
     official: false,
     publicPath,
     route: {
@@ -122,6 +123,18 @@ describe("published article discovery", () => {
         activeReleaseId,
         articles: [{ categoryTitle: selected.categoryTitle }],
       });
+      for (const result of [bucket, latest, category]) {
+        const article = result.articles?.[0];
+        expect(article).toBeDefined();
+        if (selected.appLocale === "de") {
+          expect(article).not.toHaveProperty("description");
+        } else {
+          expect(article).toHaveProperty(
+            "description",
+            "Reviewed article summary."
+          );
+        }
+      }
       expect(runtimeQueryMock).toHaveBeenNthCalledWith(1, expect.anything(), {
         appLocale: selected.appLocale,
         bucket: "abc",

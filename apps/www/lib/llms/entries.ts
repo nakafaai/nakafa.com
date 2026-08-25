@@ -14,7 +14,7 @@ type DerivedSiteRoute = (typeof derivedSiteRoutes)[number];
 
 /** One localized link advertised by a Nakafa llms index. */
 export interface LlmsEntry {
-  description: string | undefined;
+  description?: string;
   href: string;
   route: string;
   section: LlmsSection;
@@ -23,7 +23,7 @@ export interface LlmsEntry {
 }
 
 interface PublishedContentSummary {
-  readonly description: string | undefined;
+  readonly description?: string;
   readonly publicPath: string;
   readonly title: string;
 }
@@ -55,7 +55,9 @@ export function buildSiteLlmsEntries(
     }
     const route = `/${page.publicPath}`;
     entries.push({
-      description: page.metadata.description,
+      ...(page.metadata.description === undefined
+        ? {}
+        : { description: page.metadata.description }),
       href: `${BASE_URL}/${locale}${route}`,
       route,
       section: "site",
@@ -81,7 +83,9 @@ export function buildPublishedContentLlmsEntries({
     .map((row) => {
       const route = `/${row.publicPath}`;
       return {
-        description: row.description,
+        ...(row.description === undefined
+          ? {}
+          : { description: row.description }),
         href: `${BASE_URL}/${locale}${route}.md`,
         route,
         section,
@@ -109,7 +113,6 @@ function buildLocalizedSiteLlmsEntry({
       const section: LlmsSection = "site";
 
       return {
-        description: undefined,
         href: hrefBase,
         route: publicRoute,
         section,

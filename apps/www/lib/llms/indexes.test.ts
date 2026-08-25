@@ -27,7 +27,6 @@ const articleEntry: LlmsEntry = {
   title: "Framing Dynastic Politics in Local Elections within Asian Values",
 };
 const siteEntry: LlmsEntry = {
-  description: undefined,
   href: `${BASE_URL}/en/search`,
   route: "/search",
   section: "site",

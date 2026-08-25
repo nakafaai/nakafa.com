@@ -29,7 +29,7 @@ export interface PublishedMaterialSummary {
     undefined
   >;
   readonly datePublished: (typeof PublicationDatesSchema.Type)["datePublished"];
-  readonly description: string | undefined;
+  readonly description?: string;
   readonly publicPath: typeof PublicPathSchema.Type;
   readonly sourcePath: typeof CorpusSourcePathSchema.Type;
   readonly title: string;
@@ -59,7 +59,9 @@ const decodeMaterialSummary = Effect.fn("www.materials.decodeDiscovery")(
     return {
       authors: summary.authors,
       ...dates,
-      description: summary.description,
+      ...(summary.description === undefined
+        ? {}
+        : { description: summary.description }),
       publicPath,
       sourcePath,
       title: summary.title,

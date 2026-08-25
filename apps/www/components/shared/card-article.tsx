@@ -1,4 +1,3 @@
-import type { Article } from "@repo/contents/_types/content";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import {
   Card,
@@ -15,9 +14,13 @@ import {
 import { slugify } from "@repo/design-system/lib/routing/slug";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
+import type { PublishedArticleSummary } from "@/lib/content/article/catalog";
 
 interface Props {
-  article: Article;
+  readonly article: Pick<
+    PublishedArticleSummary,
+    "datePublished" | "official" | "publicPath" | "title"
+  >;
 }
 
 export function CardArticle({ article }: Props) {

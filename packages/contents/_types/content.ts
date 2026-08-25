@@ -1,18 +1,8 @@
-import { DateOnlySchema } from "@nakafa/aksara-contracts/date";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Schema, Struct } from "effect";
 /** Locale validation schema - single source of truth */
 export const LocaleSchema = ActiveAppLocaleCodeSchema;
 export type Locale = Schema.Schema.Type<typeof LocaleSchema>;
-const ArticleSchema = Schema.Struct({
-  title: Schema.String,
-  description: Schema.String,
-  dateModified: Schema.optionalKey(DateOnlySchema),
-  datePublished: DateOnlySchema,
-  official: Schema.Boolean,
-  publicPath: Schema.String,
-}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export type Article = Schema.Schema.Type<typeof ArticleSchema>;
 const ReferenceSchema = Schema.Struct({
   title: Schema.String,
   authors: Schema.String,

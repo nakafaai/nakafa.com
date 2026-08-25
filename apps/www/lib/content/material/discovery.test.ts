@@ -92,21 +92,25 @@ describe("published material discovery", () => {
   it.each(["en", "id", "de"] as const)(
     "decodes newest %s materials from the expected release",
     async (appLocale) => {
-      const { dateModified: _dateModified, ...publishedOnly } = summary;
+      const {
+        dateModified: _dateModified,
+        description: _description,
+        ...publishedOnly
+      } = summary;
       runtimeQueryMock.mockResolvedValueOnce({
         activeReleaseId,
         managed: true,
         materials: [publishedOnly],
       });
 
-      await expect(
-        Effect.runPromise(
-          readPublishedLatestMaterials(appLocale, 10, activeReleaseId)
-        )
-      ).resolves.toMatchObject({
+      const result = await Effect.runPromise(
+        readPublishedLatestMaterials(appLocale, 10, activeReleaseId)
+      );
+      expect(result).toMatchObject({
         activeReleaseId,
         materials: [{ datePublished: summary.datePublished, sourcePath }],
       });
+      expect(result.materials[0]).not.toHaveProperty("description");
       expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
         appLocale,
         limit: 10,

@@ -249,10 +249,8 @@ describe("published article catalog", () => {
       })
     );
 
-    expect(articleResult).toMatchObject({
-      articles: [{ description: "" }],
-      nextCursor: null,
-    });
+    expect(articleResult.nextCursor).toBeNull();
+    expect(articleResult.articles[0]).not.toHaveProperty("description");
     expect(categoryResult.nextCursor).toBe("next");
   });
 

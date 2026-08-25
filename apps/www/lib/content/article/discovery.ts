@@ -59,7 +59,9 @@ const decodeDiscoveryItem = Effect.fn("www.articles.decodeDiscovery")(
       category,
       categoryTitle,
       ...dates,
-      description: item.description ?? "",
+      ...(item.description === undefined
+        ? {}
+        : { description: item.description }),
       official: item.official,
       publicPath,
       route: { category: routeCategory, slug: routeSlug },

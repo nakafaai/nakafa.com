@@ -58,7 +58,7 @@ export interface PublishedArticleSummary {
   readonly categoryTitle: typeof ArticleCategoryTitleSchema.Type;
   readonly dateModified?: ArticleMetadata["dateModified"];
   readonly datePublished: ArticleMetadata["datePublished"];
-  readonly description: string;
+  readonly description?: ArticleMetadata["description"];
   readonly official: boolean;
   readonly publicPath: (typeof ArticleProjectionSchema.Type)["publicPath"];
   readonly route: {
@@ -144,7 +144,9 @@ const decodeArticleItem = Effect.fn("www.articles.decodeItem")(function* (
       ? {}
       : { dateModified: metadata.dateModified }),
     datePublished: metadata.datePublished,
-    description: metadata.description ?? "",
+    ...(metadata.description === undefined
+      ? {}
+      : { description: metadata.description }),
     official: projection.official,
     publicPath: projection.publicPath,
     route: {
