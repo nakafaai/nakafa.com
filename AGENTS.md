@@ -215,6 +215,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 
 - Use Effect for effectful TypeScript business logic across the repo, especially in `packages/ai`, `packages/contents`, MCP/agent tooling, IO/cache/schema boundaries, and scripts.
 - Effect-native means effectful work is modeled with Effect; pure deterministic helpers should stay pure.
+- Use `Predicate.*` for general-purpose runtime narrowing. Do not reimplement object, primitive, nullish, error, or collection predicates. Keep local guards only when they enforce additional domain invariants.
 - Model expected failures with `Schema.TaggedError` and specific domain error names.
 - Prefer `Effect.fn("scope.name")` for effectful exported functions and service methods so traces are named.
 - Use the Effect v4 `Context.Service` plus `Layer` pattern for dependency contracts. Keep service contracts separate from live implementations unless the owning Module intentionally provides both.

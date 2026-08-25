@@ -567,7 +567,6 @@ import type * as utils_polar_products from "../utils/polar/products.js";
 import type * as utils_polar_webhook from "../utils/polar/webhook.js";
 import type * as utils_site from "../utils/site.js";
 import type * as utils_text from "../utils/text.js";
-import type * as utils_type from "../utils/type.js";
 import type * as workflow from "../workflow.js";
 
 import type {
@@ -1136,7 +1135,6 @@ declare const fullApi: ApiFromModules<{
   "utils/polar/webhook": typeof utils_polar_webhook;
   "utils/site": typeof utils_site;
   "utils/text": typeof utils_text;
-  "utils/type": typeof utils_type;
   workflow: typeof workflow;
 }>;
 

@@ -1,4 +1,4 @@
-import { Effect, Schema } from "effect";
+import { Effect, Predicate, Schema } from "effect";
 import {
   GoogleIndexPageFetchError,
   GoogleStructuredDataParseError,
@@ -32,7 +32,7 @@ export const getEligibleGoogleIndexingUrls = Effect.fn(
     readEligibleGoogleIndexingUrl,
     { concurrency: ELIGIBILITY_FETCH_CONCURRENCY }
   );
-  const urls = maybeEligibleUrls.filter(isString);
+  const urls = maybeEligibleUrls.filter(Predicate.isString);
   logger.stats(
     `Google Indexing API eligible URLs in batch ${batch.batchIndex}`,
     urls.length
@@ -93,8 +93,4 @@ function readJsonLdScriptBodies(html: string) {
     }
   }
   return blocks;
-}
-/** Narrows optional URL results from the eligibility scan. */
-function isString(value: string | undefined): value is string {
-  return typeof value === "string";
 }

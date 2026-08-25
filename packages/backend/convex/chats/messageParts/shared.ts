@@ -1,6 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import { isNotUndefined } from "@repo/backend/convex/utils/type";
 import { ConvexError } from "convex/values";
+import { Predicate } from "effect";
 
 export type DBPart = Omit<
   Doc<"messageParts">,
@@ -17,7 +17,7 @@ export function requirePartField<T>({
   fieldName: keyof Doc<"messageParts">;
   partType: Doc<"messageParts">["type"];
 }): Exclude<T, undefined> {
-  if (isNotUndefined(value)) {
+  if (Predicate.isNotUndefined(value)) {
     return value;
   }
 

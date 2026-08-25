@@ -1,5 +1,5 @@
 import { asSchema, jsonSchema } from "ai";
-import { JsonSchema, Schema } from "effect";
+import { JsonSchema, Predicate, Schema } from "effect";
 
 interface ObjectJsonSchema extends JsonSchema.JsonSchema {
   readonly properties: Readonly<Record<string, unknown>>;
@@ -19,17 +19,12 @@ interface ArrayMetadata {
   readonly minItems?: number;
 }
 
-/** Narrows an unknown value to one JSON Schema object. */
-function isJsonSchema(value: unknown): value is JsonSchema.JsonSchema {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 /** Narrows generated JSON Schema to object-shaped function parameters. */
 function isObjectSchema(schema: unknown): schema is ObjectJsonSchema {
-  if (!isJsonSchema(schema) || schema.type !== "object") {
+  if (!Predicate.isReadonlyObject(schema) || schema.type !== "object") {
     return false;
   }
-  if (!isJsonSchema(schema.properties)) {
+  if (!Predicate.isReadonlyObject(schema.properties)) {
     return false;
   }
   return Array.isArray(schema.required);
@@ -37,7 +32,7 @@ function isObjectSchema(schema: unknown): schema is ObjectJsonSchema {
 
 /** Narrows generated JSON Schema to array-shaped properties. */
 function isArraySchema(schema: unknown): schema is ArrayJsonSchema {
-  return isJsonSchema(schema) && schema.type === "array";
+  return Predicate.isReadonlyObject(schema) && schema.type === "array";
 }
 
 /** Returns object branches from a top-level Effect union schema. */
@@ -80,7 +75,7 @@ function readArrayMetadata(schema: JsonSchema.JsonSchema): ArrayMetadata {
   }
 
   for (const constraint of schema.allOf) {
-    if (!isJsonSchema(constraint)) {
+    if (!Predicate.isReadonlyObject(constraint)) {
       continue;
     }
     const nested = readArrayMetadata(constraint);
@@ -166,7 +161,7 @@ function mergePropertySchema(
 
 /** Returns a generated property schema or fails on an unsupported boolean form. */
 function requirePropertySchema(value: unknown, name: string) {
-  if (isJsonSchema(value)) {
+  if (Predicate.isReadonlyObject(value)) {
     return value;
   }
   throw new Error(
