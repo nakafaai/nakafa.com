@@ -185,7 +185,8 @@ function parseMediaType(source: string, allowsWeight: boolean) {
     if (value === null || name in parameters) {
       return null;
     }
-    parameters[name] = value;
+    // RFC 9110 section 8.3.1 defines charset values as case-insensitive.
+    parameters[name] = name === "charset" ? value.toLowerCase() : value;
   }
   return { parameters, quality, subtype, type };
 }

@@ -77,6 +77,17 @@ describe("HTTP Accept negotiation", () => {
     ).toBe(MARKDOWN);
   });
 
+  it.each(["UTF-8", '"UTF-8"'])(
+    "matches case-insensitive charset parameter value %s",
+    (charset) => {
+      const parameterizedHtml = "text/html; charset=utf-8";
+
+      expect(
+        negotiateMediaType(`text/html; charset=${charset}`, [parameterizedHtml])
+      ).toBe(parameterizedHtml);
+    }
+  );
+
   it.each([
     "text/html;level, text/markdown;q=0.5",
     "text/html;bad name=wide, text/markdown;q=0.5",

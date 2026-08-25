@@ -30,15 +30,18 @@ describe("llms proxy route resolver", () => {
     });
   });
 
-  it("accepts the charset emitted by the Markdown handler", () => {
-    expect(
-      resolveLlmsProxyRoute({
-        acceptHeader: "text/markdown; charset=utf-8",
-        method: "GET",
-        pathname: "/en/subjects/mathematics/integral/area",
-      })
-    ).toMatchObject({ kind: "rewrite-markdown" });
-  });
+  it.each(["UTF-8", '"UTF-8"'])(
+    "accepts emitted Markdown charset spelling %s",
+    (charset) => {
+      expect(
+        resolveLlmsProxyRoute({
+          acceptHeader: `text/markdown; charset=${charset}`,
+          method: "GET",
+          pathname: "/en/subjects/mathematics/integral/area",
+        })
+      ).toMatchObject({ kind: "rewrite-markdown" });
+    }
+  );
 
   it("rewrites explicit Markdown suffixes without catalog verification", () => {
     expect(

@@ -100,16 +100,19 @@ describe("public agent API routes", () => {
     );
   });
 
-  it("accepts the charset emitted by public JSON responses", async () => {
-    const response = await fetchApi("/v1/health", {
-      headers: { accept: "application/json; charset=utf-8" },
-    });
+  it.each(["UTF-8", '"UTF-8"'])(
+    "accepts public JSON charset spelling %s",
+    async (charset) => {
+      const response = await fetchApi("/v1/health", {
+        headers: { accept: `application/json; charset=${charset}` },
+      });
 
-    expect(response.status).toBe(200);
-    expect(response.headers.get("content-type")).toBe(
-      "application/json; charset=utf-8"
-    );
-  });
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toBe(
+        "application/json; charset=utf-8"
+      );
+    }
+  );
 
   it("serves one cacheable OpenAPI document with ETag revalidation", async () => {
     const t = createConvexTestWithBetterAuth();
