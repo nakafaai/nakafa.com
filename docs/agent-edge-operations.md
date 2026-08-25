@@ -1,78 +1,86 @@
-# Agent edge operations
+# Agent interface rollout operations
 
-Nakafa keeps the public REST API and MCP server behind Vercel external rewrites. Vercel deletes any caller-supplied edge-secret header, inserts the deployment secret, and forwards the request to the Convex HTTP Action. The Convex origin rejects a missing or incorrect value.
+Nakafa is introducing its Convex-owned REST and MCP interfaces through an
+expand, switch, observe, contract rollout. The current pull request owns only
+the additive expand phase.
 
-The API and MCP use independent secrets:
+## Current additive release
+
+The deployed public transports remain unchanged:
+
+- `api.nakafa.com` remains the existing Next.js API application.
+- `mcp.nakafa.com/mcp` remains the SDK 1.30 Next.js MCP transport.
+- `nakafa.com/mcp` remains the same-origin proxy for existing MCP clients.
+- `apps/www` remains the only Vercel project that runs `convex deploy`.
+
+The new Convex REST, OpenAPI, and MCP HTTP Actions are additive successors.
+They are not connected to the canonical public hosts in this phase. Their
+direct Convex origin requires the matching edge secret before any query or
+tool work runs.
+
+The independent secrets are:
 
 - `NAKAFA_API_EDGE_SECRET`
 - `NAKAFA_MCP_EDGE_SECRET`
 
 `NAKAFA_MCP_ALLOWED_ORIGINS` is an optional comma-separated list of exact
-HTTPS browser origins. When it is absent, Nakafa accepts
-`https://nakafa.com` and `https://www.nakafa.com`. Server-to-server MCP
-clients may omit `Origin`.
+browser origins for the Convex successor. Invalid configuration fails closed.
+Server-to-server MCP clients may omit `Origin`.
 
-## Production rollout ordering
+## Local and isolated verification
 
-The `www`, `api`, and `mcp` Vercel projects are independent deployments. Each
-project therefore runs the repository-owned Convex production deploy as part
-of its own production build. Convex runs the application build or MCP
-typecheck first, pushes the exact backend only after that command succeeds,
-and Vercel moves the project alias only after the complete build command
-succeeds. An unsuccessful or racing backend push leaves the previous Vercel
-alias active.
-
-Set a production-scoped `CONVEX_DEPLOY_KEY` with `deployment:deploy`
-permission in all three projects. Keep separate named keys per project so an
-operator can revoke and audit one release path without affecting the others.
-The repository disables every non-main Vercel Git deployment, so these keys
-are never used for branch builds.
-
-The MCP project stays edge-only in production. Its build command validates the
-local Next.js adapter and deploys Convex, but Vercel publishes only the static
-edge configuration from `apps/mcp/public`.
-
-## Local development
-
-The documented local commands remain available:
+Use the existing local transports for the deployed API and SDK 1.30 MCP
+behavior:
 
 ```text
 pnpm --filter api dev
 pnpm --filter mcp dev
 ```
 
-Set `NAKAFA_CONVEX_SITE_URL` and the matching edge secret in each app's
-`.env.local`. The route adapters forward to the selected isolated Convex
-deployment when running locally. They fail closed when `VERCEL_ENV` is
-`production`, where Vercel external rewrites own the public request path.
+Exercise the additive Convex successor only through an isolated Convex Agent
+Mode deployment. Configure inert test values for both edge secrets and pass
+the matching header in the bounded verification request. Never put a secret in
+source control, logs, screenshots, or shell history. Pull-request validation
+must not create a Vercel Preview.
 
-`https://nakafa.com/mcp` remains a same-origin compatibility rewrite to the
-canonical MCP host. New clients should use `https://mcp.nakafa.com/mcp`
-directly. The compatibility path adds one edge hop but preserves browser POST
-and OPTIONS behavior without invoking a Next.js Function.
+## Later edge switch
 
-Use cryptographically random base64url or hexadecimal values without commas. Store values only in the matching Vercel project and Convex deployment. Never put a value in source control, logs, screenshots, or shell history.
+A separate protected change may connect the canonical API and MCP hosts to the
+verified Convex successor through Vercel external rewrites. That change must:
 
-## Zero-downtime rotation
+1. Delete any caller-supplied edge-secret header before inserting the Vercel
+   environment value.
+2. Disable rewrite caching for API and MCP requests.
+3. Preserve the SDK 1.30 transport contract for a bounded compatibility
+   window, including the root `/mcp` alias and era-specific taxonomy.
+4. Prove the route configuration locally, then verify the protected-main
+   production deployment without a Preview.
+5. Observe version-specific traffic until the named window shows zero legacy
+   readers before removing compatibility in a cleanup change.
 
-Rotate API and MCP independently. The Convex environment accepts one current key or a comma-separated pair during rotation.
+The switch is not part of the additive release. Vercel project deployments are
+independent, so a change must never rely on one project finishing before
+another project publishes the Convex successor.
+
+## Secret rotation after the switch
+
+The Convex guard accepts one current key or a comma-separated pair during a
+zero-downtime rotation.
 
 1. Generate a new key.
-2. In Convex, set the relevant variable to `new-key,old-key`. Keep the Vercel project on the old key.
-3. Verify the canonical host still succeeds through Vercel and direct origin requests without a key still return 403.
-4. In the matching Vercel project, replace the old key with the new key and deploy the edge configuration.
-5. Verify the canonical REST or MCP contract, direct origin rejection, and Vercel External Origins traffic.
-6. In Convex, replace `new-key,old-key` with `new-key`.
-7. Verify once more, then discard the old key from the operator's secure working material.
+2. Configure Convex with `new-key,old-key` while Vercel still sends the old
+   key.
+3. Verify the canonical host and direct-origin rejection.
+4. Replace the Vercel value with the new key through a protected-main release.
+5. Verify the canonical contract and Vercel External Origins traffic.
+6. Remove the old Convex key only after the new value is healthy.
 
-If the new Vercel configuration fails, restore the old Vercel value while Convex still accepts both keys. Do not remove the old Convex key until canonical traffic is healthy on the new value.
+## Rate-limit boundary
 
-`/openapi.json` is intentionally public and does not use an edge secret.
-
-## Rate-limit response boundary
-
-Convex-owned API failures use RFC 9457 Problem Details. A Vercel Firewall
-rule can stop a request before it reaches Convex, so its HTTP 429 response is
-owned by Vercel and is not guaranteed to use Nakafa's Problem Details schema.
-Clients must treat the status code as authoritative, honor `Retry-After` when
+The official Convex rate-limiter component applies separate bounded limits to
+the additive REST and MCP successors, including direct-origin traffic that
+passes the secret guard. Convex-owned API failures use RFC 9457 Problem
+Details. A later Vercel Firewall rule may reject a request before Convex, so a
+platform-owned HTTP 429 is not guaranteed to use Nakafa Problem Details.
+Clients must treat status 429 as authoritative, honor `Retry-After` when
 present, and retry with backoff.

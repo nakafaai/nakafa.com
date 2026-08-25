@@ -1,11 +1,4 @@
-import { deploymentEnv, routes, type VercelConfig } from "@vercel/config/v1";
-
-const CONVEX_SITE_URL = deploymentEnv("NAKAFA_CONVEX_SITE_URL");
-
-const legacyMcpRewrite = routes.rewrite("/mcp", "https://mcp.nakafa.com/mcp", {
-  requestHeaders: { "x-vercel-enable-rewrite-caching": "0" },
-  respectOriginCacheControl: false,
-});
+import type { VercelConfig } from "@vercel/config/v1";
 
 export const config: VercelConfig = {
   buildCommand: "pnpm run build:vercel",
@@ -18,12 +11,4 @@ export const config: VercelConfig = {
       main: true,
     },
   },
-  routes: [
-    legacyMcpRewrite,
-    {
-      dest: `${CONVEX_SITE_URL}/openapi.json`,
-      env: ["NAKAFA_CONVEX_SITE_URL"],
-      src: "^/openapi\\.json$",
-    },
-  ],
 };

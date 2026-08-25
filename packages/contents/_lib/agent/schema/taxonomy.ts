@@ -44,8 +44,7 @@ export const NakafaAgentTaxonomyOptionsSchema = Schema.Struct({
 })
   .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
   .annotate({ description: "Nakafa taxonomy options." });
-/** Runtime schema for taxonomy output. */
-export const NakafaAgentTaxonomySchema = Schema.Struct({
+const NakafaAgentTaxonomyFields = {
   articles: Schema.Struct({
     categories: Schema.Array(Schema.String)
       .pipe(Schema.mutable)
@@ -59,13 +58,6 @@ export const NakafaAgentTaxonomySchema = Schema.Struct({
   default_locale: LocaleSchema.annotate({
     description: "Default Nakafa locale.",
   }),
-  endpoints: Schema.Struct({
-    mcp: UrlStringSchema.annotate({
-      description: "Canonical Streamable HTTP MCP endpoint.",
-    }),
-  })
-    .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
-    .annotate({ description: "Canonical agent endpoints." }),
   tryout: Schema.Struct({
     countries: Schema.Array(NakafaAgentTaxonomyOptionSchema)
       .pipe(Schema.mutable)
@@ -98,12 +90,45 @@ export const NakafaAgentTaxonomySchema = Schema.Struct({
   tools: Schema.Array(Schema.String)
     .pipe(Schema.mutable)
     .annotate({ description: "Public MCP tools exposed by Nakafa." }),
+};
+/** Runtime schema for the current REST and MCP taxonomy output. */
+export const NakafaAgentTaxonomySchema = Schema.Struct({
+  ...NakafaAgentTaxonomyFields,
+  endpoints: Schema.Struct({
+    mcp: UrlStringSchema.annotate({
+      description: "Canonical Streamable HTTP MCP endpoint.",
+    }),
+  })
+    .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+    .annotate({ description: "Canonical agent endpoints." }),
 })
   .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
   .annotate({ description: "Nakafa public content taxonomy." });
+/** Runtime schema retained for the deployed SDK 1.30 taxonomy contract. */
+export const NakafaAgentLegacyTaxonomySchema = Schema.Struct({
+  ...NakafaAgentTaxonomyFields,
+  endpoints: Schema.Struct({
+    direct: UrlStringSchema.annotate({
+      description: "Direct MCP application endpoint.",
+    }),
+    recommended: UrlStringSchema.annotate({
+      description: "Existing same-origin MCP endpoint.",
+    }),
+    root_note: Schema.String.annotate({
+      description: "MCP subdomain root guidance.",
+    }),
+  })
+    .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+    .annotate({ description: "Legacy MCP endpoint guidance." }),
+})
+  .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+  .annotate({ description: "Nakafa SDK 1.30 content taxonomy." });
 export type NakafaAgentTaxonomyOptions = Schema.Schema.Type<
   typeof NakafaAgentTaxonomyOptionsSchema
 >;
 export type NakafaAgentTaxonomy = Schema.Schema.Type<
   typeof NakafaAgentTaxonomySchema
+>;
+export type NakafaAgentLegacyTaxonomy = Schema.Schema.Type<
+  typeof NakafaAgentLegacyTaxonomySchema
 >;

@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "build": "next build --turbopack",
-    "build:vercel": "pnpm --dir ../../packages/backend typecheck && pnpm --dir ../../packages/backend exec convex deploy --yes --typecheck disable --typecheck-components --cmd 'pnpm --dir ../../apps/mcp typecheck' --cmd-url-env-var-name NAKAFA_CONVEX_URL",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "next dev -p 3001 --turbopack",
     "start": "next start -p 3001",
@@ -15,12 +14,18 @@
     "typecheck": "next typegen && tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "@repo/ai": "workspace:*",
     "@repo/backend": "workspace:*",
+    "@repo/contents": "workspace:*",
+    "@repo/internationalization": "workspace:*",
     "@repo/next-config": "workspace:*",
+    "@t3-oss/env-nextjs": "^0.13.11",
+    "convex": "1.45.0",
     "effect": "catalog:",
     "next": "16.3.2",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@repo/testing": "workspace:*",
@@ -29,8 +34,8 @@
     "@vercel/config": "^0.6.1",
     "@vitest/coverage-istanbul": "^4.1.11",
     "@vitest/ui": "^4.1.11",
+    "jsdom": "^30.0.1",
     "typescript": "7.0.2",
-    "vite": "^8.2.2",
     "vitest": "^4.1.11"
   }
 }

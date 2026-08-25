@@ -10,6 +10,9 @@ export const NAKAFA_PUBLIC_API_VERSION = "1.0.0";
 /** Recommended public Streamable HTTP MCP endpoint. */
 export const NAKAFA_MCP_RECOMMENDED_ENDPOINT = "https://mcp.nakafa.com/mcp";
 
+/** Existing same-origin MCP endpoint retained during the legacy-client window. */
+export const NAKAFA_MCP_LEGACY_ENDPOINT = "https://nakafa.com/mcp";
+
 /** Current MCP wire revision implemented by the public Nakafa server. */
 export const NAKAFA_MCP_PROTOCOL_VERSION = "2026-07-28";
 

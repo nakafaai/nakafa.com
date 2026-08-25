@@ -40,27 +40,4 @@ describe("www Vercel configuration", () => {
       deploymentCommand.indexOf(convexDeploy)
     );
   });
-
-  it("handles agent routes before the Next.js proxy", () => {
-    expect(config.routes).toEqual([
-      {
-        dest: "https://mcp.nakafa.com/mcp",
-        respectOriginCacheControl: false,
-        src: "^\\/mcp$",
-        transforms: [
-          {
-            args: "0",
-            op: "set",
-            target: { key: "x-vercel-enable-rewrite-caching" },
-            type: "request.headers",
-          },
-        ],
-      },
-      {
-        dest: "$NAKAFA_CONVEX_SITE_URL/openapi.json",
-        env: ["NAKAFA_CONVEX_SITE_URL"],
-        src: "^/openapi\\.json$",
-      },
-    ]);
-  });
 });
