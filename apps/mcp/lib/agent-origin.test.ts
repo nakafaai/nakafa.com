@@ -1,3 +1,8 @@
+import {
+  NAKAFA_CONVEX_SITE_URL_ENVIRONMENT,
+  NAKAFA_MCP_EDGE_CONTRACT,
+} from "@repo/backend/agent/edge";
+import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/_lib/agent/constants";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { proxyMcpRequest } from "@/lib/agent-origin";
 
@@ -8,8 +13,11 @@ afterEach(() => {
 
 describe("local MCP adapter", () => {
   it("forwards local protocol requests to the selected Convex deployment", async () => {
-    vi.stubEnv("NAKAFA_CONVEX_SITE_URL", "https://isolated.convex.site");
-    vi.stubEnv("NAKAFA_MCP_EDGE_SECRET", "local-mcp-secret");
+    vi.stubEnv(
+      NAKAFA_CONVEX_SITE_URL_ENVIRONMENT,
+      "https://isolated.convex.site"
+    );
+    vi.stubEnv(NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment, "local-mcp-secret");
     vi.stubGlobal(
       "fetch",
       vi.fn(() =>
@@ -33,11 +41,34 @@ describe("local MCP adapter", () => {
     });
   });
 
+  it("forwards the public health endpoint without a Next production proxy", async () => {
+    vi.stubEnv(
+      NAKAFA_CONVEX_SITE_URL_ENVIRONMENT,
+      "https://isolated.convex.site"
+    );
+    vi.stubEnv(NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment, "local-mcp-secret");
+    let forwarded: Request | undefined;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((request: RequestInfo | URL) => {
+        forwarded = new Request(request);
+        return Promise.resolve(Response.json({ status: "healthy" }));
+      })
+    );
+
+    const response = await proxyMcpRequest(
+      new Request("http://localhost:3001/health")
+    );
+
+    expect(response.status).toBe(200);
+    expect(forwarded?.url).toBe("https://isolated.convex.site/mcp/health");
+  });
+
   it.each([
     {
       configure() {
-        vi.stubEnv("NAKAFA_CONVEX_SITE_URL", "");
-        vi.stubEnv("NAKAFA_MCP_EDGE_SECRET", "");
+        vi.stubEnv(NAKAFA_CONVEX_SITE_URL_ENVIRONMENT, "");
+        vi.stubEnv(NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment, "");
       },
       expectedMessage: "The local MCP origin is not configured.",
       request: () => new Request("http://localhost:3001/mcp"),
@@ -45,17 +76,29 @@ describe("local MCP adapter", () => {
     },
     {
       configure() {
-        vi.stubEnv("NAKAFA_CONVEX_SITE_URL", "https://isolated.convex.site");
-        vi.stubEnv("NAKAFA_MCP_EDGE_SECRET", "local-mcp-secret");
+        vi.stubEnv(
+          NAKAFA_CONVEX_SITE_URL_ENVIRONMENT,
+          "https://isolated.convex.site"
+        );
+        vi.stubEnv(
+          NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment,
+          "local-mcp-secret"
+        );
       },
-      expectedMessage: "The local MCP adapter only serves /mcp.",
+      expectedMessage: "The local MCP adapter only serves /mcp and /health.",
       request: () => new Request("http://localhost:3001/not-mcp"),
       status: 404,
     },
     {
       configure() {
-        vi.stubEnv("NAKAFA_CONVEX_SITE_URL", "https://isolated.convex.site");
-        vi.stubEnv("NAKAFA_MCP_EDGE_SECRET", "local-mcp-secret");
+        vi.stubEnv(
+          NAKAFA_CONVEX_SITE_URL_ENVIRONMENT,
+          "https://isolated.convex.site"
+        );
+        vi.stubEnv(
+          NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment,
+          "local-mcp-secret"
+        );
         vi.stubEnv("VERCEL_ENV", "production");
       },
       expectedMessage:
@@ -65,8 +108,14 @@ describe("local MCP adapter", () => {
     },
     {
       configure() {
-        vi.stubEnv("NAKAFA_CONVEX_SITE_URL", "https://isolated.convex.site");
-        vi.stubEnv("NAKAFA_MCP_EDGE_SECRET", "local-mcp-secret");
+        vi.stubEnv(
+          NAKAFA_CONVEX_SITE_URL_ENVIRONMENT,
+          "https://isolated.convex.site"
+        );
+        vi.stubEnv(
+          NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment,
+          "local-mcp-secret"
+        );
       },
       expectedMessage: "The local MCP request body exceeds two mebibytes.",
       request: () =>
@@ -78,8 +127,14 @@ describe("local MCP adapter", () => {
     },
     {
       configure() {
-        vi.stubEnv("NAKAFA_CONVEX_SITE_URL", "https://isolated.convex.site");
-        vi.stubEnv("NAKAFA_MCP_EDGE_SECRET", "local-mcp-secret");
+        vi.stubEnv(
+          NAKAFA_CONVEX_SITE_URL_ENVIRONMENT,
+          "https://isolated.convex.site"
+        );
+        vi.stubEnv(
+          NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment,
+          "local-mcp-secret"
+        );
       },
       expectedMessage: "The selected local Convex MCP origin is unavailable.",
       request: () => new Request("http://localhost:3001/mcp"),
@@ -97,7 +152,9 @@ describe("local MCP adapter", () => {
       const response = await proxyMcpRequest(request());
 
       expect(response.status).toBe(status);
-      expect(response.headers.get("mcp-protocol-version")).toBe("2026-07-28");
+      expect(response.headers.get("mcp-protocol-version")).toBe(
+        NAKAFA_MCP_PROTOCOL_VERSION
+      );
       await expect(response.json()).resolves.toMatchObject({
         error: { message: expectedMessage },
         id: null,

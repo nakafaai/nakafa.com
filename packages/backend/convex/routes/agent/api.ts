@@ -1,5 +1,6 @@
 import { getNakafaContent } from "@repo/backend/agent/content";
 import { decodeAgentInput } from "@repo/backend/agent/decode";
+import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import {
   NAKAFA_OPENAPI_ETAG,
   NAKAFA_OPENAPI_JSON,
@@ -25,10 +26,7 @@ import {
   internalFailureResponse,
   problemResponse,
 } from "@repo/backend/convex/routes/agent/response";
-import {
-  API_EDGE_SECRET_HEADER,
-  hasValidEdgeSecret,
-} from "@repo/backend/convex/routes/agent/security";
+import { hasValidEdgeSecret } from "@repo/backend/convex/routes/agent/security";
 import { requestId } from "@repo/backend/convex/routes/middleware/requestId";
 import {
   NAKAFA_API_BASE_URL,
@@ -63,11 +61,7 @@ v1.use("*", async (c, next) => {
   const instance = new URL(request.url).pathname;
   const requestId = c.get("requestId");
   const secret = await Effect.runPromise(
-    hasValidEdgeSecret(
-      request,
-      "NAKAFA_API_EDGE_SECRET",
-      API_EDGE_SECRET_HEADER
-    ).pipe(
+    hasValidEdgeSecret(request, NAKAFA_API_EDGE_CONTRACT).pipe(
       Effect.match({
         onFailure: () => null,
         onSuccess: (valid) => valid,

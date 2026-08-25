@@ -1,3 +1,7 @@
+import {
+  NAKAFA_API_EDGE_CONTRACT,
+  NAKAFA_CONVEX_SITE_URL_ENVIRONMENT,
+} from "@repo/backend/agent/edge";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { proxyPublicApiRequest } from "@/lib/agent-origin";
 
@@ -8,8 +12,11 @@ afterEach(() => {
 
 describe("local public API adapter", () => {
   it("forwards local requests to the selected Convex deployment", async () => {
-    vi.stubEnv("NAKAFA_CONVEX_SITE_URL", "https://isolated.convex.site");
-    vi.stubEnv("NAKAFA_API_EDGE_SECRET", "local-api-secret");
+    vi.stubEnv(
+      NAKAFA_CONVEX_SITE_URL_ENVIRONMENT,
+      "https://isolated.convex.site"
+    );
+    vi.stubEnv(NAKAFA_API_EDGE_CONTRACT.secretEnvironment, "local-api-secret");
     vi.stubGlobal(
       "fetch",
       vi.fn(() => Promise.resolve(Response.json({ name: "Nakafa Public API" })))
@@ -28,8 +35,8 @@ describe("local public API adapter", () => {
   it.each([
     {
       configure() {
-        vi.stubEnv("NAKAFA_CONVEX_SITE_URL", "");
-        vi.stubEnv("NAKAFA_API_EDGE_SECRET", "");
+        vi.stubEnv(NAKAFA_CONVEX_SITE_URL_ENVIRONMENT, "");
+        vi.stubEnv(NAKAFA_API_EDGE_CONTRACT.secretEnvironment, "");
       },
       expectedCode: "LOCAL_PROXY_CONFIGURATION_MISSING",
       request: () => new Request("http://localhost:3002/v1"),
@@ -37,8 +44,14 @@ describe("local public API adapter", () => {
     },
     {
       configure() {
-        vi.stubEnv("NAKAFA_CONVEX_SITE_URL", "https://isolated.convex.site");
-        vi.stubEnv("NAKAFA_API_EDGE_SECRET", "local-api-secret");
+        vi.stubEnv(
+          NAKAFA_CONVEX_SITE_URL_ENVIRONMENT,
+          "https://isolated.convex.site"
+        );
+        vi.stubEnv(
+          NAKAFA_API_EDGE_CONTRACT.secretEnvironment,
+          "local-api-secret"
+        );
       },
       expectedCode: "NOT_FOUND",
       request: () => new Request("http://localhost:3002/not-v1"),
@@ -46,8 +59,14 @@ describe("local public API adapter", () => {
     },
     {
       configure() {
-        vi.stubEnv("NAKAFA_CONVEX_SITE_URL", "https://isolated.convex.site");
-        vi.stubEnv("NAKAFA_API_EDGE_SECRET", "local-api-secret");
+        vi.stubEnv(
+          NAKAFA_CONVEX_SITE_URL_ENVIRONMENT,
+          "https://isolated.convex.site"
+        );
+        vi.stubEnv(
+          NAKAFA_API_EDGE_CONTRACT.secretEnvironment,
+          "local-api-secret"
+        );
         vi.stubEnv("VERCEL_ENV", "production");
       },
       expectedCode: "LOCAL_PROXY_DISABLED",
@@ -56,8 +75,14 @@ describe("local public API adapter", () => {
     },
     {
       configure() {
-        vi.stubEnv("NAKAFA_CONVEX_SITE_URL", "https://isolated.convex.site");
-        vi.stubEnv("NAKAFA_API_EDGE_SECRET", "local-api-secret");
+        vi.stubEnv(
+          NAKAFA_CONVEX_SITE_URL_ENVIRONMENT,
+          "https://isolated.convex.site"
+        );
+        vi.stubEnv(
+          NAKAFA_API_EDGE_CONTRACT.secretEnvironment,
+          "local-api-secret"
+        );
       },
       expectedCode: "PAYLOAD_TOO_LARGE",
       request: () =>
@@ -69,8 +94,14 @@ describe("local public API adapter", () => {
     },
     {
       configure() {
-        vi.stubEnv("NAKAFA_CONVEX_SITE_URL", "https://isolated.convex.site");
-        vi.stubEnv("NAKAFA_API_EDGE_SECRET", "local-api-secret");
+        vi.stubEnv(
+          NAKAFA_CONVEX_SITE_URL_ENVIRONMENT,
+          "https://isolated.convex.site"
+        );
+        vi.stubEnv(
+          NAKAFA_API_EDGE_CONTRACT.secretEnvironment,
+          "local-api-secret"
+        );
       },
       expectedCode: "LOCAL_PROXY_UNAVAILABLE",
       request: () => new Request("http://localhost:3002/v1"),

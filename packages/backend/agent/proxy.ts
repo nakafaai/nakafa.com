@@ -1,5 +1,11 @@
 import { Config, Effect, Redacted, Schema } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
+import {
+  type AgentEdgeSurface,
+  AgentEdgeSurfaceSchema,
+  getAgentEdgeContract,
+  NAKAFA_CONVEX_SITE_URL_ENVIRONMENT,
+} from "./edge";
 
 const MAXIMUM_PROXY_REQUEST_BYTES = 2 * 1024 * 1024;
 const HOP_BY_HOP_HEADERS = [
@@ -15,9 +21,6 @@ const HOP_BY_HOP_HEADERS = [
   "upgrade",
 ] as const;
 
-export const AgentOriginSurfaceSchema = Schema.Literals(["api", "mcp"]);
-export type AgentOriginSurface = typeof AgentOriginSurfaceSchema.Type;
-
 /** A local agent adapter could not forward one request to its Convex origin. */
 export class AgentOriginProxyError extends Schema.TaggedError<AgentOriginProxyError>()(
   "AgentOriginProxyError",
@@ -29,31 +32,18 @@ export class AgentOriginProxyError extends Schema.TaggedError<AgentOriginProxyEr
       "request-body",
       "transport",
     ]),
-    surface: AgentOriginSurfaceSchema,
+    surface: AgentEdgeSurfaceSchema,
   }
 ) {}
 
-const surfaceConfig = {
-  api: {
-    edgeSecret: "NAKAFA_API_EDGE_SECRET",
-    edgeSecretHeader: "x-nakafa-api-edge-secret",
-    pathname: "/v1",
-  },
-  mcp: {
-    edgeSecret: "NAKAFA_MCP_EDGE_SECRET",
-    edgeSecretHeader: "x-nakafa-mcp-edge-secret",
-    pathname: "/mcp",
-  },
-} as const;
-
 const proxyEnvironment = Config.all({
-  origin: Config.url("NAKAFA_CONVEX_SITE_URL"),
+  origin: Config.url(NAKAFA_CONVEX_SITE_URL_ENVIRONMENT),
   vercelEnvironment: Config.string("VERCEL_ENV").pipe(Config.withDefault("")),
 });
 
 /** Reads one bounded request body for the local development transport. */
 const readRequestBody = Effect.fn("agent.proxy.readRequestBody")(
-  (request: Request, surface: AgentOriginSurface) =>
+  (request: Request, surface: AgentEdgeSurface) =>
     Effect.tryPromise({
       catch: () =>
         new AgentOriginProxyError({ reason: "request-body", surface }),
@@ -69,17 +59,14 @@ const readRequestBody = Effect.fn("agent.proxy.readRequestBody")(
 /** Builds one upstream request without forwarding caller-owned secret headers. */
 const makeOriginRequest = Effect.fn("agent.proxy.makeOriginRequest")(function* (
   request: Request,
-  surface: AgentOriginSurface,
+  surface: AgentEdgeSurface,
   origin: URL,
   edgeSecret: Redacted.Redacted<string>
 ) {
-  const input = surfaceConfig[surface];
+  const input = getAgentEdgeContract(surface);
   const incomingUrl = new URL(request.url);
-  const validPath =
-    incomingUrl.pathname === input.pathname ||
-    (surface === "api" &&
-      incomingUrl.pathname.startsWith(`${input.pathname}/`));
-  if (!validPath) {
+  const destinationPath = resolveDestinationPath(surface, incomingUrl.pathname);
+  if (!destinationPath) {
     return yield* new AgentOriginProxyError({ reason: "path", surface });
   }
 
@@ -87,16 +74,16 @@ const makeOriginRequest = Effect.fn("agent.proxy.makeOriginRequest")(function* (
   for (const header of HOP_BY_HOP_HEADERS) {
     headers.delete(header);
   }
-  headers.delete(surfaceConfig.api.edgeSecretHeader);
-  headers.delete(surfaceConfig.mcp.edgeSecretHeader);
+  headers.delete(getAgentEdgeContract("api").secretHeader);
+  headers.delete(getAgentEdgeContract("mcp").secretHeader);
   headers.set("accept-encoding", "identity");
-  headers.set(input.edgeSecretHeader, Redacted.value(edgeSecret));
+  headers.set(input.secretHeader, Redacted.value(edgeSecret));
 
   const destination = new URL(
-    `${incomingUrl.pathname}${incomingUrl.search}`,
+    `${destinationPath}${incomingUrl.search}`,
     origin
   );
-  const hasBody = request.method !== "GET" && request.method !== "HEAD";
+  const hasBody = request.body !== null;
   const body = hasBody ? yield* readRequestBody(request, surface) : undefined;
   return new Request(destination, {
     body,
@@ -106,13 +93,30 @@ const makeOriginRequest = Effect.fn("agent.proxy.makeOriginRequest")(function* (
   });
 });
 
+/** Maps each public local path to its owning Convex HTTP Action route. */
+function resolveDestinationPath(surface: AgentEdgeSurface, pathname: string) {
+  if (surface === "api") {
+    if (pathname === "/v1" || pathname.startsWith("/v1/")) {
+      return pathname;
+    }
+    return null;
+  }
+  if (pathname === "/mcp") {
+    return "/mcp";
+  }
+  if (pathname === "/health") {
+    return "/mcp/health";
+  }
+  return null;
+}
+
 /**
  * Proxies a documented local API or MCP command to the selected Convex origin.
  * Vercel production rejects this adapter so public traffic remains edge-only.
  */
 export const proxyAgentOriginRequest = Effect.fn(
   "agent.proxy.proxyAgentOriginRequest"
-)(function* (request: Request, surface: AgentOriginSurface) {
+)(function* (request: Request, surface: AgentEdgeSurface) {
   const environment = yield* proxyEnvironment.pipe(
     Effect.mapError(
       () => new AgentOriginProxyError({ reason: "configuration", surface })
@@ -123,7 +127,7 @@ export const proxyAgentOriginRequest = Effect.fn(
   }
 
   const edgeSecret = yield* Config.redacted(
-    surfaceConfig[surface].edgeSecret
+    getAgentEdgeContract(surface).secretEnvironment
   ).pipe(
     Effect.mapError(
       () => new AgentOriginProxyError({ reason: "configuration", surface })

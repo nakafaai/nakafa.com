@@ -1,23 +1,38 @@
+import {
+  type AgentEdgeContract,
+  NAKAFA_DEFAULT_MCP_BROWSER_ORIGINS,
+  NAKAFA_MCP_ALLOWED_ORIGINS_ENVIRONMENT,
+} from "@repo/backend/agent/edge";
 import { env } from "@repo/backend/convex/_generated/server";
 import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
 } from "@repo/contents/_lib/agent/errors";
-import { Effect } from "effect";
+import { Effect, Schema, SchemaGetter } from "effect";
 
-export const API_EDGE_SECRET_HEADER = "x-nakafa-api-edge-secret";
-export const MCP_EDGE_SECRET_HEADER = "x-nakafa-mcp-edge-secret";
-const DEFAULT_MCP_ORIGINS = "https://nakafa.com,https://www.nakafa.com";
-type EdgeSecretName = "NAKAFA_API_EDGE_SECRET" | "NAKAFA_MCP_EDGE_SECRET";
+const LOOPBACK_MCP_HOSTS = new Set(["127.0.0.1", "[::1]", "localhost"]);
+const TrustedMcpOriginSchema = Schema.Trim.pipe(
+  Schema.check(Schema.isNonEmpty()),
+  Schema.check(
+    Schema.makeFilter(isTrustedMcpOriginSource, {
+      message: "Expected an exact HTTPS or loopback HTTP origin.",
+    })
+  ),
+  Schema.decodeTo(Schema.String, {
+    decode: SchemaGetter.transform((source) => new URL(source).origin),
+    encode: SchemaGetter.transform((origin) => origin),
+  })
+);
+const TrustedMcpOriginsSchema = Schema.Array(TrustedMcpOriginSchema).pipe(
+  Schema.check(Schema.isMinLength(1))
+);
 
 /** Reads and compares an edge secret without exposing it to logs or errors. */
 export const hasValidEdgeSecret = Effect.fn("agent.hasValidEdgeSecret")(
-  function* (
-    request: Request,
-    environmentName: EdgeSecretName,
-    headerName: string
-  ) {
-    const configured = yield* Effect.sync(() => env[environmentName]);
+  function* (request: Request, contract: AgentEdgeContract) {
+    const configured = yield* Effect.sync(
+      () => env[contract.secretEnvironment]
+    );
     if (!configured) {
       return yield* new NakafaAgentDataReadError({
         message: "The public edge authentication boundary is unavailable.",
@@ -34,7 +49,7 @@ export const hasValidEdgeSecret = Effect.fn("agent.hasValidEdgeSecret")(
         message: "The public edge authentication boundary is unavailable.",
       });
     }
-    const supplied = request.headers.get(headerName);
+    const supplied = request.headers.get(contract.secretHeader);
     if (!supplied) {
       return false;
     }
@@ -49,12 +64,20 @@ export const hasValidEdgeSecret = Effect.fn("agent.hasValidEdgeSecret")(
 export const readTrustedMcpOrigins = Effect.fn("agent.readTrustedMcpOrigins")(
   function* () {
     const source = yield* Effect.sync(
-      () => env.NAKAFA_MCP_ALLOWED_ORIGINS ?? DEFAULT_MCP_ORIGINS
+      () => env[NAKAFA_MCP_ALLOWED_ORIGINS_ENVIRONMENT]
     );
-    return source
-      .split(",")
-      .map((origin) => origin.trim())
-      .filter(isTrustedHttpsOrigin);
+    const encoded = source?.split(",") ?? NAKAFA_DEFAULT_MCP_BROWSER_ORIGINS;
+    const origins = yield* Schema.decodeEffect(TrustedMcpOriginsSchema)(
+      encoded
+    ).pipe(
+      Effect.mapError(
+        () =>
+          new NakafaAgentDataReadError({
+            message: "The MCP browser Origin boundary is unavailable.",
+          })
+      )
+    );
+    return [...new Set(origins)];
   }
 );
 
@@ -96,11 +119,26 @@ const constantTimeEqual = Effect.fn("agent.constantTimeEqual")(function* (
   return difference === 0;
 });
 
-/** Keeps browser access restricted to explicit HTTPS origins. */
-function isTrustedHttpsOrigin(value: string) {
+/** Keeps browser access restricted to HTTPS or explicit loopback origins. */
+function isTrustedMcpOriginSource(value: string) {
   if (!URL.canParse(value)) {
     return false;
   }
   const url = new URL(value);
-  return url.protocol === "https:" && url.origin === value;
+  if (
+    url.username !== "" ||
+    url.password !== "" ||
+    url.pathname !== "/" ||
+    url.search !== "" ||
+    url.hash !== ""
+  ) {
+    return false;
+  }
+  if (url.protocol === "https:") {
+    return true;
+  }
+  if (url.protocol !== "http:") {
+    return false;
+  }
+  return LOOPBACK_MCP_HOSTS.has(url.hostname);
 }

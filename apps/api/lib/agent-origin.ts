@@ -1,4 +1,8 @@
 import {
+  NAKAFA_API_EDGE_CONTRACT,
+  NAKAFA_CONVEX_SITE_URL_ENVIRONMENT,
+} from "@repo/backend/agent/edge";
+import {
   type AgentOriginProxyError,
   proxyAgentOriginRequest,
 } from "@repo/backend/agent/proxy";
@@ -52,8 +56,7 @@ function localApiFailure(request: Request, error: AgentOriginProxyError) {
       detail: "The local Convex origin or API edge secret is not configured.",
       instance,
       requestId,
-      resolution:
-        "Set NAKAFA_CONVEX_SITE_URL and NAKAFA_API_EDGE_SECRET in apps/api/.env.local.",
+      resolution: `Set ${NAKAFA_CONVEX_SITE_URL_ENVIRONMENT} and ${NAKAFA_API_EDGE_CONTRACT.secretEnvironment} in apps/api/.env.local.`,
       status: 503,
       title: "Service unavailable",
       type: "service-unavailable",

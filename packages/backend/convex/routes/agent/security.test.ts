@@ -1,39 +1,40 @@
 // @vitest-environment node
+import {
+  NAKAFA_API_EDGE_CONTRACT,
+  NAKAFA_DEFAULT_MCP_BROWSER_ORIGINS,
+  NAKAFA_MCP_ALLOWED_ORIGINS_ENVIRONMENT,
+} from "@repo/backend/agent/edge";
 import { Effect, Result } from "effect";
 import { afterEach, describe, expect, it } from "vitest";
 import {
-  API_EDGE_SECRET_HEADER,
   hasTrustedMcpOrigin,
   hasValidEdgeSecret,
   readTrustedMcpOrigins,
 } from "./security";
 
-const API_SECRET_NAME = "NAKAFA_API_EDGE_SECRET";
-const MCP_ORIGINS_NAME = "NAKAFA_MCP_ALLOWED_ORIGINS";
-
 afterEach(() => {
-  delete process.env[API_SECRET_NAME];
-  delete process.env[MCP_ORIGINS_NAME];
+  delete process.env[NAKAFA_API_EDGE_CONTRACT.secretEnvironment];
+  delete process.env[NAKAFA_MCP_ALLOWED_ORIGINS_ENVIRONMENT];
 });
 
 function requestWithSecret(secret?: string) {
   const headers = new Headers();
   if (secret) {
-    headers.set(API_EDGE_SECRET_HEADER, secret);
+    headers.set(NAKAFA_API_EDGE_CONTRACT.secretHeader, secret);
   }
   return new Request("https://api.nakafa.com/v1/health", { headers });
 }
 
 describe("agent edge security", () => {
   it("accepts current and previous keys during a two-key rotation", async () => {
-    process.env[API_SECRET_NAME] = "new-secret,old-secret";
+    process.env[NAKAFA_API_EDGE_CONTRACT.secretEnvironment] =
+      "new-secret,old-secret";
 
     await expect(
       Effect.runPromise(
         hasValidEdgeSecret(
           requestWithSecret("new-secret"),
-          API_SECRET_NAME,
-          API_EDGE_SECRET_HEADER
+          NAKAFA_API_EDGE_CONTRACT
         )
       )
     ).resolves.toBe(true);
@@ -41,31 +42,25 @@ describe("agent edge security", () => {
       Effect.runPromise(
         hasValidEdgeSecret(
           requestWithSecret("old-secret"),
-          API_SECRET_NAME,
-          API_EDGE_SECRET_HEADER
+          NAKAFA_API_EDGE_CONTRACT
         )
       )
     ).resolves.toBe(true);
   });
 
   it("rejects missing and incorrect request keys", async () => {
-    process.env[API_SECRET_NAME] = "current-secret";
+    process.env[NAKAFA_API_EDGE_CONTRACT.secretEnvironment] = "current-secret";
 
     await expect(
       Effect.runPromise(
-        hasValidEdgeSecret(
-          requestWithSecret(),
-          API_SECRET_NAME,
-          API_EDGE_SECRET_HEADER
-        )
+        hasValidEdgeSecret(requestWithSecret(), NAKAFA_API_EDGE_CONTRACT)
       )
     ).resolves.toBe(false);
     await expect(
       Effect.runPromise(
         hasValidEdgeSecret(
           requestWithSecret("incorrect-secret"),
-          API_SECRET_NAME,
-          API_EDGE_SECRET_HEADER
+          NAKAFA_API_EDGE_CONTRACT
         )
       )
     ).resolves.toBe(false);
@@ -75,24 +70,21 @@ describe("agent edge security", () => {
     const missing = await Effect.runPromise(
       hasValidEdgeSecret(
         requestWithSecret("supplied"),
-        API_SECRET_NAME,
-        API_EDGE_SECRET_HEADER
+        NAKAFA_API_EDGE_CONTRACT
       ).pipe(Effect.result)
     );
-    process.env[API_SECRET_NAME] = "one,two,three";
+    process.env[NAKAFA_API_EDGE_CONTRACT.secretEnvironment] = "one,two,three";
     const tooMany = await Effect.runPromise(
       hasValidEdgeSecret(
         requestWithSecret("one"),
-        API_SECRET_NAME,
-        API_EDGE_SECRET_HEADER
+        NAKAFA_API_EDGE_CONTRACT
       ).pipe(Effect.result)
     );
-    process.env[API_SECRET_NAME] = "one,";
+    process.env[NAKAFA_API_EDGE_CONTRACT.secretEnvironment] = "one,";
     const empty = await Effect.runPromise(
       hasValidEdgeSecret(
         requestWithSecret("one"),
-        API_SECRET_NAME,
-        API_EDGE_SECRET_HEADER
+        NAKAFA_API_EDGE_CONTRACT
       ).pipe(Effect.result)
     );
 
@@ -101,15 +93,18 @@ describe("agent edge security", () => {
     expect(Result.isFailure(empty)).toBe(true);
   });
 
-  it("allows absent server Origins and exact configured HTTPS Origins", async () => {
-    process.env[MCP_ORIGINS_NAME] =
-      "https://agent.example.com, http://unsafe.example.com, invalid";
+  it("normalizes and deduplicates exact HTTPS and loopback HTTP origins", async () => {
+    process.env[NAKAFA_MCP_ALLOWED_ORIGINS_ENVIRONMENT] =
+      " HTTPS://Agent.Example.COM:443/ ,https://agent.example.com,http://LOCALHOST:3001/,http://localhost:3001";
     const configured = await Effect.runPromise(readTrustedMcpOrigins());
-    delete process.env[MCP_ORIGINS_NAME];
+    delete process.env[NAKAFA_MCP_ALLOWED_ORIGINS_ENVIRONMENT];
     const defaults = await Effect.runPromise(readTrustedMcpOrigins());
 
-    expect(configured).toEqual(["https://agent.example.com"]);
-    expect(defaults).toEqual(["https://nakafa.com", "https://www.nakafa.com"]);
+    expect(configured).toEqual([
+      "https://agent.example.com",
+      "http://localhost:3001",
+    ]);
+    expect(defaults).toEqual(NAKAFA_DEFAULT_MCP_BROWSER_ORIGINS);
     expect(
       hasTrustedMcpOrigin(new Request("https://mcp.nakafa.com/mcp"), configured)
     ).toBe(true);
@@ -124,10 +119,37 @@ describe("agent edge security", () => {
     expect(
       hasTrustedMcpOrigin(
         new Request("https://mcp.nakafa.com/mcp", {
+          headers: { Origin: "http://localhost:3001" },
+        }),
+        configured
+      )
+    ).toBe(true);
+    expect(
+      hasTrustedMcpOrigin(
+        new Request("https://mcp.nakafa.com/mcp", {
           headers: { Origin: "https://evil.example.com" },
         }),
         configured
       )
     ).toBe(false);
   });
+
+  it.each([
+    "https://agent.example.com,",
+    "https://agent.example.com/path",
+    "https://agent.example.com,invalid",
+    "https://agent.example.com,http://unsafe.example.com",
+    "",
+  ])(
+    "rejects the complete configured origin list when one row is invalid",
+    async (source) => {
+      process.env[NAKAFA_MCP_ALLOWED_ORIGINS_ENVIRONMENT] = source;
+
+      const result = await Effect.runPromise(
+        readTrustedMcpOrigins().pipe(Effect.result)
+      );
+
+      expect(Result.isFailure(result)).toBe(true);
+    }
+  );
 });

@@ -1,14 +1,14 @@
-import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/backend/agent/mcp/protocol";
 import {
   type AgentOriginProxyError,
   proxyAgentOriginRequest,
 } from "@repo/backend/agent/proxy";
+import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/_lib/agent/constants";
 import { ConfigProvider, Effect } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
 
 const MCP_ERROR_HEADERS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Expose-Headers": "MCP-Protocol-Version, MCP-Session-Id",
+  "Access-Control-Expose-Headers": "MCP-Protocol-Version",
   "Cache-Control": "no-store",
   "Content-Type": "application/json; charset=utf-8",
   "MCP-Protocol-Version": NAKAFA_MCP_PROTOCOL_VERSION,
@@ -20,7 +20,7 @@ function localMcpFailure(error: AgentOriginProxyError) {
     return mcpErrorResponse(
       404,
       -32_601,
-      "The local MCP adapter only serves /mcp."
+      "The local MCP adapter only serves /mcp and /health."
     );
   }
   if (error.reason === "request-body") {

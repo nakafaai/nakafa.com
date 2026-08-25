@@ -1,10 +1,10 @@
+import { NAKAFA_MCP_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import { NAKAFA_MCP_REGISTRY_MANIFEST } from "@repo/backend/agent/mcp/manifest";
 import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/backend/agent/mcp/protocol";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import {
   hasTrustedMcpOrigin,
   hasValidEdgeSecret,
-  MCP_EDGE_SECRET_HEADER,
   readTrustedMcpOrigins,
 } from "@repo/backend/convex/routes/agent/security";
 import { requestId } from "@repo/backend/convex/routes/middleware/requestId";
@@ -147,8 +147,7 @@ async function readMcpGuard(request: Request) {
     Effect.gen(function* () {
       const validSecret = yield* hasValidEdgeSecret(
         request,
-        "NAKAFA_MCP_EDGE_SECRET",
-        MCP_EDGE_SECRET_HEADER
+        NAKAFA_MCP_EDGE_CONTRACT
       );
       if (!validSecret) {
         return "forbidden" as const;
