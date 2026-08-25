@@ -1,7 +1,12 @@
+import {
+  NAKAFA_API_BASE_URL,
+  NAKAFA_MCP_RECOMMENDED_ENDPOINT,
+} from "@repo/contents/_lib/agent/constants";
+
 const DEVELOPER_LINKS = {
-  api: "https://api.nakafa.com/v1",
-  mcp: "https://mcp.nakafa.com/mcp",
-  openApi: "https://api.nakafa.com/openapi.json",
+  api: `${NAKAFA_API_BASE_URL}/v1`,
+  mcp: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
+  openApi: `${NAKAFA_API_BASE_URL}/openapi.json`,
 } as const;
 
 /** Builds the scoped machine-readable index for developer resources. */
@@ -16,7 +21,7 @@ export function buildDeveloperLlmsIndexText() {
     `- [Nakafa Public API](${DEVELOPER_LINKS.api}): service index and version policy.`,
     `- [Nakafa OpenAPI 3.1](${DEVELOPER_LINKS.openApi}): typed operations, parameters, responses, and Problem Details errors.`,
     "- API version: v1. Compatible additions stay in v1; breaking changes require v2.",
-    "- Client budget: no more than 120 requests per 60 seconds from one IP; handle HTTP 429 with backoff.",
+    "- Client budget: no more than 120 data or MCP execution requests per 60 seconds from one IP; handle HTTP 429 with Retry-After and backoff.",
     "",
     "## Agent interfaces",
     "",

@@ -8,7 +8,7 @@ describe("developer Markdown", () => {
     expect(text).toContain("https://api.nakafa.com/v1");
     expect(text).toContain("https://mcp.nakafa.com/mcp");
     expect(text).toContain("nakafa-cli");
-    expect(text).toContain("120 requests per 60 seconds");
-    expect(text).toContain("handle HTTP 429 with backoff");
+    expect(text).toContain("120 data or MCP execution requests per 60 seconds");
+    expect(text).toContain("handle HTTP 429 with Retry-After and backoff");
   });
 });

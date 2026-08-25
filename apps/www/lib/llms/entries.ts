@@ -1,5 +1,4 @@
 import type { PublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
-import { Option } from "effect";
 import type { Locale } from "next-intl";
 import {
   BASE_URL,
@@ -7,10 +6,8 @@ import {
   SECTION_LABELS,
 } from "@/lib/llms/constants";
 import { formatRouteTitle } from "@/lib/llms/format";
-import { getLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
 
-const derivedSiteRoutes = ["/curricula"] as const;
-type DerivedSiteRoute = (typeof derivedSiteRoutes)[number];
+const derivedSiteRoutes = ["/contact"] as const;
 
 /** One localized link advertised by a Nakafa llms index. */
 export interface LlmsEntry {
@@ -45,9 +42,14 @@ export function buildSiteLlmsEntries(
   locale: Locale,
   pages: readonly PublicPageProjection[]
 ) {
-  const entries: LlmsEntry[] = derivedSiteRoutes.flatMap((route) =>
-    Option.toArray(buildLocalizedSiteLlmsEntry({ locale, route }))
-  );
+  const entries: LlmsEntry[] = derivedSiteRoutes.map((route) => ({
+    description: undefined,
+    href: `${BASE_URL}/${locale}${route}`,
+    route,
+    section: "site",
+    segments: ["site", ...route.split("/").filter(Boolean)],
+    title: formatRouteTitle(route),
+  }));
 
   for (const page of pages) {
     if (page.appLocale !== locale) {
@@ -90,32 +92,4 @@ export function buildPublishedContentLlmsEntries({
       };
     })
     .sort((left, right) => left.route.localeCompare(right.route));
-}
-
-/** Builds one locale-specific llms entry from a sitemap route. */
-function buildLocalizedSiteLlmsEntry({
-  locale,
-  route,
-}: {
-  locale: Locale;
-  route: DerivedSiteRoute;
-}) {
-  return Option.map(
-    getLocalizedMappedRoutePathname({ locale, route }),
-    (publicRoute) => {
-      const hrefBase = `${BASE_URL}/${locale}${publicRoute}`;
-      const routePath = publicRoute.slice(1);
-      const routeSegments = ["site", ...routePath.split("/").filter(Boolean)];
-      const section: LlmsSection = "site";
-
-      return {
-        description: undefined,
-        href: hrefBase,
-        route: publicRoute,
-        section,
-        segments: routeSegments,
-        title: formatRouteTitle(publicRoute),
-      };
-    }
-  );
 }

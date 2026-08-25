@@ -21,7 +21,6 @@ describe("public llms discovery indexes", () => {
     expect(text).toContain("https://mcp.nakafa.com/mcp");
     expect(text).toContain(`${BASE_URL}/skill.md`);
     expect(text).toContain("## When to use Nakafa");
-    expect(text).toContain(`${BASE_URL}/developers`);
     expect(text).toContain(`${BASE_URL}/developers/llms.txt`);
     expect(text).toContain(`${BASE_URL}/openapi.json`);
     expect(text).toContain("read-only");

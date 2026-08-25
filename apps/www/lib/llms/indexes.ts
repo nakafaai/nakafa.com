@@ -2,14 +2,10 @@ import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { hasLocale, type Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
-import { BASE_URL, type LlmsSection } from "@/lib/llms/constants";
+import { BASE_URL } from "@/lib/llms/constants";
 import { getContentPageLlmsEntries } from "@/lib/llms/content-entries";
 import { getContentListingLlmsEntries } from "@/lib/llms/content-listing";
-import {
-  getLlmsSections,
-  isLlmsSection,
-  type LlmsEntry,
-} from "@/lib/llms/entries";
+import { isLlmsSection, type LlmsEntry } from "@/lib/llms/entries";
 import { getLocaleLabel, stripLlmsRouteExtension } from "@/lib/llms/format";
 import {
   formatLlmsEntryLine,
@@ -23,8 +19,6 @@ import {
   getLlmsSectionPages,
 } from "@/lib/llms/section";
 import { readSiteLlmsEntries } from "@/lib/llms/site";
-
-const LOCALE_INDEX_ENTRY_LIMIT = 60;
 
 /** Caches section index generation for Next.js Cache Components. */
 export async function getCachedLlmsSectionIndexText({
@@ -51,7 +45,7 @@ export const getLlmsSectionIndexText = Effect.fn("www.llms.index.text")(
     const { locale, prefixParts } = parsed;
 
     if (prefixParts.length === 0) {
-      const entries = yield* getLocaleIndexEntries(locale);
+      const entries = yield* readSiteLlmsEntries(locale);
       return buildLocaleLlmsIndexText({ entries, locale });
     }
 
@@ -165,10 +159,10 @@ function buildLocaleLlmsIndexText({
   locale: Locale;
 }) {
   const localeLabel = getLocaleLabel(locale);
-  const starterLines: string[] = [];
+  const pageLines: string[] = [];
   if (entries.length > 0) {
-    starterLines.push(
-      "## Starter Pages",
+    pageLines.push(
+      "## Site Pages",
       "",
       ...entries.map(formatLlmsEntryLine),
       ""
@@ -180,48 +174,16 @@ function buildLocaleLlmsIndexText({
     "",
     `> For AI agents: use [llms.txt](${BASE_URL}/llms.txt). Start with the direct ${localeLabel} page links below or open a public section index for bounded route-catalog pages.`,
     "",
+    "## Start",
+    "",
+    `- [Nakafa ${localeLabel} homepage](${BASE_URL}/${locale}): ${localeLabel} learning entry point.`,
+    "",
     "## Sections",
     "",
     ...getPublicLlmsSectionIndexLines(locale),
     "",
-    ...starterLines,
+    ...pageLines,
   ].join("\n");
-}
-
-/** Reads a bounded starter set of page-level markdown entries for one locale. */
-const getLocaleIndexEntries = Effect.fn("www.llms.locale.entries")(function* (
-  locale: Locale
-) {
-  const sections = getLlmsSections().filter(isContentLlmsSection);
-  const siteEntries = yield* readSiteLlmsEntries(locale);
-
-  const sectionEntries = yield* Effect.all(
-    sections.map((section) =>
-      getContentPageLlmsEntries({
-        locale,
-        page: 0,
-        section,
-      })
-    )
-  );
-  const entries = [...siteEntries];
-
-  for (const pageEntries of sectionEntries) {
-    if (pageEntries === null) {
-      continue;
-    }
-
-    entries.push(...pageEntries);
-  }
-
-  return entries.slice(0, LOCALE_INDEX_ENTRY_LIMIT);
-});
-
-/** Excludes the static site section when building content-backed locale starter links. */
-function isContentLlmsSection(
-  section: LlmsSection
-): section is Exclude<LlmsSection, "site"> {
-  return section !== "site";
 }
 
 /** Parses `/:section/page/:id` index routes into a materialized page id. */

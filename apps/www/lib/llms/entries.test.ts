@@ -54,34 +54,32 @@ describe("llms entries", () => {
     });
     const englishEntries = buildSiteLlmsEntries("en", [page]);
     const indonesianEntries = buildSiteLlmsEntries("id", [page]);
-    const englishCurriculum = englishEntries.find(
-      (entry) => entry.route === "/curriculum"
+    const englishContact = englishEntries.find(
+      (entry) => entry.route === "/contact"
     );
-    const indonesianCurriculum = indonesianEntries.find(
-      (entry) => entry.route === "/kurikulum"
+    const indonesianContact = indonesianEntries.find(
+      (entry) => entry.route === "/contact"
     );
 
-    expect(englishCurriculum).toMatchObject({
-      href: `${BASE_URL}/en/curriculum`,
+    expect(englishContact).toMatchObject({
+      href: `${BASE_URL}/en/contact`,
       section: "site",
-      title: "Curriculum",
+      title: "Contact",
     });
-    expect(indonesianCurriculum).toMatchObject({
-      href: `${BASE_URL}/id/kurikulum`,
+    expect(indonesianContact).toMatchObject({
+      href: `${BASE_URL}/id/contact`,
       section: "site",
-      title: "Kurikulum",
+      title: "Contact",
     });
     expect(englishEntries.map((entry) => entry.route)).toEqual([
-      "/curriculum",
+      "/contact",
       "/privacy-policy",
     ]);
     expect(englishEntries[1]).toMatchObject({
       description: page.metadata.description,
       title: page.metadata.title,
     });
-    expect(indonesianEntries.map((entry) => entry.route)).toEqual([
-      "/kurikulum",
-    ]);
+    expect(indonesianEntries.map((entry) => entry.route)).toEqual(["/contact"]);
     expect(englishEntries.some((entry) => entry.route === "/")).toBe(false);
     expect(englishEntries.some((entry) => entry.route === "/contributor")).toBe(
       false

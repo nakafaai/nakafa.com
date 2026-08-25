@@ -106,12 +106,13 @@ beforeEach(() => {
 });
 
 describe("llms indexes", () => {
-  it("builds locale indexes with direct starter pages", async () => {
+  it("builds locale indexes with direct site pages", async () => {
     const text = await Effect.runPromise(getLlmsSectionIndexText("llms/en"));
 
     expect(text).toContain("# Nakafa English Content");
+    expect(text).toContain(`${BASE_URL}/en`);
     expect(text).toContain("## Sections");
-    expect(text).toContain("## Starter Pages");
+    expect(text).toContain("## Site Pages");
     for (const prefix of [
       "articles",
       "subjects",
@@ -122,18 +123,19 @@ describe("llms indexes", () => {
       expect(text).toContain(`${BASE_URL}/en/${prefix}/llms.txt`);
     }
     expect(text).toContain(`${BASE_URL}/en/search`);
-    expect(text).toContain(`- [${articleEntry.title}](${articleEntry.href})`);
-    expect(mockGetContentPageLlmsEntries).toHaveBeenCalled();
+    expect(text).not.toContain(
+      `- [${articleEntry.title}](${articleEntry.href})`
+    );
+    expect(mockGetContentPageLlmsEntries).not.toHaveBeenCalled();
   });
 
-  it("omits missing locale page artifacts from starter pages", async () => {
-    mockGetContentPageLlmsEntries.mockReturnValue(Effect.succeed(null));
+  it("omits the site-page section when the signed catalog is empty", async () => {
     mockReadSiteLlmsEntries.mockReturnValue(Effect.succeed([]));
 
     const text = await Effect.runPromise(getLlmsSectionIndexText("llms/en"));
 
     expect(text).toContain("# Nakafa English Content");
-    expect(text).not.toContain("## Starter Pages");
+    expect(text).not.toContain("## Site Pages");
   });
 
   it("builds section page-map indexes without reading content pages", async () => {
