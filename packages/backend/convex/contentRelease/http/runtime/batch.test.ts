@@ -7,6 +7,10 @@ import {
   PREDECESSOR_PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
   PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
 } from "@repo/backend/content/endpoint";
+import type {
+  PredecessorObservationArgs,
+  PredecessorStatus,
+} from "@repo/backend/convex/contentRelease/predecessor/spec";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
   insertRuntimeRelease,
@@ -14,11 +18,18 @@ import {
   runtimeContentKey,
 } from "@repo/backend/test/content-runtime";
 import { insertRuntimeHead } from "@repo/backend/test/runtime-head";
+import { makeFunctionReference } from "convex/server";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const RUNTIME_TOKEN = "technical-runtime-token";
+const OBSERVATION_ID = "dates-cutover-4974ee8c";
 const runtimeTokenName = "CONTENT_RUNTIME_TOKEN";
 const polarName = "POLAR_WEBHOOK_SECRET";
+const armObservation = makeFunctionReference<
+  "mutation",
+  PredecessorObservationArgs,
+  PredecessorStatus
+>("contentRelease/predecessor/internal:arm");
 const foundRequest = JSON.parse(publicRuntimeRequest());
 const missingRequest = {
   appLocale: "en",
@@ -62,6 +73,17 @@ function seedPublicRuntime(t: RuntimeTest) {
     await insertRuntimeRelease(ctx);
     await insertRuntimeHead(ctx, "public", runtimeContentKey("public"));
   });
+}
+
+/** Returns the current batch predecessor invocation count. */
+async function batchCount(t: RuntimeTest) {
+  const row = await t.run((ctx) =>
+    ctx.db
+      .query("contentPredecessorReads")
+      .withIndex("by_route", (query) => query.eq("route", "batch"))
+      .unique()
+  );
+  return row?.invocationCount ?? null;
 }
 
 beforeEach(() => {
@@ -108,6 +130,64 @@ describe("public content runtime batch HTTP route", () => {
     expect(currentBody.responses[1]).toEqual({ kind: "missing" });
     expectPrivate(predecessor);
     expectPrivate(current);
+  });
+
+  it("records authenticated bounded predecessor batches before dispatch", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await seedPublicRuntime(t);
+    await t.mutation(armObservation, { observationId: OBSERVATION_ID });
+    const body = JSON.stringify({ requests: [foundRequest] });
+
+    const unauthorized = await post(
+      t,
+      body,
+      { "x-nakafa-content-token": "wrong-token" },
+      PREDECESSOR_PUBLIC_CONTENT_RUNTIME_BATCH_PATH
+    );
+    const current = await post(t, body);
+    expect(unauthorized.status).toBe(401);
+    expect(current.status).toBe(200);
+    await expect(batchCount(t)).resolves.toBe(0);
+
+    const malformed = await post(
+      t,
+      "{",
+      undefined,
+      PREDECESSOR_PUBLIC_CONTENT_RUNTIME_BATCH_PATH
+    );
+    expect(malformed.status).toBe(400);
+    await expect(batchCount(t)).resolves.toBe(1);
+
+    const predecessor = await post(
+      t,
+      body,
+      undefined,
+      PREDECESSOR_PUBLIC_CONTENT_RUNTIME_BATCH_PATH
+    );
+    expect(predecessor.status).toBe(200);
+    await expect(batchCount(t)).resolves.toBe(2);
+
+    await t.mutation(async (ctx) => {
+      const rows = await ctx.db.query("contentPredecessorReads").collect();
+      for (const row of rows) {
+        await ctx.db.patch("contentPredecessorReads", row._id, {
+          deploymentName: "other-deployment",
+        });
+      }
+    });
+    const mismatched = await post(
+      t,
+      body,
+      undefined,
+      PREDECESSOR_PUBLIC_CONTENT_RUNTIME_BATCH_PATH
+    );
+    expect(mismatched.status).toBe(500);
+    await expect(mismatched.json()).resolves.toEqual({
+      code: "CONTENT_RUNTIME_INTERNAL",
+      kind: "failure",
+    });
+    await expect(batchCount(t)).resolves.toBe(2);
+    expectPrivate(mismatched);
   });
 
   it.each([

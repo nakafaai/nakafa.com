@@ -14,6 +14,10 @@ import {
 } from "@repo/backend/content/endpoint";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import { internal } from "@repo/backend/convex/_generated/api";
+import type {
+  PredecessorObservationArgs,
+  PredecessorStatus,
+} from "@repo/backend/convex/contentRelease/predecessor/spec";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { testProjectionJson } from "@repo/backend/test/content-material";
 import {
@@ -31,11 +35,18 @@ import {
   expect,
   it,
 } from "@repo/testing/effect";
+import { makeFunctionReference } from "convex/server";
 import { Effect } from "effect";
 
 const RUNTIME_TOKEN = "technical-runtime-token";
+const OBSERVATION_ID = "dates-cutover-4974ee8c";
 const runtimeTokenName = "CONTENT_RUNTIME_TOKEN";
 const polarName = "POLAR_WEBHOOK_SECRET";
+const armObservation = makeFunctionReference<
+  "mutation",
+  PredecessorObservationArgs,
+  PredecessorStatus
+>("contentRelease/predecessor/internal:arm");
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 type RuntimeFetcher = Pick<RuntimeTest, "fetch">;
 /** Sends one request through the actual registered Convex HTTP route. */
@@ -73,6 +84,17 @@ function seedRuntime(
     await insertRuntimeRelease(ctx);
     await insertRuntimeHead(ctx, delivery, runtimeContentKey(delivery));
   });
+}
+
+/** Returns the current singular predecessor invocation count. */
+async function singularCount(t: RuntimeTest) {
+  const row = await t.run((ctx) =>
+    ctx.db
+      .query("contentPredecessorReads")
+      .withIndex("by_route", (query) => query.eq("route", "singular"))
+      .unique()
+  );
+  return row?.invocationCount ?? null;
 }
 beforeEach(() => {
   process.env[runtimeTokenName] = RUNTIME_TOKEN;
@@ -114,6 +136,66 @@ describe("public content runtime HTTP route", () => {
     expect(predecessorBody.activeReleaseId).toBe(currentBody.activeReleaseId);
     expectPrivate(predecessor);
     expectPrivate(current);
+  });
+
+  it("records authenticated bounded predecessor calls before dispatch", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await seedRuntime(t, "public");
+    await t.mutation(armObservation, { observationId: OBSERVATION_ID });
+
+    const unauthorized = await post(
+      t,
+      publicRuntimeRequest(),
+      { "x-nakafa-content-token": "wrong-token" },
+      PREDECESSOR_PUBLIC_CONTENT_RUNTIME_PATH
+    );
+    const current = await post(t, publicRuntimeRequest());
+    expect(unauthorized.status).toBe(401);
+    expect(current.status).toBe(200);
+    await expect(singularCount(t)).resolves.toBe(0);
+
+    const malformed = await post(
+      t,
+      "{",
+      undefined,
+      PREDECESSOR_PUBLIC_CONTENT_RUNTIME_PATH
+    );
+    expect(malformed.status).toBe(400);
+    await expect(singularCount(t)).resolves.toBe(1);
+
+    const predecessor = await post(
+      t,
+      publicRuntimeRequest(),
+      undefined,
+      PREDECESSOR_PUBLIC_CONTENT_RUNTIME_PATH
+    );
+    expect(predecessor.status).toBe(200);
+    await expect(singularCount(t)).resolves.toBe(2);
+
+    await t.mutation(async (ctx) => {
+      const state = await ctx.db.query("contentState").unique();
+      if (!state) {
+        throw new Error("Expected active content state.");
+      }
+      await ctx.db.patch("contentState", state._id, {
+        activeSequence: state.activeSequence
+          ? state.activeSequence + 1
+          : undefined,
+      });
+    });
+    const drifted = await post(
+      t,
+      publicRuntimeRequest(),
+      undefined,
+      PREDECESSOR_PUBLIC_CONTENT_RUNTIME_PATH
+    );
+    expect(drifted.status).toBe(500);
+    await expect(drifted.json()).resolves.toEqual({
+      code: "CONTENT_RUNTIME_INTERNAL",
+      kind: "failure",
+    });
+    await expect(singularCount(t)).resolves.toBe(2);
+    expectPrivate(drifted);
   });
 
   it.each([
