@@ -12,10 +12,7 @@ const RenderedDatesSchema = Schema.Struct({
   dateModified: Schema.optionalKey(Schema.String),
   datePublished: Schema.String,
 });
-interface DateLabels {
-  readonly published: string;
-  readonly updated: string;
-}
+type DateLabels = Readonly<{ published: string; updated: string }>;
 type JsonLdType = "Article" | "LearningResource";
 const dateLabels = {
   de: { published: "Veröffentlicht", updated: "Aktualisiert" },
@@ -23,10 +20,7 @@ const dateLabels = {
   id: { published: "Diterbitkan", updated: "Diperbarui" },
 } satisfies Record<AppLocaleCode, DateLabels>;
 
-interface LocalizedContentRoute {
-  readonly href: string;
-  readonly locale: AppLocaleCode;
-}
+type LocalizedContentRoute = Readonly<{ href: string; locale: AppLocaleCode }>;
 
 interface ContentRouteGroup {
   readonly jsonLdTypes: readonly JsonLdType[];
@@ -260,9 +254,11 @@ const verifyContentRoute = Effect.fn("NakafaE2E.verifyContentRoute")(function* (
   if (group.kind !== "material") {
     return;
   }
+  const scenes = page.locator('[data-slot="line-scene"]');
   const canvases = page.locator("canvas");
+  yield* Effect.promise(() => expect(scenes.first()).toBeAttached());
   yield* Effect.promise(() => expect(canvases).toHaveCount(0));
-  yield* Effect.promise(() => page.keyboard.press("End"));
+  yield* Effect.promise(() => scenes.first().scrollIntoViewIfNeeded());
   yield* Effect.promise(() =>
     expect(canvases.first()).toBeVisible({ timeout: 30_000 })
   );
@@ -280,7 +276,10 @@ for (const group of contentRouteGroups) {
         {
           baseURL: baseURL ?? "",
           serviceWorkers: "block",
-          viewport: { height: 900, width: 1440 },
+          viewport: {
+            height: group.kind === "material" ? 200 : 900,
+            width: 1440,
+          },
         },
         (context) =>
           Effect.gen(function* () {

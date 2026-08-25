@@ -36,7 +36,7 @@ export function DeferredLineScene(props: LineSceneProps) {
   const [shouldRender, setShouldRender] = useState(false);
 
   return (
-    <div className="relative">
+    <div className="relative" data-slot="line-scene">
       <Intersection
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
