@@ -261,6 +261,12 @@ const restartReadModels = Effect.fn("contentRelease.restartReadModels")(
     ) {
       return { status: "stale" } satisfies ReadModelRestartResult;
     }
+    const job = yield* Effect.promise(() =>
+      ctx.db.system.get("_scheduled_functions", args.expectedJobId)
+    );
+    if (isRunningJob(job)) {
+      return { status: "stale" } satisfies ReadModelRestartResult;
+    }
     const syncGeneration = args.expectedGeneration + 1;
     const syncJobId = yield* Effect.promise(() =>
       ctx.scheduler.runAfter(0, resumeReference, {

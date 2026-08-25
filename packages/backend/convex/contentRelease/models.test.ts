@@ -209,6 +209,50 @@ describe("contentRelease/models", () => {
     ).resolves.toHaveLength(3);
   });
 
+  it("does not restart a pending lineage", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await seedActiveRelease(ctx);
+      await insertReleaseItem(ctx, ACTIVE, "test:unexpected", 0);
+      await runConvexProgram(startReadModels(ctx, ACTIVE.releaseId));
+    });
+
+    const pending = await t.query(internal.contentRelease.models.status, {
+      releaseId: ACTIVE.releaseId,
+    });
+    if (pending.phase !== "syncing") {
+      expect.fail("Expected one pending read-model lineage.");
+    }
+
+    await expect(
+      t.mutation(internal.contentRelease.models.restart, {
+        expectedGeneration: pending.syncGeneration,
+        expectedJobId: pending.syncJobId,
+        releaseId: ACTIVE.releaseId,
+      })
+    ).resolves.toEqual({ status: "stale" });
+
+    const unchanged = await t.run(async (ctx) => ({
+      jobs: await ctx.db.system.query("_scheduled_functions").collect(),
+      release: await ctx.db
+        .query("contentReleases")
+        .withIndex("by_releaseId", (index) =>
+          index.eq("releaseId", ACTIVE.releaseId)
+        )
+        .unique(),
+    }));
+    expect(unchanged.jobs).toEqual([
+      expect.objectContaining({
+        _id: pending.syncJobId,
+        state: { kind: "pending" },
+      }),
+    ]);
+    expect(unchanged.release).toMatchObject({
+      syncGeneration: pending.syncGeneration,
+      syncJobId: pending.syncJobId,
+    });
+  });
+
   it("fences concurrent restart attempts by generation and job identity", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
