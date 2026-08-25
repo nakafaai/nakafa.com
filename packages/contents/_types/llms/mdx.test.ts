@@ -190,12 +190,30 @@ Fragment child with <InlineMath math="x" />.
 `);
 
         expect(markdown).toContain(
-          "Visible readout: Sin (30°) = 0.50Cos (30°) = 0.87Tan (30°) = 0.58"
+          [
+            "Visible readout:",
+            "- Sin (30°) = 0.50",
+            "- Cos (30°) = 0.87",
+            "- Tan (30°) = 0.58",
+          ].join("\n")
         );
         expect(markdown).toContain(
-          "Visible readout: Sin (45°) = 0.71Cos (45°) = 0.71Tan (45°) = 1.00"
+          [
+            "Visible readout:",
+            "- Sin (45°) = 0.71",
+            "- Cos (45°) = 0.71",
+            "- Tan (45°) = 1.00",
+          ].join("\n")
         );
-        expect(markdown.match(/Visible readout:/g)).toHaveLength(2);
+        expect(markdown).toContain(
+          [
+            "Visible readout:",
+            "- Sin (90°) = 1.00",
+            "- Cos (90°) = 0.00",
+            "- Tan (90°) = undefined",
+          ].join("\n")
+        );
+        expect(markdown.match(/Visible readout:/g)).toHaveLength(3);
         expect(markdown).toContain("angle: angleFromRegistry");
         expect(markdown).toContain('sin: "1/2"');
       })

@@ -215,11 +215,14 @@ function renderTrigonometricReadout(name: string, attributes: MdxAttribute[]) {
   }
 
   const readout = getTrigonometricReadout(angle);
-  if (readout.tan === undefined) {
-    return "";
-  }
+  const tangent = readout.tan ?? "undefined";
 
-  return `Visible readout: Sin (${angle}°) = ${readout.sin}Cos (${angle}°) = ${readout.cos}Tan (${angle}°) = ${readout.tan}`;
+  return [
+    "Visible readout:",
+    `- Sin (${angle}°) = ${readout.sin}`,
+    `- Cos (${angle}°) = ${readout.cos}`,
+    `- Tan (${angle}°) = ${tangent}`,
+  ].join("\n");
 }
 
 /** Reads a literal angle without evaluating arbitrary authored expressions. */
