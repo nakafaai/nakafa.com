@@ -1,5 +1,5 @@
 "use client";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useMounted } from "@mantine/hooks";
 import {
   decodePublishedQuranInterpretation,
   isQuranSnapshotConflict,
@@ -60,6 +60,7 @@ export function QuranInterpretationControls({
   const [pendingVerseNumber, setPendingVerseNumber] = useState<number | null>(
     null
   );
+  const isControllerActive = useMounted();
   const [isPending, startTransition] = useTransition();
   const requestSequence = useRef(0);
   const pendingRequestId = useRef<number | null>(null);
@@ -182,6 +183,7 @@ export function QuranInterpretationControls({
     startTransition(() => Effect.runPromise(program));
   };
   const contextValue = {
+    isActive: isControllerActive,
     pendingVerseNumber: isPending ? pendingVerseNumber : null,
     selectInterpretation,
   };
