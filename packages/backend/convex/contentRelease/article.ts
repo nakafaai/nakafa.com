@@ -157,12 +157,16 @@ export const route = query({
 });
 
 /**
- * Retains the predecessor native article cursor during the 0.15.1 bridge.
+ * Retains the predecessor native article cursor and exact 0.15.0 projection
+ * view during the 0.15.1 bridge. The returned `projectionHash` identifies the
+ * authenticated signed source; `projectionJson` is a derived predecessor view
+ * and is not represented as signed bytes.
  *
  * Rollout owner: Nakafa SEO date cutover, PR #342.
  * Removal change: the strict 0.16 Nakafa cutover PR.
- * Remove this query, its predecessor reader, tests, legacy date fields, and
- * legacy indexes only after the protected-main consumer uses `publications`,
+ * Remove this query, its predecessor reader and projection adapter, tests,
+ * legacy date fields, and legacy indexes only after the protected-main
+ * consumer uses `publications`,
  * production Convex Function Metrics show zero invocations for
  * `contentRelease/article:page` and `contentRelease/article:category` for 24
  * consecutive hours after that switch, and EN, ID, and DE production browser

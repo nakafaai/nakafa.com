@@ -5,6 +5,7 @@ import {
   paginatePredecessorArticles,
 } from "@repo/backend/convex/contentRelease/article/order";
 import { loadArticleOwner } from "@repo/backend/convex/contentRelease/article/owner";
+import { encodePredecessorProjection } from "@repo/backend/convex/contentRelease/article/predecessor";
 import {
   decodeCategory,
   verifyArticle,
@@ -98,7 +99,15 @@ export const readArticlePage = Effect.fn("contentRelease.readArticlePage")(
     const stored = yield* paginate(ctx, appLocale, category, options);
     const page = yield* Effect.forEach(stored.page, (row) =>
       verifyArticle(ctx, row, owner.active.sequence).pipe(
-        Effect.map(({ resolved }) => resolved)
+        Effect.flatMap(({ projection, resolved }) => {
+          if (contract === "publication") {
+            return Effect.succeed(resolved);
+          }
+
+          return encodePredecessorProjection(projection).pipe(
+            Effect.map((projectionJson) => ({ ...resolved, projectionJson }))
+          );
+        })
       )
     );
     return {

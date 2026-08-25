@@ -1,4 +1,5 @@
 import { api } from "@repo/backend/convex/_generated/api";
+import { PredecessorArticleProjectionSchema } from "@repo/backend/convex/contentRelease/article/predecessor";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
@@ -8,6 +9,7 @@ import {
 } from "@repo/backend/test/content-runtime";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
 import { convexTest } from "convex-test";
+import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 const categories = api.contentRelease.article.categories;
@@ -153,11 +155,23 @@ describe("contentRelease/article", () => {
       { contentKey: testArticleProjection(2).contentKey },
     ]);
     expect(oldLoad.result.page).toMatchObject([
-      { contentKey: testArticleProjection(2).contentKey },
+      {
+        contentKey: testArticleProjection(2).contentKey,
+        projectionHash: stored.find(
+          (row) => row.contentKey === testArticleProjection(2).contentKey
+        )?.projectionHash,
+      },
     ]);
     expect(continued.result.page).toMatchObject([
       { contentKey: testArticleProjection(1).contentKey },
     ]);
+    for (const item of [...oldLoad.result.page, ...continued.result.page]) {
+      const projection = Schema.decodeUnknownSync(
+        PredecessorArticleProjectionSchema
+      )(JSON.parse(item.projectionJson), { onExcessProperty: "error" });
+      expect(projection.metadata).toHaveProperty("date");
+      expect(projection.metadata).not.toHaveProperty("datePublished");
+    }
     await expect(
       t.query(page, {
         category: "politics",
