@@ -3,6 +3,10 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { MATERIAL_GROUP_LIMIT } from "@repo/backend/convex/contentRelease/material/limits";
+import {
+  encodePredecessorProjection,
+  type MaterialProjectionContract,
+} from "@repo/backend/convex/contentRelease/material/predecessor";
 import { resolveMaterialRoute } from "@repo/backend/convex/contentRelease/material/route";
 import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
 import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
@@ -87,6 +91,7 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
     ctx: QueryCtx,
     appLocale: Doc<"materialCatalog">["appLocale"],
     publicPath: string,
+    contract: MaterialProjectionContract,
     expectedActiveReleaseId?: string | null
   ) {
     const route = yield* resolveMaterialRoute(ctx, appLocale, publicPath);
@@ -121,16 +126,30 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
       readAlternates(ctx, row, route.active.signed.manifest.activeAppLocales),
       readSiblings(ctx, row),
     ]);
+    const encodeProjection = (material: (typeof alternates)[number]) => {
+      if (contract === "publication") {
+        return Effect.succeed(material.projectionJson);
+      }
+      return encodePredecessorProjection(material.projection);
+    };
+    const [alternateJson, resolvedProjectionJson, siblingJson] =
+      yield* Effect.all([
+        Effect.forEach(alternates, encodeProjection),
+        contract === "publication"
+          ? Effect.succeed(projectionJson)
+          : encodePredecessorProjection(route.material.projection),
+        Effect.forEach(siblings, encodeProjection),
+      ]);
     return {
       activeManifestHash: route.active.manifestHash,
       activeAppLocales: Array.from(
         route.active.signed.manifest.activeAppLocales
       ),
       activeReleaseId: route.active.releaseId,
-      alternateJson: alternates.map(({ projectionJson }) => projectionJson),
-      projectionJson,
+      alternateJson,
+      projectionJson: resolvedProjectionJson,
       rendererDomain: row.rendererDomain,
-      siblingJson: siblings.map(({ projectionJson }) => projectionJson),
+      siblingJson,
       sourcePath: row.sourcePath,
       sourceRevision: readSourceRevision(route.active),
     };
