@@ -27,6 +27,7 @@ import {
 import {
   LLMS_REPRESENTATION_VARY_FIELDS,
   type LocalizedLlmsRoute,
+  readLlmsMarkdownPathname,
   resolveLlmsProxyRoute,
 } from "@/lib/llms/routes";
 import {
@@ -112,23 +113,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(schoolAuthRedirect);
   }
 
-  const routeDecision = resolveLlmsProxyRoute({
-    acceptHeader: Option.fromNullOr(request.headers.get("accept")),
-    method: request.method,
-    pathname,
-  });
-  if (routeDecision.kind === "not-acceptable") {
-    return representationNotAcceptable();
-  }
-
-  let migrationPathname = pathname;
-  let migrationSuffix = "";
-  if (routeDecision.kind === "rewrite-markdown") {
-    const { locale, markdownExtension, route } = routeDecision.localizedRoute;
-    migrationPathname = `/${locale}${route}`;
-    migrationSuffix = markdownExtension;
-  }
-
+  const { markdownExtension: migrationSuffix, pathname: migrationPathname } =
+    readLlmsMarkdownPathname(pathname);
   const urlMigrationRedirect = await Effect.runPromise(
     readPublicUrlMigrationRedirect({
       method: request.method,
@@ -142,6 +128,18 @@ export async function proxy(request: NextRequest) {
     const response = NextResponse.redirect(redirectUrl, 308);
     mergeRepresentationVary(response);
     return response;
+  }
+
+  const routeDecision = await Effect.runPromise(
+    resolveLlmsProxyRoute({
+      acceptHeader: Option.fromNullOr(request.headers.get("accept")),
+      method: request.method,
+      pathname,
+    })
+  );
+
+  if (routeDecision.kind === "not-acceptable") {
+    return representationNotAcceptable();
   }
 
   if (routeDecision.kind === "rewrite-markdown") {

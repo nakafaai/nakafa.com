@@ -1,4 +1,5 @@
 import {
+  acceptsExplicitMediaType,
   HttpMediaTypeSchema,
   mergeVaryHeader,
   negotiateMediaType,
@@ -8,6 +9,7 @@ import { describe, expect, it } from "vitest";
 
 const HTML = HttpMediaTypeSchema.make("text/html; charset=utf-8");
 const MARKDOWN = HttpMediaTypeSchema.make("text/markdown; charset=utf-8");
+const RSC = HttpMediaTypeSchema.make("text/x-component");
 const REPRESENTATIONS = [HTML, MARKDOWN] as const;
 
 describe("HTTP Accept negotiation", () => {
@@ -220,6 +222,23 @@ describe("HTTP Accept negotiation", () => {
     });
 
     expect(negotiateMediaType(Option.none(), [invalid])).toEqual(Option.none());
+  });
+
+  it.each([
+    ["text/x-component", true],
+    ["text/x-component;q=0.5, text/*;q=0", true],
+    ["text/x-component;q=0, text/*;q=1", false],
+    ["text/*", false],
+    ["*/*", false],
+    ["text/x-component; charset=utf-8", false],
+  ])("classifies explicit RSC acceptance in %s", (acceptHeader, expected) => {
+    expect(acceptsExplicitMediaType(Option.some(acceptHeader), RSC)).toBe(
+      expected
+    );
+  });
+
+  it("does not infer explicit acceptance from a missing Accept header", () => {
+    expect(acceptsExplicitMediaType(Option.none(), RSC)).toBe(false);
   });
 });
 

@@ -8,6 +8,7 @@ import {
 } from "@/lib/content/published/active";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { getCachedLlmsSectionIndexText } from "@/lib/llms/indexes";
+import { resolvePublicLlmsSectionIndex } from "@/lib/llms/public-index";
 import {
   getCachedPublishedText,
   type PublishedMarkdownInput,
@@ -23,6 +24,10 @@ interface PublishedMarkdownSource {
   readonly activeReleaseId: ActiveContentReleaseId;
   readonly family: PublishedMarkdownInput["family"];
   readonly publicPath: string;
+}
+interface LlmsMarkdownInput {
+  readonly cleanSlug: string;
+  readonly locale: Locale;
 }
 /** One rejected Next cache read with its exact content owner preserved. */
 class CacheFailure extends Schema.TaggedError<CacheFailure>()("CacheFailure", {
@@ -47,7 +52,7 @@ const readCachedMarkdown = Effect.fn("www.llms.markdown.owner")(function* (
  * null result means the route has no markdown source.
  */
 export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
-  function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
+  function* ({ cleanSlug, locale }: LlmsMarkdownInput) {
     const quranText = yield* getQuranLlmsText({ cleanSlug, locale });
     if (quranText) {
       return quranText;
@@ -66,6 +71,17 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
         }),
       catch: (cause) => new CacheFailure({ cause, owner: "index" }),
     });
+  }
+);
+/** Checks the exact route owners used by the public Markdown handler. */
+export const hasLlmsMarkdownSource = Effect.fn("www.llms.markdown.hasSource")(
+  function* (input: LlmsMarkdownInput) {
+    if (resolvePublicLlmsSectionIndex(input)) {
+      return true;
+    }
+
+    const markdownText = yield* getLlmsMarkdownText(input);
+    return Boolean(markdownText);
   }
 );
 /** Resolves one public route to its active signed markdown owner. */

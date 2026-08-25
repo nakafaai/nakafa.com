@@ -1,9 +1,11 @@
 import { routing } from "@repo/internationalization/src/routing";
 import {
+  acceptsExplicitMediaType,
   HttpMediaTypeSchema,
   negotiateMediaType,
 } from "@repo/utilities/http/accept";
-import { Option } from "effect";
+import { Effect, Option } from "effect";
+import { hasLlmsMarkdownSource } from "@/lib/llms/content";
 
 type SupportedLocale = (typeof routing.locales)[number];
 
@@ -29,6 +31,18 @@ const HTML_MEDIA_TYPE = HttpMediaTypeSchema.make("text/html; charset=utf-8");
 export const LLMS_MARKDOWN_MEDIA_TYPE = HttpMediaTypeSchema.make(
   "text/markdown; charset=utf-8"
 );
+const RSC_MEDIA_TYPE = HttpMediaTypeSchema.make("text/x-component");
+const DOCUMENT_MEDIA_TYPES = [
+  HTML_MEDIA_TYPE,
+  LLMS_MARKDOWN_MEDIA_TYPE,
+] as const;
+const DOCUMENT_MEDIA_TYPES_WITH_RSC = [
+  HTML_MEDIA_TYPE,
+  LLMS_MARKDOWN_MEDIA_TYPE,
+  RSC_MEDIA_TYPE,
+] as const;
+const HTML_MEDIA_TYPES = [HTML_MEDIA_TYPE] as const;
+const HTML_MEDIA_TYPES_WITH_RSC = [HTML_MEDIA_TYPE, RSC_MEDIA_TYPE] as const;
 export const LLMS_REPRESENTATION_VARY_FIELDS = Object.freeze([
   "Accept",
   "Accept-Encoding",
@@ -37,63 +51,89 @@ export const LLMS_REPRESENTATION_VARY_FIELDS = Object.freeze([
 /**
  * Classifies localized Markdown negotiation before the Next route handler.
  *
- * The proxy only decides whether a request wants Markdown. The rewritten route
- * handler owns content lookup and its final HTTP status, avoiding duplicate
- * catalog reads on every localized request.
+ * The resolver checks the existing source owner only after Markdown wins.
+ * Ordinary HTML and RSC traffic stays inside Next without catalog reads, while
+ * the rewritten route handler still owns the final Markdown response status.
  */
-export function resolveLlmsProxyRoute(
-  request: LlmsProxyRouteRequest
-): LlmsProxyRouteDecision {
-  const localizedRoute = getLocalizedLlmsRoute(request.pathname);
+export const resolveLlmsProxyRoute = Effect.fn("www.llms.proxyRoute.resolve")(
+  function* (request: LlmsProxyRouteRequest) {
+    const localizedRoute = getLocalizedLlmsRoute(request.pathname);
 
-  if (Option.isNone(localizedRoute)) {
-    return { kind: "delegate" };
+    if (Option.isNone(localizedRoute)) {
+      return { kind: "delegate" } satisfies LlmsProxyRouteDecision;
+    }
+
+    if (!isReadMethod(request.method)) {
+      return { kind: "delegate" } satisfies LlmsProxyRouteDecision;
+    }
+
+    if (localizedRoute.value.markdownExtension) {
+      return {
+        kind: "rewrite-markdown",
+        localizedRoute: localizedRoute.value,
+      } satisfies LlmsProxyRouteDecision;
+    }
+
+    const acceptsRsc = acceptsExplicitMediaType(
+      request.acceptHeader,
+      RSC_MEDIA_TYPE
+    );
+    const negotiatedMediaType = negotiateMediaType(
+      request.acceptHeader,
+      acceptsRsc ? DOCUMENT_MEDIA_TYPES_WITH_RSC : DOCUMENT_MEDIA_TYPES
+    );
+    if (
+      Option.isSome(negotiatedMediaType) &&
+      negotiatedMediaType.value === RSC_MEDIA_TYPE
+    ) {
+      return { kind: "delegate" } satisfies LlmsProxyRouteDecision;
+    }
+
+    if (Option.isNone(negotiatedMediaType)) {
+      return { kind: "not-acceptable" } satisfies LlmsProxyRouteDecision;
+    }
+
+    if (negotiatedMediaType.value === HTML_MEDIA_TYPE) {
+      return { kind: "delegate" } satisfies LlmsProxyRouteDecision;
+    }
+
+    const markdownAvailable = yield* hasLlmsMarkdownSource({
+      cleanSlug: localizedRoute.value.route.slice(1),
+      locale: localizedRoute.value.locale,
+    });
+    if (markdownAvailable) {
+      return {
+        kind: "rewrite-markdown",
+        localizedRoute: localizedRoute.value,
+      } satisfies LlmsProxyRouteDecision;
+    }
+
+    const fallbackMediaType = negotiateMediaType(
+      request.acceptHeader,
+      acceptsRsc ? HTML_MEDIA_TYPES_WITH_RSC : HTML_MEDIA_TYPES
+    );
+    if (Option.isNone(fallbackMediaType)) {
+      return { kind: "not-acceptable" } satisfies LlmsProxyRouteDecision;
+    }
+
+    return { kind: "delegate" } satisfies LlmsProxyRouteDecision;
   }
+);
 
-  if (!isDocumentRequest(request)) {
-    return { kind: "delegate" };
-  }
-
-  if (localizedRoute.value.markdownExtension) {
-    return {
-      kind: "rewrite-markdown",
-      localizedRoute: localizedRoute.value,
-    };
-  }
-
-  const negotiatedMediaType = negotiateMediaType(request.acceptHeader, [
-    HTML_MEDIA_TYPE,
-    LLMS_MARKDOWN_MEDIA_TYPE,
-  ]);
-  if (Option.isNone(negotiatedMediaType)) {
-    return { kind: "not-acceptable" };
-  }
-
-  if (negotiatedMediaType.value === HTML_MEDIA_TYPE) {
-    return { kind: "delegate" };
-  }
-
-  return {
-    kind: "rewrite-markdown",
-    localizedRoute: localizedRoute.value,
-  };
+/** Limits public representation negotiation to safe retrieval methods. */
+function isReadMethod(method: string) {
+  return method === "GET" || method === "HEAD";
 }
 
-/** Keeps Server Actions and React Server Component traffic inside Next.js. */
-function isDocumentRequest(request: LlmsProxyRouteRequest) {
-  if (request.method !== "GET" && request.method !== "HEAD") {
-    return false;
-  }
+/** Removes one explicit Markdown suffix while preserving its exact spelling. */
+export function readLlmsMarkdownPathname(pathname: string) {
+  const markdownExtension =
+    pathname.match(MARKDOWN_EXTENSION_PATTERN)?.[0] ?? "";
 
-  return !Option.exists(request.acceptHeader, (acceptHeader) =>
-    acceptHeader
-      .toLowerCase()
-      .split(",")
-      .some(
-        (mediaRange) =>
-          mediaRange.split(";", 1)[0]?.trim() === "text/x-component"
-      )
-  );
+  return {
+    markdownExtension,
+    pathname: pathname.replace(MARKDOWN_EXTENSION_PATTERN, ""),
+  };
 }
 
 /** Parses one locale-prefixed URL and removes its Markdown extension. */
@@ -116,12 +156,8 @@ function getLocalizedLlmsRoute(
   }
 
   const rawRoute = `/${routeSegments.join("/")}`;
-  const markdownExtension =
-    rawRoute.match(MARKDOWN_EXTENSION_PATTERN)?.[0] ?? "";
-  const routeWithoutExtension = rawRoute.replace(
-    MARKDOWN_EXTENSION_PATTERN,
-    ""
-  );
+  const { markdownExtension, pathname: routeWithoutExtension } =
+    readLlmsMarkdownPathname(rawRoute);
 
   return Option.some({
     locale: locale.value,

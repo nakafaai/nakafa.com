@@ -2,6 +2,7 @@ import { Effect } from "effect";
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server.js";
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { hasLlmsMarkdownSource } from "@/lib/llms/content";
 import { config, proxy } from "@/proxy";
 
 type NextRequestInit = ConstructorParameters<typeof NextRequest>[1];
@@ -92,6 +93,10 @@ vi.mock("@/lib/content/preview/route", () => ({
 vi.mock("@/lib/content/runtime/query", () => ({
   readRuntimeQuery: runtimeMocks.readTryout,
 }));
+vi.mock("@/lib/llms/content", () => ({
+  hasLlmsMarkdownSource: (input: Parameters<typeof hasLlmsMarkdownSource>[0]) =>
+    Effect.succeed(input.cleanSlug === "terms-of-service"),
+}));
 vi.mock("@/lib/content/article/category", () => ({
   hasPublishedArticleCategory: runtimeMocks.hasArticleCategory,
 }));
@@ -161,6 +166,7 @@ describe("proxy", () => {
     [
       "/id/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle?utm=test",
       "/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling?utm=test",
+      { headers: { accept: "application/json" } },
     ],
     [
       "/de/articles/politics/regional-elections-turmoil?source=agent",
@@ -191,13 +197,10 @@ describe("proxy", () => {
     const matches = (url: string) =>
       unstable_doesMiddlewareMatch({ config, url });
     const rootFileExtensions =
-      "svg jpg jpeg gif webp glb gltf bin ktx2 hdr exr js css xml webmanifest txt".split(
-        " "
-      );
-
-    const matched = rootFileExtensions.map(
-      (extension) => `/missing.${extension}`
-    );
+      "svg jpg jpeg gif webp glb gltf bin ktx2 hdr exr js css xml webmanifest txt";
+    const matched = rootFileExtensions
+      .split(" ")
+      .map((extension) => `/missing.${extension}`);
     const bypassed = [
       "/.well-known/llms.txt",
       "/sitemap/base.xml",
@@ -207,6 +210,7 @@ describe("proxy", () => {
       "/models/physics/kinematics/kenney-car-kit/LICENSE.txt",
       "/models/physics/kinematics/car.glb",
       "/missing.png",
+      "/_not-found/id",
     ];
     expect([...matched, "/MISSING.XML", "/llms.txt"].every(matches)).toBe(true);
     expect(bypassed.some(matches)).toBe(false);
@@ -346,12 +350,6 @@ describe("proxy", () => {
     }
   );
 
-  it("keeps the internal not-found target outside the proxy matcher", () => {
-    expect(
-      unstable_doesMiddlewareMatch({ config, url: "/_not-found/id" })
-    ).toBe(false);
-  });
-
   it("lets the selected next-intl preview rewrite reach the actual page", async () => {
     previewMocks.configured.mockReturnValueOnce(true);
     previewMocks.internal.mockReturnValueOnce(Effect.succeed(true));
@@ -370,18 +368,20 @@ describe("proxy", () => {
   it.each([
     [
       "accept header",
+      "/en/terms-of-service",
       { headers: { accept: "text/markdown" } },
       "http://localhost:3000/llms.mdx/en/terms-of-service",
     ],
     [
       "unacceptable header",
+      "/en/terms-of-service",
       { headers: { accept: "text/html;q=0, text/markdown;q=0" } },
       null,
     ],
   ])(
     "negotiates public representations with an %s",
-    async (_kind, init, expected) => {
-      const response = await requestProxy("/en/terms-of-service", init);
+    async (_kind, pathname, init, expected) => {
+      const response = await requestProxy(pathname, init);
       expectNoLocaleProxy();
       expect(response.status).toBe(expected === null ? 406 : 200);
       expect(response.headers.get("x-middleware-rewrite")).toBe(expected);

@@ -1,9 +1,26 @@
 // @vitest-environment node
-import { Option } from "effect";
-import { describe, expect, it } from "vitest";
-import { resolveLlmsProxyRoute } from "@/lib/llms/routes";
+import { Effect, Option } from "effect";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  type LlmsProxyRouteRequest,
+  resolveLlmsProxyRoute as resolveLlmsProxyRouteEffect,
+} from "@/lib/llms/routes";
+
+const mockHasLlmsMarkdownSource = vi.hoisted(() => vi.fn());
+
+vi.mock("@/lib/llms/content", () => ({
+  hasLlmsMarkdownSource: mockHasLlmsMarkdownSource,
+}));
+
+function resolveLlmsProxyRoute(request: LlmsProxyRouteRequest) {
+  return Effect.runSync(resolveLlmsProxyRouteEffect(request));
+}
 
 describe("llms proxy route resolver", () => {
+  beforeEach(() => {
+    mockHasLlmsMarkdownSource.mockReset().mockReturnValue(Effect.succeed(true));
+  });
+
   it("delegates ordinary localized HTML without reading content catalogs", () => {
     expect(
       resolveLlmsProxyRoute({
@@ -12,6 +29,7 @@ describe("llms proxy route resolver", () => {
         pathname: "/en/subjects/mathematics/integral",
       })
     ).toEqual({ kind: "delegate" });
+    expect(mockHasLlmsMarkdownSource).not.toHaveBeenCalled();
   });
 
   it("rewrites localized content negotiation to the Markdown handler", () => {
@@ -44,22 +62,34 @@ describe("llms proxy route resolver", () => {
     }
   );
 
-  it("rewrites explicit Markdown suffixes without catalog verification", () => {
-    expect(
-      resolveLlmsProxyRoute({
-        acceptHeader: Option.some("text/html"),
-        method: "GET",
-        pathname: "/id/artikel/tidak-ada.mdx",
-      })
-    ).toEqual({
-      kind: "rewrite-markdown",
-      localizedRoute: {
-        locale: "id",
-        markdownExtension: ".mdx",
-        route: "/artikel/tidak-ada",
-      },
-    });
-  });
+  it.each([
+    [".md", "text/x-component;q=0"],
+    [".md", "text/x-component;q=0.8"],
+    [".mdx", "text/x-component;q=0"],
+    [".mdx", "text/x-component;q=0.8"],
+  ])(
+    "preserves an explicit %s route with %s",
+    (markdownExtension, acceptHeader) => {
+      mockHasLlmsMarkdownSource.mockReturnValueOnce(Effect.succeed(false));
+
+      expect(
+        resolveLlmsProxyRoute({
+          acceptHeader: Option.some(acceptHeader),
+          method: "GET",
+          pathname: `/id/artikel/tidak-ada${markdownExtension}`,
+        })
+      ).toEqual({
+        kind: "rewrite-markdown",
+        localizedRoute: {
+          locale: "id",
+          markdownExtension,
+          route: "/artikel/tidak-ada",
+        },
+      });
+
+      expect(mockHasLlmsMarkdownSource).not.toHaveBeenCalled();
+    }
+  );
 
   it("delegates unsupported locales to normal Next routing", () => {
     expect(
@@ -138,7 +168,7 @@ describe("llms proxy route resolver", () => {
   it.each([
     ["POST", "text/x-component"],
     ["GET", "text/x-component"],
-    ["HEAD", "text/x-component; charset=utf-8"],
+    ["HEAD", "text/x-component;q=0.5, text/html;q=0.4"],
   ])(
     "delegates %s Next.js component traffic with %s",
     (method, acceptHeader) => {
@@ -160,5 +190,73 @@ describe("llms proxy route resolver", () => {
         pathname: "/en/quran/1",
       })
     ).toEqual({ kind: "not-acceptable" });
+  });
+
+  it("ignores an explicitly unacceptable RSC representation", () => {
+    expect(
+      resolveLlmsProxyRoute({
+        acceptHeader: Option.some(
+          "text/x-component;q=0, text/markdown; charset=utf-8"
+        ),
+        method: "GET",
+        pathname: "/en/quran/1",
+      })
+    ).toMatchObject({ kind: "rewrite-markdown" });
+  });
+
+  it("uses server order so a generic text wildcard stays HTML", () => {
+    mockHasLlmsMarkdownSource.mockReturnValueOnce(Effect.succeed(false));
+
+    expect(
+      resolveLlmsProxyRoute({
+        acceptHeader: Option.some("text/*"),
+        method: "GET",
+        pathname: "/en/search",
+      })
+    ).toEqual({ kind: "delegate" });
+
+    expect(mockHasLlmsMarkdownSource).not.toHaveBeenCalled();
+  });
+
+  it("delegates only when an acceptable explicit RSC type wins", () => {
+    expect(
+      resolveLlmsProxyRoute({
+        acceptHeader: Option.some("text/x-component;q=0.7, text/html;q=0.6"),
+        method: "GET",
+        pathname: "/en/quran/1",
+      })
+    ).toEqual({ kind: "delegate" });
+
+    expect(mockHasLlmsMarkdownSource).not.toHaveBeenCalled();
+  });
+
+  it("falls back to an explicit RSC type when Markdown is unavailable", () => {
+    mockHasLlmsMarkdownSource.mockReturnValueOnce(Effect.succeed(false));
+
+    expect(
+      resolveLlmsProxyRoute({
+        acceptHeader: Option.some(
+          "text/markdown;q=1, text/x-component;q=0.8, text/html;q=0.7"
+        ),
+        method: "GET",
+        pathname: "/en/search",
+      })
+    ).toEqual({ kind: "delegate" });
+
+    expect(mockHasLlmsMarkdownSource).toHaveBeenCalledOnce();
+  });
+
+  it("returns 406 when the requested Markdown source is unavailable", () => {
+    mockHasLlmsMarkdownSource.mockReturnValueOnce(Effect.succeed(false));
+
+    expect(
+      resolveLlmsProxyRoute({
+        acceptHeader: Option.some("text/markdown"),
+        method: "GET",
+        pathname: "/en/search",
+      })
+    ).toEqual({ kind: "not-acceptable" });
+
+    expect(mockHasLlmsMarkdownSource).toHaveBeenCalledOnce();
   });
 });

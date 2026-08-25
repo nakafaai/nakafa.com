@@ -2,7 +2,7 @@
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getLlmsMarkdownText } from "@/lib/llms/content";
+import { getLlmsMarkdownText, hasLlmsMarkdownSource } from "@/lib/llms/content";
 
 const PUBLISHED_PATH =
   "subjects/mathematics/function-composition-inverse-function/function-concept";
@@ -16,6 +16,7 @@ const mockGetCachedPublishedText = vi.hoisted(() => vi.fn());
 const mockGetQuranLlmsText = vi.hoisted(() => vi.fn());
 const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
+const mockResolvePublicLlmsSectionIndex = vi.hoisted(() => vi.fn());
 const activeReleaseId = "release-active";
 
 vi.mock("@/lib/content/published/route", () => ({
@@ -35,6 +36,10 @@ vi.mock("@/lib/llms/published", () => ({
 
 vi.mock("@/lib/llms/quran", () => ({
   getQuranLlmsText: mockGetQuranLlmsText,
+}));
+
+vi.mock("@/lib/llms/public-index", () => ({
+  resolvePublicLlmsSectionIndex: mockResolvePublicLlmsSectionIndex,
 }));
 
 /** Asserts one cache rejection remains a typed Effect failure. */
@@ -68,6 +73,7 @@ describe("llms markdown content resolver", () => {
     mockGetCachedPublishedText.mockReset().mockResolvedValue(null);
     mockGetQuranLlmsText.mockReset().mockReturnValue(Effect.succeed(null));
     mockReadActiveContentRoute.mockReset();
+    mockResolvePublicLlmsSectionIndex.mockReset().mockReturnValue(null);
     mockReadActiveContentIdentity
       .mockReset()
       .mockReturnValue(Effect.succeed({ releaseId: activeReleaseId }));
@@ -249,6 +255,39 @@ describe("llms markdown content resolver", () => {
 
   it("returns null when no markdown source exists", async () => {
     await expect(readMarkdown("articles/missing")).resolves.toBeNull();
+  });
+
+  it("recognizes a route owned by a public Markdown index", async () => {
+    mockResolvePublicLlmsSectionIndex.mockReturnValueOnce({
+      label: "Curriculum",
+      prefix: "curriculum",
+    });
+
+    await expect(
+      Effect.runPromise(
+        hasLlmsMarkdownSource({ cleanSlug: "curriculum", locale: "en" })
+      )
+    ).resolves.toBe(true);
+
+    expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
+    expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
+  });
+
+  it("reports availability only when the real source chain returns text", async () => {
+    mockGetCachedLlmsSectionIndexText
+      .mockResolvedValueOnce("Index markdown")
+      .mockResolvedValueOnce(null);
+
+    await expect(
+      Effect.runPromise(
+        hasLlmsMarkdownSource({ cleanSlug: "articles/politics", locale: "en" })
+      )
+    ).resolves.toBe(true);
+    await expect(
+      Effect.runPromise(
+        hasLlmsMarkdownSource({ cleanSlug: "search", locale: "en" })
+      )
+    ).resolves.toBe(false);
   });
 
   it("treats invalid projected markdown paths as unsupported content", async () => {
