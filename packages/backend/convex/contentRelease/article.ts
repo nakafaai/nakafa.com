@@ -163,10 +163,11 @@ export const route = query({
  * Removal change: the strict 0.16 Nakafa cutover PR.
  * Remove this query, its predecessor reader, tests, legacy date fields, and
  * legacy indexes only after the protected-main consumer uses `publications`,
- * production execution logs show zero `contentRelease/article:page` calls for
- * 24 consecutive hours after that switch, and EN, ID, and DE production browser
- * acceptance passes. The 24-hour window is Nakafa rollout policy, not a Convex
- * requirement, and does not block the bridge PR itself.
+ * production execution logs show zero `contentRelease/article:page` and
+ * `contentRelease/article:category` calls for 24 consecutive hours after that
+ * switch, and EN, ID, and DE production browser acceptance passes. The 24-hour
+ * window is Nakafa rollout policy, not a Convex requirement, and does not block
+ * the bridge PR itself.
  */
 export const page = query({
   args: {
