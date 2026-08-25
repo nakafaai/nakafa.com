@@ -13,7 +13,6 @@ export type FetchImplementation = (
 
 interface ApiRequest {
   readonly apiBase: string;
-  readonly apiEdgeSecret?: string;
   readonly fetchImplementation: FetchImplementation;
   readonly path: string;
 }
@@ -26,9 +25,6 @@ export const requestNakafaApi = Effect.fn("nakafaCli.requestApi")(function* (
   const headers = new Headers({
     Accept: "application/json, application/problem+json",
   });
-  if (request.apiEdgeSecret) {
-    headers.set("x-nakafa-api-edge-secret", request.apiEdgeSecret);
-  }
   const response = yield* Effect.tryPromise({
     catch: (cause) =>
       new NetworkError({

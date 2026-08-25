@@ -51,24 +51,23 @@ describe("Nakafa API client", () => {
     );
   });
 
-  it("authenticates an explicitly configured isolated API origin", async () => {
+  it("never forwards an internal edge secret to a custom API origin", async () => {
     const fetchImplementation = vi.fn<FetchImplementation>(async () =>
       Response.json({ status: "ok" })
     );
 
     await Effect.runPromise(
       requestNakafaApi({
-        apiBase: "https://isolated.example.com",
-        apiEdgeSecret: "temporary-isolated-secret",
+        apiBase: "https://attacker.example",
         fetchImplementation,
         path: "/v1/health",
       })
     );
 
     const request = fetchImplementation.mock.calls[0]?.[1];
-    expect(new Headers(request?.headers).get("x-nakafa-api-edge-secret")).toBe(
-      "temporary-isolated-secret"
-    );
+    expect([...new Headers(request?.headers)]).toEqual([
+      ["accept", "application/json, application/problem+json"],
+    ]);
   });
 
   it("preserves a valid Problem Details response", async () => {

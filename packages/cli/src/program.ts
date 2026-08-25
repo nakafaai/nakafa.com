@@ -3,7 +3,6 @@ import { type FetchImplementation, requestNakafaApi } from "./client.js";
 import {
   type CliCommand,
   type CliRequest,
-  DEFAULT_API_BASE,
   HELP_TEXT,
   readCliRequest,
 } from "./command.js";
@@ -19,7 +18,6 @@ const NETWORK_OR_SERVER_EXIT_CODE = 4;
 const MCP_ENDPOINT = "https://mcp.nakafa.com/mcp";
 
 export interface CliDependencies {
-  readonly apiEdgeSecret?: string;
   readonly fetchImplementation: FetchImplementation;
   readonly stderr: { write(value: string): unknown };
   readonly stdout: { write(value: string): unknown };
@@ -108,10 +106,6 @@ function executeCommand(
   }
   return requestNakafaApi({
     apiBase: request.apiBase,
-    apiEdgeSecret:
-      request.apiBase === DEFAULT_API_BASE
-        ? undefined
-        : dependencies.apiEdgeSecret,
     fetchImplementation: dependencies.fetchImplementation,
     path: buildApiPath(command),
   }).pipe(Effect.map((value) => ({ kind: "json", value })));

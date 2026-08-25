@@ -20,7 +20,7 @@ nakafa --help
 nakafa --version
 ```
 
-Commands emit compact JSON to standard output. Add `--pretty` for indented output. Add `--api-base <url>` to use another HTTP edge. Direct isolated Convex origins also require a deployment-specific temporary `NAKAFA_API_EDGE_SECRET` environment variable. Never reuse the production edge secret for isolated verification.
+Commands emit compact JSON to standard output. Add `--pretty` for indented output. Add `--api-base <url>` to use another public HTTP edge. The CLI never reads or sends Nakafa's internal edge secrets. Direct Convex origins therefore remain inaccessible through this public package.
 
 HTTP API failures preserve Nakafa's RFC 9457 Problem Details object on standard error. Exit status `2` means invalid CLI invocation, `3` means an API request failure, and `4` means a network, server, or response-decoding failure.
 

@@ -29,14 +29,12 @@ function createOutput() {
 async function execute(
   argv: readonly string[],
   fetchImplementation: FetchImplementation = async () =>
-    Response.json({ ok: true }),
-  apiEdgeSecret?: string
+    Response.json({ ok: true })
 ) {
   const stdout = createOutput();
   const stderr = createOutput();
   const exitCode = await Effect.runPromise(
     runCli(argv, {
-      apiEdgeSecret,
       fetchImplementation,
       stderr: stderr.stream,
       stdout: stdout.stream,
@@ -110,15 +108,14 @@ describe("Nakafa CLI execution", () => {
     );
   });
 
-  it("supports authenticated custom API bases and pretty JSON", async () => {
+  it("supports custom public API bases without forwarding edge secrets", async () => {
     const fetchImplementation = vi.fn<FetchImplementation>(async () =>
       Response.json({ nested: { ok: true } })
     );
 
     const result = await execute(
       ["taxonomy", "--pretty", "--api-base", "https://isolated.example.com"],
-      fetchImplementation,
-      "temporary-isolated-secret"
+      fetchImplementation
     );
 
     expect(result.stdout).toBe('{\n  "nested": {\n    "ok": true\n  }\n}\n');
@@ -127,9 +124,9 @@ describe("Nakafa CLI execution", () => {
       expect.any(Object)
     );
     const request = fetchImplementation.mock.calls[0]?.[1];
-    expect(new Headers(request?.headers).get("x-nakafa-api-edge-secret")).toBe(
-      "temporary-isolated-secret"
-    );
+    expect([...new Headers(request?.headers)]).toEqual([
+      ["accept", "application/json, application/problem+json"],
+    ]);
   });
 
   it("returns stable invocation, API, server, network, and decoding exits", async () => {
