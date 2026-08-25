@@ -24,4 +24,4 @@ Commands emit compact JSON to standard output. Add `--pretty` for indented outpu
 
 HTTP API failures preserve Nakafa's RFC 9457 Problem Details object on standard error. Exit status `2` means invalid CLI invocation, `3` means an API request failure, and `4` means a network, server, or response-decoding failure.
 
-See [Nakafa Developer Resources](https://nakafa.com/developers) and the [OpenAPI 3.1 contract](https://api.nakafa.com/openapi.json).
+See [Nakafa Developer Resources](https://nakafa.com/developers/llms.txt) and the [OpenAPI 3.1 contract](https://api.nakafa.com/openapi.json).

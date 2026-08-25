@@ -1,3 +1,7 @@
+import {
+  NAKAFA_MCP_PROTOCOL_VERSION,
+  NAKAFA_MCP_RECOMMENDED_ENDPOINT,
+} from "@repo/contents/_lib/agent/constants";
 import { Effect } from "effect";
 import { type FetchImplementation, requestNakafaApi } from "./client.js";
 import {
@@ -15,7 +19,6 @@ import type {
 const INVOCATION_EXIT_CODE = 2;
 const API_EXIT_CODE = 3;
 const NETWORK_OR_SERVER_EXIT_CODE = 4;
-const MCP_ENDPOINT = "https://mcp.nakafa.com/mcp";
 
 export interface CliDependencies {
   readonly fetchImplementation: FetchImplementation;
@@ -97,9 +100,9 @@ function executeCommand(
     return Effect.succeed({
       kind: "json",
       value: {
-        endpoint: MCP_ENDPOINT,
-        manifest: MCP_ENDPOINT,
-        protocol_version: "2026-07-28",
+        endpoint: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
+        manifest: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
+        protocol_version: NAKAFA_MCP_PROTOCOL_VERSION,
         transport: "streamable-http",
       },
     });

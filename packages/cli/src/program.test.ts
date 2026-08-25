@@ -1,3 +1,4 @@
+import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/_lib/agent/constants";
 import { Effect } from "effect";
 import { describe, expect, it, vi } from "vitest";
 import type { FetchImplementation } from "./client.js";
@@ -57,7 +58,7 @@ describe("Nakafa CLI execution", () => {
     expect(JSON.parse(mcp.stdout)).toEqual({
       endpoint: "https://mcp.nakafa.com/mcp",
       manifest: "https://mcp.nakafa.com/mcp",
-      protocol_version: "2026-07-28",
+      protocol_version: NAKAFA_MCP_PROTOCOL_VERSION,
       transport: "streamable-http",
     });
     expect(fetchImplementation).not.toHaveBeenCalled();

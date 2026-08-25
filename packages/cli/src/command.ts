@@ -1,23 +1,27 @@
 import { parseArgs } from "node:util";
+import { NAKAFA_API_BASE_URL } from "@repo/contents/_lib/agent/constants";
+import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran";
+import { NakafaAgentSectionSchema } from "@repo/contents/_lib/agent/schema/ref";
+import {
+  NAKAFA_AGENT_MAX_LIMIT,
+  NAKAFA_AGENT_MAX_OFFSET,
+} from "@repo/contents/_types/agent/search";
+import { LocaleSchema } from "@repo/contents/_types/content";
 import { Effect, Schema } from "effect";
 import { InvocationError } from "./error.js";
 
-export const DEFAULT_API_BASE = "https://api.nakafa.com";
-
-const LocaleSchema = Schema.Literals(["en", "id", "de"]);
-const SectionSchema = Schema.Literals([
-  "articles",
-  "material",
-  "tryout",
-  "quran",
-]);
 const PositiveIntegerSchema = Schema.Finite.pipe(
   Schema.check(Schema.isInt()),
   Schema.check(Schema.isGreaterThan(0))
 );
+const SearchLimitSchema = PositiveIntegerSchema.pipe(
+  Schema.check(Schema.isLessThanOrEqualTo(NAKAFA_AGENT_MAX_LIMIT))
+);
 const SearchOffsetSchema = Schema.Finite.pipe(
   Schema.check(Schema.isInt()),
-  Schema.check(Schema.isBetween({ minimum: 0, maximum: 49 }))
+  Schema.check(
+    Schema.isBetween({ minimum: 0, maximum: NAKAFA_AGENT_MAX_OFFSET })
+  )
 );
 const ApiBaseSchema = Schema.String.check(
   Schema.makeFilter(isHttpOrigin, {
@@ -27,13 +31,11 @@ const ApiBaseSchema = Schema.String.check(
 
 const SearchCommandSchema = Schema.Struct({
   kind: Schema.Literal("search"),
-  limit: Schema.optional(
-    PositiveIntegerSchema.pipe(Schema.check(Schema.isLessThanOrEqualTo(50)))
-  ),
+  limit: Schema.optional(SearchLimitSchema),
   locale: Schema.optional(LocaleSchema),
   offset: Schema.optional(SearchOffsetSchema),
   query: Schema.Trim.pipe(Schema.check(Schema.isNonEmpty())),
-  section: Schema.optional(SectionSchema),
+  section: Schema.optional(NakafaAgentSectionSchema),
 });
 
 const GetCommandSchema = Schema.Struct({
@@ -51,9 +53,7 @@ const QuranCommandSchema = Schema.Struct({
   includeTafsir: Schema.Boolean,
   kind: Schema.Literal("quran"),
   locale: Schema.optional(LocaleSchema),
-  surah: PositiveIntegerSchema.pipe(
-    Schema.check(Schema.isLessThanOrEqualTo(114))
-  ),
+  surah: NakafaAgentQuranReferenceOptionsSchema.fields.surah,
   toVerse: Schema.optional(PositiveIntegerSchema),
 });
 
@@ -119,7 +119,7 @@ export const readCliRequest = Effect.fn("nakafaCli.readRequest")(function* (
   });
 
   const apiBase = normalizeApiBase(
-    readStringOption(parsed.values["api-base"]) ?? DEFAULT_API_BASE
+    readStringOption(parsed.values["api-base"]) ?? NAKAFA_API_BASE_URL
   );
   const pretty = parsed.values.pretty === true;
   if (parsed.values.help === true) {
@@ -315,7 +315,7 @@ Usage:
 
 Global options:
   --pretty, -p          Indent JSON output
-  --api-base <url>      Override https://api.nakafa.com
+  --api-base <url>      Override ${NAKAFA_API_BASE_URL}
   --help, -h            Show this help
   --version, -v         Show the CLI version
 `;

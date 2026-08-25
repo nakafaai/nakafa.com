@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { Cause, Effect } from "effect";
 import { readPackageVersion } from "./package.js";
 import { runCli } from "./program.js";
@@ -25,7 +26,8 @@ const program = Effect.gen(function* () {
       );
       return 4;
     })
-  )
+  ),
+  Effect.provide(NodeFileSystem.layer)
 );
 
 Effect.runPromise(program).then((exitCode) => {

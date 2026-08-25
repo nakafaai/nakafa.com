@@ -668,6 +668,12 @@ importers:
 
   packages/cli:
     devDependencies:
+      '@effect/platform-node':
+        specifier: 'catalog:'
+        version: 4.0.0-rc.110(effect@4.0.0-rc.110)(redis@6.2.1)
+      '@repo/contents':
+        specifier: workspace:*
+        version: link:../contents
       '@repo/testing':
         specifier: workspace:*
         version: link:../testing
