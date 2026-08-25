@@ -25,6 +25,7 @@ import {
   agentOptionsResponse,
   httpInputFailureResponse,
   internalFailureResponse,
+  PUBLIC_API_MEDIA_TYPE,
   problemResponse,
 } from "@repo/backend/convex/routes/agent/response";
 import { hasValidEdgeSecret } from "@repo/backend/convex/routes/agent/security";
@@ -110,7 +111,7 @@ v1.use("*", async (c, next) => {
     });
   }
   if (
-    !negotiateMediaType(request.headers.get("accept"), ["application/json"])
+    !negotiateMediaType(request.headers.get("accept"), [PUBLIC_API_MEDIA_TYPE])
   ) {
     return problemResponse({
       code: "NOT_ACCEPTABLE",

@@ -17,6 +17,8 @@ export type AgentProblemStatus =
   | 500
   | 503;
 
+export const PUBLIC_API_MEDIA_TYPE = "application/json; charset=utf-8";
+
 export const PUBLIC_API_HEADERS = {
   "Access-Control-Allow-Headers":
     "Accept, Content-Type, traceparent, tracestate, baggage",
@@ -24,7 +26,7 @@ export const PUBLIC_API_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Expose-Headers": "Retry-After",
   "Cache-Control": "no-store",
-  "Content-Type": "application/json; charset=utf-8",
+  "Content-Type": PUBLIC_API_MEDIA_TYPE,
   Vary: "Accept, Accept-Encoding, Origin",
 } as const;
 

@@ -30,6 +30,16 @@ describe("llms proxy route resolver", () => {
     });
   });
 
+  it("accepts the charset emitted by the Markdown handler", () => {
+    expect(
+      resolveLlmsProxyRoute({
+        acceptHeader: "text/markdown; charset=utf-8",
+        method: "GET",
+        pathname: "/en/subjects/mathematics/integral/area",
+      })
+    ).toMatchObject({ kind: "rewrite-markdown" });
+  });
+
   it("rewrites explicit Markdown suffixes without catalog verification", () => {
     expect(
       resolveLlmsProxyRoute({
@@ -94,6 +104,7 @@ describe("llms proxy route resolver", () => {
   it.each([
     "text/html;q=0, text/markdown;q=0",
     "application/json",
+    "text/html;q=0, text/markdown; charset=iso-8859-1",
     "text/html;q=invalid, text/markdown;q=invalid",
   ])("rejects an unacceptable representation request %s", (acceptHeader) => {
     expect(
@@ -107,6 +118,7 @@ describe("llms proxy route resolver", () => {
 
   it.each([
     "*/*",
+    "text/html; charset=utf-8",
     "text/html;q=0.8, text/markdown;q=0.8",
     "text/markdown;q=0.5, text/html;q=0.6",
   ])("prefers HTML for %s", (acceptHeader) => {

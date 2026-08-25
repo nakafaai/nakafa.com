@@ -21,8 +21,8 @@ export type LlmsProxyRouteDecision =
   | { kind: "rewrite-markdown"; localizedRoute: LocalizedLlmsRoute };
 
 const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
-const HTML_MEDIA_TYPE = "text/html";
-const MARKDOWN_MEDIA_TYPE = "text/markdown";
+const HTML_MEDIA_TYPE = "text/html; charset=utf-8";
+const MARKDOWN_MEDIA_TYPE = "text/markdown; charset=utf-8";
 
 /**
  * Classifies localized Markdown negotiation before the Next route handler.
