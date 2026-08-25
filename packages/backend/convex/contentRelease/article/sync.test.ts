@@ -1,19 +1,13 @@
-import {
-  ContentKeySchema,
-  PublicPathSchema,
-} from "@nakafa/aksara-contracts/ids";
-import {
-  ArticleCategorySchema,
-  type ArticleProjection,
-  ArticleProjectionSchema,
-  ArticleRouteSlugSchema,
-  canonicalizeArticleProjection,
-} from "@nakafa/aksara-contracts/projection/article";
+import { canonicalizeArticleProjection } from "@nakafa/aksara-contracts/projection/article";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { syncArticles } from "@repo/backend/convex/contentRelease/article/sync";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import {
+  categorizedArticle,
+  insertArticleProjection,
+} from "@repo/backend/test/article-release";
 import {
   insertCompletedRelease,
   insertReleaseItem,
@@ -24,10 +18,7 @@ import {
   insertTestState,
   type TestIdentity,
 } from "@repo/backend/test/content-state";
-import {
-  insertRuntimeBinding,
-  insertRuntimeVersion,
-} from "@repo/backend/test/runtime-head";
+import { insertRuntimeVersion } from "@repo/backend/test/runtime-head";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -51,71 +42,6 @@ async function insertArticle(
 ) {
   const projection = testArticleProjection(index, datePublished);
   await insertArticleProjection(ctx, identity, index, projection);
-}
-
-/** Inserts one exact article projection and its changed release identity. */
-async function insertArticleProjection(
-  ctx: MutationCtx,
-  identity: TestIdentity,
-  index: number,
-  projection: ArticleProjection
-) {
-  const projectionJson = canonicalizeArticleProjection(projection);
-  await insertReleaseItem(
-    ctx,
-    identity,
-    projection.contentKey,
-    index,
-    "article"
-  );
-  await insertRuntimeVersion(ctx, "public", projection.contentKey, {
-    headReleaseId: identity.releaseId,
-    headSequence: identity.sequence,
-    projectionJson,
-    publicPath: projection.publicPath,
-    rendererDomain: "politics",
-  });
-  await insertRuntimeBinding(ctx, projection.contentKey, {
-    bindingReleaseId: identity.releaseId,
-    bindingSequence: identity.sequence,
-    publicPath: projection.publicPath,
-  });
-}
-
-/** Builds one source category with an independently localized public route. */
-function categorizedArticle(options: {
-  readonly article: number;
-  readonly category: string;
-  readonly route: string;
-  readonly title: string;
-}) {
-  const source = testArticleProjection(options.article);
-  const articleSlug = source.articleSlug;
-  const category = ArticleCategorySchema.make(options.category);
-  const categoryRouteSlug = ArticleRouteSlugSchema.make(options.route);
-  const contentKey = ContentKeySchema.make(
-    `articles/${category}/${articleSlug}`
-  );
-  const lens = `article:${category}`;
-  const object = `${lens}:${articleSlug}`;
-  return ArticleProjectionSchema.make({
-    ...source,
-    category,
-    categoryRouteSlug,
-    categoryTitle: options.title,
-    contentKey,
-    graph: {
-      alignmentId: `alignment:${lens}:${object}`,
-      assetId: `asset:en:${lens}:${object}`,
-      conceptId: `concept:${lens}`,
-      learningObjectId: `lo:${object}`,
-      lensId: `lens:${lens}`,
-    },
-    parentPath: PublicPathSchema.make(`articles/${categoryRouteSlug}`),
-    publicPath: PublicPathSchema.make(
-      `articles/${categoryRouteSlug}/${source.articleRouteSlug}`
-    ),
-  });
 }
 
 describe("contentRelease/article/sync", () => {
@@ -152,7 +78,7 @@ describe("contentRelease/article/sync", () => {
     });
   });
 
-  it("continues article models larger than one transaction page", async () => {
+  it("publishes one converged category across validation pages", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await insertCompletedRelease(ctx, BASE, 9);
@@ -170,7 +96,19 @@ describe("contentRelease/article/sync", () => {
     ).resolves.toEqual({ done: false, nextIndex: 8, processed: 1 });
     await expect(
       t.mutation((ctx) => runConvexProgram(syncArticles(ctx, BASE.releaseId)))
-    ).resolves.toEqual({ done: false, nextIndex: 7, processed: 8 });
+    ).resolves.toEqual({ done: false, nextIndex: 8, processed: 8 });
+    const validating = await t.run(async (ctx) => ({
+      release: await ctx.db
+        .query("contentReleases")
+        .withIndex("by_releaseId", (index) =>
+          index.eq("releaseId", BASE.releaseId)
+        )
+        .unique(),
+      state: await ctx.db.query("contentState").unique(),
+    }));
+    expect(validating.release?.articleCursor).toEqual(expect.any(String));
+    expect(validating.release).not.toHaveProperty("articleSyncedAt");
+    expect(validating.state).not.toHaveProperty("articleReleaseId");
     await expect(
       t.mutation((ctx) => runConvexProgram(syncArticles(ctx, BASE.releaseId)))
     ).resolves.toEqual({ done: true, nextIndex: 8, processed: 1 });
@@ -238,7 +176,7 @@ describe("contentRelease/article/sync", () => {
     ).resolves.toEqual({ done: false, nextIndex: 2, processed: 3 });
     await expect(
       t.mutation((ctx) => runConvexProgram(syncArticles(ctx, NEXT.releaseId)))
-    ).resolves.toEqual({ done: true, nextIndex: 2, processed: 3 });
+    ).resolves.toEqual({ done: true, nextIndex: 2, processed: 1 });
     await expect(
       t.mutation((ctx) => runConvexProgram(syncArticles(ctx, NEXT.releaseId)))
     ).resolves.toEqual({ done: true, nextIndex: 2, processed: 0 });
@@ -350,7 +288,7 @@ describe("contentRelease/article/sync", () => {
     });
     await expect(
       t.mutation((ctx) => runConvexProgram(syncArticles(ctx, NEXT.releaseId)))
-    ).resolves.toEqual({ done: false, nextIndex: 7, processed: 8 });
+    ).resolves.toEqual({ done: false, nextIndex: 8, processed: 8 });
     await expect(
       t.mutation((ctx) => runConvexProgram(syncArticles(ctx, NEXT.releaseId)))
     ).resolves.toEqual({ done: true, nextIndex: 8, processed: 1 });
@@ -416,10 +354,87 @@ describe("contentRelease/article/sync", () => {
       state: await ctx.db.query("contentState").unique(),
     }));
     expect(blocked.release).toMatchObject({ articleIndex: 0 });
-    expect(blocked.release).not.toHaveProperty("articleRouteIndex");
+    expect(blocked.release).not.toHaveProperty("articleCursor");
     expect(blocked.release).not.toHaveProperty("articleSyncedAt");
     expect(blocked.state).toMatchObject({
       articleReleaseId: BASE.releaseId,
+    });
+  });
+
+  it("blocks mixed-sequence category metadata before publication", async () => {
+    const t = convexTest(schema, convexModules);
+    const changedPredecessor = categorizedArticle({
+      article: 0,
+      category: "politics",
+      route: "politics",
+      title: "Politics",
+    });
+    const unchangedPredecessor = categorizedArticle({
+      article: 1,
+      category: "politics",
+      route: "politics",
+      title: "Politics",
+    });
+    await t.mutation(async (ctx) => {
+      await insertCompletedRelease(ctx, BASE, 2);
+      await insertTestState(ctx, { active: BASE, nextSequence: 3 });
+      await insertArticleProjection(ctx, BASE, 0, changedPredecessor);
+      await insertArticleProjection(ctx, BASE, 1, unchangedPredecessor);
+    });
+    await t.mutation((ctx) =>
+      runConvexProgram(syncArticles(ctx, BASE.releaseId))
+    );
+    await t.mutation((ctx) =>
+      runConvexProgram(syncArticles(ctx, BASE.releaseId))
+    );
+
+    const changed = categorizedArticle({
+      article: 0,
+      category: "politics",
+      route: "government",
+      title: "Politics",
+    });
+    await t.mutation(async (ctx) => {
+      await insertCompletedRelease(ctx, NEXT, 1, BASE);
+      await insertArticleProjection(ctx, NEXT, 0, changed);
+      await selectActiveRelease(ctx, NEXT);
+    });
+    await expect(
+      t.mutation((ctx) => runConvexProgram(syncArticles(ctx, NEXT.releaseId)))
+    ).resolves.toEqual({ done: false, nextIndex: 0, processed: 1 });
+    await expect(
+      t.mutation((ctx) => runConvexProgram(syncArticles(ctx, NEXT.releaseId)))
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+
+    const blocked = await t.run(async (ctx) => ({
+      predecessor: await ctx.db
+        .query("articleCatalog")
+        .withIndex("by_contentKey_and_appLocale", (index) =>
+          index
+            .eq("contentKey", unchangedPredecessor.contentKey)
+            .eq("appLocale", unchangedPredecessor.appLocale)
+        )
+        .unique(),
+      release: await ctx.db
+        .query("contentReleases")
+        .withIndex("by_releaseId", (index) =>
+          index.eq("releaseId", NEXT.releaseId)
+        )
+        .unique(),
+      state: await ctx.db.query("contentState").unique(),
+    }));
+    expect(blocked.predecessor).toMatchObject({
+      releaseId: BASE.releaseId,
+      sequence: BASE.sequence,
+    });
+    expect(blocked.release).toMatchObject({ articleIndex: 0 });
+    expect(blocked.release).not.toHaveProperty("articleCursor");
+    expect(blocked.release).not.toHaveProperty("articleSyncedAt");
+    expect(blocked.state).toMatchObject({
+      articleReleaseId: BASE.releaseId,
+      articleSequence: BASE.sequence,
     });
   });
 

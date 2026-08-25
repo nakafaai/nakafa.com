@@ -5,8 +5,8 @@ import {
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { adjustArticleBucket } from "@repo/backend/convex/contentRelease/article/bucket";
+import { ARTICLE_PREDECESSOR_LIMIT } from "@repo/backend/convex/contentRelease/article/limits";
 import { readOrderedArticles } from "@repo/backend/convex/contentRelease/article/order";
-import { CONTENT_BUCKET_SIZE } from "@repo/backend/convex/contentRelease/bucket";
 import {
   ensureDocumentSize,
   READ_MODEL_DOCUMENT_LIMIT,
@@ -20,6 +20,27 @@ import { Effect, Schema } from "effect";
 
 type AppLocale = Doc<"articleCatalog">["appLocale"];
 type ArticleEntry = WithoutSystemFields<Doc<"articleCatalog">>;
+
+export interface ArticleCategoryClaim {
+  readonly appLocale: AppLocale;
+  readonly category: ArticleEntry["category"];
+  readonly rendererDomain: ArticleEntry["rendererDomain"];
+  readonly route: ArticleRouteSlug;
+  readonly title: ArticleEntry["categoryTitle"];
+}
+
+/** Page-scoped route ownership resolved once for one application locale. */
+export interface ArticlePredecessorRoutes {
+  readonly appLocale: AppLocale;
+  readonly categoryRoutes: ReadonlyMap<
+    ArticleEntry["category"],
+    ArticleRouteSlug
+  >;
+  readonly routeCategories: ReadonlyMap<
+    ArticleRouteSlug,
+    readonly ArticleEntry["category"][]
+  >;
+}
 
 /** Loads the sole active article row for one locale-specific content identity. */
 export const loadArticle = Effect.fn("contentRelease.loadArticle")(function* (
@@ -96,44 +117,93 @@ const decodeCategoryRoute = Effect.fn("contentRelease.decodeCategoryRoute")(
   }
 );
 
-/** Resolves route ownership for bounded predecessor rows without stored routes. */
-const loadBridgeRoutes = Effect.fn("contentRelease.loadBridgeArticleRoutes")(
-  function* (ctx: MutationCtx, appLocale: AppLocale, route: ArticleRouteSlug) {
-    const categories = yield* Effect.promise(() =>
-      ctx.db
-        .query("articleCategories")
-        .withIndex("by_appLocale_and_route", (index) =>
-          index.eq("appLocale", appLocale).eq("route", undefined)
-        )
-        .take(CONTENT_BUCKET_SIZE + 1)
-    );
-    if (categories.length > CONTENT_BUCKET_SIZE) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_LIMIT",
-        `Article route verification accepts at most ${CONTENT_BUCKET_SIZE} predecessor categories per locale.`
-      );
-    }
-    return yield* Effect.filter(categories, (category) =>
-      Effect.gen(function* () {
-        const representative = yield* loadArticle(
-          ctx,
-          category.contentKey,
-          category.appLocale
-        );
-        if (!representative) {
-          return yield* releaseFail(
-            "CONTENT_RELEASE_INTEGRITY",
-            `Article category ${category.appLocale}/${category.category} lost its predecessor representative.`
-          );
-        }
-        const predecessorRoute = yield* decodeCategoryRoute(
-          representative.publicPath
-        );
-        return predecessorRoute === route;
-      })
+/** Resolves one category route across current and page-scoped predecessor rows. */
+const resolveCategoryRoute = Effect.fn(
+  "contentRelease.resolveArticleCategoryRoute"
+)(function* (
+  category: Doc<"articleCategories">,
+  predecessors: ArticlePredecessorRoutes
+) {
+  if (category.route !== undefined) {
+    return yield* Schema.decodeEffect(ArticleRouteSlugSchema)(
+      category.route
+    ).pipe(
+      Effect.mapError(
+        () =>
+          new ReleaseError({
+            code: "CONTENT_RELEASE_INTEGRITY",
+            message: `Article category ${category.appLocale}/${category.category} has an invalid stored route.`,
+          })
+      )
     );
   }
-);
+  if (predecessors.appLocale !== category.appLocale) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Article category ${category.appLocale}/${category.category} received mismatched predecessor ownership.`
+    );
+  }
+  const route = predecessors.categoryRoutes.get(category.category);
+  if (route === undefined) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Article category ${category.appLocale}/${category.category} lost its predecessor route.`
+    );
+  }
+  return route;
+});
+
+/** Resolves every bounded predecessor route once for one application locale. */
+export const loadPredecessorRoutes = Effect.fn(
+  "contentRelease.loadArticlePredecessorRoutes"
+)(function* (ctx: MutationCtx, appLocale: AppLocale) {
+  const categories = yield* Effect.promise(() =>
+    ctx.db
+      .query("articleCategories")
+      .withIndex("by_appLocale_and_route", (index) =>
+        index.eq("appLocale", appLocale).eq("route", undefined)
+      )
+      .take(ARTICLE_PREDECESSOR_LIMIT + 1)
+  );
+  if (categories.length > ARTICLE_PREDECESSOR_LIMIT) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_LIMIT",
+      `Article route verification accepts at most ${ARTICLE_PREDECESSOR_LIMIT} predecessor categories per locale.`
+    );
+  }
+  const categoryRoutes = new Map<string, ArticleRouteSlug>();
+  const routeCategories = new Map<ArticleRouteSlug, readonly string[]>();
+  for (const category of categories) {
+    if (categoryRoutes.has(category.category)) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Article category ${appLocale}/${category.category} has multiple predecessor owners.`
+      );
+    }
+    const representative = yield* loadArticle(
+      ctx,
+      category.contentKey,
+      category.appLocale
+    );
+    if (!representative) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Article category ${category.appLocale}/${category.category} lost its predecessor representative.`
+      );
+    }
+    const route = yield* decodeCategoryRoute(representative.publicPath);
+    categoryRoutes.set(category.category, route);
+    routeCategories.set(route, [
+      ...(routeCategories.get(route) ?? []),
+      category.category,
+    ]);
+  }
+  return {
+    appLocale,
+    categoryRoutes,
+    routeCategories,
+  } satisfies ArticlePredecessorRoutes;
+});
 
 /** Converts one active article into its category representative row. */
 function categoryRow(article: ArticleEntry, route: ArticleRouteSlug) {
@@ -203,35 +273,84 @@ export const stageCategory = Effect.fn("contentRelease.stageArticleCategory")(
   }
 );
 
-/** Validates one staged category route against the effective final model. */
-export const validateCategoryRoute = Effect.fn(
-  "contentRelease.validateArticleCategoryRoute"
+/** Validates one effective article against a resolved localized claim. */
+export const validateCategoryMember = Effect.fn(
+  "contentRelease.validateArticleCategoryMember"
+)(function* (article: ArticleEntry, claim: ArticleCategoryClaim) {
+  const route = yield* decodeCategoryRoute(article.publicPath);
+  if (claim.route !== route) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Article ${article.contentKey}/${article.appLocale} conflicts with category route ${claim.route}.`
+    );
+  }
+  if (claim.title !== article.categoryTitle) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Article ${article.contentKey}/${article.appLocale} conflicts with category title ${claim.title}.`
+    );
+  }
+  if (claim.rendererDomain !== article.rendererDomain) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Article ${article.contentKey}/${article.appLocale} conflicts with category renderer ${claim.rendererDomain}.`
+    );
+  }
+});
+
+/** Resolves and validates one category claim from the effective final model. */
+export const validateCategoryClaim = Effect.fn(
+  "contentRelease.validateArticleCategoryClaim"
 )(function* (
   ctx: MutationCtx,
-  appLocale: AppLocale,
-  category: string,
-  route: ArticleRouteSlug
+  article: ArticleEntry,
+  predecessors: ArticlePredecessorRoutes
 ) {
-  const categoryOwner = yield* loadCategory(ctx, appLocale, category);
-  if (categoryOwner?.route !== route) {
+  if (predecessors.appLocale !== article.appLocale) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Article category ${appLocale}/${category} lost its final route ${route}.`
+      `Article ${article.contentKey}/${article.appLocale} received mismatched predecessor ownership.`
     );
   }
-  const [routeOwners, bridgeRouteOwners] = yield* Effect.all([
-    loadCategoryRoutes(ctx, appLocale, route),
-    loadBridgeRoutes(ctx, appLocale, route),
-  ]);
-  const conflictingOwner = [...routeOwners, ...bridgeRouteOwners].find(
-    (owner) => owner.category !== category
+  const categoryOwner = yield* loadCategory(
+    ctx,
+    article.appLocale,
+    article.category
   );
-  if (routeOwners.length !== 1 || conflictingOwner) {
+  if (!categoryOwner) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Article category route ${appLocale}/${route} conflicts with active category ${conflictingOwner?.category ?? category}.`
+      `Article category ${article.appLocale}/${article.category} lost its final owner.`
     );
   }
+  const route = yield* resolveCategoryRoute(categoryOwner, predecessors);
+  const claim = {
+    appLocale: categoryOwner.appLocale,
+    category: categoryOwner.category,
+    rendererDomain: categoryOwner.rendererDomain,
+    route,
+    title: categoryOwner.title,
+  } satisfies ArticleCategoryClaim;
+  yield* validateCategoryMember(article, claim);
+  const routeOwners = yield* loadCategoryRoutes(
+    ctx,
+    claim.appLocale,
+    claim.route
+  );
+  const routeCategories = [
+    ...routeOwners.map((owner) => owner.category),
+    ...(predecessors.routeCategories.get(claim.route) ?? []),
+  ];
+  const conflictingOwner = routeCategories.find(
+    (category) => category !== claim.category
+  );
+  if (routeCategories.length !== 1 || conflictingOwner) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Article category route ${claim.appLocale}/${claim.route} conflicts with active category ${conflictingOwner ?? claim.category}.`
+    );
+  }
+  return claim;
 });
 
 /** Rebuilds one category after its selected article moves or disappears. */

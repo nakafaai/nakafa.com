@@ -84,7 +84,6 @@ describe("contentRelease/models", () => {
       expect(claimed.jobs).toHaveLength(0);
       expect(claimed.release).toMatchObject({
         articleIndex: -1,
-        articleRouteIndex: -1,
         materialIndex: -1,
         searchIndex: -1,
       });

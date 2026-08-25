@@ -1,6 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { validateCategoryRoute } from "@repo/backend/convex/contentRelease/article/ownership";
+import { validateArticleModel } from "@repo/backend/convex/contentRelease/article/validation";
 import {
   deleteArticle,
   writeArticle,
@@ -88,30 +88,6 @@ const validateReleasePage = Effect.fn(
   }
 });
 
-/** Validates one page of final category claims after all writes are staged. */
-const validateRoutePage = Effect.fn("contentRelease.validateArticleRoutePage")(
-  function* (
-    ctx: MutationCtx,
-    rows: Doc<"contentItems">[],
-    activeSequence: number
-  ) {
-    const validated = new Set<string>();
-    for (const row of rows) {
-      const change = yield* resolveArticleChange(ctx, row, activeSequence);
-      if (!change) {
-        continue;
-      }
-      const { appLocale, category, categoryRouteSlug } = change.projection;
-      const claim = `${appLocale}/${category}/${categoryRouteSlug}`;
-      if (validated.has(claim)) {
-        continue;
-      }
-      yield* validateCategoryRoute(ctx, appLocale, category, categoryRouteSlug);
-      validated.add(claim);
-    }
-  }
-);
-
 /** Stages one bounded page without publishing incomplete article ownership. */
 const stageArticlePage = Effect.fn("contentRelease.stageArticlePage")(
   function* (
@@ -137,34 +113,27 @@ const stageArticlePage = Effect.fn("contentRelease.stageArticlePage")(
   }
 );
 
-/** Validates one bounded page against the effective final article model. */
-const validateFinalRoutes = Effect.fn(
-  "contentRelease.validateFinalArticleRoutes"
-)(function* (
-  ctx: MutationCtx,
-  releaseId: string,
-  activeSequence: number,
-  afterIndex: number,
-  completedIndex: number
-) {
-  const page = yield* loadReleaseItems(ctx, releaseId, afterIndex);
-  yield* validateReleasePage(releaseId, afterIndex, page.page);
-  yield* validateRoutePage(ctx, page.page, activeSequence);
-  const nextIndex = page.page.at(-1)?.index ?? afterIndex;
-  if (page.isDone && nextIndex !== completedIndex) {
+/** Rejects release items beyond the immutable signed manifest count. */
+const validateReleaseTail = Effect.fn(
+  "contentRelease.validateArticleReleaseTail"
+)(function* (ctx: MutationCtx, releaseId: string, completedIndex: number) {
+  const remainder = yield* Effect.promise(() =>
+    ctx.db
+      .query("contentItems")
+      .withIndex("by_releaseId_and_index", (index) =>
+        index.eq("releaseId", releaseId).gt("index", completedIndex)
+      )
+      .first()
+  );
+  if (remainder) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Article route validation ${releaseId} stopped at item ${nextIndex}.`
+      `Article sync ${releaseId} contains items beyond ${completedIndex}.`
     );
   }
-  return {
-    done: nextIndex === completedIndex,
-    nextIndex,
-    processed: page.page.length,
-  };
 });
 
-/** Advances staging and final route validation through durable release pages. */
+/** Advances staging and final-model validation through durable bounded pages. */
 export const syncArticles = Effect.fn("contentRelease.syncArticles")(function* (
   ctx: MutationCtx,
   releaseId: string
@@ -207,24 +176,14 @@ export const syncArticles = Effect.fn("contentRelease.syncArticles")(function* (
     return { done: false, ...progress };
   }
 
-  const routeIndex = release.articleRouteIndex ?? -1;
-  if (routeIndex > completedIndex) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Article route validation ${releaseId} advanced beyond item ${completedIndex}.`
-    );
+  if (release.articleCursor === undefined) {
+    yield* validateReleaseTail(ctx, releaseId, completedIndex);
   }
-  const progress = yield* validateFinalRoutes(
-    ctx,
-    releaseId,
-    release.sequence,
-    routeIndex,
-    completedIndex
-  );
+  const progress = yield* validateArticleModel(ctx, release.articleCursor);
   const now = Date.now();
   yield* Effect.promise(() =>
     ctx.db.patch("contentReleases", release._id, {
-      articleRouteIndex: progress.nextIndex,
+      articleCursor: progress.cursor,
       ...(progress.done ? { articleSyncedAt: now } : {}),
       updatedAt: now,
     })
@@ -239,5 +198,9 @@ export const syncArticles = Effect.fn("contentRelease.syncArticles")(function* (
       })
     );
   }
-  return progress;
+  return {
+    done: progress.done,
+    nextIndex: completedIndex,
+    processed: progress.processed,
+  };
 });

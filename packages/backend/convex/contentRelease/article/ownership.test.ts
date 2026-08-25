@@ -1,8 +1,9 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
+  loadPredecessorRoutes,
   stageCategory,
-  validateCategoryRoute,
+  validateCategoryClaim,
 } from "@repo/backend/convex/contentRelease/article/ownership";
 import { CONTENT_BUCKET_SIZE } from "@repo/backend/convex/contentRelease/bucket";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -47,12 +48,8 @@ function claim(ctx: MutationCtx) {
       const article = articleEntry();
       const route = TEST_ARTICLE_PROJECTION.categoryRouteSlug;
       yield* stageCategory(ctx, article, route);
-      yield* validateCategoryRoute(
-        ctx,
-        article.appLocale,
-        article.category,
-        route
-      );
+      const predecessors = yield* loadPredecessorRoutes(ctx, article.appLocale);
+      yield* validateCategoryClaim(ctx, article, predecessors);
     })
   );
 }
@@ -133,6 +130,102 @@ describe("contentRelease/article/ownership", () => {
     });
 
     await expect(conflict.mutation(claim)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
+  it("validates a predecessor category through its signed article route", async () => {
+    const bridge = convexTest(schema, convexModules);
+    const article = articleEntry({ sequence: 0 });
+    await bridge.mutation(async (ctx) => {
+      await ctx.db.insert("articleCatalog", article);
+      await ctx.db.insert("articleCategories", {
+        appLocale: article.appLocale,
+        bucket: article.bucket,
+        category: article.category,
+        contentKey: article.contentKey,
+        projectionHash: article.projectionHash,
+        releaseId: article.releaseId,
+        rendererDomain: article.rendererDomain,
+        sequence: article.sequence,
+        title: article.categoryTitle,
+      });
+    });
+
+    await expect(
+      bridge.mutation((ctx) =>
+        runConvexProgram(
+          Effect.gen(function* () {
+            const predecessors = yield* loadPredecessorRoutes(
+              ctx,
+              article.appLocale
+            );
+            return yield* validateCategoryClaim(ctx, article, predecessors);
+          })
+        )
+      )
+    ).resolves.toMatchObject({
+      appLocale: article.appLocale,
+      category: article.category,
+      rendererDomain: article.rendererDomain,
+      route: TEST_ARTICLE_PROJECTION.categoryRouteSlug,
+      title: article.categoryTitle,
+    });
+  });
+
+  it("rejects final member title and renderer divergence", async () => {
+    const conflict = convexTest(schema, convexModules);
+    const categoryId = await conflict.mutation((ctx) =>
+      ctx.db.insert("articleCategories", {
+        appLocale: "en",
+        bucket: "aaa",
+        category: "politics",
+        contentKey: TEST_ARTICLE_PROJECTION.contentKey,
+        projectionHash: `sha256:${"a".repeat(64)}`,
+        releaseId: "release-conflict",
+        rendererDomain: "politics",
+        route: TEST_ARTICLE_PROJECTION.categoryRouteSlug,
+        sequence: 1,
+        title: "Public affairs",
+      })
+    );
+    await expect(
+      conflict.mutation((ctx) =>
+        runConvexProgram(
+          Effect.gen(function* () {
+            const article = articleEntry();
+            const predecessors = yield* loadPredecessorRoutes(
+              ctx,
+              article.appLocale
+            );
+            return yield* validateCategoryClaim(ctx, article, predecessors);
+          })
+        )
+      )
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+
+    await conflict.mutation((ctx) =>
+      ctx.db.patch("articleCategories", categoryId, {
+        rendererDomain: "site",
+        title: TEST_ARTICLE_PROJECTION.categoryTitle,
+      })
+    );
+    await expect(
+      conflict.mutation((ctx) =>
+        runConvexProgram(
+          Effect.gen(function* () {
+            const article = articleEntry();
+            const predecessors = yield* loadPredecessorRoutes(
+              ctx,
+              article.appLocale
+            );
+            return yield* validateCategoryClaim(ctx, article, predecessors);
+          })
+        )
+      )
+    ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
   });

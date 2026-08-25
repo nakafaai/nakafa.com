@@ -140,6 +140,7 @@ import type * as contentRelease_article_category from "../contentRelease/article
 import type * as contentRelease_article_cursor from "../contentRelease/article/cursor.js";
 import type * as contentRelease_article_dates from "../contentRelease/article/dates.js";
 import type * as contentRelease_article_discovery from "../contentRelease/article/discovery.js";
+import type * as contentRelease_article_limits from "../contentRelease/article/limits.js";
 import type * as contentRelease_article_model from "../contentRelease/article/model.js";
 import type * as contentRelease_article_order from "../contentRelease/article/order.js";
 import type * as contentRelease_article_owner from "../contentRelease/article/owner.js";
@@ -150,6 +151,7 @@ import type * as contentRelease_article_route from "../contentRelease/article/ro
 import type * as contentRelease_article_sitemap from "../contentRelease/article/sitemap.js";
 import type * as contentRelease_article_spec from "../contentRelease/article/spec.js";
 import type * as contentRelease_article_sync from "../contentRelease/article/sync.js";
+import type * as contentRelease_article_validation from "../contentRelease/article/validation.js";
 import type * as contentRelease_article_verify from "../contentRelease/article/verify.js";
 import type * as contentRelease_article_write from "../contentRelease/article/write.js";
 import type * as contentRelease_artifacts from "../contentRelease/artifacts.js";
@@ -704,6 +706,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/article/cursor": typeof contentRelease_article_cursor;
   "contentRelease/article/dates": typeof contentRelease_article_dates;
   "contentRelease/article/discovery": typeof contentRelease_article_discovery;
+  "contentRelease/article/limits": typeof contentRelease_article_limits;
   "contentRelease/article/model": typeof contentRelease_article_model;
   "contentRelease/article/order": typeof contentRelease_article_order;
   "contentRelease/article/owner": typeof contentRelease_article_owner;
@@ -714,6 +717,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/article/sitemap": typeof contentRelease_article_sitemap;
   "contentRelease/article/spec": typeof contentRelease_article_spec;
   "contentRelease/article/sync": typeof contentRelease_article_sync;
+  "contentRelease/article/validation": typeof contentRelease_article_validation;
   "contentRelease/article/verify": typeof contentRelease_article_verify;
   "contentRelease/article/write": typeof contentRelease_article_write;
   "contentRelease/artifacts": typeof contentRelease_artifacts;
