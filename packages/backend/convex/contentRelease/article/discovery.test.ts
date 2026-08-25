@@ -62,8 +62,11 @@ describe("contentRelease/article/discovery", () => {
         activeReleaseId: expect.any(String),
         articles: [
           {
+            articleSlug: testLocalizedArticleProjection(1, appLocale)
+              .articleSlug,
             authors: [{ name: "Nakafa" }],
             category: "politics",
+            date: "2026-07-11",
             datePublished: "2026-07-11",
             publicPath: testLocalizedArticleProjection(1, appLocale).publicPath,
             route: {
@@ -87,7 +90,10 @@ describe("contentRelease/article/discovery", () => {
         activeReleaseId: expect.any(String),
         articles: [
           {
+            articleSlug: testLocalizedArticleProjection(1, appLocale)
+              .articleSlug,
             category: "politics",
+            date: "2026-07-11",
             publicPath: testLocalizedArticleProjection(1, appLocale).publicPath,
             route: {
               category: testLocalizedArticleProjection(1, appLocale)
@@ -104,7 +110,11 @@ describe("contentRelease/article/discovery", () => {
       ).resolves.toMatchObject({
         activeReleaseId: expect.any(String),
         articles: expect.arrayContaining([
-          expect.objectContaining({ publicPath: selected.publicPath }),
+          expect.objectContaining({
+            articleSlug: expect.any(String),
+            date: expect.any(String),
+            publicPath: selected.publicPath,
+          }),
         ]),
         managed: true,
       });

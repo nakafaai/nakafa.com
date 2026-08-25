@@ -1,4 +1,5 @@
 import { query } from "@repo/backend/convex/_generated/server";
+import { readArticleCategory } from "@repo/backend/convex/contentRelease/article/category";
 import {
   readArticleBucket,
   readCategoryArticles,
@@ -49,9 +50,11 @@ const categoryValidator = v.object({
 });
 
 const articleSummaryValidator = v.object({
+  articleSlug: v.string(),
   authors: v.array(v.object({ name: v.string() })),
   category: v.string(),
   categoryTitle: v.string(),
+  date: v.string(),
   dateModified: v.optional(v.string()),
   datePublished: v.string(),
   description: v.optional(v.string()),
@@ -80,6 +83,11 @@ const categoryPageValidator = v.object({
   result: paginationResultValidator(categoryValidator),
   sourceRevision: v.union(v.string(), v.null()),
   stale: v.boolean(),
+});
+
+const categoryLookupValidator = v.object({
+  exists: v.boolean(),
+  managed: v.boolean(),
 });
 
 const sitemapBucketsValidator = v.object({
@@ -189,6 +197,17 @@ export const categories = query({
         args.paginationOpts
       )
     ),
+});
+
+/** Retains the predecessor category lookup until the strict 0.16 cutover. */
+export const category = query({
+  args: {
+    category: v.string(),
+    appLocale: appLocaleValidator,
+  },
+  returns: categoryLookupValidator,
+  handler: (ctx, args) =>
+    runConvexProgram(readArticleCategory(ctx, args.appLocale, args.category)),
 });
 
 /** Returns one managed hash partition for agent-facing article indexes. */

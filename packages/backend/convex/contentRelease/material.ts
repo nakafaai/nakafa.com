@@ -46,6 +46,7 @@ const materialPageValidator = v.object({
 
 const materialSummaryValidator = v.object({
   authors: v.array(v.object({ name: v.string() })),
+  date: v.string(),
   dateModified: v.optional(v.string()),
   datePublished: v.string(),
   description: v.optional(v.string()),

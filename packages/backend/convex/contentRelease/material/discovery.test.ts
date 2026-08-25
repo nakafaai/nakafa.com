@@ -109,6 +109,7 @@ describe("contentRelease/material/discovery", () => {
       materials: [
         {
           authors: [{ name: "Nakafa" }],
+          date: "2026-07-24",
           datePublished: "2026-07-24",
           publicPath: expect.stringContaining("subjects/mathematics/"),
           title: expect.stringContaining("EN Section"),
@@ -120,7 +121,13 @@ describe("contentRelease/material/discovery", () => {
     ).resolves.toMatchObject({
       activeReleaseId: MATERIAL_IDENTITY.releaseId,
       managed: true,
-      materials: [{ datePublished: "2026-07-24", title: "EN Section 2" }],
+      materials: [
+        {
+          date: "2026-07-24",
+          datePublished: "2026-07-24",
+          title: "EN Section 2",
+        },
+      ],
     });
   });
 
@@ -140,6 +147,7 @@ describe("contentRelease/material/discovery", () => {
         managed: true,
         materials: [
           {
+            date: expected.metadata.datePublished,
             datePublished: expected.metadata.datePublished,
             publicPath: expected.publicPath,
             title: expected.metadata.title,

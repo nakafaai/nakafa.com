@@ -30,9 +30,11 @@ function summarizeArticle(
   const { projection } = verified;
   const dates = normalizePublicationDates(projection.metadata);
   return {
+    articleSlug: projection.articleSlug,
     authors: projection.metadata.authors.map(({ name }) => ({ name })),
     category: projection.category,
     categoryTitle: projection.categoryTitle,
+    date: dates.datePublished,
     ...dates,
     description: projection.metadata.description,
     official: projection.official,

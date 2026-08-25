@@ -19,6 +19,7 @@ function summarizeMaterial(
   const dates = normalizePublicationDates(projection.metadata);
   return {
     authors: projection.metadata.authors.map(({ name }) => ({ name })),
+    date: dates.datePublished,
     ...dates,
     description: projection.metadata.description,
     publicPath: projection.publicPath,
