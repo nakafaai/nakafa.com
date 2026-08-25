@@ -1,5 +1,13 @@
 // @vitest-environment node
+import { NAKAFA_EDGE_CLIENT_IP_HEADER } from "@repo/backend/agent/edge";
 import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/backend/agent/mcp/protocol";
+import { components } from "@repo/backend/convex/_generated/api";
+import {
+  AGENT_RATE_LIMIT_CONFIG,
+  AGENT_RATE_LIMIT_MAX_REQUESTS,
+  deriveAgentRateLimitKey,
+  getAgentRateLimitName,
+} from "@repo/backend/convex/routes/agent/rateLimit";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
   afterEach,
@@ -8,6 +16,7 @@ import {
   expect,
   it,
 } from "@repo/testing/effect";
+import { Effect } from "effect";
 
 const MCP_SECRET = "technical-mcp-edge-secret";
 const MCP_SECRET_NAME = "NAKAFA_MCP_EDGE_SECRET";
@@ -129,7 +138,7 @@ describe("Nakafa MCP HTTP route", () => {
 
     expect(direct.status).toBe(403);
     expect(direct.headers.get("access-control-expose-headers")).toBe(
-      "MCP-Protocol-Version, MCP-Session-Id"
+      "MCP-Protocol-Version, MCP-Session-Id, Retry-After"
     );
     await expect(direct.json()).resolves.toMatchObject({
       error: {
@@ -158,7 +167,7 @@ describe("Nakafa MCP HTTP route", () => {
       "https://agent.example.com"
     );
     expect(browser.headers.get("access-control-expose-headers")).toBe(
-      "MCP-Protocol-Version, MCP-Session-Id"
+      "MCP-Protocol-Version, MCP-Session-Id, Retry-After"
     );
     expect(server.status).toBe(204);
     expect(server.headers.get("access-control-allow-origin")).toBe("*");
@@ -268,6 +277,59 @@ describe("Nakafa MCP HTTP route", () => {
         content: [{ type: "text" }],
       });
     }
+  });
+
+  it("limits MCP execution by trusted edge client and exempts discovery", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const clientAddress = "203.0.113.21";
+    const key = await Effect.runPromise(
+      deriveAgentRateLimitKey(
+        new Request("https://mcp.nakafa.com/mcp", {
+          headers: { [NAKAFA_EDGE_CLIENT_IP_HEADER]: clientAddress },
+        })
+      )
+    );
+    const seeded = await t.mutation(components.rateLimiter.lib.rateLimit, {
+      config: AGENT_RATE_LIMIT_CONFIG,
+      count: AGENT_RATE_LIMIT_MAX_REQUESTS,
+      key,
+      name: getAgentRateLimitName("mcp"),
+    });
+    const headers = {
+      accept: "application/json",
+      "content-type": "application/json",
+      "mcp-method": "server/discover",
+      "mcp-protocol-version": NAKAFA_MCP_PROTOCOL_VERSION,
+      [NAKAFA_EDGE_CLIENT_IP_HEADER]: clientAddress,
+      "x-nakafa-mcp-edge-secret": MCP_SECRET,
+    };
+    const limited = await t.fetch("/mcp", {
+      body: JSON.stringify({
+        id: 40,
+        jsonrpc: "2.0",
+        method: "server/discover",
+        params: { _meta: MODERN_META },
+      }),
+      headers,
+      method: "POST",
+    });
+    const manifest = await t.fetch("/mcp", { headers });
+
+    expect(seeded.ok).toBe(true);
+    expect(limited.status).toBe(429);
+    expect(Number(limited.headers.get("retry-after"))).toBeGreaterThan(0);
+    await expect(limited.json()).resolves.toMatchObject({
+      error: {
+        code: -32_029,
+        data: {
+          request_id: expect.any(String),
+          retry_after_ms: expect.any(Number),
+        },
+      },
+      id: 40,
+      jsonrpc: "2.0",
+    });
+    expect(manifest.status).toBe(200);
   });
 
   it("returns JSON-RPC errors for malformed JSON and protocol mismatches", async () => {

@@ -2,6 +2,7 @@ import { NAKAFA_MCP_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import { NAKAFA_MCP_REGISTRY_MANIFEST } from "@repo/backend/agent/mcp/manifest";
 import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/backend/agent/mcp/protocol";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
+import { limitAgentRequest } from "@repo/backend/convex/routes/agent/rateLimit";
 import {
   hasTrustedMcpOrigin,
   hasValidEdgeSecret,
@@ -25,7 +26,8 @@ const MCP_HEADERS = {
   "Access-Control-Allow-Headers":
     "Accept, Content-Type, MCP-Protocol-Version, Mcp-Method, Mcp-Name, traceparent, tracestate, baggage",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Expose-Headers": "MCP-Protocol-Version, MCP-Session-Id",
+  "Access-Control-Expose-Headers":
+    "MCP-Protocol-Version, MCP-Session-Id, Retry-After",
   "Cache-Control": "no-store",
   Vary: "Accept, Accept-Encoding, Origin",
 };
@@ -82,6 +84,34 @@ mcp.all("/", async (c) => {
       -32_600,
       "The Nakafa MCP endpoint supports GET, POST, and OPTIONS only.",
       requestId
+    );
+  }
+
+  const rateLimit = await Effect.runPromise(
+    limitAgentRequest(c.env, request, "mcp").pipe(
+      Effect.match({
+        onFailure: () => null,
+        onSuccess: (decision) => decision,
+      })
+    )
+  );
+  if (rateLimit === null) {
+    return mcpErrorResponse(
+      503,
+      -32_603,
+      "The public MCP request limiter is unavailable.",
+      requestId
+    );
+  }
+  if (!rateLimit.allowed) {
+    const responseId = await readJsonRpcRequestId(request);
+    return mcpErrorResponse(
+      429,
+      -32_029,
+      "The public MCP request limit was exceeded for this client.",
+      requestId,
+      responseId,
+      rateLimit.retryAfterMilliseconds
     );
   }
 
@@ -171,11 +201,25 @@ function mcpErrorResponse(
   code: number,
   message: string,
   requestId: string,
-  responseId: number | string | null = null
+  responseId: number | string | null = null,
+  retryAfterMilliseconds?: number
 ) {
+  const retryAfter =
+    retryAfterMilliseconds === undefined
+      ? undefined
+      : Math.max(1, Math.ceil(retryAfterMilliseconds / 1000));
   return new Response(
     JSON.stringify({
-      error: { code, data: { request_id: requestId }, message },
+      error: {
+        code,
+        data: {
+          request_id: requestId,
+          ...(retryAfterMilliseconds === undefined
+            ? {}
+            : { retry_after_ms: retryAfterMilliseconds }),
+        },
+        message,
+      },
       id: responseId,
       jsonrpc: "2.0",
     }),
@@ -186,6 +230,9 @@ function mcpErrorResponse(
         ...(status === 405 ? { Allow: "GET, POST, OPTIONS" } : {}),
         "Content-Type": "application/json; charset=utf-8",
         "MCP-Protocol-Version": NAKAFA_MCP_PROTOCOL_VERSION,
+        ...(retryAfter === undefined
+          ? {}
+          : { "Retry-After": String(retryAfter) }),
       },
       status,
     }
