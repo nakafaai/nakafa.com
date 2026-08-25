@@ -1,6 +1,109 @@
 import { expect, type Page, test } from "@playwright/test";
+import { Effect } from "effect";
+import { withObservedPageErrors } from "./support/browser-context";
+import { seedDeniedAnalyticsConsent } from "./support/consent";
 
 const usageDataName = "Usage data";
+
+const prepareConsentPreferences = Effect.fn(
+  "NakafaE2E.prepareDrawerConsentPreferences"
+)(function* (page: Page) {
+  yield* seedDeniedAnalyticsConsent(page);
+  const response = yield* Effect.promise(() =>
+    page.goto("/en", { waitUntil: "domcontentloaded" })
+  );
+  yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+
+  const trigger = page
+    .locator("footer")
+    .getByRole("button", { name: usageDataName });
+  yield* Effect.promise(() => expect(trigger).toBeVisible());
+  yield* Effect.promise(() => trigger.scrollIntoViewIfNeeded());
+  return trigger;
+});
+
+const verifyCompactConsentDrawer = Effect.fn(
+  "NakafaE2E.verifyCompactConsentDrawer"
+)(function* (page: Page) {
+  const trigger = yield* prepareConsentPreferences(page);
+  yield* Effect.promise(() => trigger.click());
+
+  const drawer = page.locator('[data-slot="drawer-popup"]');
+  yield* Effect.promise(() => expect(drawer).toBeVisible());
+  yield* Effect.promise(() =>
+    expect(drawer.locator('[data-slot="drawer-bar"]')).toBeVisible()
+  );
+  yield* Effect.promise(() =>
+    expect(drawer.locator('[data-slot="drawer-title"]')).toHaveText(
+      usageDataName
+    )
+  );
+  yield* Effect.promise(() =>
+    expect(drawer.locator('[data-slot="drawer-description"]')).toBeVisible()
+  );
+  yield* Effect.promise(() =>
+    expect(drawer.locator('[data-slot="drawer-panel"]')).toBeVisible()
+  );
+  yield* Effect.promise(() =>
+    expect(drawer.locator('[data-slot="drawer-footer"]')).toBeVisible()
+  );
+
+  yield* Effect.promise(() => page.keyboard.press("Escape"));
+  yield* Effect.promise(() => expect(drawer).toHaveCount(0));
+  yield* Effect.promise(() => expect(trigger).toBeFocused());
+});
+
+const verifyDesktopConsentDialog = Effect.fn(
+  "NakafaE2E.verifyDesktopConsentDialog"
+)(function* (page: Page) {
+  const trigger = yield* prepareConsentPreferences(page);
+  yield* Effect.promise(() => trigger.click());
+
+  const dialog = page.locator('[data-slot="dialog-content"]');
+  yield* Effect.promise(() => expect(dialog).toBeVisible());
+  yield* Effect.promise(() =>
+    expect(dialog.locator('[data-slot="dialog-title"]')).toHaveText(
+      usageDataName
+    )
+  );
+  yield* Effect.promise(() =>
+    expect(page.locator('[data-slot="drawer-popup"]')).toHaveCount(0)
+  );
+
+  yield* Effect.promise(() => page.keyboard.press("Escape"));
+  yield* Effect.promise(() => expect(dialog).toHaveCount(0));
+  yield* Effect.promise(() => expect(trigger).toBeFocused());
+});
+
+const verifyQuranInterpretationDrawer = Effect.fn(
+  "NakafaE2E.verifyQuranInterpretationDrawer"
+)(function* (page: Page) {
+  yield* seedDeniedAnalyticsConsent(page);
+  const response = yield* Effect.promise(() =>
+    page.goto("/id/quran/2", { waitUntil: "domcontentloaded" })
+  );
+  yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+
+  const trigger = page.locator("[data-quran-interpretation-verse]").first();
+  yield* Effect.promise(() => expect(trigger).toBeVisible({ timeout: 15_000 }));
+  yield* Effect.promise(() => trigger.click());
+
+  const drawer = page.locator('[data-slot="drawer-popup"]');
+  yield* Effect.promise(() => expect(drawer).toBeVisible({ timeout: 15_000 }));
+  yield* Effect.promise(() =>
+    expect(drawer.locator('[data-slot="drawer-bar"]')).toBeVisible()
+  );
+  yield* Effect.promise(() =>
+    expect(drawer.locator('[data-slot="drawer-title"]')).toHaveText("Tafsir")
+  );
+  yield* Effect.promise(() =>
+    expect(drawer.locator('[data-slot="drawer-panel"]')).not.toBeEmpty()
+  );
+
+  yield* Effect.promise(() => page.keyboard.press("Escape"));
+  yield* Effect.promise(() => expect(drawer).toHaveCount(0));
+  yield* Effect.promise(() => expect(trigger).toBeFocused());
+});
 
 test.describe("public Drawer consumers", () => {
   test.describe("compact responsive dialog", () => {
@@ -9,25 +112,9 @@ test.describe("public Drawer consumers", () => {
     test("keeps the consent surface as a styled bottom drawer", async ({
       page,
     }) => {
-      await page.goto("/en", { waitUntil: "domcontentloaded" });
-      const trigger = await prepareConsentPreferences(page);
-
-      await trigger.click();
-      const drawer = page.locator('[data-slot="drawer-popup"]');
-      await expect(drawer).toBeVisible();
-      await expect(drawer.locator('[data-slot="drawer-bar"]')).toBeVisible();
-      await expect(drawer.locator('[data-slot="drawer-title"]')).toHaveText(
-        usageDataName
+      await Effect.runPromise(
+        withObservedPageErrors(page, verifyCompactConsentDrawer(page))
       );
-      await expect(
-        drawer.locator('[data-slot="drawer-description"]')
-      ).toBeVisible();
-      await expect(drawer.locator('[data-slot="drawer-panel"]')).toBeVisible();
-      await expect(drawer.locator('[data-slot="drawer-footer"]')).toBeVisible();
-
-      await page.keyboard.press("Escape");
-      await expect(drawer).toHaveCount(0);
-      await expect(trigger).toBeFocused();
     });
   });
 
@@ -37,20 +124,9 @@ test.describe("public Drawer consumers", () => {
     test("keeps the consent surface as a dialog on desktop", async ({
       page,
     }) => {
-      await page.goto("/en", { waitUntil: "domcontentloaded" });
-      const trigger = await prepareConsentPreferences(page);
-
-      await trigger.click();
-      const dialog = page.locator('[data-slot="dialog-content"]');
-      await expect(dialog).toBeVisible();
-      await expect(dialog.locator('[data-slot="dialog-title"]')).toHaveText(
-        usageDataName
+      await Effect.runPromise(
+        withObservedPageErrors(page, verifyDesktopConsentDialog(page))
       );
-      await expect(page.locator('[data-slot="drawer-popup"]')).toHaveCount(0);
-
-      await page.keyboard.press("Escape");
-      await expect(dialog).toHaveCount(0);
-      await expect(trigger).toBeFocused();
     });
   });
 
@@ -60,38 +136,9 @@ test.describe("public Drawer consumers", () => {
     test("keeps the tafsir drawer content and focus behavior", async ({
       page,
     }) => {
-      await page.goto("/id/quran/2", { waitUntil: "domcontentloaded" });
-      const trigger = page.locator("[data-quran-interpretation-verse]").first();
-      await expect(trigger).toBeVisible({ timeout: 15_000 });
-
-      await trigger.click();
-      const drawer = page.locator('[data-slot="drawer-popup"]');
-      await expect(drawer).toBeVisible({ timeout: 15_000 });
-      await expect(drawer.locator('[data-slot="drawer-bar"]')).toBeVisible();
-      await expect(drawer.locator('[data-slot="drawer-title"]')).toHaveText(
-        "Tafsir"
+      await Effect.runPromise(
+        withObservedPageErrors(page, verifyQuranInterpretationDrawer(page))
       );
-      await expect(
-        drawer.locator('[data-slot="drawer-panel"]')
-      ).not.toBeEmpty();
-
-      await page.keyboard.press("Escape");
-      await expect(drawer).toHaveCount(0);
-      await expect(trigger).toBeFocused();
     });
   });
 });
-
-async function prepareConsentPreferences(page: Page) {
-  const trigger = page.getByRole("button", { name: usageDataName });
-  await expect(trigger).toBeVisible();
-
-  const prompt = page.getByRole("region", { name: usageDataName });
-  if (await prompt.isVisible()) {
-    await prompt.getByRole("button", { name: "Decline" }).click();
-    await expect(prompt).toHaveCount(0);
-  }
-
-  await trigger.scrollIntoViewIfNeeded();
-  return trigger;
-}

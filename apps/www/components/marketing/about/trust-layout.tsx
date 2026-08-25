@@ -53,13 +53,9 @@ export function TrustLayout({
           {...handleProps}
           aria-controls="trust-primary-pane"
           aria-label={resizeLabel}
-          aria-orientation={handleProps["aria-orientation"]}
-          aria-valuemax={handleProps["aria-valuemax"]}
-          aria-valuemin={handleProps["aria-valuemin"]}
-          aria-valuenow={handleProps["aria-valuenow"]}
-          className="absolute inset-y-0 left-0 z-20 m-0 w-px cursor-col-resize border-0 bg-transparent after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1"
+          aria-orientation="vertical"
+          className="absolute inset-y-0 left-0 z-20 m-0 w-px cursor-col-resize touch-none border-0 bg-transparent after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1"
           data-trust-splitter=""
-          tabIndex={handleProps.tabIndex}
         />
         <div
           aria-hidden="true"

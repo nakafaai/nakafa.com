@@ -1,18 +1,21 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
+import { Effect } from "effect";
 import { contributors } from "@/lib/data/contributor";
+import { withObservedPageErrors } from "./support/browser-context";
+import { seedDeniedAnalyticsConsent } from "./support/consent";
+import {
+  legacyAvatarFragmentIds,
+  measureMarketingPage,
+  readFirstContributor,
+  swipeContributorDrawer,
+  verifyDesktopSplitter,
+} from "./support/marketing";
 
 const COMMUNITY_MAX_DESCENDANTS = 400;
 const COMMUNITY_MAX_HTML_BYTES = 110_000;
 const HOMEPAGE_MAX_DESCENDANTS = 2600;
 const TRUST_MAX_DESCENDANTS = 330;
-// react-nice-avatar@1.5.0 emits these fixed SVG fragment IDs. Character stays
-// unchanged in this performance PR, while every other duplicate remains fatal.
-const LEGACY_AVATAR_FRAGMENT_IDS = new Set([
-  "clip0",
-  "mask-id",
-  "mouth-laugh-id",
-  "path-id",
-]);
+const TRUST_RESIZE_LABEL = "Resize the human and agent views";
 
 const targetViewports = [
   { desktop: false, height: 800, name: "compact", width: 320 },
@@ -28,76 +31,28 @@ const targetViewports = [
   { desktop: true, height: 900, name: "desktop", width: 1440 },
 ] as const;
 
-for (const viewport of targetViewports) {
-  test.describe(`marketing surfaces at ${viewport.name}`, () => {
-    test.use({
-      hasTouch: "hasTouch" in viewport ? viewport.hasTouch : false,
-      viewport: { height: viewport.height, width: viewport.width },
-    });
+type MarketingViewport = (typeof targetViewports)[number];
 
-    test("preserves one responsive content tree and project DOM budgets", async ({
-      page,
-    }) => {
-      await page.goto("/en", { waitUntil: "domcontentloaded" });
+const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(function* (
+  page: Page,
+  href: string
+) {
+  yield* seedDeniedAnalyticsConsent(page);
+  const response = yield* Effect.promise(() =>
+    page.goto(href, { waitUntil: "domcontentloaded" })
+  );
+  yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+});
 
-      const measurements = await page.evaluate(
-        (legacyAvatarFragmentIds) => {
-          const knownAvatarFragmentIds = new Set(legacyAvatarFragmentIds);
-          const community = document.querySelector("#community");
-          const trust = document.querySelector("#trust");
-          const ids = [...document.querySelectorAll("[id]")].map(
-            ({ id }) => id
-          );
-          const duplicateIds = [
-            ...new Set(ids.filter((id, index) => ids.indexOf(id) !== index)),
-          ];
-          const unexpectedDuplicateIds = duplicateIds.filter((id) => {
-            if (!knownAvatarFragmentIds.has(id)) {
-              return true;
-            }
+const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
+  function* (page: Page, viewport: MarketingViewport) {
+    yield* loadMarketingPage(page, "/en");
+    const measurements = yield* measureMarketingPage(page);
 
-            const matchingElements = [
-              ...document.querySelectorAll(`[id="${CSS.escape(id)}"]`),
-            ];
-            return matchingElements.some(
-              (element) =>
-                !element.closest("#community [data-contributor-gallery] svg")
-            );
-          });
-          const fragmentReferences = [
-            ...document.querySelectorAll("[clip-path], [mask]"),
-          ].flatMap((element) =>
-            [element.getAttribute("clip-path"), element.getAttribute("mask")]
-              .filter((value) => value?.startsWith("url(#"))
-              .map((value) => value?.slice(5, -1) ?? "")
-          );
-
-          return {
-            communityDescendants: community?.querySelectorAll("*").length ?? -1,
-            communityHtmlBytes: new TextEncoder().encode(
-              community?.outerHTML ?? ""
-            ).byteLength,
-            legacyAvatarDuplicateIds: duplicateIds
-              .filter((id) => knownAvatarFragmentIds.has(id))
-              .sort(),
-            homepageDescendants: document.body.querySelectorAll("*").length,
-            missingFragmentReferences: [
-              ...new Set(
-                fragmentReferences.filter(
-                  (fragmentId) => !document.getElementById(fragmentId)
-                )
-              ),
-            ],
-            trustDescendants: trust?.querySelectorAll("*").length ?? -1,
-            unexpectedDuplicateIds: unexpectedDuplicateIds.sort(),
-          };
-        },
-        [...LEGACY_AVATAR_FRAGMENT_IDS]
-      );
-
+    yield* Effect.sync(() => {
       expect(measurements.unexpectedDuplicateIds).toEqual([]);
       expect(measurements.legacyAvatarDuplicateIds).toEqual(
-        [...LEGACY_AVATAR_FRAGMENT_IDS].sort()
+        [...legacyAvatarFragmentIds].sort()
       );
       expect(measurements.missingFragmentReferences).toEqual([]);
       expect(measurements.communityDescendants).toBeLessThanOrEqual(
@@ -112,77 +67,209 @@ for (const viewport of targetViewports) {
       expect(measurements.homepageDescendants).toBeLessThanOrEqual(
         HOMEPAGE_MAX_DESCENDANTS
       );
+    });
 
-      const gallery = page.locator("#community [data-contributor-gallery]");
-      const triggers = gallery.locator("[data-contributor-username]");
-      await expect(gallery).toHaveCount(1);
-      await expect(triggers).toHaveCount(contributors.length);
-      await expect(page.locator("[data-contributor-drawer]")).toHaveCount(0);
+    const gallery = page.locator("#community [data-contributor-gallery]");
+    const triggers = gallery.locator("[data-contributor-username]");
+    yield* Effect.promise(() => expect(gallery).toHaveCount(1));
+    yield* Effect.promise(() =>
+      expect(triggers).toHaveCount(contributors.length)
+    );
+    yield* Effect.promise(() =>
+      expect(page.locator("[data-contributor-drawer]")).toHaveCount(0)
+    );
 
-      const trust = page.locator("#trust");
-      const primaryPane = trust.locator("[data-trust-primary-pane]");
-      const sourcePane = trust.locator("[data-trust-source-pane]");
-      const splitter = trust.locator("[data-trust-splitter]");
-      await expect(trust.locator("[data-trust-layout]")).toHaveCount(1);
-      await expect(primaryPane).toHaveCount(1);
-      await expect(sourcePane).toHaveCount(1);
-      await expect(primaryPane.locator("article")).toHaveCount(1);
-      await expect(sourcePane.locator("aside")).toHaveCount(1);
-      await expect(trust.locator('[data-slot="skeleton"]')).toHaveCount(0);
+    const trust = page.locator("#trust");
+    const primaryPane = trust.locator("[data-trust-primary-pane]");
+    const sourcePane = trust.locator("[data-trust-source-pane]");
+    const splitter = trust.locator("[data-trust-splitter]");
+    yield* Effect.promise(() =>
+      expect(trust.locator("[data-trust-layout]")).toHaveCount(1)
+    );
+    yield* Effect.promise(() => expect(primaryPane).toHaveCount(1));
+    yield* Effect.promise(() => expect(sourcePane).toHaveCount(1));
+    yield* Effect.promise(() =>
+      expect(primaryPane.locator("article")).toHaveCount(1)
+    );
+    yield* Effect.promise(() =>
+      expect(sourcePane.locator("aside")).toHaveCount(1)
+    );
+    yield* Effect.promise(() =>
+      expect(trust.locator('[data-slot="skeleton"]')).toHaveCount(0)
+    );
 
-      if (viewport.desktop) {
-        await verifyDesktopSplitter(primaryPane, sourcePane, splitter, page);
-      } else {
-        await expect(splitter).toBeHidden();
-        const primaryBox = await primaryPane.boundingBox();
-        const sourceBox = await sourcePane.boundingBox();
-        expect(primaryBox).not.toBeNull();
-        expect(sourceBox).not.toBeNull();
-        expect(sourceBox?.y).toBeGreaterThan(primaryBox?.y ?? Number.MAX_VALUE);
-      }
-
-      const firstTrigger = triggers.first();
-      if ("hasTouch" in viewport && viewport.hasTouch) {
-        await firstTrigger.tap();
-      } else {
-        await firstTrigger.click();
-      }
-      const drawer = page.locator("[data-contributor-drawer]");
-      await expect(drawer).toHaveCount(1);
-      await expect(drawer).toBeVisible();
-      await expect(drawer).toHaveAccessibleName(contributors[0]?.name ?? "");
-      await expect(drawer).toHaveAttribute(
-        "data-contributor-username",
-        contributors[0]?.username ?? ""
+    if (viewport.desktop) {
+      yield* verifyDesktopSplitter(
+        primaryPane,
+        sourcePane,
+        splitter,
+        page,
+        TRUST_RESIZE_LABEL
       );
+    } else {
+      yield* Effect.promise(() => expect(splitter).toBeHidden());
+      const [primaryBounds, sourceBounds] = yield* Effect.all([
+        Effect.promise(() => primaryPane.boundingBox()),
+        Effect.promise(() => sourcePane.boundingBox()),
+      ]);
+      yield* Effect.sync(() => {
+        expect(primaryBounds).not.toBeNull();
+        expect(sourceBounds).not.toBeNull();
+        expect(sourceBounds?.y).toBeGreaterThan(
+          primaryBounds?.y ?? Number.MAX_VALUE
+        );
+      });
+    }
 
-      for (let press = 0; press < 6; press += 1) {
-        await page.keyboard.press("Tab");
-        expect(
-          await drawer.evaluate((element) =>
-            element.contains(document.activeElement)
+    const hasTouch = "hasTouch" in viewport && viewport.hasTouch;
+    const firstContributor = yield* readFirstContributor(contributors);
+    const firstTrigger = triggers.first();
+    yield* Effect.promise(() =>
+      hasTouch ? firstTrigger.tap() : firstTrigger.click()
+    );
+    const drawer = page.locator("[data-contributor-drawer]");
+    yield* Effect.promise(() => expect(drawer).toHaveCount(1));
+    yield* Effect.promise(() => expect(drawer).toBeVisible());
+    yield* Effect.promise(() =>
+      expect(drawer).toHaveAccessibleName(firstContributor.name)
+    );
+    yield* Effect.promise(() =>
+      expect(drawer).toHaveAttribute(
+        "data-contributor-username",
+        firstContributor.username
+      )
+    );
+
+    for (let press = 0; press < 6; press += 1) {
+      yield* Effect.promise(() => page.keyboard.press("Tab"));
+      yield* Effect.promise(() =>
+        expect
+          .poll(() =>
+            drawer.evaluate((element) =>
+              element.contains(document.activeElement)
+            )
           )
-        ).toBe(true);
-      }
+          .toBe(true)
+      );
+    }
 
-      if ("hasTouch" in viewport && viewport.hasTouch) {
-        await swipeDrawerClosed(drawer, page);
-      } else {
-        await page.keyboard.press("Escape");
-      }
-      await expect(drawer).toHaveCount(0);
-      await expect(firstTrigger).toBeFocused();
+    if (hasTouch) {
+      yield* swipeContributorDrawer(drawer, page);
+    } else {
+      yield* Effect.promise(() => page.keyboard.press("Escape"));
+    }
+    yield* Effect.promise(() => expect(drawer).toHaveCount(0));
+    yield* Effect.promise(() => expect(firstTrigger).toBeFocused());
 
-      if ("hasTouch" in viewport && viewport.hasTouch) {
-        await firstTrigger.tap();
-      } else {
-        await firstTrigger.click();
-      }
-      await page
-        .locator('[data-slot="drawer-backdrop"]')
-        .click({ position: { x: 2, y: 2 } });
-      await expect(drawer).toHaveCount(0);
-      await expect(firstTrigger).toBeFocused();
+    yield* Effect.promise(() =>
+      hasTouch ? firstTrigger.tap() : firstTrigger.click()
+    );
+    const backdrop = page.locator('[data-slot="drawer-backdrop"]');
+    yield* Effect.promise(() =>
+      hasTouch
+        ? backdrop.tap({ position: { x: 2, y: 2 } })
+        : backdrop.click({ position: { x: 2, y: 2 } })
+    );
+    yield* Effect.promise(() => expect(drawer).toHaveCount(0));
+    yield* Effect.promise(() => expect(firstTrigger).toBeFocused());
+  }
+);
+
+const verifyContributorPayloads = Effect.fn(
+  "NakafaE2E.verifyContributorPayloads"
+)(function* (page: Page) {
+  yield* loadMarketingPage(page, "/en");
+  const gallery = page.locator("#community [data-contributor-gallery]");
+  const drawer = page.locator("[data-contributor-drawer]");
+  const firstContributor = yield* readFirstContributor(contributors);
+  const firstTrigger = gallery.locator(
+    `[data-contributor-username="${firstContributor.username}"]`
+  );
+
+  yield* Effect.promise(() => firstTrigger.hover());
+  yield* Effect.promise(() =>
+    expect(page.getByRole("tooltip")).toHaveText(firstContributor.name)
+  );
+  yield* Effect.promise(() => page.mouse.move(0, 0));
+  yield* Effect.promise(() => expect(page.getByRole("tooltip")).toHaveCount(0));
+  yield* Effect.promise(() => firstTrigger.focus());
+  yield* Effect.promise(() =>
+    expect(page.getByRole("tooltip")).toHaveText(firstContributor.name)
+  );
+
+  for (const contributor of contributors) {
+    const trigger = gallery.locator(
+      `[data-contributor-username="${contributor.username}"]`
+    );
+    yield* Effect.promise(() => trigger.click());
+    yield* Effect.promise(() => expect(drawer).toHaveCount(1));
+    yield* Effect.promise(() =>
+      expect(drawer).toHaveAttribute(
+        "data-contributor-username",
+        contributor.username
+      )
+    );
+    yield* Effect.promise(() =>
+      expect(drawer.locator('[data-slot="drawer-title"]')).toHaveText(
+        contributor.name
+      )
+    );
+    yield* Effect.promise(() =>
+      expect(drawer).toHaveAccessibleName(contributor.name)
+    );
+
+    const actualSocialLinks = yield* Effect.promise(() =>
+      drawer
+        .locator('a[target="_blank"]')
+        .evaluateAll((links) =>
+          links.map((link) => link.getAttribute("href")).sort()
+        )
+    );
+    const expectedSocialLinks = Object.values(contributor.social ?? {})
+      .filter((href) => href !== undefined)
+      .sort();
+    yield* Effect.sync(() =>
+      expect(actualSocialLinks).toEqual(expectedSocialLinks)
+    );
+
+    yield* Effect.promise(() => page.keyboard.press("Escape"));
+    yield* Effect.promise(() => expect(drawer).toHaveCount(0));
+    yield* Effect.promise(() => expect(trigger).toBeFocused());
+  }
+});
+
+const verifyContributorPage = Effect.fn("NakafaE2E.verifyContributorPage")(
+  function* (page: Page) {
+    yield* loadMarketingPage(page, "/en/contributor");
+    const gallery = page.locator("[data-contributor-gallery]");
+    yield* Effect.promise(() => expect(gallery).toHaveCount(1));
+    yield* Effect.promise(() =>
+      expect(gallery.locator("[data-contributor-username]")).toHaveCount(
+        contributors.length
+      )
+    );
+    yield* Effect.promise(() =>
+      gallery.locator("[data-contributor-username]").last().click()
+    );
+    yield* Effect.promise(() =>
+      expect(page.locator("[data-contributor-drawer]")).toHaveCount(1)
+    );
+  }
+);
+
+for (const viewport of targetViewports) {
+  test.describe(`marketing surfaces at ${viewport.name}`, () => {
+    test.use({
+      hasTouch: "hasTouch" in viewport ? viewport.hasTouch : false,
+      viewport: { height: viewport.height, width: viewport.width },
+    });
+
+    test("preserves one responsive content tree and project DOM budgets", async ({
+      page,
+    }) => {
+      await Effect.runPromise(
+        withObservedPageErrors(page, verifyMarketingSurface(page, viewport))
+      );
     });
   });
 }
@@ -193,158 +280,16 @@ test.describe("detached contributor payloads", () => {
   test("renders every contributor through one drawer root", async ({
     page,
   }) => {
-    await page.goto("/en", { waitUntil: "domcontentloaded" });
-    const gallery = page.locator("#community [data-contributor-gallery]");
-    const drawer = page.locator("[data-contributor-drawer]");
-    const firstContributor = contributors[0];
-    const firstTrigger = gallery.locator(
-      `[data-contributor-username="${firstContributor?.username ?? ""}"]`
+    await Effect.runPromise(
+      withObservedPageErrors(page, verifyContributorPayloads(page))
     );
-
-    await firstTrigger.hover();
-    await expect(page.getByRole("tooltip")).toHaveText(
-      firstContributor?.name ?? ""
-    );
-    await page.mouse.move(0, 0);
-    await expect(page.getByRole("tooltip")).toHaveCount(0);
-    await firstTrigger.focus();
-    await expect(page.getByRole("tooltip")).toHaveText(
-      firstContributor?.name ?? ""
-    );
-
-    for (const contributor of contributors) {
-      const trigger = gallery.locator(
-        `[data-contributor-username="${contributor.username}"]`
-      );
-      await trigger.click();
-      await expect(drawer).toHaveCount(1);
-      await expect(drawer).toHaveAttribute(
-        "data-contributor-username",
-        contributor.username
-      );
-      await expect(drawer.locator('[data-slot="drawer-title"]')).toHaveText(
-        contributor.name
-      );
-      await expect(drawer).toHaveAccessibleName(contributor.name);
-
-      const actualSocialLinks = await drawer
-        .locator('a[target="_blank"]')
-        .evaluateAll((links) =>
-          links.map((link) => link.getAttribute("href") ?? "").sort()
-        );
-      const expectedSocialLinks = Object.values(contributor.social ?? {})
-        .filter((href) => href !== undefined)
-        .sort();
-      expect(actualSocialLinks).toEqual(expectedSocialLinks);
-
-      await page.keyboard.press("Escape");
-      await expect(drawer).toHaveCount(0);
-      await expect(trigger).toBeFocused();
-    }
   });
 
   test("uses the same one-root gallery on the contributor page", async ({
     page,
   }) => {
-    await page.goto("/en/contributor", { waitUntil: "domcontentloaded" });
-    const gallery = page.locator("[data-contributor-gallery]");
-    await expect(gallery).toHaveCount(1);
-    await expect(gallery.locator("[data-contributor-username]")).toHaveCount(
-      contributors.length
+    await Effect.runPromise(
+      withObservedPageErrors(page, verifyContributorPage(page))
     );
-    await gallery.locator("[data-contributor-username]").last().click();
-    await expect(page.locator("[data-contributor-drawer]")).toHaveCount(1);
   });
 });
-
-async function verifyDesktopSplitter(
-  primaryPane: import("@playwright/test").Locator,
-  sourcePane: import("@playwright/test").Locator,
-  splitter: import("@playwright/test").Locator,
-  page: import("@playwright/test").Page
-) {
-  await expect(splitter).toBeVisible();
-  await expect(splitter).toHaveAttribute("role", "separator");
-  await expect(splitter).toHaveAccessibleName(
-    "Resize the human and agent views"
-  );
-  await expect(splitter).toHaveAttribute("aria-controls", "trust-primary-pane");
-  await expect(splitter).toHaveAttribute("aria-orientation", "vertical");
-  await expect(splitter).toHaveAttribute("aria-valuemin", "36");
-  await expect(splitter).toHaveAttribute("aria-valuemax", "64");
-  await expect(splitter).toHaveAttribute("aria-valuenow", "50");
-
-  const primaryBox = await primaryPane.boundingBox();
-  const sourceBox = await sourcePane.boundingBox();
-  expect(primaryBox).not.toBeNull();
-  expect(sourceBox).not.toBeNull();
-  expect(Math.abs((primaryBox?.y ?? 0) - (sourceBox?.y ?? 1))).toBeLessThan(2);
-  expect(sourceBox?.x).toBeGreaterThan(primaryBox?.x ?? Number.MAX_VALUE);
-
-  await splitter.focus();
-  await page.keyboard.press("ArrowRight");
-  await expect(splitter).toHaveAttribute("aria-valuenow", "51");
-  await page.keyboard.press("Home");
-  await expect(splitter).toHaveAttribute("aria-valuenow", "36");
-  await page.keyboard.press("End");
-  await expect(splitter).toHaveAttribute("aria-valuenow", "64");
-  await page.keyboard.press("Home");
-
-  const splitterBox = await splitter.boundingBox();
-  expect(splitterBox).not.toBeNull();
-  if (!splitterBox) {
-    return;
-  }
-  await page.mouse.move(
-    splitterBox.x + splitterBox.width / 2,
-    splitterBox.y + 8
-  );
-  await page.mouse.down();
-  await page.mouse.move(splitterBox.x + 600, splitterBox.y + 8);
-  await page.mouse.up();
-  const pointerValue = Number(await splitter.getAttribute("aria-valuenow"));
-  expect(pointerValue).toBeGreaterThanOrEqual(36);
-  expect(pointerValue).toBeLessThanOrEqual(64);
-}
-
-async function swipeDrawerClosed(
-  drawer: import("@playwright/test").Locator,
-  page: import("@playwright/test").Page
-) {
-  const drawerBox = await drawer.boundingBox();
-  expect(drawerBox).not.toBeNull();
-  if (!drawerBox) {
-    return;
-  }
-  const clientX = drawerBox.x + drawerBox.width / 2;
-  const startY = drawerBox.y + 20;
-  const endY = Math.min(startY + 320, drawerBox.y + drawerBox.height - 4);
-  const body = page.locator("body");
-
-  await drawer.dispatchEvent("pointerdown", {
-    button: 0,
-    buttons: 1,
-    clientX,
-    clientY: startY,
-    isPrimary: true,
-    pointerId: 1,
-    pointerType: "touch",
-  });
-  await body.dispatchEvent("pointermove", {
-    buttons: 1,
-    clientX,
-    clientY: endY,
-    isPrimary: true,
-    pointerId: 1,
-    pointerType: "touch",
-  });
-  await body.dispatchEvent("pointerup", {
-    button: 0,
-    buttons: 0,
-    clientX,
-    clientY: endY,
-    isPrimary: true,
-    pointerId: 1,
-    pointerType: "touch",
-  });
-}
