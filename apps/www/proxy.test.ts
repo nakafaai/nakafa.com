@@ -179,6 +179,42 @@ describe("proxy", () => {
     expectNoLocaleProxy();
   });
 
+  it.each([
+    [
+      "accept header",
+      "/de/articles/politics/regional-elections-turmoil?source=agent",
+      { headers: { accept: "text/markdown" } },
+      "/de/articles/politics/regional-elections-turmoil",
+      "http://localhost:3000/de/articles/politik/pilkada-2024-gerichtsurteile-und-kandidaturen?source=agent",
+    ],
+    [
+      "explicit suffix",
+      "/de/articles/politics/regional-elections-turmoil.mdx?source=agent",
+      undefined,
+      "/de/articles/politics/regional-elections-turmoil",
+      "http://localhost:3000/de/articles/politik/pilkada-2024-gerichtsurteile-und-kandidaturen.mdx?source=agent",
+    ],
+  ])(
+    "redirects retired Markdown URLs negotiated by %s",
+    async (_kind, path, init, migratedPath, expected) => {
+      runtimeMocks.readRedirect.mockReturnValueOnce(
+        Effect.succeed(
+          "/de/articles/politik/pilkada-2024-gerichtsurteile-und-kandidaturen"
+        )
+      );
+
+      const response = await requestProxy(path, init);
+
+      expect(response.status).toBe(308);
+      expect(response.headers.get("location")).toBe(expected);
+      expect(runtimeMocks.readRedirect).toHaveBeenCalledWith({
+        method: "GET",
+        pathname: migratedPath,
+      });
+      expectNoLocaleProxy();
+    }
+  );
+
   it("runs only unsupported root files through the locale proxy", () => {
     const matches = (url: string) =>
       unstable_doesMiddlewareMatch({ config, url });
