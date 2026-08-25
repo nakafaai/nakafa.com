@@ -1,11 +1,12 @@
-import type { Browser, Page } from "@playwright/test";
+import type { Browser, Page, Request } from "@playwright/test";
 import { Clock, Duration, Effect, Schema } from "effect";
 import { withBrowserContext } from "./browser-context";
 import { seedDeniedAnalyticsConsent } from "./consent";
 import {
-  JavascriptRequestFailureKindSchema,
-  type JavascriptRequestTracker,
-  withJavascriptRequestTracker,
+  RequestFailureKindSchema,
+  type RequestTracker,
+  type TrackedRequestKind,
+  withRequestTracker,
 } from "./request-tracker";
 
 const JAVASCRIPT_RESOURCE_PATTERN =
@@ -13,6 +14,22 @@ const JAVASCRIPT_RESOURCE_PATTERN =
 const RESOURCE_IDLE_MILLISECONDS = 1000;
 const RESOURCE_SETTLE_TIMEOUT_MILLISECONDS = 15_000;
 const RESOURCE_POLL_MILLISECONDS = 100;
+
+const createResourceRequestClassifier = (applicationOrigin: string) =>
+  function classifyResourceRequest(
+    request: Request
+  ): TrackedRequestKind | undefined {
+    const resourceUrl = new URL(request.url());
+    if (resourceUrl.origin !== applicationOrigin) {
+      return;
+    }
+    if (JAVASCRIPT_RESOURCE_PATTERN.test(resourceUrl.pathname)) {
+      return "javascript";
+    }
+    if (request.headers()["next-router-prefetch"] !== undefined) {
+      return "prefetch";
+    }
+  };
 
 export interface JavascriptRun {
   readonly decodedBodySize: number;
@@ -41,7 +58,7 @@ export class JavascriptResourceRequestError extends Schema.TaggedError<Javascrip
   {
     errorText: Schema.optional(Schema.String),
     href: Schema.String,
-    kind: JavascriptRequestFailureKindSchema,
+    kind: RequestFailureKindSchema,
     status: Schema.optional(Schema.Finite),
     url: Schema.String,
   }
@@ -135,11 +152,7 @@ const readJavascriptRun = Effect.fn("NakafaE2E.readJavascriptRun")(function* (
 
 const readSettledJavascriptRun = Effect.fn(
   "NakafaE2E.readSettledJavascriptRun"
-)(function* (
-  page: Page,
-  href: string,
-  requestTracker: JavascriptRequestTracker
-) {
+)(function* (page: Page, href: string, requestTracker: RequestTracker) {
   const startedAt = yield* Clock.currentTimeMillis;
   let lastChangeAt = startedAt;
   let previousCount = -1;
@@ -163,7 +176,7 @@ const readSettledJavascriptRun = Effect.fn(
       previousRevision = requestTracker.revision;
       lastChangeAt = observedAt;
     }
-    if (!requestTracker.prefetchObserved) {
+    if (!requestTracker.hasObserved("prefetch")) {
       if (observedAt - startedAt > RESOURCE_SETTLE_TIMEOUT_MILLISECONDS) {
         return yield* new JavascriptPrefetchReadinessTimeout({
           href,
@@ -222,11 +235,12 @@ export const measureRouteJavascript = Effect.fn(
           const page = yield* Effect.promise(() => context.newPage());
           yield* seedDeniedAnalyticsConsent(page);
           const applicationOrigin = new URL(baseURL).origin;
+          const classifyRequest =
+            createResourceRequestClassifier(applicationOrigin);
 
-          return yield* withJavascriptRequestTracker(
+          return yield* withRequestTracker(
             page,
-            applicationOrigin,
-            JAVASCRIPT_RESOURCE_PATTERN,
+            classifyRequest,
             (requestTracker) =>
               Effect.gen(function* () {
                 const session = yield* Effect.promise(() =>

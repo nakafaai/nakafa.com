@@ -1,6 +1,7 @@
 import { instant } from "@next/playwright";
 import { expect, type Locator, type Page } from "@playwright/test";
 import { Duration, Effect, Schedule, Schema } from "effect";
+import { prepareClientNavigation } from "./readiness";
 
 const HOMEPAGE_HEADING_PATTERN = /Learn until it clicks/i;
 const QURAN_HEADING_PATTERN = /Al-Baqara/i;
@@ -203,14 +204,18 @@ const navigateHard = Effect.fn("NakafaE2E.navigateHard")(function* (
 
 const navigateClient = Effect.fn("NakafaE2E.navigateClient")(function* (
   page: Page,
+  baseURL: string,
   target: NavigationTarget,
   hasTouch: boolean
 ) {
-  const sourceResponse = yield* Effect.promise(() =>
-    page.goto(target.sourceHref, { waitUntil: "domcontentloaded" })
+  const link = yield* prepareClientNavigation(
+    page,
+    baseURL,
+    target.sourceHref,
+    target.href,
+    NAVIGATION_TIMEOUT_MILLISECONDS,
+    () => findVisibleLink(page, target.href, target.sourceHref)
   );
-  yield* Effect.sync(() => expect(sourceResponse?.ok()).toBe(true));
-  const link = yield* findVisibleLink(page, target.href, target.sourceHref);
 
   // @next/playwright owns this native Promise callback while its lock is held.
   yield* Effect.promise(() =>
@@ -237,7 +242,7 @@ export const verifyHardAndClientNavigation = Effect.fn(
   hasTouch: boolean
 ) {
   yield* navigateHard(page, baseURL, target);
-  yield* navigateClient(page, target, hasTouch);
+  yield* navigateClient(page, baseURL, target, hasTouch);
 });
 
 const resolveHomepage = Effect.fn("NakafaE2E.resolveHomepage")(() =>

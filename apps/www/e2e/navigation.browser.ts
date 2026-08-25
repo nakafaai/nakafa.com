@@ -5,7 +5,7 @@ import { seedDeniedAnalyticsConsent } from "./support/consent";
 import {
   navigationCases,
   verifyHardAndClientNavigation,
-} from "./support/navigation";
+} from "./support/navigation/cases";
 
 const targetViewports = [
   { height: 800, name: "compact", width: 320 },
