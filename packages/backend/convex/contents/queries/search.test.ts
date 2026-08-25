@@ -216,4 +216,18 @@ describe("contents/queries/search:search", () => {
       offset: NAKAFA_AGENT_SEARCH_WINDOW - 1,
     });
   });
+
+  it("rejects a page larger than the signed transaction window", async () => {
+    const t = createConvexTestWithBetterAuth();
+
+    await expect(
+      t.query(api.contents.queries.search.search, {
+        limit: NAKAFA_AGENT_SEARCH_WINDOW + 1,
+        locale: "en",
+        offset: 0,
+      })
+    ).rejects.toThrow(
+      `Content search limit must be between 1 and ${NAKAFA_AGENT_SEARCH_WINDOW}.`
+    );
+  });
 });

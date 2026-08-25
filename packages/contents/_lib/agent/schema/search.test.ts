@@ -26,4 +26,17 @@ describe("NakafaAgentSearchOptionsSchema", () => {
       offset: NAKAFA_AGENT_SEARCH_WINDOW - 1,
     });
   });
+
+  it("rejects a page outside the transaction-proven window", () => {
+    expect(() =>
+      Schema.decodeSync(NakafaAgentSearchOptionsSchema)({
+        limit: NAKAFA_AGENT_SEARCH_WINDOW + 1,
+      })
+    ).toThrow();
+    expect(() =>
+      Schema.decodeSync(NakafaAgentSearchOptionsSchema)({
+        offset: NAKAFA_AGENT_SEARCH_WINDOW,
+      })
+    ).toThrow();
+  });
 });
