@@ -183,7 +183,7 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Use double quotes for strings and JSX attributes.
 - Do not store Tailwind class strings in arbitrary data objects, maps, or variables outside a styling utility/component boundary. For reusable or variant-driven styles, use `cva` or existing variant helpers so Tailwind IntelliSense and class extraction stay reliable.
 - Prefer `import type` for type-only imports.
-- Within apps, prefer `@/` imports over long relative paths.
+- Every new or touched app TypeScript Module must use direct `@/` imports for same-app Modules, including colocated Modules and tests. Relative `./` and `../` Module imports are forbidden. Configuration inheritance values and filesystem path strings are outside this Module-import rule. Existing untouched relative imports require a separate verified cleanup.
 - Across workspaces, use `@repo/*` imports.
 - Prefer direct file imports over adding new barrel layers unless the existing API already exposes one.
 - Group imports clearly: external, workspace, then app-local.
@@ -242,6 +242,8 @@ Favor readable, skimmable, well-verified code over speed or cleverness.
 - Remove `console.log`, `debugger`, and `alert` from production code.
 
 ## React And Next.js
+
+- Before adding, changing, or reviewing React component composition, read `.agents/skills/vercel-composition-patterns/SKILL.md` completely and follow its relevant referenced rules.
 
 ### Version-Matched Next.js Guidance
 

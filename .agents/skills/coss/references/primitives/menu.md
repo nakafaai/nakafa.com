@@ -73,7 +73,7 @@ Use popup positioning props like `align` / `sideOffset` only when a layout needs
 - Use `MenuRadioGroup` + `MenuRadioItem` with a `defaultValue` when enforcing single-choice selection.
 - Use `MenuShortcut` to display keyboard hints in dense command menus.
 - Use `variant="destructive"` on dangerous actions.
-- For responsive action menus, keep desktop on `Menu` and switch mobile to `DrawerMenu` / `DrawerMenuTrigger` / `DrawerMenuItem` patterns.
+- For responsive action menus, keep desktop on `Menu` and switch mobile to `DrawerMenu` / `DrawerMenuTrigger` / `DrawerMenuItem` from `@/components/ui/drawer/menu`.
 - In `DrawerMenu` flows, wrap actionable rows with `DrawerClose render={<DrawerMenuItem />}` when selection should dismiss the drawer.
 
 ## Common pitfalls
@@ -95,4 +95,3 @@ Use popup positioning props like `align` / `sideOffset` only when a layout needs
 - switch-style checkbox items: `p-menu-9`
 - cross-component example: `p-dialog-2` (menu opening dialog)
 - responsive menu/drawer variant: `p-drawer-13`
-

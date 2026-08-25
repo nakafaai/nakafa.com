@@ -16,18 +16,14 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@repo/design-system/components/ui/resizable";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
+import { TrustLayout } from "@/components/marketing/about/trust/layout";
 import {
   buildTrustSourceExcerpt,
   type TrustLessonExcerpt,
-} from "./trust-source";
+} from "@/components/marketing/about/trust/source";
 
 /** Applies the existing marketing accent to one intentional phrase. */
 function renderAccent(chunks: ReactNode) {
@@ -144,8 +140,8 @@ function TrustSourcePreview({
 /**
  * Places the rendered lesson and source in one bounded comparison surface.
  *
- * Desktop uses Nakafa's accessible resizable panels. Compact screens show both
- * views at full width so neither proof becomes an unreadable narrow column.
+ * Desktop uses an accessible resizable grid. Compact screens show the same
+ * content nodes at full width so neither proof becomes a narrow column.
  */
 function TrustComparison({
   excerpt,
@@ -160,44 +156,19 @@ function TrustComparison({
 
   return (
     <div className="border-t">
-      <div className="grid divide-y lg:hidden">
-        <TrustLessonPreview
-          excerpt={excerpt}
-          headingIdPrefix="trust-compact"
-          lessonHref={lessonHref}
-        />
-        <TrustSourcePreview excerpt={excerpt} sourceHref={sourceHref} />
-      </div>
-      <div className="hidden h-[50rem] lg:block">
-        <ResizablePanelGroup
-          defaultLayout={{
-            "trust-human": 50,
-            "trust-agent": 50,
-          }}
-          id="trust-comparison"
-          orientation="horizontal"
-          resizeTargetMinimumSize={{
-            coarse: 44,
-            fine: 24,
-          }}
-        >
-          <ResizablePanel id="trust-human" maxSize="64%" minSize="36%">
-            <TrustLessonPreview
-              excerpt={excerpt}
-              headingIdPrefix="trust-comparison"
-              lessonHref={lessonHref}
-            />
-          </ResizablePanel>
-          <ResizableHandle
-            aria-label={t("comparison-slider-label")}
-            disableDoubleClick
-            withHandle
+      <TrustLayout
+        lesson={
+          <TrustLessonPreview
+            excerpt={excerpt}
+            headingIdPrefix="trust-comparison"
+            lessonHref={lessonHref}
           />
-          <ResizablePanel id="trust-agent" maxSize="64%" minSize="36%">
-            <TrustSourcePreview excerpt={excerpt} sourceHref={sourceHref} />
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      </div>
+        }
+        resizeLabel={t("comparison-slider-label")}
+        source={
+          <TrustSourcePreview excerpt={excerpt} sourceHref={sourceHref} />
+        }
+      />
     </div>
   );
 }

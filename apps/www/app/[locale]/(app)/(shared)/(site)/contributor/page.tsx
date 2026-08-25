@@ -2,7 +2,7 @@ import { LoveKoreanFingerIcon } from "@hugeicons/core-free-icons";
 import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
-import { Avatar } from "@/components/contributor/avatar";
+import { ContributorGallery } from "@/components/contributor/gallery";
 import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { contributors } from "@/lib/data/contributor";
@@ -30,11 +30,7 @@ export default function Page() {
     <>
       <PageHeader />
       <LayoutContent className="pb-20">
-        <div className="flex flex-wrap gap-2">
-          {contributors.map((contributor) => (
-            <Avatar contributor={contributor} key={contributor.username} />
-          ))}
-        </div>
+        <ContributorGallery contributors={contributors} />
       </LayoutContent>
     </>
   );

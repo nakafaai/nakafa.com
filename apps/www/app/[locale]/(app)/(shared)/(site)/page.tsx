@@ -12,7 +12,7 @@ import { Hero } from "@/components/marketing/about/hero";
 import { Logos } from "@/components/marketing/about/logos";
 import { Pricing } from "@/components/marketing/about/pricing";
 import { Schools } from "@/components/marketing/about/schools";
-import { Trust } from "@/components/marketing/about/trust";
+import { Trust } from "@/components/marketing/about/trust/section";
 import {
   getSubjectMenuHref,
   subjectMenu,

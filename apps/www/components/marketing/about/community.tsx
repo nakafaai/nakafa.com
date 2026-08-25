@@ -3,7 +3,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { useTranslations } from "next-intl";
-import { Avatar } from "@/components/contributor/avatar";
+import { ContributorGallery } from "@/components/contributor/gallery";
 import { contributors } from "@/lib/data/contributor";
 
 export function Community() {
@@ -39,15 +39,7 @@ export function Community() {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-4">
-            {contributors.map((contributor) => (
-              <Avatar
-                contributor={contributor}
-                key={contributor.username}
-                size="lg"
-              />
-            ))}
-          </div>
+          <ContributorGallery contributors={contributors} variant="marketing" />
         </div>
       </div>
     </section>
