@@ -48,6 +48,45 @@ describe("formatAgentDocsFailure", () => {
     expect(output).not.toContain("broken-5");
   });
 
+  it("prioritizes offenders over earlier passing page results", () => {
+    const output = formatAgentDocsFailure(
+      createResult({
+        pageResults: [
+          ...Array.from({ length: 5 }, (_, index) => ({
+            url: `https://nakafa.com/passing-${index}`,
+            status: "pass",
+            missingPercent: 0,
+          })),
+          {
+            url: "https://nakafa.com/offender",
+            status: "warn",
+            missingPercent: 8,
+          },
+        ],
+      })
+    );
+
+    expect(output).toContain('url="https://nakafa.com/offender"');
+    expect(output).toContain('status="warn"');
+    expect(output).toContain("missingPercent=8");
+    expect(output).not.toContain("passing-4");
+  });
+
+  it("prioritizes a missing-content measurement without a status", () => {
+    const output = formatAgentDocsFailure(
+      createResult({
+        pageResults: [
+          { url: "https://nakafa.com/equivalent", missingPercent: 0 },
+          { url: "https://nakafa.com/missing", missingPercent: 8 },
+        ],
+      })
+    );
+
+    expect(output.indexOf("/missing")).toBeLessThan(
+      output.indexOf("/equivalent")
+    );
+  });
+
   it("returns only the summary when no structured offender exists", () => {
     expect(formatAgentDocsFailure(createResult())).toBe(
       "[warn] One page differs"

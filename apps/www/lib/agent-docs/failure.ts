@@ -41,7 +41,7 @@ function readDetailLines(details: CheckResult["details"]) {
     return [];
   }
 
-  const lines: string[] = [];
+  const detailItems: unknown[] = [];
 
   for (const field of DETAIL_ARRAY_FIELDS) {
     const items = details[field];
@@ -49,19 +49,40 @@ function readDetailLines(details: CheckResult["details"]) {
       continue;
     }
 
-    for (const item of items) {
-      const line = formatDetailItem(item);
-      if (line) {
-        lines.push(`detail: ${line}`);
-      }
-
-      if (lines.length === MAX_DETAIL_ITEMS) {
-        return lines;
-      }
-    }
+    detailItems.push(...items);
   }
 
-  return lines;
+  return detailItems
+    .sort((left, right) => Number(isOffender(right)) - Number(isOffender(left)))
+    .map(formatDetailItem)
+    .filter((line): line is string => line !== null)
+    .slice(0, MAX_DETAIL_ITEMS)
+    .map((line) => `detail: ${line}`);
+}
+
+function isOffender(item: unknown) {
+  if (typeof item !== "object" || item === null || Array.isArray(item)) {
+    return false;
+  }
+
+  const valuesByField = new Map(Object.entries(item));
+  const error = valuesByField.get("error");
+  const status = valuesByField.get("status");
+  const missingPercent = valuesByField.get("missingPercent");
+
+  if (typeof error === "string" && error.length > 0) {
+    return true;
+  }
+
+  if (typeof status === "string") {
+    return status !== "pass";
+  }
+
+  if (typeof status === "number") {
+    return status < 200 || status >= 300;
+  }
+
+  return typeof missingPercent === "number" && missingPercent > 0;
 }
 
 function formatDetailItem(item: unknown) {
