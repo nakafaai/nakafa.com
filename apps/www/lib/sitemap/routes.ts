@@ -1,11 +1,3 @@
-import {
-  type ActiveAppLocaleCode,
-  activeAppLocaleCode,
-} from "@nakafa/aksara-contracts/locale";
-import type {
-  PageKey,
-  PublicPageProjection,
-} from "@nakafa/aksara-contracts/projection/page";
 import { compareSitemapPaths } from "@repo/backend/convex/contentRelease/sitemap";
 import { Data, Effect } from "effect";
 import { readPublishedArticleSitemap } from "@/lib/content/article/sitemap";
@@ -60,9 +52,8 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
       }
       return {
         routes: artifact.routes
-          .map(({ date, publicPath }) => ({
-            lastModified:
-              date === null ? undefined : Date.parse(`${date}T00:00:00.000Z`),
+          .map(({ lastModified, publicPath }) => ({
+            lastModified: lastModified ?? undefined,
             path: routeToPath(publicPath),
           }))
           .sort((left, right) => compareSitemapPaths(left.path, right.path)),
@@ -78,8 +69,8 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
       }
       return {
         routes: artifact.routes
-          .map(({ date, publicPath }) => ({
-            lastModified: Date.parse(`${date}T00:00:00.000Z`),
+          .map(({ lastModified, publicPath }) => ({
+            lastModified,
             path: routeToPath(publicPath),
           }))
           .sort((left, right) => compareSitemapPaths(left.path, right.path)),
@@ -95,10 +86,7 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
       }
       return {
         routes: artifact.routes
-          .map(({ publicPath }) => ({
-            lastModified: undefined,
-            path: routeToPath(publicPath),
-          }))
+          .map(({ publicPath }) => ({ path: routeToPath(publicPath) }))
           .sort((left, right) => compareSitemapPaths(left.path, right.path)),
       };
     }
@@ -113,39 +101,21 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
       }
       return {
         routes: artifact.paths
-          .map((publicPath) => ({
-            lastModified: undefined,
-            path: routeToPath(publicPath),
-          }))
+          .map((publicPath) => ({ path: routeToPath(publicPath) }))
           .sort((left, right) => compareSitemapPaths(left.path, right.path)),
       };
     }
 
     if (isPageSitemapPage(page)) {
       const catalog = yield* readPublishedPageCatalog();
-      const alternatePathsByPageKey = new Map<
-        PageKey,
-        Partial<Record<ActiveAppLocaleCode, string>>
-      >();
-      const projections: PublicPageProjection[] = [];
-      for (const projection of catalog.projections) {
-        const alternatePaths =
-          alternatePathsByPageKey.get(projection.pageKey) ?? {};
-        alternatePaths[activeAppLocaleCode(projection.appLocale)] =
-          `/${projection.publicPath}`;
-        alternatePathsByPageKey.set(projection.pageKey, alternatePaths);
-        if (projection.appLocale === page.locale) {
-          projections.push(projection);
-        }
-      }
+      const projections = catalog.projections.filter(
+        (projection) => projection.appLocale === page.locale
+      );
       if (projections.length === 0) {
         return yield* new SitemapPageNotFoundError({ pageId });
       }
       const routes = projections.map((projection) => ({
-        alternatePaths: alternatePathsByPageKey.get(projection.pageKey),
-        lastModified: Date.parse(
-          `${projection.metadata.lastModified}T00:00:00.000Z`
-        ),
+        lastModified: projection.metadata.lastModified,
         path: routeToPath(projection.publicPath),
       }));
       routes.sort((left, right) => compareSitemapPaths(left.path, right.path));
@@ -158,14 +128,13 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
       const { surahs } = yield* readPublishedQuranCatalog();
       return {
         routes: surahs.map((surah) => ({
-          lastModified: undefined,
           path: `/quran/${surah.number}`,
         })),
       };
     }
 
     return {
-      routes: baseRoutes.map((path) => ({ lastModified: undefined, path })),
+      routes: baseRoutes.map((path) => ({ path })),
     };
   }
 );

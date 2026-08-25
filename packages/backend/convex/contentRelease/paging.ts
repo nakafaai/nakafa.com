@@ -5,6 +5,9 @@ import { Effect } from "effect";
 /** Maximum projection rows requested through one public discovery page. */
 export const PROJECTION_PAGE_LIMIT = 32;
 
+/** Maximum physical rows scanned for dual-written publication lookahead. */
+export const PUBLICATION_SCAN_LIMIT = PROJECTION_PAGE_LIMIT * 2 + 2;
+
 /** Maximum optional read budget accepted from one discovery caller. */
 export const PROJECTION_PAGE_BYTES = 4 * 1024 * 1024;
 
@@ -49,4 +52,25 @@ export const validateProjectionPage = Effect.fn(
     maximumBytesRead: options.maximumBytesRead ?? PROJECTION_PAGE_BYTES,
     maximumRowsRead: options.maximumRowsRead ?? PROJECTION_PAGE_LIMIT,
   };
+});
+
+/** Reserves both index reads for every requested and lookahead row. */
+export const validatePublicationPage = Effect.fn(
+  "contentRelease.validatePublicationPage"
+)(function* (options: PaginationOptions) {
+  const { maximumRowsRead, ...nativeOptions } = options;
+  const bounded = yield* validateProjectionPage(nativeOptions);
+  const publicationRows = maximumRowsRead ?? PUBLICATION_SCAN_LIMIT;
+  const requiredRows = (bounded.numItems + 1) * 2;
+  if (
+    !Number.isSafeInteger(publicationRows) ||
+    publicationRows < requiredRows ||
+    publicationRows > PUBLICATION_SCAN_LIMIT
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_LIMIT",
+      `Publication pages accept ${requiredRows} to ${PUBLICATION_SCAN_LIMIT} scanned rows.`
+    );
+  }
+  return { ...bounded, maximumRowsRead: publicationRows };
 });

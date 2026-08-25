@@ -120,6 +120,21 @@ describe("llms entries", () => {
     ]);
   });
 
+  it("keeps an absent signed description absent", () => {
+    const [entry] = buildPublishedContentLlmsEntries({
+      locale: "de",
+      rows: [
+        {
+          publicPath: "articles/politik/beispiel",
+          title: "Beispiel",
+        },
+      ],
+      section: "articles",
+    });
+
+    expect(entry).not.toHaveProperty("description");
+  });
+
   it("preserves every segment of a nested signed Page route", () => {
     const page = PublicPageProjectionSchema.make({
       appLocale: AppLocaleSchema.make("en"),

@@ -46,9 +46,9 @@ export const readArticleNavigation = Effect.fn("www.articles.readNavigation")(
       }
 
       navigation.push(
-        ...page.categories.map(({ category, title }) => ({
+        ...page.categories.map(({ category, route, title }) => ({
           category,
-          href: `/articles/${category}`,
+          href: `/articles/${route}`,
           title,
         }))
       );

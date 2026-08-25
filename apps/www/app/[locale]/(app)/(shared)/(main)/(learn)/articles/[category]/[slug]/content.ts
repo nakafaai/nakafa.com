@@ -9,15 +9,14 @@ import { io } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import type { ReactNode } from "react";
+import { normalizeArticleMetadata } from "@/lib/content/article/decode";
+import { getArticlePublication } from "@/lib/content/article/publication";
+import { getPublishedArticleRoute } from "@/lib/content/article/route";
 import {
   type ArticlePreviewContent,
   readArticlePreview,
 } from "@/lib/content/preview/article";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
-import {
-  getCurrentPublishedArticle,
-  renderCurrentPublishedArticle,
-} from "@/lib/content/published/article";
 import { getAksaraUrl, getRawAksaraUrl } from "@/lib/utils/github";
 
 /** Exact route identity shared by metadata and body ownership reads. */
@@ -37,6 +36,7 @@ interface PreviewOwner {
 
 /** Complete article data consumed by the existing page shell. */
 export interface ArticlePageContent {
+  readonly alternates: readonly ArticleProjection[];
   readonly body: string;
   readonly categoryTitle: string;
   readonly children: ReactNode;
@@ -45,6 +45,7 @@ export interface ArticlePageContent {
   readonly kind: PreviewOwner["kind"] | PublishedOwner["kind"];
   readonly metadata: ArticleMetadata;
   readonly references: readonly ArticleReference[];
+  readonly route: ArticleProjection;
   readonly sourceUrl: null | string;
 }
 
@@ -80,20 +81,21 @@ export async function readArticleMetadata(input: ArticleContentInput) {
   const owner = await resolveArticleOwner(input);
   if (owner.kind === "preview") {
     return {
+      alternates: [owner.content.projection],
       categoryTitle: owner.content.categoryTitle,
       metadata: owner.content.metadata,
+      route: owner.content.projection,
     };
   }
-  const published = await getCurrentPublishedArticle({
-    appLocale: AppLocaleSchema.make(input.locale),
-    publicPath: input.publicPath,
-  });
-  if (!published) {
+  const model = await getPublishedArticleRoute(input.locale, input.publicPath);
+  if (!model.projection) {
     notFound();
   }
   return {
-    categoryTitle: published.projection.categoryTitle,
-    metadata: published.projection.metadata,
+    alternates: model.alternates,
+    categoryTitle: model.projection.categoryTitle,
+    metadata: normalizeArticleMetadata(model.projection.metadata),
+    route: model.projection,
   };
 }
 
@@ -105,20 +107,24 @@ export async function readArticlePage(
   if (owner.kind === "preview") {
     return {
       ...owner.content,
+      alternates: [owner.content.projection],
       copySourceUrl: null,
       kind: owner.kind,
+      route: owner.content.projection,
       sourceUrl: null,
     };
   }
-  const published = await renderCurrentPublishedArticle({
-    appLocale: AppLocaleSchema.make(input.locale),
-    publicPath: input.publicPath,
-  });
-  if (!published) {
+  const publication = await getArticlePublication(
+    input.locale,
+    input.publicPath
+  );
+  if (!publication) {
     notFound();
   }
+  const { model, published } = publication;
 
   return {
+    alternates: model.alternates,
     body: published.rawMdx,
     categoryTitle: published.categoryTitle,
     children: published.body,
@@ -132,6 +138,7 @@ export async function readArticlePage(
     kind: owner.kind,
     metadata: published.metadata,
     references: published.references,
+    route: model.projection,
     sourceUrl: published.sourceRevision
       ? getAksaraUrl({
           path: published.sourcePath,

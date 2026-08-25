@@ -11,7 +11,7 @@ describe("MDX agent markdown projection", () => {
     () =>
       Effect.gen(function* () {
         const markdown =
-          yield* projectMdxForAgentMarkdown(`import { LineEquation } from "@repo/design-system/components/contents/mathematics/line-equation";
+          yield* projectMdxForAgentMarkdown(`import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { Mermaid } from "@repo/design-system/components/ui/mermaid";
 
 ## Example

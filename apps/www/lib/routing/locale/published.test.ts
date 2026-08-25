@@ -1,7 +1,12 @@
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readPublishedLocalizedHref } from "@/lib/routing/locale/published";
+import {
+  testArticleDeProjection,
+  testArticleIdProjection,
+  testArticleProjection,
+} from "@/test/content-article";
 import { previewIdProjection, previewProjection } from "@/test/content-preview";
 import {
   readTestPublishedRoute,
@@ -9,6 +14,9 @@ import {
 } from "@/test/content-program";
 
 const publishedMocks = vi.hoisted(() => ({
+  articleCategory: vi.fn(),
+  articleRoute: vi.fn(),
+  categoryAlternates: vi.fn(),
   materialContext: vi.fn(),
   materialRoute: vi.fn(),
   pagePath: vi.fn(),
@@ -16,6 +24,16 @@ const publishedMocks = vi.hoisted(() => ({
   tryoutPath: vi.fn(),
 }));
 const activeReleaseId = ReleaseIdSchema.make("material-release");
+const articleProjections = [
+  testArticleProjection,
+  testArticleIdProjection,
+  testArticleDeProjection,
+];
+const articleLocalePairs = articleProjections.flatMap((current) =>
+  articleProjections
+    .filter((target) => target.appLocale !== current.appLocale)
+    .map((target) => ({ current, target }))
+);
 const idProgramSubject = readTestPublishedRoute(
   "kurikulum/merdeka/kelas-11/matematika",
   "id"
@@ -25,6 +43,13 @@ const deProgramSubject = readTestPublishedRoute(
   "de"
 );
 
+vi.mock("@/lib/content/article/category", () => ({
+  readPublishedArticleCategory: publishedMocks.articleCategory,
+  readPublishedCategoryAlternates: publishedMocks.categoryAlternates,
+}));
+vi.mock("@/lib/content/article/route", () => ({
+  readPublishedArticleRoute: publishedMocks.articleRoute,
+}));
 vi.mock("@/lib/content/material/context", () => ({
   readPublishedMaterialContext: publishedMocks.materialContext,
 }));
@@ -42,6 +67,44 @@ vi.mock("@/lib/content/tryout/path", () => ({
 }));
 
 beforeEach(() => {
+  publishedMocks.articleCategory
+    .mockReset()
+    .mockImplementation((route: string, locale: string) => {
+      const projection = articleProjections.find(
+        (article) =>
+          article.appLocale === locale && article.categoryRouteSlug === route
+      );
+      return Effect.succeed(
+        projection
+          ? Option.some({ category: projection.category })
+          : Option.none()
+      );
+    });
+  publishedMocks.articleRoute
+    .mockReset()
+    .mockImplementation((locale: string, publicPath: string) => {
+      const projection = articleProjections.find(
+        (article) =>
+          article.appLocale === locale && article.publicPath === publicPath
+      );
+      return Effect.succeed(
+        projection
+          ? {
+              activeReleaseId,
+              alternates: articleProjections,
+              projection,
+            }
+          : { activeReleaseId, alternates: [], projection: null }
+      );
+    });
+  publishedMocks.categoryAlternates.mockReset().mockReturnValue(
+    Effect.succeed(
+      articleProjections.map((article) => ({
+        appLocale: article.appLocale,
+        publicPath: article.parentPath,
+      }))
+    )
+  );
   publishedMocks.materialContext.mockReset();
   publishedMocks.materialRoute.mockReset().mockReturnValue(
     Effect.succeed({
@@ -76,6 +139,136 @@ function readMaterialHref(search = "") {
 }
 
 describe("published localized route ownership", () => {
+  it.each(articleLocalePairs)(
+    "projects $current.appLocale article categories to $target.appLocale",
+    ({ current, target }) => {
+      expect(
+        Effect.runSync(
+          readPublishedLocalizedHref({
+            currentLocale: current.appLocale,
+            hash: "#latest",
+            locale: target.appLocale,
+            publicPath: current.parentPath,
+            search:
+              "?cursor=source&manifest=source&release=source&source=locale",
+          })
+        )
+      ).toBe(`/${target.parentPath}?source=locale#latest`);
+    }
+  );
+
+  it.each(articleLocalePairs)(
+    "projects $current.appLocale article details to $target.appLocale",
+    ({ current, target }) => {
+      expect(
+        Effect.runSync(
+          readPublishedLocalizedHref({
+            currentLocale: current.appLocale,
+            hash: "#references",
+            locale: target.appLocale,
+            publicPath: current.publicPath,
+            search: "?source=locale",
+          })
+        )
+      ).toBe(`/${target.publicPath}?source=locale#references`);
+    }
+  );
+
+  it("fails closed for missing or malformed article projections", () => {
+    expect(
+      Effect.runSync(
+        readPublishedLocalizedHref({
+          currentLocale: "en",
+          hash: "",
+          locale: "id",
+          publicPath: "articles",
+          search: "",
+        })
+      )
+    ).toBeNull();
+
+    publishedMocks.articleCategory.mockReturnValueOnce(
+      Effect.succeed(Option.none())
+    );
+    expect(() =>
+      Effect.runSync(
+        readPublishedLocalizedHref({
+          currentLocale: "en",
+          hash: "",
+          locale: "id",
+          publicPath: "articles/missing",
+          search: "",
+        })
+      )
+    ).toThrow();
+
+    publishedMocks.categoryAlternates.mockReturnValueOnce(
+      Effect.succeed([
+        {
+          appLocale: testArticleProjection.appLocale,
+          publicPath: testArticleProjection.parentPath,
+        },
+      ])
+    );
+    expect(() =>
+      Effect.runSync(
+        readPublishedLocalizedHref({
+          currentLocale: "en",
+          hash: "",
+          locale: "de",
+          publicPath: testArticleProjection.parentPath,
+          search: "",
+        })
+      )
+    ).toThrow();
+
+    publishedMocks.articleRoute.mockReturnValueOnce(
+      Effect.succeed({ activeReleaseId, alternates: [], projection: null })
+    );
+    expect(() =>
+      Effect.runSync(
+        readPublishedLocalizedHref({
+          currentLocale: "en",
+          hash: "",
+          locale: "de",
+          publicPath: testArticleProjection.publicPath,
+          search: "",
+        })
+      )
+    ).toThrow();
+
+    publishedMocks.articleRoute.mockReturnValueOnce(
+      Effect.succeed({
+        activeReleaseId,
+        alternates: [testArticleProjection],
+        projection: testArticleProjection,
+      })
+    );
+    expect(() =>
+      Effect.runSync(
+        readPublishedLocalizedHref({
+          currentLocale: "en",
+          hash: "",
+          locale: "de",
+          publicPath: testArticleProjection.publicPath,
+          search: "",
+        })
+      )
+    ).toThrow();
+
+    expect(() =>
+      Effect.runSync(
+        readPublishedLocalizedHref({
+          currentLocale: "en",
+          hash: "",
+          locale: "de",
+          publicPath: "articles/politics/article/extra",
+          search: "",
+        })
+      )
+    ).toThrow();
+  });
+
   it("projects a material route through signed locale counterparts", () => {
     expect(readMaterialHref()).toBe(`/${previewIdProjection.publicPath}`);
     expect(publishedMocks.materialRoute).toHaveBeenCalledWith(
@@ -118,7 +311,7 @@ describe("published localized route ownership", () => {
     expect(() => readMaterialHref()).toThrow();
   });
 
-  it("projects signed curriculum counterparts and ignores other surfaces", () => {
+  it("projects signed curriculum counterparts and ignores static surfaces", () => {
     expect(
       Effect.runSync(
         readPublishedLocalizedHref({
@@ -147,7 +340,7 @@ describe("published localized route ownership", () => {
           currentLocale: "en",
           hash: "",
           locale: "id",
-          publicPath: "articles/example",
+          publicPath: "search",
           search: "",
         })
       )

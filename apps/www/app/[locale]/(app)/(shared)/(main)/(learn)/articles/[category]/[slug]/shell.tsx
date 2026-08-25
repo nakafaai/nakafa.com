@@ -4,6 +4,7 @@ import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import type { ArticlePageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/articles/[category]/[slug]/content";
+import { ContentDates } from "@/components/content/dates";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
@@ -50,6 +51,12 @@ export async function ArticleShell({
           slug={`/${locale}${filePath}`}
           sourceUrl={content.sourceUrl}
           title={metadata.title}
+        />
+        <ContentDates
+          {...(metadata.dateModified === undefined
+            ? {}
+            : { dateModified: metadata.dateModified })}
+          datePublished={metadata.datePublished}
         />
         <LayoutContent>
           {headings.length === 0 && <ComingSoon />}

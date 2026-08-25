@@ -3,14 +3,6 @@ import { Schema, Struct } from "effect";
 /** Locale validation schema - single source of truth */
 export const LocaleSchema = ActiveAppLocaleCodeSchema;
 export type Locale = Schema.Schema.Type<typeof LocaleSchema>;
-const ArticleSchema = Schema.Struct({
-  title: Schema.String,
-  description: Schema.String,
-  date: Schema.String,
-  slug: Schema.String,
-  official: Schema.Boolean,
-}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export type Article = Schema.Schema.Type<typeof ArticleSchema>;
 const ReferenceSchema = Schema.Struct({
   title: Schema.String,
   authors: Schema.String,

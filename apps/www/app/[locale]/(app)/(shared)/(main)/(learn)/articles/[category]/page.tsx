@@ -1,7 +1,7 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   type ArticleCategory,
-  ArticleCategorySchema,
+  ArticleRouteSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
@@ -21,12 +21,18 @@ import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import {
   ARTICLE_SOURCE_ROOT,
-  getPublishedArticlePage,
   getPublishedCategories,
+  type PublishedArticleSummary,
 } from "@/lib/content/article/catalog";
+import {
+  getPublishedArticleCategory,
+  getPublishedCategoryAlternates,
+  getPublishedCategoryPage,
+} from "@/lib/content/article/category";
 import {
   getArticleNextHref,
   readArticlePageCursor,
+  shouldResetArticlePublicationCursor,
 } from "@/lib/content/article/query";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { readArticlePreviewStaticParams } from "@/lib/content/preview/route";
@@ -34,7 +40,7 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { selectLearningStaticParams } from "@/lib/routing/prerender";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
-import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
+import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
 /** Validates one signed article-category route. */
@@ -43,10 +49,14 @@ async function getResolvedParams(
 ) {
   const { locale: rawLocale, category: rawCategory } = await params;
   const locale = getLocaleOrThrow(rawLocale);
-  if (!Schema.is(ArticleCategorySchema)(rawCategory)) {
+  if (!Schema.is(ArticleRouteSlugSchema)(rawCategory)) {
     notFound();
   }
-  return { category: rawCategory, locale };
+  const resolved = await getPublishedArticleCategory(rawCategory, locale);
+  if (!resolved) {
+    notFound();
+  }
+  return { locale, model: resolved };
 }
 
 /** Builds metadata for one validated article category. */
@@ -55,23 +65,21 @@ export async function generateMetadata({
 }: {
   params: PageProps<"/[locale]/articles/[category]">["params"];
 }): Promise<Metadata> {
-  const { locale, category } = await getResolvedParams(params);
-  const [catalog, t] = await Promise.all([
-    getPublishedArticlePage({
-      category,
+  const { locale, model } = await getResolvedParams(params);
+  const [alternates, catalog, t] = await Promise.all([
+    getPublishedCategoryAlternates(model),
+    getPublishedCategoryPage(model, {
       cursor: null,
       expectedManifestHash: null,
       expectedReleaseId: null,
-      locale,
     }),
     getTranslations({ locale, namespace: "Articles" }),
   ]);
-  const categoryPath = `/articles/${category}`;
-  const article = catalog.articles[0];
-  if (!article) {
+  if (catalog.articles.length === 0) {
     notFound();
   }
-  const title = article.categoryTitle;
+  const categoryPath = `/articles/${model.route}`;
+  const title = model.title;
   const description = t("description");
   const path = `/${locale}${categoryPath}`;
   const socialMetadata = getSocialMetadata({
@@ -85,7 +93,13 @@ export async function generateMetadata({
   return {
     title,
     description,
-    alternates: createLocalizedAlternates(path),
+    alternates: createResolvedRouteAlternates(
+      {
+        appLocale: AppLocaleSchema.make(locale),
+        publicPath: `articles/${model.route}`,
+      },
+      alternates
+    ),
     ...socialMetadata,
   };
 }
@@ -110,7 +124,7 @@ export async function generateStaticParams({
     locale,
   });
   return selectLearningStaticParams(
-    catalog.categories.map(({ category }) => ({ category })),
+    catalog.categories.map(({ route }) => ({ category: route })),
     { category: "build-placeholder" }
   );
 }
@@ -132,7 +146,7 @@ async function PageContent({
   params,
   searchParams,
 }: PageProps<"/[locale]/articles/[category]">) {
-  const [{ category, locale }, query] = await Promise.all([
+  const [{ locale, model }, query] = await Promise.all([
     getResolvedParams(params),
     searchParams,
   ]);
@@ -140,23 +154,21 @@ async function PageContent({
   if (Option.isNone(cursor)) {
     notFound();
   }
-  const catalog = await getPublishedArticlePage({
-    category,
-    ...cursor.value,
-    locale,
-  });
-  const categoryPath = `/articles/${category}`;
+  const categoryPath = `/articles/${model.route}`;
+  if (shouldResetArticlePublicationCursor(cursor.value)) {
+    redirect(`/${locale}${categoryPath}`);
+  }
+  const catalog = await getPublishedCategoryPage(model, cursor.value);
   if (catalog.stale) {
     redirect(`/${locale}${categoryPath}`);
   }
 
-  const source = catalog.articles[0];
-  if (!source) {
+  if (catalog.articles.length === 0) {
     notFound();
   }
   const sourceUrl = catalog.sourceRevision
     ? getAksaraTreeUrl({
-        path: `${ARTICLE_SOURCE_ROOT}/${category}`,
+        path: `${ARTICLE_SOURCE_ROOT}/${model.category}`,
         revision: catalog.sourceRevision,
       })
     : null;
@@ -165,9 +177,9 @@ async function PageContent({
   return (
     <CategoryPage
       articles={catalog.articles}
-      category={category}
+      category={model.category}
       categoryPath={categoryPath}
-      label={source.categoryTitle}
+      label={model.title}
       locale={locale}
       nextHref={nextHref}
       sourceUrl={sourceUrl}
@@ -185,13 +197,7 @@ async function CategoryPage({
   nextHref,
   sourceUrl,
 }: {
-  articles: readonly {
-    readonly date: string;
-    readonly description: string;
-    readonly official: boolean;
-    readonly slug: string;
-    readonly title: string;
-  }[];
+  articles: readonly PublishedArticleSummary[];
   category: ArticleCategory;
   categoryPath: string;
   label: string;
@@ -216,7 +222,7 @@ async function CategoryPage({
       <CollectionPageJsonLd
         description={t("description")}
         items={articles.map((article) => ({
-          url: `https://nakafa.com/${locale}${categoryPath}/${article.slug}`,
+          url: `https://nakafa.com/${locale}/${article.publicPath}`,
           name: article.title,
         }))}
         name={label}
@@ -230,11 +236,7 @@ async function CategoryPage({
       <LayoutContent>
         <ContainerList>
           {articles.map((article) => (
-            <CardArticle
-              article={article}
-              category={category}
-              key={article.slug}
-            />
+            <CardArticle article={article} key={article.publicPath} />
           ))}
         </ContainerList>
       </LayoutContent>

@@ -18,6 +18,7 @@ import {
   decodeRendererJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import type { PublicRuntimeRow } from "@repo/backend/convex/contentRelease/runtime/public/internal";
+import { makePredecessorRuntime } from "@repo/backend/convex/contentRelease/runtime/public/predecessor";
 import {
   encodeRuntimeResult,
   failureResult,
@@ -107,9 +108,27 @@ export const decodePublicRuntimeRow = Effect.fn(
   };
   return response;
 });
+/** Derives the exact 0.15.0 view after validating the stored current row. */
+export const decodePredecessorRuntimeRow = Effect.fn(
+  "contentRelease.decodePredecessorRuntimeRow"
+)(function* (row: PublicRuntimeRow) {
+  const current = yield* decodePublicRuntimeRow(row);
+  if (current === null) {
+    return null;
+  }
+  return yield* makePredecessorRuntime(current).pipe(
+    Effect.mapError(() => new PublicRuntimeReadError())
+  );
+});
+
+type RuntimeRowDecoder = typeof decodePublicRuntimeRow;
 /** Reads one active public artifact for Nakafa verification. */
 const resolvePublicRuntime = Effect.fn("contentRelease.resolvePublicRuntime")(
-  function* (ctx: ActionCtx, request: PublicContentRuntimeRequest) {
+  function* (
+    ctx: ActionCtx,
+    request: PublicContentRuntimeRequest,
+    decodeRow: RuntimeRowDecoder
+  ) {
     const row = yield* Effect.tryPromise({
       catch: () => new PublicRuntimeReadError(),
       try: (): Promise<PublicRuntimeRow> =>
@@ -118,22 +137,29 @@ const resolvePublicRuntime = Effect.fn("contentRelease.resolvePublicRuntime")(
           publicPath: request.publicPath,
         }),
     });
-    return yield* decodePublicRuntimeRow(row);
+    return yield* decodeRow(row);
   }
 );
 /** Decodes, resolves, and safely encodes one public runtime request. */
-export const dispatchProgram = Effect.fn(
-  "contentRelease.publicRuntimeDispatch"
-)(function* (ctx: ActionCtx, source: string, byteLength: number) {
+const dispatchRuntimeProgram = Effect.fn(
+  "contentRelease.dispatchPublicRuntime"
+)(function* (
+  ctx: ActionCtx,
+  source: string,
+  byteLength: number,
+  decodeRow: RuntimeRowDecoder
+) {
   const decoded = yield* decodePublicRequest(source, byteLength).pipe(
     Effect.result
   );
   if (Result.isFailure(decoded)) {
     return failureResult("CONTENT_RUNTIME_INVALID", 400);
   }
-  const resolved = yield* resolvePublicRuntime(ctx, decoded.success).pipe(
-    Effect.result
-  );
+  const resolved = yield* resolvePublicRuntime(
+    ctx,
+    decoded.success,
+    decodeRow
+  ).pipe(Effect.result);
   if (Result.isFailure(resolved)) {
     return failureResult("CONTENT_RUNTIME_INTERNAL", 500);
   }
@@ -150,5 +176,29 @@ export const dispatchProgram = Effect.fn(
     MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
     resolved.success,
     200
+  );
+});
+
+/** Serves the versioned current public runtime contract. */
+export const dispatchProgram = Effect.fn(
+  "contentRelease.publicRuntimeDispatch"
+)(function* (ctx: ActionCtx, source: string, byteLength: number) {
+  return yield* dispatchRuntimeProgram(
+    ctx,
+    source,
+    byteLength,
+    decodePublicRuntimeRow
+  );
+});
+
+/** Serves the bounded 0.15.0 predecessor runtime contract. */
+export const dispatchPredecessorProgram = Effect.fn(
+  "contentRelease.predecessorPublicRuntimeDispatch"
+)(function* (ctx: ActionCtx, source: string, byteLength: number) {
+  return yield* dispatchRuntimeProgram(
+    ctx,
+    source,
+    byteLength,
+    decodePredecessorRuntimeRow
   );
 });

@@ -278,6 +278,7 @@ export async function insertSignedHead(
   contentKey: string,
   options?: Pick<
     RuntimeHeadOptions,
+    | "artifactLocale"
     | "compiledCode"
     | "projectionJson"
     | "publicPath"
@@ -291,6 +292,7 @@ export async function insertSignedHead(
   );
   const rendererDomain = options?.rendererDomain ?? "mathematics";
   const artifact = testSignedArtifact(rendererDomain, {
+    artifactLocale: options?.artifactLocale,
     compiledCode: options?.compiledCode,
     contentKey,
   });

@@ -5,22 +5,33 @@ import {
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 
+const articleFields = {
+  appLocale: appLocaleValidator,
+  assetId: v.string(),
+  bucket: v.string(),
+  category: v.string(),
+  categoryTitle: v.string(),
+  contentKey: v.string(),
+  projectionHash: v.string(),
+  publicPath: v.string(),
+  releaseId: v.string(),
+  rendererDomain: rendererDomainValidator,
+  sequence: v.number(),
+};
+
 const tables = {
   /** Active public articles ordered independently from the search index. */
-  articleCatalog: defineTable({
-    appLocale: appLocaleValidator,
-    assetId: v.string(),
-    bucket: v.string(),
-    category: v.string(),
-    categoryTitle: v.string(),
-    contentKey: v.string(),
-    date: v.string(),
-    projectionHash: v.string(),
-    publicPath: v.string(),
-    releaseId: v.string(),
-    rendererDomain: rendererDomainValidator,
-    sequence: v.number(),
-  })
+  articleCatalog: defineTable(
+    v.union(
+      v.object({ ...articleFields, date: v.string() }),
+      v.object({
+        ...articleFields,
+        date: v.string(),
+        dateModified: v.optional(v.string()),
+        datePublished: v.string(),
+      })
+    )
+  )
     .index("by_contentKey_and_appLocale", ["contentKey", "appLocale"])
     .index("by_appLocale_and_assetId", ["appLocale", "assetId"])
     .index("by_appLocale_and_contentKey", ["appLocale", "contentKey"])
@@ -34,6 +45,17 @@ const tables = {
       "appLocale",
       "category",
       "date",
+      "contentKey",
+    ])
+    .index("by_appLocale_and_datePublished_and_contentKey", [
+      "appLocale",
+      "datePublished",
+      "contentKey",
+    ])
+    .index("by_appLocale_and_category_and_datePublished_and_contentKey", [
+      "appLocale",
+      "category",
+      "datePublished",
       "contentKey",
     ])
     .index("by_appLocale_and_bucket_and_publicPath", [
@@ -51,10 +73,12 @@ const tables = {
     projectionHash: v.string(),
     releaseId: v.string(),
     rendererDomain: rendererDomainValidator,
+    route: v.optional(v.string()),
     sequence: v.number(),
     title: v.string(),
   })
     .index("by_appLocale_and_category", ["appLocale", "category"])
+    .index("by_appLocale_and_route", ["appLocale", "route"])
     .index("by_appLocale_and_bucket_and_category", [
       "appLocale",
       "bucket",

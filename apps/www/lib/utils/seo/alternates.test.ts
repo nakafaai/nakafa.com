@@ -5,6 +5,11 @@ import {
   createLocalizedAlternates,
   createResolvedRouteAlternates,
 } from "@/lib/utils/seo/alternates";
+import {
+  testArticleDeProjection,
+  testArticleIdProjection,
+  testArticleProjection,
+} from "@/test/content-article";
 
 describe("createLocalizedAlternates", () => {
   it("keeps projected route alternates out of template-only locale middleware", () => {
@@ -138,5 +143,25 @@ describe("createLocalizedAlternates", () => {
         "x-default": "/id/materi/matematika/fungsi/konsep",
       },
     });
+  });
+
+  it("builds the same reciprocal language set from every article counterpart", () => {
+    const counterparts = [
+      testArticleProjection,
+      testArticleIdProjection,
+      testArticleDeProjection,
+    ];
+    const expectedLanguages = {
+      de: `/${testArticleDeProjection.appLocale}/${testArticleDeProjection.publicPath}`,
+      en: `/${testArticleProjection.appLocale}/${testArticleProjection.publicPath}`,
+      id: `/${testArticleIdProjection.appLocale}/${testArticleIdProjection.publicPath}`,
+      "x-default": `/${testArticleProjection.appLocale}/${testArticleProjection.publicPath}`,
+    };
+
+    for (const counterpart of counterparts) {
+      expect(
+        createResolvedRouteAlternates(counterpart, counterparts).languages
+      ).toEqual(expectedLanguages);
+    }
   });
 });

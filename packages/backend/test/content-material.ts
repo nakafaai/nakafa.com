@@ -107,7 +107,7 @@ export function testProjectionJson(options?: {
     ),
     metadata: {
       authors: [{ name: "Nakafa" }],
-      date: "2026-07-22",
+      datePublished: "2026-07-22",
       title: options?.title ?? `Technical Head ${index}`,
     },
     order: index + 1,
@@ -161,7 +161,7 @@ export const FUNCTION_MATERIAL = MaterialLessonProjectionSchema.make({
   ),
   metadata: {
     authors: [{ name: "Nabil Akbarazzima Fatih" }],
-    date: "2025-04-27",
+    datePublished: "2025-04-27",
     description:
       "Understand functions as magic machines with interactive examples. Learn f(x) notation, input-output relationships, and the one-to-one rule.",
     subject: "Function Composition and Inverse Function",
@@ -209,7 +209,7 @@ export function makeMaterialProjection(
     ),
     metadata: {
       authors: [{ name: "Nakafa" }],
-      date: "2026-07-24",
+      datePublished: "2026-07-24",
       title: `${appLocaleCode.toUpperCase()} Section ${order}`,
     },
     order,

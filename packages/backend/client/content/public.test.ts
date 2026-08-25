@@ -19,6 +19,7 @@ import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
   PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
+  PUBLIC_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
 import { testArtifactJson } from "@repo/backend/test/content-artifact";
 import { testProjectionJson } from "@repo/backend/test/content-material";
@@ -39,7 +40,7 @@ import {
 import { Effect } from "effect";
 import { vi } from "vitest";
 
-const endpoint = "https://example.convex.site/internal/content/runtime";
+const endpoint = `https://example.convex.site${PUBLIC_CONTENT_RUNTIME_PATH}`;
 const batchEndpoint = `https://example.convex.site${PUBLIC_CONTENT_RUNTIME_BATCH_PATH}`;
 const target = {
   siteUrl: "https://example.convex.site/ignored/path",

@@ -14,7 +14,9 @@ import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
-type MaterialPageArgs = FunctionArgs<typeof api.contentRelease.material.page>;
+type MaterialPageArgs = FunctionArgs<
+  typeof api.contentRelease.material.publications
+>;
 
 /** Release identity required to continue one stable material catalog read. */
 export interface MaterialPageCursor {
@@ -63,7 +65,7 @@ export const readPublishedMaterialPage = Effect.fn(
     },
   } satisfies MaterialPageArgs;
   const result = yield* readRuntimeQuery(
-    api.contentRelease.material.page,
+    api.contentRelease.material.publications,
     args
   );
   const routes = yield* Effect.forEach(result.result.page, (source) =>

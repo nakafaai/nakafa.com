@@ -20,8 +20,8 @@ import {
   createContentContractError,
   createContentEndpoint,
   encodeContentRequest,
-  postContentRequest,
   readContentResponse,
+  requestContentResponse,
   validateContentRuntimeStatus,
 } from "@repo/backend/client/content/transport";
 import { RETAINED_PROTECTED_CONTENT_RUNTIME_PATH } from "@repo/backend/content/endpoint";
@@ -70,8 +70,10 @@ export const readRetainedProtectedContent = Effect.fn(
     target.siteUrl,
     RETAINED_PROTECTED_CONTENT_RUNTIME_PATH
   );
-  const response = yield* postContentRequest({ endpoint, source, target });
-  const decoded = yield* readRetainedRuntimeResponse(response, endpoint);
+  const { response, value: decoded } = yield* requestContentResponse(
+    { endpoint, source, target },
+    readRetainedRuntimeResponse
+  );
   const verified = yield* verifyStoredProtectedContentRuntimeExchange({
     rendererManifest,
     request,

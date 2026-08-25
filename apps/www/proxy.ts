@@ -114,22 +114,29 @@ export async function proxy(request: NextRequest) {
     acceptHeader: request.headers.get("accept"),
     pathname,
   });
-
+  let migrationPathname = pathname;
+  let migrationSuffix = "";
   if (routeDecision.kind === "rewrite-markdown") {
-    return rewriteToLlmsMdx(request, routeDecision.localizedRoute);
+    const { locale, markdownExtension, route } = routeDecision.localizedRoute;
+    migrationPathname = `/${locale}${route}`;
+    migrationSuffix = markdownExtension;
   }
 
   const urlMigrationRedirect = await Effect.runPromise(
     readPublicUrlMigrationRedirect({
       method: request.method,
-      pathname,
+      pathname: migrationPathname,
     })
   );
   if (urlMigrationRedirect) {
     const redirectUrl = new URL(request.url);
-    redirectUrl.pathname = urlMigrationRedirect;
+    redirectUrl.pathname = `${urlMigrationRedirect}${migrationSuffix}`;
 
     return NextResponse.redirect(redirectUrl, 308);
+  }
+
+  if (routeDecision.kind === "rewrite-markdown") {
+    return rewriteToLlmsMdx(request, routeDecision.localizedRoute);
   }
 
   const sourceBackedRouteRejection = await Effect.runPromise(

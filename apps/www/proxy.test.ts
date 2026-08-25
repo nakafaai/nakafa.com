@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { config, proxy } from "@/proxy";
 
 type NextRequestInit = ConstructorParameters<typeof NextRequest>[1];
+const MARKDOWN_SUFFIX_PATTERN = /\.mdx?$/;
 
 function requestProxy(pathname: string, init?: NextRequestInit) {
   return proxy(new NextRequest(`http://localhost:3000${pathname}`, init));
@@ -156,27 +157,34 @@ describe("proxy", () => {
     );
   });
 
-  it("permanently redirects an authenticated retired material URL", async () => {
+  it.each([
+    [
+      "/id/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle?utm=test",
+      "/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling?utm=test",
+    ],
+    [
+      "/de/articles/politics/regional-elections-turmoil?source=agent",
+      "/de/articles/politik/pilkada-2024-gerichtsurteile-und-kandidaturen?source=agent",
+      { headers: { accept: "text/markdown" } },
+    ],
+    [
+      "/de/articles/politics/regional-elections-turmoil.mdx?source=agent",
+      "/de/articles/politik/pilkada-2024-gerichtsurteile-und-kandidaturen.mdx?source=agent",
+    ],
+  ])("permanently redirects %s", async (...args) => {
+    const [source, target, init] = args;
+    const sourceUrl = new URL(source, "http://localhost:3000");
+    const targetUrl = new URL(target, "http://localhost:3000");
     runtimeMocks.readRedirect.mockReturnValueOnce(
-      Effect.succeed(
-        "/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling"
-      )
+      Effect.succeed(targetUrl.pathname.replace(MARKDOWN_SUFFIX_PATTERN, ""))
     );
-
-    const response = await requestProxy(
-      "/id/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle?utm=test"
-    );
-
+    const response = await requestProxy(source, init);
     expect(response.status).toBe(308);
-    expect(response.headers.get("location")).toBe(
-      "http://localhost:3000/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling?utm=test"
-    );
+    expect(response.headers.get("location")).toBe(targetUrl.toString());
     expect(runtimeMocks.readRedirect).toHaveBeenCalledWith({
       method: "GET",
-      pathname:
-        "/id/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle",
+      pathname: sourceUrl.pathname.replace(MARKDOWN_SUFFIX_PATTERN, ""),
     });
-    expectNoLocaleProxy();
   });
 
   it("runs only unsupported root files through the locale proxy", () => {
@@ -324,12 +332,15 @@ describe("proxy", () => {
     expect(runtimeMocks.readTryout).not.toHaveBeenCalled();
   });
 
-  it.each(["/en", "/en/search"])(
+  it.each([
+    ["/en", { headers: { "x-next-intl-locale": "en" } }],
+    ["/en/search", { headers: { "x-next-intl-locale": "en" } }],
+    ["/zz/quran/1", undefined],
+    ["/id/kurikulum", undefined],
+  ])(
     "does not treat the public route %s as an internal rewrite",
-    async (path) => {
-      const response = await requestProxy(path, {
-        headers: { "x-next-intl-locale": "en" },
-      });
+    async (path, init) => {
+      const response = await requestProxy(path, init);
 
       expectLocaleProxy(response);
     }
@@ -401,15 +412,6 @@ describe("proxy", () => {
       }
     }
   );
-
-  it.each([
-    ["unsupported locale paths", "/zz/quran/1"],
-    ["curriculum index routes", "/id/kurikulum"],
-  ])("delegates %s to the locale middleware", async (_kind, path) => {
-    const response = await requestProxy(path);
-
-    expectLocaleProxy(response);
-  });
 
   it.each([
     [

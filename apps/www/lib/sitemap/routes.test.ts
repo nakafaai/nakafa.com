@@ -63,10 +63,10 @@ describe("sitemap route pages", () => {
       Effect.succeed({
         routes: [
           {
-            date: "2026-07-23",
+            lastModified: "2026-07-23",
             publicPath: "articles/politics/article",
           },
-          { date: null, publicPath: "articles/politics" },
+          { lastModified: null, publicPath: "articles/politics" },
         ],
       })
     );
@@ -100,11 +100,11 @@ describe("sitemap route pages", () => {
       Effect.succeed({
         routes: [
           {
-            date: "2026-07-25",
+            lastModified: "2026-07-25",
             publicPath: "subjects/mathematics/functions/concept",
           },
           {
-            date: "2026-07-24",
+            lastModified: "2026-07-24",
             publicPath: "subjects/mathematics/functions/bijection",
           },
         ],
@@ -141,7 +141,7 @@ describe("sitemap route pages", () => {
     ]);
   });
 
-  it("serves signed Page routes with locale-equivalent paths", async () => {
+  it("serves signed Page routes with source-owned dates", async () => {
     pageMocks.readPublishedPageCatalog.mockReturnValue(
       Effect.succeed({
         activeReleaseId: "release-pages",
@@ -160,21 +160,11 @@ describe("sitemap route pages", () => {
 
     expect(page.routes).toEqual([
       {
-        alternatePaths: {
-          de: "/impressum",
-          en: "/legal-notice",
-          id: "/informasi-perusahaan",
-        },
-        lastModified: Date.parse("2026-08-21T00:00:00.000Z"),
+        lastModified: "2026-08-21",
         path: "/impressum",
       },
       {
-        alternatePaths: {
-          de: "/privacy-policy",
-          en: "/privacy-policy",
-          id: "/privacy-policy",
-        },
-        lastModified: Date.parse("2026-08-21T00:00:00.000Z"),
+        lastModified: "2026-08-21",
         path: "/privacy-policy",
       },
     ]);

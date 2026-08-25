@@ -1,11 +1,19 @@
+import {
+  ReleaseIdSchema,
+  Sha256HashSchema,
+} from "@nakafa/aksara-contracts/ids";
+import { encodeArticlePublicationCursor } from "@repo/contents/_types/publication";
 import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   getArticleNextHref,
   readArticlePageCursor,
+  shouldResetArticlePublicationCursor,
+  stripArticlePagination,
 } from "@/lib/content/article/query";
 
-const manifest = `sha256:${"a".repeat(64)}`;
+const manifest = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
+const releaseId = ReleaseIdSchema.make("release-article");
 
 describe("article catalog query", () => {
   it("decodes initial and release-bound cursors", () => {
@@ -19,13 +27,13 @@ describe("article catalog query", () => {
         readArticlePageCursor({
           cursor: "next page",
           manifest,
-          release: "release-article",
+          release: releaseId,
         })
       )
     ).toEqual({
       cursor: "next page",
       expectedManifestHash: manifest,
-      expectedReleaseId: "release-article",
+      expectedReleaseId: releaseId,
     });
   });
 
@@ -36,7 +44,7 @@ describe("article catalog query", () => {
         readArticlePageCursor({
           cursor: ["first", "second"],
           manifest,
-          release: "release-article",
+          release: releaseId,
         })
       )
     ).toBe(true);
@@ -45,17 +53,68 @@ describe("article catalog query", () => {
         readArticlePageCursor({
           cursor: "x".repeat(4097),
           manifest,
-          release: "release-article",
+          release: releaseId,
         })
       )
     ).toBe(true);
+  });
+
+  it("removes release pagination while preserving unrelated query state", () => {
+    expect(
+      stripArticlePagination(
+        "?cursor=next&manifest=source&release=source&ref=locale&ref=agent"
+      )
+    ).toBe("?ref=locale&ref=agent");
+    expect(
+      stripArticlePagination("?cursor=next&manifest=source&release=source")
+    ).toBe("");
+  });
+
+  it("resets only predecessor cursors on article category pages", () => {
+    const identity = {
+      expectedManifestHash: manifest,
+      expectedReleaseId: releaseId,
+    };
+    const current = encodeArticlePublicationCursor(
+      JSON.stringify([
+        "en",
+        "politics",
+        "2026-08-22",
+        "articles/politics/current",
+        1,
+        "article-id",
+      ])
+    );
+
+    expect(
+      shouldResetArticlePublicationCursor({
+        ...identity,
+        cursor: "native-predecessor-position",
+      })
+    ).toBe(true);
+    expect(
+      shouldResetArticlePublicationCursor({ ...identity, cursor: current })
+    ).toBe(false);
+    expect(
+      shouldResetArticlePublicationCursor({
+        ...identity,
+        cursor: encodeArticlePublicationCursor("{"),
+      })
+    ).toBe(false);
+    expect(
+      shouldResetArticlePublicationCursor({
+        cursor: null,
+        expectedManifestHash: null,
+        expectedReleaseId: null,
+      })
+    ).toBe(false);
   });
 
   it("builds encoded next links only for complete page identities", () => {
     expect(
       getArticleNextHref("/articles/politics", {
         activeManifestHash: manifest,
-        activeReleaseId: "release-article",
+        activeReleaseId: releaseId,
         nextCursor: "next page",
       })
     ).toBe(
@@ -64,14 +123,14 @@ describe("article catalog query", () => {
     expect(
       getArticleNextHref("/articles", {
         activeManifestHash: manifest,
-        activeReleaseId: "release-article",
+        activeReleaseId: releaseId,
         nextCursor: null,
       })
     ).toBeNull();
     expect(
       getArticleNextHref("/articles", {
         activeManifestHash: null,
-        activeReleaseId: "release-article",
+        activeReleaseId: releaseId,
         nextCursor: "next",
       })
     ).toBeNull();

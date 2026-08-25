@@ -43,6 +43,7 @@ import {
   TEST_RUNTIME_PATH,
   TEST_RUNTIME_RELEASE,
 } from "@repo/backend/test/runtime-values";
+import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import type { FunctionReturnType } from "convex/server";
 
 type RuntimeRow = Exclude<
@@ -74,7 +75,7 @@ export const TEST_ARTICLE_PROJECTION = ArticleProjectionSchema.make({
   artifactLocale: ArtifactLocaleSchema.make("en"),
   metadata: {
     authors: [{ name: "Nakafa" }],
-    date: "2026-07-23",
+    datePublished: "2026-07-23",
     title: "Article runtime verification",
   },
   official: false,
@@ -90,11 +91,12 @@ export const TEST_ARTICLE_PROJECTION_JSON = canonicalizeArticleProjection(
 /** Builds one exact article projection for a synchronization identity. */
 export function testArticleProjection(
   index: number,
-  date = `2026-07-${index + 10}`
+  datePublished = `2026-07-${index + 10}`
 ) {
   const articleSlug = ArticleSlugSchema.make(`article-${index}`);
   const contentKey = ContentKeySchema.make(`articles/politics/${articleSlug}`);
   const publicPath = PublicPathSchema.make(contentKey);
+  const dates = normalizePublicationDates(TEST_ARTICLE_PROJECTION.metadata);
   return ArticleProjectionSchema.make({
     ...TEST_ARTICLE_PROJECTION,
     articleRouteSlug: ArticleRouteSlugSchema.make(articleSlug),
@@ -107,11 +109,42 @@ export function testArticleProjection(
       learningObjectId: `lo:article:politics:${articleSlug}`,
     },
     metadata: {
-      ...TEST_ARTICLE_PROJECTION.metadata,
-      date,
+      authors: TEST_ARTICLE_PROJECTION.metadata.authors,
+      ...dates,
+      datePublished,
       title: `Article ${index}`,
     },
     publicPath,
+  });
+}
+
+/** Localizes one article route while preserving its canonical content identity. */
+export function testLocalizedArticleProjection(
+  index: number,
+  appLocale: "de" | "en" | "id"
+) {
+  const projection = testArticleProjection(index);
+  const categoryRoute = ArticleRouteSlugSchema.make(
+    appLocale === "de" ? "politik" : "politics"
+  );
+  const articleRoute = ArticleRouteSlugSchema.make(
+    appLocale === "de" ? `artikel-${index}` : `article-${index}`
+  );
+  return ArticleProjectionSchema.make({
+    ...projection,
+    appLocale: ActiveAppLocaleSchema.make(appLocale),
+    articleRouteSlug: articleRoute,
+    artifactLocale: ArtifactLocaleSchema.make(appLocale),
+    categoryRouteSlug: categoryRoute,
+    categoryTitle: appLocale === "en" ? "Politics" : "Politik",
+    graph: {
+      ...projection.graph,
+      assetId: `asset:${appLocale}:article:politics:article:politics:${projection.articleSlug}`,
+    },
+    parentPath: PublicPathSchema.make(`articles/${categoryRoute}`),
+    publicPath: PublicPathSchema.make(
+      `articles/${categoryRoute}/${articleRoute}`
+    ),
   });
 }
 

@@ -1,12 +1,10 @@
 import type { LearningContextInput } from "@repo/backend/convex/contents/context";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { getHeadings } from "@repo/contents/_lib/toc";
-import { formatContentDateISO } from "@repo/contents/_shared/date";
 import type { ContentPagination } from "@repo/contents/_types/content";
 import { ArticleJsonLd } from "@repo/seo/json-ld/article";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { LearningResourceJsonLd } from "@repo/seo/json-ld/learning-resource";
-import { Option } from "effect";
 import type { Metadata } from "next";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
@@ -24,6 +22,7 @@ import {
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
 import { DeferredAiSheetOpen } from "@/components/ai/deferred-sheet-open";
 import { DeferredComments } from "@/components/comments/deferred";
+import { ContentDates } from "@/components/content/dates";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { FooterContent } from "@/components/shared/footer-content";
 import { HeaderContent } from "@/components/shared/header-content";
@@ -207,10 +206,8 @@ async function MaterialLessonPage({
   const raw = content.body;
   const headings = getHeadings(raw);
   const metadata = content.metadata;
-  const publishedAt = Option.getOrElse(
-    formatContentDateISO(metadata.date),
-    () => metadata.date
-  );
+  const publishedAt = metadata.datePublished;
+  const modifiedAt = metadata.dateModified;
   const authorJsonLd: ArticleJsonLdAuthor[] = metadata.authors.map(
     (author) => ({
       "@type": "Person",
@@ -229,16 +226,18 @@ async function MaterialLessonPage({
       />
       <ArticleJsonLd
         author={authorJsonLd}
+        dateModified={modifiedAt}
         datePublished={publishedAt}
-        description={metadata.description ?? metadata.subject ?? ""}
+        description={metadata.description ?? metadata.subject}
         headline={metadata.title}
         image={getOgUrl(locale, route.publicPath)}
         url={toMaterialHref(route)}
       />
       <LearningResourceJsonLd
         author={authorJsonLd}
+        dateModified={modifiedAt}
         datePublished={publishedAt}
-        description={metadata.description ?? metadata.subject ?? ""}
+        description={metadata.description ?? metadata.subject}
         educationalLevel={parentTitle}
         name={metadata.title}
       />
@@ -251,6 +250,12 @@ async function MaterialLessonPage({
           slug={toMaterialHref(route)}
           sourceUrl={sourceUrl}
           title={metadata.title}
+        />
+        <ContentDates
+          {...(metadata.dateModified === undefined
+            ? {}
+            : { dateModified: metadata.dateModified })}
+          datePublished={metadata.datePublished}
         />
         <LayoutContent>
           {headings.length === 0 && <ComingSoon />}

@@ -7,7 +7,7 @@ import {
 } from "@repo/backend/convex/contentRelease/article/verify";
 import { Effect } from "effect";
 
-/** Resolves one exact category through the active article read model. */
+/** Resolves one predecessor category lookup during the bounded bridge window. */
 export const readArticleCategory = Effect.fn(
   "contentRelease.readArticleCategory"
 )(function* (

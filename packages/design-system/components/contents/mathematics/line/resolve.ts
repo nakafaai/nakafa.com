@@ -5,54 +5,13 @@ import {
   createCircleRadiusPoints,
   createCircleSegmentBoundaryLines,
 } from "@repo/design-system/components/contents/mathematics/circle";
-import type { LineEquation } from "@repo/design-system/components/three/line-equation";
-import type { ComponentProps } from "react";
+import type {
+  AuthoredLine,
+  ResolvedLine,
+} from "@repo/design-system/components/contents/mathematics/line/spec";
 
-type RenderLine = ComponentProps<typeof LineEquation>;
-type CircleLine = Omit<RenderLine, "points">;
-interface CircleAngle {
-  readonly radius: number;
-  readonly startDegrees: number;
-  readonly sweepDegrees: number;
-}
-type CircleArc = Parameters<typeof createCircleArcLine>[0];
-interface CircleRadius {
-  readonly degrees: number;
-  readonly radius: number;
-}
-
-interface CircleOutlineLine extends CircleLine {
-  readonly kind: "circle-outline";
-  readonly radius: number;
-}
-
-interface CircleChordLine extends CircleAngle, CircleLine {
-  readonly kind: "circle-chord";
-}
-
-interface CircleRadiusLine extends CircleLine, CircleRadius {
-  readonly kind: "circle-radius";
-}
-
-interface CircleArcLine extends CircleArc {
-  readonly kind: "circle-arc";
-}
-
-interface CircleSegmentLine extends CircleArc {
-  readonly kind: "circle-segment";
-}
-
-/** Declarative or already-resolved line accepted by the mathematics renderer. */
-export type AuthoredLine =
-  | CircleArcLine
-  | CircleChordLine
-  | CircleOutlineLine
-  | CircleRadiusLine
-  | CircleSegmentLine
-  | RenderLine;
-
-/** Expands one declarative circle line into the concrete 3D line contract. */
-function resolveLine(line: AuthoredLine): RenderLine[] {
+/** Expands one declarative circle line into the concrete WebGL contract. */
+function resolveLine(line: AuthoredLine): ResolvedLine[] {
   if (!("kind" in line)) {
     return [line];
   }

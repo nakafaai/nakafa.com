@@ -41,6 +41,7 @@ beforeEach(() => {
   mockReadQuranInventory.mockReset();
   mockReadPublishedArticleBuckets.mockReturnValue(
     Effect.succeed({
+      activeReleaseId: "release-article",
       articleCount: 250,
       buckets: ["000", "abc", "fff"],
     })

@@ -1,10 +1,7 @@
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import {
-  ArticleCategorySchema,
-  ArticleSlugSchema,
-} from "@nakafa/aksara-contracts/projection/article";
+import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect, Schema } from "effect";
@@ -167,7 +164,7 @@ function readMissingArticleHtmlLocale({
   }
 
   const [category, slug] = segments;
-  if (!Schema.is(ArticleCategorySchema)(category)) {
+  if (!Schema.is(ArticleRouteSlugSchema)(category)) {
     return Effect.succeed(locale);
   }
 
@@ -177,7 +174,7 @@ function readMissingArticleHtmlLocale({
     );
   }
 
-  if (segments.length !== 2 || !Schema.is(ArticleSlugSchema)(slug)) {
+  if (segments.length !== 2 || !Schema.is(ArticleRouteSlugSchema)(slug)) {
     return Effect.succeed(locale);
   }
 

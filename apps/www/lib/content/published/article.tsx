@@ -5,12 +5,10 @@ import type {
   ArticleProjection,
   ArticleReference,
 } from "@nakafa/aksara-contracts/projection/article";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import type { ReactNode } from "react";
-import {
-  applyPublishedCatalogCache,
-  applyPublishedContentCache,
-} from "@/lib/content/cache";
+import { normalizeArticleMetadata } from "@/lib/content/article/decode";
+import { applyPublishedContentCache } from "@/lib/content/cache";
 import { evaluateVerifiedArtifact } from "@/lib/content/published/artifact";
 import {
   type PublishedContentData,
@@ -21,7 +19,7 @@ import {
 } from "@/lib/content/published/exchange";
 import { decodePublishedArticle } from "@/lib/content/published/projection";
 
-/** Exact public article identity sent to the shared runtime seam. */
+/** Exact public article identity pinned by an agent-facing catalog read. */
 export type PublishedArticleInput = PublishedContentInput;
 
 /** Exact public article identity resolved by the signed current runtime. */
@@ -35,11 +33,14 @@ export interface PublishedArticleData
 
 /** Rendered article data consumed by the existing article page shell. */
 export interface PublishedArticleContent {
+  readonly activeReleaseId: PublishedArticleData["activeReleaseId"];
+  readonly artifactHash: PublishedArticleData["artifact"]["artifactHash"];
   readonly body: ReactNode;
   readonly categoryTitle: ArticleProjection["categoryTitle"];
   readonly contentId: ArticleProjection["graph"]["assetId"];
   readonly metadata: ArticleMetadata;
   readonly official: boolean;
+  readonly projection: ArticleProjection;
   readonly publicPath: string;
   readonly rawMdx: string;
   readonly references: readonly ArticleReference[];
@@ -49,7 +50,7 @@ export interface PublishedArticleContent {
 
 /** Strictly narrows one verified runtime exchange to article data. */
 const decodeArticleData = Effect.fn("NakafaContent.decodeArticleData")(
-  function* (data: PublishedContentData, input: CurrentPublishedArticleInput) {
+  function* (data: PublishedContentData, input: PublishedContentRouteInput) {
     const projection = yield* decodePublishedArticle(data.projection, input);
 
     return {
@@ -63,7 +64,7 @@ const decodeArticleData = Effect.fn("NakafaContent.decodeArticleData")(
   }
 );
 
-/** Reads an article pinned to a release selected by another trusted read. */
+/** Reads and narrows one article pinned to a selected signed release. */
 export const readPublishedArticle = Effect.fn(
   "NakafaContent.readPublishedArticle"
 )(function* (input: PublishedArticleInput) {
@@ -71,7 +72,7 @@ export const readPublishedArticle = Effect.fn(
   return yield* decodeArticleData(data, input);
 });
 
-/** Reads an article directly from the signed current runtime. */
+/** Reads and narrows one article directly from the signed current runtime. */
 export const readCurrentPublishedArticle = Effect.fn(
   "NakafaContent.readCurrentPublishedArticle"
 )(function* (input: CurrentPublishedArticleInput) {
@@ -87,11 +88,14 @@ const renderArticleArtifact = Effect.fn("NakafaContent.renderArticleArtifact")(
     });
 
     return {
+      activeReleaseId: data.activeReleaseId,
+      artifactHash: data.artifact.artifactHash,
       body: <rendered.Content />,
       categoryTitle: data.projection.categoryTitle,
       contentId: data.projection.graph.assetId,
-      metadata: data.projection.metadata,
+      metadata: normalizeArticleMetadata(data.projection.metadata),
       official: data.projection.official,
+      projection: data.projection,
       publicPath: data.projection.publicPath,
       rawMdx: rendered.artifact.payload.rawMdx,
       references: data.projection.references,
@@ -101,39 +105,13 @@ const renderArticleArtifact = Effect.fn("NakafaContent.renderArticleArtifact")(
   }
 );
 
-/** Caches one current article while preserving a truthful missing result. */
-export async function getCurrentPublishedArticle(
-  input: CurrentPublishedArticleInput
-) {
-  "use cache";
-
-  const result = await Effect.runPromise(
-    readCurrentPublishedArticle(input).pipe(
-      Effect.map(Option.some),
-      Effect.catchTag("ContentRuntimeMissingError", () =>
-        Effect.succeed(Option.none<PublishedArticleData>())
-      )
-    )
-  );
-  if (Option.isNone(result)) {
-    applyPublishedCatalogCache("article");
-    return null;
-  }
-  applyPublishedContentCache("article", result.value.artifact.artifactHash);
-  return result.value;
-}
-
-/** Caches current article JSX resolved without a redundant ownership query. */
+/** Caches JSX rendered from one reviewed, signed Aksara article artifact. */
 export async function renderCurrentPublishedArticle(
   input: CurrentPublishedArticleInput
 ) {
   "use cache";
 
-  const data = await getCurrentPublishedArticle(input);
-  if (!data) {
-    applyPublishedCatalogCache("article");
-    return null;
-  }
+  const data = await Effect.runPromise(readCurrentPublishedArticle(input));
   const rendered = await Effect.runPromise(renderArticleArtifact(data));
   applyPublishedContentCache("article", data.artifact.artifactHash);
   return rendered;

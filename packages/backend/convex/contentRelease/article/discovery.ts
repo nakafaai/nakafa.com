@@ -1,8 +1,10 @@
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import { readOrderedArticles } from "@repo/backend/convex/contentRelease/article/order";
 import { loadArticleOwner } from "@repo/backend/convex/contentRelease/article/owner";
 import { readArticlePartition } from "@repo/backend/convex/contentRelease/article/partition";
 import { verifyArticle } from "@repo/backend/convex/contentRelease/article/verify";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import { Effect } from "effect";
 
 const ARTICLE_DISCOVERY_LIMIT = 100;
@@ -26,18 +28,25 @@ function summarizeArticle(
   verified: Effect.Success<ReturnType<typeof verifyArticle>>
 ) {
   const { projection } = verified;
+  const dates = normalizePublicationDates(projection.metadata);
   return {
     articleSlug: projection.articleSlug,
     authors: projection.metadata.authors.map(({ name }) => ({ name })),
     category: projection.category,
     categoryTitle: projection.categoryTitle,
-    date: projection.metadata.date,
+    date: dates.datePublished,
+    ...dates,
     description: projection.metadata.description,
     official: projection.official,
     publicPath: projection.publicPath,
+    route: {
+      category: projection.categoryRouteSlug,
+      slug: projection.articleRouteSlug,
+    },
     title: projection.metadata.title,
   };
 }
+
 /** Reads one complete hash partition for a managed article index. */
 export const readArticleBucket = Effect.fn("contentRelease.readArticleBucket")(
   function* (
@@ -47,12 +56,21 @@ export const readArticleBucket = Effect.fn("contentRelease.readArticleBucket")(
   ) {
     const partition = yield* readArticlePartition(ctx, appLocale, bucket);
     if (partition.kind === "unmanaged") {
-      return { articles: null, managed: false };
+      return {
+        activeReleaseId: partition.activeReleaseId,
+        articles: null,
+        managed: false,
+      };
     }
     if (partition.kind === "missing") {
-      return { articles: null, managed: true };
+      return {
+        activeReleaseId: partition.activeReleaseId,
+        articles: null,
+        managed: true,
+      };
     }
     return {
+      activeReleaseId: partition.activeReleaseId,
       articles: partition.articles.map(summarizeArticle),
       managed: true,
     };
@@ -68,22 +86,16 @@ export const readLatestArticles = Effect.fn(
 ) {
   yield* validateDiscoveryLimit(limit);
   const owner = yield* loadArticleOwner(ctx, appLocale);
+  const activeReleaseId = owner.active?.releaseId ?? null;
   if (!(owner.managed && owner.active)) {
-    return { articles: [], managed: false };
+    return { activeReleaseId, articles: [], managed: false };
   }
-  const rows = yield* Effect.promise(() =>
-    ctx.db
-      .query("articleCatalog")
-      .withIndex("by_appLocale_and_date_and_contentKey", (index) =>
-        index.eq("appLocale", appLocale)
-      )
-      .order("desc")
-      .take(limit)
-  );
+  const rows = yield* readOrderedArticles(ctx, appLocale, null, limit);
   const verified = yield* Effect.forEach(rows, (article) =>
     verifyArticle(ctx, article, owner.active.sequence)
   );
   return {
+    activeReleaseId,
     articles: verified.map(summarizeArticle),
     managed: true,
   };
@@ -99,22 +111,16 @@ export const readCategoryArticles = Effect.fn(
 ) {
   yield* validateDiscoveryLimit(limit);
   const owner = yield* loadArticleOwner(ctx, appLocale);
+  const activeReleaseId = owner.active?.releaseId ?? null;
   if (!(owner.managed && owner.active)) {
-    return { articles: [], managed: false };
+    return { activeReleaseId, articles: [], managed: false };
   }
-  const rows = yield* Effect.promise(() =>
-    ctx.db
-      .query("articleCatalog")
-      .withIndex("by_appLocale_and_category_and_date_and_contentKey", (index) =>
-        index.eq("appLocale", appLocale).eq("category", category)
-      )
-      .order("desc")
-      .take(limit)
-  );
+  const rows = yield* readOrderedArticles(ctx, appLocale, category, limit);
   const verified = yield* Effect.forEach(rows, (article) =>
     verifyArticle(ctx, article, owner.active.sequence)
   );
   return {
+    activeReleaseId,
     articles: verified.map(summarizeArticle),
     managed: true,
   };

@@ -1,12 +1,19 @@
 // @vitest-environment node
 
+import { Buffer } from "node:buffer";
+import { generateKeyPairSync, sign as signBytes } from "node:crypto";
 import {
   Ed25519SignatureSchema,
   ReleaseIdSchema,
   Sha256HashSchema,
+  SigningKeyIdSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { ProgramSnapshotSchema } from "@nakafa/aksara-contracts/program/snapshot/spec";
-import { ContentReleaseManifestSchema } from "@nakafa/aksara-contracts/release";
+import {
+  ContentReleaseManifestSchema,
+  SignedContentReleaseSchema,
+} from "@nakafa/aksara-contracts/release";
+import { canonicalizeContentReleaseSigningInput } from "@nakafa/aksara-contracts/release/signing";
 import type {
   ContentSnapshotManifest,
   ContentSnapshotRow,
@@ -16,9 +23,16 @@ import { stagePublication } from "@repo/backend/convex/contentRelease/ingress/st
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
+  ingressArtifact,
+  ingressItem,
+  ingressRelease,
+  ingressReleaseId,
+} from "@repo/backend/test/content-ingress";
+import {
   TEST_KEY_ID,
   TEST_KEY_RESOLVER,
   TEST_PROOF_RENDERER,
+  TEST_PUBLIC_KEY,
   testEmptyManifest,
   testProofRenderer,
   testSignedArtifact,
@@ -35,6 +49,44 @@ import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 const candidateId = ReleaseIdSchema.make("release-stage-candidate");
+const activeKeyId = SigningKeyIdSchema.make("test-active-key");
+const activeKeys = generateKeyPairSync("ed25519");
+const activePublicKey = activeKeys.publicKey
+  .export({ format: "pem", type: "spki" })
+  .toString();
+const rotatedKeyResolver = ContentVerificationKeyResolver.of({
+  resolve: (keyId) => {
+    if (keyId === activeKeyId) {
+      return Effect.succeed(activePublicKey);
+    }
+    if (keyId === TEST_KEY_ID) {
+      return Effect.succeed(TEST_PUBLIC_KEY);
+    }
+    return TEST_KEY_RESOLVER.resolve(keyId);
+  },
+});
+
+/** Re-signs the complete ingress manifest under the simulated active key. */
+function activeSignedRelease() {
+  return SignedContentReleaseSchema.make({
+    keyId: activeKeyId,
+    manifest: ingressRelease.manifest,
+    manifestHash: ingressRelease.manifestHash,
+    signature: Ed25519SignatureSchema.make(
+      signBytes(
+        null,
+        Buffer.from(
+          canonicalizeContentReleaseSigningInput(
+            ingressRelease.manifestHash,
+            ingressRelease.manifest
+          ),
+          "utf8"
+        ),
+        activeKeys.privateKey
+      ).toString("base64url")
+    ),
+  });
+}
 
 /** Creates one signed empty release bound to the technical renderer. */
 function signedRelease(releaseId = candidateId) {
@@ -153,6 +205,84 @@ describe("content release staging ingress", () => {
         )
       )
     ).rejects.toThrow("Content release verification failed");
+  });
+
+  it("admits retained artifacts only for authenticated recovery rows", async () => {
+    for (const role of ["candidate", "recovery"] as const) {
+      const t = convexTest(schema, convexModules);
+      await t.mutation(async (ctx) => {
+        await insertSignedCandidate(
+          ctx,
+          ingressReleaseId,
+          activeSignedRelease(),
+          JSON.stringify(TEST_PROOF_RENDERER)
+        );
+        if (role === "candidate") {
+          return;
+        }
+        const [release, state] = await Promise.all([
+          ctx.db.query("contentReleases").unique(),
+          ctx.db.query("contentState").unique(),
+        ]);
+        if (!(release && state)) {
+          throw new Error("Expected one staged release and state row.");
+        }
+        await ctx.db.patch("contentReleases", release._id, { role });
+        await ctx.db.patch("contentState", state._id, {
+          candidateManifestHash: undefined,
+          candidateReleaseId: undefined,
+          candidateSequence: undefined,
+          recoveryManifestHash: ingressRelease.manifestHash,
+          recoveryReleaseId: ingressReleaseId,
+          recoverySequence: release.sequence,
+        });
+      });
+      await t.action((ctx) =>
+        Effect.runPromise(
+          stagePublication(ctx, {
+            batchIndex: 0,
+            items: [ingressItem],
+            operation: "stageItemBatch",
+            releaseId: ingressReleaseId,
+          }).pipe(
+            Effect.provideService(
+              ContentVerificationKeyResolver,
+              rotatedKeyResolver
+            )
+          )
+        )
+      );
+      const stageArtifact = t.action((ctx) =>
+        Effect.runPromise(
+          stagePublication(
+            ctx,
+            {
+              artifacts: [ingressArtifact],
+              batchIndex: 0,
+              operation: "stageArtifactBatch",
+              releaseId: ingressReleaseId,
+            },
+            activeKeyId
+          ).pipe(
+            Effect.provideService(
+              ContentVerificationKeyResolver,
+              rotatedKeyResolver
+            )
+          )
+        )
+      );
+      if (role === "candidate") {
+        await expect(stageArtifact).rejects.toThrow(
+          "must use the active content signing key"
+        );
+        continue;
+      }
+      await expect(stageArtifact).resolves.toMatchObject({
+        ok: true,
+        operation: "stageArtifactBatch",
+        value: { created: 1, unchanged: 0 },
+      });
+    }
   });
 
   it("rejects a poisoned manifest before storage and accepts its exact retry", async () => {

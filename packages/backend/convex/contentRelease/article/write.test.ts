@@ -13,6 +13,7 @@ import {
   TEST_ARTICLE_PROJECTION,
   TEST_ARTICLE_PROJECTION_JSON,
 } from "@repo/backend/test/content-runtime";
+import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import type { WithoutSystemFields } from "convex/server";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
@@ -60,13 +61,16 @@ describe("contentRelease/article/write", () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => write(ctx));
     await t.mutation((ctx) => write(ctx));
+    const dates = normalizePublicationDates(TEST_ARTICLE_PROJECTION.metadata);
     await t.mutation((ctx) =>
       write(ctx, testHead({ sequence: 2 }), {
         ...TEST_ARTICLE_PROJECTION,
         categoryTitle: "Public Affairs",
         metadata: {
-          ...TEST_ARTICLE_PROJECTION.metadata,
-          date: "2026-07-24",
+          authors: TEST_ARTICLE_PROJECTION.metadata.authors,
+          dateModified: "2026-07-24",
+          datePublished: dates.datePublished,
+          title: TEST_ARTICLE_PROJECTION.metadata.title,
         },
       })
     );
@@ -80,12 +84,15 @@ describe("contentRelease/article/write", () => {
     expect(rows[0]).toMatchObject({
       assetId: TEST_ARTICLE_PROJECTION.graph.assetId,
       categoryTitle: "Public Affairs",
-      date: "2026-07-24",
+      date: TEST_ARTICLE_PROJECTION.metadata.datePublished,
+      dateModified: "2026-07-24",
+      datePublished: TEST_ARTICLE_PROJECTION.metadata.datePublished,
       sequence: 2,
     });
     expect(stored.categories).toHaveLength(1);
     expect(stored.categories[0]).toMatchObject({
       bucket: "444",
+      route: TEST_ARTICLE_PROJECTION.categoryRouteSlug,
       title: "Public Affairs",
     });
     expect(stored.buckets).toMatchObject([
@@ -135,8 +142,19 @@ describe("contentRelease/article/write", () => {
     });
 
     await expect(
-      t.run((ctx) => ctx.db.query("articleCategories").take(2))
-    ).resolves.toMatchObject([{ category: "politics" }]);
+      t.run(async (ctx) => ({
+        articles: await ctx.db.query("articleCatalog").take(2),
+        categories: await ctx.db.query("articleCategories").take(2),
+      }))
+    ).resolves.toMatchObject({
+      articles: [
+        {
+          date: TEST_ARTICLE_PROJECTION.metadata.datePublished,
+          datePublished: TEST_ARTICLE_PROJECTION.metadata.datePublished,
+        },
+      ],
+      categories: [{ category: "politics" }],
+    });
     await t.mutation((ctx) =>
       runConvexProgram(
         deleteArticle(

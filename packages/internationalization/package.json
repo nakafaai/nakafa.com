@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.0/nakafa-aksara-contracts-0.15.0.tgz",
+    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.1/nakafa-aksara-contracts-0.15.1.tgz",
     "@repo/utilities": "workspace:*",
     "next": "16.3.2",
     "next-intl": "^4.13.7"

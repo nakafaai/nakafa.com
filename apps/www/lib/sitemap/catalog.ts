@@ -57,7 +57,7 @@ export const readSitemapPageDescriptors = Effect.fn(
     const [articleBuckets, materialBuckets, programBuckets, tryoutCount] =
       yield* Effect.all(
         [
-          readPublishedArticleBuckets(locale),
+          readPublishedArticleBuckets(locale, activeReleaseId),
           readPublishedMaterialBuckets(locale, activeReleaseId),
           readPublishedProgramBuckets(locale),
           readPublishedTryoutSitemapCount(locale),

@@ -5,6 +5,7 @@ import {
   readCategoryArticles,
   readLatestArticles,
 } from "@repo/backend/convex/contentRelease/article/discovery";
+import { readArticleModel } from "@repo/backend/convex/contentRelease/article/model";
 import {
   readArticlePage,
   readCategoryPage,
@@ -44,6 +45,7 @@ const projectionValidator = v.object({
 const categoryValidator = v.object({
   category: v.string(),
   rendererDomain: rendererDomainValidator,
+  route: v.string(),
   title: v.string(),
 });
 
@@ -53,9 +55,15 @@ const articleSummaryValidator = v.object({
   category: v.string(),
   categoryTitle: v.string(),
   date: v.string(),
+  dateModified: v.optional(v.string()),
+  datePublished: v.string(),
   description: v.optional(v.string()),
   official: v.boolean(),
   publicPath: v.string(),
+  route: v.object({
+    category: v.string(),
+    slug: v.string(),
+  }),
   title: v.string(),
 });
 
@@ -83,17 +91,20 @@ const categoryLookupValidator = v.object({
 });
 
 const sitemapBucketsValidator = v.object({
+  activeReleaseId: v.union(v.string(), v.null()),
   articleCount: v.number(),
   buckets: v.array(v.string()),
   managed: v.boolean(),
 });
 
 const articleDiscoveryValidator = v.object({
+  activeReleaseId: v.union(v.string(), v.null()),
   articles: v.array(articleSummaryValidator),
   managed: v.boolean(),
 });
 
 const articleBucketValidator = v.object({
+  activeReleaseId: v.union(v.string(), v.null()),
   articles: v.union(v.array(articleSummaryValidator), v.null()),
   managed: v.boolean(),
 });
@@ -103,12 +114,20 @@ const sitemapPageValidator = v.union(
     routes: v.array(
       v.object({
         date: v.union(v.string(), v.null()),
+        lastModified: v.union(v.string(), v.null()),
         publicPath: v.string(),
       })
     ),
   }),
   v.null()
 );
+
+const articleModelValidator = v.object({
+  activeAppLocales: v.array(appLocaleValidator),
+  activeReleaseId: v.string(),
+  alternateJson: v.array(v.string()),
+  projectionJson: v.union(v.string(), v.null()),
+});
 
 /** Returns one current signed article partner API page. */
 export const apiPage = query({
@@ -123,7 +142,37 @@ export const apiPage = query({
     runConvexProgram(readPartnerApiPage(ctx, { ...args, family: "article" })),
 });
 
-/** Returns one release-bound newest-first article page. */
+/** Resolves one complete active article route and its locale counterparts. */
+export const route = query({
+  args: {
+    appLocale: appLocaleValidator,
+    expectedActiveReleaseId: v.optional(v.union(v.string(), v.null())),
+    publicPath: v.string(),
+  },
+  returns: articleModelValidator,
+  handler: (ctx, { appLocale, expectedActiveReleaseId, publicPath }) =>
+    runConvexProgram(
+      readArticleModel(ctx, appLocale, publicPath, expectedActiveReleaseId)
+    ),
+});
+
+/**
+ * Retains the predecessor native article cursor and exact 0.15.0 projection
+ * view during the 0.15.1 bridge. The returned `projectionHash` identifies the
+ * authenticated signed source; `projectionJson` is a derived predecessor view
+ * and is not represented as signed bytes.
+ *
+ * Rollout owner: Nakafa SEO date cutover, PR #342.
+ * Removal change: the strict 0.16 Nakafa cutover PR.
+ * Remove this query, its predecessor reader and projection adapter, tests,
+ * legacy date fields, and legacy indexes only after the protected-main
+ * consumer uses `publications`,
+ * production Convex Function Metrics show zero invocations for
+ * `contentRelease/article:page` and `contentRelease/article:category` for 24
+ * consecutive hours after that switch, and EN, ID, and DE production browser
+ * acceptance passes. The 24-hour window is Nakafa rollout policy, not a Convex
+ * requirement, and does not block the bridge PR itself.
+ */
 export const page = query({
   args: {
     category: v.string(),
@@ -141,7 +190,32 @@ export const page = query({
         args.appLocale,
         args.expectedManifestHash,
         args.expectedReleaseId,
-        args.paginationOpts
+        args.paginationOpts,
+        "predecessor"
+      )
+    ),
+});
+
+/** Returns one release-bound page across both publication-date shapes. */
+export const publications = query({
+  args: {
+    category: v.string(),
+    expectedManifestHash: v.union(v.string(), v.null()),
+    expectedReleaseId: v.union(v.string(), v.null()),
+    appLocale: appLocaleValidator,
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: articlePageValidator,
+  handler: (ctx, args) =>
+    runConvexProgram(
+      readArticlePage(
+        ctx,
+        args.category,
+        args.appLocale,
+        args.expectedManifestHash,
+        args.expectedReleaseId,
+        args.paginationOpts,
+        "publication"
       )
     ),
 });
@@ -167,7 +241,12 @@ export const categories = query({
     ),
 });
 
-/** Resolves one exact category without scanning its article rows. */
+/**
+ * Retains the predecessor category lookup during the same bounded bridge.
+ * The strict cutover removes it only after production Convex Function Metrics
+ * meet the owner, observation, and browser-acceptance gates documented on
+ * `page`.
+ */
 export const category = query({
   args: {
     category: v.string(),

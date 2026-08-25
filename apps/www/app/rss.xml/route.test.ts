@@ -30,16 +30,18 @@ beforeEach(() => {
     .mockReturnValue(Effect.succeed({ releaseId: activeReleaseId }));
   mockReadPublishedLatestArticles.mockReset().mockReturnValue(
     Effect.succeed({
+      activeReleaseId,
       articles: [
         {
           authors: [{ name: "Nakafa" }],
           category: "politics",
           categoryTitle: "Politics",
-          date: "2026-07-24",
+          dateModified: "2026-08-22",
+          datePublished: "2026-07-24",
           description: "Published description",
           official: true,
           publicPath: "articles/politics/published",
-          slug: "published",
+          route: { category: "politics", slug: "published" },
           title: "Published article",
         },
       ],
@@ -61,7 +63,8 @@ describe("rss route", () => {
         materials: [
           {
             authors: [{ name: "Nabil Akbarazzima Fatih" }],
-            date: "2025-04-27",
+            dateModified: "2026-08-22",
+            datePublished: "2025-04-27",
             description: "Understand functions as input-output relationships.",
             publicPath:
               "subjects/mathematics/function-composition-inverse-function/function-concept",
@@ -71,7 +74,7 @@ describe("rss route", () => {
           },
           {
             authors: [{ name: "Nakafa" }],
-            date: "2025-04-26",
+            datePublished: "2025-04-26",
             description: undefined,
             publicPath: "subjects/mathematics/functions/identity",
             sourcePath:
@@ -96,13 +99,41 @@ describe("rss route", () => {
     expect(text).toContain(
       "<description><![CDATA[Identity Function]]></description>"
     );
-    expect(mockReadPublishedLatestArticles).toHaveBeenCalledWith("en", 100);
-    expect(mockReadPublishedLatestArticles).toHaveBeenCalledWith("id", 100);
+    expect(mockReadPublishedLatestArticles).toHaveBeenCalledWith(
+      "en",
+      100,
+      activeReleaseId
+    );
+    expect(mockReadPublishedLatestArticles).toHaveBeenCalledWith(
+      "id",
+      100,
+      activeReleaseId
+    );
+    expect(mockReadPublishedLatestArticles).toHaveBeenCalledWith(
+      "de",
+      100,
+      activeReleaseId
+    );
+    expect(mockReadPublishedLatestMaterials).toHaveBeenCalledWith(
+      "en",
+      100,
+      activeReleaseId
+    );
+    expect(mockReadPublishedLatestMaterials).toHaveBeenCalledWith(
+      "id",
+      100,
+      activeReleaseId
+    );
+    expect(mockReadPublishedLatestMaterials).toHaveBeenCalledWith(
+      "de",
+      100,
+      activeReleaseId
+    );
   });
 
   it("omits an empty signed article catalog", async () => {
     mockReadPublishedLatestArticles.mockReturnValue(
-      Effect.succeed({ articles: [] })
+      Effect.succeed({ activeReleaseId, articles: [] })
     );
 
     const text = await (await GET()).text();

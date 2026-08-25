@@ -1,8 +1,12 @@
 // @vitest-environment node
 
-import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  ReleaseIdSchema,
+  Sha256HashSchema,
+} from "@nakafa/aksara-contracts/ids";
 import {
   ArticleProjectionSchema,
+  ArticleRouteSlugSchema,
   canonicalizeArticleProjection,
 } from "@nakafa/aksara-contracts/projection/article";
 import type { api } from "@repo/backend/convex/_generated/api";
@@ -16,6 +20,7 @@ import {
   readPublishedArticlePage,
   readPublishedCategories,
 } from "@/lib/content/article/catalog";
+import { normalizeArticleMetadata } from "@/lib/content/article/decode";
 import {
   makeTestArticleProjection,
   testArticleProjection,
@@ -25,8 +30,12 @@ import {
 const cacheMock = vi.hoisted(() => vi.fn());
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const revision = "a".repeat(40);
+const activeManifestHash = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
+const activeReleaseId = ReleaseIdSchema.make("release-article");
+const staleManifestHash = Sha256HashSchema.make(`sha256:${"c".repeat(64)}`);
+const staleReleaseId = ReleaseIdSchema.make("release-old");
 type ArticleRow = FunctionReturnType<
-  typeof api.contentRelease.article.page
+  typeof api.contentRelease.article.publications
 >["result"]["page"][number];
 type CategoryRow = FunctionReturnType<
   typeof api.contentRelease.article.categories
@@ -57,8 +66,8 @@ function articlePage(overrides?: {
   readonly stale?: boolean;
 }) {
   return {
-    activeManifestHash: `sha256:${"a".repeat(64)}`,
-    activeReleaseId: "release-article",
+    activeManifestHash,
+    activeReleaseId,
     managed: true,
     result: {
       continueCursor: "next",
@@ -76,11 +85,13 @@ function articlePage(overrides?: {
 /** Builds one backend category row from reviewed article metadata. */
 function categoryRow(overrides?: {
   readonly category?: string;
+  readonly route?: string;
   readonly title?: string;
 }): CategoryRow {
   return {
     category: overrides?.category ?? "politics",
     rendererDomain: "politics",
+    route: ArticleRouteSlugSchema.make(overrides?.route ?? "politics"),
     title: overrides?.title ?? "Politics",
   };
 }
@@ -93,8 +104,8 @@ function categoryPage(overrides?: {
   readonly title?: string;
 }) {
   return {
-    activeManifestHash: `sha256:${"a".repeat(64)}`,
-    activeReleaseId: "release-article",
+    activeManifestHash,
+    activeReleaseId,
     managed: true,
     result: {
       continueCursor: "next",
@@ -124,10 +135,18 @@ describe("published article catalog", () => {
 
   it("decodes newest articles and preserves release-bound pagination", async () => {
     const older = makeTestArticleProjection("older-politics", "2023-01-01");
+    const metadata = normalizeArticleMetadata(testArticleProjection.metadata);
+    const updated = ArticleProjectionSchema.make({
+      ...testArticleProjection,
+      metadata: {
+        ...metadata,
+        dateModified: "2026-08-22",
+      },
+    });
     runtimeQueryMock.mockResolvedValueOnce(
       articlePage({
         isDone: false,
-        page: [articleRow(testArticleProjection), articleRow(older)],
+        page: [articleRow(updated), articleRow(older)],
         sourceRevision: null,
       })
     );
@@ -141,13 +160,22 @@ describe("published article catalog", () => {
     });
 
     expect(page).toMatchObject({
-      activeReleaseId: "release-article",
+      activeReleaseId,
       articles: [
         {
           categoryTitle: "Politics",
-          slug: testArticleProjection.articleSlug,
+          dateModified: "2026-08-22",
+          route: {
+            category: testArticleProjection.categoryRouteSlug,
+            slug: testArticleProjection.articleRouteSlug,
+          },
         },
-        { slug: older.articleSlug },
+        {
+          route: {
+            category: older.categoryRouteSlug,
+            slug: older.articleRouteSlug,
+          },
+        },
       ],
       done: false,
       nextCursor: "next",
@@ -178,6 +206,7 @@ describe("published article catalog", () => {
         {
           category: "politics",
           rendererDomain: "politics",
+          route: "politics",
           title: "Politics",
         },
       ],
@@ -189,12 +218,13 @@ describe("published article catalog", () => {
   });
 
   it("preserves optional descriptions and both terminal cursor states", async () => {
+    const metadata = normalizeArticleMetadata(testArticleProjection.metadata);
     const projection = ArticleProjectionSchema.make({
       ...testArticleProjection,
       metadata: {
-        authors: testArticleProjection.metadata.authors,
-        date: testArticleProjection.metadata.date,
-        title: testArticleProjection.metadata.title,
+        authors: metadata.authors,
+        datePublished: metadata.datePublished,
+        title: metadata.title,
       },
     });
     runtimeQueryMock
@@ -219,10 +249,8 @@ describe("published article catalog", () => {
       })
     );
 
-    expect(articleResult).toMatchObject({
-      articles: [{ description: "" }],
-      nextCursor: null,
-    });
+    expect(articleResult.nextCursor).toBeNull();
+    expect(articleResult.articles[0]).not.toHaveProperty("description");
     expect(categoryResult.nextCursor).toBe("next");
   });
 
@@ -236,14 +264,14 @@ describe("published article catalog", () => {
         readPublishedArticlePage({
           category: testArticleProjection.category,
           cursor: "old-article-cursor",
-          expectedManifestHash: `sha256:${"c".repeat(64)}`,
-          expectedReleaseId: "release-old",
+          expectedManifestHash: staleManifestHash,
+          expectedReleaseId: staleReleaseId,
           locale: "en",
         }),
         readPublishedCategories({
           cursor: "old-category-cursor",
-          expectedManifestHash: `sha256:${"c".repeat(64)}`,
-          expectedReleaseId: "release-old",
+          expectedManifestHash: staleManifestHash,
+          expectedReleaseId: staleReleaseId,
           locale: "en",
         }),
       ])
@@ -320,6 +348,25 @@ describe("published article catalog", () => {
     await expect(
       Effect.runPromise(
         readPublishedCategories({
+          cursor: null,
+          expectedManifestHash: null,
+          expectedReleaseId: null,
+          locale: "en",
+        }).pipe(Effect.flip)
+      )
+    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+  });
+
+  it("rejects a malformed active generation identity", async () => {
+    runtimeQueryMock.mockResolvedValueOnce({
+      ...articlePage(),
+      activeManifestHash: "sha256:invalid",
+    });
+
+    await expect(
+      Effect.runPromise(
+        readPublishedArticlePage({
+          category: testArticleProjection.category,
           cursor: null,
           expectedManifestHash: null,
           expectedReleaseId: null,

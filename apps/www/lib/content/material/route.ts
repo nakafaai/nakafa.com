@@ -97,13 +97,16 @@ export const readPublishedMaterialRoute = Effect.fn(
   expectedActiveReleaseId?: ContentReleasePin
 ) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readRuntimeQuery(api.contentRelease.material.route, {
-    ...(expectedActiveReleaseId === undefined
-      ? {}
-      : { expectedActiveReleaseId }),
-    appLocale,
-    publicPath,
-  });
+  const result = yield* readRuntimeQuery(
+    api.contentRelease.material.publication,
+    {
+      ...(expectedActiveReleaseId === undefined
+        ? {}
+        : { expectedActiveReleaseId }),
+      appLocale,
+      publicPath,
+    }
+  );
   const decodedActiveAppLocales = Schema.decodeUnknownEffect(
     ActiveAppLocaleListSchema
   )(result.activeAppLocales).pipe(

@@ -132,11 +132,11 @@ async function ArticleCatalog({
       />
       <LayoutContent>
         <SubjectList>
-          {catalog.categories.map(({ category, title }) => (
+          {catalog.categories.map(({ category, route, title }) => (
             <SubjectItem
-              href={`/articles/${category}`}
+              href={`/articles/${route}`}
               icon={getArticleCategoryIcon(category)}
-              key={category}
+              key={route}
               label={title}
             />
           ))}

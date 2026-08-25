@@ -10,6 +10,7 @@ import {
   readMaterialNavigation,
   toMaterialHref,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/navigation";
+import { normalizeMaterialMetadata } from "@/lib/content/material/decode";
 import {
   previewIdProjection,
   previewNextProjection,
@@ -23,6 +24,7 @@ vi.mock("@/lib/content/material/context", () => ({
 }));
 
 const activeReleaseId = ReleaseIdSchema.make("release-material");
+const metadata = normalizeMaterialMetadata(previewProjection.metadata);
 const context = {
   nodeKey: "class-11-mathematics-function-composition-inverse-function",
   programKey: "merdeka",
@@ -35,7 +37,7 @@ const publishedPage = {
   copySourceUrl: null,
   kind: "published",
   appLocale: "en",
-  metadata: previewProjection.metadata,
+  metadata,
   rendererDomain: "mathematics",
   route: previewProjection,
   siblings: [previewProjection, previewNextProjection],
@@ -48,7 +50,7 @@ const previewPage = {
   copySourceUrl: null,
   kind: "preview",
   appLocale: "en",
-  metadata: previewProjection.metadata,
+  metadata,
   rendererDomain: "mathematics",
   route: previewProjection,
   siblings: [previewProjection, previewNextProjection],

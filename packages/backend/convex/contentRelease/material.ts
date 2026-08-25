@@ -47,6 +47,8 @@ const materialPageValidator = v.object({
 const materialSummaryValidator = v.object({
   authors: v.array(v.object({ name: v.string() })),
   date: v.string(),
+  dateModified: v.optional(v.string()),
+  datePublished: v.string(),
   description: v.optional(v.string()),
   publicPath: v.string(),
   sourcePath: v.string(),
@@ -78,6 +80,7 @@ const materialSitemapValidator = v.union(
     routes: v.array(
       v.object({
         date: v.string(),
+        lastModified: v.string(),
         publicPath: v.string(),
       })
     ),
@@ -131,7 +134,21 @@ export const latest = query({
     runConvexProgram(readLatestMaterials(ctx, appLocale, limit)),
 });
 
-/** Resolves one complete active material shell model by localized path. */
+/**
+ * Retains the exact 0.15.0 material route view during the 0.15.1 bridge.
+ * Every returned projection is derived only after its current stored source is
+ * authenticated. Release identity and source provenance remain unchanged.
+ *
+ * Rollout owner: Nakafa SEO date cutover, PR #342.
+ * Removal change: the strict 0.16 Nakafa cutover PR.
+ * Remove this query, `page`, their predecessor adapter, tests, and bridge date
+ * fields only after the protected-main consumer uses `publication` and
+ * `publications`, production Convex Function Metrics show zero invocations for
+ * `contentRelease/material:route` and `contentRelease/material:page` for 24
+ * consecutive hours after that switch, and EN, ID, and DE production browser
+ * acceptance passes. The 24-hour window is Nakafa rollout policy, not a Convex
+ * requirement, and does not block the bridge PR itself.
+ */
 export const route = query({
   args: {
     appLocale: appLocaleValidator,
@@ -141,7 +158,33 @@ export const route = query({
   returns: materialModelValidator,
   handler: (ctx, { appLocale, expectedActiveReleaseId, publicPath }) =>
     runConvexProgram(
-      readMaterialModel(ctx, appLocale, publicPath, expectedActiveReleaseId)
+      readMaterialModel(
+        ctx,
+        appLocale,
+        publicPath,
+        "predecessor",
+        expectedActiveReleaseId
+      )
+    ),
+});
+
+/** Resolves one current complete material shell model by localized path. */
+export const publication = query({
+  args: {
+    appLocale: appLocaleValidator,
+    expectedActiveReleaseId: v.optional(v.union(v.string(), v.null())),
+    publicPath: v.string(),
+  },
+  returns: materialModelValidator,
+  handler: (ctx, { appLocale, expectedActiveReleaseId, publicPath }) =>
+    runConvexProgram(
+      readMaterialModel(
+        ctx,
+        appLocale,
+        publicPath,
+        "publication",
+        expectedActiveReleaseId
+      )
     ),
 });
 
@@ -161,7 +204,7 @@ export const sitemapPage = query({
     runConvexProgram(readMaterialSitemap(ctx, appLocale, bucketId)),
 });
 
-/** Returns one release-bound page of active localized material routes. */
+/** Retains predecessor page and cursor behavior under the bridge above. */
 export const page = query({
   args: {
     expectedManifestHash: v.union(v.string(), v.null()),
@@ -177,7 +220,30 @@ export const page = query({
         args.appLocale,
         args.expectedManifestHash,
         args.expectedReleaseId,
-        args.paginationOpts
+        args.paginationOpts,
+        "predecessor"
+      )
+    ),
+});
+
+/** Returns one current release-bound page of localized material routes. */
+export const publications = query({
+  args: {
+    expectedManifestHash: v.union(v.string(), v.null()),
+    expectedReleaseId: v.union(v.string(), v.null()),
+    appLocale: appLocaleValidator,
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: materialPageValidator,
+  handler: (ctx, args) =>
+    runConvexProgram(
+      readMaterialPage(
+        ctx,
+        args.appLocale,
+        args.expectedManifestHash,
+        args.expectedReleaseId,
+        args.paginationOpts,
+        "publication"
       )
     ),
 });

@@ -22,7 +22,7 @@ const category = ArticleCategorySchema.make("politics");
 /** Builds one exact article projection for runtime and catalog tests. */
 export function makeTestArticleProjection(
   slugValue = "regional-elections-turmoil",
-  date = "2024-10-27"
+  datePublished = "2024-10-27"
 ) {
   const articleSlug = ArticleSlugSchema.make(slugValue);
   const publicPath = PublicPathSchema.make(
@@ -47,7 +47,7 @@ export function makeTestArticleProjection(
     kind: "article",
     metadata: {
       authors: [{ name: "Shifna Zihdatal Haq" }],
-      date,
+      datePublished,
       description:
         "The political anomaly in Indonesia as it prepares for the 2024 Regional Elections.",
       title:
@@ -63,6 +63,42 @@ export function makeTestArticleProjection(
 
 /** Exact article projection used by published-runtime adapter tests. */
 export const testArticleProjection = makeTestArticleProjection();
+
+/** Builds one localized route counterpart for the stable test article. */
+export function makeTestArticleCounterpart(
+  appLocale: "de" | "en" | "id",
+  categoryRouteSlugValue: string,
+  articleRouteSlugValue: string
+) {
+  const categoryRouteSlug = ArticleRouteSlugSchema.make(categoryRouteSlugValue);
+  const articleRouteSlug = ArticleRouteSlugSchema.make(articleRouteSlugValue);
+  return ArticleProjectionSchema.make({
+    ...testArticleProjection,
+    appLocale: AppLocaleSchema.make(appLocale),
+    articleRouteSlug,
+    artifactLocale: ArtifactLocaleSchema.make(appLocale),
+    categoryRouteSlug,
+    graph: {
+      ...testArticleProjection.graph,
+      assetId: `asset:${appLocale}:article:${category}:article:${category}:${testArticleProjection.articleSlug}`,
+    },
+    parentPath: PublicPathSchema.make(`articles/${categoryRouteSlug}`),
+    publicPath: PublicPathSchema.make(
+      `articles/${categoryRouteSlug}/${articleRouteSlug}`
+    ),
+  });
+}
+
+export const testArticleIdProjection = makeTestArticleCounterpart(
+  "id",
+  "politics",
+  "regional-elections-turmoil"
+);
+export const testArticleDeProjection = makeTestArticleCounterpart(
+  "de",
+  "politik",
+  "turbulenzen-vor-regionalwahlen"
+);
 
 /** Source path corresponding exactly to the technical article fixture. */
 export const testArticleSourcePath = CorpusSourcePathSchema.make(

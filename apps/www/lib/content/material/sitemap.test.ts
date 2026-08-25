@@ -34,7 +34,7 @@ describe("published material sitemap", () => {
       .mockResolvedValueOnce({
         routes: [
           {
-            date: "2025-04-27",
+            lastModified: "2025-04-27",
             publicPath:
               "subjects/mathematics/function-composition-inverse-function/function-concept",
           },
@@ -51,7 +51,7 @@ describe("published material sitemap", () => {
     await expect(
       Effect.runPromise(readPublishedMaterialSitemap("en", "abc"))
     ).resolves.toMatchObject({
-      routes: [{ date: "2025-04-27" }],
+      routes: [{ lastModified: "2025-04-27" }],
     });
   });
 

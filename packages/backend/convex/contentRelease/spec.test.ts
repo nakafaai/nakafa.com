@@ -1,5 +1,10 @@
 import { MAX_SIGNED_ARTIFACT_BYTES } from "@nakafa/aksara-contracts/limits";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import {
+  ARTICLE_VALIDATION_CLAIM_READ_LIMIT,
+  ARTICLE_VALIDATION_PREDECESSOR_READ_LIMIT,
+  ARTICLE_VALIDATION_SCAN_LIMIT,
+} from "@repo/backend/convex/contentRelease/article/limits";
 import { CONTENT_BUCKET_SIZE } from "@repo/backend/convex/contentRelease/bucket";
 import {
   CONTENT_DOCUMENT_LIMIT,
@@ -82,6 +87,25 @@ describe("contentRelease/spec", () => {
 
     expect(maximumArticleWork).toBeLessThanOrEqual(
       TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
+  });
+
+  it("bounds final article validation with shared predecessor reads", () => {
+    const predecessorBytes =
+      ARTICLE_VALIDATION_PREDECESSOR_READ_LIMIT * READ_MODEL_DOCUMENT_LIMIT;
+    const fixedBytes =
+      CONTENT_DOCUMENT_LIMIT +
+      (ARTICLE_VALIDATION_SCAN_LIMIT +
+        ARTICLE_VALIDATION_CLAIM_READ_LIMIT +
+        2) *
+        READ_MODEL_DOCUMENT_LIMIT;
+
+    expect(predecessorBytes).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
+    expect(fixedBytes).toBeLessThanOrEqual(TRANSACTION_READ_HEADROOM);
+    expect(predecessorBytes + fixedBytes).toBeLessThanOrEqual(
+      TRANSACTION_READ_LIMIT
     );
   });
 

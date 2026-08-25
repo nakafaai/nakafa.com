@@ -2,6 +2,7 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { hasArticlePublicationCursorPrefix } from "@repo/contents/_types/publication";
 import { Option, Schema } from "effect";
 import type { ArticlePageCursor } from "@/lib/content/article/catalog";
 
@@ -9,20 +10,30 @@ const CursorSchema = Schema.String.pipe(
   Schema.check(Schema.isMinLength(1)),
   Schema.check(Schema.isMaxLength(4096))
 );
-const ArticlePageQuerySchema = Schema.Struct({
+const articlePageQueryFields = {
   cursor: CursorSchema,
   manifest: Sha256HashSchema,
   release: ReleaseIdSchema,
-});
+};
+const ArticlePageQuerySchema = Schema.Struct(articlePageQueryFields);
 /** Raw Next.js query values accepted by article catalog pages. */
 export interface ArticlePageQuery {
   readonly [key: string]: string | string[] | undefined;
 }
 /** Minimal active page identity used to build one continuation URL. */
 export interface ArticleNextPage {
-  readonly activeManifestHash: null | string;
-  readonly activeReleaseId: null | string;
+  readonly activeManifestHash: ArticlePageCursor["expectedManifestHash"] | null;
+  readonly activeReleaseId: ArticlePageCursor["expectedReleaseId"] | null;
   readonly nextCursor: null | string;
+}
+/** Removes source-release pagination before navigating to another locale. */
+export function stripArticlePagination(search: string) {
+  const query = new URLSearchParams(search);
+  for (const parameter of Object.keys(articlePageQueryFields)) {
+    query.delete(parameter);
+  }
+  const suffix = query.toString();
+  return suffix ? `?${suffix}` : "";
 }
 /** Decodes an initial or release-bound article pagination request. */
 export function readArticlePageCursor(
@@ -50,6 +61,12 @@ export function readArticlePageCursor(
       expectedManifestHash: query.manifest,
       expectedReleaseId: query.release,
     }))
+  );
+}
+/** Restarts only unversioned predecessor pagination on article category pages. */
+export function shouldResetArticlePublicationCursor(page: ArticlePageCursor) {
+  return (
+    page.cursor !== null && !hasArticlePublicationCursorPrefix(page.cursor)
   );
 }
 /** Builds the next release-bound catalog URL when another page exists. */

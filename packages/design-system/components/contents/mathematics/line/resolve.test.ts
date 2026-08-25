@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { resolveAuthoredLines } from "@repo/design-system/components/contents/mathematics/circle-lines";
+import { resolveAuthoredLines } from "@repo/design-system/components/contents/mathematics/line/resolve";
 import { describe, expect, it } from "vitest";
 
 const rawLine = {

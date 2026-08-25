@@ -27,8 +27,9 @@ export const readArticlePartition = Effect.fn(
   }
 
   const owner = yield* loadArticleOwner(ctx, appLocale);
+  const activeReleaseId = owner.active?.releaseId ?? null;
   if (!(owner.managed && owner.active)) {
-    return { kind: "unmanaged" as const };
+    return { activeReleaseId, kind: "unmanaged" as const };
   }
 
   const [count, articles, categories] = yield* Effect.all([
@@ -58,7 +59,7 @@ export const readArticlePartition = Effect.fn(
     ),
   ]);
   if (!count) {
-    return { kind: "missing" as const };
+    return { activeReleaseId, kind: "missing" as const };
   }
   if (
     articles.length !== count.articleCount ||
@@ -81,6 +82,7 @@ export const readArticlePartition = Effect.fn(
   ]);
 
   return {
+    activeReleaseId,
     articles: verifiedArticles,
     categories: verifiedCategories,
     kind: "found" as const,

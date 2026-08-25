@@ -2,150 +2,23 @@ import type { ArticleProjection } from "@nakafa/aksara-contracts/projection/arti
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { adjustArticleBucket } from "@repo/backend/convex/contentRelease/article/bucket";
+import {
+  loadArticle,
+  reconcileCategory,
+  stageCategory,
+} from "@repo/backend/convex/contentRelease/article/ownership";
 import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";
 import {
   ensureDocumentSize,
   READ_MODEL_DOCUMENT_LIMIT,
 } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
 type ContentHead = WithoutSystemFields<Doc<"contentHeads">>;
 type AppLocale = Doc<"articleCatalog">["appLocale"];
-type ArticleEntry = WithoutSystemFields<Doc<"articleCatalog">>;
-
-/** Loads the sole active article row for one locale-specific content identity. */
-const loadArticle = Effect.fn("contentRelease.loadArticle")(function* (
-  ctx: MutationCtx,
-  contentKey: string,
-  appLocale: AppLocale
-) {
-  return yield* Effect.promise(() =>
-    ctx.db
-      .query("articleCatalog")
-      .withIndex("by_contentKey_and_appLocale", (index) =>
-        index.eq("contentKey", contentKey).eq("appLocale", appLocale)
-      )
-      .unique()
-  );
-});
-
-/** Loads the sole active localized row for one article category. */
-const loadCategory = Effect.fn("contentRelease.loadArticleCategory")(function* (
-  ctx: MutationCtx,
-  appLocale: AppLocale,
-  category: string
-) {
-  return yield* Effect.promise(() =>
-    ctx.db
-      .query("articleCategories")
-      .withIndex("by_appLocale_and_category", (index) =>
-        index.eq("appLocale", appLocale).eq("category", category)
-      )
-      .unique()
-  );
-});
-
-/** Converts one active article into its category representative row. */
-function categoryRow(article: ArticleEntry) {
-  return {
-    appLocale: article.appLocale,
-    bucket: article.bucket,
-    category: article.category,
-    contentKey: article.contentKey,
-    projectionHash: article.projectionHash,
-    releaseId: article.releaseId,
-    rendererDomain: article.rendererDomain,
-    sequence: article.sequence,
-    title: article.categoryTitle,
-  };
-}
-
-/** Claims one category identity while rejecting contradictions in one release. */
-const writeCategory = Effect.fn("contentRelease.writeArticleCategory")(
-  function* (ctx: MutationCtx, article: ArticleEntry) {
-    const existing = yield* loadCategory(
-      ctx,
-      article.appLocale,
-      article.category
-    );
-    if (
-      existing?.sequence === article.sequence &&
-      (existing.title !== article.categoryTitle ||
-        existing.rendererDomain !== article.rendererDomain)
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Article category ${article.appLocale}/${article.category} conflicts within release ${article.releaseId}.`
-      );
-    }
-    const row = categoryRow(article);
-    yield* ensureDocumentSize(
-      "Active article category",
-      row,
-      READ_MODEL_DOCUMENT_LIMIT
-    );
-    if (existing) {
-      if (existing.bucket !== row.bucket) {
-        yield* adjustArticleBucket(
-          ctx,
-          existing.appLocale,
-          existing.bucket,
-          "category",
-          -1
-        );
-        yield* adjustArticleBucket(
-          ctx,
-          row.appLocale,
-          row.bucket,
-          "category",
-          1
-        );
-      }
-      yield* Effect.promise(() =>
-        ctx.db.replace("articleCategories", existing._id, row)
-      );
-      return;
-    }
-    yield* adjustArticleBucket(ctx, row.appLocale, row.bucket, "category", 1);
-    yield* Effect.promise(() => ctx.db.insert("articleCategories", row));
-  }
-);
-
-/** Rebuilds one category after its selected article moves or disappears. */
-const reconcileCategory = Effect.fn("contentRelease.reconcileArticleCategory")(
-  function* (ctx: MutationCtx, appLocale: AppLocale, category: string) {
-    const articles = yield* Effect.promise(() =>
-      ctx.db
-        .query("articleCatalog")
-        .withIndex(
-          "by_appLocale_and_category_and_date_and_contentKey",
-          (index) => index.eq("appLocale", appLocale).eq("category", category)
-        )
-        .order("desc")
-        .take(1)
-    );
-    const representative = articles[0];
-    if (representative) {
-      yield* writeCategory(ctx, representative);
-      return;
-    }
-    const existing = yield* loadCategory(ctx, appLocale, category);
-    if (existing) {
-      yield* adjustArticleBucket(
-        ctx,
-        existing.appLocale,
-        existing.bucket,
-        "category",
-        -1
-      );
-      yield* Effect.promise(() =>
-        ctx.db.delete("articleCategories", existing._id)
-      );
-    }
-  }
-);
 
 /** Replaces one active article row and reconciles its category ownership. */
 export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
@@ -174,6 +47,7 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
       `Article entry ${head.contentKey}/${head.artifactLocale} has an invalid projection hash.`
     );
   }
+  const dates = normalizePublicationDates(projection.metadata);
   const entry = {
     appLocale: projection.appLocale,
     assetId: projection.graph.assetId,
@@ -181,7 +55,8 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
     category: projection.category,
     categoryTitle: projection.categoryTitle,
     contentKey: head.contentKey,
-    date: projection.metadata.date,
+    ...dates,
+    date: dates.datePublished,
     projectionHash: head.projectionHash,
     publicPath: projection.publicPath,
     releaseId: head.releaseId,
@@ -231,7 +106,7 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
     );
     yield* Effect.promise(() => ctx.db.insert("articleCatalog", entry));
   }
-  yield* writeCategory(ctx, entry);
+  yield* stageCategory(ctx, entry, projection.categoryRouteSlug);
 });
 
 /** Deletes one active article row and reconciles its former category. */

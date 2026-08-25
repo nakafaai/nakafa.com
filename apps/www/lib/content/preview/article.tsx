@@ -9,6 +9,7 @@ import {
 } from "@nakafa/aksara-contracts/projection/article";
 import { Effect, Option, Schema } from "effect";
 import type { ReactNode } from "react";
+import { normalizeArticleMetadata } from "@/lib/content/article/decode";
 import { executePreviewArtifact } from "@/lib/content/preview/artifact";
 import type { PreviewConfig } from "@/lib/content/preview/config";
 import {
@@ -29,6 +30,7 @@ export interface ArticlePreviewContent {
   readonly children: ReactNode;
   readonly contentId: ArticleProjection["graph"]["assetId"];
   readonly metadata: ArticleMetadata;
+  readonly projection: ArticleProjection;
   readonly references: readonly ArticleReference[];
 }
 /** Checks whether one selected article owns the requested physical route. */
@@ -70,7 +72,8 @@ const readReadyArticle = Effect.fn("NakafaContent.readReadyArticle")(function* (
     categoryTitle: projection.categoryTitle,
     children: <rendered.Content />,
     contentId: projection.graph.assetId,
-    metadata: projection.metadata,
+    metadata: normalizeArticleMetadata(projection.metadata),
+    projection,
     references: projection.references,
   } satisfies ArticlePreviewContent;
 });

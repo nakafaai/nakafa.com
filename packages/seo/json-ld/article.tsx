@@ -7,7 +7,7 @@ interface ArticleJsonLdProps {
   author: Person | Person[];
   dateModified?: string;
   datePublished: string;
-  description: string;
+  description?: string;
   headline: string;
   image?: string;
   url: string;
@@ -68,10 +68,10 @@ export function ArticleJsonLd({
       "@id": absoluteUrl,
     },
     datePublished,
-    dateModified: dateModified || datePublished,
+    ...(dateModified === undefined ? {} : { dateModified }),
     author: authors,
     image: absoluteImageUrl ? [absoluteImageUrl] : undefined,
-    description,
+    ...(description === undefined ? {} : { description }),
     publisher: ORGANIZATION,
   };
 
