@@ -1,6 +1,6 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
   type ActiveContentReleaseId,
@@ -13,7 +13,7 @@ import {
   getCachedPublishedText,
   type PublishedMarkdownInput,
 } from "@/lib/llms/published";
-import { getQuranLlmsText } from "@/lib/llms/quran";
+import { classifyQuranLlmsRoute, getQuranLlmsText } from "@/lib/llms/quran";
 
 const MATERIAL_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(
   PUBLIC_ROUTE_SURFACES.flatMap((surface) =>
@@ -77,6 +77,10 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
 export const hasLlmsMarkdownSource = Effect.fn("www.llms.markdown.hasSource")(
   function* (input: LlmsMarkdownInput) {
     if (resolvePublicLlmsSectionIndex(input)) {
+      return true;
+    }
+
+    if (Option.isSome(classifyQuranLlmsRoute(input.cleanSlug))) {
       return true;
     }
 

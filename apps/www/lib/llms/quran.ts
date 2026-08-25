@@ -1,5 +1,5 @@
-import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
-import { Effect } from "effect";
+import { QuranSurahNumberSchema } from "@nakafa/aksara-contracts/quran/spec";
+import { Effect, Option, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
   readPublishedQuranCatalog,
@@ -11,6 +11,43 @@ import { buildHeader } from "@/lib/llms/format";
 import { getQuranSurahName } from "@/lib/utils/pages/quran";
 
 const QURAN_PAGE_MARKDOWN_VERSE_LIMIT = 80;
+
+/** One canonical Quran route whose Markdown body is owned by this module. */
+export const QuranLlmsRouteSchema = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("index") }),
+  Schema.Struct({
+    kind: Schema.Literal("surah"),
+    surahNumber: QuranSurahNumberSchema,
+  }),
+]);
+
+export type QuranLlmsRoute = Schema.Schema.Type<typeof QuranLlmsRouteSchema>;
+
+/** Classifies Quran Markdown ownership without reading publication body data. */
+export function classifyQuranLlmsRoute(
+  cleanSlug: string
+): Option.Option<QuranLlmsRoute> {
+  const [root, rawSurahNumber, ...extraSegments] = cleanSlug.split("/");
+  if (root !== "quran" || extraSegments.length > 0) {
+    return Option.none();
+  }
+
+  if (rawSurahNumber === undefined) {
+    return Option.some({ kind: "index" });
+  }
+
+  const surahNumber = Schema.decodeOption(QuranSurahNumberSchema)(
+    Number(rawSurahNumber)
+  );
+  if (
+    Option.isNone(surahNumber) ||
+    surahNumber.value.toString() !== rawSurahNumber
+  ) {
+    return Option.none();
+  }
+
+  return Option.some({ kind: "surah", surahNumber: surahNumber.value });
+}
 
 /** Reads the complete bounded signed inventory used by Quran indexes. */
 export const readQuranLlmsInventory = Effect.fn("www.llms.quran.inventory")(
@@ -51,26 +88,19 @@ export const getQuranLlmsText = Effect.fn("www.llms.quran.text")(function* ({
   cleanSlug: string;
   locale: Locale;
 }) {
-  if (cleanSlug !== "quran" && !cleanSlug.startsWith("quran/")) {
+  const route = classifyQuranLlmsRoute(cleanSlug);
+  if (Option.isNone(route)) {
     return null;
   }
 
-  const parts = cleanSlug.split("/");
-
-  if (parts.length === 1) {
+  if (route.value.kind === "index") {
     return yield* getQuranIndexText(locale);
   }
 
-  if (parts.length !== 2) {
-    return null;
-  }
-
-  const surahNumber = parseQuranSurahNumber(parts[1]);
-  if (surahNumber === null) {
-    return null;
-  }
-
-  return yield* getSurahLlmsText({ locale, surahNumber });
+  return yield* getSurahLlmsText({
+    locale,
+    surahNumber: route.value.surahNumber,
+  });
 });
 
 /** Builds markdown for the Quran surah index page. */

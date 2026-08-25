@@ -1,9 +1,10 @@
 // @vitest-environment node
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BASE_URL } from "@/lib/llms/constants";
 import {
+  classifyQuranLlmsRoute,
   getQuranLlmsText,
   readQuranLlmsInventory,
   readQuranLlmsPageEntries,
@@ -29,6 +30,33 @@ beforeEach(() => {
 });
 
 describe("quran llms text", () => {
+  it("classifies canonical Quran routes without reading publication data", () => {
+    expect(classifyQuranLlmsRoute("quran")).toEqual(
+      Option.some({ kind: "index" })
+    );
+    expect(classifyQuranLlmsRoute("quran/1")).toEqual(
+      Option.some({ kind: "surah", surahNumber: 1 })
+    );
+    expect(classifyQuranLlmsRoute("quran/114")).toEqual(
+      Option.some({ kind: "surah", surahNumber: 114 })
+    );
+
+    for (const cleanSlug of [
+      "articles/politics",
+      "quran/",
+      "quran/0",
+      "quran/01",
+      "quran/115",
+      "quran/not-a-number",
+      "quran/1/extra",
+    ]) {
+      expect(classifyQuranLlmsRoute(cleanSlug)).toEqual(Option.none());
+    }
+
+    expect(publicationMocks.readPublishedQuranCatalog).not.toHaveBeenCalled();
+    expect(publicationMocks.readPublishedQuranMarkdown).not.toHaveBeenCalled();
+  });
+
   it("returns null for non-Quran and malformed Quran markdown routes", async () => {
     for (const cleanSlug of [
       "articles/politics/dynastic-politics-asian-values",
@@ -61,6 +89,12 @@ describe("quran llms text", () => {
     expect(firstSurahText).toContain("**Translation notes:** Source note.");
     expect(firstSurahText).not.toContain("Transliteration");
     expect(firstSurahText).not.toContain("Pre-Bismillah");
+    expect(publicationMocks.readPublishedQuranCatalog).toHaveBeenCalledTimes(1);
+    expect(publicationMocks.readPublishedQuranMarkdown).toHaveBeenCalledWith(
+      "en",
+      1,
+      80
+    );
   });
 
   it("bounds long signed surah markdown to eighty verses", async () => {

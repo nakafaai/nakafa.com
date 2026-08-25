@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getLlmsMarkdownText, hasLlmsMarkdownSource } from "@/lib/llms/content";
@@ -13,6 +13,7 @@ const NEW_PATH = "subjects/mathematics/new-topic/new-lesson";
 const SOURCE_PUBLIC_PATH = "subjects/chemistry/green-chemistry/definition";
 const mockGetCachedLlmsSectionIndexText = vi.hoisted(() => vi.fn());
 const mockGetCachedPublishedText = vi.hoisted(() => vi.fn());
+const mockClassifyQuranLlmsRoute = vi.hoisted(() => vi.fn());
 const mockGetQuranLlmsText = vi.hoisted(() => vi.fn());
 const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
@@ -35,6 +36,7 @@ vi.mock("@/lib/llms/published", () => ({
 }));
 
 vi.mock("@/lib/llms/quran", () => ({
+  classifyQuranLlmsRoute: mockClassifyQuranLlmsRoute,
   getQuranLlmsText: mockGetQuranLlmsText,
 }));
 
@@ -71,6 +73,7 @@ describe("llms markdown content resolver", () => {
   beforeEach(() => {
     mockGetCachedLlmsSectionIndexText.mockReset().mockResolvedValue(null);
     mockGetCachedPublishedText.mockReset().mockResolvedValue(null);
+    mockClassifyQuranLlmsRoute.mockReset().mockReturnValue(Option.none());
     mockGetQuranLlmsText.mockReset().mockReturnValue(Effect.succeed(null));
     mockReadActiveContentRoute.mockReset();
     mockResolvePublicLlmsSectionIndex.mockReset().mockReturnValue(null);
@@ -269,8 +272,27 @@ describe("llms markdown content resolver", () => {
       )
     ).resolves.toBe(true);
 
+    expect(mockClassifyQuranLlmsRoute).not.toHaveBeenCalled();
     expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
     expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
+  });
+
+  it("recognizes Quran ownership without reading its body twice", async () => {
+    mockClassifyQuranLlmsRoute.mockReturnValueOnce(
+      Option.some({ kind: "surah", surahNumber: 1 })
+    );
+
+    await expect(
+      Effect.runPromise(
+        hasLlmsMarkdownSource({ cleanSlug: "quran/1", locale: "en" })
+      )
+    ).resolves.toBe(true);
+
+    expect(mockClassifyQuranLlmsRoute).toHaveBeenCalledWith("quran/1");
+    expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
+    expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
+    expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
+    expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
   });
 
   it("reports availability only when the real source chain returns text", async () => {
