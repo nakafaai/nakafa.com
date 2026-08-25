@@ -34,6 +34,13 @@ import {
   DrawerDescription,
   DrawerFooter,
   DrawerHeader,
+  DrawerPanel,
+  DrawerPopup,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
+
+import {
   DrawerMenu,
   DrawerMenuCheckboxItem,
   DrawerMenuGroup,
@@ -42,12 +49,8 @@ import {
   DrawerMenuRadioGroup,
   DrawerMenuRadioItem,
   DrawerMenuSeparator,
-  DrawerPanel,
-  DrawerPopup,
   DrawerMenuTrigger,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer"
+} from "@/components/ui/drawer/menu"
 ```
 
 ## Minimal pattern
@@ -77,22 +80,32 @@ import {
 Drawer with handle:
 
 ```tsx
-<Drawer>
-  <DrawerTrigger render={<Button variant="outline" />}>Open Drawer</DrawerTrigger>
-  <DrawerPopup>
-    <DrawerCreateHandle />
-    <DrawerHeader>
-      <DrawerTitle>Edit Profile</DrawerTitle>
-      <DrawerDescription>Make changes to your profile here.</DrawerDescription>
-    </DrawerHeader>
-    <DrawerPanel>
-      {/* Form content */}
-    </DrawerPanel>
-    <DrawerFooter>
-      <Button>Save</Button>
-      <DrawerClose render={<Button variant="ghost" />}>Cancel</DrawerClose>
-    </DrawerFooter>
-  </DrawerPopup>
+const profileDrawer = DrawerCreateHandle<{ title: string }>()
+
+<DrawerTrigger
+  handle={profileDrawer}
+  payload={{ title: "Edit profile" }}
+  render={<Button variant="outline" />}
+>
+  Open Drawer
+</DrawerTrigger>
+
+<Drawer handle={profileDrawer}>
+  {({ payload }) => payload ? (
+    <DrawerPopup>
+      <DrawerHeader>
+        <DrawerTitle>{payload.title}</DrawerTitle>
+        <DrawerDescription>Make changes to your profile here.</DrawerDescription>
+      </DrawerHeader>
+      <DrawerPanel>
+        {/* Form content */}
+      </DrawerPanel>
+      <DrawerFooter>
+        <Button>Save</Button>
+        <DrawerClose render={<Button variant="ghost" />}>Cancel</DrawerClose>
+      </DrawerFooter>
+    </DrawerPopup>
+  ) : null}
 </Drawer>
 ```
 
