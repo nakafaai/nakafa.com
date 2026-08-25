@@ -64,6 +64,53 @@ describe("public URL migration redirects", () => {
   });
 
   it.each([
+    {
+      expectedIdentity: {
+        appLocale: "id",
+        contentKey:
+          "material/lesson/mathematics/statistics-foundations/histogram",
+        expectedMaterialKey: "lesson.mathematics.statistics-foundations",
+        expectedSectionKey: "histogram",
+      },
+      pathname: "/id/subject/high-school/10/mathematics/statistics/histogram",
+      publicPath: "materi/matematika/statistika-dasar/histogram",
+    },
+    {
+      expectedIdentity: {
+        appLocale: "en",
+        contentKey:
+          "material/lesson/mathematics/statistics-regression/scatter-diagram",
+        expectedMaterialKey: "lesson.mathematics.statistics-regression",
+        expectedSectionKey: "scatter-diagram",
+      },
+      pathname:
+        "/en/subject/high-school/11/mathematics/statistics/scatter-diagram",
+      publicPath: "subjects/mathematics/statistics-regression/scatter-diagram",
+    },
+  ])(
+    "redirects the source-proven statistics topic split for $pathname",
+    async ({ expectedIdentity, pathname, publicPath }) => {
+      readRuntimeQueryMock.mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId: "release-test",
+          managed: true,
+          publicPath,
+        })
+      );
+
+      await expect(
+        Effect.runPromise(
+          readPublicUrlMigrationRedirect({ method: "GET", pathname })
+        )
+      ).resolves.toBe(`/${expectedIdentity.appLocale}/${publicPath}`);
+      expect(readRuntimeQueryMock).toHaveBeenCalledWith(
+        expect.anything(),
+        expectedIdentity
+      );
+    }
+  );
+
+  it.each([
     ["/de/articles/politics", "/de/articles/politik"],
     [
       "/de/articles/politics/regional-elections-turmoil",
@@ -224,6 +271,16 @@ describe("public URL migration redirects", () => {
       method: "GET",
       pathname:
         "/fr/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle",
+    },
+    {
+      method: "GET",
+      pathname:
+        "/de/subject/high-school/11/mathematics/statistics/scatter-diagram",
+    },
+    {
+      method: "GET",
+      pathname:
+        "/en/subject/high-school/9/mathematics/statistics/scatter-diagram",
     },
     {
       method: "GET",

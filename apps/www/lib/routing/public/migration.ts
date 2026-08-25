@@ -1,14 +1,18 @@
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import { api } from "@repo/backend/convex/_generated/api";
-import { routing } from "@repo/internationalization/src/routing";
 import { Effect, Option, Schema } from "effect";
-import { hasLocale } from "next-intl";
 import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 const PREVIOUS_SUBJECT_NAMESPACE = "subject";
+const PREVIOUS_MATERIAL_LEVELS = new Set([
+  "high-school/10",
+  "high-school/11",
+  "high-school/12",
+  "university/bachelor",
+]);
 const REDIRECTABLE_METHODS = new Set(["GET", "HEAD"]);
 
 interface ArticleCategoryMigration {
@@ -202,14 +206,21 @@ function readPreviousMaterialIdentity(pathname: string) {
       topic &&
       section &&
       extraSegments.length === 0 &&
-      hasLocale(routing.locales, locale)
+      isPreviousMaterialLocale(locale) &&
+      isPreviousMaterialLevel(category, grade)
     )
   ) {
     return Option.none();
   }
 
+  const currentTopic = readCurrentMaterialTopic({
+    category,
+    domain,
+    grade,
+    topic,
+  });
   const contentKey = Schema.decodeOption(ContentKeySchema)(
-    `material/lesson/${domain}/${topic}/${section}`
+    `material/lesson/${domain}/${currentTopic}/${section}`
   );
   if (Option.isNone(contentKey)) {
     return Option.none();
@@ -218,7 +229,39 @@ function readPreviousMaterialIdentity(pathname: string) {
   return Option.some({
     appLocale: locale,
     contentKey: contentKey.value,
-    expectedMaterialKey: `lesson.${domain}.${topic}`,
+    expectedMaterialKey: `lesson.${domain}.${currentTopic}`,
     expectedSectionKey: section,
   });
+}
+
+/** Accepts only locales that exposed the retired subject namespace. */
+function isPreviousMaterialLocale(locale: string): locale is "en" | "id" {
+  return locale === "en" || locale === "id";
+}
+
+/** Accepts only curriculum levels that exposed the retired subject routes. */
+function isPreviousMaterialLevel(category: string, grade: string) {
+  return PREVIOUS_MATERIAL_LEVELS.has(`${category}/${grade}`);
+}
+
+/** Resolves the two source-proven statistics topic splits. */
+function readCurrentMaterialTopic({
+  category,
+  domain,
+  grade,
+  topic,
+}: {
+  readonly category: string;
+  readonly domain: string;
+  readonly grade: string;
+  readonly topic: string;
+}) {
+  switch (`${category}/${grade}/${domain}/${topic}`) {
+    case "high-school/10/mathematics/statistics":
+      return "statistics-foundations";
+    case "high-school/11/mathematics/statistics":
+      return "statistics-regression";
+    default:
+      return topic;
+  }
 }
