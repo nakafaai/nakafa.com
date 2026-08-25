@@ -5,7 +5,7 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { scheduleReadModels } from "@repo/backend/convex/contentRelease/models";
+import { startReadModels } from "@repo/backend/convex/contentRelease/models";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -54,7 +54,7 @@ describe("contentRelease/models", () => {
   afterEach(() => vi.useRealTimers());
 
   it.each(["page", "question"] as const)(
-    "claims unchanged models for %s content without scheduling empty scans",
+    "claims unchanged models for %s content under one activation lineage",
     async (family) => {
       const t = convexTest(schema, convexModules);
       await t.mutation((ctx) =>
@@ -68,7 +68,7 @@ describe("contentRelease/models", () => {
         )
       );
       await t.mutation((ctx) =>
-        runConvexProgram(scheduleReadModels(ctx, ACTIVE.releaseId))
+        runConvexProgram(startReadModels(ctx, ACTIVE.releaseId))
       );
 
       const claimed = await t.run(async (ctx) => ({
@@ -81,11 +81,15 @@ describe("contentRelease/models", () => {
           .unique(),
         state: await ctx.db.query("contentState").unique(),
       }));
-      expect(claimed.jobs).toHaveLength(0);
+      expect(claimed.jobs).toEqual([
+        expect.objectContaining({ state: { kind: "pending" } }),
+      ]);
       expect(claimed.release).toMatchObject({
         articleIndex: -1,
         materialIndex: -1,
         searchIndex: -1,
+        syncGeneration: 1,
+        syncJobId: expect.any(String),
       });
       expect(claimed.state).toMatchObject({
         articleReleaseId: ACTIVE.releaseId,
@@ -100,6 +104,17 @@ describe("contentRelease/models", () => {
         phase: "completed",
         releaseId: ACTIVE.releaseId,
       });
+      const [initialJob] = claimed.jobs;
+      if (!initialJob) {
+        expect.fail("Expected one generation-1 read-model job.");
+      }
+      await expect(
+        t.mutation(internal.contentRelease.models.restart, {
+          expectedGeneration: 1,
+          expectedJobId: initialJob._id,
+          releaseId: ACTIVE.releaseId,
+        })
+      ).resolves.toEqual({ status: "stale" });
     }
   );
 
@@ -118,7 +133,7 @@ describe("contentRelease/models", () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => seedActiveRelease(ctx, scope));
     await t.mutation((ctx) =>
-      runConvexProgram(scheduleReadModels(ctx, ACTIVE.releaseId))
+      runConvexProgram(startReadModels(ctx, ACTIVE.releaseId))
     );
     await t.finishAllScheduledFunctions(vi.runAllTimers);
 
@@ -139,8 +154,15 @@ describe("contentRelease/models", () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => seedActiveRelease(ctx));
     await t.mutation((ctx) =>
-      runConvexProgram(scheduleReadModels(ctx, ACTIVE.releaseId))
+      runConvexProgram(startReadModels(ctx, ACTIVE.releaseId))
     );
+
+    const [initialJob] = await t.run((ctx) =>
+      ctx.db.system.query("_scheduled_functions").collect()
+    );
+    if (!initialJob) {
+      expect.fail("Expected one generation-1 read-model job.");
+    }
 
     await expect(
       t.query(internal.contentRelease.models.status, {
@@ -149,6 +171,8 @@ describe("contentRelease/models", () => {
     ).resolves.toEqual({
       phase: "syncing",
       releaseId: ACTIVE.releaseId,
+      syncGeneration: 1,
+      syncJobId: initialJob._id,
     });
 
     await t.mutation(internal.contentRelease.models.resume, {
@@ -185,27 +209,35 @@ describe("contentRelease/models", () => {
     ).resolves.toHaveLength(3);
   });
 
-  it("exposes a failed job and restarts it with a new generation", async () => {
+  it("fences concurrent restart attempts by generation and job identity", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await seedActiveRelease(ctx);
       await insertReleaseItem(ctx, ACTIVE, "test:unexpected", 0);
-      await runConvexProgram(scheduleReadModels(ctx, ACTIVE.releaseId));
+      await runConvexProgram(startReadModels(ctx, ACTIVE.releaseId));
     });
     await t.finishAllScheduledFunctions(vi.runAllTimers);
 
-    await expect(
-      t.query(internal.contentRelease.models.status, {
-        releaseId: ACTIVE.releaseId,
-      })
-    ).resolves.toEqual({
-      phase: "failed",
+    const failed = await t.query(internal.contentRelease.models.status, {
       releaseId: ACTIVE.releaseId,
     });
+    if (failed.phase !== "failed") {
+      expect.fail("Expected one terminal failed lineage.");
+    }
+    expect(failed).toMatchObject({
+      releaseId: ACTIVE.releaseId,
+      syncGeneration: 1,
+    });
 
-    await t.mutation((ctx) =>
-      runConvexProgram(scheduleReadModels(ctx, ACTIVE.releaseId))
-    );
+    const restartArgs = {
+      expectedGeneration: failed.syncGeneration,
+      expectedJobId: failed.syncJobId,
+      releaseId: ACTIVE.releaseId,
+    };
+    const attempts = await Promise.all([
+      t.mutation(internal.contentRelease.models.restart, restartArgs),
+      t.mutation(internal.contentRelease.models.restart, restartArgs),
+    ]);
     const restarted = await t.run(async (ctx) => ({
       jobs: await ctx.db.system.query("_scheduled_functions").collect(),
       release: await ctx.db
@@ -218,5 +250,27 @@ describe("contentRelease/models", () => {
     expect(restarted.jobs).toHaveLength(2);
     expect(restarted.jobs.at(-1)?.state).toEqual({ kind: "pending" });
     expect(restarted.release?.syncGeneration).toBe(2);
+    expect(attempts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ status: "restarted", syncGeneration: 2 }),
+        { status: "stale" },
+      ])
+    );
+    await expect(
+      t.mutation(internal.contentRelease.models.restart, restartArgs)
+    ).resolves.toEqual({ status: "stale" });
+  });
+
+  it("fails closed when an incomplete release has no lineage identity", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) => seedActiveRelease(ctx));
+
+    await expect(
+      t.query(internal.contentRelease.models.status, {
+        releaseId: ACTIVE.releaseId,
+      })
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
   });
 });

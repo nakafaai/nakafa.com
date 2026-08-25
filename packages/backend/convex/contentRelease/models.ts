@@ -22,15 +22,38 @@ import { Effect } from "effect";
 
 type ScheduledFunction = SystemDataModel["_scheduled_functions"]["document"];
 
-export const readModelStatusValidator = v.object({
-  phase: v.union(
-    v.literal("completed"),
-    v.literal("failed"),
-    v.literal("syncing")
-  ),
+export const readModelStatusValidator = v.union(
+  v.object({
+    phase: v.literal("completed"),
+    releaseId: v.string(),
+  }),
+  v.object({
+    phase: v.union(v.literal("failed"), v.literal("syncing")),
+    releaseId: v.string(),
+    syncGeneration: v.number(),
+    syncJobId: v.id("_scheduled_functions"),
+  })
+);
+export type ReadModelStatus = Infer<typeof readModelStatusValidator>;
+
+export const readModelRestartArgsValidator = v.object({
+  expectedGeneration: v.number(),
+  expectedJobId: v.id("_scheduled_functions"),
   releaseId: v.string(),
 });
-export type ReadModelStatus = Infer<typeof readModelStatusValidator>;
+export type ReadModelRestartArgs = Infer<typeof readModelRestartArgsValidator>;
+
+export const readModelRestartResultValidator = v.union(
+  v.object({
+    status: v.literal("restarted"),
+    syncGeneration: v.number(),
+    syncJobId: v.id("_scheduled_functions"),
+  }),
+  v.object({ status: v.literal("stale") })
+);
+export type ReadModelRestartResult = Infer<
+  typeof readModelRestartResultValidator
+>;
 
 const resumeReference = makeFunctionReference<
   "mutation",
@@ -138,14 +161,21 @@ const readModelStatus = Effect.fn("contentRelease.readModelStatus")(function* (
     } satisfies ReadModelStatus;
   }
   const syncJobId = release.syncJobId;
-  const job = syncJobId
-    ? yield* Effect.promise(() =>
-        ctx.db.system.get("_scheduled_functions", syncJobId)
-      )
-    : null;
+  const syncGeneration = release.syncGeneration;
+  if (syncGeneration === undefined || syncJobId === undefined) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Read-model sync ${releaseId} has no durable lineage identity.`
+    );
+  }
+  const job = yield* Effect.promise(() =>
+    ctx.db.system.get("_scheduled_functions", syncJobId)
+  );
   return {
     phase: isRunningJob(job) ? "syncing" : "failed",
     releaseId,
+    syncGeneration,
+    syncJobId,
   } satisfies ReadModelStatus;
 });
 
@@ -187,50 +217,77 @@ const resumeReadModels = Effect.fn("contentRelease.resumeReadModels")(
 );
 
 /**
- * Starts one serial read-model lineage or preserves its active generation.
+ * Starts exactly one generation-1 read-model lineage during activation.
  *
- * Scheduling occurs inside the activation transaction. A completed activation
- * retry reuses a pending lineage, restarts a failed lineage with a new
- * generation, and schedules nothing after all three model owners converge.
+ * Scheduling and persisted identity are part of the same activation
+ * transaction. Completed activation retries never call this program.
  */
-export const scheduleReadModels = Effect.fn(
-  "contentRelease.scheduleReadModels"
-)(function* (ctx: MutationCtx, releaseId: string) {
-  const { release, signed, state } = yield* loadSyncRelease(ctx, releaseId);
-  const claimedState = yield* claimUnchangedReadModels(
-    ctx,
-    release,
-    signed,
-    state
-  );
-  if (
-    hasCompletedReadModels(getReadModelOwnership(release, signed, claimedState))
-  ) {
-    return;
+export const startReadModels = Effect.fn("contentRelease.startReadModels")(
+  function* (ctx: MutationCtx, releaseId: string) {
+    const { release, signed, state } = yield* loadSyncRelease(ctx, releaseId);
+    yield* claimUnchangedReadModels(ctx, release, signed, state);
+    const syncGeneration = 1;
+    const syncJobId = yield* Effect.promise(() =>
+      ctx.scheduler.runAfter(0, resumeReference, {
+        generation: syncGeneration,
+        releaseId,
+      })
+    );
+    yield* Effect.promise(() =>
+      ctx.db.patch("contentReleases", release._id, {
+        syncGeneration,
+        syncJobId,
+        updatedAt: Date.now(),
+      })
+    );
+    return { syncGeneration, syncJobId };
   }
-  const existingJobId = release.syncJobId;
-  const existingJob = existingJobId
-    ? yield* Effect.promise(() =>
-        ctx.db.system.get("_scheduled_functions", existingJobId)
-      )
-    : null;
-  if (isRunningJob(existingJob)) {
-    return;
-  }
-  const syncGeneration = (release.syncGeneration ?? 0) + 1;
-  const syncJobId = yield* Effect.promise(() =>
-    ctx.scheduler.runAfter(0, resumeReference, {
-      generation: syncGeneration,
-      releaseId,
-    })
-  );
-  yield* Effect.promise(() =>
-    ctx.db.patch("contentReleases", release._id, {
+);
+
+/** Restarts one failed lineage only while its persisted identity still wins. */
+const restartReadModels = Effect.fn("contentRelease.restartReadModels")(
+  function* (ctx: MutationCtx, args: ReadModelRestartArgs) {
+    const { release, signed, state } = yield* loadSyncRelease(
+      ctx,
+      args.releaseId
+    );
+    const ownership = getReadModelOwnership(release, signed, state);
+    if (hasCompletedReadModels(ownership)) {
+      return { status: "stale" } satisfies ReadModelRestartResult;
+    }
+    if (
+      release.syncGeneration !== args.expectedGeneration ||
+      release.syncJobId !== args.expectedJobId
+    ) {
+      return { status: "stale" } satisfies ReadModelRestartResult;
+    }
+    const syncGeneration = args.expectedGeneration + 1;
+    const syncJobId = yield* Effect.promise(() =>
+      ctx.scheduler.runAfter(0, resumeReference, {
+        generation: syncGeneration,
+        releaseId: args.releaseId,
+      })
+    );
+    yield* Effect.promise(() =>
+      ctx.db.patch("contentReleases", release._id, {
+        syncGeneration,
+        syncJobId,
+        updatedAt: Date.now(),
+      })
+    );
+    return {
+      status: "restarted",
       syncGeneration,
       syncJobId,
-      updatedAt: Date.now(),
-    })
-  );
+    } satisfies ReadModelRestartResult;
+  }
+);
+
+/** Generation and job fenced recovery for one terminal failed lineage. */
+export const restart = internalMutation({
+  args: readModelRestartArgsValidator,
+  returns: readModelRestartResultValidator,
+  handler: (ctx, args) => runConvexProgram(restartReadModels(ctx, args)),
 });
 
 /** Internal read-only status used by the authenticated Node lifecycle action. */
