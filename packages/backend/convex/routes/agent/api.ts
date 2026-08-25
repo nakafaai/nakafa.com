@@ -18,6 +18,7 @@ import {
   readSearchInput,
   readTaxonomyInput,
 } from "@repo/backend/convex/routes/agent/input";
+import { limitAgentRequest } from "@repo/backend/convex/routes/agent/rateLimit";
 import {
   agentFailureResponse,
   agentJsonResponse,
@@ -40,16 +41,17 @@ import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/sche
 import { negotiateMediaType } from "@repo/utilities/http/accept";
 import type { HonoWithConvex } from "convex-helpers/server/hono";
 import { Cause, Effect, Option } from "effect";
-import { Hono } from "hono";
+import { Hono, type MiddlewareHandler } from "hono";
 
 type AgentDomainError =
   | AgentHttpInputError
   | NakafaAgentDataReadError
   | NakafaAgentInputError;
-type AgentHono = Hono<{
+interface AgentHonoEnvironment {
   Bindings: ActionCtx;
   Variables: { requestId: string };
-}>;
+}
+type AgentHono = Hono<AgentHonoEnvironment>;
 
 const API_DOCUMENTATION_URL = "https://nakafa.com/developers";
 const v1: AgentHono = new Hono();
@@ -134,6 +136,60 @@ v1.use("*", async (c, next) => {
   }
   return next();
 });
+const enforceApiRateLimit: MiddlewareHandler<AgentHonoEnvironment> = async (
+  c,
+  next
+) => {
+  const request = c.req.raw;
+  if (request.method !== "GET") {
+    return next();
+  }
+  const decision = await Effect.runPromise(
+    limitAgentRequest(c.env, request, "api").pipe(
+      Effect.match({
+        onFailure: () => null,
+        onSuccess: (result) => result,
+      })
+    )
+  );
+  const instance = new URL(request.url).pathname;
+  const requestId = c.get("requestId");
+  if (decision === null) {
+    return problemResponse({
+      code: "SERVICE_UNAVAILABLE",
+      detail: "The public request limiter is unavailable.",
+      instance,
+      requestId,
+      resolution: `Retry through ${NAKAFA_API_BASE_URL} later.`,
+      status: 503,
+      title: "Service unavailable",
+      type: "service-unavailable",
+    });
+  }
+  if (!decision.allowed) {
+    const retryAfter = Math.max(
+      1,
+      Math.ceil(decision.retryAfterMilliseconds / 1000)
+    );
+    return problemResponse({
+      code: "RATE_LIMITED",
+      detail: "The public request limit was exceeded for this client.",
+      headers: { "Retry-After": String(retryAfter) },
+      instance,
+      requestId,
+      resolution: `Retry after ${retryAfter} seconds and use exponential backoff.`,
+      status: 429,
+      title: "Too many requests",
+      type: "rate-limited",
+    });
+  }
+  return next();
+};
+
+v1.use("/search", enforceApiRateLimit);
+v1.use("/content", enforceApiRateLimit);
+v1.use("/taxonomy", enforceApiRateLimit);
+v1.use("/quran/*", enforceApiRateLimit);
 
 v1.get("/", () =>
   agentJsonResponse({

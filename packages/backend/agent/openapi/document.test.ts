@@ -170,8 +170,19 @@ describe("Nakafa OpenAPI document", () => {
     });
   });
 
-  it("documents the platform-owned rate-limit response without promising Problem Details", () => {
-    const [openApiOperation, ...protectedOperations] = readOperations();
+  it("documents application rate limits only on metered data operations", () => {
+    const operations = readOperations();
+    const openApiOperation = operations.find(
+      (operation) => operation.operationId === "getNakafaOpenApi"
+    );
+    const exemptOperationIds = new Set([
+      "getNakafaOpenApi",
+      "getNakafaApiIndex",
+      "getNakafaApiHealth",
+    ]);
+    const meteredOperations = operations.filter(
+      (operation) => !exemptOperationIds.has(operation.operationId)
+    );
 
     expect(openApiOperation?.operationId).toBe("getNakafaOpenApi");
     expect(openApiOperation?.responses).toMatchObject({
@@ -182,14 +193,23 @@ describe("Nakafa OpenAPI document", () => {
     expect(openApiOperation?.responses).not.toHaveProperty("403");
     expect(openApiOperation?.responses).not.toHaveProperty("429");
 
-    for (const operation of protectedOperations) {
+    for (const operation of operations.filter((candidate) =>
+      exemptOperationIds.has(candidate.operationId)
+    )) {
+      expect(operation.responses).not.toHaveProperty("429");
+    }
+    for (const operation of meteredOperations) {
       expect(operation.responses["429"]).toMatchObject({
-        description: expect.stringContaining("Vercel Firewall"),
+        content: {
+          "application/problem+json": {
+            schema: { $ref: "#/components/schemas/Problem" },
+          },
+        },
+        description: expect.stringContaining("bounded application"),
         headers: {
           "Retry-After": { schema: { type: "string" } },
         },
       });
-      expect(operation.responses["429"]).not.toHaveProperty("content");
     }
   });
 });

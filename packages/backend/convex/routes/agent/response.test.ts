@@ -10,21 +10,26 @@ describe("agent HTTP responses", () => {
     const response = problemResponse({
       code: "RATE_LIMITED",
       detail: "The public request limit was exceeded.",
+      headers: { "Retry-After": "30" },
       instance: "/v1/search",
       requestId: "request-429",
-      resolution: "Retry after the platform rate-limit window.",
+      resolution: "Retry after the application rate-limit window.",
       status: 429,
       title: "Too many requests",
       type: "rate-limited",
     });
 
     expect(response.status).toBe(429);
+    expect(response.headers.get("access-control-expose-headers")).toBe(
+      "Retry-After"
+    );
+    expect(response.headers.get("retry-after")).toBe("30");
     await expect(response.json()).resolves.toEqual({
       code: "RATE_LIMITED",
       detail: "The public request limit was exceeded.",
       instance: "/v1/search",
       request_id: "request-429",
-      resolution: "Retry after the platform rate-limit window.",
+      resolution: "Retry after the application rate-limit window.",
       status: 429,
       title: "Too many requests",
       type: "https://nakafa.com/problems/rate-limited",

@@ -22,6 +22,7 @@ export const PUBLIC_API_HEADERS = {
     "Accept, Content-Type, traceparent, tracestate, baggage",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
   "Access-Control-Allow-Origin": "*",
+  "Access-Control-Expose-Headers": "Retry-After",
   "Cache-Control": "no-store",
   "Content-Type": "application/json; charset=utf-8",
   Vary: "Accept, Accept-Encoding, Origin",

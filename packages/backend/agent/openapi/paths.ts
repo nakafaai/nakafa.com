@@ -50,20 +50,21 @@ const COMMON_ERRORS = {
   ),
 };
 
-const PLATFORM_RATE_LIMIT_RESPONSE = {
-  description:
-    "Vercel Firewall rejected the request at the edge. The platform-owned body is not guaranteed to use Nakafa Problem Details. Honor Retry-After when present and retry with backoff.",
+const APPLICATION_RATE_LIMIT_RESPONSE = {
+  ...problemResponse(
+    "The client exceeded the bounded application request quota. Honor Retry-After and retry with backoff."
+  ),
   headers: {
     "Retry-After": {
-      description: "Optional platform retry delay in seconds.",
+      description: "Required retry delay in seconds.",
       schema: { type: "string" },
     },
   },
 };
 
-const PROTECTED_READ_RESPONSES = {
+const RATE_LIMITED_READ_RESPONSES = {
   ...COMMON_ERRORS,
-  "429": PLATFORM_RATE_LIMIT_RESPONSE,
+  "429": APPLICATION_RATE_LIMIT_RESPONSE,
 };
 
 const OPENAPI_CONTRACT_RESPONSES = {
@@ -133,7 +134,7 @@ export const OPENAPI_PATHS = {
   },
   "/v1": {
     get: readOperation({
-      additionalResponses: PROTECTED_READ_RESPONSES,
+      additionalResponses: COMMON_ERRORS,
       description:
         "Returns stable service identity and links for developers and agents.",
       operationId: "getNakafaApiIndex",
@@ -143,7 +144,7 @@ export const OPENAPI_PATHS = {
   },
   "/v1/content": {
     get: readOperation({
-      additionalResponses: PROTECTED_READ_RESPONSES,
+      additionalResponses: RATE_LIMITED_READ_RESPONSES,
       description:
         "Resolves a readable search content ID, Nakafa resource URI, or canonical URL to full agent-readable Markdown. Search results without markdown_url are citation-only catalog entries.",
       operationId: "getNakafaContent",
@@ -157,7 +158,7 @@ export const OPENAPI_PATHS = {
   },
   "/v1/health": {
     get: readOperation({
-      additionalResponses: PROTECTED_READ_RESPONSES,
+      additionalResponses: COMMON_ERRORS,
       description:
         "Returns process health and an observation timestamp without reading content data.",
       operationId: "getNakafaApiHealth",
@@ -169,7 +170,7 @@ export const OPENAPI_PATHS = {
   },
   "/v1/quran/{surah}": {
     get: readOperation({
-      additionalResponses: PROTECTED_READ_RESPONSES,
+      additionalResponses: RATE_LIMITED_READ_RESPONSES,
       description:
         "Returns a bounded reviewed Quran verse range with translation and optional tafsir.",
       operationId: "getNakafaQuranReference",
@@ -183,7 +184,7 @@ export const OPENAPI_PATHS = {
   },
   "/v1/search": {
     get: readOperation({
-      additionalResponses: PROTECTED_READ_RESPONSES,
+      additionalResponses: RATE_LIMITED_READ_RESPONSES,
       description:
         "Searches the current signed Nakafa publication with stable pagination. Repeat query for alternate phrases.",
       operationId: "searchNakafaContent",
@@ -196,7 +197,7 @@ export const OPENAPI_PATHS = {
   },
   "/v1/taxonomy": {
     get: readOperation({
-      additionalResponses: PROTECTED_READ_RESPONSES,
+      additionalResponses: RATE_LIMITED_READ_RESPONSES,
       description:
         "Returns current public sections, locales, categories, counts, and supported agent tools.",
       operationId: "getNakafaTaxonomy",

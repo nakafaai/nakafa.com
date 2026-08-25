@@ -1,4 +1,15 @@
 // @vitest-environment node
+import {
+  NAKAFA_API_EDGE_CONTRACT,
+  NAKAFA_EDGE_CLIENT_IP_HEADER,
+} from "@repo/backend/agent/edge";
+import { components } from "@repo/backend/convex/_generated/api";
+import {
+  AGENT_RATE_LIMIT_CONFIG,
+  AGENT_RATE_LIMIT_MAX_REQUESTS,
+  deriveAgentRateLimitKey,
+  getAgentRateLimitName,
+} from "@repo/backend/convex/routes/agent/rateLimit";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
   afterEach,
@@ -7,16 +18,16 @@ import {
   expect,
   it,
 } from "@repo/testing/effect";
+import { Effect } from "effect";
 
 const API_SECRET = "technical-api-edge-secret";
-const API_SECRET_NAME = "NAKAFA_API_EDGE_SECRET";
 const POLAR_SECRET_NAME = "POLAR_WEBHOOK_SECRET";
 const PROBLEM_TYPE_PATTERN = /^https:\/\/nakafa\.com\/problems\//u;
 
 /** Sends one request through the real Convex HTTP router and edge guard. */
 function fetchApi(path: string, init: RequestInit = {}) {
   const headers = new Headers(init.headers);
-  headers.set("x-nakafa-api-edge-secret", API_SECRET);
+  headers.set(NAKAFA_API_EDGE_CONTRACT.secretHeader, API_SECRET);
   return createConvexTestWithBetterAuth().fetch(path, { ...init, headers });
 }
 
@@ -50,12 +61,12 @@ async function expectProblem(
 }
 
 beforeEach(() => {
-  process.env[API_SECRET_NAME] = API_SECRET;
+  process.env[NAKAFA_API_EDGE_CONTRACT.secretEnvironment] = API_SECRET;
   process.env[POLAR_SECRET_NAME] = "technical-webhook-secret";
 });
 
 afterEach(() => {
-  delete process.env[API_SECRET_NAME];
+  delete process.env[NAKAFA_API_EDGE_CONTRACT.secretEnvironment];
   delete process.env[POLAR_SECRET_NAME];
 });
 
@@ -159,6 +170,35 @@ describe("public agent API routes", () => {
       limit: 10,
       offset: 0,
     });
+  });
+
+  it("limits expensive reads by trusted edge client and exempts health", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const clientAddress = "203.0.113.20";
+    const key = await Effect.runPromise(
+      deriveAgentRateLimitKey(
+        new Request("https://api.nakafa.com/v1/search", {
+          headers: { [NAKAFA_EDGE_CLIENT_IP_HEADER]: clientAddress },
+        })
+      )
+    );
+    const seeded = await t.mutation(components.rateLimiter.lib.rateLimit, {
+      config: AGENT_RATE_LIMIT_CONFIG,
+      count: AGENT_RATE_LIMIT_MAX_REQUESTS,
+      key,
+      name: getAgentRateLimitName("api"),
+    });
+    const headers = {
+      [NAKAFA_API_EDGE_CONTRACT.secretHeader]: API_SECRET,
+      [NAKAFA_EDGE_CLIENT_IP_HEADER]: clientAddress,
+    };
+    const limited = await t.fetch("/v1/search", { headers });
+    const health = await t.fetch("/v1/health", { headers });
+
+    expect(seeded.ok).toBe(true);
+    await expectProblem(limited, { code: "RATE_LIMITED", status: 429 });
+    expect(Number(limited.headers.get("retry-after"))).toBeGreaterThan(0);
+    expect(health.status).toBe(200);
   });
 
   it("fails closed when the signed taxonomy publication is unavailable", async () => {
