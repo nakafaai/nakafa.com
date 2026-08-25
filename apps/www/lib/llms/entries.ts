@@ -55,9 +55,7 @@ export function buildSiteLlmsEntries(
     }
     const route = `/${page.publicPath}`;
     entries.push({
-      ...(page.metadata.description === undefined
-        ? {}
-        : { description: page.metadata.description }),
+      description: page.metadata.description,
       href: `${BASE_URL}/${locale}${route}`,
       route,
       section: "site",
