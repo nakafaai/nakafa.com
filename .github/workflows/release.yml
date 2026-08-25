@@ -1,4 +1,4 @@
-name: Release
+name: Packages
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: Release-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
