@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import {
   getArticleNextHref,
   readArticlePageCursor,
+  stripArticlePagination,
 } from "@/lib/content/article/query";
 
 const manifest = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
@@ -54,6 +55,17 @@ describe("article catalog query", () => {
         })
       )
     ).toBe(true);
+  });
+
+  it("removes release pagination while preserving unrelated query state", () => {
+    expect(
+      stripArticlePagination(
+        "?cursor=next&manifest=source&release=source&ref=locale&ref=agent"
+      )
+    ).toBe("?ref=locale&ref=agent");
+    expect(
+      stripArticlePagination("?cursor=next&manifest=source&release=source")
+    ).toBe("");
   });
 
   it("builds encoded next links only for complete page identities", () => {

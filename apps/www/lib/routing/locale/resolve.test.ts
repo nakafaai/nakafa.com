@@ -166,6 +166,12 @@ describe("resolveLocalizedNavigationHref", () => {
         "de"
       )
     ).toBe(`/${testArticleDeProjection.publicPath}?source=locale#references`);
+    expect(
+      resolveHref(
+        `/${testArticleProjection.appLocale}/${testArticleProjection.parentPath}?cursor=source&manifest=source&release=source&source=locale#latest`,
+        "de"
+      )
+    ).toBe(`/${testArticleDeProjection.parentPath}?source=locale#latest`);
   });
 
   it("projects signed material and curriculum counterparts", () => {

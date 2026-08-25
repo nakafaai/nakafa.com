@@ -7,6 +7,7 @@ import {
   readPublishedArticleCategory,
   readPublishedCategoryAlternates,
 } from "@/lib/content/article/category";
+import { stripArticlePagination } from "@/lib/content/article/query";
 import { readPublishedArticleRoute } from "@/lib/content/article/route";
 import { readPublishedMaterialContext } from "@/lib/content/material/context";
 import { readPublishedMaterialRoute } from "@/lib/content/material/route";
@@ -69,7 +70,7 @@ const readLocalizedArticleHref = Effect.fn("www.routing.locale.readArticle")(
 
       return toNavigationHref(
         target.publicPath,
-        `${input.search}${input.hash}`
+        `${stripArticlePagination(input.search)}${input.hash}`
       );
     }
 

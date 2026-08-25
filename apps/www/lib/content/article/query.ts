@@ -9,11 +9,12 @@ const CursorSchema = Schema.String.pipe(
   Schema.check(Schema.isMinLength(1)),
   Schema.check(Schema.isMaxLength(4096))
 );
-const ArticlePageQuerySchema = Schema.Struct({
+const articlePageQueryFields = {
   cursor: CursorSchema,
   manifest: Sha256HashSchema,
   release: ReleaseIdSchema,
-});
+};
+const ArticlePageQuerySchema = Schema.Struct(articlePageQueryFields);
 /** Raw Next.js query values accepted by article catalog pages. */
 export interface ArticlePageQuery {
   readonly [key: string]: string | string[] | undefined;
@@ -23,6 +24,15 @@ export interface ArticleNextPage {
   readonly activeManifestHash: ArticlePageCursor["expectedManifestHash"] | null;
   readonly activeReleaseId: ArticlePageCursor["expectedReleaseId"] | null;
   readonly nextCursor: null | string;
+}
+/** Removes source-release pagination before navigating to another locale. */
+export function stripArticlePagination(search: string) {
+  const query = new URLSearchParams(search);
+  for (const parameter of Object.keys(articlePageQueryFields)) {
+    query.delete(parameter);
+  }
+  const suffix = query.toString();
+  return suffix ? `?${suffix}` : "";
 }
 /** Decodes an initial or release-bound article pagination request. */
 export function readArticlePageCursor(

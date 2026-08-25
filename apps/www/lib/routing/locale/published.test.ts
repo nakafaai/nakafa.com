@@ -149,7 +149,8 @@ describe("published localized route ownership", () => {
             hash: "#latest",
             locale: target.appLocale,
             publicPath: current.parentPath,
-            search: "?source=locale",
+            search:
+              "?cursor=source&manifest=source&release=source&source=locale",
           })
         )
       ).toBe(`/${target.parentPath}?source=locale#latest`);
