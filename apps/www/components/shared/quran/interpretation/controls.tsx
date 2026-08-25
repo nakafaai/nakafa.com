@@ -184,8 +184,9 @@ export function QuranInterpretationControls({
     startTransition(() => Effect.runPromise(program));
   };
   const selectInterpretation = useCallbackRef(handleInterpretationClick);
-  // Activity reconnects passive effects when this route becomes visible. Keep
-  // this after useCallbackRef so triggers enable only after its handler is live.
+  // Activity defers cleanup updates until this route becomes visible again.
+  // Keep this after useCallbackRef so triggers re-enable only after their
+  // handler is live again.
   // https://react.dev/reference/react/Activity
   useEffect(() => {
     setControllerActive(true);

@@ -126,7 +126,6 @@ const verifyQuranInterpretationDrawer = Effect.fn(
   yield* Effect.promise(() => expect(page).toHaveURL(quranIndexUrlPattern));
   yield* Effect.promise(() => expect(trigger).toBeAttached());
   yield* Effect.promise(() => expect(trigger).toBeHidden());
-  yield* Effect.promise(() => expect(trigger).toBeDisabled());
   yield* Effect.promise(() => expect(trigger).toHaveCSS("opacity", "1"));
 
   yield* Effect.promise(() => page.goBack());
