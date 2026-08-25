@@ -4,6 +4,7 @@ import { tryoutBundleSchema } from "@repo/backend/convex/tryouts/runtime/schema"
 import { Effect, Schema } from "effect";
 
 const ACTIVE_POINTER_TABLE = "contentState";
+const TRANSIENT_CUTOVER_TABLES = new Set(["contentPredecessorReads"]);
 export const CONTENT_RUNTIME_CACHE_VERSION = "v2";
 export const CONTENT_RUNTIME_CACHE_CONTRACT = Object.freeze({
   archive: Object.freeze({
@@ -46,7 +47,8 @@ const activePointerDefinition: RuntimeTableDefinition = [
 const runtimeTableDefinitionFragments: readonly RuntimeTableDefinitionFragment[] =
   [
     Object.entries(contentReleaseSchema).filter(
-      ([table]) => table !== ACTIVE_POINTER_TABLE
+      ([table]) =>
+        table !== ACTIVE_POINTER_TABLE && !TRANSIENT_CUTOVER_TABLES.has(table)
     ),
     Object.entries(tryoutBundleSchema),
     [activePointerDefinition],
