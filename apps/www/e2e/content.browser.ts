@@ -54,7 +54,7 @@ const contentRouteGroups = [
     ],
   },
   {
-    jsonLdTypes: ["LearningResource"],
+    jsonLdTypes: ["Article", "LearningResource"],
     kind: "material",
     routes: [
       {
