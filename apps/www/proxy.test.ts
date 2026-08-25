@@ -213,7 +213,19 @@ describe("proxy", () => {
       "/_not-found/id",
     ];
     expect([...matched, "/MISSING.XML", "/llms.txt"].every(matches)).toBe(true);
+    expect(matches("/en/example.og")).toBe(true);
     expect(bypassed.some(matches)).toBe(false);
+  });
+
+  it("delegates an OG alias before document routing", async () => {
+    const response = await requestProxy("/en/example.og", {
+      headers: { accept: "image/png" },
+    });
+
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+    expectNoLocaleProxy();
+    expect(runtimeMocks.readRedirect).not.toHaveBeenCalled();
+    expect(runtimeMocks.readActive).not.toHaveBeenCalled();
   });
 
   it("returns a clean 404 for unsupported root files", async () => {

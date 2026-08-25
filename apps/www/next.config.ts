@@ -18,6 +18,7 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import { AGENT_DISCOVERY_HEADERS } from "@/lib/agent-discovery";
 import { hasPreviewRendererEnvironment } from "@/lib/content/preview/environment";
+import { createOgRouteAliasRewrites } from "@/lib/og/route";
 
 const configEnv = createEnv({
   extends: [analyzeKeys(), convexKeys()],
@@ -63,8 +64,6 @@ function createAppRewrites() {
   ];
   const llmSource = ["/:path*.md", "/:path*.mdx", "/:path*/llms.txt"];
   const llmDestination = "/llms.mdx/:path*";
-  const ogSource = ["/:path*.png", "/:path*.og", "/:path*/image.png"];
-  const ogDestination = "/og/:path*";
   const ogRouteRewrites = [
     {
       source: "/:locale/og/:path*/image.png",
@@ -80,10 +79,7 @@ function createAppRewrites() {
       source,
       destination: llmDestination,
     })),
-    ...ogSource.map((source) => ({
-      source,
-      destination: ogDestination,
-    })),
+    ...createOgRouteAliasRewrites(),
   ];
   return {
     // PostHog requires the specific static and array rewrites to come before the

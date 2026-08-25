@@ -30,6 +30,7 @@ import {
   readLlmsMarkdownPathname,
   resolveLlmsProxyRoute,
 } from "@/lib/llms/routes";
+import { isOgRouteAliasPathname } from "@/lib/og/route";
 import {
   isLocaleBypassPath,
   isUnsupportedRootFilePath,
@@ -82,6 +83,10 @@ export async function proxy(request: NextRequest) {
         "X-Robots-Tag": "noindex",
       },
     });
+  }
+
+  if (isOgRouteAliasPathname(pathname)) {
+    return NextResponse.next();
   }
 
   const previewConfigured = hasPreviewConfig();
