@@ -53,11 +53,11 @@ export function SidebarProvider({
   cookieName?: string;
   onOpenChange?: (open: boolean) => void;
 }) {
-  const isMobile = useMediaQuery(
+  const mobileMediaQuery =
     sidebarDesktop === undefined
       ? createMaxWidthMediaQuery(SIDEBAR_DESKTOP)
-      : createMaxWidthInclusiveMediaQuery(sidebarDesktop)
-  );
+      : createMaxWidthInclusiveMediaQuery(sidebarDesktop);
+  const isMobile = useMediaQuery(mobileMediaQuery);
   const [mobileOpen, setMobileOpenState] = useState(false);
   const isLocked = locked;
 
@@ -97,13 +97,16 @@ export function SidebarProvider({
       return;
     }
 
-    if (isMobile) {
+    // Mantine updates its SSR-safe media value in useEffect. Read the current
+    // viewport at the interaction boundary so the first toggle routes correctly.
+    const mobileViewportMatches = window.matchMedia(mobileMediaQuery).matches;
+    if (mobileViewportMatches) {
       setOpenMobile((previous) => !previous);
       return;
     }
 
     setOpen((previous) => !previous);
-  }, [isLocked, isMobile, setOpen, setOpenMobile]);
+  }, [isLocked, mobileMediaQuery, setOpen, setOpenMobile]);
 
   useHotkeys(
     isLocked

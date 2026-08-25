@@ -44,7 +44,14 @@ export class JavascriptResourceRequestError extends Schema.TaggedError<Javascrip
     status: Schema.optional(Schema.Finite),
     url: Schema.String,
   }
-) {}
+) {
+  get message() {
+    const status = this.status === undefined ? "" : ` status=${this.status}`;
+    const errorText =
+      this.errorText === undefined ? "" : ` errorText=${this.errorText}`;
+    return `JavaScript resource request failed: kind=${this.kind} href=${this.href} url=${this.url}${status}${errorText}`;
+  }
+}
 
 /** Next.js did not register a visible-link prefetch within the fixed window. */
 export class JavascriptPrefetchReadinessTimeout extends Schema.TaggedError<JavascriptPrefetchReadinessTimeout>()(

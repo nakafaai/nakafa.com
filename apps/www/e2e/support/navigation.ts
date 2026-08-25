@@ -32,7 +32,11 @@ export class NavigationLinkMissing extends Schema.TaggedError<NavigationLinkMiss
     hrefPattern: Schema.String,
     sourceHref: Schema.String,
   }
-) {}
+) {
+  get message() {
+    return `No visible link matching ${this.hrefPattern} was found on ${this.sourceHref}.`;
+  }
+}
 
 export interface NavigationTarget {
   readonly href: string;
@@ -81,30 +85,49 @@ const assertSettledNavigation = Effect.fn("NakafaE2E.assertSettledNavigation")(
   }
 );
 
+const requireVisibleLocator = Effect.fn("NakafaE2E.requireVisibleLocator")(
+  function* (locator: Locator, failure: NavigationLinkMissing) {
+    const isVisible = yield* Effect.promise(() => locator.isVisible());
+    if (!isVisible) {
+      return yield* failure;
+    }
+    return locator;
+  }
+);
+
+const waitForVisibleLocator = Effect.fn("NakafaE2E.waitForVisibleLocator")(
+  (locator: Locator, failure: NavigationLinkMissing) =>
+    requireVisibleLocator(locator, failure).pipe(
+      Effect.retry(linkedHrefRetrySchedule)
+    )
+);
+
 const findVisibleLink = Effect.fn("NakafaE2E.findVisibleLink")(function* (
   page: Page,
-  href: string
+  href: string,
+  sourceHref: string
 ) {
   const link = page.locator(`a[href="${href}"]:visible`).first();
+  const missingLink = new NavigationLinkMissing({
+    hrefPattern: href,
+    sourceHref,
+  });
   const linkIsVisible = yield* Effect.promise(() => link.isVisible());
-  if (href === "/en" && !linkIsVisible) {
-    const sidebarTrigger = page
-      .locator('[data-slot="sidebar-trigger"]:visible')
-      .first();
-    const triggerIsVisible = yield* Effect.promise(() =>
-      sidebarTrigger.isVisible()
-    );
-    if (triggerIsVisible) {
-      yield* Effect.promise(() => sidebarTrigger.click());
-    }
+  if (linkIsVisible) {
+    return link;
+  }
+  if (href !== "/en") {
+    return yield* waitForVisibleLocator(link, missingLink);
   }
 
+  const sidebarTrigger = page
+    .locator('[data-slot="sidebar-trigger"]:visible')
+    .first();
+  yield* waitForVisibleLocator(sidebarTrigger, missingLink);
   yield* Effect.promise(() =>
-    expect(link, `No visible link to ${href} was found.`).toBeVisible({
-      timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-    })
+    sidebarTrigger.click({ timeout: NAVIGATION_TIMEOUT_MILLISECONDS })
   );
-  return link;
+  return yield* waitForVisibleLocator(link, missingLink);
 });
 
 const readVisibleLinkedHref = Effect.fn("NakafaE2E.readVisibleLinkedHref")(
@@ -190,13 +213,13 @@ const navigateClient = Effect.fn("NakafaE2E.navigateClient")(function* (
     page.goto(target.sourceHref, { waitUntil: "domcontentloaded" })
   );
   yield* Effect.sync(() => expect(sourceResponse?.ok()).toBe(true));
-  const link = yield* findVisibleLink(page, target.href);
+  const link = yield* findVisibleLink(page, target.href, target.sourceHref);
   yield* warmClientPrefetch(link);
 
   // @next/playwright owns this native Promise callback while its lock is held.
   yield* Effect.promise(() =>
     instant(page, () =>
-      link.click().then(() =>
+      link.click({ timeout: NAVIGATION_TIMEOUT_MILLISECONDS }).then(() =>
         page.waitForURL((url) => url.pathname === target.href, {
           timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
         })
