@@ -223,48 +223,4 @@ describe("contentRelease/article/write", () => {
       data: { code: "CONTENT_RELEASE_SIZE" },
     });
   });
-
-  it("rejects a conflicting localized category route", async () => {
-    const conflict = convexTest(schema, convexModules);
-    await conflict.mutation(async (ctx) => {
-      await ctx.db.insert("articleCategories", {
-        appLocale: "en",
-        bucket: "aaa",
-        category: "politics",
-        contentKey: "articles/politics/first",
-        projectionHash: `sha256:${"a".repeat(64)}`,
-        releaseId: "release-conflict",
-        rendererDomain: "politics",
-        route: "government",
-        sequence: 1,
-        title: TEST_ARTICLE_PROJECTION.categoryTitle,
-      });
-    });
-
-    await expect(conflict.mutation((ctx) => write(ctx))).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-  });
-
-  it("rejects a route claimed by another active release sequence", async () => {
-    const conflict = convexTest(schema, convexModules);
-    await conflict.mutation(async (ctx) => {
-      await ctx.db.insert("articleCategories", {
-        appLocale: "en",
-        bucket: "aaa",
-        category: "history",
-        contentKey: "articles/history/first",
-        projectionHash: `sha256:${"a".repeat(64)}`,
-        releaseId: "release-conflict",
-        rendererDomain: "politics",
-        route: TEST_ARTICLE_PROJECTION.categoryRouteSlug,
-        sequence: 0,
-        title: "History",
-      });
-    });
-
-    await expect(conflict.mutation((ctx) => write(ctx))).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-  });
 });

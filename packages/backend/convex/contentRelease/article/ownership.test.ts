@@ -1,0 +1,152 @@
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { writeCategory } from "@repo/backend/convex/contentRelease/article/ownership";
+import { CONTENT_BUCKET_SIZE } from "@repo/backend/convex/contentRelease/bucket";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import schema from "@repo/backend/convex/schema";
+import { convexModules } from "@repo/backend/convex/test.setup";
+import { TEST_ARTICLE_PROJECTION } from "@repo/backend/test/content-runtime";
+import { normalizePublicationDates } from "@repo/contents/_types/publication";
+import type { WithoutSystemFields } from "convex/server";
+import { convexTest } from "convex-test";
+import { describe, expect, it } from "vitest";
+
+type ArticleEntry = WithoutSystemFields<Doc<"articleCatalog">>;
+
+/** Builds one complete current article row for the category ownership seam. */
+function articleEntry(options?: {
+  readonly category?: string;
+  readonly sequence?: number;
+}): ArticleEntry {
+  const dates = normalizePublicationDates(TEST_ARTICLE_PROJECTION.metadata);
+  return {
+    appLocale: TEST_ARTICLE_PROJECTION.appLocale,
+    assetId: TEST_ARTICLE_PROJECTION.graph.assetId,
+    bucket: "444",
+    category: options?.category ?? TEST_ARTICLE_PROJECTION.category,
+    categoryTitle: TEST_ARTICLE_PROJECTION.categoryTitle,
+    contentKey: TEST_ARTICLE_PROJECTION.contentKey,
+    ...dates,
+    date: dates.datePublished,
+    projectionHash: `sha256:${"4".repeat(64)}`,
+    publicPath: TEST_ARTICLE_PROJECTION.publicPath,
+    releaseId: "release-article-write",
+    rendererDomain: "politics",
+    sequence: options?.sequence ?? 1,
+  };
+}
+
+/** Runs the category claim through the native Convex mutation boundary. */
+function claim(ctx: MutationCtx) {
+  return runConvexProgram(
+    writeCategory(
+      ctx,
+      articleEntry(),
+      TEST_ARTICLE_PROJECTION.categoryRouteSlug
+    )
+  );
+}
+
+describe("contentRelease/article/ownership", () => {
+  it("rejects a conflicting localized category route", async () => {
+    const conflict = convexTest(schema, convexModules);
+    await conflict.mutation(async (ctx) => {
+      await ctx.db.insert("articleCategories", {
+        appLocale: "en",
+        bucket: "aaa",
+        category: "politics",
+        contentKey: "articles/politics/first",
+        projectionHash: `sha256:${"a".repeat(64)}`,
+        releaseId: "release-conflict",
+        rendererDomain: "politics",
+        route: "government",
+        sequence: 1,
+        title: TEST_ARTICLE_PROJECTION.categoryTitle,
+      });
+    });
+
+    await expect(conflict.mutation(claim)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
+  it("rejects a route claimed by another active release sequence", async () => {
+    const conflict = convexTest(schema, convexModules);
+    await conflict.mutation(async (ctx) => {
+      await ctx.db.insert("articleCategories", {
+        appLocale: "en",
+        bucket: "aaa",
+        category: "history",
+        contentKey: "articles/history/first",
+        projectionHash: `sha256:${"a".repeat(64)}`,
+        releaseId: "release-conflict",
+        rendererDomain: "politics",
+        route: TEST_ARTICLE_PROJECTION.categoryRouteSlug,
+        sequence: 0,
+        title: "History",
+      });
+    });
+
+    await expect(conflict.mutation(claim)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
+  it("rejects a route claimed by a predecessor row without a stored route", async () => {
+    const conflict = convexTest(schema, convexModules);
+    await conflict.mutation(async (ctx) => {
+      await ctx.db.insert("articleCatalog", {
+        appLocale: "en",
+        assetId: "asset:en:article:history:article:politics:first",
+        bucket: "aaa",
+        category: "history",
+        categoryTitle: "History",
+        contentKey: "articles/history/first",
+        date: "2026-07-22",
+        projectionHash: `sha256:${"a".repeat(64)}`,
+        publicPath: "articles/politics/first",
+        releaseId: "release-predecessor",
+        rendererDomain: "politics",
+        sequence: 0,
+      });
+      await ctx.db.insert("articleCategories", {
+        appLocale: "en",
+        bucket: "aaa",
+        category: "history",
+        contentKey: "articles/history/first",
+        projectionHash: `sha256:${"a".repeat(64)}`,
+        releaseId: "release-predecessor",
+        rendererDomain: "politics",
+        sequence: 0,
+        title: "History",
+      });
+    });
+
+    await expect(conflict.mutation(claim)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
+  it("rejects an unbounded predecessor category inventory", async () => {
+    const oversized = convexTest(schema, convexModules);
+    await oversized.mutation(async (ctx) => {
+      for (let index = 0; index <= CONTENT_BUCKET_SIZE; index += 1) {
+        await ctx.db.insert("articleCategories", {
+          appLocale: "en",
+          bucket: "aaa",
+          category: `history-${index}`,
+          contentKey: `articles/history-${index}/first`,
+          projectionHash: `sha256:${"a".repeat(64)}`,
+          releaseId: "release-predecessor",
+          rendererDomain: "politics",
+          sequence: 0,
+          title: `History ${index}`,
+        });
+      }
+    });
+
+    await expect(oversized.mutation(claim)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_LIMIT" },
+    });
+  });
+});
