@@ -56,22 +56,14 @@ const loadCategory = Effect.fn("contentRelease.loadArticleCategory")(function* (
   );
 });
 
-/** Loads the sole category claiming one localized route in one release. */
+/** Loads the sole active category claiming one localized route. */
 const loadCategoryRoute = Effect.fn("contentRelease.loadArticleCategoryRoute")(
-  function* (
-    ctx: MutationCtx,
-    appLocale: AppLocale,
-    route: ArticleRouteSlug,
-    sequence: number
-  ) {
+  function* (ctx: MutationCtx, appLocale: AppLocale, route: ArticleRouteSlug) {
     return yield* Effect.promise(() =>
       ctx.db
         .query("articleCategories")
-        .withIndex("by_appLocale_and_route_and_sequence", (index) =>
-          index
-            .eq("appLocale", appLocale)
-            .eq("route", route)
-            .eq("sequence", sequence)
+        .withIndex("by_appLocale_and_route", (index) =>
+          index.eq("appLocale", appLocale).eq("route", route)
         )
         .unique()
     );
@@ -94,7 +86,7 @@ function categoryRow(article: ArticleEntry, route: ArticleRouteSlug) {
   };
 }
 
-/** Claims one category identity while rejecting contradictions in one release. */
+/** Claims one category identity while rejecting active route contradictions. */
 const writeCategory = Effect.fn("contentRelease.writeArticleCategory")(
   function* (ctx: MutationCtx, article: ArticleEntry, route: ArticleRouteSlug) {
     const existing = yield* loadCategory(
@@ -102,16 +94,11 @@ const writeCategory = Effect.fn("contentRelease.writeArticleCategory")(
       article.appLocale,
       article.category
     );
-    const routeOwner = yield* loadCategoryRoute(
-      ctx,
-      article.appLocale,
-      route,
-      article.sequence
-    );
+    const routeOwner = yield* loadCategoryRoute(ctx, article.appLocale, route);
     if (routeOwner && routeOwner.category !== article.category) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        `Article category route ${article.appLocale}/${route} is already claimed by ${routeOwner.category} within release ${article.releaseId}.`
+        `Article category route ${article.appLocale}/${route} is already claimed by active category ${routeOwner.category}.`
       );
     }
     if (

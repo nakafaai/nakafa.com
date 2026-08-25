@@ -78,11 +78,7 @@ const tables = {
     title: v.string(),
   })
     .index("by_appLocale_and_category", ["appLocale", "category"])
-    .index("by_appLocale_and_route_and_sequence", [
-      "appLocale",
-      "route",
-      "sequence",
-    ])
+    .index("by_appLocale_and_route", ["appLocale", "route"])
     .index("by_appLocale_and_bucket_and_category", [
       "appLocale",
       "bucket",

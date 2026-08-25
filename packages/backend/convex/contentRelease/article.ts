@@ -156,7 +156,18 @@ export const route = query({
     ),
 });
 
-/** Retains the predecessor native article cursor during the expand phase. */
+/**
+ * Retains the predecessor native article cursor during the 0.15.1 bridge.
+ *
+ * Rollout owner: Nakafa SEO date cutover, PR #342.
+ * Removal change: the strict 0.16 Nakafa cutover PR.
+ * Remove this query, its predecessor reader, tests, legacy date fields, and
+ * legacy indexes only after the protected-main consumer uses `publications`,
+ * production execution logs show zero `contentRelease/article:page` calls for
+ * 24 consecutive hours after that switch, and EN, ID, and DE production browser
+ * acceptance passes. The 24-hour window is Nakafa rollout policy, not a Convex
+ * requirement, and does not block the bridge PR itself.
+ */
 export const page = query({
   args: {
     category: v.string(),
@@ -225,7 +236,11 @@ export const categories = query({
     ),
 });
 
-/** Retains the predecessor category lookup until the strict 0.16 cutover. */
+/**
+ * Retains the predecessor category lookup during the same bounded bridge.
+ * The strict cutover removes it only after its production execution logs meet
+ * the owner, observation, and browser-acceptance gates documented on `page`.
+ */
 export const category = query({
   args: {
     category: v.string(),

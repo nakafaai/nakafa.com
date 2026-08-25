@@ -246,7 +246,7 @@ describe("contentRelease/article/write", () => {
     });
   });
 
-  it("rejects a route claimed by another category in the same release", async () => {
+  it("rejects a route claimed by another active release sequence", async () => {
     const conflict = convexTest(schema, convexModules);
     await conflict.mutation(async (ctx) => {
       await ctx.db.insert("articleCategories", {
@@ -258,7 +258,7 @@ describe("contentRelease/article/write", () => {
         releaseId: "release-conflict",
         rendererDomain: "politics",
         route: TEST_ARTICLE_PROJECTION.categoryRouteSlug,
-        sequence: 1,
+        sequence: 0,
         title: "History",
       });
     });
