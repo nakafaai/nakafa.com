@@ -47,6 +47,19 @@ const readCachedMarkdown = Effect.fn("www.llms.markdown.owner")(function* (
     try: () => readPublishedMarkdown(source, locale),
   });
 });
+/** Reads the derived index fallback after concrete Markdown owners miss. */
+const readCachedSectionIndex = Effect.fn("www.llms.markdown.index")(function* ({
+  cleanSlug,
+  locale,
+}: LlmsMarkdownInput) {
+  return yield* Effect.tryPromise({
+    try: () =>
+      getCachedLlmsSectionIndexText({
+        cleanSlug: `llms/${locale}/${cleanSlug}`,
+      }),
+    catch: (cause) => new CacheFailure({ cause, owner: "index" }),
+  });
+});
 /**
  * Resolves cached markdown for one agent-facing route.
  *
@@ -62,18 +75,9 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
     }
     const published = yield* getPublishedMarkdownSource({ cleanSlug, locale });
     if (published) {
-      const mdxText = yield* readCachedMarkdown(published, locale);
-      if (mdxText) {
-        return mdxText;
-      }
+      return yield* readCachedMarkdown(published, locale);
     }
-    return yield* Effect.tryPromise({
-      try: () =>
-        getCachedLlmsSectionIndexText({
-          cleanSlug: `llms/${locale}/${cleanSlug}`,
-        }),
-      catch: (cause) => new CacheFailure({ cause, owner: "index" }),
-    });
+    return yield* readCachedSectionIndex({ cleanSlug, locale });
   }
 );
 /** Checks the exact route owners used by the public Markdown handler. */
@@ -91,8 +95,13 @@ export const hasLlmsMarkdownSource = Effect.fn("www.llms.markdown.hasSource")(
       return true;
     }
 
-    const markdownText = yield* getLlmsMarkdownText(input);
-    return Boolean(markdownText);
+    const published = yield* getPublishedMarkdownSource(input);
+    if (published) {
+      return true;
+    }
+
+    const indexText = yield* readCachedSectionIndex(input);
+    return Boolean(indexText);
   }
 );
 /** Resolves one public route to its active signed markdown owner. */

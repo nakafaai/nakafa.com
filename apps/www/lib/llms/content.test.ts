@@ -74,7 +74,9 @@ async function expectNoPublishedMarkdown(cleanSlug: string) {
 describe("llms markdown content resolver", () => {
   beforeEach(() => {
     mockGetCachedLlmsSectionIndexText.mockReset().mockResolvedValue(null);
-    mockGetCachedPublishedText.mockReset().mockResolvedValue(null);
+    mockGetCachedPublishedText
+      .mockReset()
+      .mockResolvedValue("Published markdown");
     mockClassifyQuranLlmsRoute.mockReset().mockReturnValue(Option.none());
     mockGetQuranLlmsText.mockReset().mockReturnValue(Effect.succeed(null));
     mockIsPublicLlmsLocaleIndexRoute.mockReset().mockReturnValue(false);
@@ -114,6 +116,7 @@ describe("llms markdown content resolver", () => {
     mockGetCachedPublishedText.mockRejectedValue(error);
 
     await expectCacheFailure(PUBLISHED_PATH, error, "published");
+    expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
   });
 
   it("reads a newly published material route without an old route row", async () => {
@@ -248,17 +251,6 @@ describe("llms markdown content resolver", () => {
     });
   });
 
-  it("falls through when an owned route has no body markdown", async () => {
-    mockGetCachedLlmsSectionIndexText.mockResolvedValue("Fallback index");
-
-    await expect(readMarkdown(PUBLISHED_PATH)).resolves.toBe("Fallback index");
-
-    expect(mockGetCachedPublishedText).toHaveBeenCalledTimes(1);
-    expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
-      cleanSlug: `llms/en/${PUBLISHED_PATH}`,
-    });
-  });
-
   it("returns null when no markdown source exists", async () => {
     await expect(readMarkdown("articles/missing")).resolves.toBeNull();
   });
@@ -316,6 +308,29 @@ describe("llms markdown content resolver", () => {
     expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
     expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
   });
+
+  it.each([
+    { cleanSlug: PUBLISHED_ARTICLE_PATH, family: "article" },
+    { cleanSlug: PUBLISHED_PATH, family: "material" },
+    { cleanSlug: PUBLISHED_PAGE_PATH, family: "page" },
+  ])(
+    "recognizes an owned $family without reading its body",
+    async ({ cleanSlug, family }) => {
+      await expect(
+        Effect.runPromise(hasLlmsMarkdownSource({ cleanSlug, locale: "en" }))
+      ).resolves.toBe(true);
+
+      expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
+        activeReleaseId,
+        appLocale: "en",
+        family,
+        publicPath: cleanSlug,
+      });
+      expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
+      expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
+      expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
+    }
+  );
 
   it("reports availability only when the real source chain returns text", async () => {
     mockGetCachedLlmsSectionIndexText
