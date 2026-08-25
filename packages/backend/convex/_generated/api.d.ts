@@ -143,6 +143,7 @@ import type * as contentRelease_article_discovery from "../contentRelease/articl
 import type * as contentRelease_article_model from "../contentRelease/article/model.js";
 import type * as contentRelease_article_order from "../contentRelease/article/order.js";
 import type * as contentRelease_article_owner from "../contentRelease/article/owner.js";
+import type * as contentRelease_article_ownership from "../contentRelease/article/ownership.js";
 import type * as contentRelease_article_partition from "../contentRelease/article/partition.js";
 import type * as contentRelease_article_read from "../contentRelease/article/read.js";
 import type * as contentRelease_article_route from "../contentRelease/article/route.js";
@@ -706,6 +707,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/article/model": typeof contentRelease_article_model;
   "contentRelease/article/order": typeof contentRelease_article_order;
   "contentRelease/article/owner": typeof contentRelease_article_owner;
+  "contentRelease/article/ownership": typeof contentRelease_article_ownership;
   "contentRelease/article/partition": typeof contentRelease_article_partition;
   "contentRelease/article/read": typeof contentRelease_article_read;
   "contentRelease/article/route": typeof contentRelease_article_route;
