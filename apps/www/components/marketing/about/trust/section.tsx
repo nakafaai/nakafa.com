@@ -19,11 +19,8 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
-import { TrustLayout } from "./trust-layout";
-import {
-  buildTrustSourceExcerpt,
-  type TrustLessonExcerpt,
-} from "./trust-source";
+import { TrustLayout } from "./layout";
+import { buildTrustSourceExcerpt, type TrustLessonExcerpt } from "./source";
 
 /** Applies the existing marketing accent to one intentional phrase. */
 function renderAccent(chunks: ReactNode) {
