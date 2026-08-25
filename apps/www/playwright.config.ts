@@ -6,6 +6,7 @@ export default defineConfig({
   expect: {
     timeout: 5000,
   },
+  failOnFlakyTests: Boolean(process.env.CI),
   forbidOnly: Boolean(process.env.CI),
   fullyParallel: false,
   outputDir: "../../.cache/playwright/www",
