@@ -1,4 +1,8 @@
-import type { ArticleProjection } from "@nakafa/aksara-contracts/projection/article";
+import {
+  type ArticleProjection,
+  type ArticleRouteSlug,
+  ArticleRouteSlugSchema,
+} from "@nakafa/aksara-contracts/projection/article";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { adjustArticleBucket } from "@repo/backend/convex/contentRelease/article/bucket";
@@ -8,10 +12,13 @@ import {
   ensureDocumentSize,
   READ_MODEL_DOCUMENT_LIMIT,
 } from "@repo/backend/convex/contentRelease/document";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import {
+  ReleaseError,
+  releaseFail,
+} from "@repo/backend/convex/contentRelease/error";
 import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import type { WithoutSystemFields } from "convex/server";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 type ContentHead = WithoutSystemFields<Doc<"contentHeads">>;
 type AppLocale = Doc<"articleCatalog">["appLocale"];
@@ -50,7 +57,7 @@ const loadCategory = Effect.fn("contentRelease.loadArticleCategory")(function* (
 });
 
 /** Converts one active article into its category representative row. */
-function categoryRow(article: ArticleEntry) {
+function categoryRow(article: ArticleEntry, route: ArticleRouteSlug) {
   return {
     appLocale: article.appLocale,
     bucket: article.bucket,
@@ -59,6 +66,7 @@ function categoryRow(article: ArticleEntry) {
     projectionHash: article.projectionHash,
     releaseId: article.releaseId,
     rendererDomain: article.rendererDomain,
+    route,
     sequence: article.sequence,
     title: article.categoryTitle,
   };
@@ -66,7 +74,7 @@ function categoryRow(article: ArticleEntry) {
 
 /** Claims one category identity while rejecting contradictions in one release. */
 const writeCategory = Effect.fn("contentRelease.writeArticleCategory")(
-  function* (ctx: MutationCtx, article: ArticleEntry) {
+  function* (ctx: MutationCtx, article: ArticleEntry, route: ArticleRouteSlug) {
     const existing = yield* loadCategory(
       ctx,
       article.appLocale,
@@ -75,14 +83,15 @@ const writeCategory = Effect.fn("contentRelease.writeArticleCategory")(
     if (
       existing?.sequence === article.sequence &&
       (existing.title !== article.categoryTitle ||
-        existing.rendererDomain !== article.rendererDomain)
+        existing.rendererDomain !== article.rendererDomain ||
+        (existing.route !== undefined && existing.route !== route))
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         `Article category ${article.appLocale}/${article.category} conflicts within release ${article.releaseId}.`
       );
     }
-    const row = categoryRow(article);
+    const row = categoryRow(article, route);
     yield* ensureDocumentSize(
       "Active article category",
       row,
@@ -115,6 +124,28 @@ const writeCategory = Effect.fn("contentRelease.writeArticleCategory")(
   }
 );
 
+/** Recovers one signed category route from an immutable article public path. */
+const decodeCategoryRoute = Effect.fn("contentRelease.decodeCategoryRoute")(
+  function* (publicPath: string) {
+    const [root, category, article, ...remaining] = publicPath.split("/");
+    if (root !== "articles" || article === undefined || remaining.length > 0) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Article path ${publicPath} lost its category route.`
+      );
+    }
+    return yield* Schema.decodeEffect(ArticleRouteSlugSchema)(category).pipe(
+      Effect.mapError(
+        () =>
+          new ReleaseError({
+            code: "CONTENT_RELEASE_INTEGRITY",
+            message: `Article path ${publicPath} has an invalid category route.`,
+          })
+      )
+    );
+  }
+);
+
 /** Rebuilds one category after its selected article moves or disappears. */
 const reconcileCategory = Effect.fn("contentRelease.reconcileArticleCategory")(
   function* (ctx: MutationCtx, appLocale: AppLocale, category: string) {
@@ -125,7 +156,8 @@ const reconcileCategory = Effect.fn("contentRelease.reconcileArticleCategory")(
       1
     );
     if (representative) {
-      yield* writeCategory(ctx, representative);
+      const route = yield* decodeCategoryRoute(representative.publicPath);
+      yield* writeCategory(ctx, representative, route);
       return;
     }
     const existing = yield* loadCategory(ctx, appLocale, category);
@@ -229,7 +261,7 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
     );
     yield* Effect.promise(() => ctx.db.insert("articleCatalog", entry));
   }
-  yield* writeCategory(ctx, entry);
+  yield* writeCategory(ctx, entry, projection.categoryRouteSlug);
 });
 
 /** Deletes one active article row and reconciles its former category. */

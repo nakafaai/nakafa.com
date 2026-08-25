@@ -96,6 +96,8 @@ export const verifyCategory = Effect.fn("contentRelease.verifyArticleCategory")(
     if (
       verified.projection.category !== category.category ||
       verified.projection.categoryTitle !== category.title ||
+      (category.route !== undefined &&
+        verified.projection.categoryRouteSlug !== category.route) ||
       verified.resolved.projectionHash !== category.projectionHash ||
       verified.resolved.releaseId !== category.releaseId ||
       verified.resolved.rendererDomain !== category.rendererDomain ||

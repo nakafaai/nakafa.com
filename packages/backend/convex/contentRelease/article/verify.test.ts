@@ -1,4 +1,7 @@
-import { verifyArticle } from "@repo/backend/convex/contentRelease/article/verify";
+import {
+  verifyArticle,
+  verifyCategory,
+} from "@repo/backend/convex/contentRelease/article/verify";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -37,6 +40,34 @@ describe("contentRelease/article/verify", () => {
           throw new Error("Expected one active article row.");
         }
         return runConvexProgram(verifyArticle(ctx, row, row.sequence));
+      })
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
+  it("rejects a category route that contradicts its signed representative", async () => {
+    const target = convexTest(schema, convexModules);
+    await target.mutation((ctx) => insertRuntimeArticles(ctx, 1));
+    await target.mutation(async (ctx) => {
+      const category = await ctx.db.query("articleCategories").unique();
+      if (!category) {
+        throw new Error("Expected one active article category.");
+      }
+      await ctx.db.patch("articleCategories", category._id, {
+        route: "government",
+      });
+    });
+
+    await expect(
+      target.query(async (ctx) => {
+        const category = await ctx.db.query("articleCategories").unique();
+        if (!category) {
+          throw new Error("Expected one active article category.");
+        }
+        return runConvexProgram(
+          verifyCategory(ctx, category, category.sequence)
+        );
       })
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },

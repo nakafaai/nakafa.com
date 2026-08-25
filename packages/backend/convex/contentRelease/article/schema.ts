@@ -72,6 +72,7 @@ const tables = {
     projectionHash: v.string(),
     releaseId: v.string(),
     rendererDomain: rendererDomainValidator,
+    route: v.optional(v.string()),
     sequence: v.number(),
     title: v.string(),
   })
