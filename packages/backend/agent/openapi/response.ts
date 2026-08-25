@@ -96,6 +96,7 @@ function hasWeakEntityTagMatch(ifNoneMatch: string | undefined) {
 export function createOpenApiResponse(ifNoneMatch?: string) {
   const headers = {
     "Access-Control-Allow-Origin": "*",
+    "Access-Control-Expose-Headers": "ETag",
     "Cache-Control": OPENAPI_CACHE_CONTROL,
     ETag: NAKAFA_OPENAPI_ETAG,
     Vary: OPENAPI_VARY,

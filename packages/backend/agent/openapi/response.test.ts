@@ -15,9 +15,13 @@ describe("OpenAPI HTTP response", () => {
       "application/json; charset=utf-8"
     );
     expect(response.headers.get("etag")).toBe(NAKAFA_OPENAPI_ETAG);
+    expect(response.headers.get("access-control-expose-headers")).toBe("ETag");
     expect(await response.text()).toContain('"openapi":"3.1.1"');
     expect(revalidated.status).toBe(304);
     expect(revalidated.headers.get("etag")).toBe(NAKAFA_OPENAPI_ETAG);
+    expect(revalidated.headers.get("access-control-expose-headers")).toBe(
+      "ETag"
+    );
   });
 
   it("uses weak comparison across If-None-Match validator lists", () => {
