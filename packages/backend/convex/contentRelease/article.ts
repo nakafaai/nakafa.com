@@ -113,6 +113,7 @@ const sitemapPageValidator = v.union(
   v.object({
     routes: v.array(
       v.object({
+        date: v.union(v.string(), v.null()),
         lastModified: v.union(v.string(), v.null()),
         publicPath: v.string(),
       })

@@ -79,6 +79,7 @@ const materialSitemapValidator = v.union(
   v.object({
     routes: v.array(
       v.object({
+        date: v.string(),
         lastModified: v.string(),
         publicPath: v.string(),
       })

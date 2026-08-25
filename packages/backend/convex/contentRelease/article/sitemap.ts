@@ -82,12 +82,14 @@ export const readArticleSitemap = Effect.fn(
   return {
     routes: [
       ...partition.categories.map(({ route }) => ({
+        date: null,
         lastModified: null,
         publicPath: `articles/${route}`,
       })),
       ...partition.articles.map(({ projection }) => {
         const dates = normalizePublicationDates(projection.metadata);
         return {
+          date: dates.datePublished,
           lastModified: dates.dateModified ?? dates.datePublished,
           publicPath: projection.publicPath,
         };

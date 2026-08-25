@@ -77,6 +77,7 @@ export const readMaterialSitemap = Effect.fn(
     routes: partition.materials.map(({ projection }) => {
       const dates = normalizePublicationDates(projection.metadata);
       return {
+        date: dates.datePublished,
         lastModified: dates.dateModified ?? dates.datePublished,
         publicPath: projection.publicPath,
       };

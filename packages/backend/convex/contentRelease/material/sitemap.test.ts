@@ -59,8 +59,16 @@ describe("contentRelease/material/sitemap", () => {
       );
       expect(pages.flatMap((page) => page?.routes ?? [])).toEqual(
         expect.arrayContaining([
-          { lastModified: "2026-07-24", publicPath: first.publicPath },
-          { lastModified: "2026-07-24", publicPath: second.publicPath },
+          {
+            date: "2026-07-24",
+            lastModified: "2026-07-24",
+            publicPath: first.publicPath,
+          },
+          {
+            date: "2026-07-24",
+            lastModified: "2026-07-24",
+            publicPath: second.publicPath,
+          },
         ])
       );
     }
