@@ -3,7 +3,10 @@
 import { BookOpen02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useQuranInterpretationLoading } from "@/components/shared/quran/interpretation/context";
+import {
+  useQuranInterpretationLoading,
+  useQuranInterpretationSelection,
+} from "@/components/shared/quran/interpretation/context";
 
 /** Renders one tafsir trigger backed by the shared request controller. */
 export function QuranInterpretationButton({
@@ -14,6 +17,7 @@ export function QuranInterpretationButton({
   verseNumber: number;
 }) {
   const isLoading = useQuranInterpretationLoading(verseNumber);
+  const selectInterpretation = useQuranInterpretationSelection();
 
   return (
     <Button
@@ -21,6 +25,7 @@ export function QuranInterpretationButton({
       aria-label={label}
       data-quran-interpretation-verse={verseNumber}
       disabled={isLoading}
+      onClick={selectInterpretation}
       size="icon"
       type="button"
       variant="outline"

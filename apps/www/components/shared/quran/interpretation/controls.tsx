@@ -1,5 +1,5 @@
 "use client";
-import { useDisclosure, useWindowEvent } from "@mantine/hooks";
+import { useCallbackRef, useDisclosure } from "@mantine/hooks";
 import {
   decodePublishedQuranInterpretation,
   isQuranSnapshotConflict,
@@ -16,6 +16,7 @@ import {
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
 import {
+  type MouseEvent,
   type ReactNode,
   useLayoutEffect,
   useRef,
@@ -35,20 +36,7 @@ interface Props {
   snapshotId: string;
   surahNumber: number;
 }
-const INTERPRETATION_BUTTON_SELECTOR = "[data-quran-interpretation-verse]";
-/** Finds a delegated tafsir button from a browser click event. */
-function getInterpretationButton(event: MouseEvent) {
-  const target = event.target;
-  if (!(target instanceof Element)) {
-    return null;
-  }
-  const button = target.closest(INTERPRETATION_BUTTON_SELECTOR);
-  if (!(button instanceof HTMLButtonElement)) {
-    return null;
-  }
-  return button;
-}
-/** Reads the exact verse identity selected by one delegated button. */
+/** Reads the exact verse identity selected by one tafsir button. */
 function getVerseNumber(button: HTMLButtonElement) {
   const verseNumber = Number(button.dataset.quranInterpretationVerse);
   if (!Number.isSafeInteger(verseNumber) || verseNumber < 1) {
@@ -88,12 +76,8 @@ export function QuranInterpretationControls({
     },
     [close, toastId]
   );
-  useWindowEvent("click", (event) => {
-    const button = getInterpretationButton(event);
-    if (!button) {
-      return;
-    }
-    const verseNumber = getVerseNumber(button);
+  const handleInterpretationClick = (event: MouseEvent<HTMLButtonElement>) => {
+    const verseNumber = getVerseNumber(event.currentTarget);
     if (verseNumber === null) {
       return;
     }
@@ -196,11 +180,14 @@ export function QuranInterpretationControls({
       Effect.asVoid
     );
     startTransition(() => Effect.runPromise(program));
-  });
+  };
+  const selectInterpretation = useCallbackRef(handleInterpretationClick);
+  const contextValue = {
+    pendingVerseNumber: isPending ? pendingVerseNumber : null,
+    selectInterpretation,
+  };
   return (
-    <QuranInterpretationContext.Provider
-      value={isPending ? pendingVerseNumber : null}
-    >
+    <QuranInterpretationContext.Provider value={contextValue}>
       {children}
       <Drawer onOpenChange={set} open={isOpen}>
         <DrawerPopup className="mx-auto sm:max-w-3xl" showBar>
