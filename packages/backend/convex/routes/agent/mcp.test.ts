@@ -1,5 +1,9 @@
 // @vitest-environment node
 import { NAKAFA_EDGE_CLIENT_IP_HEADER } from "@repo/backend/agent/edge";
+import {
+  NAKAFA_MCP_SERVER_NAME,
+  NAKAFA_MCP_SERVER_VERSION,
+} from "@repo/backend/agent/mcp/identity";
 import { components } from "@repo/backend/convex/_generated/api";
 import {
   AGENT_RATE_LIMIT_CONFIG,
@@ -32,10 +36,13 @@ const MODERN_META = {
 };
 
 /** Sends one request through the protected MCP HTTP Action. */
-function fetchMcp(init: RequestInit = {}) {
+function fetchMcp(init: RequestInit = {}, pathname = "/mcp") {
   const headers = new Headers(init.headers);
   headers.set("x-nakafa-mcp-edge-secret", MCP_SECRET);
-  return createConvexTestWithBetterAuth().fetch("/mcp", { ...init, headers });
+  return createConvexTestWithBetterAuth().fetch(pathname, {
+    ...init,
+    headers,
+  });
 }
 
 /** Sends one current-protocol JSON request with required metadata headers. */
@@ -107,6 +114,29 @@ describe("Nakafa MCP HTTP route", () => {
           url: "https://mcp.nakafa.com/mcp",
         },
       ],
+    });
+  });
+
+  it("preserves the public MCP health endpoint and server identity", async () => {
+    const response = await fetchMcp({}, "/mcp/health");
+    const direct = await createConvexTestWithBetterAuth().fetch("/mcp/health");
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(body).toMatchObject({
+      server: {
+        name: NAKAFA_MCP_SERVER_NAME,
+        version: NAKAFA_MCP_SERVER_VERSION,
+      },
+      status: "healthy",
+    });
+    expect(Number.isNaN(Date.parse(body.timestamp))).toBe(false);
+    expect(direct.status).toBe(403);
+    await expect(direct.json()).resolves.toMatchObject({
+      error: {
+        message: "Direct access to this Convex MCP origin is not allowed.",
+      },
     });
   });
 

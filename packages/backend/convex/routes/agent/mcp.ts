@@ -1,4 +1,8 @@
 import { NAKAFA_MCP_EDGE_CONTRACT } from "@repo/backend/agent/edge";
+import {
+  NAKAFA_MCP_SERVER_NAME,
+  NAKAFA_MCP_SERVER_VERSION,
+} from "@repo/backend/agent/mcp/identity";
 import { NAKAFA_MCP_REGISTRY_MANIFEST } from "@repo/backend/agent/mcp/manifest";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { limitAgentRequest } from "@repo/backend/convex/routes/agent/rateLimit";
@@ -34,7 +38,7 @@ const mcp: AgentHono = new Hono();
 
 /** Handles the canonical MCP transport and its Registry manifest. */
 mcp.use("*", requestId);
-mcp.all("/", async (c) => {
+mcp.use("*", async (c, next) => {
   const request = c.req.raw;
   const requestId = c.get("requestId");
   const guard = await readMcpGuard(request);
@@ -62,6 +66,33 @@ mcp.all("/", async (c) => {
       requestId
     );
   }
+
+  await next();
+});
+
+mcp.get("/health", (c) => {
+  const request = c.req.raw;
+  return new Response(
+    JSON.stringify({
+      server: {
+        name: NAKAFA_MCP_SERVER_NAME,
+        version: NAKAFA_MCP_SERVER_VERSION,
+      },
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+    }),
+    {
+      headers: {
+        ...withCorsHeaders(request),
+        "Content-Type": "application/json; charset=utf-8",
+      },
+    }
+  );
+});
+
+mcp.all("/", async (c) => {
+  const request = c.req.raw;
+  const requestId = c.get("requestId");
 
   if (request.method === "OPTIONS") {
     return new Response(null, {
