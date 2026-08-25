@@ -3,6 +3,9 @@ import type { Contributor } from "@repo/contents/_types/contributor";
 import { Effect, Schema } from "effect";
 import { dragTouch } from "./touch";
 
+const COARSE_SPLITTER_TARGET_WIDTH = 44;
+const FINE_SPLITTER_TARGET_WIDTH = 24;
+
 export const legacyAvatarFragmentIds = [
   "clip0",
   "mask-id",
@@ -205,6 +208,15 @@ export const verifyDesktopSplitter = Effect.fn(
   yield* Effect.promise(() => page.keyboard.press("Home"));
 
   const splitterBounds = yield* readBounds(splitter, "splitter");
+  const usesCoarsePointer = yield* Effect.promise(() =>
+    page.evaluate(() => window.matchMedia("(pointer: coarse)").matches)
+  );
+  const minimumTargetWidth = usesCoarsePointer
+    ? COARSE_SPLITTER_TARGET_WIDTH
+    : FINE_SPLITTER_TARGET_WIDTH;
+  yield* Effect.sync(() =>
+    expect(splitterBounds.width).toBeGreaterThanOrEqual(minimumTargetWidth)
+  );
   const centerX = splitterBounds.x + splitterBounds.width / 2;
   const centerY = splitterBounds.y + splitterBounds.height / 2;
   yield* Effect.promise(() => page.mouse.move(centerX, centerY));
