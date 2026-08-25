@@ -1,8 +1,6 @@
-import {
-  getChartPayloadStringValue,
-  isChartPayloadRecord,
-} from "@repo/design-system/components/evilcharts/ui/chart-payload";
+import { getChartPayloadStringValue } from "@repo/design-system/components/evilcharts/ui/chart-payload";
 import type { ChartSeriesCue } from "@repo/design-system/lib/charts/series-cue";
+import { Predicate } from "effect";
 import type * as React from "react";
 
 // Format: { THEME_NAME: CSS_SELECTOR }
@@ -162,7 +160,7 @@ function getPayloadConfigEntry(
   payload: unknown,
   key: string
 ) {
-  if (!isChartPayloadRecord(payload)) {
+  if (!Predicate.isReadonlyObject(payload)) {
     return getConfigEntry(config, key);
   }
 

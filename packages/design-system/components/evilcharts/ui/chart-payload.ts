@@ -1,13 +1,8 @@
-/** Narrows unknown Recharts payload values to objects with string keys. */
-export function isChartPayloadRecord(
-  value: unknown
-): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
+import { Predicate } from "effect";
 
 /** Reads a string field from an unknown Recharts payload value. */
 export function getChartPayloadStringValue(payload: unknown, key?: string) {
-  if (!(key && isChartPayloadRecord(payload))) {
+  if (!(key && Predicate.isReadonlyObject(payload))) {
     return;
   }
 

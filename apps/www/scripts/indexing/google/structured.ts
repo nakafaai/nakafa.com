@@ -1,3 +1,5 @@
+import { Predicate } from "effect";
+
 /**
  * Checks whether one JSON-LD document is allowed by Google Indexing API.
  *
@@ -21,7 +23,7 @@ function hasSchemaType(value: unknown, schemaType: string): boolean {
     return value.some((entry) => hasSchemaType(entry, schemaType));
   }
 
-  if (!isRecord(value)) {
+  if (!Predicate.isReadonlyObject(value)) {
     return false;
   }
 
@@ -40,7 +42,7 @@ function hasBroadcastEventInsideVideoObject(value: unknown): boolean {
     return value.some(hasBroadcastEventInsideVideoObject);
   }
 
-  if (!isRecord(value)) {
+  if (!Predicate.isReadonlyObject(value)) {
     return false;
   }
 
@@ -52,13 +54,6 @@ function hasBroadcastEventInsideVideoObject(value: unknown): boolean {
   }
 
   return readRecordValues(value).some(hasBroadcastEventInsideVideoObject);
-}
-
-/** Narrows unknown JSON data to a key-readable object. */
-function isRecord(
-  value: unknown
-): value is Readonly<Record<PropertyKey, unknown>> {
-  return typeof value === "object" && value !== null;
 }
 
 /** Reads Schema.org `@type` values without assuming scalar or array shape. */

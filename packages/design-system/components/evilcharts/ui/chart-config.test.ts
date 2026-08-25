@@ -12,10 +12,7 @@ import {
   THEMES,
   validateChartConfigColors,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
-import {
-  getChartPayloadStringValue,
-  isChartPayloadRecord,
-} from "@repo/design-system/components/evilcharts/ui/chart-payload";
+import { getChartPayloadStringValue } from "@repo/design-system/components/evilcharts/ui/chart-payload";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const chartConfig = {
@@ -152,16 +149,11 @@ describe("chart config utilities", () => {
 });
 
 describe("chart payload utilities", () => {
-  it("narrows unknown payload values to records", () => {
-    expect(isChartPayloadRecord({ value: 1 })).toBe(true);
-    expect(isChartPayloadRecord(null)).toBe(false);
-    expect(isChartPayloadRecord("value")).toBe(false);
-  });
-
   it("reads string fields from unknown payload values", () => {
     expect(getChartPayloadStringValue({ name: "Siswa" }, "name")).toBe("Siswa");
     expect(getChartPayloadStringValue({ name: 10 }, "name")).toBeUndefined();
     expect(getChartPayloadStringValue({ name: "Siswa" })).toBeUndefined();
+    expect(getChartPayloadStringValue(["Siswa"], "0")).toBeUndefined();
     expect(getChartPayloadStringValue(null, "name")).toBeUndefined();
   });
 });
