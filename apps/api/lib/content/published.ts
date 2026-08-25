@@ -77,6 +77,7 @@ function makePublishedApiItem(found: ApiPublishedEvidence) {
     locale: projection.appLocale,
     metadata: {
       authors: projection.metadata.authors.map(({ name }) => ({ name })),
+      date: dates.datePublished,
       ...dates,
       ...(projection.metadata.description === undefined
         ? {}
