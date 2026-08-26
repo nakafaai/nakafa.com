@@ -185,6 +185,10 @@ const nextConfig = {
   // PostHog's same-origin proxy endpoints include trailing slashes such as
   // `/i/v0/e/`, so Next.js slash normalization must be disabled.
   skipTrailingSlashRedirect: true,
+  // Proxy negotiates public document representations, so it must receive the
+  // `rsc: 1` marker that Next.js otherwise strips with Flight headers.
+  // Docs: https://nextjs.org/docs/app/api-reference/file-conventions/proxy#rsc-requests-and-rewrites
+  skipProxyUrlNormalize: true,
   // Next.js recommends outputFileTracingRoot in monorepos so files outside the
   // app folder are included in the production trace.
   // Docs: https://nextjs.org/docs/app/api-reference/config/next-config-js/output
