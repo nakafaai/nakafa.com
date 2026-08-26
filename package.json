@@ -37,7 +37,7 @@
     "start": "turbo run start",
     "test": "pnpm check:patches && pnpm check:tests && pnpm test:scripts && turbo run test",
     "test:coverage": "pnpm check:patches && pnpm check:tests && turbo run test:coverage",
-    "test:scripts": "pnpm typecheck:scripts && pnpm --filter @repo/testing exec vitest run --root ../.. scripts/dependency-policy.test.ts scripts/github-action-policy.test.ts scripts/effect-source.test.ts",
+    "test:scripts": "pnpm typecheck:scripts && pnpm --filter @repo/testing exec vitest run --root ../.. scripts/dependency-policy.test.ts scripts/effect-source.test.ts scripts/effect-test-policy.test.ts scripts/github-action-policy.test.ts",
     "test:ui": "turbo run test:ui",
     "test:watch": "turbo run test:watch",
     "translate": "turbo run translate",
@@ -62,6 +62,7 @@
     "turbo": "2.10.11",
     "typescript": "catalog:",
     "ultracite": "7.10.6",
+    "vitest": "^4.1.11",
     "yaml": "2.9.0"
   },
   "packageManager": "pnpm@11.23.0",
