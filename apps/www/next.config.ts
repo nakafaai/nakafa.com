@@ -172,6 +172,14 @@ const nextConfig = {
   ...config,
   cacheComponents: true,
   partialPrefetching: true,
+  // Cache Components enables prerender source maps by default. The anonymous
+  // CI build does not publish those artifacts, and retaining them exhausted
+  // the static worker's isolated 4 GiB heap with two pages in flight.
+  // Production keeps source maps enabled. Docs:
+  // https://nextjs.org/docs/app/guides/memory-usage#disable-source-maps
+  ...(configEnv.CONVEX_AGENT_MODE === "anonymous"
+    ? { enablePrerenderSourceMaps: false }
+    : {}),
   env: {
     NEXT_PUBLIC_AKSARA_PREVIEW_CHILD: `${isAksaraPreviewChild}`,
   },
