@@ -278,15 +278,14 @@ const verifyContributorPage = Effect.fn("NakafaE2E.verifyContributorPage")(
   function* (page: Page) {
     yield* loadMarketingPage(page, "/en/contributor");
     const gallery = page.locator("[data-contributor-gallery]");
+    const triggers = gallery.locator("[data-contributor-username]");
     yield* Effect.promise(() => expect(gallery).toHaveCount(1));
     yield* Effect.promise(() =>
-      expect(gallery.locator("[data-contributor-username]")).toHaveCount(
-        contributors.length
-      )
+      expect(triggers).toHaveCount(contributors.length)
     );
-    yield* Effect.promise(() =>
-      gallery.locator("[data-contributor-username]").last().click()
-    );
+    const lastTrigger = triggers.last();
+    yield* Effect.promise(() => expect(lastTrigger).toBeEnabled());
+    yield* Effect.promise(() => lastTrigger.click());
     yield* Effect.promise(() =>
       expect(page.locator("[data-contributor-drawer]")).toHaveCount(1)
     );
@@ -311,6 +310,7 @@ for (const viewport of targetViewports) {
 }
 
 test.describe("detached contributor payloads", () => {
+  test.describe.configure({ mode: "parallel" });
   test.use({ viewport: { height: 900, width: 1440 } });
 
   test("renders every contributor through one drawer root", async ({
