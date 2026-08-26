@@ -1,10 +1,11 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import type { NinaContextSnapshot } from "@repo/ai/nina/memory/pack";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import { resolveNinaLearningSession } from "@/app/api/chat/context";
 import { previewProjection, previewSourcePath } from "@/test/content-preview";
 
@@ -81,332 +82,353 @@ describe("app/api/chat/context", () => {
     mocks.materialContext.mockReturnValue(Effect.succeed(null));
   });
 
-  it("opens an unverified off-page turn as canonical when no pinned context exists", async () => {
-    const session = await Effect.runPromise(
-      resolveNinaLearningSession({
-        capturedAt: "2026-06-22T00:00:00.000Z",
-        locale: "en",
-        rawContext: "not-a-client-context",
-        slug: "/chat",
-        url: "https://nakafa.com/en/chat",
-        verified: false,
-      })
-    );
+  it.effect(
+    "opens an unverified off-page turn as canonical when no pinned context exists",
+    () =>
+      Effect.gen(function* () {
+        const session = yield* resolveNinaLearningSession({
+          capturedAt: "2026-06-22T00:00:00.000Z",
+          locale: "en",
+          rawContext: "not-a-client-context",
+          slug: "/chat",
+          url: "https://nakafa.com/en/chat",
+          verified: false,
+        });
 
-    expect(session.context.snapshot).toMatchObject({
-      learning: {
-        locale: "en",
-        slug: "chat",
-        url: "https://nakafa.com/en/chat",
-        verified: false,
-      },
-      source: "current-page",
-      tools: {
-        allowPageFetch: false,
-        evidenceScope: "general-learning",
-      },
-    });
-    expect(session.context.transition).toEqual({
-      reason: "page-context",
-      toContextKey: "canonical:chat",
-    });
-  });
-
-  it("builds canonical learning identity for a retained source try-out", async () => {
-    const slug = "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge";
-    const session = await Effect.runPromise(
-      resolveNinaLearningSession({
-        capturedAt: "2026-06-22T00:00:00.000Z",
-        locale: "en",
-        rawContext: {},
-        slug: `/${slug}`,
-        url: `https://nakafa.com/en/${slug}`,
-        verified: true,
-      })
-    );
-
-    expect(session.context.snapshot).toMatchObject({
-      learning: {
-        slug,
-        verified: true,
-      },
-      source: "current-page",
-    });
-    expect(session.context.snapshot.learning.sourcePath).toBeUndefined();
-    expect(session.context.snapshot.placement).toBeUndefined();
-  });
-
-  it("reuses stored Nina context when an existing chat continues off a verified learning page", async () => {
-    const session = await Effect.runPromise(
-      resolveNinaLearningSession({
-        capturedAt: "2026-06-22T00:00:00.000Z",
-        locale: "en",
-        pinnedContext,
-        rawContext: {},
-        slug: "/chat/chat_existing",
-        url: "https://nakafa.com/en/chat/chat_existing",
-        verified: false,
-      })
-    );
-
-    expect(session.context.snapshot).toMatchObject({
-      capturedAt: "2026-06-22T00:00:00.000Z",
-      learning: pinnedContext.learning,
-      source: "pinned-chat",
-      tools: {
-        allowPageFetch: true,
-        evidenceScope: "verified-page",
-      },
-    });
-    expect(session.context.transition).toEqual({
-      reason: "same-context",
-      toContextKey:
-        "canonical:subjects/chemistry/basic-chemistry-laws/chemistry-law-applications",
-    });
-  });
-
-  it("preserves pinned placement when replaying an existing chat off-page", async () => {
-    const session = await Effect.runPromise(
-      resolveNinaLearningSession({
-        capturedAt: "2026-06-22T00:00:00.000Z",
-        locale: "en",
-        pinnedContext: pinnedPlacementContext,
-        rawContext: {},
-        slug: "/chat/chat_existing",
-        url: "https://nakafa.com/en/chat/chat_existing",
-        verified: false,
-      })
-    );
-
-    expect(session.context.snapshot).toMatchObject({
-      capturedAt: "2026-06-22T00:00:00.000Z",
-      learning: pinnedContext.learning,
-      placement: pinnedPlacementContext.placement,
-      source: "pinned-chat",
-    });
-    expect(session.context.transition).toEqual({
-      reason: "same-context",
-      toContextKey:
-        "placement:merdeka:class-10-chemistry-basic-chemistry-laws:subjects/chemistry/basic-chemistry-laws/chemistry-law-applications",
-    });
-  });
-
-  it("keeps verified material placement when the browser context hint validates", async () => {
-    mocks.materialContext.mockReturnValueOnce(
-      Effect.succeed({
-        context: {
-          nodeKey: "class-10-chemistry-basic-chemistry-laws",
-          programKey: "merdeka",
-        },
-        href: "/en/curriculum/merdeka/class-10/chemistry#basic-laws-of-chemistry",
-        label: "Basic Laws of Chemistry",
-      })
-    );
-    const session = await Effect.runPromise(
-      resolveNinaLearningSession({
-        capturedAt: "2026-06-22T00:00:00.000Z",
-        locale: "en",
-        rawContext: {
-          materialContextHint:
-            "merdeka~class-10-chemistry-basic-chemistry-laws",
-        },
-        slug: "/subjects/chemistry/basic-chemistry-laws/chemistry-law-applications",
-        url: "https://nakafa.com/en/subjects/chemistry/basic-chemistry-laws/chemistry-law-applications",
-        verified: true,
-      })
-    );
-
-    expect(session.context.snapshot).toMatchObject({
-      learning: {
-        materialKey: "lesson.chemistry.basic-chemistry-laws",
-        section: "subject-lesson",
-        sourcePath:
-          "material/lesson/chemistry/basic-chemistry-laws/chemistry-law-applications",
-        title: "Law Applications",
-        verified: true,
-      },
-      placement: {
-        mode: "placement",
-        nodeKey: "class-10-chemistry-basic-chemistry-laws",
-        parentHref:
-          "/en/curriculum/merdeka/class-10/chemistry#basic-laws-of-chemistry",
-        parentTitle: "Basic Laws of Chemistry",
-        programKey: "merdeka",
-      },
-      source: "current-page",
-      tools: {
-        allowPageFetch: true,
-        evidenceScope: "verified-page",
-      },
-    });
-    expect(session.context.transition).toEqual({
-      reason: "page-context",
-      toContextKey:
-        "placement:merdeka:class-10-chemistry-basic-chemistry-laws:subjects/chemistry/basic-chemistry-laws/chemistry-law-applications",
-    });
-  });
-
-  it("drops a stale material context hint instead of inventing placement", async () => {
-    const session = await Effect.runPromise(
-      resolveNinaLearningSession({
-        capturedAt: "2026-06-22T00:00:00.000Z",
-        locale: "en",
-        rawContext: {
-          materialContextHint: "merdeka~stale-node",
-        },
-        slug: "/subjects/chemistry/basic-chemistry-laws/chemistry-law-applications",
-        url: "https://nakafa.com/en/subjects/chemistry/basic-chemistry-laws/chemistry-law-applications",
-        verified: true,
-      })
-    );
-
-    expect(session.context.snapshot.placement).toBeUndefined();
-    expect(session.context.transition).toEqual({
-      reason: "page-context",
-      toContextKey:
-        "canonical:subjects/chemistry/basic-chemistry-laws/chemistry-law-applications",
-    });
-  });
-
-  it("uses active material and program projections instead of stale static rows", async () => {
-    mocks.materialRoute.mockReturnValueOnce(
-      Effect.succeed({
-        activeReleaseId,
-        projection: {
-          contentKey:
-            "material/lesson/mathematics/function-composition-inverse-function/function-concept",
-          graph: {
-            assetId: "asset:en:material:function-concept",
+        expect(session.context.snapshot).toMatchObject({
+          learning: {
+            locale: "en",
+            slug: "chat",
+            url: "https://nakafa.com/en/chat",
+            verified: false,
           },
-          kind: "subject-lesson",
-          materialKey:
-            "lesson.mathematics.function-composition-inverse-function",
-          metadata: { title: "Function Concept" },
-        },
-        sourcePath:
-          "packages/corpus/material/lesson/mathematics/function-composition-inverse-function/function-concept/en.mdx",
+          source: "current-page",
+          tools: {
+            allowPageFetch: false,
+            evidenceScope: "general-learning",
+          },
+        });
+        expect(session.context.transition).toEqual({
+          reason: "page-context",
+          toContextKey: "canonical:chat",
+        });
       })
-    );
-    mocks.materialContext.mockReturnValueOnce(
-      Effect.succeed({
-        context: {
-          nodeKey: "cambridge-function-concept",
-          programKey: "cambridge-international",
-        },
-        href: "/en/curriculum/cambridge-international/mathematics#functions",
-        label: "Functions",
+  );
+
+  it.effect(
+    "builds canonical learning identity for a retained source try-out",
+    () =>
+      Effect.gen(function* () {
+        const slug = "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge";
+        const session = yield* resolveNinaLearningSession({
+          capturedAt: "2026-06-22T00:00:00.000Z",
+          locale: "en",
+          rawContext: {},
+          slug: `/${slug}`,
+          url: `https://nakafa.com/en/${slug}`,
+          verified: true,
+        });
+
+        expect(session.context.snapshot).toMatchObject({
+          learning: {
+            slug,
+            verified: true,
+          },
+          source: "current-page",
+        });
+        expect(session.context.snapshot.learning.sourcePath).toBeUndefined();
+        expect(session.context.snapshot.placement).toBeUndefined();
       })
-    );
+  );
 
-    const session = await Effect.runPromise(
-      resolveNinaLearningSession({
-        capturedAt: "2026-07-26T00:00:00.000Z",
-        locale: "en",
-        rawContext: {
-          materialContextHint:
-            "cambridge-international~cambridge-function-concept",
-        },
-        slug: "/subjects/mathematics/function-composition-inverse-function/function-concept",
-        url: "https://nakafa.com/en/subjects/mathematics/function-composition-inverse-function/function-concept",
-        verified: true,
+  it.effect(
+    "reuses stored Nina context when an existing chat continues off a verified learning page",
+    () =>
+      Effect.gen(function* () {
+        const session = yield* resolveNinaLearningSession({
+          capturedAt: "2026-06-22T00:00:00.000Z",
+          locale: "en",
+          pinnedContext,
+          rawContext: {},
+          slug: "/chat/chat_existing",
+          url: "https://nakafa.com/en/chat/chat_existing",
+          verified: false,
+        });
+
+        expect(session.context.snapshot).toMatchObject({
+          capturedAt: "2026-06-22T00:00:00.000Z",
+          learning: pinnedContext.learning,
+          source: "pinned-chat",
+          tools: {
+            allowPageFetch: true,
+            evidenceScope: "verified-page",
+          },
+        });
+        expect(session.context.transition).toEqual({
+          reason: "same-context",
+          toContextKey:
+            "canonical:subjects/chemistry/basic-chemistry-laws/chemistry-law-applications",
+        });
       })
-    );
+  );
 
-    expect(session.context.snapshot).toMatchObject({
-      learning: {
-        assetId: "asset:en:material:function-concept",
-        contentId: "asset:en:material:function-concept",
-        materialKey: "lesson.mathematics.function-composition-inverse-function",
-        sourcePath:
-          "packages/corpus/material/lesson/mathematics/function-composition-inverse-function/function-concept/en.mdx",
-        title: "Function Concept",
-      },
-      placement: {
-        nodeKey: "cambridge-function-concept",
-        parentTitle: "Functions",
-        programKey: "cambridge-international",
-      },
-    });
-  });
+  it.effect(
+    "preserves pinned placement when replaying an existing chat off-page",
+    () =>
+      Effect.gen(function* () {
+        const session = yield* resolveNinaLearningSession({
+          capturedAt: "2026-06-22T00:00:00.000Z",
+          locale: "en",
+          pinnedContext: pinnedPlacementContext,
+          rawContext: {},
+          slug: "/chat/chat_existing",
+          url: "https://nakafa.com/en/chat/chat_existing",
+          verified: false,
+        });
 
-  it("uses signed material identity for placement after a route rename", async () => {
-    const renamedPath =
-      "subjects/mathematics/function-composition-inverse-function/renamed-function-concept";
-    mocks.materialRoute.mockReturnValueOnce(
-      Effect.succeed({
-        activeReleaseId,
-        projection: {
-          ...previewProjection,
-          publicPath: renamedPath,
-        },
-        sourcePath: previewSourcePath,
+        expect(session.context.snapshot).toMatchObject({
+          capturedAt: "2026-06-22T00:00:00.000Z",
+          learning: pinnedContext.learning,
+          placement: pinnedPlacementContext.placement,
+          source: "pinned-chat",
+        });
+        expect(session.context.transition).toEqual({
+          reason: "same-context",
+          toContextKey:
+            "placement:merdeka:class-10-chemistry-basic-chemistry-laws:subjects/chemistry/basic-chemistry-laws/chemistry-law-applications",
+        });
       })
-    );
-    mocks.materialContext.mockReturnValueOnce(
-      Effect.succeed({
-        context: {
-          nodeKey: "class-11-mathematics-function-composition-inverse-function",
-          programKey: "merdeka",
-        },
-        href: "/en/curriculum/merdeka/class-11/mathematics#functions",
-        label: "Functions",
+  );
+
+  it.effect(
+    "keeps verified material placement when the browser context hint validates",
+    () =>
+      Effect.gen(function* () {
+        mocks.materialContext.mockReturnValueOnce(
+          Effect.succeed({
+            context: {
+              nodeKey: "class-10-chemistry-basic-chemistry-laws",
+              programKey: "merdeka",
+            },
+            href: "/en/curriculum/merdeka/class-10/chemistry#basic-laws-of-chemistry",
+            label: "Basic Laws of Chemistry",
+          })
+        );
+        const session = yield* resolveNinaLearningSession({
+          capturedAt: "2026-06-22T00:00:00.000Z",
+          locale: "en",
+          rawContext: {
+            materialContextHint:
+              "merdeka~class-10-chemistry-basic-chemistry-laws",
+          },
+          slug: "/subjects/chemistry/basic-chemistry-laws/chemistry-law-applications",
+          url: "https://nakafa.com/en/subjects/chemistry/basic-chemistry-laws/chemistry-law-applications",
+          verified: true,
+        });
+
+        expect(session.context.snapshot).toMatchObject({
+          learning: {
+            materialKey: "lesson.chemistry.basic-chemistry-laws",
+            section: "subject-lesson",
+            sourcePath:
+              "material/lesson/chemistry/basic-chemistry-laws/chemistry-law-applications",
+            title: "Law Applications",
+            verified: true,
+          },
+          placement: {
+            mode: "placement",
+            nodeKey: "class-10-chemistry-basic-chemistry-laws",
+            parentHref:
+              "/en/curriculum/merdeka/class-10/chemistry#basic-laws-of-chemistry",
+            parentTitle: "Basic Laws of Chemistry",
+            programKey: "merdeka",
+          },
+          source: "current-page",
+          tools: {
+            allowPageFetch: true,
+            evidenceScope: "verified-page",
+          },
+        });
+        expect(session.context.transition).toEqual({
+          reason: "page-context",
+          toContextKey:
+            "placement:merdeka:class-10-chemistry-basic-chemistry-laws:subjects/chemistry/basic-chemistry-laws/chemistry-law-applications",
+        });
       })
-    );
+  );
 
-    const session = await Effect.runPromise(
-      resolveNinaLearningSession({
-        capturedAt: "2026-07-28T00:00:00.000Z",
-        locale: "en",
-        rawContext: {
-          materialContextHint:
-            "merdeka~class-11-mathematics-function-composition-inverse-function",
-        },
-        slug: `/${renamedPath}`,
-        url: `https://nakafa.com/en/${renamedPath}`,
-        verified: true,
+  it.effect(
+    "drops a stale material context hint instead of inventing placement",
+    () =>
+      Effect.gen(function* () {
+        const session = yield* resolveNinaLearningSession({
+          capturedAt: "2026-06-22T00:00:00.000Z",
+          locale: "en",
+          rawContext: {
+            materialContextHint: "merdeka~stale-node",
+          },
+          slug: "/subjects/chemistry/basic-chemistry-laws/chemistry-law-applications",
+          url: "https://nakafa.com/en/subjects/chemistry/basic-chemistry-laws/chemistry-law-applications",
+          verified: true,
+        });
+
+        expect(session.context.snapshot.placement).toBeUndefined();
+        expect(session.context.transition).toEqual({
+          reason: "page-context",
+          toContextKey:
+            "canonical:subjects/chemistry/basic-chemistry-laws/chemistry-law-applications",
+        });
       })
-    );
+  );
 
-    expect(session.context.snapshot).toMatchObject({
-      learning: {
-        contentId: previewProjection.graph.assetId,
-        slug: renamedPath,
-      },
-      placement: {
-        nodeKey: "class-11-mathematics-function-composition-inverse-function",
-        programKey: "merdeka",
-      },
-    });
-  });
+  it.effect(
+    "uses active material and program projections instead of stale static rows",
+    () =>
+      Effect.gen(function* () {
+        mocks.materialRoute.mockReturnValueOnce(
+          Effect.succeed({
+            activeReleaseId,
+            projection: {
+              contentKey:
+                "material/lesson/mathematics/function-composition-inverse-function/function-concept",
+              graph: {
+                assetId: "asset:en:material:function-concept",
+              },
+              kind: "subject-lesson",
+              materialKey:
+                "lesson.mathematics.function-composition-inverse-function",
+              metadata: { title: "Function Concept" },
+            },
+            sourcePath:
+              "packages/corpus/material/lesson/mathematics/function-composition-inverse-function/function-concept/en.mdx",
+          })
+        );
+        mocks.materialContext.mockReturnValueOnce(
+          Effect.succeed({
+            context: {
+              nodeKey: "cambridge-function-concept",
+              programKey: "cambridge-international",
+            },
+            href: "/en/curriculum/cambridge-international/mathematics#functions",
+            label: "Functions",
+          })
+        );
 
-  it("keeps active material canonical when no placement hint exists", async () => {
-    mocks.materialRoute.mockReturnValueOnce(
-      Effect.succeed({
-        activeReleaseId,
-        projection: previewProjection,
-        sourcePath: previewSourcePath,
+        const session = yield* resolveNinaLearningSession({
+          capturedAt: "2026-07-26T00:00:00.000Z",
+          locale: "en",
+          rawContext: {
+            materialContextHint:
+              "cambridge-international~cambridge-function-concept",
+          },
+          slug: "/subjects/mathematics/function-composition-inverse-function/function-concept",
+          url: "https://nakafa.com/en/subjects/mathematics/function-composition-inverse-function/function-concept",
+          verified: true,
+        });
+
+        expect(session.context.snapshot).toMatchObject({
+          learning: {
+            assetId: "asset:en:material:function-concept",
+            contentId: "asset:en:material:function-concept",
+            materialKey:
+              "lesson.mathematics.function-composition-inverse-function",
+            sourcePath:
+              "packages/corpus/material/lesson/mathematics/function-composition-inverse-function/function-concept/en.mdx",
+            title: "Function Concept",
+          },
+          placement: {
+            nodeKey: "cambridge-function-concept",
+            parentTitle: "Functions",
+            programKey: "cambridge-international",
+          },
+        });
       })
-    );
+  );
 
-    const session = await Effect.runPromise(
-      resolveNinaLearningSession({
-        capturedAt: "2026-07-26T00:00:00.000Z",
-        locale: "en",
-        rawContext: {},
-        slug: `/${previewProjection.publicPath}`,
-        url: `https://nakafa.com/en/${previewProjection.publicPath}`,
-        verified: true,
+  it.effect(
+    "uses signed material identity for placement after a route rename",
+    () =>
+      Effect.gen(function* () {
+        const renamedPath =
+          "subjects/mathematics/function-composition-inverse-function/renamed-function-concept";
+        mocks.materialRoute.mockReturnValueOnce(
+          Effect.succeed({
+            activeReleaseId,
+            projection: {
+              ...previewProjection,
+              publicPath: renamedPath,
+            },
+            sourcePath: previewSourcePath,
+          })
+        );
+        mocks.materialContext.mockReturnValueOnce(
+          Effect.succeed({
+            context: {
+              nodeKey:
+                "class-11-mathematics-function-composition-inverse-function",
+              programKey: "merdeka",
+            },
+            href: "/en/curriculum/merdeka/class-11/mathematics#functions",
+            label: "Functions",
+          })
+        );
+
+        const session = yield* resolveNinaLearningSession({
+          capturedAt: "2026-07-28T00:00:00.000Z",
+          locale: "en",
+          rawContext: {
+            materialContextHint:
+              "merdeka~class-11-mathematics-function-composition-inverse-function",
+          },
+          slug: `/${renamedPath}`,
+          url: `https://nakafa.com/en/${renamedPath}`,
+          verified: true,
+        });
+
+        expect(session.context.snapshot).toMatchObject({
+          learning: {
+            contentId: previewProjection.graph.assetId,
+            slug: renamedPath,
+          },
+          placement: {
+            nodeKey:
+              "class-11-mathematics-function-composition-inverse-function",
+            programKey: "merdeka",
+          },
+        });
       })
-    );
+  );
 
-    expect(session.context.snapshot).toMatchObject({
-      learning: {
-        contentId: previewProjection.graph.assetId,
-        sourcePath: previewSourcePath,
-      },
-      source: "current-page",
-    });
-    expect(session.context.snapshot.placement).toBeUndefined();
-    expect(mocks.materialContext).not.toHaveBeenCalled();
-  });
+  it.effect(
+    "keeps active material canonical when no placement hint exists",
+    () =>
+      Effect.gen(function* () {
+        mocks.materialRoute.mockReturnValueOnce(
+          Effect.succeed({
+            activeReleaseId,
+            projection: previewProjection,
+            sourcePath: previewSourcePath,
+          })
+        );
+
+        const session = yield* resolveNinaLearningSession({
+          capturedAt: "2026-07-26T00:00:00.000Z",
+          locale: "en",
+          rawContext: {},
+          slug: `/${previewProjection.publicPath}`,
+          url: `https://nakafa.com/en/${previewProjection.publicPath}`,
+          verified: true,
+        });
+
+        expect(session.context.snapshot).toMatchObject({
+          learning: {
+            contentId: previewProjection.graph.assetId,
+            sourcePath: previewSourcePath,
+          },
+          source: "current-page",
+        });
+        expect(session.context.snapshot.placement).toBeUndefined();
+        expect(mocks.materialContext).not.toHaveBeenCalled();
+      })
+  );
 });
