@@ -2,7 +2,8 @@ import {
   getPowerPreference,
   isMobileDevice,
 } from "@repo/design-system/lib/device";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "@repo/testing/effect";
+import { vi } from "vitest";
 
 const IPHONE_USER_AGENT =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X)";

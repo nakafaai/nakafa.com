@@ -1,6 +1,6 @@
 import { themeOptions } from "@repo/design-system/lib/theme/options";
 import { themes } from "@repo/design-system/lib/theme/registry";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@repo/testing/effect";
 
 describe("theme picker options", () => {
   it("stays synchronized with every runtime theme definition", () => {

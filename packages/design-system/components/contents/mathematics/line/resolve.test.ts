@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { resolveAuthoredLines } from "@repo/design-system/components/contents/mathematics/line/resolve";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@repo/testing/effect";
 
 const rawLine = {
   color: "blue",

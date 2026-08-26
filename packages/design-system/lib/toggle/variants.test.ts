@@ -1,5 +1,5 @@
 import { toggleVariants } from "@repo/design-system/lib/toggle/variants";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@repo/testing/effect";
 
 describe("toggleVariants", () => {
   it.each(["default", "outline"] as const)(

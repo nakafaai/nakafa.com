@@ -1,5 +1,5 @@
 import { getCodeFileExtension } from "@repo/design-system/lib/code-block/language-extension";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@repo/testing/effect";
 
 describe("getCodeFileExtension", () => {
   it("uses text for missing and unsupported languages", () => {

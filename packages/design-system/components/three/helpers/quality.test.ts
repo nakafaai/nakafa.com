@@ -3,7 +3,7 @@ import {
   createArcPoints,
   getCurveDivisions,
 } from "@repo/design-system/components/three/helpers/quality";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@repo/testing/effect";
 
 describe("graph quality helpers", () => {
   it("uses requested curve divisions when provided", () => {
