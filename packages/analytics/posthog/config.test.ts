@@ -2,7 +2,7 @@ import {
   createPostHogProxyRewrites,
   isPostHogProxyPathname,
 } from "@repo/analytics/posthog/config";
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "vitest";
 
 describe("PostHog proxy config", () => {
   it("builds the documented PostHog rewrite order", () => {
