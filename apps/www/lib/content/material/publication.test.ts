@@ -187,6 +187,7 @@ describe("material publication", () => {
 
     await expect(getMaterialPublication("en", publicPath)).resolves.toBeNull();
     expect(catalogMock).toHaveBeenCalledTimes(3);
+    expect(catalogCacheMock).toHaveBeenCalledOnce();
     expect(catalogCacheMock).toHaveBeenCalledWith("material");
     expect(contentCacheMock).not.toHaveBeenCalled();
   });
@@ -248,7 +249,8 @@ describe("material publication", () => {
       },
       published,
     });
-    expect(catalogCacheMock).not.toHaveBeenCalled();
+    expect(catalogCacheMock).toHaveBeenCalledOnce();
+    expect(catalogCacheMock).toHaveBeenCalledWith("material");
     expect(contentCacheMock).toHaveBeenCalledWith(
       "material",
       previewArtifactHash

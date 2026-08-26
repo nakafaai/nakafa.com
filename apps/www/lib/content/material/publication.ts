@@ -236,6 +236,16 @@ export async function getMaterialCatalogRoute(
   return result;
 }
 
+/** Reuses the metadata-safe route cache inside the full publication program. */
+const readCachedMaterialCatalogRoute = Effect.fn(
+  "NakafaMaterial.readCachedCatalogRoute"
+)((locale: Locale, publicPath: string) =>
+  Effect.tryPromise({
+    catch: preserveCatalogFailure,
+    try: () => getMaterialCatalogRoute(locale, publicPath),
+  })
+);
+
 /** Reads and verifies one coherent material shell and body concurrently. */
 const readMaterialPublication = Effect.fn("NakafaMaterial.readPublication")(
   function* (locale: Locale, publicPath: string) {
@@ -244,11 +254,10 @@ const readMaterialPublication = Effect.fn("NakafaMaterial.readPublication")(
       Effect.catchTag("ContentRuntimeMissingError", () => Effect.succeed(null))
     );
     const [model, published] = yield* Effect.all(
-      [readMaterialCatalogModel(locale, publicPath), readPublished],
+      [readCachedMaterialCatalogRoute(locale, publicPath), readPublished],
       { concurrency: "unbounded" }
     );
     if (!model.projection) {
-      yield* Effect.sync(() => applyPublishedCatalogCache("material"));
       if (published) {
         return yield* makeMaterialProjectionError({ appLocale, publicPath });
       }
