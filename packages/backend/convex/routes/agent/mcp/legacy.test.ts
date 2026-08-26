@@ -73,6 +73,33 @@ function postMcp(test: BackendTest, body: unknown, modern = false) {
   return postMcpSource(test, JSON.stringify(body), modern);
 }
 
+function postPredecessor(
+  test: BackendTest,
+  id: number,
+  method: string,
+  params: Readonly<Record<string, unknown>> = {}
+) {
+  return test.fetch(NAKAFA_MCP_EDGE_CONTRACT.originPath, {
+    body: JSON.stringify({ id, jsonrpc: "2.0", method, params }),
+    headers: {
+      accept: "application/json, text/event-stream",
+      "content-type": "application/json",
+      "mcp-protocol-version": MCP_PREDECESSOR_PROTOCOL_VERSION,
+      [NAKAFA_MCP_EDGE_CONTRACT.secretHeader]: MCP_SECRET,
+      "x-forwarded-for": "203.0.113.91",
+    },
+    method: "POST",
+  });
+}
+
+async function readPredecessorResult(response: Response) {
+  const event = (await response.text())
+    .split("\n")
+    .find((line) => line.startsWith("data: "));
+  expect(event).toBeDefined();
+  return JSON.parse(event?.slice("data: ".length) ?? "{}");
+}
+
 function initializeBody(id: number) {
   return {
     id,
@@ -97,6 +124,45 @@ afterEach(() => {
 });
 
 describe("MCP predecessor observation", () => {
+  it("keeps object schemas and structured errors interoperable", async () => {
+    const test = createConvexTestWithBetterAuth();
+    const [listResponse, callResponse] = await Promise.all([
+      postPredecessor(test, 1, "tools/list"),
+      postPredecessor(test, 2, "tools/call", {
+        arguments: {
+          content_ref: "https://nakafa.com/en/articles/missing/content",
+        },
+        name: "nakafa_get_content",
+      }),
+    ]);
+    const [list, call] = await Promise.all([
+      readPredecessorResult(listResponse),
+      readPredecessorResult(callResponse),
+    ]);
+
+    expect(listResponse.status).toBe(200);
+    expect(list.result.tools).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          inputSchema: expect.objectContaining({ type: "object" }),
+          name: "nakafa_get_content",
+          outputSchema: expect.objectContaining({ type: "object" }),
+        }),
+      ])
+    );
+    expect(callResponse.status).toBe(200);
+    expect(call.result).toMatchObject({
+      isError: true,
+      structuredContent: {
+        error: {
+          message: expect.any(String),
+          suggestions: [expect.any(String)],
+        },
+      },
+    });
+    expect(call.result.structuredContent).not.toHaveProperty("result");
+  });
+
   it("arms idempotently and rejects invalid or competing ownership", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(Date.UTC(2026, 7, 26, 8));

@@ -3,7 +3,7 @@ import {
   runMcpTool,
   toMcpToolError,
 } from "@repo/backend/agent/mcp/result";
-import { toMcpSchema } from "@repo/backend/agent/mcp/schema";
+import { toMcpObjectSchema } from "@repo/backend/agent/mcp/schema";
 import { NakafaAgentInputError } from "@repo/contents/_lib/agent/errors";
 import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, Schema } from "effect";
@@ -58,7 +58,7 @@ describe("Nakafa MCP tool results", () => {
   });
 
   it("advertises success and error structured content", async () => {
-    const schema = toMcpSchema(
+    const schema = toMcpObjectSchema(
       mcpToolOutputSchema(Schema.Struct({ status: Schema.Literal("ok") }))
     );
     const error = {
@@ -74,7 +74,8 @@ describe("Nakafa MCP tool results", () => {
     expect(
       schema["~standard"].jsonSchema.output({ target: "draft-2020-12" })
     ).toMatchObject({
-      allOf: [{ anyOf: expect.any(Array) }],
+      anyOf: expect.any(Array),
+      type: "object",
     });
   });
 });

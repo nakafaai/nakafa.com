@@ -8,7 +8,7 @@ import {
   ACTIVE_APP_LOCALE_CODES,
   ActiveAppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { toMcpSchema } from "@repo/backend/agent/mcp/schema";
+import { toMcpObjectSchema } from "@repo/backend/agent/mcp/schema";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { Effect, Schema, Struct } from "effect";
 
@@ -56,7 +56,7 @@ export function registerNakafaMcpPrompts(server: McpServer) {
   server.registerPrompt(
     "nakafa_find_lesson",
     {
-      argsSchema: toMcpSchema(FindLessonPromptArgsSchema),
+      argsSchema: toMcpObjectSchema(FindLessonPromptArgsSchema),
       description:
         "Guide an agent to search Nakafa lessons and choose relevant public content.",
       title: "Find Nakafa Lesson",
@@ -66,7 +66,7 @@ export function registerNakafaMcpPrompts(server: McpServer) {
   server.registerPrompt(
     "nakafa_answer_from_content",
     {
-      argsSchema: toMcpSchema(AnswerFromContentPromptArgsSchema),
+      argsSchema: toMcpObjectSchema(AnswerFromContentPromptArgsSchema),
       description:
         "Guide an agent to answer a question from one retrieved Nakafa content item.",
       title: "Answer From Nakafa Content",
@@ -76,7 +76,7 @@ export function registerNakafaMcpPrompts(server: McpServer) {
   server.registerPrompt(
     "nakafa_quran_reference",
     {
-      argsSchema: toMcpSchema(QuranReferencePromptArgsSchema),
+      argsSchema: toMcpObjectSchema(QuranReferencePromptArgsSchema),
       description:
         "Guide an agent to retrieve Quran verses with translation and citation.",
       title: "Nakafa Quran Reference",
