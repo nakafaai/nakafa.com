@@ -54,6 +54,12 @@ export const NAKAFA_DEFAULT_MCP_BROWSER_ORIGINS = [
 /** Trusted Vercel-provided client address used for pseudonymous quotas. */
 export const NAKAFA_EDGE_CLIENT_IP_HEADER = "x-forwarded-for";
 
+/** Public deployment identity attached by each canonical Vercel bridge. */
+export const NAKAFA_EDGE_RELEASE_SHA_HEADER = "x-nakafa-release-sha";
+
+/** Vercel system identity for the Git commit that produced a deployment. */
+export const VERCEL_GIT_COMMIT_SHA_ENVIRONMENT = "VERCEL_GIT_COMMIT_SHA";
+
 /** Projects one protected origin path back to its stable public API path. */
 export function projectPublicApiPath(pathname: string) {
   return pathname.slice(NAKAFA_API_EDGE_CONTRACT.originPath.length) || "/";

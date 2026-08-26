@@ -1,4 +1,5 @@
 import {
+  agentDeploymentKeys,
   agentOriginKeys,
   convexKeys,
   convexSiteKeys,
@@ -11,7 +12,13 @@ const optionalStringSchema = Schema.toStandardSchemaV1(
   Schema.UndefinedOr(Schema.String)
 );
 export const env = createEnv({
-  extends: [agentOriginKeys(), convexKeys(), convexSiteKeys(), mcpEdgeKeys()],
+  extends: [
+    agentDeploymentKeys(),
+    agentOriginKeys(),
+    convexKeys(),
+    convexSiteKeys(),
+    mcpEdgeKeys(),
+  ],
   server: {
     MCP_ALLOWED_ORIGINS: optionalStringSchema,
   },

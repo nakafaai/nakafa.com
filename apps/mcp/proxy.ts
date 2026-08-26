@@ -1,4 +1,8 @@
-import { NAKAFA_MCP_EDGE_CONTRACT } from "@repo/backend/agent/edge";
+import {
+  NAKAFA_EDGE_RELEASE_SHA_HEADER,
+  NAKAFA_MCP_EDGE_CONTRACT,
+  VERCEL_GIT_COMMIT_SHA_ENVIRONMENT,
+} from "@repo/backend/agent/edge";
 import type { NextRequest, ProxyConfig } from "next/server";
 import { NextResponse } from "next/server";
 import { env } from "@/env";
@@ -44,7 +48,12 @@ export function proxy(request: NextRequest) {
     NAKAFA_MCP_EDGE_CONTRACT.secretHeader,
     env[NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment]
   );
-  return NextResponse.rewrite(destination, { request: { headers } });
+  const response = NextResponse.rewrite(destination, { request: { headers } });
+  const releaseSha = env[VERCEL_GIT_COMMIT_SHA_ENVIRONMENT];
+  if (releaseSha !== undefined) {
+    response.headers.set(NAKAFA_EDGE_RELEASE_SHA_HEADER, releaseSha);
+  }
+  return response;
 }
 
 export const config: ProxyConfig = {

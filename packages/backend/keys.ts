@@ -1,6 +1,8 @@
+import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import {
   NAKAFA_API_EDGE_CONTRACT,
   NAKAFA_MCP_EDGE_CONTRACT,
+  VERCEL_GIT_COMMIT_SHA_ENVIRONMENT,
 } from "@repo/backend/agent/edge";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { Schema } from "effect";
@@ -18,6 +20,9 @@ const secretSchema = Schema.toStandardSchemaV1(
   Schema.Trimmed.check(Schema.isNonEmpty())
 );
 const stringSchema = Schema.toStandardSchemaV1(Schema.String);
+const optionalGitCommitShaSchema = Schema.toStandardSchemaV1(
+  Schema.UndefinedOr(GitCommitShaSchema)
+);
 /** Defines the Convex URL required by Next.js server adapters such as `convex/nextjs`. */
 export const convexKeys = () =>
   createEnv({
@@ -48,6 +53,18 @@ export const agentOriginKeys = () =>
     runtimeEnv: {
       [NAKAFA_API_EDGE_CONTRACT.originEnvironment]:
         process.env[NAKAFA_API_EDGE_CONTRACT.originEnvironment],
+    },
+  });
+
+/** Defines optional Git deployment identity for canonical public bridges. */
+export const agentDeploymentKeys = () =>
+  createEnv({
+    server: {
+      [VERCEL_GIT_COMMIT_SHA_ENVIRONMENT]: optionalGitCommitShaSchema,
+    },
+    runtimeEnv: {
+      [VERCEL_GIT_COMMIT_SHA_ENVIRONMENT]:
+        process.env[VERCEL_GIT_COMMIT_SHA_ENVIRONMENT],
     },
   });
 

@@ -1,4 +1,5 @@
 import {
+  agentDeploymentKeys,
   agentOriginKeys,
   apiEdgeKeys,
   convexKeys,
@@ -12,6 +13,7 @@ export const env = createEnv({
   extends: [
     contentApiKeys(),
     contentRuntimeKeys(),
+    agentDeploymentKeys(),
     agentOriginKeys(),
     convexKeys(),
     convexSiteKeys(),

@@ -1,3 +1,4 @@
+import { NAKAFA_EDGE_RELEASE_SHA_HEADER } from "@repo/backend/agent/edge";
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server.js";
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
@@ -179,6 +180,9 @@ describe("proxy middleware", () => {
 
       expect(response.headers.get("x-middleware-rewrite")).toBe(
         `https://test.convex.site${target}`
+      );
+      expect(response.headers.get(NAKAFA_EDGE_RELEASE_SHA_HEADER)).toBe(
+        "a".repeat(40)
       );
       expect(
         response.headers.get(`x-middleware-request-${API_EDGE_SECRET_HEADER}`)

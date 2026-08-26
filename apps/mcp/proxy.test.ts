@@ -1,3 +1,4 @@
+import { NAKAFA_EDGE_RELEASE_SHA_HEADER } from "@repo/backend/agent/edge";
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server.js";
 import { NextRequest } from "next/server";
 import { describe, expect, it, vi } from "vitest";
@@ -9,6 +10,7 @@ vi.mock("@/env", () => ({
   env: {
     NAKAFA_CONVEX_SITE_URL: "https://test.convex.site",
     NAKAFA_MCP_EDGE_SECRET: "test-mcp-edge-secret",
+    VERCEL_GIT_COMMIT_SHA: "b".repeat(40),
   },
 }));
 
@@ -39,6 +41,9 @@ describe("MCP proxy", () => {
 
     expect(response.headers.get("x-middleware-rewrite")).toBe(
       "https://test.convex.site/internal/mcp?session=1"
+    );
+    expect(response.headers.get(NAKAFA_EDGE_RELEASE_SHA_HEADER)).toBe(
+      "b".repeat(40)
     );
     expect(
       response.headers.get(`x-middleware-request-${MCP_EDGE_SECRET_HEADER}`)

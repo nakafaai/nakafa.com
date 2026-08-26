@@ -12,5 +12,6 @@ vi.mock("@/env", () => ({
     NAKAFA_CONVEX_SITE_URL: "https://test.convex.site",
     NEXT_PUBLIC_CONVEX_SITE_URL: "https://test.convex.site",
     NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
+    VERCEL_GIT_COMMIT_SHA: "a".repeat(40),
   },
 }));
