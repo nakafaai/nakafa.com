@@ -7,6 +7,7 @@ import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref
 import {
   NakafaAgentContentRefSchema,
   NakafaAgentContentRouteSchema,
+  NakafaAgentContentSummarySchema,
   NakafaAgentContentUrlSchema,
   NakafaAgentMarkdownUrlSchema,
   NakafaAgentSectionSchema,
@@ -105,12 +106,36 @@ export function createNakafaContentRefFromGraphProjection(input: unknown) {
   }
 
   return Schema.decodeOption(NakafaAgentContentRefSchema)(
-    createNakafaContentRefInput(graph)
+    createNakafaContentRefInput(graph, graph.section !== "tryout")
+  );
+}
+
+/** Preserves the focused-read capability of a decoded content summary. */
+export function createNakafaContentRefFromSummary(input: unknown) {
+  const summary = Schema.decodeUnknownOption(NakafaAgentContentSummarySchema)(
+    input
+  );
+
+  if (
+    Option.isNone(summary) ||
+    summary.value.content_id !== summary.value.assetId
+  ) {
+    return Option.none<NakafaAgentContentRef>();
+  }
+
+  return Schema.decodeOption(NakafaAgentContentRefSchema)(
+    createNakafaContentRefInput(
+      summary.value,
+      summary.value.markdown_url !== undefined
+    )
   );
 }
 
 /** Builds the schema-decoded agent content ref from graph projection fields. */
-function createNakafaContentRefInput(input: NakafaContentGraphProjection) {
+function createNakafaContentRefInput(
+  input: NakafaContentGraphProjection,
+  hasMarkdownSource: boolean
+) {
   const ref = {
     alignmentId: input.alignmentId,
     assetId: input.assetId,
@@ -126,7 +151,7 @@ function createNakafaContentRefInput(input: NakafaContentGraphProjection) {
     ),
   };
 
-  if (input.section === "tryout") {
+  if (!hasMarkdownSource) {
     return ref;
   }
 

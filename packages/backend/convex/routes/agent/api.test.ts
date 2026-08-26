@@ -1,6 +1,8 @@
 // @vitest-environment node
 
 import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge";
+import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import {
@@ -265,6 +267,25 @@ describe("public agent API routes", () => {
       section: "material",
       text: expect.stringContaining("## Technical fixture"),
       title: material.metadata.title,
+    });
+  });
+
+  it("keeps material topics citation-only without a runtime read", async () => {
+    const test = createConvexTestWithBetterAuth();
+    const material = makeMaterialProjection("en", 1);
+    const topic = await runConvexProgram(
+      deriveMaterialTopicReference(material)
+    );
+    await activateMaterialCatalog(test, [material], ["en"]);
+
+    const response = await fetchApi(
+      test,
+      `/v1/content?ref=${encodeURIComponent(topic.graph.assetId)}`
+    );
+
+    await expectProblem(response, {
+      code: "CONTENT_NOT_FOUND",
+      status: 404,
     });
   });
 

@@ -96,6 +96,30 @@ describe("resolveNakafaContentRef", () => {
     })
   );
 
+  it.live("preserves citation-only references without inventing markdown", () =>
+    Effect.gen(function* () {
+      runtimeMocks.runtimeQuery.mockResolvedValueOnce({
+        ...articleRef,
+        description: "Citation-only reference.",
+        markdown_url: undefined,
+        title: "Citation-only",
+      });
+
+      const ref = yield* resolveNakafaContentRef(
+        convexUrl,
+        articleRef.content_id
+      );
+
+      expect(Option.getOrUndefined(ref)).toMatchObject({
+        content_id: articleRef.content_id,
+        route: articleRef.route,
+        section: articleRef.section,
+        url: articleRef.url,
+      });
+      expect(Option.getOrUndefined(ref)).not.toHaveProperty("markdown_url");
+    })
+  );
+
   it.live("rejects bare route refs without querying Convex", () =>
     Effect.gen(function* () {
       const localizedRoute = yield* resolveNakafaContentRef(
@@ -133,5 +157,13 @@ function readReferenceFixture(
   }
   const matchesContent = args.input?.contentId === articleRef.content_id;
   const matchesRoute = args.input?.publicPath === articleRef.route;
-  return Promise.resolve(matchesContent || matchesRoute ? articleRef : null);
+  return Promise.resolve(
+    matchesContent || matchesRoute
+      ? {
+          ...articleRef,
+          description: "Article description.",
+          title: "Article title",
+        }
+      : null
+  );
 }

@@ -19,18 +19,24 @@ import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
 } from "@repo/contents/_lib/agent/errors";
-import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
+import {
+  createNakafaContentRefFromGraphProjection,
+  createNakafaContentRefFromSummary,
+} from "@repo/contents/_lib/agent/refs";
 import {
   type NakafaAgentMarkdown,
   NakafaAgentMarkdownSchema,
 } from "@repo/contents/_lib/agent/schema/read";
-import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
+import type {
+  NakafaAgentContentRef,
+  NakafaAgentReadableContentRef,
+} from "@repo/contents/_lib/agent/schema/ref";
 import { projectMdxForAgentMarkdown } from "@repo/contents/_types/llms/mdx";
 import { makeFunctionReference } from "convex/server";
 import type { Infer } from "convex/values";
 import { Effect, Option, Schema } from "effect";
 
-type PublishedRef = NakafaAgentContentRef & {
+type PublishedRef = NakafaAgentReadableContentRef & {
   readonly section: "articles" | "material";
 };
 
@@ -77,7 +83,7 @@ export const getNakafaContent = Effect.fn("agent.getNakafaContent")(function* (
   if (!reference) {
     return Option.none<NakafaAgentMarkdown>();
   }
-  const ref = createNakafaContentRefFromGraphProjection(reference);
+  const ref = createNakafaContentRefFromSummary(reference);
   if (Option.isNone(ref)) {
     return yield* contentReadError(
       "The signed content reference has an invalid graph identity."
@@ -208,7 +214,10 @@ const readQuranMarkdown = Effect.fn("agent.readQuranMarkdown")(function* (
 
 /** Narrows content families with a signed Markdown artifact. */
 function isPublishedRef(ref: NakafaAgentContentRef): ref is PublishedRef {
-  return ref.section === "articles" || ref.section === "material";
+  return (
+    ref.markdown_url !== undefined &&
+    (ref.section === "articles" || ref.section === "material")
+  );
 }
 
 /** Parses one canonical Quran route segment through the signed contract. */

@@ -88,16 +88,16 @@ describe("contentRelease/reference/read", () => {
       },
       { contentId: topic.graph.assetId, kind: "content" as const },
     ]) {
-      await expect(
-        target.query((ctx) =>
-          runConvexProgram(readContentReference(ctx, input))
-        )
-      ).resolves.toMatchObject({
+      const result = await target.query((ctx) =>
+        runConvexProgram(readContentReference(ctx, input))
+      );
+      expect(result).toMatchObject({
         content_id: topic.graph.assetId,
         route: topic.publicPath,
         section: "material",
         title: topic.title,
       });
+      expect(result).not.toHaveProperty("markdown_url");
     }
   });
 

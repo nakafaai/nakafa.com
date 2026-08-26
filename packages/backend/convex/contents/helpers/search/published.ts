@@ -248,6 +248,7 @@ const authenticateSearchRow = Effect.fn(
     ...projection.graph,
     contentHash: row.projectionHash,
     description: projection.metadata.description,
+    hasMarkdownSource: true,
     locale,
     route: projection.publicPath,
     section,

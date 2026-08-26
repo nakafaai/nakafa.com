@@ -1,5 +1,6 @@
 import {
   createNakafaContentRefFromGraphProjection,
+  createNakafaContentRefFromSummary,
   normalizeNakafaContentInput,
   parseNakafaUrlRoute,
 } from "@repo/contents/_lib/agent/refs";
@@ -63,6 +64,41 @@ describe("Nakafa agent references", () => {
       section: "tryout",
       url: "https://nakafa.com/en/try-out/indonesia/snbt/2027/set-1/general-reasoning",
     });
+  });
+
+  it("preserves the summary focused-read capability", () => {
+    const summary = {
+      ...graphProjection,
+      description: "A summary.",
+      markdown_url:
+        "https://nakafa.com/en/articles/politics/example.md" as const,
+      title: "Example",
+      url: "https://nakafa.com/en/articles/politics/example" as const,
+    };
+
+    expect(
+      Option.getOrUndefined(createNakafaContentRefFromSummary(summary))
+    ).toStrictEqual({
+      ...graphProjection,
+      markdown_url: summary.markdown_url,
+      url: summary.url,
+    });
+    expect(
+      Option.getOrUndefined(
+        createNakafaContentRefFromSummary({
+          ...summary,
+          markdown_url: undefined,
+        })
+      )
+    ).toStrictEqual({ ...graphProjection, url: summary.url });
+    expect(
+      Option.isNone(
+        createNakafaContentRefFromSummary({
+          ...summary,
+          content_id: "asset:en:catalog:article:other",
+        })
+      )
+    ).toBe(true);
   });
 
   it("rejects inconsistent or malformed persisted graph projections", () => {

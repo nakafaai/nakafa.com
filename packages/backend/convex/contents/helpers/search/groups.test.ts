@@ -15,6 +15,7 @@ function createDocument(slug: string) {
     ...identity,
     contentHash: `hash-${slug}`,
     description: `${slug} description`,
+    hasMarkdownSource: true,
     locale: "en",
     route,
     section: "articles",

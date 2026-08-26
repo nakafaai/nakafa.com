@@ -3,10 +3,13 @@ import { readPublishedMarkdown } from "@repo/backend/client/nakafa/published";
 import { readQuranMarkdown } from "@repo/backend/client/nakafa/quran";
 import { resolveNakafaContentRef } from "@repo/backend/client/nakafa/ref";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
-import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
+import type {
+  NakafaAgentContentRef,
+  NakafaAgentReadableContentRef,
+} from "@repo/contents/_lib/agent/schema/ref";
 import { Effect, Option } from "effect";
 
-type PublishedRef = NakafaAgentContentRef & {
+type PublishedRef = NakafaAgentReadableContentRef & {
   readonly section: "articles" | "material";
 };
 
@@ -33,5 +36,8 @@ export const readNakafaMarkdown = Effect.fn("NakafaContent.readMarkdown")(
 
 /** Narrows current signed MDX families without admitting try-out or Quran. */
 function isPublishedRef(ref: NakafaAgentContentRef): ref is PublishedRef {
-  return ref.section === "articles" || ref.section === "material";
+  return (
+    ref.markdown_url !== undefined &&
+    (ref.section === "articles" || ref.section === "material")
+  );
 }
