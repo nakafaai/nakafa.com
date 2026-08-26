@@ -30,7 +30,10 @@ import {
   getMaterialPublication,
   readMaterialCatalogRoute,
 } from "@/lib/content/material/publication";
-import { PublishedProjectionError } from "@/lib/content/published/errors";
+import {
+  PublishedProjectionError,
+  PublishedReleaseMismatchError,
+} from "@/lib/content/published/errors";
 import {
   previewArtifactHash,
   previewDeProjection,
@@ -66,7 +69,6 @@ vi.mock("@/lib/content/published/material", () => ({
   readRenderedMaterial: renderMock,
 }));
 
-/** Builds one decoded locale catalog under the selected release identity. */
 function materialCatalog(
   appLocale: AppLocale,
   routes: readonly MaterialLessonProjection[],
@@ -81,8 +83,6 @@ function materialCatalog(
     sourceRevision: revision,
   };
 }
-
-/** Builds the signed release identity shared by every locale catalog. */
 function materialRelease(
   activeAppLocales: ActiveAppLocaleList = ACTIVE_APP_LOCALES
 ): PublishedMaterialRelease {
@@ -93,7 +93,6 @@ function materialRelease(
     sourceRevision,
   };
 }
-
 const catalogs = [
   materialCatalog(previewProjection.appLocale, [
     previewProjection,
@@ -102,15 +101,12 @@ const catalogs = [
   materialCatalog(previewIdProjection.appLocale, [previewIdProjection]),
   materialCatalog(previewDeProjection.appLocale, [previewDeProjection]),
 ];
-
-/** Resolves the matching low-cardinality catalog for every locale read. */
 function mockCatalogReads(source = catalogs) {
   catalogMock.mockImplementation((locale: AppLocale) =>
     Promise.resolve(source.find((catalog) => catalog.appLocale === locale))
   );
 }
 
-/** Reads the standard fixture route with optional release and locale overrides. */
 function readCatalogRoute(
   source: readonly PublishedMaterialCatalog[],
   release = materialRelease(),
@@ -272,6 +268,10 @@ describe("material publication", () => {
     new PublishedProjectionError({
       appLocale: previewProjection.appLocale,
       publicPath: previewProjection.publicPath,
+    }),
+    new PublishedReleaseMismatchError({
+      actualReleaseId: ReleaseIdSchema.make("release-other"),
+      expectedReleaseId: activeReleaseId,
     }),
   ])(
     "preserves typed failures across cached Promise boundaries",

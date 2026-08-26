@@ -63,7 +63,8 @@ function hasUniquePublicPaths(routes: readonly MaterialLessonProjection[]) {
 function preserveCatalogFailure(cause: unknown) {
   if (
     cause instanceof NakafaAgentDataReadError ||
-    cause instanceof PublishedProjectionError
+    cause instanceof PublishedProjectionError ||
+    cause instanceof PublishedReleaseMismatchError
   ) {
     return cause;
   }
