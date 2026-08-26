@@ -83,10 +83,6 @@ export async function proxy(request: NextRequest) {
     });
   }
 
-  if (isOgRouteAliasPathname(pathname)) {
-    return NextResponse.next();
-  }
-
   const previewConfigured = hasPreviewConfig();
   if (
     previewConfigured &&
@@ -108,6 +104,10 @@ export async function proxy(request: NextRequest) {
     if (!previewOwnsPathname) {
       return rewriteToContentNotFound(request, candidateLocale);
     }
+  }
+
+  if (isOgRouteAliasPathname(pathname)) {
+    return NextResponse.next();
   }
 
   const schoolAuthRedirect = readSchoolAuthRedirect(request);

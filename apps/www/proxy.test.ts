@@ -259,7 +259,7 @@ describe("proxy", () => {
     expectLocaleProxy(response, "preview");
   });
 
-  it.each(["/fr/search", "/fr/school/onboarding/create"])(
+  it.each(["/fr/search", "/fr/school/onboarding/create", "/fr/example.og"])(
     "hard-rejects the unselected candidate route %s",
     async (path) => {
       previewMocks.configured.mockReturnValue(true);
