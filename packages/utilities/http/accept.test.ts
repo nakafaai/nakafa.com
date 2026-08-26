@@ -138,6 +138,15 @@ describe("HTTP Accept negotiation", () => {
     ).toEqual(Option.some(MARKDOWN));
   });
 
+  it("processes q as the weight regardless of parameter ordering", () => {
+    expect(
+      negotiateMediaType(
+        Option.some("text/html;q=1;charset=utf-8, text/markdown;q=0.5"),
+        REPRESENTATIONS
+      )
+    ).toEqual(Option.some(HTML));
+  });
+
   it.each([
     "text/html;level, text/markdown;q=0.5",
     "text/html;bad name=wide, text/markdown;q=0.5",
