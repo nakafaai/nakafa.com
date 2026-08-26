@@ -1,8 +1,11 @@
-import { projectPublicApiPath } from "@repo/backend/agent/edge";
+import {
+  NAKAFA_API_EDGE_CONTRACT,
+  projectPublicApiPath,
+} from "@repo/backend/agent/edge";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { hasRequestBody } from "@repo/backend/convex/routes/agent/input";
 import { problemResponse } from "@repo/backend/convex/routes/agent/response";
-import { hasValidApiEdgeSecret } from "@repo/backend/convex/routes/agent/security";
+import { hasValidEdgeSecret } from "@repo/backend/convex/routes/agent/security";
 import {
   HttpMediaTypeSchema,
   negotiateMediaType,
@@ -27,7 +30,7 @@ export const guardAgentApi: MiddlewareHandler<{
   const instance = projectPublicApiPath(new URL(request.url).pathname);
   const requestId = context.get("requestId");
   const secret = await Effect.runPromise(
-    hasValidApiEdgeSecret(request).pipe(
+    hasValidEdgeSecret(request, NAKAFA_API_EDGE_CONTRACT).pipe(
       Effect.match({
         onFailure: () => null,
         onSuccess: (valid) => valid,

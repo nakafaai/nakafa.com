@@ -1,4 +1,4 @@
-import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge";
+import type { AgentEdgeContract } from "@repo/backend/agent/edge";
 import { env } from "@repo/backend/convex/_generated/server";
 import {
   getUnknownErrorMessage,
@@ -8,11 +8,11 @@ import { Effect } from "effect";
 
 const MAX_EDGE_SECRETS = 2;
 
-/** Reads and compares the API edge secret without exposing it in diagnostics. */
-export const hasValidApiEdgeSecret = Effect.fn("agent.hasValidApiEdgeSecret")(
-  function* (request: Request) {
+/** Reads and compares one edge secret without exposing it in diagnostics. */
+export const hasValidEdgeSecret = Effect.fn("agent.hasValidEdgeSecret")(
+  function* (request: Request, contract: AgentEdgeContract) {
     const configured = yield* Effect.sync(
-      () => env[NAKAFA_API_EDGE_CONTRACT.secretEnvironment]
+      () => env[contract.secretEnvironment]
     );
     if (!configured) {
       return yield* unavailableEdgeSecret();
@@ -28,7 +28,7 @@ export const hasValidApiEdgeSecret = Effect.fn("agent.hasValidApiEdgeSecret")(
       return yield* unavailableEdgeSecret();
     }
 
-    const supplied = request.headers.get(NAKAFA_API_EDGE_CONTRACT.secretHeader);
+    const supplied = request.headers.get(contract.secretHeader);
     if (!supplied) {
       return false;
     }
@@ -49,7 +49,7 @@ const constantTimeEqual = Effect.fn("agent.constantTimeEqual")(function* (
     catch: (error) =>
       new NakafaAgentDataReadError({
         cause: getUnknownErrorMessage(error),
-        message: "The public API edge boundary is unavailable.",
+        message: "The public agent edge boundary is unavailable.",
       }),
     try: () =>
       Promise.all([
@@ -69,6 +69,6 @@ const constantTimeEqual = Effect.fn("agent.constantTimeEqual")(function* (
 /** Builds the typed fail-closed error for missing or malformed configuration. */
 function unavailableEdgeSecret() {
   return new NakafaAgentDataReadError({
-    message: "The public API edge boundary is unavailable.",
+    message: "The public agent edge boundary is unavailable.",
   });
 }

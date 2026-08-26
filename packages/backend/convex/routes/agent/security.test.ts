@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge";
-import { hasValidApiEdgeSecret } from "@repo/backend/convex/routes/agent/security";
+import { hasValidEdgeSecret } from "@repo/backend/convex/routes/agent/security";
 import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect, Result } from "effect";
 import { vi } from "vitest";
@@ -26,10 +26,16 @@ describe("agent edge security", () => {
       vi.stubEnv(SECRET_NAME, "current-secret,previous-secret");
 
       expect(
-        yield* hasValidApiEdgeSecret(requestWithSecret("current-secret"))
+        yield* hasValidEdgeSecret(
+          requestWithSecret("current-secret"),
+          NAKAFA_API_EDGE_CONTRACT
+        )
       ).toBe(true);
       expect(
-        yield* hasValidApiEdgeSecret(requestWithSecret("previous-secret"))
+        yield* hasValidEdgeSecret(
+          requestWithSecret("previous-secret"),
+          NAKAFA_API_EDGE_CONTRACT
+        )
       ).toBe(true);
     })
   );
@@ -38,26 +44,34 @@ describe("agent edge security", () => {
     Effect.gen(function* () {
       vi.stubEnv(SECRET_NAME, "current-secret");
 
-      expect(yield* hasValidApiEdgeSecret(requestWithSecret())).toBe(false);
       expect(
-        yield* hasValidApiEdgeSecret(requestWithSecret("incorrect-secret"))
+        yield* hasValidEdgeSecret(requestWithSecret(), NAKAFA_API_EDGE_CONTRACT)
+      ).toBe(false);
+      expect(
+        yield* hasValidEdgeSecret(
+          requestWithSecret("incorrect-secret"),
+          NAKAFA_API_EDGE_CONTRACT
+        )
       ).toBe(false);
     })
   );
 
   it.effect("fails closed for missing or malformed deployment keys", () =>
     Effect.gen(function* () {
-      const missing = yield* hasValidApiEdgeSecret(
-        requestWithSecret("supplied")
+      const missing = yield* hasValidEdgeSecret(
+        requestWithSecret("supplied"),
+        NAKAFA_API_EDGE_CONTRACT
       ).pipe(Effect.result);
       vi.stubEnv(SECRET_NAME, "one,two,three");
-      const tooMany = yield* hasValidApiEdgeSecret(
-        requestWithSecret("one")
+      const tooMany = yield* hasValidEdgeSecret(
+        requestWithSecret("one"),
+        NAKAFA_API_EDGE_CONTRACT
       ).pipe(Effect.result);
       vi.stubEnv(SECRET_NAME, "one,");
-      const empty = yield* hasValidApiEdgeSecret(requestWithSecret("one")).pipe(
-        Effect.result
-      );
+      const empty = yield* hasValidEdgeSecret(
+        requestWithSecret("one"),
+        NAKAFA_API_EDGE_CONTRACT
+      ).pipe(Effect.result);
 
       expect(Result.isFailure(missing)).toBe(true);
       expect(Result.isFailure(tooMany)).toBe(true);
