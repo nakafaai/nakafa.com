@@ -24,17 +24,15 @@ export function isOgRouteAliasPathname(pathname: string) {
   );
 }
 
-/** Reads the locale-shaped prefix from one localized OG alias. */
+/** Reads the locale-shaped owner from one public OG image path. */
 export function readOgRouteAliasLocale(pathname: string) {
   if (!isOgRouteAliasPathname(pathname)) {
     return null;
   }
 
-  const [locale] = pathname.split("/").filter(Boolean);
-  if (
-    !(locale && OG_ROUTE_LOCALE_PATTERN.test(locale)) ||
-    locale === OG_ROUTE_SEGMENT
-  ) {
+  const segments = pathname.split("/").filter(Boolean);
+  const locale = segments[0] === OG_ROUTE_SEGMENT ? segments[1] : segments[0];
+  if (!(locale && OG_ROUTE_LOCALE_PATTERN.test(locale))) {
     return null;
   }
 

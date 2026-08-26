@@ -282,7 +282,7 @@ describe("proxy", () => {
     expect(previewMocks.pathname).toHaveBeenCalledWith(path);
   });
 
-  it.each(["/zz/example.png", "/FR/example.png", "/EN/example.png"])(
+  it.each(["/og/fr/x/image.png", "/FR/example.png", "/EN/example.png"])(
     "hard-rejects the noncanonical localized PNG alias %s",
     async (path) => {
       const response = await requestProxy(path);
