@@ -4,7 +4,7 @@ import { useIntersection } from "@mantine/hooks";
 import { BacterialControls } from "@repo/design-system/components/contents/mathematics/bacterial-controls";
 import {
   type BacterialFormulaType,
-  BacterialFormulaTypeSchema,
+  BacterialGrowthFrameInputSchema,
   getBacterialGrowthFrame,
 } from "@repo/design-system/components/contents/mathematics/bacterial-growth";
 import {
@@ -103,16 +103,14 @@ export function BacterialGrowth({
   // Viewport visibility gates work without overriding the user's Play/Pause intent.
   const isEffectivelyPlaying = isPlaying && generation < maxGenerations;
   const isAnimating = isEffectivelyPlaying && isInView;
-  const validatedFormulaType = Schema.decodeSync(BacterialFormulaTypeSchema)(
-    formulaType
-  );
-  const frame = getBacterialGrowthFrame({
-    formulaType: validatedFormulaType,
+  const frameInput = Schema.decodeSync(BacterialGrowthFrameInputSchema)({
+    formulaType,
     generation,
     initialCount,
     maxGenerations,
     ratio,
   });
+  const frame = getBacterialGrowthFrame(frameInput);
 
   useEffect(() => {
     if (!isAnimating) {

@@ -1,6 +1,13 @@
 import { Schema } from "effect";
 
 const MAX_VISIBLE_BACTERIA = 100;
+const NonNegativeIntegerSchema = Schema.Finite.pipe(
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThanOrEqualTo(0))
+);
+const PositiveNumberSchema = Schema.Finite.pipe(
+  Schema.check(Schema.isGreaterThan(0))
+);
 
 export const BacterialFormulaTypeSchema = Schema.Literals([
   "geometric",
@@ -10,13 +17,22 @@ export type BacterialFormulaType = Schema.Schema.Type<
   typeof BacterialFormulaTypeSchema
 >;
 
-interface BacterialGrowthFrameInput {
-  formulaType: BacterialFormulaType;
-  generation: number;
-  initialCount: number;
-  maxGenerations: number;
-  ratio: number;
-}
+export const BacterialGrowthFrameInputSchema = Schema.Struct({
+  formulaType: BacterialFormulaTypeSchema,
+  generation: NonNegativeIntegerSchema,
+  initialCount: NonNegativeIntegerSchema,
+  maxGenerations: NonNegativeIntegerSchema,
+  ratio: PositiveNumberSchema,
+}).pipe(
+  Schema.check(
+    Schema.makeFilter((input) => input.generation <= input.maxGenerations, {
+      expected: "generation no greater than maxGenerations",
+    })
+  )
+);
+type BacterialGrowthFrameInput = Schema.Schema.Type<
+  typeof BacterialGrowthFrameInputSchema
+>;
 
 /**
  * Calculates the population represented by one generation.
@@ -47,6 +63,18 @@ function createNextGeneration(
     return {
       bacteriaIds: bacteriaIds.slice(0, nextVisibleCount),
       nextLineageId,
+    };
+  }
+
+  if (bacteriaIds.length === 0) {
+    const seededBacteriaIds = Array.from(
+      { length: nextVisibleCount },
+      (_, index) => nextLineageId + index
+    );
+
+    return {
+      bacteriaIds: seededBacteriaIds,
+      nextLineageId: nextLineageId + seededBacteriaIds.length,
     };
   }
 

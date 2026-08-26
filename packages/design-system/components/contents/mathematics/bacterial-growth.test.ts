@@ -1,6 +1,6 @@
 // @vitest-environment node
 import {
-  BacterialFormulaTypeSchema,
+  BacterialGrowthFrameInputSchema,
   getBacterialGrowthFrame,
 } from "@repo/design-system/components/contents/mathematics/bacterial-growth";
 import { Schema } from "effect";
@@ -117,6 +117,22 @@ describe("bacterial growth frames", () => {
     expect(frame.bacteriaIds).toEqual([0, 2, 3, 1, 4]);
   });
 
+  it("seeds visible lineages when an unvalidated caller grows from rounded zero", () => {
+    const frame = getBacterialGrowthFrame({
+      formulaType: "geometric",
+      generation: 1,
+      initialCount: 0.4,
+      maxGenerations: 1,
+      ratio: 10,
+    });
+
+    expect(frame).toEqual({
+      bacteriaCount: 4,
+      bacteriaIds: [0, 1, 2, 3],
+      gridColumns: 2,
+    });
+  });
+
   it("never exceeds the visual DOM budget", () => {
     const frame = getBacterialGrowthFrame({
       formulaType: "exponential",
@@ -130,9 +146,32 @@ describe("bacterial growth frames", () => {
     expect(frame.gridColumns).toBe(10);
   });
 
-  it("rejects unsupported formula types at the renderer boundary", () => {
+  it("rejects invalid growth inputs at the renderer boundary", () => {
+    const validInput = {
+      formulaType: "geometric",
+      generation: 1,
+      initialCount: 1,
+      maxGenerations: 2,
+      ratio: 2,
+    };
+
     expect(() =>
-      Schema.decodeUnknownSync(BacterialFormulaTypeSchema)("linear")
+      Schema.decodeUnknownSync(BacterialGrowthFrameInputSchema)({
+        ...validInput,
+        formulaType: "linear",
+      })
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BacterialGrowthFrameInputSchema)({
+        ...validInput,
+        initialCount: 0.4,
+      })
+    ).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(BacterialGrowthFrameInputSchema)({
+        ...validInput,
+        generation: 3,
+      })
     ).toThrow();
   });
 });
