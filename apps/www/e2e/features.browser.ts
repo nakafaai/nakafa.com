@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import {
   withBrowserContext,
@@ -57,6 +57,21 @@ const prepareFeaturesPage = Effect.fn("NakafaE2E.prepareFeaturesPage")(
   }
 );
 
+const expectConversationAtBottom = Effect.fn(
+  "NakafaE2E.expectConversationAtBottom"
+)(function* (scroller: Locator) {
+  yield* Effect.promise(() =>
+    expect
+      .poll(() =>
+        scroller.evaluate(
+          (element) =>
+            element.scrollHeight - element.clientHeight - element.scrollTop
+        )
+      )
+      .toBeLessThanOrEqual(2)
+  );
+});
+
 const expectNinaAtBottom = Effect.fn("NakafaE2E.expectNinaAtBottom")(function* (
   page: Page
 ) {
@@ -71,21 +86,19 @@ const expectNinaAtBottom = Effect.fn("NakafaE2E.expectNinaAtBottom")(function* (
 
   yield* Effect.promise(() => expect(conversation).toHaveCount(1));
   yield* Effect.promise(() => conversation.scrollIntoViewIfNeeded());
-  yield* Effect.promise(() =>
-    expect
-      .poll(() =>
-        scroller.evaluate(
-          (element) =>
-            element.scrollHeight - element.clientHeight - element.scrollTop
-        )
-      )
-      .toBeLessThanOrEqual(2)
-  );
+  yield* expectConversationAtBottom(scroller);
   yield* Effect.promise(() => reasoningTrigger.click());
   yield* Effect.promise(() =>
     expect(page.getByText(NINA_REASONING_TEXT, { exact: false })).toBeVisible()
   );
-  yield* Effect.promise(() => mathTrigger.click());
+
+  // A real upward wheel uses use-stick-to-bottom's owned escape path before
+  // Playwright targets content above the clipped conversation viewport.
+  yield* Effect.promise(() => scroller.hover({ scroll: "none" }));
+  yield* Effect.promise(() => page.mouse.wheel(0, -1));
+  yield* Effect.promise(() => mathTrigger.scrollIntoViewIfNeeded());
+  yield* Effect.promise(() => expect(mathTrigger).toBeInViewport({ ratio: 1 }));
+  yield* Effect.promise(() => mathTrigger.click({ scroll: "none" }));
   yield* Effect.promise(() =>
     expect(mathTrigger).toHaveAttribute("aria-expanded", "true")
   );
