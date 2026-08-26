@@ -12,7 +12,11 @@ import {
   type MaterialParams,
   readMaterialRequest,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
-import { getMaterialPublication } from "@/lib/content/material/publication";
+import { normalizeMaterialMetadata } from "@/lib/content/material/decode";
+import {
+  getMaterialCatalogRoute,
+  getMaterialPublication,
+} from "@/lib/content/material/publication";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import {
   type MaterialPreviewContent,
@@ -35,12 +39,15 @@ interface PublishedOwner {
 
 type MaterialOwner = PreviewOwner | PublishedOwner;
 
-interface MaterialFields {
+interface MaterialRouteFields {
   readonly alternates: readonly MaterialLessonProjection[];
   readonly appLocale: Locale;
   readonly metadata: MaterialMetadata;
-  readonly rendererDomain: RendererDomain;
   readonly route: MaterialLessonProjection;
+}
+
+interface MaterialFields extends MaterialRouteFields {
+  readonly rendererDomain: RendererDomain;
 }
 
 interface PreviewContent extends MaterialFields {
@@ -66,7 +73,7 @@ interface PublishedContent extends MaterialFields {
 export type MaterialPageContent = PreviewContent | PublishedContent;
 
 /** Metadata selected from the same exclusive owner as the page body. */
-export interface MaterialMetadataContent extends MaterialFields {
+export interface MaterialMetadataContent extends MaterialRouteFields {
   readonly kind: MaterialOwner["kind"];
 }
 
@@ -117,26 +124,20 @@ export async function readMaterialMetadata(
       kind: owner.kind,
       appLocale: owner.appLocale,
       metadata: owner.preview.metadata,
-      rendererDomain: owner.preview.rendererDomain,
       route: owner.preview.projection,
     };
   }
 
-  const publication = await getMaterialPublication(
-    owner.locale,
-    owner.publicPath
-  );
-  if (!publication) {
+  const model = await getMaterialCatalogRoute(owner.locale, owner.publicPath);
+  if (!model.projection) {
     notFound();
   }
-  const { model, published } = publication;
 
   return {
     alternates: model.alternates,
     kind: owner.kind,
     appLocale: owner.locale,
-    metadata: published.metadata,
-    rendererDomain: published.rendererDomain,
+    metadata: normalizeMaterialMetadata(model.projection.metadata),
     route: model.projection,
   };
 }

@@ -11,7 +11,6 @@ import type {
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { Effect } from "effect";
 import type { ReactNode } from "react";
-import { applyPublishedContentCache } from "@/lib/content/cache";
 import {
   decodeMaterialProjection,
   normalizeMaterialMetadata,
@@ -84,18 +83,9 @@ const renderMaterialArtifact = Effect.fn(
 });
 
 /** Reads and renders one material through one signed publication program. */
-const readRenderedMaterial = Effect.fn("NakafaContent.readRenderedMaterial")(
-  function* (input: PublishedMaterialInput) {
-    const data = yield* readPublishedMaterial(input);
-    return yield* renderMaterialArtifact(data);
-  }
-);
-
-/** Caches JSX rendered from one reviewed, signed Aksara material artifact. */
-export async function renderPublishedMaterial(input: PublishedMaterialInput) {
-  "use cache";
-
-  const rendered = await Effect.runPromise(readRenderedMaterial(input));
-  applyPublishedContentCache("material", rendered.artifactHash);
-  return rendered;
-}
+export const readRenderedMaterial = Effect.fn(
+  "NakafaContent.readRenderedMaterial"
+)(function* (input: PublishedMaterialInput) {
+  const data = yield* readPublishedMaterial(input);
+  return yield* renderMaterialArtifact(data);
+});

@@ -1,20 +1,23 @@
 import "server-only";
 
 import {
-  ACTIVE_APP_LOCALES,
+  APP_LOCALE_CODES,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
-import { ContentRuntimeMissingError } from "@repo/backend/client/content/errors";
-import { Effect } from "effect";
+import { MATERIAL_GROUP_LIMIT } from "@repo/backend/convex/contentRelease/material/limits";
+import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
+import { Cause, Effect } from "effect";
 import type { Locale } from "next-intl";
 import {
   applyPublishedCatalogCache,
   applyPublishedContentCache,
 } from "@/lib/content/cache";
 import {
+  getPublishedMaterialRelease,
   getPublishedMaterialRoutes,
   type PublishedMaterialCatalog,
+  type PublishedMaterialRelease,
 } from "@/lib/content/material/catalog";
 import {
   isMaterialCounterpart,
@@ -22,8 +25,11 @@ import {
   makeMaterialProjectionError,
   verifyMaterialPublication,
 } from "@/lib/content/material/decode";
-import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
-import { renderPublishedMaterial } from "@/lib/content/published/material";
+import {
+  PublishedProjectionError,
+  PublishedReleaseMismatchError,
+} from "@/lib/content/published/errors";
+import { readRenderedMaterial } from "@/lib/content/published/material";
 
 interface MaterialCatalogIdentity {
   readonly activeManifestHash: PublishedMaterialCatalog["activeManifestHash"];
@@ -53,10 +59,54 @@ function hasUniquePublicPaths(routes: readonly MaterialLessonProjection[]) {
   );
 }
 
+/** Preserves typed catalog failures rejected by an Effect framework runner. */
+function preserveCatalogFailure(cause: unknown) {
+  if (
+    cause instanceof NakafaAgentDataReadError ||
+    cause instanceof PublishedProjectionError
+  ) {
+    return cause;
+  }
+  return new Cause.UnknownError(
+    cause,
+    "Unable to read the cached material catalog."
+  );
+}
+
+/** Lifts one cached locale catalog back into the publication program. */
+const readCachedMaterialCatalog = Effect.fn("NakafaMaterial.readCachedCatalog")(
+  (locale: Locale) =>
+    Effect.tryPromise({
+      catch: preserveCatalogFailure,
+      try: () => getPublishedMaterialRoutes(locale),
+    })
+);
+
+/** Lifts the signed release identity back into the publication program. */
+const readCachedMaterialRelease = Effect.fn("NakafaMaterial.readCachedRelease")(
+  () =>
+    Effect.tryPromise({
+      catch: preserveCatalogFailure,
+      try: () => getPublishedMaterialRelease(),
+    })
+);
+
+/** Orders one localized lesson group exactly like the backend index. */
+function compareMaterialSiblings(
+  left: MaterialLessonProjection,
+  right: MaterialLessonProjection
+) {
+  if (left.order !== right.order) {
+    return left.order - right.order;
+  }
+  return left.publicPath.localeCompare(right.publicPath);
+}
+
 /** Selects one complete shell from low-cardinality release-bound catalogs. */
 export const readMaterialCatalogRoute = Effect.fn(
   "NakafaMaterial.readCatalogRoute"
 )(function* (
+  release: PublishedMaterialRelease,
   catalogs: readonly PublishedMaterialCatalog[],
   locale: Locale,
   publicPath: string
@@ -71,44 +121,51 @@ export const readMaterialCatalogRoute = Effect.fn(
     return yield* makeMaterialProjectionError(projectionIdentity);
   }
   if (
-    catalogs.length !== ACTIVE_APP_LOCALES.length ||
-    catalogsByLocale.size !== ACTIVE_APP_LOCALES.length
+    catalogs.length !== APP_LOCALE_CODES.length ||
+    catalogsByLocale.size !== APP_LOCALE_CODES.length
   ) {
     return yield* makeMaterialProjectionError(projectionIdentity);
   }
+  const activeLocaleSet = new Set(release.activeAppLocales);
   for (const catalog of catalogs) {
-    if (catalog.activeReleaseId !== currentCatalog.activeReleaseId) {
+    if (catalog.activeReleaseId !== release.activeReleaseId) {
       return yield* new PublishedReleaseMismatchError({
         actualReleaseId: catalog.activeReleaseId,
-        expectedReleaseId: currentCatalog.activeReleaseId,
+        expectedReleaseId: release.activeReleaseId,
       });
     }
     if (
-      catalog.activeManifestHash !== currentCatalog.activeManifestHash ||
-      catalog.sourceRevision !== currentCatalog.sourceRevision ||
+      catalog.activeManifestHash !== release.activeManifestHash ||
+      catalog.sourceRevision !== release.sourceRevision ||
       !hasUniquePublicPaths(catalog.routes) ||
-      catalog.routes.some((route) => route.appLocale !== catalog.appLocale)
+      catalog.routes.some((route) => route.appLocale !== catalog.appLocale) ||
+      (!activeLocaleSet.has(catalog.appLocale) && catalog.routes.length > 0)
     ) {
       return yield* makeMaterialProjectionError(projectionIdentity);
     }
+  }
+
+  const missingRoute = {
+    activeManifestHash: release.activeManifestHash,
+    activeReleaseId: release.activeReleaseId,
+    alternates: [],
+    projection: null,
+    siblings: [],
+    sourceRevision: release.sourceRevision,
+  } satisfies MaterialCatalogRoute;
+  if (!activeLocaleSet.has(appLocale)) {
+    return missingRoute;
   }
 
   const projection = currentCatalog.routes.find(
     (route) => route.publicPath === publicPath
   );
   if (!projection) {
-    return {
-      activeManifestHash: currentCatalog.activeManifestHash,
-      activeReleaseId: currentCatalog.activeReleaseId,
-      alternates: [],
-      projection: null,
-      siblings: [],
-      sourceRevision: currentCatalog.sourceRevision,
-    } satisfies MaterialCatalogRoute;
+    return missingRoute;
   }
 
   const alternates: MaterialLessonProjection[] = [];
-  for (const activeLocale of ACTIVE_APP_LOCALES) {
+  for (const activeLocale of release.activeAppLocales) {
     const counterparts = catalogs.flatMap((catalog) =>
       catalog.appLocale === activeLocale
         ? catalog.routes.filter((candidate) =>
@@ -123,43 +180,73 @@ export const readMaterialCatalogRoute = Effect.fn(
     alternates.push(counterpart);
   }
 
-  const siblings = currentCatalog.routes.filter((candidate) =>
-    isMaterialSibling(projection, candidate)
+  const siblingGroup = currentCatalog.routes.filter(
+    (candidate) => candidate.materialKey === projection.materialKey
   );
+  if (
+    siblingGroup.length > MATERIAL_GROUP_LIMIT ||
+    siblingGroup.some((candidate) => !isMaterialSibling(projection, candidate))
+  ) {
+    return yield* makeMaterialProjectionError(projectionIdentity);
+  }
+  const siblings = [...siblingGroup].sort(compareMaterialSiblings);
 
   return {
-    activeManifestHash: currentCatalog.activeManifestHash,
-    activeReleaseId: currentCatalog.activeReleaseId,
+    activeManifestHash: release.activeManifestHash,
+    activeReleaseId: release.activeReleaseId,
     alternates,
     projection,
     siblings,
-    sourceRevision: currentCatalog.sourceRevision,
+    sourceRevision: release.sourceRevision,
   } satisfies MaterialCatalogRoute;
 });
+
+/** Reads one release-bound route model from all authenticated catalogs. */
+const readMaterialCatalogModel = Effect.fn("NakafaMaterial.readCatalogModel")(
+  function* (locale: Locale, publicPath: string) {
+    const [release, catalogs] = yield* Effect.all(
+      [
+        readCachedMaterialRelease(),
+        Effect.forEach(APP_LOCALE_CODES, readCachedMaterialCatalog, {
+          concurrency: "unbounded",
+        }),
+      ],
+      { concurrency: "unbounded" }
+    );
+    return yield* readMaterialCatalogRoute(
+      release,
+      catalogs,
+      locale,
+      publicPath
+    );
+  }
+);
+
+/** Caches one metadata-safe shell without evaluating its MDX artifact. */
+export async function getMaterialCatalogRoute(
+  locale: Locale,
+  publicPath: string
+) {
+  "use cache";
+
+  const result = await Effect.runPromise(
+    readMaterialCatalogModel(locale, publicPath)
+  );
+  applyPublishedCatalogCache("material");
+  return result;
+}
 
 /** Reads and verifies one coherent material shell and body concurrently. */
 const readMaterialPublication = Effect.fn("NakafaMaterial.readPublication")(
   function* (locale: Locale, publicPath: string) {
     const appLocale = AppLocaleSchema.make(locale);
-    const readCatalogs = Effect.forEach(
-      ACTIVE_APP_LOCALES,
-      (activeLocale) =>
-        Effect.tryPromise(() => getPublishedMaterialRoutes(activeLocale)),
+    const readPublished = readRenderedMaterial({ appLocale, publicPath }).pipe(
+      Effect.catchTag("ContentRuntimeMissingError", () => Effect.succeed(null))
+    );
+    const [model, published] = yield* Effect.all(
+      [readMaterialCatalogModel(locale, publicPath), readPublished],
       { concurrency: "unbounded" }
     );
-    const readPublished = Effect.tryPromise(() =>
-      renderPublishedMaterial({ appLocale, publicPath })
-    ).pipe(
-      Effect.catchIf(
-        (failure) => failure.cause instanceof ContentRuntimeMissingError,
-        () => Effect.succeed(null)
-      )
-    );
-    const [catalogs, published] = yield* Effect.all(
-      [readCatalogs, readPublished],
-      { concurrency: "unbounded" }
-    );
-    const model = yield* readMaterialCatalogRoute(catalogs, locale, publicPath);
     if (!model.projection) {
       yield* Effect.sync(() => applyPublishedCatalogCache("material"));
       if (published) {
