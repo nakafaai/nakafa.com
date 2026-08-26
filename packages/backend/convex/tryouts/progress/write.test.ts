@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -8,7 +9,6 @@ import {
 import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress/write";
 import { insertTryoutAttempt } from "@repo/backend/test/tryout-runtime";
 import { makeTryoutSet, TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 const SIGNED_SET_IDENTITY = tryoutCatalogNodeIdentity({
