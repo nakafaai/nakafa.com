@@ -224,12 +224,13 @@ const nextConfig = {
     instantInsights: {
       validationLevel: "warning",
     },
-    // Anonymous Convex shares this runner, so keep one worker process while
-    // allowing two static pages to overlap their bounded catalog reads.
+    // Anonymous Convex shares this runner. Split the export across two isolated
+    // worker heaps, but let each worker process only one page at a time so the
+    // backend sees at most two concurrent static-generation requests.
     // Production keeps Next.js' default static-generation concurrency.
     // Docs: https://nextjs.org/docs/app/api-reference/config/next-config-js/staticGeneration
     ...(configEnv.CONVEX_AGENT_MODE === "anonymous"
-      ? { cpus: 1, staticGenerationMaxConcurrency: 2 }
+      ? { cpus: 2, staticGenerationMaxConcurrency: 1 }
       : {}),
   },
 } satisfies NextConfig;
