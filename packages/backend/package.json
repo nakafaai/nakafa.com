@@ -51,6 +51,7 @@
   },
   "devDependencies": {
     "@edge-runtime/vm": "^5.0.0",
+    "@effect/vitest": "catalog:",
     "@nakafa/aksara-v150": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.0/nakafa-aksara-contracts-0.15.0.tgz",
     "@repo/testing": "workspace:*",
     "@vitest/coverage-istanbul": "^4.1.11",

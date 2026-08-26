@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   ActiveAppLocaleListSchema,
   ActiveAppLocaleSchema,
@@ -20,7 +21,6 @@ import {
   makeTechnicalProgram,
 } from "@repo/backend/test/program-snapshot";
 import { activateTryoutStartSource } from "@repo/backend/test/tryout-source";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, Schema } from "effect";
 import { vi } from "vitest";
 
