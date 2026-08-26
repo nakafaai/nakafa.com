@@ -105,6 +105,27 @@ describe("bacterial growth frames", () => {
     expect(visibleCounts).toEqual([100, 50, 25, 13, 7, 6, 5, 4, 3, 2, 1, 0]);
   });
 
+  it("preserves every distinct decay generation within the visual budget", () => {
+    const frames = Array.from({ length: 21 }, (_, generation) =>
+      getBacterialGrowthFrame({
+        formulaType: "geometric",
+        generation,
+        initialCount: 104,
+        maxGenerations: 20,
+        ratio: 0.9,
+      })
+    );
+
+    expect(frames.map((frame) => frame.bacteriaCount)).toEqual([
+      104, 94, 84, 76, 68, 61, 55, 50, 45, 40, 36, 33, 29, 26, 24, 21, 19, 17,
+      16, 14, 13,
+    ]);
+    expect(frames.map((frame) => frame.bacteriaIds.length)).toEqual([
+      100, 90, 81, 73, 65, 59, 53, 48, 43, 38, 35, 32, 28, 25, 23, 20, 18, 16,
+      15, 14, 13,
+    ]);
+  });
+
   it("distributes an uneven number of daughters across existing parents", () => {
     const frame = getBacterialGrowthFrame({
       formulaType: "geometric",
@@ -144,6 +165,19 @@ describe("bacterial growth frames", () => {
 
     expect(frame.bacteriaIds).toHaveLength(100);
     expect(frame.gridColumns).toBe(10);
+  });
+
+  it("bounds more than 100 distinct generations to the visual budget", () => {
+    const frame = getBacterialGrowthFrame({
+      formulaType: "geometric",
+      generation: 200,
+      initialCount: 1000,
+      maxGenerations: 200,
+      ratio: 1.0005,
+    });
+
+    expect(frame.bacteriaCount).toBe(1105);
+    expect(frame.bacteriaIds).toHaveLength(1);
   });
 
   it("rejects invalid growth inputs at the renderer boundary", () => {

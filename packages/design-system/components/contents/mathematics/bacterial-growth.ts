@@ -33,6 +33,13 @@ export const BacterialGrowthFrameInputSchema = Schema.Struct({
 type BacterialGrowthFrameInput = Schema.Schema.Type<
   typeof BacterialGrowthFrameInputSchema
 >;
+interface BacteriaCountGroup {
+  bacteriaCount: number;
+  generationCount: number;
+}
+interface VisibleBacteriaCountGroup extends BacteriaCountGroup {
+  visibleCount: number;
+}
 
 /**
  * Calculates the population represented by one generation.
@@ -102,6 +109,23 @@ function createNextGeneration(
   };
 }
 
+function groupBacteriaCounts(bacteriaCounts: readonly number[]) {
+  const groups: BacteriaCountGroup[] = [];
+
+  for (const bacteriaCount of bacteriaCounts) {
+    const previousGroup = groups.at(-1);
+
+    if (previousGroup?.bacteriaCount === bacteriaCount) {
+      previousGroup.generationCount += 1;
+      continue;
+    }
+
+    groups.push({ bacteriaCount, generationCount: 1 });
+  }
+
+  return groups;
+}
+
 function getVisibleBacteriaCounts(
   bacteriaCounts: readonly number[],
   isGrowing: boolean
@@ -111,41 +135,74 @@ function getVisibleBacteriaCounts(
     return [...bacteriaCounts];
   }
 
-  const positiveBacteriaCounts = [
-    ...new Set(bacteriaCounts.filter((count) => count > 0)),
-  ].sort((left, right) => left - right);
-  const smallestPositiveCount = positiveBacteriaCounts[0];
+  const positiveGenerationGroups: BacteriaCountGroup[] = [];
+  let smallestPositiveCount = largestBacteriaCount;
+  let zeroGenerationCount = 0;
+
+  for (const group of groupBacteriaCounts(bacteriaCounts)) {
+    if (group.bacteriaCount === 0) {
+      zeroGenerationCount += group.generationCount;
+      continue;
+    }
+
+    positiveGenerationGroups.push(group);
+    smallestPositiveCount = Math.min(
+      smallestPositiveCount,
+      group.bacteriaCount
+    );
+  }
+
+  const ascendingGenerationGroups = isGrowing
+    ? positiveGenerationGroups
+    : [...positiveGenerationGroups].reverse();
   const scale = isGrowing
     ? smallestPositiveCount
     : largestBacteriaCount / MAX_VISIBLE_BACTERIA;
 
-  return bacteriaCounts.map((bacteriaCount) => {
-    if (bacteriaCount === 0) {
-      return 0;
+  const canPreserveEveryDistinctCount =
+    ascendingGenerationGroups.length <= MAX_VISIBLE_BACTERIA;
+  const ascendingVisibleGroups: VisibleBacteriaCountGroup[] = [];
+  let previousVisibleCount = 0;
+
+  for (const [index, group] of ascendingGenerationGroups.entries()) {
+    const scaledCount = Math.min(
+      MAX_VISIBLE_BACTERIA,
+      Math.max(1, Math.round(group.bacteriaCount / scale))
+    );
+
+    if (!canPreserveEveryDistinctCount) {
+      ascendingVisibleGroups.push({ ...group, visibleCount: scaledCount });
+      continue;
     }
 
-    const rank = positiveBacteriaCounts.indexOf(bacteriaCount) + 1;
-    const remainingDistinctCounts = positiveBacteriaCounts.length - rank;
-    const minimumVisibleCount = Math.min(rank, MAX_VISIBLE_BACTERIA);
-    const maximumVisibleCount = Math.max(
-      1,
-      MAX_VISIBLE_BACTERIA - remainingDistinctCounts
-    );
-    const scaledCount = Math.max(1, Math.round(bacteriaCount / scale));
-    const lowerVisibleCount = Math.min(
-      minimumVisibleCount,
-      maximumVisibleCount
-    );
-    const upperVisibleCount = Math.max(
-      minimumVisibleCount,
-      maximumVisibleCount
+    const remainingDistinctCounts =
+      ascendingGenerationGroups.length - index - 1;
+    const minimumVisibleCount = previousVisibleCount + 1;
+    const maximumVisibleCount = MAX_VISIBLE_BACTERIA - remainingDistinctCounts;
+    const visibleCount = Math.min(
+      maximumVisibleCount,
+      Math.max(minimumVisibleCount, scaledCount)
     );
 
-    return Math.min(
-      upperVisibleCount,
-      Math.max(lowerVisibleCount, scaledCount)
-    );
-  });
+    ascendingVisibleGroups.push({ ...group, visibleCount });
+    previousVisibleCount = visibleCount;
+  }
+
+  const generationOrderedVisibleGroups = isGrowing
+    ? ascendingVisibleGroups
+    : [...ascendingVisibleGroups].reverse();
+  const positiveVisibleCounts = generationOrderedVisibleGroups.flatMap(
+    (group) =>
+      Array.from({ length: group.generationCount }, () => group.visibleCount)
+  );
+  const zeroVisibleCounts = Array.from(
+    { length: zeroGenerationCount },
+    () => 0
+  );
+
+  return isGrowing
+    ? [...zeroVisibleCounts, ...positiveVisibleCounts]
+    : [...positiveVisibleCounts, ...zeroVisibleCounts];
 }
 
 /**
