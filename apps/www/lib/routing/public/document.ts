@@ -8,21 +8,20 @@ import {
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
 import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source";
 
-export const PublicDocumentRouteInputSchema = Schema.Struct({
+const PublicDocumentRouteInputSchema = Schema.Struct({
   ...LlmsProxyRouteRequestSchema.fields,
   hasAttemptCapability: Schema.Boolean,
 });
-export type PublicDocumentRouteInput =
-  typeof PublicDocumentRouteInputSchema.Type;
+type PublicDocumentRouteInput = typeof PublicDocumentRouteInputSchema.Type;
 
-export const PublicDocumentRouteDecisionSchema = Schema.Union([
+const PublicDocumentRouteDecisionSchema = Schema.Union([
   LlmsProxyRouteDecisionSchema,
   Schema.Struct({
     kind: Schema.Literal("not-found"),
     locale: AppLocaleCodeSchema,
   }),
 ]);
-export type PublicDocumentRouteDecision =
+type PublicDocumentRouteDecision =
   typeof PublicDocumentRouteDecisionSchema.Type;
 
 /** Resolves public document ownership before adapting it to a Next response. */
