@@ -16,9 +16,10 @@ export function LineScene({
       showGizmo={showZAxis}
       showZAxis={showZAxis}
     >
-      {lines.map((line) => (
+      {lines.map((line, index) => (
         <LineEquation
-          key={`line-${line.points.map((point) => `${point.x},${point.y},${point.z}`).join(";")}`}
+          // biome-ignore lint/suspicious/noArrayIndexKey: Authored order is stable, and coincident lines intentionally share every point.
+          key={`line-${index}-${line.points.map((point) => `${point.x},${point.y},${point.z}`).join(";")}`}
           {...line}
         />
       ))}
