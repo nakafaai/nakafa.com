@@ -10,6 +10,7 @@ import type {
 import {
   mcpErrorResponse,
   mcpOptionsResponse,
+  mcpRateLimitResponse,
   readJsonRpcRequestId,
   withMcpResponseHeaders,
 } from "@repo/backend/convex/routes/agent/mcp/response";
@@ -62,6 +63,24 @@ export function registerAgentMcpRoutes(app: AgentApp) {
     if (request.method === "OPTIONS") {
       return mcpOptionsResponse(request);
     }
+    const limited = await readRateLimit(context.env, request);
+    if (limited.kind === "unavailable") {
+      return withMcpResponseHeaders(
+        mcpErrorResponse(
+          503,
+          -32_603,
+          "The public MCP request limiter is unavailable.",
+          requestId
+        ),
+        request
+      );
+    }
+    if (limited.kind === "limited") {
+      return withMcpResponseHeaders(
+        mcpRateLimitResponse(limited.retryAfterMs),
+        request
+      );
+    }
     const bounded = await Effect.runPromise(
       readMcpRequest(request).pipe(Effect.result)
     );
@@ -80,33 +99,6 @@ export function registerAgentMcpRoutes(app: AgentApp) {
       );
     }
     const { parsedBody, request: boundedRequest } = bounded.success;
-    const limited = await readRateLimit(context.env, request);
-    if (limited.kind === "unavailable") {
-      return withMcpResponseHeaders(
-        mcpErrorResponse(
-          503,
-          -32_603,
-          "The public MCP request limiter is unavailable.",
-          requestId
-        ),
-        request
-      );
-    }
-    if (limited.kind === "limited") {
-      const responseId =
-        request.method === "POST" ? readJsonRpcRequestId(parsedBody) : null;
-      return withMcpResponseHeaders(
-        mcpErrorResponse(
-          429,
-          -32_029,
-          "The public MCP request limit was exceeded for this client.",
-          requestId,
-          responseId,
-          limited.retryAfterMs
-        ),
-        request
-      );
-    }
     const runtime = await Effect.runPromise(
       loadMcpRuntime().pipe(Effect.result)
     );

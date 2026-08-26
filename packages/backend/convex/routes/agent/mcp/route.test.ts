@@ -452,16 +452,35 @@ describe("Nakafa MCP transport", () => {
     }
   });
 
-  it("enforces the shared per-client quota", async () => {
+  it("charges rejected bodies and returns no JSON-RPC for throttled notifications", async () => {
     vi.spyOn(Date, "now").mockReturnValue(1_800_000_000_000);
     const test = createConvexTestWithBetterAuth();
-    const responses = await Promise.all(
-      Array.from({ length: 30 }, (_, index) =>
+    const allowed = await Promise.all(
+      Array.from({ length: 29 }, (_, index) =>
         postModern(test, 100 + index, "server/discover")
-      ).concat(fetchMcp(test))
+      )
     );
+    const rejected = await fetchMcp(test, {
+      headers: {
+        "content-length": "65537",
+        "content-type": "application/json",
+      },
+      method: "POST",
+    });
+    const throttled = await fetchMcp(test, {
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        method: "notifications/initialized",
+      }),
+      headers: { "content-type": "application/json" },
+      method: "POST",
+    });
 
-    expect(responses.filter(({ status }) => status === 200)).toHaveLength(30);
-    expect(responses.filter(({ status }) => status === 429)).toHaveLength(1);
+    expect(allowed.every(({ status }) => status === 200)).toBe(true);
+    expect(rejected.status).toBe(413);
+    expect(throttled.status).toBe(429);
+    expect(throttled.headers.get("content-type")).toBeNull();
+    expect(throttled.headers.get("retry-after")).toBe("1");
+    await expect(throttled.text()).resolves.toBe("");
   });
 });

@@ -57,6 +57,19 @@ export function mcpErrorResponse(
   );
 }
 
+/** Rejects an unprocessed transport request without emitting JSON-RPC. */
+export function mcpRateLimitResponse(retryAfterMilliseconds: number) {
+  return new Response(null, {
+    headers: {
+      "Cache-Control": "no-store",
+      "Retry-After": String(
+        Math.max(1, Math.ceil(retryAfterMilliseconds / 1000))
+      ),
+    },
+    status: 429,
+  });
+}
+
 /** Adds CORS and cache metadata without replacing SDK protocol headers. */
 export function withMcpResponseHeaders(response: Response, request: Request) {
   const headers = new Headers(response.headers);
