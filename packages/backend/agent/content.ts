@@ -43,7 +43,7 @@ const contentSourceReference = makeFunctionReference<
   "query",
   { readonly input: ContentReferenceInput },
   AgentContentSource
->("contentRelease/reference/agent:read");
+>("contentRelease/reference/internal:readAgentContent");
 
 const publicRuntimeReference = makeFunctionReference<
   "query",

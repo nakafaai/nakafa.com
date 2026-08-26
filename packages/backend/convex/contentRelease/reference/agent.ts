@@ -1,18 +1,13 @@
 import { QuranSurahNumberSchema } from "@nakafa/aksara-contracts/quran/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
   quranMarkdownValidator,
   readQuranMarkdown,
 } from "@repo/backend/convex/contentRelease/quran/markdown";
 import { readContentReference } from "@repo/backend/convex/contentRelease/reference/read";
-import {
-  type ContentReferenceInput,
-  contentReferenceInputValidator,
-} from "@repo/backend/convex/contentRelease/reference/spec";
+import type { ContentReferenceInput } from "@repo/backend/convex/contentRelease/reference/spec";
 import { contentSearchSummaryValidator } from "@repo/backend/convex/contents/helpers/search/schema";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
 import { Effect, Option, Schema } from "effect";
 
@@ -45,14 +40,6 @@ export const readAgentContentSource = Effect.fn(
   const surahNumber = yield* parseQuranRoute(reference.route);
   const markdown = yield* readQuranMarkdown(ctx, reference.locale, surahNumber);
   return { kind: "quran" as const, markdown, reference, surahNumber };
-});
-
-/** Internal query used by the protected agent HTTP action. */
-export const read = internalQuery({
-  args: { input: contentReferenceInputValidator },
-  returns: agentContentSourceValidator,
-  handler: (ctx, { input }) =>
-    runConvexProgram(readAgentContentSource(ctx, input)),
 });
 
 /** Parses one canonical Quran route from an authenticated reference. */

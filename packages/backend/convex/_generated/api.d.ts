@@ -280,6 +280,7 @@ import type * as contentRelease_recovery from "../contentRelease/recovery.js";
 import type * as contentRelease_reference from "../contentRelease/reference.js";
 import type * as contentRelease_reference_agent from "../contentRelease/reference/agent.js";
 import type * as contentRelease_reference_input from "../contentRelease/reference/input.js";
+import type * as contentRelease_reference_internal from "../contentRelease/reference/internal.js";
 import type * as contentRelease_reference_read from "../contentRelease/reference/read.js";
 import type * as contentRelease_reference_spec from "../contentRelease/reference/spec.js";
 import type * as contentRelease_renderer from "../contentRelease/renderer.js";
@@ -859,6 +860,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/reference": typeof contentRelease_reference;
   "contentRelease/reference/agent": typeof contentRelease_reference_agent;
   "contentRelease/reference/input": typeof contentRelease_reference_input;
+  "contentRelease/reference/internal": typeof contentRelease_reference_internal;
   "contentRelease/reference/read": typeof contentRelease_reference_read;
   "contentRelease/reference/spec": typeof contentRelease_reference_spec;
   "contentRelease/renderer": typeof contentRelease_renderer;
