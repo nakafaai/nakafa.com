@@ -1,7 +1,12 @@
-import { runMcpTool, toMcpToolError } from "@repo/backend/agent/mcp/result";
+import {
+  mcpToolOutputSchema,
+  runMcpTool,
+  toMcpToolError,
+} from "@repo/backend/agent/mcp/result";
+import { toMcpSchema } from "@repo/backend/agent/mcp/schema";
 import { NakafaAgentInputError } from "@repo/contents/_lib/agent/errors";
 import { describe, expect, it } from "@repo/testing/effect";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 
 describe("Nakafa MCP tool results", () => {
   it("preserves successful structured content", async () => {
@@ -49,6 +54,27 @@ describe("Nakafa MCP tool results", () => {
           suggestions: ["Retry later."],
         },
       },
+    });
+  });
+
+  it("advertises success and error structured content", async () => {
+    const schema = toMcpSchema(
+      mcpToolOutputSchema(Schema.Struct({ status: Schema.Literal("ok") }))
+    );
+    const error = {
+      error: { message: "Unavailable.", suggestions: ["Retry later."] },
+    };
+    const [successValidation, errorValidation] = await Promise.all([
+      schema["~standard"].validate({ status: "ok" }),
+      schema["~standard"].validate(error),
+    ]);
+
+    expect(successValidation).toMatchObject({ value: { status: "ok" } });
+    expect(errorValidation).toMatchObject({ value: error });
+    expect(
+      schema["~standard"].jsonSchema.output({ target: "draft-2020-12" })
+    ).toMatchObject({
+      allOf: [{ anyOf: expect.any(Array) }],
     });
   });
 });

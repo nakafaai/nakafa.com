@@ -2,9 +2,25 @@ import type {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
 } from "@repo/contents/_lib/agent/errors";
-import { Cause, Effect } from "effect";
+import { Cause, Effect, Schema } from "effect";
 
 type AgentToolError = NakafaAgentDataReadError | NakafaAgentInputError;
+
+const McpToolErrorStructuredContentSchema = Schema.Struct({
+  error: Schema.Struct({
+    message: Schema.String,
+    suggestions: Schema.Array(Schema.String).pipe(
+      Schema.check(Schema.isMinLength(1))
+    ),
+  }),
+});
+
+/** Advertises both successful structured content and actionable tool errors. */
+export function mcpToolOutputSchema<Success extends Schema.Constraint>(
+  success: Success
+) {
+  return Schema.Union([success, McpToolErrorStructuredContentSchema]);
+}
 
 /** Runs one Effect program at the MCP tool callback boundary. */
 export function runMcpTool<Output extends Readonly<Record<string, unknown>>>(

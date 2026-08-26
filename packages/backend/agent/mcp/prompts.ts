@@ -56,7 +56,7 @@ export function registerNakafaMcpPrompts(server: McpServer) {
   server.registerPrompt(
     "nakafa_find_lesson",
     {
-      argsSchema: toMcpSchema<unknown>(FindLessonPromptArgsSchema),
+      argsSchema: toMcpSchema(FindLessonPromptArgsSchema),
       description:
         "Guide an agent to search Nakafa lessons and choose relevant public content.",
       title: "Find Nakafa Lesson",
@@ -66,7 +66,7 @@ export function registerNakafaMcpPrompts(server: McpServer) {
   server.registerPrompt(
     "nakafa_answer_from_content",
     {
-      argsSchema: toMcpSchema<unknown>(AnswerFromContentPromptArgsSchema),
+      argsSchema: toMcpSchema(AnswerFromContentPromptArgsSchema),
       description:
         "Guide an agent to answer a question from one retrieved Nakafa content item.",
       title: "Answer From Nakafa Content",
@@ -76,7 +76,7 @@ export function registerNakafaMcpPrompts(server: McpServer) {
   server.registerPrompt(
     "nakafa_quran_reference",
     {
-      argsSchema: toMcpSchema<unknown>(QuranReferencePromptArgsSchema),
+      argsSchema: toMcpSchema(QuranReferencePromptArgsSchema),
       description:
         "Guide an agent to retrieve Quran verses with translation and citation.",
       title: "Nakafa Quran Reference",

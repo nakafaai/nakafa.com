@@ -2,7 +2,10 @@ import type { McpServer } from "@modelcontextprotocol/server";
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import { getNakafaContent } from "@repo/backend/agent/content";
 import { decodeAgentInput } from "@repo/backend/agent/decode";
-import { runMcpTool } from "@repo/backend/agent/mcp/result";
+import {
+  mcpToolOutputSchema,
+  runMcpTool,
+} from "@repo/backend/agent/mcp/result";
 import { toMcpSchema } from "@repo/backend/agent/mcp/schema";
 import { getNakafaQuranReference } from "@repo/backend/agent/quran";
 import { searchNakafaContent } from "@repo/backend/agent/search";
@@ -25,7 +28,7 @@ import {
   NakafaAgentTaxonomyOptionsSchema,
   NakafaAgentTaxonomySchema,
 } from "@repo/contents/_lib/agent/schema/taxonomy";
-import { Effect, Option, type Schema } from "effect";
+import { Effect, Option } from "effect";
 
 const READ_ONLY_TOOL = {
   destructiveHint: false,
@@ -46,10 +49,10 @@ export function registerNakafaMcpTools(
       annotations: READ_ONLY_TOOL,
       description:
         "Search Nakafa's signed public educational content with stable pagination.",
-      inputSchema: toMcpSchema<unknown>(NakafaAgentSearchOptionsSchema),
-      outputSchema: toMcpSchema<
-        Schema.Schema.Type<typeof NakafaAgentSearchResultSchema>
-      >(NakafaAgentSearchResultSchema),
+      inputSchema: toMcpSchema(NakafaAgentSearchOptionsSchema),
+      outputSchema: toMcpSchema(
+        mcpToolOutputSchema(NakafaAgentSearchResultSchema)
+      ),
       title: "Search Nakafa content",
     },
     (input) => runMcpTool(searchNakafaContent(ctx, input), requestId)
@@ -61,10 +64,8 @@ export function registerNakafaMcpTools(
       annotations: READ_ONLY_TOOL,
       description:
         "Read full agent-ready Markdown for a readable Nakafa content ID or canonical URL. Search results without markdown_url are citation-only catalog entries.",
-      inputSchema: toMcpSchema<unknown>(NakafaAgentReadOptionsSchema),
-      outputSchema: toMcpSchema<
-        Schema.Schema.Type<typeof NakafaAgentMarkdownSchema>
-      >(NakafaAgentMarkdownSchema),
+      inputSchema: toMcpSchema(NakafaAgentReadOptionsSchema),
+      outputSchema: toMcpSchema(mcpToolOutputSchema(NakafaAgentMarkdownSchema)),
       title: "Read Nakafa content",
     },
     (input) =>
@@ -99,10 +100,8 @@ export function registerNakafaMcpTools(
       annotations: READ_ONLY_TOOL,
       description:
         "List supported Nakafa sections, locales, categories, counts, and tools.",
-      inputSchema: toMcpSchema<unknown>(NakafaAgentTaxonomyOptionsSchema),
-      outputSchema: toMcpSchema<
-        Schema.Schema.Type<typeof NakafaAgentTaxonomySchema>
-      >(NakafaAgentTaxonomySchema),
+      inputSchema: toMcpSchema(NakafaAgentTaxonomyOptionsSchema),
+      outputSchema: toMcpSchema(mcpToolOutputSchema(NakafaAgentTaxonomySchema)),
       title: "Read Nakafa taxonomy",
     },
     (input) =>
@@ -122,10 +121,10 @@ export function registerNakafaMcpTools(
       annotations: READ_ONLY_TOOL,
       description:
         "Read a bounded Quran verse range with reviewed translation and optional tafsir.",
-      inputSchema: toMcpSchema<unknown>(NakafaAgentQuranReferenceOptionsSchema),
-      outputSchema: toMcpSchema<
-        Schema.Schema.Type<typeof NakafaAgentQuranReferenceSchema>
-      >(NakafaAgentQuranReferenceSchema),
+      inputSchema: toMcpSchema(NakafaAgentQuranReferenceOptionsSchema),
+      outputSchema: toMcpSchema(
+        mcpToolOutputSchema(NakafaAgentQuranReferenceSchema)
+      ),
       title: "Read a Quran reference",
     },
     (input) =>
