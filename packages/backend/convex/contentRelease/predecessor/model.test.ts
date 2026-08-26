@@ -1,6 +1,6 @@
 import {
+  abandonPredecessorObservation,
   armPredecessorObservation,
-  clearPredecessorObservation,
   readPredecessorObservation,
   recordPredecessorRead,
   sealPredecessorObservation,
@@ -170,7 +170,7 @@ describe("contentRelease/predecessor/model", () => {
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
     await expect(
       partial.mutation((ctx) =>
-        runConvexProgram(clearPredecessorObservation(ctx, OBSERVATION_ID))
+        runConvexProgram(abandonPredecessorObservation(ctx, OBSERVATION_ID))
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
     await expect(readRows(partial)).resolves.toMatchObject({
@@ -198,7 +198,7 @@ describe("contentRelease/predecessor/model", () => {
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
     await expect(
       competing.mutation((ctx) =>
-        runConvexProgram(clearPredecessorObservation(ctx, OBSERVATION_ID))
+        runConvexProgram(abandonPredecessorObservation(ctx, OBSERVATION_ID))
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
     await expect(readRows(competing)).resolves.toMatchObject({
@@ -343,7 +343,7 @@ describe("contentRelease/predecessor/model", () => {
       expect(status.routes.batch).not.toHaveProperty("sealedAt");
       await expect(
         target.mutation((ctx) =>
-          runConvexProgram(clearPredecessorObservation(ctx, OBSERVATION_ID))
+          runConvexProgram(abandonPredecessorObservation(ctx, OBSERVATION_ID))
         )
       ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
 
@@ -367,7 +367,7 @@ describe("contentRelease/predecessor/model", () => {
     }
   );
 
-  it("clears only the exact sealed identity with its durable evidence", async () => {
+  it("preserves active sealed evidence until predecessor routes are removed", async () => {
     const target = convexTest(schema, convexModules);
     const armedAt = Date.UTC(2026, 7, 26, 8);
     vi.setSystemTime(armedAt);
@@ -389,38 +389,28 @@ describe("contentRelease/predecessor/model", () => {
     await expect(
       target.mutation((ctx) =>
         runConvexProgram(
-          clearPredecessorObservation(ctx, COMPETING_OBSERVATION_ID)
+          abandonPredecessorObservation(ctx, COMPETING_OBSERVATION_ID)
         )
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
 
-    const cleared = await target.mutation((ctx) =>
-      runConvexProgram(clearPredecessorObservation(ctx, OBSERVATION_ID))
-    );
-    expect(cleared).toMatchObject({
-      active: TEST_RUNTIME_RELEASE,
-      clearedAt: armedAt + PREDECESSOR_QUIET_WINDOW_MS,
-      deleted: 2,
-      deploymentName: "test",
-      kind: "cleared",
-      observationId: OBSERVATION_ID,
-      routes: {
-        batch: { invocationCount: 0, phase: "sealed" },
-        singular: { invocationCount: 0, phase: "sealed" },
-      },
-    });
-    await expect(readRows(target)).resolves.toEqual({
-      batch: null,
-      singular: null,
+    await expect(
+      target.mutation((ctx) =>
+        runConvexProgram(abandonPredecessorObservation(ctx, OBSERVATION_ID))
+      )
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
+    await expect(readRows(target)).resolves.toMatchObject({
+      batch: { invocationCount: 0, phase: "sealed" },
+      singular: { invocationCount: 0, phase: "sealed" },
     });
   });
 
-  it("does not clear an observation before both routes are sealed", async () => {
+  it("does not abandon an active armed observation", async () => {
     const target = convexTest(schema, convexModules);
     await seedAndArm(target);
     await expect(
       target.mutation((ctx) =>
-        runConvexProgram(clearPredecessorObservation(ctx, OBSERVATION_ID))
+        runConvexProgram(abandonPredecessorObservation(ctx, OBSERVATION_ID))
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
     await expect(readRows(target)).resolves.toMatchObject({

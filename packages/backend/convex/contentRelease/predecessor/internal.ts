@@ -3,14 +3,14 @@ import {
   internalQuery,
 } from "@repo/backend/convex/_generated/server";
 import {
+  abandonPredecessorObservation,
   armPredecessorObservation,
-  clearPredecessorObservation,
   readPredecessorObservation,
   recordPredecessorRead,
   sealPredecessorObservation,
 } from "@repo/backend/convex/contentRelease/predecessor/model";
 import {
-  predecessorClearReceiptValidator,
+  predecessorAbandonReceiptValidator,
   predecessorObservationArgsValidator,
   predecessorRecordArgsValidator,
   predecessorRecordResultValidator,
@@ -56,10 +56,10 @@ export const seal = internalMutation({
     runConvexProgram(sealPredecessorObservation(ctx, args.observationId)),
 });
 
-/** Deletes only one exact sealed observation after external cleanup proof. */
-export const clear = internalMutation({
+/** Deletes one exact observation only after its active release has drifted. */
+export const abandon = internalMutation({
   args: predecessorObservationArgsValidator,
-  returns: predecessorClearReceiptValidator,
+  returns: predecessorAbandonReceiptValidator,
   handler: (ctx, args) =>
-    runConvexProgram(clearPredecessorObservation(ctx, args.observationId)),
+    runConvexProgram(abandonPredecessorObservation(ctx, args.observationId)),
 });

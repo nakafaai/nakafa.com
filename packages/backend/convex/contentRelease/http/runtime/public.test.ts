@@ -16,7 +16,7 @@ import {
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type {
-  PredecessorClearReceipt,
+  PredecessorAbandonReceipt,
   PredecessorObservationArgs,
   PredecessorStatus,
 } from "@repo/backend/convex/contentRelease/predecessor/spec";
@@ -71,11 +71,11 @@ const sealObservation = makeFunctionReference<
   PredecessorObservationArgs,
   PredecessorStatus
 >("contentRelease/predecessor/internal:seal");
-const clearObservation = makeFunctionReference<
+const abandonObservation = makeFunctionReference<
   "mutation",
   PredecessorObservationArgs,
-  PredecessorClearReceipt
->("contentRelease/predecessor/internal:clear");
+  PredecessorAbandonReceipt
+>("contentRelease/predecessor/internal:abandon");
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 type RuntimeFetcher = Pick<RuntimeTest, "fetch">;
 /** Sends one request through the actual registered Convex HTTP route. */
@@ -260,7 +260,7 @@ describe("public content runtime HTTP route", () => {
     expectPrivate(drifted);
 
     await expect(
-      t.mutation(clearObservation, { observationId: OBSERVATION_ID })
+      t.mutation(abandonObservation, { observationId: OBSERVATION_ID })
     ).resolves.toMatchObject({
       abandonedAt: expect.any(Number),
       deleted: 2,

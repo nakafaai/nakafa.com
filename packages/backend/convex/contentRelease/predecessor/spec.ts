@@ -97,48 +97,26 @@ export const predecessorStatusValidator = v.union(
 );
 export type PredecessorStatus = Infer<typeof predecessorStatusValidator>;
 
-const predecessorClearRouteValidator = v.object({
-  armedAt: v.number(),
-  invocationCount: v.number(),
-  lastInvokedAt: v.optional(v.number()),
-  phase: v.literal("sealed"),
-  quietSince: v.number(),
-  route: predecessorRouteValidator,
-  sealedAt: v.number(),
-});
-
-const predecessorClearFields = {
+const predecessorAbandonFields = {
   deleted: v.literal(2),
   deploymentName: v.string(),
   observationId: v.string(),
 };
 
-/** Honest server-side receipt for deleting one exact observation. */
-export const predecessorClearReceiptValidator = v.union(
-  v.object({
-    ...predecessorClearFields,
-    active: predecessorIdentityValidator,
-    clearedAt: v.number(),
-    kind: v.literal("cleared"),
-    routes: v.object({
-      batch: predecessorClearRouteValidator,
-      singular: predecessorClearRouteValidator,
-    }),
+/** Server-derived receipt for abandoning one release-drifted observation. */
+export const predecessorAbandonReceiptValidator = v.object({
+  ...predecessorAbandonFields,
+  abandonedAt: v.number(),
+  kind: v.literal("abandoned"),
+  live: predecessorIdentityValidator,
+  routes: v.object({
+    batch: predecessorRouteStatusValidator,
+    singular: predecessorRouteStatusValidator,
   }),
-  v.object({
-    ...predecessorClearFields,
-    abandonedAt: v.number(),
-    kind: v.literal("abandoned"),
-    live: predecessorIdentityValidator,
-    routes: v.object({
-      batch: predecessorRouteStatusValidator,
-      singular: predecessorRouteStatusValidator,
-    }),
-    stored: predecessorIdentityValidator,
-  })
-);
-export type PredecessorClearReceipt = Infer<
-  typeof predecessorClearReceiptValidator
+  stored: predecessorIdentityValidator,
+});
+export type PredecessorAbandonReceipt = Infer<
+  typeof predecessorAbandonReceiptValidator
 >;
 
 /** Decodes one operator observation identifier without accepting aliases. */

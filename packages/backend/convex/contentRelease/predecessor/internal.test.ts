@@ -1,6 +1,6 @@
 import {
   PREDECESSOR_QUIET_WINDOW_MS,
-  type PredecessorClearReceipt,
+  type PredecessorAbandonReceipt,
   type PredecessorObservationArgs,
   type PredecessorRecordArgs,
   type PredecessorRecordResult,
@@ -39,17 +39,17 @@ const seal = makeFunctionReference<
   PredecessorObservationArgs,
   PredecessorStatus
 >("contentRelease/predecessor/internal:seal");
-const clear = makeFunctionReference<
+const abandon = makeFunctionReference<
   "mutation",
   PredecessorObservationArgs,
-  PredecessorClearReceipt
->("contentRelease/predecessor/internal:clear");
+  PredecessorAbandonReceipt
+>("contentRelease/predecessor/internal:abandon");
 
 describe("contentRelease/predecessor/internal", () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
-  it("registers the complete temporary observation lifecycle", async () => {
+  it("registers observation controls and preserves active evidence", async () => {
     const target = convexTest(schema, convexModules);
     await expect(target.mutation(recordSingular, {})).resolves.toEqual({
       kind: "inactive",
@@ -95,11 +95,12 @@ describe("contentRelease/predecessor/internal", () => {
     vi.setSystemTime(Date.now() + PREDECESSOR_QUIET_WINDOW_MS);
     await target.mutation(seal, { observationId: OBSERVATION_ID });
     await expect(
-      target.mutation(clear, { observationId: OBSERVATION_ID })
+      target.mutation(abandon, { observationId: OBSERVATION_ID })
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
+    await expect(
+      target.query(status, { observationId: OBSERVATION_ID })
     ).resolves.toMatchObject({
-      deleted: 2,
-      kind: "cleared",
-      observationId: OBSERVATION_ID,
+      routes: { batch: { phase: "sealed" }, singular: { phase: "sealed" } },
     });
   });
 });

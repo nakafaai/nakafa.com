@@ -8,7 +8,7 @@ import { loadState } from "@repo/backend/convex/contentRelease/model";
 import {
   decodePredecessorObservationId,
   PREDECESSOR_QUIET_WINDOW_MS,
-  type PredecessorClearReceipt,
+  type PredecessorAbandonReceipt,
   type PredecessorIdentity,
   type PredecessorObservationId,
   type PredecessorRecordResult,
@@ -288,7 +288,7 @@ export const readPredecessorObservation = Effect.fn(
  * temporary observer expects zero traffic, so correctness owns the tradeoff.
  * A late read reopens both sealed rows atomically and restarts that route's
  * quiet clock. Release drift returns both identities without writing, which
- * keeps the predecessor route available while clear owns abandonment.
+ * keeps the predecessor route available while abandon owns invalidation.
  */
 export const recordPredecessorRead = Effect.fn(
   "contentRelease.predecessor.record"
@@ -400,70 +400,28 @@ const deleteObservation = Effect.fn(
   );
 });
 
-/** Deletes one sealed observation or abandons one invalidated by drift. */
-export const clearPredecessorObservation = Effect.fn(
-  "contentRelease.predecessor.clear"
+/** Deletes one exact observation only after its active release has drifted. */
+export const abandonPredecessorObservation = Effect.fn(
+  "contentRelease.predecessor.abandon"
 )(function* (ctx: MutationCtx, rawObservationId: string) {
   const observation = yield* loadObservation(ctx, rawObservationId);
   const { active, rows } = observation;
-  if (!hasActiveIdentity(rows, active)) {
-    const abandonedAt = yield* Clock.currentTimeMillis;
-    yield* deleteObservation(ctx, rows);
-    return {
-      abandonedAt,
-      deleted: 2,
-      deploymentName: rows.singular.deploymentName,
-      kind: "abandoned",
-      live: active,
-      observationId: rows.singular.observationId,
-      routes: buildRoutes(rows),
-      stored: storedIdentity(rows),
-    } satisfies PredecessorClearReceipt;
-  }
-  const singularSealedAt = rows.singular.sealedAt;
-  const batchSealedAt = rows.batch.sealedAt;
-  if (
-    rows.singular.phase !== "sealed" ||
-    singularSealedAt === undefined ||
-    batchSealedAt === undefined
-  ) {
+  if (hasActiveIdentity(rows, active)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",
-      "Only an exact sealed predecessor observation can be cleared."
+      "An active predecessor observation cannot be abandoned."
     );
   }
-  const clearedAt = yield* Clock.currentTimeMillis;
+  const abandonedAt = yield* Clock.currentTimeMillis;
   yield* deleteObservation(ctx, rows);
   return {
-    active,
-    clearedAt,
+    abandonedAt,
     deleted: 2,
     deploymentName: rows.singular.deploymentName,
-    kind: "cleared",
+    kind: "abandoned",
+    live: active,
     observationId: rows.singular.observationId,
-    routes: {
-      batch: {
-        armedAt: rows.batch.armedAt,
-        invocationCount: rows.batch.invocationCount,
-        ...(rows.batch.lastInvokedAt === undefined
-          ? {}
-          : { lastInvokedAt: rows.batch.lastInvokedAt }),
-        phase: "sealed" as const,
-        quietSince: rows.batch.quietSince,
-        route: rows.batch.route,
-        sealedAt: batchSealedAt,
-      },
-      singular: {
-        armedAt: rows.singular.armedAt,
-        invocationCount: rows.singular.invocationCount,
-        ...(rows.singular.lastInvokedAt === undefined
-          ? {}
-          : { lastInvokedAt: rows.singular.lastInvokedAt }),
-        phase: "sealed" as const,
-        quietSince: rows.singular.quietSince,
-        route: rows.singular.route,
-        sealedAt: singularSealedAt,
-      },
-    },
-  } satisfies PredecessorClearReceipt;
+    routes: buildRoutes(rows),
+    stored: storedIdentity(rows),
+  } satisfies PredecessorAbandonReceipt;
 });
