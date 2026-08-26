@@ -27,7 +27,7 @@ const MCP_REQUEST_HEADERS = new Set([
 export function proxy(request: NextRequest) {
   const destination = new URL(
     NAKAFA_MCP_EDGE_CONTRACT.originPath,
-    env.NEXT_PUBLIC_CONVEX_SITE_URL
+    env[NAKAFA_MCP_EDGE_CONTRACT.originEnvironment]
   );
   destination.search = request.nextUrl.search;
   const headers = new Headers();

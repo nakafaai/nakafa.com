@@ -56,7 +56,7 @@ export function proxy(request: NextRequest) {
 function rewriteAgentApi(request: NextRequest) {
   const destination = new URL(
     `${NAKAFA_API_EDGE_CONTRACT.originPath}${request.nextUrl.pathname}`,
-    env.NEXT_PUBLIC_CONVEX_SITE_URL
+    env[NAKAFA_API_EDGE_CONTRACT.originEnvironment]
   );
   destination.search = request.nextUrl.search;
   const headers = new Headers();

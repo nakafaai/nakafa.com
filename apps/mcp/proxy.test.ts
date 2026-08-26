@@ -7,8 +7,8 @@ const MCP_EDGE_SECRET_HEADER = "x-nakafa-mcp-edge-secret";
 
 vi.mock("@/env", () => ({
   env: {
+    NAKAFA_CONVEX_SITE_URL: "https://test.convex.site",
     NAKAFA_MCP_EDGE_SECRET: "test-mcp-edge-secret",
-    NEXT_PUBLIC_CONVEX_SITE_URL: "https://test.convex.site",
   },
 }));
 

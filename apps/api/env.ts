@@ -1,4 +1,9 @@
-import { apiEdgeKeys, convexKeys, convexSiteKeys } from "@repo/backend/keys";
+import {
+  agentOriginKeys,
+  apiEdgeKeys,
+  convexKeys,
+  convexSiteKeys,
+} from "@repo/backend/keys";
 import { contentApiKeys, contentRuntimeKeys } from "@repo/next-config/keys";
 import { createEnv } from "@t3-oss/env-nextjs";
 
@@ -7,6 +12,7 @@ export const env = createEnv({
   extends: [
     contentApiKeys(),
     contentRuntimeKeys(),
+    agentOriginKeys(),
     convexKeys(),
     convexSiteKeys(),
     apiEdgeKeys(),

@@ -39,6 +39,18 @@ export const convexSiteKeys = () =>
     },
   });
 
+/** Defines the server-only Convex HTTP origin used by public edge bridges. */
+export const agentOriginKeys = () =>
+  createEnv({
+    server: {
+      [NAKAFA_API_EDGE_CONTRACT.originEnvironment]: urlSchema,
+    },
+    runtimeEnv: {
+      [NAKAFA_API_EDGE_CONTRACT.originEnvironment]:
+        process.env[NAKAFA_API_EDGE_CONTRACT.originEnvironment],
+    },
+  });
+
 /** Defines the private Vercel credential for the direct REST origin. */
 export const apiEdgeKeys = () =>
   createEnv({
