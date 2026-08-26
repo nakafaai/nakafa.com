@@ -434,6 +434,11 @@ describe("Nakafa MCP transport", () => {
 
   it("rejects oversized declared and streaming bodies before SDK parsing", async () => {
     const test = createConvexTestWithBetterAuth();
+    const notification = JSON.stringify({
+      jsonrpc: "2.0",
+      method: "notifications/initialized",
+      padding: "x".repeat(65_537),
+    });
     const declared = await fetchMcp(test, {
       headers: {
         "content-length": "65537",
@@ -442,20 +447,15 @@ describe("Nakafa MCP transport", () => {
       method: "POST",
     });
     const streamed = await fetchMcp(test, {
-      body: "x".repeat(65_537),
+      body: notification,
       headers: { "content-type": "application/json" },
       method: "POST",
     });
     for (const response of [declared, streamed]) {
       expect(response.status).toBe(413);
-      await expect(response.json()).resolves.toMatchObject({
-        error: { code: -32_013 },
-        id: null,
-        jsonrpc: "2.0",
-      });
+      await expect(response.text()).resolves.toBe("");
     }
   });
-
   it("charges rejected bodies and keeps transport failures bodyless", async () => {
     vi.spyOn(Date, "now").mockReturnValue(1_800_000_000_000);
     const test = createConvexTestWithBetterAuth();

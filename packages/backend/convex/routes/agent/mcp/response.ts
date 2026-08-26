@@ -58,8 +58,23 @@ export function mcpErrorResponse(
 }
 
 /** Rejects an unprocessed transport request without emitting JSON-RPC. */
-export function mcpRateLimitResponse(retryAfterMilliseconds: number) {
-  return mcpEmptyResponse(429, retryAfterMilliseconds);
+export function mcpTransportErrorResponse(
+  status: number,
+  retryAfterMilliseconds?: number
+) {
+  return new Response(null, {
+    headers: {
+      "Cache-Control": "no-store",
+      ...(retryAfterMilliseconds === undefined
+        ? {}
+        : {
+            "Retry-After": String(
+              Math.max(1, Math.ceil(retryAfterMilliseconds / 1000))
+            ),
+          }),
+    },
+    status,
+  });
 }
 
 /** Maps an error after parsing while preserving notification semantics. */
@@ -71,7 +86,7 @@ export function mcpParsedErrorResponse(
   requestId: string
 ) {
   return isJsonRpcNotification(body)
-    ? mcpEmptyResponse(status)
+    ? mcpTransportErrorResponse(status)
     : mcpErrorResponse(
         status,
         code,
@@ -127,22 +142,6 @@ function isJsonRpcNotification(body: unknown) {
     "method" in body &&
     typeof body.method === "string"
   );
-}
-
-function mcpEmptyResponse(status: number, retryAfterMilliseconds?: number) {
-  return new Response(null, {
-    headers: {
-      "Cache-Control": "no-store",
-      ...(retryAfterMilliseconds === undefined
-        ? {}
-        : {
-            "Retry-After": String(
-              Math.max(1, Math.ceil(retryAfterMilliseconds / 1000))
-            ),
-          }),
-    },
-    status,
-  });
 }
 
 function readAllowedHeaders(request: Request) {

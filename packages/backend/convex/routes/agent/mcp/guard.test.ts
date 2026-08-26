@@ -44,14 +44,7 @@ describe("Nakafa MCP origin guard", () => {
     );
 
     expect(response.status).toBe(403);
-    await expect(response.json()).resolves.toMatchObject({
-      error: {
-        data: { request_id: expect.any(String) },
-        message: "Direct access to this Convex MCP origin is not allowed.",
-      },
-      id: null,
-      jsonrpc: "2.0",
-    });
+    await expect(response.text()).resolves.toBe("");
   });
 
   it("accepts exact configured and owned browser Origins", async () => {
@@ -87,6 +80,9 @@ describe("Nakafa MCP origin guard", () => {
     expect(untrusted.status).toBe(403);
     expect(loopback.status).toBe(403);
     expect(malformed.status).toBe(503);
+    for (const response of [untrusted, loopback, malformed]) {
+      await expect(response.text()).resolves.toBe("");
+    }
   });
 
   it("serves strict browser preflight metadata", async () => {

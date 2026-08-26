@@ -5,7 +5,7 @@ import {
 } from "@repo/backend/agent/edge";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { env } from "@repo/backend/convex/_generated/server";
-import { mcpErrorResponse } from "@repo/backend/convex/routes/agent/mcp/response";
+import { mcpTransportErrorResponse } from "@repo/backend/convex/routes/agent/mcp/response";
 import { hasValidEdgeSecret } from "@repo/backend/convex/routes/agent/security";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { Effect } from "effect";
@@ -18,7 +18,6 @@ export const guardMcpOrigin: MiddlewareHandler<{
   Bindings: ActionCtx;
   Variables: { requestId: string };
 }> = async (context, next) => {
-  const requestId = context.get("requestId");
   const result = await Effect.runPromise(
     readMcpGuard(context.req.raw).pipe(
       Effect.match({
@@ -30,28 +29,7 @@ export const guardMcpOrigin: MiddlewareHandler<{
   if (result === "allowed") {
     return next();
   }
-  if (result === "forbidden") {
-    return mcpErrorResponse(
-      403,
-      -32_003,
-      "Direct access to this Convex MCP origin is not allowed.",
-      requestId
-    );
-  }
-  if (result === "invalid-origin") {
-    return mcpErrorResponse(
-      403,
-      -32_003,
-      "The browser Origin is not trusted by this MCP server.",
-      requestId
-    );
-  }
-  return mcpErrorResponse(
-    503,
-    -32_603,
-    "The MCP edge authentication boundary is unavailable.",
-    requestId
-  );
+  return mcpTransportErrorResponse(result === "unavailable" ? 503 : 403);
 };
 
 /** Validates the edge secret and optional exact browser Origin. */

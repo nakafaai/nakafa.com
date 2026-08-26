@@ -8,10 +8,9 @@ import type {
   LegacyRecordResult,
 } from "@repo/backend/convex/routes/agent/mcp/legacy";
 import {
-  mcpErrorResponse,
   mcpOptionsResponse,
   mcpParsedErrorResponse,
-  mcpRateLimitResponse,
+  mcpTransportErrorResponse,
   withMcpResponseHeaders,
 } from "@repo/backend/convex/routes/agent/mcp/response";
 import {
@@ -65,14 +64,11 @@ export function registerAgentMcpRoutes(app: AgentApp) {
     }
     const limited = await readRateLimit(context.env, request);
     if (limited.kind === "unavailable") {
-      return withMcpResponseHeaders(
-        new Response(null, { status: 503 }),
-        request
-      );
+      return withMcpResponseHeaders(mcpTransportErrorResponse(503), request);
     }
     if (limited.kind === "limited") {
       return withMcpResponseHeaders(
-        mcpRateLimitResponse(limited.retryAfterMs),
+        mcpTransportErrorResponse(429, limited.retryAfterMs),
         request
       );
     }
@@ -82,14 +78,7 @@ export function registerAgentMcpRoutes(app: AgentApp) {
     if (Result.isFailure(bounded)) {
       const oversized = bounded.failure.reason === "size";
       return withMcpResponseHeaders(
-        mcpErrorResponse(
-          oversized ? 413 : 400,
-          oversized ? -32_013 : -32_700,
-          oversized
-            ? "The MCP request body exceeds the Nakafa byte limit."
-            : "The MCP request body could not be read.",
-          requestId
-        ),
+        mcpTransportErrorResponse(oversized ? 413 : 400),
         request
       );
     }
