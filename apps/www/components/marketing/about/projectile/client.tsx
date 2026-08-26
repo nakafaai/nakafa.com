@@ -163,13 +163,11 @@ export function ProjectileClient({
           </ToggleGroup>
 
           <section aria-label={viewLabel} className={threeSceneFrameVariants()}>
-            {entry?.isIntersecting ? (
+            {entry?.isIntersecting && (
               <ProjectileScene
                 motion={activeScenario.motion}
                 shouldReduceMotion={shouldReduceMotion}
               />
-            ) : (
-              <ProjectileSceneLoading />
             )}
           </section>
         </div>

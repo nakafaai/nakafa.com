@@ -211,7 +211,9 @@ const expectProjectileDeferred = Effect.fn(
 
   yield* Effect.promise(() => expect(visual).toHaveCount(1));
   yield* Effect.promise(() => expect(visual.locator("canvas")).toHaveCount(0));
-  yield* Effect.promise(() => expect(visual.getByRole("status")).toBeVisible());
+  yield* Effect.promise(() =>
+    expect(visual.getByRole("status")).toHaveCount(0)
+  );
 });
 
 for (const viewport of targetViewports) {
