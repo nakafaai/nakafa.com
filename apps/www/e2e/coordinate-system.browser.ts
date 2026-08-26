@@ -9,19 +9,58 @@ import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 const LINEAR_SYSTEM_ROUTE =
   "/id/materi/matematika/sistem-persamaan-dan-pertidaksamaan-linear/sistem-persamaan-linear";
 const MANY_SOLUTIONS_SCENE_INDEX = 2;
+const VISUAL_ASSERTION_TIMEOUT = 5000;
+const REQUIRED_STABLE_SAMPLES = 2;
 
-const waitForRenderedFrames = Effect.fn("NakafaE2E.waitForRenderedFrames")(
-  function* (page: Page) {
+const waitForStableCanvas = Effect.fn("NakafaE2E.waitForStableCanvas")(
+  function* (canvas: Locator) {
+    let previousFrame = yield* Effect.promise(() => canvas.screenshot());
+    let stableSamples = 0;
+
     yield* Effect.promise(() =>
-      page.evaluate(
-        () =>
-          new Promise<void>((resolve) => {
-            requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-          })
-      )
+      expect
+        .poll(
+          async () => {
+            const currentFrame = await canvas.screenshot();
+
+            if (currentFrame.equals(previousFrame)) {
+              stableSamples += 1;
+            } else {
+              stableSamples = 0;
+            }
+
+            previousFrame = currentFrame;
+            return stableSamples;
+          },
+          {
+            intervals: [100, 200, 300],
+            timeout: VISUAL_ASSERTION_TIMEOUT,
+          }
+        )
+        .toBeGreaterThanOrEqual(REQUIRED_STABLE_SAMPLES)
     );
   }
 );
+
+const expectCanvasToMove = Effect.fn("NakafaE2E.expectCanvasToMove")(function* (
+  canvas: Locator,
+  baseline: Uint8Array
+) {
+  yield* Effect.promise(() =>
+    expect
+      .poll(
+        async () => {
+          const currentFrame = await canvas.screenshot();
+          return currentFrame.equals(baseline);
+        },
+        {
+          intervals: [50, 100, 200],
+          timeout: VISUAL_ASSERTION_TIMEOUT,
+        }
+      )
+      .toBe(false)
+  );
+});
 
 const observeDrawingBufferSize = Effect.fn(
   "NakafaE2E.observeDrawingBufferSize"
@@ -81,7 +120,6 @@ const orbitScene = Effect.fn("NakafaE2E.orbitScene")(function* (
     })
   );
   yield* Effect.promise(() => page.mouse.up());
-  yield* waitForRenderedFrames(page);
 });
 
 const expectStableCoordinateSystem = Effect.fn(
@@ -103,18 +141,17 @@ const expectStableCoordinateSystem = Effect.fn(
   yield* Effect.promise(() => scene.scrollIntoViewIfNeeded());
   yield* Effect.promise(() => expect(canvas).toBeVisible({ timeout: 30_000 }));
   yield* observeDrawingBufferSize(canvas);
-
-  const beforeDrag = yield* Effect.promise(() => canvas.screenshot());
-  yield* orbitScene(page, canvas);
-  const afterDrag = yield* Effect.promise(() => canvas.screenshot());
-  yield* Effect.sync(() => expect(afterDrag.equals(beforeDrag)).toBe(false));
+  yield* waitForStableCanvas(canvas);
 
   const beforePlay = yield* Effect.promise(() => canvas.screenshot());
   yield* Effect.promise(() => playButton.click());
-  yield* waitForRenderedFrames(page);
-  const duringPlay = yield* Effect.promise(() => canvas.screenshot());
+  yield* expectCanvasToMove(canvas, beforePlay);
   yield* Effect.promise(() => playButton.click());
-  yield* Effect.sync(() => expect(duringPlay.equals(beforePlay)).toBe(false));
+  yield* waitForStableCanvas(canvas);
+
+  const beforeDrag = yield* Effect.promise(() => canvas.screenshot());
+  yield* orbitScene(page, canvas);
+  yield* expectCanvasToMove(canvas, beforeDrag);
   yield* Effect.promise(() =>
     expect(canvas).toHaveAttribute("data-drawing-buffer-changed", "false")
   );
