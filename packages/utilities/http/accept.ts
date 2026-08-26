@@ -66,18 +66,6 @@ export function negotiateMediaType(
   return Option.map(best, ({ mediaType }) => mediaType);
 }
 
-/** Checks whether one exact media type is explicitly acceptable. */
-export function acceptsExplicitMediaType(
-  acceptHeader: Option.Option<string>,
-  mediaType: HttpMediaType
-) {
-  const exactRanges = parseAcceptHeader(acceptHeader).filter(
-    (range) => range.type !== "*" && range.subtype !== "*"
-  );
-  const preference = readMediaPreference(exactRanges, mediaType);
-  return Option.exists(preference, ({ quality }) => quality > 0);
-}
-
 /** Merges Vary field names case-insensitively without losing existing values. */
 export function mergeVaryHeader(
   current: Option.Option<string>,
