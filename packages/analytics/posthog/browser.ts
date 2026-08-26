@@ -69,7 +69,7 @@ interface BrowserAnalyticsClient {
 }
 
 interface BrowserAnalyticsLoader {
-  readonly load: () => Promise<BrowserAnalyticsClient>;
+  readonly load: Effect.Effect<BrowserAnalyticsClient, unknown>;
 }
 
 export type BrowserAnalyticsIdentity =
@@ -121,10 +121,6 @@ const privateAutomaticEventProperties = [
   "$window_id",
 ];
 
-const defaultBrowserAnalyticsLoader: BrowserAnalyticsLoader = {
-  load: () => import("posthog-js").then((module) => module.default),
-};
-
 /** Raised when a consented browser cannot initialize the analytics SDK. */
 export class BrowserAnalyticsLoadFailed extends Schema.TaggedError<BrowserAnalyticsLoadFailed>()(
   "BrowserAnalyticsLoadFailed",
@@ -133,6 +129,12 @@ export class BrowserAnalyticsLoadFailed extends Schema.TaggedError<BrowserAnalyt
 
 const browserAnalyticsLoadFailure = () =>
   new BrowserAnalyticsLoadFailed({ code: browserAnalyticsLoadFailedCode });
+
+const defaultBrowserAnalyticsLoader: BrowserAnalyticsLoader = {
+  load: Effect.tryPromise(() => import("posthog-js")).pipe(
+    Effect.map((module) => module.default)
+  ),
+};
 
 /** Loads and enables PostHog only after the caller has resolved consent. */
 export const enableBrowserAnalytics = Effect.fn(
@@ -150,10 +152,9 @@ export const enableBrowserAnalytics = Effect.fn(
     }
 
     initializeAnalyticsIdentityAuthorization();
-    const client = yield* Effect.tryPromise({
-      try: loader.load,
-      catch: browserAnalyticsLoadFailure,
-    });
+    const client = yield* loader.load.pipe(
+      Effect.mapError(browserAnalyticsLoadFailure)
+    );
     const runtimeKeys = yield* Effect.try({
       try: keys,
       catch: browserAnalyticsLoadFailure,
