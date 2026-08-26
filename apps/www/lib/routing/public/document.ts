@@ -2,16 +2,15 @@ import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Effect, Schema } from "effect";
 import {
   LlmsProxyRouteDecisionSchema,
+  LlmsProxyRouteRequestSchema,
   resolveLlmsProxyRoute,
 } from "@/lib/llms/routes";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
 import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source";
 
 export const PublicDocumentRouteInputSchema = Schema.Struct({
-  acceptHeader: Schema.Option(Schema.String),
+  ...LlmsProxyRouteRequestSchema.fields,
   hasAttemptCapability: Schema.Boolean,
-  method: Schema.String,
-  pathname: Schema.String,
 });
 export type PublicDocumentRouteInput =
   typeof PublicDocumentRouteInputSchema.Type;
