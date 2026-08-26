@@ -19,15 +19,24 @@ export const loadQuranOwner = Effect.fn("contentRelease.loadQuranOwner")(
         activeReleaseId: owner.active ? String(owner.active.releaseId) : null,
         managed: false,
         snapshotId: null,
+        sourceOrigin: null,
         sourceRevision: null,
       };
     }
+    const sourceOrigin = owner.active.signed.manifest.origin;
     const sourceRevision = readSourceRevision(owner.active);
     return {
       activeManifestHash: String(owner.active.manifestHash),
       activeReleaseId: String(owner.active.releaseId),
       managed: true,
       snapshotId: String(owner.snapshotId),
+      sourceOrigin:
+        sourceOrigin.kind === "git"
+          ? { kind: sourceOrigin.kind, sha: String(sourceOrigin.sha) }
+          : {
+              kind: sourceOrigin.kind,
+              releaseId: String(sourceOrigin.releaseId),
+            },
       sourceRevision: sourceRevision ? String(sourceRevision) : null,
     };
   }

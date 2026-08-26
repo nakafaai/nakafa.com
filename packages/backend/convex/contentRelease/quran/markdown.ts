@@ -3,39 +3,46 @@ import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/
 import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { readQuranLocaleSources } from "@repo/backend/convex/contentRelease/quran/sources";
 import {
   quranAppLocaleValidator,
+  quranReadingSourcesValidator,
+  quranRevelationPlaceValidator,
   quranSourceFields,
+  quranTafsirAccessValidator,
+  quranTranslationDocumentValidator,
 } from "@repo/backend/convex/contentRelease/quran/spec";
 import {
   loadQuranSurah,
   readQuranSurahVersePrefix,
 } from "@repo/backend/convex/contentRelease/quran/surah";
-import { readQuranTranslation } from "@repo/backend/convex/contentRelease/quran/translation";
+import { readQuranTranslationDocument } from "@repo/backend/convex/contentRelease/quran/translation";
 import { type Infer, v } from "convex/values";
 import { Effect } from "effect";
 
 const quranMarkdownSurahValidator = v.object({
   name: v.object({
-    translation: v.string(),
+    meaning: v.union(v.string(), v.null()),
     transliteration: v.string(),
   }),
   number: v.number(),
   numberOfVerses: v.number(),
-  revelation: v.object({ place: v.string() }),
+  revelation: v.object({ place: quranRevelationPlaceValidator }),
 });
 
 const quranMarkdownVerseValidator = v.object({
   arabic: v.string(),
   number: v.object({ inSurah: v.number() }),
-  translation: v.object({ footnotes: v.string(), text: v.string() }),
+  translation: quranTranslationDocumentValidator,
 });
 
 /** Exact signed fields needed to render app-locale Quran markdown. */
 export const quranMarkdownValidator = v.object({
   ...quranSourceFields,
   appLocale: quranAppLocaleValidator,
+  sources: v.union(quranReadingSourcesValidator, v.null()),
   surah: v.union(quranMarkdownSurahValidator, v.null()),
+  tafsirAccess: v.union(quranTafsirAccessValidator, v.null()),
   toVerse: v.number(),
   verses: v.array(quranMarkdownVerseValidator),
 });
@@ -44,10 +51,16 @@ export type QuranMarkdown = Infer<typeof quranMarkdownValidator>;
 type QuranMarkdownSurah = NonNullable<QuranMarkdown["surah"]>;
 
 /** Projects only metadata rendered by Quran markdown consumers. */
-function projectSurah(surah: QuranSurahRow): QuranMarkdownSurah {
+function projectSurah(
+  surah: QuranSurahRow,
+  appLocale: AppLocaleCode
+): QuranMarkdownSurah {
   return {
     name: {
-      translation: surah.name.translation,
+      meaning:
+        surah.name.meaning.appLocale === appLocale
+          ? surah.name.meaning.text
+          : null,
       transliteration: surah.name.transliteration,
     },
     number: surah.number,
@@ -56,17 +69,22 @@ function projectSurah(surah: QuranSurahRow): QuranMarkdownSurah {
   };
 }
 
-/** Projects one localized markdown verse without multilingual or tafsir data. */
-const projectVerse = Effect.fn("contentRelease.projectQuranMarkdownVerse")(
-  function* (verse: QuranRuntimeVerse, appLocale: AppLocaleCode) {
-    const translation = yield* readQuranTranslation(verse, appLocale);
-    return {
-      arabic: verse.text.arabic,
-      number: { inSurah: verse.number.inSurah },
-      translation,
-    };
-  }
-);
+/** Loads one source translation and its canonical semantic document. */
+const loadVerse = Effect.fn("contentRelease.loadQuranMarkdownVerse")(function* (
+  verse: QuranRuntimeVerse,
+  appLocale: AppLocaleCode
+) {
+  const { document, translation } = yield* readQuranTranslationDocument(
+    verse,
+    appLocale
+  );
+  return {
+    arabic: verse.text.arabic,
+    document,
+    number: { inSurah: verse.number.inSurah },
+    translation,
+  };
+});
 
 /** Validates one optional positive verse limit from a markdown consumer. */
 const validateVerseLimit = Effect.fn(
@@ -84,8 +102,8 @@ const validateVerseLimit = Effect.fn(
   return verseLimit;
 });
 
-/** Returns the narrow signed Quran projection used by markdown consumers. */
-export const readQuranMarkdown = Effect.fn("contentRelease.readQuranMarkdown")(
+/** Loads the exact signed source fields shared by V1 and V2 markdown. */
+export const loadQuranMarkdown = Effect.fn("contentRelease.loadQuranMarkdown")(
   function* (
     ctx: QueryCtx,
     appLocale: AppLocaleCode,
@@ -98,30 +116,71 @@ export const readQuranMarkdown = Effect.fn("contentRelease.readQuranMarkdown")(
       return {
         ...loaded.owner,
         appLocale,
+        sources: null,
         surah: null,
+        tafsirAccess: null,
         toVerse: 0,
         verses: [],
       };
     }
     const numberOfVerses = loaded.surah.row.payload.numberOfVerses;
     const toVerse = Math.min(verseLimit ?? numberOfVerses, numberOfVerses);
-    const verses = yield* readQuranSurahVersePrefix(
-      ctx,
-      loaded.owner.snapshotId,
-      loaded.surah.surahNumber,
-      numberOfVerses,
-      toVerse
+    const { localeSources, verses } = yield* Effect.all(
+      {
+        localeSources: readQuranLocaleSources(
+          ctx,
+          loaded.owner.snapshotId,
+          appLocale
+        ),
+        verses: readQuranSurahVersePrefix(
+          ctx,
+          loaded.owner.snapshotId,
+          loaded.surah.surahNumber,
+          numberOfVerses,
+          toVerse
+        ),
+      },
+      { concurrency: "unbounded" }
     );
 
-    const projectedVerses = yield* Effect.forEach(verses, (verse) =>
-      projectVerse(verse, appLocale)
+    const loadedVerses = yield* Effect.forEach(verses, (verse) =>
+      loadVerse(verse, appLocale)
     );
     return {
       ...loaded.owner,
       appLocale,
-      surah: projectSurah(loaded.surah.row.payload),
+      sources: localeSources.sources,
+      surah: loaded.surah.row.payload,
+      tafsirAccess: localeSources.tafsirAccess,
       toVerse,
-      verses: projectedVerses,
+      verses: loadedVerses,
+    };
+  }
+);
+
+/** Returns canonical V2 markdown fields without predecessor aliases. */
+export const readQuranMarkdown = Effect.fn("contentRelease.readQuranMarkdown")(
+  function* (
+    ctx: QueryCtx,
+    appLocale: AppLocaleCode,
+    sourceSurah: number,
+    sourceVerseLimit?: number
+  ) {
+    const loaded = yield* loadQuranMarkdown(
+      ctx,
+      appLocale,
+      sourceSurah,
+      sourceVerseLimit
+    );
+    return {
+      ...loaded,
+      surah:
+        loaded.surah === null ? null : projectSurah(loaded.surah, appLocale),
+      verses: loaded.verses.map(({ arabic, document, number }) => ({
+        arabic,
+        number,
+        translation: document,
+      })),
     };
   }
 );

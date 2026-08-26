@@ -1,6 +1,4 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { QuranSearchRowSchema } from "@nakafa/aksara-contracts/quran/snapshot/row";
-import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { readQuranChunks } from "@repo/backend/convex/contentRelease/quran/chunks";
@@ -9,21 +7,14 @@ import { validateQuranReference } from "@repo/backend/convex/contentRelease/qura
 import { QURAN_PAGE_VERSE_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
 import { loadQuranOwner } from "@repo/backend/convex/contentRelease/quran/owner";
 import { readQuranRow } from "@repo/backend/convex/contentRelease/quran/row";
+import { readQuranLocaleSources } from "@repo/backend/convex/contentRelease/quran/sources";
+import type { QuranReferenceArgs } from "@repo/backend/convex/contentRelease/quran/spec";
+import { readQuranSurahRow } from "@repo/backend/convex/contentRelease/quran/surah";
 import { Effect } from "effect";
 
-interface QuranReferenceRequest {
-  readonly appLocale: AppLocaleCode;
-  readonly fromVerse: number;
-  readonly surahNumber: number;
-  readonly toVerse?: number;
-}
-
-interface QuranReferenceSourceRequest {
+type QuranReferenceSourceRequest = Omit<QuranReferenceArgs, "appLocale"> & {
   readonly expectedSnapshotId: null | string;
-  readonly fromVerse: number;
-  readonly surahNumber: number;
-  readonly toVerse?: number;
-}
+};
 
 /** Loads the active signed surah and validated range for one reference. */
 const loadQuranReferenceSource = Effect.fn(
@@ -43,11 +34,10 @@ const loadQuranReferenceSource = Effect.fn(
   if (owner.snapshotId === null) {
     return { input, owner, source: null };
   }
-  const surah = yield* readQuranRow(
+  const surah = yield* readQuranSurahRow(
     ctx,
     owner.snapshotId,
-    `surah:${input.surahNumber}`,
-    QuranSurahRowSchema
+    input.surahNumber
   );
   if (surah.payload.numberOfVerses > QURAN_PAGE_VERSE_LIMIT) {
     return yield* releaseFail(
@@ -110,7 +100,7 @@ export const loadQuranPassage = Effect.fn("contentRelease.loadQuranPassage")(
 /** Returns one bounded verified Quran range through the existing wire contract. */
 export const readQuranReference = Effect.fn(
   "contentRelease.readQuranReference"
-)(function* (ctx: QueryCtx, request: QuranReferenceRequest) {
+)(function* (ctx: QueryCtx, request: QuranReferenceArgs) {
   const loaded = yield* loadQuranReferenceSource(ctx, {
     expectedSnapshotId: null,
     fromVerse: request.fromVerse,
@@ -123,17 +113,24 @@ export const readQuranReference = Effect.fn(
       chunkJson: [],
       fromVerse: loaded.input.fromVerse,
       searchJson: null,
+      sources: null,
       surahJson: null,
+      tafsirAccess: null,
       toVerse: loaded.input.toVerse,
     };
   }
-  const { chunks, search } = yield* Effect.all(
+  const { chunks, localeSources, search } = yield* Effect.all(
     {
       chunks: readQuranReferenceChunks(
         ctx,
         loaded.owner.snapshotId,
         loaded.input,
         loaded.source.surah.payload.numberOfVerses
+      ),
+      localeSources: readQuranLocaleSources(
+        ctx,
+        loaded.owner.snapshotId,
+        request.appLocale
       ),
       search: readQuranRow(
         ctx,
@@ -150,7 +147,9 @@ export const readQuranReference = Effect.fn(
     chunkJson: chunks.rowJson,
     fromVerse: loaded.input.fromVerse,
     searchJson: search.rowJson,
+    sources: localeSources.sources,
     surahJson: loaded.source.surah.rowJson,
+    tafsirAccess: localeSources.tafsirAccess,
     toVerse: loaded.input.toVerse,
   };
 });

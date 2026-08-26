@@ -1,8 +1,8 @@
 // @vitest-environment node
 
-import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { QuranSurah } from "@/lib/utils/pages/quran";
 import { generateQuranMetadata } from "@/lib/utils/seo/quran";
 
 const { mockGetTranslations } = vi.hoisted(() => ({
@@ -23,7 +23,7 @@ const surah = {
   number: 1,
   numberOfVerses: 7,
   revelation: { order: 5, place: "Meccan" },
-} satisfies QuranSurahRow;
+} satisfies QuranSurah;
 
 /** Reads a mocked translation value as display text. */
 function getValue(

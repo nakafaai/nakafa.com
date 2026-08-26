@@ -3,7 +3,13 @@
   "display": "Next.js",
   "extends": "./base.json",
   "compilerOptions": {
-    "plugins": [{ "name": "next" }, { "name": "@effect/language-service" }],
+    "plugins": [
+      { "name": "next" },
+      {
+        "name": "@effect/language-service",
+        "allowedDuplicatedPackages": ["@nakafa/aksara-contracts"]
+      }
+    ],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "allowJs": true,

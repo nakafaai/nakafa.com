@@ -114,6 +114,7 @@ describe("nakafa read tool", () => {
           Nakafa,
           Nakafa.of({
             quran: () => Effect.die("unused"),
+            quranV2: () => Effect.die("unused"),
             read: () =>
               Effect.fail(
                 new NakafaAgentDataReadError({

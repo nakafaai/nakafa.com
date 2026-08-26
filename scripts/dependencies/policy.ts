@@ -1,15 +1,3 @@
-import type {
-  FirstPartyManifest,
-  PackageManifest,
-  WorkspaceManifest,
-} from "./dependency-source.ts";
-
-interface DependencyPolicyInput {
-  readonly manifests: readonly FirstPartyManifest[];
-  readonly rootManifest: PackageManifest;
-  readonly workspace: WorkspaceManifest;
-}
-
 interface DependencyHold {
   readonly allowed?: readonly string[];
   readonly approved?: string;
@@ -17,8 +5,63 @@ interface DependencyHold {
   readonly minimumDeclarations: number;
 }
 
+interface TemporaryDependencyHold {
+  readonly approved: string;
+  readonly cleanup: readonly string[];
+  readonly consumers: readonly string[];
+  readonly dependency: string;
+  readonly exitCriterion: string;
+  readonly group: "dependencies" | "devDependencies";
+  readonly manifestPath: string;
+  readonly owner: string;
+}
+
 export const CONTRACT_ARCHIVE =
+  "https://github.com/nakafaai/aksara/releases/download/contracts-v0.17.0/nakafa-aksara-contracts-0.17.0.tgz";
+
+export const LEGACY_QURAN_CONTRACT_ARCHIVE =
   "https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.1/nakafa-aksara-contracts-0.15.1.tgz";
+
+export const TEMPORARY_DEPENDENCY_HOLDS: readonly TemporaryDependencyHold[] = [
+  {
+    approved: LEGACY_QURAN_CONTRACT_ARCHIVE,
+    cleanup: [
+      "packages/backend/package.json#@nakafa/aksara-v151",
+      "packages/backend/content/quran/upgrade.ts#LegacyQuranSurahUpgradeSchema",
+      "packages/backend/client/quran/rows.ts#decodeLegacySurah",
+      "packages/backend/client/quran/v2/source.ts#tafsirAccess === null",
+      "packages/backend/client/quran/decode.test.ts#decodes 0.15.1 and 0.17 surahs into immutable V1",
+      "packages/backend/client/quran/v2/catalog.test.ts#upgrades authentic 0.15.1 surahs",
+      "packages/backend/client/quran/v2/view.test.ts#accepts temporarily unavailable Tafsir access",
+      "packages/backend/client/quran/v2/markdown.test.ts#accepts temporarily unavailable Tafsir access",
+      "packages/backend/convex/contentRelease/quran/legacy.ts",
+      "packages/backend/convex/contentRelease/quran/legacy.test.ts#authenticates and upgrades an exact 0.15.1 surah",
+      "packages/backend/convex/contentRelease/quran/attribution.ts#legacy",
+      "packages/backend/convex/contentRelease/quran/attribution.test.ts#makeLegacyQuranAttribution",
+      "packages/backend/convex/contentRelease/quran/surah.ts#verifyLegacyQuranSurah",
+      'packages/backend/convex/contentRelease/quran/sources.ts#attribution.contract === "legacy"',
+      "packages/backend/test/quran/rows.ts#makeLegacyQuranSurah",
+      "packages/backend/test/quran/v1.ts#@nakafa/aksara-v151",
+      "pnpm-lock.yaml#@nakafa/aksara-v151",
+      "scripts/dependencies/policy.ts#LEGACY_QURAN_CONTRACT_ARCHIVE",
+      "scripts/dependencies/policy.ts#TEMPORARY_DEPENDENCY_HOLDS",
+      "scripts/dependencies/policy.test.ts#temporary Quran rollback decoder",
+    ],
+    consumers: [
+      "packages/backend/client/quran/rows.ts",
+      "packages/backend/content/quran/upgrade.ts",
+      "packages/backend/convex/contentRelease/quran/legacy.ts",
+      "packages/backend/test/quran/rows.ts",
+      "packages/backend/test/quran/v1.ts",
+    ],
+    dependency: "@nakafa/aksara-v151",
+    exitCriterion:
+      "Remove after production activates a Quran snapshot signed by contracts 0.17.0 and completes rollback observation.",
+    group: "dependencies",
+    manifestPath: "packages/backend/package.json",
+    owner: "Quran content release",
+  },
+];
 
 export const DEPENDENCY_RELEASE_AGE_MINUTES = 1440;
 
@@ -264,141 +307,3 @@ export const FORBIDDEN_EFFECT_DEPENDENCIES = new Set([
   "@effect/sql",
   "@effect/workflow",
 ]);
-
-const DEPENDENCY_GROUPS = [
-  "dependencies",
-  "devDependencies",
-  "optionalDependencies",
-  "peerDependencies",
-] as const;
-
-/** Returns every first-party declaration for one dependency. */
-export function dependencyDeclarations(
-  manifests: readonly FirstPartyManifest[],
-  dependency: string
-) {
-  const declarations: Array<{
-    group: (typeof DEPENDENCY_GROUPS)[number];
-    manifestPath: string;
-    spec: string;
-  }> = [];
-
-  for (const { manifest, path: manifestPath } of manifests) {
-    for (const group of DEPENDENCY_GROUPS) {
-      const spec = manifest[group]?.[dependency];
-      if (typeof spec === "string") {
-        declarations.push({ group, manifestPath, spec });
-      }
-    }
-  }
-
-  return declarations;
-}
-
-/** Validates exact cohort declarations and the absence of v3 packages. */
-export function validateDependencyPolicy({
-  manifests,
-  rootManifest,
-  workspace,
-}: DependencyPolicyInput) {
-  const problems: string[] = [];
-
-  for (const hold of DEPENDENCY_HOLDS) {
-    const declarations = dependencyDeclarations(manifests, hold.dependency);
-    if (declarations.length < hold.minimumDeclarations) {
-      problems.push(
-        `${hold.dependency} has ${declarations.length} declarations; expected at least ${hold.minimumDeclarations}.`
-      );
-    }
-
-    const allowed = new Set(
-      hold.allowed ?? (hold.approved ? [hold.approved] : [])
-    );
-    for (const declaration of declarations) {
-      if (!allowed.has(declaration.spec)) {
-        problems.push(
-          `${declaration.manifestPath} declares ${hold.dependency} as ${declaration.spec}; approved ${[...allowed].join(" or ")}.`
-        );
-      }
-    }
-  }
-
-  for (const dependency of FORBIDDEN_EFFECT_DEPENDENCIES) {
-    for (const declaration of dependencyDeclarations(manifests, dependency)) {
-      problems.push(
-        `${declaration.manifestPath} retains obsolete Effect dependency ${dependency}.`
-      );
-    }
-  }
-
-  for (const hold of SCRIPT_DEPENDENCY_HOLDS) {
-    const manifest = manifests.find(
-      ({ path: manifestPath }) => manifestPath === hold.manifestPath
-    )?.manifest;
-    const actual = manifest?.scripts?.[hold.script];
-    if (actual !== hold.approved) {
-      problems.push(
-        `${hold.manifestPath} script ${hold.script} is ${String(actual ?? "missing")}; approved ${hold.approved}.`
-      );
-    }
-  }
-
-  const expectedIgnores = [
-    ...new Set([
-      ...DEPENDENCY_HOLDS.map(({ dependency }) => dependency),
-      "node",
-      "pnpm",
-    ]),
-  ].sort();
-  const actualIgnores = [...(workspace.update?.ignoreDeps ?? [])].sort();
-  if (JSON.stringify(actualIgnores) !== JSON.stringify(expectedIgnores)) {
-    problems.push(
-      "pnpm update.ignoreDeps does not match the reviewed hold policy."
-    );
-  }
-
-  if (workspace.catalog?.effect !== "4.0.0-rc.110") {
-    problems.push("The Effect catalog must be exactly 4.0.0-rc.110.");
-  }
-  if (workspace.catalog?.["@effect/platform-node"] !== "4.0.0-rc.110") {
-    problems.push("The platform-node catalog must match Effect RC 110.");
-  }
-  if (workspace.catalog?.["@effect/vitest"] !== "4.0.0-rc.110") {
-    problems.push("The Effect Vitest catalog must match Effect RC 110.");
-  }
-  if (
-    workspace.overrides?.["@effect/platform-node-shared"] !== "4.0.0-rc.110"
-  ) {
-    problems.push(
-      "The platform-node-shared override must match Effect RC 110."
-    );
-  }
-  if (workspace.catalog?.typescript !== "npm:@typescript/typescript6@6.0.2") {
-    problems.push(
-      "The TypeScript JavaScript API compatibility alias must be 6.0.2."
-    );
-  }
-  if (rootManifest.packageManager !== "pnpm@11.23.0") {
-    problems.push("packageManager must be pnpm@11.23.0.");
-  }
-  if (rootManifest.devEngines?.runtime?.version !== "24.19.0") {
-    problems.push("The managed Node runtime must be 24.19.0.");
-  }
-  if (workspace.minimumReleaseAge !== DEPENDENCY_RELEASE_AGE_MINUTES) {
-    problems.push("Dependency releases must mature for exactly 1440 minutes.");
-  }
-  if (workspace.minimumReleaseAgeStrict !== true) {
-    problems.push("Dependency release-age enforcement must remain strict.");
-  }
-  const expectedExclusions = [...DEPENDENCY_RELEASE_AGE_EXCLUSIONS].sort();
-  const actualExclusions = [
-    ...(workspace.minimumReleaseAgeExclude ?? []),
-  ].sort();
-  if (JSON.stringify(actualExclusions) !== JSON.stringify(expectedExclusions)) {
-    problems.push(
-      "pnpm minimumReleaseAgeExclude does not match the reviewed exception policy."
-    );
-  }
-
-  return problems;
-}

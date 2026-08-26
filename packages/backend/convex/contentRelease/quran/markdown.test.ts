@@ -2,8 +2,14 @@ import { readQuranMarkdown } from "@repo/backend/convex/contentRelease/quran/mar
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { makeQuranChunk, makeQuranSurah } from "@repo/backend/test/quran-rows";
-import { activateQuranSnapshot } from "@repo/backend/test/quran-snapshot";
+import {
+  makeQuranAttribution,
+  makeQuranChunk,
+  makeQuranLocaleSources,
+  makeQuranSurah,
+  makeQuranTafsirProjection,
+} from "@repo/backend/test/quran/rows";
+import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -17,6 +23,7 @@ describe("contentRelease/quran/markdown", () => {
       appLocale: "id",
       managed: false,
       surah: null,
+      tafsirAccess: null,
       toVerse: 0,
       verses: [],
     });
@@ -26,6 +33,7 @@ describe("contentRelease/quran/markdown", () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>
       activateQuranSnapshot(ctx, [
+        makeQuranAttribution(),
         makeQuranSurah(1),
         makeQuranChunk({
           firstQuranNumber: 1,
@@ -42,7 +50,7 @@ describe("contentRelease/quran/markdown", () => {
 
     expect(markdown.surah).toEqual({
       name: {
-        translation: "Technical meaning 1",
+        meaning: "Technical meaning 1",
         transliteration: "Technical Surah 1",
       },
       number: 1,
@@ -50,11 +58,18 @@ describe("contentRelease/quran/markdown", () => {
       revelation: { place: "Meccan" },
     });
     expect(markdown.toVerse).toBe(1);
+    expect(markdown.sources).toEqual(makeQuranLocaleSources("en"));
+    expect(markdown.tafsirAccess).toEqual(makeQuranTafsirProjection("en"));
     expect(markdown.verses).toEqual([
       {
         arabic: "آية 1",
         number: { inSurah: 1 },
-        translation: { footnotes: "", text: "Technical translation 1" },
+        translation: {
+          notes: [],
+          segments: [
+            { kind: "text", offset: 0, value: "Technical translation 1" },
+          ],
+        },
       },
     ]);
     expect(JSON.stringify(markdown)).not.toContain("Terjemahan teknis");
@@ -78,7 +93,11 @@ describe("contentRelease/quran/markdown", () => {
       }
     );
     await t.mutation((ctx) =>
-      activateQuranSnapshot(ctx, [makeQuranSurah(2, numberOfVerses), ...chunks])
+      activateQuranSnapshot(ctx, [
+        makeQuranAttribution(),
+        makeQuranSurah(2, numberOfVerses),
+        ...chunks,
+      ])
     );
 
     const markdown = await t.query((ctx) =>

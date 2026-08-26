@@ -3,7 +3,7 @@ import { OPENAPI_SCHEMAS } from "@repo/backend/agent/openapi/schema";
 import {
   NAKAFA_API_BASE_URL,
   NAKAFA_BASE_URL,
-  NAKAFA_PUBLIC_API_VERSION,
+  NAKAFA_PUBLIC_API_DOCUMENT_VERSION,
 } from "@repo/contents/_lib/agent/constants";
 
 const ETAG_CHECKSUM_MODULUS = 2_147_483_647;
@@ -26,15 +26,15 @@ export const NAKAFA_OPENAPI_DOCUMENT = {
       url: `${NAKAFA_BASE_URL}/contact`,
     },
     description:
-      "Read-only public access to Nakafa's signed educational content. Compatible additions remain in v1. Breaking changes require a new version.",
+      "Read-only public access to Nakafa's signed educational content. V1 remains immutable while source-grounded Quran semantics are added through V2.",
     license: {
       name: "Nakafa terms",
       url: `${NAKAFA_BASE_URL}/en/terms-of-service`,
     },
     title: "Nakafa Public API",
-    version: NAKAFA_PUBLIC_API_VERSION,
+    version: NAKAFA_PUBLIC_API_DOCUMENT_VERSION,
     "x-version-policy":
-      "Compatible additions remain in v1. Breaking changes require a new version.",
+      "V1 remains immutable. New Quran semantics and attribution are exposed only through V2.",
   },
   jsonSchemaDialect: "https://json-schema.org/draft/2020-12/schema",
   openapi: "3.1.1",

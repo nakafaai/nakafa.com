@@ -24,7 +24,7 @@ import {
 import {
   activateQuranSource,
   makeBlockedQuranSnapshot,
-} from "@repo/backend/test/quran-snapshot";
+} from "@repo/backend/test/quran/snapshot";
 import { describe, expect, it } from "@repo/testing/effect";
 import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";

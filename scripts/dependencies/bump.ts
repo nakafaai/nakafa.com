@@ -1,27 +1,15 @@
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
-import {
-  Config,
-  Effect,
-  Layer,
-  type PlatformError,
-  Result,
-  Schema,
-  Stream,
-} from "effect";
+import { Config, Effect, Layer, Result, Schema } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
-import { ChildProcess } from "effect/unstable/process";
-import { REGISTRY_REVIEWS } from "./dependency-policy.ts";
-import { inspectDependencyPolicy } from "./dependency-source.ts";
 import {
   fetchLatestGithubActionTag,
   githubActionReleaseReviews,
   inspectGithubActionPolicy,
-} from "./github-action-policy.ts";
-import { writeError, writeOutput } from "./output.ts";
-
-interface RunOptions {
-  readonly capture?: boolean;
-}
+} from "../github-action-policy.ts";
+import { writeError, writeOutput } from "../output.ts";
+import { runPnpm } from "./command.ts";
+import { REGISTRY_REVIEWS } from "./policy.ts";
+import { inspectDependencyPolicy } from "./source.ts";
 
 interface BumpDependenciesOptions {
   readonly inspectPolicy?: typeof inspectRepositoryPolicy;
@@ -31,15 +19,6 @@ interface BumpDependenciesOptions {
   readonly writeOutput?: typeof writeOutput;
 }
 
-/** Expected failure while running pnpm for dependency maintenance. */
-class DependencyCommandError extends Schema.TaggedError<DependencyCommandError>()(
-  "DependencyCommandError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
-
 /** Expected failure while decoding package registry metadata. */
 class DependencyMetadataError extends Schema.TaggedError<DependencyMetadataError>()(
   "DependencyMetadataError",
@@ -48,76 +27,6 @@ class DependencyMetadataError extends Schema.TaggedError<DependencyMetadataError
     message: Schema.String,
   }
 ) {}
-
-/** Collects one child-process stream as UTF-8 text. */
-function collectText(
-  stream: Stream.Stream<Uint8Array, PlatformError.PlatformError>
-) {
-  return stream.pipe(
-    Stream.decodeText(),
-    Stream.runFold(
-      () => "",
-      (output, chunk) => output + chunk
-    )
-  );
-}
-
-/** Runs pnpm without a shell and optionally captures its exact output. */
-const runPnpm = Effect.fn("RepositoryPolicy.runPnpm")(function* (
-  root: string,
-  args: readonly string[],
-  options: RunOptions = {}
-) {
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const capture = options.capture === true;
-      const command = yield* ChildProcess.make("pnpm", args, {
-        cwd: root,
-        stderr: capture ? "pipe" : "inherit",
-        stdout: capture ? "pipe" : "inherit",
-      }).pipe(
-        Effect.mapError(
-          (cause) =>
-            new DependencyCommandError({
-              cause,
-              message: `Unable to run pnpm ${args.join(" ")}.`,
-            })
-        )
-      );
-
-      if (!capture) {
-        const exitCode = yield* command.exitCode.pipe(
-          Effect.mapError(
-            (cause) =>
-              new DependencyCommandError({
-                cause,
-                message: `Unable to finish pnpm ${args.join(" ")}.`,
-              })
-          )
-        );
-        return { exitCode: Number(exitCode), stderr: "", stdout: "" };
-      }
-
-      const [exitCode, stdout, stderr] = yield* Effect.all(
-        [
-          command.exitCode,
-          collectText(command.stdout),
-          collectText(command.stderr),
-        ],
-        { concurrency: 3 }
-      ).pipe(
-        Effect.mapError(
-          (cause) =>
-            new DependencyCommandError({
-              cause,
-              message: `Unable to finish pnpm ${args.join(" ")}.`,
-            })
-        )
-      );
-      return { exitCode: Number(exitCode), stderr, stdout };
-    })
-  );
-});
 
 /** Returns every local dependency and workflow policy violation. */
 export const inspectRepositoryPolicy = Effect.fn(

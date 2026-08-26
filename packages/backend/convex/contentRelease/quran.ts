@@ -16,9 +16,24 @@ import {
 import { readQuranReference } from "@repo/backend/convex/contentRelease/quran/reference";
 import {
   quranAppLocaleValidator,
+  quranReadingSourcesValidator,
+  quranReferenceArgsValidator,
   quranSourceFields,
+  quranTafsirAccessValidator,
   quranTafsirAppLocaleValidator,
 } from "@repo/backend/convex/contentRelease/quran/spec";
+import {
+  quranDocumentV1Validator,
+  quranInterpretationV1Validator,
+  quranMarkdownV1Validator,
+  quranReferenceV1Validator,
+  quranViewV1Validator,
+  readQuranDocumentV1,
+  readQuranInterpretationV1,
+  readQuranMarkdownV1,
+  readQuranReferenceV1,
+  readQuranViewV1,
+} from "@repo/backend/convex/contentRelease/quran/v1";
 import {
   quranViewValidator,
   readQuranView,
@@ -41,7 +56,9 @@ const referenceValidator = v.object({
   chunkJson: v.array(v.string()),
   fromVerse: v.number(),
   searchJson: v.union(v.string(), v.null()),
+  sources: v.union(quranReadingSourcesValidator, v.null()),
   surahJson: v.union(v.string(), v.null()),
+  tafsirAccess: v.union(quranTafsirAccessValidator, v.null()),
   toVerse: v.number(),
 });
 
@@ -62,6 +79,14 @@ export const surahs = query({
 /** Returns the narrow locale-specific Quran document used by the public API. */
 export const document = query({
   args: { appLocale: quranAppLocaleValidator, surahNumber: v.number() },
+  returns: quranDocumentV1Validator,
+  handler: (ctx, { appLocale, surahNumber }) =>
+    runConvexProgram(readQuranDocumentV1(ctx, appLocale, surahNumber)),
+});
+
+/** Returns the canonical V2 Quran document with semantic provenance. */
+export const documentV2 = query({
+  args: { appLocale: quranAppLocaleValidator, surahNumber: v.number() },
   returns: quranDocumentValidator,
   handler: (ctx, { appLocale, surahNumber }) =>
     runConvexProgram(readQuranDocument(ctx, appLocale, surahNumber)),
@@ -69,6 +94,20 @@ export const document = query({
 
 /** Returns the exact signed fields rendered by Quran markdown consumers. */
 export const markdown = query({
+  args: {
+    appLocale: quranAppLocaleValidator,
+    surahNumber: v.number(),
+    verseLimit: v.optional(v.number()),
+  },
+  returns: quranMarkdownV1Validator,
+  handler: (ctx, { appLocale, surahNumber, verseLimit }) =>
+    runConvexProgram(
+      readQuranMarkdownV1(ctx, appLocale, surahNumber, verseLimit)
+    ),
+});
+
+/** Returns canonical V2 Quran markdown fields with semantic provenance. */
+export const markdownV2 = query({
   args: {
     appLocale: quranAppLocaleValidator,
     surahNumber: v.number(),
@@ -84,6 +123,14 @@ export const markdown = query({
 /** Returns the narrow locale-specific Quran projection used by the web UI. */
 export const view = query({
   args: { appLocale: quranAppLocaleValidator, surahNumber: v.number() },
+  returns: quranViewV1Validator,
+  handler: (ctx, { appLocale, surahNumber }) =>
+    runConvexProgram(readQuranViewV1(ctx, appLocale, surahNumber)),
+});
+
+/** Returns the canonical V2 Quran projection used by the web UI. */
+export const viewV2 = query({
+  args: { appLocale: quranAppLocaleValidator, surahNumber: v.number() },
   returns: quranViewValidator,
   handler: (ctx, { appLocale, surahNumber }) =>
     runConvexProgram(readQuranView(ctx, appLocale, surahNumber)),
@@ -91,6 +138,27 @@ export const view = query({
 
 /** Returns one exact signed tafsir only after the verse is requested. */
 export const interpretation = query({
+  args: {
+    expectedSnapshotId: v.string(),
+    appLocale: quranTafsirAppLocaleValidator,
+    surahNumber: v.number(),
+    verseNumber: v.number(),
+  },
+  returns: quranInterpretationV1Validator,
+  handler: (ctx, { appLocale, expectedSnapshotId, surahNumber, verseNumber }) =>
+    runConvexProgram(
+      readQuranInterpretationV1(
+        ctx,
+        appLocale,
+        expectedSnapshotId,
+        surahNumber,
+        verseNumber
+      )
+    ),
+});
+
+/** Returns canonical V2 on-demand Tafsir with signed access metadata. */
+export const interpretationV2 = query({
   args: {
     expectedSnapshotId: v.string(),
     appLocale: quranTafsirAppLocaleValidator,
@@ -112,12 +180,14 @@ export const interpretation = query({
 
 /** Returns one bounded localized Quran verse reference. */
 export const reference = query({
-  args: {
-    fromVerse: v.number(),
-    appLocale: quranAppLocaleValidator,
-    surahNumber: v.number(),
-    toVerse: v.optional(v.number()),
-  },
+  args: quranReferenceArgsValidator.fields,
+  returns: quranReferenceV1Validator,
+  handler: (ctx, args) => runConvexProgram(readQuranReferenceV1(ctx, args)),
+});
+
+/** Returns one canonical V2 localized Quran verse reference. */
+export const referenceV2 = query({
+  args: quranReferenceArgsValidator.fields,
   returns: referenceValidator,
   handler: (ctx, args) => runConvexProgram(readQuranReference(ctx, args)),
 });

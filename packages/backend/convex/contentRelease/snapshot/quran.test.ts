@@ -8,8 +8,8 @@ import { stageQuranRow } from "@repo/backend/convex/contentRelease/snapshot/qura
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { makeQuranSearch, makeQuranSurah } from "@repo/backend/test/quran-rows";
-import { makeQuranSnapshotRow } from "@repo/backend/test/quran-snapshot";
+import { makeQuranSearch, makeQuranSurah } from "@repo/backend/test/quran/rows";
+import { makeQuranSnapshotRow } from "@repo/backend/test/quran/snapshot";
 import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";

@@ -1,8 +1,10 @@
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadQuranPassage } from "@repo/backend/convex/contentRelease/quran/reference";
+import { readQuranLocaleSources } from "@repo/backend/convex/contentRelease/quran/sources";
 import {
   quranSourceFields,
+  quranTafsirAccessValidator,
   quranTafsirAppLocaleValidator,
 } from "@repo/backend/convex/contentRelease/quran/spec";
 import { readQuranTafsir } from "@repo/backend/convex/contentRelease/quran/translation";
@@ -15,6 +17,7 @@ export const quranInterpretationValidator = v.object({
   appLocale: quranTafsirAppLocaleValidator,
   interpretation: v.union(v.string(), v.null()),
   surahNumber: v.number(),
+  tafsirAccess: v.union(quranTafsirAccessValidator, v.null()),
   verseNumber: v.number(),
 });
 
@@ -42,6 +45,7 @@ export const readQuranInterpretation = Effect.fn(
       appLocale,
       interpretation: null,
       surahNumber: loaded.input.surahNumber,
+      tafsirAccess: null,
       verseNumber: loaded.input.fromVerse,
     };
   }
@@ -56,12 +60,24 @@ export const readQuranInterpretation = Effect.fn(
     );
   }
 
+  const { tafsirAccess } = yield* readQuranLocaleSources(
+    ctx,
+    loaded.owner.snapshotId,
+    appLocale
+  );
+  if (tafsirAccess?.kind !== "embedded") {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Quran Tafsir source is unavailable for ${appLocale}.`
+    );
+  }
   const interpretation = yield* readQuranTafsir(verse, appLocale);
   return {
     ...loaded.owner,
     appLocale,
     interpretation: interpretation.text,
     surahNumber: loaded.input.surahNumber,
+    tafsirAccess,
     verseNumber: loaded.input.fromVerse,
   };
 });

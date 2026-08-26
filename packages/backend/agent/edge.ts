@@ -2,12 +2,14 @@ import { Schema } from "effect";
 
 const API_EDGE_SECRET_ENVIRONMENT = "NAKAFA_API_EDGE_SECRET";
 const API_EDGE_SECRET_HEADER = "x-nakafa-api-edge-secret";
+const API_ORIGIN_ENVIRONMENT = "NAKAFA_CONVEX_SITE_URL";
 const API_ORIGIN_PATH = "/internal/agent";
 const MCP_EDGE_SECRET_ENVIRONMENT = "NAKAFA_MCP_EDGE_SECRET";
 const MCP_EDGE_SECRET_HEADER = "x-nakafa-mcp-edge-secret";
 const MCP_ORIGIN_PATH = "/internal/mcp";
 
 const ApiEdgeContractSchema = Schema.Struct({
+  originEnvironment: Schema.Literal(API_ORIGIN_ENVIRONMENT),
   originPath: Schema.Literal(API_ORIGIN_PATH),
   secretEnvironment: Schema.Literal(API_EDGE_SECRET_ENVIRONMENT),
   secretHeader: Schema.Literal(API_EDGE_SECRET_HEADER),
@@ -24,6 +26,7 @@ export type AgentEdgeContract =
 
 /** Server-only contract shared by the Vercel bridge and Convex origin. */
 export const NAKAFA_API_EDGE_CONTRACT: typeof ApiEdgeContractSchema.Type = {
+  originEnvironment: API_ORIGIN_ENVIRONMENT,
   originPath: API_ORIGIN_PATH,
   secretEnvironment: API_EDGE_SECRET_ENVIRONMENT,
   secretHeader: API_EDGE_SECRET_HEADER,

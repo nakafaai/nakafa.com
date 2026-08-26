@@ -4,7 +4,7 @@ import type { Sha256Hash } from "@nakafa/aksara-contracts/ids";
 import { verifyProgramSnapshotHash } from "@nakafa/aksara-contracts/program/snapshot/hash";
 import { verifyProgramSnapshotRowHash } from "@nakafa/aksara-contracts/program/snapshot/row-hash";
 import { verifyQuranSnapshotHash } from "@nakafa/aksara-contracts/quran/snapshot/hash";
-import { verifyQuranRowHash } from "@nakafa/aksara-contracts/quran/snapshot/row-hash";
+import { hashQuranRow } from "@nakafa/aksara-contracts/quran/snapshot/row/hash";
 import type {
   ContentSnapshotManifest,
   ContentSnapshotRow,
@@ -140,7 +140,7 @@ const verifySnapshotRow = Effect.fn("contentRelease.verifySnapshotRow")(
           `Quran row is not bound to snapshot ${snapshotId}.`
         );
       }
-      const actual = yield* verifyQuranRowHash(row.record).pipe(
+      const actual = yield* hashQuranRow(row.record.payload).pipe(
         Effect.mapError(contractFailure)
       );
       return yield* requireHash(

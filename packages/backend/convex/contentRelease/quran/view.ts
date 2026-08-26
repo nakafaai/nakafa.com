@@ -3,24 +3,27 @@ import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/
 import {
   QURAN_SURAH_COUNT,
   type QuranSurahRow,
-  QuranSurahRowSchema,
 } from "@nakafa/aksara-contracts/quran/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { readQuranRow } from "@repo/backend/convex/contentRelease/quran/row";
+import { readQuranLocaleSources } from "@repo/backend/convex/contentRelease/quran/sources";
 import {
   quranAppLocaleValidator,
+  quranReadingSourcesValidator,
   quranSourceFields,
+  quranTafsirAccessValidator,
+  quranTranslationDocumentValidator,
 } from "@repo/backend/convex/contentRelease/quran/spec";
 import {
   loadQuranSurah,
+  readQuranSurahRow,
   readQuranSurahVerses,
 } from "@repo/backend/convex/contentRelease/quran/surah";
-import { readQuranTranslation } from "@repo/backend/convex/contentRelease/quran/translation";
+import { readQuranTranslationDocument } from "@repo/backend/convex/contentRelease/quran/translation";
 import { type Infer, v } from "convex/values";
 import { Effect } from "effect";
 
 const quranViewNameValidator = v.object({
-  translation: v.string(),
+  meaning: v.union(v.string(), v.null()),
   transliteration: v.string(),
 });
 
@@ -36,7 +39,7 @@ const quranViewVerseValidator = v.object({
     inQuran: v.number(),
     inSurah: v.number(),
   }),
-  translation: v.string(),
+  translation: quranTranslationDocumentValidator,
 });
 
 /** Exact app-locale Quran page projection returned to the web app. */
@@ -45,7 +48,9 @@ export const quranViewValidator = v.object({
   appLocale: quranAppLocaleValidator,
   nextSurah: v.union(quranViewSurahValidator, v.null()),
   previousSurah: v.union(quranViewSurahValidator, v.null()),
+  sources: v.union(quranReadingSourcesValidator, v.null()),
   surah: v.union(quranViewSurahValidator, v.null()),
+  tafsirAccess: v.union(quranTafsirAccessValidator, v.null()),
   verses: v.array(quranViewVerseValidator),
 });
 
@@ -61,19 +66,20 @@ const readNeighbor = Effect.fn("contentRelease.readQuranNeighbor")(function* (
   if (surahNumber < 1 || surahNumber > QURAN_SURAH_COUNT) {
     return null;
   }
-  return yield* readQuranRow(
-    ctx,
-    snapshotId,
-    `surah:${surahNumber}`,
-    QuranSurahRowSchema
-  );
+  return yield* readQuranSurahRow(ctx, snapshotId, surahNumber);
 });
 
 /** Projects only the signed surah metadata needed by the Quran page. */
-function projectSurah(surah: QuranSurahRow): QuranViewSurah {
+function projectSurah(
+  surah: QuranSurahRow,
+  appLocale: AppLocaleCode
+): QuranViewSurah {
   return {
     name: {
-      translation: surah.name.translation,
+      meaning:
+        surah.name.meaning.appLocale === appLocale
+          ? surah.name.meaning.text
+          : null,
       transliteration: surah.name.transliteration,
     },
     number: surah.number,
@@ -81,20 +87,25 @@ function projectSurah(surah: QuranSurahRow): QuranViewSurah {
   };
 }
 
-/** Projects one verse without transporting other locales or tafsir fields. */
-const projectVerse = Effect.fn("contentRelease.projectQuranViewVerse")(
-  function* (verse: QuranRuntimeVerse, appLocale: AppLocaleCode) {
-    const translation = yield* readQuranTranslation(verse, appLocale);
-    return {
-      arabic: verse.text.arabic,
-      number: verse.number,
-      translation: translation.text,
-    };
-  }
-);
+/** Loads one source translation and its canonical semantic document. */
+const loadVerse = Effect.fn("contentRelease.loadQuranViewVerse")(function* (
+  verse: QuranRuntimeVerse,
+  appLocale: AppLocaleCode
+) {
+  const { document, translation } = yield* readQuranTranslationDocument(
+    verse,
+    appLocale
+  );
+  return {
+    arabic: verse.text.arabic,
+    document,
+    number: verse.number,
+    translation,
+  };
+});
 
-/** Returns the narrow app-locale projection used by the Quran web UI. */
-export const readQuranView = Effect.fn("contentRelease.readQuranView")(
+/** Loads the exact signed source fields shared by V1 and V2 views. */
+export const loadQuranView = Effect.fn("contentRelease.loadQuranView")(
   function* (ctx: QueryCtx, appLocale: AppLocaleCode, sourceSurah: number) {
     const loaded = yield* loadQuranSurah(ctx, sourceSurah);
     if (loaded.surah === null || loaded.owner.snapshotId === null) {
@@ -103,13 +114,20 @@ export const readQuranView = Effect.fn("contentRelease.readQuranView")(
         appLocale,
         nextSurah: null,
         previousSurah: null,
+        sources: null,
         surah: null,
+        tafsirAccess: null,
         verses: [],
       };
     }
 
-    const { nextRow, previousRow, verses } = yield* Effect.all(
+    const { localeSources, nextRow, previousRow, verses } = yield* Effect.all(
       {
+        localeSources: readQuranLocaleSources(
+          ctx,
+          loaded.owner.snapshotId,
+          appLocale
+        ),
         nextRow: readNeighbor(
           ctx,
           loaded.owner.snapshotId,
@@ -129,22 +147,44 @@ export const readQuranView = Effect.fn("contentRelease.readQuranView")(
       },
       { concurrency: "unbounded" }
     );
-    const nextSurah = nextRow ? projectSurah(nextRow.payload) : null;
-    const previousSurah = previousRow
-      ? projectSurah(previousRow.payload)
-      : null;
-    const surah = projectSurah(loaded.surah.row.payload);
-    const projectedVerses = yield* Effect.forEach(verses, (verse) =>
-      projectVerse(verse, appLocale)
+    const loadedVerses = yield* Effect.forEach(verses, (verse) =>
+      loadVerse(verse, appLocale)
     );
 
     return {
       ...loaded.owner,
       appLocale,
-      nextSurah,
-      previousSurah,
-      surah,
-      verses: projectedVerses,
+      nextSurah: nextRow?.payload ?? null,
+      previousSurah: previousRow?.payload ?? null,
+      sources: localeSources.sources,
+      surah: loaded.surah.row.payload,
+      tafsirAccess: localeSources.tafsirAccess,
+      verses: loadedVerses,
+    };
+  }
+);
+
+/** Returns the canonical V2 web projection without predecessor aliases. */
+export const readQuranView = Effect.fn("contentRelease.readQuranView")(
+  function* (ctx: QueryCtx, appLocale: AppLocaleCode, sourceSurah: number) {
+    const loaded = yield* loadQuranView(ctx, appLocale, sourceSurah);
+    return {
+      ...loaded,
+      nextSurah:
+        loaded.nextSurah === null
+          ? null
+          : projectSurah(loaded.nextSurah, appLocale),
+      previousSurah:
+        loaded.previousSurah === null
+          ? null
+          : projectSurah(loaded.previousSurah, appLocale),
+      surah:
+        loaded.surah === null ? null : projectSurah(loaded.surah, appLocale),
+      verses: loaded.verses.map(({ arabic, document, number }) => ({
+        arabic,
+        number,
+        translation: document,
+      })),
     };
   }
 );

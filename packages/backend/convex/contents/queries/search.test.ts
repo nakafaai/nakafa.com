@@ -9,8 +9,8 @@ import {
   activateMaterialCatalog,
   MATERIAL_IDENTITY,
 } from "@repo/backend/test/material-catalog";
-import { makeQuranSearch } from "@repo/backend/test/quran-rows";
-import { activateQuranSnapshot } from "@repo/backend/test/quran-snapshot";
+import { makeQuranSearch } from "@repo/backend/test/quran/rows";
+import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime-head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
 import {

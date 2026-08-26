@@ -8,7 +8,7 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content-release";
 import { insertTestRelease } from "@repo/backend/test/content-stage";
 import { makeProgramSnapshotData } from "@repo/backend/test/program-snapshot";
-import { makeBlockedQuranSnapshot } from "@repo/backend/test/quran-snapshot";
+import { makeBlockedQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { TEST_STAGE_SNAPSHOT } from "@repo/backend/test/snapshot-routes";
 import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";

@@ -4,6 +4,7 @@ import type {
   NakafaAgentInputError,
 } from "@repo/contents/_lib/agent/errors";
 import type { NakafaAgentQuranReference } from "@repo/contents/_lib/agent/schema/quran";
+import type { NakafaAgentQuranReferenceV2 } from "@repo/contents/_lib/agent/schema/quran/reference";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentTaxonomy } from "@repo/contents/_lib/agent/schema/taxonomy";
 import { Context, type Effect, type Option } from "effect";
@@ -14,6 +15,12 @@ export interface NakafaRuntime {
   quran: (
     input: unknown
   ) => Effect.Effect<Option.Option<NakafaAgentQuranReference>, NakafaReadError>;
+  quranV2: (
+    input: unknown
+  ) => Effect.Effect<
+    Option.Option<NakafaAgentQuranReferenceV2>,
+    NakafaReadError
+  >;
   read: (
     input: string
   ) => Effect.Effect<Option.Option<NakafaAgentMarkdown>, NakafaReadError>;

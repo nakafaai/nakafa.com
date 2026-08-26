@@ -7,6 +7,7 @@ import {
   NakafaAgentQuranReferenceOptionsSchema,
   NakafaAgentQuranReferenceSchema,
 } from "@repo/contents/_lib/agent/schema/quran";
+import { NakafaAgentQuranReferenceV2Schema } from "@repo/contents/_lib/agent/schema/quran/reference";
 import {
   NakafaAgentContentRefInputSchema,
   NakafaAgentMarkdownSchema,
@@ -36,6 +37,7 @@ export const OPENAPI_SCHEMAS = {
   Content: toOpenApiSchema(NakafaAgentMarkdownSchema),
   Problem: toOpenApiSchema(NakafaProblemDetailsSchema),
   QuranReference: toOpenApiSchema(NakafaAgentQuranReferenceSchema),
+  QuranReferenceV2: toOpenApiSchema(NakafaAgentQuranReferenceV2Schema),
   SearchResult: toOpenApiSchema(NakafaAgentSearchResultSchema),
   Taxonomy: toOpenApiSchema(NakafaAgentTaxonomySchema),
 };

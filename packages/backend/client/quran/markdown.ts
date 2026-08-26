@@ -3,10 +3,14 @@ import {
   QuranPublicationError,
 } from "@repo/backend/client/quran/decode";
 import { hasExactQuranVerseRange } from "@repo/backend/client/quran/integrity";
-import type { QuranMarkdown } from "@repo/backend/convex/contentRelease/quran/markdown";
+import type { api } from "@repo/backend/convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 
 /** Validator-derived Quran verse used by markdown renderers. */
+type QuranMarkdown = FunctionReturnType<
+  typeof api.contentRelease.quran.markdown
+>;
 export type QuranMarkdownVerse = QuranMarkdown["verses"][number];
 /** Validator-derived Quran metadata used by markdown renderers. */
 export type QuranMarkdownSurah = NonNullable<QuranMarkdown["surah"]>;

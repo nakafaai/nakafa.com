@@ -3,7 +3,7 @@ import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
   encodeTestQuranRow,
   makeQuranSurah,
-} from "@repo/backend/test/quran-rows";
+} from "@repo/backend/test/quran/v1";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {

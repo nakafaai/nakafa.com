@@ -10,7 +10,7 @@ import { makeProgramSnapshotData } from "@repo/backend/test/program-snapshot";
 import {
   makeQuranSnapshot,
   makeQuranSnapshotRow,
-} from "@repo/backend/test/quran-snapshot";
+} from "@repo/backend/test/quran/snapshot";
 import {
   makeTryoutCatalogRow,
   makeTryoutPlacementRow,

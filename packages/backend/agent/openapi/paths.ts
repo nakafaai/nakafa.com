@@ -198,4 +198,21 @@ export const OPENAPI_PATHS = {
       summary: "Read public taxonomy",
     }),
   },
+  "/v2/quran/{surah}": {
+    get: readOperation({
+      description:
+        "Returns a bounded Quran verse range with semantic translation notes, signed Arabic and translation sources, and explicit locale-specific tafsir access.",
+      operationId: "getNakafaQuranReferenceV2",
+      parameters: QURAN_PARAMETERS,
+      responses: {
+        "200": successResponse(
+          "A source-grounded Quran V2 reference.",
+          "QuranReferenceV2"
+        ),
+        "404": problemResponse("The requested surah was not found."),
+        ...METERED_RESPONSES,
+      },
+      summary: "Read a source-grounded Quran reference",
+    }),
+  },
 };

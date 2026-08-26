@@ -10,6 +10,7 @@ const source = {
   activeReleaseId: "quran-release",
   managed: true,
   snapshotId: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
+  sourceOrigin: { kind: "git" as const, sha: "c".repeat(40) },
   sourceRevision: "c".repeat(40),
 };
 const surah = {
@@ -39,11 +40,13 @@ describe("signed Quran view decoder", () => {
         arabic: "بِسْمِ اللّٰهِ",
         number: { inQuran: 1, inSurah: 1 },
         translation: "In the name of Allah.",
+        translationFootnotes: "",
       });
       expect(indonesian.verses[0]).toEqual({
         arabic: "بِسْمِ اللّٰهِ",
         number: { inQuran: 1, inSurah: 1 },
         translation: "Dengan nama Allah.",
+        translationFootnotes: "",
       });
       expect(JSON.stringify(indonesian)).not.toContain("Tafsir lengkap");
     })
@@ -60,8 +63,10 @@ describe("signed Quran view decoder", () => {
             nextSurah: null,
             previousSurah: null,
             snapshotId: null,
+            sourceOrigin: null,
             sourceRevision: null,
             surah: null,
+            tafsirAccess: null,
             verses: [],
           },
           { appLocale: "en", surahNumber: 1 }
@@ -89,6 +94,7 @@ function viewBase() {
     },
     previousSurah: null,
     surah,
+    tafsirAccess: null,
   };
 }
 /** Builds one complete English view response. */
@@ -101,6 +107,7 @@ function englishViewResult(): QuranViewResult {
         arabic: "بِسْمِ اللّٰهِ",
         number: { inQuran: 1, inSurah: 1 },
         translation: "In the name of Allah.",
+        translationFootnotes: "",
       },
     ],
   };
@@ -115,6 +122,7 @@ function indonesianViewResult(): QuranViewResult {
         arabic: "بِسْمِ اللّٰهِ",
         number: { inQuran: 1, inSurah: 1 },
         translation: "Dengan nama Allah.",
+        translationFootnotes: "",
       },
     ],
   };

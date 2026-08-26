@@ -13,6 +13,7 @@ const source = {
   activeReleaseId: "quran-release",
   managed: true,
   snapshotId: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
+  sourceOrigin: { kind: "git" as const, sha: "c".repeat(40) },
   sourceRevision: "c".repeat(40),
 };
 describe("signed Quran document decoder", () => {
@@ -44,6 +45,7 @@ describe("signed Quran document decoder", () => {
               appLocale: "id",
               managed: false,
               snapshotId: null,
+              sourceOrigin: null,
               sourceRevision: null,
               surah: null,
               verses: [],

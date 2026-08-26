@@ -3,17 +3,19 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
+  makeQuranAttribution,
   makeQuranChunk,
   makeQuranSearch,
   makeQuranSurah,
-} from "@repo/backend/test/quran-rows";
-import { activateQuranSnapshot } from "@repo/backend/test/quran-snapshot";
+} from "@repo/backend/test/quran/rows";
+import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 /** Creates two chunks and their signed metadata for one seven-verse surah. */
 function referenceRows() {
   return [
+    makeQuranAttribution(),
     makeQuranSurah(1, 7),
     makeQuranChunk({
       firstQuranNumber: 1,

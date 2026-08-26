@@ -1,5 +1,5 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
-import { bindQuranRow } from "@nakafa/aksara-contracts/quran/snapshot/row-hash";
+import { bindQuranRow } from "@nakafa/aksara-contracts/quran/snapshot/row/hash";
 import {
   quranRowFacts,
   quranSearchFacts,
@@ -9,7 +9,7 @@ import {
   makeQuranChunk,
   makeQuranSearch,
   makeQuranSurah,
-} from "@repo/backend/test/quran-rows";
+} from "@repo/backend/test/quran/rows";
 import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
@@ -37,7 +37,7 @@ describe("contentRelease/quran/facts", () => {
       expect(records.map(quranRowFacts)).toEqual([
         {
           identity:
-            "attribution:tanzil-text:tanzil-metadata:quranenc-english:quranenc-indonesian:quranenc-german:quranenc-tafsir",
+            "attribution:tanzil-text:tanzil-metadata:quranenc-english:quranenc-indonesian:quranenc-german:quranenc-tafsir:mokhtasar-english:mokhtasar-german",
           kind: "quran-attribution",
         },
         { identity: "surah:1", kind: "quran-surah", surahNumber: 1 },

@@ -48,11 +48,8 @@ interface ArticleCategoryCursor {
   readonly expectedReleaseId: string | null;
 }
 /** Reads public taxonomy from current signed publications. */
-export function readNakafaTaxonomy(
-  convexUrl: string,
-  locale: Locale = defaultLocale
-) {
-  return Effect.gen(function* () {
+export const readNakafaTaxonomy = Effect.fn("NakafaContent.readTaxonomy")(
+  function* (convexUrl: string, locale: Locale = defaultLocale) {
     const releasePin = yield* readNakafaReleasePin(convexUrl);
     const [articleCategories, signedInventory, quranResult] = yield* Effect.all(
       [
@@ -92,10 +89,11 @@ export function readNakafaTaxonomy(
         "nakafa_get_content",
         "nakafa_get_taxonomy",
         "nakafa_get_quran_reference",
+        "nakafa_get_quran_reference_v2",
       ],
     });
-  });
-}
+  }
+);
 /** Recursively reads one stable signed article-category generation. */
 function readSignedArticleCategoryPages(
   convexUrl: string,

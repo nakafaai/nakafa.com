@@ -1,28 +1,25 @@
-import {
-  PublicPathSchema,
-  type Sha256Hash,
-} from "@nakafa/aksara-contracts/ids";
+import { PublicPathSchema, type Sha256Hash } from "@nakafa/aksara-v151/ids";
 import {
   ACTIVE_APP_LOCALES,
   type AppLocaleCode,
-} from "@nakafa/aksara-contracts/locale";
+} from "@nakafa/aksara-v151/locale";
 import {
   QuranChunkRowSchema,
   type QuranRowPayload,
   type QuranRuntimeVerse,
   QuranRuntimeVerseSchema,
   QuranSearchRowSchema,
-} from "@nakafa/aksara-contracts/quran/snapshot/row";
-import { bindQuranRow } from "@nakafa/aksara-contracts/quran/snapshot/row-hash";
+} from "@nakafa/aksara-v151/quran/snapshot/row";
+import { bindQuranRow } from "@nakafa/aksara-v151/quran/snapshot/row-hash";
 import {
   QuranAttributionRowSchema,
   quranSourceIds,
-} from "@nakafa/aksara-contracts/quran/source";
+} from "@nakafa/aksara-v151/quran/source";
 import {
   type QuranSurahRow,
   QuranSurahRowSchema,
-} from "@nakafa/aksara-contracts/quran/spec";
-import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+} from "@nakafa/aksara-v151/quran/spec";
+import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-v151/release/snapshot/data";
 import { Effect, Schema } from "effect";
 
 const testDigest = `sha256:${"1".repeat(64)}`;

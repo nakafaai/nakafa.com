@@ -1,6 +1,7 @@
 // @vitest-environment node
-import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
+
 import { describe, expect, it } from "vitest";
+import type { QuranSurah } from "@/lib/utils/pages/quran";
 import { getQuranPagination, getQuranSurahName } from "@/lib/utils/pages/quran";
 
 describe("quran page helpers", () => {
@@ -43,9 +44,9 @@ describe("quran page helpers", () => {
 
 /** Builds one Quran surah page fixture matching Convex runtime output. */
 function surahPage(): {
-  nextSurah: QuranSurahRow;
+  nextSurah: QuranSurah;
   prevSurah: null;
-  surahData: QuranSurahRow;
+  surahData: QuranSurah;
 } {
   return {
     nextSurah: {
