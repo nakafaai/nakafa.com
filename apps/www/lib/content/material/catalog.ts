@@ -1,12 +1,16 @@
 import "server-only";
 
-import type { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  type GitCommitShaSchema,
+  ReleaseIdSchema,
+  Sha256HashSchema,
+} from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import type { FunctionArgs } from "convex/server";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { decodeMaterialJson } from "@/lib/content/material/decode";
@@ -49,6 +53,15 @@ export type PublishedMaterialPage = PublishedMaterialPageBase &
         readonly nextCursor: string;
       }
   );
+
+/** One complete localized catalog pinned to an authenticated release. */
+export interface PublishedMaterialCatalog {
+  readonly activeManifestHash: typeof Sha256HashSchema.Type;
+  readonly activeReleaseId: typeof ReleaseIdSchema.Type;
+  readonly appLocale: typeof AppLocaleSchema.Type;
+  readonly routes: readonly MaterialLessonProjection[];
+  readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
+}
 
 /** Reads and decodes one release-bound page of material routes. */
 export const readPublishedMaterialPage = Effect.fn(
@@ -123,12 +136,17 @@ export const readPublishedMaterialRoutes = Effect.fn(
   "NakafaMaterial.readPublishedRoutes"
 )(function* (locale: Locale) {
   const appLocale = AppLocaleSchema.make(locale);
+  const identity = { appLocale, publicPath: "materials" };
   const routes: MaterialLessonProjection[] = [];
   let cursor: MaterialPageCursor = {
     cursor: null,
     expectedManifestHash: null,
     expectedReleaseId: null,
   };
+  let catalogIdentity: null | Pick<
+    PublishedMaterialCatalog,
+    "activeManifestHash" | "activeReleaseId"
+  > = null;
   let sourceRevision: null | typeof GitCommitShaSchema.Type = null;
   while (true) {
     const page: PublishedMaterialPage = yield* readPublishedMaterialPage({
@@ -142,15 +160,32 @@ export const readPublishedMaterialRoutes = Effect.fn(
       });
     }
     if (!page.managed) {
-      return yield* new PublishedProjectionError({
-        appLocale,
-        publicPath: "materials",
-      });
+      return yield* new PublishedProjectionError(identity);
     }
+    if (page.activeManifestHash === null || page.activeReleaseId === null) {
+      return yield* new PublishedProjectionError(identity);
+    }
+    const [activeManifestHash, activeReleaseId] = yield* Effect.all([
+      Schema.decodeEffect(Sha256HashSchema)(page.activeManifestHash),
+      Schema.decodeEffect(ReleaseIdSchema)(page.activeReleaseId),
+    ]).pipe(Effect.mapError(() => new PublishedProjectionError(identity)));
+    if (
+      catalogIdentity !== null &&
+      (catalogIdentity.activeManifestHash !== activeManifestHash ||
+        catalogIdentity.activeReleaseId !== activeReleaseId)
+    ) {
+      return yield* new PublishedProjectionError(identity);
+    }
+    catalogIdentity ??= { activeManifestHash, activeReleaseId };
     routes.push(...page.routes);
     sourceRevision = page.sourceRevision;
     if (page.done) {
-      return { routes, sourceRevision };
+      return {
+        ...catalogIdentity,
+        appLocale,
+        routes,
+        sourceRevision,
+      } satisfies PublishedMaterialCatalog;
     }
     cursor = {
       cursor: page.nextCursor,

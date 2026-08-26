@@ -98,6 +98,9 @@ describe("published material catalog", () => {
       .mockResolvedValueOnce(materialPage());
 
     await expect(getPublishedMaterialRoutes("en")).resolves.toMatchObject({
+      activeManifestHash: manifestHash,
+      activeReleaseId: releaseId,
+      appLocale: "en",
       routes: [previewProjection, previewProjection],
       sourceRevision,
     });
@@ -121,6 +124,29 @@ describe("published material catalog", () => {
     await expect(
       Effect.runPromise(readPublishedMaterialRoutes("en").pipe(Effect.flip))
     ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+  });
+
+  it("rejects missing, malformed, and changing catalog identities", async () => {
+    runtimeQueryMock
+      .mockResolvedValueOnce({
+        ...materialPage(),
+        activeReleaseId: null,
+      })
+      .mockResolvedValueOnce({
+        ...materialPage(),
+        activeManifestHash: "invalid",
+      })
+      .mockResolvedValueOnce(materialPage({ done: false }))
+      .mockResolvedValueOnce({
+        ...materialPage(),
+        activeReleaseId: "release-other",
+      });
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await expect(
+        Effect.runPromise(readPublishedMaterialRoutes("en").pipe(Effect.flip))
+      ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+    }
   });
 
   it.each([

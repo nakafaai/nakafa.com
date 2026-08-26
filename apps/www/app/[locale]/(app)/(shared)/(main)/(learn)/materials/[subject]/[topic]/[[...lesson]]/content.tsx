@@ -12,9 +12,7 @@ import {
   type MaterialParams,
   readMaterialRequest,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
-import { normalizeMaterialMetadata } from "@/lib/content/material/decode";
 import { getMaterialPublication } from "@/lib/content/material/publication";
-import { getPublishedMaterialRoute } from "@/lib/content/material/route";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import {
   type MaterialPreviewContent,
@@ -124,17 +122,21 @@ export async function readMaterialMetadata(
     };
   }
 
-  const model = await getPublishedMaterialRoute(owner.locale, owner.publicPath);
-  if (!model.projection) {
+  const publication = await getMaterialPublication(
+    owner.locale,
+    owner.publicPath
+  );
+  if (!publication) {
     notFound();
   }
+  const { model, published } = publication;
 
   return {
     alternates: model.alternates,
     kind: owner.kind,
     appLocale: owner.locale,
-    metadata: normalizeMaterialMetadata(model.projection.metadata),
-    rendererDomain: model.rendererDomain,
+    metadata: published.metadata,
+    rendererDomain: published.rendererDomain,
     route: model.projection,
   };
 }
@@ -183,7 +185,7 @@ export async function readMaterialPage(
     kind: owner.kind,
     appLocale: owner.locale,
     metadata: published.metadata,
-    rendererDomain: model.rendererDomain,
+    rendererDomain: published.rendererDomain,
     route: model.projection,
     siblings: model.siblings,
     sourceUrl: published.sourceRevision

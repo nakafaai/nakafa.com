@@ -8,6 +8,7 @@ import type {
   MaterialLessonProjection,
   MaterialMetadata,
 } from "@nakafa/aksara-contracts/projection/material";
+import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { Effect } from "effect";
 import type { ReactNode } from "react";
 import { applyPublishedContentCache } from "@/lib/content/cache";
@@ -33,6 +34,7 @@ export interface PublishedMaterialContent {
   readonly metadata: MaterialMetadata;
   readonly projection: MaterialLessonProjection;
   readonly rawMdx: string;
+  readonly rendererDomain: RendererDomain;
   readonly sourcePath: CorpusSourcePath;
   readonly sourceRevision: GitCommitSha | null;
 }
@@ -75,6 +77,7 @@ const renderMaterialArtifact = Effect.fn(
     metadata: data.metadata,
     projection: data.projection,
     rawMdx: rendered.artifact.payload.rawMdx,
+    rendererDomain: rendered.artifact.payload.rendererDomain,
     sourcePath: data.sourcePath,
     sourceRevision: data.sourceRevision,
   } satisfies PublishedMaterialContent;
