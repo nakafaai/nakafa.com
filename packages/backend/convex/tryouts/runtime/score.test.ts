@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -19,7 +20,6 @@ import {
   FROZEN_SCORE_SNAPSHOT_ID as SNAPSHOT_ID,
   seedFrozenTryoutScoreState,
 } from "@repo/backend/test/tryout-score";
-import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
 import { vi } from "vitest";
