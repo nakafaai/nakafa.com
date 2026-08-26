@@ -84,6 +84,16 @@ describe("contentRelease/predecessor/internal", () => {
     ).resolves.toMatchObject({
       routes: { batch: { phase: "sealed" }, singular: { phase: "sealed" } },
     });
+    await expect(target.mutation(recordSingular, {})).resolves.toEqual({
+      kind: "recorded",
+    });
+    await expect(
+      target.query(status, { observationId: OBSERVATION_ID })
+    ).resolves.toMatchObject({
+      routes: { batch: { phase: "armed" }, singular: { phase: "armed" } },
+    });
+    vi.setSystemTime(Date.now() + PREDECESSOR_QUIET_WINDOW_MS);
+    await target.mutation(seal, { observationId: OBSERVATION_ID });
     await expect(
       target.mutation(clear, { observationId: OBSERVATION_ID })
     ).resolves.toMatchObject({

@@ -286,8 +286,9 @@ export const readPredecessorObservation = Effect.fn(
  * Both rows are read deliberately. Convex OCC therefore serializes unexpected
  * cross-route traffic, preserving the fail-closed pair invariant. This
  * temporary observer expects zero traffic, so correctness owns the tradeoff.
- * Release drift returns both identities without writing, which keeps the
- * predecessor route available while seal rejects and clear owns abandonment.
+ * A late read reopens both sealed rows atomically and restarts that route's
+ * quiet clock. Release drift returns both identities without writing, which
+ * keeps the predecessor route available while clear owns abandonment.
  */
 export const recordPredecessorRead = Effect.fn(
   "contentRelease.predecessor.record"
@@ -306,12 +307,6 @@ export const recordPredecessorRead = Effect.fn(
       stored: storedIdentity(rows),
     } satisfies PredecessorRecordResult;
   }
-  if (rows.singular.phase !== "armed") {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_STATE",
-      "Predecessor observation is sealed."
-    );
-  }
   const row = rows[route];
   if (row.invocationCount >= Number.MAX_SAFE_INTEGER) {
     return yield* releaseFail(
@@ -320,6 +315,25 @@ export const recordPredecessorRead = Effect.fn(
     );
   }
   const now = yield* Clock.currentTimeMillis;
+  if (rows.singular.phase === "sealed") {
+    const other = route === "singular" ? rows.batch : rows.singular;
+    yield* Effect.promise(() =>
+      ctx.db.patch("contentPredecessorReads", row._id, {
+        invocationCount: row.invocationCount + 1,
+        lastInvokedAt: now,
+        phase: "armed",
+        quietSince: now,
+        sealedAt: undefined,
+      })
+    );
+    yield* Effect.promise(() =>
+      ctx.db.patch("contentPredecessorReads", other._id, {
+        phase: "armed",
+        sealedAt: undefined,
+      })
+    );
+    return { kind: "recorded" } satisfies PredecessorRecordResult;
+  }
   yield* Effect.promise(() =>
     ctx.db.patch("contentPredecessorReads", row._id, {
       invocationCount: row.invocationCount + 1,

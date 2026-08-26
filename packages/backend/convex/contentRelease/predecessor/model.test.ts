@@ -18,6 +18,7 @@ import { convexTest, type TestConvex } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const OBSERVATION_ID = "dates-cutover-4974ee8c";
+const COMPETING_OBSERVATION_ID = "dates-competing-4974ee8c";
 type Target = TestConvex<typeof schema>;
 
 /** Seeds one active release and atomically arms both predecessor routes. */
@@ -110,7 +111,7 @@ describe("contentRelease/predecessor/model", () => {
     await expect(
       target.mutation((ctx) =>
         runConvexProgram(
-          armPredecessorObservation(ctx, "dates-competing-4974ee8c")
+          armPredecessorObservation(ctx, COMPETING_OBSERVATION_ID)
         )
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
@@ -187,7 +188,7 @@ describe("contentRelease/predecessor/model", () => {
         throw new Error("Expected the batch observation row.");
       }
       await ctx.db.patch("contentPredecessorReads", batch._id, {
-        observationId: "dates-competing-4974ee8c",
+        observationId: COMPETING_OBSERVATION_ID,
       });
     });
     await expect(
@@ -201,7 +202,7 @@ describe("contentRelease/predecessor/model", () => {
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
     await expect(readRows(competing)).resolves.toMatchObject({
-      batch: { observationId: "dates-competing-4974ee8c" },
+      batch: { observationId: COMPETING_OBSERVATION_ID },
       singular: { observationId: OBSERVATION_ID },
     });
 
@@ -304,6 +305,68 @@ describe("contentRelease/predecessor/model", () => {
     }
   );
 
+  it.each(PREDECESSOR_ROUTES)(
+    "reopens a sealed observation for a late %s read",
+    async (route) => {
+      const target = convexTest(schema, convexModules);
+      const armedAt = Date.UTC(2026, 7, 26, 8);
+      vi.setSystemTime(armedAt);
+      await seedAndArm(target);
+      vi.setSystemTime(armedAt + PREDECESSOR_QUIET_WINDOW_MS);
+      await target.mutation((ctx) =>
+        runConvexProgram(sealPredecessorObservation(ctx, OBSERVATION_ID))
+      );
+
+      const lateReadAt = armedAt + PREDECESSOR_QUIET_WINDOW_MS + 1;
+      vi.setSystemTime(lateReadAt);
+      await expect(
+        target.mutation((ctx) =>
+          runConvexProgram(recordPredecessorRead(ctx, route))
+        )
+      ).resolves.toEqual({ kind: "recorded" });
+
+      const status = await target.query((ctx) =>
+        runConvexProgram(readPredecessorObservation(ctx, OBSERVATION_ID))
+      );
+      expect(status).toMatchObject({
+        kind: "active",
+        routes: {
+          [route]: {
+            invocationCount: 1,
+            lastInvokedAt: lateReadAt,
+            phase: "armed",
+            quietSince: lateReadAt,
+          },
+        },
+      });
+      expect(status.routes.singular).not.toHaveProperty("sealedAt");
+      expect(status.routes.batch).not.toHaveProperty("sealedAt");
+      await expect(
+        target.mutation((ctx) =>
+          runConvexProgram(clearPredecessorObservation(ctx, OBSERVATION_ID))
+        )
+      ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
+
+      vi.setSystemTime(lateReadAt + PREDECESSOR_QUIET_WINDOW_MS - 1);
+      await expect(
+        target.mutation((ctx) =>
+          runConvexProgram(sealPredecessorObservation(ctx, OBSERVATION_ID))
+        )
+      ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
+      vi.setSystemTime(lateReadAt + PREDECESSOR_QUIET_WINDOW_MS);
+      await expect(
+        target.mutation((ctx) =>
+          runConvexProgram(sealPredecessorObservation(ctx, OBSERVATION_ID))
+        )
+      ).resolves.toMatchObject({
+        routes: {
+          batch: { phase: "sealed" },
+          singular: { phase: "sealed" },
+        },
+      });
+    }
+  );
+
   it("clears only the exact sealed identity with its durable evidence", async () => {
     const target = convexTest(schema, convexModules);
     const armedAt = Date.UTC(2026, 7, 26, 8);
@@ -325,13 +388,8 @@ describe("contentRelease/predecessor/model", () => {
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
     await expect(
       target.mutation((ctx) =>
-        runConvexProgram(recordPredecessorRead(ctx, "singular"))
-      )
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
-    await expect(
-      target.mutation((ctx) =>
         runConvexProgram(
-          clearPredecessorObservation(ctx, "dates-competing-4974ee8c")
+          clearPredecessorObservation(ctx, COMPETING_OBSERVATION_ID)
         )
       )
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
