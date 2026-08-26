@@ -1,15 +1,23 @@
 import posthogTest from "@posthog/convex/test";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type {
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
 import {
   upsertPolarCustomerWebhook,
   upsertPolarSubscriptionWebhook,
 } from "@repo/backend/convex/customers/polar/webhook";
+import {
+  runConvexActionProgram,
+  runConvexProgram,
+} from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import type { SubscriptionRecord } from "@repo/backend/convex/subscriptions/records/spec";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const polarGateway = vi.hoisted(() => ({
   getCustomerById: vi.fn(),
@@ -23,9 +31,11 @@ const NOW = Date.UTC(2026, 6, 29, 0, 0, 0);
 
 /** Builds one trigger-capable Convex test deployment. */
 function createWebhookTestConvex() {
-  const t = convexTest(schema, convexModules);
-  posthogTest.register(t);
-  return t;
+  return Effect.sync(() => {
+    const t = convexTest(schema, convexModules);
+    posthogTest.register(t);
+    return t;
+  });
 }
 
 /** Inserts one app user that may already be inside account deletion. */
@@ -34,15 +44,34 @@ function insertUser(
   suffix: string,
   deletionPreparedAt?: number
 ) {
-  return ctx.db.insert("users", {
-    authId: `auth-${suffix}`,
-    credits: 0,
-    creditsResetAt: NOW,
-    deletionPreparedAt,
-    email: `${suffix}@example.com`,
-    name: `User ${suffix}`,
-    plan: "free",
+  return Effect.promise(() =>
+    ctx.db.insert("users", {
+      authId: `auth-${suffix}`,
+      credits: 0,
+      creditsResetAt: NOW,
+      deletionPreparedAt,
+      email: `${suffix}@example.com`,
+      name: `User ${suffix}`,
+      plan: "free",
+    })
+  );
+}
+
+/** Loads the customer and subscription rows written by one webhook. */
+function readWebhookState(ctx: QueryCtx) {
+  return Effect.all({
+    customers: Effect.promise(() => ctx.db.query("customers").collect()),
+    subscriptions: Effect.promise(() =>
+      ctx.db.query("subscriptions").collect()
+    ),
   });
+}
+
+/** Records one durable Polar customer deletion marker. */
+function insertCustomerTombstone(ctx: MutationCtx, polarCustomerId: string) {
+  return Effect.promise(() =>
+    ctx.db.insert("customerDeletionTombstones", { polarCustomerId })
+  );
 }
 
 /** Builds one normalized subscription input at the webhook mutation boundary. */
@@ -77,210 +106,264 @@ beforeEach(() => {
 });
 
 describe("customers/polar/webhook", () => {
-  it("resolves the current Polar customer before storing a subscription", async () => {
-    const t = createWebhookTestConvex();
-    const userId = await t.mutation((ctx) => insertUser(ctx, "active"));
-    const subscription = buildSubscription("polar-active", "active");
-    polarGateway.getCustomerById.mockReturnValue(
-      Effect.succeed({
-        email: "active@example.com",
-        externalId: "auth-active",
-        id: subscription.customerId,
-        metadata: { userId },
-        name: "Active User",
-      })
-    );
-
-    const disposition = await t.action((ctx) =>
-      Effect.runPromise(
-        upsertPolarSubscriptionWebhook(ctx, subscription, "update")
-      )
-    );
-
-    const state = await t.query(async (ctx) => ({
-      customers: await ctx.db.query("customers").collect(),
-      subscriptions: await ctx.db.query("subscriptions").collect(),
-    }));
-
-    expect(polarGateway.getCustomerById).toHaveBeenCalledWith("polar-active");
-    expect(disposition).toBe("stored");
-    expect(state.customers).toEqual([
-      expect.objectContaining({
-        id: "polar-active",
-        userId,
-      }),
-    ]);
-    expect(state.subscriptions).toEqual([
-      expect.objectContaining({
-        customerId: "polar-active",
-        id: "subscription-active",
-      }),
-    ]);
-  });
-
-  it("keeps subscription delivery retryable during cancelable preparation", async () => {
-    const t = createWebhookTestConvex();
-    const userId = await t.mutation((ctx) => insertUser(ctx, "pending", NOW));
-    const subscription = buildSubscription("polar-pending", "pending");
-    polarGateway.getCustomerById.mockReturnValue(
-      Effect.succeed({
-        email: "pending@example.com",
-        externalId: "auth-pending",
-        id: subscription.customerId,
-        metadata: { userId },
-        name: "Pending User",
-      })
-    );
-
-    const disposition = await t.action((ctx) =>
-      Effect.runPromise(
-        upsertPolarSubscriptionWebhook(ctx, subscription, "create")
-      )
-    );
-
-    expect(disposition).toBe("missing");
-    await expect(
-      t.query(async (ctx) => ({
-        customers: await ctx.db.query("customers").collect(),
-        subscriptions: await ctx.db.query("subscriptions").collect(),
-      }))
-    ).resolves.toEqual({
-      customers: [],
-      subscriptions: [],
-    });
-  });
-
-  it("discards subscription delivery for a durable customer tombstone", async () => {
-    const t = createWebhookTestConvex();
-    const subscription = buildSubscription("polar-deleted", "deleted");
-    await t.mutation((ctx) =>
-      ctx.db.insert("customerDeletionTombstones", {
-        polarCustomerId: subscription.customerId,
-      })
-    );
-    polarGateway.getCustomerById.mockReturnValue(
-      Effect.succeed({
-        email: "deleted@example.com",
-        externalId: "auth-deleted",
-        id: subscription.customerId,
-        metadata: {},
-        name: "Deleted User",
-      })
-    );
-
-    const disposition = await t.action((ctx) =>
-      Effect.runPromise(
-        upsertPolarSubscriptionWebhook(ctx, subscription, "create")
-      )
-    );
-
-    expect(disposition).toBe("discarded");
-    await expect(
-      t.query(async (ctx) => ({
-        customers: await ctx.db.query("customers").collect(),
-        subscriptions: await ctx.db.query("subscriptions").collect(),
-      }))
-    ).resolves.toEqual({
-      customers: [],
-      subscriptions: [],
-    });
-  });
-
-  it("discards subscription delivery after Polar removes its customer", async () => {
-    const t = createWebhookTestConvex();
-    const subscription = buildSubscription("polar-missing", "missing");
-    polarGateway.getCustomerById.mockReturnValue(Effect.succeed(null));
-
-    const disposition = await t.action((ctx) =>
-      Effect.runPromise(
-        upsertPolarSubscriptionWebhook(ctx, subscription, "create")
-      )
-    );
-
-    expect(disposition).toBe("discarded");
-    await expect(
-      t.query((ctx) => ctx.db.query("subscriptions").collect())
-    ).resolves.toEqual([]);
-  });
-
-  it("keeps an unknown customer retryable but accepts a tombstoned discard", async () => {
-    const t = createWebhookTestConvex();
-    const missing = {
-      email: "unknown@example.com",
-      externalId: "auth-unknown",
-      id: "polar-unknown",
-      metadata: {},
-      name: "Unknown User",
-    };
-
-    await expect(
-      t.action((ctx) =>
-        Effect.runPromise(upsertPolarCustomerWebhook(ctx, missing))
-      )
-    ).resolves.toBe("missing");
-
-    await t.mutation((ctx) =>
-      ctx.db.insert("customerDeletionTombstones", {
-        polarCustomerId: missing.id,
-      })
-    );
-
-    await expect(
-      t.action((ctx) =>
-        Effect.runPromise(upsertPolarCustomerWebhook(ctx, missing))
-      )
-    ).resolves.toBe("discarded");
-  });
-
-  it("keeps a subscription retryable until its app user exists", async () => {
-    const t = createWebhookTestConvex();
-    const subscription = buildSubscription("polar-unknown", "unknown");
-    polarGateway.getCustomerById.mockReturnValue(
-      Effect.succeed({
-        email: "unknown@example.com",
-        externalId: "auth-unknown",
-        id: subscription.customerId,
-        metadata: {},
-        name: "Unknown User",
-      })
-    );
-
-    await expect(
-      t.action((ctx) =>
-        Effect.runPromise(
-          upsertPolarSubscriptionWebhook(ctx, subscription, "create")
-        )
-      )
-    ).resolves.toBe("missing");
-
-    await expect(
-      t.query((ctx) => ctx.db.query("subscriptions").collect())
-    ).resolves.toEqual([]);
-  });
-
-  it("fails closed when Polar metadata and external identity disagree", async () => {
-    const t = createWebhookTestConvex();
-    const metadataUserId = await t.mutation((ctx) =>
-      insertUser(ctx, "metadata-owner")
-    );
-    await t.mutation((ctx) => insertUser(ctx, "external-owner"));
-
-    await expect(
-      t.action((ctx) =>
-        Effect.runPromise(
-          upsertPolarCustomerWebhook(ctx, {
-            email: "conflict@example.com",
-            externalId: "auth-external-owner",
-            id: "polar-conflict",
-            metadata: { userId: metadataUserId },
-            name: "Conflicting User",
+  it.effect(
+    "resolves the current Polar customer before storing a subscription",
+    () =>
+      Effect.gen(function* () {
+        const t = yield* createWebhookTestConvex();
+        const userId = yield* Effect.promise(() =>
+          t.mutation((ctx) => runConvexProgram(insertUser(ctx, "active")))
+        );
+        const subscription = buildSubscription("polar-active", "active");
+        polarGateway.getCustomerById.mockReturnValue(
+          Effect.succeed({
+            email: "active@example.com",
+            externalId: "auth-active",
+            id: subscription.customerId,
+            metadata: { userId },
+            name: "Active User",
           })
-        )
-      )
-    ).resolves.toBe("missing");
+        );
 
-    await expect(
-      t.query((ctx) => ctx.db.query("customers").collect())
-    ).resolves.toEqual([]);
-  });
+        const disposition = yield* Effect.promise(() =>
+          t.action((ctx) =>
+            runConvexActionProgram(
+              upsertPolarSubscriptionWebhook(ctx, subscription, "update")
+            )
+          )
+        );
+        const state = yield* Effect.promise(() =>
+          t.query((ctx) => runConvexProgram(readWebhookState(ctx)))
+        );
+
+        expect(polarGateway.getCustomerById).toHaveBeenCalledWith(
+          "polar-active"
+        );
+        expect(disposition).toBe("stored");
+        expect(state.customers).toEqual([
+          expect.objectContaining({
+            id: "polar-active",
+            userId,
+          }),
+        ]);
+        expect(state.subscriptions).toEqual([
+          expect.objectContaining({
+            customerId: "polar-active",
+            id: "subscription-active",
+          }),
+        ]);
+      })
+  );
+
+  it.effect(
+    "keeps subscription delivery retryable during cancelable preparation",
+    () =>
+      Effect.gen(function* () {
+        const t = yield* createWebhookTestConvex();
+        const userId = yield* Effect.promise(() =>
+          t.mutation((ctx) => runConvexProgram(insertUser(ctx, "pending", NOW)))
+        );
+        const subscription = buildSubscription("polar-pending", "pending");
+        polarGateway.getCustomerById.mockReturnValue(
+          Effect.succeed({
+            email: "pending@example.com",
+            externalId: "auth-pending",
+            id: subscription.customerId,
+            metadata: { userId },
+            name: "Pending User",
+          })
+        );
+
+        const disposition = yield* Effect.promise(() =>
+          t.action((ctx) =>
+            runConvexActionProgram(
+              upsertPolarSubscriptionWebhook(ctx, subscription, "create")
+            )
+          )
+        );
+        const state = yield* Effect.promise(() =>
+          t.query((ctx) => runConvexProgram(readWebhookState(ctx)))
+        );
+
+        expect(disposition).toBe("missing");
+        expect(state).toEqual({ customers: [], subscriptions: [] });
+      })
+  );
+
+  it.effect(
+    "discards subscription delivery for a durable customer tombstone",
+    () =>
+      Effect.gen(function* () {
+        const t = yield* createWebhookTestConvex();
+        const subscription = buildSubscription("polar-deleted", "deleted");
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            runConvexProgram(
+              insertCustomerTombstone(ctx, subscription.customerId)
+            )
+          )
+        );
+        polarGateway.getCustomerById.mockReturnValue(
+          Effect.succeed({
+            email: "deleted@example.com",
+            externalId: "auth-deleted",
+            id: subscription.customerId,
+            metadata: {},
+            name: "Deleted User",
+          })
+        );
+
+        const disposition = yield* Effect.promise(() =>
+          t.action((ctx) =>
+            runConvexActionProgram(
+              upsertPolarSubscriptionWebhook(ctx, subscription, "create")
+            )
+          )
+        );
+        const state = yield* Effect.promise(() =>
+          t.query((ctx) => runConvexProgram(readWebhookState(ctx)))
+        );
+
+        expect(disposition).toBe("discarded");
+        expect(state).toEqual({ customers: [], subscriptions: [] });
+      })
+  );
+
+  it.effect(
+    "discards subscription delivery after Polar removes its customer",
+    () =>
+      Effect.gen(function* () {
+        const t = yield* createWebhookTestConvex();
+        const subscription = buildSubscription("polar-missing", "missing");
+        polarGateway.getCustomerById.mockReturnValue(Effect.succeed(null));
+
+        const disposition = yield* Effect.promise(() =>
+          t.action((ctx) =>
+            runConvexActionProgram(
+              upsertPolarSubscriptionWebhook(ctx, subscription, "create")
+            )
+          )
+        );
+        const subscriptions = yield* Effect.promise(() =>
+          t.query((ctx) =>
+            runConvexProgram(
+              Effect.promise(() => ctx.db.query("subscriptions").collect())
+            )
+          )
+        );
+
+        expect(disposition).toBe("discarded");
+        expect(subscriptions).toEqual([]);
+      })
+  );
+
+  it.effect(
+    "keeps an unknown customer retryable but accepts a tombstoned discard",
+    () =>
+      Effect.gen(function* () {
+        const t = yield* createWebhookTestConvex();
+        const missing = {
+          email: "unknown@example.com",
+          externalId: "auth-unknown",
+          id: "polar-unknown",
+          metadata: {},
+          name: "Unknown User",
+        };
+
+        const missingDisposition = yield* Effect.promise(() =>
+          t.action((ctx) =>
+            runConvexActionProgram(upsertPolarCustomerWebhook(ctx, missing))
+          )
+        );
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            runConvexProgram(insertCustomerTombstone(ctx, missing.id))
+          )
+        );
+        const discardedDisposition = yield* Effect.promise(() =>
+          t.action((ctx) =>
+            runConvexActionProgram(upsertPolarCustomerWebhook(ctx, missing))
+          )
+        );
+
+        expect(missingDisposition).toBe("missing");
+        expect(discardedDisposition).toBe("discarded");
+      })
+  );
+
+  it.effect("keeps a subscription retryable until its app user exists", () =>
+    Effect.gen(function* () {
+      const t = yield* createWebhookTestConvex();
+      const subscription = buildSubscription("polar-unknown", "unknown");
+      polarGateway.getCustomerById.mockReturnValue(
+        Effect.succeed({
+          email: "unknown@example.com",
+          externalId: "auth-unknown",
+          id: subscription.customerId,
+          metadata: {},
+          name: "Unknown User",
+        })
+      );
+
+      const disposition = yield* Effect.promise(() =>
+        t.action((ctx) =>
+          runConvexActionProgram(
+            upsertPolarSubscriptionWebhook(ctx, subscription, "create")
+          )
+        )
+      );
+      const subscriptions = yield* Effect.promise(() =>
+        t.query((ctx) =>
+          runConvexProgram(
+            Effect.promise(() => ctx.db.query("subscriptions").collect())
+          )
+        )
+      );
+
+      expect(disposition).toBe("missing");
+      expect(subscriptions).toEqual([]);
+    })
+  );
+
+  it.effect(
+    "fails closed when Polar metadata and external identity disagree",
+    () =>
+      Effect.gen(function* () {
+        const t = yield* createWebhookTestConvex();
+        const metadataUserId = yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            runConvexProgram(insertUser(ctx, "metadata-owner"))
+          )
+        );
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            runConvexProgram(insertUser(ctx, "external-owner"))
+          )
+        );
+
+        const disposition = yield* Effect.promise(() =>
+          t.action((ctx) =>
+            runConvexActionProgram(
+              upsertPolarCustomerWebhook(ctx, {
+                email: "conflict@example.com",
+                externalId: "auth-external-owner",
+                id: "polar-conflict",
+                metadata: { userId: metadataUserId },
+                name: "Conflicting User",
+              })
+            )
+          )
+        );
+        const customers = yield* Effect.promise(() =>
+          t.query((ctx) =>
+            runConvexProgram(
+              Effect.promise(() => ctx.db.query("customers").collect())
+            )
+          )
+        );
+
+        expect(disposition).toBe("missing");
+        expect(customers).toEqual([]);
+      })
+  );
 });
