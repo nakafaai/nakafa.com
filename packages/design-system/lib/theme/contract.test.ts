@@ -167,18 +167,24 @@ describe("theme profile contract", () => {
       expect(new Set(fingerprints).size).toBe(profiles.length);
     })
   );
-  it.effect("gives every profile its complete core token contract", () =>
-    Effect.gen(function* () {
-      const profiles = yield* readProfiles;
+  it.effect.each(concreteThemeNames)(
+    "$name owns each required core token once",
+    (name) =>
+      Effect.gen(function* () {
+        const sources = yield* readSources;
+        const profile = createThemeProfiles([name], sources)[0];
+        expect(profile, `${name} must resolve to a profile`).toBeDefined();
+        if (!profile) {
+          return;
+        }
 
-      for (const profile of profiles) {
         const rule = findTopLevelRule(profile.root, profile.selector);
         expect(
           rule,
           `${profile.name} must declare ${profile.selector}`
         ).toBeDefined();
         if (!rule) {
-          continue;
+          return;
         }
 
         const properties = rule.nodes.flatMap((node) =>
@@ -195,43 +201,40 @@ describe("theme profile contract", () => {
             )
         );
 
-        expect(
-          coreProperties.sort(),
-          `${profile.name} must own every required token once`
-        ).toEqual([...REQUIRED_THEME_TOKENS].sort());
-        expect(
-          unexpectedProperties,
-          `${profile.name} must not own undeclared metadata`
-        ).toEqual([]);
-      }
-    })
+        expect(coreProperties.sort()).toEqual(
+          [...REQUIRED_THEME_TOKENS].sort()
+        );
+        expect(unexpectedProperties).toEqual([]);
+      })
   );
-  it.effect("gives every profile its concrete color scheme", () =>
-    Effect.gen(function* () {
-      const profiles = yield* readProfiles;
+  it.effect.each(concreteThemeNames)(
+    "$name owns its concrete color scheme",
+    (name) =>
+      Effect.gen(function* () {
+        const sources = yield* readSources;
+        const profile = createThemeProfiles([name], sources)[0];
+        expect(profile, `${name} must resolve to a profile`).toBeDefined();
+        if (!profile) {
+          return;
+        }
 
-      for (const profile of profiles) {
         const rule = findTopLevelRule(profile.root, profile.selector);
         expect(rule).toBeDefined();
         if (!rule) {
-          continue;
+          return;
         }
         const definition = themes.find((theme) => theme.value === profile.name);
         expect(definition).toBeDefined();
         if (!definition) {
-          continue;
+          return;
         }
         const colorSchemes = rule.nodes.flatMap((node) =>
           node.type === "decl" && node.prop === "color-scheme"
             ? [node.value.trim()]
             : []
         );
-        expect(
-          colorSchemes,
-          `${profile.name} must own its concrete color scheme`
-        ).toEqual([definition.appearance]);
-      }
-    })
+        expect(colorSchemes).toEqual([definition.appearance]);
+      })
   );
   it.effect("maps every status pair into Tailwind's inline theme", () =>
     Effect.gen(function* () {
