@@ -1,350 +1,120 @@
 # Nakafa Codebase Agent Guide
 
-Build for longevity.
-Favor readable, skimmable, well-verified code over speed or cleverness.
+Build for longevity. Favor readable, skimmable, well-verified code over speed or cleverness.
 
-## Source Of Truth
+## Evidence And Scope
 
-- Use retrieval-led reasoning first. Read the repo, configs, docs, and generated files before changing code.
-- This root `AGENTS.md` is the baseline for the repo.
-- Also read any nested `AGENTS.md` files in the area you touch.
-- For Convex work, `packages/backend/AGENTS.md` is mandatory.
-- For Convex work, read `packages/backend/convex/_generated/ai/guidelines.md` before making changes.
-- Convex AI files keep their generated guideline current, while `packages/backend/convex.json` disables package-local skill copies. Root `.agents/skills` is the one canonical repo skill surface.
-- For structural work, skim recent `git log` first so you do not reintroduce old patterns.
-- Verify behavior from actual code and docs, not memory.
+- Read repository code, package manifests, configuration, generated files, installed source, and current official documentation before changing behavior.
+- This file is the repository baseline. Read `packages/backend/AGENTS.md` before any Convex work and `packages/backend/convex/_generated/ai/guidelines.md` before editing Convex code.
+- Use the enabled official Convex and Vercel plugin skills for generic ecosystem guidance. Use globally installed upstream skills when their scope matches. Do not add repository-local skill copies or generate new app-local `AGENTS.md` or `CLAUDE.md` files. The existing Convex-managed backend files are the only package-local exception.
+- Skim recent `git log` before structural work so old patterns are not reintroduced.
+- Read the touched package's `package.json`, configuration, and nearby implementation before editing. Follow current local patterns unless evidence supports changing them.
 
-## Stack And Layout
+## Stack And Ownership
 
 - Package manager: `pnpm@11.23.0`
 - Runtime: Node `24.x` through pnpm `devEngines.runtime`
 - Monorepo: Turborepo
 - Frontend: Next.js 16, React 19, TypeScript 7 CLI with TypeScript 6 API compatibility
 - Backend: Convex
-- Lint/format: Biome via Ultracite
+- Lint and format: Biome through Ultracite
 - Tests: Vitest
 - Apps: `apps/www`, `apps/api`, `apps/mcp`, `apps/email`
 - Main packages: `packages/backend`, `packages/design-system`, `packages/contents`, `packages/ai`, `packages/testing`
-- App-local alias: `@/*`
-- Cross-package alias: `@repo/*`
-- Aksara exclusively owns authored content and signed publication for every
-  content scope. `packages/contents/` contains only live Nakafa product,
-  formatting, route-context, learner, and agent contracts.
+- Same-app imports use `@/*`; cross-package imports use `@repo/*`.
+- `packages/testing` owns shared Vitest defaults by runtime. Node workspaces use `@repo/testing/node`, React workspaces use `@repo/testing/react`, and each workspace keeps only local aliases, setup, projects, and coverage policy.
+- `packages/utilities` owns generic cross-domain primitives only. Keep content contracts, roles, taxonomy, Convex values, AI vocabulary, UI copy, and product helpers in their domain-owning package.
+- Aksara exclusively owns authored content and signed publication for every content scope. For authored content work, open the Aksara repository and use its repository-local `nakafa-content` skill. `packages/contents` owns only live Nakafa product, formatting, route-context, learner, and agent contracts. Never copy that skill into Nakafa or global storage, and never add a second authored source, filesystem copy, or local publication writer.
 
-## Package Ownership
+## Architecture, TypeScript, And Imports
 
-- `packages/testing` owns shared Vitest defaults by runtime. Node workspaces use
-  `@repo/testing/node`, React workspaces use `@repo/testing/react`, and each
-  workspace keeps only its local aliases, setup, projects, and coverage policy.
-- `packages/utilities` is for generic cross-domain primitives only. Do not put Nakafa content-domain constants, taxonomy, schemas, MDX/content metadata, or content-specific helpers there.
-- Nakafa product presentation constants and domain types may live in
-  `packages/contents`, but authored inventory must always come from an
-  authenticated current Aksara publication.
-- Aksara contracts and signed snapshots are authoritative for every content
-  scope. Do not add filesystem content copies, local publication writers, or a
-  second source of truth.
+- Keep changes cohesive and complete. Remove dead, redundant, obsolete, repair-only, and legacy paths after proving they are unused in every relevant environment.
+- Prefer direct control flow, early returns, and small domain-owned modules. Avoid wrapper chains, compatibility facades, catch-all utility folders, and abstractions that do not reduce complexity.
+- Hand-written `.ts` and `.tsx` modules should target 300 LOC or less. A new or touched hand-written file over 500 LOC blocks readiness unless it is generated, vendor data, source corpus, or intentionally dense curriculum data where splitting reduces locality. Record any exception.
+- For touched files over 500 LOC, identify the Module, Interface, Implementation, Seam, Depth, Leverage, and Locality before editing. Decompose by real capability, not by moving the same mapping or filtering into shallow files.
+- Apply the deletion test: deleting a proposed module should concentrate meaningful complexity, not merely relocate it.
+- Do not create new `index.ts` barrels, hand-written facade modules, pass-through re-exports, generic `utils` or `helpers`, or imports whose only purpose is re-exporting. Generated or externally mandated package entrypoints require an explicit exception.
+- TypeScript is strict. Prefer derived and inferred types, fix the source design when inference is unclear, avoid `any`, narrow real `unknown` values quickly, and avoid assertions or workaround casts.
+- Runtime contracts own public types. Derive from Effect Schema, Convex validators, and generated Convex types. Never duplicate domain unions, value sets, schemas, validators, constants, or UI options.
+- The root exposes the Effect-patched native TypeScript 7 compiler as `tsc`. The `typescript` package remains the TypeScript 6 compatibility API for Next.js, Ultracite, and language-service consumers. `packages/backend` owns its package-local native compiler because Convex resolves it directly. Verify with `pnpm exec tsc --version`; use `pnpm exec tsc6 --version` only for compatibility diagnostics.
+- Formatting is owned by Ultracite. Use spaces, double quotes, `import type`, and clear external, workspace, then app-local import groups. Run `pnpm format` instead of hand-formatting.
+- New or touched app TypeScript modules use direct `@/` imports for same-app modules, including colocated modules and tests. Across workspaces use `@repo/*`. Prefer direct owning-file imports over new barrels.
+- Keep Tailwind class strings inside styling utilities or component boundaries. Use `cva` or existing variant helpers for reusable or variant-driven styling.
 
-## Effect-Native Standard
+## Effect V4 Standard
 
-- This is an Effect-native TypeScript codebase. Effect is the decomposition and composition architecture, not a wrapper around raw TypeScript.
-- Effect-native architecture gives Nakafa decomposable, composable, traceable, and type-safe behavior end to end. It prevents fragmented helper chains, duplicated maps, hidden failure paths, and source-of-truth drift.
-- Every new or touched TypeScript domain capability must start from Effect-native design: Schema contracts, branded values, tagged errors, small named `Effect.fn` programs, and `Context.Service` plus `Layer` only where there is a real dependency seam.
-- Public module Interfaces must expose schema-derived data contracts and Effect-native operations for fallible, effectful, cross-source, or cross-module work. Do not build a raw TypeScript module and sprinkle Schema decoding, `Effect.succeed`, or a boundary runner around it later.
-- Source registries must decode through schemas and produce typed/branded rows. Projection modules must compose those rows through typed Effects, not raw loops with hidden failure or fallback paths.
-- Missing source data, duplicate routes, invalid slugs, invalid source rows, mismatched mappings, and route collisions are expected domain failures in the Effect error channel. Model them with `Schema.TaggedError` or `Data.TaggedError`, not `null`, generic `Error`, thrown parser errors, silent filtering, or fallback strings.
-- `Effect.runPromise`, `Effect.runSync`, and `Effect.runPromiseExit` are allowed only at framework, CLI, script main, test, or React/Next event boundaries. Never run an Effect inside services, domain modules, projection modules, or helper chains; compose the program instead.
-- Effectful work includes filesystem IO, HTTP/network calls, database/client calls, dynamic imports, async orchestration, shared caches, environment/config reads, logging, schema decoding failures, and expected domain failures.
-- App code is not exempt. In `apps/*`, Server Actions, Route Handlers, Server Components that load data, client event handlers that call mutations, scripts, dynamic imports, and analytics/logging boundaries must compose Effect programs and call a runner only at the React, Next.js, CLI, or browser event boundary.
-- Do not start a non-fast-path Effect runtime inside a statically prerendered Server Component before Next.js has request data or uncached data. Installed Effect creates fibers through `unsafeRunPromiseExit()` -> `unsafeFork()` -> `FiberId.unsafeMake()`, and `fiberId` reads current time for `startTimeMillis`; Next.js Cache Components reject that during static prerender. When the framework itself owns request-less static work, use its Promise boundary directly and document the exception with `https://nextjs.org/docs/messages/next-prerender-current-time`.
-- Private pure helpers are allowed only for tiny deterministic transformations after inputs have been decoded or validated by Schema and when they cannot fail, perform IO, access dependencies, mutate shared state, or create source-of-truth contracts.
-- Pure helpers must not be exported as the primary domain API when the operation can fail, validates source data, builds public routes, syncs read models, reads config, depends on multiple registries, or crosses module boundaries.
-- If existing architecture is not Effect-native at an effectful seam, fix the seam directly instead of adding wrappers, compatibility patches, or shallow pass-through adapters.
-- Name shared modules by domain capability, not by the Effect implementation style. Prefer seams such as `lib/analytics`, `lib/content`, `lib/checkout`, or `lib/school`; do not create catch-all folders like `lib/effect` just because the implementation uses Effect.
-- After touching app effectful code, run `rg -n "\btry\s*\{|\bcatch\s*\(" <touched app paths> --glob '*.{ts,tsx}'` and either make it clean or document every remaining framework-mandated exception with the exact file and reason.
-- After touching domain source or projection modules, scan for `as ` assertions, `satisfies Record`, `Record<string`, `any`, generic `Error`, raw `throw`, raw `try/catch`, `Effect.runPromise`, `Effect.runSync`, and silent source-of-truth fallbacks such as `?? toPublicSlug` or `|| fallback`.
-- Tests for Effect-domain seams must assert typed failure behavior, not just happy-path output.
+- This is an Effect-native TypeScript codebase. New or touched effectful domain capabilities start with Schema contracts, branded values where identity matters, tagged errors, small named `Effect.fn` programs, and `Context.Service` plus `Layer` only for real dependency seams.
+- Effectful work includes filesystem IO, network calls, database and client calls, dynamic imports, asynchronous orchestration, shared caches, environment reads, logging, schema failures, and expected domain failures. Model and compose these operations directly instead of wrapping raw TypeScript later.
+- Public module interfaces expose schema-derived contracts and Effect-native operations for fallible, effectful, cross-source, or cross-module work. Source registries decode typed rows; projections compose them without silent filtering, fallback strings, or duplicated maps.
+- Model expected failures with specific `Schema.TaggedError` or `Data.TaggedError` types. Do not use `null`, generic `Error`, raw throws, parser exceptions, or silent fallbacks for expected domain failures.
+- Use `Effect.fn("domain.operation")` for exported effectful functions and service methods. Use `Effect.try`, `Effect.tryPromise`, `Effect.acquireRelease`, `Effect.sync`, `Predicate.*`, `Option`, `Config.*`, and Effect logging at their proper seams.
+- Handle known errors with `catchTag` or `catchTags`. Avoid `catchAll` unless an outer boundary intentionally preserves the complete cause.
+- `Effect.runPromise`, `Effect.runSync`, and `Effect.runPromiseExit` belong only at framework, CLI, script-main, test, or browser event boundaries. Services, domain modules, projections, and helper chains compose Effects without running them.
+- Private pure helpers are allowed only for small deterministic transformations after validation when they cannot fail, perform IO, access dependencies, mutate shared state, or define a public source of truth.
+- Name shared modules by domain capability, such as `lib/analytics`, `lib/content`, or `lib/checkout`. Do not create `lib/effect` catch-alls.
+- In `packages/ai`, keep provider calls, tool execution, search, scraping, repair, and orchestration explicit in Effect. Keep provider configuration in config boundaries, make source scoping language-neutral, reflect actual provider calls in UI data, and back final output with retrieved evidence, deterministic math, or a stated limitation.
+- Do not start a non-fast-path Effect runtime inside a statically prerendered Server Component before Next.js has request or uncached data. Use the framework Promise boundary for request-less static work and document the exception with `https://nextjs.org/docs/messages/next-prerender-current-time`.
+- After touching app effectful code, scan touched paths for raw `try/catch`. After touching domain source or projections, scan for assertions, broad records, `any`, generic errors, raw throws, runners, and silent source fallbacks. Explain every retained framework exception.
+- Tests for Effect-domain seams assert typed failure behavior as well as success.
 
-## Required Reading
+### Vendored Effect Reference
 
-- Convex best practices: `https://docs.convex.dev/understanding/best-practices/`
-- Convex Workflow: `https://www.convex.dev/components/workflow`
-- Convex cron jobs: `https://docs.convex.dev/scheduling/cron-jobs`
-- Functional relationships helpers: `https://stack.convex.dev/functional-relationships-helpers`
-- Convex Helpers README: `https://github.com/get-convex/convex-helpers/blob/main/packages/convex-helpers/README.md`
-- Convex Aggregate: `https://www.convex.dev/components/aggregate`
-- Convex pagination: `https://docs.convex.dev/database/pagination`
-- Convex Agent Mode: `https://docs.convex.dev/cli/agent-mode`
-- Confect spec/impl model: `https://confect.dev/concepts/spec-impl-model`
-- Confect file naming conventions: `https://confect.dev/concepts/file-naming-conventions`
-- Effect docs: `https://effect.website/docs`
-- Effect source-vendoring guidance: `https://www.effect.website/blog/the-one-weird-git-trick-that-makes-coding-agents-more-effect-ive`
-- Effect Cache: `https://effect.website/docs/caching/cache/`
-- Effect Platform filesystem: `https://effect.website/docs/platform/file-system/`
-- React effects guidance: `https://react.dev/learn/you-might-not-need-an-effect`
-- Mantine Hooks docs: read before building new hook utilities.
-- Read installed Convex node modules when behavior matters.
-- Read Convex MCP code/docs when the change touches MCP or agent tooling.
-- Use Context7 for current library docs. For lint and style behavior, read the
-  installed Ultracite package and the current
-  [official documentation](https://www.ultracite.ai/docs), then run the
-  repository-owned pnpm commands.
-
-## Vendored References
-
-- External source references live under `repos/` as read-only Git subtrees.
-- Follow the official Effect guidance on [vendoring source for coding agents](https://www.effect.website/blog/the-one-weird-git-trick-that-makes-coding-agents-more-effect-ive).
-- `repos/effect` is pinned to the installed `effect` package version. Before writing or reviewing Effect code, read its `.agents/AGENTS.md`, then inspect the relevant implementation, tests, type-level tests, module structure, and API design under `packages/effect`.
-- Prefer the matching vendored source for Effect API shape and idioms instead of guessing from memory, generated declarations, or examples for another major version.
-- Never edit, import from, build, lint, or test `repos/effect` as Nakafa application code.
-- `pnpm effect:source:check` verifies that the installed and vendored Effect versions match. After committing an Effect dependency update, run `pnpm effect:source:update`; it pulls the matching release tag and creates one linear reference update commit.
-
-## Core Commands
-- `pnpm dev` - run the main web app and Convex backend through Turbo
-- `pnpm dev:web` - run the main web app and Convex backend through Turbo
-- `pnpm dev:all` - run all workspace `dev` tasks through Turbo
-- `pnpm start` - run built workspace start tasks through Turbo
-- `pnpm build` - build all packages and apps
-- `pnpm test` - run all workspace tests
-- `pnpm test:watch` - run watch-mode tests where supported
-- `pnpm test:ui` - open Vitest UI where supported
-- `pnpm test:coverage` - run coverage across workspaces that support it
-- `pnpm lint` - run `ultracite check`
-- `pnpm security:audit` - fail on any known dependency advisory
-- `pnpm format` - run `ultracite fix`
-- `pnpm format:doctor` - run `ultracite doctor`
-- `pnpm analyze` - run analyze tasks
-- `pnpm boundaries` - run workspace boundaries checks
-
-## Focused Commands
-
-- `pnpm --filter www dev` - Next.js app on `3000`
-- `pnpm --filter api dev` - Next.js API app on `3002`
-- `pnpm --filter mcp dev` - MCP app on `3001`
-- `pnpm --filter email dev` - React Email preview on `3004`
-- `pnpm --filter @repo/backend dev` - Convex dev with tailed logs
-- Prefer `pnpm start` for running the app after a build; `pnpm dev` is heavy and should be used when debugging development-mode behavior, devtools, hot reload, or Convex live development.
-- `pnpm dev` / `pnpm dev:web` - development-mode combo for `www` + Convex backend
-- `pnpm dev:all` - use when you truly need every app running together
-- There is no single root `typecheck` script; run it in the workspace you changed.
-- `pnpm --filter www typecheck`
-- `pnpm --filter api typecheck`
-- `pnpm --filter @repo/backend typecheck`
-- `pnpm --filter @repo/contents typecheck`
-- `pnpm --filter @repo/design-system typecheck`
-- Preferred single-test pattern: `pnpm --filter <workspace> exec vitest run <relative-test-path>`
-- `pnpm --filter www exec vitest run lib/routing/public/source.test.ts`
-- `pnpm --filter api exec vitest run proxy.test.ts`
-- `pnpm --filter @repo/backend exec vitest run helpers/chunk.test.ts`
-- `pnpm --filter @repo/contents exec vitest run _lib/public-route.test.ts`
-- Some workspaces enforce per-file 100% coverage, so use the full workspace test for the coverage gate.
-- Add `-t "test name"` to run one named test.
-- Use `pnpm --filter <workspace> test` for the whole workspace suite.
-- Convex helpers: `pnpm --filter @repo/backend setup`, `seed`, `deploy`, `insights`
-
-## Workflow Expectations
-
-- Read the touched package's `package.json`, config files, and nearby code before editing.
-- Follow existing local patterns before inventing new abstractions.
-- Keep changes cohesive across frontend, Convex backend, and dev/prod behavior.
-- Avoid disconnected patches, workaround code, wrapper chains, and legacy leftovers.
-- Do not leave technical debt behind in touched code: remove dead code, redundant code, obsolete data repair paths, and one-off cleanup functions once the underlying data has been verified clean in every relevant environment.
-- Prefer small, direct helpers over abstraction layers.
-- Use early returns to keep logic flat and skimmable.
-- Run the smallest useful verification set after changes, then expand if risk is high.
-- Prefer `pnpm start` over `pnpm dev` when you only need to run the built app. Use `pnpm dev` when the task needs devtools, hot reload, development-mode diagnostics, or Convex live debugging.
-
-## Vercel Cost And Deployment Policy
-
-- Vercel Preview deployments are prohibited for every Nakafa project.
-- Never call the Vercel deploy connector, `vercel`, or `vercel deploy` for a feature branch or pull request.
-- Never require a Vercel Preview URL as a pull request gate.
-- Verify feature work with local production-mode builds and starts, exact-head GitHub CI, Browser or Playwright, and isolated Convex Agent Mode deployments where needed.
-- Vercel Production deployment is allowed only after a protected merge to `main`, through the existing `main` Git integration.
-- Keep every app Vercel config restricted to `main`; all other branch patterns remain disabled.
-- Do not enable external Turborepo Remote Cache for the signed `www` production build until every server-side environment input and signed-content generation is included in its task hash.
-- If an accidental Preview deployment starts, cancel it immediately, identify the owner, and remove every task-owned Preview artifact during cleanup.
-
-## Module Size And Decomposition
-
-- Hand-written `.ts` and `.tsx` Modules should target 300 LOC or less.
-- A new or touched hand-written `.ts` or `.tsx` file over 500 LOC is a production-readiness blocker unless it is generated, vendor data, source corpus, or an intentionally dense content/curriculum registry where splitting would reduce locality. Record that exception in PR or final proof.
-- When a touched Module exceeds 500 LOC, stop and apply the architecture vocabulary deliberately: identify the Module, Interface, Implementation, Seam, Depth, Leverage, and Locality before editing.
-- Decompose by real domain capability into folder-owned files with short concrete names. Do not hide size by creating shallow wrappers, pass-through files, generic `utils` or `helpers`, or wrapper chains.
-- Apply the deletion test: if deleting a new file only moves the same filtering, mapping, sorting, or reconstruction into another caller, the split is not deep enough.
-- Do not create new `index.ts` barrels or re-export layers.
-- Do not create or keep hand-written facade Modules in touched code. Do not use `export { ... } from "./x"`, `export type { ... } from "./x"`, or imports whose only purpose is to export symbols again. Export declarations implemented in the same Module; update callers to direct imports from the owning Module instead. The only exceptions are generated files or externally mandated package entrypoints, and the exception must be explicit in proof.
-- Effect-native decomposition follows the same rule: split along schema contracts, typed errors, Effect programs, services, layers, and framework adapters, not raw TypeScript or Promise wrappers.
-- Final readiness for broad changes must include LOC proof for touched `.ts` and `.tsx` files and explicit justification for any touched hand-written file over 500 LOC.
-
-## Formatting And Imports
-
-- Formatting is owned by Biome through Ultracite. Run `pnpm format` instead of hand-formatting.
-- Use spaces for indentation.
-- Use double quotes for strings and JSX attributes.
-- Do not store Tailwind class strings in arbitrary data objects, maps, or variables outside a styling utility/component boundary. For reusable or variant-driven styles, use `cva` or existing variant helpers so Tailwind IntelliSense and class extraction stay reliable.
-- Prefer `import type` for type-only imports.
-- Every new or touched app TypeScript Module must use direct `@/` imports for same-app Modules, including colocated Modules and tests. Relative `./` and `../` Module imports are forbidden. Configuration inheritance values and filesystem path strings are outside this Module-import rule. Existing untouched relative imports require a separate verified cleanup.
-- Across workspaces, use `@repo/*` imports.
-- Prefer direct file imports over adding new barrel layers unless the existing API already exposes one.
-- Group imports clearly: external, workspace, then app-local.
-- Respect existing file naming in the touched area; naming-convention lint rules are intentionally relaxed.
-
-## TypeScript Rules
-
-- TypeScript is strict across the repo.
-- The root toolchain intentionally installs TypeScript 7 as `@typescript/native` and exposes it as `tsc`, while the `typescript` package name resolves to `@typescript/typescript6` for Next.js, Ultracite, and language-service consumers that still require the JavaScript compiler API. Keep this side-by-side arrangement until those consumers support the TypeScript 7 API.
-- `packages/backend` owns package-local native TypeScript 7 because the Convex CLI resolves `node_modules/typescript/bin/tsc` directly. It deduplicates to the same Effect-patched `7.0.2` package used by the root compiler. Keep the root TypeScript 6 alias only for Next.js, Ultracite, and other programmatic consumers that still require the JavaScript compiler API.
-- Run `pnpm exec tsc --version` to verify the native TypeScript 7 compiler and `pnpm exec tsc6 --version` only for compatibility diagnostics.
-- Prefer derived and inferred types over manual annotations.
-- Do not add redundant type annotations just to restate what TypeScript already knows.
-- If inference breaks, fix the source design instead of forcing the type system.
-- Avoid `any`; use `unknown` only when something is truly unknown and narrow it quickly.
-- Avoid type assertions and workaround casts whenever possible.
-- Keep public function inputs and outputs obvious.
-- Use meaningful names instead of magic values or anonymous tuple-like objects.
-
-## Type Source Of Truth
-
-- Domain value sets have one source module. Schemas, validators, constants, and UI option lists derive from that source instead of duplicating unions.
-- Public domain types derive from their runtime contract: use `Schema.Schema.Type<typeof Schema>` for Effect schemas, Convex `Infer<typeof validator>` for validators, and generated `Doc<>`, `Id<>`, `FunctionArgs<>`, or `FunctionReturnType<>` where Convex owns the shape.
-- Do not duplicate unions such as locale, taxonomy, route-kind, content-kind, or graph identity strings when a schema, validator, generated type, or constant already owns them.
-- Do not add manual type annotations where inference is clear. If inference is unclear, improve the Module Interface or schema source instead of adding workaround casts.
-- Test fixtures may use literal values as concrete samples, but helper signatures must derive from the same source types as production code.
-
-## Effect Rules
-
-- Use Effect for effectful TypeScript business logic across the repo, especially in `packages/ai`, `packages/contents`, MCP/agent tooling, IO/cache/schema boundaries, and scripts.
-- Effect-native means effectful work is modeled with Effect; pure deterministic helpers should stay pure.
-- Use `Predicate.*` for general-purpose runtime narrowing. Do not reimplement object, primitive, nullish, error, or collection predicates. Keep local guards only when they enforce additional domain invariants.
-- Model expected failures with `Schema.TaggedError` and specific domain error names.
-- Prefer `Effect.fn("scope.name")` for effectful exported functions and service methods so traces are named.
-- Use the Effect v4 `Context.Service` plus `Layer` pattern for dependency contracts. Keep service contracts separate from live implementations unless the owning Module intentionally provides both.
-- Use Effect v4 core platform abstractions and `@effect/platform-node` for Node implementations when those packages own the IO seam.
-- Prefer `Effect.Cache` or Effect cached effects for shared effectful cache state. Plain `Map` is acceptable inside one pure algorithm for grouping, deduplication, or indexing.
-- Use `Effect.try`, `Effect.tryPromise`, `Effect.acquireRelease`, and `Effect.sync` instead of raw `try/catch`, raw async wrappers, or hidden side effects.
-- Handle known errors with `catchTag` or `catchTags`; avoid `catchAll` unless preserving the full cause at an outer boundary.
-- Use `Option.match`, `Option.getOrElse`, or explicit early returns instead of `Option.getOrThrow`.
-- Use `Option` in domain logic for absence. Use `Schema.optional` for absent object fields and `Schema.NullOr` only when `null` is a real external or corpus value.
-- Use `Config.*` for application configuration. Direct `process.env` access is allowed only in dedicated env-schema boundary modules.
-- Use `Effect.log` or the repo logger for production logs; do not use `console.log`.
-- Keep Effect code readable: flat generator flow, early returns for pure branches, no clever pipelines when a named step is clearer.
-
-## Readability And Errors
-
-- Optimize for code that is easy to skim.
-- Prefer obvious control flow over clever one-liners.
-- Keep functions focused and narrow in responsibility.
-- Extract repeated logic only when it improves readability or reuse.
-- Do not introduce wrapper functions around other functions without a clear benefit.
-- Do not leave redundant branches, temporary code, or commented-out code behind.
-- Throw real `Error` objects or framework-appropriate errors such as `ConvexError`.
-- Use descriptive error messages and handle edge cases deliberately.
-- Do not catch errors just to rethrow the same thing.
-- Remove `console.log`, `debugger`, and `alert` from production code.
+- `repos/effect` is a read-only Git subtree pinned to the installed `effect` version. Before writing or reviewing Effect code, read `repos/effect/LLMS.md` and `repos/effect/.agents/AGENTS.md`, then inspect relevant implementation, tests, type-level tests, modules, and API design.
+- Prefer matching vendored source over memory, declarations, or examples from another major version. Never edit, import from, build, lint, or test `repos/effect` as Nakafa application code.
+- `pnpm effect:source:check` verifies version parity. After committing an Effect dependency update, run `pnpm effect:source:update` to create the matching linear reference update commit.
+- Follow the official source-vendoring guidance at `https://www.effect.website/blog/the-one-weird-git-trick-that-makes-coding-agents-more-effect-ive`.
 
 ## React And Next.js
 
-- Before adding, changing, or reviewing React component composition, read `.agents/skills/vercel-composition-patterns/SKILL.md` completely and follow its relevant referenced rules.
+- Before React composition work, use the globally installed upstream `vercel-composition-patterns` skill. Use the official Vercel React, Next.js, and shadcn plugin skills when their focused guidance applies.
+- Before Next.js work, find the installed version-matched documentation with `find . -path '*/node_modules/next/dist/docs' -type d -print`. Installed docs and source are authoritative for APIs, file conventions, and deprecations.
+- Follow existing React 19 patterns. Use function components, add `"use client"` only when needed, keep hooks at the top level, derive values instead of adding effects, and check Mantine Hooks before creating a custom hook.
+- Keep server and client boundaries explicit and minimal. Use semantic HTML, accessible component APIs, and Next.js primitives such as `<Image>` where appropriate.
+- New or touched route UI reuses established Nakafa and design-system surfaces. Route migrations may change data or URL shape but must not introduce bespoke shells, cards, hover treatments, or list styling when an existing component owns the pattern.
+- With Cache Components, keep static content in prerendering. Do not hide current-time errors behind a dynamic boundary.
+- Use `io()` from `next/cache` before synchronous request-time work that should stream or participate in partial prefetching. Use `connection()` only when rendering must wait for a real request. Existing asynchronous data access already provides a suspension point unless synchronous work starts first.
+- Keep `experimental.instantInsights.validationLevel` at `"warning"`. Do not add redundant `instant = true` exports. Use `instant = false` only for a route deliberately allowed to block navigation.
+- Keep the shared App Shell as the default prefetch. Use `<Link prefetch={true}>` only when URL-dependent cached content justifies one server invocation per link. For grids and long lists, prefetch on user intent.
+- Keep truthful stable UI outside `Suspense`. When no truthful fallback exists, use `fallback={null}`. Never invent skeletons or fake content solely to satisfy navigation validation.
+- Keep the real root layout in `[locale]`, use `next/root-params` only on the server, and prefer next-intl server APIs such as `getLocale()` over manually threading locale through Server Components.
 
-### Version-Matched Next.js Guidance
+## Convex
 
-- Before any Next.js work, find and read the relevant installed documentation
-  with `find . -path '*/node_modules/next/dist/docs' -type d -print`.
-- Do not assume the docs exist at direct `node_modules/next/dist/docs/` in this
-  monorepo. Use the copy that matches the installed Next.js version.
-- Next.js APIs, conventions, and file structure may differ from training data.
-  Installed docs and source are authoritative, including deprecation notices.
-- `packages/next-config` disables app-local agent-file generation because this
-  root file is the one canonical instruction surface. Do not add duplicate
-  `AGENTS.md` or `CLAUDE.md` files under individual Next.js apps.
+- `packages/backend/AGENTS.md` owns Convex architecture, deployment isolation, auth, validator, migration, and source-of-truth rules. Do not duplicate them here.
+- Prefer direct Convex queries and mutations for app data. Add Next.js Server Actions or Route Handlers only for real framework boundaries such as cookies, headers, cache invalidation, or non-Convex integrations, and document that reason at the seam.
+- Treat every public Convex function used by a deployed client as a rollout contract. Use the expand, switch, observe, contract sequence defined in the backend guide. A promoted web deployment does not prove older clients stopped calling a predecessor.
 
-- Follow existing Next.js and React 19 conventions already present in the repo.
-- Use function components.
-- Add `"use client"` only when the component truly needs client-side features.
-- Keep hooks at the top level and satisfy dependency arrays.
-- Prefer deriving values over adding extra effects.
-- Check Mantine Hooks before writing a new custom hook from scratch.
-- Use semantic HTML and accessible component APIs.
-- Prefer Next.js primitives like `<Image>` when appropriate.
-- Keep server/client boundaries explicit and minimal.
-- New or touched app route UI must reuse existing Nakafa and design-system surfaces before adding markup. Route migrations may change data and URL shape, but the visual composition should follow the established page surface for that domain, such as subject/material lists and material body layouts. Do not introduce one-off card/list styling, bespoke hover treatments, or custom shells when an existing component already owns the pattern; use `className` only as layout glue around those components.
-- When a static route hits Next.js current-time prerender errors, do not hide the error with a dynamic boundary. Keep content that should stay static inside prerendering.
-- With Cache Components, use `io()` from `next/cache` before synchronous request-time work that should stream or participate in partial prefetching. Use `connection()` only when rendering must wait for a real user request because it blocks prefetches. An awaited fetch or asynchronous database query already provides the suspension point unless synchronous work such as starting an Effect runtime happens first.
-- Keep `experimental.instantInsights.validationLevel` pinned to `"warning"` so Next.js 16.3 validates every Page and Default segment in development. Do not add redundant `instant = true` exports while global validation is enabled. Use `instant = false` only when a route is deliberately allowed to block navigation.
-- Keep the shared App Shell as the default prefetch. Use `<Link prefetch={true}>` only when URL-dependent cached content justifies one server invocation per link. For grids and long lists, start runtime prefetch on user intent instead of prefetching every visible destination.
-- Keep truthful stable UI outside `Suspense`. When no truthful stable fallback exists, use `fallback={null}`. Do not invent skeletons, placeholder cards, or fake content solely to satisfy an instant-navigation boundary.
-- Keep the real root layout inside the root `[locale]` segment, resolve request configuration through `next/root-params`, and use next-intl server APIs such as `getLocale()` instead of manually threading locale through Server Components. `next/root-params` is server-only and does not belong in Client Components, Route Handlers, or Server Actions.
+## Testing And Content
 
-## Convex Rules
+- Vitest is the standard test runner. Keep `*.test.ts` beside the real owning `.ts` module. Do not add orphan concept tests, `*.test.tsx`, renamed React tests, or nested test folders.
+- Do not add React component tests that mock children to verify static markup. Move testable behavior into an owning `.ts` domain seam and verify rendered behavior through production-mode Browser or E2E acceptance.
+- Keep tests behavior-oriented, focused, and free of `.only` or `.skip`. Run the nearest test first, then the relevant workspace suite when risk warrants it. Some workspaces require per-file 100% coverage.
+- Use `pnpm run doctor --verbose --scope changed --base main --include-untracked` for changed React code and `pnpm run doctor --verbose --scope full` for a whole-codebase audit. Do not use the deprecated `--diff` alias or plain `npx react-doctor@latest`.
+- Authored content follows the audited Aksara locale equivalent without fallback. Preserve reviewed facts, pedagogy, exercises, renderer contracts, and the language being assessed.
+- Lesson headings begin at `h2` and descend to `h3`. Exercise answers render below an app-owned `h3`, so authored answer sections begin at `h4` and may use `h5` for real nesting.
+- Use `InlineMath` and `BlockMath` for math, `MathContainer` for consecutive blocks when needed, and explicit `NumberLine` or `LineEquation` imports. Keep blank lines between prose and math blocks.
+- Authored MDX lives only in Aksara. Nakafa renderer work must preserve Aksara publication contracts.
 
-- Follow official Convex docs and the generated AI guidelines exactly.
-- Every concurrent Convex task must use an isolated deployment through Agent Mode as documented in `packages/backend/AGENTS.md`. Never use the shared personal dev deployment for new work.
-- Prefer Convex-first app-data mutations and queries. Do not add Next Server Actions or Route Handlers that only wrap Convex functions; use them only for real Next/framework boundaries such as cookies, headers, cache invalidation, or non-Convex integrations, and document that reason at the seam.
-- Use shared helpers and validators in `packages/backend/convex/lib/`.
-- Use auth helpers from `packages/backend/convex/lib/helpers/auth.ts`; do not reach for raw `ctx.auth` patterns first.
-- Add validators for every Convex function.
-- Use `query`, `mutation`, `action`, and internal variants appropriately; do not expose sensitive logic publicly.
-- Keep Convex route files focused on registered Convex functions. Move domain implementation details into capability folders such as `checkout/impl.ts`, `redeem/spec.ts`, or `integrity/internal.ts`; do not create prefix-suffixed files like `public.impl.ts` or `mutations.impl.ts`.
-- Use the Confect spec/impl split as structural inspiration, adapted to Convex routing with folder-owned `spec.ts`, `impl.ts`, and `internal.ts` files instead of prefix-suffixed filenames.
-- Prefer one clear capability token per Convex folder or filename. CamelCase domain terms such as `assistantResponses` are acceptable when they name one established concept; ambiguous generic names or compound prefix/suffix filenames are not.
-- Prefer direct imports from the owning module. Do not add new barrel re-exports or compatibility routes when callers can import the concrete capability directly.
-- Name Convex files by the capability they expose, not by generic lifecycle labels. Use names such as `reset`, `integrity`, `checkout`, `redeem`, or `assistantResponses`; avoid vague one-off names such as `maintenance` unless the module is a permanent, domain-specific maintenance surface.
-- When a Convex migration, backfill, or repair function is no longer needed, verify dev and prod data first, then remove both the function and its tests so no legacy repair path remains.
-- Prefer installed helpers/components when they fit: Better Auth, Workflow, Aggregate, Workpool, `convex-helpers`.
-- Keep pagination, relationships, aggregates, workflows, and cron jobs aligned with official patterns.
-- Make Convex schema and index names explicit and readable.
-- Treat every public Convex function used by a deployed product consumer as a
-  rollout contract. Renames and removals use an expand, switch, observe,
-  contract sequence: deploy the successor while the predecessor remains,
-  switch every consumer, verify that the predecessor has no readers for an
-  explicit migration-owned observation window, then delete it and every
-  temporary migration artifact in the cleanup pull request. A promoted web
-  deployment is not proof that older browser clients have stopped calling the
-  predecessor. Temporary compatibility is allowed only for this bounded
-  migration phase and must have an owner, an exit criterion, and a removal
-  change. The migration is not complete until that cleanup is merged.
+## Commands And Verification
 
-## Testing Rules
+- Root commands: `pnpm dev`, `pnpm dev:web`, `pnpm dev:all`, `pnpm start`, `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm format`, `pnpm security:audit`, `pnpm analyze`, and `pnpm boundaries`.
+- Prefer `pnpm start` after a build. Use `pnpm dev` only for hot reload, development-mode diagnostics, devtools, or Convex live development.
+- There is no root typecheck. Run `pnpm --filter <workspace> typecheck` for every changed workspace.
+- Run one test with `pnpm --filter <workspace> exec vitest run <relative-test-path>` and a workspace suite with `pnpm --filter <workspace> test`.
+- Run the smallest useful verification first, then expand based on risk. Format changed files, run `pnpm lint`, run affected tests and typechecks, and run `pnpm build` for build-critical changes.
+- Run `pnpm security:audit` after dependency or lockfile changes. Report any verification that could not run.
 
-- Vitest is the standard test runner.
-- Every `name.test.ts` file must be colocated with and test the real `name.ts` Module. Do not add orphan concept, corpus, integration, or regression test filenames. Move essential assertions into the owning TypeScript Module's test, and delete redundant assertions instead of creating a fake production Module to justify a test name.
-- Do not commit tests for `.tsx` Modules. Do not rename a React test from `*.test.tsx` to `*.test.ts` as a workaround. Put testable behavior in its owning `.ts` domain seam and use production-mode Browser or E2E acceptance for rendered React behavior.
-- Keep tests colocated as `*.test.ts`; do not create `__test__` or `__tests__` folders.
-- The root `check:tests` gate rejects `*.test.tsx`, tests without a real colocated `.ts` owner, and nested test folders across every app and package.
-- Do not add React component tests or shell tests that mock child components just to render static markup. Verify app UI through production-mode Browser or E2E checks.
-- Use `describe`, `it`/`test`, and focused assertions.
-- Keep tests readable and behavior-oriented.
-- Do not leave `.only` or `.skip` in committed code.
-- When changing business logic, add or update the nearest relevant test.
-- After risky changes, run the affected workspace suite, not just one file.
-- For the React Doctor PR gate, use `pnpm run doctor --verbose --scope changed --base main --include-untracked`. Use `pnpm run doctor --verbose --scope full` when auditing whole-codebase health. The legacy `--diff` alias is deprecated; do not use it or invoke plain `npx react-doctor@latest`.
+## Vercel Cost And Deployment Policy
 
-## MDX And Content Rules
+- Vercel Preview deployments are prohibited for all Nakafa projects. Never call a Vercel deploy connector or CLI for a feature branch or pull request, and never require a Preview URL as a gate.
+- Verify feature work with local production builds and starts, exact-head GitHub CI, Browser or Playwright, and isolated Convex Agent Mode deployments where needed.
+- Production deploys only after a protected merge to `main` through the existing Git integration. Keep Vercel branch configuration restricted to `main`.
+- Do not enable external Turborepo Remote Cache for the signed `www` production build until every server-side environment input and signed-content generation input is included in the task hash.
+- Cancel any accidental Preview immediately and remove every task-owned Preview artifact during cleanup.
 
-- Authored content follows the locale-equivalent source owned by Aksara.
-  English, Indonesian, and German variants preserve the same reviewed facts,
-  pedagogy, exercises, and renderer contracts without locale fallback.
-- Locale variants of language-subject exams preserve the language being assessed; for example, Indonesian-language questions remain Indonesian and English-language questions remain English in every UI locale. Localize the surrounding shell and explanations without adding redundant per-section language override metadata.
-- Subject lesson headings start at `h2`; keep lesson depth at `h3`.
-- Exercise answer MDX is rendered under the app-provided `h3` answer heading, so answer sections start at `h4` and may use `h5` for real nested analysis.
-- Use inline code for programming syntax.
-- Use `InlineMath` and `BlockMath` for math, not plain text math.
-- Use `MathContainer` around consecutive math blocks when needed.
-- `NumberLine` and `LineEquation` require explicit imports from the design system.
-- Keep list formatting simple with hyphen bullets.
-- Leave blank lines between prose paragraphs and math blocks.
-- Authored MDX lives only in Aksara. Nakafa renderer changes must preserve the
-  reviewed component contracts consumed by Aksara publications.
+## Git And Release Readiness
 
-## Git And Final Verification
-
-- Never overwrite or revert user changes you did not make.
-- Never use destructive git commands unless explicitly asked.
-- Never commit unless the user explicitly asks for a commit.
-- Before structural changes, read recent history so your approach matches the repo's direction.
-- Format changed files.
-- Run `pnpm lint` when the change is ready.
-- Run `pnpm security:audit` after changing dependencies or the lockfile.
-- Run targeted tests and the relevant workspace `typecheck`.
-- If the change touches build-critical paths, run `pnpm build` or the affected workspace build.
-- Mention any verification you could not run.
+- Never overwrite or revert user changes. Never use destructive Git commands without explicit authorization.
+- Do not commit unless the user asks. Before creating a pull request, format, run the relevant local checks, inspect the complete diff, and use a ready pull request only when it is reviewable.
+- Production readiness requires the exact pull-request head, all required checks, reviews, mergeability, protected-branch policy, and cleanup evidence. Green results from another commit are not proof.
+- Never blindly trust automated review findings. Trace each claim through the current code and authoritative sources before changing anything.
