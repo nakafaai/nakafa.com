@@ -100,12 +100,13 @@ export function BacterialGrowth({
   });
 
   const isInView = entry?.isIntersecting ?? false;
+  const activeGeneration = Math.min(generation, maxGenerations);
   // Viewport visibility gates work without overriding the user's Play/Pause intent.
-  const isEffectivelyPlaying = isPlaying && generation < maxGenerations;
+  const isEffectivelyPlaying = isPlaying && activeGeneration < maxGenerations;
   const isAnimating = isEffectivelyPlaying && isInView;
   const frameInput = Schema.decodeSync(BacterialGrowthFrameInputSchema)({
     formulaType,
-    generation,
+    generation: activeGeneration,
     initialCount,
     maxGenerations,
     ratio,
@@ -135,7 +136,7 @@ export function BacterialGrowth({
   }
 
   function togglePlayPause() {
-    if (!isEffectivelyPlaying && generation >= maxGenerations) {
+    if (!isEffectivelyPlaying && activeGeneration >= maxGenerations) {
       // If at max generation and trying to play, restart from beginning
       setGeneration(0);
       setIsPlaying(true);
@@ -212,7 +213,7 @@ export function BacterialGrowth({
       </CardContent>
 
       <BacterialControls
-        generation={generation}
+        generation={activeGeneration}
         isPlaying={isEffectivelyPlaying}
         maxGenerations={maxGenerations}
         onGenerationChange={selectGeneration}
