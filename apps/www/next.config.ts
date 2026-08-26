@@ -172,6 +172,14 @@ const nextConfig = {
   ...config,
   cacheComponents: true,
   partialPrefetching: true,
+  // Cache Components enables prerender source maps by default. The anonymous
+  // CI build does not publish those artifacts, and retaining them exhausted
+  // the static worker's isolated 4 GiB heap with two pages in flight.
+  // Production keeps source maps enabled. Docs:
+  // https://nextjs.org/docs/app/guides/memory-usage#disable-source-maps
+  ...(configEnv.CONVEX_AGENT_MODE === "anonymous"
+    ? { enablePrerenderSourceMaps: false }
+    : {}),
   env: {
     NEXT_PUBLIC_AKSARA_PREVIEW_CHILD: `${isAksaraPreviewChild}`,
   },
@@ -216,11 +224,13 @@ const nextConfig = {
     instantInsights: {
       validationLevel: "warning",
     },
-    // Anonymous Convex shares this runner, so use one worker with one page.
+    // Anonymous Convex shares this runner. Split the export across two isolated
+    // worker heaps, but let each worker process only one page at a time so the
+    // backend sees at most two concurrent static-generation requests.
     // Production keeps Next.js' default static-generation concurrency.
     // Docs: https://nextjs.org/docs/app/api-reference/config/next-config-js/staticGeneration
     ...(configEnv.CONVEX_AGENT_MODE === "anonymous"
-      ? { cpus: 1, staticGenerationMaxConcurrency: 1 }
+      ? { cpus: 2, staticGenerationMaxConcurrency: 1 }
       : {}),
   },
 } satisfies NextConfig;

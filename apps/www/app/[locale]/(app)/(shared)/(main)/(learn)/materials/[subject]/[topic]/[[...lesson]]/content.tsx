@@ -13,8 +13,10 @@ import {
   readMaterialRequest,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import { normalizeMaterialMetadata } from "@/lib/content/material/decode";
-import { getMaterialPublication } from "@/lib/content/material/publication";
-import { getPublishedMaterialRoute } from "@/lib/content/material/route";
+import {
+  getMaterialCatalogRoute,
+  getMaterialPublication,
+} from "@/lib/content/material/publication";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import {
   type MaterialPreviewContent,
@@ -37,12 +39,15 @@ interface PublishedOwner {
 
 type MaterialOwner = PreviewOwner | PublishedOwner;
 
-interface MaterialFields {
+interface MaterialRouteFields {
   readonly alternates: readonly MaterialLessonProjection[];
   readonly appLocale: Locale;
   readonly metadata: MaterialMetadata;
-  readonly rendererDomain: RendererDomain;
   readonly route: MaterialLessonProjection;
+}
+
+interface MaterialFields extends MaterialRouteFields {
+  readonly rendererDomain: RendererDomain;
 }
 
 interface PreviewContent extends MaterialFields {
@@ -68,7 +73,7 @@ interface PublishedContent extends MaterialFields {
 export type MaterialPageContent = PreviewContent | PublishedContent;
 
 /** Metadata selected from the same exclusive owner as the page body. */
-export interface MaterialMetadataContent extends MaterialFields {
+export interface MaterialMetadataContent extends MaterialRouteFields {
   readonly kind: MaterialOwner["kind"];
 }
 
@@ -119,12 +124,11 @@ export async function readMaterialMetadata(
       kind: owner.kind,
       appLocale: owner.appLocale,
       metadata: owner.preview.metadata,
-      rendererDomain: owner.preview.rendererDomain,
       route: owner.preview.projection,
     };
   }
 
-  const model = await getPublishedMaterialRoute(owner.locale, owner.publicPath);
+  const model = await getMaterialCatalogRoute(owner.locale, owner.publicPath);
   if (!model.projection) {
     notFound();
   }
@@ -134,7 +138,6 @@ export async function readMaterialMetadata(
     kind: owner.kind,
     appLocale: owner.locale,
     metadata: normalizeMaterialMetadata(model.projection.metadata),
-    rendererDomain: model.rendererDomain,
     route: model.projection,
   };
 }
@@ -183,7 +186,7 @@ export async function readMaterialPage(
     kind: owner.kind,
     appLocale: owner.locale,
     metadata: published.metadata,
-    rendererDomain: model.rendererDomain,
+    rendererDomain: published.rendererDomain,
     route: model.projection,
     siblings: model.siblings,
     sourceUrl: published.sourceRevision

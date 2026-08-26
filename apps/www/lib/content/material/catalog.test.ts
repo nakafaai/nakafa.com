@@ -5,11 +5,14 @@ import {
   type MaterialLessonProjection,
 } from "@nakafa/aksara-contracts/projection/material";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
+import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import {
+  getPublishedMaterialRelease,
   getPublishedMaterialRoutes,
   readPublishedMaterialPage,
+  readPublishedMaterialRelease,
   readPublishedMaterialRoutes,
 } from "@/lib/content/material/catalog";
 import { previewIdProjection, previewProjection } from "@/test/content-preview";
@@ -34,11 +37,13 @@ vi.mock("@/lib/content/runtime/query", async () => {
 function materialPage({
   done = true,
   managed = true,
+  revision = sourceRevision,
   routes = [previewProjection],
   stale = false,
 }: {
   readonly done?: boolean;
   readonly managed?: boolean;
+  readonly revision?: null | string;
   readonly routes?: readonly MaterialLessonProjection[];
   readonly stale?: boolean;
 } = {}) {
@@ -51,8 +56,28 @@ function materialPage({
       isDone: done,
       page: routes.map((route) => canonicalizeMaterialProjection(route)),
     },
-    sourceRevision: managed ? sourceRevision : null,
+    sourceRevision: managed ? revision : null,
     stale,
+  };
+}
+
+/** Builds the signed material release identity returned by Convex. */
+function materialRelease({
+  activeAppLocales = ["en", "id", "de"],
+  manifest = manifestHash,
+  release = releaseId,
+  revision = sourceRevision,
+}: {
+  readonly activeAppLocales?: readonly string[];
+  readonly manifest?: null | string;
+  readonly release?: null | string;
+  readonly revision?: null | string;
+} = {}) {
+  return {
+    activeAppLocales,
+    activeManifestHash: manifest,
+    activeReleaseId: release,
+    sourceRevision: revision,
   };
 }
 
@@ -62,35 +87,35 @@ beforeEach(() => {
 });
 
 describe("published material catalog", () => {
-  it("decodes one bounded release page", async () => {
-    runtimeQueryMock.mockResolvedValueOnce(materialPage({ done: false }));
+  it.effect("decodes one bounded release page", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValueOnce(materialPage({ done: false }));
 
-    await expect(
-      Effect.runPromise(
-        readPublishedMaterialPage({
+      expect(
+        yield* readPublishedMaterialPage({
           cursor: null,
           expectedManifestHash: null,
           expectedReleaseId: null,
           locale: "en",
         })
-      )
-    ).resolves.toMatchObject({
-      activeManifestHash: manifestHash,
-      activeReleaseId: releaseId,
-      done: false,
-      managed: true,
-      nextCursor: "next",
-      routes: [previewProjection],
-      sourceRevision,
-      stale: false,
-    });
-    expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
-      appLocale: "en",
-      expectedManifestHash: null,
-      expectedReleaseId: null,
-      paginationOpts: { cursor: null, numItems: PROJECTION_PAGE_LIMIT },
-    });
-  });
+      ).toMatchObject({
+        activeManifestHash: manifestHash,
+        activeReleaseId: releaseId,
+        done: false,
+        managed: true,
+        nextCursor: "next",
+        routes: [previewProjection],
+        sourceRevision,
+        stale: false,
+      });
+      expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
+        appLocale: "en",
+        expectedManifestHash: null,
+        expectedReleaseId: null,
+        paginationOpts: { cursor: null, numItems: PROJECTION_PAGE_LIMIT },
+      });
+    })
+  );
 
   it("reads all pages through one stable release cursor", async () => {
     runtimeQueryMock
@@ -98,6 +123,9 @@ describe("published material catalog", () => {
       .mockResolvedValueOnce(materialPage());
 
     await expect(getPublishedMaterialRoutes("en")).resolves.toMatchObject({
+      activeManifestHash: manifestHash,
+      activeReleaseId: releaseId,
+      appLocale: "en",
       routes: [previewProjection, previewProjection],
       sourceRevision,
     });
@@ -110,20 +138,94 @@ describe("published material catalog", () => {
     expect(cacheMock).toHaveBeenCalledOnce();
   });
 
-  it("rejects unmanaged and stale ownership states", async () => {
-    runtimeQueryMock
-      .mockResolvedValueOnce(materialPage({ managed: false, routes: [] }))
-      .mockResolvedValueOnce(materialPage({ routes: [], stale: true }));
+  it("reads and caches signed release locale membership", async () => {
+    runtimeQueryMock.mockResolvedValueOnce(materialRelease());
 
-    await expect(
-      Effect.runPromise(readPublishedMaterialRoutes("en").pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-    await expect(
-      Effect.runPromise(readPublishedMaterialRoutes("en").pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+    await expect(getPublishedMaterialRelease()).resolves.toMatchObject({
+      activeAppLocales: ["en", "id", "de"],
+      activeManifestHash: manifestHash,
+      activeReleaseId: releaseId,
+      sourceRevision,
+    });
+    expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
+      appLocale: "en",
+      publicPath: "materials",
+    });
+    expect(cacheMock).toHaveBeenCalledOnce();
   });
 
-  it.each([
+  it.effect("rejects malformed signed release identity", () =>
+    Effect.gen(function* () {
+      for (const result of [
+        materialRelease({ activeAppLocales: ["id", "en"] }),
+        materialRelease({ manifest: null }),
+        materialRelease({ release: null }),
+        materialRelease({ revision: "main" }),
+      ]) {
+        runtimeQueryMock.mockResolvedValueOnce(result);
+        expect(
+          yield* readPublishedMaterialRelease().pipe(Effect.flip)
+        ).toMatchObject({ _tag: "PublishedProjectionError" });
+      }
+    })
+  );
+
+  it.effect("rejects unmanaged and stale ownership states", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock
+        .mockResolvedValueOnce(materialPage({ managed: false, routes: [] }))
+        .mockResolvedValueOnce(materialPage({ routes: [], stale: true }));
+
+      expect(
+        yield* readPublishedMaterialRoutes("en").pipe(Effect.flip)
+      ).toMatchObject({ _tag: "PublishedProjectionError" });
+      expect(
+        yield* readPublishedMaterialRoutes("en").pipe(Effect.flip)
+      ).toMatchObject({ _tag: "PublishedProjectionError" });
+    })
+  );
+
+  it.effect("rejects missing, malformed, and changing release identities", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock
+        .mockResolvedValueOnce({
+          ...materialPage(),
+          activeReleaseId: null,
+        })
+        .mockResolvedValueOnce({
+          ...materialPage(),
+          activeManifestHash: "invalid",
+        })
+        .mockResolvedValueOnce(materialPage({ done: false }))
+        .mockResolvedValueOnce({
+          ...materialPage(),
+          activeReleaseId: "release-other",
+        });
+
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        expect(
+          yield* readPublishedMaterialRoutes("en").pipe(Effect.flip)
+        ).toMatchObject({ _tag: "PublishedProjectionError" });
+      }
+    })
+  );
+
+  it.effect("rejects malformed and changing source revisions", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock
+        .mockResolvedValueOnce(materialPage({ revision: "main" }))
+        .mockResolvedValueOnce(materialPage({ done: false }))
+        .mockResolvedValueOnce(materialPage({ revision: "b".repeat(40) }));
+
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        expect(
+          yield* readPublishedMaterialRoutes("en").pipe(Effect.flip)
+        ).toMatchObject({ _tag: "PublishedProjectionError" });
+      }
+    })
+  );
+
+  it.effect.each([
     ["foreign locale", materialPage({ routes: [previewIdProjection] })],
     [
       "missing continuation identity",
@@ -132,18 +234,18 @@ describe("published material catalog", () => {
         activeManifestHash: null,
       },
     ],
-  ])("rejects %s", async (_label, result) => {
-    runtimeQueryMock.mockResolvedValueOnce(result);
+  ])("rejects %s", ([_label, result]) =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValueOnce(result);
 
-    await expect(
-      Effect.runPromise(
-        readPublishedMaterialPage({
+      expect(
+        yield* readPublishedMaterialPage({
           cursor: null,
           expectedManifestHash: null,
           expectedReleaseId: null,
           locale: "en",
         }).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-  });
+      ).toMatchObject({ _tag: "PublishedProjectionError" });
+    })
+  );
 });
