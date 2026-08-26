@@ -278,6 +278,7 @@ import type * as contentRelease_quran_view from "../contentRelease/quran/view.js
 import type * as contentRelease_receipt from "../contentRelease/receipt.js";
 import type * as contentRelease_recovery from "../contentRelease/recovery.js";
 import type * as contentRelease_reference from "../contentRelease/reference.js";
+import type * as contentRelease_reference_agent from "../contentRelease/reference/agent.js";
 import type * as contentRelease_reference_input from "../contentRelease/reference/input.js";
 import type * as contentRelease_reference_read from "../contentRelease/reference/read.js";
 import type * as contentRelease_reference_spec from "../contentRelease/reference/spec.js";
@@ -448,6 +449,7 @@ import type * as routes_agent_security from "../routes/agent/security.js";
 import type * as routes_constants from "../routes/constants.js";
 import type * as routes_middleware_requestId from "../routes/middleware/requestId.js";
 import type * as routes_polar from "../routes/polar.js";
+import type * as routes_v1_index from "../routes/v1/index.js";
 import type * as schools_mutations from "../schools/mutations.js";
 import type * as schools_queries from "../schools/queries.js";
 import type * as schools_slug from "../schools/slug.js";
@@ -855,6 +857,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/receipt": typeof contentRelease_receipt;
   "contentRelease/recovery": typeof contentRelease_recovery;
   "contentRelease/reference": typeof contentRelease_reference;
+  "contentRelease/reference/agent": typeof contentRelease_reference_agent;
   "contentRelease/reference/input": typeof contentRelease_reference_input;
   "contentRelease/reference/read": typeof contentRelease_reference_read;
   "contentRelease/reference/spec": typeof contentRelease_reference_spec;
@@ -1025,6 +1028,7 @@ declare const fullApi: ApiFromModules<{
   "routes/constants": typeof routes_constants;
   "routes/middleware/requestId": typeof routes_middleware_requestId;
   "routes/polar": typeof routes_polar;
+  "routes/v1/index": typeof routes_v1_index;
   "schools/mutations": typeof schools_mutations;
   "schools/queries": typeof schools_queries;
   "schools/slug": typeof schools_slug;
