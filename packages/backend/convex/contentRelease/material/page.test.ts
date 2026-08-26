@@ -2,10 +2,13 @@ import { readMaterialPage } from "@repo/backend/convex/contentRelease/material/p
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import {
   activateMaterialCatalog,
+  advanceMaterialCatalog,
   MATERIAL_IDENTITY,
 } from "@repo/backend/test/material-catalog";
+import { insertRuntimeBinding } from "@repo/backend/test/runtime-head";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -113,6 +116,38 @@ describe("contentRelease/material/page", () => {
       managed: true,
       result: { isDone: true, page: [] },
       stale: true,
+    });
+  });
+
+  it("rejects catalog rows removed from the effective publication", async () => {
+    const t = convexTest(schema, convexModules);
+    const removed = makeMaterialProjection("en", 1);
+    await activateMaterialCatalog(t);
+    await t.mutation((ctx) =>
+      insertRuntimeBinding(ctx, null, {
+        appLocale: removed.appLocale,
+        bindingReleaseId: "release-next",
+        bindingSequence: 2,
+        publicPath: removed.publicPath,
+      })
+    );
+    await advanceMaterialCatalog(t);
+
+    await expect(
+      t.query((ctx) =>
+        runConvexProgram(
+          readMaterialPage(
+            ctx,
+            removed.appLocale,
+            null,
+            null,
+            { cursor: null, numItems: 2 },
+            "publication"
+          )
+        )
+      )
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_ROUTE" },
     });
   });
 

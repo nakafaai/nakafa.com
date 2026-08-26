@@ -10,7 +10,7 @@ import {
   encodePredecessorProjection,
   type MaterialProjectionContract,
 } from "@repo/backend/convex/contentRelease/material/predecessor";
-import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
+import { verifyEffectiveMaterial } from "@repo/backend/convex/contentRelease/material/verify";
 import { validateProjectionPage } from "@repo/backend/convex/contentRelease/paging";
 import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
 import { Effect } from "effect";
@@ -78,6 +78,7 @@ export const readMaterialPage = Effect.fn("contentRelease.readMaterialPage")(
         stale: false,
       };
     }
+    const activePublication = owner.active;
     const stored = yield* Effect.promise(() =>
       ctx.db
         .query("materialCatalog")
@@ -86,25 +87,26 @@ export const readMaterialPage = Effect.fn("contentRelease.readMaterialPage")(
         )
         .paginate(options)
     );
-    const verified = yield* Effect.forEach(stored.page, verifyMaterial);
-    const page = yield* Effect.forEach(
-      verified,
-      ({ projection, projectionJson }) => {
-        if (contract === "publication") {
-          return Effect.succeed(projectionJson);
-        }
-        return encodePredecessorProjection(projection);
-      }
+    const verified = yield* Effect.forEach(
+      stored.page,
+      (row) => verifyEffectiveMaterial(ctx, row, activePublication.sequence),
+      { concurrency: "unbounded" }
     );
+    const page = yield* Effect.forEach(verified, ({ projection, resolved }) => {
+      if (contract === "publication") {
+        return Effect.succeed(resolved.projectionJson);
+      }
+      return encodePredecessorProjection(projection);
+    });
     return {
-      activeManifestHash: owner.active.manifestHash,
-      activeReleaseId: owner.active.releaseId,
+      activeManifestHash: activePublication.manifestHash,
+      activeReleaseId: activePublication.releaseId,
       managed: true,
       result: {
         ...stored,
         page,
       },
-      sourceRevision: readSourceRevision(owner.active),
+      sourceRevision: readSourceRevision(activePublication),
       stale: false,
     };
   }
