@@ -28,7 +28,7 @@ import {
   agentJsonResponse,
   agentOptionsResponse,
   httpInputFailureResponse,
-  internalFailureResponse,
+  logInternalFailure,
   problemResponse,
 } from "@repo/backend/convex/routes/agent/response";
 import {
@@ -215,17 +215,19 @@ function runAgentRequest(
   const instance = new URL(request.url).pathname;
   return Effect.runPromise(
     program.pipe(
-      Effect.matchCause({
+      Effect.matchCauseEffect({
         onFailure: (cause) => {
           const failure = cause.reasons.find(Cause.isFailReason);
           if (!failure) {
-            return internalFailureResponse(instance, requestId);
+            return logInternalFailure(cause, instance, requestId);
           }
-          return failure.error._tag === "AgentHttpInputError"
-            ? httpInputFailureResponse(failure.error, instance, requestId)
-            : agentFailureResponse(failure.error, instance, requestId);
+          return Effect.succeed(
+            failure.error._tag === "AgentHttpInputError"
+              ? httpInputFailureResponse(failure.error, instance, requestId)
+              : agentFailureResponse(failure.error, instance, requestId)
+          );
         },
-        onSuccess: (response) => response,
+        onSuccess: Effect.succeed,
       })
     )
   );

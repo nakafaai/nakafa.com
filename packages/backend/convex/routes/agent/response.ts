@@ -5,6 +5,7 @@ import type {
   NakafaAgentInputError,
 } from "@repo/contents/_lib/agent/errors";
 import type { NakafaProblemDetails } from "@repo/contents/_lib/agent/schema/api";
+import { type Cause, Effect } from "effect";
 
 export type AgentProblemStatus =
   | 400
@@ -150,6 +151,16 @@ export function internalFailureResponse(instance: string, requestId: string) {
     type: "internal-error",
   });
 }
+
+/** Logs one unexpected private cause before returning its traceable response. */
+export const logInternalFailure = Effect.fn("agent.logInternalFailure")(
+  function* (cause: Cause.Cause<unknown>, instance: string, requestId: string) {
+    yield* Effect.logError("Unexpected Nakafa public API failure.", cause).pipe(
+      Effect.annotateLogs({ instance, requestId })
+    );
+    return internalFailureResponse(instance, requestId);
+  }
+);
 
 /** Returns the shared successful CORS preflight response. */
 export function agentOptionsResponse() {
