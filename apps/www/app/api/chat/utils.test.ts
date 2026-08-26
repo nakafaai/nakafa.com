@@ -11,34 +11,33 @@ import {
   getVerified,
 } from "@/app/api/chat/utils";
 
+const mocks = vi.hoisted(() => ({
+  verify: vi.fn(),
+}));
+
 vi.mock("convex/nextjs", () => ({
   fetchMutation: vi.fn(),
   fetchQuery: vi.fn(),
 }));
 
-vi.mock("@/app/api/chat/nakafa-content", async () => {
-  const { Effect } = await import("effect");
-
-  return {
-    nakafaContent: {
-      /** Verifies chat content refs through deterministic URL fixtures. */
-      verify: (url: string) =>
-        Effect.succeed(
-          url === "https://nakafa.com/id/quran/1" ||
-            url ===
-              "https://nakafa.com/id/articles/politics/dynastic-politics-asian-values" ||
-            url ===
-              "https://nakafa.com/en/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge" ||
-            url === "asset:id:quran:quran-surah:1" ||
-            url === "nakafa://content/asset:id:quran:quran-surah:1"
-        ),
-    },
-  };
-});
+vi.mock("@/app/api/chat/nakafa-content", () => ({
+  nakafaContent: { verify: mocks.verify },
+}));
 
 describe("app/api/chat/utils", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.verify.mockImplementation((url: string) =>
+      Effect.succeed(
+        url === "https://nakafa.com/id/quran/1" ||
+          url ===
+            "https://nakafa.com/id/articles/politics/dynastic-politics-asian-values" ||
+          url ===
+            "https://nakafa.com/en/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge" ||
+          url === "asset:id:quran:quran-surah:1" ||
+          url === "nakafa://content/asset:id:quran:quran-surah:1"
+      )
+    );
   });
 
   it.effect.each([
