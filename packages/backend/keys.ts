@@ -1,3 +1,7 @@
+import {
+  NAKAFA_API_EDGE_CONTRACT,
+  NAKAFA_MCP_EDGE_CONTRACT,
+} from "@repo/backend/agent/edge";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { Schema } from "effect";
 
@@ -34,6 +38,31 @@ export const convexSiteKeys = () =>
       NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
     },
   });
+
+/** Defines the private Vercel credential for the direct REST origin. */
+export const apiEdgeKeys = () =>
+  createEnv({
+    server: {
+      [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]: secretSchema,
+    },
+    runtimeEnv: {
+      [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]:
+        process.env[NAKAFA_API_EDGE_CONTRACT.secretEnvironment],
+    },
+  });
+
+/** Defines the private Vercel credential for the direct MCP origin. */
+export const mcpEdgeKeys = () =>
+  createEnv({
+    server: {
+      [NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment]: secretSchema,
+    },
+    runtimeEnv: {
+      [NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment]:
+        process.env[NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment],
+    },
+  });
+
 export const keys = () =>
   createEnv({
     extends: [convexKeys(), convexSiteKeys()],
