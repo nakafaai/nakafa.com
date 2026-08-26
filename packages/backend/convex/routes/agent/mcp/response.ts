@@ -59,15 +59,26 @@ export function mcpErrorResponse(
 
 /** Rejects an unprocessed transport request without emitting JSON-RPC. */
 export function mcpRateLimitResponse(retryAfterMilliseconds: number) {
-  return new Response(null, {
-    headers: {
-      "Cache-Control": "no-store",
-      "Retry-After": String(
-        Math.max(1, Math.ceil(retryAfterMilliseconds / 1000))
-      ),
-    },
-    status: 429,
-  });
+  return mcpEmptyResponse(429, retryAfterMilliseconds);
+}
+
+/** Maps an error after parsing while preserving notification semantics. */
+export function mcpParsedErrorResponse(
+  body: unknown,
+  status: number,
+  code: number,
+  message: string,
+  requestId: string
+) {
+  return isJsonRpcNotification(body)
+    ? mcpEmptyResponse(status)
+    : mcpErrorResponse(
+        status,
+        code,
+        message,
+        requestId,
+        readJsonRpcRequestId(body)
+      );
 }
 
 /** Adds CORS and cache metadata without replacing SDK protocol headers. */
@@ -103,6 +114,35 @@ export function readJsonRpcRequestId(body: unknown) {
   }
   const id = body.id;
   return typeof id === "number" || typeof id === "string" ? id : null;
+}
+
+function isJsonRpcNotification(body: unknown) {
+  return (
+    typeof body === "object" &&
+    body !== null &&
+    !Array.isArray(body) &&
+    !("id" in body) &&
+    "jsonrpc" in body &&
+    body.jsonrpc === "2.0" &&
+    "method" in body &&
+    typeof body.method === "string"
+  );
+}
+
+function mcpEmptyResponse(status: number, retryAfterMilliseconds?: number) {
+  return new Response(null, {
+    headers: {
+      "Cache-Control": "no-store",
+      ...(retryAfterMilliseconds === undefined
+        ? {}
+        : {
+            "Retry-After": String(
+              Math.max(1, Math.ceil(retryAfterMilliseconds / 1000))
+            ),
+          }),
+    },
+    status,
+  });
 }
 
 function readAllowedHeaders(request: Request) {

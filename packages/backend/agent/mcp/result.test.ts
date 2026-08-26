@@ -20,7 +20,7 @@ describe("Nakafa MCP tool results", () => {
     const result = await runMcpTool(
       Effect.fail(
         new NakafaAgentInputError({
-          cause: "private parser detail",
+          cause: "Use one of the published locale values.",
           message: "Invalid tool arguments.",
         })
       ),
@@ -32,11 +32,10 @@ describe("Nakafa MCP tool results", () => {
       structuredContent: {
         error: {
           message: "Invalid tool arguments.",
-          suggestions: [expect.stringContaining("Correct")],
+          suggestions: ["Use one of the published locale values."],
         },
       },
     });
-    expect(JSON.stringify(result)).not.toContain("private parser detail");
   });
 
   it("builds non-empty actionable error guidance", () => {

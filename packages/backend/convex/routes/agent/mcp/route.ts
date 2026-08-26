@@ -10,8 +10,8 @@ import type {
 import {
   mcpErrorResponse,
   mcpOptionsResponse,
+  mcpParsedErrorResponse,
   mcpRateLimitResponse,
-  readJsonRpcRequestId,
   withMcpResponseHeaders,
 } from "@repo/backend/convex/routes/agent/mcp/response";
 import {
@@ -104,7 +104,8 @@ export function registerAgentMcpRoutes(app: AgentApp) {
     );
     if (Result.isFailure(runtime)) {
       return withMcpResponseHeaders(
-        mcpErrorResponse(
+        mcpParsedErrorResponse(
+          parsedBody,
           503,
           -32_603,
           "The MCP protocol runtime is unavailable.",
@@ -118,14 +119,13 @@ export function registerAgentMcpRoutes(app: AgentApp) {
       parsedBody
     );
     if (!(legacy || request.headers.has("mcp-protocol-version"))) {
-      const responseId = readJsonRpcRequestId(parsedBody);
       return withMcpResponseHeaders(
-        mcpErrorResponse(
+        mcpParsedErrorResponse(
+          parsedBody,
           400,
           -32_020,
           "The MCP-Protocol-Version header is required for modern requests.",
-          requestId,
-          responseId
+          requestId
         ),
         request
       );
@@ -151,12 +151,12 @@ export function registerAgentMcpRoutes(app: AgentApp) {
       );
       if (Result.isFailure(recorded)) {
         return withMcpResponseHeaders(
-          mcpErrorResponse(
+          mcpParsedErrorResponse(
+            parsedBody,
             503,
             -32_603,
             "The MCP legacy observation boundary is unavailable.",
-            requestId,
-            readJsonRpcRequestId(parsedBody)
+            requestId
           ),
           request
         );

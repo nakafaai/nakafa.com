@@ -68,7 +68,8 @@ export function toMcpToolError(
 function toExpectedToolError(error: AgentToolError) {
   if (error._tag === "NakafaAgentInputError") {
     return toMcpToolError(error.message, [
-      "Correct the tool arguments using the published input schema and retry.",
+      error.cause ??
+        "Correct the tool arguments using the published input schema and retry.",
     ]);
   }
   return toMcpToolError(error.message, [

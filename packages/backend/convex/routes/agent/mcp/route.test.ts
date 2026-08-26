@@ -379,20 +379,30 @@ describe("Nakafa MCP transport", () => {
   });
 
   it("rejects modern traffic that omits its protocol header", async () => {
-    const response = await fetchMcp(createConvexTestWithBetterAuth(), {
-      body: JSON.stringify({
+    const test = createConvexTestWithBetterAuth();
+    const post = (body: Readonly<Record<string, unknown>>) =>
+      fetchMcp(test, {
+        body: JSON.stringify(body),
+        headers: {
+          accept: "application/json, text/event-stream",
+          "content-type": "application/json",
+          "mcp-method": "server/discover",
+        },
+        method: "POST",
+      });
+    const [response, notification] = await Promise.all([
+      post({
         id: 31,
         jsonrpc: "2.0",
         method: "server/discover",
         params: { _meta: MODERN_META },
       }),
-      headers: {
-        accept: "application/json",
-        "content-type": "application/json",
-        "mcp-method": "server/discover",
-      },
-      method: "POST",
-    });
+      post({
+        jsonrpc: "2.0",
+        method: "notifications/initialized",
+        params: { _meta: MODERN_META },
+      }),
+    ]);
 
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toMatchObject({
@@ -403,6 +413,8 @@ describe("Nakafa MCP transport", () => {
       id: 31,
       jsonrpc: "2.0",
     });
+    expect(notification.status).toBe(400);
+    await expect(notification.text()).resolves.toBe("");
   });
 
   it("preserves SDK parse and method failures", async () => {
