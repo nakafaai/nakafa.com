@@ -1,3 +1,4 @@
+import { projectPublicApiPath } from "@repo/backend/agent/edge";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { hasRequestBody } from "@repo/backend/convex/routes/agent/input";
 import { problemResponse } from "@repo/backend/convex/routes/agent/response";
@@ -23,7 +24,7 @@ export const guardAgentApi: MiddlewareHandler<{
   Variables: AgentVariables;
 }> = async (context, next) => {
   const request = context.req.raw;
-  const instance = new URL(request.url).pathname;
+  const instance = projectPublicApiPath(new URL(request.url).pathname);
   const requestId = context.get("requestId");
   const secret = await Effect.runPromise(
     hasValidApiEdgeSecret(request).pipe(

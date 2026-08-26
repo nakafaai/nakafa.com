@@ -13,6 +13,7 @@ import { registerContentReleaseRoutes } from "@repo/backend/convex/contentReleas
 import { registerAgentApiRoutes } from "@repo/backend/convex/routes/agent/api";
 import { requestId } from "@repo/backend/convex/routes/middleware/requestId";
 import { registerPolarRoutes } from "@repo/backend/convex/routes/polar";
+import v1 from "@repo/backend/convex/routes/v1";
 import {
   type HonoWithConvex,
   HttpRouterWithHono,
@@ -48,7 +49,10 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => {
   return auth.handler(c.req.raw);
 });
 
-// Register the protected read-only API and its machine-readable contract.
+// Preserve the deployed predecessor until the protected Vercel bridge switches.
+app.route("/v1", v1);
+
+// Register the protected successor and its machine-readable contract.
 registerAgentApiRoutes(app);
 
 // Register webhook routes (internal - called by external services)

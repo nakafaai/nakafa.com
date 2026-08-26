@@ -42,7 +42,10 @@ function fetchApi(
   const headers = new Headers(init.headers);
   headers.set(NAKAFA_API_EDGE_CONTRACT.secretHeader, API_SECRET);
   headers.set("x-forwarded-for", address);
-  return test.fetch(path, { ...init, headers });
+  return test.fetch(`${NAKAFA_API_EDGE_CONTRACT.originPath}${path}`, {
+    ...init,
+    headers,
+  });
 }
 
 /** Asserts the public API response metadata shared by JSON outcomes. */
@@ -114,7 +117,9 @@ describe("public agent API routes", () => {
 
   it("protects and serves the cacheable OpenAPI contract", async () => {
     const test = createConvexTestWithBetterAuth();
-    const denied = await test.fetch("/openapi.json");
+    const denied = await test.fetch(
+      `${NAKAFA_API_EDGE_CONTRACT.originPath}/openapi.json`
+    );
     const response = await fetchApi(test, "/openapi.json");
     const etag = response.headers.get("etag");
     const revalidated = await fetchApi(test, "/openapi.json", {
@@ -138,11 +143,24 @@ describe("public agent API routes", () => {
   });
 
   it("rejects direct origin access before dispatching a route", async () => {
-    const response = await createConvexTestWithBetterAuth().fetch("/v1/health");
+    const response = await createConvexTestWithBetterAuth().fetch(
+      `${NAKAFA_API_EDGE_CONTRACT.originPath}/v1/health`
+    );
 
     await expectProblem(response, {
       code: "ORIGIN_ACCESS_DENIED",
       status: 403,
+    });
+  });
+
+  it("preserves the deployed v1 predecessor before the edge switch", async () => {
+    const response = await createConvexTestWithBetterAuth().fetch("/v1");
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      docs: "https://docs.nakafa.com/api",
+      status: "active",
+      version: "1.0.0",
     });
   });
 
@@ -157,6 +175,13 @@ describe("public agent API routes", () => {
       415,
     ],
     ["/v1/search?limit=11", {}, "UNPROCESSABLE_REQUEST", 422],
+    ["/v1/content?ref=", {}, "UNPROCESSABLE_REQUEST", 422],
+    [
+      "/v1/content?ref=https%3A%2F%2Fexample.com%2Fen%2Fquran%2F1",
+      {},
+      "UNPROCESSABLE_REQUEST",
+      422,
+    ],
     ["/v1/quran/115", {}, "UNPROCESSABLE_REQUEST", 422],
     ["/v1/missing", {}, "ENDPOINT_NOT_FOUND", 404],
     ["/v1/health", { method: "POST" }, "METHOD_NOT_ALLOWED", 405],
@@ -289,6 +314,37 @@ describe("public agent API routes", () => {
     });
   });
 
+  it("reads Quran markdown through one transactionally pinned source", async () => {
+    const test = createConvexTestWithBetterAuth();
+    await test.mutation((ctx) =>
+      activateQuranSnapshot(ctx, [
+        makeQuranSurah(1),
+        makeQuranChunk({
+          firstQuranNumber: 1,
+          firstVerse: 1,
+          surahNumber: 1,
+          verseCount: 1,
+        }),
+        makeQuranSearch("en", 1),
+      ])
+    );
+    const response = await fetchApi(
+      test,
+      "/v1/content?ref=asset%3Aen%3Aquran%3Aquran-surah%3A1"
+    );
+
+    expect(response.status).toBe(200);
+    expectPublicJson(response);
+    await expect(response.json()).resolves.toMatchObject({
+      content_id: "asset:en:quran:quran-surah:1",
+      locale: "en",
+      route: "quran/1",
+      section: "quran",
+      text: expect.stringContaining("Technical translation 1"),
+      title: "Technical Surah 1",
+    });
+  });
+
   it("returns one bounded authenticated Quran reference", async () => {
     const test = createConvexTestWithBetterAuth();
     await test.mutation((ctx) =>
@@ -363,7 +419,10 @@ describe("public agent API routes", () => {
     const headers = new Headers({
       [NAKAFA_API_EDGE_CONTRACT.secretHeader]: API_SECRET,
     });
-    const response = await test.fetch("/v1/search", { headers });
+    const response = await test.fetch(
+      `${NAKAFA_API_EDGE_CONTRACT.originPath}/v1/search`,
+      { headers }
+    );
 
     await expectProblem(response, {
       code: "SERVICE_UNAVAILABLE",

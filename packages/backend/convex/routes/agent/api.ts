@@ -4,6 +4,10 @@ import {
   decodeAgentOutput,
 } from "@repo/backend/agent/decode";
 import {
+  NAKAFA_API_EDGE_CONTRACT,
+  projectPublicApiPath,
+} from "@repo/backend/agent/edge";
+import {
   createOpenApiOptionsResponse,
   createOpenApiResponse,
 } from "@repo/backend/agent/openapi/response";
@@ -45,9 +49,11 @@ import {
   NakafaApiHealthSchema,
   NakafaApiIndexSchema,
 } from "@repo/contents/_lib/agent/schema/api";
+import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/schema/taxonomy";
 import type { HonoWithConvex } from "convex-helpers/server/hono";
 import { Cause, Effect, Option } from "effect";
+import { Hono } from "hono";
 
 type AgentDomainError =
   | AgentHttpInputError
@@ -58,16 +64,18 @@ type AgentApp = HonoWithConvex<ActionCtx, { requestId: string }>;
 
 /** Registers the protected read-only API and its machine-readable contract. */
 export function registerAgentApiRoutes(app: AgentApp) {
-  app.use("/openapi.json", guardAgentApi);
-  app.use("/v1", guardAgentApi);
-  app.use("/v1/*", guardAgentApi);
+  const api: AgentApp = new Hono();
 
-  app.get("/openapi.json", (context) =>
+  api.use("/openapi.json", guardAgentApi);
+  api.use("/v1", guardAgentApi);
+  api.use("/v1/*", guardAgentApi);
+
+  api.get("/openapi.json", (context) =>
     createOpenApiResponse(context.req.header("if-none-match"))
   );
-  app.options("/openapi.json", () => createOpenApiOptionsResponse());
+  api.options("/openapi.json", () => createOpenApiOptionsResponse());
 
-  app.get("/v1", (context) =>
+  api.get("/v1", (context) =>
     runAgentRequest(
       context.req.raw,
       context.get("requestId"),
@@ -89,7 +97,7 @@ export function registerAgentApiRoutes(app: AgentApp) {
     )
   );
 
-  app.get("/v1/health", (context) =>
+  api.get("/v1/health", (context) =>
     runAgentRequest(
       context.req.raw,
       context.get("requestId"),
@@ -106,7 +114,7 @@ export function registerAgentApiRoutes(app: AgentApp) {
     )
   );
 
-  app.get("/v1/search", (context) =>
+  api.get("/v1/search", (context) =>
     runMeteredRequest(
       context.env,
       context.req.raw,
@@ -118,12 +126,19 @@ export function registerAgentApiRoutes(app: AgentApp) {
     )
   );
 
-  app.get("/v1/content", (context) =>
+  api.get("/v1/content", (context) =>
     runMeteredRequest(
       context.env,
       context.req.raw,
       context.get("requestId"),
       readContentInput(new URL(context.req.url)).pipe(
+        Effect.flatMap((ref) =>
+          decodeAgentInput(
+            NakafaAgentContentRefInputSchema,
+            ref,
+            "Invalid Nakafa content reference."
+          )
+        ),
         Effect.flatMap((ref) => getNakafaContent(context.env, ref)),
         Effect.map(
           Option.match({
@@ -139,7 +154,7 @@ export function registerAgentApiRoutes(app: AgentApp) {
     )
   );
 
-  app.get("/v1/taxonomy", (context) =>
+  api.get("/v1/taxonomy", (context) =>
     runMeteredRequest(
       context.env,
       context.req.raw,
@@ -158,7 +173,7 @@ export function registerAgentApiRoutes(app: AgentApp) {
     )
   );
 
-  app.get("/v1/quran/:surah", (context) =>
+  api.get("/v1/quran/:surah", (context) =>
     runMeteredRequest(
       context.env,
       context.req.raw,
@@ -184,12 +199,14 @@ export function registerAgentApiRoutes(app: AgentApp) {
     "/v1/taxonomy",
     "/v1/quran/:surah",
   ]) {
-    app.options(path, () => agentOptionsResponse());
+    api.options(path, () => agentOptionsResponse());
   }
 
-  app.all("/v1/*", (context) =>
+  api.all("/v1/*", (context) =>
     missingRouteResponse(context.req.raw, context.get("requestId"))
   );
+
+  app.route(NAKAFA_API_EDGE_CONTRACT.originPath, api);
 }
 
 /** Applies the application quota before reading or parsing content input. */
@@ -212,7 +229,7 @@ function runAgentRequest(
   requestId: string,
   program: Effect.Effect<Response, AgentDomainError>
 ) {
-  const instance = new URL(request.url).pathname;
+  const instance = projectPublicApiPath(new URL(request.url).pathname);
   return Effect.runPromise(
     program.pipe(
       Effect.matchCauseEffect({
@@ -238,7 +255,7 @@ function contentNotFoundResponse(request: Request, requestId: string) {
   return problemResponse({
     code: "CONTENT_NOT_FOUND",
     detail: "No public Nakafa content matched the supplied reference.",
-    instance: new URL(request.url).pathname,
+    instance: projectPublicApiPath(new URL(request.url).pathname),
     requestId,
     resolution:
       "Use a content_id from /v1/search with markdown_url, or a canonical readable Nakafa URL.",
@@ -253,7 +270,7 @@ function quranNotFoundResponse(request: Request, requestId: string) {
   return problemResponse({
     code: "QURAN_REFERENCE_NOT_FOUND",
     detail: "The requested Quran reference was not found.",
-    instance: new URL(request.url).pathname,
+    instance: projectPublicApiPath(new URL(request.url).pathname),
     requestId,
     resolution: "Pass a surah number from 1 through 114.",
     status: 404,
@@ -264,7 +281,7 @@ function quranNotFoundResponse(request: Request, requestId: string) {
 
 /** Returns one exact 404 or 405 for unmatched public API routes. */
 function missingRouteResponse(request: Request, requestId: string) {
-  const instance = new URL(request.url).pathname;
+  const instance = projectPublicApiPath(new URL(request.url).pathname);
   if (request.method === "GET" || request.method === "OPTIONS") {
     return problemResponse({
       code: "ENDPOINT_NOT_FOUND",
