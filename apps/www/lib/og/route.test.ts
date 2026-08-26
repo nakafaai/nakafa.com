@@ -34,6 +34,7 @@ describe("OG route aliases", () => {
     ["/fr/example.og", "fr"],
     ["/fr/example.png", "fr"],
     ["/FR/og/example/image.png", "FR"],
+    ["/og/example/image.png", null],
     ["/example.png", null],
     ["/classes/bacteria.png", null],
     ["/open-graph/curriculum/en-index.png", null],

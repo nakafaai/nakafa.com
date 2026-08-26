@@ -224,7 +224,7 @@ describe("proxy", () => {
     expect(bypassed.some(matches)).toBe(false);
   });
 
-  it.each(["/en/example.og", "/en/example.png"])(
+  it.each(["/en/example.og", "/en/example.png", "/og/example/image.png"])(
     "delegates the active OG alias %s before document routing",
     async (path) => {
       const response = await requestProxy(path);

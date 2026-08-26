@@ -1,4 +1,5 @@
-const OG_ROUTE_DESTINATION = "/og/:path*";
+const OG_ROUTE_SEGMENT = "og";
+const OG_ROUTE_DESTINATION = `/${OG_ROUTE_SEGMENT}/:path*`;
 const OG_ROUTE_LOCALE_PATTERN = /^[A-Za-z]{2}$/;
 
 const OG_ROUTE_ALIASES = Object.freeze([
@@ -30,7 +31,10 @@ export function readOgRouteAliasLocale(pathname: string) {
   }
 
   const [locale] = pathname.split("/").filter(Boolean);
-  if (!(locale && OG_ROUTE_LOCALE_PATTERN.test(locale))) {
+  if (
+    !(locale && OG_ROUTE_LOCALE_PATTERN.test(locale)) ||
+    locale === OG_ROUTE_SEGMENT
+  ) {
     return null;
   }
 
