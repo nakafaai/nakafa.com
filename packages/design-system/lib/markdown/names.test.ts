@@ -12,7 +12,7 @@ import {
   snbtQuantComponentNames,
   tkaMathComponentNames,
 } from "@repo/design-system/lib/markdown/names";
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "vitest";
 
 const domainComponentNames = {
   "ai-ds": aiDsComponentNames,

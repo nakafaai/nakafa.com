@@ -2,9 +2,8 @@ import {
   parseMarkdownIntoBlocks,
   readMarkdownBlocks,
 } from "@repo/design-system/lib/markdown/blocks";
-import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { Lexer, type Tokens } from "marked";
-import { vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 function mockLexerBlocks(...blocks: string[]) {
   const tokens = Object.assign(

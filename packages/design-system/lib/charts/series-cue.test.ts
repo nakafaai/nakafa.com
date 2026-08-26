@@ -3,7 +3,7 @@ import {
   getLineSeriesCue,
   getPointSeriesCue,
 } from "@repo/design-system/lib/charts/series-cue";
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "vitest";
 
 describe("chart series cues", () => {
   it("assigns distinct line strokes and markers", () => {

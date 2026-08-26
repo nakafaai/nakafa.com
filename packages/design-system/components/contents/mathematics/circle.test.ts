@@ -8,7 +8,7 @@ import {
   createCircleRadiusPoints,
   createCircleSegmentBoundaryLines,
 } from "@repo/design-system/components/contents/mathematics/circle";
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "vitest";
 
 const EXPECTED_PRECISION = 12;
 

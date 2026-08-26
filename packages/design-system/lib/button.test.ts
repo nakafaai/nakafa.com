@@ -1,5 +1,5 @@
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "vitest";
 
 const BUTTON_VARIANTS = [
   "default",

@@ -4,7 +4,7 @@ import {
   createMaxWidthMediaQuery,
   TAILWIND_MEDIA_QUERIES,
 } from "@repo/design-system/lib/breakpoints";
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "vitest";
 
 describe("breakpoint media queries", () => {
   it("matches Tailwind max breakpoint semantics", () => {

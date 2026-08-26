@@ -4,7 +4,7 @@ import {
   getArcPoints,
   getMidpoint,
 } from "@repo/design-system/components/contents/snbt/geometry";
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "vitest";
 
 describe("SNBT geometry", () => {
   it("returns the midpoint on every graph axis", () => {

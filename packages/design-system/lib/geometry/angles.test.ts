@@ -5,7 +5,7 @@ import {
   getSin,
   getTan,
 } from "@repo/design-system/lib/geometry/angles";
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "vitest";
 
 describe("math degree helpers", () => {
   it("converts degrees to radians", () => {

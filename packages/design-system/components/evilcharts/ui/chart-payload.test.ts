@@ -1,5 +1,5 @@
 import { getChartPayloadStringValue } from "@repo/design-system/components/evilcharts/ui/chart-payload";
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "vitest";
 
 describe("chart payload utilities", () => {
   it("reads string fields from unknown payload values", () => {

@@ -1,5 +1,5 @@
 import { getAdaptiveInequalityResolution } from "@repo/design-system/components/three/inequality-data";
-import { afterEach, describe, expect, it } from "@repo/testing/effect";
+import { afterEach, describe, expect, it } from "vitest";
 
 const originalHardwareConcurrency = navigator.hardwareConcurrency;
 const originalUserAgent = navigator.userAgent;

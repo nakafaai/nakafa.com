@@ -3,7 +3,7 @@ import {
   normalizeMermaidChart,
   readMermaidMetadata,
 } from "@repo/design-system/lib/markdown/mermaid";
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "vitest";
 
 describe("readMermaidMetadata", () => {
   it("uses distinct fallback copy when metadata is missing", () => {
