@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
   createConvexTestWithBetterAuth,
@@ -8,7 +9,6 @@ import {
   TryoutScoreReadError,
 } from "@repo/backend/convex/tryouts/score/result";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content-release";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 7, 8, 12, 0, 0);
