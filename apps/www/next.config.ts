@@ -18,6 +18,7 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import { AGENT_DISCOVERY_HEADERS } from "@/lib/agent-discovery";
 import { hasPreviewRendererEnvironment } from "@/lib/content/preview/environment";
+import { createOgRouteAliasRewrites } from "@/lib/og/route";
 
 const configEnv = createEnv({
   extends: [analyzeKeys(), convexKeys()],
@@ -63,8 +64,6 @@ function createAppRewrites() {
   ];
   const llmSource = ["/:path*.md", "/:path*.mdx", "/:path*/llms.txt"];
   const llmDestination = "/llms.mdx/:path*";
-  const ogSource = ["/:path*.png", "/:path*.og", "/:path*/image.png"];
-  const ogDestination = "/og/:path*";
   const ogRouteRewrites = [
     {
       source: "/:locale/og/:path*/image.png",
@@ -80,10 +79,7 @@ function createAppRewrites() {
       source,
       destination: llmDestination,
     })),
-    ...ogSource.map((source) => ({
-      source,
-      destination: ogDestination,
-    })),
+    ...createOgRouteAliasRewrites(),
   ];
   return {
     // PostHog requires the specific static and array rewrites to come before the
@@ -189,6 +185,10 @@ const nextConfig = {
   // PostHog's same-origin proxy endpoints include trailing slashes such as
   // `/i/v0/e/`, so Next.js slash normalization must be disabled.
   skipTrailingSlashRedirect: true,
+  // Proxy negotiates public document representations, so it must receive the
+  // `rsc: 1` marker that Next.js otherwise strips with Flight headers.
+  // Docs: https://nextjs.org/docs/app/api-reference/file-conventions/proxy#rsc-requests-and-rewrites
+  skipProxyUrlNormalize: true,
   // Next.js recommends outputFileTracingRoot in monorepos so files outside the
   // app folder are included in the production trace.
   // Docs: https://nextjs.org/docs/app/api-reference/config/next-config-js/output

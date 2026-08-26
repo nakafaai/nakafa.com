@@ -1,6 +1,6 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/_types/route/surface";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
   type ActiveContentReleaseId,
@@ -9,10 +9,14 @@ import {
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { getCachedLlmsSectionIndexText } from "@/lib/llms/indexes";
 import {
+  isPublicLlmsLocaleIndexRoute,
+  resolvePublicLlmsSectionIndex,
+} from "@/lib/llms/public-index";
+import {
   getCachedPublishedText,
   type PublishedMarkdownInput,
 } from "@/lib/llms/published";
-import { getQuranLlmsText } from "@/lib/llms/quran";
+import { classifyQuranLlmsRoute, getQuranLlmsText } from "@/lib/llms/quran";
 
 const MATERIAL_ROUTE_SEGMENTS: ReadonlySet<string> = new Set(
   PUBLIC_ROUTE_SURFACES.flatMap((surface) =>
@@ -23,6 +27,10 @@ interface PublishedMarkdownSource {
   readonly activeReleaseId: ActiveContentReleaseId;
   readonly family: PublishedMarkdownInput["family"];
   readonly publicPath: string;
+}
+interface LlmsMarkdownInput {
+  readonly cleanSlug: string;
+  readonly locale: Locale;
 }
 /** One rejected Next cache read with its exact content owner preserved. */
 class CacheFailure extends Schema.TaggedError<CacheFailure>()("CacheFailure", {
@@ -39,6 +47,19 @@ const readCachedMarkdown = Effect.fn("www.llms.markdown.owner")(function* (
     try: () => readPublishedMarkdown(source, locale),
   });
 });
+/** Reads the derived index fallback after concrete Markdown owners miss. */
+const readCachedSectionIndex = Effect.fn("www.llms.markdown.index")(function* ({
+  cleanSlug,
+  locale,
+}: LlmsMarkdownInput) {
+  return yield* Effect.tryPromise({
+    try: () =>
+      getCachedLlmsSectionIndexText({
+        cleanSlug: `llms/${locale}/${cleanSlug}`,
+      }),
+    catch: (cause) => new CacheFailure({ cause, owner: "index" }),
+  });
+});
 /**
  * Resolves cached markdown for one agent-facing route.
  *
@@ -47,25 +68,40 @@ const readCachedMarkdown = Effect.fn("www.llms.markdown.owner")(function* (
  * null result means the route has no markdown source.
  */
 export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
-  function* ({ cleanSlug, locale }: { cleanSlug: string; locale: Locale }) {
+  function* ({ cleanSlug, locale }: LlmsMarkdownInput) {
     const quranText = yield* getQuranLlmsText({ cleanSlug, locale });
     if (quranText) {
       return quranText;
     }
     const published = yield* getPublishedMarkdownSource({ cleanSlug, locale });
     if (published) {
-      const mdxText = yield* readCachedMarkdown(published, locale);
-      if (mdxText) {
-        return mdxText;
-      }
+      return yield* readCachedMarkdown(published, locale);
     }
-    return yield* Effect.tryPromise({
-      try: () =>
-        getCachedLlmsSectionIndexText({
-          cleanSlug: `llms/${locale}/${cleanSlug}`,
-        }),
-      catch: (cause) => new CacheFailure({ cause, owner: "index" }),
-    });
+    return yield* readCachedSectionIndex({ cleanSlug, locale });
+  }
+);
+/** Checks the exact route owners used by the public Markdown handler. */
+export const hasLlmsMarkdownSource = Effect.fn("www.llms.markdown.hasSource")(
+  function* (input: LlmsMarkdownInput) {
+    if (isPublicLlmsLocaleIndexRoute(input.cleanSlug)) {
+      return true;
+    }
+
+    if (resolvePublicLlmsSectionIndex(input)) {
+      return true;
+    }
+
+    if (Option.isSome(classifyQuranLlmsRoute(input.cleanSlug))) {
+      return true;
+    }
+
+    const published = yield* getPublishedMarkdownSource(input);
+    if (published) {
+      return true;
+    }
+
+    const indexText = yield* readCachedSectionIndex(input);
+    return Boolean(indexText);
   }
 );
 /** Resolves one public route to its active signed markdown owner. */

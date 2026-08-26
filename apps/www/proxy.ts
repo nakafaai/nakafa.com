@@ -7,8 +7,9 @@ import {
   previewRouting,
   routing,
 } from "@repo/internationalization/src/routing";
+import { mergeVaryHeader } from "@repo/utilities/http/accept";
 import { getSessionCookie } from "better-auth/cookies";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import type { ProxyConfig } from "next/server";
 import { type NextRequest, NextResponse } from "next/server";
 import { hasLocale } from "next-intl";
@@ -24,16 +25,17 @@ import {
   matchesPreviewPathname,
 } from "@/lib/content/preview/route";
 import {
+  LLMS_REPRESENTATION_VARY_FIELDS,
   type LocalizedLlmsRoute,
-  resolveLlmsProxyRoute,
+  readLlmsMarkdownPathname,
 } from "@/lib/llms/routes";
+import { isOgRouteAliasPathname, readOgRouteAliasLocale } from "@/lib/og/route";
 import {
   isLocaleBypassPath,
   isUnsupportedRootFilePath,
 } from "@/lib/routing/bypass";
+import { resolvePublicDocumentRoute } from "@/lib/routing/public/document";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
-import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
-import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source";
 
 const handleLocalizedRequest = createMiddleware(routing);
 const handlePreviewLocalizedRequest = createMiddleware(previewRouting);
@@ -104,24 +106,27 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  const ogAliasLocale = readOgRouteAliasLocale(pathname);
+  if (
+    candidateLocale === null &&
+    ogAliasLocale !== null &&
+    !hasLocale(routing.locales, ogAliasLocale)
+  ) {
+    return rewriteToContentNotFound(request, routing.defaultLocale);
+  }
+
+  if (isOgRouteAliasPathname(pathname)) {
+    return NextResponse.next();
+  }
+
   const schoolAuthRedirect = readSchoolAuthRedirect(request);
 
   if (schoolAuthRedirect) {
     return NextResponse.redirect(schoolAuthRedirect);
   }
 
-  const routeDecision = resolveLlmsProxyRoute({
-    acceptHeader: request.headers.get("accept"),
-    pathname,
-  });
-  let migrationPathname = pathname;
-  let migrationSuffix = "";
-  if (routeDecision.kind === "rewrite-markdown") {
-    const { locale, markdownExtension, route } = routeDecision.localizedRoute;
-    migrationPathname = `/${locale}${route}`;
-    migrationSuffix = markdownExtension;
-  }
-
+  const { markdownExtension: migrationSuffix, pathname: migrationPathname } =
+    readLlmsMarkdownPathname(pathname);
   const urlMigrationRedirect = await Effect.runPromise(
     readPublicUrlMigrationRedirect({
       method: request.method,
@@ -132,35 +137,33 @@ export async function proxy(request: NextRequest) {
     const redirectUrl = new URL(request.url);
     redirectUrl.pathname = `${urlMigrationRedirect}${migrationSuffix}`;
 
-    return NextResponse.redirect(redirectUrl, 308);
+    const response = NextResponse.redirect(redirectUrl, 308);
+    mergeRepresentationVary(response);
+    return response;
+  }
+
+  const routeDecision = await Effect.runPromise(
+    resolvePublicDocumentRoute({
+      acceptHeader: Option.fromNullOr(request.headers.get("accept")),
+      hasAttemptCapability: hasTryoutAttemptCapability(
+        request.nextUrl.searchParams
+      ),
+      isRscRequest: request.headers.get("rsc") === "1",
+      method: request.method,
+      pathname,
+    })
+  );
+
+  if (routeDecision.kind === "not-found") {
+    return rewriteToContentNotFound(request, routeDecision.locale);
   }
 
   if (routeDecision.kind === "rewrite-markdown") {
     return rewriteToLlmsMdx(request, routeDecision.localizedRoute);
   }
 
-  const sourceBackedRouteRejection = await Effect.runPromise(
-    readSourceBackedHtmlRouteRejection({
-      method: request.method,
-      pathname,
-    })
-  );
-
-  if (sourceBackedRouteRejection) {
-    return rewriteToContentNotFound(request, sourceBackedRouteRejection);
-  }
-
-  const projectedRouteRejection = await Effect.runPromise(
-    readProjectedHtmlRouteRejection({
-      hasAttemptCapability: hasTryoutAttemptCapability(
-        request.nextUrl.searchParams
-      ),
-      pathname,
-    })
-  );
-
-  if (projectedRouteRejection) {
-    return rewriteToContentNotFound(request, projectedRouteRejection);
+  if (routeDecision.kind === "not-acceptable") {
+    return representationNotAcceptable();
   }
 
   return routeLocalizedRequest(request, candidateLocale !== null);
@@ -220,6 +223,7 @@ function routeLocalizedRequest(
     : handleLocalizedRequest(request);
   response.headers.append("Link", AGENT_DISCOVERY_LINK_HEADER);
   response.headers.set("X-Llms-Txt", LLMS_TEXT_PATH);
+  mergeRepresentationVary(response);
 
   return response;
 }
@@ -232,7 +236,31 @@ function rewriteToLlmsMdx(
   const rewriteUrl = new URL(request.url);
   rewriteUrl.pathname = `/llms.mdx/${localizedRoute.locale}${localizedRoute.route}`;
 
-  return NextResponse.rewrite(rewriteUrl);
+  const response = NextResponse.rewrite(rewriteUrl);
+  mergeRepresentationVary(response);
+  return response;
+}
+
+/** Returns a hard 406 when neither public page representation is acceptable. */
+function representationNotAcceptable() {
+  return new Response("Not Acceptable\n", {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      Vary: LLMS_REPRESENTATION_VARY_FIELDS.join(", "),
+    },
+    status: 406,
+  });
+}
+
+/** Preserves framework Vary fields and adds representation cache keys. */
+function mergeRepresentationVary(response: Response) {
+  response.headers.set(
+    "Vary",
+    mergeVaryHeader(
+      Option.fromNullOr(response.headers.get("Vary")),
+      LLMS_REPRESENTATION_VARY_FIELDS
+    )
+  );
 }
 
 /** Rewrites missing content to the styled app not-found route with 404 status. */
@@ -244,7 +272,7 @@ function rewriteToContentNotFound(request: NextRequest, locale: AppLocaleCode) {
     request.url
   );
 
-  return NextResponse.rewrite(rewriteUrl, {
+  const response = NextResponse.rewrite(rewriteUrl, {
     headers: {
       "X-Robots-Tag": "noindex",
     },
@@ -253,11 +281,14 @@ function rewriteToContentNotFound(request: NextRequest, locale: AppLocaleCode) {
     },
     status: 404,
   });
+  mergeRepresentationVary(response);
+  return response;
 }
 
 export const config: ProxyConfig = {
   matcher: [
     "/((?!_next/static|_not-found|fonts|open-graph|api|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt)$).*)",
+    "/:locale([A-Za-z]{2})/:path*.png",
     "/:rootFile([^/]+\\.(?:svg|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt))",
   ],
 };

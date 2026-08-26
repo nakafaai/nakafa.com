@@ -1,8 +1,9 @@
 // @vitest-environment node
-import { Effect } from "effect";
+import { beforeEach, describe, expect, it } from "@repo/testing/effect";
+import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getLlmsMarkdownText } from "@/lib/llms/content";
+import { vi } from "vitest";
+import { getLlmsMarkdownText, hasLlmsMarkdownSource } from "@/lib/llms/content";
 
 const PUBLISHED_PATH =
   "subjects/mathematics/function-composition-inverse-function/function-concept";
@@ -13,9 +14,12 @@ const NEW_PATH = "subjects/mathematics/new-topic/new-lesson";
 const SOURCE_PUBLIC_PATH = "subjects/chemistry/green-chemistry/definition";
 const mockGetCachedLlmsSectionIndexText = vi.hoisted(() => vi.fn());
 const mockGetCachedPublishedText = vi.hoisted(() => vi.fn());
+const mockClassifyQuranLlmsRoute = vi.hoisted(() => vi.fn());
 const mockGetQuranLlmsText = vi.hoisted(() => vi.fn());
+const mockIsPublicLlmsLocaleIndexRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentRoute = vi.hoisted(() => vi.fn());
 const mockReadActiveContentIdentity = vi.hoisted(() => vi.fn());
+const mockResolvePublicLlmsSectionIndex = vi.hoisted(() => vi.fn());
 const activeReleaseId = "release-active";
 
 vi.mock("@/lib/content/published/route", () => ({
@@ -34,40 +38,54 @@ vi.mock("@/lib/llms/published", () => ({
 }));
 
 vi.mock("@/lib/llms/quran", () => ({
+  classifyQuranLlmsRoute: mockClassifyQuranLlmsRoute,
   getQuranLlmsText: mockGetQuranLlmsText,
 }));
 
+vi.mock("@/lib/llms/public-index", () => ({
+  isPublicLlmsLocaleIndexRoute: mockIsPublicLlmsLocaleIndexRoute,
+  resolvePublicLlmsSectionIndex: mockResolvePublicLlmsSectionIndex,
+}));
+
 /** Asserts one cache rejection remains a typed Effect failure. */
-async function expectCacheFailure(
-  cleanSlug: string,
-  cause: Error,
-  owner: string
-) {
-  const program = getLlmsMarkdownText({ cleanSlug, locale: "en" });
-  await expect(Effect.runPromise(Effect.flip(program))).resolves.toMatchObject({
-    _tag: "CacheFailure",
-    cause,
-    owner,
+function expectCacheFailure(cleanSlug: string, cause: Error, owner: string) {
+  return Effect.gen(function* () {
+    const failure = yield* getLlmsMarkdownText({
+      cleanSlug,
+      locale: "en",
+    }).pipe(Effect.flip);
+    expect(failure).toMatchObject({
+      _tag: "CacheFailure",
+      cause,
+      owner,
+    });
   });
 }
 
-/** Resolves one markdown route at the framework runner boundary. */
+/** Resolves one markdown route inside the Effect test runtime. */
 function readMarkdown(cleanSlug: string, locale: Locale = "en") {
-  return Effect.runPromise(getLlmsMarkdownText({ cleanSlug, locale }));
+  return getLlmsMarkdownText({ cleanSlug, locale });
 }
 
 /** Verifies that one route has no body-bearing signed markdown. */
-async function expectNoPublishedMarkdown(cleanSlug: string) {
-  await expect(readMarkdown(cleanSlug)).resolves.toBeNull();
-  expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
+function expectNoPublishedMarkdown(cleanSlug: string) {
+  return Effect.gen(function* () {
+    expect(yield* readMarkdown(cleanSlug)).toBeNull();
+    expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
+  });
 }
 
 describe("llms markdown content resolver", () => {
   beforeEach(() => {
     mockGetCachedLlmsSectionIndexText.mockReset().mockResolvedValue(null);
-    mockGetCachedPublishedText.mockReset().mockResolvedValue(null);
+    mockGetCachedPublishedText
+      .mockReset()
+      .mockResolvedValue("Published markdown");
+    mockClassifyQuranLlmsRoute.mockReset().mockReturnValue(Option.none());
     mockGetQuranLlmsText.mockReset().mockReturnValue(Effect.succeed(null));
+    mockIsPublicLlmsLocaleIndexRoute.mockReset().mockReturnValue(false);
     mockReadActiveContentRoute.mockReset();
+    mockResolvePublicLlmsSectionIndex.mockReset().mockReturnValue(null);
     mockReadActiveContentIdentity
       .mockReset()
       .mockReturnValue(Effect.succeed({ releaseId: activeReleaseId }));
@@ -84,206 +102,334 @@ describe("llms markdown content resolver", () => {
     );
   });
 
-  it("reads migrated public material markdown only from Aksara", async () => {
-    mockGetCachedPublishedText.mockResolvedValue("Aksara markdown");
+  it.effect("reads migrated public material markdown only from Aksara", () =>
+    Effect.gen(function* () {
+      mockGetCachedPublishedText.mockResolvedValue("Aksara markdown");
 
-    await expect(readMarkdown(PUBLISHED_PATH)).resolves.toBe("Aksara markdown");
+      expect(yield* readMarkdown(PUBLISHED_PATH)).toBe("Aksara markdown");
+      expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
+        activeReleaseId,
+        appLocale: "en",
+        family: "material",
+        publicPath: PUBLISHED_PATH,
+      });
+    })
+  );
 
-    expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
-      activeReleaseId,
-      appLocale: "en",
-      family: "material",
-      publicPath: PUBLISHED_PATH,
-    });
-  });
+  it.effect("types cached Aksara markdown failures", () =>
+    Effect.gen(function* () {
+      const error = new Error("Aksara markdown failed");
+      mockGetCachedPublishedText.mockRejectedValue(error);
 
-  it("types cached Aksara markdown failures", async () => {
-    const error = new Error("Aksara markdown failed");
-    mockGetCachedPublishedText.mockRejectedValue(error);
+      yield* expectCacheFailure(PUBLISHED_PATH, error, "published");
+      expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
+    })
+  );
 
-    await expectCacheFailure(PUBLISHED_PATH, error, "published");
-  });
+  it.effect(
+    "reads a newly published material route without an old route row",
+    () =>
+      Effect.gen(function* () {
+        mockReadActiveContentRoute.mockReturnValueOnce(
+          Effect.succeed({ activeReleaseId, kind: "found" })
+        );
+        mockGetCachedPublishedText.mockResolvedValue("New markdown");
 
-  it("reads a newly published material route without an old route row", async () => {
-    mockReadActiveContentRoute.mockReturnValueOnce(
-      Effect.succeed({ activeReleaseId, kind: "found" })
-    );
-    mockGetCachedPublishedText.mockResolvedValue("New markdown");
+        expect(yield* readMarkdown(NEW_PATH)).toBe("New markdown");
+        expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
+          activeReleaseId,
+          appLocale: "en",
+          family: "material",
+          publicPath: NEW_PATH,
+        });
+      })
+  );
 
-    await expect(readMarkdown(NEW_PATH)).resolves.toBe("New markdown");
+  it.effect("does not fall back after an owned material route is deleted", () =>
+    Effect.gen(function* () {
+      mockReadActiveContentRoute.mockReturnValueOnce(
+        Effect.succeed({ activeReleaseId, kind: "missing" })
+      );
 
-    expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
-      activeReleaseId,
-      appLocale: "en",
-      family: "material",
-      publicPath: NEW_PATH,
-    });
-  });
+      expect(yield* readMarkdown(SOURCE_PUBLIC_PATH)).toBeNull();
+      expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
+    })
+  );
 
-  it("does not fall back after an owned material route is deleted", async () => {
-    mockReadActiveContentRoute.mockReturnValueOnce(
-      Effect.succeed({ activeReleaseId, kind: "missing" })
-    );
+  it.effect(
+    "reads an owned article body from the generic Aksara markdown seam",
+    () =>
+      Effect.gen(function* () {
+        mockGetCachedPublishedText.mockResolvedValue("Published article");
 
-    await expect(readMarkdown(SOURCE_PUBLIC_PATH)).resolves.toBeNull();
+        expect(yield* readMarkdown(PUBLISHED_ARTICLE_PATH)).toBe(
+          "Published article"
+        );
+        expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
+          activeReleaseId,
+          appLocale: "en",
+          family: "article",
+          publicPath: PUBLISHED_ARTICLE_PATH,
+        });
+        expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
+          activeReleaseId,
+          appLocale: "en",
+          family: "article",
+          publicPath: PUBLISHED_ARTICLE_PATH,
+        });
+      })
+  );
 
-    expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
-  });
+  it.effect("does not fall back after an owned article route is deleted", () =>
+    Effect.gen(function* () {
+      mockReadActiveContentRoute.mockReturnValueOnce(
+        Effect.succeed({ activeReleaseId, kind: "missing" })
+      );
 
-  it("reads an owned article body from the generic Aksara markdown seam", async () => {
-    mockGetCachedPublishedText.mockResolvedValue("Published article");
+      expect(yield* readMarkdown(PUBLISHED_ARTICLE_PATH)).toBeNull();
+      expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
+    })
+  );
 
-    await expect(readMarkdown(PUBLISHED_ARTICLE_PATH)).resolves.toBe(
-      "Published article"
-    );
-    expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
-      activeReleaseId,
-      appLocale: "en",
-      family: "article",
-      publicPath: PUBLISHED_ARTICLE_PATH,
-    });
-    expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
-      activeReleaseId,
-      appLocale: "en",
-      family: "article",
-      publicPath: PUBLISHED_ARTICLE_PATH,
-    });
-  });
+  it.effect("fails closed when signed material ownership is unavailable", () =>
+    Effect.gen(function* () {
+      mockReadActiveContentIdentity.mockReturnValueOnce(Effect.succeed(null));
+      mockReadActiveContentRoute.mockReturnValueOnce(
+        Effect.succeed({ activeReleaseId: null, kind: "unmanaged" })
+      );
 
-  it("does not fall back after an owned article route is deleted", async () => {
-    mockReadActiveContentRoute.mockReturnValueOnce(
-      Effect.succeed({ activeReleaseId, kind: "missing" })
-    );
+      expect(yield* readMarkdown(SOURCE_PUBLIC_PATH)).toBeNull();
+      expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
+    })
+  );
 
-    await expect(readMarkdown(PUBLISHED_ARTICLE_PATH)).resolves.toBeNull();
+  it.effect("returns Quran markdown before checking signed content", () =>
+    Effect.gen(function* () {
+      mockGetQuranLlmsText.mockReturnValue(Effect.succeed("Quran markdown"));
 
-    expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
-  });
+      expect(yield* readMarkdown("quran/1")).toBe("Quran markdown");
+      expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
+      expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
+    })
+  );
 
-  it("fails closed when signed material ownership is unavailable", async () => {
-    mockReadActiveContentIdentity.mockReturnValueOnce(Effect.succeed(null));
-    mockReadActiveContentRoute.mockReturnValueOnce(
-      Effect.succeed({ activeReleaseId: null, kind: "unmanaged" })
-    );
-
-    await expect(readMarkdown(SOURCE_PUBLIC_PATH)).resolves.toBeNull();
-    expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
-  });
-
-  it("returns Quran markdown before checking signed content", async () => {
-    mockGetQuranLlmsText.mockReturnValue(Effect.succeed("Quran markdown"));
-
-    await expect(readMarkdown("quran/1")).resolves.toBe("Quran markdown");
-
-    expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
-    expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
-  });
-
-  it("does not invent markdown for curriculum context routes", async () => {
-    await expectNoPublishedMarkdown(
+  it.effect("does not invent markdown for curriculum context routes", () =>
+    expectNoPublishedMarkdown(
       "curriculum/merdeka/class-12/mathematics/integral"
-    );
-  });
+    )
+  );
 
-  it("does not invent markdown for try-out catalog routes without a source document", async () => {
-    await expectNoPublishedMarkdown("try-out/indonesia/snbt");
-    await expect(
-      readMarkdown("try-out/indonesia/snbt/2027/set-1")
-    ).resolves.toBeNull();
-    expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
-  });
+  it.effect(
+    "does not invent markdown for try-out catalog routes without a source document",
+    () =>
+      Effect.gen(function* () {
+        yield* expectNoPublishedMarkdown("try-out/indonesia/snbt");
+        expect(
+          yield* readMarkdown("try-out/indonesia/snbt/2027/set-1")
+        ).toBeNull();
+        expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
+      })
+  );
 
-  it("reads a reviewed Page body through the same signed markdown seam", async () => {
-    mockGetCachedPublishedText.mockResolvedValue("Signed Page markdown");
+  it.effect(
+    "reads a reviewed Page body through the same signed markdown seam",
+    () =>
+      Effect.gen(function* () {
+        mockGetCachedPublishedText.mockResolvedValue("Signed Page markdown");
 
-    await expect(readMarkdown("terms-of-service")).resolves.toBe(
-      "Signed Page markdown"
-    );
+        expect(yield* readMarkdown("terms-of-service")).toBe(
+          "Signed Page markdown"
+        );
+        expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
+          activeReleaseId,
+          appLocale: "en",
+          family: "page",
+          publicPath: PUBLISHED_PAGE_PATH,
+        });
+        expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
+      })
+  );
 
-    expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
-      activeReleaseId,
-      appLocale: "en",
-      family: "page",
-      publicPath: PUBLISHED_PAGE_PATH,
-    });
-    expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
-  });
+  it.effect(
+    "reads a nested reviewed Page without assuming one route segment",
+    () =>
+      Effect.gen(function* () {
+        mockGetCachedPublishedText.mockResolvedValue(
+          "Nested signed Page markdown"
+        );
 
-  it("reads a nested reviewed Page without assuming one route segment", async () => {
-    mockGetCachedPublishedText.mockResolvedValue("Nested signed Page markdown");
+        expect(yield* readMarkdown(PUBLISHED_NESTED_PAGE_PATH)).toBe(
+          "Nested signed Page markdown"
+        );
+        expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
+          activeReleaseId,
+          appLocale: "en",
+          family: "page",
+          publicPath: PUBLISHED_NESTED_PAGE_PATH,
+        });
+      })
+  );
 
-    await expect(readMarkdown(PUBLISHED_NESTED_PAGE_PATH)).resolves.toBe(
-      "Nested signed Page markdown"
-    );
+  it.effect(
+    "returns sitemap-derived route indexes when page markdown is absent",
+    () =>
+      Effect.gen(function* () {
+        mockGetCachedLlmsSectionIndexText.mockResolvedValue("Index markdown");
 
-    expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
-      activeReleaseId,
-      appLocale: "en",
-      family: "page",
-      publicPath: PUBLISHED_NESTED_PAGE_PATH,
-    });
-  });
+        expect(yield* readMarkdown("articles/politics")).toBe("Index markdown");
+        expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
+          cleanSlug: "llms/en/articles/politics",
+        });
+      })
+  );
 
-  it("returns sitemap-derived route indexes when page markdown is absent", async () => {
-    mockGetCachedLlmsSectionIndexText.mockResolvedValue("Index markdown");
+  it.effect("returns null when no markdown source exists", () =>
+    Effect.gen(function* () {
+      expect(yield* readMarkdown("articles/missing")).toBeNull();
+    })
+  );
 
-    await expect(readMarkdown("articles/politics")).resolves.toBe(
-      "Index markdown"
-    );
+  it.effect("recognizes a route owned by a public Markdown index", () =>
+    Effect.gen(function* () {
+      mockResolvePublicLlmsSectionIndex.mockReturnValueOnce({
+        label: "Curriculum",
+        prefix: "curriculum",
+      });
 
-    expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
-      cleanSlug: "llms/en/articles/politics",
-    });
-  });
+      expect(
+        yield* hasLlmsMarkdownSource({
+          cleanSlug: "curriculum",
+          locale: "en",
+        })
+      ).toBe(true);
+      expect(mockClassifyQuranLlmsRoute).not.toHaveBeenCalled();
+      expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
+      expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
+    })
+  );
 
-  it("falls through when an owned route has no body markdown", async () => {
-    mockGetCachedLlmsSectionIndexText.mockResolvedValue("Fallback index");
+  it.effect.each(["", "llms"])(
+    "recognizes locale index %j without reading its body",
+    (cleanSlug) =>
+      Effect.gen(function* () {
+        mockIsPublicLlmsLocaleIndexRoute.mockReturnValueOnce(true);
 
-    await expect(readMarkdown(PUBLISHED_PATH)).resolves.toBe("Fallback index");
+        expect(yield* hasLlmsMarkdownSource({ cleanSlug, locale: "en" })).toBe(
+          true
+        );
+        expect(mockIsPublicLlmsLocaleIndexRoute).toHaveBeenCalledWith(
+          cleanSlug
+        );
+        expect(mockResolvePublicLlmsSectionIndex).not.toHaveBeenCalled();
+        expect(mockClassifyQuranLlmsRoute).not.toHaveBeenCalled();
+        expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
+        expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
+        expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
+        expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
+      })
+  );
 
-    expect(mockGetCachedPublishedText).toHaveBeenCalledTimes(1);
-    expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
-      cleanSlug: `llms/en/${PUBLISHED_PATH}`,
-    });
-  });
+  it.effect("recognizes Quran ownership without reading its body twice", () =>
+    Effect.gen(function* () {
+      mockClassifyQuranLlmsRoute.mockReturnValueOnce(
+        Option.some({ kind: "surah", surahNumber: 1 })
+      );
 
-  it("returns null when no markdown source exists", async () => {
-    await expect(readMarkdown("articles/missing")).resolves.toBeNull();
-  });
+      expect(
+        yield* hasLlmsMarkdownSource({ cleanSlug: "quran/1", locale: "en" })
+      ).toBe(true);
+      expect(mockClassifyQuranLlmsRoute).toHaveBeenCalledWith("quran/1");
+      expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
+      expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
+      expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
+      expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
+    })
+  );
 
-  it("treats invalid projected markdown paths as unsupported content", async () => {
-    await expect(
-      readMarkdown("subjects/mathematics/integral/invalid.segment")
-    ).resolves.toBeNull();
+  it.effect.each([
+    { cleanSlug: PUBLISHED_ARTICLE_PATH, family: "article" },
+    { cleanSlug: PUBLISHED_PATH, family: "material" },
+    { cleanSlug: PUBLISHED_PAGE_PATH, family: "page" },
+  ])(
+    "recognizes an owned $family without reading its body",
+    ({ cleanSlug, family }) =>
+      Effect.gen(function* () {
+        expect(yield* hasLlmsMarkdownSource({ cleanSlug, locale: "en" })).toBe(
+          true
+        );
+        expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
+          activeReleaseId,
+          appLocale: "en",
+          family,
+          publicPath: cleanSlug,
+        });
+        expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
+        expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
+        expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
+      })
+  );
 
-    expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
-    expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
-      activeReleaseId,
-      appLocale: "en",
-      family: "material",
-      publicPath: "subjects/mathematics/integral/invalid.segment",
-    });
-  });
+  it.effect(
+    "reports availability only when the real source chain returns text",
+    () =>
+      Effect.gen(function* () {
+        mockGetCachedLlmsSectionIndexText
+          .mockResolvedValueOnce("Index markdown")
+          .mockResolvedValueOnce(null);
 
-  it("treats the empty markdown slug as an unsupported route index", async () => {
-    await expect(readMarkdown("")).resolves.toBeNull();
+        expect(
+          yield* hasLlmsMarkdownSource({
+            cleanSlug: "articles/politics",
+            locale: "en",
+          })
+        ).toBe(true);
+        expect(
+          yield* hasLlmsMarkdownSource({ cleanSlug: "search", locale: "en" })
+        ).toBe(false);
+      })
+  );
 
-    expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
-      cleanSlug: "llms/en/",
-    });
-  });
+  it.effect(
+    "treats invalid projected markdown paths as unsupported content",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* readMarkdown("subjects/mathematics/integral/invalid.segment")
+        ).toBeNull();
+        expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
+        expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
+          activeReleaseId,
+          appLocale: "en",
+          family: "material",
+          publicPath: "subjects/mathematics/integral/invalid.segment",
+        });
+      })
+  );
 
-  it("types cached section-index failures", async () => {
+  it.effect(
+    "treats the empty markdown slug as an unsupported route index",
+    () =>
+      Effect.gen(function* () {
+        expect(yield* readMarkdown("")).toBeNull();
+        expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
+          cleanSlug: "llms/en/",
+        });
+      })
+  );
+
+  it.effect("types cached section-index failures", () => {
     const error = new Error("index failed");
     mockGetCachedLlmsSectionIndexText.mockRejectedValue(error);
 
-    await expectCacheFailure("articles/missing", error, "index");
+    return expectCacheFailure("articles/missing", error, "index");
   });
 
-  it("surfaces active material-route lookup failures", async () => {
-    const error = new Error("active route lookup failed");
-    mockReadActiveContentRoute.mockReturnValueOnce(Effect.fail(error));
+  it.effect("surfaces active material-route lookup failures", () =>
+    Effect.gen(function* () {
+      const error = new Error("active route lookup failed");
+      mockReadActiveContentRoute.mockReturnValueOnce(Effect.fail(error));
 
-    await expect(readMarkdown(PUBLISHED_PATH)).rejects.toThrow(error.message);
-  });
+      expect(yield* readMarkdown(PUBLISHED_PATH).pipe(Effect.flip)).toBe(error);
+    })
+  );
 });

@@ -4,6 +4,7 @@ import {
   type PublicRouteSurface,
 } from "@repo/contents/_types/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
+import { Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
   BASE_URL,
@@ -14,6 +15,8 @@ import { getLocaleLabel, stripLlmsRouteExtension } from "@/lib/llms/format";
 import { renderLlmsIndexText } from "@/lib/llms/index-text";
 
 type LlmsContentSection = Exclude<LlmsSection, "site">;
+
+const PublicLlmsLocaleIndexRouteSchema = Schema.Literals(["", "llms"]);
 
 /** One public-prefix index in the locale discovery hierarchy. */
 interface PublicLlmsSectionIndex {
@@ -49,6 +52,11 @@ export function getPublicLlmsSectionIndexLines(locale: Locale) {
     (index) =>
       `- [${index.label}](${BASE_URL}/${locale}/${index.prefix}/llms.txt): ${localeLabel} ${index.label.toLowerCase()}.`
   );
+}
+
+/** Checks the localized public routes owned by the locale-level llms index. */
+export function isPublicLlmsLocaleIndexRoute(cleanSlug: string) {
+  return Schema.is(PublicLlmsLocaleIndexRouteSchema)(cleanSlug);
 }
 
 /** Resolves one localized public-prefix llms index request. */

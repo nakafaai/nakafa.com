@@ -7,6 +7,7 @@ import { BASE_URL } from "@/lib/llms/constants";
 
 const mockGetLlmsMarkdownText = vi.hoisted(() => vi.fn());
 const mockGetCachedLlmsSectionIndexText = vi.hoisted(() => vi.fn());
+const mockIsPublicLlmsLocaleIndexRoute = vi.hoisted(() => vi.fn());
 const mockResolvePublicLlmsSectionIndex = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/llms/content", () => ({
@@ -20,6 +21,7 @@ vi.mock("@/lib/llms/indexes", () => ({
 vi.mock("@/lib/llms/public-index", () => ({
   buildPublicLlmsAppSectionIndexText: () => "# Nakafa English Curriculum\n",
   buildRootLlmsIndexText: () => "# Nakafa llms index\n",
+  isPublicLlmsLocaleIndexRoute: mockIsPublicLlmsLocaleIndexRoute,
   resolvePublicLlmsSectionIndex: mockResolvePublicLlmsSectionIndex,
 }));
 
@@ -27,6 +29,11 @@ describe("llms.mdx route", () => {
   beforeEach(() => {
     mockGetCachedLlmsSectionIndexText.mockReset();
     mockGetLlmsMarkdownText.mockReset();
+    mockIsPublicLlmsLocaleIndexRoute
+      .mockReset()
+      .mockImplementation(
+        (cleanSlug: string) => cleanSlug === "" || cleanSlug === "llms"
+      );
     mockResolvePublicLlmsSectionIndex.mockReset();
     mockGetCachedLlmsSectionIndexText.mockResolvedValue(null);
     mockGetLlmsMarkdownText.mockReturnValue(Effect.succeed(null));
@@ -54,6 +61,7 @@ describe("llms.mdx route", () => {
     expect(response.headers.get("content-type")).toBe(
       "text/markdown; charset=utf-8"
     );
+    expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding, RSC");
     expect(mockGetLlmsMarkdownText).not.toHaveBeenCalled();
   });
 
@@ -130,6 +138,7 @@ describe("llms.mdx route", () => {
     expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
       cleanSlug: "llms/en",
     });
+    expect(mockIsPublicLlmsLocaleIndexRoute).toHaveBeenCalledWith("");
     expect(mockGetLlmsMarkdownText).not.toHaveBeenCalled();
   });
 
@@ -198,6 +207,7 @@ describe("llms.mdx route", () => {
     expect(response.headers.get("content-type")).toBe(
       "text/plain; charset=utf-8"
     );
+    expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding, RSC");
     expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
       cleanSlug: "llms/en/articles/page/999/llms",
     });
@@ -219,6 +229,7 @@ describe("llms.mdx route", () => {
     expect(response.headers.get("content-type")).toBe(
       "text/markdown; charset=utf-8"
     );
+    expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding, RSC");
     expect(response.headers.get("x-robots-tag")).toBe("noindex");
     expect(body).toContain("# Markdown page not found");
     expect(body).toContain(`${BASE_URL}/en/search`);
