@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   type TryoutSet,
@@ -23,7 +24,6 @@ import {
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout-source";
-import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
 
