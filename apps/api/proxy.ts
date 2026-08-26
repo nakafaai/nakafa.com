@@ -24,12 +24,12 @@ const AGENT_API_REQUEST_HEADERS = new Set([
  * Bridges the public agent API and protects private content routes.
  *
  * Security model: Server-side only.
- * - No CORS headers (blocks browser access)
- * - Requires valid Bearer token for all requests
- * - Uses timing-safe comparison to prevent timing attacks
+ * - Private content routes require a timing-safe Bearer token.
+ * - Public agent routes receive only allow-listed headers and the server-owned
+ *   Convex edge secret.
  *
  * @param request - The incoming Next.js request
- * @returns NextResponse to continue or 401 error
+ * @returns A private-route decision or protected public-origin rewrite.
  */
 export function proxy(request: NextRequest) {
   if (!request.nextUrl.pathname.startsWith(CONTENT_PATH_PREFIX)) {
