@@ -34,9 +34,6 @@ export const readMcpRequest = Effect.fn("agent.mcp.readRequest")(function* (
     )
   );
 
-  if (!isJsonContentType(request.headers.get("content-type"))) {
-    return { request } satisfies BoundedMcpRequest;
-  }
   if (!request.body) {
     if (declaredLength !== null && declaredLength !== 0) {
       return yield* bodyError("invalid");
@@ -56,6 +53,16 @@ export const readMcpRequest = Effect.fn("agent.mcp.readRequest")(function* (
     return yield* bodyError("invalid");
   }
 
+  const bounded = new Request(request.url, {
+    body: new Uint8Array(bytes),
+    headers: request.headers,
+    method: request.method,
+    signal: request.signal,
+  });
+  if (!isJsonContentType(request.headers.get("content-type"))) {
+    return { request: bounded } satisfies BoundedMcpRequest;
+  }
+
   const source = yield* Effect.try({
     catch: () => bodyError("invalid"),
     try: () => new TextDecoder("utf-8", { fatal: true }).decode(bytes),
@@ -67,13 +74,6 @@ export const readMcpRequest = Effect.fn("agent.mcp.readRequest")(function* (
           catch: () => undefined,
           try: () => JSON.parse(source) as unknown,
         }).pipe(Effect.option);
-  const bounded = new Request(request.url, {
-    body: source,
-    headers: request.headers,
-    method: request.method,
-    signal: request.signal,
-  });
-
   return {
     ...(Option.isSome(parsedBody) ? { parsedBody: parsedBody.value } : {}),
     request: bounded,

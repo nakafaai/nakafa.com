@@ -8,11 +8,15 @@ import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 /** Creates one Node request whose stream has no declared byte length. */
-function streamRequest(body: ReadableStream<Uint8Array>) {
+function streamRequest(
+  body: ReadableStream<Uint8Array>,
+  contentType: string | undefined = "application/json"
+) {
   const init = {
     body,
     duplex: "half",
-    headers: { "content-type": "application/json" },
+    headers:
+      contentType === undefined ? undefined : { "content-type": contentType },
     method: "POST",
   } satisfies RequestInit & { readonly duplex: "half" };
   return new Request("https://example.test/internal/mcp", init);
@@ -60,28 +64,36 @@ describe("MCP request input", () => {
     })
   );
 
-  it.live("stops an unbounded stream immediately after the ceiling", () =>
+  it.live("stops every unbounded POST stream after the ceiling", () =>
     Effect.gen(function* () {
-      let cancelled = false;
-      const request = streamRequest(
-        new ReadableStream({
-          /** Records cancellation after the byte ceiling is crossed. */
-          cancel() {
-            cancelled = true;
-          },
-          /** Enqueues one chunk just beyond the accepted ceiling. */
-          start(controller) {
-            controller.enqueue(new Uint8Array(MAX_MCP_REQUEST_BYTES + 1));
-          },
-        })
+      const cancelled = [false, false, false];
+      const requests = ["application/json", "text/plain", undefined].map(
+        (contentType, index) =>
+          streamRequest(
+            new ReadableStream({
+              /** Records cancellation after the byte ceiling is crossed. */
+              cancel() {
+                cancelled[index] = true;
+              },
+              /** Enqueues one chunk just beyond the accepted ceiling. */
+              start(controller) {
+                controller.enqueue(new Uint8Array(MAX_MCP_REQUEST_BYTES + 1));
+              },
+            }),
+            contentType
+          )
       );
-      const result = yield* readMcpRequest(request).pipe(Effect.result);
+      const results = yield* Effect.all(
+        requests.map((request) => readMcpRequest(request).pipe(Effect.result))
+      );
 
-      expect(result).toMatchObject({
-        _tag: "Failure",
-        failure: { reason: "size" },
-      });
-      expect(cancelled).toBe(true);
+      for (const result of results) {
+        expect(result).toMatchObject({
+          _tag: "Failure",
+          failure: { reason: "size" },
+        });
+      }
+      expect(cancelled).toEqual([true, true, true]);
     })
   );
 
@@ -195,23 +207,45 @@ describe("MCP request input", () => {
     })
   );
 
-  it.live(
-    "leaves bodyless methods and unsupported media types to the SDK",
-    () =>
-      Effect.gen(function* () {
-        const get = new Request("https://example.test/internal/mcp");
-        const unsupported = new Request("https://example.test/internal/mcp", {
-          body: "plain text",
-          headers: { "content-type": "text/plain" },
-          method: "POST",
-        });
-        const [getResult, unsupportedResult] = yield* Effect.all([
-          readMcpRequest(get),
-          readMcpRequest(unsupported),
-        ]);
+  it.live("bounds unsupported media types before SDK rejection", () =>
+    Effect.gen(function* () {
+      const unsupported = new Request("https://example.test/internal/mcp", {
+        body: "plain text",
+        headers: { "content-type": "text/plain" },
+        method: "POST",
+      });
+      const missing = streamRequest(
+        new ReadableStream({
+          /** Enqueues one body without a media type. */
+          start(controller) {
+            controller.enqueue(new TextEncoder().encode("missing type"));
+            controller.close();
+          },
+        }),
+        undefined
+      );
+      const [unsupportedResult, missingResult] = yield* Effect.all([
+        readMcpRequest(unsupported),
+        readMcpRequest(missing),
+      ]);
 
-        expect(getResult.request).toBe(get);
-        expect(unsupportedResult.request).toBe(unsupported);
-      })
+      expect("parsedBody" in unsupportedResult).toBe(false);
+      expect("parsedBody" in missingResult).toBe(false);
+      expect(
+        yield* Effect.promise(() => unsupportedResult.request.text())
+      ).toBe("plain text");
+      expect(yield* Effect.promise(() => missingResult.request.text())).toBe(
+        "missing type"
+      );
+    })
+  );
+
+  it.live("leaves bodyless methods unchanged", () =>
+    Effect.gen(function* () {
+      const get = new Request("https://example.test/internal/mcp");
+      const getResult = yield* readMcpRequest(get);
+
+      expect(getResult.request).toBe(get);
+    })
   );
 });
