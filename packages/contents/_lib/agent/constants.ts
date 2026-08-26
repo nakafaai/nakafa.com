@@ -19,6 +19,12 @@ export const NAKAFA_MCP_INFORMATIONAL_ROOT = "https://mcp.nakafa.com";
 /** Stable server name reported through MCP initialize and health checks. */
 export const NAKAFA_MCP_SERVER_NAME = "nakafa-mcp-server";
 
+/** Stable server version reported through every supported MCP revision. */
+export const NAKAFA_MCP_SERVER_VERSION = "1.0.1";
+
+/** Modern wire revision served by the installed MCP server v2 contract. */
+export const NAKAFA_MCP_PROTOCOL_VERSION = "2026-07-28";
+
 /** Hard cap for direct Quran reference tool ranges. */
 export const NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES = 20;
 

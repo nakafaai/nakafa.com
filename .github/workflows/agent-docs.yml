@@ -189,6 +189,8 @@ jobs:
           INTERNAL_CONTENT_API_KEY=$INTERNAL_CONTENT_API_KEY
           JWKS=[]
           NAKAFA_API_EDGE_SECRET=agent-docs-api-edge-secret
+          NAKAFA_MCP_ALLOWED_ORIGINS=https://nakafa.com
+          NAKAFA_MCP_EDGE_SECRET=agent-docs-mcp-edge-secret
           NEXT_PUBLIC_POLAR_SERVER=sandbox
           OPENWEATHER_API_KEY=agent-docs-disabled
           POLAR_ACCESS_TOKEN=agent-docs-disabled

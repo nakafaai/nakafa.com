@@ -4,6 +4,11 @@ import rateLimiter from "@convex-dev/rate-limiter/convex.config.js";
 import resend from "@convex-dev/resend/convex.config.js";
 import workflow from "@convex-dev/workflow/convex.config.js";
 import posthog from "@posthog/convex/convex.config.js";
+import {
+  NAKAFA_API_EDGE_CONTRACT,
+  NAKAFA_MCP_ALLOWED_ORIGINS_ENVIRONMENT,
+  NAKAFA_MCP_EDGE_CONTRACT,
+} from "@repo/backend/agent/edge";
 import betterAuth from "@repo/backend/convex/betterAuth/convex.config";
 import { defineApp } from "convex/server";
 import { v } from "convex/values";
@@ -18,7 +23,9 @@ const app = defineApp({
     AKSARA_AGENT_SIGNING_PUBLIC_KEY: v.optional(v.string()),
     AKSARA_PUBLICATION_TOKEN: v.string(),
     CONTENT_RUNTIME_TOKEN: v.string(),
-    NAKAFA_API_EDGE_SECRET: v.string(),
+    [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]: v.string(),
+    [NAKAFA_MCP_ALLOWED_ORIGINS_ENVIRONMENT]: v.optional(v.string()),
+    [NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment]: v.string(),
     // Dedicated least-privilege key for permanent analytics erasure.
     POSTHOG_ERASURE_API_KEY: v.string(),
     POSTHOG_HOST: v.string(),

@@ -11,6 +11,7 @@ import { registerProtectedContentRuntimeRoute } from "@repo/backend/convex/conte
 import { registerPublicContentRuntimeRoute } from "@repo/backend/convex/contentRelease/http/runtime/public";
 import { registerContentReleaseRoutes } from "@repo/backend/convex/contentRelease/ingress/route";
 import { registerAgentApiRoutes } from "@repo/backend/convex/routes/agent/api";
+import { registerAgentMcpRoutes } from "@repo/backend/convex/routes/agent/mcp/route";
 import { requestId } from "@repo/backend/convex/routes/middleware/requestId";
 import { registerPolarRoutes } from "@repo/backend/convex/routes/polar";
 import v1 from "@repo/backend/convex/routes/v1";
@@ -54,6 +55,7 @@ app.route("/v1", v1);
 
 // Register the protected successor and its machine-readable contract.
 registerAgentApiRoutes(app);
+registerAgentMcpRoutes(app);
 
 // Register webhook routes (internal - called by external services)
 registerPolarRoutes(app);

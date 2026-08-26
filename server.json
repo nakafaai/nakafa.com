@@ -1,0 +1,18 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.nakafaai/nakafa",
+  "description": "Read-only access to Nakafa's signed educational content and reviewed Quran references.",
+  "title": "Nakafa",
+  "websiteUrl": "https://nakafa.com",
+  "repository": {
+    "url": "https://github.com/nakafaai/nakafa.com",
+    "source": "github"
+  },
+  "version": "1.0.1",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.nakafa.com/mcp"
+    }
+  ]
+}
