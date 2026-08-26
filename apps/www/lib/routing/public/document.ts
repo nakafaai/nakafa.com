@@ -1,22 +1,30 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import { Effect, type Option } from "effect";
+import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { Effect, Schema } from "effect";
 import {
-  type LlmsProxyRouteDecision,
+  LlmsProxyRouteDecisionSchema,
   resolveLlmsProxyRoute,
 } from "@/lib/llms/routes";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
 import { readSourceBackedHtmlRouteRejection } from "@/lib/routing/public/source";
 
-interface PublicDocumentRouteInput {
-  readonly acceptHeader: Option.Option<string>;
-  readonly hasAttemptCapability: boolean;
-  readonly method: string;
-  readonly pathname: string;
-}
+export const PublicDocumentRouteInputSchema = Schema.Struct({
+  acceptHeader: Schema.Option(Schema.String),
+  hasAttemptCapability: Schema.Boolean,
+  method: Schema.String,
+  pathname: Schema.String,
+});
+export type PublicDocumentRouteInput =
+  typeof PublicDocumentRouteInputSchema.Type;
 
+export const PublicDocumentRouteDecisionSchema = Schema.Union([
+  LlmsProxyRouteDecisionSchema,
+  Schema.Struct({
+    kind: Schema.Literal("not-found"),
+    locale: AppLocaleCodeSchema,
+  }),
+]);
 export type PublicDocumentRouteDecision =
-  | LlmsProxyRouteDecision
-  | { kind: "not-found"; locale: AppLocaleCode };
+  typeof PublicDocumentRouteDecisionSchema.Type;
 
 /** Resolves public document ownership before adapting it to a Next response. */
 export const resolvePublicDocumentRoute = Effect.fn(

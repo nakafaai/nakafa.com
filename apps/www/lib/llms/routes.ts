@@ -1,32 +1,37 @@
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { routing } from "@repo/internationalization/src/routing";
 import {
   acceptsExplicitMediaType,
   HttpMediaTypeSchema,
   negotiateMediaType,
 } from "@repo/utilities/http/accept";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { hasLlmsMarkdownSource } from "@/lib/llms/content";
 
-type SupportedLocale = (typeof routing.locales)[number];
+export const LocalizedLlmsRouteSchema = Schema.Struct({
+  locale: ActiveAppLocaleCodeSchema,
+  markdownExtension: Schema.Literals(["", ".md", ".mdx"]),
+  route: Schema.String,
+});
+export type LocalizedLlmsRoute = typeof LocalizedLlmsRouteSchema.Type;
 
-export interface LocalizedLlmsRoute {
-  locale: SupportedLocale;
-  markdownExtension: string;
-  route: string;
-}
+export const LlmsProxyRouteRequestSchema = Schema.Struct({
+  acceptHeader: Schema.Option(Schema.String),
+  method: Schema.String,
+  pathname: Schema.String,
+});
+export type LlmsProxyRouteRequest = typeof LlmsProxyRouteRequestSchema.Type;
 
-export interface LlmsProxyRouteRequest {
-  acceptHeader: Option.Option<string>;
-  method: string;
-  pathname: string;
-}
+export const LlmsProxyRouteDecisionSchema = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("delegate") }),
+  Schema.Struct({ kind: Schema.Literal("not-acceptable") }),
+  Schema.Struct({
+    kind: Schema.Literal("rewrite-markdown"),
+    localizedRoute: LocalizedLlmsRouteSchema,
+  }),
+]);
+export type LlmsProxyRouteDecision = typeof LlmsProxyRouteDecisionSchema.Type;
 
-export type LlmsProxyRouteDecision =
-  | { kind: "delegate" }
-  | { kind: "not-acceptable" }
-  | { kind: "rewrite-markdown"; localizedRoute: LocalizedLlmsRoute };
-
-const MARKDOWN_EXTENSION_PATTERN = /\.mdx?$/;
 const HTML_MEDIA_TYPE = HttpMediaTypeSchema.make("text/html; charset=utf-8");
 export const LLMS_MARKDOWN_MEDIA_TYPE = HttpMediaTypeSchema.make(
   "text/markdown; charset=utf-8"
@@ -127,13 +132,29 @@ function isReadMethod(method: string) {
 
 /** Removes one explicit Markdown suffix while preserving its exact spelling. */
 export function readLlmsMarkdownPathname(pathname: string) {
-  const markdownExtension =
-    pathname.match(MARKDOWN_EXTENSION_PATTERN)?.[0] ?? "";
+  const markdownExtension = readLlmsMarkdownExtension(pathname);
 
   return {
     markdownExtension,
-    pathname: pathname.replace(MARKDOWN_EXTENSION_PATTERN, ""),
+    pathname: markdownExtension
+      ? pathname.slice(0, -markdownExtension.length)
+      : pathname,
   };
+}
+
+/** Reads one supported Markdown suffix without widening its value contract. */
+function readLlmsMarkdownExtension(
+  pathname: string
+): LocalizedLlmsRoute["markdownExtension"] {
+  if (pathname.endsWith(".mdx")) {
+    return ".mdx";
+  }
+
+  if (pathname.endsWith(".md")) {
+    return ".md";
+  }
+
+  return "";
 }
 
 /** Parses one locale-prefixed URL and removes its Markdown extension. */
