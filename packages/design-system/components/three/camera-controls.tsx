@@ -1,7 +1,7 @@
 "use client";
 
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
-import { useFrame, useThree } from "@react-three/fiber";
+import { useThree } from "@react-three/fiber";
 import { type ComponentRef, useCallback, useEffect, useRef } from "react";
 
 const DEFAULT_CAMERA_X = 12;
@@ -36,6 +36,10 @@ const DEFAULT_CAMERA_TARGET = [
  * systems, Three.js requires OrbitControls.update() after manual camera
  * transform changes, and demand-rendered R3F canvases need invalidate() after
  * imperative mutations.
+ *
+ * Drei owns OrbitControls frame updates and demand-mode invalidation. Keeping a
+ * second update or performance-regression loop here would resize AdaptiveDpr's
+ * drawing buffer while camera damping settles.
  *
  * @see https://react.dev/learn/synchronizing-with-effects
  * @see https://threejs.org/docs/#examples/en/controls/OrbitControls
@@ -77,7 +81,6 @@ export function CameraControls(props: CameraControlsProps) {
   const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
   const domElement = useThree((state) => state.gl.domElement);
   const invalidate = useThree((state) => state.invalidate);
-  const regress = useThree((state) => state.performance.regress);
   const [cameraPositionX, cameraPositionY, cameraPositionZ] = cameraPosition;
   const [cameraTargetX, cameraTargetY, cameraTargetZ] = cameraTarget;
 
@@ -114,28 +117,6 @@ export function CameraControls(props: CameraControlsProps) {
     };
   }, [domElement]);
 
-  useFrame(() => {
-    if (!autoRotate) {
-      return;
-    }
-
-    if (!controlsRef.current) {
-      return;
-    }
-
-    regress();
-    controlsRef.current.update();
-    invalidate();
-  });
-
-  /**
-   * Re-renders demand-driven canvases when the user interacts with controls.
-   */
-  const invalidateCameraControls = useCallback(() => {
-    regress();
-    invalidate();
-  }, [invalidate, regress]);
-
   /**
    * Mirrors OrbitControls interaction state into the canvas cursor.
    */
@@ -168,7 +149,6 @@ export function CameraControls(props: CameraControlsProps) {
         minAzimuthAngle={minAzimuthAngle}
         minDistance={minDistance}
         minPolarAngle={minPolarAngle}
-        onChange={invalidateCameraControls}
         onEnd={handleEnd}
         onStart={handleStart}
         ref={controlsRef}
