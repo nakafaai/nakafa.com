@@ -1,5 +1,6 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -7,8 +8,8 @@ import {
 import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress/write";
 import { insertTryoutAttempt } from "@repo/backend/test/tryout-runtime";
 import { makeTryoutSet, TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 const SIGNED_SET_IDENTITY = tryoutCatalogNodeIdentity({
   appLocale: AppLocaleSchema.make("id"),
@@ -23,145 +24,179 @@ type ProgressScoreMismatch = Pick<
   ProgressInput,
   "publishedScore" | "status"
 > & {
+  readonly code: string;
   readonly message: string;
 };
 
 /** Verifies that one invalid progress score pair fails through the typed seam. */
-async function expectProgressScoreMismatch(scenario: ProgressScoreMismatch) {
+const expectProgressScoreMismatch = Effect.fn(
+  "tryouts.progress.test.expectProgressScoreMismatch"
+)(function* (scenario: ProgressScoreMismatch) {
   const t = createConvexTestWithBetterAuth();
 
-  await expect(
-    t.mutation(async (ctx) => {
-      const user = await seedAuthenticatedUser(ctx, {
-        now: TRYOUT_TEST_NOW,
-        suffix: `tryout-progress-score-${scenario.status}`,
-      });
-      const set = makeTryoutSet();
-      const attemptId = await insertTryoutAttempt(ctx, {
-        scoringStrategy: "raw",
-        sectionSnapshots: [],
-        set,
-        status: scenario.status,
-        userId: user.userId,
-      });
-      const attempt = await ctx.db.get(attemptId);
+  yield* Effect.promise(() =>
+    expect(
+      t.mutation((ctx) =>
+        runConvexProgram(
+          Effect.gen(function* () {
+            const user = yield* Effect.promise(() =>
+              seedAuthenticatedUser(ctx, {
+                now: TRYOUT_TEST_NOW,
+                suffix: `tryout-progress-score-${scenario.status}`,
+              })
+            );
+            const set = makeTryoutSet();
+            const attemptId = yield* Effect.promise(() =>
+              insertTryoutAttempt(ctx, {
+                scoringStrategy: "raw",
+                sectionSnapshots: [],
+                set,
+                status: scenario.status,
+                userId: user.userId,
+              })
+            );
+            const attempt = yield* Effect.promise(() => ctx.db.get(attemptId));
 
-      if (!attempt) {
-        throw new Error("Expected progress score fixtures.");
-      }
+            if (!attempt) {
+              return yield* Effect.die("Expected progress score fixtures.");
+            }
 
-      await Effect.runPromise(
-        writeTryoutSetProgress(ctx, {
-          attempt,
-          publishedScore: scenario.publishedScore,
-          status: scenario.status,
-          updatedAt: TRYOUT_TEST_NOW,
-        })
-      );
+            yield* writeTryoutSetProgress(ctx, {
+              attempt,
+              publishedScore: scenario.publishedScore,
+              status: scenario.status,
+              updatedAt: TRYOUT_TEST_NOW,
+            });
+          })
+        )
+      )
+    ).rejects.toMatchObject({
+      data: {
+        code: scenario.code,
+        message: scenario.message,
+      },
     })
-  ).rejects.toThrow(scenario.message);
-}
+  );
+});
 
 describe("tryouts/progress", () => {
-  it("keeps only the latest attempt and maps every workflow rank", async () => {
-    const t = createConvexTestWithBetterAuth();
+  it.effect("keeps only the latest attempt and maps every workflow rank", () =>
+    Effect.gen(function* () {
+      const t = createConvexTestWithBetterAuth();
 
-    const progress = await t.mutation(async (ctx) => {
-      const user = await seedAuthenticatedUser(ctx, {
-        now: TRYOUT_TEST_NOW,
-        suffix: "tryout-progress",
-      });
-      const set = makeTryoutSet();
+      const progress = yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          runConvexProgram(
+            Effect.gen(function* () {
+              const user = yield* Effect.promise(() =>
+                seedAuthenticatedUser(ctx, {
+                  now: TRYOUT_TEST_NOW,
+                  suffix: "tryout-progress",
+                })
+              );
+              const set = makeTryoutSet();
 
-      const firstAttemptId = await insertTryoutAttempt(ctx, {
-        scoringStrategy: "raw",
-        sectionSnapshots: [],
-        set,
-        userId: user.userId,
-      });
-      const firstAttempt = await ctx.db.get(firstAttemptId);
+              const firstAttemptId = yield* Effect.promise(() =>
+                insertTryoutAttempt(ctx, {
+                  scoringStrategy: "raw",
+                  sectionSnapshots: [],
+                  set,
+                  userId: user.userId,
+                })
+              );
+              const firstAttempt = yield* Effect.promise(() =>
+                ctx.db.get(firstAttemptId)
+              );
 
-      if (!firstAttempt) {
-        throw new Error("Expected first attempt fixture.");
-      }
+              if (!firstAttempt) {
+                return yield* Effect.die("Expected first attempt fixture.");
+              }
 
-      await Effect.runPromise(
-        writeTryoutSetProgress(ctx, {
-          attempt: firstAttempt,
-          publishedScore: null,
-          status: "in-progress",
-          updatedAt: TRYOUT_TEST_NOW,
-        })
-      );
-      await Effect.runPromise(
-        writeTryoutSetProgress(ctx, {
-          attempt: firstAttempt,
-          publishedScore: 75,
-          status: "completed",
-          updatedAt: TRYOUT_TEST_NOW + 1,
-        })
-      );
+              yield* writeTryoutSetProgress(ctx, {
+                attempt: firstAttempt,
+                publishedScore: null,
+                status: "in-progress",
+                updatedAt: TRYOUT_TEST_NOW,
+              });
+              yield* writeTryoutSetProgress(ctx, {
+                attempt: firstAttempt,
+                publishedScore: 75,
+                status: "completed",
+                updatedAt: TRYOUT_TEST_NOW + 1,
+              });
 
-      const latestAttemptId = await insertTryoutAttempt(ctx, {
-        scoringStrategy: "raw",
-        sectionSnapshots: [],
-        set,
-        status: "expired",
-        userId: user.userId,
-      });
-      await ctx.db.patch(latestAttemptId, { attemptNumber: 2 });
-      const latestAttempt = await ctx.db.get(latestAttemptId);
+              const latestAttemptId = yield* Effect.promise(() =>
+                insertTryoutAttempt(ctx, {
+                  scoringStrategy: "raw",
+                  sectionSnapshots: [],
+                  set,
+                  status: "expired",
+                  userId: user.userId,
+                })
+              );
+              yield* Effect.promise(() =>
+                ctx.db.patch(latestAttemptId, { attemptNumber: 2 })
+              );
+              const latestAttempt = yield* Effect.promise(() =>
+                ctx.db.get(latestAttemptId)
+              );
 
-      if (!latestAttempt) {
-        throw new Error("Expected latest attempt fixture.");
-      }
+              if (!latestAttempt) {
+                return yield* Effect.die("Expected latest attempt fixture.");
+              }
 
-      await Effect.runPromise(
-        writeTryoutSetProgress(ctx, {
-          attempt: latestAttempt,
-          publishedScore: 50,
-          status: "expired",
-          updatedAt: TRYOUT_TEST_NOW + 2,
-        })
-      );
-      await Effect.runPromise(
-        writeTryoutSetProgress(ctx, {
-          attempt: firstAttempt,
-          publishedScore: null,
-          status: "in-progress",
-          updatedAt: TRYOUT_TEST_NOW + 3,
-        })
-      );
+              yield* writeTryoutSetProgress(ctx, {
+                attempt: latestAttempt,
+                publishedScore: 50,
+                status: "expired",
+                updatedAt: TRYOUT_TEST_NOW + 2,
+              });
+              yield* writeTryoutSetProgress(ctx, {
+                attempt: firstAttempt,
+                publishedScore: null,
+                status: "in-progress",
+                updatedAt: TRYOUT_TEST_NOW + 3,
+              });
 
-      return await ctx.db
-        .query("tryoutSetProgress")
-        .withIndex("by_userId_and_setIdentity", (query) =>
-          query.eq("userId", user.userId).eq("setIdentity", SIGNED_SET_IDENTITY)
+              return yield* Effect.promise(() =>
+                ctx.db
+                  .query("tryoutSetProgress")
+                  .withIndex("by_userId_and_setIdentity", (query) =>
+                    query
+                      .eq("userId", user.userId)
+                      .eq("setIdentity", SIGNED_SET_IDENTITY)
+                  )
+                  .unique()
+              );
+            })
+          )
         )
-        .unique();
-    });
+      );
 
-    expect(progress).toMatchObject({
-      attemptNumber: 2,
-      publishedScore: 50,
-      status: "expired",
-      statusRank: 3,
-    });
-  });
+      expect(progress).toMatchObject({
+        attemptNumber: 2,
+        publishedScore: 50,
+        status: "expired",
+        statusRank: 3,
+      });
+    })
+  );
 
-  it("rejects active progress that exposes a score", async () => {
-    await expectProgressScoreMismatch({
+  it.effect("rejects active progress that exposes a score", () =>
+    expectProgressScoreMismatch({
+      code: "TRYOUT_ACTIVE_PROGRESS_HAS_SCORE",
       message: "Active try-out progress cannot expose a score.",
       publishedScore: 80,
       status: "in-progress",
-    });
-  });
+    })
+  );
 
-  it("rejects terminal progress without a score", async () => {
-    await expectProgressScoreMismatch({
+  it.effect("rejects terminal progress without a score", () =>
+    expectProgressScoreMismatch({
+      code: "TRYOUT_TERMINAL_PROGRESS_SCORE_REQUIRED",
       message: "Terminal try-out progress requires a score.",
       publishedScore: null,
       status: "completed",
-    });
-  });
+    })
+  );
 });
