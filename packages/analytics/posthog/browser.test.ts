@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "@repo/testing/effect";
-import { Effect, Fiber } from "effect";
+import { Deferred, Effect, Fiber, Ref } from "effect";
 import { vi } from "vitest";
 
 const client = {
@@ -33,7 +33,7 @@ const loadBrowserAnalytics = () =>
   Effect.promise(() => import("@repo/analytics/posthog/browser"));
 
 /** Resolves the test-owned PostHog client through the production loader seam. */
-const loadClient = () => Promise.resolve(client);
+const loadClient = Effect.succeed(client);
 
 describe("consent-aware PostHog browser runtime", () => {
   beforeEach(() => {
@@ -135,12 +135,15 @@ describe("consent-aware PostHog browser runtime", () => {
   it.effect("reuses an initialized client without loading it again", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
-      const load = vi.fn(loadClient);
+      const loadCount = yield* Ref.make(0);
+      const load = Ref.update(loadCount, (count) => count + 1).pipe(
+        Effect.as(client)
+      );
 
       yield* analytics.enableBrowserAnalytics({ load });
       yield* analytics.enableBrowserAnalytics({ load });
 
-      expect(load).toHaveBeenCalledOnce();
+      expect(yield* Ref.get(loadCount)).toBe(1);
       expect(client.opt_in_capturing).toHaveBeenCalledTimes(2);
     })
   );
@@ -151,7 +154,7 @@ describe("consent-aware PostHog browser runtime", () => {
 
       const failure = yield* analytics
         .enableBrowserAnalytics({
-          load: () => Promise.reject(new Error("network unavailable")),
+          load: Effect.fail("network unavailable"),
         })
         .pipe(Effect.flip);
 
@@ -203,19 +206,18 @@ describe("consent-aware PostHog browser runtime", () => {
   it.effect("stops an enable request withdrawn while the SDK loads", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
-      let resolveClient: ((value: typeof client) => void) | undefined;
-      const loading = new Promise<typeof client>((resolve) => {
-        resolveClient = resolve;
-      });
-      const load = vi.fn(() => loading);
+      const loading = yield* Deferred.make<typeof client>();
+      const started = yield* Deferred.make<void>();
+      const load = Deferred.succeed(started, undefined).pipe(
+        Effect.andThen(Deferred.await(loading))
+      );
       const enabling = yield* Effect.forkChild(
         analytics.enableBrowserAnalytics({ load })
       );
-      yield* Effect.yieldNow;
-      expect(load).toHaveBeenCalledOnce();
+      yield* Deferred.await(started);
 
       yield* analytics.disableBrowserAnalytics();
-      resolveClient?.(client);
+      yield* Deferred.succeed(loading, client);
       yield* Fiber.join(enabling);
 
       expect(client.opt_in_capturing).not.toHaveBeenCalled();
