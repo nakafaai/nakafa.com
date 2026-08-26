@@ -3,6 +3,7 @@
 import {
   CLIENT_CAPABILITIES_META_KEY,
   CLIENT_INFO_META_KEY,
+  LATEST_PROTOCOL_VERSION as MCP_PREDECESSOR_PROTOCOL_VERSION,
   PROTOCOL_VERSION_META_KEY,
 } from "@modelcontextprotocol/server";
 import { NAKAFA_MCP_EDGE_CONTRACT } from "@repo/backend/agent/edge";
@@ -361,7 +362,7 @@ describe("Nakafa MCP transport", () => {
         params: {
           capabilities: {},
           clientInfo: { name: "legacy-test", version: "1.0.0" },
-          protocolVersion: "2025-11-25",
+          protocolVersion: MCP_PREDECESSOR_PROTOCOL_VERSION,
         },
       }),
       headers: {
@@ -373,7 +374,7 @@ describe("Nakafa MCP transport", () => {
     const body = await response.text();
 
     expect(response.status, body).toBe(200);
-    expect(body).toContain("2025-11-25");
+    expect(body).toContain(MCP_PREDECESSOR_PROTOCOL_VERSION);
     expect(body).toContain("nakafa-mcp-server");
   });
 
