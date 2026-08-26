@@ -1,6 +1,14 @@
+import { Schema } from "effect";
+
 const MAX_VISIBLE_BACTERIA = 100;
 
-export type BacterialFormulaType = "geometric" | "exponential";
+export const BacterialFormulaTypeSchema = Schema.Literals([
+  "geometric",
+  "exponential",
+]);
+export type BacterialFormulaType = Schema.Schema.Type<
+  typeof BacterialFormulaTypeSchema
+>;
 
 interface BacterialGrowthFrameInput {
   formulaType: BacterialFormulaType;
@@ -66,39 +74,69 @@ function createNextGeneration(
   };
 }
 
-function getVisibleCount(bacteriaCount: number, bacteriaPerDot: number) {
-  return Math.min(
-    MAX_VISIBLE_BACTERIA,
-    Math.max(1, Math.ceil(bacteriaCount / bacteriaPerDot))
-  );
+function getVisibleBacteriaCounts(
+  bacteriaCounts: readonly number[],
+  isGrowing: boolean
+) {
+  const largestBacteriaCount = Math.max(...bacteriaCounts);
+  if (largestBacteriaCount <= MAX_VISIBLE_BACTERIA) {
+    return [...bacteriaCounts];
+  }
+
+  const positiveBacteriaCounts = [
+    ...new Set(bacteriaCounts.filter((count) => count > 0)),
+  ].sort((left, right) => left - right);
+  const smallestPositiveCount = positiveBacteriaCounts[0];
+  const scale = isGrowing
+    ? smallestPositiveCount
+    : largestBacteriaCount / MAX_VISIBLE_BACTERIA;
+
+  return bacteriaCounts.map((bacteriaCount) => {
+    if (bacteriaCount === 0) {
+      return 0;
+    }
+
+    const rank = positiveBacteriaCounts.indexOf(bacteriaCount) + 1;
+    const remainingDistinctCounts = positiveBacteriaCounts.length - rank;
+    const minimumVisibleCount = Math.min(rank, MAX_VISIBLE_BACTERIA);
+    const maximumVisibleCount = Math.max(
+      1,
+      MAX_VISIBLE_BACTERIA - remainingDistinctCounts
+    );
+    const scaledCount = Math.max(1, Math.round(bacteriaCount / scale));
+    const lowerVisibleCount = Math.min(
+      minimumVisibleCount,
+      maximumVisibleCount
+    );
+    const upperVisibleCount = Math.max(
+      minimumVisibleCount,
+      maximumVisibleCount
+    );
+
+    return Math.min(
+      upperVisibleCount,
+      Math.max(lowerVisibleCount, scaledCount)
+    );
+  });
 }
 
 /**
  * Builds one truthful bacterial-growth frame.
  *
- * Small cultures render one dot per bacterium. Large cultures use one fixed
- * cohort scale across every frame, so division stays visible without creating
- * an unbounded number of DOM nodes.
+ * Small cultures render one dot per bacterium. Large cultures use bounded
+ * representative counts that preserve every distinct generation whenever the
+ * visual budget can do so.
  */
 export function getBacterialGrowthFrame(input: BacterialGrowthFrameInput) {
   const bacteriaCounts = Array.from(
     { length: input.maxGenerations + 1 },
     (_, generation) => calculateBacteriaCount(input, generation)
   );
-  const largestBacteriaCount = Math.max(...bacteriaCounts);
-  const bacteriaPerDot =
-    largestBacteriaCount > MAX_VISIBLE_BACTERIA
-      ? Math.max(
-          1,
-          Math.round(input.initialCount),
-          Math.ceil(largestBacteriaCount / MAX_VISIBLE_BACTERIA)
-        )
-      : 1;
-
-  const initialVisibleCount = getVisibleCount(
-    calculateBacteriaCount(input, 0),
-    bacteriaPerDot
+  const visibleBacteriaCounts = getVisibleBacteriaCounts(
+    bacteriaCounts,
+    input.ratio >= 1
   );
+  const initialVisibleCount = visibleBacteriaCounts[0];
   let bacteriaIds = Array.from(
     { length: initialVisibleCount },
     (_, index) => index
@@ -106,10 +144,7 @@ export function getBacterialGrowthFrame(input: BacterialGrowthFrameInput) {
   let nextLineageId = bacteriaIds.length;
 
   for (let generation = 1; generation <= input.generation; generation += 1) {
-    const nextVisibleCount = getVisibleCount(
-      calculateBacteriaCount(input, generation),
-      bacteriaPerDot
-    );
+    const nextVisibleCount = visibleBacteriaCounts[generation];
     const nextGeneration = createNextGeneration(
       bacteriaIds,
       nextVisibleCount,
@@ -123,7 +158,9 @@ export function getBacterialGrowthFrame(input: BacterialGrowthFrameInput) {
   return {
     bacteriaCount: calculateBacteriaCount(input, input.generation),
     bacteriaIds,
-    bacteriaPerDot,
-    gridColumns: Math.min(Math.ceil(Math.sqrt(bacteriaIds.length)), 10),
+    gridColumns: Math.max(
+      1,
+      Math.min(Math.ceil(Math.sqrt(bacteriaIds.length)), 10)
+    ),
   };
 }

@@ -1,5 +1,9 @@
 // @vitest-environment node
-import { getBacterialGrowthFrame } from "@repo/design-system/components/contents/mathematics/bacterial-growth";
+import {
+  BacterialFormulaTypeSchema,
+  getBacterialGrowthFrame,
+} from "@repo/design-system/components/contents/mathematics/bacterial-growth";
+import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("bacterial growth frames", () => {
@@ -21,10 +25,21 @@ describe("bacterial growth frames", () => {
       1, 2, 4, 8, 16,
     ]);
     expect(frames[2]?.bacteriaIds).toEqual([0, 2, 1, 3]);
-    expect(frames[4]).toMatchObject({
-      bacteriaPerDot: 100,
-      gridColumns: 4,
-    });
+    expect(frames[4]).toMatchObject({ gridColumns: 4 });
+  });
+
+  it("keeps every bounded generation visually distinct", () => {
+    const visibleCounts = Array.from({ length: 11 }, (_, generation) =>
+      getBacterialGrowthFrame({
+        formulaType: "exponential",
+        generation,
+        initialCount: 1,
+        maxGenerations: 10,
+        ratio: 2,
+      })
+    ).map((frame) => frame.bacteriaIds.length);
+
+    expect(visibleCounts).toEqual([1, 2, 4, 8, 16, 32, 64, 97, 98, 99, 100]);
   });
 
   it("renders one dot per bacterium while the complete culture stays bounded", () => {
@@ -38,7 +53,6 @@ describe("bacterial growth frames", () => {
 
     expect(frame).toMatchObject({
       bacteriaCount: 54,
-      bacteriaPerDot: 1,
       gridColumns: 8,
     });
     expect(frame.bacteriaIds).toHaveLength(54);
@@ -57,9 +71,38 @@ describe("bacterial growth frames", () => {
     expect(frame).toMatchObject({
       bacteriaCount: 1,
       bacteriaIds: [0],
-      bacteriaPerDot: 1,
       gridColumns: 1,
     });
+  });
+
+  it("renders an empty culture after its population reaches zero", () => {
+    const frame = getBacterialGrowthFrame({
+      formulaType: "geometric",
+      generation: 2,
+      initialCount: 1,
+      maxGenerations: 2,
+      ratio: 0.5,
+    });
+
+    expect(frame).toEqual({
+      bacteriaCount: 0,
+      bacteriaIds: [],
+      gridColumns: 1,
+    });
+  });
+
+  it("keeps a large decreasing culture visually distinct through zero", () => {
+    const visibleCounts = Array.from({ length: 12 }, (_, generation) =>
+      getBacterialGrowthFrame({
+        formulaType: "geometric",
+        generation,
+        initialCount: 1000,
+        maxGenerations: 11,
+        ratio: 0.5,
+      })
+    ).map((frame) => frame.bacteriaIds.length);
+
+    expect(visibleCounts).toEqual([100, 50, 25, 13, 7, 6, 5, 4, 3, 2, 1, 0]);
   });
 
   it("distributes an uneven number of daughters across existing parents", () => {
@@ -85,5 +128,11 @@ describe("bacterial growth frames", () => {
 
     expect(frame.bacteriaIds).toHaveLength(100);
     expect(frame.gridColumns).toBe(10);
+  });
+
+  it("rejects unsupported formula types at the renderer boundary", () => {
+    expect(() =>
+      Schema.decodeUnknownSync(BacterialFormulaTypeSchema)("linear")
+    ).toThrow();
   });
 });
