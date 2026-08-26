@@ -6,10 +6,9 @@ import { decodeAgentOutput } from "@repo/backend/agent/decode";
 import { readAgentQuery } from "@repo/backend/agent/query";
 import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/decode";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import type { readCategoryPage } from "@repo/backend/convex/contentRelease/article/read";
+import type { readAgentArticleTaxonomy } from "@repo/backend/convex/contentRelease/article/agent";
 import type { readArticleBuckets } from "@repo/backend/convex/contentRelease/article/sitemap";
 import type { readMaterialBuckets } from "@repo/backend/convex/contentRelease/material/sitemap";
-import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import type { readQuranSurahs } from "@repo/backend/convex/contentRelease/quran/catalog";
 import type { readTryoutTaxonomy } from "@repo/backend/convex/contentRelease/tryout/taxonomy";
 import {
@@ -20,33 +19,20 @@ import {
 } from "@repo/contents/_lib/agent/constants";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { NakafaAgentTaxonomySchema } from "@repo/contents/_lib/agent/schema/taxonomy";
-import { makeFunctionReference, type PaginationOptions } from "convex/server";
+import { makeFunctionReference } from "convex/server";
 import { Effect } from "effect";
 
-interface CategoryArgs {
-  readonly appLocale: Locale;
-  readonly expectedManifestHash: null | string;
-  readonly expectedReleaseId: null | string;
-  readonly paginationOpts: PaginationOptions;
-  readonly [key: string]: unknown;
-}
 type ReleasePin = {
   readonly manifestHash: string;
   readonly releaseId: string;
   readonly sequence: number;
 } | null;
-interface CategoryCursor {
-  readonly categories: readonly string[];
-  readonly cursor: string | null;
-  readonly expectedManifestHash: string | null;
-  readonly expectedReleaseId: string | null;
-}
 
 const articleCategoriesReference = makeFunctionReference<
   "query",
-  CategoryArgs,
-  Effect.Success<ReturnType<typeof readCategoryPage>>
->("contentRelease/article:categories");
+  { readonly appLocale: Locale },
+  Effect.Success<ReturnType<typeof readAgentArticleTaxonomy>>
+>("contentRelease/article/internal:readAgentTaxonomy");
 const articleBucketsReference = makeFunctionReference<
   "query",
   { readonly appLocale: Locale },
@@ -130,62 +116,19 @@ export const getNakafaTaxonomy = Effect.fn("agent.getNakafaTaxonomy")(
 
 /** Reads every authenticated article category in one stable generation. */
 const readArticleCategories = Effect.fn("agent.readArticleCategories")(
-  (ctx: ActionCtx, locale: Locale) =>
-    readCategoryPages(ctx, locale, {
-      categories: [],
-      cursor: null,
-      expectedManifestHash: null,
-      expectedReleaseId: null,
-    })
-);
-
-/** Reads bounded article category pages until the generation is complete. */
-function readCategoryPages(
-  ctx: ActionCtx,
-  locale: Locale,
-  position: CategoryCursor
-): Effect.Effect<readonly string[], NakafaAgentDataReadError> {
-  return Effect.gen(function* () {
-    const page = yield* readAgentQuery(
+  function* (ctx: ActionCtx, locale: Locale) {
+    const taxonomy = yield* readAgentQuery(
       ctx,
       articleCategoriesReference,
-      {
-        appLocale: locale,
-        expectedManifestHash: position.expectedManifestHash,
-        expectedReleaseId: position.expectedReleaseId,
-        paginationOpts: {
-          cursor: position.cursor,
-          numItems: PROJECTION_PAGE_LIMIT,
-        },
-      },
+      { appLocale: locale },
       "Unable to read signed Nakafa article taxonomy."
     );
-    const categories = [
-      ...position.categories,
-      ...page.result.page.map(({ category }) => category),
-    ];
-    if (
-      !page.managed ||
-      page.stale ||
-      page.activeManifestHash === null ||
-      page.activeReleaseId === null
-    ) {
+    if (!taxonomy.managed) {
       return yield* missingInventory("article taxonomy", locale);
     }
-    if (page.result.isDone) {
-      return categories;
-    }
-    if (page.result.continueCursor === "") {
-      return yield* missingInventory("article taxonomy cursor", locale);
-    }
-    return yield* readCategoryPages(ctx, locale, {
-      categories,
-      cursor: page.result.continueCursor,
-      expectedManifestHash: page.activeManifestHash,
-      expectedReleaseId: page.activeReleaseId,
-    });
-  });
-}
+    return taxonomy.categories;
+  }
+);
 
 /** Reads every locale inventory and the selected try-out taxonomy. */
 const readInventories = Effect.fn("agent.readInventories")(function* (
