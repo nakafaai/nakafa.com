@@ -7,8 +7,10 @@ When working on Convex code, **always read
 how to correctly use Convex APIs and patterns. The file contains rules that
 override what you may have learned about Convex from training data.
 
-Nakafa keeps one canonical Convex skill surface in root `.agents/skills`.
-Do not install package-local skill copies.
+Use the enabled official Convex plugin for generic workflows and read the
+generated guideline above for installed API facts. Nakafa's repository guides
+still own Effect, auth, pnpm, architecture, and deployment policy. Do not
+install standalone repository or package-local Convex skill copies.
 
 <!-- convex-ai-end -->
 
@@ -78,9 +80,21 @@ filenames are not.
 Prefer direct imports from the owning module. Do not add barrel re-exports or
 compatibility routes when callers can import the concrete capability directly.
 
+Use shared validators and helpers from `convex/lib/`. Start authentication and
+app-user resolution from `convex/lib/helpers/auth.ts`; do not reach for raw
+`ctx.auth` patterns first.
+
 Do not leave one-off migration, backfill, repair, maintenance, dead, redundant,
 or legacy code/data paths behind. After verifying dev and prod data, delete the
 obsolete Convex function and its tests before considering the work complete.
+
+Every public Convex function used by a deployed client is a rollout contract.
+Renames and removals use expand, switch, observe, contract: deploy the successor
+while the predecessor remains, switch every consumer, verify the predecessor
+has no readers for an explicit migration-owned observation window, then remove
+it and every temporary migration artifact. A promoted web deployment is not
+proof that older browser clients stopped calling the predecessor. Temporary
+compatibility needs an owner, exit criterion, and cleanup change.
 
 ## Type And Convex Source Of Truth
 

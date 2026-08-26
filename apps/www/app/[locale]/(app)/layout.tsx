@@ -14,8 +14,8 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
  * References:
  * - Better Auth client provider:
  *   https://labs.convex.dev/better-auth/framework-guides/next#client-provider
- * - Next.js Cache Components / mixed static-dynamic routes:
- *   @.agents/skills/next-cache-components/SKILL.md
+ * - Next.js Cache Components:
+ *   https://nextjs.org/docs/app/getting-started/cache-components
  */
 export default async function Layout({ children }: LayoutProps<"/[locale]">) {
   const locale = getLocaleOrThrow(await rootLocale());

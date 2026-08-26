@@ -12,7 +12,8 @@ When working on Convex code, **always read
 how to correctly use Convex APIs and patterns. The file contains rules that
 override what you may have learned about Convex from training data.
 
-Nakafa keeps one canonical Convex skill surface in root `.agents/skills`.
-Do not install package-local skill copies.
+Use the official Convex plugin for generic workflows and the generated
+guideline above for installed API facts. Do not install repository-local or
+package-local Convex skill copies.
 
 <!-- convex-ai-end -->
