@@ -51,7 +51,11 @@ describe("verifyNakafaContent", () => {
 
   it.live("returns true when the current signed reference exists", () =>
     Effect.gen(function* () {
-      runtimeMocks.runtimeQuery.mockResolvedValueOnce(quranRef);
+      runtimeMocks.runtimeQuery.mockResolvedValueOnce({
+        ...quranRef,
+        description: "The Opening",
+        title: "Al-Fatihah",
+      });
 
       expect(
         yield* verifyNakafaContent(convexUrl, "https://nakafa.com/en/quran/1")
