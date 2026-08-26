@@ -10,7 +10,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: read
 
 concurrency:
   group: Agent-Friendly Docs-${{ github.ref }}
@@ -49,7 +48,9 @@ jobs:
 
   production:
     name: Production
-    if: github.event_name == 'push' || github.event_name == 'merge_group' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih')
+    # The repository Actions actor policy rejects untrusted workflow triggers
+    # before candidate-owned YAML can access signed-content secrets.
+    if: github.event_name == 'push' || (github.event_name == 'merge_group' && github.actor == 'nabilfatih') || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih')
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
@@ -68,24 +69,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-
-      - name: Verify merge group provenance
-        if: github.event_name == 'merge_group'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          MERGE_GROUP_BASE_REF: ${{ github.event.merge_group.base_ref }}
-          MERGE_GROUP_BASE_SHA: ${{ github.event.merge_group.base_sha }}
-          MERGE_GROUP_HEAD_REF: ${{ github.event.merge_group.head_ref }}
-          MERGE_GROUP_HEAD_SHA: ${{ github.event.merge_group.head_sha }}
-        run: |
-          trusted_script="$RUNNER_TEMP/verify-merge-group-provenance.sh"
-          trap 'rm -f -- "$trusted_script"' EXIT
-          gh api \
-            -H "Accept: application/vnd.github.raw+json" \
-            "repos/$GITHUB_REPOSITORY/contents/.github/scripts/verify-merge-group-provenance.sh?ref=$MERGE_GROUP_BASE_SHA" \
-            > "$trusted_script"
-          chmod 500 "$trusted_script"
-          "$trusted_script"
 
       - name: Setup toolchain
         uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
@@ -439,7 +422,7 @@ jobs:
     env:
       PRODUCTION_RESULT: ${{ needs.production.result }}
       QUALITY_RESULT: ${{ needs.quality.result }}
-      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || github.event_name == 'merge_group' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') }}
+      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || (github.event_name == 'merge_group' && github.actor == 'nabilfatih') || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') }}
     steps:
       - name: Verify acceptance jobs
         run: |
@@ -448,15 +431,21 @@ jobs:
             exit 1
           fi
 
-          if [ "$TRUSTED_CONTENT_ENVIRONMENT" = "true" ]; then
-            if [ "$PRODUCTION_RESULT" != "success" ]; then
-              echo "Production acceptance finished with $PRODUCTION_RESULT." >&2
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && \
+            [ "$TRUSTED_CONTENT_ENVIRONMENT" != "true" ]; then
+            if [ "$PRODUCTION_RESULT" != "skipped" ]; then
+              echo "Untrusted production acceptance finished with $PRODUCTION_RESULT." >&2
               exit 1
             fi
             exit 0
           fi
 
-          if [ "$PRODUCTION_RESULT" != "skipped" ]; then
-            echo "Untrusted production acceptance finished with $PRODUCTION_RESULT." >&2
+          if [ "$TRUSTED_CONTENT_ENVIRONMENT" != "true" ]; then
+            echo "The $GITHUB_EVENT_NAME event is not trusted for signed acceptance." >&2
+            exit 1
+          fi
+
+          if [ "$PRODUCTION_RESULT" != "success" ]; then
+            echo "Production acceptance finished with $PRODUCTION_RESULT." >&2
             exit 1
           fi
