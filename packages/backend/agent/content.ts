@@ -1,18 +1,11 @@
-import {
-  type AppLocaleCode,
-  AppLocaleSchema,
-} from "@nakafa/aksara-contracts/locale";
-import { QuranSurahNumberSchema } from "@nakafa/aksara-contracts/quran/spec";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { decodeAgentOutput } from "@repo/backend/agent/decode";
 import { readAgentQuery } from "@repo/backend/agent/query";
 import { getAgentContentReferenceInput } from "@repo/backend/agent/ref";
 import { decodePublishedQuranMarkdown } from "@repo/backend/client/quran/markdown";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import type { readQuranMarkdown as readQuranMarkdownQuery } from "@repo/backend/convex/contentRelease/quran/markdown";
-import type {
-  ContentReferenceInput,
-  contentReferenceReturnValidator,
-} from "@repo/backend/convex/contentRelease/reference/spec";
+import type { agentContentSourceValidator } from "@repo/backend/convex/contentRelease/reference/agent";
+import type { ContentReferenceInput } from "@repo/backend/convex/contentRelease/reference/spec";
 import { decodePublicRuntimeRow } from "@repo/backend/convex/contentRelease/runtime/public/dispatch";
 import type { PublicRuntimeRow } from "@repo/backend/convex/contentRelease/runtime/public/internal";
 import {
@@ -40,11 +33,17 @@ type PublishedRef = NakafaAgentReadableContentRef & {
   readonly section: "articles" | "material";
 };
 
-const contentReference = makeFunctionReference<
+type AgentContentSource = Infer<typeof agentContentSourceValidator>;
+type QuranContentSource = Extract<
+  NonNullable<AgentContentSource>,
+  { readonly kind: "quran" }
+>;
+
+const contentSourceReference = makeFunctionReference<
   "query",
   { readonly input: ContentReferenceInput },
-  Infer<typeof contentReferenceReturnValidator>
->("contentRelease/reference:read");
+  AgentContentSource
+>("contentRelease/reference/agent:read");
 
 const publicRuntimeReference = makeFunctionReference<
   "query",
@@ -55,16 +54,6 @@ const publicRuntimeReference = makeFunctionReference<
   PublicRuntimeRow
 >("contentRelease/runtime/public/internal:read");
 
-const quranMarkdownReference = makeFunctionReference<
-  "query",
-  {
-    readonly appLocale: AppLocaleCode;
-    readonly surahNumber: number;
-    readonly verseLimit?: number;
-  },
-  Effect.Success<ReturnType<typeof readQuranMarkdownQuery>>
->("contentRelease/quran:markdown");
-
 /** Resolves and reads one public reference entirely inside Convex. */
 export const getNakafaContent = Effect.fn("agent.getNakafaContent")(function* (
   ctx: ActionCtx,
@@ -74,23 +63,33 @@ export const getNakafaContent = Effect.fn("agent.getNakafaContent")(function* (
   if (Option.isNone(lookup)) {
     return Option.none<NakafaAgentMarkdown>();
   }
-  const reference = yield* readAgentQuery(
+  const source = yield* readAgentQuery(
     ctx,
-    contentReference,
+    contentSourceReference,
     { input: lookup.value },
     "Unable to resolve the Nakafa content reference."
   );
-  if (!reference) {
+  if (!source) {
     return Option.none<NakafaAgentMarkdown>();
   }
-  const ref = createNakafaContentRefFromSummary(reference);
+  const ref = createNakafaContentRefFromSummary(source.reference);
   if (Option.isNone(ref)) {
     return yield* contentReadError(
       "The signed content reference has an invalid graph identity."
     );
   }
+  if (source.kind === "quran") {
+    if (ref.value.section !== "quran") {
+      return yield* contentReadError(
+        "The signed Quran source has an inconsistent section identity."
+      );
+    }
+    return yield* renderQuranMarkdown(ref.value, source);
+  }
   if (ref.value.section === "quran") {
-    return yield* readQuranMarkdown(ctx, ref.value);
+    return yield* contentReadError(
+      "The signed Quran reference is missing its transactional source."
+    );
   }
   if (isPublishedRef(ref.value)) {
     return yield* readPublishedMarkdown(ctx, ref.value);
@@ -162,24 +161,13 @@ const readPublishedMarkdown = Effect.fn("agent.readPublishedMarkdown")(
 );
 
 /** Renders one signed Quran surah as agent-readable markdown. */
-const readQuranMarkdown = Effect.fn("agent.readQuranMarkdown")(function* (
-  ctx: ActionCtx,
-  ref: NakafaAgentContentRef
+const renderQuranMarkdown = Effect.fn("agent.renderQuranMarkdown")(function* (
+  ref: NakafaAgentContentRef,
+  source: QuranContentSource
 ) {
-  const [section, value, extra] = ref.route.split("/");
-  const surahNumber = parseQuranSurahNumber(value);
-  if (section !== "quran" || extra !== undefined || surahNumber === null) {
-    return Option.none<NakafaAgentMarkdown>();
-  }
-  const result = yield* readAgentQuery(
-    ctx,
-    quranMarkdownReference,
-    { appLocale: ref.locale, surahNumber },
-    "Unable to read signed Nakafa Quran markdown."
-  );
-  const publication = yield* decodePublishedQuranMarkdown(result, {
+  const publication = yield* decodePublishedQuranMarkdown(source.markdown, {
     appLocale: ref.locale,
-    surahNumber,
+    surahNumber: source.surahNumber,
   }).pipe(Effect.mapError(contentReadError));
   const title = publication.surah.name.transliteration;
   const description = publication.surah.name.translation;
@@ -218,15 +206,6 @@ function isPublishedRef(ref: NakafaAgentContentRef): ref is PublishedRef {
     ref.markdown_url !== undefined &&
     (ref.section === "articles" || ref.section === "material")
   );
-}
-
-/** Parses one canonical Quran route segment through the signed contract. */
-function parseQuranSurahNumber(value: string | undefined) {
-  const decoded = Schema.decodeOption(QuranSurahNumberSchema)(Number(value));
-  if (Option.isNone(decoded) || decoded.value.toString() !== value) {
-    return null;
-  }
-  return decoded.value;
 }
 
 /** Maps integrity and rendering failures into the agent read contract. */

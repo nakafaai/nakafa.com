@@ -40,7 +40,7 @@ export const quranMarkdownValidator = v.object({
   verses: v.array(quranMarkdownVerseValidator),
 });
 
-type QuranMarkdown = Infer<typeof quranMarkdownValidator>;
+export type QuranMarkdown = Infer<typeof quranMarkdownValidator>;
 type QuranMarkdownSurah = NonNullable<QuranMarkdown["surah"]>;
 
 /** Projects only metadata rendered by Quran markdown consumers. */
