@@ -5,19 +5,20 @@ import type {
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import {
-  getLearningPreferenceByUserId,
+  readLearningPreferenceByUserId,
   upsertPreferredCurriculumProgram,
 } from "@repo/backend/convex/learningPreferences/impl";
 import {
   listSignedPrograms,
   readSignedProgram,
 } from "@repo/backend/convex/learningPrograms/selection";
-import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { Clock, Effect, Schema } from "effect";
 
 const CURRICULUM_PROGRAM_LIMIT = 50;
 const curriculumPreferenceIoFailedCode = "CURRICULUM_PREFERENCE_IO_FAILED";
+const curriculumPreferenceIoFailedMessage =
+  "Unable to read or persist curriculum preferences.";
 const curriculumProgramNotFoundCode = "CURRICULUM_PROGRAM_NOT_FOUND";
 /** Expected curriculum preference failure exposed through Convex errors. */
 export class CurriculumPreferenceError extends Schema.TaggedError<CurriculumPreferenceError>()(
@@ -38,10 +39,10 @@ export interface CurriculumProgramOption {
   readonly title: string;
 }
 /** Maps unknown database failures into the curriculum preference error channel. */
-function toPreferenceIoError(error: unknown) {
+function toPreferenceIoError() {
   return new CurriculumPreferenceError({
     code: curriculumPreferenceIoFailedCode,
-    message: getUnknownErrorMessage(error),
+    message: curriculumPreferenceIoFailedMessage,
   });
 }
 /** Converts one verified Aksara program into a localized selector option. */
@@ -98,10 +99,9 @@ export const listCurriculumPrograms = Effect.fn(
 export const readCurrentCurriculumProgram = Effect.fn(
   "learningPreferences.readCurrentCurriculumProgram"
 )(function* (ctx: QueryCtx, locale: Locale, userId: Id<"users">) {
-  const preference = yield* Effect.tryPromise({
-    catch: toPreferenceIoError,
-    try: () => getLearningPreferenceByUserId(ctx, userId),
-  });
+  const preference = yield* readLearningPreferenceByUserId(ctx, userId).pipe(
+    Effect.mapError(toPreferenceIoError)
+  );
   if (!preference?.preferredCurriculumProgramKey) {
     return null;
   }
@@ -135,16 +135,12 @@ export const saveCurriculumProgram = Effect.fn(
     });
   }
   const now = yield* Clock.currentTimeMillis;
-  yield* Effect.tryPromise({
-    catch: toPreferenceIoError,
-    try: () =>
-      upsertPreferredCurriculumProgram({
-        ctx,
-        now,
-        programKey: program.key,
-        userId,
-      }),
-  });
+  yield* upsertPreferredCurriculumProgram({
+    ctx,
+    now,
+    programKey: program.key,
+    userId,
+  }).pipe(Effect.mapError(toPreferenceIoError));
   return {
     preferredCurriculumProgramKey: program.key,
     program,

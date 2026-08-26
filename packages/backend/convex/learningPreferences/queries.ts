@@ -12,31 +12,30 @@ import {
   currentTryoutPreferenceValidator,
   curriculumProgramOptionValidator,
 } from "@repo/backend/convex/learningPreferences/schema";
-import {
-  getUnknownErrorMessage,
-  runConvexProgram,
-} from "@repo/backend/convex/lib/effect";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import { localeValidator } from "@repo/backend/convex/lib/validators/contents";
 import { v } from "convex/values";
 import { Effect, Schema } from "effect";
 
 const learningPreferenceIoFailedCode = "LEARNING_PREFERENCE_IO_FAILED";
+const learningPreferenceIoFailedMessage =
+  "Unable to read learning preferences.";
 
 /** Raised when an authenticated preference query cannot read its user. */
 class LearningPreferenceIoError extends Schema.TaggedError<LearningPreferenceIoError>()(
   "LearningPreferenceIoError",
   {
     code: Schema.Literal(learningPreferenceIoFailedCode),
-    message: Schema.String,
+    message: Schema.Literal(learningPreferenceIoFailedMessage),
   }
 ) {}
 
 /** Maps unknown authentication reads into the preference error channel. */
-function toLearningPreferenceIoError(error: unknown) {
+function toLearningPreferenceIoError() {
   return new LearningPreferenceIoError({
     code: learningPreferenceIoFailedCode,
-    message: getUnknownErrorMessage(error),
+    message: learningPreferenceIoFailedMessage,
   });
 }
 

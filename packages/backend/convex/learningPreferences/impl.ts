@@ -8,7 +8,6 @@ import type {
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
-import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { readTryoutCatalogRowByIdentity } from "@repo/backend/convex/tryouts/catalog/row";
 import type { LearningInterest } from "@repo/contents/_types/learner/preferences";
@@ -18,21 +17,31 @@ type PreferenceCtx = MutationCtx | QueryCtx;
 type LearningProgramKind = typeof LearningProgramKindSchema.Type;
 const learningPreferencePersistenceFailedCode =
   "LEARNING_PREFERENCE_PERSISTENCE_FAILED";
+const learningPreferencePersistenceFailedMessage =
+  "Unable to read or persist learning preferences.";
 
 /** Expected database failure while reading or writing learner preferences. */
 export class LearningPreferencePersistenceError extends Schema.TaggedError<LearningPreferencePersistenceError>()(
   "LearningPreferencePersistenceError",
   {
     code: Schema.Literal(learningPreferencePersistenceFailedCode),
-    message: Schema.String,
+    message: Schema.Literal(learningPreferencePersistenceFailedMessage),
   }
 ) {}
 
 /** Maps unknown database failures into the preference persistence contract. */
-function toLearningPreferencePersistenceError(error: unknown) {
+function toLearningPreferencePersistenceError() {
   return new LearningPreferencePersistenceError({
     code: learningPreferencePersistenceFailedCode,
-    message: getUnknownErrorMessage(error),
+    message: learningPreferencePersistenceFailedMessage,
+  });
+}
+
+/** Runs one preference database operation through its typed error channel. */
+function tryLearningPreferencePersistence<A>(operation: () => Promise<A>) {
+  return Effect.tryPromise({
+    catch: toLearningPreferencePersistenceError,
+    try: operation,
   });
 }
 
@@ -46,25 +55,16 @@ export function toTryoutCountryOption(country: TryoutCountry) {
   };
 }
 
-/** Loads the saved preference row for one app user. */
-export async function getLearningPreferenceByUserId(
-  ctx: PreferenceCtx,
-  userId: Id<"users">
-) {
-  return await ctx.db
-    .query("learningPreferences")
-    .withIndex("by_userId", (q) => q.eq("userId", userId))
-    .unique();
-}
-
 /** Loads one preference row through the typed persistence error channel. */
 export const readLearningPreferenceByUserId = Effect.fn(
   "learningPreferences.readLearningPreferenceByUserId"
 )(function* (ctx: PreferenceCtx, userId: Id<"users">) {
-  return yield* Effect.tryPromise({
-    catch: toLearningPreferencePersistenceError,
-    try: () => getLearningPreferenceByUserId(ctx, userId),
-  });
+  return yield* tryLearningPreferencePersistence(() =>
+    ctx.db
+      .query("learningPreferences")
+      .withIndex("by_userId", (query) => query.eq("userId", userId))
+      .unique()
+  );
 });
 
 /** Loads one active try-out country from the signed catalog. */
@@ -117,7 +117,9 @@ export const readCurrentTryoutCountry = Effect.fn(
 });
 
 /** Creates or updates the current user's preferred curriculum program key. */
-export async function upsertPreferredCurriculumProgram({
+export const upsertPreferredCurriculumProgram = Effect.fn(
+  "learningPreferences.upsertPreferredCurriculumProgram"
+)(function* ({
   ctx,
   now,
   programKey,
@@ -128,27 +130,31 @@ export async function upsertPreferredCurriculumProgram({
   programKey: string;
   userId: Id<"users">;
 }) {
-  const current = await getLearningPreferenceByUserId(ctx, userId);
+  const current = yield* readLearningPreferenceByUserId(ctx, userId);
 
   if (!current) {
-    return await ctx.db.insert("learningPreferences", {
-      preferredCurriculumProgramKey: programKey,
-      updatedAt: now,
-      userId,
-    });
+    return yield* tryLearningPreferencePersistence(() =>
+      ctx.db.insert("learningPreferences", {
+        preferredCurriculumProgramKey: programKey,
+        updatedAt: now,
+        userId,
+      })
+    );
   }
 
   if (current.preferredCurriculumProgramKey === programKey) {
     return current._id;
   }
 
-  await ctx.db.patch(current._id, {
-    preferredCurriculumProgramKey: programKey,
-    updatedAt: now,
-  });
+  yield* tryLearningPreferencePersistence(() =>
+    ctx.db.patch(current._id, {
+      preferredCurriculumProgramKey: programKey,
+      updatedAt: now,
+    })
+  );
 
   return current._id;
-}
+});
 
 /** Creates or updates the current user's canonical learning selection. */
 export const saveLearningSelection = Effect.fn(
@@ -182,18 +188,16 @@ export const saveLearningSelection = Effect.fn(
     : {};
 
   if (!current) {
-    return yield* Effect.tryPromise({
-      catch: toLearningPreferencePersistenceError,
-      try: () =>
-        ctx.db.insert("learningPreferences", {
-          learningInterest: interest,
-          primaryProgramKey: programKey,
-          ...curriculumPreference,
-          selectionUpdatedAt,
-          updatedAt: now,
-          userId,
-        }),
-    });
+    return yield* tryLearningPreferencePersistence(() =>
+      ctx.db.insert("learningPreferences", {
+        learningInterest: interest,
+        primaryProgramKey: programKey,
+        ...curriculumPreference,
+        selectionUpdatedAt,
+        updatedAt: now,
+        userId,
+      })
+    );
   }
 
   if (
@@ -209,35 +213,33 @@ export const saveLearningSelection = Effect.fn(
       return current._id;
     }
 
-    yield* Effect.tryPromise({
-      catch: toLearningPreferencePersistenceError,
-      try: () =>
-        ctx.db.patch(current._id, {
-          selectionUpdatedAt,
-          updatedAt: now,
-        }),
-    });
+    yield* tryLearningPreferencePersistence(() =>
+      ctx.db.patch(current._id, {
+        selectionUpdatedAt,
+        updatedAt: now,
+      })
+    );
 
     return current._id;
   }
 
-  yield* Effect.tryPromise({
-    catch: toLearningPreferencePersistenceError,
-    try: () =>
-      ctx.db.patch(current._id, {
-        learningInterest: interest,
-        primaryProgramKey: programKey,
-        ...curriculumPreference,
-        selectionUpdatedAt,
-        updatedAt: now,
-      }),
-  });
+  yield* tryLearningPreferencePersistence(() =>
+    ctx.db.patch(current._id, {
+      learningInterest: interest,
+      primaryProgramKey: programKey,
+      ...curriculumPreference,
+      selectionUpdatedAt,
+      updatedAt: now,
+    })
+  );
 
   return current._id;
 });
 
 /** Creates or updates the current user's preferred try-out country key. */
-export async function upsertPreferredTryoutCountry({
+export const upsertPreferredTryoutCountry = Effect.fn(
+  "learningPreferences.upsertPreferredTryoutCountry"
+)(function* ({
   countryKey,
   ctx,
   now,
@@ -248,24 +250,28 @@ export async function upsertPreferredTryoutCountry({
   now: number;
   userId: Id<"users">;
 }) {
-  const current = await getLearningPreferenceByUserId(ctx, userId);
+  const current = yield* readLearningPreferenceByUserId(ctx, userId);
 
   if (!current) {
-    return await ctx.db.insert("learningPreferences", {
-      preferredTryoutCountryKey: countryKey,
-      updatedAt: now,
-      userId,
-    });
+    return yield* tryLearningPreferencePersistence(() =>
+      ctx.db.insert("learningPreferences", {
+        preferredTryoutCountryKey: countryKey,
+        updatedAt: now,
+        userId,
+      })
+    );
   }
 
   if (current.preferredTryoutCountryKey === countryKey) {
     return current._id;
   }
 
-  await ctx.db.patch(current._id, {
-    preferredTryoutCountryKey: countryKey,
-    updatedAt: now,
-  });
+  yield* tryLearningPreferencePersistence(() =>
+    ctx.db.patch(current._id, {
+      preferredTryoutCountryKey: countryKey,
+      updatedAt: now,
+    })
+  );
 
   return current._id;
-}
+});
