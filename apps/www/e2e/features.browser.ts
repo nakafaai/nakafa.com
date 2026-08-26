@@ -9,7 +9,9 @@ import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 const NINA_ANSWER_TEXT = "Subtract the first equation";
 const NINA_HEADING_PATTERN = /Nina already knows/;
 const NINA_REASONING_TEXT = "Compare the two known equations";
-const NEXT_CHUNK_PATH = /\/_next\/static\/chunks\/.*\.js(?:\?.*)?$/;
+// Match local Next and Vercel-promoted production chunk paths.
+const NEXT_CHUNK_PATH =
+  /\/_next\/static\/(?:immutable\/)?chunks\/.*\.js(?:\?.*)?$/;
 
 // Normal motion remains covered at three widths. Wide layouts use the product's
 // reduced-motion path so continuous WebGL frames cannot starve pointer checks.
@@ -216,6 +218,21 @@ const expectProjectileDeferred = Effect.fn(
   );
 });
 
+const expectProjectileHydratedWhileDeferred = Effect.fn(
+  "NakafaE2E.expectProjectileHydratedWhileDeferred"
+)(function* (page: Page) {
+  const highArc = page.getByRole("button", { name: "High Arc" });
+  yield* Effect.promise(() =>
+    expect
+      .poll(async () => {
+        await highArc.dispatchEvent("click");
+        return await highArc.getAttribute("aria-pressed");
+      })
+      .toBe("true")
+  );
+  yield* expectProjectileDeferred(page);
+});
+
 for (const viewport of targetViewports) {
   test(`homepage features preserve UX at ${viewport.name}`, async ({
     baseURL,
@@ -273,6 +290,7 @@ test("homepage projectile recovers from a terminal scene load failure", async ({
             Effect.gen(function* () {
               yield* prepareFeaturesPage(page);
               yield* expectProjectileDeferred(page);
+              yield* expectProjectileHydratedWhileDeferred(page);
               yield* expectProjectileRecovery(page);
             })
           );
