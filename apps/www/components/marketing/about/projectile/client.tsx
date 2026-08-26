@@ -6,6 +6,8 @@ import type {
   ProjectileScenarioId,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
+import { Button } from "@repo/design-system/components/ui/button";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -13,14 +15,50 @@ import {
 import { Effect } from "effect";
 import { useReducedMotion } from "motion/react";
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 import { loadProjectileScene } from "@/components/marketing/about/projectile/loader";
 import type { ProjectileSceneProps } from "@/components/marketing/about/projectile/scene";
 import { reportClientException } from "@/lib/analytics/client";
 
-/** Keeps the optional WebGL frame empty after a reported terminal load failure. */
+const reloadProjectilePage = Effect.fn("www.home.reloadProjectilePage")(() =>
+  Effect.sync(() => window.location.reload())
+);
+
+/** Shows a truthful recovery action after a reported terminal load failure. */
 function UnavailableProjectileScene(_props: ProjectileSceneProps) {
-  return null;
+  const t = useTranslations("Error");
+
+  return (
+    <div
+      className="flex size-full flex-col items-center justify-center gap-4 p-4 text-center"
+      role="alert"
+    >
+      <p className="font-medium">{t("title")}</p>
+      <Button
+        onClick={() => Effect.runSync(reloadProjectilePage())}
+        size="sm"
+        variant="secondary"
+      >
+        {t("retry")}
+      </Button>
+    </div>
+  );
+}
+
+/** Keeps the scene's pending state local to its semantic frame. */
+function ProjectileSceneLoading() {
+  const t = useTranslations("Features");
+
+  return (
+    <div
+      aria-label={t("projectile-view-label")}
+      className="flex size-full items-center justify-center"
+      role="status"
+    >
+      <Spinner aria-hidden="true" className="size-6" />
+    </div>
+  );
 }
 
 /**
@@ -28,23 +66,25 @@ function UnavailableProjectileScene(_props: ProjectileSceneProps) {
  *
  * @see https://nextjs.org/docs/app/guides/lazy-loading
  */
-const ProjectileScene = dynamic(() =>
-  Effect.runPromise(
-    loadProjectileScene(() =>
-      import("@/components/marketing/about/projectile/scene").then(
-        ({ ProjectileScene: Scene }) => Scene
+const ProjectileScene = dynamic(
+  () =>
+    Effect.runPromise(
+      loadProjectileScene(() =>
+        import("@/components/marketing/about/projectile/scene").then(
+          ({ ProjectileScene: Scene }) => Scene
+        )
+      ).pipe(
+        Effect.matchEffect({
+          onFailure: (error) =>
+            reportClientException(error, {
+              operation: "load-projectile-scene",
+              source: "home-features",
+            }).pipe(Effect.as(UnavailableProjectileScene)),
+          onSuccess: Effect.succeed,
+        })
       )
-    ).pipe(
-      Effect.matchEffect({
-        onFailure: (error) =>
-          reportClientException(error, {
-            operation: "load-projectile-scene",
-            source: "home-features",
-          }).pipe(Effect.as(UnavailableProjectileScene)),
-        onSuccess: Effect.succeed,
-      })
-    )
-  )
+    ),
+  { loading: ProjectileSceneLoading }
 );
 
 interface ProjectileFact {
@@ -123,12 +163,12 @@ export function ProjectileClient({
           </ToggleGroup>
 
           <section aria-label={viewLabel} className={threeSceneFrameVariants()}>
-            {entry?.isIntersecting ? (
+            {entry?.isIntersecting && (
               <ProjectileScene
                 motion={activeScenario.motion}
                 shouldReduceMotion={shouldReduceMotion}
               />
-            ) : null}
+            )}
           </section>
         </div>
       </div>

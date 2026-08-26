@@ -1,14 +1,15 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import {
   withBrowserContext,
   withObservedPageErrors,
-} from "./support/browser-context";
-import { seedDeniedAnalyticsConsent } from "./support/consent";
+} from "@/e2e/support/browser-context";
+import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 
 const NINA_ANSWER_TEXT = "Subtract the first equation";
 const NINA_HEADING_PATTERN = /Nina already knows/;
 const NINA_REASONING_TEXT = "Compare the two known equations";
+const NEXT_CHUNK_PATH = /\/_next\/static\/chunks\/.*\.js(?:\?.*)?$/;
 
 // Normal motion remains covered at three widths. Wide layouts use the product's
 // reduced-motion path so continuous WebGL frames cannot starve pointer checks.
@@ -56,6 +57,21 @@ const prepareFeaturesPage = Effect.fn("NakafaE2E.prepareFeaturesPage")(
   }
 );
 
+const expectConversationAtBottom = Effect.fn(
+  "NakafaE2E.expectConversationAtBottom"
+)(function* (scroller: Locator) {
+  yield* Effect.promise(() =>
+    expect
+      .poll(() =>
+        scroller.evaluate(
+          (element) =>
+            element.scrollHeight - element.clientHeight - element.scrollTop
+        )
+      )
+      .toBeLessThanOrEqual(2)
+  );
+});
+
 const expectNinaAtBottom = Effect.fn("NakafaE2E.expectNinaAtBottom")(function* (
   page: Page
 ) {
@@ -70,21 +86,19 @@ const expectNinaAtBottom = Effect.fn("NakafaE2E.expectNinaAtBottom")(function* (
 
   yield* Effect.promise(() => expect(conversation).toHaveCount(1));
   yield* Effect.promise(() => conversation.scrollIntoViewIfNeeded());
-  yield* Effect.promise(() =>
-    expect
-      .poll(() =>
-        scroller.evaluate(
-          (element) =>
-            element.scrollHeight - element.clientHeight - element.scrollTop
-        )
-      )
-      .toBeLessThanOrEqual(2)
-  );
+  yield* expectConversationAtBottom(scroller);
   yield* Effect.promise(() => reasoningTrigger.click());
   yield* Effect.promise(() =>
     expect(page.getByText(NINA_REASONING_TEXT, { exact: false })).toBeVisible()
   );
-  yield* Effect.promise(() => mathTrigger.click());
+
+  // A real upward wheel uses use-stick-to-bottom's owned escape path before
+  // Playwright targets content above the clipped conversation viewport.
+  yield* Effect.promise(() => scroller.hover({ scroll: "none" }));
+  yield* Effect.promise(() => page.mouse.wheel(0, -1));
+  yield* Effect.promise(() => mathTrigger.scrollIntoViewIfNeeded());
+  yield* Effect.promise(() => expect(mathTrigger).toBeInViewport({ ratio: 1 }));
+  yield* Effect.promise(() => mathTrigger.click({ scroll: "none" }));
   yield* Effect.promise(() =>
     expect(mathTrigger).toHaveAttribute("aria-expanded", "true")
   );
@@ -147,6 +161,47 @@ const expectProjectileInteraction = Effect.fn(
   );
 });
 
+const expectProjectileRecovery = Effect.fn(
+  "NakafaE2E.expectProjectileRecovery"
+)(function* (page: Page) {
+  const visual = page.getByRole("region", {
+    name: "Cannonball projectile analysis visual",
+  });
+  const error = visual.getByRole("alert");
+
+  yield* Effect.promise(() =>
+    page.route(NEXT_CHUNK_PATH, (route) => route.abort("failed"))
+  );
+  yield* Effect.promise(() => visual.scrollIntoViewIfNeeded());
+  yield* Effect.promise(() => expect(error).toBeVisible({ timeout: 15_000 }));
+  yield* Effect.promise(() =>
+    expect(error.getByRole("button", { name: "Retry" })).toBeVisible()
+  );
+  yield* Effect.promise(() => page.unroute(NEXT_CHUNK_PATH));
+  yield* Effect.promise(() =>
+    Promise.all([
+      page.waitForEvent("framenavigated", {
+        predicate: (frame) => frame === page.mainFrame(),
+      }),
+      error.getByRole("button", { name: "Retry" }).click(),
+    ])
+  );
+  yield* Effect.promise(() => page.waitForLoadState("domcontentloaded"));
+  yield* Effect.promise(() =>
+    expect
+      .poll(() =>
+        page.evaluate(() => {
+          const [entry] = performance.getEntriesByType("navigation");
+          return entry instanceof PerformanceNavigationTiming
+            ? entry.type
+            : null;
+        })
+      )
+      .toBe("reload")
+  );
+  yield* expectProjectileInteraction(page);
+});
+
 const expectProjectileDeferred = Effect.fn(
   "NakafaE2E.expectProjectileDeferred"
 )(function* (page: Page) {
@@ -156,6 +211,9 @@ const expectProjectileDeferred = Effect.fn(
 
   yield* Effect.promise(() => expect(visual).toHaveCount(1));
   yield* Effect.promise(() => expect(visual.locator("canvas")).toHaveCount(0));
+  yield* Effect.promise(() =>
+    expect(visual.getByRole("status")).toHaveCount(0)
+  );
 });
 
 for (const viewport of targetViewports) {
@@ -192,3 +250,33 @@ for (const viewport of targetViewports) {
     );
   });
 }
+
+test("homepage projectile recovers from a terminal scene load failure", async ({
+  baseURL,
+  browser,
+}) => {
+  expect(baseURL).toBeTruthy();
+  await Effect.runPromise(
+    withBrowserContext(
+      browser,
+      {
+        baseURL: baseURL ?? "",
+        reducedMotion: "reduce",
+        serviceWorkers: "block",
+        viewport: { height: 768, width: 1024 },
+      },
+      (context) =>
+        Effect.gen(function* () {
+          const page = yield* Effect.promise(() => context.newPage());
+          yield* withObservedPageErrors(
+            page,
+            Effect.gen(function* () {
+              yield* prepareFeaturesPage(page);
+              yield* expectProjectileDeferred(page);
+              yield* expectProjectileRecovery(page);
+            })
+          );
+        })
+    )
+  );
+});
