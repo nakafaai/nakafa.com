@@ -448,6 +448,8 @@ import type * as routes_agent_guard from "../routes/agent/guard.js";
 import type * as routes_agent_input from "../routes/agent/input.js";
 import type * as routes_agent_limit from "../routes/agent/limit.js";
 import type * as routes_agent_mcp_guard from "../routes/agent/mcp/guard.js";
+import type * as routes_agent_mcp_input from "../routes/agent/mcp/input.js";
+import type * as routes_agent_mcp_legacy from "../routes/agent/mcp/legacy.js";
 import type * as routes_agent_mcp_response from "../routes/agent/mcp/response.js";
 import type * as routes_agent_mcp_route from "../routes/agent/mcp/route.js";
 import type * as routes_agent_response from "../routes/agent/response.js";
@@ -1033,6 +1035,8 @@ declare const fullApi: ApiFromModules<{
   "routes/agent/input": typeof routes_agent_input;
   "routes/agent/limit": typeof routes_agent_limit;
   "routes/agent/mcp/guard": typeof routes_agent_mcp_guard;
+  "routes/agent/mcp/input": typeof routes_agent_mcp_input;
+  "routes/agent/mcp/legacy": typeof routes_agent_mcp_legacy;
   "routes/agent/mcp/response": typeof routes_agent_mcp_response;
   "routes/agent/mcp/route": typeof routes_agent_mcp_route;
   "routes/agent/response": typeof routes_agent_response;
