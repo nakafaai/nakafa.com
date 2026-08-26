@@ -439,6 +439,11 @@ import type * as notifications_queries from "../notifications/queries.js";
 import type * as polyfills from "../polyfills.js";
 import type * as privacy_recovery from "../privacy/recovery.js";
 import type * as privacy_spec from "../privacy/spec.js";
+import type * as routes_agent_guard from "../routes/agent/guard.js";
+import type * as routes_agent_input from "../routes/agent/input.js";
+import type * as routes_agent_limit from "../routes/agent/limit.js";
+import type * as routes_agent_response from "../routes/agent/response.js";
+import type * as routes_agent_security from "../routes/agent/security.js";
 import type * as routes_constants from "../routes/constants.js";
 import type * as routes_middleware_requestId from "../routes/middleware/requestId.js";
 import type * as routes_polar from "../routes/polar.js";
@@ -1011,6 +1016,11 @@ declare const fullApi: ApiFromModules<{
   polyfills: typeof polyfills;
   "privacy/recovery": typeof privacy_recovery;
   "privacy/spec": typeof privacy_spec;
+  "routes/agent/guard": typeof routes_agent_guard;
+  "routes/agent/input": typeof routes_agent_input;
+  "routes/agent/limit": typeof routes_agent_limit;
+  "routes/agent/response": typeof routes_agent_response;
+  "routes/agent/security": typeof routes_agent_security;
   "routes/constants": typeof routes_constants;
   "routes/middleware/requestId": typeof routes_middleware_requestId;
   "routes/polar": typeof routes_polar;
@@ -1175,6 +1185,7 @@ export declare const internal: FilterApi<
 export declare const components: {
   betterAuth: import("@repo/backend/convex/betterAuth/_generated/component.js").ComponentApi<"betterAuth">;
   migrations: import("@convex-dev/migrations/_generated/component.js").ComponentApi<"migrations">;
+  agentRateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"agentRateLimiter">;
   workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
   resend: import("@convex-dev/resend/_generated/component.js").ComponentApi<"resend">;
   posthog: import("@posthog/convex/_generated/component.js").ComponentApi<"posthog">;

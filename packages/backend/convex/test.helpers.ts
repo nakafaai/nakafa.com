@@ -1,4 +1,5 @@
 import aggregateTest from "@convex-dev/aggregate/test";
+import rateLimiterTest from "@convex-dev/rate-limiter/test";
 import posthogTest from "@posthog/convex/test";
 import {
   ANALYTICS_CONSENT_CATEGORY,
@@ -49,6 +50,7 @@ export function createConvexTestWithBetterAuth() {
     aggregateModules
   );
   registerLearningPopularityAggregate(t);
+  rateLimiterTest.register(t, "agentRateLimiter");
   posthogTest.register(t);
   return t;
 }

@@ -28,9 +28,9 @@ const retainedRuntimeRoute = Effect.fn("contentRelease.retainedRuntimeRoute")(
 );
 
 /** Registers the isolated read-only endpoint for retained attempt bytes. */
-export function registerRetainedProtectedContentRuntimeRoute(
-  app: HonoWithConvex<ActionCtx>
-) {
+export function registerRetainedProtectedContentRuntimeRoute<
+  Variables extends Record<string, unknown>,
+>(app: HonoWithConvex<ActionCtx, Variables>) {
   app.post(RETAINED_PROTECTED_CONTENT_RUNTIME_PATH, async (context) => {
     const result = await runConvexProgram(
       retainedRuntimeRoute(context.env, context.req.raw)

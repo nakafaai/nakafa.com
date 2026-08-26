@@ -1,5 +1,6 @@
 import aggregate from "@convex-dev/aggregate/convex.config.js";
 import migrations from "@convex-dev/migrations/convex.config.js";
+import rateLimiter from "@convex-dev/rate-limiter/convex.config.js";
 import resend from "@convex-dev/resend/convex.config.js";
 import workflow from "@convex-dev/workflow/convex.config.js";
 import posthog from "@posthog/convex/convex.config.js";
@@ -17,6 +18,7 @@ const app = defineApp({
     AKSARA_AGENT_SIGNING_PUBLIC_KEY: v.optional(v.string()),
     AKSARA_PUBLICATION_TOKEN: v.string(),
     CONTENT_RUNTIME_TOKEN: v.string(),
+    NAKAFA_API_EDGE_SECRET: v.string(),
     // Dedicated least-privilege key for permanent analytics erasure.
     POSTHOG_ERASURE_API_KEY: v.string(),
     POSTHOG_HOST: v.string(),
@@ -26,6 +28,7 @@ const app = defineApp({
 });
 app.use(betterAuth);
 app.use(migrations);
+app.use(rateLimiter, { name: "agentRateLimiter" });
 app.use(workflow);
 app.use(resend);
 app.use(posthog, {

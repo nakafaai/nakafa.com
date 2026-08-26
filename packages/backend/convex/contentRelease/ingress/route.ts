@@ -98,7 +98,9 @@ const publicationRoute = Effect.fn("contentRelease.publicationRoute")(
   }
 );
 /** Registers the single private content-publication ingress. */
-export function registerContentReleaseRoutes(app: HonoWithConvex<ActionCtx>) {
+export function registerContentReleaseRoutes<
+  Variables extends Record<string, unknown>,
+>(app: HonoWithConvex<ActionCtx, Variables>) {
   app.post("/internal/content/releases", async (context) => {
     const result = await runConvexProgram(
       publicationRoute(context.env, context.req.raw)
