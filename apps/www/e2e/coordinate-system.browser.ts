@@ -8,7 +8,7 @@ import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 
 const LINEAR_SYSTEM_ROUTE =
   "/id/materi/matematika/sistem-persamaan-dan-pertidaksamaan-linear/sistem-persamaan-linear";
-const MANY_SOLUTIONS_SCENE_INDEX = 2;
+const MANY_SOLUTIONS_TITLE = "Sistem Persamaan Linear dengan Banyak Solusi";
 const VISUAL_ASSERTION_TIMEOUT = 5000;
 const REQUIRED_STABLE_SAMPLES = 2;
 
@@ -131,15 +131,21 @@ const expectStableCoordinateSystem = Effect.fn(
   );
   yield* Effect.sync(() => expect(response?.ok()).toBe(true));
 
-  const scene = page
-    .locator('[data-slot="line-scene"]')
-    .nth(MANY_SOLUTIONS_SCENE_INDEX);
+  const card = page.locator('[data-slot="card"]').filter({
+    hasText: MANY_SOLUTIONS_TITLE,
+  });
+  const scene = card.locator('[data-slot="line-scene"]');
   const canvas = scene.locator("canvas");
   const playButton = scene.getByRole("button", { name: "Toggle Play" });
 
-  yield* Effect.promise(() => expect(scene).toBeAttached());
-  yield* Effect.promise(() => scene.scrollIntoViewIfNeeded());
-  yield* Effect.promise(() => expect(canvas).toBeVisible({ timeout: 30_000 }));
+  yield* Effect.promise(() =>
+    expect(async () => {
+      await expect(card).toHaveCount(1);
+      await expect(scene).toBeAttached();
+      await scene.scrollIntoViewIfNeeded();
+      expect(await canvas.isVisible()).toBe(true);
+    }).toPass({ timeout: 30_000 })
+  );
   yield* observeDrawingBufferSize(canvas);
   yield* waitForStableCanvas(canvas);
 
