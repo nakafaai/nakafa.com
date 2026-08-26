@@ -3,6 +3,10 @@
 import { useIntersection } from "@mantine/hooks";
 import { BacterialControls } from "@repo/design-system/components/contents/mathematics/bacterial-controls";
 import {
+  type BacterialFormulaType,
+  getBacterialGrowthFrame,
+} from "@repo/design-system/components/contents/mathematics/bacterial-growth";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -17,21 +21,18 @@ import {
   MotionConfig,
 } from "motion/react";
 import * as m from "motion/react-m";
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
-const MAX_BACTERIA_COUNT = 100;
 const SPEED_INTERVAL = 1000;
 const STAGGER_DELAY = 0.01;
 const SCALE_INCREASE = 1.1;
-
-type FormulaType = "geometric" | "exponential";
 
 interface BacterialGrowthProps {
   /**
    * The type of formula to use.
    * @default "geometric"
    */
-  formulaType?: FormulaType;
+  formulaType?: BacterialFormulaType;
   /**
    * The initial count of bacteria.
    * @default 1
@@ -43,7 +44,6 @@ interface BacterialGrowthProps {
   labels?: {
     title?: string;
     bacterial?: string;
-    initialBacteria?: string;
   };
   /**
    * The maximum number of generations to display.
@@ -87,7 +87,6 @@ export function BacterialGrowth({
   labels = {
     title: "Bacterial Growth",
     bacterial: "Bacterial",
-    initialBacteria: "Initial bacteria",
   },
 }: BacterialGrowthProps) {
   const [generation, setGeneration] = useState(0);
@@ -102,47 +101,16 @@ export function BacterialGrowth({
   // Viewport visibility gates work without overriding the user's Play/Pause intent.
   const isEffectivelyPlaying = isPlaying && generation < maxGenerations;
   const isAnimating = isEffectivelyPlaying && isInView;
-  const deferredAnimating = useDeferredValue(isAnimating);
-  const deferredGeneration = useDeferredValue(generation);
-  const pulseRepeat = deferredAnimating ? Number.POSITIVE_INFINITY : 0;
-
-  // Calculate current bacteria count based on the selected formula type
-  const bacteriaCount = useMemo(() => {
-    if (formulaType === "geometric") {
-      // U_n = a·r^(n-1) (standard geometric sequence formula)
-      // For bacterial growth: bacteria after n generations = initial × ratio^(generation)
-      // We always start index from 0, so we don't need to subtract 1 from the generation
-      return initialCount * ratio ** deferredGeneration;
-    }
-
-    // B(t) = B₀ × e^(kt) where k = ln(ratio)
-    return initialCount * Math.exp(Math.log(ratio) * deferredGeneration);
-  }, [initialCount, deferredGeneration, ratio, formulaType]);
-
-  // Create an array of bacteria to display
-  const bacteria = useMemo(
-    () =>
-      Array.from(
-        { length: Math.min(Math.round(bacteriaCount), MAX_BACTERIA_COUNT) },
-        (_, i) => i
-      ),
-    [bacteriaCount]
-  );
-
-  // Calculate how many bacteria to actually show (cap at 100 for performance)
-  const displayCount = useMemo(
-    () => Math.min(Math.round(bacteriaCount), MAX_BACTERIA_COUNT),
-    [bacteriaCount]
-  );
-
-  // Calculate grid dimensions based on bacteria count
-  const gridCols = useMemo(
-    () => Math.min(Math.ceil(Math.sqrt(displayCount)), 10),
-    [displayCount]
-  );
+  const frame = getBacterialGrowthFrame({
+    formulaType,
+    generation,
+    initialCount,
+    maxGenerations,
+    ratio,
+  });
 
   useEffect(() => {
-    if (!deferredAnimating || deferredGeneration >= maxGenerations) {
+    if (!isAnimating) {
       return;
     }
 
@@ -156,7 +124,7 @@ export function BacterialGrowth({
     }, SPEED_INTERVAL / speed);
 
     return () => clearInterval(interval);
-  }, [deferredAnimating, deferredGeneration, maxGenerations, speed]);
+  }, [isAnimating, maxGenerations, speed]);
 
   function resetAnimation() {
     setGeneration(0);
@@ -183,56 +151,52 @@ export function BacterialGrowth({
     <Card className="content-auto-card" ref={ref}>
       <CardHeader>
         <CardTitle>{labels.title}</CardTitle>
-        <CardDescription>
-          {Math.round(bacteriaCount)} {labels.bacterial}
+        <CardDescription aria-live="polite">
+          {frame.bacteriaCount} {labels.bacterial}
         </CardDescription>
       </CardHeader>
 
       <CardContent>
-        <div className="relative aspect-square w-full overflow-hidden rounded-lg border bg-card sm:aspect-video">
+        <div
+          aria-label={`${frame.bacteriaCount} ${labels.bacterial}`}
+          className="relative aspect-square w-full overflow-hidden rounded-lg border bg-card sm:aspect-video"
+          data-bacteria-count={frame.bacteriaCount}
+          data-visible-bacteria-count={frame.bacteriaIds.length}
+          role="img"
+        >
           <div
             className="relative grid h-full w-full gap-0.5 p-2 sm:px-0"
             style={{
-              gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`,
+              gridTemplateColumns: `repeat(${frame.gridColumns}, minmax(0, 1fr))`,
             }}
           >
             <MotionConfig reducedMotion="user">
               <LazyMotion features={domMax} strict>
                 <LayoutGroup>
                   <AnimatePresence mode="popLayout">
-                    {bacteria.map((id) => (
+                    {frame.bacteriaIds.map((id, index) => (
                       <m.div
                         animate={{
-                          scale: 1,
                           opacity: 1,
+                          scale: 1,
+                          x: 0,
                         }}
                         className="relative flex items-center justify-center"
-                        exit={{ scale: 0.95, opacity: 0 }}
-                        initial={{ scale: 0.95, opacity: 0 }}
+                        exit={{ opacity: 0, scale: 0.35, x: -10 }}
+                        initial={{ opacity: 0, scale: 0.35, x: -10 }}
                         key={id}
                         layout
                         transition={{
                           type: "spring",
                           stiffness: 500,
                           damping: 30,
-                          delay: id * STAGGER_DELAY, // Stagger effect
+                          delay: index * STAGGER_DELAY,
                         }}
+                        whileHover={{ scale: SCALE_INCREASE }}
                       >
-                        <m.div
-                          animate={{
-                            scale: deferredAnimating
-                              ? [1, SCALE_INCREASE, 1]
-                              : 1,
-                          }}
+                        <div
                           className="aspect-square h-full max-h-5 w-full max-w-5 rounded-full bg-chart-1 sm:max-h-8 sm:max-w-8"
-                          transition={{
-                            duration: 1,
-                            repeat: pulseRepeat,
-                            repeatType: "reverse",
-                          }}
-                          whileHover={{
-                            scale: SCALE_INCREASE,
-                          }}
+                          data-bacterium=""
                         />
                       </m.div>
                     ))}
