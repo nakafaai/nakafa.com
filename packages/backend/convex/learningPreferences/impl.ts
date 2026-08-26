@@ -8,7 +8,6 @@ import type {
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
-import { getUnknownErrorMessage } from "@repo/backend/convex/lib/effect";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { readTryoutCatalogRowByIdentity } from "@repo/backend/convex/tryouts/catalog/row";
 import type { LearningInterest } from "@repo/contents/_types/learner/preferences";
@@ -18,21 +17,23 @@ type PreferenceCtx = MutationCtx | QueryCtx;
 type LearningProgramKind = typeof LearningProgramKindSchema.Type;
 const learningPreferencePersistenceFailedCode =
   "LEARNING_PREFERENCE_PERSISTENCE_FAILED";
+const learningPreferencePersistenceFailedMessage =
+  "Unable to read or persist learning preferences.";
 
 /** Expected database failure while reading or writing learner preferences. */
 export class LearningPreferencePersistenceError extends Schema.TaggedError<LearningPreferencePersistenceError>()(
   "LearningPreferencePersistenceError",
   {
     code: Schema.Literal(learningPreferencePersistenceFailedCode),
-    message: Schema.String,
+    message: Schema.Literal(learningPreferencePersistenceFailedMessage),
   }
 ) {}
 
 /** Maps unknown database failures into the preference persistence contract. */
-function toLearningPreferencePersistenceError(error: unknown) {
+function toLearningPreferencePersistenceError() {
   return new LearningPreferencePersistenceError({
     code: learningPreferencePersistenceFailedCode,
-    message: getUnknownErrorMessage(error),
+    message: learningPreferencePersistenceFailedMessage,
   });
 }
 

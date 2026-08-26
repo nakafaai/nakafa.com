@@ -8,6 +8,7 @@ import {
   LearningProgramSchema,
 } from "@nakafa/aksara-contracts/program/spec";
 import { api } from "@repo/backend/convex/_generated/api";
+import { readLearningPreferenceByUserId } from "@repo/backend/convex/learningPreferences/impl";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
   createConvexTestWithBetterAuth,
@@ -21,6 +22,7 @@ import {
 import { activateTryoutStartSource } from "@repo/backend/test/tryout-source";
 import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, Schema } from "effect";
+import { vi } from "vitest";
 
 const NOW = 1_798_752_000_000;
 const PREFERENCE_APP_LOCALES = Schema.decodeSync(ActiveAppLocaleListSchema)([
@@ -234,6 +236,101 @@ describe("learningPreferences", () => {
           },
         })
       );
+    })
+  );
+
+  it.effect("preserves the shared authentication contracts", () =>
+    Effect.gen(function* () {
+      const t = createConvexTestWithBetterAuth();
+
+      yield* Effect.promise(() =>
+        expect(
+          t.mutation(
+            api.learningPreferences.mutations.setPreferredTryoutCountry,
+            {
+              locale: "id",
+              preferredTryoutCountryKey: "indonesia",
+            }
+          )
+        ).rejects.toMatchObject({
+          data: {
+            code: "UNAUTHENTICATED",
+            message: "Unauthenticated",
+          },
+        })
+      );
+
+      const identity = yield* seedPreferenceUser(t);
+      yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          runConvexProgram(
+            Effect.promise(() =>
+              ctx.db.patch("users", identity.userId, {
+                deletionPreparedAt: NOW,
+              })
+            )
+          )
+        )
+      );
+      const authed = t.withIdentity({
+        sessionId: identity.sessionId,
+        subject: identity.authUserId,
+      });
+
+      yield* Effect.promise(() =>
+        expect(
+          authed.mutation(
+            api.learningPreferences.mutations.setPreferredTryoutCountry,
+            {
+              locale: "id",
+              preferredTryoutCountryKey: "indonesia",
+            }
+          )
+        ).rejects.toMatchObject({
+          data: {
+            code: "UNAUTHORIZED",
+            message: "User not found.",
+          },
+        })
+      );
+    })
+  );
+
+  it.effect("redacts preference persistence failures", () =>
+    Effect.gen(function* () {
+      const t = createConvexTestWithBetterAuth();
+      const identity = yield* seedPreferenceUser(t);
+      const failure = yield* Effect.promise(() =>
+        t.query((ctx) =>
+          runConvexProgram(
+            Effect.acquireUseRelease(
+              Effect.sync(() =>
+                vi.spyOn(ctx.db, "query").mockImplementationOnce(() => {
+                  throw new Error("private database details");
+                })
+              ),
+              () =>
+                readLearningPreferenceByUserId(ctx, identity.userId).pipe(
+                  Effect.match({
+                    onFailure: (error) => ({
+                      _tag: error._tag,
+                      code: error.code,
+                      message: error.message,
+                    }),
+                    onSuccess: () => null,
+                  })
+                ),
+              (querySpy) => Effect.sync(() => querySpy.mockRestore())
+            )
+          )
+        )
+      );
+
+      expect(failure).toMatchObject({
+        _tag: "LearningPreferencePersistenceError",
+        code: "LEARNING_PREFERENCE_PERSISTENCE_FAILED",
+        message: "Unable to read or persist learning preferences.",
+      });
     })
   );
 

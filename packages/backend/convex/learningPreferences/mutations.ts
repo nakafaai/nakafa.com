@@ -11,7 +11,7 @@ import {
   currentTryoutPreferenceValidator,
 } from "@repo/backend/convex/learningPreferences/schema";
 import {
-  getUnknownErrorMessage,
+  readConvexErrorData,
   runConvexProgram,
 } from "@repo/backend/convex/lib/effect";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
@@ -20,19 +20,26 @@ import {
   localeValidator,
 } from "@repo/backend/convex/lib/validators/contents";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { Clock, Effect, Schema } from "effect";
 
 const curriculumPreferenceAuthFailedCode = "CURRICULUM_PREFERENCE_AUTH_FAILED";
+const curriculumPreferenceAuthFailedMessage =
+  "Unable to authenticate the curriculum preference request.";
 const tryoutPreferenceAuthFailedCode = "TRYOUT_PREFERENCE_AUTH_FAILED";
+const tryoutPreferenceAuthFailedMessage =
+  "Unable to authenticate the try-out preference request.";
 const tryoutCountryNotFoundCode = "TRYOUT_COUNTRY_NOT_FOUND";
+const unauthenticatedCode = "UNAUTHENTICATED";
+const unauthenticatedMessage = "Unauthenticated";
+const unauthorizedCode = "UNAUTHORIZED";
 
 /** Raised when curriculum preference authentication fails unexpectedly. */
 class CurriculumPreferenceAuthError extends Schema.TaggedError<CurriculumPreferenceAuthError>()(
   "CurriculumPreferenceAuthError",
   {
     code: Schema.Literal(curriculumPreferenceAuthFailedCode),
-    message: Schema.String,
+    message: Schema.Literal(curriculumPreferenceAuthFailedMessage),
   }
 ) {}
 
@@ -43,10 +50,44 @@ class TryoutPreferenceError extends Schema.TaggedError<TryoutPreferenceError>()(
     code: Schema.Literals([
       tryoutPreferenceAuthFailedCode,
       tryoutCountryNotFoundCode,
+      unauthenticatedCode,
+      unauthorizedCode,
     ]),
     message: Schema.String,
   }
 ) {}
+
+/** Maps unknown curriculum auth failures into a stable public contract. */
+function toCurriculumPreferenceAuthError() {
+  return new CurriculumPreferenceAuthError({
+    code: curriculumPreferenceAuthFailedCode,
+    message: curriculumPreferenceAuthFailedMessage,
+  });
+}
+
+/** Preserves known shared auth failures and tags unknown boundary failures. */
+function toTryoutPreferenceAuthError(error: unknown) {
+  const known = readConvexErrorData(error);
+
+  if (known?.code === unauthenticatedCode || known?.code === unauthorizedCode) {
+    return new TryoutPreferenceError({
+      code: known.code,
+      message: known.message,
+    });
+  }
+
+  if (error instanceof ConvexError && error.data === unauthenticatedMessage) {
+    return new TryoutPreferenceError({
+      code: unauthenticatedCode,
+      message: unauthenticatedMessage,
+    });
+  }
+
+  return new TryoutPreferenceError({
+    code: tryoutPreferenceAuthFailedCode,
+    message: tryoutPreferenceAuthFailedMessage,
+  });
+}
 
 /** Saves one authenticated curriculum preference from the signed catalog. */
 const setPreferredCurriculumProgram = Effect.fn(
@@ -59,11 +100,7 @@ const setPreferredCurriculumProgram = Effect.fn(
   }
 ) {
   const user = yield* Effect.tryPromise({
-    catch: (error) =>
-      new CurriculumPreferenceAuthError({
-        code: curriculumPreferenceAuthFailedCode,
-        message: getUnknownErrorMessage(error),
-      }),
+    catch: toCurriculumPreferenceAuthError,
     try: () => requireAuth(ctx),
   });
 
@@ -86,11 +123,7 @@ const setPreferredTryoutCountryProgram = Effect.fn(
   }
 ) {
   const user = yield* Effect.tryPromise({
-    catch: (error) =>
-      new TryoutPreferenceError({
-        code: tryoutPreferenceAuthFailedCode,
-        message: getUnknownErrorMessage(error),
-      }),
+    catch: toTryoutPreferenceAuthError,
     try: () => requireAuth(ctx),
   });
   const country = yield* readActiveTryoutCountry(ctx, {
