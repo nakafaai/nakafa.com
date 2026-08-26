@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { NodeFileSystem } from "@effect/platform-node";
+import { describe, expect, it } from "@effect/vitest";
 import {
   createThemeProfiles,
   findInlineTheme,
@@ -15,7 +16,6 @@ import {
   ThemeStyleSourceLoadError,
 } from "@repo/design-system/lib/theme/contract";
 import { themes } from "@repo/design-system/lib/theme/registry";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import postcss from "postcss";
 
@@ -35,8 +35,8 @@ const THEME_IDENTITY_TOKENS = [
   "--chart-5",
 ] as const;
 const EXPECTED_CONCRETE_THEME_COUNT = 31;
-const sources = await Effect.runPromise(
-  readThemeStyleSources().pipe(Effect.provide(NodeFileSystem.layer))
+const readSources = readThemeStyleSources().pipe(
+  Effect.provide(NodeFileSystem.layer)
 );
 const registeredThemeNames = themes.map((theme) => theme.value);
 const concreteThemeNames = registeredThemeNames.filter(
@@ -45,9 +45,13 @@ const concreteThemeNames = registeredThemeNames.filter(
 const customThemeNames = concreteThemeNames.filter(
   (name) => name !== "light" && name !== "dark"
 );
-const profiles = createThemeProfiles(concreteThemeNames, sources);
+
+const readProfiles = readSources.pipe(
+  Effect.map((sources) => createThemeProfiles(concreteThemeNames, sources))
+);
+
 describe("theme profile contract", () => {
-  it.live("returns a typed failure when a theme stylesheet cannot load", () =>
+  it.effect("returns a typed failure when a theme stylesheet cannot load", () =>
     Effect.gen(function* () {
       const missingPath = "/theme-contract/intentionally-missing.css";
       const result = yield* Effect.result(
@@ -68,16 +72,18 @@ describe("theme profile contract", () => {
       });
     })
   );
-  it.live("returns a typed failure when a theme stylesheet cannot parse", () =>
-    Effect.gen(function* () {
-      const path = "/theme-contract/invalid.css";
-      const result = yield* Effect.result(parseThemeStylesheet("}", path));
-      expect(result._tag).toBe("Failure");
-      if (result._tag !== "Failure") {
-        return;
-      }
-      expect(result.failure).toMatchObject({ path });
-    })
+  it.effect(
+    "returns a typed failure when a theme stylesheet cannot parse",
+    () =>
+      Effect.gen(function* () {
+        const path = "/theme-contract/invalid.css";
+        const result = yield* Effect.result(parseThemeStylesheet("}", path));
+        expect(result._tag).toBe("Failure");
+        if (result._tag !== "Failure") {
+          return;
+        }
+        expect(result.failure).toMatchObject({ path });
+      })
   );
   it("inspects only direct declarations and simple top-level selectors", () => {
     const syntheticRoot = postcss.parse(`
@@ -117,94 +123,135 @@ describe("theme profile contract", () => {
     ).toHaveLength(1);
     expect(new Set(registeredThemeNames).size).toBe(themes.length);
   });
-  it("keeps registry custom names synchronized with CSS selectors", () => {
-    expect(readCustomThemeNames(sources.customThemes).sort()).toEqual(
-      [...customThemeNames].sort()
-    );
-  });
-  it("gives every concrete theme a distinct semantic identity", () => {
-    const fingerprints = profiles.map((profile) => {
-      const rule = findTopLevelRule(profile.root, profile.selector);
-      expect(rule).toBeDefined();
-      if (!rule) {
-        return "";
-      }
-      return THEME_IDENTITY_TOKENS.map((token) =>
-        readDirectValue(rule, token)
-      ).join("|");
-    });
-    expect(new Set(fingerprints).size).toBe(profiles.length);
-  });
-  it("keeps each theme's feedback palette distinct", () => {
-    const fingerprints = profiles.map((profile) => {
-      const rule = findTopLevelRule(profile.root, profile.selector);
-      expect(rule).toBeDefined();
-      if (!rule) {
-        return "";
-      }
-      return STATUS_NAMES.flatMap((status) => [
-        readDirectValue(rule, `--${status}`),
-        readDirectValue(rule, `--${status}-foreground`),
-      ]).join("|");
-    });
-    expect(new Set(fingerprints).size).toBe(profiles.length);
-  });
-  it.each(profiles)("$name owns each required core token once", (profile) => {
-    const rule = findTopLevelRule(profile.root, profile.selector);
-    expect(
-      rule,
-      `${profile.name} must declare ${profile.selector}`
-    ).toBeDefined();
-    if (!rule) {
-      return;
-    }
-    const properties = rule.nodes.flatMap((node) =>
-      node.type === "decl" ? [node.prop] : []
-    );
-    const coreProperties = properties.filter((property) =>
-      REQUIRED_THEME_TOKENS.includes(property)
-    );
-    const unexpectedProperties = properties.filter(
-      (property) =>
-        !(
-          REQUIRED_THEME_TOKENS.includes(property) ||
-          THEME_METADATA_PROPERTIES.includes(property)
-        )
-    );
-    expect(coreProperties.sort()).toEqual([...REQUIRED_THEME_TOKENS].sort());
-    expect(unexpectedProperties).toEqual([]);
-  });
-  it.each(profiles)("$name owns its concrete color scheme", (profile) => {
-    const rule = findTopLevelRule(profile.root, profile.selector);
-    expect(rule).toBeDefined();
-    if (!rule) {
-      return;
-    }
-    const definition = themes.find((theme) => theme.value === profile.name);
-    expect(definition).toBeDefined();
-    if (!definition) {
-      return;
-    }
-    const colorSchemes = rule.nodes.flatMap((node) =>
-      node.type === "decl" && node.prop === "color-scheme"
-        ? [node.value.trim()]
-        : []
-    );
-    expect(colorSchemes).toEqual([definition.appearance]);
-  });
-  it("maps every status pair into Tailwind's inline theme", () => {
-    const inlineTheme = findInlineTheme(sources.globals);
-    expect(inlineTheme).toBeDefined();
-    if (!inlineTheme) {
-      return;
-    }
-    for (const status of STATUS_NAMES) {
-      expect(readDirectValue(inlineTheme, `--color-${status}`)).toBe(
-        `var(--${status})`
+  it.effect("keeps registry custom names synchronized with CSS selectors", () =>
+    Effect.gen(function* () {
+      const sources = yield* readSources;
+
+      expect(readCustomThemeNames(sources.customThemes).sort()).toEqual(
+        [...customThemeNames].sort()
       );
-      expect(readDirectValue(inlineTheme, `--color-${status}-foreground`)).toBe(
-        `var(--${status}-foreground)`
-      );
-    }
-  });
+    })
+  );
+  it.effect("gives every concrete theme a distinct semantic identity", () =>
+    Effect.gen(function* () {
+      const profiles = yield* readProfiles;
+      const fingerprints = profiles.map((profile) => {
+        const rule = findTopLevelRule(profile.root, profile.selector);
+        expect(rule).toBeDefined();
+        if (!rule) {
+          return "";
+        }
+        return THEME_IDENTITY_TOKENS.map((token) =>
+          readDirectValue(rule, token)
+        ).join("|");
+      });
+
+      expect(new Set(fingerprints).size).toBe(profiles.length);
+    })
+  );
+  it.effect("keeps each theme's feedback palette distinct", () =>
+    Effect.gen(function* () {
+      const profiles = yield* readProfiles;
+      const fingerprints = profiles.map((profile) => {
+        const rule = findTopLevelRule(profile.root, profile.selector);
+        expect(rule).toBeDefined();
+        if (!rule) {
+          return "";
+        }
+        return STATUS_NAMES.flatMap((status) => [
+          readDirectValue(rule, `--${status}`),
+          readDirectValue(rule, `--${status}-foreground`),
+        ]).join("|");
+      });
+
+      expect(new Set(fingerprints).size).toBe(profiles.length);
+    })
+  );
+  it.effect.each(concreteThemeNames)(
+    "$name owns each required core token once",
+    (name) =>
+      Effect.gen(function* () {
+        const sources = yield* readSources;
+        const profile = createThemeProfiles([name], sources)[0];
+        expect(profile, `${name} must resolve to a profile`).toBeDefined();
+        if (!profile) {
+          return;
+        }
+
+        const rule = findTopLevelRule(profile.root, profile.selector);
+        expect(
+          rule,
+          `${profile.name} must declare ${profile.selector}`
+        ).toBeDefined();
+        if (!rule) {
+          return;
+        }
+
+        const properties = rule.nodes.flatMap((node) =>
+          node.type === "decl" ? [node.prop] : []
+        );
+        const coreProperties = properties.filter((property) =>
+          REQUIRED_THEME_TOKENS.includes(property)
+        );
+        const unexpectedProperties = properties.filter(
+          (property) =>
+            !(
+              REQUIRED_THEME_TOKENS.includes(property) ||
+              THEME_METADATA_PROPERTIES.includes(property)
+            )
+        );
+
+        expect(coreProperties.sort()).toEqual(
+          [...REQUIRED_THEME_TOKENS].sort()
+        );
+        expect(unexpectedProperties).toEqual([]);
+      })
+  );
+  it.effect.each(concreteThemeNames)(
+    "$name owns its concrete color scheme",
+    (name) =>
+      Effect.gen(function* () {
+        const sources = yield* readSources;
+        const profile = createThemeProfiles([name], sources)[0];
+        expect(profile, `${name} must resolve to a profile`).toBeDefined();
+        if (!profile) {
+          return;
+        }
+
+        const rule = findTopLevelRule(profile.root, profile.selector);
+        expect(rule).toBeDefined();
+        if (!rule) {
+          return;
+        }
+        const definition = themes.find((theme) => theme.value === profile.name);
+        expect(definition).toBeDefined();
+        if (!definition) {
+          return;
+        }
+        const colorSchemes = rule.nodes.flatMap((node) =>
+          node.type === "decl" && node.prop === "color-scheme"
+            ? [node.value.trim()]
+            : []
+        );
+        expect(colorSchemes).toEqual([definition.appearance]);
+      })
+  );
+  it.effect("maps every status pair into Tailwind's inline theme", () =>
+    Effect.gen(function* () {
+      const sources = yield* readSources;
+      const inlineTheme = findInlineTheme(sources.globals);
+      expect(inlineTheme).toBeDefined();
+      if (!inlineTheme) {
+        return;
+      }
+      for (const status of STATUS_NAMES) {
+        expect(readDirectValue(inlineTheme, `--color-${status}`)).toBe(
+          `var(--${status})`
+        );
+        expect(
+          readDirectValue(inlineTheme, `--color-${status}-foreground`)
+        ).toBe(`var(--${status}-foreground)`);
+      }
+    })
+  );
 });

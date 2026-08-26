@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { NodeFileSystem } from "@effect/platform-node";
+import { describe, expect, it } from "@effect/vitest";
 import {
   createThemeProfiles,
   findTopLevelRule,
@@ -15,10 +16,9 @@ import {
   themes,
 } from "@repo/design-system/lib/theme/registry";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
-const sources = await Effect.runPromise(
-  readThemeStyleSources().pipe(Effect.provide(NodeFileSystem.layer))
+const readSources = readThemeStyleSources().pipe(
+  Effect.provide(NodeFileSystem.layer)
 );
 
 describe("theme registry", () => {
@@ -43,33 +43,40 @@ describe("theme registry", () => {
     expect(darkThemes.map((theme) => theme.value)).toEqual(["dark"]);
   });
 
-  it("derives every shader color from its profile primary", () => {
-    for (const theme of themes) {
-      const profileName = theme.value === "system" ? "light" : theme.value;
-      const profile = createThemeProfiles([profileName], sources)[0];
-      expect(profile, `${theme.value} must resolve to a profile`).toBeDefined();
-      if (!profile) {
-        continue;
-      }
+  it.effect("derives every shader color from its profile primary", () =>
+    Effect.gen(function* () {
+      const sources = yield* readSources;
 
-      const rule = findTopLevelRule(profile.root, profile.selector);
-      expect(
-        rule,
-        `${profile.name} must declare ${profile.selector}`
-      ).toBeDefined();
-      if (!rule) {
-        continue;
-      }
+      for (const theme of themes) {
+        const profileName = theme.value === "system" ? "light" : theme.value;
+        const profile = createThemeProfiles([profileName], sources)[0];
+        expect(
+          profile,
+          `${theme.value} must resolve to a profile`
+        ).toBeDefined();
+        if (!profile) {
+          continue;
+        }
 
-      const primary = readDirectValue(rule, "--primary");
-      expect(primary, `${profile.name} must declare --primary`).toBeDefined();
-      if (!primary) {
-        continue;
-      }
+        const rule = findTopLevelRule(profile.root, profile.selector);
+        expect(
+          rule,
+          `${profile.name} must declare ${profile.selector}`
+        ).toBeDefined();
+        if (!rule) {
+          continue;
+        }
 
-      expect(theme.shaderColor).toBe(toRgbProjection(primary));
-    }
-  });
+        const primary = readDirectValue(rule, "--primary");
+        expect(primary, `${profile.name} must declare --primary`).toBeDefined();
+        if (!primary) {
+          continue;
+        }
+
+        expect(theme.shaderColor).toBe(toRgbProjection(primary));
+      }
+    })
+  );
 });
 
 describe("getThemeAppearance", () => {

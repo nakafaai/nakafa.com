@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { NodeFileSystem } from "@effect/platform-node";
+import { describe, expect, it } from "@effect/vitest";
 import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
 import {
   createThemeProfiles,
@@ -11,22 +12,19 @@ import {
   toRgbProjection,
 } from "@repo/design-system/lib/theme/contract";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
-const profiles = createThemeProfiles(
-  ["light", "dark"],
-  await Effect.runPromise(
-    readThemeStyleSources().pipe(Effect.provide(NodeFileSystem.layer))
-  )
+const readProfiles = readThemeStyleSources().pipe(
+  Effect.map((sources) => createThemeProfiles(["light", "dark"], sources)),
+  Effect.provide(NodeFileSystem.layer)
 );
 
 describe("theme compatibility colors", () => {
-  it.each([
+  it.effect.each([
     { name: "light", values: THEME_COMPATIBILITY_COLORS.light },
     { name: "dark", values: THEME_COMPATIBILITY_COLORS.dark },
-  ])(
-    "derives every $name RGB value from canonical OKLCH",
-    ({ name, values }) => {
+  ])("derives every $name RGB value from canonical OKLCH", ({ name, values }) =>
+    Effect.gen(function* () {
+      const profiles = yield* readProfiles;
       const profile = profiles.find((candidate) => candidate.name === name);
       expect(profile).toBeDefined();
       if (!profile) {
@@ -51,6 +49,6 @@ describe("theme compatibility colors", () => {
         SEMANTIC_COLOR_TOKENS.map((token) => token.slice(2)).sort()
       );
       expect(values).toEqual(expected);
-    }
+    })
   );
 });

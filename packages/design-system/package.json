@@ -68,6 +68,7 @@
   },
   "devDependencies": {
     "@effect/platform-node": "catalog:",
+    "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/react": "^19.2.18",
