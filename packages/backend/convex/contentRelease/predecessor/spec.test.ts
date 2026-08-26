@@ -18,7 +18,12 @@ describe("contentRelease/predecessor/spec", () => {
         yield* decodePredecessorObservationId("dates-cutover-4974ee8c")
       ).toBe("dates-cutover-4974ee8c");
 
-      for (const invalid of ["", "Dates-Cutover", "dates_cutover", "dates--x"]) {
+      for (const invalid of [
+        "",
+        "Dates-Cutover",
+        "dates_cutover",
+        "dates--x",
+      ]) {
         expect(
           yield* decodePredecessorObservationId(invalid).pipe(Effect.flip)
         ).toMatchObject({
