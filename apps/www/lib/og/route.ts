@@ -1,4 +1,5 @@
 const OG_ROUTE_DESTINATION = "/og/:path*";
+const OG_ROUTE_LOCALE_PATTERN = /^[A-Za-z]{2}$/;
 
 const OG_ROUTE_ALIASES = Object.freeze([
   { source: "/:path*.png", suffix: ".png" },
@@ -20,4 +21,18 @@ export function isOgRouteAliasPathname(pathname: string) {
   return OG_ROUTE_ALIASES.some(({ suffix }) =>
     normalizedPathname.endsWith(suffix)
   );
+}
+
+/** Reads the locale-shaped prefix from one localized OG alias. */
+export function readOgRouteAliasLocale(pathname: string) {
+  if (!isOgRouteAliasPathname(pathname)) {
+    return null;
+  }
+
+  const [locale] = pathname.split("/").filter(Boolean);
+  if (!(locale && OG_ROUTE_LOCALE_PATTERN.test(locale))) {
+    return null;
+  }
+
+  return locale;
 }

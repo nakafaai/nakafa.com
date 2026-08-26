@@ -29,7 +29,7 @@ import {
   type LocalizedLlmsRoute,
   readLlmsMarkdownPathname,
 } from "@/lib/llms/routes";
-import { isOgRouteAliasPathname } from "@/lib/og/route";
+import { isOgRouteAliasPathname, readOgRouteAliasLocale } from "@/lib/og/route";
 import {
   isLocaleBypassPath,
   isUnsupportedRootFilePath,
@@ -104,6 +104,15 @@ export async function proxy(request: NextRequest) {
     if (!previewOwnsPathname) {
       return rewriteToContentNotFound(request, candidateLocale);
     }
+  }
+
+  const ogAliasLocale = readOgRouteAliasLocale(pathname);
+  if (
+    candidateLocale === null &&
+    ogAliasLocale !== null &&
+    !hasLocale(routing.locales, ogAliasLocale)
+  ) {
+    return rewriteToContentNotFound(request, routing.defaultLocale);
   }
 
   if (isOgRouteAliasPathname(pathname)) {
@@ -278,6 +287,7 @@ function rewriteToContentNotFound(request: NextRequest, locale: AppLocaleCode) {
 export const config: ProxyConfig = {
   matcher: [
     "/((?!_next/static|_not-found|fonts|open-graph|api|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt)$).*)",
+    "/:locale([A-Za-z]{2})/:path*.png",
     "/:rootFile([^/]+\\.(?:svg|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt))",
   ],
 };

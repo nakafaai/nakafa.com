@@ -12,6 +12,10 @@ function requestProxy(pathname: string, init?: NextRequestInit) {
   return proxy(new NextRequest(`http://localhost:3000${pathname}`, init));
 }
 
+function activeRoute(kind: "found" | "missing" | "unmanaged") {
+  return Effect.succeed({ activeReleaseId: "release-active", kind });
+}
+
 function expectLocaleProxy(
   response: Response,
   mode: "active" | "preview" = "active"
@@ -121,12 +125,9 @@ describe("proxy", () => {
     runtimeMocks.readProgramPath
       .mockReset()
       .mockReturnValue(Effect.succeed({ managed: false, route: null }));
-    runtimeMocks.readActive.mockReset().mockReturnValue(
-      Effect.succeed({
-        activeReleaseId: "release-active",
-        kind: "unmanaged",
-      })
-    );
+    runtimeMocks.readActive
+      .mockReset()
+      .mockReturnValue(activeRoute("unmanaged"));
     runtimeMocks.readActiveIdentity
       .mockReset()
       .mockReturnValue(Effect.succeed({ releaseId: "release-active" }));
@@ -193,38 +194,45 @@ describe("proxy", () => {
     });
   });
 
-  it("runs only unsupported root files through the locale proxy", () => {
+  it("matches localized PNG aliases without intercepting static assets", () => {
     const matches = (url: string) =>
       unstable_doesMiddlewareMatch({ config, url });
-    const rootFileExtensions =
-      "svg jpg jpeg gif webp glb gltf bin ktx2 hdr exr js css xml webmanifest txt";
-    const matched = rootFileExtensions
-      .split(" ")
-      .map((extension) => `/missing.${extension}`);
+    const matched =
+      "svg jpg jpeg gif webp glb gltf bin ktx2 hdr exr js css xml webmanifest txt"
+        .split(" ")
+        .map((extension) => `/missing.${extension}`);
     const bypassed = [
       "/.well-known/llms.txt",
       "/sitemap/base.xml",
       "/llms/en/articles/page/0/llms.txt",
       "/_next/static/chunks/app.js",
-      "/models/physics/kinematics/car.svg",
-      "/models/physics/kinematics/kenney-car-kit/LICENSE.txt",
-      "/models/physics/kinematics/car.glb",
+      "/classes/bacteria.png",
+      "/models/physics/kinematics/kenney-car-kit/Textures/colormap.png",
+      "/open-graph/curriculum/en-index.png",
       "/missing.png",
       "/_not-found/id",
     ];
     expect([...matched, "/MISSING.XML", "/llms.txt"].every(matches)).toBe(true);
-    expect(matches("/en/example.og")).toBe(true);
+    expect(
+      [
+        "/en/example.og",
+        "/fr/example.png",
+        "/FR/example.png",
+        "/EN/example.png",
+      ].every(matches)
+    ).toBe(true);
     expect(bypassed.some(matches)).toBe(false);
   });
 
-  it("delegates an OG alias before document routing", async () => {
-    const response = await requestProxy("/en/example.og", {
-      headers: { accept: "image/png" },
-    });
-    expect(response.headers.get("x-middleware-next")).toBe("1");
-    expectNoLocaleProxy();
-    expect(runtimeMocks.readActive).not.toHaveBeenCalled();
-  });
+  it.each(["/en/example.og", "/en/example.png"])(
+    "delegates the active OG alias %s before document routing",
+    async (path) => {
+      const response = await requestProxy(path);
+      expect(response.headers.get("x-middleware-next")).toBe("1");
+      expectNoLocaleProxy();
+      expect(runtimeMocks.readActive).not.toHaveBeenCalled();
+    }
+  );
 
   it("returns a clean 404 for unsupported root files", async () => {
     const response = await requestProxy("/missing-machine-document.xml");
@@ -259,15 +267,24 @@ describe("proxy", () => {
     expectLocaleProxy(response, "preview");
   });
 
-  it.each(["/fr/search", "/fr/school/onboarding/create", "/fr/example.og"])(
-    "hard-rejects the unselected candidate route %s",
+  it.each([
+    "/fr/search",
+    "/fr/school/onboarding/create",
+    "/fr/example.og",
+    "/fr/example.png",
+  ])("hard-rejects the unselected candidate route %s", async (path) => {
+    previewMocks.configured.mockReturnValue(true);
+    const response = await requestProxy(path);
+    expectHardNotFound(response, "fr");
+    expect(previewMocks.pathname).toHaveBeenCalledWith(path);
+  });
+
+  it.each(["/zz/example.png", "/FR/example.png", "/EN/example.png"])(
+    "hard-rejects the noncanonical localized PNG alias %s",
     async (path) => {
-      previewMocks.configured.mockReturnValue(true);
-
       const response = await requestProxy(path);
-
-      expectHardNotFound(response, "fr");
-      expect(previewMocks.pathname).toHaveBeenCalledWith(path);
+      expectHardNotFound(response, "en");
+      expect(previewMocks.pathname).not.toHaveBeenCalled();
     }
   );
 
@@ -391,12 +408,7 @@ describe("proxy", () => {
   ])(
     "negotiates public representations with an %s",
     async (_kind, pathname, init, expected) => {
-      runtimeMocks.readActive.mockReturnValueOnce(
-        Effect.succeed({
-          activeReleaseId: "release-active",
-          kind: "found",
-        })
-      );
+      runtimeMocks.readActive.mockReturnValueOnce(activeRoute("found"));
       const response = await requestProxy(pathname, init);
       expectNoLocaleProxy();
       expect(response.status).toBe(expected === null ? 406 : 200);
@@ -430,12 +442,7 @@ describe("proxy", () => {
     "delegates %s/%s to the locale middleware",
     async (locale, path, publicPath, kind) => {
       if (kind === "subject-lesson") {
-        runtimeMocks.readActive.mockReturnValueOnce(
-          Effect.succeed({
-            activeReleaseId: "release-active",
-            kind: "found",
-          })
-        );
+        runtimeMocks.readActive.mockReturnValueOnce(activeRoute("found"));
       } else {
         runtimeMocks.readProgramPath.mockReturnValueOnce(
           Effect.succeed({ managed: true, route: { sitemap: true } })
@@ -456,18 +463,8 @@ describe("proxy", () => {
   it("routes active material additions and rejects owned tombstones", async () => {
     const path = "/en/subjects/mathematics/new-topic/new-published-lesson";
     runtimeMocks.readActive
-      .mockReturnValueOnce(
-        Effect.succeed({
-          activeReleaseId: "release-active",
-          kind: "found",
-        })
-      )
-      .mockReturnValueOnce(
-        Effect.succeed({
-          activeReleaseId: "release-active",
-          kind: "missing",
-        })
-      );
+      .mockReturnValueOnce(activeRoute("found"))
+      .mockReturnValueOnce(activeRoute("missing"));
 
     const found = await requestProxy(path);
     expectLocaleProxy(found);
