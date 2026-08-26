@@ -13,7 +13,7 @@ import { makeFunctionReference } from "convex/server";
 import { convexTest } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const OBSERVATION_ID = "dates-cutover-4974ee8c";
+const OBSERVATION_ID = "test-predecessor-observation";
 const arm = makeFunctionReference<
   "mutation",
   PredecessorObservationArgs,

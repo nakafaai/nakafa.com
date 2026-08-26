@@ -22,7 +22,7 @@ import { makeFunctionReference } from "convex/server";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const RUNTIME_TOKEN = "technical-runtime-token";
-const OBSERVATION_ID = "dates-cutover-4974ee8c";
+const OBSERVATION_ID = "test-predecessor-observation";
 const runtimeTokenName = "CONTENT_RUNTIME_TOKEN";
 const polarName = "POLAR_WEBHOOK_SECRET";
 const armObservation = makeFunctionReference<

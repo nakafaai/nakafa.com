@@ -17,8 +17,8 @@ import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
 import { convexTest, type TestConvex } from "convex-test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const OBSERVATION_ID = "dates-cutover-4974ee8c";
-const COMPETING_OBSERVATION_ID = "dates-competing-4974ee8c";
+const OBSERVATION_ID = "test-predecessor-observation";
+const COMPETING_OBSERVATION_ID = "test-competing-observation";
 type Target = TestConvex<typeof schema>;
 
 /** Seeds one active release and atomically arms both predecessor routes. */

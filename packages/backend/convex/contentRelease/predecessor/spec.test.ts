@@ -15,8 +15,8 @@ describe("contentRelease/predecessor/spec", () => {
   it.effect("accepts concise receipt IDs and rejects ambiguous values", () =>
     Effect.gen(function* () {
       expect(
-        yield* decodePredecessorObservationId("dates-cutover-4974ee8c")
-      ).toBe("dates-cutover-4974ee8c");
+        yield* decodePredecessorObservationId("test-predecessor-observation")
+      ).toBe("test-predecessor-observation");
 
       for (const invalid of [
         "",
