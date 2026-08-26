@@ -66,12 +66,7 @@ export function registerAgentMcpRoutes(app: AgentApp) {
     const limited = await readRateLimit(context.env, request);
     if (limited.kind === "unavailable") {
       return withMcpResponseHeaders(
-        mcpErrorResponse(
-          503,
-          -32_603,
-          "The public MCP request limiter is unavailable.",
-          requestId
-        ),
+        new Response(null, { status: 503 }),
         request
       );
     }

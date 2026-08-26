@@ -32,7 +32,10 @@ type BackendTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 function fetchMcp(test: BackendTest, init: RequestInit = {}) {
   const headers = new Headers(init.headers);
   headers.set(NAKAFA_MCP_EDGE_CONTRACT.secretHeader, MCP_SECRET);
-  headers.set("x-forwarded-for", "203.0.113.21");
+  headers.set(
+    "x-forwarded-for",
+    headers.get("x-forwarded-for") ?? "203.0.113.21"
+  );
   return test.fetch(NAKAFA_MCP_EDGE_CONTRACT.originPath, {
     ...init,
     headers,
@@ -70,12 +73,10 @@ function postModern(
 beforeEach(() => {
   vi.stubEnv(NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment, MCP_SECRET);
 });
-
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllEnvs();
 });
-
 describe("Nakafa MCP transport", () => {
   it("serves current discovery and the established tool surface", async () => {
     const test = createConvexTestWithBetterAuth();
@@ -83,7 +84,6 @@ describe("Nakafa MCP transport", () => {
     const discoverBody = await discover.json();
     const tools = await postModern(test, 2, "tools/list");
     const toolsBody = await tools.json();
-
     expect(discover.status, JSON.stringify(discoverBody)).toBe(200);
     expect(discoverBody).toMatchObject({
       id: 1,
@@ -131,7 +131,6 @@ describe("Nakafa MCP transport", () => {
     const bodies = await Promise.all(
       responses.map((response) => response.json())
     );
-
     expect(responses.map(({ status }) => status)).toEqual([
       200, 200, 200, 200, 200,
     ]);
@@ -222,7 +221,6 @@ describe("Nakafa MCP transport", () => {
     const bodies = await Promise.all(
       responses.map((response) => response.json())
     );
-
     expect(responses.map(({ status }) => status)).toEqual([200, 200, 200]);
     expect(bodies[0]).toMatchObject({
       result: {
@@ -262,7 +260,6 @@ describe("Nakafa MCP transport", () => {
       { uri: missingUri },
       missingUri
     );
-
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
       error: {
@@ -325,7 +322,6 @@ describe("Nakafa MCP transport", () => {
     const bodies = await Promise.all(
       responses.map((response) => response.json())
     );
-
     expect(responses.map(({ status }) => status)).toEqual([200, 200, 200, 200]);
     expect(bodies[0]).toMatchObject({
       result: {
@@ -372,7 +368,6 @@ describe("Nakafa MCP transport", () => {
       method: "POST",
     });
     const body = await response.text();
-
     expect(response.status, body).toBe(200);
     expect(body).toContain(MCP_PREDECESSOR_PROTOCOL_VERSION);
     expect(body).toContain("nakafa-mcp-server");
@@ -403,7 +398,6 @@ describe("Nakafa MCP transport", () => {
         params: { _meta: MODERN_META },
       }),
     ]);
-
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toMatchObject({
       error: {
@@ -430,7 +424,6 @@ describe("Nakafa MCP transport", () => {
       }),
       fetchMcp(test),
     ]);
-
     expect(malformed.status).toBe(400);
     await expect(malformed.json()).resolves.toMatchObject({
       error: { code: -32_700 },
@@ -453,7 +446,6 @@ describe("Nakafa MCP transport", () => {
       headers: { "content-type": "application/json" },
       method: "POST",
     });
-
     for (const response of [declared, streamed]) {
       expect(response.status).toBe(413);
       await expect(response.json()).resolves.toMatchObject({
@@ -464,9 +456,13 @@ describe("Nakafa MCP transport", () => {
     }
   });
 
-  it("charges rejected bodies and returns no JSON-RPC for throttled notifications", async () => {
+  it("charges rejected bodies and keeps transport failures bodyless", async () => {
     vi.spyOn(Date, "now").mockReturnValue(1_800_000_000_000);
     const test = createConvexTestWithBetterAuth();
+    const notificationBody = JSON.stringify({
+      jsonrpc: "2.0",
+      method: "notifications/initialized",
+    });
     const allowed = await Promise.all(
       Array.from({ length: 29 }, (_, index) =>
         postModern(test, 100 + index, "server/discover")
@@ -480,19 +476,25 @@ describe("Nakafa MCP transport", () => {
       method: "POST",
     });
     const throttled = await fetchMcp(test, {
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        method: "notifications/initialized",
-      }),
+      body: notificationBody,
       headers: { "content-type": "application/json" },
       method: "POST",
     });
-
+    const unavailable = await fetchMcp(test, {
+      body: notificationBody,
+      headers: {
+        "content-type": "application/json",
+        "x-forwarded-for": "",
+      },
+      method: "POST",
+    });
     expect(allowed.every(({ status }) => status === 200)).toBe(true);
     expect(rejected.status).toBe(413);
-    expect(throttled.status).toBe(429);
+    expect([throttled.status, unavailable.status]).toEqual([429, 503]);
     expect(throttled.headers.get("content-type")).toBeNull();
     expect(throttled.headers.get("retry-after")).toBe("1");
-    await expect(throttled.text()).resolves.toBe("");
+    for (const response of [throttled, unavailable]) {
+      await expect(response.text()).resolves.toBe("");
+    }
   });
 });
