@@ -23,6 +23,7 @@ vi.mock("@/lib/routing/public/source", () => ({
 const defaultInput = {
   acceptHeader: Option.some("text/html"),
   hasAttemptCapability: false,
+  isRscRequest: false,
   method: "GET",
   pathname: "/en/search",
 };

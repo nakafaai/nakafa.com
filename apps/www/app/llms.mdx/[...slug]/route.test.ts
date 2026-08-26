@@ -61,7 +61,7 @@ describe("llms.mdx route", () => {
     expect(response.headers.get("content-type")).toBe(
       "text/markdown; charset=utf-8"
     );
-    expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding");
+    expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding, RSC");
     expect(mockGetLlmsMarkdownText).not.toHaveBeenCalled();
   });
 
@@ -207,7 +207,7 @@ describe("llms.mdx route", () => {
     expect(response.headers.get("content-type")).toBe(
       "text/plain; charset=utf-8"
     );
-    expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding");
+    expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding, RSC");
     expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
       cleanSlug: "llms/en/articles/page/999/llms",
     });
@@ -229,7 +229,7 @@ describe("llms.mdx route", () => {
     expect(response.headers.get("content-type")).toBe(
       "text/markdown; charset=utf-8"
     );
-    expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding");
+    expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding, RSC");
     expect(response.headers.get("x-robots-tag")).toBe("noindex");
     expect(body).toContain("# Markdown page not found");
     expect(body).toContain(`${BASE_URL}/en/search`);

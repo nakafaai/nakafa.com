@@ -148,6 +148,7 @@ export async function proxy(request: NextRequest) {
       hasAttemptCapability: hasTryoutAttemptCapability(
         request.nextUrl.searchParams
       ),
+      isRscRequest: request.headers.get("rsc") === "1",
       method: request.method,
       pathname,
     })

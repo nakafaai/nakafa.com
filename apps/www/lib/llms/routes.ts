@@ -1,7 +1,6 @@
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { routing } from "@repo/internationalization/src/routing";
 import {
-  acceptsExplicitMediaType,
   HttpMediaTypeSchema,
   negotiateMediaType,
 } from "@repo/utilities/http/accept";
@@ -17,6 +16,7 @@ export type LocalizedLlmsRoute = typeof LocalizedLlmsRouteSchema.Type;
 
 export const LlmsProxyRouteRequestSchema = Schema.Struct({
   acceptHeader: Schema.Option(Schema.String),
+  isRscRequest: Schema.Boolean,
   method: Schema.String,
   pathname: Schema.String,
 });
@@ -36,29 +36,23 @@ const HTML_MEDIA_TYPE = HttpMediaTypeSchema.make("text/html; charset=utf-8");
 export const LLMS_MARKDOWN_MEDIA_TYPE = HttpMediaTypeSchema.make(
   "text/markdown; charset=utf-8"
 );
-const RSC_MEDIA_TYPE = HttpMediaTypeSchema.make("text/x-component");
 const DOCUMENT_MEDIA_TYPES = [
   HTML_MEDIA_TYPE,
   LLMS_MARKDOWN_MEDIA_TYPE,
 ] as const;
-const DOCUMENT_MEDIA_TYPES_WITH_RSC = [
-  HTML_MEDIA_TYPE,
-  LLMS_MARKDOWN_MEDIA_TYPE,
-  RSC_MEDIA_TYPE,
-] as const;
 const HTML_MEDIA_TYPES = [HTML_MEDIA_TYPE] as const;
-const HTML_MEDIA_TYPES_WITH_RSC = [HTML_MEDIA_TYPE, RSC_MEDIA_TYPE] as const;
 export const LLMS_REPRESENTATION_VARY_FIELDS = Object.freeze([
   "Accept",
   "Accept-Encoding",
+  "RSC",
 ]);
 
 /**
  * Classifies localized Markdown negotiation before the Next route handler.
  *
  * The resolver checks the existing source owner only after Markdown wins.
- * Ordinary HTML and RSC traffic stays inside Next without catalog reads, while
- * the rewritten route handler still owns the final Markdown response status.
+ * Ordinary HTML and marked RSC traffic stays inside Next without catalog
+ * reads, while the rewritten route handler owns the final Markdown status.
  */
 export const resolveLlmsProxyRoute = Effect.fn("www.llms.proxyRoute.resolve")(
   function* (request: LlmsProxyRouteRequest) {
@@ -79,20 +73,14 @@ export const resolveLlmsProxyRoute = Effect.fn("www.llms.proxyRoute.resolve")(
       } satisfies LlmsProxyRouteDecision;
     }
 
-    const acceptsRsc = acceptsExplicitMediaType(
-      request.acceptHeader,
-      RSC_MEDIA_TYPE
-    );
-    const negotiatedMediaType = negotiateMediaType(
-      request.acceptHeader,
-      acceptsRsc ? DOCUMENT_MEDIA_TYPES_WITH_RSC : DOCUMENT_MEDIA_TYPES
-    );
-    if (
-      Option.isSome(negotiatedMediaType) &&
-      negotiatedMediaType.value === RSC_MEDIA_TYPE
-    ) {
+    if (request.isRscRequest) {
       return { kind: "delegate" } satisfies LlmsProxyRouteDecision;
     }
+
+    const negotiatedMediaType = negotiateMediaType(
+      request.acceptHeader,
+      DOCUMENT_MEDIA_TYPES
+    );
 
     if (Option.isNone(negotiatedMediaType)) {
       return { kind: "not-acceptable" } satisfies LlmsProxyRouteDecision;
@@ -115,7 +103,7 @@ export const resolveLlmsProxyRoute = Effect.fn("www.llms.proxyRoute.resolve")(
 
     const fallbackMediaType = negotiateMediaType(
       request.acceptHeader,
-      acceptsRsc ? HTML_MEDIA_TYPES_WITH_RSC : HTML_MEDIA_TYPES
+      HTML_MEDIA_TYPES
     );
     if (Option.isNone(fallbackMediaType)) {
       return { kind: "not-acceptable" } satisfies LlmsProxyRouteDecision;

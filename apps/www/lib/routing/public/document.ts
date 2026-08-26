@@ -42,6 +42,7 @@ export const resolvePublicDocumentRoute = Effect.fn(
 
   const representation = yield* resolveLlmsProxyRoute({
     acceptHeader: input.acceptHeader,
+    isRscRequest: input.isRscRequest,
     method: input.method,
     pathname: input.pathname,
   });

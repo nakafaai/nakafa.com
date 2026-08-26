@@ -244,14 +244,17 @@ describe("proxy", () => {
     expectNoLocaleProxy();
   });
 
-  it.each(["/en/search", "/de/search"])(
+  it.each([
+    ["/en/search", undefined],
+    ["/de/search", { headers: { accept: "text/x-component", rsc: "1" } }],
+  ])(
     "delegates the active route %s to the locale middleware",
-    async (path) => {
-      const response = await requestProxy(path);
+    async (path, init) => {
+      const response = await requestProxy(path, init);
       expectLocaleProxy(response);
       expect(response.headers.get("link")).toBe('</llms.txt>; rel="llms-txt"');
       expect(response.headers.get("x-llms-txt")).toBe("/llms.txt");
-      expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding");
+      expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding, RSC");
     }
   );
 
@@ -402,7 +405,7 @@ describe("proxy", () => {
     [
       "unacceptable header",
       "/en/terms-of-service",
-      { headers: { accept: "text/html;q=0, text/markdown;q=0" } },
+      { headers: { accept: "text/x-component" } },
       null,
     ],
   ])(
@@ -413,7 +416,7 @@ describe("proxy", () => {
       expectNoLocaleProxy();
       expect(response.status).toBe(expected === null ? 406 : 200);
       expect(response.headers.get("x-middleware-rewrite")).toBe(expected);
-      expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding");
+      expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding, RSC");
     }
   );
 

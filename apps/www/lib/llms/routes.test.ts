@@ -32,6 +32,7 @@ describe("llms proxy route resolver", () => {
       assertRoute(
         {
           acceptHeader: Option.none(),
+          isRscRequest: false,
           method: "GET",
           pathname: "/en/subjects/mathematics/integral",
         },
@@ -48,6 +49,7 @@ describe("llms proxy route resolver", () => {
       assertRoute(
         {
           acceptHeader: Option.some("text/markdown, text/plain;q=0.8"),
+          isRscRequest: false,
           method: "GET",
           pathname: "/en/subjects/mathematics/integral/area",
         },
@@ -70,6 +72,7 @@ describe("llms proxy route resolver", () => {
       assertRoute(
         {
           acceptHeader: Option.some(`text/markdown; charset=${charset}`),
+          isRscRequest: false,
           method: "GET",
           pathname: "/en/subjects/mathematics/integral/area",
         },
@@ -92,6 +95,7 @@ describe("llms proxy route resolver", () => {
       return assertRoute(
         {
           acceptHeader: Option.some(acceptHeader),
+          isRscRequest: false,
           method: "GET",
           pathname: `/id/artikel/tidak-ada${markdownExtension}`,
         },
@@ -114,6 +118,7 @@ describe("llms proxy route resolver", () => {
     assertRoute(
       {
         acceptHeader: Option.some("text/markdown"),
+        isRscRequest: false,
         method: "GET",
         pathname: "/fr/articles/example",
       },
@@ -127,6 +132,7 @@ describe("llms proxy route resolver", () => {
     assertRoute(
       {
         acceptHeader: Option.some("text/markdown"),
+        isRscRequest: false,
         method: "GET",
         pathname: "/en",
       },
@@ -149,6 +155,7 @@ describe("llms proxy route resolver", () => {
       assertRoute(
         {
           acceptHeader: Option.some("text/markdown"),
+          isRscRequest: false,
           method: "GET",
           pathname: "/",
         },
@@ -168,12 +175,14 @@ describe("llms proxy route resolver", () => {
   it.effect.each([
     "text/html;q=0, text/markdown;q=0",
     "application/json",
+    "text/x-component",
     "text/html;q=0, text/markdown; charset=iso-8859-1",
     "text/html;q=invalid, text/markdown;q=invalid",
   ])("rejects an unacceptable representation request %s", (acceptHeader) =>
     assertRoute(
       {
         acceptHeader: Option.some(acceptHeader),
+        isRscRequest: false,
         method: "GET",
         pathname: "/en/terms-of-service",
       },
@@ -192,6 +201,7 @@ describe("llms proxy route resolver", () => {
     assertRoute(
       {
         acceptHeader: Option.some(acceptHeader),
+        isRscRequest: false,
         method: "GET",
         pathname: "/en/terms-of-service",
       },
@@ -201,29 +211,26 @@ describe("llms proxy route resolver", () => {
     )
   );
 
-  it.effect.each([
-    ["POST", "text/x-component"],
-    ["GET", "text/x-component"],
-    ["HEAD", "text/x-component;q=0.5, text/html;q=0.4"],
-  ])(
-    "delegates %s Next.js component traffic with %s",
-    ([method, acceptHeader]) =>
-      assertRoute(
-        {
-          acceptHeader: Option.some(acceptHeader),
-          method,
-          pathname: "/en/quran/1",
-        },
-        (decision) => {
-          expect(decision).toEqual({ kind: "delegate" });
-        }
-      )
+  it.effect("delegates an actual Next.js RSC request", () =>
+    assertRoute(
+      {
+        acceptHeader: Option.some("text/x-component"),
+        isRscRequest: true,
+        method: "GET",
+        pathname: "/en/quran/1",
+      },
+      (decision) => {
+        expect(decision).toEqual({ kind: "delegate" });
+        expect(mockHasLlmsMarkdownSource).not.toHaveBeenCalled();
+      }
+    )
   );
 
   it.effect("does not misclassify another component-like media type", () =>
     assertRoute(
       {
         acceptHeader: Option.some("text/x-component-other"),
+        isRscRequest: false,
         method: "GET",
         pathname: "/en/quran/1",
       },
@@ -239,6 +246,7 @@ describe("llms proxy route resolver", () => {
         acceptHeader: Option.some(
           "text/x-component;q=0, text/markdown; charset=utf-8"
         ),
+        isRscRequest: false,
         method: "GET",
         pathname: "/en/quran/1",
       },
@@ -254,6 +262,7 @@ describe("llms proxy route resolver", () => {
     return assertRoute(
       {
         acceptHeader: Option.some("text/*"),
+        isRscRequest: false,
         method: "GET",
         pathname: "/en/search",
       },
@@ -272,6 +281,7 @@ describe("llms proxy route resolver", () => {
       return assertRoute(
         {
           acceptHeader: Option.some("text/*;q=1, text/html;q=0.8"),
+          isRscRequest: false,
           method: "GET",
           pathname: "/en/search",
         },
@@ -283,22 +293,24 @@ describe("llms proxy route resolver", () => {
     }
   );
 
-  it.effect("delegates only when an acceptable explicit RSC type wins", () =>
+  it.effect("ignores Flight while negotiating ordinary document requests", () =>
     assertRoute(
       {
-        acceptHeader: Option.some("text/x-component;q=0.7, text/html;q=0.6"),
+        acceptHeader: Option.some(
+          "text/x-component, text/markdown;q=0.8, text/html;q=0.7"
+        ),
+        isRscRequest: false,
         method: "GET",
         pathname: "/en/quran/1",
       },
       (decision) => {
-        expect(decision).toEqual({ kind: "delegate" });
-        expect(mockHasLlmsMarkdownSource).not.toHaveBeenCalled();
+        expect(decision).toMatchObject({ kind: "rewrite-markdown" });
       }
     )
   );
 
   it.effect(
-    "falls back to an explicit RSC type when Markdown is unavailable",
+    "falls back to acceptable HTML when Markdown is unavailable",
     () => {
       mockHasLlmsMarkdownSource.mockReturnValueOnce(Effect.succeed(false));
 
@@ -307,6 +319,7 @@ describe("llms proxy route resolver", () => {
           acceptHeader: Option.some(
             "text/markdown;q=1, text/x-component;q=0.8, text/html;q=0.7"
           ),
+          isRscRequest: false,
           method: "GET",
           pathname: "/en/search",
         },
@@ -326,6 +339,7 @@ describe("llms proxy route resolver", () => {
       return assertRoute(
         {
           acceptHeader: Option.some("text/markdown"),
+          isRscRequest: false,
           method: "GET",
           pathname: "/en/search",
         },
