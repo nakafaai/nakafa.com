@@ -145,9 +145,8 @@ export const readPublishedMaterialRoutes = Effect.fn(
   };
   let catalogIdentity: null | Pick<
     PublishedMaterialCatalog,
-    "activeManifestHash" | "activeReleaseId"
+    "activeManifestHash" | "activeReleaseId" | "sourceRevision"
   > = null;
-  let sourceRevision: null | typeof GitCommitShaSchema.Type = null;
   while (true) {
     const page: PublishedMaterialPage = yield* readPublishedMaterialPage({
       ...cursor,
@@ -169,22 +168,26 @@ export const readPublishedMaterialRoutes = Effect.fn(
       Schema.decodeEffect(Sha256HashSchema)(page.activeManifestHash),
       Schema.decodeEffect(ReleaseIdSchema)(page.activeReleaseId),
     ]).pipe(Effect.mapError(() => new PublishedProjectionError(identity)));
+    const pageIdentity = {
+      activeManifestHash,
+      activeReleaseId,
+      sourceRevision: page.sourceRevision,
+    };
     if (
       catalogIdentity !== null &&
-      (catalogIdentity.activeManifestHash !== activeManifestHash ||
-        catalogIdentity.activeReleaseId !== activeReleaseId)
+      (catalogIdentity.activeManifestHash !== pageIdentity.activeManifestHash ||
+        catalogIdentity.activeReleaseId !== pageIdentity.activeReleaseId ||
+        catalogIdentity.sourceRevision !== pageIdentity.sourceRevision)
     ) {
       return yield* new PublishedProjectionError(identity);
     }
-    catalogIdentity ??= { activeManifestHash, activeReleaseId };
+    catalogIdentity ??= pageIdentity;
     routes.push(...page.routes);
-    sourceRevision = page.sourceRevision;
     if (page.done) {
       return {
         ...catalogIdentity,
         appLocale,
         routes,
-        sourceRevision,
       } satisfies PublishedMaterialCatalog;
     }
     cursor = {

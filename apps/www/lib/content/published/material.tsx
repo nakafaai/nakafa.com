@@ -83,12 +83,19 @@ const renderMaterialArtifact = Effect.fn(
   } satisfies PublishedMaterialContent;
 });
 
+/** Reads and renders one material through one signed publication program. */
+const readRenderedMaterial = Effect.fn("NakafaContent.readRenderedMaterial")(
+  function* (input: PublishedMaterialInput) {
+    const data = yield* readPublishedMaterial(input);
+    return yield* renderMaterialArtifact(data);
+  }
+);
+
 /** Caches JSX rendered from one reviewed, signed Aksara material artifact. */
 export async function renderPublishedMaterial(input: PublishedMaterialInput) {
   "use cache";
 
-  const data = await Effect.runPromise(readPublishedMaterial(input));
-  const rendered = await Effect.runPromise(renderMaterialArtifact(data));
-  applyPublishedContentCache("material", data.artifact.artifactHash);
+  const rendered = await Effect.runPromise(readRenderedMaterial(input));
+  applyPublishedContentCache("material", rendered.artifactHash);
   return rendered;
 }

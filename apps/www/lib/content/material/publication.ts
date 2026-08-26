@@ -28,6 +28,7 @@ import { renderPublishedMaterial } from "@/lib/content/published/material";
 interface MaterialCatalogIdentity {
   readonly activeManifestHash: PublishedMaterialCatalog["activeManifestHash"];
   readonly activeReleaseId: PublishedMaterialCatalog["activeReleaseId"];
+  readonly sourceRevision: PublishedMaterialCatalog["sourceRevision"];
 }
 
 /** Route shell selected exclusively from authenticated release catalogs. */
@@ -84,6 +85,7 @@ export const readMaterialCatalogRoute = Effect.fn(
     }
     if (
       catalog.activeManifestHash !== currentCatalog.activeManifestHash ||
+      catalog.sourceRevision !== currentCatalog.sourceRevision ||
       !hasUniquePublicPaths(catalog.routes) ||
       catalog.routes.some((route) => route.appLocale !== catalog.appLocale)
     ) {
@@ -101,6 +103,7 @@ export const readMaterialCatalogRoute = Effect.fn(
       alternates: [],
       projection: null,
       siblings: [],
+      sourceRevision: currentCatalog.sourceRevision,
     } satisfies MaterialCatalogRoute;
   }
 
@@ -130,61 +133,65 @@ export const readMaterialCatalogRoute = Effect.fn(
     alternates,
     projection,
     siblings,
+    sourceRevision: currentCatalog.sourceRevision,
   } satisfies MaterialCatalogRoute;
 });
 
-/** Reads one coherent material shell and body without a sequential network waterfall. */
+/** Reads and verifies one coherent material shell and body concurrently. */
+const readMaterialPublication = Effect.fn("NakafaMaterial.readPublication")(
+  function* (locale: Locale, publicPath: string) {
+    const appLocale = AppLocaleSchema.make(locale);
+    const readCatalogs = Effect.forEach(
+      ACTIVE_APP_LOCALES,
+      (activeLocale) =>
+        Effect.tryPromise(() => getPublishedMaterialRoutes(activeLocale)),
+      { concurrency: "unbounded" }
+    );
+    const readPublished = Effect.tryPromise(() =>
+      renderPublishedMaterial({ appLocale, publicPath })
+    ).pipe(
+      Effect.catchIf(
+        (failure) => failure.cause instanceof ContentRuntimeMissingError,
+        () => Effect.succeed(null)
+      )
+    );
+    const [catalogs, published] = yield* Effect.all(
+      [readCatalogs, readPublished],
+      { concurrency: "unbounded" }
+    );
+    const model = yield* readMaterialCatalogRoute(catalogs, locale, publicPath);
+    if (!model.projection) {
+      yield* Effect.sync(() => applyPublishedCatalogCache("material"));
+      if (published) {
+        return yield* makeMaterialProjectionError({ appLocale, publicPath });
+      }
+      return null;
+    }
+    if (!published) {
+      return yield* makeMaterialProjectionError({ appLocale, publicPath });
+    }
+
+    yield* verifyMaterialPublication(
+      {
+        activeReleaseId: model.activeReleaseId,
+        projection: model.projection,
+      },
+      published
+    );
+    yield* Effect.sync(() =>
+      applyPublishedContentCache("material", published.artifactHash)
+    );
+
+    return { model, published };
+  }
+);
+
+/** Caches one coherent material publication at the Next.js framework boundary. */
 export async function getMaterialPublication(
   locale: Locale,
   publicPath: string
 ) {
   "use cache";
 
-  const appLocale = AppLocaleSchema.make(locale);
-  const readPublished = Effect.tryPromise(() =>
-    renderPublishedMaterial({ appLocale, publicPath })
-  ).pipe(
-    Effect.catchIf(
-      (failure) => failure.cause instanceof ContentRuntimeMissingError,
-      () => Effect.succeed(null)
-    )
-  );
-  const [catalogs, published] = await Promise.all([
-    Promise.all(
-      ACTIVE_APP_LOCALES.map((activeLocale) =>
-        getPublishedMaterialRoutes(activeLocale)
-      )
-    ),
-    Effect.runPromise(readPublished),
-  ]);
-  const model = await Effect.runPromise(
-    readMaterialCatalogRoute(catalogs, locale, publicPath)
-  );
-  if (!model.projection) {
-    applyPublishedCatalogCache("material");
-    if (published) {
-      return await Effect.runPromise(
-        Effect.fail(makeMaterialProjectionError({ appLocale, publicPath }))
-      );
-    }
-    return null;
-  }
-  if (!published) {
-    return await Effect.runPromise(
-      Effect.fail(makeMaterialProjectionError({ appLocale, publicPath }))
-    );
-  }
-
-  await Effect.runPromise(
-    verifyMaterialPublication(
-      {
-        activeReleaseId: model.activeReleaseId,
-        projection: model.projection,
-      },
-      published
-    )
-  );
-  applyPublishedContentCache("material", published.artifactHash);
-
-  return { model, published };
+  return await Effect.runPromise(readMaterialPublication(locale, publicPath));
 }

@@ -9,8 +9,9 @@ import {
 import type { AppLocale } from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { ContentRuntimeMissingError } from "@repo/backend/client/content/errors";
+import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import type { PublishedMaterialCatalog } from "@/lib/content/material/catalog";
 import {
   getMaterialPublication,
@@ -47,14 +48,15 @@ vi.mock("@/lib/content/published/material", () => ({
 function materialCatalog(
   appLocale: AppLocale,
   routes: readonly MaterialLessonProjection[],
-  releaseId = activeReleaseId
+  releaseId = activeReleaseId,
+  revision: PublishedMaterialCatalog["sourceRevision"] = sourceRevision
 ): PublishedMaterialCatalog {
   return {
     activeManifestHash,
     activeReleaseId: releaseId,
     appLocale,
     routes,
-    sourceRevision,
+    sourceRevision: revision,
   };
 }
 
@@ -83,6 +85,46 @@ beforeEach(() => {
 });
 
 describe("material publication", () => {
+  it("starts every catalog and the signed body before either owner settles", async () => {
+    const catalogReleases: Array<() => void> = [];
+    catalogMock.mockImplementation(
+      (locale: AppLocale) =>
+        new Promise((resolve) => {
+          const catalog = catalogs.find(
+            (candidate) => candidate.appLocale === locale
+          );
+          catalogReleases.push(() => resolve(catalog));
+        })
+    );
+    const published = {
+      activeReleaseId,
+      artifactHash: previewArtifactHash,
+      projection: previewProjection,
+      rendererDomain: "mathematics",
+    };
+    let releasePublished: () => void = () => undefined;
+    renderMock.mockReturnValue(
+      new Promise((resolve) => {
+        releasePublished = () => resolve(published);
+      })
+    );
+
+    const publication = getMaterialPublication(
+      "en",
+      previewProjection.publicPath
+    );
+    await vi.waitFor(() => {
+      expect(catalogMock).toHaveBeenCalledTimes(3);
+      expect(renderMock).toHaveBeenCalledOnce();
+    });
+    for (const releaseCatalog of catalogReleases) {
+      releaseCatalog();
+    }
+    releasePublished();
+
+    await expect(publication).resolves.toMatchObject({ published });
+  });
+
   it("returns a release-bound missing route without rendering an application error", async () => {
     const publicPath = PublicPathSchema.make(
       `${previewProjection.publicPath}-missing`
@@ -165,6 +207,7 @@ describe("material publication", () => {
         ],
         projection: previewProjection,
         siblings: [previewProjection, previewNextProjection],
+        sourceRevision,
       },
       published,
     });
@@ -175,112 +218,136 @@ describe("material publication", () => {
     );
   });
 
-  it("rejects catalogs from different active releases", async () => {
-    const mismatched = [
-      catalogs[0],
-      materialCatalog(
-        previewIdProjection.appLocale,
-        [previewIdProjection],
-        ReleaseIdSchema.make("release-other")
-      ),
-      catalogs[2],
-    ];
+  it.effect("rejects catalogs from different active releases", () =>
+    Effect.gen(function* () {
+      const mismatched = [
+        catalogs[0],
+        materialCatalog(
+          previewIdProjection.appLocale,
+          [previewIdProjection],
+          ReleaseIdSchema.make("release-other")
+        ),
+        catalogs[2],
+      ];
 
-    await expect(
-      Effect.runPromise(
-        readMaterialCatalogRoute(
+      expect(
+        yield* readMaterialCatalogRoute(
           mismatched,
           "en",
           previewProjection.publicPath
         ).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({ _tag: "PublishedReleaseMismatchError" });
-  });
+      ).toMatchObject({ _tag: "PublishedReleaseMismatchError" });
+    })
+  );
 
-  it("rejects malformed catalog ownership", async () => {
-    const otherManifestHash = Sha256HashSchema.make(`sha256:${"b".repeat(64)}`);
-    const malformedCatalogs = [
-      [
+  it.effect("rejects catalogs from different source revisions", () =>
+    Effect.gen(function* () {
+      for (const revision of [GitCommitShaSchema.make("b".repeat(40)), null]) {
+        const mismatched = [
+          catalogs[0],
+          materialCatalog(
+            previewIdProjection.appLocale,
+            [previewIdProjection],
+            activeReleaseId,
+            revision
+          ),
+          catalogs[2],
+        ];
+        expect(
+          yield* readMaterialCatalogRoute(
+            mismatched,
+            "en",
+            previewProjection.publicPath
+          ).pipe(Effect.flip)
+        ).toMatchObject({ _tag: "PublishedProjectionError" });
+      }
+    })
+  );
+
+  it.effect("rejects malformed catalog ownership", () =>
+    Effect.gen(function* () {
+      const otherManifestHash = Sha256HashSchema.make(
+        `sha256:${"b".repeat(64)}`
+      );
+      const malformedCatalogs = [
+        [
+          catalogs[0],
+          { ...catalogs[1], activeManifestHash: otherManifestHash },
+          catalogs[2],
+        ],
+        [
+          materialCatalog(previewProjection.appLocale, [
+            previewProjection,
+            previewProjection,
+          ]),
+          catalogs[1],
+          catalogs[2],
+        ],
+        [
+          materialCatalog(previewProjection.appLocale, [previewIdProjection]),
+          catalogs[1],
+          catalogs[2],
+        ],
+      ];
+
+      for (const source of malformedCatalogs) {
+        expect(
+          yield* readMaterialCatalogRoute(
+            source,
+            "en",
+            previewProjection.publicPath
+          ).pipe(Effect.flip)
+        ).toMatchObject({ _tag: "PublishedProjectionError" });
+      }
+    })
+  );
+
+  it.effect("rejects incomplete locale and counterpart ownership", () =>
+    Effect.gen(function* () {
+      const missingLocale = catalogs.slice(0, 2);
+      const duplicateLocale = [catalogs[0], catalogs[0], catalogs[2]];
+      const duplicateCounterpart = {
+        ...previewIdProjection,
+        publicPath: PublicPathSchema.make(
+          `${previewIdProjection.parentPath}/duplicate-counterpart`
+        ),
+      };
+      const missingCounterpart = [
         catalogs[0],
-        { ...catalogs[1], activeManifestHash: otherManifestHash },
+        materialCatalog(previewIdProjection.appLocale, []),
         catalogs[2],
-      ],
-      [
-        materialCatalog(previewProjection.appLocale, [
-          previewProjection,
-          previewProjection,
+      ];
+      const ambiguousCounterpart = [
+        catalogs[0],
+        materialCatalog(previewIdProjection.appLocale, [
+          previewIdProjection,
+          duplicateCounterpart,
         ]),
-        catalogs[1],
         catalogs[2],
-      ],
-      [
-        materialCatalog(previewProjection.appLocale, [previewIdProjection]),
-        catalogs[1],
-        catalogs[2],
-      ],
-    ];
+      ];
 
-    for (const source of malformedCatalogs) {
-      await expect(
-        Effect.runPromise(
-          readMaterialCatalogRoute(
+      for (const source of [
+        missingLocale,
+        duplicateLocale,
+        missingCounterpart,
+        ambiguousCounterpart,
+      ]) {
+        expect(
+          yield* readMaterialCatalogRoute(
             source,
             "en",
             previewProjection.publicPath
           ).pipe(Effect.flip)
-        )
-      ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-    }
-  });
+        ).toMatchObject({ _tag: "PublishedProjectionError" });
+      }
 
-  it("rejects incomplete locale and counterpart ownership", async () => {
-    const missingLocale = catalogs.slice(0, 2);
-    const duplicateLocale = [catalogs[0], catalogs[0], catalogs[2]];
-    const duplicateCounterpart = {
-      ...previewIdProjection,
-      publicPath: PublicPathSchema.make(
-        `${previewIdProjection.parentPath}/duplicate-counterpart`
-      ),
-    };
-    const missingCounterpart = [
-      catalogs[0],
-      materialCatalog(previewIdProjection.appLocale, []),
-      catalogs[2],
-    ];
-    const ambiguousCounterpart = [
-      catalogs[0],
-      materialCatalog(previewIdProjection.appLocale, [
-        previewIdProjection,
-        duplicateCounterpart,
-      ]),
-      catalogs[2],
-    ];
-
-    for (const source of [
-      missingLocale,
-      duplicateLocale,
-      missingCounterpart,
-      ambiguousCounterpart,
-    ]) {
-      await expect(
-        Effect.runPromise(
-          readMaterialCatalogRoute(
-            source,
-            "en",
-            previewProjection.publicPath
-          ).pipe(Effect.flip)
-        )
-      ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-    }
-
-    await expect(
-      Effect.runPromise(
-        readMaterialCatalogRoute(
+      expect(
+        yield* readMaterialCatalogRoute(
           missingLocale,
           "de",
           previewDeProjection.publicPath
         ).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-  });
+      ).toMatchObject({ _tag: "PublishedProjectionError" });
+    })
+  );
 });
