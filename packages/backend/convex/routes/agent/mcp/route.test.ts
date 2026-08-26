@@ -426,6 +426,31 @@ describe("Nakafa MCP transport", () => {
     expect(get.status).toBe(405);
   });
 
+  it("rejects oversized declared and streaming bodies before SDK parsing", async () => {
+    const test = createConvexTestWithBetterAuth();
+    const declared = await fetchMcp(test, {
+      headers: {
+        "content-length": "65537",
+        "content-type": "application/json",
+      },
+      method: "POST",
+    });
+    const streamed = await fetchMcp(test, {
+      body: "x".repeat(65_537),
+      headers: { "content-type": "application/json" },
+      method: "POST",
+    });
+
+    for (const response of [declared, streamed]) {
+      expect(response.status).toBe(413);
+      await expect(response.json()).resolves.toMatchObject({
+        error: { code: -32_013 },
+        id: null,
+        jsonrpc: "2.0",
+      });
+    }
+  });
+
   it("enforces the shared per-client quota", async () => {
     vi.spyOn(Date, "now").mockReturnValue(1_800_000_000_000);
     const test = createConvexTestWithBetterAuth();

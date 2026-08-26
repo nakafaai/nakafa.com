@@ -2,6 +2,7 @@ import { NAKAFA_MCP_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { enforceAgentReadLimit } from "@repo/backend/convex/routes/agent/limit";
 import { guardMcpOrigin } from "@repo/backend/convex/routes/agent/mcp/guard";
+import { readMcpRequest } from "@repo/backend/convex/routes/agent/mcp/input";
 import {
   mcpErrorResponse,
   mcpOptionsResponse,
@@ -50,6 +51,24 @@ export function registerAgentMcpRoutes(app: AgentApp) {
     if (request.method === "OPTIONS") {
       return mcpOptionsResponse(request);
     }
+    const bounded = await Effect.runPromise(
+      readMcpRequest(request).pipe(Effect.result)
+    );
+    if (Result.isFailure(bounded)) {
+      const oversized = bounded.failure.reason === "size";
+      return withMcpResponseHeaders(
+        mcpErrorResponse(
+          oversized ? 413 : 400,
+          oversized ? -32_013 : -32_700,
+          oversized
+            ? "The MCP request body exceeds the Nakafa byte limit."
+            : "The MCP request body could not be read.",
+          requestId
+        ),
+        request
+      );
+    }
+    const { parsedBody, request: boundedRequest } = bounded.success;
     const limited = await readRateLimit(context.env, request);
     if (limited.kind === "unavailable") {
       return withMcpResponseHeaders(
@@ -64,9 +83,7 @@ export function registerAgentMcpRoutes(app: AgentApp) {
     }
     if (limited.kind === "limited") {
       const responseId =
-        request.method === "POST"
-          ? await Effect.runPromise(readJsonRpcRequestId(request))
-          : null;
+        request.method === "POST" ? readJsonRpcRequestId(parsedBody) : null;
       return withMcpResponseHeaders(
         mcpErrorResponse(
           429,
@@ -93,9 +110,12 @@ export function registerAgentMcpRoutes(app: AgentApp) {
         request
       );
     }
-    const legacy = await runtime.success.sdk.isLegacyRequest(request);
+    const legacy = await runtime.success.sdk.isLegacyRequest(
+      boundedRequest,
+      parsedBody
+    );
     if (!(legacy || request.headers.has("mcp-protocol-version"))) {
-      const responseId = await Effect.runPromise(readJsonRpcRequestId(request));
+      const responseId = readJsonRpcRequestId(parsedBody);
       return withMcpResponseHeaders(
         mcpErrorResponse(
           400,
@@ -121,7 +141,10 @@ export function registerAgentMcpRoutes(app: AgentApp) {
         },
       }
     );
-    return withMcpResponseHeaders(await handler.fetch(request), request);
+    return withMcpResponseHeaders(
+      await handler.fetch(boundedRequest, { parsedBody }),
+      request
+    );
   });
   app.route(NAKAFA_MCP_EDGE_CONTRACT.originPath, mcp);
 }

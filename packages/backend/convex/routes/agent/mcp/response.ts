@@ -1,5 +1,3 @@
-import { Effect } from "effect";
-
 const DEFAULT_ALLOWED_HEADERS = [
   "accept",
   "baggage",
@@ -85,20 +83,14 @@ export function mcpOptionsResponse(request: Request) {
   return withMcpResponseHeaders(new Response(null, { status: 204 }), request);
 }
 
-/** Recovers an echoable JSON-RPC request ID for pre-handler failures. */
-export const readJsonRpcRequestId = Effect.fn("agent.mcp.readRequestId")(
-  function* (request: Request) {
-    const body = yield* Effect.tryPromise({
-      catch: () => null,
-      try: async () => (await request.clone().json()) as unknown,
-    });
-    if (typeof body !== "object" || body === null || !("id" in body)) {
-      return null;
-    }
-    const id = body.id;
-    return typeof id === "number" || typeof id === "string" ? id : null;
+/** Recovers an echoable JSON-RPC request ID from the bounded parsed value. */
+export function readJsonRpcRequestId(body: unknown) {
+  if (typeof body !== "object" || body === null || !("id" in body)) {
+    return null;
   }
-);
+  const id = body.id;
+  return typeof id === "number" || typeof id === "string" ? id : null;
+}
 
 function readAllowedHeaders(request: Request) {
   const requested = request.headers.get("access-control-request-headers");
