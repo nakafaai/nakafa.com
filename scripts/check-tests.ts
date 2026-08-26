@@ -1,4 +1,8 @@
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
+import {
+  EFFECT_TEST_ADAPTER,
+  inspectEffectTestRunnerPolicy,
+} from "@repo/testing/effect-test-policy";
 import { Effect, FileSystem, Path, Schema } from "effect";
 import { writeError, writeOutput } from "./output.ts";
 
@@ -83,12 +87,32 @@ const hasColocatedOwner = Effect.fn("RepositoryPolicy.hasColocatedOwner")(
   }
 );
 
+/** Reads one test module for Effect runner policy inspection. */
+const readTestSource = Effect.fn("RepositoryPolicy.readTestSource")(function* (
+  root: string,
+  testPath: string
+) {
+  const fileSystem = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const source = yield* fileSystem.readFileString(testPath).pipe(
+    Effect.mapError(
+      (cause) =>
+        new TestPolicyReadError({
+          cause,
+          message: `Unable to read ${testPath}.`,
+        })
+    )
+  );
+  return { path: path.relative(root, testPath), source };
+});
+
 /** Validates test ownership and final repository test layout. */
 export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
   function* (root: string) {
     const path = yield* Path.Path;
-    const files = yield* Effect.forEach(["apps", "packages"], (directory) =>
-      readFiles(path.join(root, directory))
+    const files = yield* Effect.forEach(
+      ["apps", "packages", "scripts"],
+      (directory) => readFiles(path.join(root, directory))
     ).pipe(Effect.map((groups) => groups.flat()));
     const tests = files.filter((file) => TEST_FILE_PATTERN.test(file));
     const ownership = yield* Effect.forEach(tests, (test) =>
@@ -96,6 +120,12 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
         Effect.map((hasOwner) => ({ hasOwner, test }))
       )
     );
+    const testSources = yield* Effect.forEach(
+      tests,
+      (test) => readTestSource(root, test),
+      { concurrency: 16 }
+    );
+    const effectRunnerProblems = inspectEffectTestRunnerPolicy(testSources);
     const orphanTests = ownership
       .filter(({ hasOwner }) => !hasOwner)
       .map(({ test }) => test);
@@ -109,9 +139,11 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
     if (
       orphanTests.length === 0 &&
       tsxTestFiles.length === 0 &&
-      nestedTestFiles.length === 0
+      nestedTestFiles.length === 0 &&
+      effectRunnerProblems.resolvedBaselineFiles.length === 0 &&
+      effectRunnerProblems.unexpectedRunnerFiles.length === 0
     ) {
-      yield* writeOutput("Test ownership checks passed.\n");
+      yield* writeOutput("Test ownership and Effect runner checks passed.\n");
       return 0;
     }
 
@@ -133,6 +165,20 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
       yield* writeError(
         `Tests must not use __test__ or __tests__ folders:\n${nestedTestFiles
           .map((file) => `  - ${path.relative(root, file)}`)
+          .join("\n")}\n`
+      );
+    }
+    if (effectRunnerProblems.unexpectedRunnerFiles.length > 0) {
+      yield* writeError(
+        `Effectful tests must use ${EFFECT_TEST_ADAPTER} methods instead of direct Effect runtime calls:\n${effectRunnerProblems.unexpectedRunnerFiles
+          .map((file) => `  - ${file}`)
+          .join("\n")}\n`
+      );
+    }
+    if (effectRunnerProblems.resolvedBaselineFiles.length > 0) {
+      yield* writeError(
+        `Remove resolved Effect runner migration baseline entries in the same checkpoint:\n${effectRunnerProblems.resolvedBaselineFiles
+          .map((file) => `  - ${file}`)
           .join("\n")}\n`
       );
     }

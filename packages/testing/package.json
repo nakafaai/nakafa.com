@@ -8,6 +8,7 @@
   },
   "exports": {
     "./effect": "./effect.ts",
+    "./effect-test-policy": "./effect-test-policy.ts",
     "./node": "./node.ts",
     "./react": "./react.ts"
   },
@@ -23,6 +24,7 @@
     "@repo/typescript-config": "workspace:*",
     "@vitejs/plugin-react": "^6.1.0",
     "@vitest/coverage-istanbul": "^4.1.11",
+    "typescript": "catalog:",
     "vitest": "^4.1.11"
   }
 }
