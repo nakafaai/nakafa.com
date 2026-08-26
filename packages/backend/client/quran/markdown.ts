@@ -3,24 +3,20 @@ import {
   QuranPublicationError,
 } from "@repo/backend/client/quran/decode";
 import { hasExactQuranVerseRange } from "@repo/backend/client/quran/integrity";
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import type { QuranMarkdown } from "@repo/backend/convex/contentRelease/quran/markdown";
 import { Effect } from "effect";
 
-type QuranMarkdownResult = FunctionReturnType<
-  typeof api.contentRelease.quran.markdown
->;
 /** Validator-derived Quran verse used by markdown renderers. */
-export type QuranMarkdownVerse = QuranMarkdownResult["verses"][number];
+export type QuranMarkdownVerse = QuranMarkdown["verses"][number];
 /** Validator-derived Quran metadata used by markdown renderers. */
-export type QuranMarkdownSurah = NonNullable<QuranMarkdownResult["surah"]>;
+export type QuranMarkdownSurah = NonNullable<QuranMarkdown["surah"]>;
 /** Decodes one active app-locale Quran markdown projection. */
 export const decodePublishedQuranMarkdown = Effect.fn(
   "NakafaQuran.decodeMarkdown"
 )(function* (
-  result: QuranMarkdownResult,
+  result: QuranMarkdown,
   expected: {
-    readonly appLocale: QuranMarkdownResult["appLocale"];
+    readonly appLocale: QuranMarkdown["appLocale"];
     readonly surahNumber: number;
     readonly verseLimit?: number;
   }

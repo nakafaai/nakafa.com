@@ -188,6 +188,7 @@ function buildSignedQuranSearchDocument(
   return buildContentSearchDocument({
     ...signed.payload.graph,
     contentHash: signed.rowHash,
+    hasMarkdownSource: true,
     locale: appLocale,
     route: signed.payload.route,
     section: "quran",

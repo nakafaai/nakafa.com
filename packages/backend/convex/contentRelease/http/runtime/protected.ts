@@ -28,9 +28,9 @@ const protectedRuntimeRoute = Effect.fn("contentRelease.protectedRuntimeRoute")(
 );
 
 /** Registers the server-authenticated retained protected content read route. */
-export function registerProtectedContentRuntimeRoute(
-  app: HonoWithConvex<ActionCtx>
-) {
+export function registerProtectedContentRuntimeRoute<
+  Variables extends Record<string, unknown>,
+>(app: HonoWithConvex<ActionCtx, Variables>) {
   app.post(PROTECTED_CONTENT_RUNTIME_PATH, async (context) => {
     const result = await runConvexProgram(
       protectedRuntimeRoute(context.env, context.req.raw)

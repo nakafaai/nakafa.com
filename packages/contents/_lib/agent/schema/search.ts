@@ -37,10 +37,16 @@ export const NakafaAgentSearchOptionsSchema = Schema.Struct({
       )
     ),
     Schema.withDecodingDefaultType(Effect.succeed(NAKAFA_AGENT_DEFAULT_LIMIT))
-  ).annotate({ description: "Maximum number of results to return." }),
+  ).annotate({
+    default: NAKAFA_AGENT_DEFAULT_LIMIT,
+    description: "Maximum number of results to return.",
+  }),
   locale: LocaleSchema.pipe(
     Schema.withDecodingDefaultType(Effect.succeed(routing.defaultLocale))
-  ).annotate({ description: "Locale to search." }),
+  ).annotate({
+    default: routing.defaultLocale,
+    description: "Locale to search.",
+  }),
   offset: Schema.Finite.pipe(
     Schema.check(Schema.isInt()),
     Schema.check(
@@ -52,7 +58,10 @@ export const NakafaAgentSearchOptionsSchema = Schema.Struct({
       )
     ),
     Schema.withDecodingDefaultType(Effect.succeed(0))
-  ).annotate({ description: "Zero-based result offset for pagination." }),
+  ).annotate({
+    default: 0,
+    description: "Zero-based result offset for pagination.",
+  }),
   queries: Schema.optional(
     Schema.Array(Schema.Trim.pipe(Schema.check(Schema.isMinLength(1))))
       .pipe(

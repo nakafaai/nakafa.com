@@ -112,7 +112,7 @@ export const getRecentlyViewed = query({
 function toPublicContentRef(
   route: Parameters<typeof buildContentSearchRef>[0]
 ) {
-  const ref = buildContentSearchRef(route);
+  const ref = buildContentSearchRef(route, true);
 
   return {
     alignmentId: ref.alignmentId,

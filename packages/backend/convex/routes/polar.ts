@@ -71,7 +71,9 @@ const verifyPolarWebhook = Effect.fn("routes.polar.verify")(
 );
 
 /** Register Polar webhook routes on the Hono app. */
-export function registerPolarRoutes(app: HonoWithConvex<ActionCtx>) {
+export function registerPolarRoutes<Variables extends Record<string, unknown>>(
+  app: HonoWithConvex<ActionCtx, Variables>
+) {
   app.post("/polar/events", (c) => {
     const program = Effect.gen(function* () {
       const body = yield* readPolarWebhookBody(c.req.raw);

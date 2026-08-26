@@ -17,6 +17,7 @@ describe("buildContentSearchDocument", () => {
       ...identity,
       contentHash: "hash-logarithm",
       description: "Memahami bentuk dasar logaritma.",
+      hasMarkdownSource: true,
       locale: "id",
       route,
       section: "material",
@@ -44,5 +45,35 @@ describe("buildContentSearchDocument", () => {
     expect(document.text).not.toContain("import");
     expect(document.text).not.toContain("##");
     expect(document.text).not.toContain("```");
+  });
+
+  it("advertises markdown only for source-backed references", () => {
+    const identity = testMaterialGraph(
+      "exponential-logarithm",
+      "logarithm-definition",
+      "en",
+      "mathematics"
+    );
+    const source = {
+      ...identity,
+      contentHash: "hash-logarithm",
+      locale: "en" as const,
+      route: "materials/mathematics/exponential-logarithm",
+      section: "material" as const,
+      sourcePath: "materials/mathematics/exponential-logarithm",
+      syncedAt: 1,
+      text: "Logarithm",
+      title: "Logarithm",
+    };
+
+    expect(
+      buildContentSearchDocument({ ...source, hasMarkdownSource: true })
+    ).toHaveProperty(
+      "markdown_url",
+      "https://nakafa.com/en/materials/mathematics/exponential-logarithm.md"
+    );
+    expect(
+      buildContentSearchDocument({ ...source, hasMarkdownSource: false })
+    ).not.toHaveProperty("markdown_url");
   });
 });

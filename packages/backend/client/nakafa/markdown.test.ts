@@ -32,6 +32,10 @@ const articleRef = readNakafaContentRefFixture(
   "articles"
 );
 const quranRef = readNakafaContentRefFixture("en", "quran/1", "quran");
+const materialTopicRef: NakafaAgentContentRef = {
+  ...materialRef,
+  markdown_url: undefined,
+};
 const tryoutRef: NakafaAgentContentRef = {
   ...quranRef,
   section: "tryout",
@@ -94,7 +98,11 @@ describe("readNakafaMarkdown", () => {
     })
   );
 
-  it.live.each([Option.none(), Option.some(tryoutRef)])(
+  it.live.each([
+    Option.none(),
+    Option.some(tryoutRef),
+    Option.some(materialTopicRef),
+  ])(
     "returns no markdown when the current identity has no readable body",
     (ref) =>
       Effect.gen(function* () {

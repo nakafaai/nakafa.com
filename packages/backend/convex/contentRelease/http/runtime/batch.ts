@@ -72,9 +72,9 @@ const readPredecessorRuntimeBatch = Effect.fn(
 });
 
 /** Registers the server-authenticated active public batch read route. */
-export function registerPublicContentRuntimeBatchRoute(
-  app: HonoWithConvex<ActionCtx>
-) {
+export function registerPublicContentRuntimeBatchRoute<
+  Variables extends Record<string, unknown>,
+>(app: HonoWithConvex<ActionCtx, Variables>) {
   app.post(PUBLIC_CONTENT_RUNTIME_BATCH_PATH, async (context) => {
     const result = await runConvexProgram(
       readPublicRuntimeBatch(context.env, context.req.raw)

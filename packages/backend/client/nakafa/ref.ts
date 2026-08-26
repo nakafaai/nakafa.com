@@ -1,7 +1,7 @@
 import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
-  createNakafaContentRefFromGraphProjection,
+  createNakafaContentRefFromSummary,
   normalizeNakafaContentInput,
   parseNakafaUrlRoute,
 } from "@repo/contents/_lib/agent/refs";
@@ -55,6 +55,6 @@ export function resolveNakafaContentRef(convexUrl: string, input: string) {
     if (!reference) {
       return Option.none<NakafaAgentContentRef>();
     }
-    return createNakafaContentRefFromGraphProjection(reference);
+    return createNakafaContentRefFromSummary(reference);
   });
 }

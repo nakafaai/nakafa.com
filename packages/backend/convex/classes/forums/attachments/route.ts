@@ -176,9 +176,9 @@ const uploadForumAttachment = Effect.fn("classes.forums.attachments.upload")(
   }
 );
 /** Registers the browser-facing, capability-authenticated upload adapter. */
-export function registerForumAttachmentUploadRoute(
-  app: HonoWithConvex<ActionCtx>
-) {
+export function registerForumAttachmentUploadRoute<
+  Variables extends Record<string, unknown>,
+>(app: HonoWithConvex<ActionCtx, Variables>) {
   app.use(
     `${FORUM_ATTACHMENT_UPLOAD_PATH_PREFIX}/*`,
     cors({

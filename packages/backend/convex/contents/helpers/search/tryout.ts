@@ -72,6 +72,7 @@ function toTryoutSearchDocument(
       ...row.graph,
       contentHash: entry.rowHash,
       description: row.description,
+      hasMarkdownSource: false,
       locale,
       route: row.publicPath,
       section: "tryout",

@@ -17,6 +17,7 @@ export const contentSearchSourceValidator = v.object({
   ...learningGraphIdentityValidator.fields,
   contentHash: v.string(),
   description: v.optional(v.string()),
+  hasMarkdownSource: v.boolean(),
   locale: localeValidator,
   route: v.string(),
   section: nakafaSectionValidator,
@@ -35,28 +36,31 @@ export type ContentSearchSource = Infer<typeof contentSearchSourceValidator>;
  * Reference: Convex search indexes work over persisted document fields.
  * https://docs.convex.dev/search/text-search
  */
-export function buildContentSearchRef({
-  alignmentId,
-  assetId,
-  conceptId,
-  learningObjectId,
-  lensId,
-  locale,
-  route,
-  section,
-  sourcePath,
-}: Pick<
-  ContentSearchSource,
-  | "alignmentId"
-  | "assetId"
-  | "conceptId"
-  | "learningObjectId"
-  | "lensId"
-  | "locale"
-  | "route"
-  | "section"
-  | "sourcePath"
->) {
+export function buildContentSearchRef(
+  {
+    alignmentId,
+    assetId,
+    conceptId,
+    learningObjectId,
+    lensId,
+    locale,
+    route,
+    section,
+    sourcePath,
+  }: Pick<
+    ContentSearchSource,
+    | "alignmentId"
+    | "assetId"
+    | "conceptId"
+    | "learningObjectId"
+    | "lensId"
+    | "locale"
+    | "route"
+    | "section"
+    | "sourcePath"
+  >,
+  hasMarkdownSource: boolean
+) {
   const cleanPublicPath = cleanSlug(route);
   const cleanSourcePath = cleanSlug(sourcePath);
   const localizedPublicPath = `${locale}/${cleanPublicPath}`;
@@ -75,7 +79,7 @@ export function buildContentSearchRef({
     url: `${NAKAFA_CONTENT_BASE_URL}/${localizedPublicPath}`,
   };
 
-  if (section === "tryout") {
+  if (!hasMarkdownSource) {
     return ref;
   }
 
@@ -145,7 +149,7 @@ function isMdxModuleLine(line: string) {
 
 /** Converts source content into the derived content search document payload. */
 export function buildContentSearchDocument(source: ContentSearchSource) {
-  const ref = buildContentSearchRef(source);
+  const ref = buildContentSearchRef(source, source.hasMarkdownSource);
   const description = source.description ?? "";
   const text = getContentSearchText([source.title, description, source.text]);
 

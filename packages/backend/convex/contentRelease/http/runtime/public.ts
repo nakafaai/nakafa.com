@@ -72,9 +72,9 @@ const predecessorRuntimeRoute = Effect.fn(
 });
 
 /** Registers the server-authenticated active public content read route. */
-export function registerPublicContentRuntimeRoute(
-  app: HonoWithConvex<ActionCtx>
-) {
+export function registerPublicContentRuntimeRoute<
+  Variables extends Record<string, unknown>,
+>(app: HonoWithConvex<ActionCtx, Variables>) {
   app.post(PUBLIC_CONTENT_RUNTIME_PATH, async (context) => {
     const result = await runConvexProgram(
       publicRuntimeRoute(context.env, context.req.raw)
