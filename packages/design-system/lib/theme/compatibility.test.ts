@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { NodeFileSystem } from "@effect/platform-node";
+import { describe, expect, it } from "@effect/vitest";
 import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
 import {
   createThemeProfiles,
@@ -10,7 +11,6 @@ import {
   SEMANTIC_COLOR_TOKENS,
   toRgbProjection,
 } from "@repo/design-system/lib/theme/contract";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 const readProfiles = readThemeStyleSources().pipe(

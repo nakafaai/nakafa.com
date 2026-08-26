@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { NodeFileSystem } from "@effect/platform-node";
+import { describe, expect, it } from "@effect/vitest";
 import {
   createThemeProfiles,
   findTopLevelRule,
@@ -18,7 +19,6 @@ import {
   TEXT_ROLE_PAIRS,
 } from "@repo/design-system/lib/theme/contrast";
 import { themes } from "@repo/design-system/lib/theme/registry";
-import { describe, expect, it } from "@repo/testing/effect";
 import Color from "colorjs.io";
 import { Effect } from "effect";
 

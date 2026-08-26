@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { NodeFileSystem } from "@effect/platform-node";
+import { describe, expect, it } from "@effect/vitest";
 import {
   createThemeProfiles,
   findInlineTheme,
@@ -15,7 +16,6 @@ import {
   ThemeStyleSourceLoadError,
 } from "@repo/design-system/lib/theme/contract";
 import { themes } from "@repo/design-system/lib/theme/registry";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import postcss from "postcss";
 

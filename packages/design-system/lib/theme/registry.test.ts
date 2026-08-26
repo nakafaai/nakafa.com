@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { NodeFileSystem } from "@effect/platform-node";
+import { describe, expect, it } from "@effect/vitest";
 import {
   createThemeProfiles,
   findTopLevelRule,
@@ -14,7 +15,6 @@ import {
   getThemeShaderColor,
   themes,
 } from "@repo/design-system/lib/theme/registry";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 const readSources = readThemeStyleSources().pipe(
