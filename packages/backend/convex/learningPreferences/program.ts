@@ -5,7 +5,7 @@ import type {
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import {
-  getLearningPreferenceByUserId,
+  readLearningPreferenceByUserId,
   upsertPreferredCurriculumProgram,
 } from "@repo/backend/convex/learningPreferences/impl";
 import {
@@ -98,10 +98,9 @@ export const listCurriculumPrograms = Effect.fn(
 export const readCurrentCurriculumProgram = Effect.fn(
   "learningPreferences.readCurrentCurriculumProgram"
 )(function* (ctx: QueryCtx, locale: Locale, userId: Id<"users">) {
-  const preference = yield* Effect.tryPromise({
-    catch: toPreferenceIoError,
-    try: () => getLearningPreferenceByUserId(ctx, userId),
-  });
+  const preference = yield* readLearningPreferenceByUserId(ctx, userId).pipe(
+    Effect.mapError(toPreferenceIoError)
+  );
   if (!preference?.preferredCurriculumProgramKey) {
     return null;
   }
@@ -135,16 +134,12 @@ export const saveCurriculumProgram = Effect.fn(
     });
   }
   const now = yield* Clock.currentTimeMillis;
-  yield* Effect.tryPromise({
-    catch: toPreferenceIoError,
-    try: () =>
-      upsertPreferredCurriculumProgram({
-        ctx,
-        now,
-        programKey: program.key,
-        userId,
-      }),
-  });
+  yield* upsertPreferredCurriculumProgram({
+    ctx,
+    now,
+    programKey: program.key,
+    userId,
+  }).pipe(Effect.mapError(toPreferenceIoError));
   return {
     preferredCurriculumProgramKey: program.key,
     program,
