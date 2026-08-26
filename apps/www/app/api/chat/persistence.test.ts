@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ModelIdSchema } from "@repo/ai/config/model";
 import type {
   NinaContextSnapshot,
@@ -6,7 +7,7 @@ import type {
 } from "@repo/ai/nina/memory/pack";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import { ChatMutationError, ChatQueryError } from "@/app/api/chat/errors";
 import {
   createChatWithMessage,
@@ -77,23 +78,21 @@ function withNinaContext() {
 }
 
 /** Returns one typed chat ID through the public persistence path. */
-async function savedChatId() {
+const savedChatId = Effect.fn("ChatPersistenceTest.savedChatId")(function* () {
   mocks.fetchMutation.mockResolvedValueOnce({ chatId: "chat_existing" });
 
-  const chatId = await Effect.runPromise(
-    createChatWithMessage({
-      message,
-      modelId,
-      ...withNinaContext(),
-      token: "session-token",
-    })
-  );
+  const chatId = yield* createChatWithMessage({
+    message,
+    modelId,
+    ...withNinaContext(),
+    token: "session-token",
+  });
 
   vi.clearAllMocks();
   mocks.mapUIMessagePartsToDBParts.mockReturnValue([]);
 
   return chatId;
-}
+});
 
 describe("app/api/chat/persistence", () => {
   beforeEach(() => {
@@ -106,301 +105,324 @@ describe("app/api/chat/persistence", () => {
     mocks.mapUIMessagePartsToDBParts.mockReturnValue([]);
   });
 
-  it("passes the selected model when creating a chat with the first user message", async () => {
-    mocks.fetchMutation.mockResolvedValue({ chatId: "chat_new" });
+  it.effect(
+    "passes the selected model when creating a chat with the first user message",
+    () =>
+      Effect.gen(function* () {
+        mocks.fetchMutation.mockResolvedValue({ chatId: "chat_new" });
 
-    const chatId = await Effect.runPromise(
-      createChatWithMessage({
-        message,
-        modelId,
-        ...withNinaContext(),
-        token: "session-token",
-      })
-    );
-
-    expect(chatId).toBe("chat_new");
-    expect(mocks.fetchMutation).toHaveBeenCalledWith(
-      expect.anything(),
-      {
-        message: {
-          identifier: "message-1",
+        const chatId = yield* createChatWithMessage({
+          message,
           modelId,
-          ninaContextSnapshot,
-          ninaContextTransition,
-          role: "user",
-        },
-        parts: [],
-        type: "study",
-      },
-      { token: "session-token" }
-    );
-  });
+          ...withNinaContext(),
+          token: "session-token",
+        });
 
-  it("maps chat creation failures into the mutation error contract", async () => {
-    const cause = new Error("mutation unavailable");
-    mocks.fetchMutation.mockRejectedValueOnce(cause);
-
-    const error = await Effect.runPromise(
-      createChatWithMessage({
-        message,
-        modelId,
-        ...withNinaContext(),
-        token: "session-token",
-      }).pipe(Effect.flip)
-    );
-
-    expect(error).toBeInstanceOf(ChatMutationError);
-    expect(error).toMatchObject({
-      cause,
-      operation: "create-chat",
-    });
-  });
-
-  it("passes the selected model when saving a message to an existing chat", async () => {
-    const chatId = await savedChatId();
-    mocks.fetchQuery.mockResolvedValue(null);
-
-    const result = await Effect.runPromise(
-      saveChatMessage({
-        chatId,
-        message,
-        modelId,
-        ...withNinaContext(),
-        token: "session-token",
+        expect(chatId).toBe("chat_new");
+        expect(mocks.fetchMutation).toHaveBeenCalledWith(
+          expect.anything(),
+          {
+            message: {
+              identifier: "message-1",
+              modelId,
+              ninaContextSnapshot,
+              ninaContextTransition,
+              role: "user",
+            },
+            parts: [],
+            type: "study",
+          },
+          { token: "session-token" }
+        );
       })
-    );
+  );
 
-    expect(result).toBe(chatId);
-    expect(mocks.fetchMutation).toHaveBeenCalledWith(
-      expect.anything(),
-      {
-        message: {
+  it.effect(
+    "maps chat creation failures into the mutation error contract",
+    () =>
+      Effect.gen(function* () {
+        const cause = new Error("mutation unavailable");
+        mocks.fetchMutation.mockRejectedValueOnce(cause);
+
+        const error = yield* createChatWithMessage({
+          message,
+          modelId,
+          ...withNinaContext(),
+          token: "session-token",
+        }).pipe(Effect.flip);
+
+        expect(error).toBeInstanceOf(ChatMutationError);
+        expect(error).toMatchObject({
+          cause,
+          operation: "create-chat",
+        });
+      })
+  );
+
+  it.effect(
+    "passes the selected model when saving a message to an existing chat",
+    () =>
+      Effect.gen(function* () {
+        const chatId = yield* savedChatId();
+        mocks.fetchQuery.mockResolvedValue(null);
+
+        const result = yield* saveChatMessage({
           chatId,
-          identifier: "message-1",
+          message,
           modelId,
-          ninaContextSnapshot,
-          ninaContextTransition,
-          role: "user",
-        },
-        parts: [],
-      },
-      { token: "session-token" }
-    );
-  });
+          ...withNinaContext(),
+          token: "session-token",
+        });
 
-  it("maps message save failures into the mutation error contract", async () => {
-    const chatId = await savedChatId();
-    const cause = new Error("mutation unavailable");
-    mocks.fetchMutation.mockRejectedValueOnce(cause);
+        expect(result).toBe(chatId);
+        expect(mocks.fetchMutation).toHaveBeenCalledWith(
+          expect.anything(),
+          {
+            message: {
+              chatId,
+              identifier: "message-1",
+              modelId,
+              ninaContextSnapshot,
+              ninaContextTransition,
+              role: "user",
+            },
+            parts: [],
+          },
+          { token: "session-token" }
+        );
+      })
+  );
 
-    const error = await Effect.runPromise(
-      saveChatMessage({
+  it.effect("maps message save failures into the mutation error contract", () =>
+    Effect.gen(function* () {
+      const chatId = yield* savedChatId();
+      const cause = new Error("mutation unavailable");
+      mocks.fetchMutation.mockRejectedValueOnce(cause);
+
+      const error = yield* saveChatMessage({
         chatId,
         message,
         modelId,
         ...withNinaContext(),
         token: "session-token",
-      }).pipe(Effect.flip)
-    );
+      }).pipe(Effect.flip);
 
-    expect(error).toBeInstanceOf(ChatMutationError);
-    expect(error).toMatchObject({
-      cause,
-      operation: "save-message",
-    });
-  });
+      expect(error).toBeInstanceOf(ChatMutationError);
+      expect(error).toMatchObject({
+        cause,
+        operation: "save-message",
+      });
+    })
+  );
 
-  it("loads the newest stored Nina context for pinned-chat continuation", async () => {
-    const chatId = await savedChatId();
-    mocks.fetchQuery.mockResolvedValue(ninaContextSnapshot);
+  it.effect(
+    "loads the newest stored Nina context for pinned-chat continuation",
+    () =>
+      Effect.gen(function* () {
+        const chatId = yield* savedChatId();
+        mocks.fetchQuery.mockResolvedValue(ninaContextSnapshot);
 
-    const result = await Effect.runPromise(
-      loadPinnedNinaContext({
-        chatId,
-        messageIdentifier: message.id,
-        token: "session-token",
-      })
-    );
-
-    expect(result).toEqual(ninaContextSnapshot);
-    expect(mocks.fetchQuery).toHaveBeenCalledWith(
-      expect.anything(),
-      { chatId, messageIdentifier: message.id },
-      { token: "session-token" }
-    );
-  });
-
-  it("ignores missing pinned Nina context instead of inventing chat context", async () => {
-    const chatId = await savedChatId();
-    mocks.fetchQuery.mockResolvedValue(null);
-
-    const result = await Effect.runPromise(
-      loadPinnedNinaContext({
-        chatId,
-        messageIdentifier: message.id,
-        token: "session-token",
-      })
-    );
-
-    expect(result).toBeUndefined();
-  });
-
-  it("maps pinned-context failures into the query error contract", async () => {
-    const chatId = await savedChatId();
-    const cause = new Error("query unavailable");
-    mocks.fetchQuery.mockRejectedValueOnce(cause);
-
-    const error = await Effect.runPromise(
-      loadPinnedNinaContext({
-        chatId,
-        messageIdentifier: message.id,
-        token: "session-token",
-      }).pipe(Effect.flip)
-    );
-
-    expect(error).toBeInstanceOf(ChatQueryError);
-    expect(error).toMatchObject({
-      cause,
-      operation: "load-context",
-    });
-  });
-
-  it("saves an existing chat rewrite through one atomic Convex mutation", async () => {
-    const chatId = await savedChatId();
-
-    await Effect.runPromise(
-      saveChatMessage({
-        chatId,
-        message,
-        modelId,
-        ...withNinaContext(),
-        token: "session-token",
-      })
-    );
-
-    expect(mocks.fetchQuery).not.toHaveBeenCalled();
-    expect(mocks.fetchMutation).toHaveBeenCalledTimes(1);
-    expect(mocks.fetchMutation).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        message: expect.objectContaining({
+        const result = yield* loadPinnedNinaContext({
           chatId,
-          modelId,
-        }),
-      }),
-      { token: "session-token" }
-    );
-  });
+          messageIdentifier: message.id,
+          token: "session-token",
+        });
 
-  it("loads rewrite-aware pinned context before saving a replacement", async () => {
-    const chatId = await savedChatId();
-    mocks.fetchQuery.mockResolvedValueOnce(ninaContextSnapshot);
+        expect(result).toEqual(ninaContextSnapshot);
+        expect(mocks.fetchQuery).toHaveBeenCalledWith(
+          expect.anything(),
+          { chatId, messageIdentifier: message.id },
+          { token: "session-token" }
+        );
+      })
+  );
 
-    const pinnedContext = await Effect.runPromise(
-      loadPinnedNinaContext({
+  it.effect(
+    "ignores missing pinned Nina context instead of inventing chat context",
+    () =>
+      Effect.gen(function* () {
+        const chatId = yield* savedChatId();
+        mocks.fetchQuery.mockResolvedValue(null);
+
+        const result = yield* loadPinnedNinaContext({
+          chatId,
+          messageIdentifier: message.id,
+          token: "session-token",
+        });
+
+        expect(result).toBeUndefined();
+      })
+  );
+
+  it.effect("maps pinned-context failures into the query error contract", () =>
+    Effect.gen(function* () {
+      const chatId = yield* savedChatId();
+      const cause = new Error("query unavailable");
+      mocks.fetchQuery.mockRejectedValueOnce(cause);
+
+      const error = yield* loadPinnedNinaContext({
         chatId,
         messageIdentifier: message.id,
         token: "session-token",
+      }).pipe(Effect.flip);
+
+      expect(error).toBeInstanceOf(ChatQueryError);
+      expect(error).toMatchObject({
+        cause,
+        operation: "load-context",
+      });
+    })
+  );
+
+  it.effect(
+    "saves an existing chat rewrite through one atomic Convex mutation",
+    () =>
+      Effect.gen(function* () {
+        const chatId = yield* savedChatId();
+
+        yield* saveChatMessage({
+          chatId,
+          message,
+          modelId,
+          ...withNinaContext(),
+          token: "session-token",
+        });
+
+        expect(mocks.fetchQuery).not.toHaveBeenCalled();
+        expect(mocks.fetchMutation).toHaveBeenCalledTimes(1);
+        expect(mocks.fetchMutation).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({
+            message: expect.objectContaining({
+              chatId,
+              modelId,
+            }),
+          }),
+          { token: "session-token" }
+        );
       })
-    );
-    await Effect.runPromise(
-      saveChatMessage({
+  );
+
+  it.effect(
+    "loads rewrite-aware pinned context before saving a replacement",
+    () =>
+      Effect.gen(function* () {
+        const chatId = yield* savedChatId();
+        mocks.fetchQuery.mockResolvedValueOnce(ninaContextSnapshot);
+
+        const pinnedContext = yield* loadPinnedNinaContext({
+          chatId,
+          messageIdentifier: message.id,
+          token: "session-token",
+        });
+        yield* saveChatMessage({
+          chatId,
+          message,
+          modelId,
+          ...withNinaContext(),
+          token: "session-token",
+        });
+
+        expect(pinnedContext).toEqual(ninaContextSnapshot);
+        expect(mocks.fetchQuery.mock.invocationCallOrder[0]).toBeLessThan(
+          mocks.fetchMutation.mock.invocationCallOrder[0]
+        );
+        expect(mocks.fetchQuery).toHaveBeenCalledWith(
+          expect.anything(),
+          { chatId, messageIdentifier: message.id },
+          { token: "session-token" }
+        );
+      })
+  );
+
+  it.effect("loads paginated messages until the page stream is done", () =>
+    Effect.gen(function* () {
+      const chatId = yield* savedChatId();
+      const newerMessage = { ...message, id: "newer" };
+      const olderMessage = { ...message, id: "older" };
+      mocks.fetchQuery
+        .mockResolvedValueOnce({
+          continueCursor: "cursor-1",
+          isDone: false,
+          page: [newerMessage],
+        })
+        .mockResolvedValueOnce({
+          continueCursor: "",
+          isDone: true,
+          page: [olderMessage],
+        });
+
+      const messages = yield* loadMessages({
         chatId,
-        message,
-        modelId,
-        ...withNinaContext(),
         token: "session-token",
-      })
-    );
-
-    expect(pinnedContext).toEqual(ninaContextSnapshot);
-    expect(mocks.fetchQuery.mock.invocationCallOrder[0]).toBeLessThan(
-      mocks.fetchMutation.mock.invocationCallOrder[0]
-    );
-    expect(mocks.fetchQuery).toHaveBeenCalledWith(
-      expect.anything(),
-      { chatId, messageIdentifier: message.id },
-      { token: "session-token" }
-    );
-  });
-
-  it("loads paginated messages until the page stream is done", async () => {
-    const chatId = await savedChatId();
-    const newerMessage = { ...message, id: "newer" };
-    const olderMessage = { ...message, id: "older" };
-    mocks.fetchQuery
-      .mockResolvedValueOnce({
-        continueCursor: "cursor-1",
-        isDone: false,
-        page: [newerMessage],
-      })
-      .mockResolvedValueOnce({
-        continueCursor: "",
-        isDone: true,
-        page: [olderMessage],
       });
 
-    const messages = await Effect.runPromise(
-      loadMessages({ chatId, token: "session-token" })
-    );
-
-    expect(messages).toEqual([olderMessage, newerMessage]);
-    expect(mocks.fetchQuery).toHaveBeenNthCalledWith(
-      1,
-      expect.anything(),
-      {
-        chatId,
-        paginationOpts: {
-          cursor: null,
-          numItems: expect.any(Number),
+      expect(messages).toEqual([olderMessage, newerMessage]);
+      expect(mocks.fetchQuery).toHaveBeenNthCalledWith(
+        1,
+        expect.anything(),
+        {
+          chatId,
+          paginationOpts: {
+            cursor: null,
+            numItems: expect.any(Number),
+          },
         },
-      },
-      { token: "session-token" }
-    );
-    expect(mocks.fetchQuery).toHaveBeenNthCalledWith(
-      2,
-      expect.anything(),
-      {
-        chatId,
-        paginationOpts: {
-          cursor: "cursor-1",
-          numItems: expect.any(Number),
+        { token: "session-token" }
+      );
+      expect(mocks.fetchQuery).toHaveBeenNthCalledWith(
+        2,
+        expect.anything(),
+        {
+          chatId,
+          paginationOpts: {
+            cursor: "cursor-1",
+            numItems: expect.any(Number),
+          },
         },
-      },
-      { token: "session-token" }
-    );
-  });
+        { token: "session-token" }
+      );
+    })
+  );
 
-  it("maps message page failures into the query error contract", async () => {
-    const chatId = await savedChatId();
-    const cause = new Error("query unavailable");
-    mocks.fetchQuery.mockRejectedValueOnce(cause);
+  it.effect("maps message page failures into the query error contract", () =>
+    Effect.gen(function* () {
+      const chatId = yield* savedChatId();
+      const cause = new Error("query unavailable");
+      mocks.fetchQuery.mockRejectedValueOnce(cause);
 
-    const error = await Effect.runPromise(
-      loadMessages({ chatId, token: "session-token" }).pipe(Effect.flip)
-    );
+      const error = yield* loadMessages({
+        chatId,
+        token: "session-token",
+      }).pipe(Effect.flip);
 
-    expect(error).toBeInstanceOf(ChatQueryError);
-    expect(error).toMatchObject({
-      cause,
-      operation: "load-messages",
-    });
-  });
+      expect(error).toBeInstanceOf(ChatQueryError);
+      expect(error).toMatchObject({
+        cause,
+        operation: "load-messages",
+      });
+    })
+  );
 
-  it("stops loading when compression trims the retained transcript", async () => {
-    const chatId = await savedChatId();
-    mocks.fetchQuery.mockResolvedValue({
-      continueCursor: "cursor-1",
-      isDone: false,
-      page: [message],
-    });
-    mocks.compressMessages.mockReturnValue({ messages: [], tokens: 0 });
+  it.effect(
+    "stops loading when compression trims the retained transcript",
+    () =>
+      Effect.gen(function* () {
+        const chatId = yield* savedChatId();
+        mocks.fetchQuery.mockResolvedValue({
+          continueCursor: "cursor-1",
+          isDone: false,
+          page: [message],
+        });
+        mocks.compressMessages.mockReturnValue({ messages: [], tokens: 0 });
 
-    const messages = await Effect.runPromise(
-      loadMessages({ chatId, token: "session-token" })
-    );
+        const messages = yield* loadMessages({
+          chatId,
+          token: "session-token",
+        });
 
-    expect(messages).toEqual([]);
-    expect(mocks.fetchQuery).toHaveBeenCalledTimes(1);
-  });
+        expect(messages).toEqual([]);
+        expect(mocks.fetchQuery).toHaveBeenCalledTimes(1);
+      })
+  );
 });
