@@ -168,7 +168,9 @@ export function ProjectileClient({
                 motion={activeScenario.motion}
                 shouldReduceMotion={shouldReduceMotion}
               />
-            ) : null}
+            ) : (
+              <ProjectileSceneLoading />
+            )}
           </section>
         </div>
       </div>

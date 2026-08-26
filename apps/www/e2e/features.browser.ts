@@ -137,12 +137,10 @@ const expectProjectileInteraction = Effect.fn(
     name: "Cannonball projectile analysis visual",
   });
   const canvas = visual.locator("canvas");
-  const readiness = canvas.or(visual.getByRole("status"));
   const highArc = page.getByRole("button", { name: "High Arc" });
 
   yield* Effect.promise(() => expect(visual).toHaveCount(1));
   yield* Effect.promise(() => visual.scrollIntoViewIfNeeded());
-  yield* Effect.promise(() => expect(readiness).toBeVisible({ timeout: 5000 }));
   yield* Effect.promise(() => expect(canvas).toBeVisible({ timeout: 30_000 }));
   yield* Effect.promise(() => highArc.click());
   yield* Effect.promise(() =>
@@ -200,6 +198,7 @@ const expectProjectileDeferred = Effect.fn(
 
   yield* Effect.promise(() => expect(visual).toHaveCount(1));
   yield* Effect.promise(() => expect(visual.locator("canvas")).toHaveCount(0));
+  yield* Effect.promise(() => expect(visual.getByRole("status")).toBeVisible());
 });
 
 for (const viewport of targetViewports) {
