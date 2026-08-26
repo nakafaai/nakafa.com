@@ -9,8 +9,8 @@ import {
   hasBrowserPrivacySignal,
   resolveAnalyticsConsentState,
 } from "@repo/analytics/consent";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, Option, Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 const grantedAnonymousConsent = Schema.decodeSync(
   AnonymousAnalyticsConsentRecordSchema
@@ -37,15 +37,17 @@ const retainedAnonymousDenial = Schema.decodeSync(
 });
 
 describe("analytics consent contract", () => {
-  it("round-trips the current anonymous consent record", async () => {
-    const encoded = await Effect.runPromise(
-      encodeAnonymousAnalyticsConsent(grantedAnonymousConsent)
-    );
+  it.effect("round-trips the current anonymous consent record", () =>
+    Effect.gen(function* () {
+      const encoded = yield* encodeAnonymousAnalyticsConsent(
+        grantedAnonymousConsent
+      );
 
-    expect(
-      Option.getOrUndefined(decodeAnonymousAnalyticsConsent(encoded))
-    ).toEqual(grantedAnonymousConsent);
-  });
+      expect(
+        Option.getOrUndefined(decodeAnonymousAnalyticsConsent(encoded))
+      ).toEqual(grantedAnonymousConsent);
+    })
+  );
 
   it("creates a record governed by the current notice", () => {
     expect(createAnonymousAnalyticsConsent("denied", 100)).toEqual({
