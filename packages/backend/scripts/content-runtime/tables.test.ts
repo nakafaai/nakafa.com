@@ -22,7 +22,8 @@ describe("content runtime tables", () => {
     () =>
       Effect.gen(function* () {
         const releaseTables = Object.keys(contentReleaseSchema).filter(
-          (table) => table !== "contentState"
+          (table) =>
+            table !== "contentState" && table !== "contentPredecessorReads"
         );
         const expected = [
           ...releaseTables,
@@ -31,6 +32,7 @@ describe("content runtime tables", () => {
         ];
 
         expect(CONTENT_RUNTIME_TABLES).toEqual(expected);
+        expect(CONTENT_RUNTIME_TABLES).not.toContain("contentPredecessorReads");
         expect(new Set(CONTENT_RUNTIME_TABLES).size).toBe(expected.length);
         expect(yield* validateContentRuntimeTableDefinitions).toHaveLength(
           expected.length
