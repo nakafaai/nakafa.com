@@ -4,6 +4,7 @@ import { NodeFileSystem } from "@effect/platform-node";
 import {
   createThemeProfiles,
   findTopLevelRule,
+  type ProfileSource,
   readDirectValue,
   readOklchChannels,
   readThemeStyleSources,
@@ -17,9 +18,9 @@ import {
   TEXT_ROLE_PAIRS,
 } from "@repo/design-system/lib/theme/contrast";
 import { themes } from "@repo/design-system/lib/theme/registry";
+import { describe, expect, it } from "@repo/testing/effect";
 import Color from "colorjs.io";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 const NORMAL_TEXT_MINIMUM_CONTRAST = 4.5;
 const NON_TEXT_MINIMUM_CONTRAST = 3;
@@ -57,13 +58,13 @@ interface ThemeCohesionViolation {
   readonly tokens: readonly string[];
 }
 
-const sources = await Effect.runPromise(
-  readThemeStyleSources().pipe(Effect.provide(NodeFileSystem.layer))
-);
 const concreteThemeNames = themes.flatMap((theme) =>
   theme.appearance === "dynamic" ? [] : [theme.value]
 );
-const profiles = createThemeProfiles(concreteThemeNames, sources);
+const readProfiles = readThemeStyleSources().pipe(
+  Effect.map((sources) => createThemeProfiles(concreteThemeNames, sources)),
+  Effect.provide(NodeFileSystem.layer)
+);
 const textPairs = TEXT_ROLE_PAIRS.map(
   ([foreground, surface]): ContrastPair => ({
     against: `--${surface}`,
@@ -92,7 +93,10 @@ const nonTextPairs = NON_TEXT_ROLE_PAIRS.map(
 );
 
 /** Finds text or non-text semantic tokens below their contrast requirement. */
-function findContrastViolations(pairs: readonly ContrastPair[]) {
+function findContrastViolations(
+  profiles: readonly ProfileSource[],
+  pairs: readonly ContrastPair[]
+) {
   return profiles.flatMap((profile) => {
     const rule = findTopLevelRule(profile.root, profile.selector);
     if (!rule) {
@@ -115,7 +119,7 @@ function findContrastViolations(pairs: readonly ContrastPair[]) {
 }
 
 /** Finds missing, invalid, translucent, or out-of-gamut semantic colors. */
-function findThemeColorViolations() {
+function findThemeColorViolations(profiles: readonly ProfileSource[]) {
   const violations: ThemeColorViolation[] = [];
 
   for (const profile of profiles) {
@@ -169,7 +173,7 @@ function getHueDistance(first: number, second: number) {
 }
 
 /** Finds border and input colors that no longer form one visual family. */
-function findBorderInputFamilyViolations() {
+function findBorderInputFamilyViolations(profiles: readonly ProfileSource[]) {
   const violations: ThemeCohesionViolation[] = [];
 
   for (const profile of profiles) {
@@ -215,7 +219,7 @@ function findBorderInputFamilyViolations() {
 }
 
 /** Finds semantic borders that disappear against their owning surfaces. */
-function findErasedBoundaries() {
+function findErasedBoundaries(profiles: readonly ProfileSource[]) {
   const violations: ThemeCohesionViolation[] = [];
 
   for (const profile of profiles) {
@@ -246,7 +250,7 @@ function findErasedBoundaries() {
 }
 
 /** Finds status colors outside their declared chroma and hue families. */
-function findStatusColorFamilyViolations() {
+function findStatusColorFamilyViolations(profiles: readonly ProfileSource[]) {
   const violations: ThemeCohesionViolation[] = [];
 
   for (const profile of profiles) {
@@ -281,27 +285,47 @@ function findStatusColorFamilyViolations() {
 }
 
 describe("theme color quality", () => {
-  it("authors every semantic color as opaque, sRGB-gamut OKLCH", () => {
-    expect(findThemeColorViolations()).toEqual([]);
-  });
+  it.effect("authors every semantic color as opaque, sRGB-gamut OKLCH", () =>
+    Effect.gen(function* () {
+      const profiles = yield* readProfiles;
+      expect(findThemeColorViolations(profiles)).toEqual([]);
+    })
+  );
 
-  it("meets 4.5:1 for every normal-text pair without rounding", () => {
-    expect(findContrastViolations(textPairs)).toEqual([]);
-  });
+  it.effect("meets 4.5:1 for every normal-text pair without rounding", () =>
+    Effect.gen(function* () {
+      const profiles = yield* readProfiles;
+      expect(findContrastViolations(profiles, textPairs)).toEqual([]);
+    })
+  );
 
-  it("meets 3:1 for opaque focus and chart roles without rounding", () => {
-    expect(findContrastViolations(nonTextPairs)).toEqual([]);
-  });
+  it.effect("meets 3:1 for opaque focus and chart roles without rounding", () =>
+    Effect.gen(function* () {
+      const profiles = yield* readProfiles;
+      expect(findContrastViolations(profiles, nonTextPairs)).toEqual([]);
+    })
+  );
 
-  it("keeps structural and control borders in one local color family", () => {
-    expect(findBorderInputFamilyViolations()).toEqual([]);
-  });
+  it.effect(
+    "keeps structural and control borders in one local color family",
+    () =>
+      Effect.gen(function* () {
+        const profiles = yield* readProfiles;
+        expect(findBorderInputFamilyViolations(profiles)).toEqual([]);
+      })
+  );
 
-  it("keeps structural and sidebar boundaries perceptible", () => {
-    expect(findErasedBoundaries()).toEqual([]);
-  });
+  it.effect("keeps structural and sidebar boundaries perceptible", () =>
+    Effect.gen(function* () {
+      const profiles = yield* readProfiles;
+      expect(findErasedBoundaries(profiles)).toEqual([]);
+    })
+  );
 
-  it("keeps status roles inside familiar semantic hue families", () => {
-    expect(findStatusColorFamilyViolations()).toEqual([]);
-  });
+  it.effect("keeps status roles inside familiar semantic hue families", () =>
+    Effect.gen(function* () {
+      const profiles = yield* readProfiles;
+      expect(findStatusColorFamilyViolations(profiles)).toEqual([]);
+    })
+  );
 });
