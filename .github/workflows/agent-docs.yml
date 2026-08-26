@@ -3,6 +3,8 @@ name: CI
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  merge_group:
+    types: [checks_requested]
   push:
     branches: [main]
 
@@ -46,7 +48,7 @@ jobs:
 
   production:
     name: Production
-    if: github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih')
+    if: github.event_name == 'push' || github.event_name == 'merge_group' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih')
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
@@ -418,7 +420,7 @@ jobs:
     env:
       PRODUCTION_RESULT: ${{ needs.production.result }}
       QUALITY_RESULT: ${{ needs.quality.result }}
-      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') }}
+      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || github.event_name == 'merge_group' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') }}
     steps:
       - name: Verify acceptance jobs
         run: |

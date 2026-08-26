@@ -3,6 +3,8 @@ name: React
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  merge_group:
+    types: [checks_requested]
   push:
     branches: [main]
 
@@ -28,8 +30,8 @@ jobs:
           install: false
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Run React Doctor for pull request
-        if: github.event_name == 'pull_request'
+      - name: Run React Doctor for candidate
+        if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
         run: pnpm run doctor --verbose --scope changed --base origin/main --include-untracked
       - name: Run React Doctor for push
         if: github.event_name == 'push'
