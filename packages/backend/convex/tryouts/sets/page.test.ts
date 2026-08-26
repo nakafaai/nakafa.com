@@ -1,10 +1,11 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
-  TryoutCatalogRowSchema,
   type TryoutSet,
+  TryoutSetSchema,
 } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
@@ -22,110 +23,132 @@ import {
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout-source";
+import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 /** Creates another valid set in the same signed track for pagination tests. */
-function makeSecondSet(source: TryoutSet) {
-  const row = Schema.decodeSync(TryoutCatalogRowSchema)({
-    ...source,
-    order: source.order + 1,
-    publicPath: `${source.publicPath}-2`,
-    setKey: "set-2",
-    title: "Set 2",
-  });
-  if (row.kind !== "set") {
-    throw new Error("Expected a signed try-out set fixture.");
+const makeSecondSet = Effect.fn("tryouts.sets.page.test.makeSecondSet")(
+  function* (source: TryoutSet) {
+    return yield* Schema.decodeEffect(TryoutSetSchema)({
+      ...source,
+      order: source.order + 1,
+      publicPath: `${source.publicPath}-2`,
+      setKey: "set-2",
+      title: "Set 2",
+    }).pipe(Effect.orDie);
   }
-  return row;
-}
+);
 
 describe("tryouts/sets/page", () => {
-  it("invalidates a loaded cursor when user progress changes its rows", async () => {
-    const t = convexTest(schema, convexModules);
-    const progressId = await t.mutation(async (ctx) => {
-      const fixture = await activateTryoutStartSource(ctx, "visible");
-      const userId = await insertTryoutUser(ctx, {
-        authId: "auth-signed-page",
-        email: "signed-page@example.com",
-        name: "Signed Page",
-      });
-      const attemptId = await insertTryoutAttempt(ctx, {
-        scoringStrategy: "raw",
-        sectionSnapshots: [],
-        set: fixture.set,
-        userId,
-      });
-      return ctx.db.insert("tryoutSetProgress", {
-        attemptNumber: 1,
-        countryKey: TRYOUT_START_COUNTRY,
-        examKey: TRYOUT_START_EXAM,
-        latestAttemptId: attemptId,
-        appLocale: "id",
-        publishedScore: null,
-        setIdentity: tryoutCatalogNodeIdentity({
-          appLocale: AppLocaleSchema.make("id"),
-          countryKey: TRYOUT_START_COUNTRY,
-          examKey: TRYOUT_START_EXAM,
-          kind: "set",
-          setKey: TRYOUT_START_SET,
-          trackKey: TRYOUT_START_TRACK,
-        }),
-        setKey: TRYOUT_START_SET,
-        status: "in-progress",
-        statusRank: 1,
-        trackKey: TRYOUT_START_TRACK,
-        updatedAt: 1,
-        userId,
-      });
-    });
+  it.effect(
+    "invalidates a loaded cursor when user progress changes its rows",
+    () =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        const progressId = yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            runConvexProgram(
+              Effect.gen(function* () {
+                const fixture = yield* Effect.promise(() =>
+                  activateTryoutStartSource(ctx, "visible")
+                );
+                const userId = yield* Effect.promise(() =>
+                  insertTryoutUser(ctx, {
+                    authId: "auth-signed-page",
+                    email: "signed-page@example.com",
+                    name: "Signed Page",
+                  })
+                );
+                const attemptId = yield* Effect.promise(() =>
+                  insertTryoutAttempt(ctx, {
+                    scoringStrategy: "raw",
+                    sectionSnapshots: [],
+                    set: fixture.set,
+                    userId,
+                  })
+                );
+                return yield* Effect.promise(() =>
+                  ctx.db.insert("tryoutSetProgress", {
+                    attemptNumber: 1,
+                    countryKey: TRYOUT_START_COUNTRY,
+                    examKey: TRYOUT_START_EXAM,
+                    latestAttemptId: attemptId,
+                    appLocale: "id",
+                    publishedScore: null,
+                    setIdentity: tryoutCatalogNodeIdentity({
+                      appLocale: AppLocaleSchema.make("id"),
+                      countryKey: TRYOUT_START_COUNTRY,
+                      examKey: TRYOUT_START_EXAM,
+                      kind: "set",
+                      setKey: TRYOUT_START_SET,
+                      trackKey: TRYOUT_START_TRACK,
+                    }),
+                    setKey: TRYOUT_START_SET,
+                    status: "in-progress",
+                    statusRank: 1,
+                    trackKey: TRYOUT_START_TRACK,
+                    updatedAt: 1,
+                    userId,
+                  })
+                );
+              })
+            )
+          )
+        );
 
-    const failure = await t.query(async (ctx) => {
-      const catalog = await Effect.runPromise(loadTryoutCatalog(ctx, "id"));
-      const firstSet = catalog.entries.find(
-        ({ row }) => row.kind === "set" && row.appLocale === "id"
-      )?.row;
-      const progress = await ctx.db.get(progressId);
-      if (!(firstSet?.kind === "set" && progress)) {
-        throw new Error("Expected signed pagination fixtures.");
-      }
-      const secondSet = makeSecondSet(firstSet);
-      const initialRows: readonly PublishedSetRow[] = [
-        { progress: null, set: firstSet },
-        { progress: null, set: secondSet },
-      ];
-      const firstPage = await Effect.runPromise(
-        paginatePublishedSets(
-          catalog,
-          { cursor: null, numItems: 1 },
-          initialRows
-        )
-      );
-      const changedRows: readonly PublishedSetRow[] = [
-        { progress, set: firstSet },
-        { progress: null, set: secondSet },
-      ];
-      return Effect.runPromise(
-        paginatePublishedSets(
-          catalog,
-          { cursor: firstPage.continueCursor, numItems: 1 },
-          changedRows
-        ).pipe(
-          Effect.match({
-            onFailure: (error) => ({
-              code: error.code,
-              message: error.message,
-            }),
-            onSuccess: () => null,
-          })
-        )
-      );
-    });
+        const failure = yield* Effect.promise(() =>
+          t.query((ctx) =>
+            runConvexProgram(
+              Effect.gen(function* () {
+                const catalog = yield* loadTryoutCatalog(ctx, "id");
+                const firstSet = catalog.entries.find(
+                  ({ row }) => row.kind === "set" && row.appLocale === "id"
+                )?.row;
+                const progress = yield* Effect.promise(() =>
+                  ctx.db.get(progressId)
+                );
+                if (!(firstSet?.kind === "set" && progress)) {
+                  return yield* Effect.die(
+                    "Expected signed pagination fixtures."
+                  );
+                }
+                const secondSet = yield* makeSecondSet(firstSet);
+                const initialRows: readonly PublishedSetRow[] = [
+                  { progress: null, set: firstSet },
+                  { progress: null, set: secondSet },
+                ];
+                const firstPage = yield* paginatePublishedSets(
+                  catalog,
+                  { cursor: null, numItems: 1 },
+                  initialRows
+                );
+                const changedRows: readonly PublishedSetRow[] = [
+                  { progress, set: firstSet },
+                  { progress: null, set: secondSet },
+                ];
+                return yield* paginatePublishedSets(
+                  catalog,
+                  { cursor: firstPage.continueCursor, numItems: 1 },
+                  changedRows
+                ).pipe(
+                  Effect.match({
+                    onFailure: (error) => ({
+                      code: error.code,
+                      message: error.message,
+                    }),
+                    onSuccess: () => null,
+                  })
+                );
+              })
+            )
+          )
+        );
 
-    expect(failure).toMatchObject({
-      code: "INVALID_TRYOUT_SET_CURSOR",
-      message: "InvalidCursor: The try-out set pagination state changed.",
-    });
-  });
+        expect(failure).toMatchObject({
+          code: "INVALID_TRYOUT_SET_CURSOR",
+          message: "InvalidCursor: The try-out set pagination state changed.",
+        });
+      })
+  );
 });
