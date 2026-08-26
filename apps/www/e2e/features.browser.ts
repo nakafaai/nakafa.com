@@ -169,10 +169,13 @@ const expectProjectileRecovery = Effect.fn(
   yield* Effect.promise(() => page.unroute(NEXT_CHUNK_PATH));
   yield* Effect.promise(() =>
     Promise.all([
-      page.waitForNavigation({ waitUntil: "domcontentloaded" }),
+      page.waitForEvent("framenavigated", {
+        predicate: (frame) => frame === page.mainFrame(),
+      }),
       error.getByRole("button", { name: "Retry" }).click(),
     ])
   );
+  yield* Effect.promise(() => page.waitForLoadState("domcontentloaded"));
   yield* Effect.promise(() =>
     expect
       .poll(() =>
