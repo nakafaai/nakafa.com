@@ -35,12 +35,14 @@ describe("PostHog server reporting", () => {
     postHogMocks.captureExceptionImmediate.mockResolvedValue(undefined);
   });
 
-  it("has no environment or SDK side effects when imported", async () => {
-    await import("@repo/analytics/posthog/server");
+  it.effect("has no environment or SDK side effects when imported", () =>
+    Effect.gen(function* () {
+      yield* Effect.promise(() => import("@repo/analytics/posthog/server"));
 
-    expect(postHogMocks.keys).not.toHaveBeenCalled();
-    expect(postHogMocks.constructor).not.toHaveBeenCalled();
-  });
+      expect(postHogMocks.keys).not.toHaveBeenCalled();
+      expect(postHogMocks.constructor).not.toHaveBeenCalled();
+    })
+  );
 
   it.effect("does not initialize the SDK when reporting is disabled", () =>
     Effect.gen(function* () {

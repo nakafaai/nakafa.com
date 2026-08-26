@@ -2,8 +2,8 @@ import {
   createOperationalException,
   decodeOperationalExceptionProperties,
 } from "@repo/analytics/posthog/exception";
+import { describe, expect, it } from "@repo/testing/effect";
 import { Option } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("operational exception privacy", () => {
   it("removes messages and retains stack frames", () => {
