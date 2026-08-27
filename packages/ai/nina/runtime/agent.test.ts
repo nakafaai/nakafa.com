@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { ModelIdSchema } from "@repo/ai/config/model";
 import {
@@ -15,14 +16,13 @@ import {
   textOutputSchema,
 } from "@repo/ai/schema/tools";
 import type { MyMetadata, MyUIMessage } from "@repo/ai/types/message";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import type {
   LanguageModelUsage,
   ModelMessage,
   TextStreamPart,
   UIMessageStreamWriter,
 } from "ai";
-import { tool } from "ai";
+import { ToolLoopAgent, tool, toUIMessageStream } from "ai";
 import { Cause, Effect, Exit, Option } from "effect";
 import { vi } from "vitest";
 
@@ -54,6 +54,11 @@ interface FakeAgentState {
   streamOptions?: CapturedStreamOptions;
 }
 const fakeAgentState = vi.hoisted((): FakeAgentState => ({}));
+const toolLoopAgentMock = vi.hoisted(() => vi.fn());
+const toUIMessageStreamMock = vi.hoisted(() => vi.fn());
+
+vi.mock("ai", { spy: true });
+
 /** Returns a complete AI SDK usage object for metadata callbacks. */
 function createUsage(): LanguageModelUsage {
   return {
@@ -72,73 +77,75 @@ function createUsage(): LanguageModelUsage {
     totalTokens: 10,
   };
 }
-vi.mock("ai", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("ai")>();
-  /** Captures ToolLoopAgent settings and returns a deterministic stream result. */
-  class FakeToolLoopAgent {
-    constructor(settings: CapturedAgentSettings) {
-      fakeAgentState.settings = settings;
-    }
-    /** Streams a single assistant response without contacting a provider. */
-    stream(options: CapturedStreamOptions) {
-      if (fakeAgentState.streamFailure) {
-        return Promise.reject(fakeAgentState.streamFailure);
-      }
-      fakeAgentState.streamOptions = options;
-      fakeAgentState.settings?.prepareStep?.({
-        initialInstructions: fakeAgentState.settings.instructions,
-        initialMessages: options.messages,
-        instructions: fakeAgentState.settings.instructions,
-        messages: options.messages,
-        model: "google/gemini-3.5-flash-lite",
-        responseMessages: [],
-        runtimeContext: {},
-        stepNumber: 0,
-        steps: [],
-        toolsContext: {},
-      });
-      return Promise.resolve({
-        response: fakeAgentState.responseFailure
-          ? Promise.reject(fakeAgentState.responseFailure)
-          : Promise.resolve({
-              messages: [
-                {
-                  content: [{ text: "Ready.", type: "text" }],
-                  role: "assistant",
-                },
-              ],
-            }),
-        stream: new ReadableStream(),
-      });
-    }
+/** Captures ToolLoopAgent settings and returns a deterministic stream result. */
+class FakeToolLoopAgent {
+  constructor(settings: CapturedAgentSettings) {
+    fakeAgentState.settings = settings;
   }
-  /** Captures stream metadata callbacks without opening an SSE stream. */
-  function fakeToUIMessageStream(streamOptions: CapturedMessageStreamOptions) {
-    fakeAgentState.startMetadata = streamOptions.messageMetadata?.({
-      part: { type: "start" },
+  /** Streams a single assistant response without contacting a provider. */
+  stream(options: CapturedStreamOptions) {
+    if (fakeAgentState.streamFailure) {
+      return Promise.reject(fakeAgentState.streamFailure);
+    }
+    fakeAgentState.streamOptions = options;
+    fakeAgentState.settings?.prepareStep?.({
+      initialInstructions: fakeAgentState.settings.instructions,
+      initialMessages: options.messages,
+      instructions: fakeAgentState.settings.instructions,
+      messages: options.messages,
+      model: "google/gemini-3.5-flash-lite",
+      responseMessages: [],
+      runtimeContext: {},
+      stepNumber: 0,
+      steps: [],
+      toolsContext: {},
     });
-    fakeAgentState.deltaMetadata = streamOptions.messageMetadata?.({
-      part: { id: "text-1", text: "ignored", type: "text-delta" },
+    return Promise.resolve({
+      response: fakeAgentState.responseFailure
+        ? Promise.reject(fakeAgentState.responseFailure)
+        : Promise.resolve({
+            messages: [
+              {
+                content: [{ text: "Ready.", type: "text" }],
+                role: "assistant",
+              },
+            ],
+          }),
+      stream: new ReadableStream(),
     });
-    fakeAgentState.finishMetadata = streamOptions.messageMetadata?.({
-      part: {
-        finishReason: "stop",
-        rawFinishReason: "stop",
-        totalUsage: createUsage(),
-        type: "finish",
-      },
-    });
-    fakeAgentState.streamErrorMessage = streamOptions.onError?.(
-      new Error("stream failed")
-    );
-    return new ReadableStream();
   }
-  return {
-    ...actual,
-    toUIMessageStream: fakeToUIMessageStream,
-    ToolLoopAgent: FakeToolLoopAgent,
-  };
+}
+
+/** Captures stream metadata callbacks without opening an SSE stream. */
+function fakeToUIMessageStream(streamOptions: CapturedMessageStreamOptions) {
+  fakeAgentState.startMetadata = streamOptions.messageMetadata?.({
+    part: { type: "start" },
+  });
+  fakeAgentState.deltaMetadata = streamOptions.messageMetadata?.({
+    part: { id: "text-1", text: "ignored", type: "text-delta" },
+  });
+  fakeAgentState.finishMetadata = streamOptions.messageMetadata?.({
+    part: {
+      finishReason: "stop",
+      rawFinishReason: "stop",
+      totalUsage: createUsage(),
+      type: "finish",
+    },
+  });
+  fakeAgentState.streamErrorMessage = streamOptions.onError?.(
+    new Error("stream failed")
+  );
+  return new ReadableStream();
+}
+
+toolLoopAgentMock.mockImplementation(function fakeToolLoopAgent(
+  settings: CapturedAgentSettings
+) {
+  return new FakeToolLoopAgent(settings);
 });
+toUIMessageStreamMock.mockImplementation(fakeToUIMessageStream);
+vi.mocked(ToolLoopAgent).mockImplementation(toolLoopAgentMock);
+vi.mocked(toUIMessageStream).mockImplementation(toUIMessageStreamMock);
 vi.mock("@repo/ai/config/app", () => ({
   provider: {
     /** Supplies a fake model object because the mocked ToolLoopAgent never calls it. */
@@ -320,7 +327,7 @@ describe("nina/agent", () => {
     expect(context.learningSelection).toEqual(learningSelection);
     expect(context.userRole).toBeUndefined();
   });
-  it.live(
+  it.effect(
     "runs the ToolLoopAgent lifecycle with Nina metadata and adapter-owned tools",
     () =>
       Effect.gen(function* () {
@@ -385,7 +392,7 @@ describe("nina/agent", () => {
         ]);
       })
   );
-  it.live(
+  it.effect(
     "keeps ToolLoopAgent stream startup failures in the Effect error channel",
     () =>
       Effect.gen(function* () {
@@ -404,7 +411,7 @@ describe("nina/agent", () => {
         expect(readExitFailure(exit)).toBeInstanceOf(NinaAgentError);
       })
   );
-  it.live(
+  it.effect(
     "keeps ToolLoopAgent response failures in the Effect error channel",
     () =>
       Effect.gen(function* () {
