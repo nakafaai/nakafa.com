@@ -1,4 +1,7 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
+import { registerTelemetry } from "ai";
+import { Effect } from "effect";
+import { vi } from "vitest";
 
 const originalAiSdkDevTools = process.env.AI_SDK_DEVTOOLS;
 const originalNodeEnv = process.env.NODE_ENV;
@@ -14,7 +17,10 @@ const telemetryIntegration = vi.hoisted(() => ({
   name: "ai-sdk-devtools",
 }));
 const DevToolsTelemetry = vi.hoisted(() => vi.fn(() => telemetryIntegration));
-const registerTelemetry = vi.hoisted(() => vi.fn());
+const registerTelemetryMock = vi.hoisted(() => vi.fn());
+
+vi.mock("ai", { spy: true });
+vi.mocked(registerTelemetry).mockImplementation(registerTelemetryMock);
 
 vi.mock("@repo/ai/config/provider", () => ({
   gateway,
@@ -24,25 +30,15 @@ vi.mock("@ai-sdk/devtools", () => ({
   DevToolsTelemetry,
 }));
 
-vi.mock("ai", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("ai")>();
-
-  return {
-    ...actual,
-    registerTelemetry,
-  };
+const importDevToolsConfig = Effect.fn("test.ai.devtools.import")(function* () {
+  yield* Effect.sync(() => vi.resetModules());
+  return yield* Effect.promise(() => import("@repo/ai/config/devtools"));
 });
-
-async function importDevToolsConfig() {
-  vi.resetModules();
-
-  return await import("@repo/ai/config/devtools");
-}
 
 function resetDevToolsEnvironment() {
   gateway.mockClear();
   DevToolsTelemetry.mockClear();
-  registerTelemetry.mockClear();
+  registerTelemetryMock.mockClear();
   globalThis.NAKAFA_AI_SDK_DEVTOOLS_REGISTERED = undefined;
   process.env.NODE_ENV = "development";
   delete process.env.AI_SDK_DEVTOOLS;
@@ -76,75 +72,89 @@ describe("AI SDK DevTools configuration", () => {
     restoreOriginalEnvironment();
   });
 
-  it("registers v7 telemetry once and returns the plain Gateway model", async () => {
-    resetDevToolsEnvironment();
-    process.env.AI_SDK_DEVTOOLS = "true";
-    process.env.NODE_ENV = "development";
+  it.effect(
+    "registers v7 telemetry once and returns the plain Gateway model",
+    () =>
+      Effect.gen(function* () {
+        resetDevToolsEnvironment();
+        process.env.AI_SDK_DEVTOOLS = "true";
+        process.env.NODE_ENV = "development";
 
-    const { createAppLanguageModel, registerAiSdkDevToolsTelemetry } =
-      await importDevToolsConfig();
+        const { createAppLanguageModel, registerAiSdkDevToolsTelemetry } =
+          yield* importDevToolsConfig();
 
-    registerAiSdkDevToolsTelemetry();
-    const model = createAppLanguageModel("google/gemini-3.5-flash-lite");
+        registerAiSdkDevToolsTelemetry();
+        const model = createAppLanguageModel("google/gemini-3.5-flash-lite");
 
-    expect(model).toBe(languageModel);
-    expect(gateway).toHaveBeenCalledTimes(1);
-    expect(gateway).toHaveBeenCalledWith("google/gemini-3.5-flash-lite");
-    expect(DevToolsTelemetry).toHaveBeenCalledTimes(1);
-    expect(registerTelemetry).toHaveBeenCalledTimes(1);
-    expect(registerTelemetry).toHaveBeenCalledWith(telemetryIntegration);
-  });
+        expect(model).toBe(languageModel);
+        expect(gateway).toHaveBeenCalledTimes(1);
+        expect(gateway).toHaveBeenCalledWith("google/gemini-3.5-flash-lite");
+        expect(DevToolsTelemetry).toHaveBeenCalledTimes(1);
+        expect(registerTelemetryMock).toHaveBeenCalledTimes(1);
+        expect(registerTelemetryMock).toHaveBeenCalledWith(
+          telemetryIntegration
+        );
+      })
+  );
 
-  it("leaves DevTools disabled when the flag is off", async () => {
-    resetDevToolsEnvironment();
+  it.effect("leaves DevTools disabled when the flag is off", () =>
+    Effect.gen(function* () {
+      resetDevToolsEnvironment();
 
-    const { createAppLanguageModel } = await importDevToolsConfig();
+      const { createAppLanguageModel } = yield* importDevToolsConfig();
 
-    expect(createAppLanguageModel("google/gemini-3.5-flash-lite")).toBe(
-      languageModel
-    );
-    expect(DevToolsTelemetry).not.toHaveBeenCalled();
-    expect(registerTelemetry).not.toHaveBeenCalled();
-  });
+      expect(createAppLanguageModel("google/gemini-3.5-flash-lite")).toBe(
+        languageModel
+      );
+      expect(DevToolsTelemetry).not.toHaveBeenCalled();
+      expect(registerTelemetryMock).not.toHaveBeenCalled();
+    })
+  );
 
-  it("never registers DevTools in production", async () => {
-    resetDevToolsEnvironment();
-    process.env.AI_SDK_DEVTOOLS = "true";
-    process.env.NODE_ENV = "production";
+  it.effect("never registers DevTools in production", () =>
+    Effect.gen(function* () {
+      resetDevToolsEnvironment();
+      process.env.AI_SDK_DEVTOOLS = "true";
+      process.env.NODE_ENV = "production";
 
-    const { registerAiSdkDevToolsTelemetry } = await importDevToolsConfig();
+      const { registerAiSdkDevToolsTelemetry } = yield* importDevToolsConfig();
 
-    registerAiSdkDevToolsTelemetry();
+      registerAiSdkDevToolsTelemetry();
 
-    expect(DevToolsTelemetry).not.toHaveBeenCalled();
-    expect(registerTelemetry).not.toHaveBeenCalled();
-  });
+      expect(DevToolsTelemetry).not.toHaveBeenCalled();
+      expect(registerTelemetryMock).not.toHaveBeenCalled();
+    })
+  );
 
-  it("allows explicit development deployments", async () => {
-    resetDevToolsEnvironment();
-    process.env.AI_SDK_DEVTOOLS = "true";
-    process.env.NODE_ENV = "development";
-    process.env.VERCEL_ENV = "development";
+  it.effect("allows explicit development deployments", () =>
+    Effect.gen(function* () {
+      resetDevToolsEnvironment();
+      process.env.AI_SDK_DEVTOOLS = "true";
+      process.env.NODE_ENV = "development";
+      process.env.VERCEL_ENV = "development";
 
-    const { registerAiSdkDevToolsTelemetry } = await importDevToolsConfig();
+      const { registerAiSdkDevToolsTelemetry } = yield* importDevToolsConfig();
 
-    registerAiSdkDevToolsTelemetry();
+      registerAiSdkDevToolsTelemetry();
 
-    expect(DevToolsTelemetry).toHaveBeenCalledTimes(1);
-    expect(registerTelemetry).toHaveBeenCalledTimes(1);
-  });
+      expect(DevToolsTelemetry).toHaveBeenCalledTimes(1);
+      expect(registerTelemetryMock).toHaveBeenCalledTimes(1);
+    })
+  );
 
-  it("keeps Vercel preview and production deployments clean", async () => {
-    resetDevToolsEnvironment();
-    process.env.AI_SDK_DEVTOOLS = "true";
-    process.env.NODE_ENV = "development";
-    process.env.VERCEL_ENV = "preview";
+  it.effect("keeps Vercel preview and production deployments clean", () =>
+    Effect.gen(function* () {
+      resetDevToolsEnvironment();
+      process.env.AI_SDK_DEVTOOLS = "true";
+      process.env.NODE_ENV = "development";
+      process.env.VERCEL_ENV = "preview";
 
-    const { registerAiSdkDevToolsTelemetry } = await importDevToolsConfig();
+      const { registerAiSdkDevToolsTelemetry } = yield* importDevToolsConfig();
 
-    registerAiSdkDevToolsTelemetry();
+      registerAiSdkDevToolsTelemetry();
 
-    expect(DevToolsTelemetry).not.toHaveBeenCalled();
-    expect(registerTelemetry).not.toHaveBeenCalled();
-  });
+      expect(DevToolsTelemetry).not.toHaveBeenCalled();
+      expect(registerTelemetryMock).not.toHaveBeenCalled();
+    })
+  );
 });

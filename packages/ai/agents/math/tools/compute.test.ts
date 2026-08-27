@@ -1,10 +1,10 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { compute } from "@repo/ai/agents/math/tools/compute";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { MathRequest } from "@repo/math/schema/request";
 import type { MathResult } from "@repo/math/schema/result";
 import type { MathToolInput } from "@repo/math/schema/tool-input";
 import { MathService } from "@repo/math/service";
-import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import type { UIMessageStreamWriter } from "ai";
 import { ConfigProvider, Effect } from "effect";
 import { vi } from "vitest";
@@ -74,7 +74,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 describe("math compute tool", () => {
-  it.live("writes loading and done math data parts", () =>
+  it.effect("writes loading and done math data parts", () =>
     Effect.gen(function* () {
       vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json(result));
       const { parts, writer } = createWriter();
@@ -112,7 +112,7 @@ describe("math compute tool", () => {
       ]);
     })
   );
-  it.live("writes an error data part for math request failures", () =>
+  it.effect("writes an error data part for math request failures", () =>
     Effect.gen(function* () {
       vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline"));
       const { parts, writer } = createWriter();
@@ -150,7 +150,7 @@ describe("math compute tool", () => {
       );
     })
   );
-  it.live("writes an error data part for math response failures", () =>
+  it.effect("writes an error data part for math response failures", () =>
     Effect.gen(function* () {
       vi.spyOn(globalThis, "fetch").mockResolvedValue(
         Response.json({ status: "verified" })
@@ -180,7 +180,7 @@ describe("math compute tool", () => {
       );
     })
   );
-  it.live(
+  it.effect(
     "asks the model to retry ambiguous symbolic calculus with the explicit variable",
     () =>
       Effect.gen(function* () {
@@ -220,7 +220,7 @@ describe("math compute tool", () => {
         );
       })
   );
-  it.live(
+  it.effect(
     "returns a model-readable error before writing data for invalid tool input",
     () =>
       Effect.gen(function* () {
@@ -243,7 +243,7 @@ describe("math compute tool", () => {
         expect(parts).toEqual([]);
       })
   );
-  it.live(
+  it.effect(
     "tells the model how to retry bounded systems with the same bounds",
     () =>
       Effect.gen(function* () {
@@ -274,7 +274,7 @@ describe("math compute tool", () => {
         expect(parts).toEqual([]);
       })
   );
-  it.live(
+  it.effect(
     "tells the model how to retry incomplete bounded system expressions",
     () =>
       Effect.gen(function* () {
@@ -304,7 +304,7 @@ describe("math compute tool", () => {
         expect(parts).toEqual([]);
       })
   );
-  it.live("keeps invalid input errors locale-free", () =>
+  it.effect("keeps invalid input errors locale-free", () =>
     Effect.gen(function* () {
       const fetch = vi.spyOn(globalThis, "fetch");
       const { parts, writer } = createWriter();
@@ -321,7 +321,7 @@ describe("math compute tool", () => {
       expect(parts).toEqual([]);
     })
   );
-  it.live("writes locale-free error data for math service failures", () =>
+  it.effect("writes locale-free error data for math service failures", () =>
     Effect.gen(function* () {
       vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("offline"));
       const { parts, writer } = createWriter();

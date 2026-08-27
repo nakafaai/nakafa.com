@@ -1,14 +1,14 @@
+import { describe, expect, it } from "@effect/vitest";
 import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import { taxonomy } from "@repo/ai/agents/nakafa/tools/taxonomy";
 import {
   createNakafaTestService,
   createWriter,
 } from "@repo/ai/agents/nakafa/tools/test";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 describe("nakafa taxonomy tool", () => {
-  it.live("writes loading and done parts for taxonomy", () =>
+  it.effect("writes loading and done parts for taxonomy", () =>
     Effect.gen(function* () {
       const { parts, writer } = createWriter();
       const output = yield* taxonomy({
@@ -41,14 +41,16 @@ describe("nakafa taxonomy tool", () => {
     })
   );
 
-  it.live("uses the injected test service for invalid route verification", () =>
-    Effect.gen(function* () {
-      const service = createNakafaTestService();
-      const isVerified = yield* service.verify("");
-      const taxonomyResult = yield* service.taxonomy();
+  it.effect(
+    "uses the injected test service for invalid route verification",
+    () =>
+      Effect.gen(function* () {
+        const service = createNakafaTestService();
+        const isVerified = yield* service.verify("");
+        const taxonomyResult = yield* service.taxonomy();
 
-      expect(isVerified).toBe(false);
-      expect(taxonomyResult.locale).toBe("en");
-    })
+        expect(isVerified).toBe(false);
+        expect(taxonomyResult.locale).toBe("en");
+      })
   );
 });

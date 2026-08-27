@@ -1,5 +1,5 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { assertPublicResearchUrl } from "@repo/ai/agents/research/tools/safety";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect, Result } from "effect";
 import { vi } from "vitest";
 
@@ -11,7 +11,7 @@ describe("assertPublicResearchUrl", () => {
   beforeEach(() => {
     lookup.mockReset();
   });
-  it.live("rejects unsafe URL syntax before DNS lookup", () =>
+  it.effect("rejects unsafe URL syntax before DNS lookup", () =>
     Effect.gen(function* () {
       const result = yield* Effect.result(
         assertPublicResearchUrl("http://localhost:3000/admin")
@@ -20,7 +20,7 @@ describe("assertPublicResearchUrl", () => {
       expect(lookup).not.toHaveBeenCalled();
     })
   );
-  it.live("allows public IP literals without DNS lookup", () =>
+  it.effect("allows public IP literals without DNS lookup", () =>
     Effect.gen(function* () {
       const result = yield* assertPublicResearchUrl(
         "https://93.184.216.34/docs"
@@ -32,7 +32,7 @@ describe("assertPublicResearchUrl", () => {
       expect(lookup).not.toHaveBeenCalled();
     })
   );
-  it.live("rejects hostnames when DNS resolution fails", () =>
+  it.effect("rejects hostnames when DNS resolution fails", () =>
     Effect.gen(function* () {
       lookup.mockRejectedValue(new Error("DNS failure"));
       const result = yield* Effect.result(
@@ -41,7 +41,7 @@ describe("assertPublicResearchUrl", () => {
       expect(Result.isFailure(result)).toBe(true);
     })
   );
-  it.live("rejects hostnames without DNS addresses", () =>
+  it.effect("rejects hostnames without DNS addresses", () =>
     Effect.gen(function* () {
       lookup.mockResolvedValue([]);
       const result = yield* Effect.result(
@@ -50,7 +50,7 @@ describe("assertPublicResearchUrl", () => {
       expect(Result.isFailure(result)).toBe(true);
     })
   );
-  it.live("rejects hostnames that resolve to private addresses", () =>
+  it.effect("rejects hostnames that resolve to private addresses", () =>
     Effect.gen(function* () {
       lookup.mockResolvedValue([{ address: "10.0.0.1", family: 4 }]);
       const result = yield* Effect.result(
@@ -59,7 +59,7 @@ describe("assertPublicResearchUrl", () => {
       expect(Result.isFailure(result)).toBe(true);
     })
   );
-  it.live(
+  it.effect(
     "allows public hostnames without enabling native server fetches",
     () =>
       Effect.gen(function* () {

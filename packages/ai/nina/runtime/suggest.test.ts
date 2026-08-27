@@ -1,46 +1,42 @@
 // @vitest-environment node
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { suggestionGenerationTimeout } from "@repo/ai/config/timeouts";
 import { writeNinaSuggestions } from "@repo/ai/nina/runtime/suggest";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import type { ModelMessage, UIMessageStreamWriter } from "ai";
-import { Effect, Result } from "effect";
+import { streamText } from "ai";
+import { Effect, Result, Stream } from "effect";
 import { vi } from "vitest";
 
-const streamText = vi.hoisted(() => vi.fn());
+const streamTextMock = vi.hoisted(() => vi.fn());
+
+vi.mock("ai", { spy: true });
+vi.mocked(streamText).mockImplementation(streamTextMock);
+
 vi.mock("@repo/ai/config/app", () => ({
   provider: {
     languageModel: (modelId: string) => modelId,
   },
 }));
-vi.mock("ai", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("ai")>();
-  return {
-    ...actual,
-    streamText,
-  };
-});
 const messages = [
   {
     content: "Halo Nina.",
     role: "user",
   },
 ] satisfies ModelMessage[];
-/** Creates an async iterable that emits the provided suggestion partials. */
-async function* suggestionPartials(
+/** Creates an Effect-backed async iterable that emits suggestion partials. */
+function suggestionPartials(
   chunks: readonly {
     readonly suggestions?: readonly string[];
   }[]
 ) {
-  for (const chunk of chunks) {
-    await Promise.resolve();
-    yield chunk;
-  }
+  return Stream.fromIterable(chunks).pipe(Stream.toAsyncIterable);
 }
-/** Creates an async iterable that fails while Nina reads streamed suggestions. */
-async function* failingSuggestionPartials() {
-  await Promise.resolve();
-  yield await Promise.reject(new Error("partial stream failed"));
+/** Creates an Effect-backed async iterable that fails while Nina reads it. */
+function failingSuggestionPartials() {
+  return Stream.fail(new Error("partial stream failed")).pipe(
+    Stream.toAsyncIterable
+  );
 }
 /** Captures suggestion data parts written by the Nina suggestion Module. */
 function createWriter() {
@@ -52,12 +48,12 @@ function createWriter() {
 }
 describe("nina/runtime/suggest", () => {
   beforeEach(() => {
-    streamText.mockReset();
+    streamTextMock.mockReset();
   });
-  it.live("writes final suggestions when partial chunks are empty", () =>
+  it.effect("writes final suggestions when partial chunks are empty", () =>
     Effect.gen(function* () {
       const writer = createWriter();
-      streamText.mockReturnValue({
+      streamTextMock.mockReturnValue({
         output: Promise.resolve({
           suggestions: ["Apa contoh lainnya?", "Beri latihan singkat."],
         }),
@@ -78,7 +74,7 @@ describe("nina/runtime/suggest", () => {
       );
     })
   );
-  it.live(
+  it.effect(
     "prunes tool-call transcript parts before generating suggestions",
     () =>
       Effect.gen(function* () {
@@ -119,7 +115,7 @@ describe("nina/runtime/suggest", () => {
             role: "assistant",
           },
         ] satisfies ModelMessage[];
-        streamText.mockReturnValue({
+        streamTextMock.mockReturnValue({
           output: Promise.resolve({
             suggestions: ["Beri contoh benda nyata."],
           }),
@@ -130,7 +126,7 @@ describe("nina/runtime/suggest", () => {
           messages: transcriptWithToolCall,
           writer,
         });
-        expect(streamText).toHaveBeenCalledWith(
+        expect(streamTextMock).toHaveBeenCalledWith(
           expect.objectContaining({
             messages: [
               { content: "Hitung 2 + 3.", role: "user" },
@@ -154,66 +150,70 @@ describe("nina/runtime/suggest", () => {
         );
       })
   );
-  it.live("updates the same suggestions part when final output completes", () =>
-    Effect.gen(function* () {
-      const writer = createWriter();
-      streamText.mockReturnValue({
-        output: Promise.resolve({
-          suggestions: ["Apa contoh finalnya?", "Buat latihan final."],
-        }),
-        partialOutputStream: suggestionPartials([
-          { suggestions: [] },
-          { suggestions: ["Apa langkah berikutnya?"] },
-        ]),
-      });
-      yield* writeNinaSuggestions({
-        locale: "id",
-        messages,
-        writer,
-      });
-      expect(writer.write).toHaveBeenCalledTimes(2);
-      const firstWrite = writer.write.mock.calls[0]?.[0];
-      const finalWrite = writer.write.mock.calls[1]?.[0];
-      expect(firstWrite).toEqual(
-        expect.objectContaining({
-          data: {
-            data: ["Apa langkah berikutnya?"],
-          },
-        })
-      );
-      expect(finalWrite).toEqual(
-        expect.objectContaining({
-          id: firstWrite?.id,
-          data: {
-            data: ["Apa contoh finalnya?", "Buat latihan final."],
-          },
-        })
-      );
-    })
+  it.effect(
+    "updates the same suggestions part when final output completes",
+    () =>
+      Effect.gen(function* () {
+        const writer = createWriter();
+        streamTextMock.mockReturnValue({
+          output: Promise.resolve({
+            suggestions: ["Apa contoh finalnya?", "Buat latihan final."],
+          }),
+          partialOutputStream: suggestionPartials([
+            { suggestions: [] },
+            { suggestions: ["Apa langkah berikutnya?"] },
+          ]),
+        });
+        yield* writeNinaSuggestions({
+          locale: "id",
+          messages,
+          writer,
+        });
+        expect(writer.write).toHaveBeenCalledTimes(2);
+        const firstWrite = writer.write.mock.calls[0]?.[0];
+        const finalWrite = writer.write.mock.calls[1]?.[0];
+        expect(firstWrite).toEqual(
+          expect.objectContaining({
+            data: {
+              data: ["Apa langkah berikutnya?"],
+            },
+          })
+        );
+        expect(finalWrite).toEqual(
+          expect.objectContaining({
+            id: firstWrite?.id,
+            data: {
+              data: ["Apa contoh finalnya?", "Buat latihan final."],
+            },
+          })
+        );
+      })
   );
-  it.live("skips writing when the completed suggestions object is empty", () =>
-    Effect.gen(function* () {
-      const writer = createWriter();
-      streamText.mockReturnValue({
-        output: Promise.resolve({
-          suggestions: [],
-        }),
-        partialOutputStream: suggestionPartials([{}]),
-      });
-      yield* writeNinaSuggestions({
-        locale: "id",
-        messages,
-        writer,
-      });
-      expect(writer.write).not.toHaveBeenCalled();
-    })
+  it.effect(
+    "skips writing when the completed suggestions object is empty",
+    () =>
+      Effect.gen(function* () {
+        const writer = createWriter();
+        streamTextMock.mockReturnValue({
+          output: Promise.resolve({
+            suggestions: [],
+          }),
+          partialOutputStream: suggestionPartials([{}]),
+        });
+        yield* writeNinaSuggestions({
+          locale: "id",
+          messages,
+          writer,
+        });
+        expect(writer.write).not.toHaveBeenCalled();
+      })
   );
-  it.live(
+  it.effect(
     "reports a typed failure when partial suggestion streaming fails",
     () =>
       Effect.gen(function* () {
         const writer = createWriter();
-        streamText.mockReturnValue({
+        streamTextMock.mockReturnValue({
           output: Promise.resolve({
             suggestions: ["Tidak dipakai."],
           }),
@@ -236,12 +236,12 @@ describe("nina/runtime/suggest", () => {
         });
       })
   );
-  it.live(
+  it.effect(
     "reports a typed failure when final suggestion completion fails",
     () =>
       Effect.gen(function* () {
         const writer = createWriter();
-        streamText.mockReturnValue({
+        streamTextMock.mockReturnValue({
           output: Promise.reject(new Error("completion failed")),
           partialOutputStream: suggestionPartials([{}]),
         });

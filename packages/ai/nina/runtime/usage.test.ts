@@ -1,7 +1,7 @@
 // @vitest-environment node
+import { describe, expect, it } from "@effect/vitest";
 import { defaultModel, getModelCreditCost } from "@repo/ai/config/model";
 import { trackUsage } from "@repo/ai/nina/runtime/usage";
-import { describe, expect, it } from "@repo/testing/effect";
 import type { LanguageModelUsage } from "ai";
 import { Effect } from "effect";
 
@@ -33,7 +33,7 @@ function usageRow({
 }
 
 describe("nina/runtime/usage", () => {
-  it.live("tracks sub-agent usage and creates final metadata", () =>
+  it.effect("tracks sub-agent usage and creates final metadata", () =>
     Effect.gen(function* () {
       const usage = yield* trackUsage();
 
@@ -68,7 +68,7 @@ describe("nina/runtime/usage", () => {
     })
   );
 
-  it.live("defaults missing usage tokens to zero", () =>
+  it.effect("defaults missing usage tokens to zero", () =>
     Effect.gen(function* () {
       const usage = yield* trackUsage();
 

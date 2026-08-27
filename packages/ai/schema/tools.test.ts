@@ -6,14 +6,23 @@ import {
 } from "@repo/ai/schema/tools";
 import { asSchema } from "ai";
 import dedent from "dedent";
+import { Predicate } from "effect";
 import { describe, expect, it } from "vitest";
 
+function readJsonSchema(schema: ReturnType<typeof asSchema>) {
+  const jsonSchema = schema.jsonSchema;
+  if (Predicate.isPromiseLike(jsonSchema)) {
+    expect.fail("AI tool JSON Schema projection must remain synchronous.");
+  }
+  return jsonSchema;
+}
+
 describe("LearningCapability tool schemas", () => {
-  it("uses one compact specialist input contract for every delegation tool", async () => {
+  it("uses one compact specialist input contract for every delegation tool", () => {
     const jsonSchemas = [
-      await Promise.resolve(asSchema(nakafaToolInputSchema).jsonSchema),
-      await Promise.resolve(asSchema(mathToolInputSchema).jsonSchema),
-      await Promise.resolve(asSchema(researchToolInputSchema).jsonSchema),
+      readJsonSchema(asSchema(nakafaToolInputSchema)),
+      readJsonSchema(asSchema(mathToolInputSchema)),
+      readJsonSchema(asSchema(researchToolInputSchema)),
     ];
 
     for (const jsonSchema of jsonSchemas) {
@@ -40,13 +49,12 @@ describe("LearningCapability tool schemas", () => {
     }
   });
 
-  it("keeps each specialist-specific concern small and explicit", async () => {
-    const nakafaSchema = asSchema(nakafaToolInputSchema);
-    const mathSchema = asSchema(mathToolInputSchema);
-    const schema = asSchema(researchToolInputSchema);
-    const nakafaJsonSchema = await Promise.resolve(nakafaSchema.jsonSchema);
-    const mathJsonSchema = await Promise.resolve(mathSchema.jsonSchema);
-    const jsonSchema = await Promise.resolve(schema.jsonSchema);
+  it("keeps each specialist-specific concern small and explicit", () => {
+    const [nakafaJsonSchema, mathJsonSchema, jsonSchema] = [
+      readJsonSchema(asSchema(nakafaToolInputSchema)),
+      readJsonSchema(asSchema(mathToolInputSchema)),
+      readJsonSchema(asSchema(researchToolInputSchema)),
+    ];
     const json = JSON.stringify(jsonSchema);
 
     expect(nakafaJsonSchema).toMatchObject({

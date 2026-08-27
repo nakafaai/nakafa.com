@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import {
   capabilityResult,
   recordSpecialistUsage,
@@ -8,7 +9,6 @@ import {
 } from "@repo/ai/nina/capability/result";
 import type { LearningCapabilityName } from "@repo/ai/nina/capability/spec";
 import type { NinaReporter } from "@repo/ai/nina/runtime/report";
-import { describe, expect, it } from "@repo/testing/effect";
 import type { LanguageModelUsage } from "ai";
 import { type Context, Effect, Logger, Option } from "effect";
 
@@ -81,7 +81,7 @@ describe("nina/capability/result", () => {
     expect(result.evidence.summary.endsWith("...")).toBe(true);
   });
 
-  it.live("preserves real usage for successful specialists", () =>
+  it.effect("preserves real usage for successful specialists", () =>
     Effect.gen(function* () {
       const tracker = usageRecorder();
       const result = specialistSuccess({
@@ -105,7 +105,7 @@ describe("nina/capability/result", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "does not invent usage when a specialist fails before completion",
     () =>
       Effect.gen(function* () {
@@ -142,7 +142,7 @@ describe("nina/capability/result", () => {
       })
   );
 
-  it.live(
+  it.effect(
     "normalizes non-Error failures into model-facing recovery evidence",
     () =>
       Effect.gen(function* () {
@@ -170,7 +170,7 @@ describe("nina/capability/result", () => {
       })
   );
 
-  it.live(
+  it.effect(
     "reports the provider cause preserved by a typed capability error",
     () =>
       Effect.gen(function* () {

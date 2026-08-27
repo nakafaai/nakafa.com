@@ -1,9 +1,9 @@
+import { describe, expect, it } from "@effect/vitest";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import {
   type NinaLearningSessionInput,
   openNinaLearningSession,
 } from "@repo/ai/nina/memory/pack";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, Exit } from "effect";
 
 const learning = {
@@ -23,7 +23,7 @@ const placementProgramKey = LearningProgramKeySchema.make(
 );
 
 describe("nina/memory/pack", () => {
-  it.live(
+  it.effect(
     "opens a verified page session with a durable snapshot and page-fetch policy",
     () =>
       Effect.gen(function* () {
@@ -57,7 +57,7 @@ describe("nina/memory/pack", () => {
       })
   );
 
-  it.live("keeps invalid session input in the Effect failure channel", () =>
+  it.effect("keeps invalid session input in the Effect failure channel", () =>
     Effect.gen(function* () {
       const exit = yield* Effect.exit(
         openNinaLearningSession({
@@ -74,7 +74,7 @@ describe("nina/memory/pack", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "opens an unverified canonical session without current-page fetch permission",
     () =>
       Effect.gen(function* () {

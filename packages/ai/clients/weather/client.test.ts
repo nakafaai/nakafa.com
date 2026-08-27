@@ -1,5 +1,5 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { getCurrentWeather } from "@repo/ai/clients/weather/client";
-import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect, Layer, Result } from "effect";
 import {
   HttpClient,
@@ -73,7 +73,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 describe("getCurrentWeather", () => {
-  it.live("returns a narrow summary from one current-weather request", () =>
+  it.effect("returns a narrow summary from one current-weather request", () =>
     Effect.gen(function* () {
       vi.stubEnv("OPENWEATHER_API_KEY", "weather-key");
       const observeRequest =
@@ -104,7 +104,7 @@ describe("getCurrentWeather", () => {
       ]);
     })
   );
-  it.live(
+  it.effect(
     "keeps an unavailable current-weather request in the typed error channel",
     () =>
       Effect.gen(function* () {
@@ -122,7 +122,7 @@ describe("getCurrentWeather", () => {
         });
       })
   );
-  it.live("keeps an invalid response in the schema error channel", () =>
+  it.effect("keeps an invalid response in the schema error channel", () =>
     Effect.gen(function* () {
       vi.stubEnv("OPENWEATHER_API_KEY", "weather-key");
       const result = yield* runWeather(() => Response.json({ cod: 200 }));
@@ -133,7 +133,7 @@ describe("getCurrentWeather", () => {
       expect(result.failure).toMatchObject({ _tag: "SchemaError" });
     })
   );
-  it.live(
+  it.effect(
     "preserves the visible condition defaults when conditions are absent",
     () =>
       Effect.gen(function* () {

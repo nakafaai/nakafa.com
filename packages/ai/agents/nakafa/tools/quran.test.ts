@@ -1,14 +1,14 @@
+import { describe, expect, it } from "@effect/vitest";
 import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import { quran } from "@repo/ai/agents/nakafa/tools/quran";
 import {
   createNakafaTestService,
   createWriter,
 } from "@repo/ai/agents/nakafa/tools/test";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 describe("nakafa Quran tool", () => {
-  it.live("writes loading and done parts for bounded Quran references", () =>
+  it.effect("writes loading and done parts for bounded Quran references", () =>
     Effect.gen(function* () {
       const { parts, writer } = createWriter();
       const output = yield* quran({
@@ -37,7 +37,7 @@ describe("nakafa Quran tool", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "applies defaults and preserves tafsir requests in persisted input",
     () =>
       Effect.gen(function* () {
@@ -68,7 +68,7 @@ describe("nakafa Quran tool", () => {
       })
   );
 
-  it.live.each([
+  it.effect.each([
     [
       "reversed range",
       { from_verse: 2, locale: "en", surah: 1, to_verse: 1 },

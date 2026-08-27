@@ -1,16 +1,10 @@
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   formatScrapeOutput,
   isSuccessfulScrapeOutput,
   scrapeUrl,
 } from "@repo/ai/agents/research/tools/scrape";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from "@repo/testing/effect";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect } from "effect";
 import { vi } from "vitest";
@@ -67,7 +61,7 @@ describe("research scrape tool", () => {
     vi.unstubAllGlobals();
   });
 
-  it.live("keeps Firecrawl metadata in tool text and UI data", () =>
+  it.effect("keeps Firecrawl metadata in tool text and UI data", () =>
     Effect.gen(function* () {
       firecrawlApp.scrape.mockResolvedValue({
         markdown: "# DevTools",
@@ -114,7 +108,7 @@ describe("research scrape tool", () => {
     })
   );
 
-  it.live("rejects private scrape targets before fetching or crawling", () =>
+  it.effect("rejects private scrape targets before fetching or crawling", () =>
     Effect.gen(function* () {
       const { parts, writer } = createWriter();
 
@@ -145,7 +139,7 @@ describe("research scrape tool", () => {
     })
   );
 
-  it.live("rejects public hostnames that resolve to private addresses", () =>
+  it.effect("rejects public hostnames that resolve to private addresses", () =>
     Effect.gen(function* () {
       lookup.mockResolvedValue([{ address: "127.0.0.1", family: 4 }]);
       const { writer } = createWriter();
@@ -161,7 +155,7 @@ describe("research scrape tool", () => {
     })
   );
 
-  it.live("prefers source-native markdown for IP-literal URLs", () =>
+  it.effect("prefers source-native markdown for IP-literal URLs", () =>
     Effect.gen(function* () {
       vi.stubGlobal(
         "fetch",
@@ -225,7 +219,7 @@ describe("research scrape tool", () => {
     })
   );
 
-  it.live("keeps source-native markdown when Firecrawl scrape fails", () =>
+  it.effect("keeps source-native markdown when Firecrawl scrape fails", () =>
     Effect.gen(function* () {
       vi.stubGlobal(
         "fetch",
@@ -260,7 +254,7 @@ describe("research scrape tool", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "falls back to alternate metadata fields when markdown is missing",
     () =>
       Effect.gen(function* () {
@@ -296,7 +290,7 @@ describe("research scrape tool", () => {
       })
   );
 
-  it.live("keeps scrape output valid when metadata is unavailable", () =>
+  it.effect("keeps scrape output valid when metadata is unavailable", () =>
     Effect.gen(function* () {
       firecrawlApp.scrape.mockResolvedValue({
         markdown: "# Plain source",
@@ -325,7 +319,7 @@ describe("research scrape tool", () => {
     })
   );
 
-  it.live("passes the selection query to relevant content selection", () =>
+  it.effect("passes the selection query to relevant content selection", () =>
     Effect.gen(function* () {
       firecrawlApp.scrape.mockResolvedValue({
         markdown: "# DevTools\n\nUse AI SDK DevTools for local debugging.",
@@ -348,7 +342,7 @@ describe("research scrape tool", () => {
     })
   );
 
-  it.live("allows exact-source callers to keep more source evidence", () =>
+  it.effect("allows exact-source callers to keep more source evidence", () =>
     Effect.gen(function* () {
       firecrawlApp.scrape.mockResolvedValue({
         markdown: "# DevTools\n\nUse AI SDK DevTools for local debugging.",
@@ -372,7 +366,7 @@ describe("research scrape tool", () => {
     })
   );
 
-  it.live("writes an error part when Firecrawl scrape fails", () =>
+  it.effect("writes an error part when Firecrawl scrape fails", () =>
     Effect.gen(function* () {
       firecrawlApp.scrape.mockRejectedValue(new Error("offline"));
       const { parts, writer } = createWriter();
