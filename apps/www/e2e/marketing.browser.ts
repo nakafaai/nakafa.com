@@ -57,6 +57,16 @@ const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(function* (
     href,
     READINESS_TIMEOUT_MILLISECONDS
   );
+  /**
+   * Next.js may commit App Router history before React reveals a streamed route.
+   * Keep the existing readiness budget attached to the visible route boundary.
+   * @see https://nextjs.org/docs/app/getting-started/linking-and-navigating#streaming
+   */
+  yield* Effect.promise(() =>
+    expect(page.locator('main[data-marketing-page="true"]')).toBeVisible({
+      timeout: READINESS_TIMEOUT_MILLISECONDS,
+    })
+  );
 });
 
 const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
