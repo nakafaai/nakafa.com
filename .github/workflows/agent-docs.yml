@@ -10,8 +10,11 @@ permissions:
   contents: read
 
 concurrency:
-  group: Agent-Friendly Docs-${{ github.ref }}
-  cancel-in-progress: true
+  # Pull request heads supersede their own predecessor runs. Protected-main
+  # runs use the immutable commit SHA so a later independent merge cannot
+  # cancel an already-admitted production acceptance.
+  group: Agent-Friendly Docs-${{ github.event_name == 'push' && github.sha || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   production-scope:
@@ -29,28 +32,28 @@ jobs:
           REQUIRED: ${{ env.TRUSTED_CONTENT_ENVIRONMENT }}
         run: echo "required=$REQUIRED" >> "$GITHUB_OUTPUT"
 
-      - if: github.event_name == 'pull_request' && env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+      - if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
       - name: Setup toolchain
-        if: github.event_name == 'pull_request' && env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
         with:
           cache: true
           install: false
 
       - name: Install dependencies
-        if: github.event_name == 'pull_request' && env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Classify production acceptance
-        if: github.event_name == 'pull_request' && env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         id: classify
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_SHA: ${{ github.event.before || github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: pnpm ci:production-acceptance
 
   quality:
@@ -89,7 +92,7 @@ jobs:
     # same-repository candidates with production-relevant changes. In-place
     # test-only candidates retain Quality while Production is skipped.
     needs: production-scope
-    if: github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih' && needs.production-scope.outputs.required == 'true')
+    if: needs.production-scope.outputs.required == 'true' && (github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih'))
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
