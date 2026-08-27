@@ -2,7 +2,7 @@ name: CI
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize]
   merge_group:
     types: [checks_requested]
   push:
@@ -48,8 +48,8 @@ jobs:
 
   production:
     name: Production
-    # Internal owner PR heads must pass signed acceptance before queue admission.
-    # Merge groups remain owner-triggered and contain only Required-green heads.
+    # Repository Actions policy admits only the owner to run candidate code.
+    # Signed acceptance is bound to PR creation, head updates, and queue heads.
     if: github.event_name == 'push' || (github.event_name == 'merge_group' && github.actor == 'nabilfatih') || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih')
     runs-on: ubuntu-latest
     timeout-minutes: 40
