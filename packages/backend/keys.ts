@@ -1,3 +1,9 @@
+import {
+  AgentEdgeReleaseShaSchema,
+  NAKAFA_API_EDGE_CONTRACT,
+  NAKAFA_MCP_EDGE_CONTRACT,
+  VERCEL_GIT_COMMIT_SHA_ENVIRONMENT,
+} from "@repo/backend/agent/edge";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { Schema } from "effect";
 
@@ -14,6 +20,9 @@ const secretSchema = Schema.toStandardSchemaV1(
   Schema.Trimmed.check(Schema.isNonEmpty())
 );
 const stringSchema = Schema.toStandardSchemaV1(Schema.String);
+const optionalGitCommitShaSchema = Schema.toStandardSchemaV1(
+  Schema.UndefinedOr(AgentEdgeReleaseShaSchema)
+);
 /** Defines the Convex URL required by Next.js server adapters such as `convex/nextjs`. */
 export const convexKeys = () =>
   createEnv({
@@ -34,6 +43,55 @@ export const convexSiteKeys = () =>
       NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
     },
   });
+
+/** Defines the server-only Convex HTTP origin used by public edge bridges. */
+export const agentOriginKeys = () =>
+  createEnv({
+    server: {
+      [NAKAFA_API_EDGE_CONTRACT.originEnvironment]: urlSchema,
+    },
+    runtimeEnv: {
+      [NAKAFA_API_EDGE_CONTRACT.originEnvironment]:
+        process.env[NAKAFA_API_EDGE_CONTRACT.originEnvironment],
+    },
+  });
+
+/** Defines optional Git deployment identity for canonical public bridges. */
+export const agentDeploymentKeys = () =>
+  createEnv({
+    server: {
+      [VERCEL_GIT_COMMIT_SHA_ENVIRONMENT]: optionalGitCommitShaSchema,
+    },
+    runtimeEnv: {
+      [VERCEL_GIT_COMMIT_SHA_ENVIRONMENT]:
+        process.env[VERCEL_GIT_COMMIT_SHA_ENVIRONMENT],
+    },
+  });
+
+/** Defines the private Vercel credential for the direct REST origin. */
+export const apiEdgeKeys = () =>
+  createEnv({
+    server: {
+      [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]: secretSchema,
+    },
+    runtimeEnv: {
+      [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]:
+        process.env[NAKAFA_API_EDGE_CONTRACT.secretEnvironment],
+    },
+  });
+
+/** Defines the private Vercel credential for the direct MCP origin. */
+export const mcpEdgeKeys = () =>
+  createEnv({
+    server: {
+      [NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment]: secretSchema,
+    },
+    runtimeEnv: {
+      [NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment]:
+        process.env[NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment],
+    },
+  });
+
 export const keys = () =>
   createEnv({
     extends: [convexKeys(), convexSiteKeys()],

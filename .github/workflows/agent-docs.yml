@@ -52,12 +52,15 @@ jobs:
     env:
       CONTENT_RUNTIME_TOKEN: ci-agent-docs
       INTERNAL_CONTENT_API_KEY: ci-agent-docs
+      NAKAFA_API_EDGE_SECRET: ci-agent-docs-api-edge
+      NAKAFA_MCP_EDGE_SECRET: ci-agent-docs-mcp-edge
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       NEXT_PUBLIC_MCP_URL: https://mcp.nakafa.com
       NEXT_PUBLIC_POSTHOG_KEY: phc_agent_docs_ci
       NEXT_PUBLIC_POSTHOG_UI_HOST: https://eu.posthog.com
       POSTHOG_PROXY_HOST: https://t.nakafa.com
       SITE_URL: http://localhost:3000
+      VERCEL_GIT_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -171,6 +174,7 @@ jobs:
             echo "CONVEX_AGENT_MODE=anonymous"
             echo "CONVEX_SITE_URL=$convex_site_url"
             echo "CONVEX_URL=$convex_url"
+            echo "NAKAFA_CONVEX_SITE_URL=$convex_site_url"
             echo "NEXT_PUBLIC_CONVEX_SITE_URL=$convex_site_url"
             echo "NEXT_PUBLIC_CONVEX_URL=$convex_url"
           } >> "$GITHUB_ENV"
@@ -257,6 +261,9 @@ jobs:
           CONVEX_SITE_URL: ""
           CONVEX_URL: ""
           INTERNAL_CONTENT_API_KEY: ""
+          NAKAFA_API_EDGE_SECRET: ""
+          NAKAFA_CONVEX_SITE_URL: ""
+          NAKAFA_MCP_EDGE_SECRET: ""
           NEXT_PUBLIC_APP_URL: ""
           NEXT_PUBLIC_CONVEX_SITE_URL: ""
           NEXT_PUBLIC_CONVEX_URL: ""
@@ -265,6 +272,7 @@ jobs:
           NEXT_PUBLIC_POSTHOG_UI_HOST: ""
           POSTHOG_PROXY_HOST: ""
           SITE_URL: ""
+          VERCEL_GIT_COMMIT_SHA: ""
         run: |
           convex_log="$RUNNER_TEMP/agent-docs-convex.log"
           log_class=unavailable
