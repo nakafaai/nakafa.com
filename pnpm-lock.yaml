@@ -212,9 +212,6 @@ importers:
       '@t3-oss/env-nextjs':
         specifier: ^0.13.11
         version: 0.13.11(typescript@7.0.2)(zod@4.4.3)
-      effect:
-        specifier: 'catalog:'
-        version: 4.0.0-rc.110
       next:
         specifier: 16.3.2
         version: 16.3.2(@babel/core@7.29.7(supports-color@7.2.0))(@playwright/test@1.62.1)(@types/node@24.13.3)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -246,6 +243,9 @@ importers:
       '@vitest/ui':
         specifier: ^4.1.11
         version: 4.1.11(vitest@4.1.11)
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.0-rc.110
       typescript:
         specifier: 7.0.2
         version: 7.0.2
