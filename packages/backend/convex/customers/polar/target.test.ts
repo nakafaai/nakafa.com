@@ -1,8 +1,8 @@
+import { describe, expect, it } from "@effect/vitest";
 import { resolvePolarCustomerWebhookTarget } from "@repo/backend/convex/customers/polar/target";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 

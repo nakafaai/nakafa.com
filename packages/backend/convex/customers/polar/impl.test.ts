@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   ensureCustomer,
   normalizeStoredCustomer,
@@ -12,8 +13,7 @@ import {
   polarDuplicateEmailCode,
   type StoredPolarCustomer,
 } from "@repo/backend/convex/customers/polar/spec";
-import { describe, expect, it } from "@repo/testing/effect";
-import { Effect, Result } from "effect";
+import { Effect } from "effect";
 
 const input: EnsurePolarCustomerInput = {
   email: "nakafaai@gmail.com",
@@ -39,7 +39,7 @@ function createGateway(overrides: Partial<PolarCustomerGateway>) {
   return { ...gateway, ...overrides };
 }
 describe("customers/polar/impl", () => {
-  it.live(
+  it.effect(
     "normalizes Polar customer metadata to Convex-storable primitive values",
     () =>
       Effect.gen(function* () {
@@ -68,7 +68,7 @@ describe("customers/polar/impl", () => {
         });
       })
   );
-  it.live("normalizes missing Polar metadata to an empty record", () =>
+  it.effect("normalizes missing Polar metadata to an empty record", () =>
     Effect.gen(function* () {
       const customer = yield* normalizeStoredCustomer({
         email: "nakafaai@gmail.com",
@@ -85,28 +85,21 @@ describe("customers/polar/impl", () => {
       });
     })
   );
-  it.live(
+  it.effect(
     "rejects Polar customers that cannot be linked to an email address",
     () =>
       Effect.gen(function* () {
-        const result = yield* Effect.result(
-          normalizeStoredCustomer({
-            externalId: null,
-            id: "polar-customer",
-            metadata: {},
-            name: "Missing Email",
-          })
-        );
-        if (Result.isSuccess(result)) {
-          throw new Error("Expected missing email to fail.");
-        }
-        expect(result.failure).toBeInstanceOf(PolarCustomerError);
-        expect(result.failure.message).toContain(
-          "missing a valid email address"
-        );
+        const failure = yield* normalizeStoredCustomer({
+          externalId: null,
+          id: "polar-customer",
+          metadata: {},
+          name: "Missing Email",
+        }).pipe(Effect.flip);
+        expect(failure).toBeInstanceOf(PolarCustomerError);
+        expect(failure.message).toContain("missing a valid email address");
       })
   );
-  it.live(
+  it.effect(
     "keeps an already-synced local Polar customer without writing updates",
     () =>
       Effect.gen(function* () {
@@ -136,7 +129,7 @@ describe("customers/polar/impl", () => {
         expect(updateCount).toBe(0);
       })
   );
-  it.live("treats omitted input metadata as an empty metadata record", () =>
+  it.effect("treats omitted input metadata as an empty metadata record", () =>
     Effect.gen(function* () {
       let updateCount = 0;
       const gateway = createGateway({
@@ -165,7 +158,7 @@ describe("customers/polar/impl", () => {
       expect(updateCount).toBe(0);
     })
   );
-  it.live(
+  it.effect(
     "creates a new customer when no existing Polar identity is found",
     () =>
       Effect.gen(function* () {
@@ -187,7 +180,7 @@ describe("customers/polar/impl", () => {
         });
       })
   );
-  it.live(
+  it.effect(
     "uses an existing external-id customer before creating a new one",
     () =>
       Effect.gen(function* () {
@@ -214,7 +207,7 @@ describe("customers/polar/impl", () => {
         expect(createCount).toBe(0);
       })
   );
-  it.live(
+  it.effect(
     "continues lookup when a stored local customer ID no longer exists in Polar",
     () =>
       Effect.gen(function* () {
@@ -243,7 +236,7 @@ describe("customers/polar/impl", () => {
         expect(createCount).toBe(1);
       })
   );
-  it.live(
+  it.effect(
     "relinks an existing email customer when externalId is still unset",
     () =>
       Effect.gen(function* () {
@@ -292,7 +285,7 @@ describe("customers/polar/impl", () => {
         ]);
       })
   );
-  it.live(
+  it.effect(
     "keeps duplicate-email conflicts typed when another externalId owns the customer",
     () =>
       Effect.gen(function* () {
@@ -314,19 +307,16 @@ describe("customers/polar/impl", () => {
             }),
           getCustomerByExternalId: () => Effect.succeed(null),
         });
-        const result = yield* Effect.result(ensureCustomer(gateway, input));
-        if (Result.isSuccess(result)) {
-          throw new Error("Expected duplicate email ownership to fail.");
-        }
-        expect(result.failure).toBeInstanceOf(PolarCustomerEmailConflict);
-        expect(result.failure).toMatchObject({
+        const failure = yield* ensureCustomer(gateway, input).pipe(Effect.flip);
+        expect(failure).toBeInstanceOf(PolarCustomerEmailConflict);
+        expect(failure).toMatchObject({
           code: "POLAR_CUSTOMER_EMAIL_CONFLICT",
           existingExternalId: "different-auth",
           polarCustomerId: "polar-existing",
         });
       })
   );
-  it.live("retries external-id lookup after a create race failure", () =>
+  it.effect("retries external-id lookup after a create race failure", () =>
     Effect.gen(function* () {
       let externalIdLookupCount = 0;
       const gateway = createGateway({
@@ -359,7 +349,7 @@ describe("customers/polar/impl", () => {
       expect(externalIdLookupCount).toBe(2);
     })
   );
-  it.live(
+  it.effect(
     "keeps create failures typed when duplicate-email recovery cannot find a customer",
     () =>
       Effect.gen(function* () {
@@ -374,12 +364,9 @@ describe("customers/polar/impl", () => {
           findCustomerByEmail: () => Effect.succeed(null),
           getCustomerByExternalId: () => Effect.succeed(null),
         });
-        const result = yield* Effect.result(ensureCustomer(gateway, input));
-        if (Result.isSuccess(result)) {
-          throw new Error("Expected unrecovered duplicate email to fail.");
-        }
-        expect(result.failure).toBeInstanceOf(PolarCustomerError);
-        expect(result.failure).toMatchObject({
+        const failure = yield* ensureCustomer(gateway, input).pipe(Effect.flip);
+        expect(failure).toBeInstanceOf(PolarCustomerError);
+        expect(failure).toMatchObject({
           code: polarCustomerErrorCode,
           message: "Duplicate email",
         });

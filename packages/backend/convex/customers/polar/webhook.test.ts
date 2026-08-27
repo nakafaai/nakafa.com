@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import posthogTest from "@posthog/convex/test";
 import type {
   MutationCtx,
@@ -14,7 +15,6 @@ import {
 import schema from "@repo/backend/convex/schema";
 import type { SubscriptionRecord } from "@repo/backend/convex/subscriptions/records/spec";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 import { vi } from "vitest";

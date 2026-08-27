@@ -1,7 +1,7 @@
+import { describe, expect, it } from "@effect/vitest";
 import { settleCustomerSync } from "@repo/backend/convex/customers/sync/settlement";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 import { vi } from "vitest";
@@ -39,7 +39,7 @@ function createSettlementIds() {
 }
 
 describe("customers/sync/settlement", () => {
-  it.live("returns the stored customer without cleanup", () =>
+  it.effect("returns the stored customer without cleanup", () =>
     Effect.gen(function* () {
       const { customerId, userId } = yield* Effect.promise(() =>
         createSettlementIds()
@@ -58,27 +58,29 @@ describe("customers/sync/settlement", () => {
     })
   );
 
-  it.live("preserves Polar and local state during cancelable preparation", () =>
-    Effect.gen(function* () {
-      const { userId } = yield* Effect.promise(() => createSettlementIds());
-      const operations = createOperations();
+  it.effect(
+    "preserves Polar and local state during cancelable preparation",
+    () =>
+      Effect.gen(function* () {
+        const { userId } = yield* Effect.promise(() => createSettlementIds());
+        const operations = createOperations();
 
-      const failure = yield* settleCustomerSync(
-        { kind: "prepared" },
-        userId,
-        operations
-      ).pipe(Effect.flip);
+        const failure = yield* settleCustomerSync(
+          { kind: "prepared" },
+          userId,
+          operations
+        ).pipe(Effect.flip);
 
-      expect(failure).toMatchObject({
-        _tag: "UserNotFound",
-        code: "USER_NOT_FOUND",
-      });
-      expect(operations.deletePolarCustomer).not.toHaveBeenCalled();
-      expect(operations.deleteLocalCustomer).not.toHaveBeenCalled();
-    })
+        expect(failure).toMatchObject({
+          _tag: "UserNotFound",
+          code: "USER_NOT_FOUND",
+        });
+        expect(operations.deletePolarCustomer).not.toHaveBeenCalled();
+        expect(operations.deleteLocalCustomer).not.toHaveBeenCalled();
+      })
   );
 
-  it.live.each([{ kind: "deleted" }, { kind: "missing" }] as const)(
+  it.effect.each([{ kind: "deleted" }, { kind: "missing" }] as const)(
     "cleans irreversible $kind state",
     (result) =>
       Effect.gen(function* () {
