@@ -1,8 +1,9 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import {
   readPublishedArticleBucket,
   readPublishedCategoryArticles,
@@ -66,29 +67,29 @@ describe("published article discovery", () => {
     runtimeQueryMock.mockReset();
   });
 
-  it.each(localeCases)(
+  it.effect.each(localeCases)(
     "decodes $appLocale bucket, latest, and category reads from one active release",
-    async (selected) => {
-      const summary = articleSummary(selected);
-      runtimeQueryMock
-        .mockResolvedValueOnce({
-          activeReleaseId,
-          articles: [summary],
-          managed: true,
-        })
-        .mockResolvedValueOnce({
-          activeReleaseId,
-          articles: [summary],
-          managed: true,
-        })
-        .mockResolvedValueOnce({
-          activeReleaseId,
-          articles: [summary],
-          managed: true,
-        });
+    (selected) =>
+      Effect.gen(function* () {
+        const summary = articleSummary(selected);
+        runtimeQueryMock
+          .mockResolvedValueOnce({
+            activeReleaseId,
+            articles: [summary],
+            managed: true,
+          })
+          .mockResolvedValueOnce({
+            activeReleaseId,
+            articles: [summary],
+            managed: true,
+          })
+          .mockResolvedValueOnce({
+            activeReleaseId,
+            articles: [summary],
+            managed: true,
+          });
 
-      const [bucket, latest, category] = await Effect.runPromise(
-        Effect.all(
+        const [bucket, latest, category] = yield* Effect.all(
           [
             readPublishedArticleBucket(
               selected.appLocale,
@@ -108,161 +109,184 @@ describe("published article discovery", () => {
             ),
           ],
           { concurrency: 1 }
-        )
-      );
+        );
 
-      expect(bucket).toMatchObject({
-        activeReleaseId,
-        articles: [{ publicPath: summary.publicPath }],
-      });
-      expect(latest).toMatchObject({
-        activeReleaseId,
-        articles: [{ route: summary.route }],
-      });
-      expect(category).toMatchObject({
-        activeReleaseId,
-        articles: [{ categoryTitle: selected.categoryTitle }],
-      });
-      for (const result of [bucket, latest, category]) {
-        const article = result.articles?.[0];
-        expect(article).toBeDefined();
-        if (selected.appLocale === "de") {
-          expect(article).not.toHaveProperty("description");
-        } else {
-          expect(article).toHaveProperty(
-            "description",
-            "Reviewed article summary."
-          );
+        expect(bucket).toMatchObject({
+          activeReleaseId,
+          articles: [{ publicPath: summary.publicPath }],
+        });
+        expect(latest).toMatchObject({
+          activeReleaseId,
+          articles: [{ route: summary.route }],
+        });
+        expect(category).toMatchObject({
+          activeReleaseId,
+          articles: [{ categoryTitle: selected.categoryTitle }],
+        });
+        for (const result of [bucket, latest, category]) {
+          const article = result.articles?.[0];
+          expect(article).toBeDefined();
+          if (selected.appLocale === "de") {
+            expect(article).not.toHaveProperty("description");
+          } else {
+            expect(article).toHaveProperty(
+              "description",
+              "Reviewed article summary."
+            );
+          }
         }
-      }
-      expect(runtimeQueryMock).toHaveBeenNthCalledWith(1, expect.anything(), {
-        appLocale: selected.appLocale,
-        bucket: "abc",
-      });
-      expect(runtimeQueryMock).toHaveBeenNthCalledWith(2, expect.anything(), {
-        appLocale: selected.appLocale,
-        limit: 10,
-      });
-      expect(runtimeQueryMock).toHaveBeenNthCalledWith(3, expect.anything(), {
-        appLocale: selected.appLocale,
-        category: "politics",
-        limit: 10,
-      });
-    }
+        expect(runtimeQueryMock).toHaveBeenNthCalledWith(1, expect.anything(), {
+          appLocale: selected.appLocale,
+          bucket: "abc",
+        });
+        expect(runtimeQueryMock).toHaveBeenNthCalledWith(2, expect.anything(), {
+          appLocale: selected.appLocale,
+          limit: 10,
+        });
+        expect(runtimeQueryMock).toHaveBeenNthCalledWith(3, expect.anything(), {
+          appLocale: selected.appLocale,
+          category: "politics",
+          limit: 10,
+        });
+      })
   );
 
-  it.each(localeCases)(
+  it.effect.each(localeCases)(
     "rejects $appLocale discovery from a different active release",
-    async (selected) => {
-      runtimeQueryMock.mockResolvedValueOnce({
-        activeReleaseId: ReleaseIdSchema.make("release-next"),
-        articles: [articleSummary(selected)],
-        managed: true,
-      });
+    (selected) =>
+      Effect.gen(function* () {
+        runtimeQueryMock.mockResolvedValueOnce({
+          activeReleaseId: ReleaseIdSchema.make("release-next"),
+          articles: [articleSummary(selected)],
+          managed: true,
+        });
 
-      await expect(
-        Effect.runPromise(
-          readPublishedLatestArticles(
-            selected.appLocale,
-            10,
-            activeReleaseId
-          ).pipe(Effect.flip)
-        )
-      ).resolves.toMatchObject({
-        _tag: "PublishedReleaseMismatchError",
-        expectedReleaseId: activeReleaseId,
-      });
-    }
+        const error = yield* readPublishedLatestArticles(
+          selected.appLocale,
+          10,
+          activeReleaseId
+        ).pipe(Effect.flip);
+        expect(error).toMatchObject({
+          _tag: "PublishedReleaseMismatchError",
+          expectedReleaseId: activeReleaseId,
+        });
+      })
   );
 
-  it("rejects unmanaged, malformed, and unavailable discovery results", async () => {
-    runtimeQueryMock
-      .mockResolvedValueOnce({
-        activeReleaseId,
-        articles: [],
-        managed: false,
-      })
-      .mockResolvedValueOnce({
-        activeReleaseId,
-        articles: [
-          {
-            ...articleSummary(localeCases[0]),
-            datePublished: "not-a-date",
-          },
-        ],
-        managed: true,
-      })
-      .mockRejectedValueOnce(new Error("runtime unavailable"));
+  it.effect(
+    "rejects unmanaged, malformed, and unavailable discovery results",
+    () =>
+      Effect.gen(function* () {
+        runtimeQueryMock
+          .mockResolvedValueOnce({
+            activeReleaseId,
+            articles: [],
+            managed: false,
+          })
+          .mockResolvedValueOnce({
+            activeReleaseId,
+            articles: [
+              {
+                ...articleSummary(localeCases[0]),
+                datePublished: "not-a-date",
+              },
+            ],
+            managed: true,
+          })
+          .mockRejectedValueOnce(new Error("runtime unavailable"));
 
-    await expect(
-      Effect.runPromise(readPublishedLatestArticles("en", 10).pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-    await expect(
-      Effect.runPromise(readPublishedLatestArticles("en", 10).pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-    await expect(
-      Effect.runPromise(readPublishedLatestArticles("en", 10).pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "TestRuntimeQueryError" });
-  });
+        const unmanaged = yield* readPublishedLatestArticles("en", 10).pipe(
+          Effect.flip
+        );
+        const malformed = yield* readPublishedLatestArticles("en", 10).pipe(
+          Effect.flip
+        );
+        const unavailable = yield* readPublishedLatestArticles("en", 10).pipe(
+          Effect.flip
+        );
 
-  it("distinguishes unmanaged, inactive, and absent discovery partitions", async () => {
-    runtimeQueryMock
-      .mockResolvedValueOnce({
-        activeReleaseId,
-        articles: null,
-        managed: false,
+        expect(unmanaged).toMatchObject({ _tag: "PublishedProjectionError" });
+        expect(malformed).toMatchObject({ _tag: "PublishedProjectionError" });
+        expect(unavailable).toMatchObject({ _tag: "TestRuntimeQueryError" });
       })
-      .mockResolvedValueOnce({
-        activeReleaseId: null,
-        articles: null,
-        managed: true,
-      })
-      .mockResolvedValueOnce({
-        activeReleaseId,
-        articles: null,
-        managed: true,
-      })
-      .mockResolvedValueOnce({
-        activeReleaseId: null,
-        articles: [],
-        managed: true,
-      })
-      .mockResolvedValueOnce({
-        activeReleaseId,
-        articles: [],
-        managed: false,
-      })
-      .mockResolvedValueOnce({
-        activeReleaseId: null,
-        articles: [],
-        managed: true,
-      });
+  );
 
-    await expect(
-      Effect.runPromise(
-        readPublishedArticleBucket("en", "abc").pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-    await expect(
-      Effect.runPromise(
-        readPublishedArticleBucket("en", "abc").pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-    await expect(
-      Effect.runPromise(readPublishedArticleBucket("en", "abc"))
-    ).resolves.toEqual({ activeReleaseId, articles: null });
-    await expect(
-      Effect.runPromise(readPublishedLatestArticles("en", 10).pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-    await expect(
-      Effect.runPromise(
-        readPublishedCategoryArticles("en", "politics", 10).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-    await expect(
-      Effect.runPromise(
-        readPublishedCategoryArticles("en", "politics", 10).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-  });
+  it.effect(
+    "distinguishes unmanaged, inactive, and absent discovery partitions",
+    () =>
+      Effect.gen(function* () {
+        runtimeQueryMock
+          .mockResolvedValueOnce({
+            activeReleaseId,
+            articles: null,
+            managed: false,
+          })
+          .mockResolvedValueOnce({
+            activeReleaseId: null,
+            articles: null,
+            managed: true,
+          })
+          .mockResolvedValueOnce({
+            activeReleaseId,
+            articles: null,
+            managed: true,
+          })
+          .mockResolvedValueOnce({
+            activeReleaseId: null,
+            articles: [],
+            managed: true,
+          })
+          .mockResolvedValueOnce({
+            activeReleaseId,
+            articles: [],
+            managed: false,
+          })
+          .mockResolvedValueOnce({
+            activeReleaseId: null,
+            articles: [],
+            managed: true,
+          });
+
+        const unmanagedBucket = yield* readPublishedArticleBucket(
+          "en",
+          "abc"
+        ).pipe(Effect.flip);
+        const inactiveBucket = yield* readPublishedArticleBucket(
+          "en",
+          "abc"
+        ).pipe(Effect.flip);
+        const absentBucket = yield* readPublishedArticleBucket("en", "abc");
+        const inactiveLatest = yield* readPublishedLatestArticles(
+          "en",
+          10
+        ).pipe(Effect.flip);
+        const unmanagedCategory = yield* readPublishedCategoryArticles(
+          "en",
+          "politics",
+          10
+        ).pipe(Effect.flip);
+        const inactiveCategory = yield* readPublishedCategoryArticles(
+          "en",
+          "politics",
+          10
+        ).pipe(Effect.flip);
+
+        expect(unmanagedBucket).toMatchObject({
+          _tag: "PublishedProjectionError",
+        });
+        expect(inactiveBucket).toMatchObject({
+          _tag: "PublishedProjectionError",
+        });
+        expect(absentBucket).toEqual({ activeReleaseId, articles: null });
+        expect(inactiveLatest).toMatchObject({
+          _tag: "PublishedProjectionError",
+        });
+        expect(unmanagedCategory).toMatchObject({
+          _tag: "PublishedProjectionError",
+        });
+        expect(inactiveCategory).toMatchObject({
+          _tag: "PublishedProjectionError",
+        });
+      })
+  );
 });
