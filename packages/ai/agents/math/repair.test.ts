@@ -6,26 +6,20 @@ import {
 } from "@repo/ai/agents/math/schema";
 import { ModelIdSchema } from "@repo/ai/config/model";
 import type { JSONSchema7, ToolCallRepairFunction, ToolSet } from "ai";
-import { InvalidToolInputError, NoSuchToolError, tool } from "ai";
+import { generateText, InvalidToolInputError, NoSuchToolError, tool } from "ai";
 import { Effect } from "effect";
 import { vi } from "vitest";
 
-const generateText = vi.hoisted(() => vi.fn());
+const generateTextMock = vi.hoisted(() => vi.fn());
+
+vi.mock("ai", { spy: true });
+vi.mocked(generateText).mockImplementation(generateTextMock);
 
 vi.mock("@repo/ai/config/app", () => ({
   provider: {
     languageModel: (modelId: string) => modelId,
   },
 }));
-
-vi.mock("ai", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("ai")>();
-
-  return {
-    ...actual,
-    generateText,
-  };
-});
 
 const tools = {
   algebra: tool({
@@ -67,14 +61,14 @@ const inputSchema = vi.fn<
 const modelId = ModelIdSchema.make("nakafa-lite");
 
 afterEach(() => {
-  generateText.mockReset();
+  generateTextMock.mockReset();
   inputSchema.mockClear();
 });
 
 describe("math tool repair", () => {
   it.effect("repairs invalid math arguments from the original task", () =>
     Effect.gen(function* () {
-      generateText.mockResolvedValue({
+      generateTextMock.mockResolvedValue({
         output: {
           expression: "(x^2 - 9)/(x - 3)",
           operation: "simplify",
@@ -103,7 +97,7 @@ describe("math tool repair", () => {
           2
         ),
       });
-      expect(generateText).toHaveBeenCalledWith(
+      expect(generateTextMock).toHaveBeenCalledWith(
         expect.objectContaining({
           model: "nakafa-lite",
           prompt: expect.stringContaining("# Original User Request"),
@@ -111,7 +105,7 @@ describe("math tool repair", () => {
         })
       );
       expect(inputSchema).toHaveBeenCalledWith(toolCall);
-      expect(generateText).toHaveBeenCalledWith(
+      expect(generateTextMock).toHaveBeenCalledWith(
         expect.objectContaining({
           prompt: expect.not.stringContaining("student request"),
         })
@@ -121,7 +115,7 @@ describe("math tool repair", () => {
 
   it.effect("keeps the failed operation when the repair model changes it", () =>
     Effect.gen(function* () {
-      generateText.mockResolvedValue({
+      generateTextMock.mockResolvedValue({
         output: {
           expression: "(x^2 - 9)/(x - 3)",
           operation: "factor",
@@ -188,7 +182,7 @@ describe("math tool repair", () => {
         });
 
         inputSchema.mockResolvedValueOnce(equationSchema);
-        generateText.mockResolvedValue({
+        generateTextMock.mockResolvedValue({
           output: {
             expressions: ["x^2 = 1", "y = 0"],
             lower: "0",
@@ -222,12 +216,12 @@ describe("math tool repair", () => {
           variable: "x",
           variables: ["x", "y"],
         });
-        expect(generateText).toHaveBeenCalledWith(
+        expect(generateTextMock).toHaveBeenCalledWith(
           expect.objectContaining({
             prompt: expect.stringContaining('"lower": "0"'),
           })
         );
-        expect(generateText).toHaveBeenCalledWith(
+        expect(generateTextMock).toHaveBeenCalledWith(
           expect.objectContaining({
             prompt: expect.stringContaining("Do not drop bounds"),
           })
@@ -237,7 +231,7 @@ describe("math tool repair", () => {
 
   it.effect("does not repair when the repair output is not object-shaped", () =>
     Effect.gen(function* () {
-      generateText.mockResolvedValue({ output: null });
+      generateTextMock.mockResolvedValue({ output: null });
 
       const repaired = yield* repairMathToolCall({
         error: invalidInputError,
@@ -258,7 +252,7 @@ describe("math tool repair", () => {
     "uses repaired arguments when the failed call has no operation field",
     () =>
       Effect.gen(function* () {
-        generateText.mockResolvedValue({
+        generateTextMock.mockResolvedValue({
           output: {
             expression: "(x^2 - 9)/(x - 3)",
             operation: "simplify",
@@ -299,7 +293,7 @@ describe("math tool repair", () => {
     "keeps malformed failed arguments readable in the repair prompt",
     () =>
       Effect.gen(function* () {
-        generateText.mockResolvedValue({
+        generateTextMock.mockResolvedValue({
           output: {
             expression: "(x^2 - 9)/(x - 3)",
             operation: "simplify",
@@ -333,7 +327,7 @@ describe("math tool repair", () => {
             2
           ),
         });
-        expect(generateText).toHaveBeenCalledWith(
+        expect(generateTextMock).toHaveBeenCalledWith(
           expect.objectContaining({
             prompt: expect.stringContaining('{"operation":"simplify"'),
           })
@@ -355,7 +349,7 @@ describe("math tool repair", () => {
       });
 
       expect(repaired).toBeNull();
-      expect(generateText).not.toHaveBeenCalled();
+      expect(generateTextMock).not.toHaveBeenCalled();
     })
   );
 
@@ -373,7 +367,7 @@ describe("math tool repair", () => {
       });
 
       expect(repaired).toBeNull();
-      expect(generateText).not.toHaveBeenCalled();
+      expect(generateTextMock).not.toHaveBeenCalled();
     })
   );
 
@@ -391,13 +385,13 @@ describe("math tool repair", () => {
       });
 
       expect(repaired).toBeNull();
-      expect(generateText).not.toHaveBeenCalled();
+      expect(generateTextMock).not.toHaveBeenCalled();
     })
   );
 
   it.effect("does not repair when the repair model fails", () =>
     Effect.gen(function* () {
-      generateText.mockRejectedValue(new Error("model unavailable"));
+      generateTextMock.mockRejectedValue(new Error("model unavailable"));
 
       const repaired = yield* repairMathToolCall({
         error: invalidInputError,
