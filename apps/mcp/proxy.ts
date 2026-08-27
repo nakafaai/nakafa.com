@@ -44,6 +44,7 @@ export function proxy(request: NextRequest) {
       headers.set(header, value);
     }
   }
+  headers.set("host", request.nextUrl.host);
   headers.set(
     NAKAFA_MCP_EDGE_CONTRACT.secretHeader,
     env[NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment]

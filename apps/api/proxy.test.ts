@@ -205,10 +205,13 @@ describe("proxy middleware", () => {
       expect(response.headers.get("x-middleware-request-x-forwarded-for")).toBe(
         "203.0.113.10"
       );
+      expect(response.headers.get("x-middleware-request-host")).toBe(
+        "api.nakafa.com"
+      );
       const forwarded = response.headers.get("x-middleware-override-headers");
       expect(forwarded).not.toContain("authorization");
       expect(forwarded).not.toContain("cookie");
-      expect(forwarded).not.toContain("host");
+      expect(forwarded).toContain("host");
     });
   });
 });
