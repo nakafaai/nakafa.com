@@ -1,13 +1,13 @@
+import { describe, expect, it } from "@effect/vitest";
 import { resolveUniqueGeneratedUsername } from "@repo/backend/convex/auth/username/availability";
 import {
   createGoogleUsernameFields,
   usernameOptions,
 } from "@repo/backend/convex/auth/username/policy";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 describe("auth/username availability", () => {
-  it.live("keeps the generated username when it is already unique", () =>
+  it.effect("keeps the generated username when it is already unique", () =>
     Effect.gen(function* () {
       const fields = createGoogleUsernameFields({
         email: "student@gmail.com",
@@ -25,7 +25,7 @@ describe("auth/username availability", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "creates another generated username when the first one already exists",
     () =>
       Effect.gen(function* () {
@@ -52,7 +52,7 @@ describe("auth/username availability", () => {
       })
   );
 
-  it.live("keeps trying generated usernames until it finds a free one", () =>
+  it.effect("keeps trying generated usernames until it finds a free one", () =>
     Effect.gen(function* () {
       const fields = createGoogleUsernameFields({
         email: "student@gmail.com",
