@@ -5,7 +5,7 @@ import {
   NetworkError,
   ProblemDetailsSchema,
   ResponseDecodeError,
-} from "./error.js";
+} from "#cli/error";
 
 export type FetchImplementation = (
   input: string,

@@ -11,7 +11,7 @@ import type {
   HttpResponseError,
   NetworkError,
   ResponseDecodeError,
-} from "./error.js";
+} from "#cli/error";
 
 const INVOCATION_EXIT_CODE = 2;
 const API_EXIT_CODE = 3;
