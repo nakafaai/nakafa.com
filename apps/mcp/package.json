@@ -28,6 +28,7 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@effect/vitest": "catalog:",
     "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.17.0/nakafa-aksara-contracts-0.17.0.tgz",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
