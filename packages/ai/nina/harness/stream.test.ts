@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
 import { Nakafa } from "@repo/ai/agents/nakafa/service";
@@ -10,7 +11,6 @@ import {
 } from "@repo/ai/nina/harness/stream";
 import { NinaReporter } from "@repo/ai/nina/runtime/report";
 import { NinaStore } from "@repo/ai/nina/runtime/store";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Cause, Effect, Exit, Option } from "effect";
 import { vi } from "vitest";
 
@@ -109,7 +109,7 @@ describe("nina/harness/stream", () => {
       Effect.succeed(new Response(input.page.slug))
     );
   });
-  it.live(
+  it.effect(
     "decodes one turn and delegates response creation through the harness Interface",
     () =>
       Effect.gen(function* () {
@@ -121,7 +121,7 @@ describe("nina/harness/stream", () => {
         expect(createNinaStreamResponseMock).toHaveBeenCalledWith(turn);
       })
   );
-  it.live("rejects invalid route input with a tagged harness error", () =>
+  it.effect("rejects invalid route input with a tagged harness error", () =>
     Effect.gen(function* () {
       const exit = yield* Effect.exit(
         provideHarnessServices(
