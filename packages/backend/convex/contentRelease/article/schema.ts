@@ -21,32 +21,15 @@ const articleFields = {
 
 const tables = {
   /** Active public articles ordered independently from the search index. */
-  articleCatalog: defineTable(
-    v.union(
-      v.object({ ...articleFields, date: v.string() }),
-      v.object({
-        ...articleFields,
-        date: v.optional(v.string()),
-        dateModified: v.optional(v.string()),
-        datePublished: v.string(),
-      })
-    )
-  )
+  articleCatalog: defineTable({
+    ...articleFields,
+    dateModified: v.optional(v.string()),
+    datePublished: v.string(),
+  })
     .index("by_contentKey_and_appLocale", ["contentKey", "appLocale"])
     .index("by_appLocale_and_assetId", ["appLocale", "assetId"])
     .index("by_appLocale_and_contentKey", ["appLocale", "contentKey"])
     .index("by_appLocale_and_publicPath", ["appLocale", "publicPath"])
-    .index("by_appLocale_and_date_and_contentKey", [
-      "appLocale",
-      "date",
-      "contentKey",
-    ])
-    .index("by_appLocale_and_category_and_date_and_contentKey", [
-      "appLocale",
-      "category",
-      "date",
-      "contentKey",
-    ])
     .index("by_appLocale_and_datePublished_and_contentKey", [
       "appLocale",
       "datePublished",

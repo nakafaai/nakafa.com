@@ -55,7 +55,6 @@ describe("published API content", () => {
           locale: "en",
           metadata: {
             authors: projection.metadata.authors,
-            date: projection.metadata.datePublished,
             dateModified: projection.metadata.dateModified,
             datePublished: projection.metadata.datePublished,
             description: projection.metadata.description,
@@ -143,7 +142,6 @@ describe("published API content", () => {
 
       expect(item?.metadata).toEqual({
         authors: baseProjection.metadata.authors,
-        date: baseProjection.metadata.datePublished,
         datePublished: baseProjection.metadata.datePublished,
         title: baseProjection.metadata.title,
       });

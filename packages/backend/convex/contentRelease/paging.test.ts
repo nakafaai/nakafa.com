@@ -53,14 +53,14 @@ describe("contentRelease/paging", () => {
     })
   );
 
-  it.live("reserves both index reads through publication lookahead", () =>
+  it.live("reserves one current index read through publication lookahead", () =>
     Effect.gen(function* () {
       expect(
         yield* validatePublicationPage({
           cursor: null,
           numItems: 32,
         })
-      ).toMatchObject({ maximumRowsRead: 66, numItems: 32 });
+      ).toMatchObject({ maximumRowsRead: 34, numItems: 32 });
       expect(
         yield* validatePublicationPage({
           cursor: null,
@@ -71,14 +71,14 @@ describe("contentRelease/paging", () => {
       expect(
         yield* validatePublicationPage({
           cursor: null,
-          maximumRowsRead: 65,
+          maximumRowsRead: 33,
           numItems: 32,
         }).pipe(Effect.flip)
       ).toMatchObject({ code: "CONTENT_RELEASE_LIMIT" });
       expect(
         yield* validatePublicationPage({
           cursor: null,
-          maximumRowsRead: 3,
+          maximumRowsRead: 2,
           numItems: 1,
         }).pipe(Effect.flip)
       ).toMatchObject({ code: "CONTENT_RELEASE_LIMIT" });

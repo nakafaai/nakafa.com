@@ -3,7 +3,6 @@ import type { AppLocale } from "@nakafa/aksara-contracts/locale";
 import { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { readPublicContentEvidenceBatch } from "@repo/backend/client/content/public";
-import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import { Effect, Schema } from "effect";
 import { env } from "@/env";
 
@@ -71,14 +70,15 @@ const verifyPublishedIdentity = Effect.fn("ApiContent.verifyPublishedIdentity")(
 /** Maps verified signed evidence into the established partner item. */
 function makePublishedApiItem(found: ApiPublishedEvidence) {
   const projection = found.projection;
-  const dates = normalizePublicationDates(projection.metadata);
   return {
     ...projection.graph,
     locale: projection.appLocale,
     metadata: {
       authors: projection.metadata.authors.map(({ name }) => ({ name })),
-      date: dates.datePublished,
-      ...dates,
+      ...(projection.metadata.dateModified === undefined
+        ? {}
+        : { dateModified: projection.metadata.dateModified }),
+      datePublished: projection.metadata.datePublished,
       ...(projection.metadata.description === undefined
         ? {}
         : { description: projection.metadata.description }),

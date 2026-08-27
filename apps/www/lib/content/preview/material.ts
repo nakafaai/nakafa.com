@@ -7,7 +7,6 @@ import {
   type MaterialMetadata,
 } from "@nakafa/aksara-contracts/projection/material";
 import { Effect, Option, Schema } from "effect";
-import { normalizeMaterialMetadata } from "@/lib/content/material/decode";
 import { executePreviewArtifact } from "@/lib/content/preview/artifact";
 import type { PreviewConfig } from "@/lib/content/preview/config";
 import {
@@ -55,7 +54,7 @@ const readReadyContent = Effect.fn("NakafaContent.readReadyPreview")(function* (
   return {
     Content: rendered.Content,
     appLocale: projection.appLocale,
-    metadata: normalizeMaterialMetadata(projection.metadata),
+    metadata: projection.metadata,
     projection,
     rawMdx: rendered.artifact.payload.rawMdx,
     rendererDomain: document.rendererDomain,

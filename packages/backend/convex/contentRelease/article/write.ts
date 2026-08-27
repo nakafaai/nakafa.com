@@ -13,7 +13,6 @@ import {
   READ_MODEL_DOCUMENT_LIMIT,
 } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
@@ -47,7 +46,6 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
       `Article entry ${head.contentKey}/${head.artifactLocale} has an invalid projection hash.`
     );
   }
-  const dates = normalizePublicationDates(projection.metadata);
   const entry = {
     appLocale: projection.appLocale,
     assetId: projection.graph.assetId,
@@ -55,7 +53,10 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
     category: projection.category,
     categoryTitle: projection.categoryTitle,
     contentKey: head.contentKey,
-    ...dates,
+    ...(projection.metadata.dateModified === undefined
+      ? {}
+      : { dateModified: projection.metadata.dateModified }),
+    datePublished: projection.metadata.datePublished,
     projectionHash: head.projectionHash,
     publicPath: projection.publicPath,
     releaseId: head.releaseId,

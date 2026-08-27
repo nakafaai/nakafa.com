@@ -44,13 +44,12 @@ export const decodePublicationCursor = Effect.fn(
 
 /** Encodes one shared merged-index position from a verified catalog row. */
 export function articlePublicationCursor(row: Doc<"articleCatalog">) {
-  const publicationDate = "datePublished" in row ? row.datePublished : row.date;
   return encodeArticlePublicationCursor(
     JSON.stringify(
       convexToJson([
         row.appLocale,
         row.category,
-        publicationDate,
+        row.datePublished,
         row.contentKey,
         row._creationTime,
         row._id,

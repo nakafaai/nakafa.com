@@ -2,7 +2,6 @@
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { normalizeMaterialMetadata } from "@/lib/content/material/decode";
 import { BASE_URL } from "@/lib/llms/constants";
 import { getContentPageLlmsEntries } from "@/lib/llms/content-entries";
 import type { LlmsEntry } from "@/lib/llms/entries";
@@ -69,7 +68,7 @@ const publishedArticles = [
 
 /** Builds one published material summary from a real projection fixture. */
 function makeMaterialSummary(projection: MaterialLessonProjection) {
-  const metadata = normalizeMaterialMetadata(projection.metadata);
+  const metadata = projection.metadata;
   return {
     authors: metadata.authors.map(({ name }) => ({ name })),
     dateModified: metadata.dateModified,

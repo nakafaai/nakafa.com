@@ -7,7 +7,6 @@ import {
   isProjectionBucket,
 } from "@repo/backend/convex/contentRelease/bucket";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import { Effect } from "effect";
 
 /** Lists non-empty deterministic sitemap partitions for managed articles. */
@@ -82,18 +81,13 @@ export const readArticleSitemap = Effect.fn(
   return {
     routes: [
       ...partition.categories.map(({ route }) => ({
-        date: null,
-        lastModified: null,
         publicPath: `articles/${route}`,
       })),
-      ...partition.articles.map(({ projection }) => {
-        const dates = normalizePublicationDates(projection.metadata);
-        return {
-          date: dates.datePublished,
-          lastModified: dates.dateModified ?? dates.datePublished,
-          publicPath: projection.publicPath,
-        };
-      }),
+      ...partition.articles.map(({ projection }) => ({
+        lastModified:
+          projection.metadata.dateModified ?? projection.metadata.datePublished,
+        publicPath: projection.publicPath,
+      })),
     ],
   };
 });

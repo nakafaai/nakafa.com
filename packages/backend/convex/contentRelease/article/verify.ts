@@ -1,14 +1,12 @@
 import { ArticleCategorySchema } from "@nakafa/aksara-transition/projection/article";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { readArticleDates } from "@repo/backend/convex/contentRelease/article/dates";
 import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import {
   ReleaseError,
   releaseFail,
 } from "@repo/backend/convex/contentRelease/error";
 import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
-import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import { Effect, Schema } from "effect";
 
 type ArticleRow = Doc<"articleCatalog">;
@@ -42,14 +40,12 @@ export const verifyArticle = Effect.fn("contentRelease.verifyArticle")(
         `Active article ${row.contentKey}/${row.appLocale} has a non-article projection.`
       );
     }
-    const projectionDates = normalizePublicationDates(projection.metadata);
-    const rowDates = yield* readArticleDates(row);
     if (
       projection.graph.assetId !== row.assetId ||
       projection.category !== row.category ||
       projection.categoryTitle !== row.categoryTitle ||
-      projectionDates.dateModified !== rowDates.dateModified ||
-      projectionDates.datePublished !== rowDates.datePublished
+      projection.metadata.dateModified !== row.dateModified ||
+      projection.metadata.datePublished !== row.datePublished
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",

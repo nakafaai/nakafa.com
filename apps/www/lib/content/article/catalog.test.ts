@@ -20,7 +20,6 @@ import {
   readPublishedArticlePage,
   readPublishedCategories,
 } from "@/lib/content/article/catalog";
-import { normalizeArticleMetadata } from "@/lib/content/article/decode";
 import {
   makeTestArticleProjection,
   testArticleProjection,
@@ -135,7 +134,7 @@ describe("published article catalog", () => {
 
   it("decodes newest articles and preserves release-bound pagination", async () => {
     const older = makeTestArticleProjection("older-politics", "2023-01-01");
-    const metadata = normalizeArticleMetadata(testArticleProjection.metadata);
+    const metadata = testArticleProjection.metadata;
     const updated = ArticleProjectionSchema.make({
       ...testArticleProjection,
       metadata: {
@@ -218,7 +217,7 @@ describe("published article catalog", () => {
   });
 
   it("preserves optional descriptions and both terminal cursor states", async () => {
-    const metadata = normalizeArticleMetadata(testArticleProjection.metadata);
+    const metadata = testArticleProjection.metadata;
     const projection = ArticleProjectionSchema.make({
       ...testArticleProjection,
       metadata: {

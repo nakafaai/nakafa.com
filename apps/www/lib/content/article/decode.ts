@@ -1,10 +1,8 @@
 import {
-  type ArticleMetadata,
   type ArticleProjection,
   ArticleProjectionSchema,
   canonicalizeArticleProjection,
 } from "@nakafa/aksara-contracts/projection/article";
-import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import { Effect, Schema } from "effect";
 import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import {
@@ -16,20 +14,6 @@ import {
 interface ArticlePublicationRead {
   readonly activeReleaseId: ActiveContentReleaseId;
   readonly projection: ArticleProjection;
-}
-
-/** Adapts one decoded signed projection to Nakafa's current article metadata. */
-export function normalizeArticleMetadata(
-  metadata: ArticleProjection["metadata"]
-): ArticleMetadata {
-  return {
-    authors: metadata.authors,
-    ...normalizePublicationDates(metadata),
-    ...(metadata.description === undefined
-      ? {}
-      : { description: metadata.description }),
-    title: metadata.title,
-  };
 }
 
 /** Creates the public failure returned for malformed article projection data. */

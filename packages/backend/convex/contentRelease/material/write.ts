@@ -14,7 +14,6 @@ import {
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { adjustMaterialBucket } from "@repo/backend/convex/contentRelease/material/bucket";
 import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
-import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import { Effect } from "effect";
 
 type PublicProjection = NonNullable<
@@ -80,13 +79,15 @@ export const writeMaterial = Effect.fn("contentRelease.writeMaterial")(
       );
     }
     const topic = yield* deriveMaterialTopicReference(projection);
-    const dates = normalizePublicationDates(projection.metadata);
     const row = {
       appLocale: head.appLocale,
       assetId: projection.graph.assetId,
       bucket,
       contentKey: head.contentKey,
-      ...dates,
+      ...(projection.metadata.dateModified === undefined
+        ? {}
+        : { dateModified: projection.metadata.dateModified }),
+      datePublished: projection.metadata.datePublished,
       materialKey: projection.materialKey,
       order: projection.order,
       parentPath: projection.parentPath,

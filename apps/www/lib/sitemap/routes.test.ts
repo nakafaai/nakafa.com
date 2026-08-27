@@ -66,7 +66,7 @@ describe("sitemap route pages", () => {
             lastModified: "2026-07-23",
             publicPath: "articles/politics/article",
           },
-          { lastModified: null, publicPath: "articles/politics" },
+          { publicPath: "articles/politics" },
         ],
       })
     );
