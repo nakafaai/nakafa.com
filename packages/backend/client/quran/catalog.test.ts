@@ -3,7 +3,10 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
+import {
+  decodePublishedQuranCatalog,
+  selectPublishedQuranSurah,
+} from "@repo/backend/client/quran/catalog";
 import { QuranPublicationError } from "@repo/backend/client/quran/publication";
 import {
   encodeTestQuranRow,
@@ -39,6 +42,13 @@ describe("signed Quran catalog decoder", () => {
         text: "Technical meaning 1",
       });
       expect(catalog.surahs.at(-1)?.number).toBe(114);
+      expect(
+        yield* selectPublishedQuranSurah(catalog, {
+          operation: "view",
+          snapshotId: source.snapshotId,
+          surahNumber: 1,
+        })
+      ).toEqual(catalog.surahs[0]);
     })
   );
 
@@ -62,6 +72,57 @@ describe("signed Quran catalog decoder", () => {
           expect(result.failure).toBeInstanceOf(QuranPublicationError);
         }
       }
+    })
+  );
+
+  it.live("rejects cross-snapshot projection metadata", () =>
+    Effect.gen(function* () {
+      const catalog = yield* decodePublishedQuranCatalog(
+        catalogResult((index) =>
+          encodeTestQuranRow(source.snapshotId, makeQuranSurah(index + 1))
+        )
+      );
+      const selected = yield* Effect.result(
+        selectPublishedQuranSurah(catalog, {
+          operation: "markdown",
+          snapshotId: Sha256HashSchema.make(`sha256:${"d".repeat(64)}`),
+          surahNumber: 1,
+        })
+      );
+
+      expect(selected).toMatchObject({
+        _tag: "Failure",
+        failure: {
+          _tag: "QuranPublicationError",
+          operation: "markdown",
+        },
+      });
+    })
+  );
+
+  it.live("rejects a projection outside the signed catalog", () =>
+    Effect.gen(function* () {
+      const catalog = yield* decodePublishedQuranCatalog(
+        catalogResult((index) =>
+          encodeTestQuranRow(source.snapshotId, makeQuranSurah(index + 1))
+        )
+      );
+      const selected = yield* Effect.result(
+        selectPublishedQuranSurah(catalog, {
+          operation: "view",
+          snapshotId: source.snapshotId,
+          surahNumber: 115,
+        })
+      );
+
+      expect(selected).toMatchObject({
+        _tag: "Failure",
+        failure: {
+          _tag: "QuranPublicationError",
+          operation: "view",
+          reason: "Signed Quran projection has no matching catalog surah.",
+        },
+      });
     })
   );
 });

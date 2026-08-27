@@ -6,6 +6,10 @@ import {
 } from "@repo/backend/client/nakafa/decode";
 import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import {
+  alignPublishedQuranSurah,
+  decodePublishedQuranCatalog,
+} from "@repo/backend/client/quran/catalog";
+import {
   decodePublishedQuranMarkdown,
   renderQuranReadingSourcesMarkdown,
   renderQuranTafsirAccessMarkdown,
@@ -88,19 +92,30 @@ export const readQuranMarkdown = Effect.fn("NakafaQuran.readMarkdown")(
     if (section !== "quran" || extra !== undefined || surahNumber === null) {
       return Option.none<NakafaAgentMarkdown>();
     }
-    const result = yield* readNakafaRuntimeQuery(
-      convexUrl,
-      api.contentRelease.quran.prose,
-      {
-        appLocale: ref.locale,
-        surahNumber,
-      }
+    const [catalogResult, result] = yield* Effect.all(
+      [
+        readNakafaRuntimeQuery(convexUrl, api.contentRelease.quran.surahs, {}),
+        readNakafaRuntimeQuery(convexUrl, api.contentRelease.quran.prose, {
+          appLocale: ref.locale,
+          surahNumber,
+        }),
+      ],
+      { concurrency: "unbounded" }
     );
-    const publication = yield* decodePublishedQuranMarkdown(result, {
-      appLocale: ref.locale,
-      surahNumber,
+    const [catalog, publication] = yield* Effect.all(
+      [
+        decodePublishedQuranCatalog(catalogResult),
+        decodePublishedQuranMarkdown(result, {
+          appLocale: ref.locale,
+          surahNumber,
+        }),
+      ],
+      { concurrency: "unbounded" }
+    ).pipe(Effect.mapError(toNakafaQuranDataReadError));
+    const surah = yield* alignPublishedQuranSurah(catalog, publication.surah, {
+      operation: "markdown",
+      snapshotId: publication.snapshotId,
     }).pipe(Effect.mapError(toNakafaQuranDataReadError));
-    const surah = publication.surah;
     const title = getSurahName(surah);
     const meaning = surah.name.meaning;
     const metadata = [

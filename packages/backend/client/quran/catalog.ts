@@ -5,6 +5,7 @@ import {
 import {
   decodePublishedQuranSource,
   type PublishedQuranSource,
+  type QuranPublicationOperation,
   quranPublicationError,
 } from "@repo/backend/client/quran/publication";
 import { decodeQuranSurahRow } from "@repo/backend/client/quran/rows";
@@ -20,6 +21,62 @@ type QuranCatalogResult = FunctionReturnType<
 export type PublishedQuranCatalog = PublishedQuranSource & {
   readonly surahs: readonly QuranSurahRow[];
 };
+
+interface QuranSurahProjection {
+  readonly name: {
+    readonly meaning: unknown;
+    readonly transliteration: string;
+  };
+  readonly number: number;
+}
+
+/** Selects one surah from the exact signed snapshot used by a projection. */
+export const selectPublishedQuranSurah = Effect.fn(
+  "NakafaQuran.selectPublishedSurah"
+)(function* (
+  catalog: PublishedQuranCatalog,
+  expected: {
+    readonly operation: QuranPublicationOperation;
+    readonly snapshotId: PublishedQuranSource["snapshotId"];
+    readonly surahNumber: number;
+  }
+) {
+  if (catalog.snapshotId !== expected.snapshotId) {
+    return yield* quranPublicationError(
+      expected.operation,
+      "Signed Quran catalog and projection snapshots do not match."
+    );
+  }
+  const surah = catalog.surahs[expected.surahNumber - 1];
+  if (surah?.number !== expected.surahNumber) {
+    return yield* quranPublicationError(
+      expected.operation,
+      "Signed Quran projection has no matching catalog surah."
+    );
+  }
+  return surah;
+});
+
+/** Aligns projected metadata with its canonical row from the same snapshot. */
+export const alignPublishedQuranSurah = Effect.fn(
+  "NakafaQuran.alignPublishedSurah"
+)(function* <Surah extends QuranSurahProjection>(
+  catalog: PublishedQuranCatalog,
+  projection: Surah,
+  expected: {
+    readonly operation: QuranPublicationOperation;
+    readonly snapshotId: PublishedQuranSource["snapshotId"];
+  }
+) {
+  const source = yield* selectPublishedQuranSurah(catalog, {
+    ...expected,
+    surahNumber: projection.number,
+  });
+  return {
+    ...projection,
+    name: { ...projection.name, meaning: source.name.meaning },
+  };
+});
 
 /** Decodes the complete active signed Quran metadata catalog. */
 export const decodePublishedQuranCatalog = Effect.fn(

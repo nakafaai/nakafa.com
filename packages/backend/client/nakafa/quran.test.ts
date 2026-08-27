@@ -213,6 +213,11 @@ function readRuntimeFixture(
   ) {
     return Promise.resolve(markdownResult(args));
   }
+  if (
+    getFunctionName(query) === getFunctionName(api.contentRelease.quran.surahs)
+  ) {
+    return Promise.resolve(catalogResult());
+  }
   return Promise.reject(new Error("Unhandled Quran query fixture."));
 }
 
@@ -241,7 +246,7 @@ function markdownResult(args: Record<string, unknown>) {
     sources: makeQuranLocaleSources(appLocale),
     surah: {
       name: {
-        meaning: { appLocale: "en", text: "The Opening" },
+        meaning: null,
         transliteration: "Al-Fatihah",
       },
       number: 1,
@@ -257,6 +262,16 @@ function markdownResult(args: Record<string, unknown>) {
         translation: translationDocument(appLocale),
       },
     ],
+  };
+}
+
+/** Builds the stable signed catalog used across the projection switch. */
+function catalogResult() {
+  return {
+    ...source,
+    rowJson: Array.from({ length: 114 }, (_, index) =>
+      encodeTestQuranRow(source.snapshotId, surahRow(index + 1))
+    ),
   };
 }
 

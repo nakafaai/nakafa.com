@@ -1,7 +1,10 @@
 import "server-only";
 
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
+import {
+  alignPublishedQuranSurah,
+  decodePublishedQuranCatalog,
+} from "@repo/backend/client/quran/catalog";
 import { decodePublishedQuranMarkdown } from "@repo/backend/client/quran/markdown";
 import { decodePublishedQuranSource } from "@repo/backend/client/quran/publication";
 import { decodePublishedQuranView } from "@repo/backend/client/quran/view";
@@ -35,31 +38,72 @@ export const readPublishedQuranMarkdown = Effect.fn(
   "NakafaQuran.readPublishedMarkdown"
 )(function* (locale: Locale, surahNumber: number, verseLimit?: number) {
   const appLocale = AppLocaleSchema.make(locale);
-  const result = yield* readRuntimeQuery(
-    api.contentRelease.quran.prose,
-    verseLimit === undefined
-      ? { appLocale, surahNumber }
-      : { appLocale, surahNumber, verseLimit }
+  const [catalog, result] = yield* Effect.all(
+    [
+      readPublishedQuranCatalog(),
+      readRuntimeQuery(
+        api.contentRelease.quran.prose,
+        verseLimit === undefined
+          ? { appLocale, surahNumber }
+          : { appLocale, surahNumber, verseLimit }
+      ),
+    ],
+    { concurrency: "unbounded" }
   );
-  return yield* decodePublishedQuranMarkdown(result, {
+  const markdown = yield* decodePublishedQuranMarkdown(result, {
     appLocale,
     surahNumber,
     verseLimit,
   });
+  const surah = yield* alignPublishedQuranSurah(catalog, markdown.surah, {
+    operation: "markdown",
+    snapshotId: markdown.snapshotId,
+  });
+  return { ...markdown, surah };
 });
 
 /** Reads and validates one locale-specific signed Quran web projection. */
 const readPublishedQuranView = Effect.fn("NakafaQuran.readPublishedView")(
   function* (locale: Locale, surahNumber: number) {
     const appLocale = AppLocaleSchema.make(locale);
-    const result = yield* readRuntimeQuery(api.contentRelease.quran.page, {
+    const [catalog, result] = yield* Effect.all(
+      [
+        readPublishedQuranCatalog(),
+        readRuntimeQuery(api.contentRelease.quran.page, {
+          appLocale,
+          surahNumber,
+        }),
+      ],
+      { concurrency: "unbounded" }
+    );
+    const view = yield* decodePublishedQuranView(result, {
       appLocale,
       surahNumber,
     });
-    return yield* decodePublishedQuranView(result, {
-      appLocale,
-      surahNumber,
+    const surah = yield* alignPublishedQuranSurah(catalog, view.surah, {
+      operation: "view",
+      snapshotId: view.snapshotId,
     });
+    const previousSurah =
+      view.previousSurah === null
+        ? null
+        : yield* alignPublishedQuranSurah(catalog, view.previousSurah, {
+            operation: "view",
+            snapshotId: view.snapshotId,
+          });
+    const nextSurah =
+      view.nextSurah === null
+        ? null
+        : yield* alignPublishedQuranSurah(catalog, view.nextSurah, {
+            operation: "view",
+            snapshotId: view.snapshotId,
+          });
+    return {
+      ...view,
+      nextSurah,
+      previousSurah,
+      surah,
+    };
   }
 );
 
