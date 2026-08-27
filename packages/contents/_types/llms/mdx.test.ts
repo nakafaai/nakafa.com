@@ -1,12 +1,13 @@
+import { it } from "@effect/vitest";
 import {
   MdxAgentProjectionError,
   projectMdxForAgentMarkdown,
 } from "@repo/contents/_types/llms/mdx";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
+import { describe, expect } from "vitest";
 
 describe("MDX agent markdown projection", () => {
-  it.live(
+  it.effect(
     "preserves authored math, diagrams, visual data, and agent context",
     () =>
       Effect.gen(function* () {
@@ -127,7 +128,7 @@ A-->B\`} />
       })
   );
 
-  it.live("handles edge MDX syntax without adding fake semantics", () =>
+  it.effect("handles edge MDX syntax without adding fake semantics", () =>
     Effect.gen(function* () {
       const markdown = yield* projectMdxForAgentMarkdown(`
 <>
@@ -158,7 +159,7 @@ Fragment child with <InlineMath math="x" />.
     })
   );
 
-  it.live(
+  it.effect(
     "keeps unknown instructional components bounded instead of using a hardcoded allowlist",
     () =>
       Effect.gen(function* () {
@@ -186,7 +187,7 @@ The scene compares entry speed and orbit height.
       })
   );
 
-  it.live("keeps escaped nested code fences inside CodeBlock data", () =>
+  it.effect("keeps escaped nested code fences inside CodeBlock data", () =>
     Effect.gen(function* () {
       const markdown = yield* projectMdxForAgentMarkdown(`
 <CodeBlock
@@ -213,7 +214,7 @@ print("Hello, World!")
     })
   );
 
-  it.live(
+  it.effect(
     "projects the cooked backslashes rendered by template literal code",
     () =>
       Effect.gen(function* () {
@@ -233,7 +234,7 @@ print("Hello, World!")
       })
   );
 
-  it.live(
+  it.effect(
     "reports malformed standalone fragments as typed projection failures",
     () =>
       Effect.gen(function* () {
