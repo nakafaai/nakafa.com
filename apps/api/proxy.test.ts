@@ -1,7 +1,9 @@
+import { it as effectIt } from "@effect/vitest";
 import {
   NAKAFA_API_EDGE_CONTRACT,
   NAKAFA_EDGE_RELEASE_SHA_HEADER,
 } from "@repo/backend/agent/edge";
+import { Effect } from "effect";
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server.js";
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
@@ -15,48 +17,59 @@ function requestProxy(pathname: string, headers?: HeadersInit) {
 
 describe("proxy middleware", () => {
   describe("authentication", () => {
-    it("should reject request without Authorization header", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/contents/en/articles"
-      );
+    effectIt.effect("should reject request without Authorization header", () =>
+      Effect.gen(function* () {
+        const request = new NextRequest(
+          "http://localhost:3000/contents/en/articles"
+        );
 
-      const response = proxy(request);
+        const response = proxy(request);
 
-      expect(response.status).toBe(401);
-      expect(await response.json()).toEqual({ error: "Unauthorized" });
-    });
+        expect(response.status).toBe(401);
+        const body = yield* Effect.promise(() => response.json());
+        expect(body).toEqual({ error: "Unauthorized" });
+      })
+    );
 
-    it("should reject request with invalid Authorization format", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/contents/en/articles",
-        {
-          headers: {
-            Authorization: "InvalidFormat",
-          },
-        }
-      );
+    effectIt.effect(
+      "should reject request with invalid Authorization format",
+      () =>
+        Effect.gen(function* () {
+          const request = new NextRequest(
+            "http://localhost:3000/contents/en/articles",
+            {
+              headers: {
+                Authorization: "InvalidFormat",
+              },
+            }
+          );
 
-      const response = proxy(request);
+          const response = proxy(request);
 
-      expect(response.status).toBe(401);
-      expect(await response.json()).toEqual({ error: "Unauthorized" });
-    });
+          expect(response.status).toBe(401);
+          const body = yield* Effect.promise(() => response.json());
+          expect(body).toEqual({ error: "Unauthorized" });
+        })
+    );
 
-    it("should reject request with wrong API key", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/contents/en/articles",
-        {
-          headers: {
-            Authorization: "Bearer wrong-api-key",
-          },
-        }
-      );
+    effectIt.effect("should reject request with wrong API key", () =>
+      Effect.gen(function* () {
+        const request = new NextRequest(
+          "http://localhost:3000/contents/en/articles",
+          {
+            headers: {
+              Authorization: "Bearer wrong-api-key",
+            },
+          }
+        );
 
-      const response = proxy(request);
+        const response = proxy(request);
 
-      expect(response.status).toBe(401);
-      expect(await response.json()).toEqual({ error: "Unauthorized" });
-    });
+        expect(response.status).toBe(401);
+        const body = yield* Effect.promise(() => response.json());
+        expect(body).toEqual({ error: "Unauthorized" });
+      })
+    );
 
     it("should allow request with correct API key", () => {
       const request = new NextRequest(
