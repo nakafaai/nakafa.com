@@ -30,8 +30,6 @@ export const TEMPORARY_DEPENDENCY_HOLDS: readonly TemporaryDependencyHold[] = [
       "packages/backend/content/quran/upgrade.ts#LegacyQuranSurahUpgradeSchema",
       "packages/backend/client/quran/rows.ts#decodeLegacySurah",
       "packages/backend/client/quran/source.ts#tafsirAccess === null",
-      "packages/backend/client/quran/predecessor.ts#PredecessorQuranSource",
-      "packages/backend/client/quran/predecessor.test.ts#decodes 0.15.1 and 0.17 surahs into the predecessor shape",
       "packages/backend/client/quran/catalog.test.ts#upgrades authentic 0.15.1 surahs",
       "packages/backend/client/quran/view.test.ts#accepts temporarily unavailable Tafsir access",
       "packages/backend/client/quran/markdown.test.ts#accepts temporarily unavailable Tafsir access",
