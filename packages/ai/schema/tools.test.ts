@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   formatSpecialistToolTask,
   mathToolInputSchema,
@@ -6,92 +7,103 @@ import {
 } from "@repo/ai/schema/tools";
 import { asSchema } from "ai";
 import dedent from "dedent";
-import { describe, expect, it } from "vitest";
+import { Effect } from "effect";
+
+const readJsonSchema = Effect.fn("test.ai.schema.readJsonSchema")(function* (
+  schema: ReturnType<typeof asSchema>
+) {
+  return yield* Effect.promise(() => Promise.resolve(schema.jsonSchema));
+});
 
 describe("LearningCapability tool schemas", () => {
-  it("uses one compact specialist input contract for every delegation tool", async () => {
-    const jsonSchemas = [
-      await Promise.resolve(asSchema(nakafaToolInputSchema).jsonSchema),
-      await Promise.resolve(asSchema(mathToolInputSchema).jsonSchema),
-      await Promise.resolve(asSchema(researchToolInputSchema).jsonSchema),
-    ];
+  it.effect(
+    "uses one compact specialist input contract for every delegation tool",
+    () =>
+      Effect.gen(function* () {
+        const jsonSchemas = yield* Effect.all([
+          readJsonSchema(asSchema(nakafaToolInputSchema)),
+          readJsonSchema(asSchema(mathToolInputSchema)),
+          readJsonSchema(asSchema(researchToolInputSchema)),
+        ]);
 
-    for (const jsonSchema of jsonSchemas) {
-      expect(jsonSchema).toMatchObject({
+        for (const jsonSchema of jsonSchemas) {
+          expect(jsonSchema).toMatchObject({
+            properties: {
+              objective: {
+                type: "string",
+              },
+              request: {
+                type: "string",
+              },
+              requirements: {
+                type: "array",
+              },
+            },
+            type: "object",
+          });
+          expect(jsonSchema.required).toEqual(
+            expect.arrayContaining(["request", "objective"])
+          );
+          expect(jsonSchema.required).not.toContain("requirements");
+          expect(jsonSchema).not.toHaveProperty("properties.task");
+          expect(jsonSchema).not.toHaveProperty("properties.query");
+        }
+      })
+  );
+
+  it.effect("keeps each specialist-specific concern small and explicit", () =>
+    Effect.gen(function* () {
+      const [nakafaJsonSchema, mathJsonSchema, jsonSchema] = yield* Effect.all([
+        readJsonSchema(asSchema(nakafaToolInputSchema)),
+        readJsonSchema(asSchema(mathToolInputSchema)),
+        readJsonSchema(asSchema(researchToolInputSchema)),
+      ]);
+      const json = JSON.stringify(jsonSchema);
+
+      expect(nakafaJsonSchema).toMatchObject({
         properties: {
-          objective: {
-            type: "string",
-          },
-          request: {
-            type: "string",
-          },
-          requirements: {
+          deliverables: {
             type: "array",
           },
         },
+        required: expect.arrayContaining(["deliverables"]),
+      });
+      expect(mathJsonSchema).toMatchObject({
+        properties: {
+          given: {
+            type: "array",
+          },
+        },
+        required: expect.arrayContaining(["given"]),
+      });
+      expect(jsonSchema).toMatchObject({
+        properties: {
+          sourceRequirements: {
+            type: "array",
+          },
+        },
+        required: expect.arrayContaining(["sourceRequirements"]),
         type: "object",
       });
-      expect(jsonSchema.required).toEqual(
-        expect.arrayContaining(["request", "objective"])
+      expect(json).toContain("Task-relevant user request details only");
+      expect(json).toContain("Keep connective wording in the user's language");
+      expect(json).toContain("Preserve technical names and terms exactly");
+      expect(json).toContain("Do not translate this field into English");
+      expect(json).toContain("Omit unrelated, repeated, emotional");
+      expect(json).toContain("Specialist job only");
+      expect(json).toContain("Source requirements only");
+      expect(json).toContain("versions");
+      expect(JSON.stringify(mathJsonSchema)).toContain(
+        "Do not add derived formulas or solution methods"
       );
-      expect(jsonSchema.required).not.toContain("requirements");
-      expect(jsonSchema).not.toHaveProperty("properties.task");
-      expect(jsonSchema).not.toHaveProperty("properties.query");
-    }
-  });
-
-  it("keeps each specialist-specific concern small and explicit", async () => {
-    const nakafaSchema = asSchema(nakafaToolInputSchema);
-    const mathSchema = asSchema(mathToolInputSchema);
-    const schema = asSchema(researchToolInputSchema);
-    const nakafaJsonSchema = await Promise.resolve(nakafaSchema.jsonSchema);
-    const mathJsonSchema = await Promise.resolve(mathSchema.jsonSchema);
-    const jsonSchema = await Promise.resolve(schema.jsonSchema);
-    const json = JSON.stringify(jsonSchema);
-
-    expect(nakafaJsonSchema).toMatchObject({
-      properties: {
-        deliverables: {
-          type: "array",
-        },
-      },
-      required: expect.arrayContaining(["deliverables"]),
-    });
-    expect(mathJsonSchema).toMatchObject({
-      properties: {
-        given: {
-          type: "array",
-        },
-      },
-      required: expect.arrayContaining(["given"]),
-    });
-    expect(jsonSchema).toMatchObject({
-      properties: {
-        sourceRequirements: {
-          type: "array",
-        },
-      },
-      required: expect.arrayContaining(["sourceRequirements"]),
-      type: "object",
-    });
-    expect(json).toContain("Task-relevant user request details only");
-    expect(json).toContain("Keep connective wording in the user's language");
-    expect(json).toContain("Preserve technical names and terms exactly");
-    expect(json).toContain("Do not translate this field into English");
-    expect(json).toContain("Omit unrelated, repeated, emotional");
-    expect(json).toContain("Specialist job only");
-    expect(json).toContain("Source requirements only");
-    expect(json).toContain("versions");
-    expect(JSON.stringify(mathJsonSchema)).toContain(
-      "Do not add derived formulas or solution methods"
-    );
-    expect(json).not.toContain("exact user wording");
-    expect(json).not.toContain("userRequest");
-    expect(json).toContain("Do not include final-answer wording");
-    expect(json).toContain(
-      "Do not include general answer-formatting, persona, or style rules"
-    );
-  });
+      expect(json).not.toContain("exact user wording");
+      expect(json).not.toContain("userRequest");
+      expect(json).toContain("Do not include final-answer wording");
+      expect(json).toContain(
+        "Do not include general answer-formatting, persona, or style rules"
+      );
+    })
+  );
 
   it("renders structured specialist input into one internal Markdown task", () => {
     expect(
