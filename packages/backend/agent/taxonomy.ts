@@ -106,7 +106,6 @@ export const getNakafaTaxonomy = Effect.fn("agent.getNakafaTaxonomy")(
           "nakafa_get_content",
           "nakafa_get_taxonomy",
           "nakafa_get_quran_reference",
-          "nakafa_get_quran_reference_v2",
         ],
         tryout: inventories.tryout,
       },

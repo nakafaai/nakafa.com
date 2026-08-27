@@ -1,15 +1,8 @@
-import {
-  type QuranEmbeddedSourceId,
-  type QuranExternalSourceId,
-  quranReadingSourceIds,
-  quranTafsirSourceId,
-} from "@nakafa/aksara-contracts/quran/identity";
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import {
   NAKAFA_API_BASE_URL,
   NAKAFA_BASE_URL,
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
-  NAKAFA_PUBLIC_API_DOCUMENT_VERSION,
   NAKAFA_PUBLIC_API_VERSION,
 } from "@repo/contents/_lib/agent/constants";
 import { NAKAFA_AGENT_DEFAULT_LIMIT } from "@repo/contents/_types/agent/search";
@@ -56,114 +49,6 @@ const QURAN_REFERENCE_EXAMPLE = {
   ],
 };
 
-const EXAMPLE_LOCALE = "en" as const;
-const EXAMPLE_DIGEST = `sha256:${"1".repeat(64)}`;
-const EXAMPLE_ARTIFACT = {
-  byte_count: 3_456_789,
-  digest: EXAMPLE_DIGEST,
-  file_count: 1,
-};
-const [ARABIC_SOURCE_ID, TRANSLATION_SOURCE_ID] =
-  quranReadingSourceIds(EXAMPLE_LOCALE);
-const TAFSIR_SOURCE_ID = quranTafsirSourceId(EXAMPLE_LOCALE);
-
-/** Builds illustrative metadata without duplicating signed source records. */
-function embeddedSource(id: QuranEmbeddedSourceId) {
-  return {
-    artifact: EXAMPLE_ARTIFACT,
-    id,
-    kind: "embedded" as const,
-    label: `Example ${id}`,
-    notice: "Example signed embedded source.",
-    publisher: "Example publisher",
-    retrieved_at: "2026-08-26T15:51:00Z",
-    source_url: `https://example.test/${id}`,
-    terms: {
-      artifact: EXAMPLE_ARTIFACT,
-      url: `https://example.test/${id}/terms`,
-    },
-    update_url: `https://example.test/${id}/updates`,
-    version: "example-version",
-  };
-}
-
-/** Builds one illustrative external source from the owning identity contract. */
-function externalSource(id: QuranExternalSourceId) {
-  return {
-    id,
-    kind: "external" as const,
-    label: `Example ${id}`,
-    notice: "Example signed link-only source.",
-    publisher: "Example publisher",
-    retrieved_at: "2026-08-26T15:51:00Z",
-    source_url: `https://example.test/${id}`,
-    terms: {
-      access: "link-only" as const,
-      url: `https://example.test/${id}/terms`,
-    },
-    update_url: `https://example.test/${id}/updates`,
-    version: "example-version",
-  };
-}
-
-const ARABIC_SOURCE_EXAMPLE = embeddedSource(ARABIC_SOURCE_ID);
-const TRANSLATION_SOURCE_EXAMPLE = {
-  ...embeddedSource(TRANSLATION_SOURCE_ID),
-  locale: EXAMPLE_LOCALE,
-};
-
-const TAFSIR_ACCESS_EXAMPLE = {
-  kind: "external",
-  locale: EXAMPLE_LOCALE,
-  notice: "Example signed link-only Tafsir access.",
-  source: externalSource(TAFSIR_SOURCE_ID),
-};
-
-const QURAN_REFERENCE_V2_EXAMPLE = {
-  alignmentId: "alignment:example:quran:1",
-  assetId: "asset:example:quran:1",
-  conceptId: "concept:example:quran:1",
-  content_id: "asset:example:quran:1",
-  learningObjectId: "learning-object:example:quran:1",
-  lensId: "lens:example:quran",
-  locale: EXAMPLE_LOCALE,
-  markdown_url: `https://nakafa.com/${EXAMPLE_LOCALE}/quran/1.md`,
-  meaning: { locale: EXAMPLE_LOCALE, text: "The Opening" },
-  name: "Al-Faatiha",
-  revelation: "Meccan",
-  route: "quran/1",
-  section: "quran",
-  sources: {
-    arabic: ARABIC_SOURCE_EXAMPLE,
-    translation: TRANSLATION_SOURCE_EXAMPLE,
-  },
-  tafsir_access: TAFSIR_ACCESS_EXAMPLE,
-  url: `https://nakafa.com/${EXAMPLE_LOCALE}/quran/1`,
-  verses: [
-    {
-      arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
-      number: 1,
-      translation: {
-        notes: [
-          {
-            number: 1,
-            referenceOffset: 47,
-            text: "Exact source-authored explanatory note.",
-          },
-        ],
-        segments: [
-          {
-            kind: "text",
-            offset: 0,
-            value: "In the name of Allah, the Most Compassionate. ",
-          },
-          { kind: "note", number: 1, offset: 47 },
-        ],
-      },
-    },
-  ],
-};
-
 /** Concrete response examples for every publicly reachable operation. */
 export const OPENAPI_RESPONSE_EXAMPLES = {
   ApiHealth: {
@@ -192,13 +77,12 @@ export const OPENAPI_RESPONSE_EXAMPLES = {
   OpenApi: {
     info: {
       title: "Nakafa Public API",
-      version: NAKAFA_PUBLIC_API_DOCUMENT_VERSION,
+      version: NAKAFA_PUBLIC_API_VERSION,
     },
     openapi: "3.1.1",
     paths: {},
   },
   QuranReference: QURAN_REFERENCE_EXAMPLE,
-  QuranReferenceV2: QURAN_REFERENCE_V2_EXAMPLE,
   SearchResult: {
     count: 1,
     has_more: false,

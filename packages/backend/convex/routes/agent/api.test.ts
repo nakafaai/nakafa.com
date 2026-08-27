@@ -160,6 +160,15 @@ describe("public agent API routes", () => {
     expect(response.status).toBe(404);
   });
 
+  it("does not expose a second public API version", async () => {
+    const response = await fetchApi(
+      createConvexTestWithBetterAuth(),
+      "/v2/quran/1?locale=en"
+    );
+
+    expect(response.status).toBe(404);
+  });
+
   it.each([
     ["/v1/search?unknown=value", {}, "INVALID_REQUEST", 400],
     ["/v1/content", {}, "INVALID_REQUEST", 400],

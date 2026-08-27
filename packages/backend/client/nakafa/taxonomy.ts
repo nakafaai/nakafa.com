@@ -89,7 +89,6 @@ export const readNakafaTaxonomy = Effect.fn("NakafaContent.readTaxonomy")(
         "nakafa_get_content",
         "nakafa_get_taxonomy",
         "nakafa_get_quran_reference",
-        "nakafa_get_quran_reference_v2",
       ],
     });
   }
