@@ -11,6 +11,12 @@ import { ChildProcess } from "effect/unstable/process";
 import { writeOutput } from "./output.ts";
 
 const GIT_REVISION_PATTERN = /^[0-9a-f]{40}$/u;
+const ProductionAcceptanceMode = Schema.Literals(["github", "vercel"]);
+
+interface RevisionEnvironment {
+  readonly base: string;
+  readonly head: string;
+}
 
 export interface ProductionChange {
   readonly path: string;
@@ -130,14 +136,13 @@ export function requiresProductionAcceptance(
   );
 }
 
-/** Writes the fail-closed production decision for the GitHub Actions job. */
-export const writeProductionAcceptanceDecision = Effect.fn(
-  "ProductionAcceptance.writeDecision"
-)(function* (repositoryRoot: string) {
+/** Resolves one fail-closed decision from exact revision environment values. */
+const resolveProductionAcceptance = Effect.fn(
+  "ProductionAcceptance.resolveDecision"
+)(function* (repositoryRoot: string, environment: RevisionEnvironment) {
   const config = yield* Config.all({
-    base: Config.nonEmptyString("BASE_SHA"),
-    head: Config.nonEmptyString("HEAD_SHA"),
-    output: Config.nonEmptyString("GITHUB_OUTPUT"),
+    base: Config.nonEmptyString(environment.base),
+    head: Config.nonEmptyString(environment.head),
   }).pipe(
     Effect.mapError(
       (cause) =>
@@ -163,10 +168,35 @@ export const writeProductionAcceptanceDecision = Effect.fn(
     )
   );
   const changes = yield* readProductionChanges(repositoryRoot, base, head);
-  const required = requiresProductionAcceptance(changes);
+  return {
+    changes,
+    required: requiresProductionAcceptance(changes),
+  } as const;
+});
+
+/** Writes the fail-closed production decision for the GitHub Actions job. */
+export const writeProductionAcceptanceDecision = Effect.fn(
+  "ProductionAcceptance.writeDecision"
+)(function* (repositoryRoot: string) {
+  const output = yield* Config.nonEmptyString("GITHUB_OUTPUT").pipe(
+    Effect.mapError(
+      (cause) =>
+        new ProductionAcceptanceError({
+          cause,
+          message: "Production acceptance configuration is incomplete.",
+        })
+    )
+  );
+  const { changes, required } = yield* resolveProductionAcceptance(
+    repositoryRoot,
+    {
+      base: "BASE_SHA",
+      head: "HEAD_SHA",
+    }
+  );
   const fileSystem = yield* FileSystem.FileSystem;
   yield* fileSystem
-    .writeFileString(config.output, `required=${String(required)}\n`, {
+    .writeFileString(output, `required=${String(required)}\n`, {
       flag: "a",
     })
     .pipe(
@@ -186,10 +216,52 @@ export const writeProductionAcceptanceDecision = Effect.fn(
   return required;
 });
 
+/** Resolves whether Vercel must build the exact protected-main change. */
+const resolveVercelProductionDecision = Effect.fn(
+  "ProductionAcceptance.resolveVercelDecision"
+)(function* (repositoryRoot: string) {
+  const decision = yield* resolveProductionAcceptance(repositoryRoot, {
+    base: "VERCEL_GIT_PREVIOUS_SHA",
+    head: "VERCEL_GIT_COMMIT_SHA",
+  });
+  yield* writeOutput(
+    decision.required
+      ? `Vercel production build required for ${decision.changes.length} changed paths.\n`
+      : `Vercel production build skipped for ${decision.changes.length} modified test modules.\n`
+  );
+  return decision.required;
+});
+
+/** Runs the selected production-scope adapter at the Node CLI boundary. */
+const runProductionAcceptanceMain = Effect.fn("ProductionAcceptance.runMain")(
+  function* () {
+    const modeInput = yield* Effect.sync(() => process.argv[2] ?? "github");
+    const mode = yield* Schema.decodeUnknownEffect(ProductionAcceptanceMode)(
+      modeInput
+    ).pipe(
+      Effect.mapError(
+        (cause) =>
+          new ProductionAcceptanceError({
+            cause,
+            message: "Production acceptance mode is invalid.",
+          })
+      )
+    );
+    const repositoryRoot = yield* Effect.sync(() => process.cwd());
+    if (mode === "github") {
+      yield* writeProductionAcceptanceDecision(repositoryRoot);
+      return;
+    }
+
+    const required = yield* resolveVercelProductionDecision(repositoryRoot);
+    yield* Effect.sync(() => {
+      process.exitCode = required ? 1 : 0;
+    });
+  }
+);
+
 if (import.meta.main) {
   NodeRuntime.runMain(
-    writeProductionAcceptanceDecision(process.cwd()).pipe(
-      Effect.provide(NodeServices.layer)
-    )
+    runProductionAcceptanceMain().pipe(Effect.provide(NodeServices.layer))
   );
 }

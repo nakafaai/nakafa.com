@@ -4,8 +4,19 @@ import { config, hasIsolatedTypecheck } from "@/vercel";
 
 describe("www Vercel configuration", () => {
   it("builds only affected production commits", () => {
-    expect(config.ignoreCommand).toBe(
-      'if [ "$VERCEL_ENV" != "production" ]; then exit 0; fi; turbo query affected --base="$VERCEL_GIT_PREVIOUS_SHA" --packages www --exit-code || exit 1'
+    const ignoreCommand = config.ignoreCommand ?? "";
+
+    expect(ignoreCommand).toContain(
+      'if [ "$VERCEL_ENV" != "production" ]; then exit 0; fi'
+    );
+    expect(ignoreCommand).toContain(
+      "node ../../scripts/production-acceptance.ts vercel && exit 0"
+    );
+    expect(ignoreCommand).toContain(
+      'turbo query affected --base="$VERCEL_GIT_PREVIOUS_SHA" --packages www --exit-code || exit 1'
+    );
+    expect(ignoreCommand.indexOf("production-acceptance.ts")).toBeLessThan(
+      ignoreCommand.indexOf("turbo query affected")
     );
     expect(config.git?.deploymentEnabled).toEqual({
       "**": false,
