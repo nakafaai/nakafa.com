@@ -143,16 +143,19 @@ describe("public agent API routes", () => {
     expect(revalidated.headers.get("etag")).toBe(etag);
   });
 
-  it("rejects direct origin access before dispatching a route", async () => {
-    const response = await createConvexTestWithBetterAuth().fetch(
-      `${NAKAFA_API_EDGE_CONTRACT.originPath}/v1/health`
-    );
+  it.each(["/v1/health", "/quran/1?locale=en"])(
+    "rejects direct origin access to %s before dispatching a route",
+    async (path) => {
+      const response = await createConvexTestWithBetterAuth().fetch(
+        `${NAKAFA_API_EDGE_CONTRACT.originPath}${path}`
+      );
 
-    await expectProblem(response, {
-      code: "ORIGIN_ACCESS_DENIED",
-      status: 403,
-    });
-  });
+      await expectProblem(response, {
+        code: "ORIGIN_ACCESS_DENIED",
+        status: 403,
+      });
+    }
+  );
 
   it("preserves the deployed v1 predecessor before the edge switch", async () => {
     const response = await createConvexTestWithBetterAuth().fetch("/v1");

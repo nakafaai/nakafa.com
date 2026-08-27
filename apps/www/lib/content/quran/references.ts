@@ -25,10 +25,10 @@ export function getQuranReferences(
 function toReference(source: QuranReferenceSource): Reference {
   return {
     authors: source.publisher,
-    details: `${source.notice} ${source.version}`,
+    details: `${source.notice} Version: ${source.version}. Terms: ${source.terms.url}. Updates: ${source.updateUrl}.`,
     publication: source.publisher,
     title: source.label,
-    url: source.updateUrl,
+    url: source.sourceUrl,
     year: Number(source.retrievedAt.slice(0, 4)),
   };
 }
@@ -42,6 +42,6 @@ function toTafsirReference(access: QuranViewTafsirAccess): Reference {
       : `Terms: ${source.terms.url}`;
   return {
     ...toReference(source),
-    details: `${access.notice} ${source.notice} ${source.version}. ${accessDetail}`,
+    details: `${access.notice} ${source.notice} Version: ${source.version}. ${accessDetail}. Updates: ${source.updateUrl}.`,
   };
 }

@@ -50,6 +50,8 @@ export function registerAgentApiRoutes(app: AgentApp) {
   const api: AgentApp = new Hono();
 
   api.use("/openapi.json", guardAgentApi);
+  api.use("/quran", guardAgentApi);
+  api.use("/quran/*", guardAgentApi);
   api.use("/v1", guardAgentApi);
   api.use("/v1/*", guardAgentApi);
   api.use("/v2", guardAgentApi);
