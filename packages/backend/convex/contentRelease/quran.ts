@@ -19,15 +19,14 @@ import {
 } from "@repo/backend/convex/contentRelease/quran/markdown";
 import {
   quranPassageValidator,
+  quranReferenceValidator,
   readQuranPassage,
   readQuranReference,
 } from "@repo/backend/convex/contentRelease/quran/reference";
 import {
   quranAppLocaleValidator,
-  quranReadingSourcesValidator,
   quranReferenceArgsValidator,
   quranSourceFields,
-  quranTafsirAccessValidator,
   quranTafsirAppLocaleValidator,
 } from "@repo/backend/convex/contentRelease/quran/spec";
 import {
@@ -59,17 +58,6 @@ const attributionValidator = v.object({
 const surahCatalogValidator = v.object({
   ...quranSourceFields,
   rowJson: v.array(v.string()),
-});
-
-const referenceValidator = v.object({
-  ...quranSourceFields,
-  chunkJson: v.array(v.string()),
-  fromVerse: v.number(),
-  searchJson: v.union(v.string(), v.null()),
-  sources: v.union(quranReadingSourcesValidator, v.null()),
-  surahJson: v.union(v.string(), v.null()),
-  tafsirAccess: v.union(quranTafsirAccessValidator, v.null()),
-  toVerse: v.number(),
 });
 
 /** Returns the visible signed source attribution for active Quran content. */
@@ -247,7 +235,7 @@ export const reference = query({
 /** Returns one canonical V2 localized Quran verse reference. */
 export const referenceV2 = query({
   args: quranReferenceArgsValidator.fields,
-  returns: referenceValidator,
+  returns: quranReferenceValidator,
   handler: (ctx, args) => runConvexProgram(readQuranReference(ctx, args)),
 });
 

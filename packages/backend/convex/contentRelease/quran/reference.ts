@@ -24,17 +24,22 @@ import { readQuranSurahRow } from "@repo/backend/convex/contentRelease/quran/sur
 import { v } from "convex/values";
 import { Effect } from "effect";
 
-/** Bismillah-aware bounded passage introduced before consumers switch. */
-export const quranPassageValidator = v.object({
+/** Existing bounded reference wire contract retained during expansion. */
+export const quranReferenceValidator = v.object({
   ...quranSourceFields,
   chunkJson: v.array(v.string()),
   fromVerse: v.number(),
-  preBismillah: v.union(quranBismillahValidator, v.null()),
   searchJson: v.union(v.string(), v.null()),
   sources: v.union(quranReadingSourcesValidator, v.null()),
   surahJson: v.union(v.string(), v.null()),
   tafsirAccess: v.union(quranTafsirAccessValidator, v.null()),
   toVerse: v.number(),
+});
+
+/** Bismillah-aware bounded passage introduced before consumers switch. */
+export const quranPassageValidator = v.object({
+  ...quranReferenceValidator.fields,
+  preBismillah: v.union(quranBismillahValidator, v.null()),
 });
 
 type QuranReferenceSourceRequest = Omit<QuranReferenceArgs, "appLocale"> & {
