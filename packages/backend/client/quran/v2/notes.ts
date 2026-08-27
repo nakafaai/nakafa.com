@@ -3,7 +3,8 @@ import type { QuranTranslationDocument } from "@nakafa/aksara-contracts/quran/no
 /** Projects semantic notes into a stable text-and-definitions contract. */
 export function projectQuranTranslationV2(
   translation: QuranTranslationDocument,
-  referenceLabel = "translation note"
+  renderReference: (number: number) => string = (number) =>
+    `[translation note ${number}]`
 ) {
   return {
     notes: translation.notes.map(({ number, text }) => ({ number, text })),
@@ -11,7 +12,7 @@ export function projectQuranTranslationV2(
       .map((segment) =>
         segment.kind === "text"
           ? segment.value
-          : `[${referenceLabel} ${segment.number}]`
+          : renderReference(segment.number)
       )
       .join(""),
   };

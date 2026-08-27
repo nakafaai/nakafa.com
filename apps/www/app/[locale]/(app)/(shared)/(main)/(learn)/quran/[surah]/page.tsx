@@ -17,8 +17,11 @@ import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { PaginationContent } from "@/components/shared/pagination-content";
+import { QuranInterpretationAvailability } from "@/components/shared/quran/interpretation/availability";
+import { QuranInterpretationButton } from "@/components/shared/quran/interpretation/button";
 import { QuranInterpretationControls } from "@/components/shared/quran/interpretation/controls";
-import { QuranVerseList } from "@/components/shared/quran/verse-list";
+import { QuranSources } from "@/components/shared/quran/sources";
+import { QuranVerseList } from "@/components/shared/quran/verses/list";
 import { RefContent } from "@/components/shared/ref-content";
 import {
   getPublishedQuranCatalog,
@@ -178,7 +181,7 @@ async function CachedSurahShell({
       recoverStalePublishedQuranSnapshot(servedSnapshotId)
     );
   }
-  const translation = surahData.name.translation;
+  const description = surahData.name.meaning ?? t("quran-description");
   const title = getQuranSurahName(surahData.name);
 
   const verseItems = result.verses.map((verse) => {
@@ -203,7 +206,8 @@ async function CachedSurahShell({
   });
 
   const interpretationLabel = t("interpretation");
-  const hasInterpretation = result.appLocale === "id";
+  const tafsirAccess = result.tafsirAccess;
+  const translationNotesLabel = t("translation-notes");
 
   return (
     <>
@@ -216,7 +220,7 @@ async function CachedSurahShell({
       />
       <BookJsonLd
         author={{ "@type": "Person", name: "Allah" }}
-        description={translation}
+        description={description}
         inLanguage={locale}
         name={title}
         position={surahNumber}
@@ -226,7 +230,7 @@ async function CachedSurahShell({
       <VirtualProvider>
         <LayoutMaterialContent>
           <HeaderContent
-            description={translation}
+            description={description}
             icon={AllahIcon}
             link={{
               href: "/quran",
@@ -235,8 +239,18 @@ async function CachedSurahShell({
             title={title}
           />
           <LayoutContent>
-            {hasInterpretation ? (
+            <QuranSources
+              arabicLabel={t("arabic-source")}
+              label={t("sources")}
+              sources={result.sources}
+              translationLabel={t("translation-source")}
+            />
+            {tafsirAccess === null ? null : (
+              <QuranInterpretationAvailability access={tafsirAccess} />
+            )}
+            {tafsirAccess?.kind === "embedded" ? (
               <QuranInterpretationControls
+                appLocale={tafsirAccess.appLocale}
                 errorMessage={t("interpretation-error")}
                 label={interpretationLabel}
                 recoverSnapshot={recoverSnapshot}
@@ -245,16 +259,20 @@ async function CachedSurahShell({
                 surahNumber={surahData.number}
               >
                 <QuranVerseList
-                  hasInterpretation
-                  interpretationLabel={interpretationLabel}
                   items={verseItems}
+                  renderAction={(verse) => (
+                    <QuranInterpretationButton
+                      label={interpretationLabel}
+                      verseNumber={verse.number.inSurah}
+                    />
+                  )}
+                  translationNotesLabel={translationNotesLabel}
                 />
               </QuranInterpretationControls>
             ) : (
               <QuranVerseList
-                hasInterpretation={false}
-                interpretationLabel={interpretationLabel}
                 items={verseItems}
+                translationNotesLabel={translationNotesLabel}
               />
             )}
           </LayoutContent>
@@ -270,7 +288,7 @@ async function CachedSurahShell({
           header={{
             title,
             href: `/quran/${surah}`,
-            description: translation,
+            description,
           }}
         />
       </VirtualProvider>

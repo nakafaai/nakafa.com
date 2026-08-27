@@ -6,8 +6,6 @@ import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 
 const usageDataName = "Usage data";
 const readinessTimeoutMilliseconds = 15_000;
-const quranIndexUrlPattern = /\/id\/quran$/;
-const quranSurahUrlPattern = /\/id\/quran\/2$/;
 
 const prepareConsentPreferences = Effect.fn(
   "NakafaE2E.prepareDrawerConsentPreferences"
@@ -85,66 +83,6 @@ const verifyDesktopConsentDialog = Effect.fn(
   yield* Effect.promise(() => expect(trigger).toBeFocused());
 });
 
-const verifyQuranInterpretationDrawer = Effect.fn(
-  "NakafaE2E.verifyQuranInterpretationDrawer"
-)(function* (page: Page) {
-  yield* seedDeniedAnalyticsConsent(page);
-  const response = yield* Effect.promise(() =>
-    page.goto("/id/quran/2", { waitUntil: "domcontentloaded" })
-  );
-  yield* Effect.sync(() => expect(response?.ok()).toBe(true));
-  yield* waitForCommittedAppRouter(
-    page,
-    "/id/quran/2",
-    "/id/quran/2",
-    readinessTimeoutMilliseconds
-  );
-
-  const trigger = page.locator("[data-quran-interpretation-verse]").first();
-  yield* Effect.promise(() => expect(trigger).toBeVisible({ timeout: 15_000 }));
-  yield* Effect.promise(() => expect(trigger).toBeEnabled({ timeout: 15_000 }));
-  yield* Effect.promise(() => trigger.click());
-
-  const drawer = page.locator('[data-slot="drawer-popup"]');
-  yield* Effect.promise(() => expect(drawer).toBeVisible({ timeout: 15_000 }));
-  yield* Effect.promise(() =>
-    expect(drawer.locator('[data-slot="drawer-bar"]')).toBeVisible()
-  );
-  yield* Effect.promise(() =>
-    expect(drawer.locator('[data-slot="drawer-title"]')).toHaveText("Tafsir")
-  );
-  yield* Effect.promise(() =>
-    expect(drawer.locator('[data-slot="drawer-panel"]')).not.toBeEmpty()
-  );
-
-  yield* Effect.promise(() => page.keyboard.press("Escape"));
-  yield* Effect.promise(() => expect(drawer).toHaveCount(0));
-
-  const quranIndexLink = page.locator('a[href="/id/quran"]').first();
-  yield* Effect.promise(() => expect(quranIndexLink).toBeVisible());
-  yield* Effect.promise(() => quranIndexLink.click());
-  yield* Effect.promise(() => expect(page).toHaveURL(quranIndexUrlPattern));
-  yield* Effect.promise(() => expect(trigger).toBeAttached());
-  yield* Effect.promise(() => expect(trigger).toBeHidden());
-  yield* Effect.promise(() => expect(trigger).toHaveCSS("opacity", "1"));
-
-  yield* Effect.promise(() => page.goBack());
-  yield* Effect.promise(() => expect(page).toHaveURL(quranSurahUrlPattern));
-  yield* waitForCommittedAppRouter(
-    page,
-    "/id/quran",
-    "/id/quran/2",
-    readinessTimeoutMilliseconds
-  );
-  yield* Effect.promise(() => expect(trigger).toBeVisible());
-  yield* Effect.promise(() => expect(trigger).toBeEnabled());
-  yield* Effect.promise(() => expect(trigger).toHaveCSS("opacity", "1"));
-  yield* Effect.promise(() => trigger.click());
-  yield* Effect.promise(() => expect(drawer).toBeVisible({ timeout: 15_000 }));
-  yield* Effect.promise(() => page.keyboard.press("Escape"));
-  yield* Effect.promise(() => expect(drawer).toHaveCount(0));
-});
-
 test.describe("public Drawer consumers", () => {
   test.describe("compact responsive dialog", () => {
     test.use({ viewport: { height: 844, width: 390 } });
@@ -166,18 +104,6 @@ test.describe("public Drawer consumers", () => {
     }) => {
       await Effect.runPromise(
         withObservedPageErrors(page, verifyDesktopConsentDialog(page))
-      );
-    });
-  });
-
-  test.describe("Quran interpretation", () => {
-    test.use({ viewport: { height: 844, width: 390 } });
-
-    test("keeps the tafsir drawer content and dismissal behavior", async ({
-      page,
-    }) => {
-      await Effect.runPromise(
-        withObservedPageErrors(page, verifyQuranInterpretationDrawer(page))
       );
     });
   });

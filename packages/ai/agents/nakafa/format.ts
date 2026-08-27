@@ -1,4 +1,4 @@
-import type { NakafaAgentQuranReference } from "@repo/contents/_lib/agent/schema/quran";
+import type { NakafaAgentQuranReferenceV2 } from "@repo/contents/_lib/agent/schema/quran/reference";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentSearchResult } from "@repo/contents/_lib/agent/schema/search";
 import type { NakafaAgentTaxonomy } from "@repo/contents/_lib/agent/schema/taxonomy";
@@ -45,21 +45,64 @@ export function formatRead(result: NakafaAgentMarkdown) {
   `);
 }
 
-/** Formats a bounded Quran reference with translation and optional tafsir. */
-export function formatQuran(result: NakafaAgentQuranReference) {
+/** Renders semantic text while preserving every source note relationship. */
+function formatQuranTranslation(
+  translation: NakafaAgentQuranReferenceV2["verses"][number]["translation"]
+) {
+  const text = translation.segments
+    .map((segment) =>
+      segment.kind === "text"
+        ? segment.value
+        : `[translation note ${segment.number}]`
+    )
+    .join("");
+  const notes = translation.notes
+    .map((note) => `- Translation note ${note.number}: ${note.text}`)
+    .join("\n");
+  return notes.length === 0
+    ? `- Translation: ${text}`
+    : `- Translation: ${text}\n${notes}`;
+}
+
+/** Formats the source identity shared by embedded and link-only editions. */
+function formatQuranSource(source: {
+  readonly label: string;
+  readonly publisher: string;
+  readonly source_url: string;
+  readonly terms: { readonly url: string };
+  readonly update_url: string;
+  readonly version: string;
+}) {
+  return `${source.label}; publisher: ${source.publisher}; version: ${source.version}; source: ${source.source_url}; updates: ${source.update_url}; terms: ${source.terms.url}`;
+}
+
+/** Formats a source-grounded V2 Quran reference for model consumption. */
+export function formatQuran(result: NakafaAgentQuranReferenceV2) {
+  const meaning = result.meaning
+    ? `${result.meaning.text} (${result.meaning.locale})`
+    : `Not available for requested locale ${result.locale}`;
   return dedent(`
-    # Nakafa Quran Reference
+    # Nakafa Quran Reference V2
     - Name: ${result.name}
-    - Translation: ${result.translation}
+    - Meaning: ${meaning}
     - Revelation: ${result.revelation}
     - Content ID: ${result.content_id}
+
+    ## Signed reading sources
+    - Arabic: ${formatQuranSource(result.sources.arabic)}
+    - Translation (${result.sources.translation.locale}): ${formatQuranSource(result.sources.translation)}
+
+    ## Tafsir access
+    - Kind: ${result.tafsir_access.kind}
+    - Notice: ${result.tafsir_access.notice}
+    - Source: ${formatQuranSource(result.tafsir_access.source)}
 
     ${result.verses
       .map(
         (verse) => `
     ## Verse ${verse.number}
     - Arabic: ${verse.arabic}
-    - Translation: ${verse.translation}
+    ${formatQuranTranslation(verse.translation)}
     ${verse.tafsir ? `- Tafsir: ${verse.tafsir}` : ""}`
       )
       .join("\n")}

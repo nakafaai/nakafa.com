@@ -1,25 +1,24 @@
-import type { QuranViewVerse } from "@repo/backend/client/quran/view";
+import type { QuranViewVerseV2 } from "@repo/backend/client/quran/v2/view";
 import { cn } from "@repo/design-system/lib/utils";
-import { QuranInterpretationButton } from "@/components/shared/quran/interpretation/button";
+import type { ReactNode } from "react";
+import { QuranVerseTranslation } from "@/components/shared/quran/verses/translation";
 import { QuranText } from "@/components/shared/quran-text";
 
 interface Props {
-  hasInterpretation: boolean;
+  action?: ReactNode;
   id: string;
-  interpretationLabel: string;
   isLast: boolean;
-  verse: QuranViewVerse;
+  translationNotesLabel: string;
+  verse: QuranViewVerseV2;
   verseLabel: string;
 }
 
-/**
- * Renders one Quran verse as SEO-visible server content with delegated controls.
- */
-export function QuranVerse({
-  hasInterpretation,
+/** Renders one Quran verse as SEO-visible server content. */
+export function QuranVerseItem({
+  action,
   id,
-  interpretationLabel,
   isLast,
+  translationNotesLabel,
   verse,
   verseLabel,
 }: Props) {
@@ -44,17 +43,17 @@ export function QuranVerse({
           </div>
         </a>
 
-        <div className="flex items-center gap-2">
-          {hasInterpretation && (
-            <QuranInterpretationButton
-              label={interpretationLabel}
-              verseNumber={verse.number.inSurah}
-            />
-          )}
-        </div>
+        {action ? (
+          <div className="flex items-center gap-2">{action}</div>
+        ) : null}
       </div>
       <QuranText>{verse.arabic}</QuranText>
-      <p className="text-pretty leading-relaxed">{verse.translation}</p>
+      <QuranVerseTranslation
+        id={id}
+        label={translationNotesLabel}
+        translation={verse.translation}
+        verseLabel={verseLabel}
+      />
     </div>
   );
 }

@@ -2,6 +2,9 @@ import { vi } from "vitest";
 
 const TEST_API_KEY = "test-api-key-12345";
 
+vi.stubEnv("NAKAFA_API_EDGE_SECRET", "test-api-edge-secret");
+vi.stubEnv("NAKAFA_CONVEX_SITE_URL", "https://test.convex.site");
+
 vi.mock("server-only", () => ({}));
 
 vi.mock("@/env", () => ({

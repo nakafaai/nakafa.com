@@ -1,3 +1,4 @@
+import { makeAppLocale } from "@nakafa/aksara-contracts/locale";
 import { describe, expect, it } from "vitest";
 import { generateFallbackMetadata } from "@/lib/utils/seo/fallback";
 
@@ -102,7 +103,7 @@ describe("generateFallbackMetadata", () => {
     });
   });
 
-  it("uses the source-authenticated Quran translation for fallback", () => {
+  it("uses the source-authenticated Quran name for fallback", () => {
     expect(
       generateFallbackMetadata({
         type: "quran",
@@ -110,7 +111,10 @@ describe("generateFallbackMetadata", () => {
           kind: "quran-surah",
           name: {
             arabic: "الفاتحة",
-            translation: "The Opening",
+            meaning: {
+              appLocale: makeAppLocale("en"),
+              text: "The Opening",
+            },
             transliteration: "Al-Fatihah",
           },
           number: 1,
@@ -119,8 +123,8 @@ describe("generateFallbackMetadata", () => {
         },
       })
     ).toStrictEqual({
-      title: "The Opening - Nakafa",
-      description: "The Opening",
+      title: "Al-Fatihah - Nakafa",
+      description: "Al-Fatihah",
       keywords: [],
     });
   });

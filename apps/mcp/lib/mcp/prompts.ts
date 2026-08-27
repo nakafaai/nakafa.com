@@ -183,7 +183,7 @@ function getQuranReferencePrompt(args: unknown) {
             question
               ? `Question: ${question}`
               : "Summarize the returned reference briefly.",
-            "Use `nakafa_get_quran_reference` and cite the canonical Nakafa URL.",
+            "Use `nakafa_get_quran_reference_v2`, preserve semantic translation notes, distinguish embedded tafsir from official link-only access, and cite the canonical Nakafa URL plus returned sources.",
           ].join("\n"),
           type: "text" as const,
         },

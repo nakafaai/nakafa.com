@@ -5,17 +5,8 @@ import * as rootParams from "next/root-params";
 import { hasLocale } from "next-intl";
 import { getRequestConfig } from "next-intl/server";
 import { hasCandidateLocalePreview } from "./environment";
+import { loadLocaleMessages } from "./messages";
 import { previewRouting } from "./routing";
-
-const loadEnglishMessages = () =>
-  import("@repo/internationalization/dictionaries/en.json");
-type EnglishMessagesModule = Awaited<ReturnType<typeof loadEnglishMessages>>;
-
-const loadMessagesByLocale = {
-  de: () => import("@repo/internationalization/dictionaries/de.json"),
-  en: loadEnglishMessages,
-  id: () => import("@repo/internationalization/dictionaries/id.json"),
-} satisfies Record<AppLocaleCode, () => Promise<EnglishMessagesModule>>;
 
 /** Accepts inactive contract locales only for the authenticated local child. */
 function hasRequestLocale(locale: string | undefined): locale is AppLocaleCode {
@@ -43,11 +34,11 @@ function hasRequestLocale(locale: string | undefined): locale is AppLocaleCode {
  */
 export default getRequestConfig(async ({ locale }) => {
   if (hasRequestLocale(locale)) {
-    const messages = await loadMessagesByLocale[locale]();
+    const messages = await loadLocaleMessages(locale);
 
     return {
       locale,
-      messages: messages.default,
+      messages,
     };
   }
 
@@ -57,10 +48,10 @@ export default getRequestConfig(async ({ locale }) => {
     notFound();
   }
 
-  const messages = await loadMessagesByLocale[rootLocale]();
+  const messages = await loadLocaleMessages(rootLocale);
 
   return {
     locale: rootLocale,
-    messages: messages.default,
+    messages,
   };
 });

@@ -5,6 +5,7 @@ import {
   formatSearch,
   formatTaxonomy,
 } from "@repo/ai/agents/nakafa/format";
+import { makeQuranV2Fixture } from "@repo/ai/agents/nakafa/tools/fixture";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { describe, expect, it } from "vitest";
 
@@ -65,31 +66,43 @@ describe("Nakafa formatter", () => {
   });
 
   it("formats Quran references with and without tafsir", () => {
+    const reference = makeQuranV2Fixture({
+      from_verse: 1,
+      include_tafsir: true,
+      locale: "id",
+      surah: 1,
+    });
     const text = formatQuran({
-      ...readNakafaContentRefFixture("id", "quran/1", "quran"),
-      name: "Al-Fatihah",
-      revelation: "Makkiyah",
-      translation: "Pembukaan",
+      ...reference,
       verses: [
         {
-          arabic: "بِسْمِ اللَّهِ",
+          ...reference.verses[0],
           number: 1,
           tafsir: "Tafsir ayat pertama.",
-          translation: "Dengan nama Allah",
-        },
-        {
-          arabic: "الْحَمْدُ لِلَّهِ",
-          number: 2,
-          translation: "Segala puji bagi Allah",
+          translation: {
+            notes: [
+              { number: 4, referenceOffset: 18, text: "Catatan sumber." },
+            ],
+            segments: [
+              { kind: "text", offset: 0, value: "Dengan nama Allah" },
+              { kind: "note", number: 4, offset: 18 },
+            ],
+          },
         },
       ],
     });
 
-    expect(text).toContain("# Nakafa Quran Reference");
+    expect(text).toContain("# Nakafa Quran Reference V2");
     expect(text).not.toContain("Inline citation:");
     expect(text).not.toContain("https://nakafa.com/id/quran/1");
+    expect(text).toContain("Meaning: Not available for requested locale id");
+    expect(text).toContain("quranenc-indonesian");
+    expect(text).toContain("quranenc-tafsir");
+    expect(text).toContain("Kind: embedded");
     expect(text).toContain("Tafsir ayat pertama.");
-    expect(text).toContain("Segala puji bagi Allah");
+    expect(text).toContain("Translation note 4: Catatan sumber.");
+    expect(text).toContain("Dengan nama Allah[translation note 4]");
+    expect(text).not.toContain("Dengan nama Allah[4]");
   });
 
   it("formats taxonomy", () => {

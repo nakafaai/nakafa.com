@@ -4,6 +4,7 @@ import {
   NakafaAgentQuranReferenceOptionsSchema,
   NakafaAgentQuranReferenceSchema,
 } from "@repo/contents/_lib/agent/schema/quran";
+import { NakafaAgentQuranReferenceV2Schema } from "@repo/contents/_lib/agent/schema/quran/reference";
 import { Effect, Option } from "effect";
 import { decodeNakafaMcpToolInput } from "@/lib/mcp/effect";
 import { nakafaContent } from "@/lib/mcp/nakafa";
@@ -16,9 +17,15 @@ export const NakafaGetQuranReferenceToolInputSchema =
   NakafaAgentQuranReferenceOptionsSchema;
 export const NakafaGetQuranReferenceToolOutputSchema =
   NakafaAgentQuranReferenceSchema;
+export const NakafaGetQuranReferenceV2ToolInputSchema =
+  NakafaAgentQuranReferenceOptionsSchema;
+export const NakafaGetQuranReferenceV2ToolOutputSchema =
+  NakafaAgentQuranReferenceV2Schema;
 /** Builds a Quran reference tool result after enforcing the MCP range limit. */
-export function getNakafaQuranReferenceToolResult(args: unknown) {
-  return Effect.gen(function* () {
+export const getNakafaQuranReferenceToolResult = Effect.fn(
+  "mcp.getNakafaQuranReferenceToolResult"
+)(
+  function* (args: unknown) {
     const input = yield* decodeNakafaMcpToolInput(
       NakafaGetQuranReferenceToolInputSchema,
       args,
@@ -48,10 +55,50 @@ export function getNakafaQuranReferenceToolResult(args: unknown) {
         ]),
       onSome: toMcpStructuredResult,
     });
-  }).pipe(
-    Effect.catchTags({
-      NakafaAgentDataReadError: succeedMcpReadModelError,
-      NakafaAgentInputError: succeedMcpReadModelError,
-    })
-  );
-}
+  },
+  Effect.catchTags({
+    NakafaAgentDataReadError: succeedMcpReadModelError,
+    NakafaAgentInputError: succeedMcpReadModelError,
+  })
+);
+
+/** Builds the source-grounded V2 Quran tool result without changing V1. */
+export const getNakafaQuranReferenceV2ToolResult = Effect.fn(
+  "mcp.getNakafaQuranReferenceV2ToolResult"
+)(
+  function* (args: unknown) {
+    const input = yield* decodeNakafaMcpToolInput(
+      NakafaGetQuranReferenceV2ToolInputSchema,
+      args,
+      "Invalid Nakafa Quran V2 reference options."
+    );
+    const lastVerse = input.to_verse ?? input.from_verse;
+    const requestedVerseCount = lastVerse - input.from_verse + 1;
+    if (lastVerse < input.from_verse) {
+      return toMcpToolError("Invalid Quran verse range.", [
+        "`to_verse` must be greater than or equal to `from_verse`.",
+      ]);
+    }
+    if (requestedVerseCount > NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES) {
+      return toMcpToolError("Quran reference range is too large.", [
+        `Request at most ${NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES} verses at a time.`,
+        "Use `nakafa_get_content` with `https://nakafa.com/en/quran/{surah}` when you need a full surah.",
+      ]);
+    }
+    const reference = yield* Nakafa.use((service) =>
+      service.quranV2(input)
+    ).pipe(Effect.provideService(Nakafa, nakafaContent));
+    return Option.match(reference, {
+      onNone: () =>
+        toMcpToolError("Nakafa Quran V2 reference was not found.", [
+          "Check that the surah number is between 1 and 114.",
+          "Check that the requested verse numbers exist in the selected surah.",
+        ]),
+      onSome: toMcpStructuredResult,
+    });
+  },
+  Effect.catchTags({
+    NakafaAgentDataReadError: succeedMcpReadModelError,
+    NakafaAgentInputError: succeedMcpReadModelError,
+  })
+);

@@ -7,7 +7,7 @@ export function generateFallbackMetadata(context: SEOContext): SEOMetadata {
   const displayName = getDisplayNameFromContext(context);
 
   if (context.type === "quran") {
-    const translation = context.surah.name.translation;
+    const translation = context.surah.name.transliteration;
 
     return {
       title: createSEOTitle([translation, displayName]),

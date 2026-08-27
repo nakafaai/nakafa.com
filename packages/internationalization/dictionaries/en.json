@@ -285,9 +285,19 @@
     "interpretation": "Interpretation",
     "interpretation-error": "This verse's interpretation could not be loaded. Try again.",
     "interpretation-refreshing": "The Quran has been updated. Refreshing this page...",
+    "meaning": "Meaning",
+    "revelation": "Revelation place",
+    "revelation-place": "{place, select, Meccan {Meccan} Medinan {Medinan} other {Unknown}}",
+    "number-of-verses": "Number of verses",
+    "arabic-source": "Arabic text",
+    "sources": "Sources",
+    "translation": "Translation",
+    "translation-source": "Translation",
+    "translation-notes": "Translation notes",
+    "markdown-limit": "This page-level Markdown is limited to verses 1-{toVerse} of {numberOfVerses}. Use the Nakafa Quran reference tool for exact verse ranges.",
     "surah-title": "Surah {number}: {name} ({translation}) - {quran}",
-    "verses": "verses",
-    "read-quran-description": "Read the Quran online with verse-by-verse translation and tafsir on Nakafa"
+    "verses": "Verses",
+    "read-quran-description": "Read the Quran online with verse-by-verse translation on Nakafa"
   },
   "Exercises": {
     "exercises": "Exercises",
@@ -1166,8 +1176,8 @@
     },
     "quran": {
       "title": "Surah {number}. {name} ({transliteration}) - {translation} | Nakafa",
-      "description": "Read Surah {name} ({transliteration}) with translation and tafsir. {numberOfVerses} verses from the Holy Quran.",
-      "keywords": "Surah {name}, Quran, {translation}, {revelation}, tafsir"
+      "description": "Read Surah {name} ({transliteration}) with verse-by-verse translation. {numberOfVerses} verses from the Holy Quran.",
+      "keywords": "Surah {name}, Quran, {translation}, {revelation}"
     }
   }
 }
