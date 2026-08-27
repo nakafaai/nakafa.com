@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
   ACCOUNT_DELETION_REQUIRES_SCHOOL_MEMBER_CODE,
@@ -5,15 +6,14 @@ import {
 } from "@repo/backend/convex/auth/deletion/constants";
 import { accountDeletionPreparationOutcome } from "@repo/backend/convex/auth/deletion/spec";
 import { verifyAccountDeletionPreparation } from "@repo/backend/convex/auth/runtime";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import { vi } from "vitest";
 
 describe("auth/runtime", () => {
-  it.live("accepts one ready preparation step", () =>
+  it.effect("accepts one ready preparation step", () =>
     Effect.gen(function* () {
-      const prepare = vi.fn(
-        async () => accountDeletionPreparationOutcome.ready
+      const prepare = vi.fn(() =>
+        Promise.resolve(accountDeletionPreparationOutcome.ready)
       );
 
       expect(yield* verifyAccountDeletionPreparation(prepare)).toBeUndefined();
@@ -21,7 +21,7 @@ describe("auth/runtime", () => {
     })
   );
 
-  it.live.each([
+  it.effect.each([
     {
       code: ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
       outcome: accountDeletionPreparationOutcome.continue,
@@ -39,7 +39,7 @@ describe("auth/runtime", () => {
     },
   ])("maps $outcome without draining another step", (testCase) =>
     Effect.gen(function* () {
-      const prepare = vi.fn(async () => testCase.outcome);
+      const prepare = vi.fn(() => Promise.resolve(testCase.outcome));
       const failure = yield* verifyAccountDeletionPreparation(prepare).pipe(
         Effect.flip
       );
@@ -55,7 +55,7 @@ describe("auth/runtime", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "maps adapter failures without retrying inside the auth request",
     () =>
       Effect.gen(function* () {
