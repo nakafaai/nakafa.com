@@ -138,30 +138,6 @@ const verifyQuranLocaleCoverage = Effect.fn(
     ).toHaveCount(0)
   );
 
-  const bibliography = page.locator("footer button").first();
-  yield* Effect.promise(() => expect(bibliography).toBeVisible());
-  yield* Effect.promise(() => bibliography.click());
-  const sourceLinks = page.locator(
-    '[data-slot="sheet-popup"] a[target="_blank"]'
-  );
-  yield* Effect.promise(() => expect(sourceLinks).toHaveCount(3));
-  yield* Effect.promise(() =>
-    expect(sourceLinks.first()).toHaveAttribute("rel", "noopener noreferrer")
-  );
-  const sourceHrefs = yield* Effect.promise(() =>
-    sourceLinks.evaluateAll((links) =>
-      links.map((link) => link.getAttribute("href"))
-    )
-  );
-  yield* Effect.sync(() =>
-    expect(
-      sourceHrefs.every((sourceHref) =>
-        sourceHref === null ? false : new URL(sourceHref).protocol === "https:"
-      )
-    ).toBe(true)
-  );
-  yield* Effect.promise(() => page.keyboard.press("Escape"));
-
   const interpretation = page.locator("[data-quran-interpretation-verse]");
   if (contract.hasEmbeddedTafsir) {
     yield* Effect.promise(() => expect(interpretation.first()).toBeVisible());
@@ -226,6 +202,46 @@ const verifyQuranLocaleCoverage = Effect.fn(
       expect(page.locator('a[role="doc-noteref"]')).toHaveCount(0)
     );
   }
+
+  const bibliographyHref = `/${contract.locale}/quran/1`;
+  const bibliographyResponse = yield* Effect.promise(() =>
+    page.goto(bibliographyHref, { waitUntil: "domcontentloaded" })
+  );
+  yield* Effect.sync(() => expect(bibliographyResponse?.ok()).toBe(true));
+  yield* waitForCommittedAppRouter(
+    page,
+    href,
+    bibliographyHref,
+    readinessTimeoutMilliseconds
+  );
+
+  const bibliography = page.locator("footer button").first();
+  yield* Effect.promise(() => expect(bibliography).toBeVisible());
+  yield* Effect.promise(() => bibliography.click());
+  const bibliographySheet = page.locator('[data-slot="sheet-popup"]');
+  yield* Effect.promise(() =>
+    expect(bibliographySheet).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    })
+  );
+  const sourceLinks = bibliographySheet.locator('a[target="_blank"]');
+  yield* Effect.promise(() => expect(sourceLinks).toHaveCount(3));
+  yield* Effect.promise(() =>
+    expect(sourceLinks.first()).toHaveAttribute("rel", "noopener noreferrer")
+  );
+  const sourceHrefs = yield* Effect.promise(() =>
+    sourceLinks.evaluateAll((links) =>
+      links.map((link) => link.getAttribute("href"))
+    )
+  );
+  yield* Effect.sync(() =>
+    expect(
+      sourceHrefs.every((sourceHref) =>
+        sourceHref === null ? false : new URL(sourceHref).protocol === "https:"
+      )
+    ).toBe(true)
+  );
+  yield* Effect.promise(() => page.keyboard.press("Escape"));
 });
 
 test.describe("Quran source and tafsir coverage", () => {
