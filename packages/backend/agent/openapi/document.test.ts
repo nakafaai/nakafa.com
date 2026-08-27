@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   createOpenApiEtag,
   NAKAFA_OPENAPI_DOCUMENT,
@@ -10,7 +11,6 @@ import {
   NakafaApiIndexSchema,
 } from "@repo/contents/_lib/agent/schema/api";
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
-import { describe, expect, it } from "@repo/testing/effect";
 import { dereference, validate } from "@scalar/openapi-parser";
 import { Effect, Predicate, Schema } from "effect";
 
