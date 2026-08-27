@@ -1,8 +1,8 @@
 // @vitest-environment node
 
-import {
-  type LegacyRetireArgs,
-  type LegacyRetireReceipt,
+import type {
+  LegacyRetireArgs,
+  LegacyRetireReceipt,
 } from "@repo/backend/convex/routes/agent/mcp/legacy";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { describe, expect, it } from "@repo/testing/effect";
