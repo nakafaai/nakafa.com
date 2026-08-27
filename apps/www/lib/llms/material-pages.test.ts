@@ -1,7 +1,8 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import { readMaterialLlmsInventory } from "@/lib/llms/material-pages";
 
 const mockReadPublishedBuckets = vi.hoisted(() => vi.fn());
@@ -21,14 +22,14 @@ beforeEach(() => {
 });
 
 describe("material LLMS pages", () => {
-  it("projects the signed material inventory", async () => {
-    await expect(
-      Effect.runPromise(readMaterialLlmsInventory("en"))
-    ).resolves.toEqual({
-      activeReleaseId: "release-material",
-      buckets: ["abc"],
-      pageCount: 1,
-      routeCount: 1,
-    });
-  });
+  it.effect("projects the signed material inventory", () =>
+    Effect.gen(function* () {
+      expect(yield* readMaterialLlmsInventory("en")).toEqual({
+        activeReleaseId: "release-material",
+        buckets: ["abc"],
+        pageCount: 1,
+        routeCount: 1,
+      });
+    })
+  );
 });

@@ -1,7 +1,8 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import { buildSiteLlmsEntries } from "@/lib/llms/entries";
 import { readSiteLlmsEntries } from "@/lib/llms/site";
 import { testPageProjection } from "@/test/content-page";
@@ -22,10 +23,12 @@ beforeEach(() => {
 });
 
 describe("site llms entries", () => {
-  it("reads site routes from the active signed Page catalog", async () => {
-    await expect(Effect.runPromise(readSiteLlmsEntries("en"))).resolves.toEqual(
-      buildSiteLlmsEntries("en", [testPageProjection])
-    );
-    expect(catalogMock).toHaveBeenCalledOnce();
-  });
+  it.effect("reads site routes from the active signed Page catalog", () =>
+    Effect.gen(function* () {
+      expect(yield* readSiteLlmsEntries("en")).toEqual(
+        buildSiteLlmsEntries("en", [testPageProjection])
+      );
+      expect(catalogMock).toHaveBeenCalledOnce();
+    })
+  );
 });
