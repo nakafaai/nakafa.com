@@ -1,4 +1,4 @@
-import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { CONTENT_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/document";
@@ -19,6 +19,10 @@ type SnapshotChild =
   | { readonly row: Doc<"quranRows">; readonly table: "quranRows" }
   | { readonly row: Doc<"quranSearch">; readonly table: "quranSearch" }
   | { readonly row: Doc<"tryoutBundles">; readonly table: "tryoutBundles" }
+  | {
+      readonly row: Doc<"tryoutRuntimeBundles">;
+      readonly table: "tryoutRuntimeBundles";
+    }
   | { readonly row: Doc<"tryoutCatalog">; readonly table: "tryoutCatalog" }
   | {
       readonly row: Doc<"tryoutPlacements">;
@@ -192,7 +196,24 @@ export const loadSnapshotChildren = Effect.fn(
       part: selected,
     } satisfies ChildPage;
   }
-  if (selected !== "bundle") {
+  if (selected === "bundle") {
+    const page = yield* Effect.promise(() =>
+      ctx.db
+        .query("tryoutBundles")
+        .withIndex("by_snapshotId_and_index", (query) =>
+          query.eq("snapshotId", snapshotId).gt("index", afterIndex)
+        )
+        .paginate(cleanupPage())
+    );
+    return {
+      children: page.page.map(
+        (row): SnapshotChild => ({ row, table: "tryoutBundles" })
+      ),
+      done: page.isDone,
+      part: selected,
+    } satisfies ChildPage;
+  }
+  if (selected !== "runtime") {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       `Try-out snapshot ${snapshotId} has an invalid cleanup part.`
@@ -200,15 +221,15 @@ export const loadSnapshotChildren = Effect.fn(
   }
   const page = yield* Effect.promise(() =>
     ctx.db
-      .query("tryoutBundles")
-      .withIndex("by_snapshotId_and_index", (query) =>
-        query.eq("snapshotId", snapshotId).gt("index", afterIndex)
+      .query("tryoutRuntimeBundles")
+      .withIndex("by_snapshotId_and_rendererManifestHash", (query) =>
+        query.eq("snapshotId", snapshotId)
       )
       .paginate(cleanupPage())
   );
   return {
     children: page.page.map(
-      (row): SnapshotChild => ({ row, table: "tryoutBundles" })
+      (row): SnapshotChild => ({ row, table: "tryoutRuntimeBundles" })
     ),
     done: page.isDone,
     part: selected,
@@ -247,6 +268,12 @@ export const deleteSnapshotChild = Effect.fn(
   }
   if (child.table === "tryoutBundles") {
     yield* Effect.promise(() => ctx.db.delete("tryoutBundles", child.row._id));
+    return;
+  }
+  if (child.table === "tryoutRuntimeBundles") {
+    yield* Effect.promise(() =>
+      ctx.db.delete("tryoutRuntimeBundles", child.row._id)
+    );
     return;
   }
   yield* Effect.promise(() => ctx.db.delete("tryoutPlacements", child.row._id));

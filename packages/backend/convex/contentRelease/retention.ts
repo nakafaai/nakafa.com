@@ -7,7 +7,11 @@ import { Effect } from "effect";
 /** Checks whether any retained immutable version still owns an artifact. */
 export const isArtifactReferenced = Effect.fn(
   "contentRelease.isArtifactReferenced"
-)(function* (ctx: MutationCtx, artifactHash: string) {
+)(function* (
+  ctx: MutationCtx,
+  artifactHash: string,
+  options?: { readonly ignoredMigrationId?: string }
+) {
   const [head, item, history, snapshot] = yield* Effect.all([
     Effect.promise(() =>
       ctx.db
@@ -26,7 +30,7 @@ export const isArtifactReferenced = Effect.fn(
         .first()
     ),
     hasRetainedHistoryArtifactReference(ctx, artifactHash),
-    hasSnapshotArtifactReference(ctx, artifactHash),
+    hasSnapshotArtifactReference(ctx, artifactHash, options),
   ]);
   return head !== null || history || item !== null || snapshot;
 });

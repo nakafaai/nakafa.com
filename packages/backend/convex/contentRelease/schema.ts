@@ -205,6 +205,8 @@ const tables = {
     status: releaseStatusValidator,
     syncGeneration: v.optional(v.number()),
     syncJobId: v.optional(v.id("_scheduled_functions")),
+    tryoutRuntimeBundleHash: v.optional(v.string()),
+    tryoutRuntimeRequired: v.optional(v.literal(true)),
     updatedAt: v.number(),
     verifiedAt: v.optional(v.number()),
     ...releaseProgress,

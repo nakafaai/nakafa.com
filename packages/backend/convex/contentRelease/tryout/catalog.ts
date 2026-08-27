@@ -74,6 +74,7 @@ export const findTryoutCatalog = Effect.fn("contentRelease.findTryoutCatalog")(
     const catalog = yield* loadStoredTryoutCatalog(ctx, locale, {
       activeManifestHash: active.manifestHash,
       activeReleaseId: active.releaseId,
+      bundleHash: active.release.tryoutRuntimeBundleHash ?? null,
       snapshot,
       snapshotId,
       sourceRevision: readSourceRevision(active),
@@ -105,6 +106,7 @@ export const loadTryoutSnapshotCatalog = Effect.fn(
   return yield* loadStoredTryoutCatalog(ctx, locale, {
     activeManifestHash: null,
     activeReleaseId: null,
+    bundleHash: null,
     snapshot,
     snapshotId,
     sourceRevision: null,
@@ -120,6 +122,7 @@ const loadStoredTryoutCatalog = Effect.fn(
   selection: {
     readonly activeManifestHash: string | null;
     readonly activeReleaseId: string | null;
+    readonly bundleHash: string | null;
     readonly snapshot: ContentSnapshotManifest;
     readonly snapshotId: string;
     readonly sourceRevision: string | null;
@@ -196,6 +199,7 @@ const loadStoredTryoutCatalog = Effect.fn(
   return {
     activeManifestHash: selection.activeManifestHash,
     activeReleaseId: selection.activeReleaseId,
+    bundleHash: selection.bundleHash,
     entries,
     routeCount: actualRouteCount,
     snapshotId: selection.snapshotId,

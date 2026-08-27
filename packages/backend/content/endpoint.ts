@@ -12,8 +12,14 @@ export const PUBLIC_CONTENT_RUNTIME_PATH = `${CONTENT_RUNTIME_PATH}/v2`;
 /** Versioned endpoint for current public content batches. */
 export const PUBLIC_CONTENT_RUNTIME_BATCH_PATH = `${PUBLIC_CONTENT_RUNTIME_PATH}/batch`;
 
-/** Private Convex endpoint for current protected content reads. */
-export const PROTECTED_CONTENT_RUNTIME_PATH = `${CONTENT_RUNTIME_PATH}/protected`;
+/** Protected endpoint retained until the deployed predecessor stops calling it. */
+export const PREDECESSOR_PROTECTED_CONTENT_RUNTIME_PATH = `${CONTENT_RUNTIME_PATH}/protected`;
+
+/** Versioned endpoint for permanent-bundle protected content reads. */
+export const PROTECTED_CONTENT_RUNTIME_PATH = `${CONTENT_RUNTIME_PATH}/v2/protected`;
+
+/** Retained-history endpoint used by the deployed predecessor web client. */
+export const PREDECESSOR_RETAINED_PROTECTED_CONTENT_RUNTIME_PATH = `${PREDECESSOR_PROTECTED_CONTENT_RUNTIME_PATH}/history`;
 
 /** Private attempt-bound endpoint for immutable retained-history reads. */
 export const RETAINED_PROTECTED_CONTENT_RUNTIME_PATH = `${PROTECTED_CONTENT_RUNTIME_PATH}/history`;

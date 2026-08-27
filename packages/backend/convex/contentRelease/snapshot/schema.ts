@@ -21,6 +21,7 @@ const tables = {
         v.literal("quran"),
         v.literal("quran-search"),
         v.literal("bundle"),
+        v.literal("runtime"),
         v.literal("catalog"),
         v.literal("placement")
       )

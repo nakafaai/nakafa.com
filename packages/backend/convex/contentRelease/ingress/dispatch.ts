@@ -19,6 +19,7 @@ import {
 } from "@repo/backend/convex/contentRelease/ingress/failure";
 import { stagePublicationGroup } from "@repo/backend/convex/contentRelease/ingress/group";
 import { advancePublication } from "@repo/backend/convex/contentRelease/ingress/lifecycle";
+import { migrateTryoutHistory } from "@repo/backend/convex/contentRelease/ingress/migration";
 import { readPublication } from "@repo/backend/convex/contentRelease/ingress/read";
 import {
   publicationFailure,
@@ -28,6 +29,7 @@ import { stagePublication } from "@repo/backend/convex/contentRelease/ingress/st
 import { runConvexActionProgram } from "@repo/backend/convex/lib/effect";
 import { type Infer, v } from "convex/values";
 import { Effect, Result } from "effect";
+import { FetchHttpClient } from "effect/unstable/http";
 
 const dispatchInputValidator = v.object({
   byteLength: v.number(),
@@ -44,6 +46,9 @@ const performRequest = Effect.fn("contentRelease.performRequest")(function* (
   if (request.operation === "stageGroup") {
     return yield* stagePublicationGroup(ctx, request, activeKeyId);
   }
+  if (request.operation === "migrateTryoutHistory") {
+    return yield* migrateTryoutHistory(ctx, request, activeKeyId);
+  }
   if (
     request.operation === "stageRelease" ||
     request.operation === "stageRecovery" ||
@@ -52,7 +57,8 @@ const performRequest = Effect.fn("contentRelease.performRequest")(function* (
     request.operation === "stageProjectionBatch" ||
     request.operation === "stageArtifactBatch" ||
     request.operation === "stageSnapshot" ||
-    request.operation === "stageSnapshotBatch"
+    request.operation === "stageSnapshotBatch" ||
+    request.operation === "stageTryoutRuntimeBundle"
   ) {
     return yield* stagePublication(ctx, request, activeKeyId);
   }
@@ -117,7 +123,8 @@ export const dispatchPublication = Effect.fn(
 export function dispatchHandler(ctx: ActionCtx, input: DispatchInput) {
   return runConvexActionProgram(
     dispatchPublication(ctx, input).pipe(
-      Effect.provideService(ContentVerificationKeyResolver, contentKeyResolver)
+      Effect.provideService(ContentVerificationKeyResolver, contentKeyResolver),
+      Effect.provide(FetchHttpClient.layer)
     )
   );
 }

@@ -24,6 +24,7 @@ const REQUEST_LIMITS: Readonly<Record<PublicationOperation, number>> = {
   cleanup: MAX_PUBLICATION_REQUEST_BYTES,
   current: MAX_PUBLICATION_REQUEST_BYTES,
   headPage: MAX_PUBLICATION_REQUEST_BYTES,
+  migrateTryoutHistory: MAX_PUBLICATION_REQUEST_BYTES,
   recovery: MAX_PUBLICATION_REQUEST_BYTES,
   rollbackPage: MAX_PUBLICATION_REQUEST_BYTES,
   routePage: MAX_PUBLICATION_REQUEST_BYTES,
@@ -36,6 +37,7 @@ const REQUEST_LIMITS: Readonly<Record<PublicationOperation, number>> = {
   stageRouteBatch: MAX_ROUTE_BATCH_BYTES,
   stageSnapshot: MAX_PUBLICATION_REQUEST_BYTES,
   stageSnapshotBatch: MAX_SNAPSHOT_BATCH_BYTES,
+  stageTryoutRuntimeBundle: MAX_PUBLICATION_REQUEST_BYTES,
   status: MAX_PUBLICATION_REQUEST_BYTES,
   verify: MAX_PUBLICATION_REQUEST_BYTES,
 };

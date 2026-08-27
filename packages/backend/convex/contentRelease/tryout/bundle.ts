@@ -1,4 +1,5 @@
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
+import { isLegacyTryoutRuntime } from "@nakafa/aksara-contracts/release/current/legacy";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
@@ -10,7 +11,7 @@ type ActivatedRelease = Pick<
   "releaseId" | "releaseJson" | "rendererJson"
 >;
 
-/** Retains the exact active release bytes needed by protected try-out bodies. */
+/** Retains only the exact predecessor bytes during permanent runtime expansion. */
 export const retainActivatedTryoutBundle = Effect.fn(
   "contentRelease.retainActivatedTryoutBundle"
 )(function* (
@@ -19,6 +20,9 @@ export const retainActivatedTryoutBundle = Effect.fn(
   signed: SignedContentRelease,
   activatedAt: number
 ) {
+  if (!isLegacyTryoutRuntime(signed)) {
+    return;
+  }
   const snapshotId = signed.manifest.snapshots.tryout.resultSnapshotId;
   if (snapshotId === null) {
     return;

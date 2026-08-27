@@ -6,9 +6,9 @@ import {
   abandonPredecessorObservation,
   armPredecessorObservation,
   readPredecessorObservation,
-  recordPredecessorRead,
   sealPredecessorObservation,
-} from "@repo/backend/convex/contentRelease/predecessor/model";
+} from "@repo/backend/convex/contentRelease/predecessor/control";
+import { recordPredecessorRead } from "@repo/backend/convex/contentRelease/predecessor/record";
 import {
   predecessorAbandonReceiptValidator,
   predecessorObservationArgsValidator,
@@ -18,7 +18,7 @@ import {
 } from "@repo/backend/convex/contentRelease/predecessor/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 
-/** Arms both predecessor routes for one exact active release. */
+/** Arms every predecessor route for one exact active release. */
 export const arm = internalMutation({
   args: predecessorObservationArgsValidator,
   returns: predecessorStatusValidator,
@@ -48,7 +48,21 @@ export const recordBatch = internalMutation({
   handler: (ctx) => runConvexProgram(recordPredecessorRead(ctx, "batch")),
 });
 
-/** Seals both routes after the exact quiet period succeeds. */
+/** Records one authenticated predecessor protected-content request. */
+export const recordProtected = internalMutation({
+  args: predecessorRecordArgsValidator,
+  returns: predecessorRecordResultValidator,
+  handler: (ctx) => runConvexProgram(recordPredecessorRead(ctx, "protected")),
+});
+
+/** Records one authenticated predecessor retained-history request. */
+export const recordHistory = internalMutation({
+  args: predecessorRecordArgsValidator,
+  returns: predecessorRecordResultValidator,
+  handler: (ctx) => runConvexProgram(recordPredecessorRead(ctx, "history")),
+});
+
+/** Seals every route after the exact quiet period succeeds. */
 export const seal = internalMutation({
   args: predecessorObservationArgsValidator,
   returns: predecessorStatusValidator,

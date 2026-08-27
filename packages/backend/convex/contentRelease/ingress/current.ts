@@ -1,17 +1,19 @@
 "use node";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
-import {
-  ContentReleaseCurrentSchema,
-  RecoveryLookupSchema,
-} from "@nakafa/aksara-contracts/release/current";
+import { RecoveryLookupSchema } from "@nakafa/aksara-contracts/release/current/evidence";
+import { ContentReleaseCurrentSchema } from "@nakafa/aksara-contracts/release/current/state";
 import { verifyContentReleaseBundle } from "@nakafa/aksara-contracts/release/verify";
+import { verifySignedTryoutRuntimeBundle } from "@nakafa/aksara-contracts/tryout/runtime/verify";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import {
   ReleaseError,
   releaseFail,
 } from "@repo/backend/convex/contentRelease/error";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
-import { parseStoredJson } from "@repo/backend/convex/contentRelease/parse";
+import {
+  decodeTryoutRuntimeBundleJson,
+  parseStoredJson,
+} from "@repo/backend/convex/contentRelease/parse";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
 import type { recoveryLookupValidator } from "@repo/backend/convex/contentRelease/recovery";
 import type { currentValidator } from "@repo/backend/convex/contentRelease/spec";
@@ -94,6 +96,28 @@ export const matchManifest = Effect.fn("contentRelease.matchManifest")(
     }
   }
 );
+/** Authenticates the optional permanent bundle against the active renderer. */
+const decodeCurrentRuntimeBundle = Effect.fn(
+  "contentRelease.decodeCurrentRuntimeBundle"
+)(function* (
+  source: string | null,
+  active: { readonly rendererManifest: unknown } | null
+) {
+  if (source === null) {
+    return null;
+  }
+  if (active === null) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      "A permanent try-out runtime bundle exists without an active release."
+    );
+  }
+  const bundle = yield* decodeTryoutRuntimeBundleJson(source);
+  return yield* verifySignedTryoutRuntimeBundle({
+    bundle,
+    rendererManifest: active.rendererManifest,
+  }).pipe(Effect.mapError(contractFailure));
+});
 /** Reads and authenticates active, candidate, and recovery release bundles. */
 export const readCurrentPublication = Effect.fn(
   "contentRelease.readCurrentPublication"
@@ -128,8 +152,12 @@ export const readCurrentPublication = Effect.fn(
         phase: stored.recovery.phase,
       }
     : null;
+  const tryoutRuntimeBundle = yield* decodeCurrentRuntimeBundle(
+    stored.tryoutRuntimeBundleJson,
+    active
+  );
   return yield* Schema.decodeUnknownEffect(ContentReleaseCurrentSchema)(
-    { active, candidate, recovery },
+    { active, candidate, recovery, tryoutRuntimeBundle },
     { onExcessProperty: "error" }
   ).pipe(
     Effect.mapError(

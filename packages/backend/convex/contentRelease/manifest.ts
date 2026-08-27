@@ -136,10 +136,10 @@ const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
       `Content release ${signed.manifest.releaseId} does not bind its renderer.`
     );
   }
-  if (signed.manifest.scope.content.length > 0) {
+  if (signed.manifest.scope.content !== undefined) {
     return yield* releaseFail(
       "CONTENT_RELEASE_UNSUPPORTED",
-      `Content release ${signed.manifest.releaseId} uses deleted exact-content ownership.`
+      `Content release ${signed.manifest.releaseId} uses predecessor exact-content ownership.`
     );
   }
   const state = yield* ensureState(ctx);
@@ -204,6 +204,7 @@ const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
     stagedSnapshotRows: 0,
     stagedUpserts: 0,
     status: "staging",
+    tryoutRuntimeRequired: true,
     updatedAt: now,
   } satisfies WithoutSystemFields<Doc<"contentReleases">>;
   yield* ensureDocumentSize(`Content release ${row.releaseId}`, row);

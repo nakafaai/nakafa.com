@@ -4,6 +4,8 @@ import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import {
   type ContentSnapshotKind,
   ContentSnapshotKindSchema,
+} from "@nakafa/aksara-contracts/release/snapshot/scope";
+import {
   hasSameContentSnapshots,
   invertContentSnapshots,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";

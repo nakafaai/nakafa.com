@@ -3,10 +3,42 @@ import { PROTECTED_CONTENT_RUNTIME_PATH } from "@repo/backend/content/endpoint";
 import { type ActionCtx, env } from "@repo/backend/convex/_generated/server";
 import { readRuntimeRequest } from "@repo/backend/convex/contentRelease/http/runtime/request";
 import { privateRuntimeResponse } from "@repo/backend/convex/contentRelease/http/runtime/response";
-import { dispatchProgram } from "@repo/backend/convex/contentRelease/runtime/protected/dispatch";
+import {
+  failureResult,
+  type RuntimeHttpResult,
+} from "@repo/backend/convex/contentRelease/runtime/result";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import { makeFunctionReference } from "convex/server";
 import type { HonoWithConvex } from "convex-helpers/server/hono";
-import { Effect } from "effect";
+import { Effect, Result, Schema } from "effect";
+
+const dispatchReference = makeFunctionReference<
+  "action",
+  { readonly byteLength: number; readonly source: string },
+  RuntimeHttpResult
+>("contentRelease/runtime/protected/dispatch:dispatch");
+
+/** The isolated Node verifier could not return one sanitized response. */
+class ProtectedRuntimeActionError extends Schema.TaggedError<ProtectedRuntimeActionError>()(
+  "ProtectedRuntimeActionError",
+  {}
+) {}
+
+/** Calls the Node-only verifier without exposing an action failure. */
+const dispatchProtectedRuntime = Effect.fn(
+  "contentRelease.dispatchProtectedRuntime"
+)(function* (
+  ctx: ActionCtx,
+  input: { readonly byteLength: number; readonly source: string }
+) {
+  const result = yield* Effect.tryPromise({
+    catch: () => new ProtectedRuntimeActionError(),
+    try: () => ctx.runAction(dispatchReference, input),
+  }).pipe(Effect.result);
+  return Result.isFailure(result)
+    ? failureResult("CONTENT_RUNTIME_INTERNAL", 500)
+    : result.success;
+});
 
 /** Authenticates and forwards one bounded protected runtime request. */
 const protectedRuntimeRoute = Effect.fn("contentRelease.protectedRuntimeRoute")(
@@ -19,11 +51,7 @@ const protectedRuntimeRoute = Effect.fn("contentRelease.protectedRuntimeRoute")(
     if (input.kind === "rejected") {
       return input.result;
     }
-    return yield* dispatchProgram(
-      ctx,
-      input.body.source,
-      input.body.byteLength
-    );
+    return yield* dispatchProtectedRuntime(ctx, input.body);
   }
 );
 

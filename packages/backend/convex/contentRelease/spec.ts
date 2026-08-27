@@ -13,7 +13,7 @@ import {
   ContentRouteBindSchema,
   ContentRouteDeleteSchema,
 } from "@nakafa/aksara-contracts/release/route/spec";
-import { ContentSnapshotKindSchema } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { ContentSnapshotKindSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
 import { v } from "convex/values";
 import { literals } from "convex-helpers/validators";
@@ -172,6 +172,15 @@ export const snapshotReceiptValidator = v.object({
   unchanged: literals(0, 1),
 });
 
+/** Idempotent outcome for one permanent signed try-out runtime bundle. */
+export const tryoutRuntimeBundleReceiptValidator = v.object({
+  bundleHash: v.string(),
+  created: literals(0, 1),
+  releaseId: v.string(),
+  snapshotId: v.string(),
+  unchanged: literals(0, 1),
+});
+
 const snapshotStateValidator = v.object({
   baseSnapshotId: v.union(v.string(), v.null()),
   mode: literals("inherit", "replace", "restore"),
@@ -251,6 +260,7 @@ export const currentValidator = v.object({
     v.null(),
     storedBundleValidator.extend({ phase: stagedPhaseValidator })
   ),
+  tryoutRuntimeBundleJson: v.union(v.string(), v.null()),
 });
 
 /** Cumulative abort progress with a server-owned continuation cursor. */
