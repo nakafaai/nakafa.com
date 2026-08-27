@@ -294,8 +294,9 @@ const verifyContributorPage = Effect.fn("NakafaE2E.verifyContributorPage")(
       expect(triggers).toHaveCount(contributors.length)
     );
     const lastTrigger = triggers.last();
+    yield* Effect.promise(() => expect(lastTrigger).toBeVisible());
     yield* Effect.promise(() => expect(lastTrigger).toBeEnabled());
-    yield* Effect.promise(() => lastTrigger.click());
+    yield* Effect.promise(() => lastTrigger.press("Enter"));
     yield* Effect.promise(() =>
       expect(page.locator("[data-contributor-drawer]")).toHaveCount(1)
     );
