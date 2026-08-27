@@ -87,5 +87,10 @@ function rewriteAgentApi(request: NextRequest) {
  * Applies only to private content and public agent API routes.
  */
 export const config: ProxyConfig = {
-  matcher: ["/contents/:path*", "/openapi.json", "/v1/:path*"],
+  matcher: [
+    "/contents/:path*",
+    "/openapi.json",
+    "/v1/:path*",
+    "/v2/:path*",
+  ],
 };

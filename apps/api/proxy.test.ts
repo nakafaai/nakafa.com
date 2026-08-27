@@ -158,9 +158,14 @@ describe("proxy middleware", () => {
         unstable_doesMiddlewareMatch({ config, url });
 
       expect(
-        ["/contents/en/articles", "/openapi.json", "/v1", "/v1/search"].every(
-          matches
-        )
+        [
+          "/contents/en/articles",
+          "/openapi.json",
+          "/v1",
+          "/v1/search",
+          "/v2",
+          "/v2/quran/1",
+        ].every(matches)
       ).toBe(true);
       expect(["/", "/health", "/robots.txt"].some(matches)).toBe(false);
     });
@@ -168,6 +173,7 @@ describe("proxy middleware", () => {
     it.each([
       ["/openapi.json", "/internal/agent/openapi.json"],
       ["/v1/search?query=algebra", "/internal/agent/v1/search?query=algebra"],
+      ["/v2/quran/2?locale=id", "/internal/agent/v2/quran/2?locale=id"],
     ])("rewrites %s to the protected Convex origin", (source, target) => {
       const response = requestProxy(source, {
         accept: "application/json",
