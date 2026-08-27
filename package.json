@@ -50,7 +50,7 @@
     "@changesets/cli": "^3.0.1",
     "@effect/platform-node": "catalog:",
     "@effect/tsgo": "0.36.5",
-    "@repo/testing": "workspace:*",
+    "@effect/vitest": "catalog:",
     "@repo/typescript-config": "workspace:*",
     "@turbo/gen": "2.10.11",
     "@types/node": "24.13.3",

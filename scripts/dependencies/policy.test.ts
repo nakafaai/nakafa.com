@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
 import { bumpDependencies } from "./bump.ts";
@@ -103,7 +103,7 @@ function validInput() {
 }
 
 describe("dependency policy", () => {
-  it.live("accepts the actual repository dependency policy", () =>
+  it.effect("accepts the actual repository dependency policy", () =>
     Effect.gen(function* () {
       const problems = yield* inspectDependencyPolicy(REPOSITORY_ROOT).pipe(
         Effect.provide(NodeServices.layer)
@@ -170,7 +170,7 @@ describe("dependency policy", () => {
     ).toBe(true);
   });
 
-  it.live("rejects unsafe policy before running pnpm update", () =>
+  it.effect("rejects unsafe policy before running pnpm update", () =>
     Effect.gen(function* () {
       const commands: string[][] = [];
       const errors: string[] = [];
