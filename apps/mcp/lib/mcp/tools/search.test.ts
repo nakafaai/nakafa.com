@@ -1,8 +1,8 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   NAKAFA_AGENT_DEFAULT_LIMIT,
   NAKAFA_AGENT_MAX_LIMIT,
 } from "@repo/contents/_types/agent/search";
-import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { fetchQuery } from "convex/nextjs";
 import { Effect, Schema } from "effect";
 import { vi } from "vitest";
@@ -35,7 +35,7 @@ const ToolErrorResultSchema = Schema.Struct({
 });
 
 describe("nakafa_search_content", () => {
-  it.live(
+  it.effect(
     "decodes omitted search options with native Effect schema defaults",
     () =>
       Effect.gen(function* () {
@@ -51,7 +51,7 @@ describe("nakafa_search_content", () => {
       })
   );
 
-  it.live("returns structured read-model input errors", () =>
+  it.effect("returns structured read-model input errors", () =>
     Effect.gen(function* () {
       const result = yield* getNakafaSearchContentToolResult({
         limit: 99,
@@ -72,7 +72,7 @@ describe("nakafa_search_content", () => {
     })
   );
 
-  it.live("returns structured read-model data errors", () =>
+  it.effect("returns structured read-model data errors", () =>
     Effect.gen(function* () {
       vi.mocked(fetchQuery).mockRejectedValueOnce(new Error("Convex offline"));
 
