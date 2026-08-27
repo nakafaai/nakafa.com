@@ -20,6 +20,9 @@ export type NinaPrepareStep = NonNullable<
   ToolLoopAgentSettings<never, NinaToolSet>["prepareStep"]
 >;
 
+type NinaPrepareStepInput = Parameters<NinaPrepareStep>[0];
+type NinaPreparedStep = Awaited<ReturnType<NinaPrepareStep>>;
+
 /**
  * Creates Nina's AI SDK step callback from verified page-fetch state.
  *
@@ -33,7 +36,7 @@ export function createNinaPrepareStep({
 }: {
   readonly instructions: string;
   readonly needsPageFetch: boolean;
-}): NinaPrepareStep {
+}): (input: NinaPrepareStepInput) => NinaPreparedStep {
   return ({ messages, stepNumber }) => {
     if (stepNumber !== firstStepNumber) {
       return {
@@ -109,7 +112,7 @@ function readToolStep({
 }: {
   readonly messages: Parameters<NinaPrepareStep>[0]["messages"];
   readonly toolName: Extract<LearningCapabilityName, RequiredStepToolName>;
-}): ReturnType<NinaPrepareStep> {
+}): NinaPreparedStep {
   return {
     activeTools: [toolName],
     messages,

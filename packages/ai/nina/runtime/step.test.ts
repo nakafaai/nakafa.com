@@ -13,8 +13,8 @@ const externalUrlMessages = [
 ] satisfies ModelMessage[];
 
 describe("nina/runtime/step", () => {
-  it("forces Nakafa on the first page-fetch step", async () => {
-    const step = await readPreparedStep({
+  it("forces Nakafa on the first page-fetch step", () => {
+    const step = readPreparedStep({
       messages: emptyMessages,
       needsPageFetch: true,
       stepNumber: 0,
@@ -27,8 +27,8 @@ describe("nina/runtime/step", () => {
     });
   });
 
-  it("reinforces final source policy after the first page-fetch step", async () => {
-    const step = await readPreparedStep({
+  it("reinforces final source policy after the first page-fetch step", () => {
+    const step = readPreparedStep({
       messages: emptyMessages,
       needsPageFetch: true,
       stepNumber: 1,
@@ -42,7 +42,7 @@ describe("nina/runtime/step", () => {
     });
   });
 
-  it("leaves low-risk first non-page-fetch prompts to Nina's system prompt", async () => {
+  it("leaves low-risk first non-page-fetch prompts to Nina's system prompt", () => {
     const greetingMessages = [
       {
         content: "hi",
@@ -50,7 +50,7 @@ describe("nina/runtime/step", () => {
       },
     ] satisfies ModelMessage[];
 
-    const step = await readPreparedStep({
+    const step = readPreparedStep({
       messages: greetingMessages,
       needsPageFetch: false,
       stepNumber: 0,
@@ -63,8 +63,8 @@ describe("nina/runtime/step", () => {
     expect(step).not.toHaveProperty("toolChoice");
   });
 
-  it("reinforces final source policy after the first non-page-fetch step", async () => {
-    const step = await readPreparedStep({
+  it("reinforces final source policy after the first non-page-fetch step", () => {
+    const step = readPreparedStep({
       messages: emptyMessages,
       needsPageFetch: false,
       stepNumber: 1,
@@ -136,8 +136,8 @@ describe("nina/runtime/step", () => {
     });
   });
 
-  it("forces research for first-step external URL requests", async () => {
-    const step = await readPreparedStep({
+  it("forces research for first-step external URL requests", () => {
+    const step = readPreparedStep({
       messages: externalUrlMessages,
       needsPageFetch: false,
       stepNumber: 0,
@@ -150,8 +150,8 @@ describe("nina/runtime/step", () => {
     });
   });
 
-  it("keeps page fetch ahead of external URL requests", async () => {
-    const step = await readPreparedStep({
+  it("keeps page fetch ahead of external URL requests", () => {
+    const step = readPreparedStep({
       messages: externalUrlMessages,
       needsPageFetch: true,
       stepNumber: 0,
@@ -164,7 +164,7 @@ describe("nina/runtime/step", () => {
     });
   });
 
-  it("keeps prepared model messages available to later model steps", async () => {
+  it("keeps prepared model messages available to later model steps", () => {
     const messages = [
       {
         content: "Cek kabar tryout.",
@@ -176,7 +176,7 @@ describe("nina/runtime/step", () => {
       },
     ] satisfies ModelMessage[];
 
-    const step = await readPreparedStep({
+    const step = readPreparedStep({
       messages,
       needsPageFetch: false,
       stepNumber: 1,
@@ -185,7 +185,7 @@ describe("nina/runtime/step", () => {
     expect(step?.messages).toEqual(messages);
   });
 
-  it("leaves continuation tool choice to the model", async () => {
+  it("leaves continuation tool choice to the model", () => {
     const messages = [
       {
         content: [
@@ -209,7 +209,7 @@ describe("nina/runtime/step", () => {
       },
     ] satisfies ModelMessage[];
 
-    const step = await readPreparedStep({
+    const step = readPreparedStep({
       messages,
       needsPageFetch: false,
       stepNumber: 1,
