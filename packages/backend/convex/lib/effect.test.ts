@@ -1,10 +1,10 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   getUnknownErrorMessage,
   readConvexErrorData,
   runConvexActionProgram,
   runConvexProgram,
 } from "@repo/backend/convex/lib/effect";
-import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { ConvexError } from "convex/values";
 import { Cause, Clock, Effect, Schema } from "effect";
 import { vi } from "vitest";
@@ -24,112 +24,153 @@ afterEach(() => {
 });
 
 describe("lib/effect", () => {
-  it("runs successful programs at the Convex boundary", async () => {
-    await expect(runConvexProgram(Effect.succeed("ok"))).resolves.toBe("ok");
-  });
+  it.effect("runs successful programs at the Convex boundary", () =>
+    Effect.gen(function* () {
+      const result = yield* Effect.promise(() =>
+        runConvexProgram(Effect.succeed("ok"))
+      );
 
-  it("does not use the Performance API while running traced programs", async () => {
-    vi.spyOn(performance, "now").mockImplementation(() => {
-      throw new Error("Performance API is unavailable");
-    });
-    const tracedProgram = Effect.fn("test.tracedProgram")(function* () {
-      return yield* Effect.succeed("ok");
-    });
+      expect(result).toBe("ok");
+    })
+  );
 
-    await expect(runConvexProgram(tracedProgram())).resolves.toBe("ok");
-  });
+  it.effect(
+    "does not use the Performance API while running traced programs",
+    () =>
+      Effect.gen(function* () {
+        yield* Effect.sync(() => {
+          vi.spyOn(performance, "now").mockImplementation(() => {
+            throw new Error("Performance API is unavailable");
+          });
+        });
+        const tracedProgram = Effect.fn("test.tracedProgram")(function* () {
+          return yield* Effect.succeed("ok");
+        });
+        const result = yield* Effect.promise(() =>
+          runConvexProgram(tracedProgram())
+        );
 
-  it("uses a Date-backed clock inside native Convex handlers", async () => {
-    const now = 1_780_000_000_000;
-    vi.spyOn(Date, "now").mockReturnValue(now);
+        expect(result).toBe("ok");
+      })
+  );
 
-    await expect(runConvexProgram(Clock.currentTimeMillis)).resolves.toBe(now);
-    await expect(runConvexProgram(Clock.currentTimeNanos)).resolves.toBe(
-      BigInt(now) * 1_000_000n
-    );
-    await expect(
-      runConvexProgram(
-        Clock.clockWith((clock) =>
-          Effect.sync(() => [
-            clock.currentTimeMillisUnsafe(),
-            clock.currentTimeNanosUnsafe(),
-          ])
-        )
-      )
-    ).resolves.toEqual([now, BigInt(now) * 1_000_000n]);
-  });
-
-  it("rejects sleeping inside native Convex handlers", async () => {
-    await expect(runConvexProgram(Effect.sleep(1))).rejects.toThrow(
-      "Effect.sleep is not supported inside native Convex handlers."
-    );
-  });
-
-  it("does not schedule timers when native programs yield", async () => {
-    const setImmediateSpy = vi
-      .spyOn(globalThis, "setImmediate")
-      .mockImplementation(() => {
-        throw new Error("setImmediate is unavailable in native Convex");
+  it.effect("uses a Date-backed clock inside native Convex handlers", () =>
+    Effect.gen(function* () {
+      const now = 1_780_000_000_000;
+      yield* Effect.sync(() => {
+        vi.spyOn(Date, "now").mockReturnValue(now);
       });
-    const setTimeoutSpy = vi
-      .spyOn(globalThis, "setTimeout")
-      .mockImplementation(() => {
-        throw new Error("setTimeout is unavailable in native Convex");
-      });
-
-    await expect(
-      runConvexProgram(Effect.yieldNow.pipe(Effect.as("done")))
-    ).resolves.toBe("done");
-    expect(setImmediateSpy).not.toHaveBeenCalled();
-    expect(setTimeoutSpy).not.toHaveBeenCalled();
-  });
-
-  it("supports the live clock at the Node action boundary", async () => {
-    await expect(
-      runConvexActionProgram(Effect.sleep(1).pipe(Effect.as("done")))
-    ).resolves.toBe("done");
-  });
-
-  it("maps tagged Effect failures into ConvexError payloads", async () => {
-    await expect(
-      runConvexProgram(
-        Effect.fail(
-          new BoundaryFailure({
-            code: boundaryFailureCode,
-            message: "Boundary failed",
-          })
+      const milliseconds = yield* Effect.promise(() =>
+        runConvexProgram(Clock.currentTimeMillis)
+      );
+      const nanoseconds = yield* Effect.promise(() =>
+        runConvexProgram(Clock.currentTimeNanos)
+      );
+      const unsafeTimes = yield* Effect.promise(() =>
+        runConvexProgram(
+          Clock.clockWith((clock) =>
+            Effect.sync(() => [
+              clock.currentTimeMillisUnsafe(),
+              clock.currentTimeNanosUnsafe(),
+            ])
+          )
         )
+      );
+
+      expect(milliseconds).toBe(now);
+      expect(nanoseconds).toBe(BigInt(now) * 1_000_000n);
+      expect(unsafeTimes).toEqual([now, BigInt(now) * 1_000_000n]);
+    })
+  );
+
+  it.effect("rejects sleeping inside native Convex handlers", () =>
+    Effect.promise(() =>
+      expect(runConvexProgram(Effect.sleep(1))).rejects.toThrow(
+        "Effect.sleep is not supported inside native Convex handlers."
       )
-    ).rejects.toMatchObject({
-      data: {
-        code: boundaryFailureCode,
-        message: "Boundary failed",
-      },
-    });
-  });
+    )
+  );
 
-  it("preserves unexpected defects instead of turning them into domain errors", async () => {
-    await expect(runConvexProgram(Effect.die("defect"))).rejects.toThrow(
-      "defect"
-    );
-  });
+  it.effect("does not schedule timers when native programs yield", () =>
+    Effect.gen(function* () {
+      const setImmediateSpy = yield* Effect.sync(() =>
+        vi.spyOn(globalThis, "setImmediate").mockImplementation(() => {
+          throw new Error("setImmediate is unavailable in native Convex");
+        })
+      );
+      const setTimeoutSpy = yield* Effect.sync(() =>
+        vi.spyOn(globalThis, "setTimeout").mockImplementation(() => {
+          throw new Error("setTimeout is unavailable in native Convex");
+        })
+      );
+      const result = yield* Effect.promise(() =>
+        runConvexProgram(Effect.yieldNow.pipe(Effect.as("done")))
+      );
 
-  it("preserves a defect when a cause also contains a tagged failure", async () => {
-    const defect = new Error("Unexpected boundary defect");
-    const cause = Cause.fromReasons([
-      Cause.makeFailReason(
-        new BoundaryFailure({
+      expect(result).toBe("done");
+      expect(setImmediateSpy).not.toHaveBeenCalled();
+      expect(setTimeoutSpy).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("supports the live clock at the Node action boundary", () =>
+    Effect.gen(function* () {
+      const result = yield* Effect.promise(() =>
+        runConvexActionProgram(Effect.sleep(1).pipe(Effect.as("done")))
+      );
+
+      expect(result).toBe("done");
+    })
+  );
+
+  it.effect("maps tagged Effect failures into ConvexError payloads", () =>
+    Effect.promise(() =>
+      expect(
+        runConvexProgram(
+          Effect.fail(
+            new BoundaryFailure({
+              code: boundaryFailureCode,
+              message: "Boundary failed",
+            })
+          )
+        )
+      ).rejects.toMatchObject({
+        data: {
           code: boundaryFailureCode,
           message: "Boundary failed",
-        })
-      ),
-      Cause.makeDieReason(defect),
-    ]);
+        },
+      })
+    )
+  );
 
-    await expect(runConvexProgram(Effect.failCause(cause))).rejects.toBe(
-      defect
-    );
-  });
+  it.effect(
+    "preserves unexpected defects instead of turning them into domain errors",
+    () =>
+      Effect.promise(() =>
+        expect(runConvexProgram(Effect.die("defect"))).rejects.toThrow("defect")
+      )
+  );
+
+  it.effect(
+    "preserves a defect when a cause also contains a tagged failure",
+    () =>
+      Effect.gen(function* () {
+        const defect = new Error("Unexpected boundary defect");
+        const cause = Cause.fromReasons([
+          Cause.makeFailReason(
+            new BoundaryFailure({
+              code: boundaryFailureCode,
+              message: "Boundary failed",
+            })
+          ),
+          Cause.makeDieReason(defect),
+        ]);
+
+        yield* Effect.promise(() =>
+          expect(runConvexProgram(Effect.failCause(cause))).rejects.toBe(defect)
+        );
+      })
+  );
 
   it("normalizes unknown thrown values into messages", () => {
     expect(getUnknownErrorMessage(new Error("Exploded"))).toBe("Exploded");
