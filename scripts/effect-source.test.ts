@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Schema } from "effect";
 import {
   type EffectSourceConfig,
@@ -44,7 +44,7 @@ const commitAll = Effect.fn("EffectSourceTest.commitAll")(function* (
 });
 
 describe("Effect source identity", () => {
-  it.live(
+  it.effect(
     "updates linearly and remains valid after its subtree history is squashed",
     () =>
       Effect.gen(function* () {
