@@ -121,7 +121,9 @@ const getQuranIndexText = Effect.fn("www.llms.quran.indexText")(function* (
     const title = getQuranSurahName(surah.name);
     scanned.push(`## ${surah.number}. ${title}`);
     scanned.push("");
-    scanned.push(`**${t("meaning")}:** ${surah.name.meaning.text}`);
+    scanned.push(
+      `**${t("meaning")}:** ${surah.name.meaning.text} (${surah.name.meaning.appLocale})`
+    );
     scanned.push("");
     scanned.push(
       `**${t("revelation")}:** ${t("revelation-place", {
@@ -159,7 +161,7 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
   const surah = markdown.surah;
   const tafsirAccess = markdown.tafsirAccess;
   const title = getQuranSurahName(surah.name);
-  const description = surah.name.meaning;
+  const description = surah.name.meaning.text;
   const scanned = buildHeader({
     description,
     title,
@@ -168,7 +170,9 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
 
   scanned.push(`## ${title}`);
   scanned.push("");
-  scanned.push(`**${t("meaning")}:** ${surah.name.meaning}`);
+  scanned.push(
+    `**${t("meaning")}:** ${surah.name.meaning.text} (${surah.name.meaning.appLocale})`
+  );
   scanned.push(
     `**${t("revelation")}:** ${t("revelation-place", {
       place: surah.revelation.place,

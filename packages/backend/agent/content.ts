@@ -175,7 +175,8 @@ const renderQuranMarkdown = Effect.fn("agent.renderQuranMarkdown")(function* (
     surahNumber: source.surahNumber,
   }).pipe(Effect.mapError(contentReadError));
   const title = publication.surah.name.transliteration;
-  const description = publication.surah.name.meaning;
+  const meaning = publication.surah.name.meaning;
+  const description = meaning.text;
   const preBismillah =
     publication.preBismillah === null
       ? []
@@ -195,7 +196,7 @@ const renderQuranMarkdown = Effect.fn("agent.renderQuranMarkdown")(function* (
       text: [
         `# ${title}`,
         "",
-        `Meaning: ${publication.surah.name.meaning}`,
+        `Meaning: ${meaning.text} (${meaning.appLocale})`,
         `Revelation: ${publication.surah.revelation.place}`,
         "",
         ...renderQuranReadingSourcesMarkdown(publication.sources),

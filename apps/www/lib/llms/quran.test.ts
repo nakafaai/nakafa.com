@@ -108,7 +108,7 @@ describe("quran llms text", () => {
 
       expect(indexText?.startsWith("# Quran")).toBe(true);
       expect(indexText).toContain("## 1. Al-Fatihah");
-      expect(indonesianIndexText).toContain("**Makna nama:** The Opening");
+      expect(indonesianIndexText).toContain("**Makna nama:** The Opening (en)");
       expect(firstSurahText?.startsWith("# Al-Fatihah")).toBe(true);
       expect(firstSurahText).toContain("### Verses");
       expect(firstSurahText).toContain("Technical English Tafsir notice.");
@@ -146,7 +146,7 @@ describe("quran llms text", () => {
         const tafsirAccess = tafsirAccessFor(locale);
 
         expect(text).toContain(tafsirAccess.notice);
-        expect(text).toContain(`**${t("meaning")}:** The Opening`);
+        expect(text).toContain(`**${t("meaning")}:** The Opening (en)`);
         expect(text).toContain(
           `[${tafsirAccess.source.label}](${tafsirAccess.source.updateUrl})`
         );
@@ -335,7 +335,7 @@ function surahMarkdown(locale: Locale, number: number, verseLimit?: number) {
     surah: {
       ...metadata,
       name: {
-        meaning: metadata.name.meaning.text,
+        meaning: metadata.name.meaning,
         transliteration: metadata.name.transliteration,
       },
     },

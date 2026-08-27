@@ -14,6 +14,7 @@ import {
   quranReadingSourcesValidator,
   quranRevelationPlaceValidator,
   quranSourceFields,
+  quranSurahMeaningValidator,
   quranTafsirAccessValidator,
   quranTranslationDocumentValidator,
 } from "@repo/backend/convex/contentRelease/quran/spec";
@@ -29,7 +30,7 @@ const quranDocumentSurahValidator = v.object({
   kind: v.literal("quran-surah"),
   name: v.object({
     arabic: v.string(),
-    meaning: v.string(),
+    meaning: quranSurahMeaningValidator,
     transliteration: v.string(),
   }),
   number: v.number(),
@@ -66,7 +67,7 @@ function projectSurah(surah: QuranSurahRow): QuranDocumentSurah {
     kind: surah.kind,
     name: {
       arabic: surah.name.arabic,
-      meaning: surah.name.meaning.text,
+      meaning: surah.name.meaning,
       transliteration: surah.name.transliteration,
     },
     number: surah.number,

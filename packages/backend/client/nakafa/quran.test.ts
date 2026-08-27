@@ -159,7 +159,7 @@ describe("Quran Nakafa reader", () => {
           "The Opening"
         );
         expect(Option.getOrUndefined(markdown)?.text).toContain(
-          "Meaning: The Opening"
+          "Meaning: The Opening (en)"
         );
         expect(Option.getOrUndefined(markdown)?.text).toContain("## Verses");
         expect(Option.getOrUndefined(markdown)?.text).toContain(
@@ -241,7 +241,7 @@ function markdownResult(args: Record<string, unknown>) {
     sources: makeQuranLocaleSources(appLocale),
     surah: {
       name: {
-        meaning: "The Opening",
+        meaning: { appLocale: "en", text: "The Opening" },
         transliteration: "Al-Fatihah",
       },
       number: 1,

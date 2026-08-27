@@ -69,7 +69,7 @@ describe("contentRelease/quran/document", () => {
       kind: "quran-surah",
       name: {
         arabic: "سورة 1",
-        meaning: "Technical meaning 1",
+        meaning: { appLocale: "en", text: "Technical meaning 1" },
         transliteration: "Technical Surah 1",
       },
       number: 1,
@@ -100,7 +100,11 @@ describe("contentRelease/quran/document", () => {
     expect(german).toMatchObject({
       appLocale: "de",
       sources: makeQuranLocaleSources("de"),
-      surah: { name: { meaning: "Technical meaning 1" } },
+      surah: {
+        name: {
+          meaning: { appLocale: "en", text: "Technical meaning 1" },
+        },
+      },
       tafsirAccess: makeQuranTafsirProjection("de"),
     });
     expect(german.verses.at(0)?.translation).toEqual({

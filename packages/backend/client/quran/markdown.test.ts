@@ -171,7 +171,7 @@ function markdownResult(
     tafsirAccess: makeQuranTafsirProjection("en"),
     surah: {
       name: {
-        meaning: "The Opening",
+        meaning: { appLocale: "en", text: "The Opening" },
         transliteration: "Al-Fatihah",
       },
       number: 1,

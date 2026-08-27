@@ -19,7 +19,7 @@ const source = {
 };
 const surah = {
   name: {
-    meaning: "The Opening",
+    meaning: { appLocale: "en" as const, text: "The Opening" },
     transliteration: "Al-Fatihah",
   },
   number: 1,
@@ -87,9 +87,18 @@ describe("signed Quran view decoder", () => {
           ],
         },
       });
-      expect(english.surah.name.meaning).toBe("The Opening");
-      expect(german.surah.name.meaning).toBe("The Opening");
-      expect(indonesian.surah.name.meaning).toBe("The Opening");
+      expect(english.surah.name.meaning).toEqual({
+        appLocale: "en",
+        text: "The Opening",
+      });
+      expect(german.surah.name.meaning).toEqual({
+        appLocale: "en",
+        text: "The Opening",
+      });
+      expect(indonesian.surah.name.meaning).toEqual({
+        appLocale: "en",
+        text: "The Opening",
+      });
       expect(english.tafsirAccess).toMatchObject({
         appLocale: "en",
         kind: "external",
