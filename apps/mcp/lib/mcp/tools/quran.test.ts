@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { ENGLISH_APP_LOCALE_CODE } from "@nakafa/aksara-contracts/locale";
 import {
   quranReadingSourceIds,
@@ -5,26 +6,23 @@ import {
 } from "@nakafa/aksara-contracts/quran/identity";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
-import { describe, expect, it } from "@repo/testing/effect";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { vi } from "vitest";
 import { getNakafaQuranReferenceToolResult } from "@/lib/mcp/tools/quran";
 
-vi.mock("@/lib/mcp/nakafa", async () => {
-  const { Effect, Option } = await import("effect");
+const nakafaContentMock = vi.hoisted(() => ({
+  quran: vi.fn(),
+}));
 
-  return {
-    nakafaContent: {
-      /** Returns deterministic Quran references for MCP result tests. */
-      quran: (input: { from_verse: number }) =>
-        Effect.succeed(
-          input.from_verse === 999
-            ? Option.none()
-            : Option.some(makeReference())
-        ),
-    },
-  };
-});
+vi.mock("@/lib/mcp/nakafa", () => ({
+  nakafaContent: nakafaContentMock,
+}));
+
+nakafaContentMock.quran.mockImplementation((input: { from_verse: number }) =>
+  Effect.succeed(
+    input.from_verse === 999 ? Option.none() : Option.some(makeReference())
+  )
+);
 
 const ToolErrorResultSchema = Schema.Struct({
   isError: Schema.Literal(true),
@@ -37,7 +35,7 @@ const ToolErrorResultSchema = Schema.Struct({
 });
 
 describe("nakafa_get_quran_reference", () => {
-  it.live("returns semantic notes and signed source access", () =>
+  it.effect("returns semantic notes and signed source access", () =>
     Effect.gen(function* () {
       const result = yield* getNakafaQuranReferenceToolResult({
         from_verse: 1,
@@ -79,7 +77,7 @@ describe("nakafa_get_quran_reference", () => {
     })
   );
 
-  it.live("returns structured read-model input errors", () =>
+  it.effect("returns structured read-model input errors", () =>
     Effect.gen(function* () {
       const result = yield* getNakafaQuranReferenceToolResult({
         from_verse: 1,
@@ -98,7 +96,7 @@ describe("nakafa_get_quran_reference", () => {
     })
   );
 
-  it.live("returns structured range and missing-reference errors", () =>
+  it.effect("returns structured range and missing-reference errors", () =>
     Effect.gen(function* () {
       const reversed = yield* getNakafaQuranReferenceToolResult({
         from_verse: 3,

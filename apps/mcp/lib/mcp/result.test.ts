@@ -1,8 +1,8 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
 } from "@repo/contents/_lib/agent/errors";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import {
   succeedMcpReadModelError,
@@ -11,7 +11,7 @@ import {
 } from "@/lib/mcp/result";
 
 describe("MCP result helpers", () => {
-  it.live("formats structured success and actionable errors", () =>
+  it.effect("formats structured success and actionable errors", () =>
     Effect.gen(function* () {
       const success = toMcpStructuredResult({ ok: true });
       const explicitError = toMcpToolError("Missing content.", [
