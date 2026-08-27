@@ -320,7 +320,6 @@ for (const viewport of targetViewports) {
 }
 
 test.describe("detached contributor payloads", () => {
-  test.describe.configure({ mode: "parallel" });
   test.use({ viewport: { height: 900, width: 1440 } });
 
   test("renders every contributor through one drawer root", async ({
