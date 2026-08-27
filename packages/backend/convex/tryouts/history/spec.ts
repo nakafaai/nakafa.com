@@ -15,9 +15,13 @@ export interface RetainedTryoutHistoryPlan {
   readonly firstPlacementIndex: number;
   readonly format: "tryout-v1";
   readonly frozenPlacementCount: number;
+  readonly legacyBundleCount: number;
   readonly placementRowCount: number;
   readonly progressCount: number;
   readonly releases: readonly RetainedTryoutRelease[];
+  readonly runtimeBundleCount: number;
+  readonly scaleAttemptCount: number;
+  readonly scaleVersionCount: number;
   readonly snapshotId: string;
 }
 /** Production identities proven by the read-only retained-attempt audit. */
@@ -29,6 +33,7 @@ export const retainedTryoutHistoryPlan = {
   firstPlacementIndex: 54,
   format: "tryout-v1",
   frozenPlacementCount: 1720,
+  legacyBundleCount: 2,
   placementRowCount: 840,
   progressCount: 10,
   releases: [
@@ -45,6 +50,9 @@ export const retainedTryoutHistoryPlan = {
       releaseId: "full-corpus-runtime-v011-20260809-16a7436",
     },
   ],
+  runtimeBundleCount: 0,
+  scaleAttemptCount: 8,
+  scaleVersionCount: 3,
   snapshotId:
     "sha256:0a43a4125fc4886f90b5a509405178bfb8762ad3c7f72be80614fce2671b5162",
 } satisfies RetainedTryoutHistoryPlan;

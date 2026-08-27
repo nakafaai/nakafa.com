@@ -12,7 +12,9 @@ import {
 import { tryoutChoiceSnapshotValidator } from "@repo/backend/convex/tryouts/runtime/choice";
 import {
   type TryoutCurrentQuestionSelector,
+  type TryoutPredecessorQuestionSelector,
   tryoutCurrentQuestionSelectorValidator,
+  tryoutPredecessorQuestionSelectorValidator,
 } from "@repo/backend/convex/tryouts/runtime/content";
 import { v } from "convex/values";
 import { Effect } from "effect";
@@ -22,8 +24,15 @@ import { Effect } from "effect";
  */
 export const featuredTryoutValidator = v.object({
   choices: v.array(tryoutChoiceSnapshotValidator),
-  question: tryoutCurrentQuestionSelectorValidator,
+  question: v.union(
+    tryoutCurrentQuestionSelectorValidator,
+    tryoutPredecessorQuestionSelectorValidator
+  ),
 });
+
+type FeaturedQuestion =
+  | TryoutCurrentQuestionSelector
+  | TryoutPredecessorQuestionSelector;
 
 /** Selects the first authored question from the canonical try-out hierarchy. */
 export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
@@ -48,7 +57,7 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
       return yield* missingFeaturedTryout("question");
     }
 
-    const question = {
+    const questionBase: TryoutPredecessorQuestionSelector = {
       appLocale: locale,
       artifactHash: placement.questionArtifactHash,
       contentHash: placement.contentHash,
@@ -59,7 +68,11 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
       snapshotId: catalog.snapshotId,
       sourcePath: placement.questionSourcePath,
       sourceRevision: placement.sourceRevision,
-    } satisfies TryoutCurrentQuestionSelector;
+    };
+    const question: FeaturedQuestion =
+      catalog.bundleHash === null
+        ? questionBase
+        : { ...questionBase, bundleHash: catalog.bundleHash };
 
     return {
       choices: [...placement.choices],

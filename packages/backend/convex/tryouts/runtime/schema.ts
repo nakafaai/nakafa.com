@@ -5,6 +5,7 @@ import {
 import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { tryoutAttemptAccessSourceKindValidator } from "@repo/backend/convex/tryouts/access/source";
 import tryoutHistorySchema from "@repo/backend/convex/tryouts/history/schema";
+import tryoutMigrationSchema from "@repo/backend/convex/tryouts/migration/schema";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
 import { tryoutChoiceSnapshotValidator } from "@repo/backend/convex/tryouts/runtime/choice";
 import {
@@ -31,9 +32,8 @@ const tryoutSectionSnapshotValidator = v.object({
   timeLimitSeconds: v.number(),
 });
 
-/** Signed release bundles required by protected content-runtime reads. */
-export const tryoutBundleSchema = {
-  /** One immutable signed renderer bundle shared by attempts from one release. */
+/** Legacy release-sized bundles retained while attempts expand to bundle IDs. */
+export const legacyTryoutBundleSchema = {
   tryoutBundles: defineTable({
     createdAt: v.number(),
     index: v.number(),
@@ -47,9 +47,32 @@ export const tryoutBundleSchema = {
     .index("by_snapshotId_and_index", ["snapshotId", "index"]),
 };
 
+/** Permanent signed snapshot and renderer bundles used by try-out attempts. */
+export const tryoutRuntimeBundleSchema = {
+  tryoutRuntimeBundles: defineTable({
+    bundleHash: v.string(),
+    bundleJson: v.string(),
+    createdAt: v.number(),
+    rendererJson: v.string(),
+    rendererManifestHash: v.string(),
+    snapshotId: v.string(),
+    sourceGitSha: v.string(),
+    sourceManifestHash: v.string(),
+    sourceReleaseId: v.string(),
+  })
+    .index("by_bundleHash", ["bundleHash"])
+    .index("by_sourceReleaseId", ["sourceReleaseId"])
+    .index("by_snapshotId_and_rendererManifestHash", [
+      "snapshotId",
+      "rendererManifestHash",
+    ]),
+};
+
 const tables = {
-  ...tryoutBundleSchema,
+  ...legacyTryoutBundleSchema,
+  ...tryoutRuntimeBundleSchema,
   ...tryoutHistorySchema,
+  ...tryoutMigrationSchema,
   tryoutAttempts: defineTable({
     userId: v.id("users"),
     tryoutBundleId: v.optional(v.id("tryoutRuntimeBundles")),
@@ -87,15 +110,9 @@ const tables = {
     completedAt: v.union(v.number(), v.null()),
     endReason: v.union(attemptEndReasonValidator, v.null()),
   })
-    .index("by_scaleVersionId", {
-      fields: ["scaleVersionId"],
-      staged: true,
-    })
+    .index("by_scaleVersionId", ["scaleVersionId"])
     .index("by_status_and_expiresAt", ["status", "expiresAt"])
-    .index("by_tryoutBundleId", {
-      fields: ["tryoutBundleId"],
-      staged: true,
-    })
+    .index("by_tryoutBundleId", ["tryoutBundleId"])
     .index("by_tryoutSnapshotId", ["tryoutSnapshotId"])
     .index("by_userId_and_startedAt", ["userId", "startedAt"])
     .index("by_userId_and_status_and_expiresAt", [
@@ -252,10 +269,7 @@ const tables = {
     publishedScore: v.number(),
     finalizedAt: v.number(),
   })
-    .index("by_scaleVersionId", {
-      fields: ["scaleVersionId"],
-      staged: true,
-    })
+    .index("by_scaleVersionId", ["scaleVersionId"])
     .index("by_tryoutAttemptId", ["tryoutAttemptId"])
     .index("by_userId_and_finalizedAt", ["userId", "finalizedAt"]),
 };

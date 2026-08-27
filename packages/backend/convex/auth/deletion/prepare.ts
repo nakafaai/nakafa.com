@@ -14,6 +14,7 @@ import {
   accountDeletionPreparationOutcome,
 } from "@repo/backend/convex/auth/deletion/spec";
 import { findSchoolOwnershipSuccessorPage } from "@repo/backend/convex/auth/deletion/successor";
+import { hasUserErasureHold } from "@repo/backend/convex/tryouts/migration/erasure";
 import { Clock, Effect } from "effect";
 
 type AccountDeletionPreparation = Doc<"accountDeletionPreparations">;
@@ -190,6 +191,10 @@ export const prepareAccountDeletion: (
 
     if (!user || user.deletedAt !== undefined) {
       return accountDeletionPreparationOutcome.ready;
+    }
+
+    if (yield* hasUserErasureHold(ctx, user._id)) {
+      return accountDeletionPreparationOutcome.temporarilyUnavailable;
     }
 
     if (yield* hasAccountDeletionCancellation(ctx, attemptId)) {

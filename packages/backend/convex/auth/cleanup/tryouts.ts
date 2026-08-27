@@ -3,8 +3,11 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   toUserCleanupError,
   tryUserCleanup,
+  USER_CLEANUP_FAILED_CODE,
+  UserCleanupError,
 } from "@repo/backend/convex/auth/cleanup/spec";
 import { deleteTryoutAttemptHistory } from "@repo/backend/convex/tryouts/history/reference";
+import { hasAttemptErasureHold } from "@repo/backend/convex/tryouts/migration/erasure";
 import { Effect } from "effect";
 
 const ATTEMPT_CHILD_BATCH_SIZE = 50;
@@ -15,6 +18,13 @@ const ACCESS_GRANT_BATCH_SIZE = 25;
 /** Deletes one bounded phase from a try-out attempt runtime. */
 const cleanupAttemptRuntime = Effect.fn("auth.cleanup.cleanupAttemptRuntime")(
   function* (ctx: MutationCtx, attempt: Doc<"tryoutAttempts">) {
+    if (yield* hasAttemptErasureHold(ctx, attempt._id)) {
+      return yield* new UserCleanupError({
+        code: USER_CLEANUP_FAILED_CODE,
+        message:
+          "Try-out attempt erasure is held by a signed history migration.",
+      });
+    }
     const section = yield* tryUserCleanup(() =>
       ctx.db
         .query("tryoutSectionAttempts")

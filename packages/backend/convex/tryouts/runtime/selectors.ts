@@ -3,25 +3,22 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { readTryoutAttemptHistory } from "@repo/backend/convex/tryouts/history/reference";
 import { projectStoredTryoutContent } from "@repo/backend/convex/tryouts/history/selectors";
+import { loadAttemptRuntimeSource } from "@repo/backend/convex/tryouts/runtime/attempt/source";
 import type {
-  TryoutAnswerSelector,
-  TryoutQuestionSelector,
+  TryoutCurrentAnswerSelector,
+  TryoutCurrentQuestionSelector,
+  TryoutPredecessorAnswerSelector,
+  TryoutPredecessorQuestionSelector,
   TryoutSectionContentAccess,
 } from "@repo/backend/convex/tryouts/runtime/content";
-import { Effect, Schema } from "effect";
+import {
+  selectorIntegrity,
+  TryoutSelectorReadError,
+} from "@repo/backend/convex/tryouts/runtime/ownership";
+import { Effect } from "effect";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
 type TryoutPlacement = Doc<"tryoutAttemptPlacements">;
-
-/** Stable failure while resolving signed attempt selectors. */
-export class TryoutSelectorReadError extends Schema.TaggedError<TryoutSelectorReadError>()(
-  "TryoutSelectorReadError",
-  {
-    cause: Schema.optional(Schema.Unknown),
-    code: Schema.Literal("TRYOUT_SELECTOR_INTEGRITY"),
-    message: Schema.String,
-  }
-) {}
 
 /** Returns exact protected selectors from one immutable signed attempt. */
 export const loadTryoutSignedContent = Effect.fn(
@@ -89,6 +86,14 @@ export const projectTryoutSignedContent = Effect.fn(
   }
   const history = yield* readTryoutAttemptHistory(input.ctx, input.attempt);
   if (history) {
+    if (
+      input.attempt.tryoutBundleId !== undefined ||
+      input.attempt.tryoutBundleHash !== undefined
+    ) {
+      return yield* selectorIntegrity(
+        "Signed try-out attempt has both permanent and historical runtime ownership."
+      );
+    }
     return yield* projectStoredTryoutContent({
       answers: input.answers,
       appLocale: input.appLocale,
@@ -97,30 +102,58 @@ export const projectTryoutSignedContent = Effect.fn(
       placements: input.placements,
     });
   }
+  const source = yield* loadAttemptRuntimeSource(input.ctx, input.attempt);
+  if (!source) {
+    return yield* selectorIntegrity(
+      "Signed try-out attempt has no immutable runtime owner."
+    );
+  }
 
-  const content: Extract<TryoutSectionContentAccess, { runtime: "current" }> = {
-    answers: input.answers
-      ? yield* Effect.forEach(input.placements, (placement) =>
-          makeAnswerSelector(
-            placement,
-            input.appLocale,
-            input.attempt.tryoutSnapshotId,
-            input.attempt.snapshotReleaseId
-          )
+  const answers = input.answers
+    ? yield* Effect.forEach(input.placements, (placement) =>
+        makeAnswerSelector(
+          placement,
+          input.appLocale,
+          input.attempt.tryoutSnapshotId,
+          input.attempt.snapshotReleaseId
         )
-      : [],
-    kind: "signed",
-    questions: yield* Effect.forEach(input.placements, (placement) =>
-      makeQuestionSelector(
-        placement,
-        input.appLocale,
-        input.attempt.tryoutSnapshotId,
-        input.attempt.snapshotReleaseId
       )
+    : [];
+  const questions = yield* Effect.forEach(input.placements, (placement) =>
+    makeQuestionSelector(
+      placement,
+      input.appLocale,
+      input.attempt.tryoutSnapshotId,
+      input.attempt.snapshotReleaseId
+    )
+  );
+  if (source.kind === "predecessor") {
+    return {
+      answers,
+      kind: "signed",
+      questions,
+      runtime: "predecessor",
+    } satisfies Extract<TryoutSectionContentAccess, { runtime: "predecessor" }>;
+  }
+  const bundleHash = source.bundleHash;
+  return {
+    answers: answers.map(
+      (answer) =>
+        ({
+          ...answer,
+          bundleHash,
+        }) satisfies TryoutCurrentAnswerSelector
+    ),
+    kind: "signed",
+    questions: questions.map(
+      (question) =>
+        ({
+          ...question,
+          bundleHash,
+        }) satisfies TryoutCurrentQuestionSelector
     ),
     runtime: "current",
-  };
-  return content;
+  } satisfies Extract<TryoutSectionContentAccess, { runtime: "current" }>;
 });
 
 /** Builds one authenticated question selector from a frozen placement. */
@@ -140,7 +173,7 @@ function makeQuestionSelector(
     return selectorIntegrity("Signed try-out question selector is incomplete.");
   }
 
-  const selector: TryoutQuestionSelector = {
+  const selector: TryoutPredecessorQuestionSelector = {
     appLocale,
     artifactHash: placement.questionArtifactHash,
     contentHash: placement.contentHash,
@@ -166,7 +199,7 @@ function makeAnswerSelector(
     return selectorIntegrity("Signed try-out answer selector is incomplete.");
   }
 
-  const selector: TryoutAnswerSelector = {
+  const selector: TryoutPredecessorAnswerSelector = {
     appLocale,
     artifactHash: placement.answerArtifactHash,
     contentHash: placement.contentHash,
@@ -179,14 +212,6 @@ function makeAnswerSelector(
     sourceRevision: placement.sourceRevision,
   };
   return Effect.succeed(selector);
-}
-
-/** Creates one typed fail-closed selector integrity error. */
-function selectorIntegrity(message: string) {
-  return new TryoutSelectorReadError({
-    code: "TRYOUT_SELECTOR_INTEGRITY",
-    message,
-  });
 }
 
 /** Lifts one Convex read into the typed selector error channel. */

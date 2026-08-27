@@ -3,16 +3,20 @@ import {
   type StoredTryoutRow,
 } from "@nakafa/aksara-contracts/history/decode";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import type {
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
 import { TryoutRuntimeError } from "@repo/backend/convex/tryouts/runtime/error";
 import { Effect } from "effect";
 
 export const RETAINED_TRYOUT_CATALOG_ROW_COUNT = 54;
+type ReadCtx = MutationCtx | QueryCtx;
 
 /** Loads and authenticates the complete retained catalog for one snapshot. */
 export const loadStoredTryoutCatalogRows = Effect.fn(
   "tryouts.history.loadStoredCatalogRows"
-)(function* (ctx: QueryCtx, snapshotId: string) {
+)(function* (ctx: ReadCtx, snapshotId: string) {
   const stored = yield* historyPromise(
     "Unable to read retained try-out catalog rows.",
     () =>
@@ -53,7 +57,7 @@ const decodeCatalogHistoryRow = Effect.fn(
 /** Loads one authenticated retained placement by its attempt-owned row hash. */
 export const loadStoredTryoutPlacement = Effect.fn(
   "tryouts.history.loadStoredPlacement"
-)(function* (ctx: QueryCtx, snapshotId: string, rowHash: string) {
+)(function* (ctx: ReadCtx, snapshotId: string, rowHash: string) {
   const stored = yield* historyPromise(
     "Unable to read one retained try-out placement.",
     () =>
