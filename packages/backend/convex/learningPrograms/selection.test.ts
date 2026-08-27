@@ -1,9 +1,11 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   type LearningProgram,
   LearningProgramKeySchema,
   LearningProgramSchema,
 } from "@nakafa/aksara-contracts/program/spec";
 import { api } from "@repo/backend/convex/_generated/api";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import {
   createConvexTestWithBetterAuth,
@@ -15,7 +17,6 @@ import {
   makeProgramSnapshotData,
   makeTechnicalProgram,
 } from "@repo/backend/test/program-snapshot";
-import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
@@ -23,7 +24,7 @@ const NOW = 1_799_020_800_000;
 const OLD_SELECTION_AT = 1_700_000_000_000;
 
 describe("learningPrograms/selection", () => {
-  it.live(
+  it.effect(
     "lists only selectable programs from the signed active snapshot",
     () =>
       Effect.gen(function* () {
@@ -48,7 +49,7 @@ describe("learningPrograms/selection", () => {
       })
   );
 
-  it.live(
+  it.effect(
     "saves one signed selection without creating profile or plan rows",
     () =>
       Effect.gen(function* () {
@@ -115,7 +116,7 @@ describe("learningPrograms/selection", () => {
       })
   );
 
-  it.live("returns no selection after its signed program is retired", () =>
+  it.effect("returns no selection after its signed program is retired", () =>
     Effect.gen(function* () {
       const target = createConvexTestWithBetterAuth();
       const data = yield* makeProgramSnapshotData([
@@ -126,15 +127,15 @@ describe("learningPrograms/selection", () => {
         target.mutation((ctx) => seedAuthenticatedUser(ctx, { now: NOW }))
       );
       yield* Effect.promise(() =>
-        target.mutation(async (ctx) => {
-          await ctx.db.insert("learningPreferences", {
+        target.mutation((ctx) =>
+          ctx.db.insert("learningPreferences", {
             learningInterest: "school-curriculum",
             primaryProgramKey: "merdeka",
             selectionUpdatedAt: NOW,
             updatedAt: NOW,
             userId: identity.userId,
-          });
-        })
+          })
+        )
       );
       const authed = target.withIdentity({
         sessionId: identity.sessionId,
@@ -151,7 +152,7 @@ describe("learningPrograms/selection", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "refreshes the timestamp when a user explicitly reselects a program",
     () =>
       Effect.gen(function* () {
@@ -207,7 +208,7 @@ describe("learningPrograms/selection", () => {
       })
   );
 
-  it.live("rejects missing, planned, and interest-mismatched programs", () =>
+  it.effect("rejects missing, planned, and interest-mismatched programs", () =>
     Effect.gen(function* () {
       const target = createConvexTestWithBetterAuth();
       const data = yield* makeProgramSnapshotData([
@@ -253,7 +254,7 @@ describe("learningPrograms/selection", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "reports duplicate preference rows through the typed persistence contract",
     () =>
       Effect.gen(function* () {
@@ -266,16 +267,24 @@ describe("learningPrograms/selection", () => {
           target.mutation((ctx) => seedAuthenticatedUser(ctx, { now: NOW }))
         );
         yield* Effect.promise(() =>
-          target.mutation(async (ctx) => {
-            await ctx.db.insert("learningPreferences", {
-              updatedAt: NOW,
-              userId: identity.userId,
-            });
-            await ctx.db.insert("learningPreferences", {
-              updatedAt: NOW + 1,
-              userId: identity.userId,
-            });
-          })
+          target.mutation((ctx) =>
+            runConvexProgram(
+              Effect.gen(function* () {
+                yield* Effect.promise(() =>
+                  ctx.db.insert("learningPreferences", {
+                    updatedAt: NOW,
+                    userId: identity.userId,
+                  })
+                );
+                yield* Effect.promise(() =>
+                  ctx.db.insert("learningPreferences", {
+                    updatedAt: NOW + 1,
+                    userId: identity.userId,
+                  })
+                );
+              })
+            )
+          )
         );
         const authed = target.withIdentity({
           sessionId: identity.sessionId,
@@ -294,17 +303,19 @@ describe("learningPrograms/selection", () => {
       })
   );
 
-  it("fails closed when no signed program snapshot is active", async () => {
+  it.effect("fails closed when no signed program snapshot is active", () => {
     const target = convexTest(schema, convexModules);
 
-    await expect(
-      target.query(api.learningPrograms.queries.listSelectablePrograms, {
-        locale: "id",
-      })
-    ).rejects.toThrow("CONTENT_RELEASE_MISSING");
+    return Effect.promise(() =>
+      expect(
+        target.query(api.learningPrograms.queries.listSelectablePrograms, {
+          locale: "id",
+        })
+      ).rejects.toThrow("CONTENT_RELEASE_MISSING")
+    );
   });
 
-  it.live("rejects a signed program whose localized root is missing", () =>
+  it.effect("rejects a signed program whose localized root is missing", () =>
     Effect.gen(function* () {
       const target = convexTest(schema, convexModules);
       const data = yield* makeProgramSnapshotData([
@@ -312,25 +323,33 @@ describe("learningPrograms/selection", () => {
       ]);
       yield* Effect.promise(() => activateProgramSnapshot(target, data));
       yield* Effect.promise(() =>
-        target.mutation(async (ctx) => {
-          const root = await ctx.db
-            .query("curriculumRoutes")
-            .withIndex(
-              "by_snapshotId_and_appLocale_and_parentPath_and_order_and_path",
-              (index) =>
-                index
-                  .eq("snapshotId", data.snapshotId)
-                  .eq("appLocale", "id")
-                  .eq("parentPath", undefined)
-            )
-            .unique();
+        target.mutation((ctx) =>
+          runConvexProgram(
+            Effect.gen(function* () {
+              const root = yield* Effect.promise(() =>
+                ctx.db
+                  .query("curriculumRoutes")
+                  .withIndex(
+                    "by_snapshotId_and_appLocale_and_parentPath_and_order_and_path",
+                    (index) =>
+                      index
+                        .eq("snapshotId", data.snapshotId)
+                        .eq("appLocale", "id")
+                        .eq("parentPath", undefined)
+                  )
+                  .unique()
+              );
 
-          if (!root) {
-            throw new Error("Expected one localized program root.");
-          }
+              if (!root) {
+                return yield* Effect.die(
+                  new Error("Expected one localized program root.")
+                );
+              }
 
-          await ctx.db.delete(root._id);
-        })
+              yield* Effect.promise(() => ctx.db.delete(root._id));
+            })
+          )
+        )
       );
 
       yield* Effect.promise(() =>
