@@ -1,0 +1,330 @@
+import { Buffer } from "node:buffer";
+import {
+  createHash,
+  generateKeyPairSync,
+  sign as signBytes,
+} from "node:crypto";
+import { hashCompiledContentPayload } from "@nakafa/aksara-contracts/artifact/integrity";
+import {
+  CompiledContentPayloadSchema,
+  canonicalizeContentArtifactSigningInput,
+  SignedContentArtifactSchema,
+} from "@nakafa/aksara-contracts/content";
+import {
+  ContentKeySchema,
+  Ed25519SignatureSchema,
+  GitCommitShaSchema,
+  type ReleaseId,
+  Sha256HashSchema,
+  SigningKeyIdSchema,
+} from "@nakafa/aksara-contracts/ids";
+import {
+  ACTIVE_APP_LOCALES,
+  ArtifactLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
+import { digestProjections } from "@nakafa/aksara-contracts/projection/digest";
+import {
+  CONTENT_RELEASE_FORMAT,
+  type ContentReleaseManifest,
+  ContentReleaseManifestSchema,
+  type SignedContentRelease,
+  SignedContentReleaseSchema,
+} from "@nakafa/aksara-contracts/release";
+import { digestItems } from "@nakafa/aksara-contracts/release/digest";
+import { hashContentReleaseManifest } from "@nakafa/aksara-contracts/release/hash";
+import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
+import { digestRollbackSnapshot } from "@nakafa/aksara-contracts/release/rollback/digest";
+import { digestRoutes } from "@nakafa/aksara-contracts/release/route/digest";
+import { canonicalizeContentReleaseSigningInput } from "@nakafa/aksara-contracts/release/signing";
+import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import {
+  canonicalizeRendererManifestContract,
+  RENDERER_CONTRACT_VERSION,
+  RENDERER_MANIFEST_FORMAT,
+  type RendererManifestEnvelope,
+  RendererManifestEnvelopeSchema,
+} from "@nakafa/aksara-contracts/renderer/contract";
+import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
+import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
+import {
+  ContentVerificationKeyResolver,
+  SigningKeyNotFoundError,
+} from "@nakafa/aksara-contracts/signature/spec";
+import {
+  canonicalizeTryoutRuntimeBundlePayload,
+  canonicalizeTryoutRuntimeBundleSigningInput,
+} from "@nakafa/aksara-contracts/tryout/runtime/canonical";
+import {
+  SignedTryoutRuntimeBundleSchema,
+  TRYOUT_RUNTIME_BUNDLE_FORMAT,
+} from "@nakafa/aksara-contracts/tryout/runtime/spec";
+import type { TryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/spec";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { testArtifactJson } from "@repo/backend/test/content/artifact";
+import {
+  testMaterialPublicPath,
+  testProjectionJson,
+} from "@repo/backend/test/content/material";
+import {
+  TEST_DIGEST,
+  TEST_MANIFEST_HASH,
+  TEST_RELEASE_ID,
+  testDeleteJson,
+  testPublicationScope,
+  testRollbackJson,
+  testRouteJson,
+  testUpsertJson,
+} from "@repo/backend/test/content/release";
+import { Effect, Schema, Stream } from "effect";
+
+const keys = generateKeyPairSync("ed25519");
+const digest = Schema.decodeSync(Sha256HashSchema)(TEST_DIGEST);
+type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
+export const TEST_KEY_ID = SigningKeyIdSchema.make("test-key");
+export const TEST_PUBLIC_KEY = keys.publicKey
+  .export({ format: "pem", type: "spki" })
+  .toString();
+/** Creates one authenticated renderer snapshot for proof tests. */
+export function testProofRenderer(
+  componentName = "p",
+  publishedDomains: readonly RendererDomain[] = RENDERER_DOMAINS
+) {
+  const components = [{ name: componentName, version: 1 }];
+  const contract = {
+    base: {
+      authoringComponents: components,
+      supportedComponents: components,
+    },
+    domains: RENDERER_DOMAINS.map((name) => ({
+      authoringComponents: [],
+      name,
+      supportedComponents: [],
+    })),
+    publishedDomains: [...publishedDomains].sort(),
+  };
+  const hash = Sha256HashSchema.make(
+    `sha256:${createHash("sha256")
+      .update(canonicalizeRendererManifestContract(contract))
+      .digest("hex")}`
+  );
+  return RendererManifestEnvelopeSchema.make({
+    ...contract,
+    format: RENDERER_MANIFEST_FORMAT,
+    hash,
+    rendererContractVersion: RENDERER_CONTRACT_VERSION,
+  });
+}
+export const TEST_PROOF_RENDERER = testProofRenderer();
+/** Inserts one ordered proof row without unrelated staging orchestration. */
+export async function insertProofItem(
+  ctx: MutationCtx,
+  index: number,
+  operation: "delete" | "upsert" = "upsert",
+  artifactJson = testArtifactJson({
+    artifactHash: `sha256:${(index + 1).toString(16).padStart(64, "0")}`,
+    contentKey: `test:head-${index}`,
+  })
+) {
+  const contentKey = `test:head-${index}`;
+  const artifactHash = `sha256:${(index + 1).toString(16).padStart(64, "0")}`;
+  await ctx.db.insert("contentItems", {
+    artifactHash: operation === "upsert" ? artifactHash : undefined,
+    artifactReady: operation === "upsert",
+    contentKey,
+    index,
+    itemBatchHash: TEST_MANIFEST_HASH,
+    itemBatchIndex: 0,
+    itemJson:
+      operation === "delete"
+        ? testDeleteJson({ contentKey, index })
+        : testUpsertJson({ artifactHash, contentKey, index }),
+    artifactLocale: "en",
+    projectionJson:
+      operation === "upsert"
+        ? testProjectionJson({ contentKey, index })
+        : undefined,
+    projectionReady: operation === "upsert",
+    releaseId: TEST_RELEASE_ID,
+    rollbackJson: testRollbackJson({ contentKey, index }),
+    sequence: 1,
+    stagedAt: 1,
+  });
+  if (operation === "upsert") {
+    await ctx.db.insert("contentArtifacts", {
+      artifactHash,
+      artifactJson,
+      createdAt: 1,
+      retainUntil: Number.MAX_SAFE_INTEGER,
+    });
+  }
+}
+/** Inserts one ordered route proof row. */
+export function insertProofRoute(ctx: MutationCtx, index: number) {
+  const contentKey = `test:head-${index}`;
+  const publicPath = testMaterialPublicPath(index);
+  return ctx.db.insert("contentBindings", {
+    batchHash: TEST_MANIFEST_HASH,
+    batchIndex: 0,
+    contentKey,
+    index,
+    appLocale: "en",
+    operation: "bind",
+    publicPath,
+    releaseId: TEST_RELEASE_ID,
+    routeJson: testRouteJson({ contentKey, index, publicPath }),
+    sequence: 1,
+  });
+}
+/** Creates an authenticated empty manifest with every catalog proof bound. */
+export function testEmptyManifest(releaseId: ReleaseId) {
+  const items = Effect.runSync(digestItems(releaseId, Stream.empty));
+  const projections = Effect.runSync(
+    digestProjections(releaseId, Stream.empty)
+  );
+  const rollback = Effect.runSync(
+    digestRollbackSnapshot(releaseId, Stream.empty)
+  );
+  const routes = Effect.runSync(digestRoutes(releaseId, Stream.empty));
+  const snapshots = inheritContentSnapshots(null);
+  return ContentReleaseManifestSchema.make({
+    activeAppLocales: ACTIVE_APP_LOCALES,
+    baseActiveAppLocales: null,
+    baseManifestHash: null,
+    baseReleaseId: null,
+    baseResultCount: 0,
+    baseResultDigest: EMPTY_RESULT_CATALOG_DIGEST,
+    deleteCount: 0,
+    format: CONTENT_RELEASE_FORMAT,
+    itemCount: 0,
+    itemsDigest: items.digest,
+    origin: { kind: "git", sha: GitCommitShaSchema.make("a".repeat(40)) },
+    projectionCount: 0,
+    projectionDigest: projections.digest,
+    releaseId,
+    rendererContractVersion: TEST_PROOF_RENDERER.rendererContractVersion,
+    rendererManifestHash: TEST_PROOF_RENDERER.hash,
+    resultCount: 0,
+    resultDigest: EMPTY_RESULT_CATALOG_DIGEST,
+    rollbackCount: 0,
+    rollbackDigest: rollback.digest,
+    routeCount: 0,
+    routeDigest: routes.digest,
+    scope: testPublicationScope({ snapshots }),
+    snapshots,
+    upsertCount: 0,
+  });
+}
+export const TEST_KEY_RESOLVER = ContentVerificationKeyResolver.of({
+  /** Resolves only the explicit technical test key. */
+  resolve: (requestedKeyId) => {
+    if (requestedKeyId === TEST_KEY_ID) {
+      return Effect.succeed(TEST_PUBLIC_KEY);
+    }
+    return Effect.fail(new SigningKeyNotFoundError({ keyId: requestedKeyId }));
+  },
+});
+/** Produces one fully authenticated technical artifact. */
+export function testSignedArtifact(
+  rendererDomain: RendererDomain = "mathematics",
+  options?: {
+    readonly artifactLocale?: ArtifactLocaleCode;
+    readonly compiledCode?: string;
+    readonly contentKey?: string;
+    readonly plainText?: string;
+    readonly rawMdx?: string;
+  }
+) {
+  const rawMdx = options?.rawMdx ?? "## Technical proof";
+  const compiledCode = options?.compiledCode ?? "return {};";
+  const payload = CompiledContentPayloadSchema.make({
+    artifactLocale: ArtifactLocaleSchema.make(options?.artifactLocale ?? "en"),
+    byteLength: Buffer.byteLength(compiledCode, "utf8"),
+    compiledCode,
+    compilerConfigHash: digest,
+    compilerVersion: "0.1.0",
+    contentKey: ContentKeySchema.make(options?.contentKey ?? "test:head-0"),
+    format: "mdx-function-body",
+    mdxCompilerVersion: "3.1.1",
+    plainText: options?.plainText ?? "Technical proof",
+    rawMdx,
+    rendererDomain,
+    requiredComponents: [],
+    sourceHash: Sha256HashSchema.make(
+      `sha256:${createHash("sha256").update(rawMdx).digest("hex")}`
+    ),
+  });
+  const artifactHash = hashCompiledContentPayload(payload);
+  return SignedContentArtifactSchema.make({
+    artifactHash,
+    keyId: TEST_KEY_ID,
+    payload,
+    signature: Ed25519SignatureSchema.make(
+      signBytes(
+        null,
+        Buffer.from(
+          canonicalizeContentArtifactSigningInput(artifactHash, payload),
+          "utf8"
+        ),
+        keys.privateKey
+      ).toString("base64url")
+    ),
+  });
+}
+/** Produces one fully authenticated technical release envelope. */
+export function testSignedRelease(manifest: ContentReleaseManifest) {
+  const manifestHash = Effect.runSync(hashContentReleaseManifest(manifest));
+  return SignedContentReleaseSchema.make({
+    keyId: TEST_KEY_ID,
+    manifest,
+    manifestHash,
+    signature: Ed25519SignatureSchema.make(
+      signBytes(
+        null,
+        Buffer.from(
+          canonicalizeContentReleaseSigningInput(manifestHash, manifest),
+          "utf8"
+        ),
+        keys.privateKey
+      ).toString("base64url")
+    ),
+  });
+}
+
+/** Produces one authenticated permanent bundle from exact release provenance. */
+export function testSignedTryoutRuntimeBundle(input: {
+  readonly release: SignedContentRelease;
+  readonly rendererManifest: RendererManifestEnvelope;
+  readonly snapshot: TryoutSnapshot;
+}) {
+  if (input.release.manifest.origin.kind !== "git") {
+    throw new Error("Expected a Git release for a test runtime bundle.");
+  }
+  const payload = {
+    format: TRYOUT_RUNTIME_BUNDLE_FORMAT,
+    rendererManifestHash: input.rendererManifest.hash,
+    snapshot: input.snapshot,
+    sourceGitSha: input.release.manifest.origin.sha,
+    sourceManifestHash: input.release.manifestHash,
+    sourceReleaseId: input.release.manifest.releaseId,
+  } as const;
+  const bundleHash = Sha256HashSchema.make(
+    `sha256:${createHash("sha256")
+      .update(canonicalizeTryoutRuntimeBundlePayload(payload))
+      .digest("hex")}`
+  );
+  return SignedTryoutRuntimeBundleSchema.make({
+    bundleHash,
+    keyId: TEST_KEY_ID,
+    payload,
+    signature: Ed25519SignatureSchema.make(
+      signBytes(
+        null,
+        Buffer.from(
+          canonicalizeTryoutRuntimeBundleSigningInput(bundleHash, payload),
+          "utf8"
+        ),
+        keys.privateKey
+      ).toString("base64url")
+    ),
+  });
+}
