@@ -222,33 +222,14 @@ describe("Nakafa MCP transport", () => {
       responses.map((response) => response.json())
     );
     expect(responses.map(({ status }) => status)).toEqual([200, 200, 200]);
-    expect(bodies[0]).toMatchObject({
-      result: {
-        messages: [
-          {
-            content: {
-              text: expect.stringContaining("What is the key idea?"),
-            },
-          },
-        ],
-      },
-    });
-    expect(bodies[1]).toMatchObject({
-      result: {
-        messages: [
-          {
-            content: {
-              text: expect.stringContaining("Surah 1, verses 1-7"),
-            },
-          },
-        ],
-      },
-    });
-    expect(bodies[2]).toMatchObject({
-      error: { code: -32_602 },
-      id: 17,
-      jsonrpc: "2.0",
-    });
+    expect(bodies[0].result.messages[0].content.text).toContain(
+      "What is the key idea?"
+    );
+    expect(bodies[1].result.messages[0].content.text).toContain(
+      "Surah 1, verses 1-7"
+    );
+    expect(bodies[2]).toMatchObject({ error: { code: -32_602 }, id: 17 });
+    expect(bodies[2].jsonrpc).toBe("2.0");
   });
 
   it("returns typed resource failures without inventing content", async () => {
