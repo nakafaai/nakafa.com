@@ -3,7 +3,8 @@ import {
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
 } from "@repo/contents/_lib/agent/constants";
 import { Effect } from "effect";
-import { type FetchImplementation, requestNakafaApi } from "#cli/client";
+import type { HttpClient } from "effect/unstable/http";
+import { requestNakafaApi } from "#cli/client";
 import { readCliRequest } from "#cli/command/read";
 import { type CliCommand, type CliRequest, HELP_TEXT } from "#cli/command/spec";
 import type {
@@ -18,7 +19,6 @@ const API_EXIT_CODE = 3;
 const NETWORK_OR_SERVER_EXIT_CODE = 4;
 
 export interface CliDependencies {
-  readonly fetchImplementation: FetchImplementation;
   readonly stderr: { write(value: string): unknown };
   readonly stdout: { write(value: string): unknown };
   readonly version: string;
@@ -100,7 +100,8 @@ function executeCommand(
   dependencies: CliDependencies
 ): Effect.Effect<
   CliOutput,
-  ApiResponseError | HttpResponseError | NetworkError | ResponseDecodeError
+  ApiResponseError | HttpResponseError | NetworkError | ResponseDecodeError,
+  HttpClient.HttpClient
 > {
   const command = request.command;
   if (command.kind === "help") {
@@ -121,7 +122,6 @@ function executeCommand(
   }
   return requestNakafaApi({
     apiBase: request.apiBase,
-    fetchImplementation: dependencies.fetchImplementation,
     path: buildApiPath(command),
   }).pipe(Effect.map((value) => ({ kind: "json", value })));
 }

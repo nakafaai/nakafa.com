@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
-import { Cause, Effect } from "effect";
+import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
+import { Cause, Effect, Layer } from "effect";
 import { readPackageVersion } from "#cli/package";
 import { runCli } from "#cli/program";
 
@@ -10,7 +11,6 @@ const program = Effect.gen(function* () {
     new URL("../package.json", import.meta.url)
   );
   return yield* runCli(process.argv.slice(2), {
-    fetchImplementation: fetch,
     stderr: process.stderr,
     stdout: process.stdout,
     version,
@@ -27,7 +27,7 @@ const program = Effect.gen(function* () {
       return 4;
     })
   ),
-  Effect.provide(NodeFileSystem.layer)
+  Effect.provide(Layer.merge(NodeFileSystem.layer, NodeHttpClient.layerFetch))
 );
 
 Effect.runPromise(program).then((exitCode) => {
