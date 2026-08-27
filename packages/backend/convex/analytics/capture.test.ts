@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import {
   captureActionProductEventProgram,
@@ -9,13 +10,6 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { seedAnalyticsConsent } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 import { vi } from "vitest";
@@ -45,15 +39,7 @@ const checkoutStartedEvent = {
 } as const;
 
 describe("analytics/capture", () => {
-  beforeEach(() => {
-    vi.setSystemTime(new Date(NOW));
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it.live(
+  it.effect(
     "schedules current-consent product delivery with validated payload",
     () =>
       Effect.gen(function* () {
@@ -100,14 +86,14 @@ describe("analytics/capture", () => {
       })
   );
 
-  it.live("drops a queued event when deletion starts before delivery", () =>
+  it.effect("drops a queued event when deletion starts before delivery", () =>
     Effect.gen(function* () {
-      const capture = vi.fn(async () => undefined);
+      const capture = vi.fn(() => Promise.resolve(undefined));
       const requestErasure = vi.fn(() => Effect.void);
 
       yield* deliverProductAnalyticsProgram({
         capture,
-        isUserEligible: vi.fn(async () => false),
+        isUserEligible: vi.fn(() => Promise.resolve(false)),
         requestErasure,
       });
 
@@ -116,14 +102,14 @@ describe("analytics/capture", () => {
     })
   );
 
-  it.live("keeps delivered analytics when the user remains active", () =>
+  it.effect("keeps delivered analytics when the user remains active", () =>
     Effect.gen(function* () {
-      const capture = vi.fn(async () => undefined);
+      const capture = vi.fn(() => Promise.resolve(undefined));
       const requestErasure = vi.fn(() => Effect.void);
 
       yield* deliverProductAnalyticsProgram({
         capture,
-        isUserEligible: vi.fn(async () => true),
+        isUserEligible: vi.fn(() => Promise.resolve(true)),
         requestErasure,
       });
 
@@ -132,9 +118,9 @@ describe("analytics/capture", () => {
     })
   );
 
-  it.live("durably erases analytics when withdrawal overlaps the send", () =>
+  it.effect("durably erases analytics when withdrawal overlaps the send", () =>
     Effect.gen(function* () {
-      const capture = vi.fn(async () => undefined);
+      const capture = vi.fn(() => Promise.resolve(undefined));
       const requestErasure = vi.fn(() => Effect.void);
       const isUserActive = vi
         .fn<() => Promise<boolean>>()
@@ -152,29 +138,31 @@ describe("analytics/capture", () => {
     })
   );
 
-  it.live("requests erasure after a failed send that overlaps withdrawal", () =>
-    Effect.gen(function* () {
-      const requestErasure = vi.fn(() => Effect.void);
-      const isUserActive = vi
-        .fn<() => Promise<boolean>>()
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(false);
+  it.effect(
+    "requests erasure after a failed send that overlaps withdrawal",
+    () =>
+      Effect.gen(function* () {
+        const requestErasure = vi.fn(() => Effect.void);
+        const isUserActive = vi
+          .fn<() => Promise<boolean>>()
+          .mockResolvedValueOnce(true)
+          .mockResolvedValueOnce(false);
 
-      const failure = yield* deliverProductAnalyticsProgram({
-        capture: vi.fn(() => Promise.reject(new Error("capture uncertain"))),
-        isUserEligible: isUserActive,
-        requestErasure,
-      }).pipe(Effect.flip);
+        const failure = yield* deliverProductAnalyticsProgram({
+          capture: vi.fn(() => Promise.reject(new Error("capture uncertain"))),
+          isUserEligible: isUserActive,
+          requestErasure,
+        }).pipe(Effect.flip);
 
-      expect(requestErasure).toHaveBeenCalledOnce();
-      expect(failure).toMatchObject({
-        _tag: "ProductAnalyticsCaptureError",
-        message: "capture uncertain",
-      });
-    })
+        expect(requestErasure).toHaveBeenCalledOnce();
+        expect(failure).toMatchObject({
+          _tag: "ProductAnalyticsCaptureError",
+          message: "capture uncertain",
+        });
+      })
   );
 
-  it.live(
+  it.effect(
     "requests erasure after a send when final eligibility is unknown",
     () =>
       Effect.gen(function* () {
@@ -185,7 +173,7 @@ describe("analytics/capture", () => {
           .mockRejectedValueOnce(new Error("eligibility unavailable"));
 
         const failure = yield* deliverProductAnalyticsProgram({
-          capture: vi.fn(async () => undefined),
+          capture: vi.fn(() => Promise.resolve(undefined)),
           isUserEligible: isUserActive,
           requestErasure,
         }).pipe(Effect.flip);
@@ -198,7 +186,7 @@ describe("analytics/capture", () => {
       })
   );
 
-  it.live("admits an action event while its app user remains active", () =>
+  it.effect("admits an action event while its app user remains active", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
       const userId = yield* Effect.promise(() =>
@@ -246,7 +234,7 @@ describe("analytics/capture", () => {
     })
   );
 
-  it.live("drops an action event while account deletion is prepared", () =>
+  it.effect("drops an action event while account deletion is prepared", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
       const userId = yield* Effect.promise(() =>
@@ -284,7 +272,7 @@ describe("analytics/capture", () => {
     })
   );
 
-  it.live("drops an action event without current analytics consent", () =>
+  it.effect("drops an action event without current analytics consent", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
       const userId = yield* Effect.promise(() =>
@@ -315,7 +303,7 @@ describe("analytics/capture", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "surfaces action event failures through the typed capture channel",
     () =>
       Effect.gen(function* () {
