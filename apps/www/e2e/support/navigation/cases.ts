@@ -2,6 +2,7 @@ import { instant } from "@next/playwright";
 import { expect, type Locator, type Page } from "@playwright/test";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { Duration, Effect, Schedule, Schema } from "effect";
+import { activateUntilVisible } from "@/e2e/support/interaction";
 import { prepareClientNavigation } from "./readiness";
 
 const HOMEPAGE_HEADING_PATTERN = /Learn until it clicks/i;
@@ -111,24 +112,6 @@ const waitForVisibleLocator = Effect.fn("NakafaE2E.waitForVisibleLocator")(
     )
 );
 
-const activateMobileSidebarLink = Effect.fn(
-  "NakafaE2E.activateMobileSidebarLink"
-)(function* (
-  sidebarTrigger: Locator,
-  link: Locator,
-  failure: NavigationLinkMissing
-) {
-  const linkIsVisible = yield* Effect.promise(() => link.isVisible());
-  if (linkIsVisible) {
-    return link;
-  }
-
-  yield* Effect.promise(() =>
-    sidebarTrigger.click({ timeout: NAVIGATION_TIMEOUT_MILLISECONDS })
-  );
-  return yield* requireVisibleLocator(link, failure);
-});
-
 const findVisibleLink = Effect.fn("NakafaE2E.findVisibleLink")(function* (
   page: Page,
   href: string,
@@ -161,11 +144,11 @@ const findVisibleLink = Effect.fn("NakafaE2E.findVisibleLink")(function* (
     .locator('[data-slot="sidebar-trigger"]:visible')
     .first();
   yield* waitForVisibleLocator(sidebarTrigger, missingLink);
-  return yield* activateMobileSidebarLink(
+  return yield* activateUntilVisible(
     sidebarTrigger,
     link,
-    missingLink
-  ).pipe(Effect.retry(linkedHrefRetrySchedule));
+    NAVIGATION_TIMEOUT_MILLISECONDS
+  );
 });
 
 const readVisibleLinkedHref = Effect.fn("NakafaE2E.readVisibleLinkedHref")(
