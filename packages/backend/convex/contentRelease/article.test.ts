@@ -117,7 +117,18 @@ describe("contentRelease/article", () => {
 
   it("continues an in-flight predecessor article cursor", async () => {
     const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) => insertRuntimeArticles(ctx, 3));
+    await t.mutation(async (ctx) => {
+      await insertRuntimeArticles(ctx, 3);
+      const rows = await ctx.db.query("articleCatalog").collect();
+      for (const row of rows) {
+        if (!("datePublished" in row)) {
+          throw new Error("Expected one current article date shape.");
+        }
+        await ctx.db.patch("articleCatalog", row._id, {
+          date: row.datePublished,
+        });
+      }
+    });
     const stored = await t.run((ctx) =>
       ctx.db.query("articleCatalog").collect()
     );
