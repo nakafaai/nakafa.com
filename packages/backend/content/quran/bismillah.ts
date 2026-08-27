@@ -50,10 +50,7 @@ export function splitQuranBismillahPrefix(arabic: string, bismillah: string) {
 
 /** Projects flat Quran verses into their dedicated Bismillah presentation. */
 export function separateQuranBismillah<
-  const Bismillah extends {
-    readonly arabic: string;
-    readonly translation: string;
-  },
+  const Bismillah extends { readonly arabic: string },
   const Verse extends { readonly arabic: string },
 >(bismillah: Bismillah | null, verses: readonly Verse[]) {
   const [firstVerse, ...remainingVerses] = verses;
@@ -71,13 +68,9 @@ export function separateQuranBismillah<
 }
 
 /** Projects authenticated runtime rows while preserving every non-Arabic field. */
-export function separateQuranRuntimeBismillah(
-  bismillah: {
-    readonly arabic: string;
-    readonly translation: string;
-  } | null,
-  verses: readonly QuranRuntimeVerse[]
-) {
+export function separateQuranRuntimeBismillah<
+  const Bismillah extends { readonly arabic: string },
+>(bismillah: Bismillah | null, verses: readonly QuranRuntimeVerse[]) {
   const [firstVerse, ...remainingVerses] = verses;
   if (bismillah === null || firstVerse === undefined) {
     return { preBismillah: null, verses };

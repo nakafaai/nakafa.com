@@ -6,7 +6,19 @@ import { describe, expect, it } from "vitest";
 
 const bismillah = {
   arabic: "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
-  translation: "In the Name of Allah, the Most Compassionate, Most Merciful.",
+  translation: {
+    notes: [
+      {
+        number: 1,
+        referenceOffset: 20,
+        text: "A reviewed translation note.",
+      },
+    ],
+    segments: [
+      { kind: "text", offset: 0, value: "In the Name of Allah" },
+      { kind: "note", number: 1, offset: 20 },
+    ],
+  },
 };
 
 describe("Quran Bismillah presentation", () => {

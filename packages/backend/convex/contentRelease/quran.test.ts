@@ -31,6 +31,10 @@ function expansionRows() {
       firstQuranNumber: 1,
       firstVerse: 1,
       surahNumber: 1,
+      translationFootnotes: {
+        id: "[4] Catatan teknis Bismillah Indonesia.",
+      },
+      translationText: { id: "Terjemahan teknis 1[4]" },
       verseCount: 1,
     }),
     makeQuranChunk({
@@ -141,7 +145,19 @@ describe("contentRelease/quran", () => {
     for (const result of [surah, prose, page, passage]) {
       expect(result.preBismillah).toEqual({
         arabic: bismillah,
-        translation: "Terjemahan teknis 1",
+        translation: {
+          notes: [
+            {
+              number: 4,
+              referenceOffset: 19,
+              text: "Catatan teknis Bismillah Indonesia.",
+            },
+          ],
+          segments: [
+            { kind: "text", offset: 0, value: "Terjemahan teknis 1" },
+            { kind: "note", number: 4, offset: 19 },
+          ],
+        },
       });
     }
     expect(surah.verses[0]?.arabic).toBe("الٓمٓ");

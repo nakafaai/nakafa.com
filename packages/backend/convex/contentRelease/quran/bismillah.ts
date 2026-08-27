@@ -4,6 +4,7 @@ import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { quranChunkIdentity } from "@repo/backend/convex/contentRelease/quran/facts";
 import { readQuranRow } from "@repo/backend/convex/contentRelease/quran/row";
+import { quranTranslationDocumentValidator } from "@repo/backend/convex/contentRelease/quran/spec";
 import { readQuranTranslationDocument } from "@repo/backend/convex/contentRelease/quran/translation";
 import { v } from "convex/values";
 import { Effect } from "effect";
@@ -15,7 +16,7 @@ const SURAH_WITHOUT_OPENING_BISMILLAH = 9;
 /** Exact signed Bismillah presentation projected from Al-Fatihah verse 1. */
 export const quranBismillahValidator = v.object({
   arabic: v.string(),
-  translation: v.string(),
+  translation: quranTranslationDocumentValidator,
 });
 
 /** Reads one locale's canonical Bismillah from authenticated source rows. */
@@ -54,19 +55,7 @@ export const readQuranBismillah = Effect.fn(
     );
   }
   const { document } = yield* readQuranTranslationDocument(verse, appLocale);
-  const [translation] = document.segments;
-  if (
-    document.notes.length !== 0 ||
-    document.segments.length !== 1 ||
-    translation === undefined ||
-    translation.kind !== "text"
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `The signed Quran Bismillah has unsupported ${appLocale} translation notes.`
-    );
-  }
-  return { arabic: verse.text.arabic, translation: translation.value };
+  return { arabic: verse.text.arabic, translation: document };
 });
 
 /** Fails closed when a surah expected to have a Bismillah cannot be split. */
