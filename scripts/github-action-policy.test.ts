@@ -69,9 +69,13 @@ describe("GitHub Action policy", () => {
     const setupIndex = actionUses.findIndex(({ reference }) =>
       reference.startsWith("pnpm/setup@")
     );
+    const setupReview = GITHUB_ACTION_REVIEWS.find(
+      ({ action }) => action === "pnpm/setup"
+    );
     const setupUse = actionUses[setupIndex];
+    expect(setupReview).toBeDefined();
     expect(setupUse).toBeDefined();
-    if (!setupUse) {
+    if (!(setupReview && setupUse)) {
       return;
     }
     actionUses[setupIndex] = {
@@ -86,9 +90,11 @@ describe("GitHub Action policy", () => {
       true
     );
     expect(problems.some((problem) => problem.includes("cache"))).toBe(true);
-    expect(problems.some((problem) => problem.includes("expected 5"))).toBe(
-      true
-    );
+    expect(
+      problems.some((problem) =>
+        problem.includes(`expected ${setupReview.expectedUsages}`)
+      )
+    ).toBe(true);
   });
 
   it.effect("reads release metadata through the Effect HTTP client", () =>

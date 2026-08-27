@@ -14,6 +14,45 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  production-scope:
+    name: Production Scope
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') }}
+    outputs:
+      required: ${{ steps.classify.outputs.required || steps.default.outputs.required }}
+    steps:
+      - name: Set fail-closed default
+        id: default
+        env:
+          REQUIRED: ${{ env.TRUSTED_CONTENT_ENVIRONMENT }}
+        run: echo "required=$REQUIRED" >> "$GITHUB_OUTPUT"
+
+      - if: github.event_name == 'pull_request' && env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup toolchain
+        if: github.event_name == 'pull_request' && env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
+        with:
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        if: github.event_name == 'pull_request' && env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Classify production acceptance
+        if: github.event_name == 'pull_request' && env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        id: classify
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: pnpm ci:production-acceptance
+
   quality:
     name: Quality
     runs-on: ubuntu-latest
@@ -47,8 +86,10 @@ jobs:
   production:
     name: Production
     # Signed acceptance runs only for protected main and owner-authored
-    # same-repository candidates. External candidates receive Quality only.
-    if: github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih')
+    # same-repository candidates with production-relevant changes. In-place
+    # test-only candidates retain Quality while Production is skipped.
+    needs: production-scope
+    if: github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih' && needs.production-scope.outputs.required == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
@@ -414,16 +455,27 @@ jobs:
   agent-docs:
     name: Required
     if: always()
-    needs: [quality, production]
+    needs: [production-scope, quality, production]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     env:
       PRODUCTION_RESULT: ${{ needs.production.result }}
+      PRODUCTION_REQUIRED: ${{ needs.production-scope.outputs.required }}
+      PRODUCTION_SCOPE_RESULT: ${{ needs.production-scope.result }}
       QUALITY_RESULT: ${{ needs.quality.result }}
       TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') }}
     steps:
       - name: Verify acceptance jobs
         run: |
+          if [ "$PRODUCTION_SCOPE_RESULT" != "success" ]; then
+            echo "Production scope finished with $PRODUCTION_SCOPE_RESULT." >&2
+            exit 1
+          fi
+          if [ "$PRODUCTION_REQUIRED" != "true" ] && \
+            [ "$PRODUCTION_REQUIRED" != "false" ]; then
+            echo "Production scope returned $PRODUCTION_REQUIRED." >&2
+            exit 1
+          fi
           if [ "$QUALITY_RESULT" != "success" ]; then
             echo "Quality checks finished with $QUALITY_RESULT." >&2
             exit 1
@@ -441,6 +493,14 @@ jobs:
           if [ "$TRUSTED_CONTENT_ENVIRONMENT" != "true" ]; then
             echo "The $GITHUB_EVENT_NAME event is not trusted for signed acceptance." >&2
             exit 1
+          fi
+
+          if [ "$PRODUCTION_REQUIRED" = "false" ]; then
+            if [ "$PRODUCTION_RESULT" != "skipped" ]; then
+              echo "Test-only production acceptance finished with $PRODUCTION_RESULT." >&2
+              exit 1
+            fi
+            exit 0
           fi
 
           if [ "$PRODUCTION_RESULT" != "success" ]; then
