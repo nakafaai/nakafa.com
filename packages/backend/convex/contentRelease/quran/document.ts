@@ -30,8 +30,7 @@ const quranDocumentSurahValidator = v.object({
   kind: v.literal("quran-surah"),
   name: v.object({
     arabic: v.string(),
-    meaning: v.union(v.string(), v.null()),
-    sourceMeaning: v.optional(quranSurahMeaningValidator),
+    sourceMeaning: quranSurahMeaningValidator,
     transliteration: v.string(),
   }),
   number: v.number(),
@@ -63,18 +62,11 @@ type QuranDocument = Infer<typeof quranDocumentValidator>;
 type QuranDocumentSurah = NonNullable<QuranDocument["surah"]>;
 
 /** Projects complete public surah metadata without signed envelope fields. */
-function projectSurah(
-  surah: QuranSurahRow,
-  appLocale: AppLocaleCode
-): QuranDocumentSurah {
+function projectSurah(surah: QuranSurahRow): QuranDocumentSurah {
   return {
     kind: surah.kind,
     name: {
       arabic: surah.name.arabic,
-      meaning:
-        surah.name.meaning.appLocale === appLocale
-          ? surah.name.meaning.text
-          : null,
       sourceMeaning: surah.name.meaning,
       transliteration: surah.name.transliteration,
     },
@@ -165,8 +157,7 @@ export const readQuranDocument = Effect.fn("contentRelease.readQuranDocument")(
     return {
       ...document,
       preBismillah: projected.preBismillah,
-      surah:
-        loaded.surah === null ? null : projectSurah(loaded.surah, appLocale),
+      surah: loaded.surah === null ? null : projectSurah(loaded.surah),
       verses: projected.verses.map(({ arabic, document, number }) => ({
         arabic,
         number,

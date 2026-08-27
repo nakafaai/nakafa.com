@@ -50,7 +50,6 @@ describe("contentRelease/quran/markdown", () => {
 
     expect(markdown.surah).toEqual({
       name: {
-        meaning: "Technical meaning 1",
         sourceMeaning: { appLocale: "en", text: "Technical meaning 1" },
         transliteration: "Technical Surah 1",
       },
@@ -120,7 +119,6 @@ describe("contentRelease/quran/markdown", () => {
     expect(markdown.toVerse).toBe(80);
     expect(markdown.verses).toHaveLength(80);
     expect(markdown.preBismillah?.arabic).toBe(bismillah);
-    expect(markdown.surah?.name.meaning).toBeNull();
     expect(markdown.surah?.name.sourceMeaning).toEqual({
       appLocale: "en",
       text: "Technical meaning 2",
