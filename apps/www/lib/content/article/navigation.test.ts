@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   ArticleCategorySchema,
   ArticleCategoryTitleSchema,
@@ -7,7 +8,7 @@ import {
 } from "@nakafa/aksara-contracts/projection/article";
 import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
 import { Effect, Schema } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import {
   getShellArticleNavigation,
   readArticleNavigation,
@@ -69,89 +70,113 @@ describe("article navigation", () => {
     previewConfigMock.mockReturnValue(false);
   });
 
-  it("builds navigation from every signed category page", async () => {
-    categoryReaderMock
-      .mockReturnValueOnce(
-        Effect.succeed(
-          categoryPage({
-            category: "politics",
-            done: false,
-            title: "Politics",
-          })
+  it.effect("builds navigation from every signed category page", () =>
+    Effect.gen(function* () {
+      categoryReaderMock
+        .mockReturnValueOnce(
+          Effect.succeed(
+            categoryPage({
+              category: "politics",
+              done: false,
+              title: "Politics",
+            })
+          )
         )
-      )
-      .mockReturnValueOnce(
-        Effect.succeed(
-          categoryPage({ category: "science", done: true, title: "Science" })
-        )
+        .mockReturnValueOnce(
+          Effect.succeed(
+            categoryPage({
+              category: "science",
+              done: true,
+              title: "Science",
+            })
+          )
+        );
+
+      const navigation = yield* Effect.tryPromise(() =>
+        getShellArticleNavigation("en")
       );
 
-    await expect(getShellArticleNavigation("en")).resolves.toEqual([
-      {
-        category: "politics",
-        href: "/articles/politics",
-        title: "Politics",
-      },
-      {
-        category: "science",
-        href: "/articles/science",
-        title: "Science",
-      },
-    ]);
-    expect(categoryReaderMock).toHaveBeenNthCalledWith(2, {
-      cursor: "next",
-      expectedManifestHash: manifestHash,
-      expectedReleaseId: releaseId,
-      locale: "en",
-    });
-    expect(cacheMock).toHaveBeenCalledWith("article");
-  });
+      expect(navigation).toEqual([
+        {
+          category: "politics",
+          href: "/articles/politics",
+          title: "Politics",
+        },
+        {
+          category: "science",
+          href: "/articles/science",
+          title: "Science",
+        },
+      ]);
+      expect(categoryReaderMock).toHaveBeenNthCalledWith(2, {
+        cursor: "next",
+        expectedManifestHash: manifestHash,
+        expectedReleaseId: releaseId,
+        locale: "en",
+      });
+      expect(cacheMock).toHaveBeenCalledWith("article");
+    })
+  );
 
-  it.each([
+  it.effect.each([
     { locale: "en", route: "politics", title: "Politics" },
     { locale: "id", route: "politics", title: "Politik" },
     { locale: "de", route: "politik", title: "Politik" },
   ] as const)(
     "preserves the signed $locale category route",
-    async ({ locale, route, title }) => {
+    ({ locale, route, title }) =>
+      Effect.gen(function* () {
+        categoryReaderMock.mockReturnValueOnce(
+          Effect.succeed(
+            categoryPage({ category: "politics", done: true, route, title })
+          )
+        );
+
+        const navigation = yield* Effect.tryPromise(() =>
+          getShellArticleNavigation(locale)
+        );
+
+        expect(navigation).toEqual([
+          {
+            category: "politics",
+            href: `/articles/${route}`,
+            title,
+          },
+        ]);
+      })
+  );
+
+  it.effect("rejects a stale category release without local fallback", () =>
+    Effect.gen(function* () {
       categoryReaderMock.mockReturnValueOnce(
         Effect.succeed(
-          categoryPage({ category: "politics", done: true, route, title })
+          categoryPage({
+            category: "politics",
+            done: true,
+            stale: true,
+            title: "Politics",
+          })
         )
       );
 
-      await expect(getShellArticleNavigation(locale)).resolves.toEqual([
-        {
-          category: "politics",
-          href: `/articles/${route}`,
-          title,
-        },
-      ]);
-    }
+      const error = yield* readArticleNavigation("en").pipe(Effect.flip);
+      expect(error).toMatchObject({ _tag: "PublishedProjectionError" });
+    })
   );
 
-  it("rejects a stale category release without local fallback", async () => {
-    categoryReaderMock.mockReturnValueOnce(
-      Effect.succeed(
-        categoryPage({
-          category: "politics",
-          done: true,
-          stale: true,
-          title: "Politics",
-        })
-      )
-    );
+  it.effect(
+    "keeps the local Aksara preview shell independent from publication",
+    () =>
+      Effect.gen(function* () {
+        previewConfigMock.mockReturnValue(true);
 
-    await expect(
-      Effect.runPromise(readArticleNavigation("en").pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-  });
+        const navigation = yield* Effect.tryPromise(() =>
+          getShellArticleNavigation("de")
+        );
 
-  it("keeps the local Aksara preview shell independent from publication", async () => {
-    previewConfigMock.mockReturnValue(true);
-
-    await expect(getShellArticleNavigation("de")).resolves.toEqual([]);
-    expect(categoryReaderMock).not.toHaveBeenCalled();
-    expect(cacheMock).not.toHaveBeenCalled();
-  });
+        expect(navigation).toEqual([]);
+        expect(categoryReaderMock).not.toHaveBeenCalled();
+        expect(cacheMock).not.toHaveBeenCalled();
+      })
+  );
 });
