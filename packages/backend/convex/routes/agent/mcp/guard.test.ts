@@ -45,16 +45,19 @@ describe("Nakafa MCP origin guard", () => {
 
   it.effect("accepts exact configured and owned browser Origins", () =>
     Effect.gen(function* () {
-      const [configured, owned] = yield* Effect.all([
-        fetchMcp("", {
-          headers: { origin: "https://agent.example.com" },
-          method: "OPTIONS",
-        }),
-        fetchMcp("", {
-          headers: { origin: "https://nakafa.com" },
-          method: "OPTIONS",
-        }),
-      ]);
+      const [configured, owned] = yield* Effect.all(
+        [
+          fetchMcp("", {
+            headers: { origin: "https://agent.example.com" },
+            method: "OPTIONS",
+          }),
+          fetchMcp("", {
+            headers: { origin: "https://nakafa.com" },
+            method: "OPTIONS",
+          }),
+        ],
+        { concurrency: "unbounded" }
+      );
 
       expect(configured.status).toBe(204);
       expect(configured.headers.get("access-control-allow-origin")).toBe(

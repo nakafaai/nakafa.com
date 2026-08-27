@@ -24,6 +24,9 @@ const MODERN_META = {
 type BackendTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 const json = (response: Response) => Effect.promise(() => response.json());
 const text = (response: Response) => Effect.promise(() => response.text());
+const allConcurrently = <const A extends Iterable<Effect.All.EffectAny>>(
+  effects: A
+) => Effect.all(effects, { concurrency: "unbounded" });
 function fetchMcp(test: BackendTest, init: RequestInit = {}) {
   const headers = new Headers(init.headers);
   headers.set(NAKAFA_MCP_EDGE_CONTRACT.secretHeader, MCP_SECRET);
@@ -101,7 +104,7 @@ describe("Nakafa MCP transport", () => {
     Effect.gen(function* () {
       const test = createConvexTestWithBetterAuth();
       const usageUri = "nakafa://usage";
-      const responses = yield* Effect.all([
+      const responses = yield* allConcurrently([
         postModern(test, 10, "resources/list"),
         postModern(test, 11, "resources/templates/list"),
         postModern(test, 12, "resources/read", { uri: usageUri }, usageUri),
@@ -117,7 +120,7 @@ describe("Nakafa MCP transport", () => {
           "nakafa_find_lesson"
         ),
       ]);
-      const bodies = yield* Effect.all(responses.map(json));
+      const bodies = yield* allConcurrently(responses.map(json));
       expect(responses.every(({ status }) => status === 200)).toBe(true);
       expect(bodies[0]).toMatchObject({
         result: {
@@ -165,7 +168,7 @@ describe("Nakafa MCP transport", () => {
     () =>
       Effect.gen(function* () {
         const test = createConvexTestWithBetterAuth();
-        const responses = yield* Effect.all([
+        const responses = yield* allConcurrently([
           postModern(
             test,
             15,
@@ -206,7 +209,7 @@ describe("Nakafa MCP transport", () => {
             "nakafa_find_lesson"
           ),
         ]);
-        const bodies = yield* Effect.all(responses.map(json));
+        const bodies = yield* allConcurrently(responses.map(json));
         expect(responses.map(({ status }) => status)).toEqual([200, 200, 200]);
         expect(bodies[0].result.messages[0].content.text).toContain(
           "What is the key idea?"
@@ -242,7 +245,7 @@ describe("Nakafa MCP transport", () => {
   it.effect("executes tools through the shared Convex programs", () =>
     Effect.gen(function* () {
       const test = createConvexTestWithBetterAuth();
-      const responses = yield* Effect.all([
+      const responses = yield* allConcurrently([
         postModern(
           test,
           20,
@@ -288,7 +291,7 @@ describe("Nakafa MCP transport", () => {
           "nakafa_get_quran_reference"
         ),
       ]);
-      const bodies = yield* Effect.all(responses.map(json));
+      const bodies = yield* allConcurrently(responses.map(json));
       expect(responses.every(({ status }) => status === 200)).toBe(true);
       expect(bodies[0]).toMatchObject({
         result: {
@@ -339,7 +342,7 @@ describe("Nakafa MCP transport", () => {
           },
           method: "POST",
         });
-      const [missingHeader, predecessorHeader] = yield* Effect.all([
+      const [missingHeader, predecessorHeader] = yield* allConcurrently([
         request({}),
         request({
           "mcp-method": "initialize",
@@ -373,7 +376,7 @@ describe("Nakafa MCP transport", () => {
           },
           method: "POST",
         });
-      const [response, notification] = yield* Effect.all([
+      const [response, notification] = yield* allConcurrently([
         post({
           id: 31,
           jsonrpc: "2.0",
@@ -402,7 +405,7 @@ describe("Nakafa MCP transport", () => {
   it.effect("preserves SDK parse and method failures", () =>
     Effect.gen(function* () {
       const test = createConvexTestWithBetterAuth();
-      const [malformed, get] = yield* Effect.all([
+      const [malformed, get] = yield* allConcurrently([
         fetchMcp(test, {
           body: "{",
           headers: {
@@ -459,7 +462,7 @@ describe("Nakafa MCP transport", () => {
           jsonrpc: "2.0",
           method: "notifications/initialized",
         });
-        const allowed = yield* Effect.all(
+        const allowed = yield* allConcurrently(
           Array.from({ length: 29 }, (_, index) =>
             postModern(test, 100 + index, "server/discover")
           )
