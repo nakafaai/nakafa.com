@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   ACCOUNT_DELETION_RECONCILIATION_DELAY_MS,
   ACCOUNT_DELETION_RECOVERY_SWEEP_BATCH_SIZE,
@@ -9,7 +10,6 @@ import {
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 import { vi } from "vitest";
@@ -18,15 +18,15 @@ const NOW = Date.UTC(2026, 6, 28, 11, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 
 describe("auth/deletion/recovery", () => {
-  it.live("cancels preparation while the auth user still exists", () =>
+  it.effect("cancels preparation while the auth user still exists", () =>
     Effect.gen(function* () {
-      const cancel = vi.fn(async () => false);
-      const finalize = vi.fn(async () => undefined);
+      const cancel = vi.fn(() => Promise.resolve(false));
+      const finalize = vi.fn(() => Promise.resolve());
 
       yield* recoverAccountDeletionProgram({
-        authUserExists: vi.fn(async () => true),
+        authUserExists: vi.fn(() => Promise.resolve(true)),
         cancel,
-        continueCommit: vi.fn(async () => false),
+        continueCommit: vi.fn(() => Promise.resolve(false)),
         finalize,
       });
 
@@ -35,15 +35,15 @@ describe("auth/deletion/recovery", () => {
     })
   );
 
-  it.live("finalizes preparation after the auth user is gone", () =>
+  it.effect("finalizes preparation after the auth user is gone", () =>
     Effect.gen(function* () {
-      const cancel = vi.fn(async () => false);
-      const finalize = vi.fn(async () => undefined);
+      const cancel = vi.fn(() => Promise.resolve(false));
+      const finalize = vi.fn(() => Promise.resolve());
 
       yield* recoverAccountDeletionProgram({
-        authUserExists: vi.fn(async () => false),
+        authUserExists: vi.fn(() => Promise.resolve(false)),
         cancel,
-        continueCommit: vi.fn(async () => false),
+        continueCommit: vi.fn(() => Promise.resolve(false)),
         finalize,
       });
 
@@ -52,15 +52,15 @@ describe("auth/deletion/recovery", () => {
     })
   );
 
-  it.live("keeps failed recovery typed for the durable sweep to retry", () =>
+  it.effect("keeps failed recovery typed for the durable sweep to retry", () =>
     Effect.gen(function* () {
       const failure = yield* recoverAccountDeletionProgram({
         authUserExists: vi.fn(() =>
           Promise.reject(new Error("auth unavailable"))
         ),
-        cancel: vi.fn(async () => false),
-        continueCommit: vi.fn(async () => false),
-        finalize: vi.fn(async () => undefined),
+        cancel: vi.fn(() => Promise.resolve(false)),
+        continueCommit: vi.fn(() => Promise.resolve(false)),
+        finalize: vi.fn(() => Promise.resolve()),
       }).pipe(Effect.flip);
 
       expect(failure).toMatchObject({
@@ -71,27 +71,27 @@ describe("auth/deletion/recovery", () => {
     })
   );
 
-  it.live("delegates exactly one bounded cancellation batch", () =>
+  it.effect("delegates exactly one bounded cancellation batch", () =>
     Effect.gen(function* () {
-      const cancel = vi.fn(async () => true);
+      const cancel = vi.fn(() => Promise.resolve(true));
 
       yield* recoverAccountDeletionProgram({
-        authUserExists: vi.fn(async () => true),
+        authUserExists: vi.fn(() => Promise.resolve(true)),
         cancel,
-        continueCommit: vi.fn(async () => false),
-        finalize: vi.fn(async () => undefined),
+        continueCommit: vi.fn(() => Promise.resolve(false)),
+        finalize: vi.fn(() => Promise.resolve()),
       });
 
       expect(cancel).toHaveBeenCalledOnce();
     })
   );
 
-  it.live("continues a claimed deletion without reopening cancellation", () =>
+  it.effect("continues a claimed deletion without reopening cancellation", () =>
     Effect.gen(function* () {
-      const authUserExists = vi.fn(async () => true);
-      const cancel = vi.fn(async () => false);
-      const continueCommit = vi.fn(async () => true);
-      const finalize = vi.fn(async () => undefined);
+      const authUserExists = vi.fn(() => Promise.resolve(true));
+      const cancel = vi.fn(() => Promise.resolve(false));
+      const continueCommit = vi.fn(() => Promise.resolve(true));
+      const finalize = vi.fn(() => Promise.resolve());
 
       yield* recoverAccountDeletionProgram({
         authUserExists,

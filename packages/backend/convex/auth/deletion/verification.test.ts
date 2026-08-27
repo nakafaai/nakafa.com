@@ -1,10 +1,10 @@
+import { describe, expect, it } from "@effect/vitest";
 import { components, internal } from "@repo/backend/convex/_generated/api";
 import { ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE } from "@repo/backend/convex/auth/deletion/constants";
 import { createDeletedUserTombstone } from "@repo/backend/convex/auth/deletion/tombstone";
 import { drainDeletedUserVerificationsProgram } from "@repo/backend/convex/auth/deletion/verification";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
-import { describe, expect, it } from "@repo/testing/effect";
-import { Effect, Result, Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 28, 21, 0, 0);
@@ -18,7 +18,7 @@ const decodeVerificationPage = Schema.decodeUnknownSync(
   })
 );
 describe("auth/deletion/verification", () => {
-  it.live(
+  it.effect(
     "resumes from the last committed verification page after an action retry",
     () =>
       Effect.gen(function* () {
@@ -51,12 +51,11 @@ describe("auth/deletion/verification", () => {
         const interrupted = yield* drainDeletedUserVerificationsProgram(
           operations
         ).pipe(Effect.result);
-        expect(Result.isFailure(interrupted)).toBe(true);
-        if (Result.isSuccess(interrupted)) {
-          throw new Error("Expected verification cleanup to be interrupted.");
-        }
-        expect(interrupted.failure).toMatchObject({
-          _tag: "UserCleanupError",
+        expect(interrupted).toMatchObject({
+          _tag: "Failure",
+          failure: {
+            _tag: "UserCleanupError",
+          },
         });
         expect(durableCursor).toBe("verification-cursor-1");
         expect(
