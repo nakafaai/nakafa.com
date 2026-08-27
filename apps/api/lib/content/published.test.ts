@@ -1,7 +1,7 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import { TEST_PAGE_PROJECTION } from "@repo/backend/test/content-page";
 import { testLocalizedArticleProjection } from "@repo/backend/test/content-runtime";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import { vi } from "vitest";
 import {
@@ -36,7 +36,7 @@ describe("published API content", () => {
     readPublicContentBatchMock.mockReset();
   });
 
-  it.live("maps a signed material into the established partner item", () =>
+  it.effect("maps a signed material into the established partner item", () =>
     Effect.gen(function* () {
       readPublicContentBatchMock.mockReturnValue(
         Effect.succeed([
@@ -78,7 +78,7 @@ describe("published API content", () => {
     })
   );
 
-  it.live.each(["en", "id", "de"] as const)(
+  it.effect.each(["en", "id", "de"] as const)(
     "accepts current article and material projections for %s",
     (appLocale) =>
       Effect.gen(function* () {
@@ -126,7 +126,7 @@ describe("published API content", () => {
       })
   );
 
-  it.live("omits absent optional metadata", () =>
+  it.effect("omits absent optional metadata", () =>
     Effect.gen(function* () {
       readPublicContentBatchMock.mockReturnValue(
         Effect.succeed([
@@ -150,7 +150,7 @@ describe("published API content", () => {
     })
   );
 
-  it.live("normalizes an authenticated legacy projection once", () =>
+  it.effect("normalizes an authenticated legacy projection once", () =>
     Effect.gen(function* () {
       const legacyProjection = {
         ...baseProjection,
@@ -182,7 +182,7 @@ describe("published API content", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "maps signed-read and current-identity failures to one typed error",
     () =>
       Effect.gen(function* () {
@@ -217,7 +217,7 @@ describe("published API content", () => {
       })
   );
 
-  it.live("rejects a signed page from the article and material API", () =>
+  it.effect("rejects a signed page from the article and material API", () =>
     Effect.gen(function* () {
       readPublicContentBatchMock.mockReturnValue(
         Effect.succeed([
@@ -240,7 +240,7 @@ describe("published API content", () => {
     })
   );
 
-  it.live("rejects a response that loses its ordered batch item", () =>
+  it.effect("rejects a response that loses its ordered batch item", () =>
     Effect.gen(function* () {
       readPublicContentBatchMock.mockReturnValue(Effect.succeed([]));
 
