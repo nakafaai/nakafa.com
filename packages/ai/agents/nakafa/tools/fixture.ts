@@ -88,6 +88,7 @@ export function makeQuranFixture(input: {
     ...readNakafaContentRefFixture(locale, `quran/${surah}`, "quran"),
     meaning: locale === "en" ? { locale: "en", text: "The Opening" } : null,
     name: "Al-Faatiha",
+    pre_bismillah: null,
     revelation: "Meccan",
     sources: {
       arabic: embeddedSource("tanzil-text"),
