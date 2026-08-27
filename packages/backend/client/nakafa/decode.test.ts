@@ -25,6 +25,7 @@ describe("Nakafa runtime decoders", () => {
       });
       expect(yield* decodeNakafaQuranReference(quranReference())).toMatchObject(
         {
+          pre_bismillah: null,
           route: "quran/1",
           verses: [{ number: 1 }],
         }
@@ -118,6 +119,7 @@ function quranReference() {
     ...readNakafaContentRefFixture("en", "quran/1", "quran"),
     meaning: { locale: "en", text: "The Opening" },
     name: "Al-Faatiha",
+    pre_bismillah: null,
     revelation: "Meccan",
     sources: {
       arabic: embeddedSource("tanzil-text"),
