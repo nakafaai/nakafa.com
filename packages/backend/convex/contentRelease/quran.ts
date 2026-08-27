@@ -76,6 +76,23 @@ export const prose = query({
     ),
 });
 
+/**
+ * Temporary PR #390 bridge for the currently deployed WWW bundle.
+ * Remove after the #390 WWW deployment serves the canonical prose reader.
+ */
+export const markdownV2 = query({
+  args: {
+    appLocale: quranAppLocaleValidator,
+    surahNumber: v.number(),
+    verseLimit: v.optional(v.number()),
+  },
+  returns: quranMarkdownValidator,
+  handler: (ctx, { appLocale, surahNumber, verseLimit }) =>
+    runConvexProgram(
+      readQuranMarkdown(ctx, appLocale, surahNumber, verseLimit)
+    ),
+});
+
 /** Returns the signed Quran page projection used by the web product. */
 export const page = query({
   args: { appLocale: quranAppLocaleValidator, surahNumber: v.number() },
@@ -84,8 +101,43 @@ export const page = query({
     runConvexProgram(readQuranView(ctx, appLocale, surahNumber)),
 });
 
+/**
+ * Temporary PR #390 bridge for the currently deployed WWW bundle.
+ * Remove after the #390 WWW deployment serves the canonical page reader.
+ */
+export const viewV2 = query({
+  args: { appLocale: quranAppLocaleValidator, surahNumber: v.number() },
+  returns: quranViewValidator,
+  handler: (ctx, { appLocale, surahNumber }) =>
+    runConvexProgram(readQuranView(ctx, appLocale, surahNumber)),
+});
+
 /** Returns one exact signed Tafsir entry after the verse is requested. */
 export const tafsir = query({
+  args: {
+    expectedSnapshotId: v.string(),
+    appLocale: quranTafsirAppLocaleValidator,
+    surahNumber: v.number(),
+    verseNumber: v.number(),
+  },
+  returns: quranInterpretationValidator,
+  handler: (ctx, { appLocale, expectedSnapshotId, surahNumber, verseNumber }) =>
+    runConvexProgram(
+      readQuranInterpretation(
+        ctx,
+        appLocale,
+        expectedSnapshotId,
+        surahNumber,
+        verseNumber
+      )
+    ),
+});
+
+/**
+ * Temporary PR #390 bridge for already-open WWW Quran pages.
+ * Remove after the #390 WWW deployment serves the canonical Tafsir reader.
+ */
+export const interpretationV2 = query({
   args: {
     expectedSnapshotId: v.string(),
     appLocale: quranTafsirAppLocaleValidator,
