@@ -39,7 +39,11 @@ const program = Effect.gen(function* () {
     version,
   });
 }).pipe(
-  Effect.catchCause((cause) => reportStartupFailure(cause).pipe(Effect.as(4))),
+  Effect.catchCause((cause) =>
+    Cause.hasInterruptsOnly(cause)
+      ? Effect.failCause(cause)
+      : reportStartupFailure(cause).pipe(Effect.as(4))
+  ),
   Effect.flatMap((exitCode) =>
     exitCode === 0 ? Effect.void : Effect.fail(new CliProcessExit({ exitCode }))
   ),

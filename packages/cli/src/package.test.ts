@@ -1,7 +1,18 @@
+import * as NodeHttp from "node:http";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { NodeServices } from "@effect/platform-node";
+import { NodeHttpServer, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Path, Result, Schema, Stream } from "effect";
+import {
+  Deferred,
+  Effect,
+  Fiber,
+  FileSystem,
+  Path,
+  Result,
+  Schema,
+  Stream,
+} from "effect";
+import { HttpServer, HttpServerResponse } from "effect/unstable/http";
 import { ChildProcess } from "effect/unstable/process";
 import {
   isAllowedPackedFile,
@@ -148,6 +159,57 @@ describe("Nakafa CLI package", () => {
         );
         const help = yield* runCommand(binary, ["--help"], directory);
         const version = yield* runCommand(binary, ["--version"], directory);
+        const interrupted = yield* Effect.scoped(
+          Effect.gen(function* () {
+            const completeRequest = yield* Deferred.make<void>();
+            const requestStarted = yield* Deferred.make<void>();
+            const server = yield* HttpServer.HttpServer;
+            yield* server.serve(
+              Deferred.succeed(requestStarted, undefined).pipe(
+                Effect.andThen(Deferred.await(completeRequest)),
+                Effect.as(HttpServerResponse.empty())
+              )
+            );
+            const childProcess = yield* ChildProcess.make(
+              binary,
+              [
+                "taxonomy",
+                "--api-base",
+                HttpServer.formatAddress(server.address),
+              ],
+              { cwd: directory }
+            );
+            const stdout = yield* Stream.mkString(
+              Stream.decodeText(childProcess.stdout)
+            ).pipe(Effect.forkScoped);
+            const stderr = yield* Stream.mkString(
+              Stream.decodeText(childProcess.stderr)
+            ).pipe(Effect.forkScoped);
+            yield* Deferred.await(requestStarted).pipe(
+              Effect.timeout("5 seconds")
+            );
+            yield* childProcess.kill({
+              forceKillAfter: "5 seconds",
+              killSignal: "SIGINT",
+            });
+            const exitCode = yield* childProcess.exitCode;
+            yield* Deferred.succeed(completeRequest, undefined);
+            const capturedStderr = yield* Fiber.join(stderr);
+            const capturedStdout = yield* Fiber.join(stdout);
+            return {
+              exitCode,
+              stderr: capturedStderr,
+              stdout: capturedStdout,
+            };
+          }).pipe(
+            Effect.provide(
+              NodeHttpServer.layer(NodeHttp.createServer, {
+                host: "127.0.0.1",
+                port: 0,
+              })
+            )
+          )
+        );
 
         expect(
           REQUIRED_PACKED_FILES.every((file) => files.includes(file))
@@ -157,6 +219,11 @@ describe("Nakafa CLI package", () => {
         expect(version).toBe(`${packageVersion}\n`);
         expect(manifest).not.toContain('"dependencies"');
         expect(bundle).not.toContain("@repo/contents");
+        expect(interrupted).toEqual({
+          exitCode: 130,
+          stderr: "",
+          stdout: "",
+        });
       }).pipe(Effect.provide(NodeServices.layer)),
     { timeout: 30_000 }
   );
