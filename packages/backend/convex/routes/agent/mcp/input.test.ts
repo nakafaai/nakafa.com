@@ -1,10 +1,10 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import {
   MAX_MCP_REQUEST_BYTES,
   readMcpRequest,
 } from "@repo/backend/convex/routes/agent/mcp/input";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 /** Creates one Node request whose stream has no declared byte length. */
@@ -23,7 +23,7 @@ function streamRequest(
 }
 
 describe("MCP request input", () => {
-  it.live("accepts the exact policy ceiling and parses the body once", () =>
+  it.effect("accepts the exact policy ceiling and parses the body once", () =>
     Effect.gen(function* () {
       const source = `"${"a".repeat(MAX_MCP_REQUEST_BYTES - 2)}"`;
       const result = yield* readMcpRequest(
@@ -39,7 +39,7 @@ describe("MCP request input", () => {
     })
   );
 
-  it.live("rejects an oversized declaration without consuming the body", () =>
+  it.effect("rejects an oversized declaration without consuming the body", () =>
     Effect.gen(function* () {
       let pulls = 0;
       const request = streamRequest(
@@ -64,7 +64,7 @@ describe("MCP request input", () => {
     })
   );
 
-  it.live("stops every unbounded POST stream after the ceiling", () =>
+  it.effect("stops every unbounded POST stream after the ceiling", () =>
     Effect.gen(function* () {
       const cancelled = [false, false, false];
       const requests = ["application/json", "text/plain", undefined].map(
@@ -97,7 +97,7 @@ describe("MCP request input", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "rejects malformed framing but preserves bounded JSON parse errors",
     () =>
       Effect.gen(function* () {
@@ -128,56 +128,58 @@ describe("MCP request input", () => {
       })
   );
 
-  it.live("rejects invalid lengths, failed streams, and malformed UTF-8", () =>
-    Effect.gen(function* () {
-      const invalidLength = new Request("https://example.test/internal/mcp", {
-        body: "{}",
-        headers: {
-          "content-length": "not-a-length",
-          "content-type": "application/json",
-        },
-        method: "POST",
-      });
-      const failed = streamRequest(
-        new ReadableStream({
-          /** Fails the source on its first bounded read. */
-          pull(controller) {
-            controller.error(new Error("stream failed"));
+  it.effect(
+    "rejects invalid lengths, failed streams, and malformed UTF-8",
+    () =>
+      Effect.gen(function* () {
+        const invalidLength = new Request("https://example.test/internal/mcp", {
+          body: "{}",
+          headers: {
+            "content-length": "not-a-length",
+            "content-type": "application/json",
           },
-        })
-      );
-      const malformedUtf8 = streamRequest(
-        new ReadableStream({
-          /** Enqueues one invalid UTF-8 sequence. */
-          start(controller) {
-            controller.enqueue(new Uint8Array([0xc3, 0x28]));
-            controller.close();
-          },
-        })
-      );
-      const absent = new Request("https://example.test/internal/mcp", {
-        headers: {
-          "content-length": "1",
-          "content-type": "application/json",
-        },
-        method: "POST",
-      });
-      const results = yield* Effect.all(
-        [invalidLength, failed, malformedUtf8, absent].map((request) =>
-          readMcpRequest(request).pipe(Effect.result)
-        )
-      );
-
-      for (const result of results) {
-        expect(result).toMatchObject({
-          _tag: "Failure",
-          failure: { reason: "invalid" },
+          method: "POST",
         });
-      }
-    })
+        const failed = streamRequest(
+          new ReadableStream({
+            /** Fails the source on its first bounded read. */
+            pull(controller) {
+              controller.error(new Error("stream failed"));
+            },
+          })
+        );
+        const malformedUtf8 = streamRequest(
+          new ReadableStream({
+            /** Enqueues one invalid UTF-8 sequence. */
+            start(controller) {
+              controller.enqueue(new Uint8Array([0xc3, 0x28]));
+              controller.close();
+            },
+          })
+        );
+        const absent = new Request("https://example.test/internal/mcp", {
+          headers: {
+            "content-length": "1",
+            "content-type": "application/json",
+          },
+          method: "POST",
+        });
+        const results = yield* Effect.all(
+          [invalidLength, failed, malformedUtf8, absent].map((request) =>
+            readMcpRequest(request).pipe(Effect.result)
+          )
+        );
+
+        for (const result of results) {
+          expect(result).toMatchObject({
+            _tag: "Failure",
+            failure: { reason: "invalid" },
+          });
+        }
+      })
   );
 
-  it.live("preserves one explicitly empty JSON request for SDK parsing", () =>
+  it.effect("preserves one explicitly empty JSON request for SDK parsing", () =>
     Effect.gen(function* () {
       const [absent, empty] = yield* Effect.all([
         readMcpRequest(
@@ -207,7 +209,7 @@ describe("MCP request input", () => {
     })
   );
 
-  it.live("bounds unsupported media types before SDK rejection", () =>
+  it.effect("bounds unsupported media types before SDK rejection", () =>
     Effect.gen(function* () {
       const unsupported = new Request("https://example.test/internal/mcp", {
         body: "plain text",
@@ -240,7 +242,7 @@ describe("MCP request input", () => {
     })
   );
 
-  it.live("leaves bodyless methods unchanged", () =>
+  it.effect("leaves bodyless methods unchanged", () =>
     Effect.gen(function* () {
       const get = new Request("https://example.test/internal/mcp");
       const getResult = yield* readMcpRequest(get);
