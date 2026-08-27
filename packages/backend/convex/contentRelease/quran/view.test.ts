@@ -95,7 +95,10 @@ describe("contentRelease/quran/view", () => {
 
     expect(view.preBismillah).toEqual({
       arabic,
-      translation: "Terjemahan teknis 1",
+      translation: {
+        notes: [],
+        segments: [{ kind: "text", offset: 0, value: "Terjemahan teknis 1" }],
+      },
     });
     expect(view.verses[0]?.arabic).toBe("الٓمٓ");
   });

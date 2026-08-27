@@ -70,6 +70,47 @@ describe("contentRelease/material/model", () => {
     ]);
   });
 
+  it.each([
+    ["locale counterpart", makeMaterialProjection("id", 1)],
+    ["sibling", makeMaterialProjection("en", 2)],
+  ])("rejects a stale %s row", async (_label, stale) => {
+    const target = convexTest(schema, convexModules);
+    const requested = makeMaterialProjection("en", 1);
+    await activateMaterialCatalog(target);
+    await target.mutation(async (ctx) => {
+      const row = await ctx.db
+        .query("materialCatalog")
+        .withIndex("by_appLocale_and_publicPath", (index) =>
+          index
+            .eq("appLocale", stale.appLocale)
+            .eq("publicPath", stale.publicPath)
+        )
+        .unique();
+      if (!row) {
+        throw new Error("Expected one related material row.");
+      }
+      await ctx.db.patch("materialCatalog", row._id, {
+        releaseId: "stale-release",
+        sequence: 0,
+      });
+    });
+
+    await expect(
+      target.query((ctx) =>
+        runConvexProgram(
+          readMaterialModel(
+            ctx,
+            requested.appLocale,
+            requested.publicPath,
+            "publication"
+          )
+        )
+      )
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
   it("returns a missing route inside the current signed family", async () => {
     const target = convexTest(schema, convexModules);
     await activateMaterialCatalog(target);

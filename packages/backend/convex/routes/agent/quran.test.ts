@@ -161,7 +161,10 @@ describe("public Quran route", () => {
 
     expect(body.pre_bismillah).toEqual({
       arabic: BISMILLAH,
-      translation: "Terjemahan teknis 1",
+      translation: {
+        notes: [],
+        segments: [{ kind: "text", offset: 0, value: "Terjemahan teknis 1" }],
+      },
     });
     expect(body.verses[0]?.arabic).toBe("الٓمٓ");
   });

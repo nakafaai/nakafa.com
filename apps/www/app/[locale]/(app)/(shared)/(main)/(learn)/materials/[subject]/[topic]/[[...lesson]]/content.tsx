@@ -13,10 +13,8 @@ import {
   readMaterialRequest,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/data";
 import { normalizeMaterialMetadata } from "@/lib/content/material/decode";
-import {
-  getMaterialCatalogRoute,
-  getMaterialPublication,
-} from "@/lib/content/material/publication";
+import { getMaterialPublication } from "@/lib/content/material/publication";
+import { getPublishedMaterialRoute } from "@/lib/content/material/route";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import {
   type MaterialPreviewContent,
@@ -128,7 +126,7 @@ export async function readMaterialMetadata(
     };
   }
 
-  const model = await getMaterialCatalogRoute(owner.locale, owner.publicPath);
+  const model = await getPublishedMaterialRoute(owner.locale, owner.publicPath);
   if (!model.projection) {
     notFound();
   }

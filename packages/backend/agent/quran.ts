@@ -9,7 +9,7 @@ import {
 } from "@repo/backend/client/quran/reference";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import type { readQuranSurahs } from "@repo/backend/convex/contentRelease/quran/catalog";
-import type { readQuranReference } from "@repo/backend/convex/contentRelease/quran/reference";
+import type { readQuranPassage } from "@repo/backend/convex/contentRelease/quran/reference";
 import type { QuranReferenceArgs } from "@repo/backend/convex/contentRelease/quran/spec";
 import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/_lib/agent/constants";
 import {
@@ -38,7 +38,7 @@ const quranCatalogReference: QuranCatalogReference = makeFunctionReference(
 const quranPassage = makeFunctionReference<
   "query",
   QuranReferenceArgs,
-  Effect.Success<ReturnType<typeof readQuranReference>>
+  Effect.Success<ReturnType<typeof readQuranPassage>>
 >("contentRelease/quran:passage");
 
 /** Returns one bounded signed Quran reference with semantic source provenance. */

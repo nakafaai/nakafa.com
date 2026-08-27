@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import { vi } from "vitest";
 import { restoreForumPostInputDraft } from "./draft";
@@ -10,7 +10,7 @@ const replyTarget = {
 };
 
 describe("conversation/input/draft", () => {
-  it.live("restores the failed draft when the composer is still empty", () =>
+  it.effect("restores the failed draft when the composer is still empty", () =>
     Effect.gen(function* () {
       const restoreBody = vi.fn();
       const restoreReplyTarget = vi.fn();
@@ -31,7 +31,7 @@ describe("conversation/input/draft", () => {
     })
   );
 
-  it.live("restores a failed top-level draft without a reply target", () =>
+  it.effect("restores a failed top-level draft without a reply target", () =>
     Effect.gen(function* () {
       const restoreBody = vi.fn();
       const restoreReplyTarget = vi.fn();
@@ -52,7 +52,7 @@ describe("conversation/input/draft", () => {
     })
   );
 
-  it.live("does not overwrite newer body or reply target input", () =>
+  it.effect("does not overwrite newer body or reply target input", () =>
     Effect.gen(function* () {
       const restoreBody = vi.fn();
       const restoreReplyTarget = vi.fn();
@@ -76,7 +76,7 @@ describe("conversation/input/draft", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "does not attach a failed reply target to newer top-level input",
     () =>
       Effect.gen(function* () {

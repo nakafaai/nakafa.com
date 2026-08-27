@@ -5,6 +5,7 @@ import {
   withObservedPageErrors,
 } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { activateUntilVisible } from "@/e2e/support/interaction";
 import { dragTouch } from "@/e2e/support/touch";
 
 const targetViewports = [
@@ -50,10 +51,8 @@ const openConsentPreferences = Effect.fn("NakafaE2E.openConsentPreferences")(
     yield* Effect.promise(() => expect(trigger).toBeVisible());
     yield* Effect.promise(() => trigger.scrollIntoViewIfNeeded());
     yield* Effect.promise(() => trigger.focus());
-    yield* Effect.promise(() => trigger.click());
-
     const popup = page.locator(`[data-slot="${slot}"]`);
-    yield* Effect.promise(() => expect(popup).toBeVisible());
+    yield* activateUntilVisible(trigger, popup, 15_000);
     yield* Effect.promise(() =>
       expect(page.getByRole("heading", { name: "Usage data" })).toBeVisible()
     );

@@ -13,8 +13,7 @@ const NINA_REASONING_TEXT = "Compare the two known equations";
 const NEXT_CHUNK_PATH =
   /\/_next\/static\/(?:immutable\/)?chunks\/.*\.js(?:\?.*)?$/;
 
-// Normal motion remains covered at three widths. Wide layouts use the product's
-// reduced-motion path so continuous WebGL frames cannot starve pointer checks.
+// Wide layouts reduce continuous WebGL pressure; three widths keep normal motion.
 const targetViewports = [
   {
     height: 800,
@@ -94,8 +93,7 @@ const expectNinaAtBottom = Effect.fn("NakafaE2E.expectNinaAtBottom")(function* (
     expect(page.getByText(NINA_REASONING_TEXT, { exact: false })).toBeVisible()
   );
 
-  // A real upward wheel uses use-stick-to-bottom's owned escape path before
-  // Playwright targets content above the clipped conversation viewport.
+  // A real upward wheel uses use-stick-to-bottom's owned escape path.
   yield* Effect.promise(() => scroller.hover({ scroll: "none" }));
   yield* Effect.promise(() => page.mouse.wheel(0, -1));
   yield* Effect.promise(() => mathTrigger.scrollIntoViewIfNeeded());
@@ -161,6 +159,8 @@ const expectProjectileInteraction = Effect.fn(
   yield* Effect.promise(() =>
     expect(highArc).toHaveAttribute("aria-pressed", "true")
   );
+  yield* Effect.promise(() => page.evaluate(() => window.scrollTo(0, 0)));
+  yield* Effect.promise(() => expect(canvas).toHaveCount(0));
 });
 
 const expectProjectileRecovery = Effect.fn(

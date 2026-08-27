@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "@repo/testing/effect";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { vi } from "vitest";
 import {
@@ -15,7 +15,7 @@ afterEach(() => {
 });
 
 describe("ai/store/draft", () => {
-  it.live("saves, reads, and clears the current tab draft", () =>
+  it.effect("saves, reads, and clears the current tab draft", () =>
     Effect.gen(function* () {
       yield* saveAiDraftText("Explain this step", "learner-a");
 
@@ -27,7 +27,7 @@ describe("ai/store/draft", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "claims an anonymous draft for the account completing authentication",
     () =>
       Effect.gen(function* () {
@@ -38,7 +38,7 @@ describe("ai/store/draft", () => {
       })
   );
 
-  it.live("discards a legacy tab draft without atomic ownership", () =>
+  it.effect("discards a legacy tab draft without atomic ownership", () =>
     Effect.gen(function* () {
       window.sessionStorage.setItem("nakafa-ai-draft", "Legacy question");
 
@@ -47,7 +47,7 @@ describe("ai/store/draft", () => {
     })
   );
 
-  it.live("writes text and ownership in one storage record", () =>
+  it.effect("writes text and ownership in one storage record", () =>
     Effect.gen(function* () {
       const setItem = vi.spyOn(Storage.prototype, "setItem");
 
@@ -61,7 +61,7 @@ describe("ai/store/draft", () => {
     })
   );
 
-  it.live("keeps newer input entered while account ownership resolves", () =>
+  it.effect("keeps newer input entered while account ownership resolves", () =>
     Effect.gen(function* () {
       yield* saveAiDraftText("Older question", "learner-a");
 
@@ -83,7 +83,7 @@ describe("ai/store/draft", () => {
     })
   );
 
-  it.live("keeps an intentional empty draft during account resolution", () =>
+  it.effect("keeps an intentional empty draft during account resolution", () =>
     Effect.gen(function* () {
       yield* saveAiDraftText("Older question", "learner-a");
 
@@ -98,7 +98,7 @@ describe("ai/store/draft", () => {
     })
   );
 
-  it.live("clears a draft when another account owns it", () =>
+  it.effect("clears a draft when another account owns it", () =>
     Effect.gen(function* () {
       yield* saveAiDraftText("Private question", "learner-a");
 
@@ -107,7 +107,7 @@ describe("ai/store/draft", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "keeps draft persistence best effort when storage rejects access",
     () =>
       Effect.gen(function* () {
@@ -135,7 +135,7 @@ describe("ai/store/draft", () => {
       })
   );
 
-  it.live("does nothing when rendered without browser storage", () =>
+  it.effect("does nothing when rendered without browser storage", () =>
     Effect.gen(function* () {
       vi.stubGlobal("window", undefined);
 

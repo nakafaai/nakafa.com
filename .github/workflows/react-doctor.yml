@@ -2,7 +2,7 @@ name: React
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize]
   push:
     branches: [main]
 
@@ -28,9 +28,9 @@ jobs:
           install: false
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Run React Doctor for pull request
+      - name: Run React Doctor for candidate
         if: github.event_name == 'pull_request'
-        run: pnpm run doctor --verbose --scope changed --base origin/main --include-untracked
+        run: pnpm run doctor --verbose --scope changed --base origin/main --include-untracked --blocking warning
       - name: Run React Doctor for push
         if: github.event_name == 'push'
-        run: pnpm run doctor --verbose --scope full
+        run: pnpm run doctor --verbose --scope full --blocking warning

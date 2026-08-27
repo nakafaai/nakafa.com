@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/browser-context";
 import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
+import { activateUntilVisible } from "@/e2e/support/interaction";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 
 const usageDataName = "Usage data";
@@ -34,10 +35,8 @@ const verifyCompactConsentDrawer = Effect.fn(
   "NakafaE2E.verifyCompactConsentDrawer"
 )(function* (page: Page) {
   const trigger = yield* prepareConsentPreferences(page);
-  yield* Effect.promise(() => trigger.click());
-
   const drawer = page.locator('[data-slot="drawer-popup"]');
-  yield* Effect.promise(() => expect(drawer).toBeVisible());
+  yield* activateUntilVisible(trigger, drawer, readinessTimeoutMilliseconds);
   yield* Effect.promise(() =>
     expect(drawer.locator('[data-slot="drawer-bar"]')).toBeVisible()
   );
@@ -65,10 +64,8 @@ const verifyDesktopConsentDialog = Effect.fn(
   "NakafaE2E.verifyDesktopConsentDialog"
 )(function* (page: Page) {
   const trigger = yield* prepareConsentPreferences(page);
-  yield* Effect.promise(() => trigger.click());
-
   const dialog = page.locator('[data-slot="dialog-content"]');
-  yield* Effect.promise(() => expect(dialog).toBeVisible());
+  yield* activateUntilVisible(trigger, dialog, readinessTimeoutMilliseconds);
   yield* Effect.promise(() =>
     expect(dialog.locator('[data-slot="dialog-title"]')).toHaveText(
       usageDataName

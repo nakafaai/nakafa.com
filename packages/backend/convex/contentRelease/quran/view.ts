@@ -111,7 +111,7 @@ const loadVerse = Effect.fn("contentRelease.loadQuranViewVerse")(function* (
   };
 });
 
-/** Loads the exact signed source fields shared by predecessor and canonical views. */
+/** Loads the exact signed source fields for one canonical Quran page. */
 export const loadQuranView = Effect.fn("contentRelease.loadQuranView")(
   function* (ctx: QueryCtx, appLocale: AppLocaleCode, sourceSurah: number) {
     const loaded = yield* loadQuranSurah(ctx, sourceSurah);

@@ -1,6 +1,5 @@
 "use client";
 
-import { useIntersection } from "@mantine/hooks";
 import type {
   ProjectileMotionState,
   ProjectileScenarioId,
@@ -16,10 +15,12 @@ import { Effect } from "effect";
 import { useReducedMotion } from "motion/react";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { loadProjectileScene } from "@/components/marketing/about/projectile/loader";
 import type { ProjectileSceneProps } from "@/components/marketing/about/projectile/scene";
 import { reportClientException } from "@/lib/analytics/client";
+
+const PROJECTILE_PRELOAD_MARGIN = 400;
 
 const reloadProjectilePage = Effect.fn("www.home.reloadProjectilePage")(() =>
   Effect.sync(() => window.location.reload())
@@ -108,6 +109,59 @@ interface ProjectileClientProps {
   readonly viewLabel: string;
 }
 
+/** Matches the scene's preload box against current viewport geometry. */
+function isSceneNearViewport(element: HTMLElement) {
+  const bounds = element.getBoundingClientRect();
+
+  return (
+    bounds.bottom > bounds.top &&
+    bounds.right > bounds.left &&
+    bounds.bottom > -PROJECTILE_PRELOAD_MARGIN &&
+    bounds.top < window.innerHeight + PROJECTILE_PRELOAD_MARGIN &&
+    bounds.right > 0 &&
+    bounds.left < window.innerWidth
+  );
+}
+
+/** Tracks scene activity from observer and current viewport geometry. */
+function useProjectileSceneVisibility() {
+  const sceneFrameRef = useRef<HTMLElement>(null);
+  const [sceneVisible, setSceneVisible] = useState(false);
+
+  useEffect(() => {
+    const sceneFrame = sceneFrameRef.current;
+    if (!sceneFrame) {
+      return;
+    }
+    const sceneTarget = sceneFrame;
+
+    function updateSceneVisibility() {
+      setSceneVisible(isSceneNearViewport(sceneTarget));
+    }
+
+    const observer = new IntersectionObserver(updateSceneVisibility, {
+      root: null,
+      rootMargin: `${PROJECTILE_PRELOAD_MARGIN}px 0px`,
+      threshold: 0,
+    });
+
+    observer.observe(sceneTarget);
+    window.addEventListener("resize", updateSceneVisibility);
+    window.addEventListener("scroll", updateSceneVisibility, {
+      passive: true,
+    });
+    updateSceneVisibility();
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateSceneVisibility);
+      window.removeEventListener("scroll", updateSceneVisibility);
+    };
+  }, []);
+
+  return { sceneFrameRef, sceneVisible };
+}
+
 /** Keeps all projectile interactions while hydrating only their control state. */
 export function ProjectileClient({
   controlsLabel,
@@ -116,11 +170,7 @@ export function ProjectileClient({
   title,
   viewLabel,
 }: ProjectileClientProps) {
-  const { ref, entry } = useIntersection({
-    root: null,
-    rootMargin: "400px 0px",
-    threshold: 0.01,
-  });
+  const { sceneFrameRef, sceneVisible } = useProjectileSceneVisibility();
   const shouldReduceMotion = useReducedMotion() ?? false;
   const [scenarioId, setScenarioId] = useState(initialScenario.id);
   const activeScenario =
@@ -137,10 +187,7 @@ export function ProjectileClient({
   }
 
   return (
-    <div
-      className="relative flex min-h-[42rem] flex-col overflow-hidden bg-background lg:col-span-7 lg:min-h-[44rem]"
-      ref={ref}
-    >
+    <div className="relative flex min-h-[42rem] flex-col overflow-hidden bg-background lg:col-span-7 lg:min-h-[44rem]">
       <div className="flex min-h-0 flex-1 flex-col gap-8 p-8 lg:p-10">
         <h3 className="max-w-2xl text-balance text-3xl tracking-tight sm:text-4xl">
           {title}
@@ -162,8 +209,12 @@ export function ProjectileClient({
             ))}
           </ToggleGroup>
 
-          <section aria-label={viewLabel} className={threeSceneFrameVariants()}>
-            {entry?.isIntersecting && (
+          <section
+            aria-label={viewLabel}
+            className={threeSceneFrameVariants()}
+            ref={sceneFrameRef}
+          >
+            {sceneVisible && (
               <ProjectileScene
                 motion={activeScenario.motion}
                 shouldReduceMotion={shouldReduceMotion}

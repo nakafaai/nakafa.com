@@ -2,6 +2,22 @@ import { defineConfig } from "@playwright/test";
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000";
 
+const ciProjects = process.env.CI
+  ? [
+      {
+        name: "shared-runtime",
+        testIgnore: "**/navigation.browser.ts",
+        workers: 1,
+      },
+      {
+        dependencies: ["shared-runtime"],
+        name: "isolated-navigation",
+        testMatch: "**/navigation.browser.ts",
+        workers: 2,
+      },
+    ]
+  : undefined;
+
 export default defineConfig({
   expect: {
     timeout: 5000,
@@ -10,6 +26,7 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   fullyParallel: false,
   outputDir: "../../.cache/playwright/www",
+  projects: ciProjects,
   reporter: "list",
   retries: process.env.CI ? 1 : 0,
   testDir: "./e2e",
@@ -22,5 +39,5 @@ export default defineConfig({
     trace: "retain-on-failure",
     video: "retain-on-failure",
   },
-  workers: process.env.CI ? 1 : undefined,
+  workers: process.env.CI ? 2 : undefined,
 });

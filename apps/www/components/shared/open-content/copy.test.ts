@@ -1,5 +1,6 @@
-import { afterEach, describe, expect, it } from "@repo/testing/effect";
-import { Cause, Effect, Exit, Option } from "effect";
+import { afterEach, describe, expect, it } from "@effect/vitest";
+import { Effect, Fiber } from "effect";
+import { TestClock } from "effect/testing";
 import { vi } from "vitest";
 import {
   copyOpenContent,
@@ -9,11 +10,10 @@ import {
 const SOURCE_URL =
   "https://raw.githubusercontent.com/nakafaai/aksara/revision/source.mdx";
 afterEach(() => {
-  vi.useRealTimers();
   vi.unstubAllGlobals();
 });
 describe("copyOpenContent", () => {
-  it.live("copies inline preview source without a network request", () =>
+  it.effect("copies inline preview source without a network request", () =>
     Effect.gen(function* () {
       const fetchMock = vi.fn();
       const writeClipboard = vi.fn(() => Promise.resolve());
@@ -23,7 +23,7 @@ describe("copyOpenContent", () => {
       expect(writeClipboard).toHaveBeenCalledWith("## Preview");
     })
   );
-  it.live("fetches one immutable published source only when copying", () =>
+  it.effect("fetches one immutable published source only when copying", () =>
     Effect.gen(function* () {
       const fetchMock = vi.fn(() =>
         Promise.resolve(new Response("## Published", { status: 200 }))
@@ -38,13 +38,13 @@ describe("copyOpenContent", () => {
       expect(writeClipboard).toHaveBeenCalledWith("## Published");
     })
   );
-  it.live("fails when no reviewed source exists", () =>
+  it.effect("fails when no reviewed source exists", () =>
     expectCopyFailure(
       copyOpenContent({ writeClipboard: vi.fn() }),
       "OPEN_CONTENT_SOURCE_MISSING"
     )
   );
-  it.live("models network failures", () =>
+  it.effect("models network failures", () =>
     Effect.gen(function* () {
       vi.stubGlobal(
         "fetch",
@@ -56,34 +56,30 @@ describe("copyOpenContent", () => {
       );
     })
   );
-  it("times out a source request that never settles", async () => {
-    vi.useFakeTimers();
-    let fetchSignal: AbortSignal | undefined;
-    vi.stubGlobal(
-      "fetch",
-      vi.fn((_input, init) => {
-        fetchSignal = init?.signal ?? undefined;
-        return new Promise<Response>(() => undefined);
-      })
-    );
-    // Vitest owns this Promise boundary so its fake clock can advance the live timeout.
-    const exitPromise = Effect.runPromiseExit(
-      copyOpenContent({ copySourceUrl: SOURCE_URL, writeClipboard: vi.fn() })
-    );
-    await vi.advanceTimersByTimeAsync(10_001);
-    const exit = await exitPromise;
-    const failure = Exit.isFailure(exit)
-      ? Cause.findErrorOption(exit.cause)
-      : Option.none();
-    expect(Option.isSome(failure)).toBe(true);
-    if (Option.isSome(failure)) {
-      expect(failure.value).toMatchObject({
-        code: "OPEN_CONTENT_SOURCE_FETCH_FAILED",
-      });
-    }
-    expect(fetchSignal?.aborted).toBe(true);
-  });
-  it.live("rejects unsuccessful source responses", () =>
+  it.effect("times out a source request that never settles", () =>
+    Effect.gen(function* () {
+      let fetchSignal: AbortSignal | undefined;
+      vi.stubGlobal(
+        "fetch",
+        vi.fn((_input, init) => {
+          fetchSignal = init?.signal ?? undefined;
+          return new Promise<Response>(() => undefined);
+        })
+      );
+      const fiber = yield* expectCopyFailure(
+        copyOpenContent({ copySourceUrl: SOURCE_URL, writeClipboard: vi.fn() }),
+        "OPEN_CONTENT_SOURCE_FETCH_FAILED"
+      ).pipe(Effect.forkChild);
+
+      yield* Effect.yieldNow;
+      expect(fetchSignal).toBeDefined();
+      yield* TestClock.adjust("10 seconds");
+      yield* Fiber.join(fiber);
+
+      expect(fetchSignal?.aborted).toBe(true);
+    })
+  );
+  it.effect("rejects unsuccessful source responses", () =>
     Effect.gen(function* () {
       vi.stubGlobal(
         "fetch",
@@ -95,7 +91,7 @@ describe("copyOpenContent", () => {
       );
     })
   );
-  it.live("models source body read failures", () =>
+  it.effect("models source body read failures", () =>
     Effect.gen(function* () {
       vi.stubGlobal(
         "fetch",
@@ -112,7 +108,7 @@ describe("copyOpenContent", () => {
       );
     })
   );
-  it.live("rejects empty published source", () =>
+  it.effect("rejects empty published source", () =>
     Effect.gen(function* () {
       vi.stubGlobal(
         "fetch",
@@ -124,7 +120,7 @@ describe("copyOpenContent", () => {
       );
     })
   );
-  it.live("waits for and models clipboard rejection", () =>
+  it.effect("waits for and models clipboard rejection", () =>
     Effect.gen(function* () {
       const writeClipboard = vi.fn(() =>
         Promise.reject(new Error("clipboard denied"))
@@ -141,16 +137,8 @@ function expectCopyFailure(
   code: OpenContentCopyError["code"]
 ) {
   return Effect.gen(function* () {
-    const exit = yield* Effect.exit(program);
-    expect(Exit.isFailure(exit)).toBe(true);
-    if (Exit.isSuccess(exit)) {
-      return;
-    }
-    const failure = Cause.findErrorOption(exit.cause);
-    expect(Option.isSome(failure)).toBe(true);
-    if (Option.isSome(failure)) {
-      expect(failure.value).toBeInstanceOf(OpenContentCopyError);
-      expect(failure.value).toEqual(expect.objectContaining({ code }));
-    }
+    const failure = yield* Effect.flip(program);
+    expect(failure).toBeInstanceOf(OpenContentCopyError);
+    expect(failure).toEqual(expect.objectContaining({ code }));
   });
 }

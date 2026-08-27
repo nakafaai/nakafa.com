@@ -3,15 +3,13 @@ import { decodeAgentOutput } from "@repo/backend/agent/decode";
 import { projectQuranVerse } from "@repo/backend/agent/quran/verse";
 import type { PublishedQuranReference } from "@repo/backend/client/quran/reference";
 import { hasExpectedQuranSources } from "@repo/backend/client/quran/source";
-import type { readQuranReference } from "@repo/backend/convex/contentRelease/quran/reference";
+import type { readQuranPassage } from "@repo/backend/convex/contentRelease/quran/reference";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { Effect } from "effect";
 
-type QuranReferenceResult = Effect.Success<
-  ReturnType<typeof readQuranReference>
->;
+type QuranReferenceResult = Effect.Success<ReturnType<typeof readQuranPassage>>;
 type QuranEmbeddedProjection =
   | NonNullable<QuranReferenceResult["sources"]>["arabic" | "translation"]
   | Extract<

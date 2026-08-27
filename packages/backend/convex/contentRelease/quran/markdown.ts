@@ -109,7 +109,7 @@ const validateVerseLimit = Effect.fn(
   return verseLimit;
 });
 
-/** Loads the exact signed source fields shared by predecessor and canonical markdown. */
+/** Loads the exact signed source fields for canonical Quran markdown. */
 export const loadQuranMarkdown = Effect.fn("contentRelease.loadQuranMarkdown")(
   function* (
     ctx: QueryCtx,

@@ -2,6 +2,7 @@ import { instant } from "@next/playwright";
 import { expect, type Locator, type Page } from "@playwright/test";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { Duration, Effect, Schedule, Schema } from "effect";
+import { activateUntilVisible } from "@/e2e/support/interaction";
 import { prepareClientNavigation } from "./readiness";
 
 const HOMEPAGE_HEADING_PATTERN = /Learn until it clicks/i;
@@ -143,10 +144,11 @@ const findVisibleLink = Effect.fn("NakafaE2E.findVisibleLink")(function* (
     .locator('[data-slot="sidebar-trigger"]:visible')
     .first();
   yield* waitForVisibleLocator(sidebarTrigger, missingLink);
-  yield* Effect.promise(() =>
-    sidebarTrigger.click({ timeout: NAVIGATION_TIMEOUT_MILLISECONDS })
+  return yield* activateUntilVisible(
+    sidebarTrigger,
+    link,
+    NAVIGATION_TIMEOUT_MILLISECONDS
   );
-  return yield* waitForVisibleLocator(link, missingLink);
 });
 
 const readVisibleLinkedHref = Effect.fn("NakafaE2E.readVisibleLinkedHref")(
