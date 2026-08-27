@@ -158,6 +158,7 @@ describe("Nakafa OpenAPI document", () => {
     expect(NAKAFA_OPENAPI_DOCUMENT.paths).not.toHaveProperty(
       "/v2/quran/{surah}"
     );
+    expect(NAKAFA_OPENAPI_DOCUMENT.paths).not.toHaveProperty("/quran/{surah}");
   });
 
   it("projects every operation to a non-recursive function definition", () => {
