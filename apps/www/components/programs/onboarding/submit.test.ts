@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import {
   submitOnboardingRole,
@@ -13,7 +13,7 @@ const validValue = {
 };
 
 describe("components/programs/onboarding/submit", () => {
-  it.live("autosaves only the selected role on the role step", () =>
+  it.effect("autosaves only the selected role on the role step", () =>
     Effect.gen(function* () {
       const roleValues: unknown[] = [];
       const result = yield* submitOnboardingRole({
@@ -31,7 +31,7 @@ describe("components/programs/onboarding/submit", () => {
     })
   );
 
-  it.live("does not autosave when the role step value is invalid", () =>
+  it.effect("does not autosave when the role step value is invalid", () =>
     Effect.gen(function* () {
       const roleValues: unknown[] = [];
       const result = yield* submitOnboardingRole({
@@ -52,7 +52,7 @@ describe("components/programs/onboarding/submit", () => {
     })
   );
 
-  it.live("returns error state when role autosave fails", () =>
+  it.effect("returns error state when role autosave fails", () =>
     Effect.gen(function* () {
       const result = yield* submitOnboardingRole({
         updateRole: () => Promise.reject(new Error("Role unavailable")),
@@ -68,7 +68,7 @@ describe("components/programs/onboarding/submit", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "returns success after the Convex role and selection mutations resolve",
     () =>
       Effect.gen(function* () {
@@ -97,7 +97,7 @@ describe("components/programs/onboarding/submit", () => {
       })
   );
 
-  it.live("returns validation state without calling either mutation", () =>
+  it.effect("returns validation state without calling either mutation", () =>
     Effect.gen(function* () {
       const selectedValues: unknown[] = [];
       const roleValues: unknown[] = [];
@@ -124,22 +124,24 @@ describe("components/programs/onboarding/submit", () => {
     })
   );
 
-  it.live("returns mutation error state when the Convex selection fails", () =>
-    Effect.gen(function* () {
-      const result = yield* submitOnboardingSelection({
-        selectProgram: () => Promise.reject(new Error("Convex unavailable")),
-        updateRole: () => Promise.resolve(),
-        value: validValue,
-      });
+  it.effect(
+    "returns mutation error state when the Convex selection fails",
+    () =>
+      Effect.gen(function* () {
+        const result = yield* submitOnboardingSelection({
+          selectProgram: () => Promise.reject(new Error("Convex unavailable")),
+          updateRole: () => Promise.resolve(),
+          value: validValue,
+        });
 
-      expect(result).toEqual({
-        messageKey: "onboarding.save-error",
-        status: "error",
-      });
-    })
+        expect(result).toEqual({
+          messageKey: "onboarding.save-error",
+          status: "error",
+        });
+      })
   );
 
-  it.live(
+  it.effect(
     "does not create a learning selection when the role mutation fails",
     () =>
       Effect.gen(function* () {

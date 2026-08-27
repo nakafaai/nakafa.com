@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import {
   decodeOnboardingRoleValue,
@@ -6,7 +6,7 @@ import {
 } from "@/components/programs/onboarding/state";
 
 describe("components/programs/onboarding/state", () => {
-  it.live("decodes a complete program onboarding value", () =>
+  it.effect("decodes a complete program onboarding value", () =>
     Effect.gen(function* () {
       const result = yield* decodeOnboardingValue({
         focusKey: "student-exam",
@@ -26,7 +26,7 @@ describe("components/programs/onboarding/state", () => {
       });
     })
   );
-  it.live("rejects incomplete program onboarding values", () =>
+  it.effect("rejects incomplete program onboarding values", () =>
     Effect.gen(function* () {
       const result = yield* decodeOnboardingValue({
         programKey: "snbt",
@@ -34,7 +34,7 @@ describe("components/programs/onboarding/state", () => {
       expect(Result.isFailure(result)).toBe(true);
     })
   );
-  it.live("decodes a route-owned role step value", () =>
+  it.effect("decodes a route-owned role step value", () =>
     Effect.gen(function* () {
       const role = yield* decodeOnboardingRoleValue({ role: "teacher" }).pipe(
         Effect.result
