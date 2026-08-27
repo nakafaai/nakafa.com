@@ -1,9 +1,10 @@
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { it as effectIt } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
-import { NetworkRetryCodeSchema } from "@repo/backend/client/network";
-import { readConvexRuntimeQuery } from "@repo/backend/client/runtime";
-import { Effect, Fiber, Schema } from "effect";
-import { vi } from "vitest";
+import * as convexRuntime from "@repo/backend/client/runtime";
+import { ConvexRuntimeQueryError } from "@repo/backend/client/runtime";
+import { toRuntimeQueryError } from "@repo/backend/test/runtime-query";
+import { Effect, Fiber } from "effect";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getApiContentReferenceByContentId,
   getArticleApiContentPage,
@@ -20,29 +21,10 @@ const publishedContentMocks = vi.hoisted(() => ({
   readPublishedApiItems: vi.fn(),
 }));
 
-class RuntimeQueryFixtureError extends Schema.TaggedError<RuntimeQueryFixtureError>()(
-  "ConvexRuntimeQueryError",
-  {
-    networkCodes: Schema.Array(NetworkRetryCodeSchema),
-    query: Schema.String,
-    reason: Schema.Literals(["client", "query", "transport"]),
-  }
-) {}
-
-vi.mock("@repo/backend/client/runtime", () => ({
-  readConvexRuntimeQuery: vi.fn(),
-}));
-vi.mocked(readConvexRuntimeQuery).mockImplementation(
+vi.spyOn(convexRuntime, "readConvexRuntimeQuery").mockImplementation(
   (url: string, query: unknown, args: unknown) =>
     Effect.tryPromise({
-      catch: (cause) =>
-        cause instanceof RuntimeQueryFixtureError
-          ? cause
-          : new RuntimeQueryFixtureError({
-              networkCodes: [],
-              query: "test-runtime-query",
-              reason: "query",
-            }),
+      catch: toRuntimeQueryError,
       try: () => runtimeClientMocks.runtimeQuery(url, query, args),
     })
 );
@@ -75,7 +57,7 @@ describe("API content runtime", () => {
     );
     expect(parseApiContentId("en/articles/a")).toBeNull();
   });
-  it.effect.each([
+  effectIt.effect.each([
     {
       args: {
         appLocale: "en" as const,
@@ -133,7 +115,7 @@ describe("API content runtime", () => {
       );
     })
   );
-  it.effect(
+  effectIt.effect(
     "chunks by eight and runs at most four batch reads concurrently",
     () =>
       Effect.gen(function* () {
@@ -210,7 +192,7 @@ describe("API content runtime", () => {
         expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledTimes(2);
       })
   );
-  it.effect.each([{ releaseId: "release-after" }, null])(
+  effectIt.effect.each([{ releaseId: "release-after" }, null])(
     "rejects a page when its signed release changes or disappears",
     (active) =>
       Effect.gen(function* () {
@@ -233,52 +215,56 @@ describe("API content runtime", () => {
         );
       })
   );
-  it.effect("maps signed hydration failures into the API runtime error", () =>
-    Effect.gen(function* () {
-      runtimeClientMocks.runtimeQuery.mockResolvedValueOnce({
-        activeReleaseId: "release-test",
-        continueCursor: "",
-        isDone: true,
-        page: [{ appLocale: "en", publicPath: "articles/politics/test" }],
-      });
-      publishedContentMocks.readPublishedApiItems.mockReturnValue(
-        Effect.fail(
-          new RuntimeQueryFixtureError({
-            networkCodes: [],
-            query: "contentRuntime/batch",
-            reason: "query",
-          })
-        )
-      );
-      const failure = yield* getArticleApiContentPage({
-        appLocale: "en",
-        cursor: null,
-        limit: 10,
-        prefix: "articles/politics",
-      }).pipe(Effect.flip);
-      expect(failure.message).toContain(
-        "Unable to read signed content for the public API."
-      );
-    })
+  effectIt.effect(
+    "maps signed hydration failures into the API runtime error",
+    () =>
+      Effect.gen(function* () {
+        runtimeClientMocks.runtimeQuery.mockResolvedValueOnce({
+          activeReleaseId: "release-test",
+          continueCursor: "",
+          isDone: true,
+          page: [{ appLocale: "en", publicPath: "articles/politics/test" }],
+        });
+        publishedContentMocks.readPublishedApiItems.mockReturnValue(
+          Effect.fail(
+            new ConvexRuntimeQueryError({
+              networkCodes: [],
+              query: "contentRuntime/batch",
+              reason: "query",
+            })
+          )
+        );
+        const failure = yield* getArticleApiContentPage({
+          appLocale: "en",
+          cursor: null,
+          limit: 10,
+          prefix: "articles/politics",
+        }).pipe(Effect.flip);
+        expect(failure.message).toContain(
+          "Unable to read signed content for the public API."
+        );
+      })
   );
-  it.effect("reads one current reference by stable graph content ID", () =>
-    Effect.gen(function* () {
-      const row = { contentId: "asset:en:article:politics:article:a" };
-      runtimeClientMocks.runtimeQuery.mockResolvedValueOnce(row);
-      expect(
-        yield* getApiContentReferenceByContentId({ contentId: row.contentId })
-      ).toEqual(row);
-      expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledWith(
-        "https://test.convex.cloud",
-        expect.anything(),
-        { input: { contentId: row.contentId, kind: "content" } }
-      );
-    })
+  effectIt.effect(
+    "reads one current reference by stable graph content ID",
+    () =>
+      Effect.gen(function* () {
+        const row = { contentId: "asset:en:article:politics:article:a" };
+        runtimeClientMocks.runtimeQuery.mockResolvedValueOnce(row);
+        expect(
+          yield* getApiContentReferenceByContentId({ contentId: row.contentId })
+        ).toEqual(row);
+        expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledWith(
+          "https://test.convex.cloud",
+          expect.anything(),
+          { input: { contentId: row.contentId, kind: "content" } }
+        );
+      })
   );
-  it.effect("wraps runtime query failures with query context", () =>
+  effectIt.effect("wraps runtime query failures with query context", () =>
     Effect.gen(function* () {
       runtimeClientMocks.runtimeQuery.mockRejectedValueOnce(
-        new RuntimeQueryFixtureError({
+        new ConvexRuntimeQueryError({
           networkCodes: [],
           query: "contentRelease/article:apiPage",
           reason: "transport",
