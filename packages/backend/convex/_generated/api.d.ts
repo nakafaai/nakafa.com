@@ -140,6 +140,9 @@ import type * as contentRelease_article_agent from "../contentRelease/article/ag
 import type * as contentRelease_article_bucket from "../contentRelease/article/bucket.js";
 import type * as contentRelease_article_category from "../contentRelease/article/category.js";
 import type * as contentRelease_article_cursor from "../contentRelease/article/cursor.js";
+import type * as contentRelease_article_cutover_internal from "../contentRelease/article/cutover/internal.js";
+import type * as contentRelease_article_cutover_model from "../contentRelease/article/cutover/model.js";
+import type * as contentRelease_article_cutover_spec from "../contentRelease/article/cutover/spec.js";
 import type * as contentRelease_article_dates from "../contentRelease/article/dates.js";
 import type * as contentRelease_article_discovery from "../contentRelease/article/discovery.js";
 import type * as contentRelease_article_internal from "../contentRelease/article/internal.js";
@@ -269,6 +272,7 @@ import type * as contentRelease_quran_document from "../contentRelease/quran/doc
 import type * as contentRelease_quran_facts from "../contentRelease/quran/facts.js";
 import type * as contentRelease_quran_input from "../contentRelease/quran/input.js";
 import type * as contentRelease_quran_interpretation from "../contentRelease/quran/interpretation.js";
+import type * as contentRelease_quran_legacy from "../contentRelease/quran/legacy.js";
 import type * as contentRelease_quran_limits from "../contentRelease/quran/limits.js";
 import type * as contentRelease_quran_markdown from "../contentRelease/quran/markdown.js";
 import type * as contentRelease_quran_owner from "../contentRelease/quran/owner.js";
@@ -278,6 +282,7 @@ import type * as contentRelease_quran_sources from "../contentRelease/quran/sour
 import type * as contentRelease_quran_spec from "../contentRelease/quran/spec.js";
 import type * as contentRelease_quran_surah from "../contentRelease/quran/surah.js";
 import type * as contentRelease_quran_translation from "../contentRelease/quran/translation.js";
+import type * as contentRelease_quran_v1 from "../contentRelease/quran/v1.js";
 import type * as contentRelease_quran_verify from "../contentRelease/quran/verify.js";
 import type * as contentRelease_quran_view from "../contentRelease/quran/view.js";
 import type * as contentRelease_receipt from "../contentRelease/receipt.js";
@@ -730,6 +735,9 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/article/bucket": typeof contentRelease_article_bucket;
   "contentRelease/article/category": typeof contentRelease_article_category;
   "contentRelease/article/cursor": typeof contentRelease_article_cursor;
+  "contentRelease/article/cutover/internal": typeof contentRelease_article_cutover_internal;
+  "contentRelease/article/cutover/model": typeof contentRelease_article_cutover_model;
+  "contentRelease/article/cutover/spec": typeof contentRelease_article_cutover_spec;
   "contentRelease/article/dates": typeof contentRelease_article_dates;
   "contentRelease/article/discovery": typeof contentRelease_article_discovery;
   "contentRelease/article/internal": typeof contentRelease_article_internal;
@@ -859,6 +867,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/quran/facts": typeof contentRelease_quran_facts;
   "contentRelease/quran/input": typeof contentRelease_quran_input;
   "contentRelease/quran/interpretation": typeof contentRelease_quran_interpretation;
+  "contentRelease/quran/legacy": typeof contentRelease_quran_legacy;
   "contentRelease/quran/limits": typeof contentRelease_quran_limits;
   "contentRelease/quran/markdown": typeof contentRelease_quran_markdown;
   "contentRelease/quran/owner": typeof contentRelease_quran_owner;
@@ -868,6 +877,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/quran/spec": typeof contentRelease_quran_spec;
   "contentRelease/quran/surah": typeof contentRelease_quran_surah;
   "contentRelease/quran/translation": typeof contentRelease_quran_translation;
+  "contentRelease/quran/v1": typeof contentRelease_quran_v1;
   "contentRelease/quran/verify": typeof contentRelease_quran_verify;
   "contentRelease/quran/view": typeof contentRelease_quran_view;
   "contentRelease/receipt": typeof contentRelease_receipt;
