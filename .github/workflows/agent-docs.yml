@@ -48,8 +48,8 @@ jobs:
 
   production:
     name: Production
-    # The repository Actions actor policy rejects untrusted workflow triggers
-    # before candidate-owned YAML can access signed-content secrets.
+    # Signed acceptance runs only for protected-main pushes and owner-triggered
+    # internal pull requests or merge groups.
     if: github.event_name == 'push' || (github.event_name == 'merge_group' && github.actor == 'nabilfatih') || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih')
     runs-on: ubuntu-latest
     timeout-minutes: 40
