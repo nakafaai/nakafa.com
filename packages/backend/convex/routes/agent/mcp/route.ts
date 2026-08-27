@@ -3,10 +3,6 @@ import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { enforceAgentReadLimit } from "@repo/backend/convex/routes/agent/limit";
 import { guardMcpOrigin } from "@repo/backend/convex/routes/agent/mcp/guard";
 import { readMcpRequest } from "@repo/backend/convex/routes/agent/mcp/input";
-import type {
-  LegacyRecordArgs,
-  LegacyRecordResult,
-} from "@repo/backend/convex/routes/agent/mcp/legacy";
 import {
   mcpOptionsResponse,
   mcpParsedErrorResponse,
@@ -21,20 +17,13 @@ import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
 } from "@repo/contents/_lib/agent/errors";
-import { makeFunctionReference } from "convex/server";
 import type { HonoWithConvex } from "convex-helpers/server/hono";
 import { Effect, Result } from "effect";
 import { Hono } from "hono";
 
 type AgentApp = HonoWithConvex<ActionCtx, { requestId: string }>;
 
-const recordLegacyReadReference = makeFunctionReference<
-  "mutation",
-  LegacyRecordArgs,
-  LegacyRecordResult
->("routes/agent/mcp/legacy:record");
-
-/** Registers the additive protected Streamable HTTP MCP successor. */
+/** Registers the protected modern Streamable HTTP MCP transport. */
 export function registerAgentMcpRoutes(app: AgentApp) {
   const mcp: AgentApp = new Hono();
   mcp.use("*", guardMcpOrigin);
@@ -98,11 +87,10 @@ export function registerAgentMcpRoutes(app: AgentApp) {
         request
       );
     }
-    const legacy = await runtime.success.sdk.isLegacyRequest(
-      boundedRequest,
-      parsedBody
-    );
-    if (!(legacy || request.headers.has("mcp-protocol-version"))) {
+    if (
+      parsedBody !== undefined &&
+      !request.headers.has("mcp-protocol-version")
+    ) {
       return withMcpResponseHeaders(
         mcpParsedErrorResponse(
           parsedBody,
@@ -118,7 +106,7 @@ export function registerAgentMcpRoutes(app: AgentApp) {
       () =>
         runtime.success.server.createNakafaMcpServer(context.env, requestId),
       {
-        legacy: "stateless",
+        legacy: "reject",
         onerror: (error) => {
           Effect.runSync(
             Effect.logWarning("Nakafa MCP protocol request failed.").pipe(
@@ -128,25 +116,10 @@ export function registerAgentMcpRoutes(app: AgentApp) {
         },
       }
     );
-    const response = await handler.fetch(boundedRequest, { parsedBody });
-    if (legacy && response.ok) {
-      const recorded = await Effect.runPromise(
-        recordSuccessfulLegacyResponse(context.env).pipe(Effect.result)
-      );
-      if (Result.isFailure(recorded)) {
-        return withMcpResponseHeaders(
-          mcpParsedErrorResponse(
-            parsedBody,
-            503,
-            -32_603,
-            "The MCP legacy observation boundary is unavailable.",
-            requestId
-          ),
-          request
-        );
-      }
-    }
-    return withMcpResponseHeaders(response, request);
+    return withMcpResponseHeaders(
+      await handler.fetch(boundedRequest, { parsedBody }),
+      request
+    );
   });
   app.route(NAKAFA_MCP_EDGE_CONTRACT.originPath, mcp);
 }
@@ -182,17 +155,3 @@ function readRateLimit(ctx: ActionCtx, request: Request) {
     )
   );
 }
-
-/** Records every successful 2025 response before it leaves the HTTP action. */
-const recordSuccessfulLegacyResponse = Effect.fn(
-  "agent.mcp.recordSuccessfulLegacyResponse"
-)(function* (ctx: ActionCtx) {
-  yield* Effect.tryPromise({
-    catch: (cause) =>
-      new NakafaAgentDataReadError({
-        cause: getUnknownErrorMessage(cause),
-        message: "Unable to record successful MCP legacy usage.",
-      }),
-    try: () => ctx.runMutation(recordLegacyReadReference, {}),
-  });
-});
