@@ -1,9 +1,9 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { verifyNakafaContent } from "@repo/backend/client/nakafa/verify";
 import { ConvexRuntimeQueryError } from "@repo/backend/client/runtime";
 import { toRuntimeQueryError } from "@repo/backend/test/runtime-query";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import { vi } from "vitest";
 
@@ -28,7 +28,7 @@ describe("verifyNakafaContent", () => {
     runtimeMocks.runtimeQuery.mockReset();
   });
 
-  it.live("returns false without a query for unsupported references", () =>
+  it.effect("returns false without a query for unsupported references", () =>
     Effect.gen(function* () {
       const result = yield* verifyNakafaContent(convexUrl, "quran/1");
 
@@ -37,7 +37,7 @@ describe("verifyNakafaContent", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "returns false when no current signed family owns a canonical route",
     () =>
       Effect.gen(function* () {
@@ -49,7 +49,7 @@ describe("verifyNakafaContent", () => {
       })
   );
 
-  it.live("returns true when the current signed reference exists", () =>
+  it.effect("returns true when the current signed reference exists", () =>
     Effect.gen(function* () {
       runtimeMocks.runtimeQuery.mockResolvedValueOnce({
         ...quranRef,
@@ -63,7 +63,7 @@ describe("verifyNakafaContent", () => {
     })
   );
 
-  it.live("preserves typed runtime read failures", () =>
+  it.effect("preserves typed runtime read failures", () =>
     Effect.gen(function* () {
       const runtimeError = new ConvexRuntimeQueryError({
         networkCodes: ["EPIPE"],

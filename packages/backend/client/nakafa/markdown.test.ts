@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { readNakafaMarkdown } from "@repo/backend/client/nakafa/markdown";
 import {
   makeMaterialContentRef,
@@ -5,7 +6,6 @@ import {
 } from "@repo/backend/test/content-material";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect, Option } from "effect";
 import { vi } from "vitest";
 
@@ -52,7 +52,7 @@ beforeEach(() => {
 });
 
 describe("readNakafaMarkdown", () => {
-  it.live.each([articleRef, materialRef])(
+  it.effect.each([articleRef, materialRef])(
     "dispatches $section through the signed public reader",
     (ref) =>
       Effect.gen(function* () {
@@ -76,7 +76,7 @@ describe("readNakafaMarkdown", () => {
       })
   );
 
-  it.live("dispatches Quran through its signed snapshot reader", () =>
+  it.effect("dispatches Quran through its signed snapshot reader", () =>
     Effect.gen(function* () {
       runtimeMocks.resolveNakafaContentRef.mockReturnValue(
         Effect.succeed(Option.some(quranRef))
@@ -98,7 +98,7 @@ describe("readNakafaMarkdown", () => {
     })
   );
 
-  it.live.each([
+  it.effect.each([
     Option.none(),
     Option.some(tryoutRef),
     Option.some(materialTopicRef),

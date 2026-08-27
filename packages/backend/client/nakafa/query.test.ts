@@ -1,9 +1,9 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { ConvexRuntimeQueryError } from "@repo/backend/client/runtime";
 import { api } from "@repo/backend/convex/_generated/api";
 import { toRuntimeQueryError } from "@repo/backend/test/runtime-query";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 import { vi } from "vitest";
@@ -23,7 +23,7 @@ describe("readNakafaRuntimeQuery", () => {
   beforeEach(() => {
     runtimeMocks.runtimeQuery.mockReset();
   });
-  it.live(
+  it.effect(
     "returns generated query results from the shared Convex runtime client",
     () =>
       Effect.gen(function* () {
@@ -48,7 +48,7 @@ describe("readNakafaRuntimeQuery", () => {
         );
       })
   );
-  it.live("maps runtime client failures into Nakafa read errors", () =>
+  it.effect("maps runtime client failures into Nakafa read errors", () =>
     Effect.gen(function* () {
       const args: FunctionArgs<typeof api.contentRelease.reference.read> = {
         input: {
@@ -80,7 +80,7 @@ describe("readNakafaRuntimeQuery", () => {
       }
     })
   );
-  it.live("preserves classified runtime diagnostics", () =>
+  it.effect("preserves classified runtime diagnostics", () =>
     Effect.gen(function* () {
       const args: FunctionArgs<typeof api.contentRelease.reference.read> = {
         input: {

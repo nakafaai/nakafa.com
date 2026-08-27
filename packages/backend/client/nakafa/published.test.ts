@@ -1,11 +1,11 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ContentTransportError } from "@repo/backend/client/content/errors";
 import { readPublishedMarkdown } from "@repo/backend/client/nakafa/published";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import { TEST_ARTICLE_PROJECTION } from "@repo/backend/test/content-runtime";
 import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect, Option } from "effect";
 import { vi } from "vitest";
 
@@ -26,7 +26,7 @@ beforeEach(() => {
 });
 
 describe("Nakafa signed public reader", () => {
-  it.live.each([
+  it.effect.each([
     ["articles" as const, TEST_ARTICLE_PROJECTION],
     ["material" as const, material],
   ] as const)("reads verified %s raw MDX", ([section, projection]) =>
@@ -66,7 +66,7 @@ describe("Nakafa signed public reader", () => {
     })
   );
 
-  it.live.each([
+  it.effect.each([
     [
       "configuration",
       () => {

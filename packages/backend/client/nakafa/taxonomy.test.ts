@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { readNakafaTaxonomy } from "@repo/backend/client/nakafa/taxonomy";
@@ -7,7 +8,6 @@ import {
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
 import { toRuntimeQueryError } from "@repo/backend/test/runtime-query";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect } from "effect";
 import { vi } from "vitest";
@@ -37,7 +37,7 @@ beforeEach(() => {
   runtimeMocks.runtimeQuery.mockImplementation(readRuntimeFixture);
 });
 describe("readNakafaTaxonomy", () => {
-  it.live("assembles taxonomy from signed publications", () =>
+  it.effect("assembles taxonomy from signed publications", () =>
     Effect.gen(function* () {
       const taxonomy = yield* readNakafaTaxonomy(
         "https://example.convex.cloud",
@@ -81,36 +81,38 @@ describe("readNakafaTaxonomy", () => {
       ).toHaveLength(4);
     })
   );
-  it.live("fails closed when an article or material family is unmanaged", () =>
-    Effect.gen(function* () {
-      for (const family of ["article", "material"]) {
-        const target =
-          family === "article"
-            ? api.contentRelease.article.sitemapBuckets
-            : api.contentRelease.material.sitemapBuckets;
-        runtimeMocks.runtimeQuery.mockImplementation(
-          (convexUrl, query, args) => {
-            if (getFunctionName(query) === getFunctionName(target)) {
-              return Promise.resolve({ managed: false });
+  it.effect(
+    "fails closed when an article or material family is unmanaged",
+    () =>
+      Effect.gen(function* () {
+        for (const family of ["article", "material"]) {
+          const target =
+            family === "article"
+              ? api.contentRelease.article.sitemapBuckets
+              : api.contentRelease.material.sitemapBuckets;
+          runtimeMocks.runtimeQuery.mockImplementation(
+            (convexUrl, query, args) => {
+              if (getFunctionName(query) === getFunctionName(target)) {
+                return Promise.resolve({ managed: false });
+              }
+              return readRuntimeFixture(convexUrl, query, args);
             }
-            return readRuntimeFixture(convexUrl, query, args);
-          }
-        );
-        expect(
-          yield* Effect.result(
-            readNakafaTaxonomy("https://example.convex.cloud", "id")
-          )
-        ).toMatchObject({
-          _tag: "Failure",
-          failure: {
-            _tag: "NakafaAgentDataReadError",
-            message: "Unable to read signed Nakafa content inventory.",
-          },
-        });
-      }
-    })
+          );
+          expect(
+            yield* Effect.result(
+              readNakafaTaxonomy("https://example.convex.cloud", "id")
+            )
+          ).toMatchObject({
+            _tag: "Failure",
+            failure: {
+              _tag: "NakafaAgentDataReadError",
+              message: "Unable to read signed Nakafa content inventory.",
+            },
+          });
+        }
+      })
   );
-  it.live("pins every article category page to one signed release", () =>
+  it.effect("pins every article category page to one signed release", () =>
     Effect.gen(function* () {
       runtimeMocks.runtimeQuery.mockImplementation((convexUrl, query, args) => {
         if (
@@ -145,7 +147,7 @@ describe("readNakafaTaxonomy", () => {
       expect(taxonomy.articles.categories).toEqual(["politics", "science"]);
     })
   );
-  it.live("fails closed when signed article taxonomy is stale", () =>
+  it.effect("fails closed when signed article taxonomy is stale", () =>
     Effect.gen(function* () {
       runtimeMocks.runtimeQuery.mockImplementation((convexUrl, query, args) => {
         if (
@@ -169,7 +171,7 @@ describe("readNakafaTaxonomy", () => {
       });
     })
   );
-  it.live("fails closed when an article category page loses its cursor", () =>
+  it.effect("fails closed when an article category page loses its cursor", () =>
     Effect.gen(function* () {
       runtimeMocks.runtimeQuery.mockImplementation((convexUrl, query, args) => {
         if (
@@ -193,7 +195,7 @@ describe("readNakafaTaxonomy", () => {
       });
     })
   );
-  it.live(
+  it.effect(
     "fails closed when the active publication changes during assembly",
     () =>
       Effect.gen(function* () {
