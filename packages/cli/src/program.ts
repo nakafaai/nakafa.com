@@ -114,7 +114,6 @@ function executeCommand(
       kind: "json",
       value: {
         endpoint: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
-        manifest: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
         protocol_version: NAKAFA_MCP_PROTOCOL_VERSION,
         transport: "streamable-http",
       },

@@ -65,7 +65,6 @@ describe("Nakafa CLI execution", () => {
       });
       expect(JSON.parse(mcp.stdout)).toEqual({
         endpoint: "https://nakafa.com/mcp",
-        manifest: "https://nakafa.com/mcp",
         protocol_version: NAKAFA_MCP_PROTOCOL_VERSION,
         transport: "streamable-http",
       });
