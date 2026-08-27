@@ -1,7 +1,8 @@
+import { it } from "@effect/vitest";
 import { MathCasRequestError } from "@repo/math/errors";
 import { MathService } from "@repo/math/service";
-import { afterEach, describe, expect, it, vi } from "@repo/testing/effect";
 import { ConfigProvider, Effect, Exit } from "effect";
+import { afterEach, describe, expect, vi } from "vitest";
 
 const provider = ConfigProvider.fromEnvRecord({
   MATH_CAS_API_KEY: "secret",
