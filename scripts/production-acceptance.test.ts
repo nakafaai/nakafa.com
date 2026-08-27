@@ -126,4 +126,51 @@ describe("production acceptance scope", () => {
         expect(requiresProductionAcceptance(renameChanges)).toBe(true);
       }).pipe(Effect.provide(NodeServices.layer))
   );
+
+  it.effect("ignores base-only changes after the target branch advances", () =>
+    Effect.gen(function* () {
+      const fileSystem = yield* FileSystem.FileSystem;
+      const repository = yield* fileSystem.makeTempDirectoryScoped({
+        prefix: "production-acceptance-diverged-test-",
+      });
+      yield* runGit(repository, ["init", "--initial-branch=main"]);
+      yield* runGit(repository, ["config", "user.name", "CI Fixture"]);
+      yield* runGit(repository, [
+        "config",
+        "user.email",
+        "ci-fixture@example.com",
+      ]);
+      yield* fileSystem.writeFileString(
+        `${repository}/example.ts`,
+        "export const example = true;\n"
+      );
+      yield* fileSystem.writeFileString(
+        `${repository}/example.test.ts`,
+        "export const testExample = true;\n"
+      );
+      yield* commitAll(repository, "initial");
+
+      yield* runGit(repository, ["switch", "--create", "candidate"]);
+      yield* fileSystem.writeFileString(
+        `${repository}/example.test.ts`,
+        "export const testExample = false;\n"
+      );
+      yield* commitAll(repository, "modify candidate test");
+
+      yield* runGit(repository, ["switch", "main"]);
+      yield* fileSystem.writeFileString(
+        `${repository}/example.ts`,
+        "export const example = false;\n"
+      );
+      yield* commitAll(repository, "advance target source");
+
+      const changes = yield* readProductionChanges(
+        repository,
+        "main",
+        "candidate"
+      );
+      expect(changes).toEqual([{ path: "example.test.ts", status: "M" }]);
+      expect(requiresProductionAcceptance(changes)).toBe(false);
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
 });

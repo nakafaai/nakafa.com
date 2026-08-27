@@ -41,7 +41,7 @@ function collectText(
   );
 }
 
-/** Reads exact changed paths without allowing rename detection to hide a source. */
+/** Reads head changes since the merge base without hiding renamed sources. */
 export const readProductionChanges = Effect.fn(
   "ProductionAcceptance.readChanges"
 )((repositoryRoot: string, base: string, head: string) =>
@@ -49,7 +49,14 @@ export const readProductionChanges = Effect.fn(
     Effect.gen(function* () {
       const command = yield* ChildProcess.make(
         "git",
-        ["diff", "--name-status", "--no-renames", "-z", base, head, "--"],
+        [
+          "diff",
+          "--name-status",
+          "--no-renames",
+          "-z",
+          `${base}...${head}`,
+          "--",
+        ],
         { cwd: repositoryRoot }
       ).pipe(
         Effect.mapError(
