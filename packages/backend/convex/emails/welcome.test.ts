@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { canonicalizePublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -11,7 +12,6 @@ import {
   TEST_PAGE_PROJECTION_JSON,
 } from "@repo/backend/test/content-page";
 import { TEST_ARTICLE_PROJECTION_JSON } from "@repo/backend/test/content-runtime";
-import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 import { vi } from "vitest";
@@ -25,23 +25,21 @@ function pageJson(pageKey: string, publicPath: string) {
 }
 
 /** Inserts one welcome-email recipient fixture. */
-function insertWelcomeUser(
-  ctx: MutationCtx,
-  suffix: string,
-  deletionPreparedAt?: number
-) {
-  return Effect.promise(() =>
-    ctx.db.insert("users", {
-      authId: `${suffix}-welcome-owner`,
-      credits: 0,
-      creditsResetAt: 0,
-      deletionPreparedAt,
-      email: `${suffix}@example.com`,
-      name: `${suffix} Welcome Owner`,
-      plan: "free",
-    })
-  );
-}
+const insertWelcomeUser = Effect.fn("test.emails.welcome.insertUser")(
+  function* (ctx: MutationCtx, suffix: string, deletionPreparedAt?: number) {
+    return yield* Effect.promise(() =>
+      ctx.db.insert("users", {
+        authId: `${suffix}-welcome-owner`,
+        credits: 0,
+        creditsResetAt: 0,
+        deletionPreparedAt,
+        email: `${suffix}@example.com`,
+        name: `${suffix} Welcome Owner`,
+        plan: "free",
+      })
+    );
+  }
+);
 
 describe("emails/welcome", () => {
   it.effect(
