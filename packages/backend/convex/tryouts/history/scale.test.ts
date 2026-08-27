@@ -136,4 +136,66 @@ describe("tryouts/history/scale", () => {
       );
     })
   );
+
+  it.effect("ignores current scales and rejects a missing retained scale", () =>
+    Effect.gen(function* () {
+      const t = createConvexTestWithBetterAuth();
+      const seeded = yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const runtime = await seedTryoutContentAccessState(ctx, {
+            attemptStatus: "completed",
+            sectionStatus: "completed",
+            suffix: "current-scale",
+          });
+          const attempt = await ctx.db.get(runtime.attemptId);
+          assert.ok(attempt);
+          return attempt;
+        })
+      );
+      yield* Effect.promise(() =>
+        expect(
+          t.mutation((ctx) =>
+            runConvexProgram(cleanupTryoutHistoryScale(ctx, seeded))
+          )
+        ).resolves.toBe(false)
+      );
+      const current = yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
+            model: "2pl",
+            publishedAt: 1,
+            questionCount: 1,
+            setIdentity: "set:current-scale",
+            status: "official",
+            tryoutSnapshotId: "snapshot:current-scale",
+          });
+          await ctx.db.patch("tryoutAttempts", seeded._id, { scaleVersionId });
+          const attempt = await ctx.db.get(seeded._id);
+          assert.ok(attempt);
+          return { attempt, scaleVersionId };
+        })
+      );
+      yield* Effect.promise(() =>
+        expect(
+          t.mutation((ctx) =>
+            runConvexProgram(cleanupTryoutHistoryScale(ctx, current.attempt))
+          )
+        ).resolves.toBe(false)
+      );
+      yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          ctx.db.delete("irtScaleVersions", current.scaleVersionId)
+        )
+      );
+      yield* Effect.promise(() =>
+        expect(
+          t.mutation((ctx) =>
+            runConvexProgram(cleanupTryoutHistoryScale(ctx, current.attempt))
+          )
+        ).rejects.toMatchObject({
+          data: { code: "TRYOUT_HISTORY_SCALE_MISSING" },
+        })
+      );
+    })
+  );
 });
