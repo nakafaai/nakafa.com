@@ -24,9 +24,11 @@ import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/rendere
 import { publicationReceiptValidator } from "@repo/backend/convex/contentRelease/spec";
 import { findReleaseTryoutRuntime } from "@repo/backend/convex/contentRelease/tryout/binding";
 import { retainActivatedTryoutBundle } from "@repo/backend/convex/contentRelease/tryout/bundle";
+import { requireTryoutMigrationReleaseChange } from "@repo/backend/convex/contentRelease/tryout/migration";
 import { loadReleaseTryoutRuntime } from "@repo/backend/convex/contentRelease/tryout/runtime";
 import { encodeRendererJson } from "@repo/backend/convex/contentRelease/wire";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import { requireContentActivationUnlocked } from "@repo/backend/convex/tryouts/migration/lock";
 import { type Infer, v } from "convex/values";
 import { Clock, Effect } from "effect";
 
@@ -130,6 +132,7 @@ const activateCandidate = Effect.fn("contentRelease.activateCandidate")(
       );
       return { kind: "completed", receipt } satisfies ActivationResult;
     }
+    yield* requireContentActivationUnlocked(ctx);
     const state = yield* loadState(ctx);
     if (
       !state ||
@@ -156,6 +159,7 @@ const activateCandidate = Effect.fn("contentRelease.activateCandidate")(
         `Content release ${releaseId} no longer extends the active release.`
       );
     }
+    yield* requireTryoutMigrationReleaseChange(ctx);
     const recovery = yield* loadRelease(ctx, state.recoveryReleaseId);
     const recoverySigned = yield* decodeReleaseJson(recovery.releaseJson);
     if (
@@ -243,6 +247,7 @@ const activateRecoveryProgram = Effect.fn("contentRelease.activateRecovery")(
       );
       return { kind: "completed", receipt } satisfies ActivationResult;
     }
+    yield* requireContentActivationUnlocked(ctx);
     const state = yield* loadState(ctx);
     if (
       !state ||
@@ -260,6 +265,7 @@ const activateRecoveryProgram = Effect.fn("contentRelease.activateRecovery")(
         `Recovery ${releaseId} is not the exact retained inverse.`
       );
     }
+    yield* requireTryoutMigrationReleaseChange(ctx);
     yield* stagedEvidence(release, signed);
     const runtime = yield* loadReleaseTryoutRuntime(ctx, signed);
     const receipt = yield* publicationReceipt(release, signed);
