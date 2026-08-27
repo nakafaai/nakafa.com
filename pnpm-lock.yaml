@@ -145,6 +145,9 @@ importers:
         specifier: 0.0.1
         version: 0.0.1
     devDependencies:
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 4.0.0-rc.110(effect@4.0.0-rc.110)(vitest@4.1.11)
       '@repo/testing':
         specifier: workspace:*
         version: link:../../packages/testing
