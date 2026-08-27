@@ -52,6 +52,8 @@ const tables = {
   ...tryoutHistorySchema,
   tryoutAttempts: defineTable({
     userId: v.id("users"),
+    tryoutBundleId: v.optional(v.id("tryoutRuntimeBundles")),
+    tryoutBundleHash: v.optional(v.string()),
     tryoutSnapshotId: v.string(),
     snapshotReleaseId: v.string(),
     setIdentity: v.string(),
@@ -85,7 +87,15 @@ const tables = {
     completedAt: v.union(v.number(), v.null()),
     endReason: v.union(attemptEndReasonValidator, v.null()),
   })
+    .index("by_scaleVersionId", {
+      fields: ["scaleVersionId"],
+      staged: true,
+    })
     .index("by_status_and_expiresAt", ["status", "expiresAt"])
+    .index("by_tryoutBundleId", {
+      fields: ["tryoutBundleId"],
+      staged: true,
+    })
     .index("by_tryoutSnapshotId", ["tryoutSnapshotId"])
     .index("by_userId_and_startedAt", ["userId", "startedAt"])
     .index("by_userId_and_status_and_expiresAt", [
@@ -242,6 +252,10 @@ const tables = {
     publishedScore: v.number(),
     finalizedAt: v.number(),
   })
+    .index("by_scaleVersionId", {
+      fields: ["scaleVersionId"],
+      staged: true,
+    })
     .index("by_tryoutAttemptId", ["tryoutAttemptId"])
     .index("by_userId_and_finalizedAt", ["userId", "finalizedAt"]),
 };
