@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import {
   ANALYTICS_BROWSER_SIGNAL_MECHANISM,
   ANALYTICS_CONSENT_CATEGORY,
@@ -8,7 +9,6 @@ import {
 } from "@repo/analytics/consent";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { describe, expect, it } from "@repo/testing/effect";
 import type { FunctionReturnType } from "convex/server";
 import { ConvexError } from "convex/values";
 import { Duration, Effect, Fiber, Option } from "effect";

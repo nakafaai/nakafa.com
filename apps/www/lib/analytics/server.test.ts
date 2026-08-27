@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { vi } from "vitest";
 import {
@@ -29,13 +29,9 @@ vi.mock("next/server", () => ({
 }));
 
 /** Returns the single request-time task registered with Next.js `after`. */
-function getScheduledTask() {
-  const [task] = analyticsMocks.tasks;
-  if (!task) {
-    throw new Error("Expected one scheduled analytics task.");
-  }
-  return task;
-}
+const getScheduledTask = Effect.fn("www.analytics.test.getScheduledTask")(() =>
+  Effect.fromNullishOr(analyticsMocks.tasks[0])
+);
 
 describe("request-time server exception reporting", () => {
   beforeEach(() => {
@@ -48,7 +44,7 @@ describe("request-time server exception reporting", () => {
     analyticsMocks.isServerExceptionReportingEnabled.mockReturnValue(true);
   });
 
-  it.live("does not schedule outside the production runtime", () =>
+  it.effect("does not schedule outside the production runtime", () =>
     Effect.gen(function* () {
       analyticsMocks.isServerExceptionReportingEnabled.mockReturnValue(false);
 
@@ -66,25 +62,28 @@ describe("request-time server exception reporting", () => {
     })
   );
 
-  it.live("schedules the current operational exception without identity", () =>
-    Effect.gen(function* () {
-      const error = new Error("preload failed");
-      const properties = { source: "settings" };
+  it.effect(
+    "schedules the current operational exception without identity",
+    () =>
+      Effect.gen(function* () {
+        const error = new Error("preload failed");
+        const properties = { source: "settings" };
 
-      yield* scheduleCurrentServerExceptionCapture(error, properties);
+        yield* scheduleCurrentServerExceptionCapture(error, properties);
 
-      expect(analyticsMocks.captureServerException).not.toHaveBeenCalled();
+        expect(analyticsMocks.captureServerException).not.toHaveBeenCalled();
 
-      yield* Effect.promise(() => Promise.resolve(getScheduledTask()()));
+        const task = yield* getScheduledTask();
+        yield* Effect.promise(() => Promise.resolve(task()));
 
-      expect(analyticsMocks.captureServerException).toHaveBeenCalledWith(
-        error,
-        properties
-      );
-    })
+        expect(analyticsMocks.captureServerException).toHaveBeenCalledWith(
+          error,
+          properties
+        );
+      })
   );
 
-  it.live("schedules an explicitly provided operational exception", () =>
+  it.effect("schedules an explicitly provided operational exception", () =>
     Effect.gen(function* () {
       const error = new Error("weather failed");
 
@@ -92,7 +91,8 @@ describe("request-time server exception reporting", () => {
         source: "weather-api",
       });
 
-      yield* Effect.promise(() => Promise.resolve(getScheduledTask()()));
+      const task = yield* getScheduledTask();
+      yield* Effect.promise(() => Promise.resolve(task()));
       expect(analyticsMocks.captureServerException).toHaveBeenCalledWith(
         error,
         {
@@ -102,7 +102,7 @@ describe("request-time server exception reporting", () => {
     })
   );
 
-  it.live("contains provider failures inside the request task", () =>
+  it.effect("contains provider failures inside the request task", () =>
     Effect.gen(function* () {
       analyticsMocks.captureServerException.mockReturnValue(
         Effect.fail({ cause: new Error("provider unavailable") })
@@ -115,13 +115,12 @@ describe("request-time server exception reporting", () => {
         }
       );
 
-      yield* Effect.promise(() =>
-        expect(getScheduledTask()()).resolves.toBeUndefined()
-      );
+      const task = yield* getScheduledTask();
+      yield* Effect.promise(() => expect(task()).resolves.toBeUndefined());
     })
   );
 
-  it.live("contains request scheduling failures", () =>
+  it.effect("contains request scheduling failures", () =>
     Effect.gen(function* () {
       analyticsMocks.after.mockImplementation(() => {
         throw new Error("request already closed");
