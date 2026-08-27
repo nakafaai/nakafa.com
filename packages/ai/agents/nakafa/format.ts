@@ -81,6 +81,13 @@ export function formatQuran(result: NakafaAgentQuranReference) {
   const meaning = result.meaning
     ? `${result.meaning.text} (${result.meaning.locale})`
     : `Not available for requested locale ${result.locale}`;
+  const preBismillah =
+    result.pre_bismillah === null
+      ? ""
+      : `
+    ## Bismillah
+    - Arabic: ${result.pre_bismillah.arabic}
+    - Translation: ${result.pre_bismillah.translation}`;
   return dedent(`
     # Nakafa Quran Reference
     - Name: ${result.name}
@@ -96,6 +103,8 @@ export function formatQuran(result: NakafaAgentQuranReference) {
     - Kind: ${result.tafsir_access.kind}
     - Notice: ${result.tafsir_access.notice}
     - Source: ${formatQuranSource(result.tafsir_access.source)}
+
+    ${preBismillah}
 
     ${result.verses
       .map(

@@ -215,6 +215,15 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
   scanned.push(`### ${t("verses")}`);
   scanned.push("");
 
+  if (markdown.preBismillah !== null) {
+    scanned.push(markdown.preBismillah.arabic);
+    scanned.push("");
+    scanned.push(
+      `**${t("translation")}:** ${markdown.preBismillah.translation}`
+    );
+    scanned.push("");
+  }
+
   for (const verse of markdown.verses) {
     scanned.push(`#### ${t("verse")} ${verse.number.inSurah}`);
     scanned.push("");
