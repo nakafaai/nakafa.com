@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { listCurriculumPrograms } from "@repo/backend/convex/learningPreferences/program";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -7,12 +8,11 @@ import {
   makeProgramSnapshotData,
   makeTechnicalProgram,
 } from "@repo/backend/test/program-snapshot";
-import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
 describe("learningPreferences/program", () => {
-  it.live(
+  it.effect(
     "filters program kinds before enforcing the curriculum preference limit",
     () =>
       Effect.gen(function* () {
@@ -40,7 +40,7 @@ describe("learningPreferences/program", () => {
       })
   );
 
-  it.live(
+  it.effect(
     "rejects a published preference list beyond its bounded UI contract",
     () =>
       Effect.gen(function* () {
