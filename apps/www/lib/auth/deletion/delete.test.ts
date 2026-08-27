@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   ACCOUNT_DELETION_ATTEMPT_HEADER,
   ACCOUNT_DELETION_PREPARATION_INCOMPLETE_CODE,
@@ -9,9 +10,9 @@ import {
   accountDeletionPreparationOutcome,
   accountDeletionRequestPhase,
 } from "@repo/backend/convex/auth/deletion/spec";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import { vi } from "vitest";
+import { authClient } from "@/lib/auth/client";
 import { deleteCurrentAccount } from "@/lib/auth/deletion/delete";
 import {
   AccountDeletionFailed,
@@ -21,8 +22,6 @@ import {
 } from "@/lib/auth/deletion/errors";
 
 type AccountDeletionOperations = Parameters<typeof deleteCurrentAccount>[0];
-
-import { authClient } from "@/lib/auth/client";
 
 vi.mock("@/lib/auth/client", () => ({
   authClient: {
@@ -43,27 +42,32 @@ function createDeletionOperations(
       phase: accountDeletionRequestPhase.preparation,
       userId: USER_ID,
     },
-    cancelPreparation: vi.fn(
-      async () => accountDeletionCancellationOutcome.complete
+    cancelPreparation: vi.fn(() =>
+      Promise.resolve(accountDeletionCancellationOutcome.complete)
     ),
     clearAttempt: Effect.void,
     persist: vi.fn(() => Effect.void),
-    prepare: vi.fn(async () => accountDeletionPreparationOutcome.ready),
-    reconcile: vi.fn(async () => accountDeletionAttemptStatus.pending),
+    prepare: vi.fn(() =>
+      Promise.resolve(accountDeletionPreparationOutcome.ready)
+    ),
+    reconcile: vi.fn(() =>
+      Promise.resolve(accountDeletionAttemptStatus.pending)
+    ),
     ...overrides,
   };
 }
 
 function requestFailure(code: string, status = 400) {
-  return async () => ({
-    data: null,
-    error: {
-      code,
-      message: code,
-      status,
-      statusText: "ERROR",
-    },
-  });
+  return () =>
+    Promise.resolve({
+      data: null,
+      error: {
+        code,
+        message: code,
+        status,
+        statusText: "ERROR",
+      },
+    });
 }
 
 function deletionFailure(overrides: Partial<AccountDeletionOperations>) {
@@ -77,7 +81,7 @@ describe("account deletion", () => {
     vi.clearAllMocks();
   });
 
-  it.live("completes when Better Auth deletes the account", () =>
+  it.effect("completes when Better Auth deletes the account", () =>
     Effect.gen(function* () {
       vi.mocked(authClient.deleteUser).mockResolvedValue({
         data: { message: "User deleted", success: true },
@@ -97,20 +101,21 @@ describe("account deletion", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "does not clear the account for a non-terminal Better Auth response",
     () =>
       Effect.gen(function* () {
-        const cancelPreparation = vi.fn(
-          async () => accountDeletionCancellationOutcome.complete
+        const cancelPreparation = vi.fn(() =>
+          Promise.resolve(accountDeletionCancellationOutcome.complete)
         );
         const failure = yield* deleteCurrentAccount(
           createDeletionOperations({
             cancelPreparation,
-            request: async () => ({
-              data: { message: "Verification email sent", success: true },
-              error: null,
-            }),
+            request: () =>
+              Promise.resolve({
+                data: { message: "Verification email sent", success: true },
+                error: null,
+              }),
           })
         ).pipe(Effect.flip);
 
@@ -119,12 +124,12 @@ describe("account deletion", () => {
       })
   );
 
-  it.live(
+  it.effect(
     "skips completed preparation when retrying an uncertain auth delete",
     () =>
       Effect.gen(function* () {
-        const prepare = vi.fn(
-          async () => accountDeletionPreparationOutcome.ready
+        const prepare = vi.fn(() =>
+          Promise.resolve(accountDeletionPreparationOutcome.ready)
         );
         const failure = yield* deletionFailure({
           prepare,
@@ -141,10 +146,10 @@ describe("account deletion", () => {
       })
   );
 
-  it.live("completes a retry from its durable commit receipt", () =>
+  it.effect("completes a retry from its durable commit receipt", () =>
     Effect.gen(function* () {
-      const prepare = vi.fn(
-        async () => accountDeletionPreparationOutcome.ready
+      const prepare = vi.fn(() =>
+        Promise.resolve(accountDeletionPreparationOutcome.ready)
       );
       const request = vi.fn();
 
@@ -152,8 +157,8 @@ describe("account deletion", () => {
         yield* deleteCurrentAccount(
           createDeletionOperations({
             prepare,
-            reconcile: vi.fn(
-              async () => accountDeletionAttemptStatus.committed
+            reconcile: vi.fn(() =>
+              Promise.resolve(accountDeletionAttemptStatus.committed)
             ),
             request,
             attempt: {
@@ -169,18 +174,18 @@ describe("account deletion", () => {
     })
   );
 
-  it.live("recovers when the delete response is lost after commit", () =>
+  it.effect("recovers when the delete response is lost after commit", () =>
     Effect.gen(function* () {
-      const cancelPreparation = vi.fn(
-        async () => accountDeletionCancellationOutcome.complete
+      const cancelPreparation = vi.fn(() =>
+        Promise.resolve(accountDeletionCancellationOutcome.complete)
       );
 
       expect(
         yield* deleteCurrentAccount(
           createDeletionOperations({
             cancelPreparation,
-            reconcile: vi.fn(
-              async () => accountDeletionAttemptStatus.committed
+            reconcile: vi.fn(() =>
+              Promise.resolve(accountDeletionAttemptStatus.committed)
             ),
             request: () => Promise.reject(new Error("response unavailable")),
           })
@@ -190,36 +195,38 @@ describe("account deletion", () => {
     })
   );
 
-  it.live("proves a lost success before accepting an unauthorized retry", () =>
-    Effect.gen(function* () {
-      const cancelPreparation = vi.fn(
-        async () => accountDeletionCancellationOutcome.complete
-      );
-      const reconcile = vi
-        .fn<AccountDeletionOperations["reconcile"]>()
-        .mockResolvedValueOnce(accountDeletionAttemptStatus.pending)
-        .mockResolvedValueOnce(accountDeletionAttemptStatus.committed);
+  it.effect(
+    "proves a lost success before accepting an unauthorized retry",
+    () =>
+      Effect.gen(function* () {
+        const cancelPreparation = vi.fn(() =>
+          Promise.resolve(accountDeletionCancellationOutcome.complete)
+        );
+        const reconcile = vi
+          .fn<AccountDeletionOperations["reconcile"]>()
+          .mockResolvedValueOnce(accountDeletionAttemptStatus.pending)
+          .mockResolvedValueOnce(accountDeletionAttemptStatus.committed);
 
-      expect(
-        yield* deleteCurrentAccount(
-          createDeletionOperations({
-            cancelPreparation,
-            reconcile,
-            request: requestFailure("UNAUTHORIZED", 401),
-            attempt: {
-              attemptId: ATTEMPT_ID,
-              phase: accountDeletionRequestPhase.deletion,
-              userId: USER_ID,
-            },
-          })
-        )
-      ).toBeUndefined();
-      expect(reconcile).toHaveBeenCalledTimes(2);
-      expect(cancelPreparation).not.toHaveBeenCalled();
-    })
+        expect(
+          yield* deleteCurrentAccount(
+            createDeletionOperations({
+              cancelPreparation,
+              reconcile,
+              request: requestFailure("UNAUTHORIZED", 401),
+              attempt: {
+                attemptId: ATTEMPT_ID,
+                phase: accountDeletionRequestPhase.deletion,
+                userId: USER_ID,
+              },
+            })
+          )
+        ).toBeUndefined();
+        expect(reconcile).toHaveBeenCalledTimes(2);
+        expect(cancelPreparation).not.toHaveBeenCalled();
+      })
   );
 
-  it.live("keeps a deletion retry uncertain when proof is unavailable", () =>
+  it.effect("keeps a deletion retry uncertain when proof is unavailable", () =>
     Effect.gen(function* () {
       const request = vi.fn();
       const failure = yield* deleteCurrentAccount(
@@ -243,12 +250,12 @@ describe("account deletion", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "cancels before retrying when the auth safety check is not ready",
     () =>
       Effect.gen(function* () {
-        const cancelPreparation = vi.fn(
-          async () => accountDeletionCancellationOutcome.complete
+        const cancelPreparation = vi.fn(() =>
+          Promise.resolve(accountDeletionCancellationOutcome.complete)
         );
         const clearAttempt = vi.fn();
         const failure = yield* deletionFailure({
@@ -267,10 +274,10 @@ describe("account deletion", () => {
       })
   );
 
-  it.live("rotates an attempt canceled by background recovery", () =>
+  it.effect("rotates an attempt canceled by background recovery", () =>
     Effect.gen(function* () {
-      const cancelPreparation = vi.fn(
-        async () => accountDeletionCancellationOutcome.complete
+      const cancelPreparation = vi.fn(() =>
+        Promise.resolve(accountDeletionCancellationOutcome.complete)
       );
       const clearAttempt = vi.fn();
       const failure = yield* deletionFailure({
@@ -294,7 +301,7 @@ describe("account deletion", () => {
     })
   );
 
-  it.live("returns a typed stale-session failure", () =>
+  it.effect("returns a typed stale-session failure", () =>
     Effect.gen(function* () {
       const failure = yield* deletionFailure({
         request: requestFailure("SESSION_EXPIRED"),
@@ -304,28 +311,30 @@ describe("account deletion", () => {
     })
   );
 
-  it.live("drains cancellation before resetting a stale-session attempt", () =>
-    Effect.gen(function* () {
-      const cancelPreparation = vi
-        .fn<AccountDeletionOperations["cancelPreparation"]>()
-        .mockResolvedValueOnce(accountDeletionCancellationOutcome.continue)
-        .mockResolvedValueOnce(accountDeletionCancellationOutcome.complete);
-      const failure = yield* deletionFailure({
-        cancelPreparation,
-        request: requestFailure("SESSION_EXPIRED"),
-      });
+  it.effect(
+    "drains cancellation before resetting a stale-session attempt",
+    () =>
+      Effect.gen(function* () {
+        const cancelPreparation = vi
+          .fn<AccountDeletionOperations["cancelPreparation"]>()
+          .mockResolvedValueOnce(accountDeletionCancellationOutcome.continue)
+          .mockResolvedValueOnce(accountDeletionCancellationOutcome.complete);
+        const failure = yield* deletionFailure({
+          cancelPreparation,
+          request: requestFailure("SESSION_EXPIRED"),
+        });
 
-      expect(failure).toBeInstanceOf(AccountDeletionSessionExpired);
-      expect(cancelPreparation).toHaveBeenCalledTimes(2);
-      expect(cancelPreparation).toHaveBeenNthCalledWith(1, ATTEMPT_ID);
-      expect(cancelPreparation).toHaveBeenNthCalledWith(2, ATTEMPT_ID);
-    })
+        expect(failure).toBeInstanceOf(AccountDeletionSessionExpired);
+        expect(cancelPreparation).toHaveBeenCalledTimes(2);
+        expect(cancelPreparation).toHaveBeenNthCalledWith(1, ATTEMPT_ID);
+        expect(cancelPreparation).toHaveBeenNthCalledWith(2, ATTEMPT_ID);
+      })
   );
 
-  it.live("leaves other delete errors to durable server recovery", () =>
+  it.effect("leaves other delete errors to durable server recovery", () =>
     Effect.gen(function* () {
-      const cancelPreparation = vi.fn(
-        async () => accountDeletionCancellationOutcome.complete
+      const cancelPreparation = vi.fn(() =>
+        Promise.resolve(accountDeletionCancellationOutcome.complete)
       );
       const failure = yield* deletionFailure({
         cancelPreparation,
@@ -341,12 +350,12 @@ describe("account deletion", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "returns a typed failure when an owned school needs a successor",
     () =>
       Effect.gen(function* () {
-        const cancelPreparation = vi.fn(
-          async () => accountDeletionCancellationOutcome.complete
+        const cancelPreparation = vi.fn(() =>
+          Promise.resolve(accountDeletionCancellationOutcome.complete)
         );
         const clearAttempt = vi.fn();
         const failure = yield* deletionFailure({
@@ -361,23 +370,25 @@ describe("account deletion", () => {
       })
   );
 
-  it.live("preserves the attempt when immediate cancellation also fails", () =>
-    Effect.gen(function* () {
-      const failure = yield* deletionFailure({
-        cancelPreparation: () =>
-          Promise.reject(new Error("cancellation unavailable")),
-        request: requestFailure("SESSION_EXPIRED"),
-      });
+  it.effect(
+    "preserves the attempt when immediate cancellation also fails",
+    () =>
+      Effect.gen(function* () {
+        const failure = yield* deletionFailure({
+          cancelPreparation: () =>
+            Promise.reject(new Error("cancellation unavailable")),
+          request: requestFailure("SESSION_EXPIRED"),
+        });
 
-      expect(failure).toMatchObject({
-        _tag: "AccountDeletionRequestUncertain",
-        attemptId: ATTEMPT_ID,
-        phase: accountDeletionRequestPhase.deletion,
-      });
-    })
+        expect(failure).toMatchObject({
+          _tag: "AccountDeletionRequestUncertain",
+          attemptId: ATTEMPT_ID,
+          phase: accountDeletionRequestPhase.deletion,
+        });
+      })
   );
 
-  it.live(
+  it.effect(
     "leaves uncertain transport failures to durable server recovery",
     () =>
       Effect.gen(function* () {

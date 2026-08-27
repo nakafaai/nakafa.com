@@ -1,9 +1,9 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY } from "@repo/analytics/consent";
 import {
   disableBrowserAnalytics,
   resetBrowserAnalyticsIdentity,
 } from "@repo/analytics/posthog/browser";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import { vi } from "vitest";
 import { authClient } from "@/lib/auth/client";
@@ -30,7 +30,7 @@ describe("account browser identity", () => {
     window.sessionStorage.clear();
   });
 
-  it.live("clears browser identity without stopping analytics", () =>
+  it.effect("clears browser identity without stopping analytics", () =>
     Effect.gen(function* () {
       const removePersistedAccountState = vi.fn();
       const resetAnalytics = vi.fn();
@@ -45,7 +45,7 @@ describe("account browser identity", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "clears account state while preserving the anonymous privacy choice",
     () =>
       Effect.gen(function* () {
@@ -88,34 +88,36 @@ describe("account browser identity", () => {
       })
   );
 
-  it.live("disables analytics before clearing a deleted browser identity", () =>
-    Effect.gen(function* () {
-      const denyAnonymousAnalytics = vi.fn(() => Effect.void);
-      const disableAnalytics = vi.fn(() => Effect.void);
-      const removePersistedAccountState = vi.fn();
-      const resetAnalytics = vi.fn();
+  it.effect(
+    "disables analytics before clearing a deleted browser identity",
+    () =>
+      Effect.gen(function* () {
+        const denyAnonymousAnalytics = vi.fn(() => Effect.void);
+        const disableAnalytics = vi.fn(() => Effect.void);
+        const removePersistedAccountState = vi.fn();
+        const resetAnalytics = vi.fn();
 
-      yield* clearDeletedAccountBrowserIdentity({
-        denyAnonymousAnalytics,
-        disableAnalytics,
-        removePersistedAccountState,
-        resetAnalytics,
-      });
+        yield* clearDeletedAccountBrowserIdentity({
+          denyAnonymousAnalytics,
+          disableAnalytics,
+          removePersistedAccountState,
+          resetAnalytics,
+        });
 
-      expect(disableAnalytics).toHaveBeenCalledOnce();
-      expect(denyAnonymousAnalytics).toHaveBeenCalledOnce();
-      expect(removePersistedAccountState).toHaveBeenCalledOnce();
-      expect(resetAnalytics).toHaveBeenCalledOnce();
-      expect(disableAnalytics.mock.invocationCallOrder[0]).toBeLessThan(
-        denyAnonymousAnalytics.mock.invocationCallOrder[0] ?? 0
-      );
-      expect(denyAnonymousAnalytics.mock.invocationCallOrder[0]).toBeLessThan(
-        resetAnalytics.mock.invocationCallOrder[0] ?? 0
-      );
-    })
+        expect(disableAnalytics).toHaveBeenCalledOnce();
+        expect(denyAnonymousAnalytics).toHaveBeenCalledOnce();
+        expect(removePersistedAccountState).toHaveBeenCalledOnce();
+        expect(resetAnalytics).toHaveBeenCalledOnce();
+        expect(disableAnalytics.mock.invocationCallOrder[0]).toBeLessThan(
+          denyAnonymousAnalytics.mock.invocationCallOrder[0] ?? 0
+        );
+        expect(denyAnonymousAnalytics.mock.invocationCallOrder[0]).toBeLessThan(
+          resetAnalytics.mock.invocationCallOrder[0] ?? 0
+        );
+      })
   );
 
-  it.live("denies anonymous analytics after a committed deletion", () =>
+  it.effect("denies anonymous analytics after a committed deletion", () =>
     Effect.gen(function* () {
       yield* clearDeletedAccountBrowserIdentity();
 
@@ -127,25 +129,27 @@ describe("account browser identity", () => {
     })
   );
 
-  it.live("does not fail a completed deletion when browser cleanup fails", () =>
-    Effect.gen(function* () {
-      expect(
-        yield* clearDeletedAccountBrowserIdentity({
-          denyAnonymousAnalytics: () =>
-            Effect.fail("privacy storage unavailable"),
-          disableAnalytics: () => Effect.fail("analytics queue unavailable"),
-          removePersistedAccountState: () => {
-            throw new Error("storage unavailable");
-          },
-          resetAnalytics: () => {
-            throw new Error("analytics unavailable");
-          },
-        })
-      ).toBeUndefined();
-    })
+  it.effect(
+    "does not fail a completed deletion when browser cleanup fails",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* clearDeletedAccountBrowserIdentity({
+            denyAnonymousAnalytics: () =>
+              Effect.fail("privacy storage unavailable"),
+            disableAnalytics: () => Effect.fail("analytics queue unavailable"),
+            removePersistedAccountState: () => {
+              throw new Error("storage unavailable");
+            },
+            resetAnalytics: () => {
+              throw new Error("analytics unavailable");
+            },
+          })
+        ).toBeUndefined();
+      })
   );
 
-  it.live("clears browser identity after successful sign-out", () =>
+  it.effect("clears browser identity after successful sign-out", () =>
     Effect.gen(function* () {
       vi.mocked(authClient.signOut).mockResolvedValue({
         data: { success: true },
@@ -175,19 +179,21 @@ describe("account browser identity", () => {
     })
   );
 
-  it.live("preserves browser identity when sign-out is rejected", () =>
+  it.effect("preserves browser identity when sign-out is rejected", () =>
     Effect.gen(function* () {
       window.localStorage.setItem("nakafa-ai", "active-account-chat");
 
-      const failure = yield* signOutAccountBrowserIdentity(async () => ({
-        data: null,
-        error: {
-          code: "SIGN_OUT_FAILED",
-          message: "Sign-out failed",
-          status: 500,
-          statusText: "INTERNAL_SERVER_ERROR",
-        },
-      })).pipe(Effect.flip);
+      const failure = yield* signOutAccountBrowserIdentity(() =>
+        Promise.resolve({
+          data: null,
+          error: {
+            code: "SIGN_OUT_FAILED",
+            message: "Sign-out failed",
+            status: 500,
+            statusText: "INTERNAL_SERVER_ERROR",
+          },
+        })
+      ).pipe(Effect.flip);
 
       expect(failure).toBeInstanceOf(AccountSignOutFailed);
       expect(window.localStorage.getItem("nakafa-ai")).toBe(
@@ -197,7 +203,7 @@ describe("account browser identity", () => {
     })
   );
 
-  it.live("preserves browser identity when sign-out cannot start", () =>
+  it.effect("preserves browser identity when sign-out cannot start", () =>
     Effect.gen(function* () {
       window.sessionStorage.setItem(
         "nakafa-forum-session:class-1",

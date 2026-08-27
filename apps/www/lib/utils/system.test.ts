@@ -1,7 +1,7 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import { vi } from "vitest";
 import {
@@ -64,7 +64,7 @@ beforeEach(() => {
 });
 
 describe("current content reference metadata", () => {
-  it.live("reads complete metadata from the current signed reference", () =>
+  it.effect("reads complete metadata from the current signed reference", () =>
     Effect.gen(function* () {
       expect(yield* getMetadataFromSlug("en", ["quran", "1"])).toEqual({
         authors: [{ name: "Nakafa" }],
@@ -75,7 +75,7 @@ describe("current content reference metadata", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "uses translated defaults when the current reference has no row",
     () =>
       Effect.gen(function* () {
@@ -86,7 +86,7 @@ describe("current content reference metadata", () => {
       })
   );
 
-  it.live("preserves typed current-reference read failures", () =>
+  it.effect("preserves typed current-reference read failures", () =>
     Effect.gen(function* () {
       routeMocks.read.mockReturnValueOnce(
         Effect.fail(
@@ -105,7 +105,7 @@ describe("current content reference metadata", () => {
     })
   );
 
-  it.live("fills sparse current metadata from translations", () =>
+  it.effect("fills sparse current metadata from translations", () =>
     Effect.gen(function* () {
       routeMocks.read.mockReturnValueOnce(
         Effect.succeed({
@@ -120,7 +120,7 @@ describe("current content reference metadata", () => {
     })
   );
 
-  it.live("reports which translation namespace failed", () =>
+  it.effect("reports which translation namespace failed", () =>
     Effect.gen(function* () {
       mockGetTranslations.mockRejectedValueOnce(new Error("Missing Common."));
       expect(
@@ -147,11 +147,15 @@ describe("current content reference metadata", () => {
     })
   );
 
-  it("applies the content cache at the route-handler boundary", async () => {
-    await expect(
-      getCachedMetadataFromSlug("en", ["quran", "1"])
-    ).resolves.toMatchObject({ title: "Runtime title" });
-    expect(cacheMocks.tag).toHaveBeenCalledWith("content-runtime");
-    expect(cacheMocks.life).toHaveBeenCalledWith("contentRuntime");
-  });
+  it.effect("applies the content cache at the route-handler boundary", () =>
+    Effect.gen(function* () {
+      const metadata = yield* Effect.promise(() =>
+        getCachedMetadataFromSlug("en", ["quran", "1"])
+      );
+
+      expect(metadata).toMatchObject({ title: "Runtime title" });
+      expect(cacheMocks.tag).toHaveBeenCalledWith("content-runtime");
+      expect(cacheMocks.life).toHaveBeenCalledWith("contentRuntime");
+    })
+  );
 });
