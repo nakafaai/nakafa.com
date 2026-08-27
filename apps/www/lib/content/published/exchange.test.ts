@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   GitCommitShaSchema,
   ReleaseIdSchema,
@@ -8,7 +9,7 @@ import { ContentRuntimeMissingError } from "@repo/backend/client/content/errors"
 import { readPublicContent } from "@repo/backend/client/content/public";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import type { PublishedContentInput } from "@/lib/content/published/exchange";
 import {
   readCurrentPublishedContent,
@@ -96,124 +97,142 @@ beforeEach(() => {
 });
 
 describe("published content exchange", () => {
-  it("binds trusted active state to the exact public projection", async () => {
-    readPublicContentMock.mockReturnValue(Effect.succeed(found));
+  it.effect("binds trusted active state to the exact public projection", () =>
+    Effect.gen(function* () {
+      readPublicContentMock.mockReturnValue(Effect.succeed(found));
 
-    await expect(
-      Effect.runPromise(readPublishedContent(input))
-    ).resolves.toEqual({
-      activeReleaseId: found.activeReleaseId,
-      artifact: found.artifact,
-      projection: previewProjection,
-      rendererManifest: liveRenderer,
-      sourcePath: previewSourcePath,
-      sourceRevision,
-    });
-    expect(readPublicContent).toHaveBeenCalledWith(
-      {
-        siteUrl: "https://example.convex.site",
-        token: "runtime-token",
-      },
-      {
-        appLocale: input.appLocale,
-        publicPath: input.publicPath,
-      },
-      liveRenderer
-    );
-  });
-
-  it("omits immutable Git provenance for a forward rollback release", async () => {
-    const rollback: FoundFixture = {
-      ...found,
-      release: {
-        manifest: {
-          origin: {
-            kind: "rollback",
-            releaseId: found.activeReleaseId,
-          },
+      expect(yield* readPublishedContent(input)).toEqual({
+        activeReleaseId: found.activeReleaseId,
+        artifact: found.artifact,
+        projection: previewProjection,
+        rendererManifest: liveRenderer,
+        sourcePath: previewSourcePath,
+        sourceRevision,
+      });
+      expect(readPublicContent).toHaveBeenCalledWith(
+        {
+          siteUrl: "https://example.convex.site",
+          token: "runtime-token",
         },
-      },
-    };
-    readPublicContentMock.mockReturnValue(Effect.succeed(rollback));
+        {
+          appLocale: input.appLocale,
+          publicPath: input.publicPath,
+        },
+        liveRenderer
+      );
+    })
+  );
 
-    await expect(
-      Effect.runPromise(readPublishedContent(input))
-    ).resolves.toMatchObject({ sourceRevision: null });
-  });
-
-  it("reads the signed current publication without a prior release lookup", async () => {
-    const next = {
-      ...found,
-      activeReleaseId: ReleaseIdSchema.make("release-next"),
-    };
-    readPublicContentMock.mockReturnValue(Effect.succeed(next));
-
-    await expect(
-      Effect.runPromise(readCurrentPublishedContent(routeInput))
-    ).resolves.toMatchObject({ activeReleaseId: next.activeReleaseId });
-  });
-
-  it("preserves signed-read and live-renderer failures", async () => {
-    readPublicContentMock.mockReturnValueOnce(
-      Effect.fail(
-        new ContentRuntimeMissingError({
-          request: {
-            appLocale: input.appLocale,
-            delivery: "public",
-            publicPath: input.publicPath,
+  it.effect(
+    "omits immutable Git provenance for a forward rollback release",
+    () =>
+      Effect.gen(function* () {
+        const rollback: FoundFixture = {
+          ...found,
+          release: {
+            manifest: {
+              origin: {
+                kind: "rollback",
+                releaseId: found.activeReleaseId,
+              },
+            },
           },
-        })
-      )
-    );
+        };
+        readPublicContentMock.mockReturnValue(Effect.succeed(rollback));
 
-    await expect(
-      Effect.runPromise(readPublishedContent(input).pipe(Effect.flip))
-    ).resolves.toMatchObject({
-      _tag: "ContentRuntimeMissingError",
-      request: {
-        appLocale: input.appLocale,
-        publicPath: input.publicPath,
-      },
-    });
-
-    readPublicContentMock.mockReturnValueOnce(
-      Effect.fail({ _tag: "ContentRuntimeVerificationError" })
-    );
-
-    await expect(
-      Effect.runPromise(readPublishedContent(input).pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "ContentRuntimeVerificationError" });
-  });
-
-  it("fails closed when the selected runtime has no private credential", async () => {
-    runtimeKeysMock.mockImplementation(() => {
-      throw new Error("missing runtime token");
-    });
-
-    await expect(
-      Effect.runPromise(readPublishedContent(input).pipe(Effect.flip))
-    ).resolves.toMatchObject({
-      _tag: "ContentRuntimeConfigurationError",
-      key: "CONTENT_RUNTIME_TOKEN",
-    });
-    expect(contentRuntimeKeys).toHaveBeenCalledOnce();
-    expect(readPublicContent).not.toHaveBeenCalled();
-  });
-
-  it("fails before rendering when activation changes after ownership", async () => {
-    readPublicContentMock.mockReturnValue(
-      Effect.succeed({
-        ...found,
-        activeReleaseId: ReleaseIdSchema.make("release-next"),
+        expect(yield* readPublishedContent(input)).toMatchObject({
+          sourceRevision: null,
+        });
       })
-    );
+  );
 
-    await expect(
-      Effect.runPromise(readPublishedContent(input).pipe(Effect.flip))
-    ).resolves.toMatchObject({
-      _tag: "PublishedReleaseMismatchError",
-      actualReleaseId: "release-next",
-      expectedReleaseId: found.activeReleaseId,
-    });
-  });
+  it.effect(
+    "reads the signed current publication without a prior release lookup",
+    () =>
+      Effect.gen(function* () {
+        const next = {
+          ...found,
+          activeReleaseId: ReleaseIdSchema.make("release-next"),
+        };
+        readPublicContentMock.mockReturnValue(Effect.succeed(next));
+
+        expect(yield* readCurrentPublishedContent(routeInput)).toMatchObject({
+          activeReleaseId: next.activeReleaseId,
+        });
+      })
+  );
+
+  it.effect("preserves signed-read and live-renderer failures", () =>
+    Effect.gen(function* () {
+      readPublicContentMock.mockReturnValueOnce(
+        Effect.fail(
+          new ContentRuntimeMissingError({
+            request: {
+              appLocale: input.appLocale,
+              delivery: "public",
+              publicPath: input.publicPath,
+            },
+          })
+        )
+      );
+
+      expect(
+        yield* readPublishedContent(input).pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "ContentRuntimeMissingError",
+        request: {
+          appLocale: input.appLocale,
+          publicPath: input.publicPath,
+        },
+      });
+
+      readPublicContentMock.mockReturnValueOnce(
+        Effect.fail({ _tag: "ContentRuntimeVerificationError" })
+      );
+
+      expect(
+        yield* readPublishedContent(input).pipe(Effect.flip)
+      ).toMatchObject({ _tag: "ContentRuntimeVerificationError" });
+    })
+  );
+
+  it.effect(
+    "fails closed when the selected runtime has no private credential",
+    () =>
+      Effect.gen(function* () {
+        runtimeKeysMock.mockImplementation(() => {
+          throw new Error("missing runtime token");
+        });
+
+        expect(
+          yield* readPublishedContent(input).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "ContentRuntimeConfigurationError",
+          key: "CONTENT_RUNTIME_TOKEN",
+        });
+        expect(contentRuntimeKeys).toHaveBeenCalledOnce();
+        expect(readPublicContent).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "fails before rendering when activation changes after ownership",
+    () =>
+      Effect.gen(function* () {
+        readPublicContentMock.mockReturnValue(
+          Effect.succeed({
+            ...found,
+            activeReleaseId: ReleaseIdSchema.make("release-next"),
+          })
+        );
+
+        expect(
+          yield* readPublishedContent(input).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "PublishedReleaseMismatchError",
+          actualReleaseId: "release-next",
+          expectedReleaseId: found.activeReleaseId,
+        });
+      })
+  );
 });
