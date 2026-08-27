@@ -11,7 +11,6 @@ import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
   PUBLIC_CONTENT_RUNTIME_PATH,
-  TRANSITION_PUBLIC_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -28,7 +27,6 @@ import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime/values";
 import { Effect } from "effect";
 
 const RUNTIME_TOKEN = "technical-runtime-token";
-const OBSERVATION_ID = "runtime-transition-test";
 const runtimeTokenName = "CONTENT_RUNTIME_TOKEN";
 const polarName = "POLAR_WEBHOOK_SECRET";
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
@@ -79,89 +77,51 @@ afterEach(() => {
   delete process.env[polarName];
 });
 describe("public content runtime HTTP route", () => {
-  it("serves one current contract on canonical and transition paths", async () => {
+  it("returns the current publication contract on the canonical path", async () => {
     const t = createConvexTestWithBetterAuth();
     await seedRuntime(t, "public");
-    await t.mutation(internal.contentRelease.predecessor.internal.arm, {
-      observationId: OBSERVATION_ID,
-    });
 
-    const responses = await Promise.all(
-      [PUBLIC_CONTENT_RUNTIME_PATH, TRANSITION_PUBLIC_CONTENT_RUNTIME_PATH].map(
-        (path) => post(t, publicRuntimeRequest(), undefined, path)
-      )
-    );
-    const bodies = await Promise.all(
-      responses.map((response) => response.json())
-    );
+    const response = await post(t, publicRuntimeRequest());
+    const body = await response.json();
 
-    expect(responses.map(({ status }) => status)).toEqual([200, 200]);
-    expect(bodies[0]).toEqual(bodies[1]);
-    expect(bodies[0].projection.metadata).toHaveProperty("datePublished");
-    expect(bodies[0].projection.metadata).not.toHaveProperty("date");
-    await expect(
-      t.query(internal.contentRelease.predecessor.internal.status, {
-        observationId: OBSERVATION_ID,
-      })
-    ).resolves.toMatchObject({
-      routes: { singular: { invocationCount: 0 } },
-    });
-    responses.forEach(expectPrivate);
+    expect(response.status).toBe(200);
+    expect(body.projection.metadata).toHaveProperty("datePublished");
+    expect(body.projection.metadata).not.toHaveProperty("date");
+    expectPrivate(response);
   });
 
-  it("authenticates both paths before consuming request bodies", async () => {
+  it("authenticates before consuming a request body", async () => {
     const t = createConvexTestWithBetterAuth();
-    await seedRuntime(t, "public");
-    await t.mutation(internal.contentRelease.predecessor.internal.arm, {
-      observationId: OBSERVATION_ID,
-    });
     let pulls = 0;
-    const responses = await Promise.all(
-      [PUBLIC_CONTENT_RUNTIME_PATH, TRANSITION_PUBLIC_CONTENT_RUNTIME_PATH].map(
-        (path) => {
-          const body = new ReadableStream<Uint8Array>(
-            {
-              /** Records any attempt to consume a request before authentication. */
-              pull(controller) {
-                pulls += 1;
-                controller.error(new Error("Unauthorized body was consumed."));
-              },
-            },
-            { highWaterMark: 0 }
-          );
-          const request = {
-            body,
-            duplex: "half",
-            headers: {
-              "content-type": "application/json",
-              "x-nakafa-content-token": "wrong-token",
-            },
-            method: "POST",
-          } satisfies RequestInit & {
-            readonly duplex: "half";
-          };
-          return t.fetch(path, request);
-        }
-      )
+    const body = new ReadableStream<Uint8Array>(
+      {
+        /** Records any attempt to consume a request before authentication. */
+        pull(controller) {
+          pulls += 1;
+          controller.error(new Error("Unauthorized body was consumed."));
+        },
+      },
+      { highWaterMark: 0 }
     );
-    expect(responses.map(({ status }) => status)).toEqual([401, 401]);
-    await Promise.all(
-      responses.map((response) =>
-        expect(response.json()).resolves.toEqual({
-          code: "CONTENT_RUNTIME_UNAUTHORIZED",
-          kind: "failure",
-        })
-      )
-    );
-    expect(pulls).toBe(0);
-    await expect(
-      t.query(internal.contentRelease.predecessor.internal.status, {
-        observationId: OBSERVATION_ID,
-      })
-    ).resolves.toMatchObject({
-      routes: { singular: { invocationCount: 0 } },
+    const request = {
+      body,
+      duplex: "half",
+      headers: {
+        "content-type": "application/json",
+        "x-nakafa-content-token": "wrong-token",
+      },
+      method: "POST",
+    } satisfies RequestInit & {
+      readonly duplex: "half";
+    };
+    const response = await t.fetch(PUBLIC_CONTENT_RUNTIME_PATH, request);
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      code: "CONTENT_RUNTIME_UNAUTHORIZED",
+      kind: "failure",
     });
-    responses.forEach(expectPrivate);
+    expect(pulls).toBe(0);
+    expectPrivate(response);
   });
   it.each([
     ["{", { "content-type": "application/json" }, 400],
@@ -252,7 +212,7 @@ describe("public content runtime HTTP route", () => {
         })
       );
       if (!row) {
-        return expect.fail("Expected one public runtime row.");
+        throw new Error("Expected one public runtime row.");
       }
       const request = yield* decodePublicContentRuntimeRequest(
         JSON.parse(publicRuntimeRequest())
@@ -299,7 +259,7 @@ describe("public content runtime HTTP route", () => {
     await corrupt.mutation(async (ctx) => {
       const head = await ctx.db.query("contentHeads").unique();
       if (!head) {
-        return expect.fail("Expected a corruptible runtime head.");
+        throw new Error("Expected a corruptible runtime head.");
       }
       await ctx.db.patch("contentHeads", head._id, {
         projectionHash: `sha256:${"f".repeat(64)}`,

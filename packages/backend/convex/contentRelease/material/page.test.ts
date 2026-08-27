@@ -19,14 +19,7 @@ describe("contentRelease/material/page", () => {
     await expect(
       t.query((ctx) =>
         runConvexProgram(
-          readMaterialPage(
-            ctx,
-            "en",
-            null,
-            null,
-            { cursor: null, numItems: 2 },
-            "publication"
-          )
+          readMaterialPage(ctx, "en", null, null, { cursor: null, numItems: 2 })
         )
       )
     ).resolves.toMatchObject({
@@ -41,14 +34,7 @@ describe("contentRelease/material/page", () => {
     await activateMaterialCatalog(t);
     const first = await t.query((ctx) =>
       runConvexProgram(
-        readMaterialPage(
-          ctx,
-          "en",
-          null,
-          null,
-          { cursor: null, numItems: 1 },
-          "publication"
-        )
+        readMaterialPage(ctx, "en", null, null, { cursor: null, numItems: 1 })
       )
     );
 
@@ -71,8 +57,7 @@ describe("contentRelease/material/page", () => {
             {
               cursor: first.result.continueCursor,
               numItems: 1,
-            },
-            "publication"
+            }
           )
         )
       )
@@ -88,28 +73,17 @@ describe("contentRelease/material/page", () => {
     await activateMaterialCatalog(t);
     const first = await t.query((ctx) =>
       runConvexProgram(
-        readMaterialPage(
-          ctx,
-          "en",
-          null,
-          null,
-          { cursor: null, numItems: 1 },
-          "publication"
-        )
+        readMaterialPage(ctx, "en", null, null, { cursor: null, numItems: 1 })
       )
     );
 
     await expect(
       t.query((ctx) =>
         runConvexProgram(
-          readMaterialPage(
-            ctx,
-            "en",
-            "stale",
-            "stale",
-            { cursor: first.result.continueCursor, numItems: 1 },
-            "publication"
-          )
+          readMaterialPage(ctx, "en", "stale", "stale", {
+            cursor: first.result.continueCursor,
+            numItems: 1,
+          })
         )
       )
     ).resolves.toMatchObject({
@@ -136,14 +110,10 @@ describe("contentRelease/material/page", () => {
     await expect(
       t.query((ctx) =>
         runConvexProgram(
-          readMaterialPage(
-            ctx,
-            removed.appLocale,
-            null,
-            null,
-            { cursor: null, numItems: 2 },
-            "publication"
-          )
+          readMaterialPage(ctx, removed.appLocale, null, null, {
+            cursor: null,
+            numItems: 2,
+          })
         )
       )
     ).rejects.toMatchObject({
@@ -157,14 +127,11 @@ describe("contentRelease/material/page", () => {
     await expect(
       t.query((ctx) =>
         runConvexProgram(
-          readMaterialPage(
-            ctx,
-            "en",
-            null,
-            null,
-            { cursor: null, endCursor: "caller-owned", numItems: 1 },
-            "publication"
-          )
+          readMaterialPage(ctx, "en", null, null, {
+            cursor: null,
+            endCursor: "caller-owned",
+            numItems: 1,
+          })
         )
       )
     ).rejects.toMatchObject({

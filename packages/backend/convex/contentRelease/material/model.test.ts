@@ -28,7 +28,7 @@ describe("contentRelease/material/model", () => {
     await expect(
       target.query((ctx) =>
         runConvexProgram(
-          readMaterialModel(ctx, "en", "subjects/test/missing", "publication")
+          readMaterialModel(ctx, "en", "subjects/test/missing")
         )
       )
     ).rejects.toMatchObject({
@@ -46,8 +46,7 @@ describe("contentRelease/material/model", () => {
         readMaterialModel(
           ctx,
           requested.appLocale,
-          requested.publicPath,
-          "publication"
+          requested.publicPath
         )
       )
     );
@@ -101,8 +100,7 @@ describe("contentRelease/material/model", () => {
           readMaterialModel(
             ctx,
             requested.appLocale,
-            requested.publicPath,
-            "publication"
+            requested.publicPath
           )
         )
       )
@@ -118,7 +116,7 @@ describe("contentRelease/material/model", () => {
     await expect(
       target.query((ctx) =>
         runConvexProgram(
-          readMaterialModel(ctx, "en", "subjects/test/missing", "publication")
+          readMaterialModel(ctx, "en", "subjects/test/missing")
         )
       )
     ).resolves.toMatchObject({
@@ -138,8 +136,7 @@ describe("contentRelease/material/model", () => {
           readMaterialModel(
             ctx,
             projection.appLocale,
-            projection.publicPath,
-            "publication"
+            projection.publicPath
           )
         )
       )
@@ -175,8 +172,7 @@ describe("contentRelease/material/model", () => {
           readMaterialModel(
             ctx,
             requested.appLocale,
-            requested.publicPath,
-            "publication"
+            requested.publicPath
           )
         )
       )
@@ -207,8 +203,7 @@ describe("contentRelease/material/model", () => {
           readMaterialModel(
             ctx,
             requested.appLocale,
-            requested.publicPath,
-            "publication"
+            requested.publicPath
           )
         )
       )
@@ -239,8 +234,7 @@ describe("contentRelease/material/model", () => {
           readMaterialModel(
             ctx,
             requested.appLocale,
-            requested.publicPath,
-            "publication"
+            requested.publicPath
           )
         )
       )
@@ -284,8 +278,7 @@ describe("contentRelease/material/model", () => {
           readMaterialModel(
             ctx,
             requested.appLocale,
-            requested.publicPath,
-            "publication"
+            requested.publicPath
           )
         )
       )
