@@ -56,7 +56,6 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
     categoryTitle: projection.categoryTitle,
     contentKey: head.contentKey,
     ...dates,
-    date: dates.datePublished,
     projectionHash: head.projectionHash,
     publicPath: projection.publicPath,
     releaseId: head.releaseId,

@@ -140,6 +140,9 @@ import type * as contentRelease_article_agent from "../contentRelease/article/ag
 import type * as contentRelease_article_bucket from "../contentRelease/article/bucket.js";
 import type * as contentRelease_article_category from "../contentRelease/article/category.js";
 import type * as contentRelease_article_cursor from "../contentRelease/article/cursor.js";
+import type * as contentRelease_article_cutover_internal from "../contentRelease/article/cutover/internal.js";
+import type * as contentRelease_article_cutover_model from "../contentRelease/article/cutover/model.js";
+import type * as contentRelease_article_cutover_spec from "../contentRelease/article/cutover/spec.js";
 import type * as contentRelease_article_dates from "../contentRelease/article/dates.js";
 import type * as contentRelease_article_discovery from "../contentRelease/article/discovery.js";
 import type * as contentRelease_article_internal from "../contentRelease/article/internal.js";
@@ -730,6 +733,9 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/article/bucket": typeof contentRelease_article_bucket;
   "contentRelease/article/category": typeof contentRelease_article_category;
   "contentRelease/article/cursor": typeof contentRelease_article_cursor;
+  "contentRelease/article/cutover/internal": typeof contentRelease_article_cutover_internal;
+  "contentRelease/article/cutover/model": typeof contentRelease_article_cutover_model;
+  "contentRelease/article/cutover/spec": typeof contentRelease_article_cutover_spec;
   "contentRelease/article/dates": typeof contentRelease_article_dates;
   "contentRelease/article/discovery": typeof contentRelease_article_discovery;
   "contentRelease/article/internal": typeof contentRelease_article_internal;

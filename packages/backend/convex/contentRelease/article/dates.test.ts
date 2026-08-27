@@ -18,6 +18,12 @@ describe("contentRelease/article/dates", () => {
     await expect(Effect.runPromise(readArticleDates(row))).resolves.toEqual({
       datePublished: row.datePublished,
     });
+    const { date: _date, ...current } = row;
+    await expect(Effect.runPromise(readArticleDates(current))).resolves.toEqual(
+      {
+        datePublished: row.datePublished,
+      }
+    );
     await expect(
       Effect.runPromise(readArticleDates({ ...row, date: "2020-01-01" }))
     ).rejects.toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });

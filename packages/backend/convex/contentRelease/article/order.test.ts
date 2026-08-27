@@ -15,12 +15,32 @@ import { convexTest } from "convex-test";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
+/** Preserves the worst-case duplicate-index bridge fixture after current writes. */
+async function insertTransitionArticles(
+  ctx: Parameters<typeof insertRuntimeArticles>[0],
+  count: number,
+  projectionAt: Parameters<
+    typeof insertRuntimeArticles
+  >[2] = testArticleProjection
+) {
+  await insertRuntimeArticles(ctx, count, projectionAt);
+  const rows = await ctx.db.query("articleCatalog").collect();
+  for (const row of rows) {
+    if (!("datePublished" in row)) {
+      throw new Error("Expected one current article date shape.");
+    }
+    await ctx.db.patch("articleCatalog", row._id, {
+      date: row.datePublished,
+    });
+  }
+}
+
 describe("contentRelease/article/order", () => {
   it("returns one full page without a false split boundary", async () => {
     const t = convexTest(schema, convexModules);
     const articleCount = PROJECTION_PAGE_LIMIT + 2;
     await t.mutation((ctx) =>
-      insertRuntimeArticles(ctx, articleCount, (index) =>
+      insertTransitionArticles(ctx, articleCount, (index) =>
         testArticleProjection(index, "2026-07-23")
       )
     );
@@ -77,7 +97,7 @@ describe("contentRelease/article/order", () => {
 
   it("bounds merged lookahead by physical rows and bytes", async () => {
     const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) => insertRuntimeArticles(ctx, 3));
+    await t.mutation((ctx) => insertTransitionArticles(ctx, 3));
 
     const rowBound = await t.query(async (ctx) => {
       const result = await Effect.runPromise(

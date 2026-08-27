@@ -84,11 +84,11 @@ describe("contentRelease/article/write", () => {
     expect(rows[0]).toMatchObject({
       assetId: TEST_ARTICLE_PROJECTION.graph.assetId,
       categoryTitle: "Public Affairs",
-      date: TEST_ARTICLE_PROJECTION.metadata.datePublished,
       dateModified: "2026-07-24",
       datePublished: TEST_ARTICLE_PROJECTION.metadata.datePublished,
       sequence: 2,
     });
+    expect(rows[0]).not.toHaveProperty("date");
     expect(stored.categories).toHaveLength(1);
     expect(stored.categories[0]).toMatchObject({
       bucket: "444",
@@ -149,12 +149,15 @@ describe("contentRelease/article/write", () => {
     ).resolves.toMatchObject({
       articles: [
         {
-          date: TEST_ARTICLE_PROJECTION.metadata.datePublished,
           datePublished: TEST_ARTICLE_PROJECTION.metadata.datePublished,
         },
       ],
       categories: [{ category: "politics" }],
     });
+    const [article] = await t.run((ctx) =>
+      ctx.db.query("articleCatalog").take(1)
+    );
+    expect(article).not.toHaveProperty("date");
     await t.mutation((ctx) =>
       runConvexProgram(
         deleteArticle(
