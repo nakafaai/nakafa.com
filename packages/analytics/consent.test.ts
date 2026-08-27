@@ -1,3 +1,4 @@
+import { it as effectIt } from "@effect/vitest";
 import {
   ANALYTICS_CONSENT_NOTICE_VERSION,
   AnonymousAnalyticsConsentRecordSchema,
@@ -9,8 +10,8 @@ import {
   hasBrowserPrivacySignal,
   resolveAnalyticsConsentState,
 } from "@repo/analytics/consent";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, Option, Schema } from "effect";
+import { describe, expect, it } from "vitest";
 
 const grantedAnonymousConsent = Schema.decodeSync(
   AnonymousAnalyticsConsentRecordSchema
@@ -37,7 +38,7 @@ const retainedAnonymousDenial = Schema.decodeSync(
 });
 
 describe("analytics consent contract", () => {
-  it.effect("round-trips the current anonymous consent record", () =>
+  effectIt.effect("round-trips the current anonymous consent record", () =>
     Effect.gen(function* () {
       const encoded = yield* encodeAnonymousAnalyticsConsent(
         grantedAnonymousConsent
