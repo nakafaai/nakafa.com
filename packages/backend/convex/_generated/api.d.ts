@@ -263,7 +263,6 @@ import type * as contentRelease_proof_workflow from "../contentRelease/proof/wor
 import type * as contentRelease_quran from "../contentRelease/quran.js";
 import type * as contentRelease_quran_attribution from "../contentRelease/quran/attribution.js";
 import type * as contentRelease_quran_bismillah from "../contentRelease/quran/bismillah.js";
-import type * as contentRelease_quran_bridge from "../contentRelease/quran/bridge.js";
 import type * as contentRelease_quran_catalog from "../contentRelease/quran/catalog.js";
 import type * as contentRelease_quran_chunks from "../contentRelease/quran/chunks.js";
 import type * as contentRelease_quran_document from "../contentRelease/quran/document.js";
@@ -274,7 +273,6 @@ import type * as contentRelease_quran_limits from "../contentRelease/quran/limit
 import type * as contentRelease_quran_markdown from "../contentRelease/quran/markdown.js";
 import type * as contentRelease_quran_owner from "../contentRelease/quran/owner.js";
 import type * as contentRelease_quran_reference from "../contentRelease/quran/reference.js";
-import type * as contentRelease_quran_rollback from "../contentRelease/quran/rollback.js";
 import type * as contentRelease_quran_row from "../contentRelease/quran/row.js";
 import type * as contentRelease_quran_sources from "../contentRelease/quran/sources.js";
 import type * as contentRelease_quran_spec from "../contentRelease/quran/spec.js";
@@ -856,7 +854,6 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/quran": typeof contentRelease_quran;
   "contentRelease/quran/attribution": typeof contentRelease_quran_attribution;
   "contentRelease/quran/bismillah": typeof contentRelease_quran_bismillah;
-  "contentRelease/quran/bridge": typeof contentRelease_quran_bridge;
   "contentRelease/quran/catalog": typeof contentRelease_quran_catalog;
   "contentRelease/quran/chunks": typeof contentRelease_quran_chunks;
   "contentRelease/quran/document": typeof contentRelease_quran_document;
@@ -867,7 +864,6 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/quran/markdown": typeof contentRelease_quran_markdown;
   "contentRelease/quran/owner": typeof contentRelease_quran_owner;
   "contentRelease/quran/reference": typeof contentRelease_quran_reference;
-  "contentRelease/quran/rollback": typeof contentRelease_quran_rollback;
   "contentRelease/quran/row": typeof contentRelease_quran_row;
   "contentRelease/quran/sources": typeof contentRelease_quran_sources;
   "contentRelease/quran/spec": typeof contentRelease_quran_spec;
