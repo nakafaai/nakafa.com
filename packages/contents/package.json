@@ -21,6 +21,7 @@
     "unified": "11.0.5"
   },
   "devDependencies": {
+    "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/mdast": "4.0.4",
