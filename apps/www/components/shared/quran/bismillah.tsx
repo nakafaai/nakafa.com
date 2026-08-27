@@ -1,11 +1,16 @@
 import type { QuranViewBismillah } from "@repo/backend/client/quran/view";
 import { QuranText } from "@/components/shared/quran/text";
+import { QuranTranslation } from "@/components/shared/quran/verses/translation";
 
 /** Restores the established Bismillah presentation before numbered verses. */
 export function QuranBismillah({
   bismillah,
+  subjectLabel,
+  translationNotesLabel,
 }: {
   bismillah: QuranViewBismillah;
+  subjectLabel: string;
+  translationNotesLabel: string;
 }) {
   return (
     <div
@@ -13,9 +18,13 @@ export function QuranBismillah({
       data-quran-bismillah
     >
       <QuranText>{bismillah.arabic}</QuranText>
-      <p className="text-pretty text-muted-foreground text-sm italic leading-relaxed">
-        {bismillah.translation}
-      </p>
+      <QuranTranslation
+        id="quran-bismillah"
+        label={translationNotesLabel}
+        proseClassName="text-pretty text-muted-foreground text-sm italic leading-relaxed"
+        subjectLabel={subjectLabel}
+        translation={bismillah.translation}
+      />
     </div>
   );
 }

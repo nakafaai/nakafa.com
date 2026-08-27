@@ -181,7 +181,9 @@ const renderQuranMarkdown = Effect.fn("agent.renderQuranMarkdown")(function* (
       : [
           publication.preBismillah.arabic,
           "",
-          `Translation: ${publication.preBismillah.translation}`,
+          ...renderQuranTranslationMarkdown(
+            publication.preBismillah.translation
+          ),
           "",
         ];
   const markdown = yield* decodeAgentOutput(

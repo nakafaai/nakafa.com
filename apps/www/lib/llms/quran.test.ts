@@ -204,6 +204,7 @@ describe("quran llms text", () => {
       expect(secondSurahText).toContain(
         `**${t("translation")}:** Dengan nama Allah Yang Maha Pengasih.`
       );
+      expect(secondSurahText).toContain("- **7.** Catatan Bismillah.");
       expect(secondSurahText).toContain("الٓمٓ");
       expect(secondSurahText.indexOf(BISMILLAH)).toBeLessThan(
         secondSurahText.indexOf(`#### ${t("verse")} 1`)
@@ -397,14 +398,42 @@ function verseFixture(surahNumber: number, number: number) {
 }
 
 /** Returns one reviewed technical Bismillah translation for the test locale. */
-function bismillahTranslation(locale: Locale) {
+function bismillahTranslation(locale: Locale): QuranTranslationDocument {
   if (locale === "en") {
-    return "In the name of Allah, the Most Compassionate.";
+    return {
+      notes: [],
+      segments: [
+        {
+          kind: "text",
+          offset: 0,
+          value: "In the name of Allah, the Most Compassionate.",
+        },
+      ],
+    };
   }
   if (locale === "de") {
-    return "Im Namen Allahs, des Allerbarmers.";
+    return {
+      notes: [],
+      segments: [
+        {
+          kind: "text",
+          offset: 0,
+          value: "Im Namen Allahs, des Allerbarmers.",
+        },
+      ],
+    };
   }
-  return "Dengan nama Allah Yang Maha Pengasih.";
+  return {
+    notes: [{ number: 7, referenceOffset: 41, text: "Catatan Bismillah." }],
+    segments: [
+      {
+        kind: "text",
+        offset: 0,
+        value: "Dengan nama Allah Yang Maha Pengasih.",
+      },
+      { kind: "note", number: 7, offset: 41 },
+    ],
+  };
 }
 
 /** Preserves the distinct Al-Fatihah and Al-Baqarah opening verse fixtures. */

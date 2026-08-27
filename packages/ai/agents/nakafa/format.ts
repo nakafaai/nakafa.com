@@ -87,7 +87,7 @@ export function formatQuran(result: NakafaAgentQuranReference) {
       : `
     ## Bismillah
     - Arabic: ${result.pre_bismillah.arabic}
-    - Translation: ${result.pre_bismillah.translation}`;
+    ${formatQuranTranslation(result.pre_bismillah.translation)}`;
   const tafsirAccess =
     result.tafsir_access === null
       ? `## Tafsir access

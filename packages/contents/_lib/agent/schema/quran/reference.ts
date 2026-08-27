@@ -33,8 +33,9 @@ export const NakafaQuranBismillahSchema = Schema.Struct({
   arabic: Schema.String.annotate({
     description: "Exact signed Arabic Bismillah text.",
   }),
-  translation: Schema.String.annotate({
-    description: "Reviewed locale translation of the Bismillah.",
+  translation: NakafaQuranTranslationDocumentSchema.annotate({
+    description:
+      "Reviewed locale translation of the Bismillah with exact source notes.",
   }),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 

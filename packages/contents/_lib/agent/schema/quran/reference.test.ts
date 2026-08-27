@@ -106,12 +106,26 @@ function reference(appLocale: AppLocaleCode, tafsir_access: unknown) {
 describe("NakafaAgentQuranReferenceSchema", () => {
   it("accepts explicit English meaning and external tafsir access", () => {
     const decoded = Schema.decodeUnknownSync(NakafaAgentQuranReferenceSchema)(
-      reference("en", {
-        kind: "external",
-        locale: "en",
-        notice: "Read the official linked English edition.",
-        source: externalSource("mokhtasar-english"),
-      }),
+      {
+        ...reference("en", {
+          kind: "external",
+          locale: "en",
+          notice: "Read the official linked English edition.",
+          source: externalSource("mokhtasar-english"),
+        }),
+        pre_bismillah: {
+          arabic: "بِسْمِ اللّٰهِ",
+          translation: {
+            notes: [
+              { number: 9, referenceOffset: 21, text: "Exact source note." },
+            ],
+            segments: [
+              { kind: "text", offset: 0, value: "In the name of Allah." },
+              { kind: "note", number: 9, offset: 21 },
+            ],
+          },
+        },
+      },
       { onExcessProperty: "error" }
     );
 
@@ -124,6 +138,7 @@ describe("NakafaAgentQuranReferenceSchema", () => {
       number: 4,
       offset: 19,
     });
+    expect(decoded.pre_bismillah?.translation.notes[0]?.number).toBe(9);
   });
 
   it("accepts Indonesian embedded and German external tafsir identities", () => {

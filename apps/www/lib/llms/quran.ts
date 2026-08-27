@@ -1,3 +1,4 @@
+import type { QuranTranslationDocument } from "@nakafa/aksara-contracts/quran/notes";
 import { QuranSurahNumberSchema } from "@nakafa/aksara-contracts/quran/spec";
 import { projectQuranTranslation } from "@repo/backend/client/quran/notes";
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
@@ -219,7 +220,11 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
     scanned.push(markdown.preBismillah.arabic);
     scanned.push("");
     scanned.push(
-      `**${t("translation")}:** ${markdown.preBismillah.translation}`
+      ...renderQuranTranslation(
+        markdown.preBismillah.translation,
+        t("translation"),
+        t("translation-notes")
+      )
     );
     scanned.push("");
   }
@@ -229,17 +234,13 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
     scanned.push("");
     scanned.push(verse.arabic);
     scanned.push("");
-    const translated = projectQuranTranslation(verse.translation, (number) =>
-      number.toString()
+    scanned.push(
+      ...renderQuranTranslation(
+        verse.translation,
+        t("translation"),
+        t("translation-notes")
+      )
     );
-    scanned.push(`**${t("translation")}:** ${translated.text}`);
-    if (verse.translation.notes.length > 0) {
-      scanned.push("");
-      scanned.push(`**${t("translation-notes")}:**`);
-      for (const note of verse.translation.notes) {
-        scanned.push(`- **${note.number}.** ${note.text}`);
-      }
-    }
     scanned.push("");
   }
 
@@ -255,3 +256,23 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
 
   return scanned.join("\n");
 });
+
+/** Renders one semantic translation and its localized source-note heading. */
+function renderQuranTranslation(
+  translation: QuranTranslationDocument,
+  translationLabel: string,
+  notesLabel: string
+) {
+  const projected = projectQuranTranslation(translation, (number) =>
+    number.toString()
+  );
+  if (projected.notes.length === 0) {
+    return [`**${translationLabel}:** ${projected.text}`];
+  }
+  return [
+    `**${translationLabel}:** ${projected.text}`,
+    "",
+    `**${notesLabel}:**`,
+    ...projected.notes.map((note) => `- **${note.number}.** ${note.text}`),
+  ];
+}

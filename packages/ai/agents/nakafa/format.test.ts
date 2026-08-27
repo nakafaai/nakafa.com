@@ -78,7 +78,23 @@ describe("Nakafa formatter", () => {
       ...reference,
       pre_bismillah: {
         arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
-        translation: "Dengan nama Allah Yang Maha Pengasih.",
+        translation: {
+          notes: [
+            {
+              number: 9,
+              referenceOffset: 37,
+              text: "Catatan Bismillah.",
+            },
+          ],
+          segments: [
+            {
+              kind: "text",
+              offset: 0,
+              value: "Dengan nama Allah Yang Maha Pengasih.",
+            },
+            { kind: "note", number: 9, offset: 37 },
+          ],
+        },
       },
       verses: [
         {
@@ -108,6 +124,7 @@ describe("Nakafa formatter", () => {
     expect(text).toContain("## Bismillah");
     expect(text).toContain("بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ");
     expect(text).toContain("Dengan nama Allah Yang Maha Pengasih.");
+    expect(text).toContain("Translation note 9: Catatan Bismillah.");
     expect(text.indexOf("## Bismillah")).toBeLessThan(
       text.indexOf("## Verse 1")
     );

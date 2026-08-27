@@ -2,7 +2,7 @@ import type { QuranViewVerse } from "@repo/backend/client/quran/view";
 import { cn } from "@repo/design-system/lib/utils";
 import type { ReactNode } from "react";
 import { QuranText } from "@/components/shared/quran/text";
-import { QuranVerseTranslation } from "@/components/shared/quran/verses/translation";
+import { QuranTranslation } from "@/components/shared/quran/verses/translation";
 
 interface Props {
   action?: ReactNode;
@@ -49,11 +49,11 @@ export function QuranVerseItem({
         ) : null}
       </div>
       <QuranText data-quran-arabic>{verse.arabic}</QuranText>
-      <QuranVerseTranslation
+      <QuranTranslation
         id={id}
         label={translationNotesLabel}
+        subjectLabel={verseLabel}
         translation={verse.translation}
-        verseLabel={verseLabel}
       />
     </div>
   );

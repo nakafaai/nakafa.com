@@ -57,7 +57,12 @@ describe("nakafa_get_quran_reference", () => {
       });
       expect(reference.pre_bismillah).toEqual({
         arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
-        translation: "In the name of Allah.",
+        translation: {
+          notes: [],
+          segments: [
+            { kind: "text", offset: 0, value: "In the name of Allah." },
+          ],
+        },
       });
       expect(reference.sources).toMatchObject({
         arabic: { id: ARABIC_SOURCE_ID },
@@ -174,7 +179,12 @@ function makeReference() {
     name: "Al-Faatiha",
     pre_bismillah: {
       arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
-      translation: "In the name of Allah.",
+      translation: {
+        notes: [],
+        segments: [
+          { kind: "text" as const, offset: 0, value: "In the name of Allah." },
+        ],
+      },
     },
     revelation: "Meccan",
     sources: {

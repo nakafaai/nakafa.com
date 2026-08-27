@@ -118,7 +118,9 @@ export const readQuranMarkdown = Effect.fn("NakafaQuran.readMarkdown")(
         : [
             publication.preBismillah.arabic,
             "",
-            `Translation: ${publication.preBismillah.translation}`,
+            ...renderQuranTranslationMarkdown(
+              publication.preBismillah.translation
+            ),
             "",
           ];
     const markdown = yield* decodeNakafaMarkdown({
