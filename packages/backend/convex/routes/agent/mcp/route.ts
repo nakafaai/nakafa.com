@@ -10,10 +10,6 @@ import {
   withMcpResponseHeaders,
 } from "@repo/backend/convex/routes/agent/mcp/response";
 import {
-  NAKAFA_MCP_SERVER_NAME,
-  NAKAFA_MCP_SERVER_VERSION,
-} from "@repo/contents/_lib/agent/constants";
-import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,
 } from "@repo/contents/_lib/agent/errors";
@@ -27,24 +23,6 @@ type AgentApp = HonoWithConvex<ActionCtx, { requestId: string }>;
 export function registerAgentMcpRoutes(app: AgentApp) {
   const mcp: AgentApp = new Hono();
   mcp.use("*", guardMcpOrigin);
-  mcp.get("/health", (context) =>
-    withMcpResponseHeaders(
-      new Response(
-        JSON.stringify({
-          server: {
-            name: NAKAFA_MCP_SERVER_NAME,
-            version: NAKAFA_MCP_SERVER_VERSION,
-          },
-          status: "healthy",
-          timestamp: new Date().toISOString(),
-        }),
-        {
-          headers: { "Content-Type": "application/json; charset=utf-8" },
-        }
-      ),
-      context.req.raw
-    )
-  );
   mcp.all("/", async (context) => {
     const request = context.req.raw;
     const requestId = context.get("requestId");

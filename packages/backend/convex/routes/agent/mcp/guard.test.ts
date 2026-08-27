@@ -3,10 +3,6 @@
 import { NAKAFA_MCP_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
-  NAKAFA_MCP_SERVER_NAME,
-  NAKAFA_MCP_SERVER_VERSION,
-} from "@repo/contents/_lib/agent/constants";
-import {
   afterEach,
   beforeEach,
   describe,
@@ -49,32 +45,39 @@ describe("Nakafa MCP origin guard", () => {
 
   it("accepts exact configured and owned browser Origins", async () => {
     const [configured, owned] = await Promise.all([
-      fetchMcp("/health", {
+      fetchMcp("", {
         headers: { origin: "https://agent.example.com" },
+        method: "OPTIONS",
       }),
-      fetchMcp("/health", { headers: { origin: "https://nakafa.com" } }),
+      fetchMcp("", {
+        headers: { origin: "https://nakafa.com" },
+        method: "OPTIONS",
+      }),
     ]);
 
-    expect(configured.status).toBe(200);
+    expect(configured.status).toBe(204);
     expect(configured.headers.get("access-control-allow-origin")).toBe(
       "https://agent.example.com"
     );
     expect(configured.headers.get("access-control-allow-credentials")).toBe(
       "true"
     );
-    expect(owned.status).toBe(200);
+    expect(owned.status).toBe(204);
   });
 
   it("rejects untrusted Origins and malformed origin configuration", async () => {
-    const untrusted = await fetchMcp("/health", {
+    const untrusted = await fetchMcp("", {
       headers: { origin: "https://evil.example.com" },
+      method: "OPTIONS",
     });
-    const loopback = await fetchMcp("/health", {
+    const loopback = await fetchMcp("", {
       headers: { origin: "http://localhost:3000" },
+      method: "OPTIONS",
     });
     vi.stubEnv(ORIGINS_ENVIRONMENT, "https://agent.example.com/path");
-    const malformed = await fetchMcp("/health", {
+    const malformed = await fetchMcp("", {
       headers: { origin: "https://agent.example.com" },
+      method: "OPTIONS",
     });
 
     expect(untrusted.status).toBe(403);
@@ -109,20 +112,5 @@ describe("Nakafa MCP origin guard", () => {
       "MCP-Protocol-Version,MCP-Session-ID,Retry-After"
     );
     expect(response.headers.get("cache-control")).toBe("no-store");
-  });
-
-  it("preserves the stable health identity without runtime metadata", async () => {
-    const response = await fetchMcp("/health");
-
-    expect(response.status).toBe(200);
-    expect(response.headers.get("cache-control")).toBe("no-store");
-    await expect(response.json()).resolves.toMatchObject({
-      server: {
-        name: NAKAFA_MCP_SERVER_NAME,
-        version: NAKAFA_MCP_SERVER_VERSION,
-      },
-      status: "healthy",
-      timestamp: expect.any(String),
-    });
   });
 });

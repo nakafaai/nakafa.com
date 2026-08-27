@@ -18,7 +18,6 @@
     "@repo/contents": "workspace:*",
     "@repo/next-config": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "effect": "catalog:",
     "next": "16.3.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
@@ -31,6 +30,7 @@
     "@vercel/config": "^0.6.1",
     "@vitest/coverage-istanbul": "^4.1.11",
     "@vitest/ui": "^4.1.11",
+    "effect": "catalog:",
     "typescript": "7.0.2",
     "vitest": "^4.1.11"
   }
