@@ -59,12 +59,17 @@ describe("bounded response body", () => {
   );
   it.effect("rejects missing and unreadable bodies", () =>
     Effect.gen(function* () {
-      const locked = new ReadableStream<Uint8Array>();
-      locked.getReader();
+      const unreadable = new ReadableStream<Uint8Array>();
+      Object.defineProperty(unreadable, "getReader", {
+        /** Simulates an acquisition race after the stream appeared unlocked. */
+        value() {
+          throw new TypeError("reader unavailable");
+        },
+      });
       expect(yield* reject(null)).toMatchObject({
         _tag: "BodyMissingError",
       });
-      expect(yield* reject(locked)).toMatchObject({
+      expect(yield* reject(unreadable)).toMatchObject({
         _tag: "BodyReadError",
       });
     })

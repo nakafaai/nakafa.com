@@ -1,4 +1,4 @@
-import { Effect, Schema, Stream } from "effect";
+import { Cause, Effect, Array as EffectArray, Schema, Stream } from "effect";
 
 const DECIMAL_BYTES = /^\d+$/u;
 /** A request or response omitted the readable body required by its contract. */
@@ -46,6 +46,33 @@ interface BoundedBodyState {
   readonly chunks: Uint8Array[];
   readonly totalBytes: number;
 }
+/** Acquires one reader in the typed channel and cancels it when its stream ends. */
+function streamBody(body: ReadableStream<Uint8Array>) {
+  return Stream.fromPull(
+    Effect.acquireRelease(
+      Effect.try({
+        catch: () => new BodyReadError(),
+        try: () => body.getReader(),
+      }),
+      (reader) =>
+        Effect.tryPromise({
+          catch: () => undefined,
+          try: () => reader.cancel(),
+        }).pipe(Effect.ignore)
+    ).pipe(
+      Effect.map((reader) =>
+        Effect.tryPromise({
+          catch: () => new BodyReadError(),
+          try: () => reader.read(),
+        }).pipe(
+          Effect.flatMap(({ done, value }) =>
+            done ? Cause.done() : Effect.succeed(EffectArray.of(value))
+          )
+        )
+      )
+    )
+  ).pipe(Stream.scoped);
+}
 /** Parses an optional decimal Content-Length without unsafe number coercion. */
 export const parseContentLength = Effect.fn("Utilities.parseContentLength")(
   function* (value: string | null, maxBytes: number) {
@@ -71,13 +98,7 @@ export const readBoundedBody = Effect.fn("Utilities.readBoundedBody")(
     if (body === null) {
       return yield* new BodyMissingError();
     }
-    if (body.locked) {
-      return yield* new BodyReadError();
-    }
-    const state = yield* Stream.fromReadableStream({
-      evaluate: () => body,
-      onError: () => new BodyReadError(),
-    }).pipe(
+    const state = yield* streamBody(body).pipe(
       Stream.runFoldEffect(
         (): BoundedBodyState => ({ chunks: [], totalBytes: 0 }),
         (current, chunk) => {
