@@ -1,5 +1,11 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { readQuranAttribution } from "@repo/backend/convex/contentRelease/quran/attribution";
+import {
+  quranDocumentBridgeValidator,
+  quranReferenceBridgeValidator,
+  readQuranDocumentBridge,
+  readQuranReferenceBridge,
+} from "@repo/backend/convex/contentRelease/quran/bridge";
 import { readQuranSurahs } from "@repo/backend/convex/contentRelease/quran/catalog";
 import {
   quranDocumentValidator,
@@ -52,6 +58,17 @@ export const surahs = query({
   args: {},
   returns: surahCatalogValidator,
   handler: (ctx) => runConvexProgram(readQuranSurahs(ctx)),
+});
+
+/**
+ * Temporary PR #390 bridge for the currently deployed private content reader.
+ * Remove after the #390 API deployment serves the canonical surah query.
+ */
+export const document = query({
+  args: { appLocale: quranAppLocaleValidator, surahNumber: v.number() },
+  returns: quranDocumentBridgeValidator,
+  handler: (ctx, { appLocale, surahNumber }) =>
+    runConvexProgram(readQuranDocumentBridge(ctx, appLocale, surahNumber)),
 });
 
 /** Returns one complete signed Quran surah for product and public readers. */
@@ -155,6 +172,16 @@ export const interpretationV2 = query({
         verseNumber
       )
     ),
+});
+
+/**
+ * Temporary PR #390 bridge for the currently deployed agent Quran tool.
+ * Remove after the #390 MCP and API deployments serve the canonical passage.
+ */
+export const reference = query({
+  args: quranReferenceArgsValidator.fields,
+  returns: quranReferenceBridgeValidator,
+  handler: (ctx, args) => runConvexProgram(readQuranReferenceBridge(ctx, args)),
 });
 
 /** Returns one bounded signed Quran passage with semantic provenance. */
