@@ -7,10 +7,12 @@ import { Argument, Command, Flag } from "effect/unstable/cli";
 import {
   ApiBaseSchema,
   type CliRequest,
+  CliRequestSchema,
   PositiveIntegerSchema,
   SearchLimitSchema,
   SearchOffsetSchema,
 } from "#cli/command/spec";
+import { InvocationError } from "#cli/error";
 
 type ExecuteRequest<E, R> = (request: CliRequest) => Effect.Effect<void, E, R>;
 
@@ -50,7 +52,17 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
   const dispatch = (command: CliRequest["command"]) =>
     Effect.gen(function* () {
       const { apiBase, pretty } = yield* root;
-      yield* execute({ apiBase, command, pretty });
+      const request = yield* Schema.decodeEffect(CliRequestSchema, {
+        onExcessProperty: "error",
+      })({ apiBase, command, pretty }).pipe(
+        Effect.mapError(
+          (cause) =>
+            new InvocationError({
+              message: `Invalid command options: ${String(cause)}`,
+            })
+        )
+      );
+      yield* execute(request);
     });
 
   const search = Command.make(

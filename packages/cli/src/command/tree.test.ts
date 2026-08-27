@@ -5,6 +5,7 @@ import { TestConsole } from "effect/testing";
 import { CliError, Command } from "effect/unstable/cli";
 import type { CliRequest } from "#cli/command/spec";
 import { makeCliCommand } from "#cli/command/tree";
+import { InvocationError } from "#cli/error";
 
 function readRequests(argv: readonly string[]) {
   return Effect.gen(function* () {
@@ -143,6 +144,20 @@ describe("Nakafa CLI command tree", () => {
       if (error?._tag === "ShowHelp") {
         expect(error.errors.length).toBeGreaterThan(0);
       }
+    })
+  );
+
+  it.effect.each([
+    ["get", ""],
+    ["get", "   "],
+    ["search", ""],
+    ["search", "   "],
+  ])("rejects empty validated values for %j", (argv) =>
+    Effect.gen(function* () {
+      const error = yield* readFailure(argv);
+
+      expect(error).toBeInstanceOf(InvocationError);
+      expect(error?.message).toContain("Invalid command options");
     })
   );
 });

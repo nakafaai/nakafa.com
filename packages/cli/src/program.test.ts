@@ -120,6 +120,11 @@ describe("Nakafa CLI execution", () => {
         const client = HttpClient.make(() => Effect.die("unexpected request"));
         const empty = yield* execute([], client);
         const help = yield* execute(["--help"], client);
+        const sharedOptionHelp = yield* execute(["--pretty"], client);
+        const sharedValueHelp = yield* execute(
+          ["--api-base", "https://isolated.example.com"],
+          client
+        );
         const version = yield* execute(["--version"], client);
         const mcp = yield* execute(["mcp"], client);
 
@@ -127,6 +132,10 @@ describe("Nakafa CLI execution", () => {
         expect(empty.stdout).toContain("Nakafa CLI");
         expect(help).toMatchObject({ exitCode: 0, stderr: "" });
         expect(help.stdout).toContain("Nakafa CLI");
+        expect(sharedOptionHelp).toMatchObject({ exitCode: 0, stderr: "" });
+        expect(sharedOptionHelp.stdout).toContain("Nakafa CLI");
+        expect(sharedValueHelp).toMatchObject({ exitCode: 0, stderr: "" });
+        expect(sharedValueHelp.stdout).toContain("Nakafa CLI");
         expect(version).toEqual({
           exitCode: 0,
           stderr: "",
@@ -250,6 +259,9 @@ describe("Nakafa CLI execution", () => {
     () =>
       Effect.gen(function* () {
         const invocation = yield* execute(["search"]);
+        const unknown = yield* execute(["unknown"]);
+        const emptyRef = yield* execute(["get", ""]);
+        const emptyQuery = yield* execute(["search", ""]);
         const api = yield* execute(
           ["get", "missing"],
           makeClient(() => Response.json(problem, { status: 404 }))
@@ -302,7 +314,20 @@ describe("Nakafa CLI execution", () => {
         );
 
         expect(invocation.exitCode).toBe(2);
+        expect(invocation.stdout).toBe("");
         expect(yield* decodeJson(invocation.stderr)).toMatchObject({
+          code: "INVOCATION_ERROR",
+        });
+        expect(unknown).toMatchObject({ exitCode: 2, stdout: "" });
+        expect(yield* decodeJson(unknown.stderr)).toMatchObject({
+          code: "INVOCATION_ERROR",
+        });
+        expect(emptyRef).toMatchObject({ exitCode: 2, stdout: "" });
+        expect(yield* decodeJson(emptyRef.stderr)).toMatchObject({
+          code: "INVOCATION_ERROR",
+        });
+        expect(emptyQuery).toMatchObject({ exitCode: 2, stdout: "" });
+        expect(yield* decodeJson(emptyQuery.stderr)).toMatchObject({
           code: "INVOCATION_ERROR",
         });
         expect(api.exitCode).toBe(3);

@@ -2,7 +2,7 @@ import {
   NAKAFA_MCP_PROTOCOL_VERSION,
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
 } from "@repo/contents/_lib/agent/constants";
-import { Effect, Layer } from "effect";
+import { Console, Effect, Layer, MutableRef } from "effect";
 import {
   CliConfig,
   CliError,
@@ -81,14 +81,46 @@ const executeCli = Effect.fn("NakafaCli.execute")(function* (
   options: CliOptions
 ) {
   const command = makeCliCommand((request) => executeRequest(request));
+  const hostConsole = yield* Console.Console;
+  const messages = MutableRef.make<readonly (readonly unknown[])[]>([]);
+  // The native runner always renders help before a ShowHelp failure. Buffer
+  // that output so invocation errors keep stdout empty for machine consumers.
+  const commandConsole: Console.Console = Object.assign(
+    Object.create(hostConsole),
+    {
+      log: (...args: readonly unknown[]) => {
+        MutableRef.update(messages, (current) => [...current, args]);
+      },
+    }
+  );
+  const flushMessages = Effect.suspend(() =>
+    Effect.forEach(
+      MutableRef.get(messages),
+      (message) => Console.log(...message),
+      { discard: true }
+    )
+  );
   yield* Command.runWith(command, {
     renderErrors: false,
     version: options.version,
   })(argv).pipe(
     Effect.provide(cliRuntimeLayer),
-    Effect.catchIf(CliError.isCliError, (error) =>
-      Effect.fail(makeInvocationError(error))
-    )
+    Effect.provideService(Console.Console, commandConsole),
+    Effect.matchEffect({
+      onFailure: (error) => {
+        if (
+          CliError.isCliError(error) &&
+          error._tag === "ShowHelp" &&
+          error.errors.length === 0
+        ) {
+          return flushMessages;
+        }
+        return CliError.isCliError(error)
+          ? Effect.fail(makeInvocationError(error))
+          : Effect.fail(error);
+      },
+      onSuccess: () => flushMessages,
+    })
   );
   return 0;
 });
