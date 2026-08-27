@@ -4,7 +4,7 @@ import { Effect, Ref, Result } from "effect";
 import { TestConsole } from "effect/testing";
 import { CliError, Command } from "effect/unstable/cli";
 import type { CliRequest } from "#cli/command/spec";
-import { makeCliCommand } from "#cli/command/tree";
+import { makeCliCommand, normalizePresenceFlags } from "#cli/command/tree";
 import { InvocationError } from "#cli/error";
 
 function readRequests(argv: readonly string[]) {
@@ -13,7 +13,9 @@ function readRequests(argv: readonly string[]) {
     const command = makeCliCommand((request) =>
       Ref.update(requests, (current) => [...current, request])
     );
-    yield* Command.runWith(command, { version: "0.1.0" })(argv);
+    yield* Command.runWith(command, { version: "0.1.0" })(
+      normalizePresenceFlags(argv)
+    );
     return yield* Ref.get(requests);
   }).pipe(Effect.provide(NodeServices.layer));
 }
@@ -26,6 +28,14 @@ function readFailure(argv: readonly string[]) {
 }
 
 describe("Nakafa CLI command tree", () => {
+  it("preserves operands after the option separator", () => {
+    expect(normalizePresenceFlags(["search", "--", "--pretty"])).toEqual([
+      "search",
+      "--",
+      "--pretty",
+    ]);
+  });
+
   it.effect("renders native help and version without dispatching", () =>
     Effect.gen(function* () {
       expect(yield* readRequests(["--help"])).toEqual([]);
@@ -117,6 +127,28 @@ describe("Nakafa CLI command tree", () => {
     })
   );
 
+  it.effect("keeps operands after presence-only switches", () =>
+    Effect.gen(function* () {
+      expect(yield* readRequests(["quran", "--tafsir", "1"])).toMatchObject([
+        {
+          command: {
+            includeTafsir: true,
+            kind: "quran",
+            surah: 1,
+          },
+        },
+      ]);
+      expect(yield* readRequests(["search", "--pretty", "true"])).toMatchObject(
+        [
+          {
+            command: { kind: "search", query: "true" },
+            pretty: true,
+          },
+        ]
+      );
+    })
+  );
+
   it.effect.each([
     ["unknown"],
     ["search"],
@@ -134,6 +166,15 @@ describe("Nakafa CLI command tree", () => {
     ["--api-base", "not-a-url", "taxonomy"],
     ["--api-base", "https://user@example.com", "taxonomy"],
     ["--api-base", "ftp://api.example.com", "taxonomy"],
+    [
+      "taxonomy",
+      "--api-base",
+      "https://first.example.com",
+      "--api-base",
+      "https://second.example.com",
+    ],
+    ["search", "query", "--locale", "en", "--locale", "de"],
+    ["search", "query", "-p", "--pretty"],
     ["--unknown"],
   ])("rejects %j", (argv) =>
     Effect.gen(function* () {

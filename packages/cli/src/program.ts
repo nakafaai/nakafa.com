@@ -12,7 +12,7 @@ import {
 } from "effect/unstable/cli";
 import { requestNakafaApi } from "#cli/client";
 import type { CliCommand, CliRequest } from "#cli/command/spec";
-import { makeCliCommand } from "#cli/command/tree";
+import { makeCliCommand, normalizePresenceFlags } from "#cli/command/tree";
 import { makeInvocationError } from "#cli/error";
 import { writeJson } from "#cli/output";
 
@@ -103,7 +103,7 @@ const executeCli = Effect.fn("NakafaCli.execute")(function* (
   yield* Command.runWith(command, {
     renderErrors: false,
     version: options.version,
-  })(argv).pipe(
+  })(normalizePresenceFlags(argv)).pipe(
     Effect.provide(cliRuntimeLayer),
     Effect.provideService(Console.Console, commandConsole),
     Effect.matchEffect({
