@@ -14,7 +14,6 @@ import { registerAgentApiRoutes } from "@repo/backend/convex/routes/agent/api";
 import { registerAgentMcpRoutes } from "@repo/backend/convex/routes/agent/mcp/route";
 import { requestId } from "@repo/backend/convex/routes/middleware/requestId";
 import { registerPolarRoutes } from "@repo/backend/convex/routes/polar";
-import v1 from "@repo/backend/convex/routes/v1";
 import {
   type HonoWithConvex,
   HttpRouterWithHono,
@@ -50,10 +49,7 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => {
   return auth.handler(c.req.raw);
 });
 
-// Preserve the deployed predecessor until the protected Vercel bridge switches.
-app.route("/v1", v1);
-
-// Register the protected successor and its machine-readable contract.
+// Register the protected public protocols and their machine-readable contract.
 registerAgentApiRoutes(app);
 registerAgentMcpRoutes(app);
 
