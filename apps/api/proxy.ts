@@ -1,6 +1,6 @@
 import {
   NAKAFA_API_EDGE_CONTRACT,
-  NAKAFA_EDGE_RELEASE_SHA_HEADER,
+  setAgentEdgeReleaseHeader,
   VERCEL_GIT_COMMIT_SHA_ENVIRONMENT,
 } from "@repo/backend/agent/edge";
 import { timingSafeEqual } from "@repo/utilities/security";
@@ -74,10 +74,10 @@ function rewriteAgentApi(request: NextRequest) {
     env[NAKAFA_API_EDGE_CONTRACT.secretEnvironment]
   );
   const response = NextResponse.rewrite(destination, { request: { headers } });
-  const releaseSha = env[VERCEL_GIT_COMMIT_SHA_ENVIRONMENT];
-  if (releaseSha !== undefined) {
-    response.headers.set(NAKAFA_EDGE_RELEASE_SHA_HEADER, releaseSha);
-  }
+  setAgentEdgeReleaseHeader(
+    response.headers,
+    env[VERCEL_GIT_COMMIT_SHA_ENVIRONMENT]
+  );
   return response;
 }
 

@@ -3,6 +3,7 @@ import {
   NAKAFA_EDGE_RELEASE_SHA_HEADER,
   NAKAFA_MCP_EDGE_CONTRACT,
   projectPublicApiPath,
+  setAgentEdgeReleaseHeader,
   VERCEL_GIT_COMMIT_SHA_ENVIRONMENT,
 } from "@repo/backend/agent/edge";
 import { describe, expect, it } from "vitest";
@@ -22,7 +23,18 @@ describe("agent edge contract", () => {
     expect(VERCEL_GIT_COMMIT_SHA_ENVIRONMENT).toBe("VERCEL_GIT_COMMIT_SHA");
   });
 
+  it("attaches only available deployment identity", () => {
+    const headers = new Headers();
+
+    setAgentEdgeReleaseHeader(headers, undefined);
+    expect(headers.get(NAKAFA_EDGE_RELEASE_SHA_HEADER)).toBeNull();
+
+    setAgentEdgeReleaseHeader(headers, "a".repeat(40));
+    expect(headers.get(NAKAFA_EDGE_RELEASE_SHA_HEADER)).toBe("a".repeat(40));
+  });
+
   it.each([
+    ["", "/"],
     ["/openapi.json", "/openapi.json"],
     ["/v1", "/v1"],
     ["/v1/content", "/v1/content"],

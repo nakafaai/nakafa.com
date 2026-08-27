@@ -1,10 +1,11 @@
-import { NAKAFA_EDGE_RELEASE_SHA_HEADER } from "@repo/backend/agent/edge";
+import {
+  NAKAFA_EDGE_RELEASE_SHA_HEADER,
+  NAKAFA_MCP_EDGE_CONTRACT,
+} from "@repo/backend/agent/edge";
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server.js";
 import { NextRequest } from "next/server";
 import { describe, expect, it, vi } from "vitest";
 import { config, proxy } from "@/proxy";
-
-const MCP_EDGE_SECRET_HEADER = "x-nakafa-mcp-edge-secret";
 
 vi.mock("@/env", () => ({
   env: {
@@ -31,7 +32,7 @@ describe("MCP proxy", () => {
         "content-type": "application/json",
         host: "hostile.example.com",
         "mcp-param-region": "eu-central",
-        [MCP_EDGE_SECRET_HEADER]: "hostile-secret",
+        [NAKAFA_MCP_EDGE_CONTRACT.secretHeader]: "hostile-secret",
         "x-forwarded-for": "203.0.113.20",
       },
       method: "POST",
@@ -46,7 +47,9 @@ describe("MCP proxy", () => {
       "b".repeat(40)
     );
     expect(
-      response.headers.get(`x-middleware-request-${MCP_EDGE_SECRET_HEADER}`)
+      response.headers.get(
+        `x-middleware-request-${NAKAFA_MCP_EDGE_CONTRACT.secretHeader}`
+      )
     ).toBe("test-mcp-edge-secret");
     expect(response.headers.get("x-middleware-request-content-type")).toBe(
       "application/json"

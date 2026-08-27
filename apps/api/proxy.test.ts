@@ -1,10 +1,11 @@
-import { NAKAFA_EDGE_RELEASE_SHA_HEADER } from "@repo/backend/agent/edge";
+import {
+  NAKAFA_API_EDGE_CONTRACT,
+  NAKAFA_EDGE_RELEASE_SHA_HEADER,
+} from "@repo/backend/agent/edge";
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server.js";
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
 import { config, proxy } from "@/proxy";
-
-const API_EDGE_SECRET_HEADER = "x-nakafa-api-edge-secret";
 
 function requestProxy(pathname: string, headers?: HeadersInit) {
   return proxy(
@@ -174,7 +175,7 @@ describe("proxy middleware", () => {
         cookie: "session=private",
         host: "hostile.example.com",
         "if-none-match": '"agent-contract"',
-        [API_EDGE_SECRET_HEADER]: "hostile-secret",
+        [NAKAFA_API_EDGE_CONTRACT.secretHeader]: "hostile-secret",
         "x-forwarded-for": "203.0.113.10",
       });
 
@@ -185,7 +186,9 @@ describe("proxy middleware", () => {
         "a".repeat(40)
       );
       expect(
-        response.headers.get(`x-middleware-request-${API_EDGE_SECRET_HEADER}`)
+        response.headers.get(
+          `x-middleware-request-${NAKAFA_API_EDGE_CONTRACT.secretHeader}`
+        )
       ).toBe("test-api-edge-secret");
       expect(response.headers.get("x-middleware-request-accept")).toBe(
         "application/json"

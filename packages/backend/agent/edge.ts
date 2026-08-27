@@ -60,6 +60,16 @@ export const NAKAFA_EDGE_RELEASE_SHA_HEADER = "x-nakafa-release-sha";
 /** Vercel system identity for the Git commit that produced a deployment. */
 export const VERCEL_GIT_COMMIT_SHA_ENVIRONMENT = "VERCEL_GIT_COMMIT_SHA";
 
+/** Attaches exact deployment identity when the bridge runs on Vercel. */
+export function setAgentEdgeReleaseHeader(
+  headers: Headers,
+  releaseSha: string | undefined
+) {
+  if (releaseSha !== undefined) {
+    headers.set(NAKAFA_EDGE_RELEASE_SHA_HEADER, releaseSha);
+  }
+}
+
 /** Projects one protected origin path back to its stable public API path. */
 export function projectPublicApiPath(pathname: string) {
   return pathname.slice(NAKAFA_API_EDGE_CONTRACT.originPath.length) || "/";
