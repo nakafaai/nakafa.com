@@ -136,17 +136,6 @@ describe("signed Quran view decoder", () => {
       expect(inconsistent._tag).toBe("Failure");
     })
   );
-  it.live("accepts temporarily unavailable Tafsir access during rollout", () =>
-    Effect.gen(function* () {
-      const view = yield* decodePublishedQuranView(
-        { ...englishViewResult(), tafsirAccess: null },
-        { appLocale: "en", surahNumber: 1 }
-      );
-
-      expect(view.tafsirAccess).toBeNull();
-      expect(view.verses).toHaveLength(1);
-    })
-  );
 });
 /** Builds source and metadata shared by app-locale view fixtures. */
 function viewBase(appLocale: AppLocaleCode) {

@@ -38,22 +38,9 @@ import {
   QuranSurahRowSchema,
 } from "@nakafa/aksara-contracts/quran/spec";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
-import { Sha256HashSchema as LegacySha256HashSchema } from "@nakafa/aksara-v151/ids";
-import { ACTIVE_APP_LOCALES as LEGACY_ACTIVE_APP_LOCALES } from "@nakafa/aksara-v151/locale";
-import { bindQuranRow as bindLegacyQuranRow } from "@nakafa/aksara-v151/quran/snapshot/row-hash";
-import {
-  QuranAttributionRowSchema as LegacyQuranAttributionRowSchema,
-  quranSourceIds as legacyQuranSourceIds,
-} from "@nakafa/aksara-v151/quran/source";
-import {
-  type QuranSurahRow as LegacyQuranSurahRow,
-  QuranSurahRowSchema as LegacyQuranSurahRowSchema,
-} from "@nakafa/aksara-v151/quran/spec";
-import { canonicalizeContentSnapshotRow as canonicalizeLegacyQuranRow } from "@nakafa/aksara-v151/release/snapshot/data";
 import { Effect, Schema } from "effect";
 
 const testDigest = Sha256HashSchema.make(`sha256:${"1".repeat(64)}`);
-const legacyTestDigest = `sha256:${"1".repeat(64)}`;
 type QuranChunkRow = typeof QuranChunkRowSchema.Type;
 type QuranSearchRow = typeof QuranSearchRowSchema.Type;
 
@@ -406,79 +393,4 @@ export function encodeTestQuranRow(
 ) {
   const record = Effect.runSync(bindQuranRow(snapshotId, payload));
   return canonicalizeContentSnapshotRow({ family: "quran", record });
-}
-
-/** Creates the exact signed attribution shape published by contracts 0.15.1. */
-export function makeLegacyQuranAttribution() {
-  return Schema.decodeUnknownSync(LegacyQuranAttributionRowSchema)({
-    activeAppLocales: LEGACY_ACTIVE_APP_LOCALES,
-    kind: "quran-attribution",
-    sources: legacyQuranSourceIds(LEGACY_ACTIVE_APP_LOCALES).map((id) => ({
-      artifact: {
-        byteCount: 1,
-        digest: legacyTestDigest,
-        fileCount: 1,
-      },
-      copy: LEGACY_ACTIVE_APP_LOCALES.map((appLocale) => ({
-        appLocale,
-        notice: `Legacy attribution notice ${appLocale}`,
-        title: `Legacy source ${id} ${appLocale}`,
-      })),
-      id,
-      publisher: "Nakafa legacy protocol tests",
-      retrievedAt: "2026-07-31T00:00:00Z",
-      sourceUrl: `https://example.test/${id}`,
-      terms: {
-        artifact: {
-          byteCount: 1,
-          digest: legacyTestDigest,
-          fileCount: 1,
-        },
-        url: `https://example.test/${id}/terms`,
-      },
-      updateUrl: `https://example.test/${id}/updates`,
-      version: "legacy-technical-version",
-    })),
-  });
-}
-
-/** Creates one authentic Quran surah from the 0.15.1 contract. */
-export function makeLegacyQuranSurah(
-  number: number,
-  numberOfVerses = 7
-): LegacyQuranSurahRow {
-  return Schema.decodeSync(LegacyQuranSurahRowSchema)({
-    kind: "quran-surah",
-    name: {
-      arabic: `سورة ${number}`,
-      translation: `Technical meaning ${number}`,
-      transliteration: `Technical Surah ${number}`,
-    },
-    number,
-    numberOfVerses,
-    revelation: { order: number, place: "Meccan" },
-  });
-}
-
-type LegacyQuranPayload = Parameters<typeof bindLegacyQuranRow>[1];
-
-/** Binds one authentic 0.15.1 row for rollout compatibility tests. */
-export function makeLegacyQuranRecord(
-  snapshotId: string,
-  payload: LegacyQuranPayload
-) {
-  return Effect.runSync(
-    bindLegacyQuranRow(LegacySha256HashSchema.make(snapshotId), payload)
-  );
-}
-
-/** Encodes one authentic 0.15.1 row envelope for client compatibility tests. */
-export function encodeLegacyQuranRow(
-  snapshotId: string,
-  payload: LegacyQuranPayload
-) {
-  return canonicalizeLegacyQuranRow({
-    family: "quran",
-    record: makeLegacyQuranRecord(snapshotId, payload),
-  });
 }

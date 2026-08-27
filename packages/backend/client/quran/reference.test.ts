@@ -47,17 +47,6 @@ describe("signed Quran passage decoder", () => {
     })
   );
 
-  it.live("accepts the bounded legacy external-Tafsir rollout gap", () =>
-    Effect.gen(function* () {
-      const reference = yield* decodePublishedQuranReference(
-        { ...referenceResult(), tafsirAccess: null },
-        { appLocale: "en", surahNumber: 1 }
-      );
-
-      expect(reference.tafsirAccess).toBeNull();
-    })
-  );
-
   it.live("fails closed for missing and inconsistent references", () =>
     Effect.gen(function* () {
       const missing = yield* Effect.result(

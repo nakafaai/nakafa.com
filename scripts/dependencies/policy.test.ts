@@ -9,8 +9,6 @@ import {
   DEPENDENCY_HOLDS,
   DEPENDENCY_RELEASE_AGE_EXCLUSIONS,
   DEPENDENCY_RELEASE_AGE_MINUTES,
-  LEGACY_QURAN_CONTRACT_ARCHIVE,
-  TEMPORARY_DEPENDENCY_HOLDS,
 } from "./policy.ts";
 import { inspectDependencyPolicy } from "./source.ts";
 
@@ -43,12 +41,7 @@ function validInput() {
       dependencies:
         index === 0
           ? dependencies
-          : {
-              "@nakafa/aksara-contracts": CONTRACT_ARCHIVE,
-              ...(index === 1
-                ? { "@nakafa/aksara-v151": LEGACY_QURAN_CONTRACT_ARCHIVE }
-                : {}),
-            },
+          : { "@nakafa/aksara-contracts": CONTRACT_ARCHIVE },
       scripts:
         index === 0 ? { doctor: "pnpm dlx react-doctor@0.9.12" } : undefined,
     },
@@ -61,24 +54,7 @@ function validInput() {
       "pnpm",
     ]),
   ].sort();
-  const policyFiles = new Map<string, string>();
-  for (const hold of TEMPORARY_DEPENDENCY_HOLDS) {
-    for (const target of hold.cleanup) {
-      const separator = target.indexOf("#");
-      const path = separator === -1 ? target : target.slice(0, separator);
-      const marker = separator === -1 ? "" : target.slice(separator + 1);
-      policyFiles.set(path, `${policyFiles.get(path) ?? ""}\n${marker}`);
-    }
-    for (const consumer of hold.consumers) {
-      policyFiles.set(
-        consumer,
-        `${policyFiles.get(consumer) ?? ""}\nimport "${hold.dependency}/fixture";`
-      );
-    }
-  }
-
   return {
-    files: [...policyFiles].map(([path, source]) => ({ path, source })),
     manifests,
     rootManifest: {
       devEngines: { runtime: { version: "24.19.0" } },
@@ -114,60 +90,6 @@ describe("dependency policy", () => {
 
   it("accepts every reviewed dependency cohort", () => {
     expect(validateDependencyPolicy(validInput())).toEqual([]);
-  });
-
-  it("restricts the temporary Quran rollback decoder to its owned seam", () => {
-    expect(TEMPORARY_DEPENDENCY_HOLDS).toEqual([
-      expect.objectContaining({
-        approved: LEGACY_QURAN_CONTRACT_ARCHIVE,
-        dependency: "@nakafa/aksara-v151",
-        group: "dependencies",
-        manifestPath: "packages/backend/package.json",
-        owner: "Quran content release",
-      }),
-    ]);
-
-    const input = validInput();
-    const firstManifest = input.manifests[0];
-    expect(firstManifest).toBeDefined();
-    if (!firstManifest) {
-      return;
-    }
-    firstManifest.manifest.dependencies["@nakafa/aksara-v151"] =
-      LEGACY_QURAN_CONTRACT_ARCHIVE;
-
-    const problems = validateDependencyPolicy(input);
-    expect(
-      problems.some((problem) =>
-        problem.includes("expected exactly one temporary declaration")
-      )
-    ).toBe(true);
-    expect(problems.some((problem) => problem.includes("approved"))).toBe(true);
-  });
-
-  it("rejects temporary dependency consumers and cleanup targets that drift", () => {
-    const input = validInput();
-    input.files.push({
-      path: "packages/example/escape.ts",
-      source: 'import "@nakafa/aksara-v151/quran/spec";',
-    });
-    const cleanupFile = input.files.find(
-      ({ path }) => path === "packages/backend/client/quran/source.ts"
-    );
-    expect(cleanupFile).toBeDefined();
-    if (cleanupFile) {
-      cleanupFile.source = "cleanup marker removed";
-    }
-
-    const problems = validateDependencyPolicy(input);
-    expect(problems.some((problem) => problem.includes("consumers are"))).toBe(
-      true
-    );
-    expect(
-      problems.some((problem) =>
-        problem.includes("no longer contains tafsirAccess === null")
-      )
-    ).toBe(true);
   });
 
   it.effect("rejects unsafe policy before running pnpm update", () =>

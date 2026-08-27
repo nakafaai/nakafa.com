@@ -5,62 +5,8 @@ interface DependencyHold {
   readonly minimumDeclarations: number;
 }
 
-interface TemporaryDependencyHold {
-  readonly approved: string;
-  readonly cleanup: readonly string[];
-  readonly consumers: readonly string[];
-  readonly dependency: string;
-  readonly exitCriterion: string;
-  readonly group: "dependencies" | "devDependencies";
-  readonly manifestPath: string;
-  readonly owner: string;
-}
-
 export const CONTRACT_ARCHIVE =
   "https://github.com/nakafaai/aksara/releases/download/contracts-v0.17.0/nakafa-aksara-contracts-0.17.0.tgz";
-
-export const LEGACY_QURAN_CONTRACT_ARCHIVE =
-  "https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.1/nakafa-aksara-contracts-0.15.1.tgz";
-
-export const TEMPORARY_DEPENDENCY_HOLDS: readonly TemporaryDependencyHold[] = [
-  {
-    approved: LEGACY_QURAN_CONTRACT_ARCHIVE,
-    cleanup: [
-      "packages/backend/package.json#@nakafa/aksara-v151",
-      "packages/backend/content/quran/upgrade.ts#LegacyQuranSurahUpgradeSchema",
-      "packages/backend/client/quran/rows.ts#decodeLegacySurah",
-      "packages/backend/client/quran/source.ts#tafsirAccess === null",
-      "packages/backend/client/quran/catalog.test.ts#upgrades authentic 0.15.1 surahs",
-      "packages/backend/client/quran/view.test.ts#accepts temporarily unavailable Tafsir access",
-      "packages/backend/client/quran/markdown.test.ts#accepts temporarily unavailable Tafsir access",
-      "packages/backend/convex/contentRelease/quran/legacy.ts",
-      "packages/backend/convex/contentRelease/quran/legacy.test.ts#authenticates and upgrades an exact 0.15.1 surah",
-      "packages/backend/convex/contentRelease/quran/attribution.ts#legacy",
-      "packages/backend/convex/contentRelease/quran/attribution.test.ts#makeLegacyQuranAttribution",
-      "packages/backend/convex/contentRelease/quran/surah.ts#verifyLegacyQuranSurah",
-      'packages/backend/convex/contentRelease/quran/sources.ts#attribution.contract === "legacy"',
-      "packages/backend/test/quran/rows.ts#makeLegacyQuranSurah",
-      "packages/backend/test/quran/archive.ts#@nakafa/aksara-v151",
-      "pnpm-lock.yaml#@nakafa/aksara-v151",
-      "scripts/dependencies/policy.ts#LEGACY_QURAN_CONTRACT_ARCHIVE",
-      "scripts/dependencies/policy.ts#TEMPORARY_DEPENDENCY_HOLDS",
-      "scripts/dependencies/policy.test.ts#temporary Quran rollback decoder",
-    ],
-    consumers: [
-      "packages/backend/client/quran/rows.ts",
-      "packages/backend/content/quran/upgrade.ts",
-      "packages/backend/convex/contentRelease/quran/legacy.ts",
-      "packages/backend/test/quran/archive.ts",
-      "packages/backend/test/quran/rows.ts",
-    ],
-    dependency: "@nakafa/aksara-v151",
-    exitCriterion:
-      "Remove after production activates a Quran snapshot signed by contracts 0.17.0 and completes rollback observation.",
-    group: "dependencies",
-    manifestPath: "packages/backend/package.json",
-    owner: "Quran content release",
-  },
-];
 
 export const DEPENDENCY_RELEASE_AGE_MINUTES = 1440;
 

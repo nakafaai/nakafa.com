@@ -1,11 +1,9 @@
-import ts from "typescript";
 import {
   DEPENDENCY_HOLDS,
   DEPENDENCY_RELEASE_AGE_EXCLUSIONS,
   DEPENDENCY_RELEASE_AGE_MINUTES,
   FORBIDDEN_EFFECT_DEPENDENCIES,
   SCRIPT_DEPENDENCY_HOLDS,
-  TEMPORARY_DEPENDENCY_HOLDS,
 } from "./policy.ts";
 import type {
   FirstPartyManifest,
@@ -14,15 +12,9 @@ import type {
 } from "./source.ts";
 
 interface DependencyPolicyInput {
-  readonly files: readonly DependencyPolicyFile[];
   readonly manifests: readonly FirstPartyManifest[];
   readonly rootManifest: PackageManifest;
   readonly workspace: WorkspaceManifest;
-}
-
-export interface DependencyPolicyFile {
-  readonly path: string;
-  readonly source: string;
 }
 
 const DEPENDENCY_GROUPS = [
@@ -31,61 +23,6 @@ const DEPENDENCY_GROUPS = [
   "optionalDependencies",
   "peerDependencies",
 ] as const;
-
-function matchesDependency(specifier: string, dependency: string) {
-  return specifier === dependency || specifier.startsWith(`${dependency}/`);
-}
-
-function importsDependency(
-  { path, source }: DependencyPolicyFile,
-  dependency: string
-) {
-  if (!source.includes(dependency)) {
-    return false;
-  }
-  const sourceFile = ts.createSourceFile(
-    path,
-    source,
-    ts.ScriptTarget.Latest,
-    false,
-    path.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS
-  );
-  let found = false;
-
-  function visit(node: ts.Node) {
-    if (found) {
-      return;
-    }
-
-    let specifier: ts.Expression | undefined;
-    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
-      specifier = node.moduleSpecifier;
-    } else if (
-      ts.isImportEqualsDeclaration(node) &&
-      ts.isExternalModuleReference(node.moduleReference)
-    ) {
-      specifier = node.moduleReference.expression;
-    } else if (
-      ts.isCallExpression(node) &&
-      node.expression.kind === ts.SyntaxKind.ImportKeyword
-    ) {
-      specifier = node.arguments[0];
-    }
-
-    if (
-      specifier !== undefined &&
-      ts.isStringLiteralLike(specifier) &&
-      matchesDependency(specifier.text, dependency)
-    ) {
-      found = true;
-      return;
-    }
-    ts.forEachChild(node, visit);
-  }
-
-  visit(sourceFile);
-  return found;
-}
 
 /** Returns every first-party declaration for one dependency. */
 export function dependencyDeclarations(
@@ -110,75 +47,8 @@ export function dependencyDeclarations(
   return declarations;
 }
 
-/** Validates one exact, owned dependency retained only during a rollout. */
-function validateTemporaryDependencyHolds(
-  manifests: readonly FirstPartyManifest[],
-  files: readonly DependencyPolicyFile[]
-) {
-  const problems: string[] = [];
-  const filesByPath = new Map(files.map((file) => [file.path, file.source]));
-  for (const hold of TEMPORARY_DEPENDENCY_HOLDS) {
-    const declarations = dependencyDeclarations(manifests, hold.dependency);
-    if (declarations.length !== 1) {
-      problems.push(
-        `${hold.dependency} has ${declarations.length} declarations; expected exactly one temporary declaration.`
-      );
-    }
-    for (const declaration of declarations) {
-      if (
-        declaration.manifestPath !== hold.manifestPath ||
-        declaration.group !== hold.group ||
-        declaration.spec !== hold.approved
-      ) {
-        problems.push(
-          `${declaration.manifestPath} declares temporary ${hold.dependency} as ${declaration.spec} in ${declaration.group}; approved ${hold.approved} in ${hold.manifestPath} ${hold.group}.`
-        );
-      }
-    }
-    if (
-      hold.owner.length === 0 ||
-      hold.exitCriterion.length === 0 ||
-      hold.cleanup.length === 0 ||
-      hold.consumers.length === 0
-    ) {
-      problems.push(
-        `${hold.dependency} must retain an owner, exit criterion, and cleanup scope.`
-      );
-    }
-
-    const actualConsumers = files
-      .filter((file) => importsDependency(file, hold.dependency))
-      .map(({ path }) => path)
-      .sort();
-    const approvedConsumers = [...hold.consumers].sort();
-    if (JSON.stringify(actualConsumers) !== JSON.stringify(approvedConsumers)) {
-      problems.push(
-        `${hold.dependency} consumers are ${actualConsumers.join(", ") || "none"}; approved ${approvedConsumers.join(", ")}.`
-      );
-    }
-
-    for (const target of hold.cleanup) {
-      const separator = target.indexOf("#");
-      const path = separator === -1 ? target : target.slice(0, separator);
-      const marker = separator === -1 ? null : target.slice(separator + 1);
-      const source = filesByPath.get(path);
-      if (source === undefined) {
-        problems.push(
-          `${hold.dependency} cleanup target ${path} is missing from the inspected repository.`
-        );
-      } else if (marker !== null && !source.includes(marker)) {
-        problems.push(
-          `${hold.dependency} cleanup target ${path} no longer contains ${marker}.`
-        );
-      }
-    }
-  }
-  return problems;
-}
-
 /** Validates exact cohort declarations and the absence of v3 packages. */
 export function validateDependencyPolicy({
-  files,
   manifests,
   rootManifest,
   workspace,
@@ -204,8 +74,6 @@ export function validateDependencyPolicy({
       }
     }
   }
-
-  problems.push(...validateTemporaryDependencyHolds(manifests, files));
 
   for (const dependency of FORBIDDEN_EFFECT_DEPENDENCIES) {
     for (const declaration of dependencyDeclarations(manifests, dependency)) {

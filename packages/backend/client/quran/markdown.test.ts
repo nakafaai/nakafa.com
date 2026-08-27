@@ -111,17 +111,6 @@ describe("signed Quran markdown decoder", () => {
       });
     })
   );
-  it.live("accepts temporarily unavailable Tafsir access during rollout", () =>
-    Effect.gen(function* () {
-      const markdown = yield* decodePublishedQuranMarkdown(
-        { ...markdownResult(), tafsirAccess: null },
-        { appLocale: "en", surahNumber: 1 }
-      );
-
-      expect(markdown.tafsirAccess).toBeNull();
-      expect(markdown.verses).toHaveLength(1);
-    })
-  );
 });
 /** Builds one active-source result whose requested surah is absent. */
 function missingMarkdownResult(): QuranMarkdownResult {

@@ -4,24 +4,19 @@ import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { readQuranChunks } from "@repo/backend/convex/contentRelease/quran/chunks";
 import { validateQuranSurah } from "@repo/backend/convex/contentRelease/quran/input";
-import { verifyLegacyQuranSurah } from "@repo/backend/convex/contentRelease/quran/legacy";
 import { QURAN_PAGE_VERSE_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
 import { loadQuranOwner } from "@repo/backend/convex/contentRelease/quran/owner";
 import { verifyQuranRow } from "@repo/backend/convex/contentRelease/quran/verify";
 import { Effect } from "effect";
 
-/** Authenticates either signed surah contract during the rollout window. */
+/** Authenticates one signed surah contract. */
 export const verifyQuranSurahRow = Effect.fn(
   "contentRelease.verifyQuranSurahRow"
 )(function* (row: Doc<"quranRows">, snapshotId: string) {
-  return yield* verifyQuranRow(row, snapshotId, QuranSurahRowSchema).pipe(
-    Effect.catchTag("ReleaseError", () =>
-      verifyLegacyQuranSurah(row, snapshotId)
-    )
-  );
+  return yield* verifyQuranRow(row, snapshotId, QuranSurahRowSchema);
 });
 
-/** Reads and authenticates one surah under either signed rollout contract. */
+/** Reads and authenticates one surah under the active signed contract. */
 export const readQuranSurahRow = Effect.fn("contentRelease.readQuranSurahRow")(
   function* (ctx: QueryCtx, snapshotId: string, surahNumber: number) {
     const stored = yield* Effect.promise(() =>

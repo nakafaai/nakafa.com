@@ -37,7 +37,7 @@
     "start": "turbo run start",
     "test": "pnpm check:patches && pnpm check:tests && pnpm test:scripts && turbo run test",
     "test:coverage": "pnpm check:patches && pnpm check:tests && turbo run test:coverage",
-    "test:scripts": "pnpm typecheck:scripts && pnpm --filter @repo/testing exec vitest run --root ../.. scripts/dependencies/policy.test.ts scripts/dependencies/source.test.ts scripts/github-action-policy.test.ts scripts/effect-source.test.ts",
+    "test:scripts": "pnpm typecheck:scripts && pnpm --filter @repo/testing exec vitest run --root ../.. scripts/dependencies/policy.test.ts scripts/github-action-policy.test.ts scripts/effect-source.test.ts",
     "test:ui": "turbo run test:ui",
     "test:watch": "turbo run test:watch",
     "translate": "turbo run translate",

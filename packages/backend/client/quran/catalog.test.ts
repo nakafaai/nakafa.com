@@ -6,9 +6,7 @@ import {
 import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
 import { QuranPublicationError } from "@repo/backend/client/quran/publication";
 import {
-  encodeLegacyQuranRow,
   encodeTestQuranRow,
-  makeLegacyQuranSurah,
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
 import { describe, expect, it } from "@repo/testing/effect";
@@ -41,24 +39,6 @@ describe("signed Quran catalog decoder", () => {
         text: "Technical meaning 1",
       });
       expect(catalog.surahs.at(-1)?.number).toBe(114);
-    })
-  );
-
-  it.live("upgrades authentic 0.15.1 surahs into the canonical shape", () =>
-    Effect.gen(function* () {
-      const catalog = yield* decodePublishedQuranCatalog(
-        catalogResult((index) =>
-          encodeLegacyQuranRow(
-            source.snapshotId,
-            makeLegacyQuranSurah(index + 1)
-          )
-        )
-      );
-
-      expect(catalog.surahs[0]?.name.meaning).toEqual({
-        appLocale: "en",
-        text: "Technical meaning 1",
-      });
     })
   );
 

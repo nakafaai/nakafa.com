@@ -1,7 +1,4 @@
-import {
-  type AppLocaleCode,
-  INDONESIAN_APP_LOCALE_CODE,
-} from "@nakafa/aksara-contracts/locale";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import {
   quranReadingSourceIds,
   quranTafsirSourceId,
@@ -35,7 +32,7 @@ export function hasExpectedQuranSources(
     return false;
   }
   if (tafsirAccess === null) {
-    return appLocale !== INDONESIAN_APP_LOCALE_CODE;
+    return false;
   }
   return (
     tafsirAccess.appLocale === appLocale &&
