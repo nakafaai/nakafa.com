@@ -35,7 +35,7 @@ const READ_ONLY_TOOL = {
   readOnlyHint: true,
 };
 
-/** Registers the four public read-only tools over shared Convex programs. */
+/** Registers the public read-only tools over shared Convex programs. */
 export function registerNakafaMcpTools(
   server: McpServer,
   ctx: ActionCtx,

@@ -4,7 +4,6 @@ import {
   NakafaProblemDetailsSchema,
 } from "@repo/contents/_lib/agent/schema/api";
 import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran/input";
-import { NakafaAgentQuranPredecessorSchema } from "@repo/contents/_lib/agent/schema/quran/predecessor";
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
 import {
   NakafaAgentContentRefInputSchema,
@@ -34,7 +33,6 @@ export const OPENAPI_SCHEMAS = {
   ApiIndex: toOpenApiSchema(NakafaApiIndexSchema),
   Content: toOpenApiSchema(NakafaAgentMarkdownSchema),
   Problem: toOpenApiSchema(NakafaProblemDetailsSchema),
-  QuranPredecessor: toOpenApiSchema(NakafaAgentQuranPredecessorSchema),
   QuranReference: toOpenApiSchema(NakafaAgentQuranReferenceSchema),
   SearchResult: toOpenApiSchema(NakafaAgentSearchResultSchema),
   Taxonomy: toOpenApiSchema(NakafaAgentTaxonomySchema),

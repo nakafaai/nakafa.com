@@ -1,15 +1,10 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { decodeAgentOutput } from "@repo/backend/agent/decode";
-import {
-  projectQuranPredecessorVerse,
-  projectQuranVerse,
-} from "@repo/backend/agent/quran/verse";
-import type { PredecessorQuranReference } from "@repo/backend/client/quran/predecessor";
+import { projectQuranVerse } from "@repo/backend/agent/quran/verse";
 import type { PublishedQuranReference } from "@repo/backend/client/quran/reference";
 import { hasExpectedQuranSources } from "@repo/backend/client/quran/source";
 import type { readQuranReference } from "@repo/backend/convex/contentRelease/quran/reference";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
-import { NakafaAgentQuranPredecessorSchema } from "@repo/contents/_lib/agent/schema/quran/predecessor";
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { Effect } from "effect";
@@ -30,33 +25,9 @@ interface QuranProjectionInput {
   readonly ref: NakafaAgentContentRef;
 }
 
-interface QuranPredecessorProjectionInput extends QuranProjectionInput {
-  readonly reference: PredecessorQuranReference;
-}
-
 interface QuranReferenceProjectionInput extends QuranProjectionInput {
   readonly reference: PublishedQuranReference;
 }
-
-/** Projects the stable predecessor Quran contract. */
-export const projectNakafaQuranPredecessor = Effect.fn(
-  "agent.quran.projectPredecessor"
-)(function* (input: QuranPredecessorProjectionInput) {
-  const verses = yield* Effect.forEach(input.reference.verses, (verse) =>
-    projectQuranPredecessorVerse(verse, input.appLocale, input.includeTafsir)
-  );
-  return yield* decodeAgentOutput(
-    NakafaAgentQuranPredecessorSchema,
-    {
-      ...input.ref,
-      name: input.reference.surah.name.transliteration,
-      revelation: input.reference.surah.revelation.place,
-      translation: input.reference.surah.name.translation,
-      verses,
-    },
-    "Unable to build Nakafa Quran reference."
-  );
-});
 
 /** Projects the canonical Quran contract with semantic notes and signed sources. */
 export const projectNakafaQuranReference = Effect.fn(

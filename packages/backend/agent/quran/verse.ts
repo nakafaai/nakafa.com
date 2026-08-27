@@ -23,23 +23,6 @@ const readTranslation = Effect.fn("agent.quran.readTranslation")(function* (
   return localized.value;
 });
 
-/** Projects one verse into the immutable predecessor wire shape. */
-export const projectQuranPredecessorVerse = Effect.fn(
-  "agent.quran.projectPredecessorVerse"
-)(function* (
-  verse: QuranRuntimeVerse,
-  appLocale: AppLocaleCode,
-  includeTafsir: boolean
-) {
-  const row = {
-    arabic: verse.text.arabic,
-    number: verse.number.inSurah,
-    translation: (yield* readTranslation(verse, appLocale)).text,
-  };
-  const tafsir = yield* readRequestedTafsir(verse, appLocale, includeTafsir);
-  return tafsir === undefined ? row : { ...row, tafsir };
-});
-
 /** Projects one verse into semantic translation-note fields. */
 export const projectQuranVerse = Effect.fn("agent.quran.projectVerse")(
   function* (

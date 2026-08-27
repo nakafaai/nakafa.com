@@ -122,7 +122,7 @@ export const OPENAPI_PATHS = {
       summary: "Read the OpenAPI contract",
     }),
   },
-  "/quran/{surah}": {
+  "/v1/quran/{surah}": {
     get: readOperation({
       description:
         "Returns a bounded Quran verse range with semantic translation notes, signed Arabic and translation sources, and explicit locale-specific tafsir access.",
@@ -177,24 +177,6 @@ export const OPENAPI_PATHS = {
       summary: "Check API health",
     }),
   },
-  "/v1/quran/{surah}": {
-    get: readOperation({
-      deprecated: true,
-      description:
-        "Returns a bounded reviewed Quran verse range with translation and optional tafsir.",
-      operationId: "getNakafaQuranPredecessor",
-      parameters: QURAN_PARAMETERS,
-      responses: {
-        "200": successResponse(
-          "A predecessor Quran reference.",
-          "QuranPredecessor"
-        ),
-        "404": problemResponse("The requested surah was not found."),
-        ...METERED_RESPONSES,
-      },
-      summary: "Read a Quran reference",
-    }),
-  },
   "/v1/search": {
     get: readOperation({
       description:
@@ -219,24 +201,6 @@ export const OPENAPI_PATHS = {
         ...METERED_RESPONSES,
       },
       summary: "Read public taxonomy",
-    }),
-  },
-  "/v2/quran/{surah}": {
-    get: readOperation({
-      deprecated: true,
-      description:
-        "Compatibility alias for the canonical unversioned Quran reference endpoint.",
-      operationId: "getNakafaQuranReferenceCompatibility",
-      parameters: QURAN_PARAMETERS,
-      responses: {
-        "200": successResponse(
-          "A source-grounded Quran reference.",
-          "QuranReference"
-        ),
-        "404": problemResponse("The requested surah was not found."),
-        ...METERED_RESPONSES,
-      },
-      summary: "Read a source-grounded Quran reference",
     }),
   },
 };

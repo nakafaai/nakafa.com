@@ -174,7 +174,7 @@ function fetchQuran(
   surah = 1
 ) {
   return test.fetch(
-    `${NAKAFA_API_EDGE_CONTRACT.originPath}/quran/${surah}?locale=${locale}&include_tafsir=true`,
+    `${NAKAFA_API_EDGE_CONTRACT.originPath}/v1/quran/${surah}?locale=${locale}&include_tafsir=true`,
     {
       headers: {
         [NAKAFA_API_EDGE_CONTRACT.secretHeader]: API_SECRET,

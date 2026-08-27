@@ -32,30 +32,6 @@ const CONTENT_REFERENCE_EXAMPLE = {
   url: "https://nakafa.com/en/subjects/mathematics/algebra/linear-equations",
 };
 
-const QURAN_PREDECESSOR_EXAMPLE = {
-  alignmentId: "alignment:example:quran:1",
-  assetId: "asset:example:quran:1",
-  conceptId: "concept:example:quran:1",
-  content_id: "asset:example:quran:1",
-  learningObjectId: "learning-object:example:quran:1",
-  lensId: "lens:example:quran",
-  locale: "en",
-  markdown_url: "https://nakafa.com/en/quran/1.md",
-  name: "Al-Faatiha",
-  revelation: "Mecca",
-  route: "quran/1",
-  section: "quran",
-  translation: "The Opening",
-  url: "https://nakafa.com/en/quran/1",
-  verses: [
-    {
-      arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
-      number: 1,
-      translation: "In the name of Allah, the Most Compassionate.",
-    },
-  ],
-};
-
 const EXAMPLE_LOCALE = "en" as const;
 const EXAMPLE_DIGEST = `sha256:${"1".repeat(64)}`;
 const EXAMPLE_ARTIFACT = {
@@ -198,7 +174,6 @@ export const OPENAPI_RESPONSE_EXAMPLES = {
     openapi: "3.1.1",
     paths: {},
   },
-  QuranPredecessor: QURAN_PREDECESSOR_EXAMPLE,
   QuranReference: QURAN_REFERENCE_EXAMPLE,
   SearchResult: {
     count: 1,
