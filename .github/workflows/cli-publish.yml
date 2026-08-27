@@ -35,12 +35,5 @@ jobs:
           pnpm --filter nakafa-cli test:coverage
           pnpm --filter nakafa-cli build
 
-      # Bootstrap only. Delete this registry token setup after 0.1.0 exists and
-      # cli-publish.yml is registered as the package's trusted publisher.
-      - name: Configure bootstrap authentication
-        run: npm config set //registry.npmjs.org/:_authToken "$NODE_AUTH_TOKEN"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_BOOTSTRAP_TOKEN }}
-
       - name: Publish package
         run: pnpm --filter nakafa-cli exec npm publish --access public --provenance
