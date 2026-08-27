@@ -1,6 +1,6 @@
 import { previewQuran, previewRead } from "@repo/ai/agents/nakafa/preview";
+import { makeQuranV2Fixture } from "@repo/ai/agents/nakafa/tools/fixture";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
-import type { NakafaAgentQuranReference } from "@repo/contents/_lib/agent/schema/quran";
 import { describe, expect, it } from "vitest";
 
 describe("nakafa previews", () => {
@@ -19,16 +19,20 @@ describe("nakafa previews", () => {
   });
 
   it("keeps Quran preview stable when a malformed result has no verses", () => {
+    const reference = makeQuranV2Fixture({
+      from_verse: 1,
+      include_tafsir: false,
+      locale: "en",
+      surah: 1,
+    });
     const result = {
-      ...readNakafaContentRefFixture("en", "quran/1", "quran"),
-      name: "Al-Fatihah",
-      revelation: "Mecca",
-      translation: "The Opening",
+      ...reference,
       verses: [],
-    } satisfies NakafaAgentQuranReference;
+    };
 
     expect(previewQuran(result)).toMatchObject({
       from_verse: 1,
+      meaning: { locale: "en", text: "The Opening" },
       to_verse: 1,
       verse_count: 0,
     });

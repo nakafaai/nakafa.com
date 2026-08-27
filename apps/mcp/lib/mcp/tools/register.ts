@@ -21,8 +21,11 @@ import {
 } from "@/lib/mcp/tools/content";
 import {
   getNakafaQuranReferenceToolResult,
+  getNakafaQuranReferenceV2ToolResult,
   NakafaGetQuranReferenceToolInputSchema,
   NakafaGetQuranReferenceToolOutputSchema,
+  NakafaGetQuranReferenceV2ToolInputSchema,
+  NakafaGetQuranReferenceV2ToolOutputSchema,
 } from "@/lib/mcp/tools/quran";
 import {
   getNakafaSearchContentToolResult,
@@ -78,12 +81,22 @@ const NAKAFA_MCP_TOOLS: readonly NakafaMcpTool[] = [
   {
     annotations: NAKAFA_READ_ONLY_TOOL_ANNOTATIONS,
     description:
-      "Return bounded signed Surah and verse data with Arabic text, selected translation, optional tafsir, and canonical Nakafa URL.",
+      "Compatibility tool for bounded signed Quran data in the immutable V1 shape.",
     inputSchema: NakafaGetQuranReferenceToolInputSchema,
     name: "nakafa_get_quran_reference",
     outputSchema: NakafaGetQuranReferenceToolOutputSchema,
     run: getNakafaQuranReferenceToolResult,
     title: "Get Nakafa Quran Reference",
+  },
+  {
+    annotations: NAKAFA_READ_ONLY_TOOL_ANNOTATIONS,
+    description:
+      "Preferred Quran tool. Return semantic translation notes, signed Arabic and translation sources, and explicit embedded or official link-only tafsir access.",
+    inputSchema: NakafaGetQuranReferenceV2ToolInputSchema,
+    name: "nakafa_get_quran_reference_v2",
+    outputSchema: NakafaGetQuranReferenceV2ToolOutputSchema,
+    run: getNakafaQuranReferenceV2ToolResult,
+    title: "Get Source-Grounded Nakafa Quran Reference",
   },
 ];
 /** Registers Nakafa tools through an Effect Schema-backed MCP boundary. */

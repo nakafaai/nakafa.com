@@ -70,7 +70,7 @@ export const quran = Effect.fn("nakafa.quran")(function* ({
     return oversizedRangeMessage;
   }
   const result = yield* Effect.result(
-    Nakafa.use((service) => service.quran(dataInput))
+    Nakafa.use((service) => service.quranV2(dataInput))
   );
   if (Result.isFailure(result)) {
     yield* Effect.sync(() =>
