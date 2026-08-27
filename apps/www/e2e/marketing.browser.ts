@@ -227,7 +227,9 @@ const verifyContributorPayloads = Effect.fn(
   // Base UI 1.7 describes Tooltip as a visual hint and its Popup renders a
   // div without a tooltip role. The trigger's aria-label owns its identity.
   // @see https://base-ui.com/react/components/tooltip
-  const tooltip = page.locator('[data-slot="tooltip-content"][data-open]');
+  const tooltip = page.locator(
+    '[data-slot="tooltip-content"][data-open]:not([data-ending-style])'
+  );
   yield* Effect.promise(() =>
     expect(tooltip).toHaveText(firstContributor.name)
   );
