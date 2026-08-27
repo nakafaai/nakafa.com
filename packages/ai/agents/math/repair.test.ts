@@ -1,10 +1,10 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { repairMathToolCall } from "@repo/ai/agents/math/repair";
 import {
   mathAlgebraInput,
   mathEquationInput,
 } from "@repo/ai/agents/math/schema";
 import { ModelIdSchema } from "@repo/ai/config/model";
-import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import type { JSONSchema7, ToolCallRepairFunction, ToolSet } from "ai";
 import { InvalidToolInputError, NoSuchToolError, tool } from "ai";
 import { Effect } from "effect";
@@ -72,7 +72,7 @@ afterEach(() => {
 });
 
 describe("math tool repair", () => {
-  it.live("repairs invalid math arguments from the original task", () =>
+  it.effect("repairs invalid math arguments from the original task", () =>
     Effect.gen(function* () {
       generateText.mockResolvedValue({
         output: {
@@ -119,7 +119,7 @@ describe("math tool repair", () => {
     })
   );
 
-  it.live("keeps the failed operation when the repair model changes it", () =>
+  it.effect("keeps the failed operation when the repair model changes it", () =>
     Effect.gen(function* () {
       generateText.mockResolvedValue({
         output: {
@@ -153,7 +153,7 @@ describe("math tool repair", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "preserves valid solve-domain fields while repairing bounded systems",
     () =>
       Effect.gen(function* () {
@@ -235,7 +235,7 @@ describe("math tool repair", () => {
       })
   );
 
-  it.live("does not repair when the repair output is not object-shaped", () =>
+  it.effect("does not repair when the repair output is not object-shaped", () =>
     Effect.gen(function* () {
       generateText.mockResolvedValue({ output: null });
 
@@ -254,7 +254,7 @@ describe("math tool repair", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "uses repaired arguments when the failed call has no operation field",
     () =>
       Effect.gen(function* () {
@@ -295,7 +295,7 @@ describe("math tool repair", () => {
       })
   );
 
-  it.live(
+  it.effect(
     "keeps malformed failed arguments readable in the repair prompt",
     () =>
       Effect.gen(function* () {
@@ -341,7 +341,7 @@ describe("math tool repair", () => {
       })
   );
 
-  it.live("does not repair unavailable tools", () =>
+  it.effect("does not repair unavailable tools", () =>
     Effect.gen(function* () {
       const repaired = yield* repairMathToolCall({
         error: new NoSuchToolError({ toolName: "unknown" }),
@@ -359,7 +359,7 @@ describe("math tool repair", () => {
     })
   );
 
-  it.live("does not repair missing tool definitions", () =>
+  it.effect("does not repair missing tool definitions", () =>
     Effect.gen(function* () {
       const repaired = yield* repairMathToolCall({
         error: invalidInputError,
@@ -377,7 +377,7 @@ describe("math tool repair", () => {
     })
   );
 
-  it.live("does not repair when schema lookup fails", () =>
+  it.effect("does not repair when schema lookup fails", () =>
     Effect.gen(function* () {
       const repaired = yield* repairMathToolCall({
         error: invalidInputError,
@@ -395,7 +395,7 @@ describe("math tool repair", () => {
     })
   );
 
-  it.live("does not repair when the repair model fails", () =>
+  it.effect("does not repair when the repair model fails", () =>
     Effect.gen(function* () {
       generateText.mockRejectedValue(new Error("model unavailable"));
 
