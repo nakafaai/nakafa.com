@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import packageJson from "@/package.json";
-import { config } from "@/vercel";
+import { config, hasIsolatedTypecheck } from "@/vercel";
 
 describe("www Vercel configuration", () => {
   it("builds only affected production commits", () => {
@@ -17,6 +17,7 @@ describe("www Vercel configuration", () => {
   it("deploys the matching Convex backend with the production web build", () => {
     const buildCommand = config.buildCommand ?? "";
     const deploymentCommand = packageJson.scripts["build:vercel"];
+    const webTypecheck = "pnpm --dir ../../apps/www typecheck";
     const backendTypecheck = "pnpm --dir ../../packages/backend typecheck";
     const convexDeploy = "pnpm --dir ../../packages/backend exec convex deploy";
     const webBuild = "pnpm --dir ../../apps/www build";
@@ -32,12 +33,20 @@ describe("www Vercel configuration", () => {
     expect(deploymentCommand).toContain(
       "--cmd-url-env-var-name NEXT_PUBLIC_CONVEX_URL"
     );
-    expect(deploymentCommand.indexOf(backendTypecheck)).toBe(0);
+    expect(deploymentCommand.indexOf(webTypecheck)).toBe(0);
+    expect(deploymentCommand.indexOf(backendTypecheck)).toBeGreaterThan(
+      deploymentCommand.indexOf(webTypecheck)
+    );
     expect(deploymentCommand.indexOf(convexDeploy)).toBeGreaterThan(
       deploymentCommand.indexOf(backendTypecheck)
     );
     expect(deploymentCommand.indexOf(webBuild)).toBeGreaterThan(
       deploymentCommand.indexOf(convexDeploy)
     );
+  });
+
+  it("skips only the duplicate Vercel typecheck", () => {
+    expect(hasIsolatedTypecheck("1")).toBe(true);
+    expect(hasIsolatedTypecheck(undefined)).toBe(false);
   });
 });

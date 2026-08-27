@@ -19,6 +19,7 @@ import createNextIntlPlugin from "next-intl/plugin";
 import { AGENT_DISCOVERY_HEADERS } from "@/lib/agent-discovery";
 import { hasPreviewRendererEnvironment } from "@/lib/content/preview/environment";
 import { createOgRouteAliasRewrites } from "@/lib/og/route";
+import { hasIsolatedTypecheck } from "@/vercel";
 
 const configEnv = createEnv({
   extends: [analyzeKeys(), convexKeys()],
@@ -29,10 +30,12 @@ const configEnv = createEnv({
     NEXT_EXPOSE_TESTING_API: Schema.toStandardSchemaV1(
       Schema.UndefinedOr(Schema.Literal("true"))
     ),
+    VERCEL: Schema.toStandardSchemaV1(Schema.UndefinedOr(Schema.Literal("1"))),
   },
   runtimeEnv: {
     CONVEX_AGENT_MODE: process.env.CONVEX_AGENT_MODE,
     NEXT_EXPOSE_TESTING_API: process.env.NEXT_EXPOSE_TESTING_API,
+    VERCEL: process.env.VERCEL,
   },
 });
 const localConvexConnectSources = createLoopbackConnectSources(
@@ -172,6 +175,14 @@ const nextConfig = {
   ...config,
   cacheComponents: true,
   partialPrefetching: true,
+  // The Vercel command completes an isolated app typecheck before `next build`.
+  // Repeating static analysis after Turbopack compilation retained enough
+  // memory to exceed Vercel's build limit on every cold-cache production build.
+  // Local and CI builds keep Next's built-in typecheck as an independent gate.
+  // https://nextjs.org/docs/app/guides/memory-usage#disable-static-analysis
+  typescript: {
+    ignoreBuildErrors: hasIsolatedTypecheck(configEnv.VERCEL),
+  },
   // Cache Components enables prerender source maps by default. The anonymous
   // CI build does not publish those artifacts, and retaining them exhausted
   // the static worker's isolated 4 GiB heap with two pages in flight.
