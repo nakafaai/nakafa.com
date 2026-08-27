@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import {
   EvalRenderer,
   evaluateRenderedCase,
@@ -7,11 +8,10 @@ import {
 } from "@repo/ai/eval/runner";
 import { EvalCase, EvalExpectation } from "@repo/ai/eval/spec";
 import { createNinaEvalSuite, renderNinaEvalCase } from "@repo/ai/eval/suites";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 describe("nina deterministic eval suite", () => {
-  it.live(
+  it.effect(
     "passes every local NinaHarness and LearningCapability eval case",
     () =>
       Effect.gen(function* () {
