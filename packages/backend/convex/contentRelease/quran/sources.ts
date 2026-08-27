@@ -187,37 +187,6 @@ export const readQuranLocaleSources = Effect.fn(
     snapshotId,
     appLocale
   );
-  if (attribution.contract === "rollback") {
-    if (appLocale !== INDONESIAN_APP_LOCALE_CODE) {
-      return { sources, tafsirAccess: null };
-    }
-    const rollbackTafsirSourceId = quranTafsirSourceId(
-      INDONESIAN_APP_LOCALE_CODE
-    );
-    const source = yield* projectEmbeddedQuranSource(
-      attribution.payload.sources.find(
-        ({ id }) => id === rollbackTafsirSourceId
-      ),
-      appLocale,
-      rollbackTafsirSourceId,
-      snapshotId
-    );
-    if (source.kind !== "embedded") {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Active Quran snapshot ${snapshotId} has invalid rollback Tafsir access for ${appLocale}.`
-      );
-    }
-    return {
-      sources,
-      tafsirAccess: {
-        appLocale,
-        kind: source.kind,
-        notice: source.notice,
-        source,
-      },
-    };
-  }
   const expectedTafsirSourceId = quranTafsirSourceId(appLocale);
   const access = attribution.payload.tafsirAccess.find(
     (candidate) => candidate.appLocale === appLocale
