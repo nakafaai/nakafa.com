@@ -123,52 +123,43 @@ function isSceneNearViewport(element: HTMLElement) {
   );
 }
 
-/** Latches scene loading after either observer or direct viewport intent. */
-function useProjectileSceneRequest() {
+/** Tracks scene activity from observer and current viewport geometry. */
+function useProjectileSceneVisibility() {
   const sceneFrameRef = useRef<HTMLElement>(null);
-  const [sceneRequested, setSceneRequested] = useState(false);
+  const [sceneVisible, setSceneVisible] = useState(false);
 
   useEffect(() => {
     const sceneFrame = sceneFrameRef.current;
-    if (!sceneFrame || sceneRequested) {
+    if (!sceneFrame) {
       return;
     }
     const sceneTarget = sceneFrame;
 
-    function requestSceneIfNearViewport() {
-      if (isSceneNearViewport(sceneTarget)) {
-        setSceneRequested(true);
-      }
+    function updateSceneVisibility() {
+      setSceneVisible(isSceneNearViewport(sceneTarget));
     }
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          setSceneRequested(true);
-        }
-      },
-      {
-        root: null,
-        rootMargin: `${PROJECTILE_PRELOAD_MARGIN}px 0px`,
-        threshold: 0,
-      }
-    );
+    const observer = new IntersectionObserver(updateSceneVisibility, {
+      root: null,
+      rootMargin: `${PROJECTILE_PRELOAD_MARGIN}px 0px`,
+      threshold: 0,
+    });
 
     observer.observe(sceneTarget);
-    window.addEventListener("resize", requestSceneIfNearViewport);
-    window.addEventListener("scroll", requestSceneIfNearViewport, {
+    window.addEventListener("resize", updateSceneVisibility);
+    window.addEventListener("scroll", updateSceneVisibility, {
       passive: true,
     });
-    requestSceneIfNearViewport();
+    updateSceneVisibility();
 
     return () => {
       observer.disconnect();
-      window.removeEventListener("resize", requestSceneIfNearViewport);
-      window.removeEventListener("scroll", requestSceneIfNearViewport);
+      window.removeEventListener("resize", updateSceneVisibility);
+      window.removeEventListener("scroll", updateSceneVisibility);
     };
-  }, [sceneRequested]);
+  }, []);
 
-  return { sceneFrameRef, sceneRequested };
+  return { sceneFrameRef, sceneVisible };
 }
 
 /** Keeps all projectile interactions while hydrating only their control state. */
@@ -179,7 +170,7 @@ export function ProjectileClient({
   title,
   viewLabel,
 }: ProjectileClientProps) {
-  const { sceneFrameRef, sceneRequested } = useProjectileSceneRequest();
+  const { sceneFrameRef, sceneVisible } = useProjectileSceneVisibility();
   const shouldReduceMotion = useReducedMotion() ?? false;
   const [scenarioId, setScenarioId] = useState(initialScenario.id);
   const activeScenario =
@@ -223,7 +214,7 @@ export function ProjectileClient({
             className={threeSceneFrameVariants()}
             ref={sceneFrameRef}
           >
-            {sceneRequested && (
+            {sceneVisible && (
               <ProjectileScene
                 motion={activeScenario.motion}
                 shouldReduceMotion={shouldReduceMotion}
