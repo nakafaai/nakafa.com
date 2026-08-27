@@ -15,6 +15,7 @@
     "server-only": "0.0.1"
   },
   "devDependencies": {
+    "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@vitest/coverage-istanbul": "^4.1.11",
