@@ -22,50 +22,52 @@ afterEach(() => {
 });
 
 describe("generateTitle", () => {
-  it.effect("summarizes the first user message without assistant internals", () =>
-    Effect.gen(function* () {
-      generateText.mockResolvedValue({
-        text: "Latihan Matriks Eigen",
-      });
+  it.effect(
+    "summarizes the first user message without assistant internals",
+    () =>
+      Effect.gen(function* () {
+        generateText.mockResolvedValue({
+          text: "Latihan Matriks Eigen",
+        });
 
-      yield* generateTitle({
-        messages: [
-          {
-            id: "user-1",
-            metadata: { model: modelId },
-            parts: [
-              {
-                text: "Cek apakah matriks ini bisa didiagonalkan.",
-                type: "text",
-              },
-            ],
-            role: "user",
-          },
-          {
-            id: "assistant-1",
-            metadata: { model: modelId },
-            parts: [
-              {
-                text: "Internal reasoning that should not title the chat.",
-                type: "reasoning",
-              },
-            ],
-            role: "assistant",
-          },
-        ] satisfies MyUIMessage[],
-      });
+        yield* generateTitle({
+          messages: [
+            {
+              id: "user-1",
+              metadata: { model: modelId },
+              parts: [
+                {
+                  text: "Cek apakah matriks ini bisa didiagonalkan.",
+                  type: "text",
+                },
+              ],
+              role: "user",
+            },
+            {
+              id: "assistant-1",
+              metadata: { model: modelId },
+              parts: [
+                {
+                  text: "Internal reasoning that should not title the chat.",
+                  type: "reasoning",
+                },
+              ],
+              role: "assistant",
+            },
+          ] satisfies MyUIMessage[],
+        });
 
-      expect(generateText).toHaveBeenCalledWith(
-        expect.objectContaining({
-          prompt: "Cek apakah matriks ini bisa didiagonalkan.",
-        })
-      );
-      expect(generateText).not.toHaveBeenCalledWith(
-        expect.objectContaining({
-          prompt: expect.stringContaining("Internal reasoning"),
-        })
-      );
-    })
+        expect(generateText).toHaveBeenCalledWith(
+          expect.objectContaining({
+            prompt: "Cek apakah matriks ini bisa didiagonalkan.",
+          })
+        );
+        expect(generateText).not.toHaveBeenCalledWith(
+          expect.objectContaining({
+            prompt: expect.stringContaining("Internal reasoning"),
+          })
+        );
+      })
   );
 
   it.effect("removes surrounding title quotes", () =>
