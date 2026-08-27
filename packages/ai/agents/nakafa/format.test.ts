@@ -117,7 +117,7 @@ describe("Nakafa formatter", () => {
     expect(text).toContain("# Nakafa Quran Reference");
     expect(text).not.toContain("Inline citation:");
     expect(text).not.toContain("https://nakafa.com/id/quran/1");
-    expect(text).toContain("Meaning: Not available for requested locale id");
+    expect(text).toContain("Meaning: The Opening (en)");
     expect(text).toContain("quranenc-indonesian");
     expect(text).toContain("quranenc-tafsir");
     expect(text).toContain("Kind: embedded");

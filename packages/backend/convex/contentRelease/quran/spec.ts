@@ -30,6 +30,12 @@ export const quranRevelationPlaceValidator = literals(
   ...QuranSurahRowSchema.fields.revelation.fields.place.literals
 );
 
+/** Source-language meaning retained from the signed surah metadata row. */
+export const quranSurahMeaningValidator = v.object({
+  appLocale: v.literal(ENGLISH_APP_LOCALE_CODE),
+  text: v.string(),
+});
+
 const quranSourceArtifactValidator = v.object({
   byteCount: v.number(),
   digest: v.string(),

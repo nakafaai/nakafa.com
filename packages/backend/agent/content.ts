@@ -2,6 +2,7 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { decodeAgentOutput } from "@repo/backend/agent/decode";
 import { readAgentQuery } from "@repo/backend/agent/query";
 import { getAgentContentReferenceInput } from "@repo/backend/agent/ref";
+import { completePublishedQuranSurah } from "@repo/backend/client/quran/catalog";
 import {
   decodePublishedQuranMarkdown,
   renderQuranReadingSourcesMarkdown,
@@ -174,8 +175,13 @@ const renderQuranMarkdown = Effect.fn("agent.renderQuranMarkdown")(function* (
     appLocale: ref.locale,
     surahNumber: source.surahNumber,
   }).pipe(Effect.mapError(contentReadError));
-  const title = publication.surah.name.transliteration;
-  const description = publication.surah.name.meaning ?? title;
+  const surah = yield* completePublishedQuranSurah(publication.surah, null, {
+    operation: "markdown",
+    snapshotId: publication.snapshotId,
+  }).pipe(Effect.mapError(contentReadError));
+  const title = surah.name.transliteration;
+  const meaning = surah.name.meaning;
+  const description = meaning.text;
   const preBismillah =
     publication.preBismillah === null
       ? []
@@ -195,10 +201,8 @@ const renderQuranMarkdown = Effect.fn("agent.renderQuranMarkdown")(function* (
       text: [
         `# ${title}`,
         "",
-        ...(publication.surah.name.meaning === null
-          ? []
-          : [`Meaning: ${publication.surah.name.meaning}`]),
-        `Revelation: ${publication.surah.revelation.place}`,
+        `Meaning: ${meaning.text} (${meaning.appLocale})`,
+        `Revelation: ${surah.revelation.place}`,
         "",
         ...renderQuranReadingSourcesMarkdown(publication.sources),
         ...renderQuranTafsirAccessMarkdown(publication.tafsirAccess),

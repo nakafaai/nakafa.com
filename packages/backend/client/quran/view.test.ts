@@ -1,8 +1,4 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
-import {
-  type AppLocaleCode,
-  ENGLISH_APP_LOCALE_CODE,
-} from "@nakafa/aksara-contracts/locale";
 import { decodePublishedQuranView } from "@repo/backend/client/quran/view";
 import type { api } from "@repo/backend/convex/_generated/api";
 import {
@@ -23,7 +19,8 @@ const source = {
 };
 const surah = {
   name: {
-    meaning: null,
+    meaning: "The Opening",
+    sourceMeaning: { appLocale: "en" as const, text: "The Opening" },
     transliteration: "Al-Fatihah",
   },
   number: 1,
@@ -91,6 +88,18 @@ describe("signed Quran view decoder", () => {
           ],
         },
       });
+      expect(english.surah.name.meaning).toEqual({
+        appLocale: "en",
+        text: "The Opening",
+      });
+      expect(german.surah.name.meaning).toEqual({
+        appLocale: "en",
+        text: "The Opening",
+      });
+      expect(indonesian.surah.name.meaning).toEqual({
+        appLocale: "en",
+        text: "The Opening",
+      });
       expect(english.tafsirAccess).toMatchObject({
         appLocale: "en",
         kind: "external",
@@ -138,29 +147,22 @@ describe("signed Quran view decoder", () => {
   );
 });
 /** Builds source and metadata shared by app-locale view fixtures. */
-function viewBase(appLocale: AppLocaleCode) {
-  const localizedSurah = {
-    ...surah,
-    name: {
-      ...surah.name,
-      meaning: appLocale === ENGLISH_APP_LOCALE_CODE ? "The Opening" : null,
-    },
-  };
+function viewBase(meaning: string | null) {
   return {
     ...source,
     nextSurah: {
-      ...localizedSurah,
-      name: { ...localizedSurah.name, transliteration: "Al-Baqarah" },
+      ...surah,
+      name: { ...surah.name, meaning, transliteration: "Al-Baqarah" },
       number: 2,
     },
     previousSurah: null,
-    surah: localizedSurah,
+    surah: { ...surah, name: { ...surah.name, meaning } },
   };
 }
 /** Builds one complete English view response. */
 function englishViewResult(): QuranViewResult {
   return {
-    ...viewBase("en"),
+    ...viewBase("The Opening"),
     appLocale: "en",
     preBismillah: null,
     sources: makeQuranLocaleSources("en"),
@@ -190,7 +192,7 @@ function englishViewResult(): QuranViewResult {
 /** Builds one complete German view response without invented source notes. */
 function germanViewResult(): QuranViewResult {
   return {
-    ...viewBase("de"),
+    ...viewBase(null),
     appLocale: "de",
     preBismillah: null,
     sources: makeQuranLocaleSources("de"),
@@ -210,7 +212,7 @@ function germanViewResult(): QuranViewResult {
 /** Builds one complete Indonesian view response. */
 function indonesianViewResult(): QuranViewResult {
   return {
-    ...viewBase("id"),
+    ...viewBase(null),
     appLocale: "id",
     preBismillah: null,
     sources: makeQuranLocaleSources("id"),

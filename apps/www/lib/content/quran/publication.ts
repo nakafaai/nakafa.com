@@ -1,7 +1,10 @@
 import "server-only";
 
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
+import {
+  completePublishedQuranSurah,
+  decodePublishedQuranCatalog,
+} from "@repo/backend/client/quran/catalog";
 import { decodePublishedQuranMarkdown } from "@repo/backend/client/quran/markdown";
 import { decodePublishedQuranSource } from "@repo/backend/client/quran/publication";
 import { decodePublishedQuranView } from "@repo/backend/client/quran/view";
@@ -30,9 +33,9 @@ export const readPublishedQuranCatalog = Effect.fn(
   return yield* decodePublishedQuranCatalog(result);
 });
 
-/** Reads and validates one active signed Quran markdown projection. */
-export const readPublishedQuranMarkdown = Effect.fn(
-  "NakafaQuran.readPublishedMarkdown"
+/** Reads one Quran markdown projection and its predecessor-only catalog. */
+const readPublishedQuranMarkdownAttempt = Effect.fn(
+  "NakafaQuran.readPublishedMarkdownAttempt"
 )(function* (locale: Locale, surahNumber: number, verseLimit?: number) {
   const appLocale = AppLocaleSchema.make(locale);
   const result = yield* readRuntimeQuery(
@@ -41,25 +44,90 @@ export const readPublishedQuranMarkdown = Effect.fn(
       ? { appLocale, surahNumber }
       : { appLocale, surahNumber, verseLimit }
   );
-  return yield* decodePublishedQuranMarkdown(result, {
+  const markdown = yield* decodePublishedQuranMarkdown(result, {
     appLocale,
     surahNumber,
     verseLimit,
   });
+  const catalog =
+    markdown.surah.name.meaning === null
+      ? yield* readPublishedQuranCatalog()
+      : null;
+  const surah = yield* completePublishedQuranSurah(markdown.surah, catalog, {
+    operation: "markdown",
+    snapshotId: markdown.snapshotId,
+  });
+  return { ...markdown, surah };
 });
 
-/** Reads and validates one locale-specific signed Quran web projection. */
+/** Retries only the release-switch race while predecessor reads remain live. */
+export const readPublishedQuranMarkdown = Effect.fn(
+  "NakafaQuran.readPublishedMarkdown"
+)(function* (locale: Locale, surahNumber: number, verseLimit?: number) {
+  return yield* readPublishedQuranMarkdownAttempt(
+    locale,
+    surahNumber,
+    verseLimit
+  ).pipe(
+    Effect.retry({
+      times: 2,
+      while: (error) => error._tag === "QuranSnapshotChangedError",
+    })
+  );
+});
+
+/** Reads one Quran view projection and its predecessor-only catalog. */
+const readPublishedQuranViewAttempt = Effect.fn(
+  "NakafaQuran.readPublishedViewAttempt"
+)(function* (locale: Locale, surahNumber: number) {
+  const appLocale = AppLocaleSchema.make(locale);
+  const result = yield* readRuntimeQuery(api.contentRelease.quran.page, {
+    appLocale,
+    surahNumber,
+  });
+  const view = yield* decodePublishedQuranView(result, {
+    appLocale,
+    surahNumber,
+  });
+  const needsCatalog = [view.surah, view.previousSurah, view.nextSurah].some(
+    (surah) => surah?.name.meaning === null
+  );
+  const catalog = needsCatalog ? yield* readPublishedQuranCatalog() : null;
+  const surah = yield* completePublishedQuranSurah(view.surah, catalog, {
+    operation: "view",
+    snapshotId: view.snapshotId,
+  });
+  const previousSurah =
+    view.previousSurah === null
+      ? null
+      : yield* completePublishedQuranSurah(view.previousSurah, catalog, {
+          operation: "view",
+          snapshotId: view.snapshotId,
+        });
+  const nextSurah =
+    view.nextSurah === null
+      ? null
+      : yield* completePublishedQuranSurah(view.nextSurah, catalog, {
+          operation: "view",
+          snapshotId: view.snapshotId,
+        });
+  return {
+    ...view,
+    nextSurah,
+    previousSurah,
+    surah,
+  };
+});
+
+/** Reads one race-safe locale-specific signed Quran web projection. */
 const readPublishedQuranView = Effect.fn("NakafaQuran.readPublishedView")(
   function* (locale: Locale, surahNumber: number) {
-    const appLocale = AppLocaleSchema.make(locale);
-    const result = yield* readRuntimeQuery(api.contentRelease.quran.page, {
-      appLocale,
-      surahNumber,
-    });
-    return yield* decodePublishedQuranView(result, {
-      appLocale,
-      surahNumber,
-    });
+    return yield* readPublishedQuranViewAttempt(locale, surahNumber).pipe(
+      Effect.retry({
+        times: 2,
+        while: (error) => error._tag === "QuranSnapshotChangedError",
+      })
+    );
   }
 );
 

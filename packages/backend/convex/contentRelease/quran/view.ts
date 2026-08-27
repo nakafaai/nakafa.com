@@ -16,6 +16,7 @@ import {
   quranAppLocaleValidator,
   quranReadingSourcesValidator,
   quranSourceFields,
+  quranSurahMeaningValidator,
   quranTafsirAccessValidator,
   quranTranslationDocumentValidator,
 } from "@repo/backend/convex/contentRelease/quran/spec";
@@ -30,6 +31,7 @@ import { Effect } from "effect";
 
 const quranViewNameValidator = v.object({
   meaning: v.union(v.string(), v.null()),
+  sourceMeaning: v.optional(quranSurahMeaningValidator),
   transliteration: v.string(),
 });
 
@@ -87,6 +89,7 @@ function projectSurah(
         surah.name.meaning.appLocale === appLocale
           ? surah.name.meaning.text
           : null,
+      sourceMeaning: surah.name.meaning,
       transliteration: surah.name.transliteration,
     },
     number: surah.number,

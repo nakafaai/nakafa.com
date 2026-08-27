@@ -1,3 +1,4 @@
+import { decodePublishedQuranSurah } from "@repo/backend/client/quran/catalog";
 import { hasExactQuranVerseRange } from "@repo/backend/client/quran/integrity";
 import {
   decodePublishedQuranSource,
@@ -102,12 +103,13 @@ export const decodePublishedQuranMarkdown = Effect.fn(
       reason: "Signed Quran markdown identity is inconsistent.",
     });
   }
+  const surah = yield* decodePublishedQuranSurah(result.surah, "markdown");
   return {
     ...source,
     appLocale: result.appLocale,
     preBismillah: result.preBismillah,
     sources: result.sources,
-    surah: result.surah,
+    surah,
     tafsirAccess: result.tafsirAccess,
     toVerse: result.toVerse,
     verses: result.verses,

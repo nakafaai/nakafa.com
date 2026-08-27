@@ -10,6 +10,8 @@ interface Props {
   copySourceUrl?: null | string;
   /** The description of the content */
   description?: string;
+  /** BCP 47 language of the description when it differs from the page */
+  descriptionLanguage?: string;
   /** The icon of the title */
   icon?: IconSvgElement;
   /** The link to go some where, it will be shown as a button on top of the title */
@@ -30,6 +32,7 @@ export function HeaderContent({
   title,
   link,
   description,
+  descriptionLanguage,
   icon: Icon,
   slug,
   sourceUrl,
@@ -65,7 +68,9 @@ export function HeaderContent({
 
         {!!description && (
           <div className="space-y-3">
-            <p className="text-muted-foreground">{description}</p>
+            <p className="text-muted-foreground" lang={descriptionLanguage}>
+              {description}
+            </p>
           </div>
         )}
 

@@ -178,7 +178,8 @@ async function CachedSurahShell({
       recoverStalePublishedQuranSnapshot(servedSnapshotId)
     );
   }
-  const description = surahData.name.meaning ?? t("quran-description");
+  const description = surahData.name.meaning.text;
+  const descriptionLanguage = surahData.name.meaning.appLocale;
   const title = getQuranSurahName(surahData.name);
 
   const verseItems = result.verses.map((verse) => {
@@ -229,6 +230,7 @@ async function CachedSurahShell({
         <LayoutMaterialContent>
           <HeaderContent
             description={description}
+            descriptionLanguage={descriptionLanguage}
             icon={AllahIcon}
             link={{
               href: "/quran",
@@ -287,6 +289,7 @@ async function CachedSurahShell({
             title,
             href: `/quran/${surah}`,
             description,
+            descriptionLanguage,
           }}
         />
       </VirtualProvider>

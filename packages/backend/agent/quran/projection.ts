@@ -48,13 +48,10 @@ export const projectNakafaQuranReference = Effect.fn(
     NakafaAgentQuranReferenceSchema,
     {
       ...input.ref,
-      meaning:
-        input.reference.surah.name.meaning.appLocale === input.appLocale
-          ? {
-              locale: input.reference.surah.name.meaning.appLocale,
-              text: input.reference.surah.name.meaning.text,
-            }
-          : null,
+      meaning: {
+        locale: input.reference.surah.name.meaning.appLocale,
+        text: input.reference.surah.name.meaning.text,
+      },
       name: input.reference.surah.name.transliteration,
       pre_bismillah: input.reference.preBismillah,
       revelation: input.reference.surah.revelation.place,

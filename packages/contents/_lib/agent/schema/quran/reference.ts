@@ -64,6 +64,7 @@ const NakafaQuranReferenceVerseSchema = Schema.Struct({
 
 const NakafaQuranReferenceFields = {
   ...NakafaAgentReadableContentRefSchema.fields,
+  meaning: NakafaQuranMeaningSchema,
   name: QuranSurahRowSchema.fields.name.fields.transliteration.annotate({
     description: "Source-authenticated transliterated surah name.",
   }),
@@ -82,7 +83,6 @@ const NakafaQuranReferenceFields = {
 const NakafaQuranEnglishReferenceSchema = Schema.Struct({
   ...NakafaQuranReferenceFields,
   locale: Schema.Literal(ENGLISH_APP_LOCALE_CODE),
-  meaning: NakafaQuranMeaningSchema,
   sources: NakafaQuranEnglishReadingSourcesSchema,
   tafsir_access: Schema.NullOr(NakafaQuranEnglishTafsirAccessSchema).annotate({
     description:
@@ -93,7 +93,6 @@ const NakafaQuranEnglishReferenceSchema = Schema.Struct({
 const NakafaQuranIndonesianReferenceSchema = Schema.Struct({
   ...NakafaQuranReferenceFields,
   locale: Schema.Literal(INDONESIAN_APP_LOCALE_CODE),
-  meaning: Schema.Null,
   sources: NakafaQuranIndonesianReadingSourcesSchema,
   tafsir_access: NakafaQuranIndonesianTafsirAccessSchema,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
@@ -101,7 +100,6 @@ const NakafaQuranIndonesianReferenceSchema = Schema.Struct({
 const NakafaQuranGermanReferenceSchema = Schema.Struct({
   ...NakafaQuranReferenceFields,
   locale: Schema.Literal(GERMAN_APP_LOCALE_CODE),
-  meaning: Schema.Null,
   sources: NakafaQuranGermanReadingSourcesSchema,
   tafsir_access: Schema.NullOr(NakafaQuranGermanTafsirAccessSchema).annotate({
     description:
@@ -109,7 +107,7 @@ const NakafaQuranGermanReferenceSchema = Schema.Struct({
   }),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 
-/** Quran output with locale-correlated meaning and signed source access. */
+/** Quran output with source-language meaning and locale-selected reading access. */
 export const NakafaAgentQuranReferenceSchema = Schema.Union([
   NakafaQuranEnglishReferenceSchema,
   NakafaQuranIndonesianReferenceSchema,

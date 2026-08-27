@@ -172,6 +172,7 @@ function markdownResult(
     surah: {
       name: {
         meaning: "The Opening",
+        sourceMeaning: { appLocale: "en", text: "The Opening" },
         transliteration: "Al-Fatihah",
       },
       number: 1,
