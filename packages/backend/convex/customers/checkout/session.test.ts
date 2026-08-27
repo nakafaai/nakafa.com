@@ -1,15 +1,15 @@
+import { describe, expect, it } from "@effect/vitest";
 import { createAdmittedCheckoutSession } from "@repo/backend/convex/customers/checkout/session";
 import {
   CheckoutSessionIoError,
   checkoutSessionIoErrorCode,
 } from "@repo/backend/convex/customers/checkout/spec";
-import { describe, expect, it } from "@repo/testing/effect";
-import { Effect, Result } from "effect";
+import { Effect } from "effect";
 import { vi } from "vitest";
 
 const checkout = { url: "https://polar.sh/checkout/test" };
 describe("customers/checkout/session", () => {
-  it.live("withholds a checkout created before deletion starts", () =>
+  it.effect("withholds a checkout created before deletion starts", () =>
     Effect.gen(function* () {
       const createCheckout = vi.fn(() => Effect.succeed(checkout));
       const admitCheckout = vi.fn(() => Effect.succeed(false));
@@ -23,7 +23,7 @@ describe("customers/checkout/session", () => {
       );
     })
   );
-  it.live("returns a checkout admitted after Polar IO", () =>
+  it.effect("returns a checkout admitted after Polar IO", () =>
     Effect.gen(function* () {
       const createCheckout = vi.fn(() => Effect.succeed(checkout));
       const admitCheckout = vi.fn(() => Effect.succeed(true));
@@ -32,26 +32,21 @@ describe("customers/checkout/session", () => {
       ).toEqual(checkout);
     })
   );
-  it.live("preserves typed admission failures", () =>
+  it.effect("preserves typed admission failures", () =>
     Effect.gen(function* () {
       const failure = new CheckoutSessionIoError({
         code: checkoutSessionIoErrorCode,
         message: "Convex unavailable",
       });
-      const result = yield* Effect.result(
-        createAdmittedCheckoutSession({
-          admitCheckout: () => Effect.fail(failure),
-          createCheckout: () => Effect.succeed(checkout),
-        })
-      );
-      expect(Result.isFailure(result)).toBe(true);
-      if (Result.isFailure(result)) {
-        expect(result.failure).toMatchObject({
-          _tag: "CheckoutSessionIoError",
-          code: checkoutSessionIoErrorCode,
-          message: "Convex unavailable",
-        });
-      }
+      const observed = yield* createAdmittedCheckoutSession({
+        admitCheckout: () => Effect.fail(failure),
+        createCheckout: () => Effect.succeed(checkout),
+      }).pipe(Effect.flip);
+      expect(observed).toMatchObject({
+        _tag: "CheckoutSessionIoError",
+        code: checkoutSessionIoErrorCode,
+        message: "Convex unavailable",
+      });
     })
   );
 });
