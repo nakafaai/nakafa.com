@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import { read } from "@repo/ai/agents/nakafa/tools/read";
 import {
@@ -7,7 +8,6 @@ import {
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 const ARTICLE_CONTENT_ID = NakafaAgentContentRefInputSchema.make(
@@ -28,7 +28,7 @@ const TRYOUT_URL = NakafaAgentContentRefInputSchema.make(
   "https://nakafa.com/en/try-out/indonesia/snbt/2027/set-2"
 );
 describe("nakafa read tool", () => {
-  it.live("writes loading and done parts for content reads", () =>
+  it.effect("writes loading and done parts for content reads", () =>
     Effect.gen(function* () {
       const { parts, writer } = createWriter();
       const output = yield* read({
@@ -51,7 +51,7 @@ describe("nakafa read tool", () => {
       );
     })
   );
-  it.live("accepts canonical URL projections for current-page reads", () =>
+  it.effect("accepts canonical URL projections for current-page reads", () =>
     Effect.gen(function* () {
       const { parts, writer } = createWriter();
       const output = yield* read({
@@ -70,7 +70,7 @@ describe("nakafa read tool", () => {
       );
     })
   );
-  it.live("writes an error part when content is missing", () =>
+  it.effect("writes an error part when content is missing", () =>
     Effect.gen(function* () {
       const { parts, writer } = createWriter();
       const output = yield* read({
@@ -86,7 +86,7 @@ describe("nakafa read tool", () => {
       );
     })
   );
-  it.live("does not invent a markdown read for tryout references", () =>
+  it.effect("does not invent a markdown read for tryout references", () =>
     Effect.gen(function* () {
       const { parts, writer } = createWriter();
       const output = yield* read({
@@ -102,7 +102,7 @@ describe("nakafa read tool", () => {
       );
     })
   );
-  it.live("writes an error part when content reading fails", () =>
+  it.effect("writes an error part when content reading fails", () =>
     Effect.gen(function* () {
       const { parts, writer } = createWriter();
       const output = yield* read({
