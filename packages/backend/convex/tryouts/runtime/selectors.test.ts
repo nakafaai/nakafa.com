@@ -1,4 +1,4 @@
-import { assert, beforeEach, describe, it } from "@effect/vitest";
+import { assert, beforeEach, describe, it, vi } from "@effect/vitest";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { loadTryoutSignedContent } from "@repo/backend/convex/tryouts/runtime/selectors";
@@ -8,7 +8,6 @@ import {
   TRYOUT_TEST_NOW,
 } from "@repo/backend/test/tryouts";
 import { Data, Effect } from "effect";
-import { vi } from "vitest";
 
 class QueryFailure extends Data.TaggedError("QueryFailure")<{
   readonly message: string;

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it, vi } from "@effect/vitest";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -22,7 +22,6 @@ import {
 } from "@repo/backend/test/tryout/score";
 import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
-import { vi } from "vitest";
 
 class ObservedPublicFailure extends Schema.TaggedError<ObservedPublicFailure>()(
   "ObservedPublicFailure",

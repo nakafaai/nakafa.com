@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, it, vi } from "@effect/vitest";
 import {
   CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT,
   clearContentRuntimeSecrets,
@@ -10,7 +10,6 @@ import {
 } from "@repo/backend/scripts/content/runtime/ci/config";
 import { CONTENT_RUNTIME_CACHE_VERSION } from "@repo/backend/scripts/content/runtime/tables";
 import { ConfigProvider, Effect } from "effect";
-import { vi } from "vitest";
 
 describe("content runtime CI config", () => {
   afterEach(() => {
