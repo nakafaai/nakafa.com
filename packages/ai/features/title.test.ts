@@ -1,8 +1,8 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { ModelIdSchema } from "@repo/ai/config/model";
 import { DEFAULT_TITLE, MAX_TITLE_LENGTH } from "@repo/ai/features/constants";
 import { generateTitle } from "@repo/ai/features/title";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import { vi } from "vitest";
 
@@ -15,21 +15,14 @@ vi.mock("@repo/ai/config/app", () => ({
   },
 }));
 
-vi.mock("ai", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("ai")>();
-
-  return {
-    ...actual,
-    generateText,
-  };
-});
+vi.mock("ai", () => ({ generateText }));
 
 afterEach(() => {
   generateText.mockReset();
 });
 
 describe("generateTitle", () => {
-  it.live("summarizes the first user message without assistant internals", () =>
+  it.effect("summarizes the first user message without assistant internals", () =>
     Effect.gen(function* () {
       generateText.mockResolvedValue({
         text: "Latihan Matriks Eigen",
@@ -75,7 +68,7 @@ describe("generateTitle", () => {
     })
   );
 
-  it.live("removes surrounding title quotes", () =>
+  it.effect("removes surrounding title quotes", () =>
     Effect.gen(function* () {
       generateText.mockResolvedValue({
         text: '"Belajar Fungsi Kuadrat"',
@@ -101,7 +94,7 @@ describe("generateTitle", () => {
     })
   );
 
-  it.live("truncates long generated titles", () =>
+  it.effect("truncates long generated titles", () =>
     Effect.gen(function* () {
       generateText.mockResolvedValue({
         text: "Analisis Persamaan Diferensial Linear Orde Dua Homogen dengan Koefisien Variabel dan Kondisi Awal",
@@ -128,7 +121,7 @@ describe("generateTitle", () => {
     })
   );
 
-  it.live("falls back when generation fails", () =>
+  it.effect("falls back when generation fails", () =>
     Effect.gen(function* () {
       generateText.mockRejectedValue(new Error("model unavailable"));
 
@@ -152,7 +145,7 @@ describe("generateTitle", () => {
     })
   );
 
-  it.live("uses an empty title prompt when no user text exists", () =>
+  it.effect("uses an empty title prompt when no user text exists", () =>
     Effect.gen(function* () {
       generateText.mockResolvedValue({
         text: "Obrolan Baru",
@@ -182,7 +175,7 @@ describe("generateTitle", () => {
     })
   );
 
-  it.live("ignores non-text user parts when building the title prompt", () =>
+  it.effect("ignores non-text user parts when building the title prompt", () =>
     Effect.gen(function* () {
       generateText.mockResolvedValue({
         text: "Latihan Kombinatorika",
