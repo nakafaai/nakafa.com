@@ -1,8 +1,9 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { testArticleProjection } from "@/test/content-article";
 import { previewProjection } from "@/test/content-preview";
@@ -29,145 +30,155 @@ beforeEach(() => {
 });
 
 describe("published content route", () => {
-  it("skips route lookup when no content release is active", async () => {
-    await expect(
-      Effect.runPromise(
-        readActiveContentRoute({
+  it.effect("skips route lookup when no content release is active", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* readActiveContentRoute({
           activeReleaseId: null,
           appLocale: input.appLocale,
           family: input.family,
           publicPath: input.publicPath,
         })
-      )
-    ).resolves.toEqual({
-      activeReleaseId: null,
-      kind: "unmanaged",
-    });
-    expect(readQueryMock).not.toHaveBeenCalled();
-    expect(fetchQueryMock).not.toHaveBeenCalled();
-  });
-
-  it("passes unmanaged and owned absence through without projection fallback", async () => {
-    fetchQueryMock
-      .mockResolvedValueOnce({
-        activeReleaseId: input.activeReleaseId,
+      ).toEqual({
+        activeReleaseId: null,
         kind: "unmanaged",
-      })
-      .mockResolvedValueOnce({
-        activeReleaseId: input.activeReleaseId,
-        kind: "missing",
       });
+      expect(readQueryMock).not.toHaveBeenCalled();
+      expect(fetchQueryMock).not.toHaveBeenCalled();
+    })
+  );
 
-    await expect(
-      Effect.runPromise(readActiveContentRoute(input))
-    ).resolves.toEqual({
-      activeReleaseId: input.activeReleaseId,
-      kind: "unmanaged",
-    });
-    await expect(
-      Effect.runPromise(readActiveContentRoute(input))
-    ).resolves.toEqual({
-      activeReleaseId: input.activeReleaseId,
-      kind: "missing",
-    });
-  });
+  it.effect(
+    "passes unmanaged and owned absence through without projection fallback",
+    () =>
+      Effect.gen(function* () {
+        fetchQueryMock
+          .mockResolvedValueOnce({
+            activeReleaseId: input.activeReleaseId,
+            kind: "unmanaged",
+          })
+          .mockResolvedValueOnce({
+            activeReleaseId: input.activeReleaseId,
+            kind: "missing",
+          });
 
-  it("fails when ownership changes after the caller reads active identity", async () => {
-    const nextReleaseId = ReleaseIdSchema.make("release-next");
-    fetchQueryMock
-      .mockResolvedValueOnce({
-        activeReleaseId: nextReleaseId,
-        kind: "unmanaged",
+        expect(yield* readActiveContentRoute(input)).toEqual({
+          activeReleaseId: input.activeReleaseId,
+          kind: "unmanaged",
+        });
+        expect(yield* readActiveContentRoute(input)).toEqual({
+          activeReleaseId: input.activeReleaseId,
+          kind: "missing",
+        });
       })
-      .mockResolvedValueOnce({
-        activeReleaseId: nextReleaseId,
-        kind: "missing",
-      });
+  );
 
-    await expect(
-      Effect.runPromise(readActiveContentRoute(input).pipe(Effect.flip))
-    ).resolves.toMatchObject({
-      _tag: "PublishedReleaseMismatchError",
-      actualReleaseId: "release-next",
-      expectedReleaseId: activeReleaseId,
-    });
-    await expect(
-      Effect.runPromise(readActiveContentRoute(input).pipe(Effect.flip))
-    ).resolves.toMatchObject({
-      _tag: "PublishedReleaseMismatchError",
-      actualReleaseId: "release-next",
-      expectedReleaseId: activeReleaseId,
-    });
-  });
+  it.effect(
+    "fails when ownership changes after the caller reads active identity",
+    () =>
+      Effect.gen(function* () {
+        const nextReleaseId = ReleaseIdSchema.make("release-next");
+        fetchQueryMock
+          .mockResolvedValueOnce({
+            activeReleaseId: nextReleaseId,
+            kind: "unmanaged",
+          })
+          .mockResolvedValueOnce({
+            activeReleaseId: nextReleaseId,
+            kind: "missing",
+          });
 
-  it("decodes the canonical routed projection without fetching its artifact", async () => {
-    fetchQueryMock.mockResolvedValue({
-      activeReleaseId,
-      kind: "found",
-      projectionJson: JSON.stringify(previewProjection),
-    });
+        expect(
+          yield* readActiveContentRoute(input).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "PublishedReleaseMismatchError",
+          actualReleaseId: "release-next",
+          expectedReleaseId: activeReleaseId,
+        });
+        expect(
+          yield* readActiveContentRoute(input).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "PublishedReleaseMismatchError",
+          actualReleaseId: "release-next",
+          expectedReleaseId: activeReleaseId,
+        });
+      })
+  );
 
-    await expect(
-      Effect.runPromise(readActiveContentRoute(input))
-    ).resolves.toEqual({
-      activeReleaseId,
-      kind: "found",
-      projection: previewProjection,
-    });
-    expect(fetchQueryMock).toHaveBeenCalledWith(expect.anything(), {
-      appLocale: input.appLocale,
-      family: input.family,
-      publicPath: input.publicPath,
-    });
-    expect(readQueryMock).toHaveBeenCalledWith(expect.anything(), {
-      appLocale: input.appLocale,
-      family: input.family,
-      publicPath: input.publicPath,
-    });
-  });
+  it.effect(
+    "decodes the canonical routed projection without fetching its artifact",
+    () =>
+      Effect.gen(function* () {
+        fetchQueryMock.mockResolvedValue({
+          activeReleaseId,
+          kind: "found",
+          projectionJson: JSON.stringify(previewProjection),
+        });
 
-  it("surfaces malformed stored projections as typed integrity failures", async () => {
-    fetchQueryMock.mockResolvedValue({
-      activeReleaseId,
-      kind: "found",
-      projectionJson: JSON.stringify({
-        ...previewProjection,
-        publicPath: "subjects/mathematics/unrelated",
-      }),
-    });
+        expect(yield* readActiveContentRoute(input)).toEqual({
+          activeReleaseId,
+          kind: "found",
+          projection: previewProjection,
+        });
+        expect(fetchQueryMock).toHaveBeenCalledWith(expect.anything(), {
+          appLocale: input.appLocale,
+          family: input.family,
+          publicPath: input.publicPath,
+        });
+        expect(readQueryMock).toHaveBeenCalledWith(expect.anything(), {
+          appLocale: input.appLocale,
+          family: input.family,
+          publicPath: input.publicPath,
+        });
+      })
+  );
 
-    await expect(
-      Effect.runPromise(readActiveContentRoute(input).pipe(Effect.flip))
-    ).resolves.toMatchObject({
-      _tag: "PublishedProjectionError",
-      appLocale: input.appLocale,
-      publicPath: input.publicPath,
-    });
+  it.effect(
+    "surfaces malformed stored projections as typed integrity failures",
+    () =>
+      Effect.gen(function* () {
+        fetchQueryMock.mockResolvedValue({
+          activeReleaseId,
+          kind: "found",
+          projectionJson: JSON.stringify({
+            ...previewProjection,
+            publicPath: "subjects/mathematics/unrelated",
+          }),
+        });
 
-    fetchQueryMock.mockResolvedValue({
-      activeReleaseId,
-      kind: "found",
-      projectionJson: JSON.stringify(testArticleProjection),
-    });
-    await expect(
-      Effect.runPromise(readActiveContentRoute(input).pipe(Effect.flip))
-    ).resolves.toMatchObject({
-      _tag: "PublishedProjectionError",
-      appLocale: input.appLocale,
-      publicPath: input.publicPath,
-    });
+        expect(
+          yield* readActiveContentRoute(input).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "PublishedProjectionError",
+          appLocale: input.appLocale,
+          publicPath: input.publicPath,
+        });
 
-    fetchQueryMock.mockResolvedValue({
-      activeReleaseId,
-      kind: "found",
-      projectionJson: "{",
-    });
-    await expect(
-      Effect.runPromise(readActiveContentRoute(input).pipe(Effect.flip))
-    ).resolves.toMatchObject({
-      _tag: "PublishedProjectionError",
-      appLocale: input.appLocale,
-      publicPath: input.publicPath,
-    });
-  });
+        fetchQueryMock.mockResolvedValue({
+          activeReleaseId,
+          kind: "found",
+          projectionJson: JSON.stringify(testArticleProjection),
+        });
+        expect(
+          yield* readActiveContentRoute(input).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "PublishedProjectionError",
+          appLocale: input.appLocale,
+          publicPath: input.publicPath,
+        });
+
+        fetchQueryMock.mockResolvedValue({
+          activeReleaseId,
+          kind: "found",
+          projectionJson: "{",
+        });
+        expect(
+          yield* readActiveContentRoute(input).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "PublishedProjectionError",
+          appLocale: input.appLocale,
+          publicPath: input.publicPath,
+        });
+      })
+  );
 });
