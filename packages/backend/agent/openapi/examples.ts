@@ -9,7 +9,6 @@ import {
   NAKAFA_API_BASE_URL,
   NAKAFA_BASE_URL,
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
-  NAKAFA_PUBLIC_API_DOCUMENT_VERSION,
   NAKAFA_PUBLIC_API_VERSION,
 } from "@repo/contents/_lib/agent/constants";
 import { NAKAFA_AGENT_DEFAULT_LIMIT } from "@repo/contents/_types/agent/search";
@@ -169,7 +168,7 @@ export const OPENAPI_RESPONSE_EXAMPLES = {
   OpenApi: {
     info: {
       title: "Nakafa Public API",
-      version: NAKAFA_PUBLIC_API_DOCUMENT_VERSION,
+      version: NAKAFA_PUBLIC_API_VERSION,
     },
     openapi: "3.1.1",
     paths: {},

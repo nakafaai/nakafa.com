@@ -64,7 +64,6 @@ const METERED_RESPONSES = { ...COMMON_ERRORS, "429": RATE_LIMIT_RESPONSE };
 
 /** Adds the contract shared by read-only API operations. */
 function readOperation(input: {
-  readonly deprecated?: boolean;
   readonly description: string;
   readonly operationId: string;
   readonly parameters?: readonly unknown[];
@@ -72,7 +71,6 @@ function readOperation(input: {
   readonly summary: string;
 }) {
   return {
-    ...(input.deprecated === true ? { deprecated: true } : {}),
     description: input.description,
     operationId: input.operationId,
     parameters: input.parameters ?? [],

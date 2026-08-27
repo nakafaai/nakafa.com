@@ -3,7 +3,7 @@ import { OPENAPI_SCHEMAS } from "@repo/backend/agent/openapi/schema";
 import {
   NAKAFA_API_BASE_URL,
   NAKAFA_BASE_URL,
-  NAKAFA_PUBLIC_API_DOCUMENT_VERSION,
+  NAKAFA_PUBLIC_API_VERSION,
 } from "@repo/contents/_lib/agent/constants";
 
 const ETAG_CHECKSUM_MODULUS = 2_147_483_647;
@@ -26,15 +26,14 @@ export const NAKAFA_OPENAPI_DOCUMENT = {
       url: `${NAKAFA_BASE_URL}/contact`,
     },
     description:
-      "Read-only public access to Nakafa's signed educational content. Quran uses one canonical unversioned contract with temporary compatibility routes.",
+      "Read-only public access to Nakafa's signed educational content through one supported V1 contract.",
     license: {
       name: "Nakafa terms",
       url: `${NAKAFA_BASE_URL}/en/terms-of-service`,
     },
     title: "Nakafa Public API",
-    version: NAKAFA_PUBLIC_API_DOCUMENT_VERSION,
-    "x-version-policy":
-      "The unversioned Quran route is canonical. Deprecated Quran compatibility routes remain only for safe client migration.",
+    version: NAKAFA_PUBLIC_API_VERSION,
+    "x-version-policy": "V1 is the only supported public API contract.",
   },
   jsonSchemaDialect: "https://json-schema.org/draft/2020-12/schema",
   openapi: "3.1.1",
