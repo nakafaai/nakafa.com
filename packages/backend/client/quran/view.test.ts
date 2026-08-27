@@ -19,7 +19,6 @@ const source = {
 };
 const surah = {
   name: {
-    meaning: "The Opening",
     sourceMeaning: { appLocale: "en" as const, text: "The Opening" },
     transliteration: "Al-Fatihah",
   },

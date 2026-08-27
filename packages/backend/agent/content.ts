@@ -2,7 +2,6 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { decodeAgentOutput } from "@repo/backend/agent/decode";
 import { readAgentQuery } from "@repo/backend/agent/query";
 import { getAgentContentReferenceInput } from "@repo/backend/agent/ref";
-import { completePublishedQuranSurah } from "@repo/backend/client/quran/catalog";
 import {
   decodePublishedQuranMarkdown,
   renderQuranReadingSourcesMarkdown,
@@ -175,10 +174,7 @@ const renderQuranMarkdown = Effect.fn("agent.renderQuranMarkdown")(function* (
     appLocale: ref.locale,
     surahNumber: source.surahNumber,
   }).pipe(Effect.mapError(contentReadError));
-  const surah = yield* completePublishedQuranSurah(publication.surah, null, {
-    operation: "markdown",
-    snapshotId: publication.snapshotId,
-  }).pipe(Effect.mapError(contentReadError));
+  const surah = publication.surah;
   const title = surah.name.transliteration;
   const meaning = surah.name.meaning;
   const description = meaning.text;

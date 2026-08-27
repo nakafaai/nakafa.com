@@ -183,87 +183,6 @@ describe("Quran Nakafa reader", () => {
         expect(runtimeMocks.runtimeQuery).toHaveBeenCalledTimes(1);
       })
   );
-  it.live("retries predecessor Markdown across a signed release switch", () =>
-    Effect.gen(function* () {
-      const otherSnapshotId = Sha256HashSchema.make(`sha256:${"d".repeat(64)}`);
-      let catalogReads = 0;
-      runtimeMocks.runtimeQuery.mockImplementation(
-        (
-          _url: string,
-          query: FunctionReference<"query">,
-          args: Record<string, unknown>
-        ) => {
-          if (
-            getFunctionName(query) ===
-            getFunctionName(api.contentRelease.quran.prose)
-          ) {
-            return Promise.resolve(legacyMarkdownResult(args));
-          }
-          if (
-            getFunctionName(query) ===
-            getFunctionName(api.contentRelease.quran.surahs)
-          ) {
-            catalogReads += 1;
-            return Promise.resolve(
-              catalogResult(
-                catalogReads === 1 ? otherSnapshotId : source.snapshotId
-              )
-            );
-          }
-          return Promise.reject(new Error("Unhandled Quran query fixture."));
-        }
-      );
-
-      const markdown = yield* readQuranMarkdown(
-        convexUrl,
-        readNakafaContentRefFixture("id", "quran/1", "quran")
-      );
-      expect(Option.getOrUndefined(markdown)?.description).toBe("The Opening");
-      expect(catalogReads).toBe(2);
-      expect(runtimeMocks.runtimeQuery).toHaveBeenCalledTimes(4);
-    })
-  );
-  it.live("maps a persistent signed release switch to the agent boundary", () =>
-    Effect.gen(function* () {
-      const otherSnapshotId = Sha256HashSchema.make(`sha256:${"d".repeat(64)}`);
-      runtimeMocks.runtimeQuery.mockImplementation(
-        (
-          _url: string,
-          query: FunctionReference<"query">,
-          args: Record<string, unknown>
-        ) => {
-          if (
-            getFunctionName(query) ===
-            getFunctionName(api.contentRelease.quran.prose)
-          ) {
-            return Promise.resolve(legacyMarkdownResult(args));
-          }
-          if (
-            getFunctionName(query) ===
-            getFunctionName(api.contentRelease.quran.surahs)
-          ) {
-            return Promise.resolve(catalogResult(otherSnapshotId));
-          }
-          return Promise.reject(new Error("Unhandled Quran query fixture."));
-        }
-      );
-
-      const result = yield* Effect.result(
-        readQuranMarkdown(
-          convexUrl,
-          readNakafaContentRefFixture("id", "quran/1", "quran")
-        )
-      );
-      expect(result).toMatchObject({
-        _tag: "Failure",
-        failure: {
-          _tag: "NakafaAgentDataReadError",
-          cause: "Signed Quran release changed while reading its projection.",
-        },
-      });
-      expect(runtimeMocks.runtimeQuery).toHaveBeenCalledTimes(6);
-    })
-  );
   it.live("rejects non-Quran routes and reads source names directly", () =>
     Effect.gen(function* () {
       const missing = yield* readQuranMarkdown(
@@ -295,11 +214,6 @@ function readRuntimeFixture(
   ) {
     return Promise.resolve(markdownResult(args));
   }
-  if (
-    getFunctionName(query) === getFunctionName(api.contentRelease.quran.surahs)
-  ) {
-    return Promise.resolve(catalogResult());
-  }
   return Promise.reject(new Error("Unhandled Quran query fixture."));
 }
 
@@ -328,7 +242,6 @@ function markdownResult(args: Record<string, unknown>) {
     sources: makeQuranLocaleSources(appLocale),
     surah: {
       name: {
-        meaning: null,
         sourceMeaning: { appLocale: "en", text: "The Opening" },
         transliteration: "Al-Fatihah",
       },
@@ -345,32 +258,6 @@ function markdownResult(args: Record<string, unknown>) {
         translation: translationDocument(appLocale),
       },
     ],
-  };
-}
-
-/** Builds the stable signed catalog used across the projection switch. */
-function catalogResult(snapshotId = source.snapshotId) {
-  return {
-    ...source,
-    snapshotId,
-    rowJson: Array.from({ length: 114 }, (_, index) =>
-      encodeTestQuranRow(snapshotId, surahRow(index + 1))
-    ),
-  };
-}
-
-/** Simulates the deployed predecessor Markdown before the successor field. */
-function legacyMarkdownResult(args: Record<string, unknown>) {
-  const result = markdownResult(args);
-  return {
-    ...result,
-    surah: {
-      ...result.surah,
-      name: {
-        meaning: result.surah.name.meaning,
-        transliteration: result.surah.name.transliteration,
-      },
-    },
   };
 }
 

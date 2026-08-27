@@ -6,10 +6,6 @@ import {
 } from "@repo/backend/client/nakafa/decode";
 import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import {
-  completePublishedQuranSurah,
-  decodePublishedQuranCatalog,
-} from "@repo/backend/client/quran/catalog";
-import {
   decodePublishedQuranMarkdown,
   renderQuranReadingSourcesMarkdown,
   renderQuranTafsirAccessMarkdown,
@@ -85,7 +81,7 @@ function referenceArgs(input: ParsedQuranReferenceOptions) {
   };
 }
 
-/** Reads one expanded projection, consulting the catalog only for its predecessor. */
+/** Reads one complete signed Quran markdown projection. */
 const readQuranMarkdownPublication = Effect.fn(
   "NakafaQuran.readMarkdownPublication"
 )(function* (
@@ -98,23 +94,10 @@ const readQuranMarkdownPublication = Effect.fn(
     api.contentRelease.quran.prose,
     { appLocale, surahNumber }
   );
-  const publication = yield* decodePublishedQuranMarkdown(result, {
+  return yield* decodePublishedQuranMarkdown(result, {
     appLocale,
     surahNumber,
   });
-  const catalog =
-    publication.surah.name.meaning === null
-      ? yield* readNakafaRuntimeQuery(
-          convexUrl,
-          api.contentRelease.quran.surahs,
-          {}
-        ).pipe(Effect.flatMap(decodePublishedQuranCatalog))
-      : null;
-  const surah = yield* completePublishedQuranSurah(publication.surah, catalog, {
-    operation: "markdown",
-    snapshotId: publication.snapshotId,
-  });
-  return { ...publication, surah };
 });
 
 /** Renders one signed Quran surah as full agent markdown. */
@@ -130,16 +113,9 @@ export const readQuranMarkdown = Effect.fn("NakafaQuran.readMarkdown")(
       ref.locale,
       surahNumber
     ).pipe(
-      Effect.retry({
-        times: 2,
-        while: (error) => error._tag === "QuranSnapshotChangedError",
-      }),
-      Effect.catchTags({
-        QuranPublicationError: (error) =>
-          Effect.fail(toNakafaQuranDataReadError(error)),
-        QuranSnapshotChangedError: (error) =>
-          Effect.fail(toNakafaQuranDataReadError(error)),
-      })
+      Effect.catchTag("QuranPublicationError", (error) =>
+        Effect.fail(toNakafaQuranDataReadError(error))
+      )
     );
     const surah = publication.surah;
     const title = getSurahName(surah);

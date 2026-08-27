@@ -28,17 +28,6 @@ export class QuranPublicationError extends Schema.TaggedError<QuranPublicationEr
   }
 ) {}
 
-/** A projection and its predecessor catalog were read across a release switch. */
-export class QuranSnapshotChangedError extends Schema.TaggedError<QuranSnapshotChangedError>()(
-  "QuranSnapshotChangedError",
-  {
-    catalogSnapshotId: Sha256HashSchema,
-    operation: QuranPublicationOperationSchema,
-    projectionSnapshotId: Sha256HashSchema,
-    reason: Schema.String,
-  }
-) {}
-
 /** Creates one domain failure for malformed or inactive signed Quran data. */
 export function quranPublicationError(
   operation: QuranPublicationOperation,

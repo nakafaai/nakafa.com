@@ -97,7 +97,6 @@ function documentResult(): QuranDocumentResult {
       kind: "quran-surah",
       name: {
         arabic: "الفاتحة",
-        meaning: null,
         sourceMeaning: { appLocale: "en", text: "The Opening" },
         transliteration: "Al-Fatihah",
       },
