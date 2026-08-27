@@ -3,6 +3,13 @@
 import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import {
+  API_SECRET,
+  expectProblem,
+  expectPublicJson,
+  fetchApi,
+  setupApiTest,
+} from "@repo/backend/convex/routes/agent/fixture";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import {
@@ -10,81 +17,11 @@ import {
   testArticleProjection,
 } from "@repo/backend/test/content-runtime";
 import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
-import {
-  makeQuranAttribution,
-  makeQuranChunk,
-  makeQuranSearch,
-  makeQuranSurah,
-} from "@repo/backend/test/quran/rows";
-import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime-head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from "@repo/testing/effect";
-import { vi } from "vitest";
+import { describe, expect, it } from "@repo/testing/effect";
 
-const API_SECRET = "technical-api-edge-secret";
-const PROBLEM_TYPE_PATTERN = /^https:\/\/nakafa\.com\/problems\//u;
-
-type BackendTest = ReturnType<typeof createConvexTestWithBetterAuth>;
-
-/** Sends one request through the real Convex router and edge guard. */
-function fetchApi(
-  test: BackendTest,
-  path: string,
-  init: RequestInit = {},
-  address = "203.0.113.4"
-) {
-  const headers = new Headers(init.headers);
-  headers.set(NAKAFA_API_EDGE_CONTRACT.secretHeader, API_SECRET);
-  headers.set("x-forwarded-for", address);
-  return test.fetch(`${NAKAFA_API_EDGE_CONTRACT.originPath}${path}`, {
-    ...init,
-    headers,
-  });
-}
-
-/** Asserts the public API response metadata shared by JSON outcomes. */
-function expectPublicJson(response: Response) {
-  expect(response.headers.get("access-control-allow-origin")).toBe("*");
-  expect(response.headers.get("cache-control")).toBe("no-store");
-  expect(response.headers.get("vary")).toContain("Accept");
-  expect(response.headers.get("vary")).toContain("Accept-Encoding");
-}
-
-/** Asserts one traceable RFC 9457 response without fixing its request ID. */
-async function expectProblem(
-  response: Response,
-  expected: { readonly code: string; readonly status: number }
-) {
-  expect(response.status).toBe(expected.status);
-  expect(response.headers.get("content-type")).toBe(
-    "application/problem+json; charset=utf-8"
-  );
-  if (expected.status === 405) {
-    expect(response.headers.get("allow")).toBe("GET, OPTIONS");
-  }
-  expectPublicJson(response);
-  await expect(response.json()).resolves.toMatchObject({
-    code: expected.code,
-    request_id: expect.any(String),
-    status: expected.status,
-    type: expect.stringMatching(PROBLEM_TYPE_PATTERN),
-  });
-}
-
-beforeEach(() => {
-  vi.stubEnv(NAKAFA_API_EDGE_CONTRACT.secretEnvironment, API_SECRET);
-});
-
-afterEach(() => {
-  vi.unstubAllEnvs();
-});
+setupApiTest();
 
 describe("public agent API routes", () => {
   it("serves the API index, health response, and CORS preflight", async () => {
@@ -163,15 +100,6 @@ describe("public agent API routes", () => {
     expect(response.status).toBe(404);
   });
 
-  it.each(["/quran/1?locale=en", "/v2/quran/1?locale=en"])(
-    "does not expose the unsupported public route %s",
-    async (path) => {
-      const response = await fetchApi(createConvexTestWithBetterAuth(), path);
-
-      expect(response.status).toBe(404);
-    }
-  );
-
   it.each([
     ["/v1/search?unknown=value", {}, "INVALID_REQUEST", 400],
     ["/v1/content", {}, "INVALID_REQUEST", 400],
@@ -190,7 +118,6 @@ describe("public agent API routes", () => {
       "UNPROCESSABLE_REQUEST",
       422,
     ],
-    ["/v1/quran/115", {}, "UNPROCESSABLE_REQUEST", 422],
     ["/v1/missing", {}, "ENDPOINT_NOT_FOUND", 404],
     ["/v1/health", { method: "POST" }, "METHOD_NOT_ALLOWED", 405],
   ] as const)(
@@ -202,15 +129,6 @@ describe("public agent API routes", () => {
         init
       );
       await expectProblem(response, { code, status });
-    }
-  );
-
-  it.each(["/quran/1", "/v2/quran/1"])(
-    "does not expose the retired Quran path %s",
-    async (path) => {
-      const response = await fetchApi(createConvexTestWithBetterAuth(), path);
-
-      expect(response.status).toBe(404);
     }
   );
 
@@ -328,130 +246,6 @@ describe("public agent API routes", () => {
     await expectProblem(response, {
       code: "CONTENT_NOT_FOUND",
       status: 404,
-    });
-  });
-
-  it("reads Quran markdown through one transactionally pinned source", async () => {
-    const test = createConvexTestWithBetterAuth();
-    await test.mutation((ctx) =>
-      activateQuranSnapshot(ctx, [
-        makeQuranAttribution(),
-        makeQuranSurah(1),
-        makeQuranChunk({
-          firstQuranNumber: 1,
-          firstVerse: 1,
-          surahNumber: 1,
-          translationFootnotes: {
-            en: "[1] Exact English source note.",
-          },
-          translationText: {
-            en: "Technical translation 1[1]",
-          },
-          verseCount: 1,
-        }),
-        makeQuranSearch("en", 1),
-      ])
-    );
-    const response = await fetchApi(
-      test,
-      "/v1/content?ref=asset%3Aen%3Aquran%3Aquran-surah%3A1"
-    );
-
-    expect(response.status).toBe(200);
-    expectPublicJson(response);
-    const body = await response.json();
-    expect(body).toMatchObject({
-      content_id: "asset:en:quran:quran-surah:1",
-      locale: "en",
-      route: "quran/1",
-      section: "quran",
-      text: expect.stringContaining(
-        "Technical translation 1[translation note 1]"
-      ),
-      title: "Technical Surah 1",
-    });
-    expect(body.text).toContain("Translation notes:");
-    expect(body.text).toContain("Exact English source note.");
-    expect(body.text).toContain("## Reading sources");
-    expect(body.text).toContain("https://example.test/tanzil-text/terms");
-    expect(body.text).toContain(
-      "https://example.test/quranenc-english/updates"
-    );
-    expect(body.text).toContain("Version: technical-version");
-    expect(body.text).toContain("Technical English Tafsir notice.");
-  });
-
-  it("returns one bounded authenticated Quran reference", async () => {
-    const test = createConvexTestWithBetterAuth();
-    await test.mutation((ctx) =>
-      activateQuranSnapshot(ctx, [
-        makeQuranAttribution(),
-        ...Array.from({ length: 114 }, (_, index) => makeQuranSurah(index + 1)),
-        makeQuranChunk({
-          firstQuranNumber: 1,
-          firstVerse: 1,
-          surahNumber: 1,
-          translationFootnotes: {
-            id: "[4] Catatan sumber Indonesia.",
-          },
-          translationText: {
-            id: "Terjemahan teknis 1[4]",
-          },
-          verseCount: 1,
-        }),
-        makeQuranSearch("id", 1),
-      ])
-    );
-    const response = await fetchApi(
-      test,
-      "/v1/quran/1?locale=id&from_verse=1&include_tafsir=true"
-    );
-
-    expect(response.status).toBe(200);
-    expectPublicJson(response);
-    expect(await response.json()).toMatchObject({
-      alignmentId: "alignment:quran:quran-surah:1",
-      assetId: "asset:id:quran:quran-surah:1",
-      conceptId: "concept:quran:surah:1",
-      content_id: "asset:id:quran:quran-surah:1",
-      learningObjectId: "lo:quran-surah:1",
-      lensId: "lens:quran",
-      locale: "id",
-      markdown_url: "https://nakafa.com/id/quran/1.md",
-      meaning: { locale: "en", text: "Technical meaning 1" },
-      name: "Technical Surah 1",
-      pre_bismillah: null,
-      revelation: "Meccan",
-      route: "quran/1",
-      section: "quran",
-      sources: {
-        arabic: { id: "tanzil-text", kind: "embedded" },
-        translation: {
-          id: "quranenc-indonesian",
-          kind: "embedded",
-          locale: "id",
-        },
-      },
-      tafsir_access: {
-        kind: "embedded",
-        locale: "id",
-        source: { id: "quranenc-tafsir" },
-      },
-      url: "https://nakafa.com/id/quran/1",
-      verses: [
-        {
-          arabic: "آية 1",
-          number: 1,
-          tafsir: "Tafsir teknis 1",
-          translation: {
-            notes: [{ number: 4, text: "Catatan sumber Indonesia." }],
-            segments: [
-              { kind: "text", offset: 0, value: "Terjemahan teknis 1" },
-              { kind: "note", number: 4 },
-            ],
-          },
-        },
-      ],
     });
   });
 
