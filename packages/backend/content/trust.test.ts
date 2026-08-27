@@ -1,10 +1,10 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { SigningKeyIdSchema } from "@nakafa/aksara-contracts/ids";
 import {
   ACTIVE_SIGNING_KEY_ID,
   TRUSTED_CONTENT_KEYS,
 } from "@nakafa/aksara-contracts/signature/trusted";
 import { contentKeyResolver } from "@repo/backend/content/trust";
-import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import { vi } from "vitest";
 
@@ -17,7 +17,7 @@ afterEach(() => {
 });
 
 describe("content trust", () => {
-  it.live("resolves the active reviewed code-owned key", () =>
+  it.effect("resolves the active reviewed code-owned key", () =>
     Effect.gen(function* () {
       const active = TRUSTED_CONTENT_KEYS.find(
         ({ keyId }) => keyId === ACTIVE_SIGNING_KEY_ID
@@ -29,7 +29,7 @@ describe("content trust", () => {
     })
   );
 
-  it.live("rejects identities absent from the retained registry", () =>
+  it.effect("rejects identities absent from the retained registry", () =>
     Effect.gen(function* () {
       const missing = yield* contentKeyResolver
         .resolve(unknownKeyId)
@@ -39,7 +39,7 @@ describe("content trust", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "adds one complete Agent Mode key without replacing retained keys",
     () =>
       Effect.gen(function* () {
@@ -71,11 +71,13 @@ describe("content trust", () => {
       })
   );
 
-  it("rejects a partial Agent Mode key pair", async () => {
+  it.effect("rejects a partial Agent Mode key pair", () => {
     vi.stubEnv("AKSARA_AGENT_SIGNING_KEY_ID", agentKeyId);
     vi.stubEnv("AKSARA_AGENT_SIGNING_PUBLIC_KEY", undefined);
     vi.resetModules();
 
-    await expect(import("@repo/backend/content/trust")).rejects.toThrow();
+    return Effect.promise(() =>
+      expect(import("@repo/backend/content/trust")).rejects.toThrow()
+    );
   });
 });
