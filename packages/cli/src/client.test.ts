@@ -191,12 +191,15 @@ describe("Nakafa API client", () => {
           requestClient,
           "https://api.nakafa.com"
         ).pipe(Effect.result);
-        class UnreadableResponse extends Response {
-          override arrayBuffer() {
-            return Promise.reject(new Error("body unavailable"));
-          }
-        }
-        const readFailure = yield* runFailure(new UnreadableResponse());
+        const readFailure = yield* runFailure(
+          new Response(
+            new ReadableStream({
+              start: (controller) => {
+                controller.error(new Error("body unavailable"));
+              },
+            })
+          )
+        );
 
         expect(
           Result.isFailure(requestFailure) && requestFailure.failure._tag
