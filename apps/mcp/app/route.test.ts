@@ -20,8 +20,8 @@ describe("MCP root route", () => {
       expect(text).toContain(
         "Use https://mcp.nakafa.com/mcp as the direct MCP endpoint"
       );
-      expect(text).toContain("nakafa_get_quran_reference_v2");
-      expect(text).toContain("semantic notes and signed source attribution");
+      expect(text).toContain("nakafa_get_quran_reference");
+      expect(text).not.toContain("nakafa_get_quran_reference_v2");
     })
   );
 

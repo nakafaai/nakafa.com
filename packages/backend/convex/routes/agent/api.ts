@@ -52,8 +52,6 @@ export function registerAgentApiRoutes(app: AgentApp) {
   api.use("/openapi.json", guardAgentApi);
   api.use("/v1", guardAgentApi);
   api.use("/v1/*", guardAgentApi);
-  api.use("/v2", guardAgentApi);
-  api.use("/v2/*", guardAgentApi);
 
   api.get("/openapi.json", (context) =>
     createOpenApiResponse(context.req.header("if-none-match"))
@@ -171,12 +169,6 @@ export function registerAgentApiRoutes(app: AgentApp) {
   }
 
   api.all("/v1/*", (context) =>
-    missingRouteResponse(context.req.raw, context.get("requestId"))
-  );
-  api.all("/v2", (context) =>
-    missingRouteResponse(context.req.raw, context.get("requestId"))
-  );
-  api.all("/v2/*", (context) =>
     missingRouteResponse(context.req.raw, context.get("requestId"))
   );
 
