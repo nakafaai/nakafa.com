@@ -96,61 +96,68 @@ describe("Nakafa CLI package", () => {
     }).pipe(Effect.provide(NodeServices.layer))
   );
 
-  it.effect("packs only the allowlist and installs a working executable", () =>
-    Effect.gen(function* () {
-      const fileSystem = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const directory = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "nakafa-cli-pack-",
-      });
-      const packageVersion = yield* readPackageVersion(
-        pathToFileURL(path.join(packageRoot, "package.json"))
-      );
-      const packOutput = yield* runCommand(
-        "npm",
-        ["pack", "--json", "--pack-destination", directory],
-        packageRoot
-      );
-      const [pack] = yield* Schema.decodeEffect(PackResultSchema)(packOutput);
-      const files = pack.files.map(({ path: file }) => file);
-      const tarballPath = path.join(directory, pack.filename);
+  it.effect(
+    "packs only the allowlist and installs a working executable",
+    () =>
+      Effect.gen(function* () {
+        const fileSystem = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const directory = yield* fileSystem.makeTempDirectoryScoped({
+          prefix: "nakafa-cli-pack-",
+        });
+        const packageVersion = yield* readPackageVersion(
+          pathToFileURL(path.join(packageRoot, "package.json"))
+        );
+        const packOutput = yield* runCommand(
+          "npm",
+          ["pack", "--json", "--pack-destination", directory],
+          packageRoot
+        );
+        const [pack] = yield* Schema.decodeEffect(PackResultSchema)(packOutput);
+        const files = pack.files.map(({ path: file }) => file);
+        const tarballPath = path.join(directory, pack.filename);
 
-      yield* fileSystem.writeFileString(
-        path.join(directory, "package.json"),
-        '{"name":"nakafa-cli-smoke","private":true}'
-      );
-      yield* runCommand(
-        "npm",
-        [
-          "install",
-          "--ignore-scripts",
-          "--no-audit",
-          "--no-fund",
-          "--package-lock=false",
-          tarballPath,
-        ],
-        directory
-      );
+        yield* fileSystem.writeFileString(
+          path.join(directory, "package.json"),
+          '{"name":"nakafa-cli-smoke","private":true}'
+        );
+        yield* runCommand(
+          "npm",
+          [
+            "install",
+            "--ignore-scripts",
+            "--no-audit",
+            "--no-fund",
+            "--package-lock=false",
+            tarballPath,
+          ],
+          directory
+        );
 
-      const binary = path.join(directory, "node_modules", ".bin", "nakafa");
-      const installedRoot = path.join(directory, "node_modules", "nakafa-cli");
-      const bundle = yield* fileSystem.readFileString(
-        path.join(installedRoot, "dist", "main.js")
-      );
-      const manifest = yield* fileSystem.readFileString(
-        path.join(installedRoot, "package.json")
-      );
-      const help = yield* runCommand(binary, ["--help"], directory);
-      const version = yield* runCommand(binary, ["--version"], directory);
+        const binary = path.join(directory, "node_modules", ".bin", "nakafa");
+        const installedRoot = path.join(
+          directory,
+          "node_modules",
+          "nakafa-cli"
+        );
+        const bundle = yield* fileSystem.readFileString(
+          path.join(installedRoot, "dist", "main.js")
+        );
+        const manifest = yield* fileSystem.readFileString(
+          path.join(installedRoot, "package.json")
+        );
+        const help = yield* runCommand(binary, ["--help"], directory);
+        const version = yield* runCommand(binary, ["--version"], directory);
 
-      expect(REQUIRED_PACKED_FILES.every((file) => files.includes(file))).toBe(
-        true
-      );
-      expect(files.every(isAllowedPackedFile)).toBe(true);
-      expect(help).toContain("Nakafa CLI");
-      expect(version).toBe(`${packageVersion}\n`);
-      expect(manifest).not.toContain('"dependencies"');
-      expect(bundle).not.toContain("@repo/contents");
-    }).pipe(Effect.provide(NodeServices.layer))
+        expect(
+          REQUIRED_PACKED_FILES.every((file) => files.includes(file))
+        ).toBe(true);
+        expect(files.every(isAllowedPackedFile)).toBe(true);
+        expect(help).toContain("Nakafa CLI");
+        expect(version).toBe(`${packageVersion}\n`);
+        expect(manifest).not.toContain('"dependencies"');
+        expect(bundle).not.toContain("@repo/contents");
+      }).pipe(Effect.provide(NodeServices.layer)),
+    { timeout: 30_000 }
   );
 });
