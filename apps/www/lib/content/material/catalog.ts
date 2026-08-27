@@ -5,10 +5,7 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import {
-  ActiveAppLocaleListSchema,
-  AppLocaleSchema,
-} from "@nakafa/aksara-contracts/locale";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
@@ -63,14 +60,6 @@ export interface PublishedMaterialCatalog {
   readonly activeReleaseId: typeof ReleaseIdSchema.Type;
   readonly appLocale: typeof AppLocaleSchema.Type;
   readonly routes: readonly MaterialLessonProjection[];
-  readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
-}
-
-/** Signed release identity shared by every localized material catalog. */
-export interface PublishedMaterialRelease {
-  readonly activeAppLocales: typeof ActiveAppLocaleListSchema.Type;
-  readonly activeManifestHash: typeof Sha256HashSchema.Type;
-  readonly activeReleaseId: typeof ReleaseIdSchema.Type;
   readonly sourceRevision: null | typeof GitCommitShaSchema.Type;
 }
 
@@ -209,54 +198,11 @@ export const readPublishedMaterialRoutes = Effect.fn(
   }
 });
 
-/** Reads signed locale membership from one guaranteed material tombstone. */
-export const readPublishedMaterialRelease = Effect.fn(
-  "NakafaMaterial.readPublishedRelease"
-)(function* () {
-  const appLocale = AppLocaleSchema.make("en");
-  const identity = { appLocale, publicPath: "materials" };
-  const result = yield* readRuntimeQuery(
-    api.contentRelease.material.publication,
-    identity
-  );
-  if (result.activeManifestHash === null || result.activeReleaseId === null) {
-    return yield* new PublishedProjectionError(identity);
-  }
-  const [
-    activeAppLocales,
-    activeManifestHash,
-    activeReleaseId,
-    sourceRevision,
-  ] = yield* Effect.all([
-    Schema.decodeUnknownEffect(ActiveAppLocaleListSchema)(
-      result.activeAppLocales
-    ),
-    Schema.decodeEffect(Sha256HashSchema)(result.activeManifestHash),
-    Schema.decodeEffect(ReleaseIdSchema)(result.activeReleaseId),
-    decodeSourceRevision(result.sourceRevision, identity),
-  ]).pipe(Effect.mapError(() => new PublishedProjectionError(identity)));
-  return {
-    activeAppLocales,
-    activeManifestHash,
-    activeReleaseId,
-    sourceRevision,
-  } satisfies PublishedMaterialRelease;
-});
-
 /** Caches all localized material routes under release invalidation. */
 export async function getPublishedMaterialRoutes(locale: Locale) {
   "use cache";
 
   const result = await Effect.runPromise(readPublishedMaterialRoutes(locale));
-  applyContentRuntimeCache();
-  return result;
-}
-
-/** Caches signed material release membership under release invalidation. */
-export async function getPublishedMaterialRelease() {
-  "use cache";
-
-  const result = await Effect.runPromise(readPublishedMaterialRelease());
   applyContentRuntimeCache();
   return result;
 }

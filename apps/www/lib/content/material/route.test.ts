@@ -104,6 +104,7 @@ describe("published material route", () => {
       siblings: [previewProjection, previewNextProjection],
       sourceRevision,
     });
+    expect(runtimeQueryMock).toHaveBeenCalledOnce();
     expect(cacheMock).toHaveBeenCalledOnce();
   });
 

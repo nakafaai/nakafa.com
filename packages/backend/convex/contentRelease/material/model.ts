@@ -8,7 +8,7 @@ import {
   type MaterialProjectionContract,
 } from "@repo/backend/convex/contentRelease/material/predecessor";
 import { resolveMaterialRoute } from "@repo/backend/convex/contentRelease/material/route";
-import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
+import { verifyEffectiveMaterial } from "@repo/backend/convex/contentRelease/material/verify";
 import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
 import { requireExpectedActiveRelease } from "@repo/backend/convex/contentRelease/runtime/pin";
 import { Effect } from "effect";
@@ -18,7 +18,8 @@ const readAlternates = Effect.fn("contentRelease.readMaterialAlternates")(
   function* (
     ctx: QueryCtx,
     row: Doc<"materialCatalog">,
-    activeAppLocales: ActiveAppLocaleList
+    activeAppLocales: ActiveAppLocaleList,
+    activeSequence: number
   ) {
     const counterparts = yield* Effect.forEach(activeAppLocales, (appLocale) =>
       Effect.gen(function* () {
@@ -31,8 +32,16 @@ const readAlternates = Effect.fn("contentRelease.readMaterialAlternates")(
             .unique()
         );
         if (alternate) {
-          const verified = yield* verifyMaterial(alternate);
-          return { ...verified, row: alternate };
+          const { projection, resolved } = yield* verifyEffectiveMaterial(
+            ctx,
+            alternate,
+            activeSequence
+          );
+          return {
+            projection,
+            projectionJson: resolved.projectionJson,
+            row: alternate,
+          };
         }
         return yield* releaseFail(
           "CONTENT_RELEASE_INTEGRITY",
@@ -46,7 +55,11 @@ const readAlternates = Effect.fn("contentRelease.readMaterialAlternates")(
 
 /** Reads every ordered lesson section sharing one localized material key. */
 const readSiblings = Effect.fn("contentRelease.readMaterialSiblings")(
-  function* (ctx: QueryCtx, row: Doc<"materialCatalog">) {
+  function* (
+    ctx: QueryCtx,
+    row: Doc<"materialCatalog">,
+    activeSequence: number
+  ) {
     const siblings = yield* Effect.promise(() =>
       ctx.db
         .query("materialCatalog")
@@ -66,9 +79,18 @@ const readSiblings = Effect.fn("contentRelease.readMaterialSiblings")(
       );
     }
     const verified = yield* Effect.forEach(siblings, (sibling) =>
-      verifyMaterial(sibling).pipe(
-        Effect.map((material) => ({ ...material, row: sibling }))
-      )
+      Effect.gen(function* () {
+        const { projection, resolved } = yield* verifyEffectiveMaterial(
+          ctx,
+          sibling,
+          activeSequence
+        );
+        return {
+          projection,
+          projectionJson: resolved.projectionJson,
+          row: sibling,
+        };
+      })
     );
     if (
       !verified.some(({ row: candidate }) => candidate._id === row._id) ||
@@ -123,8 +145,13 @@ export const readMaterialModel = Effect.fn("contentRelease.readMaterialModel")(
     }
     const { projectionJson, row } = route.material;
     const [alternates, siblings] = yield* Effect.all([
-      readAlternates(ctx, row, route.active.signed.manifest.activeAppLocales),
-      readSiblings(ctx, row),
+      readAlternates(
+        ctx,
+        row,
+        route.active.signed.manifest.activeAppLocales,
+        route.active.sequence
+      ),
+      readSiblings(ctx, row, route.active.sequence),
     ]);
     const encodeProjection = (material: (typeof alternates)[number]) => {
       if (contract === "publication") {
