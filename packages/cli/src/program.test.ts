@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/_lib/agent/constants";
-import { Effect, Ref, Schema } from "effect";
+import { Effect, Layer, Ref, Schema, Sink, Stdio } from "effect";
 import {
   HttpClient,
   HttpClientError,
@@ -34,36 +34,40 @@ function makeClient(
   );
 }
 
-function createOutput() {
-  let value = "";
-  return {
-    read: () => value,
-    stream: {
-      write(chunk: string) {
-        value += chunk;
-      },
-    },
-  };
-}
-
 function execute(
   argv: readonly string[],
   client: HttpClient.HttpClient = makeClient(() => Response.json({ ok: true }))
 ) {
-  const stdout = createOutput();
-  const stderr = createOutput();
-  return runCli(argv, {
-    stderr: stderr.stream,
-    stdout: stdout.stream,
-    version: "0.1.0",
-  }).pipe(
-    Effect.provideService(HttpClient.HttpClient, client),
-    Effect.map((exitCode) => ({
+  return Effect.gen(function* () {
+    const stderr = yield* Ref.make("");
+    const stdout = yield* Ref.make("");
+    const append = (target: Ref.Ref<string>) =>
+      Sink.forEachWhile((chunk: string | Uint8Array) =>
+        Ref.update(
+          target,
+          (current) =>
+            current +
+            (typeof chunk === "string"
+              ? chunk
+              : new TextDecoder().decode(chunk))
+        ).pipe(Effect.as(true))
+      );
+    const layer = Layer.merge(
+      Layer.succeed(HttpClient.HttpClient, client),
+      Stdio.layerTest({
+        stderr: () => append(stderr),
+        stdout: () => append(stdout),
+      })
+    );
+    const exitCode = yield* runCli(argv, { version: "0.1.0" }).pipe(
+      Effect.provide(layer)
+    );
+    return {
       exitCode,
-      stderr: stderr.read(),
-      stdout: stdout.read(),
-    }))
-  );
+      stderr: yield* Ref.get(stderr),
+      stdout: yield* Ref.get(stdout),
+    };
+  });
 }
 
 describe("Nakafa CLI execution", () => {
