@@ -7,6 +7,7 @@ import {
 import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import {
   decodePublishedQuranMarkdown,
+  renderQuranReadingSourcesMarkdown,
   renderQuranTafsirAccessMarkdown,
 } from "@repo/backend/client/quran/markdown";
 import { renderQuranTranslationMarkdown } from "@repo/backend/client/quran/notes";
@@ -108,6 +109,7 @@ export const readQuranMarkdown = Effect.fn("NakafaQuran.readMarkdown")(
       ...(meaning === null ? [] : [`Meaning: ${meaning}`]),
       `Revelation: ${surah.revelation.place}`,
       "",
+      ...renderQuranReadingSourcesMarkdown(publication.sources),
       ...renderQuranTafsirAccessMarkdown(publication.tafsirAccess),
       "## Verses",
       "",

@@ -160,6 +160,18 @@ describe("Quran Nakafa reader", () => {
         expect(Option.getOrUndefined(markdown)?.text).toContain(
           "Dengan nama Allah."
         );
+        expect(Option.getOrUndefined(markdown)?.text).toContain(
+          "## Reading sources"
+        );
+        expect(Option.getOrUndefined(markdown)?.text).toContain(
+          "https://example.test/tanzil-text/terms"
+        );
+        expect(Option.getOrUndefined(markdown)?.text).toContain(
+          "https://example.test/quranenc-indonesian/updates"
+        );
+        expect(Option.getOrUndefined(markdown)?.text).toContain(
+          "Version: technical-version"
+        );
         expect(Option.getOrUndefined(markdown)?.text).not.toContain(
           "Transliteration"
         );

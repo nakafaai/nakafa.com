@@ -1,6 +1,7 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
   decodePublishedQuranMarkdown,
+  renderQuranReadingSourcesMarkdown,
   renderQuranTafsirAccessMarkdown,
 } from "@repo/backend/client/quran/markdown";
 import type { api } from "@repo/backend/convex/_generated/api";
@@ -24,6 +25,37 @@ const source = {
   sourceRevision: "c".repeat(40),
 };
 describe("signed Quran markdown decoder", () => {
+  it("renders complete Arabic and translation source access metadata", () => {
+    const sources = makeQuranLocaleSources("en");
+
+    expect(renderQuranReadingSourcesMarkdown(sources)).toEqual([
+      "## Reading sources",
+      "",
+      "### Arabic text",
+      "",
+      sources.arabic.notice,
+      "",
+      `Source: [${sources.arabic.label}](${sources.arabic.sourceUrl})`,
+      `Publisher: ${sources.arabic.publisher}`,
+      `Version: ${sources.arabic.version}`,
+      `Retrieved: ${sources.arabic.retrievedAt}`,
+      `Updates: [Edition updates](${sources.arabic.updateUrl})`,
+      `Terms: [Usage terms](${sources.arabic.terms.url})`,
+      "",
+      "### Translation",
+      "",
+      sources.translation.notice,
+      "",
+      `Source: [${sources.translation.label}](${sources.translation.sourceUrl})`,
+      `Publisher: ${sources.translation.publisher}`,
+      `Version: ${sources.translation.version}`,
+      `Retrieved: ${sources.translation.retrievedAt}`,
+      `Updates: [Edition updates](${sources.translation.updateUrl})`,
+      `Terms: [Usage terms](${sources.translation.terms.url})`,
+      "",
+    ]);
+  });
+
   it("renders distinct source, update, and terms links", () => {
     const access = makeQuranTafsirProjection("en");
 

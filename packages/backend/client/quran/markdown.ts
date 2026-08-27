@@ -7,6 +7,40 @@ import { hasExpectedQuranSources } from "@repo/backend/client/quran/source";
 import type { QuranMarkdown } from "@repo/backend/convex/contentRelease/quran/markdown";
 import { Effect } from "effect";
 
+type QuranReadingSources = NonNullable<QuranMarkdown["sources"]>;
+
+/** Renders the exact Arabic and translation source bibliography. */
+export function renderQuranReadingSourcesMarkdown(
+  sources: QuranReadingSources
+): readonly string[] {
+  return [
+    "## Reading sources",
+    "",
+    ...renderEmbeddedSource("Arabic text", sources.arabic),
+    ...renderEmbeddedSource("Translation", sources.translation),
+  ];
+}
+
+/** Renders one signed embedded source without dropping access metadata. */
+function renderEmbeddedSource(
+  heading: string,
+  source: QuranReadingSources[keyof QuranReadingSources]
+): readonly string[] {
+  return [
+    `### ${heading}`,
+    "",
+    source.notice,
+    "",
+    `Source: [${source.label}](${source.sourceUrl})`,
+    `Publisher: ${source.publisher}`,
+    `Version: ${source.version}`,
+    `Retrieved: ${source.retrievedAt}`,
+    `Updates: [Edition updates](${source.updateUrl})`,
+    `Terms: [Usage terms](${source.terms.url})`,
+    "",
+  ];
+}
+
 /** Renders signed locale-specific Tafsir availability for agent Markdown. */
 export function renderQuranTafsirAccessMarkdown(
   access: QuranMarkdown["tafsirAccess"]

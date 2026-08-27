@@ -4,6 +4,7 @@ import { readAgentQuery } from "@repo/backend/agent/query";
 import { getAgentContentReferenceInput } from "@repo/backend/agent/ref";
 import {
   decodePublishedQuranMarkdown,
+  renderQuranReadingSourcesMarkdown,
   renderQuranTafsirAccessMarkdown,
 } from "@repo/backend/client/quran/markdown";
 import { renderQuranTranslationMarkdown } from "@repo/backend/client/quran/notes";
@@ -199,6 +200,7 @@ const renderQuranMarkdown = Effect.fn("agent.renderQuranMarkdown")(function* (
           : [`Meaning: ${publication.surah.name.meaning}`]),
         `Revelation: ${publication.surah.revelation.place}`,
         "",
+        ...renderQuranReadingSourcesMarkdown(publication.sources),
         ...renderQuranTafsirAccessMarkdown(publication.tafsirAccess),
         "## Verses",
         "",

@@ -372,6 +372,12 @@ describe("public agent API routes", () => {
     });
     expect(body.text).toContain("Translation notes:");
     expect(body.text).toContain("Exact English source note.");
+    expect(body.text).toContain("## Reading sources");
+    expect(body.text).toContain("https://example.test/tanzil-text/terms");
+    expect(body.text).toContain(
+      "https://example.test/quranenc-english/updates"
+    );
+    expect(body.text).toContain("Version: technical-version");
     expect(body.text).toContain("Technical English Tafsir notice.");
   });
 
