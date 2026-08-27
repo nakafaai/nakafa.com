@@ -15,6 +15,10 @@ export type CurrentContentAccess = Extract<
   SignedContentAccess,
   { runtime: "current" }
 >;
+export type PredecessorContentAccess = Extract<
+  SignedContentAccess,
+  { runtime: "predecessor" }
+>;
 export type HistoryContentAccess = Extract<
   SignedContentAccess,
   { runtime: "history" }
@@ -24,6 +28,10 @@ export type CurrentTryoutQuestionSelector =
   CurrentContentAccess["questions"][number];
 export type CurrentTryoutAnswerSelector =
   CurrentContentAccess["answers"][number];
+export type PredecessorTryoutQuestionSelector =
+  PredecessorContentAccess["questions"][number];
+export type PredecessorTryoutAnswerSelector =
+  PredecessorContentAccess["answers"][number];
 export type HistoryTryoutQuestionSelector =
   HistoryContentAccess["questions"][number];
 export type HistoryTryoutAnswerSelector =
@@ -31,6 +39,9 @@ export type HistoryTryoutAnswerSelector =
 export type CurrentTryoutSelector =
   | CurrentTryoutAnswerSelector
   | CurrentTryoutQuestionSelector;
+export type PredecessorTryoutSelector =
+  | PredecessorTryoutAnswerSelector
+  | PredecessorTryoutQuestionSelector;
 export type HistoryTryoutSelector =
   | HistoryTryoutAnswerSelector
   | HistoryTryoutQuestionSelector;

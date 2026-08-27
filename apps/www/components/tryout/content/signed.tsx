@@ -1,13 +1,15 @@
 import "server-only";
 
-import type { StoredProtectedRuntimeItem } from "@nakafa/aksara-contracts/history/decode";
-import type { ProtectedContentRuntimeItem } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
 import { readRetainedProtectedContent } from "@repo/backend/client/content/history";
+import { readPredecessorContent } from "@repo/backend/client/content/predecessor";
 import { readProtectedContent } from "@repo/backend/client/content/protected";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
 import { Effect } from "effect";
-import type { ComponentType } from "react";
+import {
+  renderHistoryItem,
+  renderLiveItem,
+} from "@/components/tryout/content/artifact";
 import {
   planTryoutContentBatches,
   restoreTryoutContentOrder,
@@ -15,26 +17,26 @@ import {
 } from "@/components/tryout/content/batch";
 import {
   type CurrentContentAccess,
+  type CurrentTryoutQuestionSelector,
   type CurrentTryoutSelector,
   type HistoryContentAccess,
   type HistoryTryoutSelector,
+  type PredecessorContentAccess,
+  type PredecessorTryoutQuestionSelector,
+  type PredecessorTryoutSelector,
   projectTryoutRuntimeContent,
   type RenderedTryoutContentEntry,
   type SignedContentAccess,
   type TryoutQuestionSelector,
-  type TryoutRenderSelector,
 } from "@/components/tryout/content/model";
 import {
   makeCurrentTryoutRuntimeRequest,
   makeHistoryTryoutRuntimeRequest,
-  requireCurrentTryoutQuestion,
+  makePredecessorTryoutRuntimeRequest,
+  requireLiveTryoutQuestion,
 } from "@/components/tryout/content/request";
 import { env } from "@/env";
 import { applyPublishedContentBatchCache } from "@/lib/content/cache";
-import {
-  evaluateVerifiedArtifact,
-  evaluateVerifiedHistoricalArtifact,
-} from "@/lib/content/published/artifact";
 import { ContentRuntimeConfigurationError } from "@/lib/content/published/errors";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 
@@ -47,18 +49,23 @@ export const loadSignedTryoutContent = Effect.fn(
   if (access.runtime === "history") {
     return yield* loadHistoryTryoutContent(access);
   }
+  if (access.runtime === "predecessor") {
+    return yield* loadPredecessorTryoutContent(access);
+  }
   return yield* loadCurrentTryoutContent(access);
 });
 
-/** Renders the public featured question only through the current transport. */
+/** Renders the public featured question through its exact live transport. */
 export const loadCurrentTryoutQuestion = Effect.fn(
   "NakafaContent.loadCurrentTryoutQuestion"
 )(function* (question: TryoutQuestionSelector) {
-  const currentQuestion = yield* requireCurrentTryoutQuestion(question);
-  const rendered = yield* loadCurrentTryoutContent({
-    answers: [],
-    questions: [currentQuestion],
-  });
+  const liveQuestion = yield* requireLiveTryoutQuestion(question);
+  const rendered = yield* hasPermanentBundle(liveQuestion)
+    ? loadCurrentTryoutContent({ answers: [], questions: [liveQuestion] })
+    : loadPredecessorTryoutContent({
+        answers: [],
+        questions: [liveQuestion],
+      });
   const result = rendered.questions[0];
   if (!result) {
     return yield* runtimeIntegrity(
@@ -74,6 +81,14 @@ const loadCurrentTryoutContent = Effect.fn(
 )(function* (access: Pick<CurrentContentAccess, "answers" | "questions">) {
   const plan = planTryoutContentBatches(access.questions, access.answers);
   return yield* renderContentPlan(plan, renderCurrentBatch);
+});
+
+/** Renders one predecessor access through its isolated temporary transport. */
+const loadPredecessorTryoutContent = Effect.fn(
+  "NakafaContent.loadPredecessorTryoutContent"
+)(function* (access: Pick<PredecessorContentAccess, "answers" | "questions">) {
+  const plan = planTryoutContentBatches(access.questions, access.answers);
+  return yield* renderContentPlan(plan, renderPredecessorBatch);
 });
 
 /** Renders one retained attempt through its isolated historical transport. */
@@ -125,6 +140,13 @@ async function renderCurrentBatch(selectors: readonly CurrentTryoutSelector[]) {
   return content;
 }
 
+/** Renders one predecessor batch through its instrumented transport. */
+function renderPredecessorBatch(
+  selectors: readonly PredecessorTryoutSelector[]
+) {
+  return Effect.runPromise(readPredecessorBatch(selectors));
+}
+
 /** Caches one attempt-bound historical batch by immutable selector identity. */
 async function renderHistoryBatch(
   attemptId: string,
@@ -159,11 +181,29 @@ const readCurrentBatch = Effect.fn("NakafaContent.readCurrentTryoutBatch")(
         item: found.items[index],
         selector,
       })),
-      ({ item, selector }) => renderCurrentItem(item, selector),
+      ({ item, selector }) => renderLiveItem(item, selector),
       { concurrency: SIGNED_RENDER_CONCURRENCY }
     );
   }
 );
+
+/** Reads, verifies, and renders one predecessor protected batch. */
+const readPredecessorBatch = Effect.fn(
+  "NakafaContent.readPredecessorTryoutBatch"
+)(function* (selectors: readonly PredecessorTryoutSelector[]) {
+  const request = yield* makePredecessorTryoutRuntimeRequest(selectors);
+  const target = yield* readRuntimeTarget;
+  const liveRenderer = yield* rendererManifest;
+  const found = yield* readPredecessorContent(target, request, liveRenderer);
+  return yield* Effect.forEach(
+    selectors.map((selector, index) => ({
+      item: found.items[index],
+      selector,
+    })),
+    ({ item, selector }) => renderLiveItem(item, selector),
+    { concurrency: SIGNED_RENDER_CONCURRENCY }
+  );
+});
 
 /** Reads, verifies, and renders one attempt-bound historical batch. */
 const readHistoryBatch = Effect.fn("NakafaContent.readHistoryTryoutBatch")(
@@ -200,62 +240,14 @@ const readRuntimeTarget = Effect.try({
   }),
 });
 
-/** Renders one current item only after current exchange verification. */
-const renderCurrentItem = Effect.fn("NakafaContent.renderCurrentTryoutItem")(
-  function* (
-    item: ProtectedContentRuntimeItem | undefined,
-    selector: CurrentTryoutSelector
-  ) {
-    if (!item) {
-      return yield* runtimeIntegrity(
-        "Protected content batch lost an ordered item."
-      );
-    }
-    const rendered = yield* evaluateVerifiedArtifact({
-      artifact: item.artifact,
-    });
-    return projectRenderedArtifact(rendered, selector);
-  }
-);
-
-/** Renders one old item only after historical exchange verification. */
-const renderHistoryItem = Effect.fn("NakafaContent.renderHistoryTryoutItem")(
-  function* (
-    item: StoredProtectedRuntimeItem | undefined,
-    selector: HistoryTryoutSelector
-  ) {
-    if (!item) {
-      return yield* runtimeIntegrity(
-        "Protected content batch lost an ordered item."
-      );
-    }
-    const rendered = yield* evaluateVerifiedHistoricalArtifact({
-      artifact: item.artifact,
-    });
-    return projectRenderedArtifact(rendered, selector);
-  }
-);
-
-/** Projects one separately typed authenticated artifact into runtime content. */
-function projectRenderedArtifact(
-  rendered: {
-    readonly artifact: {
-      readonly artifactHash: RenderedTryoutContentEntry["artifactHash"];
-    };
-    readonly Content: ComponentType;
-  },
-  selector: TryoutRenderSelector
-) {
-  return {
-    artifactHash: rendered.artifact.artifactHash,
-    body: <rendered.Content />,
-    contentHash: selector.contentHash,
-    sourcePath: selector.sourcePath,
-    sourceRevision: selector.sourceRevision,
-  } satisfies RenderedTryoutContentEntry;
-}
-
 /** Creates one consistent signed runtime verification failure. */
 function runtimeIntegrity(cause: string) {
   return new ContentRuntimeVerificationError({ cause });
+}
+
+/** Narrows one live selector to the permanent runtime generation. */
+function hasPermanentBundle(
+  question: CurrentTryoutQuestionSelector | PredecessorTryoutQuestionSelector
+): question is CurrentTryoutQuestionSelector {
+  return "bundleHash" in question && typeof question.bundleHash === "string";
 }
