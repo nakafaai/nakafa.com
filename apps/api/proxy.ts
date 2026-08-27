@@ -69,6 +69,7 @@ function rewriteAgentApi(request: NextRequest) {
       headers.set(header, value);
     }
   }
+  headers.set("host", request.nextUrl.host);
   headers.set(
     NAKAFA_API_EDGE_CONTRACT.secretHeader,
     env[NAKAFA_API_EDGE_CONTRACT.secretEnvironment]

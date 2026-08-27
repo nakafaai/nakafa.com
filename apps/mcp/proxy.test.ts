@@ -60,9 +60,12 @@ describe("MCP proxy", () => {
     expect(response.headers.get("x-middleware-request-x-forwarded-for")).toBe(
       "203.0.113.20"
     );
+    expect(response.headers.get("x-middleware-request-host")).toBe(
+      "mcp.nakafa.com"
+    );
     const forwarded = response.headers.get("x-middleware-override-headers");
     expect(forwarded).not.toContain("authorization");
     expect(forwarded).not.toContain("cookie");
-    expect(forwarded).not.toContain("host");
+    expect(forwarded).toContain("host");
   });
 });

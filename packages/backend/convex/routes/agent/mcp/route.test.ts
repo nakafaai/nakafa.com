@@ -222,33 +222,14 @@ describe("Nakafa MCP transport", () => {
       responses.map((response) => response.json())
     );
     expect(responses.map(({ status }) => status)).toEqual([200, 200, 200]);
-    expect(bodies[0]).toMatchObject({
-      result: {
-        messages: [
-          {
-            content: {
-              text: expect.stringContaining("What is the key idea?"),
-            },
-          },
-        ],
-      },
-    });
-    expect(bodies[1]).toMatchObject({
-      result: {
-        messages: [
-          {
-            content: {
-              text: expect.stringContaining("Surah 1, verses 1-7"),
-            },
-          },
-        ],
-      },
-    });
-    expect(bodies[2]).toMatchObject({
-      error: { code: -32_602 },
-      id: 17,
-      jsonrpc: "2.0",
-    });
+    expect(bodies[0].result.messages[0].content.text).toContain(
+      "What is the key idea?"
+    );
+    expect(bodies[1].result.messages[0].content.text).toContain(
+      "Surah 1, verses 1-7"
+    );
+    expect(bodies[2]).toMatchObject({ error: { code: -32_602 }, id: 17 });
+    expect(bodies[2].jsonrpc).toBe("2.0");
   });
 
   it("returns typed resource failures without inventing content", async () => {
@@ -349,28 +330,47 @@ describe("Nakafa MCP transport", () => {
     }
   });
 
-  it("serves the predecessor 2025 initialize handshake", async () => {
-    const response = await fetchMcp(createConvexTestWithBetterAuth(), {
-      body: JSON.stringify({
-        id: 30,
-        jsonrpc: "2.0",
-        method: "initialize",
-        params: {
-          capabilities: {},
-          clientInfo: { name: "legacy-test", version: "1.0.0" },
-          protocolVersion: MCP_PREDECESSOR_PROTOCOL_VERSION,
-        },
-      }),
-      headers: {
-        accept: "application/json, text/event-stream",
-        "content-type": "application/json",
+  it("rejects the predecessor 2025 initialize handshake", async () => {
+    const test = createConvexTestWithBetterAuth();
+    const body = JSON.stringify({
+      id: 30,
+      jsonrpc: "2.0",
+      method: "initialize",
+      params: {
+        capabilities: {},
+        clientInfo: { name: "predecessor-test", version: "1.0.0" },
+        protocolVersion: MCP_PREDECESSOR_PROTOCOL_VERSION,
       },
-      method: "POST",
     });
-    const body = await response.text();
-    expect(response.status, body).toBe(200);
-    expect(body).toContain(MCP_PREDECESSOR_PROTOCOL_VERSION);
-    expect(body).toContain("nakafa-mcp-server");
+    const request = (headers: HeadersInit) =>
+      fetchMcp(test, {
+        body,
+        headers: {
+          accept: "application/json, text/event-stream",
+          "content-type": "application/json",
+          ...headers,
+        },
+        method: "POST",
+      });
+    const [missingHeader, predecessorHeader] = await Promise.all([
+      request({}),
+      request({
+        "mcp-method": "initialize",
+        "mcp-protocol-version": MCP_PREDECESSOR_PROTOCOL_VERSION,
+      }),
+    ]);
+    expect(missingHeader.status).toBe(400);
+    await expect(missingHeader.json()).resolves.toMatchObject({
+      error: { code: -32_020 },
+      id: 30,
+      jsonrpc: "2.0",
+    });
+    expect(predecessorHeader.status).toBe(400);
+    await expect(predecessorHeader.json()).resolves.toMatchObject({
+      error: { code: -32_022 },
+      id: 30,
+      jsonrpc: "2.0",
+    });
   });
 
   it("rejects modern traffic that omits its protocol header", async () => {

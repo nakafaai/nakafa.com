@@ -171,12 +171,6 @@ export function registerAgentApiRoutes(app: AgentApp) {
   api.all("/v1/*", (context) =>
     missingRouteResponse(context.req.raw, context.get("requestId"))
   );
-  api.all("/v2", (context) =>
-    missingRouteResponse(context.req.raw, context.get("requestId"))
-  );
-  api.all("/v2/*", (context) =>
-    missingRouteResponse(context.req.raw, context.get("requestId"))
-  );
 
   app.route(NAKAFA_API_EDGE_CONTRACT.originPath, api);
 }

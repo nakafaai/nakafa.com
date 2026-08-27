@@ -157,16 +157,20 @@ describe("public agent API routes", () => {
     }
   );
 
-  it("preserves the deployed v1 predecessor before the edge switch", async () => {
+  it("does not expose the predecessor origin mount", async () => {
     const response = await createConvexTestWithBetterAuth().fetch("/v1");
 
-    expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({
-      docs: "https://docs.nakafa.com/api",
-      status: "active",
-      version: "1.0.0",
-    });
+    expect(response.status).toBe(404);
   });
+
+  it.each(["/quran/1?locale=en", "/v2/quran/1?locale=en"])(
+    "does not expose the unsupported public route %s",
+    async (path) => {
+      const response = await fetchApi(createConvexTestWithBetterAuth(), path);
+
+      expect(response.status).toBe(404);
+    }
+  );
 
   it.each([
     ["/v1/search?unknown=value", {}, "INVALID_REQUEST", 400],
