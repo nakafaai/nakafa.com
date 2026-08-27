@@ -1,10 +1,10 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
+import { describe, expect, it } from "@effect/vitest";
 import {
   createEncryptedArchive,
   decryptAndExtractArchive,
-} from "@repo/backend/scripts/content-runtime/ci/archive";
-import { CONTENT_RUNTIME_TABLES } from "@repo/backend/scripts/content-runtime/tables";
-import { describe, expect, it } from "@repo/testing/effect";
+} from "@repo/backend/scripts/content/runtime/ci/archive";
+import { CONTENT_RUNTIME_TABLES } from "@repo/backend/scripts/content/runtime/tables";
 import { Effect, FileSystem } from "effect";
 
 const CACHE_KEY = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGH";

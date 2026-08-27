@@ -1,6 +1,9 @@
 import { createHash } from "node:crypto";
 import contentReleaseSchema from "@repo/backend/convex/contentRelease/schema";
-import { tryoutBundleSchema } from "@repo/backend/convex/tryouts/runtime/schema";
+import {
+  legacyTryoutBundleSchema,
+  tryoutRuntimeBundleSchema,
+} from "@repo/backend/convex/tryouts/runtime/schema";
 import { Effect, Schema } from "effect";
 
 const ACTIVE_POINTER_TABLE = "contentState";
@@ -50,7 +53,8 @@ const runtimeTableDefinitionFragments: readonly RuntimeTableDefinitionFragment[]
       ([table]) =>
         table !== ACTIVE_POINTER_TABLE && !TRANSIENT_CUTOVER_TABLES.has(table)
     ),
-    Object.entries(tryoutBundleSchema),
+    Object.entries(legacyTryoutBundleSchema),
+    Object.entries(tryoutRuntimeBundleSchema),
     [activePointerDefinition],
   ];
 const runtimeTableDefinitions = runtimeTableDefinitionFragments.flat();

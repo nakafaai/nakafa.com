@@ -1,12 +1,12 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   buildRuntimeGenerations,
   formatGenerationEnvironment,
   verifyRuntimeSelection,
   verifyStableRuntimeExport,
-} from "@repo/backend/scripts/content-runtime/ci/generation";
-import { decodeJsonRows } from "@repo/backend/scripts/content-runtime/ci/json";
-import { CONTENT_RUNTIME_CACHE_VERSION } from "@repo/backend/scripts/content-runtime/tables";
-import { describe, expect, it } from "@repo/testing/effect";
+} from "@repo/backend/scripts/content/runtime/ci/generation";
+import { decodeJsonRows } from "@repo/backend/scripts/content/runtime/ci/json";
+import { CONTENT_RUNTIME_CACHE_VERSION } from "@repo/backend/scripts/content/runtime/tables";
 import { Effect } from "effect";
 
 const ACTIVE_HASH = `sha256:${"a".repeat(64)}`;

@@ -1,7 +1,7 @@
 import {
   CONTENT_RUNTIME_SCHEMA_FINGERPRINT,
   CONTENT_RUNTIME_TABLES,
-} from "@repo/backend/scripts/content-runtime/tables";
+} from "@repo/backend/scripts/content/runtime/tables";
 import { Console, Effect, FileSystem, Redacted } from "effect";
 import { createEncryptedArchive } from "./archive";
 import { runConvexData } from "./command";

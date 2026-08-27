@@ -14,7 +14,7 @@
     "@ai-sdk/gateway": "4.0.62",
     "@ai-sdk/google": "4.0.50",
     "@mendable/firecrawl-js": "^4.35.0",
-    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.17.0/nakafa-aksara-contracts-0.17.0.tgz",
+    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz",
     "@repo/contents": "workspace:*",
     "@repo/math": "workspace:*",
     "@repo/utilities": "workspace:*",

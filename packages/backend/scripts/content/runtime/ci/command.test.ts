@@ -1,11 +1,11 @@
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import * as NodeServices from "@effect/platform-node/NodeServices";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   runRuntimeCommand,
   sanitizeRuntimeCommandError,
-} from "@repo/backend/scripts/content-runtime/ci/command";
-import { afterEach, describe, expect, it } from "@repo/testing/effect";
+} from "@repo/backend/scripts/content/runtime/ci/command";
 import { Effect, FileSystem } from "effect";
 import { vi } from "vitest";
 

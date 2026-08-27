@@ -5,7 +5,7 @@ import {
   CONTENT_RUNTIME_SCHEMA_FINGERPRINT,
   CONTENT_RUNTIME_TABLES,
   validateContentRuntimeTableDefinitions,
-} from "@repo/backend/scripts/content-runtime/tables";
+} from "@repo/backend/scripts/content/runtime/tables";
 import { Config, ConfigProvider, Effect, FileSystem } from "effect";
 import {
   clearContentRuntimeSecrets,

@@ -1,5 +1,9 @@
+import { describe, expect, it } from "@effect/vitest";
 import contentReleaseSchema from "@repo/backend/convex/contentRelease/schema";
-import { tryoutBundleSchema } from "@repo/backend/convex/tryouts/runtime/schema";
+import {
+  legacyTryoutBundleSchema,
+  tryoutRuntimeBundleSchema,
+} from "@repo/backend/convex/tryouts/runtime/schema";
 import {
   CONTENT_RUNTIME_CACHE_CONTRACT,
   CONTENT_RUNTIME_SCHEMA_FINGERPRINT,
@@ -7,14 +11,13 @@ import {
   fingerprintRuntimeSchema,
   validateContentRuntimeTableDefinitions,
   validateRuntimeTableDefinitions,
-} from "@repo/backend/scripts/content-runtime/tables";
-import { describe, expect, it } from "@repo/testing/effect";
+} from "@repo/backend/scripts/content/runtime/tables";
 import { defineTable } from "convex/server";
 import { v } from "convex/values";
 import { Effect } from "effect";
 
 const EXPECTED_RUNTIME_SCHEMA_FINGERPRINT =
-  "9f0f733f9336b64d4076f48d49eb848354b4952410af30560d65a92bf1361d80";
+  "e141d0ea3ad0e44464928cdfd221d876d566e4330f64fbf9431bdd7106a67ee4";
 
 describe("content runtime tables", () => {
   it.live(
@@ -27,7 +30,8 @@ describe("content runtime tables", () => {
         );
         const expected = [
           ...releaseTables,
-          ...Object.keys(tryoutBundleSchema),
+          ...Object.keys(legacyTryoutBundleSchema),
+          ...Object.keys(tryoutRuntimeBundleSchema),
           "contentState",
         ];
 

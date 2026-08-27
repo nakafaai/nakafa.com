@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import {
   CONTENT_RUNTIME_CACHE_CONTRACT,
   CONTENT_RUNTIME_TABLES,
-} from "@repo/backend/scripts/content-runtime/tables";
+} from "@repo/backend/scripts/content/runtime/tables";
 import { Effect, Schema } from "effect";
 import type { CacheIdentity } from "./config";
 import { contentRuntimeCiError } from "./error";

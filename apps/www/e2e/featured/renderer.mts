@@ -1,10 +1,14 @@
 import assert from "node:assert/strict";
+import { readPredecessorContent } from "@repo/backend/client/content/predecessor";
 import { readProtectedContent } from "@repo/backend/client/content/protected";
 import { api } from "@repo/backend/convex/_generated/api";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
 import { ConvexHttpClient } from "convex/browser";
 import { Effect } from "effect";
-import { makeCurrentTryoutRuntimeRequest } from "@/components/tryout/content/request";
+import {
+  makeCurrentTryoutRuntimeRequest,
+  makePredecessorTryoutRuntimeRequest,
+} from "@/components/tryout/content/request";
 import { env } from "@/env";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 import { selectRendererImplementations } from "@/lib/content/renderer/selection";
@@ -18,16 +22,23 @@ const verifyFeaturedRenderer = Effect.fn(
       appLocale: "en",
     })
   );
-  const request = yield* makeCurrentTryoutRuntimeRequest([featured.question]);
+  const target = {
+    siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
+    token: contentRuntimeKeys().CONTENT_RUNTIME_TOKEN,
+  };
   const manifest = yield* rendererManifest;
-  const response = yield* readProtectedContent(
-    {
-      siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
-      token: contentRuntimeKeys().CONTENT_RUNTIME_TOKEN,
-    },
-    request,
-    manifest
-  );
+  const response =
+    "bundleHash" in featured.question
+      ? yield* readProtectedContent(
+          target,
+          yield* makeCurrentTryoutRuntimeRequest([featured.question]),
+          manifest
+        )
+      : yield* readPredecessorContent(
+          target,
+          yield* makePredecessorTryoutRuntimeRequest([featured.question]),
+          manifest
+        );
   const item = response.items[0];
   assert(item, "The featured signed snapshot returned no question artifact.");
 
@@ -50,6 +61,7 @@ const verifyFeaturedRenderer = Effect.fn(
   return {
     contentKey: item.artifact.payload.contentKey,
     rendererDomain: item.artifact.payload.rendererDomain,
+    runtime: "bundleHash" in featured.question ? "current" : "predecessor",
     selectedRendererNames,
   };
 });

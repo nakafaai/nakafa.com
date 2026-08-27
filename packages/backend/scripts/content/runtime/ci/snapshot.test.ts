@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   CONTENT_RUNTIME_CACHE_DIRECTORY,
   CONTENT_RUNTIME_CACHE_FILE,
@@ -9,9 +10,8 @@ import {
   validateArchiveListing,
   validateMetadata,
   validatePortableTable,
-} from "@repo/backend/scripts/content-runtime/ci/snapshot";
-import { CONTENT_RUNTIME_TABLES } from "@repo/backend/scripts/content-runtime/tables";
-import { describe, expect, it } from "@repo/testing/effect";
+} from "@repo/backend/scripts/content/runtime/ci/snapshot";
+import { CONTENT_RUNTIME_TABLES } from "@repo/backend/scripts/content/runtime/tables";
 import { Effect } from "effect";
 
 const identity = {
