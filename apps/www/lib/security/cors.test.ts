@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Effect } from "effect";
 import {
   createCorsForbiddenResponse,
@@ -82,11 +82,15 @@ describe("WWW CORS policy", () => {
     })
   );
 
-  it("creates one plain forbidden response", async () => {
-    const response = createCorsForbiddenResponse();
+  it.effect("creates one plain forbidden response", () =>
+    Effect.gen(function* () {
+      const response = createCorsForbiddenResponse();
 
-    expect(response.status).toBe(403);
-    expect(response.headers.get("content-type")).toBe("text/plain");
-    await expect(response.text()).resolves.toBe("Access denied.");
-  });
+      expect(response.status).toBe(403);
+      expect(response.headers.get("content-type")).toBe("text/plain");
+      expect(yield* Effect.promise(() => response.text())).toBe(
+        "Access denied."
+      );
+    })
+  );
 });
