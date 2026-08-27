@@ -1,7 +1,4 @@
-import {
-  type AppLocaleCode,
-  INDONESIAN_APP_LOCALE_CODE,
-} from "@nakafa/aksara-contracts/locale";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import {
   quranReadingSourceIds,
   quranTafsirSourceId,
@@ -16,7 +13,7 @@ type QuranReadingSources = Infer<typeof quranReadingSourcesValidator>;
 type QuranTafsirAccess = Infer<typeof quranTafsirAccessValidator>;
 
 /** Checks that one response carries the exact signed sources for its locale. */
-export function hasExpectedQuranSourcesV2(
+export function hasExpectedQuranSources(
   sources: null | QuranReadingSources,
   tafsirAccess: null | QuranTafsirAccess,
   appLocale: AppLocaleCode
@@ -35,7 +32,7 @@ export function hasExpectedQuranSourcesV2(
     return false;
   }
   if (tafsirAccess === null) {
-    return appLocale !== INDONESIAN_APP_LOCALE_CODE;
+    return false;
   }
   return (
     tafsirAccess.appLocale === appLocale &&

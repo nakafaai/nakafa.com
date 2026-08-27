@@ -12,10 +12,8 @@ import { searchNakafaContent } from "@repo/backend/agent/search";
 import { getNakafaTaxonomy } from "@repo/backend/agent/taxonomy";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { NakafaAgentInputError } from "@repo/contents/_lib/agent/errors";
-import {
-  NakafaAgentQuranReferenceOptionsSchema,
-  NakafaAgentQuranReferenceSchema,
-} from "@repo/contents/_lib/agent/schema/quran";
+import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran/input";
+import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
 import {
   NakafaAgentMarkdownSchema,
   NakafaAgentReadOptionsSchema,
@@ -37,7 +35,7 @@ const READ_ONLY_TOOL = {
   readOnlyHint: true,
 };
 
-/** Registers the four public read-only tools over shared Convex programs. */
+/** Registers the public read-only tools over shared Convex programs. */
 export function registerNakafaMcpTools(
   server: McpServer,
   ctx: ActionCtx,

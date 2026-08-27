@@ -7,7 +7,7 @@ import {
   type QuranExternalSourceId,
   quranTranslationSourceId,
 } from "@nakafa/aksara-contracts/quran/identity";
-import { NakafaAgentQuranReferenceV2Schema } from "@repo/contents/_lib/agent/schema/quran/reference";
+import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -56,7 +56,7 @@ function externalSource(id: QuranExternalSourceId) {
   };
 }
 
-/** Builds one complete V2 reference for an explicit tafsir access record. */
+/** Builds one complete reference for an explicit tafsir access record. */
 function reference(appLocale: AppLocaleCode, tafsir_access: unknown) {
   return {
     alignmentId: "alignment:quran:quran-surah:1",
@@ -72,6 +72,7 @@ function reference(appLocale: AppLocaleCode, tafsir_access: unknown) {
         ? { locale: ENGLISH_APP_LOCALE_CODE, text: "The Opening" }
         : null,
     name: "Al-Fatihah",
+    pre_bismillah: null,
     revelation: "Meccan",
     sources: {
       arabic: embeddedSource("tanzil-text"),
@@ -102,25 +103,42 @@ function reference(appLocale: AppLocaleCode, tafsir_access: unknown) {
   };
 }
 
-describe("NakafaAgentQuranReferenceV2Schema", () => {
+describe("NakafaAgentQuranReferenceSchema", () => {
   it("accepts explicit English meaning and external tafsir access", () => {
-    const decoded = Schema.decodeUnknownSync(NakafaAgentQuranReferenceV2Schema)(
-      reference("en", {
-        kind: "external",
-        locale: "en",
-        notice: "Read the official linked English edition.",
-        source: externalSource("mokhtasar-english"),
-      }),
+    const decoded = Schema.decodeUnknownSync(NakafaAgentQuranReferenceSchema)(
+      {
+        ...reference("en", {
+          kind: "external",
+          locale: "en",
+          notice: "Read the official linked English edition.",
+          source: externalSource("mokhtasar-english"),
+        }),
+        pre_bismillah: {
+          arabic: "بِسْمِ اللّٰهِ",
+          translation: {
+            notes: [
+              { number: 9, referenceOffset: 21, text: "Exact source note." },
+            ],
+            segments: [
+              { kind: "text", offset: 0, value: "In the name of Allah." },
+              { kind: "note", number: 9, offset: 21 },
+            ],
+          },
+        },
+      },
       { onExcessProperty: "error" }
     );
 
     expect(decoded.meaning).toEqual({ locale: "en", text: "The Opening" });
-    expect(decoded.tafsir_access.source.id).toBe("mokhtasar-english");
+    expect(decoded.tafsir_access).toMatchObject({
+      source: { id: "mokhtasar-english" },
+    });
     expect(decoded.verses[0]?.translation.segments[1]).toEqual({
       kind: "note",
       number: 4,
       offset: 19,
     });
+    expect(decoded.pre_bismillah?.translation.notes[0]?.number).toBe(9);
   });
 
   it("accepts Indonesian embedded and German external tafsir identities", () => {
@@ -137,8 +155,20 @@ describe("NakafaAgentQuranReferenceV2Schema", () => {
       source: externalSource("mokhtasar-german"),
     });
 
-    expect(Schema.is(NakafaAgentQuranReferenceV2Schema)(indonesian)).toBe(true);
-    expect(Schema.is(NakafaAgentQuranReferenceV2Schema)(german)).toBe(true);
+    expect(Schema.is(NakafaAgentQuranReferenceSchema)(indonesian)).toBe(true);
+    expect(Schema.is(NakafaAgentQuranReferenceSchema)(german)).toBe(true);
+  });
+
+  it("accepts legacy missing access only for external Tafsir locales", () => {
+    expect(
+      Schema.is(NakafaAgentQuranReferenceSchema)(reference("en", null))
+    ).toBe(true);
+    expect(
+      Schema.is(NakafaAgentQuranReferenceSchema)(reference("de", null))
+    ).toBe(true);
+    expect(
+      Schema.is(NakafaAgentQuranReferenceSchema)(reference("id", null))
+    ).toBe(false);
   });
 
   it("rejects source access from another otherwise valid locale", () => {
@@ -149,9 +179,7 @@ describe("NakafaAgentQuranReferenceV2Schema", () => {
       source: externalSource("mokhtasar-german"),
     });
 
-    expect(Schema.is(NakafaAgentQuranReferenceV2Schema)(mismatched)).toBe(
-      false
-    );
+    expect(Schema.is(NakafaAgentQuranReferenceSchema)(mismatched)).toBe(false);
   });
 
   it("rejects translation provenance from another locale", () => {
@@ -166,8 +194,6 @@ describe("NakafaAgentQuranReferenceV2Schema", () => {
       locale: "de",
     };
 
-    expect(Schema.is(NakafaAgentQuranReferenceV2Schema)(mismatched)).toBe(
-      false
-    );
+    expect(Schema.is(NakafaAgentQuranReferenceSchema)(mismatched)).toBe(false);
   });
 });

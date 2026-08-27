@@ -11,7 +11,7 @@ import {
   readNakafaReleasePin,
   verifyNakafaReleasePin,
 } from "@repo/backend/client/nakafa/release";
-import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/decode";
+import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import {

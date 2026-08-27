@@ -12,6 +12,7 @@ const ref = readNakafaContentRefFixture(
   "articles/politics/dynastic-politics-asian-values",
   "articles"
 );
+const quranRef = readNakafaContentRefFixture("en", "quran/1", "quran");
 
 const toolCallProviderMetadata = {
   google: { thoughtSignature: "call-signature" },
@@ -214,6 +215,32 @@ describe("mapDBPartToUIMessagePart", () => {
       await ctx.db.insert("messageParts", {
         messageId,
         order: 6,
+        type: "data-nakafa",
+        dataNakafaId: "quran-1",
+        dataNakafaData: {
+          kind: "quran",
+          status: "done",
+          input: {
+            from_verse: 1,
+            include_tafsir: false,
+            locale: "en",
+            surah: 1,
+            to_verse: 1,
+          },
+          result: {
+            ...quranRef,
+            from_verse: 1,
+            name: "Al-Fatihah",
+            revelation: "Mecca",
+            to_verse: 1,
+            translation: "The Opening",
+            verse_count: 1,
+          },
+        },
+      });
+      await ctx.db.insert("messageParts", {
+        messageId,
+        order: 7,
         type: "data-scrape-url",
         dataScrapeUrlId: "scrape-1",
         dataScrapeUrlUrl: "https://ai-sdk.dev/docs/ai-sdk-core/devtools",
@@ -232,7 +259,8 @@ describe("mapDBPartToUIMessagePart", () => {
         .collect();
     });
 
-    expect(parts.map((part) => mapDBPartToUIMessagePart({ part }))).toEqual([
+    const mapped = parts.map((part) => mapDBPartToUIMessagePart({ part }));
+    expect(mapped).toEqual([
       expect.objectContaining({
         type: "tool-nakafa",
         callProviderMetadata: toolCallProviderMetadata,
@@ -287,6 +315,17 @@ describe("mapDBPartToUIMessagePart", () => {
         }),
       }),
       expect.objectContaining({
+        type: "data-nakafa",
+        id: "quran-1",
+        data: expect.objectContaining({
+          kind: "quran",
+          result: expect.objectContaining({
+            meaning: { locale: "en", text: "The Opening" },
+          }),
+          status: "done",
+        }),
+      }),
+      expect.objectContaining({
         type: "data-scrape-url",
         id: "scrape-1",
         data: expect.objectContaining({
@@ -299,5 +338,6 @@ describe("mapDBPartToUIMessagePart", () => {
         }),
       }),
     ]);
+    expect(JSON.stringify(mapped[6])).not.toContain('"translation"');
   });
 });

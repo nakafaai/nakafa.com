@@ -1,6 +1,5 @@
 import { Effect, FileSystem, Path, Schema } from "effect";
 import { parse } from "yaml";
-import { TEMPORARY_DEPENDENCY_HOLDS } from "./policy.ts";
 import { validateDependencyPolicy } from "./validate.ts";
 
 const StringMap = Schema.Record(Schema.String, Schema.String);
@@ -37,16 +36,6 @@ export interface FirstPartyManifest {
   readonly manifest: PackageManifest;
   readonly path: string;
 }
-
-const IGNORED_SOURCE_DIRECTORIES = new Set([
-  ".git",
-  ".next",
-  ".turbo",
-  "coverage",
-  "dist",
-  "node_modules",
-]);
-const TYPESCRIPT_SOURCE_PATTERN = /\.(?:[cm]?ts|tsx)$/u;
 
 /** Expected failure while reading or decoding dependency policy files. */
 export class DependencyPolicyReadError extends Schema.TaggedError<DependencyPolicyReadError>()(
@@ -151,98 +140,6 @@ export const readFirstPartyManifests = Effect.fn(
   );
 });
 
-/** Reads every first-party TypeScript source without entering generated trees. */
-export const readFirstPartySourceFiles = Effect.fn(
-  "RepositoryPolicy.readFirstPartySourceFiles"
-)(function* (root: string) {
-  const fileSystem = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const files = new Map<string, string>();
-  const pending = [path.join(root, "apps"), path.join(root, "packages")];
-
-  while (pending.length > 0) {
-    const current = pending.pop();
-    if (current === undefined) {
-      continue;
-    }
-    const entries = yield* fileSystem
-      .readDirectory(current)
-      .pipe(
-        Effect.mapError((cause) =>
-          readError(`Unable to read ${current}.`, cause)
-        )
-      );
-    for (const entry of entries) {
-      if (IGNORED_SOURCE_DIRECTORIES.has(entry)) {
-        continue;
-      }
-      const entryPath = path.join(current, entry);
-      const info = yield* fileSystem
-        .stat(entryPath)
-        .pipe(
-          Effect.mapError((cause) =>
-            readError(`Unable to inspect ${entryPath}.`, cause)
-          )
-        );
-      if (info.type === "Directory") {
-        pending.push(entryPath);
-      } else if (TYPESCRIPT_SOURCE_PATTERN.test(entry)) {
-        const source = yield* fileSystem
-          .readFileString(entryPath)
-          .pipe(
-            Effect.mapError((cause) =>
-              readError(`Unable to read ${entryPath}.`, cause)
-            )
-          );
-        files.set(path.relative(root, entryPath), source);
-      }
-    }
-  }
-
-  return [...files].map(([filePath, source]) => ({
-    path: filePath,
-    source,
-  }));
-});
-
-/** Adds every explicit non-TypeScript cleanup target to the source scan. */
-const readDependencyPolicyFiles = Effect.fn(
-  "RepositoryPolicy.readDependencyPolicyFiles"
-)(function* (root: string) {
-  const fileSystem = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const files = new Map(
-    (yield* readFirstPartySourceFiles(root)).map((file) => [
-      file.path,
-      file.source,
-    ])
-  );
-
-  const cleanupPaths = new Set(
-    TEMPORARY_DEPENDENCY_HOLDS.flatMap(({ cleanup }) =>
-      cleanup.map((target) => target.split("#", 1)[0] ?? target)
-    )
-  );
-  for (const cleanupPath of cleanupPaths) {
-    if (files.has(cleanupPath)) {
-      continue;
-    }
-    const source = yield* fileSystem
-      .readFileString(path.join(root, cleanupPath))
-      .pipe(
-        Effect.mapError((cause) =>
-          readError(`Unable to read ${cleanupPath}.`, cause)
-        )
-      );
-    files.set(cleanupPath, source);
-  }
-
-  return [...files].map(([filePath, source]) => ({
-    path: filePath,
-    source,
-  }));
-});
-
 /** Reads and validates the repository dependency policy. */
 export const inspectDependencyPolicy = Effect.fn(
   "RepositoryPolicy.inspectDependencies"
@@ -255,9 +152,7 @@ export const inspectDependencyPolicy = Effect.fn(
     path.join(root, "pnpm-workspace.yaml")
   );
   const manifests = yield* readFirstPartyManifests(root);
-  const files = yield* readDependencyPolicyFiles(root);
   return validateDependencyPolicy({
-    files,
     manifests,
     rootManifest,
     workspace,

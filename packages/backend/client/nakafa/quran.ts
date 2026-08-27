@@ -1,7 +1,4 @@
-import {
-  projectNakafaQuranReferenceV1,
-  projectNakafaQuranReferenceV2,
-} from "@repo/backend/agent/quran/projection";
+import { projectNakafaQuranReference } from "@repo/backend/agent/quran/projection";
 import {
   decodeNakafaMarkdown,
   parseQuranReferenceOptions,
@@ -9,12 +6,16 @@ import {
 } from "@repo/backend/client/nakafa/decode";
 import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import {
+  decodePublishedQuranMarkdown,
+  renderQuranReadingSourcesMarkdown,
+  renderQuranTafsirAccessMarkdown,
+} from "@repo/backend/client/quran/markdown";
+import { renderQuranTranslationMarkdown } from "@repo/backend/client/quran/notes";
+import {
   decodePublishedQuranReference,
   type PublishedQuranReference,
-} from "@repo/backend/client/quran/decode";
-import { decodePublishedQuranMarkdown } from "@repo/backend/client/quran/markdown";
+} from "@repo/backend/client/quran/reference";
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
-import { decodePublishedQuranReferenceV2 } from "@repo/backend/client/quran/v2/reference";
 import { api } from "@repo/backend/convex/_generated/api";
 import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
@@ -25,13 +26,13 @@ type ParsedQuranReferenceOptions = Effect.Success<
   ReturnType<typeof parseQuranReferenceOptions>
 >;
 
-/** Reads a bounded Quran reference through the immutable V1 projection. */
+/** Reads one bounded source-grounded Quran passage. */
 export const readNakafaQuranReference = Effect.fn("NakafaQuran.readReference")(
   function* (convexUrl: string, input: unknown) {
     const parsed = yield* parseQuranReferenceOptions(input);
     const result = yield* readNakafaRuntimeQuery(
       convexUrl,
-      api.contentRelease.quran.reference,
+      api.contentRelease.quran.passage,
       referenceArgs(parsed)
     );
     const reference = yield* decodePublishedQuranReference(result, {
@@ -43,39 +44,13 @@ export const readNakafaQuranReference = Effect.fn("NakafaQuran.readReference")(
       return Option.none();
     }
     return Option.some(
-      yield* projectNakafaQuranReferenceV1({
+      yield* projectNakafaQuranReference({
         ...identity.value,
         reference,
       })
     );
   }
 );
-
-/** Reads a bounded Quran reference through the explicit V2 projection. */
-export const readNakafaQuranReferenceV2 = Effect.fn(
-  "NakafaQuran.readReferenceV2"
-)(function* (convexUrl: string, input: unknown) {
-  const parsed = yield* parseQuranReferenceOptions(input);
-  const result = yield* readNakafaRuntimeQuery(
-    convexUrl,
-    api.contentRelease.quran.referenceV2,
-    referenceArgs(parsed)
-  );
-  const reference = yield* decodePublishedQuranReferenceV2(result, {
-    appLocale: parsed.locale,
-    surahNumber: parsed.surah,
-  }).pipe(Effect.mapError(toNakafaQuranDataReadError));
-  const identity = projectReferenceIdentity(reference.search, parsed);
-  if (Option.isNone(identity)) {
-    return Option.none();
-  }
-  return Option.some(
-    yield* projectNakafaQuranReferenceV2({
-      ...identity.value,
-      reference,
-    })
-  );
-});
 
 /** Builds the shared public identity from one verified reference search row. */
 function projectReferenceIdentity(
@@ -115,7 +90,7 @@ export const readQuranMarkdown = Effect.fn("NakafaQuran.readMarkdown")(
     }
     const result = yield* readNakafaRuntimeQuery(
       convexUrl,
-      api.contentRelease.quran.markdown,
+      api.contentRelease.quran.prose,
       {
         appLocale: ref.locale,
         surahNumber,
@@ -127,24 +102,41 @@ export const readQuranMarkdown = Effect.fn("NakafaQuran.readMarkdown")(
     }).pipe(Effect.mapError(toNakafaQuranDataReadError));
     const surah = publication.surah;
     const title = getSurahName(surah);
-    const translation = surah.name.translation;
+    const meaning = surah.name.meaning;
+    const metadata = [
+      `# ${title}`,
+      "",
+      ...(meaning === null ? [] : [`Meaning: ${meaning}`]),
+      `Revelation: ${surah.revelation.place}`,
+      "",
+      ...renderQuranReadingSourcesMarkdown(publication.sources),
+      ...renderQuranTafsirAccessMarkdown(publication.tafsirAccess),
+      "## Verses",
+      "",
+    ];
+    const preBismillah =
+      publication.preBismillah === null
+        ? []
+        : [
+            publication.preBismillah.arabic,
+            "",
+            ...renderQuranTranslationMarkdown(
+              publication.preBismillah.translation
+            ),
+            "",
+          ];
     const markdown = yield* decodeNakafaMarkdown({
       ...ref,
-      description: translation,
+      description: meaning ?? title,
       text: [
-        `# ${title}`,
-        "",
-        `Translation: ${translation}`,
-        `Revelation: ${surah.revelation.place}`,
-        "",
-        "## Verses",
-        "",
+        ...metadata,
+        ...preBismillah,
         ...publication.verses.flatMap((verse) => [
           `### Verse ${verse.number.inSurah}`,
           "",
           verse.arabic,
           "",
-          `Translation: ${verse.translation.text}`,
+          ...renderQuranTranslationMarkdown(verse.translation),
           "",
         ]),
       ].join("\n"),

@@ -4,10 +4,8 @@ import {
   NakafaAgentDataReadError,
   NakafaAgentInputError,
 } from "@repo/contents/_lib/agent/errors";
-import {
-  NakafaAgentQuranReferenceOptionsSchema,
-  NakafaAgentQuranReferenceSchema,
-} from "@repo/contents/_lib/agent/schema/quran";
+import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran/input";
+import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
 import { NakafaAgentMarkdownSchema } from "@repo/contents/_lib/agent/schema/read";
 import { NakafaAgentTaxonomySchema } from "@repo/contents/_lib/agent/schema/taxonomy";
 import { Effect, Schema } from "effect";

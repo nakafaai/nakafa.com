@@ -25,14 +25,14 @@ type ReadQuranReference = (
   NakafaAgentDataReadError | NakafaAgentInputError
 >;
 
-/** Registers the public V1 Quran read route. */
+/** Registers the canonical Quran route in the stable public API namespace. */
 export function registerAgentQuranRoutes(api: AgentApp) {
   registerQuranRoute(api, "/v1/quran/:surah", (ctx, input) =>
     getNakafaQuranReference(ctx, input)
   );
 }
 
-/** Registers the Quran GET and its matching preflight. */
+/** Registers one Quran GET and its matching preflight. */
 function registerQuranRoute(
   api: AgentApp,
   path: "/v1/quran/:surah",

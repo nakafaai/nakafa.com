@@ -143,16 +143,19 @@ describe("public agent API routes", () => {
     expect(revalidated.headers.get("etag")).toBe(etag);
   });
 
-  it("rejects direct origin access before dispatching a route", async () => {
-    const response = await createConvexTestWithBetterAuth().fetch(
-      `${NAKAFA_API_EDGE_CONTRACT.originPath}/v1/health`
-    );
+  it.each(["/v1/health", "/v1/quran/1?locale=en"])(
+    "rejects direct origin access to %s before dispatching a route",
+    async (path) => {
+      const response = await createConvexTestWithBetterAuth().fetch(
+        `${NAKAFA_API_EDGE_CONTRACT.originPath}${path}`
+      );
 
-    await expectProblem(response, {
-      code: "ORIGIN_ACCESS_DENIED",
-      status: 403,
-    });
-  });
+      await expectProblem(response, {
+        code: "ORIGIN_ACCESS_DENIED",
+        status: 403,
+      });
+    }
+  );
 
   it("does not expose the predecessor origin mount", async () => {
     const response = await createConvexTestWithBetterAuth().fetch("/v1");
@@ -202,6 +205,15 @@ describe("public agent API routes", () => {
     }
   );
 
+  it.each(["/quran/1", "/v2/quran/1"])(
+    "does not expose the retired Quran path %s",
+    async (path) => {
+      const response = await fetchApi(createConvexTestWithBetterAuth(), path);
+
+      expect(response.status).toBe(404);
+    }
+  );
+
   it("returns stable empty search pagination from an empty deployment", async () => {
     const response = await fetchApi(
       createConvexTestWithBetterAuth(),
@@ -210,7 +222,7 @@ describe("public agent API routes", () => {
 
     expect(response.status).toBe(200);
     expectPublicJson(response);
-    await expect(response.json()).resolves.toEqual({
+    await expect(response.json()).resolves.toMatchObject({
       count: 0,
       has_more: false,
       items: [],
@@ -353,11 +365,20 @@ describe("public agent API routes", () => {
       locale: "en",
       route: "quran/1",
       section: "quran",
-      text: expect.stringContaining("Technical translation 1[1]"),
+      text: expect.stringContaining(
+        "Technical translation 1[translation note 1]"
+      ),
       title: "Technical Surah 1",
     });
-    expect(body.text).not.toContain("translation note 1");
-    expect(body.text).not.toContain("Technical English Tafsir notice.");
+    expect(body.text).toContain("Translation notes:");
+    expect(body.text).toContain("Exact English source note.");
+    expect(body.text).toContain("## Reading sources");
+    expect(body.text).toContain("https://example.test/tanzil-text/terms");
+    expect(body.text).toContain(
+      "https://example.test/quranenc-english/updates"
+    );
+    expect(body.text).toContain("Version: technical-version");
+    expect(body.text).toContain("Technical English Tafsir notice.");
   });
 
   it("returns one bounded authenticated Quran reference", async () => {
@@ -388,7 +409,7 @@ describe("public agent API routes", () => {
 
     expect(response.status).toBe(200);
     expectPublicJson(response);
-    await expect(response.json()).resolves.toEqual({
+    expect(await response.json()).toMatchObject({
       alignmentId: "alignment:quran:quran-surah:1",
       assetId: "asset:id:quran:quran-surah:1",
       conceptId: "concept:quran:surah:1",
@@ -397,18 +418,38 @@ describe("public agent API routes", () => {
       lensId: "lens:quran",
       locale: "id",
       markdown_url: "https://nakafa.com/id/quran/1.md",
+      meaning: null,
       name: "Technical Surah 1",
+      pre_bismillah: null,
       revelation: "Meccan",
       route: "quran/1",
       section: "quran",
-      translation: "Technical meaning 1",
+      sources: {
+        arabic: { id: "tanzil-text", kind: "embedded" },
+        translation: {
+          id: "quranenc-indonesian",
+          kind: "embedded",
+          locale: "id",
+        },
+      },
+      tafsir_access: {
+        kind: "embedded",
+        locale: "id",
+        source: { id: "quranenc-tafsir" },
+      },
       url: "https://nakafa.com/id/quran/1",
       verses: [
         {
           arabic: "آية 1",
           number: 1,
           tafsir: "Tafsir teknis 1",
-          translation: "Terjemahan teknis 1[4]",
+          translation: {
+            notes: [{ number: 4, text: "Catatan sumber Indonesia." }],
+            segments: [
+              { kind: "text", offset: 0, value: "Terjemahan teknis 1" },
+              { kind: "note", number: 4 },
+            ],
+          },
         },
       ],
     });

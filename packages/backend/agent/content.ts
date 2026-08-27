@@ -2,7 +2,12 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { decodeAgentOutput } from "@repo/backend/agent/decode";
 import { readAgentQuery } from "@repo/backend/agent/query";
 import { getAgentContentReferenceInput } from "@repo/backend/agent/ref";
-import { decodePublishedQuranMarkdown } from "@repo/backend/client/quran/markdown";
+import {
+  decodePublishedQuranMarkdown,
+  renderQuranReadingSourcesMarkdown,
+  renderQuranTafsirAccessMarkdown,
+} from "@repo/backend/client/quran/markdown";
+import { renderQuranTranslationMarkdown } from "@repo/backend/client/quran/notes";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import type { agentContentSourceValidator } from "@repo/backend/convex/contentRelease/reference/agent";
 import type { ContentReferenceInput } from "@repo/backend/convex/contentRelease/reference/spec";
@@ -170,7 +175,18 @@ const renderQuranMarkdown = Effect.fn("agent.renderQuranMarkdown")(function* (
     surahNumber: source.surahNumber,
   }).pipe(Effect.mapError(contentReadError));
   const title = publication.surah.name.transliteration;
-  const description = publication.surah.name.translation;
+  const description = publication.surah.name.meaning ?? title;
+  const preBismillah =
+    publication.preBismillah === null
+      ? []
+      : [
+          publication.preBismillah.arabic,
+          "",
+          ...renderQuranTranslationMarkdown(
+            publication.preBismillah.translation
+          ),
+          "",
+        ];
   const markdown = yield* decodeAgentOutput(
     NakafaAgentMarkdownSchema,
     {
@@ -179,17 +195,22 @@ const renderQuranMarkdown = Effect.fn("agent.renderQuranMarkdown")(function* (
       text: [
         `# ${title}`,
         "",
-        `Translation: ${description}`,
+        ...(publication.surah.name.meaning === null
+          ? []
+          : [`Meaning: ${publication.surah.name.meaning}`]),
         `Revelation: ${publication.surah.revelation.place}`,
         "",
+        ...renderQuranReadingSourcesMarkdown(publication.sources),
+        ...renderQuranTafsirAccessMarkdown(publication.tafsirAccess),
         "## Verses",
         "",
+        ...preBismillah,
         ...publication.verses.flatMap((verse) => [
           `### Verse ${verse.number.inSurah}`,
           "",
           verse.arabic,
           "",
-          `Translation: ${verse.translation.text}`,
+          ...renderQuranTranslationMarkdown(verse.translation),
           "",
         ]),
       ].join("\n"),

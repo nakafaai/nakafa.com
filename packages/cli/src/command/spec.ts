@@ -1,5 +1,5 @@
 import { NAKAFA_API_BASE_URL } from "@repo/contents/_lib/agent/constants";
-import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran";
+import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran/input";
 import { NakafaAgentSectionSchema } from "@repo/contents/_lib/agent/schema/ref";
 import {
   NAKAFA_AGENT_MAX_LIMIT,

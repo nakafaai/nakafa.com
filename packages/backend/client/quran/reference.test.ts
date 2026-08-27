@@ -4,7 +4,7 @@ import {
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { QuranPublicationError } from "@repo/backend/client/quran/publication";
-import { decodePublishedQuranReferenceV2 } from "@repo/backend/client/quran/v2/reference";
+import { decodePublishedQuranReference } from "@repo/backend/client/quran/reference";
 import {
   encodeTestQuranRow,
   makeQuranChunk,
@@ -28,10 +28,10 @@ const source = {
   sourceRevision: GitCommitShaSchema.make("c".repeat(40)),
 };
 
-describe("signed Quran V2 reference decoder", () => {
+describe("signed Quran passage decoder", () => {
   it.live("selects exact verses with locale-matched signed sources", () =>
     Effect.gen(function* () {
-      const reference = yield* decodePublishedQuranReferenceV2(
+      const reference = yield* decodePublishedQuranReference(
         referenceResult(),
         { appLocale: "en", surahNumber: 1 }
       );
@@ -47,21 +47,10 @@ describe("signed Quran V2 reference decoder", () => {
     })
   );
 
-  it.live("accepts the bounded legacy external-Tafsir rollout gap", () =>
-    Effect.gen(function* () {
-      const reference = yield* decodePublishedQuranReferenceV2(
-        { ...referenceResult(), tafsirAccess: null },
-        { appLocale: "en", surahNumber: 1 }
-      );
-
-      expect(reference.tafsirAccess).toBeNull();
-    })
-  );
-
   it.live("fails closed for missing and inconsistent references", () =>
     Effect.gen(function* () {
       const missing = yield* Effect.result(
-        decodePublishedQuranReferenceV2(
+        decodePublishedQuranReference(
           {
             ...referenceResult(),
             chunkJson: [],
@@ -74,7 +63,7 @@ describe("signed Quran V2 reference decoder", () => {
         )
       );
       const inconsistent = yield* Effect.result(
-        decodePublishedQuranReferenceV2(referenceResult(), {
+        decodePublishedQuranReference(referenceResult(), {
           appLocale: "de",
           surahNumber: 1,
         })
@@ -90,7 +79,7 @@ describe("signed Quran V2 reference decoder", () => {
   );
 });
 
-/** Builds one complete bounded V2 reference response. */
+/** Builds one complete bounded passage response. */
 function referenceResult() {
   const chunk = makeQuranChunk({
     firstQuranNumber: 1,
@@ -102,6 +91,7 @@ function referenceResult() {
     ...source,
     chunkJson: [encodeTestQuranRow(source.snapshotId, chunk)],
     fromVerse: 2,
+    preBismillah: null,
     searchJson: encodeTestQuranRow(source.snapshotId, makeQuranSearch("en", 1)),
     sources: makeQuranLocaleSources("en"),
     surahJson: encodeTestQuranRow(source.snapshotId, makeQuranSurah(1, 6)),

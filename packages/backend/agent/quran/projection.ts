@@ -1,22 +1,15 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { decodeAgentOutput } from "@repo/backend/agent/decode";
-import {
-  projectQuranVerseV1,
-  projectQuranVerseV2,
-} from "@repo/backend/agent/quran/verse";
-import type { PublishedQuranReference } from "@repo/backend/client/quran/decode";
-import type { PublishedQuranReferenceV2 } from "@repo/backend/client/quran/v2/reference";
-import { hasExpectedQuranSourcesV2 } from "@repo/backend/client/quran/v2/source";
-import type { readQuranReference } from "@repo/backend/convex/contentRelease/quran/reference";
+import { projectQuranVerse } from "@repo/backend/agent/quran/verse";
+import type { PublishedQuranReference } from "@repo/backend/client/quran/reference";
+import { hasExpectedQuranSources } from "@repo/backend/client/quran/source";
+import type { readQuranPassage } from "@repo/backend/convex/contentRelease/quran/reference";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
-import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran";
-import { NakafaAgentQuranReferenceV2Schema } from "@repo/contents/_lib/agent/schema/quran/reference";
+import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { Effect } from "effect";
 
-type QuranReferenceResult = Effect.Success<
-  ReturnType<typeof readQuranReference>
->;
+type QuranReferenceResult = Effect.Success<ReturnType<typeof readQuranPassage>>;
 type QuranEmbeddedProjection =
   | NonNullable<QuranReferenceResult["sources"]>["arabic" | "translation"]
   | Extract<
@@ -30,43 +23,18 @@ interface QuranProjectionInput {
   readonly ref: NakafaAgentContentRef;
 }
 
-interface QuranProjectionV1Input extends QuranProjectionInput {
+interface QuranReferenceProjectionInput extends QuranProjectionInput {
   readonly reference: PublishedQuranReference;
 }
 
-interface QuranProjectionV2Input extends QuranProjectionInput {
-  readonly reference: PublishedQuranReferenceV2;
-}
-
-/** Projects the stable V1 Quran contract without adding V2 fields. */
-export const projectNakafaQuranReferenceV1 = Effect.fn(
-  "agent.quran.projectReferenceV1"
-)(function* (input: QuranProjectionV1Input) {
-  const verses = yield* Effect.forEach(input.reference.verses, (verse) =>
-    projectQuranVerseV1(verse, input.appLocale, input.includeTafsir)
-  );
-  return yield* decodeAgentOutput(
-    NakafaAgentQuranReferenceSchema,
-    {
-      ...input.ref,
-      name: input.reference.surah.name.transliteration,
-      revelation: input.reference.surah.revelation.place,
-      translation: input.reference.surah.name.translation,
-      verses,
-    },
-    "Unable to build Nakafa Quran reference."
-  );
-});
-
-/** Projects the V2 Quran contract with semantic notes and signed sources. */
-export const projectNakafaQuranReferenceV2 = Effect.fn(
-  "agent.quran.projectReferenceV2"
-)(function* (input: QuranProjectionV2Input) {
+/** Projects the canonical Quran contract with semantic notes and signed sources. */
+export const projectNakafaQuranReference = Effect.fn(
+  "agent.quran.projectReference"
+)(function* (input: QuranReferenceProjectionInput) {
   const { sources, tafsirAccess } = input.reference;
   if (
     sources === null ||
-    tafsirAccess === null ||
-    !hasExpectedQuranSourcesV2(sources, tafsirAccess, input.appLocale)
+    !hasExpectedQuranSources(sources, tafsirAccess, input.appLocale)
   ) {
     return yield* new NakafaAgentDataReadError({
       cause: `Signed Quran reference has incomplete ${input.appLocale} source attribution.`,
@@ -74,10 +42,10 @@ export const projectNakafaQuranReferenceV2 = Effect.fn(
     });
   }
   const verses = yield* Effect.forEach(input.reference.verses, (verse) =>
-    projectQuranVerseV2(verse, input.appLocale, input.includeTafsir)
+    projectQuranVerse(verse, input.appLocale, input.includeTafsir)
   );
   return yield* decodeAgentOutput(
-    NakafaAgentQuranReferenceV2Schema,
+    NakafaAgentQuranReferenceSchema,
     {
       ...input.ref,
       meaning:
@@ -88,6 +56,7 @@ export const projectNakafaQuranReferenceV2 = Effect.fn(
             }
           : null,
       name: input.reference.surah.name.transliteration,
+      pre_bismillah: input.reference.preBismillah,
       revelation: input.reference.surah.revelation.place,
       sources: {
         arabic: projectEmbeddedSource(sources.arabic),
@@ -96,10 +65,11 @@ export const projectNakafaQuranReferenceV2 = Effect.fn(
           locale: input.appLocale,
         },
       },
-      tafsir_access: projectTafsirAccess(tafsirAccess),
+      tafsir_access:
+        tafsirAccess === null ? null : projectTafsirAccess(tafsirAccess),
       verses,
     },
-    "Unable to build Nakafa Quran V2 reference."
+    "Unable to build Nakafa Quran reference."
   );
 });
 

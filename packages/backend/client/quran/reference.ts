@@ -2,29 +2,31 @@ import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 import { hasExactQuranVerseRange } from "@repo/backend/client/quran/integrity";
-import { quranPublicationError } from "@repo/backend/client/quran/publication";
+import {
+  decodePublishedQuranSource,
+  type PublishedQuranSource,
+  quranPublicationError,
+} from "@repo/backend/client/quran/publication";
 import {
   decodeQuranChunkVerses,
   decodeQuranSearchRow,
   decodeQuranSurahRow,
   type QuranSearchRow,
 } from "@repo/backend/client/quran/rows";
-import {
-  decodePublishedQuranSourceV2,
-  type PublishedQuranSourceV2,
-} from "@repo/backend/client/quran/v2/publication";
-import { hasExpectedQuranSourcesV2 } from "@repo/backend/client/quran/v2/source";
+import { hasExpectedQuranSources } from "@repo/backend/client/quran/source";
+import { separateQuranRuntimeBismillah } from "@repo/backend/content/quran/bismillah";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 
 type QuranReferenceResult = FunctionReturnType<
-  typeof api.contentRelease.quran.referenceV2
+  typeof api.contentRelease.quran.passage
 >;
 
-/** One bounded signed Quran reference in the canonical V2 shape. */
-export type PublishedQuranReferenceV2 = PublishedQuranSourceV2 & {
+/** One bounded signed Quran passage in its canonical shape. */
+export type PublishedQuranReference = PublishedQuranSource & {
   readonly fromVerse: number;
+  readonly preBismillah: QuranReferenceResult["preBismillah"];
   readonly search: QuranSearchRow;
   readonly sources: NonNullable<QuranReferenceResult["sources"]>;
   readonly surah: QuranSurahRow;
@@ -33,9 +35,9 @@ export type PublishedQuranReferenceV2 = PublishedQuranSourceV2 & {
   readonly verses: readonly QuranRuntimeVerse[];
 };
 
-/** Decodes one bounded active signed Quran verse reference as V2. */
-export const decodePublishedQuranReferenceV2 = Effect.fn(
-  "NakafaQuran.decodeReferenceV2"
+/** Decodes one bounded active signed Quran passage. */
+export const decodePublishedQuranReference = Effect.fn(
+  "NakafaQuran.decodeReference"
 )(function* (
   result: QuranReferenceResult,
   expected: {
@@ -43,11 +45,11 @@ export const decodePublishedQuranReferenceV2 = Effect.fn(
     readonly surahNumber: number;
   }
 ) {
-  const source = yield* decodePublishedQuranSourceV2(result, "reference");
+  const source = yield* decodePublishedQuranSource(result, "reference");
   if (
     result.surahJson === null ||
     result.searchJson === null ||
-    !hasExpectedQuranSourcesV2(
+    !hasExpectedQuranSources(
       result.sources,
       result.tafsirAccess,
       expected.appLocale
@@ -68,11 +70,16 @@ export const decodePublishedQuranReferenceV2 = Effect.fn(
       expected.surahNumber
     ),
   ]);
-  const verses = chunkVerses.filter(
+  const selectedVerses = chunkVerses.filter(
     (verse) =>
       verse.number.inSurah >= result.fromVerse &&
       verse.number.inSurah <= result.toVerse
   );
+  const projected = separateQuranRuntimeBismillah(
+    result.preBismillah,
+    selectedVerses
+  );
+  const verses = projected.verses;
   if (
     surah.number !== expected.surahNumber ||
     result.fromVerse < 1 ||
@@ -85,16 +92,23 @@ export const decodePublishedQuranReferenceV2 = Effect.fn(
       "Signed Quran reference identity is inconsistent."
     );
   }
+  if (result.preBismillah !== null && projected.preBismillah === null) {
+    return yield* quranPublicationError(
+      "reference",
+      "Signed Quran Bismillah identity is inconsistent."
+    );
+  }
   return {
     ...source,
     fromVerse: result.fromVerse,
+    preBismillah: projected.preBismillah,
     search,
     sources: result.sources,
     surah,
     tafsirAccess: result.tafsirAccess,
     toVerse: result.toVerse,
     verses,
-  } satisfies PublishedQuranReferenceV2;
+  } satisfies PublishedQuranReference;
 });
 
 /** Checks the app-locale search identity returned beside one surah. */

@@ -1,14 +1,14 @@
 import {
   decodePublishedQuranSource,
   QuranPublicationError,
-} from "@repo/backend/client/quran/decode";
+} from "@repo/backend/client/quran/publication";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { ConvexError } from "convex/values";
 import { Data, Effect, Schema } from "effect";
 
 type QuranInterpretationResult = FunctionReturnType<
-  typeof api.contentRelease.quran.interpretation
+  typeof api.contentRelease.quran.tafsir
 >;
 const QuranSnapshotConflictDataSchema = Schema.Struct({
   code: Schema.Literal("CONTENT_RELEASE_CONFLICT"),
@@ -48,6 +48,9 @@ export const decodePublishedQuranInterpretation = Effect.fn(
   const source = yield* decodePublishedQuranSource(result, "interpretation");
   if (
     result.appLocale !== expected.appLocale ||
+    result.tafsirAccess === null ||
+    result.tafsirAccess.appLocale !== expected.appLocale ||
+    result.tafsirAccess.kind !== "embedded" ||
     source.snapshotId !== expected.snapshotId ||
     result.surahNumber !== expected.surahNumber ||
     result.verseNumber !== expected.verseNumber ||
@@ -63,6 +66,7 @@ export const decodePublishedQuranInterpretation = Effect.fn(
     appLocale: result.appLocale,
     interpretation: result.interpretation,
     surahNumber: result.surahNumber,
+    tafsirAccess: result.tafsirAccess,
     verseNumber: result.verseNumber,
   };
 });

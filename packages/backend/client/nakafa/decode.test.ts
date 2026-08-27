@@ -25,6 +25,7 @@ describe("Nakafa runtime decoders", () => {
       });
       expect(yield* decodeNakafaQuranReference(quranReference())).toMatchObject(
         {
+          pre_bismillah: null,
           route: "quran/1",
           verses: [{ number: 1 }],
         }
@@ -96,16 +97,67 @@ function markdown() {
 }
 /** Builds a minimal valid Quran reference payload for schema decoding. */
 function quranReference() {
+  const artifact = {
+    byte_count: 1,
+    digest: `sha256:${"1".repeat(64)}`,
+    file_count: 1,
+  };
+  const embeddedSource = (id: string) => ({
+    artifact,
+    id,
+    kind: "embedded" as const,
+    label: id,
+    notice: `${id} notice.`,
+    publisher: "Technical publisher",
+    retrieved_at: "2026-08-26T00:00:00Z",
+    source_url: `https://example.test/${id}`,
+    terms: { artifact, url: `https://example.test/${id}/terms` },
+    update_url: `https://example.test/${id}/updates`,
+    version: "technical-version",
+  });
   return {
     ...readNakafaContentRefFixture("en", "quran/1", "quran"),
+    meaning: { locale: "en", text: "The Opening" },
     name: "Al-Faatiha",
-    revelation: "Mecca",
-    translation: "The Opening",
+    pre_bismillah: null,
+    revelation: "Meccan",
+    sources: {
+      arabic: embeddedSource("tanzil-text"),
+      translation: {
+        ...embeddedSource("quranenc-english"),
+        locale: "en",
+      },
+    },
+    tafsir_access: {
+      kind: "external",
+      locale: "en",
+      notice: "Official link-only Tafsir access.",
+      source: {
+        id: "mokhtasar-english",
+        kind: "external",
+        label: "Al-Mukhtasar English",
+        notice: "Official link-only source.",
+        publisher: "Tafsir Center for Quranic Studies",
+        retrieved_at: "2026-08-26T00:00:00Z",
+        source_url: "https://mokhtasr.com/en/books/319",
+        terms: {
+          access: "link-only",
+          url: "https://mokhtasr.com/en/pages/terms-and-conditions",
+        },
+        update_url: "https://mokhtasr.com/en/books/319",
+        version: "7",
+      },
+    },
     verses: [
       {
         arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
         number: 1,
-        translation: "In the name of Allah.",
+        translation: {
+          notes: [],
+          segments: [
+            { kind: "text", offset: 0, value: "In the name of Allah." },
+          ],
+        },
       },
     ],
   };

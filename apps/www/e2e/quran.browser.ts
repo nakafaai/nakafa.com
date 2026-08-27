@@ -122,25 +122,20 @@ const verifyQuranLocaleCoverage = Effect.fn(
     readinessTimeoutMilliseconds
   );
 
-  const availability = page.locator("[data-quran-interpretation-availability]");
+  const bismillah = page.locator("[data-quran-bismillah]");
+  yield* Effect.promise(() => expect(bismillah).toBeVisible());
   yield* Effect.promise(() =>
-    expect(availability.locator("p")).not.toBeEmpty()
-  );
-  const sourceLink = availability.getByRole("link");
-  yield* Effect.promise(() => expect(sourceLink).toHaveCount(1));
-  yield* Effect.promise(() => expect(sourceLink).toBeVisible());
-  const sourceHref = yield* Effect.promise(() =>
-    sourceLink.getAttribute("href")
-  );
-  yield* Effect.sync(() => expect(sourceHref).not.toBeNull());
-  yield* Effect.sync(() =>
-    expect(new URL(sourceHref ?? "").protocol).toBe("https:")
+    expect(bismillah.locator('[lang="ar"]')).toContainText("بِسْمِ")
   );
   yield* Effect.promise(() =>
-    expect(sourceLink).toHaveAttribute("target", "_blank")
+    expect(
+      page.locator('[data-quran-verse="1"] [data-quran-arabic]')
+    ).toHaveText("الٓمٓ")
   );
   yield* Effect.promise(() =>
-    expect(sourceLink).toHaveAttribute("rel", "noopener noreferrer")
+    expect(
+      page.locator("[data-quran-interpretation-availability]")
+    ).toHaveCount(0)
   );
 
   const interpretation = page.locator("[data-quran-interpretation-verse]");
@@ -155,6 +150,11 @@ const verifyQuranLocaleCoverage = Effect.fn(
     `aside[aria-label^="${contract.translationNotesLabel}: "]`
   );
   if (contract.hasTranslationNotes) {
+    yield* Effect.promise(() =>
+      expect(
+        page.getByText(contract.translationNotesLabel, { exact: true })
+      ).toHaveCount(0)
+    );
     yield* Effect.promise(() => expect(translationNotes.first()).toBeVisible());
     yield* Effect.promise(() =>
       expect(
@@ -202,6 +202,46 @@ const verifyQuranLocaleCoverage = Effect.fn(
       expect(page.locator('a[role="doc-noteref"]')).toHaveCount(0)
     );
   }
+
+  const bibliographyHref = `/${contract.locale}/quran/1`;
+  const bibliographyResponse = yield* Effect.promise(() =>
+    page.goto(bibliographyHref, { waitUntil: "domcontentloaded" })
+  );
+  yield* Effect.sync(() => expect(bibliographyResponse?.ok()).toBe(true));
+  yield* waitForCommittedAppRouter(
+    page,
+    href,
+    bibliographyHref,
+    readinessTimeoutMilliseconds
+  );
+
+  const bibliography = page.locator("footer button").first();
+  yield* Effect.promise(() => expect(bibliography).toBeVisible());
+  yield* Effect.promise(() => bibliography.click());
+  const bibliographySheet = page.locator('[data-slot="sheet-popup"]');
+  yield* Effect.promise(() =>
+    expect(bibliographySheet).toBeVisible({
+      timeout: readinessTimeoutMilliseconds,
+    })
+  );
+  const sourceLinks = bibliographySheet.locator('a[target="_blank"]');
+  yield* Effect.promise(() => expect(sourceLinks).toHaveCount(3));
+  yield* Effect.promise(() =>
+    expect(sourceLinks.first()).toHaveAttribute("rel", "noopener noreferrer")
+  );
+  const sourceHrefs = yield* Effect.promise(() =>
+    sourceLinks.evaluateAll((links) =>
+      links.map((link) => link.getAttribute("href"))
+    )
+  );
+  yield* Effect.sync(() =>
+    expect(
+      sourceHrefs.every((sourceHref) =>
+        sourceHref === null ? false : new URL(sourceHref).protocol === "https:"
+      )
+    ).toBe(true)
+  );
+  yield* Effect.promise(() => page.keyboard.press("Escape"));
 });
 
 test.describe("Quran source and tafsir coverage", () => {

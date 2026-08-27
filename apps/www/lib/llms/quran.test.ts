@@ -18,6 +18,7 @@ const publicationMocks = vi.hoisted(() => ({
   readPublishedQuranCatalog: vi.fn(),
   readPublishedQuranMarkdown: vi.fn(),
 }));
+const BISMILLAH = "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ";
 /** Builds the real locale translator used by the server mock. */
 const createHolyTranslator = Effect.fn("test.createHolyTranslator")(function* (
   locale: Locale
@@ -187,6 +188,9 @@ describe("quran llms text", () => {
         cleanSlug: "quran/2",
         locale: "id",
       });
+      if (secondSurahText === null) {
+        expect.fail("Expected signed Al-Baqarah Markdown.");
+      }
 
       expect(secondSurahText).toContain("## Al-Baqarah");
       expect(secondSurahText).toContain(
@@ -196,6 +200,16 @@ describe("quran llms text", () => {
       );
       expect(secondSurahText).toContain(`#### ${t("verse")} 80`);
       expect(secondSurahText).not.toContain(`#### ${t("verse")} 81`);
+      expect(secondSurahText).toContain(BISMILLAH);
+      expect(secondSurahText).toContain(
+        `**${t("translation")}:** Dengan nama Allah Yang Maha Pengasih.`
+      );
+      expect(secondSurahText).toContain("- **7.** Catatan Bismillah.");
+      expect(secondSurahText).toContain("الٓمٓ");
+      expect(secondSurahText.indexOf(BISMILLAH)).toBeLessThan(
+        secondSurahText.indexOf(`#### ${t("verse")} 1`)
+      );
+      expect(secondSurahText.split(BISMILLAH)).toHaveLength(2);
       expect(secondSurahText).toContain(
         t("markdown-limit", { numberOfVerses: 82, toVerse: 80 })
       );
@@ -294,6 +308,13 @@ function surahMarkdown(locale: Locale, number: number, verseLimit?: number) {
   const metadata = surahMetadata(number);
   return {
     appLocale: locale,
+    preBismillah:
+      number === 1
+        ? null
+        : {
+            arabic: BISMILLAH,
+            translation: bismillahTranslation(locale),
+          },
     sources: {
       arabic: {
         label: "Technical Arabic source.",
@@ -320,7 +341,7 @@ function surahMarkdown(locale: Locale, number: number, verseLimit?: number) {
     tafsirAccess: tafsirAccessFor(locale),
     toVerse,
     verses: Array.from({ length: toVerse }, (_, index) =>
-      verseFixture(index + 1)
+      verseFixture(number, index + 1)
     ),
   };
 }
@@ -356,7 +377,7 @@ function tafsirAccessFor(locale: Locale) {
 }
 
 /** Builds one exact locale-specific Quran markdown verse. */
-function verseFixture(number: number) {
+function verseFixture(surahNumber: number, number: number) {
   const notes =
     number === 1
       ? [{ number: 1, referenceOffset: 12, text: "Source note." }]
@@ -370,8 +391,55 @@ function verseFixture(number: number) {
         ]
       : [{ kind: "text", offset: 0, value: `Translation ${number}.` }];
   return {
-    arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
+    arabic: arabicVerse(surahNumber, number),
     number: { inSurah: number },
     translation: { notes, segments },
   };
+}
+
+/** Returns one reviewed technical Bismillah translation for the test locale. */
+function bismillahTranslation(locale: Locale): QuranTranslationDocument {
+  if (locale === "en") {
+    return {
+      notes: [],
+      segments: [
+        {
+          kind: "text",
+          offset: 0,
+          value: "In the name of Allah, the Most Compassionate.",
+        },
+      ],
+    };
+  }
+  if (locale === "de") {
+    return {
+      notes: [],
+      segments: [
+        {
+          kind: "text",
+          offset: 0,
+          value: "Im Namen Allahs, des Allerbarmers.",
+        },
+      ],
+    };
+  }
+  return {
+    notes: [{ number: 7, referenceOffset: 41, text: "Catatan Bismillah." }],
+    segments: [
+      {
+        kind: "text",
+        offset: 0,
+        value: "Dengan nama Allah Yang Maha Pengasih.",
+      },
+      { kind: "note", number: 7, offset: 41 },
+    ],
+  };
+}
+
+/** Preserves the distinct Al-Fatihah and Al-Baqarah opening verse fixtures. */
+function arabicVerse(surahNumber: number, number: number) {
+  if (number !== 1) {
+    return `آية ${number}`;
+  }
+  return surahNumber === 2 ? "الٓمٓ" : BISMILLAH;
 }

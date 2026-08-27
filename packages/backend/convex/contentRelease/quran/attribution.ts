@@ -1,7 +1,6 @@
 import { QuranAttributionRowSchema } from "@nakafa/aksara-contracts/quran/source";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { verifyLegacyQuranAttribution } from "@repo/backend/convex/contentRelease/quran/legacy";
 import { loadQuranOwner } from "@repo/backend/convex/contentRelease/quran/owner";
 import { verifyQuranRow } from "@repo/backend/convex/contentRelease/quran/verify";
 import { Effect } from "effect";
@@ -27,19 +26,12 @@ export const readQuranAttributionRow = Effect.fn(
       `Active Quran snapshot ${snapshotId} lost its unique attribution row.`
     );
   }
-  const attribution = yield* verifyQuranRow(
+  const payload = yield* verifyQuranRow(
     row,
     snapshotId,
     QuranAttributionRowSchema
-  ).pipe(
-    Effect.map((payload) => ({ contract: "current" as const, payload })),
-    Effect.catchTag("ReleaseError", () =>
-      verifyLegacyQuranAttribution(row, snapshotId).pipe(
-        Effect.map((payload) => ({ contract: "legacy" as const, payload }))
-      )
-    )
   );
-  return { ...attribution, rowJson: row.rowJson };
+  return { payload, rowJson: row.rowJson };
 });
 
 /** Returns the visible signed source attribution for active Quran content. */

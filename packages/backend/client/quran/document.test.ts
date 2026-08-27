@@ -1,12 +1,16 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { decodePublishedQuranDocument } from "@repo/backend/client/quran/document";
 import type { api } from "@repo/backend/convex/_generated/api";
+import {
+  makeQuranLocaleSources,
+  makeQuranTafsirProjection,
+} from "@repo/backend/test/quran/rows";
 import { describe, expect, it } from "@repo/testing/effect";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 
 type QuranDocumentResult = FunctionReturnType<
-  typeof api.contentRelease.quran.document
+  typeof api.contentRelease.quran.surah
 >;
 const source = {
   activeManifestHash: `sha256:${"a".repeat(64)}`,
@@ -28,7 +32,12 @@ describe("signed Quran document decoder", () => {
         {
           arabic: "بِسْمِ اللّٰهِ",
           number: { inQuran: 1, inSurah: 1 },
-          translation: { footnotes: "Catatan.", text: "Dengan nama Allah." },
+          translation: {
+            notes: [],
+            segments: [
+              { kind: "text", offset: 0, value: "Dengan nama Allah." },
+            ],
+          },
         },
       ]);
     })
@@ -44,10 +53,13 @@ describe("signed Quran document decoder", () => {
               activeReleaseId: null,
               appLocale: "id",
               managed: false,
+              preBismillah: null,
               snapshotId: null,
               sourceOrigin: null,
               sourceRevision: null,
+              sources: null,
               surah: null,
+              tafsirAccess: null,
               verses: [],
             },
             { appLocale: "id", surahNumber: 1 }
@@ -75,22 +87,28 @@ function documentResult(): QuranDocumentResult {
   return {
     ...source,
     appLocale: "id",
+    preBismillah: null,
+    sources: makeQuranLocaleSources("id"),
     surah: {
       kind: "quran-surah",
       name: {
         arabic: "الفاتحة",
-        translation: "Pembukaan",
+        meaning: null,
         transliteration: "Al-Fatihah",
       },
       number: 1,
       numberOfVerses: 1,
       revelation: { order: 5, place: "Meccan" },
     },
+    tafsirAccess: makeQuranTafsirProjection("id"),
     verses: [
       {
         arabic: "بِسْمِ اللّٰهِ",
         number: { inQuran: 1, inSurah: 1 },
-        translation: { footnotes: "Catatan.", text: "Dengan nama Allah." },
+        translation: {
+          notes: [],
+          segments: [{ kind: "text", offset: 0, value: "Dengan nama Allah." }],
+        },
       },
     ],
   };

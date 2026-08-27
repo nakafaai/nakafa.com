@@ -120,6 +120,23 @@ export const OPENAPI_PATHS = {
       summary: "Read the OpenAPI contract",
     }),
   },
+  "/v1/quran/{surah}": {
+    get: readOperation({
+      description:
+        "Returns a bounded Quran verse range with semantic translation notes, signed Arabic and translation sources, and explicit locale-specific tafsir access.",
+      operationId: "getNakafaQuranReference",
+      parameters: QURAN_PARAMETERS,
+      responses: {
+        "200": successResponse(
+          "A source-grounded Quran reference.",
+          "QuranReference"
+        ),
+        "404": problemResponse("The requested surah was not found."),
+        ...METERED_RESPONSES,
+      },
+      summary: "Read a source-grounded Quran reference",
+    }),
+  },
   "/v1": {
     get: readOperation({
       description:
@@ -156,20 +173,6 @@ export const OPENAPI_PATHS = {
         ...COMMON_ERRORS,
       },
       summary: "Check API health",
-    }),
-  },
-  "/v1/quran/{surah}": {
-    get: readOperation({
-      description:
-        "Returns a bounded reviewed Quran verse range with translation and optional tafsir.",
-      operationId: "getNakafaQuranReference",
-      parameters: QURAN_PARAMETERS,
-      responses: {
-        "200": successResponse("A typed Quran reference.", "QuranReference"),
-        "404": problemResponse("The requested surah was not found."),
-        ...METERED_RESPONSES,
-      },
-      summary: "Read a Quran reference",
     }),
   },
   "/v1/search": {

@@ -49,7 +49,7 @@ function expansionRows() {
 }
 
 describe("contentRelease/quran", () => {
-  it("registers semantic queries before consumers switch", async () => {
+  it("registers the canonical semantic queries", async () => {
     const t = convexTest(schema, convexModules);
 
     const [surah, prose, page, passage] = await Promise.all([
@@ -87,29 +87,12 @@ describe("contentRelease/quran", () => {
     });
   });
 
-  it("preserves prior responses while semantic queries separate Bismillah", async () => {
+  it("separates Bismillah while preserving exact source notes", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => activateQuranSnapshot(ctx, expansionRows()));
 
-    const [
-      documentV2,
-      surah,
-      markdownV2,
-      prose,
-      viewV2,
-      page,
-      referenceV2,
-      passage,
-    ] = await Promise.all([
-      t.query(api.contentRelease.quran.documentV2, {
-        appLocale: "id",
-        surahNumber: 2,
-      }),
+    const [surah, prose, page, passage] = await Promise.all([
       t.query(api.contentRelease.quran.surah, {
-        appLocale: "id",
-        surahNumber: 2,
-      }),
-      t.query(api.contentRelease.quran.markdownV2, {
         appLocale: "id",
         surahNumber: 2,
       }),
@@ -117,17 +100,8 @@ describe("contentRelease/quran", () => {
         appLocale: "id",
         surahNumber: 2,
       }),
-      t.query(api.contentRelease.quran.viewV2, {
-        appLocale: "id",
-        surahNumber: 2,
-      }),
       t.query(api.contentRelease.quran.page, {
         appLocale: "id",
-        surahNumber: 2,
-      }),
-      t.query(api.contentRelease.quran.referenceV2, {
-        appLocale: "id",
-        fromVerse: 1,
         surahNumber: 2,
       }),
       t.query(api.contentRelease.quran.passage, {
@@ -137,11 +111,6 @@ describe("contentRelease/quran", () => {
       }),
     ]);
 
-    for (const result of [documentV2, markdownV2, viewV2]) {
-      expect(result).not.toHaveProperty("preBismillah");
-      expect(result.verses[0]?.arabic).toBe(`${bismillah} الٓمٓ`);
-    }
-    expect(referenceV2).not.toHaveProperty("preBismillah");
     for (const result of [surah, prose, page, passage]) {
       expect(result.preBismillah).toEqual({
         arabic: bismillah,
@@ -165,6 +134,47 @@ describe("contentRelease/quran", () => {
     expect(page.verses[0]?.arabic).toBe("الٓمٓ");
   });
 
+  it("keeps the current WWW rollout bridge exact", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) => activateQuranSnapshot(ctx, expansionRows()));
+
+    const [prose, markdownV2, page, viewV2] = await Promise.all([
+      t.query(api.contentRelease.quran.prose, {
+        appLocale: "id",
+        surahNumber: 2,
+      }),
+      t.query(api.contentRelease.quran.markdownV2, {
+        appLocale: "id",
+        surahNumber: 2,
+      }),
+      t.query(api.contentRelease.quran.page, {
+        appLocale: "id",
+        surahNumber: 2,
+      }),
+      t.query(api.contentRelease.quran.viewV2, {
+        appLocale: "id",
+        surahNumber: 2,
+      }),
+    ]);
+
+    expect(markdownV2).toEqual(prose);
+    expect(viewV2).toEqual(page);
+    if (page.snapshotId === null) {
+      expect.fail("The active Quran page must retain its snapshot identity.");
+    }
+    const args = {
+      appLocale: "id" as const,
+      expectedSnapshotId: page.snapshotId,
+      surahNumber: 2,
+      verseNumber: 1,
+    };
+    const [tafsir, interpretationV2] = await Promise.all([
+      t.query(api.contentRelease.quran.tafsir, args),
+      t.query(api.contentRelease.quran.interpretationV2, args),
+    ]);
+    expect(interpretationV2).toEqual(tafsir);
+  });
+
   it("registers public reads and rejects a stale interpretation", async () => {
     const t = convexTest(schema, convexModules);
 
@@ -175,25 +185,25 @@ describe("contentRelease/quran", () => {
       t.query(api.contentRelease.quran.surahs, {})
     ).resolves.toMatchObject({ managed: false, rowJson: [] });
     await expect(
-      t.query(api.contentRelease.quran.document, {
+      t.query(api.contentRelease.quran.surah, {
         appLocale: "en",
         surahNumber: 1,
       })
     ).resolves.toMatchObject({ managed: false, surah: null, verses: [] });
     await expect(
-      t.query(api.contentRelease.quran.markdown, {
+      t.query(api.contentRelease.quran.prose, {
         appLocale: "id",
         surahNumber: 1,
       })
     ).resolves.toMatchObject({ managed: false, surah: null, verses: [] });
     await expect(
-      t.query(api.contentRelease.quran.view, {
+      t.query(api.contentRelease.quran.page, {
         appLocale: "id",
         surahNumber: 1,
       })
     ).resolves.toMatchObject({ managed: false, surah: null, verses: [] });
     await expect(
-      t.query(api.contentRelease.quran.interpretation, {
+      t.query(api.contentRelease.quran.tafsir, {
         appLocale: "id",
         expectedSnapshotId: `sha256:${"0".repeat(64)}`,
         surahNumber: 1,
@@ -203,7 +213,7 @@ describe("contentRelease/quran", () => {
       data: { code: "CONTENT_RELEASE_CONFLICT" },
     });
     await expect(
-      t.query(api.contentRelease.quran.reference, {
+      t.query(api.contentRelease.quran.passage, {
         appLocale: "id",
         fromVerse: 1,
         surahNumber: 1,
@@ -217,19 +227,19 @@ describe("contentRelease/quran", () => {
     const results = await Promise.all([
       t.query(api.contentRelease.quran.attribution, {}),
       t.query(api.contentRelease.quran.surahs, {}),
-      t.query(api.contentRelease.quran.document, {
+      t.query(api.contentRelease.quran.surah, {
         appLocale: "en",
         surahNumber: 1,
       }),
-      t.query(api.contentRelease.quran.markdown, {
+      t.query(api.contentRelease.quran.prose, {
         appLocale: "id",
         surahNumber: 1,
       }),
-      t.query(api.contentRelease.quran.view, {
+      t.query(api.contentRelease.quran.page, {
         appLocale: "id",
         surahNumber: 1,
       }),
-      t.query(api.contentRelease.quran.reference, {
+      t.query(api.contentRelease.quran.passage, {
         appLocale: "id",
         fromVerse: 1,
         surahNumber: 1,
@@ -247,7 +257,7 @@ describe("contentRelease/quran", () => {
       });
     }
     await expect(
-      t.query(api.contentRelease.quran.interpretation, {
+      t.query(api.contentRelease.quran.tafsir, {
         appLocale: "id",
         expectedSnapshotId: `sha256:${"0".repeat(64)}`,
         surahNumber: 1,

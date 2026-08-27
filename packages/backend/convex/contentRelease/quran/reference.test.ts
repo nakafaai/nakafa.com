@@ -1,4 +1,4 @@
-import { readQuranReference } from "@repo/backend/convex/contentRelease/quran/reference";
+import { readQuranPassage } from "@repo/backend/convex/contentRelease/quran/reference";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -39,7 +39,7 @@ describe("contentRelease/quran/reference", () => {
     await expect(
       t.query((ctx) =>
         runConvexProgram(
-          readQuranReference(ctx, {
+          readQuranPassage(ctx, {
             fromVerse: 2,
             appLocale: "en",
             surahNumber: 1,
@@ -62,7 +62,7 @@ describe("contentRelease/quran/reference", () => {
     await expect(
       t.query((ctx) =>
         runConvexProgram(
-          readQuranReference(ctx, {
+          readQuranPassage(ctx, {
             fromVerse: 6,
             appLocale: "en",
             surahNumber: 1,
@@ -88,7 +88,7 @@ describe("contentRelease/quran/reference", () => {
     await expect(
       t.query((ctx) =>
         runConvexProgram(
-          readQuranReference(ctx, {
+          readQuranPassage(ctx, {
             fromVerse: 7,
             appLocale: "en",
             surahNumber: 1,
@@ -110,7 +110,7 @@ describe("contentRelease/quran/reference", () => {
     await expect(
       t.query((ctx) =>
         runConvexProgram(
-          readQuranReference(ctx, {
+          readQuranPassage(ctx, {
             fromVerse: 1,
             appLocale: "en",
             surahNumber: 1,
@@ -134,7 +134,7 @@ describe("contentRelease/quran/reference", () => {
     await expect(
       t.query((ctx) =>
         runConvexProgram(
-          readQuranReference(ctx, {
+          readQuranPassage(ctx, {
             fromVerse: 1,
             appLocale: "en",
             surahNumber: 1,

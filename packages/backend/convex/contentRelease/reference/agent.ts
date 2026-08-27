@@ -2,9 +2,9 @@ import { QuranSurahNumberSchema } from "@nakafa/aksara-contracts/quran/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
-  quranMarkdownV1Validator,
-  readQuranMarkdownV1,
-} from "@repo/backend/convex/contentRelease/quran/v1";
+  quranMarkdownValidator,
+  readQuranMarkdown,
+} from "@repo/backend/convex/contentRelease/quran/markdown";
 import { readContentReference } from "@repo/backend/convex/contentRelease/reference/read";
 import type { ContentReferenceInput } from "@repo/backend/convex/contentRelease/reference/spec";
 import { contentSearchSummaryValidator } from "@repo/backend/convex/contents/helpers/search/schema";
@@ -19,7 +19,7 @@ export const agentContentSourceValidator = v.union(
   }),
   v.object({
     kind: v.literal("quran"),
-    markdown: quranMarkdownV1Validator,
+    markdown: quranMarkdownValidator,
     reference: contentSearchSummaryValidator,
     surahNumber: v.number(),
   }),
@@ -38,11 +38,7 @@ export const readAgentContentSource = Effect.fn(
     return { kind: "reference" as const, reference };
   }
   const surahNumber = yield* parseQuranRoute(reference.route);
-  const markdown = yield* readQuranMarkdownV1(
-    ctx,
-    reference.locale,
-    surahNumber
-  );
+  const markdown = yield* readQuranMarkdown(ctx, reference.locale, surahNumber);
   return { kind: "quran" as const, markdown, reference, surahNumber };
 });
 

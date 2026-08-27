@@ -46,17 +46,12 @@ const quranMarkdownVerseValidator = v.object({
 export const quranMarkdownValidator = v.object({
   ...quranSourceFields,
   appLocale: quranAppLocaleValidator,
+  preBismillah: v.union(quranBismillahValidator, v.null()),
   sources: v.union(quranReadingSourcesValidator, v.null()),
   surah: v.union(quranMarkdownSurahValidator, v.null()),
   tafsirAccess: v.union(quranTafsirAccessValidator, v.null()),
   toVerse: v.number(),
   verses: v.array(quranMarkdownVerseValidator),
-});
-
-/** Bismillah-aware Quran prose introduced before consumers switch. */
-export const quranProseValidator = v.object({
-  ...quranMarkdownValidator.fields,
-  preBismillah: v.union(quranBismillahValidator, v.null()),
 });
 
 export type QuranMarkdown = Infer<typeof quranMarkdownValidator>;
@@ -114,7 +109,7 @@ const validateVerseLimit = Effect.fn(
   return verseLimit;
 });
 
-/** Loads the exact signed source fields shared by V1 and V2 markdown. */
+/** Loads the exact signed source fields for canonical Quran markdown. */
 export const loadQuranMarkdown = Effect.fn("contentRelease.loadQuranMarkdown")(
   function* (
     ctx: QueryCtx,
@@ -128,6 +123,7 @@ export const loadQuranMarkdown = Effect.fn("contentRelease.loadQuranMarkdown")(
       return {
         ...loaded.owner,
         appLocale,
+        bismillah: null,
         sources: null,
         surah: null,
         tafsirAccess: null,
@@ -137,8 +133,15 @@ export const loadQuranMarkdown = Effect.fn("contentRelease.loadQuranMarkdown")(
     }
     const numberOfVerses = loaded.surah.row.payload.numberOfVerses;
     const toVerse = Math.min(verseLimit ?? numberOfVerses, numberOfVerses);
-    const { localeSources, verses } = yield* Effect.all(
+    const { bismillah, localeSources, verses } = yield* Effect.all(
       {
+        bismillah: readQuranBismillah(
+          ctx,
+          loaded.owner.snapshotId,
+          appLocale,
+          loaded.surah.surahNumber,
+          1
+        ),
         localeSources: readQuranLocaleSources(
           ctx,
           loaded.owner.snapshotId,
@@ -161,6 +164,7 @@ export const loadQuranMarkdown = Effect.fn("contentRelease.loadQuranMarkdown")(
     return {
       ...loaded.owner,
       appLocale,
+      bismillah,
       sources: localeSources.sources,
       surah: loaded.surah.row.payload,
       tafsirAccess: localeSources.tafsirAccess,
@@ -170,7 +174,7 @@ export const loadQuranMarkdown = Effect.fn("contentRelease.loadQuranMarkdown")(
   }
 );
 
-/** Returns canonical V2 markdown fields without predecessor aliases. */
+/** Returns canonical markdown fields without compatibility aliases. */
 export const readQuranMarkdown = Effect.fn("contentRelease.readQuranMarkdown")(
   function* (
     ctx: QueryCtx,
@@ -184,47 +188,11 @@ export const readQuranMarkdown = Effect.fn("contentRelease.readQuranMarkdown")(
       sourceSurah,
       sourceVerseLimit
     );
-    return {
-      ...loaded,
-      surah:
-        loaded.surah === null ? null : projectSurah(loaded.surah, appLocale),
-      verses: loaded.verses.map(({ arabic, document, number }) => ({
-        arabic,
-        number,
-        translation: document,
-      })),
-    };
-  }
-);
-
-/** Returns Bismillah-aware Quran prose without changing prior contracts. */
-export const readQuranProse = Effect.fn("contentRelease.readQuranProse")(
-  function* (
-    ctx: QueryCtx,
-    appLocale: AppLocaleCode,
-    sourceSurah: number,
-    sourceVerseLimit?: number
-  ) {
-    const loaded = yield* loadQuranMarkdown(
-      ctx,
-      appLocale,
-      sourceSurah,
-      sourceVerseLimit
-    );
-    const bismillah =
-      loaded.snapshotId === null
-        ? null
-        : yield* readQuranBismillah(
-            ctx,
-            loaded.snapshotId,
-            appLocale,
-            sourceSurah,
-            1
-          );
+    const { bismillah, ...markdown } = loaded;
     const projected = separateQuranBismillah(bismillah, loaded.verses);
     yield* verifyQuranBismillah(bismillah, projected.preBismillah);
     return {
-      ...loaded,
+      ...markdown,
       preBismillah: projected.preBismillah,
       surah:
         loaded.surah === null ? null : projectSurah(loaded.surah, appLocale),

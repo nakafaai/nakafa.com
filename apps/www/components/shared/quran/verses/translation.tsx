@@ -3,20 +3,25 @@ import type { QuranTranslationDocument } from "@nakafa/aksara-contracts/quran/no
 interface Props {
   id: string;
   label: string;
+  proseClassName?: string;
+  subjectLabel: string;
   translation: QuranTranslationDocument;
-  verseLabel: string;
 }
 
 /** Renders one semantic translation with accessible source-note references. */
-export function QuranVerseTranslation({
+export function QuranTranslation({
   id,
   label,
+  proseClassName,
+  subjectLabel,
   translation,
-  verseLabel,
 }: Props) {
   return (
     <>
-      <p className="text-pretty leading-relaxed" data-quran-translation>
+      <p
+        className={proseClassName ?? "text-pretty leading-relaxed"}
+        data-quran-translation
+      >
         {translation.segments.map((segment) =>
           segment.kind === "text" ? (
             <span key={`text:${segment.offset}`}>{segment.value}</span>
@@ -40,10 +45,9 @@ export function QuranVerseTranslation({
       </p>
       {translation.notes.length > 0 ? (
         <aside
-          aria-label={`${label}: ${verseLabel}`}
+          aria-label={`${label}: ${subjectLabel}`}
           className="space-y-2 text-muted-foreground text-sm"
         >
-          <p className="font-medium text-foreground">{label}</p>
           <ol className="space-y-2">
             {translation.notes.map((note) => (
               <li
@@ -53,7 +57,7 @@ export function QuranVerseTranslation({
                 key={note.number}
               >
                 <a
-                  aria-label={`${verseLabel}: ${label} ${note.number}`}
+                  aria-label={`${subjectLabel}: ${label} ${note.number}`}
                   className="font-mono text-primary underline decoration-primary/40 underline-offset-2 hover:decoration-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   href={`#${id}-translation-note-reference-${note.number}-${note.referenceOffset}`}
                   role="doc-backlink"

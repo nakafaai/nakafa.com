@@ -17,10 +17,9 @@ import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { PaginationContent } from "@/components/shared/pagination-content";
-import { QuranInterpretationAvailability } from "@/components/shared/quran/interpretation/availability";
+import { QuranBismillah } from "@/components/shared/quran/bismillah";
 import { QuranInterpretationButton } from "@/components/shared/quran/interpretation/button";
 import { QuranInterpretationControls } from "@/components/shared/quran/interpretation/controls";
-import { QuranSources } from "@/components/shared/quran/sources";
 import { QuranVerseList } from "@/components/shared/quran/verses/list";
 import { RefContent } from "@/components/shared/ref-content";
 import {
@@ -28,6 +27,7 @@ import {
   getPublishedQuranView,
 } from "@/lib/content/quran/publication";
 import { recoverStalePublishedQuranSnapshot } from "@/lib/content/quran/recovery";
+import { getQuranReferences } from "@/lib/content/quran/references";
 import { VirtualProvider } from "@/lib/context/use-virtual";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getSocialMetadata } from "@/lib/utils/metadata";
@@ -133,7 +133,6 @@ async function ResolvedSurahPage({
 
   return (
     <CachedSurahShell
-      footer={<RefContent key={`refs:${surah}`} />}
       locale={locale}
       surah={surah}
       surahNumber={surahNumber}
@@ -155,13 +154,11 @@ async function CachedSurahShell({
   locale,
   surah,
   surahNumber,
-  footer,
   toolbar,
 }: {
   locale: Locale;
   surah: string;
   surahNumber: number;
-  footer: ReactNode;
   toolbar: ReactNode;
 }) {
   "use cache";
@@ -208,6 +205,7 @@ async function CachedSurahShell({
   const interpretationLabel = t("interpretation");
   const tafsirAccess = result.tafsirAccess;
   const translationNotesLabel = t("translation-notes");
+  const references = getQuranReferences(result.sources, tafsirAccess);
 
   return (
     <>
@@ -239,14 +237,12 @@ async function CachedSurahShell({
             title={title}
           />
           <LayoutContent>
-            <QuranSources
-              arabicLabel={t("arabic-source")}
-              label={t("sources")}
-              sources={result.sources}
-              translationLabel={t("translation-source")}
-            />
-            {tafsirAccess === null ? null : (
-              <QuranInterpretationAvailability access={tafsirAccess} />
+            {result.preBismillah === null ? null : (
+              <QuranBismillah
+                bismillah={result.preBismillah}
+                subjectLabel={title}
+                translationNotesLabel={translationNotesLabel}
+              />
             )}
             {tafsirAccess?.kind === "embedded" ? (
               <QuranInterpretationControls
@@ -277,7 +273,9 @@ async function CachedSurahShell({
             )}
           </LayoutContent>
           <PaginationContent pagination={pagination} />
-          <FooterContent>{footer}</FooterContent>
+          <FooterContent>
+            <RefContent references={references} title={title} />
+          </FooterContent>
           {toolbar}
         </LayoutMaterialContent>
         <LayoutMaterialToc

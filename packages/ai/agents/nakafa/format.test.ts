@@ -5,8 +5,10 @@ import {
   formatSearch,
   formatTaxonomy,
 } from "@repo/ai/agents/nakafa/format";
-import { makeQuranV2Fixture } from "@repo/ai/agents/nakafa/tools/fixture";
+import { makeQuranFixture } from "@repo/ai/agents/nakafa/tools/fixture";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
+import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 const defaultLocale = ACTIVE_APP_LOCALE_CODES[0];
@@ -66,7 +68,7 @@ describe("Nakafa formatter", () => {
   });
 
   it("formats Quran references with and without tafsir", () => {
-    const reference = makeQuranV2Fixture({
+    const reference = makeQuranFixture({
       from_verse: 1,
       include_tafsir: true,
       locale: "id",
@@ -74,6 +76,26 @@ describe("Nakafa formatter", () => {
     });
     const text = formatQuran({
       ...reference,
+      pre_bismillah: {
+        arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
+        translation: {
+          notes: [
+            {
+              number: 9,
+              referenceOffset: 37,
+              text: "Catatan Bismillah.",
+            },
+          ],
+          segments: [
+            {
+              kind: "text",
+              offset: 0,
+              value: "Dengan nama Allah Yang Maha Pengasih.",
+            },
+            { kind: "note", number: 9, offset: 37 },
+          ],
+        },
+      },
       verses: [
         {
           ...reference.verses[0],
@@ -92,17 +114,40 @@ describe("Nakafa formatter", () => {
       ],
     });
 
-    expect(text).toContain("# Nakafa Quran Reference V2");
+    expect(text).toContain("# Nakafa Quran Reference");
     expect(text).not.toContain("Inline citation:");
     expect(text).not.toContain("https://nakafa.com/id/quran/1");
     expect(text).toContain("Meaning: Not available for requested locale id");
     expect(text).toContain("quranenc-indonesian");
     expect(text).toContain("quranenc-tafsir");
     expect(text).toContain("Kind: embedded");
+    expect(text).toContain("## Bismillah");
+    expect(text).toContain("بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ");
+    expect(text).toContain("Dengan nama Allah Yang Maha Pengasih.");
+    expect(text).toContain("Translation note 9: Catatan Bismillah.");
+    expect(text.indexOf("## Bismillah")).toBeLessThan(
+      text.indexOf("## Verse 1")
+    );
     expect(text).toContain("Tafsir ayat pertama.");
     expect(text).toContain("Translation note 4: Catatan sumber.");
     expect(text).toContain("Dengan nama Allah[translation note 4]");
     expect(text).not.toContain("Dengan nama Allah[4]");
+    expect(formatQuran(reference)).not.toContain("## Bismillah");
+
+    const legacyEnglishReference = Schema.decodeUnknownSync(
+      NakafaAgentQuranReferenceSchema
+    )({
+      ...makeQuranFixture({
+        from_verse: 1,
+        include_tafsir: true,
+        locale: "en",
+        surah: 1,
+      }),
+      tafsir_access: null,
+    });
+    expect(formatQuran(legacyEnglishReference)).toContain(
+      "No Tafsir access metadata is available in the current signed publication."
+    );
   });
 
   it("formats taxonomy", () => {

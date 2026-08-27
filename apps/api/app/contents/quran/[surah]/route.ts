@@ -34,6 +34,9 @@ export async function GET(
         NextResponse.json({
           ...document.surah,
           locale: document.appLocale,
+          preBismillah: document.preBismillah,
+          sources: document.sources,
+          tafsirAccess: document.tafsirAccess,
           verses: document.verses,
         })
       ),

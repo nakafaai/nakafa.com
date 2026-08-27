@@ -3,12 +3,10 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
 import { QuranPublicationError } from "@repo/backend/client/quran/publication";
-import { decodePublishedQuranCatalogV2 } from "@repo/backend/client/quran/v2/catalog";
 import {
-  encodeLegacyQuranRow,
   encodeTestQuranRow,
-  makeLegacyQuranSurah,
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
 import { describe, expect, it } from "@repo/testing/effect";
@@ -26,10 +24,10 @@ const source = {
   sourceRevision: GitCommitShaSchema.make("c".repeat(40)),
 };
 
-describe("signed Quran V2 catalog decoder", () => {
+describe("signed Quran catalog decoder", () => {
   it.live("decodes the complete ordered current catalog", () =>
     Effect.gen(function* () {
-      const catalog = yield* decodePublishedQuranCatalogV2(
+      const catalog = yield* decodePublishedQuranCatalog(
         catalogResult((index) =>
           encodeTestQuranRow(source.snapshotId, makeQuranSurah(index + 1))
         )
@@ -44,32 +42,14 @@ describe("signed Quran V2 catalog decoder", () => {
     })
   );
 
-  it.live("upgrades authentic 0.15.1 surahs into canonical V2", () =>
-    Effect.gen(function* () {
-      const catalog = yield* decodePublishedQuranCatalogV2(
-        catalogResult((index) =>
-          encodeLegacyQuranRow(
-            source.snapshotId,
-            makeLegacyQuranSurah(index + 1)
-          )
-        )
-      );
-
-      expect(catalog.surahs[0]?.name.meaning).toEqual({
-        appLocale: "en",
-        text: "Technical meaning 1",
-      });
-    })
-  );
-
   it.live("fails closed for malformed and cross-snapshot rows", () =>
     Effect.gen(function* () {
       const malformed = yield* Effect.result(
-        decodePublishedQuranCatalogV2({ ...source, rowJson: ["not-json"] })
+        decodePublishedQuranCatalog({ ...source, rowJson: ["not-json"] })
       );
       const otherSnapshotId = Sha256HashSchema.make(`sha256:${"d".repeat(64)}`);
       const wrongSnapshot = yield* Effect.result(
-        decodePublishedQuranCatalogV2(
+        decodePublishedQuranCatalog(
           catalogResult((index) =>
             encodeTestQuranRow(otherSnapshotId, makeQuranSurah(index + 1))
           )

@@ -21,7 +21,7 @@ const preview = {
 };
 
 describe("Nakafa chat data schema", () => {
-  it("persists canonical V2 Quran previews", () => {
+  it("persists canonical Quran previews", () => {
     expect(
       validate(nakafaDataValidator, {
         input,
@@ -38,7 +38,7 @@ describe("Nakafa chat data schema", () => {
     ).toBe(true);
   });
 
-  it("continues to decode legacy persisted Quran previews", () => {
+  it("preserves persisted translation-only Quran previews", () => {
     expect(
       validate(nakafaDataValidator, {
         input,
@@ -52,7 +52,7 @@ describe("Nakafa chat data schema", () => {
     ).toBe(true);
   });
 
-  it("rejects an ambiguous preview with both V1 and V2 fields", () => {
+  it("rejects previews with canonical and obsolete fields", () => {
     expect(
       validate(nakafaDataValidator, {
         input,

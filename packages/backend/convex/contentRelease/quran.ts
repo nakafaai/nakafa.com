@@ -1,11 +1,15 @@
 import { query } from "@repo/backend/convex/_generated/server";
 import { readQuranAttribution } from "@repo/backend/convex/contentRelease/quran/attribution";
+import {
+  quranDocumentBridgeValidator,
+  quranReferenceBridgeValidator,
+  readQuranDocumentBridge,
+  readQuranReferenceBridge,
+} from "@repo/backend/convex/contentRelease/quran/bridge";
 import { readQuranSurahs } from "@repo/backend/convex/contentRelease/quran/catalog";
 import {
   quranDocumentValidator,
-  quranSurahValidator,
   readQuranDocument,
-  readQuranSurah,
 } from "@repo/backend/convex/contentRelease/quran/document";
 import {
   quranInterpretationValidator,
@@ -13,15 +17,11 @@ import {
 } from "@repo/backend/convex/contentRelease/quran/interpretation";
 import {
   quranMarkdownValidator,
-  quranProseValidator,
   readQuranMarkdown,
-  readQuranProse,
 } from "@repo/backend/convex/contentRelease/quran/markdown";
 import {
   quranPassageValidator,
-  quranReferenceValidator,
   readQuranPassage,
-  readQuranReference,
 } from "@repo/backend/convex/contentRelease/quran/reference";
 import {
   quranAppLocaleValidator,
@@ -30,21 +30,7 @@ import {
   quranTafsirAppLocaleValidator,
 } from "@repo/backend/convex/contentRelease/quran/spec";
 import {
-  quranDocumentV1Validator,
-  quranInterpretationV1Validator,
-  quranMarkdownV1Validator,
-  quranReferenceV1Validator,
-  quranViewV1Validator,
-  readQuranDocumentV1,
-  readQuranInterpretationV1,
-  readQuranMarkdownV1,
-  readQuranReferenceV1,
-  readQuranViewV1,
-} from "@repo/backend/convex/contentRelease/quran/v1";
-import {
-  quranPageValidator,
   quranViewValidator,
-  readQuranPage,
   readQuranView,
 } from "@repo/backend/convex/contentRelease/quran/view";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -74,45 +60,43 @@ export const surahs = query({
   handler: (ctx) => runConvexProgram(readQuranSurahs(ctx)),
 });
 
-/** Returns the narrow locale-specific Quran document used by the public API. */
+/**
+ * Temporary PR #390 bridge for the currently deployed private content reader.
+ * Remove after the #390 API deployment serves the canonical surah query.
+ */
 export const document = query({
   args: { appLocale: quranAppLocaleValidator, surahNumber: v.number() },
-  returns: quranDocumentV1Validator,
+  returns: quranDocumentBridgeValidator,
   handler: (ctx, { appLocale, surahNumber }) =>
-    runConvexProgram(readQuranDocumentV1(ctx, appLocale, surahNumber)),
+    runConvexProgram(readQuranDocumentBridge(ctx, appLocale, surahNumber)),
 });
 
-/** Returns the canonical V2 Quran document with semantic provenance. */
-export const documentV2 = query({
+/** Returns one complete signed Quran surah for product and public readers. */
+export const surah = query({
   args: { appLocale: quranAppLocaleValidator, surahNumber: v.number() },
   returns: quranDocumentValidator,
   handler: (ctx, { appLocale, surahNumber }) =>
     runConvexProgram(readQuranDocument(ctx, appLocale, surahNumber)),
 });
 
-/** Returns one complete signed Quran surah for product and public readers. */
-export const surah = query({
-  args: { appLocale: quranAppLocaleValidator, surahNumber: v.number() },
-  returns: quranSurahValidator,
-  handler: (ctx, { appLocale, surahNumber }) =>
-    runConvexProgram(readQuranSurah(ctx, appLocale, surahNumber)),
-});
-
-/** Returns the exact signed fields rendered by Quran markdown consumers. */
-export const markdown = query({
+/** Returns one signed Quran surah as semantic Markdown source fields. */
+export const prose = query({
   args: {
     appLocale: quranAppLocaleValidator,
     surahNumber: v.number(),
     verseLimit: v.optional(v.number()),
   },
-  returns: quranMarkdownV1Validator,
+  returns: quranMarkdownValidator,
   handler: (ctx, { appLocale, surahNumber, verseLimit }) =>
     runConvexProgram(
-      readQuranMarkdownV1(ctx, appLocale, surahNumber, verseLimit)
+      readQuranMarkdown(ctx, appLocale, surahNumber, verseLimit)
     ),
 });
 
-/** Returns canonical V2 Quran markdown fields with semantic provenance. */
+/**
+ * Temporary PR #390 bridge for the currently deployed WWW bundle.
+ * Remove after the #390 WWW deployment serves the canonical prose reader.
+ */
 export const markdownV2 = query({
   args: {
     appLocale: quranAppLocaleValidator,
@@ -126,82 +110,23 @@ export const markdownV2 = query({
     ),
 });
 
-/** Returns one signed Quran surah as semantic Markdown source fields. */
-export const prose = query({
-  args: {
-    appLocale: quranAppLocaleValidator,
-    surahNumber: v.number(),
-    verseLimit: v.optional(v.number()),
-  },
-  returns: quranProseValidator,
-  handler: (ctx, { appLocale, surahNumber, verseLimit }) =>
-    runConvexProgram(readQuranProse(ctx, appLocale, surahNumber, verseLimit)),
-});
-
-/** Returns the narrow locale-specific Quran projection used by the web UI. */
-export const view = query({
-  args: { appLocale: quranAppLocaleValidator, surahNumber: v.number() },
-  returns: quranViewV1Validator,
-  handler: (ctx, { appLocale, surahNumber }) =>
-    runConvexProgram(readQuranViewV1(ctx, appLocale, surahNumber)),
-});
-
-/** Returns the canonical V2 Quran projection used by the web UI. */
-export const viewV2 = query({
+/** Returns the signed Quran page projection used by the web product. */
+export const page = query({
   args: { appLocale: quranAppLocaleValidator, surahNumber: v.number() },
   returns: quranViewValidator,
   handler: (ctx, { appLocale, surahNumber }) =>
     runConvexProgram(readQuranView(ctx, appLocale, surahNumber)),
 });
 
-/** Returns the signed Quran page projection used by the web product. */
-export const page = query({
+/**
+ * Temporary PR #390 bridge for the currently deployed WWW bundle.
+ * Remove after the #390 WWW deployment serves the canonical page reader.
+ */
+export const viewV2 = query({
   args: { appLocale: quranAppLocaleValidator, surahNumber: v.number() },
-  returns: quranPageValidator,
+  returns: quranViewValidator,
   handler: (ctx, { appLocale, surahNumber }) =>
-    runConvexProgram(readQuranPage(ctx, appLocale, surahNumber)),
-});
-
-/** Returns one exact signed tafsir only after the verse is requested. */
-export const interpretation = query({
-  args: {
-    expectedSnapshotId: v.string(),
-    appLocale: quranTafsirAppLocaleValidator,
-    surahNumber: v.number(),
-    verseNumber: v.number(),
-  },
-  returns: quranInterpretationV1Validator,
-  handler: (ctx, { appLocale, expectedSnapshotId, surahNumber, verseNumber }) =>
-    runConvexProgram(
-      readQuranInterpretationV1(
-        ctx,
-        appLocale,
-        expectedSnapshotId,
-        surahNumber,
-        verseNumber
-      )
-    ),
-});
-
-/** Returns canonical V2 on-demand Tafsir with signed access metadata. */
-export const interpretationV2 = query({
-  args: {
-    expectedSnapshotId: v.string(),
-    appLocale: quranTafsirAppLocaleValidator,
-    surahNumber: v.number(),
-    verseNumber: v.number(),
-  },
-  returns: quranInterpretationValidator,
-  handler: (ctx, { appLocale, expectedSnapshotId, surahNumber, verseNumber }) =>
-    runConvexProgram(
-      readQuranInterpretation(
-        ctx,
-        appLocale,
-        expectedSnapshotId,
-        surahNumber,
-        verseNumber
-      )
-    ),
+    runConvexProgram(readQuranView(ctx, appLocale, surahNumber)),
 });
 
 /** Returns one exact signed Tafsir entry after the verse is requested. */
@@ -225,18 +150,38 @@ export const tafsir = query({
     ),
 });
 
-/** Returns one bounded localized Quran verse reference. */
-export const reference = query({
-  args: quranReferenceArgsValidator.fields,
-  returns: quranReferenceV1Validator,
-  handler: (ctx, args) => runConvexProgram(readQuranReferenceV1(ctx, args)),
+/**
+ * Temporary PR #390 bridge for already-open WWW Quran pages.
+ * Remove after the #390 WWW deployment serves the canonical Tafsir reader.
+ */
+export const interpretationV2 = query({
+  args: {
+    expectedSnapshotId: v.string(),
+    appLocale: quranTafsirAppLocaleValidator,
+    surahNumber: v.number(),
+    verseNumber: v.number(),
+  },
+  returns: quranInterpretationValidator,
+  handler: (ctx, { appLocale, expectedSnapshotId, surahNumber, verseNumber }) =>
+    runConvexProgram(
+      readQuranInterpretation(
+        ctx,
+        appLocale,
+        expectedSnapshotId,
+        surahNumber,
+        verseNumber
+      )
+    ),
 });
 
-/** Returns one canonical V2 localized Quran verse reference. */
-export const referenceV2 = query({
+/**
+ * Temporary PR #390 bridge for the currently deployed agent Quran tool.
+ * Remove after the #390 MCP and API deployments serve the canonical passage.
+ */
+export const reference = query({
   args: quranReferenceArgsValidator.fields,
-  returns: quranReferenceValidator,
-  handler: (ctx, args) => runConvexProgram(readQuranReference(ctx, args)),
+  returns: quranReferenceBridgeValidator,
+  handler: (ctx, args) => runConvexProgram(readQuranReferenceBridge(ctx, args)),
 });
 
 /** Returns one bounded signed Quran passage with semantic provenance. */

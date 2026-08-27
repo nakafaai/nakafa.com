@@ -8,7 +8,6 @@ import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
 import {
   getSurahName,
   readNakafaQuranReference,
-  readNakafaQuranReferenceV2,
   readQuranMarkdown,
 } from "@repo/backend/client/nakafa/quran";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -65,7 +64,13 @@ describe("Quran Nakafa reader", () => {
         );
         expect(Option.getOrUndefined(reference)?.name).toBe("Al-Fatihah");
         expect(Option.getOrUndefined(reference)?.verses[0]).toMatchObject({
-          translation: "Dengan nama Allah.[4]",
+          translation: {
+            notes: [expect.objectContaining({ number: 4 })],
+            segments: [
+              expect.objectContaining({ kind: "text" }),
+              expect.objectContaining({ kind: "note", number: 4 }),
+            ],
+          },
         });
       })
   );
@@ -82,9 +87,9 @@ describe("Quran Nakafa reader", () => {
       ).toBeUndefined();
     })
   );
-  it.live("reads semantic V2 notes and exact locale source access", () =>
+  it.live("reads semantic notes and exact locale source access", () =>
     Effect.gen(function* () {
-      const reference = yield* readNakafaQuranReferenceV2(convexUrl, {
+      const reference = yield* readNakafaQuranReference(convexUrl, {
         from_verse: 1,
         include_tafsir: true,
         locale: "id",
@@ -93,6 +98,7 @@ describe("Quran Nakafa reader", () => {
       const value = Option.getOrUndefined(reference);
 
       expect(value?.meaning).toBeNull();
+      expect(value?.pre_bismillah).toBeNull();
       expect(value?.sources).toMatchObject({
         arabic: { id: "tanzil-text" },
         translation: { id: "quranenc-indonesian", locale: "id" },
@@ -124,9 +130,9 @@ describe("Quran Nakafa reader", () => {
         locale: "de",
         surah: 1,
       });
-      expect(Option.getOrUndefined(reference)?.verses[0]?.translation).toBe(
-        "Im Namen Allahs."
-      );
+      expect(
+        Option.getOrUndefined(reference)?.verses[0]?.translation.segments
+      ).toEqual([{ kind: "text", offset: 0, value: "Im Namen Allahs." }]);
     })
   );
   it.live("maps malformed reference input to the agent input error", () =>
@@ -141,7 +147,7 @@ describe("Quran Nakafa reader", () => {
     })
   );
   it.live(
-    "renders full signed surah markdown without blocked legacy fields",
+    "renders full signed surah markdown without obsolete transport fields",
     () =>
       Effect.gen(function* () {
         const markdown = yield* readQuranMarkdown(
@@ -149,12 +155,22 @@ describe("Quran Nakafa reader", () => {
           readNakafaContentRefFixture("id", "quran/1", "quran")
         );
         expect(Option.getOrUndefined(markdown)?.title).toBe("Al-Fatihah");
-        expect(Option.getOrUndefined(markdown)?.description).toBe(
-          "The Opening"
-        );
+        expect(Option.getOrUndefined(markdown)?.description).toBe("Al-Fatihah");
         expect(Option.getOrUndefined(markdown)?.text).toContain("## Verses");
         expect(Option.getOrUndefined(markdown)?.text).toContain(
           "Dengan nama Allah."
+        );
+        expect(Option.getOrUndefined(markdown)?.text).toContain(
+          "## Reading sources"
+        );
+        expect(Option.getOrUndefined(markdown)?.text).toContain(
+          "https://example.test/tanzil-text/terms"
+        );
+        expect(Option.getOrUndefined(markdown)?.text).toContain(
+          "https://example.test/quranenc-indonesian/updates"
+        );
+        expect(Option.getOrUndefined(markdown)?.text).toContain(
+          "Version: technical-version"
         );
         expect(Option.getOrUndefined(markdown)?.text).not.toContain(
           "Transliteration"
@@ -183,21 +199,18 @@ function readRuntimeFixture(
   args: Record<string, unknown>
 ) {
   if (
-    getFunctionName(query) ===
-      getFunctionName(api.contentRelease.quran.reference) ||
-    getFunctionName(query) ===
-      getFunctionName(api.contentRelease.quran.referenceV2)
+    getFunctionName(query) === getFunctionName(api.contentRelease.quran.passage)
   ) {
     return Promise.resolve(referenceResult(args));
   }
   if (
-    getFunctionName(query) ===
-    getFunctionName(api.contentRelease.quran.markdown)
+    getFunctionName(query) === getFunctionName(api.contentRelease.quran.prose)
   ) {
     return Promise.resolve(markdownResult(args));
   }
   return Promise.reject(new Error("Unhandled Quran query fixture."));
 }
+
 /** Builds one signed reference response around a bounded chunk. */
 function referenceResult(args: Record<string, unknown>) {
   const appLocale = readFixtureLocale(args.appLocale);
@@ -205,6 +218,7 @@ function referenceResult(args: Record<string, unknown>) {
     ...source,
     chunkJson: [encodeTestQuranRow(source.snapshotId, chunkRow())],
     fromVerse: 1,
+    preBismillah: null,
     searchJson: encodeTestQuranRow(source.snapshotId, searchRow(appLocale)),
     sources: makeQuranLocaleSources(appLocale),
     surahJson: encodeTestQuranRow(source.snapshotId, surahRow()),
@@ -215,31 +229,57 @@ function referenceResult(args: Record<string, unknown>) {
 /** Builds one app-locale signed markdown response. */
 function markdownResult(args: Record<string, unknown>) {
   const appLocale = readFixtureLocale(args.appLocale);
-  const verse = chunkRow().verses[0];
-  if (!verse) {
-    throw new Error("Expected one technical Quran verse.");
-  }
   return {
     ...source,
     appLocale,
+    preBismillah: null,
+    sources: makeQuranLocaleSources(appLocale),
     surah: {
       name: {
-        translation: "The Opening",
+        meaning: appLocale === "en" ? "The Opening" : null,
         transliteration: "Al-Fatihah",
       },
       number: 1,
       numberOfVerses: 1,
       revelation: { place: "Meccan" },
     },
-    tafsirAccess: null,
+    tafsirAccess: makeQuranTafsirProjection(appLocale),
     toVerse: 1,
     verses: [
       {
-        arabic: verse.text.arabic,
-        number: { inSurah: verse.number.inSurah },
-        translation: verse.translations.find(
-          (translation) => translation.appLocale === appLocale
-        )?.value,
+        arabic: "بِسْمِ اللّٰهِ",
+        number: { inSurah: 1 },
+        translation: translationDocument(appLocale),
+      },
+    ],
+  };
+}
+
+/** Builds the semantic translation document expected by canonical Markdown. */
+function translationDocument(appLocale: ActiveAppLocaleCode) {
+  if (appLocale === "id") {
+    return {
+      notes: [
+        {
+          number: 4,
+          referenceOffset: 18,
+          text: "Catatan terjemahan Indonesia.",
+        },
+      ],
+      segments: [
+        { kind: "text" as const, offset: 0, value: "Dengan nama Allah." },
+        { kind: "note" as const, number: 4, offset: 18 },
+      ],
+    };
+  }
+  return {
+    notes: [],
+    segments: [
+      {
+        kind: "text" as const,
+        offset: 0,
+        value:
+          appLocale === "de" ? "Im Namen Allahs." : "In the name of Allah.",
       },
     ],
   };

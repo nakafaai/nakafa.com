@@ -1,3 +1,9 @@
+import {
+  type QuranEmbeddedSourceId,
+  type QuranExternalSourceId,
+  quranReadingSourceIds,
+  quranTafsirSourceId,
+} from "@nakafa/aksara-contracts/quran/identity";
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import {
   NAKAFA_API_BASE_URL,
@@ -25,6 +31,69 @@ const CONTENT_REFERENCE_EXAMPLE = {
   url: "https://nakafa.com/en/subjects/mathematics/algebra/linear-equations",
 };
 
+const EXAMPLE_LOCALE = "en" as const;
+const EXAMPLE_DIGEST = `sha256:${"1".repeat(64)}`;
+const EXAMPLE_ARTIFACT = {
+  byte_count: 3_456_789,
+  digest: EXAMPLE_DIGEST,
+  file_count: 1,
+};
+const [ARABIC_SOURCE_ID, TRANSLATION_SOURCE_ID] =
+  quranReadingSourceIds(EXAMPLE_LOCALE);
+const TAFSIR_SOURCE_ID = quranTafsirSourceId(EXAMPLE_LOCALE);
+
+/** Builds illustrative metadata without duplicating signed source records. */
+function embeddedSource(id: QuranEmbeddedSourceId) {
+  return {
+    artifact: EXAMPLE_ARTIFACT,
+    id,
+    kind: "embedded" as const,
+    label: `Example ${id}`,
+    notice: "Example signed embedded source.",
+    publisher: "Example publisher",
+    retrieved_at: "2026-08-26T15:51:00Z",
+    source_url: `https://example.test/${id}`,
+    terms: {
+      artifact: EXAMPLE_ARTIFACT,
+      url: `https://example.test/${id}/terms`,
+    },
+    update_url: `https://example.test/${id}/updates`,
+    version: "example-version",
+  };
+}
+
+/** Builds one illustrative external source from the owning identity contract. */
+function externalSource(id: QuranExternalSourceId) {
+  return {
+    id,
+    kind: "external" as const,
+    label: `Example ${id}`,
+    notice: "Example signed link-only source.",
+    publisher: "Example publisher",
+    retrieved_at: "2026-08-26T15:51:00Z",
+    source_url: `https://example.test/${id}`,
+    terms: {
+      access: "link-only" as const,
+      url: `https://example.test/${id}/terms`,
+    },
+    update_url: `https://example.test/${id}/updates`,
+    version: "example-version",
+  };
+}
+
+const ARABIC_SOURCE_EXAMPLE = embeddedSource(ARABIC_SOURCE_ID);
+const TRANSLATION_SOURCE_EXAMPLE = {
+  ...embeddedSource(TRANSLATION_SOURCE_ID),
+  locale: EXAMPLE_LOCALE,
+};
+
+const TAFSIR_ACCESS_EXAMPLE = {
+  kind: "external",
+  locale: EXAMPLE_LOCALE,
+  notice: "Example signed link-only Tafsir access.",
+  source: externalSource(TAFSIR_SOURCE_ID),
+};
+
 const QURAN_REFERENCE_EXAMPLE = {
   alignmentId: "alignment:example:quran:1",
   assetId: "asset:example:quran:1",
@@ -32,19 +101,41 @@ const QURAN_REFERENCE_EXAMPLE = {
   content_id: "asset:example:quran:1",
   learningObjectId: "learning-object:example:quran:1",
   lensId: "lens:example:quran",
-  locale: "en",
-  markdown_url: "https://nakafa.com/en/quran/1.md",
+  locale: EXAMPLE_LOCALE,
+  markdown_url: `https://nakafa.com/${EXAMPLE_LOCALE}/quran/1.md`,
+  meaning: { locale: EXAMPLE_LOCALE, text: "The Opening" },
   name: "Al-Faatiha",
-  revelation: "Mecca",
+  pre_bismillah: null,
+  revelation: "Meccan",
   route: "quran/1",
   section: "quran",
-  translation: "The Opening",
-  url: "https://nakafa.com/en/quran/1",
+  sources: {
+    arabic: ARABIC_SOURCE_EXAMPLE,
+    translation: TRANSLATION_SOURCE_EXAMPLE,
+  },
+  tafsir_access: TAFSIR_ACCESS_EXAMPLE,
+  url: `https://nakafa.com/${EXAMPLE_LOCALE}/quran/1`,
   verses: [
     {
       arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
       number: 1,
-      translation: "In the name of Allah, the Most Compassionate.",
+      translation: {
+        notes: [
+          {
+            number: 1,
+            referenceOffset: 47,
+            text: "Exact source-authored explanatory note.",
+          },
+        ],
+        segments: [
+          {
+            kind: "text",
+            offset: 0,
+            value: "In the name of Allah, the Most Compassionate. ",
+          },
+          { kind: "note", number: 1, offset: 47 },
+        ],
+      },
     },
   ],
 };

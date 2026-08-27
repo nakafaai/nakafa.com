@@ -5,12 +5,10 @@ import {
 } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
 import { ContentSnapshotRowSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
-import { ContentSnapshotRowSchema as LegacyContentSnapshotRowSchema } from "@nakafa/aksara-v151/release/snapshot/data";
 import {
   type QuranPublicationOperation,
   quranPublicationError,
 } from "@repo/backend/client/quran/publication";
-import { LegacyQuranSurahUpgradeSchema } from "@repo/backend/content/quran/upgrade";
 import { Effect, Schema } from "effect";
 
 type QuranChunkRow = typeof QuranChunkRowSchema.Type;
@@ -66,43 +64,7 @@ const decodeCurrentQuranRow = Effect.fn("NakafaQuran.decodeCurrentRow")(
   }
 );
 
-/** Decodes one legacy surah into the canonical current representation. */
-const decodeLegacySurah = Effect.fn("NakafaQuran.decodeLegacySurah")(function* (
-  input: unknown,
-  snapshotId: string,
-  operation: QuranPublicationOperation
-) {
-  const row = yield* Schema.decodeUnknownEffect(LegacyContentSnapshotRowSchema)(
-    input,
-    { onExcessProperty: "error" }
-  ).pipe(
-    Effect.mapError(() =>
-      quranPublicationError(
-        operation,
-        "Quran row failed its legacy signed contract."
-      )
-    )
-  );
-  if (row.family !== "quran" || row.record.snapshotId !== snapshotId) {
-    return yield* quranPublicationError(
-      operation,
-      "Quran row belongs to another signed snapshot."
-    );
-  }
-  return yield* Schema.decodeUnknownEffect(LegacyQuranSurahUpgradeSchema)(
-    row.record.payload,
-    { onExcessProperty: "error" }
-  ).pipe(
-    Effect.mapError(() =>
-      quranPublicationError(
-        operation,
-        "Quran row failed its legacy signed contract."
-      )
-    )
-  );
-});
-
-/** Decodes either supported signed surah contract into the canonical shape. */
+/** Decodes one signed surah contract into its canonical shape. */
 export const decodeQuranSurahRow = Effect.fn("NakafaQuran.decodeSurahRow")(
   function* (
     source: string,
@@ -115,10 +77,6 @@ export const decodeQuranSurahRow = Effect.fn("NakafaQuran.decodeSurahRow")(
       snapshotId,
       QuranSurahRowSchema,
       operation
-    ).pipe(
-      Effect.catchTag("QuranPublicationError", () =>
-        decodeLegacySurah(input, snapshotId, operation)
-      )
     );
   }
 );

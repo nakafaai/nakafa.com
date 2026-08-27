@@ -53,17 +53,12 @@ export const quranViewValidator = v.object({
   ...quranSourceFields,
   appLocale: quranAppLocaleValidator,
   nextSurah: v.union(quranViewSurahValidator, v.null()),
+  preBismillah: v.union(quranBismillahValidator, v.null()),
   previousSurah: v.union(quranViewSurahValidator, v.null()),
   sources: v.union(quranReadingSourcesValidator, v.null()),
   surah: v.union(quranViewSurahValidator, v.null()),
   tafsirAccess: v.union(quranTafsirAccessValidator, v.null()),
   verses: v.array(quranViewVerseValidator),
-});
-
-/** Bismillah-aware Quran page introduced before consumers switch. */
-export const quranPageValidator = v.object({
-  ...quranViewValidator.fields,
-  preBismillah: v.union(quranBismillahValidator, v.null()),
 });
 
 type QuranView = Infer<typeof quranViewValidator>;
@@ -116,7 +111,7 @@ const loadVerse = Effect.fn("contentRelease.loadQuranViewVerse")(function* (
   };
 });
 
-/** Loads the exact signed source fields shared by V1 and V2 views. */
+/** Loads the exact signed source fields for one canonical Quran page. */
 export const loadQuranView = Effect.fn("contentRelease.loadQuranView")(
   function* (ctx: QueryCtx, appLocale: AppLocaleCode, sourceSurah: number) {
     const loaded = yield* loadQuranSurah(ctx, sourceSurah);
@@ -125,6 +120,7 @@ export const loadQuranView = Effect.fn("contentRelease.loadQuranView")(
         ...loaded.owner,
         appLocale,
         nextSurah: null,
+        bismillah: null,
         previousSurah: null,
         sources: null,
         surah: null,
@@ -133,32 +129,40 @@ export const loadQuranView = Effect.fn("contentRelease.loadQuranView")(
       };
     }
 
-    const { localeSources, nextRow, previousRow, verses } = yield* Effect.all(
-      {
-        localeSources: readQuranLocaleSources(
-          ctx,
-          loaded.owner.snapshotId,
-          appLocale
-        ),
-        nextRow: readNeighbor(
-          ctx,
-          loaded.owner.snapshotId,
-          loaded.surah.surahNumber + 1
-        ),
-        previousRow: readNeighbor(
-          ctx,
-          loaded.owner.snapshotId,
-          loaded.surah.surahNumber - 1
-        ),
-        verses: readQuranSurahVerses(
-          ctx,
-          loaded.owner.snapshotId,
-          loaded.surah.surahNumber,
-          loaded.surah.row.payload.numberOfVerses
-        ),
-      },
-      { concurrency: "unbounded" }
-    );
+    const { bismillah, localeSources, nextRow, previousRow, verses } =
+      yield* Effect.all(
+        {
+          bismillah: readQuranBismillah(
+            ctx,
+            loaded.owner.snapshotId,
+            appLocale,
+            loaded.surah.surahNumber,
+            1
+          ),
+          localeSources: readQuranLocaleSources(
+            ctx,
+            loaded.owner.snapshotId,
+            appLocale
+          ),
+          nextRow: readNeighbor(
+            ctx,
+            loaded.owner.snapshotId,
+            loaded.surah.surahNumber + 1
+          ),
+          previousRow: readNeighbor(
+            ctx,
+            loaded.owner.snapshotId,
+            loaded.surah.surahNumber - 1
+          ),
+          verses: readQuranSurahVerses(
+            ctx,
+            loaded.owner.snapshotId,
+            loaded.surah.surahNumber,
+            loaded.surah.row.payload.numberOfVerses
+          ),
+        },
+        { concurrency: "unbounded" }
+      );
     const loadedVerses = yield* Effect.forEach(verses, (verse) =>
       loadVerse(verse, appLocale)
     );
@@ -166,6 +170,7 @@ export const loadQuranView = Effect.fn("contentRelease.loadQuranView")(
     return {
       ...loaded.owner,
       appLocale,
+      bismillah,
       nextSurah: nextRow?.payload ?? null,
       previousSurah: previousRow?.payload ?? null,
       sources: localeSources.sources,
@@ -176,58 +181,24 @@ export const loadQuranView = Effect.fn("contentRelease.loadQuranView")(
   }
 );
 
-/** Returns the canonical V2 web projection without predecessor aliases. */
+/** Returns the canonical web projection without compatibility aliases. */
 export const readQuranView = Effect.fn("contentRelease.readQuranView")(
   function* (ctx: QueryCtx, appLocale: AppLocaleCode, sourceSurah: number) {
     const loaded = yield* loadQuranView(ctx, appLocale, sourceSurah);
-    return {
-      ...loaded,
-      nextSurah:
-        loaded.nextSurah === null
-          ? null
-          : projectSurah(loaded.nextSurah, appLocale),
-      previousSurah:
-        loaded.previousSurah === null
-          ? null
-          : projectSurah(loaded.previousSurah, appLocale),
-      surah:
-        loaded.surah === null ? null : projectSurah(loaded.surah, appLocale),
-      verses: loaded.verses.map(({ arabic, document, number }) => ({
-        arabic,
-        number,
-        translation: document,
-      })),
-    };
-  }
-);
-
-/** Returns the Bismillah-aware Quran page without changing prior contracts. */
-export const readQuranPage = Effect.fn("contentRelease.readQuranPage")(
-  function* (ctx: QueryCtx, appLocale: AppLocaleCode, sourceSurah: number) {
-    const loaded = yield* loadQuranView(ctx, appLocale, sourceSurah);
-    const bismillah =
-      loaded.snapshotId === null
-        ? null
-        : yield* readQuranBismillah(
-            ctx,
-            loaded.snapshotId,
-            appLocale,
-            sourceSurah,
-            1
-          );
+    const { bismillah, ...view } = loaded;
     const projected = separateQuranBismillah(bismillah, loaded.verses);
     yield* verifyQuranBismillah(bismillah, projected.preBismillah);
     return {
-      ...loaded,
+      ...view,
       nextSurah:
         loaded.nextSurah === null
           ? null
           : projectSurah(loaded.nextSurah, appLocale),
-      preBismillah: projected.preBismillah,
       previousSurah:
         loaded.previousSurah === null
           ? null
           : projectSurah(loaded.previousSurah, appLocale),
+      preBismillah: projected.preBismillah,
       surah:
         loaded.surah === null ? null : projectSurah(loaded.surah, appLocale),
       verses: projected.verses.map(({ arabic, document, number }) => ({

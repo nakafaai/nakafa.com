@@ -1,14 +1,15 @@
+import { hasExactQuranVerseRange } from "@repo/backend/client/quran/integrity";
 import {
   decodePublishedQuranSource,
   QuranPublicationError,
-} from "@repo/backend/client/quran/decode";
-import { hasExactQuranVerseRange } from "@repo/backend/client/quran/integrity";
+} from "@repo/backend/client/quran/publication";
+import { hasExpectedQuranSources } from "@repo/backend/client/quran/source";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 
 type QuranDocumentResult = FunctionReturnType<
-  typeof api.contentRelease.quran.document
+  typeof api.contentRelease.quran.surah
 >;
 /** Validator-derived Quran document verse returned by the public API. */
 export type QuranDocumentVerse = QuranDocumentResult["verses"][number];
@@ -25,7 +26,14 @@ export const decodePublishedQuranDocument = Effect.fn(
   }
 ) {
   const source = yield* decodePublishedQuranSource(result, "document");
-  if (result.surah === null) {
+  if (
+    result.surah === null ||
+    !hasExpectedQuranSources(
+      result.sources,
+      result.tafsirAccess,
+      expected.appLocale
+    )
+  ) {
     return yield* new QuranPublicationError({
       operation: "document",
       reason: "Signed Quran document is missing.",
@@ -44,7 +52,10 @@ export const decodePublishedQuranDocument = Effect.fn(
   return {
     ...source,
     appLocale: result.appLocale,
+    preBismillah: result.preBismillah,
+    sources: result.sources,
     surah: result.surah,
+    tafsirAccess: result.tafsirAccess,
     verses: result.verses,
   };
 });

@@ -1,16 +1,16 @@
 import { decodeAgentInput } from "@repo/backend/agent/decode";
 import { readAgentQuery } from "@repo/backend/agent/query";
-import { projectNakafaQuranReferenceV1 } from "@repo/backend/agent/quran/projection";
+import { projectNakafaQuranReference } from "@repo/backend/agent/quran/projection";
+import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
+import type { QuranPublicationError } from "@repo/backend/client/quran/publication";
 import {
   decodePublishedQuranReference,
   type PublishedQuranReference,
-} from "@repo/backend/client/quran/decode";
-import type { QuranPublicationError } from "@repo/backend/client/quran/publication";
-import { decodePublishedQuranCatalogV2 } from "@repo/backend/client/quran/v2/catalog";
+} from "@repo/backend/client/quran/reference";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import type { readQuranSurahs } from "@repo/backend/convex/contentRelease/quran/catalog";
+import type { readQuranPassage } from "@repo/backend/convex/contentRelease/quran/reference";
 import type { QuranReferenceArgs } from "@repo/backend/convex/contentRelease/quran/spec";
-import type { readQuranReferenceV1 } from "@repo/backend/convex/contentRelease/quran/v1";
 import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/_lib/agent/constants";
 import {
   NakafaAgentDataReadError,
@@ -20,7 +20,7 @@ import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/a
 import {
   type NakafaAgentQuranReferenceInput,
   NakafaAgentQuranReferenceOptionsSchema,
-} from "@repo/contents/_lib/agent/schema/quran";
+} from "@repo/contents/_lib/agent/schema/quran/input";
 import { type FunctionReference, makeFunctionReference } from "convex/server";
 import { Effect, Option } from "effect";
 
@@ -35,13 +35,13 @@ const quranCatalogReference: QuranCatalogReference = makeFunctionReference(
   "contentRelease/quran:surahs"
 );
 
-const quranReferenceV1 = makeFunctionReference<
+const quranPassage = makeFunctionReference<
   "query",
   QuranReferenceArgs,
-  Effect.Success<ReturnType<typeof readQuranReferenceV1>>
->("contentRelease/quran:reference");
+  Effect.Success<ReturnType<typeof readQuranPassage>>
+>("contentRelease/quran:passage");
 
-/** Returns one bounded signed Quran reference through the immutable V1 shape. */
+/** Returns one bounded signed Quran reference with semantic source provenance. */
 export const getNakafaQuranReference = Effect.fn(
   "agent.getNakafaQuranReference"
 )(function* (ctx: ActionCtx, input: unknown) {
@@ -55,7 +55,7 @@ export const getNakafaQuranReference = Effect.fn(
   }
   const result = yield* readAgentQuery(
     ctx,
-    quranReferenceV1,
+    quranPassage,
     referenceArgs(request.value),
     "Unable to read the signed Nakafa Quran reference."
   );
@@ -68,11 +68,11 @@ export const getNakafaQuranReference = Effect.fn(
     request.value
   );
   return Option.some(
-    yield* projectNakafaQuranReferenceV1({ ...identity, reference })
+    yield* projectNakafaQuranReference({ ...identity, reference })
   );
 });
 
-/** Decodes and bounds one request against its versioned signed catalog. */
+/** Decodes and bounds one request against its signed catalog. */
 const readNakafaQuranRequest = Effect.fn("agent.readNakafaQuranRequest")(
   function* (
     ctx: ActionCtx,
@@ -92,7 +92,7 @@ const readNakafaQuranRequest = Effect.fn("agent.readNakafaQuranRequest")(
       {},
       "Unable to read the signed Nakafa Quran catalog."
     );
-    const catalog = yield* decodePublishedQuranCatalogV2(catalogResult).pipe(
+    const catalog = yield* decodePublishedQuranCatalog(catalogResult).pipe(
       Effect.mapError(quranReadError)
     );
     const surah = catalog.surahs.find(

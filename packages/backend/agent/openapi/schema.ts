@@ -3,10 +3,8 @@ import {
   NakafaApiIndexSchema,
   NakafaProblemDetailsSchema,
 } from "@repo/contents/_lib/agent/schema/api";
-import {
-  NakafaAgentQuranReferenceOptionsSchema,
-  NakafaAgentQuranReferenceSchema,
-} from "@repo/contents/_lib/agent/schema/quran";
+import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran/input";
+import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
 import {
   NakafaAgentContentRefInputSchema,
   NakafaAgentMarkdownSchema,

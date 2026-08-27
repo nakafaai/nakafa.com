@@ -1,21 +1,28 @@
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import {
-  decodePublishedQuranSource,
-  QuranPublicationError,
-} from "@repo/backend/client/quran/decode";
-import {
   hasExactQuranVerseRange,
   hasExpectedQuranNeighbors,
 } from "@repo/backend/client/quran/integrity";
+import {
+  decodePublishedQuranSource,
+  QuranPublicationError,
+} from "@repo/backend/client/quran/publication";
+import { hasExpectedQuranSources } from "@repo/backend/client/quran/source";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 
-type QuranViewResult = FunctionReturnType<typeof api.contentRelease.quran.view>;
-/** One validator-derived verse rendered by the app-locale Quran web view. */
-export type QuranViewVerse = QuranViewResult["verses"][number];
+type QuranViewResult = FunctionReturnType<typeof api.contentRelease.quran.page>;
 /** Minimal validator-derived surah metadata rendered by the Quran web view. */
 export type QuranViewSurah = NonNullable<QuranViewResult["surah"]>;
+/** Dedicated signed Bismillah shown before numbered verses when present. */
+export type QuranViewBismillah = NonNullable<QuranViewResult["preBismillah"]>;
+/** Signed locale-specific Tafsir access rendered by the Quran web view. */
+export type QuranViewTafsirAccess = NonNullable<
+  QuranViewResult["tafsirAccess"]
+>;
+/** Exact signed Arabic and locale translation sources rendered by the page. */
+export type QuranViewSources = NonNullable<QuranViewResult["sources"]>;
 /** Decodes one active app-locale Quran web projection. */
 export const decodePublishedQuranView = Effect.fn("NakafaQuran.decodeView")(
   function* (
@@ -26,7 +33,14 @@ export const decodePublishedQuranView = Effect.fn("NakafaQuran.decodeView")(
     }
   ) {
     const source = yield* decodePublishedQuranSource(result, "view");
-    if (result.surah === null) {
+    if (
+      result.surah === null ||
+      !hasExpectedQuranSources(
+        result.sources,
+        result.tafsirAccess,
+        expected.appLocale
+      )
+    ) {
       return yield* new QuranPublicationError({
         operation: "view",
         reason: "Signed Quran view is missing.",
@@ -34,6 +48,8 @@ export const decodePublishedQuranView = Effect.fn("NakafaQuran.decodeView")(
     }
     if (
       result.appLocale !== expected.appLocale ||
+      (result.tafsirAccess !== null &&
+        result.tafsirAccess.appLocale !== expected.appLocale) ||
       result.surah.number !== expected.surahNumber ||
       !hasExactQuranVerseRange(result.verses, 1, result.surah.numberOfVerses) ||
       !hasExpectedQuranNeighbors(
@@ -52,8 +68,11 @@ export const decodePublishedQuranView = Effect.fn("NakafaQuran.decodeView")(
       ...source,
       appLocale: result.appLocale,
       nextSurah: result.nextSurah,
+      preBismillah: result.preBismillah,
       previousSurah: result.previousSurah,
+      sources: result.sources,
       surah: result.surah,
+      tafsirAccess: result.tafsirAccess,
       verses: result.verses,
     };
   }
@@ -61,3 +80,5 @@ export const decodePublishedQuranView = Effect.fn("NakafaQuran.decodeView")(
 export type PublishedQuranView = Effect.Success<
   ReturnType<typeof decodePublishedQuranView>
 >;
+/** One semantic verse rendered by the app-locale Quran web view. */
+export type QuranViewVerse = PublishedQuranView["verses"][number];

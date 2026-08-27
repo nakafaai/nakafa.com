@@ -6,7 +6,7 @@ import {
   quranTranslationSourceId,
 } from "@nakafa/aksara-contracts/quran/identity";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
-import { NakafaAgentQuranReferenceV2Schema } from "@repo/contents/_lib/agent/schema/quran/reference";
+import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
 import { Schema } from "effect";
 
 const ARTIFACT = {
@@ -14,7 +14,7 @@ const ARTIFACT = {
   digest: `sha256:${"1".repeat(64)}`,
   file_count: 1,
 };
-/** Builds one complete embedded source for injected V2 results. */
+/** Builds one complete embedded source for injected results. */
 function embeddedSource(id: QuranEmbeddedSourceId) {
   return {
     artifact: ARTIFACT,
@@ -31,7 +31,7 @@ function embeddedSource(id: QuranEmbeddedSourceId) {
   };
 }
 
-/** Builds one complete link-only source for injected V2 results. */
+/** Builds one complete link-only source for injected results. */
 function externalSource(id: QuranExternalSourceId) {
   return {
     id,
@@ -77,17 +77,18 @@ function tafsirAccess(locale: ActiveAppLocaleCode) {
 }
 
 /** Decodes one source-grounded reference used by injected AI tests. */
-export function makeQuranV2Fixture(input: {
+export function makeQuranFixture(input: {
   readonly from_verse: number;
   readonly include_tafsir: boolean;
   readonly locale: ActiveAppLocaleCode;
   readonly surah: number;
 }) {
   const { from_verse, include_tafsir, locale, surah } = input;
-  return Schema.decodeUnknownSync(NakafaAgentQuranReferenceV2Schema)({
+  return Schema.decodeUnknownSync(NakafaAgentQuranReferenceSchema)({
     ...readNakafaContentRefFixture(locale, `quran/${surah}`, "quran"),
     meaning: locale === "en" ? { locale: "en", text: "The Opening" } : null,
     name: "Al-Faatiha",
+    pre_bismillah: null,
     revelation: "Meccan",
     sources: {
       arabic: embeddedSource("tanzil-text"),

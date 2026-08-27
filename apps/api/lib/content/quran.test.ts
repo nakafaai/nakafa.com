@@ -1,4 +1,8 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import {
+  makeQuranLocaleSources,
+  makeQuranTafsirProjection,
+} from "@repo/backend/test/quran/rows";
 import { toRuntimeQueryError } from "@repo/backend/test/runtime-query";
 import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
@@ -26,6 +30,7 @@ const source = {
   activeReleaseId: "quran-release",
   managed: true,
   snapshotId: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
+  sourceOrigin: { kind: "git" as const, sha: "c".repeat(40) },
   sourceRevision: "c".repeat(40),
 };
 afterEach(() => {
@@ -37,24 +42,36 @@ describe("Quran API content", () => {
       runtimeClientMocks.runtimeQuery.mockResolvedValueOnce({
         ...source,
         appLocale: "en",
+        preBismillah: null,
+        sources: makeQuranLocaleSources("en"),
         surah: {
           kind: "quran-surah",
           name: {
             arabic: "الفاتحة",
-            translation: "The Opening",
+            meaning: "The Opening",
             transliteration: "Al-Fatihah",
           },
           number: 1,
           numberOfVerses: 1,
           revelation: { order: 5, place: "Meccan" },
         },
+        tafsirAccess: makeQuranTafsirProjection("en"),
         verses: [
           {
             arabic: "بِسْمِ اللّٰهِ",
             number: { inQuran: 1, inSurah: 1 },
             translation: {
-              footnotes: "Source note.",
-              text: "In Allah's name.",
+              notes: [
+                {
+                  number: 1,
+                  referenceOffset: 16,
+                  text: "Source note.",
+                },
+              ],
+              segments: [
+                { kind: "text", offset: 0, value: "In Allah's name." },
+                { kind: "note", number: 1, offset: 16 },
+              ],
             },
           },
         ],
@@ -67,8 +84,11 @@ describe("Quran API content", () => {
         verses: [
           {
             translation: {
-              footnotes: "Source note.",
-              text: "In Allah's name.",
+              notes: [expect.objectContaining({ number: 1 })],
+              segments: [
+                expect.objectContaining({ kind: "text" }),
+                expect.objectContaining({ kind: "note", number: 1 }),
+              ],
             },
           },
         ],
@@ -96,7 +116,10 @@ describe("Quran API content", () => {
       runtimeClientMocks.runtimeQuery.mockResolvedValueOnce({
         ...source,
         appLocale: "en",
+        preBismillah: null,
+        sources: null,
         surah: null,
+        tafsirAccess: null,
         verses: [],
       });
       expect(
