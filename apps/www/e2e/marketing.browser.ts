@@ -63,9 +63,11 @@ const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(function* (
    * @see https://nextjs.org/docs/app/getting-started/linking-and-navigating#streaming
    */
   yield* Effect.promise(() =>
-    expect(page.locator('main[data-marketing-page="true"]')).toBeVisible({
-      timeout: READINESS_TIMEOUT_MILLISECONDS,
-    })
+    expect(
+      page
+        .locator('main[data-marketing-page="true"]')
+        .filter({ visible: true })
+    ).toHaveCount(1, { timeout: READINESS_TIMEOUT_MILLISECONDS })
   );
 });
 
