@@ -1,9 +1,9 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import {
   readNakafaReleasePin,
   verifyNakafaReleasePin,
 } from "@repo/backend/client/nakafa/release";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import { vi } from "vitest";
 
@@ -24,7 +24,7 @@ describe("Nakafa release pin", () => {
     queryMock.mockReset();
   });
 
-  it.live("reads the complete active publication identity", () =>
+  it.effect("reads the complete active publication identity", () =>
     Effect.gen(function* () {
       queryMock.mockReturnValue(Effect.succeed(ACTIVE_RELEASE));
 
@@ -39,7 +39,7 @@ describe("Nakafa release pin", () => {
     })
   );
 
-  it.live("rejects a malformed active publication identity", () =>
+  it.effect("rejects a malformed active publication identity", () =>
     Effect.gen(function* () {
       queryMock.mockReturnValue(
         Effect.succeed({ ...ACTIVE_RELEASE, manifestHash: "not-a-hash" })
@@ -56,7 +56,7 @@ describe("Nakafa release pin", () => {
     })
   );
 
-  it.live("accepts stable active and empty publication identities", () =>
+  it.effect("accepts stable active and empty publication identities", () =>
     Effect.gen(function* () {
       for (const identity of [ACTIVE_RELEASE, null]) {
         queryMock.mockReturnValue(Effect.succeed(identity));
@@ -71,7 +71,7 @@ describe("Nakafa release pin", () => {
     })
   );
 
-  it.live.each([
+  it.effect.each([
     [
       "manifest hash",
       {
@@ -101,7 +101,7 @@ describe("Nakafa release pin", () => {
     })
   );
 
-  it.live("rejects activation from an empty publication", () =>
+  it.effect("rejects activation from an empty publication", () =>
     Effect.gen(function* () {
       queryMock.mockReturnValue(Effect.succeed(ACTIVE_RELEASE));
 
