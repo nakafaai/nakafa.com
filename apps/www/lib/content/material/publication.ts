@@ -1,7 +1,7 @@
 import "server-only";
 
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
 import {
   applyPublishedCatalogCache,
@@ -14,6 +14,15 @@ import {
 import { getPublishedMaterialRoute } from "@/lib/content/material/route";
 import { readRenderedMaterial } from "@/lib/content/published/material";
 
+class MaterialRouteReadError extends Schema.TaggedError<MaterialRouteReadError>()(
+  "MaterialRouteReadError",
+  {
+    appLocale: AppLocaleSchema,
+    cause: Schema.Unknown,
+    publicPath: Schema.String,
+  }
+) {}
+
 /** Caches one coherent material publication at the Next.js boundary. */
 export async function getMaterialPublication(
   locale: Locale,
@@ -22,39 +31,40 @@ export async function getMaterialPublication(
   "use cache";
 
   const appLocale = AppLocaleSchema.make(locale);
+  const readModel = Effect.tryPromise({
+    catch: (cause) =>
+      new MaterialRouteReadError({ appLocale, cause, publicPath }),
+    try: () => getPublishedMaterialRoute(locale, publicPath),
+  });
   const readPublished = readRenderedMaterial({ appLocale, publicPath }).pipe(
     Effect.catchTag("ContentRuntimeMissingError", () => Effect.succeed(null))
   );
-  const [model, published] = await Promise.all([
-    getPublishedMaterialRoute(locale, publicPath),
-    Effect.runPromise(readPublished),
-  ]);
-
-  applyPublishedCatalogCache("material");
-  if (!model.projection) {
-    if (published) {
-      return await Effect.runPromise(
-        Effect.fail(makeMaterialProjectionError({ appLocale, publicPath }))
-      );
+  const program = Effect.gen(function* () {
+    const [model, published] = yield* Effect.all([readModel, readPublished], {
+      concurrency: "unbounded",
+    });
+    yield* Effect.sync(() => applyPublishedCatalogCache("material"));
+    if (!model.projection) {
+      if (published) {
+        return yield* makeMaterialProjectionError({ appLocale, publicPath });
+      }
+      return null;
     }
-    return null;
-  }
-  if (!published) {
-    return await Effect.runPromise(
-      Effect.fail(makeMaterialProjectionError({ appLocale, publicPath }))
-    );
-  }
-
-  await Effect.runPromise(
-    verifyMaterialPublication(
+    if (!published) {
+      return yield* makeMaterialProjectionError({ appLocale, publicPath });
+    }
+    yield* verifyMaterialPublication(
       {
         activeReleaseId: model.activeReleaseId,
         projection: model.projection,
       },
       published
-    )
-  );
-  applyPublishedContentCache("material", published.artifactHash);
+    );
+    yield* Effect.sync(() =>
+      applyPublishedContentCache("material", published.artifactHash)
+    );
+    return { model, published };
+  });
 
-  return { model, published };
+  return await Effect.runPromise(program);
 }

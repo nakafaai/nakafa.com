@@ -177,7 +177,7 @@ describe("material publication", () => {
     );
   });
 
-  it("preserves typed route failures without a Promise adapter", async () => {
+  it("preserves route failure provenance across the cache boundary", async () => {
     const failure = new PublishedProjectionError({
       appLocale: previewProjection.appLocale,
       publicPath: previewProjection.publicPath,
@@ -186,6 +186,31 @@ describe("material publication", () => {
 
     await expect(
       getMaterialPublication("en", previewProjection.publicPath)
-    ).rejects.toBe(failure);
+    ).rejects.toMatchObject({
+      _tag: "MaterialRouteReadError",
+      appLocale: previewProjection.appLocale,
+      cause: failure,
+      publicPath: previewProjection.publicPath,
+    });
+  });
+
+  it("interrupts the signed body read when the bounded route fails", async () => {
+    const interrupted = vi.fn();
+    const failure = new PublishedProjectionError({
+      appLocale: previewProjection.appLocale,
+      publicPath: previewProjection.publicPath,
+    });
+    routeMock.mockRejectedValueOnce(failure);
+    renderMock.mockReturnValueOnce(
+      Effect.never.pipe(Effect.onInterrupt(() => Effect.sync(interrupted)))
+    );
+
+    await expect(
+      getMaterialPublication("en", previewProjection.publicPath)
+    ).rejects.toMatchObject({
+      _tag: "MaterialRouteReadError",
+      cause: failure,
+    });
+    expect(interrupted).toHaveBeenCalledOnce();
   });
 });
