@@ -1,9 +1,9 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   accountDeletionCancellationOutcome,
   accountDeletionPreparationOutcome,
   accountDeletionRequestPhase,
 } from "@repo/backend/convex/auth/deletion/spec";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import { vi } from "vitest";
 import { AccountDeletionAttemptStorageFailed } from "@/lib/auth/deletion/attempt";
@@ -30,12 +30,14 @@ function createPreparationOperations(
       phase: accountDeletionRequestPhase.preparation,
       userId: USER_ID,
     },
-    cancelPreparation: vi.fn(
-      async () => accountDeletionCancellationOutcome.complete
+    cancelPreparation: vi.fn(() =>
+      Promise.resolve(accountDeletionCancellationOutcome.complete)
     ),
     clearAttempt: Effect.void,
     persist: vi.fn(() => Effect.void),
-    prepare: vi.fn(async () => accountDeletionPreparationOutcome.ready),
+    prepare: vi.fn(() =>
+      Promise.resolve(accountDeletionPreparationOutcome.ready)
+    ),
     ...overrides,
   };
 }
@@ -49,7 +51,7 @@ function preparationFailure(
 }
 
 describe("account deletion preparation", () => {
-  it.live(
+  it.effect(
     "drains every bounded preparation request before persisting deletion",
     () =>
       Effect.gen(function* () {
@@ -80,11 +82,11 @@ describe("account deletion preparation", () => {
       })
   );
 
-  it.live("continues the browser-persisted attempt after a page reload", () =>
+  it.effect("continues the browser-persisted attempt after a page reload", () =>
     Effect.gen(function* () {
       const persistedAttemptId = "019fa44c-02be-7cd0-a4ed-61a7af8e0621";
-      const prepare = vi.fn(
-        async () => accountDeletionPreparationOutcome.ready
+      const prepare = vi.fn(() =>
+        Promise.resolve(accountDeletionPreparationOutcome.ready)
       );
 
       yield* prepareAccountDeletion(
@@ -102,15 +104,15 @@ describe("account deletion preparation", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "cancels before deletion when its durable phase cannot be saved",
     () =>
       Effect.gen(function* () {
-        const cancelPreparation = vi.fn(
-          async () => accountDeletionCancellationOutcome.complete
+        const cancelPreparation = vi.fn(() =>
+          Promise.resolve(accountDeletionCancellationOutcome.complete)
         );
-        const prepare = vi.fn(
-          async () => accountDeletionPreparationOutcome.ready
+        const prepare = vi.fn(() =>
+          Promise.resolve(accountDeletionPreparationOutcome.ready)
         );
         const failure = yield* preparationFailure({
           cancelPreparation,
@@ -129,12 +131,12 @@ describe("account deletion preparation", () => {
       })
   );
 
-  it.live(
+  it.effect(
     "preserves the attempt when the preparation response is uncertain",
     () =>
       Effect.gen(function* () {
-        const cancelPreparation = vi.fn(
-          async () => accountDeletionCancellationOutcome.complete
+        const cancelPreparation = vi.fn(() =>
+          Promise.resolve(accountDeletionCancellationOutcome.complete)
         );
         const failure = yield* preparationFailure({
           cancelPreparation,
@@ -151,17 +153,19 @@ describe("account deletion preparation", () => {
       })
   );
 
-  it.live("cancels when an owned school needs a successor", () =>
+  it.effect("cancels when an owned school needs a successor", () =>
     Effect.gen(function* () {
-      const cancelPreparation = vi.fn(
-        async () => accountDeletionCancellationOutcome.complete
+      const cancelPreparation = vi.fn(() =>
+        Promise.resolve(accountDeletionCancellationOutcome.complete)
       );
       const clearAttempt = vi.fn();
       const failure = yield* preparationFailure({
         cancelPreparation,
         clearAttempt: Effect.sync(clearAttempt),
-        prepare: vi.fn(
-          async () => accountDeletionPreparationOutcome.schoolSuccessorRequired
+        prepare: vi.fn(() =>
+          Promise.resolve(
+            accountDeletionPreparationOutcome.schoolSuccessorRequired
+          )
         ),
       });
 
@@ -171,17 +175,19 @@ describe("account deletion preparation", () => {
     })
   );
 
-  it.live("cancels a preparation that cannot safely continue", () =>
+  it.effect("cancels a preparation that cannot safely continue", () =>
     Effect.gen(function* () {
-      const cancelPreparation = vi.fn(
-        async () => accountDeletionCancellationOutcome.complete
+      const cancelPreparation = vi.fn(() =>
+        Promise.resolve(accountDeletionCancellationOutcome.complete)
       );
       const clearAttempt = vi.fn();
       const failure = yield* preparationFailure({
         cancelPreparation,
         clearAttempt: Effect.sync(clearAttempt),
-        prepare: vi.fn(
-          async () => accountDeletionPreparationOutcome.temporarilyUnavailable
+        prepare: vi.fn(() =>
+          Promise.resolve(
+            accountDeletionPreparationOutcome.temporarilyUnavailable
+          )
         ),
       });
 
@@ -191,7 +197,7 @@ describe("account deletion preparation", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "fails closed when a canceled browser capability cannot be removed",
     () =>
       Effect.gen(function* () {
@@ -201,8 +207,10 @@ describe("account deletion preparation", () => {
               code: STORAGE_FAILED_CODE,
             })
           ),
-          prepare: vi.fn(
-            async () => accountDeletionPreparationOutcome.temporarilyUnavailable
+          prepare: vi.fn(() =>
+            Promise.resolve(
+              accountDeletionPreparationOutcome.temporarilyUnavailable
+            )
           ),
         });
 

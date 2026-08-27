@@ -1,5 +1,5 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { accountDeletionRequestPhase } from "@repo/backend/convex/auth/deletion/spec";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import {
   AccountDeletionAttemptStorageFailed,
@@ -16,7 +16,7 @@ describe("account deletion attempt", () => {
     window.sessionStorage.clear();
   });
 
-  it.live("creates and reloads one tab-owned browser capability", () =>
+  it.effect("creates and reloads one tab-owned browser capability", () =>
     Effect.gen(function* () {
       const created = yield* loadOrCreateAccountDeletionAttempt(USER_ID);
       const reloaded = yield* loadOrCreateAccountDeletionAttempt(USER_ID);
@@ -30,7 +30,7 @@ describe("account deletion attempt", () => {
     })
   );
 
-  it.live("persists the irreversible phase before auth deletion", () =>
+  it.effect("persists the irreversible phase before auth deletion", () =>
     Effect.gen(function* () {
       const deletionAttempt = {
         attemptId: ATTEMPT_ID,
@@ -46,7 +46,7 @@ describe("account deletion attempt", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "rotates a persisted capability when the signed-in account changes",
     () =>
       Effect.gen(function* () {
@@ -61,7 +61,7 @@ describe("account deletion attempt", () => {
       })
   );
 
-  it.live("rotates a capability after its cancellation is proven", () =>
+  it.effect("rotates a capability after its cancellation is proven", () =>
     Effect.gen(function* () {
       const canceled = yield* loadOrCreateAccountDeletionAttempt(USER_ID);
 
@@ -73,7 +73,7 @@ describe("account deletion attempt", () => {
     })
   );
 
-  it.live("fails closed when persisted state is malformed", () =>
+  it.effect("fails closed when persisted state is malformed", () =>
     Effect.gen(function* () {
       window.sessionStorage.setItem(
         "nakafa-account-deletion-attempt",
@@ -88,7 +88,7 @@ describe("account deletion attempt", () => {
     })
   );
 
-  it.live("fails closed when session storage is unavailable", () =>
+  it.effect("fails closed when session storage is unavailable", () =>
     Effect.gen(function* () {
       const unavailableStorage = {
         getItem: () => {
