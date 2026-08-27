@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "@effect/vitest";
 import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/_lib/agent/constants";
 import { Effect } from "effect";
-import type { FetchImplementation } from "./client.js";
-import { runCli } from "./program.js";
+import type { FetchImplementation } from "#cli/client";
+import { runCli } from "#cli/program";
 
 const problem = {
   code: "NOT_FOUND",

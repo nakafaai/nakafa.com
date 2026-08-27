@@ -7,7 +7,7 @@ import {
   isAllowedPackedFile,
   REQUIRED_PACKED_FILES,
   readPackageVersion,
-} from "./package.js";
+} from "#cli/package";
 
 class CliTestCommandError extends Schema.TaggedError<CliTestCommandError>()(
   "CliTestCommandError",

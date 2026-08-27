@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { Effect, FileSystem, Schema } from "effect";
-import { CliStartupError } from "./error.js";
+import { CliStartupError } from "#cli/error";
 
 export const REQUIRED_PACKED_FILES = [
   "LICENSE",

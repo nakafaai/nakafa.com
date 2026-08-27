@@ -3,9 +3,9 @@ import {
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
 } from "@repo/contents/_lib/agent/constants";
 import { Effect } from "effect";
-import { type FetchImplementation, requestNakafaApi } from "./client.js";
-import { readCliRequest } from "./command/read.js";
-import { type CliCommand, type CliRequest, HELP_TEXT } from "./command/spec.js";
+import { type FetchImplementation, requestNakafaApi } from "#cli/client";
+import { readCliRequest } from "#cli/command/read";
+import { type CliCommand, type CliRequest, HELP_TEXT } from "#cli/command/spec";
 import type {
   ApiResponseError,
   HttpResponseError,

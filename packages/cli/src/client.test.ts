@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "@effect/vitest";
 import { Effect, Result } from "effect";
-import { type FetchImplementation, requestNakafaApi } from "./client.js";
+import { type FetchImplementation, requestNakafaApi } from "#cli/client";
 
 const problem = {
   code: "NOT_FOUND",

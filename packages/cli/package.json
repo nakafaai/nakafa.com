@@ -20,6 +20,9 @@
   },
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
+  "imports": {
+    "#cli/*": "./src/*.ts"
+  },
   "bin": {
     "nakafa": "dist/main.js"
   },

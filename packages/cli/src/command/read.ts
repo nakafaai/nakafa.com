@@ -1,8 +1,8 @@
 import { parseArgs } from "node:util";
 import { NAKAFA_API_BASE_URL } from "@repo/contents/_lib/agent/constants";
 import { Effect, Schema } from "effect";
-import { InvocationError } from "../error.js";
-import { CliRequestSchema, isHttpOrigin } from "./spec.js";
+import { CliRequestSchema, isHttpOrigin } from "#cli/command/spec";
+import { InvocationError } from "#cli/error";
 
 const optionDefinitions = {
   "api-base": { type: "string" },

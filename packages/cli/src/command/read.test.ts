@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { readCliRequest } from "./read.js";
-import { HELP_TEXT } from "./spec.js";
+import { readCliRequest } from "#cli/command/read";
+import { HELP_TEXT } from "#cli/command/spec";
 
 function readFailure(argv: readonly string[]) {
   return readCliRequest(argv).pipe(

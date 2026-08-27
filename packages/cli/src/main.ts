@@ -2,8 +2,8 @@
 
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { Cause, Effect } from "effect";
-import { readPackageVersion } from "./package.js";
-import { runCli } from "./program.js";
+import { readPackageVersion } from "#cli/package";
+import { runCli } from "#cli/program";
 
 const program = Effect.gen(function* () {
   const version = yield* readPackageVersion(
