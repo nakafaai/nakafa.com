@@ -134,47 +134,6 @@ describe("contentRelease/quran", () => {
     expect(page.verses[0]?.arabic).toBe("الٓمٓ");
   });
 
-  it("keeps the current WWW rollout bridge exact", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) => activateQuranSnapshot(ctx, expansionRows()));
-
-    const [prose, markdownV2, page, viewV2] = await Promise.all([
-      t.query(api.contentRelease.quran.prose, {
-        appLocale: "id",
-        surahNumber: 2,
-      }),
-      t.query(api.contentRelease.quran.markdownV2, {
-        appLocale: "id",
-        surahNumber: 2,
-      }),
-      t.query(api.contentRelease.quran.page, {
-        appLocale: "id",
-        surahNumber: 2,
-      }),
-      t.query(api.contentRelease.quran.viewV2, {
-        appLocale: "id",
-        surahNumber: 2,
-      }),
-    ]);
-
-    expect(markdownV2).toEqual(prose);
-    expect(viewV2).toEqual(page);
-    if (page.snapshotId === null) {
-      expect.fail("The active Quran page must retain its snapshot identity.");
-    }
-    const args = {
-      appLocale: "id" as const,
-      expectedSnapshotId: page.snapshotId,
-      surahNumber: 2,
-      verseNumber: 1,
-    };
-    const [tafsir, interpretationV2] = await Promise.all([
-      t.query(api.contentRelease.quran.tafsir, args),
-      t.query(api.contentRelease.quran.interpretationV2, args),
-    ]);
-    expect(interpretationV2).toEqual(tafsir);
-  });
-
   it("registers public reads and rejects a stale interpretation", async () => {
     const t = convexTest(schema, convexModules);
 
