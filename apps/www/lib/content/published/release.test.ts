@@ -1,9 +1,10 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import type { PublishedProjectionIdentity } from "@/lib/content/published/errors";
 import {
   decodeContentReleasePin,
@@ -28,62 +29,66 @@ beforeEach(() => {
 });
 
 describe("content release pin", () => {
-  it.each([
+  it.effect.each([
     ["active release", activeReleaseId],
     ["no active release", null],
-  ])("decodes %s", async (_label, actual) => {
-    await expect(
-      Effect.runPromise(decodeContentReleasePin(actual, undefined, identity))
-    ).resolves.toBe(actual);
-  });
+  ])("decodes %s", ([, actual]) =>
+    Effect.gen(function* () {
+      expect(yield* decodeContentReleasePin(actual, undefined, identity)).toBe(
+        actual
+      );
+    })
+  );
 
-  it("maps malformed release data to the material projection failure", async () => {
-    await expect(
-      Effect.runPromise(
-        decodeContentReleasePin("invalid release", undefined, identity).pipe(
-          Effect.flip
+  it.effect(
+    "maps malformed release data to the material projection failure",
+    () =>
+      decodeContentReleasePin("invalid release", undefined, identity).pipe(
+        Effect.flip,
+        Effect.map((error) =>
+          expect(error).toMatchObject({
+            _tag: "PublishedProjectionError",
+            ...identity,
+          })
         )
       )
-    ).resolves.toMatchObject({
-      _tag: "PublishedProjectionError",
-      ...identity,
-    });
-  });
+  );
 
-  it("rejects a changed active release", async () => {
-    await expect(
-      Effect.runPromise(
-        decodeContentReleasePin(nextReleaseId, activeReleaseId, identity).pipe(
-          Effect.flip
-        )
+  it.effect("rejects a changed active release", () =>
+    decodeContentReleasePin(nextReleaseId, activeReleaseId, identity).pipe(
+      Effect.flip,
+      Effect.map((error) =>
+        expect(error).toMatchObject({
+          _tag: "PublishedReleaseMismatchError",
+          actualReleaseId: nextReleaseId,
+          expectedReleaseId: activeReleaseId,
+        })
       )
-    ).resolves.toMatchObject({
-      _tag: "PublishedReleaseMismatchError",
-      actualReleaseId: nextReleaseId,
-      expectedReleaseId: activeReleaseId,
-    });
-  });
+    )
+  );
 
-  it("rechecks the latest active release identity", async () => {
-    readActiveContentIdentityMock.mockReturnValueOnce(
-      Effect.succeed({
-        manifestHash: `sha256:${"a".repeat(64)}`,
-        releaseId: activeReleaseId,
-        sequence: 3,
-      })
-    );
+  it.effect("rechecks the latest active release identity", () =>
+    Effect.gen(function* () {
+      readActiveContentIdentityMock.mockReturnValueOnce(
+        Effect.succeed({
+          manifestHash: `sha256:${"a".repeat(64)}`,
+          releaseId: activeReleaseId,
+          sequence: 3,
+        })
+      );
 
-    await expect(
-      Effect.runPromise(verifyContentReleasePin(activeReleaseId, identity))
-    ).resolves.toBe(activeReleaseId);
-    expect(readActiveContentIdentityMock).toHaveBeenCalledOnce();
-  });
+      expect(yield* verifyContentReleasePin(activeReleaseId, identity)).toBe(
+        activeReleaseId
+      );
+      expect(readActiveContentIdentityMock).toHaveBeenCalledOnce();
+    })
+  );
 
-  it("preserves an absent active release identity", async () => {
-    readActiveContentIdentityMock.mockReturnValueOnce(Effect.succeed(null));
+  it.effect("preserves an absent active release identity", () =>
+    Effect.gen(function* () {
+      readActiveContentIdentityMock.mockReturnValueOnce(Effect.succeed(null));
 
-    await expect(
-      Effect.runPromise(verifyContentReleasePin(null, identity))
-    ).resolves.toBeNull();
-  });
+      expect(yield* verifyContentReleasePin(null, identity)).toBeNull();
+    })
+  );
 });

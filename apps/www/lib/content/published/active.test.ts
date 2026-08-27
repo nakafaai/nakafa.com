@@ -1,11 +1,12 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { createTestRuntimeQuery } from "@/test/runtime-query";
 
@@ -23,25 +24,27 @@ beforeEach(() => {
 });
 
 describe("published active identity", () => {
-  it("reads the exact active release without another state interpretation", async () => {
-    const identity = {
-      manifestHash: Sha256HashSchema.make(`sha256:${"a".repeat(64)}`),
-      releaseId: ReleaseIdSchema.make("release-active"),
-      sequence: 3,
-    };
-    fetchQueryMock.mockResolvedValue(identity);
+  it.effect(
+    "reads the exact active release without another state interpretation",
+    () =>
+      Effect.gen(function* () {
+        const identity = {
+          manifestHash: Sha256HashSchema.make(`sha256:${"a".repeat(64)}`),
+          releaseId: ReleaseIdSchema.make("release-active"),
+          sequence: 3,
+        };
+        fetchQueryMock.mockResolvedValue(identity);
 
-    await expect(
-      Effect.runPromise(readActiveContentIdentity())
-    ).resolves.toEqual(identity);
-    expect(readQueryMock).toHaveBeenCalledWith(expect.anything(), {});
-  });
+        expect(yield* readActiveContentIdentity()).toEqual(identity);
+        expect(readQueryMock).toHaveBeenCalledWith(expect.anything(), {});
+      })
+  );
 
-  it("preserves the absence of an active release", async () => {
-    fetchQueryMock.mockResolvedValue(null);
+  it.effect("preserves the absence of an active release", () =>
+    Effect.gen(function* () {
+      fetchQueryMock.mockResolvedValue(null);
 
-    await expect(
-      Effect.runPromise(readActiveContentIdentity())
-    ).resolves.toBeNull();
-  });
+      expect(yield* readActiveContentIdentity()).toBeNull();
+    })
+  );
 });

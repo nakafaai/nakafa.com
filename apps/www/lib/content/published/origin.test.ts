@@ -1,6 +1,6 @@
+import { describe, expect, it } from "@effect/vitest";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 
 const identity = {
@@ -9,28 +9,27 @@ const identity = {
 } as const;
 
 describe("content/published/origin", () => {
-  it("treats omitted and null revisions as absent", async () => {
-    await expect(
-      Effect.runPromise(decodeSourceRevision(undefined, identity))
-    ).resolves.toBeNull();
-    await expect(
-      Effect.runPromise(decodeSourceRevision(null, identity))
-    ).resolves.toBeNull();
-  });
+  it.effect("treats omitted and null revisions as absent", () =>
+    Effect.gen(function* () {
+      expect(yield* decodeSourceRevision(undefined, identity)).toBeNull();
+      expect(yield* decodeSourceRevision(null, identity)).toBeNull();
+    })
+  );
 
-  it("decodes exact Git provenance", async () => {
-    const revision = "a".repeat(40);
+  it.effect("decodes exact Git provenance", () =>
+    Effect.gen(function* () {
+      const revision = "a".repeat(40);
 
-    await expect(
-      Effect.runPromise(decodeSourceRevision(revision, identity))
-    ).resolves.toBe(revision);
-  });
+      expect(yield* decodeSourceRevision(revision, identity)).toBe(revision);
+    })
+  );
 
-  it("rejects malformed Git provenance", async () => {
-    await expect(
-      Effect.runPromise(
-        decodeSourceRevision("not-a-commit", identity).pipe(Effect.flip)
+  it.effect("rejects malformed Git provenance", () =>
+    decodeSourceRevision("not-a-commit", identity).pipe(
+      Effect.flip,
+      Effect.map((error) =>
+        expect(error).toMatchObject({ _tag: "PublishedProjectionError" })
       )
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-  });
+    )
+  );
 });
