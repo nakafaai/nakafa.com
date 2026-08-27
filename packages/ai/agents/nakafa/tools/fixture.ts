@@ -86,7 +86,7 @@ export function makeQuranFixture(input: {
   const { from_verse, include_tafsir, locale, surah } = input;
   return Schema.decodeUnknownSync(NakafaAgentQuranReferenceSchema)({
     ...readNakafaContentRefFixture(locale, `quran/${surah}`, "quran"),
-    meaning: locale === "en" ? { locale: "en", text: "The Opening" } : null,
+    meaning: { locale: "en", text: "The Opening" },
     name: "Al-Faatiha",
     pre_bismillah: null,
     revelation: "Meccan",

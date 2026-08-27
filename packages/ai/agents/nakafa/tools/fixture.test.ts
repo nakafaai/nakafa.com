@@ -25,9 +25,7 @@ describe("Nakafa Quran AI fixtures", () => {
         locale,
         source: { id: tafsirId },
       });
-      expect(result.meaning).toEqual(
-        locale === "en" ? { locale: "en", text: "The Opening" } : null
-      );
+      expect(result.meaning).toEqual({ locale: "en", text: "The Opening" });
       expect(result.verses[0]?.tafsir).toBe(
         locale === "id" ? "Tafsir from the injected test adapter." : undefined
       );
