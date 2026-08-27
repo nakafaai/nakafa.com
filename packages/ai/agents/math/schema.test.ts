@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   mathAlgebraInput,
   mathArithmeticInput,
@@ -11,154 +12,141 @@ import {
   mathStatisticsInput,
 } from "@repo/ai/agents/math/schema";
 import { asSchema } from "ai";
-import { describe, expect, it } from "vitest";
+import { Effect, Predicate } from "effect";
 
+/** Proves that Effect-backed AI schemas keep their deterministic sync contract. */
+function readSynchronous<A>(value: A | PromiseLike<A>, operation: string): A {
+  if (Predicate.isPromiseLike(value)) {
+    expect.fail(`${operation} must remain synchronous.`);
+  }
+  return value;
+}
+/** Awaits one AI SDK validator inside Effect and returns its Vitest matcher. */
+function expectValidation<A>(value: A | PromiseLike<A>) {
+  return Effect.promise(() => Promise.resolve(value)).pipe(
+    Effect.map((result) => expect(result))
+  );
+}
+/** Requires the validator promised by an AI SDK schema adapter. */
+function requireValidator<A>(value: A | undefined) {
+  return Effect.suspend(() =>
+    value === undefined
+      ? Effect.die("AI SDK schema adapter omitted its validator.")
+      : Effect.succeed(value)
+  );
+}
 describe("math AI input schemas", () => {
-  it("exposes Effect schemas as AI SDK-compatible JSON schemas", async () => {
-    const schema = asSchema(mathArithmeticInput);
-    const jsonSchema = await Promise.resolve(schema.jsonSchema);
-    const validate = schema.validate;
-
-    if (!validate) {
-      throw new Error("Math input schema must validate model tool input.");
-    }
-
-    expect(jsonSchema).toMatchObject({
-      description: "Exact arithmetic tool input.",
-      properties: {
-        expression: {
-          description:
-            "A math expression in plain text syntax, for example (x^2 - 9)/(x - 3).",
-          type: "string",
+  it.effect("exposes Effect schemas as AI SDK-compatible JSON schemas", () =>
+    Effect.gen(function* () {
+      const schema = asSchema(mathArithmeticInput);
+      const jsonSchema = readSynchronous(schema.jsonSchema, "Math JSON Schema");
+      const validate = yield* requireValidator(schema.validate);
+      expect(jsonSchema).toMatchObject({
+        description: "Exact arithmetic tool input.",
+        properties: {
+          expression: {
+            description:
+              "A math expression in plain text syntax, for example (x^2 - 9)/(x - 3).",
+            type: "string",
+          },
+          operation: {
+            description: "Evaluate an exact arithmetic or numeric expression.",
+            enum: ["evaluate"],
+            type: "string",
+          },
         },
-        operation: {
-          description: "Evaluate an exact arithmetic or numeric expression.",
-          enum: ["evaluate"],
-          type: "string",
-        },
-      },
-      required: ["expression", "operation"],
-      type: "object",
-    });
-
-    await expect(
-      Promise.resolve(
+        required: ["expression", "operation"],
+        type: "object",
+      });
+      (yield* expectValidation(
         validate({
           expression: "2 + 2",
           operation: "evaluate",
         })
-      )
-    ).resolves.toEqual({
-      success: true,
-      value: {
-        expression: "2 + 2",
-        operation: "evaluate",
-      },
-    });
-
-    await expect(
-      Promise.resolve(
+      )).toEqual({
+        success: true,
+        value: {
+          expression: "2 + 2",
+          operation: "evaluate",
+        },
+      });
+      (yield* expectValidation(
         validate({
           expression: "2 + 2",
           operation: "simplify",
         })
-      )
-    ).resolves.toMatchObject({
-      success: false,
-    });
-  });
-
-  it("rejects algebra operations that omit their required expression fields", async () => {
-    const schema = asSchema(mathAlgebraInput);
-    const validate = schema.validate;
-
-    if (!validate) {
-      throw new Error("Math algebra schema must validate model tool input.");
-    }
-
-    await expect(
-      Promise.resolve(
-        validate({
-          operation: "simplify",
-        })
-      )
-    ).resolves.toMatchObject({
-      success: false,
-    });
-
-    await expect(
-      Promise.resolve(
-        validate({
-          operation: "domain",
-        })
-      )
-    ).resolves.toMatchObject({
-      success: false,
-    });
-
-    await expect(
-      Promise.resolve(
-        validate({
-          expression: "(x^2 - 9)/(x - 3)",
-          operation: "simplify",
-        })
-      )
-    ).resolves.toEqual({
-      success: true,
-      value: {
-        expression: "(x^2 - 9)/(x - 3)",
-        operation: "simplify",
-      },
-    });
-  });
-
-  it("requires both sides for algebra comparison", async () => {
-    const schema = asSchema(mathAlgebraInput);
-    const validate = schema.validate;
-
-    if (!validate) {
-      throw new Error("Math algebra schema must validate model tool input.");
-    }
-
-    await expect(
-      Promise.resolve(
+      )).toMatchObject({
+        success: false,
+      });
+    })
+  );
+  it.effect(
+    "rejects algebra operations that omit their required expression fields",
+    () =>
+      Effect.gen(function* () {
+        const schema = asSchema(mathAlgebraInput);
+        const validate = yield* requireValidator(schema.validate);
+        (yield* expectValidation(
+          validate({
+            operation: "simplify",
+          })
+        )).toMatchObject({
+          success: false,
+        });
+        (yield* expectValidation(
+          validate({
+            operation: "domain",
+          })
+        )).toMatchObject({
+          success: false,
+        });
+        (yield* expectValidation(
+          validate({
+            expression: "(x^2 - 9)/(x - 3)",
+            operation: "simplify",
+          })
+        )).toEqual({
+          success: true,
+          value: {
+            expression: "(x^2 - 9)/(x - 3)",
+            operation: "simplify",
+          },
+        });
+      })
+  );
+  it.effect("requires both sides for algebra comparison", () =>
+    Effect.gen(function* () {
+      const schema = asSchema(mathAlgebraInput);
+      const validate = yield* requireValidator(schema.validate);
+      (yield* expectValidation(
         validate({
           left: "(x^2 - 9)/(x - 3)",
           operation: "compare",
         })
-      )
-    ).resolves.toMatchObject({
-      success: false,
-    });
-
-    await expect(
-      Promise.resolve(
+      )).toMatchObject({
+        success: false,
+      });
+      (yield* expectValidation(
         validate({
           left: "(x^2 - 9)/(x - 3)",
           operation: "compare",
           right: "x + 3",
         })
-      )
-    ).resolves.toEqual({
-      success: true,
-      value: {
-        left: "(x^2 - 9)/(x - 3)",
-        operation: "compare",
-        right: "x + 3",
-      },
-    });
-  });
-
-  it("allows equation solve domains for restricted variables", async () => {
-    const schema = asSchema(mathEquationInput);
-    const validate = schema.validate;
-
-    if (!validate) {
-      throw new Error("Math equation schema must validate model tool input.");
-    }
-
-    await expect(
-      Promise.resolve(
+      )).toEqual({
+        success: true,
+        value: {
+          left: "(x^2 - 9)/(x - 3)",
+          operation: "compare",
+          right: "x + 3",
+        },
+      });
+    })
+  );
+  it.effect("allows equation solve domains for restricted variables", () =>
+    Effect.gen(function* () {
+      const schema = asSchema(mathEquationInput);
+      const validate = yield* requireValidator(schema.validate);
+      (yield* expectValidation(
         validate({
           expression: "x^x * (ln(x) + 1) = 0",
           lower: "0",
@@ -166,87 +154,71 @@ describe("math AI input schemas", () => {
           operation: "solve",
           variable: "x",
         })
-      )
-    ).resolves.toEqual({
-      success: true,
-      value: {
-        expression: "x^x * (ln(x) + 1) = 0",
-        lower: "0",
-        lowerInclusive: false,
-        operation: "solve",
-        variable: "x",
-      },
-    });
-  });
-
-  it("allows system solve domains with an explicit bounded variable", async () => {
-    const schema = asSchema(mathEquationInput);
-    const validate = schema.validate;
-
-    if (!validate) {
-      throw new Error("Math equation schema must validate model tool input.");
-    }
-
-    await expect(
-      Promise.resolve(
-        validate({
-          expressions: ["x^2 - 1 = 0", "y = 0"],
+      )).toEqual({
+        success: true,
+        value: {
+          expression: "x^x * (ln(x) + 1) = 0",
           lower: "0",
           lowerInclusive: false,
           operation: "solve",
           variable: "x",
-          variables: ["x", "y"],
-        })
-      )
-    ).resolves.toEqual({
-      success: true,
-      value: {
-        expressions: ["x^2 - 1 = 0", "y = 0"],
-        lower: "0",
-        lowerInclusive: false,
-        operation: "solve",
-        variable: "x",
-        variables: ["x", "y"],
-      },
-    });
-  });
-
-  it("rejects unsupported equation domain shapes", async () => {
-    const schema = asSchema(mathEquationInput);
-    const validate = schema.validate;
-
-    if (!validate) {
-      throw new Error("Math equation schema must validate model tool input.");
-    }
-
-    await expect(
-      Promise.resolve(
+        },
+      });
+    })
+  );
+  it.effect(
+    "allows system solve domains with an explicit bounded variable",
+    () =>
+      Effect.gen(function* () {
+        const schema = asSchema(mathEquationInput);
+        const validate = yield* requireValidator(schema.validate);
+        (yield* expectValidation(
+          validate({
+            expressions: ["x^2 - 1 = 0", "y = 0"],
+            lower: "0",
+            lowerInclusive: false,
+            operation: "solve",
+            variable: "x",
+            variables: ["x", "y"],
+          })
+        )).toEqual({
+          success: true,
+          value: {
+            expressions: ["x^2 - 1 = 0", "y = 0"],
+            lower: "0",
+            lowerInclusive: false,
+            operation: "solve",
+            variable: "x",
+            variables: ["x", "y"],
+          },
+        });
+      })
+  );
+  it.effect("rejects unsupported equation domain shapes", () =>
+    Effect.gen(function* () {
+      const schema = asSchema(mathEquationInput);
+      const validate = yield* requireValidator(schema.validate);
+      (yield* expectValidation(
         validate({
           expression: "x^2 - 1 = 0",
           lower: "0",
           operation: "roots",
           variable: "x",
         })
-      )
-    ).resolves.toMatchObject({
-      success: false,
-    });
-
-    await expect(
-      Promise.resolve(
+      )).toMatchObject({
+        success: false,
+      });
+      (yield* expectValidation(
         validate({
           expressions: ["x + y = 3", "y = 1"],
           lower: "0",
           operation: "solve",
           variable: "x",
         })
-      )
-    ).resolves.toMatchObject({
-      success: false,
-    });
-
-    await expect(
-      Promise.resolve(
+      )).toMatchObject({
+        success: false,
+      });
+      (yield* expectValidation(
         validate({
           expressions: ["x^2 - 1 = 0", "y = 0"],
           lower: "0",
@@ -254,106 +226,81 @@ describe("math AI input schemas", () => {
           variable: "z",
           variables: ["x", "y"],
         })
-      )
-    ).resolves.toMatchObject({
-      success: false,
-    });
-  });
-
-  it("requires values for discrete operations that use integer lists", async () => {
-    const schema = asSchema(mathDiscreteInput);
-    const validate = schema.validate;
-
-    if (!validate) {
-      throw new Error("Math discrete schema must validate model tool input.");
-    }
-
-    await expect(
-      Promise.resolve(
-        validate({
-          operation: "gcd",
-        })
-      )
-    ).resolves.toMatchObject({
-      success: false,
-    });
-
-    await expect(
-      Promise.resolve(
-        validate({
-          operation: "gcd",
-          values: ["84", "30"],
-        })
-      )
-    ).resolves.toEqual({
-      success: true,
-      value: {
-        operation: "gcd",
-        values: ["84", "30"],
-      },
-    });
-  });
-
-  it("requires the second matrix for matrix multiplication", async () => {
-    const schema = asSchema(mathMatrixInput);
-    const validate = schema.validate;
-
-    if (!validate) {
-      throw new Error("Math matrix schema must validate model tool input.");
-    }
-
-    await expect(
-      Promise.resolve(
+      )).toMatchObject({
+        success: false,
+      });
+    })
+  );
+  it.effect(
+    "requires values for discrete operations that use integer lists",
+    () =>
+      Effect.gen(function* () {
+        const schema = asSchema(mathDiscreteInput);
+        const validate = yield* requireValidator(schema.validate);
+        (yield* expectValidation(
+          validate({
+            operation: "gcd",
+          })
+        )).toMatchObject({
+          success: false,
+        });
+        (yield* expectValidation(
+          validate({
+            operation: "gcd",
+            values: ["84", "30"],
+          })
+        )).toEqual({
+          success: true,
+          value: {
+            operation: "gcd",
+            values: ["84", "30"],
+          },
+        });
+      })
+  );
+  it.effect("requires the second matrix for matrix multiplication", () =>
+    Effect.gen(function* () {
+      const schema = asSchema(mathMatrixInput);
+      const validate = yield* requireValidator(schema.validate);
+      (yield* expectValidation(
         validate({
           matrix: [["1"]],
           operation: "matrix_multiply",
         })
-      )
-    ).resolves.toMatchObject({
-      success: false,
-    });
-
-    await expect(
-      Promise.resolve(
+      )).toMatchObject({
+        success: false,
+      });
+      (yield* expectValidation(
         validate({
           matrix: [["1"]],
           operation: "matrix_multiply",
           right_matrix: [["2"]],
         })
-      )
-    ).resolves.toEqual({
-      success: true,
-      value: {
-        matrix: [["1"]],
-        operation: "matrix_multiply",
-        right_matrix: [["2"]],
-      },
-    });
-  });
-
-  it("requires a calculus variable for parameterized expressions", async () => {
-    const schema = asSchema(mathCalculusInput);
-    const validate = schema.validate;
-
-    if (!validate) {
-      throw new Error("Math calculus schema must validate model tool input.");
-    }
-
-    await expect(
-      Promise.resolve(
+      )).toEqual({
+        success: true,
+        value: {
+          matrix: [["1"]],
+          operation: "matrix_multiply",
+          right_matrix: [["2"]],
+        },
+      });
+    })
+  );
+  it.effect("requires a calculus variable for parameterized expressions", () =>
+    Effect.gen(function* () {
+      const schema = asSchema(mathCalculusInput);
+      const validate = yield* requireValidator(schema.validate);
+      (yield* expectValidation(
         validate({
           expression: "x^(a-1) * exp(-x)",
           lower: "0",
           operation: "integrate",
           upper: "oo",
         })
-      )
-    ).resolves.toMatchObject({
-      success: false,
-    });
-
-    await expect(
-      Promise.resolve(
+      )).toMatchObject({
+        success: false,
+      });
+      (yield* expectValidation(
         validate({
           expression: "x^(a-1) * exp(-x)",
           lower: "0",
@@ -361,67 +308,55 @@ describe("math AI input schemas", () => {
           upper: "oo",
           variable: "x",
         })
-      )
-    ).resolves.toEqual({
-      success: true,
-      value: {
-        expression: "x^(a-1) * exp(-x)",
-        lower: "0",
-        operation: "integrate",
-        upper: "oo",
-        variable: "x",
-      },
-    });
-
-    await expect(
-      Promise.resolve(
+      )).toEqual({
+        success: true,
+        value: {
+          expression: "x^(a-1) * exp(-x)",
+          lower: "0",
+          operation: "integrate",
+          upper: "oo",
+          variable: "x",
+        },
+      });
+      (yield* expectValidation(
         validate({
           expression: "x^2",
           operation: "differentiate",
         })
-      )
-    ).resolves.toEqual({
-      success: true,
-      value: {
-        expression: "x^2",
-        operation: "differentiate",
-      },
-    });
-
-    await expect(
-      Promise.resolve(
+      )).toEqual({
+        success: true,
+        value: {
+          expression: "x^2",
+          operation: "differentiate",
+        },
+      });
+      (yield* expectValidation(
         validate({
           expression: "x^x",
           operation: "differentiate",
           order: 2,
           variable: "x",
         })
-      )
-    ).resolves.toEqual({
-      success: true,
-      value: {
-        expression: "x^x",
-        operation: "differentiate",
-        order: 2,
-        variable: "x",
-      },
-    });
-
-    await expect(
-      Promise.resolve(
+      )).toEqual({
+        success: true,
+        value: {
+          expression: "x^x",
+          operation: "differentiate",
+          order: 2,
+          variable: "x",
+        },
+      });
+      (yield* expectValidation(
         validate({
           expression: "x^2",
           operation: "integrate",
           order: 2,
           variable: "x",
         })
-      )
-    ).resolves.toMatchObject({
-      success: false,
-    });
-
-    await expect(
-      Promise.resolve(
+      )).toMatchObject({
+        success: false,
+      });
+      (yield* expectValidation(
         validate({
           expression: "sin(x) / x",
           operation: "limit",
@@ -429,138 +364,111 @@ describe("math AI input schemas", () => {
           point: "0",
           variable: "x",
         })
-      )
-    ).resolves.toMatchObject({
-      success: false,
-    });
-  });
-
-  it("requires event bounds for named probability event operations", async () => {
-    const schema = asSchema(mathProbabilityInput);
-    const validate = schema.validate;
-
-    if (!validate) {
-      throw new Error(
-        "Math probability schema must validate model tool input."
-      );
-    }
-
-    await expect(
-      Promise.resolve(
-        validate({
-          distribution: "normal",
-          operation: "cumulative_probability",
-          parameters: {},
-          upper: "85",
-        })
-      )
-    ).resolves.toMatchObject({
-      success: false,
-    });
-
-    await expect(
-      Promise.resolve(
-        validate({
-          distribution: "normal",
-          operation: "cumulative_probability",
-          parameters: { mean: "70", standard_deviation: "10" },
-        })
-      )
-    ).resolves.toMatchObject({
-      success: false,
-    });
-
-    await expect(
-      Promise.resolve(
-        validate({
-          distribution: "normal",
-          operation: "cumulative_probability",
-          parameters: { mean: "70", standard_deviation: "10" },
-          upper: "85",
-        })
-      )
-    ).resolves.toEqual({
-      success: true,
-      value: {
-        distribution: "normal",
-        operation: "cumulative_probability",
-        parameters: { mean: "70", standard_deviation: "10" },
-        upper: "85",
-      },
-    });
-
-    await expect(
-      Promise.resolve(
-        validate({
-          distribution: "binomial",
-          operation: "point_probability",
-          parameters: { n: "10", p: "1/5" },
-          point: "3",
-        })
-      )
-    ).resolves.toEqual({
-      success: true,
-      value: {
-        distribution: "binomial",
-        operation: "point_probability",
-        parameters: { n: "10", p: "1/5" },
-        point: "3",
-      },
-    });
-
-    await expect(
-      Promise.resolve(
-        validate({
-          distribution: "normal",
-          lower: "60",
-          operation: "interval_probability",
-          parameters: { mean: "70", standard_deviation: "10" },
-          upper: "85",
-        })
-      )
-    ).resolves.toEqual({
-      success: true,
-      value: {
-        distribution: "normal",
-        lower: "60",
-        operation: "interval_probability",
-        parameters: { mean: "70", standard_deviation: "10" },
-        upper: "85",
-      },
-    });
-
-    await expect(
-      Promise.resolve(
-        validate({
-          distribution: "poisson",
-          inclusive: false,
-          lower: "2",
-          operation: "tail_probability",
-          parameters: { lambda: "3" },
-        })
-      )
-    ).resolves.toEqual({
-      success: true,
-      value: {
-        distribution: "poisson",
-        inclusive: false,
-        lower: "2",
-        operation: "tail_probability",
-        parameters: { lambda: "3" },
-      },
-    });
-  });
-
-  it("rejects malformed geometry points before tool execution", async () => {
-    const schema = asSchema(mathGeometryInput);
-    const validate = schema.validate;
-
-    if (!validate) {
-      throw new Error("Math geometry schema must validate model tool input.");
-    }
-
-    await expect(
-      Promise.resolve(
+      )).toMatchObject({
+        success: false,
+      });
+    })
+  );
+  it.effect(
+    "requires event bounds for named probability event operations",
+    () =>
+      Effect.gen(function* () {
+        const schema = asSchema(mathProbabilityInput);
+        const validate = yield* requireValidator(schema.validate);
+        (yield* expectValidation(
+          validate({
+            distribution: "normal",
+            operation: "cumulative_probability",
+            parameters: {},
+            upper: "85",
+          })
+        )).toMatchObject({
+          success: false,
+        });
+        (yield* expectValidation(
+          validate({
+            distribution: "normal",
+            operation: "cumulative_probability",
+            parameters: { mean: "70", standard_deviation: "10" },
+          })
+        )).toMatchObject({
+          success: false,
+        });
+        (yield* expectValidation(
+          validate({
+            distribution: "normal",
+            operation: "cumulative_probability",
+            parameters: { mean: "70", standard_deviation: "10" },
+            upper: "85",
+          })
+        )).toEqual({
+          success: true,
+          value: {
+            distribution: "normal",
+            operation: "cumulative_probability",
+            parameters: { mean: "70", standard_deviation: "10" },
+            upper: "85",
+          },
+        });
+        (yield* expectValidation(
+          validate({
+            distribution: "binomial",
+            operation: "point_probability",
+            parameters: { n: "10", p: "1/5" },
+            point: "3",
+          })
+        )).toEqual({
+          success: true,
+          value: {
+            distribution: "binomial",
+            operation: "point_probability",
+            parameters: { n: "10", p: "1/5" },
+            point: "3",
+          },
+        });
+        (yield* expectValidation(
+          validate({
+            distribution: "normal",
+            lower: "60",
+            operation: "interval_probability",
+            parameters: { mean: "70", standard_deviation: "10" },
+            upper: "85",
+          })
+        )).toEqual({
+          success: true,
+          value: {
+            distribution: "normal",
+            lower: "60",
+            operation: "interval_probability",
+            parameters: { mean: "70", standard_deviation: "10" },
+            upper: "85",
+          },
+        });
+        (yield* expectValidation(
+          validate({
+            distribution: "poisson",
+            inclusive: false,
+            lower: "2",
+            operation: "tail_probability",
+            parameters: { lambda: "3" },
+          })
+        )).toEqual({
+          success: true,
+          value: {
+            distribution: "poisson",
+            inclusive: false,
+            lower: "2",
+            operation: "tail_probability",
+            parameters: { lambda: "3" },
+          },
+        });
+      })
+  );
+  it.effect("rejects malformed geometry points before tool execution", () =>
+    Effect.gen(function* () {
+      const schema = asSchema(mathGeometryInput);
+      const validate = yield* requireValidator(schema.validate);
+      (yield* expectValidation(
         validate({
           operation: "midpoint",
           points: [
@@ -568,13 +476,10 @@ describe("math AI input schemas", () => {
             { x: "4,y:", y: "6" },
           ],
         })
-      )
-    ).resolves.toMatchObject({
-      success: false,
-    });
-
-    await expect(
-      Promise.resolve(
+      )).toMatchObject({
+        success: false,
+      });
+      (yield* expectValidation(
         validate({
           operation: "midpoint",
           points: [
@@ -582,29 +487,25 @@ describe("math AI input schemas", () => {
             { x: "4", y: "6" },
           ],
         })
-      )
-    ).resolves.toEqual({
-      success: true,
-      value: {
-        operation: "midpoint",
-        points: [
-          { x: "1", y: "2" },
-          { x: "4", y: "6" },
-        ],
-      },
-    });
-  });
-
-  it("keeps geometry model metadata clear for two-point and four-point operations", async () => {
+      )).toEqual({
+        success: true,
+        value: {
+          operation: "midpoint",
+          points: [
+            { x: "1", y: "2" },
+            { x: "4", y: "6" },
+          ],
+        },
+      });
+    })
+  );
+  it("keeps geometry model metadata clear for two-point and four-point operations", () => {
     const schema = asSchema(mathGeometryInput);
-    const jsonSchema = await Promise.resolve(schema.jsonSchema);
-
+    const jsonSchema = readSynchronous(schema.jsonSchema, "Math JSON Schema");
     if (!("properties" in jsonSchema && jsonSchema.properties)) {
-      throw new Error("Math geometry schema must expose object properties.");
+      expect.fail("Math geometry schema must expose object properties.");
     }
-
     const { properties } = jsonSchema;
-
     expect(jsonSchema).toMatchObject({
       properties: {
         operation: {
@@ -632,29 +533,43 @@ describe("math AI input schemas", () => {
       },
     });
   });
-
-  it("exposes grouped tool schemas as provider-compatible objects", async () => {
+  it("exposes grouped tool schemas as provider-compatible objects", () => {
     const jsonSchemas = [
-      await Promise.resolve(asSchema(mathAlgebraInput).jsonSchema),
-      await Promise.resolve(asSchema(mathEquationInput).jsonSchema),
-      await Promise.resolve(asSchema(mathGeometryInput).jsonSchema),
-      await Promise.resolve(asSchema(mathDiscreteInput).jsonSchema),
-      await Promise.resolve(asSchema(mathMatrixInput).jsonSchema),
-      await Promise.resolve(asSchema(mathSeriesInput).jsonSchema),
-      await Promise.resolve(asSchema(mathStatisticsInput).jsonSchema),
-      await Promise.resolve(asSchema(mathProbabilityInput).jsonSchema),
+      readSynchronous(
+        asSchema(mathAlgebraInput).jsonSchema,
+        "Math JSON Schema"
+      ),
+      readSynchronous(
+        asSchema(mathEquationInput).jsonSchema,
+        "Math JSON Schema"
+      ),
+      readSynchronous(
+        asSchema(mathGeometryInput).jsonSchema,
+        "Math JSON Schema"
+      ),
+      readSynchronous(
+        asSchema(mathDiscreteInput).jsonSchema,
+        "Math JSON Schema"
+      ),
+      readSynchronous(asSchema(mathMatrixInput).jsonSchema, "Math JSON Schema"),
+      readSynchronous(asSchema(mathSeriesInput).jsonSchema, "Math JSON Schema"),
+      readSynchronous(
+        asSchema(mathStatisticsInput).jsonSchema,
+        "Math JSON Schema"
+      ),
+      readSynchronous(
+        asSchema(mathProbabilityInput).jsonSchema,
+        "Math JSON Schema"
+      ),
     ];
-
     for (const jsonSchema of jsonSchemas) {
       expect(jsonSchema).not.toHaveProperty("anyOf");
       expect(jsonSchema).toMatchObject({ type: "object" });
     }
   });
-
-  it("keeps probability event fields visible behind one model-facing tool", async () => {
+  it("keeps probability event fields visible behind one model-facing tool", () => {
     const schema = asSchema(mathProbabilityInput);
-    const jsonSchema = await Promise.resolve(schema.jsonSchema);
-
+    const jsonSchema = readSynchronous(schema.jsonSchema, "Math JSON Schema");
     expect(jsonSchema).toMatchObject({
       properties: {
         distribution: {
@@ -699,11 +614,9 @@ describe("math AI input schemas", () => {
       },
     });
   });
-
-  it("keeps model-facing field metadata for grouped algebra tools", async () => {
+  it("keeps model-facing field metadata for grouped algebra tools", () => {
     const schema = asSchema(mathAlgebraInput);
-    const jsonSchema = await Promise.resolve(schema.jsonSchema);
-
+    const jsonSchema = readSynchronous(schema.jsonSchema, "Math JSON Schema");
     expect(jsonSchema).toMatchObject({
       properties: {
         expression: {
