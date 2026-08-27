@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import packageJson from "@/package.json";
-import { config } from "@/vercel";
+import { config, hasIsolatedTypecheck } from "@/vercel";
 
 describe("www Vercel configuration", () => {
   it("builds only affected production commits", () => {
@@ -43,5 +43,10 @@ describe("www Vercel configuration", () => {
     expect(deploymentCommand.indexOf(webBuild)).toBeGreaterThan(
       deploymentCommand.indexOf(convexDeploy)
     );
+  });
+
+  it("skips only the duplicate Vercel typecheck", () => {
+    expect(hasIsolatedTypecheck("1")).toBe(true);
+    expect(hasIsolatedTypecheck(undefined)).toBe(false);
   });
 });

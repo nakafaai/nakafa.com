@@ -19,6 +19,7 @@ import createNextIntlPlugin from "next-intl/plugin";
 import { AGENT_DISCOVERY_HEADERS } from "@/lib/agent-discovery";
 import { hasPreviewRendererEnvironment } from "@/lib/content/preview/environment";
 import { createOgRouteAliasRewrites } from "@/lib/og/route";
+import { hasIsolatedTypecheck } from "@/vercel";
 
 const configEnv = createEnv({
   extends: [analyzeKeys(), convexKeys()],
@@ -180,7 +181,7 @@ const nextConfig = {
   // Local and CI builds keep Next's built-in typecheck as an independent gate.
   // https://nextjs.org/docs/app/guides/memory-usage#disable-static-analysis
   typescript: {
-    ignoreBuildErrors: configEnv.VERCEL === "1",
+    ignoreBuildErrors: hasIsolatedTypecheck(configEnv.VERCEL),
   },
   // Cache Components enables prerender source maps by default. The anonymous
   // CI build does not publish those artifacts, and retaining them exhausted
