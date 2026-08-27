@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { compactSnapshots } from "@repo/backend/convex/contentRelease/snapshot/cleanup";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -207,6 +208,89 @@ describe("tryouts/migration/abort", () => {
       expect(retained.runtime).toHaveLength(1);
       expect(retained.snapshots).toHaveLength(1);
     })
+  );
+
+  it.effect(
+    "keeps transferred target ownership when external evidence disappears",
+    () =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        const batchId = yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            await seedOwnedAbort(ctx);
+            return ctx.db.insert("snapshotBatches", {
+              batchHash: `sha256:${"d".repeat(64)}`,
+              batchIndex: 0,
+              createdAt: 1,
+              family: "tryout",
+              firstIndex: 0,
+              releaseId: "external-snapshot-owner",
+              rowCount: 2,
+              sequence: 1,
+              snapshotId: ABORT_TARGET_SNAPSHOT,
+            });
+          })
+        );
+
+        const first = yield* Effect.promise(() =>
+          t.mutation((ctx) => abort(ctx))
+        );
+        expect(first.done).toBe(false);
+        yield* Effect.promise(() =>
+          t.mutation((ctx) => ctx.db.delete("snapshotBatches", batchId))
+        );
+
+        let result = yield* Effect.promise(() =>
+          t.mutation((ctx) => abort(ctx))
+        );
+        while (!result.done) {
+          result = yield* Effect.promise(() => t.mutation((ctx) => abort(ctx)));
+        }
+        const retained = yield* Effect.promise(() =>
+          t.run(async (ctx) => ({
+            catalog: await ctx.db.query("tryoutCatalog").collect(),
+            placements: await ctx.db.query("tryoutPlacements").collect(),
+            runtime: await ctx.db.query("tryoutRuntimeBundles").collect(),
+            snapshots: await ctx.db.query("contentSnapshots").collect(),
+          }))
+        );
+        expect(retained.catalog).toHaveLength(1);
+        expect(retained.placements).toHaveLength(1);
+        expect(retained.runtime).toHaveLength(1);
+        expect(retained.snapshots).toHaveLength(1);
+
+        yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            const snapshot = await ctx.db.query("contentSnapshots").unique();
+            if (snapshot) {
+              await ctx.db.patch("contentSnapshots", snapshot._id, {
+                retainUntil: 0,
+              });
+            }
+          })
+        );
+        let compacted = false;
+        while (!compacted) {
+          const page = yield* Effect.promise(() =>
+            t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
+          );
+          compacted = page.done;
+        }
+        const cleaned = yield* Effect.promise(() =>
+          t.run(async (ctx) => ({
+            catalog: await ctx.db.query("tryoutCatalog").collect(),
+            placements: await ctx.db.query("tryoutPlacements").collect(),
+            runtime: await ctx.db.query("tryoutRuntimeBundles").collect(),
+            snapshots: await ctx.db.query("contentSnapshots").collect(),
+          }))
+        );
+        expect(cleaned).toEqual({
+          catalog: [],
+          placements: [],
+          runtime: [],
+          snapshots: [],
+        });
+      })
   );
 
   it.effect(

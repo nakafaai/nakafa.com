@@ -82,31 +82,6 @@ const cleanupMaps = Effect.fn("tryouts.migration.cleanupMaps")(function* (
 /** Deletes one bounded temporary ledger page after source cleanup. */
 export const cleanupLedger = Effect.fn("tryouts.migration.cleanupLedger")(
   function* (ctx: MutationCtx, migrationId: string) {
-    const audits = yield* Effect.promise(() =>
-      ctx.db
-        .query("tryoutHistoryAttemptMigrationAudits")
-        .withIndex("by_migrationId_and_tryoutAttemptId", (query) =>
-          query.eq("migrationId", migrationId)
-        )
-        .take(MAP_PAGE_COUNT)
-    );
-    if (audits.some(({ phase }) => phase !== "completed")) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        "Try-out history migration retained an unfinished attempt audit."
-      );
-    }
-    if (audits.length > 0) {
-      yield* Effect.forEach(audits, (audit) =>
-        Effect.promise(() =>
-          ctx.db.delete("tryoutHistoryAttemptMigrationAudits", audit._id)
-        )
-      );
-      return {
-        deleted: audits.length,
-        kind: "audit",
-      } satisfies CleanupPage;
-    }
     const artifacts = yield* cleanupArtifacts(ctx, migrationId);
     if (artifacts !== null) {
       return artifacts;
@@ -142,8 +117,33 @@ export const cleanupLedger = Effect.fn("tryouts.migration.cleanupLedger")(
         ctx.db.delete("tryoutHistoryScaleMigrations", scale._id)
       )
     );
-    return scales.length === 0
+    if (scales.length > 0) {
+      return {
+        deleted: scales.length,
+        kind: "scaleMap",
+      } satisfies CleanupPage;
+    }
+    const audits = yield* Effect.promise(() =>
+      ctx.db
+        .query("tryoutHistoryAttemptMigrationAudits")
+        .withIndex("by_migrationId_and_tryoutAttemptId", (query) =>
+          query.eq("migrationId", migrationId)
+        )
+        .take(MAP_PAGE_COUNT)
+    );
+    if (audits.some(({ phase }) => phase !== "completed")) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        "Try-out history migration retained an unfinished attempt audit."
+      );
+    }
+    yield* Effect.forEach(audits, (audit) =>
+      Effect.promise(() =>
+        ctx.db.delete("tryoutHistoryAttemptMigrationAudits", audit._id)
+      )
+    );
+    return audits.length === 0
       ? null
-      : ({ deleted: scales.length, kind: "scaleMap" } satisfies CleanupPage);
+      : ({ deleted: audits.length, kind: "audit" } satisfies CleanupPage);
   }
 );

@@ -3,7 +3,10 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { isArtifactReferenced } from "@repo/backend/convex/contentRelease/retention";
 import type { AbortingMigration } from "@repo/backend/convex/tryouts/migration/abort/state";
-import { hasAbortSnapshotReference } from "@repo/backend/convex/tryouts/migration/abort/target";
+import {
+  hasAbortSnapshotReference,
+  transferAbortTarget,
+} from "@repo/backend/convex/tryouts/migration/abort/target";
 import { Effect } from "effect";
 
 const MAP_PAGE_LIMIT = 8;
@@ -106,7 +109,11 @@ const deleteMappedRow = Effect.fn("tryouts.migration.deleteAbortMappedRow")(
       migration.target.snapshotId,
       mapping
     );
-    if (!mapping.targetCreated || snapshotReferenced) {
+    if (
+      !mapping.targetCreated ||
+      snapshotReferenced ||
+      !migration.target.snapshotCreated
+    ) {
       return 0;
     }
     if (target.table === "tryoutCatalog") {
@@ -168,6 +175,9 @@ export const deleteAbortMapPage = Effect.fn(
   )
     ? yield* hasAbortSnapshotReference(ctx, migration)
     : false;
+  if (snapshotReferenced) {
+    yield* transferAbortTarget(ctx, migration);
+  }
   const maps = { artifact: 0, catalog: 0, placement: 0 };
   let deleted = 0;
   for (const mapping of mappings) {

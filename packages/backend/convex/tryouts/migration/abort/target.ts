@@ -3,7 +3,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { isSnapshotReferenced } from "@repo/backend/convex/contentRelease/snapshot/retention";
 import type { AbortingMigration } from "@repo/backend/convex/tryouts/migration/abort/state";
-import { Effect } from "effect";
+import { Clock, Effect } from "effect";
 
 /** Detects another durable or in-progress owner of the target snapshot. */
 export const hasAbortSnapshotReference = Effect.fn(
@@ -27,6 +27,33 @@ export const hasAbortSnapshotReference = Effect.fn(
     ),
   ]);
   return referenced || batch !== null;
+});
+
+/** Transfers migration-created target bytes to another verified snapshot owner. */
+export const transferAbortTarget = Effect.fn(
+  "tryouts.migration.transferAbortTarget"
+)(function* (ctx: MutationCtx, migration: AbortingMigration) {
+  if (migration.target.kind !== "staged") {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      "A pending try-out history target cannot transfer staged ownership."
+    );
+  }
+  const target = migration.target;
+  if (!(target.bundleCreated || target.snapshotCreated)) {
+    return;
+  }
+  const now = yield* Clock.currentTimeMillis;
+  yield* Effect.promise(() =>
+    ctx.db.patch("tryoutHistoryMigrations", migration._id, {
+      target: {
+        ...target,
+        bundleCreated: false,
+        snapshotCreated: false,
+      },
+      updatedAt: now,
+    })
+  );
 });
 
 /** Proves whether another consumer retains one staged runtime bundle. */

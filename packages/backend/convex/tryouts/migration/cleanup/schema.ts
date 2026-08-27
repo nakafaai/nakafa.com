@@ -10,11 +10,11 @@ export const cleanupKinds = [
   "legacy",
   "runtime",
   "snapshot",
-  "audit",
   "artifact",
   "catalogMap",
   "placementMap",
   "scaleMap",
+  "audit",
   "observer",
 ] as const;
 

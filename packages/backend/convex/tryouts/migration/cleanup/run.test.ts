@@ -258,7 +258,7 @@ describe("tryouts/migration/cleanup/run", () => {
               : null;
           })
         );
-        if (kind === "audit") {
+        if (kind === "artifact") {
           break;
         }
         yield* runCleanup(t);

@@ -7,6 +7,7 @@ import {
   UserCleanupError,
 } from "@repo/backend/convex/auth/cleanup/spec";
 import { deleteTryoutAttemptHistory } from "@repo/backend/convex/tryouts/history/reference";
+import { cleanupTryoutHistoryScale } from "@repo/backend/convex/tryouts/history/scale";
 import { hasAttemptErasureHold } from "@repo/backend/convex/tryouts/migration/erasure";
 import { Effect } from "effect";
 
@@ -90,6 +91,14 @@ const cleanupAttemptRuntime = Effect.fn("auth.cleanup.cleanupAttemptRuntime")(
 
     if (score) {
       yield* tryUserCleanup(() => ctx.db.delete("tryoutScores", score._id));
+      return true;
+    }
+
+    if (
+      yield* cleanupTryoutHistoryScale(ctx, attempt).pipe(
+        Effect.mapError(toUserCleanupError)
+      )
+    ) {
       return true;
     }
 
