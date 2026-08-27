@@ -1,8 +1,8 @@
 import { fileURLToPath } from "node:url";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import { describe, expect, it } from "@effect/vitest";
 import { NAKAFA_MCP_REGISTRY_MANIFEST } from "@repo/backend/agent/mcp/manifest";
 import { NAKAFA_MCP_SERVER_VERSION } from "@repo/contents/_lib/agent/constants";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, FileSystem } from "effect";
 
 const repositoryManifestUrl = new URL(

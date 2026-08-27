@@ -1,6 +1,6 @@
 import { toMcpObjectSchema } from "@repo/backend/agent/mcp/schema";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Schema } from "effect";
+import { describe, expect, it } from "vitest";
 
 describe("MCP object schemas", () => {
   it("keeps input and output schemas object-rooted", () => {
