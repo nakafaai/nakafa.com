@@ -163,7 +163,15 @@ describe("proxy middleware", () => {
         )
       ).toBe(true);
       expect(
-        ["/", "/health", "/robots.txt", "/v2", "/v2/quran/1"].some(matches)
+        [
+          "/",
+          "/health",
+          "/quran",
+          "/quran/1",
+          "/robots.txt",
+          "/v2",
+          "/v2/quran/1",
+        ].some(matches)
       ).toBe(false);
     });
 
