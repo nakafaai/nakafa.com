@@ -1,18 +1,15 @@
-import { describe, expect, it } from "@repo/testing/effect";
-import { Effect, Schema } from "effect";
+import { describe, expect, it } from "@effect/vitest";
+import { Effect, Option, Schema } from "effect";
 import { vi } from "vitest";
 import { getNakafaContentToolResult } from "@/lib/mcp/tools/content";
 
-vi.mock("@/lib/mcp/nakafa", async () => {
-  const { Effect, Option } = await import("effect");
+const nakafaContentMock = vi.hoisted(() => ({
+  read: vi.fn(),
+}));
 
-  return {
-    nakafaContent: {
-      /** Returns no content so the tool can shape its not-found response. */
-      read: () => Effect.succeed(Option.none()),
-    },
-  };
-});
+vi.mock("@/lib/mcp/nakafa", () => ({ nakafaContent: nakafaContentMock }));
+
+nakafaContentMock.read.mockImplementation(() => Effect.succeed(Option.none()));
 
 const ToolErrorResultSchema = Schema.Struct({
   isError: Schema.Literal(true),
@@ -25,7 +22,7 @@ const ToolErrorResultSchema = Schema.Struct({
 });
 
 describe("nakafa_get_content", () => {
-  it.live("returns structured not-found errors", () =>
+  it.effect("returns structured not-found errors", () =>
     Effect.gen(function* () {
       const result = yield* getNakafaContentToolResult({
         content_ref: "https://nakafa.com/en/articles/politics/missing",
