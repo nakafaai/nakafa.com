@@ -116,7 +116,9 @@ describe("NakafaAgentQuranReferenceSchema", () => {
     );
 
     expect(decoded.meaning).toEqual({ locale: "en", text: "The Opening" });
-    expect(decoded.tafsir_access.source.id).toBe("mokhtasar-english");
+    expect(decoded.tafsir_access).toMatchObject({
+      source: { id: "mokhtasar-english" },
+    });
     expect(decoded.verses[0]?.translation.segments[1]).toEqual({
       kind: "note",
       number: 4,
@@ -140,6 +142,18 @@ describe("NakafaAgentQuranReferenceSchema", () => {
 
     expect(Schema.is(NakafaAgentQuranReferenceSchema)(indonesian)).toBe(true);
     expect(Schema.is(NakafaAgentQuranReferenceSchema)(german)).toBe(true);
+  });
+
+  it("accepts legacy missing access only for external Tafsir locales", () => {
+    expect(
+      Schema.is(NakafaAgentQuranReferenceSchema)(reference("en", null))
+    ).toBe(true);
+    expect(
+      Schema.is(NakafaAgentQuranReferenceSchema)(reference("de", null))
+    ).toBe(true);
+    expect(
+      Schema.is(NakafaAgentQuranReferenceSchema)(reference("id", null))
+    ).toBe(false);
   });
 
   it("rejects source access from another otherwise valid locale", () => {

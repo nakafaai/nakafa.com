@@ -88,6 +88,14 @@ export function formatQuran(result: NakafaAgentQuranReference) {
     ## Bismillah
     - Arabic: ${result.pre_bismillah.arabic}
     - Translation: ${result.pre_bismillah.translation}`;
+  const tafsirAccess =
+    result.tafsir_access === null
+      ? `## Tafsir access
+    - Availability: No Tafsir access metadata is available in the current signed publication.`
+      : `## Tafsir access
+    - Kind: ${result.tafsir_access.kind}
+    - Notice: ${result.tafsir_access.notice}
+    - Source: ${formatQuranSource(result.tafsir_access.source)}`;
   return dedent(`
     # Nakafa Quran Reference
     - Name: ${result.name}
@@ -99,10 +107,7 @@ export function formatQuran(result: NakafaAgentQuranReference) {
     - Arabic: ${formatQuranSource(result.sources.arabic)}
     - Translation (${result.sources.translation.locale}): ${formatQuranSource(result.sources.translation)}
 
-    ## Tafsir access
-    - Kind: ${result.tafsir_access.kind}
-    - Notice: ${result.tafsir_access.notice}
-    - Source: ${formatQuranSource(result.tafsir_access.source)}
+    ${tafsirAccess}
 
     ${preBismillah}
 

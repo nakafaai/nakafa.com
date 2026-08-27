@@ -87,6 +87,22 @@ describe("Quran Nakafa reader", () => {
       ).toBeUndefined();
     })
   );
+  it.live("preserves a legacy missing external Tafsir access record", () =>
+    Effect.gen(function* () {
+      runtimeMocks.runtimeQuery.mockImplementationOnce(
+        readLegacyEnglishRuntimeFixture
+      );
+
+      const reference = yield* readNakafaQuranReference(convexUrl, {
+        from_verse: 1,
+        include_tafsir: true,
+        locale: "en",
+        surah: 1,
+      });
+
+      expect(Option.getOrUndefined(reference)?.tafsir_access).toBeNull();
+    })
+  );
   it.live("reads semantic notes and exact locale source access", () =>
     Effect.gen(function* () {
       const reference = yield* readNakafaQuranReference(convexUrl, {
@@ -198,6 +214,21 @@ function readRuntimeFixture(
   }
   return Promise.reject(new Error("Unhandled Quran query fixture."));
 }
+
+/** Returns one accepted legacy English passage without Tafsir metadata. */
+function readLegacyEnglishRuntimeFixture(
+  _convexUrl: string,
+  query: FunctionReference<"query">,
+  args: Record<string, unknown>
+) {
+  if (
+    getFunctionName(query) === getFunctionName(api.contentRelease.quran.passage)
+  ) {
+    return Promise.resolve({ ...referenceResult(args), tafsirAccess: null });
+  }
+  return Promise.reject(new Error("Unhandled legacy Quran query fixture."));
+}
+
 /** Builds one signed reference response around a bounded chunk. */
 function referenceResult(args: Record<string, unknown>) {
   const appLocale = readFixtureLocale(args.appLocale);

@@ -65,7 +65,6 @@ export const projectNakafaQuranReference = Effect.fn(
   const { sources, tafsirAccess } = input.reference;
   if (
     sources === null ||
-    tafsirAccess === null ||
     !hasExpectedQuranSources(sources, tafsirAccess, input.appLocale)
   ) {
     return yield* new NakafaAgentDataReadError({
@@ -97,7 +96,8 @@ export const projectNakafaQuranReference = Effect.fn(
           locale: input.appLocale,
         },
       },
-      tafsir_access: projectTafsirAccess(tafsirAccess),
+      tafsir_access:
+        tafsirAccess === null ? null : projectTafsirAccess(tafsirAccess),
       verses,
     },
     "Unable to build Nakafa Quran reference."

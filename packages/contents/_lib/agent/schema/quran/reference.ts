@@ -83,7 +83,10 @@ const NakafaQuranEnglishReferenceSchema = Schema.Struct({
   locale: Schema.Literal(ENGLISH_APP_LOCALE_CODE),
   meaning: NakafaQuranMeaningSchema,
   sources: NakafaQuranEnglishReadingSourcesSchema,
-  tafsir_access: NakafaQuranEnglishTafsirAccessSchema,
+  tafsir_access: Schema.NullOr(NakafaQuranEnglishTafsirAccessSchema).annotate({
+    description:
+      "Signed English Tafsir access, or null for a legacy signed publication without access metadata.",
+  }),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 
 const NakafaQuranIndonesianReferenceSchema = Schema.Struct({
@@ -99,7 +102,10 @@ const NakafaQuranGermanReferenceSchema = Schema.Struct({
   locale: Schema.Literal(GERMAN_APP_LOCALE_CODE),
   meaning: Schema.Null,
   sources: NakafaQuranGermanReadingSourcesSchema,
-  tafsir_access: NakafaQuranGermanTafsirAccessSchema,
+  tafsir_access: Schema.NullOr(NakafaQuranGermanTafsirAccessSchema).annotate({
+    description:
+      "Signed German Tafsir access, or null for a legacy signed publication without access metadata.",
+  }),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 
 /** Quran output with locale-correlated meaning and signed source access. */

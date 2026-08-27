@@ -7,6 +7,8 @@ import {
 } from "@repo/ai/agents/nakafa/format";
 import { makeQuranFixture } from "@repo/ai/agents/nakafa/tools/fixture";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
+import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 const defaultLocale = ACTIVE_APP_LOCALE_CODES[0];
@@ -114,6 +116,21 @@ describe("Nakafa formatter", () => {
     expect(text).toContain("Dengan nama Allah[translation note 4]");
     expect(text).not.toContain("Dengan nama Allah[4]");
     expect(formatQuran(reference)).not.toContain("## Bismillah");
+
+    const legacyEnglishReference = Schema.decodeUnknownSync(
+      NakafaAgentQuranReferenceSchema
+    )({
+      ...makeQuranFixture({
+        from_verse: 1,
+        include_tafsir: true,
+        locale: "en",
+        surah: 1,
+      }),
+      tafsir_access: null,
+    });
+    expect(formatQuran(legacyEnglishReference)).toContain(
+      "No Tafsir access metadata is available in the current signed publication."
+    );
   });
 
   it("formats taxonomy", () => {
