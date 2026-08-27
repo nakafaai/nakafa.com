@@ -1,7 +1,10 @@
 // @vitest-environment node
+
+import type { QuranTranslationDocument } from "@nakafa/aksara-contracts/quran/notes";
+import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect, Option } from "effect";
-import type { Locale } from "next-intl";
+import { createTranslator, type Locale } from "next-intl";
 import { vi } from "vitest";
 import { BASE_URL } from "@/lib/llms/constants";
 import {
@@ -15,6 +18,13 @@ const publicationMocks = vi.hoisted(() => ({
   readPublishedQuranCatalog: vi.fn(),
   readPublishedQuranMarkdown: vi.fn(),
 }));
+/** Builds the real locale translator used by the server mock. */
+const createHolyTranslator = Effect.fn("test.createHolyTranslator")(function* (
+  locale: Locale
+) {
+  const messages = yield* Effect.promise(() => loadLocaleMessages(locale));
+  return createTranslator({ locale, messages, namespace: "Holy" });
+});
 
 vi.mock("@/lib/content/quran/publication", () => publicationMocks);
 
@@ -25,8 +35,8 @@ beforeEach(() => {
     Effect.succeed({ surahs: [surahMetadata(1), surahMetadata(2)] })
   );
   publicationMocks.readPublishedQuranMarkdown.mockImplementation(
-    (_locale: Locale, surahNumber: number, verseLimit?: number) =>
-      Effect.succeed(surahMarkdown(surahNumber, verseLimit))
+    (locale: Locale, surahNumber: number, verseLimit?: number) =>
+      Effect.succeed(surahMarkdown(locale, surahNumber, verseLimit))
   );
 });
 
@@ -86,22 +96,35 @@ describe("quran llms text", () => {
         cleanSlug: "quran",
         locale: "en",
       });
+      const indonesianIndexText = yield* getQuranLlmsText({
+        cleanSlug: "quran",
+        locale: "id",
+      });
       const firstSurahText = yield* getQuranLlmsText({
         cleanSlug: "quran/1",
         locale: "en",
       });
 
-      expect(indexText?.startsWith("# Al-Quran")).toBe(true);
+      expect(indexText?.startsWith("# Quran")).toBe(true);
       expect(indexText).toContain("## 1. Al-Fatihah");
+      expect(indonesianIndexText).not.toContain("**Makna nama:**");
       expect(firstSurahText?.startsWith("# Al-Fatihah")).toBe(true);
       expect(firstSurahText).toContain("### Verses");
+      expect(firstSurahText).toContain("Technical English Tafsir notice.");
+      expect(firstSurahText).toContain(
+        "[Technical English Tafsir link.](https://example.test/tafsir/en)"
+      );
       expect(firstSurahText).toContain("#### Verse 1");
-      expect(firstSurahText).toContain("**Translation:** Translation 1.");
-      expect(firstSurahText).toContain("**Translation notes:** Source note.");
+      expect(firstSurahText).toContain(
+        "**Translation:** Translation 1[Translation notes 1]."
+      );
+      expect(firstSurahText).toContain(
+        "**Translation notes:**\n- **1.** Source note."
+      );
       expect(firstSurahText).not.toContain("Transliteration");
       expect(firstSurahText).not.toContain("Pre-Bismillah");
       expect(publicationMocks.readPublishedQuranCatalog).toHaveBeenCalledTimes(
-        1
+        2
       );
       expect(publicationMocks.readPublishedQuranMarkdown).toHaveBeenCalledWith(
         "en",
@@ -111,19 +134,70 @@ describe("quran llms text", () => {
     })
   );
 
+  it.effect("uses the visible page copy for every supported locale", () =>
+    Effect.gen(function* () {
+      for (const locale of ["en", "id", "de"] as const) {
+        const t = yield* createHolyTranslator(locale);
+        const text = yield* getQuranLlmsText({
+          cleanSlug: "quran/1",
+          locale,
+        });
+        const tafsirAccess = tafsirAccessFor(locale);
+
+        expect(text).toContain(tafsirAccess.notice);
+        expect(text).toContain(
+          `[${tafsirAccess.source.label}](${tafsirAccess.source.updateUrl})`
+        );
+        expect(text).toContain(
+          `**${t("translation-notes")}:**\n- **1.** Source note.`
+        );
+        expect(text).toContain(`### ${t("verses")}`);
+        expect(text).toContain(`#### ${t("verse")} 1`);
+        expect(text).toContain(`**${t("translation")}:**`);
+        expect(text).toContain(
+          `**${t("revelation")}:** ${t("revelation-place", {
+            place: "Meccan",
+          })}`
+        );
+        expect(text).toContain(`**${t("number-of-verses")}:**`);
+      }
+    })
+  );
+
+  it.effect("keeps verses available while Tafsir access is switching", () =>
+    Effect.gen(function* () {
+      publicationMocks.readPublishedQuranMarkdown.mockReturnValueOnce(
+        Effect.succeed({ ...surahMarkdown("en", 1), tafsirAccess: null })
+      );
+
+      const text = yield* getQuranLlmsText({
+        cleanSlug: "quran/1",
+        locale: "en",
+      });
+
+      expect(text).toContain("#### Verse 1");
+      expect(text).not.toContain("Technical English Tafsir link.");
+    })
+  );
+
   it.effect("bounds long signed surah markdown to eighty verses", () =>
     Effect.gen(function* () {
+      const t = yield* createHolyTranslator("id");
       const secondSurahText = yield* getQuranLlmsText({
         cleanSlug: "quran/2",
         locale: "id",
       });
 
       expect(secondSurahText).toContain("## Al-Baqarah");
-      expect(secondSurahText).toContain("**Revelation:** Meccan");
-      expect(secondSurahText).toContain("#### Verse 80");
-      expect(secondSurahText).not.toContain("#### Verse 81");
       expect(secondSurahText).toContain(
-        "page-level markdown is bounded to verses 1-80"
+        `**${t("revelation")}:** ${t("revelation-place", {
+          place: "Meccan",
+        })}`
+      );
+      expect(secondSurahText).toContain(`#### ${t("verse")} 80`);
+      expect(secondSurahText).not.toContain(`#### ${t("verse")} 81`);
+      expect(secondSurahText).toContain(
+        t("markdown-limit", { numberOfVerses: 82, toVerse: 80 })
       );
     })
   );
@@ -136,10 +210,10 @@ describe("quran llms text", () => {
           pageCount: 1,
           routeCount: 2,
         });
-        expect(yield* readQuranLlmsPageEntries("id", 0)).toEqual([
+        expect(yield* readQuranLlmsPageEntries("en", 0)).toEqual([
           {
             description: "The Opening",
-            href: `${BASE_URL}/id/quran/1.md`,
+            href: `${BASE_URL}/en/quran/1.md`,
             route: "/quran/1",
             section: "quran",
             segments: ["quran", "1"],
@@ -147,6 +221,24 @@ describe("quran llms text", () => {
           },
           {
             description: "The Cow",
+            href: `${BASE_URL}/en/quran/2.md`,
+            route: "/quran/2",
+            section: "quran",
+            segments: ["quran", "2"],
+            title: "Al-Baqarah",
+          },
+        ]);
+        expect(yield* readQuranLlmsPageEntries("id", 0)).toEqual([
+          {
+            description: "Baca Al-Quran dengan terjemahan dan tafsir per ayat.",
+            href: `${BASE_URL}/id/quran/1.md`,
+            route: "/quran/1",
+            section: "quran",
+            segments: ["quran", "1"],
+            title: "Al-Fatihah",
+          },
+          {
+            description: "Baca Al-Quran dengan terjemahan dan tafsir per ayat.",
             href: `${BASE_URL}/id/quran/2.md`,
             route: "/quran/2",
             section: "quran",
@@ -183,7 +275,10 @@ function surahMetadata(number: number) {
     kind: "quran-surah",
     name: {
       arabic: number === 1 ? "الفاتحة" : "البقرة",
-      translation: number === 1 ? "The Opening" : "The Cow",
+      meaning: {
+        appLocale: "en" as const,
+        text: number === 1 ? "The Opening" : "The Cow",
+      },
       transliteration: number === 1 ? "Al-Fatihah" : "Al-Baqarah",
     },
     number,
@@ -193,12 +288,30 @@ function surahMetadata(number: number) {
 }
 
 /** Builds one signed Quran projection for markdown rendering checks. */
-function surahMarkdown(number: number, verseLimit?: number) {
+function surahMarkdown(locale: Locale, number: number, verseLimit?: number) {
   const numberOfVerses = number === 1 ? 1 : 82;
   const toVerse = Math.min(verseLimit ?? numberOfVerses, numberOfVerses);
+  const metadata = surahMetadata(number);
   return {
-    locale: "en",
-    surah: surahMetadata(number),
+    appLocale: locale,
+    sources: {
+      arabic: {
+        label: "Technical Arabic source.",
+        sourceUrl: "https://example.test/quran/arabic",
+      },
+      translation: {
+        label: `Technical ${locale} translation source.`,
+        sourceUrl: `https://example.test/quran/translation/${locale}`,
+      },
+    },
+    surah: {
+      ...metadata,
+      name: {
+        meaning: locale === "en" ? metadata.name.meaning.text : null,
+        transliteration: metadata.name.transliteration,
+      },
+    },
+    tafsirAccess: tafsirAccessFor(locale),
     toVerse,
     verses: Array.from({ length: toVerse }, (_, index) =>
       verseFixture(index + 1)
@@ -206,14 +319,53 @@ function surahMarkdown(number: number, verseLimit?: number) {
   };
 }
 
+/** Builds one signed locale Tafsir access fixture for markdown checks. */
+function tafsirAccessFor(locale: Locale) {
+  if (locale === "id") {
+    return {
+      appLocale: locale,
+      kind: "embedded",
+      notice: "Catatan teknis tafsir Indonesia.",
+      source: {
+        label: "Technical Indonesian Tafsir source.",
+        updateUrl: "https://example.test/tafsir/id",
+      },
+    };
+  }
+  return {
+    appLocale: locale,
+    kind: "external",
+    notice:
+      locale === "en"
+        ? "Technical English Tafsir notice."
+        : "Technischer deutscher Tafsirhinweis.",
+    source: {
+      label:
+        locale === "en"
+          ? "Technical English Tafsir link."
+          : "Technischer deutscher Tafsirlink.",
+      updateUrl: `https://example.test/tafsir/${locale}`,
+    },
+  };
+}
+
 /** Builds one exact locale-specific Quran markdown verse. */
 function verseFixture(number: number) {
+  const notes =
+    number === 1
+      ? [{ number: 1, referenceOffset: 13, text: "Source note." }]
+      : [];
+  const segments: QuranTranslationDocument["segments"] =
+    number === 1
+      ? [
+          { kind: "text", offset: 0, value: "Translation 1" },
+          { kind: "note", number: 1, offset: 13 },
+          { kind: "text", offset: 16, value: "." },
+        ]
+      : [{ kind: "text", offset: 0, value: `Translation ${number}.` }];
   return {
     arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
     number: { inSurah: number },
-    translation: {
-      footnotes: number === 1 ? "Source note." : "",
-      text: `Translation ${number}.`,
-    },
+    translation: { notes, segments },
   };
 }

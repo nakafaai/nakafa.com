@@ -2,8 +2,10 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
   encodeTestQuranRow,
+  makeQuranLocaleSources,
   makeQuranSurah,
-} from "@repo/backend/test/quran/v1";
+  makeQuranTafsirProjection,
+} from "@repo/backend/test/quran/rows";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -30,6 +32,7 @@ const source = {
   activeReleaseId: "quran-release",
   managed: true,
   snapshotId: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
+  sourceOrigin: { kind: "git" as const, sha: "c".repeat(40) },
   sourceRevision: "c".repeat(40),
 };
 beforeEach(() => {
@@ -105,7 +108,19 @@ describe("published Quran content", () => {
       surah: { number: 1 },
       verses: [
         {
-          translation: "Terjemahan teknis 1",
+          translation: {
+            notes: [
+              {
+                number: 4,
+                referenceOffset: 20,
+                text: "Catatan terjemahan Indonesia.",
+              },
+            ],
+            segments: [
+              { kind: "text", offset: 0, value: "Terjemahan teknis 1." },
+              { kind: "note", number: 4, offset: 20 },
+            ],
+          },
         },
       ],
     });
@@ -132,7 +147,7 @@ function viewResult() {
     appLocale: "id",
     nextSurah: {
       name: {
-        translation: "Technical meaning 2",
+        meaning: null,
         transliteration: "Technical Surah 2",
       },
       number: 2,
@@ -141,17 +156,31 @@ function viewResult() {
     previousSurah: null,
     surah: {
       name: {
-        translation: "Technical meaning 1",
+        meaning: null,
         transliteration: "Technical Surah 1",
       },
       number: 1,
       numberOfVerses: 1,
     },
+    sources: makeQuranLocaleSources("id"),
+    tafsirAccess: makeQuranTafsirProjection("id"),
     verses: [
       {
         arabic: "آية 1",
         number: { inQuran: 1, inSurah: 1 },
-        translation: "Terjemahan teknis 1",
+        translation: {
+          notes: [
+            {
+              number: 4,
+              referenceOffset: 20,
+              text: "Catatan terjemahan Indonesia.",
+            },
+          ],
+          segments: [
+            { kind: "text", offset: 0, value: "Terjemahan teknis 1." },
+            { kind: "note", number: 4, offset: 20 },
+          ],
+        },
       },
     ],
   };
@@ -161,21 +190,26 @@ function markdownResult() {
   return {
     ...source,
     appLocale: "id",
+    sources: makeQuranLocaleSources("id"),
     surah: {
       name: {
-        translation: "Technical meaning 1",
+        meaning: null,
         transliteration: "Technical Surah 1",
       },
       number: 1,
       numberOfVerses: 1,
       revelation: { place: "Meccan" },
     },
+    tafsirAccess: makeQuranTafsirProjection("id"),
     toVerse: 1,
     verses: [
       {
         arabic: "آية 1",
         number: { inSurah: 1 },
-        translation: { footnotes: "", text: "Terjemahan teknis 1" },
+        translation: {
+          notes: [],
+          segments: [{ kind: "text", offset: 0, value: "Terjemahan teknis 1" }],
+        },
       },
     ],
   };

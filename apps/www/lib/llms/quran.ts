@@ -1,7 +1,9 @@
 import { QuranSurahNumberSchema } from "@nakafa/aksara-contracts/quran/spec";
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
+import { projectQuranTranslationV2 } from "@repo/backend/client/quran/v2/notes";
+import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Effect, Option, Schema } from "effect";
-import type { Locale } from "next-intl";
+import { createTranslator, type Locale } from "next-intl";
 import {
   readPublishedQuranCatalog,
   readPublishedQuranMarkdown,
@@ -59,15 +61,22 @@ export const readQuranLlmsInventory = Effect.fn("www.llms.quran.inventory")(
 /** Builds the one bounded page of signed Quran links for a locale. */
 export const readQuranLlmsPageEntries = Effect.fn("www.llms.quran.pageEntries")(
   function* (locale: Locale, page: number) {
-    const { surahs } = yield* readPublishedQuranCatalog();
+    const [{ surahs }, messages] = yield* Effect.all([
+      readPublishedQuranCatalog(),
+      Effect.promise(() => loadLocaleMessages(locale)),
+    ]);
     if (page !== 0 || surahs.length === 0) {
       return null;
     }
+    const t = createTranslator({ locale, messages, namespace: "Holy" });
 
     return buildPublishedContentLlmsEntries({
       locale,
       rows: surahs.map((surah) => ({
-        description: surah.name.translation,
+        description:
+          surah.name.meaning.appLocale === locale
+            ? surah.name.meaning.text
+            : t("quran-description"),
         publicPath: `quran/${surah.number}`,
         title: getQuranSurahName(surah.name),
       })),
@@ -100,86 +109,133 @@ export const getQuranLlmsText = Effect.fn("www.llms.quran.text")(function* ({
 });
 
 /** Builds markdown for the Quran surah index page. */
-function getQuranIndexText(locale: Locale) {
-  return Effect.gen(function* () {
-    const { surahs } = yield* readPublishedQuranCatalog();
-    const scanned = buildHeader({
-      description: "Al-Quran - List of all 114 Surahs in the Holy Quran.",
-      title: "Al-Quran",
-      url: `${BASE_URL}/${locale}/quran`,
-    });
+const getQuranIndexText = Effect.fn("www.llms.quran.indexText")(function* (
+  locale: Locale
+) {
+  const [{ surahs }, messages] = yield* Effect.all([
+    readPublishedQuranCatalog(),
+    Effect.promise(() => loadLocaleMessages(locale)),
+  ]);
+  const t = createTranslator({ locale, messages, namespace: "Holy" });
+  const scanned = buildHeader({
+    description: t("quran-description"),
+    title: t("quran"),
+    url: `${BASE_URL}/${locale}/quran`,
+  });
 
-    for (const surah of surahs) {
-      const title = getQuranSurahName(surah.name);
-      const translation = surah.name.translation;
-      scanned.push(`## ${surah.number}. ${title}`);
-      scanned.push("");
-      scanned.push(`**Translation:** ${translation}`);
-      scanned.push("");
-      scanned.push(`**Revelation:** ${surah.revelation.place}`);
-      scanned.push("");
-      scanned.push(`**Number of Verses:** ${surah.numberOfVerses}`);
+  for (const surah of surahs) {
+    const title = getQuranSurahName(surah.name);
+    scanned.push(`## ${surah.number}. ${title}`);
+    scanned.push("");
+    if (surah.name.meaning.appLocale === locale) {
+      scanned.push(`**${t("meaning")}:** ${surah.name.meaning.text}`);
       scanned.push("");
     }
+    scanned.push(
+      `**${t("revelation")}:** ${t("revelation-place", {
+        place: surah.revelation.place,
+      })}`
+    );
+    scanned.push("");
+    scanned.push(`**${t("number-of-verses")}:** ${surah.numberOfVerses}`);
+    scanned.push("");
+  }
 
-    return scanned.join("\n");
-  });
-}
+  return scanned.join("\n");
+});
 
 /** Builds markdown for one surah and its verses. */
-function getSurahLlmsText({
+const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
   locale,
   surahNumber,
 }: {
   locale: Locale;
   surahNumber: number;
 }) {
-  return Effect.gen(function* () {
-    const markdown = yield* readPublishedQuranMarkdown(
-      locale,
-      surahNumber,
-      QURAN_PAGE_MARKDOWN_VERSE_LIMIT
-    );
-    const surah = markdown.surah;
-    const title = getQuranSurahName(surah.name);
-    const translation = surah.name.translation;
-    const scanned = buildHeader({
-      description: `Al-Quran - Surah ${title} (${translation})`,
-      title,
-      url: `${BASE_URL}/${locale}/quran/${surahNumber}`,
-    });
-
-    scanned.push(`## ${title}`);
-    scanned.push("");
-    scanned.push(`**Translation:** ${translation}`);
-    scanned.push(`**Revelation:** ${surah.revelation.place}`);
-    scanned.push(`**Number of Verses:** ${surah.numberOfVerses}`);
-    scanned.push("");
-
-    scanned.push("### Verses");
-    scanned.push("");
-
-    for (const verse of markdown.verses) {
-      scanned.push(`#### Verse ${verse.number.inSurah}`);
-      scanned.push("");
-      scanned.push(verse.arabic);
-      scanned.push("");
-      scanned.push(`**Translation:** ${verse.translation.text}`);
-      const footnotes = verse.translation.footnotes;
-      if (footnotes) {
-        scanned.push("");
-        scanned.push(`**Translation notes:** ${footnotes}`);
-      }
-      scanned.push("");
-    }
-
-    if (surah.numberOfVerses > markdown.toVerse) {
-      scanned.push(
-        `_This page-level markdown is bounded to verses 1-${markdown.toVerse} of ${surah.numberOfVerses}. Use the Nakafa Quran reference tool for exact verse ranges._`
-      );
-      scanned.push("");
-    }
-
-    return scanned.join("\n");
+  const [markdown, messages] = yield* Effect.all(
+    [
+      readPublishedQuranMarkdown(
+        locale,
+        surahNumber,
+        QURAN_PAGE_MARKDOWN_VERSE_LIMIT
+      ),
+      Effect.promise(() => loadLocaleMessages(locale)),
+    ],
+    { concurrency: "unbounded" }
+  );
+  const t = createTranslator({ locale, messages, namespace: "Holy" });
+  const surah = markdown.surah;
+  const tafsirAccess = markdown.tafsirAccess;
+  const title = getQuranSurahName(surah.name);
+  const description = surah.name.meaning ?? t("quran-description");
+  const scanned = buildHeader({
+    description,
+    title,
+    url: `${BASE_URL}/${locale}/quran/${surahNumber}`,
   });
-}
+
+  scanned.push(`## ${title}`);
+  scanned.push("");
+  if (surah.name.meaning !== null) {
+    scanned.push(`**${t("meaning")}:** ${surah.name.meaning}`);
+  }
+  scanned.push(
+    `**${t("revelation")}:** ${t("revelation-place", {
+      place: surah.revelation.place,
+    })}`
+  );
+  scanned.push(`**${t("number-of-verses")}:** ${surah.numberOfVerses}`);
+  scanned.push("");
+  scanned.push(`### ${t("sources")}`);
+  scanned.push("");
+  scanned.push(
+    `- **${t("arabic-source")}:** [${markdown.sources.arabic.label}](${markdown.sources.arabic.sourceUrl})`
+  );
+  scanned.push(
+    `- **${t("translation-source")}:** [${markdown.sources.translation.label}](${markdown.sources.translation.sourceUrl})`
+  );
+  scanned.push("");
+  if (tafsirAccess !== null) {
+    scanned.push(tafsirAccess.notice);
+    scanned.push("");
+    scanned.push(
+      `[${tafsirAccess.source.label}](${tafsirAccess.source.updateUrl})`
+    );
+    scanned.push("");
+  }
+
+  scanned.push(`### ${t("verses")}`);
+  scanned.push("");
+
+  for (const verse of markdown.verses) {
+    scanned.push(`#### ${t("verse")} ${verse.number.inSurah}`);
+    scanned.push("");
+    scanned.push(verse.arabic);
+    scanned.push("");
+    const translated = projectQuranTranslationV2(
+      verse.translation,
+      t("translation-notes")
+    );
+    scanned.push(`**${t("translation")}:** ${translated.text}`);
+    if (verse.translation.notes.length > 0) {
+      scanned.push("");
+      scanned.push(`**${t("translation-notes")}:**`);
+      for (const note of verse.translation.notes) {
+        scanned.push(`- **${note.number}.** ${note.text}`);
+      }
+    }
+    scanned.push("");
+  }
+
+  if (surah.numberOfVerses > markdown.toVerse) {
+    scanned.push(
+      `_${t("markdown-limit", {
+        numberOfVerses: surah.numberOfVerses,
+        toVerse: markdown.toVerse,
+      })}_`
+    );
+    scanned.push("");
+  }
+
+  return scanned.join("\n");
+});

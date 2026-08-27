@@ -1,7 +1,7 @@
 // @vitest-environment node
-
+import { makeAppLocale } from "@nakafa/aksara-contracts/locale";
+import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 import { describe, expect, it } from "vitest";
-import type { QuranSurah } from "@/lib/utils/pages/quran";
 import { getQuranPagination, getQuranSurahName } from "@/lib/utils/pages/quran";
 
 describe("quran page helpers", () => {
@@ -44,17 +44,17 @@ describe("quran page helpers", () => {
 
 /** Builds one Quran surah page fixture matching Convex runtime output. */
 function surahPage(): {
-  nextSurah: QuranSurah;
+  nextSurah: QuranSurahRow;
   prevSurah: null;
-  surahData: QuranSurah;
+  surahData: QuranSurahRow;
 } {
   return {
     nextSurah: {
       kind: "quran-surah",
       name: {
         arabic: "البقرة",
+        meaning: { appLocale: makeAppLocale("en"), text: "The Cow" },
         transliteration: "Al-Baqarah",
-        translation: "The Cow",
       },
       number: 2,
       numberOfVerses: 286,
@@ -65,8 +65,8 @@ function surahPage(): {
       kind: "quran-surah",
       name: {
         arabic: "الفاتحة",
+        meaning: { appLocale: makeAppLocale("en"), text: "The Opening" },
         transliteration: "Al-Fatihah",
-        translation: "The Opening",
       },
       number: 1,
       numberOfVerses: 7,

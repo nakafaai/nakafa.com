@@ -1,8 +1,17 @@
-import type { PublishedQuranCatalog } from "@repo/backend/client/quran/decode";
-import type { QuranViewSurah } from "@repo/backend/client/quran/view";
+import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 
-export type QuranSurah = PublishedQuranCatalog["surahs"][number];
-type QuranSurahMetadata = null | QuranViewSurah;
+export type QuranSurah = QuranSurahRow;
+
+interface QuranName {
+  readonly transliteration: string;
+}
+
+interface QuranSurahNavigation {
+  readonly name: QuranName;
+  readonly number: number;
+}
+
+type QuranSurahMetadata = null | QuranSurahNavigation;
 
 /** Navigation data for Quran previous and next links. */
 export interface QuranPagination {
@@ -43,6 +52,6 @@ function getQuranPaginationItem(surah: QuranSurahMetadata) {
 }
 
 /** Returns the source-authenticated transliterated name for one Quran surah. */
-export function getQuranSurahName(name: QuranViewSurah["name"]) {
+export function getQuranSurahName(name: QuranName) {
   return name.transliteration;
 }

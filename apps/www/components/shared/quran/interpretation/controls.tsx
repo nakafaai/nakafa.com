@@ -1,10 +1,12 @@
 "use client";
 import { useDisclosure, useMounted } from "@mantine/hooks";
+import type { QuranPublicationError } from "@repo/backend/client/quran/publication";
 import {
-  decodePublishedQuranInterpretation,
+  decodePublishedQuranInterpretationV2,
   isQuranSnapshotConflict,
+  type QuranInterpretationRequestError,
   toQuranInterpretationRequestError,
-} from "@repo/backend/client/quran/interpretation";
+} from "@repo/backend/client/quran/v2/interpretation";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   Drawer,
@@ -14,6 +16,7 @@ import {
   DrawerTitle,
 } from "@repo/design-system/components/ui/drawer";
 import { useConvex } from "convex/react";
+import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";
 import {
   type MouseEvent,
@@ -28,6 +31,9 @@ import { QuranInterpretationContext } from "@/components/shared/quran/interpreta
 import { reportClientException } from "@/lib/analytics/client";
 
 interface Props {
+  appLocale: FunctionArgs<
+    typeof api.contentRelease.quran.interpretationV2
+  >["appLocale"];
   children: ReactNode;
   errorMessage: string;
   label: string;
@@ -46,6 +52,7 @@ function getVerseNumber(button: HTMLButtonElement) {
 }
 /** Coordinates every verse tafsir request and drawer through one client controller. */
 export function QuranInterpretationControls({
+  appLocale,
   children,
   errorMessage,
   label,
@@ -91,19 +98,78 @@ export function QuranInterpretationControls({
     setPendingVerseNumber(verseNumber);
     close();
     setSelectedInterpretation("");
+    const reportFailure = (
+      error: QuranInterpretationRequestError | QuranPublicationError
+    ) =>
+      Effect.sync(() => {
+        toast.error(errorMessage, {
+          id: toastId,
+          position: "bottom-center",
+        });
+      }).pipe(
+        Effect.andThen(
+          reportClientException(error, {
+            source: "quran-interpretation",
+            surahNumber,
+            verseNumber,
+          })
+        )
+      );
+    const handleFailure = (
+      error: QuranInterpretationRequestError | QuranPublicationError
+    ) => {
+      if (requestSequence.current !== requestId) {
+        return Effect.void;
+      }
+      if (!isQuranSnapshotConflict(error)) {
+        return reportFailure(error);
+      }
+      return Effect.sync(() =>
+        toast.info(refreshingMessage, {
+          id: toastId,
+          position: "bottom-center",
+        })
+      ).pipe(
+        Effect.andThen(
+          Effect.tryPromise({
+            catch: toQuranInterpretationRequestError,
+            try: recoverSnapshot,
+          }).pipe(
+            Effect.catchTag(
+              "QuranInterpretationRequestError",
+              (recoveryError) =>
+                Effect.sync(() => {
+                  toast.error(errorMessage, {
+                    id: toastId,
+                    position: "bottom-center",
+                  });
+                }).pipe(
+                  Effect.andThen(
+                    reportClientException(recoveryError, {
+                      source: "quran-interpretation-recovery",
+                      surahNumber,
+                      verseNumber,
+                    })
+                  )
+                )
+            )
+          )
+        )
+      );
+    };
     const program = Effect.tryPromise({
       catch: toQuranInterpretationRequestError,
       try: () =>
-        convex.query(api.contentRelease.quran.interpretation, {
+        convex.query(api.contentRelease.quran.interpretationV2, {
           expectedSnapshotId: snapshotId,
-          appLocale: "id",
+          appLocale,
           surahNumber,
           verseNumber,
         }),
     }).pipe(
       Effect.flatMap((result) =>
-        decodePublishedQuranInterpretation(result, {
-          appLocale: "id",
+        decodePublishedQuranInterpretationV2(result, {
+          appLocale,
           snapshotId,
           surahNumber,
           verseNumber,
@@ -118,56 +184,9 @@ export function QuranInterpretationControls({
           open();
         })
       ),
-      Effect.catch((error) => {
-        if (requestSequence.current !== requestId) {
-          return Effect.void;
-        }
-        if (isQuranSnapshotConflict(error)) {
-          return Effect.sync(() =>
-            toast.info(refreshingMessage, {
-              id: toastId,
-              position: "bottom-center",
-            })
-          ).pipe(
-            Effect.andThen(
-              Effect.tryPromise({
-                catch: toQuranInterpretationRequestError,
-                try: recoverSnapshot,
-              }).pipe(
-                Effect.catch((recoveryError) =>
-                  Effect.sync(() => {
-                    toast.error(errorMessage, {
-                      id: toastId,
-                      position: "bottom-center",
-                    });
-                  }).pipe(
-                    Effect.andThen(
-                      reportClientException(recoveryError, {
-                        source: "quran-interpretation-recovery",
-                        surahNumber,
-                        verseNumber,
-                      })
-                    )
-                  )
-                )
-              )
-            )
-          );
-        }
-        return Effect.sync(() => {
-          toast.error(errorMessage, {
-            id: toastId,
-            position: "bottom-center",
-          });
-        }).pipe(
-          Effect.andThen(
-            reportClientException(error, {
-              source: "quran-interpretation",
-              surahNumber,
-              verseNumber,
-            })
-          )
-        );
+      Effect.catchTags({
+        QuranInterpretationRequestError: handleFailure,
+        QuranPublicationError: handleFailure,
       }),
       Effect.ensuring(
         Effect.sync(() => {

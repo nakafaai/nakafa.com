@@ -1,7 +1,7 @@
 // @vitest-environment node
-
+import { makeAppLocale } from "@nakafa/aksara-contracts/locale";
+import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { QuranSurah } from "@/lib/utils/pages/quran";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 
 const { mockCacheLife, mockGetTranslations } = vi.hoisted(() => ({
@@ -116,13 +116,13 @@ const surah = {
   kind: "quran-surah",
   name: {
     arabic: "Al-Fatihah",
-    translation: "The Opening",
+    meaning: { appLocale: makeAppLocale("en"), text: "The Opening" },
     transliteration: "Al-Fatihah",
   },
   number: 1,
   numberOfVerses: 7,
   revelation: { order: 5, place: "Meccan" },
-} satisfies QuranSurah;
+} satisfies QuranSurahRow;
 
 beforeEach(() => {
   mockCacheLife.mockClear();
