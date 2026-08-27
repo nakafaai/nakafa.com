@@ -3,8 +3,6 @@ name: CI
 on:
   pull_request:
     types: [opened, synchronize]
-  merge_group:
-    types: [checks_requested]
   push:
     branches: [main]
 
@@ -48,9 +46,9 @@ jobs:
 
   production:
     name: Production
-    # Repository Actions policy admits only the owner to run candidate code.
-    # Signed acceptance is bound to PR creation, head updates, and queue heads.
-    if: github.event_name == 'push' || (github.event_name == 'merge_group' && github.actor == 'nabilfatih') || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih')
+    # Signed acceptance runs only for protected main and owner-authored
+    # same-repository candidates. External candidates receive Quality only.
+    if: github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih')
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
@@ -422,7 +420,7 @@ jobs:
     env:
       PRODUCTION_RESULT: ${{ needs.production.result }}
       QUALITY_RESULT: ${{ needs.quality.result }}
-      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || (github.event_name == 'merge_group' && github.actor == 'nabilfatih') || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') }}
+      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') }}
     steps:
       - name: Verify acceptance jobs
         run: |
@@ -437,8 +435,7 @@ jobs:
               echo "Untrusted production acceptance finished with $PRODUCTION_RESULT." >&2
               exit 1
             fi
-            echo "This pull request is not eligible for signed acceptance." >&2
-            exit 1
+            exit 0
           fi
 
           if [ "$TRUSTED_CONTENT_ENVIRONMENT" != "true" ]; then
