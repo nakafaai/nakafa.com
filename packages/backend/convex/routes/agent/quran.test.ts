@@ -15,6 +15,7 @@ import {
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
+
 setupApiTest();
 
 describe("public Quran API routes", () => {
