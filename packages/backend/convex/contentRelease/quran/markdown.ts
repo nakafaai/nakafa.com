@@ -1,8 +1,14 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
+import { separateQuranBismillah } from "@repo/backend/content/quran/bismillah";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import {
+  quranBismillahValidator,
+  readQuranBismillah,
+  verifyQuranBismillah,
+} from "@repo/backend/convex/contentRelease/quran/bismillah";
 import { readQuranLocaleSources } from "@repo/backend/convex/contentRelease/quran/sources";
 import {
   quranAppLocaleValidator,
@@ -45,6 +51,12 @@ export const quranMarkdownValidator = v.object({
   tafsirAccess: v.union(quranTafsirAccessValidator, v.null()),
   toVerse: v.number(),
   verses: v.array(quranMarkdownVerseValidator),
+});
+
+/** Bismillah-aware Quran prose introduced before consumers switch. */
+export const quranProseValidator = v.object({
+  ...quranMarkdownValidator.fields,
+  preBismillah: v.union(quranBismillahValidator, v.null()),
 });
 
 export type QuranMarkdown = Infer<typeof quranMarkdownValidator>;
@@ -177,6 +189,46 @@ export const readQuranMarkdown = Effect.fn("contentRelease.readQuranMarkdown")(
       surah:
         loaded.surah === null ? null : projectSurah(loaded.surah, appLocale),
       verses: loaded.verses.map(({ arabic, document, number }) => ({
+        arabic,
+        number,
+        translation: document,
+      })),
+    };
+  }
+);
+
+/** Returns Bismillah-aware Quran prose without changing prior contracts. */
+export const readQuranProse = Effect.fn("contentRelease.readQuranProse")(
+  function* (
+    ctx: QueryCtx,
+    appLocale: AppLocaleCode,
+    sourceSurah: number,
+    sourceVerseLimit?: number
+  ) {
+    const loaded = yield* loadQuranMarkdown(
+      ctx,
+      appLocale,
+      sourceSurah,
+      sourceVerseLimit
+    );
+    const bismillah =
+      loaded.snapshotId === null
+        ? null
+        : yield* readQuranBismillah(
+            ctx,
+            loaded.snapshotId,
+            appLocale,
+            sourceSurah,
+            1
+          );
+    const projected = separateQuranBismillah(bismillah, loaded.verses);
+    yield* verifyQuranBismillah(bismillah, projected.preBismillah);
+    return {
+      ...loaded,
+      preBismillah: projected.preBismillah,
+      surah:
+        loaded.surah === null ? null : projectSurah(loaded.surah, appLocale),
+      verses: projected.verses.map(({ arabic, document, number }) => ({
         arabic,
         number,
         translation: document,

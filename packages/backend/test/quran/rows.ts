@@ -345,6 +345,7 @@ function makeQuranVerse(
 
 /** Creates one coherent immutable Quran chunk for protocol tests. */
 export function makeQuranChunk(input: {
+  readonly arabicText?: string;
   readonly firstQuranNumber: number;
   readonly firstVerse: number;
   readonly surahNumber: number;
@@ -354,14 +355,17 @@ export function makeQuranChunk(input: {
   readonly translationText?: Readonly<Partial<Record<AppLocaleCode, string>>>;
   readonly verseCount: number;
 }): QuranChunkRow {
-  const verses = Array.from({ length: input.verseCount }, (_, index) =>
-    makeQuranVerse(
+  const verses = Array.from({ length: input.verseCount }, (_, index) => {
+    const verse = makeQuranVerse(
       input.firstQuranNumber + index,
       input.firstVerse + index,
       input.translationFootnotes ?? {},
       input.translationText ?? {}
-    )
-  );
+    );
+    return index === 0 && input.arabicText !== undefined
+      ? { ...verse, text: { ...verse.text, arabic: input.arabicText } }
+      : verse;
+  });
   return Schema.decodeUnknownSync(QuranChunkRowSchema)({
     firstQuranNumber: input.firstQuranNumber,
     firstVerse: input.firstVerse,
