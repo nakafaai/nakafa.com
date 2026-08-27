@@ -38,9 +38,22 @@ import {
   QuranSurahRowSchema,
 } from "@nakafa/aksara-contracts/quran/spec";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { Sha256HashSchema as RollbackSha256HashSchema } from "@nakafa/aksara-rollback/ids";
+import { ACTIVE_APP_LOCALES as ROLLBACK_APP_LOCALES } from "@nakafa/aksara-rollback/locale";
+import { bindQuranRow as bindRollbackQuranRow } from "@nakafa/aksara-rollback/quran/snapshot/row-hash";
+import {
+  QuranAttributionRowSchema as RollbackQuranAttributionRowSchema,
+  quranSourceIds as rollbackQuranSourceIds,
+} from "@nakafa/aksara-rollback/quran/source";
+import {
+  type QuranSurahRow as RollbackQuranSurahRow,
+  QuranSurahRowSchema as RollbackQuranSurahRowSchema,
+} from "@nakafa/aksara-rollback/quran/spec";
+import { canonicalizeContentSnapshotRow as canonicalizeRollbackQuranRow } from "@nakafa/aksara-rollback/release/snapshot/data";
 import { Effect, Schema } from "effect";
 
 const testDigest = Sha256HashSchema.make(`sha256:${"1".repeat(64)}`);
+const rollbackTestDigest = `sha256:${"1".repeat(64)}`;
 type QuranChunkRow = typeof QuranChunkRowSchema.Type;
 type QuranSearchRow = typeof QuranSearchRowSchema.Type;
 
@@ -393,4 +406,79 @@ export function encodeTestQuranRow(
 ) {
   const record = Effect.runSync(bindQuranRow(snapshotId, payload));
   return canonicalizeContentSnapshotRow({ family: "quran", record });
+}
+
+/** Creates the exact attribution shape retained by the rollback snapshot. */
+export function makeRollbackQuranAttribution() {
+  return Schema.decodeUnknownSync(RollbackQuranAttributionRowSchema)({
+    activeAppLocales: ROLLBACK_APP_LOCALES,
+    kind: "quran-attribution",
+    sources: rollbackQuranSourceIds(ROLLBACK_APP_LOCALES).map((id) => ({
+      artifact: {
+        byteCount: 1,
+        digest: rollbackTestDigest,
+        fileCount: 1,
+      },
+      copy: ROLLBACK_APP_LOCALES.map((appLocale) => ({
+        appLocale,
+        notice: `Rollback attribution notice ${appLocale}`,
+        title: `Rollback source ${id} ${appLocale}`,
+      })),
+      id,
+      publisher: "Nakafa rollback protocol tests",
+      retrievedAt: "2026-07-31T00:00:00Z",
+      sourceUrl: `https://example.test/${id}`,
+      terms: {
+        artifact: {
+          byteCount: 1,
+          digest: rollbackTestDigest,
+          fileCount: 1,
+        },
+        url: `https://example.test/${id}/terms`,
+      },
+      updateUrl: `https://example.test/${id}/updates`,
+      version: "rollback-technical-version",
+    })),
+  });
+}
+
+/** Creates one authentic surah from the retained rollback contract. */
+export function makeRollbackQuranSurah(
+  number: number,
+  numberOfVerses = 7
+): RollbackQuranSurahRow {
+  return Schema.decodeSync(RollbackQuranSurahRowSchema)({
+    kind: "quran-surah",
+    name: {
+      arabic: `سورة ${number}`,
+      translation: `Technical meaning ${number}`,
+      transliteration: `Technical Surah ${number}`,
+    },
+    number,
+    numberOfVerses,
+    revelation: { order: number, place: "Meccan" },
+  });
+}
+
+type RollbackQuranPayload = Parameters<typeof bindRollbackQuranRow>[1];
+
+/** Binds one authentic row under the retained rollback contract. */
+export function makeRollbackQuranRecord(
+  snapshotId: string,
+  payload: RollbackQuranPayload
+) {
+  return Effect.runSync(
+    bindRollbackQuranRow(RollbackSha256HashSchema.make(snapshotId), payload)
+  );
+}
+
+/** Encodes one authentic retained rollback row envelope. */
+export function encodeRollbackQuranRow(
+  snapshotId: string,
+  payload: RollbackQuranPayload
+) {
+  return canonicalizeRollbackQuranRow({
+    family: "quran",
+    record: makeRollbackQuranRecord(snapshotId, payload),
+  });
 }

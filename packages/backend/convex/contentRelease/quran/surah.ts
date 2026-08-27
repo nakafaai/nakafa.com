@@ -6,6 +6,7 @@ import { readQuranChunks } from "@repo/backend/convex/contentRelease/quran/chunk
 import { validateQuranSurah } from "@repo/backend/convex/contentRelease/quran/input";
 import { QURAN_PAGE_VERSE_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
 import { loadQuranOwner } from "@repo/backend/convex/contentRelease/quran/owner";
+import { verifyRollbackQuranSurah } from "@repo/backend/convex/contentRelease/quran/rollback";
 import { verifyQuranRow } from "@repo/backend/convex/contentRelease/quran/verify";
 import { Effect } from "effect";
 
@@ -13,7 +14,11 @@ import { Effect } from "effect";
 export const verifyQuranSurahRow = Effect.fn(
   "contentRelease.verifyQuranSurahRow"
 )(function* (row: Doc<"quranRows">, snapshotId: string) {
-  return yield* verifyQuranRow(row, snapshotId, QuranSurahRowSchema);
+  return yield* verifyQuranRow(row, snapshotId, QuranSurahRowSchema).pipe(
+    Effect.catchTag("ReleaseError", () =>
+      verifyRollbackQuranSurah(row, snapshotId)
+    )
+  );
 });
 
 /** Reads and authenticates one surah under the active signed contract. */
