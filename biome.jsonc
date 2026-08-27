@@ -21,6 +21,28 @@
       "jsxQuoteStyle": "double"
     }
   },
+  "overrides": [
+    {
+      "includes": ["packages/cli/**/*.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["./**", "../**"],
+                    "message": "Use the #cli/* package alias instead."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
   "linter": {
     "rules": {
       "correctness": {
