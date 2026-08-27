@@ -111,6 +111,24 @@ const waitForVisibleLocator = Effect.fn("NakafaE2E.waitForVisibleLocator")(
     )
 );
 
+const activateMobileSidebarLink = Effect.fn(
+  "NakafaE2E.activateMobileSidebarLink"
+)(function* (
+  sidebarTrigger: Locator,
+  link: Locator,
+  failure: NavigationLinkMissing
+) {
+  const linkIsVisible = yield* Effect.promise(() => link.isVisible());
+  if (linkIsVisible) {
+    return link;
+  }
+
+  yield* Effect.promise(() =>
+    sidebarTrigger.click({ timeout: NAVIGATION_TIMEOUT_MILLISECONDS })
+  );
+  return yield* requireVisibleLocator(link, failure);
+});
+
 const findVisibleLink = Effect.fn("NakafaE2E.findVisibleLink")(function* (
   page: Page,
   href: string,
@@ -143,10 +161,11 @@ const findVisibleLink = Effect.fn("NakafaE2E.findVisibleLink")(function* (
     .locator('[data-slot="sidebar-trigger"]:visible')
     .first();
   yield* waitForVisibleLocator(sidebarTrigger, missingLink);
-  yield* Effect.promise(() =>
-    sidebarTrigger.click({ timeout: NAVIGATION_TIMEOUT_MILLISECONDS })
-  );
-  return yield* waitForVisibleLocator(link, missingLink);
+  return yield* activateMobileSidebarLink(
+    sidebarTrigger,
+    link,
+    missingLink
+  ).pipe(Effect.retry(linkedHrefRetrySchedule));
 });
 
 const readVisibleLinkedHref = Effect.fn("NakafaE2E.readVisibleLinkedHref")(
