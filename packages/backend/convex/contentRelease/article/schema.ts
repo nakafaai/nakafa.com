@@ -26,7 +26,7 @@ const tables = {
       v.object({ ...articleFields, date: v.string() }),
       v.object({
         ...articleFields,
-        date: v.string(),
+        date: v.optional(v.string()),
         dateModified: v.optional(v.string()),
         datePublished: v.string(),
       })
