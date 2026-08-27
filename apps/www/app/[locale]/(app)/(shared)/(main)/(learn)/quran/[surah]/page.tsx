@@ -1,4 +1,5 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
+import { ENGLISH_APP_LOCALE_CODE } from "@nakafa/aksara-contracts/locale";
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
 import { slugify } from "@repo/design-system/lib/routing/slug";
 import { BookJsonLd } from "@repo/seo/json-ld/book";
@@ -229,6 +230,7 @@ async function CachedSurahShell({
         <LayoutMaterialContent>
           <HeaderContent
             description={description}
+            descriptionLanguage={ENGLISH_APP_LOCALE_CODE}
             icon={AllahIcon}
             link={{
               href: "/quran",
@@ -287,6 +289,7 @@ async function CachedSurahShell({
             title,
             href: `/quran/${surah}`,
             description,
+            descriptionLanguage: ENGLISH_APP_LOCALE_CODE,
           }}
         />
       </VirtualProvider>

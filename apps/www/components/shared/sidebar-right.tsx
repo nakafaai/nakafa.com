@@ -30,6 +30,7 @@ export type SidebarRightProps = {
     title: string;
     href: string;
     description?: string;
+    descriptionLanguage?: string;
   };
   githubUrl?: string;
   showComments?: boolean;
@@ -59,7 +60,7 @@ function SidebarRightHeader({
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{header.title}</span>
               {!!header.description && (
-                <SidebarMenuDescription>
+                <SidebarMenuDescription lang={header.descriptionLanguage}>
                   {header.description}
                 </SidebarMenuDescription>
               )}

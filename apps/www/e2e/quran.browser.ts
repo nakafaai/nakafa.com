@@ -126,10 +126,17 @@ const verifyQuranLocaleCoverage = Effect.fn(
     readinessTimeoutMilliseconds
   );
 
+  const headerMeaning = page
+    .locator("header p")
+    .filter({ hasText: contract.meaning });
+  yield* Effect.promise(() => expect(headerMeaning).toBeVisible());
+  yield* Effect.promise(() =>
+    expect(headerMeaning).toHaveAttribute("lang", "en")
+  );
   yield* Effect.promise(() =>
     expect(
-      page.getByText(contract.meaning, { exact: true }).first()
-    ).toBeVisible()
+      page.locator('[data-slot="sidebar-menu-description"]')
+    ).toHaveAttribute("lang", "en")
   );
 
   const bismillah = page.locator("[data-quran-bismillah]");
