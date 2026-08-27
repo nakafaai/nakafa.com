@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { ENGLISH_APP_LOCALE_CODE } from "@nakafa/aksara-contracts/locale";
 import {
   quranReadingSourceIds,
@@ -6,58 +7,58 @@ import {
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran";
 import { NakafaAgentQuranReferenceV2Schema } from "@repo/contents/_lib/agent/schema/quran/reference";
-import { describe, expect, it } from "@repo/testing/effect";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { vi } from "vitest";
 import {
   getNakafaQuranReferenceToolResult,
   getNakafaQuranReferenceV2ToolResult,
 } from "@/lib/mcp/tools/quran";
 
-vi.mock("@/lib/mcp/nakafa", async () => {
-  const { Effect, Option } = await import("effect");
+const nakafaContentMock = vi.hoisted(() => ({
+  quran: vi.fn(),
+  quranV2: vi.fn(),
+}));
 
-  return {
-    nakafaContent: {
-      /** Returns deterministic Quran references for MCP result shaping tests. */
-      quran: (input: { from_verse: number; include_tafsir: boolean }) => {
-        if (input.from_verse === 999) {
-          return Effect.succeed(Option.none());
-        }
+vi.mock("@/lib/mcp/nakafa", () => ({
+  nakafaContent: nakafaContentMock,
+}));
 
-        return Effect.succeed(
-          Option.some({
-            ...readNakafaContentRefFixture("en", "quran/1", "quran"),
-            name: "Al-Faatiha",
-            revelation: "Mecca",
-            translation: "The Opening",
-            verses: [
-              {
-                arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
-                number: 1,
-                ...(input.include_tafsir ? { tafsir: "Tafsir" } : {}),
-                translation: "In the name of Allah.",
-              },
-              {
-                arabic: "الْحَمْدُ لِلّٰهِ رَبِّ الْعٰلَمِيْنَ",
-                number: 2,
-                ...(input.include_tafsir ? { tafsir: "Tafsir" } : {}),
-                translation: "All praise is for Allah.",
-              },
-            ],
-          })
-        );
-      },
-      /** Returns deterministic V2 Quran references for MCP result tests. */
-      quranV2: (input: { from_verse: number }) =>
-        Effect.succeed(
-          input.from_verse === 999
-            ? Option.none()
-            : Option.some(makeV2Reference())
-        ),
-    },
-  };
-});
+nakafaContentMock.quran.mockImplementation(
+  (input: { from_verse: number; include_tafsir: boolean }) => {
+    if (input.from_verse === 999) {
+      return Effect.succeed(Option.none());
+    }
+
+    return Effect.succeed(
+      Option.some({
+        ...readNakafaContentRefFixture("en", "quran/1", "quran"),
+        name: "Al-Faatiha",
+        revelation: "Mecca",
+        translation: "The Opening",
+        verses: [
+          {
+            arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
+            number: 1,
+            ...(input.include_tafsir ? { tafsir: "Tafsir" } : {}),
+            translation: "In the name of Allah.",
+          },
+          {
+            arabic: "الْحَمْدُ لِلّٰهِ رَبِّ الْعٰلَمِيْنَ",
+            number: 2,
+            ...(input.include_tafsir ? { tafsir: "Tafsir" } : {}),
+            translation: "All praise is for Allah.",
+          },
+        ],
+      })
+    );
+  }
+);
+
+nakafaContentMock.quranV2.mockImplementation((input: { from_verse: number }) =>
+  Effect.succeed(
+    input.from_verse === 999 ? Option.none() : Option.some(makeV2Reference())
+  )
+);
 
 const ToolErrorResultSchema = Schema.Struct({
   isError: Schema.Literal(true),
@@ -70,7 +71,7 @@ const ToolErrorResultSchema = Schema.Struct({
 });
 
 describe("nakafa_get_quran_reference", () => {
-  it.live("returns structured Quran references", () =>
+  it.effect("returns structured Quran references", () =>
     Effect.gen(function* () {
       const result = yield* getNakafaQuranReferenceToolResult({
         from_verse: 1,
@@ -92,7 +93,7 @@ describe("nakafa_get_quran_reference", () => {
     })
   );
 
-  it.live("returns structured read-model input errors", () =>
+  it.effect("returns structured read-model input errors", () =>
     Effect.gen(function* () {
       const result = yield* getNakafaQuranReferenceToolResult({
         from_verse: 1,
@@ -111,7 +112,7 @@ describe("nakafa_get_quran_reference", () => {
     })
   );
 
-  it.live("returns structured range and missing-reference errors", () =>
+  it.effect("returns structured range and missing-reference errors", () =>
     Effect.gen(function* () {
       const reversed = yield* getNakafaQuranReferenceToolResult({
         from_verse: 3,
@@ -150,7 +151,7 @@ describe("nakafa_get_quran_reference", () => {
 });
 
 describe("nakafa_get_quran_reference_v2", () => {
-  it.live("returns semantic notes and signed source access", () =>
+  it.effect("returns semantic notes and signed source access", () =>
     Effect.gen(function* () {
       const result = yield* getNakafaQuranReferenceV2ToolResult({
         from_verse: 1,
@@ -185,7 +186,7 @@ describe("nakafa_get_quran_reference_v2", () => {
     })
   );
 
-  it.live("retains structured V2 range and missing errors", () =>
+  it.effect("retains structured V2 range and missing errors", () =>
     Effect.gen(function* () {
       const reversed = yield* getNakafaQuranReferenceV2ToolResult({
         from_verse: 3,
