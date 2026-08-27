@@ -2,17 +2,19 @@ import {
   NAKAFA_MCP_PROTOCOL_VERSION,
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
 } from "@repo/contents/_lib/agent/constants";
-import { Effect, Stdio, Stream } from "effect";
-import type { HttpClient } from "effect/unstable/http";
+import { Effect, Layer } from "effect";
+import {
+  CliConfig,
+  CliError,
+  CliOutput,
+  Command,
+  GlobalFlag,
+} from "effect/unstable/cli";
 import { requestNakafaApi } from "#cli/client";
-import { readCliRequest } from "#cli/command/read";
-import { type CliCommand, type CliRequest, HELP_TEXT } from "#cli/command/spec";
-import type {
-  ApiResponseError,
-  HttpResponseError,
-  NetworkError,
-  ResponseDecodeError,
-} from "#cli/error";
+import type { CliCommand, CliRequest } from "#cli/command/spec";
+import { makeCliCommand } from "#cli/command/tree";
+import { makeInvocationError } from "#cli/error";
+import { writeJson } from "#cli/output";
 
 const INVOCATION_EXIT_CODE = 2;
 const API_EXIT_CODE = 3;
@@ -22,14 +24,9 @@ export interface CliOptions {
   readonly version: string;
 }
 
-interface CliOutput {
-  readonly kind: "json" | "text";
-  readonly value: unknown;
-}
-
 /** Executes one CLI invocation and returns its stable process exit category. */
 export function runCli(argv: readonly string[], options: CliOptions) {
-  return executeCli(argv, options).pipe(
+  return executeCli(argv.length === 0 ? ["--help"] : argv, options).pipe(
     Effect.catchTags({
       ApiResponseError: (error) =>
         writeJson("stderr", error.problem, false).pipe(
@@ -83,50 +80,42 @@ const executeCli = Effect.fn("NakafaCli.execute")(function* (
   argv: readonly string[],
   options: CliOptions
 ) {
-  const request = yield* readCliRequest(argv);
-  const output = yield* executeCommand(request, options);
-  if (output.kind === "text") {
-    yield* writeText("stdout", String(output.value));
-    return 0;
-  }
-  yield* writeJson("stdout", output.value, request.pretty);
+  const command = makeCliCommand((request) => executeRequest(request));
+  yield* Command.runWith(command, {
+    renderErrors: false,
+    version: options.version,
+  })(argv).pipe(
+    Effect.provide(cliRuntimeLayer),
+    Effect.catchIf(CliError.isCliError, (error) =>
+      Effect.fail(makeInvocationError(error))
+    )
+  );
   return 0;
 });
 
-function executeCommand(
-  request: CliRequest,
-  options: CliOptions
-): Effect.Effect<
-  CliOutput,
-  ApiResponseError | HttpResponseError | NetworkError | ResponseDecodeError,
-  HttpClient.HttpClient
-> {
+const executeRequest = Effect.fn("NakafaCli.executeRequest")(function* (
+  request: CliRequest
+) {
+  const output = yield* executeCommand(request);
+  yield* writeJson("stdout", output, request.pretty);
+});
+
+function executeCommand(request: CliRequest) {
   const command = request.command;
-  if (command.kind === "help") {
-    return Effect.succeed({ kind: "text", value: HELP_TEXT });
-  }
-  if (command.kind === "version") {
-    return Effect.succeed({ kind: "text", value: `${options.version}\n` });
-  }
   if (command.kind === "mcp") {
     return Effect.succeed({
-      kind: "json",
-      value: {
-        endpoint: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
-        protocol_version: NAKAFA_MCP_PROTOCOL_VERSION,
-        transport: "streamable-http",
-      },
+      endpoint: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
+      protocol_version: NAKAFA_MCP_PROTOCOL_VERSION,
+      transport: "streamable-http",
     });
   }
   return requestNakafaApi({
     apiBase: request.apiBase,
     path: buildApiPath(command),
-  }).pipe(Effect.map((value) => ({ kind: "json", value })));
+  });
 }
 
-function buildApiPath(
-  command: Exclude<CliCommand, { kind: "help" | "mcp" | "version" }>
-) {
+function buildApiPath(command: Exclude<CliCommand, { kind: "mcp" }>) {
   if (command.kind === "get") {
     const query = new URLSearchParams({ ref: command.ref });
     return `/v1/content?${query}`;
@@ -154,6 +143,15 @@ function buildApiPath(
   return `/v1/search?${query}`;
 }
 
+const plainFormatter = CliOutput.defaultFormatter({ colors: false });
+const cliRuntimeLayer = Layer.merge(
+  CliConfig.layer({ builtIns: [GlobalFlag.Help, GlobalFlag.Version] }),
+  CliOutput.layer({
+    ...plainFormatter,
+    formatVersion: (_name, version) => version,
+  })
+);
+
 function appendOptional(
   query: URLSearchParams,
   name: string,
@@ -167,18 +165,4 @@ function appendOptional(
 function withQuery(path: string, query: URLSearchParams) {
   const source = query.toString();
   return source.length === 0 ? path : `${path}?${source}`;
-}
-
-function writeJson(
-  output: "stderr" | "stdout",
-  value: unknown,
-  pretty: boolean
-) {
-  return writeText(output, `${JSON.stringify(value, null, pretty ? 2 : 0)}\n`);
-}
-
-function writeText(output: "stderr" | "stdout", value: string) {
-  return Stdio.Stdio.use((stdio) =>
-    Stream.make(value).pipe(Stream.run(stdio[output]()))
-  );
 }

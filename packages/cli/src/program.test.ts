@@ -1,12 +1,24 @@
 import { describe, expect, it } from "@effect/vitest";
 import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/_lib/agent/constants";
-import { Effect, Layer, Ref, Schema, Sink, Stdio } from "effect";
+import {
+  Effect,
+  FileSystem,
+  Layer,
+  Path,
+  Ref,
+  Schema,
+  Sink,
+  Stdio,
+  Terminal,
+} from "effect";
+import { TestConsole } from "effect/testing";
 import {
   HttpClient,
   HttpClientError,
   type HttpClientRequest,
   HttpClientResponse,
 } from "effect/unstable/http";
+import { ChildProcessSpawner } from "effect/unstable/process";
 import { runCli } from "#cli/program";
 
 const problem = {
@@ -24,6 +36,25 @@ const decodeJson = Schema.decodeUnknownEffect(
   Schema.fromJsonString(Schema.Json)
 );
 
+const cliPlatformLayer = Layer.mergeAll(
+  FileSystem.layerNoop({}),
+  Path.layer,
+  Layer.succeed(
+    Terminal.Terminal,
+    Terminal.make({
+      columns: Effect.succeed(80),
+      display: () => Effect.void,
+      readInput: Effect.die("Unexpected terminal input"),
+      readLine: Effect.die("Unexpected terminal input"),
+      rows: Effect.succeed(24),
+    })
+  ),
+  Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make(() => Effect.die("Unexpected child process"))
+  )
+);
+
 function makeClient(
   makeResponse: (request: HttpClientRequest.HttpClientRequest) => Response
 ) {
@@ -39,6 +70,7 @@ function execute(
   client: HttpClient.HttpClient = makeClient(() => Response.json({ ok: true }))
 ) {
   return Effect.gen(function* () {
+    const consoleBefore = yield* TestConsole.logLines;
     const stderr = yield* Ref.make("");
     const stdout = yield* Ref.make("");
     const append = (target: Ref.Ref<string>) =>
@@ -52,7 +84,8 @@ function execute(
               : new TextDecoder().decode(chunk))
         ).pipe(Effect.as(true))
       );
-    const layer = Layer.merge(
+    const layer = Layer.mergeAll(
+      cliPlatformLayer,
       Layer.succeed(HttpClient.HttpClient, client),
       Stdio.layerTest({
         stderr: () => append(stderr),
@@ -62,10 +95,19 @@ function execute(
     const exitCode = yield* runCli(argv, { version: "0.1.0" }).pipe(
       Effect.provide(layer)
     );
+    const consoleAfter = yield* TestConsole.logLines;
+    const consoleOutput = consoleAfter
+      .slice(consoleBefore.length)
+      .map(String)
+      .join("\n");
+    const capturedStdout = yield* Ref.get(stdout);
     return {
       exitCode,
       stderr: yield* Ref.get(stderr),
-      stdout: yield* Ref.get(stdout),
+      stdout:
+        consoleOutput.length === 0
+          ? capturedStdout
+          : `${capturedStdout}${consoleOutput}\n`,
     };
   });
 }
@@ -76,10 +118,13 @@ describe("Nakafa CLI execution", () => {
     () =>
       Effect.gen(function* () {
         const client = HttpClient.make(() => Effect.die("unexpected request"));
+        const empty = yield* execute([], client);
         const help = yield* execute(["--help"], client);
         const version = yield* execute(["--version"], client);
         const mcp = yield* execute(["mcp"], client);
 
+        expect(empty).toMatchObject({ exitCode: 0, stderr: "" });
+        expect(empty.stdout).toContain("Nakafa CLI");
         expect(help).toMatchObject({ exitCode: 0, stderr: "" });
         expect(help.stdout).toContain("Nakafa CLI");
         expect(version).toEqual({
