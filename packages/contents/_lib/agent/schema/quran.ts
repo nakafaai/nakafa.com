@@ -94,6 +94,9 @@ export const NakafaAgentQuranReferenceSchema =
 export type NakafaAgentQuranReferenceOptions = Schema.Codec.Encoded<
   typeof NakafaAgentQuranReferenceOptionsSchema
 >;
+export type NakafaAgentQuranReferenceInput = Schema.Schema.Type<
+  typeof NakafaAgentQuranReferenceOptionsSchema
+>;
 export type NakafaAgentQuranReference = Schema.Schema.Type<
   typeof NakafaAgentQuranReferenceSchema
 >;

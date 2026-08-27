@@ -3,20 +3,22 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
+  makeQuranAttribution,
   makeQuranChunk,
   makeQuranSearch,
   makeQuranSurah,
-} from "@repo/backend/test/quran-rows";
+} from "@repo/backend/test/quran/rows";
 import {
   activateQuranSnapshot,
   restoreAbsentQuranSnapshot,
-} from "@repo/backend/test/quran-snapshot";
+} from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 /** Creates only the signed rows required to read verse seven. */
 function interpretationRows() {
   return [
+    makeQuranAttribution(),
     makeQuranSurah(1, 7),
     makeQuranChunk({
       firstQuranNumber: 7,

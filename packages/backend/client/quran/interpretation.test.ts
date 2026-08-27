@@ -18,6 +18,7 @@ const source = {
   activeReleaseId: "quran-release",
   managed: true,
   snapshotId: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
+  sourceOrigin: { kind: "git" as const, sha: "c".repeat(40) },
   sourceRevision: "c".repeat(40),
 };
 type QuranInterpretationResult = FunctionReturnType<
@@ -61,6 +62,7 @@ describe("signed Quran interpretation decoder", () => {
           appLocale: "id",
           managed: false,
           snapshotId: null,
+          sourceOrigin: null,
           sourceRevision: null,
           surahNumber: 1,
           verseNumber: 7,

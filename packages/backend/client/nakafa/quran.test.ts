@@ -8,10 +8,15 @@ import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
 import {
   getSurahName,
   readNakafaQuranReference,
+  readNakafaQuranReferenceV2,
   readQuranMarkdown,
 } from "@repo/backend/client/nakafa/quran";
 import { api } from "@repo/backend/convex/_generated/api";
-import { encodeTestQuranRow } from "@repo/backend/test/quran-rows";
+import {
+  encodeTestQuranRow,
+  makeQuranLocaleSources,
+  makeQuranTafsirProjection,
+} from "@repo/backend/test/quran/rows";
 import { toRuntimeQueryError } from "@repo/backend/test/runtime-query";
 import { NakafaAgentInputError } from "@repo/contents/_lib/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
@@ -36,6 +41,7 @@ const source = {
   activeReleaseId: "quran-release",
   managed: true,
   snapshotId: Sha256HashSchema.make(`sha256:${"b".repeat(64)}`),
+  sourceOrigin: { kind: "git" as const, sha: "c".repeat(40) },
   sourceRevision: "c".repeat(40),
 };
 beforeEach(() => {
@@ -58,6 +64,9 @@ describe("Quran Nakafa reader", () => {
           "Tafsir lengkap."
         );
         expect(Option.getOrUndefined(reference)?.name).toBe("Al-Fatihah");
+        expect(Option.getOrUndefined(reference)?.verses[0]).toMatchObject({
+          translation: "Dengan nama Allah.[4]",
+        });
       })
   );
   it.live("does not invent tafsir for a locale without published tafsir", () =>
@@ -71,6 +80,41 @@ describe("Quran Nakafa reader", () => {
       expect(
         Option.getOrUndefined(reference)?.verses[0]?.tafsir
       ).toBeUndefined();
+    })
+  );
+  it.live("reads semantic V2 notes and exact locale source access", () =>
+    Effect.gen(function* () {
+      const reference = yield* readNakafaQuranReferenceV2(convexUrl, {
+        from_verse: 1,
+        include_tafsir: true,
+        locale: "id",
+        surah: 1,
+      });
+      const value = Option.getOrUndefined(reference);
+
+      expect(value?.meaning).toBeNull();
+      expect(value?.sources).toMatchObject({
+        arabic: { id: "tanzil-text" },
+        translation: { id: "quranenc-indonesian", locale: "id" },
+      });
+      expect(value?.tafsir_access).toMatchObject({
+        kind: "embedded",
+        locale: "id",
+        source: { id: "quranenc-tafsir" },
+      });
+      expect(value?.verses[0]?.translation).toEqual({
+        notes: [
+          {
+            number: 4,
+            referenceOffset: 18,
+            text: "Catatan terjemahan Indonesia.",
+          },
+        ],
+        segments: [
+          { kind: "text", offset: 0, value: "Dengan nama Allah." },
+          { kind: "note", number: 4, offset: 18 },
+        ],
+      });
     })
   );
   it.live("reads the reviewed German Quran translation", () =>
@@ -105,7 +149,9 @@ describe("Quran Nakafa reader", () => {
           readNakafaContentRefFixture("id", "quran/1", "quran")
         );
         expect(Option.getOrUndefined(markdown)?.title).toBe("Al-Fatihah");
-        expect(Option.getOrUndefined(markdown)?.description).toBe("Pembukaan");
+        expect(Option.getOrUndefined(markdown)?.description).toBe(
+          "The Opening"
+        );
         expect(Option.getOrUndefined(markdown)?.text).toContain("## Verses");
         expect(Option.getOrUndefined(markdown)?.text).toContain(
           "Dengan nama Allah."
@@ -138,7 +184,9 @@ function readRuntimeFixture(
 ) {
   if (
     getFunctionName(query) ===
-    getFunctionName(api.contentRelease.quran.reference)
+      getFunctionName(api.contentRelease.quran.reference) ||
+    getFunctionName(query) ===
+      getFunctionName(api.contentRelease.quran.referenceV2)
   ) {
     return Promise.resolve(referenceResult(args));
   }
@@ -158,7 +206,9 @@ function referenceResult(args: Record<string, unknown>) {
     chunkJson: [encodeTestQuranRow(source.snapshotId, chunkRow())],
     fromVerse: 1,
     searchJson: encodeTestQuranRow(source.snapshotId, searchRow(appLocale)),
+    sources: makeQuranLocaleSources(appLocale),
     surahJson: encodeTestQuranRow(source.snapshotId, surahRow()),
+    tafsirAccess: makeQuranTafsirProjection(appLocale),
     toVerse: 1,
   };
 }
@@ -174,13 +224,14 @@ function markdownResult(args: Record<string, unknown>) {
     appLocale,
     surah: {
       name: {
-        translation: "Pembukaan",
+        translation: "The Opening",
         transliteration: "Al-Fatihah",
       },
       number: 1,
       numberOfVerses: 1,
       revelation: { place: "Meccan" },
     },
+    tafsirAccess: null,
     toVerse: 1,
     verses: [
       {
@@ -199,7 +250,7 @@ function surahRow(number = 1) {
     kind: "quran-surah",
     name: {
       arabic: "الفاتحة",
-      translation: "Pembukaan",
+      meaning: { appLocale: "en", text: "The Opening" },
       transliteration: "Al-Fatihah",
     },
     number,
@@ -241,7 +292,10 @@ function chunkRow() {
           },
           {
             appLocale: "id",
-            value: { footnotes: "", text: "Dengan nama Allah." },
+            value: {
+              footnotes: "[4] Catatan terjemahan Indonesia.",
+              text: "Dengan nama Allah.[4]",
+            },
           },
           {
             appLocale: "de",

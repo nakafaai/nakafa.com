@@ -8,11 +8,11 @@ import {
   TEST_RELEASE_ID,
   testReleaseJson,
 } from "@repo/backend/test/content-release";
-import { makeQuranSurah } from "@repo/backend/test/quran-rows";
+import { makeQuranSurah } from "@repo/backend/test/quran/rows";
 import {
   activateQuranSnapshot,
   activateQuranSource,
-} from "@repo/backend/test/quran-snapshot";
+} from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -28,6 +28,7 @@ describe("contentRelease/quran/owner", () => {
       activeReleaseId: TEST_RELEASE_ID,
       managed: false,
       snapshotId: null,
+      sourceOrigin: null,
       sourceRevision: null,
     });
   });
@@ -73,6 +74,7 @@ describe("contentRelease/quran/owner", () => {
       activeReleaseId: null,
       managed: false,
       snapshotId: null,
+      sourceOrigin: null,
       sourceRevision: null,
     });
 
@@ -86,7 +88,26 @@ describe("contentRelease/quran/owner", () => {
       activeReleaseId: TEST_RELEASE_ID,
       managed: true,
       snapshotId,
+      sourceOrigin: { kind: "git", sha: expect.any(String) },
       sourceRevision: expect.any(String),
+    });
+  });
+
+  it("preserves the exact signed rollback origin for an active snapshot", async () => {
+    const t = convexTest(schema, convexModules);
+    const originReleaseId = ReleaseIdSchema.make("release-quran-origin");
+    const snapshotId = await t.mutation((ctx) =>
+      activateQuranSnapshot(ctx, [makeQuranSurah(1)], { originReleaseId })
+    );
+
+    await expect(
+      t.query((ctx) => runConvexProgram(loadQuranOwner(ctx)))
+    ).resolves.toMatchObject({
+      activeReleaseId: TEST_RELEASE_ID,
+      managed: true,
+      snapshotId,
+      sourceOrigin: { kind: "rollback", releaseId: originReleaseId },
+      sourceRevision: null,
     });
   });
 });

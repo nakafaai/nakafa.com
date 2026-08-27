@@ -1,0 +1,79 @@
+import { hasExactQuranVerseRange } from "@repo/backend/client/quran/integrity";
+import { QuranPublicationError } from "@repo/backend/client/quran/publication";
+import { decodePublishedQuranSourceV2 } from "@repo/backend/client/quran/v2/publication";
+import { hasExpectedQuranSourcesV2 } from "@repo/backend/client/quran/v2/source";
+import type { QuranMarkdown } from "@repo/backend/convex/contentRelease/quran/markdown";
+import { Effect } from "effect";
+
+/** Renders signed locale-specific Tafsir availability for agent Markdown. */
+export function renderQuranTafsirAccessMarkdownV2(
+  access: QuranMarkdown["tafsirAccess"]
+): readonly string[] {
+  if (access === null) {
+    return [];
+  }
+  return [
+    "## Tafsir access",
+    "",
+    access.notice,
+    "",
+    `Source: [${access.source.label}](${access.source.updateUrl})`,
+    "",
+  ];
+}
+
+/** Decodes one active app-locale Quran markdown projection. */
+export const decodePublishedQuranMarkdownV2 = Effect.fn(
+  "NakafaQuran.decodeMarkdownV2"
+)(function* (
+  result: QuranMarkdown,
+  expected: {
+    readonly appLocale: QuranMarkdown["appLocale"];
+    readonly surahNumber: number;
+    readonly verseLimit?: number;
+  }
+) {
+  const source = yield* decodePublishedQuranSourceV2(result, "markdown");
+  if (
+    result.surah === null ||
+    !hasExpectedQuranSourcesV2(
+      result.sources,
+      result.tafsirAccess,
+      expected.appLocale
+    )
+  ) {
+    return yield* new QuranPublicationError({
+      operation: "markdown",
+      reason: "Signed Quran markdown is missing.",
+    });
+  }
+  const expectedToVerse = Math.min(
+    expected.verseLimit ?? result.surah.numberOfVerses,
+    result.surah.numberOfVerses
+  );
+  if (
+    result.appLocale !== expected.appLocale ||
+    (result.tafsirAccess !== null &&
+      result.tafsirAccess.appLocale !== expected.appLocale) ||
+    result.surah.number !== expected.surahNumber ||
+    result.toVerse !== expectedToVerse ||
+    !hasExactQuranVerseRange(result.verses, 1, expectedToVerse)
+  ) {
+    return yield* new QuranPublicationError({
+      operation: "markdown",
+      reason: "Signed Quran markdown identity is inconsistent.",
+    });
+  }
+  return {
+    ...source,
+    appLocale: result.appLocale,
+    sources: result.sources,
+    surah: result.surah,
+    tafsirAccess: result.tafsirAccess,
+    toVerse: result.toVerse,
+    verses: result.verses,
+  };
+});
+export type PublishedQuranMarkdownV2 = Effect.Success<
+  ReturnType<typeof decodePublishedQuranMarkdownV2>
+>;

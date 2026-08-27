@@ -2,7 +2,7 @@ import {
   readQuranTafsir,
   readQuranTranslation,
 } from "@repo/backend/convex/contentRelease/quran/translation";
-import { makeQuranChunk } from "@repo/backend/test/quran-rows";
+import { makeQuranChunk } from "@repo/backend/test/quran/rows";
 import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
@@ -30,7 +30,20 @@ describe("contentRelease/quran/translation", () => {
     Effect.gen(function* () {
       const results = yield* Effect.all({
         tafsir: Effect.result(readQuranTafsir({ ...verse, tafsir: [] }, "id")),
-        translation: Effect.result(readQuranTranslation(verse, "de")),
+        translation: Effect.result(
+          readQuranTranslation(
+            {
+              ...verse,
+              translations: [
+                verse.translations[0],
+                ...verse.translations
+                  .slice(1)
+                  .filter(({ appLocale }) => appLocale !== "de"),
+              ],
+            },
+            "de"
+          )
+        ),
       });
       for (const result of Object.values(results)) {
         expect(result).toMatchObject({

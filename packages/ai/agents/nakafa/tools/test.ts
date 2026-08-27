@@ -5,6 +5,7 @@ import {
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { Nakafa, type NakafaRuntime } from "@repo/ai/agents/nakafa/service";
+import { makeQuranV2Fixture } from "@repo/ai/agents/nakafa/tools/fixture";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import {
   getUnknownErrorMessage,
@@ -81,6 +82,24 @@ const nakafaTestRuntime = {
         verses: [verse],
       })
     );
+  },
+  /** Returns source-grounded V2 Quran data for AI tool tests. */
+  quranV2: (input) => {
+    const parsed = Schema.decodeUnknownOption(
+      NakafaAgentQuranReferenceOptionsSchema
+    )(input);
+    if (Option.isNone(parsed)) {
+      return Effect.fail(
+        new NakafaAgentInputError({
+          cause: getUnknownErrorMessage(input),
+          message: "Invalid Nakafa Quran reference options.",
+        })
+      );
+    }
+    if (parsed.value.from_verse === 999) {
+      return Effect.succeed(Option.none());
+    }
+    return Effect.succeed(Option.some(makeQuranV2Fixture(parsed.value)));
   },
   /** Returns deterministic markdown for service-injection tests. */
   read: (input) => {

@@ -1,4 +1,4 @@
-import type { QuranPublicationError } from "@repo/backend/client/quran/decode";
+import type { QuranPublicationError } from "@repo/backend/client/quran/publication";
 import {
   getUnknownErrorMessage,
   NakafaAgentDataReadError,

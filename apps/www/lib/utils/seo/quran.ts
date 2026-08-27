@@ -1,12 +1,12 @@
-import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
+import type { QuranSurah } from "@/lib/utils/pages/quran";
 import { createSEOKeywords } from "@/lib/utils/seo/keywords";
 import { fetchSEOTranslationsNamespace } from "@/lib/utils/seo/translations";
 
 /** Generates localized SEO metadata for one Quran surah payload. */
 export const generateQuranMetadata = Effect.fn("SEO.generateQuranMetadata")(
-  (surah: QuranSurahRow, locale: Locale) =>
+  (surah: QuranSurah, locale: Locale) =>
     Effect.gen(function* () {
       const name = surah.name.arabic;
       const transliteration = surah.name.transliteration;

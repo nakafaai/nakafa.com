@@ -1,0 +1,72 @@
+import { nakafaDataValidator } from "@repo/backend/convex/chats/nakafa";
+import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
+import { validate } from "convex-helpers/validators";
+import { describe, expect, it } from "vitest";
+
+const quranRef = readNakafaContentRefFixture("en", "quran/1", "quran");
+const input = {
+  from_verse: 1,
+  include_tafsir: false,
+  locale: "en",
+  surah: 1,
+  to_verse: 1,
+};
+const preview = {
+  ...quranRef,
+  from_verse: 1,
+  name: "Al-Fatihah",
+  revelation: "Mecca",
+  to_verse: 1,
+  verse_count: 1,
+};
+
+describe("Nakafa chat data schema", () => {
+  it("persists canonical V2 Quran previews", () => {
+    expect(
+      validate(nakafaDataValidator, {
+        input,
+        kind: "quran",
+        result: {
+          ...preview,
+          meaning: {
+            locale: "en",
+            text: "The Opening",
+          },
+        },
+        status: "done",
+      })
+    ).toBe(true);
+  });
+
+  it("continues to decode legacy persisted Quran previews", () => {
+    expect(
+      validate(nakafaDataValidator, {
+        input,
+        kind: "quran",
+        result: {
+          ...preview,
+          translation: "The Opening",
+        },
+        status: "done",
+      })
+    ).toBe(true);
+  });
+
+  it("rejects an ambiguous preview with both V1 and V2 fields", () => {
+    expect(
+      validate(nakafaDataValidator, {
+        input,
+        kind: "quran",
+        result: {
+          ...preview,
+          meaning: {
+            locale: "en",
+            text: "The Opening",
+          },
+          translation: "The Opening",
+        },
+        status: "done",
+      })
+    ).toBe(false);
+  });
+});

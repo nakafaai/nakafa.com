@@ -5,7 +5,7 @@ import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
 } from "@repo/backend/test/content-release";
-import { activateQuranSource } from "@repo/backend/test/quran-snapshot";
+import { activateQuranSource } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -87,6 +87,7 @@ describe("contentRelease/quran", () => {
         activeReleaseId: TEST_RELEASE_ID,
         managed: false,
         snapshotId: null,
+        sourceOrigin: null,
         sourceRevision: null,
       });
     }

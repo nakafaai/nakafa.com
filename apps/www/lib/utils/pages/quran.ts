@@ -1,7 +1,7 @@
-import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
+import type { PublishedQuranCatalog } from "@repo/backend/client/quran/decode";
 import type { QuranViewSurah } from "@repo/backend/client/quran/view";
 
-export type QuranSurah = QuranSurahRow;
+export type QuranSurah = PublishedQuranCatalog["surahs"][number];
 type QuranSurahMetadata = null | QuranViewSurah;
 
 /** Navigation data for Quran previous and next links. */

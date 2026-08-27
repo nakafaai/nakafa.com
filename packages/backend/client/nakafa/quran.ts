@@ -1,115 +1,113 @@
-import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
+import {
+  projectNakafaQuranReferenceV1,
+  projectNakafaQuranReferenceV2,
+} from "@repo/backend/agent/quran/projection";
 import {
   decodeNakafaMarkdown,
-  decodeNakafaQuranReference,
   parseQuranReferenceOptions,
   toNakafaQuranDataReadError,
 } from "@repo/backend/client/nakafa/decode";
 import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import {
   decodePublishedQuranReference,
-  QuranPublicationError,
+  type PublishedQuranReference,
 } from "@repo/backend/client/quran/decode";
 import { decodePublishedQuranMarkdown } from "@repo/backend/client/quran/markdown";
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
+import { decodePublishedQuranReferenceV2 } from "@repo/backend/client/quran/v2/reference";
 import { api } from "@repo/backend/convex/_generated/api";
 import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { Effect, Option } from "effect";
 
-/** Reads the exact reviewed translation selected by one application locale. */
-const readPublishedQuranTranslation = Effect.fn("NakafaQuran.readTranslation")(
-  function* (verse: QuranRuntimeVerse, appLocale: AppLocaleCode) {
-    const localized = verse.translations.find(
-      (translation) => translation.appLocale === appLocale
-    );
-    if (!localized) {
-      return yield* new QuranPublicationError({
-        operation: "reference",
-        reason: `Signed Quran verse ${verse.number.inQuran} has no ${appLocale} translation.`,
-      });
-    }
-    return localized.value;
-  }
-);
-/** Reads optional reviewed Indonesian tafsir without inventing another locale. */
-function findPublishedQuranTafsir(verse: QuranRuntimeVerse) {
-  return verse.tafsir.find(
-    (interpretation) => interpretation.appLocale === "id"
-  );
-}
-/** Reads a bounded Quran reference from the active signed publication. */
-export function readNakafaQuranReference(convexUrl: string, input: unknown) {
-  return Effect.gen(function* () {
+type ParsedQuranReferenceOptions = Effect.Success<
+  ReturnType<typeof parseQuranReferenceOptions>
+>;
+
+/** Reads a bounded Quran reference through the immutable V1 projection. */
+export const readNakafaQuranReference = Effect.fn("NakafaQuran.readReference")(
+  function* (convexUrl: string, input: unknown) {
     const parsed = yield* parseQuranReferenceOptions(input);
     const result = yield* readNakafaRuntimeQuery(
       convexUrl,
       api.contentRelease.quran.reference,
-      {
-        fromVerse: parsed.from_verse,
-        appLocale: parsed.locale,
-        surahNumber: parsed.surah,
-        toVerse: parsed.to_verse,
-      }
+      referenceArgs(parsed)
     );
     const reference = yield* decodePublishedQuranReference(result, {
       appLocale: parsed.locale,
       surahNumber: parsed.surah,
     }).pipe(Effect.mapError(toNakafaQuranDataReadError));
-    const ref = createNakafaContentRefFromGraphProjection({
-      ...reference.search.graph,
-      content_id: reference.search.graph.assetId,
-      locale: reference.search.appLocale,
-      route: reference.search.route,
-      section: "quran",
-    });
-    if (Option.isNone(ref)) {
-      return Option.none<
-        Effect.Success<ReturnType<typeof decodeNakafaQuranReference>>
-      >();
+    const identity = projectReferenceIdentity(reference.search, parsed);
+    if (Option.isNone(identity)) {
+      return Option.none();
     }
-    const verses = yield* Effect.forEach(reference.verses, (verse) =>
-      Effect.gen(function* () {
-        const translation = yield* readPublishedQuranTranslation(
-          verse,
-          parsed.locale
-        );
-        const row = {
-          arabic: verse.text.arabic,
-          number: verse.number.inSurah,
-          translation: translation.text,
-        };
-        if (!(parsed.include_tafsir && parsed.locale === "id")) {
-          return row;
-        }
-        const tafsir = findPublishedQuranTafsir(verse);
-        if (!tafsir) {
-          return yield* new QuranPublicationError({
-            operation: "reference",
-            reason: `Signed Quran verse ${verse.number.inQuran} has no Indonesian tafsir.`,
-          });
-        }
-        return { ...row, tafsir: tafsir.text };
+    return Option.some(
+      yield* projectNakafaQuranReferenceV1({
+        ...identity.value,
+        reference,
       })
-    ).pipe(Effect.mapError(toNakafaQuranDataReadError));
-    const decoded = yield* decodeNakafaQuranReference({
-      ...ref.value,
-      name: reference.surah.name.transliteration,
-      revelation: reference.surah.revelation.place,
-      translation: reference.surah.name.translation,
-      verses,
-    });
-    return Option.some(decoded);
+    );
+  }
+);
+
+/** Reads a bounded Quran reference through the explicit V2 projection. */
+export const readNakafaQuranReferenceV2 = Effect.fn(
+  "NakafaQuran.readReferenceV2"
+)(function* (convexUrl: string, input: unknown) {
+  const parsed = yield* parseQuranReferenceOptions(input);
+  const result = yield* readNakafaRuntimeQuery(
+    convexUrl,
+    api.contentRelease.quran.referenceV2,
+    referenceArgs(parsed)
+  );
+  const reference = yield* decodePublishedQuranReferenceV2(result, {
+    appLocale: parsed.locale,
+    surahNumber: parsed.surah,
+  }).pipe(Effect.mapError(toNakafaQuranDataReadError));
+  const identity = projectReferenceIdentity(reference.search, parsed);
+  if (Option.isNone(identity)) {
+    return Option.none();
+  }
+  return Option.some(
+    yield* projectNakafaQuranReferenceV2({
+      ...identity.value,
+      reference,
+    })
+  );
+});
+
+/** Builds the shared public identity from one verified reference search row. */
+function projectReferenceIdentity(
+  search: PublishedQuranReference["search"],
+  parsed: ParsedQuranReferenceOptions
+) {
+  const ref = createNakafaContentRefFromGraphProjection({
+    ...search.graph,
+    content_id: search.graph.assetId,
+    locale: search.appLocale,
+    route: search.route,
+    section: "quran",
   });
+  return Option.map(ref, (value) => ({
+    appLocale: parsed.locale,
+    includeTafsir: parsed.include_tafsir,
+    ref: value,
+  }));
+}
+
+/** Projects decoded public options into the direct Convex query shape. */
+function referenceArgs(input: ParsedQuranReferenceOptions) {
+  return {
+    appLocale: input.locale,
+    fromVerse: input.from_verse,
+    surahNumber: input.surah,
+    toVerse: input.to_verse,
+  };
 }
 /** Renders one signed Quran surah as full agent markdown. */
-export function readQuranMarkdown(
-  convexUrl: string,
-  ref: NakafaAgentContentRef
-) {
-  return Effect.gen(function* () {
+export const readQuranMarkdown = Effect.fn("NakafaQuran.readMarkdown")(
+  function* (convexUrl: string, ref: NakafaAgentContentRef) {
     const [section, value, extra] = ref.route.split("/");
     const surahNumber = parseQuranSurahNumber(value);
     if (section !== "quran" || extra !== undefined || surahNumber === null) {
@@ -153,8 +151,9 @@ export function readQuranMarkdown(
       title,
     });
     return Option.some(markdown);
-  });
-}
+  }
+);
+
 /** Returns the source-authenticated transliterated surah name. */
 export function getSurahName(surah: {
   readonly name: {

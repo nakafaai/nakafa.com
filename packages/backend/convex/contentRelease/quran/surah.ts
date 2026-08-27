@@ -1,12 +1,54 @@
 import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { readQuranChunks } from "@repo/backend/convex/contentRelease/quran/chunks";
 import { validateQuranSurah } from "@repo/backend/convex/contentRelease/quran/input";
+import { verifyLegacyQuranSurah } from "@repo/backend/convex/contentRelease/quran/legacy";
 import { QURAN_PAGE_VERSE_LIMIT } from "@repo/backend/convex/contentRelease/quran/limits";
 import { loadQuranOwner } from "@repo/backend/convex/contentRelease/quran/owner";
-import { readQuranRow } from "@repo/backend/convex/contentRelease/quran/row";
+import { verifyQuranRow } from "@repo/backend/convex/contentRelease/quran/verify";
 import { Effect } from "effect";
+
+/** Authenticates either signed surah contract during the rollout window. */
+export const verifyQuranSurahRow = Effect.fn(
+  "contentRelease.verifyQuranSurahRow"
+)(function* (row: Doc<"quranRows">, snapshotId: string) {
+  return yield* verifyQuranRow(row, snapshotId, QuranSurahRowSchema).pipe(
+    Effect.catchTag("ReleaseError", () =>
+      verifyLegacyQuranSurah(row, snapshotId)
+    )
+  );
+});
+
+/** Reads and authenticates one surah under either signed rollout contract. */
+export const readQuranSurahRow = Effect.fn("contentRelease.readQuranSurahRow")(
+  function* (ctx: QueryCtx, snapshotId: string, surahNumber: number) {
+    const stored = yield* Effect.promise(() =>
+      ctx.db
+        .query("quranRows")
+        .withIndex("by_snapshotId_and_identity", (index) =>
+          index
+            .eq("snapshotId", snapshotId)
+            .eq("identity", `surah:${surahNumber}`)
+        )
+        .unique()
+    );
+    if (stored === null) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        `Active Quran row surah:${surahNumber} is unavailable.`
+      );
+    }
+    const payload = yield* verifyQuranSurahRow(stored, snapshotId);
+    return {
+      index: stored.index,
+      payload,
+      rowHash: stored.rowHash,
+      rowJson: stored.rowJson,
+    };
+  }
+);
 
 /** Loads and validates one active signed Quran surah metadata row. */
 export const loadQuranSurah = Effect.fn("contentRelease.loadQuranSurah")(
@@ -16,12 +58,7 @@ export const loadQuranSurah = Effect.fn("contentRelease.loadQuranSurah")(
     if (owner.snapshotId === null) {
       return { owner, surah: null };
     }
-    const surah = yield* readQuranRow(
-      ctx,
-      owner.snapshotId,
-      `surah:${surahNumber}`,
-      QuranSurahRowSchema
-    );
+    const surah = yield* readQuranSurahRow(ctx, owner.snapshotId, surahNumber);
     if (surah.payload.numberOfVerses > QURAN_PAGE_VERSE_LIMIT) {
       return yield* releaseFail(
         "CONTENT_RELEASE_LIMIT",

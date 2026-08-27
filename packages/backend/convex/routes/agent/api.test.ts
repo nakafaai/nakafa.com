@@ -11,11 +11,12 @@ import {
 } from "@repo/backend/test/content-runtime";
 import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
 import {
+  makeQuranAttribution,
   makeQuranChunk,
   makeQuranSearch,
   makeQuranSurah,
-} from "@repo/backend/test/quran-rows";
-import { activateQuranSnapshot } from "@repo/backend/test/quran-snapshot";
+} from "@repo/backend/test/quran/rows";
+import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime-head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
 import {
@@ -318,11 +319,18 @@ describe("public agent API routes", () => {
     const test = createConvexTestWithBetterAuth();
     await test.mutation((ctx) =>
       activateQuranSnapshot(ctx, [
+        makeQuranAttribution(),
         makeQuranSurah(1),
         makeQuranChunk({
           firstQuranNumber: 1,
           firstVerse: 1,
           surahNumber: 1,
+          translationFootnotes: {
+            en: "[1] Exact English source note.",
+          },
+          translationText: {
+            en: "Technical translation 1[1]",
+          },
           verseCount: 1,
         }),
         makeQuranSearch("en", 1),
@@ -335,44 +343,68 @@ describe("public agent API routes", () => {
 
     expect(response.status).toBe(200);
     expectPublicJson(response);
-    await expect(response.json()).resolves.toMatchObject({
+    const body = await response.json();
+    expect(body).toMatchObject({
       content_id: "asset:en:quran:quran-surah:1",
       locale: "en",
       route: "quran/1",
       section: "quran",
-      text: expect.stringContaining("Technical translation 1"),
+      text: expect.stringContaining("Technical translation 1[1]"),
       title: "Technical Surah 1",
     });
+    expect(body.text).not.toContain("translation note 1");
+    expect(body.text).not.toContain("Technical English Tafsir notice.");
   });
 
   it("returns one bounded authenticated Quran reference", async () => {
     const test = createConvexTestWithBetterAuth();
     await test.mutation((ctx) =>
       activateQuranSnapshot(ctx, [
+        makeQuranAttribution(),
         ...Array.from({ length: 114 }, (_, index) => makeQuranSurah(index + 1)),
         makeQuranChunk({
           firstQuranNumber: 1,
           firstVerse: 1,
           surahNumber: 1,
+          translationFootnotes: {
+            id: "[4] Catatan sumber Indonesia.",
+          },
+          translationText: {
+            id: "Terjemahan teknis 1[4]",
+          },
           verseCount: 1,
         }),
-        makeQuranSearch("en", 1),
+        makeQuranSearch("id", 1),
       ])
     );
-    const response = await fetchApi(test, "/v1/quran/1?locale=en&from_verse=1");
+    const response = await fetchApi(
+      test,
+      "/v1/quran/1?locale=id&from_verse=1&include_tafsir=true"
+    );
 
     expect(response.status).toBe(200);
     expectPublicJson(response);
-    await expect(response.json()).resolves.toMatchObject({
-      content_id: "asset:en:quran:quran-surah:1",
-      locale: "en",
+    await expect(response.json()).resolves.toEqual({
+      alignmentId: "alignment:quran:quran-surah:1",
+      assetId: "asset:id:quran:quran-surah:1",
+      conceptId: "concept:quran:surah:1",
+      content_id: "asset:id:quran:quran-surah:1",
+      learningObjectId: "lo:quran-surah:1",
+      lensId: "lens:quran",
+      locale: "id",
+      markdown_url: "https://nakafa.com/id/quran/1.md",
+      name: "Technical Surah 1",
+      revelation: "Meccan",
       route: "quran/1",
       section: "quran",
+      translation: "Technical meaning 1",
+      url: "https://nakafa.com/id/quran/1",
       verses: [
         {
           arabic: "آية 1",
           number: 1,
-          translation: "Technical translation 1",
+          tafsir: "Tafsir teknis 1",
+          translation: "Terjemahan teknis 1[4]",
         },
       ],
     });

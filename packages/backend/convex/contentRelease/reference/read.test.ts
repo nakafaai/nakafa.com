@@ -9,8 +9,8 @@ import {
   testArticleProjection,
 } from "@repo/backend/test/content-runtime";
 import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
-import { makeQuranSearch } from "@repo/backend/test/quran-rows";
-import { activateQuranSnapshot } from "@repo/backend/test/quran-snapshot";
+import { makeQuranSearch } from "@repo/backend/test/quran/rows";
+import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import {
   activateTryoutSnapshot,
   makeTryoutCatalogRow,

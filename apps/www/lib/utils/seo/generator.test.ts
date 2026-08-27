@@ -1,6 +1,7 @@
 // @vitest-environment node
-import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { QuranSurah } from "@/lib/utils/pages/quran";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 
 const { mockCacheLife, mockGetTranslations } = vi.hoisted(() => ({
@@ -121,7 +122,7 @@ const surah = {
   number: 1,
   numberOfVerses: 7,
   revelation: { order: 5, place: "Meccan" },
-} satisfies QuranSurahRow;
+} satisfies QuranSurah;
 
 beforeEach(() => {
   mockCacheLife.mockClear();

@@ -3,23 +3,35 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
+  makeQuranAttribution,
   makeQuranChunk,
+  makeQuranLocaleSources,
   makeQuranSearch,
   makeQuranSurah,
-} from "@repo/backend/test/quran-rows";
-import { activateQuranSnapshot } from "@repo/backend/test/quran-snapshot";
+  makeQuranTafsirProjection,
+} from "@repo/backend/test/quran/rows";
+import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
 /** Builds every verified source row needed by the first Quran page. */
 function viewRows() {
   return [
+    makeQuranAttribution(),
     makeQuranSurah(1),
     makeQuranSurah(2),
     makeQuranChunk({
       firstQuranNumber: 1,
       firstVerse: 1,
       surahNumber: 1,
+      translationFootnotes: {
+        en: "[1] Technical English translation note.",
+        id: "[4] Catatan teknis terjemahan Indonesia.",
+      },
+      translationText: {
+        en: "Technical translation 1[1]",
+        id: "Terjemahan teknis 1[4]",
+      },
       verseCount: 1,
     }),
     makeQuranSearch("en", 1),
@@ -41,13 +53,16 @@ describe("contentRelease/quran/view", () => {
       nextSurah: null,
       previousSurah: null,
       snapshotId: null,
+      sourceOrigin: null,
       sourceRevision: null,
+      sources: null,
       surah: null,
+      tafsirAccess: null,
       verses: [],
     });
   });
 
-  it("projects only the requested app locale without transporting tafsir", async () => {
+  it("projects only the requested app locale without transporting tafsir bodies", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => activateQuranSnapshot(ctx, viewRows()));
 
@@ -60,7 +75,7 @@ describe("contentRelease/quran/view", () => {
 
     expect(english.nextSurah).toEqual({
       name: {
-        translation: "Technical meaning 2",
+        meaning: "Technical meaning 2",
         transliteration: "Technical Surah 2",
       },
       number: 2,
@@ -69,26 +84,54 @@ describe("contentRelease/quran/view", () => {
     expect(english.previousSurah).toBeNull();
     expect(english.surah).toEqual({
       name: {
-        translation: "Technical meaning 1",
+        meaning: "Technical meaning 1",
         transliteration: "Technical Surah 1",
       },
       number: 1,
       numberOfVerses: 1,
     });
+    expect(english.sources).toEqual(makeQuranLocaleSources("en"));
+    expect(english.tafsirAccess).toEqual(makeQuranTafsirProjection("en"));
     expect(english.verses).toEqual([
       {
         arabic: "آية 1",
         number: { inQuran: 1, inSurah: 1 },
-        translation: "Technical translation 1",
+        translation: {
+          notes: [
+            {
+              number: 1,
+              referenceOffset: 23,
+              text: "Technical English translation note.",
+            },
+          ],
+          segments: [
+            { kind: "text", offset: 0, value: "Technical translation 1" },
+            { kind: "note", number: 1, offset: 23 },
+          ],
+        },
       },
     ]);
     expect(indonesian.verses).toEqual([
       {
         arabic: "آية 1",
         number: { inQuran: 1, inSurah: 1 },
-        translation: "Terjemahan teknis 1",
+        translation: {
+          notes: [
+            {
+              number: 4,
+              referenceOffset: 19,
+              text: "Catatan teknis terjemahan Indonesia.",
+            },
+          ],
+          segments: [
+            { kind: "text", offset: 0, value: "Terjemahan teknis 1" },
+            { kind: "note", number: 4, offset: 19 },
+          ],
+        },
       },
     ]);
+    expect(indonesian.sources).toEqual(makeQuranLocaleSources("id"));
+    expect(indonesian.tafsirAccess).toEqual(makeQuranTafsirProjection("id"));
     expect(JSON.stringify(indonesian)).not.toContain("Tafsir teknis");
     expect({
       english: english.appLocale,
@@ -112,7 +155,19 @@ describe("contentRelease/quran/view", () => {
       verses: [
         {
           number: { inQuran: 1, inSurah: 1 },
-          translation: "Terjemahan teknis 1",
+          translation: {
+            notes: [
+              {
+                number: 4,
+                referenceOffset: 19,
+                text: "Catatan teknis terjemahan Indonesia.",
+              },
+            ],
+            segments: [
+              { kind: "text", offset: 0, value: "Terjemahan teknis 1" },
+              { kind: "note", number: 4, offset: 19 },
+            ],
+          },
         },
       ],
     });

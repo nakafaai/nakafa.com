@@ -3,11 +3,12 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
+  makeQuranAttribution,
   makeQuranChunk,
   makeQuranSearch,
   makeQuranSurah,
-} from "@repo/backend/test/quran-rows";
-import { activateQuranSnapshot } from "@repo/backend/test/quran-snapshot";
+} from "@repo/backend/test/quran/rows";
+import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
@@ -32,6 +33,7 @@ describe("contentRelease/reference/agent", () => {
     const test = convexTest(schema, convexModules);
     await test.mutation((ctx) =>
       activateQuranSnapshot(ctx, [
+        makeQuranAttribution(),
         makeQuranSurah(1),
         makeQuranChunk({
           firstQuranNumber: 1,

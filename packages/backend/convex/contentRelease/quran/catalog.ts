@@ -1,11 +1,8 @@
-import {
-  QURAN_SURAH_COUNT,
-  QuranSurahRowSchema,
-} from "@nakafa/aksara-contracts/quran/spec";
+import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadQuranOwner } from "@repo/backend/convex/contentRelease/quran/owner";
-import { verifyQuranRow } from "@repo/backend/convex/contentRelease/quran/verify";
+import { verifyQuranSurahRow } from "@repo/backend/convex/contentRelease/quran/surah";
 import { Effect } from "effect";
 
 /** Loads and authenticates the complete ordered Quran surah catalog. */
@@ -32,7 +29,7 @@ const loadQuranCatalog = Effect.fn("contentRelease.loadQuranCatalog")(
       );
     }
     const surahs = yield* Effect.forEach(stored, (row) =>
-      verifyQuranRow(row, owner.snapshotId, QuranSurahRowSchema)
+      verifyQuranSurahRow(row, owner.snapshotId)
     );
     const invalid = surahs.find((surah, index) => surah.number !== index + 1);
     if (invalid) {

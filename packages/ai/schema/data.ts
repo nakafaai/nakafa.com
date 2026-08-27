@@ -30,12 +30,24 @@ const TaxonomyInputSchema = NakafaAgentTaxonomyOptionsSchema;
 const QuranPreviewSchema = NakafaAgentContentRefSchema.mapFields((fields) => ({
   ...fields,
   from_verse: Schema.Finite,
+  meaning: Schema.NullOr(
+    Schema.Struct({
+      locale: Schema.Literal("en"),
+      text: Schema.String,
+    }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+  ),
   name: Schema.String,
   revelation: Schema.String,
   to_verse: Schema.Finite,
-  translation: Schema.String,
   verse_count: Schema.Finite,
 })).mapFields(Struct.map(Schema.mutableKey));
+const LegacyQuranPreviewSchema = QuranPreviewSchema.mapFields((fields) => {
+  const { meaning: _meaning, ...legacyFields } = fields;
+  return {
+    ...legacyFields,
+    translation: Schema.String,
+  };
+}).mapFields(Struct.map(Schema.mutableKey));
 const TaxonomyPreviewSchema = Schema.Struct({
   content_counts: Schema.Array(
     Schema.Struct({
@@ -93,7 +105,7 @@ const NakafaQuranLoadingSchema = Schema.Struct(nakafaQuranLoadingFields).pipe(
 );
 const NakafaQuranDoneSchema = Schema.Struct({
   ...nakafaQuranLoadingFields,
-  result: QuranPreviewSchema,
+  result: Schema.Union([QuranPreviewSchema, LegacyQuranPreviewSchema]),
   status: Schema.Literal("done"),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 const NakafaQuranErrorSchema = Schema.Struct({

@@ -5,7 +5,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import {
   encodeTestQuranRow,
   makeQuranSurah,
-} from "@repo/backend/test/quran-rows";
+} from "@repo/backend/test/quran/rows";
 import { toRuntimeQueryError } from "@repo/backend/test/runtime-query";
 import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { type FunctionReference, getFunctionName } from "convex/server";
@@ -55,6 +55,7 @@ describe("readNakafaTaxonomy", () => {
         { count: 121, locale: "de" },
       ]);
       expect(taxonomy.tools).toContain("nakafa_get_quran_reference");
+      expect(taxonomy.tools).toContain("nakafa_get_quran_reference_v2");
       expect(taxonomy.articles.categories).toEqual(["politics"]);
       expect(taxonomy.tryout).toEqual({
         countries: [{ id: "indonesia", label: "Indonesia" }],
@@ -274,6 +275,7 @@ function readRuntimeFixture(
         encodeTestQuranRow(quranSnapshotId, makeQuranSurah(index + 1))
       ),
       snapshotId: quranSnapshotId,
+      sourceOrigin: { kind: "git", sha: "c".repeat(40) },
       sourceRevision: "c".repeat(40),
     });
   }

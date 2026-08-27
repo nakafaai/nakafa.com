@@ -1,6 +1,6 @@
 import type { ProgramNavigationLevel } from "@nakafa/aksara-contracts/program/spec";
-import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 import type { Grade, Material } from "@repo/contents/_types/taxonomy";
+import type { QuranSurah } from "@/lib/utils/pages/quran";
 
 /**
  * Base SEO data extracted from content metadata
@@ -43,7 +43,7 @@ export type SEOContext =
     }
   | {
       type: "quran";
-      surah: QuranSurahRow;
+      surah: QuranSurah;
     };
 
 /**

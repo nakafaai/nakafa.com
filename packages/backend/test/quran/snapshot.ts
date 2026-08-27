@@ -6,7 +6,7 @@ import {
 import { ACTIVE_APP_LOCALES } from "@nakafa/aksara-contracts/locale";
 import { makeQuranSnapshot as makeSignedQuranSnapshot } from "@nakafa/aksara-contracts/quran/snapshot/hash";
 import type { QuranRowPayload } from "@nakafa/aksara-contracts/quran/snapshot/row";
-import { bindQuranRow } from "@nakafa/aksara-contracts/quran/snapshot/row-hash";
+import { bindQuranRow } from "@nakafa/aksara-contracts/quran/snapshot/row/hash";
 import type { QuranSnapshotFacts } from "@nakafa/aksara-contracts/quran/snapshot/spec";
 import { quranSourceFileCount } from "@nakafa/aksara-contracts/quran/source";
 import {
@@ -39,11 +39,14 @@ import {
   insertZeroRelease,
   type TestIdentity,
 } from "@repo/backend/test/content-state";
-import { makeQuranSearch } from "@repo/backend/test/quran-rows";
+import { makeQuranSearch } from "@repo/backend/test/quran/rows";
 import { Effect } from "effect";
 
 const QURAN_SEARCH_COUNT = QURAN_SURAH_COUNT * ACTIVE_APP_LOCALES.length;
 const QURAN_SOURCE_FILE_COUNT = quranSourceFileCount(ACTIVE_APP_LOCALES);
+const QURAN_ROLLBACK_BASE_SNAPSHOT_ID = Sha256HashSchema.make(
+  `sha256:${"f".repeat(64)}`
+);
 
 /** Creates the complete technical snapshot facts shared by test manifests. */
 function makeQuranSnapshotFacts(
@@ -146,7 +149,8 @@ export async function activateQuranSource(ctx: MutationCtx) {
 /** Activates explicit technical rows under one approved Quran snapshot. */
 export async function activateQuranSnapshot(
   ctx: MutationCtx,
-  payloads: readonly QuranRowPayload[]
+  payloads: readonly QuranRowPayload[],
+  options?: { readonly originReleaseId?: string }
 ) {
   const snapshot = await Effect.runPromise(makeQuranSnapshot());
   const snapshotId = snapshot.manifest.snapshotId;
@@ -155,14 +159,19 @@ export async function activateQuranSnapshot(
   );
   const snapshots = {
     ...inheritContentSnapshots(null),
-    quran: replaceContentSnapshot({
-      baseSnapshotId: null,
-      resultSnapshotId: snapshotId,
-      rowCount: records.length,
-      rowDigest: snapshotId,
-    }),
+    quran: options?.originReleaseId
+      ? restoreContentSnapshot(QURAN_ROLLBACK_BASE_SNAPSHOT_ID, snapshotId)
+      : replaceContentSnapshot({
+          baseSnapshotId: null,
+          resultSnapshotId: snapshotId,
+          rowCount: records.length,
+          rowDigest: snapshotId,
+        }),
   };
-  await insertTestRelease(ctx, { snapshots });
+  await insertTestRelease(ctx, {
+    originReleaseId: options?.originReleaseId,
+    snapshots,
+  });
   await ctx.db.insert("contentSnapshots", {
     createdAt: 1,
     family: "quran",

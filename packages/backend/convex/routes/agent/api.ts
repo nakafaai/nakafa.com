@@ -11,56 +11,39 @@ import {
   createOpenApiOptionsResponse,
   createOpenApiResponse,
 } from "@repo/backend/agent/openapi/response";
-import { getNakafaQuranReference } from "@repo/backend/agent/quran";
 import { searchNakafaContent } from "@repo/backend/agent/search";
 import { getNakafaTaxonomy } from "@repo/backend/agent/taxonomy";
-import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { guardAgentApi } from "@repo/backend/convex/routes/agent/guard";
 import {
-  type AgentHttpInputError,
   readContentInput,
-  readQuranInput,
   readSearchInput,
   readTaxonomyInput,
 } from "@repo/backend/convex/routes/agent/input";
+import { registerAgentQuranRoutes } from "@repo/backend/convex/routes/agent/quran";
 import {
-  type AgentRateLimitError,
-  enforceAgentReadLimit,
-} from "@repo/backend/convex/routes/agent/limit";
-import {
-  agentFailureResponse,
   agentJsonResponse,
   agentOptionsResponse,
-  httpInputFailureResponse,
-  logInternalFailure,
   problemResponse,
 } from "@repo/backend/convex/routes/agent/response";
+import {
+  type AgentApp,
+  runAgentRequest,
+  runMeteredRequest,
+} from "@repo/backend/convex/routes/agent/runtime";
 import {
   NAKAFA_API_BASE_URL,
   NAKAFA_BASE_URL,
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
   NAKAFA_PUBLIC_API_VERSION,
 } from "@repo/contents/_lib/agent/constants";
-import type {
-  NakafaAgentDataReadError,
-  NakafaAgentInputError,
-} from "@repo/contents/_lib/agent/errors";
 import {
   NakafaApiHealthSchema,
   NakafaApiIndexSchema,
 } from "@repo/contents/_lib/agent/schema/api";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/schema/taxonomy";
-import type { HonoWithConvex } from "convex-helpers/server/hono";
-import { Cause, Effect, Option } from "effect";
+import { Effect, Option } from "effect";
 import { Hono } from "hono";
-
-type AgentDomainError =
-  | AgentHttpInputError
-  | AgentRateLimitError
-  | NakafaAgentDataReadError
-  | NakafaAgentInputError;
-type AgentApp = HonoWithConvex<ActionCtx, { requestId: string }>;
 
 /** Registers the protected read-only API and its machine-readable contract. */
 export function registerAgentApiRoutes(app: AgentApp) {
@@ -69,6 +52,8 @@ export function registerAgentApiRoutes(app: AgentApp) {
   api.use("/openapi.json", guardAgentApi);
   api.use("/v1", guardAgentApi);
   api.use("/v1/*", guardAgentApi);
+  api.use("/v2", guardAgentApi);
+  api.use("/v2/*", guardAgentApi);
 
   api.get("/openapi.json", (context) =>
     createOpenApiResponse(context.req.header("if-none-match"))
@@ -173,23 +158,7 @@ export function registerAgentApiRoutes(app: AgentApp) {
     )
   );
 
-  api.get("/v1/quran/:surah", (context) =>
-    runMeteredRequest(
-      context.env,
-      context.req.raw,
-      context.get("requestId"),
-      readQuranInput(new URL(context.req.url), context.req.param("surah")).pipe(
-        Effect.flatMap((input) => getNakafaQuranReference(context.env, input)),
-        Effect.map(
-          Option.match({
-            onNone: () =>
-              quranNotFoundResponse(context.req.raw, context.get("requestId")),
-            onSome: agentJsonResponse,
-          })
-        )
-      )
-    )
-  );
+  registerAgentQuranRoutes(api);
 
   for (const path of [
     "/v1",
@@ -197,7 +166,6 @@ export function registerAgentApiRoutes(app: AgentApp) {
     "/v1/search",
     "/v1/content",
     "/v1/taxonomy",
-    "/v1/quran/:surah",
   ]) {
     api.options(path, () => agentOptionsResponse());
   }
@@ -205,49 +173,14 @@ export function registerAgentApiRoutes(app: AgentApp) {
   api.all("/v1/*", (context) =>
     missingRouteResponse(context.req.raw, context.get("requestId"))
   );
+  api.all("/v2", (context) =>
+    missingRouteResponse(context.req.raw, context.get("requestId"))
+  );
+  api.all("/v2/*", (context) =>
+    missingRouteResponse(context.req.raw, context.get("requestId"))
+  );
 
   app.route(NAKAFA_API_EDGE_CONTRACT.originPath, api);
-}
-
-/** Applies the application quota before reading or parsing content input. */
-function runMeteredRequest(
-  ctx: ActionCtx,
-  request: Request,
-  requestId: string,
-  program: Effect.Effect<Response, AgentDomainError>
-) {
-  return runAgentRequest(
-    request,
-    requestId,
-    enforceAgentReadLimit(ctx, request).pipe(Effect.flatMap(() => program))
-  );
-}
-
-/** Runs one typed agent program at the Hono HTTP Action boundary. */
-function runAgentRequest(
-  request: Request,
-  requestId: string,
-  program: Effect.Effect<Response, AgentDomainError>
-) {
-  const instance = projectPublicApiPath(new URL(request.url).pathname);
-  return Effect.runPromise(
-    program.pipe(
-      Effect.matchCauseEffect({
-        onFailure: (cause) => {
-          const failure = cause.reasons.find(Cause.isFailReason);
-          if (!failure) {
-            return logInternalFailure(cause, instance, requestId);
-          }
-          return Effect.succeed(
-            failure.error._tag === "AgentHttpInputError"
-              ? httpInputFailureResponse(failure.error, instance, requestId)
-              : agentFailureResponse(failure.error, instance, requestId)
-          );
-        },
-        onSuccess: Effect.succeed,
-      })
-    )
-  );
 }
 
 /** Returns a stable missing-content problem. */
@@ -262,20 +195,6 @@ function contentNotFoundResponse(request: Request, requestId: string) {
     status: 404,
     title: "Content not found",
     type: "content-not-found",
-  });
-}
-
-/** Returns a stable missing-Quran-reference problem. */
-function quranNotFoundResponse(request: Request, requestId: string) {
-  return problemResponse({
-    code: "QURAN_REFERENCE_NOT_FOUND",
-    detail: "The requested Quran reference was not found.",
-    instance: projectPublicApiPath(new URL(request.url).pathname),
-    requestId,
-    resolution: "Pass a surah number from 1 through 114.",
-    status: 404,
-    title: "Quran reference not found",
-    type: "quran-reference-not-found",
   });
 }
 

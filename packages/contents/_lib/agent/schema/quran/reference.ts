@@ -1,0 +1,103 @@
+import {
+  ENGLISH_APP_LOCALE_CODE,
+  GERMAN_APP_LOCALE_CODE,
+  INDONESIAN_APP_LOCALE_CODE,
+} from "@nakafa/aksara-contracts/locale";
+import { QuranTranslationDocumentSchema } from "@nakafa/aksara-contracts/quran/notes";
+import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
+import {
+  NakafaQuranEnglishReadingSourcesSchema,
+  NakafaQuranEnglishTafsirAccessSchema,
+  NakafaQuranGermanReadingSourcesSchema,
+  NakafaQuranGermanTafsirAccessSchema,
+  NakafaQuranIndonesianReadingSourcesSchema,
+  NakafaQuranIndonesianTafsirAccessSchema,
+} from "@repo/contents/_lib/agent/schema/quran/source";
+import { NakafaAgentReadableContentRefSchema } from "@repo/contents/_lib/agent/schema/ref";
+import { Schema, Struct } from "effect";
+
+/** English-only source-authenticated meaning of a surah name. */
+export const NakafaQuranMeaningSchema = Schema.Struct({
+  locale: Schema.Literal(ENGLISH_APP_LOCALE_CODE),
+  text: QuranSurahRowSchema.fields.name.fields.meaning.fields.text,
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
+
+const NakafaQuranTranslationDocumentSchema =
+  QuranTranslationDocumentSchema.mapFields((fields) => ({
+    notes: fields.notes.pipe(Schema.mutable),
+    segments: fields.segments.pipe(Schema.mutable),
+  })).mapFields(Struct.map(Schema.mutableKey));
+
+/** One Quran verse with semantic translation-note relationships. */
+const NakafaQuranReferenceVerseV2Schema = Schema.Struct({
+  arabic: Schema.String.annotate({
+    description: "Arabic Quran verse text.",
+  }),
+  number: Schema.Finite.pipe(
+    Schema.check(Schema.isInt()),
+    Schema.check(Schema.isGreaterThan(0))
+  ).annotate({ description: "Verse number inside the surah." }),
+  tafsir: Schema.optional(
+    Schema.String.annotate({
+      description:
+        "Reviewed tafsir text when the locale has an embedded edition and it was requested.",
+    })
+  ),
+  translation: NakafaQuranTranslationDocumentSchema.annotate({
+    description:
+      "Translation represented as text and note-reference segments plus exact source notes.",
+  }),
+})
+  .pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
+  .annotate({ description: "Nakafa Quran V2 verse reference." });
+
+const NakafaQuranReferenceV2Fields = {
+  ...NakafaAgentReadableContentRefSchema.fields,
+  name: QuranSurahRowSchema.fields.name.fields.transliteration.annotate({
+    description: "Source-authenticated transliterated surah name.",
+  }),
+  revelation: QuranSurahRowSchema.fields.revelation.fields.place.annotate({
+    description: "Source-authenticated revelation place.",
+  }),
+  verses: Schema.Array(NakafaQuranReferenceVerseV2Schema)
+    .pipe(Schema.mutable, Schema.check(Schema.isMinLength(1)))
+    .annotate({ description: "Bounded Quran verses." }),
+};
+
+const NakafaQuranEnglishReferenceV2Schema = Schema.Struct({
+  ...NakafaQuranReferenceV2Fields,
+  locale: Schema.Literal(ENGLISH_APP_LOCALE_CODE),
+  meaning: NakafaQuranMeaningSchema,
+  sources: NakafaQuranEnglishReadingSourcesSchema,
+  tafsir_access: NakafaQuranEnglishTafsirAccessSchema,
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
+
+const NakafaQuranIndonesianReferenceV2Schema = Schema.Struct({
+  ...NakafaQuranReferenceV2Fields,
+  locale: Schema.Literal(INDONESIAN_APP_LOCALE_CODE),
+  meaning: Schema.Null,
+  sources: NakafaQuranIndonesianReadingSourcesSchema,
+  tafsir_access: NakafaQuranIndonesianTafsirAccessSchema,
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
+
+const NakafaQuranGermanReferenceV2Schema = Schema.Struct({
+  ...NakafaQuranReferenceV2Fields,
+  locale: Schema.Literal(GERMAN_APP_LOCALE_CODE),
+  meaning: Schema.Null,
+  sources: NakafaQuranGermanReadingSourcesSchema,
+  tafsir_access: NakafaQuranGermanTafsirAccessSchema,
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
+
+/** Quran V2 output with locale-correlated meaning and signed source access. */
+export const NakafaAgentQuranReferenceV2Schema = Schema.Union([
+  NakafaQuranEnglishReferenceV2Schema,
+  NakafaQuranIndonesianReferenceV2Schema,
+  NakafaQuranGermanReferenceV2Schema,
+]).annotate({
+  description:
+    "Nakafa Quran V2 reference with semantic notes and signed source attribution.",
+});
+
+export type NakafaAgentQuranReferenceV2 = Schema.Schema.Type<
+  typeof NakafaAgentQuranReferenceV2Schema
+>;
