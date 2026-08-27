@@ -2,7 +2,7 @@
 
 import { access } from "node:fs/promises";
 import { join } from "node:path";
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { resolveTryoutExamArtwork } from "@/lib/tryout/artwork";
 

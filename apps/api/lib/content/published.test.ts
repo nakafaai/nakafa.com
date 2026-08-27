@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { makeMaterialProjection } from "@repo/backend/test/content-material";
-import { TEST_PAGE_PROJECTION } from "@repo/backend/test/content-page";
-import { testLocalizedArticleProjection } from "@repo/backend/test/content-runtime";
+import { makeMaterialProjection } from "@repo/backend/test/content/material";
+import { TEST_PAGE_PROJECTION } from "@repo/backend/test/content/page";
+import { testLocalizedArticleProjection } from "@repo/backend/test/content/runtime";
 import { Effect } from "effect";
 import { vi } from "vitest";
 import {

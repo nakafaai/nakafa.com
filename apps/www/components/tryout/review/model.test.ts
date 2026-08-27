@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import { projectTryoutReview } from "@/components/tryout/review/model";

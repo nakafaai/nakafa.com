@@ -1,8 +1,8 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type { QuranTranslationDocument } from "@nakafa/aksara-contracts/quran/notes";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect, Option } from "effect";
 import { createTranslator, type Locale } from "next-intl";
 import { vi } from "vitest";

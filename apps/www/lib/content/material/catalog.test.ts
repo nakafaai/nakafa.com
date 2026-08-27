@@ -1,11 +1,11 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   canonicalizeMaterialProjection,
   type MaterialLessonProjection,
 } from "@nakafa/aksara-contracts/projection/material";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import { vi } from "vitest";
 import {
