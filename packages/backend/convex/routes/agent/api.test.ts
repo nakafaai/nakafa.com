@@ -154,15 +154,10 @@ describe("public agent API routes", () => {
     });
   });
 
-  it("preserves the deployed v1 predecessor before the edge switch", async () => {
+  it("does not expose the predecessor origin mount", async () => {
     const response = await createConvexTestWithBetterAuth().fetch("/v1");
 
-    expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({
-      docs: "https://docs.nakafa.com/api",
-      status: "active",
-      version: "1.0.0",
-    });
+    expect(response.status).toBe(404);
   });
 
   it.each([
