@@ -9,10 +9,8 @@ import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import { vi } from "vitest";
 import {
-  getPublishedMaterialRelease,
   getPublishedMaterialRoutes,
   readPublishedMaterialPage,
-  readPublishedMaterialRelease,
   readPublishedMaterialRoutes,
 } from "@/lib/content/material/catalog";
 import { previewIdProjection, previewProjection } from "@/test/content-preview";
@@ -58,26 +56,6 @@ function materialPage({
     },
     sourceRevision: managed ? revision : null,
     stale,
-  };
-}
-
-/** Builds the signed material release identity returned by Convex. */
-function materialRelease({
-  activeAppLocales = ["en", "id", "de"],
-  manifest = manifestHash,
-  release = releaseId,
-  revision = sourceRevision,
-}: {
-  readonly activeAppLocales?: readonly string[];
-  readonly manifest?: null | string;
-  readonly release?: null | string;
-  readonly revision?: null | string;
-} = {}) {
-  return {
-    activeAppLocales,
-    activeManifestHash: manifest,
-    activeReleaseId: release,
-    sourceRevision: revision,
   };
 }
 
@@ -137,38 +115,6 @@ describe("published material catalog", () => {
     });
     expect(cacheMock).toHaveBeenCalledOnce();
   });
-
-  it("reads and caches signed release locale membership", async () => {
-    runtimeQueryMock.mockResolvedValueOnce(materialRelease());
-
-    await expect(getPublishedMaterialRelease()).resolves.toMatchObject({
-      activeAppLocales: ["en", "id", "de"],
-      activeManifestHash: manifestHash,
-      activeReleaseId: releaseId,
-      sourceRevision,
-    });
-    expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
-      appLocale: "en",
-      publicPath: "materials",
-    });
-    expect(cacheMock).toHaveBeenCalledOnce();
-  });
-
-  it.effect("rejects malformed signed release identity", () =>
-    Effect.gen(function* () {
-      for (const result of [
-        materialRelease({ activeAppLocales: ["id", "en"] }),
-        materialRelease({ manifest: null }),
-        materialRelease({ release: null }),
-        materialRelease({ revision: "main" }),
-      ]) {
-        runtimeQueryMock.mockResolvedValueOnce(result);
-        expect(
-          yield* readPublishedMaterialRelease().pipe(Effect.flip)
-        ).toMatchObject({ _tag: "PublishedProjectionError" });
-      }
-    })
-  );
 
   it.effect("rejects unmanaged and stale ownership states", () =>
     Effect.gen(function* () {
