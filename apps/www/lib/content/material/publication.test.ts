@@ -48,7 +48,7 @@ vi.mock("@/lib/content/cache", () => ({
   applyPublishedContentCache: contentCacheMock,
 }));
 vi.mock("@/lib/content/material/route", () => ({
-  readPublishedMaterialRoute: routeMock,
+  getPublishedMaterialRoute: routeMock,
 }));
 vi.mock("@/lib/content/published/material", () => ({
   readRenderedMaterial: renderMock,
@@ -69,7 +69,7 @@ beforeEach(() => {
   contentCacheMock.mockReset();
   routeMock.mockReset();
   renderMock.mockReset();
-  routeMock.mockReturnValue(Effect.succeed(model));
+  routeMock.mockResolvedValue(model);
   renderMock.mockReturnValue(Effect.succeed(published));
 });
 
@@ -78,12 +78,9 @@ describe("material publication", () => {
     let releaseRoute: () => void = () => undefined;
     let releasePublished: () => void = () => undefined;
     routeMock.mockReturnValueOnce(
-      Effect.promise(
-        () =>
-          new Promise((resolve) => {
-            releaseRoute = () => resolve(model);
-          })
-      )
+      new Promise((resolve) => {
+        releaseRoute = () => resolve(model);
+      })
     );
     renderMock.mockReturnValueOnce(
       Effect.promise(
@@ -116,16 +113,14 @@ describe("material publication", () => {
     const publicPath = PublicPathSchema.make(
       `${previewProjection.publicPath}-missing`
     );
-    routeMock.mockReturnValueOnce(
-      Effect.succeed({
-        ...model,
-        alternates: [],
-        projection: null,
-        rendererDomain: null,
-        siblings: [],
-        sourcePath: null,
-      })
-    );
+    routeMock.mockResolvedValueOnce({
+      ...model,
+      alternates: [],
+      projection: null,
+      rendererDomain: null,
+      siblings: [],
+      sourcePath: null,
+    });
     renderMock.mockReturnValueOnce(Effect.fail(missingRuntime(publicPath)));
 
     await expect(getMaterialPublication("en", publicPath)).resolves.toBeNull();
@@ -152,16 +147,14 @@ describe("material publication", () => {
     const publicPath = PublicPathSchema.make(
       `${previewProjection.publicPath}-missing`
     );
-    routeMock.mockReturnValueOnce(
-      Effect.succeed({
-        ...model,
-        alternates: [],
-        projection: null,
-        rendererDomain: null,
-        siblings: [],
-        sourcePath: null,
-      })
-    );
+    routeMock.mockResolvedValueOnce({
+      ...model,
+      alternates: [],
+      projection: null,
+      rendererDomain: null,
+      siblings: [],
+      sourcePath: null,
+    });
 
     await expect(
       getMaterialPublication("en", publicPath)
@@ -189,7 +182,7 @@ describe("material publication", () => {
       appLocale: previewProjection.appLocale,
       publicPath: previewProjection.publicPath,
     });
-    routeMock.mockReturnValueOnce(Effect.fail(failure));
+    routeMock.mockRejectedValueOnce(failure);
 
     await expect(
       getMaterialPublication("en", previewProjection.publicPath)
