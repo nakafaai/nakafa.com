@@ -1,8 +1,9 @@
 // @vitest-environment node
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import { ChatMutationError, ChatQueryError } from "@/app/api/chat/errors";
 import {
   getLearningSelection,
@@ -40,7 +41,7 @@ describe("app/api/chat/utils", () => {
     vi.clearAllMocks();
   });
 
-  it.each([
+  it.effect.each([
     ["https://nakafa.com/id/quran/1", true],
     [
       "https://nakafa.com/id/articles/politics/dynastic-politics-asian-values",
@@ -56,104 +57,116 @@ describe("app/api/chat/utils", () => {
     ["quran/1", false],
     ["https://nakafa.com/id/quran/1/al-fatihah", false],
     ["https://nakafa.com/id/articles/missing", false],
-  ] as const)("verifies %s", async (url, expected) => {
-    const isVerified = await Effect.runPromise(getVerified(url));
+  ] as const)("verifies %s", ([url, expected]) =>
+    Effect.gen(function* () {
+      const isVerified = yield* getVerified(url);
 
-    expect(isVerified).toBe(expected);
-  });
+      expect(isVerified).toBe(expected);
+    })
+  );
 
-  it("fetches chat user info through the sync mutation", async () => {
-    vi.mocked(fetchMutation).mockResolvedValue({
-      role: "student",
-      credits: 7,
-      userId: "user_123",
-    });
+  it.effect("fetches chat user info through the sync mutation", () =>
+    Effect.gen(function* () {
+      vi.mocked(fetchMutation).mockResolvedValue({
+        role: "student",
+        credits: 7,
+        userId: "user_123",
+      });
 
-    const userInfo = await Effect.runPromise(getUserInfo("test-token"));
+      const userInfo = yield* getUserInfo("test-token");
 
-    expect(userInfo).toEqual({
-      role: "student",
-      credits: 7,
-      userId: "user_123",
-    });
-    expect(fetchMutation).toHaveBeenCalledWith(
-      convexApi.users.mutations.syncUserInfoForChat,
-      {},
-      {
-        token: "test-token",
-      }
-    );
-  });
+      expect(userInfo).toEqual({
+        role: "student",
+        credits: 7,
+        userId: "user_123",
+      });
+      expect(fetchMutation).toHaveBeenCalledWith(
+        convexApi.users.mutations.syncUserInfoForChat,
+        {},
+        {
+          token: "test-token",
+        }
+      );
+    })
+  );
 
-  it("maps user synchronization failures into the mutation error contract", async () => {
-    const cause = new Error("mutation unavailable");
-    vi.mocked(fetchMutation).mockRejectedValueOnce(cause);
+  it.effect(
+    "maps user synchronization failures into the mutation error contract",
+    () =>
+      Effect.gen(function* () {
+        const cause = new Error("mutation unavailable");
+        vi.mocked(fetchMutation).mockRejectedValueOnce(cause);
 
-    const error = await Effect.runPromise(
-      getUserInfo("test-token").pipe(Effect.flip)
-    );
+        const error = yield* getUserInfo("test-token").pipe(Effect.flip);
 
-    expect(error).toBeInstanceOf(ChatMutationError);
-    expect(error).toMatchObject({
-      cause,
-      operation: "sync-user",
-    });
-  });
+        expect(error).toBeInstanceOf(ChatMutationError);
+        expect(error).toMatchObject({
+          cause,
+          operation: "sync-user",
+        });
+      })
+  );
 
-  it("fetches the active learning selection through the shared Convex query", async () => {
-    const learningSelection = {
-      interest: "exam-prep",
-      program: {
-        coverageStatus: "partial",
-        description: "UTBK-SNBT preparation for the 2026 admission cycle.",
-        displayOrder: 40,
-        key: "snbt",
-        kind: "admission-exam",
-        navigation: {
-          levels: ["section", "domain", "set"],
-          model: "exam-domain-set",
-        },
-        title: "SNBT 2026",
-        versionLabel: "2026",
-      },
-    };
-    vi.mocked(fetchQuery).mockResolvedValue(learningSelection);
+  it.effect(
+    "fetches the active learning selection through the shared Convex query",
+    () =>
+      Effect.gen(function* () {
+        const learningSelection = {
+          interest: "exam-prep",
+          program: {
+            coverageStatus: "partial",
+            description: "UTBK-SNBT preparation for the 2026 admission cycle.",
+            displayOrder: 40,
+            key: "snbt",
+            kind: "admission-exam",
+            navigation: {
+              levels: ["section", "domain", "set"],
+              model: "exam-domain-set",
+            },
+            title: "SNBT 2026",
+            versionLabel: "2026",
+          },
+        };
+        vi.mocked(fetchQuery).mockResolvedValue(learningSelection);
 
-    const result = await Effect.runPromise(
-      getLearningSelection("test-token", "en")
-    );
+        const result = yield* getLearningSelection("test-token", "en");
 
-    expect(result).toEqual({
-      interest: "exam-prep",
-      program: {
-        coverageStatus: "partial",
-        key: "snbt",
-        kind: "admission-exam",
-        title: "SNBT 2026",
-        versionLabel: "2026",
-      },
-    });
-    expect(fetchQuery).toHaveBeenCalledWith(
-      convexApi.learningPrograms.queries.getActiveSelection,
-      { locale: "en" },
-      {
-        token: "test-token",
-      }
-    );
-  });
+        expect(result).toEqual({
+          interest: "exam-prep",
+          program: {
+            coverageStatus: "partial",
+            key: "snbt",
+            kind: "admission-exam",
+            title: "SNBT 2026",
+            versionLabel: "2026",
+          },
+        });
+        expect(fetchQuery).toHaveBeenCalledWith(
+          convexApi.learningPrograms.queries.getActiveSelection,
+          { locale: "en" },
+          {
+            token: "test-token",
+          }
+        );
+      })
+  );
 
-  it("maps learning-selection failures into the query error contract", async () => {
-    const cause = new Error("query unavailable");
-    vi.mocked(fetchQuery).mockRejectedValueOnce(cause);
+  it.effect(
+    "maps learning-selection failures into the query error contract",
+    () =>
+      Effect.gen(function* () {
+        const cause = new Error("query unavailable");
+        vi.mocked(fetchQuery).mockRejectedValueOnce(cause);
 
-    const error = await Effect.runPromise(
-      getLearningSelection("test-token", "en").pipe(Effect.flip)
-    );
+        const error = yield* getLearningSelection("test-token", "en").pipe(
+          Effect.flip
+        );
 
-    expect(error).toBeInstanceOf(ChatQueryError);
-    expect(error).toMatchObject({
-      cause,
-      operation: "load-selection",
-    });
-  });
+        expect(error).toBeInstanceOf(ChatQueryError);
+        expect(error).toMatchObject({
+          cause,
+          operation: "load-selection",
+        });
+      })
+  );
 });
