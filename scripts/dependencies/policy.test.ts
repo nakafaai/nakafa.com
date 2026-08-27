@@ -152,7 +152,7 @@ describe("dependency policy", () => {
       source: 'import "@nakafa/aksara-v151/quran/spec";',
     });
     const cleanupFile = input.files.find(
-      ({ path }) => path === "packages/backend/client/quran/v2/source.ts"
+      ({ path }) => path === "packages/backend/client/quran/source.ts"
     );
     expect(cleanupFile).toBeDefined();
     if (cleanupFile) {
