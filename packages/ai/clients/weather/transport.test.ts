@@ -1,6 +1,7 @@
+import { describe, expect, it } from "@effect/vitest";
 import { requestWeatherJson } from "@repo/ai/clients/weather/transport";
-import { describe, expect, it } from "@repo/testing/effect";
-import { Effect, Layer, Result } from "effect";
+import { Effect, Fiber, Layer, Result } from "effect";
+import { TestClock } from "effect/testing";
 import {
   HttpClient,
   type HttpClientRequest,
@@ -28,7 +29,7 @@ function makeTestClient({
   );
 }
 describe("requestWeatherJson", () => {
-  it.live("sends query parameters and returns decoded JSON", () =>
+  it.effect("sends query parameters and returns decoded JSON", () =>
     Effect.gen(function* () {
       const observeRequest =
         vi.fn<(request: HttpClientRequest.HttpClientRequest) => void>();
@@ -61,7 +62,7 @@ describe("requestWeatherJson", () => {
       expect(request?.headers).not.toHaveProperty("traceparent");
     })
   );
-  it.live("maps rejected HTTP status into the weather error contract", () =>
+  it.effect("maps rejected HTTP status into the weather error contract", () =>
     Effect.gen(function* () {
       const result = yield* requestWeatherJson({
         endpoint: "current-weather",
@@ -95,17 +96,22 @@ describe("requestWeatherJson", () => {
       );
     })
   );
-  it.live("retries transient HTTP failures before returning JSON", () =>
+  it.effect("retries transient HTTP failures before returning JSON", () =>
     Effect.gen(function* () {
       const makeResponse = vi
         .fn<(request: HttpClientRequest.HttpClientRequest) => Response>()
         .mockReturnValueOnce(new Response("unavailable", { status: 503 }))
         .mockReturnValueOnce(Response.json({ cod: "200" }));
-      const result = yield* requestWeatherJson({
+      const resultFiber = yield* requestWeatherJson({
         endpoint: "current-weather",
         searchParams: {},
         url: "https://weather.example.test/weather",
-      }).pipe(Effect.provide(makeTestClient({ makeResponse })));
+      }).pipe(
+        Effect.provide(makeTestClient({ makeResponse })),
+        Effect.forkChild
+      );
+      yield* TestClock.adjust("300 millis");
+      const result = yield* Fiber.join(resultFiber);
       expect(result).toEqual({ cod: "200" });
       expect(makeResponse).toHaveBeenCalledTimes(2);
     })
