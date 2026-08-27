@@ -1,5 +1,5 @@
-import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import {
+  AgentEdgeReleaseShaSchema,
   NAKAFA_API_EDGE_CONTRACT,
   NAKAFA_MCP_EDGE_CONTRACT,
   VERCEL_GIT_COMMIT_SHA_ENVIRONMENT,
@@ -21,7 +21,7 @@ const secretSchema = Schema.toStandardSchemaV1(
 );
 const stringSchema = Schema.toStandardSchemaV1(Schema.String);
 const optionalGitCommitShaSchema = Schema.toStandardSchemaV1(
-  Schema.UndefinedOr(GitCommitShaSchema)
+  Schema.UndefinedOr(AgentEdgeReleaseShaSchema)
 );
 /** Defines the Convex URL required by Next.js server adapters such as `convex/nextjs`. */
 export const convexKeys = () =>

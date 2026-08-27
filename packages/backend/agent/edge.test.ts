@@ -1,4 +1,5 @@
 import {
+  AgentEdgeReleaseShaSchema,
   NAKAFA_API_EDGE_CONTRACT,
   NAKAFA_EDGE_RELEASE_SHA_HEADER,
   NAKAFA_MCP_EDGE_CONTRACT,
@@ -6,6 +7,7 @@ import {
   setAgentEdgeReleaseHeader,
   VERCEL_GIT_COMMIT_SHA_ENVIRONMENT,
 } from "@repo/backend/agent/edge";
+import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("agent edge contract", () => {
@@ -21,6 +23,9 @@ describe("agent edge contract", () => {
   it("owns the public deployment identity contract", () => {
     expect(NAKAFA_EDGE_RELEASE_SHA_HEADER).toBe("x-nakafa-release-sha");
     expect(VERCEL_GIT_COMMIT_SHA_ENVIRONMENT).toBe("VERCEL_GIT_COMMIT_SHA");
+    expect(Schema.is(AgentEdgeReleaseShaSchema)("a".repeat(40))).toBe(true);
+    expect(Schema.is(AgentEdgeReleaseShaSchema)("A".repeat(40))).toBe(false);
+    expect(Schema.is(AgentEdgeReleaseShaSchema)("a".repeat(39))).toBe(false);
   });
 
   it("attaches only available deployment identity", () => {
