@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import {
   hasRequestBody,
   readContentInput,
@@ -7,7 +8,6 @@ import {
   readSearchInput,
   readTaxonomyInput,
 } from "@repo/backend/convex/routes/agent/input";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 function url(path: string) {

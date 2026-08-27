@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   getContentReferenceInput,
   resolveNakafaContentRef,
@@ -6,7 +7,6 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import { toRuntimeQueryError } from "@repo/backend/test/runtime-query";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option } from "effect";
 import { vi } from "vitest";
@@ -55,7 +55,7 @@ describe("resolveNakafaContentRef", () => {
     expect(getContentReferenceInput("not-content")).toEqual(Option.none());
   });
 
-  it.live(
+  it.effect(
     "resolves graph content IDs and resource URIs through the current seam",
     () =>
       Effect.gen(function* () {
@@ -74,7 +74,7 @@ describe("resolveNakafaContentRef", () => {
       })
   );
 
-  it.live("resolves canonical public URLs through the current seam", () =>
+  it.effect("resolves canonical public URLs through the current seam", () =>
     Effect.gen(function* () {
       const ref = yield* resolveNakafaContentRef(
         convexUrl,
@@ -96,31 +96,33 @@ describe("resolveNakafaContentRef", () => {
     })
   );
 
-  it.live("preserves citation-only references without inventing markdown", () =>
-    Effect.gen(function* () {
-      runtimeMocks.runtimeQuery.mockResolvedValueOnce({
-        ...articleRef,
-        description: "Citation-only reference.",
-        markdown_url: undefined,
-        title: "Citation-only",
-      });
+  it.effect(
+    "preserves citation-only references without inventing markdown",
+    () =>
+      Effect.gen(function* () {
+        runtimeMocks.runtimeQuery.mockResolvedValueOnce({
+          ...articleRef,
+          description: "Citation-only reference.",
+          markdown_url: undefined,
+          title: "Citation-only",
+        });
 
-      const ref = yield* resolveNakafaContentRef(
-        convexUrl,
-        articleRef.content_id
-      );
+        const ref = yield* resolveNakafaContentRef(
+          convexUrl,
+          articleRef.content_id
+        );
 
-      expect(Option.getOrUndefined(ref)).toMatchObject({
-        content_id: articleRef.content_id,
-        route: articleRef.route,
-        section: articleRef.section,
-        url: articleRef.url,
-      });
-      expect(Option.getOrUndefined(ref)).not.toHaveProperty("markdown_url");
-    })
+        expect(Option.getOrUndefined(ref)).toMatchObject({
+          content_id: articleRef.content_id,
+          route: articleRef.route,
+          section: articleRef.section,
+          url: articleRef.url,
+        });
+        expect(Option.getOrUndefined(ref)).not.toHaveProperty("markdown_url");
+      })
   );
 
-  it.live("rejects bare route refs without querying Convex", () =>
+  it.effect("rejects bare route refs without querying Convex", () =>
     Effect.gen(function* () {
       const localizedRoute = yield* resolveNakafaContentRef(
         convexUrl,

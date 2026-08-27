@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { logInternalFailure } from "@repo/backend/convex/routes/agent/response";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Cause, Effect, Logger } from "effect";
 
 describe("agent responses", () => {
