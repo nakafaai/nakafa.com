@@ -104,11 +104,11 @@ describe("Nakafa CLI execution", () => {
         "--tafsir",
       ],
       expectedUrl:
-        "https://api.nakafa.com/quran/1?from_verse=1&to_verse=7&locale=en&include_tafsir=true",
+        "https://api.nakafa.com/v1/quran/1?from_verse=1&to_verse=7&locale=en&include_tafsir=true",
     },
     {
       argv: ["quran", "114"],
-      expectedUrl: "https://api.nakafa.com/quran/114",
+      expectedUrl: "https://api.nakafa.com/v1/quran/114",
     },
   ])("calls the public endpoint for $argv", ({ argv, expectedUrl }) =>
     Effect.gen(function* () {
