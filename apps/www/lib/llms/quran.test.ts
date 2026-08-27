@@ -115,12 +115,12 @@ describe("quran llms text", () => {
         "[Technical English Tafsir link.](https://example.test/tafsir/en)"
       );
       expect(firstSurahText).toContain("#### Verse 1");
-      expect(firstSurahText).toContain(
-        "**Translation:** Translation 1[Translation notes 1]."
-      );
+      expect(firstSurahText).toContain("**Translation:** Translation 1.");
       expect(firstSurahText).toContain(
         "**Translation notes:**\n- **1.** Source note."
       );
+      expect(firstSurahText).toContain("Technical Arabic source notice.");
+      expect(firstSurahText).toContain("Technical Publisher · v1.0.0");
       expect(firstSurahText).not.toContain("Transliteration");
       expect(firstSurahText).not.toContain("Pre-Bismillah");
       expect(publicationMocks.readPublishedQuranCatalog).toHaveBeenCalledTimes(
@@ -297,11 +297,17 @@ function surahMarkdown(locale: Locale, number: number, verseLimit?: number) {
     sources: {
       arabic: {
         label: "Technical Arabic source.",
+        notice: "Technical Arabic source notice.",
+        publisher: "Technical Publisher",
         sourceUrl: "https://example.test/quran/arabic",
+        version: "v1.0.0",
       },
       translation: {
         label: `Technical ${locale} translation source.`,
+        notice: `Technical ${locale} translation source notice.`,
+        publisher: "Technical Publisher",
         sourceUrl: `https://example.test/quran/translation/${locale}`,
+        version: "v1.0.0",
       },
     },
     surah: {
@@ -353,14 +359,14 @@ function tafsirAccessFor(locale: Locale) {
 function verseFixture(number: number) {
   const notes =
     number === 1
-      ? [{ number: 1, referenceOffset: 13, text: "Source note." }]
+      ? [{ number: 1, referenceOffset: 12, text: "Source note." }]
       : [];
   const segments: QuranTranslationDocument["segments"] =
     number === 1
       ? [
-          { kind: "text", offset: 0, value: "Translation 1" },
-          { kind: "note", number: 1, offset: 13 },
-          { kind: "text", offset: 16, value: "." },
+          { kind: "text", offset: 0, value: "Translation " },
+          { kind: "note", number: 1, offset: 12 },
+          { kind: "text", offset: 15, value: "." },
         ]
       : [{ kind: "text", offset: 0, value: `Translation ${number}.` }];
   return {

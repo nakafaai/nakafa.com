@@ -191,8 +191,16 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
   scanned.push(
     `- **${t("arabic-source")}:** [${markdown.sources.arabic.label}](${markdown.sources.arabic.sourceUrl})`
   );
+  scanned.push(`  ${markdown.sources.arabic.notice}`);
+  scanned.push(
+    `  ${markdown.sources.arabic.publisher} · ${markdown.sources.arabic.version}`
+  );
   scanned.push(
     `- **${t("translation-source")}:** [${markdown.sources.translation.label}](${markdown.sources.translation.sourceUrl})`
+  );
+  scanned.push(`  ${markdown.sources.translation.notice}`);
+  scanned.push(
+    `  ${markdown.sources.translation.publisher} · ${markdown.sources.translation.version}`
   );
   scanned.push("");
   if (tafsirAccess !== null) {
@@ -212,9 +220,8 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
     scanned.push("");
     scanned.push(verse.arabic);
     scanned.push("");
-    const translated = projectQuranTranslationV2(
-      verse.translation,
-      t("translation-notes")
+    const translated = projectQuranTranslationV2(verse.translation, (number) =>
+      number.toString()
     );
     scanned.push(`**${t("translation")}:** ${translated.text}`);
     if (verse.translation.notes.length > 0) {

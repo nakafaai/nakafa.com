@@ -12,15 +12,18 @@ import { Effect } from "effect";
 describe("Quran translation notes", () => {
   it.live("preserves translations without source notes", () =>
     Effect.gen(function* () {
-      expect(
-        yield* parseQuranTranslation({
-          footnotes: "",
-          text: "Im Namen Allahs.",
-        })
-      ).toEqual({
+      const translation = yield* parseQuranTranslation({
+        footnotes: "",
+        text: "Im Namen Allahs.",
+      });
+
+      expect(translation).toEqual({
         notes: [],
         segments: [{ kind: "text", offset: 0, value: "Im Namen Allahs." }],
       });
+      expect(renderQuranTranslationMarkdownV2(translation)).toEqual([
+        "Translation: Im Namen Allahs.",
+      ]);
     })
   );
 
@@ -51,6 +54,12 @@ describe("Quran translation notes", () => {
       expect(projectQuranTranslationV2(translation)).toEqual({
         notes: [{ number: 4, text: "Catatan sumber." }],
         text: "Alif Lām Mīm.[translation note 4]",
+      });
+      expect(
+        projectQuranTranslationV2(translation, (number) => number.toString())
+      ).toEqual({
+        notes: [{ number: 4, text: "Catatan sumber." }],
+        text: "Alif Lām Mīm.4",
       });
       expect(renderQuranTranslationMarkdownV2(translation)).toEqual([
         "Translation: Alif Lām Mīm.[translation note 4]",
