@@ -64,9 +64,7 @@ const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(function* (
    */
   yield* Effect.promise(() =>
     expect(
-      page
-        .locator('main[data-marketing-page="true"]')
-        .filter({ visible: true })
+      page.locator('main[data-marketing-page="true"]').filter({ visible: true })
     ).toHaveCount(1, { timeout: READINESS_TIMEOUT_MILLISECONDS })
   );
 });
@@ -223,6 +221,9 @@ const verifyContributorPayloads = Effect.fn(
   yield* Effect.promise(() => page.keyboard.press("Escape"));
   yield* Effect.promise(() => expect(drawer).toHaveCount(0));
   yield* Effect.promise(() => expect(firstTrigger).toBeFocused());
+  // Closing the drawer can scroll a different trigger under the last click.
+  // Remove pointer ownership before verifying the focused tooltip contract.
+  yield* Effect.promise(() => page.mouse.move(0, 0));
   yield* Effect.promise(() => page.keyboard.press("Tab"));
   yield* Effect.promise(() => page.keyboard.press("Shift+Tab"));
   yield* Effect.promise(() => expect(firstTrigger).toBeFocused());
