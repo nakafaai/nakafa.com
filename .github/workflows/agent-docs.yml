@@ -2,7 +2,7 @@ name: CI
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize]
   push:
     branches: [main]
 
@@ -46,6 +46,8 @@ jobs:
 
   production:
     name: Production
+    # Signed acceptance runs only for protected main and owner-authored
+    # same-repository candidates. External candidates receive Quality only.
     if: github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih')
     runs-on: ubuntu-latest
     timeout-minutes: 40
@@ -427,15 +429,21 @@ jobs:
             exit 1
           fi
 
-          if [ "$TRUSTED_CONTENT_ENVIRONMENT" = "true" ]; then
-            if [ "$PRODUCTION_RESULT" != "success" ]; then
-              echo "Production acceptance finished with $PRODUCTION_RESULT." >&2
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ] && \
+            [ "$TRUSTED_CONTENT_ENVIRONMENT" != "true" ]; then
+            if [ "$PRODUCTION_RESULT" != "skipped" ]; then
+              echo "Untrusted production acceptance finished with $PRODUCTION_RESULT." >&2
               exit 1
             fi
             exit 0
           fi
 
-          if [ "$PRODUCTION_RESULT" != "skipped" ]; then
-            echo "Untrusted production acceptance finished with $PRODUCTION_RESULT." >&2
+          if [ "$TRUSTED_CONTENT_ENVIRONMENT" != "true" ]; then
+            echo "The $GITHUB_EVENT_NAME event is not trusted for signed acceptance." >&2
+            exit 1
+          fi
+
+          if [ "$PRODUCTION_RESULT" != "success" ]; then
+            echo "Production acceptance finished with $PRODUCTION_RESULT." >&2
             exit 1
           fi

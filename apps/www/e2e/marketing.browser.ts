@@ -57,6 +57,16 @@ const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(function* (
     href,
     READINESS_TIMEOUT_MILLISECONDS
   );
+  /**
+   * Next.js may commit App Router history before React reveals a streamed route.
+   * Keep the existing readiness budget attached to the visible route boundary.
+   * @see https://nextjs.org/docs/app/getting-started/linking-and-navigating#streaming
+   */
+  yield* Effect.promise(() =>
+    expect(
+      page.locator('main[data-marketing-page="true"]').filter({ visible: true })
+    ).toHaveCount(1, { timeout: READINESS_TIMEOUT_MILLISECONDS })
+  );
 });
 
 const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
@@ -196,8 +206,8 @@ const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
 const verifyContributorPayloads = Effect.fn(
   "NakafaE2E.verifyContributorPayloads"
 )(function* (page: Page) {
-  yield* loadMarketingPage(page, "/en");
-  const gallery = page.locator("#community [data-contributor-gallery]");
+  yield* loadMarketingPage(page, "/en/contributor");
+  const gallery = page.locator("[data-contributor-gallery]");
   const drawer = page.locator("[data-contributor-drawer]");
   const firstContributor = yield* readFirstContributor(contributors);
   const firstTrigger = gallery.locator(
@@ -211,13 +221,18 @@ const verifyContributorPayloads = Effect.fn(
   yield* Effect.promise(() => page.keyboard.press("Escape"));
   yield* Effect.promise(() => expect(drawer).toHaveCount(0));
   yield* Effect.promise(() => expect(firstTrigger).toBeFocused());
+  // Closing the drawer can scroll a different trigger under the last click.
+  // Remove pointer ownership before verifying the focused tooltip contract.
+  yield* Effect.promise(() => page.mouse.move(0, 0));
   yield* Effect.promise(() => page.keyboard.press("Tab"));
   yield* Effect.promise(() => page.keyboard.press("Shift+Tab"));
   yield* Effect.promise(() => expect(firstTrigger).toBeFocused());
   // Base UI 1.7 describes Tooltip as a visual hint and its Popup renders a
   // div without a tooltip role. The trigger's aria-label owns its identity.
   // @see https://base-ui.com/react/components/tooltip
-  const tooltip = page.locator('[data-slot="tooltip-content"][data-open]');
+  const tooltip = page.locator(
+    '[data-slot="tooltip-content"][data-open]:not([data-ending-style])'
+  );
   yield* Effect.promise(() =>
     expect(tooltip).toHaveText(firstContributor.name)
   );
@@ -278,15 +293,15 @@ const verifyContributorPage = Effect.fn("NakafaE2E.verifyContributorPage")(
   function* (page: Page) {
     yield* loadMarketingPage(page, "/en/contributor");
     const gallery = page.locator("[data-contributor-gallery]");
+    const triggers = gallery.locator("[data-contributor-username]");
     yield* Effect.promise(() => expect(gallery).toHaveCount(1));
     yield* Effect.promise(() =>
-      expect(gallery.locator("[data-contributor-username]")).toHaveCount(
-        contributors.length
-      )
+      expect(triggers).toHaveCount(contributors.length)
     );
-    yield* Effect.promise(() =>
-      gallery.locator("[data-contributor-username]").last().click()
-    );
+    const lastTrigger = triggers.last();
+    yield* Effect.promise(() => expect(lastTrigger).toBeVisible());
+    yield* Effect.promise(() => expect(lastTrigger).toBeEnabled());
+    yield* Effect.promise(() => lastTrigger.press("Enter"));
     yield* Effect.promise(() =>
       expect(page.locator("[data-contributor-drawer]")).toHaveCount(1)
     );
