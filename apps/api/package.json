@@ -28,6 +28,7 @@
     "server-only": "0.0.1"
   },
   "devDependencies": {
+    "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/react": "19.2.18",
