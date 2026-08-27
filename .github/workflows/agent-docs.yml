@@ -48,8 +48,8 @@ jobs:
 
   production:
     name: Production
-    # Signed acceptance runs only for protected-main pushes and owner-triggered
-    # internal pull requests or merge groups.
+    # Internal owner PR heads must pass signed acceptance before queue admission.
+    # Merge groups remain owner-triggered and contain only Required-green heads.
     if: github.event_name == 'push' || (github.event_name == 'merge_group' && github.actor == 'nabilfatih') || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih')
     runs-on: ubuntu-latest
     timeout-minutes: 40
@@ -437,7 +437,8 @@ jobs:
               echo "Untrusted production acceptance finished with $PRODUCTION_RESULT." >&2
               exit 1
             fi
-            exit 0
+            echo "This pull request is not eligible for signed acceptance." >&2
+            exit 1
           fi
 
           if [ "$TRUSTED_CONTENT_ENVIRONMENT" != "true" ]; then
