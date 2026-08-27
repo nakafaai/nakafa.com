@@ -85,26 +85,15 @@ describe("contentRelease/quran/markdown", () => {
       { length: Math.ceil(numberOfVerses / 6) },
       (_, index) => {
         const firstVerse = index * 6 + 1;
-        const chunk = makeQuranChunk({
+        return makeQuranChunk({
+          ...(index === 0
+            ? { arabicText: `${bismillah} آية ${firstVerse}` }
+            : {}),
           firstQuranNumber: firstVerse + 1,
           firstVerse,
           surahNumber: 2,
           verseCount: Math.min(6, numberOfVerses - firstVerse + 1),
         });
-        if (index !== 0) {
-          return chunk;
-        }
-        return {
-          ...chunk,
-          verses: chunk.verses.map((verse, verseIndex) =>
-            verseIndex === 0
-              ? {
-                  ...verse,
-                  text: { arabic: `${bismillah} ${verse.text.arabic}` },
-                }
-              : verse
-          ),
-        };
       }
     );
     await t.mutation((ctx) =>
