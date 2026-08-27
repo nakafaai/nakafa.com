@@ -14,14 +14,10 @@
     "typecheck": "next typegen && tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.30.0",
-    "@repo/ai": "workspace:*",
     "@repo/backend": "workspace:*",
     "@repo/contents": "workspace:*",
-    "@repo/internationalization": "workspace:*",
     "@repo/next-config": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
-    "convex": "1.45.0",
     "effect": "catalog:",
     "next": "16.3.2",
     "react": "^19.2.8",
@@ -29,14 +25,12 @@
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",
-    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.17.0/nakafa-aksara-contracts-0.17.0.tgz",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/react": "19.2.18",
     "@vercel/config": "^0.6.1",
     "@vitest/coverage-istanbul": "^4.1.11",
     "@vitest/ui": "^4.1.11",
-    "jsdom": "^30.0.1",
     "typescript": "7.0.2",
     "vitest": "^4.1.11"
   }
