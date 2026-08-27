@@ -18,21 +18,21 @@ import { loadQuranView } from "@repo/backend/convex/contentRelease/quran/view";
 import { v } from "convex/values";
 import { Effect } from "effect";
 
-const quranTafsirAccessV1Validator = v.object({
+const quranPredecessorTafsirAccessValidator = v.object({
   appLocale: quranAppLocaleValidator,
   kind: v.union(v.literal("embedded"), v.literal("external")),
   notice: v.string(),
   source: v.object({ label: v.string(), url: v.string() }),
 });
 
-const quranSurahV1Validator = v.object({
+const quranPredecessorSurahValidator = v.object({
   name: v.object({ translation: v.string(), transliteration: v.string() }),
   number: v.number(),
   numberOfVerses: v.number(),
 });
 
 /** Immutable predecessor Quran document response. */
-export const quranDocumentV1Validator = v.object({
+export const quranPredecessorDocumentValidator = v.object({
   ...quranSourceFields,
   appLocale: quranAppLocaleValidator,
   surah: v.union(
@@ -62,17 +62,17 @@ export const quranDocumentV1Validator = v.object({
 });
 
 /** Immutable predecessor Quran markdown response. */
-export const quranMarkdownV1Validator = v.object({
+export const quranPredecessorMarkdownValidator = v.object({
   ...quranSourceFields,
   appLocale: quranAppLocaleValidator,
   surah: v.union(
     v.object({
-      ...quranSurahV1Validator.fields,
+      ...quranPredecessorSurahValidator.fields,
       revelation: v.object({ place: quranRevelationPlaceValidator }),
     }),
     v.null()
   ),
-  tafsirAccess: v.union(quranTafsirAccessV1Validator, v.null()),
+  tafsirAccess: v.union(quranPredecessorTafsirAccessValidator, v.null()),
   toVerse: v.number(),
   verses: v.array(
     v.object({
@@ -84,13 +84,13 @@ export const quranMarkdownV1Validator = v.object({
 });
 
 /** Immutable predecessor Quran view response. */
-export const quranViewV1Validator = v.object({
+export const quranPredecessorViewValidator = v.object({
   ...quranSourceFields,
   appLocale: quranAppLocaleValidator,
-  nextSurah: v.union(quranSurahV1Validator, v.null()),
-  previousSurah: v.union(quranSurahV1Validator, v.null()),
-  surah: v.union(quranSurahV1Validator, v.null()),
-  tafsirAccess: v.union(quranTafsirAccessV1Validator, v.null()),
+  nextSurah: v.union(quranPredecessorSurahValidator, v.null()),
+  previousSurah: v.union(quranPredecessorSurahValidator, v.null()),
+  surah: v.union(quranPredecessorSurahValidator, v.null()),
+  tafsirAccess: v.union(quranPredecessorTafsirAccessValidator, v.null()),
   verses: v.array(
     v.object({
       arabic: v.string(),
@@ -102,7 +102,7 @@ export const quranViewV1Validator = v.object({
 });
 
 /** Immutable predecessor on-demand Tafsir response. */
-export const quranInterpretationV1Validator = v.object({
+export const quranPredecessorInterpretationValidator = v.object({
   ...quranSourceFields,
   appLocale: quranTafsirAppLocaleValidator,
   interpretation: v.union(v.string(), v.null()),
@@ -111,7 +111,7 @@ export const quranInterpretationV1Validator = v.object({
 });
 
 /** Immutable predecessor bounded-reference response. */
-export const quranReferenceV1Validator = v.object({
+export const quranPredecessorReferenceValidator = v.object({
   ...quranSourceFields,
   chunkJson: v.array(v.string()),
   fromVerse: v.number(),
@@ -162,8 +162,8 @@ function surah(
 }
 
 /** Adapts the canonical document into its exact predecessor contract. */
-export const readQuranDocumentV1 = Effect.fn(
-  "contentRelease.readQuranDocumentV1"
+export const readQuranPredecessorDocument = Effect.fn(
+  "contentRelease.readQuranPredecessorDocument"
 )(function* (ctx: QueryCtx, appLocale: AppLocaleCode, surahNumber: number) {
   const result = yield* loadQuranDocument(ctx, appLocale, surahNumber);
   return {
@@ -189,8 +189,8 @@ export const readQuranDocumentV1 = Effect.fn(
 });
 
 /** Adapts canonical markdown into its exact predecessor contract. */
-export const readQuranMarkdownV1 = Effect.fn(
-  "contentRelease.readQuranMarkdownV1"
+export const readQuranPredecessorMarkdown = Effect.fn(
+  "contentRelease.readQuranPredecessorMarkdown"
 )(function* (
   ctx: QueryCtx,
   appLocale: AppLocaleCode,
@@ -225,29 +225,29 @@ export const readQuranMarkdownV1 = Effect.fn(
 });
 
 /** Adapts the canonical view into its exact predecessor contract. */
-export const readQuranViewV1 = Effect.fn("contentRelease.readQuranViewV1")(
-  function* (ctx: QueryCtx, appLocale: AppLocaleCode, surahNumber: number) {
-    const result = yield* loadQuranView(ctx, appLocale, surahNumber);
-    return {
-      ...sourceFields(result),
-      appLocale: result.appLocale,
-      nextSurah: surah(result.nextSurah),
-      previousSurah: surah(result.previousSurah),
-      surah: surah(result.surah),
-      tafsirAccess: tafsirAccess(result.tafsirAccess),
-      verses: result.verses.map(({ arabic, number, translation }) => ({
-        arabic,
-        number,
-        translation: translation.text,
-        translationFootnotes: translation.footnotes,
-      })),
-    };
-  }
-);
+export const readQuranPredecessorView = Effect.fn(
+  "contentRelease.readQuranPredecessorView"
+)(function* (ctx: QueryCtx, appLocale: AppLocaleCode, surahNumber: number) {
+  const result = yield* loadQuranView(ctx, appLocale, surahNumber);
+  return {
+    ...sourceFields(result),
+    appLocale: result.appLocale,
+    nextSurah: surah(result.nextSurah),
+    previousSurah: surah(result.previousSurah),
+    surah: surah(result.surah),
+    tafsirAccess: tafsirAccess(result.tafsirAccess),
+    verses: result.verses.map(({ arabic, number, translation }) => ({
+      arabic,
+      number,
+      translation: translation.text,
+      translationFootnotes: translation.footnotes,
+    })),
+  };
+});
 
 /** Adapts on-demand Tafsir into its exact predecessor contract. */
-export const readQuranInterpretationV1 = Effect.fn(
-  "contentRelease.readQuranInterpretationV1"
+export const readQuranPredecessorInterpretation = Effect.fn(
+  "contentRelease.readQuranPredecessorInterpretation"
 )(function* (
   ctx: QueryCtx,
   appLocale: typeof INDONESIAN_APP_LOCALE_CODE,
@@ -272,8 +272,8 @@ export const readQuranInterpretationV1 = Effect.fn(
 });
 
 /** Adapts one bounded reference into its exact predecessor contract. */
-export const readQuranReferenceV1 = Effect.fn(
-  "contentRelease.readQuranReferenceV1"
+export const readQuranPredecessorReference = Effect.fn(
+  "contentRelease.readQuranPredecessorReference"
 )(function* (
   ctx: QueryCtx,
   request: {

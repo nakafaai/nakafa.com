@@ -1,7 +1,7 @@
 import type { QuranTranslationDocument } from "@nakafa/aksara-contracts/quran/notes";
 
 /** Projects semantic notes into a stable text-and-definitions contract. */
-export function projectQuranTranslationV2(
+export function projectQuranTranslation(
   translation: QuranTranslationDocument,
   renderReference: (number: number) => string = (number) =>
     `[translation note ${number}]`
@@ -19,10 +19,10 @@ export function projectQuranTranslationV2(
 }
 
 /** Renders one translation and its exact notes for agent Markdown. */
-export function renderQuranTranslationMarkdownV2(
+export function renderQuranTranslationMarkdown(
   translation: QuranTranslationDocument
 ): readonly string[] {
-  const { notes, text } = projectQuranTranslationV2(translation);
+  const { notes, text } = projectQuranTranslation(translation);
   if (notes.length === 0) {
     return [`Translation: ${text}`];
   }

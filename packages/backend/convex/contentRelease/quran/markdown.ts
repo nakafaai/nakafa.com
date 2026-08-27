@@ -1,8 +1,14 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
+import { separateQuranBismillah } from "@repo/backend/content/quran/bismillah";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import {
+  quranBismillahValidator,
+  readQuranBismillah,
+  verifyQuranBismillah,
+} from "@repo/backend/convex/contentRelease/quran/bismillah";
 import { readQuranLocaleSources } from "@repo/backend/convex/contentRelease/quran/sources";
 import {
   quranAppLocaleValidator,
@@ -40,6 +46,7 @@ const quranMarkdownVerseValidator = v.object({
 export const quranMarkdownValidator = v.object({
   ...quranSourceFields,
   appLocale: quranAppLocaleValidator,
+  preBismillah: v.union(quranBismillahValidator, v.null()),
   sources: v.union(quranReadingSourcesValidator, v.null()),
   surah: v.union(quranMarkdownSurahValidator, v.null()),
   tafsirAccess: v.union(quranTafsirAccessValidator, v.null()),
@@ -102,7 +109,7 @@ const validateVerseLimit = Effect.fn(
   return verseLimit;
 });
 
-/** Loads the exact signed source fields shared by V1 and V2 markdown. */
+/** Loads the exact signed source fields shared by predecessor and canonical markdown. */
 export const loadQuranMarkdown = Effect.fn("contentRelease.loadQuranMarkdown")(
   function* (
     ctx: QueryCtx,
@@ -116,6 +123,7 @@ export const loadQuranMarkdown = Effect.fn("contentRelease.loadQuranMarkdown")(
       return {
         ...loaded.owner,
         appLocale,
+        bismillah: null,
         sources: null,
         surah: null,
         tafsirAccess: null,
@@ -125,8 +133,15 @@ export const loadQuranMarkdown = Effect.fn("contentRelease.loadQuranMarkdown")(
     }
     const numberOfVerses = loaded.surah.row.payload.numberOfVerses;
     const toVerse = Math.min(verseLimit ?? numberOfVerses, numberOfVerses);
-    const { localeSources, verses } = yield* Effect.all(
+    const { bismillah, localeSources, verses } = yield* Effect.all(
       {
+        bismillah: readQuranBismillah(
+          ctx,
+          loaded.owner.snapshotId,
+          appLocale,
+          loaded.surah.surahNumber,
+          1
+        ),
         localeSources: readQuranLocaleSources(
           ctx,
           loaded.owner.snapshotId,
@@ -149,6 +164,7 @@ export const loadQuranMarkdown = Effect.fn("contentRelease.loadQuranMarkdown")(
     return {
       ...loaded.owner,
       appLocale,
+      bismillah,
       sources: localeSources.sources,
       surah: loaded.surah.row.payload,
       tafsirAccess: localeSources.tafsirAccess,
@@ -158,7 +174,7 @@ export const loadQuranMarkdown = Effect.fn("contentRelease.loadQuranMarkdown")(
   }
 );
 
-/** Returns canonical V2 markdown fields without predecessor aliases. */
+/** Returns canonical markdown fields without compatibility aliases. */
 export const readQuranMarkdown = Effect.fn("contentRelease.readQuranMarkdown")(
   function* (
     ctx: QueryCtx,
@@ -172,11 +188,15 @@ export const readQuranMarkdown = Effect.fn("contentRelease.readQuranMarkdown")(
       sourceSurah,
       sourceVerseLimit
     );
+    const { bismillah, ...markdown } = loaded;
+    const projected = separateQuranBismillah(bismillah, loaded.verses);
+    yield* verifyQuranBismillah(bismillah, projected.preBismillah);
     return {
-      ...loaded,
+      ...markdown,
+      preBismillah: projected.preBismillah,
       surah:
         loaded.surah === null ? null : projectSurah(loaded.surah, appLocale),
-      verses: loaded.verses.map(({ arabic, document, number }) => ({
+      verses: projected.verses.map(({ arabic, document, number }) => ({
         arabic,
         number,
         translation: document,

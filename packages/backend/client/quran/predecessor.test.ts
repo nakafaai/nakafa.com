@@ -4,10 +4,16 @@ import {
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import {
-  decodePublishedQuranCatalog,
-  decodePublishedQuranReference,
+  decodePredecessorQuranCatalog,
+  decodePredecessorQuranReference,
   QuranPublicationError,
-} from "@repo/backend/client/quran/decode";
+} from "@repo/backend/client/quran/predecessor";
+import {
+  encodeTestQuranRow as encodeLegacyReferenceRow,
+  makeQuranChunk as makeLegacyQuranChunk,
+  makeQuranSearch as makeLegacyQuranSearch,
+  makeQuranSurah as makeLegacyReferenceSurah,
+} from "@repo/backend/test/quran/archive";
 import {
   encodeLegacyQuranRow,
   encodeTestQuranRow,
@@ -16,12 +22,6 @@ import {
   makeQuranSearch,
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
-import {
-  encodeTestQuranRow as encodeLegacyReferenceRow,
-  makeQuranChunk as makeLegacyQuranChunk,
-  makeQuranSearch as makeLegacyQuranSearch,
-  makeQuranSurah as makeLegacyReferenceSurah,
-} from "@repo/backend/test/quran/v1";
 import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
@@ -34,10 +34,10 @@ const source = {
   sourceRevision: GitCommitShaSchema.make("c".repeat(40)),
 };
 
-describe("signed Quran V1 decoder", () => {
-  it.live("decodes 0.15.1 and 0.17 surahs into immutable V1", () =>
+describe("signed Quran predecessor decoder", () => {
+  it.live("decodes 0.15.1 and 0.17 surahs into the predecessor shape", () =>
     Effect.gen(function* () {
-      const legacy = yield* decodePublishedQuranCatalog(
+      const legacy = yield* decodePredecessorQuranCatalog(
         catalogResult((index) =>
           encodeLegacyQuranRow(
             source.snapshotId,
@@ -45,7 +45,7 @@ describe("signed Quran V1 decoder", () => {
           )
         )
       );
-      const current = yield* decodePublishedQuranCatalog(
+      const current = yield* decodePredecessorQuranCatalog(
         catalogResult((index) =>
           encodeTestQuranRow(source.snapshotId, makeQuranSurah(index + 1))
         )
@@ -61,69 +61,73 @@ describe("signed Quran V1 decoder", () => {
     })
   );
 
-  it.live("projects 0.15.1 and 0.17 references into immutable V1", () =>
-    Effect.gen(function* () {
-      const currentChunk = makeQuranChunk({
-        firstQuranNumber: 1,
-        firstVerse: 1,
-        surahNumber: 1,
-        verseCount: 6,
-      });
-      const legacyChunk = makeLegacyQuranChunk({
-        firstQuranNumber: 1,
-        firstVerse: 1,
-        surahNumber: 1,
-        verseCount: 6,
-      });
-      const results = [
-        {
-          ...source,
-          chunkJson: [encodeLegacyReferenceRow(source.snapshotId, legacyChunk)],
-          fromVerse: 2,
-          searchJson: encodeLegacyReferenceRow(
-            source.snapshotId,
-            makeLegacyQuranSearch("en", 1)
-          ),
-          surahJson: encodeLegacyReferenceRow(
-            source.snapshotId,
-            makeLegacyReferenceSurah(1, 6)
-          ),
-          toVerse: 3,
-        },
-        {
-          ...source,
-          chunkJson: [encodeTestQuranRow(source.snapshotId, currentChunk)],
-          fromVerse: 2,
-          searchJson: encodeTestQuranRow(
-            source.snapshotId,
-            makeQuranSearch("en", 1)
-          ),
-          surahJson: encodeTestQuranRow(
-            source.snapshotId,
-            makeQuranSurah(1, 6)
-          ),
-          toVerse: 3,
-        },
-      ];
-
-      for (const result of results) {
-        const reference = yield* decodePublishedQuranReference(result, {
-          appLocale: "en",
+  it.live(
+    "projects 0.15.1 and 0.17 references into the predecessor shape",
+    () =>
+      Effect.gen(function* () {
+        const currentChunk = makeQuranChunk({
+          firstQuranNumber: 1,
+          firstVerse: 1,
           surahNumber: 1,
+          verseCount: 6,
         });
-        expect(reference.surah.name.translation).toBe("Technical meaning 1");
-        expect(reference.surah.name).not.toHaveProperty("meaning");
-        expect(reference.verses.map((verse) => verse.number.inSurah)).toEqual([
-          2, 3,
-        ]);
-      }
-    })
+        const legacyChunk = makeLegacyQuranChunk({
+          firstQuranNumber: 1,
+          firstVerse: 1,
+          surahNumber: 1,
+          verseCount: 6,
+        });
+        const results = [
+          {
+            ...source,
+            chunkJson: [
+              encodeLegacyReferenceRow(source.snapshotId, legacyChunk),
+            ],
+            fromVerse: 2,
+            searchJson: encodeLegacyReferenceRow(
+              source.snapshotId,
+              makeLegacyQuranSearch("en", 1)
+            ),
+            surahJson: encodeLegacyReferenceRow(
+              source.snapshotId,
+              makeLegacyReferenceSurah(1, 6)
+            ),
+            toVerse: 3,
+          },
+          {
+            ...source,
+            chunkJson: [encodeTestQuranRow(source.snapshotId, currentChunk)],
+            fromVerse: 2,
+            searchJson: encodeTestQuranRow(
+              source.snapshotId,
+              makeQuranSearch("en", 1)
+            ),
+            surahJson: encodeTestQuranRow(
+              source.snapshotId,
+              makeQuranSurah(1, 6)
+            ),
+            toVerse: 3,
+          },
+        ];
+
+        for (const result of results) {
+          const reference = yield* decodePredecessorQuranReference(result, {
+            appLocale: "en",
+            surahNumber: 1,
+          });
+          expect(reference.surah.name.translation).toBe("Technical meaning 1");
+          expect(reference.surah.name).not.toHaveProperty("meaning");
+          expect(reference.verses.map((verse) => verse.number.inSurah)).toEqual(
+            [2, 3]
+          );
+        }
+      })
   );
 
   it.live("fails closed for inactive, malformed, and cross-snapshot rows", () =>
     Effect.gen(function* () {
       const inactive = yield* Effect.result(
-        decodePublishedQuranCatalog({
+        decodePredecessorQuranCatalog({
           activeManifestHash: null,
           activeReleaseId: null,
           managed: false,
@@ -134,11 +138,11 @@ describe("signed Quran V1 decoder", () => {
         })
       );
       const malformed = yield* Effect.result(
-        decodePublishedQuranCatalog({ ...source, rowJson: ["not-json"] })
+        decodePredecessorQuranCatalog({ ...source, rowJson: ["not-json"] })
       );
       const otherSnapshotId = Sha256HashSchema.make(`sha256:${"d".repeat(64)}`);
       const wrongSnapshot = yield* Effect.result(
-        decodePublishedQuranCatalog(
+        decodePredecessorQuranCatalog(
           catalogResult((index) =>
             encodeTestQuranRow(otherSnapshotId, makeQuranSurah(index + 1))
           )

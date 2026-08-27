@@ -3,8 +3,10 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import { QuranPublicationError } from "@repo/backend/client/quran/publication";
-import { decodePublishedQuranSourceV2 } from "@repo/backend/client/quran/v2/publication";
+import {
+  decodePublishedQuranSource,
+  QuranPublicationError,
+} from "@repo/backend/client/quran/publication";
 import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
@@ -20,11 +22,11 @@ const source = {
   sourceRevision: GitCommitShaSchema.make("c".repeat(40)),
 };
 
-describe("signed Quran V2 publication source", () => {
+describe("signed Quran publication source", () => {
   it.live("preserves Git and rollback provenance without invention", () =>
     Effect.gen(function* () {
-      const git = yield* decodePublishedQuranSourceV2(source, "attribution");
-      const rollback = yield* decodePublishedQuranSourceV2(
+      const git = yield* decodePublishedQuranSource(source, "attribution");
+      const rollback = yield* decodePublishedQuranSource(
         {
           ...source,
           sourceOrigin: {
@@ -50,7 +52,7 @@ describe("signed Quran V2 publication source", () => {
   it.live("rejects inactive and contradictory source identities", () =>
     Effect.gen(function* () {
       const inactive = yield* Effect.result(
-        decodePublishedQuranSourceV2(
+        decodePublishedQuranSource(
           {
             activeManifestHash: null,
             activeReleaseId: null,
@@ -63,7 +65,7 @@ describe("signed Quran V2 publication source", () => {
         )
       );
       const mismatched = yield* Effect.result(
-        decodePublishedQuranSourceV2(
+        decodePublishedQuranSource(
           { ...source, sourceRevision: "d".repeat(40) },
           "attribution"
         )

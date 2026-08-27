@@ -1,5 +1,4 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
-import { QuranPublicationError } from "@repo/backend/client/quran/decode";
 import {
   decodePublishedQuranInterpretation,
   isQuranSnapshotConflict,
@@ -7,7 +6,9 @@ import {
   QuranInterpretationRequestError,
   toQuranInterpretationRequestError,
 } from "@repo/backend/client/quran/interpretation";
+import { QuranPublicationError } from "@repo/backend/client/quran/publication";
 import type { api } from "@repo/backend/convex/_generated/api";
+import { makeQuranTafsirProjection } from "@repo/backend/test/quran/rows";
 import { describe, expect, it } from "@repo/testing/effect";
 import type { FunctionReturnType } from "convex/server";
 import { ConvexError } from "convex/values";
@@ -22,15 +23,16 @@ const source = {
   sourceRevision: "c".repeat(40),
 };
 type QuranInterpretationResult = FunctionReturnType<
-  typeof api.contentRelease.quran.interpretation
+  typeof api.contentRelease.quran.tafsir
 >;
-const activeInterpretation: QuranInterpretationResult = {
+const activeInterpretation = {
   ...source,
   interpretation: "Tafsir ayat tujuh.",
   appLocale: "id",
   surahNumber: 1,
+  tafsirAccess: makeQuranTafsirProjection("id"),
   verseNumber: 7,
-};
+} satisfies QuranInterpretationResult;
 describe("signed Quran interpretation decoder", () => {
   it.live("preserves one exact active tafsir", () =>
     Effect.gen(function* () {
@@ -51,6 +53,28 @@ describe("signed Quran interpretation decoder", () => {
       } satisfies Partial<PublishedQuranInterpretation>);
     })
   );
+  it.live("preserves tafsir from a signed rollback release", () =>
+    Effect.gen(function* () {
+      const interpretation = yield* decodePublishedQuranInterpretation(
+        {
+          ...activeInterpretation,
+          sourceOrigin: {
+            kind: "rollback",
+            releaseId: "quran-origin-release",
+          },
+          sourceRevision: null,
+        },
+        {
+          appLocale: "id",
+          snapshotId: source.snapshotId,
+          surahNumber: 1,
+          verseNumber: 7,
+        }
+      );
+      expect(interpretation.sourceRevision).toBeNull();
+      expect(interpretation.interpretation).toBe("Tafsir ayat tujuh.");
+    })
+  );
   it.live(
     "fails closed for inactive, stale, mismatched, and empty responses",
     () =>
@@ -65,6 +89,7 @@ describe("signed Quran interpretation decoder", () => {
           sourceOrigin: null,
           sourceRevision: null,
           surahNumber: 1,
+          tafsirAccess: null,
           verseNumber: 7,
         };
         const mismatched: QuranInterpretationResult = {

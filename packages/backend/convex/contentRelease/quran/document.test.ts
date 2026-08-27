@@ -44,6 +44,7 @@ describe("contentRelease/quran/document", () => {
       activeReleaseId: null,
       appLocale: "en",
       managed: false,
+      preBismillah: null,
       snapshotId: null,
       sourceOrigin: null,
       sourceRevision: null,

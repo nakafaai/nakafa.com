@@ -36,15 +36,15 @@ const PublishedQuranSourceSchema = Schema.Struct({
   sourceRevision: GitCommitShaSchema,
 });
 
-export type PublishedQuranSource = typeof PublishedQuranSourceSchema.Type;
+export type PredecessorQuranSource = typeof PublishedQuranSourceSchema.Type;
 
-/** Complete signed Quran metadata catalog in the immutable V1 shape. */
-export interface PublishedQuranCatalog extends PublishedQuranSource {
+/** Complete signed Quran metadata catalog in the predecessor shape. */
+export interface PredecessorQuranCatalog extends PredecessorQuranSource {
   readonly surahs: readonly LegacyQuranSurah[];
 }
 
-/** One bounded signed Quran reference in the immutable V1 shape. */
-export interface PublishedQuranReference extends PublishedQuranSource {
+/** One bounded signed Quran reference in the predecessor shape. */
+export interface PredecessorQuranReference extends PredecessorQuranSource {
   readonly fromVerse: number;
   readonly search: QuranSearchRow;
   readonly surah: LegacyQuranSurah;
@@ -53,42 +53,41 @@ export interface PublishedQuranReference extends PublishedQuranSource {
 }
 
 /** Requires the exact source identity exposed by the predecessor client. */
-export const decodePublishedQuranSource = Effect.fn("NakafaQuran.decodeSource")(
-  function* (
-    input: {
-      readonly activeManifestHash: null | string;
-      readonly activeReleaseId: null | string;
-      readonly managed: boolean;
-      readonly snapshotId: null | string;
-      readonly sourceRevision: null | string;
-    },
-    operation: Parameters<typeof quranPublicationError>[0]
-  ) {
-    if (!input.managed) {
-      return yield* quranPublicationError(
-        operation,
-        "Signed Quran publication is not active."
-      );
-    }
-    return yield* Schema.decodeUnknownEffect(PublishedQuranSourceSchema)(
-      input,
-      { onExcessProperty: "ignore" }
-    ).pipe(
-      Effect.mapError(() =>
-        quranPublicationError(
-          operation,
-          "Signed Quran source identity is invalid."
-        )
-      )
+export const decodePredecessorQuranSource = Effect.fn(
+  "NakafaQuran.decodePredecessorSource"
+)(function* (
+  input: {
+    readonly activeManifestHash: null | string;
+    readonly activeReleaseId: null | string;
+    readonly managed: boolean;
+    readonly snapshotId: null | string;
+    readonly sourceRevision: null | string;
+  },
+  operation: Parameters<typeof quranPublicationError>[0]
+) {
+  if (!input.managed) {
+    return yield* quranPublicationError(
+      operation,
+      "Signed Quran publication is not active."
     );
   }
-);
+  return yield* Schema.decodeUnknownEffect(PublishedQuranSourceSchema)(input, {
+    onExcessProperty: "ignore",
+  }).pipe(
+    Effect.mapError(() =>
+      quranPublicationError(
+        operation,
+        "Signed Quran source identity is invalid."
+      )
+    )
+  );
+});
 
-/** Decodes the complete catalog and projects every supported row into V1. */
-export const decodePublishedQuranCatalog = Effect.fn(
-  "NakafaQuran.decodeCatalog"
+/** Decodes the complete catalog for predecessor readers. */
+export const decodePredecessorQuranCatalog = Effect.fn(
+  "NakafaQuran.decodePredecessorCatalog"
 )(function* (result: QuranCatalogResult) {
-  const source = yield* decodePublishedQuranSource(result, "catalog");
+  const source = yield* decodePredecessorQuranSource(result, "catalog");
   const current = yield* Effect.forEach(result.rowJson, (row) =>
     decodeQuranSurahRow(row, source.snapshotId, "catalog")
   );
@@ -102,12 +101,12 @@ export const decodePublishedQuranCatalog = Effect.fn(
   const surahs = yield* Effect.forEach(current, (surah) =>
     encodeLegacyQuranSurah(surah, "catalog")
   );
-  return { ...source, surahs } satisfies PublishedQuranCatalog;
+  return { ...source, surahs } satisfies PredecessorQuranCatalog;
 });
 
-/** Decodes one bounded active signed Quran reference into V1. */
-export const decodePublishedQuranReference = Effect.fn(
-  "NakafaQuran.decodeReference"
+/** Decodes one bounded active signed Quran reference for predecessor readers. */
+export const decodePredecessorQuranReference = Effect.fn(
+  "NakafaQuran.decodePredecessorReference"
 )(function* (
   result: QuranReferenceResult,
   expected: {
@@ -115,7 +114,7 @@ export const decodePublishedQuranReference = Effect.fn(
     readonly surahNumber: number;
   }
 ) {
-  const source = yield* decodePublishedQuranSource(result, "reference");
+  const source = yield* decodePredecessorQuranSource(result, "reference");
   if (result.surahJson === null || result.searchJson === null) {
     return yield* quranPublicationError(
       "reference",
@@ -157,7 +156,7 @@ export const decodePublishedQuranReference = Effect.fn(
     surah,
     toVerse: result.toVerse,
     verses,
-  } satisfies PublishedQuranReference;
+  } satisfies PredecessorQuranReference;
 });
 
 /** Encodes canonical metadata through the reviewed bidirectional bridge. */
@@ -170,7 +169,7 @@ const encodeLegacyQuranSurah = Effect.fn("NakafaQuran.encodeLegacySurah")(
       Effect.mapError(() =>
         quranPublicationError(
           operation,
-          "Quran surah cannot satisfy the immutable V1 contract."
+          "Quran surah cannot satisfy the predecessor contract."
         )
       )
     )

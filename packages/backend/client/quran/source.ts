@@ -16,7 +16,7 @@ type QuranReadingSources = Infer<typeof quranReadingSourcesValidator>;
 type QuranTafsirAccess = Infer<typeof quranTafsirAccessValidator>;
 
 /** Checks that one response carries the exact signed sources for its locale. */
-export function hasExpectedQuranSourcesV2(
+export function hasExpectedQuranSources(
   sources: null | QuranReadingSources,
   tafsirAccess: null | QuranTafsirAccess,
   appLocale: AppLocaleCode

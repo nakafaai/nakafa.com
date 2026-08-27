@@ -1,6 +1,11 @@
 import { QuranSearchRowSchema } from "@nakafa/aksara-contracts/quran/snapshot/row";
+import { separateQuranRuntimeBismillah } from "@repo/backend/content/quran/bismillah";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import {
+  readQuranBismillah,
+  verifyQuranBismillah,
+} from "@repo/backend/convex/contentRelease/quran/bismillah";
 import { readQuranChunks } from "@repo/backend/convex/contentRelease/quran/chunks";
 import { quranSearchIdentity } from "@repo/backend/convex/contentRelease/quran/facts";
 import { validateQuranReference } from "@repo/backend/convex/contentRelease/quran/input";
@@ -112,6 +117,7 @@ export const readQuranReference = Effect.fn(
       ...loaded.owner,
       chunkJson: [],
       fromVerse: loaded.input.fromVerse,
+      preBismillah: null,
       searchJson: null,
       sources: null,
       surahJson: null,
@@ -119,8 +125,15 @@ export const readQuranReference = Effect.fn(
       toVerse: loaded.input.toVerse,
     };
   }
-  const { chunks, localeSources, search } = yield* Effect.all(
+  const { bismillah, chunks, localeSources, search } = yield* Effect.all(
     {
+      bismillah: readQuranBismillah(
+        ctx,
+        loaded.owner.snapshotId,
+        request.appLocale,
+        loaded.input.surahNumber,
+        loaded.input.fromVerse
+      ),
       chunks: readQuranReferenceChunks(
         ctx,
         loaded.owner.snapshotId,
@@ -141,11 +154,21 @@ export const readQuranReference = Effect.fn(
     },
     { concurrency: "unbounded" }
   );
+  const selectedVerses = chunks.rows
+    .flatMap((chunk) => chunk.verses)
+    .filter(
+      (verse) =>
+        verse.number.inSurah >= loaded.input.fromVerse &&
+        verse.number.inSurah <= loaded.input.toVerse
+    );
+  const projected = separateQuranRuntimeBismillah(bismillah, selectedVerses);
+  yield* verifyQuranBismillah(bismillah, projected.preBismillah);
 
   return {
     ...loaded.owner,
     chunkJson: chunks.rowJson,
     fromVerse: loaded.input.fromVerse,
+    preBismillah: projected.preBismillah,
     searchJson: search.rowJson,
     sources: localeSources.sources,
     surahJson: loaded.source.surah.rowJson,

@@ -80,22 +80,45 @@ describe("contentRelease/quran/markdown", () => {
   it("reads only the requested signed verse prefix", async () => {
     const t = convexTest(schema, convexModules);
     const numberOfVerses = 82;
+    const bismillah = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ";
     const chunks = Array.from(
       { length: Math.ceil(numberOfVerses / 6) },
       (_, index) => {
         const firstVerse = index * 6 + 1;
-        return makeQuranChunk({
-          firstQuranNumber: firstVerse,
+        const chunk = makeQuranChunk({
+          firstQuranNumber: firstVerse + 1,
           firstVerse,
           surahNumber: 2,
           verseCount: Math.min(6, numberOfVerses - firstVerse + 1),
         });
+        if (index !== 0) {
+          return chunk;
+        }
+        return {
+          ...chunk,
+          verses: chunk.verses.map((verse, verseIndex) =>
+            verseIndex === 0
+              ? {
+                  ...verse,
+                  text: { arabic: `${bismillah} ${verse.text.arabic}` },
+                }
+              : verse
+          ),
+        };
       }
     );
     await t.mutation((ctx) =>
       activateQuranSnapshot(ctx, [
         makeQuranAttribution(),
+        makeQuranSurah(1),
         makeQuranSurah(2, numberOfVerses),
+        makeQuranChunk({
+          arabicText: bismillah,
+          firstQuranNumber: 1,
+          firstVerse: 1,
+          surahNumber: 1,
+          verseCount: 1,
+        }),
         ...chunks,
       ])
     );
@@ -106,6 +129,8 @@ describe("contentRelease/quran/markdown", () => {
 
     expect(markdown.toVerse).toBe(80);
     expect(markdown.verses).toHaveLength(80);
+    expect(markdown.preBismillah?.arabic).toBe(bismillah);
+    expect(markdown.verses[0]?.arabic).toBe("آية 1");
     expect(markdown.verses.at(-1)?.number.inSurah).toBe(80);
   });
 

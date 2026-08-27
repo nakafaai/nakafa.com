@@ -51,6 +51,7 @@ describe("contentRelease/quran/view", () => {
       appLocale: "en",
       managed: false,
       nextSurah: null,
+      preBismillah: null,
       previousSurah: null,
       snapshotId: null,
       sourceOrigin: null,
@@ -60,6 +61,43 @@ describe("contentRelease/quran/view", () => {
       tafsirAccess: null,
       verses: [],
     });
+  });
+
+  it("separates the signed Bismillah before Al-Baqarah verse 1", async () => {
+    const t = convexTest(schema, convexModules);
+    const arabic = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ";
+    await t.mutation((ctx) =>
+      activateQuranSnapshot(ctx, [
+        makeQuranAttribution(),
+        makeQuranSurah(1),
+        makeQuranSurah(2),
+        makeQuranSurah(3),
+        makeQuranChunk({
+          arabicText: arabic,
+          firstQuranNumber: 1,
+          firstVerse: 1,
+          surahNumber: 1,
+          verseCount: 1,
+        }),
+        makeQuranChunk({
+          arabicText: `${arabic} الٓمٓ`,
+          firstQuranNumber: 2,
+          firstVerse: 1,
+          surahNumber: 2,
+          verseCount: 1,
+        }),
+      ])
+    );
+
+    const view = await t.query((ctx) =>
+      runConvexProgram(readQuranView(ctx, "id", 2))
+    );
+
+    expect(view.preBismillah).toEqual({
+      arabic,
+      translation: "Terjemahan teknis 1",
+    });
+    expect(view.verses[0]?.arabic).toBe("الٓمٓ");
   });
 
   it("projects only the requested app locale without transporting tafsir bodies", async () => {

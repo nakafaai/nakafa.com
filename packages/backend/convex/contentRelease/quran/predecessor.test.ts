@@ -20,8 +20,8 @@ const sourceKeys = [
   "sourceRevision",
 ];
 
-describe("contentRelease/quran V1 compatibility", () => {
-  it("keeps predecessor query shapes exact beside richer V2 queries", async () => {
+describe("contentRelease/quran predecessor compatibility", () => {
+  it("keeps predecessor query shapes exact beside richer canonical queries", async () => {
     const t = convexTest(schema, convexModules);
     const snapshotId = await t.mutation((ctx) =>
       activateQuranSnapshot(ctx, [
@@ -38,12 +38,17 @@ describe("contentRelease/quran V1 compatibility", () => {
       ])
     );
 
-    const [documentV1, documentV2, markdownV1, markdownV2] = await Promise.all([
+    const [
+      documentPredecessor,
+      documentCanonical,
+      markdownPredecessor,
+      markdownCanonical,
+    ] = await Promise.all([
       t.query(api.contentRelease.quran.document, {
         appLocale: "id",
         surahNumber: 1,
       }),
-      t.query(api.contentRelease.quran.documentV2, {
+      t.query(api.contentRelease.quran.surah, {
         appLocale: "id",
         surahNumber: 1,
       }),
@@ -51,17 +56,22 @@ describe("contentRelease/quran V1 compatibility", () => {
         appLocale: "id",
         surahNumber: 1,
       }),
-      t.query(api.contentRelease.quran.markdownV2, {
+      t.query(api.contentRelease.quran.prose, {
         appLocale: "id",
         surahNumber: 1,
       }),
     ]);
-    const [viewV1, viewV2, referenceV1, referenceV2] = await Promise.all([
+    const [
+      viewPredecessor,
+      viewCanonical,
+      referencePredecessor,
+      referenceCanonical,
+    ] = await Promise.all([
       t.query(api.contentRelease.quran.view, {
         appLocale: "id",
         surahNumber: 1,
       }),
-      t.query(api.contentRelease.quran.viewV2, {
+      t.query(api.contentRelease.quran.page, {
         appLocale: "id",
         surahNumber: 1,
       }),
@@ -70,45 +80,46 @@ describe("contentRelease/quran V1 compatibility", () => {
         fromVerse: 1,
         surahNumber: 1,
       }),
-      t.query(api.contentRelease.quran.referenceV2, {
+      t.query(api.contentRelease.quran.passage, {
         appLocale: "id",
         fromVerse: 1,
         surahNumber: 1,
       }),
     ]);
-    const [interpretationV1, interpretationV2] = await Promise.all([
-      t.query(api.contentRelease.quran.interpretation, {
-        appLocale: "id",
-        expectedSnapshotId: snapshotId,
-        surahNumber: 1,
-        verseNumber: 1,
-      }),
-      t.query(api.contentRelease.quran.interpretationV2, {
-        appLocale: "id",
-        expectedSnapshotId: snapshotId,
-        surahNumber: 1,
-        verseNumber: 1,
-      }),
-    ]);
+    const [interpretationPredecessor, interpretationCanonical] =
+      await Promise.all([
+        t.query(api.contentRelease.quran.interpretation, {
+          appLocale: "id",
+          expectedSnapshotId: snapshotId,
+          surahNumber: 1,
+          verseNumber: 1,
+        }),
+        t.query(api.contentRelease.quran.tafsir, {
+          appLocale: "id",
+          expectedSnapshotId: snapshotId,
+          surahNumber: 1,
+          verseNumber: 1,
+        }),
+      ]);
 
-    expect(Object.keys(documentV1).sort()).toEqual(
+    expect(Object.keys(documentPredecessor).sort()).toEqual(
       [...sourceKeys, "appLocale", "surah", "verses"].sort()
     );
-    expect(Object.keys(documentV1.verses[0] ?? {}).sort()).toEqual([
+    expect(Object.keys(documentPredecessor.verses[0] ?? {}).sort()).toEqual([
       "arabic",
       "number",
       "translation",
     ]);
-    expect(documentV2).toMatchObject({ sources: {}, tafsirAccess: {} });
-    expect(documentV2.verses[0]?.translation).toMatchObject({
+    expect(documentCanonical).toMatchObject({ sources: {}, tafsirAccess: {} });
+    expect(documentCanonical.verses[0]?.translation).toMatchObject({
       notes: [],
       segments: {},
     });
-    expect(Object.keys(documentV2.verses[0] ?? {})).not.toContain(
+    expect(Object.keys(documentCanonical.verses[0] ?? {})).not.toContain(
       "translationDocument"
     );
 
-    expect(Object.keys(markdownV1).sort()).toEqual(
+    expect(Object.keys(markdownPredecessor).sort()).toEqual(
       [
         ...sourceKeys,
         "appLocale",
@@ -118,15 +129,15 @@ describe("contentRelease/quran V1 compatibility", () => {
         "verses",
       ].sort()
     );
-    expect(Object.keys(markdownV1.verses[0] ?? {})).not.toContain(
+    expect(Object.keys(markdownPredecessor.verses[0] ?? {})).not.toContain(
       "translationDocument"
     );
-    expect(markdownV2).toMatchObject({ sources: {}, tafsirAccess: {} });
-    expect(Object.keys(markdownV2.verses[0] ?? {})).not.toContain(
+    expect(markdownCanonical).toMatchObject({ sources: {}, tafsirAccess: {} });
+    expect(Object.keys(markdownCanonical.verses[0] ?? {})).not.toContain(
       "translationDocument"
     );
 
-    expect(Object.keys(viewV1).sort()).toEqual(
+    expect(Object.keys(viewPredecessor).sort()).toEqual(
       [
         ...sourceKeys,
         "appLocale",
@@ -137,17 +148,17 @@ describe("contentRelease/quran V1 compatibility", () => {
         "verses",
       ].sort()
     );
-    expect(viewV1.surah?.name).toEqual({
+    expect(viewPredecessor.surah?.name).toEqual({
       translation: "Technical meaning 1",
       transliteration: "Technical Surah 1",
     });
-    expect(viewV2.surah?.name).toMatchObject({ meaning: null });
-    expect(viewV2).toMatchObject({ sources: {}, tafsirAccess: {} });
-    expect(Object.keys(viewV2.verses[0] ?? {})).not.toContain(
+    expect(viewCanonical.surah?.name).toMatchObject({ meaning: null });
+    expect(viewCanonical).toMatchObject({ sources: {}, tafsirAccess: {} });
+    expect(Object.keys(viewCanonical.verses[0] ?? {})).not.toContain(
       "translationFootnotes"
     );
 
-    expect(Object.keys(referenceV1).sort()).toEqual(
+    expect(Object.keys(referencePredecessor).sort()).toEqual(
       [
         ...sourceKeys,
         "chunkJson",
@@ -157,9 +168,9 @@ describe("contentRelease/quran V1 compatibility", () => {
         "toVerse",
       ].sort()
     );
-    expect(referenceV2).toMatchObject({ sources: {}, tafsirAccess: {} });
+    expect(referenceCanonical).toMatchObject({ sources: {}, tafsirAccess: {} });
 
-    expect(Object.keys(interpretationV1).sort()).toEqual(
+    expect(Object.keys(interpretationPredecessor).sort()).toEqual(
       [
         ...sourceKeys,
         "appLocale",
@@ -168,7 +179,7 @@ describe("contentRelease/quran V1 compatibility", () => {
         "verseNumber",
       ].sort()
     );
-    expect(interpretationV2).toMatchObject({
+    expect(interpretationCanonical).toMatchObject({
       interpretation: "Tafsir teknis 1",
       tafsirAccess: { appLocale: "id", kind: "embedded" },
     });

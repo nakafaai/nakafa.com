@@ -3,9 +3,9 @@ import {
   QuranTranslationNotesError,
 } from "@nakafa/aksara-contracts/quran/notes";
 import {
-  projectQuranTranslationV2,
-  renderQuranTranslationMarkdownV2,
-} from "@repo/backend/client/quran/v2/notes";
+  projectQuranTranslation,
+  renderQuranTranslationMarkdown,
+} from "@repo/backend/client/quran/notes";
 import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
@@ -21,7 +21,7 @@ describe("Quran translation notes", () => {
         notes: [],
         segments: [{ kind: "text", offset: 0, value: "Im Namen Allahs." }],
       });
-      expect(renderQuranTranslationMarkdownV2(translation)).toEqual([
+      expect(renderQuranTranslationMarkdown(translation)).toEqual([
         "Translation: Im Namen Allahs.",
       ]);
     })
@@ -51,17 +51,17 @@ describe("Quran translation notes", () => {
         text: "Alif Lām Mīm.[4]",
       });
 
-      expect(projectQuranTranslationV2(translation)).toEqual({
+      expect(projectQuranTranslation(translation)).toEqual({
         notes: [{ number: 4, text: "Catatan sumber." }],
         text: "Alif Lām Mīm.[translation note 4]",
       });
       expect(
-        projectQuranTranslationV2(translation, (number) => number.toString())
+        projectQuranTranslation(translation, (number) => number.toString())
       ).toEqual({
         notes: [{ number: 4, text: "Catatan sumber." }],
         text: "Alif Lām Mīm.4",
       });
-      expect(renderQuranTranslationMarkdownV2(translation)).toEqual([
+      expect(renderQuranTranslationMarkdown(translation)).toEqual([
         "Translation: Alif Lām Mīm.[translation note 4]",
         "",
         "Translation notes:",

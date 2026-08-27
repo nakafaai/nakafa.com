@@ -1,7 +1,13 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
+import { separateQuranBismillah } from "@repo/backend/content/quran/bismillah";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import {
+  quranBismillahValidator,
+  readQuranBismillah,
+  verifyQuranBismillah,
+} from "@repo/backend/convex/contentRelease/quran/bismillah";
 import { readQuranLocaleSources } from "@repo/backend/convex/contentRelease/quran/sources";
 import {
   quranAppLocaleValidator,
@@ -44,6 +50,7 @@ const quranDocumentVerseValidator = v.object({
 export const quranDocumentValidator = v.object({
   ...quranSourceFields,
   appLocale: quranAppLocaleValidator,
+  preBismillah: v.union(quranBismillahValidator, v.null()),
   sources: v.union(quranReadingSourcesValidator, v.null()),
   surah: v.union(quranDocumentSurahValidator, v.null()),
   tafsirAccess: v.union(quranTafsirAccessValidator, v.null()),
@@ -91,7 +98,7 @@ const loadVerse = Effect.fn("contentRelease.loadQuranDocumentVerse")(function* (
   };
 });
 
-/** Loads the exact signed source fields shared by V1 and V2 projections. */
+/** Loads the exact signed source fields shared by predecessor and canonical projections. */
 export const loadQuranDocument = Effect.fn("contentRelease.loadQuranDocument")(
   function* (ctx: QueryCtx, appLocale: AppLocaleCode, sourceSurah: number) {
     const loaded = yield* loadQuranSurah(ctx, sourceSurah);
@@ -99,14 +106,22 @@ export const loadQuranDocument = Effect.fn("contentRelease.loadQuranDocument")(
       return {
         ...loaded.owner,
         appLocale,
+        bismillah: null,
         sources: null,
         surah: null,
         tafsirAccess: null,
         verses: [],
       };
     }
-    const { localeSources, verses } = yield* Effect.all(
+    const { bismillah, localeSources, verses } = yield* Effect.all(
       {
+        bismillah: readQuranBismillah(
+          ctx,
+          loaded.owner.snapshotId,
+          appLocale,
+          loaded.surah.surahNumber,
+          1
+        ),
         localeSources: readQuranLocaleSources(
           ctx,
           loaded.owner.snapshotId,
@@ -128,6 +143,7 @@ export const loadQuranDocument = Effect.fn("contentRelease.loadQuranDocument")(
     return {
       ...loaded.owner,
       appLocale,
+      bismillah,
       sources: localeSources.sources,
       surah: loaded.surah.row.payload,
       tafsirAccess: localeSources.tafsirAccess,
@@ -136,15 +152,19 @@ export const loadQuranDocument = Effect.fn("contentRelease.loadQuranDocument")(
   }
 );
 
-/** Returns the canonical V2 Quran document without predecessor aliases. */
+/** Returns the canonical Quran document without compatibility aliases. */
 export const readQuranDocument = Effect.fn("contentRelease.readQuranDocument")(
   function* (ctx: QueryCtx, appLocale: AppLocaleCode, sourceSurah: number) {
     const loaded = yield* loadQuranDocument(ctx, appLocale, sourceSurah);
+    const { bismillah, ...document } = loaded;
+    const projected = separateQuranBismillah(bismillah, loaded.verses);
+    yield* verifyQuranBismillah(bismillah, projected.preBismillah);
     return {
-      ...loaded,
+      ...document,
+      preBismillah: projected.preBismillah,
       surah:
         loaded.surah === null ? null : projectSurah(loaded.surah, appLocale),
-      verses: loaded.verses.map(({ arabic, document, number }) => ({
+      verses: projected.verses.map(({ arabic, document, number }) => ({
         arabic,
         number,
         translation: document,
