@@ -52,8 +52,8 @@ jobs:
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         id: classify
         env:
-          BASE_SHA: ${{ github.event.before || github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
         run: pnpm ci:production-acceptance
 
   quality:
