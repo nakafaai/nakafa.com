@@ -1,11 +1,11 @@
 // @vitest-environment node
 
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   ConvexRuntimeQueryError,
   readConvexRuntimeQuery,
 } from "@repo/backend/client/runtime";
 import { api } from "@repo/backend/convex/_generated/api";
-import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import type { FunctionArgs } from "convex/server";
 import { ConvexError } from "convex/values";
 import { Duration, Effect, Fiber } from "effect";
@@ -149,7 +149,7 @@ describe("Convex runtime query", () => {
     });
   });
 
-  it.live("does not retry Convex function failures", () =>
+  it.effect("does not retry Convex function failures", () =>
     Effect.gen(function* () {
       clientState.query.mockRejectedValueOnce(
         new ConvexError("public failure")
@@ -193,7 +193,7 @@ describe("Convex runtime query", () => {
     });
   });
 
-  it.live("does not retry unclassified or timeout fetch failures", () =>
+  it.effect("does not retry unclassified or timeout fetch failures", () =>
     Effect.gen(function* () {
       const fetchMock = vi
         .fn<typeof fetch>()
@@ -214,7 +214,7 @@ describe("Convex runtime query", () => {
     })
   );
 
-  it.live("sanitizes non-Convex query failures", () =>
+  it.effect("sanitizes non-Convex query failures", () =>
     Effect.gen(function* () {
       clientState.query.mockRejectedValueOnce(
         new Error("private client detail")
@@ -237,7 +237,7 @@ describe("Convex runtime query", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "converts synchronous client construction failures to typed errors",
     () =>
       Effect.gen(function* () {
