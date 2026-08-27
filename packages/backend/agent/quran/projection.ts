@@ -1,16 +1,16 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { decodeAgentOutput } from "@repo/backend/agent/decode";
 import {
-  projectQuranVerseV1,
-  projectQuranVerseV2,
+  projectQuranPredecessorVerse,
+  projectQuranVerse,
 } from "@repo/backend/agent/quran/verse";
-import type { PublishedQuranReference } from "@repo/backend/client/quran/decode";
-import type { PublishedQuranReferenceV2 } from "@repo/backend/client/quran/v2/reference";
-import { hasExpectedQuranSourcesV2 } from "@repo/backend/client/quran/v2/source";
+import type { PredecessorQuranReference } from "@repo/backend/client/quran/predecessor";
+import type { PublishedQuranReference } from "@repo/backend/client/quran/reference";
+import { hasExpectedQuranSources } from "@repo/backend/client/quran/source";
 import type { readQuranReference } from "@repo/backend/convex/contentRelease/quran/reference";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
-import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran";
-import { NakafaAgentQuranReferenceV2Schema } from "@repo/contents/_lib/agent/schema/quran/reference";
+import { NakafaAgentQuranPredecessorSchema } from "@repo/contents/_lib/agent/schema/quran/predecessor";
+import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { Effect } from "effect";
 
@@ -30,23 +30,23 @@ interface QuranProjectionInput {
   readonly ref: NakafaAgentContentRef;
 }
 
-interface QuranProjectionV1Input extends QuranProjectionInput {
+interface QuranPredecessorProjectionInput extends QuranProjectionInput {
+  readonly reference: PredecessorQuranReference;
+}
+
+interface QuranReferenceProjectionInput extends QuranProjectionInput {
   readonly reference: PublishedQuranReference;
 }
 
-interface QuranProjectionV2Input extends QuranProjectionInput {
-  readonly reference: PublishedQuranReferenceV2;
-}
-
-/** Projects the stable V1 Quran contract without adding V2 fields. */
-export const projectNakafaQuranReferenceV1 = Effect.fn(
-  "agent.quran.projectReferenceV1"
-)(function* (input: QuranProjectionV1Input) {
+/** Projects the stable predecessor Quran contract. */
+export const projectNakafaQuranPredecessor = Effect.fn(
+  "agent.quran.projectPredecessor"
+)(function* (input: QuranPredecessorProjectionInput) {
   const verses = yield* Effect.forEach(input.reference.verses, (verse) =>
-    projectQuranVerseV1(verse, input.appLocale, input.includeTafsir)
+    projectQuranPredecessorVerse(verse, input.appLocale, input.includeTafsir)
   );
   return yield* decodeAgentOutput(
-    NakafaAgentQuranReferenceSchema,
+    NakafaAgentQuranPredecessorSchema,
     {
       ...input.ref,
       name: input.reference.surah.name.transliteration,
@@ -58,15 +58,15 @@ export const projectNakafaQuranReferenceV1 = Effect.fn(
   );
 });
 
-/** Projects the V2 Quran contract with semantic notes and signed sources. */
-export const projectNakafaQuranReferenceV2 = Effect.fn(
-  "agent.quran.projectReferenceV2"
-)(function* (input: QuranProjectionV2Input) {
+/** Projects the canonical Quran contract with semantic notes and signed sources. */
+export const projectNakafaQuranReference = Effect.fn(
+  "agent.quran.projectReference"
+)(function* (input: QuranReferenceProjectionInput) {
   const { sources, tafsirAccess } = input.reference;
   if (
     sources === null ||
     tafsirAccess === null ||
-    !hasExpectedQuranSourcesV2(sources, tafsirAccess, input.appLocale)
+    !hasExpectedQuranSources(sources, tafsirAccess, input.appLocale)
   ) {
     return yield* new NakafaAgentDataReadError({
       cause: `Signed Quran reference has incomplete ${input.appLocale} source attribution.`,
@@ -74,10 +74,10 @@ export const projectNakafaQuranReferenceV2 = Effect.fn(
     });
   }
   const verses = yield* Effect.forEach(input.reference.verses, (verse) =>
-    projectQuranVerseV2(verse, input.appLocale, input.includeTafsir)
+    projectQuranVerse(verse, input.appLocale, input.includeTafsir)
   );
   return yield* decodeAgentOutput(
-    NakafaAgentQuranReferenceV2Schema,
+    NakafaAgentQuranReferenceSchema,
     {
       ...input.ref,
       meaning:
@@ -99,7 +99,7 @@ export const projectNakafaQuranReferenceV2 = Effect.fn(
       tafsir_access: projectTafsirAccess(tafsirAccess),
       verses,
     },
-    "Unable to build Nakafa Quran V2 reference."
+    "Unable to build Nakafa Quran reference."
   );
 });
 

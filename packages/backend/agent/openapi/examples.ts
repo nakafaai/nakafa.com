@@ -32,7 +32,7 @@ const CONTENT_REFERENCE_EXAMPLE = {
   url: "https://nakafa.com/en/subjects/mathematics/algebra/linear-equations",
 };
 
-const QURAN_REFERENCE_EXAMPLE = {
+const QURAN_PREDECESSOR_EXAMPLE = {
   alignmentId: "alignment:example:quran:1",
   assetId: "asset:example:quran:1",
   conceptId: "concept:example:quran:1",
@@ -119,7 +119,7 @@ const TAFSIR_ACCESS_EXAMPLE = {
   source: externalSource(TAFSIR_SOURCE_ID),
 };
 
-const QURAN_REFERENCE_V2_EXAMPLE = {
+const QURAN_REFERENCE_EXAMPLE = {
   alignmentId: "alignment:example:quran:1",
   assetId: "asset:example:quran:1",
   conceptId: "concept:example:quran:1",
@@ -197,8 +197,8 @@ export const OPENAPI_RESPONSE_EXAMPLES = {
     openapi: "3.1.1",
     paths: {},
   },
+  QuranPredecessor: QURAN_PREDECESSOR_EXAMPLE,
   QuranReference: QURAN_REFERENCE_EXAMPLE,
-  QuranReferenceV2: QURAN_REFERENCE_V2_EXAMPLE,
   SearchResult: {
     count: 1,
     has_more: false,

@@ -4,56 +4,23 @@ import {
   quranTafsirSourceId,
 } from "@nakafa/aksara-contracts/quran/identity";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
-import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran";
-import { NakafaAgentQuranReferenceV2Schema } from "@repo/contents/_lib/agent/schema/quran/reference";
+import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
 import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, Schema } from "effect";
 import { vi } from "vitest";
-import {
-  getNakafaQuranReferenceToolResult,
-  getNakafaQuranReferenceV2ToolResult,
-} from "@/lib/mcp/tools/quran";
+import { getNakafaQuranReferenceToolResult } from "@/lib/mcp/tools/quran";
 
 vi.mock("@/lib/mcp/nakafa", async () => {
   const { Effect, Option } = await import("effect");
 
   return {
     nakafaContent: {
-      /** Returns deterministic Quran references for MCP result shaping tests. */
-      quran: (input: { from_verse: number; include_tafsir: boolean }) => {
-        if (input.from_verse === 999) {
-          return Effect.succeed(Option.none());
-        }
-
-        return Effect.succeed(
-          Option.some({
-            ...readNakafaContentRefFixture("en", "quran/1", "quran"),
-            name: "Al-Faatiha",
-            revelation: "Mecca",
-            translation: "The Opening",
-            verses: [
-              {
-                arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
-                number: 1,
-                ...(input.include_tafsir ? { tafsir: "Tafsir" } : {}),
-                translation: "In the name of Allah.",
-              },
-              {
-                arabic: "الْحَمْدُ لِلّٰهِ رَبِّ الْعٰلَمِيْنَ",
-                number: 2,
-                ...(input.include_tafsir ? { tafsir: "Tafsir" } : {}),
-                translation: "All praise is for Allah.",
-              },
-            ],
-          })
-        );
-      },
-      /** Returns deterministic V2 Quran references for MCP result tests. */
-      quranV2: (input: { from_verse: number }) =>
+      /** Returns deterministic Quran references for MCP result tests. */
+      quran: (input: { from_verse: number }) =>
         Effect.succeed(
           input.from_verse === 999
             ? Option.none()
-            : Option.some(makeV2Reference())
+            : Option.some(makeReference())
         ),
     },
   };
@@ -70,14 +37,13 @@ const ToolErrorResultSchema = Schema.Struct({
 });
 
 describe("nakafa_get_quran_reference", () => {
-  it.live("returns structured Quran references", () =>
+  it.live("returns semantic notes and signed source access", () =>
     Effect.gen(function* () {
       const result = yield* getNakafaQuranReferenceToolResult({
         from_verse: 1,
         include_tafsir: true,
         locale: "en",
         surah: 1,
-        to_verse: 2,
       });
       const reference = yield* Schema.decodeUnknownEffect(
         NakafaAgentQuranReferenceSchema
@@ -87,8 +53,25 @@ describe("nakafa_get_quran_reference", () => {
       expect(reference.content_id).toBe(
         readNakafaContentRefFixture("en", "quran/1", "quran").content_id
       );
-      expect(reference.verses).toHaveLength(2);
-      expect(reference.verses[0].tafsir).toBeTruthy();
+      expect(reference.meaning).toEqual({
+        locale: ENGLISH_APP_LOCALE_CODE,
+        text: "The Opening",
+      });
+      expect(reference.sources).toMatchObject({
+        arabic: { id: ARABIC_SOURCE_ID },
+        translation: {
+          id: TRANSLATION_SOURCE_ID,
+          locale: ENGLISH_APP_LOCALE_CODE,
+        },
+      });
+      expect(reference.tafsir_access).toMatchObject({
+        kind: "external",
+        source: { id: TAFSIR_SOURCE_ID },
+      });
+      expect(reference.verses[0]?.translation.notes[0]).toMatchObject({
+        number: 1,
+        text: "Exact source note.",
+      });
     })
   );
 
@@ -149,75 +132,6 @@ describe("nakafa_get_quran_reference", () => {
   );
 });
 
-describe("nakafa_get_quran_reference_v2", () => {
-  it.live("returns semantic notes and signed source access", () =>
-    Effect.gen(function* () {
-      const result = yield* getNakafaQuranReferenceV2ToolResult({
-        from_verse: 1,
-        include_tafsir: true,
-        locale: "en",
-        surah: 1,
-      });
-      const reference = yield* Schema.decodeUnknownEffect(
-        NakafaAgentQuranReferenceV2Schema
-      )(result.structuredContent);
-
-      expect(result.isError).not.toBe(true);
-      expect(reference.meaning).toEqual({
-        locale: ENGLISH_APP_LOCALE_CODE,
-        text: "The Opening",
-      });
-      expect(reference.sources).toMatchObject({
-        arabic: { id: ARABIC_SOURCE_ID },
-        translation: {
-          id: TRANSLATION_SOURCE_ID,
-          locale: ENGLISH_APP_LOCALE_CODE,
-        },
-      });
-      expect(reference.tafsir_access).toMatchObject({
-        kind: "external",
-        source: { id: TAFSIR_SOURCE_ID },
-      });
-      expect(reference.verses[0]?.translation.notes[0]).toMatchObject({
-        number: 1,
-        text: "Exact source note.",
-      });
-    })
-  );
-
-  it.live("retains structured V2 range and missing errors", () =>
-    Effect.gen(function* () {
-      const reversed = yield* getNakafaQuranReferenceV2ToolResult({
-        from_verse: 3,
-        locale: "en",
-        surah: 1,
-        to_verse: 2,
-      });
-      const large = yield* getNakafaQuranReferenceV2ToolResult({
-        from_verse: 1,
-        locale: "en",
-        surah: 1,
-        to_verse: 30,
-      });
-      const missing = yield* getNakafaQuranReferenceV2ToolResult({
-        from_verse: 999,
-        locale: "en",
-        surah: 1,
-      });
-
-      expect(reversed.structuredContent).toMatchObject({
-        error: { message: "Invalid Quran verse range." },
-      });
-      expect(large.structuredContent).toMatchObject({
-        error: { message: "Quran reference range is too large." },
-      });
-      expect(missing.structuredContent).toMatchObject({
-        error: { message: "Nakafa Quran V2 reference was not found." },
-      });
-    })
-  );
-});
-
 const ARTIFACT = {
   byte_count: 1,
   digest: `sha256:${"1".repeat(64)}`,
@@ -228,7 +142,7 @@ const [ARABIC_SOURCE_ID, TRANSLATION_SOURCE_ID] = quranReadingSourceIds(
 );
 const TAFSIR_SOURCE_ID = quranTafsirSourceId(ENGLISH_APP_LOCALE_CODE);
 
-/** Builds one complete embedded V2 source fixture. */
+/** Builds one complete embedded source fixture. */
 function embeddedSource(
   id: typeof ARABIC_SOURCE_ID | typeof TRANSLATION_SOURCE_ID
 ) {
@@ -250,8 +164,8 @@ function embeddedSource(
   };
 }
 
-/** Builds one complete V2 Quran reference fixture. */
-function makeV2Reference() {
+/** Builds one complete Quran reference fixture. */
+function makeReference() {
   return {
     ...readNakafaContentRefFixture("en", "quran/1", "quran"),
     meaning: { locale: ENGLISH_APP_LOCALE_CODE, text: "The Opening" },

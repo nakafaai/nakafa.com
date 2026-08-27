@@ -9,7 +9,7 @@ import {
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
-import { NakafaAgentQuranReferenceV2Schema } from "@repo/contents/_lib/agent/schema/quran/reference";
+import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
 import {
   afterEach,
   beforeEach,
@@ -58,7 +58,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("public Quran V2 route", () => {
+describe("public Quran route", () => {
   it("preserves semantic notes and signed EN, ID, and DE source access", async () => {
     const test = createConvexTestWithBetterAuth();
     await test.mutation((ctx) =>
@@ -88,10 +88,10 @@ describe("public Quran V2 route", () => {
     );
 
     for (const locale of ["en", "id", "de"] as const) {
-      const response = await fetchV2(test, locale);
+      const response = await fetchQuran(test, locale);
       expect(response.status).toBe(200);
       const raw: unknown = await response.json();
-      const body = Schema.decodeUnknownSync(NakafaAgentQuranReferenceV2Schema)(
+      const body = Schema.decodeUnknownSync(NakafaAgentQuranReferenceSchema)(
         raw,
         { onExcessProperty: "error" }
       );
@@ -128,12 +128,12 @@ describe("public Quran V2 route", () => {
 });
 
 /** Requests one locale through the real protected Convex HTTP router. */
-function fetchV2(
+function fetchQuran(
   test: ReturnType<typeof createConvexTestWithBetterAuth>,
   locale: "de" | "en" | "id"
 ) {
   return test.fetch(
-    `${NAKAFA_API_EDGE_CONTRACT.originPath}/v2/quran/1?locale=${locale}&include_tafsir=true`,
+    `${NAKAFA_API_EDGE_CONTRACT.originPath}/quran/1?locale=${locale}&include_tafsir=true`,
     {
       headers: {
         [NAKAFA_API_EDGE_CONTRACT.secretHeader]: API_SECRET,

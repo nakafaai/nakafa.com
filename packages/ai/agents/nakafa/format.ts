@@ -1,4 +1,4 @@
-import type { NakafaAgentQuranReferenceV2 } from "@repo/contents/_lib/agent/schema/quran/reference";
+import type { NakafaAgentQuranReference } from "@repo/contents/_lib/agent/schema/quran/reference";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentSearchResult } from "@repo/contents/_lib/agent/schema/search";
 import type { NakafaAgentTaxonomy } from "@repo/contents/_lib/agent/schema/taxonomy";
@@ -47,7 +47,7 @@ export function formatRead(result: NakafaAgentMarkdown) {
 
 /** Renders semantic text while preserving every source note relationship. */
 function formatQuranTranslation(
-  translation: NakafaAgentQuranReferenceV2["verses"][number]["translation"]
+  translation: NakafaAgentQuranReference["verses"][number]["translation"]
 ) {
   const text = translation.segments
     .map((segment) =>
@@ -76,13 +76,13 @@ function formatQuranSource(source: {
   return `${source.label}; publisher: ${source.publisher}; version: ${source.version}; source: ${source.source_url}; updates: ${source.update_url}; terms: ${source.terms.url}`;
 }
 
-/** Formats a source-grounded V2 Quran reference for model consumption. */
-export function formatQuran(result: NakafaAgentQuranReferenceV2) {
+/** Formats a source-grounded Quran reference for model consumption. */
+export function formatQuran(result: NakafaAgentQuranReference) {
   const meaning = result.meaning
     ? `${result.meaning.text} (${result.meaning.locale})`
     : `Not available for requested locale ${result.locale}`;
   return dedent(`
-    # Nakafa Quran Reference V2
+    # Nakafa Quran Reference
     - Name: ${result.name}
     - Meaning: ${meaning}
     - Revelation: ${result.revelation}

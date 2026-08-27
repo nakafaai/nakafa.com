@@ -26,7 +26,7 @@ export const NAKAFA_OPENAPI_DOCUMENT = {
       url: `${NAKAFA_BASE_URL}/contact`,
     },
     description:
-      "Read-only public access to Nakafa's signed educational content. V1 remains immutable while source-grounded Quran semantics are added through V2.",
+      "Read-only public access to Nakafa's signed educational content. Quran uses one canonical unversioned contract with temporary compatibility routes.",
     license: {
       name: "Nakafa terms",
       url: `${NAKAFA_BASE_URL}/en/terms-of-service`,
@@ -34,7 +34,7 @@ export const NAKAFA_OPENAPI_DOCUMENT = {
     title: "Nakafa Public API",
     version: NAKAFA_PUBLIC_API_DOCUMENT_VERSION,
     "x-version-policy":
-      "V1 remains immutable. New Quran semantics and attribution are exposed only through V2.",
+      "The unversioned Quran route is canonical. Deprecated Quran compatibility routes remain only for safe client migration.",
   },
   jsonSchemaDialect: "https://json-schema.org/draft/2020-12/schema",
   openapi: "3.1.1",

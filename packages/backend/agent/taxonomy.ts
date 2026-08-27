@@ -4,7 +4,7 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { decodeAgentOutput } from "@repo/backend/agent/decode";
 import { readAgentQuery } from "@repo/backend/agent/query";
-import { decodePublishedQuranCatalogV2 } from "@repo/backend/client/quran/v2/catalog";
+import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import type { readAgentArticleTaxonomy } from "@repo/backend/convex/contentRelease/article/agent";
 import type { readArticleBuckets } from "@repo/backend/convex/contentRelease/article/sitemap";
@@ -73,7 +73,7 @@ export const getNakafaTaxonomy = Effect.fn("agent.getNakafaTaxonomy")(
         "Unable to read the signed Nakafa Quran catalog."
       ),
     ]);
-    const quran = yield* decodePublishedQuranCatalogV2(quranResult).pipe(
+    const quran = yield* decodePublishedQuranCatalog(quranResult).pipe(
       Effect.mapError(
         (error) =>
           new NakafaAgentDataReadError({
@@ -106,7 +106,6 @@ export const getNakafaTaxonomy = Effect.fn("agent.getNakafaTaxonomy")(
           "nakafa_get_content",
           "nakafa_get_taxonomy",
           "nakafa_get_quran_reference",
-          "nakafa_get_quran_reference_v2",
         ],
         tryout: inventories.tryout,
       },

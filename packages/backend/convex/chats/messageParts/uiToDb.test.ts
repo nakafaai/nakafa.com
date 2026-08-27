@@ -139,10 +139,10 @@ describe("mapUIMessagePartsToDBParts", () => {
           result: {
             ...quranRef,
             from_verse: 1,
+            meaning: { locale: "en", text: "The Opening" },
             name: "Al-Fatihah",
             revelation: "Mecca",
             to_verse: 1,
-            translation: "The Opening",
             verse_count: 1,
           },
         },

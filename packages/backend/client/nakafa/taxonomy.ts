@@ -11,7 +11,7 @@ import {
   readNakafaReleasePin,
   verifyNakafaReleasePin,
 } from "@repo/backend/client/nakafa/release";
-import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/decode";
+import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import {
@@ -89,7 +89,6 @@ export const readNakafaTaxonomy = Effect.fn("NakafaContent.readTaxonomy")(
         "nakafa_get_content",
         "nakafa_get_taxonomy",
         "nakafa_get_quran_reference",
-        "nakafa_get_quran_reference_v2",
       ],
     });
   }

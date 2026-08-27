@@ -40,7 +40,7 @@ class ApiBridgeError extends Schema.TaggedError<ApiBridgeError>()(
   }
 ) {}
 
-/** Runs the V2-only Convex bridge at the Next.js route boundary. */
+/** Runs the Quran and compatibility Convex bridge at the Next.js boundary. */
 export function bridgePublicApiRequest(request: Request) {
   return Effect.runPromise(bridgePublicApi(request));
 }
@@ -104,10 +104,12 @@ const forwardPublicApiRequest = Effect.fn("ApiBridge.forward")(function* (
   });
 });
 
-/** Restricts the bridge to the explicit successor and its contract document. */
+/** Restricts the bridge to canonical Quran and explicit compatibility paths. */
 function isBridgedPath(pathname: string) {
   return (
     pathname === "/openapi.json" ||
+    pathname === "/quran" ||
+    pathname.startsWith("/quran/") ||
     pathname === "/v2" ||
     pathname.startsWith("/v2/")
   );

@@ -9,7 +9,7 @@ afterEach(() => {
   vi.stubEnv("NAKAFA_CONVEX_SITE_URL", "https://test.convex.site");
 });
 
-describe("public API V2 bridge", () => {
+describe("public Quran API bridge", () => {
   it("forwards the exact path, query, method, and allowlisted headers", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response('{"ok":true}', {
@@ -27,7 +27,7 @@ describe("public API V2 bridge", () => {
     vi.stubGlobal("fetch", fetchMock);
     const response = await bridgePublicApiRequest(
       new Request(
-        "https://api.nakafa.com/v2/quran/2?locale=id&include_tafsir=true",
+        "https://api.nakafa.com/quran/2?locale=id&include_tafsir=true",
         {
           headers: {
             accept: "application/json",
@@ -45,7 +45,7 @@ describe("public API V2 bridge", () => {
     expect(fetchMock).toHaveBeenCalledOnce();
     const [url, init] = fetchMock.mock.calls[0] ?? [];
     expect(String(url)).toBe(
-      "https://test.convex.site/internal/agent/v2/quran/2?locale=id&include_tafsir=true"
+      "https://test.convex.site/internal/agent/quran/2?locale=id&include_tafsir=true"
     );
     expect(init).toMatchObject({
       cache: "no-store",
@@ -99,7 +99,7 @@ describe("public API V2 bridge", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const options = await bridgePublicApiRequest(
-      new Request("https://api.nakafa.com/v2/quran/1", {
+      new Request("https://api.nakafa.com/quran/1", {
         method: "OPTIONS",
       })
     );
@@ -107,7 +107,7 @@ describe("public API V2 bridge", () => {
       new Request("https://api.nakafa.com/openapi.json")
     );
     const limited = await bridgePublicApiRequest(
-      new Request("https://api.nakafa.com/v2/quran/1")
+      new Request("https://api.nakafa.com/quran/1")
     );
 
     expect(options.status).toBe(204);
@@ -128,7 +128,7 @@ describe("public API V2 bridge", () => {
     );
 
     const response = await bridgePublicApiRequest(
-      new Request("https://api.nakafa.com/v2/quran/1")
+      new Request("https://api.nakafa.com/quran/1")
     );
     const body = await response.json();
 
@@ -136,7 +136,7 @@ describe("public API V2 bridge", () => {
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(body).toMatchObject({
       code: "EDGE_SERVICE_UNAVAILABLE",
-      instance: "/v2/quran/1",
+      instance: "/quran/1",
       request_id: expect.any(String),
       status: 503,
     });
@@ -149,7 +149,7 @@ describe("public API V2 bridge", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const response = await Effect.runPromise(
-      bridgePublicApi(new Request("https://api.nakafa.com/v2/quran/1")).pipe(
+      bridgePublicApi(new Request("https://api.nakafa.com/quran/1")).pipe(
         Effect.provideService(
           ConfigProvider.ConfigProvider,
           ConfigProvider.fromEnvRecord({
@@ -164,7 +164,7 @@ describe("public API V2 bridge", () => {
     expect(fetchMock).not.toHaveBeenCalled();
     expect(body).toMatchObject({
       code: "EDGE_SERVICE_UNAVAILABLE",
-      instance: "/v2/quran/1",
+      instance: "/quran/1",
       status: 503,
     });
     expect(JSON.stringify(body)).not.toContain("NAKAFA_API_EDGE_SECRET");

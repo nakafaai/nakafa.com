@@ -5,7 +5,7 @@ import type { FunctionArgs } from "convex/server";
 import { Effect, Schema } from "effect";
 import { env } from "@/env";
 
-type QuranDocumentArgs = FunctionArgs<typeof api.contentRelease.quran.document>;
+type QuranDocumentArgs = FunctionArgs<typeof api.contentRelease.quran.surah>;
 
 /** The public API could not read or validate one signed Quran document. */
 export class QuranApiReadError extends Schema.TaggedError<QuranApiReadError>()(
@@ -18,7 +18,7 @@ export const readQuranApiDocument = Effect.fn("api.quran.readDocument")(
   function* (args: QuranDocumentArgs) {
     const result = yield* readConvexRuntimeQuery(
       env.NEXT_PUBLIC_CONVEX_URL,
-      api.contentRelease.quran.document,
+      api.contentRelease.quran.surah,
       args
     );
 

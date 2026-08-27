@@ -5,7 +5,7 @@ import {
   formatSearch,
   formatTaxonomy,
 } from "@repo/ai/agents/nakafa/format";
-import { makeQuranV2Fixture } from "@repo/ai/agents/nakafa/tools/fixture";
+import { makeQuranFixture } from "@repo/ai/agents/nakafa/tools/fixture";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { describe, expect, it } from "vitest";
 
@@ -66,7 +66,7 @@ describe("Nakafa formatter", () => {
   });
 
   it("formats Quran references with and without tafsir", () => {
-    const reference = makeQuranV2Fixture({
+    const reference = makeQuranFixture({
       from_verse: 1,
       include_tafsir: true,
       locale: "id",
@@ -92,7 +92,7 @@ describe("Nakafa formatter", () => {
       ],
     });
 
-    expect(text).toContain("# Nakafa Quran Reference V2");
+    expect(text).toContain("# Nakafa Quran Reference");
     expect(text).not.toContain("Inline citation:");
     expect(text).not.toContain("https://nakafa.com/id/quran/1");
     expect(text).toContain("Meaning: Not available for requested locale id");

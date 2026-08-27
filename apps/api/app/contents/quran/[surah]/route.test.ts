@@ -33,8 +33,10 @@ describe("Quran content API route", () => {
     quranMocks.readQuranApiDocument.mockReturnValue(
       Effect.succeed({
         appLocale: "en",
+        preBismillah: null,
+        sources: { arabic: { id: "tanzil-text" } },
         surah: {
-          name: { transliteration: "Al-Faatiha" },
+          name: { meaning: "The Opening", transliteration: "Al-Faatiha" },
           number: 1,
           revelation: { order: 5, place: "Meccan" },
         },
@@ -43,11 +45,14 @@ describe("Quran content API route", () => {
             arabic: "بِسْمِ اللّٰهِ",
             number: { inSurah: 1 },
             translation: {
-              footnotes: "Source note.",
-              text: "In Allah's name.",
+              notes: [],
+              segments: [
+                { kind: "text", offset: 0, value: "In Allah's name." },
+              ],
             },
           },
         ],
+        tafsirAccess: { kind: "external" },
       })
     );
 
@@ -58,15 +63,21 @@ describe("Quran content API route", () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
-      name: { transliteration: "Al-Faatiha" },
+      name: { meaning: "The Opening", transliteration: "Al-Faatiha" },
       locale: "en",
       number: 1,
+      preBismillah: null,
       revelation: { order: 5, place: "Meccan" },
+      sources: { arabic: { id: "tanzil-text" } },
+      tafsirAccess: { kind: "external" },
       verses: [
         {
           arabic: "بِسْمِ اللّٰهِ",
           number: { inSurah: 1 },
-          translation: { footnotes: "Source note.", text: "In Allah's name." },
+          translation: {
+            notes: [],
+            segments: [{ kind: "text", offset: 0, value: "In Allah's name." }],
+          },
         },
       ],
     });

@@ -349,11 +349,14 @@ describe("public agent API routes", () => {
       locale: "en",
       route: "quran/1",
       section: "quran",
-      text: expect.stringContaining("Technical translation 1[1]"),
+      text: expect.stringContaining(
+        "Technical translation 1[translation note 1]"
+      ),
       title: "Technical Surah 1",
     });
-    expect(body.text).not.toContain("translation note 1");
-    expect(body.text).not.toContain("Technical English Tafsir notice.");
+    expect(body.text).toContain("Translation notes:");
+    expect(body.text).toContain("Exact English source note.");
+    expect(body.text).toContain("Technical English Tafsir notice.");
   });
 
   it("returns one bounded authenticated Quran reference", async () => {

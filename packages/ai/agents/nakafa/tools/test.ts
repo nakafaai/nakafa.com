@@ -5,7 +5,7 @@ import {
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { Nakafa, type NakafaRuntime } from "@repo/ai/agents/nakafa/service";
-import { makeQuranV2Fixture } from "@repo/ai/agents/nakafa/tools/fixture";
+import { makeQuranFixture } from "@repo/ai/agents/nakafa/tools/fixture";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import {
   getUnknownErrorMessage,
@@ -16,7 +16,7 @@ import {
   createNakafaContentRefFromGraphProjection,
   normalizeNakafaContentInput,
 } from "@repo/contents/_lib/agent/refs";
-import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran";
+import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran/input";
 import { NakafaAgentReadableContentRefSchema } from "@repo/contents/_lib/agent/schema/ref";
 import type { Locale } from "@repo/contents/_types/content";
 import type { UIMessageStreamWriter } from "ai";
@@ -44,7 +44,7 @@ export function createNakafaTestService(
   });
 }
 const nakafaTestRuntime = {
-  /** Returns deterministic Quran references and missing ranges for tests. */
+  /** Returns source-grounded Quran data for AI tool tests. */
   quran: (input) => {
     const parsed = Schema.decodeUnknownOption(
       NakafaAgentQuranReferenceOptionsSchema
@@ -60,46 +60,7 @@ const nakafaTestRuntime = {
     if (parsed.value.from_verse === 999) {
       return Effect.succeed(Option.none());
     }
-    const ref = readNakafaContentRefFixture(
-      parsed.value.locale,
-      `quran/${parsed.value.surah}`,
-      "quran"
-    );
-    const verse = {
-      arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
-      number: parsed.value.from_verse,
-      ...(parsed.value.include_tafsir
-        ? { tafsir: "Tafsir from the injected test adapter." }
-        : {}),
-      translation: "In the name of Allah.",
-    };
-    return Effect.succeed(
-      Option.some({
-        ...ref,
-        name: "Al-Faatiha",
-        revelation: "Mecca",
-        translation: "The Opening",
-        verses: [verse],
-      })
-    );
-  },
-  /** Returns source-grounded V2 Quran data for AI tool tests. */
-  quranV2: (input) => {
-    const parsed = Schema.decodeUnknownOption(
-      NakafaAgentQuranReferenceOptionsSchema
-    )(input);
-    if (Option.isNone(parsed)) {
-      return Effect.fail(
-        new NakafaAgentInputError({
-          cause: getUnknownErrorMessage(input),
-          message: "Invalid Nakafa Quran reference options.",
-        })
-      );
-    }
-    if (parsed.value.from_verse === 999) {
-      return Effect.succeed(Option.none());
-    }
-    return Effect.succeed(Option.some(makeQuranV2Fixture(parsed.value)));
+    return Effect.succeed(Option.some(makeQuranFixture(parsed.value)));
   },
   /** Returns deterministic markdown for service-injection tests. */
   read: (input) => {

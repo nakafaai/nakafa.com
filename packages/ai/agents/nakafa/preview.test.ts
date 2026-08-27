@@ -1,5 +1,5 @@
 import { previewQuran, previewRead } from "@repo/ai/agents/nakafa/preview";
-import { makeQuranV2Fixture } from "@repo/ai/agents/nakafa/tools/fixture";
+import { makeQuranFixture } from "@repo/ai/agents/nakafa/tools/fixture";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { describe, expect, it } from "vitest";
 
@@ -19,7 +19,7 @@ describe("nakafa previews", () => {
   });
 
   it("keeps Quran preview stable when a malformed result has no verses", () => {
-    const reference = makeQuranV2Fixture({
+    const reference = makeQuranFixture({
       from_verse: 1,
       include_tafsir: false,
       locale: "en",

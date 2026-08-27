@@ -16,8 +16,8 @@ export function GET() {
 [${timestamp}] INFO: Use ${NAKAFA_MCP_RECOMMENDED_ENDPOINT} as the recommended MCP endpoint.
 [${timestamp}] INFO: Use ${NAKAFA_MCP_DIRECT_ENDPOINT} as the direct MCP endpoint.
 [${timestamp}] INFO: Root URL ${NAKAFA_MCP_INFORMATIONAL_ROOT} is not an MCP transport endpoint.
-[${timestamp}] INFO: Tools: nakafa_search_content, nakafa_get_content, nakafa_get_taxonomy, nakafa_get_quran_reference, nakafa_get_quran_reference_v2.
-[${timestamp}] INFO: Prefer nakafa_get_quran_reference_v2 for semantic notes and signed source attribution.
+[${timestamp}] INFO: Tools: nakafa_search_content, nakafa_get_content, nakafa_get_taxonomy, nakafa_get_quran_reference.
+[${timestamp}] INFO: The Quran tool preserves semantic notes and signed source attribution.
 
 [${timestamp}] INFO: Website: https://nakafa.com
 [${timestamp}] INFO: GitHub: https://github.com/nakafaai/nakafa.com

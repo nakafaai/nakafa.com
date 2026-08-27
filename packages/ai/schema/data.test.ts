@@ -24,18 +24,19 @@ const preview = {
 };
 
 describe("Nakafa persisted Quran data", () => {
-  it("decodes both legacy and source-grounded V2 previews", () => {
-    const legacy = {
-      ...common,
-      result: { ...preview, translation: "The Opening" },
-    };
-    const v2 = {
+  it("decodes only the canonical source-grounded preview", () => {
+    const canonical = {
       ...common,
       result: { ...preview, meaning: { locale: "en", text: "The Opening" } },
     };
 
-    expect(Schema.is(NakafaDataSchema)(legacy)).toBe(true);
-    expect(Schema.is(NakafaDataSchema)(v2)).toBe(true);
+    expect(Schema.is(NakafaDataSchema)(canonical)).toBe(true);
+    expect(
+      Schema.is(NakafaDataSchema)({
+        ...common,
+        result: { ...preview, translation: "The Opening" },
+      })
+    ).toBe(false);
     expect(
       Schema.is(NakafaDataSchema)({
         ...common,

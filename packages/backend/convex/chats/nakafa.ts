@@ -40,7 +40,7 @@ const nakafaQuranPreviewFields = {
   verse_count: v.number(),
 };
 
-const nakafaQuranPreviewV2Validator = v.object({
+export const nakafaQuranPreviewValidator = v.object({
   ...nakafaQuranPreviewFields,
   meaning: v.union(
     v.null(),
@@ -50,16 +50,6 @@ const nakafaQuranPreviewV2Validator = v.object({
     })
   ),
 });
-
-const nakafaQuranPreviewV1Validator = v.object({
-  ...nakafaQuranPreviewFields,
-  translation: v.string(),
-});
-
-export const nakafaQuranPreviewValidator = v.union(
-  nakafaQuranPreviewV2Validator,
-  nakafaQuranPreviewV1Validator
-);
 
 export const nakafaTaxonomyPreviewValidator = v.object({
   content_counts: v.array(

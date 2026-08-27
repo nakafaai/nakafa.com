@@ -1,7 +1,7 @@
 import { projectPublicApiPath } from "@repo/backend/agent/edge";
 import {
+  getNakafaQuranPredecessor,
   getNakafaQuranReference,
-  getNakafaQuranReferenceV2,
 } from "@repo/backend/agent/quran";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { readQuranInput } from "@repo/backend/convex/routes/agent/input";
@@ -28,20 +28,23 @@ type ReadQuranReference = (
   NakafaAgentDataReadError | NakafaAgentInputError
 >;
 
-/** Registers immutable V1 and explicit V2 Quran read routes. */
+/** Registers the canonical Quran route and temporary public predecessors. */
 export function registerAgentQuranRoutes(api: AgentApp) {
   registerQuranRoute(api, "/v1/quran/:surah", (ctx, input) =>
+    getNakafaQuranPredecessor(ctx, input)
+  );
+  registerQuranRoute(api, "/quran/:surah", (ctx, input) =>
     getNakafaQuranReference(ctx, input)
   );
   registerQuranRoute(api, "/v2/quran/:surah", (ctx, input) =>
-    getNakafaQuranReferenceV2(ctx, input)
+    getNakafaQuranReference(ctx, input)
   );
 }
 
-/** Registers one versioned Quran GET and its matching preflight. */
+/** Registers one Quran GET and its matching preflight. */
 function registerQuranRoute(
   api: AgentApp,
-  path: "/v1/quran/:surah" | "/v2/quran/:surah",
+  path: "/quran/:surah" | "/v1/quran/:surah" | "/v2/quran/:surah",
   readReference: ReadQuranReference
 ) {
   api.get(path, (context) =>

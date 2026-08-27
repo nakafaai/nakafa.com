@@ -55,7 +55,6 @@ describe("readNakafaTaxonomy", () => {
         { count: 121, locale: "de" },
       ]);
       expect(taxonomy.tools).toContain("nakafa_get_quran_reference");
-      expect(taxonomy.tools).toContain("nakafa_get_quran_reference_v2");
       expect(taxonomy.articles.categories).toEqual(["politics"]);
       expect(taxonomy.tryout).toEqual({
         countries: [{ id: "indonesia", label: "Indonesia" }],

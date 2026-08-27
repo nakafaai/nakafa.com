@@ -3,7 +3,7 @@ import { previewQuran } from "@repo/ai/agents/nakafa/preview";
 import { Nakafa } from "@repo/ai/agents/nakafa/service";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/_lib/agent/constants";
-import type { NakafaAgentQuranReferenceOptions } from "@repo/contents/_lib/agent/schema/quran";
+import type { NakafaAgentQuranReferenceOptions } from "@repo/contents/_lib/agent/schema/quran/input";
 import type { Locale } from "@repo/contents/_types/content";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect, Option, Result } from "effect";
@@ -70,7 +70,7 @@ export const quran = Effect.fn("nakafa.quran")(function* ({
     return oversizedRangeMessage;
   }
   const result = yield* Effect.result(
-    Nakafa.use((service) => service.quranV2(dataInput))
+    Nakafa.use((service) => service.quran(dataInput))
   );
   if (Result.isFailure(result)) {
     yield* Effect.sync(() =>

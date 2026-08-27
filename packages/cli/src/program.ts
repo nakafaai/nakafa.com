@@ -146,7 +146,7 @@ function buildApiPath(
     if (command.includeTafsir) {
       query.set("include_tafsir", "true");
     }
-    return withQuery(`/v1/quran/${command.surah}`, query);
+    return withQuery(`/quran/${command.surah}`, query);
   }
   const query = new URLSearchParams({ query: command.query });
   appendOptional(query, "section", command.section);

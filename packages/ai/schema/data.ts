@@ -1,5 +1,5 @@
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
-import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran";
+import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran/input";
 import { NakafaAgentReadOptionsSchema } from "@repo/contents/_lib/agent/schema/read";
 import {
   NakafaAgentContentRefSchema,
@@ -41,13 +41,6 @@ const QuranPreviewSchema = NakafaAgentContentRefSchema.mapFields((fields) => ({
   to_verse: Schema.Finite,
   verse_count: Schema.Finite,
 })).mapFields(Struct.map(Schema.mutableKey));
-const LegacyQuranPreviewSchema = QuranPreviewSchema.mapFields((fields) => {
-  const { meaning: _meaning, ...legacyFields } = fields;
-  return {
-    ...legacyFields,
-    translation: Schema.String,
-  };
-}).mapFields(Struct.map(Schema.mutableKey));
 const TaxonomyPreviewSchema = Schema.Struct({
   content_counts: Schema.Array(
     Schema.Struct({
@@ -105,7 +98,7 @@ const NakafaQuranLoadingSchema = Schema.Struct(nakafaQuranLoadingFields).pipe(
 );
 const NakafaQuranDoneSchema = Schema.Struct({
   ...nakafaQuranLoadingFields,
-  result: Schema.Union([QuranPreviewSchema, LegacyQuranPreviewSchema]),
+  result: QuranPreviewSchema,
   status: Schema.Literal("done"),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 const NakafaQuranErrorSchema = Schema.Struct({

@@ -7,7 +7,7 @@ export const NAKAFA_API_BASE_URL = "https://api.nakafa.com";
 /** Current compatible version of the public REST contract. */
 export const NAKAFA_PUBLIC_API_VERSION = "1.0.0";
 
-/** Version of the OpenAPI document that introduces the explicit V2 surface. */
+/** Version of the OpenAPI document that introduces canonical Quran semantics. */
 export const NAKAFA_PUBLIC_API_DOCUMENT_VERSION = "2.0.0";
 
 /** Recommended public Streamable HTTP MCP endpoint. */

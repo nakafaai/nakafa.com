@@ -1,4 +1,4 @@
-import type { NakafaAgentQuranReferenceV2 } from "@repo/contents/_lib/agent/schema/quran/reference";
+import type { NakafaAgentQuranReference } from "@repo/contents/_lib/agent/schema/quran/reference";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import type { NakafaAgentTaxonomy } from "@repo/contents/_lib/agent/schema/taxonomy";
@@ -15,7 +15,7 @@ export function previewRead(result: NakafaAgentMarkdown) {
 }
 
 /** Builds the bounded UI preview for a Quran reference. */
-export function previewQuran(result: NakafaAgentQuranReferenceV2) {
+export function previewQuran(result: NakafaAgentQuranReference) {
   const firstVerse = result.verses.at(0);
   const lastVerse = result.verses.at(-1);
 

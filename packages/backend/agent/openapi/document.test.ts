@@ -9,8 +9,8 @@ import {
   NakafaApiHealthSchema,
   NakafaApiIndexSchema,
 } from "@repo/contents/_lib/agent/schema/api";
-import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran";
-import { NakafaAgentQuranReferenceV2Schema } from "@repo/contents/_lib/agent/schema/quran/reference";
+import { NakafaAgentQuranPredecessorSchema } from "@repo/contents/_lib/agent/schema/quran/predecessor";
+import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
 import { describe, expect, it } from "@repo/testing/effect";
 import { dereference, validate } from "@scalar/openapi-parser";
 import { Effect, Predicate, Schema } from "effect";
@@ -139,7 +139,7 @@ describe("Nakafa OpenAPI document", () => {
   });
 
   it("documents semantic Quran translation notes without raw markers", () => {
-    const verse = OPENAPI_RESPONSE_EXAMPLES.QuranReferenceV2.verses[0];
+    const verse = OPENAPI_RESPONSE_EXAMPLES.QuranReference.verses[0];
 
     expect(verse).toEqual({
       arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
@@ -165,7 +165,7 @@ describe("Nakafa OpenAPI document", () => {
     expect(JSON.stringify(verse)).not.toContain('"translation":"');
   });
 
-  it("keeps V1 exact and derives the V2 example from runtime schemas", () => {
+  it("keeps the predecessor exact and derives the canonical example", () => {
     expect(
       Schema.is(NakafaApiIndexSchema)(OPENAPI_RESPONSE_EXAMPLES.ApiIndex)
     ).toBe(true);
@@ -173,15 +173,16 @@ describe("Nakafa OpenAPI document", () => {
       Schema.is(NakafaApiHealthSchema)(OPENAPI_RESPONSE_EXAMPLES.ApiHealth)
     ).toBe(true);
     expect(
+      Schema.is(NakafaAgentQuranPredecessorSchema)(
+        OPENAPI_RESPONSE_EXAMPLES.QuranPredecessor
+      )
+    ).toBe(true);
+    expect(
       Schema.is(NakafaAgentQuranReferenceSchema)(
         OPENAPI_RESPONSE_EXAMPLES.QuranReference
       )
     ).toBe(true);
-    expect(
-      Schema.is(NakafaAgentQuranReferenceV2Schema)(
-        OPENAPI_RESPONSE_EXAMPLES.QuranReferenceV2
-      )
-    ).toBe(true);
+    expect(NAKAFA_OPENAPI_DOCUMENT.paths).toHaveProperty("/quran/{surah}");
     expect(NAKAFA_OPENAPI_DOCUMENT.paths).toHaveProperty("/v1");
     expect(NAKAFA_OPENAPI_DOCUMENT.paths).toHaveProperty("/v1/content");
     expect(NAKAFA_OPENAPI_DOCUMENT.paths).toHaveProperty("/v1/health");
@@ -196,13 +197,14 @@ describe("Nakafa OpenAPI document", () => {
 
     expect(functions.map(({ name }) => name)).toEqual([
       "getNakafaOpenApi",
+      "getNakafaQuranReference",
       "getNakafaApiIndex",
       "getNakafaContent",
       "getNakafaApiHealth",
-      "getNakafaQuranReference",
+      "getNakafaQuranPredecessor",
       "searchNakafaContent",
       "getNakafaTaxonomy",
-      "getNakafaQuranReferenceV2",
+      "getNakafaQuranReferenceCompatibility",
     ]);
     for (const definition of functions) {
       expect(definition.parameters).toMatchObject({
@@ -219,7 +221,8 @@ describe("Nakafa OpenAPI document", () => {
     const metered = new Set([
       "getNakafaContent",
       "getNakafaQuranReference",
-      "getNakafaQuranReferenceV2",
+      "getNakafaQuranPredecessor",
+      "getNakafaQuranReferenceCompatibility",
       "searchNakafaContent",
       "getNakafaTaxonomy",
     ]);
