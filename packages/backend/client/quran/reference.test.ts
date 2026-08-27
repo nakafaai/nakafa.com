@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   GitCommitShaSchema,
   ReleaseIdSchema,
@@ -13,7 +14,6 @@ import {
   makeQuranSurah,
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 const source = {

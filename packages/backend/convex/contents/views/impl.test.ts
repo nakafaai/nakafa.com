@@ -1,3 +1,11 @@
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import {
@@ -17,9 +25,8 @@ import {
   CONTENT_VIEW_NOW as NOW,
   readContentViewState as readViewState,
   seedArticleViewer,
-} from "@repo/backend/test/content-view";
+} from "@repo/backend/test/content/view";
 import { convexTest } from "convex-test";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("contents/views/impl", () => {
   beforeEach(() => {

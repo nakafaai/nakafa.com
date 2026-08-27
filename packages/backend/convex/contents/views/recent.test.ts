@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   createCanonicalLearningContext,
@@ -11,8 +12,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
-import { makeMaterialProjection } from "@repo/backend/test/content-material";
-import { describe, expect, it } from "vitest";
+import { makeMaterialProjection } from "@repo/backend/test/content/material";
 
 const NOW = Date.UTC(2026, 4, 29, 10, 0, 0);
 const CONTEXT_PROGRAM_KEY = "merdeka";

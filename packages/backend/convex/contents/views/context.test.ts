@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   CorpusSourcePathSchema,
   PublicPathSchema,
@@ -25,19 +26,18 @@ import { validateIncomingContentTarget } from "@repo/backend/convex/contents/vie
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { FUNCTION_MATERIAL } from "@repo/backend/test/content-material";
+import { FUNCTION_MATERIAL } from "@repo/backend/test/content/material";
 import {
   activateMaterialCatalog,
   insertMaterialProjection,
-} from "@repo/backend/test/material-catalog";
+} from "@repo/backend/test/material/catalog";
 import {
   activateProgramSnapshot,
   makeProgramSnapshotData,
-} from "@repo/backend/test/program-snapshot";
+} from "@repo/backend/test/program/snapshot";
 import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 const PROGRAM_KEY = LearningProgramKeySchema.make("technical-program-1");
 const GROUP_KEY = CurriculumNodeKeySchema.make("test-group");

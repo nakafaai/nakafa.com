@@ -1,20 +1,20 @@
+import { describe, expect, it } from "@effect/vitest";
 import { readContentSearchDocuments } from "@repo/backend/convex/contents/helpers/search/read";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
-import { makeMaterialProjection } from "@repo/backend/test/content-material";
+import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   insertRuntimeArticles,
   testArticleProjection,
-} from "@repo/backend/test/content-runtime";
+} from "@repo/backend/test/content/runtime";
 import {
   activateMaterialCatalog,
   insertMaterialProjection,
   MATERIAL_IDENTITY,
-} from "@repo/backend/test/material-catalog";
-import { insertRuntimeIndex } from "@repo/backend/test/runtime-head";
-import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
+} from "@repo/backend/test/material/catalog";
+import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
+import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/_types/agent/search";
-import { describe, expect, it } from "vitest";
 
 describe("readContentSearchDocuments", () => {
   it("reads searchable articles only from the active signed projection", async () => {

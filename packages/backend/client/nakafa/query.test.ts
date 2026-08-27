@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { readNakafaRuntimeQuery } from "@repo/backend/client/nakafa/query";
 import { ConvexRuntimeQueryError } from "@repo/backend/client/runtime";
 import { api } from "@repo/backend/convex/_generated/api";
-import { toRuntimeQueryError } from "@repo/backend/test/runtime-query";
+import { toRuntimeQueryError } from "@repo/backend/test/runtime/query";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import type { FunctionArgs } from "convex/server";
 import { Effect } from "effect";

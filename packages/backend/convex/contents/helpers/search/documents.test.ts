@@ -1,6 +1,6 @@
+import { describe, expect, it } from "@effect/vitest";
 import { buildContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/documents";
-import { testMaterialGraph } from "@repo/backend/test/content-material";
-import { describe, expect, it } from "vitest";
+import { testMaterialGraph } from "@repo/backend/test/content/material";
 
 describe("buildContentSearchDocument", () => {
   it("keeps route identity separate from display search text", () => {

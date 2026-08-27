@@ -1,3 +1,11 @@
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -15,9 +23,8 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { logger } from "@repo/backend/convex/utils/logger";
-import { testMaterialGraph } from "@repo/backend/test/content-material";
+import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { convexTest, type TestConvex } from "convex-test";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const SUBJECT_ROUTE = "material/lesson/mathematics/vector/addition";

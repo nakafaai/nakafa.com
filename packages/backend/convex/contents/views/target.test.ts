@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   ContentKeySchema,
   PublicPathSchema,
@@ -20,14 +21,13 @@ import {
   FUNCTION_MATERIAL,
   makeMaterialProjection,
   testMaterialGraph,
-} from "@repo/backend/test/content-material";
+} from "@repo/backend/test/content/material";
 import {
   insertRuntimeArticles,
   testArticleProjection,
-} from "@repo/backend/test/content-runtime";
-import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
-import { insertRuntimeBinding } from "@repo/backend/test/runtime-head";
-import { describe, expect, it } from "@repo/testing/effect";
+} from "@repo/backend/test/content/runtime";
+import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
+import { insertRuntimeBinding } from "@repo/backend/test/runtime/head";
 import { convexTest, type TestConvex } from "convex-test";
 import { Effect } from "effect";
 

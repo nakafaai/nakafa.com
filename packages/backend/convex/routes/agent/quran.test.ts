@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
   expectProblem,
@@ -14,8 +15,6 @@ import {
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
-import { describe, expect, it } from "@repo/testing/effect";
-
 setupApiTest();
 
 describe("public Quran API routes", () => {

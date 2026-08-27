@@ -3,8 +3,8 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ContentTransportError } from "@repo/backend/client/content/errors";
 import { readPublishedMarkdown } from "@repo/backend/client/nakafa/published";
-import { makeMaterialProjection } from "@repo/backend/test/content-material";
-import { TEST_ARTICLE_PROJECTION } from "@repo/backend/test/content-runtime";
+import { makeMaterialProjection } from "@repo/backend/test/content/material";
+import { TEST_ARTICLE_PROJECTION } from "@repo/backend/test/content/runtime";
 import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
 import { Effect, Option } from "effect";
 import { vi } from "vitest";

@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   parseQuranTranslation,
   QuranTranslationNotesError,
@@ -6,7 +7,6 @@ import {
   projectQuranTranslation,
   renderQuranTranslationMarkdown,
 } from "@repo/backend/client/quran/notes";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 describe("Quran translation notes", () => {

@@ -7,7 +7,7 @@ import {
   encodeTestQuranRow,
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
-import { toRuntimeQueryError } from "@repo/backend/test/runtime-query";
+import { toRuntimeQueryError } from "@repo/backend/test/runtime/query";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect } from "effect";
 import { vi } from "vitest";

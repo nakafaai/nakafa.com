@@ -19,8 +19,8 @@ import {
   activateProgramSnapshot,
   makeProgramSnapshotData,
   makeTechnicalProgram,
-} from "@repo/backend/test/program-snapshot";
-import { activateTryoutStartSource } from "@repo/backend/test/tryout-source";
+} from "@repo/backend/test/program/snapshot";
+import { activateTryoutStartSource } from "@repo/backend/test/tryout/source";
 import { Effect, Schema } from "effect";
 import { vi } from "vitest";
 

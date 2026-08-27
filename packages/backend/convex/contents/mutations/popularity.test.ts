@@ -1,3 +1,11 @@
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -8,10 +16,9 @@ import { learningPopularityRankings } from "@repo/backend/convex/contents/rankin
 import schema from "@repo/backend/convex/schema";
 import { registerLearningPopularityAggregate } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { testMaterialGraph } from "@repo/backend/test/content-material";
-import { testArticleGraph } from "@repo/backend/test/content-release";
+import { testMaterialGraph } from "@repo/backend/test/content/material";
+import { testArticleGraph } from "@repo/backend/test/content/release";
 import { convexTest } from "convex-test";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.parse("2026-01-08T12:00:00.000Z");
 const ARTICLE_ROUTE = "articles/politics/dynastic-politics-asian-values";

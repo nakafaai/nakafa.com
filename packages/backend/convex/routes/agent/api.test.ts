@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -19,8 +20,6 @@ import {
 import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
 import { insertRuntimeIndex } from "@repo/backend/test/runtime-head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
-import { describe, expect, it } from "@repo/testing/effect";
-
 setupApiTest();
 
 describe("public agent API routes", () => {
