@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, type JsonSchema, Schema, Struct } from "effect";
 import {
   decodeNakafaMcpToolInput,
