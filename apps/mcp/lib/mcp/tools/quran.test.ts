@@ -57,6 +57,10 @@ describe("nakafa_get_quran_reference", () => {
         locale: ENGLISH_APP_LOCALE_CODE,
         text: "The Opening",
       });
+      expect(reference.pre_bismillah).toEqual({
+        arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
+        translation: "In the name of Allah.",
+      });
       expect(reference.sources).toMatchObject({
         arabic: { id: ARABIC_SOURCE_ID },
         translation: {
@@ -170,6 +174,10 @@ function makeReference() {
     ...readNakafaContentRefFixture("en", "quran/1", "quran"),
     meaning: { locale: ENGLISH_APP_LOCALE_CODE, text: "The Opening" },
     name: "Al-Faatiha",
+    pre_bismillah: {
+      arabic: "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
+      translation: "In the name of Allah.",
+    },
     revelation: "Meccan",
     sources: {
       arabic: embeddedSource(ARABIC_SOURCE_ID),

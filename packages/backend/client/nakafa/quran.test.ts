@@ -98,6 +98,7 @@ describe("Quran Nakafa reader", () => {
       const value = Option.getOrUndefined(reference);
 
       expect(value?.meaning).toBeNull();
+      expect(value?.pre_bismillah).toBeNull();
       expect(value?.sources).toMatchObject({
         arabic: { id: "tanzil-text" },
         translation: { id: "quranenc-indonesian", locale: "id" },

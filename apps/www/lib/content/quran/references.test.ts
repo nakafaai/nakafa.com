@@ -34,6 +34,16 @@ describe("Quran bibliography", () => {
         references.every(({ url }) => url !== undefined && URL.canParse(url))
       ).toBe(true);
       expect(references.every(({ year }) => year === 2026)).toBe(true);
+      const tafsirReference = references.at(-1);
+      expect(tafsirReference?.details).toContain(
+        makeQuranTafsirProjection(locale).notice
+      );
+      expect(tafsirReference?.details).toContain(
+        makeQuranTafsirProjection(locale).source.terms.url
+      );
+      if (locale !== "id") {
+        expect(tafsirReference?.details).toContain("Access: link-only");
+      }
     }
   );
 });

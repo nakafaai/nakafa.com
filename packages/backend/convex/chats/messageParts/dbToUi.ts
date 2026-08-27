@@ -317,12 +317,14 @@ export function mapDBPartToUIMessagePart({
           fieldName: "dataNakafaId",
           partType: part.type,
         }),
-        data: Schema.decodeSync(NakafaDataSchema)(
-          requirePartField({
-            value: part.dataNakafaData,
-            fieldName: "dataNakafaData",
-            partType: part.type,
-          })
+        data: Schema.decodeUnknownSync(NakafaDataSchema)(
+          projectPersistedNakafaData(
+            requirePartField({
+              value: part.dataNakafaData,
+              fieldName: "dataNakafaData",
+              partType: part.type,
+            })
+          )
         ),
       };
     case "data-math":
@@ -403,4 +405,28 @@ export function mapDBPartToUIMessagePart({
         message: `Unsupported persisted part type: ${part.type}`,
       });
   }
+}
+
+type PersistedNakafaData = NonNullable<Doc<"messageParts">["dataNakafaData"]>;
+
+/** Projects persisted predecessor Quran previews into the canonical UI shape. */
+function projectPersistedNakafaData(data: PersistedNakafaData): unknown {
+  if (
+    data.kind !== "quran" ||
+    data.status !== "done" ||
+    !("translation" in data.result)
+  ) {
+    return data;
+  }
+  const { translation, ...result } = data.result;
+  return {
+    ...data,
+    result: {
+      ...result,
+      meaning:
+        data.input.locale === "en"
+          ? { locale: data.input.locale, text: translation }
+          : null,
+    },
+  };
 }

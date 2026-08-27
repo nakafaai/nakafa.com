@@ -182,6 +182,7 @@ describe("Nakafa OpenAPI document", () => {
         OPENAPI_RESPONSE_EXAMPLES.QuranReference
       )
     ).toBe(true);
+    expect(OPENAPI_RESPONSE_EXAMPLES.QuranReference.pre_bismillah).toBeNull();
     expect(NAKAFA_OPENAPI_DOCUMENT.paths).toHaveProperty("/quran/{surah}");
     expect(NAKAFA_OPENAPI_DOCUMENT.paths).toHaveProperty("/v1");
     expect(NAKAFA_OPENAPI_DOCUMENT.paths).toHaveProperty("/v1/content");

@@ -21,6 +21,7 @@ import { Schema } from "effect";
 import { vi } from "vitest";
 
 const API_SECRET = "technical-api-edge-secret";
+const BISMILLAH = "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ";
 const FORWARDED_IP = {
   de: "203.0.113.12",
   en: "203.0.113.10",
@@ -99,6 +100,7 @@ describe("public Quran route", () => {
       const verse = body.verses[0];
 
       expect(body.meaning).toEqual(expected.meaning);
+      expect(body.pre_bismillah).toBeNull();
       expect(body.sources.arabic.id).toBe("tanzil-text");
       expect(body.sources.translation).toMatchObject({
         id: expected.translation,
@@ -124,16 +126,55 @@ describe("public Quran route", () => {
       }
       expect(JSON.stringify(body)).not.toContain(`[${expected.note}]`);
     }
+  }, 15_000);
+
+  it("keeps Al-Baqarah Bismillah outside numbered verse 1", async () => {
+    const test = createConvexTestWithBetterAuth();
+    await test.mutation((ctx) =>
+      activateQuranSnapshot(ctx, [
+        makeQuranAttribution(),
+        ...Array.from({ length: 114 }, (_, index) => makeQuranSurah(index + 1)),
+        makeQuranChunk({
+          arabicText: BISMILLAH,
+          firstQuranNumber: 1,
+          firstVerse: 1,
+          surahNumber: 1,
+          verseCount: 1,
+        }),
+        makeQuranChunk({
+          arabicText: `${BISMILLAH} الٓمٓ`,
+          firstQuranNumber: 2,
+          firstVerse: 1,
+          surahNumber: 2,
+          verseCount: 1,
+        }),
+        makeQuranSearch("id", 2),
+      ])
+    );
+
+    const response = await fetchQuran(test, "id", 2);
+    expect(response.status).toBe(200);
+    const body = Schema.decodeUnknownSync(NakafaAgentQuranReferenceSchema)(
+      await response.json(),
+      { onExcessProperty: "error" }
+    );
+
+    expect(body.pre_bismillah).toEqual({
+      arabic: BISMILLAH,
+      translation: "Terjemahan teknis 1",
+    });
+    expect(body.verses[0]?.arabic).toBe("الٓمٓ");
   });
 });
 
 /** Requests one locale through the real protected Convex HTTP router. */
 function fetchQuran(
   test: ReturnType<typeof createConvexTestWithBetterAuth>,
-  locale: "de" | "en" | "id"
+  locale: "de" | "en" | "id",
+  surah = 1
 ) {
   return test.fetch(
-    `${NAKAFA_API_EDGE_CONTRACT.originPath}/quran/1?locale=${locale}&include_tafsir=true`,
+    `${NAKAFA_API_EDGE_CONTRACT.originPath}/quran/${surah}?locale=${locale}&include_tafsir=true`,
     {
       headers: {
         [NAKAFA_API_EDGE_CONTRACT.secretHeader]: API_SECRET,

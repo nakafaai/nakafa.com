@@ -38,7 +38,7 @@ describe("Nakafa chat data schema", () => {
     ).toBe(true);
   });
 
-  it("rejects obsolete translation-only Quran previews", () => {
+  it("preserves persisted translation-only Quran previews", () => {
     expect(
       validate(nakafaDataValidator, {
         input,
@@ -49,7 +49,7 @@ describe("Nakafa chat data schema", () => {
         },
         status: "done",
       })
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it("rejects previews with canonical and obsolete fields", () => {

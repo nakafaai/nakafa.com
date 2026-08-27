@@ -130,6 +130,7 @@ const QURAN_REFERENCE_EXAMPLE = {
   markdown_url: `https://nakafa.com/${EXAMPLE_LOCALE}/quran/1.md`,
   meaning: { locale: EXAMPLE_LOCALE, text: "The Opening" },
   name: "Al-Faatiha",
+  pre_bismillah: null,
   revelation: "Meccan",
   route: "quran/1",
   section: "quran",

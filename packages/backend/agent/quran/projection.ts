@@ -88,6 +88,7 @@ export const projectNakafaQuranReference = Effect.fn(
             }
           : null,
       name: input.reference.surah.name.transliteration,
+      pre_bismillah: input.reference.preBismillah,
       revelation: input.reference.surah.revelation.place,
       sources: {
         arabic: projectEmbeddedSource(sources.arabic),

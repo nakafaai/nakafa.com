@@ -28,6 +28,16 @@ const NakafaQuranTranslationDocumentSchema =
     segments: fields.segments.pipe(Schema.mutable),
   })).mapFields(Struct.map(Schema.mutableKey));
 
+/** Dedicated signed Bismillah presented before numbered verses. */
+export const NakafaQuranBismillahSchema = Schema.Struct({
+  arabic: Schema.String.annotate({
+    description: "Exact signed Arabic Bismillah text.",
+  }),
+  translation: Schema.String.annotate({
+    description: "Reviewed locale translation of the Bismillah.",
+  }),
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
+
 /** One Quran verse with semantic translation-note relationships. */
 const NakafaQuranReferenceVerseSchema = Schema.Struct({
   arabic: Schema.String.annotate({
@@ -55,6 +65,10 @@ const NakafaQuranReferenceFields = {
   ...NakafaAgentReadableContentRefSchema.fields,
   name: QuranSurahRowSchema.fields.name.fields.transliteration.annotate({
     description: "Source-authenticated transliterated surah name.",
+  }),
+  pre_bismillah: Schema.NullOr(NakafaQuranBismillahSchema).annotate({
+    description:
+      "Dedicated Bismillah before the selected numbered verses when present.",
   }),
   revelation: QuranSurahRowSchema.fields.revelation.fields.place.annotate({
     description: "Source-authenticated revelation place.",

@@ -13,12 +13,13 @@ export function getQuranReferences(
   sources: QuranViewSources,
   tafsirAccess: QuranViewTafsirAccess | null
 ): Reference[] {
-  const selected = [
-    sources.arabic,
-    sources.translation,
-    ...(tafsirAccess === null ? [] : [tafsirAccess.source]),
-  ];
-  return selected.map(toReference);
+  const readingReferences = [sources.arabic, sources.translation].map(
+    toReference
+  );
+  if (tafsirAccess === null) {
+    return readingReferences;
+  }
+  return [...readingReferences, toTafsirReference(tafsirAccess)];
 }
 
 function toReference(source: QuranReferenceSource): Reference {
@@ -29,5 +30,18 @@ function toReference(source: QuranReferenceSource): Reference {
     title: source.label,
     url: source.updateUrl,
     year: Number(source.retrievedAt.slice(0, 4)),
+  };
+}
+
+/** Preserves signed Tafsir availability and terms in the bibliography entry. */
+function toTafsirReference(access: QuranViewTafsirAccess): Reference {
+  const source = access.source;
+  const accessDetail =
+    source.kind === "external"
+      ? `Access: ${source.terms.access}. Terms: ${source.terms.url}`
+      : `Terms: ${source.terms.url}`;
+  return {
+    ...toReference(source),
+    details: `${access.notice} ${source.notice} ${source.version}. ${accessDetail}`,
   };
 }

@@ -72,6 +72,7 @@ function reference(appLocale: AppLocaleCode, tafsir_access: unknown) {
         ? { locale: ENGLISH_APP_LOCALE_CODE, text: "The Opening" }
         : null,
     name: "Al-Fatihah",
+    pre_bismillah: null,
     revelation: "Meccan",
     sources: {
       arabic: embeddedSource("tanzil-text"),
