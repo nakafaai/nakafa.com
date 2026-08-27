@@ -1,0 +1,46 @@
+name: CLI Package
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: CLI-Package
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup toolchain
+        uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
+        with:
+          cache: true
+          install: false
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify package
+        run: |
+          pnpm --filter nakafa-cli typecheck
+          pnpm --filter nakafa-cli test:coverage
+          pnpm --filter nakafa-cli build
+
+      # Bootstrap only. Delete this registry token setup after 0.1.0 exists and
+      # cli-publish.yml is registered as the package's trusted publisher.
+      - name: Configure bootstrap authentication
+        run: npm config set //registry.npmjs.org/:_authToken "$NODE_AUTH_TOKEN"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_BOOTSTRAP_TOKEN }}
+
+      - name: Publish package
+        run: pnpm --filter nakafa-cli exec npm publish --access public --provenance

@@ -1,0 +1,185 @@
+# Nakafa Source Available License 1.0
+
+Effective date: April 24, 2026
+
+Copyright (c) 2026 PT NAKAFA TEKNO KREATIF. All rights reserved.
+
+This is not an open-source license. Nakafa source code is public so people can
+inspect it, learn from it, review it, and propose improvements. The public
+source code does not grant permission to rebrand, redistribute, host, sell,
+monetize, or turn Nakafa into another product without written permission.
+
+## 1. Definitions
+
+`Nakafa` means the software, source code, build files, configuration, scripts,
+database schema, prompts, UI, and related code made available in this repository.
+
+`You` means the individual or entity receiving or using Nakafa.
+
+`Personal use` means use by one individual for that individual's own learning,
+research, testing, security review, or hobby evaluation. Personal use does not
+include use for an employer, client, school, organization, product, service,
+team, or business purpose.
+
+`Local use` means use on a device or development environment controlled by you,
+without making Nakafa available to any other person over the internet, an
+intranet, a private network, a shared server, or any hosted environment.
+
+`Written permission` means a separate written agreement signed by PT NAKAFA
+TEKNO KREATIF, or a written approval sent from an official Nakafa email address.
+
+## 2. Scope
+
+This license applies to the software source code in this repository unless a
+file says that a different license applies.
+
+This license does not apply to:
+
+- Third-party dependencies, packages, services, fonts, or libraries, which keep
+  their own licenses.
+- Educational content, articles, exercises, explanations, datasets, copy,
+  images, video, audio, and other non-code materials, which are covered by
+  `CONTENT_LICENSE.md` unless a file says otherwise.
+- The Nakafa name, logos, domains, product names, visual identity, and other
+  brand assets, which are covered by `TRADEMARKS.md`.
+- Prior copies of Nakafa that were lawfully received under a previous license.
+  Those older copies remain under the license terms that applied when they were
+  received. New changes published after the effective date above are covered by
+  this license.
+
+All rights not expressly granted by this license are reserved by PT NAKAFA TEKNO
+KREATIF.
+
+## 3. Allowed Use Without Written Permission
+
+You may do only the following without written permission from PT NAKAFA TEKNO
+KREATIF:
+
+- View, read, inspect, and audit the source code.
+- Clone or download one copy for personal review.
+- Create a GitHub fork only to prepare and submit contributions back to Nakafa,
+  as long as the fork is not used as a standalone project, hosted service,
+  mirror, product, rebrand, or distribution channel.
+- Run the unmodified software locally for your own personal, non-commercial
+  learning, research, testing, security review, or hobby evaluation.
+- Make temporary technical copies that are necessary for the allowed personal
+  local use above.
+- Submit issues, suggestions, or pull requests under the contribution terms in
+  `.github/CONTRIBUTING.md`.
+
+These permissions are personal, limited, non-exclusive, non-transferable, and
+revocable if you violate this license.
+
+## 4. Permission Required
+
+You must get prior written permission from PT NAKAFA TEKNO KREATIF before doing
+anything not listed in Section 3.
+
+The following uses always require prior written permission:
+
+- Commercial use.
+- Revenue-generating use.
+- Use in a product, service, course, school system, learning management system,
+  SaaS, API, internal company tool, agency project, client project, consulting
+  work, paid training, or paid content.
+- Use by a company, school, institution, nonprofit organization, government
+  organization, team, or other entity outside personal local evaluation.
+- Any hosted deployment outside your own local machine, whether public or
+  private, and whether or not anyone else can access it.
+- Distribution, redistribution, mirroring, publishing, uploading, packaging,
+  reselling, sublicensing, or sharing copies of the software.
+- Modification, forked product development, derivative works, white-label use,
+  private-label use, rebranding, or presenting Nakafa as your own project.
+- Removing, hiding, or changing copyright, license, attribution, source,
+  trademark, or brand notices.
+- Using Nakafa code, content, structure, datasets, or outputs to train,
+  fine-tune, benchmark, evaluate, seed, or improve AI models, search indexes,
+  datasets, embeddings, retrieval systems, or competing educational products.
+
+Commercial or revenue-generating use includes use connected to subscriptions,
+ads, sponsorships, affiliate revenue, lead generation, paid access, paid
+support, paid tutoring, paid courses, paid school services, sales enablement,
+customer acquisition, investor demos, or any other direct or indirect business
+benefit.
+
+## 5. Brand Rights
+
+This license grants no trademark, service mark, trade name, domain name, logo,
+design, or brand rights. You may not use the Nakafa brand in a way that suggests
+ownership, endorsement, partnership, official status, or source confusion.
+
+See `TRADEMARKS.md` for the brand rules.
+
+## 6. Content Rights
+
+This license grants no rights to copy, redistribute, sell, mirror, scrape,
+repackage, rebrand, or monetize Nakafa educational content.
+
+See `CONTENT_LICENSE.md` for the content rules.
+
+## 7. Contributions
+
+By submitting a contribution, you agree to the contribution terms in
+`.github/CONTRIBUTING.md`.
+
+If you cannot grant those contribution rights, do not submit the contribution.
+
+## 8. Termination
+
+Your rights under this license end immediately if you violate any term.
+
+After termination, you must stop using the software and delete all copies under
+your control, except copies you are required to keep for legal compliance.
+
+PT NAKAFA TEKNO KREATIF may reinstate your rights only in writing.
+
+## 9. Mandatory Legal Rights
+
+This license does not limit rights that applicable law says cannot be waived,
+limited, or conditioned by contract.
+
+## 10. No Warranty
+
+Nakafa is provided "as is" and "as available", without warranties or conditions
+of any kind, whether express, implied, statutory, or otherwise.
+
+PT NAKAFA TEKNO KREATIF does not warrant that Nakafa is accurate, secure,
+complete, uninterrupted, error-free, fit for a particular purpose, or
+non-infringing.
+
+## 11. Limitation of Liability
+
+To the fullest extent permitted by law, PT NAKAFA TEKNO KREATIF will not be
+liable for any indirect, incidental, special, consequential, exemplary, punitive,
+or similar damages, or for any loss of profits, revenue, data, goodwill, or
+business opportunity, arising from or related to Nakafa or this license.
+
+## 12. Governing Law and Venue
+
+This license is governed by the laws of the Republic of Indonesia, without
+regard to conflict of law principles.
+
+Except where prohibited by applicable law, any dispute arising out of or related
+to this license or Nakafa must be brought exclusively in the courts of the
+Republic of Indonesia.
+
+## 13. No Waiver
+
+If PT NAKAFA TEKNO KREATIF does not enforce a term immediately, that does not
+waive the right to enforce that term later.
+
+Any waiver must be in writing and signed by PT NAKAFA TEKNO KREATIF.
+
+## 14. Severability
+
+If any part of this license is found unenforceable, the rest remains in effect.
+The unenforceable part will be interpreted as narrowly as possible so it becomes
+enforceable while preserving the original intent.
+
+## 15. Written Permission
+
+Commercial, hosted, institutional, redistribution, modification, white-label,
+private-label, rebrand, AI-training, or other non-personal use requires a
+separate written agreement.
+
+Contact: nakafaai@gmail.com

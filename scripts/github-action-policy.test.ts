@@ -76,7 +76,7 @@ describe("GitHub Action policy", () => {
     }
     actionUses[setupIndex] = {
       ...setupUse,
-      inputs: { cache: false, install: false },
+      inputs: { cache: "unexpected", install: false },
     };
     actionUses.splice(setupIndex + 1, 1);
 
@@ -86,7 +86,7 @@ describe("GitHub Action policy", () => {
       true
     );
     expect(problems.some((problem) => problem.includes("cache"))).toBe(true);
-    expect(problems.some((problem) => problem.includes("expected 4"))).toBe(
+    expect(problems.some((problem) => problem.includes("expected 5"))).toBe(
       true
     );
   });
