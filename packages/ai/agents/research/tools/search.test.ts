@@ -1,6 +1,6 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { searchWeb } from "@repo/ai/agents/research/tools/search";
 import type { MyUIMessage } from "@repo/ai/types/message";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect } from "effect";
 import { vi } from "vitest";
@@ -67,7 +67,7 @@ describe("research web search tool", () => {
     firecrawlApp.search.mockReset();
   });
 
-  it.live(
+  it.effect(
     "writes loading and done parts while returning text and structured sources",
     () =>
       Effect.gen(function* () {
@@ -174,7 +174,7 @@ describe("research web search tool", () => {
       })
   );
 
-  it.live("deduplicates blank and repeated queries before searching", () =>
+  it.effect("deduplicates blank and repeated queries before searching", () =>
     Effect.gen(function* () {
       firecrawlApp.search.mockResolvedValue({
         web: [
@@ -216,7 +216,7 @@ describe("research web search tool", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "searches each optimized query with query-scoped visible results",
     () =>
       Effect.gen(function* () {
@@ -276,7 +276,7 @@ describe("research web search tool", () => {
       })
   );
 
-  it.live("keeps successful query results when another query fails", () =>
+  it.effect("keeps successful query results when another query fails", () =>
     Effect.gen(function* () {
       firecrawlApp.search.mockImplementation((query: string) => {
         if (query === "AI SDK DevTools") {
@@ -328,7 +328,7 @@ describe("research web search tool", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "writes an empty done part when Firecrawl returns no result groups",
     () =>
       Effect.gen(function* () {
@@ -357,7 +357,7 @@ describe("research web search tool", () => {
       })
   );
 
-  it.live("writes an error part when Firecrawl search fails", () =>
+  it.effect("writes an error part when Firecrawl search fails", () =>
     Effect.gen(function* () {
       firecrawlApp.search.mockRejectedValue(new Error("offline"));
       const { parts, writer } = createWriter();
