@@ -1,4 +1,12 @@
 import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "@effect/vitest";
+import {
   PREDECESSOR_QUIET_WINDOW_MS,
   type PredecessorAbandonReceipt,
   type PredecessorObservationArgs,
@@ -8,10 +16,9 @@ import {
 } from "@repo/backend/convex/contentRelease/predecessor/spec";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { insertRuntimeRelease } from "@repo/backend/test/content-runtime";
+import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
 import { makeFunctionReference } from "convex/server";
 import { convexTest } from "convex-test";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const OBSERVATION_ID = "test-predecessor-observation";
 const arm = makeFunctionReference<

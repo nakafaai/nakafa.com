@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   type RollbackPage,
   RollbackPageSchema,
@@ -17,22 +18,21 @@ import {
   FUNCTION_MATERIAL_JSON,
   FUNCTION_MATERIAL_KEY,
   FUNCTION_MATERIAL_SOURCE,
-} from "@repo/backend/test/content-material";
+} from "@repo/backend/test/content/material";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
   testRollbackJson,
-} from "@repo/backend/test/content-release";
+} from "@repo/backend/test/content/release";
 import {
   activateRollbackFixture,
   insertRollbackItem,
   insertRoute,
   rollbackArtifactHash,
-} from "@repo/backend/test/content-rollback";
-import { insertTestRelease } from "@repo/backend/test/content-stage";
+} from "@repo/backend/test/content/rollback";
+import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { convexTest, type TestConvex } from "convex-test";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 const prepareRollback = internal.contentRelease.rollback.prepareRollback;
 const prepareRoutes = internal.contentRelease.rollback.prepareRoutes;

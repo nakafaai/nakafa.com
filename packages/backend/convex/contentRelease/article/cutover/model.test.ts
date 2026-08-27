@@ -1,3 +1,4 @@
+import { afterEach, describe, expect, it, vi } from "@effect/vitest";
 import {
   readArticleDateCutover,
   removeLegacyArticleDates,
@@ -10,10 +11,9 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   insertRuntimeArticles,
   insertRuntimeRelease,
-} from "@repo/backend/test/content-runtime";
-import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
+} from "@repo/backend/test/content/runtime";
+import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 import { convexTest } from "convex-test";
-import { afterEach, describe, expect, it, vi } from "vitest";
 
 const REQUEST = {
   expectedManifestHash: TEST_RUNTIME_RELEASE.manifestHash,

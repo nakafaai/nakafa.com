@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/catalog-hash";
@@ -25,9 +26,8 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   makeTryoutCatalogRow,
   makeTryoutPlacementRow,
-} from "@repo/backend/test/tryout-snapshot";
+} from "@repo/backend/test/tryout/snapshot";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const snapshotId = Sha256HashSchema.make(`sha256:${"7".repeat(64)}`);
 describe("contentRelease/snapshot/tryout", () => {

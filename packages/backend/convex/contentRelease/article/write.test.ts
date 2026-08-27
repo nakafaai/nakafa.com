@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { ArticleProjection } from "@nakafa/aksara-contracts/projection/article";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -12,11 +13,10 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   TEST_ARTICLE_PROJECTION,
   TEST_ARTICLE_PROJECTION_JSON,
-} from "@repo/backend/test/content-runtime";
+} from "@repo/backend/test/content/runtime";
 import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import type { WithoutSystemFields } from "convex/server";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 type ContentHead = WithoutSystemFields<Doc<"contentHeads">>;
 

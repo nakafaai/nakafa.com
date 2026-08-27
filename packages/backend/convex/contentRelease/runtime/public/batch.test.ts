@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
 import { MAX_PUBLIC_RUNTIME_RESPONSE_BYTES } from "@nakafa/aksara-contracts/runtime/spec";
 import { MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES } from "@repo/backend/content/batch";
@@ -12,24 +13,23 @@ import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helper
 import {
   makeMaterialProjection,
   testProjectionJson,
-} from "@repo/backend/test/content-material";
+} from "@repo/backend/test/content/material";
 import {
   insertRuntimeRelease,
   insertSignedRelease,
   publicRuntimeRequest,
   runtimeContentKey,
-} from "@repo/backend/test/content-runtime";
+} from "@repo/backend/test/content/runtime";
 import {
   insertRuntimeHead,
   insertSignedHead,
-} from "@repo/backend/test/runtime-head";
+} from "@repo/backend/test/runtime/head";
 import {
   loadRuntimeV150,
   verifyRuntimeV150,
-} from "@repo/backend/test/runtime-v150";
-import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime-values";
+} from "@repo/backend/test/runtime/v150";
+import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime/values";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 type RuntimeAction = Pick<RuntimeTest, "action">;

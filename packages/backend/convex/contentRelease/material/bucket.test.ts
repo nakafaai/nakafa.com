@@ -1,10 +1,10 @@
+import { describe, expect, it } from "@effect/vitest";
 import { CONTENT_BUCKET_SIZE } from "@repo/backend/convex/contentRelease/bucket";
 import { adjustMaterialBucket } from "@repo/backend/convex/contentRelease/material/bucket";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 describe("contentRelease/material/bucket", () => {
   it("creates, updates, and removes one material partition", async () => {

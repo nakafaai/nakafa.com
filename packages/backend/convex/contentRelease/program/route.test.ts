@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
 import { makeCurriculumSnapshotRow } from "@nakafa/aksara-contracts/program/snapshot/row-hash";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
@@ -6,21 +7,20 @@ import { readProgramRoute } from "@repo/backend/convex/contentRelease/program/ro
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { makeMaterialProjection } from "@repo/backend/test/content-material";
+import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
-} from "@repo/backend/test/content-release";
+} from "@repo/backend/test/content/release";
 import {
   activateMaterialCatalog,
   insertMaterialProjection,
   MATERIAL_IDENTITY,
-} from "@repo/backend/test/material-catalog";
+} from "@repo/backend/test/material/catalog";
 import {
   activateProgramSnapshot,
   makeProgramSnapshotData,
-} from "@repo/backend/test/program-snapshot";
-import { describe, expect, it } from "@repo/testing/effect";
+} from "@repo/backend/test/program/snapshot";
 import { convexTest, type TestConvex } from "convex-test";
 import { Effect, Schema } from "effect";
 

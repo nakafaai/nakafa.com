@@ -1,19 +1,18 @@
+import { describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { testProjectionJson } from "@repo/backend/test/content-material";
+import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
   TEST_DIGEST,
   TEST_RELEASE_ID,
   testDeleteJson,
   testRollbackJson,
   testUpsertJson,
-} from "@repo/backend/test/content-release";
-
-import { insertTestRelease } from "@repo/backend/test/content-stage";
+} from "@repo/backend/test/content/release";
+import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { convexTest, type TestConvex } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const stageItems = internal.contentRelease.items.stageItemBatch;
 const stageProjections = internal.contentRelease.items.stageProjectionBatch;

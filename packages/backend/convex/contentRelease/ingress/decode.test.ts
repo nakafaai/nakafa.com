@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   MAX_ARTIFACT_BATCH_BYTES,
   MAX_ITEM_BATCH_BYTES,
@@ -13,9 +14,8 @@ import {
   publicationRequestLimit,
   validateRequestBytes,
 } from "@repo/backend/convex/contentRelease/ingress/decode";
-import { testProjectionJson } from "@repo/backend/test/content-material";
-import { testUpsertJson } from "@repo/backend/test/content-release";
-import { describe, expect, it } from "@repo/testing/effect";
+import { testProjectionJson } from "@repo/backend/test/content/material";
+import { testUpsertJson } from "@repo/backend/test/content/release";
 import { Effect, Result, Schema } from "effect";
 
 /** Decodes one exact source at the Vitest boundary. */
@@ -144,6 +144,7 @@ describe("content publication request decoding", () => {
       "stageRecovery",
       "stageRelease",
       "stageSnapshot",
+      "stageTryoutRuntimeBundle",
       "status",
       "verify",
     ] as const) {

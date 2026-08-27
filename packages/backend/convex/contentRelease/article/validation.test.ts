@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { ARTICLE_PREDECESSOR_LIMIT } from "@repo/backend/convex/contentRelease/article/limits";
 import { validateArticleModel } from "@repo/backend/convex/contentRelease/article/validation";
@@ -7,10 +8,9 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   categorizedArticle,
   insertPredecessorArticle,
-} from "@repo/backend/test/article-release";
-import type { TestIdentity } from "@repo/backend/test/content-state";
+} from "@repo/backend/test/article/release";
+import type { TestIdentity } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const PREDECESSOR = {
   manifestHash: `sha256:${"5".repeat(64)}`,

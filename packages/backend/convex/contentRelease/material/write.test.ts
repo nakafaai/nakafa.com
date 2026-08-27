@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   PublicPathSchema,
   Sha256HashSchema,
@@ -16,10 +17,9 @@ import {
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { ingressProjection } from "@repo/backend/test/content-ingress";
+import { ingressProjection } from "@repo/backend/test/content/ingress";
 import { convexTest } from "convex-test";
 import type { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 type PublicProjection = NonNullable<
   Effect.Success<ReturnType<typeof resolvePublicProjection>>

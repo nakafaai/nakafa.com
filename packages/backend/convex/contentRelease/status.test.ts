@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -8,16 +9,15 @@ import {
   TEST_RELEASE_ID,
   testReleaseJson,
   testRendererJson,
-} from "@repo/backend/test/content-release";
-import { insertTestRelease } from "@repo/backend/test/content-stage";
+} from "@repo/backend/test/content/release";
+import { insertTestRelease } from "@repo/backend/test/content/stage";
 import {
   insertTestState,
   insertZeroRelease,
   type TestIdentity,
   zeroReleaseJson,
-} from "@repo/backend/test/content-state";
+} from "@repo/backend/test/content/state";
 import { convexTest, type TestConvex } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const currentRelease = internal.contentRelease.status.current;
 const releaseStatus = internal.contentRelease.status.getStatus;
@@ -61,6 +61,7 @@ describe("contentRelease/status", () => {
       active: null,
       candidate: null,
       recovery: null,
+      tryoutRuntimeBundleJson: null,
     });
     await expect(getStatus(empty)).resolves.toEqual({
       manifestHash: TEST_MANIFEST_HASH,
@@ -78,6 +79,7 @@ describe("contentRelease/status", () => {
         rendererJson: testRendererJson(),
       },
       recovery: null,
+      tryoutRuntimeBundleJson: null,
     });
     await expect(getStatus(candidate)).resolves.toMatchObject({
       phase: "staging",
@@ -91,6 +93,7 @@ describe("contentRelease/status", () => {
       active: null,
       candidate: null,
       recovery: { phase: "staging" },
+      tryoutRuntimeBundleJson: null,
     });
   });
 
@@ -186,6 +189,7 @@ describe("contentRelease/status", () => {
       },
       candidate: null,
       recovery: null,
+      tryoutRuntimeBundleJson: null,
     });
     await expect(
       getStatus(t, `sha256:${"f".repeat(64)}`, ACTIVE.releaseId)

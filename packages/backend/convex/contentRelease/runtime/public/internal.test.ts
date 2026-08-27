@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { PublicRuntimeRow } from "@repo/backend/convex/contentRelease/runtime/public/internal";
@@ -9,28 +10,26 @@ import {
   FUNCTION_MATERIAL_PATH,
   FUNCTION_MATERIAL_SOURCE,
   testProjectionJson,
-} from "@repo/backend/test/content-material";
-import { testTextHash } from "@repo/backend/test/content-release";
-
+} from "@repo/backend/test/content/material";
+import { testTextHash } from "@repo/backend/test/content/release";
 import {
   insertRuntimeRelease,
   TEST_ARTICLE_KEY,
   TEST_ARTICLE_PATH,
   TEST_ARTICLE_PROJECTION_JSON,
   TEST_ARTICLE_SOURCE,
-} from "@repo/backend/test/content-runtime";
+} from "@repo/backend/test/content/runtime";
 import {
   insertRuntimeBinding,
   insertRuntimeHead,
   insertRuntimeVersion,
-} from "@repo/backend/test/runtime-head";
+} from "@repo/backend/test/runtime/head";
 import {
   TEST_RUNTIME_PATH,
   TEST_RUNTIME_RELEASE,
-} from "@repo/backend/test/runtime-values";
+} from "@repo/backend/test/runtime/values";
 import { makeFunctionReference } from "convex/server";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const routeArgs = {
   appLocale: "en",

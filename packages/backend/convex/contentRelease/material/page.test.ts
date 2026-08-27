@@ -1,16 +1,16 @@
+import { describe, expect, it } from "@effect/vitest";
 import { readMaterialPage } from "@repo/backend/convex/contentRelease/material/page";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { makeMaterialProjection } from "@repo/backend/test/content-material";
+import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   activateMaterialCatalog,
   advanceMaterialCatalog,
   MATERIAL_IDENTITY,
-} from "@repo/backend/test/material-catalog";
-import { insertRuntimeBinding } from "@repo/backend/test/runtime-head";
+} from "@repo/backend/test/material/catalog";
+import { insertRuntimeBinding } from "@repo/backend/test/runtime/head";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 describe("contentRelease/material/page", () => {
   it("returns an empty unmanaged page before material publication", async () => {

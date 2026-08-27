@@ -1,11 +1,11 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import { MAX_PROTECTED_RUNTIME_REQUEST_BYTES } from "@nakafa/aksara-contracts/runtime/protected/limits";
 import { dispatchProgram } from "@repo/backend/convex/contentRelease/runtime/history/dispatch";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
-import { insertRetainedRuntime } from "@repo/backend/test/retained-runtime";
-import { describe, expect, it } from "vitest";
+import { insertRetainedRuntime } from "@repo/backend/test/runtime/retained";
 
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 

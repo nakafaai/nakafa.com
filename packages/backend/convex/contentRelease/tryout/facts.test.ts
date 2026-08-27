@@ -1,9 +1,9 @@
+import { describe, expect, it } from "@effect/vitest";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/catalog-hash";
 import { tryoutCatalogFacts } from "@repo/backend/convex/contentRelease/tryout/facts";
-import { makeTryoutCatalogRow } from "@repo/backend/test/tryout-snapshot";
+import { makeTryoutCatalogRow } from "@repo/backend/test/tryout/snapshot";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 /** Creates one schema-decoded technical set or section row. */
 function makeSetChild(kind: "section" | "set") {

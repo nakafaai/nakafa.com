@@ -1,12 +1,12 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { ContentSnapshotManifest } from "@nakafa/aksara-contracts/release/snapshot/data";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { TEST_RELEASE_ID } from "@repo/backend/test/content-release";
+import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import {
   makeProgramSnapshotData,
   stageProgramSnapshot,
-} from "@repo/backend/test/program-snapshot";
-import { describe, expect, it } from "@repo/testing/effect";
+} from "@repo/backend/test/program/snapshot";
 import { makeFunctionReference } from "convex/server";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";

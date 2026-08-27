@@ -1,30 +1,30 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { checkItem } from "@repo/backend/convex/contentRelease/verify/item";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { testArtifactJson } from "@repo/backend/test/content-artifact";
-import { testProjectionJson } from "@repo/backend/test/content-material";
+import { testArtifactJson } from "@repo/backend/test/content/artifact";
+import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
   TEST_PAGE_KEY,
   TEST_PAGE_PATH,
   TEST_PAGE_SOURCE,
-} from "@repo/backend/test/content-page";
+} from "@repo/backend/test/content/page";
 import {
   TEST_RELEASE_ID,
   testRollbackJson,
-} from "@repo/backend/test/content-release";
+} from "@repo/backend/test/content/release";
 import {
   TEST_ARTICLE_KEY,
   TEST_ARTICLE_SOURCE,
-} from "@repo/backend/test/content-runtime";
+} from "@repo/backend/test/content/runtime";
 import {
   beginFixture,
   stageDeleteFixture,
   stageUpsertFixture,
-} from "@repo/backend/test/content-verify";
+} from "@repo/backend/test/content/verify";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 /** Runs item verification against the only staged release item. */
 async function verifyOnly(ctx: MutationCtx) {

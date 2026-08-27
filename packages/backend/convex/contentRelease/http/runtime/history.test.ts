@@ -1,17 +1,25 @@
 // @vitest-environment node
 
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { MAX_PROTECTED_RUNTIME_REQUEST_BYTES } from "@nakafa/aksara-contracts/runtime/protected/limits";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
+  PREDECESSOR_RETAINED_PROTECTED_CONTENT_RUNTIME_PATH,
   RETAINED_PROTECTED_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
+import type {
+  PredecessorObservationArgs,
+  PredecessorStatus,
+} from "@repo/backend/convex/contentRelease/predecessor/spec";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
+import { makeFunctionReference } from "convex/server";
 
 const runtimeToken = "retained-runtime-token";
 const runtimeTokenName = "CONTENT_RUNTIME_TOKEN";
 const polarName = "POLAR_WEBHOOK_SECRET";
+const OBSERVATION_ID = "test-predecessor-observation";
 const digest = `sha256:${"a".repeat(64)}`;
 const request = {
   appLocale: "en",
@@ -28,17 +36,38 @@ const request = {
   snapshotId: digest,
   snapshotReleaseId: "retained-runtime-release",
 };
+type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
+const armObservation = makeFunctionReference<
+  "mutation",
+  PredecessorObservationArgs,
+  PredecessorStatus
+>("contentRelease/predecessor/internal:arm");
 
 /** Sends one request through the registered retained-history route. */
-function post(body: BodyInit | null, token = runtimeToken) {
-  const t = createConvexTestWithBetterAuth();
-  return t.fetch(RETAINED_PROTECTED_CONTENT_RUNTIME_PATH, {
+function post(
+  target: RuntimeTest,
+  body: BodyInit | null,
+  token = runtimeToken,
+  path = RETAINED_PROTECTED_CONTENT_RUNTIME_PATH
+) {
+  return target.fetch(path, {
     body,
     headers: {
       "content-type": "application/json",
       "x-nakafa-content-token": token,
     },
     method: "POST",
+  });
+}
+
+/** Reads one observer count without scanning the temporary table. */
+function historyCount(target: RuntimeTest) {
+  return target.query(async (ctx) => {
+    const row = await ctx.db
+      .query("contentPredecessorReads")
+      .withIndex("by_route", (query) => query.eq("route", "history"))
+      .unique();
+    return row?.invocationCount ?? null;
   });
 }
 
@@ -53,26 +82,46 @@ afterEach(() => {
 });
 
 describe("retained protected content runtime HTTP route", () => {
-  it("returns attempt-bound absence with private response controls", async () => {
-    const response = await post(JSON.stringify(request));
-
-    expect(response.status).toBe(404);
-    await expect(response.json()).resolves.toEqual({
-      appLocale: request.appLocale,
-      attemptId: request.attemptId,
-      kind: "missing",
-    });
-    expect(response.headers.get("cache-control")).toBe("private, no-store");
-    expect(response.headers.get(CONTENT_RUNTIME_RESPONSE_HEADER)).toBe(
-      CONTENT_RUNTIME_RESPONSE_MARKER
+  it("serves both rollout paths through the exact retained contract", async () => {
+    const target = createConvexTestWithBetterAuth();
+    await target.mutation((ctx) => insertRuntimeRelease(ctx));
+    await target.mutation(armObservation, { observationId: OBSERVATION_ID });
+    const responses = await Promise.all(
+      [
+        PREDECESSOR_RETAINED_PROTECTED_CONTENT_RUNTIME_PATH,
+        RETAINED_PROTECTED_CONTENT_RUNTIME_PATH,
+      ].map((path) => post(target, JSON.stringify(request), runtimeToken, path))
     );
-    expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+
+    for (const response of responses) {
+      expect(response.status).toBe(404);
+      await expect(response.json()).resolves.toEqual({
+        appLocale: request.appLocale,
+        attemptId: request.attemptId,
+        kind: "missing",
+      });
+      expect(response.headers.get("cache-control")).toBe("private, no-store");
+      expect(response.headers.get(CONTENT_RUNTIME_RESPONSE_HEADER)).toBe(
+        CONTENT_RUNTIME_RESPONSE_MARKER
+      );
+      expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+    }
+    await expect(historyCount(target)).resolves.toBe(1);
   });
 
   it("rejects unauthorized, malformed, and oversized requests", async () => {
-    const unauthorized = await post(JSON.stringify(request), "wrong-token");
-    const malformed = await post(JSON.stringify({ ...request, selectors: [] }));
+    const target = createConvexTestWithBetterAuth();
+    const unauthorized = await post(
+      target,
+      JSON.stringify(request),
+      "wrong-token"
+    );
+    const malformed = await post(
+      target,
+      JSON.stringify({ ...request, selectors: [] })
+    );
     const oversized = await post(
+      target,
       "x".repeat(MAX_PROTECTED_RUNTIME_REQUEST_BYTES + 1)
     );
 

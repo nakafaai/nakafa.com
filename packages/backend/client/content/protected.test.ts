@@ -1,11 +1,12 @@
 // @vitest-environment node
 
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   ContentKeySchema,
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { ACTIVE_APP_LOCALES } from "@nakafa/aksara-contracts/locale";
 import { ContentReleaseManifestSchema } from "@nakafa/aksara-contracts/release";
 import {
   inheritContentSnapshots,
@@ -13,6 +14,7 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { ProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import { verifyProtectedContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/protected/verify";
+import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";
 import {
   ContentRuntimeMissingError,
   ContentTransportError,
@@ -21,32 +23,35 @@ import { readProtectedContent } from "@repo/backend/client/content/protected";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
+  PROTECTED_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
 import {
   TEST_PROOF_RENDERER,
   testEmptyManifest,
   testSignedArtifact,
   testSignedRelease,
-} from "@repo/backend/test/content-proof";
-import { testPublicationScope } from "@repo/backend/test/content-release";
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from "@repo/testing/effect";
+  testSignedTryoutRuntimeBundle,
+} from "@repo/backend/test/content/proof";
+import { testPublicationScope } from "@repo/backend/test/content/release";
 import { Effect } from "effect";
 import { vi } from "vitest";
 
-const endpoint =
-  "https://example.convex.site/internal/content/runtime/protected";
+const endpoint = `https://example.convex.site${PROTECTED_CONTENT_RUNTIME_PATH}`;
 const target = {
   siteUrl: "https://example.convex.site",
   token: "runtime-test-token",
 };
 const releaseId = ReleaseIdSchema.make("release-protected-client");
-const snapshotId = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
+const digest = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
+const snapshot = makeTryoutSnapshot({
+  activeAppLocales: ACTIVE_APP_LOCALES,
+  catalogDigest: digest,
+  counts: { country: 1, exam: 1, section: 1, set: 1, track: 1 },
+  placementCount: 1,
+  placementDigest: digest,
+  routeCount: 1,
+});
+const snapshotId = snapshot.snapshotId;
 const snapshots = {
   ...inheritContentSnapshots(null),
   tryout: replaceContentSnapshot({
@@ -67,8 +72,13 @@ const contentKey = ContentKeySchema.make(
   "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/question"
 );
 const artifact = testSignedArtifact("snbt-quant", { contentKey });
+const bundle = testSignedTryoutRuntimeBundle({
+  release,
+  rendererManifest: TEST_PROOF_RENDERER,
+  snapshot,
+});
 const request: ProtectedContentRuntimeRequest = {
-  appLocale: AppLocaleSchema.make("en"),
+  bundleHash: bundle.bundleHash,
   selectors: [
     {
       artifactHash: artifact.artifactHash,
@@ -76,10 +86,10 @@ const request: ProtectedContentRuntimeRequest = {
       delivery: "authenticated",
     },
   ],
-  snapshotReleaseId: release.manifest.releaseId,
   snapshotId,
 };
 const found = {
+  bundle,
   items: [
     {
       artifact,
@@ -88,11 +98,7 @@ const found = {
     },
   ],
   kind: "found",
-  release,
   rendererManifest: TEST_PROOF_RENDERER,
-  snapshotManifestHash: release.manifestHash,
-  snapshotReleaseId: release.manifest.releaseId,
-  snapshotId,
 };
 const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
 const verifyMock = vi.hoisted(() => vi.fn());
@@ -131,7 +137,7 @@ afterEach(() => {
 });
 
 describe("protected content runtime client", () => {
-  it.live("posts and verifies one retained-snapshot batch", () =>
+  it.effect("posts and verifies one retained-snapshot batch", () =>
     Effect.gen(function* () {
       fetchMock.mockResolvedValue(createResponse(found, 200, false));
 
@@ -149,7 +155,7 @@ describe("protected content runtime client", () => {
     })
   );
 
-  it.live("returns a typed absence bound to the complete batch request", () =>
+  it.effect("returns a typed absence bound to the complete batch request", () =>
     Effect.gen(function* () {
       fetchMock.mockResolvedValue(createResponse({ kind: "missing" }, 404));
 
@@ -161,23 +167,31 @@ describe("protected content runtime client", () => {
     })
   );
 
-  it.live("classifies valid JSON outside the protected response contract", () =>
-    Effect.gen(function* () {
-      fetchMock
-        .mockResolvedValueOnce(createResponse({ unexpected: true }, 200, false))
-        .mockResolvedValueOnce(createResponse({ unexpected: true }, 200));
+  it.effect(
+    "classifies valid JSON outside the protected response contract",
+    () =>
+      Effect.gen(function* () {
+        fetchMock
+          .mockResolvedValueOnce(
+            createResponse({ unexpected: true }, 200, false)
+          )
+          .mockResolvedValueOnce(createResponse({ unexpected: true }, 200));
 
-      expect(
-        yield* readProtectedContent(target, request, TEST_PROOF_RENDERER).pipe(
-          Effect.flip
-        )
-      ).toEqual(new ContentTransportError({ reason: "response-unmarked" }));
-      expect(
-        yield* readProtectedContent(target, request, TEST_PROOF_RENDERER).pipe(
-          Effect.flip
-        )
-      ).toEqual(new ContentTransportError({ reason: "response-contract" }));
-      expect(verifyProtectedContentRuntimeExchange).not.toHaveBeenCalled();
-    })
+        expect(
+          yield* readProtectedContent(
+            target,
+            request,
+            TEST_PROOF_RENDERER
+          ).pipe(Effect.flip)
+        ).toEqual(new ContentTransportError({ reason: "response-unmarked" }));
+        expect(
+          yield* readProtectedContent(
+            target,
+            request,
+            TEST_PROOF_RENDERER
+          ).pipe(Effect.flip)
+        ).toEqual(new ContentTransportError({ reason: "response-contract" }));
+        expect(verifyProtectedContentRuntimeExchange).not.toHaveBeenCalled();
+      })
   );
 });

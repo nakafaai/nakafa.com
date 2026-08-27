@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
 import { readTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
@@ -8,8 +9,7 @@ import {
   activateTryoutSnapshot,
   makeTryoutCatalogRow,
   makeTryoutPlacementRow,
-} from "@repo/backend/test/tryout-snapshot";
-import { describe, expect, it } from "@repo/testing/effect";
+} from "@repo/backend/test/tryout/snapshot";
 import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
 

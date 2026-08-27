@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
@@ -17,11 +18,11 @@ import {
   encodeReleaseJson,
   encodeRendererJson,
 } from "@repo/backend/convex/contentRelease/wire";
-import { testArtifactJson } from "@repo/backend/test/content-artifact";
+import { testArtifactJson } from "@repo/backend/test/content/artifact";
 import {
   FUNCTION_MATERIAL,
   testProjectionJson,
-} from "@repo/backend/test/content-material";
+} from "@repo/backend/test/content/material";
 import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
@@ -29,8 +30,7 @@ import {
   testReleaseJson,
   testRendererJson,
   testUpsertJson,
-} from "@repo/backend/test/content-release";
-import { describe, expect, it } from "@repo/testing/effect";
+} from "@repo/backend/test/content/release";
 import { Effect, Exit } from "effect";
 
 /** Creates exact server-derived evidence for strict proof decoding. */

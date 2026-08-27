@@ -1,9 +1,9 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   hasExactFamilies,
   loadReleaseFamilies,
   mergeManagedFamilies,
 } from "@repo/backend/convex/contentRelease/scope/family";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 describe("contentRelease/scope/family", () => {

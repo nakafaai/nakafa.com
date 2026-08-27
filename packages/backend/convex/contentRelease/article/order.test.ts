@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { paginateArticles } from "@repo/backend/convex/contentRelease/article/order";
 import {
   PROJECTION_PAGE_BYTES,
@@ -9,11 +10,10 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   insertRuntimeArticles,
   testArticleProjection,
-} from "@repo/backend/test/content-runtime";
+} from "@repo/backend/test/content/runtime";
 import { ARTICLE_PUBLICATION_CURSOR_PREFIX } from "@repo/contents/_types/publication";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 /** Preserves the worst-case duplicate-index bridge fixture after current writes. */
 async function insertTransitionArticles(

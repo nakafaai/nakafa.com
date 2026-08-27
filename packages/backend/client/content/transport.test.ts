@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { ContentTransportError } from "@repo/backend/client/content/errors";
 import {
   createContentContractError,
@@ -14,13 +15,6 @@ import {
   CONTENT_RUNTIME_RESPONSE_MARKER,
   PUBLIC_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from "@repo/testing/effect";
 import { Duration, Effect, Fiber, Logger } from "effect";
 import { TestClock } from "effect/testing";
 import { vi } from "vitest";

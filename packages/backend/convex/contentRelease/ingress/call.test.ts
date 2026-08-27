@@ -1,6 +1,6 @@
+import { describe, expect, it } from "@effect/vitest";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
-import { describe, expect, it } from "@repo/testing/effect";
 import { ConvexError } from "convex/values";
 import { Cause, Effect, Exit, Result } from "effect";
 

@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ContentReleaseManifestSchema } from "@nakafa/aksara-contracts/release";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
@@ -14,13 +15,12 @@ import {
   TEST_PROOF_RENDERER,
   testEmptyManifest,
   testSignedRelease,
-} from "@repo/backend/test/content-proof";
-import { testPublicationScope } from "@repo/backend/test/content-release";
-import { insertSignedCandidate } from "@repo/backend/test/content-stage";
-import { makeProgramSnapshotData } from "@repo/backend/test/program-snapshot";
+} from "@repo/backend/test/content/proof";
+import { testPublicationScope } from "@repo/backend/test/content/release";
+import { insertSignedCandidate } from "@repo/backend/test/content/stage";
+import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
 import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 const releaseId = ReleaseIdSchema.make("release-stage-group");
 

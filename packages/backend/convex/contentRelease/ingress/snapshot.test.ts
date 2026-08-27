@@ -1,12 +1,13 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import {
   verifySnapshotBatch,
   verifySnapshotManifest,
 } from "@repo/backend/convex/contentRelease/ingress/snapshot";
-import { makeProgramSnapshotData } from "@repo/backend/test/program-snapshot";
+import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
 import {
   makeQuranSnapshot,
   makeQuranSnapshotRow,
@@ -15,8 +16,7 @@ import {
   makeTryoutCatalogRow,
   makeTryoutPlacementRow,
   makeTryoutSnapshotManifest,
-} from "@repo/backend/test/tryout-snapshot";
-import { describe, expect, it } from "@repo/testing/effect";
+} from "@repo/backend/test/tryout/snapshot";
 import { Effect } from "effect";
 
 const otherSnapshotId = Sha256HashSchema.make(`sha256:${"9".repeat(64)}`);

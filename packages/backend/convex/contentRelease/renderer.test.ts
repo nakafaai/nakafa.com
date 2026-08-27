@@ -1,11 +1,11 @@
+import { describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/renderer";
 import {
   TEST_PROOF_RENDERER,
   testEmptyManifest,
   testProofRenderer,
-} from "@repo/backend/test/content-proof";
-import { describe, expect, it } from "vitest";
+} from "@repo/backend/test/content/proof";
 
 const manifest = testEmptyManifest(ReleaseIdSchema.make("release-renderer"));
 

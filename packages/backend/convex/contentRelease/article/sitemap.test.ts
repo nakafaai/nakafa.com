@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   readArticleBuckets,
   readArticleSitemap,
@@ -9,9 +10,8 @@ import {
   insertRuntimeArticles,
   testArticleProjection,
   testLocalizedArticleProjection,
-} from "@repo/backend/test/content-runtime";
+} from "@repo/backend/test/content/runtime";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 describe("contentRelease/article/sitemap", () => {
   it("keeps sitemap ownership absent before the article cutover", async () => {

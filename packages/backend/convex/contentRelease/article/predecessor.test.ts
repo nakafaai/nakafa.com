@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   ArticleProjectionSchema,
   canonicalizeArticleProjection,
@@ -9,10 +10,9 @@ import {
 import {
   testArticleProjection,
   testLocalizedArticleProjection,
-} from "@repo/backend/test/content-runtime";
+} from "@repo/backend/test/content/runtime";
 import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import { Cause, Effect, Exit, Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 const decodePredecessor = Schema.decodeUnknownSync(
   PredecessorArticleProjectionSchema

@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import { canonicalizeArticleProjection } from "@nakafa/aksara-contracts/projection/article";
 import {
   decodePublicContentRuntimeRequest,
@@ -19,15 +20,15 @@ import {
   FUNCTION_MATERIAL_KEY,
   FUNCTION_MATERIAL_PATH,
   FUNCTION_MATERIAL_SOURCE,
-} from "@repo/backend/test/content-material";
+} from "@repo/backend/test/content/material";
 import {
   TEST_PAGE_KEY,
   TEST_PAGE_PATH,
   TEST_PAGE_PROJECTION_JSON,
   TEST_PAGE_SOURCE,
-} from "@repo/backend/test/content-page";
-import { TEST_KEY_RESOLVER } from "@repo/backend/test/content-proof";
-import { testTextHash } from "@repo/backend/test/content-release";
+} from "@repo/backend/test/content/page";
+import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
+import { testTextHash } from "@repo/backend/test/content/release";
 import {
   articleRuntimeRequest,
   insertSignedRelease,
@@ -38,14 +39,13 @@ import {
   TEST_ARTICLE_PROJECTION_JSON,
   TEST_ARTICLE_SOURCE,
   testLocalizedArticleProjection,
-} from "@repo/backend/test/content-runtime";
-import { insertSignedHead } from "@repo/backend/test/runtime-head";
+} from "@repo/backend/test/content/runtime";
+import { insertSignedHead } from "@repo/backend/test/runtime/head";
 import {
   loadRuntimeV150,
   verifyRuntimeV150,
-} from "@repo/backend/test/runtime-v150";
-import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime-values";
-import { describe, expect, it } from "@repo/testing/effect";
+} from "@repo/backend/test/runtime/v150";
+import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime/values";
 import { Effect } from "effect";
 
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;

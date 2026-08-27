@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   canonicalizeMaterialProjection,
   MaterialLessonProjectionSchema,
@@ -6,10 +7,9 @@ import {
   encodePredecessorProjection,
   PredecessorMaterialProjectionSchema,
 } from "@repo/backend/convex/contentRelease/material/predecessor";
-import { makeMaterialProjection } from "@repo/backend/test/content-material";
+import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import { Cause, Effect, Exit, Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 const decodePredecessor = Schema.decodeUnknownSync(
   PredecessorMaterialProjectionSchema

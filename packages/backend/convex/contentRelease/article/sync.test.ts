@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { canonicalizeArticleProjection } from "@nakafa/aksara-contracts/projection/article";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { syncArticles } from "@repo/backend/convex/contentRelease/article/sync";
@@ -7,20 +8,19 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   categorizedArticle,
   insertArticleProjection,
-} from "@repo/backend/test/article-release";
+} from "@repo/backend/test/article/release";
 import {
   insertCompletedRelease,
   insertReleaseItem,
   selectActiveRelease,
-} from "@repo/backend/test/content-read-model";
-import { testArticleProjection } from "@repo/backend/test/content-runtime";
+} from "@repo/backend/test/content/model";
+import { testArticleProjection } from "@repo/backend/test/content/runtime";
 import {
   insertTestState,
   type TestIdentity,
-} from "@repo/backend/test/content-state";
-import { insertRuntimeVersion } from "@repo/backend/test/runtime-head";
+} from "@repo/backend/test/content/state";
+import { insertRuntimeVersion } from "@repo/backend/test/runtime/head";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const BASE = {
   manifestHash: `sha256:${"6".repeat(64)}`,

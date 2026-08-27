@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { abortProgram } from "@repo/backend/convex/contentRelease/abort";
@@ -11,15 +12,14 @@ import {
   ABORT_RELEASE_ID,
   abortContentKey,
   seedAbortRelease,
-} from "@repo/backend/test/content-abort";
-import { testProjectionJson } from "@repo/backend/test/content-material";
-import { TEST_DIGEST, testTextHash } from "@repo/backend/test/content-release";
+} from "@repo/backend/test/content/abort";
+import { testProjectionJson } from "@repo/backend/test/content/material";
+import { TEST_DIGEST, testTextHash } from "@repo/backend/test/content/release";
 import {
   insertZeroRelease,
   type TestIdentity,
-} from "@repo/backend/test/content-state";
+} from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 /** Runs one server-cursor abort page at the native Convex test boundary. */
 function abort(ctx: MutationCtx, releaseId = ABORT_RELEASE_ID) {

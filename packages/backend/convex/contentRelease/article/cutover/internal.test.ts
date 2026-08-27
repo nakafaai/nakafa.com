@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import type {
   ArticleDateCutoverReceipt,
   ArticleDateCutoverRequest,
@@ -5,11 +6,10 @@ import type {
 } from "@repo/backend/convex/contentRelease/article/cutover/spec";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { insertRuntimeArticles } from "@repo/backend/test/content-runtime";
-import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
+import { insertRuntimeArticles } from "@repo/backend/test/content/runtime";
+import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 import { makeFunctionReference } from "convex/server";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const REQUEST = {
   expectedManifestHash: TEST_RUNTIME_RELEASE.manifestHash,

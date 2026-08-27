@@ -1,22 +1,22 @@
+import { describe, expect, it } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { ARTIFACT_PAGE_COUNT } from "@repo/backend/convex/contentRelease/spec";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { testProjectionJson } from "@repo/backend/test/content-material";
+import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
   TEST_ARTIFACT_HASH,
   TEST_DIGEST,
   testRollbackJson,
   testUpsertJson,
-} from "@repo/backend/test/content-release";
+} from "@repo/backend/test/content/release";
 import {
   insertZeroRelease,
   type TestIdentity,
-} from "@repo/backend/test/content-state";
+} from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const cleanup = internal.contentRelease.cleanup.cleanup;
 const RELEASE = {

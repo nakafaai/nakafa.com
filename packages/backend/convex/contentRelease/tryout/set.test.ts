@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   ACTIVE_APP_LOCALE_CODES,
   AppLocaleSchema,
@@ -15,7 +16,7 @@ import {
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { activateTryoutSnapshot } from "@repo/backend/test/tryout-snapshot";
+import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
 import {
   makeTryoutStartCatalog,
   makeTryoutStartPlacement,
@@ -24,10 +25,9 @@ import {
   TRYOUT_START_SECTION,
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
-} from "@repo/backend/test/tryout-source";
+} from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 const identity: TryoutSetIdentity = {
   countryKey: TRYOUT_START_COUNTRY,

@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   type ContentFamily,
   ContentFamilySchema,
@@ -17,32 +18,31 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   insertTestHead,
   maximumTestHead,
-} from "@repo/backend/test/content-head";
+} from "@repo/backend/test/content/head";
 import {
   TEST_PAGE_KEY,
   TEST_PAGE_PATH,
   TEST_PAGE_SOURCE,
-} from "@repo/backend/test/content-page";
+} from "@repo/backend/test/content/page";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
-} from "@repo/backend/test/content-release";
-import { activateRollbackFixture } from "@repo/backend/test/content-rollback";
+} from "@repo/backend/test/content/release";
+import { activateRollbackFixture } from "@repo/backend/test/content/rollback";
 import {
   TEST_ARTICLE_KEY,
   TEST_ARTICLE_PATH,
   TEST_ARTICLE_SOURCE,
-} from "@repo/backend/test/content-runtime";
+} from "@repo/backend/test/content/runtime";
 import {
   insertTestState,
   insertZeroRelease,
   type TestIdentity,
-} from "@repo/backend/test/content-state";
+} from "@repo/backend/test/content/state";
 import {
   beginFixture,
   stageUpsertFixture,
-} from "@repo/backend/test/content-verify";
-import { describe, expect, it } from "@repo/testing/effect";
+} from "@repo/backend/test/content/verify";
 import { getConvexSize } from "convex/values";
 import { convexTest, type TestConvex } from "convex-test";
 import { Effect, Result, Schema } from "effect";

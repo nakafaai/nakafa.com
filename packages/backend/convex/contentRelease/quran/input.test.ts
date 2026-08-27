@@ -1,8 +1,8 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   validateQuranReference,
   validateQuranSurah,
 } from "@repo/backend/convex/contentRelease/quran/input";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 /** Runs one input validator and exposes its typed failure for assertions. */

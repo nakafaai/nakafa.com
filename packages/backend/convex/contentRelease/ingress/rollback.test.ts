@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { PublicationRequestSchema } from "@nakafa/aksara-contracts/transport/request";
@@ -13,19 +14,18 @@ import {
   TEST_KEY_RESOLVER,
   TEST_PROOF_RENDERER,
   testSignedRelease,
-} from "@repo/backend/test/content-proof";
+} from "@repo/backend/test/content/proof";
 import {
   TEST_RELEASE_ID,
   testReleaseJson,
-} from "@repo/backend/test/content-release";
+} from "@repo/backend/test/content/release";
 import {
   activateRollbackFixture,
   insertRollbackItem,
   insertRoute,
-} from "@repo/backend/test/content-rollback";
+} from "@repo/backend/test/content/rollback";
 import { convexTest, type TestConvex } from "convex-test";
 import { Effect, Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 /** Activates one authenticated release that the ingress may replay. */
 async function activateAuthenticatedRelease(

@@ -2,6 +2,7 @@
 
 import { Buffer } from "node:buffer";
 import { generateKeyPairSync, sign as signBytes } from "node:crypto";
+import { describe, expect, it } from "@effect/vitest";
 import {
   Ed25519SignatureSchema,
   ReleaseIdSchema,
@@ -27,7 +28,7 @@ import {
   ingressItem,
   ingressRelease,
   ingressReleaseId,
-} from "@repo/backend/test/content-ingress";
+} from "@repo/backend/test/content/ingress";
 import {
   TEST_KEY_ID,
   TEST_KEY_RESOLVER,
@@ -37,16 +38,15 @@ import {
   testProofRenderer,
   testSignedArtifact,
   testSignedRelease,
-} from "@repo/backend/test/content-proof";
-import { testPublicationScope } from "@repo/backend/test/content-release";
-import { insertSignedCandidate } from "@repo/backend/test/content-stage";
+} from "@repo/backend/test/content/proof";
+import { testPublicationScope } from "@repo/backend/test/content/release";
+import { insertSignedCandidate } from "@repo/backend/test/content/stage";
 import {
   makeProgramSnapshotData,
   type ProgramSnapshotData,
-} from "@repo/backend/test/program-snapshot";
+} from "@repo/backend/test/program/snapshot";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 const candidateId = ReleaseIdSchema.make("release-stage-candidate");
 const activeKeyId = SigningKeyIdSchema.make("test-active-key");

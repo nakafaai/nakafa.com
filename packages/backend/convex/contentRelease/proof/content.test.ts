@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import {
   ContentKeySchema,
   ReleaseIdSchema,
@@ -19,8 +20,7 @@ import { verifyContentStreams } from "@repo/backend/convex/contentRelease/proof/
 import {
   testEmptyManifest,
   testSignedRelease,
-} from "@repo/backend/test/content-proof";
-import { describe, expect, it } from "@repo/testing/effect";
+} from "@repo/backend/test/content/proof";
 import { Effect, Stream } from "effect";
 
 const releaseId = ReleaseIdSchema.make("release-one-pass-proof");

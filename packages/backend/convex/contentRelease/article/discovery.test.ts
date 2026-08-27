@@ -1,12 +1,12 @@
+import { describe, expect, it } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   insertRuntimeArticles,
   testLocalizedArticleProjection,
-} from "@repo/backend/test/content-runtime";
+} from "@repo/backend/test/content/runtime";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const bucket = api.contentRelease.article.bucket;
 const latest = api.contentRelease.article.latest;

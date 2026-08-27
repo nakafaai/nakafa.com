@@ -1,16 +1,16 @@
+import { describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { PROOF_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { testMaterialPublicPath } from "@repo/backend/test/content-material";
-import { TEST_RELEASE_ID } from "@repo/backend/test/content-release";
+import { testMaterialPublicPath } from "@repo/backend/test/content/material";
+import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import {
   insertRollbackItem,
   insertRoute,
-} from "@repo/backend/test/content-rollback";
-import { insertTestRelease } from "@repo/backend/test/content-stage";
+} from "@repo/backend/test/content/rollback";
+import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const readCatalog = internal.contentRelease.proof.catalog.page;
 

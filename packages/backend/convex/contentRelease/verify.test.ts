@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import {
   PROOF_PAGE_LIMIT,
@@ -5,23 +6,22 @@ import {
 } from "@repo/backend/convex/contentRelease/spec";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { testArtifactJson } from "@repo/backend/test/content-artifact";
+import { testArtifactJson } from "@repo/backend/test/content/artifact";
 import {
   testMaterialPublicPath,
   testProjectionJson,
-} from "@repo/backend/test/content-material";
+} from "@repo/backend/test/content/material";
 import {
   TEST_RELEASE_ID,
   testRouteJson,
   testUpsertJson,
-} from "@repo/backend/test/content-release";
-import { insertTestRelease } from "@repo/backend/test/content-stage";
+} from "@repo/backend/test/content/release";
+import { insertTestRelease } from "@repo/backend/test/content/stage";
 import {
   beginFixture,
   stageUpsertFixture,
-} from "@repo/backend/test/content-verify";
+} from "@repo/backend/test/content/verify";
 import { convexTest, type TestConvex } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const stageItems = internal.contentRelease.items.stageItemBatch;
 const stageArtifacts = internal.contentRelease.artifacts.stageArtifactBatch;

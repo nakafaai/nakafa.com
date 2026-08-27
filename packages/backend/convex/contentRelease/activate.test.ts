@@ -1,99 +1,32 @@
-import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
-import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
-import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
-import type { ContentSnapshotSet } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
-  inheritContentSnapshots,
-  invertContentSnapshots,
-  replaceContentSnapshot,
-} from "@nakafa/aksara-contracts/release/snapshot/spec";
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "@effect/vitest";
+import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { insertReleaseItem } from "@repo/backend/test/content-read-model";
 import {
-  TEST_DIGEST,
-  testRendererJson,
-} from "@repo/backend/test/content-release";
+  CANDIDATE,
+  expectedReceipt,
+  RECOVERY,
+  seedVerifiedPair,
+} from "@repo/backend/test/activation/fixture";
+import { insertReleaseItem } from "@repo/backend/test/content/model";
+import { testRendererJson } from "@repo/backend/test/content/release";
 import {
   insertTestState,
   insertZeroRelease,
   type TestIdentity,
-} from "@repo/backend/test/content-state";
+} from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-const CANDIDATE = {
-  manifestHash: `sha256:${"6".repeat(64)}`,
-  releaseId: "release-candidate",
-  sequence: 1,
-} satisfies TestIdentity;
-const RECOVERY = {
-  manifestHash: `sha256:${"7".repeat(64)}`,
-  releaseId: "release-recovery",
-  sequence: 2,
-} satisfies TestIdentity;
+import { Effect } from "effect";
 
 const activate = internal.contentRelease.activate.activate;
-const activateRecovery = internal.contentRelease.activate.activateRecovery;
-
-/** Seeds one verified genesis candidate and its exact verified inverse. */
-async function seedVerifiedPair(
-  ctx: Parameters<typeof insertTestState>[0],
-  snapshots?: {
-    readonly candidate: ContentSnapshotSet;
-    readonly recovery: ContentSnapshotSet;
-  }
-) {
-  await insertZeroRelease(ctx, {
-    ...CANDIDATE,
-    ownership: {
-      base: [],
-      result: ContentFamilySchema.literals,
-    },
-    role: "candidate",
-    snapshots: snapshots?.candidate,
-    status: "verified",
-  });
-  await insertZeroRelease(ctx, {
-    ...RECOVERY,
-    base: CANDIDATE,
-    originReleaseId: CANDIDATE.releaseId,
-    ownership: {
-      base: ContentFamilySchema.literals,
-      result: [],
-    },
-    role: "recovery",
-    snapshots: snapshots?.recovery,
-    status: "verified",
-  });
-  await insertTestState(ctx, {
-    candidate: CANDIDATE,
-    nextSequence: 3,
-    recovery: RECOVERY,
-  });
-}
-
-/** Builds the exact terminal receipt expected for one technical identity. */
-function expectedReceipt(identity: TestIdentity) {
-  return {
-    activatedHeads: 0,
-    activeAppLocales: ACTIVE_APP_LOCALE_CODES,
-    deletedHeads: 0,
-    manifestHash: identity.manifestHash,
-    projectionDigest: TEST_DIGEST,
-    releaseId: identity.releaseId,
-    resultCount: 0,
-    resultDigest: EMPTY_RESULT_CATALOG_DIGEST,
-    routeDigest: TEST_DIGEST,
-    snapshots: inheritContentSnapshots(null),
-    stagedArtifacts: 0,
-    stagedItems: 0,
-    stagedProjections: 0,
-    stagedRoutes: 0,
-    stagedSnapshotRows: 0,
-  };
-}
 
 describe("contentRelease/activate", () => {
   beforeEach(() => vi.useFakeTimers());
@@ -166,118 +99,6 @@ describe("contentRelease/activate", () => {
     expect(state?.candidateReleaseId).toBeUndefined();
   });
 
-  it("retains and repairs the active release try-out bundle", async () => {
-    const t = convexTest(schema, convexModules);
-    const candidate = {
-      ...inheritContentSnapshots(null),
-      tryout: replaceContentSnapshot({
-        baseSnapshotId: null,
-        resultSnapshotId: TEST_DIGEST,
-        rowCount: 1,
-        rowDigest: TEST_DIGEST,
-      }),
-    };
-    await t.mutation((ctx) =>
-      seedVerifiedPair(ctx, {
-        candidate,
-        recovery: invertContentSnapshots(candidate),
-      })
-    );
-
-    await t.mutation(activate, {
-      manifestHash: CANDIDATE.manifestHash,
-      releaseId: CANDIDATE.releaseId,
-      rendererJson: testRendererJson(),
-    });
-    const retained = await t.run((ctx) =>
-      ctx.db.query("tryoutBundles").unique()
-    );
-    expect(retained).toMatchObject({
-      manifestHash: CANDIDATE.manifestHash,
-      releaseId: CANDIDATE.releaseId,
-      snapshotId: TEST_DIGEST,
-    });
-
-    await t.mutation(async (ctx) => {
-      const bundle = await ctx.db.query("tryoutBundles").unique();
-      if (!bundle) {
-        expect.fail("Expected one retained try-out bundle.");
-      }
-      await ctx.db.delete("tryoutBundles", bundle._id);
-    });
-    await t.mutation(activate, {
-      manifestHash: CANDIDATE.manifestHash,
-      releaseId: CANDIDATE.releaseId,
-      rendererJson: testRendererJson(),
-    });
-
-    await expect(
-      t.run((ctx) => ctx.db.query("tryoutBundles").collect())
-    ).resolves.toEqual([
-      expect.objectContaining({
-        manifestHash: CANDIDATE.manifestHash,
-        releaseId: CANDIDATE.releaseId,
-        snapshotId: TEST_DIGEST,
-      }),
-    ]);
-  });
-
-  it("atomically activates the retained inverse and clears its slot", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(seedVerifiedPair);
-    await t.mutation(activate, {
-      manifestHash: CANDIDATE.manifestHash,
-      releaseId: CANDIDATE.releaseId,
-      rendererJson: testRendererJson(),
-    });
-    await t.finishAllScheduledFunctions(vi.runAllTimers);
-
-    const activation = await t.mutation(activateRecovery, {
-      manifestHash: RECOVERY.manifestHash,
-      releaseId: RECOVERY.releaseId,
-      rendererJson: testRendererJson(),
-    });
-    await t.finishAllScheduledFunctions(vi.runAllTimers);
-    const state = await t.run((ctx) => ctx.db.query("contentState").unique());
-
-    expect(activation).toEqual({
-      kind: "activated",
-      receipt: expectedReceipt(RECOVERY),
-    });
-    expect(state).toMatchObject({
-      activeManifestHash: RECOVERY.manifestHash,
-      activeReleaseId: RECOVERY.releaseId,
-      activeSequence: RECOVERY.sequence,
-      articleReleaseId: RECOVERY.releaseId,
-      searchReleaseId: RECOVERY.releaseId,
-    });
-    expect(state?.recoveryReleaseId).toBeUndefined();
-  });
-
-  it("rejects activation without the exact verified retained inverse", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(seedVerifiedPair);
-    await t.mutation(async (ctx) => {
-      const state = await ctx.db.query("contentState").unique();
-      if (!state) {
-        throw new Error("Expected content state.");
-      }
-      await ctx.db.patch("contentState", state._id, {
-        recoveryManifestHash: undefined,
-        recoveryReleaseId: undefined,
-        recoverySequence: undefined,
-      });
-    });
-
-    await expect(
-      t.mutation(activate, {
-        manifestHash: CANDIDATE.manifestHash,
-        releaseId: CANDIDATE.releaseId,
-        rendererJson: testRendererJson(),
-      })
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
-  });
-
   it("returns completed evidence without rescheduling a failed lineage", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
@@ -343,60 +164,103 @@ describe("contentRelease/activate", () => {
     expect(restarted.release?.syncGeneration).toBe(1);
   });
 
-  it("rejects renderer drift and a stale active base", async () => {
-    const renderer = convexTest(schema, convexModules);
-    await renderer.mutation(seedVerifiedPair);
-    await expect(
-      renderer.mutation(activate, {
-        manifestHash: CANDIDATE.manifestHash,
-        releaseId: CANDIDATE.releaseId,
-        rendererJson: testRendererJson(`sha256:${"8".repeat(64)}`),
-      })
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_UNSUPPORTED" } });
+  it.effect("requires the exact verified retained inverse", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(() => t.mutation(seedVerifiedPair));
+      yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const state = await ctx.db.query("contentState").unique();
+          expect(state).not.toBeNull();
+          if (!state) {
+            return;
+          }
+          await ctx.db.patch("contentState", state._id, {
+            recoveryManifestHash: undefined,
+            recoveryReleaseId: undefined,
+            recoverySequence: undefined,
+          });
+        })
+      );
 
-    const stale = convexTest(schema, convexModules);
-    const base = {
-      manifestHash: `sha256:${"9".repeat(64)}`,
-      releaseId: "release-base",
-      sequence: 1,
-    } satisfies TestIdentity;
-    const candidate = { ...CANDIDATE, sequence: 2 };
-    const recovery = { ...RECOVERY, sequence: 3 };
-    await stale.mutation(async (ctx) => {
-      await insertZeroRelease(ctx, {
-        ...candidate,
-        base,
-        ownership: {
-          base: ContentFamilySchema.literals,
-          result: ContentFamilySchema.literals,
-        },
-        role: "candidate",
-        status: "verified",
-      });
-      await insertZeroRelease(ctx, {
-        ...recovery,
-        base: candidate,
-        originReleaseId: candidate.releaseId,
-        ownership: {
-          base: ContentFamilySchema.literals,
-          result: ContentFamilySchema.literals,
-        },
-        role: "recovery",
-        status: "verified",
-      });
-      await insertTestState(ctx, {
-        active: { ...base, manifestHash: `sha256:${"a".repeat(64)}` },
-        candidate,
-        nextSequence: 4,
-        recovery,
-      });
-    });
-    await expect(
-      stale.mutation(activate, {
-        manifestHash: candidate.manifestHash,
-        releaseId: candidate.releaseId,
-        rendererJson: testRendererJson(),
-      })
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STALE_BASE" } });
-  });
+      yield* Effect.promise(() =>
+        expect(
+          t.mutation(activate, {
+            manifestHash: CANDIDATE.manifestHash,
+            releaseId: CANDIDATE.releaseId,
+            rendererJson: testRendererJson(),
+          })
+        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } })
+      );
+    })
+  );
+
+  it.effect("rejects renderer drift and a stale active base", () =>
+    Effect.gen(function* () {
+      const renderer = convexTest(schema, convexModules);
+      yield* Effect.promise(() => renderer.mutation(seedVerifiedPair));
+      yield* Effect.promise(() =>
+        expect(
+          renderer.mutation(activate, {
+            manifestHash: CANDIDATE.manifestHash,
+            releaseId: CANDIDATE.releaseId,
+            rendererJson: testRendererJson(`sha256:${"8".repeat(64)}`),
+          })
+        ).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_UNSUPPORTED" },
+        })
+      );
+
+      const stale = convexTest(schema, convexModules);
+      const base = {
+        manifestHash: `sha256:${"9".repeat(64)}`,
+        releaseId: "release-base",
+        sequence: 1,
+      } satisfies TestIdentity;
+      const candidate = { ...CANDIDATE, sequence: 2 };
+      const recovery = { ...RECOVERY, sequence: 3 };
+      yield* Effect.promise(() =>
+        stale.mutation(async (ctx) => {
+          await insertZeroRelease(ctx, {
+            ...candidate,
+            base,
+            ownership: {
+              base: ContentFamilySchema.literals,
+              result: ContentFamilySchema.literals,
+            },
+            role: "candidate",
+            status: "verified",
+          });
+          await insertZeroRelease(ctx, {
+            ...recovery,
+            base: candidate,
+            originReleaseId: candidate.releaseId,
+            ownership: {
+              base: ContentFamilySchema.literals,
+              result: ContentFamilySchema.literals,
+            },
+            role: "recovery",
+            status: "verified",
+          });
+          await insertTestState(ctx, {
+            active: { ...base, manifestHash: `sha256:${"a".repeat(64)}` },
+            candidate,
+            nextSequence: 4,
+            recovery,
+          });
+        })
+      );
+      yield* Effect.promise(() =>
+        expect(
+          stale.mutation(activate, {
+            manifestHash: candidate.manifestHash,
+            releaseId: candidate.releaseId,
+            rendererJson: testRendererJson(),
+          })
+        ).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_STALE_BASE" },
+        })
+      );
+    })
+  );
 });

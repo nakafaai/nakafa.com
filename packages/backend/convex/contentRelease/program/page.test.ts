@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
 import { readProgramPage } from "@repo/backend/convex/contentRelease/program/page";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -6,12 +7,11 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
-} from "@repo/backend/test/content-release";
+} from "@repo/backend/test/content/release";
 import {
   activateProgramSnapshot,
   makeProgramSnapshotData,
-} from "@repo/backend/test/program-snapshot";
-import { describe, expect, it } from "@repo/testing/effect";
+} from "@repo/backend/test/program/snapshot";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 

@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { readMaterialPartition } from "@repo/backend/convex/contentRelease/material/partition";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -5,9 +6,8 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   activateMaterialCatalog,
   MATERIAL_IDENTITY,
-} from "@repo/backend/test/material-catalog";
+} from "@repo/backend/test/material/catalog";
 import { convexTest, type TestConvex } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 /** Reads one concrete English material partition from the test catalog. */
 async function readEnglishBucket(target: TestConvex<typeof schema>) {

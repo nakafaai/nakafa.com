@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import workflowTest from "@convex-dev/workflow/test";
+import { afterEach, describe, expect, it, vi } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { cleanupProofWorkflow } from "@repo/backend/convex/contentRelease/proof/coordinator";
@@ -11,10 +12,9 @@ import {
   TEST_PROOF_RENDERER,
   testEmptyManifest,
   testSignedRelease,
-} from "@repo/backend/test/content-proof";
-import { insertSignedCandidate } from "@repo/backend/test/content-stage";
+} from "@repo/backend/test/content/proof";
+import { insertSignedCandidate } from "@repo/backend/test/content/stage";
 import { convexTest } from "convex-test";
-import { afterEach, describe, expect, it, vi } from "vitest";
 
 const releaseId = ReleaseIdSchema.make("release-proof-coordinator");
 const release = testSignedRelease(testEmptyManifest(releaseId));

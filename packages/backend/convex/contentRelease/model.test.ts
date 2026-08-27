@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   ensureState,
@@ -15,7 +16,7 @@ import {
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { testProjectionJson } from "@repo/backend/test/content-material";
+import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
   TEST_ARTIFACT_HASH,
   TEST_DIGEST,
@@ -23,10 +24,9 @@ import {
   testRollbackJson,
   testRouteJson,
   testUpsertJson,
-} from "@repo/backend/test/content-release";
-import { insertTestRelease } from "@repo/backend/test/content-stage";
+} from "@repo/backend/test/content/release";
+import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 23, 12);
 

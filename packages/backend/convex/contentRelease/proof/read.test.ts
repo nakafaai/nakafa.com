@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { PROOF_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import schema from "@repo/backend/convex/schema";
@@ -5,18 +6,17 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   insertProofItem,
   insertProofRoute,
-} from "@repo/backend/test/content-proof";
+} from "@repo/backend/test/content/proof";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
-} from "@repo/backend/test/content-release";
-import { insertTestRelease } from "@repo/backend/test/content-stage";
+} from "@repo/backend/test/content/release";
+import { insertTestRelease } from "@repo/backend/test/content/stage";
 import {
   beginFixture,
   stageUpsertFixture,
-} from "@repo/backend/test/content-verify";
+} from "@repo/backend/test/content/verify";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const proofState = internal.contentRelease.proof.read.state;
 const proofPage = internal.contentRelease.proof.read.page;

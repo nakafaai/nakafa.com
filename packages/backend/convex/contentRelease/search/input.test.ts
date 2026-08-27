@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { validateSearchQuery } from "@repo/backend/convex/contentRelease/search/input";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 /** Runs one search validator and exposes its typed failure for assertions. */
