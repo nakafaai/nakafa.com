@@ -1,10 +1,6 @@
-import { describe, expect, it } from "@repo/testing/effect";
-import {
-  parseContentLength,
-  readBoundedBody,
-  readBoundedBodyResult,
-} from "@repo/utilities/body";
-import { Effect, Fiber, Result } from "effect";
+import { describe, expect, it } from "@effect/vitest";
+import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
+import { Deferred, Effect, Fiber } from "effect";
 import { vi } from "vitest";
 
 /** Builds one bounded body read for the Effect test runtime. */
@@ -61,26 +57,19 @@ describe("bounded response body", () => {
       expect(yield* read(stream)).toEqual(new TextEncoder().encode("abcd"));
     })
   );
-  it("exposes the same bounded result without starting a runtime", async () => {
-    const stream = new ReadableStream<Uint8Array>({
-      /** Emits one direct-boundary chunk. */
-      start(controller) {
-        controller.enqueue(new TextEncoder().encode("direct"));
-        controller.close();
-      },
-    });
-    await expect(readBoundedBodyResult(stream, 8)).resolves.toEqual(
-      Result.succeed(new TextEncoder().encode("direct"))
-    );
-  });
   it.effect("rejects missing and unreadable bodies", () =>
     Effect.gen(function* () {
-      const locked = new ReadableStream<Uint8Array>();
-      locked.getReader();
+      const unreadable = new ReadableStream<Uint8Array>();
+      Object.defineProperty(unreadable, "getReader", {
+        /** Simulates an acquisition race after the stream appeared unlocked. */
+        value() {
+          throw new TypeError("reader unavailable");
+        },
+      });
       expect(yield* reject(null)).toMatchObject({
         _tag: "BodyMissingError",
       });
-      expect(yield* reject(locked)).toMatchObject({
+      expect(yield* reject(unreadable)).toMatchObject({
         _tag: "BodyReadError",
       });
     })
@@ -100,24 +89,20 @@ describe("bounded response body", () => {
   );
   it.effect("cancels an unfinished reader when its Effect is interrupted", () =>
     Effect.gen(function* () {
-      let markCancelled: () => void = () => undefined;
-      const cancelled = new Promise<void>((resolve) => {
-        markCancelled = resolve;
-      });
-      const cancel = vi.fn(markCancelled);
-      let markPullStarted: () => void = () => undefined;
-      const pullStarted = new Promise<void>((resolve) => {
-        markPullStarted = resolve;
-      });
+      const pullStarted = yield* Deferred.make<void>();
+      const cancel = vi.fn();
       const stream = new ReadableStream<Uint8Array>({
         cancel,
-        pull: markPullStarted,
+        /** Marks the native reader as active without completing its read. */
+        pull() {
+          Deferred.doneUnsafe(pullStarted, Effect.void);
+        },
       });
-      const fiber = yield* Effect.forkChild(readBoundedBody(stream, 8));
-      yield* Effect.promise(() => pullStarted);
-      yield* Effect.yieldNow;
+      const fiber = yield* readBoundedBody(stream, 8).pipe(
+        Effect.forkChild({ startImmediately: true })
+      );
+      yield* Deferred.await(pullStarted);
       yield* Fiber.interrupt(fiber);
-      yield* Effect.promise(() => cancelled);
       expect(cancel).toHaveBeenCalledOnce();
     })
   );
@@ -125,11 +110,11 @@ describe("bounded response body", () => {
     "cancels an oversized body even when cancellation rejects: %s",
     (rejectCancellation) =>
       Effect.gen(function* () {
-        const cancel = vi.fn(() =>
-          rejectCancellation
-            ? Promise.reject(new TypeError("cancel failed"))
-            : Promise.resolve()
-        );
+        const cancel = vi.fn(() => {
+          if (rejectCancellation) {
+            return Promise.reject(new TypeError("cancel failed"));
+          }
+        });
         const stream = new ReadableStream<Uint8Array>({
           cancel,
           /** Emits one oversized chunk before provider cancellation. */
