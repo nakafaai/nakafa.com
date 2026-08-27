@@ -19,7 +19,9 @@ export function renderQuranTafsirAccessMarkdown(
     "",
     access.notice,
     "",
-    `Source: [${access.source.label}](${access.source.updateUrl})`,
+    `Source: [${access.source.label}](${access.source.sourceUrl})`,
+    `Updates: [Edition updates](${access.source.updateUrl})`,
+    `Terms: [Usage terms](${access.source.terms.url})`,
     "",
   ];
 }

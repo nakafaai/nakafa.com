@@ -1,5 +1,8 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
-import { decodePublishedQuranMarkdown } from "@repo/backend/client/quran/markdown";
+import {
+  decodePublishedQuranMarkdown,
+  renderQuranTafsirAccessMarkdown,
+} from "@repo/backend/client/quran/markdown";
 import type { api } from "@repo/backend/convex/_generated/api";
 import {
   makeQuranLocaleSources,
@@ -21,6 +24,21 @@ const source = {
   sourceRevision: "c".repeat(40),
 };
 describe("signed Quran markdown decoder", () => {
+  it("renders distinct source, update, and terms links", () => {
+    const access = makeQuranTafsirProjection("en");
+
+    expect(renderQuranTafsirAccessMarkdown(access)).toEqual([
+      "## Tafsir access",
+      "",
+      access.notice,
+      "",
+      `Source: [${access.source.label}](${access.source.sourceUrl})`,
+      `Updates: [Edition updates](${access.source.updateUrl})`,
+      `Terms: [Usage terms](${access.source.terms.url})`,
+      "",
+    ]);
+  });
+
   it.live("preserves the exact fields rendered by markdown consumers", () =>
     Effect.gen(function* () {
       const markdown = yield* decodePublishedQuranMarkdown(markdownResult(), {
