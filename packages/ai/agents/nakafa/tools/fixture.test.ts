@@ -1,3 +1,4 @@
+import { it as effectIt } from "@effect/vitest";
 import { makeQuranV2Fixture } from "@repo/ai/agents/nakafa/tools/fixture";
 import { createNakafaTestService } from "@repo/ai/agents/nakafa/tools/test";
 import { Effect, Option } from "effect";
@@ -33,37 +34,43 @@ describe("Nakafa Quran V2 AI fixtures", () => {
     }
   );
 
-  it("retains the injected V1 service for compatibility consumers", async () => {
-    const service = createNakafaTestService();
-    const [plain, interpreted, missing, invalid] = await Effect.runPromise(
-      Effect.all([
-        service.quran({ include_tafsir: false, locale: "en", surah: 1 }),
-        service.quran({ include_tafsir: true, locale: "id", surah: 1 }),
-        service.quran({ from_verse: 999, locale: "en", surah: 1 }),
-        Effect.result(service.quran({ locale: "en", surah: 999 })),
-      ])
-    );
+  effectIt.effect(
+    "retains the injected V1 service for compatibility consumers",
+    () =>
+      Effect.gen(function* () {
+        const service = createNakafaTestService();
+        const [plain, interpreted, missing, invalid] = yield* Effect.all([
+          service.quran({ include_tafsir: false, locale: "en", surah: 1 }),
+          service.quran({ include_tafsir: true, locale: "id", surah: 1 }),
+          service.quran({ from_verse: 999, locale: "en", surah: 1 }),
+          Effect.result(service.quran({ locale: "en", surah: 999 })),
+        ]);
 
-    expect(Option.getOrUndefined(plain)?.verses[0]?.tafsir).toBeUndefined();
-    expect(Option.getOrUndefined(interpreted)?.verses[0]?.tafsir).toBeTruthy();
-    expect(Option.isNone(missing)).toBe(true);
-    expect(invalid._tag).toBe("Failure");
-  });
+        expect(Option.getOrUndefined(plain)?.verses[0]?.tafsir).toBeUndefined();
+        expect(
+          Option.getOrUndefined(interpreted)?.verses[0]?.tafsir
+        ).toBeTruthy();
+        expect(Option.isNone(missing)).toBe(true);
+        expect(invalid._tag).toBe("Failure");
+      })
+  );
 
-  it("exposes the explicit V2 service without switching V1 consumers", async () => {
-    const service = createNakafaTestService();
-    const [reference, missing, invalid] = await Effect.runPromise(
-      Effect.all([
-        service.quranV2({ locale: "de", surah: 1 }),
-        service.quranV2({ from_verse: 999, locale: "en", surah: 1 }),
-        Effect.result(service.quranV2({ locale: "en", surah: 999 })),
-      ])
-    );
+  effectIt.effect(
+    "exposes the explicit V2 service without switching V1 consumers",
+    () =>
+      Effect.gen(function* () {
+        const service = createNakafaTestService();
+        const [reference, missing, invalid] = yield* Effect.all([
+          service.quranV2({ locale: "de", surah: 1 }),
+          service.quranV2({ from_verse: 999, locale: "en", surah: 1 }),
+          Effect.result(service.quranV2({ locale: "en", surah: 999 })),
+        ]);
 
-    expect(Option.getOrUndefined(reference)?.sources.translation.id).toBe(
-      "quranenc-german"
-    );
-    expect(Option.isNone(missing)).toBe(true);
-    expect(invalid._tag).toBe("Failure");
-  });
+        expect(Option.getOrUndefined(reference)?.sources.translation.id).toBe(
+          "quranenc-german"
+        );
+        expect(Option.isNone(missing)).toBe(true);
+        expect(invalid._tag).toBe("Failure");
+      })
+  );
 });
