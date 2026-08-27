@@ -206,8 +206,8 @@ const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
 const verifyContributorPayloads = Effect.fn(
   "NakafaE2E.verifyContributorPayloads"
 )(function* (page: Page) {
-  yield* loadMarketingPage(page, "/en");
-  const gallery = page.locator("#community [data-contributor-gallery]");
+  yield* loadMarketingPage(page, "/en/contributor");
+  const gallery = page.locator("[data-contributor-gallery]");
   const drawer = page.locator("[data-contributor-drawer]");
   const firstContributor = yield* readFirstContributor(contributors);
   const firstTrigger = gallery.locator(
