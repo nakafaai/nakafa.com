@@ -225,42 +225,26 @@ describe("quran llms text", () => {
           pageCount: 1,
           routeCount: 2,
         });
-        expect(yield* readQuranLlmsPageEntries("en", 0)).toEqual([
-          {
-            description: "The Opening",
-            href: `${BASE_URL}/en/quran/1.md`,
-            route: "/quran/1",
-            section: "quran",
-            segments: ["quran", "1"],
-            title: "Al-Fatihah",
-          },
-          {
-            description: "The Cow",
-            href: `${BASE_URL}/en/quran/2.md`,
-            route: "/quran/2",
-            section: "quran",
-            segments: ["quran", "2"],
-            title: "Al-Baqarah",
-          },
-        ]);
-        expect(yield* readQuranLlmsPageEntries("id", 0)).toEqual([
-          {
-            description: "The Opening",
-            href: `${BASE_URL}/id/quran/1.md`,
-            route: "/quran/1",
-            section: "quran",
-            segments: ["quran", "1"],
-            title: "Al-Fatihah",
-          },
-          {
-            description: "The Cow",
-            href: `${BASE_URL}/id/quran/2.md`,
-            route: "/quran/2",
-            section: "quran",
-            segments: ["quran", "2"],
-            title: "Al-Baqarah",
-          },
-        ]);
+        for (const locale of ["en", "id", "de"] as const) {
+          expect(yield* readQuranLlmsPageEntries(locale, 0)).toEqual([
+            {
+              description: "The Opening (en)",
+              href: `${BASE_URL}/${locale}/quran/1.md`,
+              route: "/quran/1",
+              section: "quran",
+              segments: ["quran", "1"],
+              title: "Al-Fatihah",
+            },
+            {
+              description: "The Cow (en)",
+              href: `${BASE_URL}/${locale}/quran/2.md`,
+              route: "/quran/2",
+              section: "quran",
+              segments: ["quran", "2"],
+              title: "Al-Baqarah",
+            },
+          ]);
+        }
       })
   );
 

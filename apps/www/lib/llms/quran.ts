@@ -70,7 +70,7 @@ export const readQuranLlmsPageEntries = Effect.fn("www.llms.quran.pageEntries")(
     return buildPublishedContentLlmsEntries({
       locale,
       rows: surahs.map((surah) => ({
-        description: surah.name.meaning.text,
+        description: formatQuranMeaning(surah.name.meaning),
         publicPath: `quran/${surah.number}`,
         title: getQuranSurahName(surah.name),
       })),
@@ -122,7 +122,7 @@ const getQuranIndexText = Effect.fn("www.llms.quran.indexText")(function* (
     scanned.push(`## ${surah.number}. ${title}`);
     scanned.push("");
     scanned.push(
-      `**${t("meaning")}:** ${surah.name.meaning.text} (${surah.name.meaning.appLocale})`
+      `**${t("meaning")}:** ${formatQuranMeaning(surah.name.meaning)}`
     );
     scanned.push("");
     scanned.push(
@@ -171,7 +171,7 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
   scanned.push(`## ${title}`);
   scanned.push("");
   scanned.push(
-    `**${t("meaning")}:** ${surah.name.meaning.text} (${surah.name.meaning.appLocale})`
+    `**${t("meaning")}:** ${formatQuranMeaning(surah.name.meaning)}`
   );
   scanned.push(
     `**${t("revelation")}:** ${t("revelation-place", {
@@ -249,6 +249,14 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
 
   return scanned.join("\n");
 });
+
+/** Preserves the signed source language beside one Quran meaning. */
+function formatQuranMeaning(meaning: {
+  readonly appLocale: string;
+  readonly text: string;
+}) {
+  return `${meaning.text} (${meaning.appLocale})`;
+}
 
 /** Renders one semantic translation and its localized source-note heading. */
 function renderQuranTranslation(

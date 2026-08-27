@@ -3,14 +3,14 @@
 import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
   API_SECRET,
   expectProblem,
   expectPublicJson,
   fetchApi,
   setupApiTest,
-} from "@repo/backend/convex/routes/agent/fixture";
-import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+} from "@repo/backend/test/api";
 import { makeMaterialProjection } from "@repo/backend/test/content-material";
 import {
   insertRuntimeArticles,

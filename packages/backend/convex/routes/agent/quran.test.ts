@@ -1,12 +1,12 @@
 // @vitest-environment node
 
+import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
   expectProblem,
   expectPublicJson,
   fetchApi,
   setupApiTest,
-} from "@repo/backend/convex/routes/agent/fixture";
-import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+} from "@repo/backend/test/api";
 import {
   makeQuranAttribution,
   makeQuranChunk,
