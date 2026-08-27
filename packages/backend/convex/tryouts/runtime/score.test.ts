@@ -13,13 +13,13 @@ import {
   loadAttemptScoreSource,
   requireOwnedAttempt,
 } from "@repo/backend/convex/tryouts/runtime/score";
+import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
 import {
   FROZEN_SCORE_NOW as NOW,
   FROZEN_SCORE_SET_IDENTITY as SET_IDENTITY,
   FROZEN_SCORE_SNAPSHOT_ID as SNAPSHOT_ID,
   seedFrozenTryoutScoreState,
 } from "@repo/backend/test/tryout/score";
-import { seedTryoutContentAccessState } from "@repo/backend/test/tryout-runtime";
 import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
 import { vi } from "vitest";

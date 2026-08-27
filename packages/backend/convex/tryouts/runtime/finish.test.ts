@@ -1,3 +1,4 @@
+import { describe, expect, it, vi } from "@effect/vitest";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
@@ -7,6 +8,7 @@ import {
   finalizeSectionAttempt,
 } from "@repo/backend/convex/tryouts/runtime/finish";
 import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
+import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import {
   insertIrtScaleItem,
   insertTryoutAttempt,
@@ -14,15 +16,14 @@ import {
   insertTryoutUser,
   seedTryoutContentAccessState,
   tryoutSectionSnapshot,
-} from "@repo/backend/test/tryout-runtime";
+} from "@repo/backend/test/tryout/runtime";
 import {
   makeSignedTryoutSection,
   makeSignedTryoutSource,
-} from "@repo/backend/test/tryout-section";
+} from "@repo/backend/test/tryout/section";
 import { makeTryoutSection, makeTryoutSet } from "@repo/backend/test/tryouts";
 import { ConvexError } from "convex/values";
 import { convexTest } from "convex-test";
-import { describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 const EXPIRED_AT = NOW - 1000;
@@ -98,7 +99,7 @@ describe("tryouts/runtime/finish", () => {
         ],
         set,
         snapshotId: source.snapshot.snapshotId,
-        snapshotReleaseId: source.bundle.releaseId,
+        snapshotReleaseId: TEST_RELEASE_ID,
         userId,
       });
       const sectionAttemptId = await insertTryoutSectionAttempt(ctx, {
@@ -353,7 +354,7 @@ describe("tryouts/runtime/finish", () => {
         sectionSnapshots: [tryoutSectionSnapshot({ signed: signedSection })],
         set,
         snapshotId: source.snapshot.snapshotId,
-        snapshotReleaseId: source.bundle.releaseId,
+        snapshotReleaseId: TEST_RELEASE_ID,
         userId,
       });
       const sectionId = await insertTryoutSectionAttempt(ctx, {

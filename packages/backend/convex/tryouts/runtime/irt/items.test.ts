@@ -1,3 +1,4 @@
+import { describe, expect, it, vi } from "@effect/vitest";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -7,19 +8,19 @@ import {
   createAttemptPlacements,
   loadAttemptPlacements,
 } from "@repo/backend/convex/tryouts/runtime/placement";
+import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import {
   insertIrtScaleItem,
   insertTryoutAttempt,
   insertTryoutUser,
   tryoutSectionSnapshot,
-} from "@repo/backend/test/tryout-runtime";
+} from "@repo/backend/test/tryout/runtime";
 import {
   makeSignedTryoutSection,
   makeSignedTryoutSource,
-} from "@repo/backend/test/tryout-section";
+} from "@repo/backend/test/tryout/section";
 import { makeTryoutSection, makeTryoutSet } from "@repo/backend/test/tryouts";
 import { convexTest } from "convex-test";
-import { describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 type SourceCorruption = "duplicate" | "none" | "stale";
@@ -79,7 +80,7 @@ async function seedSectionIrtSource(
     sectionSnapshots: [snapshot],
     set,
     snapshotId: source.snapshot.snapshotId,
-    snapshotReleaseId: source.bundle.releaseId,
+    snapshotReleaseId: TEST_RELEASE_ID,
     userId,
   });
   const attempt = await ctx.db.get(attemptId);

@@ -1,20 +1,21 @@
+import { describe, expect, it } from "@effect/vitest";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
+import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import {
   insertTryoutAttempt,
   insertTryoutUser,
   tryoutSectionSnapshot,
-} from "@repo/backend/test/tryout-runtime";
+} from "@repo/backend/test/tryout/runtime";
 import {
   makeSignedTryoutSection,
   makeSignedTryoutSource,
   TRYOUT_TEST_CONTENT_HASH,
-} from "@repo/backend/test/tryout-section";
+} from "@repo/backend/test/tryout/section";
 import { makeTryoutSection, makeTryoutSet } from "@repo/backend/test/tryouts";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const TRACK = "2027";
 const SECTION = "penalaran-matematika";
@@ -42,7 +43,7 @@ async function insertRuntime(ctx: Parameters<typeof insertTryoutUser>[0]) {
     sectionSnapshots: [tryoutSectionSnapshot(signedSection)],
     set,
     snapshotId: source.snapshot.snapshotId,
-    snapshotReleaseId: source.bundle.releaseId,
+    snapshotReleaseId: TEST_RELEASE_ID,
     userId,
   });
   const attempt = await ctx.db.get(attemptId);

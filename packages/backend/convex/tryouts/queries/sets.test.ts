@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
@@ -5,8 +6,7 @@ import {
   TRYOUT_START_COUNTRY,
   TRYOUT_START_EXAM,
   TRYOUT_START_TRACK,
-} from "@repo/backend/test/tryout-source";
-import { describe, expect, it } from "vitest";
+} from "@repo/backend/test/tryout/source";
 
 const route = {
   countryKey: TRYOUT_START_COUNTRY,

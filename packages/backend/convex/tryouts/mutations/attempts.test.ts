@@ -1,11 +1,12 @@
+import { describe, expect, it, vi } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import { tryoutEntitlementSourceKindCompetition } from "@repo/backend/convex/tryoutAccess/schema";
-import { testTextHash } from "@repo/backend/test/content-release";
-import { insertTryoutAttempt } from "@repo/backend/test/tryout-runtime";
+import { testTextHash } from "@repo/backend/test/content/release";
+import { insertTryoutAttempt } from "@repo/backend/test/tryout/runtime";
 import {
   activateRenamedTryoutStartSource,
   activateReusedTryoutStartPath,
@@ -16,10 +17,9 @@ import {
   TRYOUT_START_SET as SET,
   TRYOUT_START_TRACK as TRACK,
   TRYOUT_RENAMED_SET_PATH,
-} from "@repo/backend/test/tryout-source";
-import { seedTryoutStartSet } from "@repo/backend/test/tryout-start";
+} from "@repo/backend/test/tryout/source";
+import { seedTryoutStartSet } from "@repo/backend/test/tryout/start";
 import type { FunctionArgs } from "convex/server";
-import { describe, expect, it, vi } from "vitest";
 
 const startArgs: FunctionArgs<
   typeof api.tryouts.mutations.attempts.startAttempt

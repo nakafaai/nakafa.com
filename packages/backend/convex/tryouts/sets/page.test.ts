@@ -16,14 +16,14 @@ import {
 import {
   insertTryoutAttempt,
   insertTryoutUser,
-} from "@repo/backend/test/tryout-runtime";
+} from "@repo/backend/test/tryout/runtime";
 import {
   activateTryoutStartSource,
   TRYOUT_START_COUNTRY,
   TRYOUT_START_EXAM,
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
-} from "@repo/backend/test/tryout-source";
+} from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
 

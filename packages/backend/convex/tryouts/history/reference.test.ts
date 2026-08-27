@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -8,10 +9,9 @@ import {
 import {
   insertTryoutAttempt,
   insertTryoutUser,
-} from "@repo/backend/test/tryout-runtime";
+} from "@repo/backend/test/tryout/runtime";
 import { makeTryoutSet } from "@repo/backend/test/tryouts";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 describe("tryouts/history/reference", () => {
   it("reads and deletes an exact attempt-owned history reference", async () => {

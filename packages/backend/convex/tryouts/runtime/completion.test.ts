@@ -1,10 +1,10 @@
+import { describe, expect, it } from "@effect/vitest";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
   readSectionCompletion,
   requireFinalSectionAttempts,
 } from "@repo/backend/convex/tryouts/runtime/completion";
-import { seedTryoutContentAccessState } from "@repo/backend/test/tryout-runtime";
-import { describe, expect, it } from "@repo/testing/effect";
+import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
 import { Effect } from "effect";
 
 async function loadCompletionFixture(suffix: string) {

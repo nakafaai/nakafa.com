@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   ACTIVE_APP_LOCALE_CODES,
   type ActiveAppLocaleCode,
@@ -11,8 +12,8 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { readFeaturedTryout } from "@repo/backend/convex/tryouts/catalog/featured";
-import { TEST_RELEASE_ID } from "@repo/backend/test/content-release";
-import { activateTryoutSnapshot } from "@repo/backend/test/tryout-snapshot";
+import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
+import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
 import {
   activateTryoutStartSource,
   makeTryoutStartCatalog,
@@ -26,10 +27,9 @@ import {
   TRYOUT_START_SECTION,
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
-} from "@repo/backend/test/tryout-source";
+} from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 const FIRST_SOURCE_SEGMENT = `/${TRYOUT_START_SECTION}/${TRYOUT_START_SET}`;
 const SECOND_SOURCE_SEGMENT = `/${TRYOUT_REUSED_SECTION}/${TRYOUT_REUSED_SET}`;
@@ -204,6 +204,7 @@ describe("tryouts/catalog/featured", () => {
       ],
       question: {
         artifactHash: source.questionArtifactHash,
+        bundleHash: expect.any(String),
         contentHash: TRYOUT_START_CONTENT_HASH,
         contentKey: source.questionContentKey,
         delivery: "authenticated",
