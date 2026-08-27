@@ -62,8 +62,8 @@ describe("emails/deletion", () => {
                 );
 
                 if (!user) {
-                  return yield* Effect.dieMessage(
-                    "Expected the welcome email owner."
+                  return yield* Effect.die(
+                    new Error("Expected the welcome email owner.")
                   );
                 }
 
