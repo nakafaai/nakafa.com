@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { SigningKeyIdSchema } from "@nakafa/aksara-contracts/ids";
-import { Effect, Fiber, Redacted } from "effect";
+import { Deferred, Effect, Fiber, Redacted } from "effect";
 import { TestClock } from "effect/testing";
 import { vi } from "vitest";
 import type { PreviewConfig } from "@/lib/content/preview/config";
@@ -179,6 +179,32 @@ describe("local preview JSON requests", () => {
     })
   );
 
+  it.effect.each([false, true])(
+    "cancels an unread invalid response even when cancellation rejects: %s",
+    (rejectCancellation) =>
+      Effect.gen(function* () {
+        const cancel = vi.fn(() => {
+          if (rejectCancellation) {
+            return Promise.reject(new TypeError("cancel failed"));
+          }
+        });
+        const invalid = response(new ReadableStream({ cancel }), {
+          status: 409,
+        });
+        vi.stubGlobal(
+          "fetch",
+          vi.fn<typeof fetch>().mockResolvedValue(invalid)
+        );
+
+        expect(yield* runFailure()).toMatchObject({
+          _tag: "PreviewRequestError",
+          stage: "response",
+          status: 409,
+        });
+        expect(cancel).toHaveBeenCalledOnce();
+      })
+  );
+
   it.effect("rejects a response without a body", () =>
     Effect.gen(function* () {
       vi.stubGlobal(
@@ -272,6 +298,64 @@ describe("local preview JSON requests", () => {
       expect(yield* runFailure()).toMatchObject({ stage: "body" });
       expect(yield* runFailure()).toMatchObject({ stage: "body" });
       expect(yield* runFailure()).toMatchObject({ stage: "body" });
+    })
+  );
+
+  it.effect("maps synchronous stream-reader acquisition failures", () =>
+    Effect.gen(function* () {
+      const unreadable = new ReadableStream<Uint8Array>();
+      Object.defineProperty(unreadable, "getReader", {
+        /** Fails after response validation but before the first body pull. */
+        value() {
+          throw new TypeError("reader unavailable");
+        },
+      });
+      const value = response("{}", {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      });
+      Object.defineProperty(value, "body", { value: unreadable });
+      vi.stubGlobal("fetch", vi.fn<typeof fetch>().mockResolvedValue(value));
+
+      expect(yield* runFailure()).toMatchObject({
+        _tag: "PreviewRequestError",
+        stage: "body",
+      });
+    })
+  );
+
+  it.effect("classifies and cancels a stalled response body", () =>
+    Effect.gen(function* () {
+      const pullStarted = yield* Deferred.make<void>();
+      const cancel = vi.fn();
+      const stalled = new ReadableStream<Uint8Array>({
+        cancel,
+        /** Marks the body phase active without completing its first read. */
+        pull() {
+          Deferred.doneUnsafe(pullStarted, Effect.void);
+        },
+      });
+      vi.stubGlobal(
+        "fetch",
+        vi.fn<typeof fetch>().mockResolvedValue(
+          response(stalled, {
+            headers: { "content-type": "application/json" },
+            status: 200,
+          })
+        )
+      );
+      const fiber = yield* runFailure().pipe(
+        Effect.forkChild({ startImmediately: true })
+      );
+
+      yield* Deferred.await(pullStarted);
+      yield* TestClock.adjust("1 hour");
+
+      expect(yield* Fiber.join(fiber)).toMatchObject({
+        _tag: "PreviewRequestError",
+        stage: "body",
+      });
+      expect(cancel).toHaveBeenCalledOnce();
     })
   );
 

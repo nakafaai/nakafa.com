@@ -18,13 +18,16 @@ import {
 
 /** Maximum UTF-8 bytes accepted from the small current-state manifest. */
 export const MAX_PREVIEW_MANIFEST_BYTES = 128 * 1024;
-const PREVIEW_REQUEST_TIMEOUT_MS = 5000;
-/** Applies the one typed timeout contract shared by both request boundaries. */
-function withPreviewRequestTimeout<A, E, R>(effect: Effect.Effect<A, E, R>) {
+const PREVIEW_PHASE_TIMEOUT_MS = 5000;
+/** Applies the typed timeout for one preview request phase. */
+function withPreviewRequestTimeout<A, E, R>(
+  effect: Effect.Effect<A, E, R>,
+  stage: "body" | "connect"
+) {
   return effect.pipe(
     Effect.timeoutOrElse({
-      duration: PREVIEW_REQUEST_TIMEOUT_MS,
-      orElse: () => Effect.fail(new PreviewRequestError({ stage: "connect" })),
+      duration: PREVIEW_PHASE_TIMEOUT_MS,
+      orElse: () => Effect.fail(new PreviewRequestError({ stage })),
     })
   );
 }
@@ -72,6 +75,17 @@ function mapBodyError(
   }
   return new PreviewRequestError({ stage: "body" });
 }
+/** Cancels an unread response body without replacing its primary result. */
+function cancelUnreadResponse(response: Response) {
+  const body = response.body;
+  if (body === null || response.bodyUsed) {
+    return Effect.void;
+  }
+  return Effect.tryPromise({
+    catch: () => undefined,
+    try: () => body.cancel(),
+  }).pipe(Effect.ignore);
+}
 /** Builds the private request shared by Effect and Next framework boundaries. */
 function previewRequestInit(config: PreviewConfig, signal: AbortSignal) {
   return {
@@ -98,11 +112,21 @@ const requestPreviewResponse = Effect.fn(
 /** Validates and decodes one fetched response through the Effect error channel. */
 const decodePreviewResponse = Effect.fn("NakafaContent.decodePreviewResponse")(
   function* (response: Response, target: URL, maxBytes: number) {
-    const validated = yield* validateResponse(response, target);
-    const bytes = yield* readBoundedBody(validated.body, maxBytes).pipe(
-      Effect.mapError(mapBodyError)
+    return yield* Effect.acquireUseRelease(
+      Effect.succeed(response),
+      (activeResponse) =>
+        Effect.gen(function* () {
+          const validated = yield* validateResponse(activeResponse, target);
+          return yield* withPreviewRequestTimeout(
+            readBoundedBody(validated.body, maxBytes).pipe(
+              Effect.mapError(mapBodyError),
+              Effect.flatMap(decodeJson)
+            ),
+            "body"
+          );
+        }),
+      cancelUnreadResponse
     );
-    return yield* decodeJson(bytes);
   }
 );
 /**
@@ -126,20 +150,21 @@ export function fetchPreviewJsonForPrerender(
     previewRequestInit(config, controller.signal)
   );
   return Effect.runPromise(
-    withPreviewRequestTimeout(
-      Effect.acquireUseRelease(
-        Effect.succeed(controller),
-        () =>
+    Effect.acquireUseRelease(
+      Effect.succeed(controller),
+      () =>
+        withPreviewRequestTimeout(
           Effect.tryPromise({
             catch: () => new PreviewRequestError({ stage: "connect" }),
             try: () => response,
-          }).pipe(
-            Effect.flatMap((value) =>
-              decodePreviewResponse(value, target.success, maxBytes)
-            )
-          ),
-        (activeController) => Effect.sync(() => activeController.abort())
-      )
+          }),
+          "connect"
+        ).pipe(
+          Effect.flatMap((value) =>
+            decodePreviewResponse(value, target.success, maxBytes)
+          )
+        ),
+      (activeController) => Effect.sync(() => activeController.abort())
     )
   );
 }
@@ -150,12 +175,10 @@ export const fetchPreviewJson = Effect.fn("NakafaContent.fetchPreviewJson")(
     if (Result.isFailure(target)) {
       return yield* target.failure;
     }
-    return yield* withPreviewRequestTimeout(
-      requestPreviewResponse(config, target.success).pipe(
-        Effect.flatMap((response) =>
-          decodePreviewResponse(response, target.success, maxBytes)
-        )
-      )
+    const response = yield* withPreviewRequestTimeout(
+      requestPreviewResponse(config, target.success),
+      "connect"
     );
+    return yield* decodePreviewResponse(response, target.success, maxBytes);
   }
 );
