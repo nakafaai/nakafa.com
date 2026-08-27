@@ -1,4 +1,5 @@
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
+import { decodePublishedQuranSurah } from "@repo/backend/client/quran/catalog";
 import {
   hasExactQuranVerseRange,
   hasExpectedQuranNeighbors,
@@ -64,14 +65,25 @@ export const decodePublishedQuranView = Effect.fn("NakafaQuran.decodeView")(
         reason: "Signed Quran view identity is inconsistent.",
       });
     }
+    const normalized = yield* Effect.all({
+      nextSurah:
+        result.nextSurah === null
+          ? Effect.succeed(null)
+          : decodePublishedQuranSurah(result.nextSurah, "view"),
+      previousSurah:
+        result.previousSurah === null
+          ? Effect.succeed(null)
+          : decodePublishedQuranSurah(result.previousSurah, "view"),
+      surah: decodePublishedQuranSurah(result.surah, "view"),
+    });
     return {
       ...source,
       appLocale: result.appLocale,
-      nextSurah: result.nextSurah,
+      nextSurah: normalized.nextSurah,
       preBismillah: result.preBismillah,
-      previousSurah: result.previousSurah,
+      previousSurah: normalized.previousSurah,
       sources: result.sources,
-      surah: result.surah,
+      surah: normalized.surah,
       tafsirAccess: result.tafsirAccess,
       verses: result.verses,
     };

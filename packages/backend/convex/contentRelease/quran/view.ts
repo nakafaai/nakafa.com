@@ -30,7 +30,8 @@ import { type Infer, v } from "convex/values";
 import { Effect } from "effect";
 
 const quranViewNameValidator = v.object({
-  meaning: quranSurahMeaningValidator,
+  meaning: v.union(v.string(), v.null()),
+  sourceMeaning: v.optional(quranSurahMeaningValidator),
   transliteration: v.string(),
 });
 
@@ -78,10 +79,17 @@ const readNeighbor = Effect.fn("contentRelease.readQuranNeighbor")(function* (
 });
 
 /** Projects only the signed surah metadata needed by the Quran page. */
-function projectSurah(surah: QuranSurahRow): QuranViewSurah {
+function projectSurah(
+  surah: QuranSurahRow,
+  appLocale: AppLocaleCode
+): QuranViewSurah {
   return {
     name: {
-      meaning: surah.name.meaning,
+      meaning:
+        surah.name.meaning.appLocale === appLocale
+          ? surah.name.meaning.text
+          : null,
+      sourceMeaning: surah.name.meaning,
       transliteration: surah.name.transliteration,
     },
     number: surah.number,
@@ -186,13 +194,16 @@ export const readQuranView = Effect.fn("contentRelease.readQuranView")(
     return {
       ...view,
       nextSurah:
-        loaded.nextSurah === null ? null : projectSurah(loaded.nextSurah),
+        loaded.nextSurah === null
+          ? null
+          : projectSurah(loaded.nextSurah, appLocale),
       previousSurah:
         loaded.previousSurah === null
           ? null
-          : projectSurah(loaded.previousSurah),
+          : projectSurah(loaded.previousSurah, appLocale),
       preBismillah: projected.preBismillah,
-      surah: loaded.surah === null ? null : projectSurah(loaded.surah),
+      surah:
+        loaded.surah === null ? null : projectSurah(loaded.surah, appLocale),
       verses: projected.verses.map(({ arabic, document, number }) => ({
         arabic,
         number,

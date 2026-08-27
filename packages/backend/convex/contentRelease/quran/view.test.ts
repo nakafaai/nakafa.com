@@ -116,7 +116,8 @@ describe("contentRelease/quran/view", () => {
 
     expect(english.nextSurah).toEqual({
       name: {
-        meaning: { appLocale: "en", text: "Technical meaning 2" },
+        meaning: "Technical meaning 2",
+        sourceMeaning: { appLocale: "en", text: "Technical meaning 2" },
         transliteration: "Technical Surah 2",
       },
       number: 2,
@@ -125,7 +126,8 @@ describe("contentRelease/quran/view", () => {
     expect(english.previousSurah).toBeNull();
     expect(english.surah).toEqual({
       name: {
-        meaning: { appLocale: "en", text: "Technical meaning 1" },
+        meaning: "Technical meaning 1",
+        sourceMeaning: { appLocale: "en", text: "Technical meaning 1" },
         transliteration: "Technical Surah 1",
       },
       number: 1,
@@ -173,11 +175,13 @@ describe("contentRelease/quran/view", () => {
     ]);
     expect(indonesian.sources).toEqual(makeQuranLocaleSources("id"));
     expect(indonesian.tafsirAccess).toEqual(makeQuranTafsirProjection("id"));
-    expect(indonesian.nextSurah?.name.meaning).toEqual({
+    expect(indonesian.nextSurah?.name.meaning).toBeNull();
+    expect(indonesian.nextSurah?.name.sourceMeaning).toEqual({
       appLocale: "en",
       text: "Technical meaning 2",
     });
-    expect(indonesian.surah?.name.meaning).toEqual({
+    expect(indonesian.surah?.name.meaning).toBeNull();
+    expect(indonesian.surah?.name.sourceMeaning).toEqual({
       appLocale: "en",
       text: "Technical meaning 1",
     });

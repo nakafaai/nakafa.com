@@ -19,7 +19,8 @@ const source = {
 };
 const surah = {
   name: {
-    meaning: { appLocale: "en" as const, text: "The Opening" },
+    meaning: "The Opening",
+    sourceMeaning: { appLocale: "en" as const, text: "The Opening" },
     transliteration: "Al-Fatihah",
   },
   number: 1,
@@ -146,22 +147,22 @@ describe("signed Quran view decoder", () => {
   );
 });
 /** Builds source and metadata shared by app-locale view fixtures. */
-function viewBase() {
+function viewBase(meaning: string | null) {
   return {
     ...source,
     nextSurah: {
       ...surah,
-      name: { ...surah.name, transliteration: "Al-Baqarah" },
+      name: { ...surah.name, meaning, transliteration: "Al-Baqarah" },
       number: 2,
     },
     previousSurah: null,
-    surah,
+    surah: { ...surah, name: { ...surah.name, meaning } },
   };
 }
 /** Builds one complete English view response. */
 function englishViewResult(): QuranViewResult {
   return {
-    ...viewBase(),
+    ...viewBase("The Opening"),
     appLocale: "en",
     preBismillah: null,
     sources: makeQuranLocaleSources("en"),
@@ -191,7 +192,7 @@ function englishViewResult(): QuranViewResult {
 /** Builds one complete German view response without invented source notes. */
 function germanViewResult(): QuranViewResult {
   return {
-    ...viewBase(),
+    ...viewBase(null),
     appLocale: "de",
     preBismillah: null,
     sources: makeQuranLocaleSources("de"),
@@ -211,7 +212,7 @@ function germanViewResult(): QuranViewResult {
 /** Builds one complete Indonesian view response. */
 function indonesianViewResult(): QuranViewResult {
   return {
-    ...viewBase(),
+    ...viewBase(null),
     appLocale: "id",
     preBismillah: null,
     sources: makeQuranLocaleSources("id"),

@@ -69,7 +69,8 @@ describe("contentRelease/quran/document", () => {
       kind: "quran-surah",
       name: {
         arabic: "سورة 1",
-        meaning: { appLocale: "en", text: "Technical meaning 1" },
+        meaning: null,
+        sourceMeaning: { appLocale: "en", text: "Technical meaning 1" },
         transliteration: "Technical Surah 1",
       },
       number: 1,
@@ -102,7 +103,8 @@ describe("contentRelease/quran/document", () => {
       sources: makeQuranLocaleSources("de"),
       surah: {
         name: {
-          meaning: { appLocale: "en", text: "Technical meaning 1" },
+          meaning: null,
+          sourceMeaning: { appLocale: "en", text: "Technical meaning 1" },
         },
       },
       tafsirAccess: makeQuranTafsirProjection("de"),

@@ -4,7 +4,9 @@ import {
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import {
+  completePublishedQuranSurah,
   decodePublishedQuranCatalog,
+  decodePublishedQuranSurah,
   selectPublishedQuranSurah,
 } from "@repo/backend/client/quran/catalog";
 import { QuranPublicationError } from "@repo/backend/client/quran/publication";
@@ -93,8 +95,113 @@ describe("signed Quran catalog decoder", () => {
       expect(selected).toMatchObject({
         _tag: "Failure",
         failure: {
-          _tag: "QuranPublicationError",
+          _tag: "QuranSnapshotChangedError",
           operation: "markdown",
+        },
+      });
+    })
+  );
+
+  it.live("normalizes the expanded meaning and detects its predecessor", () =>
+    Effect.gen(function* () {
+      const expanded = yield* decodePublishedQuranSurah(
+        {
+          name: {
+            meaning: null,
+            sourceMeaning: { appLocale: "en", text: "The Opening" },
+            transliteration: "Al-Fatihah",
+          },
+          number: 1,
+        },
+        "view"
+      );
+      const predecessor = yield* decodePublishedQuranSurah(
+        {
+          name: { meaning: null, transliteration: "Al-Fatihah" },
+          number: 1,
+        },
+        "view"
+      );
+
+      expect(expanded.name).toEqual({
+        meaning: { appLocale: "en", text: "The Opening" },
+        transliteration: "Al-Fatihah",
+      });
+      expect(predecessor.name.meaning).toBeNull();
+    })
+  );
+
+  it.live("fails closed for an invalid expanded meaning", () =>
+    Effect.gen(function* () {
+      const decoded = yield* Effect.result(
+        decodePublishedQuranSurah(
+          {
+            name: {
+              meaning: null,
+              sourceMeaning: { appLocale: "id", text: "Pembukaan" },
+              transliteration: "Al-Fatihah",
+            },
+            number: 1,
+          },
+          "view"
+        )
+      );
+
+      expect(decoded).toMatchObject({
+        _tag: "Failure",
+        failure: {
+          _tag: "QuranPublicationError",
+          operation: "view",
+          reason: "Signed Quran source meaning is invalid.",
+        },
+      });
+    })
+  );
+
+  it.live("completes only predecessor projections from the same catalog", () =>
+    Effect.gen(function* () {
+      const catalog = yield* decodePublishedQuranCatalog(
+        catalogResult((index) =>
+          encodeTestQuranRow(source.snapshotId, makeQuranSurah(index + 1))
+        )
+      );
+      const expanded = yield* completePublishedQuranSurah(
+        {
+          name: {
+            meaning: makeQuranSurah(1).name.meaning,
+            transliteration: "Al-Fatihah",
+          },
+          number: 1,
+        },
+        null,
+        { operation: "view", snapshotId: source.snapshotId }
+      );
+      const predecessor = yield* completePublishedQuranSurah(
+        {
+          name: { meaning: null, transliteration: "Al-Fatihah" },
+          number: 1,
+        },
+        catalog,
+        { operation: "view", snapshotId: source.snapshotId }
+      );
+      const missing = yield* Effect.result(
+        completePublishedQuranSurah(
+          {
+            name: { meaning: null, transliteration: "Al-Fatihah" },
+            number: 1,
+          },
+          null,
+          { operation: "view", snapshotId: source.snapshotId }
+        )
+      );
+
+      expect(expanded.name.meaning.text).toBe("Technical meaning 1");
+      expect(predecessor.name.meaning.text).toBe("Technical meaning 1");
+      expect(missing).toMatchObject({
+        _tag: "Failure",
+        failure: {
+          _tag: "QuranPublicationError",
+          reason: "Signed Quran source meaning is missing.",
         },
       });
     })

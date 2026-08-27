@@ -64,10 +64,7 @@ describe("published Quran content", () => {
     expect(cacheMock).toHaveBeenCalledWith(source.snapshotId);
   });
   it("reads the locale-specific signed markdown through the Effect boundary", async () => {
-    useProjectionFixture(
-      api.contentRelease.quran.prose,
-      legacyMarkdownResult()
-    );
+    useProjectionFixture(api.contentRelease.quran.prose, markdownResult());
     await expect(
       Effect.runPromise(readPublishedQuranMarkdown("id", 1, 80))
     ).resolves.toMatchObject({
@@ -84,6 +81,7 @@ describe("published Quran content", () => {
       surahNumber: 1,
       verseLimit: 80,
     });
+    expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
   });
   it("reads the complete signed markdown when no verse limit is requested", async () => {
     useProjectionFixture(
@@ -114,7 +112,7 @@ describe("published Quran content", () => {
     });
   });
   it("caches the locale-specific Quran web projection", async () => {
-    useProjectionFixture(api.contentRelease.quran.page, legacyViewResult());
+    useProjectionFixture(api.contentRelease.quran.page, viewResult());
     await expect(getPublishedQuranView("id", 1)).resolves.toMatchObject({
       appLocale: "id",
       nextSurah: {
@@ -152,6 +150,7 @@ describe("published Quran content", () => {
       surahNumber: 1,
     });
     expect(cacheMock).toHaveBeenCalledWith(source.snapshotId);
+    expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
   });
   it("aligns the final surah and its previous neighbor", async () => {
     useProjectionFixture(
@@ -174,13 +173,74 @@ describe("published Quran content", () => {
       },
     });
   });
+  it("retries a predecessor view when the signed release switches", async () => {
+    const otherSnapshotId = Sha256HashSchema.make(`sha256:${"d".repeat(64)}`);
+    let catalogReads = 0;
+    runtimeQueryMock.mockImplementation((query: FunctionReference<"query">) => {
+      if (
+        getFunctionName(query) ===
+        getFunctionName(api.contentRelease.quran.page)
+      ) {
+        return Promise.resolve(legacyViewResult());
+      }
+      if (
+        getFunctionName(query) ===
+        getFunctionName(api.contentRelease.quran.surahs)
+      ) {
+        catalogReads += 1;
+        return Promise.resolve(
+          catalogResult(
+            catalogReads === 1 ? otherSnapshotId : source.snapshotId
+          )
+        );
+      }
+      return Promise.reject(new Error("Unhandled Quran publication query."));
+    });
+
+    await expect(getPublishedQuranView("id", 1)).resolves.toMatchObject({
+      surah: {
+        name: {
+          meaning: { appLocale: "en", text: "Technical meaning 1" },
+        },
+      },
+    });
+    expect(catalogReads).toBe(2);
+    expect(runtimeQueryMock).toHaveBeenCalledTimes(4);
+  });
+  it("fails closed after a persistent predecessor snapshot race", async () => {
+    const otherSnapshotId = Sha256HashSchema.make(`sha256:${"d".repeat(64)}`);
+    runtimeQueryMock.mockImplementation((query: FunctionReference<"query">) => {
+      if (
+        getFunctionName(query) ===
+        getFunctionName(api.contentRelease.quran.prose)
+      ) {
+        return Promise.resolve(legacyMarkdownResult());
+      }
+      if (
+        getFunctionName(query) ===
+        getFunctionName(api.contentRelease.quran.surahs)
+      ) {
+        return Promise.resolve(catalogResult(otherSnapshotId));
+      }
+      return Promise.reject(new Error("Unhandled Quran publication query."));
+    });
+
+    await expect(
+      Effect.runPromise(Effect.result(readPublishedQuranMarkdown("id", 1)))
+    ).resolves.toMatchObject({
+      _tag: "Failure",
+      failure: { _tag: "QuranSnapshotChangedError" },
+    });
+    expect(runtimeQueryMock).toHaveBeenCalledTimes(6);
+  });
 });
 /** Builds the complete signed metadata catalog response. */
-function catalogResult() {
+function catalogResult(snapshotId = source.snapshotId) {
   return {
     ...source,
+    snapshotId,
     rowJson: Array.from({ length: 114 }, (_, index) =>
-      encodeTestQuranRow(source.snapshotId, makeQuranSurah(index + 1))
+      encodeTestQuranRow(snapshotId, makeQuranSurah(index + 1))
     ),
   };
 }
@@ -210,7 +270,8 @@ function viewResult() {
     appLocale: "id",
     nextSurah: {
       name: {
-        meaning: { appLocale: "en", text: "Technical meaning 2" },
+        meaning: null,
+        sourceMeaning: { appLocale: "en", text: "Technical meaning 2" },
         transliteration: "Technical Surah 2",
       },
       number: 2,
@@ -219,7 +280,8 @@ function viewResult() {
     previousSurah: null,
     surah: {
       name: {
-        meaning: { appLocale: "en", text: "Technical meaning 1" },
+        meaning: null,
+        sourceMeaning: { appLocale: "en", text: "Technical meaning 1" },
         transliteration: "Technical Surah 1",
       },
       number: 1,
@@ -256,11 +318,17 @@ function legacyViewResult() {
     ...result,
     nextSurah: {
       ...result.nextSurah,
-      name: { ...result.nextSurah.name, meaning: null },
+      name: {
+        meaning: result.nextSurah.name.meaning,
+        transliteration: result.nextSurah.name.transliteration,
+      },
     },
     surah: {
       ...result.surah,
-      name: { ...result.surah.name, meaning: null },
+      name: {
+        meaning: result.surah.name.meaning,
+        transliteration: result.surah.name.transliteration,
+      },
     },
   };
 }
@@ -275,12 +343,18 @@ function legacyFinalViewResult() {
     nextSurah: null,
     previousSurah: {
       ...previousSurah,
-      name: { ...previousSurah.name, meaning: null },
+      name: {
+        meaning: null,
+        transliteration: previousSurah.name.transliteration,
+      },
       numberOfVerses: 1,
     },
     surah: {
       ...surah,
-      name: { ...surah.name, meaning: null },
+      name: {
+        meaning: null,
+        transliteration: surah.name.transliteration,
+      },
       numberOfVerses: 1,
     },
   };
@@ -293,7 +367,8 @@ function markdownResult() {
     sources: makeQuranLocaleSources("id"),
     surah: {
       name: {
-        meaning: { appLocale: "en", text: "Technical meaning 1" },
+        meaning: null,
+        sourceMeaning: { appLocale: "en", text: "Technical meaning 1" },
         transliteration: "Technical Surah 1",
       },
       number: 1,
@@ -322,7 +397,10 @@ function legacyMarkdownResult() {
     ...result,
     surah: {
       ...result.surah,
-      name: { ...result.surah.name, meaning: null },
+      name: {
+        meaning: result.surah.name.meaning,
+        transliteration: result.surah.name.transliteration,
+      },
     },
   };
 }
