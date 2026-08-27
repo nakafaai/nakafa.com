@@ -1,12 +1,11 @@
+import { describe, expect, it, vi } from "@effect/vitest";
 import type { PromptInputFile } from "@repo/design-system/lib/prompt-input/files";
 import {
   PromptInputCompletionError,
   PromptInputSubmitError,
   submitPromptInput,
 } from "@repo/design-system/lib/prompt-input/submission";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 function createPromptFile(): PromptInputFile {
   return {

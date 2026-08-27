@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { readCliRequest } from "./read.js";
 import { HELP_TEXT } from "./spec.js";

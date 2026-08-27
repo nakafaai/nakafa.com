@@ -1,9 +1,9 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   CodeHighlightError,
   highlightCode,
   UnsupportedCodeLanguageError,
 } from "@repo/design-system/lib/code-block/highlight";
-import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import type { CodeOptionsMultipleThemes } from "shiki";
 import { vi } from "vitest";

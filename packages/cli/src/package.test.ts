@@ -1,6 +1,6 @@
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Path, Result, Schema, Stream } from "effect";
 import { ChildProcess } from "effect/unstable/process";
 import {

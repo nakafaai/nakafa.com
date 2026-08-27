@@ -1,11 +1,10 @@
+import { describe, expect, it, vi } from "@effect/vitest";
 import {
   CodeClipboardUnavailableError,
   CodeClipboardWriteError,
   writeCodeToClipboard,
 } from "@repo/design-system/lib/code-block/clipboard";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, Fiber } from "effect";
-import { vi } from "vitest";
 
 describe("code clipboard", () => {
   it.live("reports when the browser does not expose the Clipboard API", () =>

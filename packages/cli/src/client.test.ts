@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "@repo/testing/effect";
+import { describe, expect, it, vi } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import { type FetchImplementation, requestNakafaApi } from "./client.js";
 

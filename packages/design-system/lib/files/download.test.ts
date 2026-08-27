@@ -1,10 +1,9 @@
+import { afterEach, describe, expect, it, vi } from "@effect/vitest";
 import {
   BrowserFileDownloadError,
   downloadFile,
 } from "@repo/design-system/lib/files/download";
-import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const DOWNLOAD = {
   content: "const answer = 42;",

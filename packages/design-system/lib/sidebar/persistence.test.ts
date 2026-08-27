@@ -1,12 +1,11 @@
+import { afterEach, describe, expect, it, vi } from "@effect/vitest";
 import {
   BrowserSidebarCookieWriterLive,
   persistSidebarState,
   SidebarCookieWriter,
   SidebarStatePersistenceError,
 } from "@repo/design-system/lib/sidebar/persistence";
-import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect, Layer } from "effect";
-import { vi } from "vitest";
 
 const TEST_COOKIE_NAME = "sidebar-state-test";
 
