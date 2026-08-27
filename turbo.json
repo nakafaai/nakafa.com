@@ -25,6 +25,12 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": [
+        "NAKAFA_API_EDGE_SECRET",
+        "NAKAFA_CONVEX_SITE_URL",
+        "NAKAFA_MCP_EDGE_SECRET",
+        "VERCEL_GIT_COMMIT_SHA"
+      ],
       "outputs": [
         ".next/**",
         "!.next/cache/**",
