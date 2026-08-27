@@ -1,15 +1,15 @@
-import type { QuranViewVerseV2 } from "@repo/backend/client/quran/v2/view";
+import type { QuranViewVerse } from "@repo/backend/client/quran/view";
 import { cn } from "@repo/design-system/lib/utils";
 import type { ReactNode } from "react";
+import { QuranText } from "@/components/shared/quran/text";
 import { QuranVerseTranslation } from "@/components/shared/quran/verses/translation";
-import { QuranText } from "@/components/shared/quran-text";
 
 interface Props {
   action?: ReactNode;
   id: string;
   isLast: boolean;
   translationNotesLabel: string;
-  verse: QuranViewVerseV2;
+  verse: QuranViewVerse;
   verseLabel: string;
 }
 
@@ -28,6 +28,7 @@ export function QuranVerseItem({
         "mb-6 space-y-6 border-b pb-6 content-auto-quran-verse",
         isLast && "mb-0 border-b-0 pb-0"
       )}
+      data-quran-verse={verse.number.inSurah}
     >
       <div className="flex items-center gap-4">
         <a
@@ -47,7 +48,7 @@ export function QuranVerseItem({
           <div className="flex items-center gap-2">{action}</div>
         ) : null}
       </div>
-      <QuranText>{verse.arabic}</QuranText>
+      <QuranText data-quran-arabic>{verse.arabic}</QuranText>
       <QuranVerseTranslation
         id={id}
         label={translationNotesLabel}

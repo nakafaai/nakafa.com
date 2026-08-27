@@ -43,7 +43,6 @@ export function QuranVerseTranslation({
           aria-label={`${label}: ${verseLabel}`}
           className="space-y-2 text-muted-foreground text-sm"
         >
-          <p className="font-medium text-foreground">{label}</p>
           <ol className="space-y-2">
             {translation.notes.map((note) => (
               <li

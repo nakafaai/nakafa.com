@@ -1,10 +1,10 @@
 import "server-only";
 
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { decodePublishedQuranCatalogV2 } from "@repo/backend/client/quran/v2/catalog";
-import { decodePublishedQuranMarkdownV2 } from "@repo/backend/client/quran/v2/markdown";
-import { decodePublishedQuranSourceV2 } from "@repo/backend/client/quran/v2/publication";
-import { decodePublishedQuranViewV2 } from "@repo/backend/client/quran/v2/view";
+import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
+import { decodePublishedQuranMarkdown } from "@repo/backend/client/quran/markdown";
+import { decodePublishedQuranSource } from "@repo/backend/client/quran/publication";
+import { decodePublishedQuranView } from "@repo/backend/client/quran/view";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
@@ -19,7 +19,7 @@ export const readPublishedQuranIdentity = Effect.fn(
     api.contentRelease.quran.attribution,
     {}
   );
-  return yield* decodePublishedQuranSourceV2(result, "attribution");
+  return yield* decodePublishedQuranSource(result, "attribution");
 });
 
 /** Reads and validates the active signed Quran metadata catalog. */
@@ -27,7 +27,7 @@ export const readPublishedQuranCatalog = Effect.fn(
   "NakafaQuran.readPublishedCatalog"
 )(function* () {
   const result = yield* readRuntimeQuery(api.contentRelease.quran.surahs, {});
-  return yield* decodePublishedQuranCatalogV2(result);
+  return yield* decodePublishedQuranCatalog(result);
 });
 
 /** Reads and validates one active signed Quran markdown projection. */
@@ -36,12 +36,12 @@ export const readPublishedQuranMarkdown = Effect.fn(
 )(function* (locale: Locale, surahNumber: number, verseLimit?: number) {
   const appLocale = AppLocaleSchema.make(locale);
   const result = yield* readRuntimeQuery(
-    api.contentRelease.quran.markdownV2,
+    api.contentRelease.quran.prose,
     verseLimit === undefined
       ? { appLocale, surahNumber }
       : { appLocale, surahNumber, verseLimit }
   );
-  return yield* decodePublishedQuranMarkdownV2(result, {
+  return yield* decodePublishedQuranMarkdown(result, {
     appLocale,
     surahNumber,
     verseLimit,
@@ -52,11 +52,11 @@ export const readPublishedQuranMarkdown = Effect.fn(
 const readPublishedQuranView = Effect.fn("NakafaQuran.readPublishedView")(
   function* (locale: Locale, surahNumber: number) {
     const appLocale = AppLocaleSchema.make(locale);
-    const result = yield* readRuntimeQuery(api.contentRelease.quran.viewV2, {
+    const result = yield* readRuntimeQuery(api.contentRelease.quran.page, {
       appLocale,
       surahNumber,
     });
-    return yield* decodePublishedQuranViewV2(result, {
+    return yield* decodePublishedQuranView(result, {
       appLocale,
       surahNumber,
     });

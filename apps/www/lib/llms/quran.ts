@@ -1,6 +1,6 @@
 import { QuranSurahNumberSchema } from "@nakafa/aksara-contracts/quran/spec";
+import { projectQuranTranslation } from "@repo/backend/client/quran/notes";
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
-import { projectQuranTranslationV2 } from "@repo/backend/client/quran/v2/notes";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Effect, Option, Schema } from "effect";
 import { createTranslator, type Locale } from "next-intl";
@@ -220,7 +220,7 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
     scanned.push("");
     scanned.push(verse.arabic);
     scanned.push("");
-    const translated = projectQuranTranslationV2(verse.translation, (number) =>
+    const translated = projectQuranTranslation(verse.translation, (number) =>
       number.toString()
     );
     scanned.push(`**${t("translation")}:** ${translated.text}`);

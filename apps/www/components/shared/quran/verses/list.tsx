@@ -1,4 +1,4 @@
-import type { QuranViewVerseV2 } from "@repo/backend/client/quran/v2/view";
+import type { QuranViewVerse } from "@repo/backend/client/quran/view";
 import type { ReactNode } from "react";
 import { QuranVerseItem } from "@/components/shared/quran/verses/item";
 import { WindowVirtualized } from "@/components/shared/window-virtualized";
@@ -6,12 +6,12 @@ import { WindowVirtualized } from "@/components/shared/window-virtualized";
 interface VerseItem {
   id: string;
   label: string;
-  verse: QuranViewVerseV2;
+  verse: QuranViewVerse;
 }
 
 interface Props {
   items: readonly VerseItem[];
-  renderAction?: (verse: QuranViewVerseV2) => ReactNode;
+  renderAction?: (verse: QuranViewVerse) => ReactNode;
   translationNotesLabel: string;
 }
 

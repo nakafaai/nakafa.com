@@ -1,12 +1,12 @@
 "use client";
 import { useDisclosure, useMounted } from "@mantine/hooks";
-import type { QuranPublicationError } from "@repo/backend/client/quran/publication";
 import {
-  decodePublishedQuranInterpretationV2,
+  decodePublishedQuranInterpretation,
   isQuranSnapshotConflict,
   type QuranInterpretationRequestError,
   toQuranInterpretationRequestError,
-} from "@repo/backend/client/quran/v2/interpretation";
+} from "@repo/backend/client/quran/interpretation";
+import type { QuranPublicationError } from "@repo/backend/client/quran/publication";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   Drawer,
@@ -31,9 +31,7 @@ import { QuranInterpretationContext } from "@/components/shared/quran/interpreta
 import { reportClientException } from "@/lib/analytics/client";
 
 interface Props {
-  appLocale: FunctionArgs<
-    typeof api.contentRelease.quran.interpretationV2
-  >["appLocale"];
+  appLocale: FunctionArgs<typeof api.contentRelease.quran.tafsir>["appLocale"];
   children: ReactNode;
   errorMessage: string;
   label: string;
@@ -160,7 +158,7 @@ export function QuranInterpretationControls({
     const program = Effect.tryPromise({
       catch: toQuranInterpretationRequestError,
       try: () =>
-        convex.query(api.contentRelease.quran.interpretationV2, {
+        convex.query(api.contentRelease.quran.tafsir, {
           expectedSnapshotId: snapshotId,
           appLocale,
           surahNumber,
@@ -168,7 +166,7 @@ export function QuranInterpretationControls({
         }),
     }).pipe(
       Effect.flatMap((result) =>
-        decodePublishedQuranInterpretationV2(result, {
+        decodePublishedQuranInterpretation(result, {
           appLocale,
           snapshotId,
           surahNumber,
