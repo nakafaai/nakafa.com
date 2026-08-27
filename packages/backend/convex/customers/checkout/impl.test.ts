@@ -1,12 +1,12 @@
+import { describe, expect, it } from "@effect/vitest";
 import { validateCheckoutRequest } from "@repo/backend/convex/customers/checkout/impl";
 import { InvalidCheckoutSuccessUrl } from "@repo/backend/convex/customers/checkout/spec";
 import { products } from "@repo/backend/convex/utils/polar/products";
 import { siteOrigin } from "@repo/backend/convex/utils/site";
-import { describe, expect, it } from "@repo/testing/effect";
-import { Effect, Result } from "effect";
+import { Effect } from "effect";
 
 describe("customers/checkout/impl", () => {
-  it.live("keeps allowed product IDs and same-origin success URLs", () =>
+  it.effect("keeps allowed product IDs and same-origin success URLs", () =>
     Effect.gen(function* () {
       const productId = products.pro.id;
       const successUrl = `${siteOrigin}/en/home`;
@@ -23,7 +23,7 @@ describe("customers/checkout/impl", () => {
       });
     })
   );
-  it.live(
+  it.effect(
     "keeps Indonesian app locale separate from Polar checkout language",
     () =>
       Effect.gen(function* () {
@@ -42,7 +42,7 @@ describe("customers/checkout/impl", () => {
         });
       })
   );
-  it.live("uses German for a German checkout", () =>
+  it.effect("uses German for a German checkout", () =>
     Effect.gen(function* () {
       const productId = products.pro.id;
       const successUrl = `${siteOrigin}/de/home`;
@@ -59,32 +59,22 @@ describe("customers/checkout/impl", () => {
       });
     })
   );
-  it.live("rejects off-site success URLs", () =>
+  it.effect("rejects off-site success URLs", () =>
     Effect.gen(function* () {
-      const result = yield* Effect.result(
-        validateCheckoutRequest({
-          locale: "en",
-          successUrl: "https://example.com/en/home",
-        })
-      );
-      if (Result.isSuccess(result)) {
-        throw new Error("Expected off-site success URL to fail.");
-      }
-      expect(result.failure).toBeInstanceOf(InvalidCheckoutSuccessUrl);
+      const failure = yield* validateCheckoutRequest({
+        locale: "en",
+        successUrl: "https://example.com/en/home",
+      }).pipe(Effect.flip);
+      expect(failure).toBeInstanceOf(InvalidCheckoutSuccessUrl);
     })
   );
-  it.live("rejects malformed success URLs", () =>
+  it.effect("rejects malformed success URLs", () =>
     Effect.gen(function* () {
-      const result = yield* Effect.result(
-        validateCheckoutRequest({
-          locale: "en",
-          successUrl: "not-a-url",
-        })
-      );
-      if (Result.isSuccess(result)) {
-        throw new Error("Expected malformed success URL to fail.");
-      }
-      expect(result.failure).toBeInstanceOf(InvalidCheckoutSuccessUrl);
+      const failure = yield* validateCheckoutRequest({
+        locale: "en",
+        successUrl: "not-a-url",
+      }).pipe(Effect.flip);
+      expect(failure).toBeInstanceOf(InvalidCheckoutSuccessUrl);
     })
   );
 });
