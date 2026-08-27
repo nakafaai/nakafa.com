@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import {
   decodeNakafaMarkdown,
@@ -10,13 +11,12 @@ import {
   NakafaAgentInputError,
 } from "@repo/contents/_lib/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 const defaultLocale = ACTIVE_APP_LOCALE_CODES[0];
 
 describe("Nakafa runtime decoders", () => {
-  it.live("decodes valid agent-facing payloads", () =>
+  it.effect("decodes valid agent-facing payloads", () =>
     Effect.gen(function* () {
       expect(yield* decodeNakafaMarkdown(markdown())).toMatchObject({
         locale: "en",
@@ -48,7 +48,7 @@ describe("Nakafa runtime decoders", () => {
       });
     })
   );
-  it.live("maps invalid output and input into typed Nakafa errors", () =>
+  it.effect("maps invalid output and input into typed Nakafa errors", () =>
     Effect.gen(function* () {
       yield* expectDecodeError(
         decodeNakafaMarkdown({}),
