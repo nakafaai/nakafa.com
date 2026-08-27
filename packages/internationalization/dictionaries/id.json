@@ -285,8 +285,18 @@
     "interpretation": "Tafsir",
     "interpretation-error": "Tafsir ayat ini belum dapat dimuat. Coba lagi.",
     "interpretation-refreshing": "Al-Quran telah diperbarui. Memuat ulang halaman ini...",
-    "surah-title": "Surat {number}: {name} ({translation}) - {quran}",
-    "verses": "ayat",
+    "meaning": "Makna nama",
+    "revelation": "Tempat turun",
+    "revelation-place": "{place, select, Meccan {Makkiyah} Medinan {Madaniyah} other {Tidak diketahui}}",
+    "number-of-verses": "Jumlah ayat",
+    "arabic-source": "Teks Arab",
+    "sources": "Sumber",
+    "translation": "Terjemahan",
+    "translation-source": "Terjemahan",
+    "translation-notes": "Catatan terjemahan",
+    "markdown-limit": "Markdown pada halaman ini dibatasi pada ayat 1-{toVerse} dari {numberOfVerses}. Gunakan alat rujukan Al-Quran Nakafa untuk rentang ayat yang tepat.",
+    "surah-title": "Surat {number}: {name} - {quran}",
+    "verses": "Ayat",
     "read-quran-description": "Baca Al-Quran online dengan terjemahan dan tafsir per ayat di Nakafa"
   },
   "Exercises": {
@@ -1165,9 +1175,9 @@
       "keywords": "{title}, {category}, analisis, fakta, terkini, riset, informasi, berita"
     },
     "quran": {
-      "title": "Surat {number}. {name} ({transliteration}) - {translation} | Nakafa",
+      "title": "Surat {number}. {name} ({transliteration}) | Nakafa",
       "description": "Baca Surat {name} ({transliteration}) dengan terjemahan dan tafsir. {numberOfVerses} ayat dari Al-Quran.",
-      "keywords": "Surat {name}, Al-Quran, {translation}, {revelation}, tafsir"
+      "keywords": "Surat {name}, Al-Quran, {transliteration}, {revelation}, tafsir"
     }
   }
 }

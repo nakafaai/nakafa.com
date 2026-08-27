@@ -285,9 +285,19 @@
     "interpretation": "Tafsir",
     "interpretation-error": "Der Tafsir zu diesem Vers konnte nicht geladen werden. Versuche es erneut.",
     "interpretation-refreshing": "Der Quran wurde aktualisiert. Die Seite wird neu geladen...",
-    "surah-title": "Sure {number}: {name} ({translation}) - {quran}",
+    "meaning": "Namensbedeutung",
+    "revelation": "Offenbarungsort",
+    "revelation-place": "{place, select, Meccan {mekkanisch} Medinan {medinensisch} other {unbekannt}}",
+    "number-of-verses": "Anzahl der Verse",
+    "arabic-source": "Arabischer Text",
+    "sources": "Quellen",
+    "translation": "Übersetzung",
+    "translation-source": "Übersetzung",
+    "translation-notes": "Anmerkungen zur Übersetzung",
+    "markdown-limit": "Dieses Markdown auf Seitenebene ist auf die Verse 1-{toVerse} von {numberOfVerses} begrenzt. Nutze das Nakafa-Quran-Nachschlagewerkzeug für genaue Versbereiche.",
+    "surah-title": "Sure {number}: {name} - {quran}",
     "verses": "Verse",
-    "read-quran-description": "Lies den Quran auf Nakafa online mit Übersetzung und Tafsir Vers für Vers"
+    "read-quran-description": "Lies den Quran auf Nakafa online mit einer Übersetzung Vers für Vers"
   },
   "Exercises": {
     "exercises": "Übungen",
@@ -1165,9 +1175,9 @@
       "keywords": "{title}, {category}, Analyse, Fakten, aktuell, Forschung, Informationen, Nachrichten"
     },
     "quran": {
-      "title": "Sure {number}. {name} ({transliteration}) - {translation} | Nakafa",
-      "description": "Lies die Sure {name} ({transliteration}) mit Übersetzung und Tafsir. {numberOfVerses} Verse aus dem heiligen Quran.",
-      "keywords": "Sure {name}, Quran, {translation}, {revelation}, Tafsir"
+      "title": "Sure {number}. {name} ({transliteration}) | Nakafa",
+      "description": "Lies die Sure {name} ({transliteration}) mit einer Übersetzung Vers für Vers. {numberOfVerses} Verse aus dem heiligen Quran.",
+      "keywords": "Sure {name}, Quran, {transliteration}, {revelation}"
     }
   }
 }
