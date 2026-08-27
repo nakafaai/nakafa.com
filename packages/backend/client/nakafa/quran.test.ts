@@ -97,7 +97,7 @@ describe("Quran Nakafa reader", () => {
       });
       const value = Option.getOrUndefined(reference);
 
-      expect(value?.meaning).toBeNull();
+      expect(value?.meaning).toEqual({ locale: "en", text: "The Opening" });
       expect(value?.pre_bismillah).toBeNull();
       expect(value?.sources).toMatchObject({
         arabic: { id: "tanzil-text" },
@@ -155,7 +155,12 @@ describe("Quran Nakafa reader", () => {
           readNakafaContentRefFixture("id", "quran/1", "quran")
         );
         expect(Option.getOrUndefined(markdown)?.title).toBe("Al-Fatihah");
-        expect(Option.getOrUndefined(markdown)?.description).toBe("Al-Fatihah");
+        expect(Option.getOrUndefined(markdown)?.description).toBe(
+          "The Opening"
+        );
+        expect(Option.getOrUndefined(markdown)?.text).toContain(
+          "Meaning: The Opening"
+        );
         expect(Option.getOrUndefined(markdown)?.text).toContain("## Verses");
         expect(Option.getOrUndefined(markdown)?.text).toContain(
           "Dengan nama Allah."
@@ -236,7 +241,7 @@ function markdownResult(args: Record<string, unknown>) {
     sources: makeQuranLocaleSources(appLocale),
     surah: {
       name: {
-        meaning: appLocale === "en" ? "The Opening" : null,
+        meaning: "The Opening",
         transliteration: "Al-Fatihah",
       },
       number: 1,

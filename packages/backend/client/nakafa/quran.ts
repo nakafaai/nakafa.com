@@ -106,7 +106,7 @@ export const readQuranMarkdown = Effect.fn("NakafaQuran.readMarkdown")(
     const metadata = [
       `# ${title}`,
       "",
-      ...(meaning === null ? [] : [`Meaning: ${meaning}`]),
+      `Meaning: ${meaning}`,
       `Revelation: ${surah.revelation.place}`,
       "",
       ...renderQuranReadingSourcesMarkdown(publication.sources),
@@ -127,7 +127,7 @@ export const readQuranMarkdown = Effect.fn("NakafaQuran.readMarkdown")(
           ];
     const markdown = yield* decodeNakafaMarkdown({
       ...ref,
-      description: meaning ?? title,
+      description: meaning,
       text: [
         ...metadata,
         ...preBismillah,

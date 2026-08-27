@@ -28,7 +28,7 @@ import { Effect } from "effect";
 
 const quranMarkdownSurahValidator = v.object({
   name: v.object({
-    meaning: v.union(v.string(), v.null()),
+    meaning: v.string(),
     transliteration: v.string(),
   }),
   number: v.number(),
@@ -58,16 +58,10 @@ export type QuranMarkdown = Infer<typeof quranMarkdownValidator>;
 type QuranMarkdownSurah = NonNullable<QuranMarkdown["surah"]>;
 
 /** Projects only metadata rendered by Quran markdown consumers. */
-function projectSurah(
-  surah: QuranSurahRow,
-  appLocale: AppLocaleCode
-): QuranMarkdownSurah {
+function projectSurah(surah: QuranSurahRow): QuranMarkdownSurah {
   return {
     name: {
-      meaning:
-        surah.name.meaning.appLocale === appLocale
-          ? surah.name.meaning.text
-          : null,
+      meaning: surah.name.meaning.text,
       transliteration: surah.name.transliteration,
     },
     number: surah.number,
@@ -194,8 +188,7 @@ export const readQuranMarkdown = Effect.fn("contentRelease.readQuranMarkdown")(
     return {
       ...markdown,
       preBismillah: projected.preBismillah,
-      surah:
-        loaded.surah === null ? null : projectSurah(loaded.surah, appLocale),
+      surah: loaded.surah === null ? null : projectSurah(loaded.surah),
       verses: projected.verses.map(({ arabic, document, number }) => ({
         arabic,
         number,

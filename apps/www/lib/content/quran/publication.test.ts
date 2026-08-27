@@ -147,7 +147,7 @@ function viewResult() {
     appLocale: "id",
     nextSurah: {
       name: {
-        meaning: null,
+        meaning: "Technical meaning 2",
         transliteration: "Technical Surah 2",
       },
       number: 2,
@@ -156,7 +156,7 @@ function viewResult() {
     previousSurah: null,
     surah: {
       name: {
-        meaning: null,
+        meaning: "Technical meaning 1",
         transliteration: "Technical Surah 1",
       },
       number: 1,
@@ -193,7 +193,7 @@ function markdownResult() {
     sources: makeQuranLocaleSources("id"),
     surah: {
       name: {
-        meaning: null,
+        meaning: "Technical meaning 1",
         transliteration: "Technical Surah 1",
       },
       number: 1,

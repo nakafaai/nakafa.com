@@ -178,7 +178,7 @@ async function CachedSurahShell({
       recoverStalePublishedQuranSnapshot(servedSnapshotId)
     );
   }
-  const description = surahData.name.meaning ?? t("quran-description");
+  const description = surahData.name.meaning;
   const title = getQuranSurahName(surahData.name);
 
   const verseItems = result.verses.map((verse) => {

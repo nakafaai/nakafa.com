@@ -62,22 +62,15 @@ export const readQuranLlmsInventory = Effect.fn("www.llms.quran.inventory")(
 /** Builds the one bounded page of signed Quran links for a locale. */
 export const readQuranLlmsPageEntries = Effect.fn("www.llms.quran.pageEntries")(
   function* (locale: Locale, page: number) {
-    const [{ surahs }, messages] = yield* Effect.all([
-      readPublishedQuranCatalog(),
-      Effect.promise(() => loadLocaleMessages(locale)),
-    ]);
+    const { surahs } = yield* readPublishedQuranCatalog();
     if (page !== 0 || surahs.length === 0) {
       return null;
     }
-    const t = createTranslator({ locale, messages, namespace: "Holy" });
 
     return buildPublishedContentLlmsEntries({
       locale,
       rows: surahs.map((surah) => ({
-        description:
-          surah.name.meaning.appLocale === locale
-            ? surah.name.meaning.text
-            : t("quran-description"),
+        description: surah.name.meaning.text,
         publicPath: `quran/${surah.number}`,
         title: getQuranSurahName(surah.name),
       })),
@@ -128,10 +121,8 @@ const getQuranIndexText = Effect.fn("www.llms.quran.indexText")(function* (
     const title = getQuranSurahName(surah.name);
     scanned.push(`## ${surah.number}. ${title}`);
     scanned.push("");
-    if (surah.name.meaning.appLocale === locale) {
-      scanned.push(`**${t("meaning")}:** ${surah.name.meaning.text}`);
-      scanned.push("");
-    }
+    scanned.push(`**${t("meaning")}:** ${surah.name.meaning.text}`);
+    scanned.push("");
     scanned.push(
       `**${t("revelation")}:** ${t("revelation-place", {
         place: surah.revelation.place,
@@ -168,7 +159,7 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
   const surah = markdown.surah;
   const tafsirAccess = markdown.tafsirAccess;
   const title = getQuranSurahName(surah.name);
-  const description = surah.name.meaning ?? t("quran-description");
+  const description = surah.name.meaning;
   const scanned = buildHeader({
     description,
     title,
@@ -177,9 +168,7 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
 
   scanned.push(`## ${title}`);
   scanned.push("");
-  if (surah.name.meaning !== null) {
-    scanned.push(`**${t("meaning")}:** ${surah.name.meaning}`);
-  }
+  scanned.push(`**${t("meaning")}:** ${surah.name.meaning}`);
   scanned.push(
     `**${t("revelation")}:** ${t("revelation-place", {
       place: surah.revelation.place,

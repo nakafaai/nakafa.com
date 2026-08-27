@@ -28,6 +28,7 @@ describe("signed Quran document decoder", () => {
         surahNumber: 1,
       });
       expect(document.surah.revelation).toEqual({ order: 5, place: "Meccan" });
+      expect(document.surah.name.meaning).toBe("The Opening");
       expect(document.verses).toEqual([
         {
           arabic: "بِسْمِ اللّٰهِ",
@@ -93,7 +94,7 @@ function documentResult(): QuranDocumentResult {
       kind: "quran-surah",
       name: {
         arabic: "الفاتحة",
-        meaning: null,
+        meaning: "The Opening",
         transliteration: "Al-Fatihah",
       },
       number: 1,

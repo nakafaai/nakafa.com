@@ -14,6 +14,7 @@ const rawTranslationNotePattern = /\[\d+\]/u;
 interface QuranLocaleContract {
   readonly hasEmbeddedTafsir: boolean;
   readonly hasTranslationNotes: boolean;
+  readonly meaning: string;
   readonly translationNotesLabel: string;
 }
 
@@ -28,18 +29,21 @@ const quranLocaleContracts = {
     hasEmbeddedTafsir: false,
     hasTranslationNotes: false,
     locale: "de",
+    meaning: "The Cow",
     translationNotesLabel: "Anmerkungen zur Übersetzung",
   },
   en: {
     hasEmbeddedTafsir: false,
     hasTranslationNotes: true,
     locale: "en",
+    meaning: "The Cow",
     translationNotesLabel: "Translation notes",
   },
   id: {
     hasEmbeddedTafsir: true,
     hasTranslationNotes: true,
     locale: "id",
+    meaning: "The Cow",
     translationNotesLabel: "Catatan terjemahan",
   },
 } satisfies QuranLocaleContracts;
@@ -120,6 +124,12 @@ const verifyQuranLocaleCoverage = Effect.fn(
     href,
     href,
     readinessTimeoutMilliseconds
+  );
+
+  yield* Effect.promise(() =>
+    expect(
+      page.getByText(contract.meaning, { exact: true }).first()
+    ).toBeVisible()
   );
 
   const bismillah = page.locator("[data-quran-bismillah]");

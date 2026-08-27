@@ -173,6 +173,8 @@ describe("contentRelease/quran/view", () => {
     ]);
     expect(indonesian.sources).toEqual(makeQuranLocaleSources("id"));
     expect(indonesian.tafsirAccess).toEqual(makeQuranTafsirProjection("id"));
+    expect(indonesian.nextSurah?.name.meaning).toBe("Technical meaning 2");
+    expect(indonesian.surah?.name.meaning).toBe("Technical meaning 1");
     expect(JSON.stringify(indonesian)).not.toContain("Tafsir teknis");
     expect({
       english: english.appLocale,

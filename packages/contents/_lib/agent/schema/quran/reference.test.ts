@@ -67,10 +67,7 @@ function reference(appLocale: AppLocaleCode, tafsir_access: unknown) {
     lensId: "lens:quran",
     locale: appLocale,
     markdown_url: `https://nakafa.com/${appLocale}/quran/1.md`,
-    meaning:
-      appLocale === ENGLISH_APP_LOCALE_CODE
-        ? { locale: ENGLISH_APP_LOCALE_CODE, text: "The Opening" }
-        : null,
+    meaning: { locale: ENGLISH_APP_LOCALE_CODE, text: "The Opening" },
     name: "Al-Fatihah",
     pre_bismillah: null,
     revelation: "Meccan",
@@ -157,6 +154,8 @@ describe("NakafaAgentQuranReferenceSchema", () => {
 
     expect(Schema.is(NakafaAgentQuranReferenceSchema)(indonesian)).toBe(true);
     expect(Schema.is(NakafaAgentQuranReferenceSchema)(german)).toBe(true);
+    expect(indonesian.meaning).toEqual({ locale: "en", text: "The Opening" });
+    expect(german.meaning).toEqual({ locale: "en", text: "The Opening" });
   });
 
   it("accepts legacy missing access only for external Tafsir locales", () => {

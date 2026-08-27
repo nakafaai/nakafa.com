@@ -108,7 +108,7 @@ describe("quran llms text", () => {
 
       expect(indexText?.startsWith("# Quran")).toBe(true);
       expect(indexText).toContain("## 1. Al-Fatihah");
-      expect(indonesianIndexText).not.toContain("**Makna nama:**");
+      expect(indonesianIndexText).toContain("**Makna nama:** The Opening");
       expect(firstSurahText?.startsWith("# Al-Fatihah")).toBe(true);
       expect(firstSurahText).toContain("### Verses");
       expect(firstSurahText).toContain("Technical English Tafsir notice.");
@@ -146,6 +146,7 @@ describe("quran llms text", () => {
         const tafsirAccess = tafsirAccessFor(locale);
 
         expect(text).toContain(tafsirAccess.notice);
+        expect(text).toContain(`**${t("meaning")}:** The Opening`);
         expect(text).toContain(
           `[${tafsirAccess.source.label}](${tafsirAccess.source.updateUrl})`
         );
@@ -244,7 +245,7 @@ describe("quran llms text", () => {
         ]);
         expect(yield* readQuranLlmsPageEntries("id", 0)).toEqual([
           {
-            description: "Baca Al-Quran dengan terjemahan dan tafsir per ayat.",
+            description: "The Opening",
             href: `${BASE_URL}/id/quran/1.md`,
             route: "/quran/1",
             section: "quran",
@@ -252,7 +253,7 @@ describe("quran llms text", () => {
             title: "Al-Fatihah",
           },
           {
-            description: "Baca Al-Quran dengan terjemahan dan tafsir per ayat.",
+            description: "The Cow",
             href: `${BASE_URL}/id/quran/2.md`,
             route: "/quran/2",
             section: "quran",
@@ -334,7 +335,7 @@ function surahMarkdown(locale: Locale, number: number, verseLimit?: number) {
     surah: {
       ...metadata,
       name: {
-        meaning: locale === "en" ? metadata.name.meaning.text : null,
+        meaning: metadata.name.meaning.text,
         transliteration: metadata.name.transliteration,
       },
     },
