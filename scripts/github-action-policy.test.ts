@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Result } from "effect";
 import {
   HttpClient,
@@ -41,7 +41,7 @@ function makeHttpClient(
 }
 
 describe("GitHub Action policy", () => {
-  it.live("accepts every reviewed immutable GitHub Action", () =>
+  it.effect("accepts every reviewed immutable GitHub Action", () =>
     Effect.gen(function* () {
       expect(validateGithubActionPolicy(validActionUses())).toEqual([]);
       expect(
@@ -91,7 +91,7 @@ describe("GitHub Action policy", () => {
     );
   });
 
-  it.live("reads release metadata through the Effect HTTP client", () =>
+  it.effect("reads release metadata through the Effect HTTP client", () =>
     Effect.gen(function* () {
       let observedRequest: HttpClientRequest.HttpClientRequest | undefined;
       const releaseTag = yield* fetchLatestGithubActionTag({
@@ -112,7 +112,7 @@ describe("GitHub Action policy", () => {
     })
   );
 
-  it.live("rejects unavailable GitHub release metadata", () =>
+  it.effect("rejects unavailable GitHub release metadata", () =>
     Effect.gen(function* () {
       const result = yield* fetchLatestGithubActionTag({
         repository: "actions/checkout",

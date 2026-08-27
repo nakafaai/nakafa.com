@@ -61,9 +61,9 @@ importers:
       '@effect/tsgo':
         specifier: 0.36.5
         version: 0.36.5
-      '@repo/testing':
-        specifier: workspace:*
-        version: link:packages/testing
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 4.0.0-rc.110(effect@4.0.0-rc.110)(vitest@4.1.11)
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:packages/typescript-config
