@@ -7,7 +7,7 @@ import {
 import { Effect, Fiber } from "effect";
 
 describe("code clipboard", () => {
-  it.live("reports when the browser does not expose the Clipboard API", () =>
+  it.effect("reports when the browser does not expose the Clipboard API", () =>
     Effect.gen(function* () {
       const error = yield* writeCodeToClipboard(
         undefined,
@@ -22,7 +22,7 @@ describe("code clipboard", () => {
     })
   );
 
-  it.live("writes the exact code through the injected clipboard", () =>
+  it.effect("writes the exact code through the injected clipboard", () =>
     Effect.gen(function* () {
       const writeText = vi.fn().mockResolvedValue(undefined);
 
@@ -32,7 +32,7 @@ describe("code clipboard", () => {
     })
   );
 
-  it.live("maps clipboard failures into the typed error channel", () =>
+  it.effect("maps clipboard failures into the typed error channel", () =>
     Effect.gen(function* () {
       const cause = new Error("Clipboard permission denied.");
       const writeText = vi.fn().mockRejectedValue(cause);
@@ -51,35 +51,37 @@ describe("code clipboard", () => {
     })
   );
 
-  it.live("finishes an interrupted write before starting the next write", () =>
-    Effect.gen(function* () {
-      let finishFirstWrite: (() => void) | undefined;
-      const writeText = vi.fn((code: string) => {
-        if (code === "first") {
-          return new Promise<void>((resolve) => {
-            finishFirstWrite = resolve;
-          });
-        }
-        return Promise.resolve();
-      });
-      const first = yield* Effect.forkChild(
-        writeCodeToClipboard({ writeText }, "first")
-      );
-      yield* Effect.promise(() =>
-        vi.waitFor(() => expect(writeText).toHaveBeenCalledWith("first"))
-      );
+  it.effect(
+    "finishes an interrupted write before starting the next write",
+    () =>
+      Effect.gen(function* () {
+        let finishFirstWrite: (() => void) | undefined;
+        const writeText = vi.fn((code: string) => {
+          if (code === "first") {
+            return new Promise<void>((resolve) => {
+              finishFirstWrite = resolve;
+            });
+          }
+          return Promise.resolve();
+        });
+        const first = yield* Effect.forkChild(
+          writeCodeToClipboard({ writeText }, "first")
+        );
+        yield* Effect.promise(() =>
+          vi.waitFor(() => expect(writeText).toHaveBeenCalledWith("first"))
+        );
 
-      const interrupt = yield* Effect.forkChild(Fiber.interrupt(first));
-      const second = yield* Effect.forkChild(
-        writeCodeToClipboard({ writeText }, "second")
-      );
-      expect(writeText).not.toHaveBeenCalledWith("second");
+        const interrupt = yield* Effect.forkChild(Fiber.interrupt(first));
+        const second = yield* Effect.forkChild(
+          writeCodeToClipboard({ writeText }, "second")
+        );
+        expect(writeText).not.toHaveBeenCalledWith("second");
 
-      finishFirstWrite?.();
-      yield* Fiber.join(interrupt);
-      yield* Fiber.join(second);
+        finishFirstWrite?.();
+        yield* Fiber.join(interrupt);
+        yield* Fiber.join(second);
 
-      expect(writeText.mock.calls).toEqual([["first"], ["second"]]);
-    })
+        expect(writeText.mock.calls).toEqual([["first"], ["second"]]);
+      })
   );
 });

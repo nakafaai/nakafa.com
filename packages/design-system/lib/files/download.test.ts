@@ -37,7 +37,7 @@ afterEach(() => {
 });
 
 describe("browser file download", () => {
-  it.live("downloads string content and releases temporary resources", () =>
+  it.effect("downloads string content and releases temporary resources", () =>
     Effect.gen(function* () {
       const { createObjectURL, revokeObjectURL } = installUrlBoundary();
       const click = vi
@@ -61,7 +61,7 @@ describe("browser file download", () => {
     })
   );
 
-  it.live("preserves Blob content without rebuilding it", () =>
+  it.effect("preserves Blob content without rebuilding it", () =>
     Effect.gen(function* () {
       const { createObjectURL } = installUrlBoundary();
       vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
@@ -77,7 +77,7 @@ describe("browser file download", () => {
     })
   );
 
-  it.live("maps object URL failures into the typed error channel", () =>
+  it.effect("maps object URL failures into the typed error channel", () =>
     Effect.gen(function* () {
       const { createObjectURL, revokeObjectURL } = installUrlBoundary();
       const cause = new Error("Object URL unavailable.");
@@ -92,7 +92,7 @@ describe("browser file download", () => {
     })
   );
 
-  it.live("revokes the object URL when attaching the anchor fails", () =>
+  it.effect("revokes the object URL when attaching the anchor fails", () =>
     Effect.gen(function* () {
       const { revokeObjectURL } = installUrlBoundary();
       const cause = new Error("Document body unavailable.");
@@ -109,26 +109,30 @@ describe("browser file download", () => {
     })
   );
 
-  it.live("removes the anchor and revokes the URL when activation fails", () =>
-    Effect.gen(function* () {
-      const { revokeObjectURL } = installUrlBoundary();
-      const cause = new Error("Download activation blocked.");
-      const remove = vi.spyOn(Element.prototype, "remove");
-      vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {
-        throw cause;
-      });
+  it.effect(
+    "removes the anchor and revokes the URL when activation fails",
+    () =>
+      Effect.gen(function* () {
+        const { revokeObjectURL } = installUrlBoundary();
+        const cause = new Error("Download activation blocked.");
+        const remove = vi.spyOn(Element.prototype, "remove");
+        vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
+          () => {
+            throw cause;
+          }
+        );
 
-      const error = yield* downloadFile(DOWNLOAD).pipe(Effect.flip);
+        const error = yield* downloadFile(DOWNLOAD).pipe(Effect.flip);
 
-      expectDownloadError(error, cause);
-      expect(remove).toHaveBeenCalledOnce();
-      expect(revokeObjectURL).toHaveBeenCalledExactlyOnceWith(
-        "blob:nakafa-download"
-      );
-    })
+        expectDownloadError(error, cause);
+        expect(remove).toHaveBeenCalledOnce();
+        expect(revokeObjectURL).toHaveBeenCalledExactlyOnceWith(
+          "blob:nakafa-download"
+        );
+      })
   );
 
-  it.live("reports anchor cleanup failures and still revokes the URL", () =>
+  it.effect("reports anchor cleanup failures and still revokes the URL", () =>
     Effect.gen(function* () {
       const { revokeObjectURL } = installUrlBoundary();
       const cause = new Error("Anchor cleanup failed.");
@@ -148,7 +152,7 @@ describe("browser file download", () => {
     })
   );
 
-  it.live("reports object URL cleanup failures", () =>
+  it.effect("reports object URL cleanup failures", () =>
     Effect.gen(function* () {
       const { revokeObjectURL } = installUrlBoundary();
       const cause = new Error("Object URL cleanup failed.");

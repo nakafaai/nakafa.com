@@ -26,7 +26,7 @@ afterEach(() => {
 });
 
 describe("code highlighting", () => {
-  it.live("uses Nakafa's defaults and preserves Shiki line boundaries", () =>
+  it.effect("uses Nakafa's defaults and preserves Shiki line boundaries", () =>
     Effect.gen(function* () {
       codeToHtmlMock.mockResolvedValue(
         '<span class="line">one</span><span class="line">two</span>'
@@ -50,7 +50,7 @@ describe("code highlighting", () => {
     })
   );
 
-  it.live("forwards an explicit supported language and theme pair", () =>
+  it.effect("forwards an explicit supported language and theme pair", () =>
     Effect.gen(function* () {
       codeToHtmlMock.mockResolvedValue("<pre>const answer = 42;</pre>");
       const themes = {
@@ -71,7 +71,7 @@ describe("code highlighting", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "applies a pre class and removes Shiki's inline background on request",
     () =>
       Effect.gen(function* () {
@@ -91,7 +91,7 @@ describe("code highlighting", () => {
       })
   );
 
-  it.live("rejects unsupported languages before invoking Shiki", () =>
+  it.effect("rejects unsupported languages before invoking Shiki", () =>
     Effect.gen(function* () {
       const error = yield* highlightCode({
         code: "example",
@@ -109,7 +109,7 @@ describe("code highlighting", () => {
     })
   );
 
-  it.live("maps Shiki rendering failures into the typed error channel", () =>
+  it.effect("maps Shiki rendering failures into the typed error channel", () =>
     Effect.gen(function* () {
       const cause = new Error("Shiki failed to load its grammar.");
       codeToHtmlMock.mockRejectedValue(cause);

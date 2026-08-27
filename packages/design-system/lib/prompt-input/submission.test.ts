@@ -18,7 +18,7 @@ function createPromptFile(): PromptInputFile {
 }
 
 describe("prompt input submission", () => {
-  it.live("submits synchronously and applies success state", () =>
+  it.effect("submits synchronously and applies success state", () =>
     Effect.gen(function* () {
       const onSubmit = vi.fn();
       const onSuccess = vi.fn();
@@ -49,7 +49,7 @@ describe("prompt input submission", () => {
     })
   );
 
-  it.live("awaits asynchronous consumers before applying success state", () =>
+  it.effect("awaits asynchronous consumers before applying success state", () =>
     Effect.gen(function* () {
       const order: string[] = [];
 
@@ -70,7 +70,7 @@ describe("prompt input submission", () => {
     })
   );
 
-  it.live("types synchronous consumer failures", () =>
+  it.effect("types synchronous consumer failures", () =>
     Effect.gen(function* () {
       const cause = new Error("Submit failed immediately.");
       const onSuccess = vi.fn();
@@ -90,7 +90,7 @@ describe("prompt input submission", () => {
     })
   );
 
-  it.live("types asynchronous consumer failures", () =>
+  it.effect("types asynchronous consumer failures", () =>
     Effect.gen(function* () {
       const cause = new Error("Submit promise rejected.");
       const onSuccess = vi.fn();
@@ -108,7 +108,7 @@ describe("prompt input submission", () => {
     })
   );
 
-  it.live("types success-state failures after a successful submit", () =>
+  it.effect("types success-state failures after a successful submit", () =>
     Effect.gen(function* () {
       const cause = new Error("Completion state failed.");
       const error = yield* submitPromptInput({

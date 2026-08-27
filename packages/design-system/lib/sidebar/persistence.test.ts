@@ -14,28 +14,30 @@ afterEach(() => {
 });
 
 describe("sidebar state persistence", () => {
-  it.live("serializes the exact state cookie through its writer service", () =>
-    Effect.gen(function* () {
-      let persistedCookie = "";
-      const recordingWriter = Layer.succeed(SidebarCookieWriter, {
-        write: (cookie) =>
-          Effect.sync(() => {
-            persistedCookie = cookie;
-          }),
-      });
+  it.effect(
+    "serializes the exact state cookie through its writer service",
+    () =>
+      Effect.gen(function* () {
+        let persistedCookie = "";
+        const recordingWriter = Layer.succeed(SidebarCookieWriter, {
+          write: (cookie) =>
+            Effect.sync(() => {
+              persistedCookie = cookie;
+            }),
+        });
 
-      yield* persistSidebarState({
-        cookieName: TEST_COOKIE_NAME,
-        open: true,
-      }).pipe(Effect.provide(recordingWriter));
+        yield* persistSidebarState({
+          cookieName: TEST_COOKIE_NAME,
+          open: true,
+        }).pipe(Effect.provide(recordingWriter));
 
-      expect(persistedCookie).toBe(
-        `${TEST_COOKIE_NAME}=true; path=/; max-age=604800`
-      );
-    })
+        expect(persistedCookie).toBe(
+          `${TEST_COOKIE_NAME}=true; path=/; max-age=604800`
+        );
+      })
   );
 
-  it.live("writes sidebar state through the browser layer", () =>
+  it.effect("writes sidebar state through the browser layer", () =>
     Effect.gen(function* () {
       yield* persistSidebarState({
         cookieName: TEST_COOKIE_NAME,
@@ -46,7 +48,7 @@ describe("sidebar state persistence", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "exposes browser write failures through the typed error channel",
     () =>
       Effect.gen(function* () {
