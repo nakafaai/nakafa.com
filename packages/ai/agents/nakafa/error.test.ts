@@ -1,12 +1,12 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   makeNakafaGenerationError,
   NakafaGenerationError,
 } from "@repo/ai/agents/nakafa/error";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 describe("Nakafa generation error", () => {
-  it.live(
+  it.effect(
     "maps unknown provider failures into the capability error channel",
     () =>
       Effect.gen(function* () {

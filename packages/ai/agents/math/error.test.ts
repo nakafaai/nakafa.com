@@ -1,12 +1,12 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   MathGenerationError,
   makeMathGenerationError,
 } from "@repo/ai/agents/math/error";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 describe("math generation error", () => {
-  it.live(
+  it.effect(
     "maps unknown provider failures into the capability error channel",
     () =>
       Effect.gen(function* () {

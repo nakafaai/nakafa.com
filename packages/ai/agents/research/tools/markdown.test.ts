@@ -1,5 +1,5 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { fetchSourceMarkdown } from "@repo/ai/agents/research/tools/markdown";
-import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import { vi } from "vitest";
 
@@ -8,7 +8,7 @@ describe("source markdown fetcher", () => {
     vi.unstubAllGlobals();
   });
 
-  it.live(
+  it.effect(
     "reads markdown from the original URL when it is already markdown",
     () =>
       Effect.gen(function* () {
@@ -29,7 +29,7 @@ describe("source markdown fetcher", () => {
       })
   );
 
-  it.live("uses the adjacent markdown URL when the page shell is HTML", () =>
+  it.effect("uses the adjacent markdown URL when the page shell is HTML", () =>
     Effect.gen(function* () {
       vi.stubGlobal(
         "fetch",
@@ -56,34 +56,36 @@ describe("source markdown fetcher", () => {
     })
   );
 
-  it.live("rejects markdown-looking HTML before using adjacent markdown", () =>
-    Effect.gen(function* () {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn((input: Parameters<typeof fetch>[0]) => {
-          if (String(input) === "https://example.com/docs/devtools.md") {
+  it.effect(
+    "rejects markdown-looking HTML before using adjacent markdown",
+    () =>
+      Effect.gen(function* () {
+        vi.stubGlobal(
+          "fetch",
+          vi.fn((input: Parameters<typeof fetch>[0]) => {
+            if (String(input) === "https://example.com/docs/devtools.md") {
+              return Promise.resolve(
+                new Response("# DevTools\n\n- Input parameters and prompts", {
+                  headers: { "content-type": "text/markdown" },
+                })
+              );
+            }
+
             return Promise.resolve(
-              new Response("# DevTools\n\n- Input parameters and prompts", {
-                headers: { "content-type": "text/markdown" },
+              new Response("# DevTools\n\n- Navigation item", {
+                headers: { "content-type": "text/html" },
               })
             );
-          }
+          })
+        );
 
-          return Promise.resolve(
-            new Response("# DevTools\n\n- Navigation item", {
-              headers: { "content-type": "text/html" },
-            })
-          );
-        })
-      );
-
-      expect(
-        yield* fetchSourceMarkdown("https://example.com/docs/devtools")
-      ).toBe("# DevTools\n\n- Input parameters and prompts");
-    })
+        expect(
+          yield* fetchSourceMarkdown("https://example.com/docs/devtools")
+        ).toBe("# DevTools\n\n- Input parameters and prompts");
+      })
   );
 
-  it.live("supports trailing slash docs pages with adjacent markdown", () =>
+  it.effect("supports trailing slash docs pages with adjacent markdown", () =>
     Effect.gen(function* () {
       vi.stubGlobal(
         "fetch",
@@ -106,26 +108,28 @@ describe("source markdown fetcher", () => {
     })
   );
 
-  it.live("returns empty when root pages do not expose readable markdown", () =>
-    Effect.gen(function* () {
-      vi.stubGlobal(
-        "fetch",
-        vi.fn(() =>
-          Promise.resolve(
-            new Response("<body>home</body>", {
-              headers: { "content-type": "text/html" },
-            })
+  it.effect(
+    "returns empty when root pages do not expose readable markdown",
+    () =>
+      Effect.gen(function* () {
+        vi.stubGlobal(
+          "fetch",
+          vi.fn(() =>
+            Promise.resolve(
+              new Response("<body>home</body>", {
+                headers: { "content-type": "text/html" },
+              })
+            )
           )
-        )
-      );
+        );
 
-      expect(
-        yield* fetchSourceMarkdown("https://example.com/")
-      ).toBeUndefined();
-    })
+        expect(
+          yield* fetchSourceMarkdown("https://example.com/")
+        ).toBeUndefined();
+      })
   );
 
-  it.live(
+  it.effect(
     "accepts markdown-looking content from unknown text-compatible responses",
     () =>
       Effect.gen(function* () {
@@ -146,7 +150,7 @@ describe("source markdown fetcher", () => {
       })
   );
 
-  it.live("accepts markdown-looking content without a content type", () =>
+  it.effect("accepts markdown-looking content without a content type", () =>
     Effect.gen(function* () {
       vi.stubGlobal(
         "fetch",
@@ -163,7 +167,7 @@ describe("source markdown fetcher", () => {
     })
   );
 
-  it.live("rejects unknown responses that do not look like markdown", () =>
+  it.effect("rejects unknown responses that do not look like markdown", () =>
     Effect.gen(function* () {
       vi.stubGlobal(
         "fetch",
@@ -182,7 +186,7 @@ describe("source markdown fetcher", () => {
     })
   );
 
-  it.live("returns empty when source fetches fail", () =>
+  it.effect("returns empty when source fetches fail", () =>
     Effect.gen(function* () {
       vi.stubGlobal(
         "fetch",
@@ -195,7 +199,7 @@ describe("source markdown fetcher", () => {
     })
   );
 
-  it.live("returns empty when response bodies cannot be read", () =>
+  it.effect("returns empty when response bodies cannot be read", () =>
     Effect.gen(function* () {
       const stream = new ReadableStream({
         start(controller) {

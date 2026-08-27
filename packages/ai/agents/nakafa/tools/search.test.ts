@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { NakafaSearch } from "@repo/ai/agents/nakafa/search";
 import { search } from "@repo/ai/agents/nakafa/tools/search";
 import {
@@ -9,7 +10,6 @@ import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import type { NakafaAgentSection } from "@repo/contents/_lib/agent/schema/ref";
 import { NakafaAgentSearchResultSchema } from "@repo/contents/_lib/agent/schema/search";
 import type { Locale } from "@repo/contents/_types/content";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, Schema } from "effect";
 
 /** Extracts Nakafa search data parts from a recorded test writer stream. */
@@ -64,7 +64,7 @@ function searchItem({
 }
 
 describe("nakafa search tool", () => {
-  it.live("writes loading and done parts for search results", () =>
+  it.effect("writes loading and done parts for search results", () =>
     Effect.gen(function* () {
       const { parts, writer } = createWriter();
       const output = yield* search({
@@ -121,7 +121,7 @@ describe("nakafa search tool", () => {
     })
   );
 
-  it.live("writes an error part when Convex-backed search fails", () =>
+  it.effect("writes an error part when Convex-backed search fails", () =>
     Effect.gen(function* () {
       const { parts, writer } = createWriter();
       const output = yield* search({
@@ -157,7 +157,7 @@ describe("nakafa search tool", () => {
     })
   );
 
-  it.live("formats empty search results without a next offset", () =>
+  it.effect("formats empty search results without a next offset", () =>
     Effect.gen(function* () {
       const { writer } = createWriter();
       const output = yield* search({
@@ -190,7 +190,7 @@ describe("nakafa search tool", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "formats unscoped search results when no query text is provided",
     () =>
       Effect.gen(function* () {
@@ -242,7 +242,7 @@ describe("nakafa search tool", () => {
       })
   );
 
-  it.live("uses the server locale instead of the model-provided locale", () =>
+  it.effect("uses the server locale instead of the model-provided locale", () =>
     Effect.gen(function* () {
       const { parts, writer } = createWriter();
       const output = yield* search({
@@ -297,7 +297,7 @@ describe("nakafa search tool", () => {
     })
   );
 
-  it.live("preserves model-selected section filters", () =>
+  it.effect("preserves model-selected section filters", () =>
     Effect.gen(function* () {
       const { parts, writer } = createWriter();
       const output = yield* search({
@@ -346,7 +346,7 @@ describe("nakafa search tool", () => {
     })
   );
 
-  it.live("preserves alternate query variants for one section", () =>
+  it.effect("preserves alternate query variants for one section", () =>
     Effect.gen(function* () {
       const { parts, writer } = createWriter();
       const capturedQueries: string[][] = [];
@@ -408,7 +408,7 @@ describe("nakafa search tool", () => {
     })
   );
 
-  it.live("executes the model-provided try-out query unchanged", () =>
+  it.effect("executes the model-provided try-out query unchanged", () =>
     Effect.gen(function* () {
       const { parts, writer } = createWriter();
       const capturedQueries: string[][] = [];

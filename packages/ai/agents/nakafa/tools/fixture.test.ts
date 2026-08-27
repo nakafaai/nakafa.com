@@ -1,3 +1,4 @@
+import { it as effectIt } from "@effect/vitest";
 import { makeQuranFixture } from "@repo/ai/agents/nakafa/tools/fixture";
 import { createNakafaTestService } from "@repo/ai/agents/nakafa/tools/test";
 import { Effect, Option } from "effect";
@@ -33,22 +34,24 @@ describe("Nakafa Quran AI fixtures", () => {
     }
   );
 
-  it("exposes one canonical source-grounded service", async () => {
-    const service = createNakafaTestService();
-    const [reference, interpreted, missing, invalid] = await Effect.runPromise(
-      Effect.all([
+  effectIt.effect("exposes one canonical source-grounded service", () =>
+    Effect.gen(function* () {
+      const service = createNakafaTestService();
+      const [reference, interpreted, missing, invalid] = yield* Effect.all([
         service.quran({ locale: "de", surah: 1 }),
         service.quran({ include_tafsir: true, locale: "id", surah: 1 }),
         service.quran({ from_verse: 999, locale: "en", surah: 1 }),
         Effect.result(service.quran({ locale: "en", surah: 999 })),
-      ])
-    );
+      ]);
 
-    expect(Option.getOrUndefined(reference)?.sources.translation.id).toBe(
-      "quranenc-german"
-    );
-    expect(Option.getOrUndefined(interpreted)?.verses[0]?.tafsir).toBeTruthy();
-    expect(Option.isNone(missing)).toBe(true);
-    expect(invalid._tag).toBe("Failure");
-  });
+      expect(Option.getOrUndefined(reference)?.sources.translation.id).toBe(
+        "quranenc-german"
+      );
+      expect(
+        Option.getOrUndefined(interpreted)?.verses[0]?.tafsir
+      ).toBeTruthy();
+      expect(Option.isNone(missing)).toBe(true);
+      expect(invalid._tag).toBe("Failure");
+    })
+  );
 });
