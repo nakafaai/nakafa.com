@@ -1,10 +1,11 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { canonicalizeArticleProjection } from "@nakafa/aksara-contracts/projection/article";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import {
   getPublishedArticleRoute,
   readPublishedArticleRoute,
@@ -63,86 +64,92 @@ beforeEach(() => {
 });
 
 describe("published article route", () => {
-  it.each([
+  it.effect.each([
     testArticleProjection,
     testArticleIdProjection,
     testArticleDeProjection,
   ])(
     "decodes one complete $appLocale route and reciprocal locale set",
-    async (projection) => {
-      runtimeQueryMock.mockResolvedValueOnce(
-        foundModel({
-          projectionJson: canonicalizeArticleProjection(projection),
-        })
-      );
+    (projection) =>
+      Effect.gen(function* () {
+        runtimeQueryMock.mockResolvedValueOnce(
+          foundModel({
+            projectionJson: canonicalizeArticleProjection(projection),
+          })
+        );
 
-      await expect(
-        getPublishedArticleRoute(projection.appLocale, projection.publicPath)
-      ).resolves.toEqual({
-        activeReleaseId,
-        alternates: [
-          testArticleProjection,
-          testArticleIdProjection,
-          testArticleDeProjection,
-        ],
-        projection,
-      });
-      expect(cacheMock).toHaveBeenCalledWith("article");
-    }
+        const route = yield* Effect.tryPromise(() =>
+          getPublishedArticleRoute(projection.appLocale, projection.publicPath)
+        );
+        expect(route).toEqual({
+          activeReleaseId,
+          alternates: [
+            testArticleProjection,
+            testArticleIdProjection,
+            testArticleDeProjection,
+          ],
+          projection,
+        });
+        expect(cacheMock).toHaveBeenCalledWith("article");
+      })
   );
 
-  it("pins a route read to the expected active release", async () => {
-    runtimeQueryMock.mockResolvedValueOnce(foundModel());
+  it.effect("pins a route read to the expected active release", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValueOnce(foundModel());
 
-    await expect(
-      getPublishedArticleRoute(
-        "en",
-        testArticleProjection.publicPath,
-        activeReleaseId
-      )
-    ).resolves.toMatchObject({ activeReleaseId });
-    expect(runtimeQueryMock).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ expectedActiveReleaseId: activeReleaseId })
-    );
-  });
-
-  it("preserves an active release mismatch for pinned callers", async () => {
-    const expectedReleaseId = ReleaseIdSchema.make("release-previous");
-    runtimeQueryMock.mockResolvedValueOnce(foundModel());
-
-    await expect(
-      Effect.runPromise(
-        readPublishedArticleRoute(
+      const route = yield* Effect.tryPromise(() =>
+        getPublishedArticleRoute(
           "en",
           testArticleProjection.publicPath,
-          expectedReleaseId
-        ).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({
-      _tag: "PublishedReleaseMismatchError",
-      actualReleaseId: activeReleaseId,
-      expectedReleaseId,
-    });
-  });
+          activeReleaseId
+        )
+      );
+      expect(route).toMatchObject({ activeReleaseId });
+      expect(runtimeQueryMock).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ expectedActiveReleaseId: activeReleaseId })
+      );
+    })
+  );
 
-  it("preserves a signed missing-route tombstone", async () => {
-    runtimeQueryMock.mockResolvedValueOnce(
-      foundModel({ alternateJson: [], projectionJson: null })
-    );
+  it.effect("preserves an active release mismatch for pinned callers", () =>
+    Effect.gen(function* () {
+      const expectedReleaseId = ReleaseIdSchema.make("release-previous");
+      runtimeQueryMock.mockResolvedValueOnce(foundModel());
 
-    await expect(
-      Effect.runPromise(
-        readPublishedArticleRoute("en", testArticleProjection.publicPath)
-      )
-    ).resolves.toEqual({
-      activeReleaseId,
-      alternates: [],
-      projection: null,
-    });
-  });
+      const error = yield* readPublishedArticleRoute(
+        "en",
+        testArticleProjection.publicPath,
+        expectedReleaseId
+      ).pipe(Effect.flip);
+      expect(error).toMatchObject({
+        _tag: "PublishedReleaseMismatchError",
+        actualReleaseId: activeReleaseId,
+        expectedReleaseId,
+      });
+    })
+  );
 
-  it.each([
+  it.effect("preserves a signed missing-route tombstone", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValueOnce(
+        foundModel({ alternateJson: [], projectionJson: null })
+      );
+
+      const route = yield* readPublishedArticleRoute(
+        "en",
+        testArticleProjection.publicPath
+      );
+      expect(route).toEqual({
+        activeReleaseId,
+        alternates: [],
+        projection: null,
+      });
+    })
+  );
+
+  it.effect.each([
     ["active locales", foundModel({ activeAppLocales: ["id", "en", "de"] })],
     ["missing release", foundModel({ activeReleaseId: null })],
     [
@@ -179,15 +186,15 @@ describe("published article route", () => {
     ],
     ["projection JSON", foundModel({ projectionJson: "{}" })],
     ["alternate JSON", foundModel({ alternateJson: ["{}"] })],
-  ])("rejects an invalid %s", async (_label, result) => {
-    runtimeQueryMock.mockResolvedValueOnce(result);
+  ])("rejects an invalid %s", ([, result]) =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValueOnce(result);
 
-    await expect(
-      Effect.runPromise(
-        readPublishedArticleRoute("en", testArticleProjection.publicPath).pipe(
-          Effect.flip
-        )
-      )
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-  });
+      const error = yield* readPublishedArticleRoute(
+        "en",
+        testArticleProjection.publicPath
+      ).pipe(Effect.flip);
+      expect(error).toMatchObject({ _tag: "PublishedProjectionError" });
+    })
+  );
 });

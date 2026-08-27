@@ -1,9 +1,9 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { canonicalizeArticleProjection } from "@nakafa/aksara-contracts/projection/article";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 import {
   decodeArticleJson,
   isArticleCounterpart,
@@ -21,28 +21,32 @@ const identity = {
 };
 
 describe("published article decoding", () => {
-  it("decodes one canonical article projection", async () => {
-    await expect(
-      Effect.runPromise(
-        decodeArticleJson(
-          canonicalizeArticleProjection(testArticleProjection),
-          identity
-        )
-      )
-    ).resolves.toEqual(testArticleProjection);
-  });
+  it.effect("decodes one canonical article projection", () =>
+    Effect.gen(function* () {
+      const projection = yield* decodeArticleJson(
+        canonicalizeArticleProjection(testArticleProjection),
+        identity
+      );
 
-  it.each([
+      expect(projection).toEqual(testArticleProjection);
+    })
+  );
+
+  it.effect.each([
     ["invalid JSON", "{"],
     ["invalid projection", "{}"],
-  ])("preserves %s in the typed error channel", async (_label, source) => {
-    await expect(
-      Effect.runPromise(decodeArticleJson(source, identity).pipe(Effect.flip))
-    ).resolves.toMatchObject({
-      _tag: "PublishedProjectionError",
-      ...identity,
-    });
-  });
+  ])("preserves %s in the typed error channel", ([, source]) =>
+    Effect.gen(function* () {
+      const error = yield* decodeArticleJson(source, identity).pipe(
+        Effect.flip
+      );
+
+      expect(error).toMatchObject({
+        _tag: "PublishedProjectionError",
+        ...identity,
+      });
+    })
+  );
 
   it("compares stable locale counterparts", () => {
     expect(
@@ -56,43 +60,38 @@ describe("published article decoding", () => {
     ).toBe(false);
   });
 
-  it("accepts only identical projections from one active release", async () => {
-    const activeReleaseId = ReleaseIdSchema.make("release-active");
-    const catalog = { activeReleaseId, projection: testArticleProjection };
+  it.effect("accepts only identical projections from one active release", () =>
+    Effect.gen(function* () {
+      const activeReleaseId = ReleaseIdSchema.make("release-active");
+      const catalog = { activeReleaseId, projection: testArticleProjection };
 
-    await expect(
-      Effect.runPromise(verifyArticlePublication(catalog, catalog))
-    ).resolves.toBeUndefined();
+      const verified = yield* verifyArticlePublication(catalog, catalog);
+      expect(verified).toBeUndefined();
 
-    await expect(
-      Effect.runPromise(
-        verifyArticlePublication(catalog, {
-          activeReleaseId: ReleaseIdSchema.make("release-next"),
-          projection: testArticleProjection,
-        }).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({
-      _tag: "PublishedReleaseMismatchError",
-      actualReleaseId: "release-next",
-      expectedReleaseId: activeReleaseId,
-    });
+      const releaseError = yield* verifyArticlePublication(catalog, {
+        activeReleaseId: ReleaseIdSchema.make("release-next"),
+        projection: testArticleProjection,
+      }).pipe(Effect.flip);
+      expect(releaseError).toMatchObject({
+        _tag: "PublishedReleaseMismatchError",
+        actualReleaseId: "release-next",
+        expectedReleaseId: activeReleaseId,
+      });
 
-    await expect(
-      Effect.runPromise(
-        verifyArticlePublication(catalog, {
-          activeReleaseId,
-          projection: {
-            ...testArticleProjection,
-            metadata: {
-              ...testArticleProjection.metadata,
-              title: "Different title",
-            },
+      const projectionError = yield* verifyArticlePublication(catalog, {
+        activeReleaseId,
+        projection: {
+          ...testArticleProjection,
+          metadata: {
+            ...testArticleProjection.metadata,
+            title: "Different title",
           },
-        }).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({
-      _tag: "PublishedProjectionError",
-      ...identity,
-    });
-  });
+        },
+      }).pipe(Effect.flip);
+      expect(projectionError).toMatchObject({
+        _tag: "PublishedProjectionError",
+        ...identity,
+      });
+    })
+  );
 });
