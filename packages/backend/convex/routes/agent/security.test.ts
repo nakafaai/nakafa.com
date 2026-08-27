@@ -1,8 +1,8 @@
 // @vitest-environment node
 
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import { hasValidEdgeSecret } from "@repo/backend/convex/routes/agent/security";
-import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect, Result } from "effect";
 import { vi } from "vitest";
 
