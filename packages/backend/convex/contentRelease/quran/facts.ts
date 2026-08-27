@@ -22,6 +22,11 @@ export function quranSearchIdentity(
   return `search:${appLocale}:${surahNumber}`;
 }
 
+/** Derives the canonical identity for one immutable Quran chunk row. */
+export function quranChunkIdentity(surahNumber: number, firstVerse: number) {
+  return `chunk:${surahNumber}:${firstVerse}`;
+}
+
 /** Derives the immutable indexed facts stored beside one signed Quran row. */
 export function quranRowFacts(record: QuranSnapshotRow): QuranRowFacts {
   const { payload } = record;
@@ -41,7 +46,7 @@ export function quranRowFacts(record: QuranSnapshotRow): QuranRowFacts {
   if (payload.kind === "quran-chunk") {
     return {
       firstVerse: payload.firstVerse,
-      identity: `chunk:${payload.surahNumber}:${payload.firstVerse}`,
+      identity: quranChunkIdentity(payload.surahNumber, payload.firstVerse),
       kind: payload.kind,
       surahNumber: payload.surahNumber,
     };

@@ -1,6 +1,12 @@
 import { QuranSearchRowSchema } from "@nakafa/aksara-contracts/quran/snapshot/row";
+import { separateQuranRuntimeBismillah } from "@repo/backend/content/quran/bismillah";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import {
+  quranBismillahValidator,
+  readQuranBismillah,
+  verifyQuranBismillah,
+} from "@repo/backend/convex/contentRelease/quran/bismillah";
 import { readQuranChunks } from "@repo/backend/convex/contentRelease/quran/chunks";
 import { quranSearchIdentity } from "@repo/backend/convex/contentRelease/quran/facts";
 import { validateQuranReference } from "@repo/backend/convex/contentRelease/quran/input";
@@ -8,9 +14,33 @@ import { QURAN_PAGE_VERSE_LIMIT } from "@repo/backend/convex/contentRelease/qura
 import { loadQuranOwner } from "@repo/backend/convex/contentRelease/quran/owner";
 import { readQuranRow } from "@repo/backend/convex/contentRelease/quran/row";
 import { readQuranLocaleSources } from "@repo/backend/convex/contentRelease/quran/sources";
-import type { QuranReferenceArgs } from "@repo/backend/convex/contentRelease/quran/spec";
+import {
+  type QuranReferenceArgs,
+  quranReadingSourcesValidator,
+  quranSourceFields,
+  quranTafsirAccessValidator,
+} from "@repo/backend/convex/contentRelease/quran/spec";
 import { readQuranSurahRow } from "@repo/backend/convex/contentRelease/quran/surah";
+import { v } from "convex/values";
 import { Effect } from "effect";
+
+/** Existing bounded reference wire contract retained during expansion. */
+export const quranReferenceValidator = v.object({
+  ...quranSourceFields,
+  chunkJson: v.array(v.string()),
+  fromVerse: v.number(),
+  searchJson: v.union(v.string(), v.null()),
+  sources: v.union(quranReadingSourcesValidator, v.null()),
+  surahJson: v.union(v.string(), v.null()),
+  tafsirAccess: v.union(quranTafsirAccessValidator, v.null()),
+  toVerse: v.number(),
+});
+
+/** Bismillah-aware bounded passage introduced before consumers switch. */
+export const quranPassageValidator = v.object({
+  ...quranReferenceValidator.fields,
+  preBismillah: v.union(quranBismillahValidator, v.null()),
+});
 
 type QuranReferenceSourceRequest = Omit<QuranReferenceArgs, "appLocale"> & {
   readonly expectedSnapshotId: null | string;
@@ -153,3 +183,72 @@ export const readQuranReference = Effect.fn(
     toVerse: loaded.input.toVerse,
   };
 });
+
+/** Returns a Bismillah-aware Quran passage without changing prior contracts. */
+export const readQuranPassage = Effect.fn("contentRelease.readQuranPassage")(
+  function* (ctx: QueryCtx, request: QuranReferenceArgs) {
+    const loaded = yield* loadQuranPassage(ctx, {
+      expectedSnapshotId: null,
+      fromVerse: request.fromVerse,
+      surahNumber: request.surahNumber,
+      toVerse: request.toVerse,
+    });
+    if (loaded.passage === null || loaded.owner.snapshotId === null) {
+      return {
+        ...loaded.owner,
+        chunkJson: [],
+        fromVerse: loaded.input.fromVerse,
+        preBismillah: null,
+        searchJson: null,
+        sources: null,
+        surahJson: null,
+        tafsirAccess: null,
+        toVerse: loaded.input.toVerse,
+      };
+    }
+    const { bismillah, localeSources, search } = yield* Effect.all(
+      {
+        bismillah: readQuranBismillah(
+          ctx,
+          loaded.owner.snapshotId,
+          request.appLocale,
+          loaded.input.surahNumber,
+          loaded.input.fromVerse
+        ),
+        localeSources: readQuranLocaleSources(
+          ctx,
+          loaded.owner.snapshotId,
+          request.appLocale
+        ),
+        search: readQuranRow(
+          ctx,
+          loaded.owner.snapshotId,
+          quranSearchIdentity(request.appLocale, loaded.input.surahNumber),
+          QuranSearchRowSchema
+        ),
+      },
+      { concurrency: "unbounded" }
+    );
+    const selectedVerses = loaded.passage.chunks.rows
+      .flatMap((chunk) => chunk.verses)
+      .filter(
+        (verse) =>
+          verse.number.inSurah >= loaded.input.fromVerse &&
+          verse.number.inSurah <= loaded.input.toVerse
+      );
+    const projected = separateQuranRuntimeBismillah(bismillah, selectedVerses);
+    yield* verifyQuranBismillah(bismillah, projected.preBismillah);
+
+    return {
+      ...loaded.owner,
+      chunkJson: loaded.passage.chunks.rowJson,
+      fromVerse: loaded.input.fromVerse,
+      preBismillah: projected.preBismillah,
+      searchJson: search.rowJson,
+      sources: localeSources.sources,
+      surahJson: loaded.passage.surah.rowJson,
+      tafsirAccess: localeSources.tafsirAccess,
+      toVerse: loaded.input.toVerse,
+    };
+  }
+);
