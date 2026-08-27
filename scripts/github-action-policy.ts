@@ -32,7 +32,7 @@ export const GITHUB_ACTION_REVIEWS: readonly GithubActionReview[] = [
     action: "actions/checkout",
     approvedSha: "3d3c42e5aac5ba805825da76410c181273ba90b1",
     expectedTag: "v7.0.1",
-    expectedUsages: 5,
+    expectedUsages: 6,
     reason: "Checkout is pinned to the latest reviewed stable release.",
   },
   {
@@ -40,7 +40,7 @@ export const GITHUB_ACTION_REVIEWS: readonly GithubActionReview[] = [
     approvedSha: "84cb39b217b10273981911c288cd62326dc7c6d2",
     expectedInputs: { cache: "true", install: "false" },
     expectedTag: "v2.0.2",
-    expectedUsages: 5,
+    expectedUsages: 6,
     reason:
       "The signed successor action owns Node, pnpm, and dependency caching.",
   },
