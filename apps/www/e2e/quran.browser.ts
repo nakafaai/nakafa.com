@@ -184,6 +184,20 @@ const verifyQuranLocaleCoverage = Effect.fn(
       ).toBe(true)
     );
   }
+  const interpretationActions = page.locator(
+    "[data-quran-interpretation-verse], [data-quran-interpretation-link]"
+  );
+  const interpretationNames = yield* Effect.promise(() =>
+    interpretationActions.evaluateAll((elements) =>
+      elements.map((element) => element.getAttribute("aria-label"))
+    )
+  );
+  yield* Effect.sync(() => {
+    expect(interpretationNames.every((name) => name?.includes(": "))).toBe(
+      true
+    );
+    expect(new Set(interpretationNames).size).toBe(interpretationNames.length);
+  });
 
   const translationNotes = page.locator(
     `aside[aria-label^="${contract.translationNotesLabel}: "]`

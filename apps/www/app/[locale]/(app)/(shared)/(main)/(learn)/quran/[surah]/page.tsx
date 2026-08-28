@@ -263,9 +263,9 @@ async function CachedSurahShell({
               >
                 <QuranVerseList
                   items={verseItems}
-                  renderAction={(verse) => (
+                  renderAction={(verse, verseLabel) => (
                     <QuranInterpretationButton
-                      label={interpretationLabel}
+                      label={`${interpretationLabel}: ${verseLabel}`}
                       verseNumber={verse.number.inSurah}
                     />
                   )}
@@ -275,10 +275,10 @@ async function CachedSurahShell({
             ) : (
               <QuranVerseList
                 items={verseItems}
-                renderAction={() => (
+                renderAction={(_verse, verseLabel) => (
                   <QuranInterpretationLink
                     href={tafsirAccess.source.sourceUrl}
-                    label={interpretationLabel}
+                    label={`${interpretationLabel}: ${verseLabel}`}
                   />
                 )}
                 translationNotesLabel={translationNotesLabel}
