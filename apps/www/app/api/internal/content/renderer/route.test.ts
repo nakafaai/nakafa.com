@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   PreviewRendererNonceSchema,
   PreviewRendererResponseSchema,
@@ -9,7 +10,7 @@ import {
 import { RENDERER_DOMAINS } from "@nakafa/aksara-contracts/renderer/domain";
 import { Effect, Schema } from "effect";
 import { NextRequest } from "next/server";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const nonce = PreviewRendererNonceSchema.make("n".repeat(43));
 const secret = PreviewRendererSecretSchema.make("s".repeat(43));
@@ -68,84 +69,113 @@ function stubRendererEnvironment() {
 }
 
 describe("renderer manifest route", () => {
-  it("rejects missing, malformed, and invalid bearer tokens", async () => {
-    const { GET } = await import("@/app/api/internal/content/renderer/route");
+  it.effect("rejects missing, malformed, and invalid bearer tokens", () =>
+    Effect.gen(function* () {
+      const { GET } = yield* Effect.promise(
+        () => import("@/app/api/internal/content/renderer/route")
+      );
+      const responses = yield* Effect.all(
+        [
+          Effect.promise(() => GET(createRequest())),
+          Effect.promise(() =>
+            GET(createRequest({ authorization: "Basic test-key" }))
+          ),
+          Effect.promise(() =>
+            GET(createRequest({ authorization: "Bearer wrong-key" }))
+          ),
+        ],
+        { concurrency: "unbounded" }
+      );
 
-    const responses = await Promise.all([
-      GET(createRequest()),
-      GET(createRequest({ authorization: "Basic test-key" })),
-      GET(createRequest({ authorization: "Bearer wrong-key" })),
-    ]);
+      for (const response of responses) {
+        expect(response.status).toBe(401);
+        expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+      }
+    })
+  );
 
-    for (const response of responses) {
-      expect(response.status).toBe(401);
+  it.effect("returns the exact private no-store envelope", () =>
+    Effect.gen(function* () {
+      const { GET } = yield* Effect.promise(
+        () => import("@/app/api/internal/content/renderer/route")
+      );
+      const response = yield* Effect.promise(() =>
+        GET(createRequest({ authorization: "Bearer test-key" }))
+      );
+
+      expect(response.status).toBe(200);
       expect(response.headers.get("Cache-Control")).toBe("private, no-store");
-    }
-  });
+      expect(yield* Effect.promise(() => response.json())).toEqual(manifest);
+    })
+  );
 
-  it("returns the exact private no-store envelope", async () => {
-    const { GET } = await import("@/app/api/internal/content/renderer/route");
-    const response = await GET(
-      createRequest({ authorization: "Bearer test-key" })
-    );
+  it.effect("requires both local renderer credentials and a valid nonce", () =>
+    Effect.gen(function* () {
+      stubRendererEnvironment();
+      const { GET } = yield* Effect.promise(
+        () => import("@/app/api/internal/content/renderer/route")
+      );
+      const responses = yield* Effect.all(
+        [
+          Effect.promise(() =>
+            GET(
+              createRequest({
+                authorization: "Bearer renderer-token",
+              })
+            )
+          ),
+          Effect.promise(() =>
+            GET(
+              createRequest({
+                authorization: "Bearer renderer-token",
+                nonce: "invalid",
+              })
+            )
+          ),
+          Effect.promise(() =>
+            GET(
+              createRequest({
+                authorization: "Bearer wrong-token",
+                nonce,
+              })
+            )
+          ),
+        ],
+        { concurrency: "unbounded" }
+      );
 
-    expect(response.status).toBe(200);
-    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
-    await expect(response.json()).resolves.toEqual(manifest);
-  });
+      expect(responses.map(({ status }) => status)).toEqual([401, 401, 401]);
+    })
+  );
 
-  it("requires both local renderer credentials and a valid nonce", async () => {
-    stubRendererEnvironment();
-    const { GET } = await import("@/app/api/internal/content/renderer/route");
+  it.effect("returns a challenge-bound local renderer proof", () =>
+    Effect.gen(function* () {
+      stubRendererEnvironment();
+      const { GET } = yield* Effect.promise(
+        () => import("@/app/api/internal/content/renderer/route")
+      );
+      const response = yield* Effect.promise(() =>
+        GET(
+          createRequest({
+            authorization: "Bearer renderer-token",
+            nonce,
+          })
+        )
+      );
+      const responseBody = yield* Effect.promise(() => response.json());
+      const body = yield* Schema.decodeUnknownEffect(
+        PreviewRendererResponseSchema
+      )(responseBody);
 
-    const responses = await Promise.all([
-      GET(
-        createRequest({
-          authorization: "Bearer renderer-token",
-        })
-      ),
-      GET(
-        createRequest({
-          authorization: "Bearer renderer-token",
-          nonce: "invalid",
-        })
-      ),
-      GET(
-        createRequest({
-          authorization: "Bearer wrong-token",
-          nonce,
-        })
-      ),
-    ]);
-
-    expect(responses.map(({ status }) => status)).toEqual([401, 401, 401]);
-  });
-
-  it("returns a challenge-bound local renderer proof", async () => {
-    stubRendererEnvironment();
-    const { GET } = await import("@/app/api/internal/content/renderer/route");
-    const response = await GET(
-      createRequest({
-        authorization: "Bearer renderer-token",
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+      expect(body.manifest).toEqual(manifest);
+      yield* verifyPreviewRendererProof({
+        manifestHash: body.manifest.hash,
         nonce,
-      })
-    );
-    const body = Schema.decodeUnknownSync(PreviewRendererResponseSchema)(
-      await response.json()
-    );
-
-    expect(response.status).toBe(200);
-    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
-    expect(body.manifest).toEqual(manifest);
-    await expect(
-      Effect.runPromise(
-        verifyPreviewRendererProof({
-          manifestHash: body.manifest.hash,
-          nonce,
-          proof: body.proof,
-          secret,
-        })
-      )
-    ).resolves.toBeUndefined();
-  });
+        proof: body.proof,
+        secret,
+      });
+    })
+  );
 });
