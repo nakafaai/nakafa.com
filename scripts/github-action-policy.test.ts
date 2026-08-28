@@ -67,6 +67,52 @@ describe("GitHub Action policy", () => {
         })
       );
     }
+
+    const cacheSource = readFileSync(
+      fileURLToPath(
+        new URL(
+          "../.github/workflows/content-snapshot-cache.yml",
+          import.meta.url
+        )
+      ),
+      "utf8"
+    );
+    const cacheWorkflow: unknown = yamlParse(cacheSource);
+    expect(cacheWorkflow).toEqual(
+      expect.objectContaining({
+        jobs: {
+          publish: expect.objectContaining({ name: "Publish" }),
+        },
+        on: {
+          push: { branches: ["main"] },
+        },
+      })
+    );
+    expect(cacheWorkflow).not.toEqual(
+      expect.objectContaining({
+        on: expect.objectContaining({ merge_group: expect.anything() }),
+      })
+    );
+    expect(cacheWorkflow).not.toEqual(
+      expect.objectContaining({
+        on: expect.objectContaining({ pull_request: expect.anything() }),
+      })
+    );
+  });
+
+  it("runs changed React checks on pull requests and full checks in the queue", () => {
+    const source = readFileSync(
+      fileURLToPath(
+        new URL("../.github/workflows/react-doctor.yml", import.meta.url)
+      ),
+      "utf8"
+    );
+    expect(source).toContain(
+      'pnpm run doctor --verbose --scope changed --base "$DOCTOR_BASE"'
+    );
+    expect(source).toContain(
+      "pnpm run doctor --verbose --scope full --blocking warning"
+    );
   });
 
   it.effect("accepts every reviewed immutable GitHub Action", () =>

@@ -496,13 +496,6 @@ jobs:
           CONVEX_DEPLOY_KEY: ${{ secrets.AGENT_DOCS_CONVEX_DEPLOY_KEY }}
         run: pnpm --silent --dir packages/backend runtime:ci verify-generations
 
-      - name: Save verified encrypted signed content snapshot
-        if: github.event_name == 'merge_group' && steps.signed-content-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ runner.temp }}/agent-docs-content-cache
-          key: ${{ steps.signed-content-cache.outputs.cache-primary-key }}
-
       - name: Stop local services and erase temporary state
         if: always()
         run: |
