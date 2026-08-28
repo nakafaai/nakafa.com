@@ -78,7 +78,7 @@ afterEach(() => {
 });
 
 describe("prompt input file selection", () => {
-  it.live("keeps unconstrained and MIME-matched selections", () =>
+  it.effect("keeps unconstrained and MIME-matched selections", () =>
     Effect.gen(function* () {
       const result = yield* validatePromptInputFiles({
         currentFileCount: 0,
@@ -95,7 +95,7 @@ describe("prompt input file selection", () => {
     })
   );
 
-  it.live("matches wildcard media types and filename extensions", () =>
+  it.effect("matches wildcard media types and filename extensions", () =>
     Effect.gen(function* () {
       const result = yield* validatePromptInputFiles({
         accept: "image/*, .txt",
@@ -107,7 +107,7 @@ describe("prompt input file selection", () => {
     })
   );
 
-  it.live("rejects a selection without an accepted file type", () =>
+  it.effect("rejects a selection without an accepted file type", () =>
     Effect.gen(function* () {
       const error = yield* validatePromptInputFiles({
         accept: "image/*",
@@ -120,7 +120,7 @@ describe("prompt input file selection", () => {
     })
   );
 
-  it.live("rejects a selection whose accepted files are all oversized", () =>
+  it.effect("rejects a selection whose accepted files are all oversized", () =>
     Effect.gen(function* () {
       const error = yield* validatePromptInputFiles({
         currentFileCount: 0,
@@ -132,7 +132,7 @@ describe("prompt input file selection", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "retains valid files when only part of a selection is oversized",
     () =>
       Effect.gen(function* () {
@@ -147,7 +147,7 @@ describe("prompt input file selection", () => {
       })
   );
 
-  it.live("caps available capacity and returns a typed warning", () =>
+  it.effect("caps available capacity and returns a typed warning", () =>
     Effect.gen(function* () {
       const result = yield* validatePromptInputFiles({
         currentFileCount: 1,
@@ -163,7 +163,7 @@ describe("prompt input file selection", () => {
 });
 
 describe("prompt input attachment conversion", () => {
-  it.live("keeps remote attachments unchanged", () =>
+  it.effect("keeps remote attachments unchanged", () =>
     Effect.gen(function* () {
       const file = createPromptFile("https://nakafa.test/lesson.txt");
       const converted = yield* convertPromptInputFiles([file]);
@@ -179,7 +179,7 @@ describe("prompt input attachment conversion", () => {
     })
   );
 
-  it.live("converts blob attachments into data URLs", () =>
+  it.effect("converts blob attachments into data URLs", () =>
     Effect.gen(function* () {
       const { fetchAttachment, readBlob } = stubSuccessfulConversion();
       const converted = yield* convertPromptInputFiles([createPromptFile()]);
@@ -193,7 +193,7 @@ describe("prompt input attachment conversion", () => {
     })
   );
 
-  it.live("types attachment fetch failures", () =>
+  it.effect("types attachment fetch failures", () =>
     Effect.gen(function* () {
       const cause = new Error("Network unavailable.");
       vi.stubGlobal("fetch", vi.fn().mockRejectedValue(cause));
@@ -207,7 +207,7 @@ describe("prompt input attachment conversion", () => {
     })
   );
 
-  it.live("types response blob failures", () =>
+  it.effect("types response blob failures", () =>
     Effect.gen(function* () {
       const cause = new Error("Response body unavailable.");
       vi.stubGlobal(
@@ -223,7 +223,7 @@ describe("prompt input attachment conversion", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "aborts the attachment request when blob reading is interrupted",
     () =>
       Effect.gen(function* () {
@@ -247,7 +247,7 @@ describe("prompt input attachment conversion", () => {
       })
   );
 
-  it.live("types FileReader construction failures", () =>
+  it.effect("types FileReader construction failures", () =>
     Effect.gen(function* () {
       const cause = new Error("FileReader unavailable.");
       stubSuccessfulConversion();
@@ -269,7 +269,7 @@ describe("prompt input attachment conversion", () => {
     })
   );
 
-  it.live.each([
+  it.effect.each([
     [InvalidResultFileReader, ArrayBuffer],
     [FailedFileReader, DOMException],
   ])("types invalid FileReader results from %s", ([Reader, Cause]) =>
@@ -286,7 +286,7 @@ describe("prompt input attachment conversion", () => {
     })
   );
 
-  it.live("provides a cause when FileReader omits its error", () =>
+  it.effect("provides a cause when FileReader omits its error", () =>
     Effect.gen(function* () {
       stubSuccessfulConversion();
       vi.stubGlobal("FileReader", EmptyErrorFileReader);
@@ -302,7 +302,7 @@ describe("prompt input attachment conversion", () => {
     })
   );
 
-  it.live.each([
+  it.effect.each([
     [1, 1],
     [2, 0],
   ])(
