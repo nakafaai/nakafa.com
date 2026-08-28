@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { MaterialDomainSchema } from "@nakafa/aksara-contracts/material/domain";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   createCanonicalLearningContext,
@@ -13,6 +14,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
+import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 4, 29, 10, 0, 0);
 const CONTEXT_PROGRAM_KEY = "merdeka";
@@ -49,65 +51,83 @@ const placementContext: LearningContextStorage = {
 };
 
 /** Reads the small recent fixture table used by this test. */
-async function readRecents(ctx: MutationCtx) {
-  return await ctx.db.query("userLearningRecents").take(10);
-}
-
-describe("contents/views/recent", () => {
-  it("keeps one user recent row while the latest material context changes", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const result = await t.mutation(async (ctx) => {
-      const user = await seedAuthenticatedUser(ctx, {
-        now: NOW,
-        suffix: "recent-context",
-      });
-      await runConvexProgram(
-        upsertUserRecent(ctx.db, target, createCanonicalLearningContext(), {
-          lastViewedAt: NOW,
-          userId: user.userId,
-        })
-      );
-      await runConvexProgram(
-        upsertUserRecent(ctx.db, target, placementContext, {
-          lastViewedAt: NOW + 1000,
-          userId: user.userId,
-        })
-      );
-      const placementRecents = await readRecents(ctx);
-      await runConvexProgram(
-        upsertUserRecent(ctx.db, target, createCanonicalLearningContext(), {
-          lastViewedAt: NOW + 2000,
-          userId: user.userId,
-        })
-      );
-      return {
-        placementRecents,
-        recents: await readRecents(ctx),
-        userId: user.userId,
-      };
-    });
-
-    expect(result.placementRecents).toHaveLength(1);
-    expect(result.placementRecents[0]).toMatchObject({
-      content_id: target.content_id,
-      contextKey: placementContext.contextKey,
-      contextMode: "placement",
-      contextNodeKey: CONTEXT_NODE_KEY,
-      contextProgramKey: CONTEXT_PROGRAM_KEY,
-      lastViewedAt: NOW + 1000,
-      userId: result.userId,
-    });
-    expect(result.recents).toHaveLength(1);
-    expect(result.recents[0]).toMatchObject({
-      content_id: target.content_id,
-      contextKey: "canonical",
-      contextMode: "canonical",
-      lastViewedAt: NOW + 2000,
-      userId: result.userId,
-    });
-    expect(result.recents[0]).not.toHaveProperty("contextNodeKey");
-    expect(result.recents[0]).not.toHaveProperty("contextProgramKey");
-  });
+const readRecents = Effect.fn("contents.views.test.readRecents")(function* (
+  ctx: MutationCtx
+) {
+  return yield* Effect.promise(() =>
+    ctx.db.query("userLearningRecents").take(10)
+  );
 });
 
-import { MaterialDomainSchema } from "@nakafa/aksara-contracts/material/domain";
+describe("contents/views/recent", () => {
+  it.effect(
+    "keeps one user recent row while the latest material context changes",
+    () =>
+      Effect.gen(function* () {
+        const t = createConvexTestWithBetterAuth();
+        const result = yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            runConvexProgram(
+              Effect.gen(function* () {
+                const user = yield* Effect.promise(() =>
+                  seedAuthenticatedUser(ctx, {
+                    now: NOW,
+                    suffix: "recent-context",
+                  })
+                );
+                yield* upsertUserRecent(
+                  ctx.db,
+                  target,
+                  createCanonicalLearningContext(),
+                  {
+                    lastViewedAt: NOW,
+                    userId: user.userId,
+                  }
+                );
+                yield* upsertUserRecent(ctx.db, target, placementContext, {
+                  lastViewedAt: NOW + 1000,
+                  userId: user.userId,
+                });
+                const placementRecents = yield* readRecents(ctx);
+                yield* upsertUserRecent(
+                  ctx.db,
+                  target,
+                  createCanonicalLearningContext(),
+                  {
+                    lastViewedAt: NOW + 2000,
+                    userId: user.userId,
+                  }
+                );
+                return {
+                  placementRecents,
+                  recents: yield* readRecents(ctx),
+                  userId: user.userId,
+                };
+              })
+            )
+          )
+        );
+
+        expect(result.placementRecents).toHaveLength(1);
+        expect(result.placementRecents[0]).toMatchObject({
+          content_id: target.content_id,
+          contextKey: placementContext.contextKey,
+          contextMode: "placement",
+          contextNodeKey: CONTEXT_NODE_KEY,
+          contextProgramKey: CONTEXT_PROGRAM_KEY,
+          lastViewedAt: NOW + 1000,
+          userId: result.userId,
+        });
+        expect(result.recents).toHaveLength(1);
+        expect(result.recents[0]).toMatchObject({
+          content_id: target.content_id,
+          contextKey: "canonical",
+          contextMode: "canonical",
+          lastViewedAt: NOW + 2000,
+          userId: result.userId,
+        });
+        expect(result.recents[0]).not.toHaveProperty("contextNodeKey");
+        expect(result.recents[0]).not.toHaveProperty("contextProgramKey");
+      })
+  );
+});
