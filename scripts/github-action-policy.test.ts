@@ -107,18 +107,24 @@ describe("GitHub Action policy", () => {
       expect(workflow).not.toContain("mergeQueue");
       expect(workflow).not.toContain("github.graphql");
       for (const evidence of [
+        "const mergeGroup = context.payload.merge_group",
         "github.rest.pulls.get",
         'pull.state !== "open"',
         "groupRef !== process.env.GITHUB_REF",
         "pull.base.repo.full_name !== context.payload.repository.full_name",
         "pull.head.repo?.full_name !== context.payload.repository.full_name",
-        "pull.user?.login !== trustedOwner",
-        "actor !== trustedOwner",
+        "pull.user?.login !== trustedOwner ||",
+        "const actor = context.payload.sender?.login",
+        "actor !== trustedOwner ||",
         "context.actor !== trustedOwner",
+        'core.setOutput("pull-head", pull.head.sha)',
+        'actual_head="$(git rev-parse HEAD)"',
+        'actual_parent="$(git rev-parse "$GROUP_SHA^")"',
         'git rev-list --parents -n 1 "$GROUP_SHA" | wc -w',
         '[ "$actual_parent" != "$BASE_SHA" ]',
         '[ "$parent_count" -ne 2 ]',
         'git merge-tree --write-tree "$BASE_SHA" "$PULL_HEAD"',
+        'actual_tree="$(git rev-parse "$GROUP_SHA^{tree}")"',
         'if [ "$actual_tree" != "$expected_tree" ]; then',
       ]) {
         expect(workflow).toContain(evidence);
