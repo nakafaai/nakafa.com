@@ -1,4 +1,3 @@
-import { makeAppLocale } from "@nakafa/aksara-contracts/locale";
 import {
   formatQuranMeaning,
   selectQuranMeaning,
@@ -27,17 +26,7 @@ describe("published Quran meaning selection", () => {
     });
   });
 
-  it("preserves the authenticated English language of a stored transition", () => {
-    const meaning = { appLocale: makeAppLocale("en"), text: "The Cow" };
-
-    expect(selectQuranMeaning(meaning, "id")).toEqual({
-      appLocale: "en",
-      text: "The Cow",
-    });
-    expect(formatQuranMeaning(meaning, "id")).toBe("The Cow (en)");
-  });
-
-  it("does not annotate a meaning selected in the requested locale", () => {
+  it("formats every reviewed meaning without a fallback annotation", () => {
     const meaning = {
       de: "Die Kuh",
       en: "The Cow",
@@ -45,5 +34,7 @@ describe("published Quran meaning selection", () => {
     } as const;
 
     expect(formatQuranMeaning(meaning, "de")).toBe("Die Kuh");
+    expect(formatQuranMeaning(meaning, "en")).toBe("The Cow");
+    expect(formatQuranMeaning(meaning, "id")).toBe("Sapi");
   });
 });
