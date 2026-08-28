@@ -96,6 +96,49 @@ describe("tryouts/migration/cleanup/repair", () => {
     })
   );
 
+  it.effect("repairs from retained history after current rows are gone", () =>
+    Effect.gen(function* () {
+      const t = createConvexTestWithBetterAuth();
+      const { repair } = yield* Effect.promise(() => seedRepair(t));
+      yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const [catalog, placements] = await Promise.all([
+            ctx.db
+              .query("tryoutCatalog")
+              .withIndex("by_snapshotId_and_index", (query) =>
+                query.eq("snapshotId", CLEANUP_SOURCE_SNAPSHOT)
+              )
+              .collect(),
+            ctx.db
+              .query("tryoutPlacements")
+              .withIndex("by_snapshotId_and_index", (query) =>
+                query.eq("snapshotId", CLEANUP_SOURCE_SNAPSHOT)
+              )
+              .collect(),
+          ]);
+          await Promise.all(
+            [...catalog, ...placements].map(({ _id }) => ctx.db.delete(_id))
+          );
+        })
+      );
+
+      const result = yield* Effect.promise(() =>
+        runCleanup(t, repair.evidence)
+      );
+      const state = yield* Effect.promise(() => readRepair(t, repair));
+
+      assert.deepStrictEqual(result, {
+        deleted: 0,
+        done: false,
+        repaired: countScaleRepairRows(repair.evidence),
+      });
+      assert.strictEqual(state.scale, null);
+      assert.ok(state.items.every((item) => item === null));
+      assert.ok(state.runs.every((run) => run === null));
+      assert.ok(state.receipt?.repair);
+    })
+  );
+
   it.effect("rejects a cleaned retry without its exact repair audit", () =>
     Effect.gen(function* () {
       for (const damage of ["missing", "tampered"] as const) {

@@ -164,8 +164,9 @@ export const prepareUnusedScale = Effect.fn(
   );
   const signedPlacements = yield* loadRepairPlacements(
     ctx,
+    migration.migrationId,
     migration.sourceSnapshotId,
-    evidence.runs
+    items
   );
   const runIds = new Set(runs.map(({ _id }) => _id));
   const itemIds = new Set(items.map(({ _id }) => _id));

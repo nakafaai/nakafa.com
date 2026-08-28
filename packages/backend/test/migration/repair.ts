@@ -1,9 +1,11 @@
 import { strict as assert } from "node:assert/strict";
+import { createHash } from "node:crypto";
+import type { StoredTryoutPlacementRow } from "@nakafa/aksara-contracts/history/decode";
 import {
   ContentKeySchema,
   CorpusSourcePathSchema,
+  Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/catalog-hash";
 import {
   tryoutCatalogIdentity,
@@ -13,20 +15,20 @@ import {
 import { makeTryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/placement-hash";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import {
-  tryoutCatalogFacts,
-  tryoutPlacementFacts,
-} from "@repo/backend/convex/contentRelease/tryout/facts";
 import type schema from "@repo/backend/convex/schema";
 import type { ScaleRepairEvidence } from "@repo/backend/convex/tryouts/migration/cleanup/evidence";
 import { seedCleanupSuccess } from "@repo/backend/test/migration/seed";
-import { CLEANUP_SOURCE_SNAPSHOT } from "@repo/backend/test/migration/state";
+import {
+  CLEANUP_MIGRATION_ID,
+  CLEANUP_SOURCE_SNAPSHOT,
+} from "@repo/backend/test/migration/state";
 import { makeTryoutPlacementRow } from "@repo/backend/test/tryout/snapshot";
 import { makeTryoutStartCatalog } from "@repo/backend/test/tryout/source";
 import type { TestConvex } from "convex-test";
 
 const REPAIR_PUBLISHED_AT = 20;
 type CleanupTest = TestConvex<typeof schema>;
+type CleanupSeed = Awaited<ReturnType<typeof seedCleanupSuccess>>;
 
 /** Builds one signed section and placement selected by the repair graph. */
 function makeRepairSource(sectionKey: string, order: number) {
@@ -66,49 +68,117 @@ function makeRepairSource(sectionKey: string, order: number) {
     }),
     rowKind: "placement",
   } as const;
-  return { placement, section };
+  const current = placement.record.row;
+  assert.strictEqual(current.appLocale, "en");
+  assert.strictEqual(current.rendererDomain, "snbt-quant");
+  const historical = {
+    answerArtifactHash: current.answerArtifactHash,
+    answerContentKey: current.answerContentKey,
+    choices: current.choices,
+    contentHash: current.contentHash,
+    countryKey: current.countryKey,
+    examKey: current.examKey,
+    locale: current.appLocale,
+    questionArtifactHash: current.questionArtifactHash,
+    questionContentKey: current.questionContentKey,
+    questionOrder: current.questionOrder,
+    questionSourcePath: current.questionSourcePath,
+    rendererDomain: current.rendererDomain,
+    scope: current.scope,
+    sectionKey: current.sectionKey,
+    setKey: current.setKey,
+    sourceRevision: current.sourceRevision,
+    title: "Question 1",
+    trackKey: current.trackKey,
+  };
+  const historicalHash = Sha256HashSchema.make(
+    `sha256:${createHash("sha256")
+      .update(
+        `nakafa.aksara.tryout-placements.v1\n${JSON.stringify(historical)}`
+      )
+      .digest("hex")}`
+  );
+  const retained = {
+    family: "tryout",
+    record: { row: historical, rowHash: historicalHash },
+    rowKind: "placement",
+  } satisfies StoredTryoutPlacementRow;
+  return { placement, retained, section };
 }
 
-/** Replaces legacy test placeholders with authenticated source rows. */
+/** Replaces retained-history placeholders with authenticated placements. */
 async function seedRepairSource(
   ctx: MutationCtx,
+  cleanup: CleanupSeed,
   source: readonly ReturnType<typeof makeRepairSource>[]
 ) {
-  const catalogs = await ctx.db
-    .query("tryoutCatalog")
-    .withIndex("by_snapshotId_and_index", (query) =>
-      query.eq("snapshotId", CLEANUP_SOURCE_SNAPSHOT)
-    )
-    .take(source.length);
   const placements = await ctx.db
-    .query("tryoutPlacements")
-    .withIndex("by_snapshotId_and_index", (query) =>
-      query.eq("snapshotId", CLEANUP_SOURCE_SNAPSHOT)
+    .query("tryoutHistoryRows")
+    .withIndex("by_snapshotId_and_rowKind_and_index", (query) =>
+      query.eq("snapshotId", CLEANUP_SOURCE_SNAPSHOT).eq("rowKind", "placement")
     )
     .take(source.length);
-  assert.ok(catalogs.length === source.length && placements[0]);
+  const mappings = await ctx.db
+    .query("tryoutHistoryMigrationMaps")
+    .withIndex("by_migrationId_and_kind_and_index", (query) =>
+      query.eq("migrationId", CLEANUP_MIGRATION_ID).eq("kind", "placement")
+    )
+    .take(source.length);
   for (const [index, row] of source.entries()) {
-    const catalog = catalogs[index];
-    assert.ok(catalog);
-    await ctx.db.replace("tryoutCatalog", catalog._id, {
-      ...tryoutCatalogFacts(row.section.record),
-      index: catalog.index,
-      rowHash: row.section.record.rowHash,
-      rowJson: canonicalizeContentSnapshotRow(row.section),
-      snapshotId: CLEANUP_SOURCE_SNAPSHOT,
-    });
     const stored = placements[index];
     const next = {
-      ...tryoutPlacementFacts(row.placement.record),
-      index: stored?.index ?? index + 1,
-      rowHash: row.placement.record.rowHash,
-      rowJson: canonicalizeContentSnapshotRow(row.placement),
+      answerArtifactHash: row.retained.record.row.answerArtifactHash,
+      index: stored?.index ?? index + 33,
+      questionArtifactHash: row.retained.record.row.questionArtifactHash,
+      rowHash: row.retained.record.rowHash,
+      rowJson: JSON.stringify(row.retained),
+      rowKind: "placement" as const,
       snapshotId: CLEANUP_SOURCE_SNAPSHOT,
     };
     if (stored) {
-      await ctx.db.replace("tryoutPlacements", stored._id, next);
+      await ctx.db.replace("tryoutHistoryRows", stored._id, next);
     } else {
-      await ctx.db.insert("tryoutPlacements", next);
+      await ctx.db.insert("tryoutHistoryRows", next);
+    }
+    const mapping = mappings[index];
+    const mapped = {
+      identity: tryoutPlacementIdentity(row.placement.record.row),
+      index: mapping?.index ?? index,
+      kind: "placement" as const,
+      migrationId: CLEANUP_MIGRATION_ID,
+      newHash: row.placement.record.rowHash,
+      oldHash: row.retained.record.rowHash,
+      targetCreated: false,
+    };
+    if (mapping) {
+      await ctx.db.replace("tryoutHistoryMigrationMaps", mapping._id, mapped);
+    } else {
+      await ctx.db.insert("tryoutHistoryMigrationMaps", mapped);
+    }
+    if (index === 0) {
+      const [sourceItem, targetItem] = await Promise.all([
+        ctx.db
+          .query("irtScaleItems")
+          .withIndex("by_scaleVersionId_and_placementIdentity", (query) =>
+            query.eq("scaleVersionId", cleanup.sourceScale.scaleVersionId)
+          )
+          .unique(),
+        ctx.db
+          .query("irtScaleItems")
+          .withIndex("by_scaleVersionId_and_placementIdentity", (query) =>
+            query.eq("scaleVersionId", cleanup.targetScaleId)
+          )
+          .unique(),
+      ]);
+      assert.ok(sourceItem && targetItem);
+      await ctx.db.patch(sourceItem._id, {
+        placementIdentity: mapped.identity,
+        placementRowHash: mapped.oldHash,
+      });
+      await ctx.db.patch(targetItem._id, {
+        placementIdentity: mapped.identity,
+        placementRowHash: mapped.newHash,
+      });
     }
   }
 }
@@ -165,7 +235,7 @@ export async function seedUnusedScale(
         difficulty: 0,
         discrimination: 1,
         placementIdentity: tryoutPlacementIdentity(row.placement.record.row),
-        placementRowHash: row.placement.record.rowHash,
+        placementRowHash: row.retained.record.rowHash,
         responseCount: 0,
         scaleVersionId,
       })
@@ -201,7 +271,7 @@ export async function seedRepair(
   const repair = await test.mutation(async (ctx) => {
     const migration = await ctx.db.query("tryoutHistoryMigrations").unique();
     assert.ok(migration?.phase === "completed");
-    await seedRepairSource(ctx, source);
+    await seedRepairSource(ctx, cleanup, source);
     const graph = await seedUnusedScale(ctx, source, responseCount);
     return {
       ...graph,

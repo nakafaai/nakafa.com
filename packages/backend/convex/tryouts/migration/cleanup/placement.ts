@@ -1,66 +1,84 @@
-import {
-  tryoutCatalogIdentity,
-  tryoutPlacementIdentity,
-} from "@nakafa/aksara-contracts/tryout/identity";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { readTryoutSectionRows } from "@repo/backend/convex/contentRelease/tryout/section";
+import { loadStoredTryoutPlacement } from "@repo/backend/convex/tryouts/history/rows";
 import { Effect } from "effect";
 
-interface RepairRun {
-  readonly questionCount: number;
-  readonly sectionIdentity: string;
-}
+type RepairItem = Pick<
+  Doc<"irtScaleItems">,
+  "placementIdentity" | "placementRowHash"
+>;
 
 interface SignedPlacement {
   readonly rowHash: string;
   readonly sectionIdentity: string;
 }
 
-/** Authenticates every signed source placement selected by the repair runs. */
+/** Authenticates every scale item against its immutable retained placement. */
 export const loadRepairPlacements = Effect.fn(
   "tryouts.migration.loadRepairPlacements"
-)(function* (ctx: MutationCtx, snapshotId: string, runs: readonly RepairRun[]) {
+)(function* (
+  ctx: MutationCtx,
+  migrationId: string,
+  snapshotId: string,
+  items: readonly RepairItem[]
+) {
   const placements = new Map<string, SignedPlacement>();
-  for (const run of runs) {
-    const storedSection = yield* Effect.promise(() =>
+  for (const item of items) {
+    const placement = yield* loadStoredTryoutPlacement(
+      ctx,
+      snapshotId,
+      item.placementRowHash
+    ).pipe(
+      Effect.catchTag("TryoutRuntimeError", () =>
+        releaseFail(
+          "CONTENT_RELEASE_INTEGRITY",
+          "Try-out history scale repair could not authenticate a retained placement."
+        )
+      )
+    );
+    if (!placement) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        "Try-out history scale repair lost a retained placement."
+      );
+    }
+    const mapping = yield* Effect.promise(() =>
       ctx.db
-        .query("tryoutCatalog")
-        .withIndex("by_snapshotId_and_identity", (query) =>
-          query.eq("snapshotId", snapshotId).eq("identity", run.sectionIdentity)
+        .query("tryoutHistoryMigrationMaps")
+        .withIndex("by_migrationId_and_kind_and_oldHash", (query) =>
+          query
+            .eq("migrationId", migrationId)
+            .eq("kind", "placement")
+            .eq("oldHash", item.placementRowHash)
         )
         .unique()
     );
-    if (!storedSection) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        "Try-out history scale repair lost a signed source section."
-      );
-    }
-    const source = yield* readTryoutSectionRows(ctx, snapshotId, storedSection);
     if (
-      tryoutCatalogIdentity(source.section.row) !== run.sectionIdentity ||
-      source.placements.length !== run.questionCount
+      !mapping ||
+      mapping.identity !== item.placementIdentity ||
+      placements.has(mapping.identity)
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
-        "Try-out history scale repair changed signed section ownership."
+        "Try-out history scale repair changed retained placement ownership."
       );
     }
-    for (const placement of source.placements) {
-      const identity = tryoutPlacementIdentity(placement.row);
-      if (placements.has(identity)) {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_INTEGRITY",
-          "Try-out history scale repair found duplicate signed placements."
-        );
-      }
-      placements.set(identity, {
-        rowHash: placement.rowHash,
-        sectionIdentity: run.sectionIdentity,
-      });
-    }
+    const sectionIdentity = tryoutCatalogNodeIdentity({
+      appLocale: AppLocaleSchema.make(placement.locale),
+      countryKey: placement.countryKey,
+      examKey: placement.examKey,
+      kind: "section",
+      sectionKey: placement.sectionKey,
+      setKey: placement.setKey,
+      trackKey: placement.trackKey,
+    });
+    placements.set(mapping.identity, {
+      rowHash: item.placementRowHash,
+      sectionIdentity,
+    });
   }
   return placements;
 });
