@@ -1,6 +1,7 @@
 import { Effect, FileSystem, Schema } from "effect";
 import { parse as yamlParse } from "yaml";
 import { validateQueueAdmission } from "./admission.ts";
+import { validateQueueExecution } from "./execution.ts";
 import {
   actionExpression,
   decodeQueuePolicy,
@@ -84,10 +85,8 @@ export const validateGithubQueuePolicy = Effect.fn("GithubQueue.validate")(
       );
     }
 
-    yield* validateQueueAdmission(
-      jobs["production-scope"] ?? {},
-      jobs.production ?? {}
-    );
+    yield* validateQueueAdmission(jobs["production-scope"] ?? {});
+    yield* validateQueueExecution(jobs.quality ?? {}, jobs.production ?? {});
     yield* validateRequiredJob(jobs["agent-docs"] ?? {});
   }
 );

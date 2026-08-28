@@ -21,7 +21,7 @@ describe("GitHub merge queue", () => {
     })
   );
 
-  it.effect("rejects extra jobs and a bypassed Required decision", () =>
+  it.effect("rejects unreviewed jobs and bypassed acceptance commands", () =>
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const source = yield* fileSystem.readFileString(WORKFLOW_PATH);
@@ -33,13 +33,23 @@ describe("GitHub merge queue", () => {
         'if [ "$PRODUCTION_SCOPE_RESULT" != "success" ]; then',
         "if false; then"
       );
-      const [jobResult, requiredResult] = yield* Effect.all([
-        validateGithubQueuePolicy(extraJob).pipe(Effect.result),
-        validateGithubQueuePolicy(bypassedRequired).pipe(Effect.result),
-      ]);
+      const bypassedQuality = source.replace("run: pnpm test", 'run: "true"');
+      const bypassedProduction = source.replace(
+        "run: pnpm build",
+        'run: "true"'
+      );
+      const [jobResult, requiredResult, qualityResult, productionResult] =
+        yield* Effect.all([
+          validateGithubQueuePolicy(extraJob).pipe(Effect.result),
+          validateGithubQueuePolicy(bypassedRequired).pipe(Effect.result),
+          validateGithubQueuePolicy(bypassedQuality).pipe(Effect.result),
+          validateGithubQueuePolicy(bypassedProduction).pipe(Effect.result),
+        ]);
 
       expect(Result.isFailure(jobResult)).toBe(true);
       expect(Result.isFailure(requiredResult)).toBe(true);
+      expect(Result.isFailure(qualityResult)).toBe(true);
+      expect(Result.isFailure(productionResult)).toBe(true);
     }).pipe(Effect.provide(NodeServices.layer))
   );
 });

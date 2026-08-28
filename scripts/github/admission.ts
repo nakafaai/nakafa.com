@@ -24,10 +24,7 @@ function stepAt(
 
 /** Validates the signed Production Scope admission and Production consumer. */
 export const validateQueueAdmission = Effect.fn("GithubQueue.admission")(
-  function* (
-    scope: Readonly<Record<string, unknown>>,
-    production: Readonly<Record<string, unknown>>
-  ) {
+  function* (scope: Readonly<Record<string, unknown>>) {
     yield* requireQueueExact(
       Object.keys(scope).sort(),
       ["env", "name", "outputs", "runs-on", "steps", "timeout-minutes"].sort(),
@@ -235,17 +232,6 @@ export const validateQueueAdmission = Effect.fn("GithubQueue.admission")(
         run: "pnpm ci:production-acceptance",
       },
       "The production classification step changed."
-    );
-
-    yield* requireQueueExact(
-      production.needs,
-      "production-scope",
-      "Production lost its scope dependency."
-    );
-    yield* requireQueueExact(
-      production.if,
-      "needs.production-scope.outputs.required == 'true' && needs.production-scope.outputs.trusted == 'true'",
-      "Production changed its signed admission condition."
     );
   }
 );
