@@ -1,5 +1,6 @@
 import { Resend } from "@convex-dev/resend";
 import resendTest from "@convex-dev/resend/test";
+import { describe, expect, it } from "@effect/vitest";
 import {
   ACTIVE_APP_LOCALE_CODES,
   type ActiveAppLocaleCode,
@@ -7,10 +8,9 @@ import {
 import { components, internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { insertTestPage } from "@repo/backend/test/content-page";
-import { insertRuntimeRelease } from "@repo/backend/test/content-runtime";
+import { insertTestPage } from "@repo/backend/test/content/page";
+import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const testResend = new Resend(components.resend, {
   apiKey: "re_test_welcome_delivery",

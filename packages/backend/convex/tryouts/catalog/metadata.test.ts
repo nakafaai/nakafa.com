@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -11,7 +12,7 @@ import {
   activateTryoutSnapshot,
   makeTryoutCatalogRow,
   makeTryoutPlacementRow,
-} from "@repo/backend/test/tryout-snapshot";
+} from "@repo/backend/test/tryout/snapshot";
 import {
   makeTryoutStartHierarchy,
   makeTryoutStartPlacement,
@@ -20,10 +21,9 @@ import {
   TRYOUT_START_SECTION,
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
-} from "@repo/backend/test/tryout-source";
+} from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 /** Activates the smallest coherent two-locale catalog. */
 async function activateCatalog() {

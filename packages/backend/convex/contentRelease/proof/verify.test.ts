@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import {
   ContentKeySchema,
@@ -30,15 +31,14 @@ import {
   testEmptyManifest,
   testProofRenderer,
   testSignedRelease,
-} from "@repo/backend/test/content-proof";
-import { TEST_RELEASE_ID } from "@repo/backend/test/content-release";
+} from "@repo/backend/test/content/proof";
+import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import {
   recomputeContentProof,
   stageUpsertFixture,
-} from "@repo/backend/test/content-verify";
+} from "@repo/backend/test/content/verify";
 import { convexTest, type TestConvex } from "convex-test";
 import { Effect, Schema, Stream } from "effect";
-import { describe, expect, it } from "vitest";
 
 const releaseId = ReleaseIdSchema.make("release-proof");
 const manifest = testEmptyManifest(releaseId);

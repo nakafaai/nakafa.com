@@ -1,0 +1,189 @@
+// @vitest-environment node
+
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@effect/vitest";
+import {
+  ContentKeySchema,
+  ReleaseIdSchema,
+  Sha256HashSchema,
+} from "@nakafa/aksara-contracts/ids";
+import {
+  ACTIVE_APP_LOCALES,
+  makeAppLocale,
+} from "@nakafa/aksara-contracts/locale";
+import { ContentReleaseManifestSchema } from "@nakafa/aksara-contracts/release";
+import {
+  inheritContentSnapshots,
+  replaceContentSnapshot,
+} from "@nakafa/aksara-contracts/release/snapshot/spec";
+import type { ProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/predecessor/spec";
+import { verifyProtectedContentRuntimeExchange } from "@nakafa/aksara-contracts/runtime/predecessor/verify";
+import { makeTryoutSnapshot } from "@nakafa/aksara-contracts/tryout/snapshot/hash";
+import {
+  ContentRuntimeMissingError,
+  ContentTransportError,
+} from "@repo/backend/client/content/errors";
+import { readPredecessorContent } from "@repo/backend/client/content/predecessor";
+import {
+  CONTENT_RUNTIME_RESPONSE_HEADER,
+  CONTENT_RUNTIME_RESPONSE_MARKER,
+  PREDECESSOR_PROTECTED_CONTENT_RUNTIME_PATH,
+} from "@repo/backend/content/endpoint";
+import {
+  TEST_PROOF_RENDERER,
+  testEmptyManifest,
+  testSignedArtifact,
+  testSignedRelease,
+} from "@repo/backend/test/content/proof";
+import { testPublicationScope } from "@repo/backend/test/content/release";
+import { Effect } from "effect";
+import { vi } from "vitest";
+
+const endpoint = `https://example.convex.site${PREDECESSOR_PROTECTED_CONTENT_RUNTIME_PATH}`;
+const target = {
+  siteUrl: "https://example.convex.site",
+  token: "runtime-test-token",
+};
+const releaseId = ReleaseIdSchema.make("release-predecessor-client");
+const digest = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
+const snapshot = makeTryoutSnapshot({
+  activeAppLocales: ACTIVE_APP_LOCALES,
+  catalogDigest: digest,
+  counts: { country: 1, exam: 1, section: 1, set: 1, track: 1 },
+  placementCount: 1,
+  placementDigest: digest,
+  routeCount: 1,
+});
+const snapshotId = snapshot.snapshotId;
+const snapshots = {
+  ...inheritContentSnapshots(null),
+  tryout: replaceContentSnapshot({
+    baseSnapshotId: null,
+    resultSnapshotId: snapshotId,
+    rowCount: 1,
+    rowDigest: snapshotId,
+  }),
+};
+const release = testSignedRelease(
+  ContentReleaseManifestSchema.make({
+    ...testEmptyManifest(releaseId),
+    scope: testPublicationScope({ snapshots }),
+    snapshots,
+  })
+);
+const contentKey = ContentKeySchema.make(
+  "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/question"
+);
+const artifact = testSignedArtifact("snbt-quant", { contentKey });
+const request: ProtectedContentRuntimeRequest = {
+  appLocale: makeAppLocale("en"),
+  selectors: [
+    {
+      artifactHash: artifact.artifactHash,
+      contentKey,
+      delivery: "authenticated",
+    },
+  ],
+  snapshotId,
+  snapshotReleaseId: releaseId,
+};
+const found = {
+  items: [
+    {
+      artifact,
+      delivery: "authenticated",
+      sourcePath: `packages/corpus/${contentKey}/en.mdx`,
+    },
+  ],
+  kind: "found",
+  release,
+  rendererManifest: TEST_PROOF_RENDERER,
+  snapshotId,
+  snapshotManifestHash: release.manifestHash,
+  snapshotReleaseId: releaseId,
+};
+const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
+const verifyMock = vi.hoisted(() => vi.fn());
+
+vi.mock("server-only", () => ({}));
+vi.mock("@nakafa/aksara-contracts/runtime/predecessor/verify", () => ({
+  verifyProtectedContentRuntimeExchange: verifyMock,
+}));
+
+/** Creates one response with the immutable network URL populated. */
+function createResponse(body: unknown, status: number, marked = true) {
+  const headers = new Headers({ "content-type": "application/json" });
+  if (marked) {
+    headers.set(
+      CONTENT_RUNTIME_RESPONSE_HEADER,
+      CONTENT_RUNTIME_RESPONSE_MARKER
+    );
+  }
+  const response = new Response(JSON.stringify(body), { headers, status });
+  Object.defineProperty(response, "url", { value: endpoint });
+  return response;
+}
+
+beforeEach(() => {
+  fetchMock.mockReset();
+  verifyMock.mockReset();
+  verifyMock.mockImplementation(({ response }) => Effect.succeed(response));
+  vi.stubGlobal("fetch", fetchMock);
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe("predecessor protected content runtime client", () => {
+  it.effect("posts and verifies the predecessor request contract", () =>
+    Effect.gen(function* () {
+      fetchMock.mockResolvedValue(createResponse(found, 200, false));
+
+      expect(
+        yield* readPredecessorContent(target, request, TEST_PROOF_RENDERER)
+      ).toMatchObject({ items: [{ delivery: "authenticated" }] });
+      expect(fetchMock).toHaveBeenCalledOnce();
+      const call = fetchMock.mock.calls.at(0);
+      assert.ok(call && typeof call[1]?.body === "string");
+      expect(call[0]).toBe(endpoint);
+      expect(JSON.parse(call[1].body)).toEqual(request);
+      expect(verifyProtectedContentRuntimeExchange).toHaveBeenCalledOnce();
+    })
+  );
+
+  it.effect("returns a typed absence bound to the predecessor request", () =>
+    Effect.gen(function* () {
+      fetchMock.mockResolvedValue(createResponse({ kind: "missing" }, 404));
+
+      expect(
+        yield* readPredecessorContent(
+          target,
+          request,
+          TEST_PROOF_RENDERER
+        ).pipe(Effect.flip)
+      ).toEqual(new ContentRuntimeMissingError({ request }));
+    })
+  );
+
+  it.effect("rejects a marked body outside the predecessor contract", () =>
+    Effect.gen(function* () {
+      fetchMock.mockResolvedValue(createResponse({ unexpected: true }, 200));
+
+      expect(
+        yield* readPredecessorContent(
+          target,
+          request,
+          TEST_PROOF_RENDERER
+        ).pipe(Effect.flip)
+      ).toEqual(new ContentTransportError({ reason: "response-contract" }));
+      expect(verifyProtectedContentRuntimeExchange).not.toHaveBeenCalled();
+    })
+  );
+});

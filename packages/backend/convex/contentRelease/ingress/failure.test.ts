@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   type PublicationRequest,
   PublicationRequestSchema,
@@ -9,8 +10,14 @@ import {
   requestFailure,
   requestReleaseId,
 } from "@repo/backend/convex/contentRelease/ingress/failure";
-import { testArtifactJson } from "@repo/backend/test/content-artifact";
-import { testProjectionJson } from "@repo/backend/test/content-material";
+import { testArtifactJson } from "@repo/backend/test/content/artifact";
+import { testProjectionJson } from "@repo/backend/test/content/material";
+import {
+  TEST_PROOF_RENDERER,
+  testEmptyManifest,
+  testSignedRelease,
+  testSignedTryoutRuntimeBundle,
+} from "@repo/backend/test/content/proof";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
@@ -18,8 +25,8 @@ import {
   testRendererJson,
   testRouteJson,
   testUpsertJson,
-} from "@repo/backend/test/content-release";
-import { describe, expect, it } from "@repo/testing/effect";
+} from "@repo/backend/test/content/release";
+import { makeTryoutSnapshotManifest } from "@repo/backend/test/tryout/snapshot";
 import { Cause, Effect, Exit, Result, Schema } from "effect";
 
 /** Strictly decodes one technical request through the shared contract. */
@@ -132,6 +139,27 @@ const requests = {
   verify: request({ operation: "verify", release }),
 };
 
+/** Creates one schema-valid permanent-bundle request for mapping tests. */
+const makeRuntimeBundleRequest = Effect.fn(
+  "contentReleaseTest.makeRuntimeBundleRequest"
+)(function* () {
+  const snapshot = (yield* makeTryoutSnapshotManifest()).manifest;
+  const signedRelease = testSignedRelease(testEmptyManifest(TEST_RELEASE_ID));
+  const decoded = request({
+    bundle: testSignedTryoutRuntimeBundle({
+      release: signedRelease,
+      rendererManifest: TEST_PROOF_RENDERER,
+      snapshot,
+    }),
+    operation: "stageTryoutRuntimeBundle",
+    releaseId: TEST_RELEASE_ID,
+  });
+  if (decoded.operation !== "stageTryoutRuntimeBundle") {
+    return yield* Effect.die("Expected one runtime-bundle request.");
+  }
+  return decoded;
+});
+
 /** Runs one request-failure conversion at the Vitest boundary. */
 function failure(request: PublicationRequest, code: ReleaseError["code"]) {
   return Effect.exit(
@@ -144,22 +172,28 @@ function failure(request: PublicationRequest, code: ReleaseError["code"]) {
 }
 
 describe("content publication failure mapping", () => {
-  it("derives every exact request identity without a duplicate map", () => {
-    expect(requestReleaseId(requests.current)).toBeNull();
-    expect(requestReleaseId(requests.recovery)).toBe(recoveryId);
-    expect(requestReleaseId(requests.stageRecovery)).toBe(recoveryId);
-    expect(requestReleaseId(requests.activateRecovery)).toBe(recoveryId);
-    for (const publicationRequest of Object.values(requests)) {
-      if (
-        publicationRequest.operation !== "current" &&
-        publicationRequest.operation !== "recovery" &&
-        publicationRequest.operation !== "stageRecovery" &&
-        publicationRequest.operation !== "activateRecovery"
-      ) {
-        expect(requestReleaseId(publicationRequest)).toBe(TEST_RELEASE_ID);
+  it.live("derives every exact request identity without a duplicate map", () =>
+    Effect.gen(function* () {
+      const runtimeBundleRequest = yield* makeRuntimeBundleRequest();
+      expect(requestReleaseId(requests.current)).toBeNull();
+      expect(requestReleaseId(requests.recovery)).toBe(recoveryId);
+      expect(requestReleaseId(requests.stageRecovery)).toBe(recoveryId);
+      expect(requestReleaseId(requests.activateRecovery)).toBe(recoveryId);
+      for (const publicationRequest of [
+        ...Object.values(requests),
+        runtimeBundleRequest,
+      ]) {
+        if (
+          publicationRequest.operation !== "current" &&
+          publicationRequest.operation !== "recovery" &&
+          publicationRequest.operation !== "stageRecovery" &&
+          publicationRequest.operation !== "activateRecovery"
+        ) {
+          expect(requestReleaseId(publicationRequest)).toBe(TEST_RELEASE_ID);
+        }
       }
-    }
-  });
+    })
+  );
 
   it("sanitizes predecode failures without retaining private detail", () => {
     /** Builds one private failure whose message must never cross ingress. */
@@ -187,7 +221,11 @@ describe("content publication failure mapping", () => {
 
   it.live("preserves every operation identity for domain rejection", () =>
     Effect.gen(function* () {
-      for (const publicationRequest of Object.values(requests)) {
+      const runtimeBundleRequest = yield* makeRuntimeBundleRequest();
+      for (const publicationRequest of [
+        ...Object.values(requests),
+        runtimeBundleRequest,
+      ]) {
         const exit = yield* failure(
           publicationRequest,
           "CONTENT_RELEASE_STATE"
@@ -220,6 +258,20 @@ describe("content publication failure mapping", () => {
           value: { batchIndex: 0, kind: "conflict", operation },
         });
       }
+      const runtimeBundleRequest = yield* makeRuntimeBundleRequest();
+      const runtimeBundleExit = yield* failure(
+        runtimeBundleRequest,
+        "CONTENT_RELEASE_CONFLICT"
+      );
+      expect(runtimeBundleExit).toMatchObject({
+        _tag: "Success",
+        value: {
+          bundleHash: runtimeBundleRequest.bundle.bundleHash,
+          kind: "conflict",
+          operation: "stageTryoutRuntimeBundle",
+          snapshotId: runtimeBundleRequest.bundle.payload.snapshot.snapshotId,
+        },
+      });
       for (const operation of [
         "accept",
         "abort",

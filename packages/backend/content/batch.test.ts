@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   MAX_PUBLIC_RUNTIME_REQUEST_BYTES,
   MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
@@ -11,17 +12,16 @@ import {
   PublicContentRuntimeBatchResponseSchema,
   publicRuntimeResponseBytes,
 } from "@repo/backend/content/batch";
-import { testArtifactJson } from "@repo/backend/test/content-artifact";
-import { testProjectionJson } from "@repo/backend/test/content-material";
+import { testArtifactJson } from "@repo/backend/test/content/artifact";
+import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
   testReleaseJson,
   testRendererJson,
-} from "@repo/backend/test/content-release";
+} from "@repo/backend/test/content/release";
 import { Result, Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 /** Creates one structurally exact Aksara public found response. */
 function foundResponse(title = "Technical title") {

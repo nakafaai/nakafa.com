@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -9,9 +10,8 @@ import {
 import {
   FUNCTION_MATERIAL,
   makeMaterialProjection,
-} from "@repo/backend/test/content-material";
-import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
-import { describe, expect, it } from "vitest";
+} from "@repo/backend/test/content/material";
+import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const canonicalContext = {

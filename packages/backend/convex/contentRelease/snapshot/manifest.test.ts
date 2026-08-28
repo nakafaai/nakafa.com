@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   inheritContentSnapshots,
   replaceContentSnapshot,
@@ -5,12 +6,11 @@ import {
 import { encodeSnapshotJson } from "@repo/backend/convex/contentRelease/wire";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { TEST_RELEASE_ID } from "@repo/backend/test/content-release";
-import { insertTestRelease } from "@repo/backend/test/content-stage";
-import { makeProgramSnapshotData } from "@repo/backend/test/program-snapshot";
+import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
+import { insertTestRelease } from "@repo/backend/test/content/stage";
+import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
 import { makeBlockedQuranSnapshot } from "@repo/backend/test/quran/snapshot";
-import { TEST_STAGE_SNAPSHOT } from "@repo/backend/test/snapshot-routes";
-import { describe, expect, it } from "@repo/testing/effect";
+import { TEST_STAGE_SNAPSHOT } from "@repo/backend/test/snapshot/routes";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 

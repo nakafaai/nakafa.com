@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { loadQuranOwner } from "@repo/backend/convex/contentRelease/quran/owner";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -7,14 +8,13 @@ import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
   testReleaseJson,
-} from "@repo/backend/test/content-release";
+} from "@repo/backend/test/content/release";
 import { makeQuranSurah } from "@repo/backend/test/quran/rows";
 import {
   activateQuranSnapshot,
   activateQuranSource,
 } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 describe("contentRelease/quran/owner", () => {
   it("preserves the active release while Quran remains source-owned", async () => {

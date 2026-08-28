@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import {
   AppLocaleSchema,
@@ -14,10 +15,9 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   insertRuntimeArticles,
   testArticleProjection,
-} from "@repo/backend/test/content-runtime";
+} from "@repo/backend/test/content/runtime";
 import { convexTest } from "convex-test";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 const localizedRoutes = [
   { appLocale: "en", article: "article-route", category: "politics" },

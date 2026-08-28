@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { decodePublishedQuranView } from "@repo/backend/client/quran/view";
 import type { api } from "@repo/backend/convex/_generated/api";
@@ -5,7 +6,6 @@ import {
   makeQuranLocaleSources,
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
-import { describe, expect, it } from "@repo/testing/effect";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
 

@@ -1,25 +1,25 @@
+import { describe, expect, it } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
-import { makeMaterialProjection } from "@repo/backend/test/content-material";
+import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   insertRuntimeArticles,
   testArticleProjection,
-} from "@repo/backend/test/content-runtime";
+} from "@repo/backend/test/content/runtime";
 import {
   activateMaterialCatalog,
   MATERIAL_IDENTITY,
-} from "@repo/backend/test/material-catalog";
+} from "@repo/backend/test/material/catalog";
 import { makeQuranSearch } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
-import { insertRuntimeIndex } from "@repo/backend/test/runtime-head";
-import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
+import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
+import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 import {
   activateTryoutSnapshot,
   makeTryoutCatalogRow,
   makeTryoutPlacementRow,
-} from "@repo/backend/test/tryout-snapshot";
+} from "@repo/backend/test/tryout/snapshot";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/_types/agent/search";
-import { describe, expect, it } from "vitest";
 
 const MARKDOWN_PATH_PATTERN = /\.md$/;
 

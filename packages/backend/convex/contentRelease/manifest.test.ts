@@ -1,5 +1,10 @@
+import { describe, expect, it } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
+import {
+  type PublicationScope,
+  PublicationScopeSchema,
+} from "@nakafa/aksara-contracts/release/snapshot/scope";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -7,15 +12,14 @@ import {
   TEST_DIGEST,
   testReleaseJson,
   testRendererJson,
-} from "@repo/backend/test/content-release";
+} from "@repo/backend/test/content/release";
 import {
   insertTestState,
   insertZeroRelease,
   type TestIdentity,
   zeroReleaseJson,
-} from "@repo/backend/test/content-state";
+} from "@repo/backend/test/content/state";
 import { convexTest, type TestConvex } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const stageRelease = internal.contentRelease.manifest.stageRelease;
 const stageRecovery = internal.contentRelease.manifest.stageRecovery;
@@ -31,7 +35,7 @@ const RECOVERY = {
 } satisfies TestIdentity;
 
 /** Creates one empty genesis candidate envelope. */
-function candidateJson(identity = CANDIDATE) {
+function candidateJson(identity = CANDIDATE, scope?: PublicationScope) {
   return testReleaseJson({
     itemCount: 0,
     manifestHash: identity.manifestHash,
@@ -40,6 +44,7 @@ function candidateJson(identity = CANDIDATE) {
     resultCount: 0,
     resultDigest: EMPTY_RESULT_CATALOG_DIGEST,
     routeCount: 0,
+    scope,
     upsertCount: 0,
   });
 }
@@ -109,6 +114,7 @@ describe("contentRelease/manifest", () => {
     expect(stored.release).toMatchObject({
       baseFamilies: [],
       resultFamilies: ContentFamilySchema.literals,
+      tryoutRuntimeRequired: true,
     });
     await expect(
       t.mutation(stageRelease, {
@@ -208,6 +214,21 @@ describe("contentRelease/manifest", () => {
       unsupported.mutation(stageRelease, {
         releaseJson: candidateJson(),
         rendererJson: testRendererJson(`sha256:${"9".repeat(64)}`),
+      })
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_UNSUPPORTED" } });
+
+    const predecessor = convexTest(schema, convexModules);
+    await expect(
+      predecessor.mutation(stageRelease, {
+        releaseJson: candidateJson(
+          CANDIDATE,
+          PublicationScopeSchema.make({
+            content: [],
+            families: ContentFamilySchema.literals,
+            snapshots: [],
+          })
+        ),
+        rendererJson: testRendererJson(),
       })
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_UNSUPPORTED" } });
 

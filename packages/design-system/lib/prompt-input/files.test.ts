@@ -1,3 +1,4 @@
+import { afterEach, describe, expect, it, vi } from "@effect/vitest";
 import {
   convertPromptInputFiles,
   PromptInputAttachmentConversionError,
@@ -5,9 +6,7 @@ import {
   PromptInputFileConstraintError,
   validatePromptInputFiles,
 } from "@repo/design-system/lib/prompt-input/files";
-import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect, Fiber } from "effect";
-import { vi } from "vitest";
 
 const BLOB_URL = "blob:https://nakafa.test/attachment";
 const DATA_URL = "data:text/plain;base64,bmFrYWZh";

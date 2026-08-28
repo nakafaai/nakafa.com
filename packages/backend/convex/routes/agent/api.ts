@@ -1,4 +1,3 @@
-import { getNakafaContent } from "@repo/backend/agent/content";
 import {
   decodeAgentInput,
   decodeAgentOutput,
@@ -11,14 +10,10 @@ import {
   createOpenApiOptionsResponse,
   createOpenApiResponse,
 } from "@repo/backend/agent/openapi/response";
-import { searchNakafaContent } from "@repo/backend/agent/search";
 import { getNakafaTaxonomy } from "@repo/backend/agent/taxonomy";
+import { registerAgentContentRoute } from "@repo/backend/convex/routes/agent/content";
 import { guardAgentApi } from "@repo/backend/convex/routes/agent/guard";
-import {
-  readContentInput,
-  readSearchInput,
-  readTaxonomyInput,
-} from "@repo/backend/convex/routes/agent/input";
+import { readTaxonomyInput } from "@repo/backend/convex/routes/agent/input";
 import { registerAgentQuranRoutes } from "@repo/backend/convex/routes/agent/quran";
 import {
   agentJsonResponse,
@@ -30,6 +25,7 @@ import {
   runAgentRequest,
   runMeteredRequest,
 } from "@repo/backend/convex/routes/agent/runtime";
+import { registerAgentSearchRoute } from "@repo/backend/convex/routes/agent/search";
 import {
   NAKAFA_API_BASE_URL,
   NAKAFA_BASE_URL,
@@ -40,9 +36,8 @@ import {
   NakafaApiHealthSchema,
   NakafaApiIndexSchema,
 } from "@repo/contents/_lib/agent/schema/api";
-import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { NakafaAgentTaxonomyOptionsSchema } from "@repo/contents/_lib/agent/schema/taxonomy";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import { Hono } from "hono";
 
 /** Registers the protected read-only API and its machine-readable contract. */
@@ -97,45 +92,8 @@ export function registerAgentApiRoutes(app: AgentApp) {
     )
   );
 
-  api.get("/v1/search", (context) =>
-    runMeteredRequest(
-      context.env,
-      context.req.raw,
-      context.get("requestId"),
-      readSearchInput(new URL(context.req.url)).pipe(
-        Effect.flatMap((input) => searchNakafaContent(context.env, input)),
-        Effect.map(agentJsonResponse)
-      )
-    )
-  );
-
-  api.get("/v1/content", (context) =>
-    runMeteredRequest(
-      context.env,
-      context.req.raw,
-      context.get("requestId"),
-      readContentInput(new URL(context.req.url)).pipe(
-        Effect.flatMap((ref) =>
-          decodeAgentInput(
-            NakafaAgentContentRefInputSchema,
-            ref,
-            "Invalid Nakafa content reference."
-          )
-        ),
-        Effect.flatMap((ref) => getNakafaContent(context.env, ref)),
-        Effect.map(
-          Option.match({
-            onNone: () =>
-              contentNotFoundResponse(
-                context.req.raw,
-                context.get("requestId")
-              ),
-            onSome: agentJsonResponse,
-          })
-        )
-      )
-    )
-  );
+  registerAgentSearchRoute(api);
+  registerAgentContentRoute(api);
 
   api.get("/v1/taxonomy", (context) =>
     runMeteredRequest(
@@ -158,13 +116,7 @@ export function registerAgentApiRoutes(app: AgentApp) {
 
   registerAgentQuranRoutes(api);
 
-  for (const path of [
-    "/v1",
-    "/v1/health",
-    "/v1/search",
-    "/v1/content",
-    "/v1/taxonomy",
-  ]) {
+  for (const path of ["/v1", "/v1/health", "/v1/taxonomy"]) {
     api.options(path, () => agentOptionsResponse());
   }
 
@@ -173,21 +125,6 @@ export function registerAgentApiRoutes(app: AgentApp) {
   );
 
   app.route(NAKAFA_API_EDGE_CONTRACT.originPath, api);
-}
-
-/** Returns a stable missing-content problem. */
-function contentNotFoundResponse(request: Request, requestId: string) {
-  return problemResponse({
-    code: "CONTENT_NOT_FOUND",
-    detail: "No public Nakafa content matched the supplied reference.",
-    instance: projectPublicApiPath(new URL(request.url).pathname),
-    requestId,
-    resolution:
-      "Use a content_id from /v1/search with markdown_url, or a canonical readable Nakafa URL.",
-    status: 404,
-    title: "Content not found",
-    type: "content-not-found",
-  });
 }
 
 /** Returns one exact 404 or 405 for unmatched public API routes. */

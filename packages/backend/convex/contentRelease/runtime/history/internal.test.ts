@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   type StoredProtectedRuntimeRequest,
   StoredProtectedRuntimeRequestSchema,
@@ -8,11 +9,10 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   insertRetainedRuntime,
   RETAINED_RUNTIME_QUESTION,
-} from "@repo/backend/test/retained-runtime";
+} from "@repo/backend/test/runtime/retained";
 import { makeFunctionReference } from "convex/server";
 import { convexTest } from "convex-test";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 const readRetained = makeFunctionReference<
   "query",

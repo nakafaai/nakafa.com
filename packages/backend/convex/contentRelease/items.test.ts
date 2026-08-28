@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
@@ -7,14 +8,13 @@ import {
   TEST_RELEASE_ID,
   testDeleteJson,
   testUpsertJson,
-} from "@repo/backend/test/content-release";
-import { insertTestRelease } from "@repo/backend/test/content-stage";
+} from "@repo/backend/test/content/release";
+import { insertTestRelease } from "@repo/backend/test/content/stage";
 import {
   insertRuntimeBinding,
   insertRuntimeVersion,
-} from "@repo/backend/test/runtime-head";
+} from "@repo/backend/test/runtime/head";
 import { convexTest, type TestConvex } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const stageItems = internal.contentRelease.items.stageItemBatch;
 

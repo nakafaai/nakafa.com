@@ -22,11 +22,14 @@ import {
 } from "@repo/backend/convex/contentRelease/receipt";
 import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/renderer";
 import { publicationReceiptValidator } from "@repo/backend/convex/contentRelease/spec";
+import { findReleaseTryoutRuntime } from "@repo/backend/convex/contentRelease/tryout/binding";
 import { retainActivatedTryoutBundle } from "@repo/backend/convex/contentRelease/tryout/bundle";
+import { loadReleaseTryoutRuntime } from "@repo/backend/convex/contentRelease/tryout/runtime";
 import { encodeRendererJson } from "@repo/backend/convex/contentRelease/wire";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import { requireContentActivationUnlocked } from "@repo/backend/convex/tryouts/migration/lock";
 import { type Infer, v } from "convex/values";
-import { Effect } from "effect";
+import { Clock, Effect } from "effect";
 
 const activationResultValidator = v.union(
   v.object({
@@ -89,8 +92,16 @@ const completedRetry = Effect.fn("contentRelease.completedActivationRetry")(
       );
     }
     const signed = yield* decodeReleaseJson(release.releaseJson);
+    const runtime = yield* findReleaseTryoutRuntime(
+      ctx,
+      signed,
+      release.tryoutRuntimeBundleHash
+    );
     const receipt = yield* completedReceipt(release, signed);
-    yield* retainActivatedTryoutBundle(ctx, release, signed, Date.now());
+    const now = yield* Clock.currentTimeMillis;
+    if (runtime.result === null) {
+      yield* retainActivatedTryoutBundle(ctx, release, signed, now);
+    }
     return receipt;
   }
 );
@@ -120,6 +131,7 @@ const activateCandidate = Effect.fn("contentRelease.activateCandidate")(
       );
       return { kind: "completed", receipt } satisfies ActivationResult;
     }
+    yield* requireContentActivationUnlocked(ctx);
     const state = yield* loadState(ctx);
     if (
       !state ||
@@ -170,14 +182,25 @@ const activateCandidate = Effect.fn("contentRelease.activateCandidate")(
     }
     yield* stagedEvidence(release, signed);
     yield* stagedEvidence(recovery, recoverySigned);
+    const runtime = yield* loadReleaseTryoutRuntime(ctx, signed);
+    const recoveryRuntime = yield* loadReleaseTryoutRuntime(
+      ctx,
+      recoverySigned
+    );
     const receipt = yield* publicationReceipt(release, signed);
-    const now = Date.now();
-    yield* retainActivatedTryoutBundle(ctx, release, signed, now);
+    const now = yield* Clock.currentTimeMillis;
+    yield* Effect.promise(() =>
+      ctx.db.patch("contentReleases", recovery._id, {
+        tryoutRuntimeBundleHash: recoveryRuntime.result?.bundle.bundleHash,
+        updatedAt: now,
+      })
+    );
     yield* Effect.promise(() =>
       ctx.db.patch("contentReleases", release._id, {
         completedAt: now,
         receiptJson: JSON.stringify(receipt),
         status: "completed",
+        tryoutRuntimeBundleHash: runtime.result?.bundle.bundleHash,
         updatedAt: now,
       })
     );
@@ -222,6 +245,7 @@ const activateRecoveryProgram = Effect.fn("contentRelease.activateRecovery")(
       );
       return { kind: "completed", receipt } satisfies ActivationResult;
     }
+    yield* requireContentActivationUnlocked(ctx);
     const state = yield* loadState(ctx);
     if (
       !state ||
@@ -240,14 +264,15 @@ const activateRecoveryProgram = Effect.fn("contentRelease.activateRecovery")(
       );
     }
     yield* stagedEvidence(release, signed);
+    const runtime = yield* loadReleaseTryoutRuntime(ctx, signed);
     const receipt = yield* publicationReceipt(release, signed);
-    const now = Date.now();
-    yield* retainActivatedTryoutBundle(ctx, release, signed, now);
+    const now = yield* Clock.currentTimeMillis;
     yield* Effect.promise(() =>
       ctx.db.patch("contentReleases", release._id, {
         completedAt: now,
         receiptJson: JSON.stringify(receipt),
         status: "completed",
+        tryoutRuntimeBundleHash: runtime.result?.bundle.bundleHash,
         updatedAt: now,
       })
     );

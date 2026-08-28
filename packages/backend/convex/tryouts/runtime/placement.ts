@@ -11,7 +11,7 @@ import {
   TryoutRuntimeError,
   tryRuntimePromise,
 } from "@repo/backend/convex/tryouts/runtime/error";
-import type { TryoutStartSource } from "@repo/backend/convex/tryouts/start/source";
+import type { TryoutSnapshotSource } from "@repo/backend/convex/tryouts/start/source";
 import {
   TryoutStartError,
   toTryoutStartError,
@@ -87,7 +87,7 @@ export const createAttemptPlacements = Effect.fn(
   ctx: MutationCtx,
   args: {
     readonly attempt: TryoutAttempt;
-    readonly source: TryoutStartSource;
+    readonly source: TryoutSnapshotSource;
   }
 ) {
   for (const source of args.source.snapshot.sections) {

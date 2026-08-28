@@ -8,7 +8,7 @@ import {
   loadAttemptScoreResult,
   TryoutScoreReadError,
 } from "@repo/backend/convex/tryouts/score/result";
-import { TEST_RELEASE_ID } from "@repo/backend/test/content-release";
+import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 7, 8, 12, 0, 0);

@@ -1,3 +1,4 @@
+import { describe, expect, it, vi } from "@effect/vitest";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import { api } from "@repo/backend/convex/_generated/api";
@@ -14,9 +15,8 @@ import {
   TRYOUT_START_NOW,
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
-} from "@repo/backend/test/tryout-source";
+} from "@repo/backend/test/tryout/source";
 import type { FunctionArgs } from "convex/server";
-import { describe, expect, it, vi } from "vitest";
 
 type UnattemptedArgs = FunctionArgs<
   typeof api.tryouts.queries.sets.unattempted

@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   CorpusSourcePathSchema,
   PublicPathSchema,
@@ -20,14 +21,13 @@ import { stageProgramRow } from "@repo/backend/convex/contentRelease/snapshot/pr
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { makeMaterialProjection } from "@repo/backend/test/content-material";
-import { insertMaterialProjection } from "@repo/backend/test/material-catalog";
+import { makeMaterialProjection } from "@repo/backend/test/content/material";
+import { insertMaterialProjection } from "@repo/backend/test/material/catalog";
 import {
   activateProgramSnapshot,
   makeProgramSnapshotData,
   type ProgramSnapshotData,
-} from "@repo/backend/test/program-snapshot";
-import { describe, expect, it } from "@repo/testing/effect";
+} from "@repo/backend/test/program/snapshot";
 import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";

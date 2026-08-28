@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { verifyTryoutPlacement } from "@repo/backend/convex/contentRelease/tryout/verify";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -6,9 +7,8 @@ import {
   activateTryoutSnapshot,
   makeTryoutCatalogRow,
   makeTryoutPlacementRow,
-} from "@repo/backend/test/tryout-snapshot";
+} from "@repo/backend/test/tryout/snapshot";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 /** Activates and returns one exact technical placement row. */
 async function activatePlacement() {

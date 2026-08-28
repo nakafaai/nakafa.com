@@ -1,4 +1,5 @@
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import { describe, expect, it, vi } from "@effect/vitest";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   ACCOUNT_DELETION_RECOVERY_DELAY_MS,
@@ -8,9 +9,15 @@ import { prepareAccountDeletion } from "@repo/backend/convex/auth/deletion/prepa
 import type { AccountDeletionPreparationOutcome } from "@repo/backend/convex/auth/deletion/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
+import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import {
+  seedDeletionMember,
+  seedDeletionSchool,
+  seedDeletionUser,
+} from "@repo/backend/test/deletion/seed";
+import { seedMigrationHold } from "@repo/backend/test/migration/seed";
 import { convexTest } from "convex-test";
-import { describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 28, 8, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
@@ -38,63 +45,6 @@ async function settlePreparation(
   return outcome;
 }
 
-/** Inserts one app user with optional deletion state. */
-function insertUser(
-  ctx: MutationCtx,
-  authId: string,
-  state: {
-    readonly deletedAt?: number;
-    readonly deletionPreparedAt?: number;
-  } = {}
-) {
-  return ctx.db.insert("users", {
-    authId,
-    credits: 0,
-    creditsResetAt: 0,
-    email: `${authId}@example.com`,
-    name: authId,
-    plan: "free",
-    ...state,
-  });
-}
-
-/** Inserts one school owned by the test user. */
-function insertOwnedSchool(
-  ctx: MutationCtx,
-  ownerId: Id<"users">,
-  slug: string
-) {
-  return ctx.db.insert("schools", {
-    city: "Jakarta",
-    createdBy: ownerId,
-    currentStudents: 0,
-    currentTeachers: 0,
-    email: `${slug}@example.com`,
-    name: slug,
-    province: "DKI Jakarta",
-    slug,
-    type: "high-school",
-    updatedAt: NOW,
-  });
-}
-
-/** Inserts one active school membership. */
-function insertActiveSchoolMember(
-  ctx: MutationCtx,
-  schoolId: Id<"schools">,
-  userId: Id<"users">,
-  role: Doc<"schoolMembers">["role"] = "student"
-) {
-  return ctx.db.insert("schoolMembers", {
-    joinedAt: NOW,
-    role,
-    schoolId,
-    status: "active",
-    updatedAt: NOW,
-    userId,
-  });
-}
-
 describe("auth/deletion/prepare", () => {
   it("allows an account that does not own a school", async () => {
     const t = convexTest(schema, convexModules);
@@ -109,7 +59,10 @@ describe("auth/deletion/prepare", () => {
   it("rejects a delayed request after its attempt was canceled", async () => {
     const t = convexTest(schema, convexModules);
     const userId = await t.mutation(async (ctx) => {
-      const insertedUserId = await insertUser(ctx, "canceled-attempt-owner");
+      const insertedUserId = await seedDeletionUser(
+        ctx,
+        "canceled-attempt-owner"
+      );
       await ctx.db.insert("accountDeletionAttemptCancellations", {
         attemptId: ATTEMPT_ID,
         canceledAt: NOW,
@@ -130,17 +83,37 @@ describe("auth/deletion/prepare", () => {
     expect(state.user).not.toHaveProperty("deletionPreparedAt");
   });
 
+  it("defers an account held by signed try-out migration", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation((ctx) =>
+      seedMigrationHold(ctx, "deletion-migration-hold")
+    );
+
+    const outcome = await t.mutation((ctx) =>
+      prepareInTest(ctx, seeded.authId)
+    );
+    const state = await t.query(async (ctx) => ({
+      preparation: await ctx.db.query("accountDeletionPreparations").unique(),
+      user: await ctx.db.get(seeded.userId),
+    }));
+
+    expect(outcome).toBe("temporarily-unavailable");
+    expect(state.preparation).toBeNull();
+    expect(state.user).not.toHaveProperty("deletionPreparedAt");
+  });
+
   it("leaves an owner-only school and account unchanged", async () => {
     const t = convexTest(schema, convexModules);
 
     const seeded = await t.mutation(async (ctx) => {
-      const ownerId = await insertUser(ctx, "school-owner");
-      const schoolId = await insertOwnedSchool(
+      const ownerId = await seedDeletionUser(ctx, "school-owner");
+      const schoolId = await seedDeletionSchool(
         ctx,
         ownerId,
-        "owner-only-school"
+        "owner-only-school",
+        NOW
       );
-      await insertActiveSchoolMember(ctx, schoolId, ownerId, "admin");
+      await seedDeletionMember(ctx, schoolId, ownerId, NOW, "admin");
 
       return { ownerId, schoolId };
     });
@@ -164,22 +137,28 @@ describe("auth/deletion/prepare", () => {
     const t = convexTest(schema, convexModules);
 
     const seeded = await t.mutation(async (ctx) => {
-      const ownerId = await insertUser(ctx, "transfer-owner");
-      const deletingSuccessorId = await insertUser(
+      const ownerId = await seedDeletionUser(ctx, "transfer-owner");
+      const deletingSuccessorId = await seedDeletionUser(
         ctx,
         "deleting-transfer-successor",
         { deletedAt: NOW }
       );
-      const successorId = await insertUser(ctx, "transfer-successor");
-      const schoolId = await insertOwnedSchool(ctx, ownerId, "shared-school");
-      await insertActiveSchoolMember(ctx, schoolId, ownerId, "admin");
-      await insertActiveSchoolMember(
+      const successorId = await seedDeletionUser(ctx, "transfer-successor");
+      const schoolId = await seedDeletionSchool(
+        ctx,
+        ownerId,
+        "shared-school",
+        NOW
+      );
+      await seedDeletionMember(ctx, schoolId, ownerId, NOW, "admin");
+      await seedDeletionMember(
         ctx,
         schoolId,
         deletingSuccessorId,
+        NOW,
         "teacher"
       );
-      await insertActiveSchoolMember(ctx, schoolId, successorId);
+      await seedDeletionMember(ctx, schoolId, successorId, NOW);
 
       return { ownerId, schoolId, successorId };
     });
@@ -227,10 +206,15 @@ describe("auth/deletion/prepare", () => {
   it("quiesces account writes from the first reservation batch", async () => {
     const t = convexTest(schema, convexModules);
     const ownerId = await t.mutation(async (ctx) => {
-      const ownerId = await insertUser(ctx, "quiesced-owner");
-      const successorId = await insertUser(ctx, "quiesced-successor");
-      const schoolId = await insertOwnedSchool(ctx, ownerId, "quiesced-school");
-      await insertActiveSchoolMember(ctx, schoolId, successorId);
+      const ownerId = await seedDeletionUser(ctx, "quiesced-owner");
+      const successorId = await seedDeletionUser(ctx, "quiesced-successor");
+      const schoolId = await seedDeletionSchool(
+        ctx,
+        ownerId,
+        "quiesced-school",
+        NOW
+      );
+      await seedDeletionMember(ctx, schoolId, successorId, NOW);
       return ownerId;
     });
 
@@ -251,22 +235,24 @@ describe("auth/deletion/prepare", () => {
     const t = convexTest(schema, convexModules);
 
     const ownerId = await t.mutation(async (ctx) => {
-      const ownerId = await insertUser(ctx, "concurrent-owner");
-      const deletingSuccessorId = await insertUser(
+      const ownerId = await seedDeletionUser(ctx, "concurrent-owner");
+      const deletingSuccessorId = await seedDeletionUser(
         ctx,
         "concurrent-successor",
         { deletionPreparedAt: NOW }
       );
-      const schoolId = await insertOwnedSchool(
+      const schoolId = await seedDeletionSchool(
         ctx,
         ownerId,
-        "concurrent-deletion-school"
+        "concurrent-deletion-school",
+        NOW
       );
-      await insertActiveSchoolMember(ctx, schoolId, ownerId, "admin");
-      await insertActiveSchoolMember(
+      await seedDeletionMember(ctx, schoolId, ownerId, NOW, "admin");
+      await seedDeletionMember(
         ctx,
         schoolId,
         deletingSuccessorId,
+        NOW,
         "teacher"
       );
 
@@ -286,13 +272,19 @@ describe("auth/deletion/prepare", () => {
     const t = convexTest(schema, convexModules);
 
     const reservedUserId = await t.mutation(async (ctx) => {
-      const ownerId = await insertUser(ctx, "reserving-owner");
-      const successorId = await insertUser(ctx, "reserved-successor");
-      const schoolId = await insertOwnedSchool(ctx, ownerId, "reserved-school");
-      const membershipId = await insertActiveSchoolMember(
+      const ownerId = await seedDeletionUser(ctx, "reserving-owner");
+      const successorId = await seedDeletionUser(ctx, "reserved-successor");
+      const schoolId = await seedDeletionSchool(
+        ctx,
+        ownerId,
+        "reserved-school",
+        NOW
+      );
+      const membershipId = await seedDeletionMember(
         ctx,
         schoolId,
-        successorId
+        successorId,
+        NOW
       );
       const preparationId = await ctx.db.insert("accountDeletionPreparations", {
         attemptId: ATTEMPT_ID,
@@ -325,7 +317,7 @@ describe("auth/deletion/prepare", () => {
   it("refreshes one preparation without duplicating it", async () => {
     const t = convexTest(schema, convexModules);
 
-    await t.mutation((ctx) => insertUser(ctx, "retry-owner"));
+    await t.mutation((ctx) => seedDeletionUser(ctx, "retry-owner"));
 
     for (const now of [NOW, NOW + 1000]) {
       vi.setSystemTime(now);
@@ -347,7 +339,9 @@ describe("auth/deletion/prepare", () => {
   it("rejects a concurrent browser attempt without changing the reservation", async () => {
     const t = convexTest(schema, convexModules);
 
-    await t.mutation((ctx) => insertUser(ctx, "concurrent-attempt-owner"));
+    await t.mutation((ctx) =>
+      seedDeletionUser(ctx, "concurrent-attempt-owner")
+    );
 
     await t.mutation((ctx) => prepareInTest(ctx, "concurrent-attempt-owner"));
     const initialPreparation = await t.query((ctx) =>
@@ -377,20 +371,21 @@ describe("auth/deletion/prepare", () => {
     const continuedPreparations: Doc<"accountDeletionPreparations">[] = [];
     let currentTime = NOW;
     const seeded = await t.mutation(async (ctx) => {
-      const ownerId = await insertUser(ctx, "many-schools-owner");
-      const successorId = await insertUser(ctx, "many-schools-successor");
+      const ownerId = await seedDeletionUser(ctx, "many-schools-owner");
+      const successorId = await seedDeletionUser(ctx, "many-schools-successor");
 
       for (
         let index = 0;
         index <= ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE;
         index += 1
       ) {
-        const schoolId = await insertOwnedSchool(
+        const schoolId = await seedDeletionSchool(
           ctx,
           ownerId,
-          `many-schools-${index}`
+          `many-schools-${index}`,
+          NOW
         );
-        await insertActiveSchoolMember(ctx, schoolId, successorId);
+        await seedDeletionMember(ctx, schoolId, successorId, NOW);
       }
 
       return ownerId;
@@ -436,23 +431,30 @@ describe("auth/deletion/prepare", () => {
   it("schedules continued cancellation after a later school has no successor", async () => {
     const t = convexTest(schema, convexModules);
     const ownerId = await t.mutation(async (ctx) => {
-      const insertedOwnerId = await insertUser(ctx, "partially-reserved-owner");
-      const successorId = await insertUser(ctx, "partially-reserved-successor");
+      const insertedOwnerId = await seedDeletionUser(
+        ctx,
+        "partially-reserved-owner"
+      );
+      const successorId = await seedDeletionUser(
+        ctx,
+        "partially-reserved-successor"
+      );
 
       for (
         let index = 0;
         index <= ACCOUNT_DELETION_TRANSACTION_BATCH_SIZE;
         index += 1
       ) {
-        const schoolId = await insertOwnedSchool(
+        const schoolId = await seedDeletionSchool(
           ctx,
           insertedOwnerId,
-          `partially-reserved-${index}`
+          `partially-reserved-${index}`,
+          NOW
         );
-        await insertActiveSchoolMember(ctx, schoolId, successorId);
+        await seedDeletionMember(ctx, schoolId, successorId, NOW);
       }
 
-      await insertOwnedSchool(ctx, insertedOwnerId, "successor-required");
+      await seedDeletionSchool(ctx, insertedOwnerId, "successor-required", NOW);
 
       return insertedOwnerId;
     });

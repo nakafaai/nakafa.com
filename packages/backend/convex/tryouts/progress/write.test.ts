@@ -7,7 +7,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress/write";
-import { insertTryoutAttempt } from "@repo/backend/test/tryout-runtime";
+import { insertTryoutAttempt } from "@repo/backend/test/tryout/runtime";
 import { makeTryoutSet, TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { Effect } from "effect";
 

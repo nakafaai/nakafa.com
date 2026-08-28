@@ -1,3 +1,11 @@
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   createConvexTestWithBetterAuth,
@@ -7,8 +15,7 @@ import {
 import {
   insertRuntimeArticles,
   testArticleProjection,
-} from "@repo/backend/test/content-runtime";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+} from "@repo/backend/test/content/runtime";
 
 const NOW = Date.UTC(2026, 3, 2, 12, 0, 0);
 

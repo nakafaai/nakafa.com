@@ -1,11 +1,11 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { compactSnapshots } from "@repo/backend/convex/contentRelease/snapshot/cleanup";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { insertTestRelease } from "@repo/backend/test/content-stage";
-import { makeProgramSnapshotData } from "@repo/backend/test/program-snapshot";
-import { describe, expect, it } from "@repo/testing/effect";
+import { insertTestRelease } from "@repo/backend/test/content/stage";
+import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
@@ -212,6 +212,20 @@ describe("contentRelease/snapshot/cleanup", () => {
         rendererJson: "{}",
         snapshotId,
       });
+      for (const index of [0, 1, 2]) {
+        await ctx.db.insert("tryoutRuntimeBundles", {
+          bundleHash: `sha256:${(index + 1).toString(16).repeat(64)}`,
+          bundleJson: "{}",
+          cleanupReleaseId: `release-cleanup-${index}`,
+          createdAt: 0,
+          rendererJson: "{}",
+          rendererManifestHash: `sha256:${(index + 4).toString(16).repeat(64)}`,
+          snapshotId,
+          sourceGitSha: "a".repeat(40),
+          sourceManifestHash: `sha256:${"b".repeat(64)}`,
+          sourceReleaseId: `release-cleanup-${index}`,
+        });
+      }
     });
 
     await expect(
@@ -228,21 +242,40 @@ describe("contentRelease/snapshot/cleanup", () => {
         bundle: await ctx.db.query("tryoutBundles").take(1),
         catalog: await ctx.db.query("tryoutCatalog").take(1),
         placement: await ctx.db.query("tryoutPlacements").take(1),
+        runtime: await ctx.db.query("tryoutRuntimeBundles").take(3),
       }))
     ).resolves.toEqual({
       bundle: [expect.objectContaining({ snapshotId })],
       catalog: [],
       placement: [],
+      runtime: [
+        expect.objectContaining({ snapshotId }),
+        expect.objectContaining({ snapshotId }),
+        expect.objectContaining({ snapshotId }),
+      ],
     });
+    await expect(
+      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
+    ).resolves.toEqual({ cursor: null, deleted: 1, done: false });
+    await expect(
+      t.run((ctx) => ctx.db.query("contentSnapshots").unique())
+    ).resolves.toMatchObject({ cleanupPart: "runtime" });
+    await expect(
+      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
+    ).resolves.toEqual({ cursor: null, deleted: 2, done: false });
+    await expect(
+      t.run((ctx) => ctx.db.query("contentSnapshots").unique())
+    ).resolves.toMatchObject({ cleanupPart: "runtime" });
     await expect(
       t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
     ).resolves.toEqual({ cursor: null, deleted: 2, done: false });
     await expect(
       t.run(async (ctx) => ({
         bundle: await ctx.db.query("tryoutBundles").take(1),
+        runtime: await ctx.db.query("tryoutRuntimeBundles").take(1),
         snapshot: await ctx.db.query("contentSnapshots").take(1),
       }))
-    ).resolves.toEqual({ bundle: [], snapshot: [] });
+    ).resolves.toEqual({ bundle: [], runtime: [], snapshot: [] });
   });
 
   it("cleans signed Quran rows and search projections in separate phases", async () => {

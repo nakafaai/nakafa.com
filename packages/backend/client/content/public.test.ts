@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { MAX_PUBLIC_RUNTIME_RESPONSE_BYTES } from "@nakafa/aksara-contracts/runtime/spec";
@@ -21,22 +22,15 @@ import {
   PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
   PUBLIC_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
-import { testArtifactJson } from "@repo/backend/test/content-artifact";
-import { testProjectionJson } from "@repo/backend/test/content-material";
+import { testArtifactJson } from "@repo/backend/test/content/artifact";
+import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
   testReleaseJson,
   testRendererJson,
-} from "@repo/backend/test/content-release";
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from "@repo/testing/effect";
+} from "@repo/backend/test/content/release";
 import { Effect } from "effect";
 import { vi } from "vitest";
 

@@ -1,7 +1,9 @@
+import { describe, expect, it } from "@effect/vitest";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
+import { LEGACY_TRYOUT_RUNTIME } from "@nakafa/aksara-contracts/release/current/legacy";
 import {
+  inheritContentSnapshot,
   inheritContentSnapshots,
-  replaceContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { CONTENT_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/document";
 import { retainActivatedTryoutBundle } from "@repo/backend/convex/contentRelease/tryout/bundle";
@@ -10,32 +12,32 @@ import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   TEST_DIGEST,
-  TEST_RELEASE_ID,
   testReleaseJson,
   testRendererJson,
-} from "@repo/backend/test/content-release";
+} from "@repo/backend/test/content/release";
 import { convexTest } from "convex-test";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 const ACTIVATED_AT = Date.UTC(2026, 7, 6, 4, 0, 0);
 const snapshots = {
   ...inheritContentSnapshots(null),
-  tryout: replaceContentSnapshot({
-    baseSnapshotId: null,
-    resultSnapshotId: TEST_DIGEST,
-    rowCount: 1,
-    rowDigest: TEST_DIGEST,
-  }),
+  tryout: inheritContentSnapshot(LEGACY_TRYOUT_RUNTIME.snapshotId),
 };
-const releaseJson = testReleaseJson({ snapshots });
+const releaseJson = testReleaseJson({
+  baseManifestHash: TEST_DIGEST,
+  baseReleaseId: "release-legacy-base",
+  manifestHash: LEGACY_TRYOUT_RUNTIME.manifestHash,
+  releaseId: LEGACY_TRYOUT_RUNTIME.releaseId,
+  rendererHash: LEGACY_TRYOUT_RUNTIME.rendererManifestHash,
+  snapshots,
+});
 const signed = Schema.decodeUnknownSync(SignedContentReleaseSchema)(
   JSON.parse(releaseJson)
 );
 const release = {
-  releaseId: TEST_RELEASE_ID,
+  releaseId: LEGACY_TRYOUT_RUNTIME.releaseId,
   releaseJson,
-  rendererJson: testRendererJson(),
+  rendererJson: testRendererJson(LEGACY_TRYOUT_RUNTIME.rendererManifestHash),
 };
 
 describe("contentRelease/tryout/bundle", () => {
@@ -57,10 +59,10 @@ describe("contentRelease/tryout/bundle", () => {
         createdAt: ACTIVATED_AT,
         index: 0,
         manifestHash: signed.manifestHash,
-        releaseId: TEST_RELEASE_ID,
+        releaseId: LEGACY_TRYOUT_RUNTIME.releaseId,
         releaseJson,
         rendererJson: release.rendererJson,
-        snapshotId: TEST_DIGEST,
+        snapshotId: LEGACY_TRYOUT_RUNTIME.snapshotId,
       }),
     ]);
   });

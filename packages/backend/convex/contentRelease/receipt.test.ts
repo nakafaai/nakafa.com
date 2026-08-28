@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { decodeReleaseJson } from "@repo/backend/convex/contentRelease/parse";
 import {
@@ -8,8 +9,7 @@ import {
 } from "@repo/backend/convex/contentRelease/receipt";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { insertTestRelease } from "@repo/backend/test/content-stage";
-import { describe, expect, it } from "@repo/testing/effect";
+import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 

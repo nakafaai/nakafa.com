@@ -1,5 +1,6 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { protectedRuntimeFloor } from "@repo/backend/convex/contentRelease/compact/runtime";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
   ensureState,
@@ -186,6 +187,13 @@ const retainedFloor = Effect.fn("contentRelease.retainedFloor")(function* (
   }
   const cutoff = Date.now() - ROLLBACK_RETENTION_MS;
   const retained = releases.find((release) => release.createdAt >= cutoff);
+  const runtimeFloor = yield* protectedRuntimeFloor(ctx, releases);
+  if (
+    runtimeFloor !== null &&
+    (retained === undefined || runtimeFloor < retained.sequence)
+  ) {
+    return runtimeFloor;
+  }
   if (retained) {
     return retained.sequence;
   }

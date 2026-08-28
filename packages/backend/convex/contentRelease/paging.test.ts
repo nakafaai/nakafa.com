@@ -1,8 +1,8 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   validateProjectionPage,
   validatePublicationPage,
 } from "@repo/backend/convex/contentRelease/paging";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 describe("contentRelease/paging", () => {

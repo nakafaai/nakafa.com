@@ -8,7 +8,12 @@ import { Effect, Schema } from "effect";
 export const PREDECESSOR_QUIET_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 /** Temporary predecessor routes observed independently during the cutover. */
-export const PREDECESSOR_ROUTES = ["singular", "batch"] as const;
+export const PREDECESSOR_ROUTES = [
+  "singular",
+  "batch",
+  "protected",
+  "history",
+] as const;
 export const predecessorRouteValidator = literals(...PREDECESSOR_ROUTES);
 export type PredecessorRoute = Infer<typeof predecessorRouteValidator>;
 
@@ -77,6 +82,8 @@ const predecessorStatusFields = {
   observationId: v.string(),
   routes: v.object({
     batch: predecessorRouteStatusValidator,
+    history: predecessorRouteStatusValidator,
+    protected: predecessorRouteStatusValidator,
     singular: predecessorRouteStatusValidator,
   }),
 };
@@ -98,7 +105,7 @@ export const predecessorStatusValidator = v.union(
 export type PredecessorStatus = Infer<typeof predecessorStatusValidator>;
 
 const predecessorAbandonFields = {
-  deleted: v.literal(2),
+  deleted: v.literal(4),
   deploymentName: v.string(),
   observationId: v.string(),
 };
@@ -111,6 +118,8 @@ export const predecessorAbandonReceiptValidator = v.object({
   live: predecessorIdentityValidator,
   routes: v.object({
     batch: predecessorRouteStatusValidator,
+    history: predecessorRouteStatusValidator,
+    protected: predecessorRouteStatusValidator,
     singular: predecessorRouteStatusValidator,
   }),
   stored: predecessorIdentityValidator,

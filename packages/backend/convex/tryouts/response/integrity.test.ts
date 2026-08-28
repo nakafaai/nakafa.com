@@ -1,8 +1,8 @@
+import { describe, expect, it } from "@effect/vitest";
 import { validateTryoutSectionSnapshots } from "@repo/backend/convex/tryouts/response/integrity";
-import { tryoutSectionSnapshot } from "@repo/backend/test/tryout-runtime";
-import { makeSignedTryoutSection } from "@repo/backend/test/tryout-section";
+import { tryoutSectionSnapshot } from "@repo/backend/test/tryout/runtime";
+import { makeSignedTryoutSection } from "@repo/backend/test/tryout/section";
 import { makeTryoutSection } from "@repo/backend/test/tryouts";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 const firstSnapshot = tryoutSectionSnapshot({

@@ -1,10 +1,11 @@
+import { describe, expect, it } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
-} from "@repo/backend/test/content-release";
+} from "@repo/backend/test/content/release";
 import {
   makeQuranAttribution,
   makeQuranChunk,
@@ -16,7 +17,6 @@ import {
   activateQuranSource,
 } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const bismillah = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ";
 

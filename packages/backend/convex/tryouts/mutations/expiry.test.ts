@@ -1,3 +1,11 @@
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
@@ -6,9 +14,8 @@ import {
   insertTryoutSectionAttempt,
   insertTryoutUser,
   seedTryoutContentAccessState,
-} from "@repo/backend/test/tryout-runtime";
+} from "@repo/backend/test/tryout/runtime";
 import { makeTryoutSet } from "@repo/backend/test/tryouts";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 const EXPIRED_AT = NOW - 60_000;

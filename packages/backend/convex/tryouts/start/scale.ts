@@ -55,6 +55,7 @@ const loadExactScale = Effect.fn("tryouts.start.loadExactScale")(function* (
             .eq("tryoutSnapshotId", source.snapshot.snapshotId)
             .eq("setIdentity", source.snapshot.setIdentity)
       )
+      .filter((query) => query.neq(query.field("history"), true))
       .take(2)
   );
   if (scales.length > 1) {
@@ -173,6 +174,7 @@ const loadPreviousScale = Effect.fn("tryouts.start.loadPreviousScale")(
         .withIndex("by_setIdentity_and_publishedAt", (query) =>
           query.eq("setIdentity", source.snapshot.setIdentity)
         )
+        .filter((query) => query.neq(query.field("history"), true))
         .order("desc")
         .first()
     );

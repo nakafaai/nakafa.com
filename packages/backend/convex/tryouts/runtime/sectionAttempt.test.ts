@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { requireInternalEntrySection } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 const unavailableSections: Parameters<typeof requireInternalEntrySection>[0] = [

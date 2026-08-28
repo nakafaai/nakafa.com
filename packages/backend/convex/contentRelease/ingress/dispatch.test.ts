@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { dispatchHandler } from "@repo/backend/convex/contentRelease/ingress/dispatch";
@@ -9,30 +10,34 @@ import {
   publishIngressCandidate,
   publishIngressRecovery,
   sendPublication,
-} from "@repo/backend/test/content-dispatch";
+} from "@repo/backend/test/content/dispatch";
 import {
   ingressItem,
   ingressRelease,
   ingressReleaseId,
-} from "@repo/backend/test/content-ingress";
+} from "@repo/backend/test/content/ingress";
 import {
   TEST_PROOF_RENDERER,
   testProofRenderer,
-} from "@repo/backend/test/content-proof";
+} from "@repo/backend/test/content/proof";
 import {
   insertAbortedRelease,
   insertActiveRelease,
   insertTestState,
   insertZeroRelease,
   type TestIdentity,
-} from "@repo/backend/test/content-state";
+} from "@repo/backend/test/content/state";
+import {
+  ABORT_MIGRATION_ID,
+  seedPendingAbort,
+} from "@repo/backend/test/migration/abort";
 import { convexTest } from "convex-test";
 import { Schema } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 vi.mock("@repo/backend/content/trust", async () => {
   const { TEST_KEY_ID, TEST_KEY_RESOLVER } = await import(
-    "@repo/backend/test/content-proof"
+    "@repo/backend/test/content/proof"
   );
   return {
     activeContentSigningKeyId: TEST_KEY_ID,
@@ -41,6 +46,31 @@ vi.mock("@repo/backend/content/trust", async () => {
 });
 
 describe("content publication Node dispatch", () => {
+  it("dispatches idempotent retained-history abort evidence", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(seedPendingAbort);
+
+    const request = {
+      command: "abort",
+      operation: "migrateTryoutHistory",
+      releaseId: ABORT_MIGRATION_ID,
+    } as const;
+    const completed = await sendPublication(t, request);
+    const repeated = await sendPublication(t, request);
+
+    expect(completed).toMatchObject({
+      ok: true,
+      operation: "migrateTryoutHistory",
+      value: {
+        command: "abort",
+        deleted: 1,
+        done: true,
+        migrationId: ABORT_MIGRATION_ID,
+      },
+    });
+    expect(repeated).toEqual(completed);
+  });
+
   it("publishes one authenticated release through every lifecycle boundary", async () => {
     const t = convexTest(schema, convexModules);
     const candidateResponses = await publishIngressCandidate(t);

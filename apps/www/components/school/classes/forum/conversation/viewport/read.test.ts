@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Deferred, Effect } from "effect";
 import {
   conversationTestFirstPost as firstPost,

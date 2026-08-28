@@ -2,10 +2,8 @@ import type {
   ReleaseVerificationEvidence,
   SignedContentRelease,
 } from "@nakafa/aksara-contracts/release";
-import {
-  ContentSnapshotKindSchema,
-  hasSameContentSnapshots,
-} from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { ContentSnapshotKindSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
+import { hasSameContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";

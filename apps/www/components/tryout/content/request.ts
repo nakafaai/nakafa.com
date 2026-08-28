@@ -5,6 +5,8 @@ import type {
   CurrentTryoutQuestionSelector,
   HistoryTryoutAnswerSelector,
   HistoryTryoutQuestionSelector,
+  PredecessorTryoutAnswerSelector,
+  PredecessorTryoutQuestionSelector,
   TryoutQuestionSelector,
 } from "@/components/tryout/content/model";
 
@@ -14,14 +16,17 @@ type CurrentSelector =
 type HistorySelector =
   | HistoryTryoutAnswerSelector
   | HistoryTryoutQuestionSelector;
+type PredecessorSelector =
+  | PredecessorTryoutAnswerSelector
+  | PredecessorTryoutQuestionSelector;
 type RuntimeIdentity = Pick<
   CurrentTryoutQuestionSelector,
   "appLocale" | "snapshotId" | "snapshotReleaseId"
 >;
 
 /** Rejects historical selectors at the public featured-question boundary. */
-export const requireCurrentTryoutQuestion = Effect.fn(
-  "NakafaContent.requireCurrentTryoutQuestion"
+export const requireLiveTryoutQuestion = Effect.fn(
+  "NakafaContent.requireLiveTryoutQuestion"
 )(function* (question: TryoutQuestionSelector) {
   if ("artifactLocale" in question) {
     return yield* runtimeIntegrity(
@@ -57,6 +62,27 @@ const requireCoherentSelectors = Effect.fn(
 export const makeCurrentTryoutRuntimeRequest = Effect.fn(
   "NakafaContent.makeCurrentTryoutRequest"
 )(function* (selectors: readonly CurrentSelector[]) {
+  const first = yield* requireCoherentSelectors(selectors);
+  if (selectors.some(({ bundleHash }) => bundleHash !== first.bundleHash)) {
+    return yield* runtimeIntegrity(
+      "Protected content batch spans multiple permanent bundles."
+    );
+  }
+  return {
+    bundleHash: first.bundleHash,
+    selectors: selectors.map(({ artifactHash, contentKey, delivery }) => ({
+      artifactHash,
+      contentKey,
+      delivery,
+    })),
+    snapshotId: first.snapshotId,
+  };
+});
+
+/** Builds one coherent request for the deployed predecessor endpoint. */
+export const makePredecessorTryoutRuntimeRequest = Effect.fn(
+  "NakafaContent.makePredecessorTryoutRequest"
+)(function* (selectors: readonly PredecessorSelector[]) {
   const first = yield* requireCoherentSelectors(selectors);
   return {
     appLocale: first.appLocale,

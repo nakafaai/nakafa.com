@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { ActiveAppLocaleListSchema } from "@nakafa/aksara-contracts/locale";
 import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
 import { readQuranAttribution } from "@repo/backend/convex/contentRelease/quran/attribution";
@@ -7,7 +8,6 @@ import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeQuranAttribution } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
-import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
 

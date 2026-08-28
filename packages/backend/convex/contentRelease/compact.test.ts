@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   compactProgram,
   runProgram,
@@ -11,13 +12,12 @@ import {
   compactionIdentity,
   insertCompletedRelease,
   seedCompactionHistory,
-} from "@repo/backend/test/content-compact";
+} from "@repo/backend/test/content/compact";
 import {
   insertTestState,
   insertZeroRelease,
-} from "@repo/backend/test/content-state";
+} from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 describe("contentRelease/compact", () => {
   it("resumes pages and preserves floor anchors before collecting history", async () => {

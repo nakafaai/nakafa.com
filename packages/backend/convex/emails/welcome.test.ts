@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it, vi } from "@effect/vitest";
 import { canonicalizePublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -10,11 +10,10 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   makeTestPageProjection,
   TEST_PAGE_PROJECTION_JSON,
-} from "@repo/backend/test/content-page";
-import { TEST_ARTICLE_PROJECTION_JSON } from "@repo/backend/test/content-runtime";
+} from "@repo/backend/test/content/page";
+import { TEST_ARTICLE_PROJECTION_JSON } from "@repo/backend/test/content/runtime";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const SITE_URL = new URL("https://nakafa.com");
 

@@ -1,6 +1,6 @@
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
-import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { Effect } from "effect";
@@ -13,10 +13,7 @@ interface ReadModelImpact {
 
 /** Checks whether a release may change one authored content family. */
 function changesFamily(scope: PublicationScope, family: ContentFamily) {
-  return (
-    scope.families.includes(family) ||
-    scope.content.some((identity) => identity.family === family)
-  );
+  return scope.families.includes(family);
 }
 
 /** Derives the read models whose source data may change under one exact scope. */

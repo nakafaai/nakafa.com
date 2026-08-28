@@ -6,7 +6,7 @@ interface DependencyHold {
 }
 
 export const CONTRACT_ARCHIVE =
-  "https://github.com/nakafaai/aksara/releases/download/contracts-v0.17.0/nakafa-aksara-contracts-0.17.0.tgz";
+  "https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz";
 
 export const DEPENDENCY_RELEASE_AGE_MINUTES = 1440;
 

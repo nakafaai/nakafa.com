@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it, vi } from "@effect/vitest";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -13,16 +13,15 @@ import {
   loadAttemptScoreSource,
   requireOwnedAttempt,
 } from "@repo/backend/convex/tryouts/runtime/score";
+import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
 import {
   FROZEN_SCORE_NOW as NOW,
   FROZEN_SCORE_SET_IDENTITY as SET_IDENTITY,
   FROZEN_SCORE_SNAPSHOT_ID as SNAPSHOT_ID,
   seedFrozenTryoutScoreState,
 } from "@repo/backend/test/tryout/score";
-import { seedTryoutContentAccessState } from "@repo/backend/test/tryout-runtime";
 import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
-import { vi } from "vitest";
 
 class ObservedPublicFailure extends Schema.TaggedError<ObservedPublicFailure>()(
   "ObservedPublicFailure",

@@ -1,15 +1,15 @@
+import { describe, expect, it } from "@effect/vitest";
 import { readMaterialIdentity } from "@repo/backend/convex/contentRelease/material/identity";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { makeMaterialProjection } from "@repo/backend/test/content-material";
+import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   activateMaterialCatalog,
   advanceMaterialCatalog,
   MATERIAL_IDENTITY,
-} from "@repo/backend/test/material-catalog";
+} from "@repo/backend/test/material/catalog";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const projection = makeMaterialProjection("en", 1);
 const identity = {

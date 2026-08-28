@@ -1,12 +1,12 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   PublicPathSchema,
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { ContentRuntimeMissingError } from "@repo/backend/client/content/errors";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import { vi } from "vitest";
 import { getMaterialPublication } from "@/lib/content/material/publication";

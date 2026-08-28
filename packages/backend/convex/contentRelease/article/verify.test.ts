@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   verifyArticle,
   verifyCategory,
@@ -5,9 +6,8 @@ import {
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { insertRuntimeArticles } from "@repo/backend/test/content-runtime";
+import { insertRuntimeArticles } from "@repo/backend/test/content/runtime";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 describe("contentRelease/article/verify", () => {
   it("accepts the signed asset identity and rejects a stored mismatch", async () => {

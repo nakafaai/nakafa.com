@@ -1,5 +1,4 @@
 import type { SignedContentArtifact } from "@nakafa/aksara-contracts/content";
-import { MAX_SIGNED_ARTIFACT_BYTES } from "@nakafa/aksara-contracts/limits";
 import { StageArtifactBatchInputSchema } from "@nakafa/aksara-contracts/transport/batch";
 import {
   MAX_ARTIFACT_BATCH_BYTES,
@@ -7,11 +6,11 @@ import {
 } from "@nakafa/aksara-contracts/transport/limits";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
+import { storeContentArtifact } from "@repo/backend/convex/contentRelease/artifact/store";
 import {
   hashBatch,
   validateStoredBatch,
 } from "@repo/backend/convex/contentRelease/batch";
-import { ensureDocumentSize } from "@repo/backend/convex/contentRelease/document";
 import {
   ReleaseError,
   releaseFail,
@@ -104,44 +103,14 @@ const stageArtifact = Effect.fn("contentRelease.stageArtifact")(function* (
       `Artifact ${artifact.artifactHash} does not match its staged upsert.`
     );
   }
-  if (
-    new TextEncoder().encode(artifactJson).byteLength >
-    MAX_SIGNED_ARTIFACT_BYTES
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_SIZE",
-      `Artifact ${artifact.artifactHash} exceeds its signed wire ceiling.`
-    );
-  }
   const retainUntil = now + ROLLBACK_RETENTION_MS;
-  const row = {
-    artifactHash: artifact.artifactHash,
+  const stored = yield* storeContentArtifact(
+    ctx,
+    artifact,
     artifactJson,
-    createdAt: now,
-    retainUntil,
-  };
-  yield* ensureDocumentSize(`Artifact ${artifact.artifactHash}`, row);
-  const stored = yield* Effect.promise(() =>
-    ctx.db
-      .query("contentArtifacts")
-      .withIndex("by_artifactHash", (query) =>
-        query.eq("artifactHash", artifact.artifactHash)
-      )
-      .unique()
+    now,
+    retainUntil
   );
-  if (stored && stored.artifactJson !== artifactJson) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_CONFLICT",
-      `Artifact hash ${artifact.artifactHash} was reused with different bytes.`
-    );
-  }
-  if (!stored) {
-    yield* Effect.promise(() => ctx.db.insert("contentArtifacts", row));
-  } else if (stored.retainUntil < retainUntil) {
-    yield* Effect.promise(() =>
-      ctx.db.patch("contentArtifacts", stored._id, { retainUntil })
-    );
-  }
   yield* Effect.promise(() =>
     ctx.db.patch("contentItems", item._id, {
       artifactBatchHash: batchHash,
@@ -149,7 +118,7 @@ const stageArtifact = Effect.fn("contentRelease.stageArtifact")(function* (
       artifactReady: true,
     })
   );
-  return stored !== null;
+  return stored;
 });
 /** Stages one canonical artifact batch with exact immutable retry identity. */
 const stageProgram = Effect.fn("contentRelease.stageArtifactBatch")(function* (

@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { MAX_PUBLICATION_RESPONSE_BYTES } from "@nakafa/aksara-contracts/transport/limits";
 import {
   encodePublicationResult,
@@ -6,7 +7,6 @@ import {
   publicationSuccess,
   validateResponseBytes,
 } from "@repo/backend/convex/contentRelease/ingress/response";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Cause, Effect, Exit, Result } from "effect";
 
 describe("content publication response encoding", () => {
@@ -20,10 +20,11 @@ describe("content publication response encoding", () => {
             active: null,
             candidate: null,
             recovery: null,
+            tryoutRuntimeBundle: null,
           },
         })
       ).toEqual({
-        body: '{"ok":true,"operation":"current","value":{"active":null,"candidate":null,"recovery":null}}',
+        body: '{"ok":true,"operation":"current","value":{"active":null,"candidate":null,"recovery":null,"tryoutRuntimeBundle":null}}',
         status: 200,
       });
       expect(

@@ -10,6 +10,7 @@ import { loadRelease } from "@repo/backend/convex/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/convex/contentRelease/parse";
 import { completedReceipt } from "@repo/backend/convex/contentRelease/receipt";
 import { publicationReceiptValidator } from "@repo/backend/convex/contentRelease/spec";
+import { findReleaseTryoutRuntime } from "@repo/backend/convex/contentRelease/tryout/binding";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
 import { Effect } from "effect";
@@ -80,6 +81,11 @@ export const lookupProgram = Effect.fn("contentRelease.recoveryLookup")(
     }
     const candidate = yield* loadRelease(ctx, releaseId);
     const signed = yield* validateRecoveryRelation(candidate, recovery);
+    yield* findReleaseTryoutRuntime(
+      ctx,
+      signed.recovery,
+      recovery.tryoutRuntimeBundleHash
+    );
     return {
       kind: "completed",
       value: {

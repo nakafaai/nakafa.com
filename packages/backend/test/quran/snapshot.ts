@@ -33,12 +33,12 @@ import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
-} from "@repo/backend/test/content-release";
-import { insertTestRelease } from "@repo/backend/test/content-stage";
+} from "@repo/backend/test/content/release";
+import { insertTestRelease } from "@repo/backend/test/content/stage";
 import {
   insertZeroRelease,
   type TestIdentity,
-} from "@repo/backend/test/content-state";
+} from "@repo/backend/test/content/state";
 import { makeQuranSearch } from "@repo/backend/test/quran/rows";
 import { Effect } from "effect";
 

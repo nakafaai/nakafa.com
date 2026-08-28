@@ -1,6 +1,7 @@
 // @vitest-environment node
+
+import { describe, expect, it } from "@effect/vitest";
 import { readJsonBody } from "@repo/backend/convex/contentRelease/http/body";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, Result } from "effect";
 
 /** Reads one request at the Vitest boundary while preserving typed failures. */

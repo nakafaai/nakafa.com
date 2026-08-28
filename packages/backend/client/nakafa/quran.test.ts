@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import {
@@ -16,10 +17,9 @@ import {
   makeQuranLocaleSources,
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
-import { toRuntimeQueryError } from "@repo/backend/test/runtime-query";
+import { toRuntimeQueryError } from "@repo/backend/test/runtime/query";
 import { NakafaAgentInputError } from "@repo/contents/_lib/agent/errors";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
-import { beforeEach, describe, expect, it } from "@repo/testing/effect";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option, Schema } from "effect";
 import { vi } from "vitest";

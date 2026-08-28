@@ -1,10 +1,10 @@
+import { describe, expect, it } from "@effect/vitest";
 import { adjustArticleBucket } from "@repo/backend/convex/contentRelease/article/bucket";
 import { CONTENT_BUCKET_SIZE } from "@repo/backend/convex/contentRelease/bucket";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 describe("contentRelease/article/bucket", () => {
   it("creates, updates, and removes non-empty bucket counts", async () => {

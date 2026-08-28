@@ -7,6 +7,10 @@ import {
   deleteAbortRows,
   hasAbortResidue,
 } from "@repo/backend/convex/contentRelease/abort/rows";
+import {
+  deleteAbortRuntime,
+  hasAbortRuntime,
+} from "@repo/backend/convex/contentRelease/abort/runtime";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
   loadRelease,
@@ -50,7 +54,7 @@ export const validateAbortedRelease = Effect.fn(
 )(function* (ctx: MutationCtx | QueryCtx, releaseId: string) {
   const release = yield* loadRelease(ctx, releaseId);
   const state = yield* loadState(ctx);
-  const [rows, residue] = yield* Effect.all([
+  const [rows, residue, runtime] = yield* Effect.all([
     Effect.all([
       Effect.promise(() =>
         ctx.db
@@ -86,6 +90,7 @@ export const validateAbortedRelease = Effect.fn(
       ),
     ]),
     hasAbortResidue(ctx, release.sequence),
+    hasAbortRuntime(ctx, releaseId),
   ]);
   if (
     release.status !== "aborted" ||
@@ -98,6 +103,7 @@ export const validateAbortedRelease = Effect.fn(
     state?.candidateReleaseId === releaseId ||
     state?.recoveryReleaseId === releaseId ||
     residue ||
+    runtime ||
     rows.some((row) => row !== null)
   ) {
     return yield* releaseFail(
@@ -151,6 +157,7 @@ export const abortProgram = Effect.fn("contentRelease.abort")(function* (
   }
   const total = abortRowCount(release);
   const before = release.abortedRows ?? 0;
+  yield* deleteAbortRuntime(ctx, releaseId);
   const deleted = yield* deleteAbortRows(ctx, releaseId, release.sequence);
   if (deleted === 0 && before < total) {
     return yield* releaseFail(
@@ -166,7 +173,11 @@ export const abortProgram = Effect.fn("contentRelease.abort")(function* (
     );
   }
   const complete = processed === total;
-  if (complete && (yield* hasAbortResidue(ctx, release.sequence))) {
+  if (
+    complete &&
+    ((yield* hasAbortResidue(ctx, release.sequence)) ||
+      (yield* hasAbortRuntime(ctx, releaseId)))
+  ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       `Release ${releaseId} retained staged publication ownership.`

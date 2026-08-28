@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { readPageCatalog } from "@repo/backend/convex/contentRelease/page/catalog";
@@ -5,11 +6,10 @@ import { PAGE_CATALOG_LIMIT } from "@repo/backend/convex/contentRelease/page/lim
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { insertTestPage } from "@repo/backend/test/content-page";
-import { insertRuntimeRelease } from "@repo/backend/test/content-runtime";
-import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
+import { insertTestPage } from "@repo/backend/test/content/page";
+import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
+import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 describe("contentRelease/page/catalog", () => {
   it("keeps page ownership absent before its signed family cutover", async () => {

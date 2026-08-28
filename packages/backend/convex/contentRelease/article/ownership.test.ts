@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -9,12 +10,11 @@ import { CONTENT_BUCKET_SIZE } from "@repo/backend/convex/contentRelease/bucket"
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { TEST_ARTICLE_PROJECTION } from "@repo/backend/test/content-runtime";
+import { TEST_ARTICLE_PROJECTION } from "@repo/backend/test/content/runtime";
 import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import type { WithoutSystemFields } from "convex/server";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 type ArticleEntry = WithoutSystemFields<Doc<"articleCatalog">>;
 

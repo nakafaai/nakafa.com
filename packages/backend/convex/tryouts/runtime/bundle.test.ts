@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { CONTENT_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/document";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -13,9 +14,8 @@ import {
   TEST_RELEASE_ID,
   testReleaseJson,
   testRendererJson,
-} from "@repo/backend/test/content-release";
+} from "@repo/backend/test/content/release";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const NOW = Date.UTC(2026, 7, 3, 12, 0, 0);
 const source: TryoutBundleSource = {

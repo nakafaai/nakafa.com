@@ -42,15 +42,17 @@ interface CreateTryoutAttemptInput {
 export const createTryoutAttempt = Effect.fn(
   "tryouts.start.createTryoutAttempt"
 )(function* (ctx: MutationCtx, input: CreateTryoutAttemptInput) {
-  yield* retainTryoutBundle(ctx, input.source.bundle, input.now).pipe(
-    Effect.mapError(
-      (error) =>
-        new TryoutStartError({
-          code: error.code,
-          message: error.message,
-        })
-    )
-  );
+  if (input.source.kind === "legacy") {
+    yield* retainTryoutBundle(ctx, input.source.bundle, input.now).pipe(
+      Effect.mapError(
+        (error) =>
+          new TryoutStartError({
+            code: error.code,
+            message: error.message,
+          })
+      )
+    );
+  }
   const values = buildAttemptValues(input);
   const attemptId = yield* tryStartPromise(() =>
     ctx.db.insert("tryoutAttempts", values)
@@ -92,8 +94,17 @@ function buildAttemptValues(
     ...(input.scaleVersion ? { scaleVersionId: input.scaleVersion._id } : {}),
   } satisfies Partial<TryoutAttemptInsert>;
   const signedSet = input.source.snapshot.set.row;
+  const runtime =
+    input.source.kind === "permanent"
+      ? {
+          snapshotReleaseId: input.source.releaseId,
+          tryoutBundleHash: input.source.bundle.bundleHash,
+          tryoutBundleId: input.source.bundle._id,
+        }
+      : { snapshotReleaseId: input.source.bundle.releaseId };
   return {
     ...values,
+    ...runtime,
     countryKey: signedSet.countryKey,
     examKey: signedSet.examKey,
     appLocale: input.args.locale,
@@ -112,7 +123,6 @@ function buildAttemptValues(
     setIdentity: input.source.snapshot.setIdentity,
     setKey: signedSet.setKey,
     setPublicPath: signedSet.publicPath,
-    snapshotReleaseId: input.source.bundle.releaseId,
     totalQuestions: signedSet.questionCount,
     trackKey: signedSet.trackKey,
     tryoutSnapshotId: input.source.snapshot.snapshotId,

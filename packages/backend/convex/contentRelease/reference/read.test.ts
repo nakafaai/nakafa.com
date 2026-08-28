@@ -1,23 +1,23 @@
+import { describe, expect, it } from "@effect/vitest";
 import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
 import { readContentReference } from "@repo/backend/convex/contentRelease/reference/read";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { makeMaterialProjection } from "@repo/backend/test/content-material";
+import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   insertRuntimeArticles,
   testArticleProjection,
-} from "@repo/backend/test/content-runtime";
-import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
+} from "@repo/backend/test/content/runtime";
+import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
 import { makeQuranSearch } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import {
   activateTryoutSnapshot,
   makeTryoutCatalogRow,
   makeTryoutPlacementRow,
-} from "@repo/backend/test/tryout-snapshot";
+} from "@repo/backend/test/tryout/snapshot";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 describe("contentRelease/reference/read", () => {
   it("resolves current signed articles by route and graph identity", async () => {

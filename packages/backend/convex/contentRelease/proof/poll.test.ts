@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import workflowTest from "@convex-dev/workflow/test";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   ReleaseIdSchema,
   type Sha256Hash,
@@ -15,18 +16,18 @@ import {
   TEST_PROOF_RENDERER,
   testEmptyManifest,
   testSignedRelease,
-} from "@repo/backend/test/content-proof";
-import { insertSignedCandidate } from "@repo/backend/test/content-stage";
+} from "@repo/backend/test/content/proof";
+import { insertSignedCandidate } from "@repo/backend/test/content/stage";
 import {
   completeContentProof,
   recomputeContentProof,
-} from "@repo/backend/test/content-verify";
+} from "@repo/backend/test/content/verify";
 import { convexTest, type TestConvex } from "convex-test";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 vi.mock("@repo/backend/content/trust", async () => {
   const { TEST_KEY_RESOLVER } = await import(
-    "@repo/backend/test/content-proof"
+    "@repo/backend/test/content/proof"
   );
   return { contentKeyResolver: TEST_KEY_RESOLVER };
 });

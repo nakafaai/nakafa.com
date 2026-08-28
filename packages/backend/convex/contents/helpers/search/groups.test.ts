@@ -1,10 +1,10 @@
+import { describe, expect, it } from "@effect/vitest";
 import { buildContentSearchDocument } from "@repo/backend/convex/contents/helpers/search/documents";
 import {
   appendSearchGroups,
   interleaveSearchGroups,
 } from "@repo/backend/convex/contents/helpers/search/groups";
-import { testArticleGraph } from "@repo/backend/test/content-release";
-import { describe, expect, it } from "vitest";
+import { testArticleGraph } from "@repo/backend/test/content/release";
 
 /** Builds one complete search document for deterministic group tests. */
 function createDocument(slug: string) {

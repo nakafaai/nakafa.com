@@ -1,10 +1,10 @@
-import { it as effectIt } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import * as convexRuntime from "@repo/backend/client/runtime";
 import { ConvexRuntimeQueryError } from "@repo/backend/client/runtime";
-import { toRuntimeQueryError } from "@repo/backend/test/runtime-query";
+import { toRuntimeQueryError } from "@repo/backend/test/runtime/query";
 import { Effect, Fiber } from "effect";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import {
   getApiContentReferenceByContentId,
   getArticleApiContentPage,
@@ -57,7 +57,7 @@ describe("API content runtime", () => {
     );
     expect(parseApiContentId("en/articles/a")).toBeNull();
   });
-  effectIt.effect.each([
+  it.effect.each([
     {
       args: {
         appLocale: "en" as const,
@@ -115,7 +115,7 @@ describe("API content runtime", () => {
       );
     })
   );
-  effectIt.effect(
+  it.effect(
     "chunks by eight and runs at most four batch reads concurrently",
     () =>
       Effect.gen(function* () {
@@ -192,7 +192,7 @@ describe("API content runtime", () => {
         expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledTimes(2);
       })
   );
-  effectIt.effect.each([{ releaseId: "release-after" }, null])(
+  it.effect.each([{ releaseId: "release-after" }, null])(
     "rejects a page when its signed release changes or disappears",
     (active) =>
       Effect.gen(function* () {
@@ -215,53 +215,49 @@ describe("API content runtime", () => {
         );
       })
   );
-  effectIt.effect(
-    "maps signed hydration failures into the API runtime error",
-    () =>
-      Effect.gen(function* () {
-        runtimeClientMocks.runtimeQuery.mockResolvedValueOnce({
-          activeReleaseId: "release-test",
-          continueCursor: "",
-          isDone: true,
-          page: [{ appLocale: "en", publicPath: "articles/politics/test" }],
-        });
-        publishedContentMocks.readPublishedApiItems.mockReturnValue(
-          Effect.fail(
-            new ConvexRuntimeQueryError({
-              networkCodes: [],
-              query: "contentRuntime/batch",
-              reason: "query",
-            })
-          )
-        );
-        const failure = yield* getArticleApiContentPage({
-          appLocale: "en",
-          cursor: null,
-          limit: 10,
-          prefix: "articles/politics",
-        }).pipe(Effect.flip);
-        expect(failure.message).toContain(
-          "Unable to read signed content for the public API."
-        );
-      })
+  it.effect("maps signed hydration failures into the API runtime error", () =>
+    Effect.gen(function* () {
+      runtimeClientMocks.runtimeQuery.mockResolvedValueOnce({
+        activeReleaseId: "release-test",
+        continueCursor: "",
+        isDone: true,
+        page: [{ appLocale: "en", publicPath: "articles/politics/test" }],
+      });
+      publishedContentMocks.readPublishedApiItems.mockReturnValue(
+        Effect.fail(
+          new ConvexRuntimeQueryError({
+            networkCodes: [],
+            query: "contentRuntime/batch",
+            reason: "query",
+          })
+        )
+      );
+      const failure = yield* getArticleApiContentPage({
+        appLocale: "en",
+        cursor: null,
+        limit: 10,
+        prefix: "articles/politics",
+      }).pipe(Effect.flip);
+      expect(failure.message).toContain(
+        "Unable to read signed content for the public API."
+      );
+    })
   );
-  effectIt.effect(
-    "reads one current reference by stable graph content ID",
-    () =>
-      Effect.gen(function* () {
-        const row = { contentId: "asset:en:article:politics:article:a" };
-        runtimeClientMocks.runtimeQuery.mockResolvedValueOnce(row);
-        expect(
-          yield* getApiContentReferenceByContentId({ contentId: row.contentId })
-        ).toEqual(row);
-        expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledWith(
-          "https://test.convex.cloud",
-          expect.anything(),
-          { input: { contentId: row.contentId, kind: "content" } }
-        );
-      })
+  it.effect("reads one current reference by stable graph content ID", () =>
+    Effect.gen(function* () {
+      const row = { contentId: "asset:en:article:politics:article:a" };
+      runtimeClientMocks.runtimeQuery.mockResolvedValueOnce(row);
+      expect(
+        yield* getApiContentReferenceByContentId({ contentId: row.contentId })
+      ).toEqual(row);
+      expect(runtimeClientMocks.runtimeQuery).toHaveBeenCalledWith(
+        "https://test.convex.cloud",
+        expect.anything(),
+        { input: { contentId: row.contentId, kind: "content" } }
+      );
+    })
   );
-  effectIt.effect("wraps runtime query failures with query context", () =>
+  it.effect("wraps runtime query failures with query context", () =>
     Effect.gen(function* () {
       runtimeClientMocks.runtimeQuery.mockRejectedValueOnce(
         new ConvexRuntimeQueryError({

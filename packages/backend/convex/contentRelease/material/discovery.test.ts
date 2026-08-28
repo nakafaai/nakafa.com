@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import {
   readLatestMaterials,
@@ -6,13 +7,12 @@ import {
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { makeMaterialProjection } from "@repo/backend/test/content-material";
+import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   activateMaterialCatalog,
   MATERIAL_IDENTITY,
-} from "@repo/backend/test/material-catalog";
+} from "@repo/backend/test/material/catalog";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 describe("contentRelease/material/discovery", () => {
   it("returns bounded unmanaged discovery and rejects invalid limits", async () => {

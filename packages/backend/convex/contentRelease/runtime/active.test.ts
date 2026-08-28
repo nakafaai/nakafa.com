@@ -1,11 +1,11 @@
+import { describe, expect, it } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { testProofRenderer } from "@repo/backend/test/content-proof";
-import { insertRuntimeRelease } from "@repo/backend/test/content-runtime";
-import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
+import { testProofRenderer } from "@repo/backend/test/content/proof";
+import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
+import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const readActive = api.contentRelease.runtime.active.read;
 

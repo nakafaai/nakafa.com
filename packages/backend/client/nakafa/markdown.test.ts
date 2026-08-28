@@ -3,7 +3,7 @@ import { readNakafaMarkdown } from "@repo/backend/client/nakafa/markdown";
 import {
   makeMaterialContentRef,
   makeMaterialProjection,
-} from "@repo/backend/test/content-material";
+} from "@repo/backend/test/content/material";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import { Effect, Option } from "effect";

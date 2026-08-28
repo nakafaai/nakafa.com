@@ -7,7 +7,7 @@ import {
   activateProgramSnapshot,
   makeProgramSnapshotData,
   makeTechnicalProgram,
-} from "@repo/backend/test/program-snapshot";
+} from "@repo/backend/test/program/snapshot";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 

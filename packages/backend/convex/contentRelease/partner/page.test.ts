@@ -1,21 +1,21 @@
+import { describe, expect, it } from "@effect/vitest";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { makeMaterialProjection } from "@repo/backend/test/content-material";
+import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   insertRuntimeArticles,
   testArticleProjection,
-} from "@repo/backend/test/content-runtime";
+} from "@repo/backend/test/content/runtime";
 import {
   activateMaterialCatalog,
   advanceMaterialCatalog,
   MATERIAL_IDENTITY,
-} from "@repo/backend/test/material-catalog";
-import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
+} from "@repo/backend/test/material/catalog";
+import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const ARTICLE_PREFIX = "articles/politics";
 const ARTICLE_CURSOR_PATTERN = /^content:article:/;

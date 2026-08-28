@@ -1,9 +1,9 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   readQuranTafsir,
   readQuranTranslation,
 } from "@repo/backend/convex/contentRelease/quran/translation";
 import { makeQuranChunk } from "@repo/backend/test/quran/rows";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 const verse = makeQuranChunk({

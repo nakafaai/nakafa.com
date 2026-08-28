@@ -1,4 +1,12 @@
 // @vitest-environment node
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import {
   decodePublicContentRuntimeRequest,
@@ -21,30 +29,22 @@ import type {
   PredecessorStatus,
 } from "@repo/backend/convex/contentRelease/predecessor/spec";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
-import { testProjectionJson } from "@repo/backend/test/content-material";
-import { testRendererJson } from "@repo/backend/test/content-release";
+import { testProjectionJson } from "@repo/backend/test/content/material";
+import { testRendererJson } from "@repo/backend/test/content/release";
 import {
   insertRuntimeRelease,
   publicRuntimeRequest,
   runtimeCases,
   runtimeContentKey,
-} from "@repo/backend/test/content-runtime";
-import { insertZeroRelease } from "@repo/backend/test/content-state";
-import { insertRuntimeHead } from "@repo/backend/test/runtime-head";
+} from "@repo/backend/test/content/runtime";
+import { insertZeroRelease } from "@repo/backend/test/content/state";
+import { insertRuntimeHead } from "@repo/backend/test/runtime/head";
 import {
   TEST_RUNTIME_PATH,
   TEST_RUNTIME_RELEASE,
-} from "@repo/backend/test/runtime-values";
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from "@repo/testing/effect";
+} from "@repo/backend/test/runtime/values";
 import { makeFunctionReference } from "convex/server";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const RUNTIME_TOKEN = "technical-runtime-token";
 const OBSERVATION_ID = "test-predecessor-observation";
@@ -263,7 +263,7 @@ describe("public content runtime HTTP route", () => {
       t.mutation(abandonObservation, { observationId: OBSERVATION_ID })
     ).resolves.toMatchObject({
       abandonedAt: expect.any(Number),
-      deleted: 2,
+      deleted: 4,
       deploymentName: "test",
       kind: "abandoned",
       live: RECOVERY,

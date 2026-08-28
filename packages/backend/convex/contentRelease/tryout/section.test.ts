@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   ACTIVE_APP_LOCALE_CODES,
   type ActiveAppLocaleCode,
@@ -15,10 +16,9 @@ import {
   activateTryoutSnapshot,
   makeTryoutCatalogRow,
   makeTryoutPlacementRow,
-} from "@repo/backend/test/tryout-snapshot";
+} from "@repo/backend/test/tryout/snapshot";
 import { convexTest } from "convex-test";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 const identity: TryoutSectionIdentity = {
   countryKey: "indonesia",

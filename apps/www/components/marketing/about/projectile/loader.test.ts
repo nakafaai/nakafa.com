@@ -1,10 +1,9 @@
 // @vitest-environment node
 
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it, vi } from "@effect/vitest";
 import { Duration, Effect, Fiber } from "effect";
 import { TestClock } from "effect/testing";
 import { createElement } from "react";
-import { vi } from "vitest";
 import { loadProjectileScene } from "@/components/marketing/about/projectile/loader";
 
 describe("deferred projectile scene loading", () => {

@@ -3,7 +3,7 @@ import {
   ContentFamilySchema,
 } from "@nakafa/aksara-contracts/content";
 import type { ContentReleaseManifest } from "@nakafa/aksara-contracts/release";
-import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,
@@ -47,16 +47,7 @@ export function hasSamePublicationScope(
     left.snapshots.length === right.snapshots.length &&
     left.snapshots.every(
       (snapshot, index) => snapshot === right.snapshots[index]
-    ) &&
-    left.content.length === right.content.length &&
-    left.content.every((identity, index) => {
-      const compared = right.content[index];
-      return (
-        compared?.artifactLocale === identity.artifactLocale &&
-        compared.contentKey === identity.contentKey &&
-        compared.family === identity.family
-      );
-    })
+    )
   );
 }
 

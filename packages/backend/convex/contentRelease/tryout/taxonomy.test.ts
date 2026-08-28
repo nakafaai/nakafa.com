@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { TryoutCatalogRowSchema } from "@nakafa/aksara-contracts/tryout/catalog";
 import { readTryoutTaxonomy } from "@repo/backend/convex/contentRelease/tryout/taxonomy";
@@ -8,10 +9,9 @@ import {
   activateTryoutSnapshot,
   makeTryoutCatalogRow,
   makeTryoutPlacementRow,
-} from "@repo/backend/test/tryout-snapshot";
+} from "@repo/backend/test/tryout/snapshot";
 import { convexTest } from "convex-test";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 /** Builds one localized technical exam beneath the shared country fixture. */
 function makeTryoutExam(locale: ActiveAppLocaleCode) {

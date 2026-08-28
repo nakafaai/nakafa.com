@@ -13,6 +13,7 @@ import {
   ContentSnapshotRowSchema,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
+import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { Effect, Schema } from "effect";
 /** Parses one stored JSON value without allowing thrown parser failures. */
@@ -227,6 +228,27 @@ export const decodeRendererJson = Effect.fn(
         new ReleaseError({
           code: "CONTENT_RELEASE_INTEGRITY",
           message: "Renderer manifest does not satisfy its exact contract.",
+        })
+    )
+  )
+);
+
+/** Strictly decodes one permanent signed try-out runtime bundle. */
+export const decodeTryoutRuntimeBundleJson = Effect.fn(
+  "contentRelease.decodeTryoutRuntimeBundleJson"
+)((source: string) =>
+  parseStoredJson(source, "Try-out runtime bundle").pipe(
+    Effect.flatMap(
+      Schema.decodeUnknownEffect(SignedTryoutRuntimeBundleSchema, {
+        onExcessProperty: "error",
+      })
+    ),
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message:
+            "Try-out runtime bundle does not satisfy its exact contract.",
         })
     )
   )

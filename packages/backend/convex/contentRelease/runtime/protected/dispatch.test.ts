@@ -1,11 +1,14 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import { MAX_PROTECTED_RUNTIME_REQUEST_BYTES } from "@nakafa/aksara-contracts/runtime/protected/limits";
+import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { dispatchProgram } from "@repo/backend/convex/contentRelease/runtime/protected/dispatch";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
-import { insertProtectedRuntime } from "@repo/backend/test/protected-runtime";
-import { describe, expect, it } from "vitest";
+import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
+import { insertProtectedRuntime } from "@repo/backend/test/runtime/protected";
+import { Effect } from "effect";
 
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 type RuntimeAction = Pick<RuntimeTest, "action">;
@@ -14,7 +17,11 @@ type RuntimeAction = Pick<RuntimeTest, "action">;
 function runDispatch(t: RuntimeAction, source: string) {
   const byteLength = new TextEncoder().encode(source).byteLength;
   return t.action((ctx) =>
-    runConvexProgram(dispatchProgram(ctx, source, byteLength))
+    runConvexProgram(
+      dispatchProgram(ctx, source, byteLength).pipe(
+        Effect.provideService(ContentVerificationKeyResolver, TEST_KEY_RESOLVER)
+      )
+    )
   );
 }
 
@@ -43,8 +50,11 @@ describe("contentRelease/runtime/protected/dispatch", () => {
           delivery: "entitled",
         },
       ],
+      bundle: {
+        bundleHash: fixture.request.bundleHash,
+        payload: { snapshot: { snapshotId: fixture.snapshotId } },
+      },
       kind: "found",
-      snapshotId: fixture.snapshotId,
     });
   });
 
@@ -62,7 +72,14 @@ describe("contentRelease/runtime/protected/dispatch", () => {
     };
     const source = JSON.stringify(fixture.request);
     const mismatch = await t.action((ctx) =>
-      runConvexProgram(dispatchProgram(ctx, source, 1))
+      runConvexProgram(
+        dispatchProgram(ctx, source, 1).pipe(
+          Effect.provideService(
+            ContentVerificationKeyResolver,
+            TEST_KEY_RESOLVER
+          )
+        )
+      )
     );
 
     await expect(runDispatch(t, JSON.stringify(missing))).resolves.toEqual({

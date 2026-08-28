@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ContentReleaseManifestSchema } from "@nakafa/aksara-contracts/release";
 import {
@@ -15,14 +16,13 @@ import {
   TEST_PROOF_RENDERER,
   testEmptyManifest,
   testSignedRelease,
-} from "@repo/backend/test/content-proof";
-import { testPublicationScope } from "@repo/backend/test/content-release";
-import type { ProgramSnapshotData } from "@repo/backend/test/program-snapshot";
+} from "@repo/backend/test/content/proof";
+import { testPublicationScope } from "@repo/backend/test/content/release";
+import type { ProgramSnapshotData } from "@repo/backend/test/program/snapshot";
 import {
   makeProgramSnapshotData,
   stageProgramSnapshot,
-} from "@repo/backend/test/program-snapshot";
-import { describe, expect, it } from "@repo/testing/effect";
+} from "@repo/backend/test/program/snapshot";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 

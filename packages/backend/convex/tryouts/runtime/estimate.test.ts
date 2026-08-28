@@ -1,8 +1,8 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { estimateIrtScore } from "@repo/backend/convex/tryouts/runtime/estimate";
-import { describe, expect, it } from "@repo/testing/effect";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 

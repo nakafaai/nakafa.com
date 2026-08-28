@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import {
   Ed25519SignatureSchema,
   ReleaseIdSchema,
@@ -9,7 +10,7 @@ import {
   RollbackSignedContentReleaseSchema,
   type SignedContentRelease,
 } from "@nakafa/aksara-contracts/release";
-import { PublicationScopeSchema } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { PublicationScopeSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { advancePublication } from "@repo/backend/convex/contentRelease/ingress/lifecycle";
@@ -22,20 +23,20 @@ import {
   testEmptyManifest,
   testProofRenderer,
   testSignedRelease,
-} from "@repo/backend/test/content-proof";
-import { insertSignedCandidate } from "@repo/backend/test/content-stage";
+} from "@repo/backend/test/content/proof";
+import { insertSignedCandidate } from "@repo/backend/test/content/stage";
 import {
   insertTestState,
   insertZeroRelease,
-} from "@repo/backend/test/content-state";
-import { completeContentProof } from "@repo/backend/test/content-verify";
+} from "@repo/backend/test/content/state";
+import { completeContentProof } from "@repo/backend/test/content/verify";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 vi.mock("@repo/backend/content/trust", async () => {
   const { TEST_KEY_RESOLVER } = await import(
-    "@repo/backend/test/content-proof"
+    "@repo/backend/test/content/proof"
   );
   return { contentKeyResolver: TEST_KEY_RESOLVER };
 });
@@ -138,7 +139,6 @@ async function insertActivationPair(
 /** Creates signed zero-impact manifests that complete read models immediately. */
 function makeActivationPair() {
   const scope = PublicationScopeSchema.make({
-    content: [],
     families: ["page"],
     snapshots: [],
   });

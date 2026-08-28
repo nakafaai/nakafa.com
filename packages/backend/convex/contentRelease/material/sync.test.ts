@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { syncMaterials } from "@repo/backend/convex/contentRelease/material/sync";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -9,24 +10,23 @@ import {
   FUNCTION_MATERIAL_PATH,
   FUNCTION_MATERIAL_SOURCE,
   testProjectionJson,
-} from "@repo/backend/test/content-material";
+} from "@repo/backend/test/content/material";
 import {
   insertCompletedRelease,
   insertReleaseItem,
   selectActiveRelease,
-} from "@repo/backend/test/content-read-model";
-import { testTextHash } from "@repo/backend/test/content-release";
+} from "@repo/backend/test/content/model";
+import { testTextHash } from "@repo/backend/test/content/release";
 import {
   insertTestState,
   type TestIdentity,
-} from "@repo/backend/test/content-state";
+} from "@repo/backend/test/content/state";
 import {
   insertRuntimeBinding,
   insertRuntimeKey,
   insertRuntimeVersion,
-} from "@repo/backend/test/runtime-head";
+} from "@repo/backend/test/runtime/head";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const BASE = {
   manifestHash: `sha256:${"8".repeat(64)}`,

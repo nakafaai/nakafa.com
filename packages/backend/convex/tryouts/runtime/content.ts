@@ -33,8 +33,13 @@ const protectedSelectorFields = {
   sourceRevision: v.string(),
 };
 
-export const tryoutCurrentQuestionSelectorValidator = v.object({
+const currentSelectorFields = {
   ...protectedSelectorFields,
+  bundleHash: v.string(),
+};
+
+export const tryoutCurrentQuestionSelectorValidator = v.object({
+  ...currentSelectorFields,
   delivery: v.literal("authenticated"),
 });
 export type TryoutCurrentQuestionSelector = Infer<
@@ -42,9 +47,28 @@ export type TryoutCurrentQuestionSelector = Infer<
 >;
 
 const currentAnswerSelectorValidator = v.object({
+  ...currentSelectorFields,
+  delivery: v.literal("entitled"),
+});
+export type TryoutCurrentAnswerSelector = Infer<
+  typeof currentAnswerSelectorValidator
+>;
+
+export const tryoutPredecessorQuestionSelectorValidator = v.object({
+  ...protectedSelectorFields,
+  delivery: v.literal("authenticated"),
+});
+export type TryoutPredecessorQuestionSelector = Infer<
+  typeof tryoutPredecessorQuestionSelectorValidator
+>;
+
+const predecessorAnswerSelectorValidator = v.object({
   ...protectedSelectorFields,
   delivery: v.literal("entitled"),
 });
+export type TryoutPredecessorAnswerSelector = Infer<
+  typeof predecessorAnswerSelectorValidator
+>;
 
 const historySelectorFields = {
   ...protectedSelectorFields,
@@ -63,6 +87,7 @@ const historyAnswerSelectorValidator = v.object({
 
 export const tryoutQuestionSelectorValidator = v.union(
   tryoutCurrentQuestionSelectorValidator,
+  tryoutPredecessorQuestionSelectorValidator,
   historyQuestionSelectorValidator
 );
 export type TryoutQuestionSelector = Infer<
@@ -71,6 +96,7 @@ export type TryoutQuestionSelector = Infer<
 
 export const tryoutAnswerSelectorValidator = v.union(
   currentAnswerSelectorValidator,
+  predecessorAnswerSelectorValidator,
   historyAnswerSelectorValidator
 );
 export type TryoutAnswerSelector = Infer<typeof tryoutAnswerSelectorValidator>;
@@ -82,6 +108,12 @@ export const tryoutSectionContentAccessValidator = v.union(
     kind: v.literal("signed"),
     questions: v.array(tryoutCurrentQuestionSelectorValidator),
     runtime: v.literal("current"),
+  }),
+  v.object({
+    answers: v.array(predecessorAnswerSelectorValidator),
+    kind: v.literal("signed"),
+    questions: v.array(tryoutPredecessorQuestionSelectorValidator),
+    runtime: v.literal("predecessor"),
   }),
   v.object({
     answers: v.array(historyAnswerSelectorValidator),

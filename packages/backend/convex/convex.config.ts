@@ -1,5 +1,4 @@
 import aggregate from "@convex-dev/aggregate/convex.config.js";
-import migrations from "@convex-dev/migrations/convex.config.js";
 import rateLimiter from "@convex-dev/rate-limiter/convex.config.js";
 import resend from "@convex-dev/resend/convex.config.js";
 import workflow from "@convex-dev/workflow/convex.config.js";
@@ -34,7 +33,6 @@ const app = defineApp({
   },
 });
 app.use(betterAuth);
-app.use(migrations);
 app.use(rateLimiter, { name: "agentRateLimiter" });
 app.use(workflow);
 app.use(resend);

@@ -1,8 +1,8 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   hashBatch,
   validateStoredBatch,
 } from "@repo/backend/convex/contentRelease/batch";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect, Exit } from "effect";
 
 describe("contentRelease/batch", () => {

@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   canonicalizeMaterialProjection,
   MaterialLessonProjectionSchema,
@@ -6,14 +7,13 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { PredecessorMaterialProjectionSchema } from "@repo/backend/convex/contentRelease/material/predecessor";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { makeMaterialProjection } from "@repo/backend/test/content-material";
+import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   activateMaterialCatalog,
   MATERIAL_IDENTITY,
-} from "@repo/backend/test/material-catalog";
+} from "@repo/backend/test/material/catalog";
 import { convexTest } from "convex-test";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 const publication = api.contentRelease.material.publication;
 const publications = api.contentRelease.material.publications;

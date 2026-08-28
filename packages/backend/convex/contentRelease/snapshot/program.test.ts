@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { CurriculumRouteSchema } from "@nakafa/aksara-contracts/program/curriculum";
 import {
@@ -17,8 +18,7 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   makeProgramSnapshotData,
   type ProgramSnapshotData,
-} from "@repo/backend/test/program-snapshot";
-import { describe, expect, it } from "@repo/testing/effect";
+} from "@repo/backend/test/program/snapshot";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 

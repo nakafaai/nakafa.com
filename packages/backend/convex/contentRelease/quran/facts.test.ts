@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { bindQuranRow } from "@nakafa/aksara-contracts/quran/snapshot/row/hash";
 import {
@@ -10,7 +11,6 @@ import {
   makeQuranSearch,
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 const snapshotId = Sha256HashSchema.make(`sha256:${"2".repeat(64)}`);

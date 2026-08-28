@@ -1,6 +1,6 @@
+import { describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { MAX_PROTECTED_RUNTIME_SELECTORS } from "@nakafa/aksara-contracts/runtime/protected/limits";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 import {
   planTryoutContentBatches,

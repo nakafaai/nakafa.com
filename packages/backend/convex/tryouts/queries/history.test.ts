@@ -1,3 +1,4 @@
+import { describe, expect, it, vi } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -5,7 +6,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
-import { TEST_RELEASE_ID } from "@repo/backend/test/content-release";
+import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import {
   activateRenamedTryoutStartSource,
   activateTryoutStartSource,
@@ -13,8 +14,7 @@ import {
   TRYOUT_START_EXAM,
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
-} from "@repo/backend/test/tryout-source";
-import { describe, expect, it, vi } from "vitest";
+} from "@repo/backend/test/tryout/source";
 
 const NOW = Date.UTC(2026, 6, 12, 12, 0, 0);
 const SET_PATH = "try-out/indonesia/tka/matematika/set-1";

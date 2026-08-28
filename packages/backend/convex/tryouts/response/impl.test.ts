@@ -1,3 +1,4 @@
+import { describe, expect, it, vi } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
@@ -6,9 +7,8 @@ import {
 } from "@repo/backend/convex/test.helpers";
 import { saveTryoutResponse } from "@repo/backend/convex/tryouts/response/impl";
 import type { TryoutStatus } from "@repo/backend/convex/tryouts/status";
-import { seedTryoutContentAccessState } from "@repo/backend/test/tryout-runtime";
+import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { describe, expect, it, vi } from "vitest";
 
 type ConvexTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 

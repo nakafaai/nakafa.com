@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import {
   type MaterialLessonProjection,
@@ -13,12 +14,11 @@ import type {
 import schema from "@repo/backend/convex/schema";
 import { registerLearningPopularityAggregate } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { makeMaterialProjection } from "@repo/backend/test/content-material";
-import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
+import { makeMaterialProjection } from "@repo/backend/test/content/material";
+import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
 import type { Locale } from "@repo/contents/_types/content";
 import { makeFunctionReference } from "convex/server";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");
 const canonicalContext = {

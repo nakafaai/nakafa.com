@@ -1,14 +1,19 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   decodePredecessorObservationId,
   PREDECESSOR_QUIET_WINDOW_MS,
   PREDECESSOR_ROUTES,
 } from "@repo/backend/convex/contentRelease/predecessor/spec";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 describe("contentRelease/predecessor/spec", () => {
   it("owns the exact temporary route set and quiet period", () => {
-    expect(PREDECESSOR_ROUTES).toEqual(["singular", "batch"]);
+    expect(PREDECESSOR_ROUTES).toEqual([
+      "singular",
+      "batch",
+      "protected",
+      "history",
+    ]);
     expect(PREDECESSOR_QUIET_WINDOW_MS).toBe(86_400_000);
   });
 

@@ -1,5 +1,5 @@
+import { describe, expect, it, vi } from "@effect/vitest";
 import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/_lib/agent/constants";
-import { describe, expect, it, vi } from "@repo/testing/effect";
 import { Effect } from "effect";
 import type { FetchImplementation } from "./client.js";
 import { runCli } from "./program.js";

@@ -1,20 +1,20 @@
 // @vitest-environment node
 
+import { afterEach, beforeAll, describe, expect, it } from "@effect/vitest";
 import { MAX_PUBLICATION_REQUEST_BYTES } from "@nakafa/aksara-contracts/transport/limits";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { convexTest } from "convex-test";
-import { afterEach, describe, expect, it } from "vitest";
+import { convexTest, type TestConvex } from "convex-test";
 
 const publicationPath = "/internal/content/releases";
 const polarName = "POLAR_WEBHOOK_SECRET";
 const tokenName = "AKSARA_PUBLICATION_TOKEN";
+let target: TestConvex<typeof schema>;
 
 /** Posts one complete body through the actual Convex HTTP router. */
 function post(source: string, headers?: HeadersInit) {
   process.env[polarName] = "technical-webhook-secret";
-  const t = convexTest(schema, convexModules);
-  return t.fetch(publicationPath, {
+  return target.fetch(publicationPath, {
     body: source,
     headers: {
       authorization: "Bearer technical-token",
@@ -24,6 +24,16 @@ function post(source: string, headers?: HeadersInit) {
     method: "POST",
   });
 }
+
+/** Prepares one read-only router before per-case timing begins. */
+beforeAll(async () => {
+  target = convexTest(schema, convexModules);
+  process.env[tokenName] = "technical-token";
+  const response = await post('{"operation":"current"}');
+  await response.arrayBuffer();
+  delete process.env[tokenName];
+  delete process.env[polarName];
+});
 
 /** Asserts the publication endpoint never exposes cacheable response bytes. */
 function expectPrivate(response: Response) {
@@ -51,6 +61,7 @@ describe("content publication HTTP route", () => {
         active: null,
         candidate: null,
         recovery: null,
+        tryoutRuntimeBundle: null,
       },
     });
   });
@@ -75,8 +86,7 @@ describe("content publication HTTP route", () => {
     });
 
     process.env[polarName] = "technical-webhook-secret";
-    const t = convexTest(schema, convexModules);
-    const missing = await t.fetch(publicationPath, {
+    const missing = await target.fetch(publicationPath, {
       body: "{",
       headers: { "content-type": "application/json" },
       method: "POST",
@@ -87,7 +97,6 @@ describe("content publication HTTP route", () => {
   it("does not pull a hostile request stream before bearer rejection", async () => {
     process.env[tokenName] = "technical-token";
     process.env[polarName] = "technical-webhook-secret";
-    const t = convexTest(schema, convexModules);
     let pulls = 0;
     const body = new ReadableStream<Uint8Array>(
       {
@@ -109,7 +118,7 @@ describe("content publication HTTP route", () => {
       method: "POST",
     } satisfies RequestInit & { readonly duplex: "half" };
 
-    const response = await t.fetch(publicationPath, request);
+    const response = await target.fetch(publicationPath, request);
 
     expect(response.status).toBe(401);
     expect(pulls).toBe(0);

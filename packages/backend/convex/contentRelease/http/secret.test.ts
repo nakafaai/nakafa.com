@@ -1,11 +1,11 @@
 // @vitest-environment node
+
+import { afterEach, describe, expect, it, vi } from "@effect/vitest";
 import {
   bearerToken,
   matchesHttpSecret,
 } from "@repo/backend/convex/contentRelease/http/secret";
-import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect, Result } from "effect";
-import { vi } from "vitest";
 
 /** Compares one candidate at the Vitest runner boundary. */
 function matches(candidate: string, secret: string) {

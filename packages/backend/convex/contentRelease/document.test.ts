@@ -1,9 +1,9 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   CONTENT_DOCUMENT_LIMIT,
   ensureDocumentSize,
   READ_MODEL_DOCUMENT_LIMIT,
 } from "@repo/backend/convex/contentRelease/document";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 describe("contentRelease/document", () => {

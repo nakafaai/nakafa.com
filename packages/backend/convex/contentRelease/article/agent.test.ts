@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { readAgentArticleTaxonomy } from "@repo/backend/convex/contentRelease/article/agent";
 import { ARTICLE_AGENT_TAXONOMY_LIMIT } from "@repo/backend/convex/contentRelease/article/limits";
@@ -8,9 +9,8 @@ import {
   insertRuntimeArticles,
   testArticleProjection,
   testLocalizedArticleProjection,
-} from "@repo/backend/test/content-runtime";
+} from "@repo/backend/test/content/runtime";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 describe("contentRelease/article/agent", () => {
   it("keeps agent taxonomy unmanaged before the article cutover", async () => {

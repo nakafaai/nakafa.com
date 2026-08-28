@@ -1,9 +1,9 @@
+import { describe, expect, it } from "@effect/vitest";
 import { TRYOUT_PROGRESS_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/tryout/limits";
 import {
   ensureTryoutProgressWithinReadBudget,
   isTryoutProgressWithinReadBudget,
 } from "@repo/backend/convex/tryouts/progress/size";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 const compactProgress = Object.freeze({

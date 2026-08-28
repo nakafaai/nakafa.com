@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { StoredProtectedRuntimeRequestSchema } from "@nakafa/aksara-contracts/history/decode";
 import {
   ContentRuntimeVerificationError,
@@ -19,14 +20,7 @@ import {
   RETAINED_RUNTIME_QUESTION,
   RETAINED_RUNTIME_RELEASE,
   retainedRuntimeFound,
-} from "@repo/backend/test/retained-runtime";
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from "@repo/testing/effect";
+} from "@repo/backend/test/runtime/retained";
 import { Effect, Schema } from "effect";
 import { vi } from "vitest";
 
@@ -55,7 +49,7 @@ const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
 vi.mock("server-only", () => ({}));
 vi.mock("@repo/backend/content/trust", async () => {
   const { retainedRuntimeKeyResolver } = await import(
-    "@repo/backend/test/retained-runtime"
+    "@repo/backend/test/runtime/retained"
   );
   return { contentKeyResolver: retainedRuntimeKeyResolver };
 });

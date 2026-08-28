@@ -1,7 +1,6 @@
+import { afterEach, describe, expect, it, vi } from "@effect/vitest";
 import { hashText } from "@repo/backend/convex/contentRelease/digest";
-import { afterEach, describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 describe("contentRelease/digest", () => {
   afterEach(() => vi.restoreAllMocks());

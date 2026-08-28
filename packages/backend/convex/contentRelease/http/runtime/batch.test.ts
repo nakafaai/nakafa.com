@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES } from "@repo/backend/content/batch";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
@@ -16,10 +17,9 @@ import {
   insertRuntimeRelease,
   publicRuntimeRequest,
   runtimeContentKey,
-} from "@repo/backend/test/content-runtime";
-import { insertRuntimeHead } from "@repo/backend/test/runtime-head";
+} from "@repo/backend/test/content/runtime";
+import { insertRuntimeHead } from "@repo/backend/test/runtime/head";
 import { makeFunctionReference } from "convex/server";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const RUNTIME_TOKEN = "technical-runtime-token";
 const OBSERVATION_ID = "test-predecessor-observation";

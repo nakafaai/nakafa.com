@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
   inheritContentSnapshots,
@@ -14,18 +15,17 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
-} from "@repo/backend/test/content-release";
-import { insertTestRelease } from "@repo/backend/test/content-stage";
+} from "@repo/backend/test/content/release";
+import { insertTestRelease } from "@repo/backend/test/content/stage";
 import {
   makeProgramSnapshotData,
   type ProgramSnapshotData,
   stageProgramSnapshot,
-} from "@repo/backend/test/program-snapshot";
+} from "@repo/backend/test/program/snapshot";
 import {
   activateQuranSource,
   makeBlockedQuranSnapshot,
 } from "@repo/backend/test/quran/snapshot";
-import { describe, expect, it } from "@repo/testing/effect";
 import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";

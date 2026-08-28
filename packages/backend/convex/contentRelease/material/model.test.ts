@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   canonicalizeMaterialProjection,
   MaterialLessonProjectionSchema,
@@ -6,13 +7,12 @@ import { readMaterialModel } from "@repo/backend/convex/contentRelease/material/
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { makeMaterialProjection } from "@repo/backend/test/content-material";
-import { TEST_ARTICLE_PROJECTION_JSON } from "@repo/backend/test/content-runtime";
-import { activateMaterialCatalog } from "@repo/backend/test/material-catalog";
+import { makeMaterialProjection } from "@repo/backend/test/content/material";
+import { TEST_ARTICLE_PROJECTION_JSON } from "@repo/backend/test/content/runtime";
+import { activateMaterialCatalog } from "@repo/backend/test/material/catalog";
 import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import { convexTest } from "convex-test";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 /** Decodes one returned material projection for result assertions. */
 function decodeProjection(source: string) {

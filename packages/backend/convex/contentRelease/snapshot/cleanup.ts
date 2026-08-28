@@ -98,13 +98,14 @@ export const compactSnapshots = Effect.fn("contentRelease.compactSnapshots")(
           `Snapshot ${snapshot.family}/${snapshot.snapshotId} lost its cleanup page.`
         );
       }
-      yield* persistCleanup(
-        ctx,
-        snapshot,
-        cutoff,
-        last.row.index,
-        children.part
-      );
+      const nextIndex = "index" in last.row ? last.row.index : undefined;
+      if (children.part !== "runtime" && nextIndex === undefined) {
+        return yield* releaseFail(
+          "CONTENT_RELEASE_INTEGRITY",
+          `Snapshot ${snapshot.family}/${snapshot.snapshotId} lost its cleanup position.`
+        );
+      }
+      yield* persistCleanup(ctx, snapshot, cutoff, nextIndex, children.part);
       return {
         cursor: null,
         deleted: children.children.length,
@@ -145,6 +146,14 @@ export const compactSnapshots = Effect.fn("contentRelease.compactSnapshots")(
     }
     if (snapshot.family === "tryout" && children.part === "placement") {
       yield* persistCleanup(ctx, snapshot, cutoff, undefined, "bundle");
+      return {
+        cursor: null,
+        deleted: children.children.length,
+        done: false,
+      };
+    }
+    if (snapshot.family === "tryout" && children.part === "bundle") {
+      yield* persistCleanup(ctx, snapshot, cutoff, undefined, "runtime");
       return {
         cursor: null,
         deleted: children.children.length,

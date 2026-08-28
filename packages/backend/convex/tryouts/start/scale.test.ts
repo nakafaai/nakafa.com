@@ -1,3 +1,4 @@
+import { describe, expect, it, vi } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
@@ -5,7 +6,8 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import type { StartAttemptArgs } from "@repo/backend/convex/tryouts/start/spec";
-import { activateTryoutSnapshot } from "@repo/backend/test/tryout-snapshot";
+import { insertTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
+import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
 import {
   TRYOUT_START_COUNTRY as COUNTRY,
   TRYOUT_START_EXAM as EXAM,
@@ -14,9 +16,8 @@ import {
   TRYOUT_START_NOW as NOW,
   TRYOUT_START_SET as SET,
   TRYOUT_START_TRACK as TRACK,
-} from "@repo/backend/test/tryout-source";
-import { seedTryoutStartSet } from "@repo/backend/test/tryout-start";
-import { describe, expect, it, vi } from "vitest";
+} from "@repo/backend/test/tryout/source";
+import { seedTryoutStartSet } from "@repo/backend/test/tryout/start";
 
 const startArgs: StartAttemptArgs = {
   countryKey: COUNTRY,
@@ -76,6 +77,7 @@ describe("tryouts/start/scale", () => {
         placements,
         releaseId: "release-test-second-scale",
       });
+      await insertTestTryoutRuntimeBundle(ctx, snapshotId);
       const identity = await seedAuthenticatedUser(ctx, {
         now: NOW,
         suffix: "tryout-second-scale",
@@ -159,5 +161,51 @@ describe("tryouts/start/scale", () => {
     await expect(
       authed.mutation(api.tryouts.mutations.attempts.startAttempt, startArgs)
     ).rejects.toThrow("TRYOUT_IRT_SCALE_REQUIRED");
+  });
+
+  it("excludes migrated history from live scale selection", async () => {
+    vi.setSystemTime(new Date(NOW));
+
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation(async (ctx) => {
+      const identity = await seedAuthenticatedUser(ctx, {
+        now: NOW,
+        suffix: "tryout-history-scale",
+      });
+      const fixture = await seedTryoutStartSet(ctx, {
+        scoringStrategy: "irt",
+        userId: identity.userId,
+        visibility: "visible",
+      });
+      const historyId = await ctx.db.insert("irtScaleVersions", {
+        history: true,
+        model: "2pl",
+        publishedAt: NOW - 1,
+        questionCount: 1,
+        setIdentity: fixture.setIdentity,
+        status: "official",
+        tryoutSnapshotId: fixture.snapshotId,
+      });
+      return { historyId, identity };
+    });
+    const authed = t.withIdentity({
+      sessionId: seeded.identity.sessionId,
+      subject: seeded.identity.authUserId,
+    });
+
+    const result = await authed.mutation(
+      api.tryouts.mutations.attempts.startAttempt,
+      startArgs
+    );
+    const proof = await t.query(async (ctx) => ({
+      attempt: await ctx.db.get(result.attemptId),
+      scales: await ctx.db.query("irtScaleVersions").collect(),
+    }));
+
+    expect(proof.scales).toHaveLength(2);
+    expect(proof.attempt?.scaleVersionId).not.toBe(seeded.historyId);
+    expect(
+      proof.scales.find(({ _id }) => _id === proof.attempt?.scaleVersionId)
+    ).not.toHaveProperty("history");
   });
 });

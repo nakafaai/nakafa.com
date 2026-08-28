@@ -106,8 +106,8 @@ importers:
   apps/api:
     dependencies:
       '@nakafa/aksara-contracts':
-        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.17.0/nakafa-aksara-contracts-0.17.0.tgz
-        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.17.0/nakafa-aksara-contracts-0.17.0.tgz(effect@4.0.0-rc.110)
+        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz
+        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz(effect@4.0.0-rc.110)
       '@repo/backend':
         specifier: workspace:*
         version: link:../../packages/backend
@@ -277,8 +277,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1(supports-color@7.2.0)
       '@nakafa/aksara-contracts':
-        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.17.0/nakafa-aksara-contracts-0.17.0.tgz
-        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.17.0/nakafa-aksara-contracts-0.17.0.tgz(effect@4.0.0-rc.110)
+        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz
+        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz(effect@4.0.0-rc.110)
       '@paper-design/shaders-react':
         specifier: ^0.0.80
         version: 0.0.80(@types/react@19.2.18)(react@19.2.8)
@@ -476,8 +476,8 @@ importers:
         specifier: ^4.35.0
         version: 4.35.0(debug@4.4.3(supports-color@7.2.0))(supports-color@7.2.0)
       '@nakafa/aksara-contracts':
-        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.17.0/nakafa-aksara-contracts-0.17.0.tgz
-        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.17.0/nakafa-aksara-contracts-0.17.0.tgz(effect@4.0.0-rc.110)
+        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz
+        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz(effect@4.0.0-rc.110)
       '@repo/contents':
         specifier: workspace:*
         version: link:../contents
@@ -567,9 +567,6 @@ importers:
       '@convex-dev/better-auth':
         specifier: 0.12.5
         version: 0.12.5(@standard-schema/spec@1.1.0)(better-auth@1.6.30(next@16.3.2(@babel/core@7.29.7(supports-color@7.2.0))(@playwright/test@1.62.1)(@types/node@24.13.3)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(vitest@4.1.11))(convex@1.45.0(react@19.2.8))(hono@4.13.3)(react@19.2.8)(typescript@7.0.2)
-      '@convex-dev/migrations':
-        specifier: 0.3.6
-        version: 0.3.6(convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(react@19.2.8))(hono@4.13.3)(react@19.2.8)(typescript@7.0.2)(zod@4.4.3))(convex@1.45.0(react@19.2.8))
       '@convex-dev/rate-limiter':
         specifier: 0.3.2
         version: 0.3.2(convex@1.45.0(react@19.2.8))(react@19.2.8)
@@ -589,8 +586,8 @@ importers:
         specifier: 2.0.0
         version: 2.0.0
       '@nakafa/aksara-contracts':
-        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.17.0/nakafa-aksara-contracts-0.17.0.tgz
-        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.17.0/nakafa-aksara-contracts-0.17.0.tgz(effect@4.0.0-rc.110)
+        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz
+        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz(effect@4.0.0-rc.110)
       '@polar-sh/sdk':
         specifier: ^0.49.0
         version: 0.49.0
@@ -691,6 +688,9 @@ importers:
       '@effect/platform-node':
         specifier: 'catalog:'
         version: 4.0.0-rc.110(effect@4.0.0-rc.110)(redis@6.2.1)
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 4.0.0-rc.110(effect@4.0.0-rc.110)(vitest@4.1.11)
       '@repo/contents':
         specifier: workspace:*
         version: link:../contents
@@ -725,8 +725,8 @@ importers:
         specifier: ^4.3.0
         version: 4.3.0
       '@nakafa/aksara-contracts':
-        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.17.0/nakafa-aksara-contracts-0.17.0.tgz
-        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.17.0/nakafa-aksara-contracts-0.17.0.tgz(effect@4.0.0-rc.110)
+        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz
+        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz(effect@4.0.0-rc.110)
       '@repo/design-system':
         specifier: workspace:*
         version: link:../design-system
@@ -1007,8 +1007,8 @@ importers:
   packages/internationalization:
     dependencies:
       '@nakafa/aksara-contracts':
-        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.17.0/nakafa-aksara-contracts-0.17.0.tgz
-        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.17.0/nakafa-aksara-contracts-0.17.0.tgz(effect@4.0.0-rc.110)
+        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz
+        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz(effect@4.0.0-rc.110)
       '@repo/utilities':
         specifier: workspace:*
         version: link:../utilities
@@ -1138,13 +1138,6 @@ importers:
         version: 4.1.11(@edge-runtime/vm@5.0.0)(@types/node@24.13.3)(@vitest/coverage-istanbul@4.1.11)(@vitest/ui@4.1.11)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))
 
   packages/testing:
-    dependencies:
-      '@effect/vitest':
-        specifier: 'catalog:'
-        version: 4.0.0-rc.110(effect@4.0.0-rc.110)(vitest@4.1.11)
-      effect:
-        specifier: 'catalog:'
-        version: 4.0.0-rc.110
     devDependencies:
       '@repo/typescript-config':
         specifier: workspace:*
@@ -1693,12 +1686,6 @@ packages:
       better-auth: '>=1.6.11 <1.7.0'
       convex: ^1.25.0
       react: ^18.3.1 || ^19.0.0
-
-  '@convex-dev/migrations@0.3.6':
-    resolution: {integrity: sha512-cURYG4uy323MDi55QWNF5HAGemS4QspSgJ4uP+gGPAJdBLBbk2KFO7toFlKhacc1NinJQiG6+D/YEFyFyBS1/A==}
-    peerDependencies:
-      convex: ^1.42.0
-      convex-helpers: 0.1.123
 
   '@convex-dev/rate-limiter@0.3.2':
     resolution: {integrity: sha512-+oBPsBfFbzdxiF/9XaaTQmVnvDlvEfg/c69/v8LxTbw4VLuiflIKlfnPQL8OS0azXQQ11hcPWHmU8ytFmHKDXA==}
@@ -2793,9 +2780,9 @@ packages:
     peerDependencies:
       effect: 4.0.0-rc.110
 
-  '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.17.0/nakafa-aksara-contracts-0.17.0.tgz':
-    resolution: {integrity: sha512-Xe1N5tfGb9/kgKas47Iz2IpCXZ6gwedgwPkrxV9r7qG2DvnrSPDL4P8b5ca8ZS6EHm1JgMZwfj403Zp2yu72Uw==, tarball: https://github.com/nakafaai/aksara/releases/download/contracts-v0.17.0/nakafa-aksara-contracts-0.17.0.tgz}
-    version: 0.17.0
+  '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz':
+    resolution: {integrity: sha512-GlqxogjyqVXBJvrQCK7pB9DAMTxPLerLL4F5Czk0BDNT9IkuBBer7CUqtyZ60eBGnpYcIzNLjRK+di1n6DDm8w==, tarball: https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz}
+    version: 0.21.1
     engines: {node: '>=24.0.0 <25.0.0'}
     peerDependencies:
       effect: 4.0.0-rc.110
@@ -8451,11 +8438,6 @@ snapshots:
       - hono
       - typescript
 
-  '@convex-dev/migrations@0.3.6(convex-helpers@0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(react@19.2.8))(hono@4.13.3)(react@19.2.8)(typescript@7.0.2)(zod@4.4.3))(convex@1.45.0(react@19.2.8))':
-    dependencies:
-      convex: 1.45.0(react@19.2.8)
-      convex-helpers: 0.1.123(@standard-schema/spec@1.1.0)(convex@1.45.0(react@19.2.8))(hono@4.13.3)(react@19.2.8)(typescript@7.0.2)(zod@4.4.3)
-
   '@convex-dev/rate-limiter@0.3.2(convex@1.45.0(react@19.2.8))(react@19.2.8)':
     dependencies:
       convex: 1.45.0(react@19.2.8)
@@ -9259,7 +9241,7 @@ snapshots:
     dependencies:
       effect: 4.0.0-rc.110
 
-  '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.17.0/nakafa-aksara-contracts-0.17.0.tgz(effect@4.0.0-rc.110)':
+  '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz(effect@4.0.0-rc.110)':
     dependencies:
       effect: 4.0.0-rc.110
 

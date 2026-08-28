@@ -1,9 +1,9 @@
+import { describe, expect, it } from "@effect/vitest";
 import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { matchManifest } from "@repo/backend/convex/contentRelease/ingress/current";
-import { testSignedRelease } from "@repo/backend/test/content-proof";
-import { testReleaseJson } from "@repo/backend/test/content-release";
-import { describe, expect, it } from "@repo/testing/effect";
+import { testSignedRelease } from "@repo/backend/test/content/proof";
+import { testReleaseJson } from "@repo/backend/test/content/release";
 import { Effect, Schema } from "effect";
 
 describe("content publication authenticated reads", () => {

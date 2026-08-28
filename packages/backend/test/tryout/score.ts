@@ -6,11 +6,11 @@ import {
   TEST_MANIFEST_HASH,
   testReleaseJson,
   testRendererJson,
-} from "@repo/backend/test/content-release";
+} from "@repo/backend/test/content/release";
 import {
   insertTestState,
   insertZeroRelease,
-} from "@repo/backend/test/content-state";
+} from "@repo/backend/test/content/state";
 import { Effect } from "effect";
 
 export const FROZEN_SCORE_NOW = Date.UTC(2026, 6, 7, 12, 0, 0);

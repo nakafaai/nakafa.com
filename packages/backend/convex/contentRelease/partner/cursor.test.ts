@@ -1,8 +1,8 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   decodePartnerCursor,
   encodePartnerCursor,
 } from "@repo/backend/convex/contentRelease/partner/cursor";
-import { describe, expect, it } from "@repo/testing/effect";
 import { Effect } from "effect";
 
 describe("contentRelease/partner/cursor", () => {

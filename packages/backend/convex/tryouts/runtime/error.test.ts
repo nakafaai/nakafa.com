@@ -1,9 +1,9 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   TryoutRuntimeError,
   toTryoutRuntimeError,
   tryRuntimePromise,
 } from "@repo/backend/convex/tryouts/runtime/error";
-import { describe, expect, it } from "@repo/testing/effect";
 import { ConvexError } from "convex/values";
 import { Effect } from "effect";
 

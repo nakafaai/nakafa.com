@@ -1,3 +1,4 @@
+import { describe, expect, it, vi } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   createConvexTestWithBetterAuth,
@@ -10,9 +11,8 @@ import {
   TRYOUT_START_SECTION,
   TRYOUT_START_SET,
   TRYOUT_START_TRACK,
-} from "@repo/backend/test/tryout-source";
-import { seedTryoutStartSet } from "@repo/backend/test/tryout-start";
-import { describe, expect, it, vi } from "vitest";
+} from "@repo/backend/test/tryout/source";
+import { seedTryoutStartSet } from "@repo/backend/test/tryout/start";
 
 describe("tryouts/queries/attempt", () => {
   it("locks only one exact authenticated in-progress attempt", async () => {

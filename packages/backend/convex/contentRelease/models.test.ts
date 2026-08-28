@@ -1,22 +1,29 @@
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import {
   type PublicationScope,
   PublicationScopeSchema,
-} from "@nakafa/aksara-contracts/release/snapshot/spec";
+} from "@nakafa/aksara-contracts/release/snapshot/scope";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { startReadModels } from "@repo/backend/convex/contentRelease/models";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { insertReleaseItem } from "@repo/backend/test/content-read-model";
+import { insertReleaseItem } from "@repo/backend/test/content/model";
 import {
   insertTestState,
   insertZeroRelease,
   type TestIdentity,
-} from "@repo/backend/test/content-state";
+} from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const ACTIVE = {
   manifestHash: `sha256:${"b".repeat(64)}`,
@@ -28,7 +35,6 @@ const ACTIVE = {
 async function seedActiveRelease(
   ctx: MutationCtx,
   scope: PublicationScope = PublicationScopeSchema.make({
-    content: [],
     families: ContentFamilySchema.literals,
     snapshots: [],
   })
@@ -61,7 +67,6 @@ describe("contentRelease/models", () => {
         seedActiveRelease(
           ctx,
           PublicationScopeSchema.make({
-            content: [],
             families: [family],
             snapshots: ["tryout"],
           })
@@ -108,12 +113,10 @@ describe("contentRelease/models", () => {
 
   it.each([
     PublicationScopeSchema.make({
-      content: [],
       families: ["article"],
       snapshots: [],
     }),
     PublicationScopeSchema.make({
-      content: [],
       families: ["material"],
       snapshots: [],
     }),

@@ -72,6 +72,16 @@ export function predecodeFailure(error: ReleaseError): PublicationFailure {
 function conflictFailure(
   request: PublicationRequest
 ): PublicationFailure | null {
+  if (request.operation === "stageTryoutRuntimeBundle") {
+    return {
+      bundleHash: request.bundle.bundleHash,
+      code: "CONTENT_RELEASE_CONFLICT",
+      kind: "conflict",
+      operation: request.operation,
+      releaseId: request.releaseId,
+      snapshotId: request.bundle.payload.snapshot.snapshotId,
+    };
+  }
   if (
     request.operation === "stageItemBatch" ||
     request.operation === "stageRouteBatch" ||
@@ -90,6 +100,7 @@ function conflictFailure(
     request.operation === "stageRelease" ||
     request.operation === "stageRecovery" ||
     request.operation === "stageGroup" ||
+    request.operation === "migrateTryoutHistory" ||
     request.operation === "verify" ||
     request.operation === "activate" ||
     request.operation === "activateRecovery"

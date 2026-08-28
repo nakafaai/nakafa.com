@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@repo/testing/effect";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, Ref } from "effect";
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import {

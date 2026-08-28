@@ -1,10 +1,10 @@
+import { describe, expect, it } from "@effect/vitest";
 import { readArticleDates } from "@repo/backend/convex/contentRelease/article/dates";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { insertRuntimeArticles } from "@repo/backend/test/content-runtime";
+import { insertRuntimeArticles } from "@repo/backend/test/content/runtime";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("contentRelease/article/dates", () => {
   it("accepts equal bridge dates and rejects contradictions", async () => {

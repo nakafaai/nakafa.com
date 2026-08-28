@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   readProgramBuckets,
   readProgramSitemap,
@@ -8,8 +9,7 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   activateProgramSnapshot,
   makeProgramSnapshotData,
-} from "@repo/backend/test/program-snapshot";
-import { describe, expect, it } from "@repo/testing/effect";
+} from "@repo/backend/test/program/snapshot";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 

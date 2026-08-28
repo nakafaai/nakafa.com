@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import {
   ArtifactPayloadFieldByteLimitError,
   ArtifactRendererComponentMissingError,
@@ -15,8 +16,7 @@ import {
   SigningKeyResolutionError,
 } from "@nakafa/aksara-contracts/signature/spec";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
-import { TEST_KEY_ID } from "@repo/backend/test/content-proof";
-import { describe, expect, it } from "vitest";
+import { TEST_KEY_ID } from "@repo/backend/test/content/proof";
 
 describe("contentRelease/proof/failure", () => {
   it("maps unsupported, size, and integrity contract failures", () => {

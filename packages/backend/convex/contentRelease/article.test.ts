@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PredecessorArticleProjectionSchema } from "@repo/backend/convex/contentRelease/article/predecessor";
 import schema from "@repo/backend/convex/schema";
@@ -6,15 +7,14 @@ import {
   insertRuntimeArticles,
   insertRuntimeRelease,
   testArticleProjection,
-} from "@repo/backend/test/content-runtime";
-import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime-values";
+} from "@repo/backend/test/content/runtime";
+import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 import {
   ARTICLE_PUBLICATION_CURSOR_PREFIX,
   encodeArticlePublicationCursor,
 } from "@repo/contents/_types/publication";
 import { convexTest } from "convex-test";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 const categories = api.contentRelease.article.categories;
 const page = api.contentRelease.article.publications;

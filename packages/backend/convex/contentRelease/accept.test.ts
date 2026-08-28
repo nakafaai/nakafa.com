@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
@@ -6,9 +7,8 @@ import {
   insertTestState,
   insertZeroRelease,
   type TestIdentity,
-} from "@repo/backend/test/content-state";
+} from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const CANDIDATE = {
   manifestHash: `sha256:${"3".repeat(64)}`,

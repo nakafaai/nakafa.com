@@ -1,26 +1,23 @@
 "use node";
 
 import { verifySignedContentArtifact } from "@nakafa/aksara-contracts/artifact/verify";
-import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
-import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/verify";
-import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
 import { ACTIVE_SIGNING_KEY_ID } from "@nakafa/aksara-contracts/signature/trusted";
 import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
 import {
+  loadStageEnvelope,
+  validateReleaseRenderer,
+} from "@repo/backend/convex/contentRelease/ingress/envelope";
+import { requireActiveContentKey } from "@repo/backend/convex/contentRelease/ingress/key";
+import { stageTryoutRuntimeBundle } from "@repo/backend/convex/contentRelease/ingress/runtime/bundle";
+import {
   stageSnapshot,
   stageSnapshotBatch,
 } from "@repo/backend/convex/contentRelease/ingress/snapshot";
-import {
-  decodeReleaseJson,
-  decodeRendererJson,
-} from "@repo/backend/convex/contentRelease/parse";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
-import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/renderer";
 import type {
-  releaseRoleValidator,
   stageReceiptValidator,
   statusValidator,
 } from "@repo/backend/convex/contentRelease/spec";
@@ -47,7 +44,8 @@ type StageRequest = Extract<
       | "stageRelease"
       | "stageRouteBatch"
       | "stageSnapshot"
-      | "stageSnapshotBatch";
+      | "stageSnapshotBatch"
+      | "stageTryoutRuntimeBundle";
   }
 >;
 
@@ -55,19 +53,9 @@ type ReleaseRequest = Extract<
   StageRequest,
   { readonly operation: "stageRecovery" | "stageRelease" }
 >;
-interface StoredEnvelope {
-  readonly releaseJson: string;
-  readonly rendererJson: string;
-  readonly role: Infer<typeof releaseRoleValidator>;
-}
 type StageReceipt = Infer<typeof stageReceiptValidator>;
 type Status = Infer<typeof statusValidator>;
 
-const releaseEnvelopeReference = makeFunctionReference<
-  "query",
-  { releaseId: string },
-  StoredEnvelope
->("contentRelease/envelope:byRelease");
 const stageReleaseReference = makeFunctionReference<
   "mutation",
   { releaseJson: string; rendererJson: string },
@@ -103,65 +91,6 @@ const artifactBatchReference = makeFunctionReference<
   { artifactJson: string[]; batchIndex: number; releaseId: string },
   StageReceipt
 >("contentRelease/artifacts:stageArtifactBatch");
-/** Rejects new publication bytes signed by a retained but inactive key. */
-const requireActiveKey = Effect.fn("contentRelease.requireActiveKey")(
-  function* (keyId: string, activeKeyId: string, subject: string) {
-    if (keyId !== activeKeyId) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_UNSUPPORTED",
-        `${subject} must use the active content signing key.`
-      );
-    }
-  }
-);
-
-/** Authenticates one signed release through the code-owned trusted key set. */
-function verifyRelease(release: SignedContentRelease) {
-  return verifySignedContentRelease(release).pipe(
-    Effect.mapError(contractFailure)
-  );
-}
-
-/** Validates that one signed release owns the supplied renderer snapshot. */
-const validateRenderer = Effect.fn("contentRelease.validateRenderer")(
-  function* (
-    release: ReleaseRequest["release"],
-    rendererInput: ReleaseRequest["rendererManifest"]
-  ) {
-    const signed = yield* verifyRelease(release);
-    const renderer = yield* validateRendererManifestHash(rendererInput).pipe(
-      Effect.mapError(contractFailure)
-    );
-    if (!hasRendererIdentity(signed.manifest, renderer)) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        "Signed release does not own the supplied renderer snapshot."
-      );
-    }
-    return { renderer, signed };
-  }
-);
-
-/** Loads and verifies the release envelope owning one staged batch. */
-const loadEnvelope = Effect.fn("contentRelease.loadStageEnvelope")(function* (
-  ctx: ActionCtx,
-  releaseId: string
-) {
-  const stored = yield* callInternal(() =>
-    ctx.runQuery(releaseEnvelopeReference, { releaseId })
-  );
-  const release = yield* decodeReleaseJson(stored.releaseJson);
-  const renderer = yield* decodeRendererJson(stored.rendererJson);
-  const verified = yield* validateRenderer(release, renderer);
-  if (verified.signed.manifest.releaseId !== releaseId) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      "Staged release identity does not match its stored envelope."
-    );
-  }
-  return { ...verified, role: stored.role };
-});
-
 /** Authenticates candidate and retained recovery artifacts against their keys. */
 const verifyArtifactBatch = Effect.fn("contentRelease.verifyArtifactBatch")(
   function* (
@@ -169,13 +98,13 @@ const verifyArtifactBatch = Effect.fn("contentRelease.verifyArtifactBatch")(
     request: Extract<StageRequest, { operation: "stageArtifactBatch" }>,
     activeKeyId: string
   ) {
-    const verified = yield* loadEnvelope(ctx, request.releaseId);
+    const verified = yield* loadStageEnvelope(ctx, request.releaseId);
     yield* Effect.forEach(
       request.artifacts,
       (artifact) => {
         const keyGate =
           verified.role === "candidate"
-            ? requireActiveKey(
+            ? requireActiveContentKey(
                 artifact.keyId,
                 activeKeyId,
                 `Artifact ${artifact.artifactHash}`
@@ -203,11 +132,11 @@ const stageRelease = Effect.fn("contentRelease.stageSignedRelease")(function* (
   request: ReleaseRequest,
   activeKeyId: string
 ) {
-  const { renderer, signed } = yield* validateRenderer(
+  const { renderer, signed } = yield* validateReleaseRenderer(
     request.release,
     request.rendererManifest
   );
-  yield* requireActiveKey(
+  yield* requireActiveContentKey(
     signed.keyId,
     activeKeyId,
     `Release ${signed.manifest.releaseId}`
@@ -249,6 +178,10 @@ export const stagePublication = Effect.fn("contentRelease.stagePublication")(
     }
     if (request.operation === "stageSnapshotBatch") {
       const value = yield* stageSnapshotBatch(ctx, request);
+      return { ok: true, operation: request.operation, value };
+    }
+    if (request.operation === "stageTryoutRuntimeBundle") {
+      const value = yield* stageTryoutRuntimeBundle(ctx, request, activeKeyId);
       return { ok: true, operation: request.operation, value };
     }
     if (request.operation === "stageItemBatch") {

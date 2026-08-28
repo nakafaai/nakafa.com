@@ -23,6 +23,7 @@ export const irtOperationalModelValidator = literals("2pl");
 
 const tables = {
   irtScaleVersions: defineTable({
+    history: v.optional(v.literal(true)),
     tryoutSnapshotId: v.string(),
     setIdentity: v.string(),
     model: irtOperationalModelValidator,

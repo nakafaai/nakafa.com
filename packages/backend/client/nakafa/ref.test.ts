@@ -4,8 +4,8 @@ import {
   resolveNakafaContentRef,
 } from "@repo/backend/client/nakafa/ref";
 import { api } from "@repo/backend/convex/_generated/api";
-import { makeMaterialProjection } from "@repo/backend/test/content-material";
-import { toRuntimeQueryError } from "@repo/backend/test/runtime-query";
+import { makeMaterialProjection } from "@repo/backend/test/content/material";
+import { toRuntimeQueryError } from "@repo/backend/test/runtime/query";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option } from "effect";

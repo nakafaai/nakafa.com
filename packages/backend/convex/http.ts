@@ -7,6 +7,7 @@ import {
 } from "@repo/backend/convex/classes/forums/attachments/route";
 import { registerPublicContentRuntimeBatchRoute } from "@repo/backend/convex/contentRelease/http/runtime/batch";
 import { registerRetainedProtectedContentRuntimeRoute } from "@repo/backend/convex/contentRelease/http/runtime/history";
+import { registerPredecessorContentRuntimeRoute } from "@repo/backend/convex/contentRelease/http/runtime/predecessor";
 import { registerProtectedContentRuntimeRoute } from "@repo/backend/convex/contentRelease/http/runtime/protected";
 import { registerPublicContentRuntimeRoute } from "@repo/backend/convex/contentRelease/http/runtime/public";
 import { registerContentReleaseRoutes } from "@repo/backend/convex/contentRelease/ingress/route";
@@ -65,6 +66,7 @@ registerContentReleaseRoutes(app);
 // Register server-authenticated executable content reads.
 registerPublicContentRuntimeBatchRoute(app);
 registerPublicContentRuntimeRoute(app);
+registerPredecessorContentRuntimeRoute(app);
 registerProtectedContentRuntimeRoute(app);
 registerRetainedProtectedContentRuntimeRoute(app);
 

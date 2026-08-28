@@ -1,10 +1,10 @@
+import { describe, expect, it } from "@effect/vitest";
 import { decodeStoredTryoutRow } from "@nakafa/aksara-contracts/history/decode";
 import {
   StoredTryoutPlacementMismatchError,
   verifyStoredTryoutPlacement,
 } from "@repo/backend/convex/tryouts/history/placement";
-import { TEST_STORED_TRYOUT_PLACEMENT } from "@repo/backend/test/tryout-history";
-import { describe, expect, it } from "@repo/testing/effect";
+import { TEST_STORED_TRYOUT_PLACEMENT } from "@repo/backend/test/tryout/history";
 import { Effect } from "effect";
 
 const FROZEN_CONTENT_HASH = "f".repeat(64);

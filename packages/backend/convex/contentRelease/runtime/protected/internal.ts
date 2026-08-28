@@ -13,15 +13,13 @@ import {
 } from "@repo/backend/convex/contentRelease/error";
 import {
   decodeArtifactJson,
-  decodeReleaseJson,
   decodeRendererJson,
+  decodeTryoutRuntimeBundleJson,
 } from "@repo/backend/convex/contentRelease/parse";
-import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/renderer";
 import { loadVerifiedSnapshot } from "@repo/backend/convex/contentRelease/runtime/snapshot";
-import { appLocaleValidator } from "@repo/backend/convex/contentRelease/spec";
 import { verifyTryoutPlacement } from "@repo/backend/convex/contentRelease/tryout/verify";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { findTryoutBundleByRelease } from "@repo/backend/convex/tryouts/runtime/bundle";
+import { findTryoutRuntimeBundleByHash } from "@repo/backend/convex/tryouts/runtime/signed";
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { Effect, Schema } from "effect";
@@ -36,9 +34,8 @@ const protectedSelectorValidator = v.object({
   delivery: protectedDeliveryValidator,
 });
 const protectedArgsValidator = {
-  appLocale: appLocaleValidator,
+  bundleHash: v.string(),
   selectors: v.array(protectedSelectorValidator),
-  snapshotReleaseId: v.string(),
   snapshotId: v.string(),
 };
 const protectedItemValidator = v.object({
@@ -49,27 +46,28 @@ const protectedItemValidator = v.object({
 const protectedResultValidator = v.union(
   v.null(),
   v.object({
+    bundleJson: v.string(),
     items: v.array(protectedItemValidator),
-    releaseJson: v.string(),
     rendererJson: v.string(),
-    snapshotManifestHash: v.string(),
-    snapshotReleaseId: v.string(),
-    snapshotId: v.string(),
   })
 );
+
 /** Stored protected batch returned only through one internal query. */
 export type ProtectedRuntimeBatchRow = Infer<typeof protectedResultValidator>;
+
 interface ProtectedBodyIdentity {
   readonly artifactHash: string;
   readonly artifactLocale: TryoutPlacement["answerArtifactLocale"];
   readonly contentKey: string;
   readonly kind: "answer" | "question";
 }
+
 interface ProtectedPlacementSelection {
   readonly placement: Doc<"tryoutPlacements">;
   readonly selector: ProtectedContentRuntimeSelector;
 }
-/** Selects the placement index owned by one protected body class. */
+
+/** Selects one retained placement through its exact body artifact identity. */
 const loadPlacement = Effect.fn("contentRelease.loadProtectedPlacement")(
   function* (
     ctx: QueryCtx,
@@ -100,6 +98,7 @@ const loadPlacement = Effect.fn("contentRelease.loadProtectedPlacement")(
     );
   }
 );
+
 /** Derives the exact signed identity owned by one placement body. */
 function bodyIdentity(
   placement: TryoutPlacement,
@@ -120,6 +119,7 @@ function bodyIdentity(
     kind: "answer",
   };
 }
+
 /** Loads one immutable artifact after exact retained-snapshot membership checks. */
 const resolveProtectedItem = Effect.fn("contentRelease.resolveProtectedItem")(
   function* (
@@ -135,7 +135,6 @@ const resolveProtectedItem = Effect.fn("contentRelease.resolveProtectedItem")(
     const body = bodyIdentity(placement, selector.delivery);
     const sourcePath = `${placement.questionSourcePath}/${body.kind}.${body.artifactLocale}.mdx`;
     if (
-      placement.appLocale !== request.appLocale ||
       body.artifactHash !== selector.artifactHash ||
       body.contentKey !== selector.contentKey
     ) {
@@ -177,45 +176,50 @@ const resolveProtectedItem = Effect.fn("contentRelease.resolveProtectedItem")(
     };
   }
 );
-/** Loads and verifies the immutable release bundle selected by one attempt. */
+
+/** Loads and checks the permanent bundle selected by one attempt. */
 const loadBundle = Effect.fn("contentRelease.loadProtectedBundle")(function* (
   ctx: QueryCtx,
   request: ProtectedContentRuntimeRequest
 ) {
-  const stored = yield* findTryoutBundleByRelease(
+  const stored = yield* findTryoutRuntimeBundleByHash(
     ctx,
-    request.snapshotReleaseId
+    request.bundleHash
   ).pipe(
     Effect.mapError(
       () =>
         new ReleaseError({
           code: "CONTENT_RELEASE_INTEGRITY",
-          message: `Protected try-out bundle ${request.snapshotReleaseId} could not be read.`,
+          message: `Protected try-out bundle ${request.bundleHash} could not be read.`,
         })
     )
   );
   if (!stored) {
     return null;
   }
-  const [release, renderer] = yield* Effect.all([
-    decodeReleaseJson(stored.releaseJson),
+  const [bundle, renderer] = yield* Effect.all([
+    decodeTryoutRuntimeBundleJson(stored.bundleJson),
     decodeRendererJson(stored.rendererJson),
   ]);
-  const snapshot = release.manifest.snapshots.tryout;
   if (
-    stored.manifestHash !== release.manifestHash ||
-    stored.releaseId !== release.manifest.releaseId ||
+    stored.bundleHash !== bundle.bundleHash ||
+    stored.bundleHash !== request.bundleHash ||
+    stored.snapshotId !== bundle.payload.snapshot.snapshotId ||
     stored.snapshotId !== request.snapshotId ||
-    snapshot.resultSnapshotId !== request.snapshotId ||
-    !hasRendererIdentity(release.manifest, renderer)
+    stored.rendererManifestHash !== bundle.payload.rendererManifestHash ||
+    stored.rendererManifestHash !== renderer.hash ||
+    stored.sourceGitSha !== bundle.payload.sourceGitSha ||
+    stored.sourceManifestHash !== bundle.payload.sourceManifestHash ||
+    stored.sourceReleaseId !== bundle.payload.sourceReleaseId
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      `Protected try-out bundle ${request.snapshotReleaseId} changed its identity.`
+      `Protected try-out bundle ${request.bundleHash} changed its identity.`
     );
   }
   return stored;
 });
+
 /** Decodes and resolves one complete protected batch in a single transaction. */
 const readProtectedProgram = Effect.fn("contentRelease.readProtectedBatch")(
   function* (ctx: QueryCtx, input: unknown) {
@@ -231,6 +235,10 @@ const readProtectedProgram = Effect.fn("contentRelease.readProtectedBatch")(
           })
       )
     );
+    const bundle = yield* loadBundle(ctx, request);
+    if (!bundle) {
+      return null;
+    }
     const selections = yield* Effect.forEach(
       request.selectors,
       (selector) =>
@@ -247,10 +255,6 @@ const readProtectedProgram = Effect.fn("contentRelease.readProtectedBatch")(
         selection.placement !== null
     );
     yield* loadVerifiedSnapshot(ctx, "tryout", request.snapshotId);
-    const bundle = yield* loadBundle(ctx, request);
-    if (!bundle) {
-      return null;
-    }
     const items = yield* Effect.forEach(
       foundSelections,
       ({ placement, selector }) =>
@@ -258,16 +262,14 @@ const readProtectedProgram = Effect.fn("contentRelease.readProtectedBatch")(
       { concurrency: "unbounded" }
     );
     return {
+      bundleJson: bundle.bundleJson,
       items,
-      releaseJson: bundle.releaseJson,
       rendererJson: bundle.rendererJson,
-      snapshotManifestHash: bundle.manifestHash,
-      snapshotReleaseId: bundle.releaseId,
-      snapshotId: request.snapshotId,
     };
   }
 );
-/** Returns one ordered protected batch from a retained snapshot transaction. */
+
+/** Returns one ordered protected batch from a permanent runtime bundle. */
 export const read = internalQuery({
   args: protectedArgsValidator,
   returns: protectedResultValidator,
