@@ -113,7 +113,7 @@ describe("quran llms text", () => {
       expect(firstSurahText).toContain("### Verses");
       expect(firstSurahText).toContain("Technical English Tafsir notice.");
       expect(firstSurahText).toContain(
-        "[Technical English Tafsir link.](https://example.test/tafsir/en)"
+        "[Technical English Tafsir link.](https://example.test/tafsir/en/read)"
       );
       expect(firstSurahText).toContain("#### Verse 1");
       expect(firstSurahText).toContain("**Translation:** Translation 1.");
@@ -150,7 +150,7 @@ describe("quran llms text", () => {
           `**${t("meaning")}:** ${surahMeanings[1][locale]}`
         );
         expect(text).toContain(
-          `[${tafsirAccess.source.label}](${tafsirAccess.source.updateUrl})`
+          `[${tafsirAccess.source.label}](${tafsirAccess.source.sourceUrl})`
         );
         expect(text).toContain(
           `**${t("translation-notes")}:**\n- **1.** Source note.`
@@ -328,7 +328,8 @@ function tafsirAccessFor(locale: Locale) {
       notice: "Catatan teknis tafsir Indonesia.",
       source: {
         label: "Technical Indonesian Tafsir source.",
-        updateUrl: "https://example.test/tafsir/id",
+        sourceUrl: "https://example.test/tafsir/id/read",
+        updateUrl: "https://example.test/tafsir/id/updates",
       },
     };
   }
@@ -344,7 +345,8 @@ function tafsirAccessFor(locale: Locale) {
         locale === "en"
           ? "Technical English Tafsir link."
           : "Technischer deutscher Tafsirlink.",
-      updateUrl: `https://example.test/tafsir/${locale}`,
+      sourceUrl: `https://example.test/tafsir/${locale}/read`,
+      updateUrl: `https://example.test/tafsir/${locale}/updates`,
     },
   };
 }

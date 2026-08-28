@@ -204,7 +204,7 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
   scanned.push(tafsirAccess.notice);
   scanned.push("");
   scanned.push(
-    `[${tafsirAccess.source.label}](${tafsirAccess.source.updateUrl})`
+    `[${tafsirAccess.source.label}](${tafsirAccess.source.sourceUrl})`
   );
   scanned.push("");
 

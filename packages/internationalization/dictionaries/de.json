@@ -1144,9 +1144,9 @@
       "keywords": "{title}, {category}, Analyse, Fakten, aktuell, Forschung, Informationen, Nachrichten"
     },
     "quran": {
-      "title": "Sure {number}. {name} ({transliteration}) | Nakafa",
+      "title": "Sure {number}. {name} ({transliteration}) - {translation} | Nakafa",
       "description": "Lies die Sure {name} ({transliteration}) mit einer Übersetzung Vers für Vers. {numberOfVerses} Verse aus dem heiligen Quran.",
-      "keywords": "Sure {name}, Quran, {transliteration}, {revelation}"
+      "keywords": "Sure {name}, Quran, {translation}, {revelation}"
     }
   }
 }
