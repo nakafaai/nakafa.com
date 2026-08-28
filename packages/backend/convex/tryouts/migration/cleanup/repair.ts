@@ -9,10 +9,6 @@ import {
   retainedScaleRepair,
   type ScaleRepairEvidence,
 } from "@repo/backend/convex/tryouts/migration/cleanup/evidence";
-import {
-  loadRepairPlacements,
-  matchesRepairPlacements,
-} from "@repo/backend/convex/tryouts/migration/cleanup/placement";
 import type { CleanupRepair } from "@repo/backend/convex/tryouts/migration/cleanup/schema";
 import { Effect } from "effect";
 
@@ -162,11 +158,6 @@ export const prepareUnusedScale = Effect.fn(
   const observedRunIdentities = new Set(
     runs.map(({ sectionIdentity }) => sectionIdentity)
   );
-  const signedPlacements = yield* loadRepairPlacements(
-    ctx,
-    migration.sourceSnapshotId,
-    evidence.runs
-  );
   const runIds = new Set(runs.map(({ _id }) => _id));
   const itemIds = new Set(items.map(({ _id }) => _id));
   const reverseItems = yield* Effect.forEach(runs, (run) =>
@@ -193,7 +184,6 @@ export const prepareUnusedScale = Effect.fn(
     attempt !== null ||
     score !== null ||
     items.length !== evidence.itemCount ||
-    !matchesRepairPlacements(signedPlacements, items, runs) ||
     runs.length !== evidence.runs.length ||
     expectedRuns.size !== runs.length ||
     observedRunIdentities.size !== runs.length ||

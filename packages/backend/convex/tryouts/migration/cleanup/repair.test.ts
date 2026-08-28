@@ -149,50 +149,48 @@ describe("tryouts/migration/cleanup/repair", () => {
     })
   );
 
-  it.effect("rejects signed placement drift before any repair write", () =>
+  it.effect("repairs after the retained source rows were cleaned", () =>
     Effect.gen(function* () {
-      for (const drift of ["identity", "rowHash", "section"] as const) {
-        const t = createConvexTestWithBetterAuth();
-        const { repair } = yield* Effect.promise(() =>
-          seedRepair(t, 0, ["quantitative-knowledge", "english-language"])
-        );
-        const [firstItemId, secondItemId] = repair.itemIds;
-        const [firstRunId, secondRunId] = repair.runIds;
-        assert.ok(firstItemId && secondItemId && firstRunId && secondRunId);
-        yield* Effect.promise(() =>
-          t.mutation(async (ctx) => {
-            if (drift === "identity") {
-              await ctx.db.patch(firstItemId, {
-                placementIdentity: "drifted-placement",
-              });
-              return;
-            }
-            if (drift === "rowHash") {
-              await ctx.db.patch(firstItemId, {
-                placementRowHash: "drifted-row",
-              });
-              return;
-            }
-            await ctx.db.patch(firstItemId, {
-              calibrationRunId: secondRunId,
-            });
-            await ctx.db.patch(secondItemId, {
-              calibrationRunId: firstRunId,
-            });
-          })
-        );
+      const t = createConvexTestWithBetterAuth();
+      const { repair } = yield* Effect.promise(() => seedRepair(t));
+      yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const catalogs = await ctx.db
+            .query("tryoutCatalog")
+            .withIndex("by_snapshotId_and_index", (query) =>
+              query.eq("snapshotId", repair.evidence.sourceSnapshotId)
+            )
+            .collect();
+          const placements = await ctx.db
+            .query("tryoutPlacements")
+            .withIndex("by_snapshotId_and_index", (query) =>
+              query.eq("snapshotId", repair.evidence.sourceSnapshotId)
+            )
+            .collect();
+          await Promise.all([
+            ...catalogs.map((row) => ctx.db.delete(row._id)),
+            ...placements.map((row) => ctx.db.delete(row._id)),
+          ]);
+        })
+      );
 
-        yield* Effect.promise(() =>
-          expect(runCleanup(t, repair.evidence)).rejects.toMatchObject({
-            data: { code: "CONTENT_RELEASE_INTEGRITY" },
-          })
-        );
-        const state = yield* Effect.promise(() => readRepair(t, repair));
-        assert.ok(state.scale);
-        assert.ok(state.items.every((item) => item !== null));
-        assert.ok(state.runs.every((run) => run !== null));
-        assert.strictEqual(state.receipt?.repair, undefined);
-      }
+      const result = yield* Effect.promise(() =>
+        runCleanup(t, repair.evidence)
+      );
+      const state = yield* Effect.promise(() => readRepair(t, repair));
+
+      assert.deepStrictEqual(result, {
+        deleted: 0,
+        done: false,
+        repaired: countScaleRepairRows(repair.evidence),
+      });
+      assert.strictEqual(state.scale, null);
+      assert.ok(state.items.every((item) => item === null));
+      assert.ok(state.runs.every((run) => run === null));
+      assert.strictEqual(
+        state.receipt?.repair?.deletedRows,
+        countScaleRepairRows(repair.evidence)
+      );
     })
   );
 
