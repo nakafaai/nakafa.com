@@ -50,6 +50,7 @@ export function QuranInterpretationLink({
     <a
       aria-label={label}
       className={buttonVariants({ size: "icon", variant: "outline" })}
+      data-quran-interpretation-link=""
       href={href}
       rel="noreferrer"
       target="_blank"

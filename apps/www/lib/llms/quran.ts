@@ -1,10 +1,11 @@
 import type { QuranTranslationDocument } from "@nakafa/aksara-contracts/quran/notes";
-import {
-  QuranSurahNumberSchema,
-  type QuranSurahRow,
-} from "@nakafa/aksara-contracts/quran/spec";
+import { QuranSurahNumberSchema } from "@nakafa/aksara-contracts/quran/spec";
 import { projectQuranTranslation } from "@repo/backend/client/quran/notes";
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
+import {
+  type PublishedQuranMeaning,
+  selectQuranMeaning,
+} from "@repo/backend/content/quran/contract";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Effect, Option, Schema } from "effect";
 import { createTranslator, type Locale } from "next-intl";
@@ -252,11 +253,8 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
 });
 
 /** Preserves the signed source language beside one Quran meaning. */
-function formatQuranMeaning(
-  meaning: QuranSurahRow["name"]["meaning"],
-  locale: Locale
-) {
-  return meaning[locale];
+function formatQuranMeaning(meaning: PublishedQuranMeaning, locale: Locale) {
+  return selectQuranMeaning(meaning, locale).text;
 }
 
 /** Renders one semantic translation and its localized source-note heading. */

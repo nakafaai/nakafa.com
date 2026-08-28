@@ -1,5 +1,6 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
+import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
 import { slugify } from "@repo/design-system/lib/routing/slug";
 import { BookJsonLd } from "@repo/seo/json-ld/book";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
@@ -181,8 +182,9 @@ async function CachedSurahShell({
       recoverStalePublishedQuranSnapshot(servedSnapshotId)
     );
   }
-  const description = surahData.name.meaning[locale];
-  const descriptionLanguage = locale;
+  const meaning = selectQuranMeaning(surahData.name.meaning, locale);
+  const description = meaning.text;
+  const descriptionLanguage = meaning.appLocale;
   const title = getQuranSurahName(surahData.name);
 
   const verseItems = result.verses.map((verse) => {

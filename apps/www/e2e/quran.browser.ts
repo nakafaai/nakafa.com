@@ -29,7 +29,7 @@ const quranLocaleContracts = {
     hasEmbeddedTafsir: false,
     hasTranslationNotes: false,
     locale: "de",
-    meaning: "The Cow",
+    meaning: "Die Kuh",
     translationNotesLabel: "Anmerkungen zur Übersetzung",
   },
   en: {
@@ -43,7 +43,7 @@ const quranLocaleContracts = {
     hasEmbeddedTafsir: true,
     hasTranslationNotes: true,
     locale: "id",
-    meaning: "The Cow",
+    meaning: "Sapi",
     translationNotesLabel: "Catatan terjemahan",
   },
 } satisfies QuranLocaleContracts;
@@ -131,13 +131,13 @@ const verifyQuranLocaleCoverage = Effect.fn(
     .filter({ hasText: contract.meaning });
   yield* Effect.promise(() => expect(headerMeaning).toBeVisible());
   yield* Effect.promise(() =>
-    expect(headerMeaning).toHaveAttribute("lang", "en")
+    expect(headerMeaning).toHaveAttribute("lang", contract.locale)
   );
   const sidebarMeaning = page
     .locator('[data-slot="sidebar-menu-description"]')
     .filter({ hasText: contract.meaning });
   yield* Effect.promise(() =>
-    expect(sidebarMeaning).toHaveAttribute("lang", "en")
+    expect(sidebarMeaning).toHaveAttribute("lang", contract.locale)
   );
 
   const bismillah = page.locator("[data-quran-bismillah]");
@@ -157,11 +157,32 @@ const verifyQuranLocaleCoverage = Effect.fn(
   );
 
   const interpretation = page.locator("[data-quran-interpretation-verse]");
+  const interpretationLink = page.locator("[data-quran-interpretation-link]");
   if (contract.hasEmbeddedTafsir) {
     yield* Effect.promise(() => expect(interpretation.first()).toBeVisible());
     yield* Effect.promise(() => expect(interpretation.first()).toBeEnabled());
+    yield* Effect.promise(() => expect(interpretationLink).toHaveCount(0));
   } else {
     yield* Effect.promise(() => expect(interpretation).toHaveCount(0));
+    yield* Effect.promise(() =>
+      expect(interpretationLink.first()).toBeVisible()
+    );
+    yield* Effect.promise(() =>
+      expect(interpretationLink.first()).toHaveAttribute("target", "_blank")
+    );
+    yield* Effect.promise(() =>
+      expect(interpretationLink.first()).toHaveAttribute("rel", "noreferrer")
+    );
+    const interpretationHref = yield* Effect.promise(() =>
+      interpretationLink.first().getAttribute("href")
+    );
+    yield* Effect.sync(() =>
+      expect(
+        interpretationHref === null
+          ? false
+          : new URL(interpretationHref).protocol === "https:"
+      ).toBe(true)
+    );
   }
 
   const translationNotes = page.locator(
