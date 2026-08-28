@@ -15,6 +15,7 @@ import type {
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
   insertRuntimeRelease,
+  insertSignedRelease,
   publicRuntimeRequest,
   runtimeContentKey,
 } from "@repo/backend/test/content/runtime";
@@ -68,9 +69,13 @@ function expectPrivate(response: Response) {
 }
 
 /** Seeds one active public runtime route. */
-function seedPublicRuntime(t: RuntimeTest) {
+function seedPublicRuntime(t: RuntimeTest, predecessorCompatible = false) {
   return t.mutation(async (ctx) => {
-    await insertRuntimeRelease(ctx);
+    if (predecessorCompatible) {
+      await insertSignedRelease(ctx);
+    } else {
+      await insertRuntimeRelease(ctx);
+    }
     await insertRuntimeHead(ctx, "public", runtimeContentKey("public"));
   });
 }
@@ -99,7 +104,7 @@ afterEach(() => {
 describe("public content runtime batch HTTP route", () => {
   it("routes predecessor and current batches without changing active identity", async () => {
     const t = createConvexTestWithBetterAuth();
-    await seedPublicRuntime(t);
+    await seedPublicRuntime(t, true);
     const body = JSON.stringify({ requests: [foundRequest, missingRequest] });
 
     const [predecessor, current] = await Promise.all([
@@ -134,7 +139,7 @@ describe("public content runtime batch HTTP route", () => {
 
   it("records authenticated bounded predecessor batches before dispatch", async () => {
     const t = createConvexTestWithBetterAuth();
-    await seedPublicRuntime(t);
+    await seedPublicRuntime(t, true);
     await t.mutation(armObservation, { observationId: OBSERVATION_ID });
     const body = JSON.stringify({ requests: [foundRequest] });
 

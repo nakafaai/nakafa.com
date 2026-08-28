@@ -10,6 +10,10 @@ import {
   type PublicContentRuntimeRequest,
   PublicContentRuntimeResponseSchema,
 } from "@nakafa/aksara-contracts/runtime/spec";
+import {
+  MAX_PUBLIC_RUNTIME_RESPONSE_BYTES as MAX_PREDECESSOR_PUBLIC_RUNTIME_RESPONSE_BYTES,
+  PublicContentRuntimeResponseSchema as predecessorPublicContentRuntimeResponseSchema,
+} from "@nakafa/aksara-v150/runtime/spec";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import {
   decodeArtifactJson,
@@ -121,13 +125,15 @@ export const decodePredecessorRuntimeRow = Effect.fn(
   );
 });
 
-type RuntimeRowDecoder = typeof decodePublicRuntimeRow;
+type RuntimeRowDecoder<Found> = (
+  row: PublicRuntimeRow
+) => Effect.Effect<Found | null, PublicRuntimeReadError>;
 /** Reads one active public artifact for Nakafa verification. */
 const resolvePublicRuntime = Effect.fn("contentRelease.resolvePublicRuntime")(
-  function* (
+  function* <Found>(
     ctx: ActionCtx,
     request: PublicContentRuntimeRequest,
-    decodeRow: RuntimeRowDecoder
+    decodeRow: RuntimeRowDecoder<Found>
   ) {
     const row = yield* Effect.tryPromise({
       catch: () => new PublicRuntimeReadError(),
@@ -143,11 +149,13 @@ const resolvePublicRuntime = Effect.fn("contentRelease.resolvePublicRuntime")(
 /** Decodes, resolves, and safely encodes one public runtime request. */
 const dispatchRuntimeProgram = Effect.fn(
   "contentRelease.dispatchPublicRuntime"
-)(function* (
+)(function* <Found, A, I>(
   ctx: ActionCtx,
   source: string,
   byteLength: number,
-  decodeRow: RuntimeRowDecoder
+  decodeRow: RuntimeRowDecoder<Found>,
+  responseSchema: Schema.Codec<A, I, never, never>,
+  maxResponseBytes: number
 ) {
   const decoded = yield* decodePublicRequest(source, byteLength).pipe(
     Effect.result
@@ -165,15 +173,15 @@ const dispatchRuntimeProgram = Effect.fn(
   }
   if (resolved.success === null) {
     return encodeRuntimeResult(
-      PublicContentRuntimeResponseSchema,
-      MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
+      responseSchema,
+      maxResponseBytes,
       { kind: "missing" },
       404
     );
   }
   return encodeRuntimeResult(
-    PublicContentRuntimeResponseSchema,
-    MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
+    responseSchema,
+    maxResponseBytes,
     resolved.success,
     200
   );
@@ -187,7 +195,9 @@ export const dispatchProgram = Effect.fn(
     ctx,
     source,
     byteLength,
-    decodePublicRuntimeRow
+    decodePublicRuntimeRow,
+    PublicContentRuntimeResponseSchema,
+    MAX_PUBLIC_RUNTIME_RESPONSE_BYTES
   );
 });
 
@@ -199,6 +209,8 @@ export const dispatchPredecessorProgram = Effect.fn(
     ctx,
     source,
     byteLength,
-    decodePredecessorRuntimeRow
+    decodePredecessorRuntimeRow,
+    predecessorPublicContentRuntimeResponseSchema,
+    MAX_PREDECESSOR_PUBLIC_RUNTIME_RESPONSE_BYTES
   );
 });

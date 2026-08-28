@@ -1,11 +1,11 @@
-import type {
-  PublicContentRuntimeRequest,
-  PublicContentRuntimeResponse,
-} from "@nakafa/aksara-contracts/runtime/spec";
+import type { PublicContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/spec";
 import { MAX_PUBLIC_RUNTIME_RESPONSE_BYTES } from "@nakafa/aksara-contracts/runtime/spec";
+import { MAX_PUBLIC_RUNTIME_RESPONSE_BYTES as MAX_PREDECESSOR_PUBLIC_RUNTIME_RESPONSE_BYTES } from "@nakafa/aksara-v150/runtime/spec";
 import {
+  MAX_PREDECESSOR_PUBLIC_RUNTIME_BATCH_RESPONSE_BYTES,
   MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES,
   MAX_PUBLIC_RUNTIME_BATCH_RESPONSE_BYTES,
+  PredecessorPublicContentRuntimeBatchResponseSchema,
   PublicContentRuntimeBatchRequestSchema,
   PublicContentRuntimeBatchResponseSchema,
   publicRuntimeResponseBytes,
@@ -41,7 +41,9 @@ class PublicRuntimeBatchReadError extends Schema.TaggedError<PublicRuntimeBatchR
   "PublicRuntimeBatchReadError",
   {}
 ) {}
-type RuntimeRowDecoder = typeof decodePublicRuntimeRow;
+type RuntimeRowDecoder<Found, Failure> = (
+  row: PublicRuntimeRow
+) => Effect.Effect<Found | null, Failure>;
 /** Strictly parses one bounded UTF-8 public batch request. */
 const decodeBatchRequest = Effect.fn("contentRelease.decodePublicBatchRequest")(
   function* (source: string, byteLength: number) {
@@ -66,10 +68,10 @@ const decodeBatchRequest = Effect.fn("contentRelease.decodePublicBatchRequest")(
 /** Reads and decodes one transactionally consistent public batch. */
 const resolvePublicRuntimeBatch = Effect.fn(
   "contentRelease.resolvePublicRuntimeBatch"
-)(function* (
+)(function* <Found, Failure>(
   ctx: ActionCtx,
   requests: readonly PublicContentRuntimeRequest[],
-  decodeRow: RuntimeRowDecoder
+  decodeRow: RuntimeRowDecoder<Found, Failure>
 ) {
   const rows = yield* Effect.tryPromise({
     catch: () => new PublicRuntimeBatchReadError(),
@@ -87,14 +89,8 @@ const resolvePublicRuntimeBatch = Effect.fn(
   return yield* Effect.forEach(rows, (row) =>
     decodeRow(row).pipe(
       Effect.map(
-        (
-          response
-        ): Exclude<
-          PublicContentRuntimeResponse,
-          {
-            kind: "failure";
-          }
-        > => response ?? { kind: "missing" }
+        (response): Found | { readonly kind: "missing" } =>
+          response ?? { kind: "missing" }
       ),
       Effect.mapError(() => new PublicRuntimeBatchReadError())
     )
@@ -103,11 +99,14 @@ const resolvePublicRuntimeBatch = Effect.fn(
 /** Decodes, resolves, and safely encodes one public runtime batch. */
 const dispatchRuntimeBatchProgram = Effect.fn(
   "contentRelease.dispatchPublicRuntimeBatch"
-)(function* (
+)(function* <Found, Failure, A, I>(
   ctx: ActionCtx,
   source: string,
   byteLength: number,
-  decodeRow: RuntimeRowDecoder
+  decodeRow: RuntimeRowDecoder<Found, Failure>,
+  responseSchema: Schema.Codec<A, I, never, never>,
+  maxItemBytes: number,
+  maxResponseBytes: number
 ) {
   const decoded = yield* decodeBatchRequest(source, byteLength).pipe(
     Effect.result
@@ -125,15 +124,14 @@ const dispatchRuntimeBatchProgram = Effect.fn(
   }
   if (
     responses.success.some(
-      (response) =>
-        publicRuntimeResponseBytes(response) > MAX_PUBLIC_RUNTIME_RESPONSE_BYTES
+      (response) => publicRuntimeResponseBytes(response) > maxItemBytes
     )
   ) {
     return failureResult("CONTENT_RUNTIME_RESPONSE_TOO_LARGE", 500);
   }
   return encodeRuntimeResult(
-    PublicContentRuntimeBatchResponseSchema,
-    MAX_PUBLIC_RUNTIME_BATCH_RESPONSE_BYTES,
+    responseSchema,
+    maxResponseBytes,
     { responses: responses.success },
     200
   );
@@ -147,7 +145,10 @@ export const dispatchBatchProgram = Effect.fn(
     ctx,
     source,
     byteLength,
-    decodePublicRuntimeRow
+    decodePublicRuntimeRow,
+    PublicContentRuntimeBatchResponseSchema,
+    MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
+    MAX_PUBLIC_RUNTIME_BATCH_RESPONSE_BYTES
   );
 });
 
@@ -159,6 +160,9 @@ export const dispatchPredecessorBatchProgram = Effect.fn(
     ctx,
     source,
     byteLength,
-    decodePredecessorRuntimeRow
+    decodePredecessorRuntimeRow,
+    PredecessorPublicContentRuntimeBatchResponseSchema,
+    MAX_PREDECESSOR_PUBLIC_RUNTIME_RESPONSE_BYTES,
+    MAX_PREDECESSOR_PUBLIC_RUNTIME_BATCH_RESPONSE_BYTES
   );
 });

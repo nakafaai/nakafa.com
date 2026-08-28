@@ -30,9 +30,13 @@ import type {
 } from "@repo/backend/convex/contentRelease/predecessor/spec";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { testProjectionJson } from "@repo/backend/test/content/material";
-import { testRendererJson } from "@repo/backend/test/content/release";
+import {
+  testPublicationScope,
+  testRendererJson,
+} from "@repo/backend/test/content/release";
 import {
   insertRuntimeRelease,
+  insertSignedRelease,
   publicRuntimeRequest,
   runtimeCases,
   runtimeContentKey,
@@ -107,10 +111,15 @@ function expectPrivate(response: Response) {
 /** Seeds one active route for an exact stored delivery class. */
 function seedRuntime(
   t: RuntimeTest,
-  delivery: "authenticated" | "entitled" | "public"
+  delivery: "authenticated" | "entitled" | "public",
+  predecessorCompatible = false
 ) {
   return t.mutation(async (ctx) => {
-    await insertRuntimeRelease(ctx);
+    if (predecessorCompatible) {
+      await insertSignedRelease(ctx);
+    } else {
+      await insertRuntimeRelease(ctx);
+    }
     await insertRuntimeHead(ctx, delivery, runtimeContentKey(delivery));
   });
 }
@@ -124,6 +133,7 @@ async function recoverRuntime(t: RuntimeTest) {
       originReleaseId: TEST_RUNTIME_RELEASE.releaseId,
       ownership: { base: ContentFamilySchema.literals, result: [] },
       role: "recovery",
+      scope: { content: [], ...testPublicationScope() },
       status: "verified",
     });
     const state = await ctx.db.query("contentState").unique();
@@ -167,7 +177,7 @@ afterEach(() => {
 describe("public content runtime HTTP route", () => {
   it("routes predecessor and current contracts without changing active identity", async () => {
     const t = createConvexTestWithBetterAuth();
-    await seedRuntime(t, "public");
+    await seedRuntime(t, "public", true);
 
     const [predecessor, current] = await Promise.all([
       post(
@@ -200,7 +210,7 @@ describe("public content runtime HTTP route", () => {
 
   it("records authenticated bounded predecessor calls before dispatch", async () => {
     const t = createConvexTestWithBetterAuth();
-    await seedRuntime(t, "public");
+    await seedRuntime(t, "public", true);
     await t.mutation(armObservation, { observationId: OBSERVATION_ID });
 
     const unauthorized = await post(
