@@ -216,24 +216,30 @@ export function Welcome({
 }
 
 /** Renders the production HTML and text bodies from one source template. */
-export const renderWelcomeEmail = Effect.fn("email.welcome.render")(
-  (props: WelcomeProps) =>
-    Effect.tryPromise({
-      catch: () =>
-        new WelcomeEmailRenderError({
-          code: "WELCOME_EMAIL_RENDER_FAILED",
-          message: "Unable to render the welcome email.",
-        }),
-      try: async () => {
-        const email = <Welcome {...props} />;
-        const [html, text] = await Promise.all([
-          render(email),
-          render(email, { plainText: true }),
-        ]);
-        return { html, text };
-      },
-    })
-);
+export const renderWelcomeEmail = Effect.fn("email.welcome.render")(function* (
+  props: WelcomeProps
+) {
+  const email = <Welcome {...props} />;
+  const renderFailure = () =>
+    new WelcomeEmailRenderError({
+      code: "WELCOME_EMAIL_RENDER_FAILED",
+      message: "Unable to render the welcome email.",
+    });
+  const [html, text] = yield* Effect.all(
+    [
+      Effect.tryPromise({
+        catch: renderFailure,
+        try: () => render(email),
+      }),
+      Effect.tryPromise({
+        catch: renderFailure,
+        try: () => render(email, { plainText: true }),
+      }),
+    ],
+    { concurrency: "unbounded" }
+  );
+  return { html, text };
+});
 
 Welcome.PreviewProps = {
   name: "Nabil Fatih",
