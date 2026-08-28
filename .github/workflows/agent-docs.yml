@@ -6,17 +6,15 @@ on:
   merge_group:
     branches: [main]
     types: [checks_requested]
-  push:
-    branches: [main]
 
 permissions:
   contents: read
   pull-requests: read
 
 concurrency:
-  # Pull request heads supersede their own predecessor runs. Protected-main
-  # and merge-group runs use the immutable commit SHA so a later independent
-  # change cannot cancel an already-admitted production acceptance.
+  # Pull request heads supersede their own predecessor runs. Merge-group runs
+  # use the immutable commit SHA so a later independent change cannot cancel
+  # an already-admitted production acceptance.
   group: Agent-Friendly Docs-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
@@ -26,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      DIRECT_TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') }}
+      DIRECT_TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih' }}
     outputs:
       required: ${{ steps.classify.outputs.required || steps.default.outputs.required }}
       trusted: ${{ steps.trust.outputs.trusted }}
@@ -152,8 +150,8 @@ jobs:
         if: steps.trust.outputs.trusted == 'true'
         id: classify
         env:
-          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before }}
-          HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event_name == 'merge_group' && github.event.merge_group.head_sha || github.sha }}
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
         run: pnpm ci:production-acceptance
 
   quality:
@@ -188,9 +186,9 @@ jobs:
 
   production:
     name: Production
-    # Signed acceptance runs only for protected main and owner-authored
-    # same-repository candidates with production-relevant changes. In-place
-    # test-only candidates retain Quality while Production is skipped.
+    # Signed acceptance runs only for trusted same-repository candidates and
+    # their merge-group trees when they contain production-relevant changes.
+    # Test-only candidates retain Quality while Production is skipped.
     needs: production-scope
     if: needs.production-scope.outputs.required == 'true' && needs.production-scope.outputs.trusted == 'true'
     runs-on: ubuntu-latest
@@ -499,7 +497,7 @@ jobs:
         run: pnpm --silent --dir packages/backend runtime:ci verify-generations
 
       - name: Save verified encrypted signed content snapshot
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.signed-content-cache.outputs.cache-hit != 'true'
+        if: github.event_name == 'merge_group' && steps.signed-content-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/agent-docs-content-cache

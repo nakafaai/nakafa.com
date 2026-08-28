@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -7,6 +8,7 @@ import {
   type HttpClientRequest,
   HttpClientResponse,
 } from "effect/unstable/http";
+import { parse as yamlParse } from "yaml";
 import {
   fetchLatestGithubActionTag,
   GITHUB_ACTION_REVIEWS,
@@ -41,6 +43,32 @@ function makeHttpClient(
 }
 
 describe("GitHub Action policy", () => {
+  it("runs candidate validation before merge without repeating it on main", () => {
+    for (const fileName of ["agent-docs.yml", "react-doctor.yml"]) {
+      const source = readFileSync(
+        fileURLToPath(
+          new URL(`../.github/workflows/${fileName}`, import.meta.url)
+        ),
+        "utf8"
+      );
+      const workflow: unknown = yamlParse(source);
+
+      expect(workflow).toEqual(
+        expect.objectContaining({
+          on: expect.objectContaining({
+            merge_group: expect.any(Object),
+            pull_request: expect.any(Object),
+          }),
+        })
+      );
+      expect(workflow).not.toEqual(
+        expect.objectContaining({
+          on: expect.objectContaining({ push: expect.anything() }),
+        })
+      );
+    }
+  });
+
   it.effect("accepts every reviewed immutable GitHub Action", () =>
     Effect.gen(function* () {
       expect(validateGithubActionPolicy(validActionUses())).toEqual([]);
