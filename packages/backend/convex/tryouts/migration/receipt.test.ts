@@ -7,13 +7,20 @@ describe("tryouts/migration/receipt", () => {
     "accepts an idempotent terminal cleanup race only after cleanup",
     () =>
       Effect.gen(function* () {
-        yield* requireCleanupProgress({ deleted: 0, done: true }, "cleaned");
+        yield* requireCleanupProgress(
+          { deleted: 0, done: true, repaired: 0 },
+          "cleaned"
+        );
+        yield* requireCleanupProgress(
+          { deleted: 0, done: false, repaired: 158 },
+          "sealed"
+        );
         const unfinished = yield* requireCleanupProgress(
-          { deleted: 0, done: false },
+          { deleted: 0, done: false, repaired: 0 },
           "sealed"
         ).pipe(Effect.flip);
         const contradictory = yield* requireCleanupProgress(
-          { deleted: 0, done: true },
+          { deleted: 0, done: true, repaired: 0 },
           "sealed"
         ).pipe(Effect.flip);
 
