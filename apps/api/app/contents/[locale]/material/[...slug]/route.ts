@@ -37,47 +37,29 @@ export async function GET(
   }
 
   const prefix = `material/${slug.join("/")}`;
-  return runMaterialApiRead(
+  return Effect.runPromise(
     getMaterialApiContentPage({
       ...pageParams,
       appLocale: validLocale,
       prefix,
-    }),
-    { locale, slug }
-  );
-}
-
-/** Converts one content-runtime read into the shared material API response shape. */
-function runMaterialApiRead(
-  apiRead: ReturnType<typeof getMaterialApiContentPage>,
-  {
-    locale,
-    slug,
-  }: {
-    locale: string;
-    slug: readonly string[];
-  }
-) {
-  const onError = (error: Parameters<typeof logError>[0]) =>
-    Effect.gen(function* () {
-      yield* logError(error, {
-        service: "api-contents",
-        locale,
-        basePath: slug.join("/") || "/",
-        slugLength: slug.length,
-        message: "Failed to fetch contents.",
-      });
-
-      return NextResponse.json(
-        { error: "Failed to fetch contents." },
-        { status: 500 }
-      );
-    });
-
-  return Effect.runPromise(
-    apiRead.pipe(
+    }).pipe(
       Effect.map((data): Response => NextResponse.json(data)),
-      Effect.catch(onError)
+      Effect.catch((error) =>
+        Effect.gen(function* () {
+          yield* logError(error, {
+            service: "api-contents",
+            locale,
+            basePath: slug.join("/") || "/",
+            slugLength: slug.length,
+            message: "Failed to fetch contents.",
+          });
+
+          return NextResponse.json(
+            { error: "Failed to fetch contents." },
+            { status: 500 }
+          );
+        })
+      )
     )
   );
 }
