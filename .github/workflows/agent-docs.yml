@@ -49,64 +49,54 @@ jobs:
               throw new Error("Missing merge group payload.")
             }
 
-            const baseBranch = mergeGroup.base_ref.replace("refs/heads/", "")
-            const candidateHeads = []
-            const visited = new Set()
-            let cursor = mergeGroup.head_sha
-
-            while (cursor !== mergeGroup.base_sha) {
-              if (visited.has(cursor) || candidateHeads.length >= 100) {
-                throw new Error("Invalid merge group commit chain.")
-              }
-              visited.add(cursor)
-
-              const { data: commit } = await github.rest.git.getCommit({
-                ...context.repo,
-                commit_sha: cursor,
-              })
-              if (commit.parents.length !== 2) {
-                throw new Error(`Merge group commit ${cursor} is not a two-parent merge.`)
-              }
-
-              const [queueParent, candidateParent] = commit.parents
-              candidateHeads.push(candidateParent.sha)
-              cursor = queueParent.sha
-            }
-
-            if (candidateHeads.length === 0) {
-              throw new Error("Merge group contains no pull request commits.")
-            }
-
-            for (const candidateHead of candidateHeads) {
-              const pulls = await github.paginate(
-                github.rest.repos.listPullRequestsAssociatedWithCommit,
-                {
-                  ...context.repo,
-                  commit_sha: candidateHead,
-                  per_page: 100,
-                },
+            const result = await github.graphql(
+              `query MergeQueueEntry($owner: String!, $name: String!) {
+                repository(owner: $owner, name: $name) {
+                  mergeQueue {
+                    entries(first: 100) {
+                      nodes {
+                        baseCommit { oid }
+                        enqueuer { login }
+                        headCommit { oid }
+                        pullRequest {
+                          author { login }
+                          baseRefName
+                          headRefOid
+                          headRepository { nameWithOwner }
+                          number
+                          state
+                        }
+                      }
+                    }
+                  }
+                }
+              }`,
+              context.repo,
+            )
+            const entries = result.repository?.mergeQueue?.entries?.nodes ?? []
+            const candidates = entries.filter(
+              (entry) =>
+                entry?.baseCommit?.oid === mergeGroup.base_sha &&
+                entry?.headCommit?.oid === mergeGroup.head_sha,
+            )
+            if (candidates.length !== 1) {
+              throw new Error(
+                `Merge group has ${candidates.length} exact queue entries.`,
               )
-              const candidates = pulls.filter(
-                (pull) =>
-                  pull.state === "open" &&
-                  pull.base.ref === baseBranch &&
-                  pull.head.sha === candidateHead,
-              )
-              if (candidates.length !== 1) {
-                throw new Error(
-                  `Merge group commit ${candidateHead} has ${candidates.length} matching pull requests.`,
-                )
-              }
-
-              const [pull] = candidates
-              if (
-                pull.head.repo?.full_name !== context.payload.repository.full_name ||
-                pull.user?.login !== "nabilfatih"
-              ) {
-                throw new Error(`Pull request #${pull.number} is not trusted for signed acceptance.`)
-              }
-              core.info(`Trusted pull request #${pull.number} at ${candidateHead}.`)
             }
+
+            const [{ enqueuer, pullRequest: pull }] = candidates
+            if (
+              !pull ||
+              pull.state !== "OPEN" ||
+              pull.baseRefName !== mergeGroup.base_ref.replace("refs/heads/", "") ||
+              pull.headRepository?.nameWithOwner !== context.payload.repository.full_name ||
+              pull.author?.login !== "nabilfatih" ||
+              enqueuer?.login !== "nabilfatih"
+            ) {
+              throw new Error("Merge queue entry is not trusted for signed acceptance.")
+            }
+            core.info(`Trusted pull request #${pull.number} at ${pull.headRefOid}.`)
 
             return "true"
 
