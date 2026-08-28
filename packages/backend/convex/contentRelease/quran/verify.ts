@@ -1,10 +1,11 @@
+import { PublishedQuranRowSchema } from "@repo/backend/content/quran/contract";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { ensureDocumentSize } from "@repo/backend/convex/contentRelease/document";
 import {
   ReleaseError,
   releaseFail,
 } from "@repo/backend/convex/contentRelease/error";
-import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
+import { parseStoredJson } from "@repo/backend/convex/contentRelease/parse";
 import { quranRowFacts } from "@repo/backend/convex/contentRelease/quran/facts";
 import { quranRowDocumentLimit } from "@repo/backend/convex/contentRelease/quran/limits";
 import { Effect, Schema } from "effect";
@@ -15,9 +16,25 @@ export const verifyQuranRow = Effect.fn("contentRelease.verifyQuranRow")(
     snapshotId: string,
     payloadSchema: Schema.Codec<A, I, never, never>
   ) {
-    const decoded = yield* decodeSnapshotRowJson(row.rowJson);
+    const decoded = yield* parseStoredJson(
+      row.rowJson,
+      "Quran snapshot row"
+    ).pipe(
+      Effect.flatMap(
+        Schema.decodeUnknownEffect(PublishedQuranRowSchema, {
+          onExcessProperty: "error",
+        })
+      ),
+      Effect.mapError(
+        () =>
+          new ReleaseError({
+            code: "CONTENT_RELEASE_INTEGRITY",
+            message:
+              "Quran snapshot row does not satisfy its bounded publication contract.",
+          })
+      )
+    );
     if (
-      decoded.family !== "quran" ||
       decoded.record.rowHash !== row.rowHash ||
       decoded.record.snapshotId !== snapshotId ||
       row.snapshotId !== snapshotId

@@ -14,8 +14,13 @@ const rawTranslationNotePattern = /\[\d+\]/u;
 interface QuranLocaleContract {
   readonly hasEmbeddedTafsir: boolean;
   readonly hasTranslationNotes: boolean;
-  readonly meaning: string;
+  readonly meanings: readonly [QuranMeaningContract, ...QuranMeaningContract[]];
   readonly translationNotesLabel: string;
+}
+
+interface QuranMeaningContract {
+  readonly locale: AppLocaleCode;
+  readonly text: string;
 }
 
 type QuranLocaleContracts = {
@@ -29,25 +34,44 @@ const quranLocaleContracts = {
     hasEmbeddedTafsir: false,
     hasTranslationNotes: false,
     locale: "de",
-    meaning: "The Cow",
+    meanings: [
+      { locale: "de", text: "Die Kuh" },
+      { locale: "en", text: "The Cow" },
+    ],
     translationNotesLabel: "Anmerkungen zur Übersetzung",
   },
   en: {
     hasEmbeddedTafsir: false,
     hasTranslationNotes: true,
     locale: "en",
-    meaning: "The Cow",
+    meanings: [{ locale: "en", text: "The Cow" }],
     translationNotesLabel: "Translation notes",
   },
   id: {
     hasEmbeddedTafsir: true,
     hasTranslationNotes: true,
     locale: "id",
-    meaning: "The Cow",
+    meanings: [
+      { locale: "id", text: "Sapi" },
+      { locale: "en", text: "The Cow" },
+    ],
     translationNotesLabel: "Catatan terjemahan",
   },
 } satisfies QuranLocaleContracts;
 type QuranLocaleCase = (typeof quranLocaleContracts)[AppLocaleCode];
+
+function quranMeaningLocator(
+  page: Page,
+  selector: string,
+  meanings: readonly [QuranMeaningContract, ...QuranMeaningContract[]]
+) {
+  const [first, ...rest] = meanings;
+  return rest.reduce(
+    (locator, meaning) =>
+      locator.or(page.locator(selector).filter({ hasText: meaning.text })),
+    page.locator(selector).filter({ hasText: first.text })
+  );
+}
 
 const verifyQuranInterpretationDrawer = Effect.fn(
   "NakafaE2E.verifyQuranInterpretationDrawer"
@@ -126,18 +150,31 @@ const verifyQuranLocaleCoverage = Effect.fn(
     readinessTimeoutMilliseconds
   );
 
-  const headerMeaning = page
-    .locator("header p")
-    .filter({ hasText: contract.meaning });
-  yield* Effect.promise(() => expect(headerMeaning).toBeVisible());
-  yield* Effect.promise(() =>
-    expect(headerMeaning).toHaveAttribute("lang", "en")
+  const headerMeaning = quranMeaningLocator(
+    page,
+    "header p",
+    contract.meanings
   );
-  const sidebarMeaning = page
-    .locator('[data-slot="sidebar-menu-description"]')
-    .filter({ hasText: contract.meaning });
-  yield* Effect.promise(() =>
-    expect(sidebarMeaning).toHaveAttribute("lang", "en")
+  yield* Effect.promise(() => expect(headerMeaning).toHaveCount(1));
+  const renderedMeaning = yield* Effect.promise(async () => ({
+    locale: await headerMeaning.getAttribute("lang"),
+    text: (await headerMeaning.textContent())?.trim(),
+  }));
+  yield* Effect.sync(() =>
+    expect(contract.meanings).toContainEqual(renderedMeaning)
+  );
+  const sidebarMeaning = quranMeaningLocator(
+    page,
+    '[data-slot="sidebar-menu-description"]',
+    contract.meanings
+  );
+  yield* Effect.promise(() => expect(sidebarMeaning).toHaveCount(1));
+  const renderedSidebarMeaning = yield* Effect.promise(async () => ({
+    locale: await sidebarMeaning.getAttribute("lang"),
+    text: (await sidebarMeaning.textContent())?.trim(),
+  }));
+  yield* Effect.sync(() =>
+    expect(renderedSidebarMeaning).toEqual(renderedMeaning)
   );
 
   const bismillah = page.locator("[data-quran-bismillah]");
@@ -157,12 +194,47 @@ const verifyQuranLocaleCoverage = Effect.fn(
   );
 
   const interpretation = page.locator("[data-quran-interpretation-verse]");
+  const interpretationLink = page.locator("[data-quran-interpretation-link]");
   if (contract.hasEmbeddedTafsir) {
     yield* Effect.promise(() => expect(interpretation.first()).toBeVisible());
     yield* Effect.promise(() => expect(interpretation.first()).toBeEnabled());
+    yield* Effect.promise(() => expect(interpretationLink).toHaveCount(0));
   } else {
     yield* Effect.promise(() => expect(interpretation).toHaveCount(0));
+    yield* Effect.promise(() =>
+      expect(interpretationLink.first()).toBeVisible()
+    );
+    yield* Effect.promise(() =>
+      expect(interpretationLink.first()).toHaveAttribute("target", "_blank")
+    );
+    yield* Effect.promise(() =>
+      expect(interpretationLink.first()).toHaveAttribute("rel", "noreferrer")
+    );
+    const interpretationHref = yield* Effect.promise(() =>
+      interpretationLink.first().getAttribute("href")
+    );
+    yield* Effect.sync(() =>
+      expect(
+        interpretationHref === null
+          ? false
+          : new URL(interpretationHref).protocol === "https:"
+      ).toBe(true)
+    );
   }
+  const interpretationActions = page.locator(
+    "[data-quran-interpretation-verse], [data-quran-interpretation-link]"
+  );
+  const interpretationNames = yield* Effect.promise(() =>
+    interpretationActions.evaluateAll((elements) =>
+      elements.map((element) => element.getAttribute("aria-label"))
+    )
+  );
+  yield* Effect.sync(() => {
+    expect(interpretationNames.every((name) => name?.includes(": "))).toBe(
+      true
+    );
+    expect(new Set(interpretationNames).size).toBe(interpretationNames.length);
+  });
 
   const translationNotes = page.locator(
     `aside[aria-label^="${contract.translationNotesLabel}: "]`

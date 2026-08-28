@@ -11,7 +11,7 @@ interface VerseItem {
 
 interface Props {
   items: readonly VerseItem[];
-  renderAction?: (verse: QuranViewVerse) => ReactNode;
+  renderAction?: (verse: QuranViewVerse, verseLabel: string) => ReactNode;
   translationNotesLabel: string;
 }
 
@@ -29,7 +29,7 @@ export function QuranVerseList({
     >
       {items.map(({ id, label, verse }, index) => (
         <QuranVerseItem
-          action={renderAction?.(verse)}
+          action={renderAction?.(verse, label)}
           id={id}
           isLast={index === items.length - 1}
           key={verse.number.inQuran}

@@ -1,7 +1,7 @@
 import {
   canonicalizeMaterialProjection,
   type MaterialLessonProjection,
-} from "@nakafa/aksara-contracts/projection/material";
+} from "@nakafa/aksara-transition/projection/material";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getHashBucket } from "@repo/backend/convex/contentRelease/bucket";

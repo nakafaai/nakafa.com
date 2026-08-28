@@ -1,5 +1,4 @@
 // @vitest-environment node
-import { makeAppLocale } from "@nakafa/aksara-contracts/locale";
 import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 import { describe, expect, it } from "vitest";
 import { getQuranPagination, getQuranSurahName } from "@/lib/utils/pages/quran";
@@ -53,7 +52,7 @@ function surahPage(): {
       kind: "quran-surah",
       name: {
         arabic: "البقرة",
-        meaning: { appLocale: makeAppLocale("en"), text: "The Cow" },
+        meaning: { de: "Die Kuh", en: "The Cow", id: "Sapi" },
         transliteration: "Al-Baqarah",
       },
       number: 2,
@@ -65,7 +64,7 @@ function surahPage(): {
       kind: "quran-surah",
       name: {
         arabic: "الفاتحة",
-        meaning: { appLocale: makeAppLocale("en"), text: "The Opening" },
+        meaning: { de: "Die Eröffnende", en: "The Opening", id: "Pembuka" },
         transliteration: "Al-Fatihah",
       },
       number: 1,

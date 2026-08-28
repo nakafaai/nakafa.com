@@ -11,6 +11,7 @@ import {
 import { QuranPublicationError } from "@repo/backend/client/quran/publication";
 import {
   encodeTestQuranRow,
+  makeQuranMeaning,
   makeQuranSurah,
 } from "@repo/backend/test/quran/rows";
 import { Effect } from "effect";
@@ -37,10 +38,7 @@ describe("signed Quran catalog decoder", () => {
       );
 
       expect(catalog.surahs).toHaveLength(114);
-      expect(catalog.surahs.at(0)?.name.meaning).toEqual({
-        appLocale: "en",
-        text: "Technical meaning 1",
-      });
+      expect(catalog.surahs.at(0)?.name.meaning).toEqual(makeQuranMeaning(1));
       expect(catalog.surahs.at(-1)?.number).toBe(114);
     })
   );
@@ -73,7 +71,11 @@ describe("signed Quran catalog decoder", () => {
       const decoded = yield* decodePublishedQuranSurah(
         {
           name: {
-            sourceMeaning: { appLocale: "en", text: "The Opening" },
+            sourceMeaning: {
+              de: "Die Eröffnende",
+              en: "The Opening",
+              id: "Pembuka",
+            },
             transliteration: "Al-Fatihah",
           },
           number: 1,
@@ -82,7 +84,11 @@ describe("signed Quran catalog decoder", () => {
       );
 
       expect(decoded.name).toEqual({
-        meaning: { appLocale: "en", text: "The Opening" },
+        meaning: {
+          de: "Die Eröffnende",
+          en: "The Opening",
+          id: "Pembuka",
+        },
         transliteration: "Al-Fatihah",
       });
     })
@@ -94,7 +100,7 @@ describe("signed Quran catalog decoder", () => {
         decodePublishedQuranSurah(
           {
             name: {
-              sourceMeaning: { appLocale: "id", text: "Pembukaan" },
+              sourceMeaning: { en: "The Opening" },
               transliteration: "Al-Fatihah",
             },
             number: 1,

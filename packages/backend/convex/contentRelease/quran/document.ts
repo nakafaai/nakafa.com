@@ -1,7 +1,7 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
-import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 import { separateQuranBismillah } from "@repo/backend/content/quran/bismillah";
+import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import {
   quranBismillahValidator,
@@ -62,7 +62,7 @@ type QuranDocument = Infer<typeof quranDocumentValidator>;
 type QuranDocumentSurah = NonNullable<QuranDocument["surah"]>;
 
 /** Projects complete public surah metadata without signed envelope fields. */
-function projectSurah(surah: QuranSurahRow): QuranDocumentSurah {
+function projectSurah(surah: PublishedQuranSurah): QuranDocumentSurah {
   return {
     kind: surah.kind,
     name: {

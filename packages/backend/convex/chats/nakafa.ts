@@ -1,4 +1,10 @@
 import {
+  type AppLocaleCode,
+  ENGLISH_APP_LOCALE_CODE,
+  GERMAN_APP_LOCALE_CODE,
+  INDONESIAN_APP_LOCALE_CODE,
+} from "@nakafa/aksara-contracts/locale";
+import {
   contentSearchInputValidator,
   contentSearchRefValidator,
   contentSearchResultValidator,
@@ -40,27 +46,38 @@ const nakafaQuranPreviewFields = {
   verse_count: v.number(),
 };
 
-const nakafaQuranMeaningPreviewValidator = v.object({
-  ...nakafaQuranPreviewFields,
-  meaning: v.union(
-    v.null(),
-    v.object({
-      locale: v.literal("en"),
-      text: v.string(),
-    })
-  ),
-});
-
 const nakafaQuranTranslationPreviewValidator = v.object({
   ...nakafaQuranPreviewFields,
   translation: v.string(),
 });
 
-/** Accepts current previews and persisted predecessor chat data. */
-export const nakafaQuranPreviewValidator = v.union(
-  nakafaQuranMeaningPreviewValidator,
-  nakafaQuranTranslationPreviewValidator
-);
+/** Builds one canonical Quran preview correlated to its request locale. */
+function makeNakafaQuranDoneValidator<const Locale extends AppLocaleCode>(
+  locale: Locale
+) {
+  return v.object({
+    kind: v.literal("quran"),
+    status: v.literal("done"),
+    input: v.object({
+      ...nakafaQuranInputValidator.fields,
+      locale: v.literal(locale),
+    }),
+    result: v.object({
+      ...nakafaQuranPreviewFields,
+      locale: v.literal(locale),
+      meaning: v.object({
+        locale: v.union(v.literal(locale), v.literal(ENGLISH_APP_LOCALE_CODE)),
+        text: v.string(),
+      }),
+    }),
+  });
+}
+
+const nakafaQuranDoneValidators = [
+  makeNakafaQuranDoneValidator(ENGLISH_APP_LOCALE_CODE),
+  makeNakafaQuranDoneValidator(INDONESIAN_APP_LOCALE_CODE),
+  makeNakafaQuranDoneValidator(GERMAN_APP_LOCALE_CODE),
+] as const;
 
 export const nakafaTaxonomyPreviewValidator = v.object({
   content_counts: v.array(
@@ -114,11 +131,12 @@ export const nakafaDataValidator = v.union(
     status: v.literal("loading"),
     input: nakafaQuranInputValidator,
   }),
+  ...nakafaQuranDoneValidators,
   v.object({
     kind: v.literal("quran"),
     status: v.literal("done"),
     input: nakafaQuranInputValidator,
-    result: nakafaQuranPreviewValidator,
+    result: nakafaQuranTranslationPreviewValidator,
   }),
   v.object({
     kind: v.literal("quran"),

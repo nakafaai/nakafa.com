@@ -1,5 +1,6 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
+import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
 import { slugify } from "@repo/design-system/lib/routing/slug";
 import { BookJsonLd } from "@repo/seo/json-ld/book";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
@@ -18,7 +19,10 @@ import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { PaginationContent } from "@/components/shared/pagination-content";
 import { QuranBismillah } from "@/components/shared/quran/bismillah";
-import { QuranInterpretationButton } from "@/components/shared/quran/interpretation/button";
+import {
+  QuranInterpretationButton,
+  QuranInterpretationLink,
+} from "@/components/shared/quran/interpretation/button";
 import { QuranInterpretationControls } from "@/components/shared/quran/interpretation/controls";
 import { QuranVerseList } from "@/components/shared/quran/verses/list";
 import { RefContent } from "@/components/shared/ref-content";
@@ -178,8 +182,9 @@ async function CachedSurahShell({
       recoverStalePublishedQuranSnapshot(servedSnapshotId)
     );
   }
-  const description = surahData.name.meaning.text;
-  const descriptionLanguage = surahData.name.meaning.appLocale;
+  const meaning = selectQuranMeaning(surahData.name.meaning, locale);
+  const description = meaning.text;
+  const descriptionLanguage = meaning.appLocale;
   const title = getQuranSurahName(surahData.name);
 
   const verseItems = result.verses.map((verse) => {
@@ -246,7 +251,7 @@ async function CachedSurahShell({
                 translationNotesLabel={translationNotesLabel}
               />
             )}
-            {tafsirAccess?.kind === "embedded" ? (
+            {tafsirAccess.kind === "embedded" ? (
               <QuranInterpretationControls
                 appLocale={tafsirAccess.appLocale}
                 errorMessage={t("interpretation-error")}
@@ -258,9 +263,9 @@ async function CachedSurahShell({
               >
                 <QuranVerseList
                   items={verseItems}
-                  renderAction={(verse) => (
+                  renderAction={(verse, verseLabel) => (
                     <QuranInterpretationButton
-                      label={interpretationLabel}
+                      label={`${interpretationLabel}: ${verseLabel}`}
                       verseNumber={verse.number.inSurah}
                     />
                   )}
@@ -270,6 +275,12 @@ async function CachedSurahShell({
             ) : (
               <QuranVerseList
                 items={verseItems}
+                renderAction={(_verse, verseLabel) => (
+                  <QuranInterpretationLink
+                    href={tafsirAccess.source.sourceUrl}
+                    label={`${interpretationLabel}: ${verseLabel}`}
+                  />
+                )}
                 translationNotesLabel={translationNotesLabel}
               />
             )}

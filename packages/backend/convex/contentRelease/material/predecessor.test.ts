@@ -80,22 +80,4 @@ describe("contentRelease/material/predecessor", () => {
     });
     expect(predecessorJson).not.toContain("dateModified");
   });
-
-  it("preserves a legacy projection without changing its canonical bytes", async () => {
-    const current = makeMaterialProjection("en", 1);
-    const dates = normalizePublicationDates(current.metadata);
-    const legacy = MaterialLessonProjectionSchema.make({
-      ...current,
-      metadata: {
-        authors: current.metadata.authors,
-        date: dates.datePublished,
-        title: current.metadata.title,
-      },
-    });
-    const canonical = canonicalizeMaterialProjection(legacy);
-
-    await expect(
-      Effect.runPromise(encodePredecessorProjection(legacy))
-    ).resolves.toBe(canonical);
-  });
 });

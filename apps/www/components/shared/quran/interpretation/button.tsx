@@ -3,6 +3,7 @@
 import { BookOpen02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import {
   useQuranInterpretationSelection,
   useQuranInterpretationState,
@@ -34,5 +35,27 @@ export function QuranInterpretationButton({
     >
       <Spinner aria-hidden="true" icon={BookOpen02Icon} isLoading={isLoading} />
     </Button>
+  );
+}
+
+/** Opens one official link-only Tafsir edition with the established trigger. */
+export function QuranInterpretationLink({
+  href,
+  label,
+}: {
+  href: string;
+  label: string;
+}) {
+  return (
+    <a
+      aria-label={label}
+      className={buttonVariants({ size: "icon", variant: "outline" })}
+      data-quran-interpretation-link=""
+      href={href}
+      rel="noreferrer"
+      target="_blank"
+    >
+      <Spinner aria-hidden="true" icon={BookOpen02Icon} isLoading={false} />
+    </a>
   );
 }

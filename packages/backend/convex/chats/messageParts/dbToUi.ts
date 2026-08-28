@@ -423,10 +423,7 @@ function projectPersistedNakafaData(data: PersistedNakafaData): unknown {
     ...data,
     result: {
       ...result,
-      meaning:
-        data.input.locale === "en"
-          ? { locale: data.input.locale, text: translation }
-          : null,
+      meaning: { locale: "en", text: translation },
     },
   };
 }

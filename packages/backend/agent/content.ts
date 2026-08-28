@@ -8,6 +8,7 @@ import {
   renderQuranTafsirAccessMarkdown,
 } from "@repo/backend/client/quran/markdown";
 import { renderQuranTranslationMarkdown } from "@repo/backend/client/quran/notes";
+import { formatQuranMeaning } from "@repo/backend/content/quran/contract";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import type { agentContentSourceValidator } from "@repo/backend/convex/contentRelease/reference/agent";
 import type { ContentReferenceInput } from "@repo/backend/convex/contentRelease/reference/spec";
@@ -176,8 +177,8 @@ const renderQuranMarkdown = Effect.fn("agent.renderQuranMarkdown")(function* (
   }).pipe(Effect.mapError(contentReadError));
   const surah = publication.surah;
   const title = surah.name.transliteration;
-  const meaning = surah.name.meaning;
-  const description = meaning.text;
+  const meaning = formatQuranMeaning(surah.name.meaning, ref.locale);
+  const description = meaning;
   const preBismillah =
     publication.preBismillah === null
       ? []
@@ -197,7 +198,7 @@ const renderQuranMarkdown = Effect.fn("agent.renderQuranMarkdown")(function* (
       text: [
         `# ${title}`,
         "",
-        `Meaning: ${meaning.text} (${meaning.appLocale})`,
+        `Meaning: ${meaning}`,
         `Revelation: ${surah.revelation.place}`,
         "",
         ...renderQuranReadingSourcesMarkdown(publication.sources),

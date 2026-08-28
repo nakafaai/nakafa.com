@@ -108,12 +108,12 @@ describe("quran llms text", () => {
 
       expect(indexText?.startsWith("# Quran")).toBe(true);
       expect(indexText).toContain("## 1. Al-Fatihah");
-      expect(indonesianIndexText).toContain("**Makna nama:** The Opening (en)");
+      expect(indonesianIndexText).toContain("**Makna nama:** Pembuka");
       expect(firstSurahText?.startsWith("# Al-Fatihah")).toBe(true);
       expect(firstSurahText).toContain("### Verses");
       expect(firstSurahText).toContain("Technical English Tafsir notice.");
       expect(firstSurahText).toContain(
-        "[Technical English Tafsir link.](https://example.test/tafsir/en)"
+        "[Technical English Tafsir link.](https://example.test/tafsir/en/read)"
       );
       expect(firstSurahText).toContain("#### Verse 1");
       expect(firstSurahText).toContain("**Translation:** Translation 1.");
@@ -146,9 +146,11 @@ describe("quran llms text", () => {
         const tafsirAccess = tafsirAccessFor(locale);
 
         expect(text).toContain(tafsirAccess.notice);
-        expect(text).toContain(`**${t("meaning")}:** The Opening (en)`);
         expect(text).toContain(
-          `[${tafsirAccess.source.label}](${tafsirAccess.source.updateUrl})`
+          `**${t("meaning")}:** ${surahMeanings[1][locale]}`
+        );
+        expect(text).toContain(
+          `[${tafsirAccess.source.label}](${tafsirAccess.source.sourceUrl})`
         );
         expect(text).toContain(
           `**${t("translation-notes")}:**\n- **1.** Source note.`
@@ -166,19 +168,40 @@ describe("quran llms text", () => {
     })
   );
 
-  it.effect("keeps verses available while Tafsir access is switching", () =>
+  it.effect("labels retained English meanings in localized output", () =>
     Effect.gen(function* () {
-      publicationMocks.readPublishedQuranMarkdown.mockReturnValueOnce(
-        Effect.succeed({ ...surahMarkdown("en", 1), tafsirAccess: null })
+      const metadata = surahMetadata(1);
+      const predecessorMeaning = {
+        appLocale: "en",
+        text: "The Opening",
+      } as const;
+      const predecessorMetadata = {
+        ...metadata,
+        name: { ...metadata.name, meaning: predecessorMeaning },
+      };
+      const markdown = surahMarkdown("id", 1);
+      publicationMocks.readPublishedQuranCatalog.mockReturnValue(
+        Effect.succeed({ surahs: [predecessorMetadata] })
+      );
+      publicationMocks.readPublishedQuranMarkdown.mockReturnValue(
+        Effect.succeed({
+          ...markdown,
+          surah: {
+            ...markdown.surah,
+            name: { ...markdown.surah.name, meaning: predecessorMeaning },
+          },
+        })
       );
 
-      const text = yield* getQuranLlmsText({
-        cleanSlug: "quran/1",
-        locale: "en",
-      });
-
-      expect(text).toContain("#### Verse 1");
-      expect(text).not.toContain("Technical English Tafsir link.");
+      expect(yield* readQuranLlmsPageEntries("id", 0)).toEqual([
+        expect.objectContaining({ description: "The Opening (en)" }),
+      ]);
+      expect(
+        yield* getQuranLlmsText({ cleanSlug: "quran", locale: "id" })
+      ).toContain("**Makna nama:** The Opening (en)");
+      expect(
+        yield* getQuranLlmsText({ cleanSlug: "quran/1", locale: "id" })
+      ).toContain("**Makna nama:** The Opening (en)");
     })
   );
 
@@ -228,7 +251,7 @@ describe("quran llms text", () => {
         for (const locale of ["en", "id", "de"] as const) {
           expect(yield* readQuranLlmsPageEntries(locale, 0)).toEqual([
             {
-              description: "The Opening (en)",
+              description: surahMeanings[1][locale],
               href: `${BASE_URL}/${locale}/quran/1.md`,
               route: "/quran/1",
               section: "quran",
@@ -236,7 +259,7 @@ describe("quran llms text", () => {
               title: "Al-Fatihah",
             },
             {
-              description: "The Cow (en)",
+              description: surahMeanings[2][locale],
               href: `${BASE_URL}/${locale}/quran/2.md`,
               route: "/quran/2",
               section: "quran",
@@ -268,16 +291,18 @@ describe("quran llms text", () => {
   );
 });
 
+const surahMeanings = {
+  1: { de: "Die Eröffnende", en: "The Opening", id: "Pembuka" },
+  2: { de: "Die Kuh", en: "The Cow", id: "Sapi" },
+} as const;
+
 /** Builds source-authenticated Quran metadata for tests. */
 function surahMetadata(number: number) {
   return {
     kind: "quran-surah",
     name: {
       arabic: number === 1 ? "الفاتحة" : "البقرة",
-      meaning: {
-        appLocale: "en" as const,
-        text: number === 1 ? "The Opening" : "The Cow",
-      },
+      meaning: number === 1 ? surahMeanings[1] : surahMeanings[2],
       transliteration: number === 1 ? "Al-Fatihah" : "Al-Baqarah",
     },
     number,
@@ -340,7 +365,8 @@ function tafsirAccessFor(locale: Locale) {
       notice: "Catatan teknis tafsir Indonesia.",
       source: {
         label: "Technical Indonesian Tafsir source.",
-        updateUrl: "https://example.test/tafsir/id",
+        sourceUrl: "https://example.test/tafsir/id/read",
+        updateUrl: "https://example.test/tafsir/id/updates",
       },
     };
   }
@@ -356,7 +382,8 @@ function tafsirAccessFor(locale: Locale) {
         locale === "en"
           ? "Technical English Tafsir link."
           : "Technischer deutscher Tafsirlink.",
-      updateUrl: `https://example.test/tafsir/${locale}`,
+      sourceUrl: `https://example.test/tafsir/${locale}/read`,
+      updateUrl: `https://example.test/tafsir/${locale}/updates`,
     },
   };
 }

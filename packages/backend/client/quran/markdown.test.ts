@@ -8,6 +8,7 @@ import {
 import type { api } from "@repo/backend/convex/_generated/api";
 import {
   makeQuranLocaleSources,
+  makeQuranMeaning,
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
 import type { FunctionReturnType } from "convex/server";
@@ -171,7 +172,7 @@ function markdownResult(
     tafsirAccess: makeQuranTafsirProjection("en"),
     surah: {
       name: {
-        sourceMeaning: { appLocale: "en", text: "The Opening" },
+        sourceMeaning: makeQuranMeaning(1),
         transliteration: "Al-Fatihah",
       },
       number: 1,

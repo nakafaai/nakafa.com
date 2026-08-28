@@ -31,7 +31,9 @@ export function previewQuran(result: NakafaAgentQuranReference) {
 }
 
 /** Builds the shared graph-backed content reference preview fields. */
-function previewContentRef(result: NakafaAgentContentRef) {
+function previewContentRef<const Result extends NakafaAgentContentRef>(
+  result: Result
+) {
   return {
     alignmentId: result.alignmentId,
     assetId: result.assetId,

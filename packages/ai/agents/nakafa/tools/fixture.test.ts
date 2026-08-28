@@ -5,6 +5,12 @@ import { Effect, Option } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("Nakafa Quran AI fixtures", () => {
+  const meaningByLocale = {
+    de: "Die Eröffnende",
+    en: "The Opening",
+    id: "Pembuka",
+  } as const;
+
   it.each([
     ["en", "quranenc-english", "mokhtasar-english", "external"],
     ["id", "quranenc-indonesian", "quranenc-tafsir", "embedded"],
@@ -25,7 +31,8 @@ describe("Nakafa Quran AI fixtures", () => {
         locale,
         source: { id: tafsirId },
       });
-      expect(result.meaning).toEqual({ locale: "en", text: "The Opening" });
+      expect(result.meaning.locale).toBe(locale);
+      expect(result.meaning.text).toBe(meaningByLocale[locale]);
       expect(result.verses[0]?.tafsir).toBe(
         locale === "id" ? "Tafsir from the injected test adapter." : undefined
       );

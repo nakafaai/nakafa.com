@@ -1,6 +1,6 @@
-import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
+import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
 
-export type QuranSurah = QuranSurahRow;
+export type QuranSurah = PublishedQuranSurah;
 
 interface QuranName {
   readonly transliteration: string;

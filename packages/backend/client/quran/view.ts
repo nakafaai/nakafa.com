@@ -36,6 +36,8 @@ export const decodePublishedQuranView = Effect.fn("NakafaQuran.decodeView")(
     const source = yield* decodePublishedQuranSource(result, "view");
     if (
       result.surah === null ||
+      result.sources === null ||
+      result.tafsirAccess === null ||
       !hasExpectedQuranSources(
         result.sources,
         result.tafsirAccess,
@@ -49,8 +51,7 @@ export const decodePublishedQuranView = Effect.fn("NakafaQuran.decodeView")(
     }
     if (
       result.appLocale !== expected.appLocale ||
-      (result.tafsirAccess !== null &&
-        result.tafsirAccess.appLocale !== expected.appLocale) ||
+      result.tafsirAccess.appLocale !== expected.appLocale ||
       result.surah.number !== expected.surahNumber ||
       !hasExactQuranVerseRange(result.verses, 1, result.surah.numberOfVerses) ||
       !hasExpectedQuranNeighbors(

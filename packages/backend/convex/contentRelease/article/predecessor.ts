@@ -1,30 +1,14 @@
-import { DateOnlySchema } from "@nakafa/aksara-contracts/date";
+import type { ArticleProjection } from "@nakafa/aksara-transition/projection/article";
 import {
-  ArticleMetadataSchema,
-  type ArticleProjection,
-  ArticleProjectionSchema,
-  canonicalizeArticleProjection,
-} from "@nakafa/aksara-contracts/projection/article";
+  canonicalizeArticleProjection as canonicalizePredecessorArticleProjection,
+  ArticleProjectionSchema as predecessorArticleProjectionSchema,
+} from "@nakafa/aksara-v150/projection/article";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import { Effect, Schema } from "effect";
 
-const PredecessorArticleMetadataSchema = ArticleMetadataSchema.mapFields(
-  ({
-    dateModified: _dateModified,
-    datePublished: _datePublished,
-    ...fields
-  }) => ({ ...fields, date: DateOnlySchema })
-);
-
 /** Exact 0.15.0 article projection view derived from shared contract fields. */
-export const PredecessorArticleProjectionSchema =
-  ArticleProjectionSchema.mapFields(
-    (fields) => ({ ...fields, metadata: PredecessorArticleMetadataSchema }),
-    // The projection checks cover route, locale, graph, and parent identity.
-    // Replacing only metadata dates cannot invalidate those checks.
-    { unsafePreserveChecks: true }
-  );
+export { ArticleProjectionSchema as PredecessorArticleProjectionSchema } from "@nakafa/aksara-v150/projection/article";
 
 /**
  * Derives the exact 0.15.0 view required by the bounded predecessor query.
@@ -38,7 +22,7 @@ export const encodePredecessorProjection = Effect.fn(
 )(function* (projection: ArticleProjection) {
   const dates = normalizePublicationDates(projection.metadata);
   const predecessor = yield* Schema.decodeEffect(
-    PredecessorArticleProjectionSchema
+    predecessorArticleProjectionSchema
   )(
     {
       ...projection,
@@ -62,5 +46,5 @@ export const encodePredecessorProjection = Effect.fn(
     )
   );
 
-  return canonicalizeArticleProjection(predecessor);
+  return canonicalizePredecessorArticleProjection(predecessor);
 });

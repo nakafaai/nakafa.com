@@ -1,7 +1,7 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
-import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 import { separateQuranBismillah } from "@repo/backend/content/quran/bismillah";
+import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
@@ -59,7 +59,7 @@ export type QuranMarkdown = Infer<typeof quranMarkdownValidator>;
 type QuranMarkdownSurah = NonNullable<QuranMarkdown["surah"]>;
 
 /** Projects only metadata rendered by Quran markdown consumers. */
-function projectSurah(surah: QuranSurahRow): QuranMarkdownSurah {
+function projectSurah(surah: PublishedQuranSurah): QuranMarkdownSurah {
   return {
     name: {
       sourceMeaning: surah.name.meaning,

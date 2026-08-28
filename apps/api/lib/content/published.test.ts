@@ -150,9 +150,9 @@ describe("published API content", () => {
     })
   );
 
-  it.effect("normalizes an authenticated legacy projection once", () =>
+  it.effect("rejects a non-current projection at the API boundary", () =>
     Effect.gen(function* () {
-      const legacyProjection = {
+      const storedProjection = {
         ...baseProjection,
         metadata: {
           authors: baseProjection.metadata.authors,
@@ -166,19 +166,18 @@ describe("published API content", () => {
             activeReleaseId: input.activeReleaseId,
             artifact: { payload: { rawMdx: "## Signed body" } },
             delivery: "public",
-            projection: legacyProjection,
+            projection: storedProjection,
           },
         ])
       );
 
-      const [item] = yield* readPublishedApiItems([input]);
-
-      expect(item?.metadata).toEqual({
-        authors: legacyProjection.metadata.authors,
-        date: legacyProjection.metadata.date,
-        datePublished: legacyProjection.metadata.date,
-        title: legacyProjection.metadata.title,
-      });
+      expect(yield* readPublishedApiItems([input]).pipe(Effect.flip)).toEqual(
+        new ApiPublishedContentReadError({
+          cause:
+            "Signed content does not belong to the article or material API.",
+          message: "Unable to read signed public content for the public API.",
+        })
+      );
     })
   );
 

@@ -1,4 +1,4 @@
-import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
+import { canonicalizeMaterialProjection } from "@nakafa/aksara-transition/projection/material";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,

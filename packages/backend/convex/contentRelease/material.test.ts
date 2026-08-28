@@ -3,6 +3,7 @@ import {
   canonicalizeMaterialProjection,
   MaterialLessonProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
+import { canonicalizeMaterialProjection as canonicalizePredecessorMaterialProjection } from "@nakafa/aksara-v150/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
 import { PredecessorMaterialProjectionSchema } from "@repo/backend/convex/contentRelease/material/predecessor";
 import schema from "@repo/backend/convex/schema";
@@ -113,7 +114,9 @@ describe("contentRelease/material", () => {
         expect(projection.appLocale).toBe(appLocale);
         expect(projection.metadata).toHaveProperty("date");
         expect(projection.metadata).not.toHaveProperty("datePublished");
-        expect(canonicalizeMaterialProjection(projection)).toBe(source);
+        expect(canonicalizePredecessorMaterialProjection(projection)).toBe(
+          source
+        );
       }
       const currentProjection = decodeCurrent(
         JSON.parse(current.result.page[0] ?? "{}"),
@@ -157,7 +160,9 @@ describe("contentRelease/material", () => {
         });
         expect(projection.metadata).toHaveProperty("date");
         expect(projection.metadata).not.toHaveProperty("datePublished");
-        expect(canonicalizeMaterialProjection(projection)).toBe(source);
+        expect(canonicalizePredecessorMaterialProjection(projection)).toBe(
+          source
+        );
       }
       expect(current.projectionJson).toBe(
         canonicalizeMaterialProjection(requested)

@@ -1,4 +1,4 @@
-import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
+import { PublishedQuranSurahSchema } from "@repo/backend/content/quran/contract";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
@@ -13,7 +13,7 @@ import { Effect } from "effect";
 export const verifyQuranSurahRow = Effect.fn(
   "contentRelease.verifyQuranSurahRow"
 )(function* (row: Doc<"quranRows">, snapshotId: string) {
-  return yield* verifyQuranRow(row, snapshotId, QuranSurahRowSchema);
+  return yield* verifyQuranRow(row, snapshotId, PublishedQuranSurahSchema);
 });
 
 /** Reads and authenticates one surah under the active signed contract. */

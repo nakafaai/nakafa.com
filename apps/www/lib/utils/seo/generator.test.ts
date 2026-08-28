@@ -1,5 +1,4 @@
 // @vitest-environment node
-import { makeAppLocale } from "@nakafa/aksara-contracts/locale";
 import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateSEOMetadata } from "@/lib/utils/seo/generator";
@@ -116,7 +115,7 @@ const surah = {
   kind: "quran-surah",
   name: {
     arabic: "Al-Fatihah",
-    meaning: { appLocale: makeAppLocale("en"), text: "The Opening" },
+    meaning: { de: "Die Eröffnende", en: "The Opening", id: "Pembuka" },
     transliteration: "Al-Fatihah",
   },
   number: 1,

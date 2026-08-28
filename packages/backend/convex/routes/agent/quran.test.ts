@@ -81,7 +81,7 @@ describe("public Quran API routes", () => {
       ),
       title: "Technical Surah 1",
     });
-    expect(body.text).toContain("Meaning: Technical meaning 1 (en)");
+    expect(body.text).toContain("Meaning: Technical meaning 1");
     expect(body.text).toContain("Translation notes:");
     expect(body.text).toContain("Exact English source note.");
     expect(body.text).toContain("## Reading sources");
@@ -130,7 +130,7 @@ describe("public Quran API routes", () => {
       lensId: "lens:quran",
       locale: "id",
       markdown_url: "https://nakafa.com/id/quran/1.md",
-      meaning: { locale: "en", text: "Technical meaning 1" },
+      meaning: { locale: "id", text: "Arti teknis 1" },
       name: "Technical Surah 1",
       pre_bismillah: null,
       revelation: "Meccan",

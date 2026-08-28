@@ -1,8 +1,8 @@
+import { ContentHeadSchema } from "@nakafa/aksara-contracts/release/head";
 import {
   canonicalizeContentProjection,
   familyForProjection,
-} from "@nakafa/aksara-contracts/projection/spec";
-import { ContentHeadSchema } from "@nakafa/aksara-contracts/release/head";
+} from "@nakafa/aksara-transition/projection/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type {
   MutationCtx,

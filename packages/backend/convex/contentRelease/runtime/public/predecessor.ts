@@ -1,9 +1,10 @@
-import {
-  canonicalizeContentProjection,
-  type RoutedContentProjection,
-  RoutedContentProjectionSchema,
-} from "@nakafa/aksara-contracts/projection/spec";
 import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
+import type { RoutedContentProjection } from "@nakafa/aksara-transition/projection/spec";
+import {
+  canonicalizeContentProjection as canonicalizePredecessorContentProjection,
+  RoutedContentProjectionSchema as predecessorRoutedContentProjectionSchema,
+} from "@nakafa/aksara-v150/projection/spec";
+import { PublicContentRuntimeFoundSchema as predecessorPublicContentRuntimeFoundSchema } from "@nakafa/aksara-v150/runtime/spec";
 import { encodePredecessorProjection as encodeArticleProjection } from "@repo/backend/convex/contentRelease/article/predecessor";
 import { hashText } from "@repo/backend/convex/contentRelease/digest";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
@@ -21,7 +22,7 @@ const encodeProjection = Effect.fn(
   if (projection.kind === "subject-lesson") {
     return yield* encodeMaterialProjection(projection);
   }
-  return canonicalizeContentProjection(projection);
+  return canonicalizePredecessorContentProjection(projection);
 });
 
 /** Decodes one derived predecessor projection without widening its family. */
@@ -30,7 +31,7 @@ const decodeProjection = Effect.fn(
 )((source: string) =>
   parseStoredJson(source, "Predecessor content projection").pipe(
     Effect.flatMap(
-      Schema.decodeUnknownEffect(RoutedContentProjectionSchema, {
+      Schema.decodeUnknownEffect(predecessorRoutedContentProjectionSchema, {
         onExcessProperty: "error",
       })
     ),
@@ -63,9 +64,23 @@ export const makePredecessorRuntime = Effect.fn(
     projectionJson
   );
 
-  return {
-    ...found,
-    projection,
-    projectionHash,
-  } satisfies PublicContentRuntimeFound;
+  return yield* Schema.decodeUnknownEffect(
+    predecessorPublicContentRuntimeFoundSchema
+  )(
+    {
+      ...found,
+      projection,
+      projectionHash,
+    },
+    { onExcessProperty: "error" }
+  ).pipe(
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message:
+            "Predecessor public runtime does not satisfy its exact contract.",
+        })
+    )
+  );
 });

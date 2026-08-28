@@ -14,6 +14,11 @@ const ARTIFACT = {
   digest: `sha256:${"1".repeat(64)}`,
   file_count: 1,
 };
+const meaningByLocale = {
+  de: "Die Eröffnende",
+  en: "The Opening",
+  id: "Pembuka",
+} as const;
 /** Builds one complete embedded source for injected results. */
 function embeddedSource(id: QuranEmbeddedSourceId) {
   return {
@@ -86,7 +91,7 @@ export function makeQuranFixture(input: {
   const { from_verse, include_tafsir, locale, surah } = input;
   return Schema.decodeUnknownSync(NakafaAgentQuranReferenceSchema)({
     ...readNakafaContentRefFixture(locale, `quran/${surah}`, "quran"),
-    meaning: { locale: "en", text: "The Opening" },
+    meaning: { locale, text: meaningByLocale[locale] },
     name: "Al-Faatiha",
     pre_bismillah: null,
     revelation: "Meccan",

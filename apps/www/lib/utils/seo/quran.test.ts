@@ -18,7 +18,7 @@ const surah = {
   kind: "quran-surah",
   name: {
     arabic: "Al-Fatihah",
-    meaning: { appLocale: makeAppLocale("en"), text: "The Opening" },
+    meaning: { de: "Die Eröffnende", en: "The Opening", id: "Pembuka" },
     transliteration: "Al-Fatihah",
   },
   number: 1,
@@ -46,9 +46,18 @@ describe("generateQuranMetadata", () => {
           return `Read Surah ${getValue(values, "name")} with ${getValue(values, "numberOfVerses")} verses.`;
         }
         if (key === "quran.keywords") {
-          return `${getValue(values, "name")}, ${getValue(values, "translation")}, ${getValue(values, "revelation")}`;
+          return [
+            getValue(values, "name"),
+            getValue(values, "translation"),
+            getValue(values, "revelation"),
+          ]
+            .filter((value) => value !== "__EMPTY__")
+            .join(", ");
         }
-        return `Surah ${getValue(values, "number")}. ${getValue(values, "name")} - ${getValue(values, "translation")} | Nakafa`;
+        const translation = getValue(values, "translation");
+        const translationSuffix =
+          translation === "__EMPTY__" ? "" : ` - ${translation}`;
+        return `Surah ${getValue(values, "number")}. ${getValue(values, "name")}${translationSuffix} | Nakafa`;
       }
     );
   });
@@ -63,7 +72,24 @@ describe("generateQuranMetadata", () => {
   it("uses the same authenticated Quran names in every shell locale", async () => {
     const result = await Effect.runPromise(generateQuranMetadata(surah, "id"));
 
-    expect(result.title).toBe("Surah 1. Al-Fatihah - Al-Fatihah | Nakafa");
+    expect(result.title).toBe("Surah 1. Al-Fatihah - Pembuka | Nakafa");
+    expect(result.keywords).toEqual(["Al-Fatihah", "Pembuka", "Meccan"]);
+  });
+
+  it("does not relabel a retained English meaning as localized SEO", async () => {
+    const predecessor = {
+      ...surah,
+      name: {
+        ...surah.name,
+        meaning: { appLocale: makeAppLocale("en"), text: "The Opening" },
+      },
+    };
+
+    const result = await Effect.runPromise(
+      generateQuranMetadata(predecessor, "id")
+    );
+
+    expect(result.title).toBe("Surah 1. Al-Fatihah | Nakafa");
     expect(result.keywords).toEqual(["Al-Fatihah", "Meccan"]);
   });
 });

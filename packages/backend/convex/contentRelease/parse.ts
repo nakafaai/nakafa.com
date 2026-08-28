@@ -1,12 +1,13 @@
 import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
-import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
+import { ACTIVE_APP_LOCALES } from "@nakafa/aksara-contracts/locale";
+import { ContentProjectionSchema as CurrentContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
+import { quranSourceFileCount } from "@nakafa/aksara-contracts/quran/source";
 import {
   ContentReleaseItemSchema,
   PublicationReceiptSchema,
   ReleaseVerificationEvidenceSchema,
   SignedContentReleaseSchema,
 } from "@nakafa/aksara-contracts/release";
-import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-contracts/release/rollback/spec";
 import { ContentRouteItemSchema } from "@nakafa/aksara-contracts/release/route/spec";
 import {
   ContentSnapshotManifestSchema,
@@ -14,8 +15,32 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
+import { ContentProjectionSchema as StoredContentProjectionSchema } from "@nakafa/aksara-transition/projection/spec";
+import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-transition/release/rollback/spec";
+import { PublishedQuranManifestSchema } from "@repo/backend/content/quran/contract";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { Effect, Schema } from "effect";
+
+const CurrentContentSnapshotManifestSchema = ContentSnapshotManifestSchema.pipe(
+  Schema.check(
+    Schema.makeFilter(
+      (snapshot) =>
+        snapshot.family !== "quran" ||
+        (snapshot.manifest.activeAppLocales.length ===
+          ACTIVE_APP_LOCALES.length &&
+          snapshot.manifest.activeAppLocales.every(
+            (locale, index) => locale === ACTIVE_APP_LOCALES[index]
+          ) &&
+          snapshot.manifest.sourceFileCount ===
+            quranSourceFileCount(ACTIVE_APP_LOCALES)),
+      {
+        message:
+          "Expected the complete current Quran locale and source inventory.",
+      }
+    )
+  )
+);
+
 /** Parses one stored JSON value without allowing thrown parser failures. */
 export const parseStoredJson = Effect.fn("contentRelease.parseStoredJson")(
   (source: string, label = "Stored publication JSON") =>
@@ -101,13 +126,13 @@ export const decodeArtifactJson = Effect.fn(
     )
   )
 );
-/** Strictly decodes one content projection from canonical storage JSON. */
+/** Strictly decodes one authenticated projection already present in storage. */
 export const decodeProjectionJson = Effect.fn(
   "contentRelease.decodeProjectionJson"
 )((source: string) =>
   parseStoredJson(source, "Content projection").pipe(
     Effect.flatMap(
-      Schema.decodeUnknownEffect(ContentProjectionSchema, {
+      Schema.decodeUnknownEffect(StoredContentProjectionSchema, {
         onExcessProperty: "error",
       })
     ),
@@ -116,6 +141,26 @@ export const decodeProjectionJson = Effect.fn(
         new ReleaseError({
           code: "CONTENT_RELEASE_INTEGRITY",
           message: "Content projection does not satisfy its exact contract.",
+        })
+    )
+  )
+);
+/** Strictly decodes one newly staged projection through the current contract. */
+export const decodeCurrentProjectionJson = Effect.fn(
+  "contentRelease.decodeCurrentProjectionJson"
+)((source: string) =>
+  parseStoredJson(source, "Current content projection").pipe(
+    Effect.flatMap(
+      Schema.decodeUnknownEffect(CurrentContentProjectionSchema, {
+        onExcessProperty: "error",
+      })
+    ),
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message:
+            "New content projection does not satisfy the current contract.",
         })
     )
   )
@@ -181,7 +226,30 @@ export const decodeSnapshotJson = Effect.fn(
 )((source: string) =>
   parseStoredJson(source, "Content snapshot").pipe(
     Effect.flatMap(
-      Schema.decodeUnknownEffect(ContentSnapshotManifestSchema, {
+      Schema.decodeUnknownEffect(
+        Schema.Union([
+          ContentSnapshotManifestSchema,
+          PublishedQuranManifestSchema,
+        ]),
+        { onExcessProperty: "error" }
+      )
+    ),
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: "Content snapshot does not satisfy its exact contract.",
+        })
+    )
+  )
+);
+/** Strictly decodes one newly staged manifest through the current contract. */
+export const decodeCurrentSnapshotJson = Effect.fn(
+  "contentRelease.decodeCurrentSnapshotJson"
+)((source: string) =>
+  parseStoredJson(source, "Current content snapshot").pipe(
+    Effect.flatMap(
+      Schema.decodeUnknownEffect(CurrentContentSnapshotManifestSchema, {
         onExcessProperty: "error",
       })
     ),
@@ -189,7 +257,8 @@ export const decodeSnapshotJson = Effect.fn(
       () =>
         new ReleaseError({
           code: "CONTENT_RELEASE_INTEGRITY",
-          message: "Content snapshot does not satisfy its exact contract.",
+          message:
+            "New content snapshot does not satisfy the current contract.",
         })
     )
   )

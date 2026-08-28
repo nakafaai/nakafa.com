@@ -117,7 +117,7 @@ describe("Nakafa formatter", () => {
     expect(text).toContain("# Nakafa Quran Reference");
     expect(text).not.toContain("Inline citation:");
     expect(text).not.toContain("https://nakafa.com/id/quran/1");
-    expect(text).toContain("Meaning: The Opening (en)");
+    expect(text).toContain("Meaning: Pembuka");
     expect(text).toContain("quranenc-indonesian");
     expect(text).toContain("quranenc-tafsir");
     expect(text).toContain("Kind: embedded");
@@ -134,20 +134,25 @@ describe("Nakafa formatter", () => {
     expect(text).not.toContain("Dengan nama Allah[4]");
     expect(formatQuran(reference)).not.toContain("## Bismillah");
 
-    const legacyEnglishReference = Schema.decodeUnknownSync(
+    const fallbackReference = Schema.decodeSync(
       NakafaAgentQuranReferenceSchema
     )({
-      ...makeQuranFixture({
+      ...reference,
+      meaning: { locale: "en", text: "The Opening" },
+    });
+    expect(formatQuran(fallbackReference)).toContain(
+      "Meaning: The Opening (en)"
+    );
+
+    const englishReference = Schema.decodeSync(NakafaAgentQuranReferenceSchema)(
+      makeQuranFixture({
         from_verse: 1,
         include_tafsir: true,
         locale: "en",
         surah: 1,
-      }),
-      tafsir_access: null,
-    });
-    expect(formatQuran(legacyEnglishReference)).toContain(
-      "No Tafsir access metadata is available in the current signed publication."
+      })
     );
+    expect(formatQuran(englishReference)).toContain("Kind: external");
   });
 
   it("formats taxonomy", () => {

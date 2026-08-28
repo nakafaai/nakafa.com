@@ -78,7 +78,10 @@ function formatQuranSource(source: {
 
 /** Formats a source-grounded Quran reference for model consumption. */
 export function formatQuran(result: NakafaAgentQuranReference) {
-  const meaning = `${result.meaning.text} (${result.meaning.locale})`;
+  const meaning =
+    result.meaning.locale === result.locale
+      ? result.meaning.text
+      : `${result.meaning.text} (${result.meaning.locale})`;
   const preBismillah =
     result.pre_bismillah === null
       ? ""
@@ -86,11 +89,7 @@ export function formatQuran(result: NakafaAgentQuranReference) {
     ## Bismillah
     - Arabic: ${result.pre_bismillah.arabic}
     ${formatQuranTranslation(result.pre_bismillah.translation)}`;
-  const tafsirAccess =
-    result.tafsir_access === null
-      ? `## Tafsir access
-    - Availability: No Tafsir access metadata is available in the current signed publication.`
-      : `## Tafsir access
+  const tafsirAccess = `## Tafsir access
     - Kind: ${result.tafsir_access.kind}
     - Notice: ${result.tafsir_access.notice}
     - Source: ${formatQuranSource(result.tafsir_access.source)}`;
