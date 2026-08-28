@@ -322,7 +322,6 @@ import type * as contentRelease_runtime_protected_internal from "../contentRelea
 import type * as contentRelease_runtime_public_batch from "../contentRelease/runtime/public/batch.js";
 import type * as contentRelease_runtime_public_dispatch from "../contentRelease/runtime/public/dispatch.js";
 import type * as contentRelease_runtime_public_internal from "../contentRelease/runtime/public/internal.js";
-import type * as contentRelease_runtime_public_predecessor from "../contentRelease/runtime/public/predecessor.js";
 import type * as contentRelease_runtime_result from "../contentRelease/runtime/result.js";
 import type * as contentRelease_runtime_snapshot from "../contentRelease/runtime/snapshot.js";
 import type * as contentRelease_scope_family from "../contentRelease/scope/family.js";
@@ -983,7 +982,6 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/runtime/public/batch": typeof contentRelease_runtime_public_batch;
   "contentRelease/runtime/public/dispatch": typeof contentRelease_runtime_public_dispatch;
   "contentRelease/runtime/public/internal": typeof contentRelease_runtime_public_internal;
-  "contentRelease/runtime/public/predecessor": typeof contentRelease_runtime_public_predecessor;
   "contentRelease/runtime/result": typeof contentRelease_runtime_result;
   "contentRelease/runtime/snapshot": typeof contentRelease_runtime_snapshot;
   "contentRelease/scope/family": typeof contentRelease_scope_family;

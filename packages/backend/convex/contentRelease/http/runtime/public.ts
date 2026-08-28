@@ -1,7 +1,7 @@
 import { MAX_PUBLIC_RUNTIME_REQUEST_BYTES } from "@nakafa/aksara-contracts/runtime/spec";
 import {
-  PREDECESSOR_PUBLIC_CONTENT_RUNTIME_PATH,
   PUBLIC_CONTENT_RUNTIME_PATH,
+  TRANSITION_PUBLIC_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
 import { type ActionCtx, env } from "@repo/backend/convex/_generated/server";
 import { readRuntimeRequest } from "@repo/backend/convex/contentRelease/http/runtime/request";
@@ -11,10 +11,7 @@ import type {
   PredecessorRecordArgs,
   PredecessorRecordResult,
 } from "@repo/backend/convex/contentRelease/predecessor/spec";
-import {
-  dispatchPredecessorProgram,
-  dispatchProgram,
-} from "@repo/backend/convex/contentRelease/runtime/public/dispatch";
+import { dispatchProgram } from "@repo/backend/convex/contentRelease/runtime/public/dispatch";
 import { failureResult } from "@repo/backend/convex/contentRelease/runtime/result";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { makeFunctionReference } from "convex/server";
@@ -46,9 +43,9 @@ const publicRuntimeRoute = Effect.fn("contentRelease.publicRuntimeRoute")(
   }
 );
 
-/** Records an authenticated predecessor request before its runtime dispatch. */
-const predecessorRuntimeRoute = Effect.fn(
-  "contentRelease.predecessorRuntimeRoute"
+/** Records one authenticated transition request before current dispatch. */
+const transitionRuntimeRoute = Effect.fn(
+  "contentRelease.transitionRuntimeRoute"
 )(function* (ctx: ActionCtx, request: Request) {
   const input = yield* readRuntimeRequest(
     request,
@@ -64,11 +61,7 @@ const predecessorRuntimeRoute = Effect.fn(
   if (Result.isFailure(observed)) {
     return failureResult("CONTENT_RUNTIME_INTERNAL", 500);
   }
-  return yield* dispatchPredecessorProgram(
-    ctx,
-    input.body.source,
-    input.body.byteLength
-  );
+  return yield* dispatchProgram(ctx, input.body.source, input.body.byteLength);
 });
 
 /** Registers the server-authenticated active public content read route. */
@@ -81,9 +74,9 @@ export function registerPublicContentRuntimeRoute<
     );
     return privateRuntimeResponse(result);
   });
-  app.post(PREDECESSOR_PUBLIC_CONTENT_RUNTIME_PATH, async (context) => {
+  app.post(TRANSITION_PUBLIC_CONTENT_RUNTIME_PATH, async (context) => {
     const result = await runConvexProgram(
-      predecessorRuntimeRoute(context.env, context.req.raw)
+      transitionRuntimeRoute(context.env, context.req.raw)
     );
     return privateRuntimeResponse(result);
   });
