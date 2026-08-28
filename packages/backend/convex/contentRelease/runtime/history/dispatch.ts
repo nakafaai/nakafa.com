@@ -10,7 +10,10 @@ import {
   protectedRuntimeResponseBytes,
 } from "@nakafa/aksara-contracts/runtime/protected/limits";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import type { RetainedRuntimeBatchRow } from "@repo/backend/convex/contentRelease/runtime/history/internal";
+import type {
+  RetainedRuntimeBatchRow,
+  RetainedRuntimePredecessorResult,
+} from "@repo/backend/convex/contentRelease/runtime/history/internal";
 import { failureResult } from "@repo/backend/convex/contentRelease/runtime/result";
 import { makeFunctionReference } from "convex/server";
 import { Effect, Result, Schema } from "effect";
@@ -20,6 +23,11 @@ const readReference = makeFunctionReference<
   StoredProtectedRuntimeRequest,
   RetainedRuntimeBatchRow
 >("contentRelease/runtime/history/internal:read");
+const readPredecessorReference = makeFunctionReference<
+  "mutation",
+  StoredProtectedRuntimeRequest,
+  RetainedRuntimePredecessorResult
+>("contentRelease/runtime/history/internal:readPredecessor");
 /** Request JSON could not satisfy the exact retained history contract. */
 class RetainedRuntimeRequestError extends Schema.TaggedError<RetainedRuntimeRequestError>()(
   "RetainedRuntimeRequestError",
@@ -105,12 +113,28 @@ function encodeRetainedFailure(
 }
 /** Resolves exact retained JSON without decoding it as current content. */
 const resolveRuntime = Effect.fn("contentRelease.resolveRetainedRuntime")(
-  function* (ctx: ActionCtx, request: StoredProtectedRuntimeRequest) {
-    const row = yield* Effect.tryPromise({
-      catch: () => new RetainedRuntimeReadError(),
-      try: (): Promise<RetainedRuntimeBatchRow> =>
-        ctx.runQuery(readReference, request),
-    });
+  function* (
+    ctx: ActionCtx,
+    request: StoredProtectedRuntimeRequest,
+    contract: "current" | "predecessor"
+  ) {
+    const row =
+      contract === "predecessor"
+        ? yield* Effect.tryPromise({
+            catch: () => new RetainedRuntimeReadError(),
+            try: () => ctx.runMutation(readPredecessorReference, request),
+          }).pipe(
+            Effect.flatMap((result) =>
+              result.kind === "failure"
+                ? new RetainedRuntimeReadError()
+                : Effect.succeed(result.row)
+            )
+          )
+        : yield* Effect.tryPromise({
+            catch: () => new RetainedRuntimeReadError(),
+            try: (): Promise<RetainedRuntimeBatchRow> =>
+              ctx.runQuery(readReference, request),
+          });
     if (!row) {
       return null;
     }
@@ -157,12 +181,17 @@ const resolveRuntime = Effect.fn("contentRelease.resolveRetainedRuntime")(
 /** Decodes, resolves, and safely encodes one retained-history request. */
 export const dispatchProgram = Effect.fn(
   "contentRelease.retainedRuntimeDispatch"
-)(function* (ctx: ActionCtx, source: string, byteLength: number) {
+)(function* (
+  ctx: ActionCtx,
+  source: string,
+  byteLength: number,
+  contract: "current" | "predecessor"
+) {
   const decoded = yield* decodeRequest(source, byteLength).pipe(Effect.result);
   if (Result.isFailure(decoded)) {
     return failureResult("CONTENT_RUNTIME_INVALID", 400);
   }
-  const resolved = yield* resolveRuntime(ctx, decoded.success).pipe(
+  const resolved = yield* resolveRuntime(ctx, decoded.success, contract).pipe(
     Effect.result
   );
   if (Result.isFailure(resolved)) {
