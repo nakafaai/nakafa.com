@@ -7,6 +7,14 @@ import {
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { Schema } from "effect";
 
+export const COMMAND_NAME = {
+  get: "get",
+  mcp: "mcp",
+  quran: "quran",
+  search: "search",
+  taxonomy: "taxonomy",
+} as const;
+
 export const PositiveIntegerSchema = Schema.Finite.pipe(
   Schema.check(Schema.isInt()),
   Schema.check(Schema.isGreaterThan(0))
@@ -27,7 +35,7 @@ export const ApiBaseSchema = Schema.String.check(
 );
 
 const SearchCommandSchema = Schema.Struct({
-  kind: Schema.Literal("search"),
+  kind: Schema.Literal(COMMAND_NAME.search),
   limit: Schema.optional(SearchLimitSchema),
   locale: Schema.optional(LocaleSchema),
   offset: Schema.optional(SearchOffsetSchema),
@@ -35,17 +43,17 @@ const SearchCommandSchema = Schema.Struct({
   section: Schema.optional(NakafaAgentSectionSchema),
 });
 const GetCommandSchema = Schema.Struct({
-  kind: Schema.Literal("get"),
+  kind: Schema.Literal(COMMAND_NAME.get),
   ref: Schema.Trim.pipe(Schema.check(Schema.isNonEmpty())),
 });
 const TaxonomyCommandSchema = Schema.Struct({
-  kind: Schema.Literal("taxonomy"),
+  kind: Schema.Literal(COMMAND_NAME.taxonomy),
   locale: Schema.optional(LocaleSchema),
 });
 const QuranCommandSchema = Schema.Struct({
   fromVerse: Schema.optional(PositiveIntegerSchema),
   includeTafsir: Schema.Boolean,
-  kind: Schema.Literal("quran"),
+  kind: Schema.Literal(COMMAND_NAME.quran),
   locale: Schema.optional(LocaleSchema),
   surah: NakafaAgentQuranReferenceOptionsSchema.fields.surah,
   toVerse: Schema.optional(PositiveIntegerSchema),
@@ -55,7 +63,7 @@ const CliCommandSchema = Schema.Union([
   GetCommandSchema,
   TaxonomyCommandSchema,
   QuranCommandSchema,
-  Schema.Struct({ kind: Schema.Literal("mcp") }),
+  Schema.Struct({ kind: Schema.Literal(COMMAND_NAME.mcp) }),
 ]);
 
 export const CliRequestSchema = Schema.Struct({

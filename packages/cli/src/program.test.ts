@@ -125,6 +125,7 @@ describe("Nakafa CLI execution", () => {
           ["--api-base", "https://isolated.example.com"],
           client
         );
+        const commandHelp = yield* execute(["taxonomy", "--help"], client);
         const version = yield* execute(["--version"], client);
         const mcp = yield* execute(["mcp"], client);
 
@@ -136,6 +137,8 @@ describe("Nakafa CLI execution", () => {
         expect(sharedOptionHelp.stdout).toContain("Nakafa CLI");
         expect(sharedValueHelp).toMatchObject({ exitCode: 0, stderr: "" });
         expect(sharedValueHelp.stdout).toContain("Nakafa CLI");
+        expect(commandHelp).toMatchObject({ exitCode: 0, stderr: "" });
+        expect(commandHelp.stdout).toContain("published content taxonomy");
         expect(version).toEqual({
           exitCode: 0,
           stderr: "",
@@ -160,12 +163,20 @@ describe("Nakafa CLI execution", () => {
       expectedUrl: "https://api.nakafa.com/v1/search?query=linear+equations",
     },
     {
+      argv: ["--limit", "5", "search", "algebra"],
+      expectedUrl: "https://api.nakafa.com/v1/search?query=algebra&limit=5",
+    },
+    {
       argv: ["get", "https://nakafa.com/en/content?id=1"],
       expectedUrl:
         "https://api.nakafa.com/v1/content?ref=https%3A%2F%2Fnakafa.com%2Fen%2Fcontent%3Fid%3D1",
     },
     {
       argv: ["taxonomy", "--locale", "id"],
+      expectedUrl: "https://api.nakafa.com/v1/taxonomy?locale=id",
+    },
+    {
+      argv: ["--locale", "id", "taxonomy"],
       expectedUrl: "https://api.nakafa.com/v1/taxonomy?locale=id",
     },
     {
@@ -190,6 +201,22 @@ describe("Nakafa CLI execution", () => {
     {
       argv: ["quran", "114"],
       expectedUrl: "https://api.nakafa.com/v1/quran/114",
+    },
+    {
+      argv: ["quran", "--no-tafsir", "1"],
+      expectedUrl: "https://api.nakafa.com/v1/quran/1",
+    },
+    {
+      argv: ["search", "--no-pretty", "true"],
+      expectedUrl: "https://api.nakafa.com/v1/search?query=true",
+    },
+    {
+      argv: ["--no-help", "taxonomy"],
+      expectedUrl: "https://api.nakafa.com/v1/taxonomy",
+    },
+    {
+      argv: ["taxonomy", "--no-version"],
+      expectedUrl: "https://api.nakafa.com/v1/taxonomy",
     },
   ])("calls the public endpoint for $argv", ({ argv, expectedUrl }) =>
     Effect.gen(function* () {
@@ -364,5 +391,21 @@ describe("Nakafa CLI execution", () => {
           status: 503,
         });
       })
+  );
+
+  it.effect.each([
+    ["taxonomy", "--bogus", "--help"],
+    ["--version", "--unknown"],
+    ["search", "query", "--limit", "zero", "--help"],
+    ["get", "", "--help"],
+  ])("rejects invalid action invocation %j", (argv) =>
+    Effect.gen(function* () {
+      const result = yield* execute(argv);
+
+      expect(result).toMatchObject({ exitCode: 2, stdout: "" });
+      expect(yield* decodeJson(result.stderr)).toMatchObject({
+        code: "INVOCATION_ERROR",
+      });
+    })
   );
 });

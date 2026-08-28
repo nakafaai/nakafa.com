@@ -3,8 +3,9 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Ref, Result } from "effect";
 import { TestConsole } from "effect/testing";
 import { CliError, Command } from "effect/unstable/cli";
+import { normalizeArgv } from "#cli/command/argv";
 import type { CliRequest } from "#cli/command/spec";
-import { makeCliCommand, normalizeArgv } from "#cli/command/tree";
+import { makeCliCommand } from "#cli/command/tree";
 import { InvocationError } from "#cli/error";
 
 function readRequests(argv: readonly string[]) {
@@ -29,16 +30,6 @@ function readFailure(argv: readonly string[]) {
 describe("Nakafa CLI command tree", () => {
   it.effect("preserves operands after the option separator", () =>
     Effect.gen(function* () {
-      expect(yield* normalizeArgv(["search", "--", "--pretty"])).toEqual([
-        "search",
-        "--",
-        "--pretty",
-      ]);
-      expect(yield* normalizeArgv(["--", "search", "--pretty"])).toEqual([
-        "search",
-        "--",
-        "--pretty",
-      ]);
       expect(yield* readRequests(["search", "--", "--pretty"])).toMatchObject([
         {
           command: { kind: "search", query: "--pretty" },
@@ -66,6 +57,19 @@ describe("Nakafa CLI command tree", () => {
           },
         ]
       );
+    })
+  );
+
+  it.effect("moves command options behind their native subcommand", () =>
+    Effect.gen(function* () {
+      expect(yield* readRequests(["--locale", "id", "taxonomy"])).toMatchObject(
+        [{ command: { kind: "taxonomy", locale: "id" } }]
+      );
+      expect(
+        yield* readRequests(["--limit", "5", "search", "algebra"])
+      ).toMatchObject([
+        { command: { kind: "search", limit: 5, query: "algebra" } },
+      ]);
     })
   );
 
@@ -179,6 +183,28 @@ describe("Nakafa CLI command tree", () => {
           },
         ]
       );
+    })
+  );
+
+  it.effect("preserves operands after negated presence switches", () =>
+    Effect.gen(function* () {
+      expect(yield* readRequests(["quran", "--no-tafsir", "1"])).toMatchObject([
+        {
+          command: {
+            includeTafsir: false,
+            kind: "quran",
+            surah: 1,
+          },
+        },
+      ]);
+      expect(
+        yield* readRequests(["search", "--no-pretty", "true"])
+      ).toMatchObject([
+        {
+          command: { kind: "search", query: "true" },
+          pretty: false,
+        },
+      ]);
     })
   );
 

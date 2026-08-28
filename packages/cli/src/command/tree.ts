@@ -4,10 +4,12 @@ import { NakafaAgentSectionSchema } from "@repo/contents/_lib/agent/schema/ref";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { Effect, Option, Schema } from "effect";
 import { Argument, Command, Flag } from "effect/unstable/cli";
+import { FLAG_ALIAS, FLAG_NAME } from "#cli/command/argv";
 import {
   ApiBaseSchema,
   type CliRequest,
   CliRequestSchema,
+  COMMAND_NAME,
   PositiveIntegerSchema,
   SearchLimitSchema,
   SearchOffsetSchema,
@@ -15,30 +17,6 @@ import {
 import { InvocationError } from "#cli/error";
 
 type ExecuteRequest<E, R> = (request: CliRequest) => Effect.Effect<void, E, R>;
-
-const COMMAND_NAME = {
-  get: "get",
-  mcp: "mcp",
-  quran: "quran",
-  search: "search",
-  taxonomy: "taxonomy",
-} as const;
-type CommandName = (typeof COMMAND_NAME)[keyof typeof COMMAND_NAME];
-const PRETTY_FLAG = "pretty";
-const PRETTY_ALIAS = "p";
-const TAFSIR_FLAG = "tafsir";
-const PRESENCE_FLAGS = [
-  `--${PRETTY_FLAG}`,
-  `-${PRETTY_ALIAS}`,
-  `--${TAFSIR_FLAG}`,
-] as const;
-
-function isCommandName(value: string | undefined): value is CommandName {
-  return (
-    value !== undefined &&
-    Object.values(COMMAND_NAME).some((name) => name === value)
-  );
-}
 
 const LocaleInputSchema = Schema.String.pipe(Schema.decodeTo(LocaleSchema));
 const SectionInputSchema = Schema.String.pipe(
@@ -52,59 +30,11 @@ const withDefaultOnce = <A>(flag: Flag.Flag<A>, fallback: A) =>
   optionalOnce(flag).pipe(Flag.map(Option.getOrElse(() => fallback)));
 
 const optionalLocale = () =>
-  Flag.string("locale").pipe(
+  Flag.string(FLAG_NAME.locale).pipe(
     Flag.withSchema(LocaleInputSchema),
     optionalOnce,
     Flag.withDescription("Restrict results to one content locale")
   );
-
-/** Preserves Nakafa's public argv contract at the native parser boundary. */
-export const normalizeArgv = Effect.fn("NakafaCli.normalizeArgv")(function* (
-  argv: readonly string[]
-) {
-  const normalized: string[] = [];
-  let parseFlags = true;
-  for (const argument of argv) {
-    if (argument === "--") {
-      parseFlags = false;
-      normalized.push(argument);
-      continue;
-    }
-    if (!parseFlags) {
-      normalized.push(argument);
-      continue;
-    }
-    const presenceFlag = PRESENCE_FLAGS.find(
-      (flag) => argument === flag || argument.startsWith(`${flag}=`)
-    );
-    if (presenceFlag === undefined) {
-      normalized.push(argument);
-      continue;
-    }
-    if (argument !== presenceFlag) {
-      return yield* new InvocationError({
-        message: `${presenceFlag} does not accept a value.`,
-      });
-    }
-    normalized.push(`${presenceFlag}=true`);
-  }
-  const separatorIndex = normalized.indexOf("--");
-  if (separatorIndex === -1) {
-    return normalized;
-  }
-  const leading = normalized.slice(0, separatorIndex);
-  const hasLeadingCommand = leading.some(isCommandName);
-  const trailingCommand = normalized.at(separatorIndex + 1);
-  if (hasLeadingCommand || !isCommandName(trailingCommand)) {
-    return normalized;
-  }
-  return [
-    ...leading,
-    trailingCommand,
-    "--",
-    ...normalized.slice(separatorIndex + 2),
-  ];
-});
 
 /** Builds the complete typed command tree for one CLI execution boundary. */
 export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
@@ -113,14 +43,14 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
       "Nakafa CLI for the public REST API and MCP server"
     ),
     Command.withSharedFlags({
-      apiBase: Flag.string("api-base").pipe(
+      apiBase: Flag.string(FLAG_NAME.apiBase).pipe(
         Flag.withSchema(ApiBaseSchema),
         Flag.map((value) => new URL(value).origin),
         (flag) => withDefaultOnce(flag, NAKAFA_API_BASE_URL),
         Flag.withDescription("Override the public Nakafa API origin")
       ),
-      pretty: Flag.boolean(PRETTY_FLAG).pipe(
-        Flag.withAlias(PRETTY_ALIAS),
+      pretty: Flag.boolean(FLAG_NAME.pretty).pipe(
+        Flag.withAlias(FLAG_ALIAS.pretty),
         (flag) => withDefaultOnce(flag, false),
         Flag.withDescription("Indent JSON output")
       ),
@@ -146,13 +76,13 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
   const search = Command.make(
     COMMAND_NAME.search,
     {
-      limit: Flag.integer("limit").pipe(
+      limit: Flag.integer(FLAG_NAME.limit).pipe(
         Flag.withSchema(SearchLimitSchema),
         optionalOnce,
         Flag.withDescription("Maximum number of search results")
       ),
       locale: optionalLocale(),
-      offset: Flag.integer("offset").pipe(
+      offset: Flag.integer(FLAG_NAME.offset).pipe(
         Flag.withSchema(SearchOffsetSchema),
         optionalOnce,
         Flag.withDescription("Search result offset")
@@ -161,7 +91,7 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
         Argument.variadic({ min: 1 }),
         Argument.withDescription("Search query")
       ),
-      section: Flag.string("section").pipe(
+      section: Flag.string(FLAG_NAME.section).pipe(
         Flag.withSchema(SectionInputSchema),
         optionalOnce,
         Flag.withDescription("Restrict results to one content section")
@@ -201,12 +131,12 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
   const quran = Command.make(
     COMMAND_NAME.quran,
     {
-      fromVerse: Flag.integer("from-verse").pipe(
+      fromVerse: Flag.integer(FLAG_NAME.fromVerse).pipe(
         Flag.withSchema(PositiveIntegerSchema),
         optionalOnce,
         Flag.withDescription("First verse to include")
       ),
-      includeTafsir: Flag.boolean(TAFSIR_FLAG).pipe(
+      includeTafsir: Flag.boolean(FLAG_NAME.tafsir).pipe(
         (flag) => withDefaultOnce(flag, false),
         Flag.withDescription("Include the published tafsir")
       ),
@@ -217,7 +147,7 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
         ),
         Argument.withDescription("Surah number")
       ),
-      toVerse: Flag.integer("to-verse").pipe(
+      toVerse: Flag.integer(FLAG_NAME.toVerse).pipe(
         Flag.withSchema(PositiveIntegerSchema),
         optionalOnce,
         Flag.withDescription("Last verse to include")

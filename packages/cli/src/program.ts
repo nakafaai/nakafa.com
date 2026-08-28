@@ -2,7 +2,7 @@ import {
   NAKAFA_MCP_PROTOCOL_VERSION,
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
 } from "@repo/contents/_lib/agent/constants";
-import { Console, Effect, Layer, MutableRef } from "effect";
+import { Console, Effect, Layer, MutableRef, Option } from "effect";
 import {
   CliConfig,
   CliError,
@@ -11,8 +11,9 @@ import {
   GlobalFlag,
 } from "effect/unstable/cli";
 import { requestNakafaApi } from "#cli/client";
+import { normalizeArgv, readActionValidation } from "#cli/command/argv";
 import type { CliCommand, CliRequest } from "#cli/command/spec";
-import { makeCliCommand, normalizeArgv } from "#cli/command/tree";
+import { makeCliCommand } from "#cli/command/tree";
 import { makeInvocationError } from "#cli/error";
 import { writeJson } from "#cli/output";
 
@@ -104,6 +105,33 @@ const executeCli = Effect.fn("NakafaCli.execute")(function* (
     )
   );
   const normalizedArgv = yield* normalizeArgv(argv);
+  const actionValidation = readActionValidation(normalizedArgv);
+  if (Option.isSome(actionValidation)) {
+    const validationCommand = makeCliCommand(() => Effect.void);
+    yield* Command.runWith(validationCommand, {
+      renderErrors: false,
+      version: options.version,
+    })(actionValidation.value).pipe(
+      Effect.provide(cliValidationLayer),
+      Effect.provideService(Console.Console, commandConsole),
+      Effect.matchEffect({
+        onFailure: (error) => {
+          if (
+            CliError.isCliError(error) &&
+            error._tag === "ShowHelp" &&
+            error.errors.length === 0
+          ) {
+            return Effect.void;
+          }
+          return CliError.isCliError(error)
+            ? Effect.fail(makeInvocationError(error))
+            : Effect.fail(error);
+        },
+        onSuccess: () => Effect.void,
+      })
+    );
+    MutableRef.set(messages, []);
+  }
   yield* Command.runWith(command, {
     renderErrors: false,
     version: options.version,
@@ -180,12 +208,17 @@ function buildApiPath(command: Exclude<CliCommand, { kind: "mcp" }>) {
 }
 
 const plainFormatter = CliOutput.defaultFormatter({ colors: false });
+const cliOutputLayer = CliOutput.layer({
+  ...plainFormatter,
+  formatVersion: (_name, version) => version,
+});
 const cliRuntimeLayer = Layer.merge(
   CliConfig.layer({ builtIns: [GlobalFlag.Help, GlobalFlag.Version] }),
-  CliOutput.layer({
-    ...plainFormatter,
-    formatVersion: (_name, version) => version,
-  })
+  cliOutputLayer
+);
+const cliValidationLayer = Layer.merge(
+  CliConfig.layer({ builtIns: [] }),
+  cliOutputLayer
 );
 
 function appendOptional(
