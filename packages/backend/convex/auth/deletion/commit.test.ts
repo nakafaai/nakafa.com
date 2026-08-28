@@ -11,36 +11,44 @@ const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 
 function seedStartedDeletion(t: ReturnType<typeof convexTest>, authId: string) {
   return Effect.promise(() =>
-    t.mutation(async (ctx) => {
-      const userId = await ctx.db.insert("users", {
-        authId,
-        credits: 0,
-        creditsResetAt: 0,
-        deletionPreparedAt: NOW,
-        email: `${authId}@example.com`,
-        name: authId,
-        plan: "free",
-      });
-      const preparationId = await ctx.db.insert("accountDeletionPreparations", {
-        attemptId: ATTEMPT_ID,
-        authId,
-        deletionStartedAt: NOW,
-        readyAt: NOW,
-        recoveryAt: NOW,
-        recoveryGeneration: 1,
-        userId,
-      });
+    t.mutation((ctx) =>
+      runConvexProgram(
+        Effect.gen(function* () {
+          const userId = yield* Effect.promise(() =>
+            ctx.db.insert("users", {
+              authId,
+              credits: 0,
+              creditsResetAt: 0,
+              deletionPreparedAt: NOW,
+              email: `${authId}@example.com`,
+              name: authId,
+              plan: "free",
+            })
+          );
+          const preparationId = yield* Effect.promise(() =>
+            ctx.db.insert("accountDeletionPreparations", {
+              attemptId: ATTEMPT_ID,
+              authId,
+              deletionStartedAt: NOW,
+              readyAt: NOW,
+              recoveryAt: NOW,
+              recoveryGeneration: 1,
+              userId,
+            })
+          );
 
-      return {
-        expectedPreparation: {
-          attemptId: ATTEMPT_ID,
-          preparationId,
-          recoveryGeneration: 1,
-        },
-        preparationId,
-        userId,
-      };
-    })
+          return {
+            expectedPreparation: {
+              attemptId: ATTEMPT_ID,
+              preparationId,
+              recoveryGeneration: 1,
+            },
+            preparationId,
+            userId,
+          };
+        })
+      )
+    )
   );
 }
 
@@ -89,13 +97,20 @@ describe("auth/deletion/commit", () => {
         )
       );
       const state = yield* Effect.promise(() =>
-        t.query(async (ctx) => ({
-          preparation: await ctx.db.get(
-            "accountDeletionPreparations",
-            seeded.preparationId
-          ),
-          user: await ctx.db.get("users", seeded.userId),
-        }))
+        t.query((ctx) =>
+          runConvexProgram(
+            Effect.gen(function* () {
+              const preparation = yield* Effect.promise(() =>
+                ctx.db.get("accountDeletionPreparations", seeded.preparationId)
+              );
+              const user = yield* Effect.promise(() =>
+                ctx.db.get("users", seeded.userId)
+              );
+
+              return { preparation, user };
+            })
+          )
+        )
       );
 
       expect(handled).toBe(true);
@@ -136,14 +151,26 @@ describe("auth/deletion/commit", () => {
           )
         );
         const state = yield* Effect.promise(() =>
-          t.query(async (ctx) => ({
-            preparation: await ctx.db.get(
-              "accountDeletionPreparations",
-              seeded.preparationId
-            ),
-            receipt: await ctx.db.query("accountDeletionReceipts").unique(),
-            user: await ctx.db.get("users", seeded.userId),
-          }))
+          t.query((ctx) =>
+            runConvexProgram(
+              Effect.gen(function* () {
+                const preparation = yield* Effect.promise(() =>
+                  ctx.db.get(
+                    "accountDeletionPreparations",
+                    seeded.preparationId
+                  )
+                );
+                const receipt = yield* Effect.promise(() =>
+                  ctx.db.query("accountDeletionReceipts").unique()
+                );
+                const user = yield* Effect.promise(() =>
+                  ctx.db.get("users", seeded.userId)
+                );
+
+                return { preparation, receipt, user };
+              })
+            )
+          )
         );
 
         expect(handled).toBe(true);
@@ -174,10 +201,14 @@ describe("auth/deletion/commit", () => {
       const seeded = yield* seedStartedDeletion(t, "unclaimed-owner");
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          ctx.db.patch(
-            "accountDeletionPreparations",
-            seeded.preparationId,
-            patch
+          runConvexProgram(
+            Effect.promise(() =>
+              ctx.db.patch(
+                "accountDeletionPreparations",
+                seeded.preparationId,
+                patch
+              )
+            )
           )
         )
       );
