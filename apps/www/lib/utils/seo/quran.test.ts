@@ -1,6 +1,5 @@
 // @vitest-environment node
 
-import { makeAppLocale } from "@nakafa/aksara-contracts/locale";
 import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -18,7 +17,7 @@ const surah = {
   kind: "quran-surah",
   name: {
     arabic: "Al-Fatihah",
-    meaning: { appLocale: makeAppLocale("en"), text: "The Opening" },
+    meaning: { de: "Die Eröffnende", en: "The Opening", id: "Pembuka" },
     transliteration: "Al-Fatihah",
   },
   number: 1,
@@ -63,7 +62,7 @@ describe("generateQuranMetadata", () => {
   it("uses the same authenticated Quran names in every shell locale", async () => {
     const result = await Effect.runPromise(generateQuranMetadata(surah, "id"));
 
-    expect(result.title).toBe("Surah 1. Al-Fatihah - Al-Fatihah | Nakafa");
-    expect(result.keywords).toEqual(["Al-Fatihah", "Meccan"]);
+    expect(result.title).toBe("Surah 1. Al-Fatihah - Pembuka | Nakafa");
+    expect(result.keywords).toEqual(["Al-Fatihah", "Pembuka", "Meccan"]);
   });
 });

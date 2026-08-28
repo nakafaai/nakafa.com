@@ -1,4 +1,3 @@
-import { makeAppLocale } from "@nakafa/aksara-contracts/locale";
 import { describe, expect, it } from "vitest";
 import { generateFallbackMetadata } from "@/lib/utils/seo/fallback";
 
@@ -112,8 +111,9 @@ describe("generateFallbackMetadata", () => {
           name: {
             arabic: "الفاتحة",
             meaning: {
-              appLocale: makeAppLocale("en"),
-              text: "The Opening",
+              de: "Die Eröffnende",
+              en: "The Opening",
+              id: "Pembuka",
             },
             transliteration: "Al-Fatihah",
           },

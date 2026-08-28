@@ -18,7 +18,10 @@ import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { PaginationContent } from "@/components/shared/pagination-content";
 import { QuranBismillah } from "@/components/shared/quran/bismillah";
-import { QuranInterpretationButton } from "@/components/shared/quran/interpretation/button";
+import {
+  QuranInterpretationButton,
+  QuranInterpretationLink,
+} from "@/components/shared/quran/interpretation/button";
 import { QuranInterpretationControls } from "@/components/shared/quran/interpretation/controls";
 import { QuranVerseList } from "@/components/shared/quran/verses/list";
 import { RefContent } from "@/components/shared/ref-content";
@@ -178,8 +181,8 @@ async function CachedSurahShell({
       recoverStalePublishedQuranSnapshot(servedSnapshotId)
     );
   }
-  const description = surahData.name.meaning.text;
-  const descriptionLanguage = surahData.name.meaning.appLocale;
+  const description = surahData.name.meaning[locale];
+  const descriptionLanguage = locale;
   const title = getQuranSurahName(surahData.name);
 
   const verseItems = result.verses.map((verse) => {
@@ -246,7 +249,7 @@ async function CachedSurahShell({
                 translationNotesLabel={translationNotesLabel}
               />
             )}
-            {tafsirAccess?.kind === "embedded" ? (
+            {tafsirAccess.kind === "embedded" ? (
               <QuranInterpretationControls
                 appLocale={tafsirAccess.appLocale}
                 errorMessage={t("interpretation-error")}
@@ -270,6 +273,12 @@ async function CachedSurahShell({
             ) : (
               <QuranVerseList
                 items={verseItems}
+                renderAction={() => (
+                  <QuranInterpretationLink
+                    href={tafsirAccess.source.sourceUrl}
+                    label={interpretationLabel}
+                  />
+                )}
                 translationNotesLabel={translationNotesLabel}
               />
             )}

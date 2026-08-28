@@ -3,6 +3,7 @@ import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
   encodeTestQuranRow,
   makeQuranLocaleSources,
+  makeQuranMeaning,
   makeQuranSurah,
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
@@ -68,7 +69,7 @@ describe("published Quran content", () => {
     ).resolves.toMatchObject({
       surah: {
         name: {
-          meaning: { appLocale: "en", text: "Technical meaning 1" },
+          meaning: makeQuranMeaning(1),
         },
         number: 1,
       },
@@ -112,13 +113,13 @@ describe("published Quran content", () => {
       appLocale: "id",
       nextSurah: {
         name: {
-          meaning: { appLocale: "en", text: "Technical meaning 2" },
+          meaning: makeQuranMeaning(2),
         },
         number: 2,
       },
       surah: {
         name: {
-          meaning: { appLocale: "en", text: "Technical meaning 1" },
+          meaning: makeQuranMeaning(1),
         },
         number: 1,
       },
@@ -153,13 +154,13 @@ describe("published Quran content", () => {
       nextSurah: null,
       previousSurah: {
         name: {
-          meaning: { appLocale: "en", text: "Technical meaning 113" },
+          meaning: makeQuranMeaning(113),
         },
         number: 113,
       },
       surah: {
         name: {
-          meaning: { appLocale: "en", text: "Technical meaning 114" },
+          meaning: makeQuranMeaning(114),
         },
         number: 114,
       },
@@ -184,7 +185,7 @@ function viewResult() {
     appLocale: "id",
     nextSurah: {
       name: {
-        sourceMeaning: { appLocale: "en", text: "Technical meaning 2" },
+        sourceMeaning: makeQuranMeaning(2),
         transliteration: "Technical Surah 2",
       },
       number: 2,
@@ -193,7 +194,7 @@ function viewResult() {
     previousSurah: null,
     surah: {
       name: {
-        sourceMeaning: { appLocale: "en", text: "Technical meaning 1" },
+        sourceMeaning: makeQuranMeaning(1),
         transliteration: "Technical Surah 1",
       },
       number: 1,
@@ -257,7 +258,7 @@ function markdownResult() {
     sources: makeQuranLocaleSources("id"),
     surah: {
       name: {
-        sourceMeaning: { appLocale: "en", text: "Technical meaning 1" },
+        sourceMeaning: makeQuranMeaning(1),
         transliteration: "Technical Surah 1",
       },
       number: 1,

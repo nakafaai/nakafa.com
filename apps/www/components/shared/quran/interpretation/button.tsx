@@ -36,3 +36,23 @@ export function QuranInterpretationButton({
     </Button>
   );
 }
+
+/** Opens one official link-only Tafsir edition with the established trigger. */
+export function QuranInterpretationLink({
+  href,
+  label,
+}: {
+  href: string;
+  label: string;
+}) {
+  return (
+    <Button
+      aria-label={label}
+      render={<a href={href} rel="noreferrer" target="_blank" />}
+      size="icon"
+      variant="outline"
+    >
+      <Spinner aria-hidden="true" icon={BookOpen02Icon} isLoading={false} />
+    </Button>
+  );
+}

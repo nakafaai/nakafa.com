@@ -1,5 +1,8 @@
 import type { QuranTranslationDocument } from "@nakafa/aksara-contracts/quran/notes";
-import { QuranSurahNumberSchema } from "@nakafa/aksara-contracts/quran/spec";
+import {
+  QuranSurahNumberSchema,
+  type QuranSurahRow,
+} from "@nakafa/aksara-contracts/quran/spec";
 import { projectQuranTranslation } from "@repo/backend/client/quran/notes";
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
@@ -70,7 +73,7 @@ export const readQuranLlmsPageEntries = Effect.fn("www.llms.quran.pageEntries")(
     return buildPublishedContentLlmsEntries({
       locale,
       rows: surahs.map((surah) => ({
-        description: formatQuranMeaning(surah.name.meaning),
+        description: formatQuranMeaning(surah.name.meaning, locale),
         publicPath: `quran/${surah.number}`,
         title: getQuranSurahName(surah.name),
       })),
@@ -122,7 +125,7 @@ const getQuranIndexText = Effect.fn("www.llms.quran.indexText")(function* (
     scanned.push(`## ${surah.number}. ${title}`);
     scanned.push("");
     scanned.push(
-      `**${t("meaning")}:** ${formatQuranMeaning(surah.name.meaning)}`
+      `**${t("meaning")}:** ${formatQuranMeaning(surah.name.meaning, locale)}`
     );
     scanned.push("");
     scanned.push(
@@ -161,7 +164,7 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
   const surah = markdown.surah;
   const tafsirAccess = markdown.tafsirAccess;
   const title = getQuranSurahName(surah.name);
-  const description = surah.name.meaning.text;
+  const description = formatQuranMeaning(surah.name.meaning, locale);
   const scanned = buildHeader({
     description,
     title,
@@ -171,7 +174,7 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
   scanned.push(`## ${title}`);
   scanned.push("");
   scanned.push(
-    `**${t("meaning")}:** ${formatQuranMeaning(surah.name.meaning)}`
+    `**${t("meaning")}:** ${formatQuranMeaning(surah.name.meaning, locale)}`
   );
   scanned.push(
     `**${t("revelation")}:** ${t("revelation-place", {
@@ -197,14 +200,12 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
     `  ${markdown.sources.translation.publisher} · ${markdown.sources.translation.version}`
   );
   scanned.push("");
-  if (tafsirAccess !== null) {
-    scanned.push(tafsirAccess.notice);
-    scanned.push("");
-    scanned.push(
-      `[${tafsirAccess.source.label}](${tafsirAccess.source.updateUrl})`
-    );
-    scanned.push("");
-  }
+  scanned.push(tafsirAccess.notice);
+  scanned.push("");
+  scanned.push(
+    `[${tafsirAccess.source.label}](${tafsirAccess.source.updateUrl})`
+  );
+  scanned.push("");
 
   scanned.push(`### ${t("verses")}`);
   scanned.push("");
@@ -251,11 +252,11 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
 });
 
 /** Preserves the signed source language beside one Quran meaning. */
-function formatQuranMeaning(meaning: {
-  readonly appLocale: string;
-  readonly text: string;
-}) {
-  return `${meaning.text} (${meaning.appLocale})`;
+function formatQuranMeaning(
+  meaning: QuranSurahRow["name"]["meaning"],
+  locale: Locale
+) {
+  return meaning[locale];
 }
 
 /** Renders one semantic translation and its localized source-note heading. */
