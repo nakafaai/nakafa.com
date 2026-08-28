@@ -1,10 +1,11 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   PublicPathSchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { Effect, Option } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import { resolveLocalizedNavigationHref } from "@/lib/routing/locale/resolve";
 import {
   testArticleDeProjection,
@@ -71,7 +72,7 @@ vi.mock("@/lib/content/tryout/path", () => ({
 }));
 /** Resolves a localized href through the Effect boundary used by callers. */
 function resolveHref(href: string, locale: ActiveAppLocaleCode) {
-  return Effect.runSync(resolveLocalizedNavigationHref({ href, locale }));
+  return resolveLocalizedNavigationHref({ href, locale });
 }
 
 beforeEach(() => {
@@ -138,232 +139,275 @@ beforeEach(() => {
 });
 
 describe("resolveLocalizedNavigationHref", () => {
-  it("projects every EN, ID, and DE article route direction", () => {
-    for (const current of articleProjections) {
-      for (const target of articleProjections) {
-        if (current.appLocale === target.appLocale) {
-          continue;
-        }
+  it.effect("projects every EN, ID, and DE article route direction", () =>
+    Effect.gen(function* () {
+      for (const current of articleProjections) {
+        for (const target of articleProjections) {
+          if (current.appLocale === target.appLocale) {
+            continue;
+          }
 
-        expect(
-          resolveHref(
+          const category = yield* resolveHref(
             `/${current.appLocale}/${current.parentPath}`,
             target.appLocale
-          )
-        ).toBe(`/${target.parentPath}`);
-        expect(
-          resolveHref(
+          );
+          expect(category).toBe(`/${target.parentPath}`);
+
+          const article = yield* resolveHref(
             `/${current.appLocale}/${current.publicPath}`,
             target.appLocale
-          )
-        ).toBe(`/${target.publicPath}`);
+          );
+          expect(article).toBe(`/${target.publicPath}`);
+        }
       }
-    }
 
-    expect(
-      resolveHref(
+      const articleWithState = yield* resolveHref(
         `/${testArticleProjection.appLocale}/${testArticleProjection.publicPath}?source=locale#references`,
         "de"
-      )
-    ).toBe(`/${testArticleDeProjection.publicPath}?source=locale#references`);
-    expect(
-      resolveHref(
+      );
+      expect(articleWithState).toBe(
+        `/${testArticleDeProjection.publicPath}?source=locale#references`
+      );
+
+      const categoryWithState = yield* resolveHref(
         `/${testArticleProjection.appLocale}/${testArticleProjection.parentPath}?cursor=source&manifest=source&release=source&source=locale#latest`,
         "de"
-      )
-    ).toBe(`/${testArticleDeProjection.parentPath}?source=locale#latest`);
-  });
+      );
+      expect(categoryWithState).toBe(
+        `/${testArticleDeProjection.parentPath}?source=locale#latest`
+      );
+    })
+  );
 
-  it("projects signed material and curriculum counterparts", () => {
-    expect(
-      resolveHref(
+  it.effect("projects signed material and curriculum counterparts", () =>
+    Effect.gen(function* () {
+      const material = yield* resolveHref(
         `/${previewProjection.appLocale}/${previewProjection.publicPath}`,
         "id"
-      )
-    ).toBe(`/${previewIdProjection.publicPath}`);
+      );
+      expect(material).toBe(`/${previewIdProjection.publicPath}`);
 
-    publishedMocks.programRoute.mockReturnValue(
-      Effect.succeed({
-        alternates: [testProgramSubject, idProgramSubject, deProgramSubject],
-        route: testProgramSubject,
-      })
-    );
-    expect(
-      resolveHref(
+      publishedMocks.programRoute.mockReturnValue(
+        Effect.succeed({
+          alternates: [testProgramSubject, idProgramSubject, deProgramSubject],
+          route: testProgramSubject,
+        })
+      );
+      const indonesian = yield* resolveHref(
         `/${testProgramSubject.appLocale}/${testProgramSubject.publicPath}`,
         "id"
-      )
-    ).toBe(`/${idProgramSubject.publicPath}`);
-    expect(
-      resolveHref(
+      );
+      expect(indonesian).toBe(`/${idProgramSubject.publicPath}`);
+
+      const german = yield* resolveHref(
         `/${testProgramSubject.appLocale}/${testProgramSubject.publicPath}`,
         "de"
-      )
-    ).toBe(`/${deProgramSubject.publicPath}`);
-  });
+      );
+      expect(german).toBe(`/${deProgramSubject.publicPath}`);
+    })
+  );
 
-  it("keeps material context only while the signed program verifies it", () => {
-    const href = `/${previewProjection.appLocale}/${previewProjection.publicPath}?ctx=merdeka~class-11-mathematics-function-composition-inverse-function`;
-    publishedMocks.materialContext
-      .mockReturnValueOnce(Effect.succeed({ context: {} }))
-      .mockReturnValueOnce(Effect.succeed(null));
+  it.effect(
+    "keeps material context only while the signed program verifies it",
+    () =>
+      Effect.gen(function* () {
+        const href = `/${previewProjection.appLocale}/${previewProjection.publicPath}?ctx=merdeka~class-11-mathematics-function-composition-inverse-function`;
+        publishedMocks.materialContext
+          .mockReturnValueOnce(Effect.succeed({ context: {} }))
+          .mockReturnValueOnce(Effect.succeed(null));
 
-    expect(resolveHref(href, "id")).toBe(
-      `/${previewIdProjection.publicPath}?ctx=merdeka~class-11-mathematics-function-composition-inverse-function`
-    );
-    expect(resolveHref(href, "id")).toBe(`/${previewIdProjection.publicPath}`);
-  });
+        const verified = yield* resolveHref(href, "id");
+        expect(verified).toBe(
+          `/${previewIdProjection.publicPath}?ctx=merdeka~class-11-mathematics-function-composition-inverse-function`
+        );
 
-  it("preserves verified context across signed material route renames", () => {
-    const currentPath = PublicPathSchema.make(
-      "subjects/mathematics/function-composition-inverse-function/renamed-function"
-    );
-    const targetPath = PublicPathSchema.make(
-      "materi/matematika/fungsi-komposisi-dan-fungsi-invers/fungsi-berganti"
-    );
-    publishedMocks.materialRoute.mockReturnValue(
-      Effect.succeed({
-        activeReleaseId,
-        alternates: [
-          { ...previewProjection, publicPath: currentPath },
-          { ...previewIdProjection, publicPath: targetPath },
-        ],
-        projection: { ...previewProjection, publicPath: currentPath },
+        const omitted = yield* resolveHref(href, "id");
+        expect(omitted).toBe(`/${previewIdProjection.publicPath}`);
       })
-    );
-    publishedMocks.materialContext.mockReturnValue(
-      Effect.succeed({ context: {} })
-    );
+  );
 
-    expect(
-      resolveHref(
-        `/en/${currentPath}?ctx=merdeka~class-11-mathematics-function-composition-inverse-function`,
-        "id"
-      )
-    ).toBe(
-      `/${targetPath}?ctx=merdeka~class-11-mathematics-function-composition-inverse-function`
-    );
-  });
+  it.effect(
+    "preserves verified context across signed material route renames",
+    () =>
+      Effect.gen(function* () {
+        const currentPath = PublicPathSchema.make(
+          "subjects/mathematics/function-composition-inverse-function/renamed-function"
+        );
+        const targetPath = PublicPathSchema.make(
+          "materi/matematika/fungsi-komposisi-dan-fungsi-invers/fungsi-berganti"
+        );
+        publishedMocks.materialRoute.mockReturnValue(
+          Effect.succeed({
+            activeReleaseId,
+            alternates: [
+              { ...previewProjection, publicPath: currentPath },
+              { ...previewIdProjection, publicPath: targetPath },
+            ],
+            projection: { ...previewProjection, publicPath: currentPath },
+          })
+        );
+        publishedMocks.materialContext.mockReturnValue(
+          Effect.succeed({ context: {} })
+        );
 
-  it("fails closed for signed tombstones and missing locale rows", () => {
-    publishedMocks.materialRoute
-      .mockReturnValueOnce(
+        const href = yield* resolveHref(
+          `/en/${currentPath}?ctx=merdeka~class-11-mathematics-function-composition-inverse-function`,
+          "id"
+        );
+        expect(href).toBe(
+          `/${targetPath}?ctx=merdeka~class-11-mathematics-function-composition-inverse-function`
+        );
+      })
+  );
+
+  it.effect("fails closed for signed tombstones and missing locale rows", () =>
+    Effect.gen(function* () {
+      publishedMocks.materialRoute
+        .mockReturnValueOnce(
+          Effect.succeed({
+            activeReleaseId,
+            alternates: [],
+            projection: null,
+          })
+        )
+        .mockReturnValueOnce(
+          Effect.succeed({
+            activeReleaseId,
+            alternates: [previewProjection],
+            projection: previewProjection,
+          })
+        );
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const failure = yield* resolveLocalizedNavigationHref({
+          href: `/${previewProjection.appLocale}/${previewProjection.publicPath}`,
+          locale: "id",
+        }).pipe(Effect.flip);
+        expect(failure).toMatchObject({
+          _tag: "MissingLocalizedRouteProjectionError",
+        });
+      }
+
+      publishedMocks.programRoute
+        .mockReturnValueOnce(Effect.succeed({ alternates: [], route: null }))
+        .mockReturnValueOnce(
+          Effect.succeed({ alternates: [], route: testProgramSubject })
+        );
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const failure = yield* resolveLocalizedNavigationHref({
+          href: `/${testProgramSubject.appLocale}/${testProgramSubject.publicPath}`,
+          locale: "id",
+        }).pipe(Effect.flip);
+        expect(failure).toMatchObject({
+          _tag: "MissingLocalizedRouteProjectionError",
+        });
+      }
+    })
+  );
+
+  it.effect("projects mapped curriculum and tryout paths", () =>
+    Effect.gen(function* () {
+      const englishCurriculum = yield* resolveHref("/id/kurikulum", "en");
+      expect(englishCurriculum).toBe("/curriculum");
+
+      const indonesianCurriculum = yield* resolveHref("/en/curriculum", "id");
+      expect(indonesianCurriculum).toBe("/kurikulum");
+
+      const tryout = yield* resolveHref("/id/try-out/indonesia", "en");
+      expect(tryout).toBe("/try-out/indonesia");
+
+      const section = yield* resolveHref(
+        "/id/try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
+        "en"
+      );
+      expect(section).toBe(
+        "/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge"
+      );
+    })
+  );
+
+  it.effect("projects signed Page identities across German route changes", () =>
+    Effect.gen(function* () {
+      publishedMocks.pagePath.mockReturnValueOnce(
+        Effect.succeed({ kind: "found", publicPath: "impressum" })
+      );
+
+      const href = yield* resolveHref(
+        "/en/legal-notice?source=footer#company",
+        "de"
+      );
+      expect(href).toBe("/impressum?source=footer#company");
+    })
+  );
+
+  it.effect("keeps static app routes and safe URL state", () =>
+    Effect.gen(function* () {
+      const search = yield* resolveHref("/id/search?q=vektor#results", "en");
+      expect(search).toBe("/search?q=vektor#results");
+
+      const home = yield* resolveHref("/en/home", "id");
+      expect(home).toBe("/home");
+
+      const unlocalizedSearch = yield* resolveHref("/search?q=vektor", "en");
+      expect(unlocalizedSearch).toBe("/search?q=vektor");
+
+      const currentLocale = yield* resolveHref("/id/search", "id");
+      expect(currentLocale).toBe("/search");
+
+      const englishRoot = yield* resolveHref("/id", "en");
+      expect(englishRoot).toBe("/");
+
+      const indonesianRoot = yield* resolveHref("/en", "id");
+      expect(indonesianRoot).toBe("/");
+
+      const preview = yield* resolveHref(
+        "/id/internal-preview/alpha?source=meeting#top",
+        "en"
+      );
+      expect(preview).toBe("/internal-preview/alpha?source=meeting#top");
+    })
+  );
+
+  it.effect("fails malformed and missing projected routes", () =>
+    Effect.gen(function* () {
+      const invalid = yield* resolveLocalizedNavigationHref({
+        href: "http://[",
+        locale: "en",
+      }).pipe(Effect.flip);
+      expect(invalid).toMatchObject({
+        _tag: "InvalidLocalizedHrefError",
+        href: "http://[",
+      });
+
+      publishedMocks.materialRoute.mockReturnValueOnce(
         Effect.succeed({
           activeReleaseId,
           alternates: [],
           projection: null,
         })
-      )
-      .mockReturnValueOnce(
-        Effect.succeed({
-          activeReleaseId,
-          alternates: [previewProjection],
-          projection: previewProjection,
-        })
       );
-    for (let attempt = 0; attempt < 2; attempt += 1) {
-      const result = Effect.runSyncExit(
-        resolveLocalizedNavigationHref({
-          href: `/${previewProjection.appLocale}/${previewProjection.publicPath}`,
-          locale: "id",
-        })
-      );
-      expect(result._tag).toBe("Failure");
-    }
+      const material = yield* resolveLocalizedNavigationHref({
+        href: "/id/materi/fisika/tidak-ada",
+        locale: "en",
+      }).pipe(Effect.flip);
+      expect(material).toMatchObject({
+        _tag: "MissingLocalizedRouteProjectionError",
+      });
 
-    publishedMocks.programRoute
-      .mockReturnValueOnce(Effect.succeed({ alternates: [], route: null }))
-      .mockReturnValueOnce(
-        Effect.succeed({ alternates: [], route: testProgramSubject })
-      );
-    for (let attempt = 0; attempt < 2; attempt += 1) {
-      const result = Effect.runSyncExit(
-        resolveLocalizedNavigationHref({
-          href: `/${testProgramSubject.appLocale}/${testProgramSubject.publicPath}`,
-          locale: "id",
-        })
-      );
-      expect(result._tag).toBe("Failure");
-    }
-  });
+      const missingTryout = yield* resolveLocalizedNavigationHref({
+        href: "/id/try-out/tidak-ada",
+        locale: "en",
+      }).pipe(Effect.flip);
+      expect(missingTryout).toMatchObject({
+        _tag: "MissingLocalizedRouteProjectionError",
+      });
 
-  it("projects mapped curriculum and tryout paths", () => {
-    expect(resolveHref("/id/kurikulum", "en")).toBe("/curriculum");
-    expect(resolveHref("/en/curriculum", "id")).toBe("/kurikulum");
-    expect(resolveHref("/id/try-out/indonesia", "en")).toBe(
-      "/try-out/indonesia"
-    );
-    expect(
-      resolveHref(
-        "/id/try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
-        "en"
-      )
-    ).toBe("/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge");
-  });
-
-  it("projects signed Page identities across German route changes", () => {
-    publishedMocks.pagePath.mockReturnValueOnce(
-      Effect.succeed({ kind: "found", publicPath: "impressum" })
-    );
-
-    expect(resolveHref("/en/legal-notice?source=footer#company", "de")).toBe(
-      "/impressum?source=footer#company"
-    );
-  });
-
-  it("keeps static app routes and safe URL state", () => {
-    expect(resolveHref("/id/search?q=vektor#results", "en")).toBe(
-      "/search?q=vektor#results"
-    );
-    expect(resolveHref("/en/home", "id")).toBe("/home");
-    expect(resolveHref("/search?q=vektor", "en")).toBe("/search?q=vektor");
-    expect(resolveHref("/id/search", "id")).toBe("/search");
-    expect(resolveHref("/id", "en")).toBe("/");
-    expect(resolveHref("/en", "id")).toBe("/");
-    expect(
-      resolveHref("/id/internal-preview/alpha?source=meeting#top", "en")
-    ).toBe("/internal-preview/alpha?source=meeting#top");
-  });
-
-  it("fails malformed and missing projected routes", () => {
-    expect(
-      Effect.runSyncExit(
-        resolveLocalizedNavigationHref({ href: "http://[", locale: "en" })
-      )._tag
-    ).toBe("Failure");
-
-    publishedMocks.materialRoute.mockReturnValueOnce(
-      Effect.succeed({
-        activeReleaseId,
-        alternates: [],
-        projection: null,
-      })
-    );
-    expect(
-      Effect.runSyncExit(
-        resolveLocalizedNavigationHref({
-          href: "/id/materi/fisika/tidak-ada",
-          locale: "en",
-        })
-      )._tag
-    ).toBe("Failure");
-
-    expect(
-      Effect.runSyncExit(
-        resolveLocalizedNavigationHref({
-          href: "/id/try-out/tidak-ada",
-          locale: "en",
-        })
-      )._tag
-    ).toBe("Failure");
-
-    expect(
-      Effect.runSyncExit(
-        resolveLocalizedNavigationHref({
-          href: "/id/try-out/indonesia/untranslated",
-          locale: "en",
-        })
-      )._tag
-    ).toBe("Failure");
-  });
+      const untranslatedTryout = yield* resolveLocalizedNavigationHref({
+        href: "/id/try-out/indonesia/untranslated",
+        locale: "en",
+      }).pipe(Effect.flip);
+      expect(untranslatedTryout).toMatchObject({
+        _tag: "MissingLocalizedRouteProjectionError",
+      });
+    })
+  );
 });
