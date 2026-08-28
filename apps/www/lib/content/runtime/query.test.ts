@@ -1,9 +1,10 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import { ConvexRuntimeQueryError } from "@repo/backend/client/runtime";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
-import { describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import { readRuntimeQuery } from "@/lib/content/runtime/query";
 
 const { readMock, runtimeUrl } = vi.hoisted(() => ({
@@ -21,53 +22,54 @@ vi.mock("@/env", () => ({
 }));
 
 describe("content runtime query", () => {
-  it("maps the Effect runtime query into the typed data-read channel", async () => {
-    readMock.mockReturnValueOnce(Effect.succeed(42));
-    await expect(
-      Effect.runPromise(
-        readRuntimeQuery(api.contentRelease.reference.read, {
-          input: {
-            appLocale: "en",
-            kind: "route",
-            publicPath: "articles/politics/test",
-          },
-        })
-      )
-    ).resolves.toBe(42);
-
-    const runtimeError = new ConvexRuntimeQueryError({
-      networkCodes: ["EPIPE"],
-      query: "contentRelease.material.route",
-      reason: "transport",
-    });
-    readMock.mockReturnValueOnce(Effect.fail(runtimeError));
-    await expect(
-      Effect.runPromise(
-        Effect.flip(
-          readRuntimeQuery(api.contentRelease.reference.read, {
+  it.effect(
+    "maps the Effect runtime query into the typed data-read channel",
+    () =>
+      Effect.gen(function* () {
+        readMock.mockReturnValueOnce(Effect.succeed(42));
+        expect(
+          yield* readRuntimeQuery(api.contentRelease.reference.read, {
             input: {
               appLocale: "en",
               kind: "route",
               publicPath: "articles/politics/test",
             },
           })
-        )
-      )
-    ).resolves.toMatchObject({
-      cause: runtimeError.message,
-      message:
-        "Unable to read Nakafa runtime content query: contentRelease.material.route.",
-    });
-    expect(readMock).toHaveBeenCalledWith(
-      runtimeUrl,
-      api.contentRelease.reference.read,
-      {
-        input: {
-          appLocale: "en",
-          kind: "route",
-          publicPath: "articles/politics/test",
-        },
-      }
-    );
-  });
+        ).toBe(42);
+
+        const runtimeError = new ConvexRuntimeQueryError({
+          networkCodes: ["EPIPE"],
+          query: "contentRelease.material.route",
+          reason: "transport",
+        });
+        readMock.mockReturnValueOnce(Effect.fail(runtimeError));
+        const failure = yield* readRuntimeQuery(
+          api.contentRelease.reference.read,
+          {
+            input: {
+              appLocale: "en",
+              kind: "route",
+              publicPath: "articles/politics/test",
+            },
+          }
+        ).pipe(Effect.flip);
+
+        expect(failure).toMatchObject({
+          cause: runtimeError.message,
+          message:
+            "Unable to read Nakafa runtime content query: contentRelease.material.route.",
+        });
+        expect(readMock).toHaveBeenCalledWith(
+          runtimeUrl,
+          api.contentRelease.reference.read,
+          {
+            input: {
+              appLocale: "en",
+              kind: "route",
+              publicPath: "articles/politics/test",
+            },
+          }
+        );
+      })
+  );
 });
