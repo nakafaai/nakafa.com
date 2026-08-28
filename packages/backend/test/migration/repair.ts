@@ -1,4 +1,17 @@
 import { strict as assert } from "node:assert/strict";
+import {
+  AppLocaleSchema,
+  ArtifactLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
+import {
+  tryoutCatalogNodeIdentity,
+  tryoutPlacementIdentity,
+} from "@nakafa/aksara-contracts/tryout/identity";
+import {
+  deliveryLanguageForSection,
+  questionArtifactLocaleForSection,
+} from "@nakafa/aksara-contracts/tryout/language";
+import { TryoutPlacementSourceSchema } from "@nakafa/aksara-contracts/tryout/placement";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type schema from "@repo/backend/convex/schema";
@@ -9,6 +22,7 @@ import {
   type CleanupSourceInventory,
 } from "@repo/backend/test/migration/state";
 import type { TestConvex } from "convex-test";
+import { Schema } from "effect";
 
 const REPAIR_PUBLISHED_AT = 20;
 type CleanupTest = TestConvex<typeof schema>;
@@ -268,43 +282,55 @@ function historicalCatalogIdentity(
   row: {
     readonly countryKey: string;
     readonly examKey: string;
-    readonly locale: string;
+    readonly locale: "en" | "id";
     readonly sectionKey?: string;
     readonly setKey: string;
     readonly trackKey: string;
   },
   kind: "section" | "set"
 ) {
-  return [
-    row.locale,
+  const appLocale = AppLocaleSchema.make(row.locale);
+  if (kind === "set") {
+    return tryoutCatalogNodeIdentity({
+      appLocale,
+      countryKey: row.countryKey,
+      examKey: row.examKey,
+      kind,
+      setKey: row.setKey,
+      trackKey: row.trackKey,
+    });
+  }
+  assert.ok(row.sectionKey);
+  return tryoutCatalogNodeIdentity({
+    appLocale,
+    countryKey: row.countryKey,
+    examKey: row.examKey,
     kind,
-    row.countryKey,
-    row.examKey,
-    row.trackKey,
-    row.setKey,
-    kind === "section" ? row.sectionKey : "",
-  ].join("\0");
+    sectionKey: row.sectionKey,
+    setKey: row.setKey,
+    trackKey: row.trackKey,
+  });
 }
 
-/** Reconstructs one exact historical placement identity for test rows. */
-function historicalPlacementIdentity(row: {
-  readonly countryKey: string;
-  readonly examKey: string;
-  readonly locale: string;
-  readonly questionContentKey: string;
-  readonly questionOrder: number;
-  readonly sectionKey: string;
-  readonly setKey: string;
-  readonly trackKey: string;
-}) {
-  return [
-    row.countryKey,
-    row.examKey,
-    row.trackKey,
-    row.setKey,
-    row.sectionKey,
-    row.questionOrder,
-    row.questionContentKey,
-    row.locale,
-  ].join("\0");
+/** Projects one retained fixture through Aksara's placement contract. */
+function historicalPlacementIdentity(
+  row: ReturnType<typeof makeRepairSource>["placement"]["record"]["row"]
+) {
+  const { locale, ...placement } = row;
+  const appLocale = AppLocaleSchema.make(locale);
+  return tryoutPlacementIdentity(
+    Schema.decodeSync(TryoutPlacementSourceSchema)({
+      ...placement,
+      answerArtifactLocale: ArtifactLocaleSchema.make(locale),
+      appLocale,
+      deliveryLanguage: deliveryLanguageForSection(
+        placement.sectionKey,
+        appLocale
+      ),
+      questionArtifactLocale: questionArtifactLocaleForSection(
+        placement.sectionKey,
+        appLocale
+      ),
+    })
+  );
 }

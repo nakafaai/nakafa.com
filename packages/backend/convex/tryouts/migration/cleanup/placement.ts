@@ -1,4 +1,16 @@
 import type { StoredTryoutRow } from "@nakafa/aksara-contracts/history/decode";
+import {
+  AppLocaleSchema,
+  ArtifactLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
+import {
+  tryoutCatalogNodeIdentity,
+  tryoutPlacementIdentity,
+} from "@nakafa/aksara-contracts/tryout/identity";
+import {
+  deliveryLanguageForSection,
+  questionArtifactLocaleForSection,
+} from "@nakafa/aksara-contracts/tryout/language";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -34,7 +46,7 @@ export const verifyRepairPlacements = Effect.fn(
     record.row.kind === "section" ? [record.row] : []
   );
   const sections = new Map(
-    sectionRows.map((row) => [historicalCatalogIdentity(row), row] as const)
+    sectionRows.map((row) => [historicalSectionIdentity(row), row] as const)
   );
   const runById = new Map(runs.map((run) => [run._id, run]));
   if (sections.size !== sectionRows.length || runById.size !== runs.length) {
@@ -88,53 +100,47 @@ export const verifyRepairPlacements = Effect.fn(
   }
 });
 
-type HistoricalCatalogRow = Extract<
-  StoredTryoutRow,
-  { readonly rowKind: "catalog" }
->["record"]["row"];
+type HistoricalSection = Extract<
+  Extract<StoredTryoutRow, { readonly rowKind: "catalog" }>["record"]["row"],
+  { readonly kind: "section" }
+>;
 type HistoricalPlacement = Extract<
   StoredTryoutRow,
   { readonly rowKind: "placement" }
 >["record"]["row"];
 
-/** Reconstructs the ordering identity frozen into the retained catalog. */
-function historicalCatalogIdentity(row: HistoricalCatalogRow) {
-  return [
-    row.locale,
-    row.kind,
-    row.countryKey,
-    "examKey" in row ? row.examKey : "",
-    "trackKey" in row ? row.trackKey : "",
-    "setKey" in row ? row.setKey : "",
-    "sectionKey" in row ? row.sectionKey : "",
-  ].join("\0");
+/** Projects one retained row through Aksara's current section identity. */
+function historicalSectionIdentity(
+  row: HistoricalPlacement | HistoricalSection
+) {
+  return tryoutCatalogNodeIdentity({
+    appLocale: AppLocaleSchema.make(row.locale),
+    countryKey: row.countryKey,
+    examKey: row.examKey,
+    kind: "section",
+    sectionKey: row.sectionKey,
+    setKey: row.setKey,
+    trackKey: row.trackKey,
+  });
 }
 
-/** Derives the exact retained section identity for one old placement. */
-function historicalSectionIdentity(row: HistoricalPlacement) {
-  return [
-    row.locale,
-    "section",
-    row.countryKey,
-    row.examKey,
-    row.trackKey,
-    row.setKey,
-    row.sectionKey,
-  ].join("\0");
-}
-
-/** Reconstructs the placement identity frozen into the old scale graph. */
+/** Projects one retained row through Aksara's current placement identity. */
 function historicalPlacementIdentity(row: HistoricalPlacement) {
-  return [
-    row.countryKey,
-    row.examKey,
-    row.trackKey,
-    row.setKey,
-    row.sectionKey,
-    row.questionOrder,
-    row.questionContentKey,
-    row.locale,
-  ].join("\0");
+  const { locale, ...placement } = row;
+  const appLocale = AppLocaleSchema.make(locale);
+  return tryoutPlacementIdentity({
+    ...placement,
+    answerArtifactLocale: ArtifactLocaleSchema.make(locale),
+    appLocale,
+    deliveryLanguage: deliveryLanguageForSection(
+      placement.sectionKey,
+      appLocale
+    ),
+    questionArtifactLocale: questionArtifactLocaleForSection(
+      placement.sectionKey,
+      appLocale
+    ),
+  });
 }
 
 /** Maps retained-history failures into the signed cleanup boundary. */
