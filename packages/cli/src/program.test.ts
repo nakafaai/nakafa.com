@@ -436,6 +436,7 @@ describe("Nakafa CLI execution", () => {
     ["taxonomy", "--locale", "--help", "id"],
     ["taxonomy", "-xh"],
     ["taxonomy", "--locale", "-xh"],
+    ["taxonomy", "-p-hfoo"],
     ["taxonomy", "-xh-foo"],
     ["search", "", "--help"],
     ["get", "", "--help"],

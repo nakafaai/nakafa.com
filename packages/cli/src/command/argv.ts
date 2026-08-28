@@ -89,6 +89,21 @@ export const normalizeArgv = Effect.fn("NakafaCli.normalizeArgv")(function* (
       continue;
     }
 
+    const terminatedShort = readTerminatedShortFlags(argument);
+    if (terminatedShort !== undefined) {
+      for (const name of terminatedShort.names) {
+        if (isActionFlagName(name)) {
+          actions[name] = true;
+        } else {
+          normalized.push(`--${name}=true`);
+        }
+      }
+      appendActions(normalized, actions);
+      normalized.push("--", ...terminatedShort.positionals);
+      parseFlags = false;
+      continue;
+    }
+
     const short = readShortFlags(argument);
     if (short !== undefined) {
       if (short.value !== undefined) {
@@ -148,37 +163,22 @@ export function readActionValidation(argv: readonly string[]) {
 }
 
 function removeShortActions(argument: string) {
-  if (
-    !argument.startsWith("-") ||
-    argument.startsWith("--") ||
-    argument === "-"
-  ) {
+  const short = readShortArgument(argument);
+  if (short === undefined) {
     return;
   }
-  const equalsIndex = argument.indexOf("=");
-  const optionCluster = argument.slice(
-    1,
-    equalsIndex === -1 ? undefined : equalsIndex
-  );
-  const terminatorIndex = optionCluster.indexOf("-");
-  // Node parseArgs ended a short cluster at an embedded hyphen. Only flags
-  // before that terminator participated in the published action contract.
-  const actionPrefix =
-    terminatorIndex === -1
-      ? optionCluster
-      : optionCluster.slice(0, terminatorIndex);
-  const validationAliases = [...actionPrefix].filter(
+  const validationAliases = [...short.source].filter(
     (alias) => alias !== FLAG_ALIAS.help && alias !== FLAG_ALIAS.version
   );
-  if (validationAliases.length === actionPrefix.length) {
+  if (validationAliases.length === short.source.length) {
     return;
   }
   if (validationAliases.length === 0) {
     return "";
   }
   const value =
-    terminatorIndex === -1 && equalsIndex !== -1
-      ? argument.slice(equalsIndex)
+    short.positionals === undefined && short.value !== undefined
+      ? `=${short.value}`
       : "";
   return `-${validationAliases.join("")}${value}`;
 }
@@ -400,6 +400,37 @@ function readLongFlag(argument: string) {
 }
 
 function readShortFlags(argument: string) {
+  const short = readShortArgument(argument);
+  if (short === undefined || short.positionals !== undefined) {
+    return;
+  }
+  const names = readShortFlagNames(short.source);
+  if (names === undefined) {
+    return;
+  }
+  return {
+    names,
+    source: short.source,
+    value: short.value,
+  };
+}
+
+function readTerminatedShortFlags(argument: string) {
+  const short = readShortArgument(argument);
+  if (short?.positionals === undefined) {
+    return;
+  }
+  const names = readShortFlagNames(short.source);
+  if (names === undefined) {
+    return;
+  }
+  return {
+    names,
+    positionals: short.positionals,
+  };
+}
+
+function readShortArgument(argument: string) {
   if (
     !argument.startsWith("-") ||
     argument.startsWith("--") ||
@@ -408,10 +439,30 @@ function readShortFlags(argument: string) {
     return;
   }
   const equalsIndex = argument.indexOf("=");
-  const source = argument.slice(
+  const optionCluster = argument.slice(
     1,
     equalsIndex === -1 ? undefined : equalsIndex
   );
+  const terminatorIndex = optionCluster.indexOf("-");
+  if (terminatorIndex !== -1) {
+    // Node 24 parseArgs ends a short cluster at an embedded hyphen and turns
+    // every remaining character into a positional value prefixed by a hyphen.
+    return {
+      positionals: [...argument.slice(terminatorIndex + 2)].map(
+        (value) => `-${value}`
+      ),
+      source: optionCluster.slice(0, terminatorIndex),
+      value: undefined,
+    };
+  }
+  return {
+    positionals: undefined,
+    source: optionCluster,
+    value: equalsIndex === -1 ? undefined : argument.slice(equalsIndex + 1),
+  };
+}
+
+function readShortFlagNames(source: string) {
   const names: ShortFlagName[] = [];
   for (const alias of source) {
     const name = readShortFlagName(alias);
@@ -420,11 +471,7 @@ function readShortFlags(argument: string) {
     }
     names.push(name);
   }
-  return {
-    names,
-    source,
-    value: equalsIndex === -1 ? undefined : argument.slice(equalsIndex + 1),
-  };
+  return names;
 }
 
 function readShortFlagName(alias: string): ShortFlagName | undefined {

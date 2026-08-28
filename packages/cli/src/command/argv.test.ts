@@ -38,6 +38,38 @@ describe("Nakafa CLI arguments", () => {
       expected: ["taxonomy", "--pretty=true", "--help", "--version"],
     },
     {
+      argv: ["taxonomy", "-p-hfoo"],
+      expected: ["taxonomy", "--pretty=true", "--", "-h", "-f", "-o", "-o"],
+    },
+    {
+      argv: ["taxonomy", "-p-hfoo=bar"],
+      expected: [
+        "taxonomy",
+        "--pretty=true",
+        "--",
+        "-h",
+        "-f",
+        "-o",
+        "-o",
+        "-=",
+        "-b",
+        "-a",
+        "-r",
+      ],
+    },
+    {
+      argv: ["taxonomy", "-p--h"],
+      expected: ["taxonomy", "--pretty=true", "--", "--", "-h"],
+    },
+    {
+      argv: ["taxonomy", "-p-"],
+      expected: ["taxonomy", "--pretty=true", "--"],
+    },
+    {
+      argv: ["taxonomy", "-ph-foo"],
+      expected: ["taxonomy", "--pretty=true", "--help", "--", "-f", "-o", "-o"],
+    },
+    {
       argv: ["--help", "--no-help", "taxonomy"],
       expected: ["taxonomy"],
     },
