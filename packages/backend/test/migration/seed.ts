@@ -9,7 +9,9 @@ import {
 } from "@repo/backend/test/migration/source";
 import {
   CLEANUP_MIGRATION_ID,
+  CLEANUP_SOURCE_INVENTORY,
   CLEANUP_SOURCE_SNAPSHOT,
+  type CleanupSourceInventory,
   type CleanupTest,
 } from "@repo/backend/test/migration/state";
 import { seedTarget } from "@repo/backend/test/migration/target";
@@ -116,7 +118,11 @@ export function seedCleanupGuard(
 }
 
 /** Seeds a multi-page source plus permanent target and shared references. */
-export function seedCleanupSuccess(t: CleanupTest, sourceScaleCount = 1) {
+export function seedCleanupSuccess(
+  t: CleanupTest,
+  sourceScaleCount = 1,
+  sourceInventory: CleanupSourceInventory = CLEANUP_SOURCE_INVENTORY
+) {
   return t.mutation(async (ctx) => {
     const target = await seedTarget(ctx);
     const sourceScale = await seedSourceScale(ctx);
@@ -143,7 +149,7 @@ export function seedCleanupSuccess(t: CleanupTest, sourceScaleCount = 1) {
     await ctx.db.patch(target.attemptId, {
       scaleVersionId: targetScale.scaleVersionId,
     });
-    await seedSourceRows(ctx, target);
+    await seedSourceRows(ctx, target, sourceInventory);
     const markerId = await ctx.db.insert("tryoutAttemptHistory", {
       snapshotReleaseId: "source-release",
       tryoutAttemptId: target.attemptId,
@@ -165,7 +171,8 @@ export function seedCleanupSuccess(t: CleanupTest, sourceScaleCount = 1) {
     await seedRoot(
       ctx,
       target,
-      sourceScales.map(({ scaleVersionId }) => scaleVersionId)
+      sourceScales.map(({ scaleVersionId }) => scaleVersionId),
+      sourceInventory
     );
     return {
       sourceScale,

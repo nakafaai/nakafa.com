@@ -51,6 +51,24 @@ function readRepair(
     receipt: await ctx.db.query("tryoutHistoryMigrationReceipts").unique(),
     runs: await Promise.all(graph.runIds.map((id) => ctx.db.get(id))),
     scale: await ctx.db.get(graph.scaleVersionId),
+    sourceCatalog: await ctx.db
+      .query("tryoutCatalog")
+      .withIndex("by_snapshotId_and_index", (query) =>
+        query.eq("snapshotId", CLEANUP_SOURCE_SNAPSHOT)
+      )
+      .collect(),
+    sourceHistory: await ctx.db
+      .query("tryoutHistoryRows")
+      .withIndex("by_snapshotId_and_rowKind_and_index", (query) =>
+        query.eq("snapshotId", CLEANUP_SOURCE_SNAPSHOT)
+      )
+      .collect(),
+    sourcePlacements: await ctx.db
+      .query("tryoutPlacements")
+      .withIndex("by_snapshotId_and_index", (query) =>
+        query.eq("snapshotId", CLEANUP_SOURCE_SNAPSHOT)
+      )
+      .collect(),
   }));
 }
 
@@ -83,6 +101,9 @@ describe("tryouts/migration/cleanup/repair", () => {
       assert.strictEqual(repaired.receipt?.deletedRows, 0);
       assert.deepStrictEqual(repaired.receipt?.proof, CLEANUP_PROOF);
       assert.strictEqual(repaired.receipt?.repair?.deletedRows, repairedRows);
+      assert.deepStrictEqual(repaired.sourceCatalog, []);
+      assert.strictEqual(repaired.sourceHistory.length, 2);
+      assert.deepStrictEqual(repaired.sourcePlacements, []);
       assert.strictEqual(
         repaired.receipt?.repair?.scaleVersionId,
         repair.scaleVersionId
@@ -91,7 +112,7 @@ describe("tryouts/migration/cleanup/repair", () => {
       yield* Effect.promise(() => finishCleanup(t, repair.evidence));
       const finished = yield* Effect.promise(() => readRepair(t, repair));
       assert.strictEqual(finished.receipt?.phase, "cleaned");
-      assert.strictEqual(finished.receipt?.deletedRows, 82);
+      assert.strictEqual(finished.receipt?.deletedRows, 16);
       assert.strictEqual(finished.receipt?.repair?.deletedRows, repairedRows);
     })
   );
@@ -154,7 +175,7 @@ describe("tryouts/migration/cleanup/repair", () => {
       for (const drift of ["identity", "rowHash", "section"] as const) {
         const t = createConvexTestWithBetterAuth();
         const { repair } = yield* Effect.promise(() =>
-          seedRepair(t, 0, ["quantitative-knowledge", "english-language"])
+          seedRepair(t, 0, ["general-reasoning", "english-language"])
         );
         const [firstItemId, secondItemId] = repair.itemIds;
         const [firstRunId, secondRunId] = repair.runIds;
@@ -200,7 +221,7 @@ describe("tryouts/migration/cleanup/repair", () => {
     Effect.gen(function* () {
       const t = createConvexTestWithBetterAuth();
       const { repair } = yield* Effect.promise(() =>
-        seedRepair(t, 0, ["quantitative-knowledge", "english-language"])
+        seedRepair(t, 0, ["general-reasoning", "english-language"])
       );
       const [firstRun, secondRun] = repair.runIds;
       const [firstEvidence, secondEvidence] = repair.evidence.runs;
