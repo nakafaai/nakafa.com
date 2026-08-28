@@ -8,6 +8,7 @@ import {
 } from "@repo/backend/convex/tryouts/migration/cleanup/evidence";
 import { cleanupProgram } from "@repo/backend/convex/tryouts/migration/cleanup/run";
 import {
+  seedDuplicateScaleItemIdentity,
   seedRepair,
   seedUnusedScale,
 } from "@repo/backend/test/migration/repair";
@@ -291,6 +292,25 @@ describe("tryouts/migration/cleanup/repair", () => {
       );
       const state = yield* Effect.promise(() => readRepair(t, repair));
       assert.ok(state.scale);
+      assert.strictEqual(state.receipt?.repair, undefined);
+    })
+  );
+
+  it.effect("rejects duplicate item placement identities before writes", () =>
+    Effect.gen(function* () {
+      const t = createConvexTestWithBetterAuth();
+      const seeded = yield* Effect.promise(() =>
+        seedDuplicateScaleItemIdentity(t)
+      );
+
+      yield* Effect.promise(() =>
+        expect(runCleanup(t, seeded.evidence)).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        })
+      );
+      const state = yield* Effect.promise(() => readRepair(t, seeded.repair));
+      assert.ok(state.scale);
+      assert.ok(state.items.every((item) => item !== null));
       assert.strictEqual(state.receipt?.repair, undefined);
     })
   );

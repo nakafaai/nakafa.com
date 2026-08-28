@@ -84,8 +84,15 @@ export const verifyRepairPlacements = Effect.fn(
       });
     }
   }
+  const itemPlacementIdentities = new Set(
+    items.map(({ placementIdentity }) => placementIdentity)
+  );
   if (
-    signedPlacements.size !== items.length ||
+    itemPlacementIdentities.size !== items.length ||
+    itemPlacementIdentities.size !== signedPlacements.size ||
+    [...signedPlacements.keys()].some(
+      (identity) => !itemPlacementIdentities.has(identity)
+    ) ||
     items.some((item) => {
       const placement = signedPlacements.get(item.placementIdentity);
       const run = runById.get(item.calibrationRunId);
