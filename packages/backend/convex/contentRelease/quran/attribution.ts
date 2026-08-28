@@ -1,4 +1,4 @@
-import { QuranAttributionRowSchema } from "@nakafa/aksara-contracts/quran/source";
+import { PublishedQuranAttributionSchema } from "@repo/backend/content/quran/contract";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadQuranOwner } from "@repo/backend/convex/contentRelease/quran/owner";
@@ -29,7 +29,7 @@ export const readQuranAttributionRow = Effect.fn(
   const payload = yield* verifyQuranRow(
     row,
     snapshotId,
-    QuranAttributionRowSchema
+    PublishedQuranAttributionSchema
   );
   return { payload, rowJson: row.rowJson };
 });

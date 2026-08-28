@@ -1,11 +1,21 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { QuranSnapshotRowSchema } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import { QuranSnapshotSchema } from "@nakafa/aksara-contracts/quran/snapshot/spec";
+import { QuranAttributionRowSchema } from "@nakafa/aksara-contracts/quran/source";
 import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
 import { QuranSnapshotRowSchema as TransitionQuranSnapshotRowSchema } from "@nakafa/aksara-transition/quran/snapshot/row";
 import { QuranSnapshotSchema as TransitionQuranSnapshotSchema } from "@nakafa/aksara-transition/quran/snapshot/spec";
+import { QuranAttributionRowSchema as TransitionQuranAttributionRowSchema } from "@nakafa/aksara-transition/quran/source";
 import { QuranSurahRowSchema as TransitionQuranSurahRowSchema } from "@nakafa/aksara-transition/quran/spec";
 import { Schema } from "effect";
+
+/** Exact signed attribution contracts accepted during the bounded data switch. */
+export const PublishedQuranAttributionSchema = Schema.Union([
+  QuranAttributionRowSchema,
+  TransitionQuranAttributionRowSchema,
+]);
+export type PublishedQuranAttribution =
+  typeof PublishedQuranAttributionSchema.Type;
 
 /** Exact signed surah meanings accepted during the bounded data switch. */
 export const PublishedQuranMeaningSchema = Schema.Union([
