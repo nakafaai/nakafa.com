@@ -1,4 +1,4 @@
-import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
+import { formatQuranMeaning } from "@repo/backend/content/quran/contract";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import type { QuranSurah } from "@/lib/utils/pages/quran";
@@ -11,9 +11,7 @@ export const generateQuranMetadata = Effect.fn("SEO.generateQuranMetadata")(
     Effect.gen(function* () {
       const name = surah.name.arabic;
       const transliteration = surah.name.transliteration;
-      const meaning = selectQuranMeaning(surah.name.meaning, locale);
-      const localizedMeaning =
-        meaning.appLocale === locale ? meaning.text : "__EMPTY__";
+      const localizedMeaning = formatQuranMeaning(surah.name.meaning, locale);
       const revelation = surah.revelation.place;
 
       const t = yield* fetchSEOTranslationsNamespace(locale, "SEO");
