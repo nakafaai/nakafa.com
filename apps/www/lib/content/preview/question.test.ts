@@ -1,7 +1,8 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import { executePreviewArtifact } from "@/lib/content/preview/artifact";
 import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
 import {
@@ -47,12 +48,12 @@ function AnswerContent() {
 
 /** Runs one preview while preserving its typed domain failures. */
 function runPreview(request = input) {
-  return Effect.runPromise(readQuestionPreview(request));
+  return readQuestionPreview(request);
 }
 
 /** Returns one expected preview failure. */
 function runFailure(request = input) {
-  return Effect.runPromise(readQuestionPreview(request).pipe(Effect.flip));
+  return readQuestionPreview(request).pipe(Effect.flip);
 }
 
 /** Supplies one exact provider snapshot to the reader boundary. */
@@ -79,147 +80,166 @@ beforeEach(() => {
 });
 
 describe("local question preview", () => {
-  it("leaves production and unrelated routes on their existing source", async () => {
-    snapshotMock.mockReturnValueOnce(Effect.succeed(Option.none()));
-    await expect(runPreview()).resolves.toEqual(Option.none());
+  it.effect(
+    "leaves production and unrelated routes on their existing source",
+    () =>
+      Effect.gen(function* () {
+        snapshotMock.mockReturnValueOnce(Effect.succeed(Option.none()));
+        expect(yield* runPreview()).toEqual(Option.none());
 
-    snapshotMock.mockReturnValueOnce(
-      Effect.succeed(
-        Option.some({
-          config: previewConfig,
-          manifest: makeReadyManifest(previewManifestHash),
-        })
-      )
-    );
-    await expect(runPreview()).resolves.toEqual(Option.none());
+        snapshotMock.mockReturnValueOnce(
+          Effect.succeed(
+            Option.some({
+              config: previewConfig,
+              manifest: makeReadyManifest(previewManifestHash),
+            })
+          )
+        );
+        expect(yield* runPreview()).toEqual(Option.none());
 
-    provideManifest(makeQuestionReadyManifest(previewManifestHash));
-    await expect(
-      runPreview({ ...input, publicPath: `${input.publicPath}-other` })
-    ).resolves.toEqual(Option.none());
-    expect(executeMock).not.toHaveBeenCalled();
-  });
-
-  it("fails closed while the selected question compiles or fails", async () => {
-    snapshotMock
-      .mockReturnValueOnce(
-        Effect.succeed(
-          Option.some({
-            config: previewConfig,
-            manifest: makeQuestionPendingManifest(),
+        provideManifest(makeQuestionReadyManifest(previewManifestHash));
+        expect(
+          yield* runPreview({
+            ...input,
+            publicPath: `${input.publicPath}-other`,
           })
+        ).toEqual(Option.none());
+        expect(executeMock).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect("fails closed while the selected question compiles or fails", () =>
+    Effect.gen(function* () {
+      snapshotMock
+        .mockReturnValueOnce(
+          Effect.succeed(
+            Option.some({
+              config: previewConfig,
+              manifest: makeQuestionPendingManifest(),
+            })
+          )
         )
-      )
-      .mockReturnValueOnce(
-        Effect.succeed(
-          Option.some({
-            config: previewConfig,
-            manifest: makeQuestionFailedManifest(),
-          })
-        )
+        .mockReturnValueOnce(
+          Effect.succeed(
+            Option.some({
+              config: previewConfig,
+              manifest: makeQuestionFailedManifest(),
+            })
+          )
+        );
+
+      expect(yield* runFailure()).toMatchObject({
+        _tag: "PreviewPendingError",
+        revision: 1,
+      });
+      expect(yield* runFailure()).toMatchObject({
+        _tag: "PreviewCompileError",
+        code: "MDX_PARSE",
+        message: "Compilation failed.",
+      });
+    })
+  );
+
+  it.effect("renders one authenticated prompt with its authored choices", () =>
+    Effect.gen(function* () {
+      const manifest = makeQuestionReadyManifest(previewManifestHash);
+      provideManifest(manifest);
+
+      const result = Option.getOrThrow(yield* runPreview());
+
+      expect(result).toMatchObject({
+        Answer: null,
+        Question: QuestionContent,
+        choices: [
+          { label: "Correct", value: true },
+          { label: "Incorrect", value: false },
+        ],
+        selectedBodyKind: "question",
+      });
+      expect(executeMock).toHaveBeenCalledOnce();
+      expect(executeMock).toHaveBeenCalledWith(
+        expect.objectContaining({ previewArtifact: manifest.artifacts[0] })
       );
+    })
+  );
 
-    await expect(runFailure()).resolves.toMatchObject({
-      _tag: "PreviewPendingError",
-      revision: 1,
-    });
-    await expect(runFailure()).resolves.toMatchObject({
-      _tag: "PreviewCompileError",
-      code: "MDX_PARSE",
-      message: "Compilation failed.",
-    });
-  });
+  it.effect("renders the ordered prompt and entitled answer artifacts", () =>
+    Effect.gen(function* () {
+      const manifest = makeQuestionReadyManifest(previewManifestHash, "answer");
+      provideManifest(manifest);
 
-  it("renders one authenticated prompt with its authored choices", async () => {
-    const manifest = makeQuestionReadyManifest(previewManifestHash);
-    provideManifest(manifest);
+      const result = Option.getOrThrow(yield* runPreview());
 
-    const result = Option.getOrThrow(await runPreview());
+      expect(result).toMatchObject({
+        Answer: AnswerContent,
+        Question: QuestionContent,
+        selectedBodyKind: "answer",
+      });
+      expect(executeMock).toHaveBeenCalledTimes(2);
+      expect(executeMock).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          previewArtifact: expect.objectContaining({
+            artifactHash: questionPromptHash,
+          }),
+        })
+      );
+      expect(executeMock).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          previewArtifact: expect.objectContaining({
+            artifactHash: questionAnswerHash,
+          }),
+        })
+      );
+    })
+  );
 
-    expect(result).toMatchObject({
-      Answer: null,
-      Question: QuestionContent,
-      choices: [
-        { label: "Correct", value: true },
-        { label: "Incorrect", value: false },
-      ],
-      selectedBodyKind: "question",
-    });
-    expect(executeMock).toHaveBeenCalledOnce();
-    expect(executeMock).toHaveBeenCalledWith(
-      expect.objectContaining({ previewArtifact: manifest.artifacts[0] })
-    );
-  });
+  it.effect(
+    "rejects a prompt or answer projection from another content family",
+    () =>
+      Effect.gen(function* () {
+        const materialProjection =
+          makeReadyManifest(previewManifestHash).artifacts[0].projection;
+        const promptManifest = makeQuestionReadyManifest(previewManifestHash);
+        provideManifest({
+          ...promptManifest,
+          artifacts: [
+            { ...promptManifest.artifacts[0], projection: materialProjection },
+          ],
+        });
+        expect(yield* runFailure()).toMatchObject({
+          _tag: "PreviewIntegrityError",
+          check: "projection",
+        });
 
-  it("renders the ordered prompt and entitled answer artifacts", async () => {
-    const manifest = makeQuestionReadyManifest(previewManifestHash, "answer");
-    provideManifest(manifest);
-
-    const result = Option.getOrThrow(await runPreview());
-
-    expect(result).toMatchObject({
-      Answer: AnswerContent,
-      Question: QuestionContent,
-      selectedBodyKind: "answer",
-    });
-    expect(executeMock).toHaveBeenCalledTimes(2);
-    expect(executeMock).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({
-        previewArtifact: expect.objectContaining({
-          artifactHash: questionPromptHash,
-        }),
+        const answerManifest = makeQuestionReadyManifest(
+          previewManifestHash,
+          "answer"
+        );
+        provideManifest({
+          ...answerManifest,
+          artifacts: [
+            answerManifest.artifacts[0],
+            { ...answerManifest.artifacts[1], projection: materialProjection },
+          ],
+        });
+        expect(yield* runFailure()).toMatchObject({
+          _tag: "PreviewIntegrityError",
+          check: "projection",
+        });
       })
-    );
-    expect(executeMock).toHaveBeenNthCalledWith(
-      2,
-      expect.objectContaining({
-        previewArtifact: expect.objectContaining({
-          artifactHash: questionAnswerHash,
-        }),
-      })
-    );
-  });
+  );
 
-  it("rejects a prompt or answer projection from another content family", async () => {
-    const materialProjection =
-      makeReadyManifest(previewManifestHash).artifacts[0].projection;
-    const promptManifest = makeQuestionReadyManifest(previewManifestHash);
-    provideManifest({
-      ...promptManifest,
-      artifacts: [
-        { ...promptManifest.artifacts[0], projection: materialProjection },
-      ],
-    });
-    await expect(runFailure()).resolves.toMatchObject({
-      _tag: "PreviewIntegrityError",
-      check: "projection",
-    });
+  it.effect("rejects an answer manifest that loses its second artifact", () =>
+    Effect.gen(function* () {
+      const manifest = makeQuestionReadyManifest(previewManifestHash, "answer");
+      provideManifest({ ...manifest, artifacts: [manifest.artifacts[0]] });
 
-    const answerManifest = makeQuestionReadyManifest(
-      previewManifestHash,
-      "answer"
-    );
-    provideManifest({
-      ...answerManifest,
-      artifacts: [
-        answerManifest.artifacts[0],
-        { ...answerManifest.artifacts[1], projection: materialProjection },
-      ],
-    });
-    await expect(runFailure()).resolves.toMatchObject({
-      _tag: "PreviewIntegrityError",
-      check: "projection",
-    });
-  });
-
-  it("rejects an answer manifest that loses its second artifact", async () => {
-    const manifest = makeQuestionReadyManifest(previewManifestHash, "answer");
-    provideManifest({ ...manifest, artifacts: [manifest.artifacts[0]] });
-
-    await expect(runFailure()).resolves.toMatchObject({
-      _tag: "PreviewIntegrityError",
-      check: "artifact",
-    });
-  });
+      expect(yield* runFailure()).toMatchObject({
+        _tag: "PreviewIntegrityError",
+        check: "artifact",
+      });
+    })
+  );
 });
