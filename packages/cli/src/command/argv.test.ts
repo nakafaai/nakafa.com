@@ -50,6 +50,10 @@ describe("Nakafa CLI arguments", () => {
       expected: ["--bogus", "--", "taxonomy"],
     },
     {
+      argv: ["--help", "--", "--"],
+      expected: ["--help", "--", "--"],
+    },
+    {
       argv: ["--no-locale", "taxonomy"],
       expected: ["--no-locale", "taxonomy"],
     },
@@ -103,5 +107,8 @@ describe("Nakafa CLI arguments", () => {
     expect(
       Option.isNone(readActionValidation(["search", "--", "--help"]))
     ).toBe(true);
+    expect(
+      Option.getOrUndefined(readActionValidation(["--help", "--", "--"]))
+    ).toEqual(["--", "--"]);
   });
 });

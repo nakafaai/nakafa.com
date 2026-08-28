@@ -116,11 +116,7 @@ const executeCli = Effect.fn("NakafaCli.execute")(function* (
       Effect.provideService(Console.Console, commandConsole),
       Effect.matchEffect({
         onFailure: (error) => {
-          if (
-            CliError.isCliError(error) &&
-            error._tag === "ShowHelp" &&
-            error.errors.length === 0
-          ) {
+          if (isActionValidationHelp(error)) {
             return Effect.void;
           }
           return CliError.isCliError(error)
@@ -156,6 +152,24 @@ const executeCli = Effect.fn("NakafaCli.execute")(function* (
   );
   return 0;
 });
+
+function isActionValidationHelp(error: unknown) {
+  // Native actions precede positional parsing. Dry validation therefore ignores
+  // only positional shapes, including Effect's required-variadic "0 values".
+  return (
+    CliError.isCliError(error) &&
+    error._tag === "ShowHelp" &&
+    error.errors.every(
+      (detail) =>
+        detail._tag === "MissingArgument" ||
+        detail._tag === "UnexpectedArgument" ||
+        detail._tag === "UnknownSubcommand" ||
+        (detail._tag === "InvalidValue" &&
+          detail.kind === "argument" &&
+          detail.value === "0 values")
+    )
+  );
+}
 
 const executeRequest = Effect.fn("NakafaCli.executeRequest")(function* (
   request: CliRequest

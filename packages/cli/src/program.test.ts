@@ -152,6 +152,26 @@ describe("Nakafa CLI execution", () => {
       })
   );
 
+  it.effect("renders action help before positional validation", () =>
+    Effect.gen(function* () {
+      const client = HttpClient.make(() => Effect.die("unexpected request"));
+      const results = yield* Effect.forEach(
+        [
+          ["search", "--help"],
+          ["get", "--help"],
+          ["quran", "--help"],
+          ["--help", "--", "--"],
+        ],
+        (argv) => execute(argv, client)
+      );
+
+      for (const result of results) {
+        expect(result).toMatchObject({ exitCode: 0, stderr: "" });
+        expect(result.stdout).not.toBe("");
+      }
+    })
+  );
+
   it.effect.each([
     {
       argv: ["search", "linear", "equations", "--locale", "de", "--limit", "5"],
@@ -397,6 +417,7 @@ describe("Nakafa CLI execution", () => {
     ["taxonomy", "--bogus", "--help"],
     ["--version", "--unknown"],
     ["search", "query", "--limit", "zero", "--help"],
+    ["search", "", "--help"],
     ["get", "", "--help"],
   ])("rejects invalid action invocation %j", (argv) =>
     Effect.gen(function* () {

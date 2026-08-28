@@ -58,7 +58,7 @@ export const normalizeArgv = Effect.fn("NakafaCli.normalizeArgv")(function* (
   let parseFlags = true;
 
   for (const argument of argv) {
-    if (argument === "--") {
+    if (parseFlags && argument === "--") {
       appendActions(normalized, actions);
       normalized.push(argument);
       parseFlags = false;
