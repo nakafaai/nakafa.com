@@ -1,7 +1,8 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const instrumentationMocks = vi.hoisted(() => ({
   captureServerException: vi.fn(),
@@ -33,6 +34,10 @@ vi.mock("@repo/analytics/posthog/server", () => {
   };
 });
 
+const loadInstrumentation = Effect.fn("www.instrumentation.test.load")(() =>
+  Effect.promise(() => import("@/instrumentation"))
+);
+
 const request = {
   headers: { cookie: "ph_cookie=encoded" },
   method: "GET",
@@ -59,107 +64,157 @@ describe("Next.js instrumentation", () => {
     );
   });
 
-  it("registers AI SDK telemetry only in the Node.js runtime", async () => {
-    const { register } = await import("@/instrumentation");
+  it.effect("registers AI SDK telemetry only in the Node.js runtime", () =>
+    Effect.gen(function* () {
+      const { register } = yield* loadInstrumentation();
 
-    vi.stubEnv("NEXT_RUNTIME", "edge");
-    await register();
-    expect(
-      instrumentationMocks.registerAiSdkDevToolsTelemetry
-    ).not.toHaveBeenCalled();
+      vi.stubEnv("NEXT_RUNTIME", "edge");
+      yield* Effect.promise(() => register());
+      expect(
+        instrumentationMocks.registerAiSdkDevToolsTelemetry
+      ).not.toHaveBeenCalled();
 
-    vi.stubEnv("NEXT_RUNTIME", "nodejs");
-    await register();
-    expect(
-      instrumentationMocks.registerAiSdkDevToolsTelemetry
-    ).not.toHaveBeenCalled();
-
-    instrumentationMocks.isAiSdkDevToolsTelemetryEnabled.mockReturnValue(true);
-    await register();
-    expect(
-      instrumentationMocks.registerAiSdkDevToolsTelemetry
-    ).toHaveBeenCalledOnce();
-  });
-
-  it("does not load provider code outside production Node.js", async () => {
-    const providerLoadsBefore = instrumentationMocks.postHogModuleLoads;
-    const { onRequestError } = await import("@/instrumentation");
-
-    vi.stubEnv("NEXT_RUNTIME", "edge");
-    await onRequestError(new Error("edge failure"), request, requestContext);
-
-    vi.stubEnv("NEXT_RUNTIME", "nodejs");
-    await onRequestError(
-      new Error("development failure"),
-      request,
-      requestContext
-    );
-
-    expect(instrumentationMocks.postHogModuleLoads).toBe(providerLoadsBefore);
-    expect(instrumentationMocks.captureServerException).not.toHaveBeenCalled();
-  });
-
-  it.each(["stale", "on-demand"] as const)(
-    "reports production %s revalidation errors",
-    async (revalidateReason) => {
-      const { onRequestError } = await import("@/instrumentation");
       vi.stubEnv("NEXT_RUNTIME", "nodejs");
-      instrumentationMocks.isServerExceptionReportingEnabled.mockReturnValue(
+      yield* Effect.promise(() => register());
+      expect(
+        instrumentationMocks.registerAiSdkDevToolsTelemetry
+      ).not.toHaveBeenCalled();
+
+      instrumentationMocks.isAiSdkDevToolsTelemetryEnabled.mockReturnValue(
         true
       );
-      const error = new Error(`${revalidateReason} render failure`);
-
-      await onRequestError(error, request, {
-        ...requestContext,
-        revalidateReason,
-      });
-
-      expect(instrumentationMocks.captureServerException).toHaveBeenCalledWith(
-        error,
-        expect.objectContaining({ revalidate_reason: revalidateReason })
-      );
-    }
+      yield* Effect.promise(() => register());
+      expect(
+        instrumentationMocks.registerAiSdkDevToolsTelemetry
+      ).toHaveBeenCalledOnce();
+    })
   );
 
-  it("lazily reports production request errors with render context", async () => {
-    const { onRequestError } = await import("@/instrumentation");
-    vi.stubEnv("NEXT_RUNTIME", "nodejs");
-    instrumentationMocks.isServerExceptionReportingEnabled.mockReturnValue(
-      true
-    );
-    const error = Object.assign(new Error("render failure"), {
-      digest: "NEXT_DIGEST",
-    });
+  it.effect("propagates startup telemetry registration defects", () =>
+    Effect.gen(function* () {
+      const { register } = yield* loadInstrumentation();
+      vi.stubEnv("NEXT_RUNTIME", "nodejs");
+      instrumentationMocks.isAiSdkDevToolsTelemetryEnabled.mockReturnValue(
+        true
+      );
+      instrumentationMocks.registerAiSdkDevToolsTelemetry.mockImplementationOnce(
+        () => {
+          throw new Error("telemetry registration failed");
+        }
+      );
 
-    await onRequestError(error, request, requestContext);
+      const failure = yield* Effect.tryPromise(() => register()).pipe(
+        Effect.flip
+      );
 
-    expect(instrumentationMocks.captureServerException).toHaveBeenCalledWith(
-      error,
-      {
-        error_digest: "NEXT_DIGEST",
-        method: "GET",
-        render_source: "react-server-components",
-        revalidate_reason: undefined,
-        route_path: "/[locale]",
-        route_type: "render",
-        router_kind: "App Router",
-        source: "next-on-request-error",
-      }
-    );
-  });
+      expect(failure.cause).toBeInstanceOf(Error);
+      expect(String(failure.cause)).toContain("telemetry registration failed");
+    })
+  );
 
-  it("contains provider failures without replacing the application error", async () => {
-    const { onRequestError } = await import("@/instrumentation");
-    vi.stubEnv("NEXT_RUNTIME", "nodejs");
-    instrumentationMocks.isServerExceptionReportingEnabled.mockReturnValue(
-      true
-    );
-    instrumentationMocks.captureServerException.mockReturnValue(
-      Effect.fail({ cause: new Error("provider unavailable") })
-    );
+  it.effect("does not load provider code outside production Node.js", () =>
+    Effect.gen(function* () {
+      const providerLoadsBefore = instrumentationMocks.postHogModuleLoads;
+      const { onRequestError } = yield* loadInstrumentation();
 
-    await expect(
-      onRequestError(new Error("render failure"), request, requestContext)
-    ).resolves.toBeUndefined();
-  });
+      vi.stubEnv("NEXT_RUNTIME", "edge");
+      yield* Effect.promise(() =>
+        onRequestError(new Error("edge failure"), request, requestContext)
+      );
+
+      vi.stubEnv("NEXT_RUNTIME", "nodejs");
+      yield* Effect.promise(() =>
+        onRequestError(
+          new Error("development failure"),
+          request,
+          requestContext
+        )
+      );
+
+      expect(instrumentationMocks.postHogModuleLoads).toBe(providerLoadsBefore);
+      expect(
+        instrumentationMocks.captureServerException
+      ).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect.each(["stale", "on-demand"] as const)(
+    "reports production %s revalidation errors",
+    (revalidateReason) =>
+      Effect.gen(function* () {
+        const { onRequestError } = yield* loadInstrumentation();
+        vi.stubEnv("NEXT_RUNTIME", "nodejs");
+        instrumentationMocks.isServerExceptionReportingEnabled.mockReturnValue(
+          true
+        );
+        const error = new Error(`${revalidateReason} render failure`);
+
+        yield* Effect.promise(() =>
+          onRequestError(error, request, {
+            ...requestContext,
+            revalidateReason,
+          })
+        );
+
+        expect(
+          instrumentationMocks.captureServerException
+        ).toHaveBeenCalledWith(
+          error,
+          expect.objectContaining({ revalidate_reason: revalidateReason })
+        );
+      })
+  );
+
+  it.effect(
+    "lazily reports production request errors with render context",
+    () =>
+      Effect.gen(function* () {
+        const { onRequestError } = yield* loadInstrumentation();
+        vi.stubEnv("NEXT_RUNTIME", "nodejs");
+        instrumentationMocks.isServerExceptionReportingEnabled.mockReturnValue(
+          true
+        );
+        const error = Object.assign(new Error("render failure"), {
+          digest: "NEXT_DIGEST",
+        });
+
+        yield* Effect.promise(() =>
+          onRequestError(error, request, requestContext)
+        );
+
+        expect(
+          instrumentationMocks.captureServerException
+        ).toHaveBeenCalledWith(error, {
+          error_digest: "NEXT_DIGEST",
+          method: "GET",
+          render_source: "react-server-components",
+          revalidate_reason: undefined,
+          route_path: "/[locale]",
+          route_type: "render",
+          router_kind: "App Router",
+          source: "next-on-request-error",
+        });
+      })
+  );
+
+  it.effect(
+    "contains provider failures without replacing the application error",
+    () =>
+      Effect.gen(function* () {
+        const { onRequestError } = yield* loadInstrumentation();
+        vi.stubEnv("NEXT_RUNTIME", "nodejs");
+        instrumentationMocks.isServerExceptionReportingEnabled.mockReturnValue(
+          true
+        );
+        instrumentationMocks.captureServerException.mockReturnValue(
+          Effect.fail({ cause: new Error("provider unavailable") })
+        );
+
+        const result = yield* Effect.promise(() =>
+          onRequestError(new Error("render failure"), request, requestContext)
+        );
+
+        expect(result).toBeUndefined();
+      })
+  );
 });
