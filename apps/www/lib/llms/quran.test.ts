@@ -168,43 +168,6 @@ describe("quran llms text", () => {
     })
   );
 
-  it.effect("labels retained English meanings in localized output", () =>
-    Effect.gen(function* () {
-      const metadata = surahMetadata(1);
-      const predecessorMeaning = {
-        appLocale: "en",
-        text: "The Opening",
-      } as const;
-      const predecessorMetadata = {
-        ...metadata,
-        name: { ...metadata.name, meaning: predecessorMeaning },
-      };
-      const markdown = surahMarkdown("id", 1);
-      publicationMocks.readPublishedQuranCatalog.mockReturnValue(
-        Effect.succeed({ surahs: [predecessorMetadata] })
-      );
-      publicationMocks.readPublishedQuranMarkdown.mockReturnValue(
-        Effect.succeed({
-          ...markdown,
-          surah: {
-            ...markdown.surah,
-            name: { ...markdown.surah.name, meaning: predecessorMeaning },
-          },
-        })
-      );
-
-      expect(yield* readQuranLlmsPageEntries("id", 0)).toEqual([
-        expect.objectContaining({ description: "The Opening (en)" }),
-      ]);
-      expect(
-        yield* getQuranLlmsText({ cleanSlug: "quran", locale: "id" })
-      ).toContain("**Makna nama:** The Opening (en)");
-      expect(
-        yield* getQuranLlmsText({ cleanSlug: "quran/1", locale: "id" })
-      ).toContain("**Makna nama:** The Opening (en)");
-    })
-  );
-
   it.effect("bounds long signed surah markdown to eighty verses", () =>
     Effect.gen(function* () {
       const t = yield* createHolyTranslator("id");

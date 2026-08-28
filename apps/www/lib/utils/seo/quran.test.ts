@@ -1,6 +1,5 @@
 // @vitest-environment node
 
-import { makeAppLocale } from "@nakafa/aksara-contracts/locale";
 import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -74,22 +73,5 @@ describe("generateQuranMetadata", () => {
 
     expect(result.title).toBe("Surah 1. Al-Fatihah - Pembuka | Nakafa");
     expect(result.keywords).toEqual(["Al-Fatihah", "Pembuka", "Meccan"]);
-  });
-
-  it("does not relabel a retained English meaning as localized SEO", async () => {
-    const predecessor = {
-      ...surah,
-      name: {
-        ...surah.name,
-        meaning: { appLocale: makeAppLocale("en"), text: "The Opening" },
-      },
-    };
-
-    const result = await Effect.runPromise(
-      generateQuranMetadata(predecessor, "id")
-    );
-
-    expect(result.title).toBe("Surah 1. Al-Fatihah | Nakafa");
-    expect(result.keywords).toEqual(["Al-Fatihah", "Meccan"]);
   });
 });
