@@ -231,7 +231,7 @@ const verifyContributorPayloads = Effect.fn(
   // div without a tooltip role. The trigger's aria-label owns its identity.
   // @see https://base-ui.com/react/components/tooltip
   const tooltip = page.locator(
-    '[data-slot="tooltip-content"][data-open]:not([data-ending-style])'
+    '[data-slot="tooltip-content"][data-open]:not([data-starting-style]):not([data-ending-style])'
   );
   yield* Effect.promise(() =>
     expect(tooltip).toHaveText(firstContributor.name)
