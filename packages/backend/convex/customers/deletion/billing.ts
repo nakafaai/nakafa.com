@@ -64,22 +64,30 @@ export const cleanupDeletedUserBilling: (
 ) => Effect.Effect<null, DeletedUserBillingCleanupError> = Effect.fn(
   "customers.deletion.cleanupDeletedUserBilling"
 )(function* (ctx: ActionCtx, userId: Id<"users">, authId: string) {
-  const [customer, checkpointPolarCustomerId] = yield* Effect.tryPromise({
-    try: () =>
-      Promise.all([
-        ctx.runQuery(
-          internal.customers.queries.internal.customer.getCustomerByUserId,
-          { userId }
-        ),
-        ctx.runQuery(
-          internal.customers.queries.internal.customer
-            .getCustomerDeletionCheckpoint,
-          { userId }
-        ),
-      ]),
-    catch: (error) =>
-      customerSyncIoError("Failed to load customer cleanup state", error),
-  });
+  const [customer, checkpointPolarCustomerId] = yield* Effect.all(
+    [
+      Effect.tryPromise({
+        try: () =>
+          ctx.runQuery(
+            internal.customers.queries.internal.customer.getCustomerByUserId,
+            { userId }
+          ),
+        catch: (error) =>
+          customerSyncIoError("Failed to load customer cleanup state", error),
+      }),
+      Effect.tryPromise({
+        try: () =>
+          ctx.runQuery(
+            internal.customers.queries.internal.customer
+              .getCustomerDeletionCheckpoint,
+            { userId }
+          ),
+        catch: (error) =>
+          customerSyncIoError("Failed to load customer cleanup state", error),
+      }),
+    ],
+    { concurrency: "unbounded" }
+  );
 
   if (
     checkpointPolarCustomerId &&
