@@ -1,3 +1,5 @@
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { CleanupRepair } from "@repo/backend/convex/tryouts/migration/cleanup/schema";
 
 interface RepairRun {
@@ -17,7 +19,22 @@ export interface ScaleRepairEvidence {
   readonly sourceSnapshotId: string;
 }
 
-const identity = (...parts: readonly string[]) => parts.join("\0");
+const retainedCatalogParent = {
+  appLocale: AppLocaleSchema.make("en"),
+  countryKey: "indonesia",
+  examKey: "snbt",
+  setKey: "set-2",
+  trackKey: "2027",
+} as const;
+
+/** Projects a retained section through Aksara's identity contract. */
+function retainedSectionIdentity(sectionKey: string) {
+  return tryoutCatalogNodeIdentity({
+    ...retainedCatalogParent,
+    kind: "section",
+    sectionKey,
+  });
+}
 
 /** Exact production graph omitted by the signed attempt-derived inventory. */
 export const retainedScaleRepair = {
@@ -30,91 +47,38 @@ export const retainedScaleRepair = {
   runs: [
     {
       questionCount: 20,
-      sectionIdentity: identity(
-        "en",
-        "section",
-        "indonesia",
-        "snbt",
-        "2027",
-        "set-2",
-        "reading-and-writing-skills"
-      ),
+      sectionIdentity: retainedSectionIdentity("reading-and-writing-skills"),
     },
     {
       questionCount: 20,
-      sectionIdentity: identity(
-        "en",
-        "section",
-        "indonesia",
-        "snbt",
-        "2027",
-        "set-2",
-        "general-knowledge"
-      ),
+      sectionIdentity: retainedSectionIdentity("general-knowledge"),
     },
     {
       questionCount: 20,
-      sectionIdentity: identity(
-        "en",
-        "section",
-        "indonesia",
-        "snbt",
-        "2027",
-        "set-2",
-        "english-language"
-      ),
+      sectionIdentity: retainedSectionIdentity("english-language"),
     },
     {
       questionCount: 30,
-      sectionIdentity: identity(
-        "en",
-        "section",
-        "indonesia",
-        "snbt",
-        "2027",
-        "set-2",
-        "indonesian-language"
-      ),
+      sectionIdentity: retainedSectionIdentity("indonesian-language"),
     },
     {
       questionCount: 20,
-      sectionIdentity: identity(
-        "en",
-        "section",
-        "indonesia",
-        "snbt",
-        "2027",
-        "set-2",
-        "general-reasoning"
-      ),
+      sectionIdentity: retainedSectionIdentity("general-reasoning"),
     },
     {
       questionCount: 20,
-      sectionIdentity: identity(
-        "en",
-        "section",
-        "indonesia",
-        "snbt",
-        "2027",
-        "set-2",
-        "mathematical-reasoning"
-      ),
+      sectionIdentity: retainedSectionIdentity("mathematical-reasoning"),
     },
     {
       questionCount: 20,
-      sectionIdentity: identity(
-        "en",
-        "section",
-        "indonesia",
-        "snbt",
-        "2027",
-        "set-2",
-        "quantitative-knowledge"
-      ),
+      sectionIdentity: retainedSectionIdentity("quantitative-knowledge"),
     },
   ],
   scaleVersionId: "wh77kyh90xdyy9bxkve0h7w4d98a5ghm",
-  setIdentity: identity("en", "set", "indonesia", "snbt", "2027", "set-2", ""),
+  setIdentity: tryoutCatalogNodeIdentity({
+    ...retainedCatalogParent,
+    kind: "set",
+  }),
   sourceSnapshotId:
     "sha256:0a43a4125fc4886f90b5a509405178bfb8762ad3c7f72be80614fce2671b5162",
 } satisfies ScaleRepairEvidence;

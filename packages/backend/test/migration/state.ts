@@ -8,12 +8,20 @@ export const CLEANUP_SOURCE_SNAPSHOT = `sha256:${"1".repeat(64)}`;
 export const CLEANUP_SHARED_ARTIFACT = "artifact-cleanup-shared";
 export const CLEANUP_ORPHAN_ARTIFACT = "artifact-cleanup-orphan";
 export const CLEANUP_LIMIT = 87;
+export const CLEANUP_SOURCE_INVENTORY = {
+  catalogRowCount: 33,
+  placementRowCount: 1,
+} as const;
 export const CLEANUP_PROOF = {
   assetHash: `sha256:${"a".repeat(64)}`,
   sourceSha: "b".repeat(40),
 } as const;
 
 export type CleanupTest = TestConvex<typeof schema>;
+export interface CleanupSourceInventory {
+  readonly catalogRowCount: number;
+  readonly placementRowCount: number;
+}
 
 /** Captures every cleanup-owned table for before-and-after guard proof. */
 export function readCleanupState(t: CleanupTest) {

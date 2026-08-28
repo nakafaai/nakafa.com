@@ -12,7 +12,9 @@ import {
   CLEANUP_LIMIT,
   CLEANUP_MIGRATION_ID,
   CLEANUP_RECEIPT_HASH,
+  CLEANUP_SOURCE_INVENTORY,
   CLEANUP_SOURCE_SNAPSHOT,
+  type CleanupSourceInventory,
 } from "@repo/backend/test/migration/state";
 import type { CleanupTarget } from "@repo/backend/test/migration/target";
 import { Effect, Schema } from "effect";
@@ -22,7 +24,8 @@ const digest = (digit: string) => `sha256:${digit.repeat(64)}`;
 /** Builds the exact signed-plan shape rehashed by native cleanup code. */
 async function makeCleanupPlan(
   target: CleanupTarget,
-  scaleVersionCount: number
+  scaleVersionCount: number,
+  sourceInventory: CleanupSourceInventory
 ) {
   const payload = Schema.decodeSync(TryoutHistoryMigrationPlanPayloadSchema)({
     format: "signed-tryout-history-migration-plan",
@@ -38,10 +41,10 @@ async function makeCleanupPlan(
         scoreCount: 1,
         sectionAttemptCount: 1,
       },
-      catalogRowCount: 33,
+      catalogRowCount: sourceInventory.catalogRowCount,
       creatingReleaseId: "source-release",
       legacyBundleCount: 1,
-      placementRowCount: 1,
+      placementRowCount: sourceInventory.placementRowCount,
       releases: [
         {
           attemptCount: 1,
@@ -62,7 +65,7 @@ async function makeCleanupPlan(
         counts: { country: 1, exam: 1, section: 1, set: 1, track: 1 },
         format: "tryout-v1",
         locales: ["en", "id"],
-        placementCount: 1,
+        placementCount: sourceInventory.placementRowCount,
         placementDigest: digest("7"),
         routeCount: 1,
         snapshotId: CLEANUP_SOURCE_SNAPSHOT,
@@ -97,7 +100,13 @@ async function makeCleanupPlan(
   const cleanupLimit = await Effect.runPromise(
     computeTryoutHistoryCleanupLimit(payload)
   );
-  if (scaleVersionCount === 1) {
+  if (
+    scaleVersionCount === 1 &&
+    sourceInventory.catalogRowCount ===
+      CLEANUP_SOURCE_INVENTORY.catalogRowCount &&
+    sourceInventory.placementRowCount ===
+      CLEANUP_SOURCE_INVENTORY.placementRowCount
+  ) {
     assert.equal(cleanupLimit, CLEANUP_LIMIT);
   }
   return {
@@ -111,9 +120,14 @@ async function makeCleanupPlan(
 export async function seedRoot(
   ctx: MutationCtx,
   target: CleanupTarget,
-  sourceScaleVersionIds: readonly Id<"irtScaleVersions">[]
+  sourceScaleVersionIds: readonly Id<"irtScaleVersions">[],
+  sourceInventory: CleanupSourceInventory = CLEANUP_SOURCE_INVENTORY
 ) {
-  const signed = await makeCleanupPlan(target, sourceScaleVersionIds.length);
+  const signed = await makeCleanupPlan(
+    target,
+    sourceScaleVersionIds.length,
+    sourceInventory
+  );
   const completion = {
     cleanupLimit: signed.cleanupLimit,
     completedAt: 10,
