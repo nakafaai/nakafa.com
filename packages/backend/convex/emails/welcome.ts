@@ -4,8 +4,8 @@ import {
   type PageKey,
   PageKeySchema,
   type PublicPageProjection,
-} from "@nakafa/aksara-contracts/projection/page";
-import type { ContentProjection } from "@nakafa/aksara-contracts/projection/spec";
+} from "@nakafa/aksara-transition/projection/page";
+import type { ContentProjection } from "@nakafa/aksara-transition/projection/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   internalQuery,

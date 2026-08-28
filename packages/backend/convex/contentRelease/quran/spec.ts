@@ -31,11 +31,17 @@ export const quranRevelationPlaceValidator = literals(
 );
 
 /** Complete locale-keyed meanings retained from the signed surah metadata row. */
-export const quranSurahMeaningValidator = v.object({
-  de: v.string(),
-  en: v.string(),
-  id: v.string(),
-});
+export const quranSurahMeaningValidator = v.union(
+  v.object({
+    de: v.string(),
+    en: v.string(),
+    id: v.string(),
+  }),
+  v.object({
+    appLocale: v.literal(ENGLISH_APP_LOCALE_CODE),
+    text: v.string(),
+  })
+);
 
 const quranSourceArtifactValidator = v.object({
   byteCount: v.number(),

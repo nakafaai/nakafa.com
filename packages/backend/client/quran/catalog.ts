@@ -1,8 +1,8 @@
+import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import {
-  QURAN_SURAH_COUNT,
-  type QuranSurahRow,
-  QuranSurahRowSchema,
-} from "@nakafa/aksara-contracts/quran/spec";
+  PublishedQuranMeaningSchema,
+  type PublishedQuranSurah,
+} from "@repo/backend/content/quran/contract";
 import {
   decodePublishedQuranSource,
   type PublishedQuranSource,
@@ -20,7 +20,7 @@ type QuranCatalogResult = FunctionReturnType<
 
 /** Complete signed Quran metadata catalog in its canonical shape. */
 export type PublishedQuranCatalog = PublishedQuranSource & {
-  readonly surahs: readonly QuranSurahRow[];
+  readonly surahs: readonly PublishedQuranSurah[];
 };
 
 interface QuranSurahTransportProjection {
@@ -40,7 +40,7 @@ export const decodePublishedQuranSurah = Effect.fn(
 ) {
   const { sourceMeaning, ...name } = projection.name;
   const meaning = yield* Schema.decodeUnknownEffect(
-    QuranSurahRowSchema.fields.name.fields.meaning
+    PublishedQuranMeaningSchema
   )(sourceMeaning).pipe(
     Effect.mapError(() =>
       quranPublicationError(

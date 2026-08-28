@@ -1,12 +1,11 @@
 import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
-import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
+import { ContentProjectionSchema as CurrentContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
 import {
   ContentReleaseItemSchema,
   PublicationReceiptSchema,
   ReleaseVerificationEvidenceSchema,
   SignedContentReleaseSchema,
 } from "@nakafa/aksara-contracts/release";
-import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-contracts/release/rollback/spec";
 import { ContentRouteItemSchema } from "@nakafa/aksara-contracts/release/route/spec";
 import {
   ContentSnapshotManifestSchema,
@@ -14,6 +13,9 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
+import { ContentProjectionSchema as StoredContentProjectionSchema } from "@nakafa/aksara-transition/projection/spec";
+import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-transition/release/rollback/spec";
+import { PublishedQuranManifestSchema } from "@repo/backend/content/quran/contract";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { Effect, Schema } from "effect";
 /** Parses one stored JSON value without allowing thrown parser failures. */
@@ -101,13 +103,13 @@ export const decodeArtifactJson = Effect.fn(
     )
   )
 );
-/** Strictly decodes one content projection from canonical storage JSON. */
+/** Strictly decodes one authenticated projection already present in storage. */
 export const decodeProjectionJson = Effect.fn(
   "contentRelease.decodeProjectionJson"
 )((source: string) =>
   parseStoredJson(source, "Content projection").pipe(
     Effect.flatMap(
-      Schema.decodeUnknownEffect(ContentProjectionSchema, {
+      Schema.decodeUnknownEffect(StoredContentProjectionSchema, {
         onExcessProperty: "error",
       })
     ),
@@ -116,6 +118,26 @@ export const decodeProjectionJson = Effect.fn(
         new ReleaseError({
           code: "CONTENT_RELEASE_INTEGRITY",
           message: "Content projection does not satisfy its exact contract.",
+        })
+    )
+  )
+);
+/** Strictly decodes one newly staged projection through the current contract. */
+export const decodeCurrentProjectionJson = Effect.fn(
+  "contentRelease.decodeCurrentProjectionJson"
+)((source: string) =>
+  parseStoredJson(source, "Current content projection").pipe(
+    Effect.flatMap(
+      Schema.decodeUnknownEffect(CurrentContentProjectionSchema, {
+        onExcessProperty: "error",
+      })
+    ),
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message:
+            "New content projection does not satisfy the current contract.",
         })
     )
   )
@@ -181,9 +203,13 @@ export const decodeSnapshotJson = Effect.fn(
 )((source: string) =>
   parseStoredJson(source, "Content snapshot").pipe(
     Effect.flatMap(
-      Schema.decodeUnknownEffect(ContentSnapshotManifestSchema, {
-        onExcessProperty: "error",
-      })
+      Schema.decodeUnknownEffect(
+        Schema.Union([
+          ContentSnapshotManifestSchema,
+          PublishedQuranManifestSchema,
+        ]),
+        { onExcessProperty: "error" }
+      )
     ),
     Effect.mapError(
       () =>

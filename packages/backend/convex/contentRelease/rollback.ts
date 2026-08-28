@@ -6,7 +6,7 @@ import {
   type RollbackPage,
   RollbackPageRequestSchema,
   type RollbackRecord,
-} from "@nakafa/aksara-contracts/release/rollback/spec";
+} from "@nakafa/aksara-transition/release/rollback/spec";
 import {
   MAX_ROUTE_PAGE_RECORDS,
   type RoutePage,

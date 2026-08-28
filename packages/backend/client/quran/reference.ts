@@ -1,6 +1,6 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
-import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
+import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
 import { hasExactQuranVerseRange } from "@repo/backend/client/quran/integrity";
 import {
   decodePublishedQuranSource,
@@ -29,7 +29,7 @@ export type PublishedQuranReference = PublishedQuranSource & {
   readonly preBismillah: QuranReferenceResult["preBismillah"];
   readonly search: QuranSearchRow;
   readonly sources: NonNullable<QuranReferenceResult["sources"]>;
-  readonly surah: QuranSurahRow;
+  readonly surah: PublishedQuranSurah;
   readonly tafsirAccess: NonNullable<QuranReferenceResult["tafsirAccess"]>;
   readonly toVerse: number;
   readonly verses: readonly QuranRuntimeVerse[];

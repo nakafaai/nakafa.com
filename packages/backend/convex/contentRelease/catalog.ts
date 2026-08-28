@@ -1,7 +1,7 @@
 import {
   canonicalizeContentProjection,
   familyForProjection,
-} from "@nakafa/aksara-contracts/projection/spec";
+} from "@nakafa/aksara-transition/projection/spec";
 import { ContentHeadSchema } from "@nakafa/aksara-contracts/release/head";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type {

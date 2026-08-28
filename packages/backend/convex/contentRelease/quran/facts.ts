@@ -1,5 +1,7 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import type { QuranSnapshotRow } from "@nakafa/aksara-contracts/quran/snapshot/row";
+import type { PublishedQuranRow } from "@repo/backend/content/quran/contract";
+
+type QuranSnapshotRow = PublishedQuranRow["record"];
 
 type QuranSearch = Extract<
   QuranSnapshotRow["payload"],

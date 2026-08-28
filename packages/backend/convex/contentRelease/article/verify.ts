@@ -1,4 +1,4 @@
-import { ArticleCategorySchema } from "@nakafa/aksara-contracts/projection/article";
+import { ArticleCategorySchema } from "@nakafa/aksara-transition/projection/article";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { readArticleDates } from "@repo/backend/convex/contentRelease/article/dates";

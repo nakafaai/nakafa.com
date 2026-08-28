@@ -3,8 +3,10 @@ import {
   type QuranRuntimeVerse,
   QuranSearchRowSchema,
 } from "@nakafa/aksara-contracts/quran/snapshot/row";
-import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
-import { ContentSnapshotRowSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
+import {
+  PublishedQuranRowSchema,
+  PublishedQuranSurahSchema,
+} from "@repo/backend/content/quran/contract";
 import {
   type QuranPublicationOperation,
   quranPublicationError,
@@ -26,15 +28,15 @@ const parseQuranRow = Effect.fn("NakafaQuran.parseRow")(function* (
   });
 });
 
-/** Decodes one current signed Quran row and verifies snapshot ownership. */
-const decodeCurrentQuranRow = Effect.fn("NakafaQuran.decodeCurrentRow")(
+/** Decodes one signed Quran row and verifies snapshot ownership. */
+const decodeSignedQuranRow = Effect.fn("NakafaQuran.decodeSignedRow")(
   function* <A, I>(
     input: unknown,
     snapshotId: string,
     schema: Schema.Codec<A, I, never, never>,
     operation: QuranPublicationOperation
   ) {
-    const row = yield* Schema.decodeUnknownEffect(ContentSnapshotRowSchema)(
+    const row = yield* Schema.decodeUnknownEffect(PublishedQuranRowSchema)(
       input,
       { onExcessProperty: "error" }
     ).pipe(
@@ -45,7 +47,7 @@ const decodeCurrentQuranRow = Effect.fn("NakafaQuran.decodeCurrentRow")(
         )
       )
     );
-    if (row.family !== "quran" || row.record.snapshotId !== snapshotId) {
+    if (row.record.snapshotId !== snapshotId) {
       return yield* quranPublicationError(
         operation,
         "Quran row belongs to another signed snapshot."
@@ -72,10 +74,10 @@ export const decodeQuranSurahRow = Effect.fn("NakafaQuran.decodeSurahRow")(
     operation: QuranPublicationOperation
   ) {
     const input = yield* parseQuranRow(source, operation);
-    return yield* decodeCurrentQuranRow(
+    return yield* decodeSignedQuranRow(
       input,
       snapshotId,
-      QuranSurahRowSchema,
+      PublishedQuranSurahSchema,
       operation
     );
   }
@@ -89,7 +91,7 @@ export const decodeQuranSearchRow = Effect.fn("NakafaQuran.decodeSearchRow")(
     operation: QuranPublicationOperation
   ) {
     const input = yield* parseQuranRow(source, operation);
-    return yield* decodeCurrentQuranRow(
+    return yield* decodeSignedQuranRow(
       input,
       snapshotId,
       QuranSearchRowSchema,
@@ -110,7 +112,7 @@ export const decodeQuranChunkVerses = Effect.fn(
   const chunks = yield* Effect.forEach(sources, (source) =>
     parseQuranRow(source, operation).pipe(
       Effect.flatMap((input) =>
-        decodeCurrentQuranRow(input, snapshotId, QuranChunkRowSchema, operation)
+        decodeSignedQuranRow(input, snapshotId, QuranChunkRowSchema, operation)
       )
     )
   );

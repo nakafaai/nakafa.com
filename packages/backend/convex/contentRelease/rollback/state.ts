@@ -1,4 +1,4 @@
-import { canonicalizeContentProjection } from "@nakafa/aksara-contracts/projection/spec";
+import { canonicalizeContentProjection } from "@nakafa/aksara-transition/projection/spec";
 import {
   type ContentChange,
   ContentUpsertSchema,
@@ -7,7 +7,7 @@ import {
   RollbackRecordSchema,
   type RollbackState,
   RollbackUpsertStateSchema,
-} from "@nakafa/aksara-contracts/release/rollback/spec";
+} from "@nakafa/aksara-transition/release/rollback/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { hashText } from "@repo/backend/convex/contentRelease/digest";

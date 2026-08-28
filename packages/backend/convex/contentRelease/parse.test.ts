@@ -4,6 +4,7 @@ import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/re
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
   decodeArtifactJson,
+  decodeCurrentProjectionJson,
   decodeItemJson,
   decodeProjectionJson,
   decodeProofJson,
@@ -73,7 +74,9 @@ describe("contentRelease/parse", () => {
         const release = yield* decodeReleaseJson(testReleaseJson());
         const item = yield* decodeItemJson(testUpsertJson());
         const artifact = yield* decodeArtifactJson(testArtifactJson());
-        const projection = yield* decodeProjectionJson(testProjectionJson());
+        const projection = yield* decodeCurrentProjectionJson(
+          testProjectionJson()
+        );
         const renderer = yield* decodeRendererJson(testRendererJson());
         const proof = yield* decodeProofJson(testProofJson());
 
@@ -85,6 +88,27 @@ describe("contentRelease/parse", () => {
         );
         expect(encodeRendererJson(renderer)).toBe(testRendererJson());
         expect(proof.releaseId).toBe(TEST_RELEASE_ID);
+      })
+  );
+
+  it.live(
+    "accepts an authenticated stored projection only at its boundary",
+    () =>
+      Effect.gen(function* () {
+        const current = JSON.parse(testProjectionJson());
+        const { datePublished, ...metadata } = current.metadata;
+        const storedJson = JSON.stringify({
+          ...current,
+          metadata: { ...metadata, date: datePublished },
+        });
+
+        const stored = yield* decodeProjectionJson(storedJson);
+        const rejected = yield* decodeCurrentProjectionJson(storedJson).pipe(
+          Effect.flip
+        );
+
+        expect(stored.metadata).toMatchObject({ date: datePublished });
+        expect(rejected).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
       })
   );
 

@@ -1,4 +1,4 @@
-import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
+import type { MaterialLessonProjection } from "@nakafa/aksara-transition/projection/material";
 import {
   canonicalizeMaterialProjection as canonicalizePredecessorMaterialProjection,
   MaterialLessonProjectionSchema as predecessorMaterialProjectionSchema,

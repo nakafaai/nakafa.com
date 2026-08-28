@@ -588,6 +588,12 @@ importers:
       '@nakafa/aksara-contracts':
         specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.23.0/nakafa-aksara-contracts-0.23.0.tgz
         version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.23.0/nakafa-aksara-contracts-0.23.0.tgz(effect@4.0.0-rc.110)
+      '@nakafa/aksara-transition':
+        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz
+        version: '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz(effect@4.0.0-rc.110)'
+      '@nakafa/aksara-v150':
+        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.0/nakafa-aksara-contracts-0.15.0.tgz
+        version: '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.0/nakafa-aksara-contracts-0.15.0.tgz(effect@4.0.0-rc.110)'
       '@polar-sh/sdk':
         specifier: ^0.49.0
         version: 0.49.0
@@ -652,9 +658,6 @@ importers:
       '@effect/vitest':
         specifier: 'catalog:'
         version: 4.0.0-rc.110(effect@4.0.0-rc.110)(vitest@4.1.11)
-      '@nakafa/aksara-v150':
-        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.0/nakafa-aksara-contracts-0.15.0.tgz
-        version: '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.0/nakafa-aksara-contracts-0.15.0.tgz(effect@4.0.0-rc.110)'
       '@repo/testing':
         specifier: workspace:*
         version: link:../testing
@@ -2776,6 +2779,13 @@ packages:
   '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.0/nakafa-aksara-contracts-0.15.0.tgz':
     resolution: {integrity: sha512-Ty6Af71mH/fDrwkbO+tKNVXFiq2IKt8vENAU9O0azHy8BzV/jSuUn3uqmFwBHHEjZ5VxcVVmw4bG0Fx3oCZ7Mw==, tarball: https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.0/nakafa-aksara-contracts-0.15.0.tgz}
     version: 0.15.0
+    engines: {node: '>=24.0.0 <25.0.0'}
+    peerDependencies:
+      effect: 4.0.0-rc.110
+
+  '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz':
+    resolution: {integrity: sha512-GlqxogjyqVXBJvrQCK7pB9DAMTxPLerLL4F5Czk0BDNT9IkuBBer7CUqtyZ60eBGnpYcIzNLjRK+di1n6DDm8w==, tarball: https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz}
+    version: 0.21.1
     engines: {node: '>=24.0.0 <25.0.0'}
     peerDependencies:
       effect: 4.0.0-rc.110
@@ -9238,6 +9248,10 @@ snapshots:
     optional: true
 
   '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.15.0/nakafa-aksara-contracts-0.15.0.tgz(effect@4.0.0-rc.110)':
+    dependencies:
+      effect: 4.0.0-rc.110
+
+  '@nakafa/aksara-contracts@https://github.com/nakafaai/aksara/releases/download/contracts-v0.21.1/nakafa-aksara-contracts-0.21.1.tgz(effect@4.0.0-rc.110)':
     dependencies:
       effect: 4.0.0-rc.110
 

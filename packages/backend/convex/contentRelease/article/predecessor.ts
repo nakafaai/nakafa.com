@@ -1,4 +1,4 @@
-import type { ArticleProjection } from "@nakafa/aksara-contracts/projection/article";
+import type { ArticleProjection } from "@nakafa/aksara-transition/projection/article";
 import {
   canonicalizeArticleProjection as canonicalizePredecessorArticleProjection,
   ArticleProjectionSchema as predecessorArticleProjectionSchema,

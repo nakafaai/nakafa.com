@@ -15,6 +15,7 @@ import {
   PublicContentRuntimeResponseSchema as predecessorPublicContentRuntimeResponseSchema,
 } from "@nakafa/aksara-v150/runtime/spec";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
+import { hashText } from "@repo/backend/convex/contentRelease/digest";
 import {
   decodeArtifactJson,
   decodeProjectionJson,
@@ -23,6 +24,7 @@ import {
 } from "@repo/backend/convex/contentRelease/parse";
 import type { PublicRuntimeRow } from "@repo/backend/convex/contentRelease/runtime/public/internal";
 import { makePredecessorRuntime } from "@repo/backend/convex/contentRelease/runtime/public/predecessor";
+import { encodePublicProjection } from "@repo/backend/convex/contentRelease/runtime/public/projection";
 import {
   encodeRuntimeResult,
   failureResult,
@@ -74,21 +76,24 @@ export const decodePublicRuntimeRow = Effect.fn(
   if (row.delivery !== "public") {
     return yield* new PublicRuntimeReadError();
   }
-  const [
-    artifact,
-    projection,
-    projectionHash,
-    release,
-    rendererManifest,
-    sourcePath,
-  ] = yield* Effect.all([
+  const [artifact, storedProjection, release, rendererManifest, sourcePath] =
+    yield* Effect.all([
     decodeArtifactJson(row.artifactJson),
     decodeProjectionJson(row.projectionJson),
-    Schema.decodeEffect(Sha256HashSchema)(row.projectionHash),
     decodeReleaseJson(row.releaseJson),
     decodeRendererJson(row.rendererJson),
     Schema.decodeEffect(CorpusSourcePathSchema)(row.sourcePath),
   ]).pipe(Effect.mapError(() => new PublicRuntimeReadError()));
+  yield* Schema.decodeEffect(Sha256HashSchema)(row.projectionHash).pipe(
+    Effect.mapError(() => new PublicRuntimeReadError())
+  );
+  const { projection, projectionJson } = yield* encodePublicProjection(
+    storedProjection
+  ).pipe(Effect.mapError(() => new PublicRuntimeReadError()));
+  const projectionHash = yield* hashText(
+    "the current public content projection",
+    projectionJson
+  ).pipe(Effect.mapError(() => new PublicRuntimeReadError()));
   if (projection.kind === "question-body") {
     return yield* new PublicRuntimeReadError();
   }

@@ -1,9 +1,7 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
-import {
-  QURAN_SURAH_COUNT,
-  type QuranSurahRow,
-} from "@nakafa/aksara-contracts/quran/spec";
+import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
+import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
 import { separateQuranBismillah } from "@repo/backend/content/quran/bismillah";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import {
@@ -78,7 +76,7 @@ const readNeighbor = Effect.fn("contentRelease.readQuranNeighbor")(function* (
 });
 
 /** Projects only the signed surah metadata needed by the Quran page. */
-function projectSurah(surah: QuranSurahRow): QuranViewSurah {
+function projectSurah(surah: PublishedQuranSurah): QuranViewSurah {
   return {
     name: {
       sourceMeaning: surah.name.meaning,

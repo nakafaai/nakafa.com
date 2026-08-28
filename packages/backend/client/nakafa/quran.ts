@@ -11,6 +11,7 @@ import {
   renderQuranTafsirAccessMarkdown,
 } from "@repo/backend/client/quran/markdown";
 import { renderQuranTranslationMarkdown } from "@repo/backend/client/quran/notes";
+import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
 import {
   decodePublishedQuranReference,
   type PublishedQuranReference,
@@ -119,7 +120,7 @@ export const readQuranMarkdown = Effect.fn("NakafaQuran.readMarkdown")(
     );
     const surah = publication.surah;
     const title = getSurahName(surah);
-    const meaning = surah.name.meaning[ref.locale];
+    const meaning = selectQuranMeaning(surah.name.meaning, ref.locale).text;
     const metadata = [
       `# ${title}`,
       "",

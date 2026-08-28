@@ -8,7 +8,7 @@ import {
   type RollbackPage,
   RollbackPageSchema,
   type RollbackRecord,
-} from "@nakafa/aksara-contracts/release/rollback/spec";
+} from "@nakafa/aksara-transition/release/rollback/spec";
 import {
   type RoutePage,
   RoutePageSchema,
