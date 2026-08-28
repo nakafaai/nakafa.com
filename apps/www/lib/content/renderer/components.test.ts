@@ -1,9 +1,10 @@
 // @vitest-environment node
 
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import { semanticMdxComponents } from "@repo/design-system/lib/markdown/semantic";
-import { Effect } from "effect";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { Data, Effect } from "effect";
+import { vi } from "vitest";
 
 vi.mock("@repo/internationalization/src/navigation", () => ({
   getPathname: vi.fn(),
@@ -19,6 +20,12 @@ vi.mock("next-intl", () => ({
 
 const contentKey = ContentKeySchema.make("test:renderer-components");
 
+class RendererFixtureUnavailable extends Data.TaggedError(
+  "RendererFixtureUnavailable"
+)<{
+  readonly resource: "component" | "domain";
+}> {}
+
 afterEach(() => {
   vi.doUnmock("@repo/design-system/lib/markdown/semantic");
   vi.doUnmock("@/lib/content/renderer/domain/site");
@@ -26,173 +33,188 @@ afterEach(() => {
 });
 
 describe("renderer components", () => {
-  it("loads semantic HTML plus exactly the signed custom requirements", async () => {
-    const { resolveRendererComponents } = await import(
-      "@/lib/content/renderer/components"
-    );
-    const components = await Effect.runPromise(
-      resolveRendererComponents({
-        contentKey,
-        rendererDomain: "snbt-plain",
-        requiredComponents: [{ name: "InlineMath", version: 1 }],
+  it.effect(
+    "loads semantic HTML plus exactly the signed custom requirements",
+    () =>
+      Effect.gen(function* () {
+        const { resolveRendererComponents } = yield* Effect.promise(
+          () => import("@/lib/content/renderer/components")
+        );
+        const components = yield* resolveRendererComponents({
+          contentKey,
+          rendererDomain: "snbt-plain",
+          requiredComponents: [{ name: "InlineMath", version: 1 }],
+        });
+
+        expect(components).toMatchObject(semanticMdxComponents);
+        expect(Object.keys(components).sort()).toEqual(
+          [...Object.keys(semanticMdxComponents), "InlineMath"].sort()
+        );
+        expect(components).not.toHaveProperty("BlockMath");
+        expect(components).not.toHaveProperty("Mermaid");
       })
-    );
+  );
 
-    expect(components).toMatchObject(semanticMdxComponents);
-    expect(Object.keys(components).sort()).toEqual(
-      [...Object.keys(semanticMdxComponents), "InlineMath"].sort()
-    );
-    expect(components).not.toHaveProperty("BlockMath");
-    expect(components).not.toHaveProperty("Mermaid");
-  });
-
-  it("fails with the signed identity when an implementation is missing", async () => {
-    const { resolveRendererComponents } = await import(
-      "@/lib/content/renderer/components"
-    );
-
-    await expect(
-      Effect.runPromise(
-        resolveRendererComponents({
+  it.effect(
+    "fails with the signed identity when an implementation is missing",
+    () =>
+      Effect.gen(function* () {
+        const { resolveRendererComponents } = yield* Effect.promise(
+          () => import("@/lib/content/renderer/components")
+        );
+        const failure = yield* resolveRendererComponents({
           contentKey,
           rendererDomain: "site",
           requiredComponents: [{ name: "MissingRenderer", version: 1 }],
-        }).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({
-      _tag: "RendererImplementationMissing",
-      componentName: "MissingRenderer",
-      contentKey,
-      rendererDomain: "site",
-    });
-  });
+        }).pipe(Effect.flip);
 
-  it("fails when semantic ownership and implementation coverage drift", async () => {
-    vi.doMock("@repo/design-system/lib/markdown/semantic", () => ({
-      semanticMdxComponents: {},
-    }));
-    const { resolveRendererComponents } = await import(
-      "@/lib/content/renderer/components"
-    );
+        expect(failure).toMatchObject({
+          _tag: "RendererImplementationMissing",
+          componentName: "MissingRenderer",
+          contentKey,
+          rendererDomain: "site",
+        });
+      })
+  );
 
-    await expect(
-      Effect.runPromise(
-        resolveRendererComponents({
+  it.effect(
+    "fails when semantic ownership and implementation coverage drift",
+    () =>
+      Effect.gen(function* () {
+        yield* Effect.sync(() =>
+          vi.doMock("@repo/design-system/lib/markdown/semantic", () => ({
+            semanticMdxComponents: {},
+          }))
+        );
+        const { resolveRendererComponents } = yield* Effect.promise(
+          () => import("@/lib/content/renderer/components")
+        );
+        const failure = yield* resolveRendererComponents({
           contentKey,
           rendererDomain: "site",
           requiredComponents: [{ name: "p", version: 1 }],
-        }).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({
-      _tag: "RendererImplementationMissing",
-      componentName: "p",
-      contentKey,
-      rendererDomain: "site",
-    });
-  });
+        }).pipe(Effect.flip);
 
-  it("rejects a base and selected-domain ownership collision", async () => {
-    vi.doMock("@/lib/content/renderer/domain/site", () => ({
-      domainComponentLoaders: [
-        { load: () => Promise.resolve(() => null), name: "InlineMath" },
-      ],
-    }));
-    const { resolveRendererComponents } = await import(
-      "@/lib/content/renderer/components"
-    );
-
-    await expect(
-      Effect.runPromise(
-        resolveRendererComponents({
+        expect(failure).toMatchObject({
+          _tag: "RendererImplementationMissing",
+          componentName: "p",
           contentKey,
           rendererDomain: "site",
-          requiredComponents: [{ name: "InlineMath", version: 1 }],
-        }).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({
-      _tag: "RendererComponentCollision",
-      componentName: "InlineMath",
-      contentKey,
-      rendererDomain: "site",
-    });
-  });
+        });
+      })
+  );
 
-  it("rejects duplicate implementations inside the selected domain", async () => {
-    vi.doMock("@/lib/content/renderer/domain/site", () => ({
-      domainComponentLoaders: [
-        { load: () => Promise.resolve(() => null), name: "SiteWidget" },
-        { load: () => Promise.resolve(() => null), name: "SiteWidget" },
-      ],
-    }));
-    const { resolveRendererComponents } = await import(
-      "@/lib/content/renderer/components"
-    );
+  it.effect("rejects a base and selected-domain ownership collision", () =>
+    Effect.gen(function* () {
+      yield* Effect.sync(() =>
+        vi.doMock("@/lib/content/renderer/domain/site", () => ({
+          domainComponentLoaders: [
+            { load: () => Promise.resolve(() => null), name: "InlineMath" },
+          ],
+        }))
+      );
+      const { resolveRendererComponents } = yield* Effect.promise(
+        () => import("@/lib/content/renderer/components")
+      );
+      const failure = yield* resolveRendererComponents({
+        contentKey,
+        rendererDomain: "site",
+        requiredComponents: [{ name: "InlineMath", version: 1 }],
+      }).pipe(Effect.flip);
 
-    await expect(
-      Effect.runPromise(
-        resolveRendererComponents({
-          contentKey,
-          rendererDomain: "site",
-          requiredComponents: [{ name: "SiteWidget", version: 1 }],
-        }).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({
-      _tag: "RendererComponentCollision",
-      componentName: "SiteWidget",
-      contentKey,
-      rendererDomain: "site",
-    });
-  });
+      expect(failure).toMatchObject({
+        _tag: "RendererComponentCollision",
+        componentName: "InlineMath",
+        contentKey,
+        rendererDomain: "site",
+      });
+    })
+  );
 
-  it("preserves domain import failures in the typed error channel", async () => {
-    vi.doMock("@/lib/content/renderer/domain/site", () => {
-      throw new Error("domain unavailable");
-    });
-    const { resolveRendererComponents } = await import(
-      "@/lib/content/renderer/components"
-    );
-
-    await expect(
-      Effect.runPromise(
-        resolveRendererComponents({
-          contentKey,
-          rendererDomain: "site",
-          requiredComponents: [],
-        }).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({
-      _tag: "RendererDomainLoadError",
-      contentKey,
-      rendererDomain: "site",
-    });
-  });
-
-  it("identifies the component whose implementation import failed", async () => {
-    vi.doMock("@/lib/content/renderer/domain/site", () => ({
-      domainComponentLoaders: [
-        {
-          load: () => Promise.reject(new Error("component unavailable")),
-          name: "SiteWidget",
-        },
-      ],
-    }));
-    const { resolveRendererComponents } = await import(
-      "@/lib/content/renderer/components"
-    );
-
-    await expect(
-      Effect.runPromise(
-        resolveRendererComponents({
+  it.effect(
+    "rejects duplicate implementations inside the selected domain",
+    () =>
+      Effect.gen(function* () {
+        yield* Effect.sync(() =>
+          vi.doMock("@/lib/content/renderer/domain/site", () => ({
+            domainComponentLoaders: [
+              { load: () => Promise.resolve(() => null), name: "SiteWidget" },
+              { load: () => Promise.resolve(() => null), name: "SiteWidget" },
+            ],
+          }))
+        );
+        const { resolveRendererComponents } = yield* Effect.promise(
+          () => import("@/lib/content/renderer/components")
+        );
+        const failure = yield* resolveRendererComponents({
           contentKey,
           rendererDomain: "site",
           requiredComponents: [{ name: "SiteWidget", version: 1 }],
-        }).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({
-      _tag: "RendererDomainLoadError",
-      componentName: "SiteWidget",
-      contentKey,
-      rendererDomain: "site",
-    });
-  });
+        }).pipe(Effect.flip);
+
+        expect(failure).toMatchObject({
+          _tag: "RendererComponentCollision",
+          componentName: "SiteWidget",
+          contentKey,
+          rendererDomain: "site",
+        });
+      })
+  );
+
+  it.effect("preserves domain import failures in the typed error channel", () =>
+    Effect.gen(function* () {
+      yield* Effect.sync(() =>
+        vi.doMock("@/lib/content/renderer/domain/site", () => {
+          throw new RendererFixtureUnavailable({ resource: "domain" });
+        })
+      );
+      const { resolveRendererComponents } = yield* Effect.promise(
+        () => import("@/lib/content/renderer/components")
+      );
+      const failure = yield* resolveRendererComponents({
+        contentKey,
+        rendererDomain: "site",
+        requiredComponents: [],
+      }).pipe(Effect.flip);
+
+      expect(failure).toMatchObject({
+        _tag: "RendererDomainLoadError",
+        contentKey,
+        rendererDomain: "site",
+      });
+    })
+  );
+
+  it.effect("identifies the component whose implementation import failed", () =>
+    Effect.gen(function* () {
+      yield* Effect.sync(() =>
+        vi.doMock("@/lib/content/renderer/domain/site", () => ({
+          domainComponentLoaders: [
+            {
+              load: () =>
+                Promise.reject(
+                  new RendererFixtureUnavailable({ resource: "component" })
+                ),
+              name: "SiteWidget",
+            },
+          ],
+        }))
+      );
+      const { resolveRendererComponents } = yield* Effect.promise(
+        () => import("@/lib/content/renderer/components")
+      );
+      const failure = yield* resolveRendererComponents({
+        contentKey,
+        rendererDomain: "site",
+        requiredComponents: [{ name: "SiteWidget", version: 1 }],
+      }).pipe(Effect.flip);
+
+      expect(failure).toMatchObject({
+        _tag: "RendererDomainLoadError",
+        componentName: "SiteWidget",
+        contentKey,
+        rendererDomain: "site",
+      });
+    })
+  );
 });
