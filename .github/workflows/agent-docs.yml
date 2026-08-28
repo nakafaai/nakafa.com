@@ -53,6 +53,7 @@ jobs:
               `query MergeQueueEntry($owner: String!, $name: String!) {
                 repository(owner: $owner, name: $name) {
                   mergeQueue {
+                    configuration { maximumEntriesToMerge }
                     entries(first: 100) {
                       nodes {
                         baseCommit { oid }
@@ -71,9 +72,14 @@ jobs:
                   }
                 }
               }`,
-              context.repo,
+              { name: context.repo.repo, owner: context.repo.owner },
             )
-            const entries = result.repository?.mergeQueue?.entries?.nodes ?? []
+            const queue = result.repository?.mergeQueue
+            if (queue?.configuration?.maximumEntriesToMerge !== 1) {
+              throw new Error("Signed acceptance requires one pull request per merge group.")
+            }
+
+            const entries = queue.entries?.nodes ?? []
             const candidates = entries.filter(
               (entry) =>
                 entry?.baseCommit?.oid === mergeGroup.base_sha &&
