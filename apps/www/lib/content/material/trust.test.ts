@@ -1,8 +1,9 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import {
   getPublishedTrustLesson,
   readPublishedTrustLesson,
@@ -27,53 +28,59 @@ describe("published marketing trust lesson", () => {
     cacheMock.mockReset();
   });
 
-  it("resolves the current signed route from its stable lesson identity", async () => {
-    runtimeQueryMock.mockResolvedValueOnce({
-      activeReleaseId: "release-material",
-      managed: true,
-      publicPath:
-        "subjects/mathematics/exponential-logarithm/current-basic-concept",
-    });
+  it.effect(
+    "resolves the current signed route from its stable lesson identity",
+    () =>
+      Effect.gen(function* () {
+        runtimeQueryMock.mockResolvedValueOnce({
+          activeReleaseId: "release-material",
+          managed: true,
+          publicPath:
+            "subjects/mathematics/exponential-logarithm/current-basic-concept",
+        });
 
-    await expect(getPublishedTrustLesson("en")).resolves.toEqual({
-      lessonHref:
-        "/en/subjects/mathematics/exponential-logarithm/current-basic-concept",
-      sourceHref:
-        "/en/subjects/mathematics/exponential-logarithm/current-basic-concept.md",
-    });
-    expect(runtimeQueryMock).toHaveBeenCalledWith(
-      api.contentRelease.material.identity,
-      {
-        contentKey:
-          "material/lesson/mathematics/exponential-logarithm/basic-concept",
-        appLocale: "en",
-        expectedMaterialKey: "lesson.mathematics.exponential-logarithm",
-        expectedSectionKey: "basic-concept",
-      }
-    );
-    expect(cacheMock).toHaveBeenCalledWith("material");
-  });
+        expect(
+          yield* Effect.promise(() => getPublishedTrustLesson("en"))
+        ).toEqual({
+          lessonHref:
+            "/en/subjects/mathematics/exponential-logarithm/current-basic-concept",
+          sourceHref:
+            "/en/subjects/mathematics/exponential-logarithm/current-basic-concept.md",
+        });
+        expect(runtimeQueryMock).toHaveBeenCalledWith(
+          api.contentRelease.material.identity,
+          {
+            contentKey:
+              "material/lesson/mathematics/exponential-logarithm/basic-concept",
+            appLocale: "en",
+            expectedMaterialKey: "lesson.mathematics.exponential-logarithm",
+            expectedSectionKey: "basic-concept",
+          }
+        );
+        expect(cacheMock).toHaveBeenCalledWith("material");
+      })
+  );
 
-  it.each([
+  it.effect.each([
     ["unmanaged", false, null],
     ["missing", true, null],
     ["malformed", true, "/copied/path"],
-  ])(
+  ] as const)(
     "rejects a %s signed identity without a copied route",
-    async (_name, managed, publicPath) => {
-      runtimeQueryMock.mockResolvedValueOnce({
-        activeReleaseId: managed ? "release-material" : null,
-        managed,
-        publicPath,
-      });
+    ([_name, managed, publicPath]) =>
+      Effect.gen(function* () {
+        runtimeQueryMock.mockResolvedValueOnce({
+          activeReleaseId: managed ? "release-material" : null,
+          managed,
+          publicPath,
+        });
 
-      await expect(
-        Effect.runPromise(readPublishedTrustLesson("en").pipe(Effect.flip))
-      ).resolves.toMatchObject({
-        _tag: "PublishedProjectionError",
-        appLocale: "en",
-        publicPath: "marketing/trust",
-      });
-    }
+        const failure = yield* readPublishedTrustLesson("en").pipe(Effect.flip);
+        expect(failure).toMatchObject({
+          _tag: "PublishedProjectionError",
+          appLocale: "en",
+          publicPath: "marketing/trust",
+        });
+      })
   );
 });
