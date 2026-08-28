@@ -25,8 +25,11 @@ export interface CliOptions {
 }
 
 /** Executes one CLI invocation and returns its stable process exit category. */
-export function runCli(argv: readonly string[], options: CliOptions) {
-  return executeCli(argv.length === 0 ? ["--help"] : argv, options).pipe(
+export const runCli = Effect.fn("NakafaCli.run")(function* (
+  argv: readonly string[],
+  options: CliOptions
+) {
+  return yield* executeCli(argv.length === 0 ? ["--help"] : argv, options).pipe(
     Effect.catchTags({
       ApiResponseError: (error) =>
         writeJson("stderr", error.problem, false).pipe(
@@ -74,13 +77,13 @@ export function runCli(argv: readonly string[], options: CliOptions) {
         ).pipe(Effect.as(NETWORK_OR_SERVER_EXIT_CODE)),
     })
   );
-}
+});
 
 const executeCli = Effect.fn("NakafaCli.execute")(function* (
   argv: readonly string[],
   options: CliOptions
 ) {
-  const command = makeCliCommand((request) => executeRequest(request));
+  const command = makeCliCommand(executeRequest);
   const hostConsole = yield* Console.Console;
   const messages = MutableRef.make<readonly (readonly unknown[])[]>([]);
   // The native runner always renders help before a ShowHelp failure. Buffer
