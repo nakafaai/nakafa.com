@@ -31,16 +31,11 @@ const status = makeFunctionReference<
   PredecessorObservationArgs,
   PredecessorStatus
 >("contentRelease/predecessor/internal:status");
-const recordSingular = makeFunctionReference<
+const recordProtected = makeFunctionReference<
   "mutation",
   PredecessorRecordArgs,
   PredecessorRecordResult
->("contentRelease/predecessor/internal:recordSingular");
-const recordBatch = makeFunctionReference<
-  "mutation",
-  PredecessorRecordArgs,
-  PredecessorRecordResult
->("contentRelease/predecessor/internal:recordBatch");
+>("contentRelease/predecessor/internal:recordProtected");
 const seal = makeFunctionReference<
   "mutation",
   PredecessorObservationArgs,
@@ -58,7 +53,7 @@ describe("contentRelease/predecessor/internal", () => {
 
   it("registers observation controls and preserves active evidence", async () => {
     const target = convexTest(schema, convexModules);
-    await expect(target.mutation(recordSingular, {})).resolves.toEqual({
+    await expect(target.mutation(recordProtected, {})).resolves.toEqual({
       kind: "inactive",
     });
     await target.mutation((ctx) => insertRuntimeRelease(ctx));
@@ -70,18 +65,17 @@ describe("contentRelease/predecessor/internal", () => {
     await expect(
       target.mutation(arm, { observationId: OBSERVATION_ID })
     ).resolves.toEqual(armed);
-    await expect(target.mutation(recordSingular, {})).resolves.toEqual({
-      kind: "recorded",
-    });
-    await expect(target.mutation(recordBatch, {})).resolves.toEqual({
+    await expect(target.mutation(recordProtected, {})).resolves.toEqual({
       kind: "recorded",
     });
     await expect(
       target.query(status, { observationId: OBSERVATION_ID })
     ).resolves.toMatchObject({
       routes: {
-        batch: { invocationCount: 1 },
-        singular: { invocationCount: 1 },
+        batch: { invocationCount: 0 },
+        history: { invocationCount: 0 },
+        protected: { invocationCount: 1 },
+        singular: { invocationCount: 0 },
       },
     });
 
@@ -91,13 +85,18 @@ describe("contentRelease/predecessor/internal", () => {
     ).resolves.toMatchObject({
       routes: { batch: { phase: "sealed" }, singular: { phase: "sealed" } },
     });
-    await expect(target.mutation(recordSingular, {})).resolves.toEqual({
+    await expect(target.mutation(recordProtected, {})).resolves.toEqual({
       kind: "recorded",
     });
     await expect(
       target.query(status, { observationId: OBSERVATION_ID })
     ).resolves.toMatchObject({
-      routes: { batch: { phase: "armed" }, singular: { phase: "armed" } },
+      routes: {
+        batch: { phase: "armed" },
+        history: { phase: "armed" },
+        protected: { invocationCount: 2, phase: "armed" },
+        singular: { phase: "armed" },
+      },
     });
     vi.setSystemTime(Date.now() + PREDECESSOR_QUIET_WINDOW_MS);
     await target.mutation(seal, { observationId: OBSERVATION_ID });

@@ -34,32 +34,11 @@ export const status = internalQuery({
     runConvexProgram(readPredecessorObservation(ctx, args.observationId)),
 });
 
-/** Records one authenticated predecessor singular request. */
-export const recordSingular = internalMutation({
-  args: predecessorRecordArgsValidator,
-  returns: predecessorRecordResultValidator,
-  handler: (ctx) => runConvexProgram(recordPredecessorRead(ctx, "singular")),
-});
-
-/** Records one authenticated predecessor batch request. */
-export const recordBatch = internalMutation({
-  args: predecessorRecordArgsValidator,
-  returns: predecessorRecordResultValidator,
-  handler: (ctx) => runConvexProgram(recordPredecessorRead(ctx, "batch")),
-});
-
 /** Records one authenticated predecessor protected-content request. */
 export const recordProtected = internalMutation({
   args: predecessorRecordArgsValidator,
   returns: predecessorRecordResultValidator,
   handler: (ctx) => runConvexProgram(recordPredecessorRead(ctx, "protected")),
-});
-
-/** Records one authenticated predecessor retained-history request. */
-export const recordHistory = internalMutation({
-  args: predecessorRecordArgsValidator,
-  returns: predecessorRecordResultValidator,
-  handler: (ctx) => runConvexProgram(recordPredecessorRead(ctx, "history")),
 });
 
 /** Seals every route after the exact quiet period succeeds. */
