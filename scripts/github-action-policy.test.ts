@@ -109,6 +109,7 @@ describe("GitHub Action policy", () => {
       for (const evidence of [
         "github.rest.pulls.get",
         "github.rest.git.getCommit",
+        'pull.state !== "open"',
         "groupCommit.parents.length !== 1",
         "groupCommit.parents[0]?.sha !== mergeGroup.base_sha",
         "groupCommit.tree.sha !== pullCommit.tree?.sha",
