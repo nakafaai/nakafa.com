@@ -1,391 +1,498 @@
+import { describe, expect, it } from "@effect/vitest";
 import posthogTest from "@posthog/convex/test";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { getPlanCreditConfig } from "@repo/backend/convex/credits/constants";
 import type { CustomerUpsertResult } from "@repo/backend/convex/customers/mutations/spec";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { products } from "@repo/backend/convex/utils/polar/products";
-import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
+import type { FunctionArgs } from "convex/server";
+import { convexTest, type TestConvex } from "convex-test";
+import { Data, Effect } from "effect";
+
+type CustomerTest = TestConvex<typeof schema>;
+type CustomerInput = FunctionArgs<
+  typeof internal.customers.mutations.internal.upsertCustomer
+>["customer"];
+
+class ExpectedStoredCustomer extends Data.TaggedError(
+  "ExpectedStoredCustomer"
+)<{
+  readonly result: Exclude<CustomerUpsertResult, { readonly kind: "stored" }>;
+}> {}
+
+const customerUpsertCases = [
+  { externalId: "auth-new", id: "polar-new", match: "none" },
+  { externalId: "auth-same", id: "polar-same", match: "both" },
+  { externalId: "auth-new-polar", id: "polar-only", match: "polar" },
+  { externalId: "auth-user-only", id: "polar-fresh", match: "user" },
+] as const;
+
+type CustomerMatch = (typeof customerUpsertCases)[number]["match"];
 
 /** Inserts a user row for customer reconciliation tests. */
-function insertCustomerUser(ctx: MutationCtx, suffix: string) {
-  return ctx.db.insert("users", {
-    authId: `auth-${suffix}`,
-    credits: 10,
-    creditsResetAt: 1,
-    email: `${suffix}@example.com`,
-    name: suffix,
-    plan: "free",
-  });
-}
+const insertCustomerUser = Effect.fn("customers.mutations.test.insertUser")(
+  function* (ctx: MutationCtx, suffix: string) {
+    return yield* Effect.promise(() =>
+      ctx.db.insert("users", {
+        authId: `auth-${suffix}`,
+        credits: 10,
+        creditsResetAt: 1,
+        email: `${suffix}@example.com`,
+        name: suffix,
+        plan: "free",
+      })
+    );
+  }
+);
 
 /** Inserts a local customer row owned by one user. */
-function insertCustomerRow(
-  ctx: MutationCtx,
-  {
-    polarId,
-    userId,
-  }: {
-    polarId: string;
-    userId: Id<"users">;
+const insertCustomerRow = Effect.fn("customers.mutations.test.insertCustomer")(
+  function* (
+    ctx: MutationCtx,
+    {
+      polarId,
+      userId,
+    }: {
+      polarId: string;
+      userId: Id<"users">;
+    }
+  ) {
+    return yield* Effect.promise(() =>
+      ctx.db.insert("customers", {
+        id: polarId,
+        externalId: null,
+        metadata: {},
+        userId,
+      })
+    );
   }
-) {
-  return ctx.db.insert("customers", {
-    id: polarId,
-    externalId: null,
-    metadata: {},
-    userId,
-  });
-}
+);
+
+const insertCustomerState = Effect.fn(
+  "customers.mutations.test.insertCustomerState"
+)(function* (ctx: MutationCtx, suffix: string, polarId: string) {
+  const userId = yield* insertCustomerUser(ctx, suffix);
+  const customerId = yield* insertCustomerRow(ctx, { polarId, userId });
+  return { customerId, userId };
+});
+
+const createCustomerUser = Effect.fn(
+  "customers.mutations.test.createCustomerUser"
+)(function* (t: CustomerTest, suffix: string) {
+  return yield* Effect.promise(() =>
+    t.mutation((ctx) => runConvexProgram(insertCustomerUser(ctx, suffix)))
+  );
+});
+
+const createCustomerState = Effect.fn(
+  "customers.mutations.test.createCustomerState"
+)(function* (t: CustomerTest, suffix: string, polarId: string) {
+  return yield* Effect.promise(() =>
+    t.mutation((ctx) =>
+      runConvexProgram(insertCustomerState(ctx, suffix, polarId))
+    )
+  );
+});
+
+const createCustomerMatchState = Effect.fn(
+  "customers.mutations.test.createCustomerMatchState"
+)(function* (t: CustomerTest, match: CustomerMatch) {
+  if (match === "none") {
+    return { userId: yield* createCustomerUser(t, "new") };
+  }
+  if (match === "both") {
+    return yield* createCustomerState(t, "same", "polar-same");
+  }
+  if (match === "user") {
+    return yield* createCustomerState(t, "user-only", "polar-stale");
+  }
+
+  return yield* Effect.promise(() =>
+    t.mutation((ctx) =>
+      runConvexProgram(
+        Effect.gen(function* () {
+          const { customerId } = yield* insertCustomerState(
+            ctx,
+            "old-polar",
+            "polar-only"
+          );
+          const userId = yield* insertCustomerUser(ctx, "new-polar");
+          return { customerId, userId };
+        })
+      )
+    )
+  );
+});
+
+const upsertCustomer = Effect.fn("customers.mutations.test.upsertCustomer")(
+  function* (t: CustomerTest, customer: CustomerInput) {
+    return yield* Effect.promise(() =>
+      t.mutation(internal.customers.mutations.internal.upsertCustomer, {
+        customer,
+      })
+    );
+  }
+);
+
+const readCustomer = Effect.fn("customers.mutations.test.readCustomer")(
+  function* (t: CustomerTest, customerId: Id<"customers">) {
+    return yield* Effect.promise(() =>
+      t.query((ctx) =>
+        runConvexProgram(Effect.promise(() => ctx.db.get(customerId)))
+      )
+    );
+  }
+);
+
+const collectCustomers = Effect.fn("customers.mutations.test.collectCustomers")(
+  function* (t: CustomerTest) {
+    return yield* Effect.promise(() =>
+      t.query((ctx) =>
+        runConvexProgram(
+          Effect.promise(() => ctx.db.query("customers").collect())
+        )
+      )
+    );
+  }
+);
+
+const readTombstone = Effect.fn("customers.mutations.test.readTombstone")(
+  function* (t: CustomerTest, polarCustomerId: string) {
+    return yield* Effect.promise(() =>
+      t.query((ctx) =>
+        runConvexProgram(
+          Effect.promise(() =>
+            ctx.db
+              .query("customerDeletionTombstones")
+              .withIndex("by_polarCustomerId", (query) =>
+                query.eq("polarCustomerId", polarCustomerId)
+              )
+              .unique()
+          )
+        )
+      )
+    );
+  }
+);
 
 /** Narrows one successful customer upsert after asserting its contract. */
-function getStoredCustomerId(result: CustomerUpsertResult) {
-  expect(result.kind).toBe("stored");
-
+const getStoredCustomerId = Effect.fn(
+  "customers.mutations.test.getStoredCustomerId"
+)(function* (result: CustomerUpsertResult) {
   if (result.kind !== "stored") {
-    throw new Error(`Expected stored customer, received ${result.kind}`);
+    return yield* new ExpectedStoredCustomer({ result });
   }
 
   return result.customerId;
-}
+});
 
 describe("customers/mutations", () => {
-  it("inserts a new customer when no local row exists", async () => {
-    const t = convexTest(schema, convexModules);
-    const userId = await t.mutation((ctx) => insertCustomerUser(ctx, "new"));
-
-    const result = await t.mutation(
-      internal.customers.mutations.internal.upsertCustomer,
-      {
-        customer: {
-          id: "polar-new",
-          externalId: "auth-new",
-          metadata: { userId },
-          userId,
-        },
-      }
-    );
-    const customerId = getStoredCustomerId(result);
-
-    const customer = await t.query((ctx) => ctx.db.get(customerId));
-
-    expect(customer).toMatchObject({
-      externalId: "auth-new",
-      id: "polar-new",
-      metadata: { userId },
-      userId,
-    });
-  });
-
-  it("patches the same row when user and Polar id both match", async () => {
-    const t = convexTest(schema, convexModules);
-
-    const state = await t.mutation(async (ctx) => {
-      const userId = await insertCustomerUser(ctx, "same");
-      const customerId = await insertCustomerRow(ctx, {
-        polarId: "polar-same",
-        userId,
-      });
-
-      return { customerId, userId };
-    });
-
-    const result = await t.mutation(
-      internal.customers.mutations.internal.upsertCustomer,
-      {
-        customer: {
-          id: "polar-same",
-          externalId: "auth-same",
-          metadata: { tier: "pro" },
+  it.effect.each(customerUpsertCases)(
+    "reconciles $match customer rows",
+    ({ externalId, id, match }) =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        const state = yield* createCustomerMatchState(t, match);
+        const metadata: CustomerInput["metadata"] =
+          match === "both" ? { tier: "pro" } : { userId: state.userId };
+        const result = yield* upsertCustomer(t, {
+          externalId,
+          id,
+          metadata,
           userId: state.userId,
-        },
-      }
-    );
-    const resultId = getStoredCustomerId(result);
+        });
+        const resultId = yield* getStoredCustomerId(result);
+        const customer = yield* readCustomer(t, resultId);
 
-    const customer = await t.query((ctx) => ctx.db.get(resultId));
-
-    expect(resultId).toBe(state.customerId);
-    expect(customer).toMatchObject({
-      externalId: "auth-same",
-      id: "polar-same",
-      metadata: { tier: "pro" },
-      userId: state.userId,
-    });
-  });
-
-  it("patches an existing Polar row when only the Polar id matches", async () => {
-    const t = convexTest(schema, convexModules);
-
-    const state = await t.mutation(async (ctx) => {
-      const oldUserId = await insertCustomerUser(ctx, "old-polar");
-      const newUserId = await insertCustomerUser(ctx, "new-polar");
-      const customerId = await insertCustomerRow(ctx, {
-        polarId: "polar-only",
-        userId: oldUserId,
-      });
-
-      return { customerId, newUserId };
-    });
-
-    const result = await t.mutation(
-      internal.customers.mutations.internal.upsertCustomer,
-      {
-        customer: {
-          id: "polar-only",
-          externalId: "auth-new-polar",
-          metadata: { userId: state.newUserId },
-          userId: state.newUserId,
-        },
-      }
-    );
-    const resultId = getStoredCustomerId(result);
-
-    const customer = await t.query((ctx) => ctx.db.get(resultId));
-
-    expect(resultId).toBe(state.customerId);
-    expect(customer).toMatchObject({
-      externalId: "auth-new-polar",
-      id: "polar-only",
-      userId: state.newUserId,
-    });
-  });
-
-  it("patches an existing user row when only the user matches", async () => {
-    const t = convexTest(schema, convexModules);
-
-    const state = await t.mutation(async (ctx) => {
-      const userId = await insertCustomerUser(ctx, "user-only");
-      const customerId = await insertCustomerRow(ctx, {
-        polarId: "polar-stale",
-        userId,
-      });
-
-      return { customerId, userId };
-    });
-
-    const result = await t.mutation(
-      internal.customers.mutations.internal.upsertCustomer,
-      {
-        customer: {
-          id: "polar-fresh",
-          externalId: "auth-user-only",
-          metadata: { userId: state.userId },
+        if ("customerId" in state) {
+          expect(resultId).toBe(state.customerId);
+        }
+        expect(customer).toMatchObject({
+          externalId,
+          id,
+          metadata,
           userId: state.userId,
-        },
-      }
-    );
-    const resultId = getStoredCustomerId(result);
+        });
+      })
+  );
 
-    const customer = await t.query((ctx) => ctx.db.get(resultId));
-
-    expect(resultId).toBe(state.customerId);
-    expect(customer).toMatchObject({
-      externalId: "auth-user-only",
-      id: "polar-fresh",
-      userId: state.userId,
-    });
-  });
-
-  it("reconciles local rows by Polar customer id and removes stale duplicates", async () => {
-    const t = convexTest(schema, convexModules);
-
-    const state = await t.mutation(async (ctx) => {
-      const staleUserId = await insertCustomerUser(ctx, "stale");
-      const currentUserId = await insertCustomerUser(ctx, "current");
-      const stalePolarRowId = await insertCustomerRow(ctx, {
-        polarId: "polar-target",
-        userId: staleUserId,
-      });
-      const staleUserRowId = await insertCustomerRow(ctx, {
-        polarId: "polar-stale-user",
-        userId: currentUserId,
-      });
-
-      return {
-        currentUserId,
-        stalePolarRowId,
-        staleUserRowId,
-      };
-    });
-
-    const result = await t.mutation(
-      internal.customers.mutations.internal.upsertCustomer,
-      {
-        customer: {
+  it.effect(
+    "reconciles local rows by Polar customer id and removes stale duplicates",
+    () =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        const state = yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            runConvexProgram(
+              Effect.gen(function* () {
+                yield* insertCustomerState(ctx, "stale", "polar-target");
+                const currentUserId = yield* insertCustomerUser(ctx, "current");
+                yield* insertCustomerRow(ctx, {
+                  polarId: "polar-stale-user",
+                  userId: currentUserId,
+                });
+                return { currentUserId };
+              })
+            )
+          )
+        );
+        const result = yield* upsertCustomer(t, {
           id: "polar-target",
           externalId: "auth-current",
           metadata: { userId: state.currentUserId },
           userId: state.currentUserId,
-        },
+        });
+        const reconciledId = yield* getStoredCustomerId(result);
+        const customers = yield* collectCustomers(t);
+
+        expect(customers).toHaveLength(1);
+        expect(customers[0]).toMatchObject({
+          _id: reconciledId,
+          externalId: "auth-current",
+          id: "polar-target",
+          userId: state.currentUserId,
+        });
+      })
+  );
+
+  it.effect("drains every subscription batch before deleting a customer", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      yield* Effect.sync(() => posthogTest.register(t));
+      const userId = yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          runConvexProgram(
+            Effect.gen(function* () {
+              const state = yield* insertCustomerState(
+                ctx,
+                "delete",
+                "polar-delete"
+              );
+              yield* Effect.promise(() =>
+                ctx.db.patch("users", state.userId, {
+                  credits: getPlanCreditConfig("pro").amount,
+                  plan: "pro",
+                })
+              );
+              for (let index = 0; index <= 50; index += 1) {
+                yield* Effect.promise(() =>
+                  ctx.db.insert("subscriptions", {
+                    amount: null,
+                    cancelAtPeriodEnd: false,
+                    checkoutId: null,
+                    createdAt: "2026-07-27T00:00:00.000Z",
+                    currency: null,
+                    currentPeriodEnd: null,
+                    currentPeriodStart: "2026-07-27T00:00:00.000Z",
+                    customerId: "polar-delete",
+                    endedAt: null,
+                    id: `subscription-delete-${index}`,
+                    metadata: {},
+                    modifiedAt: null,
+                    productId: products.pro.id,
+                    recurringInterval: null,
+                    startedAt: "2026-07-27T00:00:00.000Z",
+                    status: "active",
+                  })
+                );
+              }
+              return state.userId;
+            })
+          )
+        )
+      );
+      let hasMore = true;
+      let mutationCount = 0;
+
+      while (hasMore) {
+        hasMore = yield* Effect.promise(() =>
+          t.mutation(internal.customers.mutations.internal.deleteCustomerById, {
+            id: "polar-delete",
+          })
+        );
+        mutationCount += 1;
       }
-    );
-    const reconciledId = getStoredCustomerId(result);
 
-    const customers = await t.query(
-      async (ctx) => await ctx.db.query("customers").collect()
-    );
+      expect(mutationCount).toBe(2);
 
-    expect(customers).toHaveLength(1);
-    expect(customers[0]).toMatchObject({
-      _id: reconciledId,
-      externalId: "auth-current",
-      id: "polar-target",
-      userId: state.currentUserId,
-    });
-  });
+      const state = yield* Effect.promise(() =>
+        t.query((ctx) =>
+          runConvexProgram(
+            Effect.gen(function* () {
+              const customers = yield* Effect.promise(() =>
+                ctx.db.query("customers").collect()
+              );
+              const subscriptions = yield* Effect.promise(() =>
+                ctx.db.query("subscriptions").collect()
+              );
+              const tombstones = yield* Effect.promise(() =>
+                ctx.db.query("customerDeletionTombstones").collect()
+              );
+              const user = yield* Effect.promise(() =>
+                ctx.db.get("users", userId)
+              );
+              return { customers, subscriptions, tombstones, user };
+            })
+          )
+        )
+      );
 
-  it("drains every subscription batch before deleting a customer", async () => {
-    const t = convexTest(schema, convexModules);
-    posthogTest.register(t);
-
-    const userId = await t.mutation(async (ctx) => {
-      const userId = await insertCustomerUser(ctx, "delete");
-      await ctx.db.patch("users", userId, {
-        credits: getPlanCreditConfig("pro").amount,
-        plan: "pro",
+      expect(state).toEqual({
+        customers: [],
+        subscriptions: [],
+        tombstones: [
+          expect.objectContaining({ polarCustomerId: "polar-delete" }),
+        ],
+        user: expect.objectContaining({
+          credits: getPlanCreditConfig("free").amount,
+          plan: "free",
+        }),
       });
-      await insertCustomerRow(ctx, {
-        polarId: "polar-delete",
+    })
+  );
+
+  it.effect("records and completes a customer deletion checkpoint", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      const userId = yield* createCustomerUser(t, "checkpoint");
+      const checkpoint = {
+        polarCustomerId: "polar-checkpoint",
+        userId,
+      };
+
+      expect(
+        yield* Effect.promise(() =>
+          t.mutation(
+            internal.customers.mutations.internal
+              .recordCustomerDeletionCheckpoint,
+            checkpoint
+          )
+        )
+      ).toBeNull();
+
+      const recorded = yield* readTombstone(t, checkpoint.polarCustomerId);
+      expect(recorded).toMatchObject({
+        cleanupUserId: userId,
+        polarCustomerId: checkpoint.polarCustomerId,
+      });
+
+      expect(
+        yield* Effect.promise(() =>
+          t.mutation(
+            internal.customers.mutations.internal
+              .completeCustomerDeletionCheckpoint,
+            checkpoint
+          )
+        )
+      ).toBeNull();
+
+      const completed = yield* readTombstone(t, checkpoint.polarCustomerId);
+      expect(completed).toMatchObject({
+        polarCustomerId: checkpoint.polarCustomerId,
+      });
+      expect(completed).not.toHaveProperty("cleanupUserId");
+    })
+  );
+
+  it.effect.each([
+    { kind: "prepared" },
+    { kind: "missing" },
+    { kind: "deleted" },
+  ] as const)("does not store a customer for a $kind user", ({ kind }) =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      const userId = yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          runConvexProgram(
+            Effect.gen(function* () {
+              const insertedUserId = yield* insertCustomerUser(ctx, kind);
+              if (kind === "missing") {
+                yield* Effect.promise(() =>
+                  ctx.db.delete("users", insertedUserId)
+                );
+                return insertedUserId;
+              }
+              yield* Effect.promise(() =>
+                ctx.db.patch(
+                  "users",
+                  insertedUserId,
+                  kind === "prepared"
+                    ? { deletionPreparedAt: 1 }
+                    : { deletedAt: 1 }
+                )
+              );
+              return insertedUserId;
+            })
+          )
+        )
+      );
+      const result = yield* upsertCustomer(t, {
+        id: `polar-${kind}`,
+        externalId: `auth-${kind}`,
+        metadata: { userId },
         userId,
       });
-      for (let index = 0; index <= 50; index += 1) {
-        await ctx.db.insert("subscriptions", {
-          amount: null,
-          cancelAtPeriodEnd: false,
-          checkoutId: null,
-          createdAt: "2026-07-27T00:00:00.000Z",
-          currency: null,
-          currentPeriodEnd: null,
-          currentPeriodStart: "2026-07-27T00:00:00.000Z",
-          customerId: "polar-delete",
-          endedAt: null,
-          id: `subscription-delete-${index}`,
-          metadata: {},
-          modifiedAt: null,
-          productId: products.pro.id,
-          recurringInterval: null,
-          startedAt: "2026-07-27T00:00:00.000Z",
-          status: "active",
-        });
-      }
+      const customers = yield* collectCustomers(t);
 
-      return userId;
-    });
-    let hasMore = true;
-    let mutationCount = 0;
+      expect(result).toEqual({ kind });
+      expect(customers).toEqual([]);
+    })
+  );
 
-    while (hasMore) {
-      hasMore = await t.mutation(
-        internal.customers.mutations.internal.deleteCustomerById,
-        {
-          id: "polar-delete",
-        }
-      );
-      mutationCount += 1;
-    }
+  it.effect(
+    "does not recreate a customer after its Polar deletion tombstone",
+    () =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        const userId = yield* createCustomerUser(t, "terminal");
 
-    expect(mutationCount).toBe(2);
-
-    const state = await t.query(async (ctx) => ({
-      customers: await ctx.db.query("customers").collect(),
-      subscriptions: await ctx.db.query("subscriptions").collect(),
-      tombstones: await ctx.db.query("customerDeletionTombstones").collect(),
-      user: await ctx.db.get("users", userId),
-    }));
-
-    expect(state).toEqual({
-      customers: [],
-      subscriptions: [],
-      tombstones: [
-        expect.objectContaining({
-          polarCustomerId: "polar-delete",
-        }),
-      ],
-      user: expect.objectContaining({
-        credits: getPlanCreditConfig("free").amount,
-        plan: "free",
-      }),
-    });
-  });
-
-  it("does not recreate customer data for a prepared user", async () => {
-    const t = convexTest(schema, convexModules);
-    const userId = await t.mutation(async (ctx) => {
-      const insertedUserId = await insertCustomerUser(ctx, "deleted");
-      await ctx.db.patch("users", insertedUserId, {
-        deletionPreparedAt: 1,
-      });
-      return insertedUserId;
-    });
-
-    const result = await t.mutation(
-      internal.customers.mutations.internal.upsertCustomer,
-      {
-        customer: {
-          id: "polar-deleted",
-          externalId: "auth-deleted",
-          metadata: { userId },
-          userId,
-        },
-      }
-    );
-    const customers = await t.query(
-      async (ctx) => await ctx.db.query("customers").collect()
-    );
-
-    expect(result).toEqual({ kind: "prepared" });
-    expect(customers).toEqual([]);
-  });
-
-  it("does not recreate a customer after its Polar deletion tombstone", async () => {
-    const t = convexTest(schema, convexModules);
-    const userId = await t.mutation((ctx) =>
-      insertCustomerUser(ctx, "terminal")
-    );
-
-    await t.mutation(internal.customers.mutations.internal.deleteCustomerById, {
-      id: "polar-terminal",
-    });
-    const result = await t.mutation(
-      internal.customers.mutations.internal.upsertCustomer,
-      {
-        customer: {
+        yield* Effect.promise(() =>
+          t.mutation(internal.customers.mutations.internal.deleteCustomerById, {
+            id: "polar-terminal",
+          })
+        );
+        const result = yield* upsertCustomer(t, {
           id: "polar-terminal",
           externalId: "auth-terminal",
           metadata: { userId },
           userId,
-        },
-      }
-    );
-    const customers = await t.query(
-      async (ctx) => await ctx.db.query("customers").collect()
-    );
+        });
+        const customers = yield* collectCustomers(t);
 
-    expect(result).toEqual({ kind: "deleted" });
-    expect(customers).toEqual([]);
-  });
-
-  it("ignores delete requests for unknown Polar ids", async () => {
-    const t = convexTest(schema, convexModules);
-
-    await expect(
-      t.mutation(internal.customers.mutations.internal.deleteCustomerById, {
-        id: "missing-polar",
+        expect(result).toEqual({ kind: "deleted" });
+        expect(customers).toEqual([]);
       })
-    ).resolves.toBe(false);
+  );
 
-    const tombstones = await t.query(
-      async (ctx) => await ctx.db.query("customerDeletionTombstones").collect()
-    );
+  it.effect("ignores delete requests for unknown Polar ids", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
 
-    expect(tombstones).toEqual([
-      expect.objectContaining({
-        polarCustomerId: "missing-polar",
-      }),
-    ]);
-  });
+      expect(
+        yield* Effect.promise(() =>
+          t.mutation(internal.customers.mutations.internal.deleteCustomerById, {
+            id: "missing-polar",
+          })
+        )
+      ).toBe(false);
+
+      const tombstones = yield* Effect.promise(() =>
+        t.query((ctx) =>
+          runConvexProgram(
+            Effect.promise(() =>
+              ctx.db.query("customerDeletionTombstones").collect()
+            )
+          )
+        )
+      );
+
+      expect(tombstones).toEqual([
+        expect.objectContaining({ polarCustomerId: "missing-polar" }),
+      ]);
+    })
+  );
 });
