@@ -146,6 +146,7 @@ import type * as contentRelease_cleanup from "../contentRelease/cleanup.js";
 import type * as contentRelease_compact from "../contentRelease/compact.js";
 import type * as contentRelease_compact_artifacts from "../contentRelease/compact/artifacts.js";
 import type * as contentRelease_compact_rows from "../contentRelease/compact/rows.js";
+import type * as contentRelease_compact_runtime from "../contentRelease/compact/runtime.js";
 import type * as contentRelease_compact_state from "../contentRelease/compact/state.js";
 import type * as contentRelease_cursor from "../contentRelease/cursor.js";
 import type * as contentRelease_digest from "../contentRelease/digest.js";
@@ -296,7 +297,7 @@ import type * as contentRelease_runtime_protected_internal from "../contentRelea
 import type * as contentRelease_runtime_public_batch from "../contentRelease/runtime/public/batch.js";
 import type * as contentRelease_runtime_public_dispatch from "../contentRelease/runtime/public/dispatch.js";
 import type * as contentRelease_runtime_public_internal from "../contentRelease/runtime/public/internal.js";
-import type * as contentRelease_runtime_public_predecessor from "../contentRelease/runtime/public/predecessor.js";
+import type * as contentRelease_runtime_public_projection from "../contentRelease/runtime/public/projection.js";
 import type * as contentRelease_runtime_result from "../contentRelease/runtime/result.js";
 import type * as contentRelease_runtime_snapshot from "../contentRelease/runtime/snapshot.js";
 import type * as contentRelease_scope_family from "../contentRelease/scope/family.js";
@@ -512,6 +513,7 @@ import type * as tryouts_history_placement from "../tryouts/history/placement.js
 import type * as tryouts_history_reference from "../tryouts/history/reference.js";
 import type * as tryouts_history_row from "../tryouts/history/row.js";
 import type * as tryouts_history_rows from "../tryouts/history/rows.js";
+import type * as tryouts_history_scale from "../tryouts/history/scale.js";
 import type * as tryouts_history_selectors from "../tryouts/history/selectors.js";
 import type * as tryouts_history_spec from "../tryouts/history/spec.js";
 import type * as tryouts_migration_abort from "../tryouts/migration/abort.js";
@@ -537,6 +539,7 @@ import type * as tryouts_migration_closure from "../tryouts/migration/closure.js
 import type * as tryouts_migration_erasure from "../tryouts/migration/erasure.js";
 import type * as tryouts_migration_evidence from "../tryouts/migration/evidence.js";
 import type * as tryouts_migration_lifecycle from "../tryouts/migration/lifecycle.js";
+import type * as tryouts_migration_lock from "../tryouts/migration/lock.js";
 import type * as tryouts_migration_pages from "../tryouts/migration/pages.js";
 import type * as tryouts_migration_plan from "../tryouts/migration/plan.js";
 import type * as tryouts_migration_proof_github from "../tryouts/migration/proof/github.js";
@@ -781,6 +784,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/compact": typeof contentRelease_compact;
   "contentRelease/compact/artifacts": typeof contentRelease_compact_artifacts;
   "contentRelease/compact/rows": typeof contentRelease_compact_rows;
+  "contentRelease/compact/runtime": typeof contentRelease_compact_runtime;
   "contentRelease/compact/state": typeof contentRelease_compact_state;
   "contentRelease/cursor": typeof contentRelease_cursor;
   "contentRelease/digest": typeof contentRelease_digest;
@@ -931,7 +935,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/runtime/public/batch": typeof contentRelease_runtime_public_batch;
   "contentRelease/runtime/public/dispatch": typeof contentRelease_runtime_public_dispatch;
   "contentRelease/runtime/public/internal": typeof contentRelease_runtime_public_internal;
-  "contentRelease/runtime/public/predecessor": typeof contentRelease_runtime_public_predecessor;
+  "contentRelease/runtime/public/projection": typeof contentRelease_runtime_public_projection;
   "contentRelease/runtime/result": typeof contentRelease_runtime_result;
   "contentRelease/runtime/snapshot": typeof contentRelease_runtime_snapshot;
   "contentRelease/scope/family": typeof contentRelease_scope_family;
@@ -1147,6 +1151,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/history/reference": typeof tryouts_history_reference;
   "tryouts/history/row": typeof tryouts_history_row;
   "tryouts/history/rows": typeof tryouts_history_rows;
+  "tryouts/history/scale": typeof tryouts_history_scale;
   "tryouts/history/selectors": typeof tryouts_history_selectors;
   "tryouts/history/spec": typeof tryouts_history_spec;
   "tryouts/migration/abort": typeof tryouts_migration_abort;
@@ -1172,6 +1177,7 @@ declare const fullApi: ApiFromModules<{
   "tryouts/migration/erasure": typeof tryouts_migration_erasure;
   "tryouts/migration/evidence": typeof tryouts_migration_evidence;
   "tryouts/migration/lifecycle": typeof tryouts_migration_lifecycle;
+  "tryouts/migration/lock": typeof tryouts_migration_lock;
   "tryouts/migration/pages": typeof tryouts_migration_pages;
   "tryouts/migration/plan": typeof tryouts_migration_plan;
   "tryouts/migration/proof/github": typeof tryouts_migration_proof_github;

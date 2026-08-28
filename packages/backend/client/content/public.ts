@@ -31,8 +31,8 @@ import {
   PublicContentRuntimeBatchResponseSchema,
 } from "@repo/backend/content/batch";
 import {
-  PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
-  PUBLIC_CONTENT_RUNTIME_PATH,
+  TRANSITION_PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
+  TRANSITION_PUBLIC_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import { Effect, Schema } from "effect";
@@ -128,7 +128,7 @@ const readPublicContentProgram = Effect.fn(
   );
   const endpoint = yield* createContentEndpoint(
     target.siteUrl,
-    PUBLIC_CONTENT_RUNTIME_PATH
+    TRANSITION_PUBLIC_CONTENT_RUNTIME_PATH
   );
   const { response, value: decoded } = yield* requestContentResponse(
     { endpoint, source, target },
@@ -198,7 +198,7 @@ export const readPublicContentEvidenceBatch = Effect.fn(
   );
   const endpoint = yield* createContentEndpoint(
     target.siteUrl,
-    PUBLIC_CONTENT_RUNTIME_BATCH_PATH
+    TRANSITION_PUBLIC_CONTENT_RUNTIME_BATCH_PATH
   );
   const { response, value: decoded } = yield* requestContentResponse(
     { endpoint, source, target },

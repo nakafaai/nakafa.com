@@ -13,13 +13,13 @@ import {
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
-  PUBLIC_CONTENT_RUNTIME_PATH,
+  TRANSITION_PUBLIC_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
 import { Duration, Effect, Fiber, Logger } from "effect";
 import { TestClock } from "effect/testing";
 import { vi } from "vitest";
 
-const endpoint = `https://example.convex.site${PUBLIC_CONTENT_RUNTIME_PATH}`;
+const endpoint = `https://example.convex.site${TRANSITION_PUBLIC_CONTENT_RUNTIME_PATH}`;
 const target = {
   siteUrl: "https://example.convex.site",
   token: "runtime-test-token",
@@ -100,15 +100,15 @@ describe("content runtime transport", () => {
       expect(
         yield* createContentEndpoint(
           "https://example.convex.site/ignored",
-          PUBLIC_CONTENT_RUNTIME_PATH
+          TRANSITION_PUBLIC_CONTENT_RUNTIME_PATH
         )
       ).toBe(endpoint);
       expect(
         yield* createContentEndpoint(
           "http://localhost:3211/ignored",
-          PUBLIC_CONTENT_RUNTIME_PATH
+          TRANSITION_PUBLIC_CONTENT_RUNTIME_PATH
         )
-      ).toBe(`http://localhost:3211${PUBLIC_CONTENT_RUNTIME_PATH}`);
+      ).toBe(`http://localhost:3211${TRANSITION_PUBLIC_CONTENT_RUNTIME_PATH}`);
 
       for (const siteUrl of [
         "not a URL",
@@ -119,7 +119,7 @@ describe("content runtime transport", () => {
         expect(
           yield* createContentEndpoint(
             siteUrl,
-            PUBLIC_CONTENT_RUNTIME_PATH
+            TRANSITION_PUBLIC_CONTENT_RUNTIME_PATH
           ).pipe(Effect.flip)
         ).toEqual(new ContentTransportError({ reason: "url" }));
       }

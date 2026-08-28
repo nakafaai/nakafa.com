@@ -1,16 +1,16 @@
 const CONTENT_RUNTIME_PATH = "/internal/content/runtime";
 
-/** Bounded predecessor endpoint for 0.15.0 public content reads. */
-export const PREDECESSOR_PUBLIC_CONTENT_RUNTIME_PATH = CONTENT_RUNTIME_PATH;
+/** Canonical endpoint for current public content reads. */
+export const PUBLIC_CONTENT_RUNTIME_PATH = CONTENT_RUNTIME_PATH;
 
-/** Bounded predecessor endpoint for 0.15.0 public content batches. */
-export const PREDECESSOR_PUBLIC_CONTENT_RUNTIME_BATCH_PATH = `${PREDECESSOR_PUBLIC_CONTENT_RUNTIME_PATH}/batch`;
-
-/** Versioned endpoint for current public content reads. */
-export const PUBLIC_CONTENT_RUNTIME_PATH = `${CONTENT_RUNTIME_PATH}/v2`;
-
-/** Versioned endpoint for current public content batches. */
+/** Canonical endpoint for current public content batches. */
 export const PUBLIC_CONTENT_RUNTIME_BATCH_PATH = `${PUBLIC_CONTENT_RUNTIME_PATH}/batch`;
+
+/** Temporary current endpoint removed immediately after controlled clients switch. */
+export const TRANSITION_PUBLIC_CONTENT_RUNTIME_PATH = `${CONTENT_RUNTIME_PATH}/v2`;
+
+/** Temporary current batch endpoint removed immediately after controlled clients switch. */
+export const TRANSITION_PUBLIC_CONTENT_RUNTIME_BATCH_PATH = `${TRANSITION_PUBLIC_CONTENT_RUNTIME_PATH}/batch`;
 
 /** Protected endpoint retained until the deployed predecessor stops calling it. */
 export const PREDECESSOR_PROTECTED_CONTENT_RUNTIME_PATH = `${CONTENT_RUNTIME_PATH}/protected`;
