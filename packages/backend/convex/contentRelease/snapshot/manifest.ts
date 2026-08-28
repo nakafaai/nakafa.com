@@ -12,8 +12,8 @@ import { ensureDocumentSize } from "@repo/backend/convex/contentRelease/document
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadStaged } from "@repo/backend/convex/contentRelease/model";
 import {
+  decodeCurrentSnapshotJson,
   decodeReleaseJson,
-  decodeSnapshotJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import {
   ROLLBACK_RETENTION_MS,
@@ -77,7 +77,7 @@ const stageManifest = Effect.fn("contentRelease.stageSnapshot")(function* (
   releaseId: string,
   snapshotJson: string
 ) {
-  const snapshot = yield* decodeSnapshotJson(snapshotJson);
+  const snapshot = yield* decodeCurrentSnapshotJson(snapshotJson);
   const canonicalJson = encodeSnapshotJson(snapshot);
   const snapshotId = contentSnapshotId(snapshot);
   const { release } = yield* loadStaged(ctx, releaseId);

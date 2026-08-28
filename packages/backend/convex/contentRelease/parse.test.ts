@@ -5,11 +5,13 @@ import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapsh
 import {
   decodeArtifactJson,
   decodeCurrentProjectionJson,
+  decodeCurrentSnapshotJson,
   decodeItemJson,
   decodeProjectionJson,
   decodeProofJson,
   decodeReleaseJson,
   decodeRendererJson,
+  decodeSnapshotJson,
   parseStoredJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import {
@@ -18,6 +20,7 @@ import {
   encodeProjectionJson,
   encodeReleaseJson,
   encodeRendererJson,
+  encodeSnapshotJson,
 } from "@repo/backend/convex/contentRelease/wire";
 import { testArtifactJson } from "@repo/backend/test/content/artifact";
 import {
@@ -32,6 +35,7 @@ import {
   testRendererJson,
   testUpsertJson,
 } from "@repo/backend/test/content/release";
+import { makeStoredQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { Effect, Exit } from "effect";
 
 /** Creates exact server-derived evidence for strict proof decoding. */
@@ -108,6 +112,23 @@ describe("contentRelease/parse", () => {
         );
 
         expect(stored.metadata).toMatchObject({ date: datePublished });
+        expect(rejected).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
+      })
+  );
+
+  it.live(
+    "accepts a predecessor Quran manifest only at its stored boundary",
+    () =>
+      Effect.gen(function* () {
+        const snapshot = yield* makeStoredQuranSnapshot();
+        const storedJson = encodeSnapshotJson(snapshot);
+
+        const stored = yield* decodeSnapshotJson(storedJson);
+        const rejected = yield* decodeCurrentSnapshotJson(storedJson).pipe(
+          Effect.flip
+        );
+
+        expect(stored.family).toBe("quran");
         expect(rejected).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
       })
   );

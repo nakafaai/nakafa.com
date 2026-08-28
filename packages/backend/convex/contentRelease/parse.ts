@@ -1,5 +1,7 @@
 import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
+import { ACTIVE_APP_LOCALES } from "@nakafa/aksara-contracts/locale";
 import { ContentProjectionSchema as CurrentContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
+import { quranSourceFileCount } from "@nakafa/aksara-contracts/quran/source";
 import {
   ContentReleaseItemSchema,
   PublicationReceiptSchema,
@@ -18,6 +20,27 @@ import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-transition/release/r
 import { PublishedQuranManifestSchema } from "@repo/backend/content/quran/contract";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { Effect, Schema } from "effect";
+
+const CurrentContentSnapshotManifestSchema = ContentSnapshotManifestSchema.pipe(
+  Schema.check(
+    Schema.makeFilter(
+      (snapshot) =>
+        snapshot.family !== "quran" ||
+        (snapshot.manifest.activeAppLocales.length ===
+          ACTIVE_APP_LOCALES.length &&
+          snapshot.manifest.activeAppLocales.every(
+            (locale, index) => locale === ACTIVE_APP_LOCALES[index]
+          ) &&
+          snapshot.manifest.sourceFileCount ===
+            quranSourceFileCount(ACTIVE_APP_LOCALES)),
+      {
+        message:
+          "Expected the complete current Quran locale and source inventory.",
+      }
+    )
+  )
+);
+
 /** Parses one stored JSON value without allowing thrown parser failures. */
 export const parseStoredJson = Effect.fn("contentRelease.parseStoredJson")(
   (source: string, label = "Stored publication JSON") =>
@@ -216,6 +239,26 @@ export const decodeSnapshotJson = Effect.fn(
         new ReleaseError({
           code: "CONTENT_RELEASE_INTEGRITY",
           message: "Content snapshot does not satisfy its exact contract.",
+        })
+    )
+  )
+);
+/** Strictly decodes one newly staged manifest through the current contract. */
+export const decodeCurrentSnapshotJson = Effect.fn(
+  "contentRelease.decodeCurrentSnapshotJson"
+)((source: string) =>
+  parseStoredJson(source, "Current content snapshot").pipe(
+    Effect.flatMap(
+      Schema.decodeUnknownEffect(CurrentContentSnapshotManifestSchema, {
+        onExcessProperty: "error",
+      })
+    ),
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message:
+            "New content snapshot does not satisfy the current contract.",
         })
     )
   )
