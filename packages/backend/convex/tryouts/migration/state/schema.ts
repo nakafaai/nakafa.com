@@ -129,6 +129,7 @@ export const cleanupReceiptValidator = v.union(
 /** Internal state read that distinguishes absent, sealed, and cleaned roots. */
 export const migrationRecordValidator = v.object({
   cleanupStarted: v.boolean(),
+  repairScalePresent: v.boolean(),
   receipt: v.union(migrationReceiptRecordValidator, v.null()),
   status: v.union(activeMigrationStatusValidator, v.null()),
 });

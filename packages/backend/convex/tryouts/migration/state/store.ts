@@ -10,6 +10,7 @@ import {
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { retainedTryoutHistoryPlan } from "@repo/backend/convex/tryouts/history/spec";
+import { retainedRepairScalePresent } from "@repo/backend/convex/tryouts/migration/cleanup/marker";
 import {
   type activeMigrationStatusValidator,
   type completedMigrationStatusValidator,
@@ -264,9 +265,11 @@ export const record = internalQuery({
             .unique()
         ),
         receipt: loadMigrationReceipt(ctx, args.migrationId),
+        repairScalePresent: retainedRepairScalePresent(ctx, args.migrationId),
       }).pipe(
-        Effect.map(({ migration, receipt }) => ({
+        Effect.map(({ migration, receipt, repairScalePresent }) => ({
           cleanupStarted: migration?.phase === "cleaning",
+          repairScalePresent,
           receipt: receipt ? migrationReceiptRecord(receipt) : null,
           status: migration ? migrationStatus(migration) : null,
         }))

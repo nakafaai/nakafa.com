@@ -50,20 +50,19 @@ export const requireTerminalRepair = Effect.fn(
   receipt: Pick<
     MigrationReceiptRecord,
     "migrationId" | "phase" | "proof" | "repair"
-  >
+  >,
+  repairScalePresent: boolean
 ) {
-  const repairStarted =
-    receipt.phase === "cleaned" ||
-    receipt.proof !== null ||
-    receipt.repair !== null;
-  const proofMissing =
-    receipt.migrationId === retainedScaleRepair.migrationId &&
-    repairStarted &&
-    receipt.proof === null;
+  if (receipt.migrationId !== retainedScaleRepair.migrationId) {
+    return;
+  }
+  const repaired = !repairScalePresent;
+  const hasProof = receipt.proof !== null;
+  const hasRepair = hasRequiredScaleRepair(receipt.migrationId, receipt.repair);
   if (
-    repairStarted &&
-    (proofMissing ||
-      !hasRequiredScaleRepair(receipt.migrationId, receipt.repair))
+    (repaired && !(hasProof && hasRepair)) ||
+    (!repaired &&
+      (receipt.phase === "cleaned" || hasProof || receipt.repair !== null))
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
@@ -140,7 +139,7 @@ export const readMigrationStatus = Effect.fn("tryouts.migration.readStatus")(
         "Stored try-out history migration receipt changed signed identity."
       );
     }
-    yield* requireTerminalRepair(record.receipt);
+    yield* requireTerminalRepair(record.receipt, record.repairScalePresent);
     if (!record.status) {
       if (record.receipt.phase !== "cleaned") {
         return yield* releaseFail(

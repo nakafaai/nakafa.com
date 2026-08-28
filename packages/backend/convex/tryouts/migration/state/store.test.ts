@@ -1,10 +1,12 @@
 import { describe, expect, it } from "@effect/vitest";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   countScaleRepairRows,
   retainedScaleRepair,
 } from "@repo/backend/convex/tryouts/migration/cleanup/evidence";
+import { retainedRepairScalePresent } from "@repo/backend/convex/tryouts/migration/cleanup/marker";
 import type {
   migrationRecordValidator,
   migrationStatusValidator,
@@ -34,6 +36,81 @@ const record = makeFunctionReference<
 >("tryouts/migration/state/store:record");
 
 describe("tryouts/migration/state/store", () => {
+  it.effect("observes the exact retained repair scale independently", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      const scaleVersionId = yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          ctx.db.insert("irtScaleVersions", {
+            model: "2pl",
+            publishedAt: retainedScaleRepair.publishedAt,
+            questionCount: retainedScaleRepair.questionCount,
+            setIdentity: retainedScaleRepair.setIdentity,
+            status: "provisional",
+            tryoutSnapshotId: retainedScaleRepair.sourceSnapshotId,
+          })
+        )
+      );
+      const evidence = { ...retainedScaleRepair, scaleVersionId };
+      const present = yield* Effect.promise(() =>
+        t.query((ctx) =>
+          runConvexProgram(
+            retainedRepairScalePresent(
+              ctx,
+              retainedScaleRepair.migrationId,
+              evidence
+            )
+          )
+        )
+      );
+      expect(present).toBe(true);
+
+      yield* Effect.promise(() =>
+        t.mutation((ctx) => ctx.db.delete(scaleVersionId))
+      );
+      const absent = yield* Effect.promise(() =>
+        t.query((ctx) =>
+          runConvexProgram(
+            retainedRepairScalePresent(
+              ctx,
+              retainedScaleRepair.migrationId,
+              evidence
+            )
+          )
+        )
+      );
+      expect(absent).toBe(false);
+
+      yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          ctx.db.insert("irtScaleVersions", {
+            model: "2pl",
+            publishedAt: retainedScaleRepair.publishedAt,
+            questionCount: retainedScaleRepair.questionCount,
+            setIdentity: retainedScaleRepair.setIdentity,
+            status: "provisional",
+            tryoutSnapshotId: retainedScaleRepair.sourceSnapshotId,
+          })
+        )
+      );
+      yield* Effect.promise(() =>
+        expect(
+          t.query((ctx) =>
+            runConvexProgram(
+              retainedRepairScalePresent(
+                ctx,
+                retainedScaleRepair.migrationId,
+                evidence
+              )
+            )
+          )
+        ).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        })
+      );
+    })
+  );
+
   it.effect("projects the durable terminal repair audit", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
