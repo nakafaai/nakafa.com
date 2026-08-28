@@ -1,7 +1,8 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import { BASE_URL } from "@/lib/llms/constants";
 import type { LlmsEntry } from "@/lib/llms/entries";
 import {
@@ -60,69 +61,86 @@ beforeEach(() => {
 });
 
 describe("llms section indexes", () => {
-  it("reads signed article partitions without source discovery", async () => {
-    await expect(
-      Effect.runPromise(
-        getLlmsSectionPages({ locale: "en", section: "articles" })
-      )
-    ).resolves.toEqual({
-      pageCount: 3,
-      routeCount: 250,
-    });
-    expect(mockReadQuranInventory).not.toHaveBeenCalled();
-  });
+  it.effect("reads signed article partitions without source discovery", () =>
+    Effect.gen(function* () {
+      const pages = yield* getLlmsSectionPages({
+        locale: "en",
+        section: "articles",
+      });
 
-  it("reads signed material counts without source discovery", async () => {
-    await expect(
-      Effect.runPromise(
-        getLlmsSectionPages({ locale: "en", section: "material" })
-      )
-    ).resolves.toEqual({
-      pageCount: 1,
-      routeCount: 100,
-    });
-    expect(mockReadPublishedArticleBuckets).not.toHaveBeenCalled();
-  });
+      expect(pages).toEqual({
+        pageCount: 3,
+        routeCount: 250,
+      });
+      expect(mockReadQuranInventory).not.toHaveBeenCalled();
+    })
+  );
 
-  it("uses signed material partitions", async () => {
-    mockReadMaterialInventory.mockReturnValue(
-      Effect.succeed({
-        activeReleaseId: "release-material",
-        buckets: ["000", "abc"],
+  it.effect("reads signed material counts without source discovery", () =>
+    Effect.gen(function* () {
+      const pages = yield* getLlmsSectionPages({
+        locale: "en",
+        section: "material",
+      });
+
+      expect(pages).toEqual({
+        pageCount: 1,
+        routeCount: 100,
+      });
+      expect(mockReadPublishedArticleBuckets).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("uses signed material partitions", () =>
+    Effect.gen(function* () {
+      mockReadMaterialInventory.mockReturnValue(
+        Effect.succeed({
+          activeReleaseId: "release-material",
+          buckets: ["000", "abc"],
+          pageCount: 2,
+          routeCount: 42,
+        })
+      );
+
+      const pages = yield* getLlmsSectionPages({
+        locale: "en",
+        section: "material",
+      });
+
+      expect(pages).toEqual({
         pageCount: 2,
         routeCount: 42,
+      });
+      expect(mockReadQuranInventory).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect(
+    "reads the signed Quran inventory and handles an empty release",
+    () =>
+      Effect.gen(function* () {
+        const published = yield* getLlmsSectionPages({
+          locale: "en",
+          section: "quran",
+        });
+        expect(published).toEqual({
+          pageCount: 1,
+          routeCount: 114,
+        });
+
+        mockReadQuranInventory.mockReturnValueOnce(
+          Effect.succeed({ pageCount: 0, routeCount: 0 })
+        );
+        const empty = yield* getLlmsSectionPages({
+          locale: "id",
+          section: "quran",
+        });
+        expect(empty).toEqual({
+          pageCount: 0,
+          routeCount: 0,
+        });
       })
-    );
-
-    await expect(
-      Effect.runPromise(
-        getLlmsSectionPages({ locale: "en", section: "material" })
-      )
-    ).resolves.toEqual({
-      pageCount: 2,
-      routeCount: 42,
-    });
-    expect(mockReadQuranInventory).not.toHaveBeenCalled();
-  });
-
-  it("reads the signed Quran inventory and handles an empty release", async () => {
-    await expect(
-      Effect.runPromise(getLlmsSectionPages({ locale: "en", section: "quran" }))
-    ).resolves.toEqual({
-      pageCount: 1,
-      routeCount: 114,
-    });
-
-    mockReadQuranInventory.mockReturnValueOnce(
-      Effect.succeed({ pageCount: 0, routeCount: 0 })
-    );
-    await expect(
-      Effect.runPromise(getLlmsSectionPages({ locale: "id", section: "quran" }))
-    ).resolves.toEqual({
-      pageCount: 0,
-      routeCount: 0,
-    });
-  });
+  );
 
   it("renders empty, single, and multi-page navigation", () => {
     const empty = buildLlmsSectionPageMapText({
