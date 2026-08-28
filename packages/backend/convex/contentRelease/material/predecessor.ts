@@ -1,33 +1,14 @@
-import { DateOnlySchema } from "@nakafa/aksara-contracts/date";
+import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import {
-  canonicalizeMaterialProjection,
-  type MaterialLessonProjection,
-  MaterialLessonProjectionSchema,
-  MaterialMetadataSchema,
-} from "@nakafa/aksara-contracts/projection/material";
+  canonicalizeMaterialProjection as canonicalizePredecessorMaterialProjection,
+  MaterialLessonProjectionSchema as predecessorMaterialProjectionSchema,
+} from "@nakafa/aksara-v150/projection/material";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import { Effect, Schema } from "effect";
 
-const PredecessorMaterialMetadataSchema = MaterialMetadataSchema.mapFields(
-  ({
-    dateModified: _dateModified,
-    datePublished: _datePublished,
-    ...fields
-  }) => ({ ...fields, date: DateOnlySchema })
-);
-
 /** Exact 0.15.0 material projection view derived from shared contract fields. */
-export const PredecessorMaterialProjectionSchema =
-  MaterialLessonProjectionSchema.mapFields(
-    (fields) => ({
-      ...fields,
-      metadata: PredecessorMaterialMetadataSchema,
-    }),
-    // The projection checks cover route, locale, graph, and parent identity.
-    // Replacing only metadata dates cannot invalidate those checks.
-    { unsafePreserveChecks: true }
-  );
+export { MaterialLessonProjectionSchema as PredecessorMaterialProjectionSchema } from "@nakafa/aksara-v150/projection/material";
 
 export type MaterialProjectionContract = "predecessor" | "publication";
 
@@ -43,7 +24,7 @@ export const encodePredecessorProjection = Effect.fn(
 )(function* (projection: MaterialLessonProjection) {
   const dates = normalizePublicationDates(projection.metadata);
   const predecessor = yield* Schema.decodeEffect(
-    PredecessorMaterialProjectionSchema
+    predecessorMaterialProjectionSchema
   )(
     {
       ...projection,
@@ -70,5 +51,5 @@ export const encodePredecessorProjection = Effect.fn(
     )
   );
 
-  return canonicalizeMaterialProjection(predecessor);
+  return canonicalizePredecessorMaterialProjection(predecessor);
 });

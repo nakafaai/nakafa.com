@@ -34,6 +34,17 @@ describe("Nakafa persisted Quran data", () => {
     expect(
       Schema.is(NakafaDataSchema)({
         ...common,
+        input: { ...common.input, locale: "id" },
+        result: {
+          ...preview,
+          locale: "id",
+          meaning: { locale: "id", text: "Pembuka" },
+        },
+      })
+    ).toBe(true);
+    expect(
+      Schema.is(NakafaDataSchema)({
+        ...common,
         result: { ...preview, translation: "The Opening" },
       })
     ).toBe(false);

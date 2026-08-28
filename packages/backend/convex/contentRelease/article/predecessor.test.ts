@@ -78,23 +78,4 @@ describe("contentRelease/article/predecessor", () => {
     expect(predecessor.metadata.date).toBe(current.metadata.datePublished);
     expect(predecessorJson).not.toContain("dateModified");
   });
-
-  it("preserves a legacy projection without changing its canonical bytes", async () => {
-    const current = testArticleProjection(0);
-    const dates = normalizePublicationDates(current.metadata);
-    const legacy = ArticleProjectionSchema.make({
-      ...current,
-      metadata: {
-        authors: current.metadata.authors,
-        date: dates.datePublished,
-        description: current.metadata.description,
-        title: current.metadata.title,
-      },
-    });
-    const canonical = canonicalizeArticleProjection(legacy);
-
-    await expect(
-      Effect.runPromise(encodePredecessorProjection(legacy))
-    ).resolves.toBe(canonical);
-  });
 });

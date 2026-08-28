@@ -6,6 +6,7 @@ import {
   makeQuranAttribution,
   makeQuranChunk,
   makeQuranLocaleSources,
+  makeQuranMeaning,
   makeQuranSurah,
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
@@ -69,7 +70,7 @@ describe("contentRelease/quran/document", () => {
       kind: "quran-surah",
       name: {
         arabic: "سورة 1",
-        sourceMeaning: { appLocale: "en", text: "Technical meaning 1" },
+        sourceMeaning: makeQuranMeaning(1),
         transliteration: "Technical Surah 1",
       },
       number: 1,
@@ -102,7 +103,7 @@ describe("contentRelease/quran/document", () => {
       sources: makeQuranLocaleSources("de"),
       surah: {
         name: {
-          sourceMeaning: { appLocale: "en", text: "Technical meaning 1" },
+          sourceMeaning: makeQuranMeaning(1),
         },
       },
       tafsirAccess: makeQuranTafsirProjection("de"),

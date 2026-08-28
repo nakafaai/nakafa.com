@@ -119,11 +119,11 @@ export const readQuranMarkdown = Effect.fn("NakafaQuran.readMarkdown")(
     );
     const surah = publication.surah;
     const title = getSurahName(surah);
-    const meaning = surah.name.meaning;
+    const meaning = surah.name.meaning[ref.locale];
     const metadata = [
       `# ${title}`,
       "",
-      `Meaning: ${meaning.text} (${meaning.appLocale})`,
+      `Meaning: ${meaning}`,
       `Revelation: ${surah.revelation.place}`,
       "",
       ...renderQuranReadingSourcesMarkdown(publication.sources),
@@ -144,7 +144,7 @@ export const readQuranMarkdown = Effect.fn("NakafaQuran.readMarkdown")(
           ];
     const markdown = yield* decodeNakafaMarkdown({
       ...ref,
-      description: meaning.text,
+      description: meaning,
       text: [
         ...metadata,
         ...preBismillah,

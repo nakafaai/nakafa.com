@@ -42,13 +42,10 @@ const nakafaQuranPreviewFields = {
 
 const nakafaQuranMeaningPreviewValidator = v.object({
   ...nakafaQuranPreviewFields,
-  meaning: v.union(
-    v.null(),
-    v.object({
-      locale: v.literal("en"),
-      text: v.string(),
-    })
-  ),
+  meaning: v.object({
+    locale: localeValidator,
+    text: v.string(),
+  }),
 });
 
 const nakafaQuranTranslationPreviewValidator = v.object({
@@ -56,7 +53,7 @@ const nakafaQuranTranslationPreviewValidator = v.object({
   translation: v.string(),
 });
 
-/** Accepts current previews and persisted predecessor chat data. */
+/** Accepts current previews and retained historical chat data. */
 export const nakafaQuranPreviewValidator = v.union(
   nakafaQuranMeaningPreviewValidator,
   nakafaQuranTranslationPreviewValidator

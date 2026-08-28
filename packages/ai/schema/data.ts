@@ -27,20 +27,18 @@ const SearchResultSchema = NakafaAgentSearchResultSchema;
 const ReadInputSchema = NakafaAgentReadOptionsSchema;
 const QuranInputSchema = NakafaAgentQuranReferenceOptionsSchema;
 const TaxonomyInputSchema = NakafaAgentTaxonomyOptionsSchema;
-const QuranPreviewSchema = NakafaAgentContentRefSchema.mapFields((fields) => ({
-  ...fields,
+const QuranPreviewSchema = Schema.Struct({
+  ...NakafaAgentContentRefSchema.fields,
   from_verse: Schema.Finite,
-  meaning: Schema.NullOr(
-    Schema.Struct({
-      locale: Schema.Literal("en"),
-      text: Schema.String,
-    }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)))
-  ),
+  meaning: Schema.Struct({
+    locale: LocaleSchema,
+    text: Schema.String,
+  }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
   name: Schema.String,
   revelation: Schema.String,
   to_verse: Schema.Finite,
   verse_count: Schema.Finite,
-})).mapFields(Struct.map(Schema.mutableKey));
+}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 const TaxonomyPreviewSchema = Schema.Struct({
   content_counts: Schema.Array(
     Schema.Struct({

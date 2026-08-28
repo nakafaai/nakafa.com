@@ -6,6 +6,7 @@ import {
   makeQuranAttribution,
   makeQuranChunk,
   makeQuranLocaleSources,
+  makeQuranMeaning,
   makeQuranSearch,
   makeQuranSurah,
   makeQuranTafsirProjection,
@@ -116,7 +117,7 @@ describe("contentRelease/quran/view", () => {
 
     expect(english.nextSurah).toEqual({
       name: {
-        sourceMeaning: { appLocale: "en", text: "Technical meaning 2" },
+        sourceMeaning: makeQuranMeaning(2),
         transliteration: "Technical Surah 2",
       },
       number: 2,
@@ -125,7 +126,7 @@ describe("contentRelease/quran/view", () => {
     expect(english.previousSurah).toBeNull();
     expect(english.surah).toEqual({
       name: {
-        sourceMeaning: { appLocale: "en", text: "Technical meaning 1" },
+        sourceMeaning: makeQuranMeaning(1),
         transliteration: "Technical Surah 1",
       },
       number: 1,
@@ -173,14 +174,10 @@ describe("contentRelease/quran/view", () => {
     ]);
     expect(indonesian.sources).toEqual(makeQuranLocaleSources("id"));
     expect(indonesian.tafsirAccess).toEqual(makeQuranTafsirProjection("id"));
-    expect(indonesian.nextSurah?.name.sourceMeaning).toEqual({
-      appLocale: "en",
-      text: "Technical meaning 2",
-    });
-    expect(indonesian.surah?.name.sourceMeaning).toEqual({
-      appLocale: "en",
-      text: "Technical meaning 1",
-    });
+    expect(indonesian.nextSurah?.name.sourceMeaning).toEqual(
+      makeQuranMeaning(2)
+    );
+    expect(indonesian.surah?.name.sourceMeaning).toEqual(makeQuranMeaning(1));
     expect(JSON.stringify(indonesian)).not.toContain("Tafsir teknis");
     expect({
       english: english.appLocale,

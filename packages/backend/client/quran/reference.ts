@@ -30,7 +30,7 @@ export type PublishedQuranReference = PublishedQuranSource & {
   readonly search: QuranSearchRow;
   readonly sources: NonNullable<QuranReferenceResult["sources"]>;
   readonly surah: QuranSurahRow;
-  readonly tafsirAccess: QuranReferenceResult["tafsirAccess"];
+  readonly tafsirAccess: NonNullable<QuranReferenceResult["tafsirAccess"]>;
   readonly toVerse: number;
   readonly verses: readonly QuranRuntimeVerse[];
 };
@@ -49,6 +49,8 @@ export const decodePublishedQuranReference = Effect.fn(
   if (
     result.surahJson === null ||
     result.searchJson === null ||
+    result.sources === null ||
+    result.tafsirAccess === null ||
     !hasExpectedQuranSources(
       result.sources,
       result.tafsirAccess,

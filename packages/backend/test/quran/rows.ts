@@ -258,6 +258,15 @@ export function makeQuranAttribution(
   });
 }
 
+/** Creates the complete locale-keyed meaning map for protocol tests. */
+export function makeQuranMeaning(surahNumber: number) {
+  return {
+    de: `Technische Bedeutung ${surahNumber}`,
+    en: `Technical meaning ${surahNumber}`,
+    id: `Arti teknis ${surahNumber}`,
+  } as const;
+}
+
 /** Creates one signed-contract surah metadata row for protocol tests. */
 export function makeQuranSurah(
   surahNumber: number,
@@ -267,10 +276,7 @@ export function makeQuranSurah(
     kind: "quran-surah",
     name: {
       arabic: `سورة ${surahNumber}`,
-      meaning: {
-        appLocale: makeAppLocale("en"),
-        text: `Technical meaning ${surahNumber}`,
-      },
+      meaning: makeQuranMeaning(surahNumber),
       transliteration: `Technical Surah ${surahNumber}`,
     },
     number: surahNumber,

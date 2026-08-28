@@ -43,6 +43,11 @@ const source = {
   sourceOrigin: { kind: "git" as const, sha: "c".repeat(40) },
   sourceRevision: "c".repeat(40),
 };
+const surahMeaning = {
+  de: "Die Eröffnende",
+  en: "The Opening",
+  id: "Pembuka",
+} as const;
 beforeEach(() => {
   runtimeMocks.runtimeQuery.mockReset();
   runtimeMocks.runtimeQuery.mockImplementation(readRuntimeFixture);
@@ -97,7 +102,7 @@ describe("Quran Nakafa reader", () => {
       });
       const value = Option.getOrUndefined(reference);
 
-      expect(value?.meaning).toEqual({ locale: "en", text: "The Opening" });
+      expect(value?.meaning).toEqual({ locale: "id", text: "Pembuka" });
       expect(value?.pre_bismillah).toBeNull();
       expect(value?.sources).toMatchObject({
         arabic: { id: "tanzil-text" },
@@ -155,11 +160,9 @@ describe("Quran Nakafa reader", () => {
           readNakafaContentRefFixture("id", "quran/1", "quran")
         );
         expect(Option.getOrUndefined(markdown)?.title).toBe("Al-Fatihah");
-        expect(Option.getOrUndefined(markdown)?.description).toBe(
-          "The Opening"
-        );
+        expect(Option.getOrUndefined(markdown)?.description).toBe("Pembuka");
         expect(Option.getOrUndefined(markdown)?.text).toContain(
-          "Meaning: The Opening (en)"
+          "Meaning: Pembuka"
         );
         expect(Option.getOrUndefined(markdown)?.text).toContain("## Verses");
         expect(Option.getOrUndefined(markdown)?.text).toContain(
@@ -242,7 +245,7 @@ function markdownResult(args: Record<string, unknown>) {
     sources: makeQuranLocaleSources(appLocale),
     surah: {
       name: {
-        sourceMeaning: { appLocale: "en", text: "The Opening" },
+        sourceMeaning: surahMeaning,
         transliteration: "Al-Fatihah",
       },
       number: 1,
@@ -296,7 +299,7 @@ function surahRow(number = 1) {
     kind: "quran-surah",
     name: {
       arabic: "الفاتحة",
-      meaning: { appLocale: "en", text: "The Opening" },
+      meaning: surahMeaning,
       transliteration: "Al-Fatihah",
     },
     number,

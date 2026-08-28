@@ -44,11 +44,8 @@ function renderEmbeddedSource(
 
 /** Renders signed locale-specific Tafsir availability for agent Markdown. */
 export function renderQuranTafsirAccessMarkdown(
-  access: QuranMarkdown["tafsirAccess"]
+  access: NonNullable<QuranMarkdown["tafsirAccess"]>
 ): readonly string[] {
-  if (access === null) {
-    return [];
-  }
   return [
     "## Tafsir access",
     "",
@@ -75,6 +72,8 @@ export const decodePublishedQuranMarkdown = Effect.fn(
   const source = yield* decodePublishedQuranSource(result, "markdown");
   if (
     result.surah === null ||
+    result.sources === null ||
+    result.tafsirAccess === null ||
     !hasExpectedQuranSources(
       result.sources,
       result.tafsirAccess,
@@ -92,8 +91,7 @@ export const decodePublishedQuranMarkdown = Effect.fn(
   );
   if (
     result.appLocale !== expected.appLocale ||
-    (result.tafsirAccess !== null &&
-      result.tafsirAccess.appLocale !== expected.appLocale) ||
+    result.tafsirAccess.appLocale !== expected.appLocale ||
     result.surah.number !== expected.surahNumber ||
     result.toVerse !== expectedToVerse ||
     !hasExactQuranVerseRange(result.verses, 1, expectedToVerse)

@@ -29,6 +29,8 @@ export const decodePublishedQuranDocument = Effect.fn(
   const source = yield* decodePublishedQuranSource(result, "document");
   if (
     result.surah === null ||
+    result.sources === null ||
+    result.tafsirAccess === null ||
     !hasExpectedQuranSources(
       result.sources,
       result.tafsirAccess,
