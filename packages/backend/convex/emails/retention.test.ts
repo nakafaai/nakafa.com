@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
@@ -16,7 +17,11 @@ describe("emails/retention", () => {
 
       const scheduledJobs = yield* Effect.promise(() =>
         test.query((ctx) =>
-          ctx.db.system.query("_scheduled_functions").collect()
+          runConvexProgram(
+            Effect.promise(() =>
+              ctx.db.system.query("_scheduled_functions").collect()
+            )
+          )
         )
       );
 
