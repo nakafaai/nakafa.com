@@ -1,6 +1,7 @@
 // @vitest-environment node
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 
 const readRuntimeQueryMock = vi.hoisted(() => vi.fn());
@@ -33,37 +34,36 @@ describe("public URL migration redirects", () => {
     articleMocks.readActiveRoute.mockReset();
   });
 
-  it("redirects a retired URL to its authenticated current route", async () => {
-    readRuntimeQueryMock.mockReturnValueOnce(
-      Effect.succeed({
-        activeReleaseId: "release-test",
-        managed: true,
-        publicPath:
-          "materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling",
-      })
-    );
-
-    await expect(
-      Effect.runPromise(
-        readPublicUrlMigrationRedirect({
-          method: "GET",
-          pathname:
-            "/id/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle",
+  it.effect("redirects a retired URL to its authenticated current route", () =>
+    Effect.gen(function* () {
+      readRuntimeQueryMock.mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId: "release-test",
+          managed: true,
+          publicPath:
+            "materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling",
         })
-      )
-    ).resolves.toBe(
-      "/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling"
-    );
-    expect(readRuntimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
-      appLocale: "id",
-      contentKey:
-        "material/lesson/mathematics/circle/central-angle-and-inscribed-angle",
-      expectedMaterialKey: "lesson.mathematics.circle",
-      expectedSectionKey: "central-angle-and-inscribed-angle",
-    });
-  });
+      );
 
-  it.each([
+      const redirect = yield* readPublicUrlMigrationRedirect({
+        method: "GET",
+        pathname:
+          "/id/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle",
+      });
+      expect(redirect).toBe(
+        "/id/materi/matematika/lingkaran/sudut-pusat-dan-sudut-keliling"
+      );
+      expect(readRuntimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
+        appLocale: "id",
+        contentKey:
+          "material/lesson/mathematics/circle/central-angle-and-inscribed-angle",
+        expectedMaterialKey: "lesson.mathematics.circle",
+        expectedSectionKey: "central-angle-and-inscribed-angle",
+      });
+    })
+  );
+
+  it.effect.each([
     {
       expectedIdentity: {
         appLocale: "id",
@@ -89,28 +89,29 @@ describe("public URL migration redirects", () => {
     },
   ])(
     "redirects the source-proven statistics topic split for $pathname",
-    async ({ expectedIdentity, pathname, publicPath }) => {
-      readRuntimeQueryMock.mockReturnValueOnce(
-        Effect.succeed({
-          activeReleaseId: "release-test",
-          managed: true,
-          publicPath,
-        })
-      );
+    ({ expectedIdentity, pathname, publicPath }) =>
+      Effect.gen(function* () {
+        readRuntimeQueryMock.mockReturnValueOnce(
+          Effect.succeed({
+            activeReleaseId: "release-test",
+            managed: true,
+            publicPath,
+          })
+        );
 
-      await expect(
-        Effect.runPromise(
-          readPublicUrlMigrationRedirect({ method: "GET", pathname })
-        )
-      ).resolves.toBe(`/${expectedIdentity.appLocale}/${publicPath}`);
-      expect(readRuntimeQueryMock).toHaveBeenCalledWith(
-        expect.anything(),
-        expectedIdentity
-      );
-    }
+        const redirect = yield* readPublicUrlMigrationRedirect({
+          method: "GET",
+          pathname,
+        });
+        expect(redirect).toBe(`/${expectedIdentity.appLocale}/${publicPath}`);
+        expect(readRuntimeQueryMock).toHaveBeenCalledWith(
+          expect.anything(),
+          expectedIdentity
+        );
+      })
   );
 
-  it.each([
+  it.effect.each([
     ["/de/articles/politics", "/de/articles/politik"],
     [
       "/de/articles/politics/regional-elections-turmoil",
@@ -140,102 +141,104 @@ describe("public URL migration redirects", () => {
       "/de/articles/politics/dynastic-politics-asian-values",
       "/de/articles/politik/politische-dynastien-und-asiatische-werte",
     ],
-  ])("redirects exposed German article URL %s", async (pathname, expected) => {
-    articleMocks.hasCategory
-      .mockReturnValueOnce(Effect.succeed(false))
-      .mockReturnValueOnce(Effect.succeed(true));
-    articleMocks.readActiveRoute
-      .mockReturnValueOnce(
-        Effect.succeed({
-          activeReleaseId: "release-current",
-          kind: "missing",
-        })
-      )
-      .mockReturnValueOnce(
-        Effect.succeed({
-          activeReleaseId: "release-current",
-          kind: "found",
-        })
-      );
+  ])("redirects exposed German article URL %s", ([pathname, expected]) =>
+    Effect.gen(function* () {
+      articleMocks.hasCategory
+        .mockReturnValueOnce(Effect.succeed(false))
+        .mockReturnValueOnce(Effect.succeed(true));
+      articleMocks.readActiveRoute
+        .mockReturnValueOnce(
+          Effect.succeed({
+            activeReleaseId: "release-current",
+            kind: "missing",
+          })
+        )
+        .mockReturnValueOnce(
+          Effect.succeed({
+            activeReleaseId: "release-current",
+            kind: "found",
+          })
+        );
 
-    await expect(
-      Effect.runPromise(
-        readPublicUrlMigrationRedirect({ method: "GET", pathname })
-      )
-    ).resolves.toBe(expected);
-    expect(readRuntimeQueryMock).not.toHaveBeenCalled();
-  });
+      const redirect = yield* readPublicUrlMigrationRedirect({
+        method: "GET",
+        pathname,
+      });
+      expect(redirect).toBe(expected);
+      expect(readRuntimeQueryMock).not.toHaveBeenCalled();
+    })
+  );
 
-  it("redirects HEAD requests for an exposed article category", async () => {
-    articleMocks.hasCategory
-      .mockReturnValueOnce(Effect.succeed(false))
-      .mockReturnValueOnce(Effect.succeed(true));
+  it.effect("redirects HEAD requests for an exposed article category", () =>
+    Effect.gen(function* () {
+      articleMocks.hasCategory
+        .mockReturnValueOnce(Effect.succeed(false))
+        .mockReturnValueOnce(Effect.succeed(true));
 
-    await expect(
-      Effect.runPromise(
-        readPublicUrlMigrationRedirect({
-          method: "HEAD",
-          pathname: "/de/articles/politics",
-        })
-      )
-    ).resolves.toBe("/de/articles/politik");
-  });
+      const redirect = yield* readPublicUrlMigrationRedirect({
+        method: "HEAD",
+        pathname: "/de/articles/politics",
+      });
+      expect(redirect).toBe("/de/articles/politik");
+    })
+  );
 
-  it("keeps article routes owned by a recovered signed release", async () => {
-    articleMocks.readActiveRoute
-      .mockReturnValueOnce(
-        Effect.succeed({
-          activeReleaseId: "release-recovery",
-          kind: "found",
-        })
-      )
-      .mockReturnValueOnce(
-        Effect.succeed({
-          activeReleaseId: "release-recovery",
-          kind: "missing",
-        })
-      );
+  it.effect("keeps article routes owned by a recovered signed release", () =>
+    Effect.gen(function* () {
+      articleMocks.readActiveRoute
+        .mockReturnValueOnce(
+          Effect.succeed({
+            activeReleaseId: "release-recovery",
+            kind: "found",
+          })
+        )
+        .mockReturnValueOnce(
+          Effect.succeed({
+            activeReleaseId: "release-recovery",
+            kind: "missing",
+          })
+        );
 
-    await expect(
-      Effect.runPromise(
-        readPublicUrlMigrationRedirect({
+      const redirect = yield* readPublicUrlMigrationRedirect({
+        method: "GET",
+        pathname: "/de/articles/politics/regional-elections-turmoil",
+      });
+      expect(redirect).toBeNull();
+    })
+  );
+
+  it.effect("keeps category routes owned by a recovered signed release", () =>
+    Effect.gen(function* () {
+      articleMocks.hasCategory
+        .mockReturnValueOnce(Effect.succeed(true))
+        .mockReturnValueOnce(Effect.succeed(false));
+
+      const redirect = yield* readPublicUrlMigrationRedirect({
+        method: "HEAD",
+        pathname: "/de/articles/politics",
+      });
+      expect(redirect).toBeNull();
+    })
+  );
+
+  it.effect(
+    "does not redirect an article without active signed ownership",
+    () =>
+      Effect.gen(function* () {
+        articleMocks.readActiveIdentity.mockReturnValueOnce(
+          Effect.succeed(null)
+        );
+
+        const redirect = yield* readPublicUrlMigrationRedirect({
           method: "GET",
           pathname: "/de/articles/politics/regional-elections-turmoil",
-        })
-      )
-    ).resolves.toBeNull();
-  });
+        });
+        expect(redirect).toBeNull();
+        expect(articleMocks.readActiveRoute).not.toHaveBeenCalled();
+      })
+  );
 
-  it("keeps category routes owned by a recovered signed release", async () => {
-    articleMocks.hasCategory
-      .mockReturnValueOnce(Effect.succeed(true))
-      .mockReturnValueOnce(Effect.succeed(false));
-
-    await expect(
-      Effect.runPromise(
-        readPublicUrlMigrationRedirect({
-          method: "HEAD",
-          pathname: "/de/articles/politics",
-        })
-      )
-    ).resolves.toBeNull();
-  });
-
-  it("does not redirect an article without active signed ownership", async () => {
-    articleMocks.readActiveIdentity.mockReturnValueOnce(Effect.succeed(null));
-
-    await expect(
-      Effect.runPromise(
-        readPublicUrlMigrationRedirect({
-          method: "GET",
-          pathname: "/de/articles/politics/regional-elections-turmoil",
-        })
-      )
-    ).resolves.toBeNull();
-    expect(articleMocks.readActiveRoute).not.toHaveBeenCalled();
-  });
-
-  it.each([
+  it.effect.each([
     { activeReleaseId: "release-test", managed: true, publicPath: null },
     { activeReleaseId: null, managed: false, publicPath: null },
     {
@@ -243,21 +246,20 @@ describe("public URL migration redirects", () => {
       managed: true,
       publicPath: "subjects/mathematics/circle/section",
     },
-  ])("does not redirect an absent signed identity", async (decision) => {
-    readRuntimeQueryMock.mockReturnValueOnce(Effect.succeed(decision));
+  ])("does not redirect an absent signed identity", (decision) =>
+    Effect.gen(function* () {
+      readRuntimeQueryMock.mockReturnValueOnce(Effect.succeed(decision));
 
-    await expect(
-      Effect.runPromise(
-        readPublicUrlMigrationRedirect({
-          method: "HEAD",
-          pathname:
-            "/en/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle",
-        })
-      )
-    ).resolves.toBeNull();
-  });
+      const redirect = yield* readPublicUrlMigrationRedirect({
+        method: "HEAD",
+        pathname:
+          "/en/subject/high-school/11/mathematics/circle/central-angle-and-inscribed-angle",
+      });
+      expect(redirect).toBeNull();
+    })
+  );
 
-  it.each([
+  it.effect.each([
     {
       method: "POST",
       pathname:
@@ -295,12 +297,14 @@ describe("public URL migration redirects", () => {
       method: "GET",
       pathname: "/en/subject/high-school/11/mathematics/circle/NotAContentKey",
     },
-  ])("ignores a non-migration request", async (request) => {
-    await expect(
-      Effect.runPromise(readPublicUrlMigrationRedirect(request))
-    ).resolves.toBeNull();
-    expect(readRuntimeQueryMock).not.toHaveBeenCalled();
-    expect(articleMocks.hasCategory).not.toHaveBeenCalled();
-    expect(articleMocks.readActiveIdentity).not.toHaveBeenCalled();
-  });
+  ])("ignores a non-migration request", (request) =>
+    Effect.gen(function* () {
+      const redirect = yield* readPublicUrlMigrationRedirect(request);
+
+      expect(redirect).toBeNull();
+      expect(readRuntimeQueryMock).not.toHaveBeenCalled();
+      expect(articleMocks.hasCategory).not.toHaveBeenCalled();
+      expect(articleMocks.readActiveIdentity).not.toHaveBeenCalled();
+    })
+  );
 });
