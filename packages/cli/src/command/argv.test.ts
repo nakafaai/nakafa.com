@@ -58,10 +58,6 @@ describe("Nakafa CLI arguments", () => {
       expected: ["--no-locale", "taxonomy"],
     },
     {
-      argv: ["--locale", "--", "taxonomy"],
-      expected: ["--locale", "--", "taxonomy"],
-    },
-    {
       argv: ["-x", "taxonomy"],
       expected: ["-x", "taxonomy"],
     },
@@ -69,14 +65,15 @@ describe("Nakafa CLI arguments", () => {
     { argv: ["other", "taxonomy"], expected: ["other", "taxonomy"] },
     { argv: ["--pretty"], expected: ["--pretty=true"] },
     { argv: ["--locale", "id"], expected: ["--help"] },
+    { argv: ["--locale", "id", "--"], expected: ["--help"] },
     { argv: ["--locale", "taxonomy"], expected: ["--help"] },
     { argv: ["--locale=id"], expected: ["--help"] },
     { argv: ["--limit", "5"], expected: ["--help"] },
     { argv: ["--tafsir"], expected: ["--help"] },
     { argv: ["--locale"], expected: ["--locale"] },
     {
-      argv: ["--locale", "--pretty"],
-      expected: ["--locale", "--pretty=true"],
+      argv: ["--locale", "--", "taxonomy"],
+      expected: ["--locale", "--", "taxonomy"],
     },
     { argv: ["--api-base"], expected: ["--api-base"] },
     {
@@ -90,18 +87,31 @@ describe("Nakafa CLI arguments", () => {
   );
 
   it.effect.each([
-    ["--pretty=false"],
-    ["--no-pretty=false"],
-    ["-p=true"],
-    ["-hv=false"],
-  ])("rejects explicit presence value %j", (argv) =>
+    { argv: ["--pretty=false"], message: "does not accept a value" },
+    { argv: ["--no-pretty=false"], message: "does not accept a value" },
+    { argv: ["-p=true"], message: "does not accept a value" },
+    { argv: ["-hv=false"], message: "does not accept a value" },
+    {
+      argv: ["taxonomy", "--locale", "--help", "id"],
+      message: "requires a value",
+    },
+    {
+      argv: ["taxonomy", "--locale", "--pretty", "id"],
+      message: "requires a value",
+    },
+    { argv: ["--locale", "--pretty"], message: "requires a value" },
+    {
+      argv: ["taxonomy", "--locale", "-h", "id"],
+      message: "requires a value",
+    },
+  ])("rejects invalid flag values $argv", ({ argv, message }) =>
     Effect.gen(function* () {
       const result = yield* normalizeArgv(argv).pipe(Effect.result);
 
       expect(Result.isFailure(result)).toBe(true);
       if (Result.isFailure(result)) {
         expect(result.failure).toBeInstanceOf(InvocationError);
-        expect(result.failure.message).toContain("does not accept a value");
+        expect(result.failure.message).toContain(message);
       }
     })
   );

@@ -126,7 +126,14 @@ describe("Nakafa CLI execution", () => {
           client
         );
         const commandOptionHelp = yield* Effect.forEach(
-          [["--locale", "id"], ["--limit", "5"], ["--tafsir"]],
+          [
+            ["--locale", "id"],
+            ["--limit", "5"],
+            ["--tafsir"],
+            ["--locale", "id", "--"],
+            ["--limit", "5", "--"],
+            ["--tafsir", "--"],
+          ],
           (argv) => execute(argv, client)
         );
         const commandHelp = yield* execute(["taxonomy", "--help"], client);
@@ -425,6 +432,7 @@ describe("Nakafa CLI execution", () => {
     ["taxonomy", "--bogus", "--help"],
     ["--version", "--unknown"],
     ["search", "query", "--limit", "zero", "--help"],
+    ["taxonomy", "--locale", "--help", "id"],
     ["search", "", "--help"],
     ["get", "", "--help"],
   ])("rejects invalid action invocation %j", (argv) =>

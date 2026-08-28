@@ -54,6 +54,7 @@ type ShortFlagName =
 export const normalizeArgv = Effect.fn("NakafaCli.normalizeArgv")(function* (
   argv: readonly string[]
 ) {
+  yield* validateActionBoundaries(argv);
   const normalized: string[] = [];
   const actions: Record<ActionName, boolean | undefined> = {
     help: undefined,
@@ -235,7 +236,12 @@ function moveToFront(
 }
 
 function addRootHelp(argv: readonly string[]) {
-  if (argv.includes("--") || findCommand(argv) !== undefined) {
+  const separatorIndex = argv.indexOf("--");
+  if (separatorIndex !== -1 && separatorIndex !== argv.length - 1) {
+    return [...argv];
+  }
+  const source = separatorIndex === -1 ? argv : argv.slice(0, -1);
+  if (findCommand(source) !== undefined) {
     return [...argv];
   }
 
@@ -243,7 +249,7 @@ function addRootHelp(argv: readonly string[]) {
   let hasCommandOption = false;
   let skipValue = false;
 
-  for (const [index, argument] of argv.entries()) {
+  for (const [index, argument] of source.entries()) {
     if (skipValue) {
       skipValue = false;
       continue;
@@ -268,7 +274,7 @@ function addRootHelp(argv: readonly string[]) {
       continue;
     }
     if (long.name === FLAG_NAME.apiBase && long.value === undefined) {
-      const value = argv[index + 1];
+      const value = source[index + 1];
       if (value === undefined || value.startsWith("-")) {
         return [...argv];
       }
@@ -288,12 +294,45 @@ function addRootHelp(argv: readonly string[]) {
   }
 
   if (!hasCommandOption) {
-    return [...argv];
+    return [...source];
   }
   if (!rootArgv.some(isCanonicalActionFlag)) {
     rootArgv.push(`--${FLAG_NAME.help}`);
   }
   return rootArgv;
+}
+
+const validateActionBoundaries = Effect.fn(
+  "NakafaCli.validateActionBoundaries"
+)(function* (argv: readonly string[]) {
+  for (const [index, argument] of argv.entries()) {
+    if (argument === "--") {
+      return;
+    }
+    const long = readLongFlag(argument);
+    if (
+      long === undefined ||
+      long.negated ||
+      long.value !== undefined ||
+      !VALUE_FLAGS.has(long.name)
+    ) {
+      continue;
+    }
+    const value = argv[index + 1];
+    if (value !== undefined && isNormalizedBooleanFlag(value)) {
+      return yield* new InvocationError({
+        message: `--${long.sourceName} requires a value.`,
+      });
+    }
+  }
+});
+
+function isNormalizedBooleanFlag(argument: string) {
+  const long = readLongFlag(argument);
+  return (
+    (long !== undefined && isBooleanFlag(long.name)) ||
+    readShortFlags(argument) !== undefined
+  );
 }
 
 function readLongFlag(argument: string) {
