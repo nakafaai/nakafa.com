@@ -20,7 +20,17 @@ import type {
   ContentSnapshotRow,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import type {
+  ActionCtx,
+  MutationCtx,
+} from "@repo/backend/convex/_generated/server";
 import { stagePublication } from "@repo/backend/convex/contentRelease/ingress/stage";
+import {
+  type ConvexTaggedError,
+  getUnknownErrorMessage,
+  runConvexActionProgram,
+  runConvexProgram,
+} from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
@@ -45,8 +55,8 @@ import {
   makeProgramSnapshotData,
   type ProgramSnapshotData,
 } from "@repo/backend/test/program/snapshot";
-import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { convexTest, type TestConvex } from "convex-test";
+import { Data, Effect, Schema } from "effect";
 
 const candidateId = ReleaseIdSchema.make("release-stage-candidate");
 const activeKeyId = SigningKeyIdSchema.make("test-active-key");
@@ -104,289 +114,320 @@ function snapshotRelease(snapshots: ProgramSnapshotData["snapshots"]) {
   );
 }
 
-describe("content release staging ingress", () => {
-  it("rejects a renderer not owned by the signed release", async () => {
-    const t = convexTest(schema, convexModules);
+class ObservedStageActionFailure extends Schema.TaggedError<ObservedStageActionFailure>()(
+  "ObservedStageActionFailure",
+  { cause: Schema.Unknown }
+) {}
 
-    await expect(
-      t.action((ctx) =>
-        Effect.runPromise(
-          stagePublication(
-            ctx,
-            {
-              operation: "stageRelease",
-              release: signedRelease(),
-              rendererManifest: testProofRenderer("h1"),
-            },
-            TEST_KEY_ID
-          ).pipe(
-            Effect.provideService(
-              ContentVerificationKeyResolver,
-              TEST_KEY_RESOLVER
-            )
+class UnexpectedStageTestState extends Data.TaggedError(
+  "UnexpectedStageTestState"
+)<{
+  readonly operation: "select-program-row" | "select-recovery-release";
+}> {}
+
+/** Stores one candidate or recovery release under the rotated-key fixture. */
+const storeIngressRelease = Effect.fn(
+  "test.contentRelease.storeIngressRelease"
+)(function* (ctx: MutationCtx, role: "candidate" | "recovery") {
+  yield* Effect.promise(() =>
+    insertSignedCandidate(
+      ctx,
+      ingressReleaseId,
+      activeSignedRelease(),
+      JSON.stringify(TEST_PROOF_RENDERER)
+    )
+  );
+  if (role === "candidate") {
+    return;
+  }
+  const [release, state] = yield* Effect.all([
+    Effect.promise(() => ctx.db.query("contentReleases").unique()),
+    Effect.promise(() => ctx.db.query("contentState").unique()),
+  ]);
+  if (!(release && state)) {
+    return yield* Effect.die(
+      new UnexpectedStageTestState({
+        operation: "select-recovery-release",
+      })
+    );
+  }
+  yield* Effect.promise(() =>
+    ctx.db.patch("contentReleases", release._id, { role })
+  );
+  yield* Effect.promise(() =>
+    ctx.db.patch("contentState", state._id, {
+      candidateManifestHash: undefined,
+      candidateReleaseId: undefined,
+      candidateSequence: undefined,
+      recoveryManifestHash: ingressRelease.manifestHash,
+      recoveryReleaseId: ingressReleaseId,
+      recoverySequence: release.sequence,
+    })
+  );
+});
+
+/** Runs one staging program through the real Convex action boundary. */
+const runStage = Effect.fn("test.contentRelease.runStage")(function* <
+  A,
+  E extends ConvexTaggedError,
+>(
+  target: TestConvex<typeof schema>,
+  makeProgram: (
+    ctx: ActionCtx
+  ) => Effect.Effect<A, E, ContentVerificationKeyResolver>,
+  resolver = TEST_KEY_RESOLVER
+) {
+  return yield* Effect.tryPromise({
+    catch: (cause) => new ObservedStageActionFailure({ cause }),
+    try: () =>
+      target.action((ctx) =>
+        runConvexActionProgram(
+          makeProgram(ctx).pipe(
+            Effect.provideService(ContentVerificationKeyResolver, resolver)
           )
         )
-      )
-    ).rejects.toThrow("does not own the supplied renderer snapshot");
-  });
-
-  it("rejects a stored candidate whose signed identity drifted", async () => {
-    const t = convexTest(schema, convexModules);
-    const other = signedRelease(ReleaseIdSchema.make("release-stage-other"));
-    await t.mutation((ctx) =>
-      insertSignedCandidate(
-        ctx,
-        candidateId,
-        other,
-        JSON.stringify(TEST_PROOF_RENDERER)
-      )
-    );
-
-    await expect(
-      t.action((ctx) =>
-        Effect.runPromise(
-          stagePublication(
-            ctx,
-            {
-              artifacts: [testSignedArtifact()],
-              batchIndex: 0,
-              operation: "stageArtifactBatch",
-              releaseId: candidateId,
-            },
-            TEST_KEY_ID
-          ).pipe(
-            Effect.provideService(
-              ContentVerificationKeyResolver,
-              TEST_KEY_RESOLVER
-            )
-          )
-        )
-      )
-    ).rejects.toThrow("identity does not match its stored envelope");
-  });
-
-  it("rejects a tampered artifact before storage", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) =>
-      insertSignedCandidate(
-        ctx,
-        candidateId,
-        signedRelease(),
-        JSON.stringify(TEST_PROOF_RENDERER)
-      )
-    );
-    const artifact = testSignedArtifact();
-    const prefix = artifact.signature.startsWith("A") ? "B" : "A";
-    const tampered = {
-      ...artifact,
-      signature: Ed25519SignatureSchema.make(
-        `${prefix}${artifact.signature.slice(1)}`
       ),
-    };
-
-    await expect(
-      t.action((ctx) =>
-        Effect.runPromise(
-          stagePublication(
-            ctx,
-            {
-              artifacts: [tampered],
-              batchIndex: 0,
-              operation: "stageArtifactBatch",
-              releaseId: candidateId,
-            },
-            TEST_KEY_ID
-          ).pipe(
-            Effect.provideService(
-              ContentVerificationKeyResolver,
-              TEST_KEY_RESOLVER
-            )
-          )
-        )
-      )
-    ).rejects.toThrow("Content release verification failed");
   });
+});
 
-  it("admits retained artifacts only for authenticated recovery rows", async () => {
-    for (const role of ["candidate", "recovery"] as const) {
+describe("content release staging ingress", () => {
+  it.effect("rejects a renderer not owned by the signed release", () =>
+    Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
-      await t.mutation(async (ctx) => {
-        await insertSignedCandidate(
+      const failure = yield* runStage(t, (ctx) =>
+        stagePublication(
           ctx,
-          ingressReleaseId,
-          activeSignedRelease(),
-          JSON.stringify(TEST_PROOF_RENDERER)
-        );
-        if (role === "candidate") {
-          return;
-        }
-        const [release, state] = await Promise.all([
-          ctx.db.query("contentReleases").unique(),
-          ctx.db.query("contentState").unique(),
-        ]);
-        if (!(release && state)) {
-          throw new Error("Expected one staged release and state row.");
-        }
-        await ctx.db.patch("contentReleases", release._id, { role });
-        await ctx.db.patch("contentState", state._id, {
-          candidateManifestHash: undefined,
-          candidateReleaseId: undefined,
-          candidateSequence: undefined,
-          recoveryManifestHash: ingressRelease.manifestHash,
-          recoveryReleaseId: ingressReleaseId,
-          recoverySequence: release.sequence,
-        });
-      });
-      await t.action((ctx) =>
-        Effect.runPromise(
-          stagePublication(ctx, {
-            batchIndex: 0,
-            items: [ingressItem],
-            operation: "stageItemBatch",
-            releaseId: ingressReleaseId,
-          }).pipe(
-            Effect.provideService(
-              ContentVerificationKeyResolver,
-              rotatedKeyResolver
-            )
-          )
+          {
+            operation: "stageRelease",
+            release: signedRelease(),
+            rendererManifest: testProofRenderer("h1"),
+          },
+          TEST_KEY_ID
         )
+      ).pipe(Effect.flip);
+      expect(getUnknownErrorMessage(failure.cause)).toContain(
+        "does not own the supplied renderer snapshot"
       );
-      const stageArtifact = t.action((ctx) =>
-        Effect.runPromise(
-          stagePublication(
+    })
+  );
+
+  it.effect("rejects a stored candidate whose signed identity drifted", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      const other = signedRelease(ReleaseIdSchema.make("release-stage-other"));
+      yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          insertSignedCandidate(
             ctx,
-            {
-              artifacts: [ingressArtifact],
-              batchIndex: 0,
-              operation: "stageArtifactBatch",
-              releaseId: ingressReleaseId,
-            },
-            activeKeyId
-          ).pipe(
-            Effect.provideService(
-              ContentVerificationKeyResolver,
-              rotatedKeyResolver
-            )
+            candidateId,
+            other,
+            JSON.stringify(TEST_PROOF_RENDERER)
           )
         )
       );
-      if (role === "candidate") {
-        await expect(stageArtifact).rejects.toThrow(
-          "must use the active content signing key"
+      const failure = yield* runStage(t, (ctx) =>
+        stagePublication(
+          ctx,
+          {
+            artifacts: [testSignedArtifact()],
+            batchIndex: 0,
+            operation: "stageArtifactBatch",
+            releaseId: candidateId,
+          },
+          TEST_KEY_ID
+        )
+      ).pipe(Effect.flip);
+      expect(getUnknownErrorMessage(failure.cause)).toContain(
+        "identity does not match its stored envelope"
+      );
+    })
+  );
+
+  it.effect("rejects a tampered artifact before storage", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          insertSignedCandidate(
+            ctx,
+            candidateId,
+            signedRelease(),
+            JSON.stringify(TEST_PROOF_RENDERER)
+          )
+        )
+      );
+      const artifact = testSignedArtifact();
+      const prefix = artifact.signature.startsWith("A") ? "B" : "A";
+      const tampered = {
+        ...artifact,
+        signature: Ed25519SignatureSchema.make(
+          `${prefix}${artifact.signature.slice(1)}`
+        ),
+      };
+      const failure = yield* runStage(t, (ctx) =>
+        stagePublication(
+          ctx,
+          {
+            artifacts: [tampered],
+            batchIndex: 0,
+            operation: "stageArtifactBatch",
+            releaseId: candidateId,
+          },
+          TEST_KEY_ID
+        )
+      ).pipe(Effect.flip);
+      expect(getUnknownErrorMessage(failure.cause)).toContain(
+        "Content release verification failed"
+      );
+    })
+  );
+
+  it.effect(
+    "admits retained artifacts only for authenticated recovery rows",
+    () =>
+      Effect.gen(function* () {
+        for (const role of ["candidate", "recovery"] as const) {
+          const t = convexTest(schema, convexModules);
+          yield* Effect.promise(() =>
+            t.mutation((ctx) =>
+              runConvexProgram(storeIngressRelease(ctx, role))
+            )
+          );
+          yield* runStage(
+            t,
+            (ctx) =>
+              stagePublication(ctx, {
+                batchIndex: 0,
+                items: [ingressItem],
+                operation: "stageItemBatch",
+                releaseId: ingressReleaseId,
+              }),
+            rotatedKeyResolver
+          );
+          const stageArtifact = runStage(
+            t,
+            (ctx) =>
+              stagePublication(
+                ctx,
+                {
+                  artifacts: [ingressArtifact],
+                  batchIndex: 0,
+                  operation: "stageArtifactBatch",
+                  releaseId: ingressReleaseId,
+                },
+                activeKeyId
+              ),
+            rotatedKeyResolver
+          );
+          if (role === "candidate") {
+            const failure = yield* stageArtifact.pipe(Effect.flip);
+            expect(getUnknownErrorMessage(failure.cause)).toContain(
+              "must use the active content signing key"
+            );
+            continue;
+          }
+          expect(yield* stageArtifact).toMatchObject({
+            ok: true,
+            operation: "stageArtifactBatch",
+            value: { created: 1, unchanged: 0 },
+          });
+        }
+      })
+  );
+
+  it.effect(
+    "rejects a poisoned manifest before storage and accepts its exact retry",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* makeProgramSnapshotData();
+        const release = snapshotRelease(data.snapshots);
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            insertSignedCandidate(
+              ctx,
+              candidateId,
+              release,
+              JSON.stringify(TEST_PROOF_RENDERER)
+            )
+          )
         );
-        continue;
-      }
-      await expect(stageArtifact).resolves.toMatchObject({
-        ok: true,
-        operation: "stageArtifactBatch",
-        value: { created: 1, unchanged: 0 },
-      });
-    }
-  });
-
-  it("rejects a poisoned manifest before storage and accepts its exact retry", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const release = snapshotRelease(data.snapshots);
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) =>
-      insertSignedCandidate(
-        ctx,
-        candidateId,
-        release,
-        JSON.stringify(TEST_PROOF_RENDERER)
-      )
-    );
-    const tampered: ContentSnapshotManifest = {
-      family: "program",
-      manifest: ProgramSnapshotSchema.make({
-        ...data.snapshot.manifest,
-        rowDigest: Sha256HashSchema.make(`sha256:${"9".repeat(64)}`),
-      }),
-    };
-
-    await expect(
-      t.action((ctx) =>
-        Effect.runPromise(
+        const tampered: ContentSnapshotManifest = {
+          family: "program",
+          manifest: ProgramSnapshotSchema.make({
+            ...data.snapshot.manifest,
+            rowDigest: Sha256HashSchema.make(`sha256:${"9".repeat(64)}`),
+          }),
+        };
+        const failure = yield* runStage(t, (ctx) =>
           stagePublication(ctx, {
             operation: "stageSnapshot",
             releaseId: candidateId,
             snapshot: tampered,
-          }).pipe(
-            Effect.provideService(
-              ContentVerificationKeyResolver,
-              TEST_KEY_RESOLVER
+          })
+        ).pipe(Effect.flip);
+        expect(getUnknownErrorMessage(failure.cause)).toContain(
+          "invalid content identity"
+        );
+        expect(
+          yield* Effect.promise(() =>
+            t.run((ctx) => ctx.db.query("contentSnapshots").unique())
+          )
+        ).toBeNull();
+        expect(
+          yield* runStage(t, (ctx) =>
+            stagePublication(ctx, {
+              operation: "stageSnapshot",
+              releaseId: candidateId,
+              snapshot: data.snapshot,
+            })
+          )
+        ).toMatchObject({
+          ok: true,
+          operation: "stageSnapshot",
+          value: { created: 1, snapshotId: data.snapshotId },
+        });
+      })
+  );
+
+  it.effect(
+    "rejects poisoned rows before storage and accepts the exact batch retry",
+    () =>
+      Effect.gen(function* () {
+        const data = yield* makeProgramSnapshotData();
+        const [firstRow, ...remainingRows] = data.rows;
+        if (firstRow?.family !== "program") {
+          return yield* Effect.die(
+            new UnexpectedStageTestState({ operation: "select-program-row" })
+          );
+        }
+        const tampered: ContentSnapshotRow = {
+          ...firstRow,
+          record: {
+            ...firstRow.record,
+            rowHash: Sha256HashSchema.make(`sha256:${"9".repeat(64)}`),
+          },
+        };
+        const release = snapshotRelease(data.snapshots);
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            insertSignedCandidate(
+              ctx,
+              candidateId,
+              release,
+              JSON.stringify(TEST_PROOF_RENDERER)
             )
           )
-        )
-      )
-    ).rejects.toThrow("invalid content identity");
-    await expect(
-      t.run((ctx) => ctx.db.query("contentSnapshots").unique())
-    ).resolves.toBeNull();
-    await expect(
-      t.action((ctx) =>
-        Effect.runPromise(
+        );
+        yield* runStage(t, (ctx) =>
           stagePublication(ctx, {
             operation: "stageSnapshot",
             releaseId: candidateId,
             snapshot: data.snapshot,
-          }).pipe(
-            Effect.provideService(
-              ContentVerificationKeyResolver,
-              TEST_KEY_RESOLVER
-            )
-          )
-        )
-      )
-    ).resolves.toMatchObject({
-      ok: true,
-      operation: "stageSnapshot",
-      value: { created: 1, snapshotId: data.snapshotId },
-    });
-  });
-
-  it("rejects poisoned rows before storage and accepts the exact batch retry", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const [firstRow, ...remainingRows] = data.rows;
-    if (firstRow?.family !== "program") {
-      throw new Error("Expected one program snapshot row.");
-    }
-    const tampered: ContentSnapshotRow = {
-      ...firstRow,
-      record: {
-        ...firstRow.record,
-        rowHash: Sha256HashSchema.make(`sha256:${"9".repeat(64)}`),
-      },
-    };
-    const release = snapshotRelease(data.snapshots);
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) =>
-      insertSignedCandidate(
-        ctx,
-        candidateId,
-        release,
-        JSON.stringify(TEST_PROOF_RENDERER)
-      )
-    );
-    await t.action((ctx) =>
-      Effect.runPromise(
-        stagePublication(ctx, {
-          operation: "stageSnapshot",
-          releaseId: candidateId,
-          snapshot: data.snapshot,
-        }).pipe(
-          Effect.provideService(
-            ContentVerificationKeyResolver,
-            TEST_KEY_RESOLVER
-          )
-        )
-      )
-    );
-
-    await expect(
-      t.action((ctx) =>
-        Effect.runPromise(
+          })
+        );
+        const failure = yield* runStage(t, (ctx) =>
           stagePublication(ctx, {
             batchIndex: 0,
             family: "program",
@@ -394,48 +435,49 @@ describe("content release staging ingress", () => {
             releaseId: candidateId,
             rows: [tampered],
             snapshotId: data.snapshotId,
-          }).pipe(
-            Effect.provideService(
-              ContentVerificationKeyResolver,
-              TEST_KEY_RESOLVER
+          })
+        ).pipe(Effect.flip);
+        expect(getUnknownErrorMessage(failure.cause)).toContain(
+          "invalid content identity"
+        );
+        const stored = yield* Effect.promise(() =>
+          t.run((ctx) =>
+            runConvexProgram(
+              Effect.all({
+                batches: Effect.promise(() =>
+                  ctx.db.query("snapshotBatches").collect()
+                ),
+                curriculum: Effect.promise(() =>
+                  ctx.db.query("curriculumRoutes").collect()
+                ),
+                programs: Effect.promise(() =>
+                  ctx.db.query("programCatalog").collect()
+                ),
+              })
             )
           )
-        )
-      )
-    ).rejects.toThrow("invalid content identity");
-    await expect(
-      t.run(async (ctx) => ({
-        batches: await ctx.db.query("snapshotBatches").collect(),
-        curriculum: await ctx.db.query("curriculumRoutes").collect(),
-        programs: await ctx.db.query("programCatalog").collect(),
-      }))
-    ).resolves.toEqual({ batches: [], curriculum: [], programs: [] });
-    await expect(
-      t.action((ctx) =>
-        Effect.runPromise(
-          stagePublication(ctx, {
+        );
+        expect(stored).toEqual({ batches: [], curriculum: [], programs: [] });
+        expect(
+          yield* runStage(t, (ctx) =>
+            stagePublication(ctx, {
+              batchIndex: 0,
+              family: "program",
+              operation: "stageSnapshotBatch",
+              releaseId: candidateId,
+              rows: [firstRow, ...remainingRows],
+              snapshotId: data.snapshotId,
+            })
+          )
+        ).toMatchObject({
+          ok: true,
+          operation: "stageSnapshotBatch",
+          value: {
             batchIndex: 0,
             family: "program",
-            operation: "stageSnapshotBatch",
-            releaseId: candidateId,
-            rows: [firstRow, ...remainingRows],
             snapshotId: data.snapshotId,
-          }).pipe(
-            Effect.provideService(
-              ContentVerificationKeyResolver,
-              TEST_KEY_RESOLVER
-            )
-          )
-        )
-      )
-    ).resolves.toMatchObject({
-      ok: true,
-      operation: "stageSnapshotBatch",
-      value: {
-        batchIndex: 0,
-        family: "program",
-        snapshotId: data.snapshotId,
-      },
-    });
-  });
+          },
+        });
+      })
+  );
 });

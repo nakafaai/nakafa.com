@@ -1,7 +1,8 @@
 // @vitest-environment node
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect, Result } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import {
   QuranSnapshotRecoveryError,
   recoverStalePublishedQuranSnapshot,
@@ -29,80 +30,110 @@ beforeEach(() => {
   updateTagMock.mockReset();
 });
 describe("stale published Quran snapshot recovery", () => {
-  it("rejects an invalid captured snapshot before reading active state", async () => {
-    const result = await Effect.runPromise(
-      recoverStalePublishedQuranSnapshot("not-a-snapshot").pipe(Effect.result)
-    );
-    expect(Result.isFailure(result)).toBe(true);
-    if (Result.isFailure(result)) {
-      expect(result.failure).toMatchObject({
-        _tag: "QuranSnapshotRecoveryError",
-        reason: "invalid-input",
+  it.effect("rejects invalid input before reading active state", () =>
+    Effect.gen(function* () {
+      const result = yield* recoverStalePublishedQuranSnapshot(
+        "not-a-snapshot"
+      ).pipe(Effect.result);
+
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result)) {
+        expect(result.failure).toMatchObject({
+          _tag: "QuranSnapshotRecoveryError",
+          reason: "invalid-input",
+        });
+      }
+      expect(readIdentityMock).not.toHaveBeenCalled();
+      expect(refreshMock).not.toHaveBeenCalled();
+      expect(updateTagMock).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("refreshes without expiring the active snapshot", () =>
+    Effect.gen(function* () {
+      const recovered =
+        yield* recoverStalePublishedQuranSnapshot(activeSnapshotId);
+
+      expect(recovered).toBe(false);
+      expect(refreshMock).toHaveBeenCalledOnce();
+      expect(updateTagMock).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("immediately expires only the captured stale snapshot tag", () =>
+    Effect.gen(function* () {
+      const recovered =
+        yield* recoverStalePublishedQuranSnapshot(staleSnapshotId);
+
+      expect(recovered).toBe(true);
+      expect(refreshMock).not.toHaveBeenCalled();
+      expect(updateTagMock).toHaveBeenCalledWith(
+        `content-artifact:${staleSnapshotId}`
+      );
+    })
+  );
+
+  it.effect(
+    "maps active identity failures into the recovery error channel",
+    () =>
+      Effect.gen(function* () {
+        const sourceFailure = new Error("identity unavailable");
+        readIdentityMock.mockReturnValueOnce(Effect.fail(sourceFailure));
+
+        const result = yield* recoverStalePublishedQuranSnapshot(
+          staleSnapshotId
+        ).pipe(Effect.result);
+
+        expect(result).toEqual(
+          Result.fail(
+            new QuranSnapshotRecoveryError({
+              cause: sourceFailure,
+              reason: "active-identity",
+            })
+          )
+        );
+      })
+  );
+
+  it.effect("keeps route refresh failures in the typed error channel", () =>
+    Effect.gen(function* () {
+      refreshMock.mockImplementationOnce(() => {
+        throw new Error("refresh unavailable");
       });
-    }
-    expect(readIdentityMock).not.toHaveBeenCalled();
-    expect(refreshMock).not.toHaveBeenCalled();
-    expect(updateTagMock).not.toHaveBeenCalled();
-  });
-  it("refreshes without expiring the currently active snapshot", async () => {
-    await expect(
-      Effect.runPromise(recoverStalePublishedQuranSnapshot(activeSnapshotId))
-    ).resolves.toBe(false);
-    expect(refreshMock).toHaveBeenCalledOnce();
-    expect(updateTagMock).not.toHaveBeenCalled();
-  });
-  it("immediately expires only the captured stale snapshot tag", async () => {
-    await expect(
-      Effect.runPromise(recoverStalePublishedQuranSnapshot(staleSnapshotId))
-    ).resolves.toBe(true);
-    expect(refreshMock).not.toHaveBeenCalled();
-    expect(updateTagMock).toHaveBeenCalledWith(
-      `content-artifact:${staleSnapshotId}`
-    );
-  });
-  it("maps active identity failures into the recovery error channel", async () => {
-    const sourceFailure = new Error("identity unavailable");
-    readIdentityMock.mockReturnValueOnce(Effect.fail(sourceFailure));
-    const result = await Effect.runPromise(
-      recoverStalePublishedQuranSnapshot(staleSnapshotId).pipe(Effect.result)
-    );
-    expect(result).toEqual(
-      Result.fail(
-        new QuranSnapshotRecoveryError({
-          cause: sourceFailure,
-          reason: "active-identity",
-        })
-      )
-    );
-  });
-  it("keeps route refresh failures in the typed error channel", async () => {
-    refreshMock.mockImplementationOnce(() => {
-      throw new Error("refresh unavailable");
-    });
-    const result = await Effect.runPromise(
-      recoverStalePublishedQuranSnapshot(activeSnapshotId).pipe(Effect.result)
-    );
-    expect(Result.isFailure(result)).toBe(true);
-    if (Result.isFailure(result)) {
-      expect(result.failure).toMatchObject({
-        _tag: "QuranSnapshotRecoveryError",
-        reason: "route-refresh",
-      });
-    }
-  });
-  it("keeps cache invalidation failures in the typed error channel", async () => {
-    updateTagMock.mockImplementationOnce(() => {
-      throw new Error("cache unavailable");
-    });
-    const result = await Effect.runPromise(
-      recoverStalePublishedQuranSnapshot(staleSnapshotId).pipe(Effect.result)
-    );
-    expect(Result.isFailure(result)).toBe(true);
-    if (Result.isFailure(result)) {
-      expect(result.failure).toMatchObject({
-        _tag: "QuranSnapshotRecoveryError",
-        reason: "cache-invalidation",
-      });
-    }
-  });
+
+      const result = yield* recoverStalePublishedQuranSnapshot(
+        activeSnapshotId
+      ).pipe(Effect.result);
+
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result)) {
+        expect(result.failure).toMatchObject({
+          _tag: "QuranSnapshotRecoveryError",
+          reason: "route-refresh",
+        });
+      }
+    })
+  );
+
+  it.effect(
+    "keeps cache invalidation failures in the typed error channel",
+    () =>
+      Effect.gen(function* () {
+        updateTagMock.mockImplementationOnce(() => {
+          throw new Error("cache unavailable");
+        });
+
+        const result = yield* recoverStalePublishedQuranSnapshot(
+          staleSnapshotId
+        ).pipe(Effect.result);
+
+        expect(Result.isFailure(result)).toBe(true);
+        if (Result.isFailure(result)) {
+          expect(result.failure).toMatchObject({
+            _tag: "QuranSnapshotRecoveryError",
+            reason: "cache-invalidation",
+          });
+        }
+      })
+  );
 });

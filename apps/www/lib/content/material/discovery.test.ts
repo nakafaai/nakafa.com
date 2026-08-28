@@ -1,8 +1,9 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
-import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Data, Effect } from "effect";
+import { vi } from "vitest";
 import {
   readPublishedLatestMaterials,
   readPublishedMaterialBucket,
@@ -14,6 +15,12 @@ const publicPath =
 const sourcePath =
   "packages/corpus/material/lesson/mathematics/function-composition-inverse-function/function-concept/en.mdx";
 const activeReleaseId = ReleaseIdSchema.make("release-material");
+
+class TestMaterialRuntimeUnavailable extends Data.TaggedError(
+  "TestMaterialRuntimeUnavailable"
+)<{
+  readonly operation: "query";
+}> {}
 
 vi.mock("@/lib/content/runtime/query", async () => {
   const { createTestRuntimeQuery } = await import("@/test/runtime-query");
@@ -38,136 +45,144 @@ describe("published material discovery", () => {
     runtimeQueryMock.mockReset();
   });
 
-  it("rejects unmanaged buckets and reads complete signed buckets", async () => {
-    runtimeQueryMock
-      .mockResolvedValueOnce({
-        activeReleaseId,
-        managed: false,
-        materials: null,
-      })
-      .mockResolvedValueOnce({
-        activeReleaseId: null,
-        managed: true,
-        materials: null,
-      })
-      .mockResolvedValueOnce({
-        activeReleaseId,
-        managed: true,
-        materials: null,
-      })
-      .mockResolvedValueOnce({
-        activeReleaseId,
-        managed: true,
-        materials: [summary],
-      });
+  it.effect("rejects unmanaged buckets and reads complete signed buckets", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock
+        .mockResolvedValueOnce({
+          activeReleaseId,
+          managed: false,
+          materials: null,
+        })
+        .mockResolvedValueOnce({
+          activeReleaseId: null,
+          managed: true,
+          materials: null,
+        })
+        .mockResolvedValueOnce({
+          activeReleaseId,
+          managed: true,
+          materials: null,
+        })
+        .mockResolvedValueOnce({
+          activeReleaseId,
+          managed: true,
+          materials: [summary],
+        });
 
-    await expect(
-      Effect.runPromise(
-        readPublishedMaterialBucket("en", "abc").pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-    await expect(
-      Effect.runPromise(
-        readPublishedMaterialBucket("en", "def").pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-    await expect(
-      Effect.runPromise(readPublishedMaterialBucket("en", "ghi"))
-    ).resolves.toEqual({ activeReleaseId, materials: null });
-    await expect(
-      Effect.runPromise(
-        readPublishedMaterialBucket("en", "jkl", activeReleaseId)
-      )
-    ).resolves.toMatchObject({
-      activeReleaseId,
-      materials: [
-        {
-          publicPath,
-          sourcePath,
-        },
-      ],
-    });
-  });
-
-  it.each(["en", "id", "de"] as const)(
-    "decodes newest %s materials from the expected release",
-    async (appLocale) => {
-      const {
-        dateModified: _dateModified,
-        description: _description,
-        ...publishedOnly
-      } = summary;
-      runtimeQueryMock.mockResolvedValueOnce({
-        activeReleaseId,
-        managed: true,
-        materials: [publishedOnly],
-      });
-
-      const result = await Effect.runPromise(
-        readPublishedLatestMaterials(appLocale, 10, activeReleaseId)
+      const unmanaged = yield* readPublishedMaterialBucket("en", "abc").pipe(
+        Effect.flip
       );
-      expect(result).toMatchObject({
+      const inactive = yield* readPublishedMaterialBucket("en", "def").pipe(
+        Effect.flip
+      );
+      const absent = yield* readPublishedMaterialBucket("en", "ghi");
+      const published = yield* readPublishedMaterialBucket(
+        "en",
+        "jkl",
+        activeReleaseId
+      );
+
+      expect(unmanaged).toMatchObject({ _tag: "PublishedProjectionError" });
+      expect(inactive).toMatchObject({ _tag: "PublishedProjectionError" });
+      expect(absent).toEqual({ activeReleaseId, materials: null });
+      expect(published).toMatchObject({
         activeReleaseId,
-        materials: [{ datePublished: summary.datePublished, sourcePath }],
+        materials: [
+          {
+            publicPath,
+            sourcePath,
+          },
+        ],
       });
-      expect(result.materials[0]).not.toHaveProperty("description");
-      expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
-        appLocale,
-        limit: 10,
-      });
-    }
+    })
   );
 
-  it("rejects malformed summaries, unmanaged results, and runtime failures", async () => {
-    runtimeQueryMock
-      .mockResolvedValueOnce({
-        activeReleaseId,
-        managed: true,
-        materials: [{ ...summary, sourcePath: "" }],
-      })
-      .mockResolvedValueOnce({
-        activeReleaseId,
-        managed: false,
-        materials: [],
-      })
-      .mockRejectedValueOnce(new Error("runtime unavailable"));
+  it.effect.each(["en", "id", "de"] as const)(
+    "decodes newest %s materials from the expected release",
+    (appLocale) =>
+      Effect.gen(function* () {
+        const {
+          dateModified: _dateModified,
+          description: _description,
+          ...publishedOnly
+        } = summary;
+        runtimeQueryMock.mockResolvedValueOnce({
+          activeReleaseId,
+          managed: true,
+          materials: [publishedOnly],
+        });
 
-    await expect(
-      Effect.runPromise(
-        readPublishedMaterialBucket("en", "abc").pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-    await expect(
-      Effect.runPromise(
-        readPublishedLatestMaterials("en", 10).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-    await expect(
-      Effect.runPromise(
-        readPublishedLatestMaterials("en", 10).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({ _tag: "TestRuntimeQueryError" });
-  });
+        const result = yield* readPublishedLatestMaterials(
+          appLocale,
+          10,
+          activeReleaseId
+        );
+        expect(result).toMatchObject({
+          activeReleaseId,
+          materials: [{ datePublished: summary.datePublished, sourcePath }],
+        });
+        expect(result.materials[0]).not.toHaveProperty("description");
+        expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
+          appLocale,
+          limit: 10,
+        });
+      })
+  );
 
-  it.each(["en", "id", "de"] as const)(
+  it.effect(
+    "rejects malformed summaries, unmanaged results, and runtime failures",
+    () =>
+      Effect.gen(function* () {
+        runtimeQueryMock
+          .mockResolvedValueOnce({
+            activeReleaseId,
+            managed: true,
+            materials: [{ ...summary, sourcePath: "" }],
+          })
+          .mockResolvedValueOnce({
+            activeReleaseId,
+            managed: false,
+            materials: [],
+          })
+          .mockRejectedValueOnce(
+            new TestMaterialRuntimeUnavailable({ operation: "query" })
+          );
+
+        const malformed = yield* readPublishedMaterialBucket("en", "abc").pipe(
+          Effect.flip
+        );
+        const unmanaged = yield* readPublishedLatestMaterials("en", 10).pipe(
+          Effect.flip
+        );
+        const unavailable = yield* readPublishedLatestMaterials("en", 10).pipe(
+          Effect.flip
+        );
+
+        expect(malformed).toMatchObject({ _tag: "PublishedProjectionError" });
+        expect(unmanaged).toMatchObject({ _tag: "PublishedProjectionError" });
+        expect(unavailable).toMatchObject({ _tag: "TestRuntimeQueryError" });
+      })
+  );
+
+  it.effect.each(["en", "id", "de"] as const)(
     "rejects a %s material bucket from a different active release",
-    async (appLocale) => {
-      runtimeQueryMock.mockResolvedValueOnce({
-        activeReleaseId: ReleaseIdSchema.make("release-next"),
-        managed: true,
-        materials: [summary],
-      });
+    (appLocale) =>
+      Effect.gen(function* () {
+        runtimeQueryMock.mockResolvedValueOnce({
+          activeReleaseId: ReleaseIdSchema.make("release-next"),
+          managed: true,
+          materials: [summary],
+        });
 
-      await expect(
-        Effect.runPromise(
-          readPublishedMaterialBucket(appLocale, "abc", activeReleaseId).pipe(
-            Effect.flip
-          )
-        )
-      ).resolves.toMatchObject({
-        _tag: "PublishedReleaseMismatchError",
-        expectedReleaseId: activeReleaseId,
-      });
-    }
+        const mismatch = yield* readPublishedMaterialBucket(
+          appLocale,
+          "abc",
+          activeReleaseId
+        ).pipe(Effect.flip);
+        expect(mismatch).toMatchObject({
+          _tag: "PublishedReleaseMismatchError",
+          expectedReleaseId: activeReleaseId,
+        });
+      })
   );
 });

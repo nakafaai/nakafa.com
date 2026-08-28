@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import {
   encodeTestQuranRow,
@@ -8,7 +9,7 @@ import {
   makeQuranTafsirProjection,
 } from "@repo/backend/test/quran/rows";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import {
   getPublishedQuranCatalog,
   getPublishedQuranView,
@@ -41,131 +42,167 @@ beforeEach(() => {
   runtimeQueryMock.mockReset();
 });
 describe("published Quran content", () => {
-  it("reads the active identity through the one-row attribution query", async () => {
-    runtimeQueryMock.mockResolvedValue({
-      ...source,
-      rowJson: "attribution-row",
-    });
-    await expect(
-      Effect.runPromise(readPublishedQuranIdentity())
-    ).resolves.toMatchObject({ snapshotId: source.snapshotId });
-    expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {});
-  });
-  it("reads and caches the signed catalog through the Effect boundary", async () => {
-    runtimeQueryMock.mockResolvedValue(catalogResult());
-    await expect(
-      Effect.runPromise(readPublishedQuranCatalog())
-    ).resolves.toMatchObject({ surahs: expect.any(Array) });
-    await expect(getPublishedQuranCatalog()).resolves.toMatchObject({
-      surahs: expect.any(Array),
-    });
-    expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {});
-    expect(cacheMock).toHaveBeenCalledWith(source.snapshotId);
-  });
-  it("reads the locale-specific signed markdown through the Effect boundary", async () => {
-    runtimeQueryMock.mockResolvedValue(markdownResult());
-    await expect(
-      Effect.runPromise(readPublishedQuranMarkdown("id", 1, 80))
-    ).resolves.toMatchObject({
-      surah: {
-        name: {
-          meaning: makeQuranMeaning(1),
-        },
-        number: 1,
-      },
-      verses: [{ number: {} }],
-    });
-    expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
-      appLocale: "id",
-      surahNumber: 1,
-      verseLimit: 80,
-    });
-    expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
-  });
-  it("reads the complete signed markdown when no verse limit is requested", async () => {
-    runtimeQueryMock.mockResolvedValue(markdownResult());
-    await expect(
-      Effect.runPromise(readPublishedQuranMarkdown("id", 1))
-    ).resolves.toMatchObject({
-      surah: { number: 1 },
-      verses: [{ number: {} }],
-    });
-    expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
-      appLocale: "id",
-      surahNumber: 1,
-    });
-  });
-  it("keeps a failed Quran query in the Effect error channel", async () => {
-    runtimeQueryMock.mockRejectedValueOnce(new Error("Quran unavailable"));
-    await expect(
-      Effect.runPromise(Effect.result(readPublishedQuranCatalog()))
-    ).resolves.toMatchObject({
-      _tag: "Failure",
-      failure: {
-        _tag: "TestRuntimeQueryError",
-        message: "Error: Quran unavailable",
-      },
-    });
-  });
-  it("caches the locale-specific Quran web projection", async () => {
-    runtimeQueryMock.mockResolvedValue(viewResult());
-    await expect(getPublishedQuranView("id", 1)).resolves.toMatchObject({
-      appLocale: "id",
-      nextSurah: {
-        name: {
-          meaning: makeQuranMeaning(2),
-        },
-        number: 2,
-      },
-      surah: {
-        name: {
-          meaning: makeQuranMeaning(1),
-        },
-        number: 1,
-      },
-      verses: [
-        {
-          translation: {
-            notes: [
-              {
-                number: 4,
-                referenceOffset: 20,
-                text: "Catatan terjemahan Indonesia.",
-              },
-            ],
-            segments: [
-              { kind: "text", offset: 0, value: "Terjemahan teknis 1." },
-              { kind: "note", number: 4, offset: 20 },
-            ],
+  it.effect("reads the active identity through the attribution query", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValue({
+        ...source,
+        rowJson: "attribution-row",
+      });
+
+      const identity = yield* readPublishedQuranIdentity();
+
+      expect(identity).toMatchObject({ snapshotId: source.snapshotId });
+      expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {});
+    })
+  );
+
+  it.effect("reads and caches the signed catalog", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValue(catalogResult());
+
+      const catalog = yield* readPublishedQuranCatalog();
+      const cachedCatalog = yield* Effect.tryPromise(() =>
+        getPublishedQuranCatalog()
+      );
+
+      expect(catalog).toMatchObject({ surahs: expect.any(Array) });
+      expect(cachedCatalog).toMatchObject({ surahs: expect.any(Array) });
+      expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {});
+      expect(cacheMock).toHaveBeenCalledWith(source.snapshotId);
+    })
+  );
+
+  it.effect("reads the locale-specific signed markdown", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValue(markdownResult());
+
+      const markdown = yield* readPublishedQuranMarkdown("id", 1, 80);
+
+      expect(markdown).toMatchObject({
+        surah: {
+          name: {
+            meaning: makeQuranMeaning(1),
           },
+          number: 1,
         },
-      ],
-    });
-    expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
-      appLocale: "id",
-      surahNumber: 1,
-    });
-    expect(cacheMock).toHaveBeenCalledWith(source.snapshotId);
-    expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
-  });
-  it("preserves the final surah and its previous neighbor", async () => {
-    runtimeQueryMock.mockResolvedValue(finalViewResult());
-    await expect(getPublishedQuranView("id", 114)).resolves.toMatchObject({
-      nextSurah: null,
-      previousSurah: {
-        name: {
-          meaning: makeQuranMeaning(113),
+        verses: [{ number: {} }],
+      });
+      expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
+        appLocale: "id",
+        surahNumber: 1,
+        verseLimit: 80,
+      });
+      expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
+    })
+  );
+
+  it.effect("reads complete signed markdown without a verse limit", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValue(markdownResult());
+
+      const markdown = yield* readPublishedQuranMarkdown("id", 1);
+
+      expect(markdown).toMatchObject({
+        surah: { number: 1 },
+        verses: [{ number: {} }],
+      });
+      expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
+        appLocale: "id",
+        surahNumber: 1,
+      });
+    })
+  );
+
+  it.effect("keeps a failed Quran query in the Effect error channel", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockRejectedValueOnce(new Error("Quran unavailable"));
+
+      const result = yield* readPublishedQuranCatalog().pipe(Effect.result);
+
+      expect(result).toMatchObject({
+        _tag: "Failure",
+        failure: {
+          _tag: "TestRuntimeQueryError",
+          message: "Error: Quran unavailable",
         },
-        number: 113,
-      },
-      surah: {
-        name: {
-          meaning: makeQuranMeaning(114),
+      });
+    })
+  );
+
+  it.effect("caches the locale-specific Quran web projection", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValue(viewResult());
+
+      const view = yield* Effect.tryPromise(() =>
+        getPublishedQuranView("id", 1)
+      );
+
+      expect(view).toMatchObject({
+        appLocale: "id",
+        nextSurah: {
+          name: {
+            meaning: makeQuranMeaning(2),
+          },
+          number: 2,
         },
-        number: 114,
-      },
-    });
-  });
+        surah: {
+          name: {
+            meaning: makeQuranMeaning(1),
+          },
+          number: 1,
+        },
+        verses: [
+          {
+            translation: {
+              notes: [
+                {
+                  number: 4,
+                  referenceOffset: 20,
+                  text: "Catatan terjemahan Indonesia.",
+                },
+              ],
+              segments: [
+                { kind: "text", offset: 0, value: "Terjemahan teknis 1." },
+                { kind: "note", number: 4, offset: 20 },
+              ],
+            },
+          },
+        ],
+      });
+      expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {
+        appLocale: "id",
+        surahNumber: 1,
+      });
+      expect(cacheMock).toHaveBeenCalledWith(source.snapshotId);
+      expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
+    })
+  );
+
+  it.effect("preserves the final surah and its previous neighbor", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValue(finalViewResult());
+
+      const view = yield* Effect.tryPromise(() =>
+        getPublishedQuranView("id", 114)
+      );
+
+      expect(view).toMatchObject({
+        nextSurah: null,
+        previousSurah: {
+          name: {
+            meaning: makeQuranMeaning(113),
+          },
+          number: 113,
+        },
+        surah: {
+          name: {
+            meaning: makeQuranMeaning(114),
+          },
+          number: 114,
+        },
+      });
+    })
+  );
 });
 /** Builds the complete signed metadata catalog response. */
 function catalogResult(snapshotId = source.snapshotId) {
