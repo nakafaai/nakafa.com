@@ -42,6 +42,7 @@ export const prepareUnusedScale = Effect.fn(
   migration: CleanupMigration,
   receipt: CleanupReceipt,
   sourceCatalogRowCount: number,
+  sourcePlacementRowCount: number,
   evidence: ScaleRepairEvidence = retainedScaleRepair
 ) {
   const applies =
@@ -164,6 +165,7 @@ export const prepareUnusedScale = Effect.fn(
     ctx,
     migration.sourceSnapshotId,
     sourceCatalogRowCount,
+    sourcePlacementRowCount,
     items,
     runs
   );

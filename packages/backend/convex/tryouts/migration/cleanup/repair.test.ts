@@ -217,6 +217,84 @@ describe("tryouts/migration/cleanup/repair", () => {
     })
   );
 
+  it.effect("rejects an incomplete retained section before writes", () =>
+    Effect.gen(function* () {
+      const t = createConvexTestWithBetterAuth();
+      const { repair, source } = yield* Effect.promise(() =>
+        seedRepair(t, 0, ["general-reasoning", "english-language"])
+      );
+      const [, removedItemId] = repair.itemIds;
+      const [, removedRunId] = repair.runIds;
+      const [retainedRun] = repair.evidence.runs;
+      const [retainedSource, replacedSource] = source;
+      assert.ok(
+        removedItemId &&
+          removedRunId &&
+          retainedRun &&
+          retainedSource &&
+          replacedSource
+      );
+      const evidence = {
+        ...repair.evidence,
+        itemCount: 1,
+        questionCount: 1,
+        runs: [retainedRun],
+      };
+      yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          await ctx.db.delete("irtScaleItems", removedItemId);
+          await ctx.db.delete("irtCalibrationRuns", removedRunId);
+          await ctx.db.patch("irtScaleVersions", repair.scaleVersionId, {
+            questionCount: 1,
+          });
+          const replaced = await ctx.db
+            .query("tryoutHistoryRows")
+            .withIndex("by_snapshotId_and_rowKind_and_rowHash", (query) =>
+              query
+                .eq("snapshotId", CLEANUP_SOURCE_SNAPSHOT)
+                .eq("rowKind", "placement")
+                .eq("rowHash", replacedSource.placement.record.rowHash)
+            )
+            .unique();
+          assert.ok(replaced?.rowKind === "placement");
+          const questionRoot =
+            "question-bank/tryout/indonesia/snbt/general-reasoning/set-2/question-2";
+          const rowHash =
+            "sha256:c7e013e48e7bb05b0e1feaf1f59e238da2470163d345bfe5dc22b351aeb9ae6a";
+          const row = {
+            ...retainedSource.placement.record.row,
+            answerContentKey: `${questionRoot}/answer`,
+            questionContentKey: `${questionRoot}/question`,
+            questionOrder: 2,
+            questionSourcePath: `packages/corpus/${questionRoot}`,
+            title: "Question 2",
+          };
+          await ctx.db.replace("tryoutHistoryRows", replaced._id, {
+            answerArtifactHash: row.answerArtifactHash,
+            index: replaced.index,
+            questionArtifactHash: row.questionArtifactHash,
+            rowHash,
+            rowJson: JSON.stringify({
+              ...retainedSource.placement,
+              record: { row, rowHash },
+            }),
+            rowKind: "placement",
+            snapshotId: CLEANUP_SOURCE_SNAPSHOT,
+          });
+        })
+      );
+
+      yield* Effect.promise(() =>
+        expect(runCleanup(t, evidence)).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        })
+      );
+      const state = yield* Effect.promise(() => readRepair(t, repair));
+      assert.ok(state.scale);
+      assert.strictEqual(state.receipt?.repair, undefined);
+    })
+  );
+
   it.effect("rejects duplicate run identities before any repair write", () =>
     Effect.gen(function* () {
       const t = createConvexTestWithBetterAuth();

@@ -7,10 +7,10 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import { retainedTryoutHistoryPlan } from "@repo/backend/convex/tryouts/history/spec";
 import { TryoutRuntimeError } from "@repo/backend/convex/tryouts/runtime/error";
 import { Effect } from "effect";
 
-export const RETAINED_TRYOUT_CATALOG_ROW_COUNT = 54;
 type ReadCtx = MutationCtx | QueryCtx;
 
 /** Loads and authenticates the complete retained catalog for one snapshot. */
@@ -19,12 +19,12 @@ export const loadStoredTryoutCatalogRows = Effect.fn(
 )(function* (
   ctx: ReadCtx,
   snapshotId: string,
-  expectedCount = RETAINED_TRYOUT_CATALOG_ROW_COUNT
+  expectedCount = retainedTryoutHistoryPlan.catalogRowCount
 ) {
   if (
     !Number.isSafeInteger(expectedCount) ||
     expectedCount <= 0 ||
-    expectedCount > RETAINED_TRYOUT_CATALOG_ROW_COUNT
+    expectedCount > retainedTryoutHistoryPlan.catalogRowCount
   ) {
     return yield* historyIntegrity(
       "Retained try-out catalog count exceeds its audited bound."
@@ -52,6 +52,51 @@ export const loadStoredTryoutCatalogRows = Effect.fn(
     );
   }
   return yield* Effect.forEach(stored, (row) => decodeCatalogHistoryRow(row));
+});
+
+/** Loads the complete bounded placement inventory for exact section proof. */
+export const loadStoredTryoutPlacementRows = Effect.fn(
+  "tryouts.history.loadStoredPlacementRows"
+)(function* (
+  ctx: ReadCtx,
+  snapshotId: string,
+  expectedCount = retainedTryoutHistoryPlan.placementRowCount
+) {
+  if (
+    !Number.isSafeInteger(expectedCount) ||
+    expectedCount <= 0 ||
+    expectedCount > retainedTryoutHistoryPlan.placementRowCount
+  ) {
+    return yield* historyIntegrity(
+      "Retained try-out placement count exceeds its audited bound."
+    );
+  }
+  const stored = yield* historyPromise(
+    "Unable to read retained try-out placement rows.",
+    () =>
+      ctx.db
+        .query("tryoutHistoryRows")
+        .withIndex("by_snapshotId_and_rowKind_and_index", (index) =>
+          index.eq("snapshotId", snapshotId).eq("rowKind", "placement")
+        )
+        .take(expectedCount + 1)
+  );
+  if (stored.length !== expectedCount) {
+    return yield* historyIntegrity(
+      "Retained try-out placements do not match their audited count."
+    );
+  }
+  const uniqueIndices = new Set(stored.map(({ index }) => index));
+  const uniqueHashes = new Set(stored.map(({ rowHash }) => rowHash));
+  if (
+    uniqueIndices.size !== stored.length ||
+    uniqueHashes.size !== stored.length
+  ) {
+    return yield* historyIntegrity(
+      "Retained try-out placements repeat a source identity."
+    );
+  }
+  return yield* Effect.forEach(stored, (row) => decodePlacementHistoryRow(row));
 });
 
 /** Narrows an authenticated retained row to the catalog family. */
@@ -87,13 +132,21 @@ export const loadStoredTryoutPlacement = Effect.fn(
   if (!stored) {
     return null;
   }
+  const decoded = yield* decodePlacementHistoryRow(stored);
+  return decoded.record.row;
+});
+
+/** Narrows one authenticated retained row to the placement family. */
+const decodePlacementHistoryRow = Effect.fn(
+  "tryouts.history.decodeStoredPlacementRow"
+)(function* (stored: Doc<"tryoutHistoryRows">) {
   const decoded = yield* decodeHistoryRow(stored);
   if (decoded.rowKind !== "placement") {
     return yield* historyIntegrity(
       "Retained try-out placement changed its row kind."
     );
   }
-  return decoded.record.row;
+  return decoded;
 });
 
 /** Decodes one exact envelope and checks its indexed storage facts. */

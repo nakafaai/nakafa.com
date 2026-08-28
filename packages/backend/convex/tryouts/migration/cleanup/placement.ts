@@ -7,9 +7,9 @@ import {
 } from "@repo/backend/convex/contentRelease/error";
 import {
   loadStoredTryoutCatalogRows,
-  loadStoredTryoutPlacement,
+  loadStoredTryoutPlacementRows,
 } from "@repo/backend/convex/tryouts/history/rows";
-import { Effect } from "effect";
+import { Effect, Array as EffectArray } from "effect";
 
 /** Authenticates every signed source placement selected by the repair runs. */
 export const verifyRepairPlacements = Effect.fn(
@@ -18,14 +18,18 @@ export const verifyRepairPlacements = Effect.fn(
   ctx: MutationCtx,
   snapshotId: string,
   catalogRowCount: number,
+  placementRowCount: number,
   items: readonly Doc<"irtScaleItems">[],
   runs: readonly Doc<"irtCalibrationRuns">[]
 ) {
-  const catalog = yield* loadStoredTryoutCatalogRows(
-    ctx,
-    snapshotId,
-    catalogRowCount
-  ).pipe(Effect.mapError(repairSourceError));
+  const { catalog, placements } = yield* Effect.all({
+    catalog: loadStoredTryoutCatalogRows(ctx, snapshotId, catalogRowCount),
+    placements: loadStoredTryoutPlacementRows(
+      ctx,
+      snapshotId,
+      placementRowCount
+    ),
+  }).pipe(Effect.mapError(repairSourceError));
   const sectionRows = catalog.flatMap(({ record }) =>
     record.row.kind === "section" ? [record.row] : []
   );
@@ -42,32 +46,44 @@ export const verifyRepairPlacements = Effect.fn(
       return yield* repairPlacementFailure();
     }
   }
-  const placementIdentities = new Set<string>();
-  yield* Effect.forEach(items, (item) =>
-    Effect.gen(function* () {
-      const placement = yield* loadStoredTryoutPlacement(
-        ctx,
-        snapshotId,
-        item.placementRowHash
-      ).pipe(Effect.mapError(repairSourceError));
-      if (!placement) {
-        return yield* repairPlacementFailure();
-      }
-      const placementIdentity = historicalPlacementIdentity(placement);
-      const run = runById.get(item.calibrationRunId);
-      const sectionIdentity = historicalSectionIdentity(placement);
-      if (
-        !run ||
-        placementIdentity !== item.placementIdentity ||
-        run.sectionIdentity !== sectionIdentity ||
-        placementIdentities.has(placementIdentity)
-      ) {
-        return yield* repairPlacementFailure();
-      }
-      placementIdentities.add(placementIdentity);
-    })
+  const placementsBySection = EffectArray.groupBy(placements, ({ record }) =>
+    historicalSectionIdentity(record.row)
   );
-  if (placementIdentities.size !== items.length) {
+  const signedPlacements = new Map<
+    string,
+    { readonly rowHash: string; readonly sectionIdentity: string }
+  >();
+  for (const run of runs) {
+    const source = placementsBySection[run.sectionIdentity] ?? [];
+    if (
+      source.length !== run.questionCount ||
+      source.some(({ record }, index) => record.row.questionOrder !== index + 1)
+    ) {
+      return yield* repairPlacementFailure();
+    }
+    for (const { record } of source) {
+      const placementIdentity = historicalPlacementIdentity(record.row);
+      if (signedPlacements.has(placementIdentity)) {
+        return yield* repairPlacementFailure();
+      }
+      signedPlacements.set(placementIdentity, {
+        rowHash: record.rowHash,
+        sectionIdentity: run.sectionIdentity,
+      });
+    }
+  }
+  if (
+    signedPlacements.size !== items.length ||
+    items.some((item) => {
+      const placement = signedPlacements.get(item.placementIdentity);
+      const run = runById.get(item.calibrationRunId);
+      return (
+        !(placement && run) ||
+        placement.rowHash !== item.placementRowHash ||
+        placement.sectionIdentity !== run.sectionIdentity
+      );
+    })
+  ) {
     return yield* repairPlacementFailure();
   }
 });
