@@ -3,17 +3,21 @@ name: CI
 on:
   pull_request:
     types: [opened, synchronize]
+  merge_group:
+    branches: [main]
+    types: [checks_requested]
   push:
     branches: [main]
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   # Pull request heads supersede their own predecessor runs. Protected-main
-  # runs use the immutable commit SHA so a later independent merge cannot
-  # cancel an already-admitted production acceptance.
-  group: Agent-Friendly Docs-${{ github.event_name == 'push' && github.sha || github.ref }}
+  # and merge-group runs use the immutable commit SHA so a later independent
+  # change cannot cancel an already-admitted production acceptance.
+  group: Agent-Friendly Docs-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -22,38 +26,149 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') }}
+      DIRECT_TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') }}
     outputs:
       required: ${{ steps.classify.outputs.required || steps.default.outputs.required }}
+      trusted: ${{ steps.trust.outputs.trusted }}
     steps:
       - name: Set fail-closed default
         id: default
         env:
-          REQUIRED: ${{ env.TRUSTED_CONTENT_ENVIRONMENT }}
+          REQUIRED: ${{ env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT }}
         run: echo "required=$REQUIRED" >> "$GITHUB_OUTPUT"
 
-      - if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+      - name: Verify merge group provenance
+        if: github.event_name == 'merge_group'
+        id: merge-group-provenance
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          result-encoding: string
+          script: |
+            const mergeGroup = context.payload.merge_group
+            if (!mergeGroup) {
+              throw new Error("Missing merge group payload.")
+            }
+
+            const result = await github.graphql(
+              `query MergeQueueEntry($owner: String!, $name: String!) {
+                repository(owner: $owner, name: $name) {
+                  mergeQueue {
+                    configuration {
+                      maximumEntriesToBuild
+                      maximumEntriesToMerge
+                    }
+                    entries(first: 100) {
+                      nodes {
+                        baseCommit { oid }
+                        enqueuer { login }
+                        headCommit {
+                          oid
+                          tree { oid }
+                        }
+                        pullRequest {
+                          author { login }
+                          baseRefName
+                          baseRefOid
+                          headRefOid
+                          headRepository { nameWithOwner }
+                          number
+                          potentialMergeCommit {
+                            parents(first: 3) { nodes { oid } }
+                            tree { oid }
+                          }
+                          state
+                        }
+                      }
+                    }
+                  }
+                }
+              }`,
+              { name: context.repo.repo, owner: context.repo.owner },
+            )
+            const queue = result.repository?.mergeQueue
+            if (
+              queue?.configuration?.maximumEntriesToBuild !== 1 ||
+              queue.configuration.maximumEntriesToMerge !== 1
+            ) {
+              throw new Error("Signed acceptance requires a single-entry queue.")
+            }
+
+            const entries = queue.entries?.nodes ?? []
+            const candidates = entries.filter(
+              (entry) =>
+                entry?.baseCommit?.oid === mergeGroup.base_sha &&
+                entry?.headCommit?.oid === mergeGroup.head_sha,
+            )
+            if (candidates.length !== 1) {
+              throw new Error(
+                `Merge group has ${candidates.length} exact queue entries.`,
+              )
+            }
+
+            const [{ enqueuer, headCommit, pullRequest: pull }] = candidates
+            if (
+              !pull ||
+              pull.state !== "OPEN" ||
+              pull.baseRefName !== mergeGroup.base_ref.replace("refs/heads/", "") ||
+              pull.baseRefOid !== mergeGroup.base_sha ||
+              pull.headRepository?.nameWithOwner !== context.payload.repository.full_name ||
+              pull.author?.login !== "nabilfatih" ||
+              enqueuer?.login !== "nabilfatih"
+            ) {
+              throw new Error("Merge queue entry is not trusted for signed acceptance.")
+            }
+
+            // Matching trees proves the event head contains only the admitted
+            // pull request, even if queue settings changed after group creation.
+            const mergeParents = pull.potentialMergeCommit?.parents?.nodes ?? []
+            const expectedParents = [mergeGroup.base_sha, pull.headRefOid].sort()
+            const actualParents = mergeParents.map(({ oid }) => oid).sort()
+            if (
+              actualParents.length !== 2 ||
+              actualParents.some((oid, index) => oid !== expectedParents[index]) ||
+              !pull.potentialMergeCommit?.tree?.oid ||
+              headCommit?.tree?.oid !== pull.potentialMergeCommit.tree.oid
+            ) {
+              throw new Error("Merge group contains changes outside its trusted pull request.")
+            }
+            core.info(`Trusted pull request #${pull.number} at ${pull.headRefOid}.`)
+
+            return "true"
+
+      - name: Export content environment trust
+        id: trust
+        env:
+          DIRECT_TRUST: ${{ env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT }}
+          MERGE_GROUP_TRUST: ${{ steps.merge-group-provenance.outputs.result }}
+        run: |
+          trusted=false
+          if [ "$DIRECT_TRUST" = "true" ] || [ "$MERGE_GROUP_TRUST" = "true" ]; then
+            trusted=true
+          fi
+          echo "trusted=$trusted" >> "$GITHUB_OUTPUT"
+
+      - if: steps.trust.outputs.trusted == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
       - name: Setup toolchain
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        if: steps.trust.outputs.trusted == 'true'
         uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
         with:
           cache: true
           install: false
 
       - name: Install dependencies
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        if: steps.trust.outputs.trusted == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Classify production acceptance
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        if: steps.trust.outputs.trusted == 'true'
         id: classify
         env:
-          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
-          HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before }}
+          HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event_name == 'merge_group' && github.event.merge_group.head_sha || github.sha }}
         run: pnpm ci:production-acceptance
 
   quality:
@@ -92,7 +207,7 @@ jobs:
     # same-repository candidates with production-relevant changes. In-place
     # test-only candidates retain Quality while Production is skipped.
     needs: production-scope
-    if: needs.production-scope.outputs.required == 'true' && (github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih'))
+    if: needs.production-scope.outputs.required == 'true' && needs.production-scope.outputs.trusted == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
@@ -466,7 +581,7 @@ jobs:
       PRODUCTION_REQUIRED: ${{ needs.production-scope.outputs.required }}
       PRODUCTION_SCOPE_RESULT: ${{ needs.production-scope.result }}
       QUALITY_RESULT: ${{ needs.quality.result }}
-      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') }}
+      TRUSTED_CONTENT_ENVIRONMENT: ${{ needs.production-scope.outputs.trusted }}
     steps:
       - name: Verify acceptance jobs
         run: |
