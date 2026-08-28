@@ -9,10 +9,7 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
-import {
-  makeBlockedQuranSnapshot,
-  makeStoredQuranSnapshot,
-} from "@repo/backend/test/quran/snapshot";
+import { makeBlockedQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { TEST_STAGE_SNAPSHOT } from "@repo/backend/test/snapshot/routes";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
@@ -135,41 +132,6 @@ describe("contentRelease/snapshot/manifest", () => {
       t.run((ctx) => ctx.db.query("contentSnapshots").unique())
     ).resolves.toBeNull();
   });
-
-  it.live("rejects a predecessor Quran manifest before storing it", () =>
-    Effect.gen(function* () {
-      const snapshot = yield* makeStoredQuranSnapshot();
-      const snapshots = {
-        ...inheritContentSnapshots(null),
-        quran: replaceContentSnapshot({
-          baseSnapshotId: null,
-          resultSnapshotId: snapshot.manifest.snapshotId,
-          rowCount: snapshot.manifest.projectionCount,
-          rowDigest: snapshot.manifest.projectionDigest,
-        }),
-      };
-      const t = convexTest(schema, convexModules);
-      yield* Effect.promise(() =>
-        t.mutation((ctx) => insertTestRelease(ctx, { snapshots }))
-      );
-
-      yield* Effect.promise(() =>
-        expect(
-          t.mutation(TEST_STAGE_SNAPSHOT, {
-            releaseId: TEST_RELEASE_ID,
-            snapshotJson: encodeSnapshotJson(snapshot),
-          })
-        ).rejects.toMatchObject({
-          data: { code: "CONTENT_RELEASE_INTEGRITY" },
-        })
-      );
-      yield* Effect.promise(() =>
-        expect(
-          t.run((ctx) => ctx.db.query("contentSnapshots").unique())
-        ).resolves.toBeNull()
-      );
-    })
-  );
 
   it.live("rejects manifests after release staging closes", () =>
     Effect.gen(function* () {

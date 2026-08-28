@@ -15,9 +15,8 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
-import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-transition/release/rollback/spec";
-import { PublishedQuranManifestSchema } from "@repo/backend/content/quran/contract";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
+import { StoredSnapshotEntrySchema } from "@repo/backend/convex/contentRelease/rollback/stored";
 import { Effect, Schema } from "effect";
 
 const CurrentContentSnapshotManifestSchema = ContentSnapshotManifestSchema.pipe(
@@ -186,7 +185,7 @@ export const decodeRollbackJson = Effect.fn(
 )((source: string) =>
   parseStoredJson(source, "Rollback snapshot").pipe(
     Effect.flatMap(
-      Schema.decodeUnknownEffect(RollbackSnapshotEntrySchema, {
+      Schema.decodeUnknownEffect(StoredSnapshotEntrySchema, {
         onExcessProperty: "error",
       })
     ),
@@ -205,29 +204,6 @@ export const decodeSnapshotJson = Effect.fn(
 )((source: string) =>
   parseStoredJson(source, "Content snapshot").pipe(
     Effect.flatMap(
-      Schema.decodeUnknownEffect(
-        Schema.Union([
-          ContentSnapshotManifestSchema,
-          PublishedQuranManifestSchema,
-        ]),
-        { onExcessProperty: "error" }
-      )
-    ),
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: "Content snapshot does not satisfy its exact contract.",
-        })
-    )
-  )
-);
-/** Strictly decodes one newly staged manifest through the current contract. */
-export const decodeCurrentSnapshotJson = Effect.fn(
-  "contentRelease.decodeCurrentSnapshotJson"
-)((source: string) =>
-  parseStoredJson(source, "Current content snapshot").pipe(
-    Effect.flatMap(
       Schema.decodeUnknownEffect(CurrentContentSnapshotManifestSchema, {
         onExcessProperty: "error",
       })
@@ -236,8 +212,7 @@ export const decodeCurrentSnapshotJson = Effect.fn(
       () =>
         new ReleaseError({
           code: "CONTENT_RELEASE_INTEGRITY",
-          message:
-            "New content snapshot does not satisfy the current contract.",
+          message: "Content snapshot does not satisfy its exact contract.",
         })
     )
   )

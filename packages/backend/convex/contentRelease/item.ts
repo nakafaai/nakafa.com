@@ -4,7 +4,7 @@ import {
   canonicalizeRollbackSnapshotEntry,
   RollbackSnapshotEntrySchema,
   type RollbackSnapshotState,
-} from "@nakafa/aksara-transition/release/rollback/spec";
+} from "@nakafa/aksara-contracts/release/rollback/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { resolveContentHead } from "@repo/backend/convex/contentRelease/catalog";
 import { ensureDocumentSize } from "@repo/backend/convex/contentRelease/document";
