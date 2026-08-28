@@ -1,4 +1,4 @@
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { isSnapshotReferenced } from "@repo/backend/convex/contentRelease/snapshot/retention";
@@ -16,7 +16,7 @@ type CleanupMigration = Pick<
     Doc<"tryoutHistoryMigrations">,
     { readonly phase: "cleaning" | "completed" }
   >,
-  "authorization" | "migrationId" | "sourceSnapshotId"
+  "authorization" | "migrationId" | "phase" | "sourceSnapshotId"
 >;
 
 type CleanupReceipt = Pick<Doc<"tryoutHistoryMigrationReceipts">, "repair">;
@@ -26,9 +26,15 @@ interface ScaleRepairResult {
   readonly repair: Omit<CleanupRepair, "repairedAt">;
 }
 
-/** Removes one exact zero-use graph and returns its separate durable audit. */
-export const repairUnusedScale = Effect.fn(
-  "tryouts.migration.repairUnusedScale"
+interface ScaleRepairPlan extends ScaleRepairResult {
+  readonly itemIds: readonly Id<"irtScaleItems">[];
+  readonly runIds: readonly Id<"irtCalibrationRuns">[];
+  readonly scaleVersionId: Id<"irtScaleVersions">;
+}
+
+/** Proves one exact zero-use graph before any repair write is possible. */
+export const prepareUnusedScale = Effect.fn(
+  "tryouts.migration.prepareUnusedScale"
 )(function* (
   ctx: MutationCtx,
   migration: CleanupMigration,
@@ -57,6 +63,12 @@ export const repairUnusedScale = Effect.fn(
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       "Try-out history cleanup has invalid repair cardinality."
+    );
+  }
+  if (receipt.repair === undefined && migration.phase !== "completed") {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      "Try-out history cleanup cannot repair after signed deletion started."
     );
   }
   const authorized = new Set(migration.authorization.sourceScaleVersionIds);
@@ -233,15 +245,9 @@ export const repairUnusedScale = Effect.fn(
       "The provisional scale repair source is still protected."
     );
   }
-  yield* Effect.forEach(items, (item) =>
-    Effect.promise(() => ctx.db.delete("irtScaleItems", item._id))
-  );
-  yield* Effect.forEach(runs, (run) =>
-    Effect.promise(() => ctx.db.delete("irtCalibrationRuns", run._id))
-  );
-  yield* Effect.promise(() => ctx.db.delete("irtScaleVersions", scale._id));
   return {
     deletedRows,
+    itemIds: items.map(({ _id }) => _id),
     repair: {
       deletedRows,
       itemCount: evidence.itemCount,
@@ -258,5 +264,26 @@ export const repairUnusedScale = Effect.fn(
       setIdentity: evidence.setIdentity,
       sourceSnapshotId: evidence.sourceSnapshotId,
     },
+    runIds: runs.map(({ _id }) => _id),
+    scaleVersionId: scale._id,
+  } satisfies ScaleRepairPlan;
+});
+
+/** Commits one previously proven graph inside the caller's transaction. */
+export const commitUnusedScale = Effect.fn(
+  "tryouts.migration.commitUnusedScale"
+)(function* (ctx: MutationCtx, plan: ScaleRepairPlan) {
+  yield* Effect.forEach(plan.itemIds, (id) =>
+    Effect.promise(() => ctx.db.delete("irtScaleItems", id))
+  );
+  yield* Effect.forEach(plan.runIds, (id) =>
+    Effect.promise(() => ctx.db.delete("irtCalibrationRuns", id))
+  );
+  yield* Effect.promise(() =>
+    ctx.db.delete("irtScaleVersions", plan.scaleVersionId)
+  );
+  return {
+    deletedRows: plan.deletedRows,
+    repair: plan.repair,
   } satisfies ScaleRepairResult;
 });

@@ -86,7 +86,10 @@ describe("tryouts/migration/cleanup/run", () => {
         ).pipe(Effect.flip);
         const after = yield* Effect.promise(() => readCleanupState(t));
 
-        assert.ok(failure.message.includes(message));
+        assert.ok(
+          failure.message.includes(message),
+          `${guard}: ${failure.message}`
+        );
         assert.deepStrictEqual(after, before);
       }
     })

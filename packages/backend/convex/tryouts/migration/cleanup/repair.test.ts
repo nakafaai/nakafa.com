@@ -4,7 +4,10 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type schema from "@repo/backend/convex/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
-import type { ScaleRepairEvidence } from "@repo/backend/convex/tryouts/migration/cleanup/evidence";
+import {
+  retainedScaleRepair,
+  type ScaleRepairEvidence,
+} from "@repo/backend/convex/tryouts/migration/cleanup/evidence";
 import { cleanupProgram } from "@repo/backend/convex/tryouts/migration/cleanup/run";
 import { seedCleanupSuccess } from "@repo/backend/test/migration/seed";
 import {
@@ -18,41 +21,22 @@ import { Effect } from "effect";
 
 type CleanupTest = TestConvex<typeof schema>;
 
-const RUNS = [
-  { questionCount: 20, sectionIdentity: "section:reading" },
-  { questionCount: 20, sectionIdentity: "section:knowledge" },
-  { questionCount: 20, sectionIdentity: "section:english" },
-  { questionCount: 30, sectionIdentity: "section:indonesian" },
-  { questionCount: 20, sectionIdentity: "section:reasoning" },
-  { questionCount: 20, sectionIdentity: "section:mathematics" },
-  { questionCount: 20, sectionIdentity: "section:quantitative" },
-] as const;
-const SET_IDENTITY = [
-  "en",
-  "set",
-  "indonesia",
-  "snbt",
-  "2027",
-  "set-2",
-  "",
-].join("\0");
-
 /** Seeds the exact zero-use provisional graph omitted by attempt inventory. */
 async function seedUnusedScale(ctx: MutationCtx, responseCount = 0) {
   const scaleVersionId = await ctx.db.insert("irtScaleVersions", {
     model: "2pl",
-    publishedAt: 1,
-    questionCount: 150,
-    setIdentity: SET_IDENTITY,
+    publishedAt: retainedScaleRepair.publishedAt,
+    questionCount: retainedScaleRepair.questionCount,
+    setIdentity: retainedScaleRepair.setIdentity,
     status: "provisional",
     tryoutSnapshotId: CLEANUP_SOURCE_SNAPSHOT,
   });
   const itemIds: Id<"irtScaleItems">[] = [];
   const runIds: Id<"irtCalibrationRuns">[] = [];
-  for (const { questionCount, sectionIdentity } of RUNS) {
+  for (const { questionCount, sectionIdentity } of retainedScaleRepair.runs) {
     const runId = await ctx.db.insert("irtCalibrationRuns", {
       attemptCount: 0,
-      completedAt: 1,
+      completedAt: retainedScaleRepair.publishedAt,
       iterationCount: 0,
       maxParameterDelta: 0,
       model: "2pl",
@@ -60,9 +44,9 @@ async function seedUnusedScale(ctx: MutationCtx, responseCount = 0) {
       responseCount,
       scaleVersionId,
       sectionIdentity,
-      startedAt: 1,
+      startedAt: retainedScaleRepair.publishedAt,
       status: "completed",
-      updatedAt: 1,
+      updatedAt: retainedScaleRepair.publishedAt,
     });
     runIds.push(runId);
     for (let question = 0; question < questionCount; question += 1) {
@@ -94,14 +78,10 @@ async function seedRepair(t: CleanupTest, responseCount = 0) {
     return {
       ...graph,
       evidence: {
-        itemCount: 150,
+        ...retainedScaleRepair,
         migrationId: migration.migrationId,
         planHash: migration.authorization.planHash,
-        publishedAt: 1,
-        questionCount: 150,
-        runs: RUNS,
         scaleVersionId: graph.scaleVersionId,
-        setIdentity: SET_IDENTITY,
         sourceSnapshotId: migration.sourceSnapshotId,
       } satisfies ScaleRepairEvidence,
     };
@@ -148,20 +128,19 @@ describe("tryouts/migration/cleanup/repair", () => {
       const { repair } = yield* Effect.promise(() => seedRepair(t));
       const first = yield* Effect.promise(() => runCleanup(t, repair.evidence));
       const repaired = yield* Effect.promise(() => readRepair(t, repair));
-
       assert.deepStrictEqual(first, { deleted: 0, done: false, repaired: 158 });
       assert.strictEqual(repaired.scale, null);
       assert.ok(repaired.items.every((item) => item === null));
       assert.ok(repaired.runs.every((run) => run === null));
       assert.strictEqual(repaired.migration?.phase, "completed");
       assert.strictEqual(repaired.receipt?.deletedRows, 0);
+      assert.deepStrictEqual(repaired.receipt?.proof, CLEANUP_PROOF);
       assert.strictEqual(repaired.receipt?.repair?.deletedRows, 158);
       assert.strictEqual(
         repaired.receipt?.repair?.scaleVersionId,
         repair.scaleVersionId
       );
       assert.ok((repaired.receipt?.repair?.repairedAt ?? 0) > 0);
-
       let done = false;
       for (let page = 0; page < 32; page += 1) {
         const result = yield* Effect.promise(() =>
@@ -173,7 +152,6 @@ describe("tryouts/migration/cleanup/repair", () => {
         }
       }
       const finished = yield* Effect.promise(() => readRepair(t, repair));
-
       assert.strictEqual(done, true);
       assert.strictEqual(finished.receipt?.phase, "cleaned");
       assert.strictEqual(finished.receipt?.deletedRows, 82);
@@ -185,7 +163,6 @@ describe("tryouts/migration/cleanup/repair", () => {
     Effect.gen(function* () {
       const t = createConvexTestWithBetterAuth();
       const { repair } = yield* Effect.promise(() => seedRepair(t, 1));
-
       yield* Effect.promise(() =>
         expect(runCleanup(t, repair.evidence)).rejects.toMatchObject({
           data: { code: "CONTENT_RELEASE_INTEGRITY" },
@@ -294,6 +271,29 @@ describe("tryouts/migration/cleanup/repair", () => {
       assert.ok(state.scale);
       assert.ok(state.items.every((item) => item !== null));
       assert.ok(state.runs.every((run) => run !== null));
+      assert.strictEqual(state.receipt?.repair, undefined);
+    })
+  );
+
+  it.effect("rejects terminal target drift before repair writes", () =>
+    Effect.gen(function* () {
+      const t = createConvexTestWithBetterAuth();
+      const { cleanup, repair } = yield* Effect.promise(() => seedRepair(t));
+      yield* Effect.promise(() =>
+        t.mutation((ctx) => ctx.db.delete(cleanup.target.bundleId))
+      );
+
+      yield* Effect.promise(() =>
+        expect(runCleanup(t, repair.evidence)).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        })
+      );
+      const state = yield* Effect.promise(() => readRepair(t, repair));
+
+      assert.ok(state.scale);
+      assert.ok(state.items.every((item) => item !== null));
+      assert.ok(state.runs.every((run) => run !== null));
+      assert.strictEqual(state.receipt?.proof, undefined);
       assert.strictEqual(state.receipt?.repair, undefined);
     })
   );

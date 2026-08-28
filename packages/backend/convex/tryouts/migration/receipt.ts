@@ -252,7 +252,6 @@ export const cleanupMigrationReceipt = Effect.fn(
       command: request.command,
       deleted: 0,
       migrationId: request.releaseId,
-      repaired: 0,
       status: current,
     };
   }
@@ -269,7 +268,6 @@ export const cleanupMigrationReceipt = Effect.fn(
     command: request.command,
     deleted: result.deleted,
     migrationId: request.releaseId,
-    repaired: result.repaired,
     status,
   };
 });

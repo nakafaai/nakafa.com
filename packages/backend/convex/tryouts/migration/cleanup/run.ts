@@ -15,10 +15,14 @@ import {
   requireCleanupPlan,
   requireCleanupPreconditions,
   requireCleanupRetention,
+  requireCleanupStart,
 } from "@repo/backend/convex/tryouts/migration/cleanup/guard";
 import { cleanupLedger } from "@repo/backend/convex/tryouts/migration/cleanup/ledger";
 import { requireCleanupEmpty } from "@repo/backend/convex/tryouts/migration/cleanup/proof";
-import { repairUnusedScale } from "@repo/backend/convex/tryouts/migration/cleanup/repair";
+import {
+  commitUnusedScale,
+  prepareUnusedScale,
+} from "@repo/backend/convex/tryouts/migration/cleanup/repair";
 import { cleanupScale } from "@repo/backend/convex/tryouts/migration/cleanup/scale";
 import {
   type CleanupProof,
@@ -110,16 +114,26 @@ export const cleanupProgram = Effect.fn("tryouts.migration.cleanup")(function* (
   }
   const plan = yield* requireCleanupPlan(migration);
   yield* requireCleanupPreconditions(ctx, migration);
-  const repair = yield* repairUnusedScale(
+  const start = yield* requireCleanupStart(migration, receipt, proof);
+  const preparedRepair = yield* prepareUnusedScale(
     ctx,
     migration,
     receipt,
     repairEvidence
   );
-  if (repair !== null) {
+  if (preparedRepair !== null) {
+    if (start.kind !== "initial") {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        "Try-out history cleanup cannot repair after signed deletion started."
+      );
+    }
+    yield* verifyTerminalStorage(ctx, start.migration);
+    const repair = yield* commitUnusedScale(ctx, preparedRepair);
     const repairedAt = yield* Clock.currentTimeMillis;
     yield* Effect.promise(() =>
       ctx.db.patch("tryoutHistoryMigrationReceipts", receipt._id, {
+        proof,
         repair: { ...repair.repair, repairedAt },
       })
     );
@@ -127,23 +141,11 @@ export const cleanupProgram = Effect.fn("tryouts.migration.cleanup")(function* (
   }
   yield* requireCleanupRetention(ctx, migration);
   let state: CleanupState;
-  if (migration.phase === "completed") {
-    if (receipt.proof || receipt.deletedRows !== 0) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        "Unstarted try-out history cleanup already has durable progress."
-      );
-    }
-    yield* verifyTerminalStorage(ctx, migration);
+  if (start.kind === "initial") {
+    yield* verifyTerminalStorage(ctx, start.migration);
     state = initialCleanupState(yield* Clock.currentTimeMillis);
   } else {
-    if (!(receipt.proof && hasSameCleanupProof(receipt.proof, proof))) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        "Try-out history cleanup proof changed after deletion started."
-      );
-    }
-    state = migration.cleanup;
+    state = start.state;
   }
   const countedRows = yield* countCleanupRows(state, plan.payload);
   if (countedRows !== receipt.deletedRows) {
