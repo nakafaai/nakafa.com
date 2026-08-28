@@ -42,6 +42,14 @@ const retirementResultValidator = v.object({
   retiredAt: v.number(),
 });
 
+const retirementEvidence = {
+  assetHash:
+    "sha256:2e0e31ea0733fc7945d9e05c91d9e012c477ce7fb5bd958245e744ae4eab14ba",
+  receiptHash:
+    "sha256:42e30eff6c16e14ba86bb44ff85be2b621fab1b2749440e647d7b71a67b47649",
+  sourceSha: "5ff4bbffe406ea020a741ffa794bc4ff5d9353e0",
+} as const;
+
 /** Authenticates the immutable receipt and its exact published asset digest. */
 const authenticateReceipt = Effect.fn("contentRelease.retire.authenticate")(
   function* (receiptJson: string, proofInput: unknown) {
@@ -67,6 +75,20 @@ const authenticateReceipt = Effect.fn("contentRelease.retire.authenticate")(
     yield* verifyTryoutHistoryMigrationProof(receipt, proof).pipe(
       Effect.mapError(contractFailure)
     );
+    if (
+      receipt.payload.migrationId !== retainedScaleRepair.migrationId ||
+      receipt.payload.planHash !== retainedScaleRepair.planHash ||
+      receipt.payload.sourceSnapshotId !==
+        retainedScaleRepair.sourceSnapshotId ||
+      receipt.receiptHash !== retirementEvidence.receiptHash ||
+      proof.assetHash !== retirementEvidence.assetHash ||
+      proof.sourceSha !== retirementEvidence.sourceSha
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        "Try-out history retirement proof does not identify the retained migration."
+      );
+    }
     return { proof, receipt };
   }
 );
@@ -159,7 +181,6 @@ export const retireRuntimeState = Effect.fn("contentRelease.retire")(function* (
   }
   const completion = receipt.payload.completion;
   if (
-    receipt.payload.migrationId !== retainedScaleRepair.migrationId ||
     state.receipt.length !== 1 ||
     stored.phase !== "cleaned" ||
     stored.cleanupLimit !== completion.cleanupLimit ||

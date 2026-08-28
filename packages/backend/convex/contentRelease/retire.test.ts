@@ -139,6 +139,25 @@ describe("contentRelease/retire", () => {
     await expect(runRetirement(target)).resolves.toMatchObject({ deleted: 0 });
   });
 
+  it("rejects a terminal retry with a different source commit", async () => {
+    const target = convexTest(schema, convexModules);
+    await seedTerminalState(target);
+    await expect(runRetirement(target)).resolves.toMatchObject({ deleted: 5 });
+
+    await expect(
+      target.mutation(retire, {
+        observationId: PREDECESSOR_OBSERVATION_ID,
+        proof: {
+          ...RETIREMENT_PROOF,
+          sourceSha: "f".repeat(40),
+        },
+        receiptJson: RETIREMENT_RECEIPT_JSON,
+      })
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+  });
+
   it("rejects a late predecessor call without deleting evidence", async () => {
     const target = convexTest(schema, convexModules);
     await seedTerminalState(target);
