@@ -1,6 +1,6 @@
 import { Resend } from "@convex-dev/resend";
 import resendTest from "@convex-dev/resend/test";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it, vi } from "@effect/vitest";
 import { components } from "@repo/backend/convex/_generated/api";
 import { claimAccountDeletion } from "@repo/backend/convex/auth/deletion/claim";
 import { ACCOUNT_DELETION_RECOVERY_DELAY_MS } from "@repo/backend/convex/auth/deletion/constants";
@@ -11,7 +11,6 @@ import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 28, 8, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
@@ -31,29 +30,41 @@ describe("auth/deletion/claim", () => {
 
         const userId = yield* Effect.promise(() =>
           test.mutation((ctx) =>
-            ctx.db.insert("users", {
-              authId: "claimed-owner",
-              credits: 0,
-              creditsResetAt: 0,
-              email: "delivered@resend.dev",
-              name: "Claimed Owner",
-              plan: "free",
-            })
+            runConvexProgram(
+              Effect.promise(() =>
+                ctx.db.insert("users", {
+                  authId: "claimed-owner",
+                  credits: 0,
+                  creditsResetAt: 0,
+                  email: "delivered@resend.dev",
+                  name: "Claimed Owner",
+                  plan: "free",
+                })
+              )
+            )
           )
         );
         const emailId = yield* Effect.promise(() =>
           test.mutation((ctx) =>
-            testResend.sendEmail(ctx, {
-              from: "Nakafa <nakafa@notifications.nakafa.com>",
-              subject: "Welcome",
-              text: "Welcome",
-              to: "delivered@resend.dev",
-            })
+            runConvexProgram(
+              Effect.promise(() =>
+                testResend.sendEmail(ctx, {
+                  from: "Nakafa <nakafa@notifications.nakafa.com>",
+                  subject: "Welcome",
+                  text: "Welcome",
+                  to: "delivered@resend.dev",
+                })
+              )
+            )
           )
         );
         yield* Effect.promise(() =>
           test.mutation((ctx) =>
-            ctx.db.patch("users", userId, { welcomeEmailId: emailId })
+            runConvexProgram(
+              Effect.promise(() =>
+                ctx.db.patch("users", userId, { welcomeEmailId: emailId })
+              )
+            )
           )
         );
 
@@ -66,11 +77,17 @@ describe("auth/deletion/claim", () => {
         );
         const cancelablePreparation = yield* Effect.promise(() =>
           test.query((ctx) =>
-            ctx.db.query("accountDeletionPreparations").unique()
+            runConvexProgram(
+              Effect.promise(() =>
+                ctx.db.query("accountDeletionPreparations").unique()
+              )
+            )
           )
         );
         const cancelableUser = yield* Effect.promise(() =>
-          test.query((ctx) => ctx.db.get("users", userId))
+          test.query((ctx) =>
+            runConvexProgram(Effect.promise(() => ctx.db.get("users", userId)))
+          )
         );
         const cancelableEmail = yield* Effect.promise(() =>
           test.query(components.resend.lib.getStatus, { emailId })
@@ -86,11 +103,17 @@ describe("auth/deletion/claim", () => {
         );
         const committedPreparation = yield* Effect.promise(() =>
           test.query((ctx) =>
-            ctx.db.query("accountDeletionPreparations").unique()
+            runConvexProgram(
+              Effect.promise(() =>
+                ctx.db.query("accountDeletionPreparations").unique()
+              )
+            )
           )
         );
         const committedUser = yield* Effect.promise(() =>
-          test.query((ctx) => ctx.db.get("users", userId))
+          test.query((ctx) =>
+            runConvexProgram(Effect.promise(() => ctx.db.get("users", userId)))
+          )
         );
         const committedEmail = yield* Effect.promise(() =>
           test.query(components.resend.lib.getStatus, { emailId })
