@@ -1,5 +1,6 @@
 import { redirect } from "@repo/internationalization/src/navigation";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
+import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { HomeContinueLearning } from "@/components/home/continue-learning";
@@ -11,8 +12,8 @@ import { isActiveLocale } from "@/lib/i18n/active";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { shouldRequireLearningProgramOnboarding } from "@/lib/programs/catalog";
 import {
-  getActiveLearningSelection,
   getLearningProgramOnboardingCatalog,
+  readActiveLearningSelection,
 } from "@/lib/programs/server";
 
 /** Routes authenticated users through canonical learning selection. */
@@ -45,7 +46,9 @@ async function AuthenticatedHome({
     return null;
   }
 
-  const learningSelection = await getActiveLearningSelection(token, locale);
+  const learningSelection = await Effect.runPromise(
+    readActiveLearningSelection(token, locale)
+  );
   if (!learningSelection) {
     const programs = await getLearningProgramOnboardingCatalog(locale);
 
