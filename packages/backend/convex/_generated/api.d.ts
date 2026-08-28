@@ -272,6 +272,7 @@ import type * as contentRelease_reference_read from "../contentRelease/reference
 import type * as contentRelease_reference_spec from "../contentRelease/reference/spec.js";
 import type * as contentRelease_renderer from "../contentRelease/renderer.js";
 import type * as contentRelease_retention from "../contentRelease/retention.js";
+import type * as contentRelease_retire from "../contentRelease/retire.js";
 import type * as contentRelease_rollback from "../contentRelease/rollback.js";
 import type * as contentRelease_rollback_state from "../contentRelease/rollback/state.js";
 import type * as contentRelease_route from "../contentRelease/route.js";
@@ -521,9 +522,13 @@ import type * as tryouts_migration_attempt_target from "../tryouts/migration/att
 import type * as tryouts_migration_authorization from "../tryouts/migration/authorization.js";
 import type * as tryouts_migration_bundle from "../tryouts/migration/bundle.js";
 import type * as tryouts_migration_cleanup_count from "../tryouts/migration/cleanup/count.js";
+import type * as tryouts_migration_cleanup_evidence from "../tryouts/migration/cleanup/evidence.js";
 import type * as tryouts_migration_cleanup_guard from "../tryouts/migration/cleanup/guard.js";
 import type * as tryouts_migration_cleanup_ledger from "../tryouts/migration/cleanup/ledger.js";
+import type * as tryouts_migration_cleanup_marker from "../tryouts/migration/cleanup/marker.js";
+import type * as tryouts_migration_cleanup_placement from "../tryouts/migration/cleanup/placement.js";
 import type * as tryouts_migration_cleanup_proof from "../tryouts/migration/cleanup/proof.js";
+import type * as tryouts_migration_cleanup_repair from "../tryouts/migration/cleanup/repair.js";
 import type * as tryouts_migration_cleanup_run from "../tryouts/migration/cleanup/run.js";
 import type * as tryouts_migration_cleanup_scale from "../tryouts/migration/cleanup/scale.js";
 import type * as tryouts_migration_cleanup_source from "../tryouts/migration/cleanup/source.js";
@@ -902,6 +907,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/reference/spec": typeof contentRelease_reference_spec;
   "contentRelease/renderer": typeof contentRelease_renderer;
   "contentRelease/retention": typeof contentRelease_retention;
+  "contentRelease/retire": typeof contentRelease_retire;
   "contentRelease/rollback": typeof contentRelease_rollback;
   "contentRelease/rollback/state": typeof contentRelease_rollback_state;
   "contentRelease/route": typeof contentRelease_route;
@@ -1151,9 +1157,13 @@ declare const fullApi: ApiFromModules<{
   "tryouts/migration/authorization": typeof tryouts_migration_authorization;
   "tryouts/migration/bundle": typeof tryouts_migration_bundle;
   "tryouts/migration/cleanup/count": typeof tryouts_migration_cleanup_count;
+  "tryouts/migration/cleanup/evidence": typeof tryouts_migration_cleanup_evidence;
   "tryouts/migration/cleanup/guard": typeof tryouts_migration_cleanup_guard;
   "tryouts/migration/cleanup/ledger": typeof tryouts_migration_cleanup_ledger;
+  "tryouts/migration/cleanup/marker": typeof tryouts_migration_cleanup_marker;
+  "tryouts/migration/cleanup/placement": typeof tryouts_migration_cleanup_placement;
   "tryouts/migration/cleanup/proof": typeof tryouts_migration_cleanup_proof;
+  "tryouts/migration/cleanup/repair": typeof tryouts_migration_cleanup_repair;
   "tryouts/migration/cleanup/run": typeof tryouts_migration_cleanup_run;
   "tryouts/migration/cleanup/scale": typeof tryouts_migration_cleanup_scale;
   "tryouts/migration/cleanup/source": typeof tryouts_migration_cleanup_source;
