@@ -1,8 +1,9 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import {
   getPublishedProgramCatalog,
   getPublishedProgramRoutes,
@@ -80,39 +81,46 @@ describe("published program catalog", () => {
     runtimeQueryMock.mockReset();
   });
 
-  it("decodes real program roots and applies the runtime cache", async () => {
-    runtimeQueryMock.mockResolvedValueOnce(catalogResponse());
+  it.effect("decodes real program roots and applies the runtime cache", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValueOnce(catalogResponse());
 
-    const catalog = await getPublishedProgramCatalog("en");
+      const catalog = yield* Effect.tryPromise(() =>
+        getPublishedProgramCatalog("en")
+      );
 
-    expect(catalog).toMatchObject({
-      entries: [
-        {
-          program: { key: "merdeka" },
-          route: { publicPath: "curriculum/merdeka" },
-        },
-      ],
-      sourceRevision: revision,
-    });
-    expect(cacheMock).toHaveBeenCalledOnce();
-  });
+      expect(catalog).toMatchObject({
+        entries: [
+          {
+            program: { key: "merdeka" },
+            route: { publicPath: "curriculum/merdeka" },
+          },
+        ],
+        sourceRevision: revision,
+      });
+      expect(cacheMock).toHaveBeenCalledOnce();
+    })
+  );
 
-  it("rejects an unmanaged catalog", async () => {
-    runtimeQueryMock.mockResolvedValueOnce(
-      catalogResponse({
-        managed: false,
-        programJson: [],
-        routeJson: [],
-        sourceRevision: null,
-      })
-    );
+  it.effect("rejects an unmanaged catalog", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValueOnce(
+        catalogResponse({
+          managed: false,
+          programJson: [],
+          routeJson: [],
+          sourceRevision: null,
+        })
+      );
 
-    await expect(
-      Effect.runPromise(readPublishedProgramCatalog("id").pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-  });
+      const failure = yield* readPublishedProgramCatalog("id").pipe(
+        Effect.flip
+      );
+      expect(failure).toMatchObject({ _tag: "PublishedProjectionError" });
+    })
+  );
 
-  it.each([
+  it.effect.each([
     [
       "non-root route",
       catalogResponse({
@@ -126,88 +134,106 @@ describe("published program catalog", () => {
       }),
     ],
     ["invalid source revision", catalogResponse({ sourceRevision: "main" })],
-  ])("rejects a catalog with %s", async (_name, response) => {
-    runtimeQueryMock.mockResolvedValueOnce(response);
+  ] as const)("rejects a catalog with %s", ([_name, response]) =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValueOnce(response);
 
-    await expect(
-      Effect.runPromise(readPublishedProgramCatalog("en").pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-  });
+      const failure = yield* readPublishedProgramCatalog("en").pipe(
+        Effect.flip
+      );
+      expect(failure).toMatchObject({ _tag: "PublishedProjectionError" });
+    })
+  );
 
-  it("reads every route page under one immutable release identity", async () => {
-    runtimeQueryMock
-      .mockResolvedValueOnce(pageResponse({ isDone: false }))
-      .mockResolvedValueOnce(
-        pageResponse({
-          page: [testCurriculumRowJson(testProgramClass)],
-        })
+  it.effect("reads every route page under one immutable release identity", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock
+        .mockResolvedValueOnce(pageResponse({ isDone: false }))
+        .mockResolvedValueOnce(
+          pageResponse({
+            page: [testCurriculumRowJson(testProgramClass)],
+          })
+        );
+
+      const catalog = yield* Effect.tryPromise(() =>
+        getPublishedProgramRoutes("en")
       );
 
-    const catalog = await getPublishedProgramRoutes("en");
+      expect(catalog).toMatchObject({
+        routes: [
+          { publicPath: "curriculum/merdeka" },
+          { publicPath: "curriculum/merdeka/class-11" },
+        ],
+        sourceRevision: revision,
+      });
+      expect(runtimeQueryMock).toHaveBeenNthCalledWith(2, expect.anything(), {
+        appLocale: "en",
+        expectedManifestHash: `sha256:${"b".repeat(64)}`,
+        expectedReleaseId: "program-release",
+        paginationOpts: { cursor: "next", numItems: PROJECTION_PAGE_LIMIT },
+      });
+      expect(cacheMock).toHaveBeenCalledOnce();
+    })
+  );
 
-    expect(catalog).toMatchObject({
-      routes: [
-        { publicPath: "curriculum/merdeka" },
-        { publicPath: "curriculum/merdeka/class-11" },
-      ],
-      sourceRevision: revision,
-    });
-    expect(runtimeQueryMock).toHaveBeenNthCalledWith(2, expect.anything(), {
-      appLocale: "en",
-      expectedManifestHash: `sha256:${"b".repeat(64)}`,
-      expectedReleaseId: "program-release",
-      paginationOpts: { cursor: "next", numItems: PROJECTION_PAGE_LIMIT },
-    });
-    expect(cacheMock).toHaveBeenCalledOnce();
-  });
+  it.effect("preserves both terminal page cursor states", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValueOnce(pageResponse({ isDone: false }));
 
-  it("preserves both terminal page cursor states", async () => {
-    runtimeQueryMock.mockResolvedValueOnce(pageResponse({ isDone: false }));
+      const page = yield* readPublishedProgramPage({
+        cursor: null,
+        expectedManifestHash: null,
+        expectedReleaseId: null,
+        locale: "en",
+      });
+      expect(page).toMatchObject({
+        done: false,
+        nextCursor: "next",
+      });
+    })
+  );
 
-    await expect(
-      Effect.runPromise(
-        readPublishedProgramPage({
-          cursor: null,
-          expectedManifestHash: null,
-          expectedReleaseId: null,
-          locale: "en",
-        })
-      )
-    ).resolves.toMatchObject({
-      done: false,
-      nextCursor: "next",
-    });
-  });
+  it.effect("rejects routes before Aksara owns the program family", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValueOnce(
+        pageResponse({ managed: false, page: [] })
+      );
 
-  it("rejects routes before Aksara owns the program family", async () => {
-    runtimeQueryMock.mockResolvedValueOnce(
-      pageResponse({ managed: false, page: [] })
-    );
+      const failure = yield* readPublishedProgramRoutes("id").pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "PublishedProjectionError" });
+    })
+  );
 
-    await expect(
-      Effect.runPromise(readPublishedProgramRoutes("id").pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-  });
-
-  it.each([
+  it.effect.each([
     ["stale page", pageResponse({ stale: true })],
     [
       "missing continuation identity",
       { ...pageResponse({ isDone: false }), activeReleaseId: null },
     ],
-  ])("rejects a %s", async (_name, response) => {
-    runtimeQueryMock.mockResolvedValueOnce(response);
+  ] as const)("rejects a %s", ([_name, response]) =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValueOnce(response);
 
-    await expect(
-      Effect.runPromise(readPublishedProgramRoutes("en").pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-  });
+      const failure = yield* readPublishedProgramRoutes("en").pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "PublishedProjectionError" });
+    })
+  );
 
-  it("preserves runtime query failures in the Effect error channel", async () => {
-    runtimeQueryMock.mockRejectedValueOnce(new Error("program unavailable"));
+  it.effect(
+    "preserves runtime query failures in the Effect error channel",
+    () =>
+      Effect.gen(function* () {
+        runtimeQueryMock.mockRejectedValueOnce(
+          new Error("program unavailable")
+        );
 
-    await expect(
-      Effect.runPromise(readPublishedProgramCatalog("en"))
-    ).rejects.toThrow("program unavailable");
-  });
+        const failure = yield* readPublishedProgramCatalog("en").pipe(
+          Effect.flip
+        );
+        expect(failure).toMatchObject({
+          _tag: "TestRuntimeQueryError",
+          message: "Error: program unavailable",
+        });
+      })
+  );
 });
