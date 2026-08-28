@@ -83,7 +83,10 @@ describe("contentRelease/predecessor/internal", () => {
     await expect(
       target.mutation(seal, { observationId: OBSERVATION_ID })
     ).resolves.toMatchObject({
-      routes: { batch: { phase: "sealed" }, singular: { phase: "sealed" } },
+      routes: {
+        history: { phase: "sealed" },
+        protected: { phase: "sealed" },
+      },
     });
     await expect(target.mutation(recordProtected, {})).resolves.toEqual({
       kind: "recorded",
@@ -106,7 +109,10 @@ describe("contentRelease/predecessor/internal", () => {
     await expect(
       target.query(status, { observationId: OBSERVATION_ID })
     ).resolves.toMatchObject({
-      routes: { batch: { phase: "sealed" }, singular: { phase: "sealed" } },
+      routes: {
+        history: { phase: "sealed" },
+        protected: { phase: "sealed" },
+      },
     });
   });
 });
