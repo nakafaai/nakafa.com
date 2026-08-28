@@ -1,9 +1,5 @@
+import type { CreditGrantType } from "@repo/backend/convex/credits/schema";
 import type { UserPlan } from "@repo/backend/convex/users/schema";
-
-/**
- * Grant types for credit reset (subset of CreditTransactionType).
- */
-type CreditGrantType = "daily-grant" | "monthly-grant";
 
 /**
  * Credit grant configuration per plan.

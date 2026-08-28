@@ -18,6 +18,8 @@ export type CreditTransactionType = Infer<
   typeof creditTransactionTypeValidator
 >;
 
+export type CreditGrantType = Extract<CreditTransactionType, `${string}-grant`>;
+
 /** Scalar audit values allowed on credit transaction metadata. */
 export const creditTransactionMetadataValueValidator = v.union(
   v.string(),
