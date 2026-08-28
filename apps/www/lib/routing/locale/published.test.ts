@@ -1,6 +1,7 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect, Option } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import { readPublishedLocalizedHref } from "@/lib/routing/locale/published";
 import {
   testArticleDeProjection,
@@ -127,311 +128,330 @@ beforeEach(() => {
 
 /** Reads one English material route through its Indonesian signed target. */
 function readMaterialHref(search = "") {
-  return Effect.runSync(
-    readPublishedLocalizedHref({
-      currentLocale: "en",
-      hash: "",
-      locale: "id",
-      publicPath: previewProjection.publicPath,
-      search,
-    })
-  );
+  return readPublishedLocalizedHref({
+    currentLocale: "en",
+    hash: "",
+    locale: "id",
+    publicPath: previewProjection.publicPath,
+    search,
+  });
 }
 
 describe("published localized route ownership", () => {
-  it.each(articleLocalePairs)(
+  it.effect.each(articleLocalePairs)(
     "projects $current.appLocale article categories to $target.appLocale",
-    ({ current, target }) => {
-      expect(
-        Effect.runSync(
-          readPublishedLocalizedHref({
-            currentLocale: current.appLocale,
-            hash: "#latest",
-            locale: target.appLocale,
-            publicPath: current.parentPath,
-            search:
-              "?cursor=source&manifest=source&release=source&source=locale",
-          })
-        )
-      ).toBe(`/${target.parentPath}?source=locale#latest`);
-    }
-  );
+    ({ current, target }) =>
+      Effect.gen(function* () {
+        const href = yield* readPublishedLocalizedHref({
+          currentLocale: current.appLocale,
+          hash: "#latest",
+          locale: target.appLocale,
+          publicPath: current.parentPath,
+          search: "?cursor=source&manifest=source&release=source&source=locale",
+        });
 
-  it.each(articleLocalePairs)(
-    "projects $current.appLocale article details to $target.appLocale",
-    ({ current, target }) => {
-      expect(
-        Effect.runSync(
-          readPublishedLocalizedHref({
-            currentLocale: current.appLocale,
-            hash: "#references",
-            locale: target.appLocale,
-            publicPath: current.publicPath,
-            search: "?source=locale",
-          })
-        )
-      ).toBe(`/${target.publicPath}?source=locale#references`);
-    }
-  );
-
-  it("fails closed for missing or malformed article projections", () => {
-    expect(
-      Effect.runSync(
-        readPublishedLocalizedHref({
-          currentLocale: "en",
-          hash: "",
-          locale: "id",
-          publicPath: "articles",
-          search: "",
-        })
-      )
-    ).toBeNull();
-
-    publishedMocks.articleCategory.mockReturnValueOnce(
-      Effect.succeed(Option.none())
-    );
-    expect(() =>
-      Effect.runSync(
-        readPublishedLocalizedHref({
-          currentLocale: "en",
-          hash: "",
-          locale: "id",
-          publicPath: "articles/missing",
-          search: "",
-        })
-      )
-    ).toThrow();
-
-    publishedMocks.categoryAlternates.mockReturnValueOnce(
-      Effect.succeed([
-        {
-          appLocale: testArticleProjection.appLocale,
-          publicPath: testArticleProjection.parentPath,
-        },
-      ])
-    );
-    expect(() =>
-      Effect.runSync(
-        readPublishedLocalizedHref({
-          currentLocale: "en",
-          hash: "",
-          locale: "de",
-          publicPath: testArticleProjection.parentPath,
-          search: "",
-        })
-      )
-    ).toThrow();
-
-    publishedMocks.articleRoute.mockReturnValueOnce(
-      Effect.succeed({ activeReleaseId, alternates: [], projection: null })
-    );
-    expect(() =>
-      Effect.runSync(
-        readPublishedLocalizedHref({
-          currentLocale: "en",
-          hash: "",
-          locale: "de",
-          publicPath: testArticleProjection.publicPath,
-          search: "",
-        })
-      )
-    ).toThrow();
-
-    publishedMocks.articleRoute.mockReturnValueOnce(
-      Effect.succeed({
-        activeReleaseId,
-        alternates: [testArticleProjection],
-        projection: testArticleProjection,
+        expect(href).toBe(`/${target.parentPath}?source=locale#latest`);
       })
-    );
-    expect(() =>
-      Effect.runSync(
+  );
+
+  it.effect.each(articleLocalePairs)(
+    "projects $current.appLocale article details to $target.appLocale",
+    ({ current, target }) =>
+      Effect.gen(function* () {
+        const href = yield* readPublishedLocalizedHref({
+          currentLocale: current.appLocale,
+          hash: "#references",
+          locale: target.appLocale,
+          publicPath: current.publicPath,
+          search: "?source=locale",
+        });
+
+        expect(href).toBe(`/${target.publicPath}?source=locale#references`);
+      })
+  );
+
+  it.effect("fails closed for missing or malformed article projections", () =>
+    Effect.gen(function* () {
+      const read = (publicPath: string, locale: "de" | "id" = "id") =>
         readPublishedLocalizedHref({
           currentLocale: "en",
           hash: "",
-          locale: "de",
-          publicPath: testArticleProjection.publicPath,
+          locale,
+          publicPath,
           search: "",
-        })
-      )
-    ).toThrow();
+        });
 
-    expect(() =>
-      Effect.runSync(
-        readPublishedLocalizedHref({
-          currentLocale: "en",
-          hash: "",
-          locale: "de",
-          publicPath: "articles/politics/article/extra",
-          search: "",
-        })
-      )
-    ).toThrow();
-  });
+      const unmanaged = yield* read("articles");
+      expect(unmanaged).toBeNull();
 
-  it("projects a material route through signed locale counterparts", () => {
-    expect(readMaterialHref()).toBe(`/${previewIdProjection.publicPath}`);
-    expect(publishedMocks.materialRoute).toHaveBeenCalledWith(
-      "en",
-      previewProjection.publicPath
-    );
-  });
+      publishedMocks.articleCategory.mockReturnValueOnce(
+        Effect.succeed(Option.none())
+      );
+      const missingCategory = yield* read("articles/missing").pipe(Effect.flip);
+      expect(missingCategory).toMatchObject({
+        _tag: "MissingLocalizedRouteProjectionError",
+        locale: "id",
+        publicPath: "articles/missing",
+      });
 
-  it("keeps only backend-verified material context", () => {
-    const search =
-      "?ctx=merdeka~class-11-mathematics-function-composition-inverse-function";
-    publishedMocks.materialContext
-      .mockReturnValueOnce(Effect.succeed({ context: {} }))
-      .mockReturnValueOnce(Effect.succeed(null));
+      publishedMocks.categoryAlternates.mockReturnValueOnce(
+        Effect.succeed([
+          {
+            appLocale: testArticleProjection.appLocale,
+            publicPath: testArticleProjection.parentPath,
+          },
+        ])
+      );
+      const missingCategoryAlternate = yield* read(
+        testArticleProjection.parentPath,
+        "de"
+      ).pipe(Effect.flip);
+      expect(missingCategoryAlternate).toMatchObject({
+        _tag: "MissingLocalizedRouteProjectionError",
+        locale: "de",
+        publicPath: testArticleProjection.parentPath,
+      });
 
-    expect(readMaterialHref(search)).toBe(
-      `/${previewIdProjection.publicPath}${search}`
-    );
-    expect(readMaterialHref(search)).toBe(`/${previewIdProjection.publicPath}`);
-  });
+      publishedMocks.articleRoute.mockReturnValueOnce(
+        Effect.succeed({ activeReleaseId, alternates: [], projection: null })
+      );
+      const missingArticle = yield* read(
+        testArticleProjection.publicPath,
+        "de"
+      ).pipe(Effect.flip);
+      expect(missingArticle).toMatchObject({
+        _tag: "MissingLocalizedRouteProjectionError",
+        locale: "de",
+        publicPath: testArticleProjection.publicPath,
+      });
 
-  it("fails closed for material tombstones and missing counterparts", () => {
-    publishedMocks.materialRoute
-      .mockReturnValueOnce(
+      publishedMocks.articleRoute.mockReturnValueOnce(
         Effect.succeed({
           activeReleaseId,
-          alternates: [],
-          projection: null,
-        })
-      )
-      .mockReturnValueOnce(
-        Effect.succeed({
-          activeReleaseId,
-          alternates: [previewProjection],
-          projection: previewProjection,
+          alternates: [testArticleProjection],
+          projection: testArticleProjection,
         })
       );
+      const missingArticleAlternate = yield* read(
+        testArticleProjection.publicPath,
+        "de"
+      ).pipe(Effect.flip);
+      expect(missingArticleAlternate).toMatchObject({
+        _tag: "MissingLocalizedRouteProjectionError",
+        locale: "de",
+        publicPath: testArticleProjection.publicPath,
+      });
 
-    expect(() => readMaterialHref()).toThrow();
-    expect(() => readMaterialHref()).toThrow();
-  });
+      const malformedArticle = yield* read(
+        "articles/politics/article/extra",
+        "de"
+      ).pipe(Effect.flip);
+      expect(malformedArticle).toMatchObject({
+        _tag: "MissingLocalizedRouteProjectionError",
+        locale: "de",
+        publicPath: "articles/politics/article/extra",
+      });
+    })
+  );
 
-  it("projects signed curriculum counterparts and ignores static surfaces", () => {
-    expect(
-      Effect.runSync(
-        readPublishedLocalizedHref({
+  it.effect(
+    "projects a material route through signed locale counterparts",
+    () =>
+      Effect.gen(function* () {
+        const href = yield* readMaterialHref();
+
+        expect(href).toBe(`/${previewIdProjection.publicPath}`);
+        expect(publishedMocks.materialRoute).toHaveBeenCalledWith(
+          "en",
+          previewProjection.publicPath
+        );
+      })
+  );
+
+  it.effect("keeps only backend-verified material context", () =>
+    Effect.gen(function* () {
+      const search =
+        "?ctx=merdeka~class-11-mathematics-function-composition-inverse-function";
+      publishedMocks.materialContext
+        .mockReturnValueOnce(Effect.succeed({ context: {} }))
+        .mockReturnValueOnce(Effect.succeed(null));
+
+      const verified = yield* readMaterialHref(search);
+      expect(verified).toBe(`/${previewIdProjection.publicPath}${search}`);
+
+      const omitted = yield* readMaterialHref(search);
+      expect(omitted).toBe(`/${previewIdProjection.publicPath}`);
+    })
+  );
+
+  it.effect(
+    "fails closed for material tombstones and missing counterparts",
+    () =>
+      Effect.gen(function* () {
+        publishedMocks.materialRoute
+          .mockReturnValueOnce(
+            Effect.succeed({
+              activeReleaseId,
+              alternates: [],
+              projection: null,
+            })
+          )
+          .mockReturnValueOnce(
+            Effect.succeed({
+              activeReleaseId,
+              alternates: [previewProjection],
+              projection: previewProjection,
+            })
+          );
+
+        const tombstone = yield* readMaterialHref().pipe(Effect.flip);
+        expect(tombstone).toMatchObject({
+          _tag: "MissingLocalizedRouteProjectionError",
+        });
+
+        const missingCounterpart = yield* readMaterialHref().pipe(Effect.flip);
+        expect(missingCounterpart).toMatchObject({
+          _tag: "MissingLocalizedRouteProjectionError",
+        });
+      })
+  );
+
+  it.effect(
+    "projects signed curriculum counterparts and ignores static surfaces",
+    () =>
+      Effect.gen(function* () {
+        const indonesian = yield* readPublishedLocalizedHref({
           currentLocale: "en",
           hash: "",
           locale: "id",
           publicPath: testProgramSubject.publicPath,
           search: "",
-        })
-      )
-    ).toBe(`/${idProgramSubject.publicPath}`);
-    expect(
-      Effect.runSync(
-        readPublishedLocalizedHref({
+        });
+        expect(indonesian).toBe(`/${idProgramSubject.publicPath}`);
+
+        const german = yield* readPublishedLocalizedHref({
           currentLocale: "en",
           hash: "",
           locale: "de",
           publicPath: testProgramSubject.publicPath,
           search: "",
-        })
-      )
-    ).toBe(`/${deProgramSubject.publicPath}`);
-    expect(
-      Effect.runSync(
-        readPublishedLocalizedHref({
+        });
+        expect(german).toBe(`/${deProgramSubject.publicPath}`);
+
+        const staticSurface = yield* readPublishedLocalizedHref({
           currentLocale: "en",
           hash: "",
           locale: "id",
           publicPath: "search",
           search: "",
-        })
-      )
-    ).toBeNull();
-  });
+        });
+        expect(staticSurface).toBeNull();
+      })
+  );
 
-  it("projects signed try-out counterparts and fails closed for tombstones", () => {
-    publishedMocks.tryoutPath
-      .mockReturnValueOnce(
-        Effect.succeed(
-          "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge"
-        )
-      )
-      .mockReturnValueOnce(Effect.succeed(null));
-    const read = () =>
-      Effect.runSync(
-        readPublishedLocalizedHref({
-          currentLocale: "id",
-          hash: "",
-          locale: "en",
-          publicPath:
-            "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
-          search: "",
-        })
-      );
+  it.effect(
+    "projects signed try-out counterparts and fails closed for tombstones",
+    () =>
+      Effect.gen(function* () {
+        publishedMocks.tryoutPath
+          .mockReturnValueOnce(
+            Effect.succeed(
+              "try-out/indonesia/snbt/2027/set-1/quantitative-knowledge"
+            )
+          )
+          .mockReturnValueOnce(Effect.succeed(null));
+        const read = () =>
+          readPublishedLocalizedHref({
+            currentLocale: "id",
+            hash: "",
+            locale: "en",
+            publicPath:
+              "try-out/indonesia/snbt/2027/set-1/pengetahuan-kuantitatif",
+            search: "",
+          });
 
-    expect(read()).toBe(
-      "/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge"
-    );
-    expect(read).toThrow();
-  });
+        const href = yield* read();
+        expect(href).toBe(
+          "/try-out/indonesia/snbt/2027/set-1/quantitative-knowledge"
+        );
 
-  it("fails closed for curriculum tombstones and missing counterparts", () => {
-    publishedMocks.programRoute
-      .mockReturnValueOnce(Effect.succeed({ alternates: [], route: null }))
-      .mockReturnValueOnce(
-        Effect.succeed({
-          alternates: [testProgramSubject],
-          route: testProgramSubject,
-        })
-      );
-    const read = () =>
-      Effect.runSync(
-        readPublishedLocalizedHref({
-          currentLocale: "en",
-          hash: "",
-          locale: "id",
-          publicPath: testProgramSubject.publicPath,
-          search: "",
-        })
-      );
+        const tombstone = yield* read().pipe(Effect.flip);
+        expect(tombstone).toMatchObject({
+          _tag: "MissingLocalizedRouteProjectionError",
+        });
+      })
+  );
 
-    expect(read).toThrow();
-    expect(read).toThrow();
-  });
+  it.effect(
+    "fails closed for curriculum tombstones and missing counterparts",
+    () =>
+      Effect.gen(function* () {
+        publishedMocks.programRoute
+          .mockReturnValueOnce(Effect.succeed({ alternates: [], route: null }))
+          .mockReturnValueOnce(
+            Effect.succeed({
+              alternates: [testProgramSubject],
+              route: testProgramSubject,
+            })
+          );
+        const read = () =>
+          readPublishedLocalizedHref({
+            currentLocale: "en",
+            hash: "",
+            locale: "id",
+            publicPath: testProgramSubject.publicPath,
+            search: "",
+          });
 
-  it("projects signed Page counterparts and preserves safe URL state", () => {
-    publishedMocks.pagePath.mockReturnValueOnce(
-      Effect.succeed({ kind: "found", publicPath: "impressum" })
-    );
+        const tombstone = yield* read().pipe(Effect.flip);
+        expect(tombstone).toMatchObject({
+          _tag: "MissingLocalizedRouteProjectionError",
+        });
 
-    expect(
-      Effect.runSync(
-        readPublishedLocalizedHref({
+        const missingCounterpart = yield* read().pipe(Effect.flip);
+        expect(missingCounterpart).toMatchObject({
+          _tag: "MissingLocalizedRouteProjectionError",
+        });
+      })
+  );
+
+  it.effect(
+    "projects signed Page counterparts and preserves safe URL state",
+    () =>
+      Effect.gen(function* () {
+        publishedMocks.pagePath.mockReturnValueOnce(
+          Effect.succeed({ kind: "found", publicPath: "impressum" })
+        );
+
+        const href = yield* readPublishedLocalizedHref({
           currentLocale: "en",
           hash: "#company",
           locale: "de",
           publicPath: "legal-notice",
           search: "?source=footer",
-        })
-      )
-    ).toBe("/impressum?source=footer#company");
-    expect(publishedMocks.pagePath).toHaveBeenCalledWith({
-      currentLocale: "en",
-      locale: "de",
-      publicPath: "legal-notice",
-    });
+        });
+        expect(href).toBe("/impressum?source=footer#company");
+        expect(publishedMocks.pagePath).toHaveBeenCalledWith({
+          currentLocale: "en",
+          locale: "de",
+          publicPath: "legal-notice",
+        });
 
-    publishedMocks.pagePath.mockReturnValueOnce(
-      Effect.succeed({ kind: "missing" })
-    );
-    expect(() =>
-      Effect.runSync(
-        readPublishedLocalizedHref({
+        publishedMocks.pagePath.mockReturnValueOnce(
+          Effect.succeed({ kind: "missing" })
+        );
+        const missing = yield* readPublishedLocalizedHref({
           currentLocale: "en",
           hash: "",
           locale: "de",
           publicPath: "legal-notice",
           search: "",
-        })
-      )
-    ).toThrow();
-  });
+        }).pipe(Effect.flip);
+        expect(missing).toMatchObject({
+          _tag: "MissingLocalizedRouteProjectionError",
+          locale: "de",
+          publicPath: "legal-notice",
+        });
+      })
+  );
 });
