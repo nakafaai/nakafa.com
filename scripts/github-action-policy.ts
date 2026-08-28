@@ -36,6 +36,13 @@ export const GITHUB_ACTION_REVIEWS: readonly GithubActionReview[] = [
     reason: "Checkout is pinned to the latest reviewed stable release.",
   },
   {
+    action: "actions/github-script",
+    approvedSha: "3a2844b7e9c422d3c10d287c895573f7108da1b3",
+    expectedTag: "v9.0.0",
+    expectedUsages: 1,
+    reason: "Merge groups verify every candidate through the GitHub API.",
+  },
+  {
     action: "pnpm/setup",
     approvedSha: "84cb39b217b10273981911c288cd62326dc7c6d2",
     expectedInputs: { cache: "true", install: "false" },

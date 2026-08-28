@@ -11,12 +11,13 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   # Pull request heads supersede their own predecessor runs. Protected-main
-  # runs use the immutable commit SHA so a later independent merge cannot
-  # cancel an already-admitted production acceptance.
-  group: Agent-Friendly Docs-${{ github.event_name == 'push' && github.sha || github.ref }}
+  # and merge-group runs use the immutable commit SHA so a later independent
+  # change cannot cancel an already-admitted production acceptance.
+  group: Agent-Friendly Docs-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -25,38 +26,120 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || github.event_name == 'merge_group' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') }}
+      DIRECT_TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') }}
     outputs:
       required: ${{ steps.classify.outputs.required || steps.default.outputs.required }}
-      trusted: ${{ steps.default.outputs.trusted }}
+      trusted: ${{ steps.trust.outputs.trusted }}
     steps:
       - name: Set fail-closed default
         id: default
         env:
-          REQUIRED: ${{ env.TRUSTED_CONTENT_ENVIRONMENT }}
-          TRUSTED: ${{ env.TRUSTED_CONTENT_ENVIRONMENT }}
-        run: |
-          echo "required=$REQUIRED" >> "$GITHUB_OUTPUT"
-          echo "trusted=$TRUSTED" >> "$GITHUB_OUTPUT"
+          REQUIRED: ${{ env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT }}
+        run: echo "required=$REQUIRED" >> "$GITHUB_OUTPUT"
 
-      - if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+      - name: Verify merge group provenance
+        if: github.event_name == 'merge_group'
+        id: merge-group-provenance
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          result-encoding: string
+          script: |
+            const mergeGroup = context.payload.merge_group
+            if (!mergeGroup) {
+              throw new Error("Missing merge group payload.")
+            }
+
+            const baseBranch = mergeGroup.base_ref.replace("refs/heads/", "")
+            const candidateHeads = []
+            const visited = new Set()
+            let cursor = mergeGroup.head_sha
+
+            while (cursor !== mergeGroup.base_sha) {
+              if (visited.has(cursor) || candidateHeads.length >= 100) {
+                throw new Error("Invalid merge group commit chain.")
+              }
+              visited.add(cursor)
+
+              const { data: commit } = await github.rest.git.getCommit({
+                ...context.repo,
+                commit_sha: cursor,
+              })
+              if (commit.parents.length !== 2) {
+                throw new Error(`Merge group commit ${cursor} is not a two-parent merge.`)
+              }
+
+              const [queueParent, candidateParent] = commit.parents
+              candidateHeads.push(candidateParent.sha)
+              cursor = queueParent.sha
+            }
+
+            if (candidateHeads.length === 0) {
+              throw new Error("Merge group contains no pull request commits.")
+            }
+
+            for (const candidateHead of candidateHeads) {
+              const pulls = await github.paginate(
+                github.rest.repos.listPullRequestsAssociatedWithCommit,
+                {
+                  ...context.repo,
+                  commit_sha: candidateHead,
+                  per_page: 100,
+                },
+              )
+              const candidates = pulls.filter(
+                (pull) =>
+                  pull.state === "open" &&
+                  pull.base.ref === baseBranch &&
+                  pull.head.sha === candidateHead,
+              )
+              if (candidates.length !== 1) {
+                throw new Error(
+                  `Merge group commit ${candidateHead} has ${candidates.length} matching pull requests.`,
+                )
+              }
+
+              const [pull] = candidates
+              if (
+                pull.head.repo?.full_name !== context.payload.repository.full_name ||
+                pull.user?.login !== "nabilfatih"
+              ) {
+                throw new Error(`Pull request #${pull.number} is not trusted for signed acceptance.`)
+              }
+              core.info(`Trusted pull request #${pull.number} at ${candidateHead}.`)
+            }
+
+            return "true"
+
+      - name: Export content environment trust
+        id: trust
+        env:
+          DIRECT_TRUST: ${{ env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT }}
+          MERGE_GROUP_TRUST: ${{ steps.merge-group-provenance.outputs.result }}
+        run: |
+          trusted=false
+          if [ "$DIRECT_TRUST" = "true" ] || [ "$MERGE_GROUP_TRUST" = "true" ]; then
+            trusted=true
+          fi
+          echo "trusted=$trusted" >> "$GITHUB_OUTPUT"
+
+      - if: steps.trust.outputs.trusted == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
       - name: Setup toolchain
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        if: steps.trust.outputs.trusted == 'true'
         uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2 # v2.0.2
         with:
           cache: true
           install: false
 
       - name: Install dependencies
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        if: steps.trust.outputs.trusted == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Classify production acceptance
-        if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
+        if: steps.trust.outputs.trusted == 'true'
         id: classify
         env:
           BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before }}
