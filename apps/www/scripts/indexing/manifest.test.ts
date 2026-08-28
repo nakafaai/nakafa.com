@@ -1,5 +1,6 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 
 const sitemapMocks = vi.hoisted(() => ({
   getSitemapEntries: vi.fn(),
@@ -19,63 +20,65 @@ afterEach(() => {
 });
 
 describe("forEachSiteIndexUrlBatch", () => {
-  it("streams canonical sitemap URLs through bounded batches", async () => {
-    sitemapMocks.readSitemapPageDescriptors.mockReturnValue(
-      Effect.succeed([{ id: "public_id_0" }, { id: "public_en_0" }])
-    );
-    sitemapMocks.getSitemapEntries
-      .mockReturnValueOnce(
-        Effect.succeed([
-          { url: "https://nakafa.com/id/home" },
-          { url: "https://nakafa.com/id/search" },
-        ])
-      )
-      .mockReturnValueOnce(
-        Effect.succeed([{ url: "https://nakafa.com/en/home" }])
+  it.effect("streams canonical sitemap URLs through bounded batches", () =>
+    Effect.gen(function* () {
+      sitemapMocks.readSitemapPageDescriptors.mockReturnValue(
+        Effect.succeed([{ id: "public_id_0" }, { id: "public_en_0" }])
       );
-    const { forEachSiteIndexUrlBatch } = await import(
-      "@/scripts/indexing/manifest"
-    );
-    const batches: string[][] = [];
+      sitemapMocks.getSitemapEntries
+        .mockReturnValueOnce(
+          Effect.succeed([
+            { url: "https://nakafa.com/id/home" },
+            { url: "https://nakafa.com/id/search" },
+          ])
+        )
+        .mockReturnValueOnce(
+          Effect.succeed([{ url: "https://nakafa.com/en/home" }])
+        );
+      const { forEachSiteIndexUrlBatch } = yield* Effect.promise(
+        () => import("@/scripts/indexing/manifest")
+      );
+      const batches: string[][] = [];
 
-    const summary = await Effect.runPromise(
-      forEachSiteIndexUrlBatch(
+      const summary = yield* forEachSiteIndexUrlBatch(
         (batch) =>
           Effect.sync(() => {
             batches.push([...batch.urls]);
           }),
         { batchSize: 2 }
-      )
-    );
+      );
 
-    expect(summary).toEqual({
-      batchCount: 2,
-      canonicalUrlCount: 3,
-    });
-    expect(batches).toEqual([
-      ["https://nakafa.com/id/home", "https://nakafa.com/id/search"],
-      ["https://nakafa.com/en/home"],
-    ]);
-  });
+      expect(summary).toEqual({
+        batchCount: 2,
+        canonicalUrlCount: 3,
+      });
+      expect(batches).toEqual([
+        ["https://nakafa.com/id/home", "https://nakafa.com/id/search"],
+        ["https://nakafa.com/en/home"],
+      ]);
+    })
+  );
 
-  it("returns an empty summary without invoking the batch processor", async () => {
-    sitemapMocks.readSitemapPageDescriptors.mockReturnValue(
-      Effect.succeed([{ id: "public_id_0" }])
-    );
-    sitemapMocks.getSitemapEntries.mockReturnValueOnce(Effect.succeed([]));
-    const { forEachSiteIndexUrlBatch } = await import(
-      "@/scripts/indexing/manifest"
-    );
-    const processBatch = vi.fn(() => Effect.void);
+  it.effect(
+    "returns an empty summary without invoking the batch processor",
+    () =>
+      Effect.gen(function* () {
+        sitemapMocks.readSitemapPageDescriptors.mockReturnValue(
+          Effect.succeed([{ id: "public_id_0" }])
+        );
+        sitemapMocks.getSitemapEntries.mockReturnValueOnce(Effect.succeed([]));
+        const { forEachSiteIndexUrlBatch } = yield* Effect.promise(
+          () => import("@/scripts/indexing/manifest")
+        );
+        const processBatch = vi.fn(() => Effect.void);
 
-    const summary = await Effect.runPromise(
-      forEachSiteIndexUrlBatch(processBatch)
-    );
+        const summary = yield* forEachSiteIndexUrlBatch(processBatch);
 
-    expect(summary).toEqual({
-      batchCount: 0,
-      canonicalUrlCount: 0,
-    });
-    expect(processBatch).not.toHaveBeenCalled();
-  });
+        expect(summary).toEqual({
+          batchCount: 0,
+          canonicalUrlCount: 0,
+        });
+        expect(processBatch).not.toHaveBeenCalled();
+      })
+  );
 });

@@ -1,5 +1,6 @@
-import { Cause, Effect, Exit, Option } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
+import { vi } from "vitest";
 import {
   fetchSEOTranslationsNamespace,
   SEOTranslationLoadError,
@@ -15,23 +16,24 @@ describe("fetchSEOTranslationsNamespace", () => {
   beforeEach(() => {
     mockGetTranslations.mockReset();
   });
-  it("preserves thrown Error messages in the typed failure channel", async () => {
-    mockGetTranslations.mockRejectedValue(new Error("dictionary unavailable"));
-    const exit = await Effect.runPromiseExit(
-      fetchSEOTranslationsNamespace("en", "SEO")
-    );
-    const failure = Exit.isFailure(exit)
-      ? Cause.findErrorOption(exit.cause)
-      : Option.none();
-    expect(Option.isSome(failure)).toBe(true);
-    if (Option.isSome(failure)) {
-      expect(failure.value).toBeInstanceOf(SEOTranslationLoadError);
-      expect(failure.value).toMatchObject({
-        _tag: "SEOTranslationLoadError",
-        locale: "en",
-        message: "Failed to load SEO translations: dictionary unavailable",
-        namespace: "SEO",
-      });
-    }
-  });
+  it.effect(
+    "preserves thrown Error messages in the typed failure channel",
+    () =>
+      Effect.gen(function* () {
+        mockGetTranslations.mockRejectedValue(
+          new Error("dictionary unavailable")
+        );
+        const failure = yield* fetchSEOTranslationsNamespace("en", "SEO").pipe(
+          Effect.flip
+        );
+
+        expect(failure).toBeInstanceOf(SEOTranslationLoadError);
+        expect(failure).toMatchObject({
+          _tag: "SEOTranslationLoadError",
+          locale: "en",
+          message: "Failed to load SEO translations: dictionary unavailable",
+          namespace: "SEO",
+        });
+      })
+  );
 });
