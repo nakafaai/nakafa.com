@@ -91,7 +91,11 @@ function hasSameCleanupProof(
 export const requireCleanupProgress = Effect.fn(
   "tryouts.migration.requireCleanupProgress"
 )(function* (result: CleanupResult, phase: MigrationStatus["phase"]) {
-  if (result.deleted < 0 || (result.deleted === 0 && !result.done)) {
+  if (
+    result.deleted < 0 ||
+    result.repaired < 0 ||
+    (result.deleted === 0 && result.repaired === 0 && !result.done)
+  ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       "Try-out history cleanup made no bounded progress."
@@ -248,6 +252,7 @@ export const cleanupMigrationReceipt = Effect.fn(
       command: request.command,
       deleted: 0,
       migrationId: request.releaseId,
+      repaired: 0,
       status: current,
     };
   }
@@ -264,6 +269,7 @@ export const cleanupMigrationReceipt = Effect.fn(
     command: request.command,
     deleted: result.deleted,
     migrationId: request.releaseId,
+    repaired: result.repaired,
     status,
   };
 });

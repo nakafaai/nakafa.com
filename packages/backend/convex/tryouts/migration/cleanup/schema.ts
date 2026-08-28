@@ -39,6 +39,26 @@ export const cleanupProofValidator = v.object({
   sourceSha: v.string(),
 });
 
+export const cleanupRepairValidator = v.object({
+  deletedRows: v.number(),
+  itemCount: v.number(),
+  migrationId: v.string(),
+  planHash: v.string(),
+  publishedAt: v.number(),
+  questionCount: v.number(),
+  repairedAt: v.number(),
+  runCount: v.number(),
+  runs: v.array(
+    v.object({
+      questionCount: v.number(),
+      sectionIdentity: v.string(),
+    })
+  ),
+  scaleVersionId: v.string(),
+  setIdentity: v.string(),
+  sourceSnapshotId: v.string(),
+});
+
 export const cleanupCountsValidator = v.object({
   artifact: v.number(),
   audit: v.number(),
@@ -64,6 +84,7 @@ export const cleanupStateValidator = v.object({
 
 export type CleanupKind = Infer<typeof cleanupKindValidator>;
 export type CleanupProof = Infer<typeof cleanupProofValidator>;
+export type CleanupRepair = Infer<typeof cleanupRepairValidator>;
 export type CleanupState = Infer<typeof cleanupStateValidator>;
 
 /** One bounded deletion page attributed to its signed source category. */

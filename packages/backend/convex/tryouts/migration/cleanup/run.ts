@@ -8,6 +8,7 @@ import {
   recordCleanupPage,
   requireCleanupComplete,
 } from "@repo/backend/convex/tryouts/migration/cleanup/count";
+import type { ScaleRepairEvidence } from "@repo/backend/convex/tryouts/migration/cleanup/evidence";
 import {
   hasCleanupReceiptBinding,
   hasSameCleanupProof,
@@ -34,6 +35,7 @@ import { Clock, Effect } from "effect";
 export const cleanupResultValidator = v.object({
   deleted: v.number(),
   done: v.boolean(),
+  repaired: v.number(),
 });
 
 /** Deletes one bounded legacy page and removes the temporary root last. */
@@ -41,7 +43,8 @@ export const cleanupProgram = Effect.fn("tryouts.migration.cleanup")(function* (
   ctx: MutationCtx,
   migrationId: string,
   receiptHash: string,
-  proof: CleanupProof
+  proof: CleanupProof,
+  repairEvidence?: ScaleRepairEvidence
 ) {
   const receipt = yield* loadMigrationReceipt(ctx, migrationId);
   if (!receipt || receipt.receiptHash !== receiptHash) {
@@ -67,7 +70,7 @@ export const cleanupProgram = Effect.fn("tryouts.migration.cleanup")(function* (
       receipt.deletedRows > 0 &&
       receipt.deletedRows <= receipt.cleanupLimit
     ) {
-      return { deleted: 0, done: true };
+      return { deleted: 0, done: true, repaired: 0 };
     }
     if (receipt.phase === "cleaned") {
       return yield* releaseFail(
@@ -107,7 +110,21 @@ export const cleanupProgram = Effect.fn("tryouts.migration.cleanup")(function* (
   }
   const plan = yield* requireCleanupPlan(migration);
   yield* requireCleanupPreconditions(ctx, migration);
-  yield* repairUnusedScale(ctx, migration);
+  const repair = yield* repairUnusedScale(
+    ctx,
+    migration,
+    receipt,
+    repairEvidence
+  );
+  if (repair !== null) {
+    const repairedAt = yield* Clock.currentTimeMillis;
+    yield* Effect.promise(() =>
+      ctx.db.patch("tryoutHistoryMigrationReceipts", receipt._id, {
+        repair: { ...repair.repair, repairedAt },
+      })
+    );
+    return { deleted: 0, done: false, repaired: repair.deletedRows };
+  }
   yield* requireCleanupRetention(ctx, migration);
   let state: CleanupState;
   if (migration.phase === "completed") {
@@ -188,7 +205,7 @@ export const cleanupProgram = Effect.fn("tryouts.migration.cleanup")(function* (
         proof,
       })
     );
-    return { deleted: page.deleted, done: false };
+    return { deleted: page.deleted, done: false, repaired: 0 };
   }
   yield* requireCleanupEmpty(ctx, migration);
   const deletedRows = yield* requireCleanupComplete(state, plan.payload);
@@ -218,7 +235,7 @@ export const cleanupProgram = Effect.fn("tryouts.migration.cleanup")(function* (
   yield* Effect.promise(() =>
     ctx.db.delete("tryoutHistoryMigrations", migration._id)
   );
-  return { deleted: 1, done: true };
+  return { deleted: 1, done: true, repaired: 0 };
 });
 
 export const cleanup = internalMutation({
