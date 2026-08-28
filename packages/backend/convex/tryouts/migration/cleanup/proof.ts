@@ -96,7 +96,6 @@ export const requireCleanupEmpty = Effect.fn(
         )
         .first()
     ),
-    Effect.promise(() => ctx.db.query("contentPredecessorReads").first()),
   ]);
   const scales = yield* Effect.forEach(
     migration.authorization.sourceScaleVersionIds,

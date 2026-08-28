@@ -1,6 +1,5 @@
 import type { TryoutHistoryMigrationPlanPayload } from "@nakafa/aksara-contracts/migration/tryout/history/spec";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { PREDECESSOR_ROUTES } from "@repo/backend/convex/contentRelease/predecessor/spec";
 import {
   type CleanupKind,
   type CleanupPage,
@@ -82,11 +81,6 @@ function cleanupBounds(
         maximum: plan.target.placements.count,
         minimum: plan.target.placements.count,
       };
-    case "observer":
-      return {
-        maximum: PREDECESSOR_ROUTES.length,
-        minimum: PREDECESSOR_ROUTES.length,
-      };
     default:
       return kind satisfies never;
   }
@@ -106,7 +100,6 @@ export function initialCleanupState(startedAt: number): CleanupState {
       catalogMap: 0,
       history: 0,
       legacy: 0,
-      observer: 0,
       placement: 0,
       placementMap: 0,
       runtime: 0,

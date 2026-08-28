@@ -1,21 +1,18 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { PREDECESSOR_ROUTES } from "@repo/backend/convex/contentRelease/predecessor/spec";
 import { Effect } from "effect";
 
-/** Returns whether one migration still owns the active predecessor identity. */
+/** Returns whether one migration still owns the active target identity. */
 function ownsActiveRelease(migration: Doc<"tryoutHistoryMigrations">) {
-  if (migration.phase === "running" || migration.phase === "completed") {
-    return true;
-  }
   return (
-    migration.phase === "cleaning" &&
-    migration.cleanup.counts.observer !== PREDECESSOR_ROUTES.length
+    migration.phase === "running" ||
+    migration.phase === "completed" ||
+    migration.phase === "cleaning"
   );
 }
 
-/** Prevents active release drift while migration state owns its predecessor. */
+/** Prevents active release drift while migration state owns its target. */
 export const requireContentActivationUnlocked = Effect.fn(
   "tryouts.migration.requireContentActivationUnlocked"
 )(function* (ctx: MutationCtx) {

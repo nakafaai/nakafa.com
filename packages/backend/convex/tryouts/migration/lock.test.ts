@@ -1,7 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { PREDECESSOR_ROUTES } from "@repo/backend/convex/contentRelease/predecessor/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -41,7 +40,7 @@ const completion = {
   migratedScaleVersions: 0,
 };
 
-/** Inserts an authorized migration before its observation becomes binding. */
+/** Inserts an authorized migration before permanent writes begin. */
 function seedReadyMigration(ctx: MutationCtx) {
   return ctx.db.insert("tryoutHistoryMigrations", {
     artifactMapCount: 0,
@@ -57,7 +56,7 @@ function seedReadyMigration(ctx: MutationCtx) {
   });
 }
 
-/** Inserts a migration that has bound its sealed predecessor observation. */
+/** Inserts a migration that owns its permanent target identity. */
 function seedRunningMigration(ctx: MutationCtx) {
   return ctx.db.insert("tryoutHistoryMigrations", {
     artifactMapCount: 0,
@@ -67,7 +66,6 @@ function seedRunningMigration(ctx: MutationCtx) {
     migrationId: MIGRATION_ID,
     phase: "running",
     placementMapCount: 0,
-    predecessorObservationId: "activation-lock-observation",
     progress: {
       migratedAttempts: 0,
       migratedScaleItems: 0,
@@ -91,31 +89,24 @@ function seedCompletedMigration(ctx: MutationCtx) {
     migrationId: MIGRATION_ID,
     phase: "completed",
     placementMapCount: 0,
-    predecessorObservationId: "activation-lock-observation",
     sourceSnapshotId: digest,
     target,
     updatedAt: 1,
   });
 }
 
-/** Inserts cleanup ownership before or after observer deletion. */
-function seedCleaningMigration(ctx: MutationCtx, observerCount: number) {
-  const cleanup = initialCleanupState(1);
+/** Inserts cleanup ownership before the migration root is deleted. */
+function seedCleaningMigration(ctx: MutationCtx) {
   return ctx.db.insert("tryoutHistoryMigrations", {
     artifactMapCount: 0,
     authorization,
     catalogMapCount: 0,
-    cleanup: {
-      ...cleanup,
-      counts: { ...cleanup.counts, observer: observerCount },
-      kind: "observer",
-    },
+    cleanup: initialCleanupState(1),
     completion,
     createdAt: 1,
     migrationId: MIGRATION_ID,
     phase: "cleaning",
     placementMapCount: 0,
-    predecessorObservationId: "activation-lock-observation",
     sourceSnapshotId: digest,
     target,
     updatedAt: 1,
@@ -149,7 +140,7 @@ const recoveryRequest = {
 };
 
 describe("tryouts/migration/lock", () => {
-  it.effect("blocks candidate activation after observer binding", () =>
+  it.effect("blocks candidate activation while migration runs", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
       yield* Effect.promise(() =>
@@ -203,7 +194,7 @@ describe("tryouts/migration/lock", () => {
       })
   );
 
-  it.effect("allows ready activation before observer binding", () =>
+  it.effect("allows ready activation before migration begins", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
       yield* Effect.promise(() =>
@@ -254,30 +245,33 @@ describe("tryouts/migration/lock", () => {
     })
   );
 
-  it.effect("releases cleanup ownership after observer deletion", () =>
+  it.effect("locks cleanup ownership until root deletion", () =>
     Effect.gen(function* () {
-      const locked = convexTest(schema, convexModules);
+      const t = convexTest(schema, convexModules);
       yield* Effect.promise(() =>
-        locked.mutation((ctx) => seedCleaningMigration(ctx, 0))
+        t.mutation((ctx) => seedCleaningMigration(ctx))
       );
       yield* Effect.promise(() =>
         expect(
-          locked.mutation((ctx) =>
+          t.mutation((ctx) =>
             runConvexProgram(requireContentActivationUnlocked(ctx))
           )
         ).rejects.toMatchObject({
           data: { code: "CONTENT_RELEASE_STATE" },
         })
       );
-
-      const released = convexTest(schema, convexModules);
       yield* Effect.promise(() =>
-        released.mutation((ctx) =>
-          seedCleaningMigration(ctx, PREDECESSOR_ROUTES.length)
-        )
+        t.mutation(async (ctx) => {
+          const migration = await ctx.db
+            .query("tryoutHistoryMigrations")
+            .unique();
+          if (migration) {
+            await ctx.db.delete(migration._id);
+          }
+        })
       );
       const result = yield* Effect.promise(() =>
-        released.mutation((ctx) =>
+        t.mutation((ctx) =>
           runConvexProgram(requireContentActivationUnlocked(ctx))
         )
       );

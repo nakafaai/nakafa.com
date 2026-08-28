@@ -15,7 +15,6 @@ import {
   CLEANUP_SOURCE_SNAPSHOT,
 } from "@repo/backend/test/migration/state";
 import type { CleanupTarget } from "@repo/backend/test/migration/target";
-import { PREDECESSOR_OBSERVATION_ID } from "@repo/backend/test/predecessor";
 import { Effect, Schema } from "effect";
 
 const digest = (digit: string) => `sha256:${digit.repeat(64)}`;
@@ -136,7 +135,6 @@ export async function seedRoot(
     migrationId: CLEANUP_MIGRATION_ID,
     phase: "completed",
     placementMapCount: 1,
-    predecessorObservationId: PREDECESSOR_OBSERVATION_ID,
     sourceSnapshotId: CLEANUP_SOURCE_SNAPSHOT,
     target: {
       bundleCreated: false,

@@ -2,7 +2,6 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { requireSealedPredecessorObservation } from "@repo/backend/convex/contentRelease/predecessor/control";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
   hashTryoutHistoryAttemptEntry,
@@ -36,10 +35,6 @@ const migrateAttempt = Effect.fn("tryouts.migration.migrateAttempt")(function* (
       "Try-out history migration is not authorized to run."
     );
   }
-  yield* requireSealedPredecessorObservation(
-    ctx,
-    root.predecessorObservationId
-  );
   const targetBundleHash = root.target.bundleHash;
   const targetSnapshotId = root.target.snapshotId;
   const plan = yield* decodeMigrationPlan(root.authorization.planJson);

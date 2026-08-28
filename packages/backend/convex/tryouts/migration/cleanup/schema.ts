@@ -15,7 +15,6 @@ export const cleanupKinds = [
   "placementMap",
   "scaleMap",
   "audit",
-  "observer",
 ] as const;
 
 export const cleanupKindValidator = v.union(
@@ -32,8 +31,7 @@ export const cleanupKindValidator = v.union(
   v.literal("artifact"),
   v.literal("catalogMap"),
   v.literal("placementMap"),
-  v.literal("scaleMap"),
-  v.literal("observer")
+  v.literal("scaleMap")
 );
 
 export const cleanupProofValidator = v.object({
@@ -48,7 +46,6 @@ export const cleanupCountsValidator = v.object({
   catalogMap: v.number(),
   history: v.number(),
   legacy: v.number(),
-  observer: v.number(),
   placement: v.number(),
   placementMap: v.number(),
   runtime: v.number(),

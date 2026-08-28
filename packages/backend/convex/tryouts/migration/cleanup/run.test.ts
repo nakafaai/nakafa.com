@@ -48,8 +48,6 @@ describe("tryouts/migration/cleanup/run", () => {
         readonly guard:
           | "attempt"
           | "marker"
-          | "observer"
-          | "observerId"
           | "receipt"
           | "reference"
           | "scaleAttempt"
@@ -61,14 +59,6 @@ describe("tryouts/migration/cleanup/run", () => {
           message: "no matching permanent signed receipt",
         },
         { guard: "marker", message: "unmigrated attempt marker" },
-        {
-          guard: "observer",
-          message: "must complete its observation window",
-        },
-        {
-          guard: "observerId",
-          message: "observation ID changed during migration",
-        },
         {
           guard: "attempt",
           message: "attempt on the retained source snapshot",
@@ -153,9 +143,6 @@ describe("tryouts/migration/cleanup/run", () => {
         );
 
         assert.ok(pages.some(({ deleted }) => deleted === 32));
-        assert.ok(
-          pages.some(({ deleted, done }) => deleted === 4 && done === false)
-        );
         assert.strictEqual(pages.at(-1)?.done, true);
         assert.deepStrictEqual(retry, { deleted: 0, done: true });
         assert.ok(state.attempt);
@@ -183,7 +170,7 @@ describe("tryouts/migration/cleanup/run", () => {
         assert.strictEqual(state.receipt?.receiptHash, CLEANUP_RECEIPT_HASH);
         assert.strictEqual(state.receipt?.phase, "cleaned");
         assert.strictEqual(state.receipt?.cleanupLimit, CLEANUP_LIMIT);
-        assert.strictEqual(state.receipt?.deletedRows, 86);
+        assert.strictEqual(state.receipt?.deletedRows, 82);
         assert.deepStrictEqual(state.receipt?.proof, CLEANUP_PROOF);
       })
   );
@@ -222,7 +209,7 @@ describe("tryouts/migration/cleanup/run", () => {
       assert.deepStrictEqual(state.sourceScales, [null, null]);
       assert.ok(state.targetScales.every((scale) => scale !== null));
       assert.strictEqual(state.receipt?.phase, "cleaned");
-      assert.strictEqual(state.receipt?.deletedRows, 90);
+      assert.strictEqual(state.receipt?.deletedRows, 86);
     })
   );
 
