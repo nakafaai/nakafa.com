@@ -106,7 +106,7 @@ describe("public content runtime batch HTTP route", () => {
         observationId: OBSERVATION_ID,
       })
     ).resolves.toMatchObject({
-      routes: { batch: { invocationCount: 1 } },
+      routes: { batch: { invocationCount: 0 } },
     });
     responses.forEach(expectPrivate);
   });

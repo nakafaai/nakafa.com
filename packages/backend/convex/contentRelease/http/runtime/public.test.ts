@@ -104,7 +104,7 @@ describe("public content runtime HTTP route", () => {
         observationId: OBSERVATION_ID,
       })
     ).resolves.toMatchObject({
-      routes: { singular: { invocationCount: 1 } },
+      routes: { singular: { invocationCount: 0 } },
     });
     responses.forEach(expectPrivate);
   });

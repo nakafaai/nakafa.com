@@ -557,7 +557,6 @@ import type * as tryouts_migration_bundle from "../tryouts/migration/bundle.js";
 import type * as tryouts_migration_cleanup_count from "../tryouts/migration/cleanup/count.js";
 import type * as tryouts_migration_cleanup_guard from "../tryouts/migration/cleanup/guard.js";
 import type * as tryouts_migration_cleanup_ledger from "../tryouts/migration/cleanup/ledger.js";
-import type * as tryouts_migration_cleanup_observer from "../tryouts/migration/cleanup/observer.js";
 import type * as tryouts_migration_cleanup_proof from "../tryouts/migration/cleanup/proof.js";
 import type * as tryouts_migration_cleanup_run from "../tryouts/migration/cleanup/run.js";
 import type * as tryouts_migration_cleanup_scale from "../tryouts/migration/cleanup/scale.js";
@@ -1222,7 +1221,6 @@ declare const fullApi: ApiFromModules<{
   "tryouts/migration/cleanup/count": typeof tryouts_migration_cleanup_count;
   "tryouts/migration/cleanup/guard": typeof tryouts_migration_cleanup_guard;
   "tryouts/migration/cleanup/ledger": typeof tryouts_migration_cleanup_ledger;
-  "tryouts/migration/cleanup/observer": typeof tryouts_migration_cleanup_observer;
   "tryouts/migration/cleanup/proof": typeof tryouts_migration_cleanup_proof;
   "tryouts/migration/cleanup/run": typeof tryouts_migration_cleanup_run;
   "tryouts/migration/cleanup/scale": typeof tryouts_migration_cleanup_scale;
