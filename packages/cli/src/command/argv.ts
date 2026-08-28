@@ -91,12 +91,10 @@ export const normalizeArgv = Effect.fn("NakafaCli.normalizeArgv")(function* (
 
     const terminatedShort = readTerminatedShortFlags(argument);
     if (terminatedShort !== undefined) {
-      for (const name of terminatedShort.names) {
-        if (isActionFlagName(name)) {
-          actions[name] = true;
-        } else {
-          normalized.push(`--${name}=true`);
-        }
+      if (terminatedShort.names === undefined) {
+        normalized.push(`-${terminatedShort.source}`);
+      } else {
+        appendShortFlags(normalized, actions, terminatedShort.names);
       }
       appendActions(normalized, actions);
       normalized.push("--", ...terminatedShort.positionals);
@@ -111,13 +109,7 @@ export const normalizeArgv = Effect.fn("NakafaCli.normalizeArgv")(function* (
           message: `-${short.source} does not accept a value.`,
         });
       }
-      for (const name of short.names) {
-        if (isActionFlagName(name)) {
-          actions[name] = true;
-        } else {
-          normalized.push(`--${name}=true`);
-        }
-      }
+      appendShortFlags(normalized, actions, short.names);
       continue;
     }
 
@@ -192,6 +184,20 @@ function appendActions(
   }
   if (actions.version === true) {
     target.push(`--${FLAG_NAME.version}`);
+  }
+}
+
+function appendShortFlags(
+  target: string[],
+  actions: Record<ActionName, boolean | undefined>,
+  names: readonly ShortFlagName[]
+) {
+  for (const name of names) {
+    if (isActionFlagName(name)) {
+      actions[name] = true;
+    } else {
+      target.push(`--${name}=true`);
+    }
   }
 }
 
@@ -420,13 +426,10 @@ function readTerminatedShortFlags(argument: string) {
   if (short?.positionals === undefined) {
     return;
   }
-  const names = readShortFlagNames(short.source);
-  if (names === undefined) {
-    return;
-  }
   return {
-    names,
+    names: readShortFlagNames(short.source),
     positionals: short.positionals,
+    source: short.source,
   };
 }
 

@@ -42,6 +42,10 @@ describe("Nakafa CLI arguments", () => {
       expected: ["taxonomy", "--pretty=true", "--", "-h", "-f", "-o", "-o"],
     },
     {
+      argv: ["taxonomy", "-x-hfoo"],
+      expected: ["taxonomy", "-x", "--", "-h", "-f", "-o", "-o"],
+    },
+    {
       argv: ["taxonomy", "-p-hfoo=bar"],
       expected: [
         "taxonomy",
@@ -179,6 +183,11 @@ describe("Nakafa CLI arguments", () => {
     expect(
       Option.getOrUndefined(readActionValidation(["taxonomy", "-xh-foo"]))
     ).toEqual(["taxonomy", "-x"]);
+    expect(
+      Option.isNone(
+        readActionValidation(["taxonomy", "-x", "--", "-h", "-f", "-o", "-o"])
+      )
+    ).toBe(true);
     expect(Option.getOrUndefined(readActionValidation(["-h"]))).toEqual([]);
     expect(Option.isNone(readActionValidation(["-x"]))).toBe(true);
   });
