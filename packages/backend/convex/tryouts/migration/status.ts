@@ -7,6 +7,7 @@ import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
 import { parseStoredJson } from "@repo/backend/convex/contentRelease/parse";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
+import { hasRequiredScaleRepair } from "@repo/backend/convex/tryouts/migration/cleanup/evidence";
 import { decodeMigrationPlan } from "@repo/backend/convex/tryouts/migration/plan";
 import {
   authenticateMigrationReceipt,
@@ -24,6 +25,7 @@ import type { Infer } from "convex/values";
 import { Effect } from "effect";
 
 type MigrationRecord = Infer<typeof migrationRecordValidator>;
+type MigrationReceiptRecord = NonNullable<MigrationRecord["receipt"]>;
 type MigrationStatus = Infer<typeof migrationStatusValidator>;
 type TerminalRecord = Infer<typeof terminalRecordValidator>;
 
@@ -37,6 +39,23 @@ const terminalReference = makeFunctionReference<
   { migrationId: string },
   TerminalRecord
 >("tryouts/migration/terminal:terminal");
+
+/** Requires the durable repair audit before exposing cleaned terminal state. */
+export const requireTerminalRepair = Effect.fn(
+  "tryouts.migration.requireTerminalRepair"
+)(function* (
+  receipt: Pick<MigrationReceiptRecord, "migrationId" | "phase" | "repair">
+) {
+  if (
+    receipt.phase === "cleaned" &&
+    !hasRequiredScaleRepair(receipt.migrationId, receipt.repair)
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      "Cleaned try-out history migration lost its durable repair audit."
+    );
+  }
+});
 
 /** Recomputes the complete permanent target before terminal state is exposed. */
 const verifyCompletedStatus = Effect.fn(
@@ -106,6 +125,7 @@ export const readMigrationStatus = Effect.fn("tryouts.migration.readStatus")(
         "Stored try-out history migration receipt changed signed identity."
       );
     }
+    yield* requireTerminalRepair(record.receipt);
     if (!record.status) {
       if (record.receipt.phase !== "cleaned") {
         return yield* releaseFail(

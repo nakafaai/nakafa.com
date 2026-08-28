@@ -107,6 +107,7 @@ export const migrationReceiptRecordValidator = v.object({
   phase: v.union(v.literal("sealed"), v.literal("cleaned")),
   planHash: v.string(),
   proof: v.union(cleanupProofValidator, v.null()),
+  repair: v.union(cleanupRepairValidator, v.null()),
   receiptHash: v.string(),
   receiptJson: v.string(),
   sourceSnapshotId: v.string(),

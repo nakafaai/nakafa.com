@@ -130,6 +130,7 @@ export function migrationReceiptRecord(
     phase: receipt.phase,
     planHash: receipt.planHash,
     proof: receipt.proof ?? null,
+    repair: receipt.repair ?? null,
     receiptHash: receipt.receiptHash,
     receiptJson: receipt.receiptJson,
     sourceSnapshotId: receipt.sourceSnapshotId,
