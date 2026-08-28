@@ -212,7 +212,7 @@ describe("public content runtime HTTP route", () => {
         })
       );
       if (!row) {
-        throw new Error("Expected one public runtime row.");
+        return expect.fail("Expected one public runtime row.");
       }
       const request = yield* decodePublicContentRuntimeRequest(
         JSON.parse(publicRuntimeRequest())
@@ -259,7 +259,7 @@ describe("public content runtime HTTP route", () => {
     await corrupt.mutation(async (ctx) => {
       const head = await ctx.db.query("contentHeads").unique();
       if (!head) {
-        throw new Error("Expected a corruptible runtime head.");
+        return expect.fail("Expected a corruptible runtime head.");
       }
       await ctx.db.patch("contentHeads", head._id, {
         projectionHash: `sha256:${"f".repeat(64)}`,

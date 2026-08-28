@@ -172,7 +172,7 @@ describe("public content runtime batch HTTP route", () => {
     await t.mutation(async (ctx) => {
       const head = await ctx.db.query("contentHeads").unique();
       if (!head) {
-        throw new Error("Expected one runtime head.");
+        return expect.fail("Expected one runtime head.");
       }
       await ctx.db.patch("contentHeads", head._id, {
         projectionHash: `sha256:${"f".repeat(64)}`,
