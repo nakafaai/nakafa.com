@@ -58,3 +58,14 @@ export function selectQuranMeaning(
   }
   return { appLocale, text: meaning[appLocale] };
 }
+
+/** Formats one meaning without disguising a retained source language. */
+export function formatQuranMeaning(
+  meaning: PublishedQuranMeaning,
+  appLocale: AppLocaleCode
+) {
+  const selected = selectQuranMeaning(meaning, appLocale);
+  return selected.appLocale === appLocale
+    ? selected.text
+    : `${selected.text} (${selected.appLocale})`;
+}

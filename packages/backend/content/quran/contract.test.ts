@@ -1,5 +1,8 @@
 import { makeAppLocale } from "@nakafa/aksara-contracts/locale";
-import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
+import {
+  formatQuranMeaning,
+  selectQuranMeaning,
+} from "@repo/backend/content/quran/contract";
 import { describe, expect, it } from "vitest";
 
 describe("published Quran meaning selection", () => {
@@ -31,5 +34,16 @@ describe("published Quran meaning selection", () => {
       appLocale: "en",
       text: "The Cow",
     });
+    expect(formatQuranMeaning(meaning, "id")).toBe("The Cow (en)");
+  });
+
+  it("does not annotate a meaning selected in the requested locale", () => {
+    const meaning = {
+      de: "Die Kuh",
+      en: "The Cow",
+      id: "Sapi",
+    } as const;
+
+    expect(formatQuranMeaning(meaning, "de")).toBe("Die Kuh");
   });
 });

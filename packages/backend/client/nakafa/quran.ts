@@ -16,7 +16,7 @@ import {
   type PublishedQuranReference,
 } from "@repo/backend/client/quran/reference";
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
-import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
+import { formatQuranMeaning } from "@repo/backend/content/quran/contract";
 import { api } from "@repo/backend/convex/_generated/api";
 import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";
@@ -120,7 +120,7 @@ export const readQuranMarkdown = Effect.fn("NakafaQuran.readMarkdown")(
     );
     const surah = publication.surah;
     const title = getSurahName(surah);
-    const meaning = selectQuranMeaning(surah.name.meaning, ref.locale).text;
+    const meaning = formatQuranMeaning(surah.name.meaning, ref.locale);
     const metadata = [
       `# ${title}`,
       "",
