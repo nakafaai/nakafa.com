@@ -160,6 +160,46 @@ describe("NakafaAgentQuranReferenceSchema", () => {
     expect(german.meaning).toEqual({ locale: "de", text: "Die Eröffnende" });
   });
 
+  it("preserves retained English meanings for localized references", () => {
+    const indonesian = reference("id", {
+      kind: "embedded",
+      locale: "id",
+      notice: "Tafsir Indonesia is embedded.",
+      source: embeddedSource("quranenc-tafsir"),
+    });
+    const german = reference("de", {
+      kind: "external",
+      locale: "de",
+      notice: "Read the official linked German edition.",
+      source: externalSource("mokhtasar-german"),
+    });
+    indonesian.meaning = { locale: "en", text: "The Opening" };
+    german.meaning = { locale: "en", text: "The Opening" };
+
+    expect(Schema.is(NakafaAgentQuranReferenceSchema)(indonesian)).toBe(true);
+    expect(Schema.is(NakafaAgentQuranReferenceSchema)(german)).toBe(true);
+    expect(indonesian).toMatchObject({
+      locale: "id",
+      meaning: { locale: "en", text: "The Opening" },
+    });
+    expect(german).toMatchObject({
+      locale: "de",
+      meaning: { locale: "en", text: "The Opening" },
+    });
+  });
+
+  it("rejects a localized meaning from another requested locale", () => {
+    const indonesian = reference("id", {
+      kind: "embedded",
+      locale: "id",
+      notice: "Tafsir Indonesia is embedded.",
+      source: embeddedSource("quranenc-tafsir"),
+    });
+    indonesian.meaning = { locale: "de", text: "Die Eröffnende" };
+
+    expect(Schema.is(NakafaAgentQuranReferenceSchema)(indonesian)).toBe(false);
+  });
+
   it("rejects missing Tafsir access for every locale", () => {
     expect(
       Schema.is(NakafaAgentQuranReferenceSchema)(reference("en", null))

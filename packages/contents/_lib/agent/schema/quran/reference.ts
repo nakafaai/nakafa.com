@@ -28,6 +28,20 @@ function makeNakafaQuranMeaningSchema<const Locale extends AppLocaleCode>(
   }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 }
 
+const NakafaQuranEnglishMeaningSchema = makeNakafaQuranMeaningSchema(
+  ENGLISH_APP_LOCALE_CODE
+);
+
+/** Accepts current locale meaning or truthful English from retained storage. */
+function makeNakafaQuranLocalizedMeaningSchema(
+  locale: typeof GERMAN_APP_LOCALE_CODE | typeof INDONESIAN_APP_LOCALE_CODE
+) {
+  return Schema.Union([
+    makeNakafaQuranMeaningSchema(locale),
+    NakafaQuranEnglishMeaningSchema,
+  ]);
+}
+
 const NakafaQuranTranslationDocumentSchema =
   QuranTranslationDocumentSchema.mapFields((fields) => ({
     notes: fields.notes.pipe(Schema.mutable),
@@ -88,7 +102,7 @@ const NakafaQuranReferenceFields = {
 const NakafaQuranEnglishReferenceSchema = Schema.Struct({
   ...NakafaQuranReferenceFields,
   locale: Schema.Literal(ENGLISH_APP_LOCALE_CODE),
-  meaning: makeNakafaQuranMeaningSchema(ENGLISH_APP_LOCALE_CODE),
+  meaning: NakafaQuranEnglishMeaningSchema,
   sources: NakafaQuranEnglishReadingSourcesSchema,
   tafsir_access: NakafaQuranEnglishTafsirAccessSchema.annotate({
     description: "Signed link-only English Tafsir access.",
@@ -98,7 +112,7 @@ const NakafaQuranEnglishReferenceSchema = Schema.Struct({
 const NakafaQuranIndonesianReferenceSchema = Schema.Struct({
   ...NakafaQuranReferenceFields,
   locale: Schema.Literal(INDONESIAN_APP_LOCALE_CODE),
-  meaning: makeNakafaQuranMeaningSchema(INDONESIAN_APP_LOCALE_CODE),
+  meaning: makeNakafaQuranLocalizedMeaningSchema(INDONESIAN_APP_LOCALE_CODE),
   sources: NakafaQuranIndonesianReadingSourcesSchema,
   tafsir_access: NakafaQuranIndonesianTafsirAccessSchema,
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
@@ -106,7 +120,7 @@ const NakafaQuranIndonesianReferenceSchema = Schema.Struct({
 const NakafaQuranGermanReferenceSchema = Schema.Struct({
   ...NakafaQuranReferenceFields,
   locale: Schema.Literal(GERMAN_APP_LOCALE_CODE),
-  meaning: makeNakafaQuranMeaningSchema(GERMAN_APP_LOCALE_CODE),
+  meaning: makeNakafaQuranLocalizedMeaningSchema(GERMAN_APP_LOCALE_CODE),
   sources: NakafaQuranGermanReadingSourcesSchema,
   tafsir_access: NakafaQuranGermanTafsirAccessSchema.annotate({
     description: "Signed link-only German Tafsir access.",
