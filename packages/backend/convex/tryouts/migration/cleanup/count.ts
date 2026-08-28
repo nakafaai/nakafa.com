@@ -13,10 +13,13 @@ interface CleanupBounds {
   readonly minimum: number;
 }
 
+export type CleanupSourceState = "present" | "retired";
+
 /** Derives the authenticated row bounds for one deletion category. */
 function cleanupBounds(
   plan: TryoutHistoryMigrationPlanPayload,
-  kind: CleanupKind
+  kind: CleanupKind,
+  sourceState: CleanupSourceState
 ): CleanupBounds {
   switch (kind) {
     case "scaleItem":
@@ -41,13 +44,13 @@ function cleanupBounds(
     }
     case "catalog":
       return {
-        maximum: plan.source.catalogRowCount,
-        minimum: plan.source.catalogRowCount,
+        maximum: sourceState === "retired" ? 0 : plan.source.catalogRowCount,
+        minimum: sourceState === "retired" ? 0 : plan.source.catalogRowCount,
       };
     case "placement":
       return {
-        maximum: plan.source.placementRowCount,
-        minimum: plan.source.placementRowCount,
+        maximum: sourceState === "retired" ? 0 : plan.source.placementRowCount,
+        minimum: sourceState === "retired" ? 0 : plan.source.placementRowCount,
       };
     case "legacy":
       return {
@@ -117,7 +120,11 @@ export function initialCleanupState(startedAt: number): CleanupState {
 /** Rejects corrupted, over-budget, or non-monotonic persisted counters. */
 export const requireCleanupState = Effect.fn(
   "tryouts.migration.requireCleanupState"
-)(function* (state: CleanupState, plan: TryoutHistoryMigrationPlanPayload) {
+)(function* (
+  state: CleanupState,
+  plan: TryoutHistoryMigrationPlanPayload,
+  sourceState: CleanupSourceState
+) {
   if (!isSafeCount(state.startedAt)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
@@ -127,7 +134,7 @@ export const requireCleanupState = Effect.fn(
   const activeIndex = cleanupKinds.indexOf(state.kind);
   for (const [index, kind] of cleanupKinds.entries()) {
     const count = state.counts[kind];
-    const bounds = cleanupBounds(plan, kind);
+    const bounds = cleanupBounds(plan, kind, sourceState);
     if (
       !isSafeCount(count) ||
       count > bounds.maximum ||
@@ -149,9 +156,10 @@ export const recordCleanupPage = Effect.fn(
 )(function* (
   state: CleanupState,
   plan: TryoutHistoryMigrationPlanPayload,
-  page: CleanupPage
+  page: CleanupPage,
+  sourceState: CleanupSourceState
 ) {
-  yield* requireCleanupState(state, plan);
+  yield* requireCleanupState(state, plan, sourceState);
   if (!Number.isSafeInteger(page.deleted) || page.deleted <= 0) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
@@ -168,7 +176,7 @@ export const recordCleanupPage = Effect.fn(
   }
   for (let index = activeIndex; index < pageIndex; index += 1) {
     const kind = cleanupKinds[index];
-    const bounds = cleanupBounds(plan, kind);
+    const bounds = cleanupBounds(plan, kind, sourceState);
     if (state.counts[kind] < bounds.minimum) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
@@ -177,7 +185,7 @@ export const recordCleanupPage = Effect.fn(
     }
   }
   const nextCount = state.counts[page.kind] + page.deleted;
-  const bounds = cleanupBounds(plan, page.kind);
+  const bounds = cleanupBounds(plan, page.kind, sourceState);
   if (!isSafeCount(nextCount) || nextCount > bounds.maximum) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
@@ -189,14 +197,18 @@ export const recordCleanupPage = Effect.fn(
     kind: page.kind,
     startedAt: state.startedAt,
   } satisfies CleanupState;
-  yield* requireCleanupState(next, plan);
+  yield* requireCleanupState(next, plan, sourceState);
   return next;
 });
 
 /** Sums every validated category without requiring terminal completion. */
 export const countCleanupRows = Effect.fn("tryouts.migration.countCleanupRows")(
-  function* (state: CleanupState, plan: TryoutHistoryMigrationPlanPayload) {
-    yield* requireCleanupState(state, plan);
+  function* (
+    state: CleanupState,
+    plan: TryoutHistoryMigrationPlanPayload,
+    sourceState: CleanupSourceState
+  ) {
+    yield* requireCleanupState(state, plan, sourceState);
     let deleted = 0;
     for (const kind of cleanupKinds) {
       deleted += state.counts[kind];
@@ -214,11 +226,15 @@ export const countCleanupRows = Effect.fn("tryouts.migration.countCleanupRows")(
 /** Returns the exact deleted total only after every category is complete. */
 export const requireCleanupComplete = Effect.fn(
   "tryouts.migration.requireCleanupComplete"
-)(function* (state: CleanupState, plan: TryoutHistoryMigrationPlanPayload) {
-  const deleted = yield* countCleanupRows(state, plan);
+)(function* (
+  state: CleanupState,
+  plan: TryoutHistoryMigrationPlanPayload,
+  sourceState: CleanupSourceState
+) {
+  const deleted = yield* countCleanupRows(state, plan, sourceState);
   for (const kind of cleanupKinds) {
     const count = state.counts[kind];
-    const bounds = cleanupBounds(plan, kind);
+    const bounds = cleanupBounds(plan, kind, sourceState);
     if (count < bounds.minimum || count > bounds.maximum) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",

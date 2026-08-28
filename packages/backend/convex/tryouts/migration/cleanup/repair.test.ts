@@ -11,6 +11,7 @@ import {
   seedRepair,
   seedUnusedScale,
 } from "@repo/backend/test/migration/repair";
+import { retireRepairSourceRows } from "@repo/backend/test/migration/retained";
 import {
   CLEANUP_MIGRATION_ID,
   CLEANUP_PROOF,
@@ -68,6 +69,7 @@ describe("tryouts/migration/cleanup/repair", () => {
     Effect.gen(function* () {
       const t = createConvexTestWithBetterAuth();
       const { repair } = yield* Effect.promise(() => seedRepair(t));
+      yield* Effect.promise(() => retireRepairSourceRows(t));
       const first = yield* Effect.promise(() => runCleanup(t, repair.evidence));
       const repaired = yield* Effect.promise(() => readRepair(t, repair));
       const repairedRows = countScaleRepairRows(repair.evidence);
@@ -91,7 +93,7 @@ describe("tryouts/migration/cleanup/repair", () => {
       yield* Effect.promise(() => finishCleanup(t, repair.evidence));
       const finished = yield* Effect.promise(() => readRepair(t, repair));
       assert.strictEqual(finished.receipt?.phase, "cleaned");
-      assert.strictEqual(finished.receipt?.deletedRows, 82);
+      assert.strictEqual(finished.receipt?.deletedRows, 48);
       assert.strictEqual(finished.receipt?.repair?.deletedRows, repairedRows);
     })
   );
@@ -101,6 +103,7 @@ describe("tryouts/migration/cleanup/repair", () => {
       for (const damage of ["missing", "tampered"] as const) {
         const t = createConvexTestWithBetterAuth();
         const { repair } = yield* Effect.promise(() => seedRepair(t));
+        yield* Effect.promise(() => retireRepairSourceRows(t));
         yield* Effect.promise(() => runCleanup(t, repair.evidence));
         yield* Effect.promise(() => finishCleanup(t, repair.evidence));
         yield* Effect.promise(() =>
@@ -153,26 +156,7 @@ describe("tryouts/migration/cleanup/repair", () => {
     Effect.gen(function* () {
       const t = createConvexTestWithBetterAuth();
       const { repair } = yield* Effect.promise(() => seedRepair(t));
-      yield* Effect.promise(() =>
-        t.mutation(async (ctx) => {
-          const catalogs = await ctx.db
-            .query("tryoutCatalog")
-            .withIndex("by_snapshotId_and_index", (query) =>
-              query.eq("snapshotId", repair.evidence.sourceSnapshotId)
-            )
-            .collect();
-          const placements = await ctx.db
-            .query("tryoutPlacements")
-            .withIndex("by_snapshotId_and_index", (query) =>
-              query.eq("snapshotId", repair.evidence.sourceSnapshotId)
-            )
-            .collect();
-          await Promise.all([
-            ...catalogs.map((row) => ctx.db.delete(row._id)),
-            ...placements.map((row) => ctx.db.delete(row._id)),
-          ]);
-        })
-      );
+      yield* Effect.promise(() => retireRepairSourceRows(t));
 
       const result = yield* Effect.promise(() =>
         runCleanup(t, repair.evidence)
@@ -191,6 +175,27 @@ describe("tryouts/migration/cleanup/repair", () => {
         state.receipt?.repair?.deletedRows,
         countScaleRepairRows(repair.evidence)
       );
+      yield* Effect.promise(() => finishCleanup(t, repair.evidence));
+      const finished = yield* Effect.promise(() => readRepair(t, repair));
+      assert.strictEqual(finished.migration, null);
+      assert.strictEqual(finished.receipt?.phase, "cleaned");
+      assert.strictEqual(finished.receipt?.deletedRows, 48);
+    })
+  );
+
+  it.effect("rejects repair while live source rows still exist", () =>
+    Effect.gen(function* () {
+      const t = createConvexTestWithBetterAuth();
+      const { repair } = yield* Effect.promise(() => seedRepair(t));
+
+      yield* Effect.promise(() =>
+        expect(runCleanup(t, repair.evidence)).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        })
+      );
+      const state = yield* Effect.promise(() => readRepair(t, repair));
+      assert.ok(state.scale);
+      assert.strictEqual(state.receipt?.repair, undefined);
     })
   );
 
@@ -296,6 +301,7 @@ describe("tryouts/migration/cleanup/repair", () => {
     Effect.gen(function* () {
       const t = createConvexTestWithBetterAuth();
       const { repair } = yield* Effect.promise(() => seedRepair(t));
+      yield* Effect.promise(() => retireRepairSourceRows(t));
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
           ctx.db.insert("tryoutHistoryMigrations", {
@@ -330,6 +336,7 @@ describe("tryouts/migration/cleanup/repair", () => {
     Effect.gen(function* () {
       const t = createConvexTestWithBetterAuth();
       const { cleanup, repair } = yield* Effect.promise(() => seedRepair(t));
+      yield* Effect.promise(() => retireRepairSourceRows(t));
       yield* Effect.promise(() =>
         t.mutation((ctx) => ctx.db.delete(cleanup.target.bundleId))
       );

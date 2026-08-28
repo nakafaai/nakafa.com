@@ -9,6 +9,7 @@ import {
   retainedScaleRepair,
   type ScaleRepairEvidence,
 } from "@repo/backend/convex/tryouts/migration/cleanup/evidence";
+import { requireRepairHistory } from "@repo/backend/convex/tryouts/migration/cleanup/history";
 import type { CleanupRepair } from "@repo/backend/convex/tryouts/migration/cleanup/schema";
 import { Effect } from "effect";
 
@@ -228,6 +229,7 @@ export const prepareUnusedScale = Effect.fn(
       "Try-out history cleanup cannot prove the exact provisional scale graph."
     );
   }
+  yield* requireRepairHistory(ctx, migration.sourceSnapshotId, items, runs);
   if (
     yield* isSnapshotReferenced(ctx, "tryout", migration.sourceSnapshotId, {
       ignoredMigrationId: migration.migrationId,

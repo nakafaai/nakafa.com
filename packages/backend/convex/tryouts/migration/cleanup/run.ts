@@ -3,12 +3,14 @@ import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
+  type CleanupSourceState,
   countCleanupRows,
   initialCleanupState,
   recordCleanupPage,
   requireCleanupComplete,
 } from "@repo/backend/convex/tryouts/migration/cleanup/count";
 import {
+  hasRecordedScaleRepair,
   hasRequiredScaleRepair,
   type ScaleRepairEvidence,
 } from "@repo/backend/convex/tryouts/migration/cleanup/evidence";
@@ -151,6 +153,13 @@ export const cleanupProgram = Effect.fn("tryouts.migration.cleanup")(function* (
     );
     return { deleted: 0, done: false, repaired: repair.deletedRows };
   }
+  const sourceState: CleanupSourceState = hasRecordedScaleRepair(
+    migrationId,
+    receipt.repair,
+    repairEvidence
+  )
+    ? "retired"
+    : "present";
   yield* requireCleanupRetention(ctx, migration);
   let state: CleanupState;
   if (start.kind === "initial") {
@@ -159,7 +168,7 @@ export const cleanupProgram = Effect.fn("tryouts.migration.cleanup")(function* (
   } else {
     state = start.state;
   }
-  const countedRows = yield* countCleanupRows(state, plan.payload);
+  const countedRows = yield* countCleanupRows(state, plan.payload, sourceState);
   if (countedRows !== receipt.deletedRows) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
@@ -174,9 +183,18 @@ export const cleanupProgram = Effect.fn("tryouts.migration.cleanup")(function* (
       : null;
   const page = scale ?? source ?? ledger;
   if (page) {
-    const nextState = yield* recordCleanupPage(state, plan.payload, page);
+    const nextState = yield* recordCleanupPage(
+      state,
+      plan.payload,
+      page,
+      sourceState
+    );
     const deletedRows = receipt.deletedRows + page.deleted;
-    const nextCount = yield* countCleanupRows(nextState, plan.payload);
+    const nextCount = yield* countCleanupRows(
+      nextState,
+      plan.payload,
+      sourceState
+    );
     if (
       !Number.isSafeInteger(deletedRows) ||
       deletedRows !== nextCount ||
@@ -222,7 +240,11 @@ export const cleanupProgram = Effect.fn("tryouts.migration.cleanup")(function* (
     return { deleted: page.deleted, done: false, repaired: 0 };
   }
   yield* requireCleanupEmpty(ctx, migration);
-  const deletedRows = yield* requireCleanupComplete(state, plan.payload);
+  const deletedRows = yield* requireCleanupComplete(
+    state,
+    plan.payload,
+    sourceState
+  );
   if (deletedRows !== receipt.deletedRows) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",

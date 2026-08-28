@@ -178,6 +178,20 @@ export function matchesScaleRepair(
   );
 }
 
+/** Recognizes the exact durable repair that proves retired source rows. */
+export function hasRecordedScaleRepair(
+  migrationId: string,
+  repair: CleanupRepair | null | undefined,
+  evidence: ScaleRepairEvidence = retainedScaleRepair
+) {
+  return (
+    migrationId === evidence.migrationId &&
+    repair !== null &&
+    repair !== undefined &&
+    matchesScaleRepair(repair, evidence, countScaleRepairRows(evidence))
+  );
+}
+
 /** Requires the exact durable audit for the one migration that owns a repair. */
 export function hasRequiredScaleRepair(
   migrationId: string,
@@ -186,8 +200,6 @@ export function hasRequiredScaleRepair(
 ) {
   return (
     migrationId !== evidence.migrationId ||
-    (repair !== null &&
-      repair !== undefined &&
-      matchesScaleRepair(repair, evidence, countScaleRepairRows(evidence)))
+    hasRecordedScaleRepair(migrationId, repair, evidence)
   );
 }
