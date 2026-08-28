@@ -2,10 +2,6 @@
 
 import "next/dist/server/node-environment-baseline";
 
-import { workAsyncStorage } from "next/dist/server/app-render/work-async-storage.external";
-import { workUnitAsyncStorage } from "next/dist/server/app-render/work-unit-async-storage.external";
-import { createRequestStore } from "next/dist/server/async-storage/request-store";
-import { createWorkStore } from "next/dist/server/async-storage/work-store";
 import {
   afterAll,
   afterEach,
@@ -13,8 +9,13 @@ import {
   describe,
   expect,
   it,
-  vi,
-} from "vitest";
+} from "@effect/vitest";
+import { Effect } from "effect";
+import { workAsyncStorage } from "next/dist/server/app-render/work-async-storage.external";
+import { workUnitAsyncStorage } from "next/dist/server/app-render/work-unit-async-storage.external";
+import { createRequestStore } from "next/dist/server/async-storage/request-store";
+import { createWorkStore } from "next/dist/server/async-storage/work-store";
+import { vi } from "vitest";
 
 const CONVEX_SITE_URL = "https://test.convex.site";
 
@@ -64,8 +65,10 @@ const runWithRequestHeaders = (headers: Headers) => {
     },
   });
 
-  return workAsyncStorage.run(workStore, () =>
-    workUnitAsyncStorage.run(requestStore, getToken)
+  return Effect.tryPromise(() =>
+    workAsyncStorage.run(workStore, () =>
+      workUnitAsyncStorage.run(requestStore, getToken)
+    )
   );
 };
 
@@ -88,51 +91,57 @@ afterAll(() => {
 });
 
 describe("Better Auth server boundary", () => {
-  it("forwards auth routes through the installed adapter", async () => {
-    const fetchSpy = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(new Response(null, { status: 200 }));
-    const request = new Request("https://nakafa.com/api/auth/sign-in/social", {
-      body: "{}",
-      headers: { "x-forwarded-host": "proxy.internal.example.com" },
-      method: "POST",
-    });
+  it.effect("forwards auth routes through the installed adapter", () =>
+    Effect.gen(function* () {
+      const fetchSpy = vi
+        .spyOn(globalThis, "fetch")
+        .mockResolvedValue(new Response(null, { status: 200 }));
+      const request = new Request(
+        "https://nakafa.com/api/auth/sign-in/social",
+        {
+          body: "{}",
+          headers: { "x-forwarded-host": "proxy.internal.example.com" },
+          method: "POST",
+        }
+      );
 
-    const response = await handler.POST(request);
-    const [, init] = fetchSpy.mock.calls[0] ?? [];
-    const headers = new Headers(init?.headers);
+      const response = yield* Effect.tryPromise(() => handler.POST(request));
+      const [, init] = fetchSpy.mock.calls[0] ?? [];
+      const headers = new Headers(init?.headers);
 
-    expect(response.status).toBe(200);
-    expect(fetchSpy).toHaveBeenCalledOnce();
-    expect(fetchSpy.mock.calls[0]?.[0]).toBe(
-      `${CONVEX_SITE_URL}/api/auth/sign-in/social`
-    );
-    expect(headers.get("host")).toBe("test.convex.site");
-    expect(headers.get("x-forwarded-proto")).toBe("https");
-  });
+      expect(response.status).toBe(200);
+      expect(fetchSpy).toHaveBeenCalledOnce();
+      expect(fetchSpy.mock.calls[0]?.[0]).toBe(
+        `${CONVEX_SITE_URL}/api/auth/sign-in/social`
+      );
+      expect(headers.get("host")).toBe("test.convex.site");
+      expect(headers.get("x-forwarded-proto")).toBe("https");
+    })
+  );
 
-  it("gets the SSR token through the installed adapter", async () => {
-    const cookie = "better-auth.session_token=session-cookie";
-    const requestHeaders = new Headers({
-      cookie,
-      host: "render.internal.example.com",
-      "x-forwarded-host": "nakafa.com",
-      "x-forwarded-proto": "https",
-    });
-    const fetchSpy = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(Response.json({ token: "test-token" }));
+  it.effect("gets the SSR token through the installed adapter", () =>
+    Effect.gen(function* () {
+      const cookie = "better-auth.session_token=session-cookie";
+      const requestHeaders = new Headers({
+        cookie,
+        host: "render.internal.example.com",
+        "x-forwarded-host": "nakafa.com",
+        "x-forwarded-proto": "https",
+      });
+      const fetchSpy = vi
+        .spyOn(globalThis, "fetch")
+        .mockResolvedValue(Response.json({ token: "test-token" }));
 
-    await expect(runWithRequestHeaders(requestHeaders)).resolves.toBe(
-      "test-token"
-    );
-    const [, init] = fetchSpy.mock.calls[0] ?? [];
-    const headers = new Headers(init?.headers);
+      const token = yield* runWithRequestHeaders(requestHeaders);
+      expect(token).toBe("test-token");
+      const [, init] = fetchSpy.mock.calls[0] ?? [];
+      const headers = new Headers(init?.headers);
 
-    expect(String(fetchSpy.mock.calls[0]?.[0])).toBe(
-      `${CONVEX_SITE_URL}/api/auth/convex/token`
-    );
-    expect(headers.get("host")).toBe("test.convex.site");
-    expect(headers.get("cookie")).toBe(cookie);
-  });
+      expect(String(fetchSpy.mock.calls[0]?.[0])).toBe(
+        `${CONVEX_SITE_URL}/api/auth/convex/token`
+      );
+      expect(headers.get("host")).toBe("test.convex.site");
+      expect(headers.get("cookie")).toBe(cookie);
+    })
+  );
 });
