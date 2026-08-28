@@ -131,10 +131,46 @@ export function readActionValidation(argv: readonly string[]) {
       hasAction = true;
       continue;
     }
+    if (parseFlags) {
+      const short = removeShortActions(argument);
+      if (short !== undefined) {
+        hasAction = true;
+        if (short.length > 0) {
+          validation.push(short);
+        }
+        continue;
+      }
+    }
     validation.push(argument);
   }
 
   return hasAction ? Option.some(validation) : Option.none();
+}
+
+function removeShortActions(argument: string) {
+  if (
+    !argument.startsWith("-") ||
+    argument.startsWith("--") ||
+    argument === "-"
+  ) {
+    return;
+  }
+  const equalsIndex = argument.indexOf("=");
+  const source = argument.slice(
+    1,
+    equalsIndex === -1 ? undefined : equalsIndex
+  );
+  const remaining = [...source].filter(
+    (alias) => alias !== FLAG_ALIAS.help && alias !== FLAG_ALIAS.version
+  );
+  if (remaining.length === source.length) {
+    return;
+  }
+  if (remaining.length === 0) {
+    return "";
+  }
+  const value = equalsIndex === -1 ? "" : argument.slice(equalsIndex);
+  return `-${remaining.join("")}${value}`;
 }
 
 function appendActions(

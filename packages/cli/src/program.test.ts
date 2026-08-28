@@ -433,6 +433,8 @@ describe("Nakafa CLI execution", () => {
     ["--version", "--unknown"],
     ["search", "query", "--limit", "zero", "--help"],
     ["taxonomy", "--locale", "--help", "id"],
+    ["taxonomy", "-xh"],
+    ["taxonomy", "--locale", "-xh"],
     ["search", "", "--help"],
     ["get", "", "--help"],
   ])("rejects invalid action invocation %j", (argv) =>
