@@ -1,11 +1,11 @@
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import { Config, Effect, Layer, Result, Schema } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
+import { inspectGithubActionPolicy } from "../github/policy.ts";
 import {
   fetchLatestGithubActionTag,
   githubActionReleaseReviews,
-  inspectGithubActionPolicy,
-} from "../github-action-policy.ts";
+} from "../github/release.ts";
 import { writeError, writeOutput } from "../output.ts";
 import { runPnpm } from "./command.ts";
 import { REGISTRY_REVIEWS } from "./policy.ts";
