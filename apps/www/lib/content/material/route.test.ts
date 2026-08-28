@@ -1,10 +1,11 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import {
   getPublishedMaterialRoute,
   readPublishedMaterialRoute,
@@ -91,82 +92,95 @@ beforeEach(() => {
 });
 
 describe("published material route", () => {
-  it("decodes one complete signed route, locale set, and sibling group", async () => {
-    runtimeQueryMock.mockResolvedValueOnce(foundModel());
+  it.effect(
+    "decodes one complete signed route, locale set, and sibling group",
+    () =>
+      Effect.gen(function* () {
+        runtimeQueryMock.mockResolvedValueOnce(foundModel());
 
-    await expect(
-      getPublishedMaterialRoute("en", previewProjection.publicPath)
-    ).resolves.toMatchObject({
-      activeReleaseId,
-      alternates: [previewProjection, previewIdProjection, previewDeProjection],
-      projection: previewProjection,
-      rendererDomain: "mathematics",
-      siblings: [previewProjection, previewNextProjection],
-      sourceRevision,
-    });
-    expect(runtimeQueryMock).toHaveBeenCalledOnce();
-    expect(cacheMock).toHaveBeenCalledOnce();
-  });
+        const route = yield* Effect.tryPromise(() =>
+          getPublishedMaterialRoute("en", previewProjection.publicPath)
+        );
+        expect(route).toMatchObject({
+          activeReleaseId,
+          alternates: [
+            previewProjection,
+            previewIdProjection,
+            previewDeProjection,
+          ],
+          projection: previewProjection,
+          rendererDomain: "mathematics",
+          siblings: [previewProjection, previewNextProjection],
+          sourceRevision,
+        });
+        expect(runtimeQueryMock).toHaveBeenCalledOnce();
+        expect(cacheMock).toHaveBeenCalledOnce();
+      })
+  );
 
-  it("pins a route read to the expected active release", async () => {
-    runtimeQueryMock.mockResolvedValueOnce(foundModel());
+  it.effect("pins a route read to the expected active release", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValueOnce(foundModel());
 
-    await expect(
-      getPublishedMaterialRoute(
-        "en",
-        previewProjection.publicPath,
-        activeReleaseId
-      )
-    ).resolves.toMatchObject({ activeReleaseId });
-    expect(runtimeQueryMock).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ expectedActiveReleaseId: activeReleaseId })
-    );
-  });
-
-  it("preserves an active release mismatch for pinned callers", async () => {
-    const expectedReleaseId = ReleaseIdSchema.make("release-previous");
-    runtimeQueryMock.mockResolvedValueOnce(foundModel());
-
-    await expect(
-      Effect.runPromise(
-        readPublishedMaterialRoute(
+      const route = yield* Effect.tryPromise(() =>
+        getPublishedMaterialRoute(
           "en",
           previewProjection.publicPath,
-          expectedReleaseId
-        ).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({
-      _tag: "PublishedReleaseMismatchError",
-      actualReleaseId: activeReleaseId,
-      expectedReleaseId,
-    });
-  });
+          activeReleaseId
+        )
+      );
+      expect(route).toMatchObject({ activeReleaseId });
+      expect(runtimeQueryMock).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ expectedActiveReleaseId: activeReleaseId })
+      );
+    })
+  );
 
-  it("preserves a signed missing-route tombstone", async () => {
-    runtimeQueryMock.mockResolvedValueOnce(
-      foundModel({
-        alternateJson: [],
-        projectionJson: null,
-        rendererDomain: null,
-        siblingJson: [],
+  it.effect("preserves an active release mismatch for pinned callers", () =>
+    Effect.gen(function* () {
+      const expectedReleaseId = ReleaseIdSchema.make("release-previous");
+      runtimeQueryMock.mockResolvedValueOnce(foundModel());
+
+      const mismatch = yield* readPublishedMaterialRoute(
+        "en",
+        previewProjection.publicPath,
+        expectedReleaseId
+      ).pipe(Effect.flip);
+      expect(mismatch).toMatchObject({
+        _tag: "PublishedReleaseMismatchError",
+        actualReleaseId: activeReleaseId,
+        expectedReleaseId,
+      });
+    })
+  );
+
+  it.effect("preserves a signed missing-route tombstone", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValueOnce(
+        foundModel({
+          alternateJson: [],
+          projectionJson: null,
+          rendererDomain: null,
+          siblingJson: [],
+          sourcePath: null,
+        })
+      );
+
+      const route = yield* readPublishedMaterialRoute(
+        "en",
+        previewProjection.publicPath
+      );
+      expect(route).toMatchObject({
+        activeReleaseId,
+        alternates: [],
+        projection: null,
         sourcePath: null,
-      })
-    );
+      });
+    })
+  );
 
-    await expect(
-      Effect.runPromise(
-        readPublishedMaterialRoute("en", previewProjection.publicPath)
-      )
-    ).resolves.toMatchObject({
-      activeReleaseId,
-      alternates: [],
-      projection: null,
-      sourcePath: null,
-    });
-  });
-
-  it.each([
+  it.effect.each([
     ["active manifest", foundModel({ activeManifestHash: "invalid" })],
     ["missing manifest", foundModel({ activeManifestHash: null })],
     ["active locales", foundModel({ activeAppLocales: ["id", "en", "de"] })],
@@ -219,15 +233,15 @@ describe("published material route", () => {
     ["projection JSON", foundModel({ projectionJson: "{}" })],
     ["alternate JSON", foundModel({ alternateJson: ["{}"] })],
     ["sibling JSON", foundModel({ siblingJson: ["{}"] })],
-  ])("rejects an invalid %s", async (_label, result) => {
-    runtimeQueryMock.mockResolvedValueOnce(result);
+  ])("rejects an invalid %s", ([, result]) =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockResolvedValueOnce(result);
 
-    await expect(
-      Effect.runPromise(
-        readPublishedMaterialRoute("en", previewProjection.publicPath).pipe(
-          Effect.flip
-        )
-      )
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-  });
+      const failure = yield* readPublishedMaterialRoute(
+        "en",
+        previewProjection.publicPath
+      ).pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "PublishedProjectionError" });
+    })
+  );
 });
