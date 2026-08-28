@@ -1,12 +1,16 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   PublicPathSchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
-import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
-import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  type CurriculumRoute,
+  CurriculumRouteSchema,
+} from "@nakafa/aksara-contracts/program/curriculum";
+import { Effect, Schema } from "effect";
+import { vi } from "vitest";
 import {
   getPublishedMaterialContext,
   readPublishedMaterialContext,
@@ -21,20 +25,16 @@ import {
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const cacheMock = vi.hoisted(() => vi.fn());
-const group = testProgramGroups[0];
-if (!group) {
-  throw new Error("Expected the real Function Concept curriculum group.");
-}
+const [group] = Schema.decodeUnknownSync(Schema.Tuple([CurriculumRouteSchema]))(
+  testProgramGroups
+);
 const context = {
   nodeKey: group.nodeKey,
   programKey: group.programKey,
 };
-const mapping = testProgramContexts.find(
-  (route) => route.materialContextNodeKey === group.nodeKey
-);
-if (!mapping) {
-  throw new Error("Expected the real Function Concept curriculum mapping.");
-}
+const [mapping] = Schema.decodeUnknownSync(
+  Schema.Tuple([CurriculumRouteSchema])
+)(testProgramContexts);
 const publishedContext = {
   groupJson: testCurriculumRowJson(group),
   managed: true,
@@ -46,12 +46,9 @@ const publishedContext = {
 vi.mock("@/lib/content/cache", () => ({
   applyContentRuntimeCache: cacheMock,
 }));
-vi.mock("@/lib/content/runtime/query", async () => {
-  const { createTestRuntimeQuery } = await import("@/test/runtime-query");
-  return {
-    readRuntimeQuery: createTestRuntimeQuery(runtimeQueryMock),
-  };
-});
+vi.mock("@/lib/content/runtime/query", () => ({
+  readRuntimeQuery: runtimeQueryMock,
+}));
 
 beforeEach(() => {
   runtimeQueryMock.mockReset();
@@ -59,149 +56,167 @@ beforeEach(() => {
 });
 
 describe("published material context", () => {
-  it("builds a return link from verified curriculum rows", async () => {
-    runtimeQueryMock.mockResolvedValueOnce(publishedContext);
+  it.effect("builds a return link from verified curriculum rows", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockReturnValueOnce(Effect.succeed(publishedContext));
 
-    await expect(
-      getPublishedMaterialContext("en", previewProjection, context)
-    ).resolves.toMatchObject({
-      context,
-      group: {
-        nodeKey: group.nodeKey,
-        publicPath: group.publicPath,
-      },
-      href: expect.stringContaining(
-        "/en/curriculum/merdeka/class-11/mathematics#"
-      ),
-      label: "Function Composition and Inverses",
-      mapping: {
-        canonicalPath: mapping.canonicalPath,
-      },
-      parent: {
-        nodeKey: testProgramSubject.nodeKey,
-        publicPath: testProgramSubject.publicPath,
-      },
-    });
-    expect(cacheMock).toHaveBeenCalledOnce();
-  });
-
-  it("rejects unmanaged context and preserves an invalid optional hint", async () => {
-    runtimeQueryMock
-      .mockResolvedValueOnce({
-        groupJson: null,
-        managed: false,
-        mappingJson: null,
-        parentJson: null,
-        resolvedCanonicalPath: null,
-      })
-      .mockResolvedValueOnce({
-        groupJson: null,
-        managed: true,
-        mappingJson: null,
-        parentJson: null,
-        resolvedCanonicalPath: null,
-      });
-
-    await expect(
-      Effect.runPromise(
-        readPublishedMaterialContext("en", previewProjection, context).pipe(
-          Effect.flip
+      expect(
+        yield* Effect.promise(() =>
+          getPublishedMaterialContext("en", previewProjection, context)
         )
-      )
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-    await expect(
-      Effect.runPromise(
-        readPublishedMaterialContext("en", previewProjection, context)
-      )
-    ).resolves.toBeNull();
-  });
+      ).toMatchObject({
+        context,
+        group: {
+          nodeKey: group.nodeKey,
+          publicPath: group.publicPath,
+        },
+        href: expect.stringContaining(
+          "/en/curriculum/merdeka/class-11/mathematics#"
+        ),
+        label: "Function Composition and Inverses",
+        mapping: {
+          canonicalPath: mapping.canonicalPath,
+        },
+        parent: {
+          nodeKey: testProgramSubject.nodeKey,
+          publicPath: testProgramSubject.publicPath,
+        },
+      });
+      expect(cacheMock).toHaveBeenCalledOnce();
+    })
+  );
 
-  it("pins a context read to the expected active release", async () => {
-    const activeReleaseId = ReleaseIdSchema.make("release-material");
-    runtimeQueryMock.mockResolvedValueOnce({
-      groupJson: null,
-      managed: true,
-      mappingJson: null,
-      parentJson: null,
-      resolvedCanonicalPath: null,
-    });
+  it.effect(
+    "rejects unmanaged context and preserves an invalid optional hint",
+    () =>
+      Effect.gen(function* () {
+        runtimeQueryMock
+          .mockReturnValueOnce(
+            Effect.succeed({
+              groupJson: null,
+              managed: false,
+              mappingJson: null,
+              parentJson: null,
+              resolvedCanonicalPath: null,
+            })
+          )
+          .mockReturnValueOnce(
+            Effect.succeed({
+              groupJson: null,
+              managed: true,
+              mappingJson: null,
+              parentJson: null,
+              resolvedCanonicalPath: null,
+            })
+          );
 
-    await expect(
-      Effect.runPromise(
-        readPublishedMaterialContext(
+        expect(
+          yield* readPublishedMaterialContext(
+            "en",
+            previewProjection,
+            context
+          ).pipe(Effect.flip)
+        ).toMatchObject({ _tag: "PublishedProjectionError" });
+        expect(
+          yield* readPublishedMaterialContext("en", previewProjection, context)
+        ).toBeNull();
+      })
+  );
+
+  it.effect("pins a context read to the expected active release", () =>
+    Effect.gen(function* () {
+      const activeReleaseId = ReleaseIdSchema.make("release-material");
+      runtimeQueryMock.mockReturnValueOnce(
+        Effect.succeed({
+          groupJson: null,
+          managed: true,
+          mappingJson: null,
+          parentJson: null,
+          resolvedCanonicalPath: null,
+        })
+      );
+
+      expect(
+        yield* readPublishedMaterialContext(
           "en",
           previewProjection,
           context,
           activeReleaseId
         )
-      )
-    ).resolves.toBeNull();
-    expect(runtimeQueryMock).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        contentKey: previewProjection.contentKey,
-        expectedActiveReleaseId: activeReleaseId,
-      })
-    );
-  });
+      ).toBeNull();
+      expect(runtimeQueryMock).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          contentKey: previewProjection.contentKey,
+          expectedActiveReleaseId: activeReleaseId,
+        })
+      );
+    })
+  );
 
-  it("accepts course parents and falls back to the authored group title", async () => {
-    const courseParent = {
-      ...testProgramSubject,
-      level: "course",
-    } satisfies CurriculumRoute;
-    const groupWithoutCardTitle = {
-      ...group,
-      materialCardTitle: undefined,
-    };
-    runtimeQueryMock
-      .mockResolvedValueOnce({
-        ...publishedContext,
-        parentJson: testCurriculumRowJson(courseParent),
+  it.effect(
+    "accepts course parents and falls back to the authored group title",
+    () =>
+      Effect.gen(function* () {
+        const courseParent = {
+          ...testProgramSubject,
+          level: "course",
+        } satisfies CurriculumRoute;
+        const groupWithoutCardTitle = {
+          ...group,
+          materialCardTitle: undefined,
+        };
+        runtimeQueryMock
+          .mockReturnValueOnce(
+            Effect.succeed({
+              ...publishedContext,
+              parentJson: testCurriculumRowJson(courseParent),
+            })
+          )
+          .mockReturnValueOnce(
+            Effect.succeed({
+              ...publishedContext,
+              groupJson: testCurriculumRowJson(groupWithoutCardTitle),
+            })
+          );
+
+        expect(
+          yield* readPublishedMaterialContext("en", previewProjection, context)
+        ).toMatchObject({ parent: { level: "course" } });
+        expect(
+          yield* readPublishedMaterialContext("en", previewProjection, context)
+        ).toMatchObject({ label: group.title });
       })
-      .mockResolvedValueOnce({
-        ...publishedContext,
-        groupJson: testCurriculumRowJson(groupWithoutCardTitle),
+  );
+
+  it.effect("accepts a backend-verified renamed material parent", () =>
+    Effect.gen(function* () {
+      const renamedParent = PublicPathSchema.make(
+        "subjects/mathematics/renamed-functions"
+      );
+      const renamedMaterial = {
+        ...previewProjection,
+        parentPath: renamedParent,
+        publicPath: PublicPathSchema.make(
+          `${renamedParent}/renamed-function-concept`
+        ),
+      };
+      runtimeQueryMock.mockReturnValueOnce(
+        Effect.succeed({
+          ...publishedContext,
+          resolvedCanonicalPath: renamedParent,
+        })
+      );
+
+      expect(
+        yield* readPublishedMaterialContext("en", renamedMaterial, context)
+      ).toMatchObject({
+        mapping: { canonicalPath: mapping.canonicalPath },
       });
+    })
+  );
 
-    await expect(
-      Effect.runPromise(
-        readPublishedMaterialContext("en", previewProjection, context)
-      )
-    ).resolves.toMatchObject({ parent: { level: "course" } });
-    await expect(
-      Effect.runPromise(
-        readPublishedMaterialContext("en", previewProjection, context)
-      )
-    ).resolves.toMatchObject({ label: group.title });
-  });
-
-  it("accepts a backend-verified renamed material parent", async () => {
-    const renamedParent = PublicPathSchema.make(
-      "subjects/mathematics/renamed-functions"
-    );
-    const renamedMaterial = {
-      ...previewProjection,
-      parentPath: renamedParent,
-      publicPath: PublicPathSchema.make(
-        `${renamedParent}/renamed-function-concept`
-      ),
-    };
-    runtimeQueryMock.mockResolvedValueOnce({
-      ...publishedContext,
-      resolvedCanonicalPath: renamedParent,
-    });
-
-    await expect(
-      Effect.runPromise(
-        readPublishedMaterialContext("en", renamedMaterial, context)
-      )
-    ).resolves.toMatchObject({
-      mapping: { canonicalPath: mapping.canonicalPath },
-    });
-  });
-
-  it.each([
+  it.effect.each([
     [
       "partial rows",
       {
@@ -231,38 +246,44 @@ describe("published material context", () => {
         }),
       },
     ],
-  ])("rejects %s", async (_label, result) => {
-    runtimeQueryMock.mockResolvedValueOnce(result);
+  ])("rejects %s", ([, result]) =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockReturnValueOnce(Effect.succeed(result));
 
-    await expect(
-      Effect.runPromise(
-        readPublishedMaterialContext("en", previewProjection, context).pipe(
-          Effect.flip
-        )
-      )
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-  });
+      expect(
+        yield* readPublishedMaterialContext(
+          "en",
+          previewProjection,
+          context
+        ).pipe(Effect.flip)
+      ).toMatchObject({ _tag: "PublishedProjectionError" });
+    })
+  );
 
-  it("rejects a mapping for a different material route", async () => {
-    runtimeQueryMock.mockResolvedValueOnce({
-      ...publishedContext,
-      mappingJson: testCurriculumRowJson({
-        ...mapping,
-        canonicalPath: PublicPathSchema.make(
-          `${previewProjection.parentPath}/other-lesson`
-        ),
-      }),
-      resolvedCanonicalPath: PublicPathSchema.make(
-        `${previewProjection.parentPath}/other-lesson`
-      ),
-    });
+  it.effect("rejects a mapping for a different material route", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockReturnValueOnce(
+        Effect.succeed({
+          ...publishedContext,
+          mappingJson: testCurriculumRowJson({
+            ...mapping,
+            canonicalPath: PublicPathSchema.make(
+              `${previewProjection.parentPath}/other-lesson`
+            ),
+          }),
+          resolvedCanonicalPath: PublicPathSchema.make(
+            `${previewProjection.parentPath}/other-lesson`
+          ),
+        })
+      );
 
-    await expect(
-      Effect.runPromise(
-        readPublishedMaterialContext("en", previewProjection, context).pipe(
-          Effect.flip
-        )
-      )
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-  });
+      expect(
+        yield* readPublishedMaterialContext(
+          "en",
+          previewProjection,
+          context
+        ).pipe(Effect.flip)
+      ).toMatchObject({ _tag: "PublishedProjectionError" });
+    })
+  );
 });
