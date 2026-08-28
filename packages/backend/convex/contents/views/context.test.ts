@@ -37,7 +37,7 @@ import {
 } from "@repo/backend/test/program/snapshot";
 import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Data, Effect, Schema } from "effect";
 
 const PROGRAM_KEY = LearningProgramKeySchema.make("technical-program-1");
 const GROUP_KEY = CurriculumNodeKeySchema.make("test-group");
@@ -62,6 +62,17 @@ const RENAMED_MATERIAL = MaterialLessonProjectionSchema.make({
     `${FUNCTION_MATERIAL.parentPath}/function-concept-renamed`
   ),
 });
+
+class ObservedContextQueryFailure extends Schema.TaggedError<ObservedContextQueryFailure>()(
+  "ObservedContextQueryFailure",
+  { cause: Schema.Unknown }
+) {}
+
+class UnexpectedContextTestState extends Data.TaggedError(
+  "UnexpectedContextTestState"
+)<{
+  readonly operation: "resolve-current-material";
+}> {}
 
 /** Creates the card-list parent for the placement group. */
 function subjectRoute(): CurriculumRoute {
@@ -127,14 +138,14 @@ function mappingRoute(
 }
 
 /** Adds current signed placement rows to the active program snapshot. */
-async function stagePlacement(
-  target: TestConvex<typeof schema>,
-  snapshotId: string,
-  canonicalPath: typeof FUNCTION_MATERIAL.publicPath
-) {
-  const routes = [subjectRoute(), groupRoute(), mappingRoute(canonicalPath)];
-  const rows = await Effect.runPromise(
-    Effect.forEach(routes, (route) =>
+const stagePlacement = Effect.fn("contents.views.test.stagePlacement")(
+  function* (
+    target: TestConvex<typeof schema>,
+    snapshotId: string,
+    canonicalPath: typeof FUNCTION_MATERIAL.publicPath
+  ) {
+    const routes = [subjectRoute(), groupRoute(), mappingRoute(canonicalPath)];
+    const rows = yield* Effect.forEach(routes, (route) =>
       Effect.gen(function* () {
         const record = yield* makeCurriculumSnapshotRow(route);
         const source = {
@@ -146,124 +157,163 @@ async function stagePlacement(
           source,
         };
       })
-    )
-  );
-  for (const [offset, row] of rows.entries()) {
-    await target.mutation((ctx) =>
-      runConvexProgram(
-        stageProgramRow(ctx, snapshotId, offset + 100, row.source, row.rowJson)
-      )
     );
+    for (const [offset, row] of rows.entries()) {
+      yield* Effect.promise(() =>
+        target.mutation((ctx) =>
+          runConvexProgram(
+            stageProgramRow(
+              ctx,
+              snapshotId,
+              offset + 100,
+              row.source,
+              row.rowJson
+            )
+          )
+        )
+      );
+    }
   }
-}
+);
 
 /** Resolves context through the current signed material target. */
-function readContext(
+const readContext = Effect.fn("contents.views.test.readContext")(function* (
   target: TestConvex<typeof schema>,
   projection: MaterialLessonProjection,
   context?: LearningContextInput
 ) {
-  return target.query((ctx) =>
-    runConvexProgram(
-      Effect.gen(function* () {
-        const material = yield* validateIncomingContentTarget(ctx, {
-          contentId: projection.graph.assetId,
-          locale: "en",
-          publicPath: projection.publicPath,
-          section: "material",
-        });
-        if (!material) {
-          return yield* Effect.die(
-            new Error("Expected one current signed material target.")
-          );
-        }
-        return yield* resolveLearningContext(ctx, material, context);
-      })
-    )
-  );
-}
+  return yield* Effect.tryPromise({
+    catch: (cause) => new ObservedContextQueryFailure({ cause }),
+    try: () =>
+      target.query((ctx) =>
+        runConvexProgram(
+          Effect.gen(function* () {
+            const material = yield* validateIncomingContentTarget(ctx, {
+              contentId: projection.graph.assetId,
+              locale: "en",
+              publicPath: projection.publicPath,
+              section: "material",
+            });
+            if (!material) {
+              return yield* Effect.die(
+                new UnexpectedContextTestState({
+                  operation: "resolve-current-material",
+                })
+              );
+            }
+            return yield* resolveLearningContext(ctx, material, context);
+          })
+        )
+      ),
+  });
+});
 
 /** Activates one current signed program and material placement fixture. */
-async function activatePlacement(
-  target: TestConvex<typeof schema>,
-  canonicalPath: typeof FUNCTION_MATERIAL.publicPath,
-  projection: MaterialLessonProjection = FUNCTION_MATERIAL
-) {
-  const data = await Effect.runPromise(makeProgramSnapshotData());
-  await activateProgramSnapshot(target, data);
-  await stagePlacement(target, data.snapshotId, canonicalPath);
-  await target.mutation((ctx) => insertMaterialProjection(ctx, projection));
-}
+const activatePlacement = Effect.fn("contents.views.test.activatePlacement")(
+  function* (
+    target: TestConvex<typeof schema>,
+    canonicalPath: typeof FUNCTION_MATERIAL.publicPath,
+    projection: MaterialLessonProjection = FUNCTION_MATERIAL
+  ) {
+    const data = yield* makeProgramSnapshotData();
+    yield* Effect.promise(() => activateProgramSnapshot(target, data));
+    yield* stagePlacement(target, data.snapshotId, canonicalPath);
+    yield* Effect.promise(() =>
+      target.mutation((ctx) => insertMaterialProjection(ctx, projection))
+    );
+  }
+);
 
 describe("contents/views/context", () => {
-  it("keeps a direct visit canonical", async () => {
-    const target = convexTest(schema, convexModules);
-    await activateMaterialCatalog(target, [FUNCTION_MATERIAL]);
+  it.effect("keeps a direct visit canonical", () =>
+    Effect.gen(function* () {
+      const target = convexTest(schema, convexModules);
+      yield* Effect.promise(() =>
+        activateMaterialCatalog(target, [FUNCTION_MATERIAL])
+      );
 
-    await expect(readContext(target, FUNCTION_MATERIAL)).resolves.toEqual({
-      contextKey: "canonical",
-      contextMode: "canonical",
-    });
-  });
+      expect(yield* readContext(target, FUNCTION_MATERIAL)).toEqual({
+        contextKey: "canonical",
+        contextMode: "canonical",
+      });
+    })
+  );
 
-  it("rejects placement when signed curriculum ownership is unavailable", async () => {
-    const target = convexTest(schema, convexModules);
-    await activateMaterialCatalog(target, [FUNCTION_MATERIAL]);
+  it.effect(
+    "rejects placement when signed curriculum ownership is unavailable",
+    () =>
+      Effect.gen(function* () {
+        const target = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          activateMaterialCatalog(target, [FUNCTION_MATERIAL])
+        );
 
-    await expect(
-      readContext(target, FUNCTION_MATERIAL, PLACEMENT)
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_VIEW_IO_FAILED" },
-    });
-  });
-
-  it("resolves an exact current signed curriculum placement", async () => {
-    const target = convexTest(schema, convexModules);
-    await activatePlacement(target, FUNCTION_MATERIAL.publicPath);
-
-    await expect(
-      readContext(target, FUNCTION_MATERIAL, PLACEMENT)
-    ).resolves.toMatchObject({
-      contextKey: `placement:${PROGRAM_KEY}:${GROUP_KEY}`,
-      contextMaterialKey: FUNCTION_MATERIAL.materialKey,
-      contextMode: "placement",
-      contextNodeKey: GROUP_KEY,
-      contextParentPath: SUBJECT_PATH,
-      contextProgramKey: PROGRAM_KEY,
-      contextPublicPath: GROUP_PATH,
-    });
-  });
-
-  it("keeps a stable parent placement after a signed lesson rename", async () => {
-    const target = convexTest(schema, convexModules);
-    await activatePlacement(
-      target,
-      FUNCTION_MATERIAL.parentPath,
-      RENAMED_MATERIAL
-    );
-
-    await expect(
-      readContext(target, RENAMED_MATERIAL, PLACEMENT)
-    ).resolves.toMatchObject({
-      contextKey: `placement:${PROGRAM_KEY}:${GROUP_KEY}`,
-      contextMaterialKey: FUNCTION_MATERIAL.materialKey,
-      contextMode: "placement",
-    });
-  });
-
-  it("makes an unverified signed placement canonical", async () => {
-    const target = convexTest(schema, convexModules);
-    await activatePlacement(target, FUNCTION_MATERIAL.publicPath);
-
-    await expect(
-      readContext(target, FUNCTION_MATERIAL, {
-        mode: "placement",
-        nodeKey: "missing-group",
-        programKey: PROGRAM_KEY,
+        const failure = yield* readContext(
+          target,
+          FUNCTION_MATERIAL,
+          PLACEMENT
+        ).pipe(Effect.flip);
+        expect(failure.cause).toMatchObject({
+          data: { code: "CONTENT_VIEW_IO_FAILED" },
+        });
       })
-    ).resolves.toEqual({
-      contextKey: "canonical",
-      contextMode: "canonical",
-    });
-  });
+  );
+
+  it.effect("resolves an exact current signed curriculum placement", () =>
+    Effect.gen(function* () {
+      const target = convexTest(schema, convexModules);
+      yield* activatePlacement(target, FUNCTION_MATERIAL.publicPath);
+
+      expect(
+        yield* readContext(target, FUNCTION_MATERIAL, PLACEMENT)
+      ).toMatchObject({
+        contextKey: `placement:${PROGRAM_KEY}:${GROUP_KEY}`,
+        contextMaterialKey: FUNCTION_MATERIAL.materialKey,
+        contextMode: "placement",
+        contextNodeKey: GROUP_KEY,
+        contextParentPath: SUBJECT_PATH,
+        contextProgramKey: PROGRAM_KEY,
+        contextPublicPath: GROUP_PATH,
+      });
+    })
+  );
+
+  it.effect(
+    "keeps a stable parent placement after a signed lesson rename",
+    () =>
+      Effect.gen(function* () {
+        const target = convexTest(schema, convexModules);
+        yield* activatePlacement(
+          target,
+          FUNCTION_MATERIAL.parentPath,
+          RENAMED_MATERIAL
+        );
+
+        expect(
+          yield* readContext(target, RENAMED_MATERIAL, PLACEMENT)
+        ).toMatchObject({
+          contextKey: `placement:${PROGRAM_KEY}:${GROUP_KEY}`,
+          contextMaterialKey: FUNCTION_MATERIAL.materialKey,
+          contextMode: "placement",
+        });
+      })
+  );
+
+  it.effect("makes an unverified signed placement canonical", () =>
+    Effect.gen(function* () {
+      const target = convexTest(schema, convexModules);
+      yield* activatePlacement(target, FUNCTION_MATERIAL.publicPath);
+
+      expect(
+        yield* readContext(target, FUNCTION_MATERIAL, {
+          mode: "placement",
+          nodeKey: "missing-group",
+          programKey: PROGRAM_KEY,
+        })
+      ).toEqual({
+        contextKey: "canonical",
+        contextMode: "canonical",
+      });
+    })
+  );
 });
