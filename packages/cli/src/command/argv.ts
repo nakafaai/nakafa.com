@@ -1,4 +1,4 @@
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import { COMMAND_NAME } from "#cli/command/spec";
 import { InvocationError } from "#cli/error";
 
@@ -43,6 +43,9 @@ const VALUE_FLAGS: ReadonlySet<string> = new Set([
   FLAG_NAME.apiBase,
   ...COMMAND_VALUE_FLAGS,
 ]);
+const SHORT_ONLY_ALIASES: ReadonlySet<string> = new Set(
+  Object.values(FLAG_ALIAS)
+);
 type ActionName = typeof FLAG_NAME.help | typeof FLAG_NAME.version;
 type CommandName = (typeof COMMAND_NAME)[keyof typeof COMMAND_NAME];
 type ShortFlagName =
@@ -75,6 +78,11 @@ export const normalizeArgv = Effect.fn("NakafaCli.normalizeArgv")(function* (
     }
 
     const long = readLongFlag(argument);
+    if (long !== undefined && SHORT_ONLY_ALIASES.has(long.name)) {
+      return yield* new InvocationError({
+        message: `Unrecognized flag: --${long.sourceName}.`,
+      });
+    }
     if (long !== undefined && isBooleanFlag(long.name)) {
       if (long.value !== undefined) {
         return yield* new InvocationError({
@@ -123,58 +131,6 @@ export const normalizeArgv = Effect.fn("NakafaCli.normalizeArgv")(function* (
 });
 
 /** Returns the same invocation without action flags when dry validation is needed. */
-export function readActionValidation(argv: readonly string[]) {
-  const validation: string[] = [];
-  let hasAction = false;
-  let parseFlags = true;
-
-  for (const argument of argv) {
-    if (argument === "--") {
-      parseFlags = false;
-      validation.push(argument);
-      continue;
-    }
-    if (parseFlags && isCanonicalActionFlag(argument)) {
-      hasAction = true;
-      continue;
-    }
-    if (parseFlags) {
-      const short = removeShortActions(argument);
-      if (short !== undefined) {
-        hasAction = true;
-        if (short.length > 0) {
-          validation.push(short);
-        }
-        continue;
-      }
-    }
-    validation.push(argument);
-  }
-
-  return hasAction ? Option.some(validation) : Option.none();
-}
-
-function removeShortActions(argument: string) {
-  const short = readShortArgument(argument);
-  if (short === undefined) {
-    return;
-  }
-  const validationAliases = [...short.source].filter(
-    (alias) => alias !== FLAG_ALIAS.help && alias !== FLAG_ALIAS.version
-  );
-  if (validationAliases.length === short.source.length) {
-    return;
-  }
-  if (validationAliases.length === 0) {
-    return "";
-  }
-  const value =
-    short.positionals === undefined && short.value !== undefined
-      ? `=${short.value}`
-      : "";
-  return `-${validationAliases.join("")}${value}`;
-}
-
 function appendActions(
   target: string[],
   actions: Readonly<Record<ActionName, boolean | undefined>>
@@ -209,7 +165,7 @@ function isBooleanFlag(value: string) {
   return isActionFlagName(value) || PRESENCE_FLAGS.has(value);
 }
 
-function isCanonicalActionFlag(argument: string) {
+export function isCanonicalActionFlag(argument: string) {
   return (
     argument === `--${FLAG_NAME.help}` || argument === `--${FLAG_NAME.version}`
   );
@@ -387,7 +343,7 @@ function isNormalizedBooleanFlag(argument: string) {
   );
 }
 
-function readLongFlag(argument: string) {
+export function readLongFlag(argument: string) {
   if (!argument.startsWith("--") || argument === "--") {
     return;
   }
@@ -433,7 +389,7 @@ function readTerminatedShortFlags(argument: string) {
   };
 }
 
-function readShortArgument(argument: string) {
+export function readShortArgument(argument: string) {
   if (
     !argument.startsWith("-") ||
     argument.startsWith("--") ||
@@ -463,6 +419,14 @@ function readShortArgument(argument: string) {
     source: optionCluster,
     value: equalsIndex === -1 ? undefined : argument.slice(equalsIndex + 1),
   };
+}
+
+export function isCommandPresenceFlag(value: string) {
+  return COMMAND_PRESENCE_FLAGS.has(value);
+}
+
+export function isCommandValueFlag(value: string) {
+  return COMMAND_VALUE_FLAGS.has(value);
 }
 
 function readShortFlagNames(source: string) {

@@ -2,7 +2,7 @@ import {
   NAKAFA_MCP_PROTOCOL_VERSION,
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
 } from "@repo/contents/_lib/agent/constants";
-import { Console, Effect, Layer, MutableRef, Option } from "effect";
+import { Console, Effect, Layer, MutableRef, Option, Result } from "effect";
 import {
   CliConfig,
   CliError,
@@ -11,7 +11,11 @@ import {
   GlobalFlag,
 } from "effect/unstable/cli";
 import { requestNakafaApi } from "#cli/client";
-import { normalizeArgv, readActionValidation } from "#cli/command/argv";
+import {
+  omitActionValidationFlag,
+  readActionValidation,
+} from "#cli/command/action";
+import { normalizeArgv } from "#cli/command/argv";
 import type { CliCommand, CliRequest } from "#cli/command/spec";
 import { makeCliCommand } from "#cli/command/tree";
 import { makeInvocationError } from "#cli/error";
@@ -108,24 +112,28 @@ const executeCli = Effect.fn("NakafaCli.execute")(function* (
   const actionValidation = readActionValidation(normalizedArgv);
   if (Option.isSome(actionValidation)) {
     const validationCommand = makeCliCommand(() => Effect.void);
-    yield* Command.runWith(validationCommand, {
-      renderErrors: false,
-      version: options.version,
-    })(actionValidation.value).pipe(
-      Effect.provide(cliValidationLayer),
-      Effect.provideService(Console.Console, commandConsole),
-      Effect.matchEffect({
-        onFailure: (error) => {
-          if (isActionValidationHelp(error)) {
-            return Effect.void;
-          }
-          return CliError.isCliError(error)
-            ? Effect.fail(makeInvocationError(error))
-            : Effect.fail(error);
-        },
-        onSuccess: () => Effect.void,
-      })
-    );
+    let validationArgv: readonly string[] = actionValidation.value;
+    while (true) {
+      const result = yield* Command.runWith(validationCommand, {
+        renderErrors: false,
+        version: options.version,
+      })(validationArgv).pipe(
+        Effect.provide(cliValidationLayer),
+        Effect.provideService(Console.Console, commandConsole),
+        Effect.result
+      );
+      if (Result.isSuccess(result) || isActionValidationHelp(result.failure)) {
+        break;
+      }
+      const retry = readActionValidationRetry(validationArgv, result.failure);
+      if (Option.isSome(retry)) {
+        validationArgv = retry.value;
+        continue;
+      }
+      return yield* CliError.isCliError(result.failure)
+        ? Effect.fail(makeInvocationError(result.failure))
+        : Effect.fail(result.failure);
+    }
     MutableRef.set(messages, []);
   }
   yield* Command.runWith(command, {
@@ -169,6 +177,22 @@ function isActionValidationHelp(error: unknown) {
           detail.value === "0 values")
     )
   );
+}
+
+function readActionValidationRetry(argv: readonly string[], error: unknown) {
+  if (!CliError.isCliError(error) || error._tag !== "ShowHelp") {
+    return Option.none<readonly string[]>();
+  }
+  for (const detail of error.errors) {
+    if (detail._tag !== "UnrecognizedOption") {
+      continue;
+    }
+    const retry = omitActionValidationFlag(argv, detail.option);
+    if (Option.isSome(retry)) {
+      return retry;
+    }
+  }
+  return Option.none<readonly string[]>();
 }
 
 const executeRequest = Effect.fn("NakafaCli.executeRequest")(function* (

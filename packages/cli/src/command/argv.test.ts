@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Option, Result } from "effect";
-import { normalizeArgv, readActionValidation } from "#cli/command/argv";
+import { Effect, Result } from "effect";
+import { normalizeArgv } from "#cli/command/argv";
 import { InvocationError } from "#cli/error";
 
 describe("Nakafa CLI arguments", () => {
@@ -140,6 +140,9 @@ describe("Nakafa CLI arguments", () => {
       argv: ["taxonomy", "--locale", "-h", "id"],
       message: "requires a value",
     },
+    { argv: ["--h"], message: "Unrecognized flag" },
+    { argv: ["--v"], message: "Unrecognized flag" },
+    { argv: ["--p", "taxonomy"], message: "Unrecognized flag" },
   ])("rejects invalid flag values $argv", ({ argv, message }) =>
     Effect.gen(function* () {
       const result = yield* normalizeArgv(argv).pipe(Effect.result);
@@ -151,44 +154,4 @@ describe("Nakafa CLI arguments", () => {
       }
     })
   );
-
-  it("selects only pre-separator actions for dry validation", () => {
-    expect(
-      Option.getOrUndefined(
-        readActionValidation([
-          "taxonomy",
-          "--help",
-          "--version",
-          "--",
-          "--help",
-        ])
-      )
-    ).toEqual(["taxonomy", "--", "--help"]);
-    expect(Option.isNone(readActionValidation(["taxonomy"]))).toBe(true);
-    expect(
-      Option.isNone(readActionValidation(["search", "--", "--help"]))
-    ).toBe(true);
-    expect(
-      Option.getOrUndefined(readActionValidation(["--help", "--", "--"]))
-    ).toEqual(["--", "--"]);
-    expect(
-      Option.getOrUndefined(readActionValidation(["taxonomy", "-xhv"]))
-    ).toEqual(["taxonomy", "-x"]);
-    expect(
-      Option.getOrUndefined(readActionValidation(["taxonomy", "-xh=value"]))
-    ).toEqual(["taxonomy", "-x=value"]);
-    expect(
-      Option.getOrUndefined(readActionValidation(["taxonomy", "-h-foo"]))
-    ).toEqual(["taxonomy"]);
-    expect(
-      Option.getOrUndefined(readActionValidation(["taxonomy", "-xh-foo"]))
-    ).toEqual(["taxonomy", "-x"]);
-    expect(
-      Option.isNone(
-        readActionValidation(["taxonomy", "-x", "--", "-h", "-f", "-o", "-o"])
-      )
-    ).toBe(true);
-    expect(Option.getOrUndefined(readActionValidation(["-h"]))).toEqual([]);
-    expect(Option.isNone(readActionValidation(["-x"]))).toBe(true);
-  });
 });

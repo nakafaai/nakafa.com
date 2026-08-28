@@ -137,6 +137,14 @@ describe("Nakafa CLI execution", () => {
           (argv) => execute(argv, client)
         );
         const commandHelp = yield* execute(["taxonomy", "--help"], client);
+        const crossCommandHelp = yield* execute(
+          ["taxonomy", "--limit", "5", "--help"],
+          client
+        );
+        const crossCommandVersion = yield* execute(
+          ["mcp", "--locale", "en", "--version"],
+          client
+        );
         const version = yield* execute(["--version"], client);
         const mcp = yield* execute(["mcp"], client);
 
@@ -154,6 +162,13 @@ describe("Nakafa CLI execution", () => {
         }
         expect(commandHelp).toMatchObject({ exitCode: 0, stderr: "" });
         expect(commandHelp.stdout).toContain("published content taxonomy");
+        expect(crossCommandHelp).toMatchObject({ exitCode: 0, stderr: "" });
+        expect(crossCommandHelp.stdout).toContain("published content taxonomy");
+        expect(crossCommandVersion).toEqual({
+          exitCode: 0,
+          stderr: "",
+          stdout: "0.1.0\n",
+        });
         expect(version).toEqual({
           exitCode: 0,
           stderr: "",
@@ -439,6 +454,9 @@ describe("Nakafa CLI execution", () => {
     ["taxonomy", "-p-hfoo"],
     ["taxonomy", "-x-hfoo"],
     ["taxonomy", "-xh-foo"],
+    ["--h"],
+    ["--v"],
+    ["--p", "taxonomy"],
     ["search", "", "--help"],
     ["get", "", "--help"],
   ])("rejects invalid action invocation %j", (argv) =>
