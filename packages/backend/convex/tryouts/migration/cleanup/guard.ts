@@ -147,12 +147,22 @@ export const requireCleanupPreconditions = Effect.fn(
       "A retained IRT scale is still referenced by a try-out attempt or score."
     );
   }
-  if (
-    yield* isSnapshotReferenced(ctx, "tryout", migration.sourceSnapshotId, {
+});
+
+/** Proves no live reader retains the source snapshot after bounded repair. */
+export const requireCleanupRetention = Effect.fn(
+  "tryouts.migration.requireCleanupRetention"
+)(function* (ctx: MutationCtx, migration: CleanupMigration) {
+  const referenced = yield* isSnapshotReferenced(
+    ctx,
+    "tryout",
+    migration.sourceSnapshotId,
+    {
       ignoredMigrationId: migration.migrationId,
       ignoredScaleVersionIds: migration.authorization.sourceScaleVersionIds,
-    })
-  ) {
+    }
+  );
+  if (referenced) {
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",
       "The retained try-out snapshot is still protected from cleanup."

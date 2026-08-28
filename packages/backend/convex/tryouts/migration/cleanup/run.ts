@@ -13,9 +13,11 @@ import {
   hasSameCleanupProof,
   requireCleanupPlan,
   requireCleanupPreconditions,
+  requireCleanupRetention,
 } from "@repo/backend/convex/tryouts/migration/cleanup/guard";
 import { cleanupLedger } from "@repo/backend/convex/tryouts/migration/cleanup/ledger";
 import { requireCleanupEmpty } from "@repo/backend/convex/tryouts/migration/cleanup/proof";
+import { repairUnusedScale } from "@repo/backend/convex/tryouts/migration/cleanup/repair";
 import { cleanupScale } from "@repo/backend/convex/tryouts/migration/cleanup/scale";
 import {
   type CleanupProof,
@@ -105,6 +107,8 @@ export const cleanupProgram = Effect.fn("tryouts.migration.cleanup")(function* (
   }
   const plan = yield* requireCleanupPlan(migration);
   yield* requireCleanupPreconditions(ctx, migration);
+  yield* repairUnusedScale(ctx, migration);
+  yield* requireCleanupRetention(ctx, migration);
   let state: CleanupState;
   if (migration.phase === "completed") {
     if (receipt.proof || receipt.deletedRows !== 0) {
