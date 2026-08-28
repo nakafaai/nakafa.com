@@ -70,6 +70,7 @@ describe("contentRelease/tryout binding", () => {
           ctx.db.insert("tryoutRuntimeBundles", {
             bundleHash: TEST_DIGEST,
             bundleJson: "{}",
+            cleanupReleaseId: "release-stray",
             createdAt: 1,
             rendererJson: "{}",
             rendererManifestHash: LEGACY_TRYOUT_RUNTIME.rendererManifestHash,
@@ -110,6 +111,7 @@ describe("contentRelease/tryout binding", () => {
           ctx.db.insert("tryoutRuntimeBundles", {
             bundleHash: TEST_DIGEST,
             bundleJson: "{}",
+            cleanupReleaseId: LEGACY_TRYOUT_RUNTIME.releaseId,
             createdAt: 1,
             rendererJson: "{}",
             rendererManifestHash: LEGACY_TRYOUT_RUNTIME.rendererManifestHash,

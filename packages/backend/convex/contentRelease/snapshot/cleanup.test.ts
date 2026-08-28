@@ -216,6 +216,7 @@ describe("contentRelease/snapshot/cleanup", () => {
         await ctx.db.insert("tryoutRuntimeBundles", {
           bundleHash: `sha256:${(index + 1).toString(16).repeat(64)}`,
           bundleJson: "{}",
+          cleanupReleaseId: `release-cleanup-${index}`,
           createdAt: 0,
           rendererJson: "{}",
           rendererManifestHash: `sha256:${(index + 4).toString(16).repeat(64)}`,

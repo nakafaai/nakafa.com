@@ -11,22 +11,22 @@ import {
 import { decodeReleaseJson } from "@repo/backend/convex/contentRelease/parse";
 import { Effect } from "effect";
 
-const SOURCE_RUNTIME_LIMIT = 2;
+const CLEANUP_RUNTIME_LIMIT = 2;
 
 type ReadCtx = MutationCtx | QueryCtx;
 
-/** Loads the bounded result and retained-base rows created by one release. */
-const loadSourceRuntime = Effect.fn("contentRelease.loadAbortRuntime")(
+/** Loads the bounded permanent rows owned by one release cleanup. */
+const loadAbortRuntime = Effect.fn("contentRelease.loadAbortRuntime")(
   function* (ctx: ReadCtx, releaseId: string) {
     const rows = yield* Effect.promise(() =>
       ctx.db
         .query("tryoutRuntimeBundles")
-        .withIndex("by_sourceReleaseId", (query) =>
-          query.eq("sourceReleaseId", releaseId)
+        .withIndex("by_cleanupReleaseId", (query) =>
+          query.eq("cleanupReleaseId", releaseId)
         )
-        .take(SOURCE_RUNTIME_LIMIT + 1)
+        .take(CLEANUP_RUNTIME_LIMIT + 1)
     );
-    if (rows.length > SOURCE_RUNTIME_LIMIT) {
+    if (rows.length > CLEANUP_RUNTIME_LIMIT) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
         `Content release ${releaseId} exceeded its permanent runtime pair bound.`
@@ -60,12 +60,12 @@ const releaseRetainsRuntime = Effect.fn(
   );
 });
 
-/** Classifies permanent pair retention outside its source release. */
+/** Classifies permanent pair retention outside its cleanup owner. */
 const loadAbortRuntimeRetention = Effect.fn(
   "contentRelease.loadAbortRuntimeRetention"
 )(function* (
   ctx: ReadCtx,
-  sourceReleaseId: string,
+  cleanupReleaseId: string,
   row: Doc<"tryoutRuntimeBundles">
 ) {
   const attempt = yield* Effect.promise(() =>
@@ -93,7 +93,11 @@ const loadAbortRuntimeRetention = Effect.fn(
     migration.target.snapshotId === row.snapshotId;
   const state = yield* loadState(ctx);
   if (!state) {
-    return { durable, migration: migrationRetains };
+    return {
+      durable,
+      migration: migrationRetains,
+      retainingReleaseId: null,
+    };
   }
   const releaseIds = [
     state.activeReleaseId,
@@ -103,23 +107,39 @@ const loadAbortRuntimeRetention = Effect.fn(
   for (const releaseId of releaseIds) {
     if (
       releaseId &&
-      releaseId !== sourceReleaseId &&
+      releaseId !== cleanupReleaseId &&
       (yield* releaseRetainsRuntime(ctx, releaseId, row))
     ) {
       durable = true;
-      break;
+      return {
+        durable,
+        migration: migrationRetains,
+        retainingReleaseId: releaseId,
+      };
     }
   }
-  return { durable, migration: migrationRetains };
+  return {
+    durable,
+    migration: migrationRetains,
+    retainingReleaseId: null,
+  };
 });
 
 /** Removes only permanent rows with no attempt or state-owned consumer. */
 export const deleteAbortRuntime = Effect.fn(
   "contentRelease.deleteAbortRuntime"
 )(function* (ctx: MutationCtx, releaseId: string) {
-  const rows = yield* loadSourceRuntime(ctx, releaseId);
+  const rows = yield* loadAbortRuntime(ctx, releaseId);
   for (const row of rows) {
     const retention = yield* loadAbortRuntimeRetention(ctx, releaseId, row);
+    if (retention.retainingReleaseId) {
+      yield* Effect.promise(() =>
+        ctx.db.patch("tryoutRuntimeBundles", row._id, {
+          cleanupReleaseId: retention.retainingReleaseId,
+        })
+      );
+      continue;
+    }
     if (retention.durable || retention.migration) {
       continue;
     }
@@ -127,10 +147,10 @@ export const deleteAbortRuntime = Effect.fn(
   }
 });
 
-/** Detects source-owned permanent rows with no durable runtime consumer. */
+/** Detects cleanup-owned permanent rows with no durable runtime consumer. */
 export const hasAbortRuntime = Effect.fn("contentRelease.hasAbortRuntime")(
   function* (ctx: ReadCtx, releaseId: string) {
-    const rows = yield* loadSourceRuntime(ctx, releaseId);
+    const rows = yield* loadAbortRuntime(ctx, releaseId);
     for (const row of rows) {
       const retention = yield* loadAbortRuntimeRetention(ctx, releaseId, row);
       if (!retention.durable) {

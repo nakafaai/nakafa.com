@@ -67,6 +67,7 @@ describe("content release abort runtime", () => {
       expect(reused).toMatchObject({ created: 0, unchanged: 1 });
       expect(stored).toEqual([
         expect.objectContaining({
+          cleanupReleaseId: original.release.manifest.releaseId,
           sourceReleaseId: original.release.manifest.releaseId,
         }),
       ]);
@@ -149,9 +150,94 @@ describe("content release abort runtime", () => {
       );
       expect(stored.runtime).toEqual([
         expect.objectContaining({
+          cleanupReleaseId: active.release.manifest.releaseId,
           sourceReleaseId: recovery.release.manifest.releaseId,
         }),
       ]);
+    })
+  );
+
+  it.effect("removes a reused pair after both invisible slots abort", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      const recovery = yield* makeRuntimeIngressFixture(
+        ReleaseIdSchema.make("release-runtime-recovery")
+      );
+      const candidate = yield* makeRuntimeIngressFixture(
+        ReleaseIdSchema.make("release-runtime-candidate")
+      );
+      yield* insertRuntimeIngressSource(t, recovery);
+      yield* storeRuntimeFixture(t, recovery);
+      const reused = yield* storeRuntimeFixture(t, candidate);
+      yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const recoveryRelease = await ctx.db
+            .query("contentReleases")
+            .withIndex("by_releaseId", (query) =>
+              query.eq("releaseId", recovery.release.manifest.releaseId)
+            )
+            .unique();
+          const state = await ctx.db.query("contentState").unique();
+          const runtime = await ctx.db.query("tryoutRuntimeBundles").unique();
+          if (!(recoveryRelease && state && runtime)) {
+            throw new Error("Expected invisible-slot runtime fixtures.");
+          }
+          const { _creationTime, _id, ...releaseFields } = recoveryRelease;
+          await ctx.db.patch("contentReleases", _id, { role: "recovery" });
+          await ctx.db.insert("contentReleases", {
+            ...releaseFields,
+            releaseId: candidate.release.manifest.releaseId,
+            releaseJson: JSON.stringify(candidate.release),
+            role: "candidate",
+            sequence: 2,
+          });
+          await ctx.db.patch("contentState", state._id, {
+            candidateManifestHash: candidate.release.manifestHash,
+            candidateReleaseId: candidate.release.manifest.releaseId,
+            candidateSequence: 2,
+            nextSequence: 3,
+            recoveryManifestHash: recovery.release.manifestHash,
+            recoveryReleaseId: recovery.release.manifest.releaseId,
+            recoverySequence: 1,
+          });
+        })
+      );
+
+      const recoveryReceipt = yield* Effect.promise(() =>
+        t.mutation((ctx) => abort(ctx, recovery.release.manifest.releaseId))
+      );
+      const transferred = yield* Effect.promise(() =>
+        t.run((ctx) => ctx.db.query("tryoutRuntimeBundles").unique())
+      );
+      const candidateReceipt = yield* Effect.promise(() =>
+        t.mutation((ctx) => abort(ctx, candidate.release.manifest.releaseId))
+      );
+      const repeatedRecovery = yield* Effect.promise(() =>
+        t.mutation((ctx) => abort(ctx, recovery.release.manifest.releaseId))
+      );
+      const stored = yield* Effect.promise(() =>
+        t.run(async (ctx) => ({
+          releases: await ctx.db.query("contentReleases").collect(),
+          runtime: await ctx.db.query("tryoutRuntimeBundles").collect(),
+          state: await ctx.db.query("contentState").unique(),
+        }))
+      );
+
+      expect(reused).toMatchObject({ created: 0, unchanged: 1 });
+      expect(recoveryReceipt).toMatchObject({ complete: true });
+      expect(transferred).toMatchObject({
+        cleanupReleaseId: candidate.release.manifest.releaseId,
+        sourceReleaseId: recovery.release.manifest.releaseId,
+      });
+      expect(candidateReceipt).toMatchObject({ complete: true });
+      expect(repeatedRecovery).toMatchObject({ complete: true });
+      expect(stored.releases.map(({ status }) => status)).toEqual([
+        "aborted",
+        "aborted",
+      ]);
+      expect(stored.runtime).toEqual([]);
+      expect(stored.state).not.toHaveProperty("candidateReleaseId");
+      expect(stored.state).not.toHaveProperty("recoveryReleaseId");
     })
   );
 
@@ -240,6 +326,7 @@ describe("content release abort runtime", () => {
             await ctx.db.insert("tryoutRuntimeBundles", {
               bundleHash: `sha256:${index.toString().repeat(64)}`,
               bundleJson: "{}",
+              cleanupReleaseId: releaseId,
               createdAt: index,
               rendererJson: "{}",
               rendererManifestHash: `sha256:${"a".repeat(64)}`,

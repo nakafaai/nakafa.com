@@ -65,6 +65,7 @@ export async function insertTestTryoutRuntimeBundle(
   const bundleId = await ctx.db.insert("tryoutRuntimeBundles", {
     bundleHash: bundle.bundleHash,
     bundleJson: JSON.stringify(bundle),
+    cleanupReleaseId: bundle.payload.sourceReleaseId,
     createdAt: 1,
     rendererJson: release.rendererJson,
     rendererManifestHash: bundle.payload.rendererManifestHash,

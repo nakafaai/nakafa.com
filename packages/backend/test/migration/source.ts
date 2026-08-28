@@ -121,6 +121,7 @@ export async function seedSourceRows(ctx: MutationCtx, target: CleanupTarget) {
   await ctx.db.insert("tryoutRuntimeBundles", {
     bundleHash: "source-bundle",
     bundleJson: "{}",
+    cleanupReleaseId: "source-release",
     createdAt: 1,
     rendererJson: "{}",
     rendererManifestHash: "source-renderer",

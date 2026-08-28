@@ -27,6 +27,7 @@ describe("contentRelease/compact/runtime", () => {
       await ctx.db.insert("tryoutRuntimeBundles", {
         bundleHash: `sha256:${"1".repeat(64)}`,
         bundleJson: "{}",
+        cleanupReleaseId: active.releaseId,
         createdAt: 0,
         rendererJson: "{}",
         rendererManifestHash: `sha256:${"2".repeat(64)}`,

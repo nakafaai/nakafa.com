@@ -52,6 +52,7 @@ export const tryoutRuntimeBundleSchema = {
   tryoutRuntimeBundles: defineTable({
     bundleHash: v.string(),
     bundleJson: v.string(),
+    cleanupReleaseId: v.string(),
     createdAt: v.number(),
     rendererJson: v.string(),
     rendererManifestHash: v.string(),
@@ -61,6 +62,7 @@ export const tryoutRuntimeBundleSchema = {
     sourceReleaseId: v.string(),
   })
     .index("by_bundleHash", ["bundleHash"])
+    .index("by_cleanupReleaseId", ["cleanupReleaseId"])
     .index("by_sourceReleaseId", ["sourceReleaseId"])
     .index("by_snapshotId_and_rendererManifestHash", [
       "snapshotId",

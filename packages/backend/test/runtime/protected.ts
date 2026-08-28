@@ -153,6 +153,7 @@ export async function insertProtectedRuntime(
   const runtimeId = await ctx.db.insert("tryoutRuntimeBundles", {
     bundleHash: bundle.bundleHash,
     bundleJson: JSON.stringify(bundle),
+    cleanupReleaseId: bundle.payload.sourceReleaseId,
     createdAt: 1,
     rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
     rendererManifestHash: bundle.payload.rendererManifestHash,

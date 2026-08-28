@@ -185,6 +185,7 @@ export const storeAuthenticatedTryoutRuntimeBundle = Effect.fn(
   const row = {
     bundleHash: bundle.bundleHash,
     bundleJson,
+    cleanupReleaseId: bundle.payload.sourceReleaseId,
     createdAt: storedAt,
     rendererJson,
     rendererManifestHash: bundle.payload.rendererManifestHash,

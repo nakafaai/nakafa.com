@@ -80,6 +80,7 @@ export async function seedOwnedAbort(ctx: MutationCtx) {
   await ctx.db.insert("tryoutRuntimeBundles", {
     bundleHash: ABORT_TARGET_BUNDLE,
     bundleJson: "owned-runtime",
+    cleanupReleaseId: "tryout-history-abort-target",
     createdAt: 1,
     rendererJson: "owned-renderer",
     rendererManifestHash: `sha256:${"7".repeat(64)}`,
