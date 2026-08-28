@@ -55,6 +55,10 @@ const PrivateAttemptSchema = Schema.Struct({
     tryoutSnapshotId: Schema.String,
   }),
 });
+const StoredTryoutSnapshotSchema = Schema.Struct({
+  family: Schema.Literal("tryout"),
+  manifest: TryoutHistoryMigrationSourceSchema.fields.evidence.fields.snapshot,
+});
 
 /** Produces a private domain-separated digest without exposing its identities. */
 function digestPrivateInventory(domain: string, inventoryJson: string) {
@@ -74,6 +78,21 @@ const decodePrivateAttempts = Effect.fn(
     Effect.flatMap(
       Schema.decodeUnknownEffect(Schema.Array(PrivateAttemptSchema))
     ),
+    Effect.mapError(contractFailure)
+  )
+);
+
+/** Decodes the stored Convex envelope into its authenticated manifest. */
+export const decodeMigrationSnapshot = Effect.fn(
+  "tryouts.migration.decodeSnapshot"
+)((snapshotJson: string) =>
+  parseStoredJson(snapshotJson, "Retained try-out snapshot").pipe(
+    Effect.flatMap(
+      Schema.decodeUnknownEffect(StoredTryoutSnapshotSchema, {
+        onExcessProperty: "error",
+      })
+    ),
+    Effect.map(({ manifest }) => manifest),
     Effect.mapError(contractFailure)
   )
 );
@@ -141,10 +160,7 @@ export const readMigrationSource = Effect.fn(
       "Retained try-out scale count changed after its audit."
     );
   }
-  const snapshot = yield* parseStoredJson(
-    bytes.snapshotJson,
-    "Retained try-out snapshot"
-  );
+  const snapshot = yield* decodeMigrationSnapshot(bytes.snapshotJson);
   const rendererManifest = yield* parseStoredJson(
     bytes.rendererJson,
     "Retained try-out renderer"
