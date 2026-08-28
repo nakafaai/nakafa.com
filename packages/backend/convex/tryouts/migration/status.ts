@@ -7,7 +7,10 @@ import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
 import { parseStoredJson } from "@repo/backend/convex/contentRelease/parse";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
-import { hasRequiredScaleRepair } from "@repo/backend/convex/tryouts/migration/cleanup/evidence";
+import {
+  hasRequiredScaleRepair,
+  retainedScaleRepair,
+} from "@repo/backend/convex/tryouts/migration/cleanup/evidence";
 import { decodeMigrationPlan } from "@repo/backend/convex/tryouts/migration/plan";
 import {
   authenticateMigrationReceipt,
@@ -49,9 +52,18 @@ export const requireTerminalRepair = Effect.fn(
     "migrationId" | "phase" | "proof" | "repair"
   >
 ) {
+  const repairStarted =
+    receipt.phase === "cleaned" ||
+    receipt.proof !== null ||
+    receipt.repair !== null;
+  const proofMissing =
+    receipt.migrationId === retainedScaleRepair.migrationId &&
+    repairStarted &&
+    receipt.proof === null;
   if (
-    (receipt.phase === "cleaned" || receipt.proof !== null) &&
-    !hasRequiredScaleRepair(receipt.migrationId, receipt.repair)
+    repairStarted &&
+    (proofMissing ||
+      !hasRequiredScaleRepair(receipt.migrationId, receipt.repair))
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",

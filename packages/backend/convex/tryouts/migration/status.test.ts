@@ -61,6 +61,13 @@ describe("tryouts/migration/status", () => {
           );
         }
       }
+      const missingProof = yield* requireTerminalRepair({
+        migrationId: retainedScaleRepair.migrationId,
+        phase: "sealed",
+        proof: null,
+        repair,
+      }).pipe(Effect.flip);
+      assert.strictEqual(missingProof.code, "CONTENT_RELEASE_INTEGRITY");
     })
   );
 });
