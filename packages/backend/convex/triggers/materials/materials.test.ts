@@ -1,5 +1,4 @@
 import { api } from "@repo/backend/convex/_generated/api";
-import { NOW } from "@repo/backend/convex/assessments/seed";
 import {
   insertClass,
   insertClassMembership,
@@ -11,6 +10,8 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+const NOW = Date.UTC(2026, 3, 16, 14, 0, 0);
 
 describe("triggers/materials/materials", () => {
   afterEach(() => {
