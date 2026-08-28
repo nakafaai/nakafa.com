@@ -111,6 +111,7 @@ describe("GitHub Action policy", () => {
       const provenanceStart = workflow.indexOf(
         "      - name: Verify merge group provenance"
       );
+      const scopeStart = workflow.indexOf("  production-scope:\n");
       const treeStart = workflow.indexOf(
         "      - name: Verify merge group tree"
       );
@@ -126,24 +127,63 @@ describe("GitHub Action policy", () => {
         setupStart
       );
       const qualityStart = workflow.indexOf("\n  quality:", classifyStart);
+      const productionStart = workflow.indexOf("\n  production:", qualityStart);
+      const requiredStart = workflow.indexOf(
+        "\n  agent-docs:",
+        productionStart
+      );
 
-      expect(provenanceStart).toBeGreaterThan(-1);
+      expect(scopeStart).toBeGreaterThan(-1);
+      expect(provenanceStart).toBeGreaterThan(scopeStart);
       expect(treeStart).toBeGreaterThan(provenanceStart);
       expect(trustStart).toBeGreaterThan(treeStart);
       expect(setupStart).toBeGreaterThan(trustStart);
       expect(classifyStart).toBeGreaterThan(setupStart);
       expect(qualityStart).toBeGreaterThan(classifyStart);
+      expect(productionStart).toBeGreaterThan(qualityStart);
+      expect(requiredStart).toBeGreaterThan(productionStart);
 
+      const scopeJob = workflow.slice(scopeStart, qualityStart);
+      const workflowPreamble = workflow.slice(0, scopeStart);
+      const checkoutStep = workflow.slice(scopeStart, provenanceStart);
       const provenanceStep = workflow.slice(provenanceStart, treeStart);
       const treeStep = workflow.slice(treeStart, trustStart);
       const trustStep = workflow.slice(trustStart, setupStart);
       const classifyStep = workflow.slice(classifyStart, qualityStart);
+      const productionJob = workflow.slice(productionStart, requiredStart);
 
       expect(workflow).not.toContain("mergeQueue");
       expect(workflow).not.toContain("github.graphql");
       expect(workflow).not.toContain("continue-on-error");
       for (const evidence of [
+        "  merge_group:\n    branches: [main]\n    types: [checks_requested]",
+        "permissions:\n  contents: read\n  pull-requests: read",
+        `group: Agent-Friendly Docs-${actionExpression("github.event_name == 'pull_request' && github.event.pull_request.number || github.sha")}`,
+        `cancel-in-progress: ${actionExpression("github.event_name == 'pull_request'")}`,
+      ]) {
+        expect(workflowPreamble).toContain(evidence);
+        expect(workflowPreamble.indexOf(evidence)).toBe(
+          workflowPreamble.lastIndexOf(evidence)
+        );
+      }
+      expect(checkoutStep.match(/^ {6}- if:.*$/gm)).toEqual([
+        "      - if: env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true' || github.event_name == 'merge_group'",
+      ]);
+      for (const evidence of [
+        "id: default",
+        "uses: actions/checkout@",
+        "fetch-depth: 0",
+        'echo "required=$REQUIRED" >> "$GITHUB_OUTPUT"',
+      ]) {
+        expect(checkoutStep).toContain(evidence);
+        expect(checkoutStep.indexOf(evidence)).toBe(
+          checkoutStep.lastIndexOf(evidence)
+        );
+      }
+      for (const evidence of [
         "if: github.event_name == 'merge_group'",
+        "id: merge-group-provenance",
+        "result-encoding: string",
         "const mergeGroup = context.payload.merge_group",
         "const baseBranch = mergeGroup.base_ref.replace(",
         'const groupRef = mergeGroup.head_ref.startsWith("refs/heads/")',
@@ -156,6 +196,7 @@ describe("GitHub Action policy", () => {
         "mergeGroup.head_sha !== context.sha",
         "github.rest.pulls.get",
         "pull_number: Number(pullNumber)",
+        'const trustedOwner = "nabilfatih"',
         'pull.state !== "open"',
         "groupRef !== process.env.GITHUB_REF",
         "pull.base.ref !== baseBranch",
@@ -166,6 +207,7 @@ describe("GitHub Action policy", () => {
         "actor !== trustedOwner ||",
         "context.actor !== trustedOwner",
         'core.setOutput("pull-head", pull.head.sha)',
+        'return "true"',
       ]) {
         expect(provenanceStep).toContain(evidence);
         expect(provenanceStep.indexOf(evidence)).toBe(
@@ -197,6 +239,7 @@ describe("GitHub Action policy", () => {
       expect(treeStep.match(/^\s+exit 1$/gm)).toHaveLength(2);
 
       for (const evidence of [
+        "id: trust",
         `DIRECT_TRUST: ${actionExpression("env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT")}`,
         `MERGE_GROUP_TRUST: ${actionExpression("steps.merge-group-provenance.outputs.result")}`,
         "trusted=false",
@@ -211,6 +254,7 @@ describe("GitHub Action policy", () => {
       }
 
       for (const evidence of [
+        "id: classify",
         "if: steps.trust.outputs.trusted == 'true'",
         `BASE_SHA: ${actionExpression("github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before")}`,
         `HEAD_SHA: ${actionExpression("github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event_name == 'merge_group' && github.event.merge_group.head_sha || github.sha")}`,
@@ -223,13 +267,17 @@ describe("GitHub Action policy", () => {
       }
 
       for (const evidence of [
+        `DIRECT_TRUSTED_CONTENT_ENVIRONMENT: ${actionExpression("github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih')")}`,
         `required: ${actionExpression("steps.classify.outputs.required || steps.default.outputs.required")}`,
         `trusted: ${actionExpression("steps.trust.outputs.trusted")}`,
-        "if: needs.production-scope.outputs.required == 'true' && needs.production-scope.outputs.trusted == 'true'",
       ]) {
-        expect(workflow).toContain(evidence);
-        expect(workflow.indexOf(evidence)).toBe(workflow.lastIndexOf(evidence));
+        expect(scopeJob).toContain(evidence);
+        expect(scopeJob.indexOf(evidence)).toBe(scopeJob.lastIndexOf(evidence));
       }
+
+      expect(productionJob.match(/^ {4}if:.*$/gm)).toEqual([
+        "    if: needs.production-scope.outputs.required == 'true' && needs.production-scope.outputs.trusted == 'true'",
+      ]);
     }).pipe(Effect.provide(NodeServices.layer))
   );
 
