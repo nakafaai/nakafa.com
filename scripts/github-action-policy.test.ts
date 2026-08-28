@@ -108,10 +108,19 @@ describe("GitHub Action policy", () => {
       const workflow = yield* fileSystem.readFileString(
         `${REPOSITORY_ROOT}/.github/workflows/agent-docs.yml`
       );
-      const provenanceStart = workflow.indexOf(
-        "      - name: Verify merge group provenance"
-      );
       const scopeStart = workflow.indexOf("  production-scope:\n");
+      const defaultStart = workflow.indexOf(
+        "      - name: Set fail-closed default",
+        scopeStart
+      );
+      const checkoutStart = workflow.indexOf(
+        "      - if: env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true' || github.event_name == 'merge_group'",
+        defaultStart
+      );
+      const provenanceStart = workflow.indexOf(
+        "      - name: Verify merge group provenance",
+        checkoutStart
+      );
       const treeStart = workflow.indexOf(
         "      - name: Verify merge group tree"
       );
@@ -138,7 +147,9 @@ describe("GitHub Action policy", () => {
       );
 
       expect(scopeStart).toBeGreaterThan(-1);
-      expect(provenanceStart).toBeGreaterThan(scopeStart);
+      expect(defaultStart).toBeGreaterThan(scopeStart);
+      expect(checkoutStart).toBeGreaterThan(defaultStart);
+      expect(provenanceStart).toBeGreaterThan(checkoutStart);
       expect(treeStart).toBeGreaterThan(provenanceStart);
       expect(trustStart).toBeGreaterThan(treeStart);
       expect(setupStart).toBeGreaterThan(trustStart);
@@ -148,9 +159,10 @@ describe("GitHub Action policy", () => {
       expect(productionStart).toBeGreaterThan(qualityStart);
       expect(requiredStart).toBeGreaterThan(productionStart);
 
-      const scopeJob = workflow.slice(scopeStart, qualityStart);
       const workflowPreamble = workflow.slice(0, scopeStart);
-      const checkoutStep = workflow.slice(scopeStart, provenanceStart);
+      const scopeHeader = workflow.slice(scopeStart, defaultStart);
+      const defaultStep = workflow.slice(defaultStart, checkoutStart);
+      const checkoutStep = workflow.slice(checkoutStart, provenanceStart);
       const provenanceStep = workflow.slice(provenanceStart, treeStart);
       const treeStep = workflow.slice(treeStart, trustStart);
       const trustStep = workflow.slice(trustStart, setupStart);
@@ -163,6 +175,7 @@ describe("GitHub Action policy", () => {
       expect(workflow).not.toContain("github.graphql");
       expect(workflow).not.toContain("continue-on-error");
       for (const evidence of [
+        "  pull_request:\n    types: [opened, synchronize]",
         "  merge_group:\n    branches: [main]\n    types: [checks_requested]",
         "  push:\n    branches: [main]",
         "permissions:\n  contents: read\n  pull-requests: read\n\nconcurrency:",
@@ -174,22 +187,31 @@ describe("GitHub Action policy", () => {
           workflowPreamble.lastIndexOf(evidence)
         );
       }
+      expect(scopeHeader.match(/^ {4}if:.*$/gm) ?? []).toEqual([]);
+      expect(defaultStep.match(/^ {8}if:.*$/gm) ?? []).toEqual([]);
       expect(checkoutStep.match(/^ {6}- if:.*$/gm)).toEqual([
         "      - if: env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT == 'true' || github.event_name == 'merge_group'",
       ]);
       for (const evidence of [
         "id: default",
-        "uses: actions/checkout@",
-        "fetch-depth: 0",
+        `REQUIRED: ${actionExpression("env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT")}`,
         'echo "required=$REQUIRED" >> "$GITHUB_OUTPUT"',
       ]) {
+        expect(defaultStep).toContain(evidence);
+        expect(defaultStep.indexOf(evidence)).toBe(
+          defaultStep.lastIndexOf(evidence)
+        );
+      }
+      for (const evidence of ["uses: actions/checkout@", "fetch-depth: 0"]) {
         expect(checkoutStep).toContain(evidence);
         expect(checkoutStep.indexOf(evidence)).toBe(
           checkoutStep.lastIndexOf(evidence)
         );
       }
+      expect(provenanceStep.match(/^ {8}if:.*$/gm)).toEqual([
+        "        if: github.event_name == 'merge_group'",
+      ]);
       for (const evidence of [
-        "if: github.event_name == 'merge_group'",
         "id: merge-group-provenance",
         "result-encoding: string",
         "const mergeGroup = context.payload.merge_group",
@@ -224,8 +246,10 @@ describe("GitHub Action policy", () => {
       }
       expect(provenanceStep.match(/throw new Error/g)).toHaveLength(3);
 
+      expect(treeStep.match(/^ {8}if:.*$/gm)).toEqual([
+        "        if: github.event_name == 'merge_group'",
+      ]);
       for (const evidence of [
-        "if: github.event_name == 'merge_group'",
         `BASE_SHA: ${actionExpression("github.event.merge_group.base_sha")}`,
         `GROUP_SHA: ${actionExpression("github.event.merge_group.head_sha")}`,
         `PULL_HEAD: ${actionExpression("steps.merge-group-provenance.outputs.pull-head")}`,
@@ -246,6 +270,7 @@ describe("GitHub Action policy", () => {
       }
       expect(treeStep.match(/^\s+exit 1$/gm)).toHaveLength(2);
 
+      expect(trustStep.match(/^ {8}if:.*$/gm) ?? []).toEqual([]);
       for (const evidence of [
         "id: trust",
         `DIRECT_TRUST: ${actionExpression("env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT")}`,
@@ -276,9 +301,11 @@ describe("GitHub Action policy", () => {
         ]);
       }
 
+      expect(classifyStep.match(/^ {8}if:.*$/gm)).toEqual([
+        "        if: steps.trust.outputs.trusted == 'true'",
+      ]);
       for (const evidence of [
         "id: classify",
-        "if: steps.trust.outputs.trusted == 'true'",
         `BASE_SHA: ${actionExpression("github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before")}`,
         `HEAD_SHA: ${actionExpression("github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event_name == 'merge_group' && github.event.merge_group.head_sha || github.sha")}`,
         "run: pnpm ci:production-acceptance",
@@ -294,10 +321,15 @@ describe("GitHub Action policy", () => {
         `required: ${actionExpression("steps.classify.outputs.required || steps.default.outputs.required")}`,
         `trusted: ${actionExpression("steps.trust.outputs.trusted")}`,
       ]) {
-        expect(scopeJob).toContain(evidence);
-        expect(scopeJob.indexOf(evidence)).toBe(scopeJob.lastIndexOf(evidence));
+        expect(scopeHeader).toContain(evidence);
+        expect(scopeHeader.indexOf(evidence)).toBe(
+          scopeHeader.lastIndexOf(evidence)
+        );
       }
 
+      expect(productionJob.match(/^ {4}needs:.*$/gm)).toEqual([
+        "    needs: production-scope",
+      ]);
       expect(productionJob.match(/^ {4}if:.*$/gm)).toEqual([
         "    if: needs.production-scope.outputs.required == 'true' && needs.production-scope.outputs.trusted == 'true'",
       ]);
