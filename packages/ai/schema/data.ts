@@ -1,4 +1,10 @@
-import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import {
+  ActiveAppLocaleCodeSchema,
+  type AppLocaleCode,
+  ENGLISH_APP_LOCALE_CODE,
+  GERMAN_APP_LOCALE_CODE,
+  INDONESIAN_APP_LOCALE_CODE,
+} from "@nakafa/aksara-contracts/locale";
 import { NakafaAgentQuranReferenceOptionsSchema } from "@repo/contents/_lib/agent/schema/quran/input";
 import { NakafaAgentReadOptionsSchema } from "@repo/contents/_lib/agent/schema/read";
 import {
@@ -27,18 +33,45 @@ const SearchResultSchema = NakafaAgentSearchResultSchema;
 const ReadInputSchema = NakafaAgentReadOptionsSchema;
 const QuranInputSchema = NakafaAgentQuranReferenceOptionsSchema;
 const TaxonomyInputSchema = NakafaAgentTaxonomyOptionsSchema;
-const QuranPreviewSchema = Schema.Struct({
+const quranPreviewFields = {
   ...NakafaAgentContentRefSchema.fields,
   from_verse: Schema.Finite,
-  meaning: Schema.Struct({
-    locale: LocaleSchema,
-    text: Schema.String,
-  }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
   name: Schema.String,
   revelation: Schema.String,
   to_verse: Schema.Finite,
   verse_count: Schema.Finite,
-}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
+};
+
+/** Builds one canonical Quran preview correlated to its request locale. */
+function makeQuranDoneSchema<const Locale extends AppLocaleCode>(
+  locale: Locale
+) {
+  return Schema.Struct({
+    input: Schema.Struct({
+      ...QuranInputSchema.fields,
+      locale: Schema.Literal(locale),
+    }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
+    kind: Schema.Literal("quran"),
+    result: Schema.Struct({
+      ...quranPreviewFields,
+      locale: Schema.Literal(locale),
+      meaning: Schema.Struct({
+        locale: Schema.Union([
+          Schema.Literal(locale),
+          Schema.Literal(ENGLISH_APP_LOCALE_CODE),
+        ]),
+        text: Schema.String,
+      }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
+    }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
+    status: Schema.Literal("done"),
+  }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
+}
+
+const NakafaQuranDoneSchema = Schema.Union([
+  makeQuranDoneSchema(ENGLISH_APP_LOCALE_CODE),
+  makeQuranDoneSchema(INDONESIAN_APP_LOCALE_CODE),
+  makeQuranDoneSchema(GERMAN_APP_LOCALE_CODE),
+]);
 const TaxonomyPreviewSchema = Schema.Struct({
   content_counts: Schema.Array(
     Schema.Struct({
@@ -94,11 +127,6 @@ const nakafaQuranLoadingFields = {
 const NakafaQuranLoadingSchema = Schema.Struct(nakafaQuranLoadingFields).pipe(
   (schema) => schema.mapFields(Struct.map(Schema.mutableKey))
 );
-const NakafaQuranDoneSchema = Schema.Struct({
-  ...nakafaQuranLoadingFields,
-  result: QuranPreviewSchema,
-  status: Schema.Literal("done"),
-}).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 const NakafaQuranErrorSchema = Schema.Struct({
   ...nakafaQuranLoadingFields,
   error: Schema.String,

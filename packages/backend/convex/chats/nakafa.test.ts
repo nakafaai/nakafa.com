@@ -36,6 +36,46 @@ describe("Nakafa chat data schema", () => {
         status: "done",
       })
     ).toBe(true);
+
+    expect(
+      validate(nakafaDataValidator, {
+        input: { ...input, locale: "id" },
+        kind: "quran",
+        result: {
+          ...preview,
+          locale: "id",
+          meaning: { locale: "en", text: "The Opening" },
+        },
+        status: "done",
+      })
+    ).toBe(true);
+  });
+
+  it("rejects uncorrelated Quran preview locales", () => {
+    expect(
+      validate(nakafaDataValidator, {
+        input: { ...input, locale: "id" },
+        kind: "quran",
+        result: {
+          ...preview,
+          locale: "id",
+          meaning: { locale: "de", text: "Die Eröffnende" },
+        },
+        status: "done",
+      })
+    ).toBe(false);
+    expect(
+      validate(nakafaDataValidator, {
+        input: { ...input, locale: "id" },
+        kind: "quran",
+        result: {
+          ...preview,
+          locale: "de",
+          meaning: { locale: "en", text: "The Opening" },
+        },
+        status: "done",
+      })
+    ).toBe(false);
   });
 
   it("preserves persisted translation-only Quran previews", () => {

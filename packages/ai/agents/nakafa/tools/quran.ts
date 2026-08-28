@@ -1,12 +1,13 @@
 import { formatQuran } from "@repo/ai/agents/nakafa/format";
 import { previewQuran } from "@repo/ai/agents/nakafa/preview";
 import { Nakafa } from "@repo/ai/agents/nakafa/service";
+import { NakafaDataSchema } from "@repo/ai/schema/data";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { NAKAFA_AGENT_MAX_QURAN_REFERENCE_VERSES } from "@repo/contents/_lib/agent/constants";
 import type { NakafaAgentQuranReferenceOptions } from "@repo/contents/_lib/agent/schema/quran/input";
 import type { Locale } from "@repo/contents/_types/content";
 import type { UIMessageStreamWriter } from "ai";
-import { Effect, Option, Result } from "effect";
+import { Effect, Option, Result, Schema } from "effect";
 
 type Writer = Pick<UIMessageStreamWriter<MyUIMessage>, "write">;
 const invalidRangeMessage = "Invalid Quran verse range.";
@@ -104,16 +105,17 @@ export const quran = Effect.fn("nakafa.quran")(function* ({
     return notFoundMessage;
   }
   const value = content.value;
+  const done = yield* Schema.decodeUnknownEffect(NakafaDataSchema)({
+    kind: "quran",
+    input: dataInput,
+    status: "done",
+    result: previewQuran(value),
+  });
   yield* Effect.sync(() =>
     writer.write({
       id: toolCallId,
       type: "data-nakafa",
-      data: {
-        kind: "quran",
-        input: dataInput,
-        status: "done",
-        result: previewQuran(value),
-      },
+      data: done,
     })
   );
   return formatQuran(value);

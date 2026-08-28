@@ -254,7 +254,10 @@ const getSurahLlmsText = Effect.fn("www.llms.quran.surahText")(function* ({
 
 /** Preserves the signed source language beside one Quran meaning. */
 function formatQuranMeaning(meaning: PublishedQuranMeaning, locale: Locale) {
-  return selectQuranMeaning(meaning, locale).text;
+  const selected = selectQuranMeaning(meaning, locale);
+  return selected.appLocale === locale
+    ? selected.text
+    : `${selected.text} (${selected.appLocale})`;
 }
 
 /** Renders one semantic translation and its localized source-note heading. */

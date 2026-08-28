@@ -78,6 +78,10 @@ function formatQuranSource(source: {
 
 /** Formats a source-grounded Quran reference for model consumption. */
 export function formatQuran(result: NakafaAgentQuranReference) {
+  const meaning =
+    result.meaning.locale === result.locale
+      ? result.meaning.text
+      : `${result.meaning.text} (${result.meaning.locale})`;
   const preBismillah =
     result.pre_bismillah === null
       ? ""
@@ -92,7 +96,7 @@ export function formatQuran(result: NakafaAgentQuranReference) {
   return dedent(`
     # Nakafa Quran Reference
     - Name: ${result.name}
-    - Meaning: ${result.meaning.text}
+    - Meaning: ${meaning}
     - Revelation: ${result.revelation}
     - Content ID: ${result.content_id}
 

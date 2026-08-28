@@ -134,6 +134,16 @@ describe("Nakafa formatter", () => {
     expect(text).not.toContain("Dengan nama Allah[4]");
     expect(formatQuran(reference)).not.toContain("## Bismillah");
 
+    const fallbackReference = Schema.decodeSync(
+      NakafaAgentQuranReferenceSchema
+    )({
+      ...reference,
+      meaning: { locale: "en", text: "The Opening" },
+    });
+    expect(formatQuran(fallbackReference)).toContain(
+      "Meaning: The Opening (en)"
+    );
+
     const englishReference = Schema.decodeSync(NakafaAgentQuranReferenceSchema)(
       makeQuranFixture({
         from_verse: 1,
