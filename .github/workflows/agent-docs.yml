@@ -53,18 +53,29 @@ jobs:
               `query MergeQueueEntry($owner: String!, $name: String!) {
                 repository(owner: $owner, name: $name) {
                   mergeQueue {
-                    configuration { maximumEntriesToMerge }
+                    configuration {
+                      maximumEntriesToBuild
+                      maximumEntriesToMerge
+                    }
                     entries(first: 100) {
                       nodes {
                         baseCommit { oid }
                         enqueuer { login }
-                        headCommit { oid }
+                        headCommit {
+                          oid
+                          tree { oid }
+                        }
                         pullRequest {
                           author { login }
                           baseRefName
+                          baseRefOid
                           headRefOid
                           headRepository { nameWithOwner }
                           number
+                          potentialMergeCommit {
+                            parents(first: 3) { nodes { oid } }
+                            tree { oid }
+                          }
                           state
                         }
                       }
@@ -75,8 +86,11 @@ jobs:
               { name: context.repo.repo, owner: context.repo.owner },
             )
             const queue = result.repository?.mergeQueue
-            if (queue?.configuration?.maximumEntriesToMerge !== 1) {
-              throw new Error("Signed acceptance requires one pull request per merge group.")
+            if (
+              queue?.configuration?.maximumEntriesToBuild !== 1 ||
+              queue.configuration.maximumEntriesToMerge !== 1
+            ) {
+              throw new Error("Signed acceptance requires a single-entry queue.")
             }
 
             const entries = queue.entries?.nodes ?? []
@@ -91,16 +105,31 @@ jobs:
               )
             }
 
-            const [{ enqueuer, pullRequest: pull }] = candidates
+            const [{ enqueuer, headCommit, pullRequest: pull }] = candidates
             if (
               !pull ||
               pull.state !== "OPEN" ||
               pull.baseRefName !== mergeGroup.base_ref.replace("refs/heads/", "") ||
+              pull.baseRefOid !== mergeGroup.base_sha ||
               pull.headRepository?.nameWithOwner !== context.payload.repository.full_name ||
               pull.author?.login !== "nabilfatih" ||
               enqueuer?.login !== "nabilfatih"
             ) {
               throw new Error("Merge queue entry is not trusted for signed acceptance.")
+            }
+
+            // Matching trees proves the event head contains only the admitted
+            // pull request, even if queue settings changed after group creation.
+            const mergeParents = pull.potentialMergeCommit?.parents?.nodes ?? []
+            const expectedParents = [mergeGroup.base_sha, pull.headRefOid].sort()
+            const actualParents = mergeParents.map(({ oid }) => oid).sort()
+            if (
+              actualParents.length !== 2 ||
+              actualParents.some((oid, index) => oid !== expectedParents[index]) ||
+              !pull.potentialMergeCommit?.tree?.oid ||
+              headCommit?.tree?.oid !== pull.potentialMergeCommit.tree.oid
+            ) {
+              throw new Error("Merge group contains changes outside its trusted pull request.")
             }
             core.info(`Trusted pull request #${pull.number} at ${pull.headRefOid}.`)
 
