@@ -4,7 +4,6 @@ import { NakafaAgentSectionSchema } from "@repo/contents/_lib/agent/schema/ref";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { Effect, Option, Schema } from "effect";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import { FLAG_ALIAS, FLAG_NAME } from "#cli/command/argv";
 import {
   ApiBaseSchema,
   type CliRequest,
@@ -17,6 +16,18 @@ import {
 import { InvocationError } from "#cli/error";
 
 type ExecuteRequest<E, R> = (request: CliRequest) => Effect.Effect<void, E, R>;
+
+const FLAG_NAME = {
+  apiBase: "api-base",
+  fromVerse: "from-verse",
+  limit: "limit",
+  locale: "locale",
+  offset: "offset",
+  pretty: "pretty",
+  section: "section",
+  tafsir: "tafsir",
+  toVerse: "to-verse",
+} as const;
 
 const LocaleInputSchema = Schema.String.pipe(Schema.decodeTo(LocaleSchema));
 const SectionInputSchema = Schema.String.pipe(
@@ -50,7 +61,7 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
         Flag.withDescription("Override the public Nakafa API origin")
       ),
       pretty: Flag.boolean(FLAG_NAME.pretty).pipe(
-        Flag.withAlias(FLAG_ALIAS.pretty),
+        Flag.withAlias("p"),
         (flag) => withDefaultOnce(flag, false),
         Flag.withDescription("Indent JSON output")
       ),

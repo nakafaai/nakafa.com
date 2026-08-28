@@ -2,7 +2,7 @@ import {
   NAKAFA_MCP_PROTOCOL_VERSION,
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
 } from "@repo/contents/_lib/agent/constants";
-import { Console, Effect, Layer, MutableRef, Option, Result } from "effect";
+import { Console, Effect, Layer, MutableRef } from "effect";
 import {
   CliConfig,
   CliError,
@@ -11,11 +11,6 @@ import {
   GlobalFlag,
 } from "effect/unstable/cli";
 import { requestNakafaApi } from "#cli/client";
-import {
-  omitActionValidationFlag,
-  readActionValidation,
-} from "#cli/command/action";
-import { normalizeArgv } from "#cli/command/argv";
 import type { CliCommand, CliRequest } from "#cli/command/spec";
 import { makeCliCommand } from "#cli/command/tree";
 import { makeInvocationError } from "#cli/error";
@@ -108,92 +103,22 @@ const executeCli = Effect.fn("NakafaCli.execute")(function* (
       { discard: true }
     )
   );
-  const normalizedArgv = yield* normalizeArgv(argv);
-  const actionValidation = readActionValidation(normalizedArgv);
-  if (Option.isSome(actionValidation)) {
-    const validationCommand = makeCliCommand(() => Effect.void);
-    let validationArgv: readonly string[] = actionValidation.value;
-    while (true) {
-      const result = yield* Command.runWith(validationCommand, {
-        renderErrors: false,
-        version: options.version,
-      })(validationArgv).pipe(
-        Effect.provide(cliValidationLayer),
-        Effect.provideService(Console.Console, commandConsole),
-        Effect.result
-      );
-      if (Result.isSuccess(result) || isActionValidationHelp(result.failure)) {
-        break;
-      }
-      const retry = readActionValidationRetry(validationArgv, result.failure);
-      if (Option.isSome(retry)) {
-        validationArgv = retry.value;
-        continue;
-      }
-      return yield* CliError.isCliError(result.failure)
-        ? Effect.fail(makeInvocationError(result.failure))
-        : Effect.fail(result.failure);
-    }
-    MutableRef.set(messages, []);
-  }
   yield* Command.runWith(command, {
     renderErrors: false,
     version: options.version,
-  })(normalizedArgv).pipe(
+  })(argv).pipe(
     Effect.provide(cliRuntimeLayer),
     Effect.provideService(Console.Console, commandConsole),
     Effect.matchEffect({
-      onFailure: (error) => {
-        if (
-          CliError.isCliError(error) &&
-          error._tag === "ShowHelp" &&
-          error.errors.length === 0
-        ) {
-          return flushMessages;
-        }
-        return CliError.isCliError(error)
+      onFailure: (error) =>
+        CliError.isCliError(error)
           ? Effect.fail(makeInvocationError(error))
-          : Effect.fail(error);
-      },
+          : Effect.fail(error),
       onSuccess: () => flushMessages,
     })
   );
   return 0;
 });
-
-function isActionValidationHelp(error: unknown) {
-  // Native actions precede positional parsing. Dry validation therefore ignores
-  // only positional shapes, including Effect's required-variadic "0 values".
-  return (
-    CliError.isCliError(error) &&
-    error._tag === "ShowHelp" &&
-    error.errors.every(
-      (detail) =>
-        detail._tag === "MissingArgument" ||
-        detail._tag === "UnexpectedArgument" ||
-        detail._tag === "UnknownSubcommand" ||
-        (detail._tag === "InvalidValue" &&
-          detail.kind === "argument" &&
-          detail.value === "0 values")
-    )
-  );
-}
-
-function readActionValidationRetry(argv: readonly string[], error: unknown) {
-  if (!CliError.isCliError(error) || error._tag !== "ShowHelp") {
-    return Option.none<readonly string[]>();
-  }
-  for (const detail of error.errors) {
-    if (detail._tag !== "UnrecognizedOption") {
-      continue;
-    }
-    const retry = omitActionValidationFlag(argv, detail.option);
-    if (Option.isSome(retry)) {
-      return retry;
-    }
-  }
-  return Option.none<readonly string[]>();
-}
 
 const executeRequest = Effect.fn("NakafaCli.executeRequest")(function* (
   request: CliRequest
@@ -252,10 +177,6 @@ const cliOutputLayer = CliOutput.layer({
 });
 const cliRuntimeLayer = Layer.merge(
   CliConfig.layer({ builtIns: [GlobalFlag.Help, GlobalFlag.Version] }),
-  cliOutputLayer
-);
-const cliValidationLayer = Layer.merge(
-  CliConfig.layer({ builtIns: [] }),
   cliOutputLayer
 );
 

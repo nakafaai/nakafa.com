@@ -3,7 +3,6 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Ref, Result } from "effect";
 import { TestConsole } from "effect/testing";
 import { CliError, Command } from "effect/unstable/cli";
-import { normalizeArgv } from "#cli/command/argv";
 import type { CliRequest } from "#cli/command/spec";
 import { makeCliCommand } from "#cli/command/tree";
 import { InvocationError } from "#cli/error";
@@ -14,8 +13,7 @@ function readRequests(argv: readonly string[]) {
     const command = makeCliCommand((request) =>
       Ref.update(requests, (current) => [...current, request])
     );
-    const normalizedArgv = yield* normalizeArgv(argv);
-    yield* Command.runWith(command, { version: "0.1.0" })(normalizedArgv);
+    yield* Command.runWith(command, { version: "0.1.0" })(argv);
     return yield* Ref.get(requests);
   }).pipe(Effect.provide(NodeServices.layer));
 }
@@ -35,40 +33,6 @@ describe("Nakafa CLI command tree", () => {
           command: { kind: "search", query: "--pretty" },
           pretty: false,
         },
-      ]);
-    })
-  );
-
-  it.effect("resolves commands after the option separator", () =>
-    Effect.gen(function* () {
-      expect(
-        yield* readRequests(["--", "search", "linear", "algebra"])
-      ).toMatchObject([
-        {
-          command: { kind: "search", query: "linear algebra" },
-          pretty: false,
-        },
-      ]);
-      expect(yield* readRequests(["--pretty", "--", "taxonomy"])).toMatchObject(
-        [
-          {
-            command: { kind: "taxonomy" },
-            pretty: true,
-          },
-        ]
-      );
-    })
-  );
-
-  it.effect("moves command options behind their native subcommand", () =>
-    Effect.gen(function* () {
-      expect(yield* readRequests(["--locale", "id", "taxonomy"])).toMatchObject(
-        [{ command: { kind: "taxonomy", locale: "id" } }]
-      );
-      expect(
-        yield* readRequests(["--limit", "5", "search", "algebra"])
-      ).toMatchObject([
-        { command: { kind: "search", limit: 5, query: "algebra" } },
       ]);
     })
   );
@@ -164,50 +128,6 @@ describe("Nakafa CLI command tree", () => {
     })
   );
 
-  it.effect("keeps operands after presence-only switches", () =>
-    Effect.gen(function* () {
-      expect(yield* readRequests(["quran", "--tafsir", "1"])).toMatchObject([
-        {
-          command: {
-            includeTafsir: true,
-            kind: "quran",
-            surah: 1,
-          },
-        },
-      ]);
-      expect(yield* readRequests(["search", "--pretty", "true"])).toMatchObject(
-        [
-          {
-            command: { kind: "search", query: "true" },
-            pretty: true,
-          },
-        ]
-      );
-    })
-  );
-
-  it.effect("preserves operands after negated presence switches", () =>
-    Effect.gen(function* () {
-      expect(yield* readRequests(["quran", "--no-tafsir", "1"])).toMatchObject([
-        {
-          command: {
-            includeTafsir: false,
-            kind: "quran",
-            surah: 1,
-          },
-        },
-      ]);
-      expect(
-        yield* readRequests(["search", "--no-pretty", "true"])
-      ).toMatchObject([
-        {
-          command: { kind: "search", query: "true" },
-          pretty: false,
-        },
-      ]);
-    })
-  );
-
   it.effect.each([
     ["unknown"],
     ["search"],
@@ -258,20 +178,6 @@ describe("Nakafa CLI command tree", () => {
 
       expect(error).toBeInstanceOf(InvocationError);
       expect(error?.message).toContain("Invalid command options");
-    })
-  );
-
-  it.effect.each([
-    ["mcp", "--pretty=false"],
-    ["mcp", "-p=true"],
-    ["quran", "--tafsir=false", "1"],
-    ["quran", "--tafsir=true", "1"],
-  ])("rejects explicit values for presence-only switches in %j", (argv) =>
-    Effect.gen(function* () {
-      const error = yield* readFailure(argv);
-
-      expect(error).toBeInstanceOf(InvocationError);
-      expect(error?.message).toContain("does not accept a value");
     })
   );
 });

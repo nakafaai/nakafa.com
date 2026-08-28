@@ -169,11 +169,6 @@ describe("Nakafa CLI package", () => {
         const help = yield* runCommand(binary, ["--help"], directory);
         const version = yield* runCommand(binary, ["--version"], directory);
         const invalid = yield* readCommand(binary, ["--unknown"], directory);
-        const invalidCluster = yield* readCommand(
-          binary,
-          ["taxonomy", "-x-hfoo"],
-          directory
-        );
         const interrupted = yield* Effect.scoped(
           Effect.gen(function* () {
             const completeRequest = yield* Deferred.make<void>();
@@ -233,7 +228,6 @@ describe("Nakafa CLI package", () => {
         expect(help).toContain("Nakafa CLI");
         expect(version).toBe(`${packageVersion}\n`);
         expect(invalid.exitCode).toBe(2);
-        expect(invalidCluster).toMatchObject({ exitCode: 2, stdout: "" });
         expect(
           yield* Schema.decodeEffect(Schema.fromJsonString(Schema.Json))(
             invalid.stderr

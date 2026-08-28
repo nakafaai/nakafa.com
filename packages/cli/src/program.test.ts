@@ -120,31 +120,7 @@ describe("Nakafa CLI execution", () => {
         const client = HttpClient.make(() => Effect.die("unexpected request"));
         const empty = yield* execute([], client);
         const help = yield* execute(["--help"], client);
-        const sharedOptionHelp = yield* execute(["--pretty"], client);
-        const sharedValueHelp = yield* execute(
-          ["--api-base", "https://isolated.example.com"],
-          client
-        );
-        const commandOptionHelp = yield* Effect.forEach(
-          [
-            ["--locale", "id"],
-            ["--limit", "5"],
-            ["--tafsir"],
-            ["--locale", "id", "--"],
-            ["--limit", "5", "--"],
-            ["--tafsir", "--"],
-          ],
-          (argv) => execute(argv, client)
-        );
         const commandHelp = yield* execute(["taxonomy", "--help"], client);
-        const crossCommandHelp = yield* execute(
-          ["taxonomy", "--limit", "5", "--help"],
-          client
-        );
-        const crossCommandVersion = yield* execute(
-          ["mcp", "--locale", "en", "--version"],
-          client
-        );
         const version = yield* execute(["--version"], client);
         const mcp = yield* execute(["mcp"], client);
 
@@ -152,23 +128,8 @@ describe("Nakafa CLI execution", () => {
         expect(empty.stdout).toContain("Nakafa CLI");
         expect(help).toMatchObject({ exitCode: 0, stderr: "" });
         expect(help.stdout).toContain("Nakafa CLI");
-        expect(sharedOptionHelp).toMatchObject({ exitCode: 0, stderr: "" });
-        expect(sharedOptionHelp.stdout).toContain("Nakafa CLI");
-        expect(sharedValueHelp).toMatchObject({ exitCode: 0, stderr: "" });
-        expect(sharedValueHelp.stdout).toContain("Nakafa CLI");
-        for (const result of commandOptionHelp) {
-          expect(result).toMatchObject({ exitCode: 0, stderr: "" });
-          expect(result.stdout).toContain("Nakafa CLI");
-        }
         expect(commandHelp).toMatchObject({ exitCode: 0, stderr: "" });
         expect(commandHelp.stdout).toContain("published content taxonomy");
-        expect(crossCommandHelp).toMatchObject({ exitCode: 0, stderr: "" });
-        expect(crossCommandHelp.stdout).toContain("published content taxonomy");
-        expect(crossCommandVersion).toEqual({
-          exitCode: 0,
-          stderr: "",
-          stdout: "0.1.0\n",
-        });
         expect(version).toEqual({
           exitCode: 0,
           stderr: "",
@@ -182,7 +143,7 @@ describe("Nakafa CLI execution", () => {
       })
   );
 
-  it.effect("renders action help before positional validation", () =>
+  it.effect("renders explicit help without dispatching", () =>
     Effect.gen(function* () {
       const client = HttpClient.make(() => Effect.die("unexpected request"));
       const results = yield* Effect.forEach(
@@ -190,8 +151,7 @@ describe("Nakafa CLI execution", () => {
           ["search", "--help"],
           ["get", "--help"],
           ["quran", "--help"],
-          ["taxonomy", "-h-foo"],
-          ["--help", "--", "--"],
+          ["taxonomy", "--help"],
         ],
         (argv) => execute(argv, client)
       );
@@ -210,24 +170,12 @@ describe("Nakafa CLI execution", () => {
         "https://api.nakafa.com/v1/search?query=linear+equations&locale=de&limit=5",
     },
     {
-      argv: ["--", "search", "linear", "equations"],
-      expectedUrl: "https://api.nakafa.com/v1/search?query=linear+equations",
-    },
-    {
-      argv: ["--limit", "5", "search", "algebra"],
-      expectedUrl: "https://api.nakafa.com/v1/search?query=algebra&limit=5",
-    },
-    {
       argv: ["get", "https://nakafa.com/en/content?id=1"],
       expectedUrl:
         "https://api.nakafa.com/v1/content?ref=https%3A%2F%2Fnakafa.com%2Fen%2Fcontent%3Fid%3D1",
     },
     {
       argv: ["taxonomy", "--locale", "id"],
-      expectedUrl: "https://api.nakafa.com/v1/taxonomy?locale=id",
-    },
-    {
-      argv: ["--locale", "id", "taxonomy"],
       expectedUrl: "https://api.nakafa.com/v1/taxonomy?locale=id",
     },
     {
@@ -252,22 +200,6 @@ describe("Nakafa CLI execution", () => {
     {
       argv: ["quran", "114"],
       expectedUrl: "https://api.nakafa.com/v1/quran/114",
-    },
-    {
-      argv: ["quran", "--no-tafsir", "1"],
-      expectedUrl: "https://api.nakafa.com/v1/quran/1",
-    },
-    {
-      argv: ["search", "--no-pretty", "true"],
-      expectedUrl: "https://api.nakafa.com/v1/search?query=true",
-    },
-    {
-      argv: ["--no-help", "taxonomy"],
-      expectedUrl: "https://api.nakafa.com/v1/taxonomy",
-    },
-    {
-      argv: ["taxonomy", "--no-version"],
-      expectedUrl: "https://api.nakafa.com/v1/taxonomy",
     },
   ])("calls the public endpoint for $argv", ({ argv, expectedUrl }) =>
     Effect.gen(function* () {
@@ -341,7 +273,6 @@ describe("Nakafa CLI execution", () => {
     () =>
       Effect.gen(function* () {
         const invocation = yield* execute(["search"]);
-        const explicitSwitch = yield* execute(["mcp", "--pretty=false"]);
         const unknown = yield* execute(["unknown"]);
         const emptyRef = yield* execute(["get", ""]);
         const emptyQuery = yield* execute(["search", ""]);
@@ -401,10 +332,6 @@ describe("Nakafa CLI execution", () => {
         expect(yield* decodeJson(invocation.stderr)).toMatchObject({
           code: "INVOCATION_ERROR",
         });
-        expect(explicitSwitch).toMatchObject({ exitCode: 2, stdout: "" });
-        expect(yield* decodeJson(explicitSwitch.stderr)).toMatchObject({
-          code: "INVOCATION_ERROR",
-        });
         expect(unknown).toMatchObject({ exitCode: 2, stdout: "" });
         expect(yield* decodeJson(unknown.stderr)).toMatchObject({
           code: "INVOCATION_ERROR",
@@ -445,21 +372,11 @@ describe("Nakafa CLI execution", () => {
   );
 
   it.effect.each([
-    ["taxonomy", "--bogus", "--help"],
-    ["--version", "--unknown"],
-    ["search", "query", "--limit", "zero", "--help"],
-    ["taxonomy", "--locale", "--help", "id"],
-    ["taxonomy", "-xh"],
-    ["taxonomy", "--locale", "-xh"],
-    ["taxonomy", "-p-hfoo"],
-    ["taxonomy", "-x-hfoo"],
-    ["taxonomy", "-xh-foo"],
-    ["--h"],
-    ["--v"],
-    ["--p", "taxonomy"],
-    ["search", "", "--help"],
-    ["get", "", "--help"],
-  ])("rejects invalid action invocation %j", (argv) =>
+    ["taxonomy", "--bogus"],
+    ["search", "query", "--limit", "zero"],
+    ["taxonomy", "--locale"],
+    ["taxonomy", "-x"],
+  ])("rejects invalid invocation %j", (argv) =>
     Effect.gen(function* () {
       const result = yield* execute(argv);
 
