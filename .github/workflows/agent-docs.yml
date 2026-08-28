@@ -78,15 +78,16 @@ jobs:
               repo: context.repo.repo,
               pull_number: Number(pullNumber),
             })
+            const trustedOwner = "nabilfatih"
             const actor = context.payload.sender?.login
             if (
               pull.state !== "open" ||
               pull.base.ref !== baseBranch ||
               pull.base.repo.full_name !== context.payload.repository.full_name ||
               pull.head.repo?.full_name !== context.payload.repository.full_name ||
-              !actor ||
-              pull.user?.login !== actor ||
-              context.actor !== actor
+              pull.user?.login !== trustedOwner ||
+              actor !== trustedOwner ||
+              context.actor !== trustedOwner
             ) {
               throw new Error("Merge queue entry is not trusted for signed acceptance.")
             }
