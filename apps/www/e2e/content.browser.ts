@@ -99,7 +99,11 @@ const readJsonLdDates = Effect.fn("NakafaE2E.readJsonLdDates")(function* (
             ) {
               continue;
             }
-            return value;
+            const dateModified = Reflect.get(value, "dateModified");
+            const datePublished = Reflect.get(value, "datePublished");
+            return dateModified === undefined
+              ? { datePublished }
+              : { dateModified, datePublished };
           }
           return null;
         }, jsonLdType),
