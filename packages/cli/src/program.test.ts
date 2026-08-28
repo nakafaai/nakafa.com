@@ -175,6 +175,7 @@ describe("Nakafa CLI execution", () => {
           ["search", "--help"],
           ["get", "--help"],
           ["quran", "--help"],
+          ["taxonomy", "-h-foo"],
           ["--help", "--", "--"],
         ],
         (argv) => execute(argv, client)
@@ -435,6 +436,7 @@ describe("Nakafa CLI execution", () => {
     ["taxonomy", "--locale", "--help", "id"],
     ["taxonomy", "-xh"],
     ["taxonomy", "--locale", "-xh"],
+    ["taxonomy", "-xh-foo"],
     ["search", "", "--help"],
     ["get", "", "--help"],
   ])("rejects invalid action invocation %j", (argv) =>

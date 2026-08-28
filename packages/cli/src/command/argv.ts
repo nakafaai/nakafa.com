@@ -156,21 +156,31 @@ function removeShortActions(argument: string) {
     return;
   }
   const equalsIndex = argument.indexOf("=");
-  const source = argument.slice(
+  const optionCluster = argument.slice(
     1,
     equalsIndex === -1 ? undefined : equalsIndex
   );
-  const remaining = [...source].filter(
+  const terminatorIndex = optionCluster.indexOf("-");
+  // Node parseArgs ended a short cluster at an embedded hyphen. Only flags
+  // before that terminator participated in the published action contract.
+  const actionPrefix =
+    terminatorIndex === -1
+      ? optionCluster
+      : optionCluster.slice(0, terminatorIndex);
+  const validationAliases = [...actionPrefix].filter(
     (alias) => alias !== FLAG_ALIAS.help && alias !== FLAG_ALIAS.version
   );
-  if (remaining.length === source.length) {
+  if (validationAliases.length === actionPrefix.length) {
     return;
   }
-  if (remaining.length === 0) {
+  if (validationAliases.length === 0) {
     return "";
   }
-  const value = equalsIndex === -1 ? "" : argument.slice(equalsIndex);
-  return `-${remaining.join("")}${value}`;
+  const value =
+    terminatorIndex === -1 && equalsIndex !== -1
+      ? argument.slice(equalsIndex)
+      : "";
+  return `-${validationAliases.join("")}${value}`;
 }
 
 function appendActions(

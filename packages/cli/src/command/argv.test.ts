@@ -141,6 +141,12 @@ describe("Nakafa CLI arguments", () => {
     expect(
       Option.getOrUndefined(readActionValidation(["taxonomy", "-xh=value"]))
     ).toEqual(["taxonomy", "-x=value"]);
+    expect(
+      Option.getOrUndefined(readActionValidation(["taxonomy", "-h-foo"]))
+    ).toEqual(["taxonomy"]);
+    expect(
+      Option.getOrUndefined(readActionValidation(["taxonomy", "-xh-foo"]))
+    ).toEqual(["taxonomy", "-x"]);
     expect(Option.getOrUndefined(readActionValidation(["-h"]))).toEqual([]);
     expect(Option.isNone(readActionValidation(["-x"]))).toBe(true);
   });
