@@ -3,6 +3,9 @@ name: CI
 on:
   pull_request:
     types: [opened, synchronize]
+  merge_group:
+    branches: [main]
+    types: [checks_requested]
   push:
     branches: [main]
 
@@ -22,15 +25,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') }}
+      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || github.event_name == 'merge_group' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') }}
     outputs:
       required: ${{ steps.classify.outputs.required || steps.default.outputs.required }}
+      trusted: ${{ steps.default.outputs.trusted }}
     steps:
       - name: Set fail-closed default
         id: default
         env:
           REQUIRED: ${{ env.TRUSTED_CONTENT_ENVIRONMENT }}
-        run: echo "required=$REQUIRED" >> "$GITHUB_OUTPUT"
+          TRUSTED: ${{ env.TRUSTED_CONTENT_ENVIRONMENT }}
+        run: |
+          echo "required=$REQUIRED" >> "$GITHUB_OUTPUT"
+          echo "trusted=$TRUSTED" >> "$GITHUB_OUTPUT"
 
       - if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -52,8 +59,8 @@ jobs:
         if: env.TRUSTED_CONTENT_ENVIRONMENT == 'true'
         id: classify
         env:
-          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
-          HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before }}
+          HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event_name == 'merge_group' && github.event.merge_group.head_sha || github.sha }}
         run: pnpm ci:production-acceptance
 
   quality:
@@ -92,7 +99,7 @@ jobs:
     # same-repository candidates with production-relevant changes. In-place
     # test-only candidates retain Quality while Production is skipped.
     needs: production-scope
-    if: needs.production-scope.outputs.required == 'true' && (github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih'))
+    if: needs.production-scope.outputs.required == 'true' && needs.production-scope.outputs.trusted == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
@@ -466,7 +473,7 @@ jobs:
       PRODUCTION_REQUIRED: ${{ needs.production-scope.outputs.required }}
       PRODUCTION_SCOPE_RESULT: ${{ needs.production-scope.result }}
       QUALITY_RESULT: ${{ needs.quality.result }}
-      TRUSTED_CONTENT_ENVIRONMENT: ${{ github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login == 'nabilfatih' && github.actor == 'nabilfatih') }}
+      TRUSTED_CONTENT_ENVIRONMENT: ${{ needs.production-scope.outputs.trusted }}
     steps:
       - name: Verify acceptance jobs
         run: |
