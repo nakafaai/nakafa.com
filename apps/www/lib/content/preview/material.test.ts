@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { beforeEach, expect, layer } from "@effect/vitest";
 import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import {
   ContentKeySchema,
@@ -13,8 +14,8 @@ import {
   ContentVerificationKeyResolver,
   SigningKeyNotFoundError,
 } from "@nakafa/aksara-contracts/signature/spec";
-import { Effect, Option, Schema } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Context, Effect, Layer, Option, Schema } from "effect";
+import { vi } from "vitest";
 import { readPreviewConfig } from "@/lib/content/preview/config";
 import {
   type MaterialPreviewInput,
@@ -73,26 +74,30 @@ const input: MaterialPreviewInput = makePreviewInput();
 const configMock = vi.mocked(readPreviewConfig);
 const fetchMock = vi.mocked(fetchPreviewJson);
 const executeMock = vi.mocked(executeSignedArtifact);
-const activeManifest = await Effect.runPromise(rendererManifest);
 
-/** Creates the ready state for the currently deployed renderer contract. */
-function readyManifest() {
-  return makeReadyManifest(activeManifest.hash);
+type ReadyMaterialManifestValue = ReturnType<typeof makeReadyManifest>;
+
+/** Shared ready fixture derived once from the deployed renderer contract. */
+class ReadyMaterialManifest extends Context.Service<
+  ReadyMaterialManifest,
+  ReadyMaterialManifestValue
+>()("www.test.ReadyMaterialManifest") {
+  static readonly layer = Layer.effect(
+    this,
+    rendererManifest.pipe(
+      Effect.map((activeManifest) => makeReadyManifest(activeManifest.hash))
+    )
+  );
 }
 
 /** Runs the material preview program with its typed failures preserved. */
 function runPreview(request = input) {
-  return Effect.runPromise(readMaterialPreview(request));
+  return readMaterialPreview(request);
 }
 
 /** Returns one expected material preview failure. */
 function runFailure(request = input) {
-  return Effect.runPromise(readMaterialPreview(request).pipe(Effect.flip));
-}
-
-/** Creates an async assertion for one expected preview failure. */
-function expectPreviewFailure(request = input) {
-  return expect(runFailure(request)).resolves;
+  return runPreview(request).pipe(Effect.flip);
 }
 
 beforeEach(() => {
@@ -109,218 +114,252 @@ beforeEach(() => {
   );
 });
 
-describe("local material preview", () => {
-  it("rejects a malformed provider manifest before route selection", async () => {
-    fetchMock.mockReturnValueOnce(Effect.succeed({ status: "ready" }));
-    await expectPreviewFailure().toMatchObject({
-      _tag: "PreviewIntegrityError",
-      check: "manifest",
-    });
-  });
-
-  it("leaves production and unchanged routes on their existing source", async () => {
-    configMock.mockReturnValueOnce(Effect.succeed(Option.none()));
-    await expect(runPreview()).resolves.toEqual(Option.none());
-
-    fetchMock.mockReturnValueOnce(Effect.succeed(readyManifest()));
-    await expect(
-      runPreview({
-        ...input,
-        params: { ...input.params, topic: `${input.params.topic}-other` },
+layer(ReadyMaterialManifest.layer)("local material preview", (it) => {
+  it.effect(
+    "rejects a malformed provider manifest before route selection",
+    () =>
+      Effect.gen(function* () {
+        fetchMock.mockReturnValueOnce(Effect.succeed({ status: "ready" }));
+        expect(yield* runFailure()).toMatchObject({
+          _tag: "PreviewIntegrityError",
+          check: "manifest",
+        });
       })
-    ).resolves.toEqual(Option.none());
-    expect(executeMock).not.toHaveBeenCalled();
-  });
+  );
 
-  it("leaves a selected article on its own preview renderer", async () => {
-    fetchMock.mockReturnValueOnce(Effect.succeed(articlePendingManifest));
+  it.effect(
+    "leaves production and unchanged routes on their existing source",
+    () =>
+      Effect.gen(function* () {
+        const manifest = yield* ReadyMaterialManifest;
+        configMock.mockReturnValueOnce(Effect.succeed(Option.none()));
+        expect(yield* runPreview()).toEqual(Option.none());
 
-    await expect(runPreview()).resolves.toEqual(Option.none());
-    expect(executeMock).not.toHaveBeenCalled();
-  });
+        fetchMock.mockReturnValueOnce(Effect.succeed(manifest));
+        expect(
+          yield* runPreview({
+            ...input,
+            params: { ...input.params, topic: `${input.params.topic}-other` },
+          })
+        ).toEqual(Option.none());
+        expect(executeMock).not.toHaveBeenCalled();
+      })
+  );
 
-  it("fails closed while a changed route compiles or reports an error", async () => {
-    fetchMock
-      .mockReturnValueOnce(Effect.succeed(makePendingManifest()))
-      .mockReturnValueOnce(Effect.succeed(makeFailedManifest()));
+  it.effect("leaves a selected article on its own preview renderer", () =>
+    Effect.gen(function* () {
+      fetchMock.mockReturnValueOnce(Effect.succeed(articlePendingManifest));
 
-    await expectPreviewFailure().toMatchObject({
-      _tag: "PreviewPendingError",
-      revision: 1,
-    });
-    await expectPreviewFailure().toMatchObject({
-      _tag: "PreviewCompileError",
-      code: "MDX_PARSE",
-      message: "Compilation failed.",
-    });
-  });
+      expect(yield* runPreview()).toEqual(Option.none());
+      expect(executeMock).not.toHaveBeenCalled();
+    })
+  );
 
-  it("renders the authenticated ready artifact and its exact metadata", async () => {
-    fetchMock
-      .mockReturnValueOnce(Effect.succeed(readyManifest()))
-      .mockReturnValueOnce(Effect.succeed(artifact));
+  it.effect(
+    "fails closed while a changed route compiles or reports an error",
+    () =>
+      Effect.gen(function* () {
+        fetchMock
+          .mockReturnValueOnce(Effect.succeed(makePendingManifest()))
+          .mockReturnValueOnce(Effect.succeed(makeFailedManifest()));
 
-    const result = await runPreview();
-    expect(Option.getOrUndefined(result)).toMatchObject({
-      metadata,
-      rawMdx: previewWireMdx,
-    });
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      2,
-      config,
-      `/v1/artifacts/${encodeURIComponent(artifactHash)}`,
-      expect.any(Number)
-    );
-    expect(executeMock).toHaveBeenCalledWith(
-      expect.not.objectContaining({ components: expect.anything() })
-    );
-  });
+        expect(yield* runFailure()).toMatchObject({
+          _tag: "PreviewPendingError",
+          revision: 1,
+        });
+        expect(yield* runFailure()).toMatchObject({
+          _tag: "PreviewCompileError",
+          code: "MDX_PARSE",
+          message: "Compilation failed.",
+        });
+      })
+  );
 
-  it("renders a ready lesson route absent from the static catalog", async () => {
-    const newRoute = Schema.decodeSync(MaterialLessonRouteSchema)({
-      ...route,
-      contentKey: ContentKeySchema.make(
-        "material/lesson/mathematics/function-composition-inverse-function/new-concept"
-      ),
-      graph: makeMaterialGraph(
-        "mathematics",
-        "function-composition-inverse-function",
-        "new-concept",
-        "en"
-      ),
-      order: 6,
-      publicPath:
-        "subjects/mathematics/function-composition-inverse-function/new-concept",
-      sectionKey: "new-concept",
-    });
-    const newProjection = makeMaterialLessonProjection(newRoute, metadata);
-    const newArtifact = Schema.decodeSync(SignedContentArtifactSchema)({
-      ...artifact,
-      payload: { ...artifact.payload, contentKey: newRoute.contentKey },
-    });
-    fetchMock
-      .mockReturnValueOnce(
-        Effect.succeed({
-          ...readyManifest(),
-          document: { ...readyManifest().document, route: newRoute },
-          artifacts: [
-            {
-              ...readyManifest().artifacts[0],
-              projection: newProjection,
-            },
-          ],
-        })
-      )
-      .mockReturnValueOnce(Effect.succeed(newArtifact));
-    executeMock.mockReturnValueOnce(
-      Effect.succeed({ artifact: newArtifact, Content: () => null })
-    );
+  it.effect(
+    "renders the authenticated ready artifact and its exact metadata",
+    () =>
+      Effect.gen(function* () {
+        const manifest = yield* ReadyMaterialManifest;
+        fetchMock
+          .mockReturnValueOnce(Effect.succeed(manifest))
+          .mockReturnValueOnce(Effect.succeed(artifact));
 
-    const result = await runPreview({
-      ...input,
-      params: { ...input.params, lesson: ["new-concept"] },
-    });
+        const result = yield* runPreview();
+        expect(Option.getOrUndefined(result)).toMatchObject({
+          metadata,
+          rawMdx: previewWireMdx,
+        });
+        expect(fetchMock).toHaveBeenNthCalledWith(
+          2,
+          config,
+          `/v1/artifacts/${encodeURIComponent(artifactHash)}`,
+          expect.any(Number)
+        );
+        expect(executeMock).toHaveBeenCalledWith(
+          expect.not.objectContaining({ components: expect.anything() })
+        );
+      })
+  );
 
-    expect(Option.getOrUndefined(result)?.projection).toMatchObject({
-      contentKey: newRoute.contentKey,
-      publicPath: newRoute.publicPath,
-    });
-  });
+  it.effect("renders a ready lesson route absent from the static catalog", () =>
+    Effect.gen(function* () {
+      const manifest = yield* ReadyMaterialManifest;
+      const newRoute = yield* Schema.decodeEffect(MaterialLessonRouteSchema)({
+        ...route,
+        contentKey: ContentKeySchema.make(
+          "material/lesson/mathematics/function-composition-inverse-function/new-concept"
+        ),
+        graph: makeMaterialGraph(
+          "mathematics",
+          "function-composition-inverse-function",
+          "new-concept",
+          "en"
+        ),
+        order: 6,
+        publicPath:
+          "subjects/mathematics/function-composition-inverse-function/new-concept",
+        sectionKey: "new-concept",
+      });
+      const newProjection = makeMaterialLessonProjection(newRoute, metadata);
+      const newArtifact = yield* Schema.decodeEffect(
+        SignedContentArtifactSchema
+      )({
+        ...artifact,
+        payload: { ...artifact.payload, contentKey: newRoute.contentKey },
+      });
+      fetchMock
+        .mockReturnValueOnce(
+          Effect.succeed({
+            ...manifest,
+            document: { ...manifest.document, route: newRoute },
+            artifacts: [
+              {
+                ...manifest.artifacts[0],
+                projection: newProjection,
+              },
+            ],
+          })
+        )
+        .mockReturnValueOnce(Effect.succeed(newArtifact));
+      executeMock.mockReturnValueOnce(
+        Effect.succeed({ artifact: newArtifact, Content: () => null })
+      );
 
-  it.each([
-    ["renderer", "renderer", { rendererManifestHash: manifestHash }],
+      const result = yield* runPreview({
+        ...input,
+        params: { ...input.params, lesson: ["new-concept"] },
+      });
+
+      expect(Option.getOrUndefined(result)?.projection).toMatchObject({
+        contentKey: newRoute.contentKey,
+        publicPath: newRoute.publicPath,
+      });
+    })
+  );
+
+  it.effect.each([
+    [
+      "renderer",
+      "renderer",
+      (_manifest: ReadyMaterialManifestValue) => ({
+        rendererManifestHash: manifestHash,
+      }),
+    ],
     [
       "projection",
       "manifest",
-      {
+      (manifest: ReadyMaterialManifestValue) => ({
         artifacts: [
           {
-            ...readyManifest().artifacts[0],
+            ...manifest.artifacts[0],
             projection: {
               ...projection,
               contentKey: ContentKeySchema.make("material/foreign"),
             },
           },
         ],
-      },
+      }),
     ],
     [
       "projection app locale",
       "manifest",
-      {
+      (manifest: ReadyMaterialManifestValue) => ({
         artifacts: [
           {
-            ...readyManifest().artifacts[0],
+            ...manifest.artifacts[0],
             projection: { ...projection, appLocale: "id" },
           },
         ],
-      },
+      }),
     ],
     [
       "projection material key",
       "manifest",
-      {
+      (manifest: ReadyMaterialManifestValue) => ({
         artifacts: [
           {
-            ...readyManifest().artifacts[0],
+            ...manifest.artifacts[0],
             projection: {
               ...projection,
               materialKey: "lesson.mathematics.other",
             },
           },
         ],
-      },
+      }),
     ],
     [
       "projection order",
       "manifest",
-      {
+      (manifest: ReadyMaterialManifestValue) => ({
         artifacts: [
           {
-            ...readyManifest().artifacts[0],
+            ...manifest.artifacts[0],
             projection: { ...projection, order: 6 },
           },
         ],
-      },
+      }),
     ],
     [
       "projection path",
       "manifest",
-      {
+      (manifest: ReadyMaterialManifestValue) => ({
         artifacts: [
           {
-            ...readyManifest().artifacts[0],
+            ...manifest.artifacts[0],
             projection: {
               ...projection,
               publicPath: `${route.publicPath}-other`,
             },
           },
         ],
-      },
+      }),
     ],
     [
       "projection section",
       "manifest",
-      {
+      (manifest: ReadyMaterialManifestValue) => ({
         artifacts: [
           {
-            ...readyManifest().artifacts[0],
+            ...manifest.artifacts[0],
             projection: { ...projection, sectionKey: "other-section" },
           },
         ],
-      },
+      }),
     ],
-  ])("rejects an incoherent %s field", async (_label, check, change) => {
-    fetchMock.mockReturnValueOnce(
-      Effect.succeed({ ...readyManifest(), ...change })
-    );
-    await expectPreviewFailure().toMatchObject({
-      _tag: "PreviewIntegrityError",
-      check,
-    });
-  });
+  ] as const)("rejects an incoherent %s field", ([_label, check, makeChange]) =>
+    Effect.gen(function* () {
+      const manifest = yield* ReadyMaterialManifest;
+      fetchMock.mockReturnValueOnce(
+        Effect.succeed({ ...manifest, ...makeChange(manifest) })
+      );
+      expect(yield* runFailure()).toMatchObject({
+        _tag: "PreviewIntegrityError",
+        check,
+      });
+    })
+  );
 
-  it.each([
+  it.effect.each([
     ["hash", { artifactHash: manifestHash }],
     [
       "content key",
@@ -336,36 +375,42 @@ describe("local material preview", () => {
       { payload: { ...artifact.payload, artifactLocale: "id" } },
     ],
     ["domain", { payload: { ...artifact.payload, rendererDomain: "physics" } }],
-  ])("rejects an artifact with a mismatched %s", async (_label, change) => {
-    const changedArtifact = Schema.decodeUnknownSync(
-      SignedContentArtifactSchema
-    )({ ...artifact, ...change });
-    fetchMock
-      .mockReturnValueOnce(Effect.succeed(readyManifest()))
-      .mockReturnValueOnce(Effect.succeed(changedArtifact));
-    executeMock.mockReturnValueOnce(
-      Effect.succeed({ artifact: changedArtifact, Content: () => null })
-    );
+  ] as const)("rejects an artifact with a mismatched %s", ([_label, change]) =>
+    Effect.gen(function* () {
+      const manifest = yield* ReadyMaterialManifest;
+      const changedArtifact = yield* Schema.decodeEffect(
+        SignedContentArtifactSchema
+      )({ ...artifact, ...change });
+      fetchMock
+        .mockReturnValueOnce(Effect.succeed(manifest))
+        .mockReturnValueOnce(Effect.succeed(changedArtifact));
+      executeMock.mockReturnValueOnce(
+        Effect.succeed({ artifact: changedArtifact, Content: () => null })
+      );
 
-    await expectPreviewFailure().toMatchObject({
-      _tag: "PreviewIntegrityError",
-      check: "artifact",
-    });
-  });
+      expect(yield* runFailure()).toMatchObject({
+        _tag: "PreviewIntegrityError",
+        check: "artifact",
+      });
+    })
+  );
 
-  it("rejects an artifact signed by any other ephemeral key", async () => {
-    const foreignKey = SigningKeyIdSchema.make("foreign-preview");
-    fetchMock
-      .mockReturnValueOnce(Effect.succeed(readyManifest()))
-      .mockReturnValueOnce(Effect.succeed(artifact));
-    executeMock.mockReturnValueOnce(
-      Effect.gen(function* () {
-        const resolver = yield* ContentVerificationKeyResolver;
-        yield* resolver.resolve(foreignKey);
-        return { artifact, Content: () => null };
-      })
-    );
+  it.effect("rejects an artifact signed by any other ephemeral key", () =>
+    Effect.gen(function* () {
+      const manifest = yield* ReadyMaterialManifest;
+      const foreignKey = SigningKeyIdSchema.make("foreign-preview");
+      fetchMock
+        .mockReturnValueOnce(Effect.succeed(manifest))
+        .mockReturnValueOnce(Effect.succeed(artifact));
+      executeMock.mockReturnValueOnce(
+        Effect.gen(function* () {
+          const resolver = yield* ContentVerificationKeyResolver;
+          yield* resolver.resolve(foreignKey);
+          return { artifact, Content: () => null };
+        })
+      );
 
-    await expectPreviewFailure().toBeInstanceOf(SigningKeyNotFoundError);
-  });
+      expect(yield* runFailure()).toBeInstanceOf(SigningKeyNotFoundError);
+    })
+  );
 });
