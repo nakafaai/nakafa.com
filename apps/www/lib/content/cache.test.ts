@@ -1,20 +1,43 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   ArtifactCacheTagSchema,
   ContentCacheTagsSchema,
   makeArtifactCacheTag,
 } from "@nakafa/aksara-contracts/cache/content";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
-import { Effect, Result, Schema } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Data, Effect, Schema } from "effect";
+import { vi } from "vitest";
+import {
+  applyContentRuntimeCache,
+  applyPublishedCatalogCache,
+  applyPublishedContentBatchCache,
+  applyPublishedContentCache,
+  applyPublishedSnapshotCache,
+  ContentCacheInvalidationError,
+  invalidateContentCache,
+} from "@/lib/content/cache";
 
 const artifactHash = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
 const artifactTag = makeArtifactCacheTag(artifactHash);
 const otherArtifactHash = Sha256HashSchema.make(`sha256:${"b".repeat(64)}`);
 const otherArtifactTag = makeArtifactCacheTag(otherArtifactHash);
+const familyCacheTags = Schema.decodeSync(ContentCacheTagsSchema)([
+  "content-runtime",
+  "content-family:material",
+]);
+const artifactCacheTags = Schema.decodeSync(ContentCacheTagsSchema)([
+  ...familyCacheTags,
+  artifactTag,
+]);
 const cacheLifeMock = vi.hoisted(() => vi.fn());
 const cacheTagMock = vi.hoisted(() => vi.fn());
 const revalidateTagMock = vi.hoisted(() => vi.fn());
 const dangerouslyDeleteByTagMock = vi.hoisted(() => vi.fn());
+
+class TestCacheFailure extends Data.TaggedError("TestCacheFailure")<{
+  readonly layer: "next" | "sitemap";
+}> {}
+
 vi.mock("@vercel/functions", () => ({
   /** Records immediate CDN deletion without calling Vercel. */
   dangerouslyDeleteByTag: dangerouslyDeleteByTagMock,
@@ -34,21 +57,18 @@ describe("content runtime cache", () => {
     revalidateTagMock.mockClear();
     dangerouslyDeleteByTagMock.mockReset().mockResolvedValue(undefined);
   });
-  it("applies the shared tag and cache profile", async () => {
-    const cache = await import("@/lib/content/cache");
-    cache.applyContentRuntimeCache();
+  it("applies the shared tag and cache profile", () => {
+    applyContentRuntimeCache();
     expect(cacheTagMock).toHaveBeenCalledWith("content-runtime");
     expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
   });
-  it("applies global and exact immutable snapshot tags", async () => {
-    const cache = await import("@/lib/content/cache");
-    cache.applyPublishedSnapshotCache(artifactHash);
+  it("applies global and exact immutable snapshot tags", () => {
+    applyPublishedSnapshotCache(artifactHash);
     expect(cacheTagMock).toHaveBeenCalledWith("content-runtime", artifactTag);
     expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
   });
-  it("applies global, family, and exact artifact tags", async () => {
-    const cache = await import("@/lib/content/cache");
-    cache.applyPublishedContentCache("material", artifactHash);
+  it("applies global, family, and exact artifact tags", () => {
+    applyPublishedContentCache("material", artifactHash);
     expect(cacheTagMock).toHaveBeenCalledWith(
       "content-runtime",
       "content-family:material",
@@ -56,9 +76,8 @@ describe("content runtime cache", () => {
     );
     expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
   });
-  it("applies every immutable artifact tag in a bounded batch", async () => {
-    const cache = await import("@/lib/content/cache");
-    cache.applyPublishedContentBatchCache("question", [
+  it("applies every immutable artifact tag in a bounded batch", () => {
+    applyPublishedContentBatchCache("question", [
       artifactHash,
       otherArtifactHash,
     ]);
@@ -70,73 +89,54 @@ describe("content runtime cache", () => {
     );
     expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
   });
-  it("applies global and family tags to published catalogs", async () => {
-    const cache = await import("@/lib/content/cache");
-    cache.applyPublishedCatalogCache("article");
+  it("applies global and family tags to published catalogs", () => {
+    applyPublishedCatalogCache("article");
     expect(cacheTagMock).toHaveBeenCalledWith(
       "content-runtime",
       "content-family:article"
     );
     expect(cacheLifeMock).toHaveBeenCalledWith("contentRuntime");
   });
-  it("invalidates exact Next tags and the sitemap CDN tag", async () => {
-    const cache = await import("@/lib/content/cache");
-    const tags = Schema.decodeSync(ContentCacheTagsSchema)([
-      "content-runtime",
-      "content-family:material",
-      artifactTag,
-    ]);
-    await expect(
-      Effect.runPromise(cache.invalidateContentCache(tags))
-    ).resolves.toEqual(tags);
-    expect(revalidateTagMock.mock.calls).toEqual([
-      ["content-runtime", { expire: 0 }],
-      ["content-family:material", { expire: 0 }],
-      [artifactTag, { expire: 0 }],
-    ]);
-    expect(dangerouslyDeleteByTagMock).toHaveBeenCalledWith("content-sitemap", {
-      revalidationDeadlineSeconds: 0,
-    });
-  });
-  it("keeps a failed CDN purge in the typed error channel", async () => {
-    dangerouslyDeleteByTagMock.mockRejectedValueOnce(new Error("unavailable"));
-    const cache = await import("@/lib/content/cache");
-    const tags = Schema.decodeSync(ContentCacheTagsSchema)([
-      "content-runtime",
-      "content-family:material",
-    ]);
-    const result = await Effect.runPromise(
-      cache.invalidateContentCache(tags).pipe(Effect.result)
-    );
-    expect(Result.isFailure(result)).toBe(true);
-    if (Result.isFailure(result)) {
-      expect(result.failure).toEqual(
-        new cache.ContentCacheInvalidationError({ layer: "sitemap" })
+  it.effect("invalidates exact Next tags and the sitemap CDN tag", () =>
+    Effect.gen(function* () {
+      expect(yield* invalidateContentCache(artifactCacheTags)).toEqual(
+        artifactCacheTags
       );
-    }
-  });
-  it("keeps a failed Next invalidation in the typed error channel", async () => {
-    revalidateTagMock.mockImplementationOnce(() => {
-      throw new Error("unavailable");
-    });
-    const cache = await import("@/lib/content/cache");
-    const tags = Schema.decodeSync(ContentCacheTagsSchema)([
-      "content-runtime",
-      "content-family:material",
-    ]);
-    const result = await Effect.runPromise(
-      cache.invalidateContentCache(tags).pipe(Effect.result)
-    );
-    expect(Result.isFailure(result)).toBe(true);
-    if (Result.isFailure(result)) {
-      expect(result.failure).toEqual(
-        new cache.ContentCacheInvalidationError({ layer: "next" })
+      expect(revalidateTagMock.mock.calls).toEqual([
+        ["content-runtime", { expire: 0 }],
+        ["content-family:material", { expire: 0 }],
+        [artifactTag, { expire: 0 }],
+      ]);
+      expect(dangerouslyDeleteByTagMock).toHaveBeenCalledWith(
+        "content-sitemap",
+        { revalidationDeadlineSeconds: 0 }
       );
-    }
-    expect(dangerouslyDeleteByTagMock).not.toHaveBeenCalled();
-  });
-  it("rejects an artifact tag without a canonical signed hash", async () => {
-    await import("@/lib/content/cache");
+    })
+  );
+  it.effect("keeps a failed CDN purge in the typed error channel", () =>
+    Effect.gen(function* () {
+      dangerouslyDeleteByTagMock.mockRejectedValueOnce(
+        new TestCacheFailure({ layer: "sitemap" })
+      );
+
+      expect(
+        yield* invalidateContentCache(familyCacheTags).pipe(Effect.flip)
+      ).toEqual(new ContentCacheInvalidationError({ layer: "sitemap" }));
+    })
+  );
+  it.effect("keeps a failed Next invalidation in the typed error channel", () =>
+    Effect.gen(function* () {
+      revalidateTagMock.mockImplementationOnce(() => {
+        throw new TestCacheFailure({ layer: "next" });
+      });
+
+      expect(
+        yield* invalidateContentCache(familyCacheTags).pipe(Effect.flip)
+      ).toEqual(new ContentCacheInvalidationError({ layer: "next" }));
+      expect(dangerouslyDeleteByTagMock).not.toHaveBeenCalled();
+    })
+  );
+  it("rejects an artifact tag without a canonical signed hash", () => {
     expect(() =>
       Schema.decodeSync(ArtifactCacheTagSchema)("content-artifact:unknown")
     ).toThrow(
