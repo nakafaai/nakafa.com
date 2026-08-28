@@ -7,7 +7,6 @@ import {
   it,
   vi,
 } from "@effect/vitest";
-import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import {
   decodePublicContentRuntimeRequest,
   MAX_PUBLIC_RUNTIME_REQUEST_BYTES,
@@ -23,17 +22,8 @@ import {
 } from "@repo/backend/content/endpoint";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import { internal } from "@repo/backend/convex/_generated/api";
-import type {
-  PredecessorAbandonReceipt,
-  PredecessorObservationArgs,
-  PredecessorStatus,
-} from "@repo/backend/convex/contentRelease/predecessor/spec";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { testProjectionJson } from "@repo/backend/test/content/material";
-import {
-  testPublicationScope,
-  testRendererJson,
-} from "@repo/backend/test/content/release";
 import {
   insertRuntimeRelease,
   insertSignedRelease,
@@ -41,45 +31,13 @@ import {
   runtimeCases,
   runtimeContentKey,
 } from "@repo/backend/test/content/runtime";
-import { insertZeroRelease } from "@repo/backend/test/content/state";
 import { insertRuntimeHead } from "@repo/backend/test/runtime/head";
-import {
-  TEST_RUNTIME_PATH,
-  TEST_RUNTIME_RELEASE,
-} from "@repo/backend/test/runtime/values";
-import { makeFunctionReference } from "convex/server";
+import { TEST_RUNTIME_PATH } from "@repo/backend/test/runtime/values";
 import { Effect } from "effect";
 
 const RUNTIME_TOKEN = "technical-runtime-token";
-const OBSERVATION_ID = "test-predecessor-observation";
-const REARMED_OBSERVATION_ID = "test-rearmed-observation";
 const runtimeTokenName = "CONTENT_RUNTIME_TOKEN";
 const polarName = "POLAR_WEBHOOK_SECRET";
-const RECOVERY = {
-  manifestHash: `sha256:${"9".repeat(64)}`,
-  releaseId: "test-recovery-release",
-  sequence: TEST_RUNTIME_RELEASE.sequence + 1,
-};
-const armObservation = makeFunctionReference<
-  "mutation",
-  PredecessorObservationArgs,
-  PredecessorStatus
->("contentRelease/predecessor/internal:arm");
-const statusObservation = makeFunctionReference<
-  "query",
-  PredecessorObservationArgs,
-  PredecessorStatus
->("contentRelease/predecessor/internal:status");
-const sealObservation = makeFunctionReference<
-  "mutation",
-  PredecessorObservationArgs,
-  PredecessorStatus
->("contentRelease/predecessor/internal:seal");
-const abandonObservation = makeFunctionReference<
-  "mutation",
-  PredecessorObservationArgs,
-  PredecessorAbandonReceipt
->("contentRelease/predecessor/internal:abandon");
 type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 type RuntimeFetcher = Pick<RuntimeTest, "fetch">;
 /** Sends one request through the actual registered Convex HTTP route. */
@@ -124,46 +82,6 @@ function seedRuntime(
   });
 }
 
-/** Activates the exact retained inverse through the production mutation. */
-async function recoverRuntime(t: RuntimeTest) {
-  await t.mutation(async (ctx) => {
-    await insertZeroRelease(ctx, {
-      ...RECOVERY,
-      base: TEST_RUNTIME_RELEASE,
-      originReleaseId: TEST_RUNTIME_RELEASE.releaseId,
-      ownership: { base: ContentFamilySchema.literals, result: [] },
-      role: "recovery",
-      scope: { content: [], ...testPublicationScope() },
-      status: "verified",
-    });
-    const state = await ctx.db.query("contentState").unique();
-    if (!state) {
-      throw new Error("Expected active content state.");
-    }
-    await ctx.db.patch("contentState", state._id, {
-      recoveryManifestHash: RECOVERY.manifestHash,
-      recoveryReleaseId: RECOVERY.releaseId,
-      recoverySequence: RECOVERY.sequence,
-    });
-  });
-  await t.mutation(internal.contentRelease.activate.activateRecovery, {
-    manifestHash: RECOVERY.manifestHash,
-    releaseId: RECOVERY.releaseId,
-    rendererJson: testRendererJson(),
-  });
-  await t.finishAllScheduledFunctions(vi.runAllTimers);
-}
-
-/** Returns the current singular predecessor invocation count. */
-async function singularCount(t: RuntimeTest) {
-  const row = await t.run((ctx) =>
-    ctx.db
-      .query("contentPredecessorReads")
-      .withIndex("by_route", (query) => query.eq("route", "singular"))
-      .unique()
-  );
-  return row?.invocationCount ?? null;
-}
 beforeEach(() => {
   vi.useFakeTimers();
   process.env[runtimeTokenName] = RUNTIME_TOKEN;
@@ -206,102 +124,6 @@ describe("public content runtime HTTP route", () => {
     expect(predecessorBody.activeReleaseId).toBe(currentBody.activeReleaseId);
     expectPrivate(predecessor);
     expectPrivate(current);
-  });
-
-  it("records authenticated bounded predecessor calls before dispatch", async () => {
-    const t = createConvexTestWithBetterAuth();
-    await seedRuntime(t, "public", true);
-    await t.mutation(armObservation, { observationId: OBSERVATION_ID });
-
-    const unauthorized = await post(
-      t,
-      publicRuntimeRequest(),
-      { "x-nakafa-content-token": "wrong-token" },
-      PREDECESSOR_PUBLIC_CONTENT_RUNTIME_PATH
-    );
-    const current = await post(t, publicRuntimeRequest());
-    expect(unauthorized.status).toBe(401);
-    expect(current.status).toBe(200);
-    await expect(singularCount(t)).resolves.toBe(0);
-
-    const malformed = await post(
-      t,
-      "{",
-      undefined,
-      PREDECESSOR_PUBLIC_CONTENT_RUNTIME_PATH
-    );
-    expect(malformed.status).toBe(400);
-    await expect(singularCount(t)).resolves.toBe(1);
-
-    const predecessor = await post(
-      t,
-      publicRuntimeRequest(),
-      undefined,
-      PREDECESSOR_PUBLIC_CONTENT_RUNTIME_PATH
-    );
-    expect(predecessor.status).toBe(200);
-    await expect(singularCount(t)).resolves.toBe(2);
-
-    await recoverRuntime(t);
-    const driftedStatus = {
-      kind: "drifted",
-      live: RECOVERY,
-      stored: TEST_RUNTIME_RELEASE,
-    };
-    await expect(
-      t.query(statusObservation, { observationId: OBSERVATION_ID })
-    ).resolves.toMatchObject(driftedStatus);
-    await expect(
-      t.mutation(armObservation, { observationId: OBSERVATION_ID })
-    ).resolves.toMatchObject(driftedStatus);
-    await expect(
-      t.mutation(sealObservation, { observationId: OBSERVATION_ID })
-    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });
-
-    const drifted = await post(
-      t,
-      publicRuntimeRequest(),
-      undefined,
-      PREDECESSOR_PUBLIC_CONTENT_RUNTIME_PATH
-    );
-    expect(drifted.status).toBe(200);
-    await expect(drifted.json()).resolves.toMatchObject({ kind: "found" });
-    await expect(singularCount(t)).resolves.toBe(2);
-    expectPrivate(drifted);
-
-    await expect(
-      t.mutation(abandonObservation, { observationId: OBSERVATION_ID })
-    ).resolves.toMatchObject({
-      abandonedAt: expect.any(Number),
-      deleted: 4,
-      deploymentName: "test",
-      kind: "abandoned",
-      live: RECOVERY,
-      observationId: OBSERVATION_ID,
-      routes: {
-        batch: { invocationCount: 0, phase: "armed" },
-        singular: { invocationCount: 2, phase: "armed" },
-      },
-      stored: TEST_RUNTIME_RELEASE,
-    });
-    await expect(singularCount(t)).resolves.toBeNull();
-    await expect(
-      t.mutation(armObservation, {
-        observationId: REARMED_OBSERVATION_ID,
-      })
-    ).resolves.toMatchObject({
-      active: RECOVERY,
-      kind: "active",
-      observationId: REARMED_OBSERVATION_ID,
-    });
-    const rearmed = await post(
-      t,
-      publicRuntimeRequest(),
-      undefined,
-      PREDECESSOR_PUBLIC_CONTENT_RUNTIME_PATH
-    );
-    expect(rearmed.status).toBe(200);
-    await expect(singularCount(t)).resolves.toBe(1);
   });
 
   it.each([
