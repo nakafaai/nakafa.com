@@ -68,6 +68,21 @@ describe("Nakafa CLI arguments", () => {
     { argv: ["-", "taxonomy"], expected: ["-", "taxonomy"] },
     { argv: ["other", "taxonomy"], expected: ["other", "taxonomy"] },
     { argv: ["--pretty"], expected: ["--pretty=true"] },
+    { argv: ["--locale", "id"], expected: ["--help"] },
+    { argv: ["--locale", "taxonomy"], expected: ["--help"] },
+    { argv: ["--locale=id"], expected: ["--help"] },
+    { argv: ["--limit", "5"], expected: ["--help"] },
+    { argv: ["--tafsir"], expected: ["--help"] },
+    { argv: ["--locale"], expected: ["--locale"] },
+    {
+      argv: ["--locale", "--pretty"],
+      expected: ["--locale", "--pretty=true"],
+    },
+    { argv: ["--api-base"], expected: ["--api-base"] },
+    {
+      argv: ["--locale", "id", "--version"],
+      expected: ["--version"],
+    },
   ])("normalizes $argv", ({ argv, expected }) =>
     Effect.gen(function* () {
       expect(yield* normalizeArgv(argv)).toEqual(expected);

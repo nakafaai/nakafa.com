@@ -125,6 +125,10 @@ describe("Nakafa CLI execution", () => {
           ["--api-base", "https://isolated.example.com"],
           client
         );
+        const commandOptionHelp = yield* Effect.forEach(
+          [["--locale", "id"], ["--limit", "5"], ["--tafsir"]],
+          (argv) => execute(argv, client)
+        );
         const commandHelp = yield* execute(["taxonomy", "--help"], client);
         const version = yield* execute(["--version"], client);
         const mcp = yield* execute(["mcp"], client);
@@ -137,6 +141,10 @@ describe("Nakafa CLI execution", () => {
         expect(sharedOptionHelp.stdout).toContain("Nakafa CLI");
         expect(sharedValueHelp).toMatchObject({ exitCode: 0, stderr: "" });
         expect(sharedValueHelp.stdout).toContain("Nakafa CLI");
+        for (const result of commandOptionHelp) {
+          expect(result).toMatchObject({ exitCode: 0, stderr: "" });
+          expect(result.stdout).toContain("Nakafa CLI");
+        }
         expect(commandHelp).toMatchObject({ exitCode: 0, stderr: "" });
         expect(commandHelp.stdout).toContain("published content taxonomy");
         expect(version).toEqual({

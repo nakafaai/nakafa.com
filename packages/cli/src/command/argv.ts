@@ -26,18 +26,22 @@ const ACTION_FLAGS: ReadonlySet<string> = new Set([
   FLAG_NAME.version,
 ]);
 const COMMAND_NAMES: ReadonlySet<string> = new Set(Object.values(COMMAND_NAME));
-const PRESENCE_FLAGS: ReadonlySet<string> = new Set([
-  FLAG_NAME.pretty,
-  FLAG_NAME.tafsir,
-]);
-const VALUE_FLAGS: ReadonlySet<string> = new Set([
-  FLAG_NAME.apiBase,
+const COMMAND_PRESENCE_FLAGS: ReadonlySet<string> = new Set([FLAG_NAME.tafsir]);
+const COMMAND_VALUE_FLAGS: ReadonlySet<string> = new Set([
   FLAG_NAME.fromVerse,
   FLAG_NAME.limit,
   FLAG_NAME.locale,
   FLAG_NAME.offset,
   FLAG_NAME.section,
   FLAG_NAME.toVerse,
+]);
+const PRESENCE_FLAGS: ReadonlySet<string> = new Set([
+  FLAG_NAME.pretty,
+  ...COMMAND_PRESENCE_FLAGS,
+]);
+const VALUE_FLAGS: ReadonlySet<string> = new Set([
+  FLAG_NAME.apiBase,
+  ...COMMAND_VALUE_FLAGS,
 ]);
 type ActionName = typeof FLAG_NAME.help | typeof FLAG_NAME.version;
 type CommandName = (typeof COMMAND_NAME)[keyof typeof COMMAND_NAME];
@@ -107,7 +111,7 @@ export const normalizeArgv = Effect.fn("NakafaCli.normalizeArgv")(function* (
   if (parseFlags) {
     appendActions(normalized, actions);
   }
-  return moveCommandBeforeFlags(normalized);
+  return addRootHelp(moveCommandBeforeFlags(normalized));
 });
 
 /** Returns the same invocation without action flags when dry validation is needed. */
@@ -228,6 +232,68 @@ function moveToFront(
     ...leading.slice(command.index + 1),
     ...trailing,
   ];
+}
+
+function addRootHelp(argv: readonly string[]) {
+  if (argv.includes("--") || findCommand(argv) !== undefined) {
+    return [...argv];
+  }
+
+  const rootArgv: string[] = [];
+  let hasCommandOption = false;
+  let skipValue = false;
+
+  for (const [index, argument] of argv.entries()) {
+    if (skipValue) {
+      skipValue = false;
+      continue;
+    }
+    const long = readLongFlag(argument);
+    if (long === undefined || long.negated) {
+      return [...argv];
+    }
+    if (COMMAND_PRESENCE_FLAGS.has(long.name)) {
+      hasCommandOption = true;
+      continue;
+    }
+    if (COMMAND_VALUE_FLAGS.has(long.name)) {
+      hasCommandOption = true;
+      if (long.value === undefined) {
+        const value = argv[index + 1];
+        if (value === undefined || value.startsWith("-")) {
+          return [...argv];
+        }
+        skipValue = true;
+      }
+      continue;
+    }
+    if (long.name === FLAG_NAME.apiBase && long.value === undefined) {
+      const value = argv[index + 1];
+      if (value === undefined || value.startsWith("-")) {
+        return [...argv];
+      }
+      rootArgv.push(argument, value);
+      skipValue = true;
+      continue;
+    }
+    if (
+      long.name === FLAG_NAME.apiBase ||
+      long.name === FLAG_NAME.pretty ||
+      isActionFlagName(long.name)
+    ) {
+      rootArgv.push(argument);
+      continue;
+    }
+    return [...argv];
+  }
+
+  if (!hasCommandOption) {
+    return [...argv];
+  }
+  if (!rootArgv.some(isCanonicalActionFlag)) {
+    rootArgv.push(`--${FLAG_NAME.help}`);
+  }
+  return rootArgv;
 }
 
 function readLongFlag(argument: string) {
