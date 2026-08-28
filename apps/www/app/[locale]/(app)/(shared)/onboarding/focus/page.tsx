@@ -1,5 +1,6 @@
 import { redirect } from "@repo/internationalization/src/navigation";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
+import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { FocusStepForm } from "@/components/programs/onboarding/focus";
@@ -9,8 +10,8 @@ import { getToken } from "@/lib/auth/server";
 import { isActiveLocale } from "@/lib/i18n/active";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import {
-  getActiveLearningSelection,
   getLearningProgramOnboardingCatalog,
+  readActiveLearningSelection,
 } from "@/lib/programs/server";
 
 /** Renders the route-owned focus form step for normal Nakafa onboarding. */
@@ -47,7 +48,9 @@ async function FocusStepRuntime({ locale }: { locale: PublicAppLocale }) {
     return null;
   }
 
-  const activeSelection = await getActiveLearningSelection(token, locale);
+  const activeSelection = await Effect.runPromise(
+    readActiveLearningSelection(token, locale)
+  );
 
   return (
     <FocusStepForm activeSelection={activeSelection} programs={programs} />

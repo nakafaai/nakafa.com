@@ -4,15 +4,12 @@ import { api } from "@repo/backend/convex/_generated/api";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { fetchQuery } from "convex/nextjs";
 import { Effect, Schema } from "effect";
-import type {
-  ActiveLearningSelection,
-  LearningProgramCatalog,
-} from "@/components/programs/contract";
+import type { LearningProgramCatalog } from "@/components/programs/contract";
 import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { filterOnboardingPrograms } from "@/lib/programs/catalog";
 
 /** Expected failure while reading the current user's learning selection. */
-class ActiveLearningSelectionReadError extends Schema.TaggedError<ActiveLearningSelectionReadError>()(
+export class ActiveLearningSelectionReadError extends Schema.TaggedError<ActiveLearningSelectionReadError>()(
   "ActiveLearningSelectionReadError",
   {
     cause: Schema.Unknown,
@@ -21,7 +18,7 @@ class ActiveLearningSelectionReadError extends Schema.TaggedError<ActiveLearning
 ) {}
 
 /** Reads the authenticated user's canonical learning selection. */
-const readActiveLearningSelection = Effect.fn(
+export const readActiveLearningSelection = Effect.fn(
   "www.learningPrograms.activeSelection"
 )(function* (token: string, locale: PublicAppLocale) {
   return yield* Effect.tryPromise({
@@ -66,12 +63,4 @@ export async function getLearningProgramOnboardingCatalog(
   const catalog = await getLearningProgramCatalog(locale);
 
   return filterOnboardingPrograms(catalog);
-}
-
-/** Reads the active learning selection for the authenticated request token. */
-export async function getActiveLearningSelection(
-  token: string,
-  locale: PublicAppLocale
-): Promise<ActiveLearningSelection> {
-  return await Effect.runPromise(readActiveLearningSelection(token, locale));
 }
