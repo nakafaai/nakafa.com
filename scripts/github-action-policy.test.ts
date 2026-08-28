@@ -103,14 +103,33 @@ describe("GitHub Action policy", () => {
       const workflow = yield* fileSystem.readFileString(
         `${REPOSITORY_ROOT}/.github/workflows/agent-docs.yml`
       );
+      const provenanceStart = workflow.indexOf(
+        "      - name: Verify merge group provenance"
+      );
+      const treeStart = workflow.indexOf(
+        "      - name: Verify merge group tree"
+      );
+      const trustStart = workflow.indexOf(
+        "      - name: Export content environment trust"
+      );
+
+      expect(provenanceStart).toBeGreaterThan(-1);
+      expect(treeStart).toBeGreaterThan(provenanceStart);
+      expect(trustStart).toBeGreaterThan(treeStart);
+
+      const provenanceStep = workflow.slice(provenanceStart, treeStart);
+      const treeStep = workflow.slice(treeStart, trustStart);
 
       expect(workflow).not.toContain("mergeQueue");
       expect(workflow).not.toContain("github.graphql");
+      expect(workflow).not.toContain("continue-on-error");
       for (const evidence of [
+        "if: github.event_name == 'merge_group'",
         "const mergeGroup = context.payload.merge_group",
         "github.rest.pulls.get",
         'pull.state !== "open"',
         "groupRef !== process.env.GITHUB_REF",
+        "pull.base.ref !== baseBranch",
         "pull.base.repo.full_name !== context.payload.repository.full_name",
         "pull.head.repo?.full_name !== context.payload.repository.full_name",
         "pull.user?.login !== trustedOwner ||",
@@ -118,16 +137,24 @@ describe("GitHub Action policy", () => {
         "actor !== trustedOwner ||",
         "context.actor !== trustedOwner",
         'core.setOutput("pull-head", pull.head.sha)',
+      ]) {
+        expect(provenanceStep).toContain(evidence);
+      }
+
+      for (const evidence of [
+        "if: github.event_name == 'merge_group'",
+        "set -euo pipefail",
         'actual_head="$(git rev-parse HEAD)"',
         'actual_parent="$(git rev-parse "$GROUP_SHA^")"',
         'git rev-list --parents -n 1 "$GROUP_SHA" | wc -w',
+        '[ "$actual_head" != "$GROUP_SHA" ]',
         '[ "$actual_parent" != "$BASE_SHA" ]',
         '[ "$parent_count" -ne 2 ]',
-        'git merge-tree --write-tree "$BASE_SHA" "$PULL_HEAD"',
+        'expected_tree="$(git merge-tree --write-tree "$BASE_SHA" "$PULL_HEAD")"',
         'actual_tree="$(git rev-parse "$GROUP_SHA^{tree}")"',
         'if [ "$actual_tree" != "$expected_tree" ]; then',
       ]) {
-        expect(workflow).toContain(evidence);
+        expect(treeStep).toContain(evidence);
       }
     }).pipe(Effect.provide(NodeServices.layer))
   );
