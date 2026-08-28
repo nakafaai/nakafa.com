@@ -5,7 +5,11 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
-import { Effect } from "effect";
+import { Data, Effect } from "effect";
+
+class ProgramBucketMutationRejected extends Data.TaggedError(
+  "ProgramBucketMutationRejected"
+)<{ readonly cause: unknown }> {}
 
 describe("contentRelease/program/bucket", () => {
   it.effect("creates and increments one snapshot-local sitemap partition", () =>
@@ -28,7 +32,11 @@ describe("contentRelease/program/bucket", () => {
       );
 
       const bucket = yield* Effect.promise(() =>
-        target.run((ctx) => ctx.db.query("programBuckets").unique())
+        target.run((ctx) =>
+          runConvexProgram(
+            Effect.promise(() => ctx.db.query("programBuckets").unique())
+          )
+        )
       );
       expect(bucket).toMatchObject({
         appLocale: "en",
@@ -44,40 +52,46 @@ describe("contentRelease/program/bucket", () => {
     Effect.gen(function* () {
       const target = convexTest(schema, convexModules);
 
-      yield* Effect.promise(() =>
-        expect(
+      const invalidPartition = yield* Effect.tryPromise({
+        try: () =>
           target.mutation((ctx) =>
             runConvexProgram(
               addProgramBucketRoute(ctx, "snapshot", 0, "en", "invalid")
             )
-          )
-        ).rejects.toMatchObject({
-          data: { code: "CONTENT_RELEASE_INTEGRITY" },
-        })
-      );
+          ),
+        catch: (cause) => new ProgramBucketMutationRejected({ cause }),
+      }).pipe(Effect.flip);
+      expect(invalidPartition.cause).toMatchObject({
+        data: { code: "CONTENT_RELEASE_INTEGRITY" },
+      });
 
       yield* Effect.promise(() =>
         target.mutation((ctx) =>
-          ctx.db.insert("programBuckets", {
-            appLocale: "en",
-            bucket: "abc",
-            index: 0,
-            routeCount: CONTENT_BUCKET_SIZE,
-            snapshotId: "snapshot",
-          })
+          runConvexProgram(
+            Effect.promise(() =>
+              ctx.db.insert("programBuckets", {
+                appLocale: "en",
+                bucket: "abc",
+                index: 0,
+                routeCount: CONTENT_BUCKET_SIZE,
+                snapshotId: "snapshot",
+              })
+            )
+          )
         )
       );
-      yield* Effect.promise(() =>
-        expect(
+      const overflowingPartition = yield* Effect.tryPromise({
+        try: () =>
           target.mutation((ctx) =>
             runConvexProgram(
               addProgramBucketRoute(ctx, "snapshot", 1, "en", "abc")
             )
-          )
-        ).rejects.toMatchObject({
-          data: { code: "CONTENT_RELEASE_LIMIT" },
-        })
-      );
+          ),
+        catch: (cause) => new ProgramBucketMutationRejected({ cause }),
+      }).pipe(Effect.flip);
+      expect(overflowingPartition.cause).toMatchObject({
+        data: { code: "CONTENT_RELEASE_LIMIT" },
+      });
     })
   );
 });
