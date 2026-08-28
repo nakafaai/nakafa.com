@@ -1,5 +1,5 @@
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { PublishedQuranRowSchema } from "@repo/backend/content/quran/contract";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { ensureDocumentSize } from "@repo/backend/convex/contentRelease/document";
 import {
   ReleaseError,

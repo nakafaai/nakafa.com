@@ -78,12 +78,12 @@ export const decodePublicRuntimeRow = Effect.fn(
   }
   const [artifact, storedProjection, release, rendererManifest, sourcePath] =
     yield* Effect.all([
-    decodeArtifactJson(row.artifactJson),
-    decodeProjectionJson(row.projectionJson),
-    decodeReleaseJson(row.releaseJson),
-    decodeRendererJson(row.rendererJson),
-    Schema.decodeEffect(CorpusSourcePathSchema)(row.sourcePath),
-  ]).pipe(Effect.mapError(() => new PublicRuntimeReadError()));
+      decodeArtifactJson(row.artifactJson),
+      decodeProjectionJson(row.projectionJson),
+      decodeReleaseJson(row.releaseJson),
+      decodeRendererJson(row.rendererJson),
+      Schema.decodeEffect(CorpusSourcePathSchema)(row.sourcePath),
+    ]).pipe(Effect.mapError(() => new PublicRuntimeReadError()));
   yield* Schema.decodeEffect(Sha256HashSchema)(row.projectionHash).pipe(
     Effect.mapError(() => new PublicRuntimeReadError())
   );

@@ -1,5 +1,5 @@
-import type { RoutedContentProjection } from "@nakafa/aksara-transition/projection/spec";
 import type { PublicContentRuntimeFound } from "@nakafa/aksara-contracts/runtime/spec";
+import type { RoutedContentProjection } from "@nakafa/aksara-transition/projection/spec";
 import {
   canonicalizeContentProjection as canonicalizePredecessorContentProjection,
   RoutedContentProjectionSchema as predecessorRoutedContentProjectionSchema,

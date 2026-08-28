@@ -1,6 +1,5 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
-import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
 import { hasExactQuranVerseRange } from "@repo/backend/client/quran/integrity";
 import {
   decodePublishedQuranSource,
@@ -15,6 +14,7 @@ import {
 } from "@repo/backend/client/quran/rows";
 import { hasExpectedQuranSources } from "@repo/backend/client/quran/source";
 import { separateQuranRuntimeBismillah } from "@repo/backend/content/quran/bismillah";
+import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";

@@ -1,5 +1,11 @@
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import {
+  MAX_ROUTE_PAGE_RECORDS,
+  type RoutePage,
+  RoutePageRequestSchema,
+  type RouteRollbackRecord,
+} from "@nakafa/aksara-contracts/release/route/page";
+import {
   canonicalizeRollbackPage,
   MAX_ROLLBACK_PAGE_BYTES,
   MAX_ROLLBACK_PAGE_RECORDS,
@@ -7,12 +13,6 @@ import {
   RollbackPageRequestSchema,
   type RollbackRecord,
 } from "@nakafa/aksara-transition/release/rollback/spec";
-import {
-  MAX_ROUTE_PAGE_RECORDS,
-  type RoutePage,
-  RoutePageRequestSchema,
-  type RouteRollbackRecord,
-} from "@nakafa/aksara-contracts/release/route/page";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";

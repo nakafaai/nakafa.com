@@ -11,12 +11,12 @@ import {
   renderQuranTafsirAccessMarkdown,
 } from "@repo/backend/client/quran/markdown";
 import { renderQuranTranslationMarkdown } from "@repo/backend/client/quran/notes";
-import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
 import {
   decodePublishedQuranReference,
   type PublishedQuranReference,
 } from "@repo/backend/client/quran/reference";
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
+import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
 import { api } from "@repo/backend/convex/_generated/api";
 import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
 import type { NakafaAgentMarkdown } from "@repo/contents/_lib/agent/schema/read";

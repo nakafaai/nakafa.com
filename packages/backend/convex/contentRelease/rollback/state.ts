@@ -1,8 +1,8 @@
-import { canonicalizeContentProjection } from "@nakafa/aksara-transition/projection/spec";
 import {
   type ContentChange,
   ContentUpsertSchema,
 } from "@nakafa/aksara-contracts/release";
+import { canonicalizeContentProjection } from "@nakafa/aksara-transition/projection/spec";
 import {
   RollbackRecordSchema,
   type RollbackState,

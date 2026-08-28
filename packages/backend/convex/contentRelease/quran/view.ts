@@ -1,8 +1,8 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { QuranRuntimeVerse } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
-import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
 import { separateQuranBismillah } from "@repo/backend/content/quran/bismillah";
+import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import {
   quranBismillahValidator,
