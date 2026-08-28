@@ -9,13 +9,13 @@ import {
   describe,
   expect,
   it,
+  vi,
 } from "@effect/vitest";
 import { Effect } from "effect";
 import { workAsyncStorage } from "next/dist/server/app-render/work-async-storage.external";
 import { workUnitAsyncStorage } from "next/dist/server/app-render/work-unit-async-storage.external";
 import { createRequestStore } from "next/dist/server/async-storage/request-store";
 import { createWorkStore } from "next/dist/server/async-storage/work-store";
-import { vi } from "vitest";
 
 const CONVEX_SITE_URL = "https://test.convex.site";
 
@@ -23,10 +23,9 @@ const loadAuthServer = Effect.fn("auth.server.test.load")(() =>
   Effect.tryPromise(() => import("./server"))
 );
 
-const runWithRequestHeaders = (
-  headers: Headers,
-  getToken: typeof import("./server")["getToken"]
-) => {
+const runWithRequestHeaders = Effect.fn(
+  "auth.server.test.runWithRequestHeaders"
+)((headers: Headers, getToken: typeof import("./server")["getToken"]) => {
   const requestStore = createRequestStore({
     fallbackParams: null,
     headers,
@@ -74,7 +73,7 @@ const runWithRequestHeaders = (
       workUnitAsyncStorage.run(requestStore, getToken)
     )
   );
-};
+});
 
 beforeAll(() => {
   vi.stubEnv("INTERNAL_CONTENT_API_KEY", "test-content-key");
