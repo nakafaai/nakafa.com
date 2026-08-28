@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   ContentKeySchema,
   CorpusSourcePathSchema,
@@ -13,8 +14,8 @@ import {
   PageKeySchema,
   PublicPageProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/page";
-import { Cause, Effect, Exit, Option } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Effect } from "effect";
+import { vi } from "vitest";
 import {
   getShellPageNavigation,
   PageNavigationMissingError,
@@ -94,68 +95,86 @@ beforeEach(() => {
 });
 
 describe("signed Page navigation", () => {
-  it("selects route and title metadata from the locale-owned catalog", async () => {
-    await expect(Effect.runPromise(readPageNavigation("de"))).resolves.toEqual({
-      items: [
-        {
-          href: "/privacy-policy",
-          pageKey: "privacy-policy",
-          title: "Datenschutzrichtlinie",
-        },
-        {
-          href: "/security-policy",
-          pageKey: "security-policy",
-          title: "Sicherheitsrichtlinie",
-        },
-        {
-          href: "/terms-of-service",
-          pageKey: "terms-of-service",
-          title: "Nutzungsbedingungen",
-        },
-      ],
-      privacyPolicyHref: "/privacy-policy",
-      termsOfServiceHref: "/terms-of-service",
-    });
-  });
+  it.effect(
+    "selects route and title metadata from the locale-owned catalog",
+    () =>
+      Effect.gen(function* () {
+        const navigation = yield* readPageNavigation("de");
 
-  it("fails closed when a required legal destination is absent", async () => {
-    catalogMock.mockReturnValue(
-      Effect.succeed({
-        activeReleaseId: "release-pages",
-        projections: germanPages.filter(
-          ({ pageKey }) => pageKey !== "privacy-policy"
-        ),
+        expect(navigation).toEqual({
+          items: [
+            {
+              href: "/privacy-policy",
+              pageKey: "privacy-policy",
+              title: "Datenschutzrichtlinie",
+            },
+            {
+              href: "/security-policy",
+              pageKey: "security-policy",
+              title: "Sicherheitsrichtlinie",
+            },
+            {
+              href: "/terms-of-service",
+              pageKey: "terms-of-service",
+              title: "Nutzungsbedingungen",
+            },
+          ],
+          privacyPolicyHref: "/privacy-policy",
+          termsOfServiceHref: "/terms-of-service",
+        });
       })
-    );
+  );
 
-    const exit = await Effect.runPromiseExit(readPageNavigation("de"));
-    const failure = Exit.isFailure(exit)
-      ? Cause.findErrorOption(exit.cause)
-      : Option.none();
+  it.effect("fails closed when a required legal destination is absent", () =>
+    Effect.gen(function* () {
+      catalogMock.mockReturnValue(
+        Effect.succeed({
+          activeReleaseId: "release-pages",
+          projections: germanPages.filter(
+            ({ pageKey }) => pageKey !== "privacy-policy"
+          ),
+        })
+      );
 
-    expect(Option.isSome(failure)).toBe(true);
-    if (Option.isSome(failure)) {
-      expect(failure.value).toEqual(
+      const failure = yield* readPageNavigation("de").pipe(Effect.flip);
+
+      expect(failure).toEqual(
         new PageNavigationMissingError({
           locale: "de",
           pageKey: PageKeySchema.make("privacy-policy"),
         })
       );
-    }
-  });
+    })
+  );
 
-  it("keeps isolated document previews independent from full Page state", async () => {
-    previewMock.mockReturnValue(true);
+  it.effect(
+    "keeps isolated document previews independent from full Page state",
+    () =>
+      Effect.gen(function* () {
+        previewMock.mockReturnValue(true);
 
-    await expect(getShellPageNavigation("de")).resolves.toBeNull();
-    expect(catalogMock).not.toHaveBeenCalled();
-  });
+        const navigation = yield* Effect.tryPromise(() =>
+          getShellPageNavigation("de")
+        );
 
-  it("loads and caches complete signed navigation for the product shell", async () => {
-    await expect(getShellPageNavigation("de")).resolves.toMatchObject({
-      privacyPolicyHref: "/privacy-policy",
-      termsOfServiceHref: "/terms-of-service",
-    });
-    expect(cacheMock).toHaveBeenCalledWith("page");
-  });
+        expect(navigation).toBeNull();
+        expect(catalogMock).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "loads and caches complete signed navigation for the product shell",
+    () =>
+      Effect.gen(function* () {
+        const navigation = yield* Effect.tryPromise(() =>
+          getShellPageNavigation("de")
+        );
+
+        expect(navigation).toMatchObject({
+          privacyPolicyHref: "/privacy-policy",
+          termsOfServiceHref: "/terms-of-service",
+        });
+        expect(cacheMock).toHaveBeenCalledWith("page");
+      })
+  );
 });
