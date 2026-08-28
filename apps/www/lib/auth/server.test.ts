@@ -19,10 +19,14 @@ import { vi } from "vitest";
 
 const CONVEX_SITE_URL = "https://test.convex.site";
 
-let handler: typeof import("./server")["handler"];
-let getToken: typeof import("./server")["getToken"];
+const loadAuthServer = Effect.fn("auth.server.test.load")(() =>
+  Effect.tryPromise(() => import("./server"))
+);
 
-const runWithRequestHeaders = (headers: Headers) => {
+const runWithRequestHeaders = (
+  headers: Headers,
+  getToken: typeof import("./server")["getToken"]
+) => {
   const requestStore = createRequestStore({
     fallbackParams: null,
     headers,
@@ -72,14 +76,12 @@ const runWithRequestHeaders = (headers: Headers) => {
   );
 };
 
-beforeAll(async () => {
+beforeAll(() => {
   vi.stubEnv("INTERNAL_CONTENT_API_KEY", "test-content-key");
   vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", "https://test.convex.cloud");
   vi.stubEnv("NEXT_PUBLIC_CONVEX_SITE_URL", CONVEX_SITE_URL);
   vi.stubEnv("NEXT_PUBLIC_MCP_URL", "https://test.example.com/mcp");
   vi.stubEnv("SITE_URL", "https://nakafa.com");
-
-  ({ getToken, handler } = await import("./server"));
 });
 
 afterEach(() => {
@@ -93,6 +95,7 @@ afterAll(() => {
 describe("Better Auth server boundary", () => {
   it.effect("forwards auth routes through the installed adapter", () =>
     Effect.gen(function* () {
+      const { handler } = yield* loadAuthServer();
       const fetchSpy = vi
         .spyOn(globalThis, "fetch")
         .mockResolvedValue(new Response(null, { status: 200 }));
@@ -121,6 +124,7 @@ describe("Better Auth server boundary", () => {
 
   it.effect("gets the SSR token through the installed adapter", () =>
     Effect.gen(function* () {
+      const { getToken } = yield* loadAuthServer();
       const cookie = "better-auth.session_token=session-cookie";
       const requestHeaders = new Headers({
         cookie,
@@ -132,7 +136,7 @@ describe("Better Auth server boundary", () => {
         .spyOn(globalThis, "fetch")
         .mockResolvedValue(Response.json({ token: "test-token" }));
 
-      const token = yield* runWithRequestHeaders(requestHeaders);
+      const token = yield* runWithRequestHeaders(requestHeaders, getToken);
       expect(token).toBe("test-token");
       const [, init] = fetchSpy.mock.calls[0] ?? [];
       const headers = new Headers(init?.headers);
