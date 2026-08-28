@@ -16,6 +16,11 @@ import {
 } from "./github-action-policy.ts";
 
 const REPOSITORY_ROOT = fileURLToPath(new URL("..", import.meta.url));
+const BASE_BRANCH_INTERPOLATION = ["$", "{baseBranch}"].join("");
+
+function actionExpression(expression: string) {
+  return ["$", "{{ ", expression, " }}"].join("");
+}
 
 function validActionUses(): GithubActionUse[] {
   return GITHUB_ACTION_REVIEWS.flatMap((review) =>
@@ -112,13 +117,19 @@ describe("GitHub Action policy", () => {
       const trustStart = workflow.indexOf(
         "      - name: Export content environment trust"
       );
+      const setupStart = workflow.indexOf(
+        "      - name: Setup toolchain",
+        trustStart
+      );
 
       expect(provenanceStart).toBeGreaterThan(-1);
       expect(treeStart).toBeGreaterThan(provenanceStart);
       expect(trustStart).toBeGreaterThan(treeStart);
+      expect(setupStart).toBeGreaterThan(trustStart);
 
       const provenanceStep = workflow.slice(provenanceStart, treeStart);
       const treeStep = workflow.slice(treeStart, trustStart);
+      const trustStep = workflow.slice(trustStart, setupStart);
 
       expect(workflow).not.toContain("mergeQueue");
       expect(workflow).not.toContain("github.graphql");
@@ -126,7 +137,17 @@ describe("GitHub Action policy", () => {
       for (const evidence of [
         "if: github.event_name == 'merge_group'",
         "const mergeGroup = context.payload.merge_group",
+        "const baseBranch = mergeGroup.base_ref.replace(",
+        'const groupRef = mergeGroup.head_ref.startsWith("refs/heads/")',
+        `const queuePrefix = \`refs/heads/gh-readonly-queue/${BASE_BRANCH_INTERPOLATION}/pr-\``,
+        ".slice(queuePrefix.length)",
+        "!groupRef.startsWith(queuePrefix)",
+        "!/^[1-9][0-9]*$/.test(pullNumber)",
+        "unexpected.length > 0",
+        "refBaseSha !== mergeGroup.base_sha",
+        "mergeGroup.head_sha !== context.sha",
         "github.rest.pulls.get",
+        "pull_number: Number(pullNumber)",
         'pull.state !== "open"',
         "groupRef !== process.env.GITHUB_REF",
         "pull.base.ref !== baseBranch",
@@ -139,11 +160,19 @@ describe("GitHub Action policy", () => {
         'core.setOutput("pull-head", pull.head.sha)',
       ]) {
         expect(provenanceStep).toContain(evidence);
+        expect(provenanceStep.indexOf(evidence)).toBe(
+          provenanceStep.lastIndexOf(evidence)
+        );
       }
+      expect(provenanceStep.match(/throw new Error/g)).toHaveLength(3);
 
       for (const evidence of [
         "if: github.event_name == 'merge_group'",
+        `BASE_SHA: ${actionExpression("github.event.merge_group.base_sha")}`,
+        `GROUP_SHA: ${actionExpression("github.event.merge_group.head_sha")}`,
+        `PULL_HEAD: ${actionExpression("steps.merge-group-provenance.outputs.pull-head")}`,
         "set -euo pipefail",
+        'git fetch --no-tags origin "$BASE_SHA" "$GROUP_SHA" "$PULL_HEAD"',
         'actual_head="$(git rev-parse HEAD)"',
         'actual_parent="$(git rev-parse "$GROUP_SHA^")"',
         'git rev-list --parents -n 1 "$GROUP_SHA" | wc -w',
@@ -155,6 +184,22 @@ describe("GitHub Action policy", () => {
         'if [ "$actual_tree" != "$expected_tree" ]; then',
       ]) {
         expect(treeStep).toContain(evidence);
+        expect(treeStep.indexOf(evidence)).toBe(treeStep.lastIndexOf(evidence));
+      }
+      expect(treeStep.match(/^\s+exit 1$/gm)).toHaveLength(2);
+
+      for (const evidence of [
+        `DIRECT_TRUST: ${actionExpression("env.DIRECT_TRUSTED_CONTENT_ENVIRONMENT")}`,
+        `MERGE_GROUP_TRUST: ${actionExpression("steps.merge-group-provenance.outputs.result")}`,
+        "trusted=false",
+        'if [ "$DIRECT_TRUST" = "true" ] || [ "$MERGE_GROUP_TRUST" = "true" ]; then',
+        "trusted=true",
+        'echo "trusted=$trusted" >> "$GITHUB_OUTPUT"',
+      ]) {
+        expect(trustStep).toContain(evidence);
+        expect(trustStep.indexOf(evidence)).toBe(
+          trustStep.lastIndexOf(evidence)
+        );
       }
     }).pipe(Effect.provide(NodeServices.layer))
   );
