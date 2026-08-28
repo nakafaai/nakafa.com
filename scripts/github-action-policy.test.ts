@@ -122,9 +122,13 @@ describe("GitHub Action policy", () => {
         "      - name: Setup toolchain",
         trustStart
       );
+      const installStart = workflow.indexOf(
+        "      - name: Install dependencies",
+        setupStart
+      );
       const classifyStart = workflow.indexOf(
         "      - name: Classify production acceptance",
-        setupStart
+        installStart
       );
       const qualityStart = workflow.indexOf("\n  quality:", classifyStart);
       const productionStart = workflow.indexOf("\n  production:", qualityStart);
@@ -138,7 +142,8 @@ describe("GitHub Action policy", () => {
       expect(treeStart).toBeGreaterThan(provenanceStart);
       expect(trustStart).toBeGreaterThan(treeStart);
       expect(setupStart).toBeGreaterThan(trustStart);
-      expect(classifyStart).toBeGreaterThan(setupStart);
+      expect(installStart).toBeGreaterThan(setupStart);
+      expect(classifyStart).toBeGreaterThan(installStart);
       expect(qualityStart).toBeGreaterThan(classifyStart);
       expect(productionStart).toBeGreaterThan(qualityStart);
       expect(requiredStart).toBeGreaterThan(productionStart);
@@ -149,6 +154,8 @@ describe("GitHub Action policy", () => {
       const provenanceStep = workflow.slice(provenanceStart, treeStart);
       const treeStep = workflow.slice(treeStart, trustStart);
       const trustStep = workflow.slice(trustStart, setupStart);
+      const setupStep = workflow.slice(setupStart, installStart);
+      const installStep = workflow.slice(installStart, classifyStart);
       const classifyStep = workflow.slice(classifyStart, qualityStart);
       const productionJob = workflow.slice(productionStart, requiredStart);
 
@@ -157,7 +164,8 @@ describe("GitHub Action policy", () => {
       expect(workflow).not.toContain("continue-on-error");
       for (const evidence of [
         "  merge_group:\n    branches: [main]\n    types: [checks_requested]",
-        "permissions:\n  contents: read\n  pull-requests: read",
+        "  push:\n    branches: [main]",
+        "permissions:\n  contents: read\n  pull-requests: read\n\nconcurrency:",
         `group: Agent-Friendly Docs-${actionExpression("github.event_name == 'pull_request' && github.event.pull_request.number || github.sha")}`,
         `cancel-in-progress: ${actionExpression("github.event_name == 'pull_request'")}`,
       ]) {
@@ -225,7 +233,7 @@ describe("GitHub Action policy", () => {
         'git fetch --no-tags origin "$BASE_SHA" "$GROUP_SHA" "$PULL_HEAD"',
         'actual_head="$(git rev-parse HEAD)"',
         'actual_parent="$(git rev-parse "$GROUP_SHA^")"',
-        'git rev-list --parents -n 1 "$GROUP_SHA" | wc -w',
+        'parent_count="$(git rev-list --parents -n 1 "$GROUP_SHA" | wc -w)"',
         '[ "$actual_head" != "$GROUP_SHA" ]',
         '[ "$actual_parent" != "$BASE_SHA" ]',
         '[ "$parent_count" -ne 2 ]',
@@ -251,6 +259,21 @@ describe("GitHub Action policy", () => {
         expect(trustStep.indexOf(evidence)).toBe(
           trustStep.lastIndexOf(evidence)
         );
+      }
+      expect(trustStep).toContain(
+        [
+          "          trusted=false",
+          '          if [ "$DIRECT_TRUST" = "true" ] || [ "$MERGE_GROUP_TRUST" = "true" ]; then',
+          "            trusted=true",
+          "          fi",
+          '          echo "trusted=$trusted" >> "$GITHUB_OUTPUT"',
+        ].join("\n")
+      );
+
+      for (const guardedStep of [setupStep, installStep]) {
+        expect(guardedStep.match(/^ {8}if:.*$/gm)).toEqual([
+          "        if: steps.trust.outputs.trusted == 'true'",
+        ]);
       }
 
       for (const evidence of [
