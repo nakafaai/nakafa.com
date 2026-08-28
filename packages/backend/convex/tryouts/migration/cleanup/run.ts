@@ -131,6 +131,7 @@ export const cleanupProgram = Effect.fn("tryouts.migration.cleanup")(function* (
     ctx,
     migration,
     receipt,
+    plan.payload.source.catalogRowCount,
     repairEvidence
   );
   if (preparedRepair !== null) {

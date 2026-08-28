@@ -40,14 +40,16 @@ function cleanupBounds(
       return { maximum: count, minimum: count };
     }
     case "catalog":
+      // History storage is authoritative; an old physical duplicate is optional.
       return {
         maximum: plan.source.catalogRowCount,
-        minimum: plan.source.catalogRowCount,
+        minimum: 0,
       };
     case "placement":
+      // History storage is authoritative; an old physical duplicate is optional.
       return {
         maximum: plan.source.placementRowCount,
-        minimum: plan.source.placementRowCount,
+        minimum: 0,
       };
     case "legacy":
       return {

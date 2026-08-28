@@ -16,7 +16,20 @@ type ReadCtx = MutationCtx | QueryCtx;
 /** Loads and authenticates the complete retained catalog for one snapshot. */
 export const loadStoredTryoutCatalogRows = Effect.fn(
   "tryouts.history.loadStoredCatalogRows"
-)(function* (ctx: ReadCtx, snapshotId: string) {
+)(function* (
+  ctx: ReadCtx,
+  snapshotId: string,
+  expectedCount = RETAINED_TRYOUT_CATALOG_ROW_COUNT
+) {
+  if (
+    !Number.isSafeInteger(expectedCount) ||
+    expectedCount <= 0 ||
+    expectedCount > RETAINED_TRYOUT_CATALOG_ROW_COUNT
+  ) {
+    return yield* historyIntegrity(
+      "Retained try-out catalog count exceeds its audited bound."
+    );
+  }
   const stored = yield* historyPromise(
     "Unable to read retained try-out catalog rows.",
     () =>
@@ -25,9 +38,9 @@ export const loadStoredTryoutCatalogRows = Effect.fn(
         .withIndex("by_snapshotId_and_rowKind_and_index", (index) =>
           index.eq("snapshotId", snapshotId).eq("rowKind", "catalog")
         )
-        .take(RETAINED_TRYOUT_CATALOG_ROW_COUNT + 1)
+        .take(expectedCount + 1)
   );
-  if (stored.length !== RETAINED_TRYOUT_CATALOG_ROW_COUNT) {
+  if (stored.length !== expectedCount) {
     return yield* historyIntegrity(
       "Retained try-out catalog does not match its audited count."
     );

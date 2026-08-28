@@ -1,89 +1,138 @@
-import {
-  tryoutCatalogIdentity,
-  tryoutPlacementIdentity,
-} from "@nakafa/aksara-contracts/tryout/identity";
+import type { StoredTryoutRow } from "@nakafa/aksara-contracts/history/decode";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { readTryoutSectionRows } from "@repo/backend/convex/contentRelease/tryout/section";
+import {
+  ReleaseError,
+  releaseFail,
+} from "@repo/backend/convex/contentRelease/error";
+import {
+  loadStoredTryoutCatalogRows,
+  loadStoredTryoutPlacement,
+} from "@repo/backend/convex/tryouts/history/rows";
 import { Effect } from "effect";
 
-interface RepairRun {
-  readonly questionCount: number;
-  readonly sectionIdentity: string;
-}
-
-interface SignedPlacement {
-  readonly rowHash: string;
-  readonly sectionIdentity: string;
-}
-
 /** Authenticates every signed source placement selected by the repair runs. */
-export const loadRepairPlacements = Effect.fn(
-  "tryouts.migration.loadRepairPlacements"
-)(function* (ctx: MutationCtx, snapshotId: string, runs: readonly RepairRun[]) {
-  const placements = new Map<string, SignedPlacement>();
-  for (const run of runs) {
-    const storedSection = yield* Effect.promise(() =>
-      ctx.db
-        .query("tryoutCatalog")
-        .withIndex("by_snapshotId_and_identity", (query) =>
-          query.eq("snapshotId", snapshotId).eq("identity", run.sectionIdentity)
-        )
-        .unique()
-    );
-    if (!storedSection) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        "Try-out history scale repair lost a signed source section."
-      );
-    }
-    const source = yield* readTryoutSectionRows(ctx, snapshotId, storedSection);
-    if (
-      tryoutCatalogIdentity(source.section.row) !== run.sectionIdentity ||
-      source.placements.length !== run.questionCount
-    ) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        "Try-out history scale repair changed signed section ownership."
-      );
-    }
-    for (const placement of source.placements) {
-      const identity = tryoutPlacementIdentity(placement.row);
-      if (placements.has(identity)) {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_INTEGRITY",
-          "Try-out history scale repair found duplicate signed placements."
-        );
-      }
-      placements.set(identity, {
-        rowHash: placement.rowHash,
-        sectionIdentity: run.sectionIdentity,
-      });
-    }
-  }
-  return placements;
-});
-
-/** Binds each provisional item to its exact signed row and section run. */
-export function matchesRepairPlacements(
-  placements: ReadonlyMap<string, SignedPlacement>,
+export const verifyRepairPlacements = Effect.fn(
+  "tryouts.migration.verifyRepairPlacements"
+)(function* (
+  ctx: MutationCtx,
+  snapshotId: string,
+  catalogRowCount: number,
   items: readonly Doc<"irtScaleItems">[],
   runs: readonly Doc<"irtCalibrationRuns">[]
 ) {
-  const sectionByRun = new Map(
-    runs.map((run) => [run._id, run.sectionIdentity])
+  const catalog = yield* loadStoredTryoutCatalogRows(
+    ctx,
+    snapshotId,
+    catalogRowCount
+  ).pipe(Effect.mapError(repairSourceError));
+  const sectionRows = catalog.flatMap(({ record }) =>
+    record.row.kind === "section" ? [record.row] : []
   );
-  return (
-    placements.size === items.length &&
-    new Set(items.map(({ placementIdentity }) => placementIdentity)).size ===
-      items.length &&
-    items.every((item) => {
-      const placement = placements.get(item.placementIdentity);
-      return (
-        placement?.rowHash === item.placementRowHash &&
-        placement.sectionIdentity === sectionByRun.get(item.calibrationRunId)
-      );
+  const sections = new Map(
+    sectionRows.map((row) => [historicalCatalogIdentity(row), row] as const)
+  );
+  const runById = new Map(runs.map((run) => [run._id, run]));
+  if (sections.size !== sectionRows.length || runById.size !== runs.length) {
+    return yield* repairPlacementFailure();
+  }
+  for (const run of runs) {
+    const section = sections.get(run.sectionIdentity);
+    if (!section || section.questionCount !== run.questionCount) {
+      return yield* repairPlacementFailure();
+    }
+  }
+  const placementIdentities = new Set<string>();
+  yield* Effect.forEach(items, (item) =>
+    Effect.gen(function* () {
+      const placement = yield* loadStoredTryoutPlacement(
+        ctx,
+        snapshotId,
+        item.placementRowHash
+      ).pipe(Effect.mapError(repairSourceError));
+      if (!placement) {
+        return yield* repairPlacementFailure();
+      }
+      const placementIdentity = historicalPlacementIdentity(placement);
+      const run = runById.get(item.calibrationRunId);
+      const sectionIdentity = historicalSectionIdentity(placement);
+      if (
+        !run ||
+        placementIdentity !== item.placementIdentity ||
+        run.sectionIdentity !== sectionIdentity ||
+        placementIdentities.has(placementIdentity)
+      ) {
+        return yield* repairPlacementFailure();
+      }
+      placementIdentities.add(placementIdentity);
     })
+  );
+  if (placementIdentities.size !== items.length) {
+    return yield* repairPlacementFailure();
+  }
+});
+
+type HistoricalCatalogRow = Extract<
+  StoredTryoutRow,
+  { readonly rowKind: "catalog" }
+>["record"]["row"];
+type HistoricalPlacement = Extract<
+  StoredTryoutRow,
+  { readonly rowKind: "placement" }
+>["record"]["row"];
+
+/** Reconstructs the ordering identity frozen into the retained catalog. */
+function historicalCatalogIdentity(row: HistoricalCatalogRow) {
+  return [
+    row.locale,
+    row.kind,
+    row.countryKey,
+    "examKey" in row ? row.examKey : "",
+    "trackKey" in row ? row.trackKey : "",
+    "setKey" in row ? row.setKey : "",
+    "sectionKey" in row ? row.sectionKey : "",
+  ].join("\0");
+}
+
+/** Derives the exact retained section identity for one old placement. */
+function historicalSectionIdentity(row: HistoricalPlacement) {
+  return [
+    row.locale,
+    "section",
+    row.countryKey,
+    row.examKey,
+    row.trackKey,
+    row.setKey,
+    row.sectionKey,
+  ].join("\0");
+}
+
+/** Reconstructs the placement identity frozen into the old scale graph. */
+function historicalPlacementIdentity(row: HistoricalPlacement) {
+  return [
+    row.countryKey,
+    row.examKey,
+    row.trackKey,
+    row.setKey,
+    row.sectionKey,
+    row.questionOrder,
+    row.questionContentKey,
+    row.locale,
+  ].join("\0");
+}
+
+/** Maps retained-history failures into the signed cleanup boundary. */
+function repairSourceError() {
+  return new ReleaseError({
+    code: "CONTENT_RELEASE_INTEGRITY",
+    message: "Try-out history scale repair lost its signed source rows.",
+  });
+}
+
+/** Fails one mismatch without exposing immutable historical row bytes. */
+function repairPlacementFailure() {
+  return releaseFail(
+    "CONTENT_RELEASE_INTEGRITY",
+    "Try-out history scale repair changed signed placement ownership."
   );
 }
