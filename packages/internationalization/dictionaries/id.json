@@ -1144,9 +1144,9 @@
       "keywords": "{title}, {category}, analisis, fakta, terkini, riset, informasi, berita"
     },
     "quran": {
-      "title": "Surat {number}. {name} ({transliteration}) - {translation} | Nakafa",
+      "title": "Surat {number}. {name} ({transliteration}){translation, select, __EMPTY__ {} other { - {translation}}} | Nakafa",
       "description": "Baca Surat {name} ({transliteration}) dengan terjemahan dan tafsir. {numberOfVerses} ayat dari Al-Quran.",
-      "keywords": "Surat {name}, Al-Quran, {translation}, {revelation}, tafsir"
+      "keywords": "Surat {name}, Al-Quran{translation, select, __EMPTY__ {} other {, {translation}}}, {revelation}, tafsir"
     }
   }
 }
