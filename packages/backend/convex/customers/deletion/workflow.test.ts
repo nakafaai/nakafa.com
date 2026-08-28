@@ -1,11 +1,10 @@
-import { assert, describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it, vi } from "@effect/vitest";
 import { launchDeletedUserCleanupProgram } from "@repo/backend/convex/customers/deletion/workflow";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
 import { Clock, Data, Effect } from "effect";
-import { vi } from "vitest";
 
 class WorkflowUnavailable extends Data.TaggedError("WorkflowUnavailable")<{
   readonly message: string;
@@ -157,15 +156,19 @@ describe("customers/deletion/workflow", () => {
       const deletedAt = yield* Clock.currentTimeMillis;
       const userId = yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          ctx.db.insert("users", {
-            authId: "failing-auth-user",
-            credits: 0,
-            creditsResetAt: 0,
-            deletedAt,
-            email: "failing@example.com",
-            name: "Failing User",
-            plan: "free",
-          })
+          runConvexProgram(
+            Effect.promise(() =>
+              ctx.db.insert("users", {
+                authId: "failing-auth-user",
+                credits: 0,
+                creditsResetAt: 0,
+                deletedAt,
+                email: "failing@example.com",
+                name: "Failing User",
+                plan: "free",
+              })
+            )
+          )
         )
       );
 
@@ -196,7 +199,9 @@ describe("customers/deletion/workflow", () => {
       });
 
       const user = yield* Effect.promise(() =>
-        t.query((ctx) => ctx.db.get("users", userId))
+        t.query((ctx) =>
+          runConvexProgram(Effect.promise(() => ctx.db.get("users", userId)))
+        )
       );
 
       expect(starters.startAnalytics).toHaveBeenCalledOnce();
