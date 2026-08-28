@@ -6,6 +6,7 @@ import {
   USER_CLEANUP_FAILED_CODE,
   UserCleanupError,
 } from "@repo/backend/convex/auth/cleanup/spec";
+import { reconcileTryoutRuntimeAfterAttempt } from "@repo/backend/convex/contentRelease/tryout/runtime";
 import { deleteTryoutAttemptHistory } from "@repo/backend/convex/tryouts/history/reference";
 import { cleanupTryoutHistoryScale } from "@repo/backend/convex/tryouts/history/scale";
 import { hasAttemptErasureHold } from "@repo/backend/convex/tryouts/migration/erasure";
@@ -106,6 +107,12 @@ const cleanupAttemptRuntime = Effect.fn("auth.cleanup.cleanupAttemptRuntime")(
       Effect.mapError(toUserCleanupError)
     );
     yield* tryUserCleanup(() => ctx.db.delete("tryoutAttempts", attempt._id));
+    if (attempt.tryoutBundleId) {
+      yield* reconcileTryoutRuntimeAfterAttempt(
+        ctx,
+        attempt.tryoutBundleId
+      ).pipe(Effect.mapError(toUserCleanupError));
+    }
     return true;
   }
 );
