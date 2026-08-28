@@ -13,7 +13,7 @@ type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 function runDispatch(t: Pick<RuntimeTest, "action">, source: string) {
   const byteLength = new TextEncoder().encode(source).byteLength;
   return t.action((ctx) =>
-    runConvexProgram(dispatchProgram(ctx, source, byteLength))
+    runConvexProgram(dispatchProgram(ctx, source, byteLength, "current"))
   );
 }
 
@@ -96,7 +96,7 @@ describe("contentRelease/runtime/history/dispatch", () => {
       runDispatch(t, "x".repeat(MAX_PROTECTED_RUNTIME_REQUEST_BYTES + 1))
     ).resolves.toMatchObject({ status: 400 });
     const mismatch = await t.action((ctx) =>
-      runConvexProgram(dispatchProgram(ctx, "{}", 1))
+      runConvexProgram(dispatchProgram(ctx, "{}", 1, "current"))
     );
     expect(mismatch.status).toBe(400);
   });

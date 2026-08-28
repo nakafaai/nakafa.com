@@ -3,16 +3,23 @@ import {
   type StoredProtectedRuntimeRequest,
   StoredProtectedRuntimeRequestSchema,
 } from "@nakafa/aksara-contracts/history/decode";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { internalQuery } from "@repo/backend/convex/_generated/server";
+import type {
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
+import {
+  internalMutation,
+  internalQuery,
+} from "@repo/backend/convex/_generated/server";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { parseStoredJson } from "@repo/backend/convex/contentRelease/parse";
+import { recordPredecessorRead } from "@repo/backend/convex/contentRelease/predecessor/record";
 import { loadRetainedRuntimeItems } from "@repo/backend/convex/contentRelease/runtime/history/items";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { readTryoutAttemptHistory } from "@repo/backend/convex/tryouts/history/reference";
 import { findTryoutBundleByRelease } from "@repo/backend/convex/tryouts/runtime/bundle";
 import { type Infer, v } from "convex/values";
-import { Effect, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 
 const deliveryValidator = v.union(
   v.literal("authenticated"),
@@ -51,8 +58,17 @@ const resultValidator = v.union(
     snapshotReleaseId: v.string(),
   })
 );
+const predecessorResultValidator = v.union(
+  v.object({ kind: v.literal("failure") }),
+  v.object({ kind: v.literal("read"), row: resultValidator })
+);
 /** Historical bytes returned only across the private action boundary. */
 export type RetainedRuntimeBatchRow = Infer<typeof resultValidator>;
+/** Atomic predecessor observation and retained-history read outcome. */
+export type RetainedRuntimePredecessorResult = Infer<
+  typeof predecessorResultValidator
+>;
+type ReadCtx = MutationCtx | QueryCtx;
 /** Creates one stable fail-closed retained-runtime error. */
 function historyIntegrity(message: string) {
   return new ReleaseError({
@@ -62,7 +78,7 @@ function historyIntegrity(message: string) {
 }
 /** Loads the exact attempt before any history discriminator or bytes. */
 const loadAttempt = Effect.fn("contentRelease.loadRetainedRuntimeAttempt")(
-  function* (ctx: QueryCtx, request: StoredProtectedRuntimeRequest) {
+  function* (ctx: ReadCtx, request: StoredProtectedRuntimeRequest) {
     const attemptId = ctx.db.normalizeId("tryoutAttempts", request.attemptId);
     if (!attemptId) {
       return null;
@@ -83,7 +99,7 @@ const loadAttempt = Effect.fn("contentRelease.loadRetainedRuntimeAttempt")(
 );
 /** Loads the exact old bundle selected by the attempt marker. */
 const loadBundle = Effect.fn("contentRelease.loadRetainedRuntimeBundle")(
-  function* (ctx: QueryCtx, request: StoredProtectedRuntimeRequest) {
+  function* (ctx: ReadCtx, request: StoredProtectedRuntimeRequest) {
     const bundle = yield* findTryoutBundleByRelease(
       ctx,
       request.snapshotReleaseId
@@ -108,7 +124,7 @@ const loadBundle = Effect.fn("contentRelease.loadRetainedRuntimeBundle")(
 );
 /** Resolves one complete retained batch in a single read transaction. */
 const readProgram = Effect.fn("contentRelease.readRetainedRuntimeBatch")(
-  function* (ctx: QueryCtx, input: unknown) {
+  function* (ctx: ReadCtx, input: unknown) {
     const request = yield* Schema.decodeUnknownEffect(
       StoredProtectedRuntimeRequestSchema,
       { onExcessProperty: "error" }
@@ -199,4 +215,21 @@ export const read = internalQuery({
   args: argsValidator,
   returns: resultValidator,
   handler: (ctx, args) => runConvexProgram(readProgram(ctx, args)),
+});
+
+/** Records and resolves one predecessor request in the same transaction. */
+export const readPredecessor = internalMutation({
+  args: argsValidator,
+  returns: predecessorResultValidator,
+  handler: (ctx, args) =>
+    runConvexProgram(
+      Effect.gen(function* () {
+        yield* recordPredecessorRead(ctx, "history");
+        const outcome = yield* readProgram(ctx, args).pipe(Effect.result);
+        if (Result.isFailure(outcome)) {
+          return { kind: "failure" } as const;
+        }
+        return { kind: "read", row: outcome.success } as const;
+      })
+    ),
 });

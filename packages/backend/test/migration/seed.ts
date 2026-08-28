@@ -13,10 +13,6 @@ import {
   type CleanupTest,
 } from "@repo/backend/test/migration/state";
 import { seedTarget } from "@repo/backend/test/migration/target";
-import {
-  COMPETING_PREDECESSOR_OBSERVATION_ID,
-  seedSealedPredecessorObservation,
-} from "@repo/backend/test/predecessor";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
 
 /** Seeds one pending audit that holds its account against erasure. */
@@ -52,8 +48,6 @@ export function seedCleanupGuard(
   guard:
     | "attempt"
     | "marker"
-    | "observer"
-    | "observerId"
     | "receipt"
     | "reference"
     | "scaleAttempt"
@@ -61,7 +55,6 @@ export function seedCleanupGuard(
 ) {
   return t.mutation(async (ctx) => {
     const target = await seedTarget(ctx);
-    await seedSealedPredecessorObservation(ctx);
     const referencedScale =
       guard === "scaleAttempt" || guard === "scaleScore"
         ? await seedSourceScale(ctx)
@@ -78,22 +71,6 @@ export function seedCleanupGuard(
       target,
       referencedScale === null ? [] : [referencedScale.scaleVersionId]
     );
-    if (guard === "observer") {
-      const rows = await ctx.db.query("contentPredecessorReads").collect();
-      for (const row of rows) {
-        await ctx.db.patch("contentPredecessorReads", row._id, {
-          phase: "armed",
-          sealedAt: undefined,
-        });
-      }
-    }
-    if (guard === "observerId") {
-      const root = await ctx.db.query("tryoutHistoryMigrations").unique();
-      assert.ok(root, "Expected one cleanup migration root.");
-      await ctx.db.patch("tryoutHistoryMigrations", root._id, {
-        predecessorObservationId: COMPETING_PREDECESSOR_OBSERVATION_ID,
-      });
-    }
     if (guard === "marker") {
       await ctx.db.insert("tryoutAttemptHistory", {
         snapshotReleaseId: "source-release",
@@ -142,7 +119,6 @@ export function seedCleanupGuard(
 export function seedCleanupSuccess(t: CleanupTest, sourceScaleCount = 1) {
   return t.mutation(async (ctx) => {
     const target = await seedTarget(ctx);
-    await seedSealedPredecessorObservation(ctx);
     const sourceScale = await seedSourceScale(ctx);
     const targetScale = await seedTargetScale(
       ctx,

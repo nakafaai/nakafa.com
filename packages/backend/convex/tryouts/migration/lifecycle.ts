@@ -1,7 +1,6 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { requireSealedPredecessorObservation } from "@repo/backend/convex/contentRelease/predecessor/control";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { verifyTryoutHistoryAttemptInventory } from "@repo/backend/convex/tryouts/migration/attempt/inventory";
 import { decodeMigrationPlan } from "@repo/backend/convex/tryouts/migration/plan";
@@ -27,10 +26,6 @@ const beginProgram = Effect.fn("tryouts.migration.begin")(function* (
     return migrationStatus(migration);
   }
   if (migration.phase === "running") {
-    yield* requireSealedPredecessorObservation(
-      ctx,
-      migration.predecessorObservationId
-    );
     return migrationStatus(migration);
   }
   if (migration.phase !== "ready") {
@@ -39,8 +34,6 @@ const beginProgram = Effect.fn("tryouts.migration.begin")(function* (
       "Try-out history migration has no authorized plan."
     );
   }
-  const predecessorObservationId =
-    yield* requireSealedPredecessorObservation(ctx);
   const plan = yield* decodeMigrationPlan(migration.authorization.planJson);
   if (
     plan.planHash !== migration.authorization.planHash ||
@@ -83,7 +76,6 @@ const beginProgram = Effect.fn("tryouts.migration.begin")(function* (
       migrationId,
       phase: "running",
       placementMapCount: migration.placementMapCount,
-      predecessorObservationId,
       progress: {
         migratedAttempts: 0,
         migratedScaleItems: 0,
@@ -130,7 +122,6 @@ const finalizeProgram = Effect.fn("tryouts.migration.finalize")(function* (
       migrationId,
       phase: "completed",
       placementMapCount: migration.placementMapCount,
-      predecessorObservationId: migration.predecessorObservationId,
       sourceSnapshotId: migration.sourceSnapshotId,
       target: migration.target,
       updatedAt: now,

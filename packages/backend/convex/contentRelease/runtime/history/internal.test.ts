@@ -3,9 +3,13 @@ import {
   type StoredProtectedRuntimeRequest,
   StoredProtectedRuntimeRequestSchema,
 } from "@nakafa/aksara-contracts/history/decode";
-import type { RetainedRuntimeBatchRow } from "@repo/backend/convex/contentRelease/runtime/history/internal";
+import type {
+  RetainedRuntimeBatchRow,
+  RetainedRuntimePredecessorResult,
+} from "@repo/backend/convex/contentRelease/runtime/history/internal";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { seedPredecessorObservation } from "@repo/backend/test/predecessor";
 import {
   insertRetainedRuntime,
   RETAINED_RUNTIME_QUESTION,
@@ -19,8 +23,33 @@ const readRetained = makeFunctionReference<
   StoredProtectedRuntimeRequest,
   RetainedRuntimeBatchRow
 >("contentRelease/runtime/history/internal:read");
+const readPredecessor = makeFunctionReference<
+  "mutation",
+  StoredProtectedRuntimeRequest,
+  RetainedRuntimePredecessorResult
+>("contentRelease/runtime/history/internal:readPredecessor");
 
 describe("contentRelease/runtime/history/internal", () => {
+  it("records and reads predecessor history in one mutation", async () => {
+    const t = convexTest(schema, convexModules);
+    const fixture = await t.mutation(insertRetainedRuntime);
+    await seedPredecessorObservation(t);
+
+    const result = await t.mutation(readPredecessor, fixture.request);
+    const observation = await t.query(async (ctx) =>
+      ctx.db
+        .query("contentPredecessorReads")
+        .withIndex("by_route", (query) => query.eq("route", "history"))
+        .unique()
+    );
+
+    expect(result).toMatchObject({
+      kind: "read",
+      row: { attemptId: fixture.request.attemptId },
+    });
+    expect(observation?.invocationCount).toBe(1);
+  });
+
   it("returns exact old bytes for one marked attempt-owned placement", async () => {
     const t = convexTest(schema, convexModules);
     const fixture = await t.mutation(insertRetainedRuntime);

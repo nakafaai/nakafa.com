@@ -15,10 +15,6 @@ import {
   requireCleanupPreconditions,
 } from "@repo/backend/convex/tryouts/migration/cleanup/guard";
 import { cleanupLedger } from "@repo/backend/convex/tryouts/migration/cleanup/ledger";
-import {
-  cleanupObserver,
-  requireCleanupObserver,
-} from "@repo/backend/convex/tryouts/migration/cleanup/observer";
 import { requireCleanupEmpty } from "@repo/backend/convex/tryouts/migration/cleanup/proof";
 import { cleanupScale } from "@repo/backend/convex/tryouts/migration/cleanup/scale";
 import {
@@ -128,11 +124,6 @@ export const cleanupProgram = Effect.fn("tryouts.migration.cleanup")(function* (
     }
     state = migration.cleanup;
   }
-  yield* requireCleanupObserver(
-    ctx,
-    migration.predecessorObservationId,
-    state.counts.observer > 0
-  );
   const countedRows = yield* countCleanupRows(state, plan.payload);
   if (countedRows !== receipt.deletedRows) {
     return yield* releaseFail(
@@ -146,14 +137,7 @@ export const cleanupProgram = Effect.fn("tryouts.migration.cleanup")(function* (
     scale === null && source === null
       ? yield* cleanupLedger(ctx, migrationId)
       : null;
-  const observer =
-    scale === null &&
-    source === null &&
-    ledger === null &&
-    state.counts.observer === 0
-      ? yield* cleanupObserver(ctx, migration.predecessorObservationId)
-      : null;
-  const page = scale ?? source ?? ledger ?? observer;
+  const page = scale ?? source ?? ledger;
   if (page) {
     const nextState = yield* recordCleanupPage(state, plan.payload, page);
     const deletedRows = receipt.deletedRows + page.deleted;
@@ -181,7 +165,6 @@ export const cleanupProgram = Effect.fn("tryouts.migration.cleanup")(function* (
           migrationId: migration.migrationId,
           phase: "cleaning",
           placementMapCount: migration.placementMapCount,
-          predecessorObservationId: migration.predecessorObservationId,
           sourceSnapshotId: migration.sourceSnapshotId,
           target: migration.target,
           updatedAt,

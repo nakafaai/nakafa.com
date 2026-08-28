@@ -6,23 +6,10 @@ import {
 import { type ActionCtx, env } from "@repo/backend/convex/_generated/server";
 import { readRuntimeRequest } from "@repo/backend/convex/contentRelease/http/runtime/request";
 import { privateRuntimeResponse } from "@repo/backend/convex/contentRelease/http/runtime/response";
-import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
-import type {
-  PredecessorRecordArgs,
-  PredecessorRecordResult,
-} from "@repo/backend/convex/contentRelease/predecessor/spec";
 import { dispatchProgram } from "@repo/backend/convex/contentRelease/runtime/history/dispatch";
-import { failureResult } from "@repo/backend/convex/contentRelease/runtime/result";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { makeFunctionReference } from "convex/server";
 import type { HonoWithConvex } from "convex-helpers/server/hono";
-import { Effect, Result } from "effect";
-
-const recordHistoryReference = makeFunctionReference<
-  "mutation",
-  PredecessorRecordArgs,
-  PredecessorRecordResult
->("contentRelease/predecessor/internal:recordHistory");
+import { Effect } from "effect";
 
 /** Authenticates and forwards one bounded attempt-owned history request. */
 const retainedRuntimeRoute = Effect.fn("contentRelease.retainedRuntimeRoute")(
@@ -39,18 +26,11 @@ const retainedRuntimeRoute = Effect.fn("contentRelease.retainedRuntimeRoute")(
     if (input.kind === "rejected") {
       return input.result;
     }
-    if (contract === "predecessor") {
-      const observed = yield* callInternal(() =>
-        ctx.runMutation(recordHistoryReference, {})
-      ).pipe(Effect.result);
-      if (Result.isFailure(observed)) {
-        return failureResult("CONTENT_RUNTIME_INTERNAL", 500);
-      }
-    }
     return yield* dispatchProgram(
       ctx,
       input.body.source,
-      input.body.byteLength
+      input.body.byteLength,
+      contract
     );
   }
 );

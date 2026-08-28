@@ -341,7 +341,6 @@ describe("contentRelease/snapshot/retention", () => {
             ...base,
             authorization,
             phase,
-            predecessorObservationId: "retention-observation",
             progress,
           });
         } else if (phase === "completed") {
@@ -350,7 +349,6 @@ describe("contentRelease/snapshot/retention", () => {
             authorization,
             completion: { ...progress, cleanupLimit: 0, completedAt: 3 },
             phase,
-            predecessorObservationId: "retention-observation",
           });
         } else {
           await ctx.db.insert("tryoutHistoryMigrations", {
@@ -359,7 +357,6 @@ describe("contentRelease/snapshot/retention", () => {
             cleanup: initialCleanupState(4),
             completion: { ...progress, cleanupLimit: 0, completedAt: 3 },
             phase,
-            predecessorObservationId: "retention-observation",
           });
         }
       }

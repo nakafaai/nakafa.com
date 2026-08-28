@@ -3,7 +3,10 @@ import type {
   StoredProtectedRuntimeSelector,
 } from "@nakafa/aksara-contracts/history/decode";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
-import type { QueryCtx } from "@repo/backend/convex/_generated/server";
+import type {
+  MutationCtx,
+  QueryCtx,
+} from "@repo/backend/convex/_generated/server";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import {
   type VerifiedStoredTryoutPlacement,
@@ -13,6 +16,7 @@ import { loadStoredTryoutPlacement } from "@repo/backend/convex/tryouts/history/
 import { Effect } from "effect";
 
 type AttemptPlacement = Doc<"tryoutAttemptPlacements">;
+type ReadCtx = MutationCtx | QueryCtx;
 /** Exact historical placement and selector resolved for one old body. */
 interface RetainedSelection {
   readonly placement: VerifiedStoredTryoutPlacement;
@@ -30,7 +34,7 @@ function itemIntegrity(message: string) {
 /** Loads all frozen placements once, bounded by the attempt question count. */
 const loadAttemptPlacements = Effect.fn(
   "contentRelease.loadRetainedAttemptPlacements"
-)(function* (ctx: QueryCtx, attempt: Doc<"tryoutAttempts">) {
+)(function* (ctx: ReadCtx, attempt: Doc<"tryoutAttempts">) {
   const placements = yield* Effect.promise(() =>
     ctx.db
       .query("tryoutAttemptPlacements")
@@ -70,7 +74,7 @@ function matchesSelector(
 /** Authenticates one selector against one attempt-owned historical row. */
 const resolveSelection = Effect.fn("contentRelease.resolveRetainedSelection")(
   function* (
-    ctx: QueryCtx,
+    ctx: ReadCtx,
     request: StoredProtectedRuntimeRequest,
     selector: StoredProtectedRuntimeSelector,
     placements: readonly AttemptPlacement[]
@@ -123,7 +127,7 @@ const resolveSelection = Effect.fn("contentRelease.resolveRetainedSelection")(
 
 /** Loads one exact old artifact only after placement membership is proven. */
 const resolveItem = Effect.fn("contentRelease.resolveRetainedRuntimeItem")(
-  function* (ctx: QueryCtx, selection: RetainedSelection) {
+  function* (ctx: ReadCtx, selection: RetainedSelection) {
     const artifact = yield* Effect.promise(() =>
       ctx.db
         .query("contentArtifacts")
@@ -151,7 +155,7 @@ const resolveItem = Effect.fn("contentRelease.resolveRetainedRuntimeItem")(
 export const loadRetainedRuntimeItems = Effect.fn(
   "contentRelease.loadRetainedRuntimeItems"
 )(function* (
-  ctx: QueryCtx,
+  ctx: ReadCtx,
   request: StoredProtectedRuntimeRequest,
   attempt: Doc<"tryoutAttempts">
 ) {

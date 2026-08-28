@@ -48,10 +48,6 @@ const completionValidator = v.object({
   migratedScaleRuns: v.number(),
   migratedScaleVersions: v.number(),
 });
-const observationFields = {
-  predecessorObservationId: v.string(),
-};
-
 const migrationValidator = v.union(
   v.object({
     ...migrationFields,
@@ -78,7 +74,6 @@ const migrationValidator = v.union(
   }),
   v.object({
     ...migrationFields,
-    ...observationFields,
     authorization: authorizationValidator,
     phase: v.literal("running"),
     progress: progressValidator,
@@ -86,7 +81,6 @@ const migrationValidator = v.union(
   }),
   v.object({
     ...migrationFields,
-    ...observationFields,
     authorization: authorizationValidator,
     completion: completionValidator,
     phase: v.literal("completed"),
@@ -94,7 +88,6 @@ const migrationValidator = v.union(
   }),
   v.object({
     ...migrationFields,
-    ...observationFields,
     authorization: authorizationValidator,
     cleanup: cleanupStateValidator,
     completion: completionValidator,

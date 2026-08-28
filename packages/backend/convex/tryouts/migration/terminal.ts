@@ -7,7 +7,6 @@ import type {
 } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { requireSealedPredecessorObservation } from "@repo/backend/convex/contentRelease/predecessor/control";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { decodeMigrationPlan } from "@repo/backend/convex/tryouts/migration/plan";
@@ -83,10 +82,6 @@ const verifyScaleClones = Effect.fn("tryouts.migration.verifyScaleClones")(
 export const verifyTerminalStorage = Effect.fn(
   "tryouts.migration.verifyTerminalStorage"
 )(function* (ctx: ReadCtx, migration: TerminalMigration) {
-  yield* requireSealedPredecessorObservation(
-    ctx,
-    migration.predecessorObservationId
-  );
   const plan = yield* decodeMigrationPlan(migration.authorization.planJson);
   const planHash = yield* hashTryoutHistoryMigrationPlan(plan.payload).pipe(
     Effect.mapError(contractFailure)
