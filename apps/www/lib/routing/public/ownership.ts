@@ -100,7 +100,7 @@ function isSchoolPath(segments: readonly string[]) {
     return true;
   }
 
-  if (["assessments", "materials", "people"].includes(child)) {
+  if (["materials", "people"].includes(child)) {
     return segments.length === 4;
   }
 
