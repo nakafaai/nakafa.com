@@ -156,6 +156,10 @@ describe("Nakafa CLI execution", () => {
         "https://api.nakafa.com/v1/search?query=linear+equations&locale=de&limit=5",
     },
     {
+      argv: ["--", "search", "linear", "equations"],
+      expectedUrl: "https://api.nakafa.com/v1/search?query=linear+equations",
+    },
+    {
       argv: ["get", "https://nakafa.com/en/content?id=1"],
       expectedUrl:
         "https://api.nakafa.com/v1/content?ref=https%3A%2F%2Fnakafa.com%2Fen%2Fcontent%3Fid%3D1",

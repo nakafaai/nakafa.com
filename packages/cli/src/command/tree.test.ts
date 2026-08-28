@@ -4,7 +4,7 @@ import { Effect, Ref, Result } from "effect";
 import { TestConsole } from "effect/testing";
 import { CliError, Command } from "effect/unstable/cli";
 import type { CliRequest } from "#cli/command/spec";
-import { makeCliCommand, normalizePresenceFlags } from "#cli/command/tree";
+import { makeCliCommand, normalizeArgv } from "#cli/command/tree";
 import { InvocationError } from "#cli/error";
 
 function readRequests(argv: readonly string[]) {
@@ -13,7 +13,7 @@ function readRequests(argv: readonly string[]) {
     const command = makeCliCommand((request) =>
       Ref.update(requests, (current) => [...current, request])
     );
-    const normalizedArgv = yield* normalizePresenceFlags(argv);
+    const normalizedArgv = yield* normalizeArgv(argv);
     yield* Command.runWith(command, { version: "0.1.0" })(normalizedArgv);
     return yield* Ref.get(requests);
   }).pipe(Effect.provide(NodeServices.layer));
@@ -29,9 +29,43 @@ function readFailure(argv: readonly string[]) {
 describe("Nakafa CLI command tree", () => {
   it.effect("preserves operands after the option separator", () =>
     Effect.gen(function* () {
+      expect(yield* normalizeArgv(["search", "--", "--pretty"])).toEqual([
+        "search",
+        "--",
+        "--pretty",
+      ]);
+      expect(yield* normalizeArgv(["--", "search", "--pretty"])).toEqual([
+        "search",
+        "--",
+        "--pretty",
+      ]);
+      expect(yield* readRequests(["search", "--", "--pretty"])).toMatchObject([
+        {
+          command: { kind: "search", query: "--pretty" },
+          pretty: false,
+        },
+      ]);
+    })
+  );
+
+  it.effect("resolves commands after the option separator", () =>
+    Effect.gen(function* () {
       expect(
-        yield* normalizePresenceFlags(["search", "--", "--pretty"])
-      ).toEqual(["search", "--", "--pretty"]);
+        yield* readRequests(["--", "search", "linear", "algebra"])
+      ).toMatchObject([
+        {
+          command: { kind: "search", query: "linear algebra" },
+          pretty: false,
+        },
+      ]);
+      expect(yield* readRequests(["--pretty", "--", "taxonomy"])).toMatchObject(
+        [
+          {
+            command: { kind: "taxonomy" },
+            pretty: true,
+          },
+        ]
+      );
     })
   );
 

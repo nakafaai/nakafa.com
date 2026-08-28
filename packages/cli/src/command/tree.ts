@@ -16,6 +16,14 @@ import { InvocationError } from "#cli/error";
 
 type ExecuteRequest<E, R> = (request: CliRequest) => Effect.Effect<void, E, R>;
 
+const COMMAND_NAME = {
+  get: "get",
+  mcp: "mcp",
+  quran: "quran",
+  search: "search",
+  taxonomy: "taxonomy",
+} as const;
+type CommandName = (typeof COMMAND_NAME)[keyof typeof COMMAND_NAME];
 const PRETTY_FLAG = "pretty";
 const PRETTY_ALIAS = "p";
 const TAFSIR_FLAG = "tafsir";
@@ -24,6 +32,13 @@ const PRESENCE_FLAGS = [
   `-${PRETTY_ALIAS}`,
   `--${TAFSIR_FLAG}`,
 ] as const;
+
+function isCommandName(value: string | undefined): value is CommandName {
+  return (
+    value !== undefined &&
+    Object.values(COMMAND_NAME).some((name) => name === value)
+  );
+}
 
 const LocaleInputSchema = Schema.String.pipe(Schema.decodeTo(LocaleSchema));
 const SectionInputSchema = Schema.String.pipe(
@@ -43,10 +58,10 @@ const optionalLocale = () =>
     Flag.withDescription("Restrict results to one content locale")
   );
 
-/** Preserves the public presence-only contract for owned boolean switches. */
-export const normalizePresenceFlags = Effect.fn(
-  "NakafaCli.normalizePresenceFlags"
-)(function* (argv: readonly string[]) {
+/** Preserves Nakafa's public argv contract at the native parser boundary. */
+export const normalizeArgv = Effect.fn("NakafaCli.normalizeArgv")(function* (
+  argv: readonly string[]
+) {
   const normalized: string[] = [];
   let parseFlags = true;
   for (const argument of argv) {
@@ -73,7 +88,22 @@ export const normalizePresenceFlags = Effect.fn(
     }
     normalized.push(`${presenceFlag}=true`);
   }
-  return normalized;
+  const separatorIndex = normalized.indexOf("--");
+  if (separatorIndex === -1) {
+    return normalized;
+  }
+  const leading = normalized.slice(0, separatorIndex);
+  const hasLeadingCommand = leading.some(isCommandName);
+  const trailingCommand = normalized.at(separatorIndex + 1);
+  if (hasLeadingCommand || !isCommandName(trailingCommand)) {
+    return normalized;
+  }
+  return [
+    ...leading,
+    trailingCommand,
+    "--",
+    ...normalized.slice(separatorIndex + 2),
+  ];
 });
 
 /** Builds the complete typed command tree for one CLI execution boundary. */
@@ -114,7 +144,7 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
     });
 
   const search = Command.make(
-    "search",
+    COMMAND_NAME.search,
     {
       limit: Flag.integer("limit").pipe(
         Flag.withSchema(SearchLimitSchema),
@@ -149,7 +179,7 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
   ).pipe(Command.withDescription("Search Nakafa content"));
 
   const get = Command.make(
-    "get",
+    COMMAND_NAME.get,
     {
       ref: Argument.string("content-ref").pipe(
         Argument.withDescription("Canonical URL or Nakafa content reference")
@@ -159,7 +189,7 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
   ).pipe(Command.withDescription("Fetch one content document"));
 
   const taxonomy = Command.make(
-    "taxonomy",
+    COMMAND_NAME.taxonomy,
     { locale: optionalLocale() },
     ({ locale }) =>
       dispatch({
@@ -169,7 +199,7 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
   ).pipe(Command.withDescription("Read the published content taxonomy"));
 
   const quran = Command.make(
-    "quran",
+    COMMAND_NAME.quran,
     {
       fromVerse: Flag.integer("from-verse").pipe(
         Flag.withSchema(PositiveIntegerSchema),
@@ -204,9 +234,9 @@ export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {
       })
   ).pipe(Command.withDescription("Read a Quran passage"));
 
-  const mcp = Command.make("mcp", {}, () => dispatch({ kind: "mcp" })).pipe(
-    Command.withDescription("Print the public MCP connection metadata")
-  );
+  const mcp = Command.make(COMMAND_NAME.mcp, {}, () =>
+    dispatch({ kind: "mcp" })
+  ).pipe(Command.withDescription("Print the public MCP connection metadata"));
 
   return root.pipe(
     Command.withSubcommands([search, get, taxonomy, quran, mcp])
