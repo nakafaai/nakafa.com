@@ -1,28 +1,35 @@
+import { describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
+import { Effect } from "effect";
 
 describe("emails/retention", () => {
-  it("schedules both component-owned retention sweeps", async () => {
-    const t = convexTest(schema, convexModules);
+  it.effect("schedules both component-owned retention sweeps", () =>
+    Effect.gen(function* () {
+      const test = convexTest(schema, convexModules);
 
-    await t.mutation(internal.emails.retention.cleanupRetainedEmailData, {});
+      yield* Effect.promise(() =>
+        test.mutation(internal.emails.retention.cleanupRetainedEmailData, {})
+      );
 
-    const scheduledJobs = await t.query((ctx) =>
-      ctx.db.system.query("_scheduled_functions").collect()
-    );
+      const scheduledJobs = yield* Effect.promise(() =>
+        test.query((ctx) =>
+          ctx.db.system.query("_scheduled_functions").collect()
+        )
+      );
 
-    expect(scheduledJobs).toEqual([
-      expect.objectContaining({
-        args: [{}],
-        name: expect.stringContaining("cleanupOldEmails"),
-      }),
-      expect.objectContaining({
-        args: [{}],
-        name: expect.stringContaining("cleanupAbandonedEmails"),
-      }),
-    ]);
-  });
+      expect(scheduledJobs).toEqual([
+        expect.objectContaining({
+          args: [{}],
+          name: expect.stringContaining("cleanupOldEmails"),
+        }),
+        expect.objectContaining({
+          args: [{}],
+          name: expect.stringContaining("cleanupAbandonedEmails"),
+        }),
+      ]);
+    })
+  );
 });

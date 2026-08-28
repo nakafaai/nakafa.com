@@ -1,6 +1,22 @@
 import { components } from "@repo/backend/convex/_generated/api";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/functions";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
+import { Effect } from "effect";
+
+const scheduleRetainedEmailCleanup = Effect.fn(
+  "emails.retention.scheduleCleanup"
+)(function* (ctx: MutationCtx) {
+  yield* Effect.promise(() =>
+    ctx.scheduler.runAfter(0, components.resend.lib.cleanupOldEmails, {})
+  );
+  yield* Effect.promise(() =>
+    ctx.scheduler.runAfter(0, components.resend.lib.cleanupAbandonedEmails, {})
+  );
+
+  return null;
+});
 
 /**
  * Applies the Resend component's bounded retention policy.
@@ -12,14 +28,5 @@ import { v } from "convex/values";
 export const cleanupRetainedEmailData = internalMutation({
   args: {},
   returns: v.null(),
-  handler: async (ctx) => {
-    await ctx.scheduler.runAfter(0, components.resend.lib.cleanupOldEmails, {});
-    await ctx.scheduler.runAfter(
-      0,
-      components.resend.lib.cleanupAbandonedEmails,
-      {}
-    );
-
-    return null;
-  },
+  handler: (ctx) => runConvexProgram(scheduleRetainedEmailCleanup(ctx)),
 });
