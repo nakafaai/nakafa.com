@@ -1,11 +1,13 @@
 // @vitest-environment node
 
-import { Effect, Option } from "effect";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { Data, Effect, Option } from "effect";
+import { vi } from "vitest";
 import {
   PreviewConfigError,
   readPreviewConfig,
 } from "@/lib/content/preview/config";
+import { PreviewEventError } from "@/lib/content/preview/errors";
 import { openPreviewEvents } from "@/lib/content/preview/events";
 import { previewConfig, previewRoute } from "@/test/content-preview";
 
@@ -21,6 +23,10 @@ const route = {
   publicPath: previewRoute.publicPath,
 };
 
+class UnexpectedPreviewStreamError extends Data.TaggedError(
+  "UnexpectedPreviewStreamError"
+)<{ readonly cause: unknown }> {}
+
 /** Builds one response whose final URL matches the Fetch contract. */
 function response(
   body: BodyInit | null,
@@ -32,22 +38,21 @@ function response(
 }
 
 /** Opens and consumes one finite test event stream. */
-async function readEvents() {
-  const stream = await Effect.runPromise(
-    openPreviewEvents(new AbortController().signal)
+function readEvents() {
+  return openPreviewEvents(new AbortController().signal).pipe(
+    Effect.flatMap((stream) =>
+      Effect.promise(() => new Response(stream).text())
+    )
   );
-  return await new Response(stream).text();
 }
 
 /** Returns the typed failure produced before a stream is established. */
 function openFailure() {
-  return Effect.runPromise(
-    openPreviewEvents(new AbortController().signal).pipe(Effect.flip)
-  );
+  return openPreviewEvents(new AbortController().signal).pipe(Effect.flip);
 }
 
 /** Consumes one stream that is expected to fail after response validation. */
-async function streamFailure(source: string) {
+function streamFailure(source: string) {
   vi.stubGlobal(
     "fetch",
     vi.fn(() =>
@@ -59,10 +64,21 @@ async function streamFailure(source: string) {
       )
     )
   );
-  const stream = await Effect.runPromise(
-    openPreviewEvents(new AbortController().signal)
+  return openPreviewEvents(new AbortController().signal).pipe(
+    Effect.flatMap((stream) =>
+      Effect.tryPromise({
+        catch: (cause) =>
+          cause instanceof PreviewEventError
+            ? cause
+            : new UnexpectedPreviewStreamError({ cause }),
+        try: () => new Response(stream).text(),
+      })
+    ),
+    Effect.catchTag("UnexpectedPreviewStreamError", ({ cause }) =>
+      Effect.die(cause)
+    ),
+    Effect.flip
   );
-  return new Response(stream).text();
 }
 
 beforeEach(() => {
@@ -75,40 +91,50 @@ afterEach(() => {
 });
 
 describe("local preview events", () => {
-  it("fails explicitly when no local provider is configured", async () => {
-    configMock.mockReturnValueOnce(Effect.succeed(Option.none()));
+  it.effect("fails explicitly when no local provider is configured", () =>
+    Effect.gen(function* () {
+      configMock.mockReturnValueOnce(Effect.succeed(Option.none()));
 
-    await expect(openFailure()).resolves.toMatchObject({
-      _tag: "PreviewUnavailableError",
-    });
-  });
+      expect(yield* openFailure()).toMatchObject({
+        _tag: "PreviewUnavailableError",
+      });
+    })
+  );
 
-  it("maps provider connection failures without exposing their cause", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(() => Promise.reject(new TypeError("private failure")))
-    );
+  it.effect(
+    "maps provider connection failures without exposing their cause",
+    () =>
+      Effect.gen(function* () {
+        vi.stubGlobal(
+          "fetch",
+          vi.fn(() => Promise.reject(new TypeError("private failure")))
+        );
 
-    await expect(openFailure()).resolves.toMatchObject({
-      _tag: "PreviewRequestError",
-      stage: "connect",
-    });
-  });
+        expect(yield* openFailure()).toMatchObject({
+          _tag: "PreviewRequestError",
+          stage: "connect",
+        });
+      })
+  );
 
-  it("does not send its bearer token after configuration validation fails", async () => {
-    const fetcher = vi.fn();
-    configMock.mockReturnValueOnce(
-      Effect.fail(new PreviewConfigError({ name: "AKSARA_PREVIEW" }))
-    );
-    vi.stubGlobal("fetch", fetcher);
+  it.effect(
+    "does not send its bearer token after configuration validation fails",
+    () =>
+      Effect.gen(function* () {
+        const fetcher = vi.fn();
+        configMock.mockReturnValueOnce(
+          Effect.fail(new PreviewConfigError({ name: "AKSARA_PREVIEW" }))
+        );
+        vi.stubGlobal("fetch", fetcher);
 
-    await expect(openFailure()).resolves.toMatchObject({
-      _tag: "PreviewConfigError",
-    });
-    expect(fetcher).not.toHaveBeenCalled();
-  });
+        expect(yield* openFailure()).toMatchObject({
+          _tag: "PreviewConfigError",
+        });
+        expect(fetcher).not.toHaveBeenCalled();
+      })
+  );
 
-  it.each([
+  it.effect.each([
     ["status", response(null, { status: 401 })],
     [
       "url",
@@ -133,78 +159,86 @@ describe("local preview events", () => {
         status: 200,
       }),
     ],
-  ])("rejects an invalid %s response", async (_label, value) => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(() => Promise.resolve(value))
-    );
+  ])("rejects an invalid %s response", ([_label, value]) =>
+    Effect.gen(function* () {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(() => Promise.resolve(value))
+      );
 
-    await expect(openFailure()).resolves.toMatchObject({
-      _tag: "PreviewEventError",
-      stage: "response",
-    });
-  });
+      expect(yield* openFailure()).toMatchObject({
+        _tag: "PreviewEventError",
+        stage: "response",
+      });
+    })
+  );
 
-  it("forwards only complete schema-validated updates and heartbeats", async () => {
-    const pending = JSON.stringify({
-      format: "aksara-local-preview",
-      revision: 1,
-      route,
-      status: "pending",
-    });
-    const ready = JSON.stringify({
-      format: "aksara-local-preview",
-      revision: 2,
-      route,
-      status: "ready",
-    });
-    const source = new ReadableStream<Uint8Array>({
-      /** Splits two valid events across provider chunks. */
-      start(controller) {
-        controller.enqueue(
-          new TextEncoder().encode(
-            `event: update\ndata: ${pending.slice(0, 48)}`
+  it.effect(
+    "forwards only complete schema-validated updates and heartbeats",
+    () =>
+      Effect.gen(function* () {
+        const pending = JSON.stringify({
+          format: "aksara-local-preview",
+          revision: 1,
+          route,
+          status: "pending",
+        });
+        const ready = JSON.stringify({
+          format: "aksara-local-preview",
+          revision: 2,
+          route,
+          status: "ready",
+        });
+        const source = new ReadableStream<Uint8Array>({
+          /** Splits two valid events across provider chunks. */
+          start(controller) {
+            controller.enqueue(
+              new TextEncoder().encode(
+                `event: update\ndata: ${pending.slice(0, 48)}`
+              )
+            );
+            controller.enqueue(
+              new TextEncoder().encode(
+                `${pending.slice(48)}\n\n: provider-owned-heartbeat\n\nevent: update\ndata: ${ready}\n\n`
+              )
+            );
+            controller.close();
+          },
+        });
+        vi.stubGlobal(
+          "fetch",
+          vi.fn(() =>
+            Promise.resolve(
+              response(source, {
+                headers: {
+                  "content-type": "text/event-stream; charset=utf-8",
+                },
+                status: 200,
+              })
+            )
           )
         );
-        controller.enqueue(
-          new TextEncoder().encode(
-            `${pending.slice(48)}\n\n: provider-owned-heartbeat\n\nevent: update\ndata: ${ready}\n\n`
-          )
+
+        expect(yield* readEvents()).toBe(
+          `event: update\ndata: ${pending}\n\n: keep-alive\n\nevent: update\ndata: ${ready}\n\n`
         );
-        controller.close();
-      },
-    });
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(() =>
-        Promise.resolve(
-          response(source, {
-            headers: { "content-type": "text/event-stream; charset=utf-8" },
-            status: 200,
+        expect(fetch).toHaveBeenCalledWith(
+          new URL(target),
+          expect.objectContaining({
+            cache: "no-store",
+            credentials: "omit",
+            headers: {
+              accept: "text/event-stream",
+              authorization: "Bearer test-token",
+            },
+            redirect: "error",
+            referrerPolicy: "no-referrer",
           })
-        )
-      )
-    );
-
-    await expect(readEvents()).resolves.toBe(
-      `event: update\ndata: ${pending}\n\n: keep-alive\n\nevent: update\ndata: ${ready}\n\n`
-    );
-    expect(fetch).toHaveBeenCalledWith(
-      new URL(target),
-      expect.objectContaining({
-        cache: "no-store",
-        credentials: "omit",
-        headers: {
-          accept: "text/event-stream",
-          authorization: "Bearer test-token",
-        },
-        redirect: "error",
-        referrerPolicy: "no-referrer",
+        );
       })
-    );
-  });
+  );
 
-  it.each([
+  it.effect.each([
     ["event name", 'event: other\ndata: {"revision":1}\n\n'],
     ["multiline comment", ": first\n: second\n\n"],
     ["extra line", "event: update\ndata: {}\nextra: value\n\n"],
@@ -215,10 +249,12 @@ describe("local preview events", () => {
     ],
     ["oversized partial event", "x".repeat(4097)],
     ["unfinished event", "event: update\ndata: {}"],
-  ])("rejects a malformed %s", async (_label, source) => {
-    await expect(streamFailure(source)).rejects.toMatchObject({
-      _tag: "PreviewEventError",
-      stage: "event",
-    });
-  });
+  ])("rejects a malformed %s", ([_label, source]) =>
+    Effect.gen(function* () {
+      expect(yield* streamFailure(source)).toMatchObject({
+        _tag: "PreviewEventError",
+        stage: "event",
+      });
+    })
+  );
 });
