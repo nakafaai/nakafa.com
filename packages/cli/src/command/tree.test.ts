@@ -13,9 +13,8 @@ function readRequests(argv: readonly string[]) {
     const command = makeCliCommand((request) =>
       Ref.update(requests, (current) => [...current, request])
     );
-    yield* Command.runWith(command, { version: "0.1.0" })(
-      normalizePresenceFlags(argv)
-    );
+    const normalizedArgv = yield* normalizePresenceFlags(argv);
+    yield* Command.runWith(command, { version: "0.1.0" })(normalizedArgv);
     return yield* Ref.get(requests);
   }).pipe(Effect.provide(NodeServices.layer));
 }
@@ -28,13 +27,13 @@ function readFailure(argv: readonly string[]) {
 }
 
 describe("Nakafa CLI command tree", () => {
-  it("preserves operands after the option separator", () => {
-    expect(normalizePresenceFlags(["search", "--", "--pretty"])).toEqual([
-      "search",
-      "--",
-      "--pretty",
-    ]);
-  });
+  it.effect("preserves operands after the option separator", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* normalizePresenceFlags(["search", "--", "--pretty"])
+      ).toEqual(["search", "--", "--pretty"]);
+    })
+  );
 
   it.effect("renders native help and version without dispatching", () =>
     Effect.gen(function* () {
@@ -199,6 +198,20 @@ describe("Nakafa CLI command tree", () => {
 
       expect(error).toBeInstanceOf(InvocationError);
       expect(error?.message).toContain("Invalid command options");
+    })
+  );
+
+  it.effect.each([
+    ["mcp", "--pretty=false"],
+    ["mcp", "-p=true"],
+    ["quran", "--tafsir=false", "1"],
+    ["quran", "--tafsir=true", "1"],
+  ])("rejects explicit values for presence-only switches in %j", (argv) =>
+    Effect.gen(function* () {
+      const error = yield* readFailure(argv);
+
+      expect(error).toBeInstanceOf(InvocationError);
+      expect(error?.message).toContain("does not accept a value");
     })
   );
 });

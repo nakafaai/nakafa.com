@@ -19,6 +19,11 @@ type ExecuteRequest<E, R> = (request: CliRequest) => Effect.Effect<void, E, R>;
 const PRETTY_FLAG = "pretty";
 const PRETTY_ALIAS = "p";
 const TAFSIR_FLAG = "tafsir";
+const PRESENCE_FLAGS = [
+  `--${PRETTY_FLAG}`,
+  `-${PRETTY_ALIAS}`,
+  `--${TAFSIR_FLAG}`,
+] as const;
 
 const LocaleInputSchema = Schema.String.pipe(Schema.decodeTo(LocaleSchema));
 const SectionInputSchema = Schema.String.pipe(
@@ -39,7 +44,9 @@ const optionalLocale = () =>
   );
 
 /** Preserves the public presence-only contract for owned boolean switches. */
-export function normalizePresenceFlags(argv: readonly string[]) {
+export const normalizePresenceFlags = Effect.fn(
+  "NakafaCli.normalizePresenceFlags"
+)(function* (argv: readonly string[]) {
   const normalized: string[] = [];
   let parseFlags = true;
   for (const argument of argv) {
@@ -48,19 +55,26 @@ export function normalizePresenceFlags(argv: readonly string[]) {
       normalized.push(argument);
       continue;
     }
-    if (
-      parseFlags &&
-      (argument === `--${PRETTY_FLAG}` ||
-        argument === `-${PRETTY_ALIAS}` ||
-        argument === `--${TAFSIR_FLAG}`)
-    ) {
-      normalized.push(`${argument}=true`);
+    if (!parseFlags) {
+      normalized.push(argument);
       continue;
     }
-    normalized.push(argument);
+    const presenceFlag = PRESENCE_FLAGS.find(
+      (flag) => argument === flag || argument.startsWith(`${flag}=`)
+    );
+    if (presenceFlag === undefined) {
+      normalized.push(argument);
+      continue;
+    }
+    if (argument !== presenceFlag) {
+      return yield* new InvocationError({
+        message: `${presenceFlag} does not accept a value.`,
+      });
+    }
+    normalized.push(`${presenceFlag}=true`);
   }
   return normalized;
-}
+});
 
 /** Builds the complete typed command tree for one CLI execution boundary. */
 export function makeCliCommand<E, R>(execute: ExecuteRequest<E, R>) {

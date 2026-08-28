@@ -259,6 +259,7 @@ describe("Nakafa CLI execution", () => {
     () =>
       Effect.gen(function* () {
         const invocation = yield* execute(["search"]);
+        const explicitSwitch = yield* execute(["mcp", "--pretty=false"]);
         const unknown = yield* execute(["unknown"]);
         const emptyRef = yield* execute(["get", ""]);
         const emptyQuery = yield* execute(["search", ""]);
@@ -316,6 +317,10 @@ describe("Nakafa CLI execution", () => {
         expect(invocation.exitCode).toBe(2);
         expect(invocation.stdout).toBe("");
         expect(yield* decodeJson(invocation.stderr)).toMatchObject({
+          code: "INVOCATION_ERROR",
+        });
+        expect(explicitSwitch).toMatchObject({ exitCode: 2, stdout: "" });
+        expect(yield* decodeJson(explicitSwitch.stderr)).toMatchObject({
           code: "INVOCATION_ERROR",
         });
         expect(unknown).toMatchObject({ exitCode: 2, stdout: "" });

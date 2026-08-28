@@ -20,7 +20,7 @@ const INVOCATION_EXIT_CODE = 2;
 const API_EXIT_CODE = 3;
 const NETWORK_OR_SERVER_EXIT_CODE = 4;
 
-export interface CliOptions {
+interface CliOptions {
   readonly version: string;
 }
 
@@ -103,10 +103,11 @@ const executeCli = Effect.fn("NakafaCli.execute")(function* (
       { discard: true }
     )
   );
+  const normalizedArgv = yield* normalizePresenceFlags(argv);
   yield* Command.runWith(command, {
     renderErrors: false,
     version: options.version,
-  })(normalizePresenceFlags(argv)).pipe(
+  })(normalizedArgv).pipe(
     Effect.provide(cliRuntimeLayer),
     Effect.provideService(Console.Console, commandConsole),
     Effect.matchEffect({

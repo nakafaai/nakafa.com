@@ -68,7 +68,7 @@ export type CliRequest = Schema.Schema.Type<typeof CliRequestSchema>;
 export type CliCommand = Schema.Schema.Type<typeof CliCommandSchema>;
 
 /** Checks that an API override is exactly one HTTP or HTTPS origin. */
-export function isHttpOrigin(value: string) {
+function isHttpOrigin(value: string) {
   if (!URL.canParse(value)) {
     return false;
   }
