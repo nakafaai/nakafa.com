@@ -37,16 +37,20 @@ export const deleteAbortRuntime = Effect.fn(
 )(function* (ctx: MutationCtx, releaseId: string) {
   const rows = yield* loadAbortRuntime(ctx, releaseId);
   for (const row of rows) {
-    const retention = yield* readTryoutRuntimeRetention(ctx, row, releaseId);
-    if (retention.retainingReleaseId) {
+    const retention = yield* readTryoutRuntimeRetention(ctx, row, {
+      ignoredReleaseId: releaseId,
+    });
+    const cleanupReleaseId =
+      retention.retainingReleaseId ?? retention.retainingMigrationId;
+    if (cleanupReleaseId) {
       yield* Effect.promise(() =>
         ctx.db.patch("tryoutRuntimeBundles", row._id, {
-          cleanupReleaseId: retention.retainingReleaseId,
+          cleanupReleaseId,
         })
       );
       continue;
     }
-    if (retention.durable || retention.migration) {
+    if (retention.retainedByAttempt) {
       continue;
     }
     yield* Effect.promise(() => ctx.db.delete("tryoutRuntimeBundles", row._id));
@@ -58,8 +62,10 @@ export const hasAbortRuntime = Effect.fn("contentRelease.hasAbortRuntime")(
   function* (ctx: ReadCtx, releaseId: string) {
     const rows = yield* loadAbortRuntime(ctx, releaseId);
     for (const row of rows) {
-      const retention = yield* readTryoutRuntimeRetention(ctx, row, releaseId);
-      if (!retention.durable) {
+      const retention = yield* readTryoutRuntimeRetention(ctx, row, {
+        ignoredReleaseId: releaseId,
+      });
+      if (!retention.retainedByAttempt) {
         return true;
       }
     }

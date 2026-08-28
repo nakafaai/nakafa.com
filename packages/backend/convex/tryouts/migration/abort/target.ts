@@ -1,7 +1,10 @@
-import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { isSnapshotReferenced } from "@repo/backend/convex/contentRelease/snapshot/retention";
+import {
+  handoffTryoutRuntimeToSnapshot,
+  reconcileTryoutRuntimeAfterMigrationAbort,
+} from "@repo/backend/convex/contentRelease/tryout/runtime";
 import type { AbortingMigration } from "@repo/backend/convex/tryouts/migration/abort/state";
 import { Clock, Effect } from "effect";
 
@@ -40,10 +43,13 @@ export const transferAbortTarget = Effect.fn(
     );
   }
   const target = migration.target;
-  if (!(target.bundleCreated || target.snapshotCreated)) {
-    return;
-  }
   const now = yield* Clock.currentTimeMillis;
+  yield* handoffTryoutRuntimeToSnapshot(
+    ctx,
+    target.bundleHash,
+    target.snapshotId,
+    migration.migrationId
+  );
   yield* Effect.promise(() =>
     ctx.db.patch("tryoutHistoryMigrations", migration._id, {
       target: {
@@ -53,40 +59,6 @@ export const transferAbortTarget = Effect.fn(
       },
       updatedAt: now,
     })
-  );
-});
-
-/** Proves whether another consumer retains one staged runtime bundle. */
-const hasRuntimeReference = Effect.fn(
-  "tryouts.migration.hasAbortRuntimeReference"
-)(function* (
-  ctx: MutationCtx,
-  runtime: Doc<"tryoutRuntimeBundles">,
-  snapshotReferenced: boolean
-) {
-  if (snapshotReferenced) {
-    return true;
-  }
-  const [attempt, release] = yield* Effect.all([
-    Effect.promise(() =>
-      ctx.db
-        .query("tryoutAttempts")
-        .withIndex("by_tryoutBundleId", (query) =>
-          query.eq("tryoutBundleId", runtime._id)
-        )
-        .first()
-    ),
-    Effect.promise(() =>
-      ctx.db
-        .query("contentReleases")
-        .withIndex("by_releaseId", (query) =>
-          query.eq("releaseId", runtime.sourceReleaseId)
-        )
-        .unique()
-    ),
-  ]);
-  return (
-    attempt !== null || release?.tryoutRuntimeBundleHash === runtime.bundleHash
   );
 });
 
@@ -113,16 +85,19 @@ export const deleteAbortTarget = Effect.fn(
       "Try-out history abort found an incoherent target runtime bundle."
     );
   }
-  let deleted = 0;
-  if (
-    target.bundleCreated &&
-    !(yield* hasRuntimeReference(ctx, runtime, snapshotReferenced))
-  ) {
-    yield* Effect.promise(() =>
-      ctx.db.delete("tryoutRuntimeBundles", runtime._id)
+  if (snapshotReferenced) {
+    yield* handoffTryoutRuntimeToSnapshot(
+      ctx,
+      target.bundleHash,
+      target.snapshotId,
+      migration.migrationId
     );
-    deleted += 1;
   }
+  let deleted = yield* reconcileTryoutRuntimeAfterMigrationAbort(
+    ctx,
+    runtime._id,
+    migration.migrationId
+  );
   const snapshot = yield* Effect.promise(() =>
     ctx.db
       .query("contentSnapshots")

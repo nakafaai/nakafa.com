@@ -206,6 +206,7 @@ describe("tryouts/migration/abort", () => {
       expect(retained.catalog).toHaveLength(1);
       expect(retained.placements).toHaveLength(1);
       expect(retained.runtime).toHaveLength(1);
+      expect(retained.runtime[0]).not.toHaveProperty("cleanupReleaseId");
       expect(retained.snapshots).toHaveLength(1);
     })
   );
@@ -257,6 +258,7 @@ describe("tryouts/migration/abort", () => {
         expect(retained.catalog).toHaveLength(1);
         expect(retained.placements).toHaveLength(1);
         expect(retained.runtime).toHaveLength(1);
+        expect(retained.runtime[0]).not.toHaveProperty("cleanupReleaseId");
         expect(retained.snapshots).toHaveLength(1);
 
         yield* Effect.promise(() =>

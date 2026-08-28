@@ -10,10 +10,18 @@ import {
   loadState,
 } from "@repo/backend/convex/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/convex/contentRelease/parse";
-import { loadTryoutRuntimeBundle } from "@repo/backend/convex/tryouts/runtime/signed";
+import {
+  findTryoutRuntimeBundleByHash,
+  loadTryoutRuntimeBundle,
+} from "@repo/backend/convex/tryouts/runtime/signed";
 import { Effect } from "effect";
 
 type ReadCtx = MutationCtx | QueryCtx;
+
+interface RuntimeRetentionOptions {
+  readonly ignoredMigrationId?: string;
+  readonly ignoredReleaseId?: string;
+}
 
 /** Checks whether one release still selects an immutable try-out pair. */
 const releaseRetainsRuntime = Effect.fn(
@@ -45,7 +53,7 @@ export const readTryoutRuntimeRetention = Effect.fn(
 )(function* (
   ctx: ReadCtx,
   row: Doc<"tryoutRuntimeBundles">,
-  ignoredReleaseId: string | null
+  options?: RuntimeRetentionOptions
 ) {
   const [attempt, migrations, state] = yield* Effect.all([
     Effect.promise(() =>
@@ -68,6 +76,7 @@ export const readTryoutRuntimeRetention = Effect.fn(
   const migration = migrations[0];
   const migrationRetains =
     migration?.target.kind === "staged" &&
+    migration.migrationId !== options?.ignoredMigrationId &&
     migration.target.bundleHash === row.bundleHash &&
     migration.target.snapshotId === row.snapshotId;
   const releaseIds = state
@@ -76,21 +85,69 @@ export const readTryoutRuntimeRetention = Effect.fn(
   for (const releaseId of releaseIds) {
     if (
       releaseId &&
-      releaseId !== ignoredReleaseId &&
+      releaseId !== options?.ignoredReleaseId &&
       (yield* releaseRetainsRuntime(ctx, releaseId, row))
     ) {
       return {
-        durable: true,
-        migration: migrationRetains,
+        retainedByAttempt: attempt !== null,
+        retainingMigrationId: migrationRetains ? migration.migrationId : null,
         retainingReleaseId: releaseId,
       };
     }
   }
   return {
-    durable: attempt !== null,
-    migration: migrationRetains,
+    retainedByAttempt: attempt !== null,
+    retainingMigrationId: migrationRetains ? migration.migrationId : null,
     retainingReleaseId: null,
   };
+});
+
+/** Assigns mutable cleanup ownership to one staged migration when safe. */
+export const claimTryoutRuntimeForMigration = Effect.fn(
+  "contentRelease.claimTryoutRuntimeForMigration"
+)(function* (ctx: MutationCtx, bundleHash: string, migrationId: string) {
+  const row = yield* findTryoutRuntimeBundleByHash(ctx, bundleHash);
+  if (!row) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      "A staged try-out history migration lost its permanent runtime."
+    );
+  }
+  const retention = yield* readTryoutRuntimeRetention(ctx, row, {
+    ignoredMigrationId: migrationId,
+  });
+  const cleanupReleaseId = retention.retainingReleaseId ?? migrationId;
+  if (row.cleanupReleaseId !== cleanupReleaseId) {
+    yield* Effect.promise(() =>
+      ctx.db.patch("tryoutRuntimeBundles", row._id, { cleanupReleaseId })
+    );
+  }
+  return row._id;
+});
+
+/** Releases cleanup ownership to the permanent snapshot lifecycle. */
+export const handoffTryoutRuntimeToSnapshot = Effect.fn(
+  "contentRelease.handoffTryoutRuntimeToSnapshot"
+)(function* (
+  ctx: MutationCtx,
+  bundleHash: string,
+  snapshotId: string,
+  migrationId: string
+) {
+  const row = yield* findTryoutRuntimeBundleByHash(ctx, bundleHash);
+  if (!row || row.snapshotId !== snapshotId) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      "A transferred try-out history target lost its permanent runtime."
+    );
+  }
+  if (row.cleanupReleaseId === migrationId) {
+    yield* Effect.promise(() =>
+      ctx.db.patch("tryoutRuntimeBundles", row._id, {
+        cleanupReleaseId: undefined,
+      })
+    );
+  }
 });
 
 /** Reconciles permanent ownership after its attempt is deleted transactionally. */
@@ -106,21 +163,64 @@ export const reconcileTryoutRuntimeAfterAttempt = Effect.fn(
       "A deleted try-out attempt referenced a missing permanent runtime."
     );
   }
-  const retention = yield* readTryoutRuntimeRetention(ctx, row, null);
-  if (retention.retainingReleaseId) {
-    if (retention.retainingReleaseId !== row.cleanupReleaseId) {
+  const retention = yield* readTryoutRuntimeRetention(ctx, row);
+  const cleanupReleaseId =
+    retention.retainingReleaseId ?? retention.retainingMigrationId;
+  if (cleanupReleaseId) {
+    if (cleanupReleaseId !== row.cleanupReleaseId) {
       yield* Effect.promise(() =>
         ctx.db.patch("tryoutRuntimeBundles", row._id, {
-          cleanupReleaseId: retention.retainingReleaseId,
+          cleanupReleaseId,
         })
       );
     }
     return;
   }
-  if (retention.durable || retention.migration) {
+  if (row.cleanupReleaseId === undefined) {
+    return;
+  }
+  if (retention.retainedByAttempt) {
     return;
   }
   yield* Effect.promise(() => ctx.db.delete("tryoutRuntimeBundles", row._id));
+});
+
+/** Releases migration cleanup ownership before its root is deleted. */
+export const reconcileTryoutRuntimeAfterMigrationAbort = Effect.fn(
+  "contentRelease.reconcileTryoutRuntimeAfterMigrationAbort"
+)(function* (
+  ctx: MutationCtx,
+  runtimeId: Id<"tryoutRuntimeBundles">,
+  migrationId: string
+) {
+  const row = yield* Effect.promise(() =>
+    ctx.db.get("tryoutRuntimeBundles", runtimeId)
+  );
+  if (!row) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      "A try-out history migration lost its permanent runtime during abort."
+    );
+  }
+  if (row.cleanupReleaseId !== migrationId) {
+    return 0;
+  }
+  const retention = yield* readTryoutRuntimeRetention(ctx, row, {
+    ignoredMigrationId: migrationId,
+  });
+  const cleanupReleaseId =
+    retention.retainingReleaseId ?? retention.retainingMigrationId;
+  if (cleanupReleaseId) {
+    yield* Effect.promise(() =>
+      ctx.db.patch("tryoutRuntimeBundles", row._id, { cleanupReleaseId })
+    );
+    return 0;
+  }
+  if (retention.retainedByAttempt) {
+    return 0;
+  }
+  yield* Effect.promise(() => ctx.db.delete("tryoutRuntimeBundles", row._id));
+  return 1;
 });
 
 /** Reads every permanent runtime pair addressed by one signed release. */

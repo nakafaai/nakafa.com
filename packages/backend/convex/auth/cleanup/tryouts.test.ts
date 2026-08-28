@@ -3,8 +3,15 @@ import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { cleanupUserTryouts } from "@repo/backend/convex/auth/cleanup/tryouts";
 import { abortProgram } from "@repo/backend/convex/contentRelease/abort";
+import {
+  encodeRendererJson,
+  encodeTryoutRuntimeBundleJson,
+} from "@repo/backend/convex/contentRelease/wire";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
+import { retainedTryoutHistoryPlan } from "@repo/backend/convex/tryouts/history/spec";
+import { abortProgram as abortMigrationProgram } from "@repo/backend/convex/tryouts/migration/abort";
+import { stageBundleProgram } from "@repo/backend/convex/tryouts/migration/stage/bundle";
 import { storeRuntimeFixture } from "@repo/backend/test/runtime/bundle";
 import {
   insertRuntimeIngressSource,
@@ -164,11 +171,12 @@ describe("auth/cleanup/tryouts", () => {
   );
 
   it.effect(
-    "deletes an unowned runtime after erasing its last migrated attempt",
+    "releases migration-owned runtime after erasing its last attempt",
     () =>
       Effect.gen(function* () {
         const t = createConvexTestWithBetterAuth();
         const releaseId = ReleaseIdSchema.make("release-runtime-erasure");
+        const migrationId = "runtime-erasure-migration";
         const fixture = yield* makeRuntimeIngressFixture(releaseId);
         yield* insertRuntimeIngressSource(t, fixture);
         yield* storeRuntimeFixture(t, fixture);
@@ -213,6 +221,29 @@ describe("auth/cleanup/tryouts", () => {
         const firstAbort = yield* Effect.promise(() =>
           t.mutation((ctx) => runConvexProgram(abortProgram(ctx, releaseId)))
         );
+        const staged = yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            await ctx.db.insert("tryoutHistoryMigrations", {
+              artifactMapCount: 0,
+              catalogMapCount: 0,
+              createdAt: 1,
+              migrationId,
+              phase: "staging",
+              placementMapCount: 0,
+              sourceSnapshotId: retainedTryoutHistoryPlan.snapshotId,
+              target: { kind: "pending" },
+              updatedAt: 1,
+            });
+            return runConvexProgram(
+              stageBundleProgram(
+                ctx,
+                migrationId,
+                encodeTryoutRuntimeBundleJson(fixture.bundle),
+                encodeRendererJson(fixture.rendererManifest)
+              )
+            );
+          })
+        );
         const firstOwner = seeded[0];
         const lastOwner = seeded[1];
         if (!(firstOwner && lastOwner)) {
@@ -229,7 +260,7 @@ describe("auth/cleanup/tryouts", () => {
         const retained = yield* Effect.promise(() =>
           t.query(async (ctx) => ({
             attempt: await ctx.db.get("tryoutAttempts", lastOwner.attemptId),
-            runtime: await ctx.db.query("tryoutRuntimeBundles").collect(),
+            runtime: await ctx.db.query("tryoutRuntimeBundles").unique(),
           }))
         );
         let lastProgressed = true;
@@ -240,7 +271,12 @@ describe("auth/cleanup/tryouts", () => {
             )
           );
         }
-        const repeatedAbort = yield* Effect.promise(() =>
+        const migrationAbort = yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            runConvexProgram(abortMigrationProgram(ctx, migrationId))
+          )
+        );
+        const repeatedSourceAbort = yield* Effect.promise(() =>
           t.mutation((ctx) => runConvexProgram(abortProgram(ctx, releaseId)))
         );
         const stored = yield* Effect.promise(() =>
@@ -252,11 +288,19 @@ describe("auth/cleanup/tryouts", () => {
         );
 
         expect(firstAbort).toMatchObject({ complete: true, releaseId });
+        expect(staged).toMatchObject({ created: 0, unchanged: 1 });
         expect(firstProgressed).toBe(false);
         expect(retained.attempt).not.toBeNull();
-        expect(retained.runtime).toHaveLength(1);
+        expect(retained.runtime).toMatchObject({
+          cleanupReleaseId: migrationId,
+          sourceReleaseId: releaseId,
+        });
         expect(lastProgressed).toBe(false);
-        expect(repeatedAbort).toMatchObject({ complete: true, releaseId });
+        expect(migrationAbort).toMatchObject({ deleted: 2, done: true });
+        expect(repeatedSourceAbort).toMatchObject({
+          complete: true,
+          releaseId,
+        });
         expect(stored).toEqual({ attempts: [], history: [], runtime: [] });
       })
   );

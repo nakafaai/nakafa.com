@@ -6,6 +6,7 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { abortProgram } from "@repo/backend/convex/tryouts/migration/abort";
 import {
   ABORT_MIGRATION_ID,
+  ABORT_TARGET_SNAPSHOT,
   seedOwnedAbort,
 } from "@repo/backend/test/migration/abort";
 import { convexTest } from "convex-test";
@@ -17,6 +18,66 @@ function abort(ctx: MutationCtx) {
 }
 
 describe("tryouts/migration/abort/target", () => {
+  it.effect("releases cleanup ownership on direct snapshot handoff", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          await seedOwnedAbort(ctx);
+          const [root, maps, catalog, placements, artifacts] =
+            await Promise.all([
+              ctx.db.query("tryoutHistoryMigrations").unique(),
+              ctx.db.query("tryoutHistoryMigrationMaps").collect(),
+              ctx.db.query("tryoutCatalog").collect(),
+              ctx.db.query("tryoutPlacements").collect(),
+              ctx.db.query("contentArtifacts").collect(),
+            ]);
+          if (!root) {
+            throw new Error("Expected direct handoff migration fixture.");
+          }
+          for (const row of [
+            ...maps,
+            ...catalog,
+            ...placements,
+            ...artifacts,
+          ]) {
+            await ctx.db.delete(row._id);
+          }
+          await ctx.db.patch("tryoutHistoryMigrations", root._id, {
+            artifactMapCount: 0,
+            catalogMapCount: 0,
+            placementMapCount: 0,
+          });
+          await ctx.db.insert("snapshotBatches", {
+            batchHash: `sha256:${"d".repeat(64)}`,
+            batchIndex: 0,
+            createdAt: 1,
+            family: "tryout",
+            firstIndex: 0,
+            releaseId: "direct-handoff-owner",
+            rowCount: 0,
+            sequence: 1,
+            snapshotId: ABORT_TARGET_SNAPSHOT,
+          });
+        })
+      );
+
+      const receipt = yield* Effect.promise(() =>
+        t.mutation((ctx) => abort(ctx))
+      );
+      const state = yield* Effect.promise(() =>
+        t.run(async (ctx) => ({
+          root: await ctx.db.query("tryoutHistoryMigrations").unique(),
+          runtime: await ctx.db.query("tryoutRuntimeBundles").unique(),
+        }))
+      );
+
+      expect(receipt).toMatchObject({ deleted: 1, done: true });
+      expect(state.root).toBeNull();
+      expect(state.runtime).not.toHaveProperty("cleanupReleaseId");
+    })
+  );
+
   it.effect("rejects an incoherent runtime without finalizing", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);

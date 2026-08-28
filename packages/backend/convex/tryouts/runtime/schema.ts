@@ -52,7 +52,8 @@ export const tryoutRuntimeBundleSchema = {
   tryoutRuntimeBundles: defineTable({
     bundleHash: v.string(),
     bundleJson: v.string(),
-    cleanupReleaseId: v.string(),
+    /** Mutable cleanup owner, absent only after explicit snapshot handoff. */
+    cleanupReleaseId: v.optional(v.string()),
     createdAt: v.number(),
     rendererJson: v.string(),
     rendererManifestHash: v.string(),

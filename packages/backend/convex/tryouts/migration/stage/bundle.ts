@@ -5,6 +5,7 @@ import {
   decodeRendererJson,
   decodeTryoutRuntimeBundleJson,
 } from "@repo/backend/convex/contentRelease/parse";
+import { claimTryoutRuntimeForMigration } from "@repo/backend/convex/contentRelease/tryout/runtime";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { bundleStageReceiptValidator } from "@repo/backend/convex/tryouts/migration/stage/schema";
 import { loadStagingMigration } from "@repo/backend/convex/tryouts/migration/stage/state";
@@ -50,6 +51,7 @@ export const stageBundleProgram = Effect.fn("tryouts.migration.stageBundle")(
         `Try-out history migration ${migrationId} changed its canonical target bundle.`
       );
     }
+    yield* claimTryoutRuntimeForMigration(ctx, receipt.bundleHash, migrationId);
     yield* Effect.promise(() =>
       ctx.db.patch("tryoutHistoryMigrations", migration._id, {
         target: {

@@ -241,77 +241,79 @@ describe("content release abort runtime", () => {
     })
   );
 
-  it.effect(
-    "defers source abort while a migration solely retains its pair",
-    () =>
-      Effect.gen(function* () {
-        const t = convexTest(schema, convexModules);
-        const fixture = yield* makeRuntimeIngressFixture();
-        const releaseId = fixture.release.manifest.releaseId;
-        yield* insertRuntimeIngressSource(t, fixture);
-        yield* storeRuntimeFixture(t, fixture);
-        yield* Effect.promise(() =>
-          t.mutation(async (ctx) => {
-            const runtime = await ctx.db.query("tryoutRuntimeBundles").unique();
-            if (!runtime) {
-              throw new Error("Expected staged migration runtime fixture.");
-            }
-            await ctx.db.insert("tryoutHistoryMigrations", {
-              artifactMapCount: 0,
-              catalogMapCount: 0,
-              createdAt: 1,
-              migrationId: "runtime-retention-migration",
-              phase: "staging",
-              placementMapCount: 0,
-              sourceSnapshotId: `sha256:${"f".repeat(64)}`,
-              target: {
-                bundleCreated: false,
-                bundleHash: runtime.bundleHash,
-                kind: "staged",
-                snapshotCreated: false,
-                snapshotId: runtime.snapshotId,
-              },
-              updatedAt: 1,
-            });
-          })
-        );
+  it.effect("transfers source cleanup ownership to its staged migration", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      const fixture = yield* makeRuntimeIngressFixture();
+      const releaseId = fixture.release.manifest.releaseId;
+      yield* insertRuntimeIngressSource(t, fixture);
+      yield* storeRuntimeFixture(t, fixture);
+      yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const runtime = await ctx.db.query("tryoutRuntimeBundles").unique();
+          if (!runtime) {
+            throw new Error("Expected staged migration runtime fixture.");
+          }
+          await ctx.db.insert("tryoutHistoryMigrations", {
+            artifactMapCount: 0,
+            catalogMapCount: 0,
+            createdAt: 1,
+            migrationId: "runtime-retention-migration",
+            phase: "staging",
+            placementMapCount: 0,
+            sourceSnapshotId: `sha256:${"f".repeat(64)}`,
+            target: {
+              bundleCreated: false,
+              bundleHash: runtime.bundleHash,
+              kind: "staged",
+              snapshotCreated: false,
+              snapshotId: runtime.snapshotId,
+            },
+            updatedAt: 1,
+          });
+        })
+      );
 
-        yield* Effect.promise(() =>
-          expect(
-            t.mutation((ctx) => abort(ctx, releaseId))
-          ).rejects.toMatchObject({
-            data: { code: "CONTENT_RELEASE_INTEGRITY" },
-          })
-        );
-        const retained = yield* Effect.promise(() =>
-          t.run(async (ctx) => ({
-            release: await ctx.db.query("contentReleases").unique(),
-            runtime: await ctx.db.query("tryoutRuntimeBundles").collect(),
-          }))
-        );
-        expect(retained.release?.status).toBe("staging");
-        expect(retained.runtime).toEqual([
-          expect.objectContaining({ sourceReleaseId: releaseId }),
-        ]);
+      const sourceReceipt = yield* Effect.promise(() =>
+        t.mutation((ctx) => abort(ctx, releaseId))
+      );
+      const retained = yield* Effect.promise(() =>
+        t.run(async (ctx) => ({
+          release: await ctx.db.query("contentReleases").unique(),
+          runtime: await ctx.db.query("tryoutRuntimeBundles").collect(),
+        }))
+      );
+      expect(sourceReceipt).toMatchObject({ complete: true, releaseId });
+      expect(retained.release?.status).toBe("aborted");
+      expect(retained.runtime).toEqual([
+        expect.objectContaining({
+          cleanupReleaseId: "runtime-retention-migration",
+          sourceReleaseId: releaseId,
+        }),
+      ]);
 
-        yield* Effect.promise(() =>
-          t.mutation((ctx) =>
-            runConvexProgram(
-              abortMigrationProgram(ctx, "runtime-retention-migration")
-            )
+      const migrationReceipt = yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          runConvexProgram(
+            abortMigrationProgram(ctx, "runtime-retention-migration")
           )
-        );
-        yield* Effect.promise(() => t.mutation((ctx) => abort(ctx, releaseId)));
-        const stored = yield* Effect.promise(() =>
-          t.run(async (ctx) => ({
-            release: await ctx.db.query("contentReleases").unique(),
-            runtime: await ctx.db.query("tryoutRuntimeBundles").collect(),
-          }))
-        );
+        )
+      );
+      const repeatedSource = yield* Effect.promise(() =>
+        t.mutation((ctx) => abort(ctx, releaseId))
+      );
+      const stored = yield* Effect.promise(() =>
+        t.run(async (ctx) => ({
+          release: await ctx.db.query("contentReleases").unique(),
+          runtime: await ctx.db.query("tryoutRuntimeBundles").collect(),
+        }))
+      );
 
-        expect(stored.release?.status).toBe("aborted");
-        expect(stored.runtime).toEqual([]);
-      })
+      expect(migrationReceipt).toMatchObject({ deleted: 2, done: true });
+      expect(repeatedSource).toMatchObject({ complete: true, releaseId });
+      expect(stored.release?.status).toBe("aborted");
+      expect(stored.runtime).toEqual([]);
+    })
   );
 
   it.effect("fails closed above the signed transition pair bound", () =>
