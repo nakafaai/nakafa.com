@@ -121,6 +121,15 @@ function readRepair(
   }));
 }
 
+async function finishCleanup(t: CleanupTest, evidence: ScaleRepairEvidence) {
+  for (let page = 0; page < 32; page += 1) {
+    if ((await runCleanup(t, evidence)).done) {
+      return;
+    }
+  }
+  assert.fail("Expected bounded cleanup to finish.");
+}
+
 describe("tryouts/migration/cleanup/repair", () => {
   it.effect("audits the exact graph separately from signed cleanup", () =>
     Effect.gen(function* () {
@@ -141,21 +150,42 @@ describe("tryouts/migration/cleanup/repair", () => {
         repair.scaleVersionId
       );
       assert.ok((repaired.receipt?.repair?.repairedAt ?? 0) > 0);
-      let done = false;
-      for (let page = 0; page < 32; page += 1) {
-        const result = yield* Effect.promise(() =>
-          runCleanup(t, repair.evidence)
-        );
-        if (result.done) {
-          done = true;
-          break;
-        }
-      }
+      yield* Effect.promise(() => finishCleanup(t, repair.evidence));
       const finished = yield* Effect.promise(() => readRepair(t, repair));
-      assert.strictEqual(done, true);
       assert.strictEqual(finished.receipt?.phase, "cleaned");
       assert.strictEqual(finished.receipt?.deletedRows, 82);
       assert.strictEqual(finished.receipt?.repair?.deletedRows, 158);
+    })
+  );
+
+  it.effect("rejects a cleaned retry without its exact repair audit", () =>
+    Effect.gen(function* () {
+      for (const damage of ["missing", "tampered"] as const) {
+        const t = createConvexTestWithBetterAuth();
+        const { repair } = yield* Effect.promise(() => seedRepair(t));
+        yield* Effect.promise(() => runCleanup(t, repair.evidence));
+        yield* Effect.promise(() => finishCleanup(t, repair.evidence));
+        yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            const receipt = await ctx.db
+              .query("tryoutHistoryMigrationReceipts")
+              .unique();
+            assert.ok(receipt?.repair);
+            await ctx.db.patch(receipt._id, {
+              repair:
+                damage === "missing"
+                  ? undefined
+                  : { ...receipt.repair, deletedRows: 157 },
+            });
+          })
+        );
+
+        yield* Effect.promise(() =>
+          expect(runCleanup(t, repair.evidence)).rejects.toMatchObject({
+            data: { code: "CONTENT_RELEASE_INTEGRITY" },
+          })
+        );
+      }
     })
   );
 
@@ -175,6 +205,39 @@ describe("tryouts/migration/cleanup/repair", () => {
       assert.ok(state.runs.every((run) => run !== null));
       assert.strictEqual(state.receipt?.repair, undefined);
       assert.strictEqual(state.receipt?.deletedRows, 0);
+    })
+  );
+
+  it.effect("rejects duplicate run identities before any repair write", () =>
+    Effect.gen(function* () {
+      const t = createConvexTestWithBetterAuth();
+      const { repair } = yield* Effect.promise(() => seedRepair(t));
+      const [firstRun, secondRun] = repair.runIds;
+      const [firstEvidence, secondEvidence] = repair.evidence.runs;
+      assert.ok(firstRun && secondRun && firstEvidence && secondEvidence);
+      assert.strictEqual(
+        firstEvidence.questionCount,
+        secondEvidence.questionCount
+      );
+      yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          ctx.db.patch(secondRun, {
+            sectionIdentity: firstEvidence.sectionIdentity,
+          })
+        )
+      );
+
+      yield* Effect.promise(() =>
+        expect(runCleanup(t, repair.evidence)).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        })
+      );
+      const state = yield* Effect.promise(() => readRepair(t, repair));
+      assert.ok(state.scale);
+      assert.ok(state.items.every((item) => item !== null));
+      assert.ok(state.runs.every((run) => run !== null));
+      assert.strictEqual(state.receipt?.repair, undefined);
+      assert.strictEqual(state.receipt?.proof, undefined);
     })
   );
 

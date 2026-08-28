@@ -119,6 +119,11 @@ export const retainedScaleRepair = {
     "sha256:0a43a4125fc4886f90b5a509405178bfb8762ad3c7f72be80614fce2671b5162",
 } satisfies ScaleRepairEvidence;
 
+/** Counts the exact graph rows bound by one repair evidence record. */
+export function countScaleRepairRows(evidence: ScaleRepairEvidence) {
+  return evidence.itemCount + evidence.runs.length + 1;
+}
+
 /** Checks bounded cardinalities before they reach indexed query limits. */
 export function hasValidScaleRepairEvidence(evidence: ScaleRepairEvidence) {
   const questionCount = evidence.runs.reduce(
@@ -170,5 +175,19 @@ export function matchesScaleRepair(
     repair.scaleVersionId === evidence.scaleVersionId &&
     repair.setIdentity === evidence.setIdentity &&
     repair.sourceSnapshotId === evidence.sourceSnapshotId
+  );
+}
+
+/** Requires the exact durable audit for the one migration that owns a repair. */
+export function hasRequiredScaleRepair(
+  migrationId: string,
+  repair: CleanupRepair | null | undefined,
+  evidence: ScaleRepairEvidence = retainedScaleRepair
+) {
+  return (
+    migrationId !== evidence.migrationId ||
+    (repair !== null &&
+      repair !== undefined &&
+      matchesScaleRepair(repair, evidence, countScaleRepairRows(evidence)))
   );
 }

@@ -3,6 +3,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { isSnapshotReferenced } from "@repo/backend/convex/contentRelease/snapshot/retention";
 import {
+  countScaleRepairRows,
   hasValidScaleRepairEvidence,
   matchesScaleRepair,
   retainedScaleRepair,
@@ -54,7 +55,7 @@ export const prepareUnusedScale = Effect.fn(
     }
     return null;
   }
-  const deletedRows = evidence.itemCount + evidence.runs.length + 1;
+  const deletedRows = countScaleRepairRows(evidence);
   if (
     !(
       hasValidScaleRepairEvidence(evidence) && Number.isSafeInteger(deletedRows)
@@ -154,6 +155,9 @@ export const prepareUnusedScale = Effect.fn(
       questionCount,
     ])
   );
+  const observedRunIdentities = new Set(
+    runs.map(({ sectionIdentity }) => sectionIdentity)
+  );
   const runIds = new Set(runs.map(({ _id }) => _id));
   const itemIds = new Set(items.map(({ _id }) => _id));
   const reverseItems = yield* Effect.forEach(runs, (run) =>
@@ -190,6 +194,7 @@ export const prepareUnusedScale = Effect.fn(
     rowHashCount !== items.length ||
     runs.length !== evidence.runs.length ||
     expectedRuns.size !== runs.length ||
+    observedRunIdentities.size !== runs.length ||
     !Number.isSafeInteger(runQuestionCount) ||
     runQuestionCount !== evidence.questionCount ||
     mappings.some(

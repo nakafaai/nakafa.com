@@ -13,6 +13,7 @@ import {
 } from "@repo/backend/convex/contentRelease/error";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
 import { requireActiveContentKey } from "@repo/backend/convex/contentRelease/ingress/key";
+import { hasRequiredScaleRepair } from "@repo/backend/convex/tryouts/migration/cleanup/evidence";
 import type { cleanupResultValidator } from "@repo/backend/convex/tryouts/migration/cleanup/run";
 import { verifyImmutableMigrationReceipt } from "@repo/backend/convex/tryouts/migration/proof/github";
 import {
@@ -220,6 +221,15 @@ export const cleanupMigrationReceipt = Effect.fn(
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
       "Try-out history cleanup has invalid durable progress."
+    );
+  }
+  if (
+    durable.phase === "cleaned" &&
+    !hasRequiredScaleRepair(request.releaseId, durable.repair)
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      "Cleaned try-out history migration lost its durable repair audit."
     );
   }
   let proof: TryoutHistoryMigrationProof;

@@ -8,7 +8,10 @@ import {
   recordCleanupPage,
   requireCleanupComplete,
 } from "@repo/backend/convex/tryouts/migration/cleanup/count";
-import type { ScaleRepairEvidence } from "@repo/backend/convex/tryouts/migration/cleanup/evidence";
+import {
+  hasRequiredScaleRepair,
+  type ScaleRepairEvidence,
+} from "@repo/backend/convex/tryouts/migration/cleanup/evidence";
 import {
   hasCleanupReceiptBinding,
   hasSameCleanupProof,
@@ -66,6 +69,15 @@ export const cleanupProgram = Effect.fn("tryouts.migration.cleanup")(function* (
       .unique()
   );
   if (!migration) {
+    if (
+      receipt.phase === "cleaned" &&
+      !hasRequiredScaleRepair(migrationId, receipt.repair, repairEvidence)
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        "Cleaned try-out history migration lost its durable repair audit."
+      );
+    }
     if (
       receipt.phase === "cleaned" &&
       receipt.proof &&

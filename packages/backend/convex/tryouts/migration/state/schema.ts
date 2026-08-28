@@ -1,4 +1,7 @@
-import { cleanupProofValidator } from "@repo/backend/convex/tryouts/migration/cleanup/schema";
+import {
+  cleanupProofValidator,
+  cleanupRepairValidator,
+} from "@repo/backend/convex/tryouts/migration/cleanup/schema";
 import { v } from "convex/values";
 
 export const completionValidator = v.object({
@@ -118,6 +121,7 @@ export const cleanupReceiptValidator = v.union(
     deletedRows: v.number(),
     phase: v.union(v.literal("sealed"), v.literal("cleaned")),
     proof: v.union(cleanupProofValidator, v.null()),
+    repair: v.union(cleanupRepairValidator, v.null()),
   })
 );
 
