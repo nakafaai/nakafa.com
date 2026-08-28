@@ -1,5 +1,5 @@
 import workflowTest from "@convex-dev/workflow/test";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it, vi } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { requestAnalyticsErasure } from "@repo/backend/convex/analytics/erasure/request";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -10,7 +10,6 @@ import { workflow } from "@repo/backend/convex/workflow";
 import { getFunctionName } from "convex/server";
 import { convexTest } from "convex-test";
 import { Data, Effect } from "effect";
-import { vi } from "vitest";
 
 class WorkflowUnavailable extends Data.TaggedError("WorkflowUnavailable")<{
   readonly message: string;
@@ -28,14 +27,18 @@ describe("analytics erasure request", () => {
       const t = convexTest(schema, convexModules);
       const userId = yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          ctx.db.insert("users", {
-            authId: "erasure-request-user",
-            credits: 0,
-            creditsResetAt: 0,
-            email: "erasure-request@example.com",
-            name: "Erasure Request",
-            plan: "free",
-          })
+          runConvexProgram(
+            Effect.promise(() =>
+              ctx.db.insert("users", {
+                authId: "erasure-request-user",
+                credits: 0,
+                creditsResetAt: 0,
+                email: "erasure-request@example.com",
+                name: "Erasure Request",
+                plan: "free",
+              })
+            )
+          )
         )
       );
       const startErasure = vi.fn(() => Promise.resolve(undefined));
@@ -56,14 +59,18 @@ describe("analytics erasure request", () => {
       yield* Effect.sync(() => workflowTest.register(t));
       const userId = yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          ctx.db.insert("users", {
-            authId: "durable-erasure-request-user",
-            credits: 0,
-            creditsResetAt: 0,
-            email: "durable-erasure-request@example.com",
-            name: "Durable Erasure Request",
-            plan: "free",
-          })
+          runConvexProgram(
+            Effect.promise(() =>
+              ctx.db.insert("users", {
+                authId: "durable-erasure-request-user",
+                credits: 0,
+                creditsResetAt: 0,
+                email: "durable-erasure-request@example.com",
+                name: "Durable Erasure Request",
+                plan: "free",
+              })
+            )
+          )
         )
       );
 
@@ -74,7 +81,9 @@ describe("analytics erasure request", () => {
       );
 
       const admittedWorkflows = yield* Effect.promise(() =>
-        t.action((ctx) => workflow.list(ctx))
+        t.action((ctx) =>
+          runConvexProgram(Effect.promise(() => workflow.list(ctx)))
+        )
       );
 
       expect(admittedWorkflows.page).toEqual([
@@ -94,14 +103,18 @@ describe("analytics erasure request", () => {
       const t = convexTest(schema, convexModules);
       const userId = yield* Effect.promise(() =>
         t.mutation((ctx) =>
-          ctx.db.insert("users", {
-            authId: "failed-erasure-request-user",
-            credits: 0,
-            creditsResetAt: 0,
-            email: "failed-erasure-request@example.com",
-            name: "Failed Erasure Request",
-            plan: "free",
-          })
+          runConvexProgram(
+            Effect.promise(() =>
+              ctx.db.insert("users", {
+                authId: "failed-erasure-request-user",
+                credits: 0,
+                creditsResetAt: 0,
+                email: "failed-erasure-request@example.com",
+                name: "Failed Erasure Request",
+                plan: "free",
+              })
+            )
+          )
         )
       );
       const startErasure = vi.fn(() =>
