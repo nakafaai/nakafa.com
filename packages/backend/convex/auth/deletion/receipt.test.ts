@@ -134,7 +134,13 @@ describe("auth/deletion/receipt", () => {
         )
       );
       const receipts = yield* Effect.promise(() =>
-        t.query((ctx) => ctx.db.query("accountDeletionReceipts").collect())
+        t.query((ctx) =>
+          runConvexProgram(
+            Effect.promise(() =>
+              ctx.db.query("accountDeletionReceipts").collect()
+            )
+          )
+        )
       );
 
       expect(receipts).toEqual([
@@ -187,7 +193,13 @@ describe("auth/deletion/receipt", () => {
         )
       );
       const receipts = yield* Effect.promise(() =>
-        t.query((ctx) => ctx.db.query("accountDeletionReceipts").collect())
+        t.query((ctx) =>
+          runConvexProgram(
+            Effect.promise(() =>
+              ctx.db.query("accountDeletionReceipts").collect()
+            )
+          )
+        )
       );
 
       expect(firstSweep).toBe(true);
