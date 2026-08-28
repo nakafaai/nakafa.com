@@ -106,6 +106,52 @@ export const requireSealedPredecessorObservation = Effect.fn(
   return observationId;
 });
 
+/** Requires every predecessor route to remain unused for immediate retirement. */
+export const requireUnusedPredecessorObservation = Effect.fn(
+  "contentRelease.predecessor.requireUnused"
+)(function* (ctx: ReadCtx, expectedObservationId?: string) {
+  const rows = yield* requireConsistentPredecessorRows(
+    yield* loadPredecessorRows(ctx)
+  );
+  yield* requirePredecessorDeployment(
+    rows,
+    yield* loadPredecessorDeployment(ctx)
+  );
+  yield* requireActivePredecessorIdentity(
+    rows,
+    yield* loadActivePredecessorIdentity(ctx)
+  );
+  if (
+    PREDECESSOR_ROUTES.some((route) => {
+      const row = rows[route];
+      return (
+        row.invocationCount !== 0 ||
+        row.lastInvokedAt !== undefined ||
+        row.quietSince !== row.armedAt
+      );
+    })
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_STATE",
+      "A predecessor route was invoked after observation began."
+    );
+  }
+  const observationId = yield* decodePredecessorObservationId(
+    rows.singular.observationId
+  );
+  if (
+    expectedObservationId !== undefined &&
+    observationId !==
+      (yield* decodePredecessorObservationId(expectedObservationId))
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_STATE",
+      "Predecessor observation ID changed during migration."
+    );
+  }
+  return observationId;
+});
+
 /** Creates every route row atomically for one exact active release. */
 export const armPredecessorObservation = Effect.fn(
   "contentRelease.predecessor.arm"

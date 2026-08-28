@@ -10,7 +10,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { internalMutation } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { parseStoredJson } from "@repo/backend/convex/contentRelease/parse";
-import { requireSealedPredecessorObservation } from "@repo/backend/convex/contentRelease/predecessor/control";
+import { requireUnusedPredecessorObservation } from "@repo/backend/convex/contentRelease/predecessor/control";
 import {
   deletePredecessorRows,
   loadPredecessorRows,
@@ -132,7 +132,7 @@ function hasSameProof(
   );
 }
 
-/** Deletes the final receipt and sealed observer only after all proofs agree. */
+/** Deletes the final receipt and unused observer only after all proofs agree. */
 export const retireRuntimeState = Effect.fn("contentRelease.retire")(function* (
   ctx: MutationCtx,
   observationInput: string,
@@ -213,7 +213,7 @@ export const retireRuntimeState = Effect.fn("contentRelease.retire")(function* (
       "Try-out history retirement lost its authenticated cleanup proof."
     );
   }
-  yield* requireSealedPredecessorObservation(ctx, observationId);
+  yield* requireUnusedPredecessorObservation(ctx, observationId);
   const ownedRows = yield* requireOwnedPredecessorRows(rows, observationId);
   yield* deletePredecessorRows(ctx, ownedRows);
   yield* Effect.promise(() => ctx.db.delete(stored._id));

@@ -1,16 +1,7 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { SignedTryoutHistoryMigrationReceiptSchema } from "@nakafa/aksara-contracts/migration/tryout/history/spec";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { sealPredecessorObservation } from "@repo/backend/convex/contentRelease/predecessor/control";
 import { recordPredecessorRead } from "@repo/backend/convex/contentRelease/predecessor/record";
-import { PREDECESSOR_QUIET_WINDOW_MS } from "@repo/backend/convex/contentRelease/predecessor/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -38,7 +29,6 @@ const RETIREMENT_RECEIPT = Schema.decodeUnknownSync(
   SignedTryoutHistoryMigrationReceiptSchema,
   { onExcessProperty: "error" }
 )(PARSED_RETIREMENT_RECEIPT);
-const RETIREMENT_TIME = Date.UTC(2026, 7, 30, 8);
 const retire = internal.contentRelease.retire.retire;
 
 type RetirementTest = TestConvex<typeof schema>;
@@ -79,15 +69,8 @@ async function seedCleanedReceipt(target: RetirementTest) {
 }
 
 async function seedTerminalState(target: RetirementTest) {
-  vi.setSystemTime(RETIREMENT_TIME);
   await seedPredecessorObservation(target);
   await seedCleanedReceipt(target);
-  vi.setSystemTime(RETIREMENT_TIME + PREDECESSOR_QUIET_WINDOW_MS);
-  await target.mutation((ctx) =>
-    runConvexProgram(
-      sealPredecessorObservation(ctx, PREDECESSOR_OBSERVATION_ID)
-    )
-  );
 }
 
 function runRetirement(
@@ -117,9 +100,6 @@ function readTerminalState(target: RetirementTest) {
 }
 
 describe("contentRelease/retire", () => {
-  beforeEach(() => vi.useFakeTimers());
-  afterEach(() => vi.useRealTimers());
-
   it("atomically retires five rows and accepts an exact retry", async () => {
     const target = convexTest(schema, convexModules);
     await seedTerminalState(target);
@@ -158,10 +138,9 @@ describe("contentRelease/retire", () => {
     });
   });
 
-  it("rejects a late predecessor call without deleting evidence", async () => {
+  it("rejects any predecessor call without deleting evidence", async () => {
     const target = convexTest(schema, convexModules);
     await seedTerminalState(target);
-    vi.setSystemTime(RETIREMENT_TIME + PREDECESSOR_QUIET_WINDOW_MS + 1);
     await target.mutation((ctx) =>
       runConvexProgram(recordPredecessorRead(ctx, "protected"))
     );
@@ -195,7 +174,7 @@ describe("contentRelease/retire", () => {
     });
     await expect(readTerminalState(target)).resolves.toEqual({
       observerCount: 4,
-      observerPhases: ["sealed", "sealed", "sealed", "sealed"],
+      observerPhases: ["armed", "armed", "armed", "armed"],
       receiptCount: 1,
       repairPresent: false,
     });
@@ -217,7 +196,7 @@ describe("contentRelease/retire", () => {
     });
     await expect(readTerminalState(target)).resolves.toEqual({
       observerCount: 4,
-      observerPhases: ["sealed", "sealed", "sealed", "sealed"],
+      observerPhases: ["armed", "armed", "armed", "armed"],
       receiptCount: 1,
       repairPresent: true,
     });
@@ -241,7 +220,7 @@ describe("contentRelease/retire", () => {
     });
     await expect(readTerminalState(target)).resolves.toEqual({
       observerCount: 4,
-      observerPhases: ["sealed", "sealed", "sealed", "sealed"],
+      observerPhases: ["armed", "armed", "armed", "armed"],
       receiptCount: 0,
       repairPresent: false,
     });
@@ -264,7 +243,7 @@ describe("contentRelease/retire", () => {
     });
     await expect(readTerminalState(target)).resolves.toEqual({
       observerCount: 4,
-      observerPhases: ["sealed", "sealed", "sealed", "sealed"],
+      observerPhases: ["armed", "armed", "armed", "armed"],
       receiptCount: 1,
       repairPresent: true,
     });
