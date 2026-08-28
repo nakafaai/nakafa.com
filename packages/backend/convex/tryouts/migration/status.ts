@@ -44,15 +44,18 @@ const terminalReference = makeFunctionReference<
 export const requireTerminalRepair = Effect.fn(
   "tryouts.migration.requireTerminalRepair"
 )(function* (
-  receipt: Pick<MigrationReceiptRecord, "migrationId" | "phase" | "repair">
+  receipt: Pick<
+    MigrationReceiptRecord,
+    "migrationId" | "phase" | "proof" | "repair"
+  >
 ) {
   if (
-    receipt.phase === "cleaned" &&
+    (receipt.phase === "cleaned" || receipt.proof !== null) &&
     !hasRequiredScaleRepair(receipt.migrationId, receipt.repair)
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
-      "Cleaned try-out history migration lost its durable repair audit."
+      "Try-out history migration lost its durable repair audit."
     );
   }
 });
