@@ -7,12 +7,10 @@ import {
   vi,
 } from "@effect/vitest";
 import { SignedTryoutHistoryMigrationReceiptSchema } from "@nakafa/aksara-contracts/migration/tryout/history/spec";
-import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
-import { contentKeyResolver } from "@repo/backend/content/trust";
+import { internal } from "@repo/backend/convex/_generated/api";
 import { sealPredecessorObservation } from "@repo/backend/convex/contentRelease/predecessor/control";
 import { recordPredecessorRead } from "@repo/backend/convex/contentRelease/predecessor/record";
 import { PREDECESSOR_QUIET_WINDOW_MS } from "@repo/backend/convex/contentRelease/predecessor/spec";
-import { retireRuntimeState } from "@repo/backend/convex/contentRelease/retire";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -26,7 +24,7 @@ import {
 } from "@repo/backend/test/predecessor";
 import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Schema } from "effect";
 
 const RETIREMENT_RECEIPT_JSON =
   '{"keyId":"content-2026-07-23","payload":{"completion":{"cleanupLimit":6548,"completedAt":1787910534983,"migratedAttempts":21,"migratedScaleItems":450,"migratedScaleRuns":21,"migratedScaleVersions":3,"remainingMarkers":0},"format":"signed-tryout-history-migration-receipt","migrationId":"retained-tryout-history","planHash":"sha256:9ac40883fe6c7856a4f69e492513229d4dc4596df12d78bfc7a7c9fe182c81f9","sourceSnapshotId":"sha256:0a43a4125fc4886f90b5a509405178bfb8762ad3c7f72be80614fce2671b5162","targetBundleHash":"sha256:58f26a6cfcf0b4632453fb5d8e66725cc8f7797e04ee0eb393044421b3b4a1bf","targetSnapshotId":"sha256:83d2c8ff4fbfa56bc98e90007906f8dd06495a917a32cfd622f90471f3c0afc5"},"receiptHash":"sha256:42e30eff6c16e14ba86bb44ff85be2b621fab1b2749440e647d7b71a67b47649","signature":"VD1p9541sfW3qsQs8TdJn9NumujNYBEcRXA2eGZNdSrOaMiNDQYP6mU8crYnyEC_neYOWp_6u5ycmDKhlJ2KCA"}';
@@ -41,6 +39,7 @@ const RETIREMENT_RECEIPT = Schema.decodeUnknownSync(
   { onExcessProperty: "error" }
 )(PARSED_RETIREMENT_RECEIPT);
 const RETIREMENT_TIME = Date.UTC(2026, 7, 30, 8);
+const retire = internal.contentRelease.retire.retire;
 
 type RetirementTest = TestConvex<typeof schema>;
 
@@ -91,22 +90,15 @@ async function seedTerminalState(target: RetirementTest) {
   );
 }
 
-function retire(target: RetirementTest) {
-  return target.mutation((ctx) =>
-    runConvexProgram(
-      retireRuntimeState(
-        ctx,
-        PREDECESSOR_OBSERVATION_ID,
-        RETIREMENT_RECEIPT_JSON,
-        RETIREMENT_PROOF
-      ).pipe(
-        Effect.provideService(
-          ContentVerificationKeyResolver,
-          contentKeyResolver
-        )
-      )
-    )
-  );
+function runRetirement(
+  target: RetirementTest,
+  receiptJson = RETIREMENT_RECEIPT_JSON
+) {
+  return target.mutation(retire, {
+    observationId: PREDECESSOR_OBSERVATION_ID,
+    proof: RETIREMENT_PROOF,
+    receiptJson,
+  });
 }
 
 function readTerminalState(target: RetirementTest) {
@@ -132,7 +124,7 @@ describe("contentRelease/retire", () => {
     const target = convexTest(schema, convexModules);
     await seedTerminalState(target);
 
-    await expect(retire(target)).resolves.toMatchObject({
+    await expect(runRetirement(target)).resolves.toMatchObject({
       deleted: 5,
       migrationId: RETIREMENT_RECEIPT.payload.migrationId,
       observationId: PREDECESSOR_OBSERVATION_ID,
@@ -144,7 +136,7 @@ describe("contentRelease/retire", () => {
       receiptCount: 0,
       repairPresent: false,
     });
-    await expect(retire(target)).resolves.toMatchObject({ deleted: 0 });
+    await expect(runRetirement(target)).resolves.toMatchObject({ deleted: 0 });
   });
 
   it("rejects a late predecessor call without deleting evidence", async () => {
@@ -155,7 +147,7 @@ describe("contentRelease/retire", () => {
       runConvexProgram(recordPredecessorRead(ctx, "protected"))
     );
 
-    await expect(retire(target)).rejects.toMatchObject({
+    await expect(runRetirement(target)).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_STATE" },
     });
     await expect(readTerminalState(target)).resolves.toEqual({
@@ -179,13 +171,59 @@ describe("contentRelease/retire", () => {
       }
     });
 
-    await expect(retire(target)).rejects.toMatchObject({
+    await expect(runRetirement(target)).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
     await expect(readTerminalState(target)).resolves.toEqual({
       observerCount: 4,
       observerPhases: ["sealed", "sealed", "sealed", "sealed"],
       receiptCount: 1,
+      repairPresent: false,
+    });
+  });
+
+  it("rejects noncanonical signed receipt bytes without deleting evidence", async () => {
+    const target = convexTest(schema, convexModules);
+    await seedTerminalState(target);
+    const noncanonicalReceipt = JSON.stringify(
+      PARSED_RETIREMENT_RECEIPT,
+      undefined,
+      2
+    );
+
+    await expect(
+      runRetirement(target, noncanonicalReceipt)
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+    await expect(readTerminalState(target)).resolves.toEqual({
+      observerCount: 4,
+      observerPhases: ["sealed", "sealed", "sealed", "sealed"],
+      receiptCount: 1,
+      repairPresent: true,
+    });
+  });
+
+  it("rejects partial terminal state after receipt loss", async () => {
+    const target = convexTest(schema, convexModules);
+    await seedTerminalState(target);
+    await target.mutation(async (ctx) => {
+      const receipt = await ctx.db
+        .query("tryoutHistoryMigrationReceipts")
+        .unique();
+      expect(receipt).not.toBeNull();
+      if (receipt) {
+        await ctx.db.delete(receipt._id);
+      }
+    });
+
+    await expect(runRetirement(target)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
+    await expect(readTerminalState(target)).resolves.toEqual({
+      observerCount: 4,
+      observerPhases: ["sealed", "sealed", "sealed", "sealed"],
+      receiptCount: 0,
       repairPresent: false,
     });
   });
@@ -202,7 +240,7 @@ describe("contentRelease/retire", () => {
       })
     );
 
-    await expect(retire(target)).rejects.toMatchObject({
+    await expect(runRetirement(target)).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
     await expect(readTerminalState(target)).resolves.toEqual({
