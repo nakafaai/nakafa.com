@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer, Result } from "effect";
+import { Effect, FileSystem, Layer, Result } from "effect";
 import {
   HttpClient,
   type HttpClientRequest,
@@ -96,6 +96,30 @@ describe("GitHub Action policy", () => {
       )
     ).toBe(true);
   });
+
+  it.effect("keeps merge-group trust on accessible exact evidence", () =>
+    Effect.gen(function* () {
+      const fileSystem = yield* FileSystem.FileSystem;
+      const workflow = yield* fileSystem.readFileString(
+        `${REPOSITORY_ROOT}/.github/workflows/agent-docs.yml`
+      );
+
+      expect(workflow).not.toContain("mergeQueue");
+      expect(workflow).not.toContain("github.graphql");
+      for (const evidence of [
+        "github.rest.pulls.get",
+        'pull.state !== "open"',
+        "groupRef !== process.env.GITHUB_REF",
+        "pull.head.repo?.full_name !== context.payload.repository.full_name",
+        "actor !== trustedOwner",
+        'git rev-list --parents -n 1 "$GROUP_SHA" | wc -w',
+        'git merge-tree --write-tree "$BASE_SHA" "$PULL_HEAD"',
+        'if [ "$actual_tree" != "$expected_tree" ]; then',
+      ]) {
+        expect(workflow).toContain(evidence);
+      }
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
 
   it.effect("reads release metadata through the Effect HTTP client", () =>
     Effect.gen(function* () {
