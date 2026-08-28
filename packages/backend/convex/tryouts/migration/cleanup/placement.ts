@@ -87,12 +87,10 @@ export const verifyRepairPlacements = Effect.fn(
   const itemPlacementIdentities = new Set(
     items.map(({ placementIdentity }) => placementIdentity)
   );
+  // Unique item identities, equal cardinality, and membership prove exact equality.
   if (
     itemPlacementIdentities.size !== items.length ||
-    itemPlacementIdentities.size !== signedPlacements.size ||
-    [...signedPlacements.keys()].some(
-      (identity) => !itemPlacementIdentities.has(identity)
-    ) ||
+    signedPlacements.size !== items.length ||
     items.some((item) => {
       const placement = signedPlacements.get(item.placementIdentity);
       const run = runById.get(item.calibrationRunId);
