@@ -29,7 +29,20 @@ export function registerAgentMcpRoutes(app: AgentApp) {
     if (request.method === "OPTIONS") {
       return mcpOptionsResponse(request);
     }
-    const limited = await readRateLimit(context.env, request);
+    const limited = await Effect.runPromise(
+      enforceAgentReadLimit(context.env, request).pipe(
+        Effect.match({
+          onFailure: (error) =>
+            error._tag === "AgentRateLimitError"
+              ? {
+                  kind: "limited" as const,
+                  retryAfterMs: error.retryAfterMs,
+                }
+              : { kind: "unavailable" as const },
+          onSuccess: () => ({ kind: "allowed" as const }),
+        })
+      )
+    );
     if (limited.kind === "unavailable") {
       return withMcpResponseHeaders(mcpTransportErrorResponse(503), request);
     }
@@ -116,20 +129,3 @@ const loadMcpRuntime = Effect.fn("agent.mcp.loadRuntime")(() =>
       ]).then(([sdk, server]) => ({ sdk, server })),
   })
 );
-
-function readRateLimit(ctx: ActionCtx, request: Request) {
-  return Effect.runPromise(
-    enforceAgentReadLimit(ctx, request).pipe(
-      Effect.match({
-        onFailure: (error) =>
-          error._tag === "AgentRateLimitError"
-            ? {
-                kind: "limited" as const,
-                retryAfterMs: error.retryAfterMs,
-              }
-            : { kind: "unavailable" as const },
-        onSuccess: () => ({ kind: "allowed" as const }),
-      })
-    )
-  );
-}
