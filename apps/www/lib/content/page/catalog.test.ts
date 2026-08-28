@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   PublicPathSchema,
   ReleaseIdSchema,
@@ -9,7 +10,7 @@ import {
   ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import {
   getPublishedPageCatalog,
   readPublishedPageCatalog,
@@ -54,174 +55,175 @@ describe("published Page catalog", () => {
     );
   });
 
-  it("decodes every verified Page projection with its release pin", async () => {
-    await expect(
-      Effect.runPromise(readPublishedPageCatalog())
-    ).resolves.toEqual({
-      activeReleaseId,
-      projections: [testPageProjection],
-    });
-  });
+  it.effect("decodes every verified Page projection with its release pin", () =>
+    Effect.gen(function* () {
+      const catalog = yield* readPublishedPageCatalog();
 
-  it("caches the complete signed Page catalog", async () => {
-    await expect(getPublishedPageCatalog()).resolves.toEqual({
-      activeReleaseId,
-      projections: [testPageProjection],
-    });
-    expect(cacheMock).toHaveBeenCalledWith("page");
-  });
+      expect(catalog).toEqual({
+        activeReleaseId,
+        projections: [testPageProjection],
+      });
+    })
+  );
 
-  it.each([
+  it.effect("caches the complete signed Page catalog", () =>
+    Effect.gen(function* () {
+      const catalog = yield* Effect.tryPromise(() => getPublishedPageCatalog());
+
+      expect(catalog).toEqual({
+        activeReleaseId,
+        projections: [testPageProjection],
+      });
+      expect(cacheMock).toHaveBeenCalledWith("page");
+    })
+  );
+
+  it.effect.each([
     ["unmanaged", { activeReleaseId, managed: false, projectionJson: [] }],
     [
       "missing release",
       { activeReleaseId: null, managed: true, projectionJson: [] },
     ],
-  ])("rejects an %s Page catalog", async (_label, result) => {
-    runtimeQueryMock.mockReturnValueOnce(Effect.succeed(result));
+  ])("rejects an %s Page catalog", ([, result]) =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockReturnValueOnce(Effect.succeed(result));
 
-    await expect(
-      Effect.runPromise(readPublishedPageCatalog().pipe(Effect.flip))
-    ).resolves.toMatchObject({
-      _tag: "PublishedProjectionError",
-      publicPath: "pages",
-    });
-  });
+      const failure = yield* readPublishedPageCatalog().pipe(Effect.flip);
 
-  it("rejects malformed Page projection JSON", async () => {
-    runtimeQueryMock.mockReturnValueOnce(
-      Effect.succeed({
-        activeReleaseId,
-        managed: true,
-        projectionJson: ["{"],
-      })
-    );
+      expect(failure).toMatchObject({
+        _tag: "PublishedProjectionError",
+        publicPath: "pages",
+      });
+    })
+  );
 
-    await expect(
-      Effect.runPromise(readPublishedPageCatalog().pipe(Effect.flip))
-    ).resolves.toMatchObject({
-      _tag: "PublishedProjectionError",
-      publicPath: "pages",
-    });
-  });
-
-  it.each(["search", "lehrplaene/merdeka"])(
-    "rejects a Page shadowed by the application route %s",
-    async (publicPath) => {
-      const projection = {
-        ...testPageProjection,
-        appLocale: AppLocaleSchema.make("de"),
-        artifactLocale: ArtifactLocaleSchema.make("de"),
-        publicPath: PublicPathSchema.make(publicPath),
-      };
+  it.effect("rejects malformed Page projection JSON", () =>
+    Effect.gen(function* () {
       runtimeQueryMock.mockReturnValueOnce(
         Effect.succeed({
           activeReleaseId,
           managed: true,
-          projectionJson: [JSON.stringify(projection)],
+          projectionJson: ["{"],
         })
       );
 
-      await expect(
-        Effect.runPromise(readPublishedPageCatalog().pipe(Effect.flip))
-      ).resolves.toMatchObject({
+      const failure = yield* readPublishedPageCatalog().pipe(Effect.flip);
+
+      expect(failure).toMatchObject({
         _tag: "PublishedProjectionError",
-        appLocale: "de",
-        publicPath,
+        publicPath: "pages",
       });
-    }
+    })
   );
 
-  it("verifies the exact runtime Page against its localized catalog", async () => {
-    const catalog = {
-      activeReleaseId,
-      projections: [testPageProjection],
-    };
-    await expect(
-      Effect.runPromise(
-        verifyPublishedPageCatalog(catalog, {
+  it.effect.each(["search", "lehrplaene/merdeka"])(
+    "rejects a Page shadowed by the application route %s",
+    (publicPath) =>
+      Effect.gen(function* () {
+        const projection = {
+          ...testPageProjection,
+          appLocale: AppLocaleSchema.make("de"),
+          artifactLocale: ArtifactLocaleSchema.make("de"),
+          publicPath: PublicPathSchema.make(publicPath),
+        };
+        runtimeQueryMock.mockReturnValueOnce(
+          Effect.succeed({
+            activeReleaseId,
+            managed: true,
+            projectionJson: [JSON.stringify(projection)],
+          })
+        );
+
+        const failure = yield* readPublishedPageCatalog().pipe(Effect.flip);
+
+        expect(failure).toMatchObject({
+          _tag: "PublishedProjectionError",
+          appLocale: "de",
+          publicPath,
+        });
+      })
+  );
+
+  it.effect(
+    "verifies the exact runtime Page against its localized catalog",
+    () =>
+      Effect.gen(function* () {
+        const catalog = {
+          activeReleaseId,
+          projections: [testPageProjection],
+        };
+        const verified = yield* verifyPublishedPageCatalog(catalog, {
           activeReleaseId,
           projection: testPageProjection,
-        })
-      )
-    ).resolves.toEqual([testPageProjection]);
+        });
+        expect(verified).toEqual([testPageProjection]);
 
-    await expect(
-      Effect.runPromise(
-        verifyPublishedPageCatalog(catalog, {
+        const releaseFailure = yield* verifyPublishedPageCatalog(catalog, {
           activeReleaseId: ReleaseIdSchema.make("release-next"),
           projection: testPageProjection,
-        }).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({
-      _tag: "PublishedReleaseMismatchError",
-    });
-    await expect(
-      Effect.runPromise(
-        verifyPublishedPageCatalog(catalog, {
+        }).pipe(Effect.flip);
+        expect(releaseFailure).toMatchObject({
+          _tag: "PublishedReleaseMismatchError",
+        });
+
+        const projectionFailure = yield* verifyPublishedPageCatalog(catalog, {
           activeReleaseId,
           projection: {
             ...testPageProjection,
             publicPath: PublicPathSchema.make("other-page"),
           },
-        }).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({
-      _tag: "PublishedProjectionError",
-      publicPath: "other-page",
-    });
-  });
-
-  it("resolves signed locale counterparts without a route map", async () => {
-    runtimeQueryMock.mockReturnValue(
-      Effect.succeed({
-        activeReleaseId,
-        managed: true,
-        projectionJson: [
-          testPageProjection,
-          idPageProjection,
-          dePageProjection,
-        ].map((projection) => JSON.stringify(projection)),
-      })
-    );
-
-    await expect(
-      Effect.runPromise(
-        readPublishedPageLocalePath({
-          currentLocale: "en",
-          locale: "de",
-          publicPath: "terms-of-service",
-        })
-      )
-    ).resolves.toEqual({
-      kind: "found",
-      publicPath: "nutzungsbedingungen",
-    });
-    await expect(
-      Effect.runPromise(
-        readPublishedPageLocalePath({
-          currentLocale: "en",
-          locale: "de",
+        }).pipe(Effect.flip);
+        expect(projectionFailure).toMatchObject({
+          _tag: "PublishedProjectionError",
           publicPath: "other-page",
-        })
-      )
-    ).resolves.toEqual({ kind: "unmanaged" });
-
-    runtimeQueryMock.mockReturnValueOnce(
-      Effect.succeed({
-        activeReleaseId,
-        managed: true,
-        projectionJson: [JSON.stringify(testPageProjection)],
+        });
       })
-    );
-    await expect(
-      Effect.runPromise(
-        readPublishedPageLocalePath({
-          currentLocale: "en",
-          locale: "de",
-          publicPath: "terms-of-service",
+  );
+
+  it.effect("resolves signed locale counterparts without a route map", () =>
+    Effect.gen(function* () {
+      runtimeQueryMock.mockReturnValue(
+        Effect.succeed({
+          activeReleaseId,
+          managed: true,
+          projectionJson: [
+            testPageProjection,
+            idPageProjection,
+            dePageProjection,
+          ].map((projection) => JSON.stringify(projection)),
         })
-      )
-    ).resolves.toEqual({ kind: "missing" });
-  });
+      );
+
+      const found = yield* readPublishedPageLocalePath({
+        currentLocale: "en",
+        locale: "de",
+        publicPath: "terms-of-service",
+      });
+      expect(found).toEqual({
+        kind: "found",
+        publicPath: "nutzungsbedingungen",
+      });
+
+      const unmanaged = yield* readPublishedPageLocalePath({
+        currentLocale: "en",
+        locale: "de",
+        publicPath: "other-page",
+      });
+      expect(unmanaged).toEqual({ kind: "unmanaged" });
+
+      runtimeQueryMock.mockReturnValueOnce(
+        Effect.succeed({
+          activeReleaseId,
+          managed: true,
+          projectionJson: [JSON.stringify(testPageProjection)],
+        })
+      );
+      const missing = yield* readPublishedPageLocalePath({
+        currentLocale: "en",
+        locale: "de",
+        publicPath: "terms-of-service",
+      });
+      expect(missing).toEqual({ kind: "missing" });
+    })
+  );
 });
