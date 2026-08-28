@@ -121,15 +121,23 @@ describe("GitHub Action policy", () => {
         "      - name: Setup toolchain",
         trustStart
       );
+      const classifyStart = workflow.indexOf(
+        "      - name: Classify production acceptance",
+        setupStart
+      );
+      const qualityStart = workflow.indexOf("\n  quality:", classifyStart);
 
       expect(provenanceStart).toBeGreaterThan(-1);
       expect(treeStart).toBeGreaterThan(provenanceStart);
       expect(trustStart).toBeGreaterThan(treeStart);
       expect(setupStart).toBeGreaterThan(trustStart);
+      expect(classifyStart).toBeGreaterThan(setupStart);
+      expect(qualityStart).toBeGreaterThan(classifyStart);
 
       const provenanceStep = workflow.slice(provenanceStart, treeStart);
       const treeStep = workflow.slice(treeStart, trustStart);
       const trustStep = workflow.slice(trustStart, setupStart);
+      const classifyStep = workflow.slice(classifyStart, qualityStart);
 
       expect(workflow).not.toContain("mergeQueue");
       expect(workflow).not.toContain("github.graphql");
@@ -200,6 +208,27 @@ describe("GitHub Action policy", () => {
         expect(trustStep.indexOf(evidence)).toBe(
           trustStep.lastIndexOf(evidence)
         );
+      }
+
+      for (const evidence of [
+        "if: steps.trust.outputs.trusted == 'true'",
+        `BASE_SHA: ${actionExpression("github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before")}`,
+        `HEAD_SHA: ${actionExpression("github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.event_name == 'merge_group' && github.event.merge_group.head_sha || github.sha")}`,
+        "run: pnpm ci:production-acceptance",
+      ]) {
+        expect(classifyStep).toContain(evidence);
+        expect(classifyStep.indexOf(evidence)).toBe(
+          classifyStep.lastIndexOf(evidence)
+        );
+      }
+
+      for (const evidence of [
+        `required: ${actionExpression("steps.classify.outputs.required || steps.default.outputs.required")}`,
+        `trusted: ${actionExpression("steps.trust.outputs.trusted")}`,
+        "if: needs.production-scope.outputs.required == 'true' && needs.production-scope.outputs.trusted == 'true'",
+      ]) {
+        expect(workflow).toContain(evidence);
+        expect(workflow.indexOf(evidence)).toBe(workflow.lastIndexOf(evidence));
       }
     }).pipe(Effect.provide(NodeServices.layer))
   );
