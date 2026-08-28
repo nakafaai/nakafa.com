@@ -3,20 +3,10 @@
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { Cause, Data, Effect, Layer, Runtime } from "effect";
+import { Cause, Effect, Layer } from "effect";
 import { writeJson } from "#cli/output";
 import { readPackageVersion } from "#cli/package";
 import { runCli } from "#cli/program";
-
-class CliProcessExit extends Data.TaggedError("CliProcessExit")<{
-  readonly exitCode: number;
-}> {
-  readonly [Runtime.errorReported] = false;
-
-  get [Runtime.errorExitCode]() {
-    return this.exitCode;
-  }
-}
 
 const reportStartupFailure = Effect.fn("NakafaCli.reportStartupFailure")(
   function* (cause: Cause.Cause<unknown>) {
@@ -44,8 +34,10 @@ const program = Effect.gen(function* () {
       ? Effect.failCause(cause)
       : reportStartupFailure(cause).pipe(Effect.as(4))
   ),
-  Effect.flatMap((exitCode) =>
-    exitCode === 0 ? Effect.void : Effect.fail(new CliProcessExit({ exitCode }))
+  Effect.tap((exitCode) =>
+    Effect.sync(() => {
+      process.exitCode = exitCode;
+    })
   ),
   Effect.provide(Layer.mergeAll(NodeServices.layer, NodeHttpClient.layerFetch))
 );

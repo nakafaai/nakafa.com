@@ -39,7 +39,7 @@ const PackResultSchema = Schema.fromJsonString(
   )
 );
 
-const runCommand = Effect.fn("NakafaCli.test.runCommand")(function* (
+const readCommand = Effect.fn("NakafaCli.test.readCommand")(function* (
   command: string,
   args: readonly string[],
   cwd: string
@@ -57,6 +57,15 @@ const runCommand = Effect.fn("NakafaCli.test.runCommand")(function* (
       );
     })
   );
+  return { exitCode, stderr, stdout };
+});
+
+const runCommand = Effect.fn("NakafaCli.test.runCommand")(function* (
+  command: string,
+  args: readonly string[],
+  cwd: string
+) {
+  const { exitCode, stderr, stdout } = yield* readCommand(command, args, cwd);
   if (exitCode !== 0) {
     return yield* new CliTestCommandError({
       command: [command, ...args].join(" "),
@@ -159,6 +168,7 @@ describe("Nakafa CLI package", () => {
         );
         const help = yield* runCommand(binary, ["--help"], directory);
         const version = yield* runCommand(binary, ["--version"], directory);
+        const invalid = yield* readCommand(binary, ["--unknown"], directory);
         const interrupted = yield* Effect.scoped(
           Effect.gen(function* () {
             const completeRequest = yield* Deferred.make<void>();
@@ -217,6 +227,12 @@ describe("Nakafa CLI package", () => {
         expect(files.every(isAllowedPackedFile)).toBe(true);
         expect(help).toContain("Nakafa CLI");
         expect(version).toBe(`${packageVersion}\n`);
+        expect(invalid.exitCode).toBe(2);
+        expect(
+          yield* Schema.decodeEffect(Schema.fromJsonString(Schema.Json))(
+            invalid.stderr
+          )
+        ).toMatchObject({ code: "INVOCATION_ERROR" });
         expect(manifest).not.toContain('"dependencies"');
         expect(bundle).not.toContain("@repo/contents");
         expect(interrupted).toEqual({
