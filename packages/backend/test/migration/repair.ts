@@ -277,8 +277,14 @@ export async function seedRepair(
   return { cleanup, repair, source };
 }
 
-/** Seeds two exact placements whose stored items duplicate one identity. */
-export async function seedDuplicateScaleItemIdentity(test: CleanupTest) {
+/** Seeds two placements into one section with selectable storage drift. */
+async function seedCombinedRepairSection(
+  test: CleanupTest,
+  options: {
+    readonly duplicateItemIdentity: boolean;
+    readonly reverseStorageOrder: boolean;
+  }
+) {
   const seeded = await seedRepair(test, 0, [
     "general-reasoning",
     "english-language",
@@ -307,6 +313,15 @@ export async function seedDuplicateScaleItemIdentity(test: CleanupTest) {
           .eq("rowHash", firstSource.section.record.rowHash)
       )
       .unique();
+    const firstPlacement = await ctx.db
+      .query("tryoutHistoryRows")
+      .withIndex("by_snapshotId_and_rowKind_and_rowHash", (query) =>
+        query
+          .eq("snapshotId", CLEANUP_SOURCE_SNAPSHOT)
+          .eq("rowKind", "placement")
+          .eq("rowHash", firstSource.placement.record.rowHash)
+      )
+      .unique();
     const secondPlacement = await ctx.db
       .query("tryoutHistoryRows")
       .withIndex("by_snapshotId_and_rowKind_and_rowHash", (query) =>
@@ -316,7 +331,7 @@ export async function seedDuplicateScaleItemIdentity(test: CleanupTest) {
           .eq("rowHash", secondSource.placement.record.rowHash)
       )
       .unique();
-    assert.ok(firstItem && firstCatalog && secondPlacement);
+    assert.ok(firstItem && firstCatalog && firstPlacement && secondPlacement);
     const catalogRowHash =
       "sha256:a82e49366921f6bdc2e61b36ccb09bcf50eb56a352f0fe9d85f3ab40701940b8";
     const section = {
@@ -350,22 +365,31 @@ export async function seedDuplicateScaleItemIdentity(test: CleanupTest) {
         },
         rowHash: placementRowHash,
       },
-    };
+    } as const;
     await ctx.db.replace("tryoutHistoryRows", secondPlacement._id, {
       answerArtifactHash: placement.record.row.answerArtifactHash,
-      index: secondPlacement.index,
+      index: options.reverseStorageOrder
+        ? firstPlacement.index
+        : secondPlacement.index,
       questionArtifactHash: placement.record.row.questionArtifactHash,
       rowHash: placementRowHash,
       rowJson: JSON.stringify(placement),
       rowKind: "placement",
       snapshotId: CLEANUP_SOURCE_SNAPSHOT,
     });
+    if (options.reverseStorageOrder) {
+      await ctx.db.patch(firstPlacement._id, { index: secondPlacement.index });
+    }
     await ctx.db.patch(firstRunId, { questionCount: 2 });
     await ctx.db.delete(secondRunId);
     await ctx.db.patch(secondItemId, {
       calibrationRunId: firstRunId,
-      placementIdentity: firstItem.placementIdentity,
-      placementRowHash: firstItem.placementRowHash,
+      placementIdentity: options.duplicateItemIdentity
+        ? firstItem.placementIdentity
+        : historicalPlacementIdentity(placement.record.row),
+      placementRowHash: options.duplicateItemIdentity
+        ? firstItem.placementRowHash
+        : placementRowHash,
     });
   });
   return {
@@ -375,6 +399,22 @@ export async function seedDuplicateScaleItemIdentity(test: CleanupTest) {
       runs: [{ ...firstRun, questionCount: 2 }],
     },
   };
+}
+
+/** Seeds two exact placements whose stored items duplicate one identity. */
+export function seedDuplicateScaleItemIdentity(test: CleanupTest) {
+  return seedCombinedRepairSection(test, {
+    duplicateItemIdentity: true,
+    reverseStorageOrder: false,
+  });
+}
+
+/** Seeds one exact section whose source indices are not question order. */
+export function seedUnorderedScalePlacements(test: CleanupTest) {
+  return seedCombinedRepairSection(test, {
+    duplicateItemIdentity: false,
+    reverseStorageOrder: true,
+  });
 }
 
 /** Reconstructs the frozen catalog identity used by retained scale rows. */
@@ -412,10 +452,23 @@ function historicalCatalogIdentity(
   });
 }
 
+type RepairPlacementRow = Omit<
+  ReturnType<typeof makeRepairSource>["placement"]["record"]["row"],
+  | "answerContentKey"
+  | "questionContentKey"
+  | "questionOrder"
+  | "questionSourcePath"
+  | "title"
+> & {
+  readonly answerContentKey: `${string}/answer`;
+  readonly questionContentKey: `${string}/question`;
+  readonly questionOrder: number;
+  readonly questionSourcePath: string;
+  readonly title: string;
+};
+
 /** Projects one retained fixture through Aksara's placement contract. */
-function historicalPlacementIdentity(
-  row: ReturnType<typeof makeRepairSource>["placement"]["record"]["row"]
-) {
+function historicalPlacementIdentity(row: RepairPlacementRow) {
   const { locale, ...placement } = row;
   const appLocale = AppLocaleSchema.make(locale);
   return tryoutPlacementIdentity(

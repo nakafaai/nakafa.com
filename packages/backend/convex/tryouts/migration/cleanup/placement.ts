@@ -67,9 +67,16 @@ export const verifyRepairPlacements = Effect.fn(
   >();
   for (const run of runs) {
     const source = placementsBySection[run.sectionIdentity] ?? [];
+    const questionOrders = new Set(
+      source.map(({ record }) => record.row.questionOrder)
+    );
     if (
       source.length !== run.questionCount ||
-      source.some(({ record }, index) => record.row.questionOrder !== index + 1)
+      questionOrders.size !== run.questionCount ||
+      [...questionOrders].some(
+        (order) =>
+          !Number.isSafeInteger(order) || order < 1 || order > run.questionCount
+      )
     ) {
       return yield* repairPlacementFailure();
     }
