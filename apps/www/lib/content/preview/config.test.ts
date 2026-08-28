@@ -1,7 +1,8 @@
 // @vitest-environment node
 
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option, Redacted } from "effect";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import {
   hasPreviewConfig,
   previewUrl,
@@ -14,16 +15,6 @@ import { previewConfig } from "@/test/content-preview";
 afterEach(() => {
   vi.unstubAllEnvs();
 });
-
-/** Runs the dedicated preview environment boundary. */
-function readConfig() {
-  return Effect.runPromise(readPreviewConfig());
-}
-
-/** Runs the independent local renderer environment boundary. */
-function readRendererConfig() {
-  return Effect.runPromise(readPreviewRendererConfig());
-}
 
 /** Installs one complete test-only child environment. */
 function stubPreviewEnvironment() {
@@ -79,144 +70,172 @@ describe("local preview configuration", () => {
     expect(hasPreviewRendererEnvironment()).toBe(false);
   });
 
-  it("returns one redacted development token", async () => {
-    vi.stubEnv("NODE_ENV", "development");
-    stubPreviewEnvironment();
-    const config = await readConfig();
+  it.effect("returns one redacted development token", () =>
+    Effect.gen(function* () {
+      vi.stubEnv("NODE_ENV", "development");
+      stubPreviewEnvironment();
+      const config = yield* readPreviewConfig();
 
-    expect(Option.map(config, ({ token }) => Redacted.value(token))).toEqual(
-      Option.some("provider-token")
-    );
-    expect(Option.map(config, ({ origin }) => origin.toString())).toEqual(
-      Option.some("http://127.0.0.1:4000/")
-    );
-  });
+      expect(Option.map(config, ({ token }) => Redacted.value(token))).toEqual(
+        Option.some("provider-token")
+      );
+      expect(Option.map(config, ({ origin }) => origin.toString())).toEqual(
+        Option.some("http://127.0.0.1:4000/")
+      );
+    })
+  );
 
-  it("ignores absent and non-development preview configuration", async () => {
-    vi.stubEnv("NODE_ENV", "development");
-    vi.stubEnv("AKSARA_PREVIEW_PROVIDER_TOKEN", undefined);
-    await expect(readConfig()).resolves.toEqual(Option.none());
+  it.effect("ignores absent and non-development preview configuration", () =>
+    Effect.gen(function* () {
+      vi.stubEnv("NODE_ENV", "development");
+      vi.stubEnv("AKSARA_PREVIEW_PROVIDER_TOKEN", undefined);
+      expect(yield* readPreviewConfig()).toEqual(Option.none());
 
-    vi.stubEnv("NODE_ENV", "production");
-    stubPreviewEnvironment();
-    await expect(readConfig()).resolves.toEqual(Option.none());
-  });
+      vi.stubEnv("NODE_ENV", "production");
+      stubPreviewEnvironment();
+      expect(yield* readPreviewConfig()).toEqual(Option.none());
+    })
+  );
 
-  it("fails closed for an invalid development token", async () => {
-    vi.stubEnv("NODE_ENV", "development");
-    vi.stubEnv("AKSARA_PREVIEW_PROVIDER_TOKEN", " ");
-    const error = await Effect.runPromise(
-      readPreviewConfig().pipe(Effect.flip)
-    );
+  it.effect("fails closed for an invalid development token", () =>
+    Effect.gen(function* () {
+      vi.stubEnv("NODE_ENV", "development");
+      vi.stubEnv("AKSARA_PREVIEW_PROVIDER_TOKEN", " ");
+      const error = yield* readPreviewConfig().pipe(Effect.flip);
 
-    expect(error._tag).toBe("PreviewConfigError");
-  });
+      expect(error._tag).toBe("PreviewConfigError");
+    })
+  );
 
-  it("keeps provider and renderer credentials independent", async () => {
-    vi.stubEnv("NODE_ENV", "development");
-    stubPreviewEnvironment();
-    stubRendererEnvironment();
+  it.effect("keeps provider and renderer credentials independent", () =>
+    Effect.gen(function* () {
+      vi.stubEnv("NODE_ENV", "development");
+      stubPreviewEnvironment();
+      stubRendererEnvironment();
 
-    const [provider, renderer] = await Promise.all([
-      readConfig(),
-      readRendererConfig(),
-    ]);
+      const [provider, renderer] = yield* Effect.all([
+        readPreviewConfig(),
+        readPreviewRendererConfig(),
+      ]);
 
-    expect(Option.map(provider, ({ token }) => Redacted.value(token))).toEqual(
-      Option.some("provider-token")
-    );
-    expect(Option.map(renderer, ({ token }) => Redacted.value(token))).toEqual(
-      Option.some("renderer-token")
-    );
-    expect(Option.map(renderer, ({ secret }) => secret)).toEqual(
-      Option.some("s".repeat(43))
-    );
-  });
+      expect(
+        Option.map(provider, ({ token }) => Redacted.value(token))
+      ).toEqual(Option.some("provider-token"));
+      expect(
+        Option.map(renderer, ({ token }) => Redacted.value(token))
+      ).toEqual(Option.some("renderer-token"));
+      expect(Option.map(renderer, ({ secret }) => secret)).toEqual(
+        Option.some("s".repeat(43))
+      );
+    })
+  );
 
-  it("ignores absent or production renderer credentials", async () => {
-    vi.stubEnv("NODE_ENV", "development");
-    await expect(readRendererConfig()).resolves.toEqual(Option.none());
+  it.effect("ignores absent or production renderer credentials", () =>
+    Effect.gen(function* () {
+      vi.stubEnv("NODE_ENV", "development");
+      expect(yield* readPreviewRendererConfig()).toEqual(Option.none());
 
-    vi.stubEnv("NODE_ENV", "production");
-    stubRendererEnvironment();
-    await expect(readRendererConfig()).resolves.toEqual(Option.none());
-  });
+      vi.stubEnv("NODE_ENV", "production");
+      stubRendererEnvironment();
+      expect(yield* readPreviewRendererConfig()).toEqual(Option.none());
+    })
+  );
 
-  it("fails closed for partial or invalid renderer credentials", async () => {
-    vi.stubEnv("NODE_ENV", "development");
-    vi.stubEnv("AKSARA_PREVIEW_RENDERER_TOKEN", "renderer-token");
-    await expect(
-      Effect.runPromise(readPreviewRendererConfig().pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "PreviewRendererConfigError" });
+  it.effect("fails closed for partial or invalid renderer credentials", () =>
+    Effect.gen(function* () {
+      vi.stubEnv("NODE_ENV", "development");
+      vi.stubEnv("AKSARA_PREVIEW_RENDERER_TOKEN", "renderer-token");
+      expect(
+        yield* readPreviewRendererConfig().pipe(Effect.flip)
+      ).toMatchObject({ _tag: "PreviewRendererConfigError" });
 
-    stubRendererEnvironment();
-    vi.stubEnv("AKSARA_PREVIEW_RENDERER_SECRET", "invalid");
-    await expect(
-      Effect.runPromise(readPreviewRendererConfig().pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "PreviewRendererConfigError" });
-  });
+      stubRendererEnvironment();
+      vi.stubEnv("AKSARA_PREVIEW_RENDERER_SECRET", "invalid");
+      expect(
+        yield* readPreviewRendererConfig().pipe(Effect.flip)
+      ).toMatchObject({ _tag: "PreviewRendererConfigError" });
+    })
+  );
 
-  it("requires each environment field to use its exact provider endpoint", async () => {
-    vi.stubEnv("NODE_ENV", "development");
-    stubPreviewEnvironment();
-    vi.stubEnv("AKSARA_PREVIEW_EVENTS_PATH", "/v1/manifest");
+  it.effect(
+    "requires each environment field to use its exact provider endpoint",
+    () =>
+      Effect.gen(function* () {
+        vi.stubEnv("NODE_ENV", "development");
+        stubPreviewEnvironment();
+        vi.stubEnv("AKSARA_PREVIEW_EVENTS_PATH", "/v1/manifest");
 
-    await expect(
-      Effect.runPromise(readPreviewConfig().pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "PreviewConfigError" });
-  });
+        expect(yield* readPreviewConfig().pipe(Effect.flip)).toMatchObject({
+          _tag: "PreviewConfigError",
+        });
+      })
+  );
 
-  it("keeps invalid loopback ports in the typed configuration error channel", async () => {
-    vi.stubEnv("NODE_ENV", "development");
-    stubPreviewEnvironment();
-    vi.stubEnv("AKSARA_PREVIEW_ORIGIN", "http://127.0.0.1:99999/");
+  it.effect(
+    "keeps invalid loopback ports in the typed configuration error channel",
+    () =>
+      Effect.gen(function* () {
+        vi.stubEnv("NODE_ENV", "development");
+        stubPreviewEnvironment();
+        vi.stubEnv("AKSARA_PREVIEW_ORIGIN", "http://127.0.0.1:99999/");
 
-    await expect(
-      Effect.runPromise(readPreviewConfig().pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "PreviewConfigError" });
-  });
+        expect(yield* readPreviewConfig().pipe(Effect.flip)).toMatchObject({
+          _tag: "PreviewConfigError",
+        });
+      })
+  );
 
-  it("rejects a network path and any resolved origin mismatch", async () => {
-    const networkPath = await Effect.runPromise(
-      previewUrl(previewConfig, "//attacker.test/steal").pipe(Effect.flip)
-    );
-    const origin = new URL(previewConfig.origin);
-    Object.defineProperty(origin, "origin", {
-      value: "http://attacker.test",
-    });
-    const originMismatch = await Effect.runPromise(
-      previewUrl({ ...previewConfig, origin }, "/v1/manifest").pipe(Effect.flip)
-    );
+  it.effect("rejects a network path and any resolved origin mismatch", () =>
+    Effect.gen(function* () {
+      const networkPath = yield* previewUrl(
+        previewConfig,
+        "//attacker.test/steal"
+      ).pipe(Effect.flip);
+      const origin = new URL(previewConfig.origin);
+      Object.defineProperty(origin, "origin", {
+        value: "http://attacker.test",
+      });
+      const originMismatch = yield* previewUrl(
+        { ...previewConfig, origin },
+        "/v1/manifest"
+      ).pipe(Effect.flip);
 
-    expect(networkPath._tag).toBe("PreviewConfigError");
-    expect(originMismatch._tag).toBe("PreviewConfigError");
-  });
+      expect(networkPath._tag).toBe("PreviewConfigError");
+      expect(originMismatch._tag).toBe("PreviewConfigError");
+    })
+  );
 
-  it("accepts only the two provider endpoints and exact artifact address", async () => {
-    const artifactPath = `/v1/artifacts/sha256%3A${"a".repeat(64)}`;
-    const accepted = await Promise.all(
-      ["/v1/events", "/v1/manifest", artifactPath].map((path) =>
-        Effect.runPromise(previewUrl(previewConfig, path))
-      )
-    );
+  it.effect(
+    "accepts only the two provider endpoints and exact artifact address",
+    () =>
+      Effect.gen(function* () {
+        const artifactPath = `/v1/artifacts/sha256%3A${"a".repeat(64)}`;
+        const accepted = yield* Effect.all(
+          ["/v1/events", "/v1/manifest", artifactPath].map((path) =>
+            previewUrl(previewConfig, path)
+          )
+        );
 
-    expect(accepted.map((url) => url.pathname)).toEqual([
-      "/v1/events",
-      "/v1/manifest",
-      artifactPath,
-    ]);
-  });
+        expect(accepted.map((url) => url.pathname)).toEqual([
+          "/v1/events",
+          "/v1/manifest",
+          artifactPath,
+        ]);
+      })
+  );
 
-  it.each([
+  it.effect.each([
     "/v1/unknown",
     `/v1/artifacts/sha256%3a${"a".repeat(64)}`,
     `/v1/artifacts/sha256%3A${"A".repeat(64)}`,
     `/v1/artifacts/sha256%3A${"a".repeat(63)}`,
     "/v1/artifacts/%2e%2e%2fmanifest",
     "/v1/manifest?next=artifact",
-  ])("rejects non-contract provider path %s", async (path) => {
-    await expect(
-      Effect.runPromise(previewUrl(previewConfig, path).pipe(Effect.flip))
-    ).resolves.toMatchObject({ _tag: "PreviewConfigError" });
-  });
+  ])("rejects non-contract provider path %s", (path) =>
+    Effect.gen(function* () {
+      expect(
+        yield* previewUrl(previewConfig, path).pipe(Effect.flip)
+      ).toMatchObject({ _tag: "PreviewConfigError" });
+    })
+  );
 });
