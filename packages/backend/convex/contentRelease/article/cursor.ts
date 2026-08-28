@@ -1,7 +1,7 @@
 import { DateOnlySchema } from "@nakafa/aksara-contracts/date";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { ArticleCategorySchema } from "@nakafa/aksara-transition/projection/article";
+import { ArticleCategorySchema } from "@nakafa/aksara-contracts/projection/article";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import {

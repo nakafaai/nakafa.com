@@ -2,11 +2,11 @@ import {
   type MaterialDomain,
   MaterialDomainSchema,
 } from "@nakafa/aksara-contracts/material/domain";
-import type { ArticleProjection } from "@nakafa/aksara-transition/projection/article";
+import type { ArticleProjection } from "@nakafa/aksara-contracts/projection/article";
 import {
   MaterialKeySchema,
   type MaterialLessonProjection,
-} from "@nakafa/aksara-transition/projection/material";
+} from "@nakafa/aksara-contracts/projection/material";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { loadArticleOwner } from "@repo/backend/convex/contentRelease/article/owner";
 import { verifyArticle } from "@repo/backend/convex/contentRelease/article/verify";

@@ -1,6 +1,6 @@
 import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { ACTIVE_APP_LOCALES } from "@nakafa/aksara-contracts/locale";
-import { ContentProjectionSchema as CurrentContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
+import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
 import { quranSourceFileCount } from "@nakafa/aksara-contracts/quran/source";
 import {
   ContentReleaseItemSchema,
@@ -15,7 +15,6 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
-import { ContentProjectionSchema as StoredContentProjectionSchema } from "@nakafa/aksara-transition/projection/spec";
 import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-transition/release/rollback/spec";
 import { PublishedQuranManifestSchema } from "@repo/backend/content/quran/contract";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
@@ -126,13 +125,13 @@ export const decodeArtifactJson = Effect.fn(
     )
   )
 );
-/** Strictly decodes one authenticated projection already present in storage. */
+/** Strictly decodes one current projection from canonical storage JSON. */
 export const decodeProjectionJson = Effect.fn(
   "contentRelease.decodeProjectionJson"
 )((source: string) =>
   parseStoredJson(source, "Content projection").pipe(
     Effect.flatMap(
-      Schema.decodeUnknownEffect(StoredContentProjectionSchema, {
+      Schema.decodeUnknownEffect(ContentProjectionSchema, {
         onExcessProperty: "error",
       })
     ),
@@ -141,26 +140,6 @@ export const decodeProjectionJson = Effect.fn(
         new ReleaseError({
           code: "CONTENT_RELEASE_INTEGRITY",
           message: "Content projection does not satisfy its exact contract.",
-        })
-    )
-  )
-);
-/** Strictly decodes one newly staged projection through the current contract. */
-export const decodeCurrentProjectionJson = Effect.fn(
-  "contentRelease.decodeCurrentProjectionJson"
-)((source: string) =>
-  parseStoredJson(source, "Current content projection").pipe(
-    Effect.flatMap(
-      Schema.decodeUnknownEffect(CurrentContentProjectionSchema, {
-        onExcessProperty: "error",
-      })
-    ),
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message:
-            "New content projection does not satisfy the current contract.",
         })
     )
   )

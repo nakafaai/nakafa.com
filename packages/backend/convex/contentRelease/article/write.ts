@@ -1,4 +1,4 @@
-import type { ArticleProjection } from "@nakafa/aksara-transition/projection/article";
+import type { ArticleProjection } from "@nakafa/aksara-contracts/projection/article";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { adjustArticleBucket } from "@repo/backend/convex/contentRelease/article/bucket";

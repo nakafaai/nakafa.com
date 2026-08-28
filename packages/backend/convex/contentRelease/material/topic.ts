@@ -1,5 +1,5 @@
 import { makeLearningGraphIdentity } from "@nakafa/aksara-contracts/graph/identity";
-import type { MaterialLessonProjection } from "@nakafa/aksara-transition/projection/material";
+import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { Effect } from "effect";
 

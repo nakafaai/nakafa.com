@@ -1,7 +1,7 @@
 import {
   type ArticleRouteSlug,
   ArticleRouteSlugSchema,
-} from "@nakafa/aksara-transition/projection/article";
+} from "@nakafa/aksara-contracts/projection/article";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { adjustArticleBucket } from "@repo/backend/convex/contentRelease/article/bucket";
