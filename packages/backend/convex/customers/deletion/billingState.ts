@@ -29,23 +29,28 @@ export const recordCustomerDeletionCheckpointProgram = Effect.fn(
   polarCustomerId: string,
   cleanupUserId?: Id<"users">
 ) {
-  const [customerCheckpoint, polarTombstone] = yield* tryCustomerDeletion(() =>
-    Promise.all([
+  const [customerCheckpoint, polarTombstone] = yield* Effect.all(
+    [
       cleanupUserId
-        ? ctx.db
-            .query("customerDeletionTombstones")
-            .withIndex("by_cleanupUserId", (query) =>
-              query.eq("cleanupUserId", cleanupUserId)
-            )
-            .unique()
-        : Promise.resolve(null),
-      ctx.db
-        .query("customerDeletionTombstones")
-        .withIndex("by_polarCustomerId", (query) =>
-          query.eq("polarCustomerId", polarCustomerId)
-        )
-        .unique(),
-    ])
+        ? tryCustomerDeletion(() =>
+            ctx.db
+              .query("customerDeletionTombstones")
+              .withIndex("by_cleanupUserId", (query) =>
+                query.eq("cleanupUserId", cleanupUserId)
+              )
+              .unique()
+          )
+        : Effect.succeed(null),
+      tryCustomerDeletion(() =>
+        ctx.db
+          .query("customerDeletionTombstones")
+          .withIndex("by_polarCustomerId", (query) =>
+            query.eq("polarCustomerId", polarCustomerId)
+          )
+          .unique()
+      ),
+    ],
+    { concurrency: "unbounded" }
   );
 
   if (
