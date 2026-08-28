@@ -7,6 +7,7 @@ import { cache } from "react";
 import { fetchAuthQuery, getToken, preloadAuthQuery } from "@/lib/auth/server";
 
 const SCHOOL_SWITCHER_PAGE_SIZE = 20;
+type SchoolAuthToken = Awaited<ReturnType<typeof getToken>>;
 
 const emptySchoolSwitcherPage = {
   continueCursor: "",
@@ -82,15 +83,19 @@ export const getSchoolRouteSnapshot = cache(
  * Returns `null` when the class cannot be resolved for the current viewer so
  * the route can delegate to Next's native not-found handling.
  */
-export async function preloadClassRoute({ classId }: { classId: string }) {
-  const token = await getToken();
+export const preloadClassRoute = Effect.fn("www.school.preloadClassRoute")(
+  function* ({
+    classId,
+    token,
+  }: {
+    readonly classId: string;
+    readonly token: SchoolAuthToken;
+  }) {
+    if (!token) {
+      return null;
+    }
 
-  if (!token) {
-    return null;
-  }
-
-  return Effect.runPromise(
-    Effect.tryPromise(() =>
+    return yield* Effect.tryPromise(() =>
       preloadAuthQuery(api.classes.queries.getClassRoute, { classId })
     ).pipe(
       Effect.map((preloaded) => ({
@@ -109,30 +114,28 @@ export async function preloadClassRoute({ classId }: { classId: string }) {
       Effect.catch((error) =>
         captureSchoolRouteError(error, "school-class-route-boundary")
       )
-    )
-  );
-}
+    );
+  }
+);
 
 /** Load the first school-switcher page for the authenticated school shell. */
-export async function getSchoolSwitcherPage() {
-  const token = await getToken();
-
+export const getSchoolSwitcherPage = Effect.fn(
+  "www.school.getSchoolSwitcherPage"
+)(function* (token: SchoolAuthToken) {
   if (!token) {
     return emptySchoolSwitcherPage;
   }
 
-  return Effect.runPromise(
-    Effect.tryPromise(() =>
-      fetchAuthQuery(api.schools.queries.getMySchoolsPage, {
-        paginationOpts: {
-          cursor: null,
-          numItems: SCHOOL_SWITCHER_PAGE_SIZE,
-        },
-      })
-    ).pipe(
-      Effect.catch((error) =>
-        captureSchoolRouteError(error, "school-switcher-page")
-      )
+  return yield* Effect.tryPromise(() =>
+    fetchAuthQuery(api.schools.queries.getMySchoolsPage, {
+      paginationOpts: {
+        cursor: null,
+        numItems: SCHOOL_SWITCHER_PAGE_SIZE,
+      },
+    })
+  ).pipe(
+    Effect.catch((error) =>
+      captureSchoolRouteError(error, "school-switcher-page")
     )
   );
-}
+});

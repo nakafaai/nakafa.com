@@ -1,3 +1,4 @@
+import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
@@ -6,6 +7,7 @@ import { SchoolClassesHeaderInfo } from "@/components/school/classes/info";
 import { SchoolClassesJoinForm } from "@/components/school/classes/join-form";
 import { SchoolClassesTabs } from "@/components/school/classes/tabs";
 import { SchoolClassesWorkspaceShell } from "@/components/school/classes/workspace-shell";
+import { getToken } from "@/lib/auth/server";
 import { ClassContextProvider } from "@/lib/context/use-class";
 import { preloadClassRoute } from "@/lib/school/server";
 
@@ -59,7 +61,8 @@ async function ClassRouteBoundary({
   classId: string;
   panel: ReactNode;
 }) {
-  const route = await preloadClassRoute({ classId });
+  const token = await getToken();
+  const route = await Effect.runPromise(preloadClassRoute({ classId, token }));
 
   if (!route) {
     notFound();

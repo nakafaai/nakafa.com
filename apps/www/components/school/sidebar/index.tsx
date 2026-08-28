@@ -6,11 +6,13 @@ import {
 import { SidebarMenu } from "@repo/design-system/components/ui/sidebar-menu";
 import { Sidebar } from "@repo/design-system/components/ui/sidebar-shell";
 import { cn } from "@repo/design-system/lib/utils";
+import { Effect } from "effect";
 import { type ComponentProps, Suspense } from "react";
 import { SchoolSidebarNavLearning } from "@/components/school/sidebar/nav-learning";
 import { SchoolSidebarNavUser } from "@/components/school/sidebar/nav-user";
 import { SchoolSidebarNavYours } from "@/components/school/sidebar/nav-yours";
 import { SchoolSwitcher } from "@/components/school/sidebar/school-switcher";
+import { getToken } from "@/lib/auth/server";
 import { getSchoolSwitcherPage } from "@/lib/school/server";
 
 /** Render the School sidebar shell while the switcher data streams independently. */
@@ -37,7 +39,10 @@ export function SchoolSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
 
 /** Load the first school switcher page without blocking the surrounding sidebar. */
 async function SchoolSwitcherSlot() {
-  const initialSchoolPage = await getSchoolSwitcherPage();
+  const token = await getToken();
+  const initialSchoolPage = await Effect.runPromise(
+    getSchoolSwitcherPage(token)
+  );
 
   return <SchoolSwitcher initialSchoolPage={initialSchoolPage} />;
 }
