@@ -53,7 +53,7 @@ describe("analytics erasure request", () => {
   it.effect("starts the durable erasure workflow", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
-      workflowTest.register(t);
+      yield* Effect.sync(() => workflowTest.register(t));
       const userId = yield* Effect.promise(() =>
         t.mutation((ctx) =>
           ctx.db.insert("users", {
