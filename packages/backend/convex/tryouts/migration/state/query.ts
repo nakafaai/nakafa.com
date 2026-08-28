@@ -85,6 +85,7 @@ export const receipt = internalQuery({
                 deletedRows: stored.deletedRows,
                 phase: stored.phase,
                 proof: stored.proof ?? null,
+                repair: stored.repair ?? null,
               }
             : null
         )

@@ -2,10 +2,16 @@ import { computeTryoutHistoryCleanupLimit } from "@nakafa/aksara-contracts/migra
 import { hashTryoutHistoryMigrationPlan } from "@nakafa/aksara-contracts/migration/tryout/history/hash";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import {
+  type ReleaseError,
+  releaseFail,
+} from "@repo/backend/convex/contentRelease/error";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
 import { isSnapshotReferenced } from "@repo/backend/convex/contentRelease/snapshot/retention";
-import type { CleanupProof } from "@repo/backend/convex/tryouts/migration/cleanup/schema";
+import type {
+  CleanupProof,
+  CleanupState,
+} from "@repo/backend/convex/tryouts/migration/cleanup/schema";
 import { decodeMigrationPlan } from "@repo/backend/convex/tryouts/migration/plan";
 import { Effect } from "effect";
 
@@ -39,6 +45,49 @@ export function hasSameCleanupProof(left: CleanupProof, right: CleanupProof) {
     left.assetHash === right.assetHash && left.sourceSha === right.sourceSha
   );
 }
+
+type CleanupStart =
+  | {
+      readonly kind: "initial";
+      readonly migration: Extract<
+        CleanupMigration,
+        { readonly phase: "completed" }
+      >;
+    }
+  | { readonly kind: "resume"; readonly state: CleanupState };
+
+/** Restores bounded cleanup state only under its immutable durable proof. */
+export const requireCleanupStart = Effect.fn(
+  "tryouts.migration.requireCleanupStart"
+)(function* (
+  migration: CleanupMigration,
+  receipt: Doc<"tryoutHistoryMigrationReceipts">,
+  proof: CleanupProof
+): Effect.fn.Return<CleanupStart, ReleaseError> {
+  if (migration.phase === "completed") {
+    const repairProofMatches =
+      receipt.proof !== undefined && hasSameCleanupProof(receipt.proof, proof);
+    if (
+      receipt.deletedRows !== 0 ||
+      (receipt.repair === undefined
+        ? receipt.proof !== undefined
+        : !repairProofMatches)
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_INTEGRITY",
+        "Unstarted try-out history cleanup has invalid durable progress."
+      );
+    }
+    return { kind: "initial", migration };
+  }
+  if (!(receipt.proof && hasSameCleanupProof(receipt.proof, proof))) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      "Try-out history cleanup proof changed after deletion started."
+    );
+  }
+  return { kind: "resume", state: migration.cleanup };
+});
 
 /** Recomputes the signed payload identity retained during bounded cleanup. */
 export const requireCleanupPlan = Effect.fn(
@@ -147,12 +196,22 @@ export const requireCleanupPreconditions = Effect.fn(
       "A retained IRT scale is still referenced by a try-out attempt or score."
     );
   }
-  if (
-    yield* isSnapshotReferenced(ctx, "tryout", migration.sourceSnapshotId, {
+});
+
+/** Proves no live reader retains the source snapshot after bounded repair. */
+export const requireCleanupRetention = Effect.fn(
+  "tryouts.migration.requireCleanupRetention"
+)(function* (ctx: MutationCtx, migration: CleanupMigration) {
+  const referenced = yield* isSnapshotReferenced(
+    ctx,
+    "tryout",
+    migration.sourceSnapshotId,
+    {
       ignoredMigrationId: migration.migrationId,
       ignoredScaleVersionIds: migration.authorization.sourceScaleVersionIds,
-    })
-  ) {
+    }
+  );
+  if (referenced) {
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",
       "The retained try-out snapshot is still protected from cleanup."

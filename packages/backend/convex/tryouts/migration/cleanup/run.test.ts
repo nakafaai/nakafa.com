@@ -86,7 +86,10 @@ describe("tryouts/migration/cleanup/run", () => {
         ).pipe(Effect.flip);
         const after = yield* Effect.promise(() => readCleanupState(t));
 
-        assert.ok(failure.message.includes(message));
+        assert.ok(
+          failure.message.includes(message),
+          `${guard}: ${failure.message}`
+        );
         assert.deepStrictEqual(after, before);
       }
     })
@@ -120,8 +123,11 @@ describe("tryouts/migration/cleanup/run", () => {
       Effect.gen(function* () {
         const t = createConvexTestWithBetterAuth();
         const seeded = yield* Effect.promise(() => seedCleanupSuccess(t));
-        const pages: { readonly deleted: number; readonly done: boolean }[] =
-          [];
+        const pages: {
+          readonly deleted: number;
+          readonly done: boolean;
+          readonly repaired: number;
+        }[] = [];
         for (let page = 0; page < 32; page += 1) {
           const result = yield* runCleanup(t);
           pages.push(result);
@@ -144,7 +150,11 @@ describe("tryouts/migration/cleanup/run", () => {
 
         assert.ok(pages.some(({ deleted }) => deleted === 32));
         assert.strictEqual(pages.at(-1)?.done, true);
-        assert.deepStrictEqual(retry, { deleted: 0, done: true });
+        assert.deepStrictEqual(retry, {
+          deleted: 0,
+          done: true,
+          repaired: 0,
+        });
         assert.ok(state.attempt);
         assert.ok(state.targetBundle);
         assert.ok(state.targetCatalog.length > 0);

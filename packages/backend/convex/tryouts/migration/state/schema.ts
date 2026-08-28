@@ -1,4 +1,7 @@
-import { cleanupProofValidator } from "@repo/backend/convex/tryouts/migration/cleanup/schema";
+import {
+  cleanupProofValidator,
+  cleanupRepairValidator,
+} from "@repo/backend/convex/tryouts/migration/cleanup/schema";
 import { v } from "convex/values";
 
 export const completionValidator = v.object({
@@ -104,6 +107,7 @@ export const migrationReceiptRecordValidator = v.object({
   phase: v.union(v.literal("sealed"), v.literal("cleaned")),
   planHash: v.string(),
   proof: v.union(cleanupProofValidator, v.null()),
+  repair: v.union(cleanupRepairValidator, v.null()),
   receiptHash: v.string(),
   receiptJson: v.string(),
   sourceSnapshotId: v.string(),
@@ -118,12 +122,14 @@ export const cleanupReceiptValidator = v.union(
     deletedRows: v.number(),
     phase: v.union(v.literal("sealed"), v.literal("cleaned")),
     proof: v.union(cleanupProofValidator, v.null()),
+    repair: v.union(cleanupRepairValidator, v.null()),
   })
 );
 
 /** Internal state read that distinguishes absent, sealed, and cleaned roots. */
 export const migrationRecordValidator = v.object({
   cleanupStarted: v.boolean(),
+  repairScalePresent: v.boolean(),
   receipt: v.union(migrationReceiptRecordValidator, v.null()),
   status: v.union(activeMigrationStatusValidator, v.null()),
 });

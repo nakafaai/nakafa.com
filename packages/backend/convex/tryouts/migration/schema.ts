@@ -1,5 +1,6 @@
 import {
   cleanupProofValidator,
+  cleanupRepairValidator,
   cleanupStateValidator,
 } from "@repo/backend/convex/tryouts/migration/cleanup/schema";
 import { defineTable } from "convex/server";
@@ -155,6 +156,7 @@ const tables = {
     phase: v.union(v.literal("sealed"), v.literal("cleaned")),
     planHash: v.string(),
     proof: v.optional(cleanupProofValidator),
+    repair: v.optional(cleanupRepairValidator),
     receiptHash: v.string(),
     receiptJson: v.string(),
     recordedAt: v.number(),
