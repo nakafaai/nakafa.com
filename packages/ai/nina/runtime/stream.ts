@@ -54,6 +54,7 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
     const services = yield* Effect.context<never>();
     const runFork = Effect.runForkWith(services);
     const runPromise = Effect.runPromiseWith(services);
+    const runSync = Effect.runSyncWith(services);
     const messages = yield* store.loadMessages;
     const logContext = createNinaLogContext(turn);
     const originalMessageCount = messages.length;
@@ -147,7 +148,7 @@ export const createNinaStreamResponse = Effect.fn("nina.stream.response")(
       generateId: () => responseMessageId,
       onError: (error) => {
         scheduleAssistantFailure(error, "createUIMessageStream");
-        return formatNinaStreamError({ error, logContext, turn });
+        return runSync(formatNinaStreamError({ error, logContext, turn }));
       },
       onEnd: ({
         finishReason,
@@ -261,11 +262,13 @@ const runNinaWriterTurn = Effect.fn("nina.stream.writer")(function* ({
     },
     stream: {
       formatError: (error) =>
-        formatNinaStreamError({
-          error,
-          logContext,
-          turn: { page, runtime, user, copy },
-        }),
+        runSync(
+          formatNinaStreamError({
+            error,
+            logContext,
+            turn: { page, runtime, user, copy },
+          })
+        ),
       onError: onStreamError,
       readFinishMetadata: (mainUsage) =>
         runSync(
