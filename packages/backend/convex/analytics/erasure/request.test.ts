@@ -1,15 +1,25 @@
 import workflowTest from "@convex-dev/workflow/test";
-import { assert, describe, expect, it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
+import { internal } from "@repo/backend/convex/_generated/api";
 import { requestAnalyticsErasure } from "@repo/backend/convex/analytics/erasure/request";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
+import { cleanupSource } from "@repo/backend/convex/privacy/spec";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
+import { workflow } from "@repo/backend/convex/workflow";
+import { getFunctionName } from "convex/server";
 import { convexTest } from "convex-test";
-import { Cause, Data, Effect, Exit, Result } from "effect";
+import { Data, Effect } from "effect";
 import { vi } from "vitest";
 
 class WorkflowUnavailable extends Data.TaggedError("WorkflowUnavailable")<{
   readonly message: string;
+}> {}
+
+class AnalyticsErasureActionRejected extends Data.TaggedError(
+  "AnalyticsErasureActionRejected"
+)<{
+  readonly cause: unknown;
 }> {}
 
 describe("analytics erasure request", () => {
@@ -57,13 +67,25 @@ describe("analytics erasure request", () => {
         )
       );
 
-      expect(
-        yield* Effect.promise(() =>
-          t.action((ctx) =>
-            runConvexProgram(requestAnalyticsErasure(ctx, userId))
-          )
+      yield* Effect.promise(() =>
+        t.action((ctx) =>
+          runConvexProgram(requestAnalyticsErasure(ctx, userId))
         )
-      ).toBeNull();
+      );
+
+      const admittedWorkflows = yield* Effect.promise(() =>
+        t.action((ctx) => workflow.list(ctx))
+      );
+
+      expect(admittedWorkflows.page).toEqual([
+        expect.objectContaining({
+          args: { userId },
+          context: { source: cleanupSource.consentOverlap },
+          name: getFunctionName(
+            internal.analytics.erasure.workflow.eraseConsentOverlap
+          ),
+        }),
+      ]);
     })
   );
 
@@ -88,21 +110,24 @@ describe("analytics erasure request", () => {
         )
       );
 
-      const exit = yield* Effect.exit(
-        Effect.promise(() =>
-          t.action((ctx) =>
-            runConvexProgram(requestAnalyticsErasure(ctx, userId, startErasure))
-          )
-        )
+      const failure = yield* Effect.flip(
+        Effect.tryPromise({
+          catch: (cause) => new AnalyticsErasureActionRejected({ cause }),
+          try: () =>
+            t.action((ctx) =>
+              runConvexProgram(
+                requestAnalyticsErasure(ctx, userId, startErasure)
+              )
+            ),
+        })
       );
-      assert(Exit.isFailure(exit));
-
-      const defect = Cause.findDefect(exit.cause);
-      assert(Result.isSuccess(defect));
-      expect(defect.success).toMatchObject({
-        data: {
-          code: "ANALYTICS_ERASURE_REQUEST_FAILED",
-          message: expect.stringContaining("workflow unavailable"),
+      expect(failure).toMatchObject({
+        _tag: "AnalyticsErasureActionRejected",
+        cause: {
+          data: {
+            code: "ANALYTICS_ERASURE_REQUEST_FAILED",
+            message: expect.stringContaining("workflow unavailable"),
+          },
         },
       });
     })
