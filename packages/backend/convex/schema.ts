@@ -1,4 +1,3 @@
-import assessmentsSchema from "@repo/backend/convex/assessments/tables/schema";
 import authDeletionSchema from "@repo/backend/convex/auth/deletion/schema";
 import bookmarksSchema from "@repo/backend/convex/bookmarks/schema";
 import chatsSchema from "@repo/backend/convex/chats/tables/schema";
@@ -30,7 +29,6 @@ export default defineSchema(
     ...customersSchema,
     ...subscriptionsSchema,
     ...schoolsSchema,
-    ...assessmentsSchema,
     ...classesSchema,
     ...notificationsSchema,
     ...bookmarksSchema,

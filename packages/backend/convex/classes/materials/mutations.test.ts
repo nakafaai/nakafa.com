@@ -2,13 +2,14 @@ import { api, internal } from "@repo/backend/convex/_generated/api";
 import {
   insertClass,
   insertSchool,
-  NOW,
-} from "@repo/backend/convex/assessments/seed";
+} from "@repo/backend/convex/classes/test.helpers";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import { describe, expect, it, vi } from "vitest";
+
+const NOW = Date.UTC(2026, 3, 16, 14, 0, 0);
 
 describe("classes/materials/mutations", () => {
   it("clears schedule fields when a scheduled material is published", async () => {
@@ -21,8 +22,15 @@ describe("classes/materials/mutations", () => {
         now: NOW,
         suffix: "materials-publish-teacher",
       });
-      const schoolId = await insertSchool(ctx, teacher.userId);
-      const classId = await insertClass(ctx, schoolId, teacher.userId);
+      const schoolId = await insertSchool(ctx, {
+        now: NOW,
+        userId: teacher.userId,
+      });
+      const classId = await insertClass(ctx, {
+        now: NOW,
+        schoolId,
+        userId: teacher.userId,
+      });
 
       await ctx.db.insert("schoolMembers", {
         schoolId,
@@ -93,8 +101,15 @@ describe("classes/materials/mutations", () => {
         now: NOW,
         suffix: "materials-delete-teacher",
       });
-      const schoolId = await insertSchool(ctx, teacher.userId);
-      const classId = await insertClass(ctx, schoolId, teacher.userId);
+      const schoolId = await insertSchool(ctx, {
+        now: NOW,
+        userId: teacher.userId,
+      });
+      const classId = await insertClass(ctx, {
+        now: NOW,
+        schoolId,
+        userId: teacher.userId,
+      });
 
       await ctx.db.insert("schoolMembers", {
         schoolId,
