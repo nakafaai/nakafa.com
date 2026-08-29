@@ -135,6 +135,48 @@ export interface FinalizationContract {
   readonly genesisIdentity: FinalizationGenesisIdentity;
 }
 
+/** Complete stored facts authenticated before permanent ownership changes. */
+export const finalizationTargetSourceValidator = v.object({
+  _creationTime: v.number(),
+  _id: v.id("tryoutRuntimeBundles"),
+  bundleHash: v.string(),
+  bundleJson: v.string(),
+  cleanupReleaseId: v.optional(v.string()),
+  createdAt: v.number(),
+  rendererJson: v.string(),
+  rendererManifestHash: v.string(),
+  snapshotId: v.string(),
+  sourceGitSha: v.string(),
+  sourceManifestHash: v.string(),
+  sourceReleaseId: v.string(),
+});
+export type FinalizationTargetSource = Infer<
+  typeof finalizationTargetSourceValidator
+>;
+
+/** Exact renderer and permanent targets loaded by the Node action. */
+export const finalizationSourceValidator = v.object({
+  rendererJson: v.string(),
+  rendererManifestHash: v.string(),
+  targets: v.array(finalizationTargetSourceValidator),
+});
+export type FinalizationSource = Infer<typeof finalizationSourceValidator>;
+
+/** Public input for the Node-authenticated finalization operation. */
+export const finalizationDispatchArgsValidator = v.object({
+  bundleJson: v.string(),
+});
+
+/** Internal transaction input bound to authenticated permanent targets. */
+export const finalizationBackfillArgsValidator = v.object({
+  bundleJson: v.string(),
+  rendererJson: v.string(),
+  targetProofHash: v.string(),
+});
+export type FinalizationBackfillArgs = Infer<
+  typeof finalizationBackfillArgsValidator
+>;
+
 /** Single runtime and type contract for the terminal expansion receipt. */
 export const finalizationReceiptValidator = v.object({
   backfilledAttempts: v.number(),

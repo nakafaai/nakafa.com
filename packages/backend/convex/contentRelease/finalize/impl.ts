@@ -12,6 +12,7 @@ import {
   type FinalizationReceipt,
   finalizationContract,
 } from "@repo/backend/convex/contentRelease/finalize/spec";
+import { requireFinalizationTargetProof } from "@repo/backend/convex/contentRelease/finalize/targets";
 import {
   decodeRendererJson,
   decodeTryoutRuntimeBundleJson,
@@ -114,7 +115,7 @@ const selectAttempts = Effect.fn("contentRelease.finalize.selectAttempts")(
   }
 );
 
-/** Authenticates one permanent target before any attempt can own it. */
+/** Requires one proof-bound permanent target before any attempt can own it. */
 const requireTargetBundle = Effect.fn(
   "contentRelease.finalize.requireTargetBundle"
 )(function* (ctx: MutationCtx, spec: FinalizationAttemptSpec) {
@@ -187,9 +188,11 @@ export const backfillRuntimeAttempts = Effect.fn(
   ctx: MutationCtx,
   bundle: SignedTryoutRuntimeBundle,
   renderer: RendererManifestEnvelope,
+  targetProofHash: string,
   contract: FinalizationContract = finalizationContract
 ) {
   yield* requireGenesisIdentity(bundle, renderer, contract);
+  yield* requireFinalizationTargetProof(ctx, targetProofHash, contract);
   const attempts = yield* Effect.promise(() =>
     ctx.db.query("tryoutAttempts").take(contract.attemptLimit + 1)
   );

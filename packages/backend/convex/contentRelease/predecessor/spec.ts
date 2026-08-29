@@ -67,6 +67,12 @@ export type PredecessorObservationArgs = Infer<
   typeof predecessorObservationArgsValidator
 >;
 
+/** Exact previous and replacement identities for one atomic rearm. */
+export const predecessorRearmArgsValidator = v.object({
+  observationId: v.string(),
+  previousObservationId: v.string(),
+});
+
 const predecessorRouteStatusValidator = v.object({
   armedAt: v.number(),
   invocationCount: v.number(),

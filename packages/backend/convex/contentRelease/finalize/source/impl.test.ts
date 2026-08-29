@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import { loadGenesisRendererSource } from "@repo/backend/convex/contentRelease/finalize/source";
+import { loadFinalizationSource } from "@repo/backend/convex/contentRelease/finalize/source/impl";
+import { finalizationContract } from "@repo/backend/convex/contentRelease/finalize/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -24,10 +25,18 @@ describe("contentRelease/finalize/source", () => {
       const source = yield* Effect.promise(() =>
         target.query((ctx) =>
           runConvexProgram(
-            loadGenesisRendererSource(ctx, {
-              bundleHash: fixture.bundle.bundleHash,
-              rendererManifestHash: fixture.rendererManifest.hash,
-            })
+            loadFinalizationSource(
+              ctx,
+              {
+                bundleHash: fixture.bundle.bundleHash,
+                rendererManifestHash: fixture.rendererManifest.hash,
+              },
+              {
+                ...finalizationContract,
+                attempts: [],
+                genesisBundleHash: fixture.bundle.bundleHash,
+              }
+            )
           )
         )
       );
@@ -35,6 +44,7 @@ describe("contentRelease/finalize/source", () => {
       expect(source).toEqual({
         rendererJson: JSON.stringify(fixture.rendererManifest),
         rendererManifestHash: fixture.rendererManifest.hash,
+        targets: [],
       });
     })
   );
@@ -49,12 +59,20 @@ describe("contentRelease/finalize/source", () => {
         try: () =>
           target.query((ctx) =>
             runConvexProgram(
-              loadGenesisRendererSource(ctx, {
-                bundleHash: fixture.bundle.bundleHash,
-                rendererManifestHash: testTextHash(
-                  "changed-finalization-renderer"
-                ),
-              })
+              loadFinalizationSource(
+                ctx,
+                {
+                  bundleHash: fixture.bundle.bundleHash,
+                  rendererManifestHash: testTextHash(
+                    "changed-finalization-renderer"
+                  ),
+                },
+                {
+                  ...finalizationContract,
+                  attempts: [],
+                  genesisBundleHash: fixture.bundle.bundleHash,
+                }
+              )
             )
           ),
         catch: (cause) => new TestQueryError({ cause }),

@@ -21,7 +21,7 @@ class TestMutationError extends Schema.TaggedError<TestMutationError>()(
   { cause: Schema.Unknown }
 ) {}
 
-describe("contentRelease/predecessor/rearm", () => {
+describe("contentRelease/predecessor/rearm/impl", () => {
   it.effect("rejects reuse of the previous observation identity", () =>
     Effect.gen(function* () {
       const target = convexTest(schema, convexModules);

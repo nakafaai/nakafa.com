@@ -7,6 +7,10 @@ import {
   FINALIZATION_ATTEMPT_SET_DOMAIN,
   type FinalizationContract,
 } from "@repo/backend/convex/contentRelease/finalize/spec";
+import {
+  hashFinalizationTargets,
+  loadFinalizationTargets,
+} from "@repo/backend/convex/contentRelease/finalize/targets";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type schema from "@repo/backend/convex/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
@@ -97,8 +101,22 @@ const seedFinalizationState = Effect.fn("test.finalize.seedState")(function* (
 
 const runBackfill = Effect.fn("test.finalize.runBackfill")(function* (
   target: FinalizationTest,
-  seeded: Effect.Success<ReturnType<typeof seedFinalizationState>>
+  seeded: Effect.Success<ReturnType<typeof seedFinalizationState>>,
+  authenticatedTargetHash?: string
 ) {
+  const targetProofHash =
+    authenticatedTargetHash ??
+    (yield* Effect.promise(() =>
+      target.query((ctx) =>
+        runConvexProgram(
+          Effect.gen(function* () {
+            return yield* hashFinalizationTargets(
+              yield* loadFinalizationTargets(ctx, seeded.contract)
+            );
+          })
+        )
+      )
+    ));
   return yield* Effect.tryPromise({
     try: () =>
       target.mutation((ctx) =>
@@ -107,6 +125,7 @@ const runBackfill = Effect.fn("test.finalize.runBackfill")(function* (
             ctx,
             seeded.genesis.bundle,
             seeded.genesis.rendererManifest,
+            targetProofHash,
             seeded.contract
           )
         )
@@ -228,6 +247,52 @@ describe("contentRelease/finalize/backfill", () => {
       );
 
       const failure = yield* runBackfill(target, seeded).pipe(Effect.flip);
+      expect(failure.cause).toMatchObject({
+        data: { code: "CONTENT_RELEASE_INTEGRITY" },
+      });
+      const state = yield* Effect.promise(() =>
+        target.run(async (ctx) => ({
+          attempt: await ctx.db.get(seeded.attempt._id),
+          genesis: await ctx.db
+            .query("tryoutRuntimeBundles")
+            .withIndex("by_bundleHash", (query) =>
+              query.eq("bundleHash", seeded.genesis.bundle.bundleHash)
+            )
+            .unique(),
+        }))
+      );
+      expect(state.attempt).not.toHaveProperty("tryoutBundleHash");
+      expect(state.attempt).not.toHaveProperty("tryoutBundleId");
+      expect(state.genesis).toBeNull();
+    })
+  );
+
+  it.effect("rejects target bytes changed after Node authentication", () =>
+    Effect.gen(function* () {
+      const target = createConvexTestWithBetterAuth();
+      const seeded = yield* seedFinalizationState(target);
+      const targetProofHash = yield* Effect.promise(() =>
+        target.query((ctx) =>
+          runConvexProgram(
+            Effect.gen(function* () {
+              return yield* hashFinalizationTargets(
+                yield* loadFinalizationTargets(ctx, seeded.contract)
+              );
+            })
+          )
+        )
+      );
+      yield* Effect.promise(() =>
+        target.mutation((ctx) =>
+          ctx.db.patch("tryoutRuntimeBundles", seeded.targetBundle._id, {
+            bundleJson: `${seeded.targetBundle.bundleJson} `,
+          })
+        )
+      );
+
+      const failure = yield* runBackfill(target, seeded, targetProofHash).pipe(
+        Effect.flip
+      );
       expect(failure.cause).toMatchObject({
         data: { code: "CONTENT_RELEASE_INTEGRITY" },
       });
