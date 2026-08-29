@@ -26,6 +26,13 @@ const SuggestionsOutputSchema = createEffectSchema(
     }),
   })
 );
+
+/** Keeps the secondary model request valid after Nina's assistant response. */
+const suggestionRequest = {
+  content: "Generate the requested follow-up suggestions now.",
+  role: "user",
+} satisfies ModelMessage;
+
 /** Raised when Nina cannot stream follow-up suggestions after an answer. */
 export class NinaSuggestionError extends Schema.TaggedError<NinaSuggestionError>()(
   "NinaSuggestionError",
@@ -56,7 +63,7 @@ export const writeNinaSuggestions = Effect.fn("nina.suggest.write")(function* ({
   const suggestionsStream = streamText({
     model: provider.languageModel(defaultModel),
     instructions: nakafaSuggestions({ locale }),
-    messages: promptMessages,
+    messages: [...promptMessages, suggestionRequest],
     output: Output.object({
       schema: SuggestionsOutputSchema,
     }),

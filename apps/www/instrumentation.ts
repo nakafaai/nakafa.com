@@ -4,6 +4,25 @@ import { isServerExceptionReportingEnabled } from "@repo/analytics/server-report
 import { Effect } from "effect";
 import type { Instrumentation } from "next";
 
+/** Registers Node-only startup telemetry after the runtime gate. */
+const registerInstrumentation = Effect.fn("www.instrumentation.register")(
+  function* () {
+    const isEnabled = yield* Effect.sync(
+      () =>
+        process.env.NEXT_RUNTIME === "nodejs" &&
+        isAiSdkDevToolsTelemetryEnabled()
+    );
+    if (!isEnabled) {
+      return;
+    }
+
+    const { registerAiSdkDevToolsTelemetry } = yield* Effect.promise(
+      () => import("@repo/ai/config/devtools")
+    );
+    yield* Effect.sync(registerAiSdkDevToolsTelemetry);
+  }
+);
+
 /**
  * Registers local-only AI SDK DevTools telemetry when the Next.js server starts.
  *
@@ -13,19 +32,8 @@ import type { Instrumentation } from "next";
  * https://nextjs.org/docs/app/api-reference/file-conventions/instrumentation
  * https://ai-sdk.dev/v7/docs/ai-sdk-core/devtools
  */
-export async function register() {
-  if (
-    process.env.NEXT_RUNTIME !== "nodejs" ||
-    !isAiSdkDevToolsTelemetryEnabled()
-  ) {
-    return;
-  }
-
-  const { registerAiSdkDevToolsTelemetry } = await import(
-    "@repo/ai/config/devtools"
-  );
-
-  registerAiSdkDevToolsTelemetry();
+export function register() {
+  return Effect.runPromise(registerInstrumentation());
 }
 
 /**
@@ -66,11 +74,7 @@ const captureRequestError = Effect.fn(
  * https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config/runtime
  * https://posthog.com/docs/error-tracking/installation/nextjs
  */
-export const onRequestError: Instrumentation.onRequestError = async (
-  error,
-  request,
-  context
-) => {
+export const onRequestError = (async (error, request, context) => {
   if (
     process.env.NEXT_RUNTIME !== "nodejs" ||
     !isServerExceptionReportingEnabled()
@@ -90,4 +94,4 @@ export const onRequestError: Instrumentation.onRequestError = async (
       source: "next-on-request-error",
     }).pipe(Effect.ignore)
   );
-};
+}) satisfies Instrumentation.onRequestError;
