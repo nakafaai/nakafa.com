@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
+import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
 import { Effect, Schema } from "effect";
-import { contentRuntimeCiError } from "./error";
 export type JsonValue =
   | null
   | boolean

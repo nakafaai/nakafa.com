@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect } from "effect";
 import { vi } from "vitest";
-import { restoreForumPostInputDraft } from "./draft";
+import { restoreForumPostInputDraft } from "@/components/school/classes/forum/conversation/input/draft";
 
 const replyTarget = {
   postId: "post_1" as Id<"schoolClassForumPosts">,

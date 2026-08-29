@@ -1,9 +1,3 @@
-import {
-  AgentEdgeReleaseShaSchema,
-  NAKAFA_API_EDGE_CONTRACT,
-  NAKAFA_MCP_EDGE_CONTRACT,
-  VERCEL_GIT_COMMIT_SHA_ENVIRONMENT,
-} from "@repo/backend/agent/edge";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { Schema } from "effect";
 
@@ -20,9 +14,6 @@ const secretSchema = Schema.toStandardSchemaV1(
   Schema.Trimmed.check(Schema.isNonEmpty())
 );
 const stringSchema = Schema.toStandardSchemaV1(Schema.String);
-const optionalGitCommitShaSchema = Schema.toStandardSchemaV1(
-  Schema.UndefinedOr(AgentEdgeReleaseShaSchema)
-);
 /** Defines the Convex URL required by Next.js server adapters such as `convex/nextjs`. */
 export const convexKeys = () =>
   createEnv({
@@ -44,54 +35,6 @@ export const convexSiteKeys = () =>
     },
   });
 
-/** Defines the server-only Convex HTTP origin used by public edge bridges. */
-export const agentOriginKeys = () =>
-  createEnv({
-    server: {
-      [NAKAFA_API_EDGE_CONTRACT.originEnvironment]: urlSchema,
-    },
-    runtimeEnv: {
-      [NAKAFA_API_EDGE_CONTRACT.originEnvironment]:
-        process.env[NAKAFA_API_EDGE_CONTRACT.originEnvironment],
-    },
-  });
-
-/** Defines optional Git deployment identity for canonical public bridges. */
-export const agentDeploymentKeys = () =>
-  createEnv({
-    server: {
-      [VERCEL_GIT_COMMIT_SHA_ENVIRONMENT]: optionalGitCommitShaSchema,
-    },
-    runtimeEnv: {
-      [VERCEL_GIT_COMMIT_SHA_ENVIRONMENT]:
-        process.env[VERCEL_GIT_COMMIT_SHA_ENVIRONMENT],
-    },
-  });
-
-/** Defines the private Vercel credential for the direct REST origin. */
-export const apiEdgeKeys = () =>
-  createEnv({
-    server: {
-      [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]: secretSchema,
-    },
-    runtimeEnv: {
-      [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]:
-        process.env[NAKAFA_API_EDGE_CONTRACT.secretEnvironment],
-    },
-  });
-
-/** Defines the private Vercel credential for the direct MCP origin. */
-export const mcpEdgeKeys = () =>
-  createEnv({
-    server: {
-      [NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment]: secretSchema,
-    },
-    runtimeEnv: {
-      [NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment]:
-        process.env[NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment],
-    },
-  });
-
 export const keys = () =>
   createEnv({
     extends: [convexKeys(), convexSiteKeys()],
@@ -104,7 +47,6 @@ export const keys = () =>
       POLAR_ACCESS_TOKEN: secretSchema,
       POLAR_WEBHOOK_SECRET: secretSchema,
       BETTER_AUTH_SECRET: secretSchema,
-      INTERNAL_CONTENT_API_KEY: secretSchema,
     },
     client: {
       NEXT_PUBLIC_POLAR_SERVER: Schema.toStandardSchemaV1(
@@ -121,6 +63,5 @@ export const keys = () =>
       POLAR_WEBHOOK_SECRET: process.env.POLAR_WEBHOOK_SECRET,
       NEXT_PUBLIC_POLAR_SERVER: process.env.NEXT_PUBLIC_POLAR_SERVER,
       BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
-      INTERNAL_CONTENT_API_KEY: process.env.INTERNAL_CONTENT_API_KEY,
     },
   });

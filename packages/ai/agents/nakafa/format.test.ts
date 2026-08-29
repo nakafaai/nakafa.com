@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import {
   formatQuran,
@@ -9,7 +10,6 @@ import { makeQuranFixture } from "@repo/ai/agents/nakafa/tools/fixture";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { NakafaAgentQuranReferenceSchema } from "@repo/contents/_lib/agent/schema/quran/reference";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 const defaultLocale = ACTIVE_APP_LOCALE_CODES[0];
 
@@ -162,11 +162,7 @@ describe("Nakafa formatter", () => {
       },
       content_counts: [{ count: 12, locale: "id" }],
       default_locale: defaultLocale,
-      endpoints: {
-        direct: "https://mcp.nakafa.com/mcp",
-        recommended: "https://nakafa.com/mcp",
-        root_note: "Use /mcp for MCP transport.",
-      },
+      mcp: "https://mcp.nakafa.com/mcp",
       locale: "id",
       locales: Array.from(ACTIVE_APP_LOCALE_CODES),
       quran: {

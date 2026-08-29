@@ -5,17 +5,6 @@ const optionalStringSchema = Schema.toStandardSchemaV1(
   Schema.UndefinedOr(Schema.String)
 );
 const requiredStringSchema = Schema.toStandardSchemaV1(Schema.NonEmptyString);
-const optionalUrlSchema = Schema.toStandardSchemaV1(
-  Schema.UndefinedOr(
-    Schema.String.pipe(
-      Schema.check(
-        Schema.makeFilter((value) => URL.canParse(value), {
-          message: "Expected a valid URL.",
-        })
-      )
-    )
-  )
-);
 const requiredUrlSchema = Schema.toStandardSchemaV1(
   Schema.String.pipe(
     Schema.check(
@@ -35,14 +24,14 @@ export const analyzeKeys = () =>
       ANALYZE: process.env.ANALYZE,
     },
   });
-/** Defines the shared secret accepted by internal content cache routes. */
-export const contentApiKeys = () =>
+/** Defines the Aksara token accepted by publication-owned WWW routes. */
+export const publicationKeys = () =>
   createEnv({
     server: {
-      INTERNAL_CONTENT_API_KEY: requiredStringSchema,
+      AKSARA_PUBLICATION_TOKEN: requiredStringSchema,
     },
     runtimeEnv: {
-      INTERNAL_CONTENT_API_KEY: process.env.INTERNAL_CONTENT_API_KEY,
+      AKSARA_PUBLICATION_TOKEN: process.env.AKSARA_PUBLICATION_TOKEN,
     },
   });
 /** Defines the private token used only by executable-content runtime reads. */
@@ -71,43 +60,5 @@ export const siteUrlKeys = () =>
     },
     runtimeEnv: {
       SITE_URL: process.env.SITE_URL,
-    },
-  });
-/** Defines the public MCP endpoint used by app and MCP surfaces. */
-export const mcpKeys = () =>
-  createEnv({
-    client: {
-      NEXT_PUBLIC_MCP_URL: requiredUrlSchema,
-    },
-    runtimeEnv: {
-      NEXT_PUBLIC_MCP_URL: process.env.NEXT_PUBLIC_MCP_URL,
-    },
-  });
-/** Defines public app URL values shared by Next applications. */
-export const publicAppKeys = () =>
-  createEnv({
-    client: {
-      NEXT_PUBLIC_VERSION: requiredStringSchema,
-      NEXT_PUBLIC_APP_URL: requiredUrlSchema,
-      NEXT_PUBLIC_API_URL: optionalUrlSchema,
-    },
-    runtimeEnv: {
-      NEXT_PUBLIC_VERSION: process.env.NEXT_PUBLIC_VERSION,
-      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-      NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-    },
-  });
-/** Defines the common environment contract inherited by every Next app. */
-export const keys = () =>
-  createEnv({
-    extends: [analyzeKeys(), contentApiKeys(), publicAppKeys(), mcpKeys()],
-    server: {
-      // Added by Vercel
-      NEXT_RUNTIME: Schema.toStandardSchemaV1(
-        Schema.UndefinedOr(Schema.Literals(["nodejs", "edge"]))
-      ),
-    },
-    runtimeEnv: {
-      NEXT_RUNTIME: process.env.NEXT_RUNTIME,
     },
   });

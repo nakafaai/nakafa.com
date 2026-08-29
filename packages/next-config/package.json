@@ -15,6 +15,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@effect/vitest": "catalog:",
     "@next/mdx": "16.3.2",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",

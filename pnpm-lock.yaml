@@ -105,73 +105,22 @@ importers:
 
   apps/api:
     dependencies:
-      '@nakafa/aksara-contracts':
-        specifier: https://github.com/nakafaai/aksara/releases/download/contracts-v0.23.0/nakafa-aksara-contracts-0.23.0.tgz
-        version: https://github.com/nakafaai/aksara/releases/download/contracts-v0.23.0/nakafa-aksara-contracts-0.23.0.tgz(effect@4.0.0-rc.110)
       '@repo/backend':
         specifier: workspace:*
         version: link:../../packages/backend
-      '@repo/contents':
-        specifier: workspace:*
-        version: link:../../packages/contents
-      '@repo/design-system':
-        specifier: workspace:*
-        version: link:../../packages/design-system
-      '@repo/next-config':
-        specifier: workspace:*
-        version: link:../../packages/next-config
-      '@repo/utilities':
-        specifier: workspace:*
-        version: link:../../packages/utilities
-      '@t3-oss/env-nextjs':
-        specifier: ^0.13.11
-        version: 0.13.11(typescript@7.0.2)(zod@4.4.3)
-      convex:
-        specifier: 1.45.0
-        version: 1.45.0(react@19.2.8)
-      effect:
-        specifier: 'catalog:'
-        version: 4.0.0-rc.110
-      next:
-        specifier: 16.3.2
-        version: 16.3.2(@babel/core@7.29.7(supports-color@7.2.0))(@playwright/test@1.62.1)(@types/node@24.13.3)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      react:
-        specifier: ^19.2.8
-        version: 19.2.8
-      react-dom:
-        specifier: ^19.2.8
-        version: 19.2.8(react@19.2.8)
-      server-only:
-        specifier: 0.0.1
-        version: 0.0.1
     devDependencies:
-      '@effect/vitest':
-        specifier: 'catalog:'
-        version: 4.0.0-rc.110(effect@4.0.0-rc.110)(vitest@4.1.11)
-      '@repo/testing':
-        specifier: workspace:*
-        version: link:../../packages/testing
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
-      '@types/react':
-        specifier: 19.2.18
-        version: 19.2.18
+      '@types/node':
+        specifier: 24.13.3
+        version: 24.13.3
       '@vercel/config':
         specifier: ^0.6.1
         version: 0.6.1
-      '@vitest/coverage-istanbul':
-        specifier: ^4.1.11
-        version: 4.1.11(supports-color@7.2.0)(vitest@4.1.11)
       typescript:
         specifier: 7.0.2
         version: 7.0.2
-      vite:
-        specifier: ^8.2.2
-        version: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0)
-      vitest:
-        specifier: ^4.1.11
-        version: 4.1.11(@edge-runtime/vm@5.0.0)(@types/node@24.13.3)(@vitest/coverage-istanbul@4.1.11)(@vitest/ui@4.1.11)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))
 
   apps/cas:
     devDependencies:
@@ -206,55 +155,19 @@ importers:
       '@repo/backend':
         specifier: workspace:*
         version: link:../../packages/backend
-      '@repo/contents':
-        specifier: workspace:*
-        version: link:../../packages/contents
-      '@repo/next-config':
-        specifier: workspace:*
-        version: link:../../packages/next-config
-      '@t3-oss/env-nextjs':
-        specifier: ^0.13.11
-        version: 0.13.11(typescript@7.0.2)(zod@4.4.3)
-      next:
-        specifier: 16.3.2
-        version: 16.3.2(@babel/core@7.29.7(supports-color@7.2.0))(@playwright/test@1.62.1)(@types/node@24.13.3)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      react:
-        specifier: ^19.2.8
-        version: 19.2.8
-      react-dom:
-        specifier: ^19.2.8
-        version: 19.2.8(react@19.2.8)
     devDependencies:
-      '@effect/vitest':
-        specifier: 'catalog:'
-        version: 4.0.0-rc.110(effect@4.0.0-rc.110)(vitest@4.1.11)
-      '@repo/testing':
-        specifier: workspace:*
-        version: link:../../packages/testing
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
-      '@types/react':
-        specifier: 19.2.18
-        version: 19.2.18
+      '@types/node':
+        specifier: 24.13.3
+        version: 24.13.3
       '@vercel/config':
         specifier: ^0.6.1
         version: 0.6.1
-      '@vitest/coverage-istanbul':
-        specifier: ^4.1.11
-        version: 4.1.11(supports-color@7.2.0)(vitest@4.1.11)
-      '@vitest/ui':
-        specifier: ^4.1.11
-        version: 4.1.11(vitest@4.1.11)
-      effect:
-        specifier: 'catalog:'
-        version: 4.0.0-rc.110
       typescript:
         specifier: 7.0.2
         version: 7.0.2
-      vitest:
-        specifier: ^4.1.11
-        version: 4.1.11(@edge-runtime/vm@5.0.0)(@types/node@24.13.3)(@vitest/coverage-istanbul@4.1.11)(@vitest/ui@4.1.11)(jsdom@30.0.1(@noble/hashes@2.3.0))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.12)(yaml@2.9.0))
 
   apps/www:
     dependencies:
@@ -618,6 +531,9 @@ importers:
       '@t3-oss/env-nextjs':
         specifier: ^0.13.11
         version: 0.13.11(typescript@7.0.2)(zod@4.4.3)
+      '@vercel/config':
+        specifier: ^0.6.1
+        version: 0.6.1
       ai:
         specifier: 7.0.77
         version: 7.0.77(zod@4.4.3)
@@ -1075,6 +991,9 @@ importers:
         specifier: 'catalog:'
         version: 4.0.0-rc.110
     devDependencies:
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 4.0.0-rc.110(effect@4.0.0-rc.110)(vitest@4.1.11)
       '@next/mdx':
         specifier: 16.3.2
         version: 16.3.2(@mdx-js/loader@3.1.1(supports-color@7.2.0))(@mdx-js/react@3.1.1(@types/react@19.2.18)(react@19.2.8))

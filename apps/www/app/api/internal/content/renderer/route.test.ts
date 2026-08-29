@@ -32,7 +32,7 @@ const manifest = {
 
 vi.mock("@repo/next-config/keys", () => ({
   /** Provides the renderer route's narrow internal authentication contract. */
-  contentApiKeys: () => ({ INTERNAL_CONTENT_API_KEY: "test-key" }),
+  publicationKeys: () => ({ AKSARA_PUBLICATION_TOKEN: "test-key" }),
 }));
 
 vi.mock("@/lib/content/renderer/manifest", () => ({

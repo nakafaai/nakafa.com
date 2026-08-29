@@ -1,8 +1,9 @@
 interface DependencyHold {
   readonly allowed?: readonly string[];
   readonly approved?: string;
+  readonly declarationPaths?: readonly string[];
   readonly dependency: string;
-  readonly minimumDeclarations: number;
+  readonly minimumDeclarations?: number;
 }
 
 export const CONTRACT_ARCHIVE =
@@ -139,8 +140,14 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   },
   {
     approved: CONTRACT_ARCHIVE,
+    declarationPaths: [
+      "apps/www/package.json",
+      "packages/ai/package.json",
+      "packages/backend/package.json",
+      "packages/contents/package.json",
+      "packages/internationalization/package.json",
+    ],
     dependency: "@nakafa/aksara-contracts",
-    minimumDeclarations: 6,
   },
   {
     approved: "2.5.10",

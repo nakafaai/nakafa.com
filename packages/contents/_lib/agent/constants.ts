@@ -5,16 +5,10 @@ export const NAKAFA_BASE_URL = "https://nakafa.com";
 export const NAKAFA_API_BASE_URL = "https://api.nakafa.com";
 
 /** Current compatible version of the public REST contract. */
-export const NAKAFA_PUBLIC_API_VERSION = "1.0.0";
+export const NAKAFA_PUBLIC_API_VERSION = "2.0.0";
 
-/** Recommended public Streamable HTTP MCP endpoint. */
-export const NAKAFA_MCP_RECOMMENDED_ENDPOINT = "https://nakafa.com/mcp";
-
-/** Direct MCP application endpoint for clients that prefer the subdomain. */
-export const NAKAFA_MCP_DIRECT_ENDPOINT = "https://mcp.nakafa.com/mcp";
-
-/** Informational subdomain root; this is not a transport endpoint. */
-export const NAKAFA_MCP_INFORMATIONAL_ROOT = "https://mcp.nakafa.com";
+/** Canonical public Streamable HTTP MCP endpoint. */
+export const NAKAFA_MCP_ENDPOINT = "https://mcp.nakafa.com/mcp";
 
 /** Stable server name reported through MCP initialize and health checks. */
 export const NAKAFA_MCP_SERVER_NAME = "nakafa-mcp-server";

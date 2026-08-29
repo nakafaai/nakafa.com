@@ -2,14 +2,16 @@ import { Resend } from "@convex-dev/resend";
 import resendTest from "@convex-dev/resend/test";
 import { describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/convex/_generated/api";
-import { cancelPendingWelcomeEmail } from "@repo/backend/convex/emails/deletion";
+import {
+  cancelPendingWelcomeEmail,
+  cancelWelcomeEmailProgram,
+} from "@repo/backend/convex/emails/deletion";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
 import { vi } from "vitest";
-import { cancelWelcomeEmailProgram } from "./deletion";
 
 const testResend = new Resend(components.resend, {
   apiKey: "re_test_account_deletion",

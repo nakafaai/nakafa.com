@@ -24,8 +24,9 @@ flowchart LR
   Capabilities --> Math["math capability"]
   Nakafa --> Search["Convex full-text search"]
   Nakafa --> Content["contents Effect service"]
-  Mcp["apps/mcp"] --> Search
-  Mcp --> Content
+  Mcp["Vercel MCP ingress"] --> McpRuntime["Convex MCP runtime"]
+  McpRuntime --> Search
+  McpRuntime --> Content
   Research --> ResearchEvidence["source evidence phase"]
   ResearchEvidence --> ResearchSynthesis["structured synthesis"]
   Math --> MathEvidence["deterministic evidence"]

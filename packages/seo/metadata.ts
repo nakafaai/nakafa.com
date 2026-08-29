@@ -1,6 +1,6 @@
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import merge from "lodash.merge";
 import type { Metadata } from "next";
-import { COMPANY_IDENTITY } from "./company";
 
 type MetadataGenerator = Omit<Metadata, "description" | "title"> & {
   title: string;

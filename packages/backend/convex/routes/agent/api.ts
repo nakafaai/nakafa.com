@@ -29,7 +29,7 @@ import { registerAgentSearchRoute } from "@repo/backend/convex/routes/agent/sear
 import {
   NAKAFA_API_BASE_URL,
   NAKAFA_BASE_URL,
-  NAKAFA_MCP_RECOMMENDED_ENDPOINT,
+  NAKAFA_MCP_ENDPOINT,
   NAKAFA_PUBLIC_API_VERSION,
 } from "@repo/contents/_lib/agent/constants";
 import {
@@ -64,7 +64,7 @@ export function registerAgentApiRoutes(app: AgentApp) {
           description:
             "Read-only access to Nakafa's signed educational content for developers and agents.",
           documentation: `${NAKAFA_BASE_URL}/llms.txt`,
-          mcp: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
+          mcp: NAKAFA_MCP_ENDPOINT,
           name: "Nakafa Public API",
           openapi: `${NAKAFA_API_BASE_URL}/openapi.json`,
           status: "active",

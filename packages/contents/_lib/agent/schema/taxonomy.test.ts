@@ -1,9 +1,9 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   NakafaAgentTaxonomyOptionsSchema,
   NakafaAgentTaxonomySchema,
 } from "@repo/contents/_lib/agent/schema/taxonomy";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("NakafaAgentTaxonomyOptionsSchema", () => {
   it("applies default taxonomy options", () => {
@@ -20,11 +20,7 @@ describe("NakafaAgentTaxonomySchema", () => {
         articles: { categories: [] },
         content_counts: [{ count: 1, locale: "en" }],
         default_locale: "en",
-        endpoints: {
-          direct: "not-a-url",
-          recommended: "https://mcp.nakafa.com/mcp",
-          root_note: "Use the direct endpoint.",
-        },
+        mcp: "not-a-url",
         exercises: { categories: [], materials: [], types: [] },
         locale: "en",
         locales: ["en", "id", "de"],

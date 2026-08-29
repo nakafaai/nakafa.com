@@ -1,6 +1,9 @@
 "use client";
 
 import { useMediaQuery } from "@mantine/hooks";
+import { BlockArtCell } from "@repo/design-system/components/ui/block-art/cell";
+import { useBlockArtIdle } from "@repo/design-system/components/ui/block-art/idle";
+import { useBlockArtRipple } from "@repo/design-system/components/ui/block-art/ripple";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { cn } from "@repo/design-system/lib/utils";
 import {
@@ -10,10 +13,6 @@ import {
   useReducedMotion,
 } from "motion/react";
 import { useMemo } from "react";
-
-import { BlockArtCell } from "./block-art/cell";
-import { useBlockArtIdle } from "./block-art/idle";
-import { useBlockArtRipple } from "./block-art/ripple";
 
 /** Configuration for the interactive block-art grid. */
 interface BlockArtProps {

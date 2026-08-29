@@ -1,13 +1,13 @@
-import { checkoutsCreate } from "@polar-sh/sdk/funcs/checkoutsCreate.js";
-import { customerSessionsCreate } from "@polar-sh/sdk/funcs/customerSessionsCreate.js";
-import { customersCreate } from "@polar-sh/sdk/funcs/customersCreate.js";
-import { customersDelete } from "@polar-sh/sdk/funcs/customersDelete.js";
-import { customersGet } from "@polar-sh/sdk/funcs/customersGet.js";
-import { customersGetExternal } from "@polar-sh/sdk/funcs/customersGetExternal.js";
-import { customersList } from "@polar-sh/sdk/funcs/customersList.js";
-import { customersUpdate } from "@polar-sh/sdk/funcs/customersUpdate.js";
-import { HTTPValidationError } from "@polar-sh/sdk/models/errors/httpvalidationerror.js";
-import { PolarError } from "@polar-sh/sdk/models/errors/polarerror.js";
+import { checkoutsCreate } from "@polar-sh/sdk/funcs/checkoutsCreate";
+import { customerSessionsCreate } from "@polar-sh/sdk/funcs/customerSessionsCreate";
+import { customersCreate } from "@polar-sh/sdk/funcs/customersCreate";
+import { customersDelete } from "@polar-sh/sdk/funcs/customersDelete";
+import { customersGet } from "@polar-sh/sdk/funcs/customersGet";
+import { customersGetExternal } from "@polar-sh/sdk/funcs/customersGetExternal";
+import { customersList } from "@polar-sh/sdk/funcs/customersList";
+import { customersUpdate } from "@polar-sh/sdk/funcs/customersUpdate";
+import { HTTPValidationError } from "@polar-sh/sdk/models/errors/httpvalidationerror";
+import { PolarError } from "@polar-sh/sdk/models/errors/polarerror";
 import {
   PolarCheckoutError,
   PolarCustomerError,

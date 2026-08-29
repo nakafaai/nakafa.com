@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { measureRouteJavascript } from "./support/resources";
+import { measureRouteJavascript } from "@/e2e/support/resources";
 
 const HOMEPAGE_MAX_ENCODED_BYTES = 1_168_654;
 const HOMEPAGE_MAX_DECODED_BYTES = 3_809_519;

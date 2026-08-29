@@ -4,7 +4,7 @@ import {
   createConversationTestForum,
   createConversationTestPost,
 } from "@/components/school/classes/forum/conversation/fixtures/data";
-import { createOptimisticForumPost } from "./optimistic";
+import { createOptimisticForumPost } from "@/components/school/classes/forum/conversation/input/optimistic";
 
 const optimisticPostId = "optimistic_post" as Id<"schoolClassForumPosts">;
 const currentUser = {

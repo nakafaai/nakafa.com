@@ -1,4 +1,4 @@
-import type { Subscription } from "@polar-sh/sdk/models/components/subscription.js";
+import type { Subscription } from "@polar-sh/sdk/models/components/subscription";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { SubscriptionRecurringInterval } from "@repo/backend/convex/subscriptions/schema";
 import type { WithoutSystemFields } from "convex/server";

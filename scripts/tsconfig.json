@@ -1,7 +1,6 @@
 {
   "extends": "../packages/typescript-config/base.json",
   "compilerOptions": {
-    "allowImportingTsExtensions": true,
     "noEmit": true
   },
   "include": ["./**/*.ts"]

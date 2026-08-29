@@ -1,5 +1,5 @@
+import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
 import { describe, expect, it } from "vitest";
-import { normalizeLocalizedInternalHref } from "./href";
 
 describe("localized internal href normalization", () => {
   it.each([

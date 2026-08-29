@@ -3,20 +3,20 @@ import {
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { COMPACTION_PHASES } from "@repo/backend/convex/contentRelease/spec";
-import { Effect, FileSystem, Redacted, Schema } from "effect";
-import { runConvexData } from "./command";
+import { runConvexData } from "@repo/backend/scripts/content/runtime/ci/command";
 import type {
   CacheIdentity,
   ProductionConfig,
   RuntimeSelectionIdentity,
-} from "./config";
-import { contentRuntimeCiError } from "./error";
+} from "@repo/backend/scripts/content/runtime/ci/config";
+import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
 import {
   decodeJsonRows,
   hashCanonicalJson,
   type JsonObject,
   stripConvexSystemFields,
-} from "./json";
+} from "@repo/backend/scripts/content/runtime/ci/json";
+import { Effect, FileSystem, Redacted, Schema } from "effect";
 
 const SequenceSchema = Schema.Finite.pipe(
   Schema.check(Schema.isInt()),

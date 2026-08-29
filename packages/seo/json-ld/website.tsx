@@ -1,8 +1,8 @@
 import { COMPANY_IDENTITY } from "@repo/seo/company";
+import { ORGANIZATION_REFERENCE } from "@repo/seo/json-ld/constants";
 import { type Locale, useTranslations } from "next-intl";
 import type { SearchAction, WebSite, WithContext } from "schema-dts";
 import { JsonLd } from ".";
-import { ORGANIZATION_REFERENCE } from "./constants";
 
 interface Props {
   locale: Locale;

@@ -1,12 +1,14 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import { routing } from "@repo/internationalization/src/routing";
+import { hasCandidateLocalePreview } from "@repo/internationalization/src/environment";
+import { loadLocaleMessages } from "@repo/internationalization/src/messages";
+import {
+  previewRouting,
+  routing,
+} from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
 import * as rootParams from "next/root-params";
 import { hasLocale } from "next-intl";
 import { getRequestConfig } from "next-intl/server";
-import { hasCandidateLocalePreview } from "./environment";
-import { loadLocaleMessages } from "./messages";
-import { previewRouting } from "./routing";
 
 /** Accepts inactive contract locales only for the authenticated local child. */
 function hasRequestLocale(locale: string | undefined): locale is AppLocaleCode {

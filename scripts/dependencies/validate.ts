@@ -57,7 +57,20 @@ export function validateDependencyPolicy({
 
   for (const hold of DEPENDENCY_HOLDS) {
     const declarations = dependencyDeclarations(manifests, hold.dependency);
-    if (declarations.length < hold.minimumDeclarations) {
+    if (hold.declarationPaths) {
+      const actualPaths = declarations
+        .map(({ manifestPath }) => manifestPath)
+        .sort();
+      const expectedPaths = [...hold.declarationPaths].sort();
+      if (JSON.stringify(actualPaths) !== JSON.stringify(expectedPaths)) {
+        problems.push(
+          `${hold.dependency} declarations are ${actualPaths.join(", ") || "missing"}; expected ${expectedPaths.join(", ")}.`
+        );
+      }
+    } else if (
+      hold.minimumDeclarations !== undefined &&
+      declarations.length < hold.minimumDeclarations
+    ) {
       problems.push(
         `${hold.dependency} has ${declarations.length} declarations; expected at least ${hold.minimumDeclarations}.`
       );

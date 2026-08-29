@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { NAKAFA_MCP_RECOMMENDED_ENDPOINT } from "@repo/contents/_lib/agent/constants";
+import { NAKAFA_MCP_ENDPOINT } from "@repo/contents/_lib/agent/constants";
 import { languages } from "@repo/internationalization/data/lang";
 
 const NAKAFA_SKILL_NAME = "nakafa";
@@ -34,7 +34,7 @@ export function getNakafaSkillText() {
     "- Follow bounded page-index links to discover page-level `.md` URLs without loading the whole corpus.",
     "- Prefer same-origin `.md` URLs for focused page retrieval.",
     "- Send `Accept: text/markdown` when requesting normal content URLs.",
-    `- Use \`${NAKAFA_MCP_RECOMMENDED_ENDPOINT}\` when the client supports Streamable HTTP MCP tools.`,
+    `- Use \`${NAKAFA_MCP_ENDPOINT}\` when the client supports Streamable HTTP MCP tools.`,
     "- Prefer `nakafa_search_content` first, then pass returned source-backed `content_id` values as `content_ref` to `nakafa_get_content`.",
     "- Use `nakafa_get_taxonomy` to inspect supported locales, sections, categories, grades, materials, try-out values, and endpoint guidance.",
     "",

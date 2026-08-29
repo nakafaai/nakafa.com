@@ -57,23 +57,8 @@ export const NAKAFA_EDGE_CLIENT_IP_HEADER = "x-forwarded-for";
 /** Public deployment identity attached by each canonical Vercel bridge. */
 export const NAKAFA_EDGE_RELEASE_SHA_HEADER = "x-nakafa-release-sha";
 
-/** Exact lowercase Git object identity emitted by the Vercel bridge. */
-export const AgentEdgeReleaseShaSchema = Schema.String.check(
-  Schema.isPattern(/^[0-9a-f]{40}$/)
-);
-
 /** Vercel system identity for the Git commit that produced a deployment. */
 export const VERCEL_GIT_COMMIT_SHA_ENVIRONMENT = "VERCEL_GIT_COMMIT_SHA";
-
-/** Attaches exact deployment identity when the bridge runs on Vercel. */
-export function setAgentEdgeReleaseHeader(
-  headers: Headers,
-  releaseSha: string | undefined
-) {
-  if (releaseSha !== undefined) {
-    headers.set(NAKAFA_EDGE_RELEASE_SHA_HEADER, releaseSha);
-  }
-}
 
 /** Projects one protected origin path back to its stable public API path. */
 export function projectPublicApiPath(pathname: string) {

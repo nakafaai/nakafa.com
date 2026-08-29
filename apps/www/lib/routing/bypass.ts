@@ -1,7 +1,6 @@
 const UNSUPPORTED_ROOT_FILE_PATTERN =
   /^\/[^/]+\.(?:svg|jpg|jpeg|gif|webp|glb|gltf|bin|ktx2|hdr|exr|js|css|xml|webmanifest|txt)$/i;
 const LOCALE_BYPASS_PATHS = new Set([
-  "/mcp",
   "/llms.txt",
   "/logo.svg",
   "/manifest.webmanifest",

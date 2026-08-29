@@ -1,5 +1,8 @@
 import { Schema } from "effect";
-import { formatRequestFailure, requestFailureFields } from "../request-tracker";
+import {
+  formatRequestFailure,
+  requestFailureFields,
+} from "@/e2e/support/request-tracker";
 
 export const NavigationReadinessPhaseSchema = Schema.Literals([
   "hydration",

@@ -38,14 +38,14 @@ describe("public agent API routes", () => {
       authentication: "none",
       documentation: "https://nakafa.com/llms.txt",
       name: "Nakafa Public API",
-      version: "1.0.0",
+      version: "2.0.0",
     });
     expect(health.status).toBe(200);
     await expect(health.json()).resolves.toMatchObject({
       service: "nakafa-public-api",
       status: "ok",
       timestamp: expect.any(Number),
-      version: "1.0.0",
+      version: "2.0.0",
     });
     expect(options.status).toBe(204);
     expect(options.headers.get("access-control-allow-methods")).toBe(

@@ -1,17 +1,11 @@
-import {
-  NAKAFA_MCP_DIRECT_ENDPOINT,
-  NAKAFA_MCP_INFORMATIONAL_ROOT,
-  NAKAFA_MCP_RECOMMENDED_ENDPOINT,
-} from "@repo/contents/_lib/agent/constants";
+import { NAKAFA_MCP_ENDPOINT } from "@repo/contents/_lib/agent/constants";
 
 /** Builds the static MCP usage resource for agent clients. */
 export function getNakafaMcpUsageMarkdown() {
   return [
     "# Nakafa MCP Usage",
     "",
-    `Use \`${NAKAFA_MCP_RECOMMENDED_ENDPOINT}\` as the recommended Streamable HTTP MCP endpoint.`,
-    `Use \`${NAKAFA_MCP_DIRECT_ENDPOINT}\` only when a direct MCP subdomain endpoint is preferred.`,
-    `\`${NAKAFA_MCP_INFORMATIONAL_ROOT}\` is informational only and is not an MCP transport endpoint.`,
+    `Use \`${NAKAFA_MCP_ENDPOINT}\` as the Streamable HTTP MCP endpoint.`,
     "",
     "## Workflow",
     "",

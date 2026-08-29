@@ -1,7 +1,7 @@
+import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
 import { Effect, FileSystem, Stream } from "effect";
 import { ChildProcess } from "effect/unstable/process";
 import stripAnsi from "strip-ansi";
-import { contentRuntimeCiError } from "./error";
 
 const MAX_COMMAND_ERROR_LENGTH = 500;
 const WHITESPACE = /\s+/u;

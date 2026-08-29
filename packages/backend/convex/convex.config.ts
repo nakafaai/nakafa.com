@@ -1,8 +1,8 @@
-import aggregate from "@convex-dev/aggregate/convex.config.js";
-import rateLimiter from "@convex-dev/rate-limiter/convex.config.js";
-import resend from "@convex-dev/resend/convex.config.js";
-import workflow from "@convex-dev/workflow/convex.config.js";
-import posthog from "@posthog/convex/convex.config.js";
+import aggregate from "@convex-dev/aggregate/convex.config";
+import rateLimiter from "@convex-dev/rate-limiter/convex.config";
+import resend from "@convex-dev/resend/convex.config";
+import workflow from "@convex-dev/workflow/convex.config";
+import posthog from "@posthog/convex/convex.config";
 import {
   NAKAFA_API_EDGE_CONTRACT,
   NAKAFA_MCP_ALLOWED_ORIGINS_ENVIRONMENT,

@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   makeArtifactCacheTag,
   makeContentCacheRequest,
@@ -10,7 +11,7 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import { Effect } from "effect";
 import { NextRequest } from "next/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import {
   ContentCacheInvalidationError,
   type invalidateContentCache,
@@ -32,7 +33,7 @@ const invalidateContentCacheMock = vi.hoisted(() =>
 
 vi.mock("@/env", () => ({
   /** Provides a deterministic internal key for the route handler. */
-  env: { INTERNAL_CONTENT_API_KEY: "test-key" },
+  env: { AKSARA_PUBLICATION_TOKEN: "test-key" },
 }));
 
 vi.mock("@/lib/content/cache", async (importOriginal) => ({
