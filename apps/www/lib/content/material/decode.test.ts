@@ -1,9 +1,9 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 import {
   decodeMaterialJson,
   decodeMaterialProjection,
@@ -19,48 +19,50 @@ const identity = {
 };
 
 describe("published material decoding", () => {
-  it("decodes exact object and canonical JSON projections", async () => {
-    await expect(
-      Effect.runPromise(
-        Effect.all([
+  it.effect("decodes exact object and canonical JSON projections", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* Effect.all([
           decodeMaterialProjection(previewProjection, identity),
           decodeMaterialJson(
             canonicalizeMaterialProjection(previewProjection),
             identity
           ),
         ])
-      )
-    ).resolves.toEqual([previewProjection, previewProjection]);
-  });
+      ).toEqual([previewProjection, previewProjection]);
+    })
+  );
 
-  it.each([
-    ["invalid JSON", "{"],
-    ["invalid projection", "{}"],
-  ])("preserves %s in the typed error channel", async (_label, source) => {
-    await expect(
-      Effect.runPromise(decodeMaterialJson(source, identity).pipe(Effect.flip))
-    ).resolves.toMatchObject({
-      _tag: "PublishedProjectionError",
-      ...identity,
-    });
-  });
+  it.effect.each([
+    { label: "invalid JSON", source: "{" },
+    { label: "invalid projection", source: "{}" },
+  ] as const)("preserves $label in the typed error channel", ({ source }) =>
+    Effect.gen(function* () {
+      expect(
+        yield* decodeMaterialJson(source, identity).pipe(Effect.flip)
+      ).toMatchObject({
+        _tag: "PublishedProjectionError",
+        ...identity,
+      });
+    })
+  );
 
-  it("rejects a projection selected through another public identity", async () => {
-    await expect(
-      Effect.runPromise(
-        decodeMaterialProjection(previewProjection, {
-          ...identity,
-          publicPath: `${identity.publicPath}-other`,
-        }).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
+  it.effect(
+    "rejects a projection selected through another public identity",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* decodeMaterialProjection(previewProjection, {
+            ...identity,
+            publicPath: `${identity.publicPath}-other`,
+          }).pipe(Effect.flip)
+        ).toMatchObject({ _tag: "PublishedProjectionError" });
 
-    await expect(
-      Effect.runPromise(
-        decodeMaterialProjection({}, identity).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({ _tag: "PublishedProjectionError" });
-  });
+        expect(
+          yield* decodeMaterialProjection({}, identity).pipe(Effect.flip)
+        ).toMatchObject({ _tag: "PublishedProjectionError" });
+      })
+  );
 
   it("compares stable counterparts and localized sibling groups", () => {
     expect(isMaterialCounterpart(previewProjection, previewIdProjection)).toBe(
@@ -72,30 +74,26 @@ describe("published material decoding", () => {
     );
   });
 
-  it("accepts only identical projections from one active release", async () => {
-    const activeReleaseId = ReleaseIdSchema.make("release-active");
-    const catalog = { activeReleaseId, projection: previewProjection };
+  it.effect("accepts only identical projections from one active release", () =>
+    Effect.gen(function* () {
+      const activeReleaseId = ReleaseIdSchema.make("release-active");
+      const catalog = { activeReleaseId, projection: previewProjection };
 
-    await expect(
-      Effect.runPromise(verifyMaterialPublication(catalog, catalog))
-    ).resolves.toBeUndefined();
+      yield* verifyMaterialPublication(catalog, catalog);
 
-    await expect(
-      Effect.runPromise(
-        verifyMaterialPublication(catalog, {
+      expect(
+        yield* verifyMaterialPublication(catalog, {
           activeReleaseId: ReleaseIdSchema.make("release-next"),
           projection: previewProjection,
         }).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({
-      _tag: "PublishedReleaseMismatchError",
-      actualReleaseId: "release-next",
-      expectedReleaseId: activeReleaseId,
-    });
+      ).toMatchObject({
+        _tag: "PublishedReleaseMismatchError",
+        actualReleaseId: "release-next",
+        expectedReleaseId: activeReleaseId,
+      });
 
-    await expect(
-      Effect.runPromise(
-        verifyMaterialPublication(catalog, {
+      expect(
+        yield* verifyMaterialPublication(catalog, {
           activeReleaseId,
           projection: {
             ...previewProjection,
@@ -105,10 +103,10 @@ describe("published material decoding", () => {
             },
           },
         }).pipe(Effect.flip)
-      )
-    ).resolves.toMatchObject({
-      _tag: "PublishedProjectionError",
-      ...identity,
-    });
-  });
+      ).toMatchObject({
+        _tag: "PublishedProjectionError",
+        ...identity,
+      });
+    })
+  );
 });
