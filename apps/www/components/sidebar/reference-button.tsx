@@ -73,7 +73,7 @@ export function ReferenceButton({ references, title }: Props) {
             <Separator />
 
             <div className="flex flex-1 flex-col overflow-hidden">
-              <ScrollArea className="h-full px-4">
+              <ScrollArea className="h-full">
                 <ul data-slot="reference-list">
                   {references.map((reference, index) => {
                     const url = reference.url
@@ -88,7 +88,7 @@ export function ReferenceButton({ references, title }: Props) {
                         key={reference.title}
                       >
                         <div
-                          className="flex flex-col gap-4"
+                          className="flex flex-col gap-4 px-4"
                           data-slot="reference-item-content"
                         >
                           <div className="flex flex-col gap-1">

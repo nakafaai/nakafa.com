@@ -66,11 +66,18 @@ const verifyCompactReferenceSheet = Effect.fn(
       const contentStyle = content ? getComputedStyle(content) : null;
       const metadata = content?.lastElementChild;
       const title = item.querySelector("h3");
+      const separator = item.querySelector('[data-slot="separator"]');
+      const list = item.closest('[data-slot="reference-list"]');
 
       return {
         contentGap: contentStyle?.gap,
+        contentPaddingInline: contentStyle
+          ? `${contentStyle.paddingLeft} ${contentStyle.paddingRight}`
+          : null,
+        dividerWidth: separator?.getBoundingClientRect().width,
         itemHeight: item.getBoundingClientRect().height,
         itemPaddingTop: itemStyle.paddingTop,
+        listWidth: list?.getBoundingClientRect().width,
         metadataGap: metadata ? getComputedStyle(metadata).gap : null,
         titleFontSize: title ? getComputedStyle(title).fontSize : null,
       };
@@ -79,6 +86,8 @@ const verifyCompactReferenceSheet = Effect.fn(
   yield* Effect.sync(() => {
     expect(metrics).toMatchObject({
       contentGap: "16px",
+      contentPaddingInline: "16px 16px",
+      dividerWidth: metrics.listWidth,
       itemPaddingTop: "16px",
       metadataGap: "12px",
       titleFontSize: "14px",
