@@ -15,9 +15,9 @@ describe("public content runtime endpoints", () => {
 });
 
 describe("protected content runtime endpoints", () => {
-  it("exposes one unversioned permanent contract", () => {
+  it("exposes one stable permanent contract", () => {
     expect(PROTECTED_CONTENT_RUNTIME_PATH).toBe(
-      "/internal/content/runtime/protected"
+      "/internal/content/runtime/v2/protected"
     );
   });
 });

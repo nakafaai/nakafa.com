@@ -6,8 +6,8 @@ export const PUBLIC_CONTENT_RUNTIME_PATH = CONTENT_RUNTIME_PATH;
 /** Canonical endpoint for current public content batches. */
 export const PUBLIC_CONTENT_RUNTIME_BATCH_PATH = `${PUBLIC_CONTENT_RUNTIME_PATH}/batch`;
 
-/** Unversioned endpoint for permanent-bundle protected content reads. */
-export const PROTECTED_CONTENT_RUNTIME_PATH = `${CONTENT_RUNTIME_PATH}/protected`;
+/** Stable endpoint for permanent-bundle protected content reads. */
+export const PROTECTED_CONTENT_RUNTIME_PATH = `${CONTENT_RUNTIME_PATH}/v2/protected`;
 
 /**
  * Marks responses built by the private runtime route after contract encoding.
