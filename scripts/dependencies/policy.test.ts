@@ -19,15 +19,13 @@ import {
   validateDependencyPolicy,
 } from "#scripts/dependencies/validate";
 
-function fixtureManifestPath(index: number) {
-  if (index === 0) {
-    return "apps/www/package.json";
-  }
-  if (index === 1) {
-    return "packages/backend/package.json";
-  }
-  return `packages/example-${index}/package.json`;
-}
+const CONTRACT_MANIFEST_PATHS = [
+  "apps/www/package.json",
+  "packages/ai/package.json",
+  "packages/backend/package.json",
+  "packages/contents/package.json",
+  "packages/internationalization/package.json",
+] as const;
 
 function validInput() {
   const dependencies = Object.fromEntries(
@@ -36,7 +34,7 @@ function validInput() {
       hold.approved ?? hold.allowed?.[0] ?? "missing",
     ])
   );
-  const manifests = Array.from({ length: 6 }, (_, index) => ({
+  const manifests = CONTRACT_MANIFEST_PATHS.map((path, index) => ({
     manifest: {
       dependencies:
         index === 0
@@ -45,7 +43,7 @@ function validInput() {
       scripts:
         index === 0 ? { doctor: "pnpm dlx react-doctor@0.9.12" } : undefined,
     },
-    path: fixtureManifestPath(index),
+    path,
   }));
   const ignoreDeps = [
     ...new Set([
@@ -148,7 +146,7 @@ describe("dependency policy", () => {
       problems.some((problem) => problem.includes("approved catalog:"))
     ).toBe(true);
     expect(
-      problems.some((problem) => problem.includes("expected at least 6"))
+      problems.some((problem) => problem.includes("declarations are"))
     ).toBe(true);
     expect(
       problems.some((problem) => problem.includes("obsolete Effect"))
