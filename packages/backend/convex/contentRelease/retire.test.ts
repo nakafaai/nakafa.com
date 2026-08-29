@@ -1,7 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { SignedTryoutHistoryMigrationReceiptSchema } from "@nakafa/aksara-contracts/migration/tryout/history/spec";
-import { internal } from "@repo/backend/convex/_generated/api";
+import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import { contentKeyResolver } from "@repo/backend/content/trust";
 import { recordPredecessorRead } from "@repo/backend/convex/contentRelease/predecessor/record";
+import { retireRuntimeState } from "@repo/backend/convex/contentRelease/retire";
+import type { RetirementRuntimeContract } from "@repo/backend/convex/contentRelease/retire/runtime";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -13,7 +16,10 @@ import {
   PREDECESSOR_OBSERVATION_ID,
   seedPredecessorObservation,
 } from "@repo/backend/test/predecessor";
-import type { FunctionArgs } from "convex/server";
+import {
+  seedRetirementRuntime,
+  TEST_LEGACY_BUNDLE_COUNT,
+} from "@repo/backend/test/runtime/retirement";
 import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
@@ -30,14 +36,15 @@ const RETIREMENT_RECEIPT = Schema.decodeUnknownSync(
   SignedTryoutHistoryMigrationReceiptSchema,
   { onExcessProperty: "error" }
 )(PARSED_RETIREMENT_RECEIPT);
-const retire = internal.contentRelease.retire.retire;
 const EMPTY_TERMINAL_STATE = {
+  legacyBundleCount: 0,
   observerCount: 0,
   observerPhases: [],
   receiptCount: 0,
   repairPresent: false,
 } as const;
 const RETAINED_TERMINAL_STATE = {
+  legacyBundleCount: TEST_LEGACY_BUNDLE_COUNT,
   observerCount: 4,
   observerPhases: ["armed", "armed", "armed", "armed"],
   receiptCount: 1,
@@ -45,7 +52,10 @@ const RETAINED_TERMINAL_STATE = {
 } as const;
 
 type RetirementTest = TestConvex<typeof schema>;
-type RetirementProof = FunctionArgs<typeof retire>["proof"];
+interface RetirementProof {
+  readonly assetHash: string;
+  readonly sourceSha: string;
+}
 
 class TestMutationError extends Schema.TaggedError<TestMutationError>()(
   "TestMutationError",
@@ -102,20 +112,33 @@ const seedTerminalState = Effect.fn("test.retire.seedState")(function* (
 ) {
   yield* Effect.promise(() => seedPredecessorObservation(target));
   yield* seedCleanedReceipt(target);
+  return (yield* seedRetirementRuntime(target)).contract;
 });
 
 const runRetirement = Effect.fn("test.retire.run")(function* (
   target: RetirementTest,
+  runtimeContract: RetirementRuntimeContract,
   receiptJson = RETIREMENT_RECEIPT_JSON,
   proof: RetirementProof = RETIREMENT_PROOF
 ) {
   return yield* Effect.tryPromise({
     try: () =>
-      target.mutation(retire, {
-        observationId: PREDECESSOR_OBSERVATION_ID,
-        proof,
-        receiptJson,
-      }),
+      target.mutation((ctx) =>
+        runConvexProgram(
+          retireRuntimeState(
+            ctx,
+            PREDECESSOR_OBSERVATION_ID,
+            receiptJson,
+            proof,
+            runtimeContract
+          ).pipe(
+            Effect.provideService(
+              ContentVerificationKeyResolver,
+              contentKeyResolver
+            )
+          )
+        )
+      ),
     catch: (cause) => new TestMutationError({ cause }),
   });
 });
@@ -127,6 +150,9 @@ const readTerminalState = Effect.fn("test.retire.readState")(function* (
     target.run((ctx) =>
       runConvexProgram(
         Effect.all({
+          legacyBundles: Effect.promise(() =>
+            ctx.db.query("tryoutBundles").collect()
+          ),
           observers: Effect.promise(() =>
             ctx.db.query("contentPredecessorReads").collect()
           ),
@@ -134,7 +160,8 @@ const readTerminalState = Effect.fn("test.retire.readState")(function* (
             ctx.db.query("tryoutHistoryMigrationReceipts").collect()
           ),
         }).pipe(
-          Effect.map(({ observers, receipts }) => ({
+          Effect.map(({ legacyBundles, observers, receipts }) => ({
+            legacyBundleCount: legacyBundles.length,
             observerCount: observers.length,
             observerPhases: observers.map(({ phase }) => phase),
             receiptCount: receipts.length,
@@ -147,30 +174,39 @@ const readTerminalState = Effect.fn("test.retire.readState")(function* (
 });
 
 describe("contentRelease/retire", () => {
-  it.effect("atomically retires five rows and accepts an exact retry", () =>
-    Effect.gen(function* () {
-      const target = convexTest(schema, convexModules);
-      yield* seedTerminalState(target);
+  it.effect(
+    "atomically retires all terminal rows and accepts an exact retry",
+    () =>
+      Effect.gen(function* () {
+        const target = convexTest(schema, convexModules);
+        const runtimeContract = yield* seedTerminalState(target);
 
-      expect(yield* runRetirement(target)).toMatchObject({
-        deleted: 5,
-        migrationId: RETIREMENT_RECEIPT.payload.migrationId,
-        observationId: PREDECESSOR_OBSERVATION_ID,
-        receiptHash: RETIREMENT_RECEIPT.receiptHash,
-      });
-      expect(yield* readTerminalState(target)).toEqual(EMPTY_TERMINAL_STATE);
-      expect(yield* runRetirement(target)).toMatchObject({ deleted: 0 });
-    })
+        expect(yield* runRetirement(target, runtimeContract)).toMatchObject({
+          deleted: 5 + TEST_LEGACY_BUNDLE_COUNT,
+          deletedLegacyBundles: TEST_LEGACY_BUNDLE_COUNT,
+          migrationId: RETIREMENT_RECEIPT.payload.migrationId,
+          observationId: PREDECESSOR_OBSERVATION_ID,
+          permanentAttempts: 1,
+          receiptHash: RETIREMENT_RECEIPT.receiptHash,
+        });
+        expect(yield* readTerminalState(target)).toEqual(EMPTY_TERMINAL_STATE);
+        expect(yield* runRetirement(target, runtimeContract)).toMatchObject({
+          deleted: 0,
+          deletedLegacyBundles: 0,
+        });
+      })
   );
 
   it.effect("rejects a terminal retry with a different source commit", () =>
     Effect.gen(function* () {
       const target = convexTest(schema, convexModules);
-      yield* seedTerminalState(target);
-      expect(yield* runRetirement(target)).toMatchObject({ deleted: 5 });
+      const runtimeContract = yield* seedTerminalState(target);
+      expect(yield* runRetirement(target, runtimeContract)).toMatchObject({
+        deleted: 5 + TEST_LEGACY_BUNDLE_COUNT,
+      });
 
       expectIntegrityFailure(
-        yield* runRetirement(target, RETIREMENT_RECEIPT_JSON, {
+        yield* runRetirement(target, runtimeContract, RETIREMENT_RECEIPT_JSON, {
           ...RETIREMENT_PROOF,
           sourceSha: "f".repeat(40),
         }).pipe(Effect.flip)
@@ -181,14 +217,16 @@ describe("contentRelease/retire", () => {
   it.effect("rejects any predecessor call without deleting evidence", () =>
     Effect.gen(function* () {
       const target = convexTest(schema, convexModules);
-      yield* seedTerminalState(target);
+      const runtimeContract = yield* seedTerminalState(target);
       yield* Effect.promise(() =>
         target.mutation((ctx) =>
           runConvexProgram(recordPredecessorRead(ctx, "protected"))
         )
       );
 
-      const error = yield* runRetirement(target).pipe(Effect.flip);
+      const error = yield* runRetirement(target, runtimeContract).pipe(
+        Effect.flip
+      );
       expect(error.cause).toMatchObject({
         data: { code: "CONTENT_RELEASE_STATE" },
       });
@@ -199,7 +237,7 @@ describe("contentRelease/retire", () => {
   it.effect("rejects a missing repair audit without deleting evidence", () =>
     Effect.gen(function* () {
       const target = convexTest(schema, convexModules);
-      yield* seedTerminalState(target);
+      const runtimeContract = yield* seedTerminalState(target);
       yield* Effect.promise(() =>
         target.mutation((ctx) =>
           runConvexProgram(
@@ -218,7 +256,9 @@ describe("contentRelease/retire", () => {
         )
       );
 
-      expectIntegrityFailure(yield* runRetirement(target).pipe(Effect.flip));
+      expectIntegrityFailure(
+        yield* runRetirement(target, runtimeContract).pipe(Effect.flip)
+      );
       expect(yield* readTerminalState(target)).toEqual({
         ...RETAINED_TERMINAL_STATE,
         repairPresent: false,
@@ -229,7 +269,7 @@ describe("contentRelease/retire", () => {
   it.effect("rejects noncanonical receipt without deleting evidence", () =>
     Effect.gen(function* () {
       const target = convexTest(schema, convexModules);
-      yield* seedTerminalState(target);
+      const runtimeContract = yield* seedTerminalState(target);
       const noncanonicalReceipt = JSON.stringify(
         PARSED_RETIREMENT_RECEIPT,
         undefined,
@@ -237,7 +277,9 @@ describe("contentRelease/retire", () => {
       );
 
       expectIntegrityFailure(
-        yield* runRetirement(target, noncanonicalReceipt).pipe(Effect.flip)
+        yield* runRetirement(target, runtimeContract, noncanonicalReceipt).pipe(
+          Effect.flip
+        )
       );
       expect(yield* readTerminalState(target)).toEqual(RETAINED_TERMINAL_STATE);
     })
@@ -246,7 +288,7 @@ describe("contentRelease/retire", () => {
   it.effect("rejects partial terminal state after receipt loss", () =>
     Effect.gen(function* () {
       const target = convexTest(schema, convexModules);
-      yield* seedTerminalState(target);
+      const runtimeContract = yield* seedTerminalState(target);
       yield* Effect.promise(() =>
         target.mutation((ctx) =>
           runConvexProgram(
@@ -263,9 +305,12 @@ describe("contentRelease/retire", () => {
         )
       );
 
-      expectIntegrityFailure(yield* runRetirement(target).pipe(Effect.flip));
+      expectIntegrityFailure(
+        yield* runRetirement(target, runtimeContract).pipe(Effect.flip)
+      );
       expect(yield* readTerminalState(target)).toEqual({
         ...EMPTY_TERMINAL_STATE,
+        legacyBundleCount: TEST_LEGACY_BUNDLE_COUNT,
         observerCount: 4,
         observerPhases: RETAINED_TERMINAL_STATE.observerPhases,
       });
@@ -275,7 +320,7 @@ describe("contentRelease/retire", () => {
   it.effect("rejects migration remnants without deleting evidence", () =>
     Effect.gen(function* () {
       const target = convexTest(schema, convexModules);
-      yield* seedTerminalState(target);
+      const runtimeContract = yield* seedTerminalState(target);
       yield* Effect.promise(() =>
         target.mutation((ctx) =>
           ctx.db.insert("tryoutHistoryMigrationAborts", {
@@ -287,7 +332,9 @@ describe("contentRelease/retire", () => {
         )
       );
 
-      expectIntegrityFailure(yield* runRetirement(target).pipe(Effect.flip));
+      expectIntegrityFailure(
+        yield* runRetirement(target, runtimeContract).pipe(Effect.flip)
+      );
       expect(yield* readTerminalState(target)).toEqual(RETAINED_TERMINAL_STATE);
     })
   );

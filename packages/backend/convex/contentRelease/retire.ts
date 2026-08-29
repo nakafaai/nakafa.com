@@ -18,6 +18,14 @@ import {
 } from "@repo/backend/convex/contentRelease/predecessor/rows";
 import { decodePredecessorObservationId } from "@repo/backend/convex/contentRelease/predecessor/spec";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
+import {
+  deleteLegacyBundles,
+  loadLegacyBundles,
+  type RetirementRuntimeContract,
+  requirePermanentAttemptOwnership,
+  retirementRuntimeContract,
+  verifyLegacyBundleSet,
+} from "@repo/backend/convex/contentRelease/retire/runtime";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import {
   countScaleRepairRows,
@@ -25,7 +33,7 @@ import {
   retainedScaleRepair,
 } from "@repo/backend/convex/tryouts/migration/cleanup/evidence";
 import { cleanupProofValidator } from "@repo/backend/convex/tryouts/migration/cleanup/schema";
-import { v } from "convex/values";
+import { type Infer, v } from "convex/values";
 import { Clock, Effect, Schema } from "effect";
 
 const retirementArgsValidator = v.object({
@@ -35,11 +43,46 @@ const retirementArgsValidator = v.object({
 });
 
 const retirementResultValidator = v.object({
-  deleted: v.union(v.literal(0), v.literal(5)),
+  deleted: v.union(v.literal(0), v.literal(14)),
+  deletedLegacyBundles: v.union(v.literal(0), v.literal(9)),
   migrationId: v.string(),
   observationId: v.string(),
+  permanentAttempts: v.number(),
   receiptHash: v.string(),
   retiredAt: v.number(),
+});
+type RetirementResult = Infer<typeof retirementResultValidator>;
+
+/** Narrows the injectable program result back to the production contract. */
+const requireProductionRetirementResult = Effect.fn(
+  "contentRelease.retire.requireProductionResult"
+)(function* (result: {
+  readonly deleted: number;
+  readonly deletedLegacyBundles: number;
+  readonly migrationId: string;
+  readonly observationId: string;
+  readonly permanentAttempts: number;
+  readonly receiptHash: string;
+  readonly retiredAt: number;
+}) {
+  if (result.deleted === 0 && result.deletedLegacyBundles === 0) {
+    return {
+      ...result,
+      deleted: 0,
+      deletedLegacyBundles: 0,
+    } satisfies RetirementResult;
+  }
+  if (result.deleted === 14 && result.deletedLegacyBundles === 9) {
+    return {
+      ...result,
+      deleted: 14,
+      deletedLegacyBundles: 9,
+    } satisfies RetirementResult;
+  }
+  return yield* releaseFail(
+    "CONTENT_RELEASE_INTEGRITY",
+    "Runtime retirement produced an unexpected production deletion count."
+  );
 });
 
 const retirementEvidence = {
@@ -137,7 +180,8 @@ export const retireRuntimeState = Effect.fn("contentRelease.retire")(function* (
   ctx: MutationCtx,
   observationInput: string,
   receiptJson: string,
-  proofInput: unknown
+  proofInput: unknown,
+  runtimeContract: RetirementRuntimeContract = retirementRuntimeContract
 ) {
   const observationId = yield* decodePredecessorObservationId(observationInput);
   const { proof, receipt } = yield* authenticateReceipt(
@@ -160,11 +204,17 @@ export const retireRuntimeState = Effect.fn("contentRelease.retire")(function* (
     );
   }
   const rows = yield* loadPredecessorRows(ctx);
+  const permanentAttempts = yield* requirePermanentAttemptOwnership(
+    ctx,
+    runtimeContract
+  );
+  const legacyBundles = yield* loadLegacyBundles(ctx, runtimeContract);
   const stored = state.receipt[0] ?? null;
   if (!stored) {
     if (
       state.receipt.length !== 0 ||
-      Object.values(rows).some((row) => row !== null)
+      Object.values(rows).some((row) => row !== null) ||
+      legacyBundles.length !== 0
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_INTEGRITY",
@@ -173,8 +223,10 @@ export const retireRuntimeState = Effect.fn("contentRelease.retire")(function* (
     }
     return {
       deleted: 0,
+      deletedLegacyBundles: 0,
       migrationId: receipt.payload.migrationId,
       observationId,
+      permanentAttempts,
       receiptHash: receipt.receiptHash,
       retiredAt: yield* Clock.currentTimeMillis,
     } as const;
@@ -213,14 +265,24 @@ export const retireRuntimeState = Effect.fn("contentRelease.retire")(function* (
       "Try-out history retirement lost its authenticated cleanup proof."
     );
   }
+  const retainedLegacyBundles = yield* verifyLegacyBundleSet(
+    legacyBundles,
+    runtimeContract
+  );
   yield* requireUnusedPredecessorObservation(ctx, observationId);
   const ownedRows = yield* requireOwnedPredecessorRows(rows, observationId);
   yield* deletePredecessorRows(ctx, ownedRows);
+  const deletedLegacyBundles = yield* deleteLegacyBundles(
+    ctx,
+    retainedLegacyBundles
+  );
   yield* Effect.promise(() => ctx.db.delete(stored._id));
   return {
-    deleted: 5,
+    deleted: 5 + deletedLegacyBundles,
+    deletedLegacyBundles,
     migrationId: receipt.payload.migrationId,
     observationId,
+    permanentAttempts,
     receiptHash: receipt.receiptHash,
     retiredAt: yield* Clock.currentTimeMillis,
   } as const;
@@ -232,12 +294,16 @@ export const retire = internalMutation({
   returns: retirementResultValidator,
   handler: (ctx, args) =>
     runConvexProgram(
-      retireRuntimeState(
-        ctx,
-        args.observationId,
-        args.receiptJson,
-        args.proof
-      ).pipe(
+      Effect.gen(function* () {
+        return yield* requireProductionRetirementResult(
+          yield* retireRuntimeState(
+            ctx,
+            args.observationId,
+            args.receiptJson,
+            args.proof
+          )
+        );
+      }).pipe(
         Effect.provideService(
           ContentVerificationKeyResolver,
           contentKeyResolver
