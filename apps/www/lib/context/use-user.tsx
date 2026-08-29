@@ -11,6 +11,7 @@ export type CurrentUser = NonNullable<
 >;
 
 interface UserContextValue {
+  isAuthenticated: boolean;
   isPending: boolean;
   user: CurrentUser | null;
 }
@@ -36,6 +37,7 @@ export function UserContextProvider({
   const isPending = isLoading || (shouldLoadUser && userQuery.isPending);
 
   const contextValue = {
+    isAuthenticated,
     user: currentUser,
     isPending,
   };

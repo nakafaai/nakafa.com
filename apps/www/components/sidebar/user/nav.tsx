@@ -55,7 +55,8 @@ export function NavUser() {
   const pageNavigation = usePageNavigation((navigation) => navigation);
   const pathname = usePathname();
   const router = useRouter();
-  const { isPending, user } = useUser((state) => ({
+  const { isAuthenticated, isPending, user } = useUser((state) => ({
+    isAuthenticated: state.isAuthenticated,
     isPending: state.isPending,
     user: state.user,
   }));
@@ -76,7 +77,7 @@ export function NavUser() {
     }
   }
   if (isPending) {
-    return <NavUserSkeleton />;
+    return <NavUserSkeleton mode={isAuthenticated ? "account" : "guest"} />;
   }
   if (!user) {
     return <NavUserGuest />;

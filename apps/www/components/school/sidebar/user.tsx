@@ -44,7 +44,8 @@ export function SchoolSidebarNavUser() {
   const t = useTranslations("Auth");
   const pathname = usePathname();
   const router = useRouter();
-  const { isPending, user } = useUser((state) => ({
+  const { isAuthenticated, isPending, user } = useUser((state) => ({
+    isAuthenticated: state.isAuthenticated,
     isPending: state.isPending,
     user: state.user,
   }));
@@ -65,7 +66,7 @@ export function SchoolSidebarNavUser() {
     }
   }
   if (isPending) {
-    return <NavUserSkeleton />;
+    return <NavUserSkeleton mode={isAuthenticated ? "account" : "guest"} />;
   }
   if (!user) {
     return <NavUserGuest />;

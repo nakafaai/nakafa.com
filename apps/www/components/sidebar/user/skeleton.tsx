@@ -9,11 +9,26 @@ import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import { useTranslations } from "next-intl";
 
 /**
- * Reserves the complete guest footer footprint while auth and profile data
- * settle so signed-out visitors do not see the navigation jump.
+ * Reserves the footer footprint for the confirmed account mode while auth and
+ * profile data settle, defaulting unresolved public sessions to the guest UI.
  */
-export function NavUserSkeleton() {
+export function NavUserSkeleton({ mode }: { mode: "account" | "guest" }) {
   const t = useTranslations("Auth");
+
+  if (mode === "account") {
+    return (
+      <SidebarMenuItem>
+        <SidebarMenuButton aria-hidden disabled size="lg">
+          <Skeleton className="aspect-square size-8 rounded-md" />
+          <div className="grid min-w-0 flex-1 gap-1">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-3 w-14" />
+          </div>
+          <Skeleton className="ml-auto size-4 rounded-full" />
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  }
 
   return (
     <>
