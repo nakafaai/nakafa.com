@@ -47,33 +47,43 @@ const verifyCompactReferenceSheet = Effect.fn(
   yield* Effect.promise(() =>
     expect(sheet).toBeVisible({ timeout: readinessTimeoutMilliseconds })
   );
-  const cards = sheet.locator('[data-slot="card"]');
-  yield* Effect.promise(() => expect(cards).toHaveCount(11));
+  const list = sheet.locator('[data-slot="reference-list"]');
+  const items = list.locator('[data-slot="reference-item"]');
+  yield* Effect.promise(() => expect(items).toHaveCount(11));
+  yield* Effect.promise(() =>
+    expect(list.locator('[data-slot="separator"]')).toHaveCount(10)
+  );
+  yield* Effect.promise(() =>
+    expect(list.locator('[data-slot="card"]')).toHaveCount(0)
+  );
 
   const metrics = yield* Effect.promise(() =>
-    cards.first().evaluate((card) => {
-      const cardStyle = getComputedStyle(card);
-      const content = card.querySelector('[data-slot="card-content"]');
+    items.first().evaluate((item) => {
+      const itemStyle = getComputedStyle(item);
+      const content = item.querySelector(
+        '[data-slot="reference-item-content"]'
+      );
       const contentStyle = content ? getComputedStyle(content) : null;
-      const title = card.querySelector('[data-slot="card-title"]');
+      const metadata = content?.lastElementChild;
+      const title = item.querySelector("h3");
 
       return {
-        cardGap: cardStyle.gap,
-        cardHeight: card.getBoundingClientRect().height,
-        cardPaddingBlock: `${cardStyle.paddingTop} ${cardStyle.paddingBottom}`,
         contentGap: contentStyle?.gap,
+        itemHeight: item.getBoundingClientRect().height,
+        itemPaddingTop: itemStyle.paddingTop,
+        metadataGap: metadata ? getComputedStyle(metadata).gap : null,
         titleFontSize: title ? getComputedStyle(title).fontSize : null,
       };
     })
   );
   yield* Effect.sync(() => {
     expect(metrics).toMatchObject({
-      cardGap: "16px",
-      cardPaddingBlock: "16px 16px",
-      contentGap: "12px",
+      contentGap: "16px",
+      itemPaddingTop: "16px",
+      metadataGap: "12px",
       titleFontSize: "14px",
     });
-    expect(metrics.cardHeight).toBeLessThanOrEqual(248);
+    expect(metrics.itemHeight).toBeLessThanOrEqual(232);
   });
 
   yield* Effect.promise(() => page.keyboard.press("Escape"));
@@ -84,7 +94,7 @@ const verifyCompactReferenceSheet = Effect.fn(
 test.describe("article bibliography", () => {
   test.use({ viewport: { height: 957, width: 665 } });
 
-  test("keeps reference cards compact in the side sheet", async ({ page }) => {
+  test("presents references as a compact divided list", async ({ page }) => {
     await Effect.runPromise(
       withObservedPageErrors(page, verifyCompactReferenceSheet(page))
     );

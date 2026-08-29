@@ -10,13 +10,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import type { Reference } from "@repo/contents/_types/content";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { Separator } from "@repo/design-system/components/ui/separator";
@@ -81,89 +74,102 @@ export function ReferenceButton({ references, title }: Props) {
 
             <div className="flex flex-1 flex-col overflow-hidden">
               <ScrollArea className="h-full px-4">
-                <div className="flex flex-col gap-4 py-4">
-                  {references.map((reference) => {
+                <ul data-slot="reference-list">
+                  {references.map((reference, index) => {
                     const url = reference.url
                       ? formatUrl(reference.url)
                       : t("no-website");
                     const cleanUrl = cleanupUrl(url).split("/")[0];
 
                     return (
-                      <Card key={reference.title} size="sm">
-                        <CardHeader>
-                          <CardTitle
-                            className="line-clamp-2 capitalize"
-                            title={reference.title}
-                          >
-                            {reference.title.toLowerCase()}
-                          </CardTitle>
-                          <CardDescription className="flex items-center gap-1">
-                            <HugeIcons
-                              className="size-4 shrink-0"
-                              icon={Globe02Icon}
-                            />
-                            {reference.url ? (
-                              <a
-                                className="underline-offset-4 hover:underline"
-                                href={reference.url}
-                                rel="noopener noreferrer"
-                                target="_blank"
-                              >
-                                {cleanUrl}
-                              </a>
-                            ) : (
-                              <span>{t("no-website")}</span>
-                            )}
-                          </CardDescription>
-                        </CardHeader>
-
-                        <CardContent>
-                          <div className="flex items-center gap-1">
-                            <HugeIcons
-                              className="size-4 shrink-0"
-                              icon={QuillWrite01Icon}
-                            />
-                            <span className="line-clamp-1 text-sm">
-                              {reference.authors}
-                            </span>
+                      <li
+                        className="pt-4 last:pb-4"
+                        data-slot="reference-item"
+                        key={reference.title}
+                      >
+                        <div
+                          className="flex flex-col gap-4"
+                          data-slot="reference-item-content"
+                        >
+                          <div className="flex flex-col gap-1">
+                            <h3
+                              className="line-clamp-2 font-medium text-sm capitalize leading-normal"
+                              title={reference.title}
+                            >
+                              {reference.title.toLowerCase()}
+                            </h3>
+                            <div className="flex items-center gap-1 text-muted-foreground text-sm">
+                              <HugeIcons
+                                className="size-4 shrink-0"
+                                icon={Globe02Icon}
+                              />
+                              {reference.url ? (
+                                <a
+                                  className="underline-offset-4 hover:underline"
+                                  href={reference.url}
+                                  rel="noopener noreferrer"
+                                  target="_blank"
+                                >
+                                  {cleanUrl}
+                                </a>
+                              ) : (
+                                <span>{t("no-website")}</span>
+                              )}
+                            </div>
                           </div>
 
-                          <div className="flex items-center gap-1">
-                            <HugeIcons
-                              className="size-4 shrink-0"
-                              icon={Calendar03Icon}
-                            />
-                            <span className="text-sm">{reference.year}</span>
-                          </div>
-
-                          {!!reference.publication && (
+                          <div className="flex flex-col gap-3">
                             <div className="flex items-center gap-1">
                               <HugeIcons
                                 className="size-4 shrink-0"
-                                icon={BookOpen02Icon}
+                                icon={QuillWrite01Icon}
                               />
                               <span className="line-clamp-1 text-sm">
-                                {reference.publication}
+                                {reference.authors}
                               </span>
                             </div>
-                          )}
 
-                          {!!reference.details && (
                             <div className="flex items-center gap-1">
                               <HugeIcons
                                 className="size-4 shrink-0"
-                                icon={Book03Icon}
+                                icon={Calendar03Icon}
                               />
-                              <span className="text-sm">
-                                {reference.details}
-                              </span>
+                              <span className="text-sm">{reference.year}</span>
                             </div>
-                          )}
-                        </CardContent>
-                      </Card>
+
+                            {!!reference.publication && (
+                              <div className="flex items-center gap-1">
+                                <HugeIcons
+                                  className="size-4 shrink-0"
+                                  icon={BookOpen02Icon}
+                                />
+                                <span className="line-clamp-1 text-sm">
+                                  {reference.publication}
+                                </span>
+                              </div>
+                            )}
+
+                            {!!reference.details && (
+                              <div className="flex items-center gap-1">
+                                <HugeIcons
+                                  className="size-4 shrink-0"
+                                  icon={Book03Icon}
+                                />
+                                <span className="text-sm">
+                                  {reference.details}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {index < references.length - 1 && (
+                          <Separator className="mt-4" />
+                        )}
+                      </li>
                     );
                   })}
-                </div>
+                </ul>
               </ScrollArea>
             </div>
           </div>
