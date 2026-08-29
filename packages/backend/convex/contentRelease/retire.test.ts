@@ -3,7 +3,7 @@ import { SignedTryoutHistoryMigrationReceiptSchema } from "@nakafa/aksara-contra
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import { recordPredecessorRead } from "@repo/backend/convex/contentRelease/predecessor/record";
-import { retireRuntimeState } from "@repo/backend/convex/contentRelease/retire";
+import { retireRuntimeState } from "@repo/backend/convex/contentRelease/retire/impl";
 import type { RetirementRuntimeContract } from "@repo/backend/convex/contentRelease/retire/runtime";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
