@@ -62,7 +62,6 @@ describe("contentRelease/tryout runtime activation", () => {
       );
       const unchanged = yield* Effect.promise(() =>
         t.run(async (ctx) => ({
-          legacy: await ctx.db.query("tryoutBundles").collect(),
           release: await ctx.db
             .query("contentReleases")
             .withIndex("by_releaseId", (index) =>
@@ -77,7 +76,6 @@ describe("contentRelease/tryout runtime activation", () => {
         candidateReleaseId: CANDIDATE.releaseId,
       });
       expect(unchanged.state?.activeReleaseId).toBeUndefined();
-      expect(unchanged.legacy).toEqual([]);
     })
   );
 
@@ -189,7 +187,7 @@ describe("contentRelease/tryout runtime activation", () => {
     })
   );
 
-  it.effect("does not recreate legacy retention after permanent proof", () =>
+  it.effect("returns completed proof without duplicating permanent storage", () =>
     Effect.gen(function* () {
       const t = convexTest(schema, convexModules);
       const fixture = yield* makeActivationRuntime();
@@ -206,11 +204,11 @@ describe("contentRelease/tryout runtime activation", () => {
       yield* Effect.promise(() => activateCandidate(t));
 
       const retry = yield* Effect.promise(() => activateCandidate(t));
-      const legacy = yield* Effect.promise(() =>
-        t.run((ctx) => ctx.db.query("tryoutBundles").collect())
+      const runtime = yield* Effect.promise(() =>
+        t.run((ctx) => ctx.db.query("tryoutRuntimeBundles").collect())
       );
       expect(retry.kind).toBe("completed");
-      expect(legacy).toEqual([]);
+      expect(runtime).toHaveLength(1);
     })
   );
 

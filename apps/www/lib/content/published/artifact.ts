@@ -13,7 +13,6 @@ import "server-only";
 import { run } from "@mdx-js/mdx";
 import { verifySignedContentArtifact } from "@nakafa/aksara-contracts/artifact/verify";
 import type { SignedContentArtifact } from "@nakafa/aksara-contracts/content";
-import type { StoredProtectedRuntimeItem } from "@nakafa/aksara-contracts/history/decode";
 import type {
   RendererContractVersion,
   RendererManifestEnvelope,
@@ -36,10 +35,6 @@ interface EvaluateArtifactInput {
   readonly artifact: SignedContentArtifact;
 }
 
-interface EvaluateHistoricalArtifactInput {
-  readonly artifact: StoredProtectedRuntimeItem["artifact"];
-}
-
 interface EvaluateCompiledCodeInput {
   readonly compiledCode: string;
   readonly components: MDXComponents;
@@ -49,12 +44,6 @@ interface EvaluateCompiledCodeInput {
 /** Authenticated module and projections consumed by a Nakafa route shell. */
 export interface RenderableContent {
   readonly artifact: SignedContentArtifact;
-  readonly Content: ComponentType;
-}
-
-/** Authenticated historical module retaining its exact immutable wire type. */
-interface RenderableHistoricalContent {
-  readonly artifact: StoredProtectedRuntimeItem["artifact"];
   readonly Content: ComponentType;
 }
 
@@ -101,23 +90,6 @@ export const evaluateVerifiedArtifact = Effect.fn(
     Content,
     artifact: input.artifact,
   } satisfies RenderableContent;
-});
-
-/** Evaluates an authenticated old artifact without adapting its wire schema. */
-export const evaluateVerifiedHistoricalArtifact = Effect.fn(
-  "NakafaContent.evaluateVerifiedHistoricalArtifact"
-)(function* (input: EvaluateHistoricalArtifactInput) {
-  const components = yield* resolveRendererComponents(input.artifact.payload);
-  const Content = yield* evaluateCompiledCode({
-    compiledCode: input.artifact.payload.compiledCode,
-    components,
-    contentKey: input.artifact.payload.contentKey,
-  });
-
-  return {
-    Content,
-    artifact: input.artifact,
-  } satisfies RenderableHistoricalContent;
 });
 
 /**

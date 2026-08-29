@@ -1,9 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import contentReleaseSchema from "@repo/backend/convex/contentRelease/schema";
-import {
-  legacyTryoutBundleSchema,
-  tryoutRuntimeBundleSchema,
-} from "@repo/backend/convex/tryouts/runtime/schema";
+import { tryoutRuntimeBundleSchema } from "@repo/backend/convex/tryouts/runtime/schema";
 import {
   CONTENT_RUNTIME_CACHE_CONTRACT,
   CONTENT_RUNTIME_SCHEMA_FINGERPRINT,
@@ -25,18 +22,15 @@ describe("content runtime tables", () => {
     () =>
       Effect.gen(function* () {
         const releaseTables = Object.keys(contentReleaseSchema).filter(
-          (table) =>
-            table !== "contentState" && table !== "contentPredecessorReads"
+          (table) => table !== "contentState"
         );
         const expected = [
           ...releaseTables,
-          ...Object.keys(legacyTryoutBundleSchema),
           ...Object.keys(tryoutRuntimeBundleSchema),
           "contentState",
         ];
 
         expect(CONTENT_RUNTIME_TABLES).toEqual(expected);
-        expect(CONTENT_RUNTIME_TABLES).not.toContain("contentPredecessorReads");
         expect(new Set(CONTENT_RUNTIME_TABLES).size).toBe(expected.length);
         expect(yield* validateContentRuntimeTableDefinitions).toHaveLength(
           expected.length

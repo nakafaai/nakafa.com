@@ -3,13 +3,9 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   toUserCleanupError,
   tryUserCleanup,
-  USER_CLEANUP_FAILED_CODE,
-  UserCleanupError,
 } from "@repo/backend/convex/auth/cleanup/spec";
 import { reconcileTryoutRuntimeAfterAttempt } from "@repo/backend/convex/contentRelease/tryout/runtime";
-import { deleteTryoutAttemptHistory } from "@repo/backend/convex/tryouts/history/reference";
-import { cleanupTryoutHistoryScale } from "@repo/backend/convex/tryouts/history/scale";
-import { hasAttemptErasureHold } from "@repo/backend/convex/tryouts/migration/erasure";
+import { cleanupAttemptScale } from "@repo/backend/convex/tryouts/runtime/scale";
 import { Effect } from "effect";
 
 const ATTEMPT_CHILD_BATCH_SIZE = 50;
@@ -20,13 +16,6 @@ const ACCESS_GRANT_BATCH_SIZE = 25;
 /** Deletes one bounded phase from a try-out attempt runtime. */
 const cleanupAttemptRuntime = Effect.fn("auth.cleanup.cleanupAttemptRuntime")(
   function* (ctx: MutationCtx, attempt: Doc<"tryoutAttempts">) {
-    if (yield* hasAttemptErasureHold(ctx, attempt._id)) {
-      return yield* new UserCleanupError({
-        code: USER_CLEANUP_FAILED_CODE,
-        message:
-          "Try-out attempt erasure is held by a signed history migration.",
-      });
-    }
     const section = yield* tryUserCleanup(() =>
       ctx.db
         .query("tryoutSectionAttempts")
@@ -96,23 +85,18 @@ const cleanupAttemptRuntime = Effect.fn("auth.cleanup.cleanupAttemptRuntime")(
     }
 
     if (
-      yield* cleanupTryoutHistoryScale(ctx, attempt).pipe(
+      yield* cleanupAttemptScale(ctx, attempt).pipe(
         Effect.mapError(toUserCleanupError)
       )
     ) {
       return true;
     }
 
-    yield* deleteTryoutAttemptHistory(ctx, attempt).pipe(
-      Effect.mapError(toUserCleanupError)
-    );
     yield* tryUserCleanup(() => ctx.db.delete("tryoutAttempts", attempt._id));
-    if (attempt.tryoutBundleId) {
-      yield* reconcileTryoutRuntimeAfterAttempt(
-        ctx,
-        attempt.tryoutBundleId
-      ).pipe(Effect.mapError(toUserCleanupError));
-    }
+    yield* reconcileTryoutRuntimeAfterAttempt(
+      ctx,
+      attempt.tryoutBundleId
+    ).pipe(Effect.mapError(toUserCleanupError));
     return true;
   }
 );

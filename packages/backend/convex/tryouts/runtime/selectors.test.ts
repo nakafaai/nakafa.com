@@ -69,7 +69,6 @@ describe("tryouts/runtime/selectors", () => {
           answers: [seeded.signedContent.answer],
           kind: "signed",
           questions: [seeded.signedContent.question],
-          runtime: "current",
         });
       })
   );

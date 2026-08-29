@@ -11,42 +11,12 @@ type AttemptPage = Extract<
 >;
 type ContentAccess = AttemptPage["content"];
 export type SignedContentAccess = Extract<ContentAccess, { kind: "signed" }>;
-export type CurrentContentAccess = Extract<
-  SignedContentAccess,
-  { runtime: "current" }
->;
-export type PredecessorContentAccess = Extract<
-  SignedContentAccess,
-  { runtime: "predecessor" }
->;
-export type HistoryContentAccess = Extract<
-  SignedContentAccess,
-  { runtime: "history" }
->;
-
-export type CurrentTryoutQuestionSelector =
-  CurrentContentAccess["questions"][number];
-export type CurrentTryoutAnswerSelector =
-  CurrentContentAccess["answers"][number];
-export type PredecessorTryoutQuestionSelector =
-  PredecessorContentAccess["questions"][number];
-export type PredecessorTryoutAnswerSelector =
-  PredecessorContentAccess["answers"][number];
-export type HistoryTryoutQuestionSelector =
-  HistoryContentAccess["questions"][number];
-export type HistoryTryoutAnswerSelector =
-  HistoryContentAccess["answers"][number];
-export type CurrentTryoutSelector =
-  | CurrentTryoutAnswerSelector
-  | CurrentTryoutQuestionSelector;
-export type PredecessorTryoutSelector =
-  | PredecessorTryoutAnswerSelector
-  | PredecessorTryoutQuestionSelector;
-export type HistoryTryoutSelector =
-  | HistoryTryoutAnswerSelector
-  | HistoryTryoutQuestionSelector;
+export type TryoutQuestionSelector =
+  SignedContentAccess["questions"][number];
+export type TryoutAnswerSelector = SignedContentAccess["answers"][number];
+export type TryoutSelector = TryoutAnswerSelector | TryoutQuestionSelector;
 export type TryoutRenderSelector = Pick<
-  CurrentTryoutQuestionSelector,
+  TryoutQuestionSelector,
   "contentHash" | "sourcePath" | "sourceRevision"
 >;
 
@@ -105,6 +75,3 @@ export function projectTryoutRuntimeContent(input: {
     ),
   };
 }
-
-/** Exact signed question selector authorized by Convex. */
-export type TryoutQuestionSelector = SignedContentAccess["questions"][number];

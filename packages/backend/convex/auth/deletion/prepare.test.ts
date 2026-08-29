@@ -9,14 +9,12 @@ import { prepareAccountDeletion } from "@repo/backend/convex/auth/deletion/prepa
 import type { AccountDeletionPreparationOutcome } from "@repo/backend/convex/auth/deletion/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
-import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   seedDeletionMember,
   seedDeletionSchool,
   seedDeletionUser,
 } from "@repo/backend/test/deletion/seed";
-import { seedMigrationHold } from "@repo/backend/test/migration/seed";
 import { convexTest } from "convex-test";
 
 const NOW = Date.UTC(2026, 6, 28, 8, 0, 0);
@@ -76,25 +74,6 @@ describe("auth/deletion/prepare", () => {
     const state = await t.query(async (ctx) => ({
       preparation: await ctx.db.query("accountDeletionPreparations").unique(),
       user: await ctx.db.get("users", userId),
-    }));
-
-    expect(outcome).toBe("temporarily-unavailable");
-    expect(state.preparation).toBeNull();
-    expect(state.user).not.toHaveProperty("deletionPreparedAt");
-  });
-
-  it("defers an account held by signed try-out migration", async () => {
-    const t = createConvexTestWithBetterAuth();
-    const seeded = await t.mutation((ctx) =>
-      seedMigrationHold(ctx, "deletion-migration-hold")
-    );
-
-    const outcome = await t.mutation((ctx) =>
-      prepareInTest(ctx, seeded.authId)
-    );
-    const state = await t.query(async (ctx) => ({
-      preparation: await ctx.db.query("accountDeletionPreparations").unique(),
-      user: await ctx.db.get(seeded.userId),
     }));
 
     expect(outcome).toBe("temporarily-unavailable");
