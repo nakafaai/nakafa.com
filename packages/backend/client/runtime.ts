@@ -5,6 +5,7 @@ import {
   NetworkRetryCodeSchema,
 } from "@repo/backend/client/network";
 import {
+  ConvexTerminalResponseError,
   ConvexTransientResponseError,
   ConvexTransientStatusSchema,
   createConvexRuntimeFetch,
@@ -15,6 +16,7 @@ import {
   type FunctionReference,
   getFunctionName,
 } from "convex/server";
+import { ConvexError } from "convex/values";
 import { Effect, Random, Schedule, Schema } from "effect";
 
 const CONVEX_QUERY_RETRY_SCHEDULE = Schedule.recurs(2).pipe(
@@ -38,7 +40,7 @@ export class ConvexRuntimeQueryError extends Schema.TaggedError<ConvexRuntimeQue
     httpStatuses: Schema.Array(ConvexTransientStatusSchema),
     networkCodes: Schema.Array(NetworkRetryCodeSchema),
     query: Schema.String,
-    reason: Schema.Literals(["client", "query", "transport"]),
+    reason: Schema.Literals(["client", "query", "runtime", "transport"]),
   }
 ) {
   get message() {
@@ -85,6 +87,10 @@ function mapQueryFailure(query: string, cause: unknown) {
     return createRuntimeQueryError(query, "transport", [], [cause.status]);
   }
 
+  if (cause instanceof ConvexTerminalResponseError) {
+    return createRuntimeQueryError(query, "client");
+  }
+
   if (cause instanceof NetworkRequestError) {
     return createRuntimeQueryError(query, "transport", cause.networkCodes);
   }
@@ -98,13 +104,17 @@ function mapQueryFailure(query: string, cause: unknown) {
     );
   }
 
-  return createRuntimeQueryError(query, "query");
+  return createRuntimeQueryError(
+    query,
+    cause instanceof ConvexError ? "query" : "runtime"
+  );
 }
 
 function isRetryableQueryError(error: ConvexRuntimeQueryError) {
   return (
-    error.reason === "transport" &&
-    (error.networkCodes.length > 0 || error.httpStatuses.length > 0)
+    error.reason === "runtime" ||
+    (error.reason === "transport" &&
+      (error.networkCodes.length > 0 || error.httpStatuses.length > 0))
   );
 }
 
@@ -113,9 +123,9 @@ function isRetryableQueryError(error: ConvexRuntimeQueryError) {
  *
  * Only allowlisted network failures receive the shared bounded retry schedule,
  * including response-stream failures surfaced by the official client. Convex
- * 5xx responses receive the same bounded retry because queries are read-only,
- * except status 560, which represents a real Convex function failure. Other
- * HTTP, protocol, timeout, and unknown failures remain terminal.
+ * 5xx responses and untyped runtime failures receive the same bounded retry
+ * because queries are read-only. Typed Convex domain failures, client setup,
+ * timeouts, and unknown transport failures remain terminal.
  *
  * @see https://docs.convex.dev/functions/error-handling/
  * @see https://effect.website/docs/error-management/retrying/

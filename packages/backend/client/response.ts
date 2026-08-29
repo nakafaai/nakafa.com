@@ -18,12 +18,18 @@ export class ConvexTransientResponseError extends Schema.TaggedError<ConvexTrans
   }
 ) {}
 
-/** Internal failure while releasing one transient response stream. */
+/** One terminal non-function HTTP response from the Convex query endpoint. */
+export class ConvexTerminalResponseError extends Schema.TaggedError<ConvexTerminalResponseError>()(
+  "ConvexTerminalResponseError",
+  {}
+) {}
+
+/** Internal failure while releasing one failed response stream. */
 class ConvexResponseCancelError extends Schema.TaggedError<ConvexResponseCancelError>()(
   "ConvexResponseCancelError",
   {
     cause: Schema.Unknown,
-    status: ConvexTransientStatusSchema,
+    status: Schema.Int,
   }
 ) {}
 
@@ -35,26 +41,26 @@ function isTransientConvexResponse(response: Response) {
   );
 }
 
-const cancelTransientResponse = Effect.fn(
-  "ConvexRuntime.cancelTransientResponse"
-)(function* (response: Response) {
-  const body = response.body;
-  if (!body) {
-    return;
-  }
+const cancelFailedResponse = Effect.fn("ConvexRuntime.cancelFailedResponse")(
+  function* (response: Response) {
+    const body = response.body;
+    if (!body) {
+      return;
+    }
 
-  yield* Effect.tryPromise({
-    try: () => body.cancel(),
-    catch: (cause) =>
-      new ConvexResponseCancelError({ cause, status: response.status }),
-  }).pipe(
-    Effect.catchTag("ConvexResponseCancelError", (error) =>
-      Effect.logWarning(
-        "Unable to cancel transient Convex response body."
-      ).pipe(Effect.annotateLogs({ status: error.status }))
-    )
-  );
-});
+    yield* Effect.tryPromise({
+      try: () => body.cancel(),
+      catch: (cause) =>
+        new ConvexResponseCancelError({ cause, status: response.status }),
+    }).pipe(
+      Effect.catchTag("ConvexResponseCancelError", (error) =>
+        Effect.logWarning("Unable to cancel failed Convex response body.").pipe(
+          Effect.annotateLogs({ status: error.status })
+        )
+      )
+    );
+  }
+);
 
 const readConvexResponse = Effect.fn("ConvexRuntime.response")(function* (
   input: RequestInfo | URL,
@@ -69,10 +75,14 @@ const readConvexResponse = Effect.fn("ConvexRuntime.response")(function* (
       }),
   });
   if (isTransientConvexResponse(response)) {
-    yield* cancelTransientResponse(response);
+    yield* cancelFailedResponse(response);
     return yield* new ConvexTransientResponseError({
       status: response.status,
     });
+  }
+  if (!response.ok && response.status !== CONVEX_UDF_FAILED_STATUS) {
+    yield* cancelFailedResponse(response);
+    return yield* new ConvexTerminalResponseError({});
   }
 
   return response;

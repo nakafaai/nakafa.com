@@ -193,6 +193,30 @@ describe("Convex runtime responses", () => {
     });
   });
 
+  it.effect("retries untyped function runtime failures", () => {
+    queryThroughTerminalResponse(560, new Error("private runtime failure"));
+
+    return Effect.gen(function* () {
+      const fiber = yield* Effect.forkChild(
+        readConvexRuntimeQuery(runtimeUrl, query, args).pipe(Effect.flip)
+      );
+      yield* TestClock.adjust(Duration.millis(1500));
+      const result = yield* Fiber.join(fiber);
+
+      expect(result).toEqual(
+        new ConvexRuntimeQueryError({
+          httpStatuses: [],
+          networkCodes: [],
+          query: queryName,
+          reason: "runtime",
+        })
+      );
+      expect(clientState.query).toHaveBeenCalledTimes(3);
+      expect(fetch).toHaveBeenCalledTimes(3);
+      expect(JSON.stringify(result)).not.toContain("private runtime failure");
+    });
+  });
+
   it.effect("keeps client HTTP failures terminal", () => {
     queryThroughTerminalResponse(400, new Error("private client failure"));
 
@@ -208,7 +232,7 @@ describe("Convex runtime responses", () => {
           httpStatuses: [],
           networkCodes: [],
           query: queryName,
-          reason: "query",
+          reason: "client",
         })
       );
       expect(clientState.query).toHaveBeenCalledOnce();

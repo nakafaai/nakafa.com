@@ -217,29 +217,44 @@ describe("Convex runtime query", () => {
     })
   );
 
-  it.effect("sanitizes non-Convex query failures", () =>
-    Effect.gen(function* () {
-      clientState.query.mockRejectedValueOnce(
-        new Error("private client detail")
-      );
+  it.effect("recovers from one untyped runtime failure", () => {
+    clientState.query
+      .mockRejectedValueOnce(new Error("private runtime detail"))
+      .mockResolvedValueOnce(42);
 
-      const result = yield* readConvexRuntimeQuery(
-        runtimeUrl,
-        query,
-        args
-      ).pipe(Effect.flip);
+    return Effect.gen(function* () {
+      const fiber = yield* Effect.forkChild(
+        readConvexRuntimeQuery(runtimeUrl, query, args)
+      );
+      yield* TestClock.adjust(Duration.millis(500));
+
+      expect(yield* Fiber.join(fiber)).toBe(42);
+      expect(clientState.query).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it.effect("sanitizes persistent untyped runtime failures", () => {
+    clientState.query.mockRejectedValue(new Error("private runtime detail"));
+
+    return Effect.gen(function* () {
+      const fiber = yield* Effect.forkChild(
+        readConvexRuntimeQuery(runtimeUrl, query, args).pipe(Effect.flip)
+      );
+      yield* TestClock.adjust(Duration.millis(1500));
+      const result = yield* Fiber.join(fiber);
 
       expect(result).toEqual(
         new ConvexRuntimeQueryError({
           httpStatuses: [],
           networkCodes: [],
           query: queryName,
-          reason: "query",
+          reason: "runtime",
         })
       );
-      expect(JSON.stringify(result)).not.toContain("private client detail");
-    })
-  );
+      expect(JSON.stringify(result)).not.toContain("private runtime detail");
+      expect(clientState.query).toHaveBeenCalledTimes(3);
+    });
+  });
 
   it.effect(
     "converts synchronous client construction failures to typed errors",
