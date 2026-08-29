@@ -11,10 +11,8 @@ import {
 } from "@repo/backend/convex/tryouts/catalog/hierarchy";
 import { tryoutChoiceSnapshotValidator } from "@repo/backend/convex/tryouts/runtime/choice";
 import {
-  type TryoutCurrentQuestionSelector,
-  type TryoutPredecessorQuestionSelector,
-  tryoutCurrentQuestionSelectorValidator,
-  tryoutPredecessorQuestionSelectorValidator,
+  type TryoutQuestionSelector,
+  tryoutQuestionSelectorValidator,
 } from "@repo/backend/convex/tryouts/runtime/content";
 import { v } from "convex/values";
 import { Effect } from "effect";
@@ -24,15 +22,8 @@ import { Effect } from "effect";
  */
 export const featuredTryoutValidator = v.object({
   choices: v.array(tryoutChoiceSnapshotValidator),
-  question: v.union(
-    tryoutCurrentQuestionSelectorValidator,
-    tryoutPredecessorQuestionSelectorValidator
-  ),
+  question: tryoutQuestionSelectorValidator,
 });
-
-type FeaturedQuestion =
-  | TryoutCurrentQuestionSelector
-  | TryoutPredecessorQuestionSelector;
 
 /** Selects the first authored question from the canonical try-out hierarchy. */
 export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
@@ -53,13 +44,14 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
       trackKey: section.trackKey,
     });
     const placement = source.placements[0]?.row;
-    if (!(placement && catalog.activeReleaseId)) {
+    if (!(placement && catalog.activeReleaseId && catalog.bundleHash)) {
       return yield* missingFeaturedTryout("question");
     }
 
-    const questionBase: TryoutPredecessorQuestionSelector = {
+    const question: TryoutQuestionSelector = {
       appLocale: locale,
       artifactHash: placement.questionArtifactHash,
+      bundleHash: catalog.bundleHash,
       contentHash: placement.contentHash,
       contentKey: placement.questionContentKey,
       delivery: "authenticated",
@@ -69,10 +61,6 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
       sourcePath: placement.questionSourcePath,
       sourceRevision: placement.sourceRevision,
     };
-    const question: FeaturedQuestion =
-      catalog.bundleHash === null
-        ? questionBase
-        : { ...questionBase, bundleHash: catalog.bundleHash };
 
     return {
       choices: [...placement.choices],

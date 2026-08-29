@@ -1,14 +1,10 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { readTryoutAttemptHistory } from "@repo/backend/convex/tryouts/history/reference";
-import { projectStoredTryoutContent } from "@repo/backend/convex/tryouts/history/selectors";
-import { loadAttemptRuntimeSource } from "@repo/backend/convex/tryouts/runtime/attempt/source";
+import { loadAttemptRuntimeBundle } from "@repo/backend/convex/tryouts/runtime/attempt/source";
 import type {
-  TryoutCurrentAnswerSelector,
-  TryoutCurrentQuestionSelector,
-  TryoutPredecessorAnswerSelector,
-  TryoutPredecessorQuestionSelector,
+  TryoutAnswerSelector,
+  TryoutQuestionSelector,
   TryoutSectionContentAccess,
 } from "@repo/backend/convex/tryouts/runtime/content";
 import {
@@ -84,35 +80,13 @@ export const projectTryoutSignedContent = Effect.fn(
       "Signed try-out section lost one or more frozen placements."
     );
   }
-  const history = yield* readTryoutAttemptHistory(input.ctx, input.attempt);
-  if (history) {
-    if (
-      input.attempt.tryoutBundleId !== undefined ||
-      input.attempt.tryoutBundleHash !== undefined
-    ) {
-      return yield* selectorIntegrity(
-        "Signed try-out attempt has both permanent and historical runtime ownership."
-      );
-    }
-    return yield* projectStoredTryoutContent({
-      answers: input.answers,
-      appLocale: input.appLocale,
-      attempt: input.attempt,
-      ctx: input.ctx,
-      placements: input.placements,
-    });
-  }
-  const source = yield* loadAttemptRuntimeSource(input.ctx, input.attempt);
-  if (!source) {
-    return yield* selectorIntegrity(
-      "Signed try-out attempt has no immutable runtime owner."
-    );
-  }
+  const bundle = yield* loadAttemptRuntimeBundle(input.ctx, input.attempt);
 
   const answers = input.answers
     ? yield* Effect.forEach(input.placements, (placement) =>
         makeAnswerSelector(
           placement,
+          bundle.bundleHash,
           input.appLocale,
           input.attempt.tryoutSnapshotId,
           input.attempt.snapshotReleaseId
@@ -122,43 +96,23 @@ export const projectTryoutSignedContent = Effect.fn(
   const questions = yield* Effect.forEach(input.placements, (placement) =>
     makeQuestionSelector(
       placement,
+      bundle.bundleHash,
       input.appLocale,
       input.attempt.tryoutSnapshotId,
       input.attempt.snapshotReleaseId
     )
   );
-  if (source.kind === "predecessor") {
-    return {
-      answers,
-      kind: "signed",
-      questions,
-      runtime: "predecessor",
-    } satisfies Extract<TryoutSectionContentAccess, { runtime: "predecessor" }>;
-  }
-  const bundleHash = source.bundleHash;
   return {
-    answers: answers.map(
-      (answer) =>
-        ({
-          ...answer,
-          bundleHash,
-        }) satisfies TryoutCurrentAnswerSelector
-    ),
+    answers,
     kind: "signed",
-    questions: questions.map(
-      (question) =>
-        ({
-          ...question,
-          bundleHash,
-        }) satisfies TryoutCurrentQuestionSelector
-    ),
-    runtime: "current",
-  } satisfies Extract<TryoutSectionContentAccess, { runtime: "current" }>;
+    questions,
+  } satisfies TryoutSectionContentAccess;
 });
 
 /** Builds one authenticated question selector from a frozen placement. */
 function makeQuestionSelector(
   placement: TryoutPlacement,
+  bundleHash: string,
   appLocale: AppLocaleCode,
   snapshotId: string,
   snapshotReleaseId: string
@@ -173,9 +127,10 @@ function makeQuestionSelector(
     return selectorIntegrity("Signed try-out question selector is incomplete.");
   }
 
-  const selector: TryoutPredecessorQuestionSelector = {
+  const selector: TryoutQuestionSelector = {
     appLocale,
     artifactHash: placement.questionArtifactHash,
+    bundleHash,
     contentHash: placement.contentHash,
     contentKey: placement.questionContentKey,
     delivery: "authenticated",
@@ -191,6 +146,7 @@ function makeQuestionSelector(
 /** Builds one entitled answer selector from a frozen placement. */
 function makeAnswerSelector(
   placement: TryoutPlacement,
+  bundleHash: string,
   appLocale: AppLocaleCode,
   snapshotId: string,
   snapshotReleaseId: string
@@ -199,9 +155,10 @@ function makeAnswerSelector(
     return selectorIntegrity("Signed try-out answer selector is incomplete.");
   }
 
-  const selector: TryoutPredecessorAnswerSelector = {
+  const selector: TryoutAnswerSelector = {
     appLocale,
     artifactHash: placement.answerArtifactHash,
+    bundleHash,
     contentHash: placement.contentHash,
     contentKey: placement.answerContentKey,
     delivery: "entitled",

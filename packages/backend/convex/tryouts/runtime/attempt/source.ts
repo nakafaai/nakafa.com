@@ -1,6 +1,5 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import { findTryoutBundleByRelease } from "@repo/backend/convex/tryouts/runtime/bundle";
 import {
   selectorIntegrity,
   TryoutSelectorReadError,
@@ -9,76 +8,25 @@ import { Effect } from "effect";
 
 type TryoutAttempt = Doc<"tryoutAttempts">;
 
-interface PermanentSource {
-  readonly bundleHash: string;
-  readonly kind: "permanent";
-}
-
-interface PredecessorSource {
-  readonly bundleHash: undefined;
-  readonly kind: "predecessor";
-}
-
-export type AttemptRuntimeSource = PermanentSource | PredecessorSource;
-
-/** Resolves one attempt's current runtime generation during expansion. */
-export const loadAttemptRuntimeSource = Effect.fn(
-  "tryouts.selectors.loadAttemptRuntimeSource"
+/** Resolves the permanent runtime bundle owned by one signed attempt. */
+export const loadAttemptRuntimeBundle = Effect.fn(
+  "tryouts.selectors.loadAttemptRuntimeBundle"
 )(function* (ctx: QueryCtx, attempt: TryoutAttempt) {
-  if (
-    (attempt.tryoutBundleId === undefined) !==
-    (attempt.tryoutBundleHash === undefined)
-  ) {
-    return yield* selectorIntegrity(
-      "Signed try-out attempt has a partial runtime bundle identity."
-    );
-  }
-  if (
-    attempt.tryoutBundleId !== undefined &&
-    attempt.tryoutBundleHash !== undefined
-  ) {
-    const bundleId = attempt.tryoutBundleId;
-    const bundleHash = attempt.tryoutBundleHash;
-    const stored = yield* readSource<Doc<"tryoutRuntimeBundles"> | null>(() =>
-      ctx.db.get("tryoutRuntimeBundles", bundleId)
-    );
-    if (
-      !stored ||
-      stored.bundleHash !== bundleHash ||
-      stored.snapshotId !== attempt.tryoutSnapshotId
-    ) {
-      return yield* selectorIntegrity(
-        "Signed try-out attempt lost its permanent runtime bundle."
-      );
-    }
-    return {
-      bundleHash: stored.bundleHash,
-      kind: "permanent",
-    } satisfies PermanentSource;
-  }
-  const stored = yield* findTryoutBundleByRelease(
-    ctx,
-    attempt.snapshotReleaseId
-  ).pipe(
-    Effect.mapError((cause) =>
-      selectorReadError("Unable to read the predecessor runtime bundle.", cause)
-    )
+  const bundleId = attempt.tryoutBundleId;
+  const bundleHash = attempt.tryoutBundleHash;
+  const stored = yield* readSource<Doc<"tryoutRuntimeBundles"> | null>(() =>
+    ctx.db.get("tryoutRuntimeBundles", bundleId)
   );
-  if (!stored) {
-    return null;
-  }
   if (
-    stored.releaseId !== attempt.snapshotReleaseId ||
+    !stored ||
+    stored.bundleHash !== bundleHash ||
     stored.snapshotId !== attempt.tryoutSnapshotId
   ) {
     return yield* selectorIntegrity(
-      "Signed try-out attempt lost its predecessor runtime bundle."
+      "Signed try-out attempt lost its permanent runtime bundle."
     );
   }
-  return {
-    bundleHash: undefined,
-    kind: "predecessor",
-  } satisfies PredecessorSource;
+  return stored;
 });
 
 /** Lifts one source read into the typed selector error channel. */

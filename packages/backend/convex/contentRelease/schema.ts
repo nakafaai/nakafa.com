@@ -1,10 +1,6 @@
 import { vWorkflowId } from "@convex-dev/workflow";
 import articleSchema from "@repo/backend/convex/contentRelease/article/schema";
 import materialSchema from "@repo/backend/convex/contentRelease/material/schema";
-import {
-  predecessorPhaseValidator,
-  predecessorRouteValidator,
-} from "@repo/backend/convex/contentRelease/predecessor/spec";
 import { proofFailureValidator } from "@repo/backend/convex/contentRelease/proof/spec";
 import { searchFamilyValidator } from "@repo/backend/convex/contentRelease/search/spec";
 import snapshotSchema from "@repo/backend/convex/contentRelease/snapshot/schema";
@@ -256,22 +252,6 @@ const tables = {
     .index("by_sequence", ["sequence"]),
 
   ...snapshotSchema,
-
-  /** Temporary exact counters for authenticated predecessor runtime reads. */
-  contentPredecessorReads: defineTable({
-    activeManifestHash: v.string(),
-    activeReleaseId: v.string(),
-    activeSequence: v.number(),
-    armedAt: v.number(),
-    deploymentName: v.string(),
-    invocationCount: v.number(),
-    lastInvokedAt: v.optional(v.number()),
-    observationId: v.string(),
-    phase: predecessorPhaseValidator,
-    quietSince: v.number(),
-    route: predecessorRouteValidator,
-    sealedAt: v.optional(v.number()),
-  }).index("by_route", ["route"]),
 
   /** Singleton identities selecting active, candidate, and recovery sequences. */
   contentState: defineTable({

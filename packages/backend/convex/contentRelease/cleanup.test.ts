@@ -190,39 +190,6 @@ describe("contentRelease/cleanup", () => {
     ).resolves.toMatchObject({ artifactHash: TEST_ARTIFACT_HASH });
   });
 
-  it("retains artifacts referenced only by immutable tryout history", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await insertRelease(ctx);
-      await ctx.db.insert("contentArtifacts", {
-        artifactHash: TEST_ARTIFACT_HASH,
-        artifactJson: "{}",
-        createdAt: NOW,
-        retainUntil: 0,
-      });
-      await ctx.db.insert("tryoutHistoryRows", {
-        answerArtifactHash: `sha256:${"a".repeat(64)}`,
-        index: 54,
-        questionArtifactHash: TEST_ARTIFACT_HASH,
-        rowHash: TEST_DIGEST,
-        rowJson: "{}",
-        rowKind: "placement",
-        snapshotId: TEST_DIGEST,
-      });
-    });
-
-    await expect(
-      t.mutation(cleanup, { releaseId: RELEASE.releaseId })
-    ).resolves.toEqual({
-      complete: true,
-      deletedArtifacts: 0,
-      releaseId: RELEASE.releaseId,
-    });
-    await expect(
-      t.run((ctx) => ctx.db.query("contentArtifacts").unique())
-    ).resolves.toMatchObject({ artifactHash: TEST_ARTIFACT_HASH });
-  });
-
   it("returns an exact retry deadline for retained future artifacts", async () => {
     const t = convexTest(schema, convexModules);
     const retryAt = Date.now() + 60_000;

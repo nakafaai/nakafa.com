@@ -203,15 +203,6 @@ describe("contentRelease/snapshot/cleanup", () => {
           trackKey: "2027",
         });
       }
-      await ctx.db.insert("tryoutBundles", {
-        createdAt: 0,
-        index: 0,
-        manifestHash: `sha256:${"c".repeat(64)}`,
-        releaseId: "release-cleanup",
-        releaseJson: "{}",
-        rendererJson: "{}",
-        snapshotId,
-      });
       for (const index of [0, 1, 2]) {
         await ctx.db.insert("tryoutRuntimeBundles", {
           bundleHash: `sha256:${(index + 1).toString(16).repeat(64)}`,
@@ -239,13 +230,11 @@ describe("contentRelease/snapshot/cleanup", () => {
     ).resolves.toEqual({ cursor: null, deleted: 1, done: false });
     await expect(
       t.run(async (ctx) => ({
-        bundle: await ctx.db.query("tryoutBundles").take(1),
         catalog: await ctx.db.query("tryoutCatalog").take(1),
         placement: await ctx.db.query("tryoutPlacements").take(1),
         runtime: await ctx.db.query("tryoutRuntimeBundles").take(3),
       }))
     ).resolves.toEqual({
-      bundle: [expect.objectContaining({ snapshotId })],
       catalog: [],
       placement: [],
       runtime: [
@@ -254,9 +243,6 @@ describe("contentRelease/snapshot/cleanup", () => {
         expect.objectContaining({ snapshotId }),
       ],
     });
-    await expect(
-      t.mutation((ctx) => runConvexProgram(compactSnapshots(ctx, 0)))
-    ).resolves.toEqual({ cursor: null, deleted: 1, done: false });
     await expect(
       t.run((ctx) => ctx.db.query("contentSnapshots").unique())
     ).resolves.toMatchObject({ cleanupPart: "runtime" });
@@ -271,11 +257,10 @@ describe("contentRelease/snapshot/cleanup", () => {
     ).resolves.toEqual({ cursor: null, deleted: 2, done: false });
     await expect(
       t.run(async (ctx) => ({
-        bundle: await ctx.db.query("tryoutBundles").take(1),
         runtime: await ctx.db.query("tryoutRuntimeBundles").take(1),
         snapshot: await ctx.db.query("contentSnapshots").take(1),
       }))
-    ).resolves.toEqual({ bundle: [], runtime: [], snapshot: [] });
+    ).resolves.toEqual({ runtime: [], snapshot: [] });
   });
 
   it("cleans signed Quran rows and search projections in separate phases", async () => {

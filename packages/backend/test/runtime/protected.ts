@@ -1,10 +1,6 @@
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { ContentSnapshotManifestSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
 import {
-  type ProtectedContentRuntimeRequest as PredecessorRuntimeRequest,
-  ProtectedContentRuntimeRequestSchema as PredecessorRuntimeRequestSchema,
-} from "@nakafa/aksara-contracts/runtime/predecessor/spec";
-import {
   type ProtectedContentRuntimeRequest,
   ProtectedContentRuntimeRequestSchema,
   type ProtectedContentRuntimeSelector,
@@ -28,9 +24,7 @@ import { Schema } from "effect";
 
 interface ProtectedRuntimeFixture {
   readonly answer: ProtectedContentRuntimeSelector;
-  readonly legacyId: Id<"tryoutBundles">;
   readonly placement: TryoutPlacement;
-  readonly predecessor: PredecessorRuntimeRequest;
   readonly question: ProtectedContentRuntimeSelector;
   readonly request: ProtectedContentRuntimeRequest;
   readonly runtimeId: Id<"tryoutRuntimeBundles">;
@@ -141,15 +135,6 @@ export async function insertProtectedRuntime(
     rendererManifest: TEST_PROOF_RENDERER,
     snapshot: snapshot.manifest,
   });
-  const legacyId = await ctx.db.insert("tryoutBundles", {
-    createdAt: 1,
-    index: 0,
-    manifestHash: signedRelease.manifestHash,
-    releaseId: signedRelease.manifest.releaseId,
-    releaseJson: JSON.stringify(signedRelease),
-    rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
-    snapshotId,
-  });
   const runtimeId = await ctx.db.insert("tryoutRuntimeBundles", {
     bundleHash: bundle.bundleHash,
     bundleJson: JSON.stringify(bundle),
@@ -174,12 +159,6 @@ export async function insertProtectedRuntime(
   );
   const question = protectedSelector(enPlacement, "authenticated");
   const answer = protectedSelector(enPlacement, "entitled");
-  const predecessor = Schema.decodeSync(PredecessorRuntimeRequestSchema)({
-    appLocale: enPlacement.appLocale,
-    selectors: [question, answer],
-    snapshotId,
-    snapshotReleaseId: signedRelease.manifest.releaseId,
-  });
   const request = Schema.decodeSync(ProtectedContentRuntimeRequestSchema)({
     bundleHash: bundle.bundleHash,
     selectors: [question, answer],
@@ -187,9 +166,7 @@ export async function insertProtectedRuntime(
   });
   return {
     answer,
-    legacyId,
     placement: enPlacement,
-    predecessor,
     question,
     request,
     runtimeId,

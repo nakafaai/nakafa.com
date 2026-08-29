@@ -1,9 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import contentReleaseSchema from "@repo/backend/convex/contentRelease/schema";
-import {
-  legacyTryoutBundleSchema,
-  tryoutRuntimeBundleSchema,
-} from "@repo/backend/convex/tryouts/runtime/schema";
+import { tryoutRuntimeBundleSchema } from "@repo/backend/convex/tryouts/runtime/schema";
 import {
   CONTENT_RUNTIME_CACHE_CONTRACT,
   CONTENT_RUNTIME_SCHEMA_FINGERPRINT,
@@ -17,7 +14,7 @@ import { v } from "convex/values";
 import { Effect } from "effect";
 
 const EXPECTED_RUNTIME_SCHEMA_FINGERPRINT =
-  "903d543ebf46f1ff4e37dc944d887458eec712574e68148bbc2619952927bd49";
+  "17f41a6f2e9ad7d7f1cbf846f41f6538c0314a2ff4648c7e95cbd60a41848e54";
 
 describe("content runtime tables", () => {
   it.live(
@@ -25,18 +22,15 @@ describe("content runtime tables", () => {
     () =>
       Effect.gen(function* () {
         const releaseTables = Object.keys(contentReleaseSchema).filter(
-          (table) =>
-            table !== "contentState" && table !== "contentPredecessorReads"
+          (table) => table !== "contentState"
         );
         const expected = [
           ...releaseTables,
-          ...Object.keys(legacyTryoutBundleSchema),
           ...Object.keys(tryoutRuntimeBundleSchema),
           "contentState",
         ];
 
         expect(CONTENT_RUNTIME_TABLES).toEqual(expected);
-        expect(CONTENT_RUNTIME_TABLES).not.toContain("contentPredecessorReads");
         expect(new Set(CONTENT_RUNTIME_TABLES).size).toBe(expected.length);
         expect(yield* validateContentRuntimeTableDefinitions).toHaveLength(
           expected.length

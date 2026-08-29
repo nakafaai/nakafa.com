@@ -10,7 +10,10 @@ import {
   type ActionCtx,
   internalAction,
 } from "@repo/backend/convex/_generated/server";
-import type { ReleaseError } from "@repo/backend/convex/contentRelease/error";
+import {
+  type ReleaseError,
+  releaseFail,
+} from "@repo/backend/convex/contentRelease/error";
 import { readCurrentPublication } from "@repo/backend/convex/contentRelease/ingress/current";
 import { decodePublicationBody } from "@repo/backend/convex/contentRelease/ingress/decode";
 import {
@@ -19,7 +22,6 @@ import {
 } from "@repo/backend/convex/contentRelease/ingress/failure";
 import { stagePublicationGroup } from "@repo/backend/convex/contentRelease/ingress/group";
 import { advancePublication } from "@repo/backend/convex/contentRelease/ingress/lifecycle";
-import { migrateTryoutHistory } from "@repo/backend/convex/contentRelease/ingress/migration";
 import { readPublication } from "@repo/backend/convex/contentRelease/ingress/read";
 import {
   publicationFailure,
@@ -47,7 +49,10 @@ const performRequest = Effect.fn("contentRelease.performRequest")(function* (
     return yield* stagePublicationGroup(ctx, request, activeKeyId);
   }
   if (request.operation === "migrateTryoutHistory") {
-    return yield* migrateTryoutHistory(ctx, request, activeKeyId);
+    return yield* releaseFail(
+      "CONTENT_RELEASE_UNSUPPORTED",
+      "Try-out history migration is retired."
+    );
   }
   if (
     request.operation === "stageRelease" ||

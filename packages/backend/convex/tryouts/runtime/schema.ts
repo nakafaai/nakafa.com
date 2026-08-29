@@ -4,8 +4,6 @@ import {
 } from "@repo/backend/convex/contentRelease/spec";
 import { attemptEndReasonValidator } from "@repo/backend/convex/lib/attempts";
 import { tryoutAttemptAccessSourceKindValidator } from "@repo/backend/convex/tryouts/access/source";
-import tryoutHistorySchema from "@repo/backend/convex/tryouts/history/schema";
-import tryoutMigrationSchema from "@repo/backend/convex/tryouts/migration/schema";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
 import { tryoutChoiceSnapshotValidator } from "@repo/backend/convex/tryouts/runtime/choice";
 import {
@@ -32,21 +30,6 @@ const tryoutSectionSnapshotValidator = v.object({
   timeLimitSeconds: v.number(),
 });
 
-/** Legacy release-sized bundles retained while attempts expand to bundle IDs. */
-export const legacyTryoutBundleSchema = {
-  tryoutBundles: defineTable({
-    createdAt: v.number(),
-    index: v.number(),
-    manifestHash: v.string(),
-    releaseId: v.string(),
-    releaseJson: v.string(),
-    rendererJson: v.string(),
-    snapshotId: v.string(),
-  })
-    .index("by_releaseId", ["releaseId"])
-    .index("by_snapshotId_and_index", ["snapshotId", "index"]),
-};
-
 /** Permanent signed snapshot and renderer bundles used by try-out attempts. */
 export const tryoutRuntimeBundleSchema = {
   tryoutRuntimeBundles: defineTable({
@@ -72,14 +55,11 @@ export const tryoutRuntimeBundleSchema = {
 };
 
 const tables = {
-  ...legacyTryoutBundleSchema,
   ...tryoutRuntimeBundleSchema,
-  ...tryoutHistorySchema,
-  ...tryoutMigrationSchema,
   tryoutAttempts: defineTable({
     userId: v.id("users"),
-    tryoutBundleId: v.optional(v.id("tryoutRuntimeBundles")),
-    tryoutBundleHash: v.optional(v.string()),
+    tryoutBundleId: v.id("tryoutRuntimeBundles"),
+    tryoutBundleHash: v.string(),
     tryoutSnapshotId: v.string(),
     snapshotReleaseId: v.string(),
     setIdentity: v.string(),

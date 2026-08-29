@@ -18,7 +18,6 @@ type SnapshotChild =
   | { readonly row: Doc<"programBuckets">; readonly table: "programBuckets" }
   | { readonly row: Doc<"quranRows">; readonly table: "quranRows" }
   | { readonly row: Doc<"quranSearch">; readonly table: "quranSearch" }
-  | { readonly row: Doc<"tryoutBundles">; readonly table: "tryoutBundles" }
   | {
       readonly row: Doc<"tryoutRuntimeBundles">;
       readonly table: "tryoutRuntimeBundles";
@@ -196,23 +195,6 @@ export const loadSnapshotChildren = Effect.fn(
       part: selected,
     } satisfies ChildPage;
   }
-  if (selected === "bundle") {
-    const page = yield* Effect.promise(() =>
-      ctx.db
-        .query("tryoutBundles")
-        .withIndex("by_snapshotId_and_index", (query) =>
-          query.eq("snapshotId", snapshotId).gt("index", afterIndex)
-        )
-        .paginate(cleanupPage())
-    );
-    return {
-      children: page.page.map(
-        (row): SnapshotChild => ({ row, table: "tryoutBundles" })
-      ),
-      done: page.isDone,
-      part: selected,
-    } satisfies ChildPage;
-  }
   if (selected !== "runtime") {
     return yield* releaseFail(
       "CONTENT_RELEASE_INTEGRITY",
@@ -264,10 +246,6 @@ export const deleteSnapshotChild = Effect.fn(
   }
   if (child.table === "tryoutCatalog") {
     yield* Effect.promise(() => ctx.db.delete("tryoutCatalog", child.row._id));
-    return;
-  }
-  if (child.table === "tryoutBundles") {
-    yield* Effect.promise(() => ctx.db.delete("tryoutBundles", child.row._id));
     return;
   }
   if (child.table === "tryoutRuntimeBundles") {

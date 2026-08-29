@@ -3,7 +3,6 @@ import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { captureProductEvent } from "@repo/backend/convex/analytics/capture";
 import { writeTryoutSetProgress } from "@repo/backend/convex/tryouts/progress/write";
-import { retainTryoutBundle } from "@repo/backend/convex/tryouts/runtime/bundle";
 import { createAttemptPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
 import { startSectionAttempt } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
 import type { TryoutStartSource } from "@repo/backend/convex/tryouts/start/source";
@@ -42,17 +41,6 @@ interface CreateTryoutAttemptInput {
 export const createTryoutAttempt = Effect.fn(
   "tryouts.start.createTryoutAttempt"
 )(function* (ctx: MutationCtx, input: CreateTryoutAttemptInput) {
-  if (input.source.kind === "legacy") {
-    yield* retainTryoutBundle(ctx, input.source.bundle, input.now).pipe(
-      Effect.mapError(
-        (error) =>
-          new TryoutStartError({
-            code: error.code,
-            message: error.message,
-          })
-      )
-    );
-  }
   const values = buildAttemptValues(input);
   const attemptId = yield* tryStartPromise(() =>
     ctx.db.insert("tryoutAttempts", values)
@@ -94,17 +82,8 @@ function buildAttemptValues(
     ...(input.scaleVersion ? { scaleVersionId: input.scaleVersion._id } : {}),
   } satisfies Partial<TryoutAttemptInsert>;
   const signedSet = input.source.snapshot.set.row;
-  const runtime =
-    input.source.kind === "permanent"
-      ? {
-          snapshotReleaseId: input.source.releaseId,
-          tryoutBundleHash: input.source.bundle.bundleHash,
-          tryoutBundleId: input.source.bundle._id,
-        }
-      : { snapshotReleaseId: input.source.bundle.releaseId };
   return {
     ...values,
-    ...runtime,
     countryKey: signedSet.countryKey,
     examKey: signedSet.examKey,
     appLocale: input.args.locale,
@@ -123,8 +102,11 @@ function buildAttemptValues(
     setIdentity: input.source.snapshot.setIdentity,
     setKey: signedSet.setKey,
     setPublicPath: signedSet.publicPath,
+    snapshotReleaseId: input.source.releaseId,
     totalQuestions: signedSet.questionCount,
     trackKey: signedSet.trackKey,
+    tryoutBundleHash: input.source.bundle.bundleHash,
+    tryoutBundleId: input.source.bundle._id,
     tryoutSnapshotId: input.source.snapshot.snapshotId,
   };
 }

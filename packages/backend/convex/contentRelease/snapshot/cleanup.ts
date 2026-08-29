@@ -145,14 +145,6 @@ export const compactSnapshots = Effect.fn("contentRelease.compactSnapshots")(
       };
     }
     if (snapshot.family === "tryout" && children.part === "placement") {
-      yield* persistCleanup(ctx, snapshot, cutoff, undefined, "bundle");
-      return {
-        cursor: null,
-        deleted: children.children.length,
-        done: false,
-      };
-    }
-    if (snapshot.family === "tryout" && children.part === "bundle") {
       yield* persistCleanup(ctx, snapshot, cutoff, undefined, "runtime");
       return {
         cursor: null,

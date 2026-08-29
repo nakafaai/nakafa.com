@@ -23,11 +23,9 @@ import {
 import { hasRendererIdentity } from "@repo/backend/convex/contentRelease/renderer";
 import { publicationReceiptValidator } from "@repo/backend/convex/contentRelease/spec";
 import { findReleaseTryoutRuntime } from "@repo/backend/convex/contentRelease/tryout/binding";
-import { retainActivatedTryoutBundle } from "@repo/backend/convex/contentRelease/tryout/bundle";
 import { loadReleaseTryoutRuntime } from "@repo/backend/convex/contentRelease/tryout/runtime";
 import { encodeRendererJson } from "@repo/backend/convex/contentRelease/wire";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { requireContentActivationUnlocked } from "@repo/backend/convex/tryouts/migration/lock";
 import { type Infer, v } from "convex/values";
 import { Clock, Effect } from "effect";
 
@@ -92,16 +90,12 @@ const completedRetry = Effect.fn("contentRelease.completedActivationRetry")(
       );
     }
     const signed = yield* decodeReleaseJson(release.releaseJson);
-    const runtime = yield* findReleaseTryoutRuntime(
+    yield* findReleaseTryoutRuntime(
       ctx,
       signed,
       release.tryoutRuntimeBundleHash
     );
     const receipt = yield* completedReceipt(release, signed);
-    const now = yield* Clock.currentTimeMillis;
-    if (runtime.result === null) {
-      yield* retainActivatedTryoutBundle(ctx, release, signed, now);
-    }
     return receipt;
   }
 );
@@ -131,7 +125,6 @@ const activateCandidate = Effect.fn("contentRelease.activateCandidate")(
       );
       return { kind: "completed", receipt } satisfies ActivationResult;
     }
-    yield* requireContentActivationUnlocked(ctx);
     const state = yield* loadState(ctx);
     if (
       !state ||
@@ -245,7 +238,6 @@ const activateRecoveryProgram = Effect.fn("contentRelease.activateRecovery")(
       );
       return { kind: "completed", receipt } satisfies ActivationResult;
     }
-    yield* requireContentActivationUnlocked(ctx);
     const state = yield* loadState(ctx);
     if (
       !state ||

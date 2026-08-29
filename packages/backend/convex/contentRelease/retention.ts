@@ -1,18 +1,13 @@
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { hasSnapshotArtifactReference } from "@repo/backend/convex/contentRelease/snapshot/retention";
 import { ROLLBACK_RETENTION_MS } from "@repo/backend/convex/contentRelease/spec";
-import { hasRetainedHistoryArtifactReference } from "@repo/backend/convex/tryouts/history/row";
 import { Effect } from "effect";
 
 /** Checks whether any retained immutable version still owns an artifact. */
 export const isArtifactReferenced = Effect.fn(
   "contentRelease.isArtifactReferenced"
-)(function* (
-  ctx: MutationCtx,
-  artifactHash: string,
-  options?: { readonly ignoredMigrationId?: string }
-) {
-  const [head, item, history, snapshot] = yield* Effect.all([
+)(function* (ctx: MutationCtx, artifactHash: string) {
+  const [head, item, snapshot] = yield* Effect.all([
     Effect.promise(() =>
       ctx.db
         .query("contentHeads")
@@ -29,10 +24,9 @@ export const isArtifactReferenced = Effect.fn(
         )
         .first()
     ),
-    hasRetainedHistoryArtifactReference(ctx, artifactHash),
-    hasSnapshotArtifactReference(ctx, artifactHash, options),
+    hasSnapshotArtifactReference(ctx, artifactHash),
   ]);
-  return head !== null || history || item !== null || snapshot;
+  return head !== null || item !== null || snapshot;
 });
 
 /** Starts retention when deleting rows removes an artifact's final reference. */

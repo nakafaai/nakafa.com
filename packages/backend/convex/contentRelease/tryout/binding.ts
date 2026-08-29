@@ -1,5 +1,4 @@
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
-import { isLegacyTryoutRuntime } from "@nakafa/aksara-contracts/release/current/legacy";
 import type {
   MutationCtx,
   QueryCtx,
@@ -19,13 +18,6 @@ export const findReleaseTryoutRuntime = Effect.fn(
   expectedBundleHash?: string
 ) {
   const transition = release.manifest.snapshots.tryout;
-  if (
-    transition.resultSnapshotId !== null &&
-    expectedBundleHash === undefined &&
-    isLegacyTryoutRuntime(release)
-  ) {
-    return { result: null, retainedBase: null };
-  }
   const runtime = yield* readReleaseTryoutRuntime(ctx, release);
   const hasBoundResult =
     expectedBundleHash === undefined

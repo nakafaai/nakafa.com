@@ -1,12 +1,6 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { retainTryoutBundle } from "@repo/backend/convex/tryouts/runtime/bundle";
-import {
-  TEST_MANIFEST_HASH,
-  testReleaseJson,
-  testRendererJson,
-} from "@repo/backend/test/content/release";
 import {
   insertTestState,
   insertZeroRelease,
@@ -15,6 +9,7 @@ import { Effect } from "effect";
 
 export const FROZEN_SCORE_NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 export const FROZEN_SCORE_SNAPSHOT_ID = `sha256:${"a".repeat(64)}`;
+const FROZEN_SCORE_BUNDLE_HASH = `sha256:${"c".repeat(64)}`;
 
 const trackKey = "2027";
 const sectionKey = "pengetahuan-kuantitatif";
@@ -66,16 +61,19 @@ export const seedFrozenTryoutScoreState = Effect.fn(
       nextSequence: laterRelease.sequence + 1,
     })
   );
-  yield* retainTryoutBundle(
-    ctx,
-    {
-      manifestHash: TEST_MANIFEST_HASH,
-      releaseId: frozenReleaseId,
-      releaseJson: testReleaseJson({ releaseId: frozenReleaseId }),
-      rendererJson: testRendererJson(),
+  const bundleId = yield* Effect.promise(() =>
+    ctx.db.insert("tryoutRuntimeBundles", {
+      bundleHash: FROZEN_SCORE_BUNDLE_HASH,
+      bundleJson: "{}",
+      cleanupReleaseId: frozenReleaseId,
+      createdAt: FROZEN_SCORE_NOW,
+      rendererJson: "{}",
+      rendererManifestHash: `sha256:${"d".repeat(64)}`,
       snapshotId: FROZEN_SCORE_SNAPSHOT_ID,
-    },
-    FROZEN_SCORE_NOW
+      sourceGitSha: "e".repeat(40),
+      sourceManifestHash: `sha256:${"f".repeat(64)}`,
+      sourceReleaseId: frozenReleaseId,
+    })
   );
   const userId = yield* Effect.promise(() =>
     ctx.db.insert("users", {
@@ -125,6 +123,8 @@ export const seedFrozenTryoutScoreState = Effect.fn(
       totalCorrect: 0,
       totalQuestions: 1,
       trackKey,
+      tryoutBundleHash: FROZEN_SCORE_BUNDLE_HASH,
+      tryoutBundleId: bundleId,
       tryoutSnapshotId: FROZEN_SCORE_SNAPSHOT_ID,
       userId,
     })

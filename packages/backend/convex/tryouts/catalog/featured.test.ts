@@ -13,6 +13,7 @@ import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { readFeaturedTryout } from "@repo/backend/convex/tryouts/catalog/featured";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
+import { insertTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
 import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
 import {
   activateTryoutStartSource,
@@ -233,8 +234,8 @@ describe("tryouts/catalog/featured", () => {
 
   it("continues to the next set when the first set has no visible section", async () => {
     const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) =>
-      activateTryoutSnapshot(ctx, {
+    await t.mutation(async (ctx) => {
+      const snapshotId = await activateTryoutSnapshot(ctx, {
         catalog: ACTIVE_APP_LOCALE_CODES.flatMap(
           makeInternalThenVisibleCatalog
         ),
@@ -242,8 +243,9 @@ describe("tryouts/catalog/featured", () => {
           makeTryoutStartPlacement(locale),
           makeSecondSetPlacement(locale),
         ]),
-      })
-    );
+      });
+      await insertTestTryoutRuntimeBundle(ctx, snapshotId);
+    });
 
     const featured = await t.query((ctx) =>
       runConvexProgram(readFeaturedTryout(ctx, "id"))
@@ -256,8 +258,8 @@ describe("tryouts/catalog/featured", () => {
 
   it("continues to the next track when the first track is private", async () => {
     const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) =>
-      activateTryoutSnapshot(ctx, {
+    await t.mutation(async (ctx) => {
+      const snapshotId = await activateTryoutSnapshot(ctx, {
         catalog: ACTIVE_APP_LOCALE_CODES.flatMap(
           makeInternalTrackThenVisibleCatalog
         ),
@@ -265,8 +267,9 @@ describe("tryouts/catalog/featured", () => {
           makeTryoutStartPlacement(locale),
           makeSecondTrackPlacement(locale),
         ]),
-      })
-    );
+      });
+      await insertTestTryoutRuntimeBundle(ctx, snapshotId);
+    });
 
     const featured = await t.query((ctx) =>
       runConvexProgram(readFeaturedTryout(ctx, "id"))
