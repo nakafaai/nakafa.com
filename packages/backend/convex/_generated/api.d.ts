@@ -114,10 +114,6 @@ import type * as contentRelease_article from "../contentRelease/article.js";
 import type * as contentRelease_article_agent from "../contentRelease/article/agent.js";
 import type * as contentRelease_article_bucket from "../contentRelease/article/bucket.js";
 import type * as contentRelease_article_cursor from "../contentRelease/article/cursor.js";
-import type * as contentRelease_article_cutover_internal from "../contentRelease/article/cutover/internal.js";
-import type * as contentRelease_article_cutover_model from "../contentRelease/article/cutover/model.js";
-import type * as contentRelease_article_cutover_spec from "../contentRelease/article/cutover/spec.js";
-import type * as contentRelease_article_dates from "../contentRelease/article/dates.js";
 import type * as contentRelease_article_discovery from "../contentRelease/article/discovery.js";
 import type * as contentRelease_article_internal from "../contentRelease/article/internal.js";
 import type * as contentRelease_article_limits from "../contentRelease/article/limits.js";
@@ -294,7 +290,6 @@ import type * as contentRelease_runtime_protected_internal from "../contentRelea
 import type * as contentRelease_runtime_public_batch from "../contentRelease/runtime/public/batch.js";
 import type * as contentRelease_runtime_public_dispatch from "../contentRelease/runtime/public/dispatch.js";
 import type * as contentRelease_runtime_public_internal from "../contentRelease/runtime/public/internal.js";
-import type * as contentRelease_runtime_public_projection from "../contentRelease/runtime/public/projection.js";
 import type * as contentRelease_runtime_result from "../contentRelease/runtime/result.js";
 import type * as contentRelease_runtime_snapshot from "../contentRelease/runtime/snapshot.js";
 import type * as contentRelease_scope_family from "../contentRelease/scope/family.js";
@@ -749,10 +744,6 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/article/agent": typeof contentRelease_article_agent;
   "contentRelease/article/bucket": typeof contentRelease_article_bucket;
   "contentRelease/article/cursor": typeof contentRelease_article_cursor;
-  "contentRelease/article/cutover/internal": typeof contentRelease_article_cutover_internal;
-  "contentRelease/article/cutover/model": typeof contentRelease_article_cutover_model;
-  "contentRelease/article/cutover/spec": typeof contentRelease_article_cutover_spec;
-  "contentRelease/article/dates": typeof contentRelease_article_dates;
   "contentRelease/article/discovery": typeof contentRelease_article_discovery;
   "contentRelease/article/internal": typeof contentRelease_article_internal;
   "contentRelease/article/limits": typeof contentRelease_article_limits;
@@ -929,7 +920,6 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/runtime/public/batch": typeof contentRelease_runtime_public_batch;
   "contentRelease/runtime/public/dispatch": typeof contentRelease_runtime_public_dispatch;
   "contentRelease/runtime/public/internal": typeof contentRelease_runtime_public_internal;
-  "contentRelease/runtime/public/projection": typeof contentRelease_runtime_public_projection;
   "contentRelease/runtime/result": typeof contentRelease_runtime_result;
   "contentRelease/runtime/snapshot": typeof contentRelease_runtime_snapshot;
   "contentRelease/scope/family": typeof contentRelease_scope_family;

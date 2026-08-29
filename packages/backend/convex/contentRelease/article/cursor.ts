@@ -1,7 +1,7 @@
 import { DateOnlySchema } from "@nakafa/aksara-contracts/date";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { ArticleCategorySchema } from "@nakafa/aksara-transition/projection/article";
+import { ArticleCategorySchema } from "@nakafa/aksara-contracts/projection/article";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import {
@@ -44,13 +44,12 @@ export const decodePublicationCursor = Effect.fn(
 
 /** Encodes one shared merged-index position from a verified catalog row. */
 export function articlePublicationCursor(row: Doc<"articleCatalog">) {
-  const publicationDate = "datePublished" in row ? row.datePublished : row.date;
   return encodeArticlePublicationCursor(
     JSON.stringify(
       convexToJson([
         row.appLocale,
         row.category,
-        publicationDate,
+        row.datePublished,
         row.contentKey,
         row._creationTime,
         row._id,

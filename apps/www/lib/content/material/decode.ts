@@ -2,9 +2,7 @@ import {
   canonicalizeMaterialProjection,
   type MaterialLessonProjection,
   MaterialLessonProjectionSchema,
-  type MaterialMetadata,
 } from "@nakafa/aksara-contracts/projection/material";
-import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import { Effect, Schema } from "effect";
 import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import {
@@ -18,20 +16,6 @@ interface MaterialPublicationRead {
   readonly projection: MaterialLessonProjection;
 }
 
-/** Adapts one decoded signed projection to Nakafa's current material metadata. */
-export function normalizeMaterialMetadata(
-  metadata: MaterialLessonProjection["metadata"]
-): MaterialMetadata {
-  return {
-    authors: metadata.authors,
-    ...normalizePublicationDates(metadata),
-    ...(metadata.description === undefined
-      ? {}
-      : { description: metadata.description }),
-    ...(metadata.subject === undefined ? {} : { subject: metadata.subject }),
-    title: metadata.title,
-  };
-}
 /** Creates the public failure returned for malformed material projection data. */
 export function makeMaterialProjectionError(
   identity: PublishedProjectionIdentity

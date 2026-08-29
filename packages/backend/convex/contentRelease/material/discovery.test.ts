@@ -48,36 +48,6 @@ describe("contentRelease/material/discovery", () => {
   it("reads complete partitions and newest-first material summaries", async () => {
     const target = convexTest(schema, convexModules);
     await activateMaterialCatalog(target);
-    await target.mutation(async (ctx) => {
-      const newest = await ctx.db
-        .query("materialCatalog")
-        .withIndex("by_contentKey_and_appLocale", (index) =>
-          index
-            .eq(
-              "contentKey",
-              "material/lesson/mathematics/technical-topic/section-2"
-            )
-            .eq("appLocale", "en")
-        )
-        .unique();
-      if (!newest) {
-        throw new Error("Expected the newest material catalog row.");
-      }
-      if (!("datePublished" in newest)) {
-        throw new Error("Expected one current material date shape.");
-      }
-      const {
-        _creationTime: _createdAt,
-        _id,
-        dateModified: _dateModified,
-        datePublished,
-        ...fields
-      } = newest;
-      await ctx.db.replace("materialCatalog", _id, {
-        ...fields,
-        date: datePublished,
-      });
-    });
     const count = await target.run((ctx) =>
       ctx.db
         .query("materialBuckets")
@@ -109,7 +79,6 @@ describe("contentRelease/material/discovery", () => {
       materials: [
         {
           authors: [{ name: "Nakafa" }],
-          date: "2026-07-24",
           datePublished: "2026-07-24",
           publicPath: expect.stringContaining("subjects/mathematics/"),
           title: expect.stringContaining("EN Section"),
@@ -123,7 +92,6 @@ describe("contentRelease/material/discovery", () => {
       managed: true,
       materials: [
         {
-          date: "2026-07-24",
           datePublished: "2026-07-24",
           title: "EN Section 2",
         },
@@ -147,7 +115,6 @@ describe("contentRelease/material/discovery", () => {
         managed: true,
         materials: [
           {
-            date: expected.metadata.datePublished,
             datePublished: expected.metadata.datePublished,
             publicPath: expected.publicPath,
             title: expected.metadata.title,

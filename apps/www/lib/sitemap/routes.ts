@@ -52,9 +52,11 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
       }
       return {
         routes: artifact.routes
-          .map(({ lastModified, publicPath }) => ({
-            lastModified: lastModified ?? undefined,
-            path: routeToPath(publicPath),
+          .map((route) => ({
+            ...("lastModified" in route
+              ? { lastModified: route.lastModified }
+              : {}),
+            path: routeToPath(route.publicPath),
           }))
           .sort((left, right) => compareSitemapPaths(left.path, right.path)),
       };

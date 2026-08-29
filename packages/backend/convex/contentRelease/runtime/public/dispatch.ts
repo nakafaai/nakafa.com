@@ -2,6 +2,7 @@ import {
   CorpusSourcePathSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import { canonicalizeContentProjection } from "@nakafa/aksara-contracts/projection/spec";
 import {
   decodePublicContentRuntimeRequest,
   MAX_PUBLIC_RUNTIME_REQUEST_BYTES,
@@ -19,7 +20,6 @@ import {
   decodeRendererJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import type { PublicRuntimeRow } from "@repo/backend/convex/contentRelease/runtime/public/internal";
-import { encodePublicProjection } from "@repo/backend/convex/contentRelease/runtime/public/projection";
 import {
   encodeRuntimeResult,
   failureResult,
@@ -71,7 +71,7 @@ export const decodePublicRuntimeRow = Effect.fn(
   if (row.delivery !== "public") {
     return yield* new PublicRuntimeReadError();
   }
-  const [artifact, storedProjection, release, rendererManifest, sourcePath] =
+  const [artifact, projection, release, rendererManifest, sourcePath] =
     yield* Effect.all([
       decodeArtifactJson(row.artifactJson),
       decodeProjectionJson(row.projectionJson),
@@ -82,9 +82,7 @@ export const decodePublicRuntimeRow = Effect.fn(
   yield* Schema.decodeEffect(Sha256HashSchema)(row.projectionHash).pipe(
     Effect.mapError(() => new PublicRuntimeReadError())
   );
-  const { projection, projectionJson } = yield* encodePublicProjection(
-    storedProjection
-  ).pipe(Effect.mapError(() => new PublicRuntimeReadError()));
+  const projectionJson = canonicalizeContentProjection(projection);
   const projectionHash = yield* hashText(
     "the current public content projection",
     projectionJson

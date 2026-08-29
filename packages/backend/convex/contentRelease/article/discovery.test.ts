@@ -35,27 +35,6 @@ describe("contentRelease/article/discovery", () => {
       if (!selected) {
         throw new Error("Expected one article catalog row.");
       }
-      await t.mutation(async (ctx) => {
-        const newest = await ctx.db.get(selected._id);
-        if (!newest) {
-          throw new Error("Expected the newest article catalog row.");
-        }
-        if (!("datePublished" in newest)) {
-          throw new Error("Expected one current article date shape.");
-        }
-        const {
-          _creationTime: _createdAt,
-          _id,
-          dateModified: _dateModified,
-          datePublished,
-          ...fields
-        } = newest;
-        await ctx.db.replace("articleCatalog", _id, {
-          ...fields,
-          date: datePublished,
-        });
-      });
-
       await expect(
         t.query(latest, { appLocale, limit: 1 })
       ).resolves.toMatchObject({
@@ -66,7 +45,6 @@ describe("contentRelease/article/discovery", () => {
               .articleSlug,
             authors: [{ name: "Nakafa" }],
             category: "politics",
-            date: "2026-07-11",
             datePublished: "2026-07-11",
             publicPath: testLocalizedArticleProjection(1, appLocale).publicPath,
             route: {
@@ -93,7 +71,6 @@ describe("contentRelease/article/discovery", () => {
             articleSlug: testLocalizedArticleProjection(1, appLocale)
               .articleSlug,
             category: "politics",
-            date: "2026-07-11",
             publicPath: testLocalizedArticleProjection(1, appLocale).publicPath,
             route: {
               category: testLocalizedArticleProjection(1, appLocale)
@@ -112,7 +89,7 @@ describe("contentRelease/article/discovery", () => {
         articles: expect.arrayContaining([
           expect.objectContaining({
             articleSlug: expect.any(String),
-            date: expect.any(String),
+            datePublished: expect.any(String),
             publicPath: selected.publicPath,
           }),
         ]),

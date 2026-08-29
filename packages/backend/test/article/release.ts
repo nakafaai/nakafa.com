@@ -18,7 +18,6 @@ import {
   insertRuntimeBinding,
   insertRuntimeVersion,
 } from "@repo/backend/test/runtime/head";
-import { normalizePublicationDates } from "@repo/contents/_types/publication";
 
 /** Inserts one exact article projection and its changed release identity. */
 export async function insertArticleProjection(
@@ -57,7 +56,6 @@ export async function insertPredecessorArticle(
   projection: ArticleProjection,
   rendererDomain: RendererDomain = "politics"
 ) {
-  const { datePublished } = normalizePublicationDates(projection.metadata);
   await ctx.db.insert("articleCatalog", {
     appLocale: projection.appLocale,
     assetId: projection.graph.assetId,
@@ -65,7 +63,7 @@ export async function insertPredecessorArticle(
     category: projection.category,
     categoryTitle: projection.categoryTitle,
     contentKey: projection.contentKey,
-    date: datePublished,
+    datePublished: projection.metadata.datePublished,
     projectionHash: identity.manifestHash,
     publicPath: projection.publicPath,
     releaseId: identity.releaseId,

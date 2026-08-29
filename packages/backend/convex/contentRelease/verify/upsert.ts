@@ -2,7 +2,7 @@ import {
   canonicalizeContentProjection,
   familyForProjection,
   projectionArtifactLocale,
-} from "@nakafa/aksara-transition/projection/spec";
+} from "@nakafa/aksara-contracts/projection/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { hashText } from "@repo/backend/convex/contentRelease/digest";

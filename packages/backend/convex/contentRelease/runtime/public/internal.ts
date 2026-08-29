@@ -2,7 +2,7 @@ import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   canonicalizeContentProjection,
   familyForProjection,
-} from "@nakafa/aksara-transition/projection/spec";
+} from "@nakafa/aksara-contracts/projection/spec";
 import { PUBLIC_CONTENT_RUNTIME_BATCH_SIZE } from "@repo/backend/content/batch";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";

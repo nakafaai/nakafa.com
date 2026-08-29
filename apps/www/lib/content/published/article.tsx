@@ -7,7 +7,6 @@ import type {
 } from "@nakafa/aksara-contracts/projection/article";
 import { Effect } from "effect";
 import type { ReactNode } from "react";
-import { normalizeArticleMetadata } from "@/lib/content/article/decode";
 import { applyPublishedContentCache } from "@/lib/content/cache";
 import { evaluateVerifiedArtifact } from "@/lib/content/published/artifact";
 import {
@@ -93,7 +92,7 @@ const renderArticleArtifact = Effect.fn("NakafaContent.renderArticleArtifact")(
       body: <rendered.Content />,
       categoryTitle: data.projection.categoryTitle,
       contentId: data.projection.graph.assetId,
-      metadata: normalizeArticleMetadata(data.projection.metadata),
+      metadata: data.projection.metadata,
       official: data.projection.official,
       projection: data.projection,
       publicPath: data.projection.publicPath,

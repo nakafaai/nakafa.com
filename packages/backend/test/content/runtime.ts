@@ -43,7 +43,6 @@ import {
   TEST_RUNTIME_PATH,
   TEST_RUNTIME_RELEASE,
 } from "@repo/backend/test/runtime/values";
-import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import type { FunctionReturnType } from "convex/server";
 
 type RuntimeRow = Exclude<
@@ -96,7 +95,6 @@ export function testArticleProjection(
   const articleSlug = ArticleSlugSchema.make(`article-${index}`);
   const contentKey = ContentKeySchema.make(`articles/politics/${articleSlug}`);
   const publicPath = PublicPathSchema.make(contentKey);
-  const dates = normalizePublicationDates(TEST_ARTICLE_PROJECTION.metadata);
   return ArticleProjectionSchema.make({
     ...TEST_ARTICLE_PROJECTION,
     articleRouteSlug: ArticleRouteSlugSchema.make(articleSlug),
@@ -110,7 +108,6 @@ export function testArticleProjection(
     },
     metadata: {
       authors: TEST_ARTICLE_PROJECTION.metadata.authors,
-      ...dates,
       datePublished,
       title: `Article ${index}`,
     },

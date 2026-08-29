@@ -9,7 +9,6 @@ import { io } from "next/cache";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import type { ReactNode } from "react";
-import { normalizeArticleMetadata } from "@/lib/content/article/decode";
 import { getArticlePublication } from "@/lib/content/article/publication";
 import { getPublishedArticleRoute } from "@/lib/content/article/route";
 import {
@@ -94,7 +93,7 @@ export async function readArticleMetadata(input: ArticleContentInput) {
   return {
     alternates: model.alternates,
     categoryTitle: model.projection.categoryTitle,
-    metadata: normalizeArticleMetadata(model.projection.metadata),
+    metadata: model.projection.metadata,
     route: model.projection,
   };
 }

@@ -9,7 +9,6 @@ import {
 } from "@nakafa/aksara-contracts/projection/article";
 import { Effect, Option, Schema } from "effect";
 import type { ReactNode } from "react";
-import { normalizeArticleMetadata } from "@/lib/content/article/decode";
 import { executePreviewArtifact } from "@/lib/content/preview/artifact";
 import type { PreviewConfig } from "@/lib/content/preview/config";
 import {
@@ -72,7 +71,7 @@ const readReadyArticle = Effect.fn("NakafaContent.readReadyArticle")(function* (
     categoryTitle: projection.categoryTitle,
     children: <rendered.Content />,
     contentId: projection.graph.assetId,
-    metadata: normalizeArticleMetadata(projection.metadata),
+    metadata: projection.metadata,
     projection,
     references: projection.references,
   } satisfies ArticlePreviewContent;

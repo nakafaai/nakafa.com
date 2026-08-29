@@ -6,7 +6,7 @@ import {
   type ActiveAppLocale,
   ActiveAppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { materialPublicNamespace } from "@nakafa/aksara-transition/projection/material";
+import { materialPublicNamespace } from "@nakafa/aksara-contracts/projection/material";
 import type { ContentReferenceInput } from "@repo/backend/convex/contentRelease/reference/spec";
 import type { Locale } from "@repo/contents/_types/content";
 import { LocaleSchema } from "@repo/contents/_types/content";

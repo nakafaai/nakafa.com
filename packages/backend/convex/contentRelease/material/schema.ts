@@ -25,16 +25,11 @@ const materialFields = {
 
 const tables = {
   /** Active public material lessons indexed for curriculum-card assembly. */
-  materialCatalog: defineTable(
-    v.union(
-      v.object({ ...materialFields, date: v.string() }),
-      v.object({
-        ...materialFields,
-        dateModified: v.optional(v.string()),
-        datePublished: v.string(),
-      })
-    )
-  )
+  materialCatalog: defineTable({
+    ...materialFields,
+    dateModified: v.optional(v.string()),
+    datePublished: v.string(),
+  })
     .index("by_contentKey_and_appLocale", ["contentKey", "appLocale"])
     .index("by_appLocale_and_contentKey", ["appLocale", "contentKey"])
     .index("by_appLocale_and_assetId", ["appLocale", "assetId"])
@@ -44,11 +39,6 @@ const tables = {
       "assetId",
     ])
     .index("by_appLocale_and_publicPath", ["appLocale", "publicPath"])
-    .index("by_appLocale_and_date_and_contentKey", [
-      "appLocale",
-      "date",
-      "contentKey",
-    ])
     .index("by_appLocale_and_datePublished_and_contentKey", [
       "appLocale",
       "datePublished",

@@ -14,7 +14,6 @@ import {
   TEST_ARTICLE_PROJECTION,
   TEST_ARTICLE_PROJECTION_JSON,
 } from "@repo/backend/test/content/runtime";
-import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import type { WithoutSystemFields } from "convex/server";
 import { convexTest } from "convex-test";
 
@@ -61,7 +60,6 @@ describe("contentRelease/article/write", () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => write(ctx));
     await t.mutation((ctx) => write(ctx));
-    const dates = normalizePublicationDates(TEST_ARTICLE_PROJECTION.metadata);
     await t.mutation((ctx) =>
       write(ctx, testHead({ sequence: 2 }), {
         ...TEST_ARTICLE_PROJECTION,
@@ -69,7 +67,7 @@ describe("contentRelease/article/write", () => {
         metadata: {
           authors: TEST_ARTICLE_PROJECTION.metadata.authors,
           dateModified: "2026-07-24",
-          datePublished: dates.datePublished,
+          datePublished: TEST_ARTICLE_PROJECTION.metadata.datePublished,
           title: TEST_ARTICLE_PROJECTION.metadata.title,
         },
       })
@@ -114,7 +112,7 @@ describe("contentRelease/article/write", () => {
         category: "history",
         categoryTitle: "History",
         contentKey: TEST_ARTICLE_PROJECTION.contentKey,
-        date: "2026-07-22",
+        datePublished: "2026-07-22",
         projectionHash: `sha256:${"1".repeat(64)}`,
         publicPath: TEST_ARTICLE_PROJECTION.publicPath,
         releaseId: "release-old",
@@ -154,10 +152,6 @@ describe("contentRelease/article/write", () => {
       ],
       categories: [{ category: "politics" }],
     });
-    const [article] = await t.run((ctx) =>
-      ctx.db.query("articleCatalog").take(1)
-    );
-    expect(article).not.toHaveProperty("date");
     await t.mutation((ctx) =>
       runConvexProgram(
         deleteArticle(

@@ -11,10 +11,7 @@ import type {
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import { Effect } from "effect";
 import type { ReactNode } from "react";
-import {
-  decodeMaterialProjection,
-  normalizeMaterialMetadata,
-} from "@/lib/content/material/decode";
+import { decodeMaterialProjection } from "@/lib/content/material/decode";
 import { evaluateVerifiedArtifact } from "@/lib/content/published/artifact";
 import {
   type PublishedContentData,
@@ -55,7 +52,7 @@ export const readPublishedMaterial = Effect.fn(
   return {
     activeReleaseId: data.activeReleaseId,
     artifact: data.artifact,
-    metadata: normalizeMaterialMetadata(projection.metadata),
+    metadata: projection.metadata,
     projection,
     rendererManifest: data.rendererManifest,
     sourcePath: data.sourcePath,

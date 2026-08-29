@@ -10,7 +10,7 @@ const routeMocks = vi.hoisted(() => ({
   source: vi.fn(),
 }));
 
-vi.mock("@/lib/llms/content", () => ({
+vi.mock("@/lib/llms/content/markdown", () => ({
   hasLlmsMarkdownSource: routeMocks.markdown,
 }));
 vi.mock("@/lib/routing/public/projected", () => ({

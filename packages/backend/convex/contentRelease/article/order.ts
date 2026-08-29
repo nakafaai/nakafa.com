@@ -7,96 +7,24 @@ import {
   articlePublicationCursor,
   decodePublicationCursor,
 } from "@repo/backend/convex/contentRelease/article/cursor";
-import { readArticleDates } from "@repo/backend/convex/contentRelease/article/dates";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import schema from "@repo/backend/convex/schema";
-import {
-  comparePublicationDates,
-  encodeArticlePublicationCursor,
-} from "@repo/contents/_types/publication";
+import { encodeArticlePublicationCursor } from "@repo/contents/_types/publication";
 import type { PaginationOptions } from "convex/server";
-import type { Value } from "convex/values";
-import {
-  type IndexBounds,
-  type IndexKey,
-  mergedStream,
-  QueryStream,
-  stream,
-} from "convex-helpers/server/stream";
+import { type QueryStream, stream } from "convex-helpers/server/stream";
 import { Effect } from "effect";
 
 type ReadCtx = MutationCtx | QueryCtx;
 type AppLocale = Doc<"articleCatalog">["appLocale"];
 type ArticleRow = Doc<"articleCatalog">;
 
-const PUBLICATION_INDEX_FIELDS = [
-  "appLocale",
-  "category",
-  "publicationDate",
-  "contentKey",
-  "_creationTime",
-  "_id",
-];
-
-/** Gives legacy and current date indexes one truthful shared cursor key. */
-class PublicationStream extends QueryStream<ArticleRow> {
-  readonly #source: QueryStream<ArticleRow>;
-
-  constructor(source: QueryStream<ArticleRow>) {
-    super();
-    this.#source = source;
-  }
-
-  getEqualityIndexFilter(): Value[] {
-    return this.#source.getEqualityIndexFilter();
-  }
-
-  getIndexFields(): string[] {
-    return [...PUBLICATION_INDEX_FIELDS];
-  }
-
-  getOrder() {
-    return this.#source.getOrder();
-  }
-
-  iterWithKeys(
-    trackBandwidth = false
-  ): ReturnType<QueryStream<ArticleRow>["iterWithKeys"]> {
-    const source = this.#source;
-
-    return {
-      async *[Symbol.asyncIterator](): AsyncGenerator<
-        [ArticleRow | null, IndexKey, number],
-        undefined
-      > {
-        for await (const [row, indexKey, bandwidth] of source.iterWithKeys(
-          trackBandwidth
-        )) {
-          yield [row, indexKey, bandwidth];
-        }
-        return;
-      },
-    };
-  }
-
-  narrow(bounds: IndexBounds): QueryStream<ArticleRow> {
-    return new PublicationStream(this.#source.narrow(bounds));
-  }
-}
-
-/** Builds both transition-index streams for one localized category. */
-function categoryPublicationStreams(
+/** Builds the current publication stream for one localized category. */
+function categoryPublicationStream(
   ctx: ReadCtx,
   appLocale: AppLocale,
   category: string
 ) {
-  const legacy = stream(ctx.db, schema)
-    .query("articleCatalog")
-    .withIndex("by_appLocale_and_category_and_date_and_contentKey", (index) =>
-      index.eq("appLocale", appLocale).eq("category", category).gte("date", "")
-    )
-    .order("desc");
-  const current = stream(ctx.db, schema)
+  return stream(ctx.db, schema)
     .query("articleCatalog")
     .withIndex(
       "by_appLocale_and_category_and_datePublished_and_contentKey",
@@ -107,33 +35,21 @@ function categoryPublicationStreams(
           .gte("datePublished", "")
     )
     .order("desc");
-
-  return [new PublicationStream(legacy), new PublicationStream(current)];
 }
 
-/** Paginates both streams with one bounded lookahead scan. */
-const paginatePublicationStreams = Effect.fn(
-  "contentRelease.paginatePublicationStreams"
+/** Paginates the current stream with one bounded lookahead scan. */
+const paginatePublicationStream = Effect.fn(
+  "contentRelease.paginatePublicationStream"
 )(function* (
-  streams: PublicationStream[],
+  publication: QueryStream<ArticleRow>,
   options: PaginationOptions & {
     maximumBytesRead: number;
     maximumRowsRead: number;
   }
 ) {
-  const seen = new Set<string>();
-  const publications = mergedStream(streams, [
-    ...PUBLICATION_INDEX_FIELDS,
-  ]).filterWith((row) => {
-    if (seen.has(row._id)) {
-      return Promise.resolve(false);
-    }
-    seen.add(row._id);
-    return Promise.resolve(true);
-  });
   const cursor = yield* decodePublicationCursor(options.cursor);
   const scanned = yield* Effect.promise(() =>
-    publications.paginate({
+    publication.paginate({
       ...options,
       cursor,
       maximumRowsRead: options.maximumRowsRead,
@@ -173,7 +89,7 @@ const paginatePublicationStreams = Effect.fn(
   };
 });
 
-/** Reads both transition indexes and restores one truthful order. */
+/** Reads current articles in truthful newest-first order. */
 export const readOrderedArticles = Effect.fn(
   "contentRelease.readOrderedArticles"
 )(function* (
@@ -182,65 +98,33 @@ export const readOrderedArticles = Effect.fn(
   category: string | null,
   limit: number
 ) {
-  const [legacy, current] = yield* Effect.all([
-    Effect.promise(() => {
-      if (category === null) {
-        return ctx.db
-          .query("articleCatalog")
-          .withIndex("by_appLocale_and_date_and_contentKey", (index) =>
-            index.eq("appLocale", appLocale).gte("date", "")
-          )
-          .order("desc")
-          .take(limit);
-      }
-
+  return yield* Effect.promise(() => {
+    if (category === null) {
       return ctx.db
         .query("articleCatalog")
-        .withIndex(
-          "by_appLocale_and_category_and_date_and_contentKey",
-          (index) =>
-            index
-              .eq("appLocale", appLocale)
-              .eq("category", category)
-              .gte("date", "")
+        .withIndex("by_appLocale_and_datePublished_and_contentKey", (index) =>
+          index.eq("appLocale", appLocale).gte("datePublished", "")
         )
         .order("desc")
         .take(limit);
-    }),
-    Effect.promise(() => {
-      if (category === null) {
-        return ctx.db
-          .query("articleCatalog")
-          .withIndex("by_appLocale_and_datePublished_and_contentKey", (index) =>
-            index.eq("appLocale", appLocale).gte("datePublished", "")
-          )
-          .order("desc")
-          .take(limit);
-      }
+    }
 
-      return ctx.db
-        .query("articleCatalog")
-        .withIndex(
-          "by_appLocale_and_category_and_datePublished_and_contentKey",
-          (index) =>
-            index
-              .eq("appLocale", appLocale)
-              .eq("category", category)
-              .gte("datePublished", "")
-        )
-        .order("desc")
-        .take(limit);
-    }),
-  ]);
-
-  const rows = [
-    ...new Map([...legacy, ...current].map((row) => [row._id, row])).values(),
-  ];
-  yield* Effect.forEach(rows, readArticleDates);
-  return rows.sort(comparePublicationDates).slice(0, limit);
+    return ctx.db
+      .query("articleCatalog")
+      .withIndex(
+        "by_appLocale_and_category_and_datePublished_and_contentKey",
+        (index) =>
+          index
+            .eq("appLocale", appLocale)
+            .eq("category", category)
+            .gte("datePublished", "")
+      )
+      .order("desc")
+      .take(limit);
+  });
 });
 
-/** Paginates both transition indexes through one stable cursor. */
+/** Paginates the current publication index through one stable cursor. */
 export const paginateArticles = Effect.fn("contentRelease.paginateArticles")(
   function* (
     ctx: ReadCtx,
@@ -251,7 +135,7 @@ export const paginateArticles = Effect.fn("contentRelease.paginateArticles")(
       maximumRowsRead: number;
     }
   ) {
-    const streams = categoryPublicationStreams(ctx, appLocale, category);
-    return yield* paginatePublicationStreams(streams, options);
+    const publication = categoryPublicationStream(ctx, appLocale, category);
+    return yield* paginatePublicationStream(publication, options);
   }
 );

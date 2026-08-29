@@ -1,12 +1,16 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  type RollbackPage,
-  RollbackPageSchema,
-} from "@nakafa/aksara-contracts/release/rollback/spec";
-import {
   type RoutePage,
   RoutePageSchema,
 } from "@nakafa/aksara-contracts/release/route/page";
+import {
+  ContentProjectionSchema,
+  canonicalizeContentProjection,
+} from "@nakafa/aksara-transition/projection/spec";
+import {
+  type RollbackPage,
+  RollbackPageSchema,
+} from "@nakafa/aksara-transition/release/rollback/spec";
 import { internal } from "@repo/backend/convex/_generated/api";
 import {
   RELEASE_PAGE_LIMIT,
@@ -18,6 +22,7 @@ import {
   FUNCTION_MATERIAL_JSON,
   FUNCTION_MATERIAL_KEY,
   FUNCTION_MATERIAL_SOURCE,
+  testProjectionJson,
 } from "@repo/backend/test/content/material";
 import {
   TEST_MANIFEST_HASH,
@@ -182,6 +187,34 @@ describe("contentRelease/rollback", () => {
     expect(page.records[0]?.prior).toHaveProperty(
       "projection.topicTitle",
       "Function Composition and Inverse Function"
+    );
+  });
+
+  it("replays an immutable predecessor publication-date projection", async () => {
+    const t = convexTest(schema, convexModules);
+    const current = JSON.parse(testProjectionJson());
+    const { dateModified: _, datePublished, ...metadata } = current.metadata;
+    const priorProjectionJson = canonicalizeContentProjection(
+      Schema.decodeUnknownSync(ContentProjectionSchema)({
+        ...current,
+        metadata: { ...metadata, date: datePublished },
+      })
+    );
+    await t.mutation(async (ctx) => {
+      await activateRollbackFixture(ctx, 1);
+      await insertRollbackItem(ctx, 0, true, "return {};", {
+        priorProjectionJson,
+      });
+    });
+
+    const page = await readPage(t, -1, 1);
+
+    expect(page.records[0]?.prior).toHaveProperty(
+      "projection.metadata.date",
+      datePublished
+    );
+    expect(page.records[0]?.prior).not.toHaveProperty(
+      "projection.metadata.datePublished"
     );
   });
 

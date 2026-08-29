@@ -2,7 +2,7 @@ import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import {
   MaterialKeySchema,
   MaterialSectionSchema,
-} from "@nakafa/aksara-transition/projection/material";
+} from "@nakafa/aksara-contracts/projection/material";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import {

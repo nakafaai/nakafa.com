@@ -19,7 +19,7 @@ const mockReadQuranInventory = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/content/article/sitemap", () => ({
   readPublishedArticleBuckets: mockReadPublishedArticleBuckets,
 }));
-vi.mock("@/lib/llms/material-pages", () => ({
+vi.mock("@/lib/llms/content/material", () => ({
   readMaterialLlmsInventory: mockReadMaterialInventory,
 }));
 vi.mock("@/lib/llms/quran", () => ({

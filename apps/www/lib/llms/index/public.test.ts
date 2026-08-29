@@ -8,7 +8,7 @@ import {
   getPublicLlmsSectionIndexLines,
   isPublicLlmsLocaleIndexRoute,
   resolvePublicLlmsSectionIndex,
-} from "@/lib/llms/public-index";
+} from "@/lib/llms/index/public";
 
 describe("public llms discovery indexes", () => {
   it("builds a constant root that links only locale aggregates", () => {

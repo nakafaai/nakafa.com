@@ -53,12 +53,9 @@ describe("contentRelease/article/sitemap", () => {
     ).resolves.toMatchObject({
       routes: [
         {
-          date: null,
-          lastModified: null,
           publicPath: "articles/politics",
         },
         {
-          date: testArticleProjection(0).metadata.datePublished,
           lastModified: testArticleProjection(0).metadata.datePublished,
           publicPath: testArticleProjection(0).publicPath,
         },
@@ -96,12 +93,9 @@ describe("contentRelease/article/sitemap", () => {
       ).resolves.toMatchObject({
         routes: [
           {
-            date: null,
-            lastModified: null,
             publicPath: projection.parentPath,
           },
           {
-            date: projection.metadata.datePublished,
             lastModified: projection.metadata.datePublished,
             publicPath: projection.publicPath,
           },

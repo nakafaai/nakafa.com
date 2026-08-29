@@ -19,7 +19,6 @@ import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/pagin
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
 import type { Locale } from "next-intl";
-import { normalizeArticleMetadata } from "@/lib/content/article/decode";
 import { applyPublishedCatalogCache } from "@/lib/content/cache";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
@@ -137,7 +136,7 @@ const decodeArticleItem = Effect.fn("www.articles.decodeItem")(function* (
   ) {
     return yield* projectionError(locale, item.publicPath);
   }
-  const metadata = normalizeArticleMetadata(projection.metadata);
+  const metadata = projection.metadata;
   return {
     authors: metadata.authors,
     category: projection.category,

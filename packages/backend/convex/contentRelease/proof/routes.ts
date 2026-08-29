@@ -1,5 +1,5 @@
 import { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { familyForProjection } from "@nakafa/aksara-transition/projection/spec";
+import { familyForProjection } from "@nakafa/aksara-contracts/projection/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";

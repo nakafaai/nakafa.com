@@ -1,7 +1,7 @@
 import type { LlmsEntry } from "@/lib/llms/entries";
 import { AGENT_MARKDOWN_DIRECTIVE } from "@/lib/llms/format";
 
-/** Renders one llms index document with the standard title and summary shape. */
+/** Renders one LLMS index document with the standard title and summary shape. */
 export function renderLlmsIndexText({
   lines,
   summary,

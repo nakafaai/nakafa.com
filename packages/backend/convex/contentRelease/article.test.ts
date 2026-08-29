@@ -95,29 +95,9 @@ describe("contentRelease/article", () => {
     });
   });
 
-  it("paginates mixed transition rows without hiding either date shape", async () => {
+  it("paginates every current article without duplication", async () => {
     const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await insertRuntimeArticles(ctx, 3);
-      const rows = await ctx.db.query("articleCatalog").collect();
-      const legacy = rows.find(
-        (row) => row.contentKey === testArticleProjection(1).contentKey
-      );
-      if (!(legacy && "datePublished" in legacy)) {
-        throw new Error("Expected one current article date shape.");
-      }
-      const {
-        _creationTime: _createdAt,
-        _id,
-        dateModified: _dateModified,
-        datePublished,
-        ...fields
-      } = legacy;
-      await ctx.db.replace("articleCatalog", _id, {
-        ...fields,
-        date: datePublished,
-      });
-    });
+    await t.mutation((ctx) => insertRuntimeArticles(ctx, 3));
 
     const first = await t.query(page, {
       category: "politics",

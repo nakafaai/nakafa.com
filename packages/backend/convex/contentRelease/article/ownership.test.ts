@@ -11,7 +11,6 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { TEST_ARTICLE_PROJECTION } from "@repo/backend/test/content/runtime";
-import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import type { WithoutSystemFields } from "convex/server";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
@@ -23,7 +22,6 @@ function articleEntry(options?: {
   readonly category?: string;
   readonly sequence?: number;
 }): ArticleEntry {
-  const dates = normalizePublicationDates(TEST_ARTICLE_PROJECTION.metadata);
   return {
     appLocale: TEST_ARTICLE_PROJECTION.appLocale,
     assetId: TEST_ARTICLE_PROJECTION.graph.assetId,
@@ -31,8 +29,7 @@ function articleEntry(options?: {
     category: options?.category ?? TEST_ARTICLE_PROJECTION.category,
     categoryTitle: TEST_ARTICLE_PROJECTION.categoryTitle,
     contentKey: TEST_ARTICLE_PROJECTION.contentKey,
-    ...dates,
-    date: dates.datePublished,
+    datePublished: TEST_ARTICLE_PROJECTION.metadata.datePublished,
     projectionHash: `sha256:${"4".repeat(64)}`,
     publicPath: TEST_ARTICLE_PROJECTION.publicPath,
     releaseId: "release-article-write",
@@ -109,7 +106,7 @@ describe("contentRelease/article/ownership", () => {
         category: "history",
         categoryTitle: "History",
         contentKey: "articles/history/first",
-        date: "2026-07-22",
+        datePublished: "2026-07-22",
         projectionHash: `sha256:${"a".repeat(64)}`,
         publicPath: "articles/politics/first",
         releaseId: "release-predecessor",

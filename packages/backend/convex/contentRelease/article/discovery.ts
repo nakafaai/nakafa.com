@@ -4,7 +4,6 @@ import { loadArticleOwner } from "@repo/backend/convex/contentRelease/article/ow
 import { readArticlePartition } from "@repo/backend/convex/contentRelease/article/partition";
 import { verifyArticle } from "@repo/backend/convex/contentRelease/article/verify";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { normalizePublicationDates } from "@repo/contents/_types/publication";
 import { Effect } from "effect";
 
 const ARTICLE_DISCOVERY_LIMIT = 100;
@@ -28,14 +27,15 @@ function summarizeArticle(
   verified: Effect.Success<ReturnType<typeof verifyArticle>>
 ) {
   const { projection } = verified;
-  const dates = normalizePublicationDates(projection.metadata);
   return {
     articleSlug: projection.articleSlug,
     authors: projection.metadata.authors.map(({ name }) => ({ name })),
     category: projection.category,
     categoryTitle: projection.categoryTitle,
-    date: dates.datePublished,
-    ...dates,
+    ...(projection.metadata.dateModified === undefined
+      ? {}
+      : { dateModified: projection.metadata.dateModified }),
+    datePublished: projection.metadata.datePublished,
     description: projection.metadata.description,
     official: projection.official,
     publicPath: projection.publicPath,

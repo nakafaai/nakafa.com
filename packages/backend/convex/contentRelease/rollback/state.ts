@@ -2,7 +2,10 @@ import {
   type ContentChange,
   ContentUpsertSchema,
 } from "@nakafa/aksara-contracts/release";
-import { canonicalizeContentProjection } from "@nakafa/aksara-transition/projection/spec";
+import {
+  canonicalizeContentProjection,
+  ContentProjectionSchema as HistoricalContentProjectionSchema,
+} from "@nakafa/aksara-transition/projection/spec";
 import {
   RollbackRecordSchema,
   type RollbackState,
@@ -21,6 +24,7 @@ import {
   decodeItemJson,
   decodeProjectionJson,
   decodeRollbackJson,
+  parseStoredJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import { Effect, Schema } from "effect";
 
@@ -30,6 +34,26 @@ type UpsertChange = Extract<
     readonly operation: "upsert";
   }
 >;
+/** Decodes one immutable projection through its historical rollback contract. */
+const decodeHistoricalProjectionJson = Effect.fn(
+  "contentRelease.decodeHistoricalRollbackProjectionJson"
+)((source: string) =>
+  parseStoredJson(source, "Historical rollback projection").pipe(
+    Effect.flatMap(
+      Schema.decodeUnknownEffect(HistoricalContentProjectionSchema, {
+        onExcessProperty: "error",
+      })
+    ),
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message:
+            "Historical rollback projection does not satisfy its exact contract.",
+        })
+    )
+  )
+);
 /** Loads one immutable signed artifact required by a rollback state. */
 const loadArtifact = Effect.fn("contentRelease.loadRollbackArtifact")(
   function* (ctx: QueryCtx, artifactHash: string, identity: string) {
@@ -54,13 +78,13 @@ const loadArtifact = Effect.fn("contentRelease.loadRollbackArtifact")(
 const upsertState = Effect.fn("contentRelease.rollbackUpsertState")(function* (
   ctx: QueryCtx,
   change: UpsertChange,
-  projectionJson: string,
+  projection: typeof HistoricalContentProjectionSchema.Type,
   identity: string
 ) {
   const state = {
     artifact: yield* loadArtifact(ctx, change.artifactHash, identity),
     change,
-    projection: yield* decodeProjectionJson(projectionJson),
+    projection,
   };
   return yield* Schema.decodeEffect(RollbackUpsertStateSchema)(state, {
     onExcessProperty: "error",
@@ -131,7 +155,7 @@ const currentState = Effect.fn("contentRelease.currentRollbackState")(
     const state = yield* upsertState(
       ctx,
       item.change,
-      row.projectionJson,
+      yield* decodeProjectionJson(row.projectionJson),
       `${row.releaseId}/${row.index}/current`
     );
     yield* validateVersion(
@@ -207,7 +231,7 @@ const priorState = Effect.fn("contentRelease.priorRollbackState")(function* (
   const state = yield* upsertState(
     ctx,
     change,
-    head.projectionJson,
+    yield* decodeHistoricalProjectionJson(head.projectionJson),
     `${row.releaseId}/${row.index}/prior`
   );
   yield* validateVersion(head, state, `${row.releaseId}/${row.index}/prior`);

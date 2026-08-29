@@ -4,7 +4,6 @@ import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/re
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
   decodeArtifactJson,
-  decodeCurrentProjectionJson,
   decodeCurrentSnapshotJson,
   decodeItemJson,
   decodeProjectionJson,
@@ -78,9 +77,7 @@ describe("contentRelease/parse", () => {
         const release = yield* decodeReleaseJson(testReleaseJson());
         const item = yield* decodeItemJson(testUpsertJson());
         const artifact = yield* decodeArtifactJson(testArtifactJson());
-        const projection = yield* decodeCurrentProjectionJson(
-          testProjectionJson()
-        );
+        const projection = yield* decodeProjectionJson(testProjectionJson());
         const renderer = yield* decodeRendererJson(testRendererJson());
         const proof = yield* decodeProofJson(testProofJson());
 
@@ -95,25 +92,21 @@ describe("contentRelease/parse", () => {
       })
   );
 
-  it.live(
-    "accepts an authenticated stored projection only at its boundary",
-    () =>
-      Effect.gen(function* () {
-        const current = JSON.parse(testProjectionJson());
-        const { datePublished, ...metadata } = current.metadata;
-        const storedJson = JSON.stringify({
-          ...current,
-          metadata: { ...metadata, date: datePublished },
-        });
+  it.live("rejects the retired publication-date shape", () =>
+    Effect.gen(function* () {
+      const current = JSON.parse(testProjectionJson());
+      const { datePublished, ...metadata } = current.metadata;
+      const storedJson = JSON.stringify({
+        ...current,
+        metadata: { ...metadata, date: datePublished },
+      });
 
-        const stored = yield* decodeProjectionJson(storedJson);
-        const rejected = yield* decodeCurrentProjectionJson(storedJson).pipe(
-          Effect.flip
-        );
+      const rejected = yield* decodeProjectionJson(storedJson).pipe(
+        Effect.flip
+      );
 
-        expect(stored.metadata).toMatchObject({ date: datePublished });
-        expect(rejected).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
-      })
+      expect(rejected).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
+    })
   );
 
   it.live(

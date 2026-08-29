@@ -53,7 +53,6 @@ const articleSummaryValidator = v.object({
   authors: v.array(v.object({ name: v.string() })),
   category: v.string(),
   categoryTitle: v.string(),
-  date: v.string(),
   dateModified: v.optional(v.string()),
   datePublished: v.string(),
   description: v.optional(v.string()),
@@ -107,8 +106,7 @@ const sitemapPageValidator = v.union(
   v.object({
     routes: v.array(
       v.object({
-        date: v.union(v.string(), v.null()),
-        lastModified: v.union(v.string(), v.null()),
+        lastModified: v.optional(v.string()),
         publicPath: v.string(),
       })
     ),

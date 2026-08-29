@@ -23,8 +23,8 @@ import {
   loadStaged,
 } from "@repo/backend/convex/contentRelease/model";
 import {
-  decodeCurrentProjectionJson,
   decodeItemJson,
+  decodeProjectionJson,
   decodeReleaseJson,
 } from "@repo/backend/convex/contentRelease/parse";
 import { encodeProjectionJson } from "@repo/backend/convex/contentRelease/wire";
@@ -54,7 +54,7 @@ const decodeBatch = Effect.fn("contentRelease.decodeProjectionBatch")(
     }
     const projections = yield* Effect.forEach(
       projectionJson,
-      decodeCurrentProjectionJson
+      decodeProjectionJson
     );
     return yield* Schema.decodeUnknownEffect(StageProjectionBatchInputSchema)({
       batchIndex,

@@ -7,15 +7,15 @@ import {
   LLMS_TEXT_PATH,
 } from "@/lib/agent-discovery";
 import { LLMS_CACHE_CONTROL } from "@/lib/llms/constants";
-import { getLlmsMarkdownText } from "@/lib/llms/content";
+import { getLlmsMarkdownText } from "@/lib/llms/content/markdown";
 import { stripLlmsRouteExtension } from "@/lib/llms/format";
-import { getCachedLlmsSectionIndexText } from "@/lib/llms/indexes";
+import { getCachedLlmsSectionIndexText } from "@/lib/llms/index/cache";
 import {
   buildPublicLlmsAppSectionIndexText,
   buildRootLlmsIndexText,
   isPublicLlmsLocaleIndexRoute,
   resolvePublicLlmsSectionIndex,
-} from "@/lib/llms/public-index";
+} from "@/lib/llms/index/public";
 import {
   LLMS_MARKDOWN_MEDIA_TYPE,
   LLMS_REPRESENTATION_VARY_FIELDS,
