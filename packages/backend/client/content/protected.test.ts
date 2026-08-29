@@ -1,6 +1,13 @@
 // @vitest-environment node
 
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@effect/vitest";
 import {
   ContentKeySchema,
   ReleaseIdSchema,
@@ -23,7 +30,7 @@ import { readProtectedContent } from "@repo/backend/client/content/protected";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
-  PROTECTED_CONTENT_RUNTIME_V2_PATH,
+  PROTECTED_CONTENT_RUNTIME_PATH,
 } from "@repo/backend/content/endpoint";
 import {
   TEST_PROOF_RENDERER,
@@ -36,7 +43,7 @@ import { testPublicationScope } from "@repo/backend/test/content/release";
 import { Effect } from "effect";
 import { vi } from "vitest";
 
-const endpoint = `https://example.convex.site${PROTECTED_CONTENT_RUNTIME_V2_PATH}`;
+const endpoint = `https://example.convex.site${PROTECTED_CONTENT_RUNTIME_PATH}`;
 const target = {
   siteUrl: "https://example.convex.site",
   token: "runtime-test-token",
@@ -146,9 +153,10 @@ describe("protected content runtime client", () => {
       ).toMatchObject({ items: [{ delivery: "authenticated" }] });
       expect(fetchMock).toHaveBeenCalledOnce();
       const call = fetchMock.mock.calls.at(0);
-      if (!call || typeof call[1]?.body !== "string") {
-        throw new Error("Expected one JSON protected runtime request.");
-      }
+      assert(
+        call && typeof call[1]?.body === "string",
+        "Expected one JSON protected runtime request."
+      );
       expect(call[0]).toBe(endpoint);
       expect(JSON.parse(call[1].body)).toEqual(request);
       expect(verifyProtectedContentRuntimeExchange).toHaveBeenCalledOnce();
