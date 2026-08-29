@@ -11,7 +11,6 @@ import { ChildProcess } from "effect/unstable/process";
 import { writeOutput } from "#scripts/output";
 
 const GIT_REVISION_PATTERN = /^[0-9a-f]{40}$/u;
-const ProductionAcceptanceMode = Schema.Literals(["github", "vercel"]);
 
 interface RevisionEnvironment {
   readonly base: string;
@@ -216,47 +215,11 @@ export const writeProductionAcceptanceDecision = Effect.fn(
   return required;
 });
 
-/** Resolves whether Vercel must build the exact protected-main change. */
-const resolveVercelProductionDecision = Effect.fn(
-  "ProductionAcceptance.resolveVercelDecision"
-)(function* (repositoryRoot: string) {
-  const decision = yield* resolveProductionAcceptance(repositoryRoot, {
-    base: "VERCEL_GIT_PREVIOUS_SHA",
-    head: "VERCEL_GIT_COMMIT_SHA",
-  });
-  yield* writeOutput(
-    decision.required
-      ? `Vercel production build required for ${decision.changes.length} changed paths.\n`
-      : `Vercel production build skipped for ${decision.changes.length} modified test modules.\n`
-  );
-  return decision.required;
-});
-
-/** Runs the selected production-scope adapter at the Node CLI boundary. */
+/** Runs the production-scope adapter at the Node CLI boundary. */
 const runProductionAcceptanceMain = Effect.fn("ProductionAcceptance.runMain")(
   function* () {
-    const modeInput = yield* Effect.sync(() => process.argv[2] ?? "github");
-    const mode = yield* Schema.decodeUnknownEffect(ProductionAcceptanceMode)(
-      modeInput
-    ).pipe(
-      Effect.mapError(
-        (cause) =>
-          new ProductionAcceptanceError({
-            cause,
-            message: "Production acceptance mode is invalid.",
-          })
-      )
-    );
     const repositoryRoot = yield* Effect.sync(() => process.cwd());
-    if (mode === "github") {
-      yield* writeProductionAcceptanceDecision(repositoryRoot);
-      return;
-    }
-
-    const required = yield* resolveVercelProductionDecision(repositoryRoot);
-    yield* Effect.sync(() => {
-      process.exitCode = required ? 1 : 0;
-    });
+    yield* writeProductionAcceptanceDecision(repositoryRoot);
   }
 );
 

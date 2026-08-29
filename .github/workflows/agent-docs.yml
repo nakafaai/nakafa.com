@@ -394,6 +394,7 @@ jobs:
         env:
           NEXT_EXPOSE_TESTING_API: "true"
           NODE_ENV: production
+          TURBO_CONCURRENCY: "2"
 
       - name: Classify local backend build failure
         if: failure() && steps.production_build.outcome == 'failure'
