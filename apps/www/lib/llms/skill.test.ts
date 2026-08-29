@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { createHash } from "node:crypto";
+import { describe, expect, it } from "@effect/vitest";
 import { languages } from "@repo/internationalization/data/lang";
-import { describe, expect, it } from "vitest";
 import { getNakafaAgentSkillIndex, getNakafaSkillText } from "@/lib/llms/skill";
 
 describe("Nakafa public agent skill", () => {
@@ -17,7 +17,7 @@ describe("Nakafa public agent skill", () => {
     expect(text).toContain("# Nakafa Agent Skill");
     expect(text).toContain("https://nakafa.com/llms.txt");
     expect(text).toContain("bounded page-index links");
-    expect(text).toContain("https://nakafa.com/mcp");
+    expect(text).toContain("https://mcp.nakafa.com/mcp");
     expect(text).toContain("Accept: text/markdown");
 
     for (const language of languages) {

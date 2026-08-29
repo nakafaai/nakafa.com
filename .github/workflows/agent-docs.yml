@@ -195,11 +195,10 @@ jobs:
     timeout-minutes: 40
     env:
       CONTENT_RUNTIME_TOKEN: ci-agent-docs
-      INTERNAL_CONTENT_API_KEY: ci-agent-docs
+      AKSARA_PUBLICATION_TOKEN: ci-agent-docs
       NAKAFA_API_EDGE_SECRET: ci-agent-docs-api-edge
       NAKAFA_MCP_EDGE_SECRET: ci-agent-docs-mcp-edge
       NEXT_PUBLIC_APP_URL: http://localhost:3000
-      NEXT_PUBLIC_MCP_URL: https://mcp.nakafa.com
       NEXT_PUBLIC_POSTHOG_KEY: phc_agent_docs_ci
       NEXT_PUBLIC_POSTHOG_UI_HOST: https://eu.posthog.com
       POSTHOG_PROXY_HOST: https://t.nakafa.com
@@ -328,13 +327,12 @@ jobs:
           # Agent docs exercises content reads only. External integrations stay inert.
           pnpm --dir packages/backend exec convex env set --force <<EOF
           AI_GATEWAY_API_KEY=agent-docs-disabled
-          AKSARA_PUBLICATION_TOKEN=$CONTENT_RUNTIME_TOKEN
+          AKSARA_PUBLICATION_TOKEN=$AKSARA_PUBLICATION_TOKEN
           AUTH_GOOGLE_ID=agent-docs-disabled
           AUTH_GOOGLE_SECRET=agent-docs-disabled
           BETTER_AUTH_SECRET=agent-docs-inert-secret-00000000
           CONTENT_RUNTIME_TOKEN=$CONTENT_RUNTIME_TOKEN
           FIRECRAWL_API_KEY=agent-docs-disabled
-          INTERNAL_CONTENT_API_KEY=$INTERNAL_CONTENT_API_KEY
           JWKS=[]
           NAKAFA_API_EDGE_SECRET=agent-docs-api-edge-secret
           NAKAFA_MCP_ALLOWED_ORIGINS=https://nakafa.com
@@ -403,16 +401,15 @@ jobs:
           AGENT_DOCS_RUNTIME_SELECTION_HASH: ""
           AGENT_DOCS_RUNTIME_SCHEMA_FINGERPRINT: ""
           CONTENT_RUNTIME_TOKEN: ""
+          AKSARA_PUBLICATION_TOKEN: ""
           CONVEX_SITE_URL: ""
           CONVEX_URL: ""
-          INTERNAL_CONTENT_API_KEY: ""
           NAKAFA_API_EDGE_SECRET: ""
           NAKAFA_CONVEX_SITE_URL: ""
           NAKAFA_MCP_EDGE_SECRET: ""
           NEXT_PUBLIC_APP_URL: ""
           NEXT_PUBLIC_CONVEX_SITE_URL: ""
           NEXT_PUBLIC_CONVEX_URL: ""
-          NEXT_PUBLIC_MCP_URL: ""
           NEXT_PUBLIC_POSTHOG_KEY: ""
           NEXT_PUBLIC_POSTHOG_UI_HOST: ""
           POSTHOG_PROXY_HOST: ""

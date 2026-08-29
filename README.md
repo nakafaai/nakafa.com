@@ -52,8 +52,8 @@ pnpm start
 ## Repository layout
 
 - `apps/www`: main Next.js application on port 3000
-- `apps/mcp`: MCP application on port 3001
-- `apps/api`: API application on port 3002
+- `apps/mcp`: frameworkless Vercel ingress for the Convex MCP runtime
+- `apps/api`: frameworkless Vercel ingress for the Convex REST runtime
 - `apps/cas`: Python CAS service on port 3003
 - `apps/email`: email preview application on port 3004
 - `packages/backend`: Convex schema, functions, workflows, and integrations

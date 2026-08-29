@@ -80,7 +80,7 @@ export const POST = (request: NextRequest) =>
     Effect.gen(function* () {
       const isAuthorized = isInternalContentAuthorized(
         request.headers.get("Authorization"),
-        env.INTERNAL_CONTENT_API_KEY
+        env.AKSARA_PUBLICATION_TOKEN
       );
       if (!isAuthorized) {
         return NextResponse.json(

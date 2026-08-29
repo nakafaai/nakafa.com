@@ -1,4 +1,4 @@
-import { NAKAFA_MCP_RECOMMENDED_ENDPOINT } from "@repo/contents/_lib/agent/constants";
+import { NAKAFA_MCP_ENDPOINT } from "@repo/contents/_lib/agent/constants";
 import {
   PUBLIC_ROUTE_SURFACES,
   type PublicRouteSurface,
@@ -38,7 +38,7 @@ export function buildRootLlmsIndexText() {
     "",
     "## References",
     "",
-    `- [Nakafa MCP skill](${BASE_URL}/skill.md): public agent instructions for tools \`nakafa_search_content\`, \`nakafa_get_content\`, \`nakafa_get_taxonomy\`, and \`nakafa_get_quran_reference\`. Recommended MCP endpoint: \`${NAKAFA_MCP_RECOMMENDED_ENDPOINT}\`.`,
+    `- [Nakafa MCP skill](${BASE_URL}/skill.md): public agent instructions for tools \`nakafa_search_content\`, \`nakafa_get_content\`, \`nakafa_get_taxonomy\`, and \`nakafa_get_quran_reference\`. MCP endpoint: \`${NAKAFA_MCP_ENDPOINT}\`.`,
     `- Sitemap: \`${BASE_URL}/sitemap.xml\`.`,
     "",
   ].join("\n");

@@ -13,9 +13,7 @@ import type { readQuranSurahs } from "@repo/backend/convex/contentRelease/quran/
 import type { readTryoutTaxonomy } from "@repo/backend/convex/contentRelease/tryout/taxonomy";
 import {
   NAKAFA_AGENT_SECTIONS,
-  NAKAFA_MCP_DIRECT_ENDPOINT,
-  NAKAFA_MCP_INFORMATIONAL_ROOT,
-  NAKAFA_MCP_RECOMMENDED_ENDPOINT,
+  NAKAFA_MCP_ENDPOINT,
 } from "@repo/contents/_lib/agent/constants";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import { NakafaAgentTaxonomySchema } from "@repo/contents/_lib/agent/schema/taxonomy";
@@ -92,11 +90,7 @@ export const getNakafaTaxonomy = Effect.fn("agent.getNakafaTaxonomy")(
           count: item.count + quran.surahs.length,
         })),
         default_locale: ACTIVE_APP_LOCALE_CODES[0],
-        endpoints: {
-          direct: NAKAFA_MCP_DIRECT_ENDPOINT,
-          recommended: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
-          root_note: `${NAKAFA_MCP_INFORMATIONAL_ROOT} is informational only.`,
-        },
+        mcp: NAKAFA_MCP_ENDPOINT,
         locale,
         locales: ACTIVE_APP_LOCALE_CODES,
         quran: { surah_count: quran.surahs.length },

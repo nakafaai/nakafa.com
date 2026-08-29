@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
 import {
   isLocaleBypassPath,
   isUnsupportedRootFilePath,
@@ -6,7 +6,6 @@ import {
 
 describe("routing bypass", () => {
   it.each([
-    "/mcp",
     "/llms.txt",
     "/logo.svg",
     "/manifest.webmanifest",

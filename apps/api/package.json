@@ -3,39 +3,17 @@
   "version": "1.0.1",
   "private": true,
   "scripts": {
-    "build": "next build --turbopack",
+    "build": "config validate",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "dev": "next dev -p 3002 --turbopack",
-    "start": "next start -p 3002",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "test:watch": "vitest watch",
-    "typecheck": "next typegen && tsc --noEmit --emitDeclarationOnly false"
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@nakafa/aksara-contracts": "https://github.com/nakafaai/aksara/releases/download/contracts-v0.23.0/nakafa-aksara-contracts-0.23.0.tgz",
-    "@repo/backend": "workspace:*",
-    "@repo/contents": "workspace:*",
-    "@repo/design-system": "workspace:*",
-    "@repo/next-config": "workspace:*",
-    "@repo/utilities": "workspace:*",
-    "@t3-oss/env-nextjs": "^0.13.11",
-    "convex": "1.45.0",
-    "effect": "catalog:",
-    "next": "16.3.2",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
-    "server-only": "0.0.1"
+    "@repo/backend": "workspace:*"
   },
   "devDependencies": {
-    "@effect/vitest": "catalog:",
-    "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/react": "19.2.18",
+    "@types/node": "24.13.3",
     "@vercel/config": "^0.6.1",
-    "@vitest/coverage-istanbul": "^4.1.11",
-    "typescript": "7.0.2",
-    "vite": "^8.2.2",
-    "vitest": "^4.1.11"
+    "typescript": "7.0.2"
   }
 }

@@ -3,7 +3,7 @@ import {
   PREVIEW_RENDERER_AUTH_FORMAT,
   PreviewRendererNonceSchema,
 } from "@nakafa/aksara-contracts/preview/auth";
-import { contentApiKeys } from "@repo/next-config/keys";
+import { publicationKeys } from "@repo/next-config/keys";
 import { Effect, Option, Redacted, Schema } from "effect";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
@@ -13,7 +13,7 @@ import { rendererManifest } from "@/lib/content/renderer/manifest";
 
 const PRIVATE_RESPONSE_HEADERS = { "Cache-Control": "private, no-store" };
 const PREVIEW_NONCE_HEADER = "x-aksara-preview-nonce";
-const rendererAuth = contentApiKeys();
+const rendererAuth = publicationKeys();
 
 /** Returns the exact renderer envelope to authenticated Aksara tooling. */
 export const GET = (request: NextRequest) =>
@@ -22,7 +22,7 @@ export const GET = (request: NextRequest) =>
       const authorization = request.headers.get("Authorization");
       const isInternalAuthorized = isInternalContentAuthorized(
         authorization,
-        rendererAuth.INTERNAL_CONTENT_API_KEY
+        rendererAuth.AKSARA_PUBLICATION_TOKEN
       );
 
       if (isInternalAuthorized) {

@@ -1,6 +1,10 @@
+import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge.ts";
+import { createAgentEdgeRoute } from "@repo/backend/agent/route.ts";
 import type { VercelConfig } from "@vercel/config/v1";
 
 export const config: VercelConfig = {
+  buildCommand: "pnpm build",
+  framework: null,
   ignoreCommand: "sh ../../scripts/vercel/scope.sh api",
   git: {
     deploymentEnabled: {
@@ -9,4 +13,11 @@ export const config: VercelConfig = {
       main: true,
     },
   },
+  ...createAgentEdgeRoute({
+    contract: NAKAFA_API_EDGE_CONTRACT,
+    source: "^/(openapi\\.json|v1(?:/.*)?)$",
+    suffix: "/$1",
+  }),
 };
+
+export default config;

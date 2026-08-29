@@ -1,5 +1,5 @@
 import {
-  NAKAFA_MCP_DIRECT_ENDPOINT,
+  NAKAFA_MCP_ENDPOINT,
   NAKAFA_MCP_SERVER_VERSION,
 } from "@repo/contents/_lib/agent/constants";
 
@@ -13,7 +13,7 @@ export const NAKAFA_MCP_REGISTRY_MANIFEST = {
   remotes: [
     {
       type: "streamable-http",
-      url: NAKAFA_MCP_DIRECT_ENDPOINT,
+      url: NAKAFA_MCP_ENDPOINT,
     },
   ],
   repository: {

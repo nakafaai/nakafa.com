@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { BASE_URL } from "@/lib/llms/constants";
 import { AGENT_MARKDOWN_DIRECTIVE } from "@/lib/llms/format";
 import {
@@ -19,7 +19,7 @@ describe("public llms discovery indexes", () => {
     expect(text).toContain(`${BASE_URL}/id/llms.txt`);
     expect(text).not.toContain(`${BASE_URL}/llms/en`);
     expect(text).not.toContain("/page/");
-    expect(text).toContain("https://nakafa.com/mcp");
+    expect(text).toContain("https://mcp.nakafa.com/mcp");
     expect(text).toContain(`${BASE_URL}/skill.md`);
   });
 

@@ -1,8 +1,5 @@
 import { LearningGraphIdentitySchema } from "@nakafa/aksara-contracts/graph/spec";
-import {
-  NAKAFA_BASE_URL,
-  NAKAFA_MCP_INFORMATIONAL_ROOT,
-} from "@repo/contents/_lib/agent/constants";
+import { NAKAFA_BASE_URL } from "@repo/contents/_lib/agent/constants";
 import type { NakafaAgentContentRef } from "@repo/contents/_lib/agent/schema/ref";
 import {
   NakafaAgentContentRefSchema,
@@ -179,11 +176,7 @@ export function normalizeNakafaContentInput(input: string) {
   }
 
   const url = new URL(trimmed);
-  if (
-    url.hostname === "nakafa.com" ||
-    url.hostname === "www.nakafa.com" ||
-    url.origin === NAKAFA_MCP_INFORMATIONAL_ROOT
-  ) {
+  if (url.hostname === "nakafa.com" || url.hostname === "www.nakafa.com") {
     return url.pathname;
   }
 

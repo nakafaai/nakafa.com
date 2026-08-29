@@ -2,6 +2,7 @@
   "name": "@repo/backend",
   "version": "2.0.1",
   "private": true,
+  "type": "module",
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "customers:verify": "tsx scripts/customers/verify.ts",
@@ -40,6 +41,7 @@
     "@repo/math": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.11",
+    "@vercel/config": "^0.6.1",
     "ai": "7.0.77",
     "better-auth": "1.6.30",
     "buffer": "^6.0.3",

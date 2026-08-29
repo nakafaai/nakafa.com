@@ -136,7 +136,7 @@ describe("Nakafa CLI execution", () => {
           stdout: "0.1.0\n",
         });
         expect(yield* decodeJson(mcp.stdout)).toEqual({
-          endpoint: "https://nakafa.com/mcp",
+          endpoint: "https://mcp.nakafa.com/mcp",
           protocol_version: NAKAFA_MCP_PROTOCOL_VERSION,
           transport: "streamable-http",
         });

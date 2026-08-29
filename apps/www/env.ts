@@ -1,5 +1,5 @@
 import { convexKeys, convexSiteKeys } from "@repo/backend/keys";
-import { contentApiKeys, mcpKeys, siteUrlKeys } from "@repo/next-config/keys";
+import { publicationKeys, siteUrlKeys } from "@repo/next-config/keys";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { Schema } from "effect";
 
@@ -11,13 +11,7 @@ import { Schema } from "effect";
  * those values.
  */
 export const env = createEnv({
-  extends: [
-    contentApiKeys(),
-    siteUrlKeys(),
-    convexKeys(),
-    convexSiteKeys(),
-    mcpKeys(),
-  ],
+  extends: [publicationKeys(), siteUrlKeys(), convexKeys(), convexSiteKeys()],
   client: {
     NEXT_PUBLIC_AKSARA_PREVIEW_CHILD: Schema.toStandardSchemaV1(
       Schema.UndefinedOr(Schema.Literals(["true", "false"]))

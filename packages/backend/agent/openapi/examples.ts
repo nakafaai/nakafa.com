@@ -8,7 +8,7 @@ import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import {
   NAKAFA_API_BASE_URL,
   NAKAFA_BASE_URL,
-  NAKAFA_MCP_RECOMMENDED_ENDPOINT,
+  NAKAFA_MCP_ENDPOINT,
   NAKAFA_PUBLIC_API_VERSION,
 } from "@repo/contents/_lib/agent/constants";
 import { NAKAFA_AGENT_DEFAULT_LIMIT } from "@repo/contents/_types/agent/search";
@@ -153,7 +153,7 @@ export const OPENAPI_RESPONSE_EXAMPLES = {
     description:
       "Read-only access to Nakafa's signed educational content for developers and agents.",
     documentation: `${NAKAFA_BASE_URL}/llms.txt`,
-    mcp: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
+    mcp: NAKAFA_MCP_ENDPOINT,
     name: "Nakafa Public API",
     openapi: `${NAKAFA_API_BASE_URL}/openapi.json`,
     status: "active",
@@ -196,11 +196,7 @@ export const OPENAPI_RESPONSE_EXAMPLES = {
       { count: 120, locale: "de" },
     ],
     default_locale: "en",
-    endpoints: {
-      direct: "https://mcp.nakafa.com/mcp",
-      recommended: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
-      root_note: "https://mcp.nakafa.com is informational only.",
-    },
+    mcp: NAKAFA_MCP_ENDPOINT,
     locale: "en",
     locales: ["en", "id", "de"],
     quran: { surah_count: QURAN_SURAH_COUNT },

@@ -1,6 +1,6 @@
 import {
+  NAKAFA_MCP_ENDPOINT,
   NAKAFA_MCP_PROTOCOL_VERSION,
-  NAKAFA_MCP_RECOMMENDED_ENDPOINT,
 } from "@repo/contents/_lib/agent/constants";
 import { Console, Effect, Layer, MutableRef } from "effect";
 import {
@@ -131,7 +131,7 @@ function executeCommand(request: CliRequest) {
   const command = request.command;
   if (command.kind === "mcp") {
     return Effect.succeed({
-      endpoint: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
+      endpoint: NAKAFA_MCP_ENDPOINT,
       protocol_version: NAKAFA_MCP_PROTOCOL_VERSION,
       transport: "streamable-http",
     });
