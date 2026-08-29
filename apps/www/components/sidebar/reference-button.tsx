@@ -89,7 +89,7 @@ export function ReferenceButton({ references, title }: Props) {
                     const cleanUrl = cleanupUrl(url).split("/")[0];
 
                     return (
-                      <Card key={reference.title}>
+                      <Card key={reference.title} size="sm">
                         <CardHeader>
                           <CardTitle
                             className="line-clamp-2 capitalize"
@@ -117,7 +117,7 @@ export function ReferenceButton({ references, title }: Props) {
                           </CardDescription>
                         </CardHeader>
 
-                        <CardContent className="space-y-2">
+                        <CardContent>
                           <div className="flex items-center gap-1">
                             <HugeIcons
                               className="size-4 shrink-0"
