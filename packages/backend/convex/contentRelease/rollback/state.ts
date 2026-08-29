@@ -2,15 +2,6 @@ import {
   type ContentChange,
   ContentUpsertSchema,
 } from "@nakafa/aksara-contracts/release";
-import {
-  canonicalizeContentProjection,
-  ContentProjectionSchema as HistoricalContentProjectionSchema,
-} from "@nakafa/aksara-transition/projection/spec";
-import {
-  RollbackRecordSchema,
-  type RollbackState,
-  RollbackUpsertStateSchema,
-} from "@nakafa/aksara-transition/release/rollback/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { hashText } from "@repo/backend/convex/contentRelease/digest";
@@ -22,10 +13,17 @@ import { loadExactVersion } from "@repo/backend/convex/contentRelease/model";
 import {
   decodeArtifactJson,
   decodeItemJson,
-  decodeProjectionJson,
   decodeRollbackJson,
   parseStoredJson,
 } from "@repo/backend/convex/contentRelease/parse";
+import {
+  canonicalizeStoredProjection,
+  StoredProjectionSchema,
+  StoredRecordSchema,
+  type StoredState,
+  type StoredUpsertState,
+  StoredUpsertStateSchema,
+} from "@repo/backend/convex/contentRelease/rollback/stored";
 import { Effect, Schema } from "effect";
 
 type UpsertChange = Extract<
@@ -35,12 +33,12 @@ type UpsertChange = Extract<
   }
 >;
 /** Decodes one immutable projection through its historical rollback contract. */
-const decodeHistoricalProjectionJson = Effect.fn(
-  "contentRelease.decodeHistoricalRollbackProjectionJson"
+const decodeStoredProjectionJson = Effect.fn(
+  "contentRelease.decodeStoredRollbackProjectionJson"
 )((source: string) =>
-  parseStoredJson(source, "Historical rollback projection").pipe(
+  parseStoredJson(source, "Stored rollback projection").pipe(
     Effect.flatMap(
-      Schema.decodeUnknownEffect(HistoricalContentProjectionSchema, {
+      Schema.decodeUnknownEffect(StoredProjectionSchema, {
         onExcessProperty: "error",
       })
     ),
@@ -49,7 +47,7 @@ const decodeHistoricalProjectionJson = Effect.fn(
         new ReleaseError({
           code: "CONTENT_RELEASE_INTEGRITY",
           message:
-            "Historical rollback projection does not satisfy its exact contract.",
+            "Stored rollback projection does not satisfy an exact contract.",
         })
     )
   )
@@ -78,7 +76,7 @@ const loadArtifact = Effect.fn("contentRelease.loadRollbackArtifact")(
 const upsertState = Effect.fn("contentRelease.rollbackUpsertState")(function* (
   ctx: QueryCtx,
   change: UpsertChange,
-  projection: typeof HistoricalContentProjectionSchema.Type,
+  projection: typeof StoredProjectionSchema.Type,
   identity: string
 ) {
   const state = {
@@ -86,7 +84,7 @@ const upsertState = Effect.fn("contentRelease.rollbackUpsertState")(function* (
     change,
     projection,
   };
-  return yield* Schema.decodeEffect(RollbackUpsertStateSchema)(state, {
+  return yield* Schema.decodeUnknownEffect(StoredUpsertStateSchema)(state, {
     onExcessProperty: "error",
   }).pipe(
     Effect.mapError(
@@ -102,12 +100,12 @@ const upsertState = Effect.fn("contentRelease.rollbackUpsertState")(function* (
 const validateVersion = Effect.fn("contentRelease.validateRollbackVersion")(
   function* (
     head: Doc<"contentHeads">,
-    state: typeof RollbackUpsertStateSchema.Type,
+    state: StoredUpsertState,
     identity: string
   ) {
     const projectionHash = yield* hashText(
       "the rollback content projection",
-      canonicalizeContentProjection(state.projection)
+      canonicalizeStoredProjection(state.projection)
     );
     if (
       head.operation !== "upsert" ||
@@ -132,7 +130,7 @@ const currentState = Effect.fn("contentRelease.currentRollbackState")(
   function* (ctx: QueryCtx, row: Doc<"contentItems">) {
     const item = yield* decodeItemJson(row.itemJson);
     if (item.change.operation === "delete") {
-      return { change: item.change } satisfies RollbackState;
+      return { change: item.change } satisfies StoredState;
     }
     if (!row.projectionJson) {
       return yield* releaseFail(
@@ -155,7 +153,7 @@ const currentState = Effect.fn("contentRelease.currentRollbackState")(
     const state = yield* upsertState(
       ctx,
       item.change,
-      yield* decodeProjectionJson(row.projectionJson),
+      yield* decodeStoredProjectionJson(row.projectionJson),
       `${row.releaseId}/${row.index}/current`
     );
     yield* validateVersion(
@@ -197,7 +195,7 @@ const priorState = Effect.fn("contentRelease.priorRollbackState")(function* (
         artifactLocale: snapshot.snapshot.artifactLocale,
         operation: "delete",
       },
-    } satisfies RollbackState;
+    } satisfies StoredState;
   }
   if (row.priorSequence === undefined) {
     return yield* releaseFail(
@@ -231,7 +229,7 @@ const priorState = Effect.fn("contentRelease.priorRollbackState")(function* (
   const state = yield* upsertState(
     ctx,
     change,
-    yield* decodeHistoricalProjectionJson(head.projectionJson),
+    yield* decodeStoredProjectionJson(head.projectionJson),
     `${row.releaseId}/${row.index}/prior`
   );
   yield* validateVersion(head, state, `${row.releaseId}/${row.index}/prior`);
@@ -250,7 +248,7 @@ const priorState = Effect.fn("contentRelease.priorRollbackState")(function* (
 /** Builds one exact current-to-prior transition from immutable stored state. */
 export const rollbackRecord = Effect.fn("contentRelease.rollbackRecord")(
   function* (ctx: QueryCtx, row: Doc<"contentItems">) {
-    return yield* Schema.decodeEffect(RollbackRecordSchema)(
+    return yield* Schema.decodeEffect(StoredRecordSchema)(
       {
         current: yield* currentState(ctx, row),
         index: row.index,

@@ -4,7 +4,7 @@ import { vi } from "vitest";
 import {
   fetchSEOTranslationsNamespace,
   SEOTranslationLoadError,
-} from "@/lib/utils/seo/translations";
+} from "@/lib/seo/translations";
 
 const { mockGetTranslations } = vi.hoisted(() => ({
   mockGetTranslations: vi.fn(),

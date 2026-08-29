@@ -4,14 +4,15 @@ import {
   RoutePageSchema,
 } from "@nakafa/aksara-contracts/release/route/page";
 import {
-  ContentProjectionSchema,
   canonicalizeContentProjection,
-} from "@nakafa/aksara-transition/projection/spec";
-import {
-  type RollbackPage,
-  RollbackPageSchema,
-} from "@nakafa/aksara-transition/release/rollback/spec";
+  ContentProjectionSchema as PredecessorProjectionSchema,
+} from "@nakafa/aksara-v150/projection/spec";
 import { internal } from "@repo/backend/convex/_generated/api";
+import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
+import {
+  type StoredPage,
+  StoredPageSchema,
+} from "@repo/backend/convex/contentRelease/rollback/stored";
 import {
   RELEASE_PAGE_LIMIT,
   ROUTE_CATALOG_PAGE_LIMIT,
@@ -37,14 +38,14 @@ import {
 } from "@repo/backend/test/content/rollback";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { convexTest, type TestConvex } from "convex-test";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 const prepareRollback = internal.contentRelease.rollback.prepareRollback;
 const prepareRoutes = internal.contentRelease.rollback.prepareRoutes;
 
 /** Decodes the canonical body response through the shared contract. */
-function decodePage(source: string): RollbackPage {
-  return Schema.decodeUnknownSync(RollbackPageSchema)(JSON.parse(source));
+function decodePage(source: string): StoredPage {
+  return Schema.decodeUnknownSync(StoredPageSchema)(JSON.parse(source));
 }
 
 /** Decodes the canonical route response through the shared contract. */
@@ -195,11 +196,17 @@ describe("contentRelease/rollback", () => {
     const current = JSON.parse(testProjectionJson());
     const { dateModified: _, datePublished, ...metadata } = current.metadata;
     const priorProjectionJson = canonicalizeContentProjection(
-      Schema.decodeUnknownSync(ContentProjectionSchema)({
+      Schema.decodeUnknownSync(PredecessorProjectionSchema)({
         ...current,
         metadata: { ...metadata, date: datePublished },
       })
     );
+    const activeFailure = await Effect.runPromise(
+      decodeProjectionJson(priorProjectionJson).pipe(Effect.flip)
+    );
+    expect(activeFailure).toMatchObject({
+      code: "CONTENT_RELEASE_INTEGRITY",
+    });
     await t.mutation(async (ctx) => {
       await activateRollbackFixture(ctx, 1);
       await insertRollbackItem(ctx, 0, true, "return {};", {

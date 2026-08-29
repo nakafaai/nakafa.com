@@ -24,10 +24,10 @@ import {
   readArticlePageCursor,
 } from "@/lib/content/article/query";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { createLocalizedAlternates } from "@/lib/seo/alternates";
+import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
-import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
-import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
 /** Builds locale-specific article index metadata from article copy. */
 export async function generateMetadata({

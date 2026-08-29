@@ -1,13 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { ActiveAppLocaleListSchema } from "@nakafa/aksara-contracts/locale";
-import { Sha256HashSchema as StoredSha256HashSchema } from "@nakafa/aksara-transition/ids";
-import { QuranSourceIdSchema as StoredQuranSourceIdSchema } from "@nakafa/aksara-transition/quran/identity";
-import { bindQuranRow as bindStoredQuranRow } from "@nakafa/aksara-transition/quran/snapshot/row/hash";
-import { QuranAttributionRowSchema as StoredQuranAttributionRowSchema } from "@nakafa/aksara-transition/quran/source";
-import { canonicalizeContentSnapshotRow as canonicalizeStoredQuranRow } from "@nakafa/aksara-transition/release/snapshot/data";
 import { decodeSnapshotRowJson } from "@repo/backend/convex/contentRelease/parse";
 import { readQuranAttribution } from "@repo/backend/convex/contentRelease/quran/attribution";
-import { quranRowFacts } from "@repo/backend/convex/contentRelease/quran/facts";
 import { readQuranLocaleSources } from "@repo/backend/convex/contentRelease/quran/sources";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -70,94 +64,6 @@ describe("contentRelease/quran/attribution", () => {
             },
           })
         );
-      })
-  );
-
-  it.live(
-    "reads the exact predecessor attribution during the data switch",
-    () =>
-      Effect.gen(function* () {
-        const active = convexTest(schema, convexModules);
-        const currentAttribution = makeQuranAttribution();
-        const snapshotId = yield* Effect.promise(() =>
-          active.mutation((ctx) =>
-            activateQuranSnapshot(ctx, [currentAttribution])
-          )
-        );
-        const storedAttribution = yield* Schema.decodeUnknownEffect(
-          StoredQuranAttributionRowSchema
-        )({
-          ...currentAttribution,
-          sources: currentAttribution.sources.filter((source) =>
-            Schema.is(StoredQuranSourceIdSchema)(source.id)
-          ),
-        });
-        const record = yield* bindStoredQuranRow(
-          StoredSha256HashSchema.make(snapshotId),
-          storedAttribution
-        );
-        yield* Effect.promise(() =>
-          active.mutation(async (ctx) => {
-            const row = await ctx.db.query("quranRows").unique();
-            expect(row).toBeDefined();
-            if (!row) {
-              return;
-            }
-            await ctx.db.patch("quranRows", row._id, {
-              ...quranRowFacts(record),
-              rowHash: record.rowHash,
-              rowJson: canonicalizeStoredQuranRow({ family: "quran", record }),
-            });
-          })
-        );
-
-        const locales = yield* Effect.all(
-          {
-            de: Effect.promise(() =>
-              active.query((ctx) =>
-                runConvexProgram(readQuranLocaleSources(ctx, snapshotId, "de"))
-              )
-            ),
-            en: Effect.promise(() =>
-              active.query((ctx) =>
-                runConvexProgram(readQuranLocaleSources(ctx, snapshotId, "en"))
-              )
-            ),
-            id: Effect.promise(() =>
-              active.query((ctx) =>
-                runConvexProgram(readQuranLocaleSources(ctx, snapshotId, "id"))
-              )
-            ),
-          },
-          { concurrency: "unbounded" }
-        );
-
-        expect(locales).toMatchObject({
-          de: {
-            sources: { translation: { id: "quranenc-german" } },
-            tafsirAccess: {
-              appLocale: "de",
-              kind: "external",
-              source: { id: "mokhtasar-german" },
-            },
-          },
-          en: {
-            sources: { translation: { id: "quranenc-english" } },
-            tafsirAccess: {
-              appLocale: "en",
-              kind: "external",
-              source: { id: "mokhtasar-english" },
-            },
-          },
-          id: {
-            sources: { translation: { id: "quranenc-indonesian" } },
-            tafsirAccess: {
-              appLocale: "id",
-              kind: "embedded",
-              source: { id: "quranenc-tafsir" },
-            },
-          },
-        });
       })
   );
 

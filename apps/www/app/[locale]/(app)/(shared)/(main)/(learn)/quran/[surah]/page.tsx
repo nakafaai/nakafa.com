@@ -34,12 +34,12 @@ import { recoverStalePublishedQuranSnapshot } from "@/lib/content/quran/recovery
 import { getQuranReferences } from "@/lib/content/quran/references";
 import { VirtualProvider } from "@/lib/context/use-virtual";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { createLocalizedAlternates } from "@/lib/seo/alternates";
+import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
+import { getCachedSEOMetadata } from "@/lib/seo/cache";
+import type { SEOContext } from "@/lib/seo/contract";
 import { getSocialMetadata } from "@/lib/utils/metadata";
 import { getQuranPagination, getQuranSurahName } from "@/lib/utils/pages/quran";
-import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
-import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
-import { generateSEOMetadata } from "@/lib/utils/seo/generator";
-import type { SEOContext } from "@/lib/utils/seo/types";
 
 /** Builds localized Quran surah metadata only after the runtime catalog confirms the surah exists. */
 export async function generateMetadata({
@@ -78,7 +78,7 @@ export async function generateMetadata({
     surah: surahData,
   };
 
-  const { title, description, keywords } = await generateSEOMetadata(
+  const { title, description, keywords } = await getCachedSEOMetadata(
     seoContext,
     locale
   );

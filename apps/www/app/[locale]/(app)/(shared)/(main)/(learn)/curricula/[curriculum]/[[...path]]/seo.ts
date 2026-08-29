@@ -1,5 +1,5 @@
 import type { CurriculumViewRoute } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/runtime";
-import type { SEOContext } from "@/lib/utils/seo/types";
+import type { SEOContext } from "@/lib/seo/contract";
 
 /** Builds shared SEO metadata input from one projected curriculum route. */
 export function readCurriculumSeoContext(

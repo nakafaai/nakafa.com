@@ -20,7 +20,7 @@ import {
 import { getPublishedTrustLesson } from "@/lib/content/material/trust";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { resolveSocialArtwork } from "@/lib/og/artwork";
-import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
+import { createLocalizedAlternates } from "@/lib/seo/alternates";
 
 export async function generateMetadata({
   params,

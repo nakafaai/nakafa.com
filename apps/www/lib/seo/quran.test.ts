@@ -1,10 +1,10 @@
 // @vitest-environment node
 
-import { makeAppLocale } from "@nakafa/aksara-contracts/locale";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { generateQuranMetadata } from "@/lib/utils/seo/quran";
+import { vi } from "vitest";
+import { generateQuranMetadata } from "@/lib/seo/quran";
 
 const { mockGetTranslations } = vi.hoisted(() => ({
   mockGetTranslations: vi.fn(),
@@ -62,34 +62,23 @@ describe("generateQuranMetadata", () => {
     );
   });
 
-  it("generates Quran metadata from the surah payload", async () => {
-    const result = await Effect.runPromise(generateQuranMetadata(surah, "en"));
+  it.effect("generates Quran metadata from the surah payload", () =>
+    Effect.gen(function* () {
+      const result = yield* generateQuranMetadata(surah, "en");
 
-    expect(result.title).toBe("Surah 1. Al-Fatihah - The Opening | Nakafa");
-    expect(result.description).toBe("Read Surah Al-Fatihah with 7 verses.");
-  });
+      expect(result.title).toBe("Surah 1. Al-Fatihah - The Opening | Nakafa");
+      expect(result.description).toBe("Read Surah Al-Fatihah with 7 verses.");
+    })
+  );
 
-  it("uses the same authenticated Quran names in every shell locale", async () => {
-    const result = await Effect.runPromise(generateQuranMetadata(surah, "id"));
+  it.effect(
+    "uses the same authenticated Quran names in every shell locale",
+    () =>
+      Effect.gen(function* () {
+        const result = yield* generateQuranMetadata(surah, "id");
 
-    expect(result.title).toBe("Surah 1. Al-Fatihah - Pembuka | Nakafa");
-    expect(result.keywords).toEqual(["Al-Fatihah", "Pembuka", "Meccan"]);
-  });
-
-  it("does not relabel a retained English meaning as localized SEO", async () => {
-    const predecessor = {
-      ...surah,
-      name: {
-        ...surah.name,
-        meaning: { appLocale: makeAppLocale("en"), text: "The Opening" },
-      },
-    };
-
-    const result = await Effect.runPromise(
-      generateQuranMetadata(predecessor, "id")
-    );
-
-    expect(result.title).toBe("Surah 1. Al-Fatihah | Nakafa");
-    expect(result.keywords).toEqual(["Al-Fatihah", "Meccan"]);
-  });
+        expect(result.title).toBe("Surah 1. Al-Fatihah - Pembuka | Nakafa");
+        expect(result.keywords).toEqual(["Al-Fatihah", "Pembuka", "Meccan"]);
+      })
+  );
 });

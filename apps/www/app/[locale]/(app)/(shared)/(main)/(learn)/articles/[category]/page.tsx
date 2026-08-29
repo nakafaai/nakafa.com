@@ -38,10 +38,10 @@ import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { readArticlePreviewStaticParams } from "@/lib/content/preview/route";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { selectLearningStaticParams } from "@/lib/routing/prerender";
+import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
+import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
-import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
-import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
 /** Validates one signed article-category route. */
 async function getResolvedParams(

@@ -1,18 +1,15 @@
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import {
+  MAX_ROLLBACK_PAGE_BYTES,
+  MAX_ROLLBACK_PAGE_RECORDS,
+  RollbackPageRequestSchema,
+} from "@nakafa/aksara-contracts/release/rollback/spec";
+import {
   MAX_ROUTE_PAGE_RECORDS,
   type RoutePage,
   RoutePageRequestSchema,
   type RouteRollbackRecord,
 } from "@nakafa/aksara-contracts/release/route/page";
-import {
-  canonicalizeRollbackPage,
-  MAX_ROLLBACK_PAGE_BYTES,
-  MAX_ROLLBACK_PAGE_RECORDS,
-  type RollbackPage,
-  RollbackPageRequestSchema,
-  type RollbackRecord,
-} from "@nakafa/aksara-transition/release/rollback/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { internalQuery } from "@repo/backend/convex/_generated/server";
@@ -23,6 +20,11 @@ import {
 import { loadRouteBinding } from "@repo/backend/convex/contentRelease/model";
 import { decodeRouteJson } from "@repo/backend/convex/contentRelease/parse";
 import { rollbackRecord } from "@repo/backend/convex/contentRelease/rollback/state";
+import {
+  canonicalizeStoredPage,
+  type StoredPage,
+  type StoredRecord,
+} from "@repo/backend/convex/contentRelease/rollback/stored";
 import { loadReadableSnapshot } from "@repo/backend/convex/contentRelease/snapshot";
 import {
   RELEASE_PAGE_LIMIT,
@@ -44,8 +46,8 @@ const rollbackSource = Effect.fn("contentRelease.rollbackSource")(function* (
 function makeRollbackPage(
   request: typeof RollbackPageRequestSchema.Type,
   total: number,
-  records: readonly RollbackRecord[]
-): RollbackPage {
+  records: readonly StoredRecord[]
+): StoredPage {
   const nextIndex = records.at(-1)?.index ?? request.afterIndex;
   return {
     done: nextIndex === total - 1,
@@ -105,7 +107,7 @@ const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(function* (
         numItems: request.limit,
       })
   );
-  const records: RollbackRecord[] = [];
+  const records: StoredRecord[] = [];
   for (const [offset, row] of rowPage.page.entries()) {
     if (row.index !== request.afterIndex + offset + 1) {
       return yield* releaseFail(
@@ -116,7 +118,7 @@ const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(function* (
     const record = yield* rollbackRecord(ctx, row);
     const candidate = makeRollbackPage(request, total, [...records, record]);
     if (
-      new TextEncoder().encode(canonicalizeRollbackPage(candidate)).byteLength >
+      new TextEncoder().encode(canonicalizeStoredPage(candidate)).byteLength >
       MAX_ROLLBACK_PAGE_BYTES
     ) {
       if (records.length === 0) {
@@ -129,7 +131,7 @@ const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(function* (
     }
     records.push(record);
   }
-  return canonicalizeRollbackPage(makeRollbackPage(request, total, records));
+  return canonicalizeStoredPage(makeRollbackPage(request, total, records));
 });
 /** Resolves the owner immediately before one signed route change. */
 const priorRouteOwner = Effect.fn("contentRelease.priorRouteOwner")(function* (

@@ -1,7 +1,3 @@
-import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
-
-export type QuranSurah = PublishedQuranSurah;
-
 interface QuranName {
   readonly transliteration: string;
 }

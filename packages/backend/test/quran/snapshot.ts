@@ -23,8 +23,6 @@ import {
   replaceContentSnapshot,
   restoreContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
-import { makeQuranSnapshot as makeStoredSignedQuranSnapshot } from "@nakafa/aksara-transition/quran/snapshot/hash";
-import { quranSourceFileCount as storedQuranSourceFileCount } from "@nakafa/aksara-transition/quran/source";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   quranRowFacts,
@@ -118,18 +116,6 @@ export const makeQuranSnapshot = Effect.fn("backendTest.makeQuranSnapshot")(
     } satisfies ContentSnapshotManifest;
   }
 );
-
-/** Creates the authenticated predecessor manifest retained in production. */
-export const makeStoredQuranSnapshot = Effect.fn(
-  "backendTest.makeStoredQuranSnapshot"
-)(function* () {
-  const facts = makeQuranSnapshotFacts("approved");
-  const manifest = yield* makeStoredSignedQuranSnapshot({
-    ...facts,
-    sourceFileCount: storedQuranSourceFileCount(facts.activeAppLocales),
-  });
-  return { family: "quran", manifest } as const;
-});
 
 /** Promotes the only staged technical release to the active slot. */
 async function completeTestRelease(ctx: MutationCtx) {

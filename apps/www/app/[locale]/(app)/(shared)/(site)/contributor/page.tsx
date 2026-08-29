@@ -7,7 +7,7 @@ import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { contributors } from "@/lib/data/contributor";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
+import { createLocalizedAlternates } from "@/lib/seo/alternates";
 
 export async function generateMetadata({
   params,

@@ -17,8 +17,8 @@ import { PreviewRefresh } from "@/components/dev/preview-refresh";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { readPreviewStaticLocaleParams } from "@/lib/content/preview/route";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { appViewport } from "@/lib/theme/viewport";
-import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
 
 /**
  * Builds locale-scoped root metadata for every page under `[locale]`.

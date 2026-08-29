@@ -33,9 +33,9 @@ import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { PaginationContent } from "@/components/shared/pagination-content";
 import { ContentViewTracker } from "@/components/tracking/tracker";
 import { readMaterialContextQuery } from "@/lib/routing/material/query";
+import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
+import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
-import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
-import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
 type MaterialPageProps =
   PageProps<"/[locale]/materials/[subject]/[topic]/[[...lesson]]">;

@@ -1,6 +1,6 @@
 // @vitest-environment node
-import { describe, expect, it } from "vitest";
-import { createSEOTitle } from "@/lib/utils/seo/titles";
+import { describe, expect, it } from "@effect/vitest";
+import { createSEOTitle } from "@/lib/seo/titles";
 
 describe("createSEOTitle", () => {
   describe("basic functionality", () => {

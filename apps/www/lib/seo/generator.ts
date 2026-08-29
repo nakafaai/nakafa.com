@@ -4,17 +4,16 @@ import type {
   PresentedMaterialDomain,
 } from "@repo/contents/_types/taxonomy";
 import { Effect, Option } from "effect";
-import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
-import { generateFallbackMetadata } from "@/lib/utils/seo/fallback";
-import { createSEOKeywords } from "@/lib/utils/seo/keywords";
-import { generateQuranMetadata } from "@/lib/utils/seo/quran";
-import { fetchSEOTranslationsNamespace } from "@/lib/utils/seo/translations";
 import type {
   ContentSEOData,
   SEOContext,
   SEOMetadata,
-} from "@/lib/utils/seo/types";
+} from "@/lib/seo/contract";
+import { generateFallbackMetadata } from "@/lib/seo/fallback";
+import { createSEOKeywords } from "@/lib/seo/keywords";
+import { generateQuranMetadata } from "@/lib/seo/quran";
+import { fetchSEOTranslationsNamespace } from "@/lib/seo/translations";
 
 const EMPTY_SELECT_VALUE = "__EMPTY__";
 
@@ -216,40 +215,29 @@ const generateArticleMetadata = Effect.fn("SEO.generateArticleMetadata")(
     })
 );
 
-/**
- * Main entry point for generating SEO metadata.
- */
-export async function generateSEOMetadata(
-  context: SEOContext,
-  locale: Locale
-): Promise<SEOMetadata> {
-  "use cache";
+/** Generates one complete SEO projection through typed translation failures. */
+export const generateSEOMetadata = Effect.fn("SEO.generateMetadata")(
+  (context: SEOContext, locale: Locale): Effect.Effect<SEOMetadata> => {
+    const { type } = context;
 
-  cacheLife("max");
+    return Effect.gen(function* () {
+      if (type === "material-lesson") {
+        return yield* generateSubjectMetadata(context, locale);
+      }
 
-  const { type } = context;
+      if (type === "curriculum-context") {
+        return yield* generateCurriculumMetadata(context, locale);
+      }
 
-  const effect = Effect.gen(function* () {
-    if (type === "material-lesson") {
-      return yield* generateSubjectMetadata(context, locale);
-    }
+      if (type === "article") {
+        return yield* generateArticleMetadata(context, locale);
+      }
 
-    if (type === "curriculum-context") {
-      return yield* generateCurriculumMetadata(context, locale);
-    }
-
-    if (type === "article") {
-      return yield* generateArticleMetadata(context, locale);
-    }
-
-    return yield* generateQuranMetadata(context.surah, locale);
-  });
-
-  return await Effect.runPromise(
-    effect.pipe(
+      return yield* generateQuranMetadata(context.surah, locale);
+    }).pipe(
       Effect.catchTag("SEOTranslationLoadError", () =>
         Effect.sync(() => generateFallbackMetadata(context))
       )
-    )
-  );
-}
+    );
+  }
+);

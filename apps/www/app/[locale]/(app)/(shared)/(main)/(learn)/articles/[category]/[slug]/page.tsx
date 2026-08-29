@@ -24,11 +24,11 @@ import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { readArticlePreviewStaticParams } from "@/lib/content/preview/route";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { selectLearningStaticParams } from "@/lib/routing/prerender";
+import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
+import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
+import { getCachedSEOMetadata } from "@/lib/seo/cache";
+import type { SEOContext } from "@/lib/seo/contract";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
-import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
-import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
-import { generateSEOMetadata } from "@/lib/utils/seo/generator";
-import type { SEOContext } from "@/lib/utils/seo/types";
 
 type ArrayItem<T> = T extends readonly (infer Item)[] ? Item : T;
 type ArticleJsonLdAuthor = ArrayItem<
@@ -89,7 +89,7 @@ export async function generateMetadata({
     },
   };
 
-  const { title, description, keywords } = await generateSEOMetadata(
+  const { title, description, keywords } = await getCachedSEOMetadata(
     seoContext,
     locale
   );
