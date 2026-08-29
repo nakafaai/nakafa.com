@@ -41,6 +41,9 @@ export const seedRetirementRuntime = Effect.fn(
       if (!targetBundle) {
         return null;
       }
+      await ctx.db.patch("tryoutRuntimeBundles", targetBundle._id, {
+        cleanupReleaseId: undefined,
+      });
       const userId = await insertTryoutUser(ctx, {
         authId: "retirement-runtime-user",
         email: "retirement-runtime@example.com",
@@ -87,9 +90,16 @@ export const seedRetirementRuntime = Effect.fn(
   );
   const contract = {
     attemptLimit: 10,
+    finalizationBundle: {
+      bundleHash: runtimeFixture.bundle.bundleHash,
+      rendererManifestHash: runtimeFixture.bundle.payload.rendererManifestHash,
+      snapshotId: runtimeFixture.bundle.payload.snapshot.snapshotId,
+      sourceGitSha: runtimeFixture.bundle.payload.sourceGitSha,
+      sourceManifestHash: runtimeFixture.bundle.payload.sourceManifestHash,
+      sourceReleaseId: runtimeFixture.bundle.payload.sourceReleaseId,
+    },
     legacyBundleCount: TEST_LEGACY_BUNDLE_COUNT,
     legacyBundleHash,
-    minimumPermanentAttempts: 1,
   } satisfies RetirementRuntimeContract;
   return { attemptId, contract, fixture: runtimeFixture };
 });

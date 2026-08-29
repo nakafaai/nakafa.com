@@ -153,6 +153,33 @@ const requireTargetBundle = Effect.fn(
   return stored;
 });
 
+/** Retains genesis as durable proof after its final attempt is erased. */
+const retainGenesisBundle = Effect.fn(
+  "contentRelease.finalize.retainGenesisBundle"
+)(function* (ctx: MutationCtx, bundle: SignedTryoutRuntimeBundle) {
+  const stored = yield* findTryoutRuntimeBundleByHash(ctx, bundle.bundleHash);
+  if (
+    !stored ||
+    stored.snapshotId !== bundle.payload.snapshot.snapshotId ||
+    stored.rendererManifestHash !== bundle.payload.rendererManifestHash ||
+    stored.sourceGitSha !== bundle.payload.sourceGitSha ||
+    stored.sourceManifestHash !== bundle.payload.sourceManifestHash ||
+    stored.sourceReleaseId !== bundle.payload.sourceReleaseId
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      "Genesis runtime storage lost its finalization identity."
+    );
+  }
+  if (stored.cleanupReleaseId !== undefined) {
+    yield* Effect.promise(() =>
+      ctx.db.patch("tryoutRuntimeBundles", stored._id, {
+        cleanupReleaseId: undefined,
+      })
+    );
+  }
+});
+
 /** Atomically expands the exact four terminal attempts to permanent bundles. */
 export const backfillRuntimeAttempts = Effect.fn(
   "contentRelease.finalize.backfillRuntimeAttempts"
@@ -194,6 +221,7 @@ export const backfillRuntimeAttempts = Effect.fn(
       "Genesis runtime storage returned a different content address."
     );
   }
+  yield* retainGenesisBundle(ctx, bundle);
   let backfilledAttempts = 0;
   let placementCount = 0;
   for (const { attempt, spec } of selected) {

@@ -153,6 +153,7 @@ describe("contentRelease/finalize/backfill", () => {
         expect(state.genesis?.bundleHash).toBe(
           seeded.genesis.bundle.bundleHash
         );
+        expect(state.genesis).not.toHaveProperty("cleanupReleaseId");
       })
   );
 

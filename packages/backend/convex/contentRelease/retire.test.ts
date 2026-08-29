@@ -13,6 +13,10 @@ import {
   retainedScaleRepair,
 } from "@repo/backend/convex/tryouts/migration/cleanup/evidence";
 import {
+  TEST_KEY_ID,
+  TEST_KEY_RESOLVER,
+} from "@repo/backend/test/content/proof";
+import {
   PREDECESSOR_OBSERVATION_ID,
   seedPredecessorObservation,
 } from "@repo/backend/test/predecessor";
@@ -61,6 +65,13 @@ class TestMutationError extends Schema.TaggedError<TestMutationError>()(
   "TestMutationError",
   { cause: Schema.Unknown }
 ) {}
+
+const retirementKeyResolver = ContentVerificationKeyResolver.of({
+  resolve: (keyId) =>
+    keyId === TEST_KEY_ID
+      ? TEST_KEY_RESOLVER.resolve(keyId)
+      : contentKeyResolver.resolve(keyId),
+});
 
 function expectIntegrityFailure(error: TestMutationError) {
   expect(error.cause).toMatchObject({
@@ -134,7 +145,7 @@ const runRetirement = Effect.fn("test.retire.run")(function* (
           ).pipe(
             Effect.provideService(
               ContentVerificationKeyResolver,
-              contentKeyResolver
+              retirementKeyResolver
             )
           )
         )
