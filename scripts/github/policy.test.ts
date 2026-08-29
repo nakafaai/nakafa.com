@@ -2,22 +2,16 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer, Result } from "effect";
-import {
-  HttpClient,
-  type HttpClientRequest,
-  HttpClientResponse,
-} from "effect/unstable/http";
+import { Effect } from "effect";
 import { parse as yamlParse } from "yaml";
 import {
-  fetchLatestGithubActionTag,
   GITHUB_ACTION_REVIEWS,
   type GithubActionUse,
   inspectGithubActionPolicy,
   validateGithubActionPolicy,
-} from "./github-action-policy.ts";
+} from "./policy.ts";
 
-const REPOSITORY_ROOT = fileURLToPath(new URL("..", import.meta.url));
+const REPOSITORY_ROOT = fileURLToPath(new URL("../..", import.meta.url));
 
 function validActionUses(): GithubActionUse[] {
   return GITHUB_ACTION_REVIEWS.flatMap((review) =>
@@ -29,25 +23,12 @@ function validActionUses(): GithubActionUse[] {
   );
 }
 
-function makeHttpClient(
-  makeResponse: (request: HttpClientRequest.HttpClientRequest) => Response
-) {
-  return Layer.succeed(
-    HttpClient.HttpClient,
-    HttpClient.make((request) =>
-      Effect.sync(() =>
-        HttpClientResponse.fromWeb(request, makeResponse(request))
-      )
-    )
-  );
-}
-
 describe("GitHub Action policy", () => {
   it("runs candidate validation before merge without repeating it on main", () => {
     for (const fileName of ["agent-docs.yml", "react-doctor.yml"]) {
       const source = readFileSync(
         fileURLToPath(
-          new URL(`../.github/workflows/${fileName}`, import.meta.url)
+          new URL(`../../.github/workflows/${fileName}`, import.meta.url)
         ),
         "utf8"
       );
@@ -70,10 +51,7 @@ describe("GitHub Action policy", () => {
 
     const cacheSource = readFileSync(
       fileURLToPath(
-        new URL(
-          "../.github/workflows/content-snapshot-cache.yml",
-          import.meta.url
-        )
+        new URL("../../.github/workflows/cache.yml", import.meta.url)
       ),
       "utf8"
     );
@@ -103,7 +81,7 @@ describe("GitHub Action policy", () => {
   it("runs changed React checks on pull requests and full checks in the queue", () => {
     const source = readFileSync(
       fileURLToPath(
-        new URL("../.github/workflows/react-doctor.yml", import.meta.url)
+        new URL("../../.github/workflows/react-doctor.yml", import.meta.url)
       ),
       "utf8"
     );
@@ -170,47 +148,4 @@ describe("GitHub Action policy", () => {
       )
     ).toBe(true);
   });
-
-  it.effect("reads release metadata through the Effect HTTP client", () =>
-    Effect.gen(function* () {
-      let observedRequest: HttpClientRequest.HttpClientRequest | undefined;
-      const releaseTag = yield* fetchLatestGithubActionTag({
-        repository: "actions/checkout",
-      }).pipe(
-        Effect.provide(
-          makeHttpClient((request) => {
-            observedRequest = request;
-            return Response.json({ tag_name: "v7.0.1" });
-          })
-        )
-      );
-
-      expect(releaseTag).toBe("v7.0.1");
-      expect(observedRequest?.url).toBe(
-        "https://api.github.com/repos/actions/checkout/releases/latest"
-      );
-    })
-  );
-
-  it.effect("rejects unavailable GitHub release metadata", () =>
-    Effect.gen(function* () {
-      const result = yield* fetchLatestGithubActionTag({
-        repository: "actions/checkout",
-      }).pipe(
-        Effect.provide(
-          makeHttpClient(() => new Response(null, { status: 403 }))
-        ),
-        Effect.result
-      );
-
-      expect(Result.isFailure(result)).toBe(true);
-      if (Result.isSuccess(result)) {
-        return;
-      }
-      expect(result.failure).toMatchObject({
-        _tag: "GithubActionReleaseError",
-        message: "Unable to read the latest actions/checkout release.",
-      });
-    })
-  );
 });
