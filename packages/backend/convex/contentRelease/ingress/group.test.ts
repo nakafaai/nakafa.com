@@ -7,6 +7,7 @@ import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signatu
 import { StageGroupRequestSchema } from "@nakafa/aksara-contracts/transport/group";
 import { stagePublicationGroup } from "@repo/backend/convex/contentRelease/ingress/group";
 import { stagePublication } from "@repo/backend/convex/contentRelease/ingress/stage";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
@@ -20,91 +21,120 @@ import { testPublicationScope } from "@repo/backend/test/content/release";
 import { insertSignedCandidate } from "@repo/backend/test/content/stage";
 import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
 import { convexTest } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Data, Effect, Schema } from "effect";
 
 const releaseId = ReleaseIdSchema.make("release-stage-group");
 
-describe("content release staging groups", () => {
-  it("resumes a committed prefix and retries the complete group", async () => {
-    const data = await Effect.runPromise(makeProgramSnapshotData());
-    const firstRow = data.rows[0];
-    if (!firstRow) {
-      throw new Error("Expected one program snapshot row.");
-    }
-    const release = testSignedRelease(
-      ContentReleaseManifestSchema.make({
-        ...testEmptyManifest(releaseId),
-        scope: testPublicationScope({ snapshots: data.snapshots }),
-        snapshots: data.snapshots,
-      })
-    );
-    const request = Schema.decodeSync(StageGroupRequestSchema)({
-      operation: "stageGroup",
-      releaseId,
-      requests: [
-        {
-          operation: "stageSnapshot",
-          releaseId,
-          snapshot: data.snapshot,
-        },
-        {
-          batchIndex: 0,
-          family: "program",
-          operation: "stageSnapshotBatch",
-          releaseId,
-          rows: [firstRow],
-          snapshotId: data.snapshotId,
-        },
-      ],
-    });
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) =>
-      insertSignedCandidate(
-        ctx,
-        releaseId,
-        release,
-        JSON.stringify(TEST_PROOF_RENDERER)
-      )
-    );
+class UnexpectedGroupTestState extends Data.TaggedError(
+  "UnexpectedGroupTestState"
+)<{
+  readonly operation: "select-program-row";
+}> {}
 
-    const firstRequest = request.requests[0];
-    await t.action((ctx) =>
-      Effect.runPromise(
-        stagePublication(ctx, firstRequest, TEST_KEY_ID).pipe(
-          Effect.provideService(
-            ContentVerificationKeyResolver,
-            TEST_KEY_RESOLVER
+describe("content release staging groups", () => {
+  it.effect("resumes a committed prefix and retries the complete group", () =>
+    Effect.gen(function* () {
+      const data = yield* makeProgramSnapshotData();
+      const firstRow = data.rows[0];
+      if (!firstRow) {
+        return yield* Effect.die(
+          new UnexpectedGroupTestState({ operation: "select-program-row" })
+        );
+      }
+      const release = testSignedRelease(
+        ContentReleaseManifestSchema.make({
+          ...testEmptyManifest(releaseId),
+          scope: testPublicationScope({ snapshots: data.snapshots }),
+          snapshots: data.snapshots,
+        })
+      );
+      const request = yield* Schema.decodeEffect(StageGroupRequestSchema)({
+        operation: "stageGroup",
+        releaseId,
+        requests: [
+          {
+            operation: "stageSnapshot",
+            releaseId,
+            snapshot: data.snapshot,
+          },
+          {
+            batchIndex: 0,
+            family: "program",
+            operation: "stageSnapshotBatch",
+            releaseId,
+            rows: [firstRow],
+            snapshotId: data.snapshotId,
+          },
+        ],
+      });
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(() =>
+        t.mutation((ctx) =>
+          insertSignedCandidate(
+            ctx,
+            releaseId,
+            release,
+            JSON.stringify(TEST_PROOF_RENDERER)
           )
         )
-      )
-    );
+      );
 
-    /** Executes the same authenticated group against the durable test store. */
-    const run = () =>
-      t.action((ctx) =>
-        Effect.runPromise(
-          stagePublicationGroup(ctx, request, TEST_KEY_ID).pipe(
-            Effect.provideService(
-              ContentVerificationKeyResolver,
-              TEST_KEY_RESOLVER
+      const firstRequest = request.requests[0];
+      yield* Effect.promise(() =>
+        t.action((ctx) =>
+          runConvexProgram(
+            stagePublication(ctx, firstRequest, TEST_KEY_ID).pipe(
+              Effect.provideService(
+                ContentVerificationKeyResolver,
+                TEST_KEY_RESOLVER
+              )
             )
           )
         )
       );
-    await expect(run()).resolves.toEqual({
-      ok: true,
-      operation: "stageGroup",
-      value: { releaseId, requestCount: 2 },
-    });
-    await expect(run()).resolves.toMatchObject({ ok: true });
-    await expect(
-      t.run(async (ctx) => ({
-        batches: await ctx.db.query("snapshotBatches").collect(),
-        snapshots: await ctx.db.query("contentSnapshots").collect(),
-      }))
-    ).resolves.toMatchObject({
-      batches: [expect.objectContaining({ batchIndex: 0 })],
-      snapshots: [expect.objectContaining({ family: "program" })],
-    });
-  });
+
+      /** Executes the same authenticated group against the durable test store. */
+      const runGroup = Effect.fn("contentRelease.ingress.test.runGroup")(
+        function* () {
+          return yield* Effect.promise(() =>
+            t.action((ctx) =>
+              runConvexProgram(
+                stagePublicationGroup(ctx, request, TEST_KEY_ID).pipe(
+                  Effect.provideService(
+                    ContentVerificationKeyResolver,
+                    TEST_KEY_RESOLVER
+                  )
+                )
+              )
+            )
+          );
+        }
+      );
+      expect(yield* runGroup()).toEqual({
+        ok: true,
+        operation: "stageGroup",
+        value: { releaseId, requestCount: 2 },
+      });
+      expect(yield* runGroup()).toMatchObject({ ok: true });
+
+      const stored = yield* Effect.promise(() =>
+        t.run((ctx) =>
+          runConvexProgram(
+            Effect.all({
+              batches: Effect.promise(() =>
+                ctx.db.query("snapshotBatches").collect()
+              ),
+              snapshots: Effect.promise(() =>
+                ctx.db.query("contentSnapshots").collect()
+              ),
+            })
+          )
+        )
+      );
+      expect(stored).toMatchObject({
+        batches: [expect.objectContaining({ batchIndex: 0 })],
+        snapshots: [expect.objectContaining({ family: "program" })],
+      });
+    })
+  );
 });

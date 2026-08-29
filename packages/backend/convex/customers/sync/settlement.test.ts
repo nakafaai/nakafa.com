@@ -1,10 +1,11 @@
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it, vi } from "@effect/vitest";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { settleCustomerSync } from "@repo/backend/convex/customers/sync/settlement";
+import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 /** Creates observable cleanup operations for settlement tests. */
 function createOperations() {
@@ -15,34 +16,37 @@ function createOperations() {
 }
 
 /** Creates real typed Convex IDs without test-only assertions. */
-function createSettlementIds() {
-  const t = convexTest(schema, convexModules);
-
-  return t.mutation(async (ctx) => {
-    const userId = await ctx.db.insert("users", {
-      authId: "auth-customer-settlement",
-      credits: 0,
-      creditsResetAt: 1,
-      email: "customer-settlement@example.com",
-      name: "Customer Settlement",
-      plan: "free",
-    });
-    const customerId = await ctx.db.insert("customers", {
-      externalId: "auth-customer-settlement",
-      id: "polar-customer-settlement",
-      metadata: {},
-      userId,
-    });
+const createSettlementIds = Effect.fn("customers.sync.test.createIds")(
+  function* (ctx: MutationCtx) {
+    const userId = yield* Effect.promise(() =>
+      ctx.db.insert("users", {
+        authId: "auth-customer-settlement",
+        credits: 0,
+        creditsResetAt: 1,
+        email: "customer-settlement@example.com",
+        name: "Customer Settlement",
+        plan: "free",
+      })
+    );
+    const customerId = yield* Effect.promise(() =>
+      ctx.db.insert("customers", {
+        externalId: "auth-customer-settlement",
+        id: "polar-customer-settlement",
+        metadata: {},
+        userId,
+      })
+    );
 
     return { customerId, userId };
-  });
-}
+  }
+);
 
 describe("customers/sync/settlement", () => {
   it.effect("returns the stored customer without cleanup", () =>
     Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
       const { customerId, userId } = yield* Effect.promise(() =>
-        createSettlementIds()
+        t.mutation((ctx) => runConvexProgram(createSettlementIds(ctx)))
       );
       const operations = createOperations();
 
@@ -62,7 +66,10 @@ describe("customers/sync/settlement", () => {
     "preserves Polar and local state during cancelable preparation",
     () =>
       Effect.gen(function* () {
-        const { userId } = yield* Effect.promise(() => createSettlementIds());
+        const t = convexTest(schema, convexModules);
+        const { userId } = yield* Effect.promise(() =>
+          t.mutation((ctx) => runConvexProgram(createSettlementIds(ctx)))
+        );
         const operations = createOperations();
 
         const failure = yield* settleCustomerSync(
@@ -84,7 +91,10 @@ describe("customers/sync/settlement", () => {
     "cleans irreversible $kind state",
     (result) =>
       Effect.gen(function* () {
-        const { userId } = yield* Effect.promise(() => createSettlementIds());
+        const t = convexTest(schema, convexModules);
+        const { userId } = yield* Effect.promise(() =>
+          t.mutation((ctx) => runConvexProgram(createSettlementIds(ctx)))
+        );
         const operations = createOperations();
 
         const failure = yield* settleCustomerSync(

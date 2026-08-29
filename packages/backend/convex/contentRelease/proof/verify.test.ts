@@ -23,6 +23,11 @@ import { contentKeyResolver } from "@repo/backend/content/trust";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { recomputeProgram } from "@repo/backend/convex/contentRelease/proof/verify";
 import { encodeArtifactJson } from "@repo/backend/convex/contentRelease/wire";
+import {
+  getUnknownErrorMessage,
+  runConvexActionProgram,
+  runConvexProgram,
+} from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
@@ -38,64 +43,97 @@ import {
   stageUpsertFixture,
 } from "@repo/backend/test/content/verify";
 import { convexTest, type TestConvex } from "convex-test";
-import { Effect, Schema, Stream } from "effect";
+import { Data, Effect, Schema, Stream } from "effect";
 
 const releaseId = ReleaseIdSchema.make("release-proof");
 const manifest = testEmptyManifest(releaseId);
 const signedRelease = testSignedRelease(manifest);
 const manifestHash = signedRelease.manifestHash;
 
+class ObservedProofFailure extends Schema.TaggedError<ObservedProofFailure>()(
+  "ObservedProofFailure",
+  { cause: Schema.Unknown }
+) {}
+
+class UnexpectedProofTestState extends Data.TaggedError(
+  "UnexpectedProofTestState"
+)<{
+  readonly operation:
+    | "load-candidate-manifest"
+    | "load-proof-release"
+    | "load-staged-artifact";
+}> {}
+
 /** Creates one isolated database for the production proof program. */
 function createProofTest() {
   return convexTest(schema, convexModules);
 }
 
-/** Runs the production proof inline across convex-test's component limitation. */
-function runProof(
-  t: TestConvex<typeof schema>,
-  hash = manifestHash,
-  resolver = TEST_KEY_RESOLVER
-) {
-  return recomputeContentProof(t, hash, releaseId, resolver);
-}
+/** Observes the production proof across convex-test's component limitation. */
+const runProof = Effect.fn("contentRelease.proof.verify.test.runProof")(
+  function* (
+    t: TestConvex<typeof schema>,
+    options: {
+      readonly hash?: string;
+      readonly releaseId?: string;
+      readonly resolver?: typeof TEST_KEY_RESOLVER;
+    } = {}
+  ) {
+    const hash = options.hash ?? manifestHash;
+    const proofReleaseId = options.releaseId ?? releaseId;
+    const resolver = options.resolver ?? TEST_KEY_RESOLVER;
+    return yield* Effect.tryPromise({
+      catch: (cause) => new ObservedProofFailure({ cause }),
+      try: () => recomputeContentProof(t, hash, proofReleaseId, resolver),
+    });
+  }
+);
 
 /** Inserts one empty but fully authenticated staged release. */
-async function insertRelease(ctx: MutationCtx) {
+const insertRelease = Effect.fn(
+  "contentRelease.proof.verify.test.insertRelease"
+)(function* (ctx: MutationCtx) {
   const now = Date.UTC(2026, 6, 22, 12, 0, 0);
-  await ctx.db.insert("contentReleases", {
-    baseFamilies: [],
-    checkedIndex: -1,
-    checkedItems: 0,
-    createdAt: now,
-    releaseId,
-    releaseJson: JSON.stringify(signedRelease),
-    rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
-    resultFamilies: [...signedRelease.manifest.scope.families],
-    role: "candidate",
-    sequence: 1,
-    stagedArtifacts: 0,
-    stagedDeletes: 0,
-    stagedItems: 0,
-    stagedProjections: 0,
-    stagedRoutes: 0,
-    stagedSnapshotBatches: 0,
-    stagedSnapshotRows: 0,
-    stagedUpserts: 0,
-    status: "staging",
-    updatedAt: now,
-  });
-  await ctx.db.insert("contentState", {
-    candidateManifestHash: manifestHash,
-    candidateReleaseId: releaseId,
-    candidateSequence: 1,
-    key: "primary",
-    nextSequence: 2,
-    updatedAt: now,
-  });
-}
+  yield* Effect.promise(() =>
+    ctx.db.insert("contentReleases", {
+      baseFamilies: [],
+      checkedIndex: -1,
+      checkedItems: 0,
+      createdAt: now,
+      releaseId,
+      releaseJson: JSON.stringify(signedRelease),
+      rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
+      resultFamilies: [...signedRelease.manifest.scope.families],
+      role: "candidate",
+      sequence: 1,
+      stagedArtifacts: 0,
+      stagedDeletes: 0,
+      stagedItems: 0,
+      stagedProjections: 0,
+      stagedRoutes: 0,
+      stagedSnapshotBatches: 0,
+      stagedSnapshotRows: 0,
+      stagedUpserts: 0,
+      status: "staging",
+      updatedAt: now,
+    })
+  );
+  yield* Effect.promise(() =>
+    ctx.db.insert("contentState", {
+      candidateManifestHash: manifestHash,
+      candidateReleaseId: releaseId,
+      candidateSequence: 1,
+      key: "primary",
+      nextSequence: 2,
+      updatedAt: now,
+    })
+  );
+});
 
 /** Inserts a multi-page authenticated delete-only release. */
-async function insertDeleteRelease(ctx: MutationCtx, count: number) {
+const insertDeleteRelease = Effect.fn(
+  "contentRelease.proof.verify.test.insertDeleteRelease"
+)(function* (ctx: MutationCtx, count: number) {
   const items = Array.from({ length: count }, (_, index) =>
     ContentReleaseItemSchema.make({
       change: {
@@ -108,11 +146,12 @@ async function insertDeleteRelease(ctx: MutationCtx, count: number) {
       releaseId,
     })
   );
-  const digest = Effect.runSync(
-    digestItems(releaseId, Stream.fromIterable(items))
+  const digest = yield* digestItems(releaseId, Stream.fromIterable(items)).pipe(
+    Effect.orDie
   );
-  const rollbackEntries = items.map((item) =>
-    RollbackSnapshotEntrySchema.make({
+  const entries = items.map((item) => ({
+    item,
+    rollbackEntry: RollbackSnapshotEntrySchema.make({
       index: item.index,
       releaseId,
       snapshot: {
@@ -121,11 +160,12 @@ async function insertDeleteRelease(ctx: MutationCtx, count: number) {
         artifactLocale: item.change.artifactLocale,
         state: "absent",
       },
-    })
-  );
-  const rollback = Effect.runSync(
-    digestRollbackSnapshot(releaseId, Stream.fromIterable(rollbackEntries))
-  );
+    }),
+  }));
+  const rollback = yield* digestRollbackSnapshot(
+    releaseId,
+    Stream.fromIterable(entries.map(({ rollbackEntry }) => rollbackEntry))
+  ).pipe(Effect.orDie);
   const nextManifest = ContentReleaseManifestSchema.make({
     ...manifest,
     deleteCount: count,
@@ -137,195 +177,310 @@ async function insertDeleteRelease(ctx: MutationCtx, count: number) {
   });
   const signed = testSignedRelease(nextManifest);
   const now = Date.UTC(2026, 6, 22, 12, 0, 0);
-  await ctx.db.insert("contentReleases", {
-    baseFamilies: [],
-    checkedIndex: -1,
-    checkedItems: 0,
-    createdAt: now,
-    releaseId,
-    releaseJson: JSON.stringify(signed),
-    rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
-    resultFamilies: [...signed.manifest.scope.families],
-    role: "candidate",
-    sequence: 1,
-    stagedArtifacts: 0,
-    stagedDeletes: count,
-    stagedItems: count,
-    stagedProjections: 0,
-    stagedRoutes: 0,
-    stagedSnapshotBatches: 0,
-    stagedSnapshotRows: 0,
-    stagedUpserts: 0,
-    status: "staging",
-    updatedAt: now,
-  });
-  await ctx.db.insert("contentState", {
-    candidateManifestHash: signed.manifestHash,
-    candidateReleaseId: releaseId,
-    candidateSequence: 1,
-    key: "primary",
-    nextSequence: 2,
-    updatedAt: now,
-  });
-  for (const [index, item] of items.entries()) {
-    const rollbackEntry = rollbackEntries[index];
-    if (!rollbackEntry) {
-      throw new Error(`Expected rollback entry ${index}.`);
-    }
-    await ctx.db.insert("contentItems", {
-      artifactReady: false,
-      contentKey: item.change.contentKey,
-      index: item.index,
-      itemBatchHash: digest.digest,
-      itemBatchIndex: Math.floor(item.index / 4),
-      itemJson: JSON.stringify(item),
-      artifactLocale: item.change.artifactLocale,
-      projectionReady: false,
+  yield* Effect.promise(() =>
+    ctx.db.insert("contentReleases", {
+      baseFamilies: [],
+      checkedIndex: -1,
+      checkedItems: 0,
+      createdAt: now,
       releaseId,
-      rollbackJson: canonicalizeRollbackSnapshotEntry(rollbackEntry),
+      releaseJson: JSON.stringify(signed),
+      rendererJson: JSON.stringify(TEST_PROOF_RENDERER),
+      resultFamilies: [...signed.manifest.scope.families],
+      role: "candidate",
       sequence: 1,
-      stagedAt: now,
-    });
-  }
+      stagedArtifacts: 0,
+      stagedDeletes: count,
+      stagedItems: count,
+      stagedProjections: 0,
+      stagedRoutes: 0,
+      stagedSnapshotBatches: 0,
+      stagedSnapshotRows: 0,
+      stagedUpserts: 0,
+      status: "staging",
+      updatedAt: now,
+    })
+  );
+  yield* Effect.promise(() =>
+    ctx.db.insert("contentState", {
+      candidateManifestHash: signed.manifestHash,
+      candidateReleaseId: releaseId,
+      candidateSequence: 1,
+      key: "primary",
+      nextSequence: 2,
+      updatedAt: now,
+    })
+  );
+  yield* Effect.forEach(
+    entries,
+    ({ item, rollbackEntry }) =>
+      Effect.promise(() =>
+        ctx.db.insert("contentItems", {
+          artifactReady: false,
+          contentKey: item.change.contentKey,
+          index: item.index,
+          itemBatchHash: digest.digest,
+          itemBatchIndex: Math.floor(item.index / 4),
+          itemJson: JSON.stringify(item),
+          artifactLocale: item.change.artifactLocale,
+          projectionReady: false,
+          releaseId,
+          rollbackJson: canonicalizeRollbackSnapshotEntry(rollbackEntry),
+          sequence: 1,
+          stagedAt: now,
+        })
+      ),
+    { discard: true }
+  );
   return signed.manifestHash;
-}
+});
 
 /** Changes only the stored signature while preserving its claimed identity. */
-function tamperArtifactSignature(artifactJson: string) {
-  const artifact = Schema.decodeUnknownSync(SignedContentArtifactSchema)(
-    JSON.parse(artifactJson)
-  );
+const tamperArtifactSignature = Effect.fn(
+  "contentRelease.proof.verify.test.tamperArtifactSignature"
+)(function* (artifactJson: string) {
+  const artifact = yield* Schema.decodeEffect(
+    Schema.fromJsonString(SignedContentArtifactSchema)
+  )(artifactJson);
   const firstCharacter = artifact.signature.startsWith("A") ? "B" : "A";
   const signature = Ed25519SignatureSchema.make(
     `${firstCharacter}${artifact.signature.slice(1)}`
   );
   return encodeArtifactJson({ ...artifact, signature });
-}
+});
+
+/** Loads one staged proof release or defects on an invalid fixture. */
+const loadProofRelease = Effect.fn(
+  "contentRelease.proof.verify.test.loadProofRelease"
+)(function* (ctx: MutationCtx) {
+  const release = yield* Effect.promise(() =>
+    ctx.db.query("contentReleases").unique()
+  );
+  if (!release) {
+    return yield* Effect.die(
+      new UnexpectedProofTestState({ operation: "load-proof-release" })
+    );
+  }
+  return release;
+});
+
+/** Corrupts the frozen renderer while preserving the release identity. */
+const driftStoredRenderer = Effect.fn(
+  "contentRelease.proof.verify.test.driftStoredRenderer"
+)(function* (ctx: MutationCtx) {
+  const release = yield* loadProofRelease(ctx);
+  yield* Effect.promise(() =>
+    ctx.db.patch("contentReleases", release._id, {
+      rendererJson: JSON.stringify(testProofRenderer("h1")),
+    })
+  );
+});
+
+/** Corrupts durable counters after the release entered verification. */
+const driftDurableCounters = Effect.fn(
+  "contentRelease.proof.verify.test.driftDurableCounters"
+)(function* (ctx: MutationCtx) {
+  const release = yield* loadProofRelease(ctx);
+  yield* Effect.promise(() =>
+    ctx.db.patch("contentReleases", release._id, {
+      stagedItems: 1,
+      status: "verifying",
+    })
+  );
+});
+
+/** Corrupts one staged artifact signature inside the real test transaction. */
+const tamperStoredArtifact = Effect.fn(
+  "contentRelease.proof.verify.test.tamperStoredArtifact"
+)(function* (ctx: MutationCtx) {
+  const artifact = yield* Effect.promise(() =>
+    ctx.db.query("contentArtifacts").unique()
+  );
+  if (!artifact) {
+    return yield* Effect.die(
+      new UnexpectedProofTestState({ operation: "load-staged-artifact" })
+    );
+  }
+  const artifactJson = yield* tamperArtifactSignature(
+    artifact.artifactJson
+  ).pipe(Effect.orDie);
+  yield* Effect.promise(() =>
+    ctx.db.patch("contentArtifacts", artifact._id, { artifactJson })
+  );
+});
 
 describe("contentRelease/proof/verify", () => {
-  it("recomputes an authenticated empty proof and commits it exactly once", async () => {
-    const t = createProofTest();
-    await t.mutation(insertRelease);
+  it.effect(
+    "recomputes an authenticated empty proof and commits it exactly once",
+    Effect.fn("contentRelease.proof.verify.test.recomputesEmptyProof")(
+      function* () {
+        const t = createProofTest();
+        yield* Effect.promise(() =>
+          t.mutation((ctx) => runConvexProgram(insertRelease(ctx)))
+        );
 
-    const proof = await runProof(t);
-    const release = await t.run((ctx) =>
-      ctx.db.query("contentReleases").unique()
-    );
+        const proof = yield* runProof(t);
+        const release = yield* Effect.promise(() =>
+          t.run((ctx) => ctx.db.query("contentReleases").unique())
+        );
 
-    expect(proof).toMatchObject({
-      itemCount: 0,
-      manifestHash,
-      releaseId,
-      stagedArtifacts: 0,
-    });
-    expect(release).toMatchObject({
-      checkedItems: 0,
-      proofJson: JSON.stringify(proof),
-      status: "verifying",
-    });
-  });
+        expect(proof).toMatchObject({
+          itemCount: 0,
+          manifestHash,
+          releaseId,
+          stagedArtifacts: 0,
+        });
+        expect(release).toMatchObject({
+          checkedItems: 0,
+          proofJson: JSON.stringify(proof),
+          status: "verifying",
+        });
+      }
+    )
+  );
 
-  it("fails closed when no production key has been reviewed", async () => {
-    const t = createProofTest();
-    await t.mutation(insertRelease);
+  it.effect(
+    "fails closed when no production key has been reviewed",
+    Effect.fn("contentRelease.proof.verify.test.rejectsMissingKey")(
+      function* () {
+        const t = createProofTest();
+        yield* Effect.promise(() =>
+          t.mutation((ctx) => runConvexProgram(insertRelease(ctx)))
+        );
 
-    await expect(runProof(t, manifestHash, contentKeyResolver)).rejects.toThrow(
-      "Content release verification failed with SigningKeyNotFoundError."
-    );
-  });
+        const failure = yield* runProof(t, {
+          resolver: contentKeyResolver,
+        }).pipe(Effect.flip);
+        expect(getUnknownErrorMessage(failure.cause)).toContain(
+          "Content release verification failed with SigningKeyNotFoundError."
+        );
+      }
+    )
+  );
 
-  it("recovers stable internal failures into the typed channel", async () => {
-    const t = createProofTest();
+  it.effect(
+    "recovers stable internal failures into the typed channel",
+    Effect.fn("contentRelease.proof.verify.test.recoversTypedFailure")(
+      function* () {
+        const t = createProofTest();
 
-    const result = await t.action((ctx) =>
-      Effect.runPromise(
-        recomputeProgram(ctx, manifestHash, releaseId, 0).pipe(
-          Effect.match({
-            onFailure: (error) => ({ code: error.code, tag: error._tag }),
-            onSuccess: () => ({ code: null, tag: null }),
-          }),
-          Effect.provideService(
-            ContentVerificationKeyResolver,
-            TEST_KEY_RESOLVER
+        const result = yield* Effect.promise(() =>
+          t.action((ctx) =>
+            runConvexActionProgram(
+              recomputeProgram(ctx, manifestHash, releaseId, 0).pipe(
+                Effect.match({
+                  onFailure: (error) => ({
+                    code: error.code,
+                    tag: error._tag,
+                  }),
+                  onSuccess: () => ({ code: null, tag: null }),
+                }),
+                Effect.provideService(
+                  ContentVerificationKeyResolver,
+                  TEST_KEY_RESOLVER
+                )
+              )
+            )
           )
-        )
-      )
-    );
+        );
 
-    expect(result).toEqual({
-      code: "CONTENT_RELEASE_MISSING",
-      tag: "ReleaseError",
-    });
-  });
-
-  it("replays multi-page item and proof streams before committing", async () => {
-    const t = createProofTest();
-    const hash = await t.mutation((ctx) => insertDeleteRelease(ctx, 9));
-
-    const proof = await runProof(t, hash);
-    expect(proof).toMatchObject({
-      deleteHeads: 9,
-      itemCount: 9,
-      stagedArtifacts: 0,
-      upsertHeads: 0,
-    });
-  });
-
-  it("rejects renderer and durable counter drift", async () => {
-    const rendererDrift = createProofTest();
-    await rendererDrift.mutation(insertRelease);
-    const changedRenderer = testProofRenderer("h1");
-    await rendererDrift.mutation(async (ctx) => {
-      const release = await ctx.db.query("contentReleases").unique();
-      if (!release) {
-        throw new Error("Expected proof release.");
+        expect(result).toEqual({
+          code: "CONTENT_RELEASE_MISSING",
+          tag: "ReleaseError",
+        });
       }
-      await ctx.db.patch("contentReleases", release._id, {
-        rendererJson: JSON.stringify(changedRenderer),
-      });
-    });
-    await expect(runProof(rendererDrift)).rejects.toThrow(
-      "no longer matches its frozen renderer"
-    );
+    )
+  );
 
-    const counters = createProofTest();
-    await counters.mutation(insertRelease);
-    await counters.mutation(async (ctx) => {
-      const release = await ctx.db.query("contentReleases").unique();
-      if (!release) {
-        throw new Error("Expected proof release.");
+  it.effect(
+    "replays multi-page item and proof streams before committing",
+    Effect.fn("contentRelease.proof.verify.test.replaysPagedProof")(
+      function* () {
+        const t = createProofTest();
+        const hash = yield* Effect.promise(() =>
+          t.mutation((ctx) => runConvexProgram(insertDeleteRelease(ctx, 9)))
+        );
+
+        const proof = yield* runProof(t, { hash });
+        expect(proof).toMatchObject({
+          deleteHeads: 9,
+          itemCount: 9,
+          stagedArtifacts: 0,
+          upsertHeads: 0,
+        });
       }
-      await ctx.db.patch("contentReleases", release._id, {
-        stagedItems: 1,
-        status: "verifying",
-      });
-    });
-    await expect(runProof(counters)).rejects.toThrow("lost durable progress");
-  });
+    )
+  );
 
-  it("reauthenticates stored artifacts before committing proof", async () => {
-    const t = createProofTest();
-    await stageUpsertFixture(t);
-    const state = await t.run((ctx) => ctx.db.query("contentState").unique());
-    if (!state?.candidateManifestHash) {
-      throw new Error("Expected a candidate manifest for artifact proof.");
-    }
-    await t.mutation(async (ctx) => {
-      const artifact = await ctx.db.query("contentArtifacts").unique();
-      if (!artifact) {
-        throw new Error("Expected one staged artifact.");
+  it.effect(
+    "rejects renderer and durable counter drift",
+    Effect.fn("contentRelease.proof.verify.test.rejectsDurableDrift")(
+      function* () {
+        const rendererDrift = createProofTest();
+        yield* Effect.promise(() =>
+          rendererDrift.mutation((ctx) => runConvexProgram(insertRelease(ctx)))
+        );
+        yield* Effect.promise(() =>
+          rendererDrift.mutation((ctx) =>
+            runConvexProgram(driftStoredRenderer(ctx))
+          )
+        );
+        const rendererFailure = yield* runProof(rendererDrift).pipe(
+          Effect.flip
+        );
+        expect(getUnknownErrorMessage(rendererFailure.cause)).toContain(
+          "no longer matches its frozen renderer"
+        );
+
+        const counters = createProofTest();
+        yield* Effect.promise(() =>
+          counters.mutation((ctx) => runConvexProgram(insertRelease(ctx)))
+        );
+        yield* Effect.promise(() =>
+          counters.mutation((ctx) =>
+            runConvexProgram(driftDurableCounters(ctx))
+          )
+        );
+        const counterFailure = yield* runProof(counters).pipe(Effect.flip);
+        expect(getUnknownErrorMessage(counterFailure.cause)).toContain(
+          "lost durable progress"
+        );
       }
-      await ctx.db.patch("contentArtifacts", artifact._id, {
-        artifactJson: tamperArtifactSignature(artifact.artifactJson),
-      });
-    });
+    )
+  );
 
-    await expect(
-      recomputeContentProof(t, state.candidateManifestHash, TEST_RELEASE_ID)
-    ).rejects.toThrow("Content release verification failed");
-    const release = await t.run((ctx) =>
-      ctx.db.query("contentReleases").unique()
-    );
-    expect(release?.proofJson).toBeUndefined();
-  });
+  it.effect(
+    "reauthenticates stored artifacts before committing proof",
+    Effect.fn("contentRelease.proof.verify.test.reauthenticatesArtifacts")(
+      function* () {
+        const t = createProofTest();
+        yield* Effect.promise(() => stageUpsertFixture(t));
+        const state = yield* Effect.promise(() =>
+          t.run((ctx) => ctx.db.query("contentState").unique())
+        );
+        if (!state?.candidateManifestHash) {
+          return yield* Effect.die(
+            new UnexpectedProofTestState({
+              operation: "load-candidate-manifest",
+            })
+          );
+        }
+        yield* Effect.promise(() =>
+          t.mutation((ctx) => runConvexProgram(tamperStoredArtifact(ctx)))
+        );
+
+        const failure = yield* runProof(t, {
+          hash: state.candidateManifestHash,
+          releaseId: TEST_RELEASE_ID,
+        }).pipe(Effect.flip);
+        expect(getUnknownErrorMessage(failure.cause)).toContain(
+          "Content release verification failed"
+        );
+        const release = yield* Effect.promise(() =>
+          t.run((ctx) => ctx.db.query("contentReleases").unique())
+        );
+        expect(release?.proofJson).toBeUndefined();
+      }
+    )
+  );
 });
