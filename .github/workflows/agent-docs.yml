@@ -350,6 +350,13 @@ jobs:
           SITE_URL=$SITE_URL
           EOF
 
+      - name: Compile anonymous local backend
+        run: |
+          pnpm --dir packages/backend exec convex dev \
+            --once \
+            --typecheck enable \
+            --tail-logs disable
+
       - name: Start anonymous local backend
         run: |
           umask 077
@@ -359,7 +366,8 @@ jobs:
           : > "$convex_log"
           chmod 600 "$convex_log"
           setsid pnpm --dir packages/backend exec convex dev \
-            --typecheck enable \
+            --codegen disable \
+            --typecheck disable \
             --tail-logs always > "$convex_log" 2>&1 &
           echo "$!" > "$convex_pid"
 

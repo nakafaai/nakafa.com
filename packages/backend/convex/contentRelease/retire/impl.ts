@@ -18,10 +18,12 @@ import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failu
 import {
   deleteLegacyBundles,
   loadLegacyBundles,
+  verifyLegacyBundleSet,
+} from "@repo/backend/convex/contentRelease/retire/legacy";
+import {
   type RetirementRuntimeContract,
   requirePermanentAttemptOwnership,
   retirementRuntimeContract,
-  verifyLegacyBundleSet,
 } from "@repo/backend/convex/contentRelease/retire/runtime";
 import {
   countScaleRepairRows,
@@ -126,6 +128,7 @@ export const retireRuntimeState = Effect.fn("contentRelease.retire")(function* (
   observationInput: string,
   receiptJson: string,
   proofInput: unknown,
+  runtimeProofHash: string,
   runtimeContract: RetirementRuntimeContract = retirementRuntimeContract
 ) {
   const observationId = yield* decodePredecessorObservationId(observationInput);
@@ -151,6 +154,7 @@ export const retireRuntimeState = Effect.fn("contentRelease.retire")(function* (
   const rows = yield* loadPredecessorRows(ctx);
   const permanentAttempts = yield* requirePermanentAttemptOwnership(
     ctx,
+    runtimeProofHash,
     runtimeContract
   );
   const legacyBundles = yield* loadLegacyBundles(ctx, runtimeContract);

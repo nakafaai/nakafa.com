@@ -1,8 +1,8 @@
 import {
   hashLegacyBundleSet,
   loadLegacyBundles,
-  type RetirementRuntimeContract,
-} from "@repo/backend/convex/contentRelease/retire/runtime";
+} from "@repo/backend/convex/contentRelease/retire/legacy";
+import type { RetirementRuntimeContract } from "@repo/backend/convex/contentRelease/retire/runtime";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type schema from "@repo/backend/convex/schema";
 import { storeRuntimeFixture } from "@repo/backend/test/runtime/bundle";

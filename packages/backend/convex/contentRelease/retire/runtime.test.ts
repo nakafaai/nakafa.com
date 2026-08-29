@@ -1,24 +1,18 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Ed25519SignatureSchema } from "@nakafa/aksara-contracts/ids";
-import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
-  deleteLegacyBundles,
-  loadLegacyBundles,
+  loadRuntimeBundleSource,
+  loadRuntimeOwnershipProof,
   type RetirementRuntimeContract,
   requirePermanentAttemptOwnership,
-  verifyLegacyBundleSet,
 } from "@repo/backend/convex/contentRelease/retire/runtime";
 import { reconcileTryoutRuntimeAfterAttempt } from "@repo/backend/convex/contentRelease/tryout/runtime";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
-import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
-import {
-  seedRetirementRuntime,
-  TEST_LEGACY_BUNDLE_COUNT,
-} from "@repo/backend/test/runtime/retirement";
+import { seedRetirementRuntime } from "@repo/backend/test/runtime/retirement";
 import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
 
@@ -27,46 +21,29 @@ class TestMutationError extends Schema.TaggedError<TestMutationError>()(
   { cause: Schema.Unknown }
 ) {}
 
-const proveOwnership = Effect.fn("test.retire.proveOwnership")(
-  (ctx: MutationCtx, contract: RetirementRuntimeContract) =>
-    requirePermanentAttemptOwnership(ctx, contract).pipe(
-      Effect.provideService(ContentVerificationKeyResolver, TEST_KEY_RESOLVER)
-    )
-);
+const proveOwnership = Effect.fn("test.retire.proveOwnership")(function* (
+  ctx: MutationCtx,
+  contract: RetirementRuntimeContract,
+  expectedProofHash?: string
+) {
+  const proofHash =
+    expectedProofHash ?? (yield* loadRuntimeOwnershipProof(ctx, contract)).hash;
+  return yield* requirePermanentAttemptOwnership(ctx, proofHash, contract);
+});
 
 describe("contentRelease/retire/runtime", () => {
-  it.effect("proves permanent ownership and deletes one exact legacy set", () =>
+  it.effect("proves one complete permanent ownership snapshot", () =>
     Effect.gen(function* () {
       const target = convexTest(schema, convexModules);
       const { contract } = yield* seedRetirementRuntime(target);
 
-      const result = yield* Effect.promise(() =>
+      const permanentAttempts = yield* Effect.promise(() =>
         target.mutation((ctx) =>
-          runConvexProgram(
-            Effect.gen(function* () {
-              const permanentAttempts = yield* proveOwnership(ctx, contract);
-              const bundles = yield* verifyLegacyBundleSet(
-                yield* loadLegacyBundles(ctx, contract),
-                contract
-              );
-              const deleted = yield* deleteLegacyBundles(ctx, bundles);
-              return {
-                deleted,
-                permanentAttempts,
-                remaining: yield* Effect.promise(() =>
-                  ctx.db.query("tryoutBundles").collect()
-                ),
-              };
-            })
-          )
+          runConvexProgram(proveOwnership(ctx, contract))
         )
       );
 
-      expect(result).toEqual({
-        deleted: TEST_LEGACY_BUNDLE_COUNT,
-        permanentAttempts: 1,
-        remaining: [],
-      });
+      expect(permanentAttempts).toBe(1);
     })
   );
 
@@ -161,10 +138,19 @@ describe("contentRelease/retire/runtime", () => {
     })
   );
 
-  it.effect("rejects unauthenticated finalization bundle bytes", () =>
+  it.effect("rejects bytes changed after Node authentication", () =>
     Effect.gen(function* () {
       const target = convexTest(schema, convexModules);
       const { contract } = yield* seedRetirementRuntime(target);
+      const proof = yield* Effect.promise(() =>
+        target.query((ctx) =>
+          runConvexProgram(loadRuntimeOwnershipProof(ctx, contract))
+        )
+      );
+      const expected = proof.bundles[0];
+      if (!expected) {
+        return yield* Effect.die("Expected one permanent runtime proof.");
+      }
       yield* Effect.promise(() =>
         target.mutation(async (ctx) => {
           const stored = await ctx.db.query("tryoutRuntimeBundles").unique();
@@ -184,14 +170,24 @@ describe("contentRelease/retire/runtime", () => {
         })
       );
 
+      const sourceFailure = yield* Effect.tryPromise({
+        try: () =>
+          target.query((ctx) =>
+            runConvexProgram(loadRuntimeBundleSource(ctx, expected))
+          ),
+        catch: (cause) => new TestMutationError({ cause }),
+      }).pipe(Effect.flip);
       const failure = yield* Effect.tryPromise({
         try: () =>
           target.mutation((ctx) =>
-            runConvexProgram(proveOwnership(ctx, contract))
+            runConvexProgram(proveOwnership(ctx, contract, proof.hash))
           ),
         catch: (cause) => new TestMutationError({ cause }),
       }).pipe(Effect.flip);
 
+      expect(sourceFailure.cause).toMatchObject({
+        data: { code: "CONTENT_RELEASE_INTEGRITY" },
+      });
       expect(failure.cause).toMatchObject({
         data: { code: "CONTENT_RELEASE_INTEGRITY" },
       });
@@ -214,45 +210,6 @@ describe("contentRelease/retire/runtime", () => {
         try: () =>
           target.mutation((ctx) =>
             runConvexProgram(proveOwnership(ctx, contract))
-          ),
-        catch: (cause) => new TestMutationError({ cause }),
-      }).pipe(Effect.flip);
-
-      expect(failure.cause).toMatchObject({
-        data: { code: "CONTENT_RELEASE_INTEGRITY" },
-      });
-    })
-  );
-
-  it.effect("rejects changed bytes in the exact legacy identity set", () =>
-    Effect.gen(function* () {
-      const target = convexTest(schema, convexModules);
-      const { contract } = yield* seedRetirementRuntime(target);
-      const changed = yield* Effect.promise(() =>
-        target.mutation(async (ctx) => {
-          const legacy = await ctx.db.query("tryoutBundles").first();
-          if (!legacy) {
-            return false;
-          }
-          await ctx.db.patch("tryoutBundles", legacy._id, {
-            releaseJson: JSON.stringify({ changed: true }),
-          });
-          return true;
-        })
-      );
-      expect(changed).toBe(true);
-
-      const failure = yield* Effect.tryPromise({
-        try: () =>
-          target.mutation((ctx) =>
-            runConvexProgram(
-              Effect.gen(function* () {
-                yield* verifyLegacyBundleSet(
-                  yield* loadLegacyBundles(ctx, contract),
-                  contract
-                );
-              })
-            )
           ),
         catch: (cause) => new TestMutationError({ cause }),
       }).pipe(Effect.flip);

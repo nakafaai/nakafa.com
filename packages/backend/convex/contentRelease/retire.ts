@@ -1,77 +1,111 @@
+"use node";
+
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
+import { verifySignedTryoutRuntimeBundle } from "@nakafa/aksara-contracts/tryout/runtime/verify";
 import { contentKeyResolver } from "@repo/backend/content/trust";
-import { internalMutation } from "@repo/backend/convex/_generated/server";
-import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import { retireRuntimeState } from "@repo/backend/convex/contentRelease/retire/impl";
-import { runConvexProgram } from "@repo/backend/convex/lib/effect";
-import { cleanupProofValidator } from "@repo/backend/convex/tryouts/migration/cleanup/schema";
-import { type Infer, v } from "convex/values";
+import type { ActionCtx } from "@repo/backend/convex/_generated/server";
+import { internalAction } from "@repo/backend/convex/_generated/server";
+import {
+  type ReleaseError,
+  releaseFail,
+} from "@repo/backend/convex/contentRelease/error";
+import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
+import {
+  decodeRendererJson,
+  decodeTryoutRuntimeBundleJson,
+} from "@repo/backend/convex/contentRelease/parse";
+import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
+import {
+  type RetirementArgs,
+  type RetirementBundleProof,
+  type RetirementBundleSource,
+  type RetirementInventory,
+  type RetirementResult,
+  retirementArgsValidator,
+  retirementResultValidator,
+} from "@repo/backend/convex/contentRelease/retire/spec";
+import { runConvexActionProgram } from "@repo/backend/convex/lib/effect";
+import { makeFunctionReference } from "convex/server";
 import { Effect } from "effect";
 
-const retirementArgsValidator = v.object({
-  observationId: v.string(),
-  proof: cleanupProofValidator,
-  receiptJson: v.string(),
-});
+export interface RetirementGateway {
+  readonly commit: (
+    args: RetirementArgs & { readonly runtimeProofHash: string }
+  ) => Effect.Effect<RetirementResult, ReleaseError>;
+  readonly loadBundle: (
+    args: RetirementBundleProof
+  ) => Effect.Effect<RetirementBundleSource, ReleaseError>;
+  readonly loadInventory: Effect.Effect<RetirementInventory, ReleaseError>;
+}
 
-const retirementResultValidator = v.object({
-  deleted: v.union(v.literal(0), v.literal(14)),
-  deletedLegacyBundles: v.union(v.literal(0), v.literal(9)),
-  migrationId: v.string(),
-  observationId: v.string(),
-  permanentAttempts: v.number(),
-  receiptHash: v.string(),
-  retiredAt: v.number(),
-});
-type RetirementResult = Infer<typeof retirementResultValidator>;
+const inventoryReference = makeFunctionReference<
+  "query",
+  Record<string, never>,
+  RetirementInventory
+>("contentRelease/retire/source:inventory");
+const bundleReference = makeFunctionReference<
+  "query",
+  {
+    bundleHash: string;
+    bundleJsonHash: string;
+    rendererJsonHash: string;
+  },
+  RetirementBundleSource
+>("contentRelease/retire/source:bundle");
+const commitReference = makeFunctionReference<
+  "mutation",
+  RetirementArgs & { runtimeProofHash: string },
+  RetirementResult
+>("contentRelease/retire/commit:commit");
 
-const requireProductionResult = Effect.fn(
-  "contentRelease.retire.requireProductionResult"
-)(function* (result: {
-  readonly deleted: number;
-  readonly deletedLegacyBundles: number;
-  readonly migrationId: string;
-  readonly observationId: string;
-  readonly permanentAttempts: number;
-  readonly receiptHash: string;
-  readonly retiredAt: number;
-}) {
-  if (result.deleted === 0 && result.deletedLegacyBundles === 0) {
-    return {
-      ...result,
-      deleted: 0,
-      deletedLegacyBundles: 0,
-    } satisfies RetirementResult;
+/** Binds terminal retirement to its exact internal read and write capabilities. */
+function makeRetirementGateway(ctx: ActionCtx): RetirementGateway {
+  return {
+    commit: (args) =>
+      callInternal(() => ctx.runMutation(commitReference, args)),
+    loadBundle: (args) =>
+      callInternal(() => ctx.runQuery(bundleReference, args)),
+    loadInventory: callInternal(() => ctx.runQuery(inventoryReference, {})),
+  };
+}
+
+/** Authenticates every distinct permanent bundle before one atomic contraction. */
+export const dispatchRetirement = Effect.fn("contentRelease.retire.dispatch")(
+  function* (gateway: RetirementGateway, args: RetirementArgs) {
+    const inventory = yield* gateway.loadInventory;
+    yield* Effect.forEach(inventory.bundles, (expected) =>
+      Effect.gen(function* () {
+        const source = yield* gateway.loadBundle(expected);
+        const [bundle, renderer] = yield* Effect.all([
+          decodeTryoutRuntimeBundleJson(source.bundleJson),
+          decodeRendererJson(source.rendererJson),
+        ]);
+        const verified = yield* verifySignedTryoutRuntimeBundle({
+          bundle,
+          rendererManifest: renderer,
+        }).pipe(Effect.mapError(contractFailure));
+        if (verified.bundleHash !== expected.bundleHash) {
+          return yield* releaseFail(
+            "CONTENT_RELEASE_INTEGRITY",
+            "Runtime retirement authenticated a different permanent bundle."
+          );
+        }
+      })
+    );
+    return yield* gateway.commit({
+      ...args,
+      runtimeProofHash: inventory.hash,
+    });
   }
-  if (result.deleted === 14 && result.deletedLegacyBundles === 9) {
-    return {
-      ...result,
-      deleted: 14,
-      deletedLegacyBundles: 9,
-    } satisfies RetirementResult;
-  }
-  return yield* releaseFail(
-    "CONTENT_RELEASE_INTEGRITY",
-    "Runtime retirement produced an unexpected production deletion count."
-  );
-});
+);
 
-/** Removes the last audited rows after migration and predecessor contraction. */
-export const retire = internalMutation({
+/** Node boundary for signed runtime authentication before terminal deletion. */
+export const retire = internalAction({
   args: retirementArgsValidator,
   returns: retirementResultValidator,
   handler: (ctx, args) =>
-    runConvexProgram(
-      Effect.gen(function* () {
-        return yield* requireProductionResult(
-          yield* retireRuntimeState(
-            ctx,
-            args.observationId,
-            args.receiptJson,
-            args.proof
-          )
-        );
-      }).pipe(
+    runConvexActionProgram(
+      dispatchRetirement(makeRetirementGateway(ctx), args).pipe(
         Effect.provideService(
           ContentVerificationKeyResolver,
           contentKeyResolver
