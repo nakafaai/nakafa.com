@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { hashText } from "@repo/backend/convex/contentRelease/digest";
-import { backfillRuntimeAttempts } from "@repo/backend/convex/contentRelease/finalize/backfill";
+import { backfillRuntimeAttempts } from "@repo/backend/convex/contentRelease/finalize/impl";
 import { hashFinalizationPlacements } from "@repo/backend/convex/contentRelease/finalize/proof";
 import {
   FINALIZATION_ATTEMPT_SET_DOMAIN,
@@ -211,6 +211,39 @@ describe("contentRelease/finalize/backfill", () => {
         )
       );
       expect(genesis).toBeNull();
+    })
+  );
+
+  it.effect("rejects a corrupted permanent target before binding it", () =>
+    Effect.gen(function* () {
+      const target = createConvexTestWithBetterAuth();
+      const seeded = yield* seedFinalizationState(target);
+      yield* Effect.promise(() =>
+        target.mutation((ctx) =>
+          ctx.db.patch("tryoutRuntimeBundles", seeded.targetBundle._id, {
+            sourceGitSha: "corrupted-source",
+          })
+        )
+      );
+
+      const failure = yield* runBackfill(target, seeded).pipe(Effect.flip);
+      expect(failure.cause).toMatchObject({
+        data: { code: "CONTENT_RELEASE_INTEGRITY" },
+      });
+      const state = yield* Effect.promise(() =>
+        target.run(async (ctx) => ({
+          attempt: await ctx.db.get(seeded.attempt._id),
+          genesis: await ctx.db
+            .query("tryoutRuntimeBundles")
+            .withIndex("by_bundleHash", (query) =>
+              query.eq("bundleHash", seeded.genesis.bundle.bundleHash)
+            )
+            .unique(),
+        }))
+      );
+      expect(state.attempt).not.toHaveProperty("tryoutBundleHash");
+      expect(state.attempt).not.toHaveProperty("tryoutBundleId");
+      expect(state.genesis).toBeNull();
     })
   );
 });

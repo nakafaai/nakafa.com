@@ -149,6 +149,7 @@ import type * as contentRelease_envelope from "../contentRelease/envelope.js";
 import type * as contentRelease_error from "../contentRelease/error.js";
 import type * as contentRelease_finalize_backfill from "../contentRelease/finalize/backfill.js";
 import type * as contentRelease_finalize_dispatch from "../contentRelease/finalize/dispatch.js";
+import type * as contentRelease_finalize_impl from "../contentRelease/finalize/impl.js";
 import type * as contentRelease_finalize_proof from "../contentRelease/finalize/proof.js";
 import type * as contentRelease_finalize_source from "../contentRelease/finalize/source.js";
 import type * as contentRelease_finalize_spec from "../contentRelease/finalize/spec.js";
@@ -793,6 +794,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/error": typeof contentRelease_error;
   "contentRelease/finalize/backfill": typeof contentRelease_finalize_backfill;
   "contentRelease/finalize/dispatch": typeof contentRelease_finalize_dispatch;
+  "contentRelease/finalize/impl": typeof contentRelease_finalize_impl;
   "contentRelease/finalize/proof": typeof contentRelease_finalize_proof;
   "contentRelease/finalize/source": typeof contentRelease_finalize_source;
   "contentRelease/finalize/spec": typeof contentRelease_finalize_spec;

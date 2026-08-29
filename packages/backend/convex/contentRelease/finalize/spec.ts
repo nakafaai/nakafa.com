@@ -6,7 +6,7 @@ import {
   type AppLocaleCode,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { Schema } from "effect";
+import { type Infer, v } from "convex/values";
 
 /** Exact predecessor-bound attempt class selected for terminal expansion. */
 export interface FinalizationAttemptSpec {
@@ -135,11 +135,11 @@ export interface FinalizationContract {
   readonly genesisIdentity: FinalizationGenesisIdentity;
 }
 
-/** Strict receipt returned by the terminal expansion action. */
-export const FinalizationReceiptSchema = Schema.Struct({
-  backfilledAttempts: Schema.Finite,
-  bundleCreated: Schema.Literals([0, 1]),
-  permanentAttempts: Schema.Finite,
-  placementCount: Schema.Finite,
+/** Single runtime and type contract for the terminal expansion receipt. */
+export const finalizationReceiptValidator = v.object({
+  backfilledAttempts: v.number(),
+  bundleCreated: v.union(v.literal(0), v.literal(1)),
+  permanentAttempts: v.number(),
+  placementCount: v.number(),
 });
-export type FinalizationReceipt = typeof FinalizationReceiptSchema.Type;
+export type FinalizationReceipt = Infer<typeof finalizationReceiptValidator>;

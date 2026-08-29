@@ -13,8 +13,11 @@ import {
   type ReleaseError,
   releaseFail,
 } from "@repo/backend/convex/contentRelease/error";
-import { finalizationReceiptValidator } from "@repo/backend/convex/contentRelease/finalize/backfill";
-import { GENESIS_BUNDLE_HASH } from "@repo/backend/convex/contentRelease/finalize/spec";
+import {
+  type FinalizationReceipt,
+  finalizationReceiptValidator,
+  GENESIS_BUNDLE_HASH,
+} from "@repo/backend/convex/contentRelease/finalize/spec";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
 import { requireActiveContentKey } from "@repo/backend/convex/contentRelease/ingress/key";
 import {
@@ -28,11 +31,9 @@ import {
 } from "@repo/backend/convex/contentRelease/wire";
 import { runConvexActionProgram } from "@repo/backend/convex/lib/effect";
 import { makeFunctionReference } from "convex/server";
-import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { Effect } from "effect";
 
-type FinalizationReceipt = Infer<typeof finalizationReceiptValidator>;
 interface FinalizationSource {
   readonly rendererJson: string;
   readonly rendererManifestHash: string;
