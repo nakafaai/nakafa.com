@@ -1,6 +1,12 @@
-import { describe, expect, it, vi } from "@effect/vitest";
-import { Effect, Result } from "effect";
-import { type FetchImplementation, requestNakafaApi } from "./client.js";
+import { describe, expect, it } from "@effect/vitest";
+import { Effect, Ref, Result } from "effect";
+import {
+  HttpClient,
+  HttpClientError,
+  type HttpClientRequest,
+  HttpClientResponse,
+} from "effect/unstable/http";
+import { requestNakafaApi } from "#cli/client";
 
 const problem = {
   code: "NOT_FOUND",
@@ -13,66 +19,87 @@ const problem = {
   type: "https://nakafa.com/problems/not-found",
 };
 
-function runFailure(fetchImplementation: FetchImplementation) {
-  return requestNakafaApi({
-    apiBase: "https://api.nakafa.com",
-    fetchImplementation,
-    path: "/v1/health",
-  }).pipe(Effect.result);
+function makeClient(
+  makeResponse: (request: HttpClientRequest.HttpClientRequest) => Response
+) {
+  return HttpClient.make((request) =>
+    Effect.sync(() =>
+      HttpClientResponse.fromWeb(request, makeResponse(request))
+    )
+  );
+}
+
+function execute(client: HttpClient.HttpClient, apiBase: string) {
+  return requestNakafaApi({ apiBase, path: "/v1/health" }).pipe(
+    Effect.provideService(HttpClient.HttpClient, client)
+  );
+}
+
+function runFailure(response: Response) {
+  return execute(
+    makeClient(() => response),
+    "https://api.nakafa.com"
+  ).pipe(Effect.result);
 }
 
 describe("Nakafa API client", () => {
-  it.live("requests and decodes a successful JSON response", () =>
+  it.effect("requests and decodes a successful JSON response", () =>
     Effect.gen(function* () {
-      const fetchImplementation = vi.fn<FetchImplementation>(async () =>
-        Response.json({ status: "ok" })
+      const requests = yield* Ref.make<
+        readonly HttpClientRequest.HttpClientRequest[]
+      >([]);
+      const client = HttpClient.make((request) =>
+        Ref.update(requests, (current) => [...current, request]).pipe(
+          Effect.as(
+            HttpClientResponse.fromWeb(request, Response.json({ status: "ok" }))
+          )
+        )
       );
 
-      expect(
-        yield* requestNakafaApi({
-          apiBase: "https://api.nakafa.com",
-          fetchImplementation,
-          path: "/v1/health",
-        })
-      ).toEqual({ status: "ok" });
-      expect(fetchImplementation).toHaveBeenCalledWith(
-        "https://api.nakafa.com/v1/health",
-        {
-          headers: expect.any(Headers),
-          method: "GET",
-        }
-      );
-      const request = fetchImplementation.mock.calls[0]?.[1];
-      expect(new Headers(request?.headers).get("accept")).toBe(
+      expect(yield* execute(client, "https://api.nakafa.com")).toEqual({
+        status: "ok",
+      });
+      const [request] = yield* Ref.get(requests);
+      expect(request?.method).toBe("GET");
+      expect(request?.url).toBe("https://api.nakafa.com/v1/health");
+      expect(request?.headers.accept).toBe(
         "application/json, application/problem+json"
       );
     })
   );
 
-  it.live("never forwards an internal edge secret to a custom API origin", () =>
-    Effect.gen(function* () {
-      const fetchImplementation = vi.fn<FetchImplementation>(async () =>
-        Response.json({ status: "ok" })
-      );
+  it.effect(
+    "never forwards an internal edge secret to a custom API origin",
+    () =>
+      Effect.gen(function* () {
+        const requests = yield* Ref.make<
+          readonly HttpClientRequest.HttpClientRequest[]
+        >([]);
+        const client = HttpClient.make((request) =>
+          Ref.update(requests, (current) => [...current, request]).pipe(
+            Effect.as(
+              HttpClientResponse.fromWeb(
+                request,
+                Response.json({ status: "ok" })
+              )
+            )
+          )
+        );
 
-      yield* requestNakafaApi({
-        apiBase: "https://attacker.example",
-        fetchImplementation,
-        path: "/v1/health",
-      });
+        yield* execute(client, "https://attacker.example");
 
-      const request = fetchImplementation.mock.calls[0]?.[1];
-      expect([...new Headers(request?.headers)]).toEqual([
-        ["accept", "application/json, application/problem+json"],
-      ]);
-    })
+        const [request] = yield* Ref.get(requests);
+        expect(request?.headers.accept).toBe(
+          "application/json, application/problem+json"
+        );
+        expect(request?.headers.authorization).toBeUndefined();
+        expect(request?.headers.cookie).toBeUndefined();
+      })
   );
 
-  it.live("preserves a valid Problem Details response", () =>
+  it.effect("preserves a valid Problem Details response", () =>
     Effect.gen(function* () {
-      const result = yield* runFailure(async () =>
-        Response.json(problem, { status: 404 })
-      );
+      const result = yield* runFailure(Response.json(problem, { status: 404 }));
 
       expect(Result.isFailure(result)).toBe(true);
       if (Result.isFailure(result)) {
@@ -85,16 +112,15 @@ describe("Nakafa API client", () => {
     })
   );
 
-  it.live("rejects non-JSON and malformed error responses", () =>
+  it.effect("rejects non-JSON and malformed error responses", () =>
     Effect.gen(function* () {
       const nonJson = yield* runFailure(
-        async () =>
-          new Response("not JSON", {
-            headers: { "content-type": "application/problem+json" },
-            status: 502,
-          })
+        new Response("not JSON", {
+          headers: { "content-type": "application/problem+json" },
+          status: 502,
+        })
       );
-      const malformedProblem = yield* runFailure(async () =>
+      const malformedProblem = yield* runFailure(
         Response.json({ message: "missing fields" }, { status: 400 })
       );
 
@@ -107,17 +133,16 @@ describe("Nakafa API client", () => {
     })
   );
 
-  it.live("preserves non-JSON edge status and retry guidance", () =>
+  it.effect("preserves non-JSON edge status and retry guidance", () =>
     Effect.gen(function* () {
       const result = yield* runFailure(
-        async () =>
-          new Response("<html>rate limited</html>", {
-            headers: {
-              "content-type": "text/html; charset=utf-8",
-              "retry-after": "30",
-            },
-            status: 429,
-          })
+        new Response("<html>rate limited</html>", {
+          headers: {
+            "content-type": "text/html; charset=utf-8",
+            "retry-after": "30",
+          },
+          status: 429,
+        })
       );
 
       expect(Result.isFailure(result)).toBe(true);
@@ -131,10 +156,10 @@ describe("Nakafa API client", () => {
     })
   );
 
-  it.live("preserves non-JSON edge failures without retry guidance", () =>
+  it.effect("preserves non-JSON edge failures without retry guidance", () =>
     Effect.gen(function* () {
       const result = yield* runFailure(
-        async () => new Response("unavailable", { status: 503 })
+        new Response("unavailable", { status: 503 })
       );
 
       expect(Result.isFailure(result)).toBe(true);
@@ -148,20 +173,32 @@ describe("Nakafa API client", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "classifies request and response-reading failures as network errors",
     () =>
       Effect.gen(function* () {
-        const requestFailure = yield* runFailure(() => {
-          throw new Error("offline");
-        });
-        class UnreadableResponse extends Response {
-          override text() {
-            return Promise.reject(new Error("body unavailable"));
-          }
-        }
+        const requestClient = HttpClient.make((request) =>
+          Effect.fail(
+            new HttpClientError.HttpClientError({
+              reason: new HttpClientError.TransportError({
+                cause: new Error("offline"),
+                request,
+              }),
+            })
+          )
+        );
+        const requestFailure = yield* execute(
+          requestClient,
+          "https://api.nakafa.com"
+        ).pipe(Effect.result);
         const readFailure = yield* runFailure(
-          async () => new UnreadableResponse()
+          new Response(
+            new ReadableStream({
+              start: (controller) => {
+                controller.error(new Error("body unavailable"));
+              },
+            })
+          )
         );
 
         expect(

@@ -1,4 +1,5 @@
 import { Schema } from "effect";
+import type { CliError } from "effect/unstable/cli";
 
 export const ProblemDetailsSchema = Schema.Struct({
   code: Schema.String,
@@ -56,3 +57,13 @@ export class CliStartupError extends Schema.TaggedError<CliStartupError>()(
     message: Schema.String,
   }
 ) {}
+
+/** Preserves actionable parser details in the stable invocation error shape. */
+export function makeInvocationError(error: CliError.CliError) {
+  return new InvocationError({
+    message:
+      error._tag === "ShowHelp"
+        ? error.errors.map(({ message }) => message).join("\n")
+        : error.message,
+  });
+}

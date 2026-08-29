@@ -1,20 +1,15 @@
 import { Effect, Schema } from "effect";
+import { HttpClient } from "effect/unstable/http";
 import {
   ApiResponseError,
   HttpResponseError,
   NetworkError,
   ProblemDetailsSchema,
   ResponseDecodeError,
-} from "./error.js";
-
-export type FetchImplementation = (
-  input: string,
-  init?: RequestInit
-) => Promise<Response>;
+} from "#cli/error";
 
 interface ApiRequest {
   readonly apiBase: string;
-  readonly fetchImplementation: FetchImplementation;
   readonly path: string;
 }
 
@@ -23,45 +18,50 @@ export const requestNakafaApi = Effect.fn("NakafaCli.requestApi")(function* (
   request: ApiRequest
 ) {
   const url = new URL(request.path, `${request.apiBase}/`).href;
-  const headers = new Headers({
-    Accept: "application/json, application/problem+json",
-  });
-  const response = yield* Effect.tryPromise({
-    catch: (cause) =>
-      new NetworkError({
-        cause,
-        message: `Unable to reach ${url}.`,
-      }),
-    try: () =>
-      request.fetchImplementation(url, {
-        headers,
-        method: "GET",
-      }),
-  });
-  const text = yield* Effect.tryPromise({
-    catch: (cause) =>
-      new NetworkError({
-        cause,
-        message: `Unable to read the response from ${url}.`,
-      }),
-    try: () => response.text(),
-  });
-  if (!(response.ok || isJsonMediaType(response.headers.get("content-type")))) {
+  const response = yield* HttpClient.get(url, {
+    accept: "application/json, application/problem+json",
+  }).pipe(
+    Effect.mapError(
+      (cause) =>
+        new NetworkError({
+          cause,
+          message: `Unable to reach ${url}.`,
+        })
+    )
+  );
+  const text = yield* response.text.pipe(
+    Effect.mapError(
+      (cause) =>
+        new NetworkError({
+          cause,
+          message: `Unable to read the response from ${url}.`,
+        })
+    )
+  );
+  if (
+    !(
+      isSuccessStatus(response.status) ||
+      isJsonMediaType(response.headers["content-type"])
+    )
+  ) {
     return yield* new HttpResponseError({
-      retryAfter: response.headers.get("retry-after") ?? undefined,
+      retryAfter: response.headers["retry-after"],
       status: response.status,
     });
   }
-  const payload = yield* Effect.try({
-    catch: (cause) =>
-      new ResponseDecodeError({
-        cause,
-        message: `Nakafa returned non-JSON data for ${url}.`,
-        status: response.status,
-      }),
-    try: () => JSON.parse(text),
-  });
-  if (response.ok) {
+  const payload = yield* Schema.decodeEffect(
+    Schema.fromJsonString(Schema.Json)
+  )(text).pipe(
+    Effect.mapError(
+      (cause) =>
+        new ResponseDecodeError({
+          cause,
+          message: `Nakafa returned non-JSON data for ${url}.`,
+          status: response.status,
+        })
+    )
+  );
+  if (isSuccessStatus(response.status)) {
     return payload;
   }
   const problem = yield* Schema.decodeUnknownEffect(ProblemDetailsSchema)(
@@ -82,7 +82,11 @@ export const requestNakafaApi = Effect.fn("NakafaCli.requestApi")(function* (
   });
 });
 
-function isJsonMediaType(contentType: string | null) {
+function isSuccessStatus(status: number) {
+  return status >= 200 && status < 300;
+}
+
+function isJsonMediaType(contentType: string | undefined) {
   const mediaType = contentType?.split(";", 1)[0]?.trim().toLowerCase();
   return mediaType === "application/json" || mediaType?.endsWith("+json");
 }

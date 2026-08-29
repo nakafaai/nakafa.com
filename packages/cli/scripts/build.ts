@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import { Effect, FileSystem, Schema } from "effect";
 import { build } from "esbuild";
 
@@ -37,4 +38,4 @@ const buildCli = Effect.fn("NakafaCli.build")(function* () {
   });
 });
 
-Effect.runPromise(buildCli().pipe(Effect.provide(NodeFileSystem.layer)));
+NodeRuntime.runMain(buildCli().pipe(Effect.provide(NodeFileSystem.layer)));

@@ -2,52 +2,50 @@ import {
   NAKAFA_MCP_PROTOCOL_VERSION,
   NAKAFA_MCP_RECOMMENDED_ENDPOINT,
 } from "@repo/contents/_lib/agent/constants";
-import { Effect } from "effect";
-import { type FetchImplementation, requestNakafaApi } from "./client.js";
-import { readCliRequest } from "./command/read.js";
-import { type CliCommand, type CliRequest, HELP_TEXT } from "./command/spec.js";
-import type {
-  ApiResponseError,
-  HttpResponseError,
-  NetworkError,
-  ResponseDecodeError,
-} from "./error.js";
+import { Console, Effect, Layer, MutableRef } from "effect";
+import {
+  CliConfig,
+  CliError,
+  CliOutput,
+  Command,
+  GlobalFlag,
+} from "effect/unstable/cli";
+import { requestNakafaApi } from "#cli/client";
+import type { CliCommand, CliRequest } from "#cli/command/spec";
+import { makeCliCommand } from "#cli/command/tree";
+import { makeInvocationError } from "#cli/error";
+import { writeJson } from "#cli/output";
 
 const INVOCATION_EXIT_CODE = 2;
 const API_EXIT_CODE = 3;
 const NETWORK_OR_SERVER_EXIT_CODE = 4;
 
-export interface CliDependencies {
-  readonly fetchImplementation: FetchImplementation;
-  readonly stderr: { write(value: string): unknown };
-  readonly stdout: { write(value: string): unknown };
+interface CliOptions {
   readonly version: string;
 }
 
-interface CliOutput {
-  readonly kind: "json" | "text";
-  readonly value: unknown;
-}
-
 /** Executes one CLI invocation and returns its stable process exit category. */
-export function runCli(argv: readonly string[], dependencies: CliDependencies) {
-  return executeCli(argv, dependencies).pipe(
+export const runCli = Effect.fn("NakafaCli.run")(function* (
+  argv: readonly string[],
+  options: CliOptions
+) {
+  return yield* executeCli(argv.length === 0 ? ["--help"] : argv, options).pipe(
     Effect.catchTags({
       ApiResponseError: (error) =>
-        writeJson(dependencies.stderr, error.problem, false).pipe(
+        writeJson("stderr", error.problem, false).pipe(
           Effect.as(
             error.status >= 500 ? NETWORK_OR_SERVER_EXIT_CODE : API_EXIT_CODE
           )
         ),
       InvocationError: (error) =>
         writeJson(
-          dependencies.stderr,
+          "stderr",
           { code: "INVOCATION_ERROR", message: error.message },
           false
         ).pipe(Effect.as(INVOCATION_EXIT_CODE)),
       HttpResponseError: (error) =>
         writeJson(
-          dependencies.stderr,
+          "stderr",
           {
             code: "HTTP_RESPONSE_ERROR",
             ...(error.retryAfter === undefined
@@ -63,13 +61,13 @@ export function runCli(argv: readonly string[], dependencies: CliDependencies) {
         ),
       NetworkError: (error) =>
         writeJson(
-          dependencies.stderr,
+          "stderr",
           { code: "NETWORK_ERROR", message: error.message },
           false
         ).pipe(Effect.as(NETWORK_OR_SERVER_EXIT_CODE)),
       ResponseDecodeError: (error) =>
         writeJson(
-          dependencies.stderr,
+          "stderr",
           {
             code: "INVALID_SERVER_RESPONSE",
             message: error.message,
@@ -79,56 +77,72 @@ export function runCli(argv: readonly string[], dependencies: CliDependencies) {
         ).pipe(Effect.as(NETWORK_OR_SERVER_EXIT_CODE)),
     })
   );
-}
+});
 
 const executeCli = Effect.fn("NakafaCli.execute")(function* (
   argv: readonly string[],
-  dependencies: CliDependencies
+  options: CliOptions
 ) {
-  const request = yield* readCliRequest(argv);
-  const output = yield* executeCommand(request, dependencies);
-  if (output.kind === "text") {
-    yield* writeText(dependencies.stdout, String(output.value));
-    return 0;
-  }
-  yield* writeJson(dependencies.stdout, output.value, request.pretty);
+  const command = makeCliCommand(executeRequest);
+  const hostConsole = yield* Console.Console;
+  const messages = MutableRef.make<readonly (readonly unknown[])[]>([]);
+  // The native runner always renders help before a ShowHelp failure. Buffer
+  // that output so invocation errors keep stdout empty for machine consumers.
+  const commandConsole: Console.Console = Object.assign(
+    Object.create(hostConsole),
+    {
+      log: (...args: readonly unknown[]) => {
+        MutableRef.update(messages, (current) => [...current, args]);
+      },
+    }
+  );
+  const flushMessages = Effect.suspend(() =>
+    Effect.forEach(
+      MutableRef.get(messages),
+      (message) => Console.log(...message),
+      { discard: true }
+    )
+  );
+  yield* Command.runWith(command, {
+    renderErrors: false,
+    version: options.version,
+  })(argv).pipe(
+    Effect.provide(cliRuntimeLayer),
+    Effect.provideService(Console.Console, commandConsole),
+    Effect.matchEffect({
+      onFailure: (error) =>
+        CliError.isCliError(error)
+          ? Effect.fail(makeInvocationError(error))
+          : Effect.fail(error),
+      onSuccess: () => flushMessages,
+    })
+  );
   return 0;
 });
 
-function executeCommand(
-  request: CliRequest,
-  dependencies: CliDependencies
-): Effect.Effect<
-  CliOutput,
-  ApiResponseError | HttpResponseError | NetworkError | ResponseDecodeError
-> {
+const executeRequest = Effect.fn("NakafaCli.executeRequest")(function* (
+  request: CliRequest
+) {
+  const output = yield* executeCommand(request);
+  yield* writeJson("stdout", output, request.pretty);
+});
+
+function executeCommand(request: CliRequest) {
   const command = request.command;
-  if (command.kind === "help") {
-    return Effect.succeed({ kind: "text", value: HELP_TEXT });
-  }
-  if (command.kind === "version") {
-    return Effect.succeed({ kind: "text", value: `${dependencies.version}\n` });
-  }
   if (command.kind === "mcp") {
     return Effect.succeed({
-      kind: "json",
-      value: {
-        endpoint: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
-        protocol_version: NAKAFA_MCP_PROTOCOL_VERSION,
-        transport: "streamable-http",
-      },
+      endpoint: NAKAFA_MCP_RECOMMENDED_ENDPOINT,
+      protocol_version: NAKAFA_MCP_PROTOCOL_VERSION,
+      transport: "streamable-http",
     });
   }
   return requestNakafaApi({
     apiBase: request.apiBase,
-    fetchImplementation: dependencies.fetchImplementation,
     path: buildApiPath(command),
-  }).pipe(Effect.map((value) => ({ kind: "json", value })));
+  });
 }
 
-function buildApiPath(
-  command: Exclude<CliCommand, { kind: "help" | "mcp" | "version" }>
-) {
+function buildApiPath(command: Exclude<CliCommand, { kind: "mcp" }>) {
   if (command.kind === "get") {
     const query = new URLSearchParams({ ref: command.ref });
     return `/v1/content?${query}`;
@@ -156,6 +170,16 @@ function buildApiPath(
   return `/v1/search?${query}`;
 }
 
+const plainFormatter = CliOutput.defaultFormatter({ colors: false });
+const cliOutputLayer = CliOutput.layer({
+  ...plainFormatter,
+  formatVersion: (_name, version) => version,
+});
+const cliRuntimeLayer = Layer.merge(
+  CliConfig.layer({ builtIns: [GlobalFlag.Help, GlobalFlag.Version] }),
+  cliOutputLayer
+);
+
 function appendOptional(
   query: URLSearchParams,
   name: string,
@@ -169,18 +193,4 @@ function appendOptional(
 function withQuery(path: string, query: URLSearchParams) {
   const source = query.toString();
   return source.length === 0 ? path : `${path}?${source}`;
-}
-
-function writeJson(
-  output: CliDependencies["stdout"],
-  value: unknown,
-  pretty: boolean
-) {
-  return writeText(output, `${JSON.stringify(value, null, pretty ? 2 : 0)}\n`);
-}
-
-function writeText(output: CliDependencies["stdout"], value: string) {
-  return Effect.sync(() => {
-    output.write(value);
-  });
 }

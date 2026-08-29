@@ -1,8 +1,25 @@
-import { describe, expect, it, vi } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { NAKAFA_MCP_PROTOCOL_VERSION } from "@repo/contents/_lib/agent/constants";
-import { Effect } from "effect";
-import type { FetchImplementation } from "./client.js";
-import { runCli } from "./program.js";
+import {
+  Effect,
+  FileSystem,
+  Layer,
+  Path,
+  Ref,
+  Schema,
+  Sink,
+  Stdio,
+  Terminal,
+} from "effect";
+import { TestConsole } from "effect/testing";
+import {
+  HttpClient,
+  HttpClientError,
+  type HttpClientRequest,
+  HttpClientResponse,
+} from "effect/unstable/http";
+import { ChildProcessSpawner } from "effect/unstable/process";
+import { runCli } from "#cli/program";
 
 const problem = {
   code: "NOT_FOUND",
@@ -15,64 +32,138 @@ const problem = {
   type: "https://nakafa.com/problems/not-found",
 };
 
-function createOutput() {
-  let value = "";
-  return {
-    read: () => value,
-    stream: {
-      write(chunk: string) {
-        value += chunk;
-      },
-    },
-  };
+const decodeJson = Schema.decodeUnknownEffect(
+  Schema.fromJsonString(Schema.Json)
+);
+
+const cliPlatformLayer = Layer.mergeAll(
+  FileSystem.layerNoop({}),
+  Path.layer,
+  Layer.succeed(
+    Terminal.Terminal,
+    Terminal.make({
+      columns: Effect.succeed(80),
+      display: () => Effect.void,
+      readInput: Effect.die("Unexpected terminal input"),
+      readLine: Effect.die("Unexpected terminal input"),
+      rows: Effect.succeed(24),
+    })
+  ),
+  Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make(() => Effect.die("Unexpected child process"))
+  )
+);
+
+function makeClient(
+  makeResponse: (request: HttpClientRequest.HttpClientRequest) => Response
+) {
+  return HttpClient.make((request) =>
+    Effect.sync(() =>
+      HttpClientResponse.fromWeb(request, makeResponse(request))
+    )
+  );
 }
 
 function execute(
   argv: readonly string[],
-  fetchImplementation: FetchImplementation = async () =>
-    Response.json({ ok: true })
+  client: HttpClient.HttpClient = makeClient(() => Response.json({ ok: true }))
 ) {
-  const stdout = createOutput();
-  const stderr = createOutput();
-  return runCli(argv, {
-    fetchImplementation,
-    stderr: stderr.stream,
-    stdout: stdout.stream,
-    version: "0.1.0",
-  }).pipe(
-    Effect.map((exitCode) => ({
+  return Effect.gen(function* () {
+    const consoleBefore = yield* TestConsole.logLines;
+    const stderr = yield* Ref.make("");
+    const stdout = yield* Ref.make("");
+    const append = (target: Ref.Ref<string>) =>
+      Sink.forEachWhile((chunk: string | Uint8Array) =>
+        Ref.update(
+          target,
+          (current) =>
+            current +
+            (typeof chunk === "string"
+              ? chunk
+              : new TextDecoder().decode(chunk))
+        ).pipe(Effect.as(true))
+      );
+    const layer = Layer.mergeAll(
+      cliPlatformLayer,
+      Layer.succeed(HttpClient.HttpClient, client),
+      Stdio.layerTest({
+        stderr: () => append(stderr),
+        stdout: () => append(stdout),
+      })
+    );
+    const exitCode = yield* runCli(argv, { version: "0.1.0" }).pipe(
+      Effect.provide(layer)
+    );
+    const consoleAfter = yield* TestConsole.logLines;
+    const consoleOutput = consoleAfter
+      .slice(consoleBefore.length)
+      .map(String)
+      .join("\n");
+    const capturedStdout = yield* Ref.get(stdout);
+    return {
       exitCode,
-      stderr: stderr.read(),
-      stdout: stdout.read(),
-    }))
-  );
+      stderr: yield* Ref.get(stderr),
+      stdout:
+        consoleOutput.length === 0
+          ? capturedStdout
+          : `${capturedStdout}${consoleOutput}\n`,
+    };
+  });
 }
 
 describe("Nakafa CLI execution", () => {
-  it.live("prints help, version, and MCP metadata without network calls", () =>
-    Effect.gen(function* () {
-      const fetchImplementation = vi.fn<FetchImplementation>();
-      const help = yield* execute(["--help"], fetchImplementation);
-      const version = yield* execute(["--version"], fetchImplementation);
-      const mcp = yield* execute(["mcp"], fetchImplementation);
+  it.effect(
+    "prints help, version, and MCP metadata without network calls",
+    () =>
+      Effect.gen(function* () {
+        const client = HttpClient.make(() => Effect.die("unexpected request"));
+        const empty = yield* execute([], client);
+        const help = yield* execute(["--help"], client);
+        const commandHelp = yield* execute(["taxonomy", "--help"], client);
+        const version = yield* execute(["--version"], client);
+        const mcp = yield* execute(["mcp"], client);
 
-      expect(help).toMatchObject({ exitCode: 0, stderr: "" });
-      expect(help.stdout).toContain("Nakafa CLI");
-      expect(version).toEqual({
-        exitCode: 0,
-        stderr: "",
-        stdout: "0.1.0\n",
-      });
-      expect(JSON.parse(mcp.stdout)).toEqual({
-        endpoint: "https://nakafa.com/mcp",
-        protocol_version: NAKAFA_MCP_PROTOCOL_VERSION,
-        transport: "streamable-http",
-      });
-      expect(fetchImplementation).not.toHaveBeenCalled();
+        expect(empty).toMatchObject({ exitCode: 0, stderr: "" });
+        expect(empty.stdout).toContain("Nakafa CLI");
+        expect(help).toMatchObject({ exitCode: 0, stderr: "" });
+        expect(help.stdout).toContain("Nakafa CLI");
+        expect(commandHelp).toMatchObject({ exitCode: 0, stderr: "" });
+        expect(commandHelp.stdout).toContain("published content taxonomy");
+        expect(version).toEqual({
+          exitCode: 0,
+          stderr: "",
+          stdout: "0.1.0\n",
+        });
+        expect(yield* decodeJson(mcp.stdout)).toEqual({
+          endpoint: "https://nakafa.com/mcp",
+          protocol_version: NAKAFA_MCP_PROTOCOL_VERSION,
+          transport: "streamable-http",
+        });
+      })
+  );
+
+  it.effect("renders explicit help without dispatching", () =>
+    Effect.gen(function* () {
+      const client = HttpClient.make(() => Effect.die("unexpected request"));
+      const results = yield* Effect.forEach(
+        [
+          ["search", "--help"],
+          ["get", "--help"],
+          ["quran", "--help"],
+          ["taxonomy", "--help"],
+        ],
+        (argv) => execute(argv, client)
+      );
+
+      for (const result of results) {
+        expect(result).toMatchObject({ exitCode: 0, stderr: "" });
+        expect(result.stdout).not.toBe("");
+      }
     })
   );
 
-  it.live.each([
+  it.effect.each([
     {
       argv: ["search", "linear", "equations", "--locale", "de", "--limit", "5"],
       expectedUrl:
@@ -112,30 +203,46 @@ describe("Nakafa CLI execution", () => {
     },
   ])("calls the public endpoint for $argv", ({ argv, expectedUrl }) =>
     Effect.gen(function* () {
-      const fetchImplementation = vi.fn(async () =>
-        Response.json({ ok: true })
+      const requests = yield* Ref.make<
+        readonly HttpClientRequest.HttpClientRequest[]
+      >([]);
+      const client = HttpClient.make((request) =>
+        Ref.update(requests, (current) => [...current, request]).pipe(
+          Effect.as(
+            HttpClientResponse.fromWeb(request, Response.json({ ok: true }))
+          )
+        )
       );
 
-      const result = yield* execute(argv, fetchImplementation);
+      const result = yield* execute(argv, client);
 
       expect(result).toEqual({
         exitCode: 0,
         stderr: "",
         stdout: '{"ok":true}\n',
       });
-      expect(fetchImplementation).toHaveBeenCalledWith(
+      expect((yield* Ref.get(requests)).map(({ url }) => url)).toEqual([
         expectedUrl,
-        expect.any(Object)
-      );
+      ]);
     })
   );
 
-  it.live(
+  it.effect(
     "supports custom public API bases without forwarding edge secrets",
     () =>
       Effect.gen(function* () {
-        const fetchImplementation = vi.fn<FetchImplementation>(async () =>
-          Response.json({ nested: { ok: true } })
+        const requests = yield* Ref.make<
+          readonly HttpClientRequest.HttpClientRequest[]
+        >([]);
+        const client = HttpClient.make((request) =>
+          Ref.update(requests, (current) => [...current, request]).pipe(
+            Effect.as(
+              HttpClientResponse.fromWeb(
+                request,
+                Response.json({ nested: { ok: true } })
+              )
+            )
+          )
         );
 
         const result = yield* execute(
@@ -145,89 +252,138 @@ describe("Nakafa CLI execution", () => {
             "--api-base",
             "https://isolated.example.com",
           ],
-          fetchImplementation
+          client
         );
 
         expect(result.stdout).toBe(
           '{\n  "nested": {\n    "ok": true\n  }\n}\n'
         );
-        expect(fetchImplementation).toHaveBeenCalledWith(
-          "https://isolated.example.com/v1/taxonomy",
-          expect.any(Object)
+        const [request] = yield* Ref.get(requests);
+        expect(request?.url).toBe("https://isolated.example.com/v1/taxonomy");
+        expect(request?.headers.accept).toBe(
+          "application/json, application/problem+json"
         );
-        const request = fetchImplementation.mock.calls[0]?.[1];
-        expect([...new Headers(request?.headers)]).toEqual([
-          ["accept", "application/json, application/problem+json"],
-        ]);
+        expect(request?.headers.authorization).toBeUndefined();
+        expect(request?.headers.cookie).toBeUndefined();
       })
   );
 
-  it.live(
+  it.effect(
     "returns stable invocation, API, server, network, and decoding exits",
     () =>
       Effect.gen(function* () {
         const invocation = yield* execute(["search"]);
-        const api = yield* execute(["get", "missing"], async () =>
-          Response.json(problem, { status: 404 })
+        const unknown = yield* execute(["unknown"]);
+        const emptyRef = yield* execute(["get", ""]);
+        const emptyQuery = yield* execute(["search", ""]);
+        const api = yield* execute(
+          ["get", "missing"],
+          makeClient(() => Response.json(problem, { status: 404 }))
         );
-        const server = yield* execute(["taxonomy"], async () =>
-          Response.json({ ...problem, status: 503 }, { status: 503 })
+        const server = yield* execute(
+          ["taxonomy"],
+          makeClient(() =>
+            Response.json({ ...problem, status: 503 }, { status: 503 })
+          )
         );
-        const network = yield* execute(["taxonomy"], () => {
-          throw new Error("offline");
-        });
+        const network = yield* execute(
+          ["taxonomy"],
+          HttpClient.make((request) =>
+            Effect.fail(
+              new HttpClientError.HttpClientError({
+                reason: new HttpClientError.TransportError({
+                  cause: new Error("offline"),
+                  request,
+                }),
+              })
+            )
+          )
+        );
         const decoding = yield* execute(
           ["taxonomy"],
-          async () =>
-            new Response("not JSON", {
-              headers: { "content-type": "application/problem+json" },
-              status: 502,
-            })
+          makeClient(
+            () =>
+              new Response("not JSON", {
+                headers: { "content-type": "application/problem+json" },
+                status: 502,
+              })
+          )
         );
         const edge = yield* execute(
           ["taxonomy"],
-          async () =>
-            new Response("<html>rate limited</html>", {
-              headers: {
-                "content-type": "text/html",
-                "retry-after": "30",
-              },
-              status: 429,
-            })
+          makeClient(
+            () =>
+              new Response("<html>rate limited</html>", {
+                headers: {
+                  "content-type": "text/html",
+                  "retry-after": "30",
+                },
+                status: 429,
+              })
+          )
         );
         const unavailableEdge = yield* execute(
           ["taxonomy"],
-          async () => new Response("unavailable", { status: 503 })
+          makeClient(() => new Response("unavailable", { status: 503 }))
         );
 
         expect(invocation.exitCode).toBe(2);
-        expect(JSON.parse(invocation.stderr)).toMatchObject({
+        expect(invocation.stdout).toBe("");
+        expect(yield* decodeJson(invocation.stderr)).toMatchObject({
+          code: "INVOCATION_ERROR",
+        });
+        expect(unknown).toMatchObject({ exitCode: 2, stdout: "" });
+        expect(yield* decodeJson(unknown.stderr)).toMatchObject({
+          code: "INVOCATION_ERROR",
+        });
+        expect(emptyRef).toMatchObject({ exitCode: 2, stdout: "" });
+        expect(yield* decodeJson(emptyRef.stderr)).toMatchObject({
+          code: "INVOCATION_ERROR",
+        });
+        expect(emptyQuery).toMatchObject({ exitCode: 2, stdout: "" });
+        expect(yield* decodeJson(emptyQuery.stderr)).toMatchObject({
           code: "INVOCATION_ERROR",
         });
         expect(api.exitCode).toBe(3);
-        expect(JSON.parse(api.stderr)).toEqual(problem);
+        expect(yield* decodeJson(api.stderr)).toEqual(problem);
         expect(server.exitCode).toBe(4);
-        expect(JSON.parse(server.stderr)).toMatchObject({ status: 503 });
+        expect(yield* decodeJson(server.stderr)).toMatchObject({ status: 503 });
         expect(network.exitCode).toBe(4);
-        expect(JSON.parse(network.stderr)).toMatchObject({
+        expect(yield* decodeJson(network.stderr)).toMatchObject({
           code: "NETWORK_ERROR",
         });
         expect(decoding.exitCode).toBe(4);
-        expect(JSON.parse(decoding.stderr)).toMatchObject({
+        expect(yield* decodeJson(decoding.stderr)).toMatchObject({
           code: "INVALID_SERVER_RESPONSE",
           status: 502,
         });
         expect(edge.exitCode).toBe(3);
-        expect(JSON.parse(edge.stderr)).toEqual({
+        expect(yield* decodeJson(edge.stderr)).toEqual({
           code: "HTTP_RESPONSE_ERROR",
           retry_after: "30",
           status: 429,
         });
         expect(unavailableEdge.exitCode).toBe(4);
-        expect(JSON.parse(unavailableEdge.stderr)).toEqual({
+        expect(yield* decodeJson(unavailableEdge.stderr)).toEqual({
           code: "HTTP_RESPONSE_ERROR",
           status: 503,
         });
       })
+  );
+
+  it.effect.each([
+    ["taxonomy", "--bogus"],
+    ["search", "query", "--limit", "zero"],
+    ["taxonomy", "--locale"],
+    ["taxonomy", "-x"],
+  ])("rejects invalid invocation %j", (argv) =>
+    Effect.gen(function* () {
+      const result = yield* execute(argv);
+
+      expect(result).toMatchObject({ exitCode: 2, stdout: "" });
+      expect(yield* decodeJson(result.stderr)).toMatchObject({
+        code: "INVOCATION_ERROR",
+      });
+    })
   );
 });
