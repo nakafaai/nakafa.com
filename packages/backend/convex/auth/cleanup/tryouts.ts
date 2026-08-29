@@ -93,10 +93,9 @@ const cleanupAttemptRuntime = Effect.fn("auth.cleanup.cleanupAttemptRuntime")(
     }
 
     yield* tryUserCleanup(() => ctx.db.delete("tryoutAttempts", attempt._id));
-    yield* reconcileTryoutRuntimeAfterAttempt(
-      ctx,
-      attempt.tryoutBundleId
-    ).pipe(Effect.mapError(toUserCleanupError));
+    yield* reconcileTryoutRuntimeAfterAttempt(ctx, attempt.tryoutBundleId).pipe(
+      Effect.mapError(toUserCleanupError)
+    );
     return true;
   }
 );

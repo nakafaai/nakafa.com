@@ -30,18 +30,16 @@ describe("try-out protected runtime requests", () => {
     })
   );
 
-  it.effect(
-    "keeps the request bound to one permanent bundle",
-    () =>
-      Effect.gen(function* () {
-        const request = yield* makeTryoutRuntimeRequest([question]);
+  it.effect("keeps the request bound to one permanent bundle", () =>
+    Effect.gen(function* () {
+      const request = yield* makeTryoutRuntimeRequest([question]);
 
-        expect(yield* decodeProtectedContentRuntimeRequest(request)).toEqual(
-          request
-        );
-        expect(request).not.toHaveProperty("attemptId");
-        expect(request.selectors[0]).not.toHaveProperty("artifactLocale");
-      })
+      expect(yield* decodeProtectedContentRuntimeRequest(request)).toEqual(
+        request
+      );
+      expect(request).not.toHaveProperty("attemptId");
+      expect(request.selectors[0]).not.toHaveProperty("artifactLocale");
+    })
   );
 
   it.effect("fails before transport when one batch spans bundles", () =>

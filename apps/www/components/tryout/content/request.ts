@@ -1,8 +1,6 @@
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
 import { Effect } from "effect";
-import type {
-  TryoutSelector,
-} from "@/components/tryout/content/model";
+import type { TryoutSelector } from "@/components/tryout/content/model";
 
 type RuntimeIdentity = Pick<
   TryoutSelector,

@@ -14,8 +14,8 @@ import {
   projectTryoutRuntimeContent,
   type RenderedTryoutContentEntry,
   type SignedContentAccess,
-  type TryoutSelector,
   type TryoutQuestionSelector,
+  type TryoutSelector,
 } from "@/components/tryout/content/model";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
 import { env } from "@/env";
@@ -33,27 +33,27 @@ export const loadSignedTryoutContent = Effect.fn(
 });
 
 /** Renders the public featured question through its exact live transport. */
-export const loadTryoutQuestion = Effect.fn(
-  "NakafaContent.loadTryoutQuestion"
-)(function* (question: TryoutQuestionSelector) {
-  const rendered = yield* loadTryoutContent({
-    answers: [],
-    kind: "signed",
-    questions: [question],
-  });
-  const result = rendered.questions[0];
-  if (!result) {
-    return yield* runtimeIntegrity(
-      "The featured try-out question did not render."
-    );
+export const loadTryoutQuestion = Effect.fn("NakafaContent.loadTryoutQuestion")(
+  function* (question: TryoutQuestionSelector) {
+    const rendered = yield* loadTryoutContent({
+      answers: [],
+      kind: "signed",
+      questions: [question],
+    });
+    const result = rendered.questions[0];
+    if (!result) {
+      return yield* runtimeIntegrity(
+        "The featured try-out question did not render."
+      );
+    }
+    return result;
   }
-  return result;
-});
+);
 
 /** Renders one signed access through permanent runtime bytes. */
 const loadTryoutContent = Effect.fn("NakafaContent.loadTryoutContent")(
   function* (access: SignedContentAccess) {
-  const plan = planTryoutContentBatches(access.questions, access.answers);
+    const plan = planTryoutContentBatches(access.questions, access.answers);
     return yield* renderContentPlan(plan, renderBatch);
   }
 );
@@ -106,22 +106,22 @@ function cacheRenderedBatch(content: readonly RenderedTryoutContentEntry[]) {
 }
 
 /** Reads, verifies, and renders one protected batch. */
-const readBatch = Effect.fn("NakafaContent.readTryoutBatch")(
-  function* (selectors: readonly TryoutSelector[]) {
-    const request = yield* makeTryoutRuntimeRequest(selectors);
-    const target = yield* readRuntimeTarget;
-    const liveRenderer = yield* rendererManifest;
-    const found = yield* readProtectedContent(target, request, liveRenderer);
-    return yield* Effect.forEach(
-      selectors.map((selector, index) => ({
-        item: found.items[index],
-        selector,
-      })),
-      ({ item, selector }) => renderLiveItem(item, selector),
-      { concurrency: SIGNED_RENDER_CONCURRENCY }
-    );
-  }
-);
+const readBatch = Effect.fn("NakafaContent.readTryoutBatch")(function* (
+  selectors: readonly TryoutSelector[]
+) {
+  const request = yield* makeTryoutRuntimeRequest(selectors);
+  const target = yield* readRuntimeTarget;
+  const liveRenderer = yield* rendererManifest;
+  const found = yield* readProtectedContent(target, request, liveRenderer);
+  return yield* Effect.forEach(
+    selectors.map((selector, index) => ({
+      item: found.items[index],
+      selector,
+    })),
+    ({ item, selector }) => renderLiveItem(item, selector),
+    { concurrency: SIGNED_RENDER_CONCURRENCY }
+  );
+});
 
 /** Reads the server-owned protected runtime target. */
 const readRuntimeTarget = Effect.try({

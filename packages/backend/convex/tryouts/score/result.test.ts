@@ -9,6 +9,7 @@ import {
   TryoutScoreReadError,
 } from "@repo/backend/convex/tryouts/score/result";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
+import { ensureTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
 import { Effect } from "effect";
 
 const NOW = Date.UTC(2026, 7, 8, 12, 0, 0);
@@ -36,6 +37,10 @@ describe("tryouts/score/result", () => {
           t.run((ctx) =>
             runConvexProgram(
               Effect.gen(function* () {
+                const tryoutSnapshotId = `sha256:${"a".repeat(64)}`;
+                const runtime = yield* Effect.promise(() =>
+                  ensureTestTryoutRuntimeBundle(ctx, tryoutSnapshotId)
+                );
                 const attemptId = yield* Effect.promise(() =>
                   ctx.db.insert("tryoutAttempts", {
                     accessEndsAt: NOW + 3_600_000,
@@ -62,7 +67,9 @@ describe("tryouts/score/result", () => {
                     totalCorrect: 0,
                     totalQuestions: 0,
                     trackKey: "2027",
-                    tryoutSnapshotId: `sha256:${"a".repeat(64)}`,
+                    tryoutBundleHash: runtime.bundleHash,
+                    tryoutBundleId: runtime.bundleId,
+                    tryoutSnapshotId,
                     userId: identity.userId,
                   })
                 );

@@ -40,8 +40,7 @@ export const deleteAbortRuntime = Effect.fn(
     const retention = yield* readTryoutRuntimeRetention(ctx, row, {
       ignoredReleaseId: releaseId,
     });
-    const cleanupReleaseId =
-      retention.retainingReleaseId ?? retention.retainingMigrationId;
+    const cleanupReleaseId = retention.retainingReleaseId;
     if (cleanupReleaseId) {
       yield* Effect.promise(() =>
         ctx.db.patch("tryoutRuntimeBundles", row._id, {

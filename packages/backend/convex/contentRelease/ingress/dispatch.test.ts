@@ -27,10 +27,6 @@ import {
   insertZeroRelease,
   type TestIdentity,
 } from "@repo/backend/test/content/state";
-import {
-  ABORT_MIGRATION_ID,
-  seedPendingAbort,
-} from "@repo/backend/test/migration/abort";
 import { convexTest } from "convex-test";
 import { Schema } from "effect";
 import { vi } from "vitest";
@@ -46,31 +42,6 @@ vi.mock("@repo/backend/content/trust", async () => {
 });
 
 describe("content publication Node dispatch", () => {
-  it("dispatches idempotent retained-history abort evidence", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(seedPendingAbort);
-
-    const request = {
-      command: "abort",
-      operation: "migrateTryoutHistory",
-      releaseId: ABORT_MIGRATION_ID,
-    } as const;
-    const completed = await sendPublication(t, request);
-    const repeated = await sendPublication(t, request);
-
-    expect(completed).toMatchObject({
-      ok: true,
-      operation: "migrateTryoutHistory",
-      value: {
-        command: "abort",
-        deleted: 1,
-        done: true,
-        migrationId: ABORT_MIGRATION_ID,
-      },
-    });
-    expect(repeated).toEqual(completed);
-  });
-
   it("publishes one authenticated release through every lifecycle boundary", async () => {
     const t = convexTest(schema, convexModules);
     const candidateResponses = await publishIngressCandidate(t);

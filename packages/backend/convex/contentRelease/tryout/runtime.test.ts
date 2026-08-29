@@ -187,29 +187,31 @@ describe("contentRelease/tryout runtime activation", () => {
     })
   );
 
-  it.effect("returns completed proof without duplicating permanent storage", () =>
-    Effect.gen(function* () {
-      const t = convexTest(schema, convexModules);
-      const fixture = yield* makeActivationRuntime();
-      const snapshots = fixture.release.manifest.snapshots;
-      yield* Effect.promise(() =>
-        t.mutation((ctx) =>
-          seedVerifiedPair(ctx, {
-            candidate: snapshots,
-            recovery: invertContentSnapshots(snapshots),
-          })
-        )
-      );
-      yield* storeRuntimeFixture(t, fixture);
-      yield* Effect.promise(() => activateCandidate(t));
+  it.effect(
+    "returns completed proof without duplicating permanent storage",
+    () =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        const fixture = yield* makeActivationRuntime();
+        const snapshots = fixture.release.manifest.snapshots;
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            seedVerifiedPair(ctx, {
+              candidate: snapshots,
+              recovery: invertContentSnapshots(snapshots),
+            })
+          )
+        );
+        yield* storeRuntimeFixture(t, fixture);
+        yield* Effect.promise(() => activateCandidate(t));
 
-      const retry = yield* Effect.promise(() => activateCandidate(t));
-      const runtime = yield* Effect.promise(() =>
-        t.run((ctx) => ctx.db.query("tryoutRuntimeBundles").collect())
-      );
-      expect(retry.kind).toBe("completed");
-      expect(runtime).toHaveLength(1);
-    })
+        const retry = yield* Effect.promise(() => activateCandidate(t));
+        const runtime = yield* Effect.promise(() =>
+          t.run((ctx) => ctx.db.query("tryoutRuntimeBundles").collect())
+        );
+        expect(retry.kind).toBe("completed");
+        expect(runtime).toHaveLength(1);
+      })
   );
 
   it.effect("fails closed on completed retry and current state drift", () =>

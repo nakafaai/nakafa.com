@@ -1,11 +1,12 @@
+import { describe, expect, it } from "@effect/vitest";
 import posthogTest from "@posthog/convex/test";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { seedAnalyticsConsent } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { tryoutScoresHandler } from "@repo/backend/convex/triggers/tryouts/scores";
+import { ensureTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 
@@ -28,6 +29,11 @@ async function insertScoreGraph(ctx: MutationCtx) {
   });
   const setIdentity = "tryout:set:indonesia:snbt:2027:id:set-1";
   const tryoutSnapshotId = `sha256:${"1".repeat(64)}`;
+  const runtime = await ensureTestTryoutRuntimeBundle(
+    ctx,
+    tryoutSnapshotId,
+    "release-test-score-trigger"
+  );
   const attemptId = await ctx.db.insert("tryoutAttempts", {
     accessEndsAt: NOW + 86_400_000,
     accessSourceKind: "free",
@@ -54,6 +60,8 @@ async function insertScoreGraph(ctx: MutationCtx) {
     setPublicPath: "try-out/indonesia/snbt/2027/set-1",
     snapshotReleaseId: "release-test-score-trigger",
     trackKey: "2027",
+    tryoutBundleHash: runtime.bundleHash,
+    tryoutBundleId: runtime.bundleId,
     tryoutSnapshotId,
   });
   const scoreId = await ctx.db.insert("tryoutScores", {

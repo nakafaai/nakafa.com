@@ -6,9 +6,15 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type schema from "@repo/backend/convex/schema";
 import { storeAuthenticatedTryoutRuntimeBundle } from "@repo/backend/convex/tryouts/runtime/signed";
 import { testSignedTryoutRuntimeBundle } from "@repo/backend/test/content/proof";
+import {
+  TEST_RELEASE_ID,
+  testTextHash,
+} from "@repo/backend/test/content/release";
 import type { RuntimeIngressFixture } from "@repo/backend/test/runtime/ingress";
 import type { TestConvex } from "convex-test";
 import { Effect, Schema } from "effect";
+
+const TEST_RENDERER_HASH = testTextHash("test-attempt-runtime-renderer");
 
 /** Stores one authenticated fixture through the production runtime capability. */
 export const storeRuntimeFixture = Effect.fn("test.runtime.storeFixture")(
@@ -27,6 +33,40 @@ export const storeRuntimeFixture = Effect.fn("test.runtime.storeFixture")(
     );
   }
 );
+
+/** Reuses or creates the permanent identity required by an attempt fixture. */
+export async function ensureTestTryoutRuntimeBundle(
+  ctx: MutationCtx,
+  snapshotId: string,
+  sourceReleaseId: string = TEST_RELEASE_ID
+) {
+  const existing = await ctx.db
+    .query("tryoutRuntimeBundles")
+    .withIndex("by_snapshotId_and_rendererManifestHash", (index) =>
+      index.eq("snapshotId", snapshotId)
+    )
+    .first();
+  if (existing) {
+    return { bundleHash: existing.bundleHash, bundleId: existing._id };
+  }
+
+  const bundleHash = testTextHash(
+    `test-attempt-runtime:${sourceReleaseId}:${snapshotId}`
+  );
+  const bundleId = await ctx.db.insert("tryoutRuntimeBundles", {
+    bundleHash,
+    bundleJson: "{}",
+    cleanupReleaseId: sourceReleaseId,
+    createdAt: 1,
+    rendererJson: "{}",
+    rendererManifestHash: TEST_RENDERER_HASH,
+    snapshotId,
+    sourceGitSha: "0".repeat(40),
+    sourceManifestHash: testTextHash(`test-runtime-source:${sourceReleaseId}`),
+    sourceReleaseId,
+  });
+  return { bundleHash, bundleId };
+}
 
 /** Retains a valid permanent bundle for the active technical try-out snapshot. */
 export async function insertTestTryoutRuntimeBundle(

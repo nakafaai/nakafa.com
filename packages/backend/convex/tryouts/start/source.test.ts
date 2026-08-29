@@ -103,7 +103,6 @@ describe("tryouts/start/source", () => {
       );
       expect(source).toMatchObject({
         bundle: { sourceReleaseId: seeded.sourceReleaseId },
-        kind: "permanent",
         releaseId: REUSED_RELEASE_ID,
       });
 

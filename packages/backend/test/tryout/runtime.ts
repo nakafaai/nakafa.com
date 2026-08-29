@@ -25,7 +25,10 @@ import {
   TEST_RELEASE_ID,
   testTextHash,
 } from "@repo/backend/test/content/release";
-import { insertTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
+import {
+  ensureTestTryoutRuntimeBundle,
+  insertTestTryoutRuntimeBundle,
+} from "@repo/backend/test/runtime/bundle";
 import {
   makeSignedTryoutSection,
   makeSignedTryoutSource,
@@ -276,6 +279,13 @@ export async function insertTryoutAttempt(
   const scoringStrategy = args.scoringStrategy ?? "irt";
   const accessEndsAt = args.expiresAt ?? TRYOUT_TEST_NOW + 86_400_000;
   const setIdentity = tryoutCatalogIdentity(args.set);
+  const snapshotId = args.snapshotId ?? testTextHash("tryout-runtime-snapshot");
+  const snapshotReleaseId = args.snapshotReleaseId ?? TEST_RELEASE_ID;
+  const runtime = await ensureTestTryoutRuntimeBundle(
+    ctx,
+    snapshotId,
+    snapshotReleaseId
+  );
 
   return await ctx.db.insert("tryoutAttempts", {
     accessEndsAt,
@@ -305,10 +315,11 @@ export async function insertTryoutAttempt(
     appLocale: Schema.decodeSync(ActiveAppLocaleCodeSchema)(args.set.appLocale),
     setIdentity,
     setKey: args.set.setKey,
-    snapshotReleaseId: args.snapshotReleaseId ?? TEST_RELEASE_ID,
+    snapshotReleaseId,
     trackKey: args.set.trackKey,
-    tryoutSnapshotId:
-      args.snapshotId ?? testTextHash("tryout-runtime-snapshot"),
+    tryoutBundleHash: runtime.bundleHash,
+    tryoutBundleId: runtime.bundleId,
+    tryoutSnapshotId: snapshotId,
   });
 }
 

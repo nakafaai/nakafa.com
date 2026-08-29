@@ -238,7 +238,6 @@ const activateRecoveryProgram = Effect.fn("contentRelease.activateRecovery")(
       );
       return { kind: "completed", receipt } satisfies ActivationResult;
     }
-    yield* requireContentActivationUnlocked(ctx);
     const state = yield* loadState(ctx);
     if (
       !state ||

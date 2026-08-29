@@ -7,6 +7,7 @@ import {
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
+import { ensureTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
 import {
   activateRenamedTryoutStartSource,
   activateTryoutStartSource,
@@ -31,6 +32,10 @@ async function insertHistoryAttempt(
     userId: Id<"users">;
   }
 ) {
+  const runtime = await ensureTestTryoutRuntimeBundle(
+    ctx,
+    args.tryoutSnapshotId
+  );
   const attemptId = await ctx.db.insert("tryoutAttempts", {
     accessEndsAt: args.startedAt + 3_600_000,
     accessSourceKind: "free",
@@ -57,6 +62,8 @@ async function insertHistoryAttempt(
     setPublicPath: SET_PATH,
     snapshotReleaseId: TEST_RELEASE_ID,
     trackKey: TRYOUT_START_TRACK,
+    tryoutBundleHash: runtime.bundleHash,
+    tryoutBundleId: runtime.bundleId,
     tryoutSnapshotId: args.tryoutSnapshotId,
   });
 
