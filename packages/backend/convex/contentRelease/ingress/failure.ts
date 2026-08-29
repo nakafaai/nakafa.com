@@ -100,7 +100,6 @@ function conflictFailure(
     request.operation === "stageRelease" ||
     request.operation === "stageRecovery" ||
     request.operation === "stageGroup" ||
-    request.operation === "migrateTryoutHistory" ||
     request.operation === "verify" ||
     request.operation === "activate" ||
     request.operation === "activateRecovery"

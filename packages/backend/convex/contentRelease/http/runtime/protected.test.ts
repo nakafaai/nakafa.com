@@ -6,6 +6,7 @@ import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
   PROTECTED_CONTENT_RUNTIME_PATH,
+  PROTECTED_CONTENT_RUNTIME_V2_PATH,
 } from "@repo/backend/content/endpoint";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
@@ -31,10 +32,11 @@ type RuntimeTest = ReturnType<typeof createConvexTestWithBetterAuth>;
 /** Sends one request through the registered protected Convex route. */
 function post(
   target: RuntimeTest,
+  path: string,
   body: BodyInit | null,
   token = RUNTIME_TOKEN
 ) {
-  return target.fetch(PROTECTED_CONTENT_RUNTIME_PATH, {
+  return target.fetch(path, {
     body,
     headers: {
       "content-type": "application/json",
@@ -55,33 +57,39 @@ afterEach(() => {
 });
 
 describe("protected content runtime HTTP route", () => {
-  it("returns exact absence for a valid permanent batch", async () => {
-    const target = createConvexTestWithBetterAuth();
-    await target.mutation((ctx) => insertRuntimeRelease(ctx));
-    const response = await post(target, JSON.stringify(request));
+  it.each([PROTECTED_CONTENT_RUNTIME_PATH, PROTECTED_CONTENT_RUNTIME_V2_PATH])(
+    "returns exact absence for a valid permanent batch at %s",
+    async (path) => {
+      const target = createConvexTestWithBetterAuth();
+      await target.mutation((ctx) => insertRuntimeRelease(ctx));
+      const response = await post(target, path, JSON.stringify(request));
 
-    expect(response.status).toBe(404);
-    await expect(response.json()).resolves.toEqual({ kind: "missing" });
-    expect(response.headers.get("cache-control")).toBe("private, no-store");
-    expect(response.headers.get(CONTENT_RUNTIME_RESPONSE_HEADER)).toBe(
-      CONTENT_RUNTIME_RESPONSE_MARKER
-    );
-    expect(response.headers.get("x-content-type-options")).toBe("nosniff");
-  });
+      expect(response.status).toBe(404);
+      await expect(response.json()).resolves.toEqual({ kind: "missing" });
+      expect(response.headers.get("cache-control")).toBe("private, no-store");
+      expect(response.headers.get(CONTENT_RUNTIME_RESPONSE_HEADER)).toBe(
+        CONTENT_RUNTIME_RESPONSE_MARKER
+      );
+      expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+    }
+  );
 
   it("rejects unauthorized, malformed, and oversized requests", async () => {
     const target = createConvexTestWithBetterAuth();
     const unauthorized = await post(
       target,
+      PROTECTED_CONTENT_RUNTIME_PATH,
       JSON.stringify(request),
       "wrong-token"
     );
     const malformed = await post(
       target,
+      PROTECTED_CONTENT_RUNTIME_PATH,
       JSON.stringify({ ...request, selectors: [] })
     );
     const oversized = await post(
       target,
+      PROTECTED_CONTENT_RUNTIME_PATH,
       "x".repeat(MAX_PROTECTED_RUNTIME_REQUEST_BYTES + 1)
     );
 
