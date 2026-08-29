@@ -21,7 +21,7 @@ import {
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { readPagePreviewStaticParams } from "@/lib/content/preview/route";
 import { getActiveLocaleOrThrow } from "@/lib/i18n/params";
-import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
+import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 
 type PublicPageProps = PageProps<"/[locale]/[...page]">;
 

@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   createLocalizedAlternates,
   createResolvedRouteAlternates,
-} from "@/lib/utils/seo/alternates";
+} from "@/lib/seo/alternates";
 import {
   testArticleDeProjection,
   testArticleIdProjection,

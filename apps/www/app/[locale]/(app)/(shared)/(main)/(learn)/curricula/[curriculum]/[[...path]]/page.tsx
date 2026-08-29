@@ -32,11 +32,11 @@ import { RefContent } from "@/components/shared/ref-content";
 import { SubjectItem } from "@/components/shared/subject-item";
 import { SubjectList } from "@/components/shared/subject-list";
 import { getCurriculumRouteSocialImage } from "@/lib/curriculum/social-images";
+import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
+import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
+import { generateSEOMetadata } from "@/lib/seo/generator";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
 import { getSocialMetadata } from "@/lib/utils/metadata";
-import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
-import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
-import { generateSEOMetadata } from "@/lib/utils/seo/generator";
 
 type CurriculumPageProps =
   PageProps<"/[locale]/curricula/[curriculum]/[[...path]]">;

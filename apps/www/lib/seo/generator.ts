@@ -6,15 +6,11 @@ import type {
 import { Effect, Option } from "effect";
 import { cacheLife } from "next/cache";
 import type { Locale } from "next-intl";
-import { generateFallbackMetadata } from "@/lib/utils/seo/fallback";
-import { createSEOKeywords } from "@/lib/utils/seo/keywords";
-import { generateQuranMetadata } from "@/lib/utils/seo/quran";
-import { fetchSEOTranslationsNamespace } from "@/lib/utils/seo/translations";
-import type {
-  ContentSEOData,
-  SEOContext,
-  SEOMetadata,
-} from "@/lib/utils/seo/types";
+import { generateFallbackMetadata } from "@/lib/seo/fallback";
+import { createSEOKeywords } from "@/lib/seo/keywords";
+import { generateQuranMetadata } from "@/lib/seo/quran";
+import { fetchSEOTranslationsNamespace } from "@/lib/seo/translations";
+import type { ContentSEOData, SEOContext, SEOMetadata } from "@/lib/seo/types";
 
 const EMPTY_SELECT_VALUE = "__EMPTY__";
 

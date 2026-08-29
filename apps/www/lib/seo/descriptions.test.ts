@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { createSEODescription } from "@/lib/utils/seo/descriptions";
+import { createSEODescription } from "@/lib/seo/descriptions";
 
 const LETTER_REGEX = /^[a-zA-Z]$/;
 

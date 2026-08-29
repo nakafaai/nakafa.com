@@ -3,7 +3,7 @@
 import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 import { Effect } from "effect";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { generateQuranMetadata } from "@/lib/utils/seo/quran";
+import { generateQuranMetadata } from "@/lib/seo/quran";
 
 const { mockGetTranslations } = vi.hoisted(() => ({
   mockGetTranslations: vi.fn(),

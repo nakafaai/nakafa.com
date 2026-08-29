@@ -7,9 +7,9 @@ import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { readTryoutMetadata } from "@/components/tryout/catalog/server";
+import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { resolveTryoutExamArtwork } from "@/lib/tryout/artwork";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
-import { createResolvedRouteAlternates } from "@/lib/utils/seo/alternates";
 
 type TryoutMetadataKind = Parameters<typeof readTryoutMetadata>[0]["kind"];
 

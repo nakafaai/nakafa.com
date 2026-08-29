@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "vitest";
-import { createSEOKeywords } from "@/lib/utils/seo/keywords";
+import { createSEOKeywords } from "@/lib/seo/keywords";
 
 describe("createSEOKeywords", () => {
   it("trims comma-separated keyword tokens", () => {

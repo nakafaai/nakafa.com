@@ -6,7 +6,7 @@ import { InputSearch } from "@/components/search/input";
 import { SearchListItems } from "@/components/search/results";
 import { BackButton } from "@/components/shared/back-button";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
+import { createLocalizedAlternates } from "@/lib/seo/alternates";
 
 /** Builds localized search metadata while keeping the page body first for AFDocs content-start checks. */
 export async function generateMetadata({

@@ -11,10 +11,10 @@ import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { getPublishedQuranCatalog } from "@/lib/content/quran/publication";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { createLocalizedAlternates } from "@/lib/seo/alternates";
+import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getSocialMetadata } from "@/lib/utils/metadata";
 import { getQuranSurahName, type QuranSurah } from "@/lib/utils/pages/quran";
-import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
-import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
 /** Builds localized Quran index metadata with markdown alternates for agent-readable docs. */
 export async function generateMetadata({

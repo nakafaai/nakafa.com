@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
+import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 
 describe("createBreadcrumbItems", () => {
   it("builds localized BreadcrumbList items from page hierarchy entries", () => {

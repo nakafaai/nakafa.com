@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { generateFallbackMetadata } from "@/lib/utils/seo/fallback";
+import { generateFallbackMetadata } from "@/lib/seo/fallback";
 
 describe("generateFallbackMetadata", () => {
   it("uses material source context for subject content fallback", () => {

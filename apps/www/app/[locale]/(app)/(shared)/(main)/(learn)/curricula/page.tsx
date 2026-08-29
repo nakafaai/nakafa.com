@@ -22,10 +22,10 @@ import { RefContent } from "@/components/shared/ref-content";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 import { getCurriculumIndexSocialImage } from "@/lib/curriculum/social-images";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { createLocalizedAlternates } from "@/lib/seo/alternates";
+import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
 import { getSocialMetadata } from "@/lib/utils/metadata";
-import { createLocalizedAlternates } from "@/lib/utils/seo/alternates";
-import { createBreadcrumbItems } from "@/lib/utils/seo/breadcrumbs";
 
 interface CurriculumIndexPageProps {
   params: Promise<{ locale: string }>;
