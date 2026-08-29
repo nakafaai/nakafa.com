@@ -195,6 +195,11 @@ import type * as contentRelease_material_write from "../contentRelease/material/
 import type * as contentRelease_model from "../contentRelease/model.js";
 import type * as contentRelease_models from "../contentRelease/models.js";
 import type * as contentRelease_models_impact from "../contentRelease/models/impact.js";
+import type * as contentRelease_models_migrate from "../contentRelease/models/migrate.js";
+import type * as contentRelease_models_migration_page from "../contentRelease/models/migration/page.js";
+import type * as contentRelease_models_migration_spec from "../contentRelease/models/migration/spec.js";
+import type * as contentRelease_models_migration_state from "../contentRelease/models/migration/state.js";
+import type * as contentRelease_models_slot from "../contentRelease/models/slot.js";
 import type * as contentRelease_ownership from "../contentRelease/ownership.js";
 import type * as contentRelease_page from "../contentRelease/page.js";
 import type * as contentRelease_page_catalog from "../contentRelease/page/catalog.js";
@@ -753,6 +758,11 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/model": typeof contentRelease_model;
   "contentRelease/models": typeof contentRelease_models;
   "contentRelease/models/impact": typeof contentRelease_models_impact;
+  "contentRelease/models/migrate": typeof contentRelease_models_migrate;
+  "contentRelease/models/migration/page": typeof contentRelease_models_migration_page;
+  "contentRelease/models/migration/spec": typeof contentRelease_models_migration_spec;
+  "contentRelease/models/migration/state": typeof contentRelease_models_migration_state;
+  "contentRelease/models/slot": typeof contentRelease_models_slot;
   "contentRelease/ownership": typeof contentRelease_ownership;
   "contentRelease/page": typeof contentRelease_page;
   "contentRelease/page/catalog": typeof contentRelease_page_catalog;

@@ -1,6 +1,8 @@
 import { vWorkflowId } from "@convex-dev/workflow";
 import articleSchema from "@repo/backend/convex/contentRelease/article/schema";
 import materialSchema from "@repo/backend/convex/contentRelease/material/schema";
+import modelSchema from "@repo/backend/convex/contentRelease/models/schema";
+import { modelSlotValidator } from "@repo/backend/convex/contentRelease/models/slot";
 import { proofFailureValidator } from "@repo/backend/convex/contentRelease/proof/spec";
 import { searchFamilyValidator } from "@repo/backend/convex/contentRelease/search/spec";
 import snapshotSchema from "@repo/backend/convex/contentRelease/snapshot/schema";
@@ -122,8 +124,22 @@ const tables = {
     publicPath: v.string(),
     releaseId: v.string(),
     sequence: v.number(),
+    slot: v.optional(modelSlotValidator),
     text: v.string(),
   })
+    .index("by_slot_and_contentKey_and_appLocale", {
+      fields: ["slot", "contentKey", "appLocale"],
+      staged: true,
+    })
+    .index("by_slot_and_appLocale_and_family_and_publicPath", {
+      fields: ["slot", "appLocale", "family", "publicPath"],
+      staged: true,
+    })
+    .searchIndex("search_text_by_slot_and_family_and_appLocale", {
+      searchField: "text",
+      filterFields: ["slot", "family", "appLocale"],
+      staged: true,
+    })
     .index("by_contentKey_and_appLocale", ["contentKey", "appLocale"])
     .index("by_appLocale_and_family_and_publicPath", [
       "appLocale",
@@ -137,6 +153,7 @@ const tables = {
 
   ...articleSchema,
   ...materialSchema,
+  ...modelSchema,
 
   /** Immutable route versions resolved before access policy enforcement. */
   contentBindings: defineTable({
@@ -261,6 +278,7 @@ const tables = {
     articleManifestHash: v.optional(v.string()),
     articleReleaseId: v.optional(v.string()),
     articleSequence: v.optional(v.number()),
+    articleSlot: v.optional(modelSlotValidator),
     candidateManifestHash: v.optional(v.string()),
     candidateReleaseId: v.optional(v.string()),
     candidateSequence: v.optional(v.number()),
@@ -274,6 +292,7 @@ const tables = {
     materialManifestHash: v.optional(v.string()),
     materialReleaseId: v.optional(v.string()),
     materialSequence: v.optional(v.number()),
+    materialSlot: v.optional(modelSlotValidator),
     nextSequence: v.number(),
     recoveryManifestHash: v.optional(v.string()),
     recoveryReleaseId: v.optional(v.string()),
@@ -281,6 +300,7 @@ const tables = {
     searchManifestHash: v.optional(v.string()),
     searchReleaseId: v.optional(v.string()),
     searchSequence: v.optional(v.number()),
+    searchSlot: v.optional(modelSlotValidator),
     updatedAt: v.number(),
   }).index("by_key", ["key"]),
 };
