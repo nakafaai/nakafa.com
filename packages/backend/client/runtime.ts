@@ -4,20 +4,29 @@ import {
   NetworkRequestError,
   NetworkRetryCodeSchema,
 } from "@repo/backend/client/network";
+import {
+  ConvexTransientResponseError,
+  ConvexTransientStatusSchema,
+  createConvexRuntimeFetch,
+} from "@repo/backend/client/response";
 import { ConvexHttpClient } from "convex/browser";
 import {
   type FunctionArgs,
   type FunctionReference,
   getFunctionName,
 } from "convex/server";
-import { Effect, Schedule, Schema } from "effect";
+import { Effect, Random, Schedule, Schema } from "effect";
 
 const CONVEX_QUERY_RETRY_SCHEDULE = Schedule.recurs(2).pipe(
   Schedule.addDelay(({ attempt }) =>
-    Effect.succeed(
-      attempt === 1
-        ? NETWORK_RETRY_DELAYS_MILLISECONDS[0]
-        : NETWORK_RETRY_DELAYS_MILLISECONDS[1]
+    Random.next.pipe(
+      Effect.map(
+        (random) =>
+          random *
+          (attempt === 1
+            ? NETWORK_RETRY_DELAYS_MILLISECONDS[0]
+            : NETWORK_RETRY_DELAYS_MILLISECONDS[1])
+      )
     )
   )
 );
@@ -26,32 +35,45 @@ const CONVEX_QUERY_RETRY_SCHEDULE = Schedule.recurs(2).pipe(
 export class ConvexRuntimeQueryError extends Schema.TaggedError<ConvexRuntimeQueryError>()(
   "ConvexRuntimeQueryError",
   {
+    httpStatuses: Schema.Array(ConvexTransientStatusSchema),
     networkCodes: Schema.Array(NetworkRetryCodeSchema),
     query: Schema.String,
     reason: Schema.Literals(["client", "query", "transport"]),
   }
 ) {
   get message() {
-    return createQueryMessage(this.query, this.reason, this.networkCodes);
+    return createQueryMessage(
+      this.query,
+      this.reason,
+      this.networkCodes,
+      this.httpStatuses
+    );
   }
 }
 
 function createQueryMessage(
   query: string,
   reason: ConvexRuntimeQueryError["reason"],
-  networkCodes: ConvexRuntimeQueryError["networkCodes"]
+  networkCodes: ConvexRuntimeQueryError["networkCodes"],
+  httpStatuses: ConvexRuntimeQueryError["httpStatuses"]
 ) {
   const codeSuffix =
     networkCodes.length > 0 ? ` Codes: ${networkCodes.join(", ")}.` : "";
-  return `Convex runtime query ${query} failed at the ${reason} boundary.${codeSuffix}`;
+  const statusSuffix =
+    httpStatuses.length > 0
+      ? ` HTTP statuses: ${httpStatuses.join(", ")}.`
+      : "";
+  return `Convex runtime query ${query} failed at the ${reason} boundary.${codeSuffix}${statusSuffix}`;
 }
 
 function createRuntimeQueryError(
   query: string,
   reason: ConvexRuntimeQueryError["reason"],
-  networkCodes: ConvexRuntimeQueryError["networkCodes"] = []
+  networkCodes: ConvexRuntimeQueryError["networkCodes"] = [],
+  httpStatuses: ConvexRuntimeQueryError["httpStatuses"] = []
 ) {
   return new ConvexRuntimeQueryError({
+    httpStatuses,
     networkCodes,
     query,
     reason,
@@ -59,6 +81,10 @@ function createRuntimeQueryError(
 }
 
 function mapQueryFailure(query: string, cause: unknown) {
+  if (cause instanceof ConvexTransientResponseError) {
+    return createRuntimeQueryError(query, "transport", [], [cause.status]);
+  }
+
   if (cause instanceof NetworkRequestError) {
     return createRuntimeQueryError(query, "transport", cause.networkCodes);
   }
@@ -76,7 +102,10 @@ function mapQueryFailure(query: string, cause: unknown) {
 }
 
 function isRetryableQueryError(error: ConvexRuntimeQueryError) {
-  return error.reason === "transport" && error.networkCodes.length > 0;
+  return (
+    error.reason === "transport" &&
+    (error.networkCodes.length > 0 || error.httpStatuses.length > 0)
+  );
 }
 
 /**
@@ -84,10 +113,13 @@ function isRetryableQueryError(error: ConvexRuntimeQueryError) {
  *
  * Only allowlisted network failures receive the shared bounded retry schedule,
  * including response-stream failures surfaced by the official client. Convex
- * function, HTTP, protocol, timeout, and unknown failures remain terminal.
+ * 5xx responses receive the same bounded retry because queries are read-only,
+ * except status 560, which represents a real Convex function failure. Other
+ * HTTP, protocol, timeout, and unknown failures remain terminal.
  *
  * @see https://docs.convex.dev/functions/error-handling/
  * @see https://effect.website/docs/error-management/retrying/
+ * @see https://github.com/get-convex/convex-backend/blob/1733af03ab93405b061216510695de990c33f787/npm-packages/node-executor/src/syscalls.ts#L84-L91
  * @see https://github.com/nodejs/undici/blob/v7.29.0/lib/web/fetch/index.js#L2130-L2135
  */
 export const readConvexRuntimeQuery = Effect.fn("ConvexRuntime.query")(
@@ -104,7 +136,7 @@ export const readConvexRuntimeQuery = Effect.fn("ConvexRuntime.query")(
       catch: () => createRuntimeQueryError(queryName, "client"),
       try: () =>
         new ConvexHttpClient(convexUrl, {
-          fetch: fetchNoStore,
+          fetch: createConvexRuntimeFetch(),
           logger: false,
         }),
     });
@@ -119,12 +151,3 @@ export const readConvexRuntimeQuery = Effect.fn("ConvexRuntime.query")(
     );
   }
 );
-
-/** Adapts the official client fetch hook to a sanitized network error. */
-const fetchNoStore: typeof fetch = (input, init) =>
-  fetch(input, {
-    ...init,
-    cache: "no-store",
-  }).then(undefined, (cause) =>
-    Promise.reject(createNetworkRequestError(cause))
-  );

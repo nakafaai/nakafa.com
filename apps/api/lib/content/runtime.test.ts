@@ -226,6 +226,7 @@ describe("API content runtime", () => {
       publishedContentMocks.readPublishedApiItems.mockReturnValue(
         Effect.fail(
           new ConvexRuntimeQueryError({
+            httpStatuses: [],
             networkCodes: [],
             query: "contentRuntime/batch",
             reason: "query",
@@ -261,6 +262,7 @@ describe("API content runtime", () => {
     Effect.gen(function* () {
       runtimeClientMocks.runtimeQuery.mockRejectedValueOnce(
         new ConvexRuntimeQueryError({
+          httpStatuses: [],
           networkCodes: [],
           query: "contentRelease/article:apiPage",
           reason: "transport",

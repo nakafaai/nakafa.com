@@ -7,6 +7,7 @@ export function toRuntimeQueryError(cause: unknown) {
   }
 
   return new ConvexRuntimeQueryError({
+    httpStatuses: [],
     networkCodes: [],
     query: "test-runtime-query",
     reason: "query",

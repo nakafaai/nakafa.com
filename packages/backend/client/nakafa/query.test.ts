@@ -58,6 +58,7 @@ describe("readNakafaRuntimeQuery", () => {
         },
       };
       const runtimeError = new ConvexRuntimeQueryError({
+        httpStatuses: [],
         networkCodes: [],
         query: "contentRelease/reference:read",
         reason: "client",
@@ -90,6 +91,7 @@ describe("readNakafaRuntimeQuery", () => {
         },
       };
       const runtimeError = new ConvexRuntimeQueryError({
+        httpStatuses: [],
         networkCodes: ["EPIPE"],
         query: "contentRelease/reference:read",
         reason: "transport",

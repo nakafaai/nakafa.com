@@ -66,6 +66,7 @@ describe("verifyNakafaContent", () => {
   it.effect("preserves typed runtime read failures", () =>
     Effect.gen(function* () {
       const runtimeError = new ConvexRuntimeQueryError({
+        httpStatuses: [],
         networkCodes: ["EPIPE"],
         query: "contentRelease.reference.read",
         reason: "transport",
