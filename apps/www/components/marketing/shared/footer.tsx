@@ -20,7 +20,7 @@ import {
   subjectMenu,
 } from "@/components/sidebar/data/subject";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
-import type { PageNavigationItem } from "@/lib/content/page/navigation";
+import type { PageNavigation } from "@/lib/content/page/navigation";
 
 const highSchoolSubjects =
   subjectMenu.find((subject) => subject.title === "high-school")?.items || [];
@@ -34,7 +34,7 @@ export function Footer({
   pageNavigation,
 }: {
   articleNavigation: readonly ArticleNavigationItem[];
-  pageNavigation: readonly PageNavigationItem[];
+  pageNavigation: PageNavigation | null;
 }) {
   const t = useTranslations("About");
   const tLegal = useTranslations("Legal");
@@ -116,6 +116,15 @@ export function Footer({
                     label={t("community")}
                   />
                 </li>
+                {pageNavigation ? (
+                  <li>
+                    <LinkItem
+                      href={pageNavigation.developerItem.href}
+                      label={pageNavigation.developerItem.title}
+                      prefetch
+                    />
+                  </li>
+                ) : null}
               </ul>
             </div>
 
@@ -124,9 +133,9 @@ export function Footer({
                 {tLegal("terms-and-policies")}
               </span>
               <ul className="flex flex-col gap-2">
-                {pageNavigation.map((page) => (
+                {pageNavigation?.legalItems.map((page) => (
                   <li key={page.pageKey}>
-                    <LinkItem href={page.href} label={page.title} />
+                    <LinkItem href={page.href} label={page.title} prefetch />
                   </li>
                 ))}
                 <AnalyticsConsentFooterItem />
@@ -190,17 +199,19 @@ type LinkItemProps =
       href: ComponentProps<typeof NavigationLink>["href"];
       label: string;
       nativeAnchor?: false;
+      prefetch?: ComponentProps<typeof NavigationLink>["prefetch"];
     }
   | {
       href: string;
       label: string;
       nativeAnchor: true;
+      prefetch?: never;
     };
 
 /**
  * Renders one locale-aware footer destination with the shared text treatment.
  */
-function LinkItem({ href, label, nativeAnchor }: LinkItemProps) {
+function LinkItem({ href, label, nativeAnchor, prefetch }: LinkItemProps) {
   const className = "text-sm transition-colors ease-out hover:text-primary";
 
   if (nativeAnchor) {
@@ -212,7 +223,7 @@ function LinkItem({ href, label, nativeAnchor }: LinkItemProps) {
   }
 
   return (
-    <NavigationLink className={className} href={href}>
+    <NavigationLink className={className} href={href} prefetch={prefetch}>
       {label}
     </NavigationLink>
   );
