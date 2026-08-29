@@ -80,6 +80,7 @@ describe("contentRelease/material/sitemap", () => {
         bucket: "invalid",
         count: 0,
         appLocale: "en",
+        slot: "blue",
       })
     );
 

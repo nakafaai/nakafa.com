@@ -32,6 +32,7 @@ describe("contentRelease/compact", () => {
         publicPath: "test/compact-0",
         releaseId: "release-compact-4",
         sequence: 4,
+        slot: "blue",
         text: "active search entry",
       });
     });
@@ -128,12 +129,15 @@ describe("contentRelease/compact", () => {
     const futureHash = `sha256:${"2".repeat(64)}`;
     await t.mutation(async (ctx) => {
       await ctx.db.insert("contentState", {
+        articleSlot: "blue",
         compactFloor: 1,
         compactFrom: 0,
         compactPhase: "artifacts",
         compactStartedAt: 0,
         key: "primary",
+        materialSlot: "blue",
         nextSequence: 2,
+        searchSlot: "blue",
         updatedAt: 0,
       });
       for (const artifact of [
@@ -178,12 +182,15 @@ describe("contentRelease/compact", () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await ctx.db.insert("contentState", {
+        articleSlot: "blue",
         compactFloor: 1,
         compactFrom: 0,
         compactPhase: "artifacts",
         compactStartedAt: 1,
         key: "primary",
+        materialSlot: "blue",
         nextSequence: 2,
+        searchSlot: "blue",
         updatedAt: 0,
       });
       for (let index = 0; index < ARTIFACT_PAGE_COUNT + 1; index += 1) {

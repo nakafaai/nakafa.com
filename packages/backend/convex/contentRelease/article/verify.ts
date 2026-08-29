@@ -76,8 +76,9 @@ export const verifyCategory = Effect.fn("contentRelease.verifyArticleCategory")(
     const article = yield* Effect.promise(() =>
       ctx.db
         .query("articleCatalog")
-        .withIndex("by_contentKey_and_appLocale", (index) =>
+        .withIndex("by_slot_and_contentKey_and_appLocale", (index) =>
           index
+            .eq("slot", category.slot)
             .eq("contentKey", category.contentKey)
             .eq("appLocale", category.appLocale)
         )

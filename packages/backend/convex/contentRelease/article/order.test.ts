@@ -27,7 +27,7 @@ describe("contentRelease/article/order", () => {
 
     const first = await t.query(async (ctx) => {
       const result = await Effect.runPromise(
-        paginateArticles(ctx, "en", "politics", {
+        paginateArticles(ctx, "blue", "en", "politics", {
           cursor: null,
           maximumBytesRead: PROJECTION_PAGE_BYTES,
           maximumRowsRead: PUBLICATION_SCAN_LIMIT,
@@ -51,7 +51,7 @@ describe("contentRelease/article/order", () => {
 
     const second = await t.query(async (ctx) => {
       const result = await Effect.runPromise(
-        paginateArticles(ctx, "en", "politics", {
+        paginateArticles(ctx, "blue", "en", "politics", {
           cursor: first.result.continueCursor,
           maximumBytesRead: PROJECTION_PAGE_BYTES,
           maximumRowsRead: PUBLICATION_SCAN_LIMIT,
@@ -81,7 +81,7 @@ describe("contentRelease/article/order", () => {
 
     const rowBound = await t.query(async (ctx) => {
       const result = await Effect.runPromise(
-        paginateArticles(ctx, "en", "politics", {
+        paginateArticles(ctx, "blue", "en", "politics", {
           cursor: null,
           maximumBytesRead: PROJECTION_PAGE_BYTES,
           maximumRowsRead: 4,
@@ -103,7 +103,7 @@ describe("contentRelease/article/order", () => {
 
     const byteBound = await t.query(async (ctx) => {
       const result = await Effect.runPromise(
-        paginateArticles(ctx, "en", "politics", {
+        paginateArticles(ctx, "blue", "en", "politics", {
           cursor: null,
           maximumBytesRead: 1,
           maximumRowsRead: 4,

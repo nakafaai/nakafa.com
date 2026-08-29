@@ -14,7 +14,7 @@ import { v } from "convex/values";
 import { Effect } from "effect";
 
 const EXPECTED_RUNTIME_SCHEMA_FINGERPRINT =
-  "e5780b60f87b96987ba71758af423a3ca3eea58fbfa991d666aa720cd6221cc6";
+  "eb5e1256b3d34e7e9479e508f1c26f4d7d9e68fa96bd91a25d3bd9b8ec5c9457";
 
 describe("content runtime tables", () => {
   it.live(
@@ -60,7 +60,7 @@ describe("content runtime tables", () => {
       archive: {
         fixedEntries: ["manifest.jsonl", "metadata.json", "tables.txt"],
         tableEntryPattern: "<table>.jsonl",
-        type: "tar-root-v1",
+        type: "tar-root",
       },
       encryption: {
         cipher: "AES256",
@@ -69,9 +69,9 @@ describe("content runtime tables", () => {
         s2kDigest: "SHA512",
         s2kMode: 3,
       },
-      manifest: "ordered-json-lines-row-count-sha256-v1",
+      manifest: "ordered-json-lines-row-count-sha256",
       portableRows: {
-        encoding: "json-lines-v1",
+        encoding: "json-lines",
         strippedFields: [
           "_id",
           "_creationTime",
@@ -79,7 +79,6 @@ describe("content runtime tables", () => {
           "syncJobId",
         ],
       },
-      version: "signed-runtime-cache-v2",
     });
     expect(CONTENT_RUNTIME_SCHEMA_FINGERPRINT).toBe(
       EXPECTED_RUNTIME_SCHEMA_FINGERPRINT

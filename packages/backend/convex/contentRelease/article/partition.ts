@@ -28,7 +28,7 @@ export const readArticlePartition = Effect.fn(
 
   const owner = yield* loadArticleOwner(ctx, appLocale);
   const activeReleaseId = owner.active?.releaseId ?? null;
-  if (!(owner.managed && owner.active)) {
+  if (!(owner.managed && owner.active && owner.slot)) {
     return { activeReleaseId, kind: "unmanaged" as const };
   }
 
@@ -36,24 +36,33 @@ export const readArticlePartition = Effect.fn(
     Effect.promise(() =>
       ctx.db
         .query("articleBuckets")
-        .withIndex("by_appLocale_and_bucket", (index) =>
-          index.eq("appLocale", appLocale).eq("bucket", bucket)
+        .withIndex("by_slot_and_appLocale_and_bucket", (index) =>
+          index
+            .eq("slot", owner.slot)
+            .eq("appLocale", appLocale)
+            .eq("bucket", bucket)
         )
         .unique()
     ),
     Effect.promise(() =>
       ctx.db
         .query("articleCatalog")
-        .withIndex("by_appLocale_and_bucket_and_publicPath", (index) =>
-          index.eq("appLocale", appLocale).eq("bucket", bucket)
+        .withIndex("by_slot_and_appLocale_and_bucket_and_publicPath", (index) =>
+          index
+            .eq("slot", owner.slot)
+            .eq("appLocale", appLocale)
+            .eq("bucket", bucket)
         )
         .take(CONTENT_BUCKET_SIZE + 1)
     ),
     Effect.promise(() =>
       ctx.db
         .query("articleCategories")
-        .withIndex("by_appLocale_and_bucket_and_category", (index) =>
-          index.eq("appLocale", appLocale).eq("bucket", bucket)
+        .withIndex("by_slot_and_appLocale_and_bucket_and_category", (index) =>
+          index
+            .eq("slot", owner.slot)
+            .eq("appLocale", appLocale)
+            .eq("bucket", bucket)
         )
         .take(CONTENT_BUCKET_SIZE + 1)
     ),

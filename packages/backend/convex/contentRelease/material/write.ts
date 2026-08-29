@@ -14,6 +14,7 @@ import {
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { adjustMaterialBucket } from "@repo/backend/convex/contentRelease/material/bucket";
 import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
+import type { ModelSlot } from "@repo/backend/convex/contentRelease/models/slot";
 import { Effect } from "effect";
 
 type PublicProjection = NonNullable<
@@ -23,14 +24,18 @@ type AppLocale = Doc<"materialCatalog">["appLocale"];
 /** Loads the sole active material row for one localized content identity. */
 const loadMaterial = Effect.fn("contentRelease.loadMaterial")(function* (
   ctx: MutationCtx,
+  slot: ModelSlot,
   contentKey: string,
   appLocale: AppLocale
 ) {
   return yield* Effect.promise(() =>
     ctx.db
       .query("materialCatalog")
-      .withIndex("by_contentKey_and_appLocale", (index) =>
-        index.eq("contentKey", contentKey).eq("appLocale", appLocale)
+      .withIndex("by_slot_and_contentKey_and_appLocale", (index) =>
+        index
+          .eq("slot", slot)
+          .eq("contentKey", contentKey)
+          .eq("appLocale", appLocale)
       )
       .unique()
   );
@@ -39,6 +44,7 @@ const loadMaterial = Effect.fn("contentRelease.loadMaterial")(function* (
 export const writeMaterial = Effect.fn("contentRelease.writeMaterial")(
   function* (
     ctx: MutationCtx,
+    slot: ModelSlot,
     head: PublicProjection,
     projection: MaterialLessonProjection
   ) {
@@ -99,40 +105,58 @@ export const writeMaterial = Effect.fn("contentRelease.writeMaterial")(
       sequence: head.sequence,
       sourcePath: head.sourcePath,
       topicAssetId: topic.graph.assetId,
+      slot,
     };
     yield* ensureDocumentSize(
       "Active material catalog entry",
       row,
       READ_MODEL_DOCUMENT_LIMIT
     );
-    const existing = yield* loadMaterial(ctx, head.contentKey, head.appLocale);
+    const existing = yield* loadMaterial(
+      ctx,
+      slot,
+      head.contentKey,
+      head.appLocale
+    );
     if (existing) {
       if (existing.bucket !== row.bucket) {
         yield* adjustMaterialBucket(
           ctx,
+          slot,
           existing.appLocale,
           existing.bucket,
           -1
         );
-        yield* adjustMaterialBucket(ctx, row.appLocale, row.bucket, 1);
+        yield* adjustMaterialBucket(ctx, slot, row.appLocale, row.bucket, 1);
       }
       yield* Effect.promise(() =>
         ctx.db.replace("materialCatalog", existing._id, row)
       );
       return;
     }
-    yield* adjustMaterialBucket(ctx, row.appLocale, row.bucket, 1);
+    yield* adjustMaterialBucket(ctx, slot, row.appLocale, row.bucket, 1);
     yield* Effect.promise(() => ctx.db.insert("materialCatalog", row));
   }
 );
 /** Deletes one active localized material row when its head disappears. */
 export const deleteMaterial = Effect.fn("contentRelease.deleteMaterial")(
-  function* (ctx: MutationCtx, contentKey: string, appLocale: AppLocale) {
-    const existing = yield* loadMaterial(ctx, contentKey, appLocale);
+  function* (
+    ctx: MutationCtx,
+    slot: ModelSlot,
+    contentKey: string,
+    appLocale: AppLocale
+  ) {
+    const existing = yield* loadMaterial(ctx, slot, contentKey, appLocale);
     if (!existing) {
       return;
     }
-    yield* adjustMaterialBucket(ctx, existing.appLocale, existing.bucket, -1);
+    yield* adjustMaterialBucket(
+      ctx,
+      slot,
+      existing.appLocale,
+      existing.bucket,
+      -1
+    );
     yield* Effect.promise(() => ctx.db.delete("materialCatalog", existing._id));
   }
 );

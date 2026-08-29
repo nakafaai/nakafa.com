@@ -10,11 +10,11 @@ export const loadArticleOwner = Effect.fn("contentRelease.loadArticleOwner")(
   function* (ctx: QueryCtx, appLocale: Doc<"contentPaths">["appLocale"]) {
     const active = yield* loadActiveIdentity(ctx);
     if (!active) {
-      return { active: null, managed: false };
+      return { active: null, managed: false, slot: null };
     }
     const families = yield* loadReleaseFamilies(active.release);
     if (!families.result.includes("article")) {
-      return { active, managed: false };
+      return { active, managed: false, slot: null };
     }
     if (
       active.state.articleManifestHash !== active.manifestHash ||
@@ -26,6 +26,6 @@ export const loadArticleOwner = Effect.fn("contentRelease.loadArticleOwner")(
         `Articles for ${appLocale} in active release ${active.releaseId} are still synchronizing.`
       );
     }
-    return { active, managed: true };
+    return { active, managed: true, slot: active.state.articleSlot };
   }
 );

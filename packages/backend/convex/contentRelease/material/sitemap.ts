@@ -17,7 +17,7 @@ export const readMaterialBuckets = Effect.fn(
   appLocale: Parameters<typeof readMaterialPartition>[1]
 ) {
   const owner = yield* loadMaterialOwner(ctx, appLocale);
-  if (!(owner.active && owner.managed)) {
+  if (!(owner.active && owner.managed && owner.slot)) {
     return {
       activeReleaseId: owner.active?.releaseId ?? null,
       buckets: [],
@@ -29,8 +29,8 @@ export const readMaterialBuckets = Effect.fn(
   const rows = yield* Effect.promise(() =>
     ctx.db
       .query("materialBuckets")
-      .withIndex("by_appLocale_and_bucket", (index) =>
-        index.eq("appLocale", appLocale)
+      .withIndex("by_slot_and_appLocale_and_bucket", (index) =>
+        index.eq("slot", owner.slot).eq("appLocale", appLocale)
       )
       .take(CONTENT_BUCKET_LIMIT + 1)
   );

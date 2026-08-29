@@ -86,7 +86,8 @@ export const readProgramRoute = Effect.fn("contentRelease.readProgramRoute")(
       ctx,
       snapshotId,
       route,
-      active.signed.manifest.activeAppLocales
+      active.signed.manifest.activeAppLocales,
+      active.state.materialSlot
     );
     return {
       activeManifestHash: active.manifestHash,

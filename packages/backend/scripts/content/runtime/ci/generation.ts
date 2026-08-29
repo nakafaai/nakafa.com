@@ -30,6 +30,7 @@ const OptionalManifestHashSchema = Schema.optional(Sha256HashSchema);
 const OptionalReleaseIdSchema = Schema.optional(ReleaseIdSchema);
 const OptionalSequenceSchema = Schema.optional(SequenceSchema);
 const CompactionPhaseSchema = Schema.Literals(COMPACTION_PHASES);
+const ModelSlotSchema = Schema.Literals(["blue", "green"]);
 const PublishedContentStateSchema = Schema.Struct({
   activeManifestHash: Sha256HashSchema,
   activeReleaseId: ReleaseIdSchema,
@@ -37,6 +38,7 @@ const PublishedContentStateSchema = Schema.Struct({
   articleManifestHash: Sha256HashSchema,
   articleReleaseId: ReleaseIdSchema,
   articleSequence: SequenceSchema,
+  articleSlot: ModelSlotSchema,
   candidateManifestHash: OptionalManifestHashSchema,
   candidateReleaseId: OptionalReleaseIdSchema,
   candidateSequence: OptionalSequenceSchema,
@@ -58,6 +60,7 @@ const PublishedContentStateSchema = Schema.Struct({
   materialManifestHash: Sha256HashSchema,
   materialReleaseId: ReleaseIdSchema,
   materialSequence: SequenceSchema,
+  materialSlot: ModelSlotSchema,
   nextSequence: SequenceSchema,
   recoveryManifestHash: OptionalManifestHashSchema,
   recoveryReleaseId: OptionalReleaseIdSchema,
@@ -65,6 +68,7 @@ const PublishedContentStateSchema = Schema.Struct({
   searchManifestHash: Sha256HashSchema,
   searchReleaseId: ReleaseIdSchema,
   searchSequence: SequenceSchema,
+  searchSlot: ModelSlotSchema,
   updatedAt: TimestampSchema,
 });
 type PublishedContentState = Schema.Schema.Type<
@@ -180,16 +184,19 @@ const runtimePointer = (state: PublishedContentState) => ({
     manifestHash: state.articleManifestHash,
     releaseId: state.articleReleaseId,
     sequence: state.articleSequence,
+    slot: state.articleSlot,
   },
   material: {
     manifestHash: state.materialManifestHash,
     releaseId: state.materialReleaseId,
     sequence: state.materialSequence,
+    slot: state.materialSlot,
   },
   search: {
     manifestHash: state.searchManifestHash,
     releaseId: state.searchReleaseId,
     sequence: state.searchSequence,
+    slot: state.searchSlot,
   },
 });
 /** Builds the stable signed generation identity from one complete pointer. */

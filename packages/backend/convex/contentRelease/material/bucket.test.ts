@@ -11,20 +11,20 @@ describe("contentRelease/material/bucket", () => {
     const target = convexTest(schema, convexModules);
 
     await target.mutation((ctx) =>
-      runConvexProgram(adjustMaterialBucket(ctx, "en", "abc", 1))
+      runConvexProgram(adjustMaterialBucket(ctx, "blue", "en", "abc", 1))
     );
     await target.mutation((ctx) =>
-      runConvexProgram(adjustMaterialBucket(ctx, "en", "abc", 1))
+      runConvexProgram(adjustMaterialBucket(ctx, "blue", "en", "abc", 1))
     );
     await expect(
       target.run((ctx) => ctx.db.query("materialBuckets").unique())
     ).resolves.toMatchObject({ appLocale: "en", bucket: "abc", count: 2 });
 
     await target.mutation((ctx) =>
-      runConvexProgram(adjustMaterialBucket(ctx, "en", "abc", -1))
+      runConvexProgram(adjustMaterialBucket(ctx, "blue", "en", "abc", -1))
     );
     await target.mutation((ctx) =>
-      runConvexProgram(adjustMaterialBucket(ctx, "en", "abc", -1))
+      runConvexProgram(adjustMaterialBucket(ctx, "blue", "en", "abc", -1))
     );
     await expect(
       target.run((ctx) => ctx.db.query("materialBuckets").unique())
@@ -36,14 +36,14 @@ describe("contentRelease/material/bucket", () => {
 
     await expect(
       target.mutation((ctx) =>
-        runConvexProgram(adjustMaterialBucket(ctx, "en", "invalid", 1))
+        runConvexProgram(adjustMaterialBucket(ctx, "blue", "en", "invalid", 1))
       )
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
     await expect(
       target.mutation((ctx) =>
-        runConvexProgram(adjustMaterialBucket(ctx, "en", "abc", -1))
+        runConvexProgram(adjustMaterialBucket(ctx, "blue", "en", "abc", -1))
       )
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
@@ -54,11 +54,12 @@ describe("contentRelease/material/bucket", () => {
         bucket: "abc",
         count: CONTENT_BUCKET_SIZE,
         appLocale: "en",
+        slot: "blue",
       })
     );
     await expect(
       target.mutation((ctx) =>
-        runConvexProgram(adjustMaterialBucket(ctx, "en", "abc", 1))
+        runConvexProgram(adjustMaterialBucket(ctx, "blue", "en", "abc", 1))
       )
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_LIMIT" },

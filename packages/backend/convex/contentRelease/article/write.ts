@@ -13,6 +13,7 @@ import {
   READ_MODEL_DOCUMENT_LIMIT,
 } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import type { ModelSlot } from "@repo/backend/convex/contentRelease/models/slot";
 import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
@@ -22,6 +23,7 @@ type AppLocale = Doc<"articleCatalog">["appLocale"];
 /** Replaces one active article row and reconciles its category ownership. */
 export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
   ctx: MutationCtx,
+  slot: ModelSlot,
   head: ContentHead,
   projection: ArticleProjection
 ) {
@@ -62,6 +64,7 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
     releaseId: head.releaseId,
     rendererDomain: head.rendererDomain,
     sequence: head.sequence,
+    slot,
   };
   yield* ensureDocumentSize(
     "Active article catalog entry",
@@ -70,6 +73,7 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
   );
   const existing = yield* loadArticle(
     ctx,
+    slot,
     head.contentKey,
     projection.appLocale
   );
@@ -77,6 +81,7 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
     if (existing.bucket !== entry.bucket) {
       yield* adjustArticleBucket(
         ctx,
+        slot,
         existing.appLocale,
         existing.bucket,
         "article",
@@ -84,6 +89,7 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
       );
       yield* adjustArticleBucket(
         ctx,
+        slot,
         entry.appLocale,
         entry.bucket,
         "article",
@@ -94,11 +100,17 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
       ctx.db.replace("articleCatalog", existing._id, entry)
     );
     if (existing.category !== entry.category) {
-      yield* reconcileCategory(ctx, projection.appLocale, existing.category);
+      yield* reconcileCategory(
+        ctx,
+        slot,
+        projection.appLocale,
+        existing.category
+      );
     }
   } else {
     yield* adjustArticleBucket(
       ctx,
+      slot,
       entry.appLocale,
       entry.bucket,
       "article",
@@ -111,19 +123,25 @@ export const writeArticle = Effect.fn("contentRelease.writeArticle")(function* (
 
 /** Deletes one active article row and reconciles its former category. */
 export const deleteArticle = Effect.fn("contentRelease.deleteArticle")(
-  function* (ctx: MutationCtx, contentKey: string, appLocale: AppLocale) {
-    const existing = yield* loadArticle(ctx, contentKey, appLocale);
+  function* (
+    ctx: MutationCtx,
+    slot: ModelSlot,
+    contentKey: string,
+    appLocale: AppLocale
+  ) {
+    const existing = yield* loadArticle(ctx, slot, contentKey, appLocale);
     if (!existing) {
       return;
     }
     yield* adjustArticleBucket(
       ctx,
+      slot,
       existing.appLocale,
       existing.bucket,
       "article",
       -1
     );
     yield* Effect.promise(() => ctx.db.delete("articleCatalog", existing._id));
-    yield* reconcileCategory(ctx, appLocale, existing.category);
+    yield* reconcileCategory(ctx, slot, appLocale, existing.category);
   }
 );

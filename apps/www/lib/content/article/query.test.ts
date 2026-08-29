@@ -1,10 +1,10 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { encodeArticlePublicationCursor } from "@repo/contents/_types/publication";
 import { Option } from "effect";
-import { describe, expect, it } from "vitest";
 import {
   getArticleNextHref,
   readArticlePageCursor,
@@ -70,7 +70,7 @@ describe("article catalog query", () => {
     ).toBe("");
   });
 
-  it("resets only predecessor cursors on article category pages", () => {
+  it("resets unsupported cursors at the current article publication", () => {
     const identity = {
       expectedManifestHash: manifest,
       expectedReleaseId: releaseId,
@@ -90,6 +90,12 @@ describe("article catalog query", () => {
       shouldResetArticlePublicationCursor({
         ...identity,
         cursor: "native-predecessor-position",
+      })
+    ).toBe(true);
+    expect(
+      shouldResetArticlePublicationCursor({
+        ...identity,
+        cursor: "article-publication:v1:[]",
       })
     ).toBe(true);
     expect(

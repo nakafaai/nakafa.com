@@ -5,6 +5,7 @@ import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import type { ContentSnapshotSet } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { INITIAL_MODEL_SLOT } from "@repo/backend/convex/contentRelease/models/slot";
 import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
@@ -74,11 +75,14 @@ export async function insertSignedCandidate(
     updatedAt: now,
   });
   await ctx.db.insert("contentState", {
+    articleSlot: INITIAL_MODEL_SLOT,
     candidateManifestHash: release.manifestHash,
     candidateReleaseId: releaseId,
     candidateSequence: 1,
     key: "primary",
+    materialSlot: INITIAL_MODEL_SLOT,
     nextSequence: 2,
+    searchSlot: INITIAL_MODEL_SLOT,
     updatedAt: now,
   });
 }
@@ -138,6 +142,7 @@ export async function insertTestRelease(
     updatedAt: now,
   });
   await ctx.db.insert("contentState", {
+    articleSlot: INITIAL_MODEL_SLOT,
     ...(role === "candidate"
       ? {
           candidateManifestHash: TEST_MANIFEST_HASH,
@@ -150,7 +155,9 @@ export async function insertTestRelease(
           recoverySequence: sequence,
         }),
     key: "primary",
+    materialSlot: INITIAL_MODEL_SLOT,
     nextSequence: sequence + 1,
+    searchSlot: INITIAL_MODEL_SLOT,
     updatedAt: now,
   });
 }

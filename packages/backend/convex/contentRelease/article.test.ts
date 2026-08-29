@@ -95,6 +95,41 @@ describe("contentRelease/article", () => {
     });
   });
 
+  it("restarts cursors from the retired publication queries", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) => insertRuntimeArticles(ctx, 1));
+    const identity = {
+      expectedManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
+      expectedReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+      appLocale: "en" as const,
+    };
+
+    await expect(
+      t.query(page, {
+        ...identity,
+        category: "politics",
+        paginationOpts: {
+          cursor: "article-publication:v1:[]",
+          numItems: 1,
+        },
+      })
+    ).resolves.toMatchObject({
+      managed: true,
+      result: { isDone: true, page: [] },
+      stale: true,
+    });
+    await expect(
+      t.query(categories, {
+        ...identity,
+        paginationOpts: { cursor: "retired-native-cursor", numItems: 1 },
+      })
+    ).resolves.toMatchObject({
+      managed: true,
+      result: { isDone: true, page: [] },
+      stale: true,
+    });
+  });
+
   it("paginates every current article without duplication", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => insertRuntimeArticles(ctx, 3));

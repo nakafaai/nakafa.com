@@ -218,11 +218,14 @@ describe("contentRelease/cleanup", () => {
     await reachable.mutation(async (ctx) => {
       await insertRelease(ctx);
       await ctx.db.insert("contentState", {
+        articleSlot: "blue",
         candidateManifestHash: RELEASE.manifestHash,
         candidateReleaseId: RELEASE.releaseId,
         candidateSequence: RELEASE.sequence,
         key: "primary",
+        materialSlot: "blue",
         nextSequence: 2,
+        searchSlot: "blue",
         updatedAt: NOW,
       });
     });

@@ -17,6 +17,10 @@ import {
   loadState,
   ownsRole,
 } from "@repo/backend/convex/contentRelease/model";
+import {
+  deleteModelBuild,
+  loadModelBuild,
+} from "@repo/backend/convex/contentRelease/models/build";
 import { stopProofWorkflow } from "@repo/backend/convex/contentRelease/proof/coordinator";
 import { Effect } from "effect";
 
@@ -54,7 +58,8 @@ export const validateAbortedRelease = Effect.fn(
 )(function* (ctx: MutationCtx | QueryCtx, releaseId: string) {
   const release = yield* loadRelease(ctx, releaseId);
   const state = yield* loadState(ctx);
-  const [rows, residue, runtime] = yield* Effect.all([
+  const [build, rows, residue, runtime] = yield* Effect.all([
+    loadModelBuild(ctx),
     Effect.all([
       Effect.promise(() =>
         ctx.db
@@ -102,6 +107,7 @@ export const validateAbortedRelease = Effect.fn(
     state?.activeReleaseId === releaseId ||
     state?.candidateReleaseId === releaseId ||
     state?.recoveryReleaseId === releaseId ||
+    build?.releaseId === releaseId ||
     residue ||
     runtime ||
     rows.some((row) => row !== null)
@@ -196,6 +202,7 @@ export const abortProgram = Effect.fn("contentRelease.abort")(function* (
     })
   );
   if (complete) {
+    yield* deleteModelBuild(ctx, releaseId);
     const slot =
       release.role === "candidate"
         ? {

@@ -22,7 +22,7 @@ const materialFields = {
   sequence: v.number(),
   sourcePath: v.string(),
   topicAssetId: v.string(),
-  slot: v.optional(modelSlotValidator),
+  slot: modelSlotValidator,
 };
 
 const tables = {
@@ -32,68 +32,53 @@ const tables = {
     dateModified: v.optional(v.string()),
     datePublished: v.string(),
   })
-    .index("by_slot_and_contentKey_and_appLocale", {
-      fields: ["slot", "contentKey", "appLocale"],
-      staged: true,
-    })
-    .index("by_slot_and_appLocale_and_contentKey", {
-      fields: ["slot", "appLocale", "contentKey"],
-      staged: true,
-    })
-    .index("by_slot_and_appLocale_and_assetId", {
-      fields: ["slot", "appLocale", "assetId"],
-      staged: true,
-    })
-    .index("by_slot_and_appLocale_and_topicAssetId_and_assetId", {
-      fields: ["slot", "appLocale", "topicAssetId", "assetId"],
-      staged: true,
-    })
-    .index("by_slot_and_appLocale_and_publicPath", {
-      fields: ["slot", "appLocale", "publicPath"],
-      staged: true,
-    })
-    .index("by_slot_and_appLocale_and_datePublished_and_contentKey", {
-      fields: ["slot", "appLocale", "datePublished", "contentKey"],
-      staged: true,
-    })
-    .index("by_slot_and_appLocale_and_bucket_and_publicPath", {
-      fields: ["slot", "appLocale", "bucket", "publicPath"],
-      staged: true,
-    })
-    .index("by_slot_and_appLocale_and_parentPath_and_order_and_publicPath", {
-      fields: ["slot", "appLocale", "parentPath", "order", "publicPath"],
-      staged: true,
-    })
-    .index("by_slot_and_appLocale_and_materialKey_and_order_and_publicPath", {
-      fields: ["slot", "appLocale", "materialKey", "order", "publicPath"],
-      staged: true,
-    })
-    .index("by_contentKey_and_appLocale", ["contentKey", "appLocale"])
-    .index("by_appLocale_and_contentKey", ["appLocale", "contentKey"])
-    .index("by_appLocale_and_assetId", ["appLocale", "assetId"])
-    .index("by_appLocale_and_topicAssetId_and_assetId", [
+    .index("by_slot_and_contentKey_and_appLocale", [
+      "slot",
+      "contentKey",
+      "appLocale",
+    ])
+    .index("by_slot_and_appLocale_and_contentKey", [
+      "slot",
+      "appLocale",
+      "contentKey",
+    ])
+    .index("by_slot_and_appLocale_and_assetId", [
+      "slot",
+      "appLocale",
+      "assetId",
+    ])
+    .index("by_slot_and_appLocale_and_topicAssetId_and_assetId", [
+      "slot",
       "appLocale",
       "topicAssetId",
       "assetId",
     ])
-    .index("by_appLocale_and_publicPath", ["appLocale", "publicPath"])
-    .index("by_appLocale_and_datePublished_and_contentKey", [
+    .index("by_slot_and_appLocale_and_publicPath", [
+      "slot",
+      "appLocale",
+      "publicPath",
+    ])
+    .index("by_slot_and_appLocale_and_datePublished_and_contentKey", [
+      "slot",
       "appLocale",
       "datePublished",
       "contentKey",
     ])
-    .index("by_appLocale_and_bucket_and_publicPath", [
+    .index("by_slot_and_appLocale_and_bucket_and_publicPath", [
+      "slot",
       "appLocale",
       "bucket",
       "publicPath",
     ])
-    .index("by_appLocale_and_parentPath_and_order_and_publicPath", [
+    .index("by_slot_and_appLocale_and_parentPath_and_order_and_publicPath", [
+      "slot",
       "appLocale",
       "parentPath",
       "order",
       "publicPath",
     ])
-    .index("by_appLocale_and_materialKey_and_order_and_publicPath", [
+    .index("by_slot_and_appLocale_and_materialKey_and_order_and_publicPath", [
+      "slot",
       "appLocale",
       "materialKey",
       "order",
@@ -105,13 +90,8 @@ const tables = {
     appLocale: appLocaleValidator,
     bucket: v.string(),
     count: v.number(),
-    slot: v.optional(modelSlotValidator),
-  })
-    .index("by_slot_and_appLocale_and_bucket", {
-      fields: ["slot", "appLocale", "bucket"],
-      staged: true,
-    })
-    .index("by_appLocale_and_bucket", ["appLocale", "bucket"]),
+    slot: modelSlotValidator,
+  }).index("by_slot_and_appLocale_and_bucket", ["slot", "appLocale", "bucket"]),
 };
 
 export default tables;

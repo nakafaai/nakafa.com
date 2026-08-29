@@ -88,7 +88,6 @@ export const exportSignedRuntime = Effect.fn(
     }
 
     const identity = {
-      cacheVersion: config.cacheVersion,
       contentStateHash: config.contentStateHash,
       runtimeSchemaFingerprint: config.runtimeSchemaFingerprint,
     };

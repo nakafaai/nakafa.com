@@ -3,6 +3,7 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { verifyMaterial } from "@repo/backend/convex/contentRelease/material/verify";
+import type { ModelSlot } from "@repo/backend/convex/contentRelease/models/slot";
 import {
   PROGRAM_ANCESTOR_LIMIT,
   PROGRAM_MATERIAL_LIMIT,
@@ -192,6 +193,7 @@ const readGroups = Effect.fn("contentRelease.readProgramGroups")(function* (
 const readMaterials = Effect.fn("contentRelease.readProgramMaterials")(
   function* (
     ctx: QueryCtx,
+    materialSlot: ModelSlot,
     route: CurriculumRoute,
     contexts: readonly CurriculumRoute[]
   ) {
@@ -205,9 +207,10 @@ const readMaterials = Effect.fn("contentRelease.readProgramMaterials")(
         ctx.db
           .query("materialCatalog")
           .withIndex(
-            "by_appLocale_and_materialKey_and_order_and_publicPath",
+            "by_slot_and_appLocale_and_materialKey_and_order_and_publicPath",
             (index) =>
               index
+                .eq("slot", materialSlot)
                 .eq("appLocale", route.appLocale)
                 .eq("materialKey", materialKey)
           )
@@ -235,7 +238,8 @@ export const readProgramModel = Effect.fn("contentRelease.readProgramModel")(
     ctx: QueryCtx,
     snapshotId: string,
     route: CurriculumRoute,
-    activeAppLocales: ActiveAppLocaleList
+    activeAppLocales: ActiveAppLocaleList,
+    materialSlot: ModelSlot
   ) {
     const [alternates, ancestors, children, contexts] = yield* Effect.all([
       readAlternates(
@@ -257,7 +261,7 @@ export const readProgramModel = Effect.fn("contentRelease.readProgramModel")(
     ]);
     const [groups, materialJson] = yield* Effect.all([
       readGroups(ctx, snapshotId, route, verifiedContexts),
-      readMaterials(ctx, route, verifiedContexts),
+      readMaterials(ctx, materialSlot, route, verifiedContexts),
     ]);
     return {
       alternates,

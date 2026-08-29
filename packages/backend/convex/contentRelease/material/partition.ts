@@ -25,7 +25,7 @@ export const readMaterialPartition = Effect.fn(
   }
   const owner = yield* loadMaterialOwner(ctx, appLocale);
   const activeReleaseId = owner.active?.releaseId ?? null;
-  if (!(owner.active && owner.managed)) {
+  if (!(owner.active && owner.managed && owner.slot)) {
     return {
       activeReleaseId,
       kind: "unmanaged",
@@ -37,8 +37,11 @@ export const readMaterialPartition = Effect.fn(
   const count = yield* Effect.promise(() =>
     ctx.db
       .query("materialBuckets")
-      .withIndex("by_appLocale_and_bucket", (index) =>
-        index.eq("appLocale", appLocale).eq("bucket", bucket)
+      .withIndex("by_slot_and_appLocale_and_bucket", (index) =>
+        index
+          .eq("slot", owner.slot)
+          .eq("appLocale", appLocale)
+          .eq("bucket", bucket)
       )
       .unique()
   );
@@ -54,8 +57,11 @@ export const readMaterialPartition = Effect.fn(
   const rows = yield* Effect.promise(() =>
     ctx.db
       .query("materialCatalog")
-      .withIndex("by_appLocale_and_bucket_and_publicPath", (index) =>
-        index.eq("appLocale", appLocale).eq("bucket", bucket)
+      .withIndex("by_slot_and_appLocale_and_bucket_and_publicPath", (index) =>
+        index
+          .eq("slot", owner.slot)
+          .eq("appLocale", appLocale)
+          .eq("bucket", bucket)
       )
       .take(CONTENT_BUCKET_SIZE + 1)
   );

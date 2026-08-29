@@ -28,6 +28,7 @@ export const loadSearchOwner = Effect.fn("contentRelease.loadSearchOwner")(
       manifestHash: active.manifestHash,
       releaseId: active.releaseId,
       sequence: active.sequence,
+      slot: state.searchSlot,
     };
   }
 );

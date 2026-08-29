@@ -23,6 +23,7 @@ export const requireMaterialState = Effect.fn(
       `Materials for ${appLocale} in active release ${active.releaseId} are still synchronizing.`
     );
   }
+  return active.state.materialSlot;
 });
 /** Loads active material catalog readiness and family ownership. */
 export const loadMaterialCatalogOwner = Effect.fn(
@@ -30,7 +31,7 @@ export const loadMaterialCatalogOwner = Effect.fn(
 )(function* (ctx: QueryCtx) {
   const active = yield* loadActiveIdentity(ctx);
   if (!active) {
-    return { active: null, managed: false, ready: false };
+    return { active: null, managed: false, ready: false, slot: null };
   }
   const families = yield* loadReleaseFamilies(active.release);
   const managed = families.result.includes("material");
@@ -41,16 +42,21 @@ export const loadMaterialCatalogOwner = Effect.fn(
       `Materials in active release ${active.releaseId} are still synchronizing.`
     );
   }
-  return { active, managed, ready };
+  return {
+    active,
+    managed,
+    ready,
+    slot: ready ? active.state.materialSlot : null,
+  };
 });
 /** Loads material ownership only after its active read model is complete. */
 export const loadMaterialOwner = Effect.fn("contentRelease.loadMaterialOwner")(
   function* (ctx: QueryCtx, appLocale: Doc<"contentPaths">["appLocale"]) {
     const owner = yield* loadMaterialCatalogOwner(ctx);
     if (!(owner.active && owner.managed)) {
-      return { active: owner.active, managed: false };
+      return { active: owner.active, managed: false, slot: null };
     }
-    yield* requireMaterialState(owner.active, appLocale);
-    return { active: owner.active, managed: true };
+    const slot = yield* requireMaterialState(owner.active, appLocale);
+    return { active: owner.active, managed: true, slot };
   }
 );

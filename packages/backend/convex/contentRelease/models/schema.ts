@@ -1,36 +1,25 @@
+import {
+  modelBuildBaseValidator,
+  modelBuildPhaseValidator,
+  modelBuildSlotsValidator,
+} from "@repo/backend/convex/contentRelease/models/spec";
 import { defineTable } from "convex/server";
-import type { Infer } from "convex/values";
 import { v } from "convex/values";
 
-export const modelMigrationTableValidator = v.union(
-  v.literal("articleCatalog"),
-  v.literal("articleCategories"),
-  v.literal("articleBuckets"),
-  v.literal("materialCatalog"),
-  v.literal("materialBuckets"),
-  v.literal("contentIndex"),
-  v.literal("contentReleases")
-);
-
-export type ModelMigrationTable = Infer<typeof modelMigrationTableValidator>;
-
-export const modelMigrationPhaseValidator = v.union(
-  v.literal("backfill"),
-  v.literal("verify"),
-  v.literal("complete")
-);
-
 const tables = {
-  /** One temporary crash-safe expansion cycle for the bounded model buffers. */
-  contentModelMigrations: defineTable({
-    activeManifestHash: v.string(),
-    activeReleaseId: v.string(),
-    activeSequence: v.number(),
+  /** One crash-safe inactive-buffer build removed by atomic activation. */
+  contentModelBuilds: defineTable({
+    base: modelBuildBaseValidator,
     cursor: v.optional(v.string()),
+    generation: v.number(),
+    itemIndex: v.number(),
     key: v.literal("primary"),
-    phase: modelMigrationPhaseValidator,
-    scannedRows: v.number(),
-    table: modelMigrationTableValidator,
+    manifestHash: v.string(),
+    phase: modelBuildPhaseValidator,
+    releaseId: v.string(),
+    sequence: v.number(),
+    slots: modelBuildSlotsValidator,
+    syncJobId: v.optional(v.id("_scheduled_functions")),
     updatedAt: v.number(),
   }).index("by_key", ["key"]),
 };

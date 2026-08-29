@@ -6,7 +6,6 @@ import {
   verifyStableRuntimeExport,
 } from "@repo/backend/scripts/content/runtime/ci/generation";
 import { decodeJsonRows } from "@repo/backend/scripts/content/runtime/ci/json";
-import { CONTENT_RUNTIME_CACHE_VERSION } from "@repo/backend/scripts/content/runtime/tables";
 import { Effect } from "effect";
 
 const ACTIVE_HASH = `sha256:${"a".repeat(64)}`;
@@ -20,14 +19,17 @@ const contentStateRow = {
   articleManifestHash: ACTIVE_HASH,
   articleReleaseId: "current-release",
   articleSequence: 9,
+  articleSlot: "blue",
   key: "primary",
   materialManifestHash: ACTIVE_HASH,
   materialReleaseId: "current-release",
   materialSequence: 9,
+  materialSlot: "blue",
   nextSequence: 10,
   searchManifestHash: ACTIVE_HASH,
   searchReleaseId: "current-release",
   searchSequence: 9,
+  searchSlot: "blue",
   updatedAt: 100,
 };
 const contentState = [contentStateRow];
@@ -43,10 +45,10 @@ describe("content runtime generations", () => {
         ]);
         expect(systemFieldsChanged).toEqual(baseline);
         expect(baseline.contentStateHash).toBe(
-          "21bb4b24ec4dd2151567a1850ab3899b457f01f93f4d9b80f983442a0be6440a"
+          "bf61b36a7687071f7def1f938d55b804a7a3300e4bdaf1feac9bd95808cb024e"
         );
         expect(baseline.runtimeSelectionHash).toBe(
-          "3579932e4fad16d4c08279cb35248e171d5f8b1ce9db4ea4a481acd84112d088"
+          "090771304ab66d29dfd1d9660608ca50541419a77873def422d9a6696c7d8433"
         );
         expect(formatGenerationEnvironment(baseline)).toBe(
           [
@@ -119,13 +121,16 @@ describe("content runtime generations", () => {
           articleManifestHash: NEXT_HASH,
           articleReleaseId: "next-release",
           articleSequence: 10,
+          articleSlot: "green",
           materialManifestHash: NEXT_HASH,
           materialReleaseId: "next-release",
           materialSequence: 10,
+          materialSlot: "green",
           nextSequence: 11,
           searchManifestHash: NEXT_HASH,
           searchReleaseId: "next-release",
           searchSequence: 10,
+          searchSlot: "green",
           updatedAt: 200,
         },
       ]);
@@ -228,7 +233,6 @@ describe("content runtime generations", () => {
 
 function cacheIdentity(contentStateHash: string) {
   return {
-    cacheVersion: CONTENT_RUNTIME_CACHE_VERSION,
     contentStateHash,
     runtimeSchemaFingerprint: "3".repeat(64),
   };

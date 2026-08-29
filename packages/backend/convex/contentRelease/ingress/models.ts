@@ -5,46 +5,44 @@ import type { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
 import type {
-  ReadModelRestartArgs,
-  ReadModelRestartResult,
-  ReadModelStatus,
-} from "@repo/backend/convex/contentRelease/models";
+  ModelBuildRestartArgs,
+  ModelBuildRestartResult,
+  ModelBuildStatus,
+} from "@repo/backend/convex/contentRelease/models/spec";
 import { makeFunctionReference } from "convex/server";
 import { Context, Duration, Effect, Layer } from "effect";
 
 const modelStatusReference = makeFunctionReference<
   "query",
   { releaseId: string },
-  ReadModelStatus
+  ModelBuildStatus
 >("contentRelease/models:status");
 const modelRestartReference = makeFunctionReference<
   "mutation",
-  ReadModelRestartArgs,
-  ReadModelRestartResult
+  ModelBuildRestartArgs,
+  ModelBuildRestartResult
 >("contentRelease/models:restart");
 
-export type ReadModelWaitPolicy = "observe" | "restart-failed-once";
+export type ModelBuildWaitPolicy = "observe" | "restart-failed-once";
 
-export interface ReadModelCoordinatorService {
-  /** Restarts only the exact generation and job observed as failed. */
+export interface ModelBuildCoordinatorService {
   readonly restart: (
-    args: ReadModelRestartArgs
-  ) => Effect.Effect<ReadModelRestartResult, ReleaseError>;
-  /** Reads the sole scheduler-owned status boundary for one active release. */
+    args: ModelBuildRestartArgs
+  ) => Effect.Effect<ModelBuildRestartResult, ReleaseError>;
   readonly status: (
     releaseId: string
-  ) => Effect.Effect<ReadModelStatus, ReleaseError>;
+  ) => Effect.Effect<ModelBuildStatus, ReleaseError>;
 }
 
-/** Private coordinator dependency for publication ingress read models. */
-export class ReadModelCoordinator extends Context.Service<
-  ReadModelCoordinator,
-  ReadModelCoordinatorService
->()("@repo/backend/contentRelease/ReadModelCoordinator") {}
+/** Private dependency for one candidate read-model build lineage. */
+export class ModelBuildCoordinator extends Context.Service<
+  ModelBuildCoordinator,
+  ModelBuildCoordinatorService
+>()("@repo/backend/contentRelease/ModelBuildCoordinator") {}
 
-/** Binds one action context to the private read-model coordinator functions. */
-export function makeReadModelCoordinatorLive(ctx: ActionCtx) {
-  return Layer.succeed(ReadModelCoordinator, {
+/** Binds one action context to the private model build functions. */
+export function makeModelBuildCoordinatorLive(ctx: ActionCtx) {
+  return Layer.succeed(ModelBuildCoordinator, {
     restart: (args) =>
       callInternal(() => ctx.runMutation(modelRestartReference, args)),
     status: (releaseId) =>
@@ -52,29 +50,27 @@ export function makeReadModelCoordinatorLive(ctx: ActionCtx) {
   });
 }
 
-/** Waits for convergence with at most one explicitly authorized restart. */
-export const waitForReadModels: (
+/** Waits for actual readiness with at most one fenced failed-job restart. */
+export const waitForModelBuild: (
   releaseId: string,
-  policy: ReadModelWaitPolicy
-) => Effect.Effect<void, ReleaseError, ReadModelCoordinator> = Effect.fn(
-  "contentRelease.waitForReadModels"
-)(function* (releaseId: string, policy: ReadModelWaitPolicy) {
-  const coordinator = yield* ReadModelCoordinator;
+  policy: ModelBuildWaitPolicy
+) => Effect.Effect<void, ReleaseError, ModelBuildCoordinator> = Effect.fn(
+  "contentRelease.waitForModelBuild"
+)(function* (releaseId: string, policy: ModelBuildWaitPolicy) {
+  const coordinator = yield* ModelBuildCoordinator;
   let canRestart = policy === "restart-failed-once";
-
   while (true) {
     const status = yield* coordinator.status(releaseId);
-    if (status.phase === "completed") {
+    if (status.phase === "ready" || status.phase === "completed") {
       return;
     }
     if (status.phase === "failed") {
       if (!canRestart) {
         return yield* releaseFail(
           "CONTENT_RELEASE_INTEGRITY",
-          `Read-model sync ${releaseId} failed before completion.`
+          `Model build ${releaseId} failed before readiness.`
         );
       }
-
       canRestart = false;
       yield* coordinator.restart({
         expectedGeneration: status.syncGeneration,
@@ -83,7 +79,6 @@ export const waitForReadModels: (
       });
       continue;
     }
-
     yield* Effect.sleep(Duration.millis(100));
   }
 });

@@ -4,13 +4,16 @@ import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/ver
 import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
 import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
-import type { ActivationResult } from "@repo/backend/convex/contentRelease/activate";
+import type {
+  ActivationResult,
+  PreparationResult,
+} from "@repo/backend/convex/contentRelease/activation/spec";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { callInternal } from "@repo/backend/convex/contentRelease/ingress/call";
 import {
-  makeReadModelCoordinatorLive,
-  waitForReadModels,
-} from "@repo/backend/convex/contentRelease/ingress/readModels";
+  makeModelBuildCoordinatorLive,
+  waitForModelBuild,
+} from "@repo/backend/convex/contentRelease/ingress/models";
 import {
   decodeProofJson,
   decodeRendererJson,
@@ -65,11 +68,21 @@ const activateReference = makeFunctionReference<
   { manifestHash: string; releaseId: string; rendererJson: string },
   ActivationResult
 >("contentRelease/activate:activate");
+const prepareReference = makeFunctionReference<
+  "mutation",
+  { manifestHash: string; releaseId: string; rendererJson: string },
+  PreparationResult
+>("contentRelease/activate:prepare");
 const recoveryReference = makeFunctionReference<
   "mutation",
   { manifestHash: string; releaseId: string; rendererJson: string },
   ActivationResult
 >("contentRelease/activate:activateRecovery");
+const prepareRecoveryReference = makeFunctionReference<
+  "mutation",
+  { manifestHash: string; releaseId: string; rendererJson: string },
+  PreparationResult
+>("contentRelease/activate:prepareRecovery");
 const proofPollReference = makeFunctionReference<
   "mutation",
   { manifestHash: string; releaseId: string },
@@ -162,8 +175,20 @@ export const advancePublication = Effect.fn(
     };
   }
   const rendererJson = yield* loadRenderer(ctx, release);
-  const coordinator = makeReadModelCoordinatorLive(ctx);
+  const coordinator = makeModelBuildCoordinatorLive(ctx);
   if (request.operation === "activate") {
+    const prepared = yield* callInternal(() =>
+      ctx.runMutation(prepareReference, {
+        manifestHash: release.manifestHash,
+        releaseId,
+        rendererJson,
+      })
+    );
+    if (prepared.kind === "prepared") {
+      yield* waitForModelBuild(releaseId, "restart-failed-once").pipe(
+        Effect.provide(coordinator)
+      );
+    }
     const result = yield* callInternal(() =>
       ctx.runMutation(activateReference, {
         manifestHash: release.manifestHash,
@@ -171,12 +196,19 @@ export const advancePublication = Effect.fn(
         rendererJson,
       })
     );
-    const policy =
-      result.kind === "completed" ? "restart-failed-once" : "observe";
-    yield* waitForReadModels(releaseId, policy).pipe(
+    return { ok: true, operation: request.operation, value: result.receipt };
+  }
+  const prepared = yield* callInternal(() =>
+    ctx.runMutation(prepareRecoveryReference, {
+      manifestHash: release.manifestHash,
+      releaseId,
+      rendererJson,
+    })
+  );
+  if (prepared.kind === "prepared") {
+    yield* waitForModelBuild(releaseId, "restart-failed-once").pipe(
       Effect.provide(coordinator)
     );
-    return { ok: true, operation: request.operation, value: result.receipt };
   }
   const result = yield* callInternal(() =>
     ctx.runMutation(recoveryReference, {
@@ -185,8 +217,5 @@ export const advancePublication = Effect.fn(
       rendererJson,
     })
   );
-  const policy =
-    result.kind === "completed" ? "restart-failed-once" : "observe";
-  yield* waitForReadModels(releaseId, policy).pipe(Effect.provide(coordinator));
   return { ok: true, operation: request.operation, value: result.receipt };
 });

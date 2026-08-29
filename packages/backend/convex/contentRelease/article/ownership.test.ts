@@ -35,6 +35,7 @@ function articleEntry(options?: {
     releaseId: "release-article-write",
     rendererDomain: "politics",
     sequence: options?.sequence ?? 1,
+    slot: "blue",
   };
 }
 
@@ -45,7 +46,11 @@ function claim(ctx: MutationCtx) {
       const article = articleEntry();
       const route = TEST_ARTICLE_PROJECTION.categoryRouteSlug;
       yield* stageCategory(ctx, article, route);
-      const predecessors = yield* loadPredecessorRoutes(ctx, article.appLocale);
+      const predecessors = yield* loadPredecessorRoutes(
+        ctx,
+        article.slot,
+        article.appLocale
+      );
       yield* validateCategoryClaim(ctx, article, predecessors);
     })
   );
@@ -65,6 +70,7 @@ describe("contentRelease/article/ownership", () => {
         rendererDomain: "politics",
         route: "government",
         sequence: 1,
+        slot: "blue",
         title: TEST_ARTICLE_PROJECTION.categoryTitle,
       });
     });
@@ -87,6 +93,7 @@ describe("contentRelease/article/ownership", () => {
         rendererDomain: "politics",
         route: TEST_ARTICLE_PROJECTION.categoryRouteSlug,
         sequence: 0,
+        slot: "blue",
         title: "History",
       });
     });
@@ -112,6 +119,7 @@ describe("contentRelease/article/ownership", () => {
         releaseId: "release-predecessor",
         rendererDomain: "politics",
         sequence: 0,
+        slot: "blue",
       });
       await ctx.db.insert("articleCategories", {
         appLocale: "en",
@@ -122,6 +130,7 @@ describe("contentRelease/article/ownership", () => {
         releaseId: "release-predecessor",
         rendererDomain: "politics",
         sequence: 0,
+        slot: "blue",
         title: "History",
       });
     });
@@ -145,6 +154,7 @@ describe("contentRelease/article/ownership", () => {
         releaseId: article.releaseId,
         rendererDomain: article.rendererDomain,
         sequence: article.sequence,
+        slot: article.slot,
         title: article.categoryTitle,
       });
     });
@@ -155,6 +165,7 @@ describe("contentRelease/article/ownership", () => {
           Effect.gen(function* () {
             const predecessors = yield* loadPredecessorRoutes(
               ctx,
+              article.slot,
               article.appLocale
             );
             return yield* validateCategoryClaim(ctx, article, predecessors);
@@ -183,6 +194,7 @@ describe("contentRelease/article/ownership", () => {
         rendererDomain: "politics",
         route: TEST_ARTICLE_PROJECTION.categoryRouteSlug,
         sequence: 1,
+        slot: "blue",
         title: "Public affairs",
       })
     );
@@ -193,6 +205,7 @@ describe("contentRelease/article/ownership", () => {
             const article = articleEntry();
             const predecessors = yield* loadPredecessorRoutes(
               ctx,
+              article.slot,
               article.appLocale
             );
             return yield* validateCategoryClaim(ctx, article, predecessors);
@@ -216,6 +229,7 @@ describe("contentRelease/article/ownership", () => {
             const article = articleEntry();
             const predecessors = yield* loadPredecessorRoutes(
               ctx,
+              article.slot,
               article.appLocale
             );
             return yield* validateCategoryClaim(ctx, article, predecessors);
@@ -240,6 +254,7 @@ describe("contentRelease/article/ownership", () => {
           releaseId: "release-predecessor",
           rendererDomain: "politics",
           sequence: 0,
+          slot: "blue",
           title: `History ${index}`,
         });
       }

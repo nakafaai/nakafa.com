@@ -8,6 +8,9 @@ import {
   verifyCategory,
 } from "@repo/backend/convex/contentRelease/article/verify";
 import {
+  decodePageCursor,
+  encodePageCursor,
+  hasPageCursorPrefix,
   hasStaleReleaseCursor,
   validateReleaseCursor,
 } from "@repo/backend/convex/contentRelease/cursor";
@@ -17,6 +20,7 @@ import {
   validatePublicationPage,
 } from "@repo/backend/convex/contentRelease/paging";
 import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
+import { hasArticlePublicationCursorPrefix } from "@repo/contents/_types/publication";
 import { Effect } from "effect";
 
 /** Returns a stable empty page when Aksara does not own articles yet. */
@@ -56,7 +60,9 @@ export const readArticlePage = Effect.fn("contentRelease.readArticlePage")(
         expectedManifestHash,
         expectedReleaseId,
         active
-      )
+      ) ||
+      (options.cursor !== null &&
+        !hasArticlePublicationCursorPrefix(options.cursor))
     ) {
       return {
         activeManifestHash: active?.manifestHash ?? null,
@@ -73,7 +79,7 @@ export const readArticlePage = Effect.fn("contentRelease.readArticlePage")(
       expectedReleaseId,
       active
     );
-    if (!(owner.managed && owner.active)) {
+    if (!(owner.managed && owner.active && owner.slot)) {
       return {
         activeManifestHash: owner.active?.manifestHash ?? null,
         activeReleaseId: owner.active?.releaseId ?? null,
@@ -83,7 +89,13 @@ export const readArticlePage = Effect.fn("contentRelease.readArticlePage")(
         stale: false,
       };
     }
-    const stored = yield* paginateArticles(ctx, appLocale, category, options);
+    const stored = yield* paginateArticles(
+      ctx,
+      owner.slot,
+      appLocale,
+      category,
+      options
+    );
     const page = yield* Effect.forEach(stored.page, (row) =>
       verifyArticle(ctx, row, owner.active.sequence).pipe(
         Effect.map(({ resolved }) => resolved)
@@ -127,7 +139,8 @@ export const readCategoryPage = Effect.fn(
       expectedManifestHash,
       expectedReleaseId,
       active
-    )
+    ) ||
+    !hasPageCursorPrefix(options.cursor)
   ) {
     return {
       activeManifestHash: active?.manifestHash ?? null,
@@ -144,7 +157,7 @@ export const readCategoryPage = Effect.fn(
     expectedReleaseId,
     active
   );
-  if (!(owner.managed && owner.active)) {
+  if (!(owner.managed && owner.active && owner.slot)) {
     return {
       activeManifestHash: owner.active?.manifestHash ?? null,
       activeReleaseId: owner.active?.releaseId ?? null,
@@ -154,13 +167,18 @@ export const readCategoryPage = Effect.fn(
       stale: false,
     };
   }
+  const nativeCursor = yield* decodePageCursor(
+    options.cursor,
+    "category",
+    owner.slot
+  );
   const stored = yield* Effect.promise(() =>
     ctx.db
       .query("articleCategories")
-      .withIndex("by_appLocale_and_category", (index) =>
-        index.eq("appLocale", appLocale)
+      .withIndex("by_slot_and_appLocale_and_category", (index) =>
+        index.eq("slot", owner.slot).eq("appLocale", appLocale)
       )
-      .paginate(options)
+      .paginate({ ...options, cursor: nativeCursor })
   );
   const page = yield* Effect.forEach(stored.page, (category) =>
     verifyCategory(ctx, category, owner.active.sequence)
@@ -169,7 +187,24 @@ export const readCategoryPage = Effect.fn(
     activeManifestHash: owner.active.manifestHash,
     activeReleaseId: owner.active.releaseId,
     managed: true,
-    result: { ...stored, page },
+    result: {
+      ...stored,
+      continueCursor: encodePageCursor(
+        "category",
+        owner.slot,
+        stored.continueCursor
+      ),
+      page,
+      ...(stored.splitCursor === undefined || stored.splitCursor === null
+        ? {}
+        : {
+            splitCursor: encodePageCursor(
+              "category",
+              owner.slot,
+              stored.splitCursor
+            ),
+          }),
+    },
     sourceRevision: readSourceRevision(owner.active),
     stale: false,
   };

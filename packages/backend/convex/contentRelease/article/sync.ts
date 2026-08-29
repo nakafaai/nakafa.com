@@ -1,3 +1,4 @@
+import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { validateArticleModel } from "@repo/backend/convex/contentRelease/article/validation";
@@ -7,13 +8,14 @@ import {
 } from "@repo/backend/convex/contentRelease/article/write";
 import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
-import {
-  loadReleaseItems,
-  loadVersion,
-} from "@repo/backend/convex/contentRelease/model";
+import { loadVersion } from "@repo/backend/convex/contentRelease/model";
+import { loadModelItems } from "@repo/backend/convex/contentRelease/models/items";
+import type { ModelBuildPage } from "@repo/backend/convex/contentRelease/models/spec";
 import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
-import { loadSyncRelease } from "@repo/backend/convex/contentRelease/sync";
 import { Effect } from "effect";
+
+type ModelBuild = Doc<"contentModelBuilds">;
+type Release = Doc<"contentReleases">;
 
 /** Resolves one changed identity against the effective active release. */
 const resolveArticleChange = Effect.fn("contentRelease.resolveArticleChange")(
@@ -45,12 +47,18 @@ const resolveArticleChange = Effect.fn("contentRelease.resolveArticleChange")(
 /** Synchronizes one changed identity into the active article read model. */
 const syncArticleItem = Effect.fn("contentRelease.syncArticleItem")(function* (
   ctx: MutationCtx,
+  build: ModelBuild,
   row: Doc<"contentItems">,
   activeSequence: number
 ) {
   const change = yield* resolveArticleChange(ctx, row, activeSequence);
   if (!change) {
-    return yield* deleteArticle(ctx, row.contentKey, row.artifactLocale);
+    return yield* deleteArticle(
+      ctx,
+      build.slots.articleTargetSlot,
+      row.contentKey,
+      row.artifactLocale
+    );
   }
   const head = yield* loadVersion(
     ctx,
@@ -67,140 +75,40 @@ const syncArticleItem = Effect.fn("contentRelease.syncArticleItem")(function* (
       `Active article head ${row.contentKey}/${row.artifactLocale} is incomplete.`
     );
   }
-  yield* writeArticle(ctx, head, change.projection);
-});
-
-/** Requires one release page to preserve its immutable contiguous order. */
-const validateReleasePage = Effect.fn(
-  "contentRelease.validateArticleReleasePage"
-)(function* (
-  releaseId: string,
-  afterIndex: number,
-  rows: Doc<"contentItems">[]
-) {
-  for (const [offset, row] of rows.entries()) {
-    if (row.index !== afterIndex + offset + 1) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Article sync ${releaseId} lost contiguous item ${afterIndex + offset + 1}.`
-      );
-    }
-  }
-});
-
-/** Stages one bounded page without publishing incomplete article ownership. */
-const stageArticlePage = Effect.fn("contentRelease.stageArticlePage")(
-  function* (
-    ctx: MutationCtx,
-    releaseId: string,
-    activeSequence: number,
-    afterIndex: number,
-    completedIndex: number
-  ) {
-    const page = yield* loadReleaseItems(ctx, releaseId, afterIndex);
-    yield* validateReleasePage(releaseId, afterIndex, page.page);
-    for (const row of page.page) {
-      yield* syncArticleItem(ctx, row, activeSequence);
-    }
-    const nextIndex = page.page.at(-1)?.index ?? afterIndex;
-    if (page.isDone && nextIndex !== completedIndex) {
-      return yield* releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `Article sync ${releaseId} stopped at item ${nextIndex}.`
-      );
-    }
-    return { nextIndex, processed: page.page.length };
-  }
-);
-
-/** Rejects release items beyond the immutable signed manifest count. */
-const validateReleaseTail = Effect.fn(
-  "contentRelease.validateArticleReleaseTail"
-)(function* (ctx: MutationCtx, releaseId: string, completedIndex: number) {
-  const remainder = yield* Effect.promise(() =>
-    ctx.db
-      .query("contentItems")
-      .withIndex("by_releaseId_and_index", (index) =>
-        index.eq("releaseId", releaseId).gt("index", completedIndex)
-      )
-      .first()
+  yield* writeArticle(
+    ctx,
+    build.slots.articleTargetSlot,
+    head,
+    change.projection
   );
-  if (remainder) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Article sync ${releaseId} contains items beyond ${completedIndex}.`
-    );
-  }
 });
 
 /** Advances staging and final-model validation through durable bounded pages. */
 export const syncArticles = Effect.fn("contentRelease.syncArticles")(function* (
   ctx: MutationCtx,
-  releaseId: string
+  build: ModelBuild,
+  release: Release,
+  signed: SignedContentRelease
 ) {
-  const { release, signed, state } = yield* loadSyncRelease(ctx, releaseId);
-  if (
-    state.articleManifestHash === signed.manifestHash &&
-    state.articleReleaseId === releaseId &&
-    state.articleSequence === release.sequence
-  ) {
-    return {
-      done: true,
-      nextIndex: release.articleIndex ?? signed.manifest.itemCount - 1,
-      processed: 0,
-    };
-  }
-  const completedIndex = signed.manifest.itemCount - 1;
-  const articleIndex = release.articleIndex ?? -1;
-  if (articleIndex > completedIndex) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_INTEGRITY",
-      `Article sync ${releaseId} advanced beyond item ${completedIndex}.`
-    );
-  }
-  if (articleIndex < completedIndex) {
-    const progress = yield* stageArticlePage(
-      ctx,
-      releaseId,
-      release.sequence,
-      articleIndex,
-      completedIndex
-    );
-    const now = Date.now();
-    yield* Effect.promise(() =>
-      ctx.db.patch("contentReleases", release._id, {
-        articleIndex: progress.nextIndex,
-        updatedAt: now,
-      })
-    );
-    return { done: false, ...progress };
-  }
-
-  if (release.articleCursor === undefined) {
-    yield* validateReleaseTail(ctx, releaseId, completedIndex);
-  }
-  const progress = yield* validateArticleModel(ctx, release.articleCursor);
-  const now = Date.now();
-  yield* Effect.promise(() =>
-    ctx.db.patch("contentReleases", release._id, {
-      articleCursor: progress.cursor,
-      ...(progress.done ? { articleSyncedAt: now } : {}),
-      updatedAt: now,
-    })
-  );
-  if (progress.done) {
-    yield* Effect.promise(() =>
-      ctx.db.patch("contentState", state._id, {
-        articleManifestHash: signed.manifestHash,
-        articleReleaseId: releaseId,
-        articleSequence: release.sequence,
-        updatedAt: now,
-      })
-    );
+  const page = yield* loadModelItems(ctx, release, signed, build.itemIndex);
+  for (const row of page.rows) {
+    yield* syncArticleItem(ctx, build, row, release.sequence);
   }
   return {
-    done: progress.done,
-    nextIndex: completedIndex,
-    processed: progress.processed,
-  };
+    done: page.done,
+    itemIndex: page.nextIndex,
+    processed: page.rows.length,
+  } satisfies ModelBuildPage;
+});
+
+/** Validates one bounded page of the completed inactive article buffer. */
+export const verifyArticleBuild = Effect.fn(
+  "contentRelease.verifyArticleBuild"
+)(function* (ctx: MutationCtx, build: ModelBuild) {
+  return yield* validateArticleModel(
+    ctx,
+    build.slots.articleTargetSlot,
+    build.cursor,
+    build.sequence
+  );
 });

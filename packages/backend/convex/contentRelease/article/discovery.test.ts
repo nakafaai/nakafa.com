@@ -25,8 +25,9 @@ describe("contentRelease/article/discovery", () => {
       const catalog = await t.run((ctx) =>
         ctx.db
           .query("articleCatalog")
-          .withIndex("by_appLocale_and_datePublished_and_contentKey", (index) =>
-            index.eq("appLocale", appLocale)
+          .withIndex(
+            "by_slot_and_appLocale_and_datePublished_and_contentKey",
+            (index) => index.eq("slot", "blue").eq("appLocale", appLocale)
           )
           .order("desc")
           .take(2)

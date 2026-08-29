@@ -8,7 +8,6 @@ import {
   readProductionSelectionConfig,
   validateProductionDeployKey,
 } from "@repo/backend/scripts/content/runtime/ci/config";
-import { CONTENT_RUNTIME_CACHE_VERSION } from "@repo/backend/scripts/content/runtime/tables";
 import { ConfigProvider, Effect } from "effect";
 
 describe("content runtime CI config", () => {
@@ -142,7 +141,6 @@ function stubProductionConfig() {
 
 function stubCacheIdentity(contentStateHash: string) {
   vi.stubEnv("AGENT_DOCS_CONTENT_CACHE_KEY", "k".repeat(43));
-  vi.stubEnv("AGENT_DOCS_CONTENT_CACHE_VERSION", CONTENT_RUNTIME_CACHE_VERSION);
   vi.stubEnv("AGENT_DOCS_CONTENT_STATE_HASH", contentStateHash);
   vi.stubEnv("AGENT_DOCS_RUNTIME_SCHEMA_FINGERPRINT", "3".repeat(64));
 }

@@ -42,8 +42,9 @@ export async function insertContentViewArticle(ctx: MutationCtx) {
   await insertRuntimeArticles(ctx, 1, () => ARTICLE_VIEW_PROJECTION);
   const row = await ctx.db
     .query("articleCatalog")
-    .withIndex("by_contentKey_and_appLocale", (query) =>
+    .withIndex("by_slot_and_contentKey_and_appLocale", (query) =>
       query
+        .eq("slot", "blue")
         .eq("contentKey", ARTICLE_VIEW_PROJECTION.contentKey)
         .eq("appLocale", ARTICLE_VIEW_PROJECTION.appLocale)
     )

@@ -13,6 +13,7 @@ import {
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { resolvePublicProjection } from "@repo/backend/convex/contentRelease/catalog";
 import { writeMaterial } from "@repo/backend/convex/contentRelease/material/write";
+import { INITIAL_MODEL_SLOT } from "@repo/backend/convex/contentRelease/models/slot";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import type schema from "@repo/backend/convex/schema";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
@@ -84,7 +85,9 @@ export async function insertMaterialProjection(
   if (resolved?.family !== "material") {
     throw new Error("Expected one resolved public material projection.");
   }
-  await runConvexProgram(writeMaterial(ctx, resolved, projection));
+  await runConvexProgram(
+    writeMaterial(ctx, INITIAL_MODEL_SLOT, resolved, projection)
+  );
 }
 
 /** Activates a complete locale-parity material catalog for query tests. */

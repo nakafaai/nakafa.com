@@ -22,8 +22,11 @@ const readAlternates = Effect.fn("contentRelease.readMaterialAlternates")(
         const alternate = yield* Effect.promise(() =>
           ctx.db
             .query("materialCatalog")
-            .withIndex("by_contentKey_and_appLocale", (index) =>
-              index.eq("contentKey", row.contentKey).eq("appLocale", appLocale)
+            .withIndex("by_slot_and_contentKey_and_appLocale", (index) =>
+              index
+                .eq("slot", row.slot)
+                .eq("contentKey", row.contentKey)
+                .eq("appLocale", appLocale)
             )
             .unique()
         );
@@ -60,9 +63,10 @@ const readSiblings = Effect.fn("contentRelease.readMaterialSiblings")(
       ctx.db
         .query("materialCatalog")
         .withIndex(
-          "by_appLocale_and_materialKey_and_order_and_publicPath",
+          "by_slot_and_appLocale_and_materialKey_and_order_and_publicPath",
           (index) =>
             index
+              .eq("slot", row.slot)
               .eq("appLocale", row.appLocale)
               .eq("materialKey", row.materialKey)
         )

@@ -120,11 +120,14 @@ const insertRelease = Effect.fn(
   );
   yield* Effect.promise(() =>
     ctx.db.insert("contentState", {
+      articleSlot: "blue",
       candidateManifestHash: manifestHash,
       candidateReleaseId: releaseId,
       candidateSequence: 1,
       key: "primary",
+      materialSlot: "blue",
       nextSequence: 2,
+      searchSlot: "blue",
       updatedAt: now,
     })
   );
@@ -203,11 +206,14 @@ const insertDeleteRelease = Effect.fn(
   );
   yield* Effect.promise(() =>
     ctx.db.insert("contentState", {
+      articleSlot: "blue",
       candidateManifestHash: signed.manifestHash,
       candidateReleaseId: releaseId,
       candidateSequence: 1,
       key: "primary",
+      materialSlot: "blue",
       nextSequence: 2,
+      searchSlot: "blue",
       updatedAt: now,
     })
   );

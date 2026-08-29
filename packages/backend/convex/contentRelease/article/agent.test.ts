@@ -65,6 +65,7 @@ describe("contentRelease/article/agent", () => {
           rendererDomain: source.rendererDomain,
           route: source.route,
           sequence: source.sequence,
+          slot: source.slot,
           title: source.title,
         });
       }
@@ -90,6 +91,7 @@ describe("contentRelease/article/agent", () => {
         rendererDomain: source.rendererDomain,
         route: source.route,
         sequence: source.sequence,
+        slot: source.slot,
         title: source.title,
       });
     });

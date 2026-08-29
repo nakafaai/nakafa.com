@@ -13,6 +13,10 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
+  INITIAL_MODEL_SLOT,
+  type ModelSlot,
+} from "@repo/backend/convex/contentRelease/models/slot";
+import {
   TEST_PROOF_RENDERER,
   testEmptyManifest,
   testSignedRelease,
@@ -49,11 +53,14 @@ interface TestReleaseOptions extends TestReleaseEnvelope {
 interface TestStateOptions {
   readonly active?: TestIdentity;
   readonly article?: TestIdentity;
+  readonly articleSlot?: ModelSlot;
   readonly candidate?: TestIdentity;
   readonly material?: TestIdentity;
+  readonly materialSlot?: ModelSlot;
   readonly nextSequence: number;
   readonly recovery?: TestIdentity;
   readonly search?: TestIdentity;
+  readonly searchSlot?: ModelSlot;
 }
 
 /** Creates the exact zero-item signed envelope used by lifecycle tests. */
@@ -170,6 +177,7 @@ export async function insertTestState(
           articleSequence: options.article.sequence,
         }
       : {}),
+    articleSlot: options.articleSlot ?? INITIAL_MODEL_SLOT,
     ...(options.material
       ? {
           materialManifestHash: options.material.manifestHash,
@@ -177,6 +185,7 @@ export async function insertTestState(
           materialSequence: options.material.sequence,
         }
       : {}),
+    materialSlot: options.materialSlot ?? INITIAL_MODEL_SLOT,
     key: "primary",
     nextSequence: options.nextSequence,
     ...(options.recovery
@@ -193,6 +202,7 @@ export async function insertTestState(
           searchSequence: options.search.sequence,
         }
       : {}),
+    searchSlot: options.searchSlot ?? INITIAL_MODEL_SLOT,
     updatedAt: now,
   });
 }
@@ -285,8 +295,11 @@ export async function insertActiveRelease(
     activeManifestHash: active.manifestHash,
     activeReleaseId,
     activeSequence: 1,
+    articleSlot: INITIAL_MODEL_SLOT,
     key: "primary",
+    materialSlot: INITIAL_MODEL_SLOT,
     nextSequence: 2,
+    searchSlot: INITIAL_MODEL_SLOT,
     updatedAt: now,
   });
   return active.manifestHash;

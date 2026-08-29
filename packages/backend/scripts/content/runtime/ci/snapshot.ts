@@ -23,7 +23,6 @@ const ManifestEntrySchema = Schema.Struct({
   table: Schema.String,
 });
 const MetadataSchema = Schema.Struct({
-  cacheVersion: Schema.String,
   contentStateHash: HashSchema,
   runtimeSchemaFingerprint: HashSchema,
 });
@@ -101,7 +100,6 @@ export const validateMetadata = Effect.fn("contentRuntime.validateMetadata")(
       )
     );
     if (
-      metadata.cacheVersion !== expected.cacheVersion ||
       metadata.contentStateHash !== expected.contentStateHash ||
       metadata.runtimeSchemaFingerprint !== expected.runtimeSchemaFingerprint
     ) {

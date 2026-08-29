@@ -290,7 +290,9 @@ export async function insertRuntimeArticles(
     if (!head) {
       throw new Error("Expected one active article head.");
     }
-    await runConvexProgram(writeArticle(ctx, head, projection));
+    await runConvexProgram(
+      writeArticle(ctx, state.articleSlot, head, projection)
+    );
   }
 }
 

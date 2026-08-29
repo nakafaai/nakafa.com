@@ -186,8 +186,11 @@ describe("content publication Node dispatch", () => {
     await t.mutation((ctx) =>
       ctx.db.insert("contentState", {
         activeReleaseId: "",
+        articleSlot: "blue",
         key: "primary",
+        materialSlot: "blue",
         nextSequence: 1,
+        searchSlot: "blue",
         updatedAt: 1,
       })
     );

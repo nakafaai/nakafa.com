@@ -100,11 +100,14 @@ const insertRelease = Effect.fn("test.contentRelease.insertLifecycleRelease")(
     );
     yield* Effect.promise(() =>
       ctx.db.insert("contentState", {
+        articleSlot: "blue",
         candidateManifestHash: release.manifestHash,
         candidateReleaseId: releaseId,
         candidateSequence: 1,
         key: "primary",
+        materialSlot: "blue",
         nextSequence: 2,
+        searchSlot: "blue",
         updatedAt: now,
       })
     );

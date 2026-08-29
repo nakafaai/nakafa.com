@@ -10,20 +10,28 @@ describe("contentRelease/article/bucket", () => {
   it("creates, updates, and removes non-empty bucket counts", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>
-      runConvexProgram(adjustArticleBucket(ctx, "en", "abc", "article", 1))
+      runConvexProgram(
+        adjustArticleBucket(ctx, "blue", "en", "abc", "article", 1)
+      )
     );
     await t.mutation((ctx) =>
-      runConvexProgram(adjustArticleBucket(ctx, "en", "abc", "category", 1))
+      runConvexProgram(
+        adjustArticleBucket(ctx, "blue", "en", "abc", "category", 1)
+      )
     );
     await expect(
       t.run((ctx) => ctx.db.query("articleBuckets").unique())
     ).resolves.toMatchObject({ articleCount: 1, categoryCount: 1 });
 
     await t.mutation((ctx) =>
-      runConvexProgram(adjustArticleBucket(ctx, "en", "abc", "article", -1))
+      runConvexProgram(
+        adjustArticleBucket(ctx, "blue", "en", "abc", "article", -1)
+      )
     );
     await t.mutation((ctx) =>
-      runConvexProgram(adjustArticleBucket(ctx, "en", "abc", "category", -1))
+      runConvexProgram(
+        adjustArticleBucket(ctx, "blue", "en", "abc", "category", -1)
+      )
     );
     await expect(
       t.run((ctx) => ctx.db.query("articleBuckets").unique())
@@ -34,14 +42,18 @@ describe("contentRelease/article/bucket", () => {
     const t = convexTest(schema, convexModules);
     await expect(
       t.mutation((ctx) =>
-        runConvexProgram(adjustArticleBucket(ctx, "en", "bad!", "article", 1))
+        runConvexProgram(
+          adjustArticleBucket(ctx, "blue", "en", "bad!", "article", 1)
+        )
       )
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
     await expect(
       t.mutation((ctx) =>
-        runConvexProgram(adjustArticleBucket(ctx, "en", "abc", "article", -1))
+        runConvexProgram(
+          adjustArticleBucket(ctx, "blue", "en", "abc", "article", -1)
+        )
       )
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
@@ -56,12 +68,15 @@ describe("contentRelease/article/bucket", () => {
         articleCount: CONTENT_BUCKET_SIZE,
         bucket: "abc",
         categoryCount: 0,
+        slot: "blue",
       })
     );
 
     await expect(
       t.mutation((ctx) =>
-        runConvexProgram(adjustArticleBucket(ctx, "en", "abc", "category", 1))
+        runConvexProgram(
+          adjustArticleBucket(ctx, "blue", "en", "abc", "category", 1)
+        )
       )
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_LIMIT" },

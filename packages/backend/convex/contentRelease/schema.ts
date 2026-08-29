@@ -124,31 +124,23 @@ const tables = {
     publicPath: v.string(),
     releaseId: v.string(),
     sequence: v.number(),
-    slot: v.optional(modelSlotValidator),
+    slot: modelSlotValidator,
     text: v.string(),
   })
-    .index("by_slot_and_contentKey_and_appLocale", {
-      fields: ["slot", "contentKey", "appLocale"],
-      staged: true,
-    })
-    .index("by_slot_and_appLocale_and_family_and_publicPath", {
-      fields: ["slot", "appLocale", "family", "publicPath"],
-      staged: true,
-    })
-    .searchIndex("search_text_by_slot_and_family_and_appLocale", {
-      searchField: "text",
-      filterFields: ["slot", "family", "appLocale"],
-      staged: true,
-    })
-    .index("by_contentKey_and_appLocale", ["contentKey", "appLocale"])
-    .index("by_appLocale_and_family_and_publicPath", [
+    .index("by_slot_and_contentKey_and_appLocale", [
+      "slot",
+      "contentKey",
+      "appLocale",
+    ])
+    .index("by_slot_and_appLocale_and_family_and_publicPath", [
+      "slot",
       "appLocale",
       "family",
       "publicPath",
     ])
-    .searchIndex("search_text", {
+    .searchIndex("search_text_by_slot_and_family_and_appLocale", {
       searchField: "text",
-      filterFields: ["family", "appLocale"],
+      filterFields: ["slot", "family", "appLocale"],
     }),
 
   ...articleSchema,
@@ -188,9 +180,6 @@ const tables = {
     abortedAt: v.optional(v.number()),
     abortedRows: v.optional(v.number()),
     abortingAt: v.optional(v.number()),
-    articleCursor: v.optional(v.string()),
-    articleIndex: v.optional(v.number()),
-    articleSyncedAt: v.optional(v.number()),
     baseFamilies: v.array(contentFamilyValidator),
     cleanupAt: v.optional(v.number()),
     cleanupDeletedArtifacts: v.optional(v.number()),
@@ -199,9 +188,6 @@ const tables = {
     cleanupRetryAt: v.optional(v.number()),
     completedAt: v.optional(v.number()),
     createdAt: v.number(),
-    materialCursor: v.optional(v.string()),
-    materialIndex: v.optional(v.number()),
-    materialSyncedAt: v.optional(v.number()),
     proofAt: v.optional(v.number()),
     proofFailure: v.optional(proofFailureValidator),
     proofJson: v.optional(v.string()),
@@ -212,12 +198,8 @@ const tables = {
     rendererJson: v.string(),
     resultFamilies: v.array(contentFamilyValidator),
     role: releaseRoleValidator,
-    searchIndex: v.optional(v.number()),
-    searchSyncedAt: v.optional(v.number()),
     sequence: v.number(),
     status: releaseStatusValidator,
-    syncGeneration: v.optional(v.number()),
-    syncJobId: v.optional(v.id("_scheduled_functions")),
     tryoutRuntimeBundleHash: v.optional(v.string()),
     tryoutRuntimeRequired: v.optional(v.literal(true)),
     updatedAt: v.number(),
@@ -278,7 +260,7 @@ const tables = {
     articleManifestHash: v.optional(v.string()),
     articleReleaseId: v.optional(v.string()),
     articleSequence: v.optional(v.number()),
-    articleSlot: v.optional(modelSlotValidator),
+    articleSlot: modelSlotValidator,
     candidateManifestHash: v.optional(v.string()),
     candidateReleaseId: v.optional(v.string()),
     candidateSequence: v.optional(v.number()),
@@ -292,7 +274,7 @@ const tables = {
     materialManifestHash: v.optional(v.string()),
     materialReleaseId: v.optional(v.string()),
     materialSequence: v.optional(v.number()),
-    materialSlot: v.optional(modelSlotValidator),
+    materialSlot: modelSlotValidator,
     nextSequence: v.number(),
     recoveryManifestHash: v.optional(v.string()),
     recoveryReleaseId: v.optional(v.string()),
@@ -300,7 +282,7 @@ const tables = {
     searchManifestHash: v.optional(v.string()),
     searchReleaseId: v.optional(v.string()),
     searchSequence: v.optional(v.number()),
-    searchSlot: v.optional(modelSlotValidator),
+    searchSlot: modelSlotValidator,
     updatedAt: v.number(),
   }).index("by_key", ["key"]),
 };

@@ -122,6 +122,7 @@ describe("contentRelease/article/sitemap", () => {
           articleCount: 1,
           bucket,
           categoryCount: 0,
+          slot: "blue",
         });
       }
       await ctx.db.insert("articleBuckets", {
@@ -129,6 +130,7 @@ describe("contentRelease/article/sitemap", () => {
         articleCount: 1,
         bucket: "zzz",
         categoryCount: 0,
+        slot: "blue",
       });
     });
 

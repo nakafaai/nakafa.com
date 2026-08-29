@@ -8,7 +8,9 @@ import {
   validateCategoryClaim,
   validateCategoryMember,
 } from "@repo/backend/convex/contentRelease/article/ownership";
+import { verifyArticle } from "@repo/backend/convex/contentRelease/article/verify";
 import { READ_MODEL_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/document";
+import type { ModelSlot } from "@repo/backend/convex/contentRelease/models/slot";
 import { RELEASE_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/spec";
 import { Effect } from "effect";
 
@@ -17,11 +19,19 @@ type AppLocale = Doc<"articleCatalog">["appLocale"];
 /** Validates one bounded active-catalog page against the final category model. */
 export const validateArticleModel = Effect.fn(
   "contentRelease.validateArticleModel"
-)(function* (ctx: MutationCtx, cursor: string | undefined) {
+)(function* (
+  ctx: MutationCtx,
+  slot: ModelSlot,
+  cursor: string | undefined,
+  sequence: number
+) {
   const stored = yield* Effect.promise(() =>
     ctx.db
       .query("articleCatalog")
-      .withIndex("by_appLocale_and_category_and_datePublished_and_contentKey")
+      .withIndex(
+        "by_slot_appLocale_category_datePublished_contentKey",
+        (index) => index.eq("slot", slot)
+      )
       .paginate({
         cursor: cursor ?? null,
         maximumBytesRead:
@@ -33,6 +43,7 @@ export const validateArticleModel = Effect.fn(
   const categoryClaims = new Map<string, ArticleCategoryClaim>();
   const predecessorRoutes = new Map<AppLocale, ArticlePredecessorRoutes>();
   for (const article of stored.page) {
+    yield* verifyArticle(ctx, article, sequence);
     const categoryIdentity = `${article.appLocale}/${article.category}`;
     const existingClaim = categoryClaims.get(categoryIdentity);
     if (existingClaim) {
@@ -41,7 +52,7 @@ export const validateArticleModel = Effect.fn(
     }
     let predecessors = predecessorRoutes.get(article.appLocale);
     if (!predecessors) {
-      predecessors = yield* loadPredecessorRoutes(ctx, article.appLocale);
+      predecessors = yield* loadPredecessorRoutes(ctx, slot, article.appLocale);
       predecessorRoutes.set(article.appLocale, predecessors);
     }
     const claim = yield* validateCategoryClaim(ctx, article, predecessors);
