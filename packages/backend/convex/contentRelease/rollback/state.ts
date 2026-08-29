@@ -84,10 +84,9 @@ const upsertState = Effect.fn("contentRelease.rollbackUpsertState")(function* (
     change,
     projection,
   };
-  return yield* Schema.decodeUnknownEffect(StoredUpsertStateSchema)(
-    state,
-    { onExcessProperty: "error" }
-  ).pipe(
+  return yield* Schema.decodeUnknownEffect(StoredUpsertStateSchema)(state, {
+    onExcessProperty: "error",
+  }).pipe(
     Effect.mapError(
       () =>
         new ReleaseError({

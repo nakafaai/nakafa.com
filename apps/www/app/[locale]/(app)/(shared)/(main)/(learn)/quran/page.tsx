@@ -1,4 +1,5 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
+import type { PublishedQuranSurah } from "@repo/backend/content/quran/contract";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
@@ -14,7 +15,7 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getSocialMetadata } from "@/lib/utils/metadata";
-import { getQuranSurahName, type QuranSurah } from "@/lib/utils/pages/quran";
+import { getQuranSurahName } from "@/lib/utils/pages/quran";
 
 /** Builds localized Quran index metadata with markdown alternates for agent-readable docs. */
 export async function generateMetadata({
@@ -67,7 +68,7 @@ function PageContent({
   surahs,
 }: {
   locale: Locale;
-  surahs: Omit<QuranSurah, "verses">[];
+  surahs: Omit<PublishedQuranSurah, "verses">[];
 }) {
   const t = useTranslations("Holy");
   const tCommon = useTranslations("Common");

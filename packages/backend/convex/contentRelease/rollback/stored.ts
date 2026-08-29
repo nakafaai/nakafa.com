@@ -5,16 +5,16 @@ import {
 } from "@nakafa/aksara-contracts/projection/spec";
 import { canonicalizeContentChange } from "@nakafa/aksara-contracts/release/canonical";
 import {
-  MAX_ROLLBACK_PAGE_RECORDS,
-  RollbackDeleteStateSchema,
   RollbackPageSchema as CurrentPageSchema,
   RollbackRecordSchema as CurrentRecordSchema,
   RollbackSnapshotEntrySchema as CurrentSnapshotEntrySchema,
   RollbackUpsertStateSchema as CurrentUpsertStateSchema,
+  MAX_ROLLBACK_PAGE_RECORDS,
+  RollbackDeleteStateSchema,
 } from "@nakafa/aksara-contracts/release/rollback/spec";
 import {
-  ContentProjectionSchema as PredecessorProjectionSchema,
   canonicalizeContentProjection as canonicalizePredecessorProjection,
+  ContentProjectionSchema as PredecessorProjectionSchema,
 } from "@nakafa/aksara-v150/projection/spec";
 import {
   RollbackSnapshotEntrySchema as PredecessorSnapshotEntrySchema,
@@ -99,9 +99,7 @@ export function canonicalizeStoredPage(page: StoredPage) {
 }
 
 /** Narrows one stored state to its signed body-bearing variant. */
-export function isStoredUpsert(
-  state: StoredState
-): state is StoredUpsert {
+export function isStoredUpsert(state: StoredState): state is StoredUpsert {
   return "artifact" in state;
 }
 

@@ -20,16 +20,16 @@ import {
 import { loadRouteBinding } from "@repo/backend/convex/contentRelease/model";
 import { decodeRouteJson } from "@repo/backend/convex/contentRelease/parse";
 import { rollbackRecord } from "@repo/backend/convex/contentRelease/rollback/state";
-import { loadReadableSnapshot } from "@repo/backend/convex/contentRelease/snapshot";
-import {
-  RELEASE_PAGE_LIMIT,
-  ROUTE_CATALOG_PAGE_LIMIT,
-} from "@repo/backend/convex/contentRelease/spec";
 import {
   canonicalizeStoredPage,
   type StoredPage,
   type StoredRecord,
 } from "@repo/backend/convex/contentRelease/rollback/stored";
+import { loadReadableSnapshot } from "@repo/backend/convex/contentRelease/snapshot";
+import {
+  RELEASE_PAGE_LIMIT,
+  ROUTE_CATALOG_PAGE_LIMIT,
+} from "@repo/backend/convex/contentRelease/spec";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { v } from "convex/values";
 import { Effect, Schema } from "effect";
@@ -118,8 +118,8 @@ const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(function* (
     const record = yield* rollbackRecord(ctx, row);
     const candidate = makeRollbackPage(request, total, [...records, record]);
     if (
-      new TextEncoder().encode(canonicalizeStoredPage(candidate))
-        .byteLength > MAX_ROLLBACK_PAGE_BYTES
+      new TextEncoder().encode(canonicalizeStoredPage(candidate)).byteLength >
+      MAX_ROLLBACK_PAGE_BYTES
     ) {
       if (records.length === 0) {
         return yield* releaseFail(
@@ -131,9 +131,7 @@ const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(function* (
     }
     records.push(record);
   }
-  return canonicalizeStoredPage(
-    makeRollbackPage(request, total, records)
-  );
+  return canonicalizeStoredPage(makeRollbackPage(request, total, records));
 });
 /** Resolves the owner immediately before one signed route change. */
 const priorRouteOwner = Effect.fn("contentRelease.priorRouteOwner")(function* (
