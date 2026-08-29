@@ -86,6 +86,17 @@ for (const viewport of targetViewports) {
               "/en/auth?redirect=/search"
             )
           );
+          const languageButton = footer.getByRole("button", {
+            exact: true,
+            name: "Language",
+          });
+          yield* Effect.promise(() => expect(languageButton).toBeVisible());
+          yield* Effect.promise(() => languageButton.click());
+          yield* Effect.promise(() =>
+            expect(
+              page.getByRole("menuitem", { exact: true, name: "Deutsch" })
+            ).toBeVisible()
+          );
         })
       )
     );

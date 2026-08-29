@@ -1,22 +1,20 @@
 "use client";
 
-import { Diamond02Icon, Login03Icon } from "@hugeicons/core-free-icons";
-import { Button } from "@repo/design-system/components/ui/button";
+import { Diamond02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import { usePathname } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "next-intl";
 import { AnalyticsConsentSidebarItem } from "@/components/analytics/consent/actions";
+import { NavUserGuestButton } from "@/components/sidebar/user/guest/button";
+import { NavUserGuestLanguage } from "@/components/sidebar/user/guest/language";
 
 /** Renders guest utilities and the signed-out account call to action. */
 export function NavUserGuest() {
   const t = useTranslations("Auth");
-  const pathname = usePathname();
-  const authHref = `/auth?redirect=${pathname}`;
 
   return (
     <>
@@ -33,6 +31,7 @@ export function NavUserGuest() {
           <span>{t("pricing-cta")}</span>
         </SidebarMenuButton>
       </SidebarMenuItem>
+      <NavUserGuestLanguage />
       <AnalyticsConsentSidebarItem />
       <SidebarMenuItem
         className="-mx-2 my-1 border-sidebar-border border-t"
@@ -45,14 +44,7 @@ export function NavUserGuest() {
             {t("login-cta-description")}
           </p>
         </div>
-        <Button
-          className="w-full"
-          nativeButton={false}
-          render={<NavigationLink href={authHref} />}
-        >
-          <HugeIcons icon={Login03Icon} />
-          {t("login-cta-action")}
-        </Button>
+        <NavUserGuestButton />
       </SidebarMenuItem>
     </>
   );
