@@ -25,7 +25,7 @@ import {
   requestContentResponse,
   validateContentRuntimeStatus,
 } from "@repo/backend/client/content/transport";
-import { PROTECTED_CONTENT_RUNTIME_V2_PATH } from "@repo/backend/content/endpoint";
+import { PROTECTED_CONTENT_RUNTIME_PATH } from "@repo/backend/content/endpoint";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import { Effect } from "effect";
 
@@ -62,7 +62,7 @@ export const readProtectedContent = Effect.fn(
   );
   const endpoint = yield* createContentEndpoint(
     target.siteUrl,
-    PROTECTED_CONTENT_RUNTIME_V2_PATH
+    PROTECTED_CONTENT_RUNTIME_PATH
   );
   const { response, value: decoded } = yield* requestContentResponse(
     { endpoint, source, target },
