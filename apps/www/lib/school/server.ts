@@ -2,11 +2,25 @@ import { captureServerException } from "@repo/analytics/posthog/server";
 import { api } from "@repo/backend/convex/_generated/api";
 import { preloadedQueryResult } from "convex/nextjs";
 import { ConvexError } from "convex/values";
-import { type Cause, Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { cache } from "react";
 import { fetchAuthQuery, getToken, preloadAuthQuery } from "@/lib/auth/server";
 
 const SCHOOL_SWITCHER_PAGE_SIZE = 20;
+type SchoolAuthToken = Awaited<ReturnType<typeof getToken>>;
+
+/** Expected failure while reading one authenticated school surface. */
+class SchoolDataReadError extends Schema.TaggedError<SchoolDataReadError>()(
+  "SchoolDataReadError",
+  {
+    cause: Schema.Unknown,
+    source: Schema.Literals([
+      "school-class-route-boundary",
+      "school-route-boundary",
+      "school-switcher-page",
+    ]),
+  }
+) {}
 
 const emptySchoolSwitcherPage = {
   continueCursor: "",
@@ -30,11 +44,11 @@ function hasConvexErrorCode(error: unknown, allowedCodes: readonly string[]) {
 }
 
 /** Captures an unexpected school route error and preserves the original failure. */
-function captureSchoolRouteError(failure: Cause.UnknownError, source: string) {
+function captureSchoolRouteError(failure: SchoolDataReadError) {
   return Effect.gen(function* () {
-    yield* captureServerException(failure.cause, { source }).pipe(
-      Effect.ignore
-    );
+    yield* captureServerException(failure.cause, {
+      source: failure.source,
+    }).pipe(Effect.ignore);
 
     return yield* failure;
   });
@@ -55,11 +69,17 @@ export const getSchoolRouteSnapshot = cache(
     }
 
     return Effect.runPromise(
-      Effect.tryPromise(() =>
-        fetchAuthQuery(api.schools.queries.getSchoolBySlug, {
-          slug,
-        })
-      ).pipe(
+      Effect.tryPromise({
+        try: () =>
+          fetchAuthQuery(api.schools.queries.getSchoolBySlug, {
+            slug,
+          }),
+        catch: (cause) =>
+          new SchoolDataReadError({
+            cause,
+            source: "school-route-boundary",
+          }),
+      }).pipe(
         Effect.catchIf(
           (failure) =>
             hasConvexErrorCode(failure.cause, [
@@ -68,9 +88,7 @@ export const getSchoolRouteSnapshot = cache(
             ]),
           () => Effect.succeed(null)
         ),
-        Effect.catch((error) =>
-          captureSchoolRouteError(error, "school-route-boundary")
-        )
+        Effect.catch(captureSchoolRouteError)
       )
     );
   }
@@ -82,17 +100,27 @@ export const getSchoolRouteSnapshot = cache(
  * Returns `null` when the class cannot be resolved for the current viewer so
  * the route can delegate to Next's native not-found handling.
  */
-export async function preloadClassRoute({ classId }: { classId: string }) {
-  const token = await getToken();
+export const preloadClassRoute = Effect.fn("www.school.preloadClassRoute")(
+  function* ({
+    classId,
+    token,
+  }: {
+    readonly classId: string;
+    readonly token: SchoolAuthToken;
+  }) {
+    if (!token) {
+      return null;
+    }
 
-  if (!token) {
-    return null;
-  }
-
-  return Effect.runPromise(
-    Effect.tryPromise(() =>
-      preloadAuthQuery(api.classes.queries.getClassRoute, { classId })
-    ).pipe(
+    return yield* Effect.tryPromise({
+      try: () =>
+        preloadAuthQuery(api.classes.queries.getClassRoute, { classId }),
+      catch: (cause) =>
+        new SchoolDataReadError({
+          cause,
+          source: "school-class-route-boundary",
+        }),
+    }).pipe(
       Effect.map((preloaded) => ({
         preloaded,
         value: preloadedQueryResult(preloaded),
@@ -106,33 +134,31 @@ export async function preloadClassRoute({ classId }: { classId: string }) {
           ]),
         () => Effect.succeed(null)
       ),
-      Effect.catch((error) =>
-        captureSchoolRouteError(error, "school-class-route-boundary")
-      )
-    )
-  );
-}
+      Effect.catch(captureSchoolRouteError)
+    );
+  }
+);
 
 /** Load the first school-switcher page for the authenticated school shell. */
-export async function getSchoolSwitcherPage() {
-  const token = await getToken();
-
+export const getSchoolSwitcherPage = Effect.fn(
+  "www.school.getSchoolSwitcherPage"
+)(function* (token: SchoolAuthToken) {
   if (!token) {
     return emptySchoolSwitcherPage;
   }
 
-  return Effect.runPromise(
-    Effect.tryPromise(() =>
+  return yield* Effect.tryPromise({
+    try: () =>
       fetchAuthQuery(api.schools.queries.getMySchoolsPage, {
         paginationOpts: {
           cursor: null,
           numItems: SCHOOL_SWITCHER_PAGE_SIZE,
         },
-      })
-    ).pipe(
-      Effect.catch((error) =>
-        captureSchoolRouteError(error, "school-switcher-page")
-      )
-    )
-  );
-}
+      }),
+    catch: (cause) =>
+      new SchoolDataReadError({
+        cause,
+        source: "school-switcher-page",
+      }),
+  }).pipe(Effect.catch(captureSchoolRouteError));
+});
