@@ -13,9 +13,10 @@ import {
   PREDECESSOR_OBSERVATION_ID,
   seedPredecessorObservation,
 } from "@repo/backend/test/predecessor";
+import type { FunctionArgs } from "convex/server";
 import type { TestConvex } from "convex-test";
 import { convexTest } from "convex-test";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 const RETIREMENT_RECEIPT_JSON =
   '{"keyId":"content-2026-07-23","payload":{"completion":{"cleanupLimit":6548,"completedAt":1787910534983,"migratedAttempts":21,"migratedScaleItems":450,"migratedScaleRuns":21,"migratedScaleVersions":3,"remainingMarkers":0},"format":"signed-tryout-history-migration-receipt","migrationId":"retained-tryout-history","planHash":"sha256:9ac40883fe6c7856a4f69e492513229d4dc4596df12d78bfc7a7c9fe182c81f9","sourceSnapshotId":"sha256:0a43a4125fc4886f90b5a509405178bfb8762ad3c7f72be80614fce2671b5162","targetBundleHash":"sha256:58f26a6cfcf0b4632453fb5d8e66725cc8f7797e04ee0eb393044421b3b4a1bf","targetSnapshotId":"sha256:83d2c8ff4fbfa56bc98e90007906f8dd06495a917a32cfd622f90471f3c0afc5"},"receiptHash":"sha256:42e30eff6c16e14ba86bb44ff85be2b621fab1b2749440e647d7b71a67b47649","signature":"VD1p9541sfW3qsQs8TdJn9NumujNYBEcRXA2eGZNdSrOaMiNDQYP6mU8crYnyEC_neYOWp_6u5ycmDKhlJ2KCA"}';
@@ -30,10 +31,36 @@ const RETIREMENT_RECEIPT = Schema.decodeUnknownSync(
   { onExcessProperty: "error" }
 )(PARSED_RETIREMENT_RECEIPT);
 const retire = internal.contentRelease.retire.retire;
+const EMPTY_TERMINAL_STATE = {
+  observerCount: 0,
+  observerPhases: [],
+  receiptCount: 0,
+  repairPresent: false,
+} as const;
+const RETAINED_TERMINAL_STATE = {
+  observerCount: 4,
+  observerPhases: ["armed", "armed", "armed", "armed"],
+  receiptCount: 1,
+  repairPresent: true,
+} as const;
 
 type RetirementTest = TestConvex<typeof schema>;
+type RetirementProof = FunctionArgs<typeof retire>["proof"];
 
-async function seedCleanedReceipt(target: RetirementTest) {
+class TestMutationError extends Schema.TaggedError<TestMutationError>()(
+  "TestMutationError",
+  { cause: Schema.Unknown }
+) {}
+
+function expectIntegrityFailure(error: TestMutationError) {
+  expect(error.cause).toMatchObject({
+    data: { code: "CONTENT_RELEASE_INTEGRITY" },
+  });
+}
+
+const seedCleanedReceipt = Effect.fn("test.retire.seedReceipt")(function* (
+  target: RetirementTest
+) {
   const signed = RETIREMENT_RECEIPT.payload.completion;
   const completion = {
     cleanupLimit: signed.cleanupLimit,
@@ -43,209 +70,225 @@ async function seedCleanedReceipt(target: RetirementTest) {
     migratedScaleRuns: signed.migratedScaleRuns,
     migratedScaleVersions: signed.migratedScaleVersions,
   };
-  await target.mutation((ctx) =>
-    ctx.db.insert("tryoutHistoryMigrationReceipts", {
-      ...completion,
-      deletedRows: 1,
-      migrationId: RETIREMENT_RECEIPT.payload.migrationId,
-      phase: "cleaned",
-      planHash: RETIREMENT_RECEIPT.payload.planHash,
-      proof: RETIREMENT_PROOF,
-      receiptHash: RETIREMENT_RECEIPT.receiptHash,
-      receiptJson: RETIREMENT_RECEIPT_JSON,
-      recordedAt: 1,
-      repair: {
-        ...retainedScaleRepair,
-        deletedRows: countScaleRepairRows(retainedScaleRepair),
-        repairedAt: 1,
-        runCount: retainedScaleRepair.runs.length,
-        runs: [...retainedScaleRepair.runs],
-      },
-      sourceSnapshotId: RETIREMENT_RECEIPT.payload.sourceSnapshotId,
-      targetBundleHash: RETIREMENT_RECEIPT.payload.targetBundleHash,
-      targetSnapshotId: RETIREMENT_RECEIPT.payload.targetSnapshotId,
-    })
+  yield* Effect.promise(() =>
+    target.mutation((ctx) =>
+      ctx.db.insert("tryoutHistoryMigrationReceipts", {
+        ...completion,
+        deletedRows: 1,
+        migrationId: RETIREMENT_RECEIPT.payload.migrationId,
+        phase: "cleaned",
+        planHash: RETIREMENT_RECEIPT.payload.planHash,
+        proof: RETIREMENT_PROOF,
+        receiptHash: RETIREMENT_RECEIPT.receiptHash,
+        receiptJson: RETIREMENT_RECEIPT_JSON,
+        recordedAt: 1,
+        repair: {
+          ...retainedScaleRepair,
+          deletedRows: countScaleRepairRows(retainedScaleRepair),
+          repairedAt: 1,
+          runCount: retainedScaleRepair.runs.length,
+          runs: [...retainedScaleRepair.runs],
+        },
+        sourceSnapshotId: RETIREMENT_RECEIPT.payload.sourceSnapshotId,
+        targetBundleHash: RETIREMENT_RECEIPT.payload.targetBundleHash,
+        targetSnapshotId: RETIREMENT_RECEIPT.payload.targetSnapshotId,
+      })
+    )
   );
-}
+});
 
-async function seedTerminalState(target: RetirementTest) {
-  await seedPredecessorObservation(target);
-  await seedCleanedReceipt(target);
-}
-
-function runRetirement(
-  target: RetirementTest,
-  receiptJson = RETIREMENT_RECEIPT_JSON
+const seedTerminalState = Effect.fn("test.retire.seedState")(function* (
+  target: RetirementTest
 ) {
-  return target.mutation(retire, {
-    observationId: PREDECESSOR_OBSERVATION_ID,
-    proof: RETIREMENT_PROOF,
-    receiptJson,
-  });
-}
+  yield* Effect.promise(() => seedPredecessorObservation(target));
+  yield* seedCleanedReceipt(target);
+});
 
-function readTerminalState(target: RetirementTest) {
-  return target.run(async (ctx) => {
-    const observers = await ctx.db.query("contentPredecessorReads").collect();
-    const receipts = await ctx.db
-      .query("tryoutHistoryMigrationReceipts")
-      .collect();
-    return {
-      observerCount: observers.length,
-      observerPhases: observers.map(({ phase }) => phase),
-      receiptCount: receipts.length,
-      repairPresent: receipts[0]?.repair !== undefined,
-    };
-  });
-}
-
-describe("contentRelease/retire", () => {
-  it("atomically retires five rows and accepts an exact retry", async () => {
-    const target = convexTest(schema, convexModules);
-    await seedTerminalState(target);
-
-    await expect(runRetirement(target)).resolves.toMatchObject({
-      deleted: 5,
-      migrationId: RETIREMENT_RECEIPT.payload.migrationId,
-      observationId: PREDECESSOR_OBSERVATION_ID,
-      receiptHash: RETIREMENT_RECEIPT.receiptHash,
-    });
-    await expect(readTerminalState(target)).resolves.toEqual({
-      observerCount: 0,
-      observerPhases: [],
-      receiptCount: 0,
-      repairPresent: false,
-    });
-    await expect(runRetirement(target)).resolves.toMatchObject({ deleted: 0 });
-  });
-
-  it("rejects a terminal retry with a different source commit", async () => {
-    const target = convexTest(schema, convexModules);
-    await seedTerminalState(target);
-    await expect(runRetirement(target)).resolves.toMatchObject({ deleted: 5 });
-
-    await expect(
+const runRetirement = Effect.fn("test.retire.run")(function* (
+  target: RetirementTest,
+  receiptJson = RETIREMENT_RECEIPT_JSON,
+  proof: RetirementProof = RETIREMENT_PROOF
+) {
+  return yield* Effect.tryPromise({
+    try: () =>
       target.mutation(retire, {
         observationId: PREDECESSOR_OBSERVATION_ID,
-        proof: {
+        proof,
+        receiptJson,
+      }),
+    catch: (cause) => new TestMutationError({ cause }),
+  });
+});
+
+const readTerminalState = Effect.fn("test.retire.readState")(function* (
+  target: RetirementTest
+) {
+  return yield* Effect.promise(() =>
+    target.run((ctx) =>
+      runConvexProgram(
+        Effect.all({
+          observers: Effect.promise(() =>
+            ctx.db.query("contentPredecessorReads").collect()
+          ),
+          receipts: Effect.promise(() =>
+            ctx.db.query("tryoutHistoryMigrationReceipts").collect()
+          ),
+        }).pipe(
+          Effect.map(({ observers, receipts }) => ({
+            observerCount: observers.length,
+            observerPhases: observers.map(({ phase }) => phase),
+            receiptCount: receipts.length,
+            repairPresent: receipts[0]?.repair !== undefined,
+          }))
+        )
+      )
+    )
+  );
+});
+
+describe("contentRelease/retire", () => {
+  it.effect("atomically retires five rows and accepts an exact retry", () =>
+    Effect.gen(function* () {
+      const target = convexTest(schema, convexModules);
+      yield* seedTerminalState(target);
+
+      expect(yield* runRetirement(target)).toMatchObject({
+        deleted: 5,
+        migrationId: RETIREMENT_RECEIPT.payload.migrationId,
+        observationId: PREDECESSOR_OBSERVATION_ID,
+        receiptHash: RETIREMENT_RECEIPT.receiptHash,
+      });
+      expect(yield* readTerminalState(target)).toEqual(EMPTY_TERMINAL_STATE);
+      expect(yield* runRetirement(target)).toMatchObject({ deleted: 0 });
+    })
+  );
+
+  it.effect("rejects a terminal retry with a different source commit", () =>
+    Effect.gen(function* () {
+      const target = convexTest(schema, convexModules);
+      yield* seedTerminalState(target);
+      expect(yield* runRetirement(target)).toMatchObject({ deleted: 5 });
+
+      expectIntegrityFailure(
+        yield* runRetirement(target, RETIREMENT_RECEIPT_JSON, {
           ...RETIREMENT_PROOF,
           sourceSha: "f".repeat(40),
-        },
-        receiptJson: RETIREMENT_RECEIPT_JSON,
-      })
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-  });
+        }).pipe(Effect.flip)
+      );
+    })
+  );
 
-  it("rejects any predecessor call without deleting evidence", async () => {
-    const target = convexTest(schema, convexModules);
-    await seedTerminalState(target);
-    await target.mutation((ctx) =>
-      runConvexProgram(recordPredecessorRead(ctx, "protected"))
-    );
+  it.effect("rejects any predecessor call without deleting evidence", () =>
+    Effect.gen(function* () {
+      const target = convexTest(schema, convexModules);
+      yield* seedTerminalState(target);
+      yield* Effect.promise(() =>
+        target.mutation((ctx) =>
+          runConvexProgram(recordPredecessorRead(ctx, "protected"))
+        )
+      );
 
-    await expect(runRetirement(target)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_STATE" },
-    });
-    await expect(readTerminalState(target)).resolves.toEqual({
-      observerCount: 4,
-      observerPhases: ["armed", "armed", "armed", "armed"],
-      receiptCount: 1,
-      repairPresent: true,
-    });
-  });
+      const error = yield* runRetirement(target).pipe(Effect.flip);
+      expect(error.cause).toMatchObject({
+        data: { code: "CONTENT_RELEASE_STATE" },
+      });
+      expect(yield* readTerminalState(target)).toEqual(RETAINED_TERMINAL_STATE);
+    })
+  );
 
-  it("rejects a missing repair audit without deleting evidence", async () => {
-    const target = convexTest(schema, convexModules);
-    await seedTerminalState(target);
-    await target.mutation(async (ctx) => {
-      const receipt = await ctx.db
-        .query("tryoutHistoryMigrationReceipts")
-        .unique();
-      expect(receipt).not.toBeNull();
-      if (receipt) {
-        await ctx.db.patch(receipt._id, { repair: undefined });
-      }
-    });
+  it.effect("rejects a missing repair audit without deleting evidence", () =>
+    Effect.gen(function* () {
+      const target = convexTest(schema, convexModules);
+      yield* seedTerminalState(target);
+      yield* Effect.promise(() =>
+        target.mutation((ctx) =>
+          runConvexProgram(
+            Effect.gen(function* () {
+              const receipt = yield* Effect.promise(() =>
+                ctx.db.query("tryoutHistoryMigrationReceipts").unique()
+              );
+              expect(receipt).not.toBeNull();
+              if (receipt) {
+                yield* Effect.promise(() =>
+                  ctx.db.patch(receipt._id, { repair: undefined })
+                );
+              }
+            })
+          )
+        )
+      );
 
-    await expect(runRetirement(target)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-    await expect(readTerminalState(target)).resolves.toEqual({
-      observerCount: 4,
-      observerPhases: ["armed", "armed", "armed", "armed"],
-      receiptCount: 1,
-      repairPresent: false,
-    });
-  });
+      expectIntegrityFailure(yield* runRetirement(target).pipe(Effect.flip));
+      expect(yield* readTerminalState(target)).toEqual({
+        ...RETAINED_TERMINAL_STATE,
+        repairPresent: false,
+      });
+    })
+  );
 
-  it("rejects noncanonical signed receipt bytes without deleting evidence", async () => {
-    const target = convexTest(schema, convexModules);
-    await seedTerminalState(target);
-    const noncanonicalReceipt = JSON.stringify(
-      PARSED_RETIREMENT_RECEIPT,
-      undefined,
-      2
-    );
+  it.effect("rejects noncanonical receipt without deleting evidence", () =>
+    Effect.gen(function* () {
+      const target = convexTest(schema, convexModules);
+      yield* seedTerminalState(target);
+      const noncanonicalReceipt = JSON.stringify(
+        PARSED_RETIREMENT_RECEIPT,
+        undefined,
+        2
+      );
 
-    await expect(
-      runRetirement(target, noncanonicalReceipt)
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-    await expect(readTerminalState(target)).resolves.toEqual({
-      observerCount: 4,
-      observerPhases: ["armed", "armed", "armed", "armed"],
-      receiptCount: 1,
-      repairPresent: true,
-    });
-  });
+      expectIntegrityFailure(
+        yield* runRetirement(target, noncanonicalReceipt).pipe(Effect.flip)
+      );
+      expect(yield* readTerminalState(target)).toEqual(RETAINED_TERMINAL_STATE);
+    })
+  );
 
-  it("rejects partial terminal state after receipt loss", async () => {
-    const target = convexTest(schema, convexModules);
-    await seedTerminalState(target);
-    await target.mutation(async (ctx) => {
-      const receipt = await ctx.db
-        .query("tryoutHistoryMigrationReceipts")
-        .unique();
-      expect(receipt).not.toBeNull();
-      if (receipt) {
-        await ctx.db.delete(receipt._id);
-      }
-    });
+  it.effect("rejects partial terminal state after receipt loss", () =>
+    Effect.gen(function* () {
+      const target = convexTest(schema, convexModules);
+      yield* seedTerminalState(target);
+      yield* Effect.promise(() =>
+        target.mutation((ctx) =>
+          runConvexProgram(
+            Effect.gen(function* () {
+              const receipt = yield* Effect.promise(() =>
+                ctx.db.query("tryoutHistoryMigrationReceipts").unique()
+              );
+              expect(receipt).not.toBeNull();
+              if (receipt) {
+                yield* Effect.promise(() => ctx.db.delete(receipt._id));
+              }
+            })
+          )
+        )
+      );
 
-    await expect(runRetirement(target)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-    await expect(readTerminalState(target)).resolves.toEqual({
-      observerCount: 4,
-      observerPhases: ["armed", "armed", "armed", "armed"],
-      receiptCount: 0,
-      repairPresent: false,
-    });
-  });
+      expectIntegrityFailure(yield* runRetirement(target).pipe(Effect.flip));
+      expect(yield* readTerminalState(target)).toEqual({
+        ...EMPTY_TERMINAL_STATE,
+        observerCount: 4,
+        observerPhases: RETAINED_TERMINAL_STATE.observerPhases,
+      });
+    })
+  );
 
-  it("rejects any remaining migration row without deleting evidence", async () => {
-    const target = convexTest(schema, convexModules);
-    await seedTerminalState(target);
-    await target.mutation((ctx) =>
-      ctx.db.insert("tryoutHistoryMigrationAborts", {
-        abortedAt: 1,
-        deleted: 1,
-        migrationId: "unexpected-migration",
-        sourceSnapshotId: `sha256:${"f".repeat(64)}`,
-      })
-    );
+  it.effect("rejects migration remnants without deleting evidence", () =>
+    Effect.gen(function* () {
+      const target = convexTest(schema, convexModules);
+      yield* seedTerminalState(target);
+      yield* Effect.promise(() =>
+        target.mutation((ctx) =>
+          ctx.db.insert("tryoutHistoryMigrationAborts", {
+            abortedAt: 1,
+            deleted: 1,
+            migrationId: "unexpected-migration",
+            sourceSnapshotId: `sha256:${"f".repeat(64)}`,
+          })
+        )
+      );
 
-    await expect(runRetirement(target)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-    await expect(readTerminalState(target)).resolves.toEqual({
-      observerCount: 4,
-      observerPhases: ["armed", "armed", "armed", "armed"],
-      receiptCount: 1,
-      repairPresent: true,
-    });
-  });
+      expectIntegrityFailure(yield* runRetirement(target).pipe(Effect.flip));
+      expect(yield* readTerminalState(target)).toEqual(RETAINED_TERMINAL_STATE);
+    })
+  );
 });

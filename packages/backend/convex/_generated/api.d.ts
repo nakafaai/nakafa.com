@@ -209,6 +209,7 @@ import type * as contentRelease_partner_page from "../contentRelease/partner/pag
 import type * as contentRelease_predecessor_control from "../contentRelease/predecessor/control.js";
 import type * as contentRelease_predecessor_identity from "../contentRelease/predecessor/identity.js";
 import type * as contentRelease_predecessor_internal from "../contentRelease/predecessor/internal.js";
+import type * as contentRelease_predecessor_rearm from "../contentRelease/predecessor/rearm.js";
 import type * as contentRelease_predecessor_record from "../contentRelease/predecessor/record.js";
 import type * as contentRelease_predecessor_rows from "../contentRelease/predecessor/rows.js";
 import type * as contentRelease_predecessor_spec from "../contentRelease/predecessor/spec.js";
@@ -844,6 +845,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/predecessor/control": typeof contentRelease_predecessor_control;
   "contentRelease/predecessor/identity": typeof contentRelease_predecessor_identity;
   "contentRelease/predecessor/internal": typeof contentRelease_predecessor_internal;
+  "contentRelease/predecessor/rearm": typeof contentRelease_predecessor_rearm;
   "contentRelease/predecessor/record": typeof contentRelease_predecessor_record;
   "contentRelease/predecessor/rows": typeof contentRelease_predecessor_rows;
   "contentRelease/predecessor/spec": typeof contentRelease_predecessor_spec;
