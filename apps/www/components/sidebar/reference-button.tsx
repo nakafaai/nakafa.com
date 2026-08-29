@@ -83,12 +83,12 @@ export function ReferenceButton({ references, title }: Props) {
 
                     return (
                       <li
-                        className="pt-4 last:pb-4"
+                        className="min-w-0 pt-4 last:pb-4"
                         data-slot="reference-item"
                         key={reference.title}
                       >
                         <div
-                          className="flex flex-col gap-4 px-4"
+                          className="flex min-w-0 flex-col gap-4 overflow-hidden px-4"
                           data-slot="reference-item-content"
                         >
                           <div className="flex flex-col gap-1">
@@ -98,14 +98,14 @@ export function ReferenceButton({ references, title }: Props) {
                             >
                               {reference.title.toLowerCase()}
                             </h3>
-                            <div className="flex items-center gap-1 text-muted-foreground text-sm">
+                            <div className="flex min-w-0 items-center gap-1 text-muted-foreground text-sm">
                               <HugeIcons
                                 className="size-4 shrink-0"
                                 icon={Globe02Icon}
                               />
                               {reference.url ? (
                                 <a
-                                  className="underline-offset-4 hover:underline"
+                                  className="min-w-0 truncate underline-offset-4 hover:underline"
                                   href={reference.url}
                                   rel="noopener noreferrer"
                                   target="_blank"
@@ -113,7 +113,9 @@ export function ReferenceButton({ references, title }: Props) {
                                   {cleanUrl}
                                 </a>
                               ) : (
-                                <span>{t("no-website")}</span>
+                                <span className="min-w-0 truncate">
+                                  {t("no-website")}
+                                </span>
                               )}
                             </div>
                           </div>
@@ -155,7 +157,7 @@ export function ReferenceButton({ references, title }: Props) {
                                   className="size-4 shrink-0"
                                   icon={Book03Icon}
                                 />
-                                <span className="text-sm">
+                                <span className="min-w-0 truncate text-sm">
                                   {reference.details}
                                 </span>
                               </div>

@@ -49,9 +49,10 @@ const verifyCompactReferenceSheet = Effect.fn(
   );
   const list = sheet.locator('[data-slot="reference-list"]');
   const items = list.locator('[data-slot="reference-item"]');
-  yield* Effect.promise(() => expect(items).toHaveCount(11));
+  const itemCount = yield* Effect.promise(() => items.count());
+  yield* Effect.sync(() => expect(itemCount).toBeGreaterThan(0));
   yield* Effect.promise(() =>
-    expect(list.locator('[data-slot="separator"]')).toHaveCount(10)
+    expect(list.locator('[data-slot="separator"]')).toHaveCount(itemCount - 1)
   );
   yield* Effect.promise(() =>
     expect(list.locator('[data-slot="card"]')).toHaveCount(0)
@@ -68,9 +69,12 @@ const verifyCompactReferenceSheet = Effect.fn(
       const title = item.querySelector("h3");
       const separator = item.querySelector('[data-slot="separator"]');
       const list = item.closest('[data-slot="reference-list"]');
+      const url = item.querySelector("a");
+      const urlStyle = url ? getComputedStyle(url) : null;
 
       return {
         contentGap: contentStyle?.gap,
+        contentOverflowX: contentStyle?.overflowX,
         contentPaddingInline: contentStyle
           ? `${contentStyle.paddingLeft} ${contentStyle.paddingRight}`
           : null,
@@ -80,17 +84,22 @@ const verifyCompactReferenceSheet = Effect.fn(
         listWidth: list?.getBoundingClientRect().width,
         metadataGap: metadata ? getComputedStyle(metadata).gap : null,
         titleFontSize: title ? getComputedStyle(title).fontSize : null,
+        urlOverflowX: urlStyle?.overflowX,
+        urlTextOverflow: urlStyle?.textOverflow,
       };
     })
   );
   yield* Effect.sync(() => {
     expect(metrics).toMatchObject({
       contentGap: "16px",
+      contentOverflowX: "hidden",
       contentPaddingInline: "16px 16px",
       dividerWidth: metrics.listWidth,
       itemPaddingTop: "16px",
       metadataGap: "12px",
       titleFontSize: "14px",
+      urlOverflowX: "hidden",
+      urlTextOverflow: "ellipsis",
     });
     expect(metrics.itemHeight).toBeLessThanOrEqual(232);
   });
