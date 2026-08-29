@@ -38,7 +38,7 @@ function ActiveBadge({ isActive }: { isActive: boolean }) {
 }
 
 /** Renders the nested language submenu and delegates route projection to the shared switcher seam. */
-function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
+export function LanguageMenuItems() {
   const { isPending, replace } = useLocalizedRouteSwitch();
   const currentLocale = useLocale();
 
@@ -48,23 +48,32 @@ function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
   }
 
   return (
+    <>
+      {languages.map((language) => (
+        <DropdownMenuItem
+          className="cursor-pointer"
+          disabled={isPending}
+          key={language.value}
+          onClick={() => handleChangeLocale(language.value)}
+        >
+          <CountryFlagIcon countryCode={language.countryCode} />
+          <span className="truncate">{language.label}</span>
+          <ActiveBadge isActive={currentLocale === language.value} />
+        </DropdownMenuItem>
+      ))}
+    </>
+  );
+}
+
+/** Renders language options inside the account preference submenu. */
+function LanguageSubmenuContent({ side }: { side: SubmenuSide }) {
+  return (
     <DropdownMenuSubContent
       className="w-max max-w-[calc(100vw-2rem)]"
       side={side}
     >
       <DropdownMenuGroup>
-        {languages.map((language) => (
-          <DropdownMenuItem
-            className="cursor-pointer"
-            disabled={isPending}
-            key={language.value}
-            onClick={() => handleChangeLocale(language.value)}
-          >
-            <CountryFlagIcon countryCode={language.countryCode} />
-            <span className="truncate">{language.label}</span>
-            <ActiveBadge isActive={currentLocale === language.value} />
-          </DropdownMenuItem>
-        ))}
+        <LanguageMenuItems />
       </DropdownMenuGroup>
     </DropdownMenuSubContent>
   );

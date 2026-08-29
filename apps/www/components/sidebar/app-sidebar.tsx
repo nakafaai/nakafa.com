@@ -10,8 +10,8 @@ import type { ComponentProps } from "react";
 import { HeaderMenu } from "@/components/sidebar/header-menu";
 import { NavExplore } from "@/components/sidebar/nav-explore";
 import { NavForYou } from "@/components/sidebar/nav-for-you";
-import { NavUser } from "@/components/sidebar/nav-user";
 import { SearchMenu } from "@/components/sidebar/search-menu";
+import { NavUser } from "@/components/sidebar/user/nav";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 
 export function AppSidebar({
