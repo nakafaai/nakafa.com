@@ -6,6 +6,7 @@ export const config: VercelConfig = {
   buildCommand: "pnpm build",
   framework: null,
   ignoreCommand: "sh ../../scripts/vercel/scope.sh mcp",
+  outputDirectory: "public",
   git: {
     deploymentEnabled: {
       "**": false,
