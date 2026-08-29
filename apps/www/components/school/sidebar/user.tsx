@@ -66,7 +66,7 @@ export function SchoolSidebarNavUser() {
     }
   }
   if (isPending) {
-    return <NavUserSkeleton mode={isAuthenticated ? "account" : "guest"} />;
+    return <NavUserSkeleton mode={isAuthenticated ? "account" : "neutral"} />;
   }
   if (!user) {
     return <NavUserGuest />;
