@@ -10,15 +10,15 @@ const mockGetCachedLlmsSectionIndexText = vi.hoisted(() => vi.fn());
 const mockIsPublicLlmsLocaleIndexRoute = vi.hoisted(() => vi.fn());
 const mockResolvePublicLlmsSectionIndex = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/llms/content", () => ({
+vi.mock("@/lib/llms/content/markdown", () => ({
   getLlmsMarkdownText: mockGetLlmsMarkdownText,
 }));
 
-vi.mock("@/lib/llms/indexes", () => ({
+vi.mock("@/lib/llms/index/cache", () => ({
   getCachedLlmsSectionIndexText: mockGetCachedLlmsSectionIndexText,
 }));
 
-vi.mock("@/lib/llms/public-index", () => ({
+vi.mock("@/lib/llms/index/public", () => ({
   buildPublicLlmsAppSectionIndexText: () => "# Nakafa English Curriculum\n",
   buildRootLlmsIndexText: () => "# Nakafa llms index\n",
   isPublicLlmsLocaleIndexRoute: mockIsPublicLlmsLocaleIndexRoute,

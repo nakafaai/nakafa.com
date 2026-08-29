@@ -7,11 +7,11 @@ import {
   readActiveContentIdentity,
 } from "@/lib/content/published/active";
 import { readActiveContentRoute } from "@/lib/content/published/route";
-import { getCachedLlmsSectionIndexText } from "@/lib/llms/indexes";
+import { getCachedLlmsSectionIndexText } from "@/lib/llms/index/cache";
 import {
   isPublicLlmsLocaleIndexRoute,
   resolvePublicLlmsSectionIndex,
-} from "@/lib/llms/public-index";
+} from "@/lib/llms/index/public";
 import {
   getCachedPublishedText,
   type PublishedMarkdownInput,

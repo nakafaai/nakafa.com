@@ -12,7 +12,7 @@ import {
   SECTION_LABELS,
 } from "@/lib/llms/constants";
 import { getLocaleLabel, stripLlmsRouteExtension } from "@/lib/llms/format";
-import { renderLlmsIndexText } from "@/lib/llms/index-text";
+import { renderLlmsIndexText } from "@/lib/llms/index/render";
 
 type LlmsContentSection = Exclude<LlmsSection, "site">;
 

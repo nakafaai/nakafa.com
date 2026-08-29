@@ -4,8 +4,8 @@ import { readPublishedArticleBucket } from "@/lib/content/article/discovery";
 import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
 import { readPublishedMaterialBucket } from "@/lib/content/material/discovery";
 import type { LlmsSection } from "@/lib/llms/constants";
+import { readMaterialLlmsInventory } from "@/lib/llms/content/material";
 import { buildPublishedContentLlmsEntries } from "@/lib/llms/entries";
-import { readMaterialLlmsInventory } from "@/lib/llms/material-pages";
 import { readQuranLlmsPageEntries } from "@/lib/llms/quran";
 
 /**

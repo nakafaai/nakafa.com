@@ -3,7 +3,10 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
 import type { Locale } from "next-intl";
 import { vi } from "vitest";
-import { getLlmsMarkdownText, hasLlmsMarkdownSource } from "@/lib/llms/content";
+import {
+  getLlmsMarkdownText,
+  hasLlmsMarkdownSource,
+} from "@/lib/llms/content/markdown";
 
 const PUBLISHED_PATH =
   "subjects/mathematics/function-composition-inverse-function/function-concept";
@@ -29,7 +32,7 @@ vi.mock("@/lib/content/published/active", () => ({
   readActiveContentIdentity: mockReadActiveContentIdentity,
 }));
 
-vi.mock("@/lib/llms/indexes", () => ({
+vi.mock("@/lib/llms/index/cache", () => ({
   getCachedLlmsSectionIndexText: mockGetCachedLlmsSectionIndexText,
 }));
 
@@ -42,7 +45,7 @@ vi.mock("@/lib/llms/quran", () => ({
   getQuranLlmsText: mockGetQuranLlmsText,
 }));
 
-vi.mock("@/lib/llms/public-index", () => ({
+vi.mock("@/lib/llms/index/public", () => ({
   isPublicLlmsLocaleIndexRoute: mockIsPublicLlmsLocaleIndexRoute,
   resolvePublicLlmsSectionIndex: mockResolvePublicLlmsSectionIndex,
 }));

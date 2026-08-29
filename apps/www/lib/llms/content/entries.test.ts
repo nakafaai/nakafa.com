@@ -5,7 +5,7 @@ import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projecti
 import { Effect } from "effect";
 import { vi } from "vitest";
 import { BASE_URL } from "@/lib/llms/constants";
-import { getContentPageLlmsEntries } from "@/lib/llms/content-entries";
+import { getContentPageLlmsEntries } from "@/lib/llms/content/entries";
 import type { LlmsEntry } from "@/lib/llms/entries";
 import {
   previewNextProjection,
@@ -30,7 +30,7 @@ vi.mock("@/lib/content/article/sitemap", () => ({
 vi.mock("@/lib/content/material/discovery", () => ({
   readPublishedMaterialBucket: mockReadPublishedMaterialBucket,
 }));
-vi.mock("@/lib/llms/material-pages", () => ({
+vi.mock("@/lib/llms/content/material", () => ({
   readMaterialLlmsInventory: mockReadMaterialInventory,
 }));
 vi.mock("@/lib/llms/quran", () => ({

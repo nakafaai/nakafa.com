@@ -10,7 +10,7 @@ import {
 
 const mockHasLlmsMarkdownSource = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/llms/content", () => ({
+vi.mock("@/lib/llms/content/markdown", () => ({
   hasLlmsMarkdownSource: mockHasLlmsMarkdownSource,
 }));
 

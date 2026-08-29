@@ -2,7 +2,7 @@ import { Effect } from "effect";
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server.js";
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { hasLlmsMarkdownSource } from "@/lib/llms/content";
+import type { hasLlmsMarkdownSource } from "@/lib/llms/content/markdown";
 import { config, proxy } from "@/proxy";
 
 type NextRequestInit = ConstructorParameters<typeof NextRequest>[1];
@@ -97,7 +97,7 @@ vi.mock("@/lib/content/preview/route", () => ({
 vi.mock("@/lib/content/runtime/query", () => ({
   readRuntimeQuery: runtimeMocks.readTryout,
 }));
-vi.mock("@/lib/llms/content", () => ({
+vi.mock("@/lib/llms/content/markdown", () => ({
   hasLlmsMarkdownSource: (input: Parameters<typeof hasLlmsMarkdownSource>[0]) =>
     Effect.succeed(input.cleanSlug === "terms-of-service"),
 }));

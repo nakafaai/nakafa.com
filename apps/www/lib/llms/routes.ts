@@ -5,7 +5,7 @@ import {
   negotiateMediaType,
 } from "@repo/utilities/http/accept";
 import { Effect, Option, Schema } from "effect";
-import { hasLlmsMarkdownSource } from "@/lib/llms/content";
+import { hasLlmsMarkdownSource } from "@/lib/llms/content/markdown";
 
 export const LocalizedLlmsRouteSchema = Schema.Struct({
   locale: ActiveAppLocaleCodeSchema,

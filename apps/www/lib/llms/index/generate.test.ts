@@ -4,13 +4,8 @@ import { Effect } from "effect";
 import { vi } from "vitest";
 import { BASE_URL } from "@/lib/llms/constants";
 import type { LlmsEntry } from "@/lib/llms/entries";
-import {
-  getCachedLlmsSectionIndexText,
-  getLlmsSectionIndexText,
-} from "@/lib/llms/indexes";
+import { getLlmsSectionIndexText } from "@/lib/llms/index/generate";
 
-const mockCacheLife = vi.hoisted(() => vi.fn());
-const mockCacheTag = vi.hoisted(() => vi.fn());
 const mockGetContentListingLlmsEntries = vi.hoisted(() => vi.fn());
 const mockGetContentPageLlmsEntries = vi.hoisted(() => vi.fn());
 const mockReadPublishedArticleBuckets = vi.hoisted(() => vi.fn());
@@ -35,11 +30,6 @@ const siteEntry: LlmsEntry = {
   title: "Search",
 };
 
-vi.mock("next/cache", () => ({
-  cacheLife: mockCacheLife,
-  cacheTag: mockCacheTag,
-}));
-
 vi.mock("@/lib/llms/entries", async () => {
   const constants = await import("@/lib/llms/constants");
 
@@ -57,11 +47,11 @@ vi.mock("@/lib/llms/site", () => ({
   readSiteLlmsEntries: mockReadSiteLlmsEntries,
 }));
 
-vi.mock("@/lib/llms/content-entries", () => ({
+vi.mock("@/lib/llms/content/entries", () => ({
   getContentPageLlmsEntries: mockGetContentPageLlmsEntries,
 }));
 
-vi.mock("@/lib/llms/content-listing", () => ({
+vi.mock("@/lib/llms/content/listing", () => ({
   getContentListingLlmsEntries: mockGetContentListingLlmsEntries,
 }));
 
@@ -76,8 +66,6 @@ vi.mock("@/lib/llms/quran", () => ({
 }));
 
 beforeEach(() => {
-  mockCacheLife.mockClear();
-  mockCacheTag.mockClear();
   mockGetContentListingLlmsEntries.mockReset();
   mockGetContentPageLlmsEntries.mockReset();
   mockReadPublishedArticleBuckets.mockReset();
@@ -310,20 +298,6 @@ describe("llms indexes", () => {
         for (const path of paths) {
           expect(yield* getLlmsSectionIndexText(path)).toBeNull();
         }
-      })
-  );
-
-  it.effect(
-    "uses the Next cache boundary without changing section output",
-    () =>
-      Effect.gen(function* () {
-        const text = yield* Effect.tryPromise(() =>
-          getCachedLlmsSectionIndexText({ cleanSlug: "llms/en" })
-        );
-
-        expect(text).toContain("# Nakafa English Content");
-        expect(mockCacheTag).toHaveBeenCalledWith("content-runtime");
-        expect(mockCacheLife).toHaveBeenCalledWith("contentRuntime");
       })
   );
 });

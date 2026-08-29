@@ -1,5 +1,5 @@
 import { LLMS_CACHE_CONTROL } from "@/lib/llms/constants";
-import { buildRootLlmsIndexText } from "@/lib/llms/public-index";
+import { buildRootLlmsIndexText } from "@/lib/llms/index/public";
 
 /** Serves the small root llms index. */
 export function GET() {

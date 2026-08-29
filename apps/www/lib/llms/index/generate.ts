@@ -1,21 +1,20 @@
 import { routing } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { hasLocale, type Locale } from "next-intl";
-import { applyContentRuntimeCache } from "@/lib/content/cache";
 import { BASE_URL, type LlmsSection } from "@/lib/llms/constants";
-import { getContentPageLlmsEntries } from "@/lib/llms/content-entries";
-import { getContentListingLlmsEntries } from "@/lib/llms/content-listing";
+import { getContentPageLlmsEntries } from "@/lib/llms/content/entries";
+import { getContentListingLlmsEntries } from "@/lib/llms/content/listing";
 import {
   getLlmsSections,
   isLlmsSection,
   type LlmsEntry,
 } from "@/lib/llms/entries";
 import { getLocaleLabel, stripLlmsRouteExtension } from "@/lib/llms/format";
+import { getPublicLlmsSectionIndexLines } from "@/lib/llms/index/public";
 import {
   formatLlmsEntryLine,
   renderLlmsIndexText,
-} from "@/lib/llms/index-text";
-import { getPublicLlmsSectionIndexLines } from "@/lib/llms/public-index";
+} from "@/lib/llms/index/render";
 import {
   buildLlmsListingIndexText,
   buildLlmsPageIndexText,
@@ -25,19 +24,6 @@ import {
 import { readSiteLlmsEntries } from "@/lib/llms/site";
 
 const LOCALE_INDEX_ENTRY_LIMIT = 60;
-
-/** Caches section index generation for Next.js Cache Components. */
-export async function getCachedLlmsSectionIndexText({
-  cleanSlug,
-}: {
-  cleanSlug: string;
-}) {
-  "use cache";
-
-  applyContentRuntimeCache();
-
-  return await Effect.runPromise(getLlmsSectionIndexText(cleanSlug));
-}
 
 /** Builds a locale or section llms index from a cleaned llms route. */
 export const getLlmsSectionIndexText = Effect.fn("www.llms.index.text")(

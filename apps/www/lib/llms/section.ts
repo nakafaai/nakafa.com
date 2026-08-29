@@ -6,13 +6,13 @@ import {
   type LlmsSection,
   SECTION_LABELS,
 } from "@/lib/llms/constants";
+import { readMaterialLlmsInventory } from "@/lib/llms/content/material";
 import type { LlmsEntry } from "@/lib/llms/entries";
 import { formatRouteTitle, getLocaleLabel } from "@/lib/llms/format";
 import {
   formatLlmsEntryLine,
   renderLlmsIndexText,
-} from "@/lib/llms/index-text";
-import { readMaterialLlmsInventory } from "@/lib/llms/material-pages";
+} from "@/lib/llms/index/render";
 import { readQuranLlmsInventory } from "@/lib/llms/quran";
 
 type ContentSection = Exclude<LlmsSection, "site">;
