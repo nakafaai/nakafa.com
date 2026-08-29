@@ -9,7 +9,7 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { useTranslations } from "next-intl";
 import { AnalyticsConsentSidebarItem } from "@/components/analytics/consent/actions";
-import { GuestLanguageMenu } from "@/components/sidebar/preference-menu";
+import { GuestLanguageMenu } from "@/components/sidebar/menu/preference";
 import { NavUserGuestButton } from "@/components/sidebar/user/guest/button";
 
 /** Renders guest utilities and the signed-out account call to action. */

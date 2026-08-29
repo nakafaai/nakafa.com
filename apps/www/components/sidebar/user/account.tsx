@@ -40,7 +40,7 @@ import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";
 import { clearAiDraftText } from "@/components/ai/store/draft";
 import { AnalyticsConsentMenuItem } from "@/components/analytics/consent/actions";
-import { SidebarUtilityMenuItems } from "@/components/sidebar/utility-menu-items";
+import { SidebarUtilityMenuItems } from "@/components/sidebar/menu/utility";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 import { usePageNavigation } from "@/lib/content/page/context";
 import type { CurrentUser } from "@/lib/context/use-user";

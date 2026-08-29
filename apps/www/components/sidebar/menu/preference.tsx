@@ -185,7 +185,7 @@ function ThemeSubmenuContent({ side }: { side: SubmenuSide }) {
   );
 }
 
-/** Provides the sidebar preference submenus that can be mounted from account menu surfaces. */
+/** Provides preference submenus that can be mounted from account menu surfaces. */
 export function SidebarPreferenceSubmenus({ side }: { side: SubmenuSide }) {
   const t = useTranslations("Common");
 
