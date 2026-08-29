@@ -8,10 +8,10 @@ import { Sidebar } from "@repo/design-system/components/ui/sidebar-shell";
 import { cn } from "@repo/design-system/lib/utils";
 import { Effect } from "effect";
 import { type ComponentProps, Suspense } from "react";
-import { SchoolSidebarNavLearning } from "@/components/school/sidebar/nav-learning";
-import { SchoolSidebarNavUser } from "@/components/school/sidebar/nav-user";
-import { SchoolSidebarNavYours } from "@/components/school/sidebar/nav-yours";
-import { SchoolSwitcher } from "@/components/school/sidebar/school-switcher";
+import { SchoolSidebarNavLearning } from "@/components/school/sidebar/learning";
+import { SchoolSwitcher } from "@/components/school/sidebar/switcher";
+import { SchoolSidebarNavUser } from "@/components/school/sidebar/user";
+import { SchoolSidebarNavYours } from "@/components/school/sidebar/yours";
 import { getToken } from "@/lib/auth/server";
 import { getSchoolSwitcherPage } from "@/lib/school/server";
 

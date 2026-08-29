@@ -1,6 +1,6 @@
 import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
 import { SidebarInset } from "@repo/design-system/components/ui/sidebar-shell";
-import { SchoolSidebar } from "@/components/school/sidebar";
+import { SchoolSidebar } from "@/components/school/sidebar/panel";
 
 export default function Layout({
   children,
