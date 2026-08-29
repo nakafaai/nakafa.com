@@ -36,8 +36,8 @@ import { VirtualProvider } from "@/lib/context/use-virtual";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
-import { generateSEOMetadata } from "@/lib/seo/generator";
-import type { SEOContext } from "@/lib/seo/types";
+import { getCachedSEOMetadata } from "@/lib/seo/cache";
+import type { SEOContext } from "@/lib/seo/contract";
 import { getSocialMetadata } from "@/lib/utils/metadata";
 import { getQuranPagination, getQuranSurahName } from "@/lib/utils/pages/quran";
 
@@ -78,7 +78,7 @@ export async function generateMetadata({
     surah: surahData,
   };
 
-  const { title, description, keywords } = await generateSEOMetadata(
+  const { title, description, keywords } = await getCachedSEOMetadata(
     seoContext,
     locale
   );

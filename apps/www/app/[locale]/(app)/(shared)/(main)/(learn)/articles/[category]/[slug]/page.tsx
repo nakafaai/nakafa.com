@@ -26,8 +26,8 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { selectLearningStaticParams } from "@/lib/routing/prerender";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
-import { generateSEOMetadata } from "@/lib/seo/generator";
-import type { SEOContext } from "@/lib/seo/types";
+import { getCachedSEOMetadata } from "@/lib/seo/cache";
+import type { SEOContext } from "@/lib/seo/contract";
 import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
 
 type ArrayItem<T> = T extends readonly (infer Item)[] ? Item : T;
@@ -89,7 +89,7 @@ export async function generateMetadata({
     },
   };
 
-  const { title, description, keywords } = await generateSEOMetadata(
+  const { title, description, keywords } = await getCachedSEOMetadata(
     seoContext,
     locale
   );

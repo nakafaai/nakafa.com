@@ -34,7 +34,7 @@ import { SubjectList } from "@/components/shared/subject-list";
 import { getCurriculumRouteSocialImage } from "@/lib/curriculum/social-images";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
-import { generateSEOMetadata } from "@/lib/seo/generator";
+import { getCachedSEOMetadata } from "@/lib/seo/cache";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
 import { getSocialMetadata } from "@/lib/utils/metadata";
 
@@ -61,7 +61,7 @@ export async function generateMetadata({
 }: CurriculumPageProps): Promise<Metadata> {
   const model = await resolveRuntimeCurriculumRoute(params);
   const { locale, program, route } = model;
-  const seo = await generateSEOMetadata(
+  const seo = await getCachedSEOMetadata(
     readCurriculumSeoContext(route, model.ancestors),
     locale
   );

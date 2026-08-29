@@ -1,15 +1,13 @@
 // @vitest-environment node
+
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Effect } from "effect";
+import { vi } from "vitest";
 import { generateSEOMetadata } from "@/lib/seo/generator";
 
-const { mockCacheLife, mockGetTranslations } = vi.hoisted(() => ({
-  mockCacheLife: vi.fn(),
+const { mockGetTranslations } = vi.hoisted(() => ({
   mockGetTranslations: vi.fn(),
-}));
-
-vi.mock("next/cache", () => ({
-  cacheLife: mockCacheLife,
 }));
 
 vi.mock("next-intl/server", () => ({
@@ -124,7 +122,6 @@ const surah = {
 } satisfies QuranSurahRow;
 
 beforeEach(() => {
-  mockCacheLife.mockClear();
   mockGetTranslations.mockReset();
   mockGetTranslations.mockImplementation(({ namespace }) =>
     Promise.resolve(getTranslator(namespace))
@@ -132,184 +129,210 @@ beforeEach(() => {
 });
 
 describe("generateSEOMetadata", () => {
-  it("uses subject MDX description before generated fallback copy", async () => {
-    const result = await generateSEOMetadata(
-      {
-        type: "material-lesson",
-        grade: "11",
-        material: "mathematics",
-        data: {
-          title: "Trigonometric Function Graph",
-          description: "Hand-written subject summary for students.",
+  it.effect("uses subject MDX description before generated fallback copy", () =>
+    Effect.gen(function* () {
+      const result = yield* generateSEOMetadata(
+        {
+          type: "material-lesson",
+          grade: "11",
+          material: "mathematics",
+          data: {
+            title: "Trigonometric Function Graph",
+            description: "Hand-written subject summary for students.",
+          },
         },
-      },
-      "en"
-    );
+        "en"
+      );
 
-    expect(result.description).toBe(
-      "Hand-written subject summary for students."
-    );
-    expect(result.title).toBe(
-      "Trigonometric Function Graph: Mathematics (Grade 11) | Nakafa"
-    );
-    expect(result.keywords).toEqual([
-      "Trigonometric Function Graph",
-      "Mathematics",
-      "Grade 11",
-    ]);
-  });
+      expect(result.description).toBe(
+        "Hand-written subject summary for students."
+      );
+      expect(result.title).toBe(
+        "Trigonometric Function Graph: Mathematics (Grade 11) | Nakafa"
+      );
+      expect(result.keywords).toEqual([
+        "Trigonometric Function Graph",
+        "Mathematics",
+        "Grade 11",
+      ]);
+    })
+  );
 
-  it("uses generated subject description when MDX description is missing", async () => {
-    const result = await generateSEOMetadata(
-      {
-        type: "material-lesson",
-        grade: "bachelor",
-        material: "mathematics",
-        data: {
-          title: "Linear Algebra",
-          description: "   ",
+  it.effect(
+    "uses generated subject description when MDX description is missing",
+    () =>
+      Effect.gen(function* () {
+        const result = yield* generateSEOMetadata(
+          {
+            type: "material-lesson",
+            grade: "bachelor",
+            material: "mathematics",
+            data: {
+              title: "Linear Algebra",
+              description: "   ",
+            },
+          },
+          "en"
+        );
+
+        expect(result.description).toBe(
+          "Generated subject description for Linear Algebra in Mathematics for Bachelor."
+        );
+      })
+  );
+
+  it.effect("uses subject metadata when title is missing", () =>
+    Effect.gen(function* () {
+      const result = yield* generateSEOMetadata(
+        {
+          type: "material-lesson",
+          grade: "11",
+          material: "mathematics",
+          data: {
+            title: "   ",
+            subject: "Function Modeling",
+          },
         },
-      },
-      "en"
-    );
+        "en"
+      );
 
-    expect(result.description).toBe(
-      "Generated subject description for Linear Algebra in Mathematics for Bachelor."
-    );
-  });
+      expect(result.title).toBe(
+        "Function Modeling: Mathematics (Grade 11) | Nakafa"
+      );
+    })
+  );
 
-  it("uses subject metadata when title is missing", async () => {
-    const result = await generateSEOMetadata(
-      {
-        type: "material-lesson",
-        grade: "11",
-        material: "mathematics",
-        data: {
-          title: "   ",
-          subject: "Function Modeling",
+  it.effect(
+    "uses the site title when content title and subject are missing",
+    () =>
+      Effect.gen(function* () {
+        const result = yield* generateSEOMetadata(
+          {
+            type: "material-lesson",
+            grade: "11",
+            material: "mathematics",
+            data: {},
+          },
+          "en"
+        );
+
+        expect(result.title).toBe("Nakafa: Mathematics (Grade 11) | Nakafa");
+      })
+  );
+
+  it.effect("uses article MDX description before generated fallback copy", () =>
+    Effect.gen(function* () {
+      const result = yield* generateSEOMetadata(
+        {
+          type: "article",
+          categoryLabel: "Politics",
+          data: {
+            title: "Regional Elections",
+            description: "Hand-written article summary.",
+          },
         },
-      },
-      "en"
-    );
+        "en"
+      );
 
-    expect(result.title).toBe(
-      "Function Modeling: Mathematics (Grade 11) | Nakafa"
-    );
-  });
+      expect(result.description).toBe("Hand-written article summary.");
+      expect(result.title).toBe("Regional Elections - Politics | Nakafa");
+    })
+  );
 
-  it("uses the site title when content title and subject are missing", async () => {
-    const result = await generateSEOMetadata(
-      {
-        type: "material-lesson",
-        grade: "11",
-        material: "mathematics",
-        data: {},
-      },
-      "en"
-    );
+  it.effect(
+    "uses generated article description when MDX description is missing",
+    () =>
+      Effect.gen(function* () {
+        const result = yield* generateSEOMetadata(
+          {
+            type: "article",
+            categoryLabel: "Politics",
+            data: {
+              title: "Regional Elections",
+            },
+          },
+          "en"
+        );
 
-    expect(result.title).toBe("Nakafa: Mathematics (Grade 11) | Nakafa");
-  });
+        expect(result.description).toBe(
+          "Generated article description for Regional Elections."
+        );
+      })
+  );
 
-  it("uses article MDX description before generated fallback copy", async () => {
-    const result = await generateSEOMetadata(
-      {
-        type: "article",
-        categoryLabel: "Politics",
-        data: {
-          title: "Regional Elections",
-          description: "Hand-written article summary.",
+  it.effect(
+    "generates curriculum metadata from source-owned route context",
+    () =>
+      Effect.gen(function* () {
+        const nested = yield* generateSEOMetadata(
+          {
+            type: "curriculum-context",
+            level: "subject",
+            parent: "Grade 11",
+            program: "Kurikulum Merdeka",
+            data: { title: "Mathematics" },
+          },
+          "en"
+        );
+        const root = yield* generateSEOMetadata(
+          {
+            type: "curriculum-context",
+            level: "track",
+            data: { title: "Mathematics" },
+          },
+          "en"
+        );
+
+        expect(nested.title).toBe(
+          "Mathematics - Grade 11 (Kurikulum Merdeka) | Nakafa"
+        );
+        expect(nested.keywords).toEqual([
+          "Mathematics",
+          "Grade 11",
+          "Kurikulum Merdeka",
+        ]);
+        expect(root.title).toBe("Mathematics | Nakafa");
+        expect(root.description).toBe("Browse Mathematics.");
+      })
+  );
+
+  it.effect("generates Quran metadata from the surah payload", () =>
+    Effect.gen(function* () {
+      const result = yield* generateSEOMetadata(
+        {
+          type: "quran",
+          surah,
         },
-      },
-      "en"
-    );
+        "en"
+      );
 
-    expect(result.description).toBe("Hand-written article summary.");
-    expect(result.title).toBe("Regional Elections - Politics | Nakafa");
-  });
+      expect(result.title).toBe("Surah 1. Al-Fatihah - The Opening | Nakafa");
+      expect(result.description).toBe("Read Surah Al-Fatihah with 7 verses.");
+    })
+  );
 
-  it("uses generated article description when MDX description is missing", async () => {
-    const result = await generateSEOMetadata(
-      {
-        type: "article",
-        categoryLabel: "Politics",
-        data: {
-          title: "Regional Elections",
+  it.effect("uses fallback metadata when dictionary loading fails", () =>
+    Effect.gen(function* () {
+      mockGetTranslations.mockRejectedValueOnce("missing translations");
+
+      const result = yield* generateSEOMetadata(
+        {
+          type: "material-lesson",
+          grade: "11",
+          material: "mathematics",
+          data: {
+            title: "Trigonometric Function Graph",
+            description: "Graph lesson fallback.",
+          },
         },
-      },
-      "en"
-    );
+        "en"
+      );
 
-    expect(result.description).toBe(
-      "Generated article description for Regional Elections."
-    );
-  });
-
-  it("generates curriculum metadata from source-owned route context", async () => {
-    const nested = await generateSEOMetadata(
-      {
-        type: "curriculum-context",
-        level: "subject",
-        parent: "Grade 11",
-        program: "Kurikulum Merdeka",
-        data: { title: "Mathematics" },
-      },
-      "en"
-    );
-    const root = await generateSEOMetadata(
-      {
-        type: "curriculum-context",
-        level: "track",
-        data: { title: "Mathematics" },
-      },
-      "en"
-    );
-
-    expect(nested.title).toBe(
-      "Mathematics - Grade 11 (Kurikulum Merdeka) | Nakafa"
-    );
-    expect(nested.keywords).toEqual([
-      "Mathematics",
-      "Grade 11",
-      "Kurikulum Merdeka",
-    ]);
-    expect(root.title).toBe("Mathematics | Nakafa");
-    expect(root.description).toBe("Browse Mathematics.");
-  });
-
-  it("generates Quran metadata from the surah payload", async () => {
-    const result = await generateSEOMetadata(
-      {
-        type: "quran",
-        surah,
-      },
-      "en"
-    );
-
-    expect(result.title).toBe("Surah 1. Al-Fatihah - The Opening | Nakafa");
-    expect(result.description).toBe("Read Surah Al-Fatihah with 7 verses.");
-  });
-
-  it("uses fallback metadata when dictionary loading fails", async () => {
-    mockGetTranslations.mockRejectedValueOnce("missing translations");
-
-    const result = await generateSEOMetadata(
-      {
-        type: "material-lesson",
-        grade: "11",
-        material: "mathematics",
-        data: {
-          title: "Trigonometric Function Graph",
-          description: "Graph lesson fallback.",
-        },
-      },
-      "en"
-    );
-
-    expect(result).toStrictEqual({
-      title: "Trigonometric Function Graph - mathematics - Nakafa",
-      description: "Graph lesson fallback. Trigonometric Function Graph",
-      keywords: [],
-    });
-  });
+      expect(result).toStrictEqual({
+        title: "Trigonometric Function Graph - mathematics - Nakafa",
+        description: "Graph lesson fallback. Trigonometric Function Graph",
+        keywords: [],
+      });
+    })
+  );
 });

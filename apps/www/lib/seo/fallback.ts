@@ -1,6 +1,6 @@
+import type { SEOContext, SEOMetadata } from "@/lib/seo/contract";
 import { createSEODescription } from "@/lib/seo/descriptions";
 import { createSEOTitle } from "@/lib/seo/titles";
-import type { SEOContext, SEOMetadata } from "@/lib/seo/types";
 
 /** Builds fallback metadata when localized SEO dictionaries are unavailable. */
 export function generateFallbackMetadata(context: SEOContext): SEOMetadata {

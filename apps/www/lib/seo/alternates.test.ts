@@ -1,6 +1,7 @@
 // @vitest-environment node
+
+import { describe, expect, it } from "@effect/vitest";
 import { routing } from "@repo/internationalization/src/routing";
-import { describe, expect, it } from "vitest";
 import {
   createLocalizedAlternates,
   createResolvedRouteAlternates,
