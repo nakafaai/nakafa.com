@@ -18,6 +18,15 @@ export class ConvexTransientResponseError extends Schema.TaggedError<ConvexTrans
   }
 ) {}
 
+/** Internal failure while releasing one transient response stream. */
+class ConvexResponseCancelError extends Schema.TaggedError<ConvexResponseCancelError>()(
+  "ConvexResponseCancelError",
+  {
+    cause: Schema.Unknown,
+    status: ConvexTransientStatusSchema,
+  }
+) {}
+
 function isTransientConvexResponse(response: Response) {
   return (
     response.status >= 500 &&
@@ -25,6 +34,27 @@ function isTransientConvexResponse(response: Response) {
     response.status !== CONVEX_UDF_FAILED_STATUS
   );
 }
+
+const cancelTransientResponse = Effect.fn(
+  "ConvexRuntime.cancelTransientResponse"
+)(function* (response: Response) {
+  const body = response.body;
+  if (!body) {
+    return;
+  }
+
+  yield* Effect.tryPromise({
+    try: () => body.cancel(),
+    catch: (cause) =>
+      new ConvexResponseCancelError({ cause, status: response.status }),
+  }).pipe(
+    Effect.catchTag("ConvexResponseCancelError", (error) =>
+      Effect.logWarning(
+        "Unable to cancel transient Convex response body."
+      ).pipe(Effect.annotateLogs({ status: error.status }))
+    )
+  );
+});
 
 const readConvexResponse = Effect.fn("ConvexRuntime.response")(function* (
   input: RequestInfo | URL,
@@ -39,6 +69,7 @@ const readConvexResponse = Effect.fn("ConvexRuntime.response")(function* (
       }),
   });
   if (isTransientConvexResponse(response)) {
+    yield* cancelTransientResponse(response);
     return yield* new ConvexTransientResponseError({
       status: response.status,
     });

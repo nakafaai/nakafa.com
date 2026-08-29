@@ -46,6 +46,13 @@ const args: FunctionArgs<typeof query> = {
 const queryName = "contentRelease/reference:read";
 const runtimeUrl = "https://example.convex.cloud";
 
+function transientResponse(status: number, cancel = vi.fn()) {
+  return {
+    cancel,
+    response: new Response(new ReadableStream({ cancel }), { status }),
+  };
+}
+
 function queryThroughFetch(result: unknown = null) {
   clientState.query.mockImplementation(
     async (fetchHook: typeof fetch | undefined) => {
@@ -85,12 +92,12 @@ afterEach(() => {
 
 describe("Convex runtime responses", () => {
   it.effect("retries transient HTTP responses", () => {
+    const overloaded = transientResponse(503);
+    const failed = transientResponse(500);
     const fetchMock = vi
       .fn<typeof fetch>()
-      .mockResolvedValueOnce(new Response("private overload", { status: 503 }))
-      .mockResolvedValueOnce(
-        new Response("private backend failure", { status: 500 })
-      )
+      .mockResolvedValueOnce(overloaded.response)
+      .mockResolvedValueOnce(failed.response)
       .mockResolvedValueOnce(new Response("ok"));
     vi.stubGlobal("fetch", fetchMock);
     queryThroughFetch(42);
@@ -103,6 +110,31 @@ describe("Convex runtime responses", () => {
 
       expect(yield* Fiber.join(fiber)).toBe(42);
       expect(clientState.query).toHaveBeenCalledTimes(3);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+      expect(overloaded.cancel).toHaveBeenCalledOnce();
+      expect(failed.cancel).toHaveBeenCalledOnce();
+    });
+  });
+
+  it.effect("preserves retries when response cleanup cannot complete", () => {
+    const cancel = vi.fn(() => Promise.reject(new Error("cancel failed")));
+    const failed = transientResponse(503, cancel);
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(failed.response)
+      .mockResolvedValueOnce(new Response(null, { status: 503 }))
+      .mockResolvedValueOnce(new Response("ok"));
+    vi.stubGlobal("fetch", fetchMock);
+    queryThroughFetch(42);
+
+    return Effect.gen(function* () {
+      const fiber = yield* Effect.forkChild(
+        readConvexRuntimeQuery(runtimeUrl, query, args)
+      );
+      yield* TestClock.adjust(Duration.millis(1500));
+
+      expect(yield* Fiber.join(fiber)).toBe(42);
+      expect(cancel).toHaveBeenCalledOnce();
       expect(fetchMock).toHaveBeenCalledTimes(3);
     });
   });
