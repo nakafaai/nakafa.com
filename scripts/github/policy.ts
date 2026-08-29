@@ -1,33 +1,35 @@
-import { Effect, FileSystem, Option, Path, Redacted, Schema } from "effect";
-import { HttpClient, HttpClientResponse } from "effect/unstable/http";
+import { Effect, FileSystem, Option, Path, Schema } from "effect";
 import { parse as yamlParse } from "yaml";
 
 const WORKFLOW_FILE_PATTERN = /\.ya?ml$/u;
 const UnknownRecord = Schema.Record(Schema.String, Schema.Unknown);
-const GithubRelease = Schema.Struct({ tag_name: Schema.String });
+const NonNegativeInteger = Schema.Finite.pipe(
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThanOrEqualTo(0))
+);
 
-export interface GithubActionReview {
-  readonly action: string;
-  readonly approvedSha: string;
-  readonly expectedInputs?: Readonly<Record<string, string>>;
-  readonly expectedTag: string;
-  readonly expectedUsages: number;
-  readonly reason: string;
-}
+export const GithubActionReviewSchema = Schema.Struct({
+  action: Schema.String,
+  approvedSha: Schema.String,
+  expectedInputs: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+  expectedTag: Schema.String,
+  expectedUsages: NonNegativeInteger,
+  reason: Schema.String,
+});
+export type GithubActionReview = Schema.Schema.Type<
+  typeof GithubActionReviewSchema
+>;
 
-export interface GithubActionUse {
-  readonly inputs: Readonly<Record<string, unknown>>;
-  readonly reference: string;
-  readonly workflowPath: string;
-}
+export const GithubActionUseSchema = Schema.Struct({
+  inputs: UnknownRecord,
+  reference: Schema.String,
+  workflowPath: Schema.String,
+});
+export type GithubActionUse = Schema.Schema.Type<typeof GithubActionUseSchema>;
 
-export interface GithubActionReleaseReview {
-  readonly expectedTag: string;
-  readonly reason: string;
-  readonly repository: string;
-}
-
-export const GITHUB_ACTION_REVIEWS: readonly GithubActionReview[] = [
+export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
+  Schema.Array(GithubActionReviewSchema)
+)([
   {
     action: "actions/checkout",
     approvedSha: "3d3c42e5aac5ba805825da76410c181273ba90b1",
@@ -86,20 +88,11 @@ export const GITHUB_ACTION_REVIEWS: readonly GithubActionReview[] = [
     expectedUsages: 1,
     reason: "Failure diagnostics use the reviewed stable release.",
   },
-];
+]);
 
 /** Expected failure while reading or decoding repository workflow policy. */
 export class GithubActionPolicyError extends Schema.TaggedError<GithubActionPolicyError>()(
   "GithubActionPolicyError",
-  {
-    cause: Schema.Unknown,
-    message: Schema.String,
-  }
-) {}
-
-/** Expected failure while reading upstream GitHub Action release metadata. */
-export class GithubActionReleaseError extends Schema.TaggedError<GithubActionReleaseError>()(
-  "GithubActionReleaseError",
   {
     cause: Schema.Unknown,
     message: Schema.String,
@@ -257,66 +250,3 @@ export const inspectGithubActionPolicy = Effect.fn(
     )
   )
 );
-
-function actionRepository(action: string) {
-  return action.split("/").slice(0, 2).join("/");
-}
-
-/** Returns one consistent latest-release review for each upstream repository. */
-export const githubActionReleaseReviews = Effect.fn(
-  "RepositoryPolicy.githubActionReleaseReviews"
-)(function* () {
-  const reviews = new Map<string, GithubActionReleaseReview>();
-
-  for (const actionReview of GITHUB_ACTION_REVIEWS) {
-    const repository = actionRepository(actionReview.action);
-    const existing = reviews.get(repository);
-    const review = {
-      expectedTag: actionReview.expectedTag,
-      reason: actionReview.reason,
-      repository,
-    };
-
-    if (existing && existing.expectedTag !== review.expectedTag) {
-      return yield* policyError(
-        `${repository} has conflicting action release reviews.`,
-        repository
-      );
-    }
-    reviews.set(repository, existing ?? review);
-  }
-
-  return [...reviews.values()];
-});
-
-/** Fetches the current stable tag for one reviewed GitHub Action repository. */
-export const fetchLatestGithubActionTag = Effect.fn(
-  "RepositoryPolicy.fetchLatestGithubActionTag"
-)(function* (
-  review: Pick<GithubActionReleaseReview, "repository">,
-  token: Option.Option<Redacted.Redacted> = Option.none()
-) {
-  const client = yield* HttpClient.HttpClient;
-  const headers: Record<string, string> = {
-    Accept: "application/vnd.github+json",
-    "User-Agent": "nakafa-dependency-policy",
-    "X-GitHub-Api-Version": "2022-11-28",
-  };
-  if (Option.isSome(token)) {
-    headers.Authorization = `Bearer ${Redacted.value(token.value)}`;
-  }
-  const url = `https://api.github.com/repos/${review.repository}/releases/latest`;
-
-  return yield* client.get(url, { headers }).pipe(
-    Effect.flatMap(HttpClientResponse.filterStatusOk),
-    Effect.flatMap(HttpClientResponse.schemaBodyJson(GithubRelease)),
-    Effect.map((release) => release.tag_name),
-    Effect.mapError(
-      (cause) =>
-        new GithubActionReleaseError({
-          cause,
-          message: `Unable to read the latest ${review.repository} release.`,
-        })
-    )
-  );
-});

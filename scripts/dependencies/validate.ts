@@ -4,12 +4,12 @@ import {
   DEPENDENCY_RELEASE_AGE_MINUTES,
   FORBIDDEN_EFFECT_DEPENDENCIES,
   SCRIPT_DEPENDENCY_HOLDS,
-} from "./policy.ts";
+} from "#scripts/dependencies/policy";
 import type {
   FirstPartyManifest,
   PackageManifest,
   WorkspaceManifest,
-} from "./source.ts";
+} from "#scripts/dependencies/source";
 
 interface DependencyPolicyInput {
   readonly manifests: readonly FirstPartyManifest[];

@@ -1,6 +1,6 @@
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Path, Schema } from "effect";
-import { writeError, writeOutput } from "./output.ts";
+import { writeError, writeOutput } from "#scripts/output";
 
 const PATCHED_DEPENDENCIES_PATTERN = /^patchedDependencies:/mu;
 const IGNORED_DIRECTORIES = new Set([
