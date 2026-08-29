@@ -16,16 +16,17 @@ import { workAsyncStorage } from "next/dist/server/app-render/work-async-storage
 import { workUnitAsyncStorage } from "next/dist/server/app-render/work-unit-async-storage.external";
 import { createRequestStore } from "next/dist/server/async-storage/request-store";
 import { createWorkStore } from "next/dist/server/async-storage/work-store";
+import type { getToken as getAuthToken } from "@/lib/auth/server";
 
 const CONVEX_SITE_URL = "https://test.convex.site";
 
 const loadAuthServer = Effect.fn("auth.server.test.load")(() =>
-  Effect.tryPromise(() => import("./server"))
+  Effect.tryPromise(() => import("@/lib/auth/server"))
 );
 
 const runWithRequestHeaders = Effect.fn(
   "auth.server.test.runWithRequestHeaders"
-)((headers: Headers, getToken: typeof import("./server")["getToken"]) => {
+)((headers: Headers, getToken: typeof getAuthToken) => {
   const requestStore = createRequestStore({
     fallbackParams: null,
     headers,

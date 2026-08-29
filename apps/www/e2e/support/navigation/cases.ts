@@ -3,7 +3,7 @@ import { expect, type Locator, type Page } from "@playwright/test";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { Duration, Effect, Schedule, Schema } from "effect";
 import { activateUntilVisible } from "@/e2e/support/interaction";
-import { prepareClientNavigation } from "./readiness";
+import { prepareClientNavigation } from "@/e2e/support/navigation/readiness";
 
 const HOMEPAGE_HEADING_PATTERN = /Learn until it clicks/i;
 const QURAN_HEADING_PATTERN = /Al-Baqara/i;

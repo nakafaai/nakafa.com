@@ -1,5 +1,5 @@
-import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge.ts";
-import { createAgentEdgeRoute } from "@repo/backend/agent/route.ts";
+import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge";
+import { createAgentEdgeRoute } from "@repo/backend/agent/route";
 import type { VercelConfig } from "@vercel/config/v1";
 
 export const config: VercelConfig = {

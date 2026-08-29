@@ -1,5 +1,6 @@
 "use client";
 
+import { useBlockArtRippleAnimation } from "@repo/design-system/components/ui/block-art/ripple-animation";
 import type { useAnimate } from "motion/react";
 import {
   type KeyboardEvent,
@@ -7,8 +8,6 @@ import {
   useCallback,
   useRef,
 } from "react";
-
-import { useBlockArtRippleAnimation } from "./ripple-animation";
 
 interface BlockArtRippleOptions {
   animate: BlockArtAnimate;

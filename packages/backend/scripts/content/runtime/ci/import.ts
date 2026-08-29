@@ -1,16 +1,16 @@
-import { CONTENT_RUNTIME_TABLES } from "@repo/backend/scripts/content/runtime/tables";
-import { Console, Effect, FileSystem, Redacted } from "effect";
-import { decryptAndExtractArchive } from "./archive";
-import { runConvexImport } from "./command";
-import type { ImportConfig } from "./config";
-import { contentRuntimeCiError } from "./error";
+import { decryptAndExtractArchive } from "@repo/backend/scripts/content/runtime/ci/archive";
+import { runConvexImport } from "@repo/backend/scripts/content/runtime/ci/command";
+import type { ImportConfig } from "@repo/backend/scripts/content/runtime/ci/config";
+import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
 import {
   CONTENT_RUNTIME_CACHE_DIRECTORY,
   CONTENT_RUNTIME_CACHE_FILE,
   decodeAndValidateManifest,
   validateMetadata,
   validatePortableTable,
-} from "./snapshot";
+} from "@repo/backend/scripts/content/runtime/ci/snapshot";
+import { CONTENT_RUNTIME_TABLES } from "@repo/backend/scripts/content/runtime/tables";
+import { Console, Effect, FileSystem, Redacted } from "effect";
 
 export const importSignedRuntime = Effect.fn(
   "contentRuntime.importSignedRuntime"

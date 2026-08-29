@@ -1,7 +1,6 @@
 {
   "extends": "@repo/typescript-config/library.json",
   "compilerOptions": {
-    "allowImportingTsExtensions": true,
     "paths": {
       "@/*": ["./*"],
       "@repo/*": ["../../packages/*"]

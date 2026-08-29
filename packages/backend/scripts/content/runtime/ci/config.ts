@@ -1,6 +1,6 @@
+import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
 import { CONTENT_RUNTIME_CACHE_VERSION } from "@repo/backend/scripts/content/runtime/tables";
 import { Config, Effect, Redacted } from "effect";
-import { contentRuntimeCiError } from "./error";
 
 export const CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT = "dapper-antelope-269";
 

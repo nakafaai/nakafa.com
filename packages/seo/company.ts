@@ -1,5 +1,5 @@
+import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { Schema } from "effect";
-import { COMPANY_SOCIAL_PROFILES } from "./company-profiles";
 
 const NonEmptyTrimmedStringSchema = Schema.Trimmed.check(Schema.isNonEmpty());
 const UrlStringSchema = Schema.String.check(

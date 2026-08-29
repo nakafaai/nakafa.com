@@ -1,4 +1,4 @@
-import { PolarCore } from "@polar-sh/sdk/core.js";
+import { PolarCore } from "@polar-sh/sdk/core";
 import { polarServer } from "@repo/backend/convex/utils/polar/config";
 import { requirePolarEnv } from "@repo/backend/convex/utils/polar/env";
 

@@ -1,8 +1,8 @@
 import { COMPANY_IDENTITY } from "@repo/seo/company";
+import { FOUNDER, ORGANIZATION } from "@repo/seo/json-ld/constants";
 import { useTranslations } from "next-intl";
 import type { EducationalOrganization, WithContext } from "schema-dts";
 import { JsonLd } from ".";
-import { FOUNDER, ORGANIZATION } from "./constants";
 
 /**
  * EducationalOrgJsonLd component generates Schema.org EducationalOrganization structured data

@@ -23,7 +23,11 @@
   },
   "overrides": [
     {
-      "includes": ["packages/cli/**/*.ts"],
+      "includes": [
+        "apps/**/*.{ts,tsx,mts,cts}",
+        "packages/**/*.{ts,tsx,mts,cts}",
+        "scripts/**/*.{ts,tsx,mts,cts}"
+      ],
       "linter": {
         "rules": {
           "style": {
@@ -33,7 +37,22 @@
                 "patterns": [
                   {
                     "group": ["./**", "../**"],
-                    "message": "Use the #cli/* package alias instead."
+                    "message": "Use the owning @/, @repo/*, or #scripts/* alias instead."
+                  },
+                  {
+                    "group": [
+                      "@/**/*.ts",
+                      "@/**/*.tsx",
+                      "@/**/*.js",
+                      "@/**/*.jsx",
+                      "@repo/**/*.ts",
+                      "@repo/**/*.tsx",
+                      "@repo/**/*.js",
+                      "@repo/**/*.jsx",
+                      "#scripts/**/*.ts",
+                      "#scripts/**/*.js"
+                    ],
+                    "message": "Use extensionless local aliases."
                   }
                 ]
               }

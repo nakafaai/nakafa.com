@@ -1,9 +1,9 @@
-import { createRoutes, deploymentEnv } from "@vercel/config/v1";
-import type { AgentEdgeContract } from "./edge.ts";
+import type { AgentEdgeContract } from "@repo/backend/agent/edge";
 import {
   NAKAFA_EDGE_RELEASE_SHA_HEADER,
   VERCEL_GIT_COMMIT_SHA_ENVIRONMENT,
-} from "./edge.ts";
+} from "@repo/backend/agent/edge";
+import { createRoutes, deploymentEnv } from "@vercel/config/v1";
 
 interface AgentEdgeRouteOptions {
   readonly contract: AgentEdgeContract;
