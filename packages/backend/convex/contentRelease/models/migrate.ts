@@ -17,7 +17,6 @@ import {
   acceptModelMigration,
   loadModelMigration,
 } from "@repo/backend/convex/contentRelease/models/migration/state";
-import type { ModelMigrationTable } from "@repo/backend/convex/contentRelease/models/schema";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { makeFunctionReference } from "convex/server";
 import { v } from "convex/values";
@@ -26,12 +25,7 @@ import { Effect } from "effect";
 const pageReference = makeFunctionReference<
   "mutation",
   Record<string, never>,
-  {
-    complete: boolean;
-    phase: "backfill" | "complete" | "verify";
-    scannedRows: number;
-    table: ModelMigrationTable;
-  }
+  ModelMigrationReceipt
 >("contentRelease/models/migrate:page");
 
 /** Drains bounded transactions and remains safely resumable after interruption. */

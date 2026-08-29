@@ -77,14 +77,16 @@ export const validateModelMigrationState = Effect.fn(
 });
 
 /** Loads the singleton migration cycle when one is already in progress. */
-export function loadModelMigration(ctx: MutationCtx | QueryCtx) {
-  return Effect.promise(() =>
+export const loadModelMigration = Effect.fn(
+  "contentRelease.loadModelMigration"
+)((ctx: MutationCtx | QueryCtx) =>
+  Effect.promise(() =>
     ctx.db
       .query("contentModelMigrations")
       .withIndex("by_key", (index) => index.eq("key", "primary"))
       .unique()
-  );
-}
+  )
+);
 
 /** Blocks legacy publication once the one-time slot transition begins. */
 export const requirePreMigrationModels = Effect.fn(

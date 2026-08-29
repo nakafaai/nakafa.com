@@ -48,10 +48,19 @@ const tables = {
       fields: ["slot", "appLocale", "datePublished", "contentKey"],
       staged: true,
     })
-    .index("by_slot_locale_category_datePublished_contentKey", {
-      fields: ["slot", "appLocale", "category", "datePublished", "contentKey"],
-      staged: true,
-    })
+    .index(
+      "by_slot_and_appLocale_and_category_and_datePublished_and_contentKey",
+      {
+        fields: [
+          "slot",
+          "appLocale",
+          "category",
+          "datePublished",
+          "contentKey",
+        ],
+        staged: true,
+      }
+    )
     .index("by_slot_and_appLocale_and_bucket_and_publicPath", {
       fields: ["slot", "appLocale", "bucket", "publicPath"],
       staged: true,
