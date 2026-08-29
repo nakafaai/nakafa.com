@@ -9,9 +9,6 @@ export const PUBLIC_CONTENT_RUNTIME_BATCH_PATH = `${PUBLIC_CONTENT_RUNTIME_PATH}
 /** Canonical unversioned endpoint for protected content reads. */
 export const PROTECTED_CONTENT_RUNTIME_PATH = `${CONTENT_RUNTIME_PATH}/protected`;
 
-/** Active route retained only until every server caller uses the canonical path. */
-export const PROTECTED_CONTENT_RUNTIME_V2_PATH = `${CONTENT_RUNTIME_PATH}/v2/protected`;
-
 /**
  * Marks responses built by the private runtime route after contract encoding.
  * This diagnostic signal does not replace signed response verification.

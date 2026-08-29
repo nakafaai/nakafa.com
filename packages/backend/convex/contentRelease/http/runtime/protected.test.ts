@@ -6,7 +6,6 @@ import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
   PROTECTED_CONTENT_RUNTIME_PATH,
-  PROTECTED_CONTENT_RUNTIME_V2_PATH,
 } from "@repo/backend/content/endpoint";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
@@ -57,22 +56,23 @@ afterEach(() => {
 });
 
 describe("protected content runtime HTTP route", () => {
-  it.each([PROTECTED_CONTENT_RUNTIME_PATH, PROTECTED_CONTENT_RUNTIME_V2_PATH])(
-    "returns exact absence for a valid permanent batch at %s",
-    async (path) => {
-      const target = createConvexTestWithBetterAuth();
-      await target.mutation((ctx) => insertRuntimeRelease(ctx));
-      const response = await post(target, path, JSON.stringify(request));
+  it("returns exact absence for a valid permanent batch", async () => {
+    const target = createConvexTestWithBetterAuth();
+    await target.mutation((ctx) => insertRuntimeRelease(ctx));
+    const response = await post(
+      target,
+      PROTECTED_CONTENT_RUNTIME_PATH,
+      JSON.stringify(request)
+    );
 
-      expect(response.status).toBe(404);
-      await expect(response.json()).resolves.toEqual({ kind: "missing" });
-      expect(response.headers.get("cache-control")).toBe("private, no-store");
-      expect(response.headers.get(CONTENT_RUNTIME_RESPONSE_HEADER)).toBe(
-        CONTENT_RUNTIME_RESPONSE_MARKER
-      );
-      expect(response.headers.get("x-content-type-options")).toBe("nosniff");
-    }
-  );
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({ kind: "missing" });
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(response.headers.get(CONTENT_RUNTIME_RESPONSE_HEADER)).toBe(
+      CONTENT_RUNTIME_RESPONSE_MARKER
+    );
+    expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+  });
 
   it("rejects unauthorized, malformed, and oversized requests", async () => {
     const target = createConvexTestWithBetterAuth();
