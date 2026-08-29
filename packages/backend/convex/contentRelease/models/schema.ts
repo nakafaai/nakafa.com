@@ -8,7 +8,8 @@ export const modelMigrationTableValidator = v.union(
   v.literal("articleBuckets"),
   v.literal("materialCatalog"),
   v.literal("materialBuckets"),
-  v.literal("contentIndex")
+  v.literal("contentIndex"),
+  v.literal("contentReleases")
 );
 
 export type ModelMigrationTable = Infer<typeof modelMigrationTableValidator>;

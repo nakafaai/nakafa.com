@@ -2,8 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { migrateModelPage } from "@repo/backend/convex/contentRelease/models/migration/page";
-import { requireModelMigrationAbsent } from "@repo/backend/convex/contentRelease/models/migration/state";
-import { alternateModelSlot } from "@repo/backend/convex/contentRelease/models/slot";
+import { requirePreMigrationModels } from "@repo/backend/convex/contentRelease/models/migration/state";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
@@ -131,7 +130,7 @@ describe("contentRelease/models/migrate", () => {
     });
     expect(first.scannedRows).toBeGreaterThan(0);
     await expect(
-      t.mutation((ctx) => runConvexProgram(requireModelMigrationAbsent(ctx)))
+      t.mutation((ctx) => runConvexProgram(requirePreMigrationModels(ctx)))
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_STATE" },
     });
@@ -152,7 +151,7 @@ describe("contentRelease/models/migrate", () => {
       complete: true,
       phase: "complete",
       scannedRows: 150,
-      table: "contentIndex",
+      table: "contentReleases",
     });
     const stored = await t.run(async (ctx) => ({
       articles: await ctx.db.query("articleCatalog").collect(),
@@ -178,6 +177,11 @@ describe("contentRelease/models/migrate", () => {
     await expect(
       t.query(internal.contentRelease.models.migrate.status, {})
     ).resolves.toEqual({ phase: "absent" });
+    await expect(
+      t.mutation((ctx) => runConvexProgram(requirePreMigrationModels(ctx)))
+    ).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_STATE" },
+    });
   });
 
   it("preserves rows already assigned to the initial buffer", async () => {
@@ -283,14 +287,9 @@ describe("contentRelease/models/migrate", () => {
     });
 
     await expect(
-      t.mutation((ctx) => runConvexProgram(migrateModelPage(ctx)))
+      t.action(internal.contentRelease.models.migrate.run, {})
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
-  });
-
-  it("selects the opposite bounded buffer", () => {
-    expect(alternateModelSlot("blue")).toBe("green");
-    expect(alternateModelSlot("green")).toBe("blue");
   });
 });

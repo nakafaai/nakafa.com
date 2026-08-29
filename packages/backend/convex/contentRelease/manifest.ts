@@ -11,7 +11,7 @@ import {
 import { ensureDocumentSize } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { ensureState } from "@repo/backend/convex/contentRelease/model";
-import { requireModelMigrationAbsent } from "@repo/backend/convex/contentRelease/models/migration/state";
+import { requirePreMigrationModels } from "@repo/backend/convex/contentRelease/models/migration/state";
 import {
   decodeReleaseJson,
   decodeRendererJson,
@@ -127,7 +127,7 @@ const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
   releaseJson: string,
   rendererJson: string
 ) {
-  yield* requireModelMigrationAbsent(ctx);
+  yield* requirePreMigrationModels(ctx);
   const signed = yield* decodeReleaseJson(releaseJson);
   const renderer = yield* decodeRendererJson(rendererJson);
   const canonicalRelease = encodeReleaseJson(signed);

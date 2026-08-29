@@ -86,14 +86,23 @@ export function loadModelMigration(ctx: MutationCtx | QueryCtx) {
   );
 }
 
-/** Blocks publication while the one-time model migration owns production. */
-export const requireModelMigrationAbsent = Effect.fn(
-  "contentRelease.requireModelMigrationAbsent"
+/** Blocks legacy publication once the one-time slot transition begins. */
+export const requirePreMigrationModels = Effect.fn(
+  "contentRelease.requirePreMigrationModels"
 )(function* (ctx: MutationCtx | QueryCtx) {
-  if (yield* loadModelMigration(ctx)) {
+  const [migration, state] = yield* Effect.all([
+    loadModelMigration(ctx),
+    loadState(ctx),
+  ]);
+  if (
+    migration ||
+    state?.articleSlot !== undefined ||
+    state?.materialSlot !== undefined ||
+    state?.searchSlot !== undefined
+  ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",
-      "Content publication is paused while read-model slots are migrating."
+      "Content publication is paused while read-model slots transition to atomic switching."
     );
   }
 });

@@ -2,6 +2,10 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import {
+  cleanReleasePage,
+  verifyReleasePage,
+} from "@repo/backend/convex/contentRelease/models/migration/release";
+import {
   FIRST_MODEL_TABLE,
   MODEL_MIGRATION_PAGE_BYTES,
   MODEL_MIGRATION_PAGE_ROWS,
@@ -36,13 +40,16 @@ function nextModelTable(
   if (table === "materialBuckets") {
     return "contentIndex";
   }
+  if (table === "contentIndex") {
+    return "contentReleases";
+  }
   return null;
 }
 
 /** Reads one bounded table page without relying on the new slot indexes. */
 function readModelPage(
   ctx: MutationCtx,
-  table: ModelMigrationTable,
+  table: Exclude<ModelMigrationTable, "contentReleases">,
   cursor: string | undefined
 ) {
   const options = {
@@ -72,6 +79,9 @@ function readModelPage(
 /** Backfills one bounded page while rejecting any conflicting buffer value. */
 const backfillModelPage = Effect.fn("contentRelease.backfillModelSlot")(
   function* (ctx: MutationCtx, migration: ModelMigrationCycle) {
+    if (migration.table === "contentReleases") {
+      return yield* cleanReleasePage(ctx, migration);
+    }
     const page = yield* readModelPage(ctx, migration.table, migration.cursor);
     for (const row of page.page) {
       if (row.slot !== undefined && row.slot !== INITIAL_MODEL_SLOT) {
@@ -95,6 +105,9 @@ const verifyModelPage = Effect.fn("contentRelease.verifyModelSlot")(function* (
   ctx: MutationCtx,
   migration: ModelMigrationCycle
 ) {
+  if (migration.table === "contentReleases") {
+    return yield* verifyReleasePage(ctx, migration);
+  }
   const page = yield* readModelPage(ctx, migration.table, migration.cursor);
   if (page.page.some((row) => row.slot !== INITIAL_MODEL_SLOT)) {
     return yield* releaseFail(
