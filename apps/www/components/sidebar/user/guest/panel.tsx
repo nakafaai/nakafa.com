@@ -9,8 +9,8 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { useTranslations } from "next-intl";
 import { AnalyticsConsentSidebarItem } from "@/components/analytics/consent/actions";
+import { GuestLanguageMenu } from "@/components/sidebar/menu/preference";
 import { NavUserGuestButton } from "@/components/sidebar/user/guest/button";
-import { NavUserGuestLanguage } from "@/components/sidebar/user/guest/language";
 
 /** Renders guest utilities and the signed-out account call to action. */
 export function NavUserGuest() {
@@ -31,7 +31,7 @@ export function NavUserGuest() {
           <span>{t("pricing-cta")}</span>
         </SidebarMenuButton>
       </SidebarMenuItem>
-      <NavUserGuestLanguage />
+      <GuestLanguageMenu />
       <AnalyticsConsentSidebarItem />
       <SidebarMenuItem
         className="-mx-2 my-1 border-sidebar-border border-t"

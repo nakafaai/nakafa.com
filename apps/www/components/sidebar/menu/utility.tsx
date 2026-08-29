@@ -14,12 +14,9 @@ import { useRouter } from "@repo/internationalization/src/navigation";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { useTranslations } from "next-intl";
 import type * as React from "react";
-import { SidebarPreferenceSubmenus } from "@/components/sidebar/preference-submenus";
+import { SidebarPreferenceSubmenus } from "@/components/sidebar/menu/preference";
 
-/**
- * Renders the sidebar utilities that belong inside the user dropdown in both
- * signed-in and signed-out states.
- */
+/** Renders shared utilities inside the regular and school account menus. */
 export function SidebarUtilityMenuItems({
   side,
 }: React.ComponentProps<typeof SidebarPreferenceSubmenus>) {
