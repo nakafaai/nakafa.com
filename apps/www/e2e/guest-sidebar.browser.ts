@@ -91,7 +91,12 @@ for (const viewport of targetViewports) {
             name: "Language",
           });
           yield* Effect.promise(() => expect(languageButton).toBeVisible());
-          yield* Effect.promise(() => languageButton.click());
+          yield* Effect.promise(() =>
+            expect(
+              languageButton.locator('[data-slot="language-menu-indicator"]')
+            ).toBeVisible()
+          );
+          yield* Effect.promise(() => languageButton.hover());
           yield* Effect.promise(() =>
             expect(
               page.getByRole("menuitem", { exact: true, name: "Deutsch" })

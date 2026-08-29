@@ -1,15 +1,27 @@
 "use client";
 
-import { PaintBoardIcon, TranslateIcon } from "@hugeicons/core-free-icons";
 import {
+  ArrowRight01Icon,
+  PaintBoardIcon,
+  TranslateIcon,
+} from "@hugeicons/core-free-icons";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@repo/design-system/components/ui/sidebar-menu";
+import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { themeOptions } from "@repo/design-system/lib/theme/options";
 import { cn } from "@repo/design-system/lib/utils";
 import { languages } from "@repo/internationalization/data/lang";
@@ -37,8 +49,18 @@ function ActiveBadge({ isActive }: { isActive: boolean }) {
   );
 }
 
+/** Keeps the language control label identical across guest and account menus. */
+function LanguageMenuTriggerContent({ label }: { label: string }) {
+  return (
+    <>
+      <HugeIcons icon={TranslateIcon} />
+      <span className="truncate">{label}</span>
+    </>
+  );
+}
+
 /** Renders the nested language submenu and delegates route projection to the shared switcher seam. */
-export function LanguageMenuItems() {
+function LanguageMenuItems() {
   const { isPending, replace } = useLocalizedRouteSwitch();
   const currentLocale = useLocale();
 
@@ -62,6 +84,43 @@ export function LanguageMenuItems() {
         </DropdownMenuItem>
       ))}
     </>
+  );
+}
+
+/** Renders the shared language capability as a hoverable guest sidebar menu. */
+export function GuestLanguageMenu() {
+  const t = useTranslations("Common");
+  const { isMobile } = useSidebar();
+  const label = t("language");
+
+  return (
+    <SidebarMenuItem>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          openOnHover
+          render={
+            <SidebarMenuButton title={label}>
+              <LanguageMenuTriggerContent label={label} />
+              <HugeIcons
+                className="ml-auto opacity-80"
+                data-slot="language-menu-indicator"
+                icon={ArrowRight01Icon}
+              />
+            </SidebarMenuButton>
+          }
+        />
+        <DropdownMenuContent
+          align="start"
+          className="w-max max-w-[calc(100vw-2rem)]"
+          side={isMobile ? "top" : "right"}
+          sideOffset={4}
+        >
+          <DropdownMenuGroup>
+            <LanguageMenuItems />
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </SidebarMenuItem>
   );
 }
 
@@ -134,8 +193,7 @@ export function SidebarPreferenceSubmenus({ side }: { side: SubmenuSide }) {
     <DropdownMenuGroup>
       <DropdownMenuSub>
         <DropdownMenuSubTrigger className="cursor-pointer">
-          <HugeIcons icon={TranslateIcon} />
-          <span className="truncate">{t("language")}</span>
+          <LanguageMenuTriggerContent label={t("language")} />
         </DropdownMenuSubTrigger>
         <LanguageSubmenuContent side={side} />
       </DropdownMenuSub>
