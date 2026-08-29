@@ -6,8 +6,6 @@ on:
   merge_group:
     branches: [main]
     types: [checks_requested]
-  push:
-    branches: [main]
 
 permissions:
   contents: read
@@ -31,11 +29,11 @@ jobs:
           install: false
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Run React Doctor for candidate
-        if: github.event_name != 'push'
+      - name: Run React Doctor for pull request
+        if: github.event_name == 'pull_request'
         env:
-          DOCTOR_BASE: ${{ github.event_name == 'merge_group' && github.event.merge_group.base_sha || 'origin/main' }}
+          DOCTOR_BASE: origin/main
         run: pnpm run doctor --verbose --scope changed --base "$DOCTOR_BASE" --include-untracked --blocking warning
-      - name: Run React Doctor for push
-        if: github.event_name == 'push'
+      - name: Run full React Doctor for merge group
+        if: github.event_name == 'merge_group'
         run: pnpm run doctor --verbose --scope full --blocking warning
