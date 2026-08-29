@@ -38,11 +38,8 @@ import { Effect, Result } from "effect";
 import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";
 import { clearAiDraftText } from "@/components/ai/store/draft";
-import {
-  AnalyticsConsentMenuItem,
-  AnalyticsConsentSidebarItem,
-} from "@/components/analytics/consent/actions";
-import { NavUserGuestButton } from "@/components/sidebar/nav-user-guest-button";
+import { AnalyticsConsentMenuItem } from "@/components/analytics/consent/actions";
+import { NavUserGuest } from "@/components/sidebar/guest";
 import { NavUserSkeleton } from "@/components/sidebar/nav-user-skeleton";
 import { SidebarUtilityMenuItems } from "@/components/sidebar/utility-menu-items";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
@@ -82,14 +79,7 @@ export function NavUser() {
     return <NavUserSkeleton />;
   }
   if (!user) {
-    return (
-      <>
-        <SidebarMenuItem>
-          <NavUserGuestButton />
-        </SidebarMenuItem>
-        <AnalyticsConsentSidebarItem />
-      </>
-    );
+    return <NavUserGuest />;
   }
   const planLabelByPlan = {
     free: t("plan-free"),
