@@ -23,7 +23,6 @@ export function NavUserGuest() {
           render={
             <NavigationLink
               href={{ pathname: "/", hash: "pricing" }}
-              prefetch={false}
               title={t("pricing-cta")}
             />
           }
