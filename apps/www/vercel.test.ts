@@ -1,23 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
 import packageJson from "@/package.json";
 import { config, hasIsolatedTypecheck } from "@/vercel";
 
 describe("www Vercel configuration", () => {
-  it("builds only affected production commits", () => {
+  it("uses the pre-install production scope boundary", () => {
     const ignoreCommand = config.ignoreCommand ?? "";
 
-    expect(ignoreCommand).toContain(
-      'if [ "$VERCEL_ENV" != "production" ]; then exit 0; fi'
-    );
-    expect(ignoreCommand).toContain(
-      "node ../../scripts/production-acceptance.ts vercel && exit 0"
-    );
-    expect(ignoreCommand).toContain(
-      'turbo query affected --base="$VERCEL_GIT_PREVIOUS_SHA" --packages www --exit-code || exit 1'
-    );
-    expect(ignoreCommand.indexOf("production-acceptance.ts")).toBeLessThan(
-      ignoreCommand.indexOf("turbo query affected")
-    );
+    expect(ignoreCommand).toBe("sh ../../scripts/vercel/scope.sh www");
+    expect(ignoreCommand.length).toBeLessThanOrEqual(256);
+    expect(ignoreCommand).not.toContain("node ");
+    expect(ignoreCommand).not.toContain("production-acceptance");
     expect(config.git?.deploymentEnabled).toEqual({
       "**": false,
       "changeset-release/main": false,

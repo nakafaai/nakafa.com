@@ -7,8 +7,7 @@ export function hasIsolatedTypecheck(vercel: "1" | undefined) {
 
 export const config: VercelConfig = {
   buildCommand: "pnpm run build:vercel",
-  ignoreCommand:
-    'if [ "$VERCEL_ENV" != "production" ]; then exit 0; fi; node ../../scripts/production-acceptance.ts vercel && exit 0; turbo query affected --base="$VERCEL_GIT_PREVIOUS_SHA" --packages www --exit-code || exit 1',
+  ignoreCommand: "sh ../../scripts/vercel/scope.sh www",
   git: {
     deploymentEnabled: {
       "**": false,
