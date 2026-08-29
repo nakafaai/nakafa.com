@@ -23,7 +23,7 @@ import { readProtectedContent } from "@repo/backend/client/content/protected";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
-  PROTECTED_CONTENT_RUNTIME_PATH,
+  PROTECTED_CONTENT_RUNTIME_V2_PATH,
 } from "@repo/backend/content/endpoint";
 import {
   TEST_PROOF_RENDERER,
@@ -36,7 +36,7 @@ import { testPublicationScope } from "@repo/backend/test/content/release";
 import { Effect } from "effect";
 import { vi } from "vitest";
 
-const endpoint = `https://example.convex.site${PROTECTED_CONTENT_RUNTIME_PATH}`;
+const endpoint = `https://example.convex.site${PROTECTED_CONTENT_RUNTIME_V2_PATH}`;
 const target = {
   siteUrl: "https://example.convex.site",
   token: "runtime-test-token",

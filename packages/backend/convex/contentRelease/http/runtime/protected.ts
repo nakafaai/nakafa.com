@@ -1,5 +1,8 @@
 import { MAX_PROTECTED_RUNTIME_REQUEST_BYTES } from "@nakafa/aksara-contracts/runtime/protected/limits";
-import { PROTECTED_CONTENT_RUNTIME_PATH } from "@repo/backend/content/endpoint";
+import {
+  PROTECTED_CONTENT_RUNTIME_PATH,
+  PROTECTED_CONTENT_RUNTIME_V2_PATH,
+} from "@repo/backend/content/endpoint";
 import { type ActionCtx, env } from "@repo/backend/convex/_generated/server";
 import { readRuntimeRequest } from "@repo/backend/convex/contentRelease/http/runtime/request";
 import { privateRuntimeResponse } from "@repo/backend/convex/contentRelease/http/runtime/response";
@@ -59,10 +62,15 @@ const protectedRuntimeRoute = Effect.fn("contentRelease.protectedRuntimeRoute")(
 export function registerProtectedContentRuntimeRoute<
   Variables extends Record<string, unknown>,
 >(app: HonoWithConvex<ActionCtx, Variables>) {
-  app.post(PROTECTED_CONTENT_RUNTIME_PATH, async (context) => {
-    const result = await runConvexProgram(
-      protectedRuntimeRoute(context.env, context.req.raw)
-    );
-    return privateRuntimeResponse(result);
-  });
+  for (const path of [
+    PROTECTED_CONTENT_RUNTIME_PATH,
+    PROTECTED_CONTENT_RUNTIME_V2_PATH,
+  ]) {
+    app.post(path, async (context) => {
+      const result = await runConvexProgram(
+        protectedRuntimeRoute(context.env, context.req.raw)
+      );
+      return privateRuntimeResponse(result);
+    });
+  }
 }
