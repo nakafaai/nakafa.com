@@ -111,26 +111,6 @@ function categoryPublicationStreams(
   return [new PublicationStream(legacy), new PublicationStream(current)];
 }
 
-/** Preserves the predecessor native cursor contract during the expand phase. */
-export const paginatePredecessorArticles = Effect.fn(
-  "contentRelease.paginatePredecessorArticles"
-)(function* (
-  ctx: ReadCtx,
-  appLocale: AppLocale,
-  category: string,
-  options: PaginationOptions
-) {
-  return yield* Effect.promise(() =>
-    ctx.db
-      .query("articleCatalog")
-      .withIndex("by_appLocale_and_category_and_date_and_contentKey", (index) =>
-        index.eq("appLocale", appLocale).eq("category", category)
-      )
-      .order("desc")
-      .paginate(options)
-  );
-});
-
 /** Paginates both streams with one bounded lookahead scan. */
 const paginatePublicationStreams = Effect.fn(
   "contentRelease.paginatePublicationStreams"

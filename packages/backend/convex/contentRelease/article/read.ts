@@ -1,11 +1,7 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
-import {
-  paginateArticles,
-  paginatePredecessorArticles,
-} from "@repo/backend/convex/contentRelease/article/order";
+import { paginateArticles } from "@repo/backend/convex/contentRelease/article/order";
 import { loadArticleOwner } from "@repo/backend/convex/contentRelease/article/owner";
-import { encodePredecessorProjection } from "@repo/backend/convex/contentRelease/article/predecessor";
 import {
   decodeCategory,
   verifyArticle,
@@ -40,16 +36,11 @@ export const readArticlePage = Effect.fn("contentRelease.readArticlePage")(
     appLocale: Doc<"articleCatalog">["appLocale"],
     expectedManifestHash: null | string,
     expectedReleaseId: null | string,
-    paginationOpts: Parameters<typeof validateProjectionPage>[0],
-    contract: "predecessor" | "publication"
+    paginationOpts: Parameters<typeof validatePublicationPage>[0]
   ) {
-    const validatePage =
-      contract === "predecessor"
-        ? validateProjectionPage
-        : validatePublicationPage;
     const [category, options, owner] = yield* Effect.all([
       decodeCategory(categorySource),
-      validatePage(paginationOpts),
+      validatePublicationPage(paginationOpts),
       loadArticleOwner(ctx, appLocale),
     ]);
     if (options.endCursor !== undefined && options.endCursor !== null) {
@@ -92,22 +83,10 @@ export const readArticlePage = Effect.fn("contentRelease.readArticlePage")(
         stale: false,
       };
     }
-    const paginate =
-      contract === "predecessor"
-        ? paginatePredecessorArticles
-        : paginateArticles;
-    const stored = yield* paginate(ctx, appLocale, category, options);
+    const stored = yield* paginateArticles(ctx, appLocale, category, options);
     const page = yield* Effect.forEach(stored.page, (row) =>
       verifyArticle(ctx, row, owner.active.sequence).pipe(
-        Effect.flatMap(({ projection, resolved }) => {
-          if (contract === "publication") {
-            return Effect.succeed(resolved);
-          }
-
-          return encodePredecessorProjection(projection).pipe(
-            Effect.map((projectionJson) => ({ ...resolved, projectionJson }))
-          );
-        })
+        Effect.map(({ resolved }) => resolved)
       )
     );
     return {

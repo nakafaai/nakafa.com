@@ -6,10 +6,6 @@ import {
 } from "@repo/backend/convex/contentRelease/cursor";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadMaterialOwner } from "@repo/backend/convex/contentRelease/material/owner";
-import {
-  encodePredecessorProjection,
-  type MaterialProjectionContract,
-} from "@repo/backend/convex/contentRelease/material/predecessor";
 import { verifyEffectiveMaterial } from "@repo/backend/convex/contentRelease/material/verify";
 import { validateProjectionPage } from "@repo/backend/convex/contentRelease/paging";
 import { readSourceRevision } from "@repo/backend/convex/contentRelease/runtime/origin";
@@ -31,8 +27,7 @@ export const readMaterialPage = Effect.fn("contentRelease.readMaterialPage")(
     appLocale: Doc<"materialCatalog">["appLocale"],
     expectedManifestHash: null | string,
     expectedReleaseId: null | string,
-    paginationOpts: Parameters<typeof validateProjectionPage>[0],
-    contract: MaterialProjectionContract
+    paginationOpts: Parameters<typeof validateProjectionPage>[0]
   ) {
     const [options, owner] = yield* Effect.all([
       validateProjectionPage(paginationOpts),
@@ -92,12 +87,7 @@ export const readMaterialPage = Effect.fn("contentRelease.readMaterialPage")(
       (row) => verifyEffectiveMaterial(ctx, row, activePublication.sequence),
       { concurrency: "unbounded" }
     );
-    const page = yield* Effect.forEach(verified, ({ projection, resolved }) => {
-      if (contract === "publication") {
-        return Effect.succeed(resolved.projectionJson);
-      }
-      return encodePredecessorProjection(projection);
-    });
+    const page = verified.map(({ resolved }) => resolved.projectionJson);
     return {
       activeManifestHash: activePublication.manifestHash,
       activeReleaseId: activePublication.releaseId,

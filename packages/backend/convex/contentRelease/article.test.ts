@@ -1,6 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
-import { PredecessorArticleProjectionSchema } from "@repo/backend/convex/contentRelease/article/predecessor";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
@@ -14,11 +13,9 @@ import {
   encodeArticlePublicationCursor,
 } from "@repo/contents/_types/publication";
 import { convexTest } from "convex-test";
-import { Schema } from "effect";
 
 const categories = api.contentRelease.article.categories;
 const page = api.contentRelease.article.publications;
-const predecessorPage = api.contentRelease.article.page;
 
 describe("contentRelease/article", () => {
   it("returns localized categories and newest articles through exact indexes", async () => {
@@ -76,130 +73,6 @@ describe("contentRelease/article", () => {
       { contentKey: testArticleProjection(0).contentKey },
     ]);
     expect(second.result.isDone).toBe(true);
-  });
-
-  it("paginates legacy article rows by their truthful publication date", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await insertRuntimeArticles(ctx, 2);
-      const rows = await ctx.db.query("articleCatalog").collect();
-
-      for (const row of rows) {
-        if (!("datePublished" in row)) {
-          throw new Error("Expected one current article date shape.");
-        }
-        const {
-          _creationTime: _createdAt,
-          _id,
-          dateModified: _dateModified,
-          datePublished,
-          ...fields
-        } = row;
-        await ctx.db.replace("articleCatalog", _id, {
-          ...fields,
-          date: datePublished,
-        });
-      }
-    });
-
-    const result = await t.query(page, {
-      category: "politics",
-      expectedManifestHash: null,
-      expectedReleaseId: null,
-      appLocale: "en",
-      paginationOpts: { cursor: null, numItems: 1 },
-    });
-
-    expect(result.result.page).toMatchObject([
-      { contentKey: testArticleProjection(1).contentKey },
-    ]);
-  });
-
-  it("continues an in-flight predecessor article cursor", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await insertRuntimeArticles(ctx, 3);
-      const rows = await ctx.db.query("articleCatalog").collect();
-      for (const row of rows) {
-        if (!("datePublished" in row)) {
-          throw new Error("Expected one current article date shape.");
-        }
-        await ctx.db.patch("articleCatalog", row._id, {
-          date: row.datePublished,
-        });
-      }
-    });
-    const stored = await t.run((ctx) =>
-      ctx.db.query("articleCatalog").collect()
-    );
-    expect(stored).toHaveLength(3);
-    for (const row of stored) {
-      expect(row).toHaveProperty("datePublished", row.date);
-    }
-
-    const predecessor = await t.query((ctx) =>
-      ctx.db
-        .query("articleCatalog")
-        .withIndex(
-          "by_appLocale_and_category_and_date_and_contentKey",
-          (index) => index.eq("appLocale", "en").eq("category", "politics")
-        )
-        .order("desc")
-        .paginate({ cursor: null, numItems: 1 })
-    );
-    const oldLoad = await t.query(predecessorPage, {
-      category: "politics",
-      expectedManifestHash: null,
-      expectedReleaseId: null,
-      appLocale: "en",
-      paginationOpts: { cursor: null, numItems: 1 },
-    });
-    const continued = await t.query(predecessorPage, {
-      category: "politics",
-      expectedManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
-      expectedReleaseId: TEST_RUNTIME_RELEASE.releaseId,
-      appLocale: "en",
-      paginationOpts: {
-        cursor: predecessor.continueCursor,
-        numItems: 1,
-      },
-    });
-
-    expect(predecessor.page).toMatchObject([
-      { contentKey: testArticleProjection(2).contentKey },
-    ]);
-    expect(oldLoad.result.page).toMatchObject([
-      {
-        contentKey: testArticleProjection(2).contentKey,
-        projectionHash: stored.find(
-          (row) => row.contentKey === testArticleProjection(2).contentKey
-        )?.projectionHash,
-      },
-    ]);
-    expect(continued.result.page).toMatchObject([
-      { contentKey: testArticleProjection(1).contentKey },
-    ]);
-    for (const item of [...oldLoad.result.page, ...continued.result.page]) {
-      const projection = Schema.decodeUnknownSync(
-        PredecessorArticleProjectionSchema
-      )(JSON.parse(item.projectionJson), { onExcessProperty: "error" });
-      expect(projection.metadata).toHaveProperty("date");
-      expect(projection.metadata).not.toHaveProperty("datePublished");
-    }
-    await expect(
-      t.query(page, {
-        category: "politics",
-        expectedManifestHash: TEST_RUNTIME_RELEASE.manifestHash,
-        expectedReleaseId: TEST_RUNTIME_RELEASE.releaseId,
-        appLocale: "en",
-        paginationOpts: {
-          cursor: predecessor.continueCursor,
-          numItems: 1,
-        },
-      })
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
   });
 
   it.each([

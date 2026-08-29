@@ -38,6 +38,7 @@ describe("content runtime query", () => {
         ).toBe(42);
 
         const runtimeError = new ConvexRuntimeQueryError({
+          httpStatuses: [],
           networkCodes: ["EPIPE"],
           query: "contentRelease.material.route",
           reason: "transport",

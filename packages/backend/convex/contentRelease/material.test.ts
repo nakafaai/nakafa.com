@@ -3,9 +3,7 @@ import {
   canonicalizeMaterialProjection,
   MaterialLessonProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
-import { canonicalizeMaterialProjection as canonicalizePredecessorMaterialProjection } from "@nakafa/aksara-v150/projection/material";
 import { api } from "@repo/backend/convex/_generated/api";
-import { PredecessorMaterialProjectionSchema } from "@repo/backend/convex/contentRelease/material/predecessor";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
@@ -18,12 +16,8 @@ import { Schema } from "effect";
 
 const publication = api.contentRelease.material.publication;
 const publications = api.contentRelease.material.publications;
-const predecessorPage = api.contentRelease.material.page;
-const predecessorRoute = api.contentRelease.material.route;
-
-const decodeCurrent = Schema.decodeUnknownSync(MaterialLessonProjectionSchema);
-const decodePredecessor = Schema.decodeUnknownSync(
-  PredecessorMaterialProjectionSchema
+const decodeProjection = Schema.decodeUnknownSync(
+  MaterialLessonProjectionSchema
 );
 
 describe("contentRelease/material", () => {
@@ -31,7 +25,7 @@ describe("contentRelease/material", () => {
     const t = convexTest(schema, convexModules);
 
     await expect(
-      t.query(predecessorRoute, {
+      t.query(publication, {
         appLocale: "en",
         publicPath: "subjects/mathematics/functions/concept",
       })
@@ -46,7 +40,7 @@ describe("contentRelease/material", () => {
     await activateMaterialCatalog(t);
 
     await expect(
-      t.query(predecessorRoute, {
+      t.query(publication, {
         expectedActiveReleaseId: "another-release",
         appLocale: material.appLocale,
         publicPath: material.publicPath,
@@ -55,7 +49,7 @@ describe("contentRelease/material", () => {
       data: { code: "CONTENT_RELEASE_STATE" },
     });
     await expect(
-      t.query(predecessorRoute, {
+      t.query(publication, {
         expectedActiveReleaseId: MATERIAL_IDENTITY.releaseId,
         appLocale: material.appLocale,
         publicPath: material.publicPath,
@@ -66,18 +60,18 @@ describe("contentRelease/material", () => {
   });
 
   it.each(["en", "id", "de"] as const)(
-    "keeps the %s predecessor page cursor and release identity",
+    "returns the %s current page with stable release identity",
     async (appLocale) => {
       const t = convexTest(schema, convexModules);
       await activateMaterialCatalog(t);
 
-      const first = await t.query(predecessorPage, {
+      const first = await t.query(publications, {
         expectedManifestHash: null,
         expectedReleaseId: null,
         appLocale,
         paginationOpts: { cursor: null, numItems: 1 },
       });
-      const second = await t.query(predecessorPage, {
+      const second = await t.query(publications, {
         expectedManifestHash: first.activeManifestHash,
         expectedReleaseId: first.activeReleaseId,
         appLocale,
@@ -85,12 +79,6 @@ describe("contentRelease/material", () => {
           cursor: first.result.continueCursor,
           numItems: 1,
         },
-      });
-      const current = await t.query(publications, {
-        expectedManifestHash: null,
-        expectedReleaseId: null,
-        appLocale,
-        paginationOpts: { cursor: null, numItems: 1 },
       });
 
       expect(first).toMatchObject({
@@ -108,79 +96,40 @@ describe("contentRelease/material", () => {
         stale: false,
       });
       for (const source of [...first.result.page, ...second.result.page]) {
-        const projection = decodePredecessor(JSON.parse(source), {
+        const projection = decodeProjection(JSON.parse(source), {
           onExcessProperty: "error",
         });
         expect(projection.appLocale).toBe(appLocale);
-        expect(projection.metadata).toHaveProperty("date");
-        expect(projection.metadata).not.toHaveProperty("datePublished");
-        expect(canonicalizePredecessorMaterialProjection(projection)).toBe(
-          source
-        );
+        expect(projection.metadata).toHaveProperty("datePublished");
+        expect(projection.metadata).not.toHaveProperty("date");
+        expect(canonicalizeMaterialProjection(projection)).toBe(source);
       }
-      const currentProjection = decodeCurrent(
-        JSON.parse(current.result.page[0] ?? "{}"),
-        { onExcessProperty: "error" }
-      );
-      expect(currentProjection.metadata).toHaveProperty("datePublished");
-      expect(currentProjection.metadata).not.toHaveProperty("date");
-      expect(current).toMatchObject({
-        activeManifestHash: first.activeManifestHash,
-        activeReleaseId: first.activeReleaseId,
-      });
     }
   );
 
   it.each(["en", "id", "de"] as const)(
-    "keeps the %s predecessor route exact across alternates and siblings",
+    "returns the %s current route across alternates and siblings",
     async (appLocale) => {
       const t = convexTest(schema, convexModules);
       const requested = makeMaterialProjection(appLocale, 1);
       await activateMaterialCatalog(t);
 
-      const predecessor = await t.query(predecessorRoute, {
+      const result = await t.query(publication, {
         appLocale,
         publicPath: requested.publicPath,
       });
-      const current = await t.query(publication, {
-        appLocale,
-        publicPath: requested.publicPath,
-      });
-      const predecessorSources = [
-        predecessor.projectionJson ?? "{}",
-        ...predecessor.alternateJson,
-        ...predecessor.siblingJson,
-      ];
 
-      expect(predecessor.alternateJson).toHaveLength(3);
-      expect(predecessor.siblingJson).toHaveLength(2);
-      for (const source of predecessorSources) {
-        const projection = decodePredecessor(JSON.parse(source), {
-          onExcessProperty: "error",
-        });
-        expect(projection.metadata).toHaveProperty("date");
-        expect(projection.metadata).not.toHaveProperty("datePublished");
-        expect(canonicalizePredecessorMaterialProjection(projection)).toBe(
-          source
-        );
-      }
-      expect(current.projectionJson).toBe(
+      expect(result.projectionJson).toBe(
         canonicalizeMaterialProjection(requested)
       );
-      expect(current).toMatchObject({
-        activeManifestHash: predecessor.activeManifestHash,
-        activeAppLocales: predecessor.activeAppLocales,
-        activeReleaseId: predecessor.activeReleaseId,
-        rendererDomain: predecessor.rendererDomain,
-        sourcePath: predecessor.sourcePath,
-        sourceRevision: predecessor.sourceRevision,
-      });
+      expect(result.alternateJson).toHaveLength(3);
+      expect(result.siblingJson).toHaveLength(2);
       for (const source of [
-        current.projectionJson ?? "{}",
-        ...current.alternateJson,
-        ...current.siblingJson,
+        result.projectionJson ?? "{}",
+        ...result.alternateJson,
+        ...result.siblingJson,
       ]) {
-        const projection = decodeCurrent(JSON.parse(source), {
+        const projection = decodeProjection(JSON.parse(source), {
           onExcessProperty: "error",
         });
         expect(projection.metadata).toHaveProperty("datePublished");

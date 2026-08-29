@@ -27,9 +27,7 @@ describe("contentRelease/material/model", () => {
 
     await expect(
       target.query((ctx) =>
-        runConvexProgram(
-          readMaterialModel(ctx, "en", "subjects/test/missing", "publication")
-        )
+        runConvexProgram(readMaterialModel(ctx, "en", "subjects/test/missing"))
       )
     ).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_MISSING" },
@@ -43,12 +41,7 @@ describe("contentRelease/material/model", () => {
 
     const result = await target.query((ctx) =>
       runConvexProgram(
-        readMaterialModel(
-          ctx,
-          requested.appLocale,
-          requested.publicPath,
-          "publication"
-        )
+        readMaterialModel(ctx, requested.appLocale, requested.publicPath)
       )
     );
 
@@ -98,12 +91,7 @@ describe("contentRelease/material/model", () => {
     await expect(
       target.query((ctx) =>
         runConvexProgram(
-          readMaterialModel(
-            ctx,
-            requested.appLocale,
-            requested.publicPath,
-            "publication"
-          )
+          readMaterialModel(ctx, requested.appLocale, requested.publicPath)
         )
       )
     ).rejects.toMatchObject({
@@ -117,9 +105,7 @@ describe("contentRelease/material/model", () => {
 
     await expect(
       target.query((ctx) =>
-        runConvexProgram(
-          readMaterialModel(ctx, "en", "subjects/test/missing", "publication")
-        )
+        runConvexProgram(readMaterialModel(ctx, "en", "subjects/test/missing"))
       )
     ).resolves.toMatchObject({
       projectionJson: null,
@@ -135,12 +121,7 @@ describe("contentRelease/material/model", () => {
     await expect(
       target.query((ctx) =>
         runConvexProgram(
-          readMaterialModel(
-            ctx,
-            projection.appLocale,
-            projection.publicPath,
-            "publication"
-          )
+          readMaterialModel(ctx, projection.appLocale, projection.publicPath)
         )
       )
     ).rejects.toMatchObject({
@@ -172,12 +153,7 @@ describe("contentRelease/material/model", () => {
     await expect(
       target.query((ctx) =>
         runConvexProgram(
-          readMaterialModel(
-            ctx,
-            requested.appLocale,
-            requested.publicPath,
-            "publication"
-          )
+          readMaterialModel(ctx, requested.appLocale, requested.publicPath)
         )
       )
     ).rejects.toMatchObject({
@@ -204,12 +180,7 @@ describe("contentRelease/material/model", () => {
     await expect(
       target.query((ctx) =>
         runConvexProgram(
-          readMaterialModel(
-            ctx,
-            requested.appLocale,
-            requested.publicPath,
-            "publication"
-          )
+          readMaterialModel(ctx, requested.appLocale, requested.publicPath)
         )
       )
     ).rejects.toMatchObject({
@@ -236,12 +207,7 @@ describe("contentRelease/material/model", () => {
     await expect(
       target.query((ctx) =>
         runConvexProgram(
-          readMaterialModel(
-            ctx,
-            requested.appLocale,
-            requested.publicPath,
-            "publication"
-          )
+          readMaterialModel(ctx, requested.appLocale, requested.publicPath)
         )
       )
     ).rejects.toMatchObject({
@@ -281,12 +247,7 @@ describe("contentRelease/material/model", () => {
     await expect(
       target.query((ctx) =>
         runConvexProgram(
-          readMaterialModel(
-            ctx,
-            requested.appLocale,
-            requested.publicPath,
-            "publication"
-          )
+          readMaterialModel(ctx, requested.appLocale, requested.publicPath)
         )
       )
     ).rejects.toMatchObject({

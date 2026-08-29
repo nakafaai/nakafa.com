@@ -159,6 +159,7 @@ describe("Convex runtime query", () => {
         yield* readConvexRuntimeQuery(runtimeUrl, query, args).pipe(Effect.flip)
       ).toEqual(
         new ConvexRuntimeQueryError({
+          httpStatuses: [],
           networkCodes: [],
           query: queryName,
           reason: "query",
@@ -183,6 +184,7 @@ describe("Convex runtime query", () => {
 
       expect(result).toEqual(
         new ConvexRuntimeQueryError({
+          httpStatuses: [],
           networkCodes: ["EPIPE"],
           query: queryName,
           reason: "transport",
@@ -205,6 +207,7 @@ describe("Convex runtime query", () => {
         yield* readConvexRuntimeQuery(runtimeUrl, query, args).pipe(Effect.flip)
       ).toEqual(
         new ConvexRuntimeQueryError({
+          httpStatuses: [],
           networkCodes: [],
           query: queryName,
           reason: "transport",
@@ -228,6 +231,7 @@ describe("Convex runtime query", () => {
 
       expect(result).toEqual(
         new ConvexRuntimeQueryError({
+          httpStatuses: [],
           networkCodes: [],
           query: queryName,
           reason: "query",
@@ -251,6 +255,7 @@ describe("Convex runtime query", () => {
           )
         ).toEqual(
           new ConvexRuntimeQueryError({
+            httpStatuses: [],
             networkCodes: [],
             query: queryName,
             reason: "client",

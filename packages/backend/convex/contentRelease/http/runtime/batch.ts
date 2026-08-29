@@ -1,8 +1,5 @@
 import { MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES } from "@repo/backend/content/batch";
-import {
-  PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
-  TRANSITION_PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
-} from "@repo/backend/content/endpoint";
+import { PUBLIC_CONTENT_RUNTIME_BATCH_PATH } from "@repo/backend/content/endpoint";
 import { type ActionCtx, env } from "@repo/backend/convex/_generated/server";
 import { readRuntimeRequest } from "@repo/backend/convex/contentRelease/http/runtime/request";
 import { privateRuntimeResponse } from "@repo/backend/convex/contentRelease/http/runtime/response";
@@ -35,12 +32,6 @@ export function registerPublicContentRuntimeBatchRoute<
   Variables extends Record<string, unknown>,
 >(app: HonoWithConvex<ActionCtx, Variables>) {
   app.post(PUBLIC_CONTENT_RUNTIME_BATCH_PATH, async (context) => {
-    const result = await runConvexProgram(
-      readPublicRuntimeBatch(context.env, context.req.raw)
-    );
-    return privateRuntimeResponse(result);
-  });
-  app.post(TRANSITION_PUBLIC_CONTENT_RUNTIME_BATCH_PATH, async (context) => {
     const result = await runConvexProgram(
       readPublicRuntimeBatch(context.env, context.req.raw)
     );

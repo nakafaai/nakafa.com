@@ -1,5 +1,4 @@
 import { query } from "@repo/backend/convex/_generated/server";
-import { readArticleCategory } from "@repo/backend/convex/contentRelease/article/category";
 import {
   readArticleBucket,
   readCategoryArticles,
@@ -85,11 +84,6 @@ const categoryPageValidator = v.object({
   stale: v.boolean(),
 });
 
-const categoryLookupValidator = v.object({
-  exists: v.boolean(),
-  managed: v.boolean(),
-});
-
 const sitemapBucketsValidator = v.object({
   activeReleaseId: v.union(v.string(), v.null()),
   articleCount: v.number(),
@@ -156,47 +150,7 @@ export const route = query({
     ),
 });
 
-/**
- * Retains the predecessor native article cursor and exact 0.15.0 projection
- * view during the 0.15.1 bridge. The returned `projectionHash` identifies the
- * authenticated signed source; `projectionJson` is a derived predecessor view
- * and is not represented as signed bytes.
- *
- * Rollout owner: Nakafa SEO date cutover, PR #342.
- * Removal change: the strict 0.16 Nakafa cutover PR.
- * Remove this query, its predecessor reader and projection adapter, tests,
- * legacy date fields, and legacy indexes only after the protected-main
- * consumer uses `publications`,
- * production Convex Function Metrics show zero invocations for
- * `contentRelease/article:page` and `contentRelease/article:category` for 24
- * consecutive hours after that switch, and EN, ID, and DE production browser
- * acceptance passes. The 24-hour window is Nakafa rollout policy, not a Convex
- * requirement, and does not block the bridge PR itself.
- */
-export const page = query({
-  args: {
-    category: v.string(),
-    expectedManifestHash: v.union(v.string(), v.null()),
-    expectedReleaseId: v.union(v.string(), v.null()),
-    appLocale: appLocaleValidator,
-    paginationOpts: paginationOptsValidator,
-  },
-  returns: articlePageValidator,
-  handler: (ctx, args) =>
-    runConvexProgram(
-      readArticlePage(
-        ctx,
-        args.category,
-        args.appLocale,
-        args.expectedManifestHash,
-        args.expectedReleaseId,
-        args.paginationOpts,
-        "predecessor"
-      )
-    ),
-});
-
-/** Returns one release-bound page across both publication-date shapes. */
+/** Returns one current release-bound article page. */
 export const publications = query({
   args: {
     category: v.string(),
@@ -214,8 +168,7 @@ export const publications = query({
         args.appLocale,
         args.expectedManifestHash,
         args.expectedReleaseId,
-        args.paginationOpts,
-        "publication"
+        args.paginationOpts
       )
     ),
 });
@@ -239,22 +192,6 @@ export const categories = query({
         args.paginationOpts
       )
     ),
-});
-
-/**
- * Retains the predecessor category lookup during the same bounded bridge.
- * The strict cutover removes it only after production Convex Function Metrics
- * meet the owner, observation, and browser-acceptance gates documented on
- * `page`.
- */
-export const category = query({
-  args: {
-    category: v.string(),
-    appLocale: appLocaleValidator,
-  },
-  returns: categoryLookupValidator,
-  handler: (ctx, args) =>
-    runConvexProgram(readArticleCategory(ctx, args.appLocale, args.category)),
 });
 
 /** Returns one managed hash partition for agent-facing article indexes. */

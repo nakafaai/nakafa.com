@@ -6,9 +6,7 @@ import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
   PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
-  TRANSITION_PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
 } from "@repo/backend/content/endpoint";
-import { internal } from "@repo/backend/convex/_generated/api";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
   insertRuntimeRelease,
@@ -18,7 +16,6 @@ import {
 import { insertRuntimeHead } from "@repo/backend/test/runtime/head";
 
 const RUNTIME_TOKEN = "technical-runtime-token";
-const OBSERVATION_ID = "batch-transition-test";
 const runtimeTokenName = "CONTENT_RUNTIME_TOKEN";
 const polarName = "POLAR_WEBHOOK_SECRET";
 const foundRequest = JSON.parse(publicRuntimeRequest());
@@ -77,84 +74,48 @@ afterEach(() => {
 });
 
 describe("public content runtime batch HTTP route", () => {
-  it("serves current batches on canonical and transition paths", async () => {
+  it("returns current publications on the canonical batch path", async () => {
     const t = createConvexTestWithBetterAuth();
     await seedPublicRuntime(t);
-    await t.mutation(internal.contentRelease.predecessor.internal.arm, {
-      observationId: OBSERVATION_ID,
-    });
     const body = JSON.stringify({ requests: [foundRequest, missingRequest] });
 
-    const responses = await Promise.all(
-      [
-        PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
-        TRANSITION_PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
-      ].map((path) => post(t, body, undefined, path))
-    );
-    const bodies = await Promise.all(
-      responses.map((response) => response.json())
-    );
-    const found = bodies[0].responses[0];
+    const response = await post(t, body);
+    const responseBody = await response.json();
+    const found = responseBody.responses[0];
 
-    expect(responses.map(({ status }) => status)).toEqual([200, 200]);
-    expect(bodies[0]).toEqual(bodies[1]);
+    expect(response.status).toBe(200);
     expect(found.projection.metadata).toHaveProperty("datePublished");
     expect(found.projection.metadata).not.toHaveProperty("date");
-    expect(bodies[0].responses[1]).toEqual({ kind: "missing" });
-    await expect(
-      t.query(internal.contentRelease.predecessor.internal.status, {
-        observationId: OBSERVATION_ID,
-      })
-    ).resolves.toMatchObject({
-      routes: { batch: { invocationCount: 0 } },
-    });
-    responses.forEach(expectPrivate);
+    expect(responseBody.responses[1]).toEqual({ kind: "missing" });
+    expectPrivate(response);
   });
 
-  it("authenticates both batch paths before consuming request bodies", async () => {
+  it("authenticates before consuming the request body", async () => {
     const t = createConvexTestWithBetterAuth();
-    await seedPublicRuntime(t);
-    await t.mutation(internal.contentRelease.predecessor.internal.arm, {
-      observationId: OBSERVATION_ID,
-    });
     let pulls = 0;
-    const responses = await Promise.all(
-      [
-        PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
-        TRANSITION_PUBLIC_CONTENT_RUNTIME_BATCH_PATH,
-      ].map((path) => {
-        const body = new ReadableStream<Uint8Array>(
-          {
-            pull(controller) {
-              pulls += 1;
-              controller.error(new Error("Unauthorized body was consumed."));
-            },
-          },
-          { highWaterMark: 0 }
-        );
-        const request = {
-          body,
-          duplex: "half",
-          headers: {
-            "content-type": "application/json",
-            "x-nakafa-content-token": "wrong-token",
-          },
-          method: "POST",
-        } satisfies RequestInit & { readonly duplex: "half" };
-        return t.fetch(path, request);
-      })
+    const body = new ReadableStream<Uint8Array>(
+      {
+        pull(controller) {
+          pulls += 1;
+          controller.error(new Error("Unauthorized body was consumed."));
+        },
+      },
+      { highWaterMark: 0 }
     );
+    const request = {
+      body,
+      duplex: "half",
+      headers: {
+        "content-type": "application/json",
+        "x-nakafa-content-token": "wrong-token",
+      },
+      method: "POST",
+    } satisfies RequestInit & { readonly duplex: "half" };
+    const response = await t.fetch(PUBLIC_CONTENT_RUNTIME_BATCH_PATH, request);
 
-    expect(responses.map(({ status }) => status)).toEqual([401, 401]);
+    expect(response.status).toBe(401);
     expect(pulls).toBe(0);
-    await expect(
-      t.query(internal.contentRelease.predecessor.internal.status, {
-        observationId: OBSERVATION_ID,
-      })
-    ).resolves.toMatchObject({
-      routes: { batch: { invocationCount: 0 } },
-    });
-    responses.forEach(expectPrivate);
+    expectPrivate(response);
   });
 
   it("returns eight ordered found and missing responses", async () => {
