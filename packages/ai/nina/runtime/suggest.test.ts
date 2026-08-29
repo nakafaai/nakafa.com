@@ -75,7 +75,7 @@ describe("nina/runtime/suggest", () => {
     })
   );
   it.effect(
-    "prunes tool-call transcript parts before generating suggestions",
+    "prunes tool-call parts and ends the suggestion request with a user turn",
     () =>
       Effect.gen(function* () {
         const writer = createWriter();
@@ -143,6 +143,10 @@ describe("nina/runtime/suggest", () => {
                 content:
                   "Karena dua benda ditambah tiga benda menjadi lima benda.",
                 role: "assistant",
+              },
+              {
+                content: "Generate the requested follow-up suggestions now.",
+                role: "user",
               },
             ],
             timeout: suggestionGenerationTimeout,
