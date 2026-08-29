@@ -8,7 +8,7 @@ import {
   Stream,
 } from "effect";
 import { ChildProcess } from "effect/unstable/process";
-import { writeOutput } from "./output.ts";
+import { writeOutput } from "#scripts/output";
 
 const GIT_REVISION_PATTERN = /^[0-9a-f]{40}$/u;
 const ProductionAcceptanceMode = Schema.Literals(["github", "vercel"]);

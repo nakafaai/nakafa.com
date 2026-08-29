@@ -1,14 +1,17 @@
 import { Effect, Option, Redacted, Schema } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/unstable/http";
-import { GITHUB_ACTION_REVIEWS } from "./policy.ts";
+import { GITHUB_ACTION_REVIEWS } from "#scripts/github/policy";
 
 const GithubRelease = Schema.Struct({ tag_name: Schema.String });
 
-export interface GithubActionReleaseReview {
-  readonly expectedTag: string;
-  readonly reason: string;
-  readonly repository: string;
-}
+export const GithubActionReleaseReviewSchema = Schema.Struct({
+  expectedTag: Schema.String,
+  reason: Schema.String,
+  repository: Schema.String,
+});
+export type GithubActionReleaseReview = Schema.Schema.Type<
+  typeof GithubActionReleaseReviewSchema
+>;
 
 /** Expected failure while reading upstream GitHub Action release metadata. */
 export class GithubActionReleaseError extends Schema.TaggedError<GithubActionReleaseError>()(
@@ -39,12 +42,10 @@ export const githubActionReleaseReviews = Effect.fn(
     };
 
     if (existing && existing.expectedTag !== review.expectedTag) {
-      return yield* Effect.fail(
-        new GithubActionReleaseError({
-          cause: repository,
-          message: `${repository} has conflicting action release reviews.`,
-        })
-      );
+      return yield* new GithubActionReleaseError({
+        cause: repository,
+        message: `${repository} has conflicting action release reviews.`,
+      });
     }
     reviews.set(repository, existing ?? review);
   }

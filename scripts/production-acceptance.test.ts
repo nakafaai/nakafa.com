@@ -6,7 +6,7 @@ import { ChildProcess } from "effect/unstable/process";
 import {
   readProductionChanges,
   requiresProductionAcceptance,
-} from "./production-acceptance.ts";
+} from "#scripts/production-acceptance";
 
 const PRODUCTION_ACCEPTANCE_SCRIPT = fileURLToPath(
   new URL("./production-acceptance.ts", import.meta.url)

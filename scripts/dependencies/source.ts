@@ -1,6 +1,6 @@
 import { Effect, FileSystem, Path, Schema } from "effect";
 import { parse } from "yaml";
-import { validateDependencyPolicy } from "./validate.ts";
+import { validateDependencyPolicy } from "#scripts/dependencies/validate";
 
 const StringMap = Schema.Record(Schema.String, Schema.String);
 const PackageManifest = Schema.Struct({

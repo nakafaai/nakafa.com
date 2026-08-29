@@ -8,7 +8,7 @@ import {
 import {
   fetchLatestGithubActionTag,
   githubActionReleaseReviews,
-} from "./release.ts";
+} from "#scripts/github/release";
 
 function makeHttpClient(
   makeResponse: (request: HttpClientRequest.HttpClientRequest) => Response

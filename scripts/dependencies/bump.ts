@@ -1,15 +1,15 @@
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import { Config, Effect, Layer, Result, Schema } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
-import { inspectGithubActionPolicy } from "../github/policy.ts";
+import { runPnpm } from "#scripts/dependencies/command";
+import { REGISTRY_REVIEWS } from "#scripts/dependencies/policy";
+import { inspectDependencyPolicy } from "#scripts/dependencies/source";
+import { inspectGithubActionPolicy } from "#scripts/github/policy";
 import {
   fetchLatestGithubActionTag,
   githubActionReleaseReviews,
-} from "../github/release.ts";
-import { writeError, writeOutput } from "../output.ts";
-import { runPnpm } from "./command.ts";
-import { REGISTRY_REVIEWS } from "./policy.ts";
-import { inspectDependencyPolicy } from "./source.ts";
+} from "#scripts/github/release";
+import { writeError, writeOutput } from "#scripts/output";
 
 interface BumpDependenciesOptions {
   readonly inspectPolicy?: typeof inspectRepositoryPolicy;

@@ -5,7 +5,7 @@ import { Effect, FileSystem, Schema } from "effect";
 import {
   type EffectSourceConfig,
   makeEffectSourceProgram,
-} from "./effect-source.ts";
+} from "#scripts/effect-source";
 
 class GitFixtureError extends Schema.TaggedError<GitFixtureError>()(
   "GitFixtureError",

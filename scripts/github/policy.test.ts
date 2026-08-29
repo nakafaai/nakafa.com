@@ -1,17 +1,33 @@
-import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, FileSystem } from "effect";
 import { parse as yamlParse } from "yaml";
 import {
   GITHUB_ACTION_REVIEWS,
   type GithubActionUse,
   inspectGithubActionPolicy,
   validateGithubActionPolicy,
-} from "./policy.ts";
+} from "#scripts/github/policy";
 
 const REPOSITORY_ROOT = fileURLToPath(new URL("../..", import.meta.url));
+
+const readRepositoryFile = Effect.fn("GithubPolicyTest.readRepositoryFile")(
+  function* (relativeUrl: string) {
+    const fileSystem = yield* FileSystem.FileSystem;
+    return yield* fileSystem.readFileString(
+      fileURLToPath(new URL(relativeUrl, import.meta.url))
+    );
+  }
+);
+
+const parseWorkflow = Effect.fn("GithubPolicyTest.parseWorkflow")(
+  (source: string) =>
+    Effect.try({
+      try: () => yamlParse(source) as unknown,
+      catch: (cause) => String(cause),
+    })
+);
 
 function validActionUses(): GithubActionUse[] {
   return GITHUB_ACTION_REVIEWS.flatMap((review) =>
@@ -24,74 +40,75 @@ function validActionUses(): GithubActionUse[] {
 }
 
 describe("GitHub Action policy", () => {
-  it("runs candidate validation before merge without repeating it on main", () => {
-    for (const fileName of ["agent-docs.yml", "react-doctor.yml"]) {
-      const source = readFileSync(
-        fileURLToPath(
-          new URL(`../../.github/workflows/${fileName}`, import.meta.url)
+  it.effect(
+    "runs candidate validation before merge without repeating it on main",
+    () =>
+      Effect.gen(function* () {
+        for (const fileName of ["agent-docs.yml", "react-doctor.yml"]) {
+          const source = yield* readRepositoryFile(
+            `../../.github/workflows/${fileName}`
+          );
+          const workflow = yield* parseWorkflow(source);
+
+          expect(workflow).toEqual(
+            expect.objectContaining({
+              on: expect.objectContaining({
+                merge_group: expect.any(Object),
+                pull_request: expect.any(Object),
+              }),
+            })
+          );
+          expect(workflow).not.toEqual(
+            expect.objectContaining({
+              on: expect.objectContaining({ push: expect.anything() }),
+            })
+          );
+        }
+
+        const cacheSource = yield* readRepositoryFile(
+          "../../.github/workflows/cache.yml"
+        );
+        const cacheWorkflow = yield* parseWorkflow(cacheSource);
+        expect(cacheWorkflow).toEqual(
+          expect.objectContaining({
+            jobs: {
+              publish: expect.objectContaining({ name: "Publish" }),
+            },
+            on: {
+              push: { branches: ["main"] },
+            },
+          })
+        );
+        expect(cacheWorkflow).not.toEqual(
+          expect.objectContaining({
+            on: expect.objectContaining({ merge_group: expect.anything() }),
+          })
+        );
+        expect(cacheWorkflow).not.toEqual(
+          expect.objectContaining({
+            on: expect.objectContaining({ pull_request: expect.anything() }),
+          })
+        );
+      }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect(
+    "runs changed React checks on pull requests and full checks in the queue",
+    () =>
+      readRepositoryFile("../../.github/workflows/react-doctor.yml").pipe(
+        Effect.tap((source) =>
+          Effect.sync(() => {
+            expect(source).toContain(
+              'pnpm run doctor --verbose --scope changed --base "$DOCTOR_BASE"'
+            );
+            expect(source).toContain(
+              "pnpm run doctor --verbose --scope full --blocking warning"
+            );
+          })
         ),
-        "utf8"
-      );
-      const workflow: unknown = yamlParse(source);
-
-      expect(workflow).toEqual(
-        expect.objectContaining({
-          on: expect.objectContaining({
-            merge_group: expect.any(Object),
-            pull_request: expect.any(Object),
-          }),
-        })
-      );
-      expect(workflow).not.toEqual(
-        expect.objectContaining({
-          on: expect.objectContaining({ push: expect.anything() }),
-        })
-      );
-    }
-
-    const cacheSource = readFileSync(
-      fileURLToPath(
-        new URL("../../.github/workflows/cache.yml", import.meta.url)
-      ),
-      "utf8"
-    );
-    const cacheWorkflow: unknown = yamlParse(cacheSource);
-    expect(cacheWorkflow).toEqual(
-      expect.objectContaining({
-        jobs: {
-          publish: expect.objectContaining({ name: "Publish" }),
-        },
-        on: {
-          push: { branches: ["main"] },
-        },
-      })
-    );
-    expect(cacheWorkflow).not.toEqual(
-      expect.objectContaining({
-        on: expect.objectContaining({ merge_group: expect.anything() }),
-      })
-    );
-    expect(cacheWorkflow).not.toEqual(
-      expect.objectContaining({
-        on: expect.objectContaining({ pull_request: expect.anything() }),
-      })
-    );
-  });
-
-  it("runs changed React checks on pull requests and full checks in the queue", () => {
-    const source = readFileSync(
-      fileURLToPath(
-        new URL("../../.github/workflows/react-doctor.yml", import.meta.url)
-      ),
-      "utf8"
-    );
-    expect(source).toContain(
-      'pnpm run doctor --verbose --scope changed --base "$DOCTOR_BASE"'
-    );
-    expect(source).toContain(
-      "pnpm run doctor --verbose --scope full --blocking warning"
-    );
-  });
+        Effect.provide(NodeServices.layer)
+      )
+  );
 
   it.effect("accepts every reviewed immutable GitHub Action", () =>
     Effect.gen(function* () {

@@ -1,6 +1,6 @@
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Path, Schema } from "effect";
-import { writeError, writeOutput } from "./output.ts";
+import { writeError, writeOutput } from "#scripts/output";
 
 const TEST_FILE_PATTERN = /\.test\.tsx?$/u;
 const TSX_TEST_FILE_PATTERN = /\.test\.tsx$/u;

@@ -3,21 +3,21 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
-import { bumpDependencies } from "./bump.ts";
+import { bumpDependencies } from "#scripts/dependencies/bump";
 import {
   CONTRACT_ARCHIVE,
   DEPENDENCY_HOLDS,
   DEPENDENCY_RELEASE_AGE_EXCLUSIONS,
   DEPENDENCY_RELEASE_AGE_MINUTES,
-} from "./policy.ts";
-import { inspectDependencyPolicy } from "./source.ts";
+} from "#scripts/dependencies/policy";
+import { inspectDependencyPolicy } from "#scripts/dependencies/source";
 
 const REPOSITORY_ROOT = fileURLToPath(new URL("../..", import.meta.url));
 
 import {
   dependencyDeclarations,
   validateDependencyPolicy,
-} from "./validate.ts";
+} from "#scripts/dependencies/validate";
 
 function fixtureManifestPath(index: number) {
   if (index === 0) {

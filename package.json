@@ -4,6 +4,9 @@
   "private": true,
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
+  "imports": {
+    "#scripts/*": "./scripts/*.ts"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"

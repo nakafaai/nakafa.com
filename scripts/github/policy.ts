@@ -3,23 +3,33 @@ import { parse as yamlParse } from "yaml";
 
 const WORKFLOW_FILE_PATTERN = /\.ya?ml$/u;
 const UnknownRecord = Schema.Record(Schema.String, Schema.Unknown);
+const NonNegativeInteger = Schema.Finite.pipe(
+  Schema.check(Schema.isInt()),
+  Schema.check(Schema.isGreaterThanOrEqualTo(0))
+);
 
-export interface GithubActionReview {
-  readonly action: string;
-  readonly approvedSha: string;
-  readonly expectedInputs?: Readonly<Record<string, string>>;
-  readonly expectedTag: string;
-  readonly expectedUsages: number;
-  readonly reason: string;
-}
+export const GithubActionReviewSchema = Schema.Struct({
+  action: Schema.String,
+  approvedSha: Schema.String,
+  expectedInputs: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+  expectedTag: Schema.String,
+  expectedUsages: NonNegativeInteger,
+  reason: Schema.String,
+});
+export type GithubActionReview = Schema.Schema.Type<
+  typeof GithubActionReviewSchema
+>;
 
-export interface GithubActionUse {
-  readonly inputs: Readonly<Record<string, unknown>>;
-  readonly reference: string;
-  readonly workflowPath: string;
-}
+export const GithubActionUseSchema = Schema.Struct({
+  inputs: UnknownRecord,
+  reference: Schema.String,
+  workflowPath: Schema.String,
+});
+export type GithubActionUse = Schema.Schema.Type<typeof GithubActionUseSchema>;
 
-export const GITHUB_ACTION_REVIEWS: readonly GithubActionReview[] = [
+export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
+  Schema.Array(GithubActionReviewSchema)
+)([
   {
     action: "actions/checkout",
     approvedSha: "3d3c42e5aac5ba805825da76410c181273ba90b1",
@@ -78,7 +88,7 @@ export const GITHUB_ACTION_REVIEWS: readonly GithubActionReview[] = [
     expectedUsages: 1,
     reason: "Failure diagnostics use the reviewed stable release.",
   },
-];
+]);
 
 /** Expected failure while reading or decoding repository workflow policy. */
 export class GithubActionPolicyError extends Schema.TaggedError<GithubActionPolicyError>()(
