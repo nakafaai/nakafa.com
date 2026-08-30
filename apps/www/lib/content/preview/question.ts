@@ -1,14 +1,12 @@
 import "server-only";
 import type { AppLocale } from "@nakafa/aksara-contracts/locale";
+import type { PreviewArtifact } from "@nakafa/aksara-contracts/preview/artifact";
 import {
   previewDocumentRoute,
   type QuestionAnswerPreviewDocument,
   type QuestionPromptPreviewDocument,
 } from "@nakafa/aksara-contracts/preview/document";
-import type {
-  LocalPreviewManifest,
-  PreviewArtifact,
-} from "@nakafa/aksara-contracts/preview/spec";
+import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
 import type { TryoutPreviewTarget } from "@nakafa/aksara-contracts/preview/target";
 import {
   QuestionAnswerProjectionSchema,

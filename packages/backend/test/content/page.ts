@@ -31,8 +31,8 @@ export const TEST_PAGE_PROJECTION = PublicPageProjectionSchema.make({
   contentKey: TEST_PAGE_KEY,
   kind: "public-page",
   metadata: {
+    datePublished: "2026-08-20",
     description: "Technical signed page fixture.",
-    lastModified: "2026-08-20",
     title: "Terms of Service",
   },
   pageKey: PageKeySchema.make("terms-of-service"),
@@ -42,6 +42,18 @@ export const TEST_PAGE_PROJECTION = PublicPageProjectionSchema.make({
 });
 export const TEST_PAGE_PROJECTION_JSON =
   canonicalizePublicPageProjection(TEST_PAGE_PROJECTION);
+
+/** Returns the exact historical Page bytes retained for recovery tests. */
+export function testHistoricalPageJson() {
+  return JSON.stringify({
+    ...TEST_PAGE_PROJECTION,
+    metadata: {
+      description: TEST_PAGE_PROJECTION.metadata.description,
+      lastModified: TEST_PAGE_PROJECTION.metadata.datePublished,
+      title: TEST_PAGE_PROJECTION.metadata.title,
+    },
+  });
+}
 
 /** Creates one locale-equivalent signed Page projection for backend tests. */
 export function makeTestPageProjection(

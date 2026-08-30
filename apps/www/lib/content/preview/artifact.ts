@@ -2,11 +2,9 @@ import "server-only";
 
 import type { SigningKeyId } from "@nakafa/aksara-contracts/ids";
 import { MAX_SIGNED_ARTIFACT_BYTES } from "@nakafa/aksara-contracts/limits";
+import type { PreviewArtifact } from "@nakafa/aksara-contracts/preview/artifact";
 import type { PreviewDocument } from "@nakafa/aksara-contracts/preview/document";
-import type {
-  LocalPreviewManifest,
-  PreviewArtifact,
-} from "@nakafa/aksara-contracts/preview/spec";
+import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
 import type { RendererManifestEnvelope } from "@nakafa/aksara-contracts/renderer/contract";
 import {
   ContentVerificationKeyResolver,

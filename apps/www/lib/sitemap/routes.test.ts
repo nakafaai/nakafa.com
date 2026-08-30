@@ -172,9 +172,31 @@ describe("sitemap route pages", () => {
           path: "/impressum",
         },
         {
-          lastModified: "2026-08-21",
+          lastModified: "2026-08-22",
           path: "/privacy-policy",
         },
+      ]);
+    })
+  );
+
+  it.effect("keeps retained recovery Page dates readable", () =>
+    Effect.gen(function* () {
+      pageMocks.readPublishedPageCatalog.mockReturnValue(
+        Effect.succeed({
+          activeReleaseId: "release-pages",
+          projections: [
+            {
+              ...pageProjection("en", "legal-notice", "imprint"),
+              metadata: { lastModified: "2026-08-21" },
+            },
+          ],
+        })
+      );
+
+      const page = yield* readSitemapRoutePage("page_en");
+
+      expect(page.routes).toEqual([
+        { lastModified: "2026-08-21", path: "/legal-notice" },
       ]);
     })
   );
@@ -223,7 +245,13 @@ function pageProjection(
 ) {
   return {
     appLocale,
-    metadata: { lastModified: "2026-08-21" },
+    metadata:
+      pageKey === "imprint"
+        ? {
+            dateModified: "2026-08-21",
+            datePublished: "2026-08-20",
+          }
+        : { datePublished: "2026-08-22" },
     pageKey,
     publicPath,
   };

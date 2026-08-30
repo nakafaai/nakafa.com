@@ -7,8 +7,6 @@ import { bumpDependencies } from "#scripts/dependencies/bump";
 import {
   CONTRACT_ARCHIVE,
   DEPENDENCY_HOLDS,
-  DEPENDENCY_RELEASE_AGE_EXCLUSIONS,
-  DEPENDENCY_RELEASE_AGE_MINUTES,
 } from "#scripts/dependencies/policy";
 import { inspectDependencyPolicy } from "#scripts/dependencies/source";
 
@@ -59,9 +57,6 @@ function validInput() {
       packageManager: "pnpm@11.23.0",
     },
     workspace: {
-      minimumReleaseAge: DEPENDENCY_RELEASE_AGE_MINUTES,
-      minimumReleaseAgeExclude: [...DEPENDENCY_RELEASE_AGE_EXCLUSIONS],
-      minimumReleaseAgeStrict: true,
       catalog: {
         "@effect/platform-node": "4.0.0-rc.110",
         "@effect/vitest": "4.0.0-rc.110",
@@ -132,12 +127,6 @@ describe("dependency policy", () => {
       firstManifest.manifest.scripts.doctor = "pnpm dlx react-doctor@0.9.5";
     }
     input.manifests.splice(1);
-    input.workspace.minimumReleaseAge = 0;
-    input.workspace.minimumReleaseAgeExclude = [
-      ...DEPENDENCY_RELEASE_AGE_EXCLUSIONS,
-      "effect",
-    ];
-    input.workspace.minimumReleaseAgeStrict = false;
     input.workspace.overrides["@effect/platform-node-shared"] = "4.0.0-rc.111";
     input.workspace.update.ignoreDeps = [];
 
@@ -160,15 +149,6 @@ describe("dependency policy", () => {
     expect(
       problems.some((problem) => problem.includes("update.ignoreDeps"))
     ).toBe(true);
-    expect(problems.some((problem) => problem.includes("1440 minutes"))).toBe(
-      true
-    );
-    expect(
-      problems.some((problem) => problem.includes("minimumReleaseAgeExclude"))
-    ).toBe(true);
-    expect(problems.some((problem) => problem.includes("remain strict"))).toBe(
-      true
-    );
   });
 
   it("finds declarations in every dependency group", () => {

@@ -1,6 +1,9 @@
 import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { ACTIVE_APP_LOCALES } from "@nakafa/aksara-contracts/locale";
-import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
+import {
+  ContentProjectionSchema,
+  CurrentContentProjectionSchema,
+} from "@nakafa/aksara-contracts/projection/spec";
 import { quranSourceFileCount } from "@nakafa/aksara-contracts/quran/source";
 import {
   ContentReleaseItemSchema,
@@ -124,7 +127,7 @@ export const decodeArtifactJson = Effect.fn(
     )
   )
 );
-/** Strictly decodes one current projection from canonical storage JSON. */
+/** Strictly decodes one readable projection from canonical storage JSON. */
 export const decodeProjectionJson = Effect.fn(
   "contentRelease.decodeProjectionJson"
 )((source: string) =>
@@ -139,6 +142,26 @@ export const decodeProjectionJson = Effect.fn(
         new ReleaseError({
           code: "CONTENT_RELEASE_INTEGRITY",
           message: "Content projection does not satisfy its exact contract.",
+        })
+    )
+  )
+);
+/** Rejects retained recovery Page bytes from newly staged content. */
+export const decodeCurrentProjectionJson = Effect.fn(
+  "contentRelease.decodeCurrentProjectionJson"
+)((source: string) =>
+  parseStoredJson(source, "Current content projection").pipe(
+    Effect.flatMap(
+      Schema.decodeUnknownEffect(CurrentContentProjectionSchema, {
+        onExcessProperty: "error",
+      })
+    ),
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message:
+            "New content projection does not satisfy the current contract.",
         })
     )
   )
@@ -255,7 +278,6 @@ export const decodeRendererJson = Effect.fn(
     )
   )
 );
-
 /** Strictly decodes one permanent signed try-out runtime bundle. */
 export const decodeTryoutRuntimeBundleJson = Effect.fn(
   "contentRelease.decodeTryoutRuntimeBundleJson"

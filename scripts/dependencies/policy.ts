@@ -7,60 +7,7 @@ interface DependencyHold {
 }
 
 export const CONTRACT_ARCHIVE =
-  "https://github.com/nakafaai/aksara/releases/download/contracts-v0.24.0/nakafa-aksara-contracts-0.24.0.tgz";
-
-export const DEPENDENCY_RELEASE_AGE_MINUTES = 1440;
-
-export const DEPENDENCY_RELEASE_AGE_EXCLUSIONS = [
-  "@ai-sdk/gateway@4.0.62",
-  "@ai-sdk/google@4.0.50",
-  "@ai-sdk/mcp@2.0.36",
-  "@ai-sdk/react@4.0.80",
-  "@biomejs/biome@2.5.10",
-  "@biomejs/cli-darwin-arm64@2.5.10",
-  "@biomejs/cli-darwin-x64@2.5.10",
-  "@biomejs/cli-linux-arm64-musl@2.5.10",
-  "@biomejs/cli-linux-arm64@2.5.10",
-  "@biomejs/cli-linux-x64-musl@2.5.10",
-  "@biomejs/cli-linux-x64@2.5.10",
-  "@biomejs/cli-win32-arm64@2.5.10",
-  "@biomejs/cli-win32-x64@2.5.10",
-  "@mendable/firecrawl-js@4.35.0",
-  "@next/bundle-analyzer@16.3.2",
-  "@next/env@16.3.2",
-  "@next/mdx@16.3.2",
-  "@next/swc-darwin-arm64@16.3.2",
-  "@next/swc-darwin-x64@16.3.2",
-  "@next/swc-linux-arm64-gnu@16.3.2",
-  "@next/swc-linux-arm64-musl@16.3.2",
-  "@next/swc-linux-x64-gnu@16.3.2",
-  "@next/swc-linux-x64-musl@16.3.2",
-  "@next/swc-win32-arm64-msvc@16.3.2",
-  "@next/swc-win32-x64-msvc@16.3.2",
-  "@next/third-parties@16.3.2",
-  "@takumi-rs/core-darwin-arm64@2.12.0",
-  "@takumi-rs/core-darwin-x64@2.12.0",
-  "@takumi-rs/core-linux-arm64-gnu@2.12.0",
-  "@takumi-rs/core-linux-arm64-musl@2.12.0",
-  "@takumi-rs/core-linux-x64-gnu@2.12.0",
-  "@takumi-rs/core-linux-x64-musl@2.12.0",
-  "@takumi-rs/core-win32-arm64-msvc@2.12.0",
-  "@takumi-rs/core-win32-x64-msvc@2.12.0",
-  "@takumi-rs/core@2.12.0",
-  "@takumi-rs/helpers@2.12.0",
-  "@takumi-rs/wasm@2.12.0",
-  "@tanstack/query-core@5.102.2",
-  "@tanstack/query-devtools@5.102.2",
-  "@tanstack/react-query-devtools@5.102.2",
-  "@tanstack/react-query@5.102.2",
-  "@types/react-dom@19.2.5",
-  "afdocs@0.20.0",
-  "ai@7.0.77",
-  "convex@1.45.0",
-  "next@16.3.2",
-  "pnpm@11.23.0",
-  "takumi-js@2.12.0",
-];
+  "https://github.com/nakafaai/aksara/releases/download/contracts-v0.26.0/nakafa-aksara-contracts-0.26.0.tgz";
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   {

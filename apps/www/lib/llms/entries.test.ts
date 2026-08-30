@@ -41,8 +41,8 @@ describe("llms entries", () => {
       contentKey: ContentKeySchema.make("pages/privacy-policy"),
       kind: "public-page",
       metadata: {
+        datePublished: "2026-08-21",
         description: "How Nakafa protects personal data.",
-        lastModified: "2026-08-21",
         title: "Privacy Policy",
       },
       pageKey: PageKeySchema.make("privacy-policy"),
@@ -186,8 +186,8 @@ describe("llms entries", () => {
       contentKey: ContentKeySchema.make("pages/privacy-policy"),
       kind: "public-page",
       metadata: {
+        datePublished: "2026-08-21",
         description: "How Nakafa protects personal data.",
-        lastModified: "2026-08-21",
         title: "Privacy Policy",
       },
       pageKey: PageKeySchema.make("privacy-policy"),

@@ -29,8 +29,8 @@ export const testPageProjection = PublicPageProjectionSchema.make({
   contentKey: ContentKeySchema.make("pages/terms-of-service"),
   kind: "public-page",
   metadata: {
+    datePublished: "2026-08-21",
     description: "The terms that govern use of Nakafa.",
-    lastModified: "2026-08-21",
     title: "Terms of Service",
   },
   pageKey: PageKeySchema.make("terms-of-service"),

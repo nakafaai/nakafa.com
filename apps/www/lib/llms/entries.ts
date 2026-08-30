@@ -1,4 +1,4 @@
-import type { PublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
+import type { ReadablePublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
 import { Option } from "effect";
 import type { Locale } from "next-intl";
 import {
@@ -49,7 +49,7 @@ export function getLlmsSections() {
 /** Builds site entries from derived indexes and signed Page projections. */
 export function buildSiteLlmsEntries(
   locale: Locale,
-  pages: readonly PublicPageProjection[],
+  pages: readonly ReadablePublicPageProjection[],
   applicationPages: readonly ApplicationSiteSummary[]
 ) {
   const entries: LlmsEntry[] = derivedSiteRoutes.flatMap((route) =>

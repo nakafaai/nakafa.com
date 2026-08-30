@@ -72,7 +72,8 @@ const checkRollback = Effect.fn("contentRelease.checkRollback")(function* (
 /** Verifies one staged item and writes its immutable sequence version. */
 export const checkItem = Effect.fn("contentRelease.checkItem")(function* (
   ctx: MutationCtx,
-  row: Doc<"contentItems">
+  row: Doc<"contentItems">,
+  releaseRole: Doc<"contentReleases">["role"]
 ) {
   const item = yield* decodeItemJson(row.itemJson);
   yield* checkRollback(ctx, row, item);
@@ -85,5 +86,5 @@ export const checkItem = Effect.fn("contentRelease.checkItem")(function* (
     }
     return yield* writeDelete(ctx, row);
   }
-  return yield* writeUpsert(ctx, row);
+  return yield* writeUpsert(ctx, row, releaseRole);
 });

@@ -6,7 +6,7 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import {
   canonicalizePublicPageProjection,
-  type PublicPageProjection,
+  type ReadablePublicPageProjection,
 } from "@nakafa/aksara-contracts/projection/page";
 import { api } from "@repo/backend/convex/_generated/api";
 import { routing } from "@repo/internationalization/src/routing";
@@ -25,12 +25,12 @@ import { isReservedPagePath } from "@/lib/routing/public/ownership";
 /** Complete signed Page catalog selected from one active release. */
 export interface PublishedPageCatalog {
   readonly activeReleaseId: ActiveContentReleaseId;
-  readonly projections: readonly PublicPageProjection[];
+  readonly projections: readonly ReadablePublicPageProjection[];
 }
 
 interface PublishedPageRead {
   readonly activeReleaseId: ActiveContentReleaseId;
-  readonly projection: PublicPageProjection;
+  readonly projection: ReadablePublicPageProjection;
 }
 
 /** Result of resolving one Page identity into another active locale. */
