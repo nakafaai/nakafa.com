@@ -1,6 +1,6 @@
 {
   "name": "@nakafa/cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Official command-line client for the public Nakafa REST API and MCP server.",
   "keywords": [
     "nakafa",
