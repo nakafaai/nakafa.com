@@ -1,4 +1,4 @@
-# nakafa-cli
+# @nakafa/cli
 
 ## 0.1.0
 

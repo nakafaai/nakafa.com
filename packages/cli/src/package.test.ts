@@ -91,7 +91,7 @@ describe("Nakafa CLI package", () => {
       const fileSystem = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const directory = yield* fileSystem.makeTempDirectoryScoped({
-        prefix: "nakafa-cli-metadata-",
+        prefix: "cli-metadata-",
       });
       const validPath = path.join(directory, "valid.json");
       const invalidPath = path.join(directory, "invalid.json");
@@ -123,7 +123,7 @@ describe("Nakafa CLI package", () => {
         const fileSystem = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const directory = yield* fileSystem.makeTempDirectoryScoped({
-          prefix: "nakafa-cli-pack-",
+          prefix: "cli-pack-",
         });
         const packageVersion = yield* readPackageVersion(
           pathToFileURL(path.join(packageRoot, "package.json"))
@@ -139,7 +139,7 @@ describe("Nakafa CLI package", () => {
 
         yield* fileSystem.writeFileString(
           path.join(directory, "package.json"),
-          '{"name":"nakafa-cli-smoke","private":true}'
+          '{"name":"cli-smoke","private":true}'
         );
         yield* runCommand(
           "npm",
@@ -158,7 +158,8 @@ describe("Nakafa CLI package", () => {
         const installedRoot = path.join(
           directory,
           "node_modules",
-          "nakafa-cli"
+          "@nakafa",
+          "cli"
         );
         const bundle = yield* fileSystem.readFileString(
           path.join(installedRoot, "dist", "main.js")
@@ -234,6 +235,7 @@ describe("Nakafa CLI package", () => {
           )
         ).toMatchObject({ code: "INVOCATION_ERROR" });
         expect(manifest).not.toContain('"dependencies"');
+        expect(manifest).toContain('"name": "@nakafa/cli"');
         expect(bundle).not.toContain("@repo/contents");
         expect(interrupted).toEqual({
           exitCode: 130,
