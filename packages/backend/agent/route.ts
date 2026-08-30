@@ -11,6 +11,10 @@ interface AgentEdgeRouteOptions {
   readonly suffix: string;
 }
 
+/** Public API paths forwarded by Vercel while the versioned predecessor retires. */
+export const NAKAFA_API_ROUTE_SOURCE =
+  "^/(openapi\\.json|v1(?:/.*)?|health|search|content|taxonomy|quran(?:/.*)?|)$";
+
 /** Builds one credential-stripping Vercel route into a protected Convex runtime. */
 export function createAgentEdgeRoute({
   contract,
