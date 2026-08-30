@@ -1,6 +1,7 @@
 "use client";
 
 import { useRender } from "@base-ui/react/use-render";
+import { Separator } from "@repo/design-system/components/ui/separator";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import {
   Tooltip,
@@ -33,6 +34,23 @@ export function SidebarMenuItem({ className, ...props }: ComponentProps<"li">) {
       data-slot="sidebar-menu-item"
       {...props}
     />
+  );
+}
+
+/** Separates adjacent sections inside a sidebar menu. */
+export function SidebarMenuSeparator({
+  className,
+  ...props
+}: Omit<ComponentProps<"li">, "children">) {
+  return (
+    <li
+      className={cn("-mx-2 my-1 list-none", className)}
+      data-sidebar="menu-separator"
+      data-slot="sidebar-menu-separator"
+      {...props}
+    >
+      <Separator className="bg-sidebar-border" />
+    </li>
   );
 }
 

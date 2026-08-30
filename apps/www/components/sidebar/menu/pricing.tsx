@@ -6,6 +6,7 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSeparator,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { useTranslations } from "next-intl";
 import type { CurrentUser } from "@/lib/context/use-user";
@@ -27,7 +28,7 @@ export function PricingItem() {
   );
 }
 
-/** Keeps the upgrade path visible for authenticated accounts without Pro. */
+/** Keeps pricing and account controls as distinct footer sections for Free users. */
 export function AccountPricing({
   plan,
 }: {
@@ -37,5 +38,10 @@ export function AccountPricing({
     return null;
   }
 
-  return <PricingItem />;
+  return (
+    <>
+      <PricingItem />
+      <SidebarMenuSeparator />
+    </>
+  );
 }

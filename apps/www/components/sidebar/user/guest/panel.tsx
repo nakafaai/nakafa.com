@@ -1,6 +1,9 @@
 "use client";
 
-import { SidebarMenuItem } from "@repo/design-system/components/ui/sidebar-menu";
+import {
+  SidebarMenuItem,
+  SidebarMenuSeparator,
+} from "@repo/design-system/components/ui/sidebar-menu";
 import { useTranslations } from "next-intl";
 import { AnalyticsConsentSidebarItem } from "@/components/analytics/consent/actions";
 import { GuestLanguageMenu } from "@/components/sidebar/menu/preference";
@@ -16,10 +19,7 @@ export function NavUserGuest() {
       <PricingItem />
       <GuestLanguageMenu />
       <AnalyticsConsentSidebarItem />
-      <SidebarMenuItem
-        className="-mx-2 my-1 border-sidebar-border border-t"
-        role="separator"
-      />
+      <SidebarMenuSeparator />
       <SidebarMenuItem className="flex flex-col gap-3 px-2 py-1">
         <div className="grid gap-1">
           <p className="font-medium text-sm">{t("login-cta-title")}</p>
