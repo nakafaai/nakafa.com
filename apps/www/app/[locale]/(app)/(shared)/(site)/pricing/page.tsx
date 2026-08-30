@@ -7,7 +7,7 @@ import {
   type MarketingFaqItem,
   PricingPageFaq,
 } from "@/components/marketing/about/faq";
-import { PricingPagePlans } from "@/components/marketing/about/pricing";
+import { PricingPagePlans } from "@/components/marketing/about/pricing/plans";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";

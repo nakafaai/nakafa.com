@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   getProPricingDisplay,
   pricingCountryHeaderName,
-} from "@/components/marketing/about/pricing-display";
+} from "@/components/marketing/about/pricing/display";
 
 describe("marketing/about/pricing-display", () => {
   it("uses the Vercel country header name", () => {

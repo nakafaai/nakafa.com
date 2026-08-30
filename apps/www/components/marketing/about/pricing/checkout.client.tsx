@@ -14,7 +14,7 @@ import { authClient } from "@/lib/auth/client";
 import { useUser } from "@/lib/context/use-user";
 import { isActiveLocale } from "@/lib/i18n/active";
 
-export function ProButton() {
+export function ProCheckoutButton() {
   const locale = useLocale();
   const t = useTranslations("Pricing");
   const pricingCallbackURL = `/${locale}/pricing`;
