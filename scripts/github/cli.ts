@@ -36,6 +36,9 @@ const UPLOAD_ACTION =
 /** Digest of the decoded publish job after a complete OIDC boundary review. */
 const TRUSTED_PUBLISH_SHA256 =
   "f6498b7967e2631f6a5c413e301c32308f496505e451b95504fb486f0558554d";
+/** Digest of the decoded verification job after a complete execution review. */
+const TRUSTED_VERIFY_SHA256 =
+  "afbae931e9df2cded2af3a67e81f81e1b7a81c1b21eff86ea18480a7d0008509";
 const REQUIRED_BUILD_SOURCE = [
   "pnpm test:scripts",
   "pnpm --filter @nakafa/cli typecheck",
@@ -191,6 +194,15 @@ function trustedPublishProblems(publish: WorkflowJob, source: string) {
   return problems;
 }
 
+function trustedVerifyProblems(verify: WorkflowJob) {
+  const sha256 = createHash("sha256")
+    .update(JSON.stringify(verify))
+    .digest("hex");
+  return sha256 === TRUSTED_VERIFY_SHA256
+    ? []
+    : ["CLI verification must match the exact trusted job."];
+}
+
 export function validateCliWorkflow(source: string): string[] {
   const problems: string[] = [];
   for (const snippet of FORBIDDEN_CREDENTIALS) {
@@ -321,6 +333,7 @@ export function validateCliWorkflow(source: string): string[] {
   if (verifyCommands.split('node "$VERIFIER"').length !== 2) {
     problems.push("CLI verification must execute one transported verifier.");
   }
+  problems.push(...trustedVerifyProblems(verify));
 
   return problems;
 }

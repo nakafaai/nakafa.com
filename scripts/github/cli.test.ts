@@ -103,6 +103,16 @@ describe("CLI workflow policy", () => {
         )
       );
 
+      const quotedVerifier = source.replace(
+        '          node "$VERIFIER" \\',
+        "          echo 'node \"$VERIFIER\"' && : \\"
+      );
+      assert.ok(
+        validateCliWorkflow(quotedVerifier).includes(
+          "CLI verification must match the exact trusted job."
+        )
+      );
+
       const privilegedVerifier = source.replace(
         '          npx --yes "$NPM_CLI" publish "$TARBALL" \\',
         '          node "$VERIFIER"\n          npx --yes "$NPM_CLI" publish "$TARBALL" \\'
