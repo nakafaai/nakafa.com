@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getAppSocialArtwork } from "@/lib/og/app-artwork";
 
 export async function generateMetadata({
   params,
@@ -13,6 +14,11 @@ export async function generateMetadata({
     locale,
     namespace: "Metadata",
   });
+  const image = getAppSocialArtwork({
+    key: "school",
+    locale,
+    publicPath: "school",
+  });
 
   return {
     twitter: {
@@ -21,7 +27,7 @@ export async function generateMetadata({
       description: t("description"),
       images: [
         {
-          url: "/nakafa-school.png",
+          url: image,
           alt: t("title"),
           width: 1200,
           height: 630,
@@ -39,7 +45,7 @@ export async function generateMetadata({
       type: "website",
       images: [
         {
-          url: "/nakafa-school.png",
+          url: image,
           alt: t("title"),
           width: 1200,
           height: 630,

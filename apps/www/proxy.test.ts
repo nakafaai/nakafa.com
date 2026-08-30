@@ -208,7 +208,7 @@ describe("proxy", () => {
       "/_next/static/chunks/app.js",
       "/classes/bacteria.png",
       "/models/physics/kinematics/kenney-car-kit/Textures/colormap.png",
-      "/open-graph/curriculum/en-index.png",
+      "/open-graph/curriculum/en-merdeka.png",
       "/missing.png",
       "/_not-found/id",
     ];

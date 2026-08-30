@@ -34,6 +34,7 @@ import { recoverStalePublishedQuranSnapshot } from "@/lib/content/quran/recovery
 import { getQuranReferences } from "@/lib/content/quran/references";
 import { VirtualProvider } from "@/lib/context/use-virtual";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getAppSocialArtwork } from "@/lib/og/app-artwork";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getCachedSEOMetadata } from "@/lib/seo/cache";
@@ -87,7 +88,7 @@ export async function generateMetadata({
     description,
     locale,
     path,
-    image: "/quran.png",
+    image: getAppSocialArtwork({ key: "quran", locale, publicPath: "quran" }),
     type: "book",
   });
 

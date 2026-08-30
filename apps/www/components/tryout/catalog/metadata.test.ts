@@ -124,10 +124,10 @@ describe("try-out route metadata", () => {
 
     expect(metadata).toMatchObject({
       openGraph: {
-        images: [{ url: "/open-graph/tryout/indonesia/id-snbt.png" }],
+        images: [{ url: "/open-graph/tryout/indonesia/en-snbt.png" }],
       },
       twitter: {
-        images: [{ url: "/open-graph/tryout/indonesia/id-snbt.png" }],
+        images: [{ url: "/open-graph/tryout/indonesia/en-snbt.png" }],
       },
     });
     expect(runtimeMocks.readTryoutMetadata).toHaveBeenCalledWith({
@@ -159,10 +159,10 @@ describe("try-out route metadata", () => {
 
     expect(metadata).toMatchObject({
       openGraph: {
-        images: [{ url: "/de/og/try-out/indonesien/snbt/image.png" }],
+        images: [{ url: "/open-graph/tryout/indonesia/en-snbt.png" }],
       },
       twitter: {
-        images: [{ url: "/de/og/try-out/indonesien/snbt/image.png" }],
+        images: [{ url: "/open-graph/tryout/indonesia/en-snbt.png" }],
       },
     });
   });
