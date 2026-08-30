@@ -6,10 +6,8 @@ import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { PricingPageFaq } from "@/components/marketing/about/faq/pricing";
 import type { MarketingFaqItem } from "@/components/marketing/about/faq/section";
-import {
-  type PriceProps,
-  PricingCards,
-} from "@/components/marketing/about/pricing/plans";
+import { PricingCards } from "@/components/marketing/about/pricing/plans";
+import type { PriceProps } from "@/components/marketing/about/pricing/price";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAppSocialArtwork } from "@/lib/og/app-artwork";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
