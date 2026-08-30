@@ -96,6 +96,11 @@ const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
         HOMEPAGE_MAX_DESCENDANTS
       );
     });
+    yield* Effect.promise(() =>
+      expect(page.locator('#faq [data-slot="accordion-trigger"]')).toHaveCount(
+        6
+      )
+    );
 
     const gallery = page.locator("#community [data-contributor-gallery]");
     const triggers = gallery.locator("[data-contributor-username]");
