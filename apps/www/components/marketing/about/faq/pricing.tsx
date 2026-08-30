@@ -1,5 +1,5 @@
 import { useTranslations } from "next-intl";
-import { DeferredAccordion } from "@/components/marketing/about/faq/deferred.client";
+import { FaqAccordion } from "@/components/marketing/about/faq/accordion.client";
 import {
   FaqSection,
   type MarketingFaqItem,
@@ -23,7 +23,7 @@ export function PricingPageFaq({
           mark: (chunks) => <mark>{chunks}</mark>,
         })}
       >
-        <DeferredAccordion faqs={faqs} />
+        <FaqAccordion faqs={faqs} />
       </FaqSection>
     </section>
   );

@@ -1,0 +1,27 @@
+// @vitest-environment node
+
+import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
+import { BASE_URL } from "@/lib/llms/constants";
+import { getPricingLlmsText, isPricingLlmsRoute } from "@/lib/llms/pricing";
+
+describe("pricing Markdown", () => {
+  it("owns only the pricing route", () => {
+    expect(isPricingLlmsRoute("pricing")).toBe(true);
+    expect(isPricingLlmsRoute("pricing/annual")).toBe(false);
+    expect(isPricingLlmsRoute("about")).toBe(false);
+  });
+
+  it.effect.each(["de", "en", "id"] as const)(
+    "renders localized plans and all questions for %s",
+    (locale) =>
+      Effect.gen(function* () {
+        const text = yield* getPricingLlmsText(locale);
+
+        expect(text).toContain("# ");
+        expect(text).toContain(`Canonical page: ${BASE_URL}/${locale}/pricing`);
+        expect(text.match(/^### /gm)).toHaveLength(20);
+        expect(text).not.toContain("undefined");
+      })
+  );
+});

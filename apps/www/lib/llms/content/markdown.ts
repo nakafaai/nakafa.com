@@ -12,6 +12,7 @@ import {
   isPublicLlmsLocaleIndexRoute,
   resolvePublicLlmsSectionIndex,
 } from "@/lib/llms/index/public";
+import { getPricingLlmsText, isPricingLlmsRoute } from "@/lib/llms/pricing";
 import {
   getCachedPublishedText,
   type PublishedMarkdownInput,
@@ -64,11 +65,15 @@ const readCachedSectionIndex = Effect.fn("www.llms.markdown.index")(function* ({
  * Resolves cached markdown for one agent-facing route.
  *
  * The source chain is ordered from concrete page owners to derived indexes:
- * Quran, signed content, then sitemap-derived section or listing indexes. A
- * null result means the route has no markdown source.
+ * Application pages, Quran, signed content, then sitemap-derived section or
+ * listing indexes. A null result means the route has no markdown source.
  */
 export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
   function* ({ cleanSlug, locale }: LlmsMarkdownInput) {
+    if (isPricingLlmsRoute(cleanSlug)) {
+      return yield* getPricingLlmsText(locale);
+    }
+
     const quranText = yield* getQuranLlmsText({ cleanSlug, locale });
     if (quranText) {
       return quranText;
@@ -88,6 +93,10 @@ export const hasLlmsMarkdownSource = Effect.fn("www.llms.markdown.hasSource")(
     }
 
     if (resolvePublicLlmsSectionIndex(input)) {
+      return true;
+    }
+
+    if (isPricingLlmsRoute(input.cleanSlug)) {
       return true;
     }
 
