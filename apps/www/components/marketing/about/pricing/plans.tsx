@@ -1,6 +1,5 @@
 import {
   ArrowUpRight01Icon,
-  Diamond02Icon,
   Rocket01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
@@ -12,7 +11,7 @@ import { headers } from "next/headers";
 import { useTranslations } from "next-intl";
 import type { ComponentProps, ComponentType } from "react";
 import { Suspense, use } from "react";
-import { openBilling } from "@/components/marketing/about/pricing/billing";
+import { PricingButton } from "@/components/marketing/about/pricing/button.client";
 import {
   getProPricingDisplay,
   pricingCountryHeaderName,
@@ -155,12 +154,7 @@ function PricingPlanCards({
         </div>
 
         <div className="mt-auto pt-4">
-          <form action={openBilling}>
-            <Button className="w-full" type="submit">
-              <HugeIcons icon={Diamond02Icon} />
-              {t("pro-cta")}
-            </Button>
-          </form>
+          <PricingButton />
         </div>
       </div>
     </div>
@@ -191,31 +185,13 @@ function RequestPricedCards({
   );
 }
 
-/** Renders stable default pricing while request-location pricing streams in. */
-function PricingCardsFallback({
-  Price,
-  headingLevel,
-}: Pick<PricingPlanCardsProps, "Price" | "headingLevel">) {
-  return (
-    <PricingPlanCards
-      headingLevel={headingLevel}
-      Price={Price}
-      pricingDisplay={getProPricingDisplay(null)}
-    />
-  );
-}
-
-/** Streams request-priced cards through the shared stable fallback. */
+/** Streams request-priced cards without showing a false default price. */
 function PricingCards({
   Price,
   headingLevel,
 }: Pick<PricingPlanCardsProps, "Price" | "headingLevel">) {
   return (
-    <Suspense
-      fallback={
-        <PricingCardsFallback headingLevel={headingLevel} Price={Price} />
-      }
-    >
+    <Suspense fallback={null}>
       <RequestPricedCards headingLevel={headingLevel} Price={Price} />
     </Suspense>
   );

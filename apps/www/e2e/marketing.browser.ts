@@ -330,6 +330,9 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
       })
     ).toContainText("3,000 AI credits")
   );
+  yield* Effect.promise(() =>
+    expect(page.getByRole("button", { name: "Get Pro" })).toBeEnabled()
+  );
 
   const productQuestion = page.getByRole("button", {
     name: "What can I learn on Nakafa?",
