@@ -7,6 +7,7 @@ import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadMaterialOwner } from "@repo/backend/convex/contentRelease/material/owner";
 import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
 import { verifyEffectiveMaterial } from "@repo/backend/convex/contentRelease/material/verify";
+import type { ModelSlot } from "@repo/backend/convex/contentRelease/models/slot";
 import { quranSearchIdentity } from "@repo/backend/convex/contentRelease/quran/facts";
 import { loadQuranOwner } from "@repo/backend/convex/contentRelease/quran/owner";
 import { readQuranRow } from "@repo/backend/convex/contentRelease/quran/row";
@@ -65,7 +66,11 @@ export const readContentReference = Effect.fn(
 /** Reads one exact active article through its authenticated catalog row. */
 const readArticleReference = Effect.fn("contentRelease.readArticleReference")(
   function* (ctx: QueryCtx, input: ActiveContentReferenceInput) {
-    const rows = yield* readArticleRows(ctx, input);
+    const owner = yield* loadArticleOwner(ctx, input.appLocale);
+    if (!(owner.active && owner.managed && owner.slot)) {
+      return null;
+    }
+    const rows = yield* readArticleRows(ctx, owner.slot, input);
     if (rows.length > 1) {
       return yield* identityCollision("article");
     }
@@ -73,11 +78,7 @@ const readArticleReference = Effect.fn("contentRelease.readArticleReference")(
     if (!candidate) {
       return null;
     }
-    const { appLocale, row } = candidate;
-    const owner = yield* loadArticleOwner(ctx, appLocale);
-    if (!(owner.active && owner.managed)) {
-      return null;
-    }
+    const { row } = candidate;
     const verified = yield* verifyArticle(ctx, row, owner.active.sequence);
     const { projection, resolved } = verified;
     return buildContentSearchDocument({
@@ -97,13 +98,18 @@ const readArticleReference = Effect.fn("contentRelease.readArticleReference")(
 );
 
 /** Selects article candidates through locale-bound current indexes. */
-function readArticleRows(ctx: QueryCtx, input: ActiveContentReferenceInput) {
+function readArticleRows(
+  ctx: QueryCtx,
+  slot: ModelSlot,
+  input: ActiveContentReferenceInput
+) {
   if (input.kind === "route") {
     return Effect.promise(() =>
       ctx.db
         .query("articleCatalog")
-        .withIndex("by_appLocale_and_publicPath", (index) =>
+        .withIndex("by_slot_and_appLocale_and_publicPath", (index) =>
           index
+            .eq("slot", slot)
             .eq("appLocale", input.appLocale)
             .eq("publicPath", input.publicPath)
         )
@@ -117,8 +123,11 @@ function readArticleRows(ctx: QueryCtx, input: ActiveContentReferenceInput) {
   return Effect.promise(() =>
     ctx.db
       .query("articleCatalog")
-      .withIndex("by_appLocale_and_assetId", (index) =>
-        index.eq("appLocale", input.appLocale).eq("assetId", input.contentId)
+      .withIndex("by_slot_and_appLocale_and_assetId", (index) =>
+        index
+          .eq("slot", slot)
+          .eq("appLocale", input.appLocale)
+          .eq("assetId", input.contentId)
       )
       .take(2)
   ).pipe(
@@ -131,7 +140,11 @@ function readArticleRows(ctx: QueryCtx, input: ActiveContentReferenceInput) {
 /** Reads one exact active material through its authenticated catalog row. */
 const readMaterialReference = Effect.fn("contentRelease.readMaterialReference")(
   function* (ctx: QueryCtx, input: ActiveContentReferenceInput) {
-    const rows = yield* readMaterialRows(ctx, input);
+    const owner = yield* loadMaterialOwner(ctx, input.appLocale);
+    if (!(owner.active && owner.managed && owner.slot)) {
+      return null;
+    }
+    const rows = yield* readMaterialRows(ctx, owner.slot, input);
     if (rows.length > 1) {
       return yield* identityCollision("material");
     }
@@ -139,11 +152,7 @@ const readMaterialReference = Effect.fn("contentRelease.readMaterialReference")(
     if (!candidate) {
       return null;
     }
-    const { appLocale, kind, row } = candidate;
-    const owner = yield* loadMaterialOwner(ctx, appLocale);
-    if (!(owner.active && owner.managed)) {
-      return null;
-    }
+    const { kind, row } = candidate;
     const { projection, resolved } = yield* verifyEffectiveMaterial(
       ctx,
       row,
@@ -185,14 +194,19 @@ const readMaterialReference = Effect.fn("contentRelease.readMaterialReference")(
 
 /** Selects material candidates through locale-bound current indexes. */
 const readMaterialRows = Effect.fn("contentRelease.readMaterialReferenceRows")(
-  function* (ctx: QueryCtx, input: ActiveContentReferenceInput) {
+  function* (
+    ctx: QueryCtx,
+    slot: ModelSlot,
+    input: ActiveContentReferenceInput
+  ) {
     if (input.kind === "route") {
       const rows = yield* Effect.all({
         lessons: Effect.promise(() =>
           ctx.db
             .query("materialCatalog")
-            .withIndex("by_appLocale_and_publicPath", (index) =>
+            .withIndex("by_slot_and_appLocale_and_publicPath", (index) =>
               index
+                .eq("slot", slot)
                 .eq("appLocale", input.appLocale)
                 .eq("publicPath", input.publicPath)
             )
@@ -202,9 +216,10 @@ const readMaterialRows = Effect.fn("contentRelease.readMaterialReferenceRows")(
           ctx.db
             .query("materialCatalog")
             .withIndex(
-              "by_appLocale_and_parentPath_and_order_and_publicPath",
+              "by_slot_and_appLocale_and_parentPath_and_order_and_publicPath",
               (index) =>
                 index
+                  .eq("slot", slot)
                   .eq("appLocale", input.appLocale)
                   .eq("parentPath", input.publicPath)
             )
@@ -232,8 +247,9 @@ const readMaterialRows = Effect.fn("contentRelease.readMaterialReferenceRows")(
       lessons: Effect.promise(() =>
         ctx.db
           .query("materialCatalog")
-          .withIndex("by_appLocale_and_assetId", (index) =>
+          .withIndex("by_slot_and_appLocale_and_assetId", (index) =>
             index
+              .eq("slot", slot)
               .eq("appLocale", input.appLocale)
               .eq("assetId", input.contentId)
           )
@@ -242,10 +258,13 @@ const readMaterialRows = Effect.fn("contentRelease.readMaterialReferenceRows")(
       topic: Effect.promise(() =>
         ctx.db
           .query("materialCatalog")
-          .withIndex("by_appLocale_and_topicAssetId_and_assetId", (index) =>
-            index
-              .eq("appLocale", input.appLocale)
-              .eq("topicAssetId", input.contentId)
+          .withIndex(
+            "by_slot_and_appLocale_and_topicAssetId_and_assetId",
+            (index) =>
+              index
+                .eq("slot", slot)
+                .eq("appLocale", input.appLocale)
+                .eq("topicAssetId", input.contentId)
           )
           .first()
       ),

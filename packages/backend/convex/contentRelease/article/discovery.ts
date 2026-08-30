@@ -87,10 +87,16 @@ export const readLatestArticles = Effect.fn(
   yield* validateDiscoveryLimit(limit);
   const owner = yield* loadArticleOwner(ctx, appLocale);
   const activeReleaseId = owner.active?.releaseId ?? null;
-  if (!(owner.managed && owner.active)) {
+  if (!(owner.managed && owner.active && owner.slot)) {
     return { activeReleaseId, articles: [], managed: false };
   }
-  const rows = yield* readOrderedArticles(ctx, appLocale, null, limit);
+  const rows = yield* readOrderedArticles(
+    ctx,
+    owner.slot,
+    appLocale,
+    null,
+    limit
+  );
   const verified = yield* Effect.forEach(rows, (article) =>
     verifyArticle(ctx, article, owner.active.sequence)
   );
@@ -112,10 +118,16 @@ export const readCategoryArticles = Effect.fn(
   yield* validateDiscoveryLimit(limit);
   const owner = yield* loadArticleOwner(ctx, appLocale);
   const activeReleaseId = owner.active?.releaseId ?? null;
-  if (!(owner.managed && owner.active)) {
+  if (!(owner.managed && owner.active && owner.slot)) {
     return { activeReleaseId, articles: [], managed: false };
   }
-  const rows = yield* readOrderedArticles(ctx, appLocale, category, limit);
+  const rows = yield* readOrderedArticles(
+    ctx,
+    owner.slot,
+    appLocale,
+    category,
+    limit
+  );
   const verified = yield* Effect.forEach(rows, (article) =>
     verifyArticle(ctx, article, owner.active.sequence)
   );

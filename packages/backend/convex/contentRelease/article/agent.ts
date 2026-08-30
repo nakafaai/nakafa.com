@@ -17,15 +17,15 @@ export const readAgentArticleTaxonomy = Effect.fn(
   "contentRelease.readAgentArticleTaxonomy"
 )(function* (ctx: QueryCtx, appLocale: Parameters<typeof loadArticleOwner>[1]) {
   const owner = yield* loadArticleOwner(ctx, appLocale);
-  if (!(owner.managed && owner.active)) {
+  if (!(owner.managed && owner.active && owner.slot)) {
     return { categories: [], managed: false };
   }
 
   const rows = yield* Effect.promise(() =>
     ctx.db
       .query("articleCategories")
-      .withIndex("by_appLocale_and_category", (index) =>
-        index.eq("appLocale", appLocale)
+      .withIndex("by_slot_and_appLocale_and_category", (index) =>
+        index.eq("slot", owner.slot).eq("appLocale", appLocale)
       )
       .take(ARTICLE_AGENT_TAXONOMY_LIMIT + 1)
   );

@@ -1,6 +1,9 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import {
+  decodePageCursor,
+  encodePageCursor,
+  hasPageCursorPrefix,
   hasStaleReleaseCursor,
   validateReleaseCursor,
 } from "@repo/backend/convex/contentRelease/cursor";
@@ -46,7 +49,8 @@ export const readMaterialPage = Effect.fn("contentRelease.readMaterialPage")(
         expectedManifestHash,
         expectedReleaseId,
         active
-      )
+      ) ||
+      !hasPageCursorPrefix(options.cursor)
     ) {
       return {
         activeManifestHash: active?.manifestHash ?? null,
@@ -63,7 +67,7 @@ export const readMaterialPage = Effect.fn("contentRelease.readMaterialPage")(
       expectedReleaseId,
       active
     );
-    if (!(owner.managed && owner.active)) {
+    if (!(owner.managed && owner.active && owner.slot)) {
       return {
         activeManifestHash: owner.active?.manifestHash ?? null,
         activeReleaseId: owner.active?.releaseId ?? null,
@@ -74,13 +78,18 @@ export const readMaterialPage = Effect.fn("contentRelease.readMaterialPage")(
       };
     }
     const activePublication = owner.active;
+    const nativeCursor = yield* decodePageCursor(
+      options.cursor,
+      "material",
+      owner.slot
+    );
     const stored = yield* Effect.promise(() =>
       ctx.db
         .query("materialCatalog")
-        .withIndex("by_appLocale_and_publicPath", (index) =>
-          index.eq("appLocale", appLocale)
+        .withIndex("by_slot_and_appLocale_and_publicPath", (index) =>
+          index.eq("slot", owner.slot).eq("appLocale", appLocale)
         )
-        .paginate(options)
+        .paginate({ ...options, cursor: nativeCursor })
     );
     const verified = yield* Effect.forEach(
       stored.page,
@@ -94,7 +103,21 @@ export const readMaterialPage = Effect.fn("contentRelease.readMaterialPage")(
       managed: true,
       result: {
         ...stored,
+        continueCursor: encodePageCursor(
+          "material",
+          owner.slot,
+          stored.continueCursor
+        ),
         page,
+        ...(stored.splitCursor === undefined || stored.splitCursor === null
+          ? {}
+          : {
+              splitCursor: encodePageCursor(
+                "material",
+                owner.slot,
+                stored.splitCursor
+              ),
+            }),
       },
       sourceRevision: readSourceRevision(activePublication),
       stale: false,

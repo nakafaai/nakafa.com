@@ -81,7 +81,7 @@ export const readLatestMaterials = Effect.fn(
   yield* validateDiscoveryLimit(limit);
   const owner = yield* loadMaterialOwner(ctx, appLocale);
   const activeReleaseId = owner.active?.releaseId ?? null;
-  if (!(owner.active && owner.managed)) {
+  if (!(owner.active && owner.managed && owner.slot)) {
     return {
       activeReleaseId,
       managed: false,
@@ -91,8 +91,13 @@ export const readLatestMaterials = Effect.fn(
   const rows = yield* Effect.promise(() =>
     ctx.db
       .query("materialCatalog")
-      .withIndex("by_appLocale_and_datePublished_and_contentKey", (index) =>
-        index.eq("appLocale", appLocale).gte("datePublished", "")
+      .withIndex(
+        "by_slot_and_appLocale_and_datePublished_and_contentKey",
+        (index) =>
+          index
+            .eq("slot", owner.slot)
+            .eq("appLocale", appLocale)
+            .gte("datePublished", "")
       )
       .order("desc")
       .take(limit)

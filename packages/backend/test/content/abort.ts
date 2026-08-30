@@ -66,11 +66,14 @@ export async function seedAbortRelease(ctx: MutationCtx) {
     updatedAt: now,
   });
   await ctx.db.insert("contentState", {
+    articleSlot: "blue",
     candidateManifestHash: TEST_MANIFEST_HASH,
     candidateReleaseId: ABORT_RELEASE_ID,
     candidateSequence: 1,
     key: "primary",
+    materialSlot: "blue",
     nextSequence: 2,
+    searchSlot: "blue",
     updatedAt: now,
   });
   for (let index = 0; index < ABORT_ITEM_COUNT; index += 1) {

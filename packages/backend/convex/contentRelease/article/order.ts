@@ -8,6 +8,7 @@ import {
   decodePublicationCursor,
 } from "@repo/backend/convex/contentRelease/article/cursor";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
+import type { ModelSlot } from "@repo/backend/convex/contentRelease/models/slot";
 import schema from "@repo/backend/convex/schema";
 import { encodeArticlePublicationCursor } from "@repo/contents/_types/publication";
 import type { PaginationOptions } from "convex/server";
@@ -21,18 +22,18 @@ type ArticleRow = Doc<"articleCatalog">;
 /** Builds the current publication stream for one localized category. */
 function categoryPublicationStream(
   ctx: ReadCtx,
+  slot: ModelSlot,
   appLocale: AppLocale,
   category: string
 ) {
   return stream(ctx.db, schema)
     .query("articleCatalog")
-    .withIndex(
-      "by_appLocale_and_category_and_datePublished_and_contentKey",
-      (index) =>
-        index
-          .eq("appLocale", appLocale)
-          .eq("category", category)
-          .gte("datePublished", "")
+    .withIndex("by_slot_appLocale_category_datePublished_contentKey", (index) =>
+      index
+        .eq("slot", slot)
+        .eq("appLocale", appLocale)
+        .eq("category", category)
+        .gte("datePublished", "")
     )
     .order("desc");
 }
@@ -94,6 +95,7 @@ export const readOrderedArticles = Effect.fn(
   "contentRelease.readOrderedArticles"
 )(function* (
   ctx: ReadCtx,
+  slot: ModelSlot,
   appLocale: AppLocale,
   category: string | null,
   limit: number
@@ -102,8 +104,13 @@ export const readOrderedArticles = Effect.fn(
     if (category === null) {
       return ctx.db
         .query("articleCatalog")
-        .withIndex("by_appLocale_and_datePublished_and_contentKey", (index) =>
-          index.eq("appLocale", appLocale).gte("datePublished", "")
+        .withIndex(
+          "by_slot_and_appLocale_and_datePublished_and_contentKey",
+          (index) =>
+            index
+              .eq("slot", slot)
+              .eq("appLocale", appLocale)
+              .gte("datePublished", "")
         )
         .order("desc")
         .take(limit);
@@ -112,9 +119,10 @@ export const readOrderedArticles = Effect.fn(
     return ctx.db
       .query("articleCatalog")
       .withIndex(
-        "by_appLocale_and_category_and_datePublished_and_contentKey",
+        "by_slot_appLocale_category_datePublished_contentKey",
         (index) =>
           index
+            .eq("slot", slot)
             .eq("appLocale", appLocale)
             .eq("category", category)
             .gte("datePublished", "")
@@ -128,6 +136,7 @@ export const readOrderedArticles = Effect.fn(
 export const paginateArticles = Effect.fn("contentRelease.paginateArticles")(
   function* (
     ctx: ReadCtx,
+    slot: ModelSlot,
     appLocale: AppLocale,
     category: string,
     options: PaginationOptions & {
@@ -135,7 +144,12 @@ export const paginateArticles = Effect.fn("contentRelease.paginateArticles")(
       maximumRowsRead: number;
     }
   ) {
-    const publication = categoryPublicationStream(ctx, appLocale, category);
+    const publication = categoryPublicationStream(
+      ctx,
+      slot,
+      appLocale,
+      category
+    );
     return yield* paginatePublicationStream(publication, options);
   }
 );

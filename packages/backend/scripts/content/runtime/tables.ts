@@ -4,7 +4,6 @@ import { tryoutRuntimeBundleSchema } from "@repo/backend/convex/tryouts/runtime/
 import { Effect, Schema } from "effect";
 
 const ACTIVE_POINTER_TABLE = "contentState";
-export const CONTENT_RUNTIME_CACHE_VERSION = "v2";
 export const CONTENT_RUNTIME_CACHE_CONTRACT = Object.freeze({
   archive: Object.freeze({
     fixedEntries: Object.freeze([
@@ -13,7 +12,7 @@ export const CONTENT_RUNTIME_CACHE_CONTRACT = Object.freeze({
       "tables.txt",
     ]),
     tableEntryPattern: "<table>.jsonl",
-    type: "tar-root-v1",
+    type: "tar-root",
   }),
   encryption: Object.freeze({
     cipher: "AES256",
@@ -22,9 +21,9 @@ export const CONTENT_RUNTIME_CACHE_CONTRACT = Object.freeze({
     s2kDigest: "SHA512",
     s2kMode: 3,
   }),
-  manifest: "ordered-json-lines-row-count-sha256-v1",
+  manifest: "ordered-json-lines-row-count-sha256",
   portableRows: Object.freeze({
-    encoding: "json-lines-v1",
+    encoding: "json-lines",
     strippedFields: Object.freeze([
       "_id",
       "_creationTime",
@@ -32,7 +31,6 @@ export const CONTENT_RUNTIME_CACHE_CONTRACT = Object.freeze({
       "syncJobId",
     ]),
   }),
-  version: `signed-runtime-cache-${CONTENT_RUNTIME_CACHE_VERSION}`,
 });
 const { contentState } = contentReleaseSchema;
 

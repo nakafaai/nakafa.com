@@ -20,8 +20,11 @@ const readAlternates = Effect.fn("contentRelease.readArticleAlternates")(
         const alternate = yield* Effect.promise(() =>
           ctx.db
             .query("articleCatalog")
-            .withIndex("by_contentKey_and_appLocale", (index) =>
-              index.eq("contentKey", row.contentKey).eq("appLocale", appLocale)
+            .withIndex("by_slot_and_contentKey_and_appLocale", (index) =>
+              index
+                .eq("slot", row.slot)
+                .eq("contentKey", row.contentKey)
+                .eq("appLocale", appLocale)
             )
             .unique()
         );

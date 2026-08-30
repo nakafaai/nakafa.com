@@ -146,7 +146,8 @@ export const readPartnerApiPage = Effect.fn(
     input.family === "article"
       ? yield* loadArticleOwner(ctx, input.appLocale)
       : yield* loadMaterialOwner(ctx, input.appLocale);
-  if (!(owner.active && owner.managed)) {
+  const slot = owner.slot;
+  if (!(owner.active && owner.managed && slot)) {
     return yield* releaseFail(
       "CONTENT_RELEASE_MISSING",
       `Signed ${input.family}s for ${input.appLocale} are unavailable.`
@@ -170,8 +171,10 @@ export const readPartnerApiPage = Effect.fn(
       readDescendants: (range, limit) =>
         ctx.db
           .query("articleCatalog")
-          .withIndex("by_appLocale_and_contentKey", (index) => {
-            const appLocale = index.eq("appLocale", input.appLocale);
+          .withIndex("by_slot_and_appLocale_and_contentKey", (index) => {
+            const appLocale = index
+              .eq("slot", slot)
+              .eq("appLocale", input.appLocale);
             const lower = range.inclusive
               ? appLocale.gte("contentKey", range.lower)
               : appLocale.gt("contentKey", range.lower);
@@ -181,8 +184,9 @@ export const readPartnerApiPage = Effect.fn(
       readExact: () =>
         ctx.db
           .query("articleCatalog")
-          .withIndex("by_appLocale_and_contentKey", (index) =>
+          .withIndex("by_slot_and_appLocale_and_contentKey", (index) =>
             index
+              .eq("slot", slot)
               .eq("appLocale", input.appLocale)
               .eq("contentKey", input.prefix)
           )
@@ -194,8 +198,10 @@ export const readPartnerApiPage = Effect.fn(
       readDescendants: (range, limit) =>
         ctx.db
           .query("materialCatalog")
-          .withIndex("by_appLocale_and_contentKey", (index) => {
-            const appLocale = index.eq("appLocale", input.appLocale);
+          .withIndex("by_slot_and_appLocale_and_contentKey", (index) => {
+            const appLocale = index
+              .eq("slot", slot)
+              .eq("appLocale", input.appLocale);
             const lower = range.inclusive
               ? appLocale.gte("contentKey", range.lower)
               : appLocale.gt("contentKey", range.lower);
@@ -205,8 +211,9 @@ export const readPartnerApiPage = Effect.fn(
       readExact: () =>
         ctx.db
           .query("materialCatalog")
-          .withIndex("by_appLocale_and_contentKey", (index) =>
+          .withIndex("by_slot_and_appLocale_and_contentKey", (index) =>
             index
+              .eq("slot", slot)
               .eq("appLocale", input.appLocale)
               .eq("contentKey", input.prefix)
           )

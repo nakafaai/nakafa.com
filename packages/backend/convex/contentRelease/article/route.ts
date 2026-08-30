@@ -18,7 +18,15 @@ export const resolveArticleRoute = Effect.fn(
     loadArticleOwner(ctx, appLocale),
     resolveActiveRoute(ctx, "article", appLocale, publicPath),
   ]);
-  if (!(owner.managed && owner.active && route.managed && route.active)) {
+  if (
+    !(
+      owner.managed &&
+      owner.active &&
+      owner.slot &&
+      route.managed &&
+      route.active
+    )
+  ) {
     return {
       active: route.active,
       article: null,
@@ -44,8 +52,9 @@ export const resolveArticleRoute = Effect.fn(
   const row = yield* Effect.promise(() =>
     ctx.db
       .query("articleCatalog")
-      .withIndex("by_contentKey_and_appLocale", (index) =>
+      .withIndex("by_slot_and_contentKey_and_appLocale", (index) =>
         index
+          .eq("slot", owner.slot)
           .eq("contentKey", route.projection.contentKey)
           .eq("appLocale", appLocale)
       )

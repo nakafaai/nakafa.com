@@ -98,8 +98,9 @@ describe("contentRelease/material/identity", () => {
     await stale.mutation(async (ctx) => {
       const row = await ctx.db
         .query("materialCatalog")
-        .withIndex("by_contentKey_and_appLocale", (index) =>
+        .withIndex("by_slot_and_contentKey_and_appLocale", (index) =>
           index
+            .eq("slot", "blue")
             .eq("contentKey", projection.contentKey)
             .eq("appLocale", projection.appLocale)
         )

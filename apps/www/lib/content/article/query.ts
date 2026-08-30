@@ -63,7 +63,7 @@ export function readArticlePageCursor(
     }))
   );
 }
-/** Restarts only unversioned predecessor pagination on article category pages. */
+/** Restarts unsupported article pagination at the current publication head. */
 export function shouldResetArticlePublicationCursor(page: ArticlePageCursor) {
   return (
     page.cursor !== null && !hasArticlePublicationCursorPrefix(page.cursor)

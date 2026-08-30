@@ -15,7 +15,7 @@ export const readArticleBuckets = Effect.fn(
 )(function* (ctx: QueryCtx, appLocale: Parameters<typeof loadArticleOwner>[1]) {
   const owner = yield* loadArticleOwner(ctx, appLocale);
   const activeReleaseId = owner.active?.releaseId ?? null;
-  if (!(owner.managed && owner.active)) {
+  if (!(owner.managed && owner.active && owner.slot)) {
     return {
       activeReleaseId,
       articleCount: 0,
@@ -27,8 +27,8 @@ export const readArticleBuckets = Effect.fn(
   const rows = yield* Effect.promise(() =>
     ctx.db
       .query("articleBuckets")
-      .withIndex("by_appLocale_and_bucket", (index) =>
-        index.eq("appLocale", appLocale)
+      .withIndex("by_slot_and_appLocale_and_bucket", (index) =>
+        index.eq("slot", owner.slot).eq("appLocale", appLocale)
       )
       .take(CONTENT_BUCKET_LIMIT + 1)
   );

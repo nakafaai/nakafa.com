@@ -28,8 +28,11 @@ describe("contentRelease/runtime/active", () => {
     await partial.mutation((ctx) =>
       ctx.db.insert("contentState", {
         activeReleaseId: TEST_RUNTIME_RELEASE.releaseId,
+        articleSlot: "blue",
         key: "primary",
+        materialSlot: "blue",
         nextSequence: 4,
+        searchSlot: "blue",
         updatedAt: 1,
       })
     );

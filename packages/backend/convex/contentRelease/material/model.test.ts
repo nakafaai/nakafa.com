@@ -72,8 +72,9 @@ describe("contentRelease/material/model", () => {
     await target.mutation(async (ctx) => {
       const row = await ctx.db
         .query("materialCatalog")
-        .withIndex("by_appLocale_and_publicPath", (index) =>
+        .withIndex("by_slot_and_appLocale_and_publicPath", (index) =>
           index
+            .eq("slot", "blue")
             .eq("appLocale", stale.appLocale)
             .eq("publicPath", stale.publicPath)
         )
@@ -135,8 +136,9 @@ describe("contentRelease/material/model", () => {
     await target.mutation(async (ctx) => {
       const row = await ctx.db
         .query("materialCatalog")
-        .withIndex("by_appLocale_and_publicPath", (index) =>
+        .withIndex("by_slot_and_appLocale_and_publicPath", (index) =>
           index
+            .eq("slot", "blue")
             .eq("appLocale", requested.appLocale)
             .eq("publicPath", requested.publicPath)
         )
@@ -162,8 +164,9 @@ describe("contentRelease/material/model", () => {
     await target.mutation(async (ctx) => {
       const row = await ctx.db
         .query("materialCatalog")
-        .withIndex("by_appLocale_and_publicPath", (index) =>
+        .withIndex("by_slot_and_appLocale_and_publicPath", (index) =>
           index
+            .eq("slot", "blue")
             .eq("appLocale", requested.appLocale)
             .eq("publicPath", requested.publicPath)
         )
@@ -237,6 +240,7 @@ describe("contentRelease/material/model", () => {
           rendererDomain: "mathematics",
           sequence: 1,
           sourcePath: "not-read",
+          slot: "blue",
           topicAssetId: projection.graph.assetId,
         });
       }

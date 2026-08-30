@@ -15,7 +15,6 @@ import { CONTENT_RUNTIME_TABLES } from "@repo/backend/scripts/content/runtime/ta
 import { Effect } from "effect";
 
 const identity = {
-  cacheVersion: "v2",
   contentStateHash: "1".repeat(64),
   runtimeSchemaFingerprint: "3".repeat(64),
 };
@@ -52,6 +51,20 @@ describe("content runtime snapshot", () => {
 
       yield* validateMetadata(formatMetadata(identity), identity);
       expect(manifest).toEqual(entries);
+    })
+  );
+
+  it.live("rejects obsolete versioned metadata", () =>
+    Effect.gen(function* () {
+      const failure = yield* validateMetadata(
+        `${JSON.stringify({ ...identity, cacheVersion: "v2" })}\n`,
+        identity
+      ).pipe(Effect.flip);
+
+      expect(failure).toMatchObject({
+        _tag: "ContentRuntimeCiError",
+        message: "Signed runtime metadata is invalid.",
+      });
     })
   );
 

@@ -4,6 +4,7 @@ import type {
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { INITIAL_MODEL_SLOT } from "@repo/backend/convex/contentRelease/models/slot";
 import type {
   appLocaleValidator,
   artifactLocaleValidator,
@@ -44,8 +45,11 @@ export const ensureState = Effect.fn("contentRelease.ensureState")(function* (
   const now = Date.now();
   const id = yield* Effect.promise(() =>
     ctx.db.insert("contentState", {
+      articleSlot: INITIAL_MODEL_SLOT,
       key: "primary",
+      materialSlot: INITIAL_MODEL_SLOT,
       nextSequence: 1,
+      searchSlot: INITIAL_MODEL_SLOT,
       updatedAt: now,
     })
   );

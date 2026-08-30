@@ -94,7 +94,9 @@ function write(
   projection = materialProjection(),
   plainText = "Search body"
 ) {
-  return runConvexProgram(writeSearchEntry(ctx, head, projection, plainText));
+  return runConvexProgram(
+    writeSearchEntry(ctx, "blue", head, projection, plainText)
+  );
 }
 
 describe("contentRelease/search/write", () => {
@@ -194,10 +196,10 @@ describe("contentRelease/search/write", () => {
     await t.mutation((ctx) => write(ctx, head));
     await t.mutation(async (ctx) => {
       await runConvexProgram(
-        deleteSearchEntry(ctx, head.contentKey, head.artifactLocale)
+        deleteSearchEntry(ctx, "blue", head.contentKey, head.artifactLocale)
       );
       await runConvexProgram(
-        deleteSearchEntry(ctx, head.contentKey, head.artifactLocale)
+        deleteSearchEntry(ctx, "blue", head.contentKey, head.artifactLocale)
       );
     });
 

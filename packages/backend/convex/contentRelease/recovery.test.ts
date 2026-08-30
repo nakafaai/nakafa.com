@@ -32,6 +32,8 @@ import { Effect } from "effect";
 
 const activate = internal.contentRelease.activate.activate;
 const activateRecovery = internal.contentRelease.activate.activateRecovery;
+const prepare = internal.contentRelease.activate.prepare;
+const prepareRecovery = internal.contentRelease.activate.prepareRecovery;
 const current = internal.contentRelease.status.current;
 const lookup = internal.contentRelease.recovery.lookup;
 
@@ -79,6 +81,30 @@ function rejected<A>(operation: () => Promise<A>) {
   );
 }
 
+/** Prepares invisible buffers before atomically activating the candidate. */
+async function activateCandidate(t: ReturnType<typeof convexTest>) {
+  const args = {
+    manifestHash: CANDIDATE.manifestHash,
+    releaseId: CANDIDATE.releaseId,
+    rendererJson: testRendererJson(),
+  };
+  await t.mutation(prepare, args);
+  await t.finishAllScheduledFunctions(vi.runAllTimers);
+  return t.mutation(activate, args);
+}
+
+/** Prepares invisible buffers before atomically activating the recovery. */
+async function recoverCandidate(t: ReturnType<typeof convexTest>) {
+  const args = {
+    manifestHash: RECOVERY.manifestHash,
+    releaseId: RECOVERY.releaseId,
+    rendererJson: testRendererJson(),
+  };
+  await t.mutation(prepareRecovery, args);
+  await t.finishAllScheduledFunctions(vi.runAllTimers);
+  return t.mutation(activateRecovery, args);
+}
+
 describe("contentRelease/recovery", () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
@@ -86,27 +112,9 @@ describe("contentRelease/recovery", () => {
   it.effect("activates the retained base with the current renderer", () =>
     Effect.gen(function* () {
       const { retainedBase, snapshots, t } = yield* seedRuntimePair();
-      yield* Effect.promise(() =>
-        t.mutation(activate, {
-          manifestHash: CANDIDATE.manifestHash,
-          releaseId: CANDIDATE.releaseId,
-          rendererJson: testRendererJson(),
-        })
-      );
-      yield* Effect.promise(() =>
-        t.finishAllScheduledFunctions(vi.runAllTimers)
-      );
+      yield* Effect.promise(() => activateCandidate(t));
 
-      const activation = yield* Effect.promise(() =>
-        t.mutation(activateRecovery, {
-          manifestHash: RECOVERY.manifestHash,
-          releaseId: RECOVERY.releaseId,
-          rendererJson: testRendererJson(),
-        })
-      );
-      yield* Effect.promise(() =>
-        t.finishAllScheduledFunctions(vi.runAllTimers)
-      );
+      const activation = yield* Effect.promise(() => recoverCandidate(t));
       const [state, publication] = yield* Effect.all([
         Effect.promise(() =>
           t.run((ctx) => ctx.db.query("contentState").unique())
@@ -136,26 +144,8 @@ describe("contentRelease/recovery", () => {
   it.effect("looks up completed recovery without the candidate runtime", () =>
     Effect.gen(function* () {
       const { result, retainedBase, t } = yield* seedRuntimePair();
-      yield* Effect.promise(() =>
-        t.mutation(activate, {
-          manifestHash: CANDIDATE.manifestHash,
-          releaseId: CANDIDATE.releaseId,
-          rendererJson: testRendererJson(),
-        })
-      );
-      yield* Effect.promise(() =>
-        t.finishAllScheduledFunctions(vi.runAllTimers)
-      );
-      yield* Effect.promise(() =>
-        t.mutation(activateRecovery, {
-          manifestHash: RECOVERY.manifestHash,
-          releaseId: RECOVERY.releaseId,
-          rendererJson: testRendererJson(),
-        })
-      );
-      yield* Effect.promise(() =>
-        t.finishAllScheduledFunctions(vi.runAllTimers)
-      );
+      yield* Effect.promise(() => activateCandidate(t));
+      yield* Effect.promise(() => recoverCandidate(t));
       yield* Effect.promise(() =>
         t.mutation(async (ctx) => {
           const candidateRuntime = await ctx.db
@@ -210,13 +200,7 @@ describe("contentRelease/recovery", () => {
   it.effect("keeps recovery invisible when its permanent pair disappears", () =>
     Effect.gen(function* () {
       const { retainedBase, t } = yield* seedRuntimePair();
-      yield* Effect.promise(() =>
-        t.mutation(activate, {
-          manifestHash: CANDIDATE.manifestHash,
-          releaseId: CANDIDATE.releaseId,
-          rendererJson: testRendererJson(),
-        })
-      );
+      yield* Effect.promise(() => activateCandidate(t));
       yield* Effect.promise(() =>
         t.mutation(async (ctx) => {
           const stored = await ctx.db
@@ -232,13 +216,7 @@ describe("contentRelease/recovery", () => {
         })
       );
 
-      const failure = yield* rejected(() =>
-        t.mutation(activateRecovery, {
-          manifestHash: RECOVERY.manifestHash,
-          releaseId: RECOVERY.releaseId,
-          rendererJson: testRendererJson(),
-        })
-      );
+      const failure = yield* rejected(() => recoverCandidate(t));
       assert.strictEqual(
         readConvexErrorData(failure)?.code,
         "CONTENT_RELEASE_INTEGRITY"

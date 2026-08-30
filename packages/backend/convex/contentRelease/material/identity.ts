@@ -50,7 +50,7 @@ export const readMaterialIdentity = Effect.fn(
     decodeMaterialIdentity(input),
     loadMaterialOwner(ctx, input.appLocale),
   ]);
-  if (!(owner.active && owner.managed)) {
+  if (!(owner.active && owner.managed && owner.slot)) {
     return {
       activeReleaseId: owner.active?.releaseId ?? null,
       managed: false,
@@ -60,8 +60,9 @@ export const readMaterialIdentity = Effect.fn(
   const row = yield* Effect.promise(() =>
     ctx.db
       .query("materialCatalog")
-      .withIndex("by_contentKey_and_appLocale", (index) =>
+      .withIndex("by_slot_and_contentKey_and_appLocale", (index) =>
         index
+          .eq("slot", owner.slot)
           .eq("contentKey", identity.contentKey)
           .eq("appLocale", input.appLocale)
       )

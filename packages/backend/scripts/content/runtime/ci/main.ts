@@ -19,7 +19,6 @@ import {
 } from "@repo/backend/scripts/content/runtime/ci/generation";
 import { importSignedRuntime } from "@repo/backend/scripts/content/runtime/ci/import";
 import {
-  CONTENT_RUNTIME_CACHE_VERSION,
   CONTENT_RUNTIME_SCHEMA_FINGERPRINT,
   CONTENT_RUNTIME_TABLES,
   validateContentRuntimeTableDefinitions,
@@ -57,10 +56,7 @@ const writeFingerprintEnvironment = Effect.gen(function* () {
   yield* writeEnvironmentFile(
     runnerTemp,
     FINGERPRINT_ENVIRONMENT_FILE,
-    [
-      `AGENT_DOCS_CONTENT_CACHE_VERSION=${CONTENT_RUNTIME_CACHE_VERSION}`,
-      `AGENT_DOCS_RUNTIME_SCHEMA_FINGERPRINT=${CONTENT_RUNTIME_SCHEMA_FINGERPRINT}`,
-    ].join("\n")
+    `AGENT_DOCS_RUNTIME_SCHEMA_FINGERPRINT=${CONTENT_RUNTIME_SCHEMA_FINGERPRINT}`
   );
 });
 

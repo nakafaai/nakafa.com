@@ -175,6 +175,7 @@ export async function insertRuntimeIndex(
   await runConvexProgram(
     writeSearchEntry(
       ctx,
+      "blue",
       head,
       projection,
       options?.plainText ?? "Technical fixture"

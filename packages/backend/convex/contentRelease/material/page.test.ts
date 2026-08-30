@@ -93,6 +93,29 @@ describe("contentRelease/material/page", () => {
     });
   });
 
+  it("restarts a native cursor from the retired index query", async () => {
+    const t = convexTest(schema, convexModules);
+    await activateMaterialCatalog(t);
+
+    await expect(
+      t.query((ctx) =>
+        runConvexProgram(
+          readMaterialPage(
+            ctx,
+            "en",
+            MATERIAL_IDENTITY.manifestHash,
+            MATERIAL_IDENTITY.releaseId,
+            { cursor: "retired-native-cursor", numItems: 1 }
+          )
+        )
+      )
+    ).resolves.toMatchObject({
+      managed: true,
+      result: { isDone: true, page: [] },
+      stale: true,
+    });
+  });
+
   it("rejects catalog rows removed from the effective publication", async () => {
     const t = convexTest(schema, convexModules);
     const removed = makeMaterialProjection("en", 1);

@@ -56,7 +56,9 @@ describe("contentRelease/material/write", () => {
   it("replaces and deletes one localized material identity", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) =>
-      runConvexProgram(writeMaterial(ctx, testResolved(), ingressProjection))
+      runConvexProgram(
+        writeMaterial(ctx, "blue", testResolved(), ingressProjection)
+      )
     );
     const updated = {
       ...ingressProjection,
@@ -69,7 +71,12 @@ describe("contentRelease/material/write", () => {
     };
     await t.mutation((ctx) =>
       runConvexProgram(
-        writeMaterial(ctx, testResolved({ sequence: 2 }, updated), updated)
+        writeMaterial(
+          ctx,
+          "blue",
+          testResolved({ sequence: 2 }, updated),
+          updated
+        )
       )
     );
     const [stored] = await t.run((ctx) =>
@@ -88,6 +95,7 @@ describe("contentRelease/material/write", () => {
       runConvexProgram(
         deleteMaterial(
           ctx,
+          "blue",
           ingressProjection.contentKey,
           ingressProjection.appLocale
         )
@@ -97,6 +105,7 @@ describe("contentRelease/material/write", () => {
       runConvexProgram(
         deleteMaterial(
           ctx,
+          "blue",
           ingressProjection.contentKey,
           ingressProjection.appLocale
         )
@@ -119,7 +128,7 @@ describe("contentRelease/material/write", () => {
     ]) {
       await expect(
         t.mutation((ctx) =>
-          runConvexProgram(writeMaterial(ctx, head, ingressProjection))
+          runConvexProgram(writeMaterial(ctx, "blue", head, ingressProjection))
         )
       ).rejects.toMatchObject({
         data: { code: "CONTENT_RELEASE_INTEGRITY" },
@@ -135,7 +144,12 @@ describe("contentRelease/material/write", () => {
           },
         };
         return runConvexProgram(
-          writeMaterial(ctx, testResolved(undefined, projection), projection)
+          writeMaterial(
+            ctx,
+            "blue",
+            testResolved(undefined, projection),
+            projection
+          )
         );
       })
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_SIZE" } });

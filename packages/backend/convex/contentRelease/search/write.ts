@@ -6,6 +6,7 @@ import {
   SEARCH_DOCUMENT_LIMIT,
 } from "@repo/backend/convex/contentRelease/document";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import type { ModelSlot } from "@repo/backend/convex/contentRelease/models/slot";
 import type { WithoutSystemFields } from "convex/server";
 import { Effect } from "effect";
 
@@ -27,14 +28,18 @@ function searchableText(projection: SearchProjection, plainText: string) {
 /** Loads the sole active search row for one locale-specific content identity. */
 const loadSearchEntry = Effect.fn("contentRelease.loadSearchEntry")(function* (
   ctx: MutationCtx,
+  slot: ModelSlot,
   contentKey: string,
   appLocale: Doc<"contentIndex">["appLocale"]
 ) {
   return yield* Effect.promise(() =>
     ctx.db
       .query("contentIndex")
-      .withIndex("by_contentKey_and_appLocale", (index) =>
-        index.eq("contentKey", contentKey).eq("appLocale", appLocale)
+      .withIndex("by_slot_and_contentKey_and_appLocale", (index) =>
+        index
+          .eq("slot", slot)
+          .eq("contentKey", contentKey)
+          .eq("appLocale", appLocale)
       )
       .unique()
   );
@@ -44,6 +49,7 @@ const loadSearchEntry = Effect.fn("contentRelease.loadSearchEntry")(function* (
 export const writeSearchEntry = Effect.fn("contentRelease.writeSearchEntry")(
   function* (
     ctx: MutationCtx,
+    slot: ModelSlot,
     head: WithoutSystemFields<Doc<"contentHeads">>,
     projection: ContentProjection,
     plainText: string
@@ -76,6 +82,7 @@ export const writeSearchEntry = Effect.fn("contentRelease.writeSearchEntry")(
       publicPath: projection.publicPath,
       releaseId: head.releaseId,
       sequence: head.sequence,
+      slot,
       text: searchableText(projection, plainText),
     };
     yield* ensureDocumentSize(
@@ -85,6 +92,7 @@ export const writeSearchEntry = Effect.fn("contentRelease.writeSearchEntry")(
     );
     const existing = yield* loadSearchEntry(
       ctx,
+      slot,
       head.contentKey,
       projection.appLocale
     );
@@ -102,10 +110,11 @@ export const writeSearchEntry = Effect.fn("contentRelease.writeSearchEntry")(
 export const deleteSearchEntry = Effect.fn("contentRelease.deleteSearchEntry")(
   function* (
     ctx: MutationCtx,
+    slot: ModelSlot,
     contentKey: string,
     appLocale: Doc<"contentIndex">["appLocale"]
   ) {
-    const existing = yield* loadSearchEntry(ctx, contentKey, appLocale);
+    const existing = yield* loadSearchEntry(ctx, slot, contentKey, appLocale);
     if (existing) {
       yield* Effect.promise(() => ctx.db.delete("contentIndex", existing._id));
     }

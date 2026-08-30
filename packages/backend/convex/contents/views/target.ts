@@ -145,7 +145,7 @@ const validateIncomingArticleTarget = Effect.fn(
   const owner = yield* loadArticleOwner(ctx, input.locale).pipe(
     Effect.mapError(toContentViewIoError)
   );
-  if (!(owner.managed && owner.active)) {
+  if (!(owner.managed && owner.active && owner.slot)) {
     return yield* toContentViewIoError(
       `Signed article ownership is unavailable for ${input.locale}.`
     );
@@ -164,8 +164,11 @@ const validateIncomingArticleTarget = Effect.fn(
     try: () =>
       ctx.db
         .query("articleCatalog")
-        .withIndex("by_contentKey_and_appLocale", (query) =>
-          query.eq("contentKey", contentKey).eq("appLocale", input.locale)
+        .withIndex("by_slot_and_contentKey_and_appLocale", (query) =>
+          query
+            .eq("slot", owner.slot)
+            .eq("contentKey", contentKey)
+            .eq("appLocale", input.locale)
         )
         .unique(),
     catch: toContentViewIoError,
@@ -192,7 +195,7 @@ const hydrateMaterialTarget = Effect.fn("contents.views.hydrateMaterialTarget")(
     const owner = yield* loadMaterialOwner(ctx, input.locale).pipe(
       Effect.mapError(toContentViewIoError)
     );
-    if (!(owner.managed && owner.active)) {
+    if (!(owner.managed && owner.active && owner.slot)) {
       return yield* toContentViewIoError(
         `Signed material ownership is unavailable for ${input.locale}.`
       );
@@ -201,8 +204,11 @@ const hydrateMaterialTarget = Effect.fn("contents.views.hydrateMaterialTarget")(
       try: () =>
         ctx.db
           .query("materialCatalog")
-          .withIndex("by_appLocale_and_assetId", (query) =>
-            query.eq("appLocale", input.locale).eq("assetId", input.contentId)
+          .withIndex("by_slot_and_appLocale_and_assetId", (query) =>
+            query
+              .eq("slot", owner.slot)
+              .eq("appLocale", input.locale)
+              .eq("assetId", input.contentId)
           )
           .unique(),
       catch: toContentViewIoError,
@@ -231,7 +237,7 @@ const hydrateArticleTarget = Effect.fn("contents.views.hydrateArticleTarget")(
     const owner = yield* loadArticleOwner(ctx, input.locale).pipe(
       Effect.mapError(toContentViewIoError)
     );
-    if (!(owner.managed && owner.active)) {
+    if (!(owner.managed && owner.active && owner.slot)) {
       return yield* toContentViewIoError(
         `Signed article ownership is unavailable for ${input.locale}.`
       );
@@ -240,8 +246,11 @@ const hydrateArticleTarget = Effect.fn("contents.views.hydrateArticleTarget")(
       try: () =>
         ctx.db
           .query("articleCatalog")
-          .withIndex("by_appLocale_and_assetId", (query) =>
-            query.eq("appLocale", input.locale).eq("assetId", input.contentId)
+          .withIndex("by_slot_and_appLocale_and_assetId", (query) =>
+            query
+              .eq("slot", owner.slot)
+              .eq("appLocale", input.locale)
+              .eq("assetId", input.contentId)
           )
           .unique(),
       catch: toContentViewIoError,

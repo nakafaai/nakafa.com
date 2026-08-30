@@ -154,8 +154,9 @@ describe("contentRelease/article/model", () => {
     await target.mutation(async (ctx) => {
       const row = await ctx.db
         .query("articleCatalog")
-        .withIndex("by_appLocale_and_publicPath", (index) =>
+        .withIndex("by_slot_and_appLocale_and_publicPath", (index) =>
           index
+            .eq("slot", "blue")
             .eq("appLocale", requested.appLocale)
             .eq("publicPath", requested.publicPath)
         )

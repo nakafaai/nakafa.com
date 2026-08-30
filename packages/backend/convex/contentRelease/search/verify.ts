@@ -5,14 +5,14 @@ import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import type { loadSearchOwner } from "@repo/backend/convex/contentRelease/search/owner";
 import { Effect } from "effect";
 
-type SearchOwner = NonNullable<
+export type SearchModelOwner = NonNullable<
   Effect.Success<ReturnType<typeof loadSearchOwner>>
 >;
 /** Resolves one indexed hit through the active release's structural sharing. */
 export const resolveSearchProjection = Effect.fn(
   "contentRelease.resolveSearchProjection"
-)(function* (ctx: QueryCtx, row: Doc<"contentIndex">, owner: SearchOwner) {
-  if (!owner.families.includes(row.family)) {
+)(function* (ctx: QueryCtx, row: Doc<"contentIndex">, owner: SearchModelOwner) {
+  if (row.slot !== owner.slot || !owner.families.includes(row.family)) {
     return yield* staleSearchRow(row);
   }
   const resolved = yield* resolvePublicProjection(

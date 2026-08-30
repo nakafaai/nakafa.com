@@ -9,8 +9,10 @@ import {
   ArticleRouteSlugSchema,
   canonicalizeArticleProjection,
 } from "@nakafa/aksara-contracts/projection/article";
+import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { INITIAL_MODEL_SLOT } from "@repo/backend/convex/contentRelease/models/slot";
 import { insertReleaseItem } from "@repo/backend/test/content/model";
 import { testArticleProjection } from "@repo/backend/test/content/runtime";
 import type { TestIdentity } from "@repo/backend/test/content/state";
@@ -56,6 +58,7 @@ export async function insertPredecessorArticle(
   projection: ArticleProjection,
   rendererDomain: RendererDomain = "politics"
 ) {
+  const projectionHash = hashContentProjection(projection);
   await ctx.db.insert("articleCatalog", {
     appLocale: projection.appLocale,
     assetId: projection.graph.assetId,
@@ -64,21 +67,23 @@ export async function insertPredecessorArticle(
     categoryTitle: projection.categoryTitle,
     contentKey: projection.contentKey,
     datePublished: projection.metadata.datePublished,
-    projectionHash: identity.manifestHash,
+    projectionHash,
     publicPath: projection.publicPath,
     releaseId: identity.releaseId,
     rendererDomain,
     sequence: identity.sequence,
+    slot: INITIAL_MODEL_SLOT,
   });
   await ctx.db.insert("articleCategories", {
     appLocale: projection.appLocale,
     bucket: "aaa",
     category: projection.category,
     contentKey: projection.contentKey,
-    projectionHash: identity.manifestHash,
+    projectionHash,
     releaseId: identity.releaseId,
     rendererDomain,
     sequence: identity.sequence,
+    slot: INITIAL_MODEL_SLOT,
     title: projection.categoryTitle,
   });
 }

@@ -1,5 +1,4 @@
 import { contentRuntimeCiError } from "@repo/backend/scripts/content/runtime/ci/error";
-import { CONTENT_RUNTIME_CACHE_VERSION } from "@repo/backend/scripts/content/runtime/tables";
 import { Config, Effect, Redacted } from "effect";
 
 export const CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT = "dapper-antelope-269";
@@ -32,7 +31,6 @@ const hasDisallowedDeployKeyCharacter = (value: string) =>
   });
 
 export interface CacheIdentity {
-  readonly cacheVersion: string;
   readonly contentStateHash: string;
   readonly runtimeSchemaFingerprint: string;
 }
@@ -100,18 +98,11 @@ export const validateProductionDeployKey = (deployKey: string) => {
 
 const readCacheIdentity = Effect.gen(function* () {
   const values = yield* Config.all({
-    cacheVersion: Config.nonEmptyString("AGENT_DOCS_CONTENT_CACHE_VERSION"),
     contentStateHash: Config.nonEmptyString("AGENT_DOCS_CONTENT_STATE_HASH"),
     runtimeSchemaFingerprint: Config.nonEmptyString(
       "AGENT_DOCS_RUNTIME_SCHEMA_FINGERPRINT"
     ),
   });
-
-  if (values.cacheVersion !== CONTENT_RUNTIME_CACHE_VERSION) {
-    return yield* contentRuntimeCiError(
-      "Invalid content runtime cache version."
-    );
-  }
 
   const contentStateHash = yield* validateHex(
     "AGENT_DOCS_CONTENT_STATE_HASH",
@@ -122,7 +113,6 @@ const readCacheIdentity = Effect.gen(function* () {
     values.runtimeSchemaFingerprint
   );
   return {
-    cacheVersion: values.cacheVersion,
     contentStateHash,
     runtimeSchemaFingerprint,
   } satisfies CacheIdentity;

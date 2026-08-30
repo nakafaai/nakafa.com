@@ -13,6 +13,7 @@ import { convexToJson } from "convex/values";
 import { Effect, Schema } from "effect";
 
 const PublicationCursorSchema = Schema.Tuple([
+  Schema.Literals(["blue", "green"]),
   AppLocaleSchema,
   ArticleCategorySchema,
   DateOnlySchema,
@@ -21,7 +22,7 @@ const PublicationCursorSchema = Schema.Tuple([
   Schema.String,
 ]);
 
-/** Decodes only the versioned cursor contract owned by publication pages. */
+/** Decodes only the stable cursor contract owned by publication pages. */
 export const decodePublicationCursor = Effect.fn(
   "contentRelease.decodePublicationCursor"
 )(function* (cursor: string | null) {
@@ -47,6 +48,7 @@ export function articlePublicationCursor(row: Doc<"articleCatalog">) {
   return encodeArticlePublicationCursor(
     JSON.stringify(
       convexToJson([
+        row.slot,
         row.appLocale,
         row.category,
         row.datePublished,

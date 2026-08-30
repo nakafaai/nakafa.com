@@ -201,8 +201,11 @@ describe("contentRelease/status", () => {
     await incomplete.mutation((ctx) =>
       ctx.db.insert("contentState", {
         activeReleaseId: ACTIVE.releaseId,
+        articleSlot: "blue",
         key: "primary",
+        materialSlot: "blue",
         nextSequence: 2,
+        searchSlot: "blue",
         updatedAt: 1,
       })
     );

@@ -247,6 +247,7 @@ describe("contentRelease/abort", () => {
         publicPath: "test/abort-0",
         releaseId: "release-before-abort",
         sequence: 0,
+        slot: "blue",
         text: "active search entry",
       });
     });

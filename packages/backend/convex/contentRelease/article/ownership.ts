@@ -15,6 +15,7 @@ import {
   ReleaseError,
   releaseFail,
 } from "@repo/backend/convex/contentRelease/error";
+import type { ModelSlot } from "@repo/backend/convex/contentRelease/models/slot";
 import type { WithoutSystemFields } from "convex/server";
 import { Effect, Schema } from "effect";
 
@@ -45,14 +46,18 @@ export interface ArticlePredecessorRoutes {
 /** Loads the sole active article row for one locale-specific content identity. */
 export const loadArticle = Effect.fn("contentRelease.loadArticle")(function* (
   ctx: MutationCtx,
+  slot: ModelSlot,
   contentKey: string,
   appLocale: AppLocale
 ) {
   return yield* Effect.promise(() =>
     ctx.db
       .query("articleCatalog")
-      .withIndex("by_contentKey_and_appLocale", (index) =>
-        index.eq("contentKey", contentKey).eq("appLocale", appLocale)
+      .withIndex("by_slot_and_contentKey_and_appLocale", (index) =>
+        index
+          .eq("slot", slot)
+          .eq("contentKey", contentKey)
+          .eq("appLocale", appLocale)
       )
       .unique()
   );
@@ -61,14 +66,18 @@ export const loadArticle = Effect.fn("contentRelease.loadArticle")(function* (
 /** Loads the sole active localized row for one article category. */
 const loadCategory = Effect.fn("contentRelease.loadArticleCategory")(function* (
   ctx: MutationCtx,
+  slot: ModelSlot,
   appLocale: AppLocale,
   category: string
 ) {
   const categories = yield* Effect.promise(() =>
     ctx.db
       .query("articleCategories")
-      .withIndex("by_appLocale_and_category", (index) =>
-        index.eq("appLocale", appLocale).eq("category", category)
+      .withIndex("by_slot_and_appLocale_and_category", (index) =>
+        index
+          .eq("slot", slot)
+          .eq("appLocale", appLocale)
+          .eq("category", category)
       )
       .take(2)
   );
@@ -84,12 +93,17 @@ const loadCategory = Effect.fn("contentRelease.loadArticleCategory")(function* (
 /** Loads at most two explicit category owners for one localized route. */
 const loadCategoryRoutes = Effect.fn(
   "contentRelease.loadArticleCategoryRoutes"
-)(function* (ctx: MutationCtx, appLocale: AppLocale, route: ArticleRouteSlug) {
+)(function* (
+  ctx: MutationCtx,
+  slot: ModelSlot,
+  appLocale: AppLocale,
+  route: ArticleRouteSlug
+) {
   return yield* Effect.promise(() =>
     ctx.db
       .query("articleCategories")
-      .withIndex("by_appLocale_and_route", (index) =>
-        index.eq("appLocale", appLocale).eq("route", route)
+      .withIndex("by_slot_and_appLocale_and_route", (index) =>
+        index.eq("slot", slot).eq("appLocale", appLocale).eq("route", route)
       )
       .take(2)
   );
@@ -156,12 +170,12 @@ const resolveCategoryRoute = Effect.fn(
 /** Resolves every bounded predecessor route once for one application locale. */
 export const loadPredecessorRoutes = Effect.fn(
   "contentRelease.loadArticlePredecessorRoutes"
-)(function* (ctx: MutationCtx, appLocale: AppLocale) {
+)(function* (ctx: MutationCtx, slot: ModelSlot, appLocale: AppLocale) {
   const categories = yield* Effect.promise(() =>
     ctx.db
       .query("articleCategories")
-      .withIndex("by_appLocale_and_route", (index) =>
-        index.eq("appLocale", appLocale).eq("route", undefined)
+      .withIndex("by_slot_and_appLocale_and_route", (index) =>
+        index.eq("slot", slot).eq("appLocale", appLocale).eq("route", undefined)
       )
       .take(ARTICLE_PREDECESSOR_LIMIT + 1)
   );
@@ -182,6 +196,7 @@ export const loadPredecessorRoutes = Effect.fn(
     }
     const representative = yield* loadArticle(
       ctx,
+      slot,
       category.contentKey,
       category.appLocale
     );
@@ -217,6 +232,7 @@ function categoryRow(article: ArticleEntry, route: ArticleRouteSlug) {
     rendererDomain: article.rendererDomain,
     route,
     sequence: article.sequence,
+    slot: article.slot,
     title: article.categoryTitle,
   };
 }
@@ -226,6 +242,7 @@ export const stageCategory = Effect.fn("contentRelease.stageArticleCategory")(
   function* (ctx: MutationCtx, article: ArticleEntry, route: ArticleRouteSlug) {
     const existing = yield* loadCategory(
       ctx,
+      article.slot,
       article.appLocale,
       article.category
     );
@@ -250,6 +267,7 @@ export const stageCategory = Effect.fn("contentRelease.stageArticleCategory")(
       if (existing.bucket !== row.bucket) {
         yield* adjustArticleBucket(
           ctx,
+          article.slot,
           existing.appLocale,
           existing.bucket,
           "category",
@@ -257,6 +275,7 @@ export const stageCategory = Effect.fn("contentRelease.stageArticleCategory")(
         );
         yield* adjustArticleBucket(
           ctx,
+          article.slot,
           row.appLocale,
           row.bucket,
           "category",
@@ -268,7 +287,14 @@ export const stageCategory = Effect.fn("contentRelease.stageArticleCategory")(
       );
       return;
     }
-    yield* adjustArticleBucket(ctx, row.appLocale, row.bucket, "category", 1);
+    yield* adjustArticleBucket(
+      ctx,
+      article.slot,
+      row.appLocale,
+      row.bucket,
+      "category",
+      1
+    );
     yield* Effect.promise(() => ctx.db.insert("articleCategories", row));
   }
 );
@@ -314,6 +340,7 @@ export const validateCategoryClaim = Effect.fn(
   }
   const categoryOwner = yield* loadCategory(
     ctx,
+    article.slot,
     article.appLocale,
     article.category
   );
@@ -334,6 +361,7 @@ export const validateCategoryClaim = Effect.fn(
   yield* validateCategoryMember(article, claim);
   const routeOwners = yield* loadCategoryRoutes(
     ctx,
+    article.slot,
     claim.appLocale,
     claim.route
   );
@@ -356,9 +384,15 @@ export const validateCategoryClaim = Effect.fn(
 /** Rebuilds one category after its selected article moves or disappears. */
 export const reconcileCategory = Effect.fn(
   "contentRelease.reconcileArticleCategory"
-)(function* (ctx: MutationCtx, appLocale: AppLocale, category: string) {
+)(function* (
+  ctx: MutationCtx,
+  slot: ModelSlot,
+  appLocale: AppLocale,
+  category: string
+) {
   const [representative] = yield* readOrderedArticles(
     ctx,
+    slot,
     appLocale,
     category,
     1
@@ -368,10 +402,11 @@ export const reconcileCategory = Effect.fn(
     yield* stageCategory(ctx, representative, route);
     return;
   }
-  const existing = yield* loadCategory(ctx, appLocale, category);
+  const existing = yield* loadCategory(ctx, slot, appLocale, category);
   if (existing) {
     yield* adjustArticleBucket(
       ctx,
+      slot,
       existing.appLocale,
       existing.bucket,
       "category",

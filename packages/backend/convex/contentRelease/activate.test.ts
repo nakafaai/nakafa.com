@@ -27,93 +27,144 @@ import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
 const activate = internal.contentRelease.activate.activate;
+const prepare = internal.contentRelease.activate.prepare;
+
+const activationArgs = {
+  manifestHash: CANDIDATE.manifestHash,
+  releaseId: CANDIDATE.releaseId,
+  rendererJson: testRendererJson(),
+};
 
 describe("contentRelease/activate", () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
-  it("atomically activates a candidate while retaining its inverse", async () => {
+  it("keeps the old pointers visible until one atomic candidate activation", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(seedVerifiedPair);
 
-    const activation = await t.mutation(activate, {
-      manifestHash: CANDIDATE.manifestHash,
-      releaseId: CANDIDATE.releaseId,
-      rendererJson: testRendererJson(),
+    await expect(t.mutation(activate, activationArgs)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_STATE" },
     });
-    const pending = await t.run((ctx) =>
-      ctx.db.system.query("_scheduled_functions").collect()
-    );
-    expect(pending).toEqual([
-      expect.objectContaining({
-        name: expect.stringContaining("contentRelease/models:resume"),
-        state: { kind: "pending" },
-      }),
-    ]);
+    await expect(t.mutation(prepare, activationArgs)).resolves.toEqual({
+      kind: "prepared",
+    });
+    await expect(t.mutation(prepare, activationArgs)).resolves.toEqual({
+      kind: "prepared",
+    });
 
-    const repeatedPending = await t.mutation(activate, {
-      manifestHash: CANDIDATE.manifestHash,
+    const building = await t.run(async (ctx) => ({
+      build: await ctx.db.query("contentModelBuilds").unique(),
+      jobs: await ctx.db.system.query("_scheduled_functions").collect(),
+      state: await ctx.db.query("contentState").unique(),
+    }));
+    expect(building.jobs).toEqual([
+      expect.objectContaining({ state: { kind: "pending" } }),
+    ]);
+    expect(building.build).toMatchObject({
+      generation: 1,
       releaseId: CANDIDATE.releaseId,
-      rendererJson: testRendererJson(),
     });
-    const deduplicated = await t.run((ctx) =>
-      ctx.db.system.query("_scheduled_functions").collect()
-    );
-    expect(deduplicated).toHaveLength(1);
+    expect(building.state).toMatchObject({
+      articleSlot: "blue",
+      candidateReleaseId: CANDIDATE.releaseId,
+      materialSlot: "blue",
+      recoveryReleaseId: RECOVERY.releaseId,
+      searchSlot: "blue",
+    });
+    expect(building.state?.activeReleaseId).toBeUndefined();
 
     await t.finishAllScheduledFunctions(vi.runAllTimers);
-    const completedJobs = await t.run((ctx) =>
-      ctx.db.system.query("_scheduled_functions").collect()
-    );
-    expect(completedJobs).toHaveLength(3);
-    expect(completedJobs.every(({ state }) => state.kind === "success")).toBe(
+    const ready = await t.run(async (ctx) => ({
+      build: await ctx.db.query("contentModelBuilds").unique(),
+      jobs: await ctx.db.system.query("_scheduled_functions").collect(),
+      state: await ctx.db.query("contentState").unique(),
+    }));
+    expect(ready.jobs.length).toBeGreaterThan(1);
+    expect(ready.jobs.every(({ state }) => state.kind === "success")).toBe(
       true
     );
-
-    const repeated = await t.mutation(activate, {
-      manifestHash: CANDIDATE.manifestHash,
+    expect(ready.build).toMatchObject({
+      phase: "ready",
       releaseId: CANDIDATE.releaseId,
-      rendererJson: testRendererJson(),
+      slots: {
+        articleBaseSlot: "blue",
+        articleTargetSlot: "green",
+        materialBaseSlot: "blue",
+        materialTargetSlot: "green",
+        searchBaseSlot: "blue",
+        searchTargetSlot: "green",
+      },
     });
-    await t.finishAllScheduledFunctions(vi.runAllTimers);
-    const state = await t.run((ctx) => ctx.db.query("contentState").unique());
+    expect(ready.build?.syncJobId).toBeUndefined();
+    expect(ready.state?.activeReleaseId).toBeUndefined();
+    expect(ready.state).toMatchObject({
+      articleSlot: "blue",
+      materialSlot: "blue",
+      searchSlot: "blue",
+    });
+
+    const activation = await t.mutation(activate, activationArgs);
+    const repeated = await t.mutation(activate, activationArgs);
+    const completed = await t.run(async (ctx) => ({
+      build: await ctx.db.query("contentModelBuilds").unique(),
+      state: await ctx.db.query("contentState").unique(),
+    }));
 
     expect(activation).toEqual({
       kind: "activated",
       receipt: expectedReceipt(CANDIDATE),
     });
-    expect(repeatedPending).toEqual({
+    expect(repeated).toEqual({
       kind: "completed",
-      receipt: activation.receipt,
+      receipt: expectedReceipt(CANDIDATE),
     });
-    expect(repeated).toEqual(repeatedPending);
-    expect(state).toMatchObject({
+    expect(completed.build).toBeNull();
+    expect(completed.state).toMatchObject({
       activeManifestHash: CANDIDATE.manifestHash,
       activeReleaseId: CANDIDATE.releaseId,
       activeSequence: CANDIDATE.sequence,
       articleReleaseId: CANDIDATE.releaseId,
+      articleSlot: "green",
       materialReleaseId: CANDIDATE.releaseId,
+      materialSlot: "green",
       recoveryReleaseId: RECOVERY.releaseId,
       searchReleaseId: CANDIDATE.releaseId,
+      searchSlot: "green",
     });
-    expect(state?.candidateReleaseId).toBeUndefined();
+    expect(completed.state?.candidateReleaseId).toBeUndefined();
+
+    await t.mutation(async (ctx) => {
+      const state = await ctx.db.query("contentState").unique();
+      expect(state).not.toBeNull();
+      if (state) {
+        await ctx.db.patch("contentState", state._id, {
+          articleReleaseId: "release-drifted-model",
+        });
+      }
+    });
+    await expect(t.mutation(activate, activationArgs)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_STATE" },
+    });
   });
 
-  it("returns completed evidence without rescheduling a failed lineage", async () => {
+  it("keeps a failed inactive build invisible and generation-fenced", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
       await seedVerifiedPair(ctx);
       await insertReleaseItem(ctx, CANDIDATE, "test:unexpected", 0);
     });
 
-    const activation = await t.mutation(activate, {
-      manifestHash: CANDIDATE.manifestHash,
-      releaseId: CANDIDATE.releaseId,
-      rendererJson: testRendererJson(),
-    });
+    await t.mutation(prepare, activationArgs);
     await t.finishAllScheduledFunctions(vi.runAllTimers);
-    const failed = await t.run(async (ctx) => ({
-      jobs: await ctx.db.system.query("_scheduled_functions").collect(),
+    const failed = await t.query(internal.contentRelease.models.status, {
+      releaseId: CANDIDATE.releaseId,
+    });
+    if (failed.phase !== "failed") {
+      expect.fail("Expected one failed inactive-buffer lineage.");
+    }
+    const retained = await t.run(async (ctx) => ({
+      build: await ctx.db.query("contentModelBuilds").unique(),
       release: await ctx.db
         .query("contentReleases")
         .withIndex("by_releaseId", (index) =>
@@ -122,46 +173,44 @@ describe("contentRelease/activate", () => {
         .unique(),
       state: await ctx.db.query("contentState").unique(),
     }));
-
-    expect(failed.jobs).toEqual([
-      expect.objectContaining({
-        state: expect.objectContaining({ kind: "failed" }),
-      }),
-    ]);
-    expect(failed.release).toMatchObject({
-      status: "completed",
-      syncGeneration: 1,
-    });
-    expect(failed.state?.activeReleaseId).toBe(CANDIDATE.releaseId);
-    expect(failed.state?.articleReleaseId).toBeUndefined();
-    expect(failed.state?.materialReleaseId).toBeUndefined();
-    expect(failed.state?.searchReleaseId).toBeUndefined();
-
-    const repeated = await t.mutation(activate, {
-      manifestHash: CANDIDATE.manifestHash,
+    expect(retained.build).toMatchObject({
+      generation: 1,
       releaseId: CANDIDATE.releaseId,
-      rendererJson: testRendererJson(),
     });
-    const restarted = await t.run(async (ctx) => ({
-      jobs: await ctx.db.system.query("_scheduled_functions").collect(),
-      release: await ctx.db
-        .query("contentReleases")
-        .withIndex("by_releaseId", (index) =>
-          index.eq("releaseId", CANDIDATE.releaseId)
-        )
-        .unique(),
-    }));
+    expect(retained.release?.status).toBe("verified");
+    expect(retained.state).toMatchObject({
+      articleSlot: "blue",
+      materialSlot: "blue",
+      searchSlot: "blue",
+    });
+    expect(retained.state?.activeReleaseId).toBeUndefined();
+    await expect(t.mutation(activate, activationArgs)).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_STATE" },
+    });
+    await expect(t.mutation(prepare, activationArgs)).resolves.toEqual({
+      kind: "prepared",
+    });
 
-    expect(activation.kind).toBe("activated");
-    expect(repeated).toEqual({
-      kind: "completed",
-      receipt: expectedReceipt(CANDIDATE),
+    await expect(
+      t.mutation(internal.contentRelease.models.restart, {
+        expectedGeneration: failed.syncGeneration,
+        expectedJobId: failed.syncJobId,
+        releaseId: CANDIDATE.releaseId,
+      })
+    ).resolves.toMatchObject({ status: "restarted", syncGeneration: 2 });
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    await expect(
+      t.query(internal.contentRelease.models.status, {
+        releaseId: CANDIDATE.releaseId,
+      })
+    ).resolves.toMatchObject({ phase: "failed", syncGeneration: 2 });
+    expect(
+      await t.run((ctx) => ctx.db.query("contentState").unique())
+    ).toMatchObject({
+      articleSlot: "blue",
+      materialSlot: "blue",
+      searchSlot: "blue",
     });
-    expect(restarted.jobs).toHaveLength(1);
-    expect(restarted.jobs.at(-1)?.state).toEqual(
-      expect.objectContaining({ kind: "failed" })
-    );
-    expect(restarted.release?.syncGeneration).toBe(1);
   });
 
   it.effect("requires the exact verified retained inverse", () =>
@@ -184,13 +233,9 @@ describe("contentRelease/activate", () => {
       );
 
       yield* Effect.promise(() =>
-        expect(
-          t.mutation(activate, {
-            manifestHash: CANDIDATE.manifestHash,
-            releaseId: CANDIDATE.releaseId,
-            rendererJson: testRendererJson(),
-          })
-        ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } })
+        expect(t.mutation(prepare, activationArgs)).rejects.toMatchObject({
+          data: { code: "CONTENT_RELEASE_STATE" },
+        })
       );
     })
   );
@@ -201,9 +246,8 @@ describe("contentRelease/activate", () => {
       yield* Effect.promise(() => renderer.mutation(seedVerifiedPair));
       yield* Effect.promise(() =>
         expect(
-          renderer.mutation(activate, {
-            manifestHash: CANDIDATE.manifestHash,
-            releaseId: CANDIDATE.releaseId,
+          renderer.mutation(prepare, {
+            ...activationArgs,
             rendererJson: testRendererJson(`sha256:${"8".repeat(64)}`),
           })
         ).rejects.toMatchObject({
@@ -243,7 +287,10 @@ describe("contentRelease/activate", () => {
             status: "verified",
           });
           await insertTestState(ctx, {
-            active: { ...base, manifestHash: `sha256:${"a".repeat(64)}` },
+            active: {
+              ...base,
+              manifestHash: `sha256:${"a".repeat(64)}`,
+            },
             candidate,
             nextSequence: 4,
             recovery,
@@ -252,7 +299,7 @@ describe("contentRelease/activate", () => {
       );
       yield* Effect.promise(() =>
         expect(
-          stale.mutation(activate, {
+          stale.mutation(prepare, {
             manifestHash: candidate.manifestHash,
             releaseId: candidate.releaseId,
             rendererJson: testRendererJson(),

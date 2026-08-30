@@ -5,6 +5,7 @@ import {
   isProjectionBucket,
 } from "@repo/backend/convex/contentRelease/bucket";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import type { ModelSlot } from "@repo/backend/convex/contentRelease/models/slot";
 import { Effect } from "effect";
 
 type ArticleAppLocale = Doc<"articleBuckets">["appLocale"];
@@ -15,6 +16,7 @@ export const adjustArticleBucket = Effect.fn(
   "contentRelease.adjustArticleBucket"
 )(function* (
   ctx: MutationCtx,
+  slot: ModelSlot,
   appLocale: ArticleAppLocale,
   bucket: string,
   kind: BucketKind,
@@ -30,8 +32,8 @@ export const adjustArticleBucket = Effect.fn(
   const existing = yield* Effect.promise(() =>
     ctx.db
       .query("articleBuckets")
-      .withIndex("by_appLocale_and_bucket", (index) =>
-        index.eq("appLocale", appLocale).eq("bucket", bucket)
+      .withIndex("by_slot_and_appLocale_and_bucket", (index) =>
+        index.eq("slot", slot).eq("appLocale", appLocale).eq("bucket", bucket)
       )
       .unique()
   );
@@ -62,7 +64,7 @@ export const adjustArticleBucket = Effect.fn(
     return;
   }
 
-  const row = { appLocale, articleCount, bucket, categoryCount };
+  const row = { appLocale, articleCount, bucket, categoryCount, slot };
   if (existing) {
     yield* Effect.promise(() =>
       ctx.db.replace("articleBuckets", existing._id, row)

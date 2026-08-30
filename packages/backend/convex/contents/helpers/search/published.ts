@@ -1,6 +1,7 @@
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import type { ModelSlot } from "@repo/backend/convex/contentRelease/models/slot";
 import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
 import type { loadSearchOwner } from "@repo/backend/convex/contentRelease/search/owner";
 import { resolveSearchProjection } from "@repo/backend/convex/contentRelease/search/verify";
@@ -58,7 +59,13 @@ export const readPublishedSearchDocuments = Effect.fn(
   if (queryTexts.length === 0) {
     const groups = yield* Effect.all(
       families.map((family) =>
-        browseFamily(ctx, args.locale, family, NAKAFA_AGENT_SEARCH_WINDOW)
+        browseFamily(
+          ctx,
+          owner.slot,
+          args.locale,
+          family,
+          NAKAFA_AGENT_SEARCH_WINDOW
+        )
       ),
       { concurrency: "unbounded" }
     );
@@ -79,6 +86,7 @@ export const readPublishedSearchDocuments = Effect.fn(
     queryTexts.map((queryText) =>
       searchQuery(
         ctx,
+        owner.slot,
         args.locale,
         families,
         queryText,
@@ -121,6 +129,7 @@ export const readPublishedSearchDocuments = Effect.fn(
 const searchQuery = Effect.fn("contents.search.searchPublishedQuery")(
   function* (
     ctx: QueryCtx,
+    slot: ModelSlot,
     locale: ContentSearchInput["locale"],
     families: readonly PublishedFamily[],
     queryText: string,
@@ -129,7 +138,7 @@ const searchQuery = Effect.fn("contents.search.searchPublishedQuery")(
     const route = getExactRouteQuery(locale, queryText);
     const groups = yield* Effect.all(
       families.map((family) =>
-        searchFamily(ctx, locale, family, route, queryText, scanLimit)
+        searchFamily(ctx, slot, locale, family, route, queryText, scanLimit)
       ),
       { concurrency: "unbounded" }
     );
@@ -140,6 +149,7 @@ const searchQuery = Effect.fn("contents.search.searchPublishedQuery")(
 const searchFamily = Effect.fn("contents.search.searchPublishedFamily")(
   function* (
     ctx: QueryCtx,
+    slot: ModelSlot,
     locale: ContentSearchInput["locale"],
     family: PublishedFamily,
     route: null | string,
@@ -153,11 +163,14 @@ const searchFamily = Effect.fn("contents.search.searchPublishedFamily")(
       ? yield* Effect.promise(() =>
           ctx.db
             .query("contentIndex")
-            .withIndex("by_appLocale_and_family_and_publicPath", (index) =>
-              index
-                .eq("appLocale", locale)
-                .eq("family", family)
-                .eq("publicPath", route)
+            .withIndex(
+              "by_slot_and_appLocale_and_family_and_publicPath",
+              (index) =>
+                index
+                  .eq("slot", slot)
+                  .eq("appLocale", locale)
+                  .eq("family", family)
+                  .eq("publicPath", route)
             )
             .unique()
         )
@@ -165,11 +178,14 @@ const searchFamily = Effect.fn("contents.search.searchPublishedFamily")(
     const hits = yield* Effect.promise(() =>
       ctx.db
         .query("contentIndex")
-        .withSearchIndex("search_text", (index) =>
-          index
-            .search("text", queryText)
-            .eq("family", family)
-            .eq("appLocale", locale)
+        .withSearchIndex(
+          "search_text_by_slot_and_family_and_appLocale",
+          (index) =>
+            index
+              .search("text", queryText)
+              .eq("slot", slot)
+              .eq("family", family)
+              .eq("appLocale", locale)
         )
         .take(scanLimit)
     );
@@ -183,6 +199,7 @@ const searchFamily = Effect.fn("contents.search.searchPublishedFamily")(
 const browseFamily = Effect.fn("contents.search.browsePublishedFamily")(
   function* (
     ctx: QueryCtx,
+    slot: ModelSlot,
     locale: ContentSearchInput["locale"],
     family: PublishedFamily,
     scanLimit: number
@@ -193,8 +210,8 @@ const browseFamily = Effect.fn("contents.search.browsePublishedFamily")(
     const rows = yield* Effect.promise(() =>
       ctx.db
         .query("contentIndex")
-        .withIndex("by_appLocale_and_family_and_publicPath", (index) =>
-          index.eq("appLocale", locale).eq("family", family)
+        .withIndex("by_slot_and_appLocale_and_family_and_publicPath", (index) =>
+          index.eq("slot", slot).eq("appLocale", locale).eq("family", family)
         )
         .take(scanLimit)
     );

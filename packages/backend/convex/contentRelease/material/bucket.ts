@@ -5,6 +5,7 @@ import {
   isProjectionBucket,
 } from "@repo/backend/convex/contentRelease/bucket";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import type { ModelSlot } from "@repo/backend/convex/contentRelease/models/slot";
 import { Effect } from "effect";
 
 /** Updates one material discovery bucket in the route write transaction. */
@@ -12,6 +13,7 @@ export const adjustMaterialBucket = Effect.fn(
   "contentRelease.adjustMaterialBucket"
 )(function* (
   ctx: MutationCtx,
+  slot: ModelSlot,
   appLocale: Doc<"materialBuckets">["appLocale"],
   bucket: string,
   delta: -1 | 1
@@ -25,8 +27,8 @@ export const adjustMaterialBucket = Effect.fn(
   const existing = yield* Effect.promise(() =>
     ctx.db
       .query("materialBuckets")
-      .withIndex("by_appLocale_and_bucket", (index) =>
-        index.eq("appLocale", appLocale).eq("bucket", bucket)
+      .withIndex("by_slot_and_appLocale_and_bucket", (index) =>
+        index.eq("slot", slot).eq("appLocale", appLocale).eq("bucket", bucket)
       )
       .unique()
   );
@@ -51,7 +53,7 @@ export const adjustMaterialBucket = Effect.fn(
     }
     return;
   }
-  const row = { appLocale, bucket, count };
+  const row = { appLocale, bucket, count, slot };
   if (existing) {
     yield* Effect.promise(() =>
       ctx.db.replace("materialBuckets", existing._id, row)

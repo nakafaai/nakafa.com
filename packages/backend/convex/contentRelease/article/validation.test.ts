@@ -7,6 +7,7 @@ import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import {
   categorizedArticle,
+  insertArticleProjection,
   insertPredecessorArticle,
 } from "@repo/backend/test/article/release";
 import type { TestIdentity } from "@repo/backend/test/content/state";
@@ -28,6 +29,7 @@ async function insertMaximumPredecessors(ctx: MutationCtx) {
       route: `topic-${suffix}`,
       title: `Topic ${suffix}`,
     });
+    await insertArticleProjection(ctx, PREDECESSOR, index, projection);
     await insertPredecessorArticle(ctx, PREDECESSOR, projection);
   }
 }
@@ -39,7 +41,7 @@ describe("contentRelease/article/validation", () => {
 
     await expect(
       t.mutation((ctx) =>
-        runConvexProgram(validateArticleModel(ctx, undefined))
+        runConvexProgram(validateArticleModel(ctx, "blue", undefined, 1))
       )
     ).resolves.toMatchObject({
       cursor: expect.any(String),

@@ -52,7 +52,7 @@ function write(
   head = testHead(),
   projection: ArticleProjection = TEST_ARTICLE_PROJECTION
 ) {
-  return runConvexProgram(writeArticle(ctx, head, projection));
+  return runConvexProgram(writeArticle(ctx, "blue", head, projection));
 }
 
 describe("contentRelease/article/write", () => {
@@ -118,6 +118,7 @@ describe("contentRelease/article/write", () => {
         releaseId: "release-old",
         rendererDomain: "politics",
         sequence: 0,
+        slot: "blue",
       });
       await ctx.db.insert("articleCategories", {
         appLocale: "en",
@@ -128,6 +129,7 @@ describe("contentRelease/article/write", () => {
         releaseId: "release-old",
         rendererDomain: "politics",
         sequence: 0,
+        slot: "blue",
         title: "History",
       });
       await ctx.db.insert("articleBuckets", {
@@ -135,6 +137,7 @@ describe("contentRelease/article/write", () => {
         articleCount: 1,
         bucket: "111",
         categoryCount: 1,
+        slot: "blue",
       });
       await write(ctx);
     });
@@ -156,6 +159,7 @@ describe("contentRelease/article/write", () => {
       runConvexProgram(
         deleteArticle(
           ctx,
+          "blue",
           TEST_ARTICLE_PROJECTION.contentKey,
           TEST_ARTICLE_PROJECTION.appLocale
         )
@@ -165,6 +169,7 @@ describe("contentRelease/article/write", () => {
       runConvexProgram(
         deleteArticle(
           ctx,
+          "blue",
           TEST_ARTICLE_PROJECTION.contentKey,
           TEST_ARTICLE_PROJECTION.appLocale
         )
@@ -190,6 +195,7 @@ describe("contentRelease/article/write", () => {
         releaseId: "release-conflict",
         rendererDomain: "politics",
         sequence: 1,
+        slot: "blue",
         title: "Political Affairs",
       });
     });

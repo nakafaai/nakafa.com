@@ -26,15 +26,19 @@ import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
 const activate = internal.contentRelease.activate.activate;
+const prepare = internal.contentRelease.activate.prepare;
 const current = internal.contentRelease.status.current;
 
 /** Runs the exact candidate activation request used by every runtime gate. */
-function activateCandidate(t: ReturnType<typeof convexTest>) {
-  return t.mutation(activate, {
+async function activateCandidate(t: ReturnType<typeof convexTest>) {
+  const args = {
     manifestHash: CANDIDATE.manifestHash,
     releaseId: CANDIDATE.releaseId,
     rendererJson: testRendererJson(),
-  });
+  };
+  await t.mutation(prepare, args);
+  await t.finishAllScheduledFunctions(vi.runAllTimers);
+  return t.mutation(activate, args);
 }
 
 describe("contentRelease/tryout runtime activation", () => {

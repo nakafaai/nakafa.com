@@ -27,7 +27,7 @@ export const resolveMaterialRoute = Effect.fn(
       material: null,
     };
   }
-  yield* requireMaterialState(route.active, appLocale);
+  const slot = yield* requireMaterialState(route.active, appLocale);
   if (!route.projection) {
     return {
       active: route.active,
@@ -38,8 +38,9 @@ export const resolveMaterialRoute = Effect.fn(
   const row = yield* Effect.promise(() =>
     ctx.db
       .query("materialCatalog")
-      .withIndex("by_contentKey_and_appLocale", (index) =>
+      .withIndex("by_slot_and_contentKey_and_appLocale", (index) =>
         index
+          .eq("slot", slot)
           .eq("contentKey", route.projection.contentKey)
           .eq("appLocale", appLocale)
       )
