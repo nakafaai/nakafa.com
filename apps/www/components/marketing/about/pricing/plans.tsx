@@ -10,7 +10,7 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { headers } from "next/headers";
 import { useTranslations } from "next-intl";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ComponentType } from "react";
 import { Suspense, use } from "react";
 import { openBilling } from "@/components/marketing/about/pricing/billing";
 import {
@@ -25,10 +25,35 @@ interface PricingFeatureProps {
 }
 
 type PricingDisplay = ReturnType<typeof getProPricingDisplay>;
+type Price = PricingDisplay["pro"];
+
+interface PriceProps {
+  price: Price;
+}
 
 interface PricingPlanCardsProps {
   headingLevel: "h2" | "h3";
+  Price: ComponentType<PriceProps>;
   pricingDisplay: PricingDisplay;
+}
+
+/** Renders the animated price used on the marketing homepage. */
+function AnimatedPrice({ price }: PriceProps) {
+  return (
+    <NumberFormat
+      className="font-semibold text-4xl tracking-tight"
+      format={price.format}
+      locales={price.locales}
+      value={price.value}
+    />
+  );
+}
+
+/** Renders a server-formatted price without adding animation to page prefetch. */
+function StaticPrice({ price }: PriceProps) {
+  return (
+    <span className="font-semibold text-4xl tracking-tight">{price.text}</span>
+  );
 }
 
 /** Renders one pricing card feature row with a stable icon slot. */
@@ -43,6 +68,7 @@ function PricingFeature({ text, icon }: PricingFeatureProps) {
 
 /** Renders the pricing plan cards with an already resolved price display. */
 function PricingPlanCards({
+  Price,
   headingLevel,
   pricingDisplay,
 }: PricingPlanCardsProps) {
@@ -74,12 +100,7 @@ function PricingPlanCards({
             {t("free-description")}
           </p>
           <div className="pt-2">
-            <NumberFormat
-              className="font-semibold text-4xl tracking-tight"
-              format={pricingDisplay.free.format}
-              locales={pricingDisplay.free.locales}
-              value={pricingDisplay.free.value}
-            />
+            <Price price={pricingDisplay.free} />
           </div>
         </div>
 
@@ -117,12 +138,7 @@ function PricingPlanCards({
             {t("pro-description")}
           </p>
           <div className="flex items-baseline gap-1 pt-2">
-            <NumberFormat
-              className="font-semibold text-4xl tracking-tight"
-              format={pricingDisplay.pro.format}
-              locales={pricingDisplay.pro.locales}
-              value={pricingDisplay.pro.value}
-            />
+            <Price price={pricingDisplay.pro} />
             <span className="ml-1 text-muted-foreground">
               {t("pro-period")}
             </span>
@@ -158,8 +174,9 @@ function PricingPlanCards({
  * Docs: https://nextjs.org/docs/app/getting-started/caching#dynamic-rendering
  */
 function RequestPricedCards({
+  Price,
   headingLevel,
-}: Pick<PricingPlanCardsProps, "headingLevel">) {
+}: Pick<PricingPlanCardsProps, "Price" | "headingLevel">) {
   const requestHeaders = use(headers());
   const pricingDisplay = getProPricingDisplay(
     requestHeaders.get(pricingCountryHeaderName)
@@ -168,6 +185,7 @@ function RequestPricedCards({
   return (
     <PricingPlanCards
       headingLevel={headingLevel}
+      Price={Price}
       pricingDisplay={pricingDisplay}
     />
   );
@@ -175,11 +193,13 @@ function RequestPricedCards({
 
 /** Renders stable default pricing while request-location pricing streams in. */
 function PricingCardsFallback({
+  Price,
   headingLevel,
-}: Pick<PricingPlanCardsProps, "headingLevel">) {
+}: Pick<PricingPlanCardsProps, "Price" | "headingLevel">) {
   return (
     <PricingPlanCards
       headingLevel={headingLevel}
+      Price={Price}
       pricingDisplay={getProPricingDisplay(null)}
     />
   );
@@ -187,11 +207,16 @@ function PricingCardsFallback({
 
 /** Streams request-priced cards through the shared stable fallback. */
 function PricingCards({
+  Price,
   headingLevel,
-}: Pick<PricingPlanCardsProps, "headingLevel">) {
+}: Pick<PricingPlanCardsProps, "Price" | "headingLevel">) {
   return (
-    <Suspense fallback={<PricingCardsFallback headingLevel={headingLevel} />}>
-      <RequestPricedCards headingLevel={headingLevel} />
+    <Suspense
+      fallback={
+        <PricingCardsFallback headingLevel={headingLevel} Price={Price} />
+      }
+    >
+      <RequestPricedCards headingLevel={headingLevel} Price={Price} />
     </Suspense>
   );
 }
@@ -219,7 +244,7 @@ export function Pricing() {
         </div>
 
         <div className="border-t bg-card text-card-foreground">
-          <PricingCards headingLevel="h3" />
+          <PricingCards headingLevel="h3" Price={AnimatedPrice} />
         </div>
       </div>
     </section>
@@ -253,7 +278,7 @@ export function PricingPagePlans() {
 
       <div className="border-t bg-card text-card-foreground">
         <div className="mx-auto w-full max-w-7xl border-x">
-          <PricingCards headingLevel="h2" />
+          <PricingCards headingLevel="h2" Price={StaticPrice} />
         </div>
       </div>
     </section>
