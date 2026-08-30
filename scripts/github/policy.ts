@@ -89,6 +89,18 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     expectedUsages: 1,
     reason: "The CLI release downloads only its verified build artifact.",
   },
+  {
+    action: "actions/setup-node",
+    approvedSha: "820762786026740c76f36085b0efc47a31fe5020",
+    expectedInputs: {
+      "node-version": "24.19.0",
+      "package-manager-cache": "false",
+    },
+    expectedTag: "v7.0.0",
+    expectedUsages: 1,
+    reason:
+      "The isolated CLI publisher pins Node without dependency caching or registry credentials.",
+  },
 ]);
 
 /** Expected failure while reading or decoding repository workflow policy. */
