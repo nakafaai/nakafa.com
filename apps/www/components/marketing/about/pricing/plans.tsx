@@ -1,5 +1,6 @@
 import {
   ArrowUpRight01Icon,
+  Diamond02Icon,
   Rocket01Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
@@ -11,12 +12,12 @@ import { headers } from "next/headers";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { Suspense, use } from "react";
+import { openBilling } from "@/components/marketing/about/pricing/billing";
 import {
   getProPricingDisplay,
   pricingCountryHeaderName,
 } from "@/components/marketing/about/pricing/display";
 import { PricingDithering } from "@/components/marketing/about/pricing/dithering.client";
-import { ProButton } from "@/components/marketing/about/pricing/pro-button.client";
 
 interface PricingFeatureProps {
   icon?: ComponentProps<typeof HugeIcons>["icon"];
@@ -138,7 +139,12 @@ function PricingPlanCards({
         </div>
 
         <div className="mt-auto pt-4">
-          <ProButton />
+          <form action={openBilling}>
+            <Button className="w-full" type="submit">
+              <HugeIcons icon={Diamond02Icon} />
+              {t("pro-cta")}
+            </Button>
+          </form>
         </div>
       </div>
     </div>
