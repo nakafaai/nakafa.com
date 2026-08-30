@@ -16,7 +16,7 @@ import { Effect, Option } from "effect";
 
 /** Registers the canonical content read and its matching preflight. */
 export function registerAgentContentRoute(api: AgentApp) {
-  api.get("/v1/content", (context) =>
+  api.get("/content", (context) =>
     runMeteredRequest(
       context.env,
       context.req.raw,
@@ -43,7 +43,7 @@ export function registerAgentContentRoute(api: AgentApp) {
       )
     )
   );
-  api.options("/v1/content", () => agentOptionsResponse());
+  api.options("/content", () => agentOptionsResponse());
 }
 
 /** Returns a stable missing-content problem. */

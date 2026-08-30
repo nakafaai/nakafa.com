@@ -12,7 +12,7 @@ import { Effect } from "effect";
 
 /** Registers the canonical search read and its matching preflight. */
 export function registerAgentSearchRoute(api: AgentApp) {
-  api.get("/v1/search", (context) =>
+  api.get("/search", (context) =>
     runMeteredRequest(
       context.env,
       context.req.raw,
@@ -23,5 +23,5 @@ export function registerAgentSearchRoute(api: AgentApp) {
       )
     )
   );
-  api.options("/v1/search", () => agentOptionsResponse());
+  api.options("/search", () => agentOptionsResponse());
 }

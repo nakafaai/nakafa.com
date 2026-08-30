@@ -27,9 +27,9 @@ describe("public agent API routes", () => {
   it("serves the API index, health response, and CORS preflight", async () => {
     const test = createConvexTestWithBetterAuth();
     const [index, health, options] = await Promise.all([
-      fetchApi(test, "/v1"),
-      fetchApi(test, "/v1/health"),
-      fetchApi(test, "/v1/search", { method: "OPTIONS" }),
+      fetchApi(test, "/"),
+      fetchApi(test, "/health"),
+      fetchApi(test, "/search", { method: "OPTIONS" }),
     ]);
 
     expect(index.status).toBe(200);
@@ -80,7 +80,7 @@ describe("public agent API routes", () => {
     expect(revalidated.headers.get("etag")).toBe(etag);
   });
 
-  it.each(["/v1/health", "/v1/quran/1?locale=en"])(
+  it.each(["/", "/health", "/quran/1?locale=en"])(
     "rejects direct origin access to %s before dispatching a route",
     async (path) => {
       const response = await createConvexTestWithBetterAuth().fetch(
@@ -95,31 +95,53 @@ describe("public agent API routes", () => {
   );
 
   it("does not expose the predecessor origin mount", async () => {
-    const response = await createConvexTestWithBetterAuth().fetch("/v1");
+    const response = await createConvexTestWithBetterAuth().fetch("/");
 
     expect(response.status).toBe(404);
   });
 
+  it.each(["/v1", "/v1/health", "/v1/search?query=algebra"])(
+    "keeps predecessor route %s readable during the deployment transition",
+    async (path) => {
+      const response = await fetchApi(createConvexTestWithBetterAuth(), path);
+
+      expect(response.status).toBe(200);
+    }
+  );
+
+  it.each(["/v1/openapi.json", "/v2", "/v2/search"])(
+    "does not expose retired versioned path %s",
+    async (path) => {
+      const response = await fetchApi(createConvexTestWithBetterAuth(), path);
+
+      await expectProblem(response, {
+        code: "ENDPOINT_NOT_FOUND",
+        status: 404,
+      });
+    }
+  );
+
   it.each([
-    ["/v1/search?unknown=value", {}, "INVALID_REQUEST", 400],
+    ["/search?unknown=value", {}, "INVALID_REQUEST", 400],
+    ["/content", {}, "INVALID_REQUEST", 400],
     ["/v1/content", {}, "INVALID_REQUEST", 400],
-    ["/v1/search", { headers: { accept: "text/html" } }, "NOT_ACCEPTABLE", 406],
+    ["/search", { headers: { accept: "text/html" } }, "NOT_ACCEPTABLE", 406],
     [
-      "/v1/health",
+      "/health",
       { body: "{}", method: "OPTIONS" },
       "UNSUPPORTED_MEDIA_TYPE",
       415,
     ],
-    ["/v1/search?limit=11", {}, "UNPROCESSABLE_REQUEST", 422],
-    ["/v1/content?ref=", {}, "UNPROCESSABLE_REQUEST", 422],
+    ["/search?limit=11", {}, "UNPROCESSABLE_REQUEST", 422],
+    ["/content?ref=", {}, "UNPROCESSABLE_REQUEST", 422],
     [
-      "/v1/content?ref=https%3A%2F%2Fexample.com%2Fen%2Fquran%2F1",
+      "/content?ref=https%3A%2F%2Fexample.com%2Fen%2Fquran%2F1",
       {},
       "UNPROCESSABLE_REQUEST",
       422,
     ],
-    ["/v1/missing", {}, "ENDPOINT_NOT_FOUND", 404],
-    ["/v1/health", { method: "POST" }, "METHOD_NOT_ALLOWED", 405],
+    ["/missing", {}, "ENDPOINT_NOT_FOUND", 404],
+    ["/health", { method: "POST" }, "METHOD_NOT_ALLOWED", 405],
   ] as const)(
     "returns a structured problem for %s",
     async (path, init, code, status) => {
@@ -135,7 +157,7 @@ describe("public agent API routes", () => {
   it("returns stable empty search pagination from an empty deployment", async () => {
     const response = await fetchApi(
       createConvexTestWithBetterAuth(),
-      "/v1/search?query=algebra&locale=en&limit=10&offset=0"
+      "/search?query=algebra&locale=en&limit=10&offset=0"
     );
 
     expect(response.status).toBe(200);
@@ -169,7 +191,7 @@ describe("public agent API routes", () => {
     });
     const response = await fetchApi(
       test,
-      "/v1/search?query=rational%20function&locale=en&section=articles"
+      "/search?query=rational%20function&locale=en&section=articles"
     );
 
     expect(response.status).toBe(200);
@@ -195,7 +217,7 @@ describe("public agent API routes", () => {
     const reference = encodeURIComponent(
       `https://nakafa.com/en/${article.publicPath}`
     );
-    const response = await fetchApi(test, `/v1/content?ref=${reference}`);
+    const response = await fetchApi(test, `/content?ref=${reference}`);
 
     expect(response.status).toBe(200);
     expectPublicJson(response);
@@ -215,7 +237,7 @@ describe("public agent API routes", () => {
     await activateMaterialCatalog(test, [material], ["en"]);
     const response = await fetchApi(
       test,
-      `/v1/content?ref=${encodeURIComponent(material.graph.assetId)}`
+      `/content?ref=${encodeURIComponent(material.graph.assetId)}`
     );
 
     expect(response.status).toBe(200);
@@ -240,7 +262,7 @@ describe("public agent API routes", () => {
 
     const response = await fetchApi(
       test,
-      `/v1/content?ref=${encodeURIComponent(topic.graph.assetId)}`
+      `/content?ref=${encodeURIComponent(topic.graph.assetId)}`
     );
 
     await expectProblem(response, {
@@ -265,7 +287,7 @@ describe("public agent API routes", () => {
     const reference = encodeURIComponent(
       `https://nakafa.com/en/${article.publicPath}`
     );
-    const response = await fetchApi(test, `/v1/content?ref=${reference}`);
+    const response = await fetchApi(test, `/content?ref=${reference}`);
 
     await expectProblem(response, {
       code: "SERVICE_UNAVAILABLE",
@@ -274,12 +296,17 @@ describe("public agent API routes", () => {
   });
 
   it("fails closed when the signed taxonomy publication is unavailable", async () => {
-    const response = await fetchApi(
-      createConvexTestWithBetterAuth(),
-      "/v1/taxonomy?locale=en"
-    );
+    const test = createConvexTestWithBetterAuth();
+    const [response, predecessor] = await Promise.all([
+      fetchApi(test, "/taxonomy?locale=en"),
+      fetchApi(test, "/v1/taxonomy?locale=en"),
+    ]);
 
     await expectProblem(response, {
+      code: "SERVICE_UNAVAILABLE",
+      status: 503,
+    });
+    await expectProblem(predecessor, {
       code: "SERVICE_UNAVAILABLE",
       status: 503,
     });
@@ -291,7 +318,7 @@ describe("public agent API routes", () => {
       [NAKAFA_API_EDGE_CONTRACT.secretHeader]: API_SECRET,
     });
     const response = await test.fetch(
-      `${NAKAFA_API_EDGE_CONTRACT.originPath}/v1/search`,
+      `${NAKAFA_API_EDGE_CONTRACT.originPath}/search`,
       { headers }
     );
 
@@ -304,10 +331,10 @@ describe("public agent API routes", () => {
   it("limits metered reads without limiting health checks", async () => {
     const test = createConvexTestWithBetterAuth();
     for (let index = 0; index < 30; index += 1) {
-      expect((await fetchApi(test, "/v1/search")).status).toBe(200);
-      expect((await fetchApi(test, "/v1/health")).status).toBe(200);
+      expect((await fetchApi(test, "/search")).status).toBe(200);
+      expect((await fetchApi(test, "/health")).status).toBe(200);
     }
-    const limited = await fetchApi(test, "/v1/search");
+    const limited = await fetchApi(test, "/search");
 
     await expectProblem(limited, { code: "RATE_LIMITED", status: 429 });
     expect(Number(limited.headers.get("retry-after"))).toBeGreaterThan(0);

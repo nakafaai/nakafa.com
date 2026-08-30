@@ -42,18 +42,11 @@ import { Hono } from "hono";
 
 /** Registers the protected read-only API and its machine-readable contract. */
 export function registerAgentApiRoutes(app: AgentApp) {
-  const api: AgentApp = new Hono();
+  const runtime: AgentApp = new Hono();
 
-  api.use("/openapi.json", guardAgentApi);
-  api.use("/v1", guardAgentApi);
-  api.use("/v1/*", guardAgentApi);
+  runtime.use("*", guardAgentApi);
 
-  api.get("/openapi.json", (context) =>
-    createOpenApiResponse(context.req.header("if-none-match"))
-  );
-  api.options("/openapi.json", () => createOpenApiOptionsResponse());
-
-  api.get("/v1", (context) =>
+  runtime.get("/", (context) =>
     runAgentRequest(
       context.req.raw,
       context.get("requestId"),
@@ -75,7 +68,7 @@ export function registerAgentApiRoutes(app: AgentApp) {
     )
   );
 
-  api.get("/v1/health", (context) =>
+  runtime.get("/health", (context) =>
     runAgentRequest(
       context.req.raw,
       context.get("requestId"),
@@ -92,10 +85,10 @@ export function registerAgentApiRoutes(app: AgentApp) {
     )
   );
 
-  registerAgentSearchRoute(api);
-  registerAgentContentRoute(api);
+  registerAgentSearchRoute(runtime);
+  registerAgentContentRoute(runtime);
 
-  api.get("/v1/taxonomy", (context) =>
+  runtime.get("/taxonomy", (context) =>
     runMeteredRequest(
       context.env,
       context.req.raw,
@@ -114,17 +107,28 @@ export function registerAgentApiRoutes(app: AgentApp) {
     )
   );
 
-  registerAgentQuranRoutes(api);
+  registerAgentQuranRoutes(runtime);
 
-  for (const path of ["/v1", "/v1/health", "/v1/taxonomy"]) {
-    api.options(path, () => agentOptionsResponse());
+  for (const path of ["/", "/health", "/taxonomy"]) {
+    runtime.options(path, () => agentOptionsResponse());
   }
 
-  api.all("/v1/*", (context) =>
+  runtime.all("*", (context) =>
     missingRouteResponse(context.req.raw, context.get("requestId"))
   );
 
-  app.route(NAKAFA_API_EDGE_CONTRACT.originPath, api);
+  const document: AgentApp = new Hono();
+  document.use("*", guardAgentApi);
+  document.get("/", (context) =>
+    createOpenApiResponse(context.req.header("if-none-match"))
+  );
+  document.options("/", () => createOpenApiOptionsResponse());
+
+  // Expand the protected origin before the independently deployed edge switches.
+  // The contract phase removes the predecessor after public consumers migrate.
+  app.route(`${NAKAFA_API_EDGE_CONTRACT.originPath}/openapi.json`, document);
+  app.route(`${NAKAFA_API_EDGE_CONTRACT.originPath}/v1`, runtime);
+  app.route(`${NAKAFA_API_EDGE_CONTRACT.originPath}/`, runtime);
 }
 
 /** Returns one exact 404 or 405 for unmatched public API routes. */
