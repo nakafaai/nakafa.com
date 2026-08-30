@@ -14,7 +14,7 @@ import { v } from "convex/values";
 import { Effect } from "effect";
 
 const EXPECTED_RUNTIME_SCHEMA_FINGERPRINT =
-  "17f41a6f2e9ad7d7f1cbf846f41f6538c0314a2ff4648c7e95cbd60a41848e54";
+  "e5780b60f87b96987ba71758af423a3ca3eea58fbfa991d666aa720cd6221cc6";
 
 describe("content runtime tables", () => {
   it.live(
