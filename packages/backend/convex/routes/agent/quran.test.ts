@@ -19,21 +19,19 @@ import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 setupApiTest();
 
 describe("public Quran API routes", () => {
-  it.each([
-    "/quran/1",
-    "/quran/1?locale=en",
-    "/v2/quran/1",
-    "/v2/quran/1?locale=en",
-  ])("does not expose the retired Quran path %s", async (path) => {
-    const response = await fetchApi(createConvexTestWithBetterAuth(), path);
+  it.each(["/v2/quran/1", "/v2/quran/1?locale=en"])(
+    "does not expose the retired Quran path %s",
+    async (path) => {
+      const response = await fetchApi(createConvexTestWithBetterAuth(), path);
 
-    expect(response.status).toBe(404);
-  });
+      expect(response.status).toBe(404);
+    }
+  );
 
   it("rejects an out-of-range canonical surah", async () => {
     const response = await fetchApi(
       createConvexTestWithBetterAuth(),
-      "/v1/quran/115"
+      "/quran/115"
     );
 
     await expectProblem(response, {
@@ -65,7 +63,7 @@ describe("public Quran API routes", () => {
     );
     const response = await fetchApi(
       test,
-      "/v1/content?ref=asset%3Aen%3Aquran%3Aquran-surah%3A1"
+      "/content?ref=asset%3Aen%3Aquran%3Aquran-surah%3A1"
     );
 
     expect(response.status).toBe(200);
@@ -114,14 +112,17 @@ describe("public Quran API routes", () => {
         makeQuranSearch("id", 1),
       ])
     );
-    const response = await fetchApi(
-      test,
-      "/v1/quran/1?locale=id&from_verse=1&include_tafsir=true"
-    );
+    const [response, predecessor] = await Promise.all([
+      fetchApi(test, "/quran/1?locale=id&from_verse=1&include_tafsir=true"),
+      fetchApi(test, "/v1/quran/1?locale=id&from_verse=1&include_tafsir=true"),
+    ]);
 
     expect(response.status).toBe(200);
+    expect(predecessor.status).toBe(200);
     expectPublicJson(response);
-    expect(await response.json()).toMatchObject({
+    const body = await response.json();
+    await expect(predecessor.json()).resolves.toEqual(body);
+    expect(body).toMatchObject({
       alignmentId: "alignment:quran:quran-surah:1",
       assetId: "asset:id:quran:quran-surah:1",
       conceptId: "concept:quran:surah:1",

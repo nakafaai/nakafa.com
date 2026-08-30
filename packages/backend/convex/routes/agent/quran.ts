@@ -27,7 +27,7 @@ type ReadQuranReference = (
 
 /** Registers the canonical Quran route in the stable public API namespace. */
 export function registerAgentQuranRoutes(api: AgentApp) {
-  registerQuranRoute(api, "/v1/quran/:surah", (ctx, input) =>
+  registerQuranRoute(api, "/quran/:surah", (ctx, input) =>
     getNakafaQuranReference(ctx, input)
   );
 }
@@ -35,7 +35,7 @@ export function registerAgentQuranRoutes(api: AgentApp) {
 /** Registers one Quran GET and its matching preflight. */
 function registerQuranRoute(
   api: AgentApp,
-  path: "/v1/quran/:surah",
+  path: "/quran/:surah",
   readReference: ReadQuranReference
 ) {
   api.get(path, (context) =>

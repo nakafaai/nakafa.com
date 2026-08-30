@@ -17,7 +17,7 @@ function requestWithSecret(secret?: string) {
   if (secret !== undefined) {
     headers.set(NAKAFA_API_EDGE_CONTRACT.secretHeader, secret);
   }
-  return new Request("https://api.nakafa.com/v1/health", { headers });
+  return new Request("https://api.nakafa.com/health", { headers });
 }
 
 describe("agent edge security", () => {

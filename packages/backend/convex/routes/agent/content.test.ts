@@ -36,7 +36,7 @@ describe("public agent content", () => {
     const reference = encodeURIComponent(
       `https://nakafa.com/en/${article.publicPath}`
     );
-    const response = await fetchApi(test, `/v1/content?ref=${reference}`);
+    const response = await fetchApi(test, `/content?ref=${reference}`);
 
     expect(response.status).toBe(200);
     expectPublicJson(response);
@@ -56,7 +56,7 @@ describe("public agent content", () => {
     await activateMaterialCatalog(test, [material], ["en"]);
     const response = await fetchApi(
       test,
-      `/v1/content?ref=${encodeURIComponent(material.graph.assetId)}`
+      `/content?ref=${encodeURIComponent(material.graph.assetId)}`
     );
 
     expect(response.status).toBe(200);
@@ -83,10 +83,14 @@ describe("public agent content", () => {
       test,
       `/v1/content?ref=${encodeURIComponent(topic.graph.assetId)}`
     );
+    const body = response.clone();
 
     await expectProblem(response, {
       code: "CONTENT_NOT_FOUND",
       status: 404,
+    });
+    await expect(body.json()).resolves.toMatchObject({
+      resolution: expect.stringContaining("/v1/search"),
     });
   });
 
@@ -113,7 +117,7 @@ describe("public agent content", () => {
     );
     const response = await fetchApi(
       test,
-      "/v1/content?ref=asset%3Aen%3Aquran%3Aquran-surah%3A1"
+      "/content?ref=asset%3Aen%3Aquran%3Aquran-surah%3A1"
     );
 
     expect(response.status).toBe(200);
@@ -156,7 +160,7 @@ describe("public agent content", () => {
     const reference = encodeURIComponent(
       `https://nakafa.com/en/${article.publicPath}`
     );
-    const response = await fetchApi(test, `/v1/content?ref=${reference}`);
+    const response = await fetchApi(test, `/content?ref=${reference}`);
 
     await expectProblem(response, {
       code: "SERVICE_UNAVAILABLE",

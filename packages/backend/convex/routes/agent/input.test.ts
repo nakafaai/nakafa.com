@@ -20,7 +20,7 @@ describe("agent HTTP input", () => {
       expect(
         yield* readSearchInput(
           url(
-            "/v1/search?query=linear&query=equation&locale=id&section=material&limit=5&offset=1"
+            "/search?query=linear&query=equation&locale=id&section=material&limit=5&offset=1"
           )
         )
       ).toEqual({
@@ -30,11 +30,11 @@ describe("agent HTTP input", () => {
         queries: ["linear", "equation"],
         section: "material",
       });
-      expect(yield* readSearchInput(url("/v1/search"))).toEqual({});
-      expect(yield* readTaxonomyInput(url("/v1/taxonomy?locale=de"))).toEqual({
+      expect(yield* readSearchInput(url("/search"))).toEqual({});
+      expect(yield* readTaxonomyInput(url("/taxonomy?locale=de"))).toEqual({
         locale: "de",
       });
-      expect(yield* readTaxonomyInput(url("/v1/taxonomy"))).toEqual({});
+      expect(yield* readTaxonomyInput(url("/taxonomy"))).toEqual({});
     })
   );
 
@@ -42,14 +42,12 @@ describe("agent HTTP input", () => {
     Effect.gen(function* () {
       expect(
         yield* readContentInput(
-          url("/v1/content?ref=asset%3Aexample%3Amaterial%3Aalgebra")
+          url("/content?ref=asset%3Aexample%3Amaterial%3Aalgebra")
         )
       ).toBe("asset:example:material:algebra");
       expect(
         yield* readQuranInput(
-          url(
-            "/v1/quran/2?from_verse=1&to_verse=3&locale=id&include_tafsir=true"
-          ),
+          url("/quran/2?from_verse=1&to_verse=3&locale=id&include_tafsir=true"),
           "2"
         )
       ).toEqual({
@@ -59,7 +57,7 @@ describe("agent HTTP input", () => {
         surah: 2,
         to_verse: 3,
       });
-      expect(yield* readQuranInput(url("/v1/quran/1"), "1")).toEqual({
+      expect(yield* readQuranInput(url("/quran/1"), "1")).toEqual({
         surah: 1,
       });
     })
@@ -68,22 +66,22 @@ describe("agent HTTP input", () => {
   it.effect("rejects missing, repeated, unknown, and malformed values", () =>
     Effect.gen(function* () {
       const failures = yield* Effect.all({
-        duplicate: readSearchInput(url("/v1/search?locale=en&locale=id")).pipe(
+        duplicate: readSearchInput(url("/search?locale=en&locale=id")).pipe(
           Effect.flip
         ),
         invalidBoolean: readQuranInput(
-          url("/v1/quran/1?include_tafsir=yes"),
+          url("/quran/1?include_tafsir=yes"),
           "1"
         ).pipe(Effect.flip),
-        invalidInteger: readSearchInput(url("/v1/search?limit=1.5")).pipe(
+        invalidInteger: readSearchInput(url("/search?limit=1.5")).pipe(
           Effect.flip
         ),
         invalidPath: readQuranInput(
-          url("/v1/quran/not-a-number"),
+          url("/quran/not-a-number"),
           "not-a-number"
         ).pipe(Effect.flip),
-        missing: readContentInput(url("/v1/content")).pipe(Effect.flip),
-        unknown: readSearchInput(url("/v1/search?unknown=value")).pipe(
+        missing: readContentInput(url("/content")).pipe(Effect.flip),
+        unknown: readSearchInput(url("/search?unknown=value")).pipe(
           Effect.flip
         ),
       });
@@ -96,26 +94,24 @@ describe("agent HTTP input", () => {
   );
 
   it("recognizes only requests with a body or invalid declared length", () => {
-    expect(hasRequestBody(new Request("https://api.nakafa.com/v1"))).toBe(
-      false
-    );
+    expect(hasRequestBody(new Request("https://api.nakafa.com"))).toBe(false);
     expect(
       hasRequestBody(
-        new Request("https://api.nakafa.com/v1", {
+        new Request("https://api.nakafa.com", {
           headers: { "content-length": "1" },
         })
       )
     ).toBe(true);
     expect(
       hasRequestBody(
-        new Request("https://api.nakafa.com/v1", {
+        new Request("https://api.nakafa.com", {
           headers: { "content-length": "invalid" },
         })
       )
     ).toBe(true);
     expect(
       hasRequestBody(
-        new Request("https://api.nakafa.com/v1", {
+        new Request("https://api.nakafa.com", {
           body: "{}",
           method: "POST",
         })

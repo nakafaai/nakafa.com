@@ -16,7 +16,7 @@ describe("agent responses", () => {
       );
       const response = yield* logInternalFailure(
         Cause.die(new Error("private defect detail")),
-        "/v1/content",
+        "/content",
         "request-123"
       ).pipe(Effect.provide(Logger.layer([logger])));
       const body = yield* Effect.promise(() => response.json());
@@ -24,7 +24,7 @@ describe("agent responses", () => {
       expect(entries).toHaveLength(1);
       expect(entries[0]).toMatchObject({
         annotations: {
-          instance: "/v1/content",
+          instance: "/content",
           requestId: "request-123",
         },
         level: "ERROR",
@@ -33,7 +33,7 @@ describe("agent responses", () => {
       expect(entries[0]?.cause).toContain("private defect detail");
       expect(body).toMatchObject({
         code: "INTERNAL_ERROR",
-        instance: "/v1/content",
+        instance: "/content",
         request_id: "request-123",
         status: 500,
       });

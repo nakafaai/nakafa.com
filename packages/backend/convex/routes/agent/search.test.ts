@@ -22,7 +22,7 @@ describe("public agent search", () => {
   it("returns stable empty pagination from an empty deployment", async () => {
     const response = await fetchApi(
       createConvexTestWithBetterAuth(),
-      "/v1/search?query=algebra&locale=en&limit=10&offset=0"
+      "/search?query=algebra&locale=en&limit=10&offset=0"
     );
 
     expect(response.status).toBe(200);
@@ -56,7 +56,7 @@ describe("public agent search", () => {
     });
     const response = await fetchApi(
       test,
-      "/v1/search?query=rational%20function&locale=en&section=articles"
+      "/search?query=rational%20function&locale=en&section=articles"
     );
 
     expect(response.status).toBe(200);
