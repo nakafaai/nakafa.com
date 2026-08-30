@@ -1,6 +1,6 @@
 import path from "node:path";
 import config from "@repo/testing/react";
-import { mergeConfig } from "vitest/config";
+import { configDefaults, mergeConfig } from "vitest/config";
 
 /**
  * Keep this config aligned with the shared frontend Vitest baseline.
@@ -20,6 +20,8 @@ export default mergeConfig(config, {
     },
   },
   test: {
+    /** Production AFDocs checks run only against an already-started site. */
+    exclude: [...configDefaults.exclude, "checks/afdocs.test.ts"],
     /** Prepare the React test environment before each suite loads. */
     setupFiles: ["./vitest.setup.ts"],
     coverage: {

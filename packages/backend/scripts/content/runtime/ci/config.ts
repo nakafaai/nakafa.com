@@ -88,7 +88,7 @@ export const validateProductionDeployKey = (deployKey: string) => {
   ) {
     return Effect.fail(
       contentRuntimeCiError(
-        "Agent docs requires the exact production-scoped Convex deploy key."
+        "Content runtime requires the exact production-scoped Convex deploy key."
       )
     );
   }
@@ -98,18 +98,18 @@ export const validateProductionDeployKey = (deployKey: string) => {
 
 const readCacheIdentity = Effect.gen(function* () {
   const values = yield* Config.all({
-    contentStateHash: Config.nonEmptyString("AGENT_DOCS_CONTENT_STATE_HASH"),
+    contentStateHash: Config.nonEmptyString("CONTENT_RUNTIME_STATE_HASH"),
     runtimeSchemaFingerprint: Config.nonEmptyString(
-      "AGENT_DOCS_RUNTIME_SCHEMA_FINGERPRINT"
+      "CONTENT_RUNTIME_SCHEMA_HASH"
     ),
   });
 
   const contentStateHash = yield* validateHex(
-    "AGENT_DOCS_CONTENT_STATE_HASH",
+    "CONTENT_RUNTIME_STATE_HASH",
     values.contentStateHash
   );
   const runtimeSchemaFingerprint = yield* validateHex(
-    "AGENT_DOCS_RUNTIME_SCHEMA_FINGERPRINT",
+    "CONTENT_RUNTIME_SCHEMA_HASH",
     values.runtimeSchemaFingerprint
   );
   return {
@@ -120,10 +120,10 @@ const readCacheIdentity = Effect.gen(function* () {
 
 const readRuntimeSelectionIdentity = Effect.gen(function* () {
   const runtimeSelectionHash = yield* Config.nonEmptyString(
-    "AGENT_DOCS_RUNTIME_SELECTION_HASH"
+    "CONTENT_RUNTIME_SELECTION_HASH"
   ).pipe(
     Effect.flatMap((value) =>
-      validateHex("AGENT_DOCS_RUNTIME_SELECTION_HASH", value)
+      validateHex("CONTENT_RUNTIME_SELECTION_HASH", value)
     )
   );
 
@@ -151,7 +151,7 @@ export const readProductionSelectionConfig = Effect.gen(function* () {
 export const readExportConfig = Effect.gen(function* () {
   const production = yield* readProductionConfig;
   const cacheIdentity = yield* readCacheIdentity;
-  const cacheKey = yield* Config.redacted("AGENT_DOCS_CONTENT_CACHE_KEY");
+  const cacheKey = yield* Config.redacted("CONTENT_RUNTIME_CACHE_KEY");
   const exportLimit = yield* Config.int("CONTENT_RUNTIME_EXPORT_LIMIT").pipe(
     Config.withDefault(DEFAULT_CONTENT_RUNTIME_EXPORT_LIMIT)
   );
@@ -175,7 +175,7 @@ export const readExportConfig = Effect.gen(function* () {
 
 export const readImportConfig = Effect.gen(function* () {
   const identity = yield* readCacheIdentity;
-  const cacheKey = yield* Config.redacted("AGENT_DOCS_CONTENT_CACHE_KEY");
+  const cacheKey = yield* Config.redacted("CONTENT_RUNTIME_CACHE_KEY");
   const runnerTemp = yield* Config.nonEmptyString("RUNNER_TEMP");
 
   if (Redacted.value(cacheKey).length < 43) {
@@ -188,7 +188,7 @@ export const readImportConfig = Effect.gen(function* () {
 });
 
 export const clearContentRuntimeSecrets = Effect.sync(() => {
-  delete process.env.AGENT_DOCS_CONTENT_CACHE_KEY;
+  delete process.env.CONTENT_RUNTIME_CACHE_KEY;
   delete process.env.CONVEX_DEPLOY_KEY;
   delete process.env.CONVEX_DEPLOYMENT_TOKEN;
 });

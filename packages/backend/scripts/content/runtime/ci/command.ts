@@ -81,7 +81,7 @@ export const runRuntimeCommand = Effect.fn("contentRuntime.runCommand")(
       ],
       {
         env: {
-          AGENT_DOCS_CONTENT_CACHE_KEY: "",
+          CONTENT_RUNTIME_CACHE_KEY: "",
           CONVEX_DEPLOY_KEY: spec.deployKey ?? "",
           CONVEX_DEPLOYMENT_TOKEN: "",
         },

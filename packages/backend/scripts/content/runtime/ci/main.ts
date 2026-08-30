@@ -26,8 +26,8 @@ import {
 import { Config, ConfigProvider, Effect, FileSystem } from "effect";
 
 const INVALID_TABLE_NAME = /[^A-Za-z0-9_]/;
-const FINGERPRINT_ENVIRONMENT_FILE = "agent-docs-fingerprint.env";
-const GENERATION_ENVIRONMENT_FILE = "agent-docs-generations.env";
+const FINGERPRINT_ENVIRONMENT_FILE = "runtime-schema.env";
+const GENERATION_ENVIRONMENT_FILE = "runtime-state.env";
 
 const writeEnvironmentFile = Effect.fn("contentRuntime.writeEnvironmentFile")(
   function* (runnerTemp: string, fileName: string, content: string) {
@@ -56,7 +56,7 @@ const writeFingerprintEnvironment = Effect.gen(function* () {
   yield* writeEnvironmentFile(
     runnerTemp,
     FINGERPRINT_ENVIRONMENT_FILE,
-    `AGENT_DOCS_RUNTIME_SCHEMA_FINGERPRINT=${CONTENT_RUNTIME_SCHEMA_FINGERPRINT}`
+    `CONTENT_RUNTIME_SCHEMA_HASH=${CONTENT_RUNTIME_SCHEMA_FINGERPRINT}`
   );
 });
 

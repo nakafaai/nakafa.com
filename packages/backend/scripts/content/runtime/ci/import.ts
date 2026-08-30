@@ -26,7 +26,7 @@ export const importSignedRuntime = Effect.fn(
 
   const tempRoot = yield* fileSystem.makeTempDirectoryScoped({
     directory: config.runnerTemp,
-    prefix: "agent-docs-import-",
+    prefix: "runtime-import-",
   });
   const gpgHome = `${tempRoot}/gnupg`;
   const snapshotRoot = `${tempRoot}/snapshot`;
