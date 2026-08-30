@@ -334,18 +334,46 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
     expect(page.getByRole("button", { name: "Get Pro" })).toBeEnabled()
   );
 
-  const productQuestion = page.getByRole("button", {
-    name: "What can I learn on Nakafa?",
+  const pricingQuestions = page.locator('#faq [data-slot="accordion-trigger"]');
+  yield* Effect.promise(() => expect(pricingQuestions).toHaveCount(20));
+
+  const productQuestion = pricingQuestions.filter({
+    hasText: "What can I learn on Nakafa?",
   });
+  const productItem = page
+    .locator('#faq [data-slot="accordion-item"]')
+    .filter({ hasText: "What can I learn on Nakafa?" });
+  const productPanel = productItem.locator('[data-slot="accordion-content"]');
   yield* Effect.promise(() => productQuestion.click());
+  yield* Effect.promise(() =>
+    expect(productQuestion).toHaveAttribute("aria-expanded", "true")
+  );
+  yield* Effect.promise(() =>
+    expect(productPanel).toHaveAttribute("data-open", "")
+  );
+  yield* Effect.promise(() =>
+    expect(productPanel).toHaveCSS("animation-name", "accordion-down")
+  );
+  yield* Effect.promise(() =>
+    expect(productPanel).toHaveCSS("animation-duration", "0.2s")
+  );
+  yield* Effect.promise(() =>
+    expect(productQuestion.locator("svg")).toHaveCSS("rotate", "180deg")
+  );
+  yield* Effect.promise(() =>
+    expect(productQuestion.locator("svg")).toHaveCSS(
+      "transition-duration",
+      "0.2s"
+    )
+  );
   yield* Effect.promise(() =>
     expect(page.locator("#faq")).toContainText(
       "primary school through university"
     )
   );
 
-  const subscriptionQuestion = page.getByRole("button", {
-    name: "How do I manage or cancel Pro?",
+  const subscriptionQuestion = pricingQuestions.filter({
+    hasText: "How do I manage or cancel Pro?",
   });
   yield* Effect.promise(() => subscriptionQuestion.click());
   yield* Effect.promise(() =>

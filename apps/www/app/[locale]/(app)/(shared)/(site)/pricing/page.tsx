@@ -3,10 +3,8 @@ import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
 import type { Metadata } from "next";
 import { locale as rootLocale } from "next/root-params";
 import { getTranslations } from "next-intl/server";
-import {
-  type MarketingFaqItem,
-  PricingPageFaq,
-} from "@/components/marketing/about/faq";
+import { PricingPageFaq } from "@/components/marketing/about/faq/pricing";
+import type { MarketingFaqItem } from "@/components/marketing/about/faq/section";
 import { PricingPagePlans } from "@/components/marketing/about/pricing/plans";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
