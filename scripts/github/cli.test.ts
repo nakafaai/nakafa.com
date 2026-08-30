@@ -62,6 +62,23 @@ describe("CLI workflow policy", () => {
           "CLI publication must use the protected npm-production environment."
         )
       );
+
+      assert.ok(
+        validateCliWorkflow(
+          source.replace(
+            "permissions: {}",
+            "permissions: {}\nenv:\n  NODE_OPTIONS: --import=data:text/javascript,throw%201"
+          )
+        ).includes("CLI workflow must not inherit root environment values.")
+      );
+      assert.ok(
+        validateCliWorkflow(
+          source.replace(
+            "permissions: {}",
+            "permissions: {}\ndefaults:\n  run:\n    shell: bash --noprofile --norc -e -o pipefail {0}"
+          )
+        ).includes("CLI workflow must not inherit root run defaults.")
+      );
     }).pipe(Effect.provide(NodeServices.layer))
   );
 
@@ -145,6 +162,16 @@ describe("CLI workflow policy", () => {
       assert.ok(
         validateCliWorkflow(staleArtifact).includes(
           "CLI build artifacts must be replaceable on rerun."
+        )
+      );
+
+      const unsafeRerun = source.replace(
+        "          for attempt in {1..5}; do",
+        "          for attempt in {1..1}; do"
+      );
+      assert.ok(
+        validateCliWorkflow(unsafeRerun).includes(
+          "CLI publish job is missing required contract: for attempt in {1..5}"
         )
       );
     }).pipe(Effect.provide(NodeServices.layer))

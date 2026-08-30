@@ -21,6 +21,8 @@ const WorkflowJobSchema = Schema.Struct({
 });
 
 const CliWorkflowSchema = Schema.Struct({
+  defaults: Schema.optional(Schema.Unknown),
+  env: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
   jobs: Schema.Record(Schema.String, WorkflowJobSchema),
   permissions: Schema.Record(Schema.String, Schema.String),
 });
@@ -33,7 +35,7 @@ const UPLOAD_ACTION =
   "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a";
 /** Digest of the decoded publish job after a complete OIDC boundary review. */
 const TRUSTED_PUBLISH_SHA256 =
-  "b7da581b4394002530d85c362b101ea5a3dd916e1d4b03d702f24f4f8987879f";
+  "f6498b7967e2631f6a5c413e301c32308f496505e451b95504fb486f0558554d";
 const REQUIRED_BUILD_SOURCE = [
   "pnpm test:scripts",
   "pnpm --filter @nakafa/cli typecheck",
@@ -59,6 +61,8 @@ const REQUIRED_PUBLISH_SOURCE = [
   "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
   "expected_shasum",
   "expected_integrity",
+  "npm error code E404",
+  "for attempt in {1..5}",
   'npx --yes "$NPM_CLI" publish "$TARBALL"',
   "--ignore-scripts",
   "--provenance",
@@ -208,9 +212,15 @@ export function validateCliWorkflow(source: string): string[] {
     return problems;
   }
 
-  const { jobs, permissions } = decoded.value;
+  const { defaults, env, jobs, permissions } = decoded.value;
   if (Object.keys(permissions).length > 0) {
     problems.push("CLI workflow root permissions must remain empty.");
+  }
+  if (defaults !== undefined) {
+    problems.push("CLI workflow must not inherit root run defaults.");
+  }
+  if (env !== undefined) {
+    problems.push("CLI workflow must not inherit root environment values.");
   }
   const { build, publish, verify } = jobs;
   if (!(build && publish && verify)) {
