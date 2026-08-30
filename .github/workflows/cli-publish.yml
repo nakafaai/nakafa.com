@@ -21,6 +21,8 @@ jobs:
       archive: ${{ steps.archive.outputs.archive }}
       sha256: ${{ steps.archive.outputs.sha256 }}
       size: ${{ steps.archive.outputs.size }}
+      verifier_sha256: ${{ steps.archive.outputs.verifier_sha256 }}
+      verifier_size: ${{ steps.archive.outputs.verifier_size }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -42,6 +44,7 @@ jobs:
 
       - name: Verify package
         run: |
+          pnpm test:scripts
           pnpm --filter @nakafa/cli typecheck
           pnpm --filter @nakafa/cli test:coverage
           pnpm --filter @nakafa/cli build
@@ -49,13 +52,21 @@ jobs:
       - name: Build release archive
         id: archive
         env:
-          ARCHIVE_ROOT: ${{ runner.temp }}/cli-package
+          RELEASE_ROOT: ${{ runner.temp }}/cli-release
         run: |
-          mkdir -p "$ARCHIVE_ROOT"
+          mkdir -p "$RELEASE_ROOT"
+          pnpm exec esbuild scripts/github/provenance/main.ts \
+            --banner:js="import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);" \
+            --bundle \
+            --format=esm \
+            --outfile="$RELEASE_ROOT/provenance.mjs" \
+            --platform=node \
+            --target=node24
           pack=$(npm pack packages/cli --ignore-scripts --json \
-            --pack-destination "$ARCHIVE_ROOT")
+            --pack-destination "$RELEASE_ROOT")
           archive=$(jq -er '.[0].filename' <<< "$pack")
-          tarball="$ARCHIVE_ROOT/$archive"
+          tarball="$RELEASE_ROOT/$archive"
+          verifier="$RELEASE_ROOT/provenance.mjs"
           package_json=$(tar -xOf "$tarball" package/package.json)
           package_name=$(jq -er '.name' <<< "$package_json")
           package_version=$(jq -er '.version' <<< "$package_json")
@@ -71,6 +82,8 @@ jobs:
             echo "archive=$archive"
             echo "sha256=$(sha256sum "$tarball" | cut -d ' ' -f 1)"
             echo "size=$(stat --format='%s' "$tarball")"
+            echo "verifier_sha256=$(sha256sum "$verifier" | cut -d ' ' -f 1)"
+            echo "verifier_size=$(stat --format='%s' "$verifier")"
           } >> "$GITHUB_OUTPUT"
 
       - name: Upload verified archive
@@ -78,8 +91,10 @@ jobs:
         with:
           compression-level: 0
           if-no-files-found: error
-          name: cli-package
-          path: ${{ runner.temp }}/cli-package/${{ steps.archive.outputs.archive }}
+          name: cli-release
+          path: |
+            ${{ runner.temp }}/cli-release/${{ steps.archive.outputs.archive }}
+            ${{ runner.temp }}/cli-release/provenance.mjs
           retention-days: 1
 
   publish:
@@ -94,7 +109,7 @@ jobs:
       - name: Download verified archive
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: cli-package
+          name: cli-release
           path: .
 
       - name: Setup Node
@@ -107,8 +122,11 @@ jobs:
         env:
           EXPECTED_SHA256: ${{ needs.build.outputs.sha256 }}
           EXPECTED_SIZE: ${{ needs.build.outputs.size }}
+          EXPECTED_VERIFIER_SHA256: ${{ needs.build.outputs.verifier_sha256 }}
+          EXPECTED_VERIFIER_SIZE: ${{ needs.build.outputs.verifier_size }}
           NPM_CLI: npm@12.0.2
           TARBALL: ${{ needs.build.outputs.archive }}
+          VERIFIER: ${{ github.workspace }}/provenance.mjs
         run: |
           npm_version=$(npx --yes "$NPM_CLI" --version)
           if [[ "$npm_version" != "${NPM_CLI#npm@}" ]]; then
@@ -123,9 +141,13 @@ jobs:
 
           actual_sha256=$(sha256sum "$TARBALL" | cut -d ' ' -f 1)
           actual_size=$(stat --format='%s' "$TARBALL")
+          actual_verifier_sha256=$(sha256sum "$VERIFIER" | cut -d ' ' -f 1)
+          actual_verifier_size=$(stat --format='%s' "$VERIFIER")
           if [[ "$actual_sha256" != "$EXPECTED_SHA256" \
-            || "$actual_size" != "$EXPECTED_SIZE" ]]; then
-            echo "The transported CLI archive differs from the verified build output." >&2
+            || "$actual_size" != "$EXPECTED_SIZE" \
+            || "$actual_verifier_sha256" != "$EXPECTED_VERIFIER_SHA256" \
+            || "$actual_verifier_size" != "$EXPECTED_VERIFIER_SIZE" ]]; then
+            echo "The transported release differs from the verified build output." >&2
             exit 1
           fi
 
@@ -143,7 +165,6 @@ jobs:
           encoded_package_name="${package_name/\//%2f}"
           expected_attestation_url="https://registry.npmjs.org/-/npm/v1/attestations/$encoded_package_name@$package_version"
           expected_repository="https://github.com/$GITHUB_REPOSITORY"
-          expected_dependency="git+https://github.com/$GITHUB_REPOSITORY@refs/heads/main"
 
           read_metadata() {
             local raw
@@ -177,74 +198,40 @@ jobs:
           }
 
           read_verified_provenance() {
-            local audit_root raw
+            local audit_file audit_root
             audit_root=$(mktemp -d "$RUNNER_TEMP/npm-audit.XXXXXX")
-            if ! raw=$(
+            audit_file="$audit_root/audit.json"
+            if (
               set -euo pipefail
               cd "$audit_root"
               npx --yes "$NPM_CLI" init --yes >/dev/null
               npx --yes "$NPM_CLI" install --save-exact --ignore-scripts \
                 --no-audit --no-fund "$package_specifier" >/dev/null
               npx --yes "$NPM_CLI" audit signatures --json \
-                --include-attestations
+                --include-attestations > "$audit_file"
+              node "$VERIFIER" \
+                "$audit_file" \
+                "$package_name" \
+                "$package_version" \
+                "$expected_sha512" \
+                "$expected_repository" \
+                ".github/workflows/cli-publish.yml" \
+                "refs/heads/main" \
+                "$GITHUB_SHA" \
+                "npm-production"
             ); then
-              return 1
+              rm -r -- "$audit_root"
+              return 0
             fi
-            jq -ce \
-              --arg attestation_url "$expected_attestation_url" \
-              --arg name "$package_name" \
-              --arg version "$package_version" \
-              'if (.invalid | length) != 0 or (.missing | length) != 0 then
-                empty
-              else
-                [.verified[] | select(
-                  .name == $name
-                  and .version == $version
-                  and .attestations.url == $attestation_url
-                  and .attestations.provenance.predicateType
-                    == "https://slsa.dev/provenance/v1"
-                )]
-                | if length == 1 then .[0].attestationBundles else empty end
-                | map(select(
-                    .predicateType == "https://slsa.dev/provenance/v1"
-                  ))
-                | if length == 1 then
-                    .[0].bundle.dsseEnvelope.payload | @base64d | fromjson
-                  else empty
-                  end
-              end
-            ' <<< "$raw"
-          }
-
-          is_exact_provenance() {
-            jq -e \
-              --arg dependency "$expected_dependency" \
-              --arg repository "$expected_repository" \
-              --arg sha "$GITHUB_SHA" \
-              --arg sha512 "$expected_sha512" \
-              '(.subject | length == 1)
-                and .subject[0].digest.sha512 == $sha512
-                and .predicate.buildDefinition.buildType
-                  == "https://slsa-framework.github.io/github-actions-buildtypes/workflow/v1"
-                and .predicate.buildDefinition.externalParameters.workflow.repository
-                  == $repository
-                and .predicate.buildDefinition.externalParameters.workflow.path
-                  == ".github/workflows/cli-publish.yml"
-                and .predicate.buildDefinition.externalParameters.workflow.ref
-                  == "refs/heads/main"
-                and (.predicate.buildDefinition.resolvedDependencies | any(
-                  .uri == $dependency and .digest.gitCommit == $sha
-                ))
-                and .predicate.runDetails.builder.id
-                  == "https://github.com/actions/runner/github-hosted"'
+            rm -r -- "$audit_root"
+            return 1
           }
 
           is_exact_publication() {
-            local metadata provenance
+            local metadata
             if ! metadata=$(read_metadata) \
               || ! is_exact_package <<< "$metadata" \
-              || ! provenance=$(read_verified_provenance) \
-              || ! is_exact_provenance <<< "$provenance"; then
+              || ! read_verified_provenance; then
               return 1
             fi
           }

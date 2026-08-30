@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, it } from "@effect/vitest";
 import { Effect, FileSystem } from "effect";
 import { validateCliWorkflow, verifyCliWorkflow } from "#scripts/github/cli";
 
@@ -18,47 +18,60 @@ describe("CLI workflow policy", () => {
     Effect.gen(function* () {
       const source = yield* readWorkflow();
       yield* verifyCliWorkflow(source);
-      expect(validateCliWorkflow(source)).toEqual([]);
+      assert.deepStrictEqual(validateCliWorkflow(source), []);
     }).pipe(Effect.provide(NodeServices.layer))
   );
 
   it.effect("rejects credentials and expanded publishing identity", () =>
     Effect.gen(function* () {
       const source = yield* readWorkflow();
-      expect(
-        validateCliWorkflow(`${source}\nNODE_AUTH_TOKEN: secret`)
-      ).toContain(
-        "CLI workflow contains forbidden credential: NODE_AUTH_TOKEN"
+      assert.ok(
+        validateCliWorkflow(`${source}\nNODE_AUTH_TOKEN: secret`).includes(
+          "CLI workflow contains forbidden credential: NODE_AUTH_TOKEN"
+        )
       );
-      expect(
+      assert.ok(
         validateCliWorkflow(
           source.replace(
             "      contents: read",
             "      contents: read\n      id-token: write"
           )
-        )
-      ).toContain("Exactly one isolated job must receive npm OIDC identity.");
+        ).includes("Exactly one isolated job must receive npm OIDC identity.")
+      );
     }).pipe(Effect.provide(NodeServices.layer))
   );
 
   it.effect("rejects unverified archives and provenance", () =>
     Effect.gen(function* () {
       const source = yield* readWorkflow();
-      expect(
+      assert.ok(
         validateCliWorkflow(
           source.replaceAll("EXPECTED_SHA256", "UNVERIFIED_SHA256")
-        )
-      ).not.toEqual([]);
-      expect(
+        ).length > 0
+      );
+      assert.ok(
+        validateCliWorkflow(
+          source.replaceAll(
+            "EXPECTED_VERIFIER_SHA256",
+            "UNVERIFIED_VERIFIER_SHA256"
+          )
+        ).length > 0
+      );
+      assert.ok(
         validateCliWorkflow(
           source.replace("audit signatures --json", "audit --json")
-        )
-      ).not.toEqual([]);
-      expect(
+        ).length > 0
+      );
+      assert.ok(
         validateCliWorkflow(
           source.replace("environment: npm-production", "environment: test")
+        ).length > 0
+      );
+      assert.ok(
+        validateCliWorkflow(`${source}\n@base64d`).includes(
+          "CLI workflow contains unauthenticated provenance parsing: @base64d"
         )
-      ).not.toEqual([]);
+      );
     }).pipe(Effect.provide(NodeServices.layer))
   );
 });
