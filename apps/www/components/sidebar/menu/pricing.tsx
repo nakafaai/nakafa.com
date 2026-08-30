@@ -18,9 +18,7 @@ export function PricingItem() {
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
-        render={
-          <NavigationLink href="/pricing" prefetch={false} title={label} />
-        }
+        render={<NavigationLink href="/pricing" title={label} />}
       >
         <HugeIcons icon={Diamond02Icon} />
         <span>{label}</span>

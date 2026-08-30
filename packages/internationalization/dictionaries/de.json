@@ -835,7 +835,13 @@
     "q16": "Was passiert, wenn Pro endet?",
     "a16": "Dein Konto wechselt zurück zum kostenlosen Angebot und erhält wieder die täglichen kostenlosen Credits.",
     "q17": "Bleiben die grundlegenden Lernmaterialien kostenlos?",
-    "a17": "Ja. Die grundlegenden Lernmaterialien von Nakafa bleiben für alle kostenlos."
+    "a17": "Ja. Die grundlegenden Lernmaterialien von Nakafa bleiben für alle kostenlos.",
+    "q18": "Welche Lehrpläne sind bei Nakafa verfügbar?",
+    "a18": "Nakafa umfasst den Merdeka-Lehrplan, Cambridge International, Singapore MOE und einen an US-Standards ausgerichteten Lernweg. Zur Auswahl stehen die bereits veröffentlichten Bereiche dieser Lehrpläne.",
+    "q19": "Kann ich mich mit Nakafa auf eine Prüfung vorbereiten?",
+    "a19": "Ja. Wiederhole Inhalte mit Lernmaterialien, prüfe dein Verständnis mit Übungsaufgaben und trainiere das Prüfungsformat mit Probetests. Welche Sets verfügbar sind, richtet sich nach den bereits veröffentlichten Prüfungen.",
+    "q20": "Kann ich Nakafa auf dem Smartphone nutzen?",
+    "a20": "Ja. Nakafa läuft ohne App-Installation im Browser auf Smartphones, Tablets und Computern."
   },
   "Faq": {
     "badge": "Hilfe",

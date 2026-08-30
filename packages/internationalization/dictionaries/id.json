@@ -835,7 +835,13 @@
     "q16": "Apa yang terjadi setelah Pro berakhir?",
     "a16": "Akunmu kembali ke paket Gratis dan menerima jatah kredit Gratis harian.",
     "q17": "Apakah materi belajar dasar akan tetap gratis?",
-    "a17": "Ya. Materi belajar dasar Nakafa tetap gratis untuk semua orang."
+    "a17": "Ya. Materi belajar dasar Nakafa tetap gratis untuk semua orang.",
+    "q18": "Kurikulum apa yang tersedia di Nakafa?",
+    "a18": "Nakafa memuat Kurikulum Merdeka, Cambridge International, Singapore MOE, dan jalur yang diselaraskan dengan standar Amerika Serikat. Materi yang bisa dipilih mengikuti bagian kurikulum yang sudah diterbitkan.",
+    "q19": "Apakah Nakafa bisa digunakan untuk persiapan ujian?",
+    "a19": "Bisa. Gunakan materi untuk mengulang konsep, latihan soal untuk menguji pemahaman, dan Tryout untuk berlatih dalam format ujian. Set yang tersedia dapat berbeda sesuai ujian yang sedang diterbitkan.",
+    "q20": "Apakah Nakafa bisa digunakan di ponsel?",
+    "a20": "Bisa. Nakafa dapat dibuka melalui browser di ponsel, tablet, atau komputer tanpa memasang aplikasi."
   },
   "Faq": {
     "badge": "Bantuan",

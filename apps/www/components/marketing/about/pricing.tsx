@@ -11,14 +11,12 @@ import { headers } from "next/headers";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { Suspense, use } from "react";
-import {
-  PricingDithering,
-  ProButton,
-} from "@/components/marketing/about/pricing.client";
+import { ProButton } from "@/components/marketing/about/pricing.client";
 import {
   getProPricingDisplay,
   pricingCountryHeaderName,
 } from "@/components/marketing/about/pricing-display";
+import { PricingDithering } from "@/components/marketing/about/pricing-dithering.client";
 
 interface PricingFeatureProps {
   icon?: ComponentProps<typeof HugeIcons>["icon"];

@@ -835,7 +835,13 @@
     "q16": "What happens when Pro ends?",
     "a16": "Your account returns to Free and receives the daily Free credit allowance.",
     "q17": "Will basic learning materials stay free?",
-    "a17": "Yes. Nakafa's basic learning materials remain free for everyone."
+    "a17": "Yes. Nakafa's basic learning materials remain free for everyone.",
+    "q18": "Which curricula are available on Nakafa?",
+    "a18": "Nakafa includes the Merdeka Curriculum, Cambridge International, Singapore MOE, and a pathway aligned with United States standards. The material you can choose follows the curriculum sections already published.",
+    "q19": "Can I use Nakafa to prepare for an exam?",
+    "a19": "Yes. Review concepts with learning materials, check your understanding with practice questions, and rehearse the exam format with Tryouts. Available sets vary with the exams currently published.",
+    "q20": "Can I use Nakafa on my phone?",
+    "a20": "Yes. Nakafa works in a browser on phones, tablets, and computers without installing an app."
   },
   "Faq": {
     "badge": "Support",

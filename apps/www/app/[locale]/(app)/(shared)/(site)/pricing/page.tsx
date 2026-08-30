@@ -62,6 +62,9 @@ export default async function Page() {
     { question: tPricingPage("q15"), answer: tPricingPage("a15") },
     { question: tPricingPage("q16"), answer: tPricingPage("a16") },
     { question: tPricingPage("q17"), answer: tPricingPage("a17") },
+    { question: tPricingPage("q18"), answer: tPricingPage("a18") },
+    { question: tPricingPage("q19"), answer: tPricingPage("a19") },
+    { question: tPricingPage("q20"), answer: tPricingPage("a20") },
   ];
   const url = `https://nakafa.com/${locale}/pricing`;
 
