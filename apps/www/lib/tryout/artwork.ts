@@ -1,47 +1,20 @@
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { ActiveAppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import type { TryoutTrack } from "@nakafa/aksara-contracts/tryout/catalog";
 import { TryoutKeySchema } from "@nakafa/aksara-contracts/tryout/key";
 import { Effect, Result, Schema } from "effect";
-import { constant } from "effect/Function";
-import { getOgUrl } from "@/lib/utils/metadata";
+import type { Locale } from "next-intl";
+import {
+  type ArtworkIdentity,
+  resolveSocialArtwork,
+  resolveStaticArtwork,
+} from "@/lib/og/artwork";
 
-const reviewedTryoutExamArtworkSources = [
-  {
-    countryKey: "indonesia",
-    examKey: "snbt",
-    appLocale: "en",
-  },
-  {
-    countryKey: "indonesia",
-    examKey: "tka",
-    appLocale: "en",
-  },
-  {
-    countryKey: "indonesia",
-    examKey: "snbt",
-    appLocale: "id",
-  },
-  {
-    countryKey: "indonesia",
-    examKey: "tka",
-    appLocale: "id",
-  },
-];
-const ReviewedTryoutExamArtworkSchema = Schema.Struct({
-  countryKey: TryoutKeySchema,
-  examKey: TryoutKeySchema,
-  appLocale: ActiveAppLocaleSchema,
-});
-const ReviewedTryoutExamArtworkRegistrySchema = Schema.Array(
-  ReviewedTryoutExamArtworkSchema
-).pipe(
-  Schema.check(
-    Schema.makeFilter(
-      (images) =>
-        new Set(images.map(getTryoutExamArtworkIdentity)).size === images.length
-    )
-  )
-);
+const TRYOUT_SUBJECT_ARTWORK_BY_TRACK_KEY = new Map<
+  TryoutTrack["trackKey"],
+  ArtworkIdentity
+>([["mathematics", "subject/mathematics"]]);
+
 const TryoutExamArtworkIdentitySchema = Schema.Struct({
   countryKey: TryoutKeySchema,
   examKey: TryoutKeySchema,
@@ -58,6 +31,7 @@ const TryoutExamArtworkIdentitySchema = Schema.Struct({
     )
   ),
 });
+
 export const TryoutExamArtworkSchema = Schema.Struct({
   cardImageSrc: Schema.optionalKey(Schema.String),
   socialImageSrc: Schema.String,
@@ -65,55 +39,23 @@ export const TryoutExamArtworkSchema = Schema.Struct({
 export type TryoutExamArtwork = Schema.Schema.Type<
   typeof TryoutExamArtworkSchema
 >;
+
 export class InvalidTryoutExamArtworkIdentityError extends Schema.TaggedError<InvalidTryoutExamArtworkIdentityError>()(
   "InvalidTryoutExamArtworkIdentityError",
-  {
-    message: Schema.String,
-  }
+  { message: Schema.String }
 ) {}
-class InvalidReviewedTryoutExamArtworkRegistryError extends Schema.TaggedError<InvalidReviewedTryoutExamArtworkRegistryError>()(
-  "InvalidReviewedTryoutExamArtworkRegistryError",
-  {
-    message: Schema.String,
-  }
-) {}
+
 const decodeTryoutExamArtworkIdentity = Schema.decodeUnknownResult(
   TryoutExamArtworkIdentitySchema
 );
-const invalidReviewedTryoutExamArtworkRegistryError =
-  new InvalidReviewedTryoutExamArtworkRegistryError({
-    message: "Invalid reviewed try-out exam artwork registry",
-  });
-const reviewedTryoutExamArtwork = Result.mapError(
-  Schema.decodeUnknownResult(ReviewedTryoutExamArtworkRegistrySchema)(
-    reviewedTryoutExamArtworkSources
-  ),
-  constant(invalidReviewedTryoutExamArtworkRegistryError)
-);
-const reviewedTryoutExamArtworkByIdentity = Result.map(
-  reviewedTryoutExamArtwork,
-  (images) =>
-    new Map(
-      images.map((image) => [
-        getTryoutExamArtworkIdentity(image),
-        getReviewedTryoutExamArtworkPath(image),
-      ])
-    )
-);
+
 /**
- * Resolves reviewed card artwork and localized social artwork for one exam.
- * Static prerender safety depends on this resolver returning direct Success or
- * Failure values and callers using Effect.runSync, whose fast path avoids
- * starting a fiber and reading time.
+ * Resolves reviewed card and social artwork from one signed exam identity.
+ * The direct Effect values preserve the static-prerender fast path at the
+ * framework runner boundary.
  * https://nextjs.org/docs/messages/next-prerender-current-time
  */
-export function resolveTryoutExamArtwork(
-  input: unknown
-): Effect.Effect<
-  TryoutExamArtwork,
-  | InvalidReviewedTryoutExamArtworkRegistryError
-  | InvalidTryoutExamArtworkIdentityError
-> {
+export function resolveTryoutExamArtwork(input: unknown) {
   const decodedIdentity = decodeTryoutExamArtworkIdentity(input);
   if (Result.isFailure(decodedIdentity)) {
     return Effect.fail(
@@ -122,39 +64,73 @@ export function resolveTryoutExamArtwork(
       })
     );
   }
+
   const identity = decodedIdentity.success;
-  /* istanbul ignore next -- invalid authored registry fails every real resolver fixture */
-  if (Result.isFailure(reviewedTryoutExamArtworkByIdentity)) {
-    return Effect.fail(reviewedTryoutExamArtworkByIdentity.failure);
-  }
-  const reviewedImagePath = reviewedTryoutExamArtworkByIdentity.success.get(
-    getTryoutExamArtworkIdentity(identity)
+  const artworkIdentity = getTryoutExamArtworkIdentity(
+    identity.countryKey,
+    identity.examKey
   );
-  if (!reviewedImagePath) {
-    return Effect.succeed(
-      TryoutExamArtworkSchema.make({
-        socialImageSrc: getOgUrl(identity.appLocale, identity.publicPath),
-      })
-    );
-  }
+  const socialImageSrc = resolveSocialArtwork({
+    identity: artworkIdentity,
+    locale: identity.appLocale,
+    publicPath: identity.publicPath,
+  });
+  const cardImageSrc = artworkIdentity
+    ? resolveStaticArtwork(artworkIdentity, identity.appLocale)
+    : undefined;
+
   return Effect.succeed(
-    TryoutExamArtworkSchema.make({
-      cardImageSrc: reviewedImagePath,
-      socialImageSrc: reviewedImagePath,
-    })
+    TryoutExamArtworkSchema.make(
+      cardImageSrc ? { cardImageSrc, socialImageSrc } : { socialImageSrc }
+    )
   );
 }
-function getReviewedTryoutExamArtworkPath(image: {
-  readonly countryKey: string;
-  readonly examKey: string;
-  readonly appLocale: string;
-}) {
-  return `/open-graph/tryout/${image.countryKey}/${image.appLocale}-${image.examKey}.png`;
+
+/** Resolves the reviewed country card artwork for one stable source key. */
+export function getTryoutCountryCatalogArtwork(
+  locale: Locale,
+  countryKey: string
+) {
+  return countryKey === "indonesia"
+    ? resolveStaticArtwork("tryout/index", locale)
+    : undefined;
 }
-function getTryoutExamArtworkIdentity(identity: {
-  readonly countryKey: string;
-  readonly examKey: string;
-  readonly appLocale: string;
-}) {
-  return `${identity.countryKey}:${identity.appLocale}:${identity.examKey}`;
+
+/** Resolves subject or year artwork for one signed try-out track. */
+export function getTryoutTrackCatalogArtwork(
+  locale: Locale,
+  source: Pick<TryoutTrack, "countryKey" | "examKey" | "trackKey" | "trackKind">
+) {
+  let identity: ArtworkIdentity | undefined;
+  if (
+    source.countryKey === "indonesia" &&
+    source.examKey === "snbt" &&
+    source.trackKind === "year" &&
+    source.trackKey === "2027"
+  ) {
+    identity = "tryout/indonesia/2027";
+  } else if (
+    source.countryKey === "indonesia" &&
+    source.examKey === "tka" &&
+    source.trackKind === "subject"
+  ) {
+    identity = TRYOUT_SUBJECT_ARTWORK_BY_TRACK_KEY.get(source.trackKey);
+  }
+
+  return identity ? resolveStaticArtwork(identity, locale) : undefined;
+}
+
+function getTryoutExamArtworkIdentity(
+  countryKey: string,
+  examKey: string
+): ArtworkIdentity | undefined {
+  if (countryKey !== "indonesia") {
+    return;
+  }
+  if (examKey === "snbt") {
+    return "tryout/indonesia/snbt";
+  }
+  if (examKey === "tka") {
+    return "tryout/indonesia/tka";
+  }
 }

@@ -23,11 +23,7 @@ import {
   CatalogCardImage,
 } from "@/components/shared/catalog/card";
 import { ChoiceCardIcon } from "@/components/shared/choice/visual";
-import {
-  getCurriculumCatalogArtwork,
-  getCurriculumSubjectCatalogArtwork,
-  getGradeCatalogArtwork,
-} from "@/lib/catalog/artwork";
+import { resolveCurriculumCatalogArtwork } from "@/lib/curriculum/artwork";
 
 /** Renders the curriculum index header with breadcrumb context. */
 export function CurriculumIndexHeader({
@@ -106,7 +102,10 @@ export function CurriculumCatalogCards({
   return (
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
       {entries.map(({ program, route }, index) => {
-        const imageSrc = getCurriculumCatalogArtwork(locale, program.key);
+        const imageSrc = resolveCurriculumCatalogArtwork(locale, {
+          kind: "program",
+          programKey: program.key,
+        });
 
         return (
           <CatalogCard
@@ -142,9 +141,11 @@ export function CurriculumChildCards({
   return (
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
       {routes.map((route, index) => {
-        const imageSrc =
-          getGradeCatalogArtwork(locale, route.iconKey) ??
-          getCurriculumSubjectCatalogArtwork(locale, route.materialDomain);
+        const imageSrc = resolveCurriculumCatalogArtwork(locale, {
+          iconKey: route.iconKey,
+          kind: "route",
+          materialDomain: route.materialDomain,
+        });
 
         return (
           <CatalogCard

@@ -12,6 +12,7 @@ import { LayoutContent } from "@/components/shared/layout-content";
 import { RefContent } from "@/components/shared/ref-content";
 import { getPublishedQuranCatalog } from "@/lib/content/quran/publication";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getAppSocialArtwork } from "@/lib/og/app-artwork";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getSocialMetadata } from "@/lib/utils/metadata";
@@ -41,7 +42,7 @@ export async function generateMetadata({
     description,
     locale,
     path,
-    image: "/quran.png",
+    image: getAppSocialArtwork({ key: "quran", locale, publicPath: "quran" }),
     type: "book",
   });
 

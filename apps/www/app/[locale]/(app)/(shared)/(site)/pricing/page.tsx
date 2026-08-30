@@ -11,6 +11,7 @@ import {
   PricingCards,
 } from "@/components/marketing/about/pricing/plans";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getAppSocialArtwork } from "@/lib/og/app-artwork";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getSocialMetadata } from "@/lib/utils/metadata";
@@ -76,7 +77,11 @@ export async function generateMetadata({
       description,
       locale,
       path,
-      image: "/og.png",
+      image: getAppSocialArtwork({
+        key: "pricing",
+        locale,
+        publicPath: "pricing",
+      }),
     }),
   };
 }

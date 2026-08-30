@@ -2,6 +2,12 @@
 
 This glossary records stable domain terms used by Nakafa code and PR review. It is not an implementation plan.
 
+## Public Artwork
+
+- **Public artwork**: A reviewed 1200 by 630 visual assigned to one stable Nakafa subject, learning stage, program, exam, or product surface. Cards and social metadata may reuse the same artwork.
+- **Artwork locale**: The language variant of Public artwork. When a requested variant is absent, English is the visual fallback; this rule never applies to Signed content delivery.
+- **Universal artwork**: Public artwork whose imagery does not depend on language. Nakafa records it as the English default for every application locale.
+
 ## Content Publication
 
 - **Supported application locale**: A locale code recognized by the shared Aksara contract. Support does not activate public product routes or prove that every authored content family is ready.

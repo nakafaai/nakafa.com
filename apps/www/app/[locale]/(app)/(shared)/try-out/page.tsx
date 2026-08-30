@@ -11,10 +11,11 @@ import { TryoutHubClient } from "@/components/tryout/catalog/hub.client";
 import { readTryoutHubPage } from "@/components/tryout/catalog/server";
 import { TryoutHeader } from "@/components/tryout/shell/chrome";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { getAppSocialArtwork } from "@/lib/og/app-artwork";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
-import { getOgUrl, getSocialMetadata } from "@/lib/utils/metadata";
+import { getSocialMetadata } from "@/lib/utils/metadata";
 
 /**
  * Builds metadata-only copy for the try-out hub while keeping helper prose out
@@ -39,7 +40,11 @@ export async function generateMetadata({
     description,
     locale,
     path,
-    image: getOgUrl(locale, "/try-out"),
+    image: getAppSocialArtwork({
+      key: "try-out",
+      locale,
+      publicPath: "try-out",
+    }),
   });
 
   return {

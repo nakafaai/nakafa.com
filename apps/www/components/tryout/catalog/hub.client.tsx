@@ -10,11 +10,13 @@ import { useTranslations } from "next-intl";
 import {
   CatalogCard,
   CatalogCardGradient,
+  CatalogCardImage,
 } from "@/components/shared/catalog/card";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { CountryFlagIcon } from "@/components/shared/country-flag";
 import { saveTryoutPreference } from "@/components/tryout/catalog/preference.client";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
+import { getTryoutCountryCatalogArtwork } from "@/lib/tryout/artwork";
 import { useSetPreferredTryoutMutation } from "@/lib/tryout/mutation.client";
 
 interface TryoutHubClientProps {
@@ -63,26 +65,37 @@ export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
 
   return (
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
-      {page.countries.map((country) => (
-        <CatalogCard
-          action={
-            <IntentLink
-              href={getTryoutPublicPathHref(country.publicPath)}
-              onClick={() => handleCountryClick(country)}
-            />
-          }
-          actionLabel={tTryouts("open-country-cta")}
-          key={country.countryKey}
-          title={country.title}
-        >
-          <CatalogCardGradient seed={country.publicPath}>
-            <CountryFlagIcon
-              className="relative h-6 w-9 rounded-[2px] ring-1 ring-border/60"
-              countryCode={country.countryCode}
-            />
-          </CatalogCardGradient>
-        </CatalogCard>
-      ))}
+      {page.countries.map((country, index) => {
+        const imageSrc = getTryoutCountryCatalogArtwork(
+          locale,
+          country.countryKey
+        );
+
+        return (
+          <CatalogCard
+            action={
+              <IntentLink
+                href={getTryoutPublicPathHref(country.publicPath)}
+                onClick={() => handleCountryClick(country)}
+              />
+            }
+            actionLabel={tTryouts("open-country-cta")}
+            key={country.countryKey}
+            title={country.title}
+          >
+            {imageSrc ? (
+              <CatalogCardImage preload={index === 0} src={imageSrc} />
+            ) : (
+              <CatalogCardGradient seed={country.publicPath}>
+                <CountryFlagIcon
+                  className="relative h-6 w-9 rounded-[2px] ring-1 ring-border/60"
+                  countryCode={country.countryCode}
+                />
+              </CatalogCardGradient>
+            )}
+          </CatalogCard>
+        );
+      })}
     </div>
   );
 }

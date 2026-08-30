@@ -31,7 +31,7 @@ import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { RefContent } from "@/components/shared/ref-content";
 import { SubjectItem } from "@/components/shared/subject-item";
 import { SubjectList } from "@/components/shared/subject-list";
-import { getCurriculumRouteSocialImage } from "@/lib/curriculum/social-images";
+import { getCurriculumRouteSocialImage } from "@/lib/curriculum/artwork";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getCachedSEOMetadata } from "@/lib/seo/cache";
