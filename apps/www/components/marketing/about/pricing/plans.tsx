@@ -107,7 +107,7 @@ export function PricingCards({ Price, headingLevel }: PricingPlanCardsProps) {
           <p className="text-pretty text-muted-foreground">
             {t("pro-description")}
           </p>
-          <div className="h-12 pt-2">
+          <div className="pt-2">
             <PricingPrice Price={Price} period={t("pro-period")} plan="pro" />
           </div>
         </div>

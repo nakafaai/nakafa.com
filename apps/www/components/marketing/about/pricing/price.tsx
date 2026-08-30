@@ -50,13 +50,13 @@ function PriceFallback() {
 /** Keeps plan geometry stable while the request-localized amount streams. */
 export function PricingPrice({ period, Price, plan }: PricingPriceProps) {
   return (
-    <span
-      className="inline-flex h-10 min-w-28 items-baseline"
+    <div
+      className="flex h-10 w-fit min-w-28 items-baseline"
       data-pricing-price-slot={plan}
     >
       <Suspense fallback={<PriceFallback />}>
         <ResolvedPrice Price={Price} period={period} plan={plan} />
       </Suspense>
-    </span>
+    </div>
   );
 }
