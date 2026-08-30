@@ -23,7 +23,23 @@ describe("pricing Markdown", () => {
         expect(text).toContain(AGENT_MARKDOWN_DIRECTIVE);
         expect(text).toContain(`URL: ${BASE_URL}/${locale}/pricing`);
         expect(text.match(/^### /gm)).toHaveLength(20);
+        expect(text.match(/^## /gm)).toHaveLength(4);
+        expect(text).not.toContain("<mark>");
         expect(text).not.toContain("undefined");
       })
+  );
+
+  it.effect("mirrors the visible English pricing structure", () =>
+    Effect.gen(function* () {
+      const text = yield* getPricingLlmsText("en");
+
+      expect(text).toContain(
+        "## Start with Free. Move to Pro when you are ready."
+      );
+      expect(text).toContain(
+        "Compare both plans, then choose the one that fits how you learn."
+      );
+      expect(text).toContain("## Anything you want to check first?");
+    })
   );
 });
