@@ -1,15 +1,10 @@
 "use client";
 
-import { Diamond02Icon } from "@hugeicons/core-free-icons";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import {
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@repo/design-system/components/ui/sidebar-menu";
+import { SidebarMenuItem } from "@repo/design-system/components/ui/sidebar-menu";
 import { useTranslations } from "next-intl";
 import { AnalyticsConsentSidebarItem } from "@/components/analytics/consent/actions";
 import { GuestLanguageMenu } from "@/components/sidebar/menu/preference";
+import { PricingItem } from "@/components/sidebar/menu/pricing";
 import { NavUserGuestButton } from "@/components/sidebar/user/guest/button";
 
 /** Renders guest utilities and the signed-out account call to action. */
@@ -18,19 +13,7 @@ export function NavUserGuest() {
 
   return (
     <>
-      <SidebarMenuItem>
-        <SidebarMenuButton
-          render={
-            <NavigationLink
-              href={{ pathname: "/", hash: "pricing" }}
-              title={t("pricing-cta")}
-            />
-          }
-        >
-          <HugeIcons icon={Diamond02Icon} />
-          <span>{t("pricing-cta")}</span>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
+      <PricingItem />
       <GuestLanguageMenu />
       <AnalyticsConsentSidebarItem />
       <SidebarMenuItem
