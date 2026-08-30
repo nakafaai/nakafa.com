@@ -3,6 +3,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { BASE_URL } from "@/lib/llms/constants";
+import { AGENT_MARKDOWN_DIRECTIVE } from "@/lib/llms/format";
 import { getPricingLlmsText, isPricingLlmsRoute } from "@/lib/llms/pricing";
 
 describe("pricing Markdown", () => {
@@ -19,7 +20,8 @@ describe("pricing Markdown", () => {
         const text = yield* getPricingLlmsText(locale);
 
         expect(text).toContain("# ");
-        expect(text).toContain(`Canonical page: ${BASE_URL}/${locale}/pricing`);
+        expect(text).toContain(AGENT_MARKDOWN_DIRECTIVE);
+        expect(text).toContain(`URL: ${BASE_URL}/${locale}/pricing`);
         expect(text.match(/^### /gm)).toHaveLength(20);
         expect(text).not.toContain("undefined");
       })

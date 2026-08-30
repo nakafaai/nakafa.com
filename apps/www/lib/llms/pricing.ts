@@ -2,6 +2,7 @@ import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
 import { BASE_URL } from "@/lib/llms/constants";
+import { buildHeader } from "@/lib/llms/format";
 
 const FAQ_NUMBERS = [
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
@@ -22,11 +23,14 @@ export const getPricingLlmsText = Effect.fn("www.llms.pricing.text")(function* (
   const questions = FAQ_NUMBERS.map(
     (number) => `### ${page[`q${number}`]}\n\n${page[`a${number}`]}`
   ).join("\n\n");
+  const url = `${BASE_URL}/${locale}/pricing`;
 
   return [
-    `# ${page["metadata-title"]}`,
-    page["metadata-description"],
-    `Canonical page: ${BASE_URL}/${locale}/pricing`,
+    ...buildHeader({
+      description: page["metadata-description"],
+      title: page["metadata-title"],
+      url,
+    }),
     `## ${pricing["free-title"]}`,
     pricing["free-description"],
     `- ${pricing["free-feature-1"]}`,
@@ -40,7 +44,7 @@ export const getPricingLlmsText = Effect.fn("www.llms.pricing.text")(function* (
     `- ${pricing["pro-feature-2"]}`,
     `- ${pricing["pro-feature-3"]}`,
     `- ${pricing["pro-feature-5"]}`,
-    `Current price and checkout: ${BASE_URL}/${locale}/pricing`,
+    `Current price and checkout: ${url}`,
     `## ${page["faq-badge"]}`,
     questions,
   ].join("\n\n");
