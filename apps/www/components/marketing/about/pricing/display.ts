@@ -53,26 +53,63 @@ const polarEuroTerritoryCodes = new Set([
   "YT",
 ]);
 
+type MonthlyPrice =
+  (typeof products.pro.monthlyPrices)[keyof typeof products.pro.monthlyPrices];
+
+/** Builds the shared formatting contract for one catalog price. */
+function getPriceFormat(price: MonthlyPrice) {
+  return {
+    currency: price.currency,
+    maximumFractionDigits: price.fractionDigits,
+    minimumFractionDigits: price.fractionDigits,
+    style: "currency",
+  } satisfies Intl.NumberFormatOptions;
+}
+
+const eurPrice = products.pro.monthlyPrices.EUR;
+const eurFormat = getPriceFormat(eurPrice);
+const eurPricing = {
+  format: eurFormat,
+  formatter: new Intl.NumberFormat(eurPrice.locale, eurFormat),
+  price: eurPrice,
+};
+
+const idrPrice = products.pro.monthlyPrices.IDR;
+const idrFormat = getPriceFormat(idrPrice);
+const idrPricing = {
+  format: idrFormat,
+  formatter: new Intl.NumberFormat(idrPrice.locale, idrFormat),
+  price: idrPrice,
+};
+
+const usdPrice = products.pro.monthlyPrices.USD;
+const usdFormat = getPriceFormat(usdPrice);
+const usdPricing = {
+  format: usdFormat,
+  formatter: new Intl.NumberFormat(usdPrice.locale, usdFormat),
+  price: usdPrice,
+};
+
 /** Selects the Polar catalog price for the request country. */
-function getProMonthlyPrice(countryCode: string | null) {
+function getProMonthlyPricing(countryCode: string | null) {
   const normalizedCountryCode = countryCode?.toUpperCase();
 
   if (normalizedCountryCode === "ID") {
-    return products.pro.monthlyPrices.IDR;
+    return idrPricing;
   }
 
   if (
     normalizedCountryCode &&
     polarEuroTerritoryCodes.has(normalizedCountryCode)
   ) {
-    return products.pro.monthlyPrices.EUR;
+    return eurPricing;
   }
 
-  return products.pro.monthlyPrices.USD;
+  return usdPricing;
 }
 
 /**
- * Prepares NumberFlow pricing props from Vercel country geolocation.
+ * Prepares animated and static price display from Vercel country geolocation.
  *
  * References:
  * - https://examples.vercel.com/kb/guide/geo-ip-headers-geolocation-vercel-functions
@@ -80,23 +117,19 @@ function getProMonthlyPrice(countryCode: string | null) {
  * - https://number-flow.barvian.me/
  */
 export function getProPricingDisplay(countryCode: string | null) {
-  const price = getProMonthlyPrice(countryCode);
-  const format = {
-    currency: price.currency,
-    maximumFractionDigits: price.fractionDigits,
-    minimumFractionDigits: price.fractionDigits,
-    style: "currency",
-  } satisfies Intl.NumberFormatOptions;
+  const { format, formatter, price } = getProMonthlyPricing(countryCode);
 
   return {
     free: {
       format,
       locales: price.locale,
+      text: formatter.format(0),
       value: 0,
     },
     pro: {
       format,
       locales: price.locale,
+      text: formatter.format(price.amount),
       value: price.amount,
     },
   };

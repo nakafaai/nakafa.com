@@ -35,7 +35,14 @@ vi.mock("@repo/internationalization/src/routing", () => ({
 }));
 
 vi.mock("@/lib/sitemap/routes", () => ({
-  baseRoutes: ["/", "/search", "/contributor", "/curricula", "/quran"],
+  baseRoutes: [
+    "/",
+    "/contributor",
+    "/curricula",
+    "/pricing",
+    "/quran",
+    "/search",
+  ],
   readSitemapRoutePage: mockReadSitemapRoutePage,
 }));
 

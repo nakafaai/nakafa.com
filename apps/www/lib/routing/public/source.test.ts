@@ -329,6 +329,7 @@ describe("public HTML route rejection", () => {
     Effect.gen(function* () {
       const paths = [
         "/de",
+        "/de/pricing",
         "/de/search",
         "/de/chat/new",
         "/de/lehrplaene/merdeka",
@@ -355,6 +356,7 @@ describe("public HTML route rejection", () => {
       Effect.gen(function* () {
         const paths = [
           "/de/search/fabricated",
+          "/de/pricing/fabricated",
           "/de/auth/fabricated",
           "/de/onboarding/fabricated",
           "/de/home/fabricated",

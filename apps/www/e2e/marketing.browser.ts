@@ -96,6 +96,11 @@ const verifyMarketingSurface = Effect.fn("NakafaE2E.verifyMarketingSurface")(
         HOMEPAGE_MAX_DESCENDANTS
       );
     });
+    yield* Effect.promise(() =>
+      expect(page.locator('#faq [data-slot="accordion-trigger"]')).toHaveCount(
+        6
+      )
+    );
 
     const gallery = page.locator("#community [data-contributor-gallery]");
     const triggers = gallery.locator("[data-contributor-username]");
@@ -308,6 +313,86 @@ const verifyContributorPage = Effect.fn("NakafaE2E.verifyContributorPage")(
   }
 );
 
+const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
+  page: Page
+) {
+  yield* loadMarketingPage(page, "/en/pricing");
+  yield* Effect.promise(() =>
+    expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "Start with Free. Move to Pro when you are ready."
+    )
+  );
+  yield* Effect.promise(() =>
+    expect(page.getByRole("heading", { level: 2, name: "Free" })).toBeVisible()
+  );
+  yield* Effect.promise(() =>
+    expect(page.getByRole("heading", { level: 2, name: "Pro" })).toBeVisible()
+  );
+  yield* Effect.promise(() =>
+    expect(
+      page.getByRole("region", {
+        name: "Start with Free. Move to Pro when you are ready.",
+      })
+    ).toContainText("3,000 AI credits")
+  );
+  yield* Effect.promise(() =>
+    expect(page.getByRole("button", { name: "Get Pro" })).toBeEnabled()
+  );
+
+  const pricingQuestions = page.locator('#faq [data-slot="accordion-trigger"]');
+  yield* Effect.promise(() => expect(pricingQuestions).toHaveCount(20));
+
+  const productQuestion = pricingQuestions.filter({
+    hasText: "What can I learn on Nakafa?",
+  });
+  const productItem = page
+    .locator('#faq [data-slot="accordion-item"]')
+    .filter({ hasText: "What can I learn on Nakafa?" });
+  const productPanel = productItem.locator('[data-slot="accordion-content"]');
+  yield* Effect.promise(() => productQuestion.click());
+  yield* Effect.promise(() =>
+    expect(productQuestion).toHaveAttribute("aria-expanded", "true")
+  );
+  yield* Effect.promise(() =>
+    expect(productPanel).toHaveAttribute("data-open", "")
+  );
+  yield* Effect.promise(() =>
+    expect(productPanel).toHaveCSS("animation-name", "accordion-down")
+  );
+  yield* Effect.promise(() =>
+    expect(productPanel).toHaveCSS("animation-duration", "0.2s")
+  );
+  yield* Effect.promise(() =>
+    expect(productQuestion.locator("svg")).toHaveCSS("rotate", "180deg")
+  );
+  yield* Effect.promise(() =>
+    expect(productQuestion.locator("svg")).toHaveCSS(
+      "transition-duration",
+      "0.2s"
+    )
+  );
+  yield* Effect.promise(() =>
+    expect(page.locator("#faq")).toContainText(
+      "primary school through university"
+    )
+  );
+
+  const subscriptionQuestion = pricingQuestions.filter({
+    hasText: "How do I manage or cancel Pro?",
+  });
+  yield* Effect.promise(() => subscriptionQuestion.click());
+  yield* Effect.promise(() =>
+    expect(page.locator("#faq")).toContainText(
+      "manage or cancel your subscription"
+    )
+  );
+  yield* Effect.promise(() =>
+    expect(page.locator('header nav [href="/en/pricing"]')).toHaveText(
+      "Pricing"
+    )
+  );
+});
+
 for (const viewport of targetViewports) {
   test.describe(`marketing surfaces at ${viewport.name}`, () => {
     test.use({
@@ -341,6 +426,18 @@ test.describe("detached contributor payloads", () => {
   }) => {
     await Effect.runPromise(
       withObservedPageErrors(page, verifyContributorPage(page))
+    );
+  });
+});
+
+test.describe("dedicated pricing page", () => {
+  test.use({ viewport: { height: 900, width: 1440 } });
+
+  test("renders plans and pricing questions through the marketing shell", async ({
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(page, verifyPricingPage(page))
     );
   });
 });

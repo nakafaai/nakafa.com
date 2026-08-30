@@ -25,8 +25,20 @@ beforeEach(() => {
 describe("site llms entries", () => {
   it.effect("reads site routes from the active signed Page catalog", () =>
     Effect.gen(function* () {
-      expect(yield* readSiteLlmsEntries("en")).toEqual(
-        buildSiteLlmsEntries("en", [testPageProjection])
+      const entries = yield* readSiteLlmsEntries("en");
+      expect(entries).toEqual(
+        buildSiteLlmsEntries(
+          "en",
+          [testPageProjection],
+          [
+            {
+              description:
+                "Compare Nakafa Free and Pro for learning materials, practice questions, Nina AI tutoring, and online Tryouts.",
+              route: "/pricing",
+              title: "Pricing",
+            },
+          ]
+        )
       );
       expect(catalogMock).toHaveBeenCalledOnce();
     })

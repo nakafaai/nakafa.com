@@ -6,11 +6,11 @@ import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { Community } from "@/components/marketing/about/community";
 import { Curricula } from "@/components/marketing/about/curricula";
-import { Faq } from "@/components/marketing/about/faq";
+import { Faq } from "@/components/marketing/about/faq/landing";
 import { Features } from "@/components/marketing/about/features";
 import { Hero } from "@/components/marketing/about/hero";
 import { Logos } from "@/components/marketing/about/logos";
-import { Pricing } from "@/components/marketing/about/pricing";
+import { Pricing } from "@/components/marketing/about/pricing/landing";
 import { Schools } from "@/components/marketing/about/schools";
 import { Trust } from "@/components/marketing/about/trust/section";
 import {

@@ -6,19 +6,15 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { headers } from "next/headers";
 import { useTranslations } from "next-intl";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ComponentType } from "react";
 import { Suspense, use } from "react";
-import {
-  PricingDithering,
-  ProButton,
-} from "@/components/marketing/about/pricing.client";
+import { PricingButton } from "@/components/marketing/about/pricing/button.client";
 import {
   getProPricingDisplay,
   pricingCountryHeaderName,
-} from "@/components/marketing/about/pricing-display";
+} from "@/components/marketing/about/pricing/display";
 
 interface PricingFeatureProps {
   icon?: ComponentProps<typeof HugeIcons>["icon"];
@@ -26,8 +22,15 @@ interface PricingFeatureProps {
 }
 
 type PricingDisplay = ReturnType<typeof getProPricingDisplay>;
+type Price = PricingDisplay["pro"];
+
+export interface PriceProps {
+  price: Price;
+}
 
 interface PricingPlanCardsProps {
+  headingLevel: "h2" | "h3";
+  Price: ComponentType<PriceProps>;
   pricingDisplay: PricingDisplay;
 }
 
@@ -42,8 +45,13 @@ function PricingFeature({ text, icon }: PricingFeatureProps) {
 }
 
 /** Renders the pricing plan cards with an already resolved price display. */
-function PricingPlanCards({ pricingDisplay }: PricingPlanCardsProps) {
+function PricingPlanCards({
+  Price,
+  headingLevel,
+  pricingDisplay,
+}: PricingPlanCardsProps) {
   const t = useTranslations("Pricing");
+  const PlanHeading = headingLevel;
   const freeFeatures = [
     t("free-feature-1"),
     t("free-feature-2"),
@@ -63,19 +71,14 @@ function PricingPlanCards({ pricingDisplay }: PricingPlanCardsProps) {
     <div className="grid lg:grid-cols-2 lg:divide-x">
       <div className="flex flex-col gap-6 px-6 py-12 lg:px-10">
         <div className="grid gap-2">
-          <h3 className="text-balance font-semibold text-3xl">
+          <PlanHeading className="text-balance font-semibold text-3xl">
             {t("free-title")}
-          </h3>
+          </PlanHeading>
           <p className="text-pretty text-muted-foreground">
             {t("free-description")}
           </p>
           <div className="pt-2">
-            <NumberFormat
-              className="font-semibold text-4xl tracking-tight"
-              format={pricingDisplay.free.format}
-              locales={pricingDisplay.free.locales}
-              value={pricingDisplay.free.value}
-            />
+            <Price price={pricingDisplay.free} />
           </div>
         </div>
 
@@ -106,19 +109,14 @@ function PricingPlanCards({ pricingDisplay }: PricingPlanCardsProps) {
 
       <div className="flex flex-col gap-6 px-6 py-12 lg:px-10">
         <div className="grid gap-2">
-          <h3 className="text-balance font-semibold text-3xl">
+          <PlanHeading className="text-balance font-semibold text-3xl">
             {t("pro-title")}
-          </h3>
+          </PlanHeading>
           <p className="text-pretty text-muted-foreground">
             {t("pro-description")}
           </p>
           <div className="flex items-baseline gap-1 pt-2">
-            <NumberFormat
-              className="font-semibold text-4xl tracking-tight"
-              format={pricingDisplay.pro.format}
-              locales={pricingDisplay.pro.locales}
-              value={pricingDisplay.pro.value}
-            />
+            <Price price={pricingDisplay.pro} />
             <span className="ml-1 text-muted-foreground">
               {t("pro-period")}
             </span>
@@ -135,7 +133,7 @@ function PricingPlanCards({ pricingDisplay }: PricingPlanCardsProps) {
         </div>
 
         <div className="mt-auto pt-4">
-          <ProButton />
+          <PricingButton />
         </div>
       </div>
     </div>
@@ -148,45 +146,32 @@ function PricingPlanCards({ pricingDisplay }: PricingPlanCardsProps) {
  *
  * Docs: https://nextjs.org/docs/app/getting-started/caching#dynamic-rendering
  */
-function RequestPricedCards() {
+function RequestPricedCards({
+  Price,
+  headingLevel,
+}: Pick<PricingPlanCardsProps, "Price" | "headingLevel">) {
   const requestHeaders = use(headers());
   const pricingDisplay = getProPricingDisplay(
     requestHeaders.get(pricingCountryHeaderName)
   );
 
-  return <PricingPlanCards pricingDisplay={pricingDisplay} />;
-}
-
-/** Renders stable default pricing while request-location pricing streams in. */
-function PricingCardsFallback() {
-  return <PricingPlanCards pricingDisplay={getProPricingDisplay(null)} />;
-}
-
-/** Renders the marketing pricing section with request-location price display. */
-export function Pricing() {
-  const t = useTranslations("Pricing");
-
   return (
-    <section className="border-b">
-      <div className="mx-auto w-full max-w-7xl border-x">
-        <div className="h-120 w-full overflow-hidden">
-          <PricingDithering />
-        </div>
+    <PricingPlanCards
+      headingLevel={headingLevel}
+      Price={Price}
+      pricingDisplay={pricingDisplay}
+    />
+  );
+}
 
-        <div className="scroll-mt-28 px-6 pb-12 lg:px-10" id="pricing">
-          <h2 className="max-w-3xl text-balance text-3xl tracking-tight sm:text-4xl">
-            {t.rich("headline", {
-              mark: (chunks) => <mark>{chunks}</mark>,
-            })}
-          </h2>
-        </div>
-
-        <div className="border-t bg-card text-card-foreground">
-          <Suspense fallback={<PricingCardsFallback />}>
-            <RequestPricedCards />
-          </Suspense>
-        </div>
-      </div>
-    </section>
+/** Streams request-priced cards without showing a false default price. */
+export function PricingCards({
+  Price,
+  headingLevel,
+}: Pick<PricingPlanCardsProps, "Price" | "headingLevel">) {
+  return (
+    <Suspense fallback={null}>
+      <RequestPricedCards headingLevel={headingLevel} Price={Price} />
+    </Suspense>
   );
 }

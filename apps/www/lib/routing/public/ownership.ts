@@ -10,6 +10,7 @@ const APPLICATION_ROUTE_ROOTS = new Set([
   "home",
   "og",
   "onboarding",
+  "pricing",
   "quran",
   "school",
   "search",
@@ -138,7 +139,7 @@ export function isApplicationRoutePath(
     return isPublicSurfacePath(publicSurface, segments);
   }
 
-  if (["auth", "contributor", "home", "search"].includes(root)) {
+  if (["auth", "contributor", "home", "pricing", "search"].includes(root)) {
     return segments.length === 0;
   }
 

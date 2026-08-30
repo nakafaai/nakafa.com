@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { AccountPricing } from "@/components/sidebar/menu/pricing";
 import { NavUserGuest } from "@/components/sidebar/user/guest/panel";
 import { NavUserSkeleton } from "@/components/sidebar/user/skeleton";
 import { useUser } from "@/lib/context/use-user";
@@ -27,5 +28,10 @@ export function SchoolSidebarNavUser() {
   if (!user) {
     return <NavUserGuest />;
   }
-  return <SchoolSidebarAccount user={user} />;
+  return (
+    <>
+      <AccountPricing plan={user.appUser.plan} />
+      <SchoolSidebarAccount user={user} />
+    </>
+  );
 }

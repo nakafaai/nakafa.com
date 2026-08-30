@@ -90,6 +90,7 @@ describe("sitemap route pages", () => {
         "/",
         "/contributor",
         "/curricula",
+        "/pricing",
         "/quran",
         "/search",
       ]);

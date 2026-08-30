@@ -12,6 +12,7 @@ describe("public route ownership", () => {
     ["de", "search"],
     ["en", "articles"],
     ["id", "quran"],
+    ["en", "pricing"],
     ["de", "lehrplaene"],
     ["en", "subjects"],
     ["id", "try-out"],
@@ -32,6 +33,7 @@ describe("public route ownership", () => {
 
   it.each([
     ["de", "search"],
+    ["de", "pricing"],
     ["de", "onboarding"],
     ["de", "chat/new"],
     ["de", "onboarding/focus"],
@@ -58,6 +60,7 @@ describe("public route ownership", () => {
 
   it.each([
     ["de", "search/fabricated"],
+    ["de", "pricing/fabricated"],
     ["de", ""],
     ["de", "fabricated"],
     ["de", "auth/fabricated"],

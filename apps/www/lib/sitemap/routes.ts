@@ -30,6 +30,7 @@ export const baseRoutes: readonly string[] = [
   "/",
   "/contributor",
   "/curricula",
+  "/pricing",
   quranRootRoute,
   "/search",
 ];
