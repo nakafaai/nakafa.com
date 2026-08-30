@@ -36,14 +36,10 @@ export class PageNavigationMissingError extends Schema.TaggedError<PageNavigatio
 ) {}
 
 const developerKey = PageKeySchema.make("developers");
+const imprintKey = PageKeySchema.make("imprint");
 const privacyPolicyKey = PageKeySchema.make("privacy-policy");
+const securityPolicyKey = PageKeySchema.make("security-policy");
 const termsOfServiceKey = PageKeySchema.make("terms-of-service");
-const legalPageKeys: ReadonlySet<PageKey> = new Set([
-  PageKeySchema.make("imprint"),
-  privacyPolicyKey,
-  PageKeySchema.make("security-policy"),
-  termsOfServiceKey,
-]);
 
 /** Resolves one required stable Page identity without owning its public path. */
 const readRequiredPageItem = Effect.fn("www.pages.readRequiredItem")(function* (
@@ -78,18 +74,27 @@ export const readPageNavigation = Effect.fn("www.pages.readNavigation")(
         title: metadata.title,
       });
     }
-    const [developerItem, privacyPolicyItem, termsOfServiceItem] =
-      yield* Effect.all([
-        readRequiredPageItem(localeItems, developerKey, locale),
-        readRequiredPageItem(localeItems, privacyPolicyKey, locale),
-        readRequiredPageItem(localeItems, termsOfServiceKey, locale),
-      ]);
-    const legalItems = localeItems.filter(({ pageKey }) =>
-      legalPageKeys.has(pageKey)
-    );
+    const [
+      developerItem,
+      imprintItem,
+      privacyPolicyItem,
+      securityPolicyItem,
+      termsOfServiceItem,
+    ] = yield* Effect.all([
+      readRequiredPageItem(localeItems, developerKey, locale),
+      readRequiredPageItem(localeItems, imprintKey, locale),
+      readRequiredPageItem(localeItems, privacyPolicyKey, locale),
+      readRequiredPageItem(localeItems, securityPolicyKey, locale),
+      readRequiredPageItem(localeItems, termsOfServiceKey, locale),
+    ]);
     return {
       developerItem,
-      legalItems,
+      legalItems: [
+        imprintItem,
+        privacyPolicyItem,
+        securityPolicyItem,
+        termsOfServiceItem,
+      ],
       privacyPolicyHref: privacyPolicyItem.href,
       termsOfServiceHref: termsOfServiceItem.href,
     } satisfies PageNavigation;

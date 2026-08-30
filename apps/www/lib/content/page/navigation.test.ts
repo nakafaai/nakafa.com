@@ -174,23 +174,30 @@ describe("signed Page navigation", () => {
 
   it.effect("fails closed when a required legal destination is absent", () =>
     Effect.gen(function* () {
-      catalogMock.mockReturnValue(
-        Effect.succeed({
-          activeReleaseId: "release-pages",
-          projections: germanPages.filter(
-            ({ pageKey }) => pageKey !== "privacy-policy"
-          ),
-        })
-      );
+      for (const pageKey of [
+        "imprint",
+        "privacy-policy",
+        "security-policy",
+        "terms-of-service",
+      ] as const) {
+        catalogMock.mockReturnValue(
+          Effect.succeed({
+            activeReleaseId: "release-pages",
+            projections: germanPages.filter(
+              (projection) => projection.pageKey !== pageKey
+            ),
+          })
+        );
 
-      const failure = yield* readPageNavigation("de").pipe(Effect.flip);
+        const failure = yield* readPageNavigation("de").pipe(Effect.flip);
 
-      expect(failure).toEqual(
-        new PageNavigationMissingError({
-          locale: "de",
-          pageKey: PageKeySchema.make("privacy-policy"),
-        })
-      );
+        expect(failure).toEqual(
+          new PageNavigationMissingError({
+            locale: "de",
+            pageKey: PageKeySchema.make(pageKey),
+          })
+        );
+      }
     })
   );
 
