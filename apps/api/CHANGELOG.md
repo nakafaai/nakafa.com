@@ -1,5 +1,16 @@
 # api
 
+## 2.0.0
+
+### Major Changes
+
+- [#521](https://github.com/nakafaai/nakafa.com/pull/521) [`2a13e73`](https://github.com/nakafaai/nakafa.com/commit/2a13e73d0beabc62176300bfd918e2d4d1e15143) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Replace the API and MCP Next.js proxy applications with frameworkless Vercel routing into the Convex-owned runtimes. Remove the orphaned private API and website MCP proxy surfaces, publish one canonical MCP endpoint, identify the breaking REST response contract as version 2.0.0, and rename the Aksara publication credential to match its owner.
+
+### Patch Changes
+
+- Updated dependencies [[`2a13e73`](https://github.com/nakafaai/nakafa.com/commit/2a13e73d0beabc62176300bfd918e2d4d1e15143)]:
+  - @repo/backend@3.0.0
+
 ## 1.0.1
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @repo/ai
 
+## 2.0.2
+
+### Patch Changes
+
+- Updated dependencies [[`2a13e73`](https://github.com/nakafaai/nakafa.com/commit/2a13e73d0beabc62176300bfd918e2d4d1e15143)]:
+  - @repo/contents@2.0.0
+
 ## 2.0.1
 
 ### Patch Changes
