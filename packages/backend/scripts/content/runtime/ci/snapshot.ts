@@ -10,7 +10,7 @@ import {
   CONTENT_RUNTIME_TABLES,
 } from "@repo/backend/scripts/content/runtime/tables";
 import { Effect, Schema } from "effect";
-export const CONTENT_RUNTIME_CACHE_DIRECTORY = "agent-docs-content-cache";
+export const CONTENT_RUNTIME_CACHE_DIRECTORY = "runtime-cache";
 export const CONTENT_RUNTIME_CACHE_FILE = "runtime.tar.gpg";
 const HashSchema = Schema.String.pipe(
   Schema.check(Schema.isPattern(/^[a-f0-9]{64}$/))

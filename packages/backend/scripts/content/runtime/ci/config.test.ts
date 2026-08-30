@@ -47,7 +47,7 @@ describe("content runtime CI config", () => {
       expect(failure).toMatchObject({
         _tag: "ContentRuntimeCiError",
         message:
-          "Agent docs requires the exact production-scoped Convex deploy key.",
+          "Content runtime requires the exact production-scoped Convex deploy key.",
       });
       if (deployKey.length > 0) {
         expect(failure.message).not.toContain(deployKey);
@@ -58,14 +58,14 @@ describe("content runtime CI config", () => {
   it.live("clears every content runtime credential alias", () =>
     Effect.gen(function* () {
       const sensitiveValue = "inherited-sensitive-value";
-      vi.stubEnv("AGENT_DOCS_CONTENT_CACHE_KEY", sensitiveValue);
+      vi.stubEnv("CONTENT_RUNTIME_CACHE_KEY", sensitiveValue);
       vi.stubEnv("CONVEX_DEPLOY_KEY", sensitiveValue);
       vi.stubEnv("CONVEX_DEPLOYMENT_TOKEN", sensitiveValue);
       vi.stubEnv("CONTENT_RUNTIME_UNRELATED", "preserved-value");
 
       yield* clearContentRuntimeSecrets;
 
-      expect(process.env.AGENT_DOCS_CONTENT_CACHE_KEY).toBeUndefined();
+      expect(process.env.CONTENT_RUNTIME_CACHE_KEY).toBeUndefined();
       expect(process.env.CONVEX_DEPLOY_KEY).toBeUndefined();
       expect(process.env.CONVEX_DEPLOYMENT_TOKEN).toBeUndefined();
       expect(process.env.CONTENT_RUNTIME_UNRELATED).toBe("preserved-value");
@@ -125,7 +125,7 @@ describe("content runtime CI config", () => {
         yield* withStubbedEnv(readProductionSelectionConfig.pipe(Effect.flip))
       ).toMatchObject({
         _tag: "ContentRuntimeCiError",
-        message: "AGENT_DOCS_RUNTIME_SELECTION_HASH must be a SHA-256 hash.",
+        message: "CONTENT_RUNTIME_SELECTION_HASH must be a SHA-256 hash.",
       });
     })
   );
@@ -140,13 +140,13 @@ function stubProductionConfig() {
 }
 
 function stubCacheIdentity(contentStateHash: string) {
-  vi.stubEnv("AGENT_DOCS_CONTENT_CACHE_KEY", "k".repeat(43));
-  vi.stubEnv("AGENT_DOCS_CONTENT_STATE_HASH", contentStateHash);
-  vi.stubEnv("AGENT_DOCS_RUNTIME_SCHEMA_FINGERPRINT", "3".repeat(64));
+  vi.stubEnv("CONTENT_RUNTIME_CACHE_KEY", "k".repeat(43));
+  vi.stubEnv("CONTENT_RUNTIME_STATE_HASH", contentStateHash);
+  vi.stubEnv("CONTENT_RUNTIME_SCHEMA_HASH", "3".repeat(64));
 }
 
 function stubRuntimeSelection(runtimeSelectionHash: string) {
-  vi.stubEnv("AGENT_DOCS_RUNTIME_SELECTION_HASH", runtimeSelectionHash);
+  vi.stubEnv("CONTENT_RUNTIME_SELECTION_HASH", runtimeSelectionHash);
 }
 
 function withStubbedEnv<Value, Error>(program: Effect.Effect<Value, Error>) {
