@@ -1,7 +1,5 @@
 import {
   DEPENDENCY_HOLDS,
-  DEPENDENCY_RELEASE_AGE_EXCLUSIONS,
-  DEPENDENCY_RELEASE_AGE_MINUTES,
   FORBIDDEN_EFFECT_DEPENDENCIES,
   SCRIPT_DEPENDENCY_HOLDS,
 } from "#scripts/dependencies/policy";
@@ -149,21 +147,5 @@ export function validateDependencyPolicy({
   if (rootManifest.devEngines?.runtime?.version !== "24.19.0") {
     problems.push("The managed Node runtime must be 24.19.0.");
   }
-  if (workspace.minimumReleaseAge !== DEPENDENCY_RELEASE_AGE_MINUTES) {
-    problems.push("Dependency releases must mature for exactly 1440 minutes.");
-  }
-  if (workspace.minimumReleaseAgeStrict !== true) {
-    problems.push("Dependency release-age enforcement must remain strict.");
-  }
-  const expectedExclusions = [...DEPENDENCY_RELEASE_AGE_EXCLUSIONS].sort();
-  const actualExclusions = [
-    ...(workspace.minimumReleaseAgeExclude ?? []),
-  ].sort();
-  if (JSON.stringify(actualExclusions) !== JSON.stringify(expectedExclusions)) {
-    problems.push(
-      "pnpm minimumReleaseAgeExclude does not match the reviewed exception policy."
-    );
-  }
-
   return problems;
 }

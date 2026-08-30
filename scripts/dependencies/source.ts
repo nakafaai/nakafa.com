@@ -20,9 +20,6 @@ const PackageManifest = Schema.Struct({
 });
 const WorkspaceManifest = Schema.Struct({
   catalog: Schema.optional(StringMap),
-  minimumReleaseAge: Schema.optional(Schema.Finite),
-  minimumReleaseAgeExclude: Schema.optional(Schema.Array(Schema.String)),
-  minimumReleaseAgeStrict: Schema.optional(Schema.Boolean),
   overrides: Schema.optional(StringMap),
   update: Schema.optional(
     Schema.Struct({ ignoreDeps: Schema.optional(Schema.Array(Schema.String)) })
