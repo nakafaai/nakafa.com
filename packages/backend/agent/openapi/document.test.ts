@@ -177,13 +177,13 @@ describe("Nakafa OpenAPI document", () => {
       )
     ).toBe(true);
     expect(OPENAPI_RESPONSE_EXAMPLES.QuranReference.pre_bismillah).toBeNull();
-    expect(NAKAFA_OPENAPI_DOCUMENT.paths).not.toHaveProperty("/quran/{surah}");
-    expect(NAKAFA_OPENAPI_DOCUMENT.paths).toHaveProperty("/v1");
-    expect(NAKAFA_OPENAPI_DOCUMENT.paths).toHaveProperty("/v1/content");
-    expect(NAKAFA_OPENAPI_DOCUMENT.paths).toHaveProperty("/v1/health");
-    expect(NAKAFA_OPENAPI_DOCUMENT.paths).toHaveProperty("/v1/quran/{surah}");
-    expect(NAKAFA_OPENAPI_DOCUMENT.paths).toHaveProperty("/v1/search");
-    expect(NAKAFA_OPENAPI_DOCUMENT.paths).toHaveProperty("/v1/taxonomy");
+    expect(NAKAFA_OPENAPI_DOCUMENT.paths).toHaveProperty("/");
+    expect(NAKAFA_OPENAPI_DOCUMENT.paths).toHaveProperty("/content");
+    expect(NAKAFA_OPENAPI_DOCUMENT.paths).toHaveProperty("/health");
+    expect(NAKAFA_OPENAPI_DOCUMENT.paths).toHaveProperty("/quran/{surah}");
+    expect(NAKAFA_OPENAPI_DOCUMENT.paths).toHaveProperty("/search");
+    expect(NAKAFA_OPENAPI_DOCUMENT.paths).toHaveProperty("/taxonomy");
+    expect(NAKAFA_OPENAPI_DOCUMENT.paths).not.toHaveProperty("/v1");
     expect(NAKAFA_OPENAPI_DOCUMENT.paths).not.toHaveProperty(
       "/v2/quran/{surah}"
     );

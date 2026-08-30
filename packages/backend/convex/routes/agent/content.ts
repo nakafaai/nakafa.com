@@ -54,7 +54,7 @@ function contentNotFoundResponse(request: Request, requestId: string) {
     instance: projectPublicApiPath(new URL(request.url).pathname),
     requestId,
     resolution:
-      "Use a content_id from /v1/search with markdown_url, or a canonical readable Nakafa URL.",
+      "Use a content_id from /search with markdown_url, or a canonical readable Nakafa URL.",
     status: 404,
     title: "Content not found",
     type: "content-not-found",

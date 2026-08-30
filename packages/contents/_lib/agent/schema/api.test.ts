@@ -47,7 +47,7 @@ describe("Nakafa public API schemas", () => {
       Schema.is(NakafaProblemDetailsSchema)({
         code: "INVALID_REQUEST",
         detail: "Invalid input.",
-        instance: "/v1/search",
+        instance: "/search",
         request_id: "request-1",
         resolution: "Correct the input.",
         status: 200,
