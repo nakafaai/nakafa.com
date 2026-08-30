@@ -52,8 +52,30 @@ describe("llms entries", () => {
         "packages/corpus/pages/privacy-policy/en.mdx"
       ),
     });
-    const englishEntries = buildSiteLlmsEntries("en", [page]);
-    const indonesianEntries = buildSiteLlmsEntries("id", [page]);
+    const englishEntries = buildSiteLlmsEntries(
+      "en",
+      [page],
+      [
+        {
+          description:
+            "Compare Nakafa Free and Pro for learning materials, practice questions, Nina AI tutoring, and online Tryouts.",
+          route: "/pricing",
+          title: "Pricing",
+        },
+      ]
+    );
+    const indonesianEntries = buildSiteLlmsEntries(
+      "id",
+      [page],
+      [
+        {
+          description:
+            "Bandingkan Nakafa Gratis dan Pro untuk materi belajar, latihan soal, tutor AI Nina, dan Tryout online.",
+          route: "/pricing",
+          title: "Harga",
+        },
+      ]
+    );
     const englishCurriculum = englishEntries.find(
       (entry) => entry.route === "/curriculum"
     );
@@ -66,6 +88,15 @@ describe("llms entries", () => {
       section: "site",
       title: "Curriculum",
     });
+    expect(
+      englishEntries.find((entry) => entry.route === "/pricing")
+    ).toMatchObject({
+      description:
+        "Compare Nakafa Free and Pro for learning materials, practice questions, Nina AI tutoring, and online Tryouts.",
+      href: `${BASE_URL}/en/pricing`,
+      section: "site",
+      title: "Pricing",
+    });
     expect(indonesianCurriculum).toMatchObject({
       href: `${BASE_URL}/id/kurikulum`,
       section: "site",
@@ -73,15 +104,28 @@ describe("llms entries", () => {
     });
     expect(englishEntries.map((entry) => entry.route)).toEqual([
       "/curriculum",
+      "/pricing",
       "/privacy-policy",
     ]);
     expect(englishEntries[1]).toMatchObject({
+      route: "/pricing",
+      title: "Pricing",
+    });
+    expect(englishEntries[2]).toMatchObject({
       description: page.metadata.description,
       title: page.metadata.title,
     });
     expect(indonesianEntries.map((entry) => entry.route)).toEqual([
       "/kurikulum",
+      "/pricing",
     ]);
+    expect(
+      indonesianEntries.find((entry) => entry.route === "/pricing")
+    ).toMatchObject({
+      description:
+        "Bandingkan Nakafa Gratis dan Pro untuk materi belajar, latihan soal, tutor AI Nina, dan Tryout online.",
+      title: "Harga",
+    });
     expect(englishEntries.some((entry) => entry.route === "/")).toBe(false);
     expect(englishEntries.some((entry) => entry.route === "/contributor")).toBe(
       false
@@ -154,7 +198,19 @@ describe("llms entries", () => {
       ),
     });
 
-    expect(buildSiteLlmsEntries("en", [page])[1]).toMatchObject({
+    expect(
+      buildSiteLlmsEntries(
+        "en",
+        [page],
+        [
+          {
+            description: "Compare Nakafa Free and Pro.",
+            route: "/pricing",
+            title: "Pricing",
+          },
+        ]
+      )[2]
+    ).toMatchObject({
       route: "/legal/privacy-policy",
       segments: ["site", "legal", "privacy-policy"],
     });

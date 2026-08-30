@@ -28,6 +28,12 @@ interface PublishedContentSummary {
   readonly title: string;
 }
 
+export interface ApplicationSiteSummary {
+  readonly description: string;
+  readonly route: string;
+  readonly title: string;
+}
+
 /** Checks whether a route segment is a supported llms section. */
 export function isLlmsSection(
   section: string | undefined
@@ -43,10 +49,22 @@ export function getLlmsSections() {
 /** Builds site entries from derived indexes and signed Page projections. */
 export function buildSiteLlmsEntries(
   locale: Locale,
-  pages: readonly PublicPageProjection[]
+  pages: readonly PublicPageProjection[],
+  applicationPages: readonly ApplicationSiteSummary[]
 ) {
   const entries: LlmsEntry[] = derivedSiteRoutes.flatMap((route) =>
     Option.toArray(buildLocalizedSiteLlmsEntry({ locale, route }))
+  );
+
+  entries.push(
+    ...applicationPages.map((page) =>
+      buildSiteLlmsEntry({
+        description: page.description,
+        locale,
+        publicRoute: page.route,
+        title: page.title,
+      })
+    )
   );
 
   for (const page of pages) {
@@ -104,19 +122,38 @@ function buildLocalizedSiteLlmsEntry({
 }) {
   return Option.map(
     getLocalizedMappedRoutePathname({ locale, route }),
-    (publicRoute) => {
-      const hrefBase = `${BASE_URL}/${locale}${publicRoute}`;
-      const routePath = publicRoute.slice(1);
-      const routeSegments = ["site", ...routePath.split("/").filter(Boolean)];
-      const section: LlmsSection = "site";
-
-      return {
-        href: hrefBase,
-        route: publicRoute,
-        section,
-        segments: routeSegments,
+    (publicRoute) =>
+      buildSiteLlmsEntry({
+        locale,
+        publicRoute,
         title: formatRouteTitle(publicRoute),
-      };
-    }
+      })
   );
+}
+
+/** Builds one localized site entry from its owned route and metadata. */
+function buildSiteLlmsEntry({
+  description,
+  locale,
+  publicRoute,
+  title,
+}: {
+  description?: string;
+  locale: Locale;
+  publicRoute: string;
+  title: string;
+}) {
+  const hrefBase = `${BASE_URL}/${locale}${publicRoute}`;
+  const routePath = publicRoute.slice(1);
+  const routeSegments = ["site", ...routePath.split("/").filter(Boolean)];
+  const section: LlmsSection = "site";
+
+  return {
+    ...(description === undefined ? {} : { description }),
+    href: hrefBase,
+    route: publicRoute,
+    section,
+    segments: routeSegments,
+    title,
+  };
 }

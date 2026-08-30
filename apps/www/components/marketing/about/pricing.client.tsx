@@ -53,7 +53,7 @@ export function PricingDithering({ ...props }: DitheringProps) {
 export function ProButton() {
   const locale = useLocale();
   const t = useTranslations("Pricing");
-  const pricingCallbackURL = `/${locale}/#pricing`;
+  const pricingCallbackURL = `/${locale}/pricing`;
 
   const [isPending, startTransition] = useTransition();
 

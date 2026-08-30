@@ -28,6 +28,7 @@ interface PricingFeatureProps {
 type PricingDisplay = ReturnType<typeof getProPricingDisplay>;
 
 interface PricingPlanCardsProps {
+  headingLevel: "h2" | "h3";
   pricingDisplay: PricingDisplay;
 }
 
@@ -42,8 +43,12 @@ function PricingFeature({ text, icon }: PricingFeatureProps) {
 }
 
 /** Renders the pricing plan cards with an already resolved price display. */
-function PricingPlanCards({ pricingDisplay }: PricingPlanCardsProps) {
+function PricingPlanCards({
+  headingLevel,
+  pricingDisplay,
+}: PricingPlanCardsProps) {
   const t = useTranslations("Pricing");
+  const PlanHeading = headingLevel;
   const freeFeatures = [
     t("free-feature-1"),
     t("free-feature-2"),
@@ -63,9 +68,9 @@ function PricingPlanCards({ pricingDisplay }: PricingPlanCardsProps) {
     <div className="grid lg:grid-cols-2 lg:divide-x">
       <div className="flex flex-col gap-6 px-6 py-12 lg:px-10">
         <div className="grid gap-2">
-          <h3 className="text-balance font-semibold text-3xl">
+          <PlanHeading className="text-balance font-semibold text-3xl">
             {t("free-title")}
-          </h3>
+          </PlanHeading>
           <p className="text-pretty text-muted-foreground">
             {t("free-description")}
           </p>
@@ -106,9 +111,9 @@ function PricingPlanCards({ pricingDisplay }: PricingPlanCardsProps) {
 
       <div className="flex flex-col gap-6 px-6 py-12 lg:px-10">
         <div className="grid gap-2">
-          <h3 className="text-balance font-semibold text-3xl">
+          <PlanHeading className="text-balance font-semibold text-3xl">
             {t("pro-title")}
-          </h3>
+          </PlanHeading>
           <p className="text-pretty text-muted-foreground">
             {t("pro-description")}
           </p>
@@ -148,18 +153,43 @@ function PricingPlanCards({ pricingDisplay }: PricingPlanCardsProps) {
  *
  * Docs: https://nextjs.org/docs/app/getting-started/caching#dynamic-rendering
  */
-function RequestPricedCards() {
+function RequestPricedCards({
+  headingLevel,
+}: Pick<PricingPlanCardsProps, "headingLevel">) {
   const requestHeaders = use(headers());
   const pricingDisplay = getProPricingDisplay(
     requestHeaders.get(pricingCountryHeaderName)
   );
 
-  return <PricingPlanCards pricingDisplay={pricingDisplay} />;
+  return (
+    <PricingPlanCards
+      headingLevel={headingLevel}
+      pricingDisplay={pricingDisplay}
+    />
+  );
 }
 
 /** Renders stable default pricing while request-location pricing streams in. */
-function PricingCardsFallback() {
-  return <PricingPlanCards pricingDisplay={getProPricingDisplay(null)} />;
+function PricingCardsFallback({
+  headingLevel,
+}: Pick<PricingPlanCardsProps, "headingLevel">) {
+  return (
+    <PricingPlanCards
+      headingLevel={headingLevel}
+      pricingDisplay={getProPricingDisplay(null)}
+    />
+  );
+}
+
+/** Streams request-priced cards through the shared stable fallback. */
+function PricingCards({
+  headingLevel,
+}: Pick<PricingPlanCardsProps, "headingLevel">) {
+  return (
+    <Suspense fallback={<PricingCardsFallback headingLevel={headingLevel} />}>
+      <RequestPricedCards headingLevel={headingLevel} />
+    </Suspense>
+  );
 }
 
 /** Renders the marketing pricing section with request-location price display. */
@@ -167,14 +197,17 @@ export function Pricing() {
   const t = useTranslations("Pricing");
 
   return (
-    <section className="border-b">
+    <section aria-labelledby="pricing-heading" className="border-b">
       <div className="mx-auto w-full max-w-7xl border-x">
         <div className="h-120 w-full overflow-hidden">
           <PricingDithering />
         </div>
 
         <div className="scroll-mt-28 px-6 pb-12 lg:px-10" id="pricing">
-          <h2 className="max-w-3xl text-balance text-3xl tracking-tight sm:text-4xl">
+          <h2
+            className="max-w-3xl text-balance text-3xl tracking-tight sm:text-4xl"
+            id="pricing-heading"
+          >
             {t.rich("headline", {
               mark: (chunks) => <mark>{chunks}</mark>,
             })}
@@ -182,9 +215,41 @@ export function Pricing() {
         </div>
 
         <div className="border-t bg-card text-card-foreground">
-          <Suspense fallback={<PricingCardsFallback />}>
-            <RequestPricedCards />
-          </Suspense>
+          <PricingCards headingLevel="h3" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** Renders the dedicated pricing-page introduction and shared plan cards. */
+export function PricingPagePlans() {
+  const t = useTranslations("PricingPage");
+
+  return (
+    <section aria-labelledby="pricing-heading" className="border-b">
+      <div className="mx-auto w-full max-w-7xl">
+        <div
+          className="scroll-mt-28 px-6 py-24 sm:py-28 lg:px-10 lg:py-32"
+          id="pricing"
+        >
+          <h1
+            className="max-w-3xl text-balance text-3xl tracking-tight sm:text-4xl"
+            id="pricing-heading"
+          >
+            {t.rich("headline", {
+              mark: (chunks) => <mark>{chunks}</mark>,
+            })}
+          </h1>
+          <p className="mt-6 max-w-2xl text-pretty text-lg text-muted-foreground">
+            {t("description")}
+          </p>
+        </div>
+      </div>
+
+      <div className="border-t bg-card text-card-foreground">
+        <div className="mx-auto w-full max-w-7xl border-x">
+          <PricingCards headingLevel="h2" />
         </div>
       </div>
     </section>

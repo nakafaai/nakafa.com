@@ -308,6 +308,55 @@ const verifyContributorPage = Effect.fn("NakafaE2E.verifyContributorPage")(
   }
 );
 
+const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
+  page: Page
+) {
+  yield* loadMarketingPage(page, "/en/pricing");
+  yield* Effect.promise(() =>
+    expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "Start with Free. Move to Pro when you are ready."
+    )
+  );
+  yield* Effect.promise(() =>
+    expect(page.getByRole("heading", { level: 2, name: "Free" })).toBeVisible()
+  );
+  yield* Effect.promise(() =>
+    expect(page.getByRole("heading", { level: 2, name: "Pro" })).toBeVisible()
+  );
+  yield* Effect.promise(() =>
+    expect(
+      page.getByRole("region", {
+        name: "Start with Free. Move to Pro when you are ready.",
+      })
+    ).toContainText("3,000 AI credits")
+  );
+
+  const productQuestion = page.getByRole("button", {
+    name: "What can I learn on Nakafa?",
+  });
+  yield* Effect.promise(() => productQuestion.click());
+  yield* Effect.promise(() =>
+    expect(page.locator("#faq")).toContainText(
+      "primary school through university"
+    )
+  );
+
+  const subscriptionQuestion = page.getByRole("button", {
+    name: "How do I manage or cancel Pro?",
+  });
+  yield* Effect.promise(() => subscriptionQuestion.click());
+  yield* Effect.promise(() =>
+    expect(page.locator("#faq")).toContainText(
+      "manage or cancel your subscription"
+    )
+  );
+  yield* Effect.promise(() =>
+    expect(page.locator('header nav [href="/en/pricing"]')).toHaveText(
+      "Pricing"
+    )
+  );
+});
+
 for (const viewport of targetViewports) {
   test.describe(`marketing surfaces at ${viewport.name}`, () => {
     test.use({
@@ -341,6 +390,18 @@ test.describe("detached contributor payloads", () => {
   }) => {
     await Effect.runPromise(
       withObservedPageErrors(page, verifyContributorPage(page))
+    );
+  });
+});
+
+test.describe("dedicated pricing page", () => {
+  test.use({ viewport: { height: 900, width: 1440 } });
+
+  test("renders plans and pricing questions through the marketing shell", async ({
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(page, verifyPricingPage(page))
     );
   });
 });

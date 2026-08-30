@@ -32,9 +32,7 @@ export function Header() {
           <Button
             nativeButton={false}
             render={
-              <NavigationLink href={{ pathname: "/", hash: "pricing" }}>
-                {t("pricing")}
-              </NavigationLink>
+              <NavigationLink href="/pricing">{t("pricing")}</NavigationLink>
             }
             variant="ghost"
           />

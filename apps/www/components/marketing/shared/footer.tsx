@@ -105,7 +105,7 @@ export function Footer({
                 </li>
                 <li>
                   <LinkItem
-                    href={`/${locale}#pricing`}
+                    href={`/${locale}/pricing`}
                     label={tMarketing("pricing")}
                     nativeAnchor
                   />
