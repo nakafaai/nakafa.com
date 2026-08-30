@@ -78,8 +78,28 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     action: "actions/upload-artifact",
     approvedSha: "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
     expectedTag: "v7.0.1",
-    expectedUsages: 1,
-    reason: "Failure diagnostics use the reviewed stable release.",
+    expectedUsages: 3,
+    reason:
+      "Failure diagnostics and separated CLI artifacts use the reviewed release.",
+  },
+  {
+    action: "actions/download-artifact",
+    approvedSha: "3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
+    expectedTag: "v8.0.1",
+    expectedUsages: 3,
+    reason: "CLI publishing and verification download separated artifacts.",
+  },
+  {
+    action: "actions/setup-node",
+    approvedSha: "820762786026740c76f36085b0efc47a31fe5020",
+    expectedInputs: {
+      "node-version": "24.19.0",
+      "package-manager-cache": "false",
+    },
+    expectedTag: "v7.0.0",
+    expectedUsages: 2,
+    reason:
+      "CLI publication and verification pin Node without dependency caching.",
   },
 ]);
 

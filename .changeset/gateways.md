@@ -4,7 +4,7 @@
 "@repo/next-config": major
 "api": major
 "mcp": major
-"nakafa-cli": patch
+"@nakafa/cli": patch
 "www": patch
 ---
 

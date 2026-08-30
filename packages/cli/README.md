@@ -5,7 +5,7 @@ The official Node 24 command-line client for Nakafa's public, read-only REST API
 ## Install
 
 ```sh
-npm install --global nakafa-cli
+npm install --global @nakafa/cli
 ```
 
 ## Commands
