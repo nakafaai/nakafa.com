@@ -37,13 +37,13 @@ function ResolvedPrice({ period, Price, plan }: PricingPriceProps) {
 
 function PriceFallback() {
   return (
-    <span className="flex h-10 items-center">
+    <div className="flex h-10 items-center">
       <Skeleton
         aria-hidden="true"
         className="h-10 w-28"
         data-pricing-price-fallback
       />
-    </span>
+    </div>
   );
 }
 

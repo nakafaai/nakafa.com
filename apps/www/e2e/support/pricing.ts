@@ -1,4 +1,5 @@
 import { expect, type Page } from "@playwright/test";
+import { Effect } from "effect";
 
 interface PricingRect {
   height: number;
@@ -15,6 +16,7 @@ interface PricingGeometry {
 interface PricingTransitionObservation {
   after: PricingGeometry | null;
   before: PricingGeometry | null;
+  fallbackObserved: boolean;
   layoutShift: number;
 }
 
@@ -29,98 +31,122 @@ function countOccurrences(value: string, pattern: string) {
 }
 
 /** Proves the streamed HTML keeps both plans around price-only fallbacks. */
-export async function expectStablePricingAppShell(page: Page) {
-  const response = await page.request.get("/id/pricing", {
-    headers: { Accept: "text/html" },
-  });
-  expect(response.ok()).toBe(true);
+export const expectStablePricingAppShell = Effect.fn(
+  "NakafaE2E.expectStablePricingAppShell"
+)(function* (page: Page) {
+  const response = yield* Effect.promise(() =>
+    page.request.get("/id/pricing", {
+      headers: { Accept: "text/html" },
+    })
+  );
+  const html = yield* Effect.promise(() => response.text());
 
-  const html = await response.text();
-  expect(countOccurrences(html, "data-pricing-plan=")).toBe(2);
-  expect(countOccurrences(html, "data-pricing-price-slot=")).toBe(2);
-  expect(countOccurrences(html, 'data-pricing-price-fallback="true"')).toBe(2);
-}
+  yield* Effect.sync(() => {
+    expect(response.ok()).toBe(true);
+    expect(countOccurrences(html, "data-pricing-plan=")).toBe(2);
+    expect(countOccurrences(html, "data-pricing-price-slot=")).toBe(2);
+    expect(countOccurrences(html, 'data-pricing-price-fallback="true"')).toBe(
+      2
+    );
+  });
+});
 
 /** Installs an observer before a cold document load begins parsing. */
-function installPricingTransitionObserver(page: Page) {
-  return page.addInitScript(() => {
-    const observation: PricingTransitionObservation = {
-      after: null,
-      before: null,
-      layoutShift: 0,
-    };
-    window.__nakafaPricingTransition = observation;
-
-    const readRect = (element: Element): PricingRect => {
-      const rect = element.getBoundingClientRect();
-      return {
-        height: rect.height,
-        width: rect.width,
-        x: rect.x,
-        y: rect.y,
+const installPricingTransitionObserver = Effect.fn(
+  "NakafaE2E.installPricingTransitionObserver"
+)(function* (page: Page) {
+  yield* Effect.promise(() =>
+    page.addInitScript(() => {
+      const observation: PricingTransitionObservation = {
+        after: null,
+        before: null,
+        fallbackObserved: false,
+        layoutShift: 0,
       };
-    };
-    const readGeometry = (): PricingGeometry => ({
-      plans: Object.fromEntries(
-        [...document.querySelectorAll("[data-pricing-plan]")].map((element) => [
-          element.getAttribute("data-pricing-plan") ?? "",
-          readRect(element),
-        ])
-      ),
-      slots: Object.fromEntries(
-        [...document.querySelectorAll("[data-pricing-price-slot]")].map(
-          (element) => [
-            element.getAttribute("data-pricing-price-slot") ?? "",
-            readRect(element),
-          ]
-        )
-      ),
-    });
-    const addLayoutShifts = (entries: PerformanceEntry[]) => {
-      for (const entry of entries) {
-        if ("value" in entry && typeof entry.value === "number") {
-          observation.layoutShift += entry.value;
-        }
-      }
-    };
-    const layoutShiftObserver = new PerformanceObserver((list) =>
-      addLayoutShifts(list.getEntries())
-    );
-    let baselineScheduled = false;
-    let finishing = false;
+      window.__nakafaPricingTransition = observation;
 
-    const finish = () => {
-      if (finishing) {
-        return;
-      }
-      finishing = true;
-
-      requestAnimationFrame(() =>
-        requestAnimationFrame(() => {
-          const fallbackCount = document.querySelectorAll(
-            "[data-pricing-price-fallback]"
-          ).length;
-          if (fallbackCount > 0) {
-            finishing = false;
-            return;
+      const readRect = (element: Element): PricingRect => {
+        const rect = element.getBoundingClientRect();
+        return {
+          height: rect.height,
+          width: rect.width,
+          x: rect.x,
+          y: rect.y,
+        };
+      };
+      const readGeometry = (): PricingGeometry => ({
+        plans: Object.fromEntries(
+          [...document.querySelectorAll("[data-pricing-plan]")].map(
+            (element) => [
+              element.getAttribute("data-pricing-plan") ?? "",
+              readRect(element),
+            ]
+          )
+        ),
+        slots: Object.fromEntries(
+          [...document.querySelectorAll("[data-pricing-price-slot]")].map(
+            (element) => [
+              element.getAttribute("data-pricing-price-slot") ?? "",
+              readRect(element),
+            ]
+          )
+        ),
+      });
+      const addLayoutShifts = (entries: PerformanceEntry[]) => {
+        for (const entry of entries) {
+          if ("value" in entry && typeof entry.value === "number") {
+            observation.layoutShift += entry.value;
           }
-
-          addLayoutShifts(layoutShiftObserver.takeRecords());
-          layoutShiftObserver.disconnect();
-          mutationObserver.disconnect();
-          observation.after = readGeometry();
-        })
+        }
+      };
+      const layoutShiftObserver = new PerformanceObserver((list) =>
+        addLayoutShifts(list.getEntries())
       );
-    };
+      layoutShiftObserver.observe({ buffered: true, type: "layout-shift" });
+      let finishing = false;
 
-    const scheduleBaseline = () => {
-      if (baselineScheduled || observation.before) {
-        return;
-      }
-      baselineScheduled = true;
+      const finish = () => {
+        if (finishing) {
+          return;
+        }
+        finishing = true;
 
-      requestAnimationFrame(() => {
-        baselineScheduled = false;
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            const fallbackCount = document.querySelectorAll(
+              "[data-pricing-price-fallback]"
+            ).length;
+            if (fallbackCount > 0) {
+              finishing = false;
+              return;
+            }
+
+            addLayoutShifts(layoutShiftObserver.takeRecords());
+            layoutShiftObserver.disconnect();
+            mutationObserver.disconnect();
+            observation.after = readGeometry();
+          })
+        );
+      };
+
+      const recordFallbackBaseline = () => {
+        if (observation.before) {
+          return;
+        }
+
+        const fallbacks = [
+          ...document.querySelectorAll("[data-pricing-price-fallback]"),
+        ];
+        if (fallbacks.length !== 2) {
+          return;
+        }
+        const fallbackRects = fallbacks.map(readRect);
+        if (
+          fallbackRects.some((rect) => rect.height === 0 || rect.width === 0)
+        ) {
+          return;
+        }
+
         const geometry = readGeometry();
         const renderedPlans = Object.values(geometry.plans);
 
@@ -128,59 +154,56 @@ function installPricingTransitionObserver(page: Page) {
           renderedPlans.length !== 2 ||
           renderedPlans.some((rect) => rect.height === 0 || rect.width === 0)
         ) {
-          scheduleBaseline();
           return;
         }
 
         observation.before = geometry;
-        layoutShiftObserver.observe({ type: "layout-shift" });
+        observation.fallbackObserved = true;
+      };
 
-        if (
-          document.querySelectorAll("[data-pricing-price-fallback]").length ===
-          0
-        ) {
+      const mutationObserver = new MutationObserver(() => {
+        const fallbackCount = document.querySelectorAll(
+          "[data-pricing-price-fallback]"
+        ).length;
+        const planCount = document.querySelectorAll(
+          "[data-pricing-plan]"
+        ).length;
+
+        if (planCount === 2 && fallbackCount === 2) {
+          recordFallbackBaseline();
+        }
+        if (planCount === 2 && fallbackCount === 0) {
           finish();
         }
       });
-    };
 
-    const mutationObserver = new MutationObserver(() => {
-      const fallbackCount = document.querySelectorAll(
-        "[data-pricing-price-fallback]"
-      ).length;
-      const planCount = document.querySelectorAll("[data-pricing-plan]").length;
-
-      if (!observation.before && planCount === 2) {
-        scheduleBaseline();
-      }
-      if (observation.before && fallbackCount === 0) {
-        finish();
-      }
-    });
-
-    mutationObserver.observe(document, { childList: true, subtree: true });
-  });
-}
+      mutationObserver.observe(document, { childList: true, subtree: true });
+    })
+  );
+});
 
 /** Reloads pricing from its document shell and reads its settled geometry. */
-export async function observeStablePricingReload(
-  page: Page,
-  readinessTimeoutMilliseconds: number
-) {
-  await installPricingTransitionObserver(page);
-  const response = await page.reload({ waitUntil: "domcontentloaded" });
-  expect(response?.ok()).toBe(true);
-  await page.waitForFunction(
-    () => Boolean(window.__nakafaPricingTransition?.after),
-    undefined,
-    { timeout: readinessTimeoutMilliseconds }
+export const observeStablePricingReload = Effect.fn(
+  "NakafaE2E.observeStablePricingReload"
+)(function* (page: Page, readinessTimeoutMilliseconds: number) {
+  yield* installPricingTransitionObserver(page);
+  const response = yield* Effect.promise(() =>
+    page.reload({ waitUntil: "domcontentloaded" })
   );
-  const observation = await page.evaluate(
-    () => window.__nakafaPricingTransition
+  yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+  yield* Effect.promise(() =>
+    page.waitForFunction(
+      () => Boolean(window.__nakafaPricingTransition?.after),
+      undefined,
+      { timeout: readinessTimeoutMilliseconds }
+    )
   );
-  expect(observation).toBeDefined();
+  const observation = yield* Effect.promise(() =>
+    page.evaluate(() => window.__nakafaPricingTransition)
+  );
+  yield* Effect.sync(() => expect(observation).toBeDefined());
   return observation;
-}
+});
 
 /** Asserts that localized price resolution preserved all plan geometry. */
 export function expectStablePricingTransition(
@@ -191,11 +214,12 @@ export function expectStablePricingTransition(
     return;
   }
 
-  expect(observation.before).not.toBeNull();
   expect(observation.after).not.toBeNull();
+  expect(observation.before).not.toBeNull();
+  expect(observation.fallbackObserved).toBe(true);
   expect(observation.layoutShift).toBe(0);
 
-  if (!(observation.before && observation.after)) {
+  if (!(observation.after && observation.before)) {
     return;
   }
 

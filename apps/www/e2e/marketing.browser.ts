@@ -410,7 +410,7 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
 
 const verifyPricingNavigation = Effect.fn("NakafaE2E.verifyPricingNavigation")(
   function* (page: Page) {
-    yield* Effect.promise(() => expectStablePricingAppShell(page));
+    yield* expectStablePricingAppShell(page);
     yield* loadMarketingPage(page, "/id");
 
     const pricingLink = page.locator('header nav [href="/id/pricing"]');
@@ -428,8 +428,9 @@ const verifyPricingNavigation = Effect.fn("NakafaE2E.verifyPricingNavigation")(
       expect(page.locator("[data-pricing-price-fallback]")).toHaveCount(0)
     );
 
-    const observation = yield* Effect.promise(() =>
-      observeStablePricingReload(page, READINESS_TIMEOUT_MILLISECONDS)
+    const observation = yield* observeStablePricingReload(
+      page,
+      READINESS_TIMEOUT_MILLISECONDS
     );
     yield* Effect.sync(() => expectStablePricingTransition(observation));
   }
