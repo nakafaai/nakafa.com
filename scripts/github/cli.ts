@@ -2,6 +2,7 @@ import { Effect, Option, Schema } from "effect";
 import { parseDocument } from "yaml";
 
 const WorkflowJobSchema = Schema.Struct({
+  environment: Schema.optional(Schema.String),
   needs: Schema.optional(
     Schema.Union([Schema.String, Schema.Array(Schema.String)])
   ),
@@ -24,7 +25,6 @@ const REQUIRED_SNIPPETS = [
   "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
   "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
   "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
-  "environment: npm-production",
   "EXPECTED_SHA256",
   "EXPECTED_SIZE",
   "EXPECTED_VERIFIER_SHA256",
@@ -100,6 +100,11 @@ export function validateCliWorkflow(source: string): string[] {
   }
   if (publish.permissions?.["id-token"] !== "write") {
     problems.push("Only the publish job must receive npm OIDC identity.");
+  }
+  if (publish.environment !== "npm-production") {
+    problems.push(
+      "CLI publication must use the protected npm-production environment."
+    );
   }
   for (const [name, job] of Object.entries(decodedJobs.value)) {
     if (name !== "publish" && job.permissions?.["id-token"] !== undefined) {

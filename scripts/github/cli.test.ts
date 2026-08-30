@@ -53,6 +53,15 @@ describe("CLI workflow policy", () => {
       assert.ok(
         movedProblems.includes("unrelated must not receive npm OIDC identity.")
       );
+
+      const movedEnvironment = source
+        .replace("    environment: npm-production", "    environment: test")
+        .concat("\n# environment: npm-production\n");
+      assert.ok(
+        validateCliWorkflow(movedEnvironment).includes(
+          "CLI publication must use the protected npm-production environment."
+        )
+      );
     }).pipe(Effect.provide(NodeServices.layer))
   );
 
