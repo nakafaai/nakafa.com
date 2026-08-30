@@ -1,4 +1,16 @@
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
+import { parseDocument } from "yaml";
+
+const WorkflowJobSchema = Schema.Struct({
+  needs: Schema.optional(
+    Schema.Union([Schema.String, Schema.Array(Schema.String)])
+  ),
+  permissions: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+});
+
+const CliWorkflowSchema = Schema.Struct({
+  jobs: Schema.Record(Schema.String, WorkflowJobSchema),
+});
 
 const REQUIRED_SNIPPETS = [
   "permissions: {}",
@@ -46,6 +58,16 @@ export class CliWorkflowPolicyError extends Schema.TaggedError<CliWorkflowPolicy
   { problems: Schema.NonEmptyArray(Schema.String) }
 ) {}
 
+function decodeWorkflowJobs(source: string) {
+  const document = parseDocument(source);
+  if (document.errors.length > 0) {
+    return Option.none();
+  }
+  return Schema.decodeUnknownOption(CliWorkflowSchema)(document.toJS()).pipe(
+    Option.map(({ jobs }) => jobs)
+  );
+}
+
 /** Returns every violation of the isolated npm trusted-publishing contract. */
 export function validateCliWorkflow(source: string): string[] {
   const problems = REQUIRED_SNIPPETS.filter(
@@ -65,25 +87,32 @@ export function validateCliWorkflow(source: string): string[] {
     }
   }
 
-  if ((source.match(/id-token: write/gu) ?? []).length !== 1) {
-    problems.push("Exactly one isolated job must receive npm OIDC identity.");
+  const decodedJobs = decodeWorkflowJobs(source);
+  if (Option.isNone(decodedJobs)) {
+    problems.push("CLI workflow must contain a valid jobs mapping.");
+    return problems;
   }
 
-  const buildIndex = source.indexOf("\n  build:");
-  const publishIndex = source.indexOf("\n  publish:");
-  if (buildIndex < 0 || publishIndex <= buildIndex) {
-    problems.push(
-      "CLI verification must complete before isolated publication."
-    );
-  } else {
-    const buildJob = source.slice(buildIndex, publishIndex);
-    const publishJob = source.slice(publishIndex);
-    if (buildJob.includes("id-token: write")) {
-      problems.push("CLI verification must not receive npm OIDC identity.");
+  const { build, publish } = decodedJobs.value;
+  if (!(build && publish)) {
+    problems.push("CLI workflow requires separate build and publish jobs.");
+    return problems;
+  }
+  if (publish.permissions?.["id-token"] !== "write") {
+    problems.push("Only the publish job must receive npm OIDC identity.");
+  }
+  for (const [name, job] of Object.entries(decodedJobs.value)) {
+    if (name !== "publish" && job.permissions?.["id-token"] !== undefined) {
+      problems.push(`${name} must not receive npm OIDC identity.`);
     }
-    if (!publishJob.includes("needs: build")) {
-      problems.push("CLI publication must consume the verified build job.");
-    }
+  }
+
+  const publishNeeds = publish.needs;
+  const consumesBuild =
+    publishNeeds === "build" ||
+    (Array.isArray(publishNeeds) && publishNeeds.includes("build"));
+  if (!consumesBuild) {
+    problems.push("CLI publication must consume the verified build job.");
   }
 
   return problems;

@@ -36,7 +36,22 @@ describe("CLI workflow policy", () => {
             "      contents: read",
             "      contents: read\n      id-token: write"
           )
-        ).includes("Exactly one isolated job must receive npm OIDC identity.")
+        ).includes("build must not receive npm OIDC identity.")
+      );
+
+      const movedIdentity = source
+        .replace("    permissions:\n      id-token: write\n", "")
+        .concat(
+          "\n  unrelated:\n    runs-on: ubuntu-latest\n    permissions:\n      id-token: write\n"
+        );
+      const movedProblems = validateCliWorkflow(movedIdentity);
+      assert.ok(
+        movedProblems.includes(
+          "Only the publish job must receive npm OIDC identity."
+        )
+      );
+      assert.ok(
+        movedProblems.includes("unrelated must not receive npm OIDC identity.")
       );
     }).pipe(Effect.provide(NodeServices.layer))
   );
