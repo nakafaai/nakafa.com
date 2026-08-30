@@ -86,16 +86,6 @@ export function resolveTryoutExamArtwork(input: unknown) {
   );
 }
 
-/** Resolves the reviewed country card artwork for one stable source key. */
-export function getTryoutCountryCatalogArtwork(
-  locale: Locale,
-  countryKey: string
-) {
-  return countryKey === "indonesia"
-    ? resolveStaticArtwork("tryout/index", locale)
-    : undefined;
-}
-
 /** Resolves subject or year artwork for one signed try-out track. */
 export function getTryoutTrackCatalogArtwork(
   locale: Locale,
