@@ -268,7 +268,7 @@ export const readProductionGenerations = Effect.fn(
   const fileSystem = yield* FileSystem.FileSystem;
   const tempRoot = yield* fileSystem.makeTempDirectoryScoped({
     directory: config.runnerTemp,
-    prefix: "agent-docs-generations-",
+    prefix: "runtime-state-",
   });
   yield* fileSystem.chmod(tempRoot, 0o700);
   const deployKey = Redacted.value(config.deployKey);
@@ -287,6 +287,6 @@ export const readProductionGenerations = Effect.fn(
 });
 export const formatGenerationEnvironment = (generations: RuntimeGenerations) =>
   [
-    `AGENT_DOCS_CONTENT_STATE_HASH=${generations.contentStateHash}`,
-    `AGENT_DOCS_RUNTIME_SELECTION_HASH=${generations.runtimeSelectionHash}`,
+    `CONTENT_RUNTIME_STATE_HASH=${generations.contentStateHash}`,
+    `CONTENT_RUNTIME_SELECTION_HASH=${generations.runtimeSelectionHash}`,
   ].join("\n");

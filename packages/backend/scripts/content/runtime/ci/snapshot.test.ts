@@ -92,6 +92,6 @@ describe("content runtime snapshot", () => {
   it("uses one dedicated encrypted cache path", () => {
     expect(
       `${CONTENT_RUNTIME_CACHE_DIRECTORY}/${CONTENT_RUNTIME_CACHE_FILE}`
-    ).toBe("agent-docs-content-cache/runtime.tar.gpg");
+    ).toBe("runtime-cache/runtime.tar.gpg");
   });
 });

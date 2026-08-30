@@ -44,7 +44,7 @@ export const exportSignedRuntime = Effect.fn(
 
     const tempRoot = yield* fileSystem.makeTempDirectoryScoped({
       directory: config.runnerTemp,
-      prefix: "agent-docs-export-",
+      prefix: "runtime-export-",
     });
     const gpgHome = `${tempRoot}/gnupg`;
     const snapshotRoot = `${tempRoot}/snapshot`;

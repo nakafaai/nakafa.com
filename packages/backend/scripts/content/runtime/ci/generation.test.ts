@@ -52,8 +52,8 @@ describe("content runtime generations", () => {
         );
         expect(formatGenerationEnvironment(baseline)).toBe(
           [
-            `AGENT_DOCS_CONTENT_STATE_HASH=${baseline.contentStateHash}`,
-            `AGENT_DOCS_RUNTIME_SELECTION_HASH=${baseline.runtimeSelectionHash}`,
+            `CONTENT_RUNTIME_STATE_HASH=${baseline.contentStateHash}`,
+            `CONTENT_RUNTIME_SELECTION_HASH=${baseline.runtimeSelectionHash}`,
           ].join("\n")
         );
       })

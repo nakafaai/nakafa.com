@@ -44,26 +44,29 @@ describe("GitHub Action policy", () => {
     "runs candidate validation before merge without repeating it on main",
     () =>
       Effect.gen(function* () {
-        for (const fileName of ["agent-docs.yml", "react-doctor.yml"]) {
-          const source = yield* readRepositoryFile(
-            `../../.github/workflows/${fileName}`
-          );
-          const workflow = yield* parseWorkflow(source);
+        const source = yield* readRepositoryFile(
+          "../../.github/workflows/ci.yml"
+        );
+        const workflow = yield* parseWorkflow(source);
 
-          expect(workflow).toEqual(
-            expect.objectContaining({
-              on: expect.objectContaining({
-                merge_group: expect.any(Object),
-                pull_request: expect.any(Object),
-              }),
-            })
-          );
-          expect(workflow).not.toEqual(
-            expect.objectContaining({
-              on: expect.objectContaining({ push: expect.anything() }),
-            })
-          );
-        }
+        expect(workflow).toEqual(
+          expect.objectContaining({
+            jobs: expect.objectContaining({
+              doctor: expect.objectContaining({ name: "Doctor" }),
+              required: expect.objectContaining({ name: "Required" }),
+              scope: expect.objectContaining({ name: "Scope" }),
+            }),
+            on: expect.objectContaining({
+              merge_group: expect.any(Object),
+              pull_request: expect.any(Object),
+            }),
+          })
+        );
+        expect(workflow).not.toEqual(
+          expect.objectContaining({
+            on: expect.objectContaining({ push: expect.anything() }),
+          })
+        );
 
         const cacheSource = yield* readRepositoryFile(
           "../../.github/workflows/cache.yml"
@@ -95,7 +98,7 @@ describe("GitHub Action policy", () => {
   it.effect(
     "runs changed React checks on pull requests and full checks in the queue",
     () =>
-      readRepositoryFile("../../.github/workflows/react-doctor.yml").pipe(
+      readRepositoryFile("../../.github/workflows/ci.yml").pipe(
         Effect.tap((source) =>
           Effect.sync(() => {
             expect(source).toContain(
@@ -104,6 +107,14 @@ describe("GitHub Action policy", () => {
             expect(source).toContain(
               "pnpm run doctor --verbose --scope full --blocking warning"
             );
+            expect(source).toContain("run: pnpm ci:queue");
+            expect(source).toContain("run: pnpm ci:review");
+            expect(source).toContain(
+              `required: \${{ github.event_name == 'merge_group' || steps.classify.outputs.required == 'true' || (steps.classify.outputs.required == '' && steps.default.outputs.required == 'true') }}`
+            );
+            expect(source).toContain("run: pnpm security:audit");
+            expect(source).toContain("if: needs.scope.outputs.reuse != 'true'");
+            expect(source).not.toContain("actions/github-script");
           })
         ),
         Effect.provide(NodeServices.layer)

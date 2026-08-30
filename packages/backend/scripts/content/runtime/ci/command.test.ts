@@ -81,7 +81,7 @@ describe("content runtime command diagnostics", () => {
   it.live("scrubs inherited secrets before spawning a child process", () =>
     Effect.gen(function* () {
       const sensitiveValue = "inherited-sensitive-value";
-      vi.stubEnv("AGENT_DOCS_CONTENT_CACHE_KEY", sensitiveValue);
+      vi.stubEnv("CONTENT_RUNTIME_CACHE_KEY", sensitiveValue);
       vi.stubEnv("CONVEX_DEPLOY_KEY", sensitiveValue);
       vi.stubEnv("CONVEX_DEPLOYMENT_TOKEN", sensitiveValue);
 
@@ -98,7 +98,7 @@ describe("content runtime command diagnostics", () => {
           yield* runRuntimeCommand({
             args: [
               "-e",
-              'process.stdout.write([process.env.AGENT_DOCS_CONTENT_CACHE_KEY, process.env.CONVEX_DEPLOY_KEY, process.env.CONVEX_DEPLOYMENT_TOKEN, Boolean(process.env.PATH)].join("|"));',
+              'process.stdout.write([process.env.CONTENT_RUNTIME_CACHE_KEY, process.env.CONVEX_DEPLOY_KEY, process.env.CONVEX_DEPLOYMENT_TOKEN, Boolean(process.env.PATH)].join("|"));',
             ],
             command: process.execPath,
             operation: "Secret scrub probe",

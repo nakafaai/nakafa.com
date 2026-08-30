@@ -3,11 +3,11 @@ export default {
     overrides: [
       {
         // These are explicit Vitest entrypoints reached by the root
-        // `agent-docs` script and its dedicated `--config` argument.
+        // `check:site` script and its dedicated `--config` argument.
         // https://vitest.dev/guide/cli#config
         // https://vitest.dev/config/include
         // https://www.react.doctor/docs/configuration/config-files#narrow-ignores-and-suppressions
-        files: ["agent-docs.check.ts", "vitest.agent-docs.config.mts"],
+        files: ["checks/afdocs.test.ts", "vitest.afdocs.mts"],
         rules: ["deslop/unused-file"],
       },
       {
