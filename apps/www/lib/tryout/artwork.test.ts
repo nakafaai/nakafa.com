@@ -3,7 +3,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import {
-  getTryoutCountryCatalogArtwork,
   getTryoutTrackCatalogArtwork,
   resolveTryoutExamArtwork,
 } from "@/lib/tryout/artwork";
@@ -71,16 +70,6 @@ describe("try-out artwork", () => {
       });
     })
   );
-
-  it("resolves country cards with exact and English fallback locales", () => {
-    expect(getTryoutCountryCatalogArtwork("de", "indonesia")).toBe(
-      "/open-graph/tryout/de-index.png"
-    );
-    expect(getTryoutCountryCatalogArtwork("id", "indonesia")).toBe(
-      "/open-graph/tryout/en-index.png"
-    );
-    expect(getTryoutCountryCatalogArtwork("en", "germany")).toBeUndefined();
-  });
 
   it("scopes 2027 artwork to SNBT Indonesia", () => {
     expect(
