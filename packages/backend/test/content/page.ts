@@ -31,8 +31,8 @@ export const TEST_PAGE_PROJECTION = PublicPageProjectionSchema.make({
   contentKey: TEST_PAGE_KEY,
   kind: "public-page",
   metadata: {
+    datePublished: "2026-08-20",
     description: "Technical signed page fixture.",
-    lastModified: "2026-08-20",
     title: "Terms of Service",
   },
   pageKey: PageKeySchema.make("terms-of-service"),

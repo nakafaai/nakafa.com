@@ -118,7 +118,7 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
         return yield* new SitemapPageNotFoundError({ pageId });
       }
       const routes = projections.map((projection) => ({
-        lastModified: projection.metadata.lastModified,
+        lastModified: pageLastModified(projection.metadata),
         path: routeToPath(projection.publicPath),
       }));
       routes.sort((left, right) => compareSitemapPaths(left.path, right.path));
@@ -145,4 +145,18 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
 /** Converts one route string into an app-level HTTP path string. */
 function routeToPath(route: string) {
   return `/${route}`;
+}
+
+/** Keeps sitemap dates truthful while retained recovery bytes stay readable. */
+function pageLastModified(
+  metadata:
+    | { readonly lastModified: string }
+    | {
+        readonly dateModified?: string | undefined;
+        readonly datePublished: string;
+      }
+) {
+  return "lastModified" in metadata
+    ? metadata.lastModified
+    : (metadata.dateModified ?? metadata.datePublished);
 }

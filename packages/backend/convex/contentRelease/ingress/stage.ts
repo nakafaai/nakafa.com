@@ -2,6 +2,7 @@
 
 import { verifySignedContentArtifact } from "@nakafa/aksara-contracts/artifact/verify";
 import { ACTIVE_SIGNING_KEY_ID } from "@nakafa/aksara-contracts/signature/trusted";
+import type { StageOperation } from "@nakafa/aksara-contracts/transport/group";
 import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
 import type { ActionCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
@@ -33,21 +34,12 @@ import { makeFunctionReference } from "convex/server";
 import type { Infer } from "convex/values";
 import { Effect } from "effect";
 
-type StageRequest = Extract<
-  PublicationRequest,
-  {
-    readonly operation:
-      | "stageArtifactBatch"
-      | "stageItemBatch"
-      | "stageProjectionBatch"
-      | "stageRecovery"
-      | "stageRelease"
-      | "stageRouteBatch"
-      | "stageSnapshot"
-      | "stageSnapshotBatch"
-      | "stageTryoutRuntimeBundle";
-  }
->;
+type StageRequest =
+  | StageOperation
+  | Extract<
+      PublicationRequest,
+      { readonly operation: "stageRecovery" | "stageRelease" }
+    >;
 
 type ReleaseRequest = Extract<
   StageRequest,
@@ -86,6 +78,11 @@ const projectionBatchReference = makeFunctionReference<
   { batchIndex: number; projectionJson: string[]; releaseId: string },
   StageReceipt
 >("contentRelease/items:stageProjectionBatch");
+const rollbackProjectionBatchReference = makeFunctionReference<
+  "mutation",
+  { batchIndex: number; projectionJson: string[]; releaseId: string },
+  StageReceipt
+>("contentRelease/items:stageRollbackProjectionBatch");
 const artifactBatchReference = makeFunctionReference<
   "mutation",
   { artifactJson: string[]; batchIndex: number; releaseId: string },
@@ -207,6 +204,16 @@ export const stagePublication = Effect.fn("contentRelease.stagePublication")(
     if (request.operation === "stageProjectionBatch") {
       const value = yield* callInternal(() =>
         ctx.runMutation(projectionBatchReference, {
+          batchIndex: request.batchIndex,
+          projectionJson: request.projections.map(encodeProjectionJson),
+          releaseId: request.releaseId,
+        })
+      );
+      return { ok: true, operation: request.operation, value };
+    }
+    if (request.operation === "stageRollbackProjectionBatch") {
+      const value = yield* callInternal(() =>
+        ctx.runMutation(rollbackProjectionBatchReference, {
           batchIndex: request.batchIndex,
           projectionJson: request.projections.map(encodeProjectionJson),
           releaseId: request.releaseId,

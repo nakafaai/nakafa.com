@@ -7,7 +7,7 @@ interface DependencyHold {
 }
 
 export const CONTRACT_ARCHIVE =
-  "https://github.com/nakafaai/aksara/releases/download/contracts-v0.24.0/nakafa-aksara-contracts-0.24.0.tgz";
+  "https://github.com/nakafaai/aksara/releases/download/contracts-v0.26.0/nakafa-aksara-contracts-0.26.0.tgz";
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   {

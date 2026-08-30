@@ -1,3 +1,4 @@
+import type { StageOperation } from "@nakafa/aksara-contracts/transport/group";
 import {
   MAX_ARTIFACT_BATCH_BYTES,
   MAX_ITEM_BATCH_BYTES,
@@ -14,7 +15,8 @@ import {
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
 import { Effect } from "effect";
 
-type PublicationOperation = PublicationRequest["operation"];
+type BoundedPublicationRequest = PublicationRequest | StageOperation;
+type PublicationOperation = BoundedPublicationRequest["operation"];
 
 const REQUEST_LIMITS: Readonly<Record<PublicationOperation, number>> = {
   accept: MAX_PUBLICATION_REQUEST_BYTES,
@@ -31,6 +33,7 @@ const REQUEST_LIMITS: Readonly<Record<PublicationOperation, number>> = {
   stageGroup: MAX_STAGE_GROUP_BYTES,
   stageItemBatch: MAX_ITEM_BATCH_BYTES,
   stageProjectionBatch: MAX_PROJECTION_BATCH_BYTES,
+  stageRollbackProjectionBatch: MAX_PROJECTION_BATCH_BYTES,
   stageRecovery: MAX_PUBLICATION_REQUEST_BYTES,
   stageRelease: MAX_PUBLICATION_REQUEST_BYTES,
   stageRouteBatch: MAX_ROUTE_BATCH_BYTES,
@@ -57,12 +60,15 @@ export function publicationRequestLimit(operation: PublicationOperation) {
 }
 
 /** Measures one decoded request using its exact UTF-8 JSON representation. */
-function encodedRequestBytes(request: PublicationRequest) {
+function encodedRequestBytes(request: BoundedPublicationRequest) {
   return new TextEncoder().encode(JSON.stringify(request)).byteLength;
 }
 
 /** Checks one decoded operation against its own transport ceiling. */
-function hasValidRequestBytes(request: PublicationRequest, byteLength: number) {
+function hasValidRequestBytes(
+  request: BoundedPublicationRequest,
+  byteLength: number
+) {
   return byteLength <= publicationRequestLimit(request.operation);
 }
 

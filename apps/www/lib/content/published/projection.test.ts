@@ -52,6 +52,23 @@ describe("published projection", () => {
       expect(yield* decodePublishedPage(testPageProjection, identity)).toEqual(
         testPageProjection
       );
+      const historicalProjection = {
+        ...testPageProjection,
+        metadata: {
+          description: testPageProjection.metadata.description,
+          lastModified: testPageProjection.metadata.datePublished,
+          title: testPageProjection.metadata.title,
+        },
+      };
+      expect(
+        yield* decodePublishedPage(historicalProjection, identity)
+      ).toEqual(historicalProjection);
+      expect(
+        yield* decodePublishedPageJson(
+          JSON.stringify(historicalProjection),
+          identity
+        )
+      ).toEqual(historicalProjection);
       expect(
         yield* decodePublishedPage(testPageProjection, {
           ...identity,

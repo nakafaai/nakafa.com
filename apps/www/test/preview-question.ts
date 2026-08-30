@@ -1,11 +1,11 @@
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import { localPreviewArtifactPath } from "@nakafa/aksara-contracts/preview/artifact";
 import {
   QuestionAnswerPreviewDocumentSchema,
   QuestionPromptPreviewDocumentSchema,
 } from "@nakafa/aksara-contracts/preview/document";
 import {
   LOCAL_PREVIEW_FORMAT,
-  localPreviewArtifactPath,
   PreviewFailedSchema,
   PreviewPendingSchema,
   PreviewReadySchema,
