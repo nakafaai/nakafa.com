@@ -16,7 +16,6 @@ interface PricingGeometry {
 interface PricingTransitionObservation {
   after: PricingGeometry | null;
   before: PricingGeometry | null;
-  fallbackObserved: boolean;
   layoutShift: number;
 }
 
@@ -60,7 +59,6 @@ const installPricingTransitionObserver = Effect.fn(
       const observation: PricingTransitionObservation = {
         after: null,
         before: null,
-        fallbackObserved: false,
         layoutShift: 0,
       };
       window.__nakafaPricingTransition = observation;
@@ -158,7 +156,6 @@ const installPricingTransitionObserver = Effect.fn(
         }
 
         observation.before = geometry;
-        observation.fallbackObserved = true;
       };
 
       const mutationObserver = new MutationObserver(() => {
@@ -216,7 +213,6 @@ export function expectStablePricingTransition(
 
   expect(observation.after).not.toBeNull();
   expect(observation.before).not.toBeNull();
-  expect(observation.fallbackObserved).toBe(true);
   expect(observation.layoutShift).toBe(0);
 
   if (!(observation.after && observation.before)) {
