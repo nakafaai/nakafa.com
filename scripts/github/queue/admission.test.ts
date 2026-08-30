@@ -2,12 +2,29 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import {
   decodeQueueIdentity,
+  validateQueueHead,
   validateQueuePull,
 } from "#scripts/github/queue/admission";
 
 const BASE_SHA = "1".repeat(40);
 const GROUP_SHA = "2".repeat(40);
 const PULL_SHA = "3".repeat(40);
+
+const ownerPull = {
+  base: {
+    ref: "main",
+    repo: { full_name: "nakafaai/nakafa.com" },
+    sha: BASE_SHA,
+  },
+  head: {
+    ref: "codex/example",
+    repo: { full_name: "nakafaai/nakafa.com" },
+    sha: PULL_SHA,
+  },
+  number: 42,
+  state: "open",
+  user: { login: "nabilfatih" },
+};
 
 const queueEvent = {
   action: "checks_requested",
@@ -69,21 +86,68 @@ describe("merge queue admission", () => {
         sha: GROUP_SHA,
       });
       const result = yield* validateQueuePull(identity, {
-        base: {
-          ref: "main",
-          repo: { full_name: "nakafaai/nakafa.com" },
-          sha: BASE_SHA,
-        },
-        head: {
-          ref: "contributor/change",
-          repo: { full_name: "nakafaai/nakafa.com" },
-          sha: PULL_SHA,
-        },
-        number: 42,
-        state: "open",
+        ...ownerPull,
+        head: { ...ownerPull.head, ref: "contributor/change" },
         user: { login: "contributor" },
       }).pipe(Effect.result);
 
+      expect(Result.isFailure(result)).toBe(true);
+    })
+  );
+
+  it.effect("admits the exact repository-generated Changesets lane", () =>
+    Effect.gen(function* () {
+      const identity = yield* decodeQueueIdentity({
+        actor: "nabilfatih",
+        event: queueEvent,
+        ref: `refs/heads/${queueEvent.merge_group.head_ref}`,
+        sha: GROUP_SHA,
+      });
+
+      expect(yield* validateQueuePull(identity, ownerPull)).toBe("owner");
+      expect(
+        yield* validateQueuePull(identity, {
+          ...ownerPull,
+          head: { ...ownerPull.head, ref: "changeset-release/main" },
+          user: { login: "github-actions[bot]" },
+        })
+      ).toBe("release");
+    })
+  );
+
+  it.effect("rejects the Actions bot outside the Changesets branch", () =>
+    Effect.gen(function* () {
+      const identity = yield* decodeQueueIdentity({
+        actor: "nabilfatih",
+        event: queueEvent,
+        ref: `refs/heads/${queueEvent.merge_group.head_ref}`,
+        sha: GROUP_SHA,
+      });
+      const result = yield* validateQueuePull(identity, {
+        ...ownerPull,
+        user: { login: "github-actions[bot]" },
+      }).pipe(Effect.result);
+
+      expect(Result.isFailure(result)).toBe(true);
+    })
+  );
+
+  it.effect("revalidates the generated release head at the final gate", () =>
+    Effect.gen(function* () {
+      const releasePull = {
+        ...ownerPull,
+        head: { ...ownerPull.head, ref: "changeset-release/main" },
+        user: { login: "github-actions[bot]" },
+      };
+
+      expect(
+        yield* validateQueueHead("nakafaai/nakafa.com", PULL_SHA, releasePull)
+      ).toBe("release");
+      const result = yield* validateQueueHead(
+        "nakafaai/nakafa.com",
+        "4".repeat(40),
+        releasePull
+      ).pipe(Effect.result);
       expect(Result.isFailure(result)).toBe(true);
     })
   );

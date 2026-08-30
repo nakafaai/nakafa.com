@@ -44,7 +44,7 @@
     "start": "turbo run start",
     "test": "pnpm check:patches && pnpm check:tests && pnpm test:scripts && turbo run test",
     "test:coverage": "pnpm check:patches && pnpm check:tests && turbo run test:coverage",
-    "test:scripts": "pnpm typecheck:scripts && pnpm --filter @repo/testing exec vitest run --root ../.. scripts/dependencies/policy.test.ts scripts/github/cli.test.ts scripts/github/policy.test.ts scripts/github/provenance/bundle.test.ts scripts/github/provenance/verify.test.ts scripts/github/queue/admission.test.ts scripts/github/queue/remote.test.ts scripts/github/queue/result.test.ts scripts/github/queue/tree.test.ts scripts/github/release.test.ts scripts/vercel/scope.test.ts scripts/effect-source.test.ts scripts/production-acceptance.test.ts",
+    "test:scripts": "pnpm typecheck:scripts && pnpm --filter @repo/testing exec vitest run --root ../.. scripts/dependencies/policy.test.ts scripts/github/cli.test.ts scripts/github/policy.test.ts scripts/github/provenance/bundle.test.ts scripts/github/provenance/verify.test.ts scripts/github/queue/admission.test.ts scripts/github/queue/release.test.ts scripts/github/queue/remote.test.ts scripts/github/queue/replay.test.ts scripts/github/queue/result.test.ts scripts/github/queue/tree.test.ts scripts/github/release.test.ts scripts/vercel/scope.test.ts scripts/effect-source.test.ts scripts/production-acceptance.test.ts",
     "test:ui": "turbo run test:ui",
     "test:watch": "turbo run test:watch",
     "translate": "turbo run translate",

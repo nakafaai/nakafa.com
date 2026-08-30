@@ -1,9 +1,9 @@
-import { Effect, type PlatformError, Stream } from "effect";
-import { ChildProcess } from "effect/unstable/process";
+import { Effect } from "effect";
 import {
   type QueueIdentity,
   queueGateError,
 } from "#scripts/github/queue/admission";
+import { runCommand } from "#scripts/github/queue/command";
 
 const CI_CONFIG_PATTERN =
   /(?:^|\/)(?:biome|next\.config|tsconfig|turbo|ultracite|vercel|vitest)[^/]*\.(?:[cm]?[jt]s|json|mts|yml|yaml)$/u;
@@ -76,55 +76,13 @@ export const validateQueueTree = Effect.fn("QueueGate.validateTree")(function* (
   } satisfies QueueTreeDecision;
 });
 
-const collectText = (
-  stream: Stream.Stream<Uint8Array, PlatformError.PlatformError>
-) =>
-  stream.pipe(
-    Stream.decodeText(),
-    Stream.runFold(
-      () => "",
-      (output, chunk) => output + chunk
-    )
-  );
-
-const runGit = Effect.fn("QueueGate.runGit")(function* (
-  repositoryRoot: string,
-  args: readonly string[]
-) {
-  const command = yield* ChildProcess.make("git", args, {
-    cwd: repositoryRoot,
-  }).pipe(
-    Effect.mapError((cause) =>
-      queueGateError("Unable to start merge queue Git verification.", cause)
-    )
-  );
-  const [exitCode, stdout, stderr] = yield* Effect.all(
-    [
-      command.exitCode,
-      collectText(command.stdout),
-      collectText(command.stderr),
-    ],
-    { concurrency: 3 }
-  ).pipe(
-    Effect.mapError((cause) =>
-      queueGateError("Unable to read merge queue Git verification.", cause)
-    )
-  );
-  if (exitCode !== 0) {
-    return yield* queueGateError(
-      `Merge queue Git verification failed: ${stderr.trim() || "unknown Git error"}.`
-    );
-  }
-  return stdout;
-});
-
 /** Reads and validates exact Git tree evidence for one merge-group commit. */
 export const inspectQueueTree = Effect.fn("QueueGate.inspectTree")(function* (
   repositoryRoot: string,
   identity: QueueIdentity,
   sourceHead: string
 ) {
-  yield* runGit(repositoryRoot, [
+  yield* runCommand(repositoryRoot, "git", [
     "fetch",
     "--no-tags",
     "origin",
@@ -142,24 +100,31 @@ export const inspectQueueTree = Effect.fn("QueueGate.inspectTree")(function* (
     changedPaths,
   ] = yield* Effect.all(
     [
-      runGit(repositoryRoot, ["rev-parse", "HEAD"]),
-      runGit(repositoryRoot, [
+      runCommand(repositoryRoot, "git", ["rev-parse", "HEAD"]),
+      runCommand(repositoryRoot, "git", [
         "rev-list",
         "--parents",
         "-n",
         "1",
         identity.groupSha,
       ]),
-      runGit(repositoryRoot, [
+      runCommand(repositoryRoot, "git", [
         "merge-tree",
         "--write-tree",
         identity.baseSha,
         sourceHead,
       ]),
-      runGit(repositoryRoot, ["rev-parse", `${identity.groupSha}^{tree}`]),
-      runGit(repositoryRoot, ["rev-parse", `${sourceHead}^{tree}`]),
-      runGit(repositoryRoot, ["merge-base", identity.baseSha, sourceHead]),
-      runGit(repositoryRoot, [
+      runCommand(repositoryRoot, "git", [
+        "rev-parse",
+        `${identity.groupSha}^{tree}`,
+      ]),
+      runCommand(repositoryRoot, "git", ["rev-parse", `${sourceHead}^{tree}`]),
+      runCommand(repositoryRoot, "git", [
+        "merge-base",
+        identity.baseSha,
+        sourceHead,
+      ]),
+      runCommand(repositoryRoot, "git", [
         "diff",
         "--name-only",
         "--no-renames",

@@ -119,7 +119,25 @@ export const decodeQueueIdentity = Effect.fn("QueueGate.decodeIdentity")(
   }
 );
 
-/** Proves that one queued pull request belongs to the trusted release lane. */
+const identifyQueueLane = Effect.fn("QueueGate.identifyLane")(function* (
+  pull: QueuePull,
+  trustedOwner: string
+) {
+  if (pull.user?.login === trustedOwner) {
+    return "owner" as const;
+  }
+  if (
+    pull.user?.login === "github-actions[bot]" &&
+    pull.head.ref === "changeset-release/main"
+  ) {
+    return "release" as const;
+  }
+  return yield* queueGateError(
+    "Merge queue entry is not in a trusted pull-request lane."
+  );
+});
+
+/** Proves that one queued pull request belongs to an admitted lane. */
 export const validateQueuePull = Effect.fn("QueueGate.validatePull")(function* (
   identity: QueueIdentity,
   pull: QueuePull,
@@ -132,7 +150,6 @@ export const validateQueuePull = Effect.fn("QueueGate.validatePull")(function* (
     pull.base.sha !== identity.baseSha ||
     pull.base.repo.full_name !== identity.repository ||
     pull.head.repo?.full_name !== identity.repository ||
-    pull.user?.login !== trustedOwner ||
     identity.actor !== trustedOwner ||
     identity.sender !== trustedOwner
   ) {
@@ -140,4 +157,26 @@ export const validateQueuePull = Effect.fn("QueueGate.validatePull")(function* (
       "Merge queue entry is not trusted for production acceptance."
     );
   }
+  return yield* identifyQueueLane(pull, trustedOwner);
+});
+
+/** Revalidates the immutable pull identity before the final queue gate. */
+export const validateQueueHead = Effect.fn("QueueGate.validateHead")(function* (
+  repository: string,
+  expectedHead: string,
+  pull: QueuePull,
+  trustedOwner = "nabilfatih"
+) {
+  if (
+    pull.state !== "open" ||
+    pull.base.ref !== "main" ||
+    pull.base.repo.full_name !== repository ||
+    pull.head.sha !== expectedHead ||
+    pull.head.repo?.full_name !== repository
+  ) {
+    return yield* queueGateError(
+      "Queued pull request changed after its exact-head admission."
+    );
+  }
+  return yield* identifyQueueLane(pull, trustedOwner);
 });
