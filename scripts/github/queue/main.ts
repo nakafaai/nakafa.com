@@ -5,8 +5,10 @@ import {
   decodeQueueIdentity,
   QueueEventSchema,
   queueGateError,
+  validateQueueHead,
   validateQueuePull,
 } from "#scripts/github/queue/admission";
+import { inspectReleaseTree } from "#scripts/github/queue/release";
 import {
   fetchQueuePull,
   verifyResolvedReviews,
@@ -76,9 +78,18 @@ const admit = Effect.fn("QueueGate.admit")(function* () {
   });
   const github = { repository: identity.repository, token: config.token };
   const pull = yield* fetchQueuePull(github, identity.pullNumber);
-  yield* validateQueuePull(identity, pull);
+  const lane = yield* validateQueuePull(identity, pull);
   const reviewCount = yield* verifyResolvedReviews(github, identity.pullNumber);
   const tree = yield* inspectQueueTree(process.cwd(), identity, pull.head.sha);
+  if (lane === "release") {
+    yield* inspectReleaseTree(
+      process.cwd(),
+      identity.baseSha,
+      pull.head.sha,
+      tree.changedPaths,
+      config.token
+    );
+  }
   const reuse = tree.reuse
     ? yield* verifySourceChecks(github, pull).pipe(
         Effect.as(true),
@@ -96,7 +107,7 @@ const admit = Effect.fn("QueueGate.admit")(function* () {
     trusted: true,
   });
   yield* writeOutput(
-    `Admitted pull request #${pull.number} at ${pull.head.sha}; ${reviewCount} review threads checked; static source proof reuse ${String(reuse)}.\n`
+    `Admitted ${lane} pull request #${pull.number} at ${pull.head.sha}; ${reviewCount} review threads checked; static source proof reuse ${String(reuse)}.\n`
   );
 });
 
@@ -113,18 +124,7 @@ const review = Effect.fn("QueueGate.review")(function* () {
   );
   const github = { repository: config.repository, token: config.token };
   const pull = yield* fetchQueuePull(github, config.pullNumber);
-  if (
-    pull.state !== "open" ||
-    pull.base.ref !== "main" ||
-    pull.base.repo.full_name !== config.repository ||
-    pull.head.sha !== config.expectedHead ||
-    pull.head.repo?.full_name !== config.repository ||
-    pull.user?.login !== "nabilfatih"
-  ) {
-    return yield* queueGateError(
-      "Queued pull request changed after its exact-head admission."
-    );
-  }
+  yield* validateQueueHead(config.repository, config.expectedHead, pull);
   const reviewCount = yield* verifyResolvedReviews(github, config.pullNumber);
   yield* writeOutput(
     `Final review verification passed for ${reviewCount} threads on pull request #${pull.number}.\n`
