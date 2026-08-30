@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { Effect, Option, Schema } from "effect";
 import { parseDocument } from "yaml";
 
@@ -28,6 +29,11 @@ type WorkflowJob = Schema.Schema.Type<typeof WorkflowJobSchema>;
 
 const SETUP_NODE_ACTION =
   "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020";
+const UPLOAD_ACTION =
+  "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a";
+/** Digest of the decoded publish job after a complete OIDC boundary review. */
+const TRUSTED_PUBLISH_SHA256 =
+  "b7da581b4394002530d85c362b101ea5a3dd916e1d4b03d702f24f4f8987879f";
 const REQUIRED_BUILD_SOURCE = [
   "pnpm test:scripts",
   "pnpm --filter @nakafa/cli typecheck",
@@ -87,8 +93,6 @@ const FORBIDDEN_PROVENANCE = [
   "bundle.dsseEnvelope.payload",
   "is_exact_provenance()",
 ] as const;
-const FORBIDDEN_PRIVILEGED_CODE =
-  /\b(?:bash|bun|deno|eval|exec|node|pnpm|python|source|xargs)\b|packages\/|scripts\/|\.\//u;
 const SHELL_COMMENT = /(^|[ \t])#.*$/u;
 
 export class CliWorkflowPolicyError extends Schema.TaggedError<CliWorkflowPolicyError>()(
@@ -119,12 +123,25 @@ function jobSource(job: WorkflowJob) {
   return job.steps.map(stepSource).join("\n");
 }
 
+function hasRerunnableArtifacts(build: WorkflowJob) {
+  const uploads = build.steps.filter(({ uses }) => uses === UPLOAD_ACTION);
+  return (
+    uploads.length === 2 &&
+    uploads.every(({ with: inputs }) => inputs?.overwrite === true) &&
+    ["cli-package", "cli-verifier"].every((name) =>
+      uploads.some(({ with: inputs }) => inputs?.name === name)
+    )
+  );
+}
+
 function decodeWorkflow(source: string) {
   const document = parseDocument(source);
   if (document.errors.length > 0) {
     return Option.none();
   }
-  return Schema.decodeUnknownOption(CliWorkflowSchema)(document.toJS());
+  return Schema.decodeUnknownOption(CliWorkflowSchema, {
+    onExcessProperty: "preserve",
+  })(document.toJS());
 }
 
 function requireSource(
@@ -140,6 +157,34 @@ function requireSource(
       );
     }
   }
+}
+
+function trustedPublishProblems(publish: WorkflowJob, source: string) {
+  const problems: string[] = [];
+  const commands = publish.steps
+    .flatMap(({ run }) => (run === undefined ? [] : [run]))
+    .map(executableSource)
+    .join("\n");
+  if (commands.split('npx --yes "$NPM_CLI" publish "$TARBALL"').length !== 2) {
+    problems.push("CLI publication may execute only one npm publish command.");
+  }
+  const sha256 = createHash("sha256")
+    .update(JSON.stringify(publish))
+    .digest("hex");
+  if (sha256 !== TRUSTED_PUBLISH_SHA256) {
+    problems.push("CLI publication must match the exact trusted job.");
+  }
+  if (
+    source.includes("cli-verifier") ||
+    source.includes("provenance.mjs") ||
+    source.includes("VERIFIER")
+  ) {
+    problems.push("CLI publication must not receive the verifier artifact.");
+  }
+  if (publish.steps.some(({ uses }) => uses?.startsWith("actions/checkout@"))) {
+    problems.push("CLI publication must not checkout repository code.");
+  }
+  return problems;
 }
 
 export function validateCliWorkflow(source: string): string[] {
@@ -201,6 +246,10 @@ export function validateCliWorkflow(source: string): string[] {
   requireSource(problems, "publish", publishSource, REQUIRED_PUBLISH_SOURCE);
   requireSource(problems, "verify", verifySource, REQUIRED_VERIFY_SOURCE);
 
+  if (!hasRerunnableArtifacts(build)) {
+    problems.push("CLI build artifacts must be replaceable on rerun.");
+  }
+
   if (publish.permissions?.["id-token"] !== "write") {
     problems.push("Only the publish job must receive npm OIDC identity.");
   }
@@ -253,27 +302,7 @@ export function validateCliWorkflow(source: string): string[] {
     }
   }
 
-  const publishCommands = publish.steps
-    .flatMap(({ run }) => (run === undefined ? [] : [run]))
-    .map(executableSource)
-    .join("\n");
-  if (
-    FORBIDDEN_PRIVILEGED_CODE.test(publishCommands) ||
-    publishCommands.split('npx --yes "$NPM_CLI" publish "$TARBALL"').length !==
-      2
-  ) {
-    problems.push("CLI publication may execute only one npm publish command.");
-  }
-  if (
-    publishSource.includes("cli-verifier") ||
-    publishSource.includes("provenance.mjs") ||
-    publishSource.includes("VERIFIER")
-  ) {
-    problems.push("CLI publication must not receive the verifier artifact.");
-  }
-  if (publish.steps.some(({ uses }) => uses?.startsWith("actions/checkout@"))) {
-    problems.push("CLI publication must not checkout repository code.");
-  }
+  problems.push(...trustedPublishProblems(publish, publishSource));
 
   const verifyCommands = verify.steps
     .flatMap(({ run }) => (run === undefined ? [] : [run]))

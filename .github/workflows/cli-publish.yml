@@ -92,6 +92,7 @@ jobs:
           compression-level: 0
           if-no-files-found: error
           name: cli-package
+          overwrite: true
           path: ${{ runner.temp }}/cli-release/${{ steps.archive.outputs.archive }}
           retention-days: 1
 
@@ -101,6 +102,7 @@ jobs:
           compression-level: 0
           if-no-files-found: error
           name: cli-verifier
+          overwrite: true
           path: ${{ runner.temp }}/cli-release/provenance.mjs
           retention-days: 1
 

