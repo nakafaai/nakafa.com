@@ -24,7 +24,7 @@ import { runCli } from "#cli/program";
 const problem = {
   code: "NOT_FOUND",
   detail: "The requested content does not exist.",
-  instance: "/v1/content",
+  instance: "/content",
   request_id: "request-123",
   resolution: "Use a content ID returned by search.",
   status: 404,
@@ -167,20 +167,20 @@ describe("Nakafa CLI execution", () => {
     {
       argv: ["search", "linear", "equations", "--locale", "de", "--limit", "5"],
       expectedUrl:
-        "https://api.nakafa.com/v1/search?query=linear+equations&locale=de&limit=5",
+        "https://api.nakafa.com/search?query=linear+equations&locale=de&limit=5",
     },
     {
       argv: ["get", "https://nakafa.com/en/content?id=1"],
       expectedUrl:
-        "https://api.nakafa.com/v1/content?ref=https%3A%2F%2Fnakafa.com%2Fen%2Fcontent%3Fid%3D1",
+        "https://api.nakafa.com/content?ref=https%3A%2F%2Fnakafa.com%2Fen%2Fcontent%3Fid%3D1",
     },
     {
       argv: ["taxonomy", "--locale", "id"],
-      expectedUrl: "https://api.nakafa.com/v1/taxonomy?locale=id",
+      expectedUrl: "https://api.nakafa.com/taxonomy?locale=id",
     },
     {
       argv: ["taxonomy"],
-      expectedUrl: "https://api.nakafa.com/v1/taxonomy",
+      expectedUrl: "https://api.nakafa.com/taxonomy",
     },
     {
       argv: [
@@ -195,11 +195,11 @@ describe("Nakafa CLI execution", () => {
         "--tafsir",
       ],
       expectedUrl:
-        "https://api.nakafa.com/v1/quran/1?from_verse=1&to_verse=7&locale=en&include_tafsir=true",
+        "https://api.nakafa.com/quran/1?from_verse=1&to_verse=7&locale=en&include_tafsir=true",
     },
     {
       argv: ["quran", "114"],
-      expectedUrl: "https://api.nakafa.com/v1/quran/114",
+      expectedUrl: "https://api.nakafa.com/quran/114",
     },
   ])("calls the public endpoint for $argv", ({ argv, expectedUrl }) =>
     Effect.gen(function* () {
@@ -259,7 +259,7 @@ describe("Nakafa CLI execution", () => {
           '{\n  "nested": {\n    "ok": true\n  }\n}\n'
         );
         const [request] = yield* Ref.get(requests);
-        expect(request?.url).toBe("https://isolated.example.com/v1/taxonomy");
+        expect(request?.url).toBe("https://isolated.example.com/taxonomy");
         expect(request?.headers.accept).toBe(
           "application/json, application/problem+json"
         );
