@@ -175,6 +175,14 @@ describe("CLI workflow policy", () => {
         )
       );
 
+      assert.ok(
+        validateCliWorkflow(
+          source.replace("npm pack ./packages/cli", "npm pack packages/cli")
+        ).includes(
+          "CLI build job is missing required contract: npm pack ./packages/cli"
+        )
+      );
+
       const unsafeRerun = source.replace(
         "          for attempt in {1..5}; do",
         "          for attempt in {1..1}; do"

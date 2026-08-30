@@ -62,7 +62,7 @@ jobs:
             --outfile="$RELEASE_ROOT/provenance.mjs" \
             --platform=node \
             --target=node24
-          pack=$(npm pack packages/cli --ignore-scripts --json \
+          pack=$(npm pack ./packages/cli --ignore-scripts --json \
             --pack-destination "$RELEASE_ROOT")
           archive=$(jq -er '.[0].filename' <<< "$pack")
           tarball="$RELEASE_ROOT/$archive"
