@@ -42,7 +42,7 @@ describe("CLI workflow policy", () => {
       const movedIdentity = source
         .replace("    permissions:\n      id-token: write\n", "")
         .concat(
-          "\n  unrelated:\n    runs-on: ubuntu-latest\n    permissions:\n      id-token: write\n"
+          "\n  unrelated:\n    runs-on: ubuntu-latest\n    permissions:\n      id-token: write\n    steps: []\n"
         );
       const movedProblems = validateCliWorkflow(movedIdentity);
       assert.ok(
@@ -60,6 +60,47 @@ describe("CLI workflow policy", () => {
       assert.ok(
         validateCliWorkflow(movedEnvironment).includes(
           "CLI publication must use the protected npm-production environment."
+        )
+      );
+    }).pipe(Effect.provide(NodeServices.layer))
+  );
+
+  it.effect("binds release contracts to executable decoded steps", () =>
+    Effect.gen(function* () {
+      const source = yield* readWorkflow();
+      const disabledVerifier = source
+        .replace('          node "$VERIFIER" \\', "          true \\")
+        .concat('\n# node "$VERIFIER"\n');
+      const verifierProblems = validateCliWorkflow(disabledVerifier);
+      assert.ok(
+        verifierProblems.includes(
+          'CLI publish job is missing required contract: node "$VERIFIER"'
+        )
+      );
+      assert.ok(
+        verifierProblems.includes(
+          "CLI publication must execute one transported verifier."
+        )
+      );
+
+      const siblingDecoy = source
+        .replace("          pnpm --filter @nakafa/cli build", "          true")
+        .concat(
+          "\n  unrelated:\n    runs-on: ubuntu-latest\n    steps:\n      - run: pnpm --filter @nakafa/cli build\n"
+        );
+      assert.ok(
+        validateCliWorkflow(siblingDecoy).includes(
+          "CLI build job is missing required contract: pnpm --filter @nakafa/cli build"
+        )
+      );
+
+      const shellComment = source.replace(
+        "          pnpm --filter @nakafa/cli typecheck",
+        "          # pnpm --filter @nakafa/cli typecheck"
+      );
+      assert.ok(
+        validateCliWorkflow(shellComment).includes(
+          "CLI build job is missing required contract: pnpm --filter @nakafa/cli typecheck"
         )
       );
     }).pipe(Effect.provide(NodeServices.layer))
