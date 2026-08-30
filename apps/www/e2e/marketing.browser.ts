@@ -10,6 +10,11 @@ import {
   verifyDesktopSplitter,
 } from "@/e2e/support/marketing";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import {
+  expectStablePricingAppShell,
+  expectStablePricingTransition,
+  observeStablePricingReload,
+} from "@/e2e/support/pricing";
 import { contributors } from "@/lib/data/contributor";
 
 /**
@@ -22,6 +27,7 @@ const COMMUNITY_MAX_CHROME_DESCENDANTS = 235;
 const COMMUNITY_MAX_DESCENDANTS = 800;
 const COMMUNITY_MAX_HTML_BYTES = 223_000;
 const HOMEPAGE_MAX_DESCENDANTS = 2800;
+const PRICING_PATH_PATTERN = /\/id\/pricing$/;
 const READINESS_TIMEOUT_MILLISECONDS = 15_000;
 const TRUST_MAX_DESCENDANTS = 330;
 const TRUST_RESIZE_LABEL = "Resize the human and agent views";
@@ -338,6 +344,15 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
   yield* Effect.promise(() =>
     expect(page.getByRole("button", { name: "Get Pro" })).toBeEnabled()
   );
+  yield* Effect.promise(() =>
+    expect(page.locator("[data-pricing-plan]")).toHaveCount(2)
+  );
+  yield* Effect.promise(() =>
+    expect(page.locator("[data-pricing-price-slot]")).toHaveCount(2)
+  );
+  yield* Effect.promise(() =>
+    expect(page.locator("[data-pricing-price-fallback]")).toHaveCount(0)
+  );
 
   const pricingQuestions = page.locator('#faq [data-slot="accordion-trigger"]');
   yield* Effect.promise(() => expect(pricingQuestions).toHaveCount(20));
@@ -393,6 +408,34 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
   );
 });
 
+const verifyPricingNavigation = Effect.fn("NakafaE2E.verifyPricingNavigation")(
+  function* (page: Page) {
+    yield* expectStablePricingAppShell(page);
+    yield* loadMarketingPage(page, "/id");
+
+    const pricingLink = page.locator('header nav [href="/id/pricing"]');
+    yield* Effect.promise(() => expect(pricingLink).toHaveText("Harga"));
+    yield* Effect.promise(() => pricingLink.click());
+    yield* Effect.promise(() =>
+      expect(page).toHaveURL(PRICING_PATH_PATTERN, {
+        timeout: READINESS_TIMEOUT_MILLISECONDS,
+      })
+    );
+    yield* Effect.promise(() =>
+      expect(page.locator("[data-pricing-plan]:visible")).toHaveCount(2)
+    );
+    yield* Effect.promise(() =>
+      expect(page.locator("[data-pricing-price-fallback]")).toHaveCount(0)
+    );
+
+    const observation = yield* observeStablePricingReload(
+      page,
+      READINESS_TIMEOUT_MILLISECONDS
+    );
+    yield* Effect.sync(() => expectStablePricingTransition(observation));
+  }
+);
+
 for (const viewport of targetViewports) {
   test.describe(`marketing surfaces at ${viewport.name}`, () => {
     test.use({
@@ -438,6 +481,14 @@ test.describe("dedicated pricing page", () => {
   }) => {
     await Effect.runPromise(
       withObservedPageErrors(page, verifyPricingPage(page))
+    );
+  });
+
+  test("navigates from the header with a stable pricing shell", async ({
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(page, verifyPricingNavigation(page))
     );
   });
 });

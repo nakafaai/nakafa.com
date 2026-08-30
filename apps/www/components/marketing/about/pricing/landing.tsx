@@ -1,10 +1,8 @@
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { useTranslations } from "next-intl";
 import { PricingDithering } from "@/components/marketing/about/pricing/dithering.client";
-import {
-  type PriceProps,
-  PricingCards,
-} from "@/components/marketing/about/pricing/plans";
+import { PricingCards } from "@/components/marketing/about/pricing/plans";
+import type { PriceProps } from "@/components/marketing/about/pricing/price";
 
 /** Animates prices only on the landing surface that owns this treatment. */
 function AnimatedPrice({ price }: PriceProps) {

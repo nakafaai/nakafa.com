@@ -50,6 +50,15 @@ for (const viewport of targetViewports) {
           }
 
           yield* Effect.promise(() => expect(footer).toBeVisible());
+          const sectionSeparator = footer.locator(
+            '[data-slot="sidebar-menu-separator"]'
+          );
+          yield* Effect.promise(() => expect(sectionSeparator).toHaveCount(1));
+          yield* Effect.promise(() =>
+            expect(
+              sectionSeparator.locator('[data-slot="separator"]')
+            ).toBeVisible()
+          );
           yield* Effect.promise(() =>
             expect(
               footer.getByText("Continue learning", { exact: true })

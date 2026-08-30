@@ -8,6 +8,28 @@ import { runAfdocs } from "@/checks/afdocs";
 const TIMEOUT_MS = 600_000;
 const ALLOWED_SKIPS = new Set(["auth-alternative-access"]);
 
+/** Keeps a failed CI check actionable without dumping every passing page. */
+function formatFailureDetails(details: Record<string, unknown> | undefined) {
+  if (!details) {
+    return "";
+  }
+
+  const { pageResults, ...summary } = details;
+  if (!Array.isArray(pageResults)) {
+    return `\n${JSON.stringify(details, null, 2)}`;
+  }
+
+  const failures = pageResults.filter(
+    (page) =>
+      typeof page === "object" &&
+      page !== null &&
+      "status" in page &&
+      page.status !== "pass"
+  );
+
+  return `\n${JSON.stringify({ ...summary, pageResults: failures }, null, 2)}`;
+}
+
 describe("AFDocs", () => {
   let results: readonly {
     readonly check: { readonly id: string };
@@ -29,7 +51,9 @@ describe("AFDocs", () => {
       if (result.status === "skip" && ALLOWED_SKIPS.has(result.id)) {
         continue;
       }
-      expect.fail(`[${result.status}] ${result.message}`);
+      expect.fail(
+        `[${result.status}] ${result.message}${formatFailureDetails(result.details)}`
+      );
     }
   });
 });

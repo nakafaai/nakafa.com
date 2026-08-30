@@ -6,32 +6,22 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { headers } from "next/headers";
 import { useTranslations } from "next-intl";
 import type { ComponentProps, ComponentType } from "react";
-import { Suspense, use } from "react";
 import { PricingButton } from "@/components/marketing/about/pricing/button.client";
 import {
-  getProPricingDisplay,
-  pricingCountryHeaderName,
-} from "@/components/marketing/about/pricing/display";
+  type PriceProps,
+  PricingPrice,
+} from "@/components/marketing/about/pricing/price";
 
 interface PricingFeatureProps {
   icon?: ComponentProps<typeof HugeIcons>["icon"];
   text: string;
 }
 
-type PricingDisplay = ReturnType<typeof getProPricingDisplay>;
-type Price = PricingDisplay["pro"];
-
-export interface PriceProps {
-  price: Price;
-}
-
 interface PricingPlanCardsProps {
   headingLevel: "h2" | "h3";
   Price: ComponentType<PriceProps>;
-  pricingDisplay: PricingDisplay;
 }
 
 /** Renders one pricing card feature row with a stable icon slot. */
@@ -44,12 +34,8 @@ function PricingFeature({ text, icon }: PricingFeatureProps) {
   );
 }
 
-/** Renders the pricing plan cards with an already resolved price display. */
-function PricingPlanCards({
-  Price,
-  headingLevel,
-  pricingDisplay,
-}: PricingPlanCardsProps) {
+/** Renders stable plan cards around request-localized price slots. */
+export function PricingCards({ Price, headingLevel }: PricingPlanCardsProps) {
   const t = useTranslations("Pricing");
   const PlanHeading = headingLevel;
   const freeFeatures = [
@@ -69,7 +55,10 @@ function PricingPlanCards({
 
   return (
     <div className="grid lg:grid-cols-2 lg:divide-x">
-      <div className="flex flex-col gap-6 px-6 py-12 lg:px-10">
+      <div
+        className="flex flex-col gap-6 px-6 py-12 lg:px-10"
+        data-pricing-plan="free"
+      >
         <div className="grid gap-2">
           <PlanHeading className="text-balance font-semibold text-3xl">
             {t("free-title")}
@@ -78,7 +67,7 @@ function PricingPlanCards({
             {t("free-description")}
           </p>
           <div className="pt-2">
-            <Price price={pricingDisplay.free} />
+            <PricingPrice Price={Price} plan="free" />
           </div>
         </div>
 
@@ -107,7 +96,10 @@ function PricingPlanCards({
         </div>
       </div>
 
-      <div className="flex flex-col gap-6 px-6 py-12 lg:px-10">
+      <div
+        className="flex flex-col gap-6 px-6 py-12 lg:px-10"
+        data-pricing-plan="pro"
+      >
         <div className="grid gap-2">
           <PlanHeading className="text-balance font-semibold text-3xl">
             {t("pro-title")}
@@ -115,11 +107,8 @@ function PricingPlanCards({
           <p className="text-pretty text-muted-foreground">
             {t("pro-description")}
           </p>
-          <div className="flex items-baseline gap-1 pt-2">
-            <Price price={pricingDisplay.pro} />
-            <span className="ml-1 text-muted-foreground">
-              {t("pro-period")}
-            </span>
+          <div className="pt-2">
+            <PricingPrice Price={Price} period={t("pro-period")} plan="pro" />
           </div>
         </div>
 
@@ -137,41 +126,5 @@ function PricingPlanCards({
         </div>
       </div>
     </div>
-  );
-}
-
-/**
- * Renders request-priced cards inside Suspense so Cache Components can keep the
- * surrounding pricing shell prerenderable.
- *
- * Docs: https://nextjs.org/docs/app/getting-started/caching#dynamic-rendering
- */
-function RequestPricedCards({
-  Price,
-  headingLevel,
-}: Pick<PricingPlanCardsProps, "Price" | "headingLevel">) {
-  const requestHeaders = use(headers());
-  const pricingDisplay = getProPricingDisplay(
-    requestHeaders.get(pricingCountryHeaderName)
-  );
-
-  return (
-    <PricingPlanCards
-      headingLevel={headingLevel}
-      Price={Price}
-      pricingDisplay={pricingDisplay}
-    />
-  );
-}
-
-/** Streams request-priced cards without showing a false default price. */
-export function PricingCards({
-  Price,
-  headingLevel,
-}: Pick<PricingPlanCardsProps, "Price" | "headingLevel">) {
-  return (
-    <Suspense fallback={null}>
-      <RequestPricedCards headingLevel={headingLevel} Price={Price} />
-    </Suspense>
   );
 }

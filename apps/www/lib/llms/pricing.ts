@@ -8,6 +8,11 @@ const FAQ_NUMBERS = [
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
 ] as const;
 
+/** Removes the reviewed emphasis tag from a heading used outside rich text. */
+function getPlainHeading(heading: string) {
+  return heading.replaceAll("<mark>", "").replaceAll("</mark>", "");
+}
+
 /** Identifies the application-owned pricing document. */
 export function isPricingLlmsRoute(cleanSlug: string) {
   return cleanSlug === "pricing";
@@ -31,6 +36,8 @@ export const getPricingLlmsText = Effect.fn("www.llms.pricing.text")(function* (
       title: page["metadata-title"],
       url,
     }),
+    `## ${getPlainHeading(page.headline)}`,
+    page.description,
     `## ${pricing["free-title"]}`,
     pricing["free-description"],
     `- ${pricing["free-feature-1"]}`,
@@ -45,7 +52,7 @@ export const getPricingLlmsText = Effect.fn("www.llms.pricing.text")(function* (
     `- ${pricing["pro-feature-3"]}`,
     `- ${pricing["pro-feature-5"]}`,
     `Current price and checkout: ${url}`,
-    `## ${page["faq-badge"]}`,
+    `## ${getPlainHeading(page["faq-headline"])}`,
     questions,
   ].join("\n\n");
 });
