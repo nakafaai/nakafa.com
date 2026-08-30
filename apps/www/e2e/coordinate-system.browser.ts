@@ -146,8 +146,8 @@ const expectStableCoordinateSystem = Effect.fn(
       expect(await canvas.isVisible()).toBe(true);
     }).toPass({ timeout: 30_000 })
   );
-  yield* observeDrawingBufferSize(canvas);
   yield* waitForStableCanvas(canvas);
+  yield* observeDrawingBufferSize(canvas);
 
   const beforePlay = yield* Effect.promise(() => canvas.screenshot());
   yield* Effect.promise(() => playButton.click());
