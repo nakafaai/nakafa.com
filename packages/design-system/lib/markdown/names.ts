@@ -185,6 +185,7 @@ export const snbtGeneralComponentNames = {
 
 /** Canonical rich component names owned by SNBT mathematical-reasoning routes. */
 export const snbtMathComponentNames = {
+  lineEquation: "LineEquation",
   numberLine: "NumberLine",
   set2Question19Graph: "Set2Question19Graph",
   set2Question6Graph: "Set2Question6Graph",

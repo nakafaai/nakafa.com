@@ -3,6 +3,13 @@ import type { RendererComponentLoader } from "@/lib/content/renderer/loader";
 
 export const domainComponentLoaders = [
   {
+    name: snbtMathComponentNames.lineEquation,
+    load: () =>
+      import("@/lib/content/renderer/client/snbt/math/equation").then(
+        ({ LineEquation }) => LineEquation
+      ),
+  },
+  {
     name: snbtMathComponentNames.numberLine,
     load: () =>
       import("@/lib/content/renderer/client/snbt/math/number").then(
