@@ -43,6 +43,18 @@ export const TEST_PAGE_PROJECTION = PublicPageProjectionSchema.make({
 export const TEST_PAGE_PROJECTION_JSON =
   canonicalizePublicPageProjection(TEST_PAGE_PROJECTION);
 
+/** Returns the exact historical Page bytes retained for recovery tests. */
+export function testHistoricalPageJson() {
+  return JSON.stringify({
+    ...TEST_PAGE_PROJECTION,
+    metadata: {
+      description: TEST_PAGE_PROJECTION.metadata.description,
+      lastModified: TEST_PAGE_PROJECTION.metadata.datePublished,
+      title: TEST_PAGE_PROJECTION.metadata.title,
+    },
+  });
+}
+
 /** Creates one locale-equivalent signed Page projection for backend tests. */
 export function makeTestPageProjection(
   appLocale: ActiveAppLocaleCode,

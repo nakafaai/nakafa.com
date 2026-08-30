@@ -102,7 +102,7 @@ const verifyProgram = Effect.fn("contentRelease.verifyItems")(function* (
         `Content release ${releaseId} expected item ${expectedIndex}, received ${row.index}.`
       );
     }
-    yield* checkItem(ctx, row);
+    yield* checkItem(ctx, row, release.role);
     processed += 1;
     nextIndex = row.index;
     const metrics = yield* Effect.promise(() =>

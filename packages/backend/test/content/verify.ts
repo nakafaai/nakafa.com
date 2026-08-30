@@ -2,6 +2,7 @@ import { vWorkflowId, type WorkflowStatus } from "@convex-dev/workflow";
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { internal } from "@repo/backend/convex/_generated/api";
+import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import {
   ProofPollCoordinator,
   type ProofPollCoordinatorService,
@@ -142,10 +143,11 @@ function deleteFixture(family: RoutedContentFamily) {
 /** Stages one complete technical upsert through every real mutation. */
 export async function stageUpsertFixture(
   t: TestConvex<typeof schema>,
-  family: RoutedContentFamily = "material"
+  family: RoutedContentFamily = "material",
+  role: Doc<"contentReleases">["role"] = "candidate"
 ) {
   const fixture = upsertFixture(family);
-  await t.mutation((ctx) => insertTestRelease(ctx));
+  await t.mutation((ctx) => insertTestRelease(ctx, { role }));
   await t.mutation(stageItems, {
     batchIndex: 0,
     itemJson: [fixture.itemJson],

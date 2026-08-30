@@ -6,8 +6,8 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { testProjectionJson } from "@repo/backend/test/content/material";
 import {
   TEST_PAGE_KEY,
-  TEST_PAGE_PROJECTION,
   TEST_PAGE_SOURCE,
+  testHistoricalPageJson,
 } from "@repo/backend/test/content/page";
 import {
   TEST_DIGEST,
@@ -46,18 +46,6 @@ function stagePageUpsert(t: TestConvex<typeof schema>) {
       }),
     ],
     releaseId: TEST_RELEASE_ID,
-  });
-}
-
-/** Returns the exact historical Page bytes retained for recovery only. */
-function historicalPageJson() {
-  return JSON.stringify({
-    ...TEST_PAGE_PROJECTION,
-    metadata: {
-      description: TEST_PAGE_PROJECTION.metadata.description,
-      lastModified: TEST_PAGE_PROJECTION.metadata.datePublished,
-      title: TEST_PAGE_PROJECTION.metadata.title,
-    },
   });
 }
 
@@ -220,7 +208,7 @@ describe("contentRelease/projection", () => {
     await t.mutation((ctx) => insertTestRelease(ctx));
     await stagePageUpsert(t);
 
-    await expect(stage(t, [historicalPageJson()])).rejects.toMatchObject({
+    await expect(stage(t, [testHistoricalPageJson()])).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
   });
@@ -233,9 +221,22 @@ describe("contentRelease/projection", () => {
     await stagePageUpsert(recovery);
 
     await expect(
-      recovery.mutation(stageRollbackProjections, {
+      recovery.mutation(stageProjections, {
         batchIndex: 0,
-        projectionJson: [historicalPageJson()],
+        projectionJson: [testHistoricalPageJson()],
+        releaseId: TEST_RELEASE_ID,
+      })
+    ).resolves.toMatchObject({ created: 1, unchanged: 0 });
+
+    const rollback = convexTest(schema, convexModules);
+    await rollback.mutation((ctx) =>
+      insertTestRelease(ctx, { role: "recovery" })
+    );
+    await stagePageUpsert(rollback);
+    await expect(
+      rollback.mutation(stageRollbackProjections, {
+        batchIndex: 0,
+        projectionJson: [testHistoricalPageJson()],
         releaseId: TEST_RELEASE_ID,
       })
     ).resolves.toMatchObject({ created: 1, unchanged: 0 });
@@ -246,7 +247,7 @@ describe("contentRelease/projection", () => {
     await expect(
       candidate.mutation(stageRollbackProjections, {
         batchIndex: 0,
-        projectionJson: [historicalPageJson()],
+        projectionJson: [testHistoricalPageJson()],
         releaseId: TEST_RELEASE_ID,
       })
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_STATE" } });

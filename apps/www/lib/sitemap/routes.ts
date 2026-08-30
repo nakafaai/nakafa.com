@@ -1,3 +1,4 @@
+import type { ReadablePublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
 import { compareSitemapPaths } from "@repo/backend/convex/contentRelease/sitemap";
 import { Data, Effect } from "effect";
 import { readPublishedArticleSitemap } from "@/lib/content/article/sitemap";
@@ -148,14 +149,7 @@ function routeToPath(route: string) {
 }
 
 /** Keeps sitemap dates truthful while retained recovery bytes stay readable. */
-function pageLastModified(
-  metadata:
-    | { readonly lastModified: string }
-    | {
-        readonly dateModified?: string | undefined;
-        readonly datePublished: string;
-      }
-) {
+function pageLastModified(metadata: ReadablePublicPageProjection["metadata"]) {
   return "lastModified" in metadata
     ? metadata.lastModified
     : (metadata.dateModified ?? metadata.datePublished);

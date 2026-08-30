@@ -11,6 +11,7 @@ import {
   testMaterialPublicPath,
   testProjectionJson,
 } from "@repo/backend/test/content/material";
+import { testHistoricalPageJson } from "@repo/backend/test/content/page";
 import {
   TEST_RELEASE_ID,
   testRouteJson,
@@ -126,6 +127,46 @@ describe("contentRelease/verify", () => {
       })
     ).resolves.toEqual({ done: true, nextIndex: 0, processed: 0 });
     await expect(beginFixture(t)).resolves.toBe(0);
+  });
+
+  it("rejects historical candidate bytes but verifies retained recovery", async () => {
+    const candidate = convexTest(schema, convexModules);
+    await stageUpsertFixture(candidate, "page");
+    await candidate.mutation(async (ctx) => {
+      const row = await ctx.db.query("contentItems").unique();
+      if (!row) {
+        throw new Error("Expected staged candidate item.");
+      }
+      await ctx.db.patch("contentItems", row._id, {
+        projectionJson: testHistoricalPageJson(),
+      });
+    });
+    await beginFixture(candidate);
+    await expect(
+      candidate.mutation(verifyItems, {
+        afterIndex: -1,
+        releaseId: TEST_RELEASE_ID,
+      })
+    ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+
+    const recovery = convexTest(schema, convexModules);
+    await stageUpsertFixture(recovery, "page", "recovery");
+    await recovery.mutation(async (ctx) => {
+      const row = await ctx.db.query("contentItems").unique();
+      if (!row) {
+        throw new Error("Expected staged recovery item.");
+      }
+      await ctx.db.patch("contentItems", row._id, {
+        projectionJson: testHistoricalPageJson(),
+      });
+    });
+    await beginFixture(recovery);
+    await expect(
+      recovery.mutation(verifyItems, {
+        afterIndex: -1,
+        releaseId: TEST_RELEASE_ID,
+      })
+    ).resolves.toMatchObject({ done: true, processed: 1 });
   });
 
   it("resumes verification across the bounded item page", async () => {

@@ -173,22 +173,22 @@ const stageProjectionForRole = Effect.fn(
   releaseId: string,
   batchIndex: number,
   sources: readonly string[],
-  expectedRole: "candidate" | "recovery"
+  requiredRole?: "recovery"
 ) {
   const { release } = yield* loadStaged(ctx, releaseId);
   const signed = yield* decodeReleaseJson(release.releaseJson);
   if (
-    release.role !== expectedRole ||
+    (requiredRole !== undefined && release.role !== requiredRole) ||
     release.status !== "staging" ||
     release.abortingAt !== undefined
   ) {
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",
-      `Content release ${releaseId} does not accept ${expectedRole} projection batches.`
+      `Content release ${releaseId} does not accept ${requiredRole ?? release.role} projection batches.`
     );
   }
   const batch =
-    expectedRole === "candidate"
+    release.role === "candidate"
       ? yield* decodeBatch(releaseId, batchIndex, sources)
       : yield* decodeRollbackBatch(releaseId, batchIndex, sources);
   const projections: readonly ContentProjection[] = batch.projections;
@@ -272,7 +272,7 @@ const stageProjectionForRole = Effect.fn(
   };
 });
 
-/** Stages one strict current projection batch for a candidate release. */
+/** Stages one role-decoded batch through the predecessor transport operation. */
 export const stageProjectionProgram = Effect.fn(
   "contentRelease.stageProjectionBatch"
 )(
@@ -281,7 +281,7 @@ export const stageProjectionProgram = Effect.fn(
     releaseId: string,
     batchIndex: number,
     sources: readonly string[]
-  ) => stageProjectionForRole(ctx, releaseId, batchIndex, sources, "candidate")
+  ) => stageProjectionForRole(ctx, releaseId, batchIndex, sources)
 );
 
 /** Stages one readable historical projection batch for retained recovery. */

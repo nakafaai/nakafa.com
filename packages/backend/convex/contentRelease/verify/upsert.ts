@@ -17,6 +17,7 @@ import {
 } from "@repo/backend/convex/contentRelease/model";
 import {
   decodeArtifactJson,
+  decodeCurrentProjectionJson,
   decodeItemJson,
   decodeProjectionJson,
 } from "@repo/backend/convex/contentRelease/parse";
@@ -26,7 +27,8 @@ import { Effect } from "effect";
 /** Builds the complete immutable upsert version from staged evidence. */
 const upsertVersion = Effect.fn("contentRelease.upsertVersion")(function* (
   ctx: MutationCtx,
-  row: Doc<"contentItems">
+  row: Doc<"contentItems">,
+  releaseRole: Doc<"contentReleases">["role"]
 ) {
   if (!(row.artifactReady && row.projectionReady && row.projectionJson)) {
     return yield* releaseFail(
@@ -57,7 +59,9 @@ const upsertVersion = Effect.fn("contentRelease.upsertVersion")(function* (
     );
   }
   const artifact = yield* decodeArtifactJson(artifactRow.artifactJson);
-  const projection = yield* decodeProjectionJson(row.projectionJson);
+  const projection = yield* releaseRole === "candidate"
+    ? decodeCurrentProjectionJson(row.projectionJson)
+    : decodeProjectionJson(row.projectionJson);
   const projectionHash = yield* hashText(
     "the content projection",
     canonicalizeContentProjection(projection)
@@ -142,9 +146,10 @@ function sameVersion(
 /** Inserts one immutable upsert version or validates its idempotent retry. */
 export const writeUpsert = Effect.fn("contentRelease.writeUpsert")(function* (
   ctx: MutationCtx,
-  row: Doc<"contentItems">
+  row: Doc<"contentItems">,
+  releaseRole: Doc<"contentReleases">["role"]
 ) {
-  const version = yield* upsertVersion(ctx, row);
+  const version = yield* upsertVersion(ctx, row, releaseRole);
   const existing = yield* loadExactVersion(
     ctx,
     row.contentKey,
