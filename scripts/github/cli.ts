@@ -3,7 +3,6 @@ import { parseDocument } from "yaml";
 
 const WorkflowStepSchema = Schema.Struct({
   env: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
-  name: Schema.optional(Schema.String),
   run: Schema.optional(Schema.String),
   uses: Schema.optional(Schema.String),
   with: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
@@ -26,10 +25,8 @@ const CliWorkflowSchema = Schema.Struct({
 });
 
 type WorkflowJob = Schema.Schema.Type<typeof WorkflowJobSchema>;
-type WorkflowStep = Schema.Schema.Type<typeof WorkflowStepSchema>;
 
-const GITHUB_EXPRESSION = "$";
-const PROVENANCE_ACTION =
+const SETUP_NODE_ACTION =
   "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020";
 const REQUIRED_BUILD_SOURCE = [
   "pnpm test:scripts",
@@ -39,27 +36,45 @@ const REQUIRED_BUILD_SOURCE = [
   "pnpm exec esbuild scripts/github/provenance/main.ts",
   "createRequire(import.meta.url)",
   "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
-  "cli-release",
+  "cli-package",
+  "cli-verifier",
   "provenance.mjs",
 ] as const;
 const REQUIRED_PUBLISH_SOURCE = [
   "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
-  PROVENANCE_ACTION,
+  SETUP_NODE_ACTION,
+  "cli-package",
   "EXPECTED_SHA256",
   "EXPECTED_SIZE",
-  "EXPECTED_VERIFIER_SHA256",
-  "EXPECTED_VERIFIER_SIZE",
   "NPM_CLI",
   "npm@12.0.2",
+  "NPM_CONFIG_REGISTRY",
   "ACTIONS_ID_TOKEN_REQUEST_URL",
   "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
-  'npx --yes "$NPM_CLI" publish "$TARBALL" --access public --provenance',
+  "expected_shasum",
+  "expected_integrity",
+  'npx --yes "$NPM_CLI" publish "$TARBALL"',
+  "--ignore-scripts",
+  "--provenance",
+] as const;
+const REQUIRED_VERIFY_SOURCE = [
+  "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
+  SETUP_NODE_ACTION,
+  "cli-package",
+  "cli-verifier",
+  "EXPECTED_VERIFIER_SHA256",
+  "EXPECTED_VERIFIER_SIZE",
+  "NPM_CONFIG_REGISTRY",
+  "ACTIONS_ID_TOKEN_REQUEST_URL",
+  "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
   "npm/v1/attestations/",
   "audit signatures --json",
   "--include-attestations",
   'node "$VERIFIER"',
   '".github/workflows/cli-publish.yml"',
   '"refs/heads/main"',
+  '"npm-production"',
+  "for attempt in {1..10}",
 ] as const;
 
 const FORBIDDEN_CREDENTIALS = [
@@ -72,26 +87,24 @@ const FORBIDDEN_PROVENANCE = [
   "bundle.dsseEnvelope.payload",
   "is_exact_provenance()",
 ] as const;
-const FORBIDDEN_PRIVILEGED_CODE = /\bpnpm\b|\bnode\b|packages\/|scripts\//u;
+const FORBIDDEN_PRIVILEGED_CODE =
+  /\b(?:bash|bun|deno|eval|exec|node|pnpm|python|source|xargs)\b|packages\/|scripts\/|\.\//u;
+const SHELL_COMMENT = /(^|[ \t])#.*$/u;
 
 export class CliWorkflowPolicyError extends Schema.TaggedError<CliWorkflowPolicyError>()(
   "CliWorkflowPolicyError",
   { problems: Schema.NonEmptyArray(Schema.String) }
 ) {}
 
-/** Removes blank and disabled lines from one decoded shell program. */
 function executableSource(run: string | undefined) {
   return (run ?? "")
     .split("\n")
-    .filter((line) => {
-      const trimmed = line.trim();
-      return trimmed.length > 0 && !trimmed.startsWith("#");
-    })
+    .map((line) => line.replace(SHELL_COMMENT, "$1").trimEnd())
+    .filter((line) => line.trim().length > 0)
     .join("\n");
 }
 
-/** Converts one decoded workflow step into bounded executable source. */
-function stepSource(step: WorkflowStep) {
+function stepSource(step: WorkflowJob["steps"][number]) {
   return [
     executableSource(step.run),
     step.uses,
@@ -102,12 +115,10 @@ function stepSource(step: WorkflowStep) {
     .join("\n");
 }
 
-/** Converts one decoded job into bounded step source. */
 function jobSource(job: WorkflowJob) {
   return job.steps.map(stepSource).join("\n");
 }
 
-/** Decodes the exact workflow structure without trusting comments. */
 function decodeWorkflow(source: string) {
   const document = parseDocument(source);
   if (document.errors.length > 0) {
@@ -116,10 +127,9 @@ function decodeWorkflow(source: string) {
   return Schema.decodeUnknownOption(CliWorkflowSchema)(document.toJS());
 }
 
-/** Adds every required fragment missing from one bounded job. */
 function requireSource(
   problems: string[],
-  owner: "build" | "publish",
+  owner: "build" | "publish" | "verify",
   source: string,
   fragments: readonly string[]
 ): void {
@@ -132,12 +142,6 @@ function requireSource(
   }
 }
 
-/** Counts exact occurrences of one executable fragment. */
-function occurrenceCount(source: string, fragment: string) {
-  return source.split(fragment).length - 1;
-}
-
-/** Returns every violation of the isolated npm trusted-publishing contract. */
 export function validateCliWorkflow(source: string): string[] {
   const problems: string[] = [];
   for (const snippet of FORBIDDEN_CREDENTIALS) {
@@ -163,9 +167,11 @@ export function validateCliWorkflow(source: string): string[] {
   if (Object.keys(permissions).length > 0) {
     problems.push("CLI workflow root permissions must remain empty.");
   }
-  const { build, publish } = jobs;
-  if (!(build && publish)) {
-    problems.push("CLI workflow requires separate build and publish jobs.");
+  const { build, publish, verify } = jobs;
+  if (!(build && publish && verify)) {
+    problems.push(
+      "CLI workflow requires separate build, publish, and verify jobs."
+    );
     return problems;
   }
 
@@ -175,14 +181,14 @@ export function validateCliWorkflow(source: string): string[] {
   ) {
     problems.push("CLI build must target protected Nakafa main.");
   }
-  const expectedOutputs = {
-    archive: `${GITHUB_EXPRESSION}{{ steps.archive.outputs.archive }}`,
-    sha256: `${GITHUB_EXPRESSION}{{ steps.archive.outputs.sha256 }}`,
-    size: `${GITHUB_EXPRESSION}{{ steps.archive.outputs.size }}`,
-    verifier_sha256: `${GITHUB_EXPRESSION}{{ steps.archive.outputs.verifier_sha256 }}`,
-    verifier_size: `${GITHUB_EXPRESSION}{{ steps.archive.outputs.verifier_size }}`,
-  };
-  for (const [name, value] of Object.entries(expectedOutputs)) {
+  for (const name of [
+    "archive",
+    "sha256",
+    "size",
+    "verifier_sha256",
+    "verifier_size",
+  ]) {
+    const value = `\${{ steps.archive.outputs.${name} }}`;
     if (build.outputs?.[name] !== value) {
       problems.push(`CLI build must export exact output: ${name}`);
     }
@@ -190,8 +196,10 @@ export function validateCliWorkflow(source: string): string[] {
 
   const buildSource = jobSource(build);
   const publishSource = jobSource(publish);
+  const verifySource = jobSource(verify);
   requireSource(problems, "build", buildSource, REQUIRED_BUILD_SOURCE);
   requireSource(problems, "publish", publishSource, REQUIRED_PUBLISH_SOURCE);
+  requireSource(problems, "verify", verifySource, REQUIRED_VERIFY_SOURCE);
 
   if (publish.permissions?.["id-token"] !== "write") {
     problems.push("Only the publish job must receive npm OIDC identity.");
@@ -200,6 +208,12 @@ export function validateCliWorkflow(source: string): string[] {
     problems.push(
       "CLI publication must use the protected npm-production environment."
     );
+  }
+  if (verify.environment !== undefined) {
+    problems.push("CLI verification must not use a protected environment.");
+  }
+  if (Object.keys(verify.permissions ?? {}).length > 0) {
+    problems.push("CLI verification permissions must remain empty.");
   }
   for (const [name, job] of Object.entries(jobs)) {
     if (name !== "publish" && job.permissions?.["id-token"] !== undefined) {
@@ -215,36 +229,63 @@ export function validateCliWorkflow(source: string): string[] {
     problems.push("CLI publication must consume the verified build job.");
   }
 
-  const setup = publish.steps.find(({ uses }) => uses === PROVENANCE_ACTION);
-  if (setup?.with?.["node-version"] !== "24.19.0") {
-    problems.push("CLI provenance must use the repository Node runtime.");
+  const verifyNeeds = Array.isArray(verify.needs)
+    ? verify.needs
+    : [verify.needs].filter((need) => need !== undefined);
+  if (
+    verifyNeeds.length !== 2 ||
+    !verifyNeeds.includes("build") ||
+    !verifyNeeds.includes("publish")
+  ) {
+    problems.push("CLI verification must consume build and publication.");
   }
-  if (setup?.with?.["package-manager-cache"] !== false) {
-    problems.push("CLI publication must disable package-manager caching.");
+
+  for (const [owner, job] of [
+    ["publication", publish],
+    ["verification", verify],
+  ] as const) {
+    const setup = job.steps.find(({ uses }) => uses === SETUP_NODE_ACTION);
+    if (setup?.with?.["node-version"] !== "24.19.0") {
+      problems.push(`CLI ${owner} must use the repository Node runtime.`);
+    }
+    if (setup?.with?.["package-manager-cache"] !== false) {
+      problems.push(`CLI ${owner} must disable package-manager caching.`);
+    }
   }
 
   const publishCommands = publish.steps
     .flatMap(({ run }) => (run === undefined ? [] : [run]))
     .map(executableSource)
     .join("\n");
-  if (occurrenceCount(publishCommands, 'node "$VERIFIER"') !== 1) {
-    problems.push("CLI publication must execute one transported verifier.");
+  if (
+    FORBIDDEN_PRIVILEGED_CODE.test(publishCommands) ||
+    publishCommands.split('npx --yes "$NPM_CLI" publish "$TARBALL"').length !==
+      2
+  ) {
+    problems.push("CLI publication may execute only one npm publish command.");
   }
   if (
-    FORBIDDEN_PRIVILEGED_CODE.test(
-      publishCommands.replace('node "$VERIFIER"', "")
-    )
+    publishSource.includes("cli-verifier") ||
+    publishSource.includes("provenance.mjs") ||
+    publishSource.includes("VERIFIER")
   ) {
-    problems.push("CLI publication must not execute other repository code.");
+    problems.push("CLI publication must not receive the verifier artifact.");
   }
   if (publish.steps.some(({ uses }) => uses?.startsWith("actions/checkout@"))) {
     problems.push("CLI publication must not checkout repository code.");
   }
 
+  const verifyCommands = verify.steps
+    .flatMap(({ run }) => (run === undefined ? [] : [run]))
+    .map(executableSource)
+    .join("\n");
+  if (verifyCommands.split('node "$VERIFIER"').length !== 2) {
+    problems.push("CLI verification must execute one transported verifier.");
+  }
+
   return problems;
 }
 
-/** Verifies the complete Effect-owned CLI workflow policy. */
 export const verifyCliWorkflow = Effect.fn("GithubCli.verify")(function* (
   source: string
 ) {

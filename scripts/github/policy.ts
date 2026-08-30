@@ -78,16 +78,16 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     action: "actions/upload-artifact",
     approvedSha: "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
     expectedTag: "v7.0.1",
-    expectedUsages: 2,
+    expectedUsages: 3,
     reason:
-      "Failure diagnostics and the CLI release use the reviewed stable release.",
+      "Failure diagnostics and separated CLI artifacts use the reviewed release.",
   },
   {
     action: "actions/download-artifact",
     approvedSha: "3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
     expectedTag: "v8.0.1",
-    expectedUsages: 1,
-    reason: "The CLI release downloads only its verified build artifact.",
+    expectedUsages: 3,
+    reason: "CLI publishing and verification download separated artifacts.",
   },
   {
     action: "actions/setup-node",
@@ -97,9 +97,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
       "package-manager-cache": "false",
     },
     expectedTag: "v7.0.0",
-    expectedUsages: 1,
+    expectedUsages: 2,
     reason:
-      "The isolated CLI publisher pins Node without dependency caching or registry credentials.",
+      "CLI publication and verification pin Node without dependency caching.",
   },
 ]);
 

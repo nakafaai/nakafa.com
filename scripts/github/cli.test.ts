@@ -14,7 +14,7 @@ const readWorkflow = Effect.fn("GithubCliTest.readWorkflow")(function* () {
 });
 
 describe("CLI workflow policy", () => {
-  it.effect("accepts isolated exact-byte OIDC publication", () =>
+  it.effect("accepts isolated publication and unprivileged verification", () =>
     Effect.gen(function* () {
       const source = yield* readWorkflow();
       yield* verifyCliWorkflow(source);
@@ -69,17 +69,36 @@ describe("CLI workflow policy", () => {
     Effect.gen(function* () {
       const source = yield* readWorkflow();
       const disabledVerifier = source
-        .replace('          node "$VERIFIER" \\', "          true \\")
+        .replace(
+          '          node "$VERIFIER" \\',
+          '          true # node "$VERIFIER" \\'
+        )
         .concat('\n# node "$VERIFIER"\n');
       const verifierProblems = validateCliWorkflow(disabledVerifier);
       assert.ok(
         verifierProblems.includes(
-          'CLI publish job is missing required contract: node "$VERIFIER"'
+          'CLI verify job is missing required contract: node "$VERIFIER"'
         )
       );
       assert.ok(
         verifierProblems.includes(
-          "CLI publication must execute one transported verifier."
+          "CLI verification must execute one transported verifier."
+        )
+      );
+
+      const privilegedVerifier = source.replace(
+        '          npx --yes "$NPM_CLI" publish "$TARBALL" \\',
+        '          node "$VERIFIER"\n          npx --yes "$NPM_CLI" publish "$TARBALL" \\'
+      );
+      const privilegedProblems = validateCliWorkflow(privilegedVerifier);
+      assert.ok(
+        privilegedProblems.includes(
+          "CLI publication may execute only one npm publish command."
+        )
+      );
+      assert.ok(
+        privilegedProblems.includes(
+          "CLI publication must not receive the verifier artifact."
         )
       );
 
@@ -126,6 +145,19 @@ describe("CLI workflow policy", () => {
         validateCliWorkflow(
           source.replace("audit signatures --json", "audit --json")
         ).length > 0
+      );
+      assert.ok(
+        validateCliWorkflow(
+          source.replace("needs: [build, publish]", "needs: publish")
+        ).includes("CLI verification must consume build and publication.")
+      );
+      assert.ok(
+        validateCliWorkflow(
+          source.replace(
+            "    permissions: {}\n    steps:\n      - name: Download verified package",
+            "    permissions:\n      contents: read\n    steps:\n      - name: Download verified package"
+          )
+        ).includes("CLI verification permissions must remain empty.")
       );
       assert.ok(
         validateCliWorkflow(
