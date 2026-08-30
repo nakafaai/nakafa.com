@@ -6,7 +6,6 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { headers } from "next/headers";
 import { useTranslations } from "next-intl";
 import type { ComponentProps, ComponentType } from "react";
@@ -16,7 +15,6 @@ import {
   getProPricingDisplay,
   pricingCountryHeaderName,
 } from "@/components/marketing/about/pricing/display";
-import { PricingDithering } from "@/components/marketing/about/pricing/dithering.client";
 
 interface PricingFeatureProps {
   icon?: ComponentProps<typeof HugeIcons>["icon"];
@@ -26,7 +24,7 @@ interface PricingFeatureProps {
 type PricingDisplay = ReturnType<typeof getProPricingDisplay>;
 type Price = PricingDisplay["pro"];
 
-interface PriceProps {
+export interface PriceProps {
   price: Price;
 }
 
@@ -34,25 +32,6 @@ interface PricingPlanCardsProps {
   headingLevel: "h2" | "h3";
   Price: ComponentType<PriceProps>;
   pricingDisplay: PricingDisplay;
-}
-
-/** Renders the animated price used on the marketing homepage. */
-function AnimatedPrice({ price }: PriceProps) {
-  return (
-    <NumberFormat
-      className="font-semibold text-4xl tracking-tight"
-      format={price.format}
-      locales={price.locales}
-      value={price.value}
-    />
-  );
-}
-
-/** Renders a server-formatted price without adding animation to page prefetch. */
-function StaticPrice({ price }: PriceProps) {
-  return (
-    <span className="font-semibold text-4xl tracking-tight">{price.text}</span>
-  );
 }
 
 /** Renders one pricing card feature row with a stable icon slot. */
@@ -186,7 +165,7 @@ function RequestPricedCards({
 }
 
 /** Streams request-priced cards without showing a false default price. */
-function PricingCards({
+export function PricingCards({
   Price,
   headingLevel,
 }: Pick<PricingPlanCardsProps, "Price" | "headingLevel">) {
@@ -194,69 +173,5 @@ function PricingCards({
     <Suspense fallback={null}>
       <RequestPricedCards headingLevel={headingLevel} Price={Price} />
     </Suspense>
-  );
-}
-
-/** Renders the marketing pricing section with request-location price display. */
-export function Pricing() {
-  const t = useTranslations("Pricing");
-
-  return (
-    <section aria-labelledby="pricing-heading" className="border-b">
-      <div className="mx-auto w-full max-w-7xl border-x">
-        <div className="h-120 w-full overflow-hidden">
-          <PricingDithering />
-        </div>
-
-        <div className="scroll-mt-28 px-6 pb-12 lg:px-10" id="pricing">
-          <h2
-            className="max-w-3xl text-balance text-3xl tracking-tight sm:text-4xl"
-            id="pricing-heading"
-          >
-            {t.rich("headline", {
-              mark: (chunks) => <mark>{chunks}</mark>,
-            })}
-          </h2>
-        </div>
-
-        <div className="border-t bg-card text-card-foreground">
-          <PricingCards headingLevel="h3" Price={AnimatedPrice} />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/** Renders the dedicated pricing-page introduction and shared plan cards. */
-export function PricingPagePlans() {
-  const t = useTranslations("PricingPage");
-
-  return (
-    <section aria-labelledby="pricing-heading" className="border-b">
-      <div className="mx-auto w-full max-w-7xl">
-        <div
-          className="scroll-mt-28 px-6 py-24 sm:py-28 lg:px-10 lg:py-32"
-          id="pricing"
-        >
-          <h1
-            className="max-w-3xl text-balance text-3xl tracking-tight sm:text-4xl"
-            id="pricing-heading"
-          >
-            {t.rich("headline", {
-              mark: (chunks) => <mark>{chunks}</mark>,
-            })}
-          </h1>
-          <p className="mt-6 max-w-2xl text-pretty text-lg text-muted-foreground">
-            {t("description")}
-          </p>
-        </div>
-      </div>
-
-      <div className="border-t bg-card text-card-foreground">
-        <div className="mx-auto w-full max-w-7xl border-x">
-          <PricingCards headingLevel="h2" Price={StaticPrice} />
-        </div>
-      </div>
-    </section>
   );
 }

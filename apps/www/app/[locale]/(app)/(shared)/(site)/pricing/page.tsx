@@ -2,14 +2,59 @@ import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
 import type { Metadata } from "next";
 import { locale as rootLocale } from "next/root-params";
+import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { PricingPageFaq } from "@/components/marketing/about/faq/pricing";
 import type { MarketingFaqItem } from "@/components/marketing/about/faq/section";
-import { PricingPagePlans } from "@/components/marketing/about/pricing/plans";
+import {
+  type PriceProps,
+  PricingCards,
+} from "@/components/marketing/about/pricing/plans";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createLocalizedAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getSocialMetadata } from "@/lib/utils/metadata";
+
+/** Keeps the dedicated route price static and out of the landing animation. */
+function StaticPrice({ price }: PriceProps) {
+  return (
+    <span className="font-semibold text-4xl tracking-tight">{price.text}</span>
+  );
+}
+
+/** Owns the dedicated pricing introduction and shared plan comparison. */
+function PricingPagePlans() {
+  const t = useTranslations("PricingPage");
+
+  return (
+    <section aria-labelledby="pricing-heading" className="border-b">
+      <div className="mx-auto w-full max-w-7xl">
+        <div
+          className="scroll-mt-28 px-6 py-24 sm:py-28 lg:px-10 lg:py-32"
+          id="pricing"
+        >
+          <h1
+            className="max-w-3xl text-balance text-3xl tracking-tight sm:text-4xl"
+            id="pricing-heading"
+          >
+            {t.rich("headline", {
+              mark: (chunks) => <mark>{chunks}</mark>,
+            })}
+          </h1>
+          <p className="mt-6 max-w-2xl text-pretty text-lg text-muted-foreground">
+            {t("description")}
+          </p>
+        </div>
+      </div>
+
+      <div className="border-t bg-card text-card-foreground">
+        <div className="mx-auto w-full max-w-7xl border-x">
+          <PricingCards headingLevel="h2" Price={StaticPrice} />
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export async function generateMetadata({
   params,
