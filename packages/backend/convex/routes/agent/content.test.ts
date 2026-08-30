@@ -81,7 +81,7 @@ describe("public agent content", () => {
 
     const response = await fetchApi(
       test,
-      `/v1/content?ref=${encodeURIComponent(topic.graph.assetId)}`
+      `/content?ref=${encodeURIComponent(topic.graph.assetId)}`
     );
     const body = response.clone();
 
@@ -90,7 +90,7 @@ describe("public agent content", () => {
       status: 404,
     });
     await expect(body.json()).resolves.toMatchObject({
-      resolution: expect.stringContaining("/v1/search"),
+      resolution: expect.stringContaining("/search"),
     });
   });
 
