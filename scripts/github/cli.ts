@@ -44,6 +44,7 @@ const REQUIRED_BUILD_SOURCE = [
   "pnpm --filter @nakafa/cli typecheck",
   "pnpm --filter @nakafa/cli test:coverage",
   "pnpm --filter @nakafa/cli build",
+  "npm pack ./packages/cli",
   "pnpm exec esbuild scripts/github/provenance/main.ts",
   "createRequire(import.meta.url)",
   "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
