@@ -20,7 +20,7 @@ setupApiTest();
 
 describe("public Quran API routes", () => {
   it.each(["/v2/quran/1", "/v2/quran/1?locale=en"])(
-    "does not expose the retired Quran path %s",
+    "rejects the unsupported public namespace %s",
     async (path) => {
       const response = await fetchApi(createConvexTestWithBetterAuth(), path);
 

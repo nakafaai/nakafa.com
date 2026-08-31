@@ -7,8 +7,8 @@ export const NAKAFA_API_BASE_URL = "https://api.nakafa.com";
 /** Stable compatibility namespace for the public REST contract. */
 export const NAKAFA_PUBLIC_API_PATH = "/v1";
 
-/** Current compatible version of the public REST contract. */
-export const NAKAFA_PUBLIC_API_VERSION = "2.0.0";
+/** Reported version of the only supported public REST contract, V1. */
+export const NAKAFA_PUBLIC_API_VERSION = "1.0.0";
 
 /** Canonical public Streamable HTTP MCP endpoint. */
 export const NAKAFA_MCP_ENDPOINT = "https://mcp.nakafa.com/mcp";

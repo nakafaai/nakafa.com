@@ -5,6 +5,7 @@ import {
   SEARCH_PARAMETERS,
   TAXONOMY_PARAMETERS,
 } from "@repo/backend/agent/openapi/parameters";
+import { NAKAFA_PUBLIC_API_PATH } from "@repo/contents/_lib/agent/constants";
 
 const JSON_CONTENT = "application/json";
 const PROBLEM_CONTENT = "application/problem+json";
@@ -120,7 +121,7 @@ export const OPENAPI_PATHS = {
       summary: "Read the OpenAPI contract",
     }),
   },
-  "/quran/{surah}": {
+  [`${NAKAFA_PUBLIC_API_PATH}/quran/{surah}`]: {
     get: readOperation({
       description:
         "Returns a bounded Quran verse range with semantic translation notes, signed Arabic and translation sources, and explicit locale-specific tafsir access.",
@@ -137,7 +138,7 @@ export const OPENAPI_PATHS = {
       summary: "Read a source-grounded Quran reference",
     }),
   },
-  "/": {
+  [NAKAFA_PUBLIC_API_PATH]: {
     get: readOperation({
       description:
         "Returns stable service identity and links for developers and agents.",
@@ -149,7 +150,7 @@ export const OPENAPI_PATHS = {
       summary: "Read the API index",
     }),
   },
-  "/content": {
+  [`${NAKAFA_PUBLIC_API_PATH}/content`]: {
     get: readOperation({
       description:
         "Resolves a readable content ID, resource URI, or canonical URL to agent-readable Markdown.",
@@ -163,7 +164,7 @@ export const OPENAPI_PATHS = {
       summary: "Read public content",
     }),
   },
-  "/health": {
+  [`${NAKAFA_PUBLIC_API_PATH}/health`]: {
     get: readOperation({
       description:
         "Returns process health and an observation timestamp without reading content data.",
@@ -175,7 +176,7 @@ export const OPENAPI_PATHS = {
       summary: "Check API health",
     }),
   },
-  "/search": {
+  [`${NAKAFA_PUBLIC_API_PATH}/search`]: {
     get: readOperation({
       description:
         "Searches the current signed Nakafa publication with stable pagination.",
@@ -188,7 +189,7 @@ export const OPENAPI_PATHS = {
       summary: "Search public content",
     }),
   },
-  "/taxonomy": {
+  [`${NAKAFA_PUBLIC_API_PATH}/taxonomy`]: {
     get: readOperation({
       description:
         "Returns current public sections, locales, categories, counts, and agent tools.",

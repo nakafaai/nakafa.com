@@ -1,6 +1,7 @@
 import {
   NAKAFA_MCP_ENDPOINT,
   NAKAFA_MCP_PROTOCOL_VERSION,
+  NAKAFA_PUBLIC_API_PATH,
 } from "@repo/contents/_lib/agent/constants";
 import { Console, Effect, Layer, MutableRef } from "effect";
 import {
@@ -145,12 +146,12 @@ function executeCommand(request: CliRequest) {
 function buildApiPath(command: Exclude<CliCommand, { kind: "mcp" }>) {
   if (command.kind === "get") {
     const query = new URLSearchParams({ ref: command.ref });
-    return `/content?${query}`;
+    return `${NAKAFA_PUBLIC_API_PATH}/content?${query}`;
   }
   if (command.kind === "taxonomy") {
     const query = new URLSearchParams();
     appendOptional(query, "locale", command.locale);
-    return withQuery("/taxonomy", query);
+    return withQuery(`${NAKAFA_PUBLIC_API_PATH}/taxonomy`, query);
   }
   if (command.kind === "quran") {
     const query = new URLSearchParams();
@@ -160,14 +161,14 @@ function buildApiPath(command: Exclude<CliCommand, { kind: "mcp" }>) {
     if (command.includeTafsir) {
       query.set("include_tafsir", "true");
     }
-    return withQuery(`/quran/${command.surah}`, query);
+    return withQuery(`${NAKAFA_PUBLIC_API_PATH}/quran/${command.surah}`, query);
   }
   const query = new URLSearchParams({ query: command.query });
   appendOptional(query, "section", command.section);
   appendOptional(query, "locale", command.locale);
   appendOptional(query, "limit", command.limit);
   appendOptional(query, "offset", command.offset);
-  return `/search?${query}`;
+  return `${NAKAFA_PUBLIC_API_PATH}/search?${query}`;
 }
 
 const plainFormatter = CliOutput.defaultFormatter({ colors: false });

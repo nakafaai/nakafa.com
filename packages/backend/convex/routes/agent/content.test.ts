@@ -88,7 +88,7 @@ describe("public agent content", () => {
       status: 404,
     });
     await expect(body.json()).resolves.toMatchObject({
-      resolution: expect.stringContaining("/search"),
+      resolution: expect.stringContaining("/v1/search"),
     });
   });
 
