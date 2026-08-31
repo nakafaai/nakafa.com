@@ -7,12 +7,14 @@ import { LineEquation } from "@repo/design-system/components/three/line-equation
 /** Renders the client-only WebGL implementation of one line scene. */
 export function LineScene({
   cameraPosition,
+  cameraTarget,
   lines,
   showZAxis,
 }: LineSceneProps) {
   return (
     <CoordinateSystem
       cameraPosition={cameraPosition}
+      cameraTarget={cameraTarget}
       showGizmo={showZAxis}
       showZAxis={showZAxis}
     >

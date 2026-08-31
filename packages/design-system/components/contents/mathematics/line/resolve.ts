@@ -5,6 +5,7 @@ import {
   createCircleRadiusPoints,
   createCircleSegmentBoundaryLines,
 } from "@repo/design-system/components/contents/mathematics/circle";
+import { createCuboidLines } from "@repo/design-system/components/contents/mathematics/cuboid";
 import type {
   AuthoredLine,
   ResolvedLine,
@@ -18,7 +19,13 @@ function resolveLine(line: AuthoredLine): ResolvedLine[] {
 
   if (line.kind === "circle-outline") {
     const { kind: _kind, radius, ...props } = line;
-    return [{ ...props, points: createCircleOutlinePoints(radius) }];
+    return [
+      {
+        ...props,
+        points: createCircleOutlinePoints(radius),
+        smooth: true,
+      },
+    ];
   }
 
   if (line.kind === "circle-chord") {
@@ -31,6 +38,7 @@ function resolveLine(line: AuthoredLine): ResolvedLine[] {
           startDegrees,
           sweepDegrees,
         }),
+        smooth: false,
       },
     ];
   }
@@ -41,6 +49,7 @@ function resolveLine(line: AuthoredLine): ResolvedLine[] {
       {
         ...props,
         points: createCircleRadiusPoints({ degrees, radius }),
+        smooth: false,
       },
     ];
   }
@@ -48,6 +57,10 @@ function resolveLine(line: AuthoredLine): ResolvedLine[] {
   if (line.kind === "circle-arc") {
     const { kind: _kind, ...arc } = line;
     return [createCircleArcLine(arc)];
+  }
+
+  if (line.kind === "cuboid") {
+    return createCuboidLines(line);
   }
 
   const { kind: _kind, ...segment } = line;

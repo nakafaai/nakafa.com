@@ -1,7 +1,7 @@
 import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
 import type { ReactNode } from "react";
 
-interface LinePoint {
+export interface LinePoint {
   x: number;
   y: number;
   z: number;
@@ -34,11 +34,21 @@ export interface ResolvedLine {
 /** Exact serializable payload owned by the deferred WebGL boundary. */
 export interface LineSceneProps {
   cameraPosition: [number, number, number];
+  cameraTarget?: [number, number, number];
   lines: readonly ResolvedLine[];
   showZAxis: boolean;
 }
 
-type CircleLine = Omit<ResolvedLine, "points">;
+type CircleLine = Omit<ResolvedLine, "points" | "smooth">;
+
+export interface CuboidLine
+  extends Pick<ResolvedLine, "color" | "lineWidth" | "showPoints"> {
+  readonly center?: LinePoint;
+  readonly height: number;
+  readonly kind: "cuboid";
+  readonly length: number;
+  readonly width: number;
+}
 
 interface CircleAngle {
   readonly radius: number;
@@ -83,4 +93,5 @@ export type AuthoredLine =
   | CircleOutlineLine
   | CircleRadiusLine
   | CircleSegmentLine
+  | CuboidLine
   | ResolvedLine;

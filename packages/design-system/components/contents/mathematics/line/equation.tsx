@@ -16,6 +16,7 @@ const DEFAULT_CAMERA_POSITION_Z = 10;
 
 interface Props {
   cameraPosition?: [number, number, number];
+  cameraTarget?: [number, number, number];
   data: readonly AuthoredLine[];
   description: ReactNode;
   showZAxis?: boolean;
@@ -32,6 +33,7 @@ export function LineEquation({
     DEFAULT_CAMERA_POSITION_Y,
     DEFAULT_CAMERA_POSITION_Z,
   ],
+  cameraTarget,
   showZAxis = true,
 }: Props) {
   const lines = resolveAuthoredLines(data);
@@ -45,6 +47,7 @@ export function LineEquation({
       <CardContent>
         <DeferredLineScene
           cameraPosition={cameraPosition}
+          cameraTarget={cameraTarget}
           lines={lines}
           showZAxis={showZAxis}
         />
