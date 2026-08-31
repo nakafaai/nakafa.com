@@ -538,6 +538,8 @@
     "subscriptions-description": "Kelola Nakafa Pro, 3.000 kredit AI bulanan, dan portal pembayaranmu.",
     "get-pro": "Dapatkan Pro",
     "manage": "Kelola",
+    "checkout-error": "Checkout Pro belum bisa dibuka. Coba lagi.",
+    "portal-error": "Portal langganan belum bisa dibuka. Coba lagi.",
     "plan-free": "Free",
     "plan-pro": "Pro",
     "name": "Nama",

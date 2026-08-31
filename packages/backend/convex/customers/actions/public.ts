@@ -1,6 +1,5 @@
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { action } from "@repo/backend/convex/_generated/server";
-import type { ProductAnalyticsEvent } from "@repo/backend/convex/analytics/events";
+import type { CheckoutAdmissionArgs } from "@repo/backend/convex/customers/checkout/admission";
 import { validateCheckoutRequest } from "@repo/backend/convex/customers/checkout/impl";
 import { checkoutLocaleValidator } from "@repo/backend/convex/customers/checkout/localization";
 import { createAdmittedCheckoutSession } from "@repo/backend/convex/customers/checkout/session";
@@ -16,15 +15,11 @@ import { makeFunctionReference } from "convex/server";
 import { v } from "convex/values";
 import { Effect } from "effect";
 
-const captureActionProductEventReference = makeFunctionReference<
+const admitCheckoutSessionReference = makeFunctionReference<
   "mutation",
-  {
-    distinctId: Id<"users">;
-    event: ProductAnalyticsEvent;
-    timestamp?: number;
-  },
+  CheckoutAdmissionArgs,
   boolean
->("analytics/capture:captureActionProductEvent");
+>("customers/checkout/admission:admitCheckoutSession");
 
 /**
  * Create one authenticated Polar checkout session after validating the selected
@@ -65,8 +60,7 @@ export const generateCheckoutLink = action({
           admitCheckout: () =>
             Effect.tryPromise({
               try: () =>
-                ctx.runMutation(captureActionProductEventReference, {
-                  distinctId: appUserId,
+                ctx.runMutation(admitCheckoutSessionReference, {
                   event: {
                     name: "checkout started",
                     properties: {
@@ -78,6 +72,7 @@ export const generateCheckoutLink = action({
                     },
                   },
                   timestamp: Date.now(),
+                  userId: appUserId,
                 }),
               catch: checkoutSessionIoError,
             }),

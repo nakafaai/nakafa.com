@@ -1,18 +1,14 @@
 import { ANALYTICS_CONSENT_CATEGORY } from "@repo/analytics/consent";
 import { components } from "@repo/backend/convex/_generated/api";
-import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import {
   internalAction,
-  internalMutation,
   internalQuery,
   type MutationCtx,
   type QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import { requestAnalyticsErasure } from "@repo/backend/convex/analytics/erasure/request";
-import {
-  type ProductAnalyticsEvent,
-  productAnalyticsEventValidator,
-} from "@repo/backend/convex/analytics/events";
+import type { ProductAnalyticsEvent } from "@repo/backend/convex/analytics/events";
 import { isAccountDeletionPending } from "@repo/backend/convex/auth/deletion/state";
 import { hasCurrentConsent } from "@repo/backend/convex/consents/impl";
 import {
@@ -30,10 +26,6 @@ interface ProductAnalyticsCaptureArgs {
   readonly distinctId: Id<"users">;
   readonly event: ProductAnalyticsEvent;
   readonly timestamp?: Date;
-}
-interface ProductAnalyticsCaptureOperations {
-  readonly capture: () => Effect.Effect<boolean, ProductAnalyticsCaptureError>;
-  readonly loadUser: () => Promise<Doc<"users"> | null>;
 }
 interface ProductAnalyticsDeliveryOperations {
   readonly capture: () => Promise<void>;
@@ -199,42 +191,4 @@ export const deliverProductEvent = internalAction({
     );
     return null;
   },
-});
-/** Re-enters mutation ordering before admitting an action-owned event. */
-export const captureActionProductEventProgram = Effect.fn(
-  "analytics.capture.captureActionProductEvent"
-)(function* (
-  ctx: MutationCtx,
-  args: ProductAnalyticsCaptureArgs,
-  operations: ProductAnalyticsCaptureOperations = {
-    capture: () => captureProductEvent(ctx, args),
-    loadUser: () => ctx.db.get("users", args.distinctId),
-  }
-) {
-  const user = yield* Effect.tryPromise({
-    catch: toProductAnalyticsCaptureError,
-    try: operations.loadUser,
-  });
-  if (!user || isAccountDeletionPending(user)) {
-    return false;
-  }
-  return yield* operations.capture();
-});
-/** Mutation boundary for action-owned analytics events. */
-export const captureActionProductEvent = internalMutation({
-  args: {
-    distinctId: vv.id("users"),
-    event: productAnalyticsEventValidator,
-    timestamp: v.optional(v.number()),
-  },
-  returns: v.boolean(),
-  handler: (ctx, args) =>
-    runConvexProgram(
-      captureActionProductEventProgram(ctx, {
-        distinctId: args.distinctId,
-        event: args.event,
-        timestamp:
-          args.timestamp === undefined ? undefined : new Date(args.timestamp),
-      })
-    ),
 });
