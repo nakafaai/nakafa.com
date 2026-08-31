@@ -4,7 +4,6 @@ import { DesignSystemProvider } from "@repo/design-system";
 import { Toaster } from "@repo/design-system/components/ui/sonner";
 import { TailwindIndicator } from "@repo/design-system/components/ui/tailwind-indicator";
 import { fonts } from "@repo/design-system/lib/fonts";
-import { ThemeBootstrap } from "@repo/design-system/providers/theme-bootstrap";
 import { routing } from "@repo/internationalization/src/routing";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { EducationalOrgJsonLd } from "@repo/seo/json-ld/educational-org";
@@ -152,9 +151,6 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
       lang={locale}
       suppressHydrationWarning
     >
-      <head>
-        <ThemeBootstrap />
-      </head>
       <body className="relative">
         {hasPreviewConfig() ? <PreviewRefresh /> : null}
         <p className="sr-only">

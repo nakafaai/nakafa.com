@@ -31,7 +31,7 @@ import {
 } from "@/app/api/chat/persistence";
 import { createNinaStore } from "@/app/api/chat/store";
 import {
-  getLearningSelection,
+  getCurriculumPreference,
   getUserInfo,
   getVerified,
 } from "@/app/api/chat/utils";
@@ -140,10 +140,10 @@ export function POST(req: Request) {
         country: geo.country ?? "Unknown",
       };
 
-      const [verified, userInfo, learningSelection] = yield* Effect.all([
+      const [verified, userInfo, curriculumPreference] = yield* Effect.all([
         shouldVerify ? getVerified(url) : Effect.succeed(false),
         getUserInfo(token),
-        getLearningSelection(token, locale),
+        getCurriculumPreference(token, locale),
       ]);
       if (!hasEnoughCredits(userInfo.credits, selectedModel)) {
         return new Response(CHAT_ERRORS.INSUFFICIENT_CREDITS.code, {
@@ -233,7 +233,7 @@ export function POST(req: Request) {
             modelId: selectedModel,
           },
           user: {
-            ...(learningSelection ? { learningSelection } : {}),
+            ...(curriculumPreference ? { curriculumPreference } : {}),
             ...(userInfo.role ? { role: userInfo.role } : {}),
             location: userLocation,
           },

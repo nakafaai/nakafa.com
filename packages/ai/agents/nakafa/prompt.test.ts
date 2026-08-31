@@ -79,32 +79,23 @@ describe("nakafaAgentPrompt", () => {
     expect(prompt).toContain("- user role: unknown");
   });
 
-  it("includes selected learning program context for Nakafa retrieval", () => {
+  it("includes the selected curriculum preference for Nakafa retrieval", () => {
     const prompt = nakafaAgentPrompt({
       context: {
         ...context,
-        learningSelection: {
-          interest: "school-curriculum",
+        curriculumPreference: {
           program: {
-            coverageStatus: "partial",
             key: LearningProgramKeySchema.make("merdeka"),
-            kind: "school-curriculum",
             title: "Kurikulum Merdeka",
-            versionLabel: "Indonesia",
           },
         },
       },
       locale: "id",
     });
 
-    expect(prompt).toContain("- active learning selection: selected");
-    expect(prompt).toContain("- program: Kurikulum Merdeka");
-    expect(prompt).toContain("- interest: school-curriculum");
-    const runtimeContext = prompt.slice(
-      prompt.indexOf("# Runtime Context"),
-      prompt.indexOf("# Tool Usage Guidelines")
-    );
-    expect(runtimeContext).not.toContain("plan items");
+    expect(prompt).toContain("- curriculum preference: selected");
+    expect(prompt).toContain("- curriculum: Kurikulum Merdeka");
+    expect(prompt).toContain("- curriculum key: merdeka");
   });
 
   it("keeps Nakafa sources out of model-facing prose", () => {

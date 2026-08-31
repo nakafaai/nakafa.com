@@ -162,7 +162,11 @@ describe("Nakafa formatter", () => {
       },
       content_counts: [{ count: 12, locale: "id" }],
       default_locale: defaultLocale,
-      mcp: "https://mcp.nakafa.com/mcp",
+      endpoints: {
+        direct: "https://mcp.nakafa.com/mcp",
+        recommended: "https://mcp.nakafa.com/mcp",
+        root_note: "https://mcp.nakafa.com is informational only.",
+      },
       locale: "id",
       locales: Array.from(ACTIVE_APP_LOCALE_CODES),
       quran: {

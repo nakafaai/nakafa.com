@@ -116,9 +116,9 @@ export const readCurrentTryoutCountry = Effect.fn(
   };
 });
 
-/** Creates or updates the current user's preferred curriculum program key. */
-export const upsertPreferredCurriculumProgram = Effect.fn(
-  "learningPreferences.upsertPreferredCurriculumProgram"
+/** Sets or clears the current user's preferred curriculum program key. */
+export const setPreferredCurriculumProgram = Effect.fn(
+  "learningPreferences.setPreferredCurriculumProgram"
 )(function* ({
   ctx,
   now,
@@ -127,12 +127,15 @@ export const upsertPreferredCurriculumProgram = Effect.fn(
 }: {
   ctx: MutationCtx;
   now: number;
-  programKey: string;
+  programKey: string | null;
   userId: Id<"users">;
 }) {
   const current = yield* readLearningPreferenceByUserId(ctx, userId);
 
   if (!current) {
+    if (programKey === null) {
+      return null;
+    }
     return yield* tryLearningPreferencePersistence(() =>
       ctx.db.insert("learningPreferences", {
         preferredCurriculumProgramKey: programKey,
@@ -142,13 +145,13 @@ export const upsertPreferredCurriculumProgram = Effect.fn(
     );
   }
 
-  if (current.preferredCurriculumProgramKey === programKey) {
+  if (current.preferredCurriculumProgramKey === (programKey ?? undefined)) {
     return current._id;
   }
 
   yield* tryLearningPreferencePersistence(() =>
     ctx.db.patch(current._id, {
-      preferredCurriculumProgramKey: programKey,
+      preferredCurriculumProgramKey: programKey ?? undefined,
       updatedAt: now,
     })
   );

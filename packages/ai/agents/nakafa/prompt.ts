@@ -1,5 +1,5 @@
 import type { ActiveAppLocaleCode as Locale } from "@nakafa/aksara-contracts/locale";
-import { formatLearningSelectionPromptContext } from "@repo/ai/prompt/learning-selection";
+import { formatCurriculumPreferencePromptContext } from "@repo/ai/prompt/curriculum-preference";
 import { createPrompt } from "@repo/ai/prompt/utils";
 import type { AgentContext } from "@repo/ai/types/agents";
 
@@ -27,7 +27,7 @@ export function nakafaAgentPrompt({
       - current slug: ${context.slug}
       - verified current page: ${context.verified ? "yes" : "no"}
       - user role: ${context.userRole ?? "unknown"}
-      ${formatLearningSelectionPromptContext(context.learningSelection)}
+      ${formatCurriculumPreferencePromptContext(context.curriculumPreference)}
     `,
     toolUsageGuidelines: `
       # Tool Usage Guidelines

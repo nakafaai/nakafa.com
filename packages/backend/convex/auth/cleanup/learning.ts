@@ -10,6 +10,23 @@ const HISTORY_BATCH_SIZE = 50;
 /** Deletes one bounded batch of account preferences and credit history. */
 const cleanupAccountHistory = Effect.fn("auth.cleanup.cleanupAccountHistory")(
   function* (ctx: MutationCtx, userId: Id<"users">) {
+    const onboardingProfiles = yield* tryUserCleanup(() =>
+      ctx.db
+        .query("onboardingProfiles")
+        .withIndex("by_userId", (query) => query.eq("userId", userId))
+        .take(SMALL_BATCH_SIZE)
+    );
+
+    for (const profile of onboardingProfiles) {
+      yield* tryUserCleanup(() =>
+        ctx.db.delete("onboardingProfiles", profile._id)
+      );
+    }
+
+    if (onboardingProfiles.length > 0) {
+      return true;
+    }
+
     const preferences = yield* tryUserCleanup(() =>
       ctx.db
         .query("learningPreferences")

@@ -257,29 +257,20 @@ describe("createNinaPrompt", () => {
     }
   );
 
-  it("includes selected learning program context without table-shaped prose", () => {
+  it("includes the selected curriculum preference", () => {
     const prompt = createNinaPrompt({
       ...base,
-      learningSelection: {
-        interest: "exam-prep",
+      curriculumPreference: {
         program: {
-          coverageStatus: "partial",
-          key: LearningProgramKeySchema.make("snbt"),
-          kind: "admission-exam",
-          title: "SNBT 2026",
-          versionLabel: "2026",
+          key: LearningProgramKeySchema.make("cambridge-international"),
+          title: "Cambridge International",
         },
       },
     });
 
-    expect(prompt).toContain("- active learning selection: selected");
-    expect(prompt).toContain("- program: SNBT 2026");
-    expect(prompt).toContain("- interest: exam-prep");
-    const runtimeContext = prompt.slice(
-      prompt.indexOf("# Runtime Context"),
-      prompt.indexOf("# Tool Usage Guidelines")
-    );
-    expect(runtimeContext).not.toContain("plan items");
+    expect(prompt).toContain("- curriculum preference: selected");
+    expect(prompt).toContain("- curriculum: Cambridge International");
+    expect(prompt).toContain("- curriculum key: cambridge-international");
   });
 
   it("includes default role guidance and unverified page context", () => {

@@ -41,12 +41,10 @@ function isPublicSurfacePath(
 }
 
 function isOnboardingPath(segments: readonly string[]) {
-  if (segments.length === 0) {
-    return true;
-  }
-
   return (
-    segments.length === 1 && (segments[0] === "focus" || segments[0] === "role")
+    segments.length === 0 ||
+    (segments.length === 1 &&
+      (segments[0] === "focus" || segments[0] === "role"))
   );
 }
 

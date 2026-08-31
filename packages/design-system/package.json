@@ -20,6 +20,7 @@
     "@react-three/fiber": "^9.7.0",
     "@repo/analytics": "workspace:*",
     "@repo/internationalization": "workspace:*",
+    "@shadcn/react": "0.3.0",
     "@shikijs/transformers": "^4.4.3",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/mdx": "^2.0.14",

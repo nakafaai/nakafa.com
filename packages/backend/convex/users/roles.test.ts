@@ -1,5 +1,8 @@
 import { userRoles } from "@repo/ai/types/roles";
-import { selfSelectableUserRoles } from "@repo/backend/convex/users/roles";
+import {
+  isSelfSelectableUserRole,
+  selfSelectableUserRoles,
+} from "@repo/backend/convex/users/roles";
 import { describe, expect, it } from "vitest";
 
 describe("users/roles", () => {
@@ -7,5 +10,11 @@ describe("users/roles", () => {
     expect(
       selfSelectableUserRoles.every((role) => userRoles.includes(role))
     ).toBe(true);
+  });
+
+  it("rejects privileged and missing roles at the self-service boundary", () => {
+    expect(isSelfSelectableUserRole("student")).toBe(true);
+    expect(isSelfSelectableUserRole("administrator")).toBe(false);
+    expect(isSelfSelectableUserRole(undefined)).toBe(false);
   });
 });

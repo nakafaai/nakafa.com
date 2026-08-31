@@ -6,7 +6,7 @@ import { Effect } from "effect";
 import { vi } from "vitest";
 import { ChatMutationError, ChatQueryError } from "@/app/api/chat/errors";
 import {
-  getLearningSelection,
+  getCurriculumPreference,
   getUserInfo,
   getVerified,
 } from "@/app/api/chat/utils";
@@ -107,41 +107,30 @@ describe("app/api/chat/utils", () => {
   );
 
   it.effect(
-    "fetches the active learning selection through the shared Convex query",
+    "fetches the curriculum preference through the shared Convex query",
     () =>
       Effect.gen(function* () {
-        const learningSelection = {
-          interest: "exam-prep",
+        const curriculumPreference = {
+          preferredCurriculumProgramKey: "cambridge-international",
           program: {
-            coverageStatus: "partial",
-            description: "UTBK-SNBT preparation for the 2026 admission cycle.",
-            displayOrder: 40,
-            key: "snbt",
-            kind: "admission-exam",
-            navigation: {
-              levels: ["section", "domain", "set"],
-              model: "exam-domain-set",
-            },
-            title: "SNBT 2026",
-            versionLabel: "2026",
+            countryCode: "GB",
+            key: "cambridge-international",
+            publicSlug: "cambridge-international",
+            title: "Cambridge International",
           },
         };
-        vi.mocked(fetchQuery).mockResolvedValue(learningSelection);
+        vi.mocked(fetchQuery).mockResolvedValue(curriculumPreference);
 
-        const result = yield* getLearningSelection("test-token", "en");
+        const result = yield* getCurriculumPreference("test-token", "en");
 
         expect(result).toEqual({
-          interest: "exam-prep",
           program: {
-            coverageStatus: "partial",
-            key: "snbt",
-            kind: "admission-exam",
-            title: "SNBT 2026",
-            versionLabel: "2026",
+            key: "cambridge-international",
+            title: "Cambridge International",
           },
         });
         expect(fetchQuery).toHaveBeenCalledWith(
-          convexApi.learningPrograms.queries.getActiveSelection,
+          convexApi.learningPreferences.queries.getCurrent,
           { locale: "en" },
           {
             token: "test-token",
@@ -151,21 +140,31 @@ describe("app/api/chat/utils", () => {
   );
 
   it.effect(
-    "maps learning-selection failures into the query error contract",
+    "maps curriculum-preference failures into the query error contract",
     () =>
       Effect.gen(function* () {
         const cause = new Error("query unavailable");
         vi.mocked(fetchQuery).mockRejectedValueOnce(cause);
 
-        const error = yield* getLearningSelection("test-token", "en").pipe(
+        const error = yield* getCurriculumPreference("test-token", "en").pipe(
           Effect.flip
         );
 
         expect(error).toBeInstanceOf(ChatQueryError);
         expect(error).toMatchObject({
           cause,
-          operation: "load-selection",
+          operation: "load-curriculum-preference",
         });
       })
+  );
+
+  it.effect("keeps a missing curriculum preference absent", () =>
+    Effect.gen(function* () {
+      vi.mocked(fetchQuery).mockResolvedValue(null);
+
+      const result = yield* getCurriculumPreference("test-token", "de");
+
+      expect(result).toBeNull();
+    })
   );
 });
