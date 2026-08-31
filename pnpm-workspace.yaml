@@ -4,6 +4,7 @@ packages:
 
 engineStrict: true
 savePrefix: ""
+minimumReleaseAge: 0
 
 update:
   ignoreDeps:

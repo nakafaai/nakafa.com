@@ -120,6 +120,15 @@ export function validateDependencyPolicy({
     );
   }
 
+  if (workspace.minimumReleaseAge !== 0) {
+    problems.push("pnpm minimumReleaseAge must be 0.");
+  }
+  if ((workspace.minimumReleaseAgeExclude ?? []).length > 0) {
+    problems.push(
+      "pnpm minimumReleaseAgeExclude must stay empty when the time gate is disabled."
+    );
+  }
+
   if (workspace.catalog?.effect !== "4.0.0-rc.110") {
     problems.push("The Effect catalog must be exactly 4.0.0-rc.110.");
   }

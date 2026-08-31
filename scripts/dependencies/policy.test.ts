@@ -5,7 +5,7 @@ import { Effect, Layer } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
 import { bumpDependencies } from "#scripts/dependencies/bump";
 import {
-  CONTRACT_ARCHIVE,
+  CONTRACT_VERSION,
   DEPENDENCY_HOLDS,
 } from "#scripts/dependencies/policy";
 import { inspectDependencyPolicy } from "#scripts/dependencies/source";
@@ -26,6 +26,7 @@ const CONTRACT_MANIFEST_PATHS = [
 ] as const;
 
 function validInput() {
+  const minimumReleaseAgeExclude: string[] = [];
   const dependencies = Object.fromEntries(
     DEPENDENCY_HOLDS.map((hold) => [
       hold.dependency,
@@ -37,7 +38,7 @@ function validInput() {
       dependencies:
         index === 0
           ? dependencies
-          : { "@nakafa/aksara-contracts": CONTRACT_ARCHIVE },
+          : { "@nakafa/aksara-contracts": CONTRACT_VERSION },
       scripts:
         index === 0 ? { doctor: "pnpm dlx react-doctor@0.9.12" } : undefined,
     },
@@ -63,6 +64,8 @@ function validInput() {
         effect: "4.0.0-rc.110",
         typescript: "npm:@typescript/typescript6@6.0.2",
       },
+      minimumReleaseAge: 0,
+      minimumReleaseAgeExclude,
       overrides: {
         "@effect/platform-node-shared": "4.0.0-rc.110",
       },
@@ -127,6 +130,8 @@ describe("dependency policy", () => {
       firstManifest.manifest.scripts.doctor = "pnpm dlx react-doctor@0.9.5";
     }
     input.manifests.splice(1);
+    input.workspace.minimumReleaseAge = 1440;
+    input.workspace.minimumReleaseAgeExclude = ["example@1.0.0"];
     input.workspace.overrides["@effect/platform-node-shared"] = "4.0.0-rc.111";
     input.workspace.update.ignoreDeps = [];
 
@@ -148,6 +153,16 @@ describe("dependency policy", () => {
     );
     expect(
       problems.some((problem) => problem.includes("update.ignoreDeps"))
+    ).toBe(true);
+    expect(
+      problems.some((problem) =>
+        problem.includes("minimumReleaseAge must be 0")
+      )
+    ).toBe(true);
+    expect(
+      problems.some((problem) =>
+        problem.includes("minimumReleaseAgeExclude must stay empty")
+      )
     ).toBe(true);
   });
 
