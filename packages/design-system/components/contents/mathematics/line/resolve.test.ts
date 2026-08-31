@@ -10,7 +10,7 @@ const rawLine = {
   ],
 };
 
-describe("authored circle lines", () => {
+describe("authored mathematical lines", () => {
   it("preserves concrete line data and resolves every declarative primitive", () => {
     const lines = resolveAuthoredLines([
       rawLine,
@@ -49,16 +49,27 @@ describe("authored circle lines", () => {
         startDegrees: 30,
         sweepDegrees: 120,
       },
+      {
+        center: { x: 2, y: 3, z: 4 },
+        color: "slategray",
+        height: 6,
+        kind: "cuboid",
+        length: 4,
+        width: 8,
+      },
     ]);
 
-    expect(lines).toHaveLength(7);
+    expect(lines).toHaveLength(19);
     expect(lines[0]).toBe(rawLine);
     expect(lines[1]).toMatchObject({
       color: "cyan",
       showPoints: false,
+      smooth: true,
     });
     expect(lines[1]?.points.length).toBeGreaterThan(4);
+    expect(lines[2]).toMatchObject({ smooth: false });
     expect(lines[2]?.points).toHaveLength(2);
+    expect(lines[3]).toMatchObject({ smooth: false });
     expect(lines[3]?.points[0]).toEqual({ x: 0, y: 0, z: 0 });
     expect(lines[4]).toMatchObject({
       color: "amber",
@@ -67,5 +78,15 @@ describe("authored circle lines", () => {
     });
     expect(lines[5]).toMatchObject({ smooth: true });
     expect(lines[6]).toMatchObject({ smooth: false });
+    expect(lines.slice(7)).toHaveLength(12);
+    expect(lines.slice(7)).toSatisfy((cuboidLines: typeof lines) =>
+      cuboidLines.every(
+        (line) =>
+          line.color === "slategray" &&
+          line.points.length === 2 &&
+          line.showPoints === false &&
+          line.smooth === false
+      )
+    );
   });
 });
