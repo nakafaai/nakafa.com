@@ -24,18 +24,6 @@ import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 
 setupApiTest();
 
-type BackendTest = ReturnType<typeof createConvexTestWithBetterAuth>;
-
-function fetchPredecessor(test: BackendTest, prefix: "" | "/v1", path: string) {
-  const headers = new Headers({
-    [NAKAFA_API_EDGE_CONTRACT.secretHeader]: API_SECRET,
-    "x-forwarded-for": "203.0.113.4",
-  });
-  return test.fetch(`${NAKAFA_API_EDGE_CONTRACT.originPath}${prefix}${path}`, {
-    headers,
-  });
-}
-
 describe("public agent API routes", () => {
   it("serves the API index, health response, and CORS preflight", async () => {
     const test = createConvexTestWithBetterAuth();
@@ -74,7 +62,6 @@ describe("public agent API routes", () => {
     const rejected = await fetchOpenApi(test, { method: "POST" });
     const rejectedBody = rejected.clone();
     const response = await fetchOpenApi(test);
-    const predecessor = await fetchPredecessor(test, "", "/openapi.json");
     const etag = response.headers.get("etag");
     const revalidated = await fetchOpenApi(test, {
       headers: { "if-none-match": etag ?? "missing" },
@@ -95,7 +82,6 @@ describe("public agent API routes", () => {
     expect(response.headers.get("cache-control")).toBe(
       "public, max-age=3600, s-maxage=3600"
     );
-    expect(predecessor.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
       info: { title: "Nakafa Public API" },
       openapi: "3.1.1",
@@ -118,28 +104,30 @@ describe("public agent API routes", () => {
     }
   );
 
-  it("does not expose the predecessor origin mount", async () => {
+  it("does not expose the protected origin at the site root", async () => {
     const response = await createConvexTestWithBetterAuth().fetch("/");
 
     expect(response.status).toBe(404);
   });
 
   it.each([
-    ["", "/"],
-    ["", "/health"],
-    ["/v1", ""],
-    ["/v1", "/health"],
-    ["/v1", "/search?query=algebra"],
-  ] as const)(
-    "keeps predecessor %s%s readable during the deployment transition",
-    async (prefix, path) => {
-      const response = await fetchPredecessor(
-        createConvexTestWithBetterAuth(),
-        prefix,
-        path
+    "/",
+    NAKAFA_API_EDGE_CONTRACT.discoveryPath,
+    NAKAFA_API_EDGE_CONTRACT.publicPath,
+    `${NAKAFA_API_EDGE_CONTRACT.publicPath}/health`,
+  ])(
+    "keeps public vocabulary out of the protected origin at %s",
+    async (path) => {
+      const headers = new Headers({
+        [NAKAFA_API_EDGE_CONTRACT.secretHeader]: API_SECRET,
+        "x-forwarded-for": "203.0.113.4",
+      });
+      const response = await createConvexTestWithBetterAuth().fetch(
+        `${NAKAFA_API_EDGE_CONTRACT.originPath}${path}`,
+        { headers }
       );
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(404);
     }
   );
 
@@ -330,16 +318,9 @@ describe("public agent API routes", () => {
 
   it("fails closed when the signed taxonomy publication is unavailable", async () => {
     const test = createConvexTestWithBetterAuth();
-    const [response, predecessor] = await Promise.all([
-      fetchApi(test, "/taxonomy?locale=en"),
-      fetchPredecessor(test, "/v1", "/taxonomy?locale=en"),
-    ]);
+    const response = await fetchApi(test, "/taxonomy?locale=en");
 
     await expectProblem(response, {
-      code: "SERVICE_UNAVAILABLE",
-      status: 503,
-    });
-    await expectProblem(predecessor, {
       code: "SERVICE_UNAVAILABLE",
       status: 503,
     });

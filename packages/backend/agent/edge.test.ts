@@ -31,14 +31,9 @@ describe("agent edge contract", () => {
   });
 
   it.each([
-    ["", "/"],
     ["/openapi", "/openapi.json"],
-    ["/openapi.json", "/openapi.json"],
     ["/runtime", "/v1"],
     ["/runtime/content", "/v1/content"],
-    ["/v1", "/v1"],
-    ["/v1/content", "/v1/content"],
-    ["/content", "/content"],
   ])("projects the protected origin path for %s", (path, expected) => {
     expect(
       projectPublicApiPath(`${NAKAFA_API_EDGE_CONTRACT.originPath}${path}`)

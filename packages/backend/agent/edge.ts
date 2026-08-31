@@ -81,8 +81,5 @@ export function projectPublicApiPath(pathname: string) {
   if (originPath === NAKAFA_API_EDGE_CONTRACT.runtimePath) {
     return NAKAFA_API_EDGE_CONTRACT.publicPath;
   }
-  if (originPath.startsWith(`${NAKAFA_API_EDGE_CONTRACT.runtimePath}/`)) {
-    return `${NAKAFA_API_EDGE_CONTRACT.publicPath}${originPath.slice(NAKAFA_API_EDGE_CONTRACT.runtimePath.length)}`;
-  }
-  return originPath || "/";
+  return `${NAKAFA_API_EDGE_CONTRACT.publicPath}${originPath.slice(NAKAFA_API_EDGE_CONTRACT.runtimePath.length)}`;
 }
