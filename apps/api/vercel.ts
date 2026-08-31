@@ -1,5 +1,8 @@
 import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge";
-import { createAgentEdgeRoute } from "@repo/backend/agent/route";
+import {
+  createAgentEdgeRoute,
+  NAKAFA_API_ROUTE_SOURCE,
+} from "@repo/backend/agent/route";
 import type { VercelConfig } from "@vercel/config/v1";
 
 export const config: VercelConfig = {
@@ -16,7 +19,7 @@ export const config: VercelConfig = {
   },
   ...createAgentEdgeRoute({
     contract: NAKAFA_API_EDGE_CONTRACT,
-    source: "^/(openapi\\.json|v1(?:/.*)?)$",
+    source: NAKAFA_API_ROUTE_SOURCE,
     suffix: "/$1",
   }),
 };
