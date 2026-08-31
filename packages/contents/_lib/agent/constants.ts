@@ -13,6 +13,13 @@ export const NAKAFA_PUBLIC_API_VERSION = "1.0.0";
 /** Canonical public Streamable HTTP MCP endpoint. */
 export const NAKAFA_MCP_ENDPOINT = "https://mcp.nakafa.com/mcp";
 
+/** Canonical values for the public V1 taxonomy endpoint guidance. */
+export const NAKAFA_MCP_GUIDANCE = {
+  direct: NAKAFA_MCP_ENDPOINT,
+  recommended: NAKAFA_MCP_ENDPOINT,
+  root_note: `${new URL(NAKAFA_MCP_ENDPOINT).origin} is informational only.`,
+} as const;
+
 /** Stable server name reported through MCP initialize and health checks. */
 export const NAKAFA_MCP_SERVER_NAME = "nakafa-mcp-server";
 

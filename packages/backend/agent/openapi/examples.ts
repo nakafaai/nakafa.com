@@ -9,6 +9,7 @@ import {
   NAKAFA_API_BASE_URL,
   NAKAFA_BASE_URL,
   NAKAFA_MCP_ENDPOINT,
+  NAKAFA_MCP_GUIDANCE,
   NAKAFA_PUBLIC_API_VERSION,
 } from "@repo/contents/_lib/agent/constants";
 import { NAKAFA_AGENT_DEFAULT_LIMIT } from "@repo/contents/_types/agent/search";
@@ -196,7 +197,7 @@ export const OPENAPI_RESPONSE_EXAMPLES = {
       { count: 120, locale: "de" },
     ],
     default_locale: "en",
-    mcp: NAKAFA_MCP_ENDPOINT,
+    endpoints: NAKAFA_MCP_GUIDANCE,
     locale: "en",
     locales: ["en", "id", "de"],
     quran: { surah_count: QURAN_SURAH_COUNT },

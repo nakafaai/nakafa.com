@@ -50,6 +50,14 @@ describe("Nakafa public API schemas", () => {
       })
     ).toBe(false);
     expect(
+      Schema.is(NakafaApiHealthSchema)({
+        service: "nakafa-public-api",
+        status: "ok",
+        timestamp: 1,
+        version: "2.0.0",
+      })
+    ).toBe(false);
+    expect(
       Schema.is(NakafaProblemDetailsSchema)({
         code: "INVALID_REQUEST",
         detail: "Invalid input.",

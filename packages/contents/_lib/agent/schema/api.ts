@@ -1,3 +1,4 @@
+import { NAKAFA_PUBLIC_API_VERSION } from "@repo/contents/_lib/agent/constants";
 import { Schema, Struct } from "effect";
 
 const HttpsUrlSchema = Schema.String.pipe(
@@ -18,7 +19,7 @@ export const NakafaApiIndexSchema = Schema.Struct({
   name: Schema.Literal("Nakafa Public API"),
   openapi: HttpsUrlSchema,
   status: Schema.Literal("active"),
-  version: Schema.String,
+  version: Schema.Literal(NAKAFA_PUBLIC_API_VERSION),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 
 /** Stable health response for monitors and agent clients. */
@@ -29,7 +30,7 @@ export const NakafaApiHealthSchema = Schema.Struct({
     Schema.check(Schema.isInt()),
     Schema.check(Schema.isGreaterThan(0))
   ),
-  version: Schema.String,
+  version: Schema.Literal(NAKAFA_PUBLIC_API_VERSION),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
 
 /** RFC 9457 response with stable machine recovery fields. */

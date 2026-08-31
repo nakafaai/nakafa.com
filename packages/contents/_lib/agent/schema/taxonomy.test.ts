@@ -14,14 +14,17 @@ describe("NakafaAgentTaxonomyOptionsSchema", () => {
 });
 
 describe("NakafaAgentTaxonomySchema", () => {
-  it("rejects invalid canonical endpoint URLs", () => {
+  it("rejects invalid V1 endpoint guidance", () => {
     expect(() =>
       Schema.decodeUnknownSync(NakafaAgentTaxonomySchema)({
         articles: { categories: [] },
         content_counts: [{ count: 1, locale: "en" }],
         default_locale: "en",
-        mcp: "not-a-url",
-        exercises: { categories: [], materials: [], types: [] },
+        endpoints: {
+          direct: "not-a-url",
+          recommended: "https://mcp.nakafa.com/mcp",
+          root_note: "Use the canonical endpoint.",
+        },
         locale: "en",
         locales: ["en", "id", "de"],
         quran: { surah_count: 114 },
