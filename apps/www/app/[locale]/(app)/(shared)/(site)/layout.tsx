@@ -22,7 +22,7 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
       {children}
       <Footer
         articleNavigation={articleNavigation}
-        pageNavigation={pageNavigation?.items ?? []}
+        pageNavigation={pageNavigation}
       />
     </main>
   );

@@ -18,14 +18,15 @@ export interface PageNavigationItem {
   readonly title: PageMetadata["title"];
 }
 
-/** Verified legal destinations and complete Page links for one locale. */
+/** Verified developer and legal destinations for one locale. */
 export interface PageNavigation {
-  readonly items: readonly PageNavigationItem[];
+  readonly developerItem: PageNavigationItem;
+  readonly legalItems: readonly PageNavigationItem[];
   readonly privacyPolicyHref: string;
   readonly termsOfServiceHref: string;
 }
 
-/** Raised when a required legal Page is absent from an active publication. */
+/** Raised when a required Page is absent from an active publication. */
 export class PageNavigationMissingError extends Schema.TaggedError<PageNavigationMissingError>()(
   "PageNavigationMissingError",
   {
@@ -34,11 +35,14 @@ export class PageNavigationMissingError extends Schema.TaggedError<PageNavigatio
   }
 ) {}
 
+const developerKey = PageKeySchema.make("developers");
+const imprintKey = PageKeySchema.make("imprint");
 const privacyPolicyKey = PageKeySchema.make("privacy-policy");
+const securityPolicyKey = PageKeySchema.make("security-policy");
 const termsOfServiceKey = PageKeySchema.make("terms-of-service");
 
 /** Resolves one required stable Page identity without owning its public path. */
-const readRequiredPageHref = Effect.fn("www.pages.readRequiredHref")(function* (
+const readRequiredPageItem = Effect.fn("www.pages.readRequiredItem")(function* (
   items: readonly PageNavigationItem[],
   pageKey: PageKey,
   locale: Locale
@@ -47,14 +51,14 @@ const readRequiredPageHref = Effect.fn("www.pages.readRequiredHref")(function* (
   if (!item) {
     return yield* new PageNavigationMissingError({ locale, pageKey });
   }
-  return item.href;
+  return item;
 });
 
 /** Reads every published Page owned by one application locale. */
 export const readPageNavigation = Effect.fn("www.pages.readNavigation")(
   function* (locale: Locale) {
     const catalog = yield* readPublishedPageCatalog();
-    const items: PageNavigationItem[] = [];
+    const localeItems: PageNavigationItem[] = [];
     for (const {
       appLocale,
       metadata,
@@ -64,20 +68,35 @@ export const readPageNavigation = Effect.fn("www.pages.readNavigation")(
       if (appLocale !== locale) {
         continue;
       }
-      items.push({
+      localeItems.push({
         href: `/${publicPath}`,
         pageKey,
         title: metadata.title,
       });
     }
-    const [privacyPolicyHref, termsOfServiceHref] = yield* Effect.all([
-      readRequiredPageHref(items, privacyPolicyKey, locale),
-      readRequiredPageHref(items, termsOfServiceKey, locale),
+    const [
+      developerItem,
+      imprintItem,
+      privacyPolicyItem,
+      securityPolicyItem,
+      termsOfServiceItem,
+    ] = yield* Effect.all([
+      readRequiredPageItem(localeItems, developerKey, locale),
+      readRequiredPageItem(localeItems, imprintKey, locale),
+      readRequiredPageItem(localeItems, privacyPolicyKey, locale),
+      readRequiredPageItem(localeItems, securityPolicyKey, locale),
+      readRequiredPageItem(localeItems, termsOfServiceKey, locale),
     ]);
     return {
-      items,
-      privacyPolicyHref,
-      termsOfServiceHref,
+      developerItem,
+      legalItems: [
+        imprintItem,
+        privacyPolicyItem,
+        securityPolicyItem,
+        termsOfServiceItem,
+      ],
+      privacyPolicyHref: privacyPolicyItem.href,
+      termsOfServiceHref: termsOfServiceItem.href,
     } satisfies PageNavigation;
   }
 );

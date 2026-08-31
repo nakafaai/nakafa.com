@@ -32,7 +32,12 @@ function makeGermanPage({
   publicPath,
   title,
 }: {
-  pageKey: "privacy-policy" | "security-policy" | "terms-of-service";
+  pageKey:
+    | "developers"
+    | "imprint"
+    | "privacy-policy"
+    | "security-policy"
+    | "terms-of-service";
   publicPath: string;
   title: string;
 }) {
@@ -54,6 +59,16 @@ function makeGermanPage({
 }
 
 const germanPages = [
+  makeGermanPage({
+    pageKey: "developers",
+    publicPath: "developers",
+    title: "Entwicklerressourcen",
+  }),
+  makeGermanPage({
+    pageKey: "imprint",
+    publicPath: "imprint",
+    title: "Impressum",
+  }),
   makeGermanPage({
     pageKey: "privacy-policy",
     publicPath: "privacy-policy",
@@ -102,7 +117,17 @@ describe("signed Page navigation", () => {
         const navigation = yield* readPageNavigation("de");
 
         expect(navigation).toEqual({
-          items: [
+          developerItem: {
+            href: "/developers",
+            pageKey: "developers",
+            title: "Entwicklerressourcen",
+          },
+          legalItems: [
+            {
+              href: "/imprint",
+              pageKey: "imprint",
+              title: "Impressum",
+            },
             {
               href: "/privacy-policy",
               pageKey: "privacy-policy",
@@ -125,13 +150,13 @@ describe("signed Page navigation", () => {
       })
   );
 
-  it.effect("fails closed when a required legal destination is absent", () =>
+  it.effect("fails closed when the developer destination is absent", () =>
     Effect.gen(function* () {
       catalogMock.mockReturnValue(
         Effect.succeed({
           activeReleaseId: "release-pages",
           projections: germanPages.filter(
-            ({ pageKey }) => pageKey !== "privacy-policy"
+            ({ pageKey }) => pageKey !== "developers"
           ),
         })
       );
@@ -141,9 +166,38 @@ describe("signed Page navigation", () => {
       expect(failure).toEqual(
         new PageNavigationMissingError({
           locale: "de",
-          pageKey: PageKeySchema.make("privacy-policy"),
+          pageKey: PageKeySchema.make("developers"),
         })
       );
+    })
+  );
+
+  it.effect("fails closed when a required legal destination is absent", () =>
+    Effect.gen(function* () {
+      for (const pageKey of [
+        "imprint",
+        "privacy-policy",
+        "security-policy",
+        "terms-of-service",
+      ] as const) {
+        catalogMock.mockReturnValue(
+          Effect.succeed({
+            activeReleaseId: "release-pages",
+            projections: germanPages.filter(
+              (projection) => projection.pageKey !== pageKey
+            ),
+          })
+        );
+
+        const failure = yield* readPageNavigation("de").pipe(Effect.flip);
+
+        expect(failure).toEqual(
+          new PageNavigationMissingError({
+            locale: "de",
+            pageKey: PageKeySchema.make(pageKey),
+          })
+        );
+      }
     })
   );
 
