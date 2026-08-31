@@ -2,6 +2,7 @@ import { Schema } from "effect";
 
 const API_EDGE_SECRET_ENVIRONMENT = "NAKAFA_API_EDGE_SECRET";
 const API_EDGE_SECRET_HEADER = "x-nakafa-api-edge-secret";
+const API_DISCOVERY_PATH = "/openapi.json";
 const API_DOCUMENT_PATH = "/openapi";
 const API_ORIGIN_PATH = "/internal/agent";
 const API_PUBLIC_PATH = "/v1";
@@ -12,6 +13,7 @@ const MCP_EDGE_SECRET_HEADER = "x-nakafa-mcp-edge-secret";
 const MCP_ORIGIN_PATH = "/internal/mcp";
 
 const ApiEdgeContractSchema = Schema.Struct({
+  discoveryPath: Schema.Literal(API_DISCOVERY_PATH),
   documentPath: Schema.Literal(API_DOCUMENT_PATH),
   originEnvironment: Schema.Literal(AGENT_ORIGIN_ENVIRONMENT),
   originPath: Schema.Literal(API_ORIGIN_PATH),
@@ -33,6 +35,7 @@ export type AgentEdgeContract =
 
 /** Server-only contract shared by the Vercel bridge and Convex origin. */
 export const NAKAFA_API_EDGE_CONTRACT: typeof ApiEdgeContractSchema.Type = {
+  discoveryPath: API_DISCOVERY_PATH,
   documentPath: API_DOCUMENT_PATH,
   originEnvironment: AGENT_ORIGIN_ENVIRONMENT,
   originPath: API_ORIGIN_PATH,
@@ -72,6 +75,9 @@ export const VERCEL_GIT_COMMIT_SHA_ENVIRONMENT = "VERCEL_GIT_COMMIT_SHA";
 /** Projects one protected origin path back to its public API path. */
 export function projectPublicApiPath(pathname: string) {
   const originPath = pathname.slice(NAKAFA_API_EDGE_CONTRACT.originPath.length);
+  if (originPath === NAKAFA_API_EDGE_CONTRACT.documentPath) {
+    return NAKAFA_API_EDGE_CONTRACT.discoveryPath;
+  }
   if (originPath === NAKAFA_API_EDGE_CONTRACT.runtimePath) {
     return NAKAFA_API_EDGE_CONTRACT.publicPath;
   }

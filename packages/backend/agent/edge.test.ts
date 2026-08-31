@@ -24,6 +24,7 @@ describe("agent edge contract", () => {
   });
 
   it("separates the protected document and runtime capabilities", () => {
+    expect(NAKAFA_API_EDGE_CONTRACT.discoveryPath).toBe("/openapi.json");
     expect(NAKAFA_API_EDGE_CONTRACT.documentPath).toBe("/openapi");
     expect(NAKAFA_API_EDGE_CONTRACT.publicPath).toBe(NAKAFA_PUBLIC_API_PATH);
     expect(NAKAFA_API_EDGE_CONTRACT.runtimePath).toBe("/runtime");
@@ -31,6 +32,7 @@ describe("agent edge contract", () => {
 
   it.each([
     ["", "/"],
+    ["/openapi", "/openapi.json"],
     ["/openapi.json", "/openapi.json"],
     ["/runtime", "/v1"],
     ["/runtime/content", "/v1/content"],

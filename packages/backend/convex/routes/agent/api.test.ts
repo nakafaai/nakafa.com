@@ -71,6 +71,8 @@ describe("public agent API routes", () => {
     const denied = await test.fetch(
       `${NAKAFA_API_EDGE_CONTRACT.originPath}${NAKAFA_API_EDGE_CONTRACT.documentPath}`
     );
+    const rejected = await fetchOpenApi(test, { method: "POST" });
+    const rejectedBody = rejected.clone();
     const response = await fetchOpenApi(test);
     const predecessor = await fetchPredecessor(test, "", "/openapi.json");
     const etag = response.headers.get("etag");
@@ -81,6 +83,13 @@ describe("public agent API routes", () => {
     await expectProblem(denied, {
       code: "ORIGIN_ACCESS_DENIED",
       status: 403,
+    });
+    await expectProblem(rejected, {
+      code: "METHOD_NOT_ALLOWED",
+      status: 405,
+    });
+    await expect(rejectedBody.json()).resolves.toMatchObject({
+      instance: "/openapi.json",
     });
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe(
