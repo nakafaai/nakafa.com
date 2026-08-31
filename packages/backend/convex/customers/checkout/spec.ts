@@ -1,9 +1,12 @@
 import type { ActiveAppLocaleCode as Locale } from "@nakafa/aksara-contracts/locale";
+import { productAnalyticsEventValidator } from "@repo/backend/convex/analytics/events";
 import type { PolarCheckoutLocale } from "@repo/backend/convex/customers/checkout/localization";
 import {
   type ConvexTaggedError,
   getUnknownErrorMessage,
 } from "@repo/backend/convex/lib/effect";
+import { vv } from "@repo/backend/convex/lib/validators/vv";
+import { type Infer, v } from "convex/values";
 import { Schema } from "effect";
 
 export const invalidCheckoutSuccessUrlCode = "INVALID_CHECKOUT_SUCCESS_URL";
@@ -21,6 +24,16 @@ export interface CheckoutRequest {
   readonly productIds: readonly string[];
   readonly successUrl: string;
 }
+
+export const checkoutAdmissionArgsValidator = v.object({
+  event: productAnalyticsEventValidator,
+  timestamp: v.optional(v.number()),
+  userId: vv.id("users"),
+});
+
+export type CheckoutAdmissionArgs = Infer<
+  typeof checkoutAdmissionArgsValidator
+>;
 
 export class CheckoutSessionIoError
   extends Schema.TaggedError<CheckoutSessionIoError>()(

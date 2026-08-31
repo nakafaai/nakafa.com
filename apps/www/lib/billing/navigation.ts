@@ -20,19 +20,16 @@ class BillingNavigationError extends Data.TaggedError(
 /** Opens a billing destination while containing recoverable request failures. */
 export const billingNavigationProgram = Effect.fn("www.billing.navigate")(
   function* (input: BillingNavigationInput) {
-    const destination = yield* Effect.tryPromise({
+    yield* Effect.tryPromise({
       try: input.request,
       catch: (cause) => new BillingNavigationError({ cause }),
     }).pipe(
+      Effect.tap((destination) =>
+        Effect.sync(() => input.navigate(destination.url))
+      ),
       Effect.catchTag("BillingNavigationError", (error) =>
-        input.onFailure(error.cause).pipe(Effect.as(null))
+        input.onFailure(error.cause)
       )
     );
-
-    if (!destination) {
-      return;
-    }
-
-    yield* Effect.sync(() => input.navigate(destination.url));
   }
 );

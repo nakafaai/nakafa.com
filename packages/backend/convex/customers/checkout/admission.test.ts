@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { ProductAnalyticsCaptureError } from "@repo/backend/convex/analytics/capture";
 import type { ProductAnalyticsEvent } from "@repo/backend/convex/analytics/events";
-import { admitCheckoutProgram } from "@repo/backend/convex/customers/checkout/admission";
+import { admitCheckoutProgram } from "@repo/backend/convex/customers/checkout/impl";
 import { CheckoutSessionIoError } from "@repo/backend/convex/customers/checkout/spec";
 import schema from "@repo/backend/convex/schema";
 import { seedAnalyticsConsent } from "@repo/backend/convex/test.helpers";

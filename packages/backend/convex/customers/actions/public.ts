@@ -1,9 +1,11 @@
 import { action } from "@repo/backend/convex/_generated/server";
-import type { CheckoutAdmissionArgs } from "@repo/backend/convex/customers/checkout/admission";
 import { validateCheckoutRequest } from "@repo/backend/convex/customers/checkout/impl";
 import { checkoutLocaleValidator } from "@repo/backend/convex/customers/checkout/localization";
 import { createAdmittedCheckoutSession } from "@repo/backend/convex/customers/checkout/session";
-import { checkoutSessionIoError } from "@repo/backend/convex/customers/checkout/spec";
+import {
+  type CheckoutAdmissionArgs,
+  checkoutSessionIoError,
+} from "@repo/backend/convex/customers/checkout/spec";
 import { polarGateway } from "@repo/backend/convex/customers/polar/live";
 import { requireCustomer } from "@repo/backend/convex/customers/sync/impl";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
