@@ -124,8 +124,6 @@ export function registerAgentApiRoutes(app: AgentApp) {
   );
   document.options("/", () => createOpenApiOptionsResponse());
 
-  // Keep the deployed edge destinations readable until the independently
-  // deployed public edge has switched to the capability-owned paths below.
   app.route(
     `${NAKAFA_API_EDGE_CONTRACT.originPath}${NAKAFA_API_EDGE_CONTRACT.documentPath}`,
     document
@@ -134,9 +132,6 @@ export function registerAgentApiRoutes(app: AgentApp) {
     `${NAKAFA_API_EDGE_CONTRACT.originPath}${NAKAFA_API_EDGE_CONTRACT.runtimePath}`,
     runtime
   );
-  app.route(`${NAKAFA_API_EDGE_CONTRACT.originPath}/openapi.json`, document);
-  app.route(`${NAKAFA_API_EDGE_CONTRACT.originPath}/v1`, runtime);
-  app.route(`${NAKAFA_API_EDGE_CONTRACT.originPath}/`, runtime);
 }
 
 /** Returns one exact 404 or 405 for unmatched public API routes. */
