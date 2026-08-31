@@ -4,6 +4,9 @@ export const NAKAFA_BASE_URL = "https://nakafa.com";
 /** Canonical public REST API origin. */
 export const NAKAFA_API_BASE_URL = "https://api.nakafa.com";
 
+/** Stable compatibility namespace for the public REST contract. */
+export const NAKAFA_PUBLIC_API_PATH = "/v1";
+
 /** Current compatible version of the public REST contract. */
 export const NAKAFA_PUBLIC_API_VERSION = "2.0.0";
 

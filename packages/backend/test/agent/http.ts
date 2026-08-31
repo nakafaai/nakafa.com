@@ -1,4 +1,4 @@
-import { expect, vi } from "@effect/vitest";
+import { afterEach, beforeEach, expect, vi } from "@effect/vitest";
 import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import type { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 
@@ -15,13 +15,42 @@ export function fetchApi(
   init: RequestInit = {},
   address = "203.0.113.4"
 ) {
+  const runtimePath =
+    path === "/"
+      ? NAKAFA_API_EDGE_CONTRACT.runtimePath
+      : `${NAKAFA_API_EDGE_CONTRACT.runtimePath}${path}`;
+  return fetchProtected(
+    test,
+    `${NAKAFA_API_EDGE_CONTRACT.originPath}${runtimePath}`,
+    init,
+    address
+  );
+}
+
+/** Reads the protected OpenAPI capability through the real edge guard. */
+export function fetchOpenApi(
+  test: BackendTest,
+  init: RequestInit = {},
+  address = "203.0.113.4"
+) {
+  return fetchProtected(
+    test,
+    `${NAKAFA_API_EDGE_CONTRACT.originPath}${NAKAFA_API_EDGE_CONTRACT.documentPath}`,
+    init,
+    address
+  );
+}
+
+function fetchProtected(
+  test: BackendTest,
+  path: string,
+  init: RequestInit,
+  address: string
+) {
   const headers = new Headers(init.headers);
   headers.set(NAKAFA_API_EDGE_CONTRACT.secretHeader, API_SECRET);
   headers.set("x-forwarded-for", address);
-  return test.fetch(`${NAKAFA_API_EDGE_CONTRACT.originPath}${path}`, {
-    ...init,
-    headers,
-  });
+  return test.fetch(path, { ...init, headers });
 }
 
 /** Asserts the public API response metadata shared by JSON outcomes. */
@@ -53,12 +82,13 @@ export async function expectProblem(
   });
 }
 
-/** Installs the private origin credential used by the real edge guard. */
-export function stubApiSecret() {
-  vi.stubEnv(NAKAFA_API_EDGE_CONTRACT.secretEnvironment, API_SECRET);
-}
+/** Installs and restores the signed origin secret around each route test. */
+export function setupApiTest() {
+  beforeEach(() => {
+    vi.stubEnv(NAKAFA_API_EDGE_CONTRACT.secretEnvironment, API_SECRET);
+  });
 
-/** Restores the process environment after an API integration test. */
-export function restoreApiSecret() {
-  vi.unstubAllEnvs();
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
 }

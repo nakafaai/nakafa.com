@@ -10,8 +10,9 @@ import {
   expectProblem,
   expectPublicJson,
   fetchApi,
+  fetchOpenApi,
   setupApiTest,
-} from "@repo/backend/test/api";
+} from "@repo/backend/test/agent/http";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
   insertRuntimeArticles,
@@ -22,6 +23,18 @@ import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 
 setupApiTest();
+
+type BackendTest = ReturnType<typeof createConvexTestWithBetterAuth>;
+
+function fetchPredecessor(test: BackendTest, prefix: "" | "/v1", path: string) {
+  const headers = new Headers({
+    [NAKAFA_API_EDGE_CONTRACT.secretHeader]: API_SECRET,
+    "x-forwarded-for": "203.0.113.4",
+  });
+  return test.fetch(`${NAKAFA_API_EDGE_CONTRACT.originPath}${prefix}${path}`, {
+    headers,
+  });
+}
 
 describe("public agent API routes", () => {
   it("serves the API index, health response, and CORS preflight", async () => {
@@ -56,11 +69,12 @@ describe("public agent API routes", () => {
   it("protects and serves the cacheable OpenAPI contract", async () => {
     const test = createConvexTestWithBetterAuth();
     const denied = await test.fetch(
-      `${NAKAFA_API_EDGE_CONTRACT.originPath}/openapi.json`
+      `${NAKAFA_API_EDGE_CONTRACT.originPath}${NAKAFA_API_EDGE_CONTRACT.documentPath}`
     );
-    const response = await fetchApi(test, "/openapi.json");
+    const response = await fetchOpenApi(test);
+    const predecessor = await fetchPredecessor(test, "", "/openapi.json");
     const etag = response.headers.get("etag");
-    const revalidated = await fetchApi(test, "/openapi.json", {
+    const revalidated = await fetchOpenApi(test, {
       headers: { "if-none-match": etag ?? "missing" },
     });
 
@@ -72,6 +86,7 @@ describe("public agent API routes", () => {
     expect(response.headers.get("cache-control")).toBe(
       "public, max-age=3600, s-maxage=3600"
     );
+    expect(predecessor.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
       info: { title: "Nakafa Public API" },
       openapi: "3.1.1",
@@ -84,7 +99,7 @@ describe("public agent API routes", () => {
     "rejects direct origin access to %s before dispatching a route",
     async (path) => {
       const response = await createConvexTestWithBetterAuth().fetch(
-        `${NAKAFA_API_EDGE_CONTRACT.originPath}${path}`
+        `${NAKAFA_API_EDGE_CONTRACT.originPath}${NAKAFA_API_EDGE_CONTRACT.runtimePath}${path}`
       );
 
       await expectProblem(response, {
@@ -100,17 +115,27 @@ describe("public agent API routes", () => {
     expect(response.status).toBe(404);
   });
 
-  it.each(["/v1", "/v1/health", "/v1/search?query=algebra"])(
-    "keeps predecessor route %s readable during the deployment transition",
-    async (path) => {
-      const response = await fetchApi(createConvexTestWithBetterAuth(), path);
+  it.each([
+    ["", "/"],
+    ["", "/health"],
+    ["/v1", ""],
+    ["/v1", "/health"],
+    ["/v1", "/search?query=algebra"],
+  ] as const)(
+    "keeps predecessor %s%s readable during the deployment transition",
+    async (prefix, path) => {
+      const response = await fetchPredecessor(
+        createConvexTestWithBetterAuth(),
+        prefix,
+        path
+      );
 
       expect(response.status).toBe(200);
     }
   );
 
-  it.each(["/v1/openapi.json", "/v2", "/v2/search"])(
-    "does not expose retired versioned path %s",
+  it.each(["/v1", "/v1/content", "/v1/openapi.json", "/v2", "/v2/search"])(
+    "does not nest version namespaces inside the protected runtime at %s",
     async (path) => {
       const response = await fetchApi(createConvexTestWithBetterAuth(), path);
 
@@ -124,7 +149,6 @@ describe("public agent API routes", () => {
   it.each([
     ["/search?unknown=value", {}, "INVALID_REQUEST", 400],
     ["/content", {}, "INVALID_REQUEST", 400],
-    ["/v1/content", {}, "INVALID_REQUEST", 400],
     ["/search", { headers: { accept: "text/html" } }, "NOT_ACCEPTABLE", 406],
     [
       "/health",
@@ -299,7 +323,7 @@ describe("public agent API routes", () => {
     const test = createConvexTestWithBetterAuth();
     const [response, predecessor] = await Promise.all([
       fetchApi(test, "/taxonomy?locale=en"),
-      fetchApi(test, "/v1/taxonomy?locale=en"),
+      fetchPredecessor(test, "/v1", "/taxonomy?locale=en"),
     ]);
 
     await expectProblem(response, {
@@ -318,7 +342,7 @@ describe("public agent API routes", () => {
       [NAKAFA_API_EDGE_CONTRACT.secretHeader]: API_SECRET,
     });
     const response = await test.fetch(
-      `${NAKAFA_API_EDGE_CONTRACT.originPath}/search`,
+      `${NAKAFA_API_EDGE_CONTRACT.originPath}${NAKAFA_API_EDGE_CONTRACT.runtimePath}/search`,
       { headers }
     );
 

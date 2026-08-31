@@ -124,8 +124,16 @@ export function registerAgentApiRoutes(app: AgentApp) {
   );
   document.options("/", () => createOpenApiOptionsResponse());
 
-  // Expand the protected origin before the independently deployed edge switches.
-  // The contract phase removes the predecessor after public consumers migrate.
+  // Keep the deployed edge destinations readable until the independently
+  // deployed public edge has switched to the capability-owned paths below.
+  app.route(
+    `${NAKAFA_API_EDGE_CONTRACT.originPath}${NAKAFA_API_EDGE_CONTRACT.documentPath}`,
+    document
+  );
+  app.route(
+    `${NAKAFA_API_EDGE_CONTRACT.originPath}${NAKAFA_API_EDGE_CONTRACT.runtimePath}`,
+    runtime
+  );
   app.route(`${NAKAFA_API_EDGE_CONTRACT.originPath}/openapi.json`, document);
   app.route(`${NAKAFA_API_EDGE_CONTRACT.originPath}/v1`, runtime);
   app.route(`${NAKAFA_API_EDGE_CONTRACT.originPath}/`, runtime);
