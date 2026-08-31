@@ -1,18 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
+  type RollbackPage,
+  RollbackPageSchema,
+} from "@nakafa/aksara-contracts/release/rollback/spec";
+import {
   type RoutePage,
   RoutePageSchema,
 } from "@nakafa/aksara-contracts/release/route/page";
-import {
-  canonicalizeContentProjection,
-  ContentProjectionSchema as PredecessorProjectionSchema,
-} from "@nakafa/aksara-v150/projection/spec";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
-import {
-  type StoredPage,
-  StoredPageSchema,
-} from "@repo/backend/convex/contentRelease/rollback/stored";
 import {
   RELEASE_PAGE_LIMIT,
   ROUTE_CATALOG_PAGE_LIMIT,
@@ -23,7 +18,6 @@ import {
   FUNCTION_MATERIAL_JSON,
   FUNCTION_MATERIAL_KEY,
   FUNCTION_MATERIAL_SOURCE,
-  testProjectionJson,
 } from "@repo/backend/test/content/material";
 import {
   TEST_MANIFEST_HASH,
@@ -38,14 +32,14 @@ import {
 } from "@repo/backend/test/content/rollback";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { convexTest, type TestConvex } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Schema } from "effect";
 
 const prepareRollback = internal.contentRelease.rollback.prepareRollback;
 const prepareRoutes = internal.contentRelease.rollback.prepareRoutes;
 
 /** Decodes the canonical body response through the shared contract. */
-function decodePage(source: string): StoredPage {
-  return Schema.decodeUnknownSync(StoredPageSchema)(JSON.parse(source));
+function decodePage(source: string): RollbackPage {
+  return Schema.decodeUnknownSync(RollbackPageSchema)(JSON.parse(source));
 }
 
 /** Decodes the canonical route response through the shared contract. */
@@ -188,40 +182,6 @@ describe("contentRelease/rollback", () => {
     expect(page.records[0]?.prior).toHaveProperty(
       "projection.topicTitle",
       "Function Composition and Inverse Function"
-    );
-  });
-
-  it("replays an immutable predecessor publication-date projection", async () => {
-    const t = convexTest(schema, convexModules);
-    const current = JSON.parse(testProjectionJson());
-    const { dateModified: _, datePublished, ...metadata } = current.metadata;
-    const priorProjectionJson = canonicalizeContentProjection(
-      Schema.decodeUnknownSync(PredecessorProjectionSchema)({
-        ...current,
-        metadata: { ...metadata, date: datePublished },
-      })
-    );
-    const activeFailure = await Effect.runPromise(
-      decodeProjectionJson(priorProjectionJson).pipe(Effect.flip)
-    );
-    expect(activeFailure).toMatchObject({
-      code: "CONTENT_RELEASE_INTEGRITY",
-    });
-    await t.mutation(async (ctx) => {
-      await activateRollbackFixture(ctx, 1);
-      await insertRollbackItem(ctx, 0, true, "return {};", {
-        priorProjectionJson,
-      });
-    });
-
-    const page = await readPage(t, -1, 1);
-
-    expect(page.records[0]?.prior).toHaveProperty(
-      "projection.metadata.date",
-      datePublished
-    );
-    expect(page.records[0]?.prior).not.toHaveProperty(
-      "projection.metadata.datePublished"
     );
   });
 

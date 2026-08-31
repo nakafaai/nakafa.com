@@ -78,11 +78,6 @@ const projectionBatchReference = makeFunctionReference<
   { batchIndex: number; projectionJson: string[]; releaseId: string },
   StageReceipt
 >("contentRelease/items:stageProjectionBatch");
-const rollbackProjectionBatchReference = makeFunctionReference<
-  "mutation",
-  { batchIndex: number; projectionJson: string[]; releaseId: string },
-  StageReceipt
->("contentRelease/items:stageRollbackProjectionBatch");
 const artifactBatchReference = makeFunctionReference<
   "mutation",
   { artifactJson: string[]; batchIndex: number; releaseId: string },
@@ -204,16 +199,6 @@ export const stagePublication = Effect.fn("contentRelease.stagePublication")(
     if (request.operation === "stageProjectionBatch") {
       const value = yield* callInternal(() =>
         ctx.runMutation(projectionBatchReference, {
-          batchIndex: request.batchIndex,
-          projectionJson: request.projections.map(encodeProjectionJson),
-          releaseId: request.releaseId,
-        })
-      );
-      return { ok: true, operation: request.operation, value };
-    }
-    if (request.operation === "stageRollbackProjectionBatch") {
-      const value = yield* callInternal(() =>
-        ctx.runMutation(rollbackProjectionBatchReference, {
           batchIndex: request.batchIndex,
           projectionJson: request.projections.map(encodeProjectionJson),
           releaseId: request.releaseId,

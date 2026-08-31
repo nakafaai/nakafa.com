@@ -1,9 +1,6 @@
 import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { ACTIVE_APP_LOCALES } from "@nakafa/aksara-contracts/locale";
-import {
-  ContentProjectionSchema,
-  CurrentContentProjectionSchema,
-} from "@nakafa/aksara-contracts/projection/spec";
+import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
 import { quranSourceFileCount } from "@nakafa/aksara-contracts/quran/source";
 import {
   ContentReleaseItemSchema,
@@ -11,6 +8,7 @@ import {
   ReleaseVerificationEvidenceSchema,
   SignedContentReleaseSchema,
 } from "@nakafa/aksara-contracts/release";
+import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-contracts/release/rollback/spec";
 import { ContentRouteItemSchema } from "@nakafa/aksara-contracts/release/route/spec";
 import {
   ContentSnapshotManifestSchema,
@@ -19,7 +17,6 @@ import {
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
-import { StoredSnapshotEntrySchema } from "@repo/backend/convex/contentRelease/rollback/stored";
 import { Effect, Schema } from "effect";
 
 const CurrentContentSnapshotManifestSchema = ContentSnapshotManifestSchema.pipe(
@@ -146,26 +143,6 @@ export const decodeProjectionJson = Effect.fn(
     )
   )
 );
-/** Rejects retained recovery Page bytes from newly staged content. */
-export const decodeCurrentProjectionJson = Effect.fn(
-  "contentRelease.decodeCurrentProjectionJson"
-)((source: string) =>
-  parseStoredJson(source, "Current content projection").pipe(
-    Effect.flatMap(
-      Schema.decodeUnknownEffect(CurrentContentProjectionSchema, {
-        onExcessProperty: "error",
-      })
-    ),
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message:
-            "New content projection does not satisfy the current contract.",
-        })
-    )
-  )
-);
 /** Strictly decodes server-derived verification evidence from storage JSON. */
 export const decodeProofJson = Effect.fn("contentRelease.decodeProofJson")(
   (source: string) =>
@@ -208,7 +185,7 @@ export const decodeRollbackJson = Effect.fn(
 )((source: string) =>
   parseStoredJson(source, "Rollback snapshot").pipe(
     Effect.flatMap(
-      Schema.decodeUnknownEffect(StoredSnapshotEntrySchema, {
+      Schema.decodeUnknownEffect(RollbackSnapshotEntrySchema, {
         onExcessProperty: "error",
       })
     ),

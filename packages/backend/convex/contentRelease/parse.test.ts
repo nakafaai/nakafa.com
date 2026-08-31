@@ -4,7 +4,6 @@ import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/re
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
   decodeArtifactJson,
-  decodeCurrentProjectionJson,
   decodeItemJson,
   decodeProjectionJson,
   decodeProofJson,
@@ -24,7 +23,6 @@ import {
   FUNCTION_MATERIAL,
   testProjectionJson,
 } from "@repo/backend/test/content/material";
-import { TEST_PAGE_PROJECTION } from "@repo/backend/test/content/page";
 import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
@@ -103,27 +101,6 @@ describe("contentRelease/parse", () => {
         Effect.flip
       );
 
-      expect(rejected).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
-    })
-  );
-
-  it.live("rejects retained recovery Page metadata from new staging", () =>
-    Effect.gen(function* () {
-      const storedJson = JSON.stringify({
-        ...TEST_PAGE_PROJECTION,
-        metadata: {
-          description: TEST_PAGE_PROJECTION.metadata.description,
-          lastModified: TEST_PAGE_PROJECTION.metadata.datePublished,
-          title: TEST_PAGE_PROJECTION.metadata.title,
-        },
-      });
-
-      const stored = yield* decodeProjectionJson(storedJson);
-      const rejected = yield* decodeCurrentProjectionJson(storedJson).pipe(
-        Effect.flip
-      );
-
-      expect(stored.metadata).toHaveProperty("lastModified");
       expect(rejected).toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" });
     })
   );

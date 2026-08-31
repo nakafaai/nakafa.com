@@ -179,28 +179,6 @@ describe("sitemap route pages", () => {
     })
   );
 
-  it.effect("keeps retained recovery Page dates readable", () =>
-    Effect.gen(function* () {
-      pageMocks.readPublishedPageCatalog.mockReturnValue(
-        Effect.succeed({
-          activeReleaseId: "release-pages",
-          projections: [
-            {
-              ...pageProjection("en", "legal-notice", "imprint"),
-              metadata: { lastModified: "2026-08-21" },
-            },
-          ],
-        })
-      );
-
-      const page = yield* readSitemapRoutePage("page_en");
-
-      expect(page.routes).toEqual([
-        { lastModified: "2026-08-21", path: "/legal-notice" },
-      ]);
-    })
-  );
-
   it.effect("rejects obsolete source-owned sitemap identities", () =>
     Effect.gen(function* () {
       for (const pageId of [

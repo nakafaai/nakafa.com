@@ -3,10 +3,7 @@ import {
   familyForProjection,
   projectionArtifactLocale,
 } from "@nakafa/aksara-contracts/projection/spec";
-import {
-  StageProjectionBatchInputSchema,
-  StageRollbackProjectionBatchInputSchema,
-} from "@nakafa/aksara-contracts/transport/batch";
+import { StageProjectionBatchInputSchema } from "@nakafa/aksara-contracts/transport/batch";
 import {
   MAX_PROJECTION_BATCH_BYTES,
   MAX_PROJECTION_BATCH_COUNT,
@@ -26,7 +23,6 @@ import {
   loadStaged,
 } from "@repo/backend/convex/contentRelease/model";
 import {
-  decodeCurrentProjectionJson,
   decodeItemJson,
   decodeProjectionJson,
   decodeReleaseJson,
@@ -58,7 +54,7 @@ const decodeBatch = Effect.fn("contentRelease.decodeProjectionBatch")(
     }
     const projections = yield* Effect.forEach(
       projectionJson,
-      decodeCurrentProjectionJson
+      decodeProjectionJson
     );
     return yield* Schema.decodeUnknownEffect(StageProjectionBatchInputSchema)({
       batchIndex,
@@ -75,44 +71,6 @@ const decodeBatch = Effect.fn("contentRelease.decodeProjectionBatch")(
     );
   }
 );
-/** Decodes one bounded retained-recovery projection batch. */
-const decodeRollbackBatch = Effect.fn(
-  "contentRelease.decodeRollbackProjectionBatch"
-)(function* (
-  releaseId: string,
-  batchIndex: number,
-  projectionJson: readonly string[]
-) {
-  if (
-    projectionJson.length === 0 ||
-    projectionJson.length > MAX_PROJECTION_BATCH_COUNT ||
-    getConvexSize({
-      batchIndex,
-      projectionJson: [...projectionJson],
-      releaseId,
-    }) > MAX_PROJECTION_BATCH_BYTES
-  ) {
-    return yield* releaseFail(
-      "CONTENT_RELEASE_LIMIT",
-      `Rollback projection batch ${batchIndex} exceeds its bounded transport contract.`
-    );
-  }
-  const projections = yield* Effect.forEach(
-    projectionJson,
-    decodeProjectionJson
-  );
-  return yield* Schema.decodeUnknownEffect(
-    StageRollbackProjectionBatchInputSchema
-  )({ batchIndex, projections, releaseId }).pipe(
-    Effect.mapError(
-      () =>
-        new ReleaseError({
-          code: "CONTENT_RELEASE_INTEGRITY",
-          message: `Rollback projection batch ${batchIndex} violates its exact contract.`,
-        })
-    )
-  );
-});
 /** Confirms one projection belongs to its exact staged upsert. */
 const stageProjection = Effect.fn("contentRelease.stageProjection")(function* (
   ctx: MutationCtx,
@@ -165,32 +123,22 @@ const stageProjection = Effect.fn("contentRelease.stageProjection")(function* (
     ctx.db.patch("contentItems", item._id, itemPatch)
   );
 });
-/** Stages one role-bound projection batch with exact retry identity. */
-const stageProjectionForRole = Effect.fn(
-  "contentRelease.stageProjectionForRole"
-)(function* (
+/** Stages one projection batch with exact retry identity. */
+const stageBatch = Effect.fn("contentRelease.stageProjectionBatch")(function* (
   ctx: MutationCtx,
   releaseId: string,
   batchIndex: number,
-  sources: readonly string[],
-  requiredRole?: "recovery"
+  sources: readonly string[]
 ) {
   const { release } = yield* loadStaged(ctx, releaseId);
   const signed = yield* decodeReleaseJson(release.releaseJson);
-  if (
-    (requiredRole !== undefined && release.role !== requiredRole) ||
-    release.status !== "staging" ||
-    release.abortingAt !== undefined
-  ) {
+  if (release.status !== "staging" || release.abortingAt !== undefined) {
     return yield* releaseFail(
       "CONTENT_RELEASE_STATE",
-      `Content release ${releaseId} does not accept ${requiredRole ?? release.role} projection batches.`
+      `Content release ${releaseId} does not accept projection batches.`
     );
   }
-  const batch =
-    release.role === "candidate"
-      ? yield* decodeBatch(releaseId, batchIndex, sources)
-      : yield* decodeRollbackBatch(releaseId, batchIndex, sources);
+  const batch = yield* decodeBatch(releaseId, batchIndex, sources);
   const projections: readonly ContentProjection[] = batch.projections;
   const entries = projections.map((projection) => ({
     projection,
@@ -281,17 +229,5 @@ export const stageProjectionProgram = Effect.fn(
     releaseId: string,
     batchIndex: number,
     sources: readonly string[]
-  ) => stageProjectionForRole(ctx, releaseId, batchIndex, sources)
-);
-
-/** Stages one readable historical projection batch for retained recovery. */
-export const stageRollbackProjectionProgram = Effect.fn(
-  "contentRelease.stageRollbackProjectionBatch"
-)(
-  (
-    ctx: MutationCtx,
-    releaseId: string,
-    batchIndex: number,
-    sources: readonly string[]
-  ) => stageProjectionForRole(ctx, releaseId, batchIndex, sources, "recovery")
+  ) => stageBatch(ctx, releaseId, batchIndex, sources)
 );
