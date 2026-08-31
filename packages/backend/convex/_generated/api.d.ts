@@ -378,6 +378,7 @@ import type * as credits_mutations from "../credits/mutations.js";
 import type * as crons from "../crons.js";
 import type * as customers_actions_internal from "../customers/actions/internal.js";
 import type * as customers_actions_public from "../customers/actions/public.js";
+import type * as customers_checkout_admission from "../customers/checkout/admission.js";
 import type * as customers_checkout_impl from "../customers/checkout/impl.js";
 import type * as customers_checkout_localization from "../customers/checkout/localization.js";
 import type * as customers_checkout_session from "../customers/checkout/session.js";
@@ -953,6 +954,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   "customers/actions/internal": typeof customers_actions_internal;
   "customers/actions/public": typeof customers_actions_public;
+  "customers/checkout/admission": typeof customers_checkout_admission;
   "customers/checkout/impl": typeof customers_checkout_impl;
   "customers/checkout/localization": typeof customers_checkout_localization;
   "customers/checkout/session": typeof customers_checkout_session;

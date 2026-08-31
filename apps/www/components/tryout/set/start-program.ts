@@ -10,6 +10,7 @@ import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { toast } from "sonner";
 import { reportClientException } from "@/lib/analytics/client";
+import { billingNavigationProgram } from "@/lib/billing/navigation";
 import {
   isTryoutAccessRequired,
   toTryoutClientRequestError,
@@ -77,24 +78,18 @@ export function checkoutProgram(input: {
   readonly failureMessage: string;
   readonly locale: PublicAppLocale;
 }) {
-  return Effect.tryPromise({
-    try: () =>
+  return billingNavigationProgram({
+    navigate: (url) => {
+      window.location.href = url;
+    },
+    onFailure: (error) =>
+      reportRequestFailure(error, "tryout-checkout", input.failureMessage),
+    request: () =>
       input.action({
         locale: input.locale,
         successUrl: window.location.href,
       }),
-    catch: toTryoutClientRequestError,
-  }).pipe(
-    Effect.tap(({ url }) =>
-      Effect.sync(() => {
-        window.location.href = url;
-      })
-    ),
-    Effect.catch((error) =>
-      reportRequestFailure(error, "tryout-checkout", input.failureMessage)
-    ),
-    Effect.asVoid
-  );
+  });
 }
 
 /** Records one non-blocking paywall impression and reports capture failures. */

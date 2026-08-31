@@ -538,6 +538,8 @@
     "subscriptions-description": "Manage Nakafa Pro, 3,000 monthly AI credits, and your payment portal.",
     "get-pro": "Get Pro",
     "manage": "Manage",
+    "checkout-error": "We could not open Pro checkout. Please try again.",
+    "portal-error": "We could not open the subscription portal. Please try again.",
     "plan-free": "Free",
     "plan-pro": "Pro",
     "name": "Name",

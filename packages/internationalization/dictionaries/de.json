@@ -538,6 +538,8 @@
     "subscriptions-description": "Verwalte Nakafa Pro, 3.000 monatliche KI-Credits und dein Zahlungsportal.",
     "get-pro": "Pro holen",
     "manage": "Verwalten",
+    "checkout-error": "Der Pro-Checkout konnte nicht geöffnet werden. Versuche es erneut.",
+    "portal-error": "Das Abo-Portal konnte nicht geöffnet werden. Versuche es erneut.",
     "plan-free": "Kostenlos",
     "plan-pro": "Pro",
     "name": "Name",
