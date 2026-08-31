@@ -3,7 +3,7 @@ import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { PublicationRequestSchema } from "@nakafa/aksara-contracts/transport/request";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
-import { readRollback } from "@repo/backend/convex/contentRelease/ingress/rollback";
+import { readRollback } from "@repo/backend/convex/contentRelease/ingress/rollback/read";
 import { makePublicationReceipt } from "@repo/backend/convex/contentRelease/receipt";
 import {
   RELEASE_PAGE_LIMIT,

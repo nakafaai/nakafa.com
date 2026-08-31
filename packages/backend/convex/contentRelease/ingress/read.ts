@@ -9,7 +9,7 @@ import {
   readCurrentPublication,
   readRecovery,
 } from "@repo/backend/convex/contentRelease/ingress/current";
-import { readRollback } from "@repo/backend/convex/contentRelease/ingress/rollback";
+import { readRollback } from "@repo/backend/convex/contentRelease/ingress/rollback/read";
 import type {
   cleanupReceiptValidator,
   headPageValidator,
