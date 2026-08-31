@@ -4,17 +4,16 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import { releaseFail } from "@repo/backend/convex/contentRelease/error";
+import { readVerifiedProgramCatalog } from "@repo/backend/convex/contentRelease/program/catalog";
 import {
   readLearningPreferenceByUserId,
   setPreferredCurriculumProgram,
 } from "@repo/backend/convex/learningPreferences/impl";
-import {
-  listSignedPrograms,
-  readSignedProgram,
-} from "@repo/backend/convex/learningPrograms/selection";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { Clock, Effect, Schema } from "effect";
 
+type ProgramCtx = MutationCtx | QueryCtx;
 const CURRICULUM_PROGRAM_LIMIT = 50;
 const curriculumPreferenceIoFailedCode = "CURRICULUM_PREFERENCE_IO_FAILED";
 const curriculumPreferenceIoFailedMessage =
@@ -45,6 +44,26 @@ function toPreferenceIoError() {
     message: curriculumPreferenceIoFailedMessage,
   });
 }
+/** Reads the complete program catalog from the signed active snapshot. */
+const listSignedPrograms = Effect.fn("learningPreferences.listSignedPrograms")(
+  function* (ctx: ProgramCtx, locale: Locale) {
+    const catalog = yield* readVerifiedProgramCatalog(ctx, locale);
+    if (!catalog.managed) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_MISSING",
+        "Active signed program catalog is unavailable."
+      );
+    }
+    return catalog.programs;
+  }
+);
+/** Reads one signed program by its stable Aksara key. */
+const readSignedProgram = Effect.fn("learningPreferences.readSignedProgram")(
+  function* (ctx: ProgramCtx, locale: Locale, programKey: string) {
+    const programs = yield* listSignedPrograms(ctx, locale);
+    return programs.find((program) => program.key === programKey) ?? null;
+  }
+);
 /** Converts one verified Aksara program into a localized selector option. */
 const toCurriculumProgramOption = Effect.fn(
   "learningPreferences.toCurriculumProgramOption"

@@ -1,5 +1,4 @@
 import { ActiveAppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import type { LearningProgramKindSchema } from "@nakafa/aksara-contracts/program/spec";
 import type { TryoutCountry } from "@nakafa/aksara-contracts/tryout/catalog";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -10,11 +9,9 @@ import type {
 import { loadTryoutOwner } from "@repo/backend/convex/contentRelease/tryout/owner";
 import type { Locale } from "@repo/backend/convex/lib/validators/contents";
 import { readTryoutCatalogRowByIdentity } from "@repo/backend/convex/tryouts/catalog/row";
-import type { LearningInterest } from "@repo/contents/_types/learner/preferences";
 import { Effect, Schema } from "effect";
 
 type PreferenceCtx = MutationCtx | QueryCtx;
-type LearningProgramKind = typeof LearningProgramKindSchema.Type;
 const learningPreferencePersistenceFailedCode =
   "LEARNING_PREFERENCE_PERSISTENCE_FAILED";
 const learningPreferencePersistenceFailedMessage =
@@ -152,86 +149,6 @@ export const setPreferredCurriculumProgram = Effect.fn(
   yield* tryLearningPreferencePersistence(() =>
     ctx.db.patch(current._id, {
       preferredCurriculumProgramKey: programKey ?? undefined,
-      updatedAt: now,
-    })
-  );
-
-  return current._id;
-});
-
-/** Creates or updates the current user's canonical learning selection. */
-export const saveLearningSelection = Effect.fn(
-  "learningPreferences.saveLearningSelection"
-)(function* ({
-  ctx,
-  interest,
-  now,
-  programKey,
-  programKind,
-  replaceCurriculumPreference,
-  selectionUpdatedAt = now,
-  userId,
-}: {
-  ctx: MutationCtx;
-  interest: LearningInterest;
-  now: number;
-  programKey: string;
-  programKind: LearningProgramKind;
-  replaceCurriculumPreference: boolean;
-  selectionUpdatedAt?: number;
-  userId: Id<"users">;
-}) {
-  const current = yield* readLearningPreferenceByUserId(ctx, userId);
-  const shouldSetCurriculumPreference =
-    programKind === "school-curriculum" &&
-    (replaceCurriculumPreference ||
-      current?.preferredCurriculumProgramKey === undefined);
-  const curriculumPreference = shouldSetCurriculumPreference
-    ? { preferredCurriculumProgramKey: programKey }
-    : {};
-
-  if (!current) {
-    return yield* tryLearningPreferencePersistence(() =>
-      ctx.db.insert("learningPreferences", {
-        learningInterest: interest,
-        primaryProgramKey: programKey,
-        ...curriculumPreference,
-        selectionUpdatedAt,
-        updatedAt: now,
-        userId,
-      })
-    );
-  }
-
-  if (
-    current.learningInterest === interest &&
-    current.primaryProgramKey === programKey &&
-    (!shouldSetCurriculumPreference ||
-      current.preferredCurriculumProgramKey === programKey)
-  ) {
-    if (
-      current.selectionUpdatedAt !== undefined &&
-      current.selectionUpdatedAt >= selectionUpdatedAt
-    ) {
-      return current._id;
-    }
-
-    yield* tryLearningPreferencePersistence(() =>
-      ctx.db.patch(current._id, {
-        selectionUpdatedAt,
-        updatedAt: now,
-      })
-    );
-
-    return current._id;
-  }
-
-  yield* tryLearningPreferencePersistence(() =>
-    ctx.db.patch(current._id, {
-      learningInterest: interest,
-      primaryProgramKey: programKey,
-      ...curriculumPreference,
-      selectionUpdatedAt,
       updatedAt: now,
     })
   );

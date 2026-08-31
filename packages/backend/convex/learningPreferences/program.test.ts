@@ -12,6 +12,16 @@ import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
 describe("learningPreferences/program", () => {
+  it.effect("fails closed when no signed program snapshot is active", () => {
+    const t = convexTest(schema, convexModules);
+
+    return Effect.promise(() =>
+      expect(
+        t.query((ctx) => runConvexProgram(listCurriculumPrograms(ctx, "en")))
+      ).rejects.toThrow("CONTENT_RELEASE_MISSING")
+    );
+  });
+
   it.effect(
     "filters program kinds before enforcing the curriculum preference limit",
     () =>

@@ -19,7 +19,7 @@ The existing `users` table owns auth, plan, credits, and profile identity. The e
 
 ## Decision
 
-Create a domain-owned Learning preference capability for signed-in user defaults. The first field is the user's preferred school-curriculum Learning program. It stores one row per user, validates the selected program against Convex `learningPrograms` data, and uses auth-derived user identity rather than a client-supplied user id.
+Create a domain-owned Learning preference capability for signed-in user defaults. The first field is the user's preferred school-curriculum Learning program. It stores one row per user, validates the selected program against the authenticated Aksara publication, and uses auth-derived user identity rather than a client-supplied user id.
 
 The curriculum selector navigates immediately and persists the preference in the background. The user settings page exposes the same preference with an explicit save interaction. Onboarding may initialize the preference when the learner chooses a school curriculum, but selector and settings changes do not mutate `learningProfiles` or generated plans.
 
@@ -30,7 +30,7 @@ Public curriculum routes stay explicit and static. The Curriculum index is a pub
 - Convex owns persistence through a `learningPreferences` capability with focused `schema`, `queries`, and `mutations` modules.
 - Every Convex function has args and return validators, uses the narrowest public/internal visibility, and reads the current user through existing auth helpers.
 - Preference reads use an index by `userId` and return a bounded single-row result.
-- Preference writes are idempotent upserts that touch only the signed-in user's preference row and the selected Learning program row needed for validation.
+- Preference writes are idempotent upserts that touch only the signed-in user's preference row after validating the selected program against the signed catalog.
 - The stored curriculum identity is the stable Learning program key, not a localized URL or display title.
 - Frontend route derivation converts that key to the localized public curriculum root for the active locale.
 - Public metadata, canonical URLs, hreflang alternates, sitemap entries, and structured data do not vary by signed-in user preference.
