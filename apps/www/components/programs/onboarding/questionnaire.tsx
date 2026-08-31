@@ -23,10 +23,10 @@ import {
 } from "@repo/design-system/components/ui/questionnaire";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "@repo/design-system/lib/utils";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { redirect, useRouter } from "@repo/internationalization/src/navigation";
 import { useMutation, useQuery } from "convex/react";
 import { Effect } from "effect";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { OnboardingOption } from "@/components/programs/onboarding/choice";
@@ -62,6 +62,7 @@ export function OnboardingQuestionnaire({
   initialProfile: OnboardingProfile;
 }) {
   const t = useTranslations("LearningPrograms");
+  const locale = useLocale();
   const router = useRouter();
   const reactiveStatus = useQuery(api.onboarding.queries.getStatus, {});
   const profile =
@@ -80,6 +81,11 @@ export function OnboardingQuestionnaire({
   const [isFinishing, setIsFinishing] = useState(false);
   const saveAnswer = useSaveOnboardingAnswerMutation(initialProfile);
   const finish = useMutation(api.onboarding.mutations.finish);
+
+  if (reactiveStatus?.isRequired === false && !isFinishing) {
+    redirect({ href: "/home", locale });
+  }
+
   function persistDraft(item: OnboardingItemName) {
     const answer = getOnboardingAnswer(item, answers);
     if (!answer) {
@@ -135,9 +141,8 @@ export function OnboardingQuestionnaire({
         })
       )
     );
-    setIsFinishing(false);
-
     if (outcome.status === "error") {
+      setIsFinishing(false);
       toast.error(t("onboarding.finish-error"));
       return;
     }

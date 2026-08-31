@@ -1,10 +1,12 @@
 import { query } from "@repo/backend/convex/_generated/server";
+import { readLearningPreferenceByUserId } from "@repo/backend/convex/learningPreferences/impl";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { getOptionalAppUserForRead } from "@repo/backend/convex/lib/helpers/auth";
 import {
   readOnboardingProfileByUserId,
   toOnboardingProfile,
 } from "@repo/backend/convex/onboarding/impl";
+import { deriveMigratedOnboardingAnswers } from "@repo/backend/convex/onboarding/legacy";
 import { onboardingStatusValidator } from "@repo/backend/convex/onboarding/schema";
 import { isSelfSelectableUserRole } from "@repo/backend/convex/users/roles";
 import { Effect, Schema } from "effect";
@@ -43,12 +45,21 @@ export const getStatus = query({
           ctx,
           user.appUser._id
         );
+        const legacyAnswers = profile
+          ? null
+          : deriveMigratedOnboardingAnswers(
+              user.appUser,
+              yield* readLearningPreferenceByUserId(ctx, user.appUser._id)
+            );
         const publicProfile = profile ? toOnboardingProfile(profile) : null;
         const maySelfSelectRole =
           user.appUser.role === undefined ||
           isSelfSelectableUserRole(user.appUser.role);
         return {
-          isRequired: maySelfSelectRole && profile?.completedAt === undefined,
+          isRequired:
+            maySelfSelectRole &&
+            profile?.completedAt === undefined &&
+            legacyAnswers === null,
           profile: publicProfile,
         };
       })

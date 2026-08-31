@@ -286,4 +286,56 @@ describe("onboarding", () => {
       );
     })
   );
+
+  it.effect(
+    "keeps an un-migrated legacy user out of replacement onboarding",
+    () =>
+      Effect.gen(function* () {
+        const { authenticated, identity, test } =
+          yield* createOnboardingTest("student");
+        yield* Effect.promise(() =>
+          test.mutation((ctx) =>
+            ctx.db.insert("learningPreferences", {
+              learningInterest: "school-curriculum",
+              preferredCurriculumProgramKey: "merdeka",
+              primaryProgramKey: "merdeka",
+              selectionUpdatedAt: NOW - 1,
+              updatedAt: NOW - 1,
+              userId: identity.userId,
+            })
+          )
+        );
+
+        const status = yield* Effect.promise(() =>
+          authenticated.query(api.onboarding.queries.getStatus, {})
+        );
+
+        expect(status).toEqual({ isRequired: false, profile: null });
+      })
+  );
+
+  it.effect("does not guess when legacy focus signals disagree", () =>
+    Effect.gen(function* () {
+      const { authenticated, identity, test } =
+        yield* createOnboardingTest("student");
+      yield* Effect.promise(() =>
+        test.mutation((ctx) =>
+          ctx.db.insert("learningPreferences", {
+            learningInterest: "exam-prep",
+            preferredCurriculumProgramKey: "merdeka",
+            primaryProgramKey: "merdeka",
+            selectionUpdatedAt: NOW - 1,
+            updatedAt: NOW - 1,
+            userId: identity.userId,
+          })
+        )
+      );
+
+      const status = yield* Effect.promise(() =>
+        authenticated.query(api.onboarding.queries.getStatus, {})
+      );
+
+      expect(status).toEqual({ isRequired: true, profile: null });
+    })
+  );
 });

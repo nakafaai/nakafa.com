@@ -41,7 +41,11 @@ function isPublicSurfacePath(
 }
 
 function isOnboardingPath(segments: readonly string[]) {
-  return segments.length === 0;
+  return (
+    segments.length === 0 ||
+    (segments.length === 1 &&
+      (segments[0] === "focus" || segments[0] === "role"))
+  );
 }
 
 function isUserPath(segments: readonly string[]) {
