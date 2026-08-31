@@ -2,15 +2,23 @@ import { Schema } from "effect";
 
 const API_EDGE_SECRET_ENVIRONMENT = "NAKAFA_API_EDGE_SECRET";
 const API_EDGE_SECRET_HEADER = "x-nakafa-api-edge-secret";
+const API_DISCOVERY_PATH = "/openapi.json";
+const API_DOCUMENT_PATH = "/openapi";
 const API_ORIGIN_PATH = "/internal/agent";
+const API_PUBLIC_PATH = "/v1";
+const API_RUNTIME_PATH = "/runtime";
 const AGENT_ORIGIN_ENVIRONMENT = "NAKAFA_CONVEX_SITE_URL";
 const MCP_EDGE_SECRET_ENVIRONMENT = "NAKAFA_MCP_EDGE_SECRET";
 const MCP_EDGE_SECRET_HEADER = "x-nakafa-mcp-edge-secret";
 const MCP_ORIGIN_PATH = "/internal/mcp";
 
 const ApiEdgeContractSchema = Schema.Struct({
+  discoveryPath: Schema.Literal(API_DISCOVERY_PATH),
+  documentPath: Schema.Literal(API_DOCUMENT_PATH),
   originEnvironment: Schema.Literal(AGENT_ORIGIN_ENVIRONMENT),
   originPath: Schema.Literal(API_ORIGIN_PATH),
+  publicPath: Schema.Literal(API_PUBLIC_PATH),
+  runtimePath: Schema.Literal(API_RUNTIME_PATH),
   secretEnvironment: Schema.Literal(API_EDGE_SECRET_ENVIRONMENT),
   secretHeader: Schema.Literal(API_EDGE_SECRET_HEADER),
 });
@@ -27,8 +35,12 @@ export type AgentEdgeContract =
 
 /** Server-only contract shared by the Vercel bridge and Convex origin. */
 export const NAKAFA_API_EDGE_CONTRACT: typeof ApiEdgeContractSchema.Type = {
+  discoveryPath: API_DISCOVERY_PATH,
+  documentPath: API_DOCUMENT_PATH,
   originEnvironment: AGENT_ORIGIN_ENVIRONMENT,
   originPath: API_ORIGIN_PATH,
+  publicPath: API_PUBLIC_PATH,
+  runtimePath: API_RUNTIME_PATH,
   secretEnvironment: API_EDGE_SECRET_ENVIRONMENT,
   secretHeader: API_EDGE_SECRET_HEADER,
 };
@@ -60,7 +72,17 @@ export const NAKAFA_EDGE_RELEASE_SHA_HEADER = "x-nakafa-release-sha";
 /** Vercel system identity for the Git commit that produced a deployment. */
 export const VERCEL_GIT_COMMIT_SHA_ENVIRONMENT = "VERCEL_GIT_COMMIT_SHA";
 
-/** Projects one protected origin path back to its stable public API path. */
+/** Projects one protected origin path back to its public API path. */
 export function projectPublicApiPath(pathname: string) {
-  return pathname.slice(NAKAFA_API_EDGE_CONTRACT.originPath.length) || "/";
+  const originPath = pathname.slice(NAKAFA_API_EDGE_CONTRACT.originPath.length);
+  if (originPath === NAKAFA_API_EDGE_CONTRACT.documentPath) {
+    return NAKAFA_API_EDGE_CONTRACT.discoveryPath;
+  }
+  if (originPath === NAKAFA_API_EDGE_CONTRACT.runtimePath) {
+    return NAKAFA_API_EDGE_CONTRACT.publicPath;
+  }
+  if (originPath.startsWith(`${NAKAFA_API_EDGE_CONTRACT.runtimePath}/`)) {
+    return `${NAKAFA_API_EDGE_CONTRACT.publicPath}${originPath.slice(NAKAFA_API_EDGE_CONTRACT.runtimePath.length)}`;
+  }
+  return originPath || "/";
 }

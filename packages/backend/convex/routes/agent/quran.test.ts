@@ -7,7 +7,7 @@ import {
   expectPublicJson,
   fetchApi,
   setupApiTest,
-} from "@repo/backend/test/api";
+} from "@repo/backend/test/agent/http";
 import {
   makeQuranAttribution,
   makeQuranChunk,
@@ -20,7 +20,7 @@ setupApiTest();
 
 describe("public Quran API routes", () => {
   it.each(["/v2/quran/1", "/v2/quran/1?locale=en"])(
-    "does not expose the retired Quran path %s",
+    "rejects the unsupported public namespace %s",
     async (path) => {
       const response = await fetchApi(createConvexTestWithBetterAuth(), path);
 
@@ -112,16 +112,14 @@ describe("public Quran API routes", () => {
         makeQuranSearch("id", 1),
       ])
     );
-    const [response, predecessor] = await Promise.all([
-      fetchApi(test, "/quran/1?locale=id&from_verse=1&include_tafsir=true"),
-      fetchApi(test, "/v1/quran/1?locale=id&from_verse=1&include_tafsir=true"),
-    ]);
+    const response = await fetchApi(
+      test,
+      "/quran/1?locale=id&from_verse=1&include_tafsir=true"
+    );
 
     expect(response.status).toBe(200);
-    expect(predecessor.status).toBe(200);
     expectPublicJson(response);
     const body = await response.json();
-    await expect(predecessor.json()).resolves.toEqual(body);
     expect(body).toMatchObject({
       alignmentId: "alignment:quran:quran-surah:1",
       assetId: "asset:id:quran:quran-surah:1",

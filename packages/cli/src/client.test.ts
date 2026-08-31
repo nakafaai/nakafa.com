@@ -11,7 +11,7 @@ import { requestNakafaApi } from "#cli/client";
 const problem = {
   code: "NOT_FOUND",
   detail: "The requested content does not exist.",
-  instance: "/content",
+  instance: "/v1/content",
   request_id: "request-123",
   resolution: "Use a content ID returned by search.",
   status: 404,
@@ -30,7 +30,7 @@ function makeClient(
 }
 
 function execute(client: HttpClient.HttpClient, apiBase: string) {
-  return requestNakafaApi({ apiBase, path: "/health" }).pipe(
+  return requestNakafaApi({ apiBase, path: "/v1/health" }).pipe(
     Effect.provideService(HttpClient.HttpClient, client)
   );
 }
@@ -61,7 +61,7 @@ describe("Nakafa API client", () => {
       });
       const [request] = yield* Ref.get(requests);
       expect(request?.method).toBe("GET");
-      expect(request?.url).toBe("https://api.nakafa.com/health");
+      expect(request?.url).toBe("https://api.nakafa.com/v1/health");
       expect(request?.headers.accept).toBe(
         "application/json, application/problem+json"
       );

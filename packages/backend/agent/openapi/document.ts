@@ -3,6 +3,7 @@ import { OPENAPI_SCHEMAS } from "@repo/backend/agent/openapi/schema";
 import {
   NAKAFA_API_BASE_URL,
   NAKAFA_BASE_URL,
+  NAKAFA_PUBLIC_API_PATH,
   NAKAFA_PUBLIC_API_VERSION,
 } from "@repo/contents/_lib/agent/constants";
 
@@ -26,15 +27,14 @@ export const NAKAFA_OPENAPI_DOCUMENT = {
       url: `${NAKAFA_BASE_URL}/contact`,
     },
     description:
-      "Read-only public access to Nakafa's signed educational content through one stable contract.",
+      "Read-only public access to Nakafa's signed educational content through one supported V1 contract.",
     license: {
       name: "Nakafa terms",
       url: `${NAKAFA_BASE_URL}/en/terms-of-service`,
     },
     title: "Nakafa Public API",
     version: NAKAFA_PUBLIC_API_VERSION,
-    "x-version-policy":
-      "Stable unversioned paths expose the current public API contract.",
+    "x-version-policy": `${NAKAFA_PUBLIC_API_PATH} is the only supported public API contract.`,
   },
   jsonSchemaDialect: "https://json-schema.org/draft/2020-12/schema",
   openapi: "3.1.1",

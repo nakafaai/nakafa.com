@@ -11,6 +11,7 @@ import {
   type AgentApp,
   runMeteredRequest,
 } from "@repo/backend/convex/routes/agent/runtime";
+import { NAKAFA_PUBLIC_API_PATH } from "@repo/contents/_lib/agent/constants";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { Effect, Option } from "effect";
 
@@ -53,8 +54,7 @@ function contentNotFoundResponse(request: Request, requestId: string) {
     detail: "No public Nakafa content matched the supplied reference.",
     instance: projectPublicApiPath(new URL(request.url).pathname),
     requestId,
-    resolution:
-      "Use a content_id from /search with markdown_url, or a canonical readable Nakafa URL.",
+    resolution: `Use a content_id from ${NAKAFA_PUBLIC_API_PATH}/search with markdown_url, or a canonical readable Nakafa URL.`,
     status: 404,
     title: "Content not found",
     type: "content-not-found",

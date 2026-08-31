@@ -16,7 +16,7 @@ import { api } from "@repo/backend/convex/_generated/api";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import {
   NAKAFA_AGENT_SECTIONS,
-  NAKAFA_MCP_ENDPOINT,
+  NAKAFA_MCP_GUIDANCE,
 } from "@repo/contents/_lib/agent/constants";
 import { NakafaAgentDataReadError } from "@repo/contents/_lib/agent/errors";
 import type { FunctionArgs } from "convex/server";
@@ -70,7 +70,7 @@ export const readNakafaTaxonomy = Effect.fn("NakafaContent.readTaxonomy")(
       },
       content_counts: contentCounts,
       default_locale: defaultLocale,
-      mcp: NAKAFA_MCP_ENDPOINT,
+      endpoints: NAKAFA_MCP_GUIDANCE,
       tryout: signedInventory.tryout,
       locale,
       locales: ACTIVE_APP_LOCALE_CODES,

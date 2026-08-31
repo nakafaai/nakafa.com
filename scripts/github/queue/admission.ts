@@ -147,7 +147,6 @@ export const validateQueuePull = Effect.fn("QueueGate.validatePull")(function* (
     pull.number !== identity.pullNumber ||
     pull.state !== "open" ||
     pull.base.ref !== identity.baseBranch ||
-    pull.base.sha !== identity.baseSha ||
     pull.base.repo.full_name !== identity.repository ||
     pull.head.repo?.full_name !== identity.repository ||
     identity.actor !== trustedOwner ||

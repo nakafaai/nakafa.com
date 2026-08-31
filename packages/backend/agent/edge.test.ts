@@ -6,6 +6,7 @@ import {
   projectPublicApiPath,
   VERCEL_GIT_COMMIT_SHA_ENVIRONMENT,
 } from "@repo/backend/agent/edge";
+import { NAKAFA_PUBLIC_API_PATH } from "@repo/contents/_lib/agent/constants";
 
 describe("agent edge contract", () => {
   it("owns one server-only Convex origin environment", () => {
@@ -22,9 +23,19 @@ describe("agent edge contract", () => {
     expect(VERCEL_GIT_COMMIT_SHA_ENVIRONMENT).toBe("VERCEL_GIT_COMMIT_SHA");
   });
 
+  it("separates the protected document and runtime capabilities", () => {
+    expect(NAKAFA_API_EDGE_CONTRACT.discoveryPath).toBe("/openapi.json");
+    expect(NAKAFA_API_EDGE_CONTRACT.documentPath).toBe("/openapi");
+    expect(NAKAFA_API_EDGE_CONTRACT.publicPath).toBe(NAKAFA_PUBLIC_API_PATH);
+    expect(NAKAFA_API_EDGE_CONTRACT.runtimePath).toBe("/runtime");
+  });
+
   it.each([
     ["", "/"],
+    ["/openapi", "/openapi.json"],
     ["/openapi.json", "/openapi.json"],
+    ["/runtime", "/v1"],
+    ["/runtime/content", "/v1/content"],
     ["/v1", "/v1"],
     ["/v1/content", "/v1/content"],
     ["/content", "/content"],

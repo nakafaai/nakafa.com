@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { deriveMaterialTopicReference } from "@repo/backend/convex/contentRelease/material/topic";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
@@ -8,8 +8,7 @@ import {
   expectProblem,
   expectPublicJson,
   fetchApi,
-  restoreApiSecret,
-  stubApiSecret,
+  setupApiTest,
 } from "@repo/backend/test/agent/http";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import {
@@ -25,8 +24,7 @@ import {
 } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 
-beforeEach(stubApiSecret);
-afterEach(restoreApiSecret);
+setupApiTest();
 
 describe("public agent content", () => {
   it("reads authenticated article markdown through its canonical URL", async () => {
@@ -90,7 +88,7 @@ describe("public agent content", () => {
       status: 404,
     });
     await expect(body.json()).resolves.toMatchObject({
-      resolution: expect.stringContaining("/search"),
+      resolution: expect.stringContaining("/v1/search"),
     });
   });
 

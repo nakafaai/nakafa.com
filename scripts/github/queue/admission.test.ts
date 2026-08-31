@@ -115,6 +115,24 @@ describe("merge queue admission", () => {
     })
   );
 
+  it.effect("admits a pull opened against an older main revision", () =>
+    Effect.gen(function* () {
+      const identity = yield* decodeQueueIdentity({
+        actor: "nabilfatih",
+        event: queueEvent,
+        ref: `refs/heads/${queueEvent.merge_group.head_ref}`,
+        sha: GROUP_SHA,
+      });
+
+      expect(
+        yield* validateQueuePull(identity, {
+          ...ownerPull,
+          base: { ...ownerPull.base, sha: "4".repeat(40) },
+        })
+      ).toBe("owner");
+    })
+  );
+
   it.effect("rejects the Actions bot outside the Changesets branch", () =>
     Effect.gen(function* () {
       const identity = yield* decodeQueueIdentity({

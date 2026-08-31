@@ -1,12 +1,11 @@
 // @vitest-environment node
 
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import {
   expectPublicJson,
   fetchApi,
-  restoreApiSecret,
-  stubApiSecret,
+  setupApiTest,
 } from "@repo/backend/test/agent/http";
 import {
   insertRuntimeArticles,
@@ -15,8 +14,7 @@ import {
 import { insertRuntimeIndex } from "@repo/backend/test/runtime/head";
 import { TEST_RUNTIME_RELEASE } from "@repo/backend/test/runtime/values";
 
-beforeEach(stubApiSecret);
-afterEach(restoreApiSecret);
+setupApiTest();
 
 describe("public agent search", () => {
   it("returns stable empty pagination from an empty deployment", async () => {

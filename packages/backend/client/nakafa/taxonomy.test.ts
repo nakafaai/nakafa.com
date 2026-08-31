@@ -49,6 +49,11 @@ describe("readNakafaTaxonomy", () => {
       expect(taxonomy.locale).toBe("id");
       expect(defaultTaxonomy.locale).toBe("en");
       expect(taxonomy.quran.surah_count).toBe(114);
+      expect(taxonomy.endpoints).toEqual({
+        direct: "https://mcp.nakafa.com/mcp",
+        recommended: "https://mcp.nakafa.com/mcp",
+        root_note: "https://mcp.nakafa.com is informational only.",
+      });
       expect(taxonomy.content_counts).toEqual([
         { count: 121, locale: "en" },
         { count: 121, locale: "id" },
