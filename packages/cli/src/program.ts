@@ -145,12 +145,12 @@ function executeCommand(request: CliRequest) {
 function buildApiPath(command: Exclude<CliCommand, { kind: "mcp" }>) {
   if (command.kind === "get") {
     const query = new URLSearchParams({ ref: command.ref });
-    return `/v1/content?${query}`;
+    return `/content?${query}`;
   }
   if (command.kind === "taxonomy") {
     const query = new URLSearchParams();
     appendOptional(query, "locale", command.locale);
-    return withQuery("/v1/taxonomy", query);
+    return withQuery("/taxonomy", query);
   }
   if (command.kind === "quran") {
     const query = new URLSearchParams();
@@ -160,14 +160,14 @@ function buildApiPath(command: Exclude<CliCommand, { kind: "mcp" }>) {
     if (command.includeTafsir) {
       query.set("include_tafsir", "true");
     }
-    return withQuery(`/v1/quran/${command.surah}`, query);
+    return withQuery(`/quran/${command.surah}`, query);
   }
   const query = new URLSearchParams({ query: command.query });
   appendOptional(query, "section", command.section);
   appendOptional(query, "locale", command.locale);
   appendOptional(query, "limit", command.limit);
   appendOptional(query, "offset", command.offset);
-  return `/v1/search?${query}`;
+  return `/search?${query}`;
 }
 
 const plainFormatter = CliOutput.defaultFormatter({ colors: false });
