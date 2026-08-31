@@ -19,7 +19,7 @@ interface AgentEdgeRouteOptions {
 /** Versioned public API paths and their stable protected-runtime destinations. */
 export const NAKAFA_API_EDGE_PATHS = [
   {
-    source: "^/openapi\\.json$",
+    source: `^${NAKAFA_API_EDGE_CONTRACT.discoveryPath.replaceAll(".", "\\.")}$`,
     suffix: NAKAFA_API_EDGE_CONTRACT.documentPath,
   },
   {
