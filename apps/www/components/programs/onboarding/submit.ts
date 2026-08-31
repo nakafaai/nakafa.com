@@ -1,162 +1,36 @@
+import type { api } from "@repo/backend/convex/_generated/api";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { Effect, Schema } from "effect";
-import {
-  decodeOnboardingRoleValue,
-  decodeOnboardingValue,
-  type OnboardingFormValue,
-  type OnboardingRoleValue,
-  type OnboardingState,
-} from "@/components/programs/onboarding/state";
-import { reportClientException } from "@/lib/analytics/client";
 
-type SelectProgramMutation = (
-  value: Pick<OnboardingFormValue, "interest" | "programKey">
-) => Promise<unknown>;
-type UpdateRoleMutation = (
-  value: Pick<OnboardingFormValue, "role">
-) => Promise<unknown>;
+type SaveAnswerArgs = FunctionArgs<typeof api.onboarding.mutations.saveAnswer>;
+type FinishArgs = FunctionArgs<typeof api.onboarding.mutations.finish>;
+type FinishResult = FunctionReturnType<typeof api.onboarding.mutations.finish>;
+type SaveAnswerMutation = (args: SaveAnswerArgs) => Promise<unknown>;
+type FinishMutation = (args: FinishArgs) => Promise<FinishResult>;
 
-/** Expected failure when the browser submits an incomplete form value. */
-class OnboardingValidationError extends Schema.TaggedError<OnboardingValidationError>()(
-  "OnboardingValidationError",
-  {
-    cause: Schema.Unknown,
-  }
-) {}
-
-/** Expected failure when the selected profile cannot be saved. */
-class OnboardingMutationError extends Schema.TaggedError<OnboardingMutationError>()(
+/** Expected browser mutation failure while saving onboarding state. */
+export class OnboardingMutationError extends Schema.TaggedError<OnboardingMutationError>()(
   "OnboardingMutationError",
-  {
-    cause: Schema.Unknown,
-  }
+  { cause: Schema.Unknown }
 ) {}
 
-/** Saves the selected normal Nakafa role through the Convex mutation. */
-export function submitOnboardingRole({
-  updateRole,
-  value,
-}: {
-  updateRole: UpdateRoleMutation;
-  value: unknown;
-}) {
-  return parseOnboardingRoleValue(value).pipe(
-    Effect.flatMap((formValue) =>
-      saveOnboardingRole({ formValue, updateRole })
-    ),
-    Effect.matchEffect({
-      onFailure: recoverSubmissionFailure,
-      onSuccess: () =>
-        Effect.succeed({
-          status: "success",
-        } satisfies OnboardingState),
-    })
-  );
-}
+/** Saves one draft answer through the browser's typed failure channel. */
+export const saveOnboardingDraft = Effect.fn("www.onboarding.saveDraft")(
+  function* (saveAnswer: SaveAnswerMutation, args: SaveAnswerArgs) {
+    yield* Effect.tryPromise({
+      catch: (cause) => new OnboardingMutationError({ cause }),
+      try: () => saveAnswer(args),
+    });
+  }
+);
 
-/** Saves the selected program through the Convex mutation and returns form state. */
-export function submitOnboardingSelection({
-  selectProgram,
-  updateRole,
-  value,
-}: {
-  selectProgram: SelectProgramMutation;
-  updateRole: UpdateRoleMutation;
-  value: unknown;
-}) {
-  return parseOnboardingValue(value).pipe(
-    Effect.flatMap((formValue) =>
-      saveOnboardingSelection({
-        formValue,
-        selectProgram,
-        updateRole,
-      })
-    ),
-    Effect.matchEffect({
-      onFailure: recoverSubmissionFailure,
-      onSuccess: () =>
-        Effect.succeed({
-          status: "success",
-        } satisfies OnboardingState),
-    })
-  );
-}
-
-/** Saves the user role through its owning Convex mutation. */
-function saveOnboardingRole({
-  formValue,
-  updateRole,
-}: {
-  formValue: OnboardingRoleValue;
-  updateRole: UpdateRoleMutation;
-}) {
-  return Effect.tryPromise({
-    try: () => updateRole({ role: formValue.role }),
+/** Commits every answer and derived preference through one atomic mutation. */
+export const finishOnboarding = Effect.fn("www.onboarding.finish")(function* (
+  finish: FinishMutation,
+  args: FinishArgs
+) {
+  return yield* Effect.tryPromise({
     catch: (cause) => new OnboardingMutationError({ cause }),
+    try: () => finish(args),
   });
-}
-
-/** Saves role and learning profile through their owning Convex mutations. */
-function saveOnboardingSelection({
-  formValue,
-  selectProgram,
-  updateRole,
-}: {
-  formValue: OnboardingFormValue;
-  selectProgram: SelectProgramMutation;
-  updateRole: UpdateRoleMutation;
-}) {
-  return Effect.tryPromise({
-    try: () => updateRole({ role: formValue.role }),
-    catch: (cause) => new OnboardingMutationError({ cause }),
-  }).pipe(
-    Effect.flatMap(() =>
-      Effect.tryPromise({
-        try: () =>
-          selectProgram({
-            interest: formValue.interest,
-            programKey: formValue.programKey,
-          }),
-        catch: (cause) => new OnboardingMutationError({ cause }),
-      })
-    )
-  );
-}
-
-/** Decodes TanStack Form's role-step value before saving the app role. */
-const parseOnboardingRoleValue = Effect.fn("www.programs.parseRoleForm")(
-  function* (value: unknown) {
-    return yield* decodeOnboardingRoleValue(value).pipe(
-      Effect.mapError((cause) => new OnboardingValidationError({ cause }))
-    );
-  }
-);
-
-/** Decodes TanStack Form's draft value before saving the selected program. */
-const parseOnboardingValue = Effect.fn("www.programs.parseOnboardingForm")(
-  function* (value: unknown) {
-    return yield* decodeOnboardingValue(value).pipe(
-      Effect.mapError((cause) => new OnboardingValidationError({ cause }))
-    );
-  }
-);
-
-/** Converts handled browser submission failures into form state. */
-function recoverSubmissionFailure(
-  error: OnboardingValidationError | OnboardingMutationError
-): Effect.Effect<OnboardingState> {
-  if (error._tag === "OnboardingValidationError") {
-    return Effect.succeed({
-      messageKey: "onboarding.invalid-selection",
-      status: "error",
-    } satisfies OnboardingState);
-  }
-
-  return reportClientException(error, {
-    source: "program-onboarding",
-  }).pipe(
-    Effect.as({
-      messageKey: "onboarding.save-error",
-      status: "error",
-    } satisfies OnboardingState)
-  );
-}
+});

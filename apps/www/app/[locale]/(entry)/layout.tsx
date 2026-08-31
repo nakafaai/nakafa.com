@@ -4,11 +4,11 @@ import { env } from "@/env";
 import { UserContextProvider } from "@/lib/context/use-user";
 
 /**
- * Mounts the minimal auth-capable runtime for the standalone `/auth` route.
+ * Mounts the minimal auth-capable runtime shared by auth and onboarding.
  *
- * The page intentionally lives outside the shared `(app)` subtree so account
- * changes fully tear down the authenticated Convex provider before the next
- * protected route mounts again.
+ * Entry pages intentionally live outside the shared `(app)` subtree so account
+ * changes fully tear down the authenticated Convex provider and onboarding
+ * does not depend on the published application shell.
  *
  * @see apps/www/node_modules/next/dist/docs/01-app/01-getting-started/03-layouts-and-pages.md
  * @see apps/www/node_modules/next/dist/docs/01-app/02-guides/instant-navigation.md

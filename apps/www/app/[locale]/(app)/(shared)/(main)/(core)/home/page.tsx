@@ -10,11 +10,7 @@ import { HomeTrending } from "@/components/home/trending";
 import { getToken } from "@/lib/auth/server";
 import { isActiveLocale } from "@/lib/i18n/active";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { shouldRequireLearningProgramOnboarding } from "@/lib/programs/catalog";
-import {
-  getLearningProgramOnboardingCatalog,
-  readActiveLearningSelection,
-} from "@/lib/programs/server";
+import { readOnboardingStatus } from "@/lib/onboarding/server";
 
 /** Routes authenticated users through canonical learning selection. */
 export default function Page(props: PageProps<"/[locale]/home">) {
@@ -46,16 +42,10 @@ async function AuthenticatedHome({
     return null;
   }
 
-  const learningSelection = await Effect.runPromise(
-    readActiveLearningSelection(token, locale)
-  );
-  if (!learningSelection) {
-    const programs = await getLearningProgramOnboardingCatalog(locale);
-
-    if (shouldRequireLearningProgramOnboarding(learningSelection, programs)) {
-      redirect({ href: "/onboarding/role", locale });
-      return null;
-    }
+  const onboardingStatus = await Effect.runPromise(readOnboardingStatus(token));
+  if (onboardingStatus.isRequired) {
+    redirect({ href: "/onboarding", locale });
+    return null;
   }
 
   return (

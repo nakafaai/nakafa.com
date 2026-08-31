@@ -11,6 +11,7 @@ import customersSchema from "@repo/backend/convex/customers/schema";
 import irtSchema from "@repo/backend/convex/irt/schema";
 import learningPreferencesSchema from "@repo/backend/convex/learningPreferences/schema";
 import notificationsSchema from "@repo/backend/convex/notifications/schema";
+import onboardingSchema from "@repo/backend/convex/onboarding/schema";
 import schoolsSchema from "@repo/backend/convex/schools/schema";
 import subscriptionsSchema from "@repo/backend/convex/subscriptions/schema";
 import tryoutAccessSchema from "@repo/backend/convex/tryoutAccess/schema";
@@ -36,6 +37,7 @@ export default defineSchema(
     ...creditsSchema,
     ...irtSchema,
     ...learningPreferencesSchema,
+    ...onboardingSchema,
     ...tryoutAccessSchema,
     ...tryoutRuntimeSchema,
   },

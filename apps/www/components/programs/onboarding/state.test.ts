@@ -1,45 +1,112 @@
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { describe, expect, it } from "vitest";
 import {
-  decodeOnboardingRoleValue,
-  decodeOnboardingValue,
+  applyOnboardingAnswer,
+  getCompleteOnboardingAnswers,
+  getInitialOnboardingItem,
+  getOnboardingAnswer,
+  getOnboardingAnswers,
 } from "@/components/programs/onboarding/state";
 
-describe("components/programs/onboarding/state", () => {
-  it.effect("decodes a complete program onboarding value", () =>
-    Effect.gen(function* () {
-      const result = yield* decodeOnboardingValue({
-        focusKey: "student-exam",
-        interest: "exam-prep",
-        programKey: "snbt",
+describe("onboarding state", () => {
+  it("resumes at the first unanswered question", () => {
+    expect(getInitialOnboardingItem({})).toBe("role");
+    expect(getInitialOnboardingItem({ role: "student" })).toBe("region");
+    expect(
+      getInitialOnboardingItem({ role: "student", region: "indonesia" })
+    ).toBe("focus");
+  });
+
+  it("initializes only answers owned by a saved profile", () => {
+    expect(getOnboardingAnswers(null)).toEqual({});
+    expect(getOnboardingAnswers({ updatedAt: 9 })).toEqual({});
+    expect(
+      getOnboardingAnswers({
+        focus: "learning",
+        region: "international",
+        role: "teacher",
+        updatedAt: 10,
+      })
+    ).toEqual({
+      focus: "learning",
+      region: "international",
+      role: "teacher",
+    });
+  });
+
+  it("builds the discriminated answer for the active item", () => {
+    const answers = {
+      focus: "tryout" as const,
+      region: "singapore" as const,
+      role: "parent" as const,
+    };
+    expect(getOnboardingAnswer("role", answers)).toEqual({
+      kind: "role",
+      value: "parent",
+    });
+    expect(getOnboardingAnswer("region", answers)).toEqual({
+      kind: "region",
+      value: "singapore",
+    });
+    expect(getOnboardingAnswer("focus", answers)).toEqual({
+      kind: "focus",
+      value: "tryout",
+    });
+    expect(getOnboardingAnswer("role", {})).toBeNull();
+    expect(getOnboardingAnswer("region", {})).toBeNull();
+    expect(getOnboardingAnswer("focus", {})).toBeNull();
+  });
+
+  it("requires all three answers before building the atomic Finish input", () => {
+    expect(
+      getCompleteOnboardingAnswers({ role: "student", region: "indonesia" })
+    ).toBeNull();
+    expect(
+      getCompleteOnboardingAnswers({
+        focus: "learning",
         role: "student",
-      }).pipe(Effect.result);
-      expect(Result.isSuccess(result)).toBe(true);
-      if (!Result.isSuccess(result)) {
-        return;
-      }
-      expect(result.success).toEqual({
-        focusKey: "student-exam",
-        interest: "exam-prep",
-        programKey: "snbt",
+      })
+    ).toBeNull();
+    expect(
+      getCompleteOnboardingAnswers({
+        focus: "learning",
+        region: "indonesia",
+      })
+    ).toBeNull();
+    expect(
+      getCompleteOnboardingAnswers({
+        focus: "learning",
+        region: "international",
         role: "student",
-      });
-    })
-  );
-  it.effect("rejects incomplete program onboarding values", () =>
-    Effect.gen(function* () {
-      const result = yield* decodeOnboardingValue({
-        programKey: "snbt",
-      }).pipe(Effect.result);
-      expect(Result.isFailure(result)).toBe(true);
-    })
-  );
-  it.effect("decodes a route-owned role step value", () =>
-    Effect.gen(function* () {
-      const role = yield* decodeOnboardingRoleValue({ role: "teacher" }).pipe(
-        Effect.result
-      );
-      expect(Result.isSuccess(role)).toBe(true);
-    })
-  );
+      })
+    ).toEqual({
+      focus: "learning",
+      region: "international",
+      role: "student",
+    });
+  });
+
+  it("applies one optimistic answer without dropping other draft fields", () => {
+    expect(
+      applyOnboardingAnswer(
+        { region: "indonesia", role: "student", updatedAt: 1 },
+        { kind: "focus", value: "tryout" },
+        2
+      )
+    ).toEqual({
+      focus: "tryout",
+      region: "indonesia",
+      role: "student",
+      updatedAt: 2,
+    });
+    expect(
+      applyOnboardingAnswer(null, { kind: "role", value: "parent" }, 3)
+    ).toEqual({ role: "parent", updatedAt: 3 });
+    expect(
+      applyOnboardingAnswer(
+        { role: "student", updatedAt: 3 },
+        { kind: "region", value: "germany" },
+        4
+      )
+    ).toEqual({ region: "germany", role: "student", updatedAt: 4 });
+  });
 });

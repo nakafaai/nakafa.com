@@ -1,8 +1,4 @@
-import {
-  LearningProgramKeySchema,
-  LearningProgramKindSchema,
-  ProgramCoverageSchema,
-} from "@nakafa/aksara-contracts/program/spec";
+import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import type { NakafaRuntime } from "@repo/ai/agents/nakafa/service";
 import { ModelIdSchema } from "@repo/ai/config/model";
 import { SourceReferenceSchema } from "@repo/ai/lib/source";
@@ -10,27 +6,22 @@ import { NinaContextPackSchema } from "@repo/ai/nina/memory/pack";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { PromptUserRoleSchema } from "@repo/ai/types/roles";
 import { LocaleSchema } from "@repo/contents/_types/content";
-import { LearningInterestSchema } from "@repo/contents/_types/learner/preferences";
 import type { UIMessageStreamWriter } from "ai";
 import { Schema, Struct } from "effect";
-/** Canonical learner interest and signed program context available to agents. */
-export const AgentLearningSelectionSchema = Schema.Struct({
-  interest: LearningInterestSchema,
+/** Canonical curriculum preference available to agents. */
+export const AgentCurriculumPreferenceSchema = Schema.Struct({
   program: Schema.Struct({
-    coverageStatus: ProgramCoverageSchema,
     key: LearningProgramKeySchema,
-    kind: LearningProgramKindSchema,
     title: Schema.String,
-    versionLabel: Schema.String,
   }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
 }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey)));
-export type AgentLearningSelection = Schema.Schema.Type<
-  typeof AgentLearningSelectionSchema
+export type AgentCurriculumPreference = Schema.Schema.Type<
+  typeof AgentCurriculumPreferenceSchema
 >;
 /** Per-turn context shared by Nina and specialist agents after harness arbitration. */
 export const AgentContextSchema = Schema.Struct({
   currentDate: Schema.String,
-  learningSelection: Schema.optional(AgentLearningSelectionSchema),
+  curriculumPreference: Schema.optional(AgentCurriculumPreferenceSchema),
   needsPageFetch: Schema.Boolean,
   nina: Schema.optional(NinaContextPackSchema),
   slug: Schema.String,

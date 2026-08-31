@@ -134,98 +134,66 @@
     "curriculum-index-action": "Choose a level",
     "curriculum-route-action": "View options",
     "preference-save-error": "We could not save your curriculum preference.",
-    "plan-item-untitled": "Learning step",
-    "program-status": {
-      "hidden": "Hidden",
-      "planned": "Soon",
-      "partial": "Partly ready",
-      "available": "Ready",
-      "archived": "Archived"
-    },
     "onboarding": {
-      "role-title": "How will you use Nakafa?",
+      "progress": "Question {current} of {total}",
+      "role-title": "Who are you?",
       "role": {
         "student": {
           "title": "Student",
-          "description": "Learn, practice, and tutor."
+          "description": "Study and practise."
         },
         "teacher": {
           "title": "Teacher",
-          "description": "Prepare lessons for class."
+          "description": "Prepare teaching materials."
         },
         "parent": {
           "title": "Parent",
-          "description": "Help your child learn simply."
+          "description": "Support your child."
         }
       },
+      "region-title": "Where do you study?",
+      "region-description": "This sets your language and curriculum.",
+      "region": {
+        "indonesia": {
+          "title": "Indonesia"
+        },
+        "singapore": {
+          "title": "Singapore"
+        },
+        "united-kingdom": {
+          "title": "United Kingdom"
+        },
+        "germany": {
+          "title": "Germany"
+        },
+        "united-states": {
+          "title": "United States"
+        },
+        "international": {
+          "title": "International"
+        }
+      },
+      "focus-title": "What do you want to do?",
       "focus": {
-        "student": {
-          "title": "What do you want to focus on?",
-          "school": {
-            "title": "School lessons",
-            "description": "Read clear explanations."
-          },
-          "exam": {
-            "title": "University entrance",
-            "description": "Practice before an exam."
-          }
+        "learning": {
+          "title": "Study",
+          "description": "Read lesson materials."
         },
-        "teacher": {
-          "title": "What do you want to prepare?",
-          "materials": {
-            "title": "Teaching materials",
-            "description": "Prepare explanations for class."
-          },
-          "practice": {
-            "title": "Student practice",
-            "description": "Prepare practice questions."
-          }
-        },
-        "parent": {
-          "title": "What does your child need help with?",
-          "understand": {
-            "title": "Understand lessons",
-            "description": "Read simple explanations."
-          },
-          "practice": {
-            "title": "Practice questions",
-            "description": "Prepare practice before an exam."
-          }
+        "tryout": {
+          "title": "Try out",
+          "description": "Practise for exams."
         }
       },
       "back": "Back",
       "continue": "Continue",
-      "save-cta": "Start learning",
-      "invalid-selection": "Choose your role and one learning focus.",
-      "save-error": "We could not save your choice. Try again.",
-      "unavailable-title": "Choose another option for now",
-      "unavailable-helper": "This choice is not ready yet.",
-      "auth-title": "Sign in to start",
-      "auth-helper": "Save your first plan and continue on any device.",
-      "auth-cta": "Sign in to Nakafa"
+      "finish": "Finish",
+      "required-error": "Choose one answer.",
+      "invalid-selection": "Answer every question.",
+      "save-error": "Your answer was not saved. Try again.",
+      "finish-error": "Onboarding did not finish. Try again."
     },
     "kind": {
-      "school-curriculum": "Curriculum",
-      "assessment": "Practice questions",
-      "admission-exam": "Admission exam",
-      "custom-program": "Custom program",
-      "institution-program": "Institution program"
-    },
-    "interest": {
-      "school-curriculum": {
-        "title": "School lessons"
-      },
-      "exam-prep": {
-        "title": "University entrance"
-      },
-      "assessment-prep": {
-        "title": "Practice questions"
-      }
-    },
-    "plan-item-status": {
-      "ready": "Ready",
-      "done": "Done",
-      "skipped": "Skipped"
+      "school-curriculum": "Curriculum"
     }
   },
   "Comments": {

@@ -134,98 +134,66 @@
     "curriculum-index-action": "Pilih jenjang",
     "curriculum-route-action": "Lihat pilihan",
     "preference-save-error": "Preferensi kurikulummu belum bisa disimpan.",
-    "plan-item-untitled": "Langkah belajar",
-    "program-status": {
-      "hidden": "Tidak ditampilkan",
-      "planned": "Segera",
-      "partial": "Siap sebagian",
-      "available": "Siap",
-      "archived": "Diarsipkan"
-    },
     "onboarding": {
-      "role-title": "Kamu pakai Nakafa sebagai siapa?",
+      "progress": "Pertanyaan {current} dari {total}",
+      "role-title": "Kamu siapa?",
       "role": {
         "student": {
           "title": "Siswa",
-          "description": "Belajar, latihan, dan tutor."
+          "description": "Belajar dan latihan soal."
         },
         "teacher": {
           "title": "Guru",
-          "description": "Siapkan materi untuk kelas."
+          "description": "Siapkan materi belajar."
         },
         "parent": {
           "title": "Orang tua",
-          "description": "Bantu anak belajar mudah."
+          "description": "Dampingi anak belajar."
         }
       },
+      "region-title": "Kamu belajar di mana?",
+      "region-description": "Bahasa dan kurikulum mengikuti pilihanmu.",
+      "region": {
+        "indonesia": {
+          "title": "Indonesia"
+        },
+        "singapore": {
+          "title": "Singapura"
+        },
+        "united-kingdom": {
+          "title": "Britania Raya"
+        },
+        "germany": {
+          "title": "Jerman"
+        },
+        "united-states": {
+          "title": "Amerika Serikat"
+        },
+        "international": {
+          "title": "Internasional"
+        }
+      },
+      "focus-title": "Mau fokus ke apa?",
       "focus": {
-        "student": {
-          "title": "Kamu mau fokus ke apa?",
-          "school": {
-            "title": "Pelajaran sekolah",
-            "description": "Baca penjelasan singkat."
-          },
-          "exam": {
-            "title": "Ujian masuk kampus",
-            "description": "Latihan sebelum ujian."
-          }
+        "learning": {
+          "title": "Belajar",
+          "description": "Baca materi pelajaran."
         },
-        "teacher": {
-          "title": "Kamu mau menyiapkan apa?",
-          "materials": {
-            "title": "Materi mengajar",
-            "description": "Siapkan penjelasan kelas."
-          },
-          "practice": {
-            "title": "Latihan siswa",
-            "description": "Siapkan soal latihan."
-          }
-        },
-        "parent": {
-          "title": "Anakmu butuh dibantu apa?",
-          "understand": {
-            "title": "Pahami materi",
-            "description": "Baca penjelasan mudah."
-          },
-          "practice": {
-            "title": "Latihan soal",
-            "description": "Latihan sebelum ujian."
-          }
+        "tryout": {
+          "title": "Try out",
+          "description": "Simulasi ujian."
         }
       },
       "back": "Kembali",
       "continue": "Lanjut",
-      "save-cta": "Mulai belajar",
-      "invalid-selection": "Pilih peran dan satu fokus belajar.",
-      "save-error": "Pilihanmu belum bisa disimpan. Coba lagi.",
-      "unavailable-title": "Pilih bantuan lain dulu",
-      "unavailable-helper": "Pilihan ini belum siap dipakai.",
-      "auth-title": "Masuk untuk mulai",
-      "auth-helper": "Simpan rencana pertamamu dan lanjutkan di semua perangkat.",
-      "auth-cta": "Masuk ke Nakafa"
+      "finish": "Selesai",
+      "required-error": "Pilih satu jawaban.",
+      "invalid-selection": "Jawab semua pertanyaan.",
+      "save-error": "Jawaban belum tersimpan. Coba lagi.",
+      "finish-error": "Onboarding belum selesai. Coba lagi."
     },
     "kind": {
-      "school-curriculum": "Kurikulum",
-      "assessment": "Latihan soal",
-      "admission-exam": "Ujian masuk",
-      "custom-program": "Program khusus",
-      "institution-program": "Program institusi"
-    },
-    "interest": {
-      "school-curriculum": {
-        "title": "Pelajaran sekolah"
-      },
-      "exam-prep": {
-        "title": "Ujian masuk kampus"
-      },
-      "assessment-prep": {
-        "title": "Latihan soal"
-      }
-    },
-    "plan-item-status": {
-      "ready": "Siap",
-      "done": "Selesai",
-      "skipped": "Dilewati"
+      "school-curriculum": "Kurikulum"
     }
   },
   "Comments": {

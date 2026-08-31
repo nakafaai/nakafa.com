@@ -15,9 +15,9 @@ export class ChatQueryError extends Schema.TaggedError<ChatQueryError>()(
     cause: Schema.Unknown,
     message: Schema.String,
     operation: Schema.Literals([
+      "load-curriculum-preference",
       "load-context",
       "load-messages",
-      "load-selection",
     ]),
   }
 ) {}

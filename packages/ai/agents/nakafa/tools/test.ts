@@ -89,7 +89,11 @@ const nakafaTestRuntime = {
       articles: { categories: ["politics"] },
       content_counts: [{ count: 1, locale }],
       default_locale: defaultLocale,
-      mcp: "https://mcp.nakafa.com/mcp",
+      endpoints: {
+        direct: "https://mcp.nakafa.com/mcp",
+        recommended: "https://mcp.nakafa.com/mcp",
+        root_note: "https://mcp.nakafa.com is informational only.",
+      },
       tryout: {
         countries: [{ id: "indonesia", label: "Indonesia" }],
         exams: [{ id: "snbt", label: "SNBT" }],

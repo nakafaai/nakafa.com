@@ -228,7 +228,7 @@ const runtime = {
   modelId,
 } satisfies NinaRuntime;
 const user = {
-  learningSelection: undefined,
+  curriculumPreference: undefined,
   location: {
     city: "Jakarta",
     country: "Indonesia",
@@ -304,27 +304,23 @@ describe("nina/agent", () => {
     });
     expect(context.nina?.snapshot.source).toBe("pinned-chat");
   });
-  it("preserves selected learning context without inventing a user role", () => {
-    const learningSelection = {
-      interest: "exam-prep",
+  it("preserves a curriculum preference without inventing a user role", () => {
+    const curriculumPreference = {
       program: {
-        coverageStatus: "partial",
-        key: LearningProgramKeySchema.make("snbt"),
-        kind: "admission-exam",
-        title: "SNBT 2026",
-        versionLabel: "2026",
+        key: LearningProgramKeySchema.make("cambridge-international"),
+        title: "Cambridge International",
       },
-    } satisfies NinaUser["learningSelection"];
+    } satisfies NinaUser["curriculumPreference"];
     const context = createNinaAgentContext({
       page,
       runtime,
       user: {
         ...user,
-        learningSelection,
+        curriculumPreference,
         role: undefined,
       },
     });
-    expect(context.learningSelection).toEqual(learningSelection);
+    expect(context.curriculumPreference).toEqual(curriculumPreference);
     expect(context.userRole).toBeUndefined();
   });
   it.effect(

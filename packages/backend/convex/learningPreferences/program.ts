@@ -6,7 +6,7 @@ import type {
 } from "@repo/backend/convex/_generated/server";
 import {
   readLearningPreferenceByUserId,
-  upsertPreferredCurriculumProgram,
+  setPreferredCurriculumProgram,
 } from "@repo/backend/convex/learningPreferences/impl";
 import {
   listSignedPrograms,
@@ -135,7 +135,7 @@ export const saveCurriculumProgram = Effect.fn(
     });
   }
   const now = yield* Clock.currentTimeMillis;
-  yield* upsertPreferredCurriculumProgram({
+  yield* setPreferredCurriculumProgram({
     ctx,
     now,
     programKey: program.key,

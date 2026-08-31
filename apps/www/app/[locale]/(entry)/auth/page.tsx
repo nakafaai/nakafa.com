@@ -2,9 +2,15 @@ import { Button } from "@repo/design-system/components/ui/button";
 import type { Locale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { Auth } from "@/components/auth";
-import { FeaturesDithering } from "@/components/marketing/about/features.client";
 import { Theme } from "@/components/marketing/shared/footer-action";
 import { BackButton } from "@/components/shared/back-button";
+import {
+  EntryShell,
+  EntryShellArtwork,
+  EntryShellBody,
+  EntryShellHeader,
+  EntryShellPanel,
+} from "@/components/shared/entry-shell";
 import {
   getShellPageNavigation,
   type PageNavigation,
@@ -16,25 +22,23 @@ export default async function Page(props: PageProps<"/[locale]/auth">) {
   const pageNavigation = await getShellPageNavigation(locale);
 
   return (
-    <main className="relative grid h-svh lg:grid-cols-7">
-      <div className="col-span-3 flex flex-col gap-4 p-6 sm:p-12">
-        <div className="flex items-center justify-between">
+    <EntryShell>
+      <EntryShellPanel>
+        <EntryShellHeader>
           <BackButton />
 
           <Theme variant="ghost" />
-        </div>
-        <div className="flex flex-1 flex-col items-center justify-center gap-6">
+        </EntryShellHeader>
+        <EntryShellBody>
           <PageTitle />
 
           <Auth />
 
           <PageFooter locale={locale} pageNavigation={pageNavigation} />
-        </div>
-      </div>
-      <div className="relative col-span-4 hidden lg:block">
-        <FeaturesDithering />
-      </div>
-    </main>
+        </EntryShellBody>
+      </EntryShellPanel>
+      <EntryShellArtwork />
+    </EntryShell>
   );
 }
 

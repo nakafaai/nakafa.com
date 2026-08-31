@@ -1,5 +1,5 @@
 import type { ActiveAppLocaleCode as Locale } from "@nakafa/aksara-contracts/locale";
-import { AgentLearningSelectionSchema } from "@repo/ai/types/agents";
+import { AgentCurriculumPreferenceSchema } from "@repo/ai/types/agents";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { Effect, Schema } from "effect";
@@ -41,31 +41,28 @@ export const getUserInfo = Effect.fn("chat.getUserInfo")(function* (
   });
 });
 /**
- * Fetches the authenticated user's canonical learning selection for AI context.
- *
- * This uses the same Convex read interface as the app surfaces, so Nina sees
- * the selected program and first plan items without route or folder heuristics.
+ * Fetches the authenticated user's canonical curriculum preference for AI context.
  */
-export const getLearningSelection = Effect.fn("chat.getLearningSelection")(
-  function* (token: string, locale: Locale) {
-    const profile = yield* Effect.tryPromise({
-      try: () =>
-        fetchQuery(
-          convexApi.learningPrograms.queries.getActiveSelection,
-          { locale },
-          {
-            token,
-          }
-        ),
-      catch: (cause) =>
-        new ChatQueryError({
-          cause,
-          message: "Unable to load the active learning selection.",
-          operation: "load-selection",
-        }),
-    });
-    return yield* Schema.decodeEffect(
-      Schema.NullOr(AgentLearningSelectionSchema)
-    )(profile);
-  }
-);
+export const getCurriculumPreference = Effect.fn(
+  "chat.getCurriculumPreference"
+)(function* (token: string, locale: Locale) {
+  const preference = yield* Effect.tryPromise({
+    try: () =>
+      fetchQuery(
+        convexApi.learningPreferences.queries.getCurrent,
+        { locale },
+        {
+          token,
+        }
+      ),
+    catch: (cause) =>
+      new ChatQueryError({
+        cause,
+        message: "Unable to load the curriculum preference.",
+        operation: "load-curriculum-preference",
+      }),
+  });
+  return yield* Schema.decodeEffect(
+    Schema.NullOr(AgentCurriculumPreferenceSchema)
+  )(preference ? { program: preference.program } : null);
+});

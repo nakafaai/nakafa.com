@@ -6,7 +6,6 @@ import { Particles } from "@repo/design-system/components/ui/particles";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { fonts } from "@repo/design-system/lib/fonts";
 import { cn } from "@repo/design-system/lib/utils";
-import { ThemeBootstrap } from "@repo/design-system/providers/theme-bootstrap";
 import de from "@repo/internationalization/dictionaries/de.json";
 import en from "@repo/internationalization/dictionaries/en.json";
 import id from "@repo/internationalization/dictionaries/id.json";
@@ -102,9 +101,6 @@ function NotFoundDocument({
       lang={locale}
       suppressHydrationWarning
     >
-      <head>
-        <ThemeBootstrap defaultTheme="system" />
-      </head>
       <body>
         <DesignSystemProvider
           attribute="class"

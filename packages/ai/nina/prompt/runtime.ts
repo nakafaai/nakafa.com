@@ -1,7 +1,7 @@
 import { NinaContextPackSchema } from "@repo/ai/nina/memory/pack";
 import { formatNinaContextPackPrompt } from "@repo/ai/nina/prompt/system";
-import { formatLearningSelectionPromptContext } from "@repo/ai/prompt/learning-selection";
-import { AgentLearningSelectionSchema } from "@repo/ai/types/agents";
+import { formatCurriculumPreferencePromptContext } from "@repo/ai/prompt/curriculum-preference";
+import { AgentCurriculumPreferenceSchema } from "@repo/ai/types/agents";
 import { LocaleSchema } from "@repo/contents/_types/content";
 import { Schema, Struct } from "effect";
 /** Structured runtime facts that Nina can use without route or title guessing. */
@@ -12,7 +12,7 @@ export const RuntimePromptContextSchema = Schema.Struct({
     slug: Schema.String,
     verified: Schema.Boolean,
   }).pipe((schema) => schema.mapFields(Struct.map(Schema.mutableKey))),
-  learningSelection: Schema.optional(AgentLearningSelectionSchema),
+  curriculumPreference: Schema.optional(AgentCurriculumPreferenceSchema),
   nina: NinaContextPackSchema,
   url: Schema.String,
   userLocation: Schema.Struct({
@@ -30,7 +30,7 @@ export type RuntimePromptContext = Schema.Schema.Type<
 export function formatRuntimePrompt({
   currentDate,
   currentPage,
-  learningSelection,
+  curriculumPreference,
   nina,
   url,
   userLocation,
@@ -54,6 +54,6 @@ export function formatRuntimePrompt({
 
       ${formatNinaContextPackPrompt(nina)}
 
-      ${formatLearningSelectionPromptContext(learningSelection)}
+      ${formatCurriculumPreferencePromptContext(curriculumPreference)}
     `;
 }

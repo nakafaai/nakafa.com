@@ -134,98 +134,66 @@
     "curriculum-index-action": "Stufe auswählen",
     "curriculum-route-action": "Optionen anzeigen",
     "preference-save-error": "Deine Lehrplaneinstellung konnte nicht gespeichert werden.",
-    "plan-item-untitled": "Lernschritt",
-    "program-status": {
-      "hidden": "Ausgeblendet",
-      "planned": "Demnächst",
-      "partial": "Teilweise verfügbar",
-      "available": "Verfügbar",
-      "archived": "Archiviert"
-    },
     "onboarding": {
-      "role-title": "Wie möchtest du Nakafa nutzen?",
+      "progress": "Frage {current} von {total}",
+      "role-title": "Wer bist du?",
       "role": {
         "student": {
           "title": "Schüler oder Student",
-          "description": "Lernen, üben und Nachhilfe erhalten."
+          "description": "Lernen und üben."
         },
         "teacher": {
           "title": "Lehrkraft",
-          "description": "Unterrichtsmaterial vorbereiten."
+          "description": "Unterricht vorbereiten."
         },
         "parent": {
           "title": "Elternteil",
-          "description": "Deinem Kind verständlich beim Lernen helfen."
+          "description": "Dein Kind begleiten."
         }
       },
+      "region-title": "Wo lernst du?",
+      "region-description": "Das legt Sprache und Lehrplan fest.",
+      "region": {
+        "indonesia": {
+          "title": "Indonesien"
+        },
+        "singapore": {
+          "title": "Singapur"
+        },
+        "united-kingdom": {
+          "title": "Vereinigtes Königreich"
+        },
+        "germany": {
+          "title": "Deutschland"
+        },
+        "united-states": {
+          "title": "Vereinigte Staaten"
+        },
+        "international": {
+          "title": "International"
+        }
+      },
+      "focus-title": "Was möchtest du machen?",
       "focus": {
-        "student": {
-          "title": "Worauf möchtest du dich konzentrieren?",
-          "school": {
-            "title": "Schulunterricht",
-            "description": "Lies verständliche Erklärungen."
-          },
-          "exam": {
-            "title": "Hochschulzulassung",
-            "description": "Übe vor einer Prüfung."
-          }
+        "learning": {
+          "title": "Lernen",
+          "description": "Lernstoff lesen."
         },
-        "teacher": {
-          "title": "Was möchtest du vorbereiten?",
-          "materials": {
-            "title": "Unterrichtsmaterialien",
-            "description": "Bereite Erklärungen für den Unterricht vor."
-          },
-          "practice": {
-            "title": "Übungen für Lernende",
-            "description": "Bereite Übungsaufgaben vor."
-          }
-        },
-        "parent": {
-          "title": "Wobei braucht dein Kind Unterstützung?",
-          "understand": {
-            "title": "Unterricht verstehen",
-            "description": "Lest gemeinsam einfache Erklärungen."
-          },
-          "practice": {
-            "title": "Übungsaufgaben",
-            "description": "Bereitet euch mit Übungen auf eine Prüfung vor."
-          }
+        "tryout": {
+          "title": "Probetest",
+          "description": "Prüfungen üben."
         }
       },
       "back": "Zurück",
       "continue": "Weiter",
-      "save-cta": "Lernen beginnen",
-      "invalid-selection": "Wähle deine Rolle und einen Lernschwerpunkt.",
-      "save-error": "Deine Auswahl konnte nicht gespeichert werden. Versuche es erneut.",
-      "unavailable-title": "Wähle vorerst eine andere Option",
-      "unavailable-helper": "Diese Auswahl ist noch nicht verfügbar.",
-      "auth-title": "Melde dich an, um zu beginnen",
-      "auth-helper": "Speichere deinen ersten Plan und lerne auf jedem Gerät weiter.",
-      "auth-cta": "Bei Nakafa anmelden"
+      "finish": "Fertig",
+      "required-error": "Wähle eine Antwort.",
+      "invalid-selection": "Beantworte jede Frage.",
+      "save-error": "Deine Antwort wurde nicht gespeichert. Versuch es erneut.",
+      "finish-error": "Das Onboarding wurde nicht abgeschlossen. Versuch es erneut."
     },
     "kind": {
-      "school-curriculum": "Lehrplan",
-      "assessment": "Übungsaufgaben",
-      "admission-exam": "Aufnahmeprüfung",
-      "custom-program": "Individuelles Programm",
-      "institution-program": "Institutionsprogramm"
-    },
-    "interest": {
-      "school-curriculum": {
-        "title": "Schulunterricht"
-      },
-      "exam-prep": {
-        "title": "Hochschulzulassung"
-      },
-      "assessment-prep": {
-        "title": "Übungsaufgaben"
-      }
-    },
-    "plan-item-status": {
-      "ready": "Bereit",
-      "done": "Erledigt",
-      "skipped": "Übersprungen"
+      "school-curriculum": "Lehrplan"
     }
   },
   "Comments": {

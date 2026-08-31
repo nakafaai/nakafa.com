@@ -176,13 +176,13 @@ export const themes = [
   },
 ] as const satisfies readonly ThemeDefinition[];
 
-/** Theme identifier accepted by the shared runtime and document bootstrap. */
+/** Theme identifier accepted by the shared next-themes runtime. */
 export type ThemeValue = (typeof themes)[number]["value"];
 
-/** Local-storage key shared by the document bootstrap and next-themes. */
+/** Local-storage key owned by the shared next-themes runtime. */
 export const THEME_STORAGE_KEY = "theme";
 
-/** First-visit theme shared by the localized document and next-themes. */
+/** First-visit theme applied by the shared next-themes runtime. */
 export const DEFAULT_THEME = "system" satisfies ThemeValue;
 
 /** Concrete class names managed on the document root. */
