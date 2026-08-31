@@ -1,5 +1,11 @@
 # @nakafa/cli
 
+## 0.2.0
+
+### Minor Changes
+
+- [#542](https://github.com/nakafaai/nakafa.com/pull/542) [`6173e19`](https://github.com/nakafaai/nakafa.com/commit/6173e19713ff9dcd4787b9a313781ad70eca44cd) Thanks [@nabilfatih](https://github.com/nabilfatih)! - Use the stable unversioned Nakafa REST API paths.
+
 ## 0.1.1
 
 ### Patch Changes
