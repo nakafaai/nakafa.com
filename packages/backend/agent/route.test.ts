@@ -1,87 +1,106 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
+  type AgentEdgeContract,
   NAKAFA_API_EDGE_CONTRACT,
   NAKAFA_EDGE_RELEASE_SHA_HEADER,
   NAKAFA_MCP_EDGE_CONTRACT,
   VERCEL_GIT_COMMIT_SHA_ENVIRONMENT,
 } from "@repo/backend/agent/edge";
 import {
-  createAgentEdgeRoute,
-  NAKAFA_API_ROUTE_SOURCE,
+  createAgentEdgeRoutes,
+  NAKAFA_API_EDGE_PATHS,
 } from "@repo/backend/agent/route";
 
-describe("agent Vercel route", () => {
-  it.each([
-    {
-      contract: NAKAFA_API_EDGE_CONTRACT,
-      destination: "$NAKAFA_CONVEX_SITE_URL/internal/agent/$1",
-      source: NAKAFA_API_ROUTE_SOURCE,
-      suffix: "/$1",
-    },
-    {
-      contract: NAKAFA_MCP_EDGE_CONTRACT,
-      destination: "$NAKAFA_CONVEX_SITE_URL/internal/mcp",
-      source: "^/mcp$",
-      suffix: "",
-    },
-  ])("protects $source before rewriting to Convex", (input) => {
+function expectedRoute(
+  contract: AgentEdgeContract,
+  source: string,
+  destination: string
+) {
+  return {
+    src: source,
+    dest: destination,
+    env: [contract.originEnvironment],
+    respectOriginCacheControl: false,
+    transforms: [
+      {
+        type: "request.headers",
+        op: "delete",
+        target: { key: "authorization" },
+      },
+      {
+        type: "request.headers",
+        op: "delete",
+        target: { key: "cookie" },
+      },
+      {
+        type: "request.headers",
+        op: "delete",
+        target: { key: contract.secretHeader },
+      },
+      {
+        type: "request.headers",
+        op: "set",
+        target: { key: contract.secretHeader },
+        args: `$${contract.secretEnvironment}`,
+        env: [contract.secretEnvironment],
+      },
+      {
+        type: "response.headers",
+        op: "set",
+        target: { key: NAKAFA_EDGE_RELEASE_SHA_HEADER },
+        args: `$${VERCEL_GIT_COMMIT_SHA_ENVIRONMENT}`,
+        env: [VERCEL_GIT_COMMIT_SHA_ENVIRONMENT],
+      },
+    ],
+  };
+}
+
+describe("agent Vercel routes", () => {
+  it("maps the versioned public API to separated protected capabilities", () => {
     expect(
-      createAgentEdgeRoute({
-        contract: input.contract,
-        source: input.source,
-        suffix: input.suffix,
+      createAgentEdgeRoutes({
+        contract: NAKAFA_API_EDGE_CONTRACT,
+        paths: NAKAFA_API_EDGE_PATHS,
       })
     ).toEqual({
       routes: [
-        {
-          src: input.source,
-          dest: input.destination,
-          env: [input.contract.originEnvironment],
-          respectOriginCacheControl: false,
-          transforms: [
-            {
-              type: "request.headers",
-              op: "delete",
-              target: { key: "authorization" },
-            },
-            {
-              type: "request.headers",
-              op: "delete",
-              target: { key: "cookie" },
-            },
-            {
-              type: "request.headers",
-              op: "delete",
-              target: { key: input.contract.secretHeader },
-            },
-            {
-              type: "request.headers",
-              op: "set",
-              target: { key: input.contract.secretHeader },
-              args: `$${input.contract.secretEnvironment}`,
-              env: [input.contract.secretEnvironment],
-            },
-            {
-              type: "response.headers",
-              op: "set",
-              target: { key: NAKAFA_EDGE_RELEASE_SHA_HEADER },
-              args: `$${VERCEL_GIT_COMMIT_SHA_ENVIRONMENT}`,
-              env: [VERCEL_GIT_COMMIT_SHA_ENVIRONMENT],
-            },
-          ],
-        },
+        expectedRoute(
+          NAKAFA_API_EDGE_CONTRACT,
+          "^/openapi\\.json$",
+          "$NAKAFA_CONVEX_SITE_URL/internal/agent/openapi"
+        ),
+        expectedRoute(
+          NAKAFA_API_EDGE_CONTRACT,
+          "^/v1$",
+          "$NAKAFA_CONVEX_SITE_URL/internal/agent/runtime"
+        ),
+        expectedRoute(
+          NAKAFA_API_EDGE_CONTRACT,
+          "^/v1/(.*)$",
+          "$NAKAFA_CONVEX_SITE_URL/internal/agent/runtime/$1"
+        ),
+      ],
+    });
+  });
+
+  it("maps the MCP endpoint to its protected transport", () => {
+    const paths = [{ source: "^/mcp$", suffix: "" }] as const;
+
+    expect(
+      createAgentEdgeRoutes({ contract: NAKAFA_MCP_EDGE_CONTRACT, paths })
+    ).toEqual({
+      routes: [
+        expectedRoute(
+          NAKAFA_MCP_EDGE_CONTRACT,
+          "^/mcp$",
+          "$NAKAFA_CONVEX_SITE_URL/internal/mcp"
+        ),
       ],
     });
   });
 
   it.each([
-    "/",
     "/openapi.json",
-    "/health",
-    "/search",
-    "/content",
-    "/taxonomy",
-    "/quran/1",
     "/v1",
     "/v1/health",
     "/v1/search",
@@ -91,17 +110,28 @@ describe("agent Vercel route", () => {
     "/v1/taxonomy",
     "/v1/quran/1",
   ])("forwards declared API route %s", (path) => {
-    const source = new RegExp(NAKAFA_API_ROUTE_SOURCE, "u");
-
-    expect(source.test(path)).toBe(true);
+    expect(
+      NAKAFA_API_EDGE_PATHS.some(({ source }) =>
+        new RegExp(source, "u").test(path)
+      )
+    ).toBe(true);
   });
 
-  it.each(["/robots.txt", "/missing"])(
-    "leaves undeclared route %s outside the API bridge",
-    (path) => {
-      const source = new RegExp(NAKAFA_API_ROUTE_SOURCE, "u");
-
-      expect(source.test(path)).toBe(false);
-    }
-  );
+  it.each([
+    "/",
+    "/health",
+    "/search",
+    "/content",
+    "/taxonomy",
+    "/quran/1",
+    "/robots.txt",
+    "/missing",
+    "/v2",
+  ])("leaves non-contract route %s outside the API bridge", (path) => {
+    expect(
+      NAKAFA_API_EDGE_PATHS.some(({ source }) =>
+        new RegExp(source, "u").test(path)
+      )
+    ).toBe(false);
+  });
 });
