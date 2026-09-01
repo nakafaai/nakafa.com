@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   applyOptimisticTryoutResponse,
   assignCategorySelection,
-  correctTryoutResponseSelection,
   toggleMultipleChoiceSelection,
 } from "@/components/tryout/runtime/response/state";
 import type {
@@ -79,56 +78,6 @@ describe("try-out response state", () => {
         "x"
       )
     ).toBeNull();
-  });
-
-  it("derives answer-key selections for every response kind", () => {
-    expect(
-      correctTryoutResponseSelection({ kind: "single-choice", options: [] })
-    ).toBeNull();
-    expect(
-      correctTryoutResponseSelection({ kind: "multiple-choice", options: [] })
-    ).toBeNull();
-    expect(
-      correctTryoutResponseSelection({
-        kind: "single-choice",
-        options: [
-          keyedOption("option-1", 1, false),
-          keyedOption("option-2", 2, true),
-        ],
-      })
-    ).toEqual({ kind: "single-choice", optionKey: "option-2" });
-    expect(
-      correctTryoutResponseSelection({
-        kind: "multiple-choice",
-        options: [
-          keyedOption("option-1", 1, true),
-          keyedOption("option-2", 2, false),
-          keyedOption("option-3", 3, true),
-        ],
-      })
-    ).toEqual({
-      kind: "multiple-choice",
-      optionKeys: ["option-1", "option-3"],
-    });
-    expect(
-      correctTryoutResponseSelection({
-        categories: [
-          responseCategory("category-1", 1),
-          responseCategory("category-2", 2),
-        ],
-        kind: "category",
-        statements: [
-          keyedStatement("statement-1", 1, "category-2"),
-          keyedStatement("statement-2", 2, "category-1"),
-        ],
-      })
-    ).toEqual({
-      assignments: [
-        { categoryKey: "category-2", statementKey: "statement-1" },
-        { categoryKey: "category-1", statementKey: "statement-2" },
-      ],
-      kind: "category",
-    });
   });
 
   it("counts only complete optimistic responses and supports clearing", () => {
@@ -322,21 +271,6 @@ function responseStatement(statementKey: string, order: number) {
     label: statementKey,
     order,
     statementKey,
-  };
-}
-
-function keyedOption(optionKey: string, order: number, isCorrect: boolean) {
-  return { ...responseOption(optionKey, order), isCorrect };
-}
-
-function keyedStatement(
-  statementKey: string,
-  order: number,
-  correctCategoryKey: string
-) {
-  return {
-    ...responseStatement(statementKey, order),
-    correctCategoryKey,
   };
 }
 

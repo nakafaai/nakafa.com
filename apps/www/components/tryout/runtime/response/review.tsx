@@ -1,10 +1,7 @@
-import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import { MarkdownContent } from "@repo/design-system/components/markdown/content";
 import { TryoutReviewedChoice } from "@/components/tryout/runtime/choice/surface.client";
 import type { TryoutResponseSelection } from "@/components/tryout/runtime/response/state";
 import type { TryoutRuntimeResponseSpec } from "@/components/tryout/runtime/types";
-
-type ReviewResponseSpec = QuestionResponse | TryoutRuntimeResponseSpec;
 
 /** Renders one immutable response with answer-key review styling. */
 export function TryoutReviewedResponse({
@@ -13,7 +10,7 @@ export function TryoutReviewedResponse({
   selection,
 }: {
   readonly questionOrder: number;
-  readonly responseSpec: ReviewResponseSpec;
+  readonly responseSpec: TryoutRuntimeResponseSpec;
   readonly selection: TryoutResponseSelection | null;
 }) {
   if (responseSpec.kind === "category") {
@@ -64,7 +61,10 @@ function ReviewedCategoryResponse({
   selection,
 }: {
   readonly questionOrder: number;
-  readonly responseSpec: Extract<ReviewResponseSpec, { kind: "category" }>;
+  readonly responseSpec: Extract<
+    TryoutRuntimeResponseSpec,
+    { kind: "category" }
+  >;
   readonly selection: TryoutResponseSelection | null;
 }) {
   const assigned = new Map(

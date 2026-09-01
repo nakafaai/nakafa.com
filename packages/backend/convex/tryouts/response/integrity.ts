@@ -230,14 +230,10 @@ export const indexTryoutResponses = Effect.fn(
         "Try-out placement has more than one response."
       );
     }
-    if (
-      response.selection !== undefined &&
-      (response.isComplete === undefined ||
-        response.selectedOptionId !== undefined)
-    ) {
+    if (response.selection !== undefined && response.isComplete === undefined) {
       return yield* responseIntegrity(
         "TRYOUT_RESPONSE_SELECTION_MISMATCH",
-        "Try-out response has an ambiguous learner selection."
+        "Try-out response has an incomplete canonical learner selection."
       );
     }
     const responseSpec = yield* resolvePlacementResponseSpec(

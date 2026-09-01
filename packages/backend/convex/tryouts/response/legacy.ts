@@ -6,12 +6,9 @@ import type {
 import { validateTryoutResponseSpec } from "@repo/backend/convex/tryouts/response/validation";
 import { Effect, Schema } from "effect";
 
-interface LegacyTryoutChoice {
-  readonly isCorrect: boolean;
-  readonly label: string;
-  readonly optionKey: string;
-  readonly order: number;
-}
+type LegacyTryoutChoice = NonNullable<
+  Doc<"tryoutAttemptPlacements">["choiceSnapshots"]
+>[number];
 
 /** Temporary malformed legacy response detected before terminal migration. */
 export class LegacyTryoutResponseError extends Schema.TaggedError<LegacyTryoutResponseError>()(
@@ -24,7 +21,22 @@ export const resolvePlacementResponseSpec = Effect.fn(
   "tryouts.response.resolvePlacementSpec"
 )(function* (placement: Doc<"tryoutAttemptPlacements">) {
   if (placement.responseSpec) {
-    return yield* validateTryoutResponseSpec(placement.responseSpec);
+    const responseSpec = yield* validateTryoutResponseSpec(
+      placement.responseSpec
+    );
+    if (!placement.choiceSnapshots) {
+      return responseSpec;
+    }
+    const predecessor = yield* responseSpecFromLegacyChoices(
+      placement.choiceSnapshots
+    );
+    if (!hasEqualSingleChoiceResponse(responseSpec, predecessor)) {
+      return yield* new LegacyTryoutResponseError({
+        message:
+          "Try-out placement predecessor and canonical definitions differ.",
+      });
+    }
+    return responseSpec;
   }
   if (!placement.choiceSnapshots) {
     return yield* new LegacyTryoutResponseError({
@@ -39,6 +51,16 @@ export const resolveStoredResponseSelection = Effect.fn(
   "tryouts.response.resolveStoredSelection"
 )(function* (response: Doc<"tryoutResponses">) {
   if (response.selection) {
+    if (
+      response.selectedOptionId !== undefined &&
+      (response.selection.kind !== "single-choice" ||
+        response.selection.optionKey !== response.selectedOptionId)
+    ) {
+      return yield* new LegacyTryoutResponseError({
+        message:
+          "Try-out response predecessor and canonical selections differ.",
+      });
+    }
     return response.selection;
   }
   if (response.selectedOptionId !== undefined) {
@@ -78,3 +100,25 @@ export const responseSpecFromLegacyChoices = Effect.fn(
     )
   );
 });
+
+/** Proves the retained single-choice predecessor matches its replacement. */
+function hasEqualSingleChoiceResponse(
+  responseSpec: TryoutResponseSpec,
+  predecessor: TryoutResponseSpec
+) {
+  return (
+    responseSpec.kind === "single-choice" &&
+    predecessor.kind === "single-choice" &&
+    responseSpec.options.length === predecessor.options.length &&
+    responseSpec.options.every((option, index) => {
+      const retained = predecessor.options[index];
+      return (
+        retained !== undefined &&
+        option.isCorrect === retained.isCorrect &&
+        option.label === retained.label &&
+        option.optionKey === retained.optionKey &&
+        option.order === retained.order
+      );
+    })
+  );
+}

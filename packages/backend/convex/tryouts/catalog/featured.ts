@@ -44,14 +44,7 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
       trackKey: section.trackKey,
     });
     const placement = source.placements[0]?.row;
-    if (
-      !(
-        placement &&
-        placement.response.kind === "single-choice" &&
-        catalog.activeReleaseId &&
-        catalog.bundleHash
-      )
-    ) {
+    if (!(placement && catalog.activeReleaseId && catalog.bundleHash)) {
       return yield* missingFeaturedTryout("question");
     }
 
@@ -70,7 +63,7 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
     };
 
     return {
-      choices: [...placement.response.options],
+      choices: [...placement.choices],
       question,
     };
   }

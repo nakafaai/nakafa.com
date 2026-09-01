@@ -45,7 +45,6 @@ import {
   TEST_RELEASE_ID,
 } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
-import { makeTestQuestionResponse } from "@repo/backend/test/tryout/response";
 import { Effect, Schema, Stream } from "effect";
 
 const artifactHash = Sha256HashSchema.make(`sha256:${"8".repeat(64)}`);
@@ -121,7 +120,20 @@ export function makeTryoutPlacementRow(
     answerArtifactLocale: appLocale,
     answerContentKey:
       "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/answer",
-    languagePolicy: { kind: "app-locale" },
+    choices: [
+      {
+        isCorrect: true,
+        label: technicalCopy[appLocale].choice,
+        optionKey: "option-1",
+        order: 1,
+      },
+      {
+        isCorrect: false,
+        label: `${technicalCopy[appLocale].choice} 2`,
+        optionKey: "option-2",
+        order: 2,
+      },
+    ],
     contentHash: TryoutContentHashSchema.make(
       technicalCopy[appLocale].contentHashCharacter.repeat(64)
     ),
@@ -137,7 +149,6 @@ export function makeTryoutPlacementRow(
     questionSourcePath:
       "packages/corpus/question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1",
     rendererDomain: "snbt-quant",
-    response: makeTestQuestionResponse(technicalCopy[appLocale].choice),
     scope: "server",
     sectionKey: "quantitative-knowledge",
     setKey: "set-1",

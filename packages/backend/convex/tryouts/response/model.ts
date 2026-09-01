@@ -7,12 +7,9 @@ const responseOptionValidator = v.object({
   order: v.number(),
 });
 
-const runtimeResponseOptionValidator = v.object({
-  isCorrect: v.optional(v.boolean()),
-  label: v.string(),
-  optionKey: v.string(),
-  order: v.number(),
-});
+const runtimeResponseOptionValidator = responseOptionValidator
+  .omit("isCorrect")
+  .extend({ isCorrect: v.optional(v.boolean()) });
 
 const responseCategoryValidator = v.object({
   categoryKey: v.string(),
@@ -27,12 +24,9 @@ const responseStatementValidator = v.object({
   statementKey: v.string(),
 });
 
-const runtimeResponseStatementValidator = v.object({
-  correctCategoryKey: v.optional(v.string()),
-  label: v.string(),
-  order: v.number(),
-  statementKey: v.string(),
-});
+const runtimeResponseStatementValidator = responseStatementValidator
+  .omit("correctCategoryKey")
+  .extend({ correctCategoryKey: v.optional(v.string()) });
 
 /** Complete immutable response definition frozen into one attempt placement. */
 export const tryoutResponseSpecValidator = v.union(

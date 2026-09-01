@@ -11,6 +11,7 @@ import {
   resolvePlacementResponseSpec,
   resolveStoredResponseSelection,
 } from "@repo/backend/convex/tryouts/response/legacy";
+import { loadPlacementSectionAttempt } from "@repo/backend/convex/tryouts/runtime/sectionAttempt";
 import { type DefaultFunctionArgs, makeFunctionReference } from "convex/server";
 import { v } from "convex/values";
 import { Effect, Schema } from "effect";
@@ -19,9 +20,11 @@ const PAGE_ROWS = 50;
 const PAGE_BYTES = 4 * 1024 * 1024;
 
 type MigrationPhase = "placements" | "responses";
+type MigrationMode = "contract" | "hydrate";
 
 interface MigrationPageArgs extends DefaultFunctionArgs {
   readonly cursor: string | null;
+  readonly mode: MigrationMode;
   readonly phase: MigrationPhase;
 }
 
@@ -55,7 +58,17 @@ export const start = internalMutation({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
-    await runConvexProgram(schedulePage(ctx, "placements", null));
+    await runConvexProgram(schedulePage(ctx, "hydrate", "placements", null));
+    return null;
+  },
+});
+
+/** Starts removal only after callers and stored rows use canonical fields. */
+export const contract = internalMutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    await runConvexProgram(schedulePage(ctx, "contract", "placements", null));
     return null;
   },
 });
@@ -64,6 +77,7 @@ export const start = internalMutation({
 export const page = internalMutation({
   args: {
     cursor: v.union(v.string(), v.null()),
+    mode: v.union(v.literal("contract"), v.literal("hydrate")),
     phase: v.union(v.literal("placements"), v.literal("responses")),
   },
   returns: v.null(),
@@ -80,28 +94,29 @@ export const migratePage = Effect.fn("tryouts.response.migratePage")(function* (
 ) {
   const result =
     args.phase === "placements"
-      ? yield* migratePlacementPage(ctx, args.cursor)
-      : yield* migrateResponsePage(ctx, args.cursor);
+      ? yield* migratePlacementPage(ctx, args.cursor, args.mode)
+      : yield* migrateResponsePage(ctx, args.cursor, args.mode);
 
   yield* Effect.logInfo("Migrated try-out response contract page", {
     isDone: result.isDone,
     migrated: result.migrated,
+    mode: args.mode,
     phase: args.phase,
     visited: result.visited,
   });
 
   if (!result.isDone) {
-    yield* schedulePage(ctx, args.phase, result.continueCursor);
+    yield* schedulePage(ctx, args.mode, args.phase, result.continueCursor);
     return;
   }
   if (args.phase === "placements") {
-    yield* schedulePage(ctx, "responses", null);
+    yield* schedulePage(ctx, args.mode, "responses", null);
   }
 });
 
 /** Validates and freezes every predecessor choice snapshot in one page. */
 const migratePlacementPage = Effect.fn("tryouts.response.migratePlacementPage")(
-  function* (ctx: MutationCtx, cursor: string | null) {
+  function* (ctx: MutationCtx, cursor: string | null, mode: MigrationMode) {
     const result = yield* migrationPromise("load placement page", () =>
       ctx.db.query("tryoutAttemptPlacements").paginate({
         cursor,
@@ -111,7 +126,7 @@ const migratePlacementPage = Effect.fn("tryouts.response.migratePlacementPage")(
       })
     );
     const migrated = yield* Effect.forEach(result.page, (placement) =>
-      migratePlacement(ctx, placement)
+      migratePlacement(ctx, placement, mode)
     );
     return pageResult(result, migrated);
   }
@@ -119,15 +134,33 @@ const migratePlacementPage = Effect.fn("tryouts.response.migratePlacementPage")(
 
 /** Adds the canonical response definition while retaining the predecessor. */
 const migratePlacement = Effect.fn("tryouts.response.migratePlacement")(
-  function* (ctx: MutationCtx, placement: Doc<"tryoutAttemptPlacements">) {
+  function* (
+    ctx: MutationCtx,
+    placement: Doc<"tryoutAttemptPlacements">,
+    mode: MigrationMode
+  ) {
     const responseSpec = yield* resolvePlacementResponseSpec(placement).pipe(
       Effect.mapError((cause) => migrationError(cause.message, cause))
     );
-    if (placement.responseSpec) {
+    if (mode === "hydrate") {
+      if (placement.responseSpec) {
+        return false;
+      }
+      yield* migrationPromise("write placement response definition", () =>
+        ctx.db.patch(placement._id, { responseSpec })
+      );
+      return true;
+    }
+    if (!placement.responseSpec) {
+      return yield* migrationError(
+        "Try-out placement has not completed response hydration."
+      );
+    }
+    if (!placement.choiceSnapshots) {
       return false;
     }
-    yield* migrationPromise("write placement response definition", () =>
-      ctx.db.patch(placement._id, { responseSpec })
+    yield* migrationPromise("remove placement choice predecessor", () =>
+      ctx.db.patch(placement._id, { choiceSnapshots: undefined })
     );
     return true;
   }
@@ -135,7 +168,7 @@ const migratePlacement = Effect.fn("tryouts.response.migratePlacement")(
 
 /** Validates and converts every predecessor learner selection in one page. */
 const migrateResponsePage = Effect.fn("tryouts.response.migrateResponsePage")(
-  function* (ctx: MutationCtx, cursor: string | null) {
+  function* (ctx: MutationCtx, cursor: string | null, mode: MigrationMode) {
     const result = yield* migrationPromise("load learner response page", () =>
       ctx.db.query("tryoutResponses").paginate({
         cursor,
@@ -145,7 +178,7 @@ const migrateResponsePage = Effect.fn("tryouts.response.migrateResponsePage")(
       })
     );
     const migrated = yield* Effect.forEach(result.page, (response) =>
-      migrateResponse(ctx, response)
+      migrateResponse(ctx, response, mode)
     );
     return pageResult(result, migrated);
   }
@@ -153,13 +186,30 @@ const migrateResponsePage = Effect.fn("tryouts.response.migrateResponsePage")(
 
 /** Adds one canonical learner selection only after historical score proof. */
 const migrateResponse = Effect.fn("tryouts.response.migrateResponse")(
-  function* (ctx: MutationCtx, response: Doc<"tryoutResponses">) {
+  function* (
+    ctx: MutationCtx,
+    response: Doc<"tryoutResponses">,
+    mode: MigrationMode
+  ) {
     const placement = yield* migrationPromise("load response placement", () =>
       ctx.db.get(response.placementId)
     );
     if (!placement) {
       return yield* migrationError(
         "Try-out response references a missing placement."
+      );
+    }
+    if (placement.tryoutAttemptId !== response.tryoutAttemptId) {
+      return yield* migrationError(
+        "Try-out response and placement belong to different attempts."
+      );
+    }
+    const section = yield* loadPlacementSectionAttempt(ctx, placement).pipe(
+      Effect.mapError((cause) => migrationError(cause.message, cause))
+    );
+    if (!section || section._id !== response.tryoutSectionAttemptId) {
+      return yield* migrationError(
+        "Try-out response and placement belong to different sections."
       );
     }
     const responseSpec = yield* resolvePlacementResponseSpec(placement).pipe(
@@ -181,13 +231,29 @@ const migrateResponse = Effect.fn("tryouts.response.migrateResponse")(
         "Try-out response differs from its frozen answer definition."
       );
     }
-    if (response.selection && response.isComplete !== undefined) {
+    if (mode === "hydrate") {
+      if (response.selection && response.isComplete !== undefined) {
+        return false;
+      }
+      yield* migrationPromise("write learner response selection", () =>
+        ctx.db.patch(response._id, {
+          isComplete: evaluated.isComplete,
+          selection: evaluated.selection,
+        })
+      );
+      return true;
+    }
+    if (!(response.selection && response.isComplete !== undefined)) {
+      return yield* migrationError(
+        "Try-out response has not completed canonical hydration."
+      );
+    }
+    if (response.selectedOptionId === undefined) {
       return false;
     }
-    yield* migrationPromise("write learner response selection", () =>
+    yield* migrationPromise("remove learner response predecessor", () =>
       ctx.db.patch(response._id, {
-        isComplete: evaluated.isComplete,
-        selection: evaluated.selection,
+        selectedOptionId: undefined,
       })
     );
     return true;
@@ -196,9 +262,14 @@ const migrateResponse = Effect.fn("tryouts.response.migrateResponse")(
 
 /** Schedules one idempotent page of migration work. */
 const schedulePage = Effect.fn("tryouts.response.scheduleMigrationPage")(
-  (ctx: MutationCtx, phase: MigrationPhase, cursor: string | null) =>
+  (
+    ctx: MutationCtx,
+    mode: MigrationMode,
+    phase: MigrationPhase,
+    cursor: string | null
+  ) =>
     migrationPromise("schedule migration page", () =>
-      ctx.scheduler.runAfter(0, pageReference, { cursor, phase })
+      ctx.scheduler.runAfter(0, pageReference, { cursor, mode, phase })
     )
 );
 

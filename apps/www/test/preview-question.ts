@@ -53,7 +53,6 @@ export const questionPreviewTarget = Schema.decodeSync(
     countryKey: "indonesia",
     deliveryLanguage: "en",
     examKey: "snbt",
-    languagePolicy: { kind: "app-locale" },
     questionArtifactLocale: "en",
     questionContentKey: `${questionKey}/question`,
     questionOrder: 1,
@@ -162,34 +161,21 @@ export const questionAnswerDocument = Schema.decodeSync(
 
 const metadata = {
   authors: [{ name: "Test Author" }],
-  datePublished: "2026-07-24",
+  date: "2026-07-24",
   title: "Test Preview",
 };
 
-/** Exact prompt projection with one frozen single-choice response. */
+/** Exact prompt projection with one correct authored choice. */
 export const questionPromptProjection = Schema.decodeSync(
   QuestionPromptProjectionSchema
 )({
   ...promptIdentity,
+  choices: [
+    { label: "Correct", value: true },
+    { label: "Incorrect", value: false },
+  ],
   kind: "question-body",
   metadata,
-  response: {
-    kind: "single-choice",
-    options: [
-      {
-        isCorrect: true,
-        label: "Correct",
-        optionKey: "option-1",
-        order: 1,
-      },
-      {
-        isCorrect: false,
-        label: "Incorrect",
-        optionKey: "option-2",
-        order: 2,
-      },
-    ],
-  },
 });
 
 /** Exact answer projection paired with the selected prompt. */

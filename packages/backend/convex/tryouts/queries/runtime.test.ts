@@ -71,7 +71,7 @@ describe("tryouts/queries/runtime", () => {
 
     const exact = await authed.query(
       api.tryouts.queries.runtime.getSetAttemptState,
-      { attemptId: started.attemptId }
+      { attemptId: started.attemptId, responseContract: "structured" }
     );
     expect(exact).toMatchObject({
       attempt: {
@@ -121,10 +121,14 @@ describe("tryouts/queries/runtime", () => {
       attemptId: started.attemptId,
       sectionKey: TRYOUT_START_SECTION,
     };
+    const structuredArgs = {
+      ...args,
+      responseContract: "structured" as const,
+    };
 
     const initial = await authed.query(
       api.tryouts.queries.runtime.getSectionAttemptState,
-      args
+      structuredArgs
     );
     expect(initial).toMatchObject({
       attempt: {
@@ -133,10 +137,16 @@ describe("tryouts/queries/runtime", () => {
       },
       runtime: { questions: expect.any(Array) },
     });
+    await expect(
+      authed.query(api.tryouts.queries.runtime.getSectionAttemptState, args)
+    ).resolves.toEqual(initial);
 
     await t.mutation(activateReusedTryoutStartPath);
     await expect(
-      authed.query(api.tryouts.queries.runtime.getSectionAttemptState, args)
+      authed.query(
+        api.tryouts.queries.runtime.getSectionAttemptState,
+        structuredArgs
+      )
     ).resolves.toEqual(initial);
     await expect(
       t.query(api.tryouts.queries.runtime.getSectionAttemptState, args)

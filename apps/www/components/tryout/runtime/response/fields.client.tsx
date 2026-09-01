@@ -1,10 +1,9 @@
 "use client";
 
-import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import { Response } from "@repo/design-system/components/ai/response";
 import { RadioGroup } from "@repo/design-system/components/ui/radio-group";
+import { useTranslations } from "next-intl";
 import {
-  TryoutSelectableChoice,
   TryoutSelectableMultipleChoice,
   TryoutSelectableRadioOption,
 } from "@/components/tryout/runtime/choice/surface.client";
@@ -15,13 +14,11 @@ import {
 } from "@/components/tryout/runtime/response/state";
 import type { TryoutRuntimeResponseSpec } from "@/components/tryout/runtime/types";
 
-type RenderableResponseSpec = QuestionResponse | TryoutRuntimeResponseSpec;
-
 interface TryoutResponseFieldsValue {
   readonly id: string;
   readonly locked: boolean;
   readonly onChange: (selection: TryoutResponseSelection | null) => void;
-  readonly responseSpec: RenderableResponseSpec;
+  readonly responseSpec: TryoutRuntimeResponseSpec;
   readonly selection: TryoutResponseSelection | null;
 }
 
@@ -31,45 +28,71 @@ export function TryoutResponseFields({
 }: {
   value: TryoutResponseFieldsValue;
 }) {
+  const t = useTranslations("Exercises");
+  const answerLabel = t("answer");
   if (value.responseSpec.kind === "single-choice") {
-    return <SingleChoiceFields value={value} />;
+    return <SingleChoiceFields answerLabel={answerLabel} value={value} />;
   }
   if (value.responseSpec.kind === "multiple-choice") {
-    return <MultipleChoiceFields value={value} />;
+    return <MultipleChoiceFields answerLabel={answerLabel} value={value} />;
   }
   return <CategoryFields value={value} />;
 }
 
-function SingleChoiceFields({ value }: { value: TryoutResponseFieldsValue }) {
+function SingleChoiceFields({
+  answerLabel,
+  value,
+}: {
+  answerLabel: string;
+  value: TryoutResponseFieldsValue;
+}) {
   const { id, locked, onChange, responseSpec, selection } = value;
   if (responseSpec.kind !== "single-choice") {
     return null;
   }
   const selected =
     selection?.kind === "single-choice" ? selection.optionKey : "";
+  const labelId = `${id}-answer-label`;
   return (
-    <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-      {responseSpec.options.map((option) => (
-        <TryoutSelectableChoice
-          checked={selected === option.optionKey}
-          disabled={locked}
-          id={`${id}-${option.optionKey}`}
-          key={option.optionKey}
-          label={
-            <ResponseLabel id={`${id}-${option.optionKey}`}>
-              {option.label}
-            </ResponseLabel>
-          }
-          onSelect={() =>
-            onChange({ kind: "single-choice", optionKey: option.optionKey })
-          }
-        />
-      ))}
-    </div>
+    <fieldset className="min-w-0 border-0 p-0">
+      <legend className="sr-only" id={labelId}>
+        {answerLabel}
+      </legend>
+      <RadioGroup
+        aria-labelledby={labelId}
+        className="grid grid-cols-1 gap-2 md:grid-cols-2"
+        disabled={locked}
+        onValueChange={(optionKey) =>
+          onChange({ kind: "single-choice", optionKey })
+        }
+        value={selected}
+      >
+        {responseSpec.options.map((option) => (
+          <TryoutSelectableRadioOption
+            checked={selected === option.optionKey}
+            disabled={locked}
+            id={`${id}-${option.optionKey}`}
+            key={option.optionKey}
+            label={
+              <ResponseLabel id={`${id}-${option.optionKey}`}>
+                {option.label}
+              </ResponseLabel>
+            }
+            value={option.optionKey}
+          />
+        ))}
+      </RadioGroup>
+    </fieldset>
   );
 }
 
-function MultipleChoiceFields({ value }: { value: TryoutResponseFieldsValue }) {
+function MultipleChoiceFields({
+  answerLabel,
+  value,
+}: {
+  answerLabel: string;
+  value: TryoutResponseFieldsValue;
+}) {
   const { id, locked, onChange, responseSpec, selection } = value;
   if (responseSpec.kind !== "multiple-choice") {
     return null;
@@ -78,7 +101,8 @@ function MultipleChoiceFields({ value }: { value: TryoutResponseFieldsValue }) {
     selection?.kind === "multiple-choice" ? selection.optionKeys : []
   );
   return (
-    <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+    <fieldset className="grid min-w-0 grid-cols-1 gap-2 border-0 p-0 md:grid-cols-2">
+      <legend className="sr-only">{answerLabel}</legend>
       {responseSpec.options.map((option) => (
         <TryoutSelectableMultipleChoice
           checked={selected.has(option.optionKey)}
@@ -100,7 +124,7 @@ function MultipleChoiceFields({ value }: { value: TryoutResponseFieldsValue }) {
           }
         />
       ))}
-    </div>
+    </fieldset>
   );
 }
 
@@ -119,46 +143,53 @@ function CategoryFields({ value }: { value: TryoutResponseFieldsValue }) {
   );
   return (
     <div className="space-y-6">
-      {responseSpec.statements.map((statement) => (
-        <section className="space-y-3" key={statement.statementKey}>
-          <ResponseLabel id={`${id}-${statement.statementKey}`}>
-            {statement.label}
-          </ResponseLabel>
-          <RadioGroup
-            className="grid grid-cols-1 gap-2 md:grid-cols-2"
-            disabled={locked}
-            onValueChange={(categoryKey) =>
-              onChange(
-                assignCategorySelection(
-                  { responseSpec, selection },
-                  statement.statementKey,
-                  categoryKey
+      {responseSpec.statements.map((statement) => {
+        const statementLabelId = `${id}-${statement.statementKey}-label`;
+        return (
+          <section className="space-y-3" key={statement.statementKey}>
+            <div id={statementLabelId}>
+              <ResponseLabel id={`${id}-${statement.statementKey}`}>
+                {statement.label}
+              </ResponseLabel>
+            </div>
+            <RadioGroup
+              aria-labelledby={statementLabelId}
+              className="grid grid-cols-1 gap-2 md:grid-cols-2"
+              disabled={locked}
+              onValueChange={(categoryKey) =>
+                onChange(
+                  assignCategorySelection(
+                    { responseSpec, selection },
+                    statement.statementKey,
+                    categoryKey
+                  )
                 )
-              )
-            }
-            value={assigned.get(statement.statementKey) ?? ""}
-          >
-            {responseSpec.categories.map((category) => (
-              <TryoutSelectableRadioOption
-                checked={
-                  assigned.get(statement.statementKey) === category.categoryKey
-                }
-                disabled={locked}
-                id={`${id}-${statement.statementKey}-${category.categoryKey}`}
-                key={category.categoryKey}
-                label={
-                  <ResponseLabel
-                    id={`${id}-${statement.statementKey}-${category.categoryKey}`}
-                  >
-                    {category.label}
-                  </ResponseLabel>
-                }
-                value={category.categoryKey}
-              />
-            ))}
-          </RadioGroup>
-        </section>
-      ))}
+              }
+              value={assigned.get(statement.statementKey) ?? ""}
+            >
+              {responseSpec.categories.map((category) => (
+                <TryoutSelectableRadioOption
+                  checked={
+                    assigned.get(statement.statementKey) ===
+                    category.categoryKey
+                  }
+                  disabled={locked}
+                  id={`${id}-${statement.statementKey}-${category.categoryKey}`}
+                  key={category.categoryKey}
+                  label={
+                    <ResponseLabel
+                      id={`${id}-${statement.statementKey}-${category.categoryKey}`}
+                    >
+                      {category.label}
+                    </ResponseLabel>
+                  }
+                  value={category.categoryKey}
+                />
+              ))}
+            </RadioGroup>
+          </section>
+        );
+      })}
     </div>
   );
 }

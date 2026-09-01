@@ -188,13 +188,10 @@ export async function seedTryoutContentAccessState(
   });
 
   const { row: placementRow, rowHash: placementRowHash } = signedPlacement;
-  if (placementRow.response.kind !== "single-choice") {
-    throw new Error("Expected the legacy runtime fixture to be single-choice.");
-  }
   const placementId = await ctx.db.insert("tryoutAttemptPlacements", {
     answerArtifactHash: placementRow.answerArtifactHash,
     answerContentKey: placementRow.answerContentKey,
-    choiceSnapshots: [...placementRow.response.options],
+    choiceSnapshots: [...placementRow.choices],
     contentHash: placementRow.contentHash,
     placementIdentity: tryoutPlacementIdentity(placementRow),
     placementRowHash,

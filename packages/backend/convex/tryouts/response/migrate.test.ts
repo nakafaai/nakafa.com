@@ -17,8 +17,12 @@ import { type DefaultFunctionArgs, makeFunctionReference } from "convex/server";
 const start = makeFunctionReference<"mutation", Record<string, never>, null>(
   "tryouts/response/migrate:start"
 );
+const contract = makeFunctionReference<"mutation", Record<string, never>, null>(
+  "tryouts/response/migrate:contract"
+);
 interface MigrationPageArgs extends DefaultFunctionArgs {
   cursor: string | null;
+  mode: "contract" | "hydrate";
   phase: "placements" | "responses";
 }
 const page = makeFunctionReference<"mutation", MigrationPageArgs, null>(
@@ -80,6 +84,109 @@ describe("tryouts/response/migrate", () => {
     expect(repeated.responses).toEqual(migrated.responses);
   });
 
+  it("contracts equivalent predecessor fields idempotently", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await seedMigrationFixture(t, 1);
+
+    await t.mutation(start, {});
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    await t.mutation(contract, {});
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+    const contracted = await readMigrationState(t);
+    expect(
+      contracted.placements.every(
+        ({ choiceSnapshots, responseSpec }) =>
+          choiceSnapshots === undefined && responseSpec !== undefined
+      )
+    ).toBe(true);
+    expect(
+      contracted.responses.every(
+        ({ isComplete, selectedOptionId, selection }) =>
+          isComplete !== undefined &&
+          selectedOptionId === undefined &&
+          selection !== undefined
+      )
+    ).toBe(true);
+
+    await t.mutation(contract, {});
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    const repeated = await readMigrationState(t);
+    expect(repeated.placements).toEqual(contracted.placements);
+    expect(repeated.responses).toEqual(contracted.responses);
+  });
+
+  it("rejects a placement whose predecessor and replacement differ", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await seedMigrationFixture(t, 1);
+    await t.mutation(async (ctx) => {
+      const placements = await ctx.db
+        .query("tryoutAttemptPlacements")
+        .collect();
+      const placement = placements.find(
+        ({ choiceSnapshots, responseSpec }) =>
+          choiceSnapshots !== undefined &&
+          responseSpec?.kind === "single-choice"
+      );
+      if (placement?.responseSpec?.kind !== "single-choice") {
+        throw new Error("Expected one dual-written placement fixture.");
+      }
+      const [first, ...remaining] = placement.responseSpec.options;
+      if (!first) {
+        throw new Error("Expected one response option.");
+      }
+      await ctx.db.patch(placement._id, {
+        responseSpec: {
+          ...placement.responseSpec,
+          options: [
+            { ...first, label: `${first.label} changed` },
+            ...remaining,
+          ],
+        },
+      });
+    });
+
+    await expect(
+      t.mutation(page, {
+        cursor: null,
+        mode: "contract",
+        phase: "placements",
+      })
+    ).rejects.toMatchObject({
+      data: { code: "TRYOUT_RESPONSE_MIGRATION_INVALID" },
+    });
+  });
+
+  it("rejects a response whose predecessor and replacement differ", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await seedMigrationFixture(t, 1);
+    await t.mutation(start, {});
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    await t.mutation(async (ctx) => {
+      const responses = await ctx.db.query("tryoutResponses").collect();
+      const response = responses.find(
+        ({ selectedOptionId, selection }) =>
+          selectedOptionId !== undefined && selection?.kind === "single-choice"
+      );
+      if (!response) {
+        throw new Error("Expected one dual-written response fixture.");
+      }
+      await ctx.db.patch(response._id, {
+        selection: { kind: "single-choice", optionKey: "option-2" },
+      });
+    });
+
+    await expect(
+      t.mutation(page, {
+        cursor: null,
+        mode: "contract",
+        phase: "responses",
+      })
+    ).rejects.toMatchObject({
+      data: { code: "TRYOUT_RESPONSE_MIGRATION_INVALID" },
+    });
+  });
+
   it("rejects a historical score that differs from the frozen answer", async () => {
     const t = createConvexTestWithBetterAuth();
     await seedInvalidResponse(t, "score", ({ selected }) => ({
@@ -88,7 +195,11 @@ describe("tryouts/response/migrate", () => {
     }));
 
     await expect(
-      t.mutation(page, { cursor: null, phase: "responses" })
+      t.mutation(page, {
+        cursor: null,
+        mode: "hydrate",
+        phase: "responses",
+      })
     ).rejects.toMatchObject({
       data: { code: "TRYOUT_RESPONSE_MIGRATION_INVALID" },
     });
@@ -102,7 +213,11 @@ describe("tryouts/response/migrate", () => {
     }));
 
     await expect(
-      t.mutation(page, { cursor: null, phase: "responses" })
+      t.mutation(page, {
+        cursor: null,
+        mode: "hydrate",
+        phase: "responses",
+      })
     ).rejects.toMatchObject({
       data: { code: "TRYOUT_RESPONSE_MIGRATION_INVALID" },
     });
@@ -117,7 +232,79 @@ describe("tryouts/response/migrate", () => {
     }));
 
     await expect(
-      t.mutation(page, { cursor: null, phase: "responses" })
+      t.mutation(page, {
+        cursor: null,
+        mode: "hydrate",
+        phase: "responses",
+      })
+    ).rejects.toMatchObject({
+      data: { code: "TRYOUT_RESPONSE_MIGRATION_INVALID" },
+    });
+  });
+
+  it("rejects a response linked to another attempt", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await seedMigrationFixture(t, 1);
+    await t.mutation(async (ctx) => {
+      const response = await ctx.db.query("tryoutResponses").first();
+      if (!response) {
+        throw new Error("Expected one response to cross-link.");
+      }
+      const attempt = await ctx.db.get(response.tryoutAttemptId);
+      if (!attempt) {
+        throw new Error("Expected the response attempt fixture.");
+      }
+      const { _creationTime, _id, ...attemptFields } = attempt;
+      const otherAttemptId = await ctx.db.insert("tryoutAttempts", {
+        ...attemptFields,
+        attemptNumber: attempt.attemptNumber + 1,
+      });
+      await ctx.db.patch(response._id, { tryoutAttemptId: otherAttemptId });
+    });
+
+    await expect(
+      t.mutation(page, {
+        cursor: null,
+        mode: "hydrate",
+        phase: "responses",
+      })
+    ).rejects.toMatchObject({
+      data: { code: "TRYOUT_RESPONSE_MIGRATION_INVALID" },
+    });
+  });
+
+  it("rejects a response linked to another section", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await seedMigrationFixture(t, 1);
+    await t.mutation(async (ctx) => {
+      const response = await ctx.db.query("tryoutResponses").first();
+      if (!response) {
+        throw new Error("Expected one response to cross-link.");
+      }
+      const section = await ctx.db.get(response.tryoutSectionAttemptId);
+      if (!section) {
+        throw new Error("Expected the response section fixture.");
+      }
+      const { _creationTime, _id, ...sectionFields } = section;
+      const otherSectionAttemptId = await ctx.db.insert(
+        "tryoutSectionAttempts",
+        {
+          ...sectionFields,
+          sectionIdentity: `${section.sectionIdentity}:other`,
+          sectionKey: "other-section",
+        }
+      );
+      await ctx.db.patch(response._id, {
+        tryoutSectionAttemptId: otherSectionAttemptId,
+      });
+    });
+
+    await expect(
+      t.mutation(page, {
+        cursor: null,
+        mode: "hydrate",
+        phase: "responses",
+      })
     ).rejects.toMatchObject({
       data: { code: "TRYOUT_RESPONSE_MIGRATION_INVALID" },
     });
@@ -130,7 +317,11 @@ describe("tryouts/response/migrate", () => {
     }));
 
     await expect(
-      t.mutation(page, { cursor: null, phase: "responses" })
+      t.mutation(page, {
+        cursor: null,
+        mode: "hydrate",
+        phase: "responses",
+      })
     ).rejects.toMatchObject({
       data: { code: "TRYOUT_RESPONSE_MIGRATION_INVALID" },
     });

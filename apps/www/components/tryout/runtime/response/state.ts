@@ -1,4 +1,3 @@
-import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionArgs } from "convex/server";
 import type {
@@ -15,9 +14,7 @@ export type TryoutResponseSelection = Exclude<
 >;
 
 interface TryoutResponseState {
-  readonly responseSpec:
-    | QuestionResponse
-    | TryoutRuntimeQuestion["responseSpec"];
+  readonly responseSpec: TryoutRuntimeQuestion["responseSpec"];
   readonly selection: TryoutResponseSelection | null;
 }
 
@@ -94,9 +91,9 @@ export function toggleMultipleChoiceSelection(
   } else {
     selected.add(optionKey);
   }
-  const optionKeys = state.responseSpec.options
-    .filter((option) => selected.has(option.optionKey))
-    .map((option) => option.optionKey);
+  const optionKeys = state.responseSpec.options.flatMap(({ optionKey }) =>
+    selected.has(optionKey) ? [optionKey] : []
+  );
   return optionKeys.length > 0 ? { kind: "multiple-choice", optionKeys } : null;
 }
 
@@ -130,35 +127,6 @@ export function assignCategorySelection(
           ]
         : [];
     }),
-    kind: "category",
-  };
-}
-
-/** Derives the canonical answer-key selection for an authenticated preview. */
-export function correctTryoutResponseSelection(
-  responseSpec: QuestionResponse
-): TryoutResponseSelection | null {
-  if (responseSpec.kind === "single-choice") {
-    const correct = responseSpec.options.find(({ isCorrect }) => isCorrect);
-    return correct
-      ? { kind: "single-choice", optionKey: correct.optionKey }
-      : null;
-  }
-  if (responseSpec.kind === "multiple-choice") {
-    const optionKeys = responseSpec.options
-      .filter(({ isCorrect }) => isCorrect)
-      .map(({ optionKey }) => optionKey);
-    return optionKeys.length > 0
-      ? { kind: "multiple-choice", optionKeys }
-      : null;
-  }
-  return {
-    assignments: responseSpec.statements.map(
-      ({ correctCategoryKey, statementKey }) => ({
-        categoryKey: correctCategoryKey,
-        statementKey,
-      })
-    ),
     kind: "category",
   };
 }

@@ -13,38 +13,6 @@ import {
   getTryoutSelectableChoiceVariant,
 } from "@/lib/tryout/choice-variant";
 
-interface TryoutSelectableChoiceProps {
-  checked: boolean;
-  disabled: boolean;
-  id: string;
-  label: ReactNode;
-  onSelect: () => void;
-}
-
-/** Renders one selectable choice without revealing answer correctness. */
-export function TryoutSelectableChoice({
-  checked,
-  disabled,
-  id,
-  label,
-  onSelect,
-}: TryoutSelectableChoiceProps) {
-  return (
-    <TryoutChoiceFrame
-      id={id}
-      label={label}
-      variant={getTryoutSelectableChoiceVariant({ checked })}
-    >
-      <TryoutChoiceCheckbox
-        checked={checked}
-        disabled={disabled}
-        id={id}
-        onSelect={onSelect}
-      />
-    </TryoutChoiceFrame>
-  );
-}
-
 interface TryoutSelectableRadioOptionProps {
   checked: boolean;
   disabled: boolean;
@@ -110,8 +78,13 @@ export function TryoutSelectableMultipleChoice({
   );
 }
 
-interface TryoutPreviewChoiceProps extends TryoutSelectableChoiceProps {
+interface TryoutPreviewChoiceProps {
   appearance: TryoutPreviewChoiceAppearance;
+  checked: boolean;
+  disabled: boolean;
+  id: string;
+  label: ReactNode;
+  onSelect: () => void;
 }
 
 /** Keeps one stable preview choice while its correctness appearance changes. */

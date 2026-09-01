@@ -21,9 +21,10 @@ import {
   isTryoutStateLive,
   type TryoutRuntimeState,
 } from "@/components/tryout/runtime/state";
-import type {
-  TryoutSectionAttempt,
-  TryoutSectionRuntime,
+import {
+  type TryoutSectionAttempt,
+  type TryoutSectionRuntime,
+  tryoutRuntimeQueryContract,
 } from "@/components/tryout/runtime/types";
 import type { TryoutStartDestination } from "@/components/tryout/section/action.client";
 import {
@@ -149,6 +150,7 @@ function LiveTryoutSectionPage({
     terminalState === undefined
       ? {
           attemptId: binding.attemptId,
+          ...tryoutRuntimeQueryContract,
           sectionKey: page.section.sectionKey,
         }
       : "skip"

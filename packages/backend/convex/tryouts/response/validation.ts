@@ -22,10 +22,11 @@ export const validateTryoutResponseSpec = Effect.fn(
     ({ isCorrect }) => isCorrect
   ).length;
   if (
-    responseSpec.options.length === 0 ||
-    !hasUniquePositiveIdentity(
+    responseSpec.options.length < 2 ||
+    !hasCanonicalIdentity(
       responseSpec.options,
-      ({ optionKey }) => optionKey
+      ({ optionKey }) => optionKey,
+      "option"
     ) ||
     responseSpec.options.some(({ label }) => !hasValidLabel(label)) ||
     (responseSpec.kind === "single-choice"
@@ -46,13 +47,15 @@ function hasValidCategoryDefinition(
   return (
     responseSpec.categories.length >= 2 &&
     responseSpec.statements.length > 0 &&
-    hasUniquePositiveIdentity(
+    hasCanonicalIdentity(
       responseSpec.categories,
-      ({ categoryKey }) => categoryKey
+      ({ categoryKey }) => categoryKey,
+      "category"
     ) &&
-    hasUniquePositiveIdentity(
+    hasCanonicalIdentity(
       responseSpec.statements,
-      ({ statementKey }) => statementKey
+      ({ statementKey }) => statementKey,
+      "statement"
     ) &&
     responseSpec.categories.every(({ label }) => hasValidLabel(label)) &&
     responseSpec.statements.every(
@@ -62,19 +65,19 @@ function hasValidCategoryDefinition(
   );
 }
 
-function hasUniquePositiveIdentity<Row extends { readonly order: number }>(
+function hasCanonicalIdentity<Row extends { readonly order: number }>(
   rows: readonly Row[],
-  readKey: (row: Row) => string
+  readKey: (row: Row) => string,
+  prefix: "category" | "option" | "statement"
 ) {
-  return (
-    new Set(rows.map(readKey)).size === rows.length &&
-    new Set(rows.map(({ order }) => order)).size === rows.length &&
-    rows.every(({ order }) => Number.isSafeInteger(order) && order > 0)
+  return rows.every(
+    (row, index) =>
+      row.order === index + 1 && readKey(row) === `${prefix}-${row.order}`
   );
 }
 
 function hasValidLabel(label: string) {
-  return label.length > 0;
+  return label.trim().length > 0;
 }
 
 const invalidDefinition = new TryoutResponseDefinitionError({

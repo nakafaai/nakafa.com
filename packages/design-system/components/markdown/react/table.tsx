@@ -10,7 +10,7 @@ import {
 import { filterWhitespaceNodes } from "@repo/design-system/lib/markdown/children";
 
 export const reactTableComponents: ReactMarkdownComponents = {
-  table: ({ children, ...props }) => (
+  table: ({ children, node: _node, ...props }) => (
     <Table
       containerClassName="my-4 rounded-xl border"
       data-nakafa="table"
@@ -19,12 +19,12 @@ export const reactTableComponents: ReactMarkdownComponents = {
       {filterWhitespaceNodes(children)}
     </Table>
   ),
-  tbody: ({ children, ...props }) => (
+  tbody: ({ children, node: _node, ...props }) => (
     <TableBody className="bg-muted/40" data-nakafa="table-body" {...props}>
       {filterWhitespaceNodes(children)}
     </TableBody>
   ),
-  td: ({ children, ...props }) => (
+  td: ({ children, node: _node, ...props }) => (
     <TableCell
       className="border-r last:border-r-0"
       data-nakafa="table-cell"
@@ -33,7 +33,7 @@ export const reactTableComponents: ReactMarkdownComponents = {
       {filterWhitespaceNodes(children)}
     </TableCell>
   ),
-  th: ({ children, ...props }) => (
+  th: ({ children, node: _node, ...props }) => (
     <TableHead
       className="border-r font-medium last:border-r-0"
       data-nakafa="table-head"
@@ -42,7 +42,7 @@ export const reactTableComponents: ReactMarkdownComponents = {
       {filterWhitespaceNodes(children)}
     </TableHead>
   ),
-  thead: ({ children, ...props }) => (
+  thead: ({ children, node: _node, ...props }) => (
     <TableHeader
       className="border-b bg-muted/80"
       data-nakafa="table-header"
@@ -51,7 +51,7 @@ export const reactTableComponents: ReactMarkdownComponents = {
       {filterWhitespaceNodes(children)}
     </TableHeader>
   ),
-  tr: ({ children, ...props }) => (
+  tr: ({ children, node: _node, ...props }) => (
     <TableRow
       className="border-b last:border-b-0"
       data-nakafa="table-row"

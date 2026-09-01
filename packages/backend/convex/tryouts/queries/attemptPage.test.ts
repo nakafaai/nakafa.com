@@ -107,16 +107,9 @@ describe("tryouts/queries/attemptPage", () => {
             .eq("sectionKey", TRYOUT_START_SECTION)
         )
         .unique();
-      if (!(placement && section)) {
+      const selectedOption = placement?.choiceSnapshots?.at(0);
+      if (!(placement && section && selectedOption)) {
         throw new Error("Expected one historical response target.");
-      }
-      const selectedOption =
-        placement.responseSpec?.kind === "category"
-          ? undefined
-          : (placement.responseSpec?.options.at(0) ??
-            placement.choiceSnapshots?.at(0));
-      if (!selectedOption) {
-        throw new Error("Expected one historical response option.");
       }
       await ctx.db.insert("tryoutResponses", {
         answeredAt: historicalAnswerTime,
@@ -142,11 +135,7 @@ describe("tryouts/queries/attemptPage", () => {
     );
     expect(terminal).toMatchObject({
       attemptId: started.attemptId,
-      content: {
-        answers: expect.any(Array),
-        kind: "signed",
-        questions: expect.any(Array),
-      },
+      content: { kind: "signed" },
       initialState: {
         attempt: {
           score: { publishedScore: expect.any(Number) },
@@ -162,13 +151,9 @@ describe("tryouts/queries/attemptPage", () => {
       },
     });
     expect(terminal).not.toHaveProperty("setIdentity");
-    if (terminal?.kind !== "current") {
-      throw new Error("Expected one current terminal set page.");
-    }
-    if (terminal.content.kind !== "signed") {
+    if (terminal?.kind !== "current" || terminal.content.kind !== "signed") {
       throw new Error("Expected signed terminal set content.");
     }
-    expect(terminal.content.answers).toHaveLength(1);
     expect(terminal.initialState.runtime?.questions.at(0)?.response).toEqual({
       answeredAt: historicalAnswerTime,
       isComplete: true,

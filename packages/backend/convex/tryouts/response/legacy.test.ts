@@ -6,11 +6,11 @@ describe("legacy try-out response bridge", () => {
   it.effect("sorts choices while preserving their Markdown labels", () =>
     Effect.gen(function* () {
       const response = yield* responseSpecFromLegacyChoices([
-        { isCorrect: false, label: "B", optionKey: "b", order: 2 },
+        { isCorrect: false, label: "B", optionKey: "option-2", order: 2 },
         {
           isCorrect: true,
-          label: "Nilai **utama** $x + 1$.",
-          optionKey: "a",
+          label: "Nilai **utama** $$x + 1$$.",
+          optionKey: "option-1",
           order: 1,
         },
       ]);
@@ -19,14 +19,14 @@ describe("legacy try-out response bridge", () => {
         options: [
           {
             isCorrect: true,
-            label: "Nilai **utama** $x + 1$.",
-            optionKey: "a",
+            label: "Nilai **utama** $$x + 1$$.",
+            optionKey: "option-1",
             order: 1,
           },
           {
             isCorrect: false,
             label: "B",
-            optionKey: "b",
+            optionKey: "option-2",
             order: 2,
           },
         ],
@@ -39,20 +39,20 @@ describe("legacy try-out response bridge", () => {
       for (const choices of [
         [],
         [
-          { isCorrect: true, label: "", optionKey: "a", order: 1 },
-          { isCorrect: false, label: "B", optionKey: "b", order: 2 },
+          { isCorrect: true, label: "", optionKey: "option-1", order: 1 },
+          { isCorrect: false, label: "B", optionKey: "option-2", order: 2 },
         ],
         [
-          { isCorrect: true, label: "A", optionKey: "a", order: 1 },
-          { isCorrect: true, label: "B", optionKey: "b", order: 2 },
+          { isCorrect: true, label: "A", optionKey: "option-1", order: 1 },
+          { isCorrect: true, label: "B", optionKey: "option-2", order: 2 },
         ],
         [
           { isCorrect: true, label: "A", optionKey: "same", order: 1 },
           { isCorrect: false, label: "B", optionKey: "same", order: 2 },
         ],
         [
-          { isCorrect: true, label: "A", optionKey: "a", order: 1 },
-          { isCorrect: false, label: "B", optionKey: "b", order: 1 },
+          { isCorrect: true, label: "A", optionKey: "option-1", order: 1 },
+          { isCorrect: false, label: "B", optionKey: "option-2", order: 1 },
         ],
       ]) {
         expect(

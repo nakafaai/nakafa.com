@@ -139,7 +139,7 @@ describe("local question preview", () => {
     })
   );
 
-  it.effect("renders one authenticated prompt with its frozen response", () =>
+  it.effect("renders one authenticated prompt with its authored choices", () =>
     Effect.gen(function* () {
       const manifest = makeQuestionReadyManifest(previewManifestHash);
       provideManifest(manifest);
@@ -149,13 +149,10 @@ describe("local question preview", () => {
       expect(result).toMatchObject({
         Answer: null,
         Question: QuestionContent,
-        response: {
-          kind: "single-choice",
-          options: [
-            { isCorrect: true, label: "Correct", optionKey: "option-1" },
-            { isCorrect: false, label: "Incorrect", optionKey: "option-2" },
-          ],
-        },
+        choices: [
+          { label: "Correct", value: true },
+          { label: "Incorrect", value: false },
+        ],
         selectedBodyKind: "question",
       });
       expect(executeMock).toHaveBeenCalledOnce();

@@ -94,6 +94,7 @@ describe("tryouts/response/write", () => {
         kind: "single-choice",
         optionKey: selectedChoice.optionKey,
       },
+      selectedOptionId: selectedChoice.optionKey,
       timeSpent: 9,
       updatedAt: TRYOUT_TEST_NOW + 9000,
     });
