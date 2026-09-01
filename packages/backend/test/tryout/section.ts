@@ -5,8 +5,8 @@ import type {
 import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/catalog-hash";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import {
-  deliveryLanguageForSection,
-  questionArtifactLocaleForSection,
+  deliveryLanguageForPolicy,
+  questionArtifactLocaleForPolicy,
 } from "@nakafa/aksara-contracts/tryout/language";
 import {
   type TryoutPlacement,
@@ -16,6 +16,7 @@ import { makeTryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/place
 import { TryoutContentHashSchema } from "@nakafa/aksara-contracts/tryout/spec";
 import type { TryoutSnapshotSource } from "@repo/backend/convex/tryouts/start/source";
 import { testTextHash } from "@repo/backend/test/content/release";
+import { makeTestQuestionResponse } from "@repo/backend/test/tryout/response";
 import { Schema } from "effect";
 
 export const TRYOUT_TEST_CONTENT_HASH = TryoutContentHashSchema.make(
@@ -37,6 +38,7 @@ export function makeSignedTryoutSection(
 ): SignedTryoutSectionFixture {
   const sourceRevision = options.sourceRevision ?? section.sourceRevision;
   const sourcePath = requireCorpusRelativePath(section.questionSourcePath);
+  const languagePolicy = { kind: "app-locale" } as const;
   const placements = Array.from(
     { length: section.questionCount },
     (_, index) => {
@@ -47,31 +49,25 @@ export function makeSignedTryoutSection(
         answerArtifactHash: testTextHash(`${questionRoot}:answer`),
         answerArtifactLocale: section.appLocale,
         answerContentKey: `${questionRoot}/answer`,
-        choices: [
-          {
-            isCorrect: true,
-            label: "A",
-            optionKey: "option-1",
-            order: 1,
-          },
-        ],
         contentHash: options.contentHash ?? TRYOUT_TEST_CONTENT_HASH,
         countryKey: section.countryKey,
-        deliveryLanguage: deliveryLanguageForSection(
-          section.sectionKey,
+        deliveryLanguage: deliveryLanguageForPolicy(
+          languagePolicy,
           section.appLocale
         ),
         examKey: section.examKey,
         appLocale: section.appLocale,
+        languagePolicy,
         questionArtifactHash: testTextHash(`${questionRoot}:question`),
-        questionArtifactLocale: questionArtifactLocaleForSection(
-          section.sectionKey,
+        questionArtifactLocale: questionArtifactLocaleForPolicy(
+          languagePolicy,
           section.appLocale
         ),
         questionContentKey: `${questionRoot}/question`,
         questionOrder,
         questionSourcePath: `packages/corpus/${questionRoot}`,
         rendererDomain: "snbt-math",
+        response: makeTestQuestionResponse(),
         scope: "server",
         sectionKey: section.sectionKey,
         setKey: section.setKey,

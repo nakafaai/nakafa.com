@@ -5,7 +5,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
-import { saveTryoutResponse } from "@repo/backend/convex/tryouts/response/impl";
+import { saveTryoutResponse } from "@repo/backend/convex/tryouts/response/write";
 import type { TryoutStatus } from "@repo/backend/convex/tryouts/status";
 import { seedTryoutContentAccessState } from "@repo/backend/test/tryout/runtime";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
@@ -28,8 +28,8 @@ async function seedResponseFixture(
       suffix,
     });
     const placement = await ctx.db.get(seeded.placementId);
-    if (!placement) {
-      throw new Error("Expected a seeded try-out placement.");
+    if (!placement?.choiceSnapshots) {
+      throw new Error("Expected a seeded legacy try-out placement.");
     }
     return {
       ...seeded,
@@ -58,7 +58,7 @@ function authenticate(
   });
 }
 
-describe("tryouts/response/impl", () => {
+describe("tryouts/response/write", () => {
   it("stores server-derived elapsed time and preserves first-answer time", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await seedResponseFixture(t, "response-time");
@@ -88,8 +88,12 @@ describe("tryouts/response/impl", () => {
     expect(stored.responses).toHaveLength(1);
     expect(stored.responses[0]).toMatchObject({
       answeredAt: TRYOUT_TEST_NOW + 5000,
+      isComplete: true,
       isCorrect: selectedChoice.isCorrect,
-      selectedOptionId: selectedChoice.optionKey,
+      selection: {
+        kind: "single-choice",
+        optionKey: selectedChoice.optionKey,
+      },
       timeSpent: 9,
       updatedAt: TRYOUT_TEST_NOW + 9000,
     });
@@ -112,13 +116,17 @@ describe("tryouts/response/impl", () => {
         placementId: seeded.placementId,
         selectedOptionId: "",
       })
-    ).rejects.toMatchObject({ data: { code: "TRYOUT_CHOICE_NOT_FOUND" } });
+    ).rejects.toMatchObject({
+      data: { code: "TRYOUT_RESPONSE_SELECTION_INVALID" },
+    });
     await expect(
       authed.mutation(api.tryouts.mutations.responses.save, {
         placementId: seeded.placementId,
         selectedOptionId: "option-999",
       })
-    ).rejects.toMatchObject({ data: { code: "TRYOUT_CHOICE_NOT_FOUND" } });
+    ).rejects.toMatchObject({
+      data: { code: "TRYOUT_RESPONSE_SELECTION_INVALID" },
+    });
 
     const stored = await t.query(async (ctx) => ({
       responses: await ctx.db.query("tryoutResponses").collect(),
@@ -157,7 +165,10 @@ describe("tryouts/response/impl", () => {
     expect(responses).toHaveLength(1);
     expect(responses[0]).toMatchObject({
       answeredAt: TRYOUT_TEST_NOW + 1_799_999,
-      selectedOptionId: selectedChoice.optionKey,
+      selection: {
+        kind: "single-choice",
+        optionKey: selectedChoice.optionKey,
+      },
       timeSpent: 1799,
       updatedAt: TRYOUT_TEST_NOW + 1_799_999,
     });
@@ -440,7 +451,7 @@ describe("tryouts/response/impl", () => {
         selectedOptionId: selectedChoice.optionKey,
       })
     ).rejects.toMatchObject({
-      data: { code: "TRYOUT_RESPONSE_CHOICE_MISMATCH" },
+      data: { code: "TRYOUT_RESPONSE_SELECTION_MISMATCH" },
     });
     const stored = await t.query(async (ctx) => ({
       attempt: await ctx.db.get(seeded.attemptId),

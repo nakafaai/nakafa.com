@@ -92,7 +92,7 @@ describe("tryouts/queries/attemptPage", () => {
     expect(active).not.toHaveProperty("setIdentity");
 
     const historicalAnswerTime = TRYOUT_START_NOW + 1000;
-    await t.mutation(async (ctx) => {
+    const historicalOption = await t.mutation(async (ctx) => {
       const placement = await ctx.db
         .query("tryoutAttemptPlacements")
         .withIndex("by_tryoutAttemptId_and_questionOrder", (query) =>
@@ -110,16 +110,25 @@ describe("tryouts/queries/attemptPage", () => {
       if (!(placement && section)) {
         throw new Error("Expected one historical response target.");
       }
+      const selectedOption =
+        placement.responseSpec?.kind === "category"
+          ? undefined
+          : (placement.responseSpec?.options.at(0) ??
+            placement.choiceSnapshots?.at(0));
+      if (!selectedOption) {
+        throw new Error("Expected one historical response option.");
+      }
       await ctx.db.insert("tryoutResponses", {
         answeredAt: historicalAnswerTime,
-        isCorrect: false,
+        isCorrect: selectedOption.isCorrect,
         placementId: placement._id,
-        textAnswer: "historical answer",
+        selectedOptionId: selectedOption.optionKey,
         timeSpent: 1000,
         tryoutAttemptId: started.attemptId,
         tryoutSectionAttemptId: section._id,
         updatedAt: historicalAnswerTime,
       });
+      return selectedOption;
     });
 
     await authed.mutation(api.tryouts.mutations.sections.complete, {
@@ -140,7 +149,7 @@ describe("tryouts/queries/attemptPage", () => {
       },
       initialState: {
         attempt: {
-          score: { publishedScore: 0 },
+          score: { publishedScore: expect.any(Number) },
           status: "completed",
         },
         runtime: { section: { status: "completed" } },
@@ -162,6 +171,12 @@ describe("tryouts/queries/attemptPage", () => {
     expect(terminal.content.answers).toHaveLength(1);
     expect(terminal.initialState.runtime?.questions.at(0)?.response).toEqual({
       answeredAt: historicalAnswerTime,
+      isComplete: true,
+      selectedOptionId: historicalOption.optionKey,
+      selection: {
+        kind: "single-choice",
+        optionKey: historicalOption.optionKey,
+      },
       updatedAt: historicalAnswerTime,
     });
   });

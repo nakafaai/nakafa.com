@@ -1,3 +1,4 @@
+import { canonicalQuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import {
   tryoutCatalogIdentity,
   tryoutPlacementIdentity,
@@ -110,7 +111,6 @@ export const createAttemptPlacements = Effect.fn(
         ctx.db.insert("tryoutAttemptPlacements", {
           answerArtifactHash: placement.row.answerArtifactHash,
           answerContentKey: placement.row.answerContentKey,
-          choiceSnapshots: [...placement.row.choices],
           contentHash: placement.row.contentHash,
           placementIdentity: tryoutPlacementIdentity(placement.row),
           placementRowHash: placement.rowHash,
@@ -118,6 +118,7 @@ export const createAttemptPlacements = Effect.fn(
           questionContentKey: placement.row.questionContentKey,
           questionOrder: placement.row.questionOrder,
           rendererDomain: placement.row.rendererDomain,
+          responseSpec: canonicalQuestionResponse(placement.row.response),
           sectionIdentity,
           sectionKey: placement.row.sectionKey,
           sourcePath: placement.row.questionSourcePath,

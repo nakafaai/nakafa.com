@@ -202,6 +202,12 @@ describe("tryouts/catalog/featured", () => {
           optionKey: "option-1",
           order: 1,
         },
+        {
+          isCorrect: false,
+          label: "B",
+          optionKey: "option-2",
+          order: 2,
+        },
       ],
       question: {
         artifactHash: source.questionArtifactHash,

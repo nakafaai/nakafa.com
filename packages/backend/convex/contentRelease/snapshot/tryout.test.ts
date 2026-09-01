@@ -7,7 +7,6 @@ import {
   tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
 import { makeTryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/placement-hash";
-import { TryoutChoiceListSchema } from "@nakafa/aksara-contracts/tryout/spec";
 import {
   stageTryoutCatalog,
   stageTryoutPlacement,
@@ -122,20 +121,26 @@ describe("contentRelease/snapshot/tryout", () => {
       }),
     };
     const placementSource = makeTryoutPlacementRow();
-    const [firstChoice, ...remainingChoices] =
-      placementSource.record.row.choices;
-    const oversizedChoices = TryoutChoiceListSchema.make([
+    const response = placementSource.record.row.response;
+    if (response.kind === "category") {
+      throw new Error("Expected an option response in the placement fixture.");
+    }
+    const [firstOption, ...remainingOptions] = response.options;
+    if (!firstOption) {
+      throw new Error("Expected at least one placement response option.");
+    }
+    const oversizedOptions = [
       {
-        ...firstChoice,
+        ...firstOption,
         label: "x".repeat(TRYOUT_PLACEMENT_DOCUMENT_LIMIT),
       },
-      ...remainingChoices,
-    ]);
+      ...remainingOptions,
+    ];
     const placement = {
       ...placementSource,
       record: makeTryoutPlacementRecord({
         ...placementSource.record.row,
-        choices: oversizedChoices,
+        response: { ...response, options: oversizedOptions },
       }),
     };
     const t = convexTest(schema, convexModules);

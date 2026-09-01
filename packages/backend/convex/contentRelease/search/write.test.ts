@@ -17,6 +17,7 @@ import {
   TEST_PAGE_SOURCE,
 } from "@repo/backend/test/content/page";
 import { TEST_DIGEST } from "@repo/backend/test/content/release";
+import { makeTestQuestionResponse } from "@repo/backend/test/tryout/response";
 import type { WithoutSystemFields } from "convex/server";
 import { convexTest } from "convex-test";
 import { Schema } from "effect";
@@ -68,21 +69,19 @@ function questionProjection() {
   const questionKey = `${setKey}/question-1`;
   return Schema.decodeSync(ContentProjectionSchema)({
     bodyKind: "question",
-    choices: [
-      { label: "Correct", value: true },
-      { label: "Incorrect", value: false },
-    ],
     contentKey: `${questionKey}/question`,
     kind: "question-body",
     artifactLocale: "en",
     metadata: {
       authors: [{ name: "Nakafa" }],
-      date: "2026-07-24",
+      dateModified: "2026-07-25",
+      datePublished: "2026-07-24",
       title: "Technical question",
     },
     peerContentKey: `${questionKey}/answer`,
     questionKey,
     questionNumber: 1,
+    response: makeTestQuestionResponse("Correct", "Incorrect"),
     setKey,
   });
 }

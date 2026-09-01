@@ -1,12 +1,12 @@
 import { mutation } from "@repo/backend/convex/functions";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { requireAuth } from "@repo/backend/convex/lib/helpers/auth";
-import { saveTryoutResponse } from "@repo/backend/convex/tryouts/response/impl";
 import {
   saveTryoutResponseArgsValidator,
   saveTryoutResponseResultValidator,
   toTryoutResponseError,
 } from "@repo/backend/convex/tryouts/response/spec";
+import { saveTryoutResponse } from "@repo/backend/convex/tryouts/response/write";
 import { Clock, Effect } from "effect";
 
 /** Saves one placement choice with server-owned timing and integrity checks. */

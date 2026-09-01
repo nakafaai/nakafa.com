@@ -13,8 +13,8 @@ import {
   tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
 import {
-  deliveryLanguageForSection,
-  questionArtifactLocaleForSection,
+  deliveryLanguageForPolicy,
+  questionArtifactLocaleForPolicy,
 } from "@nakafa/aksara-contracts/tryout/language";
 import {
   type TryoutPlacement,
@@ -27,6 +27,7 @@ import {
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { testTextHash } from "@repo/backend/test/content/release";
 import { insertTestTryoutRuntimeBundle } from "@repo/backend/test/runtime/bundle";
+import { makeTestQuestionResponse } from "@repo/backend/test/tryout/response";
 import { activateTryoutSnapshot } from "@repo/backend/test/tryout/snapshot";
 import { Schema } from "effect";
 
@@ -53,6 +54,7 @@ const sourcePath = `question-bank/tryout/${TRYOUT_START_COUNTRY}/${TRYOUT_START_
 const setPath = `try-out/${TRYOUT_START_COUNTRY}/${TRYOUT_START_EXAM}/${TRYOUT_START_TRACK}/${TRYOUT_START_SET}`;
 const tryoutStartLocales: readonly ActiveAppLocaleCode[] =
   ACTIVE_APP_LOCALE_CODES;
+const tryoutStartLanguagePolicy = { kind: "app-locale" } as const;
 const tryoutTrackTitles = {
   de: "Mathematik",
   en: "Mathematics",
@@ -325,31 +327,25 @@ export function makeTryoutStartPlacement(
     answerArtifactHash: testTextHash(`${appLocale}:tryout-start:answer`),
     answerArtifactLocale: signedAppLocale,
     answerContentKey: `${questionRoot}/answer`,
-    choices: [
-      {
-        isCorrect: true,
-        label: "A",
-        optionKey: "option-1",
-        order: 1,
-      },
-    ],
     contentHash: TRYOUT_START_CONTENT_HASH,
     countryKey: TRYOUT_START_COUNTRY,
-    deliveryLanguage: deliveryLanguageForSection(
-      TRYOUT_START_SECTION,
+    deliveryLanguage: deliveryLanguageForPolicy(
+      tryoutStartLanguagePolicy,
       signedAppLocale
     ),
     examKey: TRYOUT_START_EXAM,
     appLocale: signedAppLocale,
+    languagePolicy: tryoutStartLanguagePolicy,
     questionArtifactHash: testTextHash(`${appLocale}:tryout-start:question`),
-    questionArtifactLocale: questionArtifactLocaleForSection(
-      TRYOUT_START_SECTION,
+    questionArtifactLocale: questionArtifactLocaleForPolicy(
+      tryoutStartLanguagePolicy,
       signedAppLocale
     ),
     questionContentKey: `${questionRoot}/question`,
     questionOrder: 1,
     questionSourcePath: `packages/corpus/${questionRoot}`,
     rendererDomain: "tka-math",
+    response: makeTestQuestionResponse(),
     scope: "server",
     sectionKey: TRYOUT_START_SECTION,
     setKey: TRYOUT_START_SET,
