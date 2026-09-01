@@ -8,7 +8,6 @@ import {
   listRuntimeCurriculumStaticParams,
   readRuntimeCurriculumBreadcrumbs,
   readRuntimeCurriculumCatalog,
-  readRuntimeCurriculumHeader,
   readRuntimeCurriculumOptions,
   readRuntimeCurriculumToc,
   resolveRuntimeCurriculumRoute,
@@ -157,10 +156,6 @@ describe("signed curriculum runtime", () => {
       })
     );
 
-    expect(readRuntimeCurriculumHeader(model)).toEqual({
-      href: "/en/curriculum/merdeka/class-11",
-      label: "Class 11",
-    });
     expect(readRuntimeCurriculumBreadcrumbs("Home", "Subjects", model)).toEqual(
       [
         { name: "Home", path: "" },
@@ -197,7 +192,6 @@ describe("signed curriculum runtime", () => {
     expect(
       isRenderableCurriculumView({ ...testProgramRoot, sitemap: false })
     ).toBe(false);
-    expect(readRuntimeCurriculumHeader(model)).toBeUndefined();
     expect(readRuntimeCurriculumToc(model)).toEqual({
       href: "/en/curriculum/merdeka",
       title: "Kurikulum Merdeka",

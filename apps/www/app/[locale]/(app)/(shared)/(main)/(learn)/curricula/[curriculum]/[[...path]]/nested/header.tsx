@@ -3,7 +3,7 @@ import type { CurriculumViewRoute } from "@/app/[locale]/(app)/(shared)/(main)/(
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 
-/** Renders a nested curriculum chooser with breadcrumb context only. */
+/** Renders one nested curriculum route with breadcrumb context only. */
 export default function CurriculumNestedHeader({
   ancestors,
   currentRoute,

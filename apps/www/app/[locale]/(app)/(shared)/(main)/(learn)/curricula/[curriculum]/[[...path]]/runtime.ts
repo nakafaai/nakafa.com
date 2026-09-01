@@ -143,18 +143,6 @@ export function readRuntimeCurriculumOptions(
   }));
 }
 
-/** Builds the immediate parent link for one resolved curriculum route. */
-export function readRuntimeCurriculumHeader(model: CurriculumRouteModel) {
-  const parent = model.ancestors.at(-1);
-  if (!parent) {
-    return;
-  }
-  return {
-    href: `/${model.locale}/${parent.publicPath}`,
-    label: parent.title,
-  };
-}
-
 /** Builds visible and structured breadcrumb entries from resolved ancestors. */
 export function readRuntimeCurriculumBreadcrumbs(
   homeLabel: string,
