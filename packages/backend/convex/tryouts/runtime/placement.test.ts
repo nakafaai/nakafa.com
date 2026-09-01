@@ -78,8 +78,10 @@ describe("tryouts/runtime/placement", () => {
 
     expect(placement).toMatchObject({
       contentHash: TRYOUT_TEST_CONTENT_HASH,
+      responseSpec: { kind: "single-choice" },
       sourceRevision: "2027",
     });
+    expect(placement).not.toHaveProperty("choiceSnapshots");
     expect(placement).not.toHaveProperty("questionId");
   });
 
@@ -110,7 +112,7 @@ describe("tryouts/runtime/placement", () => {
     ).rejects.toThrow("TRYOUT_SECTION_SNAPSHOT_MISMATCH");
   });
 
-  it("rejects a dual-written placement beyond the section read budget", async () => {
+  it("rejects a canonical placement beyond the section read budget", async () => {
     const t = convexTest(schema, convexModules);
 
     await expect(
@@ -142,9 +144,7 @@ describe("tryouts/runtime/placement", () => {
                             {
                               ...firstChoice,
                               label: "x".repeat(
-                                Math.ceil(
-                                  TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT / 2
-                                )
+                                TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT
                               ),
                             },
                             ...remainingChoices,

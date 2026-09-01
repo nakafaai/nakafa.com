@@ -59,7 +59,7 @@ function authenticate(
 }
 
 describe("tryouts/response/write", () => {
-  it("stores server-derived elapsed time and preserves first-answer time", async () => {
+  it("stores only the canonical response and preserves first-answer time", async () => {
     const t = createConvexTestWithBetterAuth();
     const seeded = await seedResponseFixture(t, "response-time");
     const selectedChoice = requireFirstChoice(seeded.choices);
@@ -94,10 +94,10 @@ describe("tryouts/response/write", () => {
         kind: "single-choice",
         optionKey: selectedChoice.optionKey,
       },
-      selectedOptionId: selectedChoice.optionKey,
       timeSpent: 9,
       updatedAt: TRYOUT_TEST_NOW + 9000,
     });
+    expect(stored.responses[0]).not.toHaveProperty("selectedOptionId");
     expect(stored.section).toMatchObject({
       answeredCount: 1,
       correctAnswers: selectedChoice.isCorrect ? 1 : 0,

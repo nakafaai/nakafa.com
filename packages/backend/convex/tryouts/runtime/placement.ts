@@ -114,7 +114,6 @@ export const createAttemptPlacements = Effect.fn(
       const frozenPlacement = {
         answerArtifactHash: placement.row.answerArtifactHash,
         answerContentKey: placement.row.answerContentKey,
-        choiceSnapshots: [...placement.row.choices],
         contentHash: placement.row.contentHash,
         placementIdentity: tryoutPlacementIdentity(placement.row),
         placementRowHash: placement.rowHash,

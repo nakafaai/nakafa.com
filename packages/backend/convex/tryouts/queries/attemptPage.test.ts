@@ -107,7 +107,10 @@ describe("tryouts/queries/attemptPage", () => {
             .eq("sectionKey", TRYOUT_START_SECTION)
         )
         .unique();
-      const selectedOption = placement?.choiceSnapshots?.at(0);
+      const selectedOption =
+        placement?.responseSpec?.kind === "single-choice"
+          ? placement.responseSpec.options.at(0)
+          : undefined;
       if (!(placement && section && selectedOption)) {
         throw new Error("Expected one historical response target.");
       }

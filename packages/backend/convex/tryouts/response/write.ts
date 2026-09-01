@@ -193,7 +193,7 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(function* (
       ctx.db.patch(existing._id, {
         isComplete: evaluated.isComplete,
         isCorrect: evaluated.isCorrect,
-        selectedOptionId: predecessorOptionId(evaluated.selection),
+        selectedOptionId: undefined,
         selection: evaluated.selection,
         timeSpent,
         updatedAt: input.now,
@@ -215,7 +215,6 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(function* (
       isComplete: evaluated.isComplete,
       isCorrect: evaluated.isCorrect,
       placementId: placement._id,
-      selectedOptionId: predecessorOptionId(evaluated.selection),
       selection: evaluated.selection,
       timeSpent,
       tryoutAttemptId: placement.tryoutAttemptId,
@@ -232,11 +231,6 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(function* (
   });
   return null;
 });
-
-/** Retains the old single-choice field until observed callers are contracted. */
-function predecessorOptionId(selection: TryoutResponseSelection) {
-  return selection.kind === "single-choice" ? selection.optionKey : undefined;
-}
 
 /** Normalizes the public expand contract before domain evaluation. */
 const readSaveSelection = Effect.fn("tryouts.response.readSaveSelection")(
