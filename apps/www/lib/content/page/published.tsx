@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { ReadablePublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
+import type { PublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
 import { Effect, Option } from "effect";
 import type { ReactNode } from "react";
 import {
@@ -26,14 +26,14 @@ export type CurrentPublishedPageInput = PublishedContentRouteInput;
 /** Verified signed runtime data narrowed to the Page projection contract. */
 export interface PublishedPageData
   extends Omit<PublishedContentData, "projection"> {
-  readonly projection: ReadablePublicPageProjection;
+  readonly projection: PublicPageProjection;
 }
 
 /** Reviewed Page body and its immutable publication evidence. */
 export interface PublishedPageContent {
   readonly artifactHash: PublishedPageData["artifact"]["artifactHash"];
   readonly body: ReactNode;
-  readonly projection: ReadablePublicPageProjection;
+  readonly projection: PublicPageProjection;
   readonly rawMdx: string;
   readonly sourcePath: PublishedPageData["sourcePath"];
   readonly sourceRevision: PublishedPageData["sourceRevision"];

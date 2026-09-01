@@ -1,3 +1,4 @@
+import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 
@@ -17,3 +18,8 @@ export type TryoutRuntimeQuestion = TryoutSectionRuntime["questions"][number];
 
 /** One public immutable response definition in an active question. */
 export type TryoutRuntimeResponseSpec = TryoutRuntimeQuestion["responseSpec"];
+
+/** Response definition rendered from either signed preview or attempt state. */
+export type TryoutRenderableResponseSpec =
+  | QuestionResponse
+  | TryoutRuntimeResponseSpec;

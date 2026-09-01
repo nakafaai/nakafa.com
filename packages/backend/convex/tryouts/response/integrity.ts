@@ -1,10 +1,6 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { ConvexTaggedError } from "@repo/backend/convex/lib/effect";
 import { evaluateTryoutResponse } from "@repo/backend/convex/tryouts/response/evaluation";
-import {
-  resolvePlacementResponseSpec,
-  resolveStoredResponseSelection,
-} from "@repo/backend/convex/tryouts/response/legacy";
 import { Effect, Schema } from "effect";
 
 type TryoutPlacement = Doc<"tryoutAttemptPlacements">;
@@ -230,33 +226,9 @@ export const indexTryoutResponses = Effect.fn(
         "Try-out placement has more than one response."
       );
     }
-    if (response.selection !== undefined && response.isComplete === undefined) {
-      return yield* responseIntegrity(
-        "TRYOUT_RESPONSE_SELECTION_MISMATCH",
-        "Try-out response has an incomplete canonical learner selection."
-      );
-    }
-    const responseSpec = yield* resolvePlacementResponseSpec(
-      link.placement
-    ).pipe(
-      Effect.mapError(() =>
-        responseIntegrity(
-          "TRYOUT_RESPONSE_SELECTION_MISMATCH",
-          "Try-out placement has an invalid frozen response definition."
-        )
-      )
-    );
-    const selection = yield* resolveStoredResponseSelection(response).pipe(
-      Effect.mapError(() =>
-        responseIntegrity(
-          "TRYOUT_RESPONSE_SELECTION_MISMATCH",
-          "Try-out response has no supported learner selection."
-        )
-      )
-    );
     const evaluated = yield* evaluateTryoutResponse(
-      responseSpec,
-      selection
+      link.placement.responseSpec,
+      response.selection
     ).pipe(
       Effect.mapError(() =>
         responseIntegrity(
@@ -265,9 +237,8 @@ export const indexTryoutResponses = Effect.fn(
         )
       )
     );
-    const isComplete = response.isComplete ?? true;
     if (
-      evaluated.isComplete !== isComplete ||
+      evaluated.isComplete !== response.isComplete ||
       evaluated.isCorrect !== response.isCorrect
     ) {
       return yield* responseIntegrity(

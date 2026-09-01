@@ -6,7 +6,8 @@ interface DependencyHold {
   readonly minimumDeclarations?: number;
 }
 
-export const CONTRACT_ARCHIVE =
+export const CONTRACT_VERSION = "0.33.0";
+export const PREDECESSOR_CONTRACT_SPECIFIER =
   "https://github.com/nakafaai/aksara/releases/download/contracts-v0.26.0/nakafa-aksara-contracts-0.26.0.tgz";
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
@@ -86,7 +87,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   {
-    approved: CONTRACT_ARCHIVE,
+    approved: CONTRACT_VERSION,
     declarationPaths: [
       "apps/www/package.json",
       "packages/ai/package.json",
@@ -95,6 +96,11 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
       "packages/internationalization/package.json",
     ],
     dependency: "@nakafa/aksara-contracts",
+  },
+  {
+    approved: PREDECESSOR_CONTRACT_SPECIFIER,
+    declarationPaths: ["packages/backend/package.json"],
+    dependency: "@nakafa/aksara-predecessor",
   },
   {
     approved: "2.5.10",

@@ -137,9 +137,10 @@ describe("tryouts/runtime/finish", () => {
 
       await ctx.db.insert("tryoutResponses", {
         answeredAt: NOW - 5000,
+        isComplete: true,
         isCorrect: true,
         placementId: placement._id,
-        selectedOptionId: "option-1",
+        selection: { kind: "single-choice", optionKey: "option-1" },
         timeSpent: 1000,
         tryoutAttemptId: attemptId,
         tryoutSectionAttemptId: sectionAttemptId,

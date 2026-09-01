@@ -13,6 +13,7 @@ import {
 } from "@repo/design-system/components/three/helpers/quality";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { randomColor } from "@repo/design-system/lib/color";
+import { resolveArrowSize } from "@repo/design-system/lib/geometry/arrow";
 import { type ReactNode, useMemo } from "react";
 import {
   CatmullRomCurve3,
@@ -57,21 +58,17 @@ function getSharedSphereGeometry(): SphereGeometry {
  */
 function getSharedConeGeometry(size: number): ConeGeometry {
   const key = `cone-${size}`;
-  if (!sharedConeGeometries.has(key)) {
-    sharedConeGeometries.set(
-      key,
-      new ConeGeometry(
-        size / 2,
-        size,
-        GRAPH_ARROW_SEGMENTS,
-        CONE_GEOMETRY_HEIGHT_SEGMENTS
-      )
-    );
+  const cached = sharedConeGeometries.get(key);
+  if (cached) {
+    return cached;
   }
-  const geometry = sharedConeGeometries.get(key);
-  if (!geometry) {
-    throw new Error(`Cone geometry not found for size: ${size}`);
-  }
+  const geometry = new ConeGeometry(
+    size / 2,
+    size,
+    GRAPH_ARROW_SEGMENTS,
+    CONE_GEOMETRY_HEIGHT_SEGMENTS
+  );
+  sharedConeGeometries.set(key, geometry);
   return geometry;
 }
 
@@ -82,18 +79,14 @@ function getSharedConeGeometry(size: number): ConeGeometry {
  */
 function getSharedMaterial(color: string | Color): MeshBasicMaterial {
   const colorKey = color instanceof Color ? color.getHexString() : color;
-  if (!sharedMaterials.has(colorKey)) {
-    sharedMaterials.set(
-      colorKey,
-      new MeshBasicMaterial({
-        color: color instanceof Color ? color : new Color(color),
-      })
-    );
+  const cached = sharedMaterials.get(colorKey);
+  if (cached) {
+    return cached;
   }
-  const material = sharedMaterials.get(colorKey);
-  if (!material) {
-    throw new Error(`Material not found for color: ${colorKey}`);
-  }
+  const material = new MeshBasicMaterial({
+    color: color instanceof Color ? color : new Color(color),
+  });
+  sharedMaterials.set(colorKey, material);
   return material;
 }
 
@@ -168,7 +161,9 @@ export function LineEquation({
   );
 
   // Define cone size (default to 0.5 if not provided in cone prop)
-  const arrowSize = cone?.size ?? DEFAULT_ARROW_SIZE;
+  const arrowSize = cone
+    ? resolveArrowSize(points, cone.size ?? DEFAULT_ARROW_SIZE, cone.position)
+    : 0;
 
   // Generate smooth curve points if smooth is true
   const linePoints = useMemo(() => {
@@ -185,7 +180,7 @@ export function LineEquation({
     }
 
     // Adjust line end points to account for the cone size to prevent overlap
-    if (cone) {
+    if (cone && arrowSize > 0) {
       if (
         (cone.position === "start" || cone.position === "both") &&
         basePoints.length >= 2
@@ -230,17 +225,17 @@ export function LineEquation({
 
   // Cone geometry and material (reused from ArrowHelper logic)
   const coneGeometry = useMemo(
-    () => (cone ? getSharedConeGeometry(arrowSize) : null),
+    () => (cone && arrowSize > 0 ? getSharedConeGeometry(arrowSize) : null),
     [cone, arrowSize]
   );
   const coneMaterial = useMemo(
-    () => (cone ? getSharedMaterial(color) : null),
-    [cone, color]
+    () => (cone && arrowSize > 0 ? getSharedMaterial(color) : null),
+    [cone, color, arrowSize]
   );
 
   // Calculate cone position and orientation
   const coneData = useMemo(() => {
-    if (!cone || vectorPoints.length < 2) {
+    if (!cone || arrowSize <= 0 || vectorPoints.length < 2) {
       return null;
     }
 

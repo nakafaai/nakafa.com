@@ -5,8 +5,8 @@ import type {
 import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/catalog-hash";
 import { tryoutCatalogIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import {
-  deliveryLanguageForSection,
-  questionArtifactLocaleForSection,
+  deliveryLanguageForPolicy,
+  questionArtifactLocaleForPolicy,
 } from "@nakafa/aksara-contracts/tryout/language";
 import {
   type TryoutPlacement,
@@ -42,42 +42,47 @@ export function makeSignedTryoutSection(
     (_, index) => {
       const questionOrder = index + 1;
       const questionRoot = `${sourcePath}/question-${questionOrder}`;
+      const languagePolicy = { kind: "app-locale" } as const;
 
       return Schema.decodeSync(TryoutPlacementSchema)({
         answerArtifactHash: testTextHash(`${questionRoot}:answer`),
         answerArtifactLocale: section.appLocale,
         answerContentKey: `${questionRoot}/answer`,
-        choices: [
-          {
-            isCorrect: true,
-            label: "A",
-            optionKey: "option-1",
-            order: 1,
-          },
-          {
-            isCorrect: false,
-            label: "B",
-            optionKey: "option-2",
-            order: 2,
-          },
-        ],
         contentHash: options.contentHash ?? TRYOUT_TEST_CONTENT_HASH,
         countryKey: section.countryKey,
-        deliveryLanguage: deliveryLanguageForSection(
-          section.sectionKey,
+        deliveryLanguage: deliveryLanguageForPolicy(
+          languagePolicy,
           section.appLocale
         ),
         examKey: section.examKey,
         appLocale: section.appLocale,
+        languagePolicy,
         questionArtifactHash: testTextHash(`${questionRoot}:question`),
-        questionArtifactLocale: questionArtifactLocaleForSection(
-          section.sectionKey,
+        questionArtifactLocale: questionArtifactLocaleForPolicy(
+          languagePolicy,
           section.appLocale
         ),
         questionContentKey: `${questionRoot}/question`,
         questionOrder,
         questionSourcePath: `packages/corpus/${questionRoot}`,
         rendererDomain: "snbt-math",
+        response: {
+          kind: "single-choice",
+          options: [
+            {
+              isCorrect: true,
+              label: "A",
+              optionKey: "option-1",
+              order: 1,
+            },
+            {
+              isCorrect: false,
+              label: "B",
+              optionKey: "option-2",
+              order: 2,
+            },
+          ],
+        },
         scope: "server",
         sectionKey: section.sectionKey,
         setKey: section.setKey,

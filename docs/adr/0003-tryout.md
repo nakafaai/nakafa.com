@@ -6,7 +6,8 @@ Accepted. Amended on 2026-07-08 to insert the canonical try-out track layer,
 on 2026-07-22 to define freemium attempt access, and on 2026-08-04 to make
 Aksara signed publication the only authored try-out source. Amended on
 2026-08-10 to define transactional response and scoring integrity. Amended on
-2026-08-14 to record the completed physical retirement of superseded storage.
+2026-08-14 to record the completed physical retirement of superseded storage,
+and on 2026-09-01 to define the structured response rollout.
 
 ## Context
 
@@ -55,15 +56,24 @@ copies. Do not add a second authored table family beside the signed snapshot.
 
 ### Runtime Integrity
 
-One domain response transaction receives one frozen placement ID and selected
-option. The server derives elapsed time from the active section timer and
-correctness from the signed choice snapshot. The transaction validates attempt,
-section, placement, and response ownership before it updates the response and
-parent activity counters.
+One domain response transaction receives one frozen placement ID and exactly one
+learner selection. A selection is empty, one option, an ordered option set, or an
+ordered category assignment, according to the placement's frozen
+`responseSpec`. The server derives elapsed time from the active section timer and
+evaluates correctness from that immutable specification. The transaction
+validates attempt, section, placement, response kind, and response ownership
+before it updates the response and parent activity counters.
 
-The current runtime exposes only exact attempt-ID state, response, history, and
-page operations. Public-path compatibility queries, fallback indexes, duplicate
-state shapes, and old response writers are not supported.
+The structured-response rollout completed on 2026-09-01 after production data
+contained only canonical rows. Placements persist one required `responseSpec`,
+learner responses persist one required `selection` and `isComplete` result, and
+the public mutation accepts only that stable contract. Single-choice,
+multiple-choice, and category responses share this model without rollout
+adapters or duplicate runtime projections.
+
+The runtime exposes only exact attempt-ID
+state, response, history, and page operations. Public-path compatibility
+queries, fallback indexes, and duplicate state shapes are not supported.
 
 Retained attempts read their immutable signed catalog, placement, artifact,
 release, renderer, and snapshot bytes through one private history decoder. That

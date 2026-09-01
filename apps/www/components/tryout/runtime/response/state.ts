@@ -1,6 +1,8 @@
 import type { api } from "@repo/backend/convex/_generated/api";
+import { validateTryoutResponseSelection } from "@repo/backend/convex/tryouts/response/selection";
 import type { FunctionArgs } from "convex/server";
 import type {
+  TryoutRenderableResponseSpec,
   TryoutRuntimeQuestion,
   TryoutSectionRuntime,
 } from "@/components/tryout/runtime/types";
@@ -8,13 +10,12 @@ import type {
 type SaveResponseArgs = FunctionArgs<
   typeof api.tryouts.mutations.responses.save
 >;
-export type TryoutResponseSelection = Exclude<
-  NonNullable<TryoutRuntimeQuestion["response"]>["selection"],
-  undefined
->;
+export type TryoutResponseSelection = NonNullable<
+  TryoutRuntimeQuestion["response"]
+>["selection"];
 
 interface TryoutResponseState {
-  readonly responseSpec: TryoutRuntimeQuestion["responseSpec"];
+  readonly responseSpec: TryoutRenderableResponseSpec;
   readonly selection: TryoutResponseSelection | null;
 }
 
@@ -24,11 +25,6 @@ export function applyOptimisticTryoutResponse(
   args: SaveResponseArgs,
   selectedAt: number
 ) {
-  const saved = readSaveSelection(args);
-  if (!saved.valid) {
-    return null;
-  }
-  const selection = saved.selection;
   let answeredDelta = 0;
   let foundQuestion = false;
   let validSelection = true;
@@ -37,23 +33,29 @@ export function applyOptimisticTryoutResponse(
       return question;
     }
     foundQuestion = true;
-    if (selection && selection.kind !== question.responseSpec.kind) {
+    const wasComplete = question.response?.isComplete ?? false;
+    if (args.selection === null) {
+      answeredDelta = -Number(wasComplete);
+      return { ...question, response: null };
+    }
+    const validated = validateTryoutResponseSelection(
+      question.responseSpec,
+      args.selection
+    );
+    if (!validated.valid) {
       validSelection = false;
       return question;
     }
-    const wasComplete = question.response?.isComplete ?? false;
-    const isComplete = getSelectionCompleteness(question, selection);
+    const isComplete = validated.isComplete;
     answeredDelta = Number(isComplete) - Number(wasComplete);
     return {
       ...question,
-      response: selection
-        ? {
-            answeredAt: question.response?.answeredAt ?? selectedAt,
-            isComplete,
-            selection,
-            updatedAt: selectedAt,
-          }
-        : null,
+      response: {
+        answeredAt: question.response?.answeredAt ?? selectedAt,
+        isComplete,
+        selection: validated.selection,
+        updatedAt: selectedAt,
+      },
     };
   });
 
@@ -129,40 +131,4 @@ export function assignCategorySelection(
     }),
     kind: "category",
   };
-}
-
-function readSaveSelection(
-  args: SaveResponseArgs
-):
-  | { readonly selection: TryoutResponseSelection | null; readonly valid: true }
-  | { readonly valid: false } {
-  if (args.selection !== undefined && args.selectedOptionId === undefined) {
-    return { selection: args.selection, valid: true };
-  }
-  if (args.selection === undefined && args.selectedOptionId !== undefined) {
-    return {
-      selection: {
-        kind: "single-choice",
-        optionKey: args.selectedOptionId,
-      },
-      valid: true,
-    };
-  }
-  return { valid: false };
-}
-
-function getSelectionCompleteness(
-  question: TryoutRuntimeQuestion,
-  selection: TryoutResponseSelection | null
-) {
-  if (!selection) {
-    return false;
-  }
-  if (selection.kind !== "category") {
-    return true;
-  }
-  return (
-    question.responseSpec.kind === "category" &&
-    selection.assignments.length === question.responseSpec.statements.length
-  );
 }

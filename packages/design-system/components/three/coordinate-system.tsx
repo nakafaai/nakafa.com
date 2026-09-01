@@ -6,18 +6,26 @@ import {
   PauseIcon,
   PlayIcon,
 } from "@hugeicons/core-free-icons";
-import { GizmoHelper, GizmoViewport, Grid } from "@react-three/drei";
+import { GizmoHelper, GizmoViewport } from "@react-three/drei";
 import { Axes } from "@repo/design-system/components/three/axes";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
+import {
+  type CoordinateFrame,
+  type CoordinatePoint,
+  createSymmetricFrame,
+} from "@repo/design-system/components/three/frame";
+import { CoordinateGrid } from "@repo/design-system/components/three/grid";
 import { Origin } from "@repo/design-system/components/three/origin";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { COLORS, getColor } from "@repo/design-system/lib/color";
+import type { CameraProjection } from "@repo/design-system/lib/geometry/camera";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { cn } from "@repo/design-system/lib/utils";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import {
   type CSSProperties,
@@ -38,18 +46,26 @@ const CAMERA_POSITION_Z = 12;
 interface Props {
   /** Background color of the canvas */
   backgroundColor?: CSSProperties["backgroundColor"];
+  /** Farthest orbit distance from the camera target. */
+  cameraMaxDistance?: number;
+  /** Nearest orbit distance from the camera target. */
+  cameraMinDistance?: number;
   /** Custom camera position */
   cameraPosition?: [number, number, number];
+  /** Perspective or exact orthographic camera projection. */
+  cameraProjection?: CameraProjection;
   /** Custom point the camera looks at in Three.js world coordinates */
   cameraTarget?: [number, number, number];
   /** Children elements to render inside the coordinate system */
   children?: ReactNode;
   /** Additional class name */
   className?: string;
-  /** Divisions of the grid */
-  gridDivisions?: number;
+  /** Exact Cartesian frame. Overrides symmetric axis and grid sizes. */
+  frame?: CoordinateFrame;
   /** Size of the grid */
   gridSize?: number;
+  /** Projected world coordinate of the mathematical origin. */
+  origin?: CoordinatePoint;
   /** Show the coordinate axes */
   showAxes?: boolean;
   /** Show the gizmo helper for orientation */
@@ -75,14 +91,19 @@ export function CoordinateSystem({
   showLabels = true,
   showGizmo = true,
   gridSize = 30,
-  gridDivisions = 30,
   size = 30,
   backgroundColor = "transparent",
+  cameraMaxDistance,
+  cameraMinDistance,
   cameraPosition = [CAMERA_POSITION_X, CAMERA_POSITION_Y, CAMERA_POSITION_Z],
+  cameraProjection,
   cameraTarget,
+  frame,
+  origin,
   children,
   className,
 }: Props) {
+  const t = useTranslations("Common");
   const { resolvedTheme } = useTheme();
   const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
   const [sceneState, setSceneState] = useState(() => ({
@@ -109,6 +130,14 @@ export function CoordinateSystem({
   }, [isDarkTheme]);
 
   const originColor = isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK;
+  const axisFrame = useMemo(
+    () => frame ?? createSymmetricFrame(size),
+    [frame, size]
+  );
+  const gridFrame = useMemo(
+    () => frame ?? createSymmetricFrame(gridSize),
+    [frame, gridSize]
+  );
 
   // Handle button clicks with proper invalidation for on-demand rendering
   const handleGridToggle = useCallback(() => {
@@ -184,6 +213,9 @@ export function CoordinateSystem({
             autoRotate={play}
             cameraPosition={cameraPosition}
             cameraTarget={cameraTarget}
+            maxDistance={cameraMaxDistance}
+            minDistance={cameraMinDistance}
+            projection={cameraProjection}
           />
 
           {/* Lighting */}
@@ -192,6 +224,8 @@ export function CoordinateSystem({
 
           {/* Coordinate System */}
           <Axes
+            frame={axisFrame}
+            origin={origin}
             showLabels={showLabels}
             showZAxis={showZAxis}
             size={size}
@@ -199,39 +233,21 @@ export function CoordinateSystem({
           />
 
           {/* Origin */}
-          <Origin color={originColor} visible={showOrigin} />
+          <Origin
+            color={originColor}
+            position={origin ? [origin.x, origin.y, origin.z] : undefined}
+            visible={showOrigin}
+          />
 
           {/* Grid */}
-          <Grid
-            args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
-            cellColor={gridColors.secondary}
-            fadeDistance={50}
-            fadeStrength={1}
-            position={[0, 0, 0]}
-            rotation={[0, 0, 0]}
-            sectionColor={gridColors.main}
-            visible={showGrid}
-          />
-          <Grid
-            args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
-            cellColor={gridColors.secondary}
-            fadeDistance={50}
-            fadeStrength={1}
-            position={[0, 0, 0]}
-            rotation={[Math.PI / 2, 0, 0]}
-            sectionColor={gridColors.main}
-            visible={showGrid}
-          />
-          <Grid
-            args={[gridSize * 2, gridSize * 2, gridDivisions, gridDivisions]}
-            cellColor={gridColors.secondary}
-            fadeDistance={50}
-            fadeStrength={1}
-            position={[0, 0, 0]}
-            rotation={[0, 0, Math.PI / 2]}
-            sectionColor={gridColors.main}
-            visible={showGrid}
-          />
+          {showGrid ? (
+            <CoordinateGrid
+              cellColor={gridColors.secondary}
+              frame={gridFrame}
+              origin={origin}
+              sectionColor={gridColors.main}
+            />
+          ) : null}
 
           {/* User Content */}
           {children}
@@ -258,17 +274,23 @@ export function CoordinateSystem({
           sceneReady ? "opacity-100" : "opacity-0"
         )}
       >
-        <Button onClick={handleGridToggle} size="icon" variant="secondary">
+        <Button
+          aria-pressed={showGrid}
+          onClick={handleGridToggle}
+          size="icon"
+          variant="secondary"
+        >
           <HugeIcons icon={showGrid ? GridIcon : GridOffIcon} />
-          <span className="sr-only">Toggle Grid</span>
+          <span className="sr-only">{t("grid")}</span>
         </Button>
         <Button
+          aria-pressed={play}
           onClick={handlePlayToggle}
           size="icon"
           variant={play ? "secondary" : "default"}
         >
           <HugeIcons icon={play ? PauseIcon : PlayIcon} />
-          <span className="sr-only">Toggle Play</span>
+          <span className="sr-only">{t("automatic-rotation")}</span>
         </Button>
       </div>
     </div>

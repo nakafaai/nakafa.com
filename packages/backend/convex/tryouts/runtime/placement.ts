@@ -1,3 +1,4 @@
+import { canonicalQuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import {
   tryoutCatalogIdentity,
   tryoutPlacementIdentity,
@@ -7,7 +8,6 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
-import { responseSpecFromLegacyChoices } from "@repo/backend/convex/tryouts/response/legacy";
 import { isAttemptPlacementWithinBudget } from "@repo/backend/convex/tryouts/runtime/budget";
 import {
   TryoutRuntimeError,
@@ -108,9 +108,7 @@ export const createAttemptPlacements = Effect.fn(
     }
 
     for (const placement of source.placements) {
-      const responseSpec = yield* responseSpecFromLegacyChoices(
-        placement.row.choices
-      ).pipe(Effect.mapError((cause) => startMismatch(cause.message)));
+      const responseSpec = canonicalQuestionResponse(placement.row.response);
       const frozenPlacement = {
         answerArtifactHash: placement.row.answerArtifactHash,
         answerContentKey: placement.row.answerContentKey,

@@ -1,6 +1,14 @@
 "use node";
 import { verifySignedContentArtifactIntegrity } from "@nakafa/aksara-contracts/artifact/integrity";
-import { MAX_ROLLBACK_PAGE_BYTES } from "@nakafa/aksara-contracts/release/rollback/spec";
+import {
+  canonicalizeRollbackPage,
+  canonicalizeRollbackRecord,
+  isRollbackUpsert,
+  MAX_ROLLBACK_PAGE_BYTES,
+  type RollbackPage,
+  RollbackPageSchema,
+  type RollbackRecord,
+} from "@nakafa/aksara-contracts/release/rollback/spec";
 import {
   type RoutePage,
   RoutePageSchema,
@@ -18,14 +26,6 @@ import {
   matchManifest,
 } from "@repo/backend/convex/contentRelease/ingress/current";
 import { contractFailure } from "@repo/backend/convex/contentRelease/proof/failure";
-import {
-  canonicalizeStoredPage,
-  canonicalizeStoredRecord,
-  isStoredUpsert,
-  type StoredPage,
-  StoredPageSchema,
-  type StoredRecord,
-} from "@repo/backend/convex/contentRelease/rollback/stored";
 import {
   RELEASE_PAGE_LIMIT,
   ROUTE_CATALOG_PAGE_LIMIT,
@@ -89,8 +89,8 @@ function makeRollbackPage(
     }
   >,
   total: number,
-  records: readonly StoredRecord[]
-): StoredPage {
+  records: readonly RollbackRecord[]
+): RollbackPage {
   const nextIndex = records.at(-1)?.index ?? request.afterIndex;
   return {
     done: nextIndex === total - 1,
@@ -123,15 +123,15 @@ function makeRoutePage(
   };
 }
 /** Computes exact canonical bytes without repeatedly serializing prior records. */
-function rollbackPageBytes(page: StoredPage, recordBytes: number) {
-  const wrapper = canonicalizeStoredPage({ ...page, records: [] });
+function rollbackPageBytes(page: RollbackPage, recordBytes: number) {
+  const wrapper = canonicalizeRollbackPage({ ...page, records: [] });
   const separators = Math.max(0, page.records.length - 1);
   return textEncoder.encode(wrapper).byteLength + recordBytes + separators;
 }
 /** Requires one query chunk to continue the exact aggregate cursor. */
 const validateBodyChunk = Effect.fn("contentRelease.validateRollbackChunk")(
   function* (
-    chunk: StoredPage,
+    chunk: RollbackPage,
     request: Extract<
       RollbackRequest,
       {
@@ -189,10 +189,10 @@ const validateRouteChunk = Effect.fn("contentRelease.validateRouteChunk")(
 /** Reauthenticates every body-bearing rollback state before external return. */
 const verifyRollbackArtifacts = Effect.fn(
   "contentRelease.verifyRollbackArtifacts"
-)(function* (page: StoredPage) {
+)(function* (page: RollbackPage) {
   for (const record of page.records) {
     for (const state of [record.current, record.prior]) {
-      if (isStoredUpsert(state)) {
+      if (isRollbackUpsert(state)) {
         yield* verifySignedContentArtifactIntegrity(state.artifact).pipe(
           Effect.mapError(contractFailure)
         );
@@ -219,7 +219,7 @@ const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
         `Rollback cursor ${request.afterIndex} exceeds release ${request.rollbackOf}.`
       );
     }
-    const records: StoredRecord[] = [];
+    const records: RollbackRecord[] = [];
     let afterIndex = request.afterIndex;
     let recordBytes = 0;
     while (records.length < request.limit && afterIndex < total - 1) {
@@ -237,13 +237,13 @@ const readBodyPage = Effect.fn("contentRelease.readRollbackBodyPage")(
       );
       const chunk = yield* decodePage(
         source,
-        StoredPageSchema,
+        RollbackPageSchema,
         "Rollback query page"
       );
       yield* validateBodyChunk(chunk, request, afterIndex, limit, total);
       for (const record of chunk.records) {
         const encodedBytes = textEncoder.encode(
-          canonicalizeStoredRecord(record)
+          canonicalizeRollbackRecord(record)
         ).byteLength;
         records.push(record);
         const candidate = makeRollbackPage(request, total, records);

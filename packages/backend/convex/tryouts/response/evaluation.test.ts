@@ -347,35 +347,6 @@ describe("try-out response persistence", () => {
       });
     })
   );
-
-  it.effect("requires exactly one expand-contract selection argument", () =>
-    Effect.gen(function* () {
-      const fixture = yield* seedResponseSpec("argument", multipleChoice);
-      const authed = authenticate(fixture.t, fixture.identity);
-      yield* Effect.sync(() =>
-        vi.setSystemTime(new Date(TRYOUT_TEST_NOW + 5000))
-      );
-
-      for (const args of [
-        { placementId: fixture.placementId },
-        {
-          placementId: fixture.placementId,
-          selectedOptionId: "option-1",
-          selection: {
-            kind: "multiple-choice" as const,
-            optionKeys: ["option-1"],
-          },
-        },
-      ]) {
-        const failure = yield* Effect.tryPromise(() =>
-          authed.mutation(api.tryouts.mutations.responses.save, args)
-        ).pipe(Effect.flip);
-        expect(failure.cause).toMatchObject({
-          data: { code: "TRYOUT_RESPONSE_ARGUMENT_INVALID" },
-        });
-      }
-    })
-  );
 });
 
 /** Seeds one canonical response definition for persistence integration. */
@@ -390,7 +361,6 @@ const seedResponseSpec = Effect.fn("test.tryout.responseEvaluation.seed")(
           suffix: `response-format-${suffix}`,
         });
         await ctx.db.patch(state.placementId, {
-          choiceSnapshots: undefined,
           responseSpec,
         });
         return state;

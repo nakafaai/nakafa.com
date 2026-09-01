@@ -1,24 +1,37 @@
 "use client";
 
-import { Response } from "@repo/design-system/components/ai/response";
 import { RadioGroup } from "@repo/design-system/components/ui/radio-group";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import {
   TryoutSelectableMultipleChoice,
   TryoutSelectableRadioOption,
 } from "@/components/tryout/runtime/choice/surface.client";
 import {
+  categoryLabelId,
+  optionLabelId,
+  statementLabelId,
+} from "@/components/tryout/runtime/response/id";
+import {
   assignCategorySelection,
   type TryoutResponseSelection,
   toggleMultipleChoiceSelection,
 } from "@/components/tryout/runtime/response/state";
-import type { TryoutRuntimeResponseSpec } from "@/components/tryout/runtime/types";
+import type { TryoutRenderableResponseSpec } from "@/components/tryout/runtime/types";
+
+export interface TryoutResponseFieldLabel {
+  readonly correctness?: boolean;
+  readonly id: string;
+  readonly label: string;
+}
 
 interface TryoutResponseFieldsValue {
   readonly id: string;
   readonly locked: boolean;
   readonly onChange: (selection: TryoutResponseSelection | null) => void;
-  readonly responseSpec: TryoutRuntimeResponseSpec;
+  readonly renderLabel: (value: TryoutResponseFieldLabel) => ReactNode;
+  readonly responseSpec: TryoutRenderableResponseSpec;
+  readonly revealAnswers?: boolean;
   readonly selection: TryoutResponseSelection | null;
 }
 
@@ -69,15 +82,22 @@ function SingleChoiceFields({
       >
         {responseSpec.options.map((option) => (
           <TryoutSelectableRadioOption
+            appearance={previewAppearance(
+              value.revealAnswers,
+              option.isCorrect
+            )}
             checked={selected === option.optionKey}
             disabled={locked}
-            id={`${id}-${option.optionKey}`}
+            id={optionLabelId(id, option.optionKey)}
             key={option.optionKey}
-            label={
-              <ResponseLabel id={`${id}-${option.optionKey}`}>
-                {option.label}
-              </ResponseLabel>
-            }
+            label={value.renderLabel({
+              correctness: previewCorrectness(
+                value.revealAnswers,
+                option.isCorrect
+              ),
+              id: optionLabelId(id, option.optionKey),
+              label: option.label,
+            })}
             value={option.optionKey}
           />
         ))}
@@ -105,15 +125,19 @@ function MultipleChoiceFields({
       <legend className="sr-only">{answerLabel}</legend>
       {responseSpec.options.map((option) => (
         <TryoutSelectableMultipleChoice
+          appearance={previewAppearance(value.revealAnswers, option.isCorrect)}
           checked={selected.has(option.optionKey)}
           disabled={locked}
-          id={`${id}-${option.optionKey}`}
+          id={optionLabelId(id, option.optionKey)}
           key={option.optionKey}
-          label={
-            <ResponseLabel id={`${id}-${option.optionKey}`}>
-              {option.label}
-            </ResponseLabel>
-          }
+          label={value.renderLabel({
+            correctness: previewCorrectness(
+              value.revealAnswers,
+              option.isCorrect
+            ),
+            id: optionLabelId(id, option.optionKey),
+            label: option.label,
+          })}
           onCheckedChange={() =>
             onChange(
               toggleMultipleChoiceSelection(
@@ -144,16 +168,18 @@ function CategoryFields({ value }: { value: TryoutResponseFieldsValue }) {
   return (
     <div className="space-y-6">
       {responseSpec.statements.map((statement) => {
-        const statementLabelId = `${id}-${statement.statementKey}-label`;
+        const statementId = statementLabelId(id, statement.statementKey);
+        const statementHeadingId = `${statementId}-label`;
         return (
           <section className="space-y-3" key={statement.statementKey}>
-            <div id={statementLabelId}>
-              <ResponseLabel id={`${id}-${statement.statementKey}`}>
-                {statement.label}
-              </ResponseLabel>
+            <div id={statementHeadingId}>
+              {value.renderLabel({
+                id: statementId,
+                label: statement.label,
+              })}
             </div>
             <RadioGroup
-              aria-labelledby={statementLabelId}
+              aria-labelledby={statementHeadingId}
               className="grid grid-cols-1 gap-2 md:grid-cols-2"
               disabled={locked}
               onValueChange={(categoryKey) =>
@@ -169,20 +195,37 @@ function CategoryFields({ value }: { value: TryoutResponseFieldsValue }) {
             >
               {responseSpec.categories.map((category) => (
                 <TryoutSelectableRadioOption
+                  appearance={previewAppearance(
+                    value.revealAnswers,
+                    statement.correctCategoryKey === undefined
+                      ? undefined
+                      : statement.correctCategoryKey === category.categoryKey
+                  )}
                   checked={
                     assigned.get(statement.statementKey) ===
                     category.categoryKey
                   }
                   disabled={locked}
-                  id={`${id}-${statement.statementKey}-${category.categoryKey}`}
+                  id={categoryLabelId(
+                    id,
+                    statement.statementKey,
+                    category.categoryKey
+                  )}
                   key={category.categoryKey}
-                  label={
-                    <ResponseLabel
-                      id={`${id}-${statement.statementKey}-${category.categoryKey}`}
-                    >
-                      {category.label}
-                    </ResponseLabel>
-                  }
+                  label={value.renderLabel({
+                    correctness: previewCorrectness(
+                      value.revealAnswers,
+                      statement.correctCategoryKey === undefined
+                        ? undefined
+                        : statement.correctCategoryKey === category.categoryKey
+                    ),
+                    id: categoryLabelId(
+                      id,
+                      statement.statementKey,
+                      category.categoryKey
+                    ),
+                    label: category.label,
+                  })}
                   value={category.categoryKey}
                 />
               ))}
@@ -194,14 +237,18 @@ function CategoryFields({ value }: { value: TryoutResponseFieldsValue }) {
   );
 }
 
-/** Renders mixed prose and math without an authored text or math discriminator. */
-function ResponseLabel({ children, id }: { children: string; id: string }) {
-  return (
-    <Response
-      className="wrap-anywhere h-auto whitespace-normal"
-      id={`${id}-label-content`}
-    >
-      {children}
-    </Response>
-  );
+function previewAppearance(
+  revealAnswers: boolean | undefined,
+  isCorrect: boolean | undefined
+) {
+  return revealAnswers && isCorrect !== undefined
+    ? ({ isCorrect, kind: "revealed" } as const)
+    : ({ kind: "selectable" } as const);
+}
+
+function previewCorrectness(
+  revealAnswers: boolean | undefined,
+  isCorrect: boolean | undefined
+) {
+  return revealAnswers ? isCorrect : undefined;
 }

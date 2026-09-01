@@ -13,8 +13,8 @@ import {
   tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
 import {
-  deliveryLanguageForSection,
-  questionArtifactLocaleForSection,
+  deliveryLanguageForPolicy,
+  questionArtifactLocaleForPolicy,
 } from "@nakafa/aksara-contracts/tryout/language";
 import {
   type TryoutPlacement,
@@ -321,41 +321,46 @@ export function makeTryoutStartPlacement(
 ): TryoutPlacement {
   const signedAppLocale = ActiveAppLocaleSchema.make(appLocale);
   const questionRoot = `${sourcePath}/question-1`;
+  const languagePolicy = { kind: "app-locale" } as const;
   return Schema.decodeSync(TryoutPlacementSchema)({
     answerArtifactHash: testTextHash(`${appLocale}:tryout-start:answer`),
     answerArtifactLocale: signedAppLocale,
     answerContentKey: `${questionRoot}/answer`,
-    choices: [
-      {
-        isCorrect: true,
-        label: "A",
-        optionKey: "option-1",
-        order: 1,
-      },
-      {
-        isCorrect: false,
-        label: "B",
-        optionKey: "option-2",
-        order: 2,
-      },
-    ],
     contentHash: TRYOUT_START_CONTENT_HASH,
     countryKey: TRYOUT_START_COUNTRY,
-    deliveryLanguage: deliveryLanguageForSection(
-      TRYOUT_START_SECTION,
+    deliveryLanguage: deliveryLanguageForPolicy(
+      languagePolicy,
       signedAppLocale
     ),
     examKey: TRYOUT_START_EXAM,
     appLocale: signedAppLocale,
+    languagePolicy,
     questionArtifactHash: testTextHash(`${appLocale}:tryout-start:question`),
-    questionArtifactLocale: questionArtifactLocaleForSection(
-      TRYOUT_START_SECTION,
+    questionArtifactLocale: questionArtifactLocaleForPolicy(
+      languagePolicy,
       signedAppLocale
     ),
     questionContentKey: `${questionRoot}/question`,
     questionOrder: 1,
     questionSourcePath: `packages/corpus/${questionRoot}`,
     rendererDomain: "tka-math",
+    response: {
+      kind: "single-choice",
+      options: [
+        {
+          isCorrect: true,
+          label: "A",
+          optionKey: "option-1",
+          order: 1,
+        },
+        {
+          isCorrect: false,
+          label: "B",
+          optionKey: "option-2",
+          order: 2,
+        },
+      ],
+    },
     scope: "server",
     sectionKey: TRYOUT_START_SECTION,
     setKey: TRYOUT_START_SET,

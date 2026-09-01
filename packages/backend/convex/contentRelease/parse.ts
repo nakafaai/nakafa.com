@@ -11,6 +11,7 @@ import {
   ReleaseVerificationEvidenceSchema,
   SignedContentReleaseSchema,
 } from "@nakafa/aksara-contracts/release";
+import { RollbackSnapshotEntrySchema } from "@nakafa/aksara-contracts/release/rollback/spec";
 import { ContentRouteItemSchema } from "@nakafa/aksara-contracts/release/route/spec";
 import {
   ContentSnapshotManifestSchema,
@@ -19,7 +20,7 @@ import {
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout/runtime/spec";
 import { ReleaseError } from "@repo/backend/convex/contentRelease/error";
-import { StoredSnapshotEntrySchema } from "@repo/backend/convex/contentRelease/rollback/stored";
+import { decodeStoredSnapshotRow } from "@repo/backend/convex/contentRelease/tryout/row";
 import { Effect, Schema } from "effect";
 
 const CurrentContentSnapshotManifestSchema = ContentSnapshotManifestSchema.pipe(
@@ -146,7 +147,7 @@ export const decodeProjectionJson = Effect.fn(
     )
   )
 );
-/** Rejects retained recovery Page bytes from newly staged content. */
+/** Rejects readable historical projections from newly staged content. */
 export const decodeCurrentProjectionJson = Effect.fn(
   "contentRelease.decodeCurrentProjectionJson"
 )((source: string) =>
@@ -208,7 +209,7 @@ export const decodeRollbackJson = Effect.fn(
 )((source: string) =>
   parseStoredJson(source, "Rollback snapshot").pipe(
     Effect.flatMap(
-      Schema.decodeUnknownEffect(StoredSnapshotEntrySchema, {
+      Schema.decodeUnknownEffect(RollbackSnapshotEntrySchema, {
         onExcessProperty: "error",
       })
     ),
@@ -240,16 +241,32 @@ export const decodeSnapshotJson = Effect.fn(
     )
   )
 );
-/** Strictly decodes one immutable structured-family row. */
-export const decodeSnapshotRowJson = Effect.fn(
-  "contentRelease.decodeSnapshotRowJson"
+/** Strictly decodes one current row at publication ingress. */
+export const decodeCurrentSnapshotRowJson = Effect.fn(
+  "contentRelease.decodeCurrentSnapshotRowJson"
 )((source: string) =>
-  parseStoredJson(source, "Content snapshot row").pipe(
+  parseStoredJson(source, "Current content snapshot row").pipe(
     Effect.flatMap(
       Schema.decodeUnknownEffect(ContentSnapshotRowSchema, {
         onExcessProperty: "error",
       })
     ),
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message:
+            "New content snapshot row does not satisfy the current contract.",
+        })
+    )
+  )
+);
+/** Strictly decodes one immutable structured-family row from storage. */
+export const decodeSnapshotRowJson = Effect.fn(
+  "contentRelease.decodeSnapshotRowJson"
+)((source: string) =>
+  parseStoredJson(source, "Content snapshot row").pipe(
+    Effect.flatMap(decodeStoredSnapshotRow),
     Effect.mapError(
       () =>
         new ReleaseError({

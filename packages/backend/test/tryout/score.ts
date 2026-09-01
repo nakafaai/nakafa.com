@@ -150,20 +150,6 @@ export const seedFrozenTryoutScoreState = Effect.fn(
     ctx.db.insert("tryoutAttemptPlacements", {
       answerArtifactHash: "answer-artifact-hash",
       answerContentKey: `${sectionSource}/question-1/answer`,
-      choiceSnapshots: [
-        {
-          isCorrect: true,
-          label: "A",
-          optionKey: "option-1",
-          order: 1,
-        },
-        {
-          isCorrect: false,
-          label: "B",
-          optionKey: "option-2",
-          order: 2,
-        },
-      ],
       contentHash: "question-hash",
       placementIdentity: `${sectionIdentity}:question-1`,
       placementRowHash: "placement-row-hash",
@@ -171,6 +157,23 @@ export const seedFrozenTryoutScoreState = Effect.fn(
       questionContentKey: `${sectionSource}/question-1/question`,
       questionOrder: 1,
       rendererDomain: "snbt-math",
+      responseSpec: {
+        kind: "single-choice",
+        options: [
+          {
+            isCorrect: true,
+            label: "A",
+            optionKey: "option-1",
+            order: 1,
+          },
+          {
+            isCorrect: false,
+            label: "B",
+            optionKey: "option-2",
+            order: 2,
+          },
+        ],
+      },
       sectionIdentity,
       sectionKey,
       sourcePath: `${sectionSource}/question-1`,
@@ -182,9 +185,10 @@ export const seedFrozenTryoutScoreState = Effect.fn(
   yield* Effect.promise(() =>
     ctx.db.insert("tryoutResponses", {
       answeredAt: FROZEN_SCORE_NOW - 500,
+      isComplete: true,
       isCorrect: true,
       placementId,
-      selectedOptionId: "option-1",
+      selection: { kind: "single-choice", optionKey: "option-1" },
       timeSpent: 1000,
       tryoutAttemptId: attemptId,
       tryoutSectionAttemptId: sectionAttemptId,

@@ -188,9 +188,9 @@ const stageProjectionForRole = Effect.fn(
     );
   }
   const batch =
-    release.role === "candidate"
-      ? yield* decodeBatch(releaseId, batchIndex, sources)
-      : yield* decodeRollbackBatch(releaseId, batchIndex, sources);
+    requiredRole === "recovery"
+      ? yield* decodeRollbackBatch(releaseId, batchIndex, sources)
+      : yield* decodeBatch(releaseId, batchIndex, sources);
   const projections: readonly ContentProjection[] = batch.projections;
   const entries = projections.map((projection) => ({
     projection,
@@ -272,7 +272,7 @@ const stageProjectionForRole = Effect.fn(
   };
 });
 
-/** Stages one role-decoded batch through the predecessor transport operation. */
+/** Stages one current projection batch for either signed release role. */
 export const stageProjectionProgram = Effect.fn(
   "contentRelease.stageProjectionBatch"
 )(
@@ -284,7 +284,7 @@ export const stageProjectionProgram = Effect.fn(
   ) => stageProjectionForRole(ctx, releaseId, batchIndex, sources)
 );
 
-/** Stages one readable historical projection batch for retained recovery. */
+/** Stages one readable historical projection batch through recovery only. */
 export const stageRollbackProjectionProgram = Effect.fn(
   "contentRelease.stageRollbackProjectionBatch"
 )(

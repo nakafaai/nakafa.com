@@ -1,9 +1,30 @@
 import { createHash } from "node:crypto";
+import { findPackageJSON } from "node:module";
 import contentReleaseSchema from "@repo/backend/convex/contentRelease/schema";
 import { tryoutRuntimeBundleSchema } from "@repo/backend/convex/tryouts/runtime/schema";
-import { Effect, Schema } from "effect";
+import { Effect, FileSystem, Schema } from "effect";
 
 const ACTIVE_POINTER_TABLE = "contentState";
+const CURRENT_CONTRACT_SPECIFIER = "@nakafa/aksara-contracts";
+const PREDECESSOR_CONTRACT_SPECIFIER = "@nakafa/aksara-predecessor";
+const CONTRACT_PACKAGE_NAME = "@nakafa/aksara-contracts";
+const ContractSpecifierSchema = Schema.Literals([
+  CURRENT_CONTRACT_SPECIFIER,
+  PREDECESSOR_CONTRACT_SPECIFIER,
+]);
+const ContractPackageSchema = Schema.Struct({
+  name: Schema.Literal(CONTRACT_PACKAGE_NAME),
+  version: Schema.String,
+});
+type ContractSpecifier = typeof ContractSpecifierSchema.Type;
+type ContractPackage = typeof ContractPackageSchema.Type;
+interface DecoderContractIdentity extends ContractPackage {
+  readonly specifier: ContractSpecifier;
+}
+const DECODER_CONTRACT_SPECIFIERS: readonly ContractSpecifier[] = [
+  CURRENT_CONTRACT_SPECIFIER,
+  PREDECESSOR_CONTRACT_SPECIFIER,
+];
 export const CONTENT_RUNTIME_CACHE_CONTRACT = Object.freeze({
   archive: Object.freeze({
     fixedEntries: Object.freeze([
@@ -58,6 +79,13 @@ export class DuplicateContentRuntimeTableError extends Schema.TaggedError<Duplic
   }
 ) {}
 
+export class ContentRuntimeContractIdentityError extends Schema.TaggedError<ContentRuntimeContractIdentityError>()(
+  "ContentRuntimeContractIdentityError",
+  {
+    message: Schema.String,
+  }
+) {}
+
 export const validateRuntimeTableDefinitions = Effect.fn(
   "contentRuntime.validateTableDefinitions"
 )(function* (tableDefinitions: readonly RuntimeTableDefinition[]) {
@@ -83,19 +111,68 @@ export const CONTENT_RUNTIME_TABLES = Object.freeze(
 );
 
 export const fingerprintRuntimeSchema = (
-  tableDefinitions: ReadonlyArray<readonly [string, object]>
+  tableDefinitions: ReadonlyArray<readonly [string, object]>,
+  decoderContractIdentities: readonly DecoderContractIdentity[]
 ) =>
   createHash("sha256")
     .update(
       JSON.stringify({
         cacheContract: CONTENT_RUNTIME_CACHE_CONTRACT,
+        decoderContractIdentities,
         tableDefinitions,
         tableOrder: tableDefinitions.map(([table]) => table),
       })
     )
     .digest("hex");
 
-/** Changes whenever the cached row format or any runtime table contract changes. */
-export const CONTENT_RUNTIME_SCHEMA_FINGERPRINT = fingerprintRuntimeSchema(
-  runtimeTableDefinitions
+const readContractIdentity = Effect.fn("contentRuntime.readContractIdentity")(
+  function* (specifier: ContractSpecifier) {
+    const packageJsonPath = yield* Effect.try({
+      catch: () =>
+        new ContentRuntimeContractIdentityError({
+          message: `Could not resolve installed decoder ${specifier}.`,
+        }),
+      try: () => findPackageJSON(specifier, import.meta.url),
+    });
+    if (packageJsonPath === undefined) {
+      return yield* new ContentRuntimeContractIdentityError({
+        message: `Installed decoder ${specifier} has no package.json.`,
+      });
+    }
+
+    const fileSystem = yield* FileSystem.FileSystem;
+    const packageJson = yield* fileSystem.readFileString(packageJsonPath).pipe(
+      Effect.mapError(
+        () =>
+          new ContentRuntimeContractIdentityError({
+            message: `Could not read installed decoder ${specifier}.`,
+          })
+      )
+    );
+
+    const contractPackage = yield* Schema.decodeEffect(
+      Schema.fromJsonString(ContractPackageSchema)
+    )(packageJson).pipe(
+      Effect.mapError(
+        () =>
+          new ContentRuntimeContractIdentityError({
+            message: `Installed decoder ${specifier} has invalid identity metadata.`,
+          })
+      )
+    );
+    return { ...contractPackage, specifier };
+  }
 );
+
+/** Reads every exact package identity that decodes JSON inside cached rows. */
+export const readContentRuntimeContractIdentities = Effect.fn(
+  "contentRuntime.readContractIdentities"
+)(() => Effect.forEach(DECODER_CONTRACT_SPECIFIERS, readContractIdentity));
+
+/** Changes whenever cached rows, tables, or their external decoder changes. */
+export const readContentRuntimeSchemaFingerprint = Effect.fn(
+  "contentRuntime.readSchemaFingerprint"
+)(function* () {
+  const contractIdentities = yield* readContentRuntimeContractIdentities();
+  return fingerprintRuntimeSchema(runtimeTableDefinitions, contractIdentities);
+});

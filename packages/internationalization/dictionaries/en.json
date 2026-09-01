@@ -59,6 +59,8 @@
     "references": "References",
     "show": "Show",
     "hide": "Hide",
+    "grid": "Grid",
+    "automatic-rotation": "Automatic rotation",
     "no-website": "No website",
     "high": "High",
     "official": "Official",
@@ -271,6 +273,7 @@
   "Exercises": {
     "exercises": "Exercises",
     "answer": "Answer",
+    "check-answer": "Check answer",
     "correct": "Correct",
     "incorrect": "Incorrect",
     "score": "Score",

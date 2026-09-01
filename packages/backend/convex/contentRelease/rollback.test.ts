@@ -1,18 +1,13 @@
-import { assert, describe, expect, it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
+import {
+  type RollbackPage,
+  RollbackPageSchema,
+} from "@nakafa/aksara-contracts/release/rollback/spec";
 import {
   type RoutePage,
   RoutePageSchema,
 } from "@nakafa/aksara-contracts/release/route/page";
-import {
-  canonicalizeContentProjection,
-  ContentProjectionSchema as PredecessorProjectionSchema,
-} from "@nakafa/aksara-v150/projection/spec";
 import { internal } from "@repo/backend/convex/_generated/api";
-import { decodeProjectionJson } from "@repo/backend/convex/contentRelease/parse";
-import {
-  type StoredPage,
-  StoredPageSchema,
-} from "@repo/backend/convex/contentRelease/rollback/stored";
 import {
   RELEASE_PAGE_LIMIT,
   ROUTE_CATALOG_PAGE_LIMIT,
@@ -23,8 +18,13 @@ import {
   FUNCTION_MATERIAL_JSON,
   FUNCTION_MATERIAL_KEY,
   FUNCTION_MATERIAL_SOURCE,
-  testProjectionJson,
 } from "@repo/backend/test/content/material";
+import {
+  TEST_HISTORICAL_QUESTION_PROJECTION_JSON,
+  TEST_QUESTION_PROJECTION,
+  TEST_QUESTION_PROJECTION_JSON,
+  TEST_QUESTION_SOURCE,
+} from "@repo/backend/test/content/question";
 import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
@@ -38,14 +38,14 @@ import {
 } from "@repo/backend/test/content/rollback";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { convexTest, type TestConvex } from "convex-test";
-import { Effect, Schema } from "effect";
+import { Schema } from "effect";
 
 const prepareRollback = internal.contentRelease.rollback.prepareRollback;
 const prepareRoutes = internal.contentRelease.rollback.prepareRoutes;
 
 /** Decodes the canonical body response through the shared contract. */
-function decodePage(source: string): StoredPage {
-  return Schema.decodeUnknownSync(StoredPageSchema)(JSON.parse(source));
+function decodePage(source: string): RollbackPage {
+  return Schema.decodeUnknownSync(RollbackPageSchema)(JSON.parse(source));
 }
 
 /** Decodes the canonical route response through the shared contract. */
@@ -191,46 +191,43 @@ describe("contentRelease/rollback", () => {
     );
   });
 
-  it.effect(
-    "replays an immutable predecessor publication-date projection",
-    () =>
-      Effect.gen(function* () {
-        const t = convexTest(schema, convexModules);
-        const current = JSON.parse(testProjectionJson());
-        const {
-          dateModified: _,
-          datePublished,
-          ...metadata
-        } = current.metadata;
-        const predecessor = yield* Schema.decodeUnknownEffect(
-          PredecessorProjectionSchema
-        )({
-          ...current,
-          metadata: { ...metadata, date: datePublished },
-        });
-        const priorProjectionJson = canonicalizeContentProjection(predecessor);
-        const activeFailure = yield* decodeProjectionJson(
-          priorProjectionJson
-        ).pipe(Effect.flip);
-        assert.strictEqual(activeFailure.code, "CONTENT_RELEASE_INTEGRITY");
-        yield* Effect.promise(() =>
-          t.mutation(async (ctx) => {
-            await activateRollbackFixture(ctx, 1);
-            await insertRollbackItem(ctx, 0, true, "return {};", {
-              priorProjectionJson,
-            });
-          })
-        );
+  it("preserves an authenticated historical Question rollback state", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation(async (ctx) => {
+      await activateRollbackFixture(ctx, 1);
+      await insertRollbackItem(ctx, 0, true, "return {};", {
+        contentKey: TEST_QUESTION_PROJECTION.contentKey,
+        currentProjectionJson: TEST_QUESTION_PROJECTION_JSON,
+        currentSourcePath: TEST_QUESTION_SOURCE,
+        delivery: "authenticated",
+        family: "question",
+        priorProjectionJson: TEST_HISTORICAL_QUESTION_PROJECTION_JSON,
+        priorSourcePath: TEST_QUESTION_SOURCE,
+        rendererDomain: "snbt-general",
+      });
+    });
 
-        const page = yield* Effect.promise(() => readPage(t, -1, 1));
-
-        const prior = page.records[0]?.prior;
-        assert.ok(prior && "projection" in prior);
-        assert.ok("date" in prior.projection.metadata);
-        assert.strictEqual(prior.projection.metadata.date, datePublished);
-        assert.ok(!("datePublished" in prior.projection.metadata));
-      })
-  );
+    const page = await readPage(t, -1, 1);
+    expect(page.records[0]?.prior).toMatchObject({
+      change: {
+        contentKey: TEST_QUESTION_PROJECTION.contentKey,
+        delivery: "authenticated",
+        family: "question",
+        operation: "upsert",
+      },
+      projection: {
+        choices: [
+          { label: "Correct", value: true },
+          { label: "Incorrect", value: false },
+        ],
+        metadata: { date: "2026-07-24" },
+      },
+    });
+    const prior = page.records[0]?.prior;
+    expect(
+      prior && "projection" in prior ? prior.projection : null
+    ).not.toHaveProperty("publicPath");
+  });
 
   it("rejects invalid identity, unreadable state, and cursor drift", async () => {
     const invalid = convexTest(schema, convexModules);

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
+import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
 import { makeLearningGraphIdentity } from "@nakafa/aksara-contracts/graph/identity";
 import {
   ReleaseIdSchema,
@@ -187,6 +188,7 @@ export function testUpsertJson(options?: {
   readonly artifactHash?: string;
   readonly artifactLocale?: ArtifactLocaleCode;
   readonly contentKey?: string;
+  readonly delivery?: ContentDeliveryClass;
   readonly family?: ContentFamily;
   readonly index?: number;
   readonly releaseId?: string;
@@ -200,7 +202,7 @@ export function testUpsertJson(options?: {
       artifactHash: options?.artifactHash ?? TEST_ARTIFACT_HASH,
       artifactLocale,
       contentKey: options?.contentKey ?? `test:head-${index}`,
-      delivery: "public",
+      delivery: options?.delivery ?? "public",
       family: options?.family ?? "material",
       operation: "upsert",
       rendererDomain: options?.rendererDomain ?? "mathematics",

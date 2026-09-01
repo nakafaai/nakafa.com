@@ -1,11 +1,13 @@
+import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, it } from "@effect/vitest";
 import contentReleaseSchema from "@repo/backend/convex/contentRelease/schema";
 import { tryoutRuntimeBundleSchema } from "@repo/backend/convex/tryouts/runtime/schema";
 import {
   CONTENT_RUNTIME_CACHE_CONTRACT,
-  CONTENT_RUNTIME_SCHEMA_FINGERPRINT,
   CONTENT_RUNTIME_TABLES,
   fingerprintRuntimeSchema,
+  readContentRuntimeContractIdentities,
+  readContentRuntimeSchemaFingerprint,
   validateContentRuntimeTableDefinitions,
   validateRuntimeTableDefinitions,
 } from "@repo/backend/scripts/content/runtime/tables";
@@ -14,7 +16,21 @@ import { v } from "convex/values";
 import { Effect } from "effect";
 
 const EXPECTED_RUNTIME_SCHEMA_FINGERPRINT =
-  "eb5e1256b3d34e7e9479e508f1c26f4d7d9e68fa96bd91a25d3bd9b8ec5c9457";
+  "33def10905a084c8334a093fff93b385ed82af5d7d02c8478d0db2745620ac20";
+const CURRENT_DECODER_CONTRACT_IDENTITY = Object.freeze({
+  name: "@nakafa/aksara-contracts",
+  specifier: "@nakafa/aksara-contracts",
+  version: "0.33.0",
+});
+const PREDECESSOR_DECODER_CONTRACT_IDENTITY = Object.freeze({
+  name: "@nakafa/aksara-contracts",
+  specifier: "@nakafa/aksara-predecessor",
+  version: "0.26.0",
+});
+const DECODER_CONTRACT_IDENTITIES = [
+  CURRENT_DECODER_CONTRACT_IDENTITY,
+  PREDECESSOR_DECODER_CONTRACT_IDENTITY,
+];
 
 describe("content runtime tables", () => {
   it.live(
@@ -55,35 +71,42 @@ describe("content runtime tables", () => {
       })
   );
 
-  it("fingerprints the exact cache format and runtime table contracts", () => {
-    expect(CONTENT_RUNTIME_CACHE_CONTRACT).toEqual({
-      archive: {
-        fixedEntries: ["manifest.jsonl", "metadata.json", "tables.txt"],
-        tableEntryPattern: "<table>.jsonl",
-        type: "tar-root",
-      },
-      encryption: {
-        cipher: "AES256",
-        compression: "zlib",
-        mode: "OpenPGP-OCB",
-        s2kDigest: "SHA512",
-        s2kMode: 3,
-      },
-      manifest: "ordered-json-lines-row-count-sha256",
-      portableRows: {
-        encoding: "json-lines",
-        strippedFields: [
-          "_id",
-          "_creationTime",
-          "proofWorkflowId",
-          "syncJobId",
-        ],
-      },
-    });
-    expect(CONTENT_RUNTIME_SCHEMA_FINGERPRINT).toBe(
-      EXPECTED_RUNTIME_SCHEMA_FINGERPRINT
-    );
-  });
+  it.live(
+    "fingerprints the exact cache format, decoder, and runtime tables",
+    () =>
+      Effect.gen(function* () {
+        expect(CONTENT_RUNTIME_CACHE_CONTRACT).toEqual({
+          archive: {
+            fixedEntries: ["manifest.jsonl", "metadata.json", "tables.txt"],
+            tableEntryPattern: "<table>.jsonl",
+            type: "tar-root",
+          },
+          encryption: {
+            cipher: "AES256",
+            compression: "zlib",
+            mode: "OpenPGP-OCB",
+            s2kDigest: "SHA512",
+            s2kMode: 3,
+          },
+          manifest: "ordered-json-lines-row-count-sha256",
+          portableRows: {
+            encoding: "json-lines",
+            strippedFields: [
+              "_id",
+              "_creationTime",
+              "proofWorkflowId",
+              "syncJobId",
+            ],
+          },
+        });
+        expect(yield* readContentRuntimeContractIdentities()).toEqual(
+          DECODER_CONTRACT_IDENTITIES
+        );
+        expect(yield* readContentRuntimeSchemaFingerprint()).toBe(
+          EXPECTED_RUNTIME_SCHEMA_FINGERPRINT
+        );
+      }).pipe(Effect.provide(NodeServices.layer))
+  );
 
   it("changes when a Convex validator or index changes", () => {
     const baseline = [["example", defineTable({ value: v.string() })]] as const;
@@ -97,11 +120,23 @@ describe("content runtime tables", () => {
       ],
     ] as const;
 
-    expect(fingerprintRuntimeSchema(changedValidator)).not.toBe(
-      fingerprintRuntimeSchema(baseline)
-    );
-    expect(fingerprintRuntimeSchema(changedIndex)).not.toBe(
-      fingerprintRuntimeSchema(baseline)
+    expect(
+      fingerprintRuntimeSchema(changedValidator, DECODER_CONTRACT_IDENTITIES)
+    ).not.toBe(fingerprintRuntimeSchema(baseline, DECODER_CONTRACT_IDENTITIES));
+    expect(
+      fingerprintRuntimeSchema(changedIndex, DECODER_CONTRACT_IDENTITIES)
+    ).not.toBe(fingerprintRuntimeSchema(baseline, DECODER_CONTRACT_IDENTITIES));
+  });
+
+  it("changes when the external decoder package changes", () => {
+    const tables = [["example", defineTable({ value: v.string() })]] as const;
+    const changedPredecessor = [
+      CURRENT_DECODER_CONTRACT_IDENTITY,
+      { ...PREDECESSOR_DECODER_CONTRACT_IDENTITY, version: "0.25.0" },
+    ];
+
+    expect(fingerprintRuntimeSchema(tables, changedPredecessor)).not.toBe(
+      fingerprintRuntimeSchema(tables, DECODER_CONTRACT_IDENTITIES)
     );
   });
 
@@ -110,15 +145,21 @@ describe("content runtime tables", () => {
     const second = defineTable({ value: v.number() });
 
     expect(
-      fingerprintRuntimeSchema([
-        ["first", first],
-        ["second", second],
-      ])
+      fingerprintRuntimeSchema(
+        [
+          ["first", first],
+          ["second", second],
+        ],
+        DECODER_CONTRACT_IDENTITIES
+      )
     ).not.toBe(
-      fingerprintRuntimeSchema([
-        ["second", second],
-        ["first", first],
-      ])
+      fingerprintRuntimeSchema(
+        [
+          ["second", second],
+          ["first", first],
+        ],
+        DECODER_CONTRACT_IDENTITIES
+      )
     );
   });
 });

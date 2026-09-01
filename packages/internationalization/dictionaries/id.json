@@ -59,6 +59,8 @@
     "references": "Referensi",
     "show": "Tampilkan",
     "hide": "Sembunyikan",
+    "grid": "Kisi",
+    "automatic-rotation": "Rotasi otomatis",
     "no-website": "Tidak ada website",
     "high": "Tinggi",
     "official": "Resmi",
@@ -271,6 +273,7 @@
   "Exercises": {
     "exercises": "Latihan",
     "answer": "Jawaban",
+    "check-answer": "Cek jawaban",
     "correct": "Benar",
     "incorrect": "Salah",
     "score": "Nilai",

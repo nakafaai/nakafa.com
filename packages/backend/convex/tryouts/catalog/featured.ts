@@ -1,4 +1,5 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { canonicalQuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { releaseFail } from "@repo/backend/convex/contentRelease/error";
 import { loadTryoutCatalog } from "@repo/backend/convex/contentRelease/tryout/catalog";
@@ -9,7 +10,7 @@ import {
   readPublishedSetSections,
   sortCatalogRows,
 } from "@repo/backend/convex/tryouts/catalog/hierarchy";
-import { tryoutChoiceSnapshotValidator } from "@repo/backend/convex/tryouts/runtime/choice";
+import { tryoutResponseSpecValidator } from "@repo/backend/convex/tryouts/response/model";
 import {
   type TryoutQuestionSelector,
   tryoutQuestionSelectorValidator,
@@ -21,8 +22,8 @@ import { Effect } from "effect";
  * Public model for the signed landing demo, including its visible answer feedback.
  */
 export const featuredTryoutValidator = v.object({
-  choices: v.array(tryoutChoiceSnapshotValidator),
   question: tryoutQuestionSelectorValidator,
+  response: tryoutResponseSpecValidator,
 });
 
 /** Selects the first authored question from the canonical try-out hierarchy. */
@@ -34,7 +35,6 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
     if (!section) {
       return yield* missingFeaturedTryout("section");
     }
-
     const source = yield* readTryoutSection(ctx, {
       countryKey: section.countryKey,
       examKey: section.examKey,
@@ -63,8 +63,8 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
     };
 
     return {
-      choices: [...placement.choices],
       question,
+      response: canonicalQuestionResponse(placement.response),
     };
   }
 );

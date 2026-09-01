@@ -5,8 +5,8 @@ import { Effect, Layer } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
 import { bumpDependencies } from "#scripts/dependencies/bump";
 import {
-  CONTRACT_ARCHIVE,
   DEPENDENCY_HOLDS,
+  PREDECESSOR_CONTRACT_SPECIFIER,
 } from "#scripts/dependencies/policy";
 import { inspectDependencyPolicy } from "#scripts/dependencies/source";
 
@@ -26,18 +26,17 @@ const CONTRACT_MANIFEST_PATHS = [
 ] as const;
 
 function validInput() {
-  const dependencies = Object.fromEntries(
-    DEPENDENCY_HOLDS.map((hold) => [
-      hold.dependency,
-      hold.approved ?? hold.allowed?.[0] ?? "missing",
-    ])
-  );
   const manifests = CONTRACT_MANIFEST_PATHS.map((path, index) => ({
     manifest: {
-      dependencies:
-        index === 0
-          ? dependencies
-          : { "@nakafa/aksara-contracts": CONTRACT_ARCHIVE },
+      dependencies: Object.fromEntries(
+        DEPENDENCY_HOLDS.filter(
+          ({ declarationPaths }) =>
+            declarationPaths?.includes(path) ?? index === 0
+        ).map((hold) => [
+          hold.dependency,
+          hold.approved ?? hold.allowed?.[0] ?? "missing",
+        ])
+      ),
       scripts:
         index === 0 ? { doctor: "pnpm dlx react-doctor@0.9.12" } : undefined,
     },
@@ -72,6 +71,24 @@ function validInput() {
 }
 
 describe("dependency policy", () => {
+  it("pins the predecessor decoder to one backend-only release artifact", () => {
+    expect(PREDECESSOR_CONTRACT_SPECIFIER).toBe(
+      "https://github.com/nakafaai/aksara/releases/download/contracts-v0.26.0/nakafa-aksara-contracts-0.26.0.tgz"
+    );
+    expect(
+      dependencyDeclarations(
+        validInput().manifests,
+        "@nakafa/aksara-predecessor"
+      )
+    ).toEqual([
+      {
+        group: "dependencies",
+        manifestPath: "packages/backend/package.json",
+        spec: PREDECESSOR_CONTRACT_SPECIFIER,
+      },
+    ]);
+  });
+
   it.effect("accepts the actual repository dependency policy", () =>
     Effect.gen(function* () {
       const problems = yield* inspectDependencyPolicy(REPOSITORY_ROOT).pipe(

@@ -96,7 +96,6 @@ describe("tryouts/runtime/placement", () => {
         responseSpec: { kind: "single-choice" },
         sourceRevision: "2027",
       });
-      expect(placement).not.toHaveProperty("choiceSnapshots");
       expect(placement).not.toHaveProperty("questionId");
     })
   );
@@ -152,9 +151,16 @@ describe("tryouts/runtime/placement", () => {
                 const runtime = yield* insertRuntime(ctx);
                 const section = runtime.source.snapshot.sections[0];
                 const placement = section?.placements[0];
-                const [firstChoice, ...remainingChoices] =
-                  placement?.row.choices ?? [];
-                if (!(section && placement && firstChoice)) {
+                const response = placement?.row.response;
+                const firstOption =
+                  response?.kind === "single-choice"
+                    ? response.options[0]
+                    : undefined;
+                const remainingOptions =
+                  response?.kind === "single-choice"
+                    ? response.options.slice(1)
+                    : [];
+                if (!(section && placement && response && firstOption)) {
                   return yield* Effect.die(
                     "Expected one signed placement fixture."
                   );
@@ -174,15 +180,18 @@ describe("tryouts/runtime/placement", () => {
                               ...placement,
                               row: {
                                 ...placement.row,
-                                choices: [
-                                  {
-                                    ...firstChoice,
-                                    label: "x".repeat(
-                                      TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT
-                                    ),
-                                  },
-                                  ...remainingChoices,
-                                ],
+                                response: {
+                                  kind: "single-choice",
+                                  options: [
+                                    {
+                                      ...firstOption,
+                                      label: "x".repeat(
+                                        TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT
+                                      ),
+                                    },
+                                    ...remainingOptions,
+                                  ],
+                                },
                               },
                             },
                           ],

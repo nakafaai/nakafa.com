@@ -3,6 +3,7 @@ import {
   ActiveAppLocaleCodeSchema,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
+import { canonicalQuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import {
   TryoutCatalogRowSchema,
   type TryoutSet,
@@ -188,10 +189,13 @@ export async function seedTryoutContentAccessState(
   });
 
   const { row: placementRow, rowHash: placementRowHash } = signedPlacement;
+  const responseSpec = canonicalQuestionResponse(placementRow.response);
+  if (responseSpec.kind !== "single-choice") {
+    throw new Error("Expected one single-choice runtime fixture.");
+  }
   const placementId = await ctx.db.insert("tryoutAttemptPlacements", {
     answerArtifactHash: placementRow.answerArtifactHash,
     answerContentKey: placementRow.answerContentKey,
-    choiceSnapshots: [...placementRow.choices],
     contentHash: placementRow.contentHash,
     placementIdentity: tryoutPlacementIdentity(placementRow),
     placementRowHash,
@@ -199,6 +203,7 @@ export async function seedTryoutContentAccessState(
     questionContentKey: placementRow.questionContentKey,
     questionOrder: placementRow.questionOrder,
     rendererDomain: placementRow.rendererDomain,
+    responseSpec,
     sectionIdentity: tryoutCatalogIdentity(signedSection.signed.section.row),
     sectionKey: placementRow.sectionKey,
     sourcePath: placementRow.questionSourcePath,
@@ -372,7 +377,6 @@ export function insertTryoutAttemptPlacement(
   return ctx.db.insert("tryoutAttemptPlacements", {
     answerArtifactHash: placement.answerArtifactHash,
     answerContentKey: placement.answerContentKey,
-    choiceSnapshots: placement.choiceSnapshots,
     contentHash: placement.contentHash,
     placementIdentity: placement.placementIdentity,
     placementRowHash: placement.placementRowHash,
@@ -380,6 +384,7 @@ export function insertTryoutAttemptPlacement(
     questionContentKey: placement.questionContentKey,
     questionOrder: placement.questionOrder,
     rendererDomain: placement.rendererDomain,
+    responseSpec: placement.responseSpec,
     sectionIdentity: placement.sectionIdentity,
     sectionKey: placement.sectionKey,
     sourcePath: placement.sourcePath,

@@ -116,3 +116,111 @@ for (const viewport of targetViewports) {
     );
   });
 }
+
+test("guest reaches authentication only when starting a public tryout", async ({
+  page,
+}) => {
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        yield* seedDeniedAnalyticsConsent(page);
+        yield* Effect.promise(() =>
+          page.setViewportSize({ height: 900, width: 1440 })
+        );
+        const response = yield* Effect.promise(() =>
+          page.goto("/en/try-out", { waitUntil: "domcontentloaded" })
+        );
+        yield* Effect.sync(() => expect(response?.ok()).toBe(true));
+
+        const countryHref = "/en/try-out/indonesia";
+        const country = page.getByRole("button", {
+          exact: true,
+          name: "View exams Indonesia",
+        });
+        yield* Effect.promise(() => expect(country).toBeVisible());
+        yield* Effect.promise(() =>
+          expect(country).toHaveAttribute("href", countryHref)
+        );
+        yield* Effect.promise(() => country.click());
+        yield* Effect.promise(() =>
+          expect(page).toHaveURL(new URL(countryHref, page.url()).toString(), {
+            timeout: readinessTimeoutMilliseconds,
+          })
+        );
+
+        const examHref = `${countryHref}/snbt`;
+        const exam = page.getByRole("button", {
+          exact: true,
+          name: "View options SNBT",
+        });
+        yield* Effect.promise(() => expect(exam).toBeVisible());
+        yield* Effect.promise(() =>
+          expect(exam).toHaveAttribute("href", examHref)
+        );
+        yield* Effect.promise(() => exam.click());
+        yield* Effect.promise(() =>
+          expect(page).toHaveURL(new URL(examHref, page.url()).toString(), {
+            timeout: readinessTimeoutMilliseconds,
+          })
+        );
+
+        const trackHref = `${examHref}/2027`;
+        const track = page.getByRole("button", {
+          exact: true,
+          name: "View sets Year 2027",
+        });
+        yield* Effect.promise(() => expect(track).toBeVisible());
+        yield* Effect.promise(() =>
+          expect(track).toHaveAttribute("href", trackHref)
+        );
+        yield* Effect.promise(() => track.click());
+        yield* Effect.promise(() =>
+          expect(page).toHaveURL(new URL(trackHref, page.url()).toString(), {
+            timeout: readinessTimeoutMilliseconds,
+          })
+        );
+
+        const setHref = `${trackHref}/set-1`;
+        const set = page.getByRole("link", { exact: true, name: "Set 1" });
+        const setRow = page.getByRole("row").filter({ has: set });
+        yield* Effect.promise(() =>
+          expect(set).toBeVisible({ timeout: readinessTimeoutMilliseconds })
+        );
+        yield* Effect.promise(() => expect(setRow).toHaveCount(1));
+        yield* Effect.promise(() =>
+          expect(set).toHaveAttribute("href", setHref)
+        );
+        yield* Effect.promise(() => setRow.click());
+        yield* Effect.promise(() =>
+          expect(page).toHaveURL(new URL(setHref, page.url()).toString(), {
+            timeout: readinessTimeoutMilliseconds,
+          })
+        );
+
+        const start = page.getByRole("button", {
+          exact: true,
+          name: "Start free",
+        });
+        yield* Effect.promise(() =>
+          expect(start).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
+        );
+        yield* Effect.promise(() => start.click());
+        const authHref = `/en/auth?redirect=${encodeURIComponent(setHref)}`;
+        yield* Effect.promise(() =>
+          expect(page).toHaveURL(new URL(authHref, page.url()).toString(), {
+            timeout: readinessTimeoutMilliseconds,
+          })
+        );
+        yield* Effect.promise(() =>
+          expect(
+            page.getByRole("button", {
+              exact: true,
+              name: "Continue with Google",
+            })
+          ).toBeVisible()
+        );
+      })
+    )
+  );
+});

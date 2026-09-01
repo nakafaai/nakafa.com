@@ -1,25 +1,8 @@
 import type {
   CuboidLine,
-  LinePoint,
   ResolvedLine,
 } from "@repo/design-system/components/contents/mathematics/line/spec";
-
-const ORIGIN: LinePoint = { x: 0, y: 0, z: 0 };
-
-const EDGE_VERTEX_INDICES = [
-  [0, 1],
-  [1, 2],
-  [2, 3],
-  [3, 0],
-  [4, 5],
-  [5, 6],
-  [6, 7],
-  [7, 4],
-  [0, 4],
-  [1, 5],
-  [2, 6],
-  [3, 7],
-] as const;
+import { createCuboid } from "@repo/design-system/lib/geometry/cuboid";
 
 /**
  * Resolves a mathematical cuboid into its twelve exact, axis-aligned edges.
@@ -29,7 +12,7 @@ const EDGE_VERTEX_INDICES = [
  * round a cuboid corner through curve interpolation.
  */
 export function createCuboidLines({
-  center = ORIGIN,
+  center,
   color,
   height,
   length,
@@ -37,25 +20,12 @@ export function createCuboidLines({
   showPoints = false,
   width,
 }: CuboidLine): ResolvedLine[] {
-  const halfLength = length / 2;
-  const halfHeight = height / 2;
-  const halfWidth = width / 2;
-  const { x, y, z } = center;
-  const vertices: LinePoint[] = [
-    { x: x - halfLength, y: y - halfHeight, z: z - halfWidth },
-    { x: x + halfLength, y: y - halfHeight, z: z - halfWidth },
-    { x: x + halfLength, y: y + halfHeight, z: z - halfWidth },
-    { x: x - halfLength, y: y + halfHeight, z: z - halfWidth },
-    { x: x - halfLength, y: y - halfHeight, z: z + halfWidth },
-    { x: x + halfLength, y: y - halfHeight, z: z + halfWidth },
-    { x: x + halfLength, y: y + halfHeight, z: z + halfWidth },
-    { x: x - halfLength, y: y + halfHeight, z: z + halfWidth },
-  ];
+  const { edges } = createCuboid({ center, height, length, width });
 
-  return EDGE_VERTEX_INDICES.map(([startIndex, endIndex]) => ({
+  return edges.map(([start, end]) => ({
     color,
     lineWidth,
-    points: [vertices[startIndex], vertices[endIndex]],
+    points: [start, end],
     showPoints,
     smooth: false,
   }));

@@ -59,6 +59,8 @@
     "references": "Quellen",
     "show": "Anzeigen",
     "hide": "Ausblenden",
+    "grid": "Raster",
+    "automatic-rotation": "Automatische Drehung",
     "no-website": "Keine Website",
     "high": "Hoch",
     "official": "Offiziell",
@@ -271,6 +273,7 @@
   "Exercises": {
     "exercises": "Übungen",
     "answer": "Antwort",
+    "check-answer": "Antwort prüfen",
     "correct": "Richtig",
     "incorrect": "Falsch",
     "score": "Punktzahl",

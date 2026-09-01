@@ -7,8 +7,6 @@ import {
   TryoutResponseIntegrityError,
   validateTryoutResponsePlacements,
 } from "@repo/backend/convex/tryouts/response/integrity";
-import { resolvePlacementResponseSpec } from "@repo/backend/convex/tryouts/response/legacy";
-import type { TryoutResponseSelection } from "@repo/backend/convex/tryouts/response/model";
 import {
   type SaveTryoutResponseArgs,
   TryoutResponseError,
@@ -147,14 +145,14 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(function* (
   });
   const existing = existingResponses.at(0);
   const timeSpent = getResponseTimeSpent(section, input.now);
-  const selection = yield* readSaveSelection(input.args);
+  const selection = input.args.selection;
   if (selection === null) {
     if (!existing) {
       return null;
     }
     yield* tryResponsePromise(() => ctx.db.delete(existing._id));
     yield* updateResponseActivity(ctx, {
-      answeredDelta: existing.isComplete === false ? 0 : -1,
+      answeredDelta: -Number(existing.isComplete),
       attemptId: attempt._id,
       correctDelta: existing.isCorrect ? -1 : 0,
       now: input.now,
@@ -163,17 +161,10 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(function* (
     return null;
   }
 
-  const responseSpec = yield* resolvePlacementResponseSpec(placement).pipe(
-    Effect.mapError(
-      (cause) =>
-        new TryoutResponseError({
-          cause,
-          code: "TRYOUT_RESPONSE_DEFINITION_INVALID",
-          message: cause.message,
-        })
-    )
-  );
-  const evaluated = yield* evaluateTryoutResponse(responseSpec, selection).pipe(
+  const evaluated = yield* evaluateTryoutResponse(
+    placement.responseSpec,
+    selection
+  ).pipe(
     Effect.mapError(
       (cause) =>
         new TryoutResponseError({
@@ -187,13 +178,12 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(function* (
     const correctDelta =
       (evaluated.isCorrect ? 1 : 0) - (existing.isCorrect ? 1 : 0);
     const answeredDelta =
-      (evaluated.isComplete ? 1 : 0) - (existing.isComplete === false ? 0 : 1);
+      Number(evaluated.isComplete) - Number(existing.isComplete);
 
     yield* tryResponsePromise(() =>
       ctx.db.patch(existing._id, {
         isComplete: evaluated.isComplete,
         isCorrect: evaluated.isCorrect,
-        selectedOptionId: undefined,
         selection: evaluated.selection,
         timeSpent,
         updatedAt: input.now,
@@ -231,31 +221,6 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(function* (
   });
   return null;
 });
-
-/** Normalizes the public expand contract before domain evaluation. */
-const readSaveSelection = Effect.fn("tryouts.response.readSaveSelection")(
-  function* (args: SaveTryoutResponseArgs) {
-    if (args.selection !== undefined && args.selectedOptionId === undefined) {
-      yield* Effect.logInfo("Used canonical try-out response argument", {
-        contract: "selection",
-      });
-      return args.selection;
-    }
-    if (args.selection === undefined && args.selectedOptionId !== undefined) {
-      yield* Effect.logInfo("Used predecessor try-out response argument", {
-        contract: "selectedOptionId",
-      });
-      return {
-        kind: "single-choice",
-        optionKey: args.selectedOptionId,
-      } satisfies TryoutResponseSelection;
-    }
-    return yield* new TryoutResponseError({
-      code: "TRYOUT_RESPONSE_ARGUMENT_INVALID",
-      message: "Try-out response requires exactly one learner selection.",
-    });
-  }
-);
 
 /** Applies one response delta to its section and parent activity clocks. */
 const updateResponseActivity = Effect.fn("tryouts.response.updateActivity")(

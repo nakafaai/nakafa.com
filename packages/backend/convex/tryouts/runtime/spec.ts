@@ -3,7 +3,6 @@ import {
   tryoutRuntimeResponseSpecValidator,
 } from "@repo/backend/convex/tryouts/response/model";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
-import { tryoutRuntimeChoiceValidator } from "@repo/backend/convex/tryouts/runtime/choice";
 import { tryoutCurrentSectionValidator } from "@repo/backend/convex/tryouts/runtime/content";
 import { tryoutScoreResultValidator } from "@repo/backend/convex/tryouts/score";
 import { tryoutStatusValidator } from "@repo/backend/convex/tryouts/status";
@@ -27,14 +26,10 @@ const runtimeResponseValidator = v.object({
   answeredAt: v.number(),
   isComplete: v.boolean(),
   selection: tryoutResponseSelectionValidator,
-  /** Temporary predecessor projection removed after client observation. */
-  selectedOptionId: v.optional(v.string()),
   updatedAt: v.number(),
 });
 
 const runtimeQuestionValidator = v.object({
-  /** Temporary predecessor projection removed after client observation. */
-  choices: v.array(tryoutRuntimeChoiceValidator),
   contentHash: v.string(),
   placementId: v.id("tryoutAttemptPlacements"),
   questionOrder: v.number(),

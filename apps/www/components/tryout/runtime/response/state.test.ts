@@ -96,18 +96,6 @@ describe("try-out response state", () => {
       )?.section.answeredCount
     ).toBe(1);
 
-    const legacyRuntime = makeRuntime(makeSingleQuestion());
-    expect(
-      applyOptimisticTryoutResponse(
-        legacyRuntime,
-        {
-          placementId: legacyRuntime.questions[0].placementId,
-          selectedOptionId: "option-1",
-        },
-        NOW
-      )?.questions[0].response?.selection
-    ).toEqual({ kind: "single-choice", optionKey: "option-1" });
-
     const runtime = makeRuntime(makeCategoryQuestion());
     const partial = applyOptimisticTryoutResponse(
       runtime,
@@ -164,7 +152,7 @@ describe("try-out response state", () => {
     expect(cleared?.section.answeredCount).toBe(0);
   });
 
-  it("rejects a missing placement or mismatched optimistic kind", () => {
+  it("rejects missing placements and invalid optimistic selections", () => {
     const runtime = makeRuntime(makeMultipleQuestion());
     expect(
       applyOptimisticTryoutResponse(
@@ -185,31 +173,51 @@ describe("try-out response state", () => {
     ).toBeNull();
     expect(
       applyOptimisticTryoutResponse(
-        runtime,
-        { placementId: runtime.questions[0].placementId },
-        NOW
-      )
-    ).toBeNull();
-    expect(
-      applyOptimisticTryoutResponse(
-        runtime,
+        makeRuntime(makeSingleQuestion()),
         {
           placementId: runtime.questions[0].placementId,
-          selectedOptionId: "option-1",
-          selection: {
-            kind: "multiple-choice",
-            optionKeys: ["option-1"],
-          },
+          selection: { kind: "single-choice", optionKey: "missing" },
         },
         NOW
       )
     ).toBeNull();
+    for (const optionKeys of [[], ["option-1", "option-1"], ["missing"]]) {
+      expect(
+        applyOptimisticTryoutResponse(
+          runtime,
+          {
+            placementId: runtime.questions[0].placementId,
+            selection: { kind: "multiple-choice", optionKeys },
+          },
+          NOW
+        )
+      ).toBeNull();
+    }
+    const categoryRuntime = makeRuntime(makeCategoryQuestion());
+    for (const assignments of [
+      [{ categoryKey: "missing", statementKey: "statement-1" }],
+      [{ categoryKey: "category-1", statementKey: "missing" }],
+      [
+        { categoryKey: "category-1", statementKey: "statement-1" },
+        { categoryKey: "category-2", statementKey: "statement-1" },
+      ],
+    ]) {
+      expect(
+        applyOptimisticTryoutResponse(
+          categoryRuntime,
+          {
+            placementId: categoryRuntime.questions[0].placementId,
+            selection: { assignments, kind: "category" },
+          },
+          NOW
+        )
+      ).toBeNull();
+    }
   });
 });
 
 function makeMultipleQuestion(): TryoutRuntimeQuestion {
   return {
-    choices: [],
     contentHash: "content-hash",
     placementId: "placement" as TryoutRuntimeQuestion["placementId"],
     questionOrder: 1,
@@ -228,7 +236,7 @@ function makeSingleQuestion(): TryoutRuntimeQuestion {
     ...makeMultipleQuestion(),
     responseSpec: {
       kind: "single-choice",
-      options: [responseOption("option-1", 1)],
+      options: [responseOption("option-1", 1), responseOption("option-2", 2)],
     },
   };
 }
