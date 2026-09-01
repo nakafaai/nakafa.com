@@ -1,5 +1,6 @@
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
 import { type ReactNode, Suspense } from "react";
 import { readMaterialCardChapters } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/data";
@@ -29,8 +30,6 @@ import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { LayoutMaterialToc } from "@/components/shared/material/toc";
 import { RefContent } from "@/components/shared/ref-content";
-import { SubjectItem } from "@/components/shared/subject-item";
-import { SubjectList } from "@/components/shared/subject-list";
 import { getCurriculumRouteSocialImage } from "@/lib/curriculum/artwork";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
@@ -40,6 +39,13 @@ import { getSocialMetadata } from "@/lib/utils/metadata";
 
 type CurriculumPageProps =
   PageProps<"/[locale]/curricula/[curriculum]/[[...path]]">;
+
+const CurriculumNestedHeader = dynamic(
+  () =>
+    import(
+      "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/nested/header"
+    )
+);
 
 /**
  * Builds a bounded prerender subset from the exclusive curriculum owner.
@@ -117,11 +123,16 @@ async function CurriculumTrackRoute({
     getTranslations({ locale, namespace: "LearningPrograms" }),
   ]);
   const homeLabel = tCommon("home");
+  const breadcrumbs = readRuntimeCurriculumBreadcrumbs(
+    homeLabel,
+    tCommon("subject"),
+    model
+  );
 
   return (
     <CurriculumRouteFrame
       actionLabel={tLearningPrograms("curriculum-route-action")}
-      homeLabel={homeLabel}
+      breadcrumbs={breadcrumbs}
       model={model}
     >
       <CurriculumRootHeader
@@ -146,18 +157,36 @@ async function CurriculumNestedRoute({
     getTranslations({ locale, namespace: "Common" }),
     getTranslations({ locale, namespace: "LearningPrograms" }),
   ]);
+  const homeLabel = tCommon("home");
+  const subjectLabel = tCommon("subject");
+  const breadcrumbs = readRuntimeCurriculumBreadcrumbs(
+    homeLabel,
+    subjectLabel,
+    model
+  );
 
   return (
     <CurriculumRouteFrame
       actionLabel={tLearningPrograms("curriculum-route-action")}
-      homeLabel={tCommon("home")}
+      breadcrumbs={breadcrumbs}
       model={model}
     >
-      <HeaderContent
-        icon={readCurriculumRouteIcon(route)}
-        link={readRuntimeCurriculumHeader(model)}
-        title={route.title}
-      />
+      {model.childRoutes.length > 0 ? (
+        <CurriculumNestedHeader
+          ancestors={model.ancestors}
+          currentRoute={route}
+          homeLabel={homeLabel}
+          locale={locale}
+          menuLabel={tCommon("more")}
+          subjectLabel={subjectLabel}
+        />
+      ) : (
+        <HeaderContent
+          icon={readCurriculumRouteIcon(route)}
+          link={readRuntimeCurriculumHeader(model)}
+          title={route.title}
+        />
+      )}
     </CurriculumRouteFrame>
   );
 }
@@ -165,18 +194,17 @@ async function CurriculumNestedRoute({
 /** Composes the shared curriculum body around one explicit route header. */
 function CurriculumRouteFrame({
   actionLabel,
+  breadcrumbs,
   children,
-  homeLabel,
   model,
 }: {
   actionLabel: string;
+  breadcrumbs: ReturnType<typeof readRuntimeCurriculumBreadcrumbs>;
   children: ReactNode;
-  homeLabel: string;
   model: CurriculumRouteModel;
 }) {
   const { locale, route } = model;
 
-  const breadcrumbs = readRuntimeCurriculumBreadcrumbs(homeLabel, model);
   const sourceUrl = readCurriculumSourceUrl(model);
 
   return (
@@ -217,7 +245,7 @@ function CurriculumRouteBody({
   actionLabel: string;
   model: CurriculumRouteModel;
 }) {
-  const { childGroups, childRoutes, locale, materialCards, route } = model;
+  const { childRoutes, locale, materialCards } = model;
   if (materialCards.length > 0) {
     return (
       <ContainerList className="sm:grid-cols-1">
@@ -232,38 +260,12 @@ function CurriculumRouteBody({
     return <ComingSoon />;
   }
 
-  if (route.level === "track") {
-    return (
-      <CurriculumChildCards
-        actionLabel={actionLabel}
-        locale={locale}
-        routes={childRoutes}
-      />
-    );
-  }
-
   return (
-    <div className="flex flex-col gap-8">
-      {childGroups.map((group) => (
-        <section className="flex flex-col gap-3" key={group.key}>
-          {group.title && (
-            <h2 className="font-medium text-muted-foreground text-sm">
-              {group.title}
-            </h2>
-          )}
-          <SubjectList>
-            {group.children.map((child) => (
-              <SubjectItem
-                href={`/${locale}/${child.publicPath}`}
-                icon={readCurriculumRouteIcon(child)}
-                key={child.publicPath}
-                label={child.title}
-              />
-            ))}
-          </SubjectList>
-        </section>
-      ))}
-    </div>
+    <CurriculumChildCards
+      actionLabel={actionLabel}
+      locale={locale}
+      routes={childRoutes}
+    />
   );
 }
 

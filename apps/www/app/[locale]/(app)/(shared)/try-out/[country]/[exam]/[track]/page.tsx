@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
+import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { generateTryoutRouteMetadata } from "@/components/tryout/catalog/metadata";
@@ -12,7 +13,6 @@ import {
 } from "@/components/tryout/catalog/server";
 import { TryoutTrackPageClient } from "@/components/tryout/catalog/track.client";
 import { getTryoutHref } from "@/components/tryout/route/path";
-import { TryoutHeader } from "@/components/tryout/shell/chrome";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /** Builds route-owned metadata for one localized try-out track. */
@@ -87,7 +87,7 @@ async function TryoutTrackRoute({
   return (
     <LayoutMaterial className="h-[calc(100svh-4rem)] flex-col overflow-clip lg:h-svh">
       <LayoutMaterialContent className="flex min-h-0 flex-1 flex-col">
-        <TryoutHeader
+        <BreadcrumbHeader
           value={{
             action: (
               <TryoutExamSelector
@@ -109,6 +109,7 @@ async function TryoutTrackRoute({
               },
               { label: page.track.title },
             ],
+            menuLabel: tCommon("more"),
             title: page.track.title,
           }}
         />

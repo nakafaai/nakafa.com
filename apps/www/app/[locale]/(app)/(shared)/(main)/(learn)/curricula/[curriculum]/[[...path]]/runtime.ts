@@ -11,13 +11,13 @@ import type {
 import type { MaterialList } from "@repo/contents/_types/curriculum/material";
 import { notFound } from "next/navigation";
 import type { Locale } from "next-intl";
-import { groupCurriculumChildren } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/data";
 import { getPublishedMaterialCards } from "@/lib/content/program/cards";
 import {
   getPublishedProgramCatalog,
   getPublishedProgramRoutes,
 } from "@/lib/content/program/catalog";
 import { getPublishedProgramRoute } from "@/lib/content/program/route";
+import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { selectLearningStaticParams } from "@/lib/routing/prerender";
 
@@ -48,11 +48,6 @@ export interface CurriculumCatalogModel {
 export interface CurriculumRouteModel {
   readonly alternates: readonly CurriculumViewRoute[];
   readonly ancestors: readonly CurriculumViewRoute[];
-  readonly childGroups: readonly {
-    readonly children: readonly CurriculumViewRoute[];
-    readonly key: string;
-    readonly title?: string;
-  }[];
   readonly childRoutes: readonly CurriculumViewRoute[];
   readonly locale: Locale;
   readonly materialCards: MaterialList;
@@ -110,7 +105,6 @@ export async function resolveRuntimeCurriculumRoute(
   return {
     alternates: published.alternates.filter(isRenderableCurriculumView),
     ancestors: published.ancestors.filter(isRenderableCurriculumView),
-    childGroups: groupCurriculumChildren(childRoutes),
     childRoutes,
     locale,
     materialCards,
@@ -164,10 +158,15 @@ export function readRuntimeCurriculumHeader(model: CurriculumRouteModel) {
 /** Builds visible and structured breadcrumb entries from resolved ancestors. */
 export function readRuntimeCurriculumBreadcrumbs(
   homeLabel: string,
+  subjectLabel: string,
   model: CurriculumRouteModel
 ) {
   return [
     { name: homeLabel, path: "" },
+    {
+      name: subjectLabel,
+      path: getCurriculumIndexHref(model.locale),
+    },
     ...model.ancestors.map((ancestor) => ({
       name: ancestor.title,
       path: `/${ancestor.publicPath}`,

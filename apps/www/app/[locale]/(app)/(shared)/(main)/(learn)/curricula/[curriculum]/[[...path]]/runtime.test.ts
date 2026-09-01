@@ -161,15 +161,18 @@ describe("signed curriculum runtime", () => {
       href: "/en/curriculum/merdeka/class-11",
       label: "Class 11",
     });
-    expect(readRuntimeCurriculumBreadcrumbs("Home", model)).toEqual([
-      { name: "Home", path: "" },
-      { name: "Kurikulum Merdeka", path: "/curriculum/merdeka" },
-      { name: "Class 11", path: "/curriculum/merdeka/class-11" },
-      {
-        name: "Mathematics",
-        path: "/curriculum/merdeka/class-11/mathematics",
-      },
-    ]);
+    expect(readRuntimeCurriculumBreadcrumbs("Home", "Subjects", model)).toEqual(
+      [
+        { name: "Home", path: "" },
+        { name: "Subjects", path: "/curriculum" },
+        { name: "Kurikulum Merdeka", path: "/curriculum/merdeka" },
+        { name: "Class 11", path: "/curriculum/merdeka/class-11" },
+        {
+          name: "Mathematics",
+          path: "/curriculum/merdeka/class-11/mathematics",
+        },
+      ]
+    );
     expect(readRuntimeCurriculumToc(model)).toEqual({
       description: "Class 11",
       href: "/en/curriculum/merdeka/class-11/mathematics",
@@ -181,7 +184,6 @@ describe("signed curriculum runtime", () => {
     const model = {
       alternates: [testProgramRoot],
       ancestors: [],
-      childGroups: [],
       childRoutes: [],
       locale: "en",
       materialCards: [],

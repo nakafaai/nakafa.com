@@ -2,6 +2,7 @@ import { Effect } from "effect";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
+import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { FooterContent } from "@/components/shared/footer-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
@@ -16,7 +17,6 @@ import {
   readTryoutHubPage,
 } from "@/components/tryout/catalog/server";
 import { getTryoutHref } from "@/components/tryout/route/path";
-import { TryoutHeader } from "@/components/tryout/shell/chrome";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { resolveTryoutExamArtwork } from "@/lib/tryout/artwork";
 import { getAksaraTreeUrl } from "@/lib/utils/github";
@@ -96,7 +96,7 @@ async function TryoutCountryRoute({
   return (
     <LayoutMaterial>
       <LayoutMaterialContent>
-        <TryoutHeader
+        <BreadcrumbHeader
           value={{
             action:
               countryOptions.length > 0 ? (
@@ -108,6 +108,7 @@ async function TryoutCountryRoute({
               ) : undefined,
             homeLabel: tCommon("home"),
             items: [{ label: tCommon("try-out") }],
+            menuLabel: tCommon("more"),
             title: tCommon("try-out"),
           }}
         />
