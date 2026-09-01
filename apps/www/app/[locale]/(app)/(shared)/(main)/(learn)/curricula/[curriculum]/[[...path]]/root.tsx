@@ -17,7 +17,6 @@ import {
   CurriculumSelector,
   type CurriculumSelectorOption,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/selector";
-import { BreadcrumbHeader } from "@/components/shared/breadcrumb-header";
 import {
   CatalogCard,
   CatalogCardGradient,
@@ -25,7 +24,6 @@ import {
 } from "@/components/shared/catalog/card";
 import { ChoiceCardIcon } from "@/components/shared/choice/visual";
 import { resolveCurriculumCatalogArtwork } from "@/lib/curriculum/artwork";
-import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 
 /** Renders the curriculum index header with breadcrumb context. */
 export function CurriculumIndexHeader({
@@ -88,44 +86,6 @@ export function CurriculumRootHeader({
         />
       </div>
     </header>
-  );
-}
-
-/** Renders a nested curriculum chooser with breadcrumb context only. */
-export function CurriculumNestedHeader({
-  ancestors,
-  currentRoute,
-  homeLabel,
-  locale,
-  menuLabel,
-  subjectLabel,
-}: {
-  ancestors: readonly CurriculumViewRoute[];
-  currentRoute: CurriculumViewRoute;
-  homeLabel: string;
-  locale: Locale;
-  menuLabel: string;
-  subjectLabel: string;
-}) {
-  return (
-    <BreadcrumbHeader
-      value={{
-        homeLabel,
-        items: [
-          {
-            href: getCurriculumIndexHref(locale),
-            label: subjectLabel,
-          },
-          ...ancestors.map((ancestor) => ({
-            href: `/${ancestor.publicPath}`,
-            label: ancestor.title,
-          })),
-          { label: currentRoute.title },
-        ],
-        menuLabel,
-        title: currentRoute.title,
-      }}
-    />
   );
 }
 

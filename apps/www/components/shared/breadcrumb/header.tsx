@@ -12,6 +12,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
@@ -108,6 +109,7 @@ function BreadcrumbMenu({
           />
           <DropdownMenuContent align="start" className="w-48">
             <DropdownMenuGroup>
+              <DropdownMenuLabel>{menuLabel}</DropdownMenuLabel>
               {items.map((item) => (
                 <BreadcrumbMenuItem
                   item={item}

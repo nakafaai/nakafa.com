@@ -2,7 +2,7 @@ import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
 import { locale as rootLocale } from "next/root-params";
 import { getTranslations } from "next-intl/server";
-import { BreadcrumbHeader } from "@/components/shared/breadcrumb-header";
+import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { FooterContent } from "@/components/shared/footer-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";

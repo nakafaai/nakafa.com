@@ -1,12 +1,12 @@
 import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
 import { type ReactNode, Suspense } from "react";
 import { readMaterialCardChapters } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/data";
 import { readCurriculumRouteIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/icons";
 import {
   CurriculumChildCards,
-  CurriculumNestedHeader,
   CurriculumRootHeader,
 } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/root";
 import {
@@ -39,6 +39,13 @@ import { getSocialMetadata } from "@/lib/utils/metadata";
 
 type CurriculumPageProps =
   PageProps<"/[locale]/curricula/[curriculum]/[[...path]]">;
+
+const CurriculumNestedHeader = dynamic(
+  () =>
+    import(
+      "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/nested/header"
+    )
+);
 
 /**
  * Builds a bounded prerender subset from the exclusive curriculum owner.
