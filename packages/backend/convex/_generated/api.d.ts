@@ -322,6 +322,7 @@ import type * as contentRelease_tryout_catalog from "../contentRelease/tryout/ca
 import type * as contentRelease_tryout_facts from "../contentRelease/tryout/facts.js";
 import type * as contentRelease_tryout_limits from "../contentRelease/tryout/limits.js";
 import type * as contentRelease_tryout_owner from "../contentRelease/tryout/owner.js";
+import type * as contentRelease_tryout_row from "../contentRelease/tryout/row.js";
 import type * as contentRelease_tryout_runtime from "../contentRelease/tryout/runtime.js";
 import type * as contentRelease_tryout_section from "../contentRelease/tryout/section.js";
 import type * as contentRelease_tryout_set from "../contentRelease/tryout/set.js";
@@ -902,6 +903,7 @@ declare const fullApi: ApiFromModules<{
   "contentRelease/tryout/facts": typeof contentRelease_tryout_facts;
   "contentRelease/tryout/limits": typeof contentRelease_tryout_limits;
   "contentRelease/tryout/owner": typeof contentRelease_tryout_owner;
+  "contentRelease/tryout/row": typeof contentRelease_tryout_row;
   "contentRelease/tryout/runtime": typeof contentRelease_tryout_runtime;
   "contentRelease/tryout/section": typeof contentRelease_tryout_section;
   "contentRelease/tryout/set": typeof contentRelease_tryout_set;

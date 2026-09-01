@@ -3,8 +3,11 @@
 import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import { Button } from "@repo/design-system/components/ui/button";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { TryoutResponseFields } from "@/components/tryout/runtime/response/fields.client";
+import { type ReactNode, useState } from "react";
+import {
+  type TryoutResponseFieldLabel,
+  TryoutResponseFields,
+} from "@/components/tryout/runtime/response/fields.client";
 import {
   isPreviewComplete,
   isPreviewCorrect,
@@ -14,9 +17,11 @@ import type { TryoutResponseSelection } from "@/components/tryout/runtime/respon
 /** Previews every authored response kind without creating attempt state. */
 export function TryoutResponsePreview({
   id,
+  labels,
   responseSpec,
 }: {
   readonly id: string;
+  readonly labels: Readonly<Record<string, ReactNode>>;
   readonly responseSpec: QuestionResponse;
 }) {
   const t = useTranslations("Exercises");
@@ -43,6 +48,19 @@ export function TryoutResponsePreview({
               setRevealAnswers(true);
             }
           },
+          renderLabel: ({
+            correctness,
+            id: labelId,
+          }: TryoutResponseFieldLabel) => (
+            <>
+              {labels[labelId]}
+              {correctness === undefined ? null : (
+                <span className="sr-only">
+                  {t(correctness ? "correct" : "incorrect")}
+                </span>
+              )}
+            </>
+          ),
           revealAnswers,
           responseSpec,
           selection,

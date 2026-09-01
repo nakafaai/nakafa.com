@@ -136,12 +136,12 @@ const expectFeaturedTryoutResponse = Effect.fn(
   );
   yield* Effect.promise(() =>
     expect(
-      incorrectChoice.locator("xpath=ancestor::label[1] annotation")
+      incorrectChoice.locator("xpath=ancestor::label[1]").locator("annotation")
     ).toHaveText(FEATURED_INCORRECT_RESPONSE)
   );
   yield* Effect.promise(() =>
     expect(
-      correctChoice.locator("xpath=ancestor::label[1] annotation")
+      correctChoice.locator("xpath=ancestor::label[1]").locator("annotation")
     ).toHaveText(FEATURED_CORRECT_RESPONSE)
   );
   yield* Effect.promise(() =>

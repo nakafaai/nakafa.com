@@ -2,11 +2,16 @@
 
 import { RadioGroup } from "@repo/design-system/components/ui/radio-group";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import {
   TryoutSelectableMultipleChoice,
   TryoutSelectableRadioOption,
 } from "@/components/tryout/runtime/choice/surface.client";
-import { TryoutResponseLabel } from "@/components/tryout/runtime/response/label.client";
+import {
+  categoryLabelId,
+  optionLabelId,
+  statementLabelId,
+} from "@/components/tryout/runtime/response/id";
 import {
   assignCategorySelection,
   type TryoutResponseSelection,
@@ -14,10 +19,17 @@ import {
 } from "@/components/tryout/runtime/response/state";
 import type { TryoutRenderableResponseSpec } from "@/components/tryout/runtime/types";
 
+export interface TryoutResponseFieldLabel {
+  readonly correctness?: boolean;
+  readonly id: string;
+  readonly label: string;
+}
+
 interface TryoutResponseFieldsValue {
   readonly id: string;
   readonly locked: boolean;
   readonly onChange: (selection: TryoutResponseSelection | null) => void;
+  readonly renderLabel: (value: TryoutResponseFieldLabel) => ReactNode;
   readonly responseSpec: TryoutRenderableResponseSpec;
   readonly revealAnswers?: boolean;
   readonly selection: TryoutResponseSelection | null;
@@ -76,19 +88,16 @@ function SingleChoiceFields({
             )}
             checked={selected === option.optionKey}
             disabled={locked}
-            id={`${id}-${option.optionKey}`}
+            id={optionLabelId(id, option.optionKey)}
             key={option.optionKey}
-            label={
-              <TryoutResponseLabel
-                correctness={previewCorrectness(
-                  value.revealAnswers,
-                  option.isCorrect
-                )}
-                id={`${id}-${option.optionKey}`}
-              >
-                {option.label}
-              </TryoutResponseLabel>
-            }
+            label={value.renderLabel({
+              correctness: previewCorrectness(
+                value.revealAnswers,
+                option.isCorrect
+              ),
+              id: optionLabelId(id, option.optionKey),
+              label: option.label,
+            })}
             value={option.optionKey}
           />
         ))}
@@ -119,19 +128,16 @@ function MultipleChoiceFields({
           appearance={previewAppearance(value.revealAnswers, option.isCorrect)}
           checked={selected.has(option.optionKey)}
           disabled={locked}
-          id={`${id}-${option.optionKey}`}
+          id={optionLabelId(id, option.optionKey)}
           key={option.optionKey}
-          label={
-            <TryoutResponseLabel
-              correctness={previewCorrectness(
-                value.revealAnswers,
-                option.isCorrect
-              )}
-              id={`${id}-${option.optionKey}`}
-            >
-              {option.label}
-            </TryoutResponseLabel>
-          }
+          label={value.renderLabel({
+            correctness: previewCorrectness(
+              value.revealAnswers,
+              option.isCorrect
+            ),
+            id: optionLabelId(id, option.optionKey),
+            label: option.label,
+          })}
           onCheckedChange={() =>
             onChange(
               toggleMultipleChoiceSelection(
@@ -162,16 +168,18 @@ function CategoryFields({ value }: { value: TryoutResponseFieldsValue }) {
   return (
     <div className="space-y-6">
       {responseSpec.statements.map((statement) => {
-        const statementLabelId = `${id}-${statement.statementKey}-label`;
+        const statementId = statementLabelId(id, statement.statementKey);
+        const statementHeadingId = `${statementId}-label`;
         return (
           <section className="space-y-3" key={statement.statementKey}>
-            <div id={statementLabelId}>
-              <TryoutResponseLabel id={`${id}-${statement.statementKey}`}>
-                {statement.label}
-              </TryoutResponseLabel>
+            <div id={statementHeadingId}>
+              {value.renderLabel({
+                id: statementId,
+                label: statement.label,
+              })}
             </div>
             <RadioGroup
-              aria-labelledby={statementLabelId}
+              aria-labelledby={statementHeadingId}
               className="grid grid-cols-1 gap-2 md:grid-cols-2"
               disabled={locked}
               onValueChange={(categoryKey) =>
@@ -198,22 +206,26 @@ function CategoryFields({ value }: { value: TryoutResponseFieldsValue }) {
                     category.categoryKey
                   }
                   disabled={locked}
-                  id={`${id}-${statement.statementKey}-${category.categoryKey}`}
+                  id={categoryLabelId(
+                    id,
+                    statement.statementKey,
+                    category.categoryKey
+                  )}
                   key={category.categoryKey}
-                  label={
-                    <TryoutResponseLabel
-                      correctness={previewCorrectness(
-                        value.revealAnswers,
-                        statement.correctCategoryKey === undefined
-                          ? undefined
-                          : statement.correctCategoryKey ===
-                              category.categoryKey
-                      )}
-                      id={`${id}-${statement.statementKey}-${category.categoryKey}`}
-                    >
-                      {category.label}
-                    </TryoutResponseLabel>
-                  }
+                  label={value.renderLabel({
+                    correctness: previewCorrectness(
+                      value.revealAnswers,
+                      statement.correctCategoryKey === undefined
+                        ? undefined
+                        : statement.correctCategoryKey === category.categoryKey
+                    ),
+                    id: categoryLabelId(
+                      id,
+                      statement.statementKey,
+                      category.categoryKey
+                    ),
+                    label: category.label,
+                  })}
                   value={category.categoryKey}
                 />
               ))}

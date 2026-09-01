@@ -9,6 +9,7 @@ import {
   TryoutReviewQuestionExplanation,
   TryoutReviewQuestionShell,
 } from "@/components/tryout/runtime/question-shell.client";
+import { renderTryoutResponseLabels } from "@/components/tryout/runtime/response/labels";
 import { TryoutResponsePreview } from "@/components/tryout/runtime/response/preview.client";
 import { TryoutReviewedResponse } from "@/components/tryout/runtime/response/review";
 import type { TryoutResponseSelection } from "@/components/tryout/runtime/response/state";
@@ -68,12 +69,14 @@ function QuestionPreviewBody({
   const Answer = content.Answer;
 
   if (Answer === null) {
+    const responseId = `preview-question-${questionOrder}`;
     return (
       <TryoutActiveQuestionShell questionOrder={questionOrder}>
         <section className="my-6">{children}</section>
         <section className="my-8">
           <TryoutResponsePreview
-            id={`preview-question-${questionOrder}`}
+            id={responseId}
+            labels={renderTryoutResponseLabels(responseId, content.response)}
             responseSpec={content.response}
           />
         </section>

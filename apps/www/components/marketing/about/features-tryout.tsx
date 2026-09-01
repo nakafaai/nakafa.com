@@ -2,6 +2,7 @@ import type { api } from "@repo/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { renderTryoutResponseLabels } from "@/components/tryout/runtime/response/labels";
 import { TryoutResponsePreview } from "@/components/tryout/runtime/response/preview.client";
 
 type FeaturedTryout = FunctionReturnType<
@@ -20,6 +21,7 @@ export function FeaturesTryout({
   readonly value: FeaturesTryoutModel;
 }) {
   const t = useTranslations("Features");
+  const responseId = "features-tryout-response";
 
   return (
     <div className="relative flex min-h-[38rem] flex-col overflow-hidden border-b bg-background lg:col-span-5 lg:min-h-[40rem]">
@@ -32,7 +34,8 @@ export function FeaturesTryout({
         <section className="my-6">{value.question}</section>
         <section className="my-8">
           <TryoutResponsePreview
-            id="features-tryout-response"
+            id={responseId}
+            labels={renderTryoutResponseLabels(responseId, value.response)}
             responseSpec={value.response}
           />
         </section>
