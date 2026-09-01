@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { TryoutChoices } from "@/components/tryout/runtime/choice";
 import { TryoutActiveQuestionShell } from "@/components/tryout/runtime/question-shell.client";
+import { TryoutResponse } from "@/components/tryout/runtime/response/input.client";
 import type { TryoutRuntimeQuestion as RuntimeQuestion } from "@/components/tryout/runtime/types";
 
 interface TryoutActiveQuestionProps {
@@ -21,7 +21,7 @@ export function TryoutActiveQuestion({
     <TryoutActiveQuestionShell questionOrder={question.questionOrder}>
       <section className="my-6">{content}</section>
       <section className="my-8">
-        <TryoutChoices value={{ locked, question }} />
+        <TryoutResponse value={{ locked, question }} />
       </section>
     </TryoutActiveQuestionShell>
   );

@@ -15,5 +15,5 @@ export type TryoutSectionRuntime = NonNullable<TryoutSectionState["runtime"]>;
 /** One ordered question in an active try-out section runtime. */
 export type TryoutRuntimeQuestion = TryoutSectionRuntime["questions"][number];
 
-/** One selectable choice in an active try-out runtime question. */
-export type TryoutRuntimeChoice = TryoutRuntimeQuestion["choices"][number];
+/** One public immutable response definition in an active question. */
+export type TryoutRuntimeResponseSpec = TryoutRuntimeQuestion["responseSpec"];

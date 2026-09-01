@@ -8,7 +8,7 @@ import {
   ThumbsUpIcon,
 } from "@hugeicons/core-free-icons";
 import { api } from "@repo/backend/convex/_generated/api";
-import { Response } from "@repo/design-system/components/ai/response";
+import { MarkdownContent } from "@repo/design-system/components/markdown/content";
 import {
   Avatar,
   AvatarFallback,
@@ -158,7 +158,7 @@ function CommentContent({
           <ReplyToIndicator comment={comment} />
 
           <div className="wrap-break-word min-w-0">
-            <Response id={comment._id}>{comment.text}</Response>
+            <MarkdownContent id={comment._id}>{comment.text}</MarkdownContent>
           </div>
         </div>
 

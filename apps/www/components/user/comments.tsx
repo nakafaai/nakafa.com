@@ -10,7 +10,7 @@ import {
 import { api } from "@repo/backend/convex/_generated/api";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useQueryWithStatus } from "@repo/backend/helpers/react";
-import { Response } from "@repo/design-system/components/ai/response";
+import { MarkdownContent } from "@repo/design-system/components/markdown/content";
 import {
   Avatar,
   AvatarFallback,
@@ -122,7 +122,7 @@ function CommentThread({ comment }: { comment: UserComment }) {
       <div className="grid w-full gap-2">
         <div className="grid gap-1">
           <span className="truncate font-medium text-sm">{userName}</span>
-          <Response id={comment._id}>{comment.text}</Response>
+          <MarkdownContent id={comment._id}>{comment.text}</MarkdownContent>
         </div>
 
         <div className="flex -translate-x-2 items-center">

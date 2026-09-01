@@ -1,7 +1,7 @@
 import { WinkIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog/browser";
-import { Response } from "@repo/design-system/components/ai/response";
+import { MarkdownContent } from "@repo/design-system/components/markdown/content";
 import {
   Avatar,
   AvatarFallback,
@@ -74,7 +74,7 @@ export function ForumHeader() {
             </div>
 
             <div className="wrap-break-word min-w-0 text-chat">
-              <Response id={forum._id}>{forum.body}</Response>
+              <MarkdownContent id={forum._id}>{forum.body}</MarkdownContent>
             </div>
           </div>
 

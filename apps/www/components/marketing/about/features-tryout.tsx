@@ -1,5 +1,5 @@
 import type { api } from "@repo/backend/convex/_generated/api";
-import { MarkdownResponse } from "@repo/design-system/components/ai/markdown";
+import { MarkdownContent } from "@repo/design-system/components/markdown/content";
 import type { FunctionReturnType } from "convex/server";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -36,12 +36,12 @@ export function FeaturesTryout({
             choices={value.choices.map((choice) => ({
               ...choice,
               content: (
-                <MarkdownResponse
+                <MarkdownContent
                   className="wrap-anywhere h-auto whitespace-normal"
                   id={`features-tryout-choice-${choice.optionKey}`}
                 >
                   {choice.label}
-                </MarkdownResponse>
+                </MarkdownContent>
               ),
             }))}
           />

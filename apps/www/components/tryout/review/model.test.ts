@@ -26,25 +26,27 @@ describe("projectTryoutReview", () => {
       expect(yield* projectTryoutReview({ content, questions })).toEqual([
         {
           answer: "answer:questions/1",
-          choices: [{ isCorrect: true, label: "A", optionKey: "a", order: 1 }],
           content: "question:questions/1",
           questionOrder: 1,
           response: {
             answeredAt: 10,
-            selectedOptionId: "a",
+            isComplete: true,
+            selection: { kind: "single-choice", optionKey: "option-1" },
             updatedAt: 10,
           },
+          responseSpec: responseSpec(),
         },
         {
           answer: "answer:questions/2",
-          choices: [{ isCorrect: true, label: "A", optionKey: "a", order: 1 }],
           content: "question:questions/2",
           questionOrder: 2,
           response: {
             answeredAt: 20,
-            selectedOptionId: "a",
+            isComplete: true,
+            selection: { kind: "single-choice", optionKey: "option-1" },
             updatedAt: 20,
           },
+          responseSpec: responseSpec(),
         },
       ]);
     })
@@ -185,13 +187,28 @@ function createRuntimeQuestion(
   questionOrder: number
 ) {
   return {
-    choices: [{ isCorrect: true, label: "A", optionKey: "a", order: 1 }],
     ...identity,
     questionOrder,
     response: {
       answeredAt: questionOrder * 10,
-      selectedOptionId: "a",
+      isComplete: true,
+      selection: { kind: "single-choice" as const, optionKey: "option-1" },
       updatedAt: questionOrder * 10,
     },
+    responseSpec: responseSpec(),
+  };
+}
+
+function responseSpec() {
+  return {
+    kind: "single-choice" as const,
+    options: [
+      {
+        isCorrect: true,
+        label: "A",
+        optionKey: "option-1",
+        order: 1,
+      },
+    ],
   };
 }

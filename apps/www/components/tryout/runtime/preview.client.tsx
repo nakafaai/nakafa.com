@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
-import { TryoutPreviewChoice } from "@/components/tryout/runtime/choice-surface.client";
+import { TryoutPreviewChoice } from "@/components/tryout/runtime/choice/surface.client";
 
 /** Minimal immutable choice model shared by signed and local preview sources. */
 export interface TryoutPreviewChoiceItem {

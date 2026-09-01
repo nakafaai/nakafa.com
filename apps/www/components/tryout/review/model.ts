@@ -2,8 +2,8 @@ import { Effect, Schema } from "effect";
 import type { ReactNode } from "react";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import type {
-  TryoutRuntimeChoice,
   TryoutRuntimeQuestion,
+  TryoutRuntimeResponseSpec,
 } from "@/components/tryout/runtime/types";
 
 interface ReviewContentIdentity {
@@ -13,18 +13,18 @@ interface ReviewContentIdentity {
 }
 
 interface ReviewRuntimeQuestion extends ReviewContentIdentity {
-  readonly choices: readonly TryoutRuntimeChoice[];
   readonly questionOrder: number;
   readonly response: TryoutRuntimeQuestion["response"];
+  readonly responseSpec: TryoutRuntimeResponseSpec;
 }
 
 /** One immutable reviewed question ready for read-only composition. */
 export interface TryoutReviewQuestion {
   readonly answer: ReactNode;
-  readonly choices: readonly TryoutRuntimeChoice[];
   readonly content: ReactNode;
   readonly questionOrder: number;
   readonly response: TryoutRuntimeQuestion["response"];
+  readonly responseSpec: TryoutRuntimeResponseSpec;
 }
 
 /** Fails closed when signed review content no longer matches frozen runtime. */
@@ -98,10 +98,10 @@ export const projectTryoutReview = Effect.fn("TryoutReview.project")(function* <
 
     reviewQuestions.push({
       answer: signedAnswer.answer,
-      choices: question.choices,
       content: signedQuestion.content,
       questionOrder: question.questionOrder,
       response: question.response,
+      responseSpec: question.responseSpec,
     });
   }
 

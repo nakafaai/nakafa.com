@@ -24,7 +24,7 @@ export interface MarkdownSecurityProps {
   defaultOrigin?: HardenOptions["defaultOrigin"];
 }
 
-export type MarkdownResponseProps = {
+export type MarkdownContentProps = {
   readonly children: string;
   readonly className?: string;
   readonly id: string;
@@ -76,15 +76,15 @@ export function MarkdownFrame({ children, className }: MarkdownFrameProps) {
   );
 }
 
-/** Renders trusted static response copy entirely on the server. */
-export function MarkdownResponse({
+/** Renders one complete non-streaming Markdown document. */
+export function MarkdownContent({
   allowedImagePrefixes,
   allowedLinkPrefixes,
   children,
   className,
   defaultOrigin,
   id,
-}: MarkdownResponseProps) {
+}: MarkdownContentProps) {
   const blocks = readMarkdownBlocks(id, normalizeText(children));
 
   return (
