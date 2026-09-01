@@ -1,17 +1,12 @@
-import type { api } from "@repo/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { renderTryoutResponseLabels } from "@/components/tryout/runtime/response/labels";
 import { TryoutResponsePreview } from "@/components/tryout/runtime/response/preview.client";
 
-type FeaturedTryout = FunctionReturnType<
-  typeof api.tryouts.queries.catalog.getFeaturedQuestion
->;
-
 export interface FeaturesTryoutModel {
   readonly question: ReactNode;
-  readonly response: FeaturedTryout["response"];
+  readonly response: QuestionResponse;
 }
 
 /** Shows one signed production question with the established landing surface. */
