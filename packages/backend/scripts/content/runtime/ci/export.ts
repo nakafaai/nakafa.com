@@ -16,8 +16,8 @@ import {
   type ManifestEntry,
 } from "@repo/backend/scripts/content/runtime/ci/snapshot";
 import {
-  CONTENT_RUNTIME_SCHEMA_FINGERPRINT,
   CONTENT_RUNTIME_TABLES,
+  readContentRuntimeSchemaFingerprint,
 } from "@repo/backend/scripts/content/runtime/tables";
 import { Console, Effect, FileSystem, Redacted } from "effect";
 
@@ -132,9 +132,9 @@ export const exportSignedRuntime = Effect.fn(
     }
 
     yield* Console.log("Verified stable production runtime generations.");
-    if (
-      config.runtimeSchemaFingerprint !== CONTENT_RUNTIME_SCHEMA_FINGERPRINT
-    ) {
+    const currentSchemaFingerprint =
+      yield* readContentRuntimeSchemaFingerprint();
+    if (config.runtimeSchemaFingerprint !== currentSchemaFingerprint) {
       return yield* contentRuntimeCiError(
         "Runtime schema fingerprint changed after cache identity creation."
       );

@@ -19,8 +19,8 @@ import {
 } from "@repo/backend/scripts/content/runtime/ci/generation";
 import { importSignedRuntime } from "@repo/backend/scripts/content/runtime/ci/import";
 import {
-  CONTENT_RUNTIME_SCHEMA_FINGERPRINT,
   CONTENT_RUNTIME_TABLES,
+  readContentRuntimeSchemaFingerprint,
   validateContentRuntimeTableDefinitions,
 } from "@repo/backend/scripts/content/runtime/tables";
 import { Config, ConfigProvider, Effect, FileSystem } from "effect";
@@ -53,10 +53,11 @@ const writeFingerprintEnvironment = Effect.gen(function* () {
   }
 
   const runnerTemp = yield* Config.nonEmptyString("RUNNER_TEMP");
+  const runtimeSchemaFingerprint = yield* readContentRuntimeSchemaFingerprint();
   yield* writeEnvironmentFile(
     runnerTemp,
     FINGERPRINT_ENVIRONMENT_FILE,
-    `CONTENT_RUNTIME_SCHEMA_HASH=${CONTENT_RUNTIME_SCHEMA_FINGERPRINT}`
+    `CONTENT_RUNTIME_SCHEMA_HASH=${runtimeSchemaFingerprint}`
   );
 });
 
