@@ -109,7 +109,7 @@ async function TryoutTrackRoute({
               },
               { label: page.track.title },
             ],
-            menuLabel: tCommon("navigate"),
+            menuLabel: tCommon("more"),
             title: page.track.title,
           }}
         />
