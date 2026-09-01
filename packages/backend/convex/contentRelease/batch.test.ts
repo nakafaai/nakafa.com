@@ -6,7 +6,7 @@ import {
 import { Effect, Exit } from "effect";
 
 describe("contentRelease/batch", () => {
-  it.live(
+  it.effect(
     "binds batch identity to kind, release, index, order, and exact bytes",
     () =>
       Effect.gen(function* () {
@@ -32,7 +32,7 @@ describe("contentRelease/batch", () => {
       })
   );
 
-  it.live("accepts only a complete immutable retry identity", () =>
+  it.effect("accepts only a complete immutable retry identity", () =>
     Effect.gen(function* () {
       expect(
         yield* validateStoredBatch(

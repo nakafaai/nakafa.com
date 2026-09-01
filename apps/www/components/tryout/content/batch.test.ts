@@ -10,7 +10,7 @@ import {
 import { projectTryoutRuntimeContent } from "@/components/tryout/content/model";
 
 describe("try-out signed content batches", () => {
-  it.live("preserves question and answer order across the wire ceiling", () =>
+  it.effect("preserves question and answer order across the wire ceiling", () =>
     Effect.gen(function* () {
       const questions = Array.from(
         { length: MAX_PROTECTED_RUNTIME_SELECTORS - 1 },
@@ -34,7 +34,7 @@ describe("try-out signed content batches", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "fails with a typed error when one rendered batch loses an item",
     () =>
       Effect.gen(function* () {
@@ -48,7 +48,7 @@ describe("try-out signed content batches", () => {
       })
   );
 
-  it.live(
+  it.effect(
     "fails with a typed error when the rendered batch count changes",
     () =>
       Effect.gen(function* () {
@@ -66,7 +66,7 @@ describe("try-out signed content batches", () => {
       })
   );
 
-  it.live(
+  it.effect(
     "fails with a typed error when the plan count differs from its batches",
     () =>
       Effect.gen(function* () {
