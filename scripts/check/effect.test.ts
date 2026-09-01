@@ -29,6 +29,23 @@ describe("Effect test policy", () => {
     }
   });
 
+  it("resolves runtime aliases by lexical binding", () => {
+    assert.deepStrictEqual(
+      effectTestViolations(
+        FILE,
+        'import { Effect } from "effect";\nconst runtime = client;\n{\n  const runtime = Effect;\n  runtime.runPromise(program);\n}'
+      ),
+      [VIOLATION]
+    );
+    assert.deepStrictEqual(
+      effectTestViolations(
+        FILE,
+        'import { Effect } from "effect";\nconst runtime = Effect;\n{\n  const runtime = client;\n  runtime.runPromise(program);\n}'
+      ),
+      []
+    );
+  });
+
   it("allows native tests, types, and unrelated method names", () => {
     for (const source of [
       'import { Effect } from "effect";\nimport { it } from "@effect/vitest";\nit.effect("runs", () => Effect.succeed(1));',

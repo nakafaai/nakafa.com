@@ -13,8 +13,41 @@ const MANAGED_RUNTIME_RUNNERS = new Set(
 type RuntimeKind = "effect" | "managed-factory" | "managed-runtime" | "root";
 
 interface RuntimeImports {
-  readonly bindings: Map<string, RuntimeKind>;
+  readonly bindings: Map<ts.Symbol, RuntimeKind>;
+  readonly checker: ts.TypeChecker;
   readonly directRunner: boolean;
+}
+
+interface ParsedTestModule {
+  readonly checker: ts.TypeChecker;
+  readonly sourceFile: ts.SourceFile;
+}
+
+/** Parses one test with enough binding information to resolve lexical scope. */
+function parseTestModule(file: string, sourceText: string): ParsedTestModule {
+  const sourceFile = ts.createSourceFile(
+    file,
+    sourceText,
+    ts.ScriptTarget.Latest,
+    true
+  );
+  const host: ts.CompilerHost = {
+    fileExists: (candidate) => candidate === file,
+    getCanonicalFileName: (candidate) => candidate,
+    getCurrentDirectory: () => "",
+    getDefaultLibFileName: () => "",
+    getNewLine: () => "\n",
+    getSourceFile: (candidate) => (candidate === file ? sourceFile : undefined),
+    readFile: (candidate) => (candidate === file ? sourceText : undefined),
+    useCaseSensitiveFileNames: () => true,
+    writeFile: () => undefined,
+  };
+  const program = ts.createProgram({
+    host,
+    options: { noLib: true, noResolve: true },
+    rootNames: [file],
+  });
+  return { checker: program.getTypeChecker(), sourceFile };
 }
 
 /** Returns value-position descendants while excluding type-only subtrees. */
@@ -63,8 +96,11 @@ function staticElement(node: ts.Expression) {
 }
 
 /** Collects local bindings that expose Effect runtime modules. */
-function runtimeImports(nodes: readonly ts.Node[]): RuntimeImports {
-  const bindings = new Map<string, RuntimeKind>();
+function runtimeImports(
+  nodes: readonly ts.Node[],
+  checker: ts.TypeChecker
+): RuntimeImports {
+  const bindings = new Map<ts.Symbol, RuntimeKind>();
   let directRunner = false;
 
   for (const node of nodes) {
@@ -86,11 +122,15 @@ function runtimeImports(nodes: readonly ts.Node[]): RuntimeImports {
       continue;
     }
     if (ts.isNamespaceImport(namedBindings)) {
+      const symbol = checker.getSymbolAtLocation(namedBindings.name);
+      if (symbol === undefined) {
+        continue;
+      }
       if (moduleName === "effect") {
-        bindings.set(namedBindings.name.text, "root");
+        bindings.set(symbol, "root");
       } else {
         bindings.set(
-          namedBindings.name.text,
+          symbol,
           moduleName === "effect/Effect" ? "effect" : "managed-factory"
         );
       }
@@ -102,11 +142,15 @@ function runtimeImports(nodes: readonly ts.Node[]): RuntimeImports {
         continue;
       }
       const importedName = binding.propertyName?.text ?? binding.name.text;
+      const symbol = checker.getSymbolAtLocation(binding.name);
+      if (symbol === undefined) {
+        continue;
+      }
       if (moduleName === "effect") {
         if (importedName === "Effect") {
-          bindings.set(binding.name.text, "effect");
+          bindings.set(symbol, "effect");
         } else if (importedName === "ManagedRuntime") {
-          bindings.set(binding.name.text, "managed-factory");
+          bindings.set(symbol, "managed-factory");
         }
       } else if (moduleName === "effect/Effect") {
         directRunner ||= EFFECT_RUNNERS.has(importedName);
@@ -114,7 +158,7 @@ function runtimeImports(nodes: readonly ts.Node[]): RuntimeImports {
     }
   }
 
-  return { bindings, directRunner };
+  return { bindings, checker, directRunner };
 }
 
 /** Resolves an imported Effect module, factory, or runtime expression. */
@@ -126,7 +170,8 @@ function runtimeKind(
     return runtimeKind(node.expression, imports);
   }
   if (ts.isIdentifier(node)) {
-    return imports.bindings.get(node.text);
+    const symbol = imports.checker.getSymbolAtLocation(node);
+    return symbol === undefined ? undefined : imports.bindings.get(symbol);
   }
   if (
     ts.isPropertyAccessExpression(node) ||
@@ -191,8 +236,13 @@ function collectRootBindings(
     }
     const member = staticProperty(element.propertyName ?? element.name);
     const kind = rootMemberKind(member);
-    if (kind !== undefined && !imports.bindings.has(element.name.text)) {
-      imports.bindings.set(element.name.text, kind);
+    const symbol = imports.checker.getSymbolAtLocation(element.name);
+    if (
+      kind !== undefined &&
+      symbol !== undefined &&
+      !imports.bindings.has(symbol)
+    ) {
+      imports.bindings.set(symbol, kind);
       changed = true;
     }
   }
@@ -210,14 +260,17 @@ function collectVariableAlias(
   if (ts.isObjectBindingPattern(declaration.name)) {
     return kind === "root" && collectRootBindings(declaration.name, imports);
   }
+  const symbol = ts.isIdentifier(declaration.name)
+    ? imports.checker.getSymbolAtLocation(declaration.name)
+    : undefined;
   if (
     kind === undefined ||
-    !ts.isIdentifier(declaration.name) ||
-    imports.bindings.has(declaration.name.text)
+    symbol === undefined ||
+    imports.bindings.has(symbol)
   ) {
     return false;
   }
-  imports.bindings.set(declaration.name.text, kind);
+  imports.bindings.set(symbol, kind);
   return true;
 }
 
@@ -278,14 +331,9 @@ export function effectTestViolations(file: string, sourceText: string) {
   if (!TEST_MODULE_PATTERN.test(file)) {
     return [];
   }
-  const sourceFile = ts.createSourceFile(
-    file,
-    sourceText,
-    ts.ScriptTarget.Latest,
-    true
-  );
+  const { checker, sourceFile } = parseTestModule(file, sourceText);
   const nodes = descendants(sourceFile);
-  const imports = runtimeImports(nodes);
+  const imports = runtimeImports(nodes, checker);
   collectAliases(nodes, imports);
   const hasRunner =
     imports.directRunner ||
