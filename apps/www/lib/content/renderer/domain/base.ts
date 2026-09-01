@@ -60,6 +60,13 @@ export const baseComponentLoaders = [
       ),
   },
   {
+    name: baseComponentNames.mathVisual,
+    load: () =>
+      import("@/lib/content/renderer/client/base/visual/math").then(
+        ({ MathVisual }) => MathVisual
+      ),
+  },
+  {
     name: baseComponentNames.mermaid,
     load: () =>
       import("@/lib/content/renderer/client/base/media").then(

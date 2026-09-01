@@ -210,9 +210,13 @@ describe("tryouts/queries/attemptPage", () => {
             }
             await ctx.db.insert("tryoutResponses", {
               answeredAt: historicalAnswerTime,
+              isComplete: true,
               isCorrect: selectedOption.isCorrect,
               placementId: placement._id,
-              selectedOptionId: selectedOption.optionKey,
+              selection: {
+                kind: "single-choice",
+                optionKey: selectedOption.optionKey,
+              },
               timeSpent: 1000,
               tryoutAttemptId: started.attemptId,
               tryoutSectionAttemptId: section._id,
@@ -254,7 +258,6 @@ describe("tryouts/queries/attemptPage", () => {
         ).toEqual({
           answeredAt: historicalAnswerTime,
           isComplete: true,
-          selectedOptionId: historicalOption.optionKey,
           selection: {
             kind: "single-choice",
             optionKey: historicalOption.optionKey,

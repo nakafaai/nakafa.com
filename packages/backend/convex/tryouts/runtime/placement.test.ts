@@ -96,7 +96,6 @@ describe("tryouts/runtime/placement", () => {
         responseSpec: { kind: "single-choice" },
         sourceRevision: "2027",
       });
-      expect(placement).not.toHaveProperty("choiceSnapshots");
       expect(placement).not.toHaveProperty("questionId");
     })
   );

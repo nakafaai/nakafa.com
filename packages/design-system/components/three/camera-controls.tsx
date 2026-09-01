@@ -1,7 +1,12 @@
 "use client";
 
-import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import {
+  OrbitControls,
+  OrthographicCamera,
+  PerspectiveCamera,
+} from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
+import type { CameraProjection } from "@repo/design-system/lib/geometry/camera";
 import { type ComponentRef, useCallback, useEffect, useRef } from "react";
 
 const DEFAULT_CAMERA_X = 12;
@@ -60,6 +65,7 @@ interface CameraControlsProps {
   minAzimuthAngle?: number;
   minDistance?: number;
   minPolarAngle?: number;
+  projection?: CameraProjection;
 }
 
 export function CameraControls(props: CameraControlsProps) {
@@ -77,10 +83,12 @@ export function CameraControls(props: CameraControlsProps) {
     minAzimuthAngle,
     minDistance = 1,
     minPolarAngle,
+    projection = { kind: "perspective" },
   } = props;
   const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
   const domElement = useThree((state) => state.gl.domElement);
   const invalidate = useThree((state) => state.invalidate);
+  const viewportHeight = useThree((state) => state.size.height);
   const [cameraPositionX, cameraPositionY, cameraPositionZ] = cameraPosition;
   const [cameraTargetX, cameraTargetY, cameraTargetZ] = cameraTarget;
 
@@ -133,7 +141,23 @@ export function CameraControls(props: CameraControlsProps) {
 
   return (
     <>
-      <PerspectiveCamera fov={fov} makeDefault position={cameraPosition} />
+      {projection.kind === "orthographic" ? (
+        <OrthographicCamera
+          far={projection.far}
+          makeDefault
+          near={projection.near}
+          position={cameraPosition}
+          zoom={viewportHeight / projection.viewHeight}
+        />
+      ) : (
+        <PerspectiveCamera
+          far={projection.far}
+          fov={projection.fov ?? fov}
+          makeDefault
+          near={projection.near}
+          position={cameraPosition}
+        />
+      )}
       <OrbitControls
         autoRotate={autoRotate}
         autoRotateSpeed={0.5}

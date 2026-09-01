@@ -6,7 +6,7 @@ interface DependencyHold {
   readonly minimumDeclarations?: number;
 }
 
-export const CONTRACT_VERSION = "0.32.0";
+export const CONTRACT_VERSION = "0.33.0";
 
 export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   {

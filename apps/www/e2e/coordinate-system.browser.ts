@@ -136,7 +136,10 @@ const expectStableCoordinateSystem = Effect.fn(
   });
   const scene = card.locator('[data-slot="line-scene"]');
   const canvas = scene.locator("canvas");
-  const playButton = scene.getByRole("button", { name: "Toggle Play" });
+  const gridButton = scene.getByRole("button", { name: "Kisi" });
+  const rotationButton = scene.getByRole("button", {
+    name: "Rotasi otomatis",
+  });
 
   yield* Effect.promise(() =>
     expect(async () => {
@@ -146,13 +149,33 @@ const expectStableCoordinateSystem = Effect.fn(
       expect(await canvas.isVisible()).toBe(true);
     }).toPass({ timeout: 30_000 })
   );
+  yield* Effect.promise(() =>
+    expect(gridButton).toHaveAttribute("aria-pressed", "true")
+  );
+  yield* Effect.promise(() =>
+    expect(rotationButton).toHaveAttribute("aria-pressed", "false")
+  );
+  yield* Effect.promise(() => gridButton.click());
+  yield* Effect.promise(() =>
+    expect(gridButton).toHaveAttribute("aria-pressed", "false")
+  );
+  yield* Effect.promise(() => gridButton.click());
+  yield* Effect.promise(() =>
+    expect(gridButton).toHaveAttribute("aria-pressed", "true")
+  );
   yield* waitForStableCanvas(canvas);
   yield* observeDrawingBufferSize(canvas);
 
   const beforePlay = yield* Effect.promise(() => canvas.screenshot());
-  yield* Effect.promise(() => playButton.click());
+  yield* Effect.promise(() => rotationButton.click());
+  yield* Effect.promise(() =>
+    expect(rotationButton).toHaveAttribute("aria-pressed", "true")
+  );
   yield* expectCanvasToMove(canvas, beforePlay);
-  yield* Effect.promise(() => playButton.click());
+  yield* Effect.promise(() => rotationButton.click());
+  yield* Effect.promise(() =>
+    expect(rotationButton).toHaveAttribute("aria-pressed", "false")
+  );
   yield* waitForStableCanvas(canvas);
 
   const beforeDrag = yield* Effect.promise(() => canvas.screenshot());

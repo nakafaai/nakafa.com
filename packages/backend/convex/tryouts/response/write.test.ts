@@ -12,7 +12,6 @@ import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { Effect } from "effect";
 
 type ConvexTest = ReturnType<typeof createConvexTestWithBetterAuth>;
-
 const seedResponseFixture = Effect.fn("test.tryout.response.seedFixture")(
   function* (
     t: ConvexTest,
@@ -30,7 +29,10 @@ const seedResponseFixture = Effect.fn("test.tryout.response.seedFixture")(
           suffix,
         });
         const placement = await ctx.db.get(state.placementId);
-        const selectedChoice = placement?.choiceSnapshots?.at(0);
+        const selectedChoice =
+          placement?.responseSpec.kind === "single-choice"
+            ? placement.responseSpec.options.at(0)
+            : undefined;
         if (!selectedChoice) {
           throw new Error("Expected one frozen choice.");
         }
@@ -43,7 +45,6 @@ const seedResponseFixture = Effect.fn("test.tryout.response.seedFixture")(
     return { ...seeded, client: authenticate(t, seeded.identity) };
   }
 );
-
 function authenticate(
   t: ConvexTest,
   identity: { readonly authUserId: string; readonly sessionId: string }
@@ -53,13 +54,11 @@ function authenticate(
     subject: identity.authUserId,
   });
 }
-
 type ResponseFixture = Effect.Success<ReturnType<typeof seedResponseFixture>>;
 interface ExpectedConvexFailure {
   readonly code: string;
   readonly message?: string;
 }
-
 const setResponseClock = Effect.fn("test.tryout.response.setClock")(
   (offset: number) =>
     Effect.sync(() => vi.setSystemTime(new Date(TRYOUT_TEST_NOW + offset)))
@@ -68,13 +67,13 @@ const setResponseClock = Effect.fn("test.tryout.response.setClock")(
 const saveSelection = Effect.fn("test.tryout.response.saveSelection")(
   (
     fixture: ResponseFixture,
-    selectedOptionId = fixture.selectedChoice.optionKey,
+    optionKey = fixture.selectedChoice.optionKey,
     client = fixture.client
   ) =>
     Effect.promise(() =>
       client.mutation(api.tryouts.mutations.responses.save, {
         placementId: fixture.placementId,
-        selectedOptionId,
+        selection: { kind: "single-choice", optionKey },
       })
     )
 );
@@ -113,14 +112,14 @@ const expectSaveFailure = Effect.fn("test.tryout.response.expectSaveFailure")(
   function* (
     fixture: ResponseFixture,
     expected: ExpectedConvexFailure,
-    selectedOptionId = fixture.selectedChoice.optionKey,
+    optionKey = fixture.selectedChoice.optionKey,
     client = fixture.client
   ) {
     yield* expectConvexFailure(
       () =>
         client.mutation(api.tryouts.mutations.responses.save, {
           placementId: fixture.placementId,
-          selectedOptionId,
+          selection: { kind: "single-choice", optionKey },
         }),
       expected
     );
@@ -134,13 +133,10 @@ describe("tryouts/response/write", () => {
       Effect.gen(function* () {
         const t = createConvexTestWithBetterAuth();
         const seeded = yield* seedResponseFixture(t, "response-time");
-
         yield* setResponseClock(5000);
         yield* saveSelection(seeded);
-
         yield* setResponseClock(9000);
         yield* saveSelection(seeded);
-
         const stored = yield* readResponseState(t, seeded);
         expect(stored.responses).toHaveLength(1);
         expect(stored.responses[0]).toMatchObject({
@@ -154,7 +150,6 @@ describe("tryouts/response/write", () => {
           timeSpent: 9,
           updatedAt: TRYOUT_TEST_NOW + 9000,
         });
-        expect(stored.responses[0]).not.toHaveProperty("selectedOptionId");
         expect(stored.section).toMatchObject({
           answeredCount: 1,
           correctAnswers: seeded.selectedChoice.isCorrect ? 1 : 0,
@@ -172,14 +167,13 @@ describe("tryouts/response/write", () => {
         const seeded = yield* seedResponseFixture(t, "response-choice");
         yield* setResponseClock(5000);
 
-        for (const selectedOptionId of ["", "option-999"]) {
+        for (const optionKey of ["", "option-999"]) {
           yield* expectSaveFailure(
             seeded,
             { code: "TRYOUT_RESPONSE_SELECTION_INVALID" },
-            selectedOptionId
+            optionKey
           );
         }
-
         const stored = yield* Effect.promise(() =>
           t.query(async (ctx) => ({
             responses: await ctx.db.query("tryoutResponses").collect(),
@@ -201,7 +195,6 @@ describe("tryouts/response/write", () => {
       Effect.gen(function* () {
         const t = createConvexTestWithBetterAuth();
         const seeded = yield* seedResponseFixture(t, "response-expiry");
-
         yield* setResponseClock(1_799_999);
         yield* saveSelection(seeded);
         yield* setResponseClock(1_800_000);
@@ -233,7 +226,6 @@ describe("tryouts/response/write", () => {
           })
         )
       );
-
       yield* expectSaveFailure(
         seeded,
         { code: "TRYOUT_ATTEMPT_NOT_FOUND" },
@@ -249,7 +241,6 @@ describe("tryouts/response/write", () => {
     Effect.gen(function* () {
       const t = createConvexTestWithBetterAuth();
       const seeded = yield* seedResponseFixture(t, "response-storage-failure");
-
       yield* expectConvexFailure(
         () =>
           t.mutation(async (ctx) => {
@@ -267,7 +258,10 @@ describe("tryouts/response/write", () => {
               saveTryoutResponse(ctx, {
                 args: {
                   placementId: seeded.placementId,
-                  selectedOptionId: seeded.selectedChoice.optionKey,
+                  selection: {
+                    kind: "single-choice",
+                    optionKey: seeded.selectedChoice.optionKey,
+                  },
                 },
                 now: TRYOUT_TEST_NOW + 5000,
                 userId: seeded.identity.userId,
@@ -299,7 +293,6 @@ describe("tryouts/response/write", () => {
       Effect.gen(function* () {
         const t = createConvexTestWithBetterAuth();
         const seeded = yield* seedResponseFixture(t, suffix, status);
-
         yield* expectSaveFailure(seeded, { code: expectedCode });
         const responses = yield* collectResponses(t);
         expect(responses).toEqual([]);
@@ -384,9 +377,13 @@ describe("tryouts/response/write", () => {
             );
             await ctx.db.insert("tryoutResponses", {
               answeredAt: TRYOUT_TEST_NOW,
+              isComplete: true,
               isCorrect: seeded.selectedChoice.isCorrect,
               placementId: seeded.placementId,
-              selectedOptionId: seeded.selectedChoice.optionKey,
+              selection: {
+                kind: "single-choice",
+                optionKey: seeded.selectedChoice.optionKey,
+              },
               timeSpent: 0,
               tryoutAttemptId: seeded.attemptId,
               tryoutSectionAttemptId: foreignSectionId,
@@ -395,7 +392,6 @@ describe("tryouts/response/write", () => {
           })
         );
         yield* setResponseClock(5000);
-
         yield* expectSaveFailure(seeded, {
           code: "TRYOUT_RESPONSE_LINK_MISMATCH",
         });
@@ -430,9 +426,13 @@ describe("tryouts/response/write", () => {
           for (const offset of [0, 1]) {
             await ctx.db.insert("tryoutResponses", {
               answeredAt: TRYOUT_TEST_NOW + offset,
+              isComplete: true,
               isCorrect: seeded.selectedChoice.isCorrect,
               placementId: seeded.placementId,
-              selectedOptionId: seeded.selectedChoice.optionKey,
+              selection: {
+                kind: "single-choice",
+                optionKey: seeded.selectedChoice.optionKey,
+              },
               timeSpent: offset,
               tryoutAttemptId: seeded.attemptId,
               tryoutSectionAttemptId: seeded.sectionAttemptId,
@@ -442,7 +442,6 @@ describe("tryouts/response/write", () => {
         })
       );
       yield* setResponseClock(5000);
-
       yield* expectSaveFailure(seeded, {
         code: "TRYOUT_RESPONSE_PLACEMENT_DUPLICATE",
       });
@@ -464,9 +463,13 @@ describe("tryouts/response/write", () => {
         t.mutation((ctx) =>
           ctx.db.insert("tryoutResponses", {
             answeredAt: TRYOUT_TEST_NOW,
+            isComplete: true,
             isCorrect: !seeded.selectedChoice.isCorrect,
             placementId: seeded.placementId,
-            selectedOptionId: seeded.selectedChoice.optionKey,
+            selection: {
+              kind: "single-choice",
+              optionKey: seeded.selectedChoice.optionKey,
+            },
             timeSpent: 0,
             tryoutAttemptId: seeded.attemptId,
             tryoutSectionAttemptId: seeded.sectionAttemptId,
@@ -475,7 +478,6 @@ describe("tryouts/response/write", () => {
         )
       );
       yield* setResponseClock(5000);
-
       yield* expectSaveFailure(seeded, {
         code: "TRYOUT_RESPONSE_SELECTION_MISMATCH",
       });

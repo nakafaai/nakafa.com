@@ -71,7 +71,7 @@ describe("renderer manifest", () => {
       });
 
       expect(historicalManifest.hash).toBe(
-        "sha256:641c6bfbd1307ab31779a68455e4111e27a61daa26c3047da2e5995b0ac17e9f"
+        "sha256:498f63f26201b30b93d4972292b4cd4489b05b1e216529081da1b7a01e3d0483"
       );
       expect(yield* validateRendererManifestHash(historicalManifest)).toEqual(
         historicalManifest

@@ -6,9 +6,7 @@ import { Schema } from "effect";
 
 export const saveTryoutResponseArgsValidator = v.object({
   placementId: v.id("tryoutAttemptPlacements"),
-  selection: v.optional(v.union(tryoutResponseSelectionValidator, v.null())),
-  /** Temporary predecessor argument removed after client observation. */
-  selectedOptionId: v.optional(v.string()),
+  selection: v.union(tryoutResponseSelectionValidator, v.null()),
 });
 
 export type SaveTryoutResponseArgs = Infer<

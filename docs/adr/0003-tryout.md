@@ -64,18 +64,14 @@ evaluates correctness from that immutable specification. The transaction
 validates attempt, section, placement, response kind, and response ownership
 before it updates the response and parent activity counters.
 
-The structured-response change follows expand, switch, observe, then contract.
-Canonical writers persist `selection` and `responseSpec` for single-choice,
-multiple-choice, and category responses. During the bounded observation period,
-the public mutation may still accept the predecessor `selectedOptionId`, and the
-runtime may still project `choices` and `selectedOptionId` for already deployed
-clients. These fields are temporary rollout contracts, not permanent response
-models. Remove their validators, readers, projections, schema fields, tests, and
-migration operation after production logs show zero predecessor writers for the
-full client window, all stored rows are canonical, and no live attempt can still
-depend on the predecessor shape. The maximum attempt lifetime is 72 hours.
+The structured-response rollout completed on 2026-09-01 after production data
+contained only canonical rows. Placements persist one required `responseSpec`,
+learner responses persist one required `selection` and `isComplete` result, and
+the public mutation accepts only that stable contract. Single-choice,
+multiple-choice, and category responses share this model without rollout
+adapters or duplicate runtime projections.
 
-Outside that temporary rollout seam, the runtime exposes only exact attempt-ID
+The runtime exposes only exact attempt-ID
 state, response, history, and page operations. Public-path compatibility
 queries, fallback indexes, and duplicate state shapes are not supported.
 

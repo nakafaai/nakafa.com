@@ -9,7 +9,6 @@ import {
   tryoutResponseSpecValidator,
 } from "@repo/backend/convex/tryouts/response/model";
 import { tryoutRouteKeyValidator } from "@repo/backend/convex/tryouts/route";
-import { tryoutChoiceSnapshotValidator } from "@repo/backend/convex/tryouts/runtime/choice";
 import {
   tryoutScoreStatusValidator,
   tryoutScoringStrategyValidator,
@@ -205,9 +204,7 @@ const tables = {
     tryoutAttemptId: v.id("tryoutAttempts"),
     questionOrder: v.number(),
     sourcePath: v.string(),
-    /** Temporary predecessor field removed after the response migration. */
-    choiceSnapshots: v.optional(v.array(tryoutChoiceSnapshotValidator)),
-    responseSpec: v.optional(tryoutResponseSpecValidator),
+    responseSpec: tryoutResponseSpecValidator,
     sourceRevision: v.string(),
     contentHash: v.string(),
   })
@@ -225,10 +222,8 @@ const tables = {
     tryoutAttemptId: v.id("tryoutAttempts"),
     tryoutSectionAttemptId: v.id("tryoutSectionAttempts"),
     placementId: v.id("tryoutAttemptPlacements"),
-    isComplete: v.optional(v.boolean()),
-    selection: v.optional(tryoutResponseSelectionValidator),
-    /** Temporary predecessor fields removed after client and data cutover. */
-    selectedOptionId: v.optional(v.string()),
+    isComplete: v.boolean(),
+    selection: tryoutResponseSelectionValidator,
     isCorrect: v.boolean(),
     timeSpent: v.number(),
     answeredAt: v.number(),

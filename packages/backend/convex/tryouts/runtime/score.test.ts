@@ -228,7 +228,10 @@ describe("tryouts/runtime/score", () => {
                   "Expected one frozen try-out placement."
                 );
               }
-              const choice = placement.choiceSnapshots?.at(0);
+              const choice =
+                placement.responseSpec.kind === "single-choice"
+                  ? placement.responseSpec.options.at(0)
+                  : undefined;
               if (!choice) {
                 return yield* Effect.die("Expected one frozen try-out choice.");
               }
@@ -241,9 +244,13 @@ describe("tryouts/runtime/score", () => {
               yield* Effect.promise(() =>
                 ctx.db.insert("tryoutResponses", {
                   answeredAt: NOW,
+                  isComplete: true,
                   isCorrect: !choice.isCorrect,
                   placementId: placement._id,
-                  selectedOptionId: choice.optionKey,
+                  selection: {
+                    kind: "single-choice",
+                    optionKey: choice.optionKey,
+                  },
                   timeSpent: 0,
                   tryoutAttemptId: fixture.attemptId,
                   tryoutSectionAttemptId: fixture.sectionAttemptId,

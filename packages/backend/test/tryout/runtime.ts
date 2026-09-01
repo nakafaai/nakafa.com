@@ -78,7 +78,6 @@ export async function seedTryoutContentAccessState(
   ctx: MutationCtx,
   args: {
     attemptStatus: TryoutStatus;
-    responseContract?: "dual" | "legacy";
     sectionStatus: TryoutStatus;
     suffix: string;
   }
@@ -197,7 +196,6 @@ export async function seedTryoutContentAccessState(
   const placementId = await ctx.db.insert("tryoutAttemptPlacements", {
     answerArtifactHash: placementRow.answerArtifactHash,
     answerContentKey: placementRow.answerContentKey,
-    choiceSnapshots: responseSpec.options,
     contentHash: placementRow.contentHash,
     placementIdentity: tryoutPlacementIdentity(placementRow),
     placementRowHash,
@@ -205,7 +203,7 @@ export async function seedTryoutContentAccessState(
     questionContentKey: placementRow.questionContentKey,
     questionOrder: placementRow.questionOrder,
     rendererDomain: placementRow.rendererDomain,
-    ...(args.responseContract === "legacy" ? {} : { responseSpec }),
+    responseSpec,
     sectionIdentity: tryoutCatalogIdentity(signedSection.signed.section.row),
     sectionKey: placementRow.sectionKey,
     sourcePath: placementRow.questionSourcePath,
@@ -379,7 +377,6 @@ export function insertTryoutAttemptPlacement(
   return ctx.db.insert("tryoutAttemptPlacements", {
     answerArtifactHash: placement.answerArtifactHash,
     answerContentKey: placement.answerContentKey,
-    choiceSnapshots: placement.choiceSnapshots,
     contentHash: placement.contentHash,
     placementIdentity: placement.placementIdentity,
     placementRowHash: placement.placementRowHash,
@@ -387,6 +384,7 @@ export function insertTryoutAttemptPlacement(
     questionContentKey: placement.questionContentKey,
     questionOrder: placement.questionOrder,
     rendererDomain: placement.rendererDomain,
+    responseSpec: placement.responseSpec,
     sectionIdentity: placement.sectionIdentity,
     sectionKey: placement.sectionKey,
     sourcePath: placement.sourcePath,

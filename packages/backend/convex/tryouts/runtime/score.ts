@@ -120,7 +120,7 @@ export const requireOwnedAttempt = Effect.fn(
 export function summarizeResponses(responses: TryoutResponse[]) {
   return responses.reduce(
     (summary, response) => {
-      if (response.isComplete === false) {
+      if (!response.isComplete) {
         return summary;
       }
       return {

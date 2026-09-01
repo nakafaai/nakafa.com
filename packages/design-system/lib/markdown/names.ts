@@ -19,6 +19,7 @@ export const baseComponentNames = {
   inlineMath: "InlineMath",
   listItem: "li",
   mathContainer: "MathContainer",
+  mathVisual: "MathVisual",
   mermaid: "Mermaid",
   orderedList: "ol",
   paragraph: "p",
