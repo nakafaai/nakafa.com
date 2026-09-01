@@ -8,7 +8,9 @@ import { v } from "convex/values";
 
 /** Loads compact mutable set state through one exact owned attempt ID. */
 export const getSetAttemptState = query({
-  args: { attemptId: v.id("tryoutAttempts") },
+  args: {
+    attemptId: v.id("tryoutAttempts"),
+  },
   returns: v.union(v.null(), tryoutRuntimeStateValidator),
   handler: (ctx, args) =>
     runConvexProgram(readSetAttemptState(ctx, args.attemptId)),

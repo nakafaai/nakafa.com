@@ -13,7 +13,9 @@ import {
 
 /** Fetches one current set overlay or exact frozen set page. */
 export const getSet = query({
-  args: { request: tryoutSetAttemptPageRequestValidator },
+  args: {
+    request: tryoutSetAttemptPageRequestValidator,
+  },
   returns: tryoutSetAttemptPageResultValidator,
   handler: (ctx, args) =>
     runConvexProgram(readSetAttemptPage(ctx, args.request)),
@@ -21,7 +23,9 @@ export const getSet = query({
 
 /** Fetches one current section redirect or exact frozen section page. */
 export const getSection = query({
-  args: { request: tryoutSectionAttemptPageRequestValidator },
+  args: {
+    request: tryoutSectionAttemptPageRequestValidator,
+  },
   returns: tryoutSectionAttemptPageResultValidator,
   handler: (ctx, args) =>
     runConvexProgram(readSectionAttemptPage(ctx, args.request)),

@@ -30,7 +30,7 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import { convexTest } from "convex-test";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 
 const FIRST_SOURCE_SEGMENT = `/${TRYOUT_START_SECTION}/${TRYOUT_START_SET}`;
 const SECOND_SOURCE_SEGMENT = `/${TRYOUT_REUSED_SECTION}/${TRYOUT_REUSED_SET}`;
@@ -185,108 +185,140 @@ function makeSecondTrackPlacement(locale: ActiveAppLocaleCode) {
 }
 
 describe("tryouts/catalog/featured", () => {
-  it("returns the first visible signed question for the public landing demo", async () => {
-    const t = convexTest(schema, convexModules);
-    const source = makeTryoutStartPlacement("id");
-    await t.mutation((ctx) => activateTryoutStartSource(ctx, "visible"));
+  it.effect(
+    "returns the first visible signed question for the public landing demo",
+    () =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        const source = makeTryoutStartPlacement("id");
+        yield* Effect.promise(() =>
+          t.mutation((ctx) => activateTryoutStartSource(ctx, "visible"))
+        );
 
-    const featured = await t.query((ctx) =>
-      runConvexProgram(readFeaturedTryout(ctx, "id"))
-    );
+        const featured = yield* Effect.promise(() =>
+          t.query((ctx) => runConvexProgram(readFeaturedTryout(ctx, "id")))
+        );
 
-    expect(featured).toEqual({
-      choices: [
-        {
-          isCorrect: true,
-          label: "A",
-          optionKey: "option-1",
-          order: 1,
-        },
-      ],
-      question: {
-        artifactHash: source.questionArtifactHash,
-        bundleHash: expect.any(String),
-        contentHash: TRYOUT_START_CONTENT_HASH,
-        contentKey: source.questionContentKey,
-        delivery: "authenticated",
-        appLocale: "id",
-        questionOrder: 1,
-        snapshotReleaseId: TEST_RELEASE_ID,
-        snapshotId: expect.any(String),
-        sourcePath: source.questionSourcePath,
-        sourceRevision: source.sourceRevision,
-      },
-    });
-    expect(featured.question).not.toHaveProperty("answerArtifactHash");
-    expect(featured.question).not.toHaveProperty("artifactLocale");
-  });
+        expect(featured).toEqual({
+          choices: [
+            {
+              isCorrect: true,
+              label: "A",
+              optionKey: "option-1",
+              order: 1,
+            },
+            {
+              isCorrect: false,
+              label: "B",
+              optionKey: "option-2",
+              order: 2,
+            },
+          ],
+          question: {
+            artifactHash: source.questionArtifactHash,
+            bundleHash: expect.any(String),
+            contentHash: TRYOUT_START_CONTENT_HASH,
+            contentKey: source.questionContentKey,
+            delivery: "authenticated",
+            appLocale: "id",
+            questionOrder: 1,
+            snapshotReleaseId: TEST_RELEASE_ID,
+            snapshotId: expect.any(String),
+            sourcePath: source.questionSourcePath,
+            sourceRevision: source.sourceRevision,
+          },
+        });
+        expect(featured.question).not.toHaveProperty("answerArtifactHash");
+        expect(featured.question).not.toHaveProperty("artifactLocale");
+      })
+  );
 
-  it("does not expose an internal-entry section on the public landing", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation((ctx) => activateTryoutStartSource(ctx, "internal-entry"));
+  it.effect(
+    "does not expose an internal-entry section on the public landing",
+    () =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          t.mutation((ctx) => activateTryoutStartSource(ctx, "internal-entry"))
+        );
 
-    await expect(
-      t.query((ctx) => runConvexProgram(readFeaturedTryout(ctx, "id")))
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_INTEGRITY" },
-    });
-  });
+        const failure = yield* Effect.tryPromise(() =>
+          t.query((ctx) => runConvexProgram(readFeaturedTryout(ctx, "id")))
+        ).pipe(Effect.flip);
+        expect(failure.cause).toMatchObject({
+          data: { code: "CONTENT_RELEASE_INTEGRITY" },
+        });
+      })
+  );
 
-  it("continues to the next set when the first set has no visible section", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      const snapshotId = await activateTryoutSnapshot(ctx, {
-        catalog: ACTIVE_APP_LOCALE_CODES.flatMap(
-          makeInternalThenVisibleCatalog
-        ),
-        placements: ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
-          makeTryoutStartPlacement(locale),
-          makeSecondSetPlacement(locale),
-        ]),
+  it.effect(
+    "continues to the next set when the first set has no visible section",
+    () =>
+      Effect.gen(function* () {
+        const t = convexTest(schema, convexModules);
+        yield* Effect.promise(() =>
+          t.mutation(async (ctx) => {
+            const snapshotId = await activateTryoutSnapshot(ctx, {
+              catalog: ACTIVE_APP_LOCALE_CODES.flatMap(
+                makeInternalThenVisibleCatalog
+              ),
+              placements: ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
+                makeTryoutStartPlacement(locale),
+                makeSecondSetPlacement(locale),
+              ]),
+            });
+            await insertTestTryoutRuntimeBundle(ctx, snapshotId);
+          })
+        );
+
+        const featured = yield* Effect.promise(() =>
+          t.query((ctx) => runConvexProgram(readFeaturedTryout(ctx, "id")))
+        );
+
+        expect(featured.question.contentKey).toContain(
+          `/${TRYOUT_REUSED_SECTION}/${TRYOUT_REUSED_SET}/`
+        );
+      })
+  );
+
+  it.effect("continues to the next track when the first track is private", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+      yield* Effect.promise(() =>
+        t.mutation(async (ctx) => {
+          const snapshotId = await activateTryoutSnapshot(ctx, {
+            catalog: ACTIVE_APP_LOCALE_CODES.flatMap(
+              makeInternalTrackThenVisibleCatalog
+            ),
+            placements: ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
+              makeTryoutStartPlacement(locale),
+              makeSecondTrackPlacement(locale),
+            ]),
+          });
+          await insertTestTryoutRuntimeBundle(ctx, snapshotId);
+        })
+      );
+
+      const featured = yield* Effect.promise(() =>
+        t.query((ctx) => runConvexProgram(readFeaturedTryout(ctx, "id")))
+      );
+
+      expect(featured.question.contentKey).toContain(
+        `/${TRYOUT_REUSED_SECTION}/${TRYOUT_REUSED_SET}/`
+      );
+    })
+  );
+
+  it.effect("requires one active signed hierarchy", () =>
+    Effect.gen(function* () {
+      const t = convexTest(schema, convexModules);
+
+      const failure = yield* Effect.tryPromise(() =>
+        t.query((ctx) => runConvexProgram(readFeaturedTryout(ctx, "id")))
+      ).pipe(Effect.flip);
+      expect(failure.cause).toMatchObject({
+        data: { code: "CONTENT_RELEASE_MISSING" },
       });
-      await insertTestTryoutRuntimeBundle(ctx, snapshotId);
-    });
-
-    const featured = await t.query((ctx) =>
-      runConvexProgram(readFeaturedTryout(ctx, "id"))
-    );
-
-    expect(featured.question.contentKey).toContain(
-      `/${TRYOUT_REUSED_SECTION}/${TRYOUT_REUSED_SET}/`
-    );
-  });
-
-  it("continues to the next track when the first track is private", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      const snapshotId = await activateTryoutSnapshot(ctx, {
-        catalog: ACTIVE_APP_LOCALE_CODES.flatMap(
-          makeInternalTrackThenVisibleCatalog
-        ),
-        placements: ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
-          makeTryoutStartPlacement(locale),
-          makeSecondTrackPlacement(locale),
-        ]),
-      });
-      await insertTestTryoutRuntimeBundle(ctx, snapshotId);
-    });
-
-    const featured = await t.query((ctx) =>
-      runConvexProgram(readFeaturedTryout(ctx, "id"))
-    );
-
-    expect(featured.question.contentKey).toContain(
-      `/${TRYOUT_REUSED_SECTION}/${TRYOUT_REUSED_SET}/`
-    );
-  });
-
-  it("requires one active signed hierarchy", async () => {
-    const t = convexTest(schema, convexModules);
-
-    await expect(
-      t.query((ctx) => runConvexProgram(readFeaturedTryout(ctx, "id")))
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_MISSING" },
-    });
-  });
+    })
+  );
 });

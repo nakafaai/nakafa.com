@@ -1,11 +1,11 @@
 import "server-only";
 
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
-import { MarkdownResponse } from "@repo/design-system/components/ai/markdown";
+import { MarkdownContent } from "@repo/design-system/components/markdown/content";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
-import { TryoutReviewedChoice } from "@/components/tryout/runtime/choice-surface.client";
+import { TryoutReviewedChoice } from "@/components/tryout/runtime/choice/surface.client";
 import {
   TryoutChoicePreview,
   type TryoutPreviewChoiceItem,
@@ -25,12 +25,12 @@ function previewChoices(
 ): readonly TryoutPreviewChoiceItem[] {
   return content.choices.map(({ label, value }, index) => ({
     content: (
-      <MarkdownResponse
+      <MarkdownContent
         className="wrap-anywhere h-auto whitespace-normal"
         id={`features-tryout-choice-choice-${index + 1}`}
       >
         {label}
-      </MarkdownResponse>
+      </MarkdownContent>
     ),
     isCorrect: value,
     label,
@@ -116,12 +116,12 @@ function QuestionPreviewBody({
               isCorrect={choice.isCorrect}
               key={choice.optionKey}
               label={
-                <MarkdownResponse
+                <MarkdownContent
                   className="wrap-anywhere h-auto whitespace-normal"
                   id={`preview-question-${questionOrder}-${choice.optionKey}`}
                 >
                   {choice.label}
-                </MarkdownResponse>
+                </MarkdownContent>
               }
             />
           ))}

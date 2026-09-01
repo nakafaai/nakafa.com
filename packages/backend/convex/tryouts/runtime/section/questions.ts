@@ -2,9 +2,15 @@ import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
 import { requireTryoutResponseSectionSnapshot } from "@repo/backend/convex/tryouts/response/integrity";
 import {
+  resolvePlacementResponseSpec,
+  resolveStoredResponseSelection,
+} from "@repo/backend/convex/tryouts/response/legacy";
+import { projectTryoutResponseSpec } from "@repo/backend/convex/tryouts/response/model";
+import {
   getTryoutSectionContentAccess,
   noTryoutSectionContentAccess,
 } from "@repo/backend/convex/tryouts/runtime/content";
+import { TryoutRuntimeError } from "@repo/backend/convex/tryouts/runtime/error";
 import { readAttemptSetIdentity } from "@repo/backend/convex/tryouts/runtime/lookup";
 import { loadSectionPlacements } from "@repo/backend/convex/tryouts/runtime/placement";
 import { loadSectionResponseIndex } from "@repo/backend/convex/tryouts/runtime/response";
@@ -84,7 +90,7 @@ export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
       runtime: {
         attemptId: attempt._id,
         expiresAt: section.expiresAt,
-        questions: projectRuntimeQuestions(
+        questions: yield* projectRuntimeQuestions(
           loaded.placements,
           loaded.responses,
           loaded.access
@@ -96,38 +102,82 @@ export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
 );
 
 /** Projects mutable response state without repeating immutable page fields. */
-function projectRuntimeQuestions(
-  placements: readonly TryoutPlacement[],
-  responses: ReadonlyMap<TryoutPlacement["_id"], TryoutResponse>,
-  access: { readonly answers: boolean; readonly questions: boolean }
-) {
-  return placements.map((placement) => {
+const projectRuntimeQuestions = Effect.fn("tryouts.runtime.projectQuestions")(
+  (
+    placements: readonly TryoutPlacement[],
+    responses: ReadonlyMap<TryoutPlacement["_id"], TryoutResponse>,
+    access: { readonly answers: boolean; readonly questions: boolean }
+  ) =>
+    Effect.forEach(placements, (placement) =>
+      projectRuntimeQuestion(placement, responses, access)
+    )
+);
+
+/** Projects one validated frozen placement and optional learner response. */
+const projectRuntimeQuestion = Effect.fn("tryouts.runtime.projectQuestion")(
+  function* (
+    placement: TryoutPlacement,
+    responses: ReadonlyMap<TryoutPlacement["_id"], TryoutResponse>,
+    access: { readonly answers: boolean; readonly questions: boolean }
+  ) {
     const response = responses.get(placement._id) ?? null;
-    const choices = [...placement.choiceSnapshots].sort(
-      (left, right) => left.order - right.order
+    const responseSpec = yield* resolvePlacementResponseSpec(placement).pipe(
+      Effect.mapError(
+        (cause) =>
+          new TryoutRuntimeError({
+            cause,
+            code: "TRYOUT_RESPONSE_DEFINITION_INVALID",
+            message: cause.message,
+          })
+      )
     );
+    const runtimeResponse = response
+      ? {
+          answeredAt: response.answeredAt,
+          isComplete: response.isComplete ?? true,
+          selection: yield* resolveStoredResponseSelection(response).pipe(
+            Effect.mapError(
+              (cause) =>
+                new TryoutRuntimeError({
+                  cause,
+                  code: "TRYOUT_RESPONSE_SELECTION_INVALID",
+                  message: cause.message,
+                })
+            )
+          ),
+          updatedAt: response.updatedAt,
+        }
+      : null;
+    const predecessorSelectedOptionId =
+      runtimeResponse?.selection.kind === "single-choice"
+        ? runtimeResponse.selection.optionKey
+        : undefined;
+    const choices =
+      responseSpec.kind === "category"
+        ? []
+        : responseSpec.options.map((option) => ({
+            ...(access.answers ? { isCorrect: option.isCorrect } : {}),
+            label: option.label,
+            optionKey: option.optionKey,
+            order: option.order,
+          }));
 
     return {
-      choices: choices.map((choice) => ({
-        ...(access.answers ? { isCorrect: choice.isCorrect } : {}),
-        label: choice.label,
-        optionKey: choice.optionKey,
-        order: choice.order,
-      })),
+      choices,
       contentHash: placement.contentHash,
       placementId: placement._id,
       questionOrder: placement.questionOrder,
-      response: response
+      response: runtimeResponse
         ? {
-            answeredAt: response.answeredAt,
-            ...(response.selectedOptionId === undefined
-              ? {}
-              : { selectedOptionId: response.selectedOptionId }),
-            updatedAt: response.updatedAt,
+            ...runtimeResponse,
+            ...(predecessorSelectedOptionId
+              ? { selectedOptionId: predecessorSelectedOptionId }
+              : {}),
           }
         : null,
+      responseSpec: projectTryoutResponseSpec(responseSpec, access.answers),
       sourcePath: placement.sourcePath,
       sourceRevision: placement.sourceRevision,
     };
-  });
-}
+  }
+);

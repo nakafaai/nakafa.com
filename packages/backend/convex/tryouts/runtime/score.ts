@@ -119,10 +119,15 @@ export const requireOwnedAttempt = Effect.fn(
 /** Counts response answers and correctness for a section or attempt. */
 export function summarizeResponses(responses: TryoutResponse[]) {
   return responses.reduce(
-    (summary, response) => ({
-      answeredCount: summary.answeredCount + 1,
-      correctAnswers: summary.correctAnswers + (response.isCorrect ? 1 : 0),
-    }),
+    (summary, response) => {
+      if (response.isComplete === false) {
+        return summary;
+      }
+      return {
+        answeredCount: summary.answeredCount + 1,
+        correctAnswers: summary.correctAnswers + (response.isCorrect ? 1 : 0),
+      };
+    },
     { answeredCount: 0, correctAnswers: 0 }
   );
 }

@@ -127,6 +127,12 @@ export function makeTryoutPlacementRow(
         optionKey: "option-1",
         order: 1,
       },
+      {
+        isCorrect: false,
+        label: `${technicalCopy[appLocale].choice} 2`,
+        optionKey: "option-2",
+        order: 2,
+      },
     ],
     contentHash: TryoutContentHashSchema.make(
       technicalCopy[appLocale].contentHashCharacter.repeat(64)

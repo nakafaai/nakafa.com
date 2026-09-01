@@ -32,13 +32,18 @@ export const TRYOUT_CATALOG_DOCUMENT_LIMIT = Math.floor(
   (TRYOUT_ROW_BUDGET - TRYOUT_PROGRESS_READ_BUDGET) / TRYOUT_CATALOG_LIMIT
 );
 
-/** Per-row ceiling that keeps a maximum section read within its byte budget. */
-export const TRYOUT_PLACEMENT_DOCUMENT_LIMIT = Math.floor(
+/** Per-attempt row ceiling that keeps a maximum section read within budget. */
+export const TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT = Math.floor(
   (TRYOUT_ROW_BUDGET - TRYOUT_CATALOG_DOCUMENT_LIMIT) / TRYOUT_SECTION_LIMIT
+);
+
+/** Signed source ceiling that reserves space for the dual-written response. */
+export const TRYOUT_PLACEMENT_DOCUMENT_LIMIT = Math.floor(
+  TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT / 2
 );
 
 /** Maximum questions read across every section of one immutable set. */
 export const TRYOUT_SET_QUESTION_LIMIT = Math.floor(
   (TRYOUT_ROW_BUDGET - TRYOUT_CATALOG_DOCUMENT_LIMIT) /
-    (TRYOUT_CATALOG_DOCUMENT_LIMIT + TRYOUT_PLACEMENT_DOCUMENT_LIMIT)
+    (TRYOUT_CATALOG_DOCUMENT_LIMIT + TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT)
 );

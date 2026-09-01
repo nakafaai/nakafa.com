@@ -5,6 +5,7 @@ import {
   TRANSACTION_READ_LIMIT,
 } from "@repo/backend/convex/contentRelease/spec";
 import {
+  TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT,
   TRYOUT_CATALOG_DOCUMENT_LIMIT,
   TRYOUT_CATALOG_LIMIT,
   TRYOUT_PLACEMENT_DOCUMENT_LIMIT,
@@ -27,7 +28,7 @@ describe("contentRelease/tryout/limits", () => {
     const sectionBytes =
       ownerBytes +
       TRYOUT_CATALOG_DOCUMENT_LIMIT +
-      TRYOUT_SECTION_LIMIT * TRYOUT_PLACEMENT_DOCUMENT_LIMIT;
+      TRYOUT_SECTION_LIMIT * TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT;
 
     expect(catalogBytes).toBeLessThanOrEqual(
       TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
@@ -45,10 +46,14 @@ describe("contentRelease/tryout/limits", () => {
       ownerBytes +
       TRYOUT_CATALOG_DOCUMENT_LIMIT +
       TRYOUT_SET_QUESTION_LIMIT *
-        (TRYOUT_CATALOG_DOCUMENT_LIMIT + TRYOUT_PLACEMENT_DOCUMENT_LIMIT);
+        (TRYOUT_CATALOG_DOCUMENT_LIMIT +
+          TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT);
 
     expect(maximumSetBytes).toBeLessThanOrEqual(
       TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM
+    );
+    expect(TRYOUT_PLACEMENT_DOCUMENT_LIMIT * 2).toBeLessThanOrEqual(
+      TRYOUT_ATTEMPT_PLACEMENT_DOCUMENT_LIMIT
     );
   });
 });

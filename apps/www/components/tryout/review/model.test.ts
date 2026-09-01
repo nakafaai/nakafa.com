@@ -15,7 +15,7 @@ const SECOND_IDENTITY = {
 };
 
 describe("projectTryoutReview", () => {
-  it.live("pairs signed questions and answers in frozen runtime order", () =>
+  it.effect("pairs signed questions and answers in frozen runtime order", () =>
     Effect.gen(function* () {
       const content = createContent([SECOND_IDENTITY, FIRST_IDENTITY]);
       const questions = [
@@ -26,31 +26,33 @@ describe("projectTryoutReview", () => {
       expect(yield* projectTryoutReview({ content, questions })).toEqual([
         {
           answer: "answer:questions/1",
-          choices: [{ isCorrect: true, label: "A", optionKey: "a", order: 1 }],
           content: "question:questions/1",
           questionOrder: 1,
           response: {
             answeredAt: 10,
-            selectedOptionId: "a",
+            isComplete: true,
+            selection: { kind: "single-choice", optionKey: "option-1" },
             updatedAt: 10,
           },
+          responseSpec: responseSpec(),
         },
         {
           answer: "answer:questions/2",
-          choices: [{ isCorrect: true, label: "A", optionKey: "a", order: 1 }],
           content: "question:questions/2",
           questionOrder: 2,
           response: {
             answeredAt: 20,
-            selectedOptionId: "a",
+            isComplete: true,
+            selection: { kind: "single-choice", optionKey: "option-1" },
             updatedAt: 20,
           },
+          responseSpec: responseSpec(),
         },
       ]);
     })
   );
 
-  it.live("fails with a typed error when one signed answer is missing", () =>
+  it.effect("fails with a typed error when one signed answer is missing", () =>
     Effect.gen(function* () {
       const content = createContent([FIRST_IDENTITY]);
       const incompleteContent = {
@@ -72,14 +74,16 @@ describe("projectTryoutReview", () => {
     })
   );
 
-  it.live("fails with a typed error when one signed question is missing", () =>
-    expectProjectionError({
-      content: createContent([]),
-      questions: [createRuntimeQuestion(FIRST_IDENTITY, 1)],
-    })
+  it.effect(
+    "fails with a typed error when one signed question is missing",
+    () =>
+      expectProjectionError({
+        content: createContent([]),
+        questions: [createRuntimeQuestion(FIRST_IDENTITY, 1)],
+      })
   );
 
-  it.live("fails with a typed error for duplicate content identity", () =>
+  it.effect("fails with a typed error for duplicate content identity", () =>
     Effect.gen(function* () {
       const content = createContent([FIRST_IDENTITY, FIRST_IDENTITY]);
 
@@ -100,7 +104,7 @@ describe("projectTryoutReview", () => {
     })
   );
 
-  it.live("fails with a typed error for duplicate answer identity", () =>
+  it.effect("fails with a typed error for duplicate answer identity", () =>
     Effect.gen(function* () {
       const content = createContent([FIRST_IDENTITY, SECOND_IDENTITY]);
 
@@ -117,7 +121,7 @@ describe("projectTryoutReview", () => {
     })
   );
 
-  it.live("fails with a typed error for duplicate runtime order", () =>
+  it.effect("fails with a typed error for duplicate runtime order", () =>
     expectProjectionError({
       content: createContent([FIRST_IDENTITY, SECOND_IDENTITY]),
       questions: [
@@ -127,7 +131,7 @@ describe("projectTryoutReview", () => {
     })
   );
 
-  it.live(
+  it.effect(
     "fails with a typed error for runtime and signed identity drift",
     () =>
       expectProjectionError({
@@ -136,7 +140,7 @@ describe("projectTryoutReview", () => {
       })
   );
 
-  it.live("fails with a typed error for empty signed answer content", () =>
+  it.effect("fails with a typed error for empty signed answer content", () =>
     Effect.gen(function* () {
       const content = createContent([FIRST_IDENTITY]);
 
@@ -185,13 +189,28 @@ function createRuntimeQuestion(
   questionOrder: number
 ) {
   return {
-    choices: [{ isCorrect: true, label: "A", optionKey: "a", order: 1 }],
     ...identity,
     questionOrder,
     response: {
       answeredAt: questionOrder * 10,
-      selectedOptionId: "a",
+      isComplete: true,
+      selection: { kind: "single-choice" as const, optionKey: "option-1" },
       updatedAt: questionOrder * 10,
     },
+    responseSpec: responseSpec(),
+  };
+}
+
+function responseSpec() {
+  return {
+    kind: "single-choice" as const,
+    options: [
+      {
+        isCorrect: true,
+        label: "A",
+        optionKey: "option-1",
+        order: 1,
+      },
+    ],
   };
 }

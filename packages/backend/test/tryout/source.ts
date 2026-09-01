@@ -332,6 +332,12 @@ export function makeTryoutStartPlacement(
         optionKey: "option-1",
         order: 1,
       },
+      {
+        isCorrect: false,
+        label: "B",
+        optionKey: "option-2",
+        order: 2,
+      },
     ],
     contentHash: TRYOUT_START_CONTENT_HASH,
     countryKey: TRYOUT_START_COUNTRY,

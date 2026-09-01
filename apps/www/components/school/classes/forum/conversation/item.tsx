@@ -1,4 +1,4 @@
-import { Response } from "@repo/design-system/components/ai/response";
+import { MarkdownContent } from "@repo/design-system/components/markdown/content";
 import {
   Avatar,
   AvatarFallback,
@@ -110,7 +110,7 @@ export function ForumPostItem({
 
             <Activity mode={post.body.trim() ? "visible" : "hidden"}>
               <div className="wrap-break-word min-w-0 text-chat">
-                <Response id={post._id}>{post.body}</Response>
+                <MarkdownContent id={post._id}>{post.body}</MarkdownContent>
               </div>
             </Activity>
 

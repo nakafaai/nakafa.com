@@ -228,7 +228,7 @@ describe("tryouts/runtime/score", () => {
                   "Expected one frozen try-out placement."
                 );
               }
-              const choice = placement.choiceSnapshots.at(0);
+              const choice = placement.choiceSnapshots?.at(0);
               if (!choice) {
                 return yield* Effect.die("Expected one frozen try-out choice.");
               }
@@ -278,7 +278,7 @@ describe("tryouts/runtime/score", () => {
             )
           )
         ).rejects.toMatchObject({
-          data: { code: "TRYOUT_RESPONSE_CHOICE_MISMATCH" },
+          data: { code: "TRYOUT_RESPONSE_SELECTION_MISMATCH" },
         })
       );
 

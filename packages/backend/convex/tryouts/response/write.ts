@@ -1,11 +1,14 @@
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import { evaluateTryoutResponse } from "@repo/backend/convex/tryouts/response/evaluation";
 import {
   indexTryoutResponses,
   requireTryoutResponseSectionSnapshot,
   TryoutResponseIntegrityError,
   validateTryoutResponsePlacements,
 } from "@repo/backend/convex/tryouts/response/integrity";
+import { resolvePlacementResponseSpec } from "@repo/backend/convex/tryouts/response/legacy";
+import type { TryoutResponseSelection } from "@repo/backend/convex/tryouts/response/model";
 import {
   type SaveTryoutResponseArgs,
   TryoutResponseError,
@@ -122,16 +125,6 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(function* (
       message: "Try-out attempt time has expired.",
     });
   }
-  const selectedChoice = placement.choiceSnapshots.find(
-    (choice) => choice.optionKey === input.args.selectedOptionId
-  );
-  if (!selectedChoice) {
-    return yield* new TryoutResponseError({
-      code: "TRYOUT_CHOICE_NOT_FOUND",
-      message:
-        "Try-out selected choice does not belong to this frozen question.",
-    });
-  }
 
   const existingResponses = yield* tryResponsePromise(() =>
     ctx.db
@@ -154,21 +147,60 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(function* (
   });
   const existing = existingResponses.at(0);
   const timeSpent = getResponseTimeSpent(section, input.now);
+  const selection = yield* readSaveSelection(input.args);
+  if (selection === null) {
+    if (!existing) {
+      return null;
+    }
+    yield* tryResponsePromise(() => ctx.db.delete(existing._id));
+    yield* updateResponseActivity(ctx, {
+      answeredDelta: existing.isComplete === false ? 0 : -1,
+      attemptId: attempt._id,
+      correctDelta: existing.isCorrect ? -1 : 0,
+      now: input.now,
+      section,
+    });
+    return null;
+  }
+
+  const responseSpec = yield* resolvePlacementResponseSpec(placement).pipe(
+    Effect.mapError(
+      (cause) =>
+        new TryoutResponseError({
+          cause,
+          code: "TRYOUT_RESPONSE_DEFINITION_INVALID",
+          message: cause.message,
+        })
+    )
+  );
+  const evaluated = yield* evaluateTryoutResponse(responseSpec, selection).pipe(
+    Effect.mapError(
+      (cause) =>
+        new TryoutResponseError({
+          cause,
+          code: cause.code,
+          message: cause.message,
+        })
+    )
+  );
   if (existing) {
     const correctDelta =
-      (selectedChoice.isCorrect ? 1 : 0) - (existing.isCorrect ? 1 : 0);
+      (evaluated.isCorrect ? 1 : 0) - (existing.isCorrect ? 1 : 0);
+    const answeredDelta =
+      (evaluated.isComplete ? 1 : 0) - (existing.isComplete === false ? 0 : 1);
 
     yield* tryResponsePromise(() =>
       ctx.db.patch(existing._id, {
-        isCorrect: selectedChoice.isCorrect,
-        selectedOptionId: selectedChoice.optionKey,
-        textAnswer: undefined,
+        isComplete: evaluated.isComplete,
+        isCorrect: evaluated.isCorrect,
+        selectedOptionId: undefined,
+        selection: evaluated.selection,
         timeSpent,
         updatedAt: input.now,
       })
     );
     yield* updateResponseActivity(ctx, {
-      answeredDelta: 0,
+      answeredDelta,
       attemptId: attempt._id,
       correctDelta,
       now: input.now,
@@ -180,9 +212,10 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(function* (
   yield* tryResponsePromise(() =>
     ctx.db.insert("tryoutResponses", {
       answeredAt: input.now,
-      isCorrect: selectedChoice.isCorrect,
+      isComplete: evaluated.isComplete,
+      isCorrect: evaluated.isCorrect,
       placementId: placement._id,
-      selectedOptionId: selectedChoice.optionKey,
+      selection: evaluated.selection,
       timeSpent,
       tryoutAttemptId: placement.tryoutAttemptId,
       tryoutSectionAttemptId: section._id,
@@ -190,14 +223,39 @@ export const saveTryoutResponse = Effect.fn("tryouts.response.save")(function* (
     })
   );
   yield* updateResponseActivity(ctx, {
-    answeredDelta: 1,
+    answeredDelta: evaluated.isComplete ? 1 : 0,
     attemptId: attempt._id,
-    correctDelta: selectedChoice.isCorrect ? 1 : 0,
+    correctDelta: evaluated.isCorrect ? 1 : 0,
     now: input.now,
     section,
   });
   return null;
 });
+
+/** Normalizes the public expand contract before domain evaluation. */
+const readSaveSelection = Effect.fn("tryouts.response.readSaveSelection")(
+  function* (args: SaveTryoutResponseArgs) {
+    if (args.selection !== undefined && args.selectedOptionId === undefined) {
+      yield* Effect.logInfo("Used canonical try-out response argument", {
+        contract: "selection",
+      });
+      return args.selection;
+    }
+    if (args.selection === undefined && args.selectedOptionId !== undefined) {
+      yield* Effect.logInfo("Used predecessor try-out response argument", {
+        contract: "selectedOptionId",
+      });
+      return {
+        kind: "single-choice",
+        optionKey: args.selectedOptionId,
+      } satisfies TryoutResponseSelection;
+    }
+    return yield* new TryoutResponseError({
+      code: "TRYOUT_RESPONSE_ARGUMENT_INVALID",
+      message: "Try-out response requires exactly one learner selection.",
+    });
+  }
+);
 
 /** Applies one response delta to its section and parent activity clocks. */
 const updateResponseActivity = Effect.fn("tryouts.response.updateActivity")(

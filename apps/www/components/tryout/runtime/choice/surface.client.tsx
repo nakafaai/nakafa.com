@@ -2,6 +2,7 @@
 
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { Label } from "@repo/design-system/components/ui/label";
+import { Radio } from "@repo/design-system/components/ui/radio-group";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "@repo/design-system/lib/utils";
 import type { ReactNode } from "react";
@@ -12,40 +13,78 @@ import {
   getTryoutSelectableChoiceVariant,
 } from "@/lib/tryout/choice-variant";
 
-interface TryoutSelectableChoiceProps {
+interface TryoutSelectableRadioOptionProps {
   checked: boolean;
   disabled: boolean;
   id: string;
   label: ReactNode;
-  onSelect: () => void;
+  value: string;
 }
 
-/** Renders one selectable choice without revealing answer correctness. */
-export function TryoutSelectableChoice({
+/** Renders one radio option through the established choice frame. */
+export function TryoutSelectableRadioOption({
   checked,
   disabled,
   id,
   label,
-  onSelect,
-}: TryoutSelectableChoiceProps) {
+  value,
+}: TryoutSelectableRadioOptionProps) {
   return (
     <TryoutChoiceFrame
       id={id}
       label={label}
       variant={getTryoutSelectableChoiceVariant({ checked })}
     >
-      <TryoutChoiceCheckbox
-        checked={checked}
+      <Radio
+        aria-labelledby={`${id}-label`}
+        className="mt-1 shrink-0 cursor-pointer"
         disabled={disabled}
-        id={id}
-        onSelect={onSelect}
+        value={value}
       />
     </TryoutChoiceFrame>
   );
 }
 
-interface TryoutPreviewChoiceProps extends TryoutSelectableChoiceProps {
+interface TryoutSelectableMultipleChoiceProps {
+  checked: boolean;
+  disabled: boolean;
+  id: string;
+  label: ReactNode;
+  onCheckedChange: (checked: boolean) => void;
+}
+
+/** Renders one independently selectable option for an exact-set response. */
+export function TryoutSelectableMultipleChoice({
+  checked,
+  disabled,
+  id,
+  label,
+  onCheckedChange,
+}: TryoutSelectableMultipleChoiceProps) {
+  return (
+    <TryoutChoiceFrame
+      id={id}
+      label={label}
+      variant={getTryoutSelectableChoiceVariant({ checked })}
+    >
+      <Checkbox
+        aria-labelledby={`${id}-label`}
+        checked={checked}
+        className="mt-1 shrink-0 cursor-pointer"
+        disabled={disabled}
+        onCheckedChange={onCheckedChange}
+      />
+    </TryoutChoiceFrame>
+  );
+}
+
+interface TryoutPreviewChoiceProps {
   appearance: TryoutPreviewChoiceAppearance;
+  checked: boolean;
+  disabled: boolean;
+  id: string;
+  label: ReactNode;
+  onSelect: () => void;
 }
 
 /** Keeps one stable preview choice while its correctness appearance changes. */

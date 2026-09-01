@@ -2,16 +2,16 @@
 
 import {
   MarkdownBlock,
+  type MarkdownContentProps,
   MarkdownFrame,
-  type MarkdownResponseProps,
   type MarkdownSecurityProps,
-} from "@repo/design-system/components/ai/markdown";
+} from "@repo/design-system/components/markdown/content";
 import { readMarkdownBlocks } from "@repo/design-system/lib/markdown/blocks";
 import { normalizeText } from "@repo/design-system/lib/markdown/normalize";
 import { memo, useMemo } from "react";
 
 export type HardenedMarkdownProps = MarkdownSecurityProps;
-export type ResponseProps = MarkdownResponseProps;
+export type ResponseProps = MarkdownContentProps;
 
 const MemoizedMarkdownBlock = memo(MarkdownBlock);
 
@@ -22,7 +22,7 @@ function Blocks({
   children,
   defaultOrigin,
   id,
-}: MarkdownResponseProps) {
+}: MarkdownContentProps) {
   const blocks = useMemo(
     () => readMarkdownBlocks(id, children),
     [children, id]
@@ -42,8 +42,8 @@ function Blocks({
 
 const MemoizedBlocks = memo(Blocks);
 
-/** Renders the hardened block collection for one response. */
-function ResponseContent({
+/** Normalizes and renders one streamed markdown response. */
+export function Response({
   allowedImagePrefixes,
   allowedLinkPrefixes,
   children,
@@ -51,6 +51,8 @@ function ResponseContent({
   defaultOrigin,
   id,
 }: ResponseProps) {
+  const normalizedChildren = useMemo(() => normalizeText(children), [children]);
+
   return (
     <MarkdownFrame className={className}>
       <MemoizedBlocks
@@ -59,21 +61,8 @@ function ResponseContent({
         defaultOrigin={defaultOrigin}
         id={id}
       >
-        {children}
+        {normalizedChildren}
       </MemoizedBlocks>
     </MarkdownFrame>
-  );
-}
-
-const MemoizedResponseContent = memo(ResponseContent);
-
-/** Normalizes and renders one streamed markdown response. */
-export function Response({ children, ...props }: ResponseProps) {
-  const normalizedChildren = useMemo(() => normalizeText(children), [children]);
-
-  return (
-    <MemoizedResponseContent {...props}>
-      {normalizedChildren}
-    </MemoizedResponseContent>
   );
 }

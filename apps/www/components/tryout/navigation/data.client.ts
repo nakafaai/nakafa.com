@@ -42,7 +42,9 @@ export function useTryoutDataIntent() {
 
     if (intent.kind === "set") {
       convex.prewarmQuery({
-        args: { attemptId: intent.attemptId },
+        args: {
+          attemptId: intent.attemptId,
+        },
         extendSubscriptionFor: TRYOUT_QUERY_LEASE_MS,
         query: api.tryouts.queries.runtime.getSetAttemptState,
       });

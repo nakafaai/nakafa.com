@@ -1,11 +1,14 @@
 import type { ConvexTaggedError } from "@repo/backend/convex/lib/effect";
 import { readConvexErrorData } from "@repo/backend/convex/lib/effect";
+import { tryoutResponseSelectionValidator } from "@repo/backend/convex/tryouts/response/model";
 import { type Infer, v } from "convex/values";
 import { Schema } from "effect";
 
 export const saveTryoutResponseArgsValidator = v.object({
   placementId: v.id("tryoutAttemptPlacements"),
-  selectedOptionId: v.string(),
+  selection: v.optional(v.union(tryoutResponseSelectionValidator, v.null())),
+  /** Temporary predecessor argument removed after client observation. */
+  selectedOptionId: v.optional(v.string()),
 });
 
 export type SaveTryoutResponseArgs = Infer<

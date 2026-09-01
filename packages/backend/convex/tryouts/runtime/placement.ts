@@ -7,6 +7,8 @@ import type {
   MutationCtx,
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
+import { responseSpecFromLegacyChoices } from "@repo/backend/convex/tryouts/response/legacy";
+import { isAttemptPlacementWithinBudget } from "@repo/backend/convex/tryouts/runtime/budget";
 import {
   TryoutRuntimeError,
   tryRuntimePromise,
@@ -106,24 +108,33 @@ export const createAttemptPlacements = Effect.fn(
     }
 
     for (const placement of source.placements) {
+      const responseSpec = yield* responseSpecFromLegacyChoices(
+        placement.row.choices
+      ).pipe(Effect.mapError((cause) => startMismatch(cause.message)));
+      const frozenPlacement = {
+        answerArtifactHash: placement.row.answerArtifactHash,
+        answerContentKey: placement.row.answerContentKey,
+        contentHash: placement.row.contentHash,
+        placementIdentity: tryoutPlacementIdentity(placement.row),
+        placementRowHash: placement.rowHash,
+        questionArtifactHash: placement.row.questionArtifactHash,
+        questionContentKey: placement.row.questionContentKey,
+        questionOrder: placement.row.questionOrder,
+        rendererDomain: placement.row.rendererDomain,
+        responseSpec,
+        sectionIdentity,
+        sectionKey: placement.row.sectionKey,
+        sourcePath: placement.row.questionSourcePath,
+        sourceRevision: placement.row.sourceRevision,
+        tryoutAttemptId: args.attempt._id,
+      };
+      if (!isAttemptPlacementWithinBudget(frozenPlacement)) {
+        return yield* startMismatch(
+          "Try-out placement exceeds the runtime read ceiling."
+        );
+      }
       yield* tryStartPromise(() =>
-        ctx.db.insert("tryoutAttemptPlacements", {
-          answerArtifactHash: placement.row.answerArtifactHash,
-          answerContentKey: placement.row.answerContentKey,
-          choiceSnapshots: [...placement.row.choices],
-          contentHash: placement.row.contentHash,
-          placementIdentity: tryoutPlacementIdentity(placement.row),
-          placementRowHash: placement.rowHash,
-          questionArtifactHash: placement.row.questionArtifactHash,
-          questionContentKey: placement.row.questionContentKey,
-          questionOrder: placement.row.questionOrder,
-          rendererDomain: placement.row.rendererDomain,
-          sectionIdentity,
-          sectionKey: placement.row.sectionKey,
-          sourcePath: placement.row.questionSourcePath,
-          sourceRevision: placement.row.sourceRevision,
-          tryoutAttemptId: args.attempt._id,
-        })
+        ctx.db.insert("tryoutAttemptPlacements", frozenPlacement)
       );
     }
   }

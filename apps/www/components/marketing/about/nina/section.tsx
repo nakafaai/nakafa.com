@@ -3,11 +3,11 @@ import {
   Conversation,
   ConversationContent,
 } from "@repo/design-system/components/ai/conversation";
-import { MarkdownResponse } from "@repo/design-system/components/ai/markdown";
 import {
   Message,
   MessageContent,
 } from "@repo/design-system/components/ai/message";
+import { MarkdownContent } from "@repo/design-system/components/markdown/content";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { MathEvidence } from "@/components/ai/message-part/math/evidence";
@@ -87,25 +87,25 @@ export async function FeaturesNina() {
         <ConversationContent className="mx-auto w-full max-w-3xl gap-6 px-8 pt-8 pb-14 lg:px-10 lg:pt-12">
           <Message from="user">
             <MessageContent>
-              <MarkdownResponse id="features-nina-question">
+              <MarkdownContent id="features-nina-question">
                 {t.raw("nina-prompt")}
-              </MarkdownResponse>
+              </MarkdownContent>
             </MessageContent>
           </Message>
           <Message from="assistant">
             <div className="flex size-full flex-col gap-6">
               <NinaReasoning label={aiT("thought-for-a-few-seconds")}>
-                <MarkdownResponse id="features-nina-reasoning">
+                <MarkdownContent id="features-nina-reasoning">
                   {t.raw("nina-reasoning")}
-                </MarkdownResponse>
+                </MarkdownContent>
               </NinaReasoning>
               <NinaMath label={aiT("math-evaluate")}>
                 <MathEvidence message={featuresNinaMath} />
               </NinaMath>
               <MessageContent>
-                <MarkdownResponse id="features-nina-answer">
+                <MarkdownContent id="features-nina-answer">
                   {t.raw("nina-answer")}
-                </MarkdownResponse>
+                </MarkdownContent>
               </MessageContent>
             </div>
           </Message>
