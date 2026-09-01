@@ -14,7 +14,10 @@ describe("Effect test policy", () => {
       'import { Effect } from "effect";\nconst Runtime = Effect;\nRuntime[key](program);',
       'import { runPromise as execute } from "effect/Effect";\nexecute(program);',
       'import { ManagedRuntime } from "effect";\nconst runtime = ManagedRuntime.make(layer);\nruntime.runSync(program);',
+      'import { make } from "effect/ManagedRuntime";\nconst runtime = make(layer);\nruntime.runPromise(program);',
+      'import { make as buildRuntime } from "effect/ManagedRuntime";\nconst runtime = buildRuntime(layer);\nruntime.runPromise(program);',
       'const Runtime = await import("effect");\nRuntime.Effect.runFork(program);',
+      'const { make: buildRuntime } = await import("effect/ManagedRuntime");\nconst runtime = buildRuntime(layer);\nruntime.runPromise(program);',
     ]) {
       assert.deepStrictEqual(effectTestViolations(FILE, source), [VIOLATION]);
     }

@@ -10,7 +10,12 @@ const MANAGED_RUNTIME_RUNNERS = new Set(
   "runCallback runFork runPromise runPromiseExit runSync runSyncExit".split(" ")
 );
 
-type RuntimeKind = "effect" | "managed-factory" | "managed-runtime" | "root";
+type RuntimeKind =
+  | "effect"
+  | "managed-make"
+  | "managed-module"
+  | "managed-runtime"
+  | "root";
 
 interface RuntimeImports {
   readonly bindings: Map<ts.Symbol, RuntimeKind>;
@@ -131,7 +136,7 @@ function runtimeImports(
       } else {
         bindings.set(
           symbol,
-          moduleName === "effect/Effect" ? "effect" : "managed-factory"
+          moduleName === "effect/Effect" ? "effect" : "managed-module"
         );
       }
       continue;
@@ -150,10 +155,12 @@ function runtimeImports(
         if (importedName === "Effect") {
           bindings.set(symbol, "effect");
         } else if (importedName === "ManagedRuntime") {
-          bindings.set(symbol, "managed-factory");
+          bindings.set(symbol, "managed-module");
         }
       } else if (moduleName === "effect/Effect") {
         directRunner ||= EFFECT_RUNNERS.has(importedName);
+      } else if (importedName === "make") {
+        bindings.set(symbol, "managed-make");
       }
     }
   }
@@ -180,15 +187,7 @@ function runtimeKind(
     const member = ts.isPropertyAccessExpression(node)
       ? node.name.text
       : staticElement(node.argumentExpression);
-    if (runtimeKind(node.expression, imports) === "root") {
-      if (member === "Effect") {
-        return "effect";
-      }
-      if (member === "ManagedRuntime") {
-        return "managed-factory";
-      }
-    }
-    return undefined;
+    return runtimeMemberKind(runtimeKind(node.expression, imports), member);
   }
   if (!ts.isCallExpression(node)) {
     return undefined;
@@ -202,31 +201,32 @@ function runtimeKind(
       return "effect";
     }
     return moduleName === "effect/ManagedRuntime"
-      ? "managed-factory"
+      ? "managed-module"
       : undefined;
   }
-  const callee = node.expression;
-  if (
-    (ts.isPropertyAccessExpression(callee) ||
-      ts.isElementAccessExpression(callee)) &&
-    runtimeKind(callee.expression, imports) === "managed-factory"
-  ) {
-    const member = ts.isPropertyAccessExpression(callee)
-      ? callee.name.text
-      : staticElement(callee.argumentExpression);
-    return member === "make" ? "managed-runtime" : undefined;
-  }
+  return runtimeKind(node.expression, imports) === "managed-make"
+    ? "managed-runtime"
+    : undefined;
 }
 
-function rootMemberKind(member: string | undefined): RuntimeKind | undefined {
-  if (member === "Effect") {
+function runtimeMemberKind(
+  owner: RuntimeKind | undefined,
+  member: string | undefined
+): RuntimeKind | undefined {
+  if (owner === "root" && member === "Effect") {
     return "effect";
   }
-  return member === "ManagedRuntime" ? "managed-factory" : undefined;
+  if (owner === "root" && member === "ManagedRuntime") {
+    return "managed-module";
+  }
+  return owner === "managed-module" && member === "make"
+    ? "managed-make"
+    : undefined;
 }
 
-function collectRootBindings(
+function collectMemberBindings(
   pattern: ts.ObjectBindingPattern,
+  owner: RuntimeKind,
   imports: RuntimeImports
 ) {
   let changed = false;
@@ -235,7 +235,7 @@ function collectRootBindings(
       continue;
     }
     const member = staticProperty(element.propertyName ?? element.name);
-    const kind = rootMemberKind(member);
+    const kind = runtimeMemberKind(owner, member);
     const symbol = imports.checker.getSymbolAtLocation(element.name);
     if (
       kind !== undefined &&
@@ -258,7 +258,10 @@ function collectVariableAlias(
   }
   const kind = runtimeKind(declaration.initializer, imports);
   if (ts.isObjectBindingPattern(declaration.name)) {
-    return kind === "root" && collectRootBindings(declaration.name, imports);
+    return (
+      kind !== undefined &&
+      collectMemberBindings(declaration.name, kind, imports)
+    );
   }
   const symbol = ts.isIdentifier(declaration.name)
     ? imports.checker.getSymbolAtLocation(declaration.name)
