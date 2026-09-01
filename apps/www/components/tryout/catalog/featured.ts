@@ -13,6 +13,12 @@ const FeaturedResponseSchema = Schema.Union([
   Schema.Struct({ choices: Schema.Array(PredecessorChoiceSchema) }),
 ]);
 
+/** Expected failure when the deployed featured response matches no contract. */
+export class FeaturedTryoutResponseError extends Schema.TaggedError<FeaturedTryoutResponseError>()(
+  "FeaturedTryoutResponseError",
+  { cause: Schema.Unknown }
+) {}
+
 /**
  * Reads the featured response across the one deployment where web and backend
  * switch from predecessor choices to the canonical response contract.
@@ -21,17 +27,20 @@ const FeaturedResponseSchema = Schema.Union([
  */
 export const decodeFeaturedResponse = Effect.fn(
   "tryouts.catalog.decodeFeaturedResponse"
-)(function* (input: unknown) {
-  const featured = yield* Schema.decodeUnknownEffect(FeaturedResponseSchema, {
-    onExcessProperty: "ignore",
-  })(input);
-  if ("response" in featured) {
-    return featured.response;
-  }
-  return yield* Schema.decodeEffect(QuestionResponseSchema, {
-    onExcessProperty: "error",
-  })({
-    kind: "single-choice",
-    options: featured.choices,
-  });
-});
+)(
+  function* (input: unknown) {
+    const featured = yield* Schema.decodeUnknownEffect(FeaturedResponseSchema, {
+      onExcessProperty: "ignore",
+    })(input);
+    if ("response" in featured) {
+      return featured.response;
+    }
+    return yield* Schema.decodeEffect(QuestionResponseSchema, {
+      onExcessProperty: "error",
+    })({
+      kind: "single-choice",
+      options: featured.choices,
+    });
+  },
+  Effect.mapError((cause) => new FeaturedTryoutResponseError({ cause }))
+);

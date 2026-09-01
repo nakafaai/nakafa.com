@@ -42,13 +42,23 @@ describe("featured try-out response", () => {
 
   it.effect("rejects a missing response contract", () =>
     Effect.gen(function* () {
-      const exit = yield* Effect.exit(
+      const error = yield* Effect.flip(
         decodeFeaturedResponse({
           question: { contentKey: "ignored-at-this-boundary" },
         })
       );
 
-      expect(exit._tag).toBe("Failure");
+      expect(error._tag).toBe("FeaturedTryoutResponseError");
+    })
+  );
+
+  it.effect("rejects predecessor choices that cannot form a response", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        decodeFeaturedResponse({ choices: [options[0]] })
+      );
+
+      expect(error._tag).toBe("FeaturedTryoutResponseError");
     })
   );
 });
