@@ -6,7 +6,6 @@ import type { MyUIMessage } from "@repo/ai/types/message";
 import type { ModelMessage, UIMessageStreamWriter } from "ai";
 import { streamText } from "ai";
 import { Effect, Result, Stream } from "effect";
-import { vi } from "vitest";
 
 const streamTextMock = vi.hoisted(() => vi.fn());
 

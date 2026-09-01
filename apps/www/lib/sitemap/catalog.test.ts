@@ -2,7 +2,6 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
-import { vi } from "vitest";
 import { readSitemapPageDescriptors } from "@/lib/sitemap/catalog";
 
 class MissingSignedMaterialInventory extends Schema.TaggedError<MissingSignedMaterialInventory>()(

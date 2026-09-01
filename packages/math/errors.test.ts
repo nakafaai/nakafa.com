@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { MathCasRequestError, MathCasResponseError } from "@repo/math/errors";
-import { describe, expect, it } from "vitest";
 
 describe("math errors", () => {
   it("keeps request failures tagged", () => {

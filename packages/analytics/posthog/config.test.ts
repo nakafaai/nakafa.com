@@ -1,8 +1,8 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   createPostHogProxyRewrites,
   isPostHogProxyPathname,
 } from "@repo/analytics/posthog/config";
-import { describe, expect, it } from "vitest";
 
 describe("PostHog proxy config", () => {
   it("builds the documented PostHog rewrite order", () => {

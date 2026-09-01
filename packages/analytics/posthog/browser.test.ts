@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Deferred, Effect, Fiber, Ref } from "effect";
-import { vi } from "vitest";
 
 const client = {
   captureException: vi.fn(),

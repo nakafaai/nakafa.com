@@ -1,6 +1,7 @@
 // @vitest-environment node
+
+import { describe, expect, it } from "@effect/vitest";
 import { getCalendarDayKey } from "@repo/design-system/lib/calendar/day-key";
-import { describe, expect, it } from "vitest";
 
 describe("calendar day key", () => {
   it("serializes local calendar parts as a zero-padded ISO-style key", () => {

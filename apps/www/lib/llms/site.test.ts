@@ -2,7 +2,6 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import { buildSiteLlmsEntries } from "@/lib/llms/entries";
 import { readSiteLlmsEntries } from "@/lib/llms/site";
 import { testPageProjection } from "@/test/content-page";

@@ -12,7 +12,6 @@ import {
 import { NinaReporter } from "@repo/ai/nina/runtime/report";
 import { NinaStore } from "@repo/ai/nina/runtime/store";
 import { Cause, Effect, Exit, Option } from "effect";
-import { vi } from "vitest";
 
 const createNinaStreamResponseMock = vi.hoisted(() => vi.fn());
 vi.mock("@repo/ai/nina/runtime/stream", () => ({

@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   ANALYTICS_CONSENT_CATEGORY,
   ANALYTICS_CONSENT_MECHANISM,
@@ -5,7 +6,6 @@ import {
   createAnonymousAnalyticsConsent,
 } from "@repo/analytics/consent";
 import { Option } from "effect";
-import { describe, expect, it } from "vitest";
 import {
   type BrowserAnalyticsUser,
   createBrowserAnalyticsIdentity,

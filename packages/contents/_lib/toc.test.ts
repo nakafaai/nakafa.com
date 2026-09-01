@@ -1,6 +1,6 @@
+import { describe, expect, it } from "@effect/vitest";
 import { extractAllHeadingIds, getHeadings } from "@repo/contents/_lib/toc";
 import type { ParsedHeading } from "@repo/contents/_types/toc";
-import { describe, expect, it } from "vitest";
 
 const MAIN_HEADING_REGEX = /^#main-heading$/;
 const TEST_HEADING_WITH_SPACES_REGEX = /^#test-heading-with-spaces$/;

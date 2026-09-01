@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
@@ -10,7 +11,6 @@ import {
 import { getIncludedAttemptAccess } from "@repo/backend/convex/tryouts/access/impl";
 import { products } from "@repo/backend/convex/utils/polar/products";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 7, 12, 0, 0);
 const PERIOD_END = Date.UTC(2026, 6, 21, 12, 0, 0);

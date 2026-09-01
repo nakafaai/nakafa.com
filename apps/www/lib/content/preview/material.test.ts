@@ -15,7 +15,6 @@ import {
   SigningKeyNotFoundError,
 } from "@nakafa/aksara-contracts/signature/spec";
 import { Context, Effect, Layer, Option, Schema } from "effect";
-import { vi } from "vitest";
 import { readPreviewConfig } from "@/lib/content/preview/config";
 import {
   type MaterialPreviewInput,

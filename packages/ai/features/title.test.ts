@@ -4,7 +4,6 @@ import { DEFAULT_TITLE, MAX_TITLE_LENGTH } from "@repo/ai/features/constants";
 import { generateTitle } from "@repo/ai/features/title";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const generateText = vi.hoisted(() => vi.fn());
 const modelId = ModelIdSchema.make("nakafa-lite");

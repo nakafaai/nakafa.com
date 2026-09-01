@@ -1,8 +1,8 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("credits/mutations", () => {
   beforeEach(() => {

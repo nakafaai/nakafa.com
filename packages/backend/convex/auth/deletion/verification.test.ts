@@ -5,7 +5,6 @@ import { createDeletedUserTombstone } from "@repo/backend/convex/auth/deletion/t
 import { drainDeletedUserVerificationsProgram } from "@repo/backend/convex/auth/deletion/verification";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 import { Effect, Schema } from "effect";
-import { vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 28, 21, 0, 0);
 const decodeVerificationPage = Schema.decodeUnknownSync(

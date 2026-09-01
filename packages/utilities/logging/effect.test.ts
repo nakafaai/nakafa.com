@@ -1,11 +1,10 @@
-import { it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import {
   logError,
   logHttpRequest,
   timeOperation,
 } from "@repo/utilities/logging/effect";
 import { Effect, Logger } from "effect";
-import { describe, expect } from "vitest";
 
 type StructuredLogEntry = ReturnType<typeof Logger.formatStructured.log>;
 

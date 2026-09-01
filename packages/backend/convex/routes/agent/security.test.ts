@@ -4,7 +4,6 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import { hasValidEdgeSecret } from "@repo/backend/convex/routes/agent/security";
 import { Effect, Result } from "effect";
-import { vi } from "vitest";
 
 const SECRET_NAME = NAKAFA_API_EDGE_CONTRACT.secretEnvironment;
 

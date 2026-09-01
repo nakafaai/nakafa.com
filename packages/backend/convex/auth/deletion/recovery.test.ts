@@ -12,7 +12,6 @@ import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 28, 11, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";

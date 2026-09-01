@@ -1,6 +1,7 @@
 // @vitest-environment node
+
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Data, Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "@/app/sitemap.xml/route";
 
 const mockReadSitemapPageDescriptors = vi.hoisted(() => vi.fn());

@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { api, internal } from "@repo/backend/convex/_generated/api";
 import {
   ACCOUNT_DELETION_CANCELLATION_UNPROVEN_CODE,
@@ -11,7 +12,6 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
-import { describe, expect, it } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 28, 12, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";

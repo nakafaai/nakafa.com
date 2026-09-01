@@ -2,7 +2,6 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const instrumentationMocks = vi.hoisted(() => ({
   captureServerException: vi.fn(),

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { api } from "@repo/backend/convex/_generated/api";

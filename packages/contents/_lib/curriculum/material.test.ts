@@ -1,7 +1,7 @@
+import { describe, expect, it } from "@effect/vitest";
 import { BulbIcon, PiIcon } from "@hugeicons/core-free-icons";
 import { getMaterialIcon } from "@repo/contents/_lib/curriculum/material";
 import { PRESENTED_MATERIAL_DOMAINS } from "@repo/contents/_types/taxonomy";
-import { describe, expect, it } from "vitest";
 
 describe("getMaterialIcon", () => {
   it("resolves mathematics to the pi icon", () => {

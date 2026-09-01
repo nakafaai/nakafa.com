@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { canonicalizePublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";

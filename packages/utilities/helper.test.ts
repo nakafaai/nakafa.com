@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { cleanSlug, createStableId } from "@repo/utilities/helper";
-import { describe, expect, it } from "vitest";
 
 const STABLE_ID_PATTERN = /^json-ld-[a-z0-9]+$/;
 

@@ -18,6 +18,7 @@
     "schema-dts": "^2.0.0"
   },
   "devDependencies": {
+    "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/lodash.merge": "^4.6.9",

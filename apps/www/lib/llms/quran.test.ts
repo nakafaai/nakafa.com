@@ -5,7 +5,6 @@ import type { QuranTranslationDocument } from "@nakafa/aksara-contracts/quran/no
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Effect, Option } from "effect";
 import { createTranslator, type Locale } from "next-intl";
-import { vi } from "vitest";
 import { BASE_URL } from "@/lib/llms/constants";
 import {
   classifyQuranLlmsRoute,

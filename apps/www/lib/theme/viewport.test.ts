@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
-import { describe, expect, it } from "vitest";
 import { appViewport } from "@/lib/theme/viewport";
 
 describe("appViewport", () => {

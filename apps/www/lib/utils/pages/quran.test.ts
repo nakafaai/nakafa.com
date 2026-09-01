@@ -1,6 +1,7 @@
 // @vitest-environment node
+
+import { describe, expect, it } from "@effect/vitest";
 import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
-import { describe, expect, it } from "vitest";
 import { getQuranPagination, getQuranSurahName } from "@/lib/utils/pages/quran";
 
 describe("quran page helpers", () => {

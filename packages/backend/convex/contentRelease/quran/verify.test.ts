@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { QuranSearchRowSchema } from "@nakafa/aksara-contracts/quran/snapshot/row";
 import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
 import type { QueryCtx } from "@repo/backend/convex/_generated/server";
@@ -9,7 +10,6 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeQuranSearch } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 /** Loads the only technical Quran row inside one test transaction. */
 async function loadRow(ctx: Pick<QueryCtx, "db">) {

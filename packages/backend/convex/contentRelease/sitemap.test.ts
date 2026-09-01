@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { compareSitemapPaths } from "@repo/backend/convex/contentRelease/sitemap";
-import { describe, expect, it } from "vitest";
 
 describe("current content sitemap", () => {
   it("matches Convex UTF-8 index order for punctuation and umlauts", () => {

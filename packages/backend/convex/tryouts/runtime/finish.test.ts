@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";

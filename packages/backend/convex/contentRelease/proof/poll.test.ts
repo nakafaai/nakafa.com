@@ -23,7 +23,6 @@ import {
   recomputeContentProof,
 } from "@repo/backend/test/content/verify";
 import { convexTest, type TestConvex } from "convex-test";
-import { vi } from "vitest";
 
 vi.mock("@repo/backend/content/trust", async () => {
   const { TEST_KEY_RESOLVER } = await import(

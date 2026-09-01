@@ -1,7 +1,7 @@
+import { describe, expect, it } from "@effect/vitest";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import type { NinaContextPack } from "@repo/ai/nina/memory/pack";
 import { formatNinaContextPackPrompt } from "@repo/ai/nina/prompt/system";
-import { describe, expect, it } from "vitest";
 
 const placementProgramKey = LearningProgramKeySchema.make(
   "cambridge-lower-secondary"

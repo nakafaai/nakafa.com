@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   getCreditResetGrantTransaction,
   getCurrentCreditResetTimestamp,
@@ -10,7 +11,6 @@ import {
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 describe("credits/helpers/state", () => {
   it("resolves the current UTC day boundary for free users", () => {

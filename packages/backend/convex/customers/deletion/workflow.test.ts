@@ -1,4 +1,4 @@
-import { assert, describe, expect, it, vi } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import { launchDeletedUserCleanupProgram } from "@repo/backend/convex/customers/deletion/workflow";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";

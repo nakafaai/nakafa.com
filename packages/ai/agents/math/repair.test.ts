@@ -8,7 +8,6 @@ import { ModelIdSchema } from "@repo/ai/config/model";
 import type { JSONSchema7, ToolCallRepairFunction, ToolSet } from "ai";
 import { generateText, InvalidToolInputError, NoSuchToolError, tool } from "ai";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const generateTextMock = vi.hoisted(() => vi.fn());
 

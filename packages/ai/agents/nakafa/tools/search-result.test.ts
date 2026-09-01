@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   formatSearchGroup,
   getSearchTokens,
@@ -9,7 +10,6 @@ import {
   NakafaAgentSearchResultSchema,
 } from "@repo/contents/_lib/agent/schema/search";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 /** Builds one schema-decoded search result for ranking tests. */
 function searchResult(

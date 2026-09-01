@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   ACCOUNT_DELETION_SUCCESSOR_PAGE_SIZE,
@@ -8,7 +9,6 @@ import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
-import { describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 28, 10, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";

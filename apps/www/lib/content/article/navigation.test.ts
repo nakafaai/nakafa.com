@@ -8,7 +8,6 @@ import {
 } from "@nakafa/aksara-contracts/projection/article";
 import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
 import { Effect, Schema } from "effect";
-import { vi } from "vitest";
 import {
   getShellArticleNavigation,
   readArticleNavigation,

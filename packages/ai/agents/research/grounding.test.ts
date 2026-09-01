@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   addEligibleSourceUrls,
   filterResearchOutputCitations,
@@ -7,7 +8,6 @@ import {
   createGroundingWebSearchData,
   hasSingleGroundingQuery,
 } from "@repo/ai/agents/research/grounding";
-import { describe, expect, it } from "vitest";
 
 describe("research Google Search grounding", () => {
   it("drops query-only Google grounding when redirect sources are unusable", () => {

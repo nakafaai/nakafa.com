@@ -1,8 +1,8 @@
+import { describe, expect, it } from "@effect/vitest";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { createNotification } from "@repo/backend/convex/triggers/helpers/notifications";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 describe("triggers/helpers/notifications", () => {
   it("does not recreate notification data for a deletion-pending recipient", async () => {

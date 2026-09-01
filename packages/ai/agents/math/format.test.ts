@@ -1,8 +1,8 @@
+import { describe, expect, it } from "@effect/vitest";
 import { formatMathData } from "@repo/ai/agents/math/format";
 import type { MathData } from "@repo/math/schema/data";
 import type { MathRequest } from "@repo/math/schema/request";
 import type { MathResult } from "@repo/math/schema/result";
-import { describe, expect, it } from "vitest";
 
 const input = {
   expression: "6 * 7",

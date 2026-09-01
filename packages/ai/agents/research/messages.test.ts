@@ -1,8 +1,8 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   createResearchMessages,
   createResearchSynthesisMessages,
 } from "@repo/ai/agents/research/messages";
-import { describe, expect, it } from "vitest";
 
 describe("research agent messages", () => {
   it("keeps search tools usable after source evidence is prefetched", () => {

@@ -7,7 +7,6 @@ import type {
 } from "@repo/ai/nina/memory/pack";
 import type { MyUIMessage } from "@repo/ai/types/message";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import { ChatMutationError, ChatQueryError } from "@/app/api/chat/errors";
 import {
   createChatWithMessage,

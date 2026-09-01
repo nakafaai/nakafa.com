@@ -1,9 +1,9 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   type ContentSearchRankDocument,
   matchesContentSearchQuery,
   rankContentSearchDocuments,
 } from "@repo/backend/convex/contents/helpers/search/rank";
-import { describe, expect, it } from "vitest";
 
 /** Builds a persisted search row slice for rank tests without Convex IDs. */
 function createSearchRow(

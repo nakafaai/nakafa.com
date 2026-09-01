@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { chatResponseFailureCode } from "@repo/ai/config/generation";
 import type {
   NinaContextSnapshot,
@@ -7,7 +8,6 @@ import { mapDBMessagesToUIMessages } from "@repo/backend/convex/chats/utils";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const now = Date.UTC(2026, 5, 6, 0, 0, 0);
 const ninaContextSnapshot = {

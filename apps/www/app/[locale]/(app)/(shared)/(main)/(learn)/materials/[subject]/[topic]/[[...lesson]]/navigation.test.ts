@@ -1,10 +1,10 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   PublicPathSchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { MaterialPageContent } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/materials/[subject]/[topic]/[[...lesson]]/content";
 import {
   readMaterialNavigation,

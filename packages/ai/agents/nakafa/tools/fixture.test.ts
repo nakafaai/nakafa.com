@@ -1,8 +1,7 @@
-import { it as effectIt } from "@effect/vitest";
+import { describe, it as effectIt, expect, it } from "@effect/vitest";
 import { makeQuranFixture } from "@repo/ai/agents/nakafa/tools/fixture";
 import { createNakafaTestService } from "@repo/ai/agents/nakafa/tools/test";
 import { Effect, Option } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("Nakafa Quran AI fixtures", () => {
   const meaningByLocale = {

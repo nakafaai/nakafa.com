@@ -1,9 +1,9 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   CurrentWeatherSummarySchema,
   OpenWeatherCurrentResponseSchema,
 } from "@repo/ai/clients/weather/schema";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("OpenWeatherCurrentResponseSchema", () => {
   it("keeps only the provider fields needed by the weather summary", () => {

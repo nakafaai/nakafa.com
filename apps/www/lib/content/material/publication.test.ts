@@ -8,7 +8,6 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import { ContentRuntimeMissingError } from "@repo/backend/client/content/errors";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import { getMaterialPublication } from "@/lib/content/material/publication";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import {

@@ -3,7 +3,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import {
   getPublishedProgramCatalog,
   getPublishedProgramRoutes,

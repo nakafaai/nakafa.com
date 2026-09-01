@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { updateMaterialGroupState } from "@/components/school/classes/materials/state";
 
 const group = {

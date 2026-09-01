@@ -6,7 +6,6 @@ import type { FileWithPreview } from "@repo/design-system/hooks/use-file-upload"
 import { Effect, Layer, Result } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 import type { HttpClientRequest } from "effect/unstable/http/HttpClientRequest";
-import { vi } from "vitest";
 import { submitForumPost } from "@/components/school/classes/forum/conversation/input/submit";
 
 const mocks = vi.hoisted(() => ({

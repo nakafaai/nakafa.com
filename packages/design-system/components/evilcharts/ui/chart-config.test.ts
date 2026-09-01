@@ -1,3 +1,4 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   axisValueToPercentFormatter,
   type ChartConfig,
@@ -12,7 +13,6 @@ import {
   THEMES,
   validateChartConfigColors,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
-import { afterEach, describe, expect, it, vi } from "vitest";
 
 const chartConfig = {
   selected: {

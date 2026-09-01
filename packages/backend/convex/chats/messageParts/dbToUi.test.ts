@@ -1,10 +1,10 @@
+import { describe, expect, it } from "@effect/vitest";
 import { mapDBPartToUIMessagePart } from "@repo/backend/convex/chats/messageParts/dbToUi";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { NakafaAgentContentRefInputSchema } from "@repo/contents/_lib/agent/schema/read";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const now = Date.UTC(2026, 4, 8, 0, 0, 0);
 const ref = readNakafaContentRefFixture(

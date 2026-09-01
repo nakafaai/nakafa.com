@@ -1,7 +1,8 @@
 // @vitest-environment node
+
+import { describe, expect, it } from "@effect/vitest";
 import { preprocessLaTeX } from "@repo/design-system/lib/markdown/math";
 import { Lexer } from "marked";
-import { describe, expect, it } from "vitest";
 
 describe("preprocessLaTeX", () => {
   it("returns empty text unchanged", () => {

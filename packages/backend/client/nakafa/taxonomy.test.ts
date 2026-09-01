@@ -10,7 +10,6 @@ import {
 import { toRuntimeQueryError } from "@repo/backend/test/runtime/query";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const runtimeMocks = vi.hoisted(() => ({
   runtimeQuery: vi.fn(),

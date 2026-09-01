@@ -1,6 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, Queue, Ref, SubscriptionRef } from "effect";
-import { vi } from "vitest";
 import type { ActiveTranscriptModel } from "@/components/school/classes/forum/conversation/data/transcript/active";
 import { areConversationViewsEqual } from "@/components/school/classes/forum/conversation/data/view/model";
 import {

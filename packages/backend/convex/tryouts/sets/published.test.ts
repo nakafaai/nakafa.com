@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { tryoutCatalogNodeIdentity } from "@nakafa/aksara-contracts/tryout/identity";
 import { api } from "@repo/backend/convex/_generated/api";

@@ -5,7 +5,6 @@ import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import type { NinaContextSnapshot } from "@repo/ai/nina/memory/pack";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import { resolveNinaLearningSession } from "@/app/api/chat/context";
 import { previewProjection, previewSourcePath } from "@/test/content-preview";
 

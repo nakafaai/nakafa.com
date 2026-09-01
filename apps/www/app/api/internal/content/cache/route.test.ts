@@ -11,7 +11,6 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import { Effect } from "effect";
 import { NextRequest } from "next/server";
-import { vi } from "vitest";
 import {
   ContentCacheInvalidationError,
   type invalidateContentCache,

@@ -1,9 +1,10 @@
 // @vitest-environment node
+
+import { describe, expect, it } from "@effect/vitest";
 import {
   createArcPoints,
   getCurveDivisions,
 } from "@repo/design-system/components/three/helpers/quality";
-import { describe, expect, it } from "vitest";
 
 describe("graph quality helpers", () => {
   it("uses requested curve divisions when provided", () => {

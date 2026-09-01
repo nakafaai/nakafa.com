@@ -8,6 +8,7 @@ const config = defineConfig({
     },
   },
   test: {
+    globals: true,
     coverage: {
       enabled: true,
       provider: "istanbul",

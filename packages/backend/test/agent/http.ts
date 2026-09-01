@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, expect, vi } from "@effect/vitest";
+import { afterEach, beforeEach, expect } from "@effect/vitest";
 import { NAKAFA_API_EDGE_CONTRACT } from "@repo/backend/agent/edge";
 import type { createConvexTestWithBetterAuth } from "@repo/backend/convex/test.helpers";
 

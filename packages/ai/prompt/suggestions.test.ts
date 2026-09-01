@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { nakafaSuggestions } from "@repo/ai/prompt/suggestions";
-import { describe, expect, it } from "vitest";
 
 describe("nakafaSuggestions", () => {
   it("keeps Indonesian output instructions without mixed-language examples", () => {

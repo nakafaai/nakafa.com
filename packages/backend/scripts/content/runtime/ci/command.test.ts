@@ -1,7 +1,7 @@
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { afterEach, describe, expect, it, vi } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   runRuntimeCommand,
   sanitizeRuntimeCommandError,

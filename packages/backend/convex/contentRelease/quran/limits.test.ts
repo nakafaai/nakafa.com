@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import { CONTENT_DOCUMENT_LIMIT } from "@repo/backend/convex/contentRelease/document";
 import {
@@ -12,7 +13,6 @@ import {
   TRANSACTION_READ_HEADROOM,
   TRANSACTION_READ_LIMIT,
 } from "@repo/backend/convex/contentRelease/spec";
-import { describe, expect, it } from "vitest";
 
 const readBudget = TRANSACTION_READ_LIMIT - TRANSACTION_READ_HEADROOM;
 

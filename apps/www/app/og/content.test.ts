@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { readOgMetadata } from "@/app/og/content";
 
 const mocks = vi.hoisted(() => ({

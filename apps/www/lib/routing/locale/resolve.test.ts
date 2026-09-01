@@ -5,7 +5,6 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { Effect, Option } from "effect";
-import { vi } from "vitest";
 import { resolveLocalizedNavigationHref } from "@/lib/routing/locale/resolve";
 import {
   testArticleDeProjection,

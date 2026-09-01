@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import type { PromptInputFile } from "@repo/design-system/lib/prompt-input/files";
 import {
   PromptInputCompletionError,

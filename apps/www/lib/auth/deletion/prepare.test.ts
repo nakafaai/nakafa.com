@@ -5,7 +5,6 @@ import {
   accountDeletionRequestPhase,
 } from "@repo/backend/convex/auth/deletion/spec";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import { AccountDeletionAttemptStorageFailed } from "@/lib/auth/deletion/attempt";
 import {
   AccountDeletionFailed,

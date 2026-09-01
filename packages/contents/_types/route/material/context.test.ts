@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { MaterialKeySchema } from "@nakafa/aksara-contracts/projection/material";
 import {
   projectMaterialContextToLocale,
@@ -9,7 +10,6 @@ import type {
   MaterialContextRef,
   MaterialRouteIdentity,
 } from "@repo/contents/_types/route/material/reference";
-import { describe, expect, it } from "vitest";
 
 const SOURCE_PATH =
   "material/lesson/mathematics/linear-equation-inequality/system-linear-equation";

@@ -8,7 +8,6 @@ import { registerPolarRoutes } from "@repo/backend/convex/routes/polar";
 import type { HonoWithConvex } from "convex-helpers/server/hono";
 import { Effect, Schema } from "effect";
 import { Hono } from "hono";
-import { vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   processEvent: vi.fn(),

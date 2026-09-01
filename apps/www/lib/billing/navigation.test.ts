@@ -1,6 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import { billingNavigationProgram } from "@/lib/billing/navigation";
 
 describe("billing navigation", () => {

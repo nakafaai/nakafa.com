@@ -10,7 +10,6 @@ import {
   CurriculumRouteSchema,
 } from "@nakafa/aksara-contracts/program/curriculum";
 import { Effect, Schema } from "effect";
-import { vi } from "vitest";
 import {
   getPublishedMaterialContext,
   readPublishedMaterialContext,

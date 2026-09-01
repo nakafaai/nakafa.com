@@ -87,6 +87,7 @@ Build for longevity. Favor readable, skimmable, well-verified code over speed or
 ## Testing And Content
 
 - Vitest is the standard test runner. Keep `*.test.ts` beside the real owning `.ts` module. Do not add orphan concept tests, `*.test.tsx`, renamed React tests, or nested test folders.
+- Import test APIs from `@effect/vitest`. Use the shared configured `vi` global for mocks because Vitest hoists mock calls before re-export bindings initialize. Do not import `vi`. Keep `vitest` installed only because `@effect/vitest`, the CLI runner, coverage, and `vitest/config` require it. Raw `vitest` imports are forbidden in authored TypeScript.
 - Do not add React component tests that mock children to verify static markup. Move testable behavior into an owning `.ts` domain seam and verify rendered behavior through production-mode Browser or E2E acceptance.
 - Keep tests behavior-oriented, focused, and free of `.only` or `.skip`. Run the nearest test first, then the relevant workspace suite when risk warrants it. Some workspaces require per-file 100% coverage.
 - Use `pnpm run doctor --verbose --scope changed --base main --include-untracked` for changed React code and `pnpm run doctor --verbose --scope full` for a whole-codebase audit. Do not use the deprecated `--diff` alias or plain `npx react-doctor@latest`.

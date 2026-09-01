@@ -1,3 +1,4 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import posthogTest from "@posthog/convex/test";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type {
@@ -9,7 +10,6 @@ import type { SubscriptionRecord } from "@repo/backend/convex/subscriptions/reco
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { products } from "@repo/backend/convex/utils/polar/products";
 import { convexTest } from "convex-test";
-import { afterEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 3, 2, 18, 0, 0);
 

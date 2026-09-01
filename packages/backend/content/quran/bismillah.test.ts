@@ -1,8 +1,8 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   separateQuranBismillah,
   splitQuranBismillahPrefix,
 } from "@repo/backend/content/quran/bismillah";
-import { describe, expect, it } from "vitest";
 
 const bismillah = {
   arabic: "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",

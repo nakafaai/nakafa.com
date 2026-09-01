@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   config,
   createLoopbackConnectSources,
@@ -6,7 +7,6 @@ import {
   withAnalyzer,
   withMDX,
 } from "@repo/next-config";
-import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@next/bundle-analyzer", () => ({
   default: () => (sourceConfig: object) => ({

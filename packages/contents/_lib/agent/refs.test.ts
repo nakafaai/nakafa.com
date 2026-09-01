@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   createNakafaContentRefFromGraphProjection,
   createNakafaContentRefFromSummary,
@@ -5,7 +6,6 @@ import {
   parseNakafaUrlRoute,
 } from "@repo/contents/_lib/agent/refs";
 import { Option } from "effect";
-import { describe, expect, it } from "vitest";
 
 const graphProjection = {
   alignmentId: "alignment:catalog:article:example",

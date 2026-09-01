@@ -1,5 +1,5 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { isServerExceptionReportingEnabled } from "@repo/analytics/server-reporting";
-import { afterEach, describe, expect, it, vi } from "vitest";
 
 afterEach(() => {
   vi.unstubAllEnvs();

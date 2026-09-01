@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect, Option } from "effect";
-import { vi } from "vitest";
 import { readPublishedLocalizedHref } from "@/lib/routing/locale/published";
 import {
   testArticleDeProjection,

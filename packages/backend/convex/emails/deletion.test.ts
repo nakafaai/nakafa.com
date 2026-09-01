@@ -11,7 +11,6 @@ import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const testResend = new Resend(components.resend, {
   apiKey: "re_test_account_deletion",

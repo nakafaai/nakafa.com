@@ -1,10 +1,10 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   ResearchOutputSchema,
   ScrapeInputSchema,
   WebSearchInputSchema,
 } from "@repo/ai/agents/research/schema";
 import { Result, Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("research schema", () => {
   it("validates scrape URLs with Effect schema", () => {

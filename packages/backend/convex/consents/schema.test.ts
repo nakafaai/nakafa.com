@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   ANALYTICS_BROWSER_SIGNAL_MECHANISM,
   ANALYTICS_CONSENT_CATEGORY,
@@ -6,7 +7,6 @@ import {
 } from "@repo/analytics/consent";
 import { consentWriteValidator } from "@repo/backend/convex/consents/schema";
 import { validate } from "convex-helpers/validators";
-import { describe, expect, it } from "vitest";
 
 describe("consent schema", () => {
   it("rejects stale notice versions", () => {

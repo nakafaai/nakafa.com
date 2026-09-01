@@ -1,7 +1,6 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import { readProjectedHtmlRouteRejection } from "@/lib/routing/public/projected";
 
 const mockReadRuntimeContentReference = vi.hoisted(() => vi.fn());

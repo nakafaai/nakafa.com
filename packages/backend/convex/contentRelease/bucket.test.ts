@@ -1,8 +1,8 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   getHashBucket,
   isProjectionBucket,
 } from "@repo/backend/convex/contentRelease/bucket";
-import { describe, expect, it } from "vitest";
 
 describe("contentRelease/bucket", () => {
   it("derives only canonical SHA-256 hash buckets", () => {

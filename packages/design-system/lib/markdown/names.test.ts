@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   aiDsComponentNames,
   biologyComponentNames,
@@ -12,7 +13,6 @@ import {
   snbtQuantComponentNames,
   tkaMathComponentNames,
 } from "@repo/design-system/lib/markdown/names";
-import { describe, expect, it } from "vitest";
 
 const domainComponentNames = {
   "ai-ds": aiDsComponentNames,

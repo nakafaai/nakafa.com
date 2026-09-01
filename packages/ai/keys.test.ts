@@ -1,10 +1,10 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   devtoolsKeys,
   firecrawlKeys,
   gatewayKeys,
   weatherKeys,
 } from "@repo/ai/keys";
-import { afterEach, describe, expect, it } from "vitest";
 
 const originalAiGatewayApiKey = process.env.AI_GATEWAY_API_KEY;
 const originalAiSdkDevTools = process.env.AI_SDK_DEVTOOLS;

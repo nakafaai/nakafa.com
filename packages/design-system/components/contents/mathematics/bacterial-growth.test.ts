@@ -1,10 +1,11 @@
 // @vitest-environment node
+
+import { describe, expect, it } from "@effect/vitest";
 import {
   BacterialGrowthFrameInputSchema,
   getBacterialGrowthFrame,
 } from "@repo/design-system/components/contents/mathematics/bacterial-growth";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("bacterial growth frames", () => {
   it("keeps every exponential division visible for a large initial culture", () => {

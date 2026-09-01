@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { settleCustomerSync } from "@repo/backend/convex/customers/sync/settlement";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { hasGoogleIndexingApiEligibleStructuredData } from "@/scripts/indexing/google/structured";
 
 describe("hasGoogleIndexingApiEligibleStructuredData", () => {

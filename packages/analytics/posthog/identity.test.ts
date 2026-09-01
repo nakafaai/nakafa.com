@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   authorizeAnalyticsIdentity,
   authorizeAnonymousAnalyticsIdentity,
@@ -7,7 +8,6 @@ import {
   revokeAnalyticsIdentity,
 } from "@repo/analytics/posthog/identity";
 import type { CaptureResult } from "posthog-js";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const USER_ID = "user-1";
 

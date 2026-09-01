@@ -14,7 +14,6 @@ import type { api } from "@repo/backend/convex/_generated/api";
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/convex/contentRelease/paging";
 import type { FunctionReturnType } from "convex/server";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import {
   getPublishedArticlePage,
   getPublishedCategories,

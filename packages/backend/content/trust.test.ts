@@ -6,7 +6,6 @@ import {
 } from "@nakafa/aksara-contracts/signature/trusted";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const unknownKeyId = SigningKeyIdSchema.make("unknown-key");
 const agentKeyId = SigningKeyIdSchema.make("agent-test-key");

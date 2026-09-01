@@ -1,6 +1,6 @@
+import { describe, expect, it } from "@effect/vitest";
 import { MathRequestSchema } from "@repo/math/schema/request";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("MathRequestSchema", () => {
   it("decodes a CAS request", () => {

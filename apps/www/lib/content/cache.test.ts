@@ -6,7 +6,6 @@ import {
 } from "@nakafa/aksara-contracts/cache/content";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { Data, Effect, Schema } from "effect";
-import { vi } from "vitest";
 import {
   applyContentRuntimeCache,
   applyPublishedCatalogCache,

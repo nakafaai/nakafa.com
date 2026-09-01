@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   defaultModel,
   getFastModelProviderOptions,
@@ -13,7 +14,6 @@ import {
 } from "@repo/ai/config/model";
 import { gatewayProviderOptions } from "@repo/ai/config/routing";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("Nakafa model registry", () => {
   const liteModel = ModelIdSchema.make("nakafa-lite");

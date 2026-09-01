@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   mathAlgebra,
   mathArithmetic,
@@ -11,7 +12,6 @@ import {
   mathStatistics,
 } from "@repo/ai/agents/math/descriptions";
 import { mathOperations } from "@repo/math/schema/operations";
-import { describe, expect, it } from "vitest";
 
 const mathToolDescriptions = [
   mathAlgebra,

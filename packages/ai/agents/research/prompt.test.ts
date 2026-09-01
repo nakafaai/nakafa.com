@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   nakafaScrape,
   nakafaWebSearch,
@@ -6,7 +7,6 @@ import {
   researchEvidencePrompt,
   researchPrompt,
 } from "@repo/ai/agents/research/prompt";
-import { describe, expect, it } from "vitest";
 
 const context = {
   currentDate: "May 15, 2026",

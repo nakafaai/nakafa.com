@@ -9,7 +9,6 @@ import { ContentRuntimeMissingError } from "@repo/backend/client/content/errors"
 import { readPublicContent } from "@repo/backend/client/content/public";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import type { PublishedContentInput } from "@/lib/content/published/exchange";
 import {
   readCurrentPublishedContent,

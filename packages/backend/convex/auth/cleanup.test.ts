@@ -9,7 +9,6 @@ import { seedAnalyticsConsent } from "@repo/backend/convex/test.helpers";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 22, 8, 0, 0);
 const deletedAuthIdPattern = /^deleted:/;

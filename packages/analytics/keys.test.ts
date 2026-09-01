@@ -1,9 +1,9 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   keys,
   postHogProxyKeys,
   postHogPublicKeys,
 } from "@repo/analytics/keys";
-import { afterEach, describe, expect, it, vi } from "vitest";
 
 /** Installs one complete analytics environment for each assertion. */
 function stubAnalyticsEnvironment() {

@@ -1,9 +1,9 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   prepareGoogleGroundingStep,
   prepareResearchEvidenceStep,
 } from "@repo/ai/agents/research/step";
 import type { ModelMessage } from "ai";
-import { describe, expect, it } from "vitest";
 
 const messages = [
   { role: "user", content: "research latest climate data" },

@@ -1,10 +1,10 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   HttpMediaTypeSchema,
   mergeVaryHeader,
   negotiateMediaType,
 } from "@repo/utilities/http/accept";
 import { Option } from "effect";
-import { describe, expect, it } from "vitest";
 
 const HTML = HttpMediaTypeSchema.make("text/html; charset=utf-8");
 const MARKDOWN = HttpMediaTypeSchema.make("text/markdown; charset=utf-8");

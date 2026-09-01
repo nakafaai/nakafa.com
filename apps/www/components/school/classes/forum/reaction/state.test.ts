@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { toggleReactionState } from "@/components/school/classes/forum/reaction/state";
 
 const state = {

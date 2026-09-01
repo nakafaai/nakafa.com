@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { getSitemapPageDescriptor } from "@/lib/sitemap/identity";
 
 describe("sitemap page identity", () => {

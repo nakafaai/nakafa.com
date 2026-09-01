@@ -1,6 +1,6 @@
+import { describe, expect, it } from "@effect/vitest";
 import { getGradeNonNumeric } from "@repo/contents/_lib/curriculum/grade";
 import { Option } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("subject grade helpers", () => {
   it("resolves grade labels", () => {

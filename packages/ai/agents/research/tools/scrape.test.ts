@@ -7,7 +7,6 @@ import {
 import type { MyUIMessage } from "@repo/ai/types/message";
 import type { UIMessageStreamWriter } from "ai";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const firecrawlApp = vi.hoisted(() => ({
   scrape: vi.fn(),

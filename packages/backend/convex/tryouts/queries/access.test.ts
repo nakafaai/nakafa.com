@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   createConvexTestWithBetterAuth,
@@ -5,7 +6,6 @@ import {
 } from "@repo/backend/convex/test.helpers";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import type { FunctionArgs } from "convex/server";
-import { describe, expect, it } from "vitest";
 
 const startAccessArgs: FunctionArgs<
   typeof api.tryouts.queries.access.getStartAccess

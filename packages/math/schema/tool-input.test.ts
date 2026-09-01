@@ -1,6 +1,6 @@
+import { describe, expect, it } from "@effect/vitest";
 import { MathToolInputSchema } from "@repo/math/schema/tool-input";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("MathToolInputSchema", () => {
   it("routes member inputs through the combined tool schema", () => {

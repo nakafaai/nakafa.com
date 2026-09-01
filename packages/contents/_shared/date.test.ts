@@ -1,6 +1,6 @@
+import { describe, expect, it } from "@effect/vitest";
 import { formatContentDateISO } from "@repo/contents/_shared/date";
 import { Option } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("content date helpers", () => {
   it("rejects invalid or non-canonical date strings", () => {

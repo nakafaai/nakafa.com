@@ -7,7 +7,6 @@ import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { TEST_ARTICLE_PROJECTION } from "@repo/backend/test/content/runtime";
 import { createNakafaContentRefFromGraphProjection } from "@repo/contents/_lib/agent/refs";
 import { Effect, Option } from "effect";
-import { vi } from "vitest";
 
 const readMock = vi.hoisted(() => vi.fn());
 const material = makeMaterialProjection("en", 1);

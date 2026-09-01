@@ -1,8 +1,8 @@
+import { describe, expect, it } from "@effect/vitest";
 import { chatResponseFailureCode } from "@repo/ai/config/generation";
 import { getModelCreditCost, ModelIdSchema } from "@repo/ai/config/model";
 import { productAnalyticsEventValidator } from "@repo/backend/convex/analytics/events";
 import { validate } from "convex-helpers/validators";
-import { describe, expect, it } from "vitest";
 
 const contentViewProperties = {
   alignment_id: "alignment:id:articles:example",

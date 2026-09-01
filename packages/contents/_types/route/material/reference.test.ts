@@ -1,10 +1,10 @@
+import { describe, expect, it } from "@effect/vitest";
 import { MaterialKeySchema } from "@nakafa/aksara-contracts/projection/material";
 import {
   type MaterialContextRef,
   type MaterialRouteIdentity,
   readMaterialContextRef,
 } from "@repo/contents/_types/route/material/reference";
-import { describe, expect, it } from "vitest";
 
 const route = {
   locale: "id",

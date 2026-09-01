@@ -1,7 +1,7 @@
+import { describe, expect, it } from "@effect/vitest";
 import { NakafaAgentSearchOptionsSchema } from "@repo/contents/_lib/agent/schema/search";
 import { NAKAFA_AGENT_SEARCH_WINDOW } from "@repo/contents/_types/agent/search";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("NakafaAgentSearchOptionsSchema", () => {
   it("applies the documented search defaults", () => {

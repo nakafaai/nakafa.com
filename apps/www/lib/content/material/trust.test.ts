@@ -3,7 +3,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import {
   getPublishedTrustLesson,
   readPublishedTrustLesson,

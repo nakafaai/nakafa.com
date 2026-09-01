@@ -1,9 +1,9 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { api } from "@repo/backend/convex/_generated/api";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/convex/test.helpers";
-import { afterEach, describe, expect, it, vi } from "vitest";
 
 const NOW = Date.UTC(2026, 4, 29, 21, 0, 0);
 

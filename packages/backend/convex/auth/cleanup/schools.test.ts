@@ -1,9 +1,9 @@
+import { describe, expect, it } from "@effect/vitest";
 import { cleanupUserSchoolData } from "@repo/backend/convex/auth/cleanup/schools";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
 import { convexModules } from "@repo/backend/convex/test.setup";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const NOW = Date.UTC(2026, 6, 28, 8, 0, 0);
 

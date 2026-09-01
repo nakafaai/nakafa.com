@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { api as convexApi } from "@repo/backend/convex/_generated/api";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import { ChatMutationError, ChatQueryError } from "@/app/api/chat/errors";
 import {
   getCurriculumPreference,

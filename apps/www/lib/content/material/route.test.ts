@@ -5,7 +5,6 @@ import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
 import { Effect } from "effect";
-import { vi } from "vitest";
 import {
   getPublishedMaterialRoute,
   readPublishedMaterialRoute,

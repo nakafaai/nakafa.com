@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { getAttemptStatusFromEndReason } from "@repo/backend/convex/lib/attempts";
-import { describe, expect, it } from "vitest";
 
 describe("lib/attempts", () => {
   it("maps persisted end reasons to finalized attempt statuses", () => {

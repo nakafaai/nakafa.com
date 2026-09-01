@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
-import { describe, expect, it, vi } from "vitest";
 import manifest from "@/app/manifest";
 
 const HEX_COLOR_PATTERN = /#[\da-f]{3,8}\b/i;

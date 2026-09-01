@@ -1,7 +1,7 @@
+import { describe, expect, it } from "@effect/vitest";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import { toTryoutResponseError } from "@repo/backend/convex/tryouts/response/spec";
 import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("tryouts/response/spec", () => {
   it("hides unexpected storage details while retaining the internal cause", async () => {

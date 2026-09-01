@@ -1,6 +1,6 @@
+import { describe, expect, it } from "@effect/vitest";
 import { MathDataSchema } from "@repo/math/schema/data";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("MathDataSchema", () => {
   it("decodes completed math data parts", () => {

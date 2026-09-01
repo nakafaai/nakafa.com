@@ -34,7 +34,17 @@
             "noRestrictedImports": {
               "level": "error",
               "options": {
+                "paths": {
+                  "@effect/vitest": {
+                    "importNames": ["vi"],
+                    "message": "Use the configured global vi for mocks. Import the remaining test APIs from @effect/vitest."
+                  }
+                },
                 "patterns": [
+                  {
+                    "group": ["vitest", "vitest/*", "!vitest/config"],
+                    "message": "Import test APIs from @effect/vitest. Keep vitest only as the required runner and config package."
+                  },
                   {
                     "group": ["./**", "../**"],
                     "message": "Use the owning @/, @repo/*, or #scripts/* alias instead."
@@ -59,6 +69,44 @@
             }
           }
         }
+      }
+    },
+    {
+      "includes": ["*.{ts,tsx,mts,cts}"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "@effect/vitest": {
+                    "importNames": ["vi"],
+                    "message": "Use the configured global vi for mocks. Import the remaining test APIs from @effect/vitest."
+                  }
+                },
+                "patterns": [
+                  {
+                    "group": ["vitest", "vitest/*", "!vitest/config"],
+                    "message": "Import test APIs from @effect/vitest. Keep vitest only as the required runner and config package."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "**/*.test.{ts,tsx,mts,cts}",
+        "**/test/**/*.{ts,tsx,mts,cts}",
+        "**/vitest.setup.{ts,mts,cts}",
+        "apps/www/components/school/classes/forum/conversation/fixtures/data.ts",
+        "apps/www/components/school/classes/forum/conversation/viewport/fixture.ts"
+      ],
+      "javascript": {
+        "globals": ["vi"]
       }
     }
   ],

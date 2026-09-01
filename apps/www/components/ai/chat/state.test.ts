@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import type { Doc, Id } from "@repo/backend/convex/_generated/dataModel";
-import { describe, expect, it } from "vitest";
 import {
   patchChatPage,
   removeChatFromPage,

@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { readQuranChunks } from "@repo/backend/convex/contentRelease/quran/chunks";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -5,7 +6,6 @@ import { convexModules } from "@repo/backend/convex/test.setup";
 import { makeQuranChunk } from "@repo/backend/test/quran/rows";
 import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 const firstChunk = makeQuranChunk({
   firstQuranNumber: 1,

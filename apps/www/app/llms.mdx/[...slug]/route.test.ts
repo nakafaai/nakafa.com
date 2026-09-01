@@ -1,7 +1,8 @@
 // @vitest-environment node
+
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { NextRequest } from "next/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET } from "@/app/llms.mdx/[...slug]/route";
 import { BASE_URL } from "@/lib/llms/constants";
 

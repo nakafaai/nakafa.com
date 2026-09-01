@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { ENGLISH_LANGUAGE_NAMES } from "@/lib/llms/constants";
 import {
   AGENT_MARKDOWN_DIRECTIVE,

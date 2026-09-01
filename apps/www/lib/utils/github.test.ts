@@ -1,6 +1,7 @@
 // @vitest-environment node
+
+import { describe, expect, it } from "@effect/vitest";
 import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
-import { describe, expect, it } from "vitest";
 import {
   getAksaraTreeUrl,
   getAksaraUrl,

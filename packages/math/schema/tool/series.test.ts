@@ -1,6 +1,6 @@
+import { describe, expect, it } from "@effect/vitest";
 import { MathSeriesInputSchema } from "@repo/math/schema/tool/series";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 describe("MathSeriesInputSchema", () => {
   it("accepts zero-order series requests", () => {

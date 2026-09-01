@@ -1,10 +1,10 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   isBlockedIpAddress,
   isIpAddress,
   isPublicHttpUrlSyntax,
   normalizeHostname,
 } from "@repo/ai/agents/research/url";
-import { describe, expect, it } from "vitest";
 
 describe("research URL policy", () => {
   it("accepts only public http(s) URL syntax", () => {

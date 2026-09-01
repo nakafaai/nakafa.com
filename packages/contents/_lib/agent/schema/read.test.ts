@@ -1,10 +1,10 @@
+import { describe, expect, it } from "@effect/vitest";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import {
   NakafaAgentContentRefInputSchema,
   NakafaAgentMarkdownSchema,
 } from "@repo/contents/_lib/agent/schema/read";
 import { Schema } from "effect";
-import { describe, expect, it } from "vitest";
 
 const quranAssetId = "asset:en:quran:quran-surah:1";
 

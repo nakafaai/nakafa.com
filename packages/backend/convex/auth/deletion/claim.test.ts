@@ -1,6 +1,6 @@
 import { Resend } from "@convex-dev/resend";
 import resendTest from "@convex-dev/resend/test";
-import { describe, expect, it, vi } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { components } from "@repo/backend/convex/_generated/api";
 import { claimAccountDeletion } from "@repo/backend/convex/auth/deletion/claim";
 import { ACCOUNT_DELETION_RECOVERY_DELAY_MS } from "@repo/backend/convex/auth/deletion/constants";

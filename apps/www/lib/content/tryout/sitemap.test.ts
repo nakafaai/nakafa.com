@@ -1,7 +1,7 @@
 // @vitest-environment node
 
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   readPublishedTryoutSitemap,
   readPublishedTryoutSitemapCount,

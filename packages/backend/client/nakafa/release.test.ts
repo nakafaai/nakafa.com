@@ -5,7 +5,6 @@ import {
   verifyNakafaReleasePin,
 } from "@repo/backend/client/nakafa/release";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 const queryMock = vi.hoisted(() => vi.fn());
 

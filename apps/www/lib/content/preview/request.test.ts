@@ -4,7 +4,6 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import { SigningKeyIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Deferred, Effect, Fiber, Redacted } from "effect";
 import { TestClock } from "effect/testing";
-import { vi } from "vitest";
 import type { PreviewConfig } from "@/lib/content/preview/config";
 import {
   fetchPreviewJson,

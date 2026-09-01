@@ -1,11 +1,11 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import {
   createNetworkRequestError,
   isRetryableNetworkError,
   NetworkRequestError,
 } from "@repo/backend/client/network";
-import { describe, expect, it } from "vitest";
 
 describe("network request classification", () => {
   it("classifies nested Undici and Node retry codes", () => {

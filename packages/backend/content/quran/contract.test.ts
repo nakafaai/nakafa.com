@@ -1,8 +1,8 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   formatQuranMeaning,
   selectQuranMeaning,
 } from "@repo/backend/content/quran/contract";
-import { describe, expect, it } from "vitest";
 
 describe("published Quran meaning selection", () => {
   it("selects every localized meaning from the current signed contract", () => {

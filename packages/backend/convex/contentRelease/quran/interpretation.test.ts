@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import { readQuranInterpretation } from "@repo/backend/convex/contentRelease/quran/interpretation";
 import { runConvexProgram } from "@repo/backend/convex/lib/effect";
 import schema from "@repo/backend/convex/schema";
@@ -13,7 +14,6 @@ import {
   restoreAbsentQuranSnapshot,
 } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
 
 /** Creates only the signed rows required to read verse seven. */
 function interpretationRows() {

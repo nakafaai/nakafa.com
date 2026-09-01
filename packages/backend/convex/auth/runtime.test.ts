@@ -7,7 +7,6 @@ import {
 import { accountDeletionPreparationOutcome } from "@repo/backend/convex/auth/deletion/spec";
 import { verifyAccountDeletionPreparation } from "@repo/backend/convex/auth/runtime";
 import { Effect } from "effect";
-import { vi } from "vitest";
 
 describe("auth/runtime", () => {
   it.effect("accepts one ready preparation step", () =>

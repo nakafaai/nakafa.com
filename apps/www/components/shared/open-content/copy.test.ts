@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Fiber } from "effect";
 import { TestClock } from "effect/testing";
-import { vi } from "vitest";
 import {
   copyOpenContent,
   OpenContentCopyError,

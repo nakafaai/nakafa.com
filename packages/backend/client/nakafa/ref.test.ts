@@ -9,7 +9,6 @@ import { toRuntimeQueryError } from "@repo/backend/test/runtime/query";
 import { readNakafaContentRefFixture } from "@repo/contents/_lib/agent/fixture";
 import { type FunctionReference, getFunctionName } from "convex/server";
 import { Effect, Option } from "effect";
-import { vi } from "vitest";
 
 const runtimeMocks = vi.hoisted(() => ({
   runtimeQuery: vi.fn(),

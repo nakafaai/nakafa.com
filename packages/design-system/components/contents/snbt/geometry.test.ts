@@ -1,10 +1,10 @@
 // @vitest-environment node
 
+import { describe, expect, it } from "@effect/vitest";
 import {
   getArcPoints,
   getMidpoint,
 } from "@repo/design-system/components/contents/snbt/geometry";
-import { describe, expect, it } from "vitest";
 
 describe("SNBT geometry", () => {
   it("returns the midpoint on every graph axis", () => {

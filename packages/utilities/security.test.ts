@@ -1,5 +1,5 @@
+import { describe, expect, it } from "@effect/vitest";
 import { timingSafeEqual } from "@repo/utilities/security";
-import { describe, expect, it } from "vitest";
 
 describe("timingSafeEqual", () => {
   it("matches identical tokens", () => {

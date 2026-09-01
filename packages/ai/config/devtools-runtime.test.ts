@@ -1,5 +1,5 @@
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { isAiSdkDevToolsTelemetryEnabled } from "@repo/ai/config/devtools-runtime";
-import { afterEach, describe, expect, it, vi } from "vitest";
 
 describe("AI SDK DevTools runtime gate", () => {
   afterEach(() => {

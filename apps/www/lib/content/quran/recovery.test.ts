@@ -2,7 +2,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect, Result } from "effect";
-import { vi } from "vitest";
 import {
   QuranSnapshotRecoveryError,
   recoverStalePublishedQuranSnapshot,
