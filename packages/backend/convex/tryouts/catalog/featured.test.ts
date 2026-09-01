@@ -200,20 +200,6 @@ describe("tryouts/catalog/featured", () => {
         );
 
         expect(featured).toEqual({
-          choices: [
-            {
-              isCorrect: true,
-              label: "A",
-              optionKey: "option-1",
-              order: 1,
-            },
-            {
-              isCorrect: false,
-              label: "B",
-              optionKey: "option-2",
-              order: 2,
-            },
-          ],
           question: {
             artifactHash: source.questionArtifactHash,
             bundleHash: expect.any(String),
@@ -226,6 +212,23 @@ describe("tryouts/catalog/featured", () => {
             snapshotId: expect.any(String),
             sourcePath: source.questionSourcePath,
             sourceRevision: source.sourceRevision,
+          },
+          response: {
+            kind: "single-choice",
+            options: [
+              {
+                isCorrect: true,
+                label: "A",
+                optionKey: "option-1",
+                order: 1,
+              },
+              {
+                isCorrect: false,
+                label: "B",
+                optionKey: "option-2",
+                order: 2,
+              },
+            ],
           },
         });
         expect(featured.question).not.toHaveProperty("answerArtifactHash");

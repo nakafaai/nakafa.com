@@ -130,6 +130,7 @@ describe("tryouts/response/migrate", () => {
         t.mutation((ctx) =>
           seedTryoutContentAccessState(ctx, {
             attemptStatus: "in-progress",
+            responseContract: "legacy",
             sectionStatus: "in-progress",
             suffix: "response-contract-placement",
           })

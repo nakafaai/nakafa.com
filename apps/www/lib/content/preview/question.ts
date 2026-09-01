@@ -10,10 +10,10 @@ import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec
 import type { TryoutPreviewTarget } from "@nakafa/aksara-contracts/preview/target";
 import {
   QuestionAnswerProjectionSchema,
-  type QuestionChoiceList,
   type QuestionMetadata,
   QuestionPromptProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/question";
+import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import { Effect, Option, Schema } from "effect";
 import { executePreviewArtifact } from "@/lib/content/preview/artifact";
 import type { PreviewConfig } from "@/lib/content/preview/config";
@@ -28,6 +28,10 @@ import type { RenderableContent } from "@/lib/content/published/artifact";
 type QuestionPreviewDocument =
   | QuestionAnswerPreviewDocument
   | QuestionPromptPreviewDocument;
+type SingleChoiceQuestionResponse = Extract<
+  QuestionResponse,
+  { readonly kind: "single-choice" }
+>;
 type ReadyPreviewManifest = Extract<
   LocalPreviewManifest,
   {
@@ -43,9 +47,9 @@ export interface QuestionPreviewInput {
 export interface QuestionPreviewContent {
   readonly Answer: RenderableContent["Content"] | null;
   readonly appLocale: AppLocale;
-  readonly choices: QuestionChoiceList;
   readonly metadata: QuestionMetadata;
   readonly Question: RenderableContent["Content"];
+  readonly response: SingleChoiceQuestionResponse;
   readonly selectedBodyKind: QuestionPreviewDocument["identity"]["bodyKind"];
   readonly target: TryoutPreviewTarget;
 }
@@ -55,7 +59,14 @@ function decodePromptProjection(artifact: PreviewArtifact) {
     artifact.projection,
     { onExcessProperty: "error" }
   ).pipe(
-    Effect.mapError(() => new PreviewIntegrityError({ check: "projection" }))
+    Effect.mapError(() => new PreviewIntegrityError({ check: "projection" })),
+    Effect.flatMap((projection) => {
+      const response = projection.response;
+      if (response.kind !== "single-choice") {
+        return new PreviewIntegrityError({ check: "response" });
+      }
+      return Effect.succeed({ ...projection, response });
+    })
   );
 }
 /** Decodes one answer projection without weakening the manifest contract. */
@@ -101,8 +112,8 @@ const readReadyQuestion = Effect.fn("NakafaContent.readReadyQuestionPreview")(
         Answer: null,
         Question: renderedPrompt.Content,
         appLocale: document.target.section.appLocale,
-        choices: promptProjection.choices,
         metadata: promptProjection.metadata,
+        response: promptProjection.response,
         selectedBodyKind: document.identity.bodyKind,
         target: document.target,
       } satisfies QuestionPreviewContent;
@@ -122,8 +133,8 @@ const readReadyQuestion = Effect.fn("NakafaContent.readReadyQuestionPreview")(
       Answer: renderedAnswer.Content,
       Question: renderedPrompt.Content,
       appLocale: document.target.section.appLocale,
-      choices: promptProjection.choices,
       metadata: promptProjection.metadata,
+      response: promptProjection.response,
       selectedBodyKind: document.identity.bodyKind,
       target: document.target,
     } satisfies QuestionPreviewContent;

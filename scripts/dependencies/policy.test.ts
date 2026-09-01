@@ -5,7 +5,7 @@ import { Effect, Layer } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
 import { bumpDependencies } from "#scripts/dependencies/bump";
 import {
-  CONTRACT_ARCHIVE,
+  CONTRACT_VERSION,
   DEPENDENCY_HOLDS,
 } from "#scripts/dependencies/policy";
 import { inspectDependencyPolicy } from "#scripts/dependencies/source";
@@ -37,7 +37,7 @@ function validInput() {
       dependencies:
         index === 0
           ? dependencies
-          : { "@nakafa/aksara-contracts": CONTRACT_ARCHIVE },
+          : { "@nakafa/aksara-contracts": CONTRACT_VERSION },
       scripts:
         index === 0 ? { doctor: "pnpm dlx react-doctor@0.9.12" } : undefined,
     },

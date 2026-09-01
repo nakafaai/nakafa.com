@@ -16,6 +16,7 @@ export const seedResponseMigrationFixture = Effect.fn(
     t.mutation(async (ctx) => {
       const seeded = await seedTryoutContentAccessState(ctx, {
         attemptStatus: "in-progress",
+        responseContract: "legacy",
         sectionStatus: "in-progress",
         suffix: "response-migration",
       });

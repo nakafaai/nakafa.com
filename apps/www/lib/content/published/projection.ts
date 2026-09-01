@@ -1,6 +1,6 @@
 import type { AppLocale } from "@nakafa/aksara-contracts/locale";
 import { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
-import { ReadablePublicPageProjectionSchema } from "@nakafa/aksara-contracts/projection/page";
+import { PublicPageProjectionSchema } from "@nakafa/aksara-contracts/projection/page";
 import { Effect, Schema } from "effect";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 
@@ -30,7 +30,7 @@ export const decodePublishedPage = Effect.fn(
   "NakafaContent.decodePublishedPage"
 )(function* (input: unknown, identity: PublishedProjectionIdentity) {
   const projection = yield* Schema.decodeUnknownEffect(
-    ReadablePublicPageProjectionSchema
+    PublicPageProjectionSchema
   )(input, { onExcessProperty: "error" }).pipe(
     Effect.mapError(() => new PublishedProjectionError(identity))
   );
@@ -51,8 +51,7 @@ export const decodePublishedPageJson = Effect.fn(
     catch: () => new PublishedProjectionError(identity),
     try: (): unknown => JSON.parse(source),
   });
-  return yield* Schema.decodeUnknownEffect(ReadablePublicPageProjectionSchema)(
-    input,
-    { onExcessProperty: "error" }
-  ).pipe(Effect.mapError(() => new PublishedProjectionError(identity)));
+  return yield* Schema.decodeUnknownEffect(PublicPageProjectionSchema)(input, {
+    onExcessProperty: "error",
+  }).pipe(Effect.mapError(() => new PublishedProjectionError(identity)));
 });

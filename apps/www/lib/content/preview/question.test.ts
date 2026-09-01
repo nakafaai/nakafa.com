@@ -21,6 +21,7 @@ import {
   questionAnswerHash,
   questionPreviewTarget,
   questionPromptHash,
+  questionPromptProjection,
 } from "@/test/preview-question";
 
 vi.mock("@/lib/content/preview/artifact", () => ({
@@ -139,7 +140,7 @@ describe("local question preview", () => {
     })
   );
 
-  it.effect("renders one authenticated prompt with its authored choices", () =>
+  it.effect("renders one authenticated prompt with its authored response", () =>
     Effect.gen(function* () {
       const manifest = makeQuestionReadyManifest(previewManifestHash);
       provideManifest(manifest);
@@ -149,16 +150,67 @@ describe("local question preview", () => {
       expect(result).toMatchObject({
         Answer: null,
         Question: QuestionContent,
-        choices: [
-          { label: "Correct", value: true },
-          { label: "Incorrect", value: false },
-        ],
+        response: {
+          kind: "single-choice",
+          options: [
+            {
+              isCorrect: true,
+              label: "Correct",
+              optionKey: "option-1",
+              order: 1,
+            },
+            {
+              isCorrect: false,
+              label: "Incorrect",
+              optionKey: "option-2",
+              order: 2,
+            },
+          ],
+        },
         selectedBodyKind: "question",
       });
       expect(executeMock).toHaveBeenCalledOnce();
       expect(executeMock).toHaveBeenCalledWith(
         expect.objectContaining({ previewArtifact: manifest.artifacts[0] })
       );
+    })
+  );
+
+  it.effect("fails closed for a response unsupported by the preview UI", () =>
+    Effect.gen(function* () {
+      const manifest = makeQuestionReadyManifest(previewManifestHash);
+      const response = questionPromptProjection.response;
+      if (response.kind === "category") {
+        return yield* Effect.die("Expected one option-based test response.");
+      }
+      provideManifest({
+        ...manifest,
+        artifacts: [
+          {
+            ...manifest.artifacts[0],
+            projection: {
+              ...questionPromptProjection,
+              response: {
+                kind: "multiple-choice",
+                options: response.options
+                  .map((option) => ({ ...option, isCorrect: true }))
+                  .concat({
+                    isCorrect: false,
+                    label: "Another option",
+                    optionKey: "option-3",
+                    order: 3,
+                  }),
+              },
+            },
+          },
+        ],
+      });
+
+      expect(yield* runFailure()).toMatchObject({
+        _tag: "PreviewIntegrityError",
+        check: "response",
+      });
+      expect(executeMock).not.toHaveBeenCalled();
     })
   );
 

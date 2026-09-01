@@ -23,20 +23,22 @@ import type { QuestionPreviewContent } from "@/lib/content/preview/question";
 function previewChoices(
   content: QuestionPreviewContent
 ): readonly TryoutPreviewChoiceItem[] {
-  return content.choices.map(({ label, value }, index) => ({
-    content: (
-      <MarkdownContent
-        className="wrap-anywhere h-auto whitespace-normal"
-        id={`features-tryout-choice-choice-${index + 1}`}
-      >
-        {label}
-      </MarkdownContent>
-    ),
-    isCorrect: value,
-    label,
-    optionKey: `choice-${index + 1}`,
-    order: index + 1,
-  }));
+  return content.response.options.map(
+    ({ isCorrect, label, optionKey, order }) => ({
+      content: (
+        <MarkdownContent
+          className="wrap-anywhere h-auto whitespace-normal"
+          id={`features-tryout-choice-${optionKey}`}
+        >
+          {label}
+        </MarkdownContent>
+      ),
+      isCorrect,
+      label,
+      optionKey,
+      order,
+    })
+  );
 }
 
 /** Renders one authenticated prompt or full answer on its real public route. */

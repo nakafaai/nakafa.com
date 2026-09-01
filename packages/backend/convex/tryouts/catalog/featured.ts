@@ -9,7 +9,7 @@ import {
   readPublishedSetSections,
   sortCatalogRows,
 } from "@repo/backend/convex/tryouts/catalog/hierarchy";
-import { tryoutChoiceSnapshotValidator } from "@repo/backend/convex/tryouts/runtime/choice";
+import { tryoutSingleChoiceResponseSpecValidator } from "@repo/backend/convex/tryouts/response/model";
 import {
   type TryoutQuestionSelector,
   tryoutQuestionSelectorValidator,
@@ -21,8 +21,8 @@ import { Effect } from "effect";
  * Public model for the signed landing demo, including its visible answer feedback.
  */
 export const featuredTryoutValidator = v.object({
-  choices: v.array(tryoutChoiceSnapshotValidator),
   question: tryoutQuestionSelectorValidator,
+  response: tryoutSingleChoiceResponseSpecValidator,
 });
 
 /** Selects the first authored question from the canonical try-out hierarchy. */
@@ -47,6 +47,9 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
     if (!(placement && catalog.activeReleaseId && catalog.bundleHash)) {
       return yield* missingFeaturedTryout("question");
     }
+    if (placement.response.kind !== "single-choice") {
+      return yield* missingFeaturedTryout("response");
+    }
 
     const question: TryoutQuestionSelector = {
       appLocale: locale,
@@ -63,8 +66,11 @@ export const readFeaturedTryout = Effect.fn("tryouts.catalog.readFeatured")(
     };
 
     return {
-      choices: [...placement.choices],
       question,
+      response: {
+        kind: placement.response.kind,
+        options: placement.response.options.map((option) => ({ ...option })),
+      },
     };
   }
 );
@@ -129,7 +135,14 @@ const readFirstVisibleSection = Effect.fn(
 
 /** Creates one fail-closed integrity error for an incomplete featured path. */
 function missingFeaturedTryout(
-  kind: "country" | "exam" | "question" | "section" | "set" | "track"
+  kind:
+    | "country"
+    | "exam"
+    | "question"
+    | "response"
+    | "section"
+    | "set"
+    | "track"
 ) {
   return releaseFail(
     "CONTENT_RELEASE_INTEGRITY",

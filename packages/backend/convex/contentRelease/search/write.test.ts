@@ -68,21 +68,34 @@ function questionProjection() {
   const questionKey = `${setKey}/question-1`;
   return Schema.decodeSync(ContentProjectionSchema)({
     bodyKind: "question",
-    choices: [
-      { label: "Correct", value: true },
-      { label: "Incorrect", value: false },
-    ],
     contentKey: `${questionKey}/question`,
     kind: "question-body",
     artifactLocale: "en",
     metadata: {
       authors: [{ name: "Nakafa" }],
-      date: "2026-07-24",
+      datePublished: "2026-07-24",
       title: "Technical question",
     },
     peerContentKey: `${questionKey}/answer`,
     questionKey,
     questionNumber: 1,
+    response: {
+      kind: "single-choice",
+      options: [
+        {
+          isCorrect: true,
+          label: "Correct",
+          optionKey: "option-1",
+          order: 1,
+        },
+        {
+          isCorrect: false,
+          label: "Incorrect",
+          optionKey: "option-2",
+          order: 2,
+        },
+      ],
+    },
     setKey,
   });
 }

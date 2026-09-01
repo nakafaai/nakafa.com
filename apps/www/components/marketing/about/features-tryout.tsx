@@ -10,7 +10,7 @@ type FeaturedTryout = FunctionReturnType<
 >;
 
 export interface FeaturesTryoutModel {
-  readonly choices: FeaturedTryout["choices"];
+  readonly choices: FeaturedTryout["response"]["options"];
   readonly question: ReactNode;
 }
 

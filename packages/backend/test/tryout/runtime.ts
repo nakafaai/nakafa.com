@@ -3,6 +3,7 @@ import {
   ActiveAppLocaleCodeSchema,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
+import { canonicalQuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import {
   TryoutCatalogRowSchema,
   type TryoutSet,
@@ -77,6 +78,7 @@ export async function seedTryoutContentAccessState(
   ctx: MutationCtx,
   args: {
     attemptStatus: TryoutStatus;
+    responseContract?: "dual" | "legacy";
     sectionStatus: TryoutStatus;
     suffix: string;
   }
@@ -188,10 +190,14 @@ export async function seedTryoutContentAccessState(
   });
 
   const { row: placementRow, rowHash: placementRowHash } = signedPlacement;
+  const responseSpec = canonicalQuestionResponse(placementRow.response);
+  if (responseSpec.kind !== "single-choice") {
+    throw new Error("Expected one single-choice runtime fixture.");
+  }
   const placementId = await ctx.db.insert("tryoutAttemptPlacements", {
     answerArtifactHash: placementRow.answerArtifactHash,
     answerContentKey: placementRow.answerContentKey,
-    choiceSnapshots: [...placementRow.choices],
+    choiceSnapshots: responseSpec.options,
     contentHash: placementRow.contentHash,
     placementIdentity: tryoutPlacementIdentity(placementRow),
     placementRowHash,
@@ -199,6 +205,7 @@ export async function seedTryoutContentAccessState(
     questionContentKey: placementRow.questionContentKey,
     questionOrder: placementRow.questionOrder,
     rendererDomain: placementRow.rendererDomain,
+    ...(args.responseContract === "legacy" ? {} : { responseSpec }),
     sectionIdentity: tryoutCatalogIdentity(signedSection.signed.section.row),
     sectionKey: placementRow.sectionKey,
     sourcePath: placementRow.questionSourcePath,

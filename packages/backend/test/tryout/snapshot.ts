@@ -120,20 +120,6 @@ export function makeTryoutPlacementRow(
     answerArtifactLocale: appLocale,
     answerContentKey:
       "question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1/answer",
-    choices: [
-      {
-        isCorrect: true,
-        label: technicalCopy[appLocale].choice,
-        optionKey: "option-1",
-        order: 1,
-      },
-      {
-        isCorrect: false,
-        label: `${technicalCopy[appLocale].choice} 2`,
-        optionKey: "option-2",
-        order: 2,
-      },
-    ],
     contentHash: TryoutContentHashSchema.make(
       technicalCopy[appLocale].contentHashCharacter.repeat(64)
     ),
@@ -141,6 +127,7 @@ export function makeTryoutPlacementRow(
     deliveryLanguage: appLocale,
     examKey: "snbt",
     appLocale,
+    languagePolicy: { kind: "app-locale" },
     questionArtifactHash: artifacts?.questionArtifactHash ?? artifactHash,
     questionArtifactLocale: appLocale,
     questionContentKey:
@@ -149,6 +136,23 @@ export function makeTryoutPlacementRow(
     questionSourcePath:
       "packages/corpus/question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-1",
     rendererDomain: "snbt-quant",
+    response: {
+      kind: "single-choice",
+      options: [
+        {
+          isCorrect: true,
+          label: technicalCopy[appLocale].choice,
+          optionKey: "option-1",
+          order: 1,
+        },
+        {
+          isCorrect: false,
+          label: `${technicalCopy[appLocale].choice} 2`,
+          optionKey: "option-2",
+          order: 2,
+        },
+      ],
+    },
     scope: "server",
     sectionKey: "quantitative-knowledge",
     setKey: "set-1",

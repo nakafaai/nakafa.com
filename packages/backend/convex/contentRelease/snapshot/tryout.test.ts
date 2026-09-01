@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import { QuestionResponseSchema } from "@nakafa/aksara-contracts/question/response";
 import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { makeTryoutCatalogRecord } from "@nakafa/aksara-contracts/tryout/catalog-hash";
 import {
@@ -7,7 +8,6 @@ import {
   tryoutPlacementIdentity,
 } from "@nakafa/aksara-contracts/tryout/identity";
 import { makeTryoutPlacementRecord } from "@nakafa/aksara-contracts/tryout/placement-hash";
-import { TryoutChoiceListSchema } from "@nakafa/aksara-contracts/tryout/spec";
 import {
   stageTryoutCatalog,
   stageTryoutPlacement,
@@ -122,20 +122,29 @@ describe("contentRelease/snapshot/tryout", () => {
       }),
     };
     const placementSource = makeTryoutPlacementRow();
-    const [firstChoice, ...remainingChoices] =
-      placementSource.record.row.choices;
-    const oversizedChoices = TryoutChoiceListSchema.make([
-      {
-        ...firstChoice,
-        label: "x".repeat(TRYOUT_PLACEMENT_DOCUMENT_LIMIT),
-      },
-      ...remainingChoices,
-    ]);
+    const response = placementSource.record.row.response;
+    if (response.kind === "category") {
+      throw new Error("Expected one option-based technical response.");
+    }
+    const [firstOption, ...remainingOptions] = response.options;
+    if (!firstOption) {
+      throw new Error("Expected one technical response option.");
+    }
+    const oversizedResponse = QuestionResponseSchema.make({
+      kind: response.kind,
+      options: [
+        {
+          ...firstOption,
+          label: "x".repeat(TRYOUT_PLACEMENT_DOCUMENT_LIMIT),
+        },
+        ...remainingOptions,
+      ],
+    });
     const placement = {
       ...placementSource,
       record: makeTryoutPlacementRecord({
         ...placementSource.record.row,
-        choices: oversizedChoices,
+        response: oversizedResponse,
       }),
     };
     const t = convexTest(schema, convexModules);
