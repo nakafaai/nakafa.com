@@ -108,8 +108,8 @@ async function TryoutCountryRoute({
               ) : undefined,
             homeLabel: tCommon("home"),
             items: [{ label: tCommon("try-out") }],
-            menuLabel: tCommon("breadcrumb-menu"),
-            openMenuLabel: tCommon("open-breadcrumb-menu"),
+            menuLabel: tCommon("navigate"),
+            openMenuLabel: tCommon("navigate"),
             title: tCommon("try-out"),
           }}
         />
