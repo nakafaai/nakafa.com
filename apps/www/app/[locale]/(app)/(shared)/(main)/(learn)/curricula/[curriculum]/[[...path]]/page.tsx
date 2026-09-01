@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
 import { type ReactNode, Suspense } from "react";
 import { readMaterialCardChapters } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/data";
-import { readCurriculumRouteIcon } from "@/app/[locale]/(app)/(shared)/(main)/(learn)/curricula/[curriculum]/[[...path]]/icons";
 import {
   CurriculumChildCards,
   CurriculumRootHeader,
@@ -14,7 +13,6 @@ import {
   listRuntimeCurriculumStaticParams,
   readRuntimeCurriculumBreadcrumbs,
   readRuntimeCurriculumCatalog,
-  readRuntimeCurriculumHeader,
   readRuntimeCurriculumOptions,
   readRuntimeCurriculumToc,
   resolveRuntimeCurriculumRoute,
@@ -24,7 +22,6 @@ import { CardMaterial } from "@/components/shared/card-material";
 import { ComingSoon } from "@/components/shared/coming-soon";
 import { ContainerList } from "@/components/shared/container-list";
 import { FooterContent } from "@/components/shared/footer-content";
-import { HeaderContent } from "@/components/shared/header-content";
 import { LayoutContent } from "@/components/shared/layout-content";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
@@ -171,22 +168,14 @@ async function CurriculumNestedRoute({
       breadcrumbs={breadcrumbs}
       model={model}
     >
-      {model.childRoutes.length > 0 ? (
-        <CurriculumNestedHeader
-          ancestors={model.ancestors}
-          currentRoute={route}
-          homeLabel={homeLabel}
-          locale={locale}
-          menuLabel={tCommon("more")}
-          subjectLabel={subjectLabel}
-        />
-      ) : (
-        <HeaderContent
-          icon={readCurriculumRouteIcon(route)}
-          link={readRuntimeCurriculumHeader(model)}
-          title={route.title}
-        />
-      )}
+      <CurriculumNestedHeader
+        ancestors={model.ancestors}
+        currentRoute={route}
+        homeLabel={homeLabel}
+        locale={locale}
+        menuLabel={tCommon("more")}
+        subjectLabel={subjectLabel}
+      />
     </CurriculumRouteFrame>
   );
 }
