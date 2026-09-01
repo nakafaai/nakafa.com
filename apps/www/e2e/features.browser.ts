@@ -9,6 +9,10 @@ import { seedDeniedAnalyticsConsent } from "@/e2e/support/consent";
 const NINA_ANSWER_TEXT = "Subtract the first equation";
 const NINA_HEADING_PATTERN = /Nina already knows/;
 const NINA_REASONING_TEXT = "Compare the two known equations";
+const FEATURED_CORRECT_RESPONSE = "19";
+const FEATURED_INCORRECT_RESPONSE = "10";
+const FEATURED_TRYOUT_HEADING =
+  "After learning, see what you really understood";
 // Match local Next and Vercel-promoted production chunk paths.
 const NEXT_CHUNK_PATH =
   /\/_next\/static\/(?:immutable\/)?chunks\/.*\.js(?:\?.*)?$/;
@@ -102,6 +106,75 @@ const expectNinaAtBottom = Effect.fn("NakafaE2E.expectNinaAtBottom")(function* (
   yield* Effect.promise(() =>
     expect(mathTrigger).toHaveAttribute("aria-expanded", "true")
   );
+});
+
+const expectFeaturedTryoutResponse = Effect.fn(
+  "NakafaE2E.expectFeaturedTryoutResponse"
+)(function* (page: Page) {
+  const feature = page
+    .getByRole("heading", {
+      exact: true,
+      name: FEATURED_TRYOUT_HEADING,
+    })
+    .locator("..");
+  const response = feature.getByRole("radiogroup", { name: "Answer" });
+  const choices = response.getByRole("radio");
+  const incorrectChoice = choices.nth(0);
+  const correctChoice = choices.nth(4);
+  const status = feature.getByRole("status");
+
+  yield* Effect.promise(() => feature.scrollIntoViewIfNeeded());
+  yield* Effect.promise(() => expect(choices).toHaveCount(5));
+  yield* Effect.promise(() =>
+    expect(incorrectChoice).toHaveAccessibleName(FEATURED_INCORRECT_RESPONSE)
+  );
+  yield* Effect.promise(() =>
+    expect(correctChoice).toHaveAccessibleName(FEATURED_CORRECT_RESPONSE)
+  );
+  yield* Effect.promise(() =>
+    expect(response.getByTestId("katex")).toHaveCount(5)
+  );
+  yield* Effect.promise(() =>
+    expect(
+      incorrectChoice.locator("xpath=ancestor::label[1] annotation")
+    ).toHaveText(FEATURED_INCORRECT_RESPONSE)
+  );
+  yield* Effect.promise(() =>
+    expect(
+      correctChoice.locator("xpath=ancestor::label[1] annotation")
+    ).toHaveText(FEATURED_CORRECT_RESPONSE)
+  );
+  yield* Effect.promise(() =>
+    expect(feature.getByRole("button", { name: "Check answer" })).toHaveCount(0)
+  );
+  yield* Effect.promise(() =>
+    expect(feature.getByRole("button", { name: "Reset" })).toHaveCount(0)
+  );
+
+  yield* Effect.promise(() => incorrectChoice.click());
+  yield* Effect.promise(() => expect(incorrectChoice).toBeChecked());
+  yield* Effect.promise(() =>
+    expect(incorrectChoice).toHaveAccessibleName(
+      `${FEATURED_INCORRECT_RESPONSE} Incorrect`
+    )
+  );
+  yield* Effect.promise(() => expect(status).toHaveText("Incorrect"));
+  yield* Effect.promise(() =>
+    expect(feature.getByRole("button", { name: "Check answer" })).toHaveCount(0)
+  );
+  yield* Effect.promise(() =>
+    expect(feature.getByRole("button", { name: "Reset" })).toHaveCount(0)
+  );
+
+  yield* Effect.promise(() => correctChoice.click());
+  yield* Effect.promise(() => expect(correctChoice).toBeChecked());
+  yield* Effect.promise(() => expect(incorrectChoice).not.toBeChecked());
+  yield* Effect.promise(() =>
+    expect(correctChoice).toHaveAccessibleName(
+      `${FEATURED_CORRECT_RESPONSE} Correct`
+    )
+  );
+  yield* Effect.promise(() => expect(status).toHaveText("Correct"));
 });
 
 const expectResponsiveFeatureLayout = Effect.fn(
@@ -258,6 +331,9 @@ for (const viewport of targetViewports) {
                 yield* prepareFeaturesPage(page);
                 yield* expectProjectileDeferred(page);
                 yield* expectResponsiveFeatureLayout(page, viewport.width);
+                if (viewport.name === "desktop") {
+                  yield* expectFeaturedTryoutResponse(page);
+                }
                 yield* expectNinaAtBottom(page);
                 yield* expectProjectileInteraction(page);
               })
