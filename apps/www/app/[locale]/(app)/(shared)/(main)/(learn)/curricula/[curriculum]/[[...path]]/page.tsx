@@ -237,7 +237,7 @@ function CurriculumRouteBody({
   const { childRoutes, locale, materialCards } = model;
   if (materialCards.length > 0) {
     return (
-      <ContainerList className="sm:grid-cols-1">
+      <ContainerList className="pt-6 sm:grid-cols-1">
         {materialCards.map((material) => (
           <CardMaterial key={material.href} material={material} />
         ))}
