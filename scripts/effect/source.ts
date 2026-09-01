@@ -20,7 +20,7 @@ export interface EffectSourceConfig {
   readonly vendoredManifest: string;
 }
 const DEFAULT_CONFIG: EffectSourceConfig = {
-  identityManifest: "scripts/effect-source.json",
+  identityManifest: "scripts/effect/source.json",
   installedManifest: "node_modules/effect/package.json",
   repository: "https://github.com/Effect-TS/effect.git",
   repositoryRoot: ".",
@@ -366,7 +366,7 @@ export const makeEffectSourceProgram = Effect.fn("EffectSource.main")(
       return;
     }
     return yield* new EffectSourceUsageError({
-      message: "Usage: node scripts/effect-source.ts <check|update>",
+      message: "Usage: node scripts/effect/source.ts <check|update>",
     });
   }
 );

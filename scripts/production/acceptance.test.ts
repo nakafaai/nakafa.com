@@ -5,7 +5,7 @@ import { ChildProcess } from "effect/unstable/process";
 import {
   readProductionChanges,
   requiresProductionAcceptance,
-} from "#scripts/production-acceptance";
+} from "#scripts/production/acceptance";
 
 class GitFixtureError extends Schema.TaggedError<GitFixtureError>()(
   "GitFixtureError",

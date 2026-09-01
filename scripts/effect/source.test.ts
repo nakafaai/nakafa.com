@@ -5,7 +5,7 @@ import { Effect, FileSystem, Schema } from "effect";
 import {
   type EffectSourceConfig,
   makeEffectSourceProgram,
-} from "#scripts/effect-source";
+} from "#scripts/effect/source";
 
 class GitFixtureError extends Schema.TaggedError<GitFixtureError>()(
   "GitFixtureError",
@@ -58,7 +58,7 @@ describe("Effect source identity", () => {
         const consumerManifest = `${consumer}/node_modules/effect/package.json`;
         const vendoredRoot = `${consumer}/repos/effect`;
         const vendoredManifest = `${vendoredRoot}/packages/effect/package.json`;
-        const identityManifest = `${consumer}/scripts/effect-source.json`;
+        const identityManifest = `${consumer}/scripts/effect/source.json`;
 
         yield* fileSystem.makeDirectory(`${upstream}/packages/effect`, {
           recursive: true,
@@ -106,7 +106,7 @@ describe("Effect source identity", () => {
         yield* fileSystem.makeDirectory(`${vendoredRoot}/packages/effect`, {
           recursive: true,
         });
-        yield* fileSystem.makeDirectory(`${consumer}/scripts`, {
+        yield* fileSystem.makeDirectory(`${consumer}/scripts/effect`, {
           recursive: true,
         });
         yield* runGit(consumer, ["init", "--initial-branch=main"]);
@@ -144,7 +144,7 @@ describe("Effect source identity", () => {
         );
 
         const config: EffectSourceConfig = {
-          identityManifest: "scripts/effect-source.json",
+          identityManifest: "scripts/effect/source.json",
           installedManifest: "node_modules/effect/package.json",
           repository: upstream,
           repositoryRoot: consumer,
